@@ -2593,17 +2593,17 @@ struct FS_CampaignMission : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Id;
+	int MissionId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Region;
+	FString MissionName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString System;
+	FString MissionRegion;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString MissionSystem;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Scene;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Subtitles;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Desc;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2639,14 +2639,14 @@ struct FS_CampaignMission : public FTableRowBase {
 	
 	FS_CampaignMission() {
 
-		Id = 0;
-
-		Region = "";
-		System = "";
+		MissionId = 0;
+		MissionName = "";
+		MissionRegion = "";
+		MissionSystem = "";
 		Scene = "";
 
 		Subtitles = "";
-		Name = "";
+		
 		Desc = "";
 		TargetName = "";
 		WardName = "";
@@ -2654,7 +2654,6 @@ struct FS_CampaignMission : public FTableRowBase {
 		Sitrep = "";
 		StartTime = ""; // time
 		StartAfter = ""; // time
-		Id = 0;
 		Team = 0;
 		
 		Stardate = 0;
@@ -2671,17 +2670,17 @@ struct FS_TemplateMission : public FTableRowBase {
 
 	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int TemplateId; 
+	int MissionId; 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString TemplateName;
+	FString MissionName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString TargetName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString WardName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString TemplateSystem;
+	FString MissionSystem;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString TemplateRegion;
+	FString MissionRegion;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString TemplateObjective;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2714,15 +2713,15 @@ struct FS_TemplateMission : public FTableRowBase {
 	FS_TemplateMission() {
 		TargetName = "";
 		WardName = "";
-		TemplateName = "";
-		TemplateSystem = "";
-		TemplateRegion = "";
+		MissionName = "";
+		MissionSystem = "";
+		MissionRegion = "";
 		TemplateObjective = "";
 		TemplateSitrep = "";
 		TemplateStart = "";
 		TemplateAfter = "";
 		TemplateTeam = 0;
-		TemplateId = 0;
+		MissionId = 0;
 
 	    TemplateDegrees = false;
 		TemplateOnce = false;

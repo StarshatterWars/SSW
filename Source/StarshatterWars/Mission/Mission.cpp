@@ -43,7 +43,107 @@
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterMission, Log, All);
 
 // +--------------------------------------------------------------------+
+template <typename TMissionData>
+bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
+{
+	if (bFullReset)
+	{
+		ok = false;
+		elements.destroy();
+		events.destroy();
+		errmsg = "";
+		subtitles = "";
+		target = nullptr;
+		ward = nullptr;
+	}
 
+	if (!InData.MissionName.IsEmpty())
+		name = TCHAR_TO_ANSI(*InData.MissionName);
+
+	if (!InData.MissionSystem.IsEmpty())
+		system = TCHAR_TO_ANSI(*InData.MissionSystem);
+
+	if (!InData.MissionRegion.IsEmpty())
+		region = TCHAR_TO_ANSI(*InData.MissionRegion);
+
+	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
+	{
+		id = InData.MissionId;
+		desc = TCHAR_TO_ANSI(*InData.Desc);
+		script = TCHAR_TO_ANSI(*InData.Scene);
+		objective = TCHAR_TO_ANSI(*InData.Objective);
+		sitrep = TCHAR_TO_ANSI(*InData.Sitrep);
+		type = static_cast<int32>(InData.MissionType);
+		team = InData.Team;
+		degrees = InData.Degrees;
+		stardate = InData.Stardate;
+		start = UFormattingUtils::ParseStarshatterTime(InData.StartTime);
+		end = 0;
+	}
+
+	for (const FS_MissionElement& SrcElem : InData.Element)
+	{
+		MissionElement* Elem = new MissionElement();
+		if (!Elem)
+			continue;
+
+		Elem->name = TCHAR_TO_ANSI(*SrcElem.Name);
+		Elem->carrier = TCHAR_TO_ANSI(*SrcElem.Carrier);
+		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
+		Elem->squadron = TCHAR_TO_ANSI(*SrcElem.Squadron);
+		Elem->rgn_name = TCHAR_TO_ANSI(*SrcElem.RegionName);
+		Elem->IFF_code = SrcElem.IFFCode;
+		Elem->count = SrcElem.Count;
+		Elem->player = SrcElem.Player ? 1 : 0;
+		Elem->alert = SrcElem.Alert;
+		Elem->playable = SrcElem.Playable;
+		Elem->invulnerable = SrcElem.Invulnerable;
+		Elem->rogue = SrcElem.Rogue;
+		Elem->command_ai = SrcElem.CommandAI;
+		Elem->respawns = SrcElem.Respawns;
+		Elem->hold_time = SrcElem.HoldTime;
+		Elem->zone_lock = SrcElem.ZoneLock;
+		Elem->heading = SrcElem.Heading;
+		Elem->SetLocation(SrcElem.Location);
+		Elem->mission_role = static_cast<int32>(SrcElem.RoleName);
+		Elem->intel = static_cast<int32>(SrcElem.Intel);
+
+		AddElement(Elem);
+	}
+
+	for (const FS_MissionEvent& SrcEvent : InData.Event)
+	{
+		MissionEvent* Ev = new MissionEvent();
+		if (!Ev)
+			continue;
+
+		Ev->id = SrcEvent.EventId;
+		Ev->time = SrcEvent.EventTime;
+		Ev->delay = SrcEvent.EventDelay;
+		Ev->event = static_cast<int32>(SrcEvent.EventType);
+		Ev->trigger = static_cast<int32>(SrcEvent.EventTrigger);
+		Ev->event_ship = TCHAR_TO_ANSI(*SrcEvent.EventShip);
+		Ev->event_source = TCHAR_TO_ANSI(*SrcEvent.EventSource);
+		Ev->event_target = TCHAR_TO_ANSI(*SrcEvent.EventTarget);
+		Ev->event_message = TCHAR_TO_ANSI(*SrcEvent.EventMessage);
+		Ev->event_sound = TCHAR_TO_ANSI(*SrcEvent.EventSound);
+
+		AddEvent(Ev);
+	}
+
+	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
+	{
+		if (!InData.TargetName.IsEmpty())
+			target = FindElement(TCHAR_TO_ANSI(*InData.TargetName));
+
+		if (!InData.WardName.IsEmpty())
+			ward = FindElement(TCHAR_TO_ANSI(*InData.WardName));
+	}
+
+	ok = true;
+	Validate();
+	return ok;
+}
 Mission::Mission()
 	: id(0)
 {
@@ -1961,108 +2061,12 @@ Mission::Serialize(const char* player_elem, int player_index)
 
 bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 {
-	// reset legacy state first
-	ok = false;
-	elements.destroy();
-	events.destroy();
-	errmsg = "";
-	subtitles = "";
-	target = nullptr;
-	ward = nullptr;
-
-	id = InMission.Id;
-	name = TCHAR_TO_ANSI(*InMission.Name);
-	desc = TCHAR_TO_ANSI(*InMission.Desc);
-	system = TCHAR_TO_ANSI(*InMission.System);
-	region = TCHAR_TO_ANSI(*InMission.Region);
-	script = TCHAR_TO_ANSI(*InMission.Scene);
-	objective = TCHAR_TO_ANSI(*InMission.Objective);
-	sitrep = TCHAR_TO_ANSI(*InMission.Sitrep);
-
-	type = static_cast<int32>(InMission.MissionType);
-	team = InMission.Team;
-	degrees = InMission.Degrees;
-	stardate = InMission.Stardate;
-
-	start = UFormattingUtils::ParseStarshatterTime(InMission.StartTime);
-	end = 0;
-
-	// rebuild mission elements
-	for (const FS_MissionElement& SrcElem : InMission.Element)
-	{
-		MissionElement* Elem = new MissionElement();
-		if (!Elem)
-		{
-			continue;
-		}
-
-		Elem->name = TCHAR_TO_ANSI(*SrcElem.Name);
-		Elem->carrier = TCHAR_TO_ANSI(*SrcElem.Carrier);
-		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
-		Elem->squadron = TCHAR_TO_ANSI(*SrcElem.Squadron);
-		Elem->rgn_name = TCHAR_TO_ANSI(*SrcElem.RegionName);
-		Elem->IFF_code = SrcElem.IFFCode;
-		Elem->count = SrcElem.Count;
-		Elem->player = SrcElem.Player ? 1 : 0;
-		Elem->alert = SrcElem.Alert;
-		Elem->playable = SrcElem.Playable;
-		Elem->invulnerable = SrcElem.Invulnerable;
-		Elem->rogue = SrcElem.Rogue;
-		Elem->command_ai = SrcElem.CommandAI;
-		Elem->respawns = SrcElem.Respawns;
-		Elem->hold_time = SrcElem.HoldTime;
-		Elem->zone_lock = SrcElem.ZoneLock;
-		Elem->heading = SrcElem.Heading;
-		Elem->SetLocation(SrcElem.Location);
-
-		Elem->mission_role = static_cast<int32>(SrcElem.RoleName);
-		Elem->intel = static_cast<int32>(SrcElem.Intel);
-
-		AddElement(Elem);
-	}
-
-	// rebuild mission events
-	for (const FS_MissionEvent& SrcEvent : InMission.Event)
-	{
-		MissionEvent* Ev = new MissionEvent();
-		if (!Ev)
-		{
-			continue;
-		}
-
-		Ev->id = SrcEvent.EventId;
-		Ev->time = SrcEvent.EventTime;
-		Ev->delay = SrcEvent.EventDelay;
-		Ev->event = static_cast<int32>(SrcEvent.EventType);
-		Ev->trigger = static_cast<int32>(SrcEvent.EventTrigger);
-		Ev->event_ship = TCHAR_TO_ANSI(*SrcEvent.EventShip);
-		Ev->event_source = TCHAR_TO_ANSI(*SrcEvent.EventSource);
-		Ev->event_target = TCHAR_TO_ANSI(*SrcEvent.EventTarget);
-		Ev->event_message = TCHAR_TO_ANSI(*SrcEvent.EventMessage);
-		Ev->event_sound = TCHAR_TO_ANSI(*SrcEvent.EventSound);
-
-		AddEvent(Ev);
-	}
-
-	// resolve target/ward by name after elements exist
-	if (!InMission.TargetName.IsEmpty())
-	{
-		target = FindElement(TCHAR_TO_ANSI(*InMission.TargetName));
-	}
-
-	if (!InMission.WardName.IsEmpty())
-	{
-		ward = FindElement(TCHAR_TO_ANSI(*InMission.WardName));
-	}
-
-	ok = true;
-	Validate();
-	return ok;
+	return LoadMissionCommon(InMission, true);
 }
 
 bool Mission::LoadFromTemplateMissionData(const FS_TemplateMission& InTemplate)
 {
-	return false;
+	return LoadMissionCommon(InTemplate, false);
 }
 
 // +====================================================================+

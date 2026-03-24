@@ -1758,7 +1758,7 @@ const FS_CampaignMission* Campaign::FindCampaignMissionById(int32 id) const
 
     for (const FS_CampaignMission& Row : CampaignData->Missions)
     {
-        if (Row.Id == id)
+        if (Row.MissionId == id)
             return &Row;
     }
 

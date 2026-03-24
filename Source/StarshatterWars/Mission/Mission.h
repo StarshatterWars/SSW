@@ -149,6 +149,9 @@ public:
 
     Text              Serialize(const char* player_elem = 0, int player_index = 0);
 
+    template <typename TMissionData>
+    bool LoadMissionCommon(const TMissionData& InData, bool bFullReset);
+
     bool LoadFromCampaignMissionData(const FS_CampaignMission& InMission);
     bool LoadFromTemplateMissionData(const FS_TemplateMission& InTemplate);
 

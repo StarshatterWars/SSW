@@ -2743,7 +2743,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 		if (Key == "name")
 		{
 			GetDefText(Name, def, fn);
-			NewMission.Name = FString(Name);
+			NewMission.MissionName = FString(Name);
 			UE_LOG(LogTemp, Log, TEXT("mission name '%s'"), *FString(Name));
 		}
 		else if (Key == "scene")
@@ -2781,12 +2781,12 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 		else if (Key == "system")
 		{
 			GetDefText(System, def, fn);
-			NewMission.System = FString(System);
+			NewMission.MissionSystem = FString(System);
 		}
 		else if (Key == "region")
 		{
 			GetDefText(Region, def, fn);
-			NewMission.Region = FString(Region);
+			NewMission.MissionRegion = FString(Region);
 		}
 		else if (Key == "degrees")
 		{
@@ -2833,7 +2833,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 		else if (Key == "id")
 		{
 			GetDefNumber(Id, def, fn);
-			NewMission.Id = Id;
+			NewMission.MissionId = Id;
 		}
 		else if (Key == "team")
 		{
@@ -4041,16 +4041,16 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 	// ----------------------------
 	Text  TargetName = "";
 	Text  WardName = "";
-	Text  TemplateName = "";
-	Text  TemplateSystem = "";
-	Text  TemplateRegion = "";
+	Text  MissionName = "";
+	Text  MissionSystem = "";
+	Text  MissionRegion = "";
 	Text  TemplateObjective = "";
 	Text  TemplateSitrep = "";
 	Text  TemplateStart = "";
 	Text  TemplateAfter = "";
 
 	int   TemplateType = 0;
-	int   TemplateId = 0;
+	int   MissionId = 0;
 	int   TemplateTeam = 0;
 	bool  TemplateDegrees = false;
 	bool  TemplateOnce = false;
@@ -4075,8 +4075,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 
 		if (Key == "name")
 		{
-			GetDefText(TemplateName, def, fn);
-			NewTemplateMission.TemplateName = FString(TemplateName);
+			GetDefText(MissionName, def, fn);
+			NewTemplateMission.MissionName = FString(MissionName);
 		}
 		else if (Key == "type")
 		{
@@ -4101,8 +4101,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 		}
 		else if (Key == "system")
 		{
-			GetDefText(TemplateSystem, def, fn);
-			NewTemplateMission.TemplateSystem = FString(TemplateSystem);
+			GetDefText(MissionSystem, def, fn);
+			NewTemplateMission.MissionSystem = FString(MissionSystem);
 		}
 		else if (Key == "degrees")
 		{
@@ -4111,8 +4111,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 		}
 		else if (Key == "region")
 		{
-			GetDefText(TemplateRegion, def, fn);
-			NewTemplateMission.TemplateRegion = FString(TemplateRegion);
+			GetDefText(MissionRegion, def, fn);
+			NewTemplateMission.MissionRegion = FString(MissionRegion);
 		}
 		else if (Key == "objective")
 		{
@@ -4126,8 +4126,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 		}
 		else if (Key == "id")
 		{
-			GetDefNumber(TemplateId, def, fn);
-			NewTemplateMission.TemplateId = TemplateId;
+			GetDefNumber(MissionId, def, fn);
+			NewTemplateMission.MissionId = MissionId;
 		}
 		else if (Key == "start")
 		{
@@ -4275,9 +4275,9 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 
 	Text TargetName = "";
 	Text WardName = "";
-	Text TemplateName = "";
-	Text TemplateSystem = "";
-	Text TemplateRegion = "";
+	Text MissionName = "";
+	Text MissionSystem = "";
+	Text MissionRegion = "";
 	Text TemplateObjective = "";
 	Text TemplateSitrep = "";
 	Text TemplateStart = "";
@@ -4286,7 +4286,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 
 	int  TemplateType = 0;
 	int  TemplateTeam = 0;
-	int  TemplateId = 0;
+	int  MissionId = 0;
 	bool TemplateDegrees = false;
 	bool TemplateOnce = false;
 
@@ -4311,8 +4311,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 
 		if (Key == "name")
 		{
-			GetDefText(TemplateName, def, fn);
-			NewTemplateMission.TemplateName = FString(TemplateName);
+			GetDefText(MissionName, def, fn);
+			NewTemplateMission.MissionName = FString(MissionName);
 		}
 		else if (Key == "type")
 		{
@@ -4337,8 +4337,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 		}
 		else if (Key == "system")
 		{
-			GetDefText(TemplateSystem, def, fn);
-			NewTemplateMission.TemplateSystem = FString(TemplateSystem);
+			GetDefText(MissionSystem, def, fn);
+			NewTemplateMission.MissionSystem = FString(MissionSystem);
 		}
 		else if (Key == "degrees")
 		{
@@ -4352,8 +4352,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 		}
 		else if (Key == "region")
 		{
-			GetDefText(TemplateRegion, def, fn);
-			NewTemplateMission.TemplateRegion = FString(TemplateRegion);
+			GetDefText(MissionRegion, def, fn);
+			NewTemplateMission.MissionRegion = FString(MissionRegion);
 		}
 		else if (Key == "objective")
 		{
@@ -4367,8 +4367,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 		}
 		else if (Key == "id")
 		{
-			GetDefNumber(TemplateId, def, fn);
-			NewTemplateMission.TemplateId = TemplateId;
+			GetDefNumber(MissionId, def, fn);
+			NewTemplateMission.MissionId = MissionId;
 		}
 		else if (Key == "start")
 		{
