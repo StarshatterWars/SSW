@@ -7,16 +7,6 @@
 // Forward declarations (match your port style: plain C++ classes, notxUObjects)
 class Campaign;
 class CombatGroup;
-
-/**
- * Mirror of Starshatter CampaignMissionRequest.
- * A lightweight "mission generation request" object that planners / campaign logic can pass around.
- *
- * UE Port Notes:
- * - Starshatter used Text + Point; we use FString + FVector.
- * - CombatGroup pointers are plain C++ pointers (no UPROPERTY).
- * - Keep method names as close to original as practical.
- */
 class CampaignMissionRequest
 {
 public:

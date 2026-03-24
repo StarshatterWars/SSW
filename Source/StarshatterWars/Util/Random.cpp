@@ -14,21 +14,11 @@
 
 #include "Random.h"
 
+// Minimal Unreal support (FVector conversions + UE_LOG):
+#include "Math/Vector.h"
+#include "Logging/LogMacros.h"
+
 // +----------------------------------------------------------------------+
-
-FVector GetRandomPoint()
-{
-	FVector P(
-		FMath::FRandRange(-16384.0f, 16384.0f),
-		FMath::FRandRange(-16384.0f, 16384.0f),
-		0.0f
-	);
-
-	P.Normalize();
-
-	const float Distance = 15000.0f + FMath::FRandRange(0.0f, 32767.0f / 3.0f);
-	return P * Distance;
-}
 
 void RandomInit()
 {
@@ -159,5 +149,57 @@ int RandomShuffle(int count)
 
 	return set[index++];
 }
+
+FVector GetRandomPoint()
+{
+	FVector P(
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		0.0f
+	);
+
+	P.Normalize();
+
+	const float Distance = 15000.0f + FMath::FRandRange(0.0f, 32767.0f / 3.0f);
+	return P * Distance;
+}
+
+FVector GetRandomDirection()
+{
+	FVector P(
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		0.0f
+	);
+
+	return P.GetSafeNormal();
+}
+
+bool GetRandomChance(int32 Wins, int32 Tries)
+{
+	const float Fraction = 256.0f * Wins / Tries;
+	const int32 R = (FMath::Rand() >> 4) & 0xFF;
+
+	return R < Fraction;
+}
+
+int32 GetRandomIndex()
+{
+	static int32 Index = 0;
+	static int32 Table[16] = { 0, 9, 4, 7, 14, 11, 2, 12, 1, 5, 13, 8, 6, 10, 3, 15 };
+
+	const int32 R = 1 + ((FMath::Rand() & 0x0700) >> 8);
+	Index += R;
+
+	if (Index > 10000000)
+	{
+		Index = 0;
+	}
+
+	return Table[Index % 16];
+}
+
+
+
 
 

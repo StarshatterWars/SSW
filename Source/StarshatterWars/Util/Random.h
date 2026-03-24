@@ -32,8 +32,9 @@
 	int      RandomSequence(int current, int range);
 	int      RandomShuffle(int count);
 
-	static FVector GetRandomPoint();
-	
+	FVector GetRandomPoint();
+	FVector GetRandomDirection();
+	bool GetRandomChance(int32 Wins, int32 Tries);
+	int32 GetRandomIndex();
 
 	// +----------------------------------------------------------------------+
-
