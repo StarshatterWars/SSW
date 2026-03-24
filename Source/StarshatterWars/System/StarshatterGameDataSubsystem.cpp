@@ -1189,7 +1189,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	//InitializeCampaignData();
+	InitializeCampaignData();
 	ReadCampaignData();
 	
 	//InitializeCombatRoster();
@@ -1224,6 +1224,13 @@ void UStarshatterGameDataSubsystem::InitializeCampaignData() {
 
 void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 {
+	if (!CampaignDataTable)
+	{
+		return;
+	}
+
+	CampaignDataTable->EmptyTable();
+
 	const FString CampaignDPath = ANSI_TO_TCHAR(fs);
 
 	TArray<uint8> Bytes;
@@ -1579,7 +1586,10 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 								TermStruct* val2 = pdef->term()->isStruct();
 								CampaignActionReqArray.Empty();
 								Action = 0;
+
 								ActionStatus = ECombatActionStatus::COMPLETE;
+								EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
+
 								NotAction = false;
 
 								Combatant1 = "";
@@ -1643,24 +1653,20 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 											NewCampaignReq.Score = score;
 
 										}
-										else if (pdef2->name()->value() == "intel") {
-											if (pdef2->term()->isNumber()) {
-												GetDefNumber(intel, pdef2, filename);
-												NewCampaignReq.Intel = intel;
+										else if (pdef2->name()->value() == "intel")
+										{
+											Text Intel = "";
+											GetDefText(Intel, pdef2, filename);
 
-											}
-											else if (pdef2->term()->isText()) {
-												char txt[64];
-												GetDefText(txt, pdef2, filename);
-												intel = Intel::IntelFromName(txt);
-												NewCampaignReq.Intel = intel;
+											if (!FStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
+												LocalIntelType = EINTEL_TYPE::KNOWN;
 
-											}
+											NewCampaignReq.Intel = LocalIntelType;
 										}
 										else if (pdef2->name()->value() == "group_type") {
 											char type_name[64];
 											GetDefText(type_name, pdef2, filename);
-											//gtype = CombatGroup::TypeFromName(type_name);
+											gtype = (int)CombatGroup::TypeFromName(type_name);
 											NewCampaignReq.GroupType = gtype;
 
 										}
@@ -3485,8 +3491,6 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	}
 
 	// ---- strings ----
-	Text EventType = "";
-	Text TriggerName = "";
 	Text EventShip = "";
 	Text EventSource = "";
 	Text EventTarget = "";
@@ -3519,6 +3523,9 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		TriggerParam[k] = 0;
 	}
 
+	MISSIONEVENT_TYPE EventType = MISSIONEVENT_TYPE::MESSAGE;
+	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
+
 	FS_MissionEvent NewMissionEvent;
 
 	const int32 ElemCount = (int32)Val->elements()->size();
@@ -3532,13 +3539,45 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 
 		if (Key == "type")
 		{
-			GetDefText(EventType, PDef, Fn);
-			NewMissionEvent.EventType = FString(EventType);
+			char typestr[64];
+			GetDefText(typestr, PDef, Fn);
+
+			const FString NormalizedType =
+				NormalizeCombatGroupTypeToken(FString(typestr));
+
+			if (!FStringToEnum<MISSIONEVENT_TYPE>(NormalizedType, EventType, false))
+			{
+				EventType = MISSIONEVENT_TYPE::MESSAGE;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ParseEvent] unknown type '%s' normalized to '%s' in '%s'"),
+					*FString(typestr),
+					*NormalizedType,
+					UTF8_TO_TCHAR(Fn));
+			}
+
+			NewMissionEvent.EventType = EventType;
 		}
-		else if (Key == "trigger")
+		if (Key == "trigger")
 		{
-			GetDefText(TriggerName, PDef, Fn);
-			NewMissionEvent.TriggerName = FString(TriggerName);
+			char typestr[64];
+			GetDefText(typestr, PDef, Fn);
+
+			const FString NormalizedType =
+				NormalizeCombatGroupTypeToken(FString(typestr));
+
+			if (!FStringToEnum<MISSIONEVENT_TRIGGER>(NormalizedType, EventTrigger, false))
+			{
+				EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ParseEvent] unknown type '%s' normalized to '%s' in '%s'"),
+					*FString(typestr),
+					*NormalizedType,
+					UTF8_TO_TCHAR(Fn));
+			}
+
+			NewMissionEvent.EventTrigger = EventTrigger;
 		}
 		else if (Key == "id")
 		{
@@ -3694,7 +3733,6 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	Text Path = "";
 	Text Design = "";
 	Text SkinName = "";
-	Text RoleName = "";
 	Text RegionName = "";
 	Text Instr = "";
 	Text ElementIntel = "";
@@ -3719,6 +3757,9 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	bool bPlayable = false;
 	bool bRogue = false;
 	bool bInvulnerable = false;
+
+	EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
+	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
 
 	// Scratch arrays used by nested parsers:
 	MissionLoadoutArray.Empty();
@@ -3775,14 +3816,23 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 		}
 		else if (Key == "mission")
 		{
+			Text RoleName = "";
 			GetDefText(RoleName, PDef, Fn);
-			NewMissionElement.RoleName = FString(RoleName);
+
+			if (!FStringToEnum<EMISSIONTYPE>(FString(RoleName).ToUpper(), LocalMissionType, false))
+				LocalMissionType = EMISSIONTYPE::PATROL;
+
+			NewMissionElement.RoleName = LocalMissionType;
 		}
 		else if (Key == "intel")
 		{
-			// FIX: read into ElementIntel (not RoleName)
-			GetDefText(ElementIntel, PDef, Fn);
-			NewMissionElement.Intel = FString(ElementIntel);
+			Text Intel = "";
+			GetDefText(Intel, PDef, Fn);
+
+			if (!FStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
+				LocalIntelType = EINTEL_TYPE::KNOWN;
+
+			NewMissionElement.Intel = LocalIntelType;
 		}
 		else if (Key == "loc")
 		{

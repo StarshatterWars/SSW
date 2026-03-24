@@ -1888,7 +1888,7 @@ struct FS_CampaignReq : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Comp;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Intel;
+	EINTEL_TYPE Intel = EINTEL_TYPE::KNOWN;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Score;
 
@@ -1902,7 +1902,6 @@ struct FS_CampaignReq : public FTableRowBase {
 		GroupType = 0;
 		GroupId = 0;
 		Comp = 0;
-		Intel = 0;
 		Score = 0;
 	}
 };
@@ -2407,13 +2406,13 @@ struct FS_MissionElement : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString SkinName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString RoleName;
+	EMISSIONTYPE RoleName = EMISSIONTYPE::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString RegionName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Instr;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Intel;
+	EINTEL_TYPE Intel = EINTEL_TYPE::KNOWN;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FVector Location;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2465,9 +2464,7 @@ struct FS_MissionElement : public FTableRowBase {
 		Path = "";
 		Design = "";
 		SkinName = "";
-		RoleName = "";
 		RegionName = "";
-		Intel = "";
 		Instr = "";
 
 		Location = FVector::ZeroVector;
@@ -2518,9 +2515,9 @@ struct FS_MissionEvent : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString EventType;
+	MISSIONEVENT_TYPE EventType = MISSIONEVENT_TYPE::MESSAGE;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	TriggerName;
+	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString	EventShip;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2557,8 +2554,6 @@ struct FS_MissionEvent : public FTableRowBase {
 	int	TriggerNParams;
 
 	FS_MissionEvent() {
-		EventType = "";
-		TriggerName = "";
 		EventShip = "";
 		EventSource = "";
 		EventTarget = "";

@@ -2775,7 +2775,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
                     ReqRow.GroupId,
                     ReqRow.Comp,
                     ReqRow.Score,
-                    ReqRow.Intel);
+                    (int)ReqRow.Intel);
             }
             else
             {
@@ -3148,7 +3148,7 @@ void Campaign::AddActionRequirementFromData(
             ReqRow.GroupId,
             ReqRow.Comp,
             ReqRow.Score,
-            ReqRow.Intel);
+            (int) ReqRow.Intel);
     }
     else
     {

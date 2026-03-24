@@ -1,16 +1,19 @@
 MISSION
 
 scene:  "01-News-Start"
-name:   "Cmpn02 News01 - Campaign Start"
+name:   "Operation Highland"
 type:   "Patrol"
 system: "Solus"
 region: "Solus"
 stardate: 1147287263.0
 id:       201
 
-objective: "Unspecified"
+objective: "Operation Highland Briefing"
 
-sitrep: "Unknown"
+sitrep:  "SOLUS - The Provisional Security Directorate of the Independent System of Solus formally requested military assistance from Terellian Alliance Force:Command this morning.  Special couriers ran the Trellis blockade to deliver the message to the Force outpost in the nearby Janek system.\n\n"
+			 "The official government of this system has been cut off by the illegal blockade of the Trellis Farcaster, said Adminstrator Lars of the Directorate.  We have suffered a great deal of damage in the fighting, and we need help to reestablish basic services here.\n\n"
+			 "Solus has been ripped nearly in two by the bloody civil war that erupted between the Loyalist and Separatist factions of the system government.  Dantari Separatists under the leadership of Senator Masil Gannet, after months of pressing for an official alliance with the Hegemony Prefecture of Renser, have seized much of the Solus star fleet and taken control of the outer worlds of Trellis and Jalah.  The Loyalist faction, although still technically in control of the official goverment, has been trapped on the inner planets Solus and Meridian.\n\n"
+			 "The Separatist blockade of the Trellis Farcaster has also taken a toll on the many Alliance citizens in the Solus system.  Several Terellian companies maintain major offices on the capitol world itself, and Tal Vesta University runs a stellar observatory near the planet Meridian.  An estimated 375,000 Terellians are trapped by the blockade.  So far they have been unable to convince the Dantari Separatists to grant them safe passage back to the main Alliance systems."
 
 start: "01/00:00:00"
 

@@ -511,3 +511,30 @@ FString UFormattingUtils::FormatTPlus(uint64 TPlusSeconds)
         (unsigned long long)Seconds);
 }
 
+int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
+{
+    FString DayPart;
+    FString TimePart;
+
+    if (!InTime.Split(TEXT("/"), &DayPart, &TimePart))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ParseStarshatterTime: bad time string '%s'"), *InTime);
+        return 0;
+    }
+
+    TArray<FString> Parts;
+    TimePart.ParseIntoArray(Parts, TEXT(":"), true);
+
+    if (Parts.Num() != 3)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ParseStarshatterTime: bad time string '%s'"), *InTime);
+        return 0;
+    }
+
+    const int32 Days = FCString::Atoi(*DayPart);
+    const int32 Hours = FCString::Atoi(*Parts[0]);
+    const int32 Minutes = FCString::Atoi(*Parts[1]);
+    const int32 Seconds = FCString::Atoi(*Parts[2]);
+
+    return (((Days * 24) + Hours) * 60 + Minutes) * 60 + Seconds;
+}

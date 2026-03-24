@@ -139,5 +139,7 @@ public:
     static FColor ToFColor(const Color& c);
 
     static FString FormatTPlus(uint64 TPlusSeconds);
+
+    static int32 ParseStarshatterTime(const FString& InTime);
 };
 

@@ -150,6 +150,9 @@ public:
 
     Text              Serialize(const char* player_elem = 0, int player_index = 0);
 
+    bool LoadFromCampaignMissionData(const FS_CampaignMission& InMission);
+    bool LoadFromTemplateMissionData(const FS_TemplateMission& InTemplate);
+
 protected:
     MissionElement* ParseElement(TermStruct* val);
     MissionEvent* ParseEvent(TermStruct* val);
