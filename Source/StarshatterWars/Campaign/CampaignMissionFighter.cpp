@@ -56,7 +56,7 @@ static int dump_missions = 0;
 
 // +--------------------------------------------------------------------+
 
-static FVector RandomPoint()
+static FVector GetRandomPoint()
 {
     FVector P(
         FMath::FRandRange(-16384.0f, 16384.0f),
@@ -912,7 +912,7 @@ void CampaignMissionFighter::CreatePatrols()
 
             BaseLoc =
                 FVector(Base->Location().X, Base->Location().Y, Base->Location().Z) +
-                FVector(RandomPoint().X, RandomPoint().Y, RandomPoint().Z) * 1.5f;
+                FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 1.5f;
 
             if (Region->Type() == Orbital::TERRAIN)
             {
@@ -993,7 +993,7 @@ void CampaignMissionFighter::CreateWardFreight()
     {
         elem->SetLocation(
             FVector(carrier->Location().X, carrier->Location().Y, carrier->Location().Z) +
-            FVector(RandomPoint().X, RandomPoint().Y, RandomPoint().Z) * 2.0f);
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 2.0f);
     }
 
     ward = elem;
@@ -1080,7 +1080,7 @@ void CampaignMissionFighter::CreateWardShuttle()
     if (Carrier)
     {
         const FVector CarrierLoc = Carrier->Location();
-        const FVector Offset = RandomPoint() * 2.0f;
+        const FVector Offset = GetRandomPoint() * 2.0f;
 
         Elem->SetLocation(CarrierLoc + Offset);
     }
@@ -1409,7 +1409,7 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     if (airborne)
     {
         base_loc =
-            FVector(RandomPoint().X, RandomPoint().Y, RandomPoint().Z) * 2.0f +
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 2.0f +
             FVector(0.0f, 0.0f, 12000.0f);
     }
     else if (carrier_elem)
@@ -1534,7 +1534,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
         region = air_region;
 
         sweep_loc =
-            FVector(RandomPoint().X, RandomPoint().Y, RandomPoint().Z) +
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) +
             FVector(0.0f, 0.0f, 10000.0f); // keep it airborne!
     }
 
@@ -1691,9 +1691,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                     elem->AddObjective(obj);
 
                     FVector randPt(
-                        RandomPoint().X,
-                        RandomPoint().Y,
-                        RandomPoint().Z
+                        GetRandomPoint().X,
+                        GetRandomPoint().Y,
+                        GetRandomPoint().Z
                     );
 
                     FVector carrierLoc(
@@ -1708,9 +1708,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             else
             {
                 FVector randPt(
-                    RandomPoint().X,
-                    RandomPoint().Y,
-                    RandomPoint().Z
+                    GetRandomPoint().X,
+                    GetRandomPoint().Y,
+                    GetRandomPoint().Z
                 );
 
                 FVector squadLoc(
@@ -1753,9 +1753,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 e2->SetIntelLevel(Intel::KNOWN);
 
                 FVector randPt(
-                    RandomPoint().X,
-                    RandomPoint().Y,
-                    RandomPoint().Z
+                    GetRandomPoint().X,
+                    GetRandomPoint().Y,
+                    GetRandomPoint().Z
                 );
 
                 FVector elemLoc(
@@ -1860,7 +1860,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     {
         elem->SetIntelLevel(Intel::KNOWN);
 
-        const FVector RandPt = RandomPoint();
+        const FVector RandPt = GetRandomPoint();
         elem->SetLocation(ward->Location() + RandPt * 5.0f);
 
         Instruction* obj = new Instruction(
@@ -1880,7 +1880,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         {
             e2->SetIntelLevel(Intel::KNOWN);
 
-            const FVector EscortOffset = RandomPoint();
+            const FVector EscortOffset = GetRandomPoint();
             e2->SetLocation(elem->Location() + EscortOffset * 0.25f);
 
             Instruction* obj2 = new Instruction(
@@ -2308,7 +2308,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 elem->SetIntelLevel(Intel::KNOWN);
                 elem->SetRegion(rgn);
 
-                const FVector RandPt = RandomPoint();
+                const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 1.5f);
 
                 mission->AddElement(elem);
@@ -2330,7 +2330,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                     elem->SetIntelLevel(Intel::KNOWN);
                     elem->SetRegion(rgn);
 
-                    const FVector RandPt = RandomPoint();
+                    const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
 
                     mission->AddElement(elem);
@@ -2346,7 +2346,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetIntelLevel(Intel::KNOWN);
                             e2->SetRegion(rgn);
 
-                            const FVector EscortOffset = RandomPoint();
+                            const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
@@ -2377,7 +2377,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                     elem->SetIntelLevel(Intel::KNOWN);
                     elem->SetRegion(rgn);
 
-                    const FVector RandPt = RandomPoint();
+                    const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.3f);
 
                     mission->AddElement(elem);
@@ -2409,7 +2409,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                     elem->SetIntelLevel(Intel::KNOWN);
                     elem->SetRegion(rgn);
 
-                    const FVector RandPt = RandomPoint();
+                    const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
 
                     mission->AddElement(elem);
@@ -2425,7 +2425,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetIntelLevel(Intel::KNOWN);
                             e2->SetRegion(rgn);
 
-                            const FVector EscortOffset = RandomPoint();
+                            const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
@@ -2456,7 +2456,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                     elem->SetIntelLevel(Intel::KNOWN);
                     elem->SetRegion(rgn);
 
-                    const FVector RandPt = RandomPoint();
+                    const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.1f);
 
                     mission->AddElement(elem);
@@ -2472,7 +2472,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetIntelLevel(Intel::KNOWN);
                             e2->SetRegion(rgn);
 
-                            const FVector EscortOffset = RandomPoint();
+                            const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
@@ -2504,7 +2504,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 elem->SetIntelLevel(Intel::KNOWN);
                 elem->SetRegion(rgn);
 
-                const FVector RandPt = RandomPoint();
+                const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 2.0f);
 
                 mission->AddElement(elem);
@@ -2885,7 +2885,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
 
     if (carrier)
     {
-        FVector Offset = RandomPoint() * 0.3f;
+        FVector Offset = GetRandomPoint() * 0.3f;
         Offset.Y = FMath::Abs(Offset.Y);
         Offset.Z += 2000.0f;
 
@@ -2893,7 +2893,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     }
     else
     {
-        const FVector RandPt = RandomPoint();
+        const FVector RandPt = GetRandomPoint();
         elem->SetLocation(fighter->Location() + RandPt);
     }
 

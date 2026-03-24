@@ -16,6 +16,20 @@
 
 // +----------------------------------------------------------------------+
 
+FVector GetRandomPoint()
+{
+	FVector P(
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		FMath::FRandRange(-16384.0f, 16384.0f),
+		0.0f
+	);
+
+	P.Normalize();
+
+	const float Distance = 15000.0f + FMath::FRandRange(0.0f, 32767.0f / 3.0f);
+	return P * Distance;
+}
+
 void RandomInit()
 {
 	FMath::RandInit(static_cast<int32>(FDateTime::Now().GetTicks() % MAX_int32));

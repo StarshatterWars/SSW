@@ -32,5 +32,8 @@
 	int      RandomSequence(int current, int range);
 	int      RandomShuffle(int count);
 
+	static FVector GetRandomPoint();
+	
+
 	// +----------------------------------------------------------------------+
 
