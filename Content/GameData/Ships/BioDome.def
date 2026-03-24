@@ -1,0 +1,22 @@
+SHIP
+
+name:          BioDome
+class:         Building
+display_name: "BioDome"
+abrv:		   BLDG
+empire:        All
+description:   "The BioDome is a self-contained ecological habitat engineered to sustain life in otherwise hostile environments. Serving as both agricultural hub and civilian sanctuary, it represents the fragile but persistent expansion of humanity into the frontier."
+hud_icon:     "hud_dome"
+secret:        false
+
+model:   "A1-0"
+
+mass:       950e3
+integrity:  700e3
+scale:      10
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

@@ -1,0 +1,243 @@
+MISSIONLIST
+
+mission: {
+	id:      0,
+	name:    "Operation Highland",
+	objective: "Operation Highland Briefing",
+	start:   "01/00:00:00",
+	script:  "01-News-Start",
+	type:    "Patrol",
+	system:  "Solus",
+	region:  "Solus",	
+	image:   "01-campaign-start",
+	audio:	 "News_01_Campaign_Start",
+	sitrep:  "SOLUS - The Provisional Security Directorate of the Independent System of Solus formally requested military assistance from Terellian Alliance Force:Command this morning.  Special couriers ran the Trellis blockade to deliver the message to the Force outpost in the nearby Janek system.\n\n"
+			 "The official government of this system has been cut off by the illegal blockade of the Trellis Farcaster, said Adminstrator Lars of the Directorate.  We have suffered a great deal of damage in the fighting, and we need help to reestablish basic services here.\n\n"
+			 "Solus has been ripped nearly in two by the bloody civil war that erupted between the Loyalist and Separatist factions of the system government.  Dantari Separatists under the leadership of Senator Masil Gannet, after months of pressing for an official alliance with the Hegemony Prefecture of Renser, have seized much of the Solus star fleet and taken control of the outer worlds of Trellis and Jalah.  The Loyalist faction, although still technically in control of the official goverment, has been trapped on the inner planets Solus and Meridian.\n\n"
+			 "The Separatist blockade of the Trellis Farcaster has also taken a toll on the many Alliance citizens in the Solus system.  Several Terellian companies maintain major offices on the capitol world itself, and Tal Vesta University runs a stellar observatory near the planet Meridian.  An estimated 375,000 Terellians are trapped by the blockade.  So far they have been unable to convince the Dantari Separatists to grant them safe passage back to the main Alliance systems."
+}
+mission: {
+	id:      1,
+	name:    "Coup Failure",
+	objective: "Patrol Solus Space",
+	start:   "01/06:00:00",
+	script:  "02-Coup-Failure",
+	type:    "Patrol",
+	system:  "Solus",
+	region:  "Solus",	
+	image:   "02-coup-failure",
+	audio:	 "News_02_Coup_Failure",
+	sitrep:  "TELMERA CITY, SOLUS - An attempted palace coup by Dantari agents was thwarted by alert members of the Provisional Security Directorate early this morning. " 
+			 "Separatist agents, working from a secret base near the capitol offices, succeeded in destroying the executive suite of the presidential palace.  \n\n"
+
+			 "Security service members discovered the bomb only moments before it was detonated and were able to escort President Marish and his party to an undisclosed safe " 
+			 "location.  Senators Hamil and Covanon who were to attend a working breakfast with the President were killed in the blast, as were two security service agents who "
+			 "died trying to protect them.  Memorial services for all four men are planned for later in the week.\n\n"
+
+			 "Speaking on behalf of President Marish, executive spokesperson Cyn Talban affirmed that the central government had not been struck down by the terrorist-style attack. "  
+			 "We are still very much open for business.  President Marish is meeting with security advisors at this hour, and he will be holding a press conference from the safehouse "
+			 "later this morning to address your questions and concerns."
+}
+
+mission: {
+	id:      2,
+	name:    "Blockade Broken",
+	objective: "Perform mop-up operations",
+	start:   "01/11:15:00",
+	script:  "03-Blockade-Broken",
+	type:    "Patrol",
+	system:  "Solus",
+	region:  "Trellis",
+	image:   "03-blockade-broken",
+	audio:	 "News_03_Blockade_Broken",
+	sitrep:  "TRELLIS - The Alliance Third Fleet has broken the blockade of the Trellis-Solus Farcaster network, a Force:Command spokesperson has"
+			 "announced.  The minefields surrounding the Farcaster terminus have been cleared, and several Separatist squadrons have been eliminated or greatly reduced in strength. \n\n"
+
+			 "Theater commander Admiral Evars has given official authorization for the commencement of humanitarian aid traffic to the inner planets. " 
+			 "Certified non-governmental agencies delivering food, clothing, medicines, and emergency equipment will receive protective escorts "
+			 "by warships from the Third Fleet.\n\n"
+
+			 "Although the blockade has been broken, there are still several squadrons in operation near the outer worlds. We strongly recommend that only emergency traffic be routed through the Trellis sector.  Civilian ships are advised to avoid the area until the threat can be assessed and appropriate actions taken, Evars was quoted as saying."
+}
+
+mission: {
+	id:      3,
+	name:    "Harmony Risk",
+	objective: "Protect Harmony Station",
+	start:   "01/16:23:00",
+	script:  "04-Harmony-Risk",
+	type:    "Patrol"
+	system:  "Solus"
+	region:  "Solus"
+	image:   "04-harmony-risk",
+	audio:	 "Briefing_04_sam",
+	sitrep:  "****************************************\n"
+			 "*** FLASH CODED \n"
+			 "*** HARMONY STATION \n"
+			 "*** KALON SECTOR \n"
+			 "*** CLASSIFIED: SECRET R3 NTK\n"
+			 "****************************************\n"
+}
+
+mission: {
+	id:      4,
+	name:    "Foothill Ridge",
+	objective: "Destroy Foothill Ridge Base",
+	start:   "02/05:35:00",
+	script:  "05-Foothill-Ridge",
+	type:    "Patrol",
+	system:  "Solus",
+	region:  "Solus",
+	image:   "05-foothill-ridge",
+	audio:	 "Briefing_05_sam",
+	sitrep:  "*************************************\n"
+			 "*** FLASH CODED \n"
+			 "*** FOOTHILL RIDGE \n"
+			 "*** TELMERA SECTOR \n"
+			 "*** CLASSIFIED: SECRET R5 NTK\n"
+			 "*************************************\n"
+}
+
+mission: {
+	id:      5,
+	name:    "Renser Buildup",
+	objective: "Investigate Renser Buildup",
+	start:   "03/15:20:00",
+	script:  "06-Renser-Buildup",
+	type:    "Patrol",
+	system:  "Renser",
+	region:  "Renser",
+	image:   "06-renser-buildup",
+	audio:	 "Briefing_06",
+	sitrep:  "Timestamp: $TIME\n"
+			 "Subject: Renser Fleet Mobilization\n"
+			 "Classified: CONFIDENTIAL DND/CRYPTO\n"
+}
+
+mission: {
+	id:      6,
+	name:    "Research Lab",
+	objective: "Protect the Tal Vesta Research Lab",
+	start:   "04/11:00:00",
+	script:  "07-Research-Lab",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "07-research-lab",
+	audio:	 "News_07_Research_Lab",
+	sitrep:  "MERIDIAN - The Tal Vesta University Stellar Observatory in Meridian orbit has been cut off by Separatist patrols and is facing severe "
+			 "shortages of food and consumable supplies.  University staff indicate that the fusion plant on the observatory is still operational, and "
+			 "that basic life support functions - water, air, and power - are not an immediate concern.  Mainly, the students are just hungry and "
+			 "frustrated according to Research Coordinator Alen Tolap. \n\n"
+
+			 "Student researchers living at the observatory are protesting the ongoing civil war.  Native Solusans, ethnic Dantari, and even many Terellian "
+			 "Alliance students have issued a joint statement condemning the conflict and demanding the resumption of peaceful negotiations.  Thus far, neither "
+			 "party in the conflict has commented on the student protests.\n\n"
+
+			 "Alliance Theater Command has promised to make humanitarian aid to the Meridian sector a top priority.  We'll find a way to feed these kids,"
+			 "Fleet Admiral Evars was quoted as saying that there's nothing more ornery than a bunch of hungry college students."
+}
+
+mission: {
+	id:      7,
+	name:    "Renser Accusation",
+	objective: "Proceed to Solus.",
+	start:   "05/09:30:00",
+	script:  "08-Renser-Accusation",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "08-renser-accusation",
+	audio:	 "News_08_Renser_Accusation",
+	sitrep: "CITY OF ULNAR, RENSER - The Renser Secretary of Intersystem Affairs issued a statement this evening accusing the Terellian Alliance of committing illegal acts of agression in the Solus Conflict.\n\n"
+			"External involvement in this civil conflict is a clear violation of the Korian Treaty.  Alliance actions are a threat to Solusan sovereignty, and constitute a clear and present danger to the security of the Prefecture of Renser.  Strong measures may be taken to restore normal discourse in Solus.\n\n"
+			"Policy analysts believe that this statement amounts to diplomatic code words for the commencement of Renser military action in the Solusan conflict.  The statement does not set a timeline for events, but the general feeling is that something is going to happen sooner rather than later."
+
+}
+mission: {
+	id:      8,
+	name:    "Senate Resolution",
+	objective: "Investigate the Khaital Sector Staging Area",
+	start:   "05/09:30:00",
+	script:  "09-Senate-Resolution",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "09-senate-resolution",
+	audio:	 "News_09_Senate_Resolution",
+	sitrep: "ALLIANCE CAPITOL, JARNELL - Alliance government officials wasted no time in responding to the accusations of illegality made yesterday by the Renser Secretary of Intersystem Affairs.  The Combined Senate passed resolution SR498/37 censuring the Prefecture of Renser and warning of possible reprisals should Hegemony forces become involved in the Solusan Conflict.\n\n"
+			"The Alliance has undertaken Operation Highland for the specific purposes of safeguarding our citizens in the Solus system and providing humanitarian aid to those civilians who have been hardest hit by the blockade of the inner worlds.  These actions have been carried out in strict accord with Korian Treaty provisions, and we resent the implication that the Alliance has Imperial designs on our neighbors.\n\n"
+			"Several anonymous sources have hinted that there may be more to this conflict than is immediately apparent.  Rumors of an Hegemony fleet buildup in Renser have leaked from Force:Command Headquarters.  Others have expressed suspicions regarding the breakdown of peaceful negotiations between the Loyalist and Separatist factions that directly led to the current hostilities.\n\n"
+			"Military analysts are predicting that although widening of the Solusan Conflict to include Renser was unexpected and is undesirable, it may soon become unavoidable.  Alliance forces appear to have gained the upper hand in some of the fiercest fighting of the war to date.  A Force:Space garrison, once established in the Solus system, would be within easy striking distance of Renser.  That is a situation that no Hegemony border world would be willing to tolerate."
+
+}
+
+mission: {
+	id:      9,
+	name:    "Renser Arrival",
+	objective: "Hold the line against the Hegemony TF4.3",
+	start:   "05/09:30:00",
+	script:  "10-Renser-Arrival",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "10-renser-arrival",
+	audio:	 "Briefing_10-OK",
+	sitrep: "STRATPLAN BRIEFING\n"
+			"Timestamp: $TIME\n"
+			"Subject: Hegemony Task Force TF4.3\n"
+			"Classified: CONFIDENTIAL DND/CRYPTO\n\n"			
+}
+mission: {
+	id:      10,
+	name:    "Dantari Pullback",
+	objective: "Strike the Separatist forces at Jalah before they can regroup",
+	start:   "05/09:30:00",
+	script:  "11-Dantari-Pullback",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "11-dantari-pullback",
+	audio:	 "Briefing_11-OK",
+	sitrep: "STRATPLAN BRIEFING\n"
+	"Timestamp: $TIME\n"
+	"Subject: Separatist Withdrawal to Jalah\n"
+	"Classified: CONFIDENTIAL DND/CRYPTO"
+			
+}
+mission: {
+	id:      11,
+	name:    "Cease Fire",
+	objective: "Monitor the cease fire in tyhe Solus System",
+	start:   "05/09:30:00",
+	script:  "12-Cease-Fire",
+	type:    "Patrol",
+	system: "Solus",
+	region: "Solus",
+	image:   "12-cease-fire",
+	audio:	 "News_12_Cease_Fire",
+	sitrep: "TELMERA CITY, SOLUS - Guns are falling silent throughout the Solus System in accordance with a cease-fire agreement between the Solusan government and the Separatist faction that have been locked in a violent civil war for control of the region.  ISS President Marish and newly-appointed leader of the Separatist movement Ayn Toran signed the agreement in the recently repaired presidential palace as Terellian Alliance Fleet Admiral A. Evars looked on.  Notably absent from the signing ceremony was former Separatist leader Masil Gannet, who is believed to have fled the system to return to his native Adantar in the Korius System.\n\n"
+			"The cease-fire agreement has sparked hopes for a lasting peace in this war-torn region that has suffered unprecedented levels of bloodshed in a very short period of time.  The pact is the first step to renewed peace talks to address the fair settlement of ethnic Dantari throughout the system.\n\n"
+			"The deal calls for an open-ended cease-fire between both parties, with independent observers from the nearby system of Silessia to monitor the situation until more permanent agreements can be implemented.  The details of the cease-fire agreement have not yet been made public.\n\n"
+			"Pursuant to the cease-fire arrangement, Hegemony Fleet Task Force TF4.3 is standing down and will abandon the system within hours.  The Terellian Alliance Task Force that has been assisting the official Solusan Government is also making plans to leave the region."
+			
+}
+mission: {
+	id:      12,
+	name:    "Renser Invasion",
+	objective: "Assist in the invasion of Renser",
+	start:   "05/09:30:00",
+	script:  "13-Renser-Invasion",
+	type:    "Patrol",
+	system: "Renser",
+	region: "Khaital",
+	image:   "13-renser-invasion",
+	audio:	 "News_13_Renser_Invasion",
+	sitrep: "The PRESIDENT of the TERELLIAN ALLIANCE :\n\n"
+	"My fellow citizens, at this hour, Force:Space units are in the early stages of military operations to disarm the Hegemony Prefecture of Renser and eliminate a grave threat to the peace and stability of the Terellian Alliance and the Independent Systems of the blue drift.\n\n"
+	"On my orders, under the authority granted to this office by Combined Senate Resolution SR498/37, Alliance forces have begun striking specific military targets in the Renser System to undermine that government's ability to wage agressive war on her neighbors.  The victory of the Solusan people in Operation Highland can not be complete until the hard won peace has been made secure.\n\n"
+	"Now, that peace is gravely threatened by the armed might of the Hegemony.  In fact, we have evidence that the entire Solusan affair was instigated by agents of Renser Prefecture, including former Separatist Leader Masil Gannet.\n\n"
+	"To all the men and women of the various branches of Force now serving in the Renser Theater of Operations, the peace of a troubled region, and the hope for prosperity of all its free people now depend on you, on your determination, and on your abilities.  We trust in your abilities and your resolve, and we know that our trust is well placed.\n\n"
+	"Now that this stage of the conflict has come, the only way to limit its duration is to apply decisive force.  And I assure you, this will not be a campaign of half measures.  We will accept no outcome save victory.\n\n"
+	"Thank you, and good evening."
+}

@@ -1,0 +1,109 @@
+{
+  "name": "Athenar",
+  "sky": {
+    "nebula": "Nebula-Athenar.mag",
+    "poly_stars": "stars.mag",
+	"haze": "Janus/Janek/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    16,
+    17,
+    26
+  ],
+  "star": {
+    "name": "Talvesta",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"orbit": 0,
+	"rotation": 0,
+	"retro": false,
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      50,
+      50,
+      90
+    ],
+    "planet": [
+      {
+        "name": "Athenar",
+        "map": "Athenar/athenar_map.pcx",
+        "image": "Athenar/athenar_lo.pcx",
+        "high_res": "Athenar/athenar_hi.jpg",
+        "gloss": "Athenar/athenar_gloss.jpg",
+        "radius": 5720000,
+        "mass": 3.53e+24,
+        "atmosphere": [
+          150,
+          160,
+          210
+        ],
+        "orbit": 195000000000,
+        "region": {
+          "name": "Athenar",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Nike",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 720000,
+            "mass": 4.1e+22,
+            "orbit": 81000000,
+            "inclination": 0,
+            "retro": false,
+            "region": {
+              "name": "Nike",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 20000000,
+              "inclination": 0.1,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Pallas",
+        "map": "Silessia/nero_map.pcx",
+        "image": "Silessia/nero_lo.pcx",
+        "high_res": "Silessia/nero_hi.jpg",
+        "radius": 3350000,
+        "mass": 2.52e+24,
+        "atmosphere": [
+          80,
+          120,
+          150
+        ],
+        "orbit": 425000000000,
+        "region": {
+          "name": "Pallas",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 19000000,
+          "inclination": 0.2,
+          "link": [
+            "Navara",
+            "Dawn"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

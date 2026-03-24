@@ -1,0 +1,21 @@
+SHIP
+
+name:       City00
+class:      Building
+abrv:		BLDG
+display_name: "City Block"
+description:  "The City Block represents a dense urban sector composed of residential, commercial, and light industrial structures. While primarily civilian in function, its infrastructure and population density make it strategically significant during planetary occupations or urban engagements."
+empire:       All
+hud_icon:     "hud_bldg01"
+
+model:      "City00"
+
+mass:       50e3
+integrity:  500e3
+scale:      3
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

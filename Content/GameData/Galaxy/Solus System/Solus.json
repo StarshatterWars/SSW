@@ -1,0 +1,278 @@
+{
+  "name": "Solus",
+  "sky": {
+    "nebula": "Nebula-Solus.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Solus/Telmera/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 220,
+  "ambient": [
+    18,
+    20,
+    22
+  ],
+  "star": {
+    "name": "Luxor",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1597000000,
+    "mass": 2.13e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,	
+    "color": [
+      255,
+      250,
+      225
+    ],
+    "back": [
+      20,
+      50,
+      90
+    ],
+    "planet": [
+      {
+        "name": "Meridian",
+        "map": "Solus/meridian_map.pcx",
+        "image": "Solus/ur_lo.pcx",
+        "high_res": "Solus/ur_hi.pcx",
+        "radius": 3500000,
+        "mass": 2.18e+24,
+        "atmosphere": [
+          200,
+          185,
+          165
+        ],
+        "orbit": 68000000000,
+        "rotation": 15.35,
+        "region": {
+          "name": "Meridian",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 9500000,
+          "inclination": 0.7,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Solus",
+        "map": "Solus/solus_map.pcx",
+        "image": "Solus/solus_lo.pcx",
+        "high_res": "Solus/solus_hi.jpg",
+        "gloss": "Solus/solus_gloss.jpg",
+        "glow_high_res": "Solus/solus_lights.jpg",
+        "radius": 5400000,
+        "mass": 4.18e+24,
+        "atmosphere": [
+          155,
+          175,
+          220
+        ],
+        "orbit": 140000000000,
+        "rotation": 21.3,
+        "region": {
+          "name": "Solus",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.5,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Kalon",
+            "map": "Solus/omane_map.pcx",
+            "image": "Solus/omane_lo.pcx",
+            "high_res": "Solus/omane_hi.pcx",
+            "radius": 1830000,
+            "mass": 8.12e+22,
+            "orbit": 45000000,
+            "rotation": 8,
+            "region": {
+              "name": "Kalon",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 7800000,
+              "inclination": 0.5,
+              "link": []
+            }
+          },
+          {
+            "name": "Alar",
+            "map": "Moons/lunar_map.pcx",
+            "image": "Moons/lunar_lo.pcx",
+            "high_res": "Moons/lunar_hi.pcx",
+            "radius": 500000,
+            "mass": 4.3e+22,
+            "orbit": 59500000,
+            "region": {
+              "name": "Alar",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 8800000,
+              "inclination": 0.23,
+              "link": []
+            }
+          }
+        ],
+        "terrain": {
+          "name": "Telmera",
+          "radius": 480000,
+          "grid": 20000,
+          "patch": "Solus/Telmera/terrain.pcx",
+          "patch_texture": "Solus/Telmera/terrain_big.pcx",
+          "apron": "Solus/Telmera/terrain_apron.pcx",
+          "apron_texture": "Solus/Telmera/terrain_apron_tex.pcx",
+          "sky_color": "Solus/Telmera/terrain_sky.pcx",
+          "layer": [
+            {
+              "tile": "Solus/Telmera/Layer0.pcx",
+              "height": 0,
+              "detail": "Solus/Telmera/noise0.pcx"
+            },
+            {
+              "tile": "Solus/Telmera/Layer1.pcx",
+              "height": 3300,
+              "detail": "Solus/Telmera/noise0.pcx"
+            },
+            {
+              "tile": "Solus/Telmera/Layer2.pcx",
+              "height": 9500,
+              "detail": "Solus/Telmera/noise0.pcx"
+            }
+          ],
+          "clouds_high": "Solus/Telmera/terrain_cloud0.pcx",
+          "clouds_low": "Solus/Telmera/terrain_cloud1.pcx",
+          "shades_low": "Solus/Telmera/terrain_cloud1a.pcx",
+          "clouds_alt_high": 17500,
+          "clouds_alt_low": 12100,
+          "scale": 1500,
+          "mtnscale": 65,
+          "haze_fade": 0.4,
+          "fog_density": 0.4,
+          "fog_scale": 5,
+          "weather_period": 659876,
+          "weather_high_clouds": 25,
+          "weather_moderate_clouds": 75,
+          "weather_overcast": 0,
+          "weather_fog": 0,
+          "weather_storm": 0
+        }
+      },
+      {
+        "name": "Jalah",
+        "map": "Solus/jalah_map.pcx",
+        "image": "Solus/jalah.pcx",
+		"high_res": "Solus/jalah.pcx",
+        "radius": 19100000,
+        "mass": 3.6e+26,
+        "tscale": 2,
+        "tilt": 0.13,
+        "orbit": 295000000000,
+        "rotation": 29.3,
+        "region": {
+          "name": "Jalah",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 55800000,
+          "inclination": 0.2,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Trellis",
+        "map": "Giants/GasGiant9_map.pcx",
+        "image": "Giants/GasGiant9.jpg",
+		"high_res": "Giants/GasGiant9.jpg",
+        "radius": 30000000,
+        "mass": 5.42e+26,
+        "orbit": 375000000000,
+        "tscale": 2,
+        "tilt": 0.125,
+        "ring": "Giants/Ring2.pcx",
+        "minrad": 1.2,
+        "maxrad": 1.9,
+        "rotation": 19.5,
+        "region": {
+          "name": "Trellis",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 120000000,
+          "inclination": 0.3,
+          "link": [
+            "Navara",
+            "Lornas",
+            "Nero"
+          ]
+        },
+        "moon": [
+          {
+            "name": "Ovid",
+            "map": "Moons/rock_map.pcx",
+            "image": "Moons/rock_lo.pcx",
+            "high_res": "Moons/rock_hi.pcx",
+            "radius": 3000000,
+            "mass": 3e+22,
+            "orbit": 265000000,
+            "rotation": 100,
+            "region": {
+              "name": "Ovid",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 7800000,
+              "inclination": 0.02,
+              "link": []
+            }
+          },
+          {
+            "name": "Archimedes",
+            "map": "Moons/lunar_map.pcx",
+            "image": "Moons/lunar_lo.pcx",
+            "high_res": "Moons/lunar_hi.pcx",
+            "radius": 5200000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 6e+24,
+            "orbit": 431000000,
+            "region": {
+              "name": "Archimedes",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 7800000,
+              "inclination": 0.02,
+              "link": []
+            }
+          },
+          {
+            "name": "Flor",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 6000000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 814000000,
+            "region": {
+              "name": "Flor",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 7800000,
+              "inclination": 0.02,
+              "link": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

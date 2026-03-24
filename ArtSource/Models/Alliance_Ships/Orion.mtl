@@ -1,0 +1,20 @@
+#
+# Orion Material Library exported by Magic 2.0
+#
+
+newmtl Hull
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 1.00000 1.00000 1.00000
+Ns 20.00000
+illum 2
+map_Kd Hull.jpg
+
+newmtl Hangar
+Ka 0.75294 0.75294 0.75294
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Hangar_D.jpg
+

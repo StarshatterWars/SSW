@@ -1,0 +1,225 @@
+{
+  "name": "Renser",
+  "sky": {
+    "nebula": "Nebula-Renser.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 220,
+  "ambient": [
+    22,
+    20,
+    20
+  ],
+  "star": {
+    "name": "Renset",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1597000000,
+    "mass": 2.13e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,	
+    "color": [
+      255,
+      250,
+      225
+    ],
+    "back": [
+      50,
+      52,
+      55
+    ],
+    "region": {
+      "name": "Lornas",
+      "radius": 480000,
+      "grid": 20000,
+      "orbit": 478000000000,
+      "inclination": 0.23,
+      "asteroids": 100,
+      "link": [
+        "Kala",
+        "Casalle",
+        "Nero",
+        "Trellis",
+        "Solnas"
+      ]
+    },
+    "planet": [
+      {
+        "name": "Garana",
+        "map": "Renser/garana_map.pcx",
+        "image": "Renser/garana_lo.pcx",
+        "high_res": "Renser/garana_hi.pcx",
+        "radius": 4318000,
+        "mass": 3.15e+24,
+        "orbit": 61900000000,
+        "rotation": 13.19,
+        "region": {
+          "name": "Garana",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 13900000,
+          "inclination": 0.62,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Rhomindal",
+        "map": "Renser/rhomindal_map.pcx",
+        "image": "Renser/rhomindal_lo.pcx",
+        "high_res": "Renser/rhomindal_hi.pcx",
+        "radius": 5735000,
+        "mass": 4.95e+24,
+        "orbit": 115300000000,
+        "rotation": 29.3,
+        "region": {
+          "name": "Rhomindal",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 22000000,
+          "inclination": 0.55,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Renser",
+        "map": "Renser/renser_map.pcx",
+        "image": "Renser/renser_lo.pcx",
+        "high_res": "Renser/renser_hi.jpg",
+        "gloss": "Renser/renser_gloss.jpg",
+        "glow_high_res": "Renser/renser_glow.jpg",
+        "radius": 6437000,
+        "mass": 5.98e+24,
+        "atmosphere": [
+          180,
+          170,
+          200
+        ],
+        "orbit": 196400000000,
+        "rotation": 17,
+        "region": {
+          "name": "Renser",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.49,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Marisol",
+        "map": "Renser/marisol_map.pcx",
+        "image": "Renser/marisol.jpg",
+		"high_res": "Renser/marisol.jpg",
+        "radius": 27489000,
+        "mass": 4.21e+26,
+        "orbit": 375000000000,
+        "tilt": 0.2,
+        "rotation": 39.2,
+        "region": {
+          "name": "Marisol",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 75000000,
+          "inclination": 0.3,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Asur",
+            "map": "Moons/rock_map.pcx",
+            "image": "Moons/rock_lo.pcx",
+            "high_res": "Moons/rock_hi.pcx",
+            "radius": 3541000,
+            "mass": 3e+22,
+            "orbit": 265000000,
+            "rotation": 100,
+            "region": {
+              "name": "Asur",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 75000000,
+              "inclination": 0,
+              "link": []
+            }
+          },
+          {
+            "name": "Malinus",
+            "map": "Moons/lunar_map.pcx",
+            "image": "Moons/lunar_lo.pcx",
+            "high_res": "Moons/lunar_hi.pcx",
+            "radius": 5211000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 6e+24,
+            "orbit": 371000000,
+            "region": {
+              "name": "Malinus",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 75000000,
+              "inclination": 0,
+              "link": []
+            }
+          },
+          {
+            "name": "Florina",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 3707000,
+            "rotation": 12.1,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.98e+24,
+            "orbit": 624000000,
+            "region": {
+              "name": "Florina",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 75000000,
+              "inclination": 0,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Khaital",
+        "map": "Renser/khaital_map.pcx",
+        "image": "Renser/khaital_lo.pcx",
+        "high_res": "Renser/khaital_hi.jpg",
+        "gloss": "Renser/khaital_gloss.jpg",
+        "radius": 3821000,
+        "mass": 2.87e+24,
+        "atmosphere": [
+          150,
+          160,
+          190
+        ],
+        "orbit": 578000000000,
+        "rotation": 28,
+        "region": {
+          "name": "Khaital",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.49,
+          "link": [
+            "Trellis"
+          ]
+        }
+      }
+    ]
+  }
+}

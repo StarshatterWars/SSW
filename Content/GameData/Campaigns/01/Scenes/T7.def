@@ -1,0 +1,198 @@
+MISSION
+
+scene:  "T7"
+name:   "Carrier Operations"
+type:   "Training"
+system: "Janus"
+region: "Alystra"
+
+objective: "Training - Practice orbital carrier operations."
+
+sitrep: "The Third Fleet is participating in wargame exercises in the Janus system. The fleet carrier Archon has been detached to Alystra orbit to practice spaceborne fighter operations.  "
+
+start: "129:30:00"
+
+degrees: true
+
+element: {
+   name:      "Archon"
+   design:    "Orion"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     1
+   command_ai:1
+   iff:       1
+   player:    1
+   playable:  false
+   region:    "Alystra"
+   loc:       (-60e3, -25e3, 0)
+}
+
+element: {
+   name:      "Avengers"
+   design:    "Falcon"
+   carrier:   "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     24
+   maint_count: 6
+   iff:       1
+   region:    "Alystra"
+   loc:       (0, 0, 0)
+}
+
+element: {
+   name:      "Stallions"
+   design:    "Stormhawk"
+   carrier:   "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     24
+   maint_count: 6
+   iff:       1
+   region:    "Alystra"
+   loc:       (0, 0, 0)
+}
+
+element: {
+   name:      "Warbirds"
+   design:    "Thunderbolt"
+   carrier:   "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     12
+   maint_count: 2
+   iff:       1
+   region:    "Alystra"
+   loc:       (0, 0, 0)
+}
+
+element: {
+   name:      "Starlifters"
+   design:    "Zodiac"
+   carrier:   "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     8
+   dead_count:  2
+   iff:       1
+   region:    "Alystra"
+   loc:       (0, 0, 0)
+}
+
+element: {
+   name:      "Gerson"
+   design:    "Asher"
+   commander: "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     1
+   command_ai:1
+   iff:       1
+   playable:  false
+   region:    "Alystra"
+   loc:       (-75e3, -31e3, 0)
+}
+
+element: {
+   name:      "Simmons"
+   design:    "Asher"
+   commander: "Archon"
+   mission:   "Misc"
+
+   intel:     "Secret"
+   count:     1
+   command_ai:1
+   iff:       1
+   playable:  false
+   region:    "Alystra"
+   loc:       (-45e3, -24e3, 0)
+}
+
+/**********************/
+
+element: {
+   name:      "Tarpon"
+   design:    "TargetDrone"
+   mission:   "Intercept"
+
+   intel:     "Secret"
+   count:     4
+   iff:       2
+   loc:       (-130e3, -215e3, 0)
+
+   navpt:     { cmd: Vector, loc: (-60e3, -25e3, 0), speed: 600 }
+}
+
+element: {
+   name:      "Sculpin"
+   design:    "TargetDrone"
+   mission:   "Intercept"
+
+   intel:     "Secret"
+   count:     4
+   iff:       2
+   loc:       (250e3, 230e3, 0)
+
+   navpt:     { cmd: Vector, loc: (-60e3, -25e3, 0), speed: 750 }
+}
+
+element: {
+   name:      "Rockeye"
+   design:    "TargetDrone"
+   mission:   "Intercept"
+
+   intel:     "Secret"
+   count:     4
+   iff:       2
+   loc:       (250e3, 125e3, 0)
+
+   navpt:     { cmd: Vector, loc: (-60e3, -25e3, 0), speed: 550 }
+}
+
+element: {
+   name:      Pompano,
+   design:    IM3500
+   skin:      Red
+   loc:       (260e3, 125e3, 0)
+   count:     1,
+   iff:       2,
+
+   navpt:     { cmd: vector, loc: (-50e3, -50e3, 0), speed: 550 },
+}
+
+
+/*************************/
+
+// VOICE-OVER
+
+event: { id:  1, Type: Sound, time:    2, sound: "Vox/Train/Train-07-01.ogg" }
+event: { id:  2, Type: Sound, delay:  18, sound: "Vox/Train/Train-07-02.ogg", trigger: Event,  trigger_param:  1 }
+event: { id:  3, Type: Sound, delay:  15, sound: "Vox/Train/Train-07-03.ogg", trigger: Event,  trigger_param:  2 }
+event: { id:  4, Type: Sound, delay:  12, sound: "Vox/Train/Train-07-04.ogg", trigger: Event,  trigger_param:  3 }
+event: { id:  5, Type: Sound, delay:  17, sound: "Vox/Train/Train-07-05.ogg", trigger: Event,  trigger_param:  4 }
+event: { id:  6, Type: Sound, delay:  12, sound: "Vox/Train/Train-07-06.ogg", trigger: Event,  trigger_param:  5 }
+event: { id:  7, Type: Sound, delay:  18, sound: "Vox/Train/Train-07-07.ogg", trigger: Event,  trigger_param:  6 }
+event: { id:  8, Type: Sound, delay:  20, sound: "Vox/Train/Train-07-08.ogg", trigger: Event,  trigger_param:  7 }
+event: { id:  9, Type: Sound, delay:  30, sound: "Vox/Train/Train-07-09.ogg", trigger: Event,  trigger_param:  8 }
+event: { id: 10, Type: Sound, delay:  16, sound: "Vox/Train/Train-07-10.ogg", trigger: Event,  trigger_param:  9 }
+event: { id: 11, Type: Sound, delay:  12, sound: "Vox/Train/Train-07-11.ogg", trigger: Event,  trigger_param: 10 }
+event: { id: 12, Type: Sound, delay:  18, sound: "Vox/Train/Train-07-12.ogg", trigger: Event,  trigger_param: 11 }
+event: { id: 13, Type: Sound, delay:  20, sound: "Vox/Train/Train-07-13.ogg", trigger: Event,  trigger_param: 12 }
+event: { id: 14, Type: Sound, delay:  17, sound: "Vox/Train/Train-07-14.ogg", trigger: Event,  trigger_param: 13 }
+event: { id: 15, Type: Sound, delay:  16, sound: "Vox/Train/Train-07-15.ogg", trigger: Event,  trigger_param: 14 }
+event: { id: 16, Type: Sound, delay:  18, sound: "Vox/Train/Train-07-16.ogg", trigger: Event,  trigger_param: 15 }
+event: { id: 17, Type: Sound, delay:  30, sound: "Vox/Train/Train-07-17.ogg", trigger: Event,  trigger_param: 16 }
+event: { id: 18, Type: Sound, delay:  30, sound: "Vox/Train/Train-07-18.ogg", trigger: Event,  trigger_param: 17 }
+
+//event: { id: 50, type: Detect,  message: "Tarkis Detected", trigger_ship: Gerson, trigger_target: Tarkis }
+
+/**********************/
+
+// EOF

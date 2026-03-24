@@ -1,0 +1,295 @@
+{
+  "name": "Isham",
+  "sky": {
+    "nebula": "Nebula-Isham.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Isham/Garden/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    10,
+    8,
+    8
+  ],
+  "star": {
+    "name": "Isham",
+    "map": "Suns/StarK_map.pcx",
+    "image": "Suns/K1.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,	
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      30,
+      18,
+      12
+    ],
+    "planet": [
+      {
+        "name": "Garden",
+        "map": "Isham/garden_map.pcx",
+        "image": "Isham/garden_lo.pcx",
+        "high_res": "Isham/garden_hi.jpg",
+        "gloss": "Isham/garden_gloss.jpg",
+        "radius": 3750000,
+        "mass": 5.6e+23,
+        "atmosphere": [
+          145,
+          170,
+          190
+        ],
+        "orbit": 180000000000,
+        "rotation": 26.3,
+        "region": {
+          "name": "Garden",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 17000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": [],
+        "terrain": {
+          "name": "Tiger Bay",
+          "radius": 480000,
+          "grid": 20000,
+          "patch": "Isham/Garden/terrain.pcx",
+          "patch_texture": "Isham/Garden/terrain_big.pcx",
+          "apron": "Isham/Garden/terrain_apron.pcx",
+          "apron_texture": "Isham/Garden/terrain_apron_tex.pcx",
+          "sky_color": "Isham/Garden/terrain_sky.pcx",
+          "water_texture": "Isham/Garden/Water.pcx",
+          "layer": [
+            {
+              "tile": "Isham/Garden/Sand.pcx",
+              "height": 0,
+              "detail": "Haiche/Tantalus/noise0.pcx"
+            },
+            {
+              "tile": "Isham/Garden/Forest.pcx",
+              "height": 3000,
+              "detail": "Isham/Garden/noise1.pcx"
+            },
+            {
+              "tile": "Isham/Garden/Rock.pcx",
+              "height": 9500,
+              "detail": "Isham/Garden/noise1.pcx"
+            }
+          ],
+          "clouds_high": "Isham/Garden/terrain_cloud0.pcx",
+          "clouds_low": "Isham/Garden/terrain_cloud1.pcx",
+          "shades_low": "Isham/Garden/terrain_cloud1a.pcx",
+          "clouds_alt_high": 17500,
+          "clouds_alt_low": 12100,
+          "scale": 1500,
+          "mtnscale": 65,
+          "haze_fade": 0.4,
+          "fog_density": 0.4,
+          "fog_scale": 5,
+          "weather_period": 659876,
+          "weather_high_clouds": 25,
+          "weather_moderate_clouds": 40,
+          "weather_overcast": 0,
+          "weather_fog": 0,
+          "weather_storm": 0
+        }
+      },
+      {
+        "name": "Senesca",
+        "map": "Giants/GasGiant10_map.pcx",
+        "image": "Giants/GasGiant10.jpg",
+		"high_res": "Giants/GasGiant10.jpg",
+        "radius": 14100000,
+        "mass": 3.6e+26,
+        "tilt": 0.2,
+        "ring": "Giants/Ring2.pcx",
+        "minrad": 1.5,
+        "maxrad": 1.8,
+        "orbit": 265000000000,
+        "rotation": 61.3,
+        "region": {
+          "name": "Senesca",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 55530000,
+          "inclination": 0.3,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Tarawa",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 2300000,
+            "rotation": 16.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 411000000,
+            "region": {
+              "name": "Tarawa",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.1,
+              "link": []
+            }
+          },
+          {
+            "name": "Maia",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 4200000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.28e+24,
+            "orbit": 624000000,
+            "region": {
+              "name": "Maia",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.1,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Ramek",
+        "map": "Giants/GasGiant9_map.pcx",
+        "image": "Giants/GasGiant9.jpg",
+		"high_res": "Giants/GasGiant9.jpg",
+        "radius": 18100000,
+        "mass": 3.6e+26,
+        "tscale": 2,
+        "tilt": 0.13,
+        "orbit": 335000000000,
+        "rotation": 31.3,
+        "region": {
+          "name": "Ramek",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 65300000,
+          "inclination": 0.3,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Alin",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 5300000,
+            "rotation": 16.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 411000000,
+            "region": {
+              "name": "Alin",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.1,
+              "link": []
+            }
+          },
+          {
+            "name": "Orpheus",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 3100000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.28e+24,
+            "orbit": 624000000,
+            "region": {
+              "name": "Orpheus",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.1,
+              "link": []
+            }
+          },
+          {
+            "name": "Tenebrus",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 6100000,
+            "rotation": 38.4,
+            "mass": 5.98e+24,
+            "orbit": 1324000000,
+            "region": {
+              "name": "Tenebrus",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.1,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Relay",
+        "map": "Isham/relay_map.pcx",
+        "image": "Isham/relay_lo.pcx",
+        "high_res": "Isham/relay_hi.jpg",
+        "gloss": "Isham/relay_gloss.jpg",
+        "radius": 3150000,
+        "mass": 4.6e+23,
+        "atmosphere": [
+          130,
+          120,
+          110
+        ],
+        "orbit": 418000000000,
+        "rotation": 14.3,
+        "region": {
+          "name": "Relay",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 14000000,
+          "inclination": 0.3,
+          "link": [
+            "Solnas",
+            "Volova",
+            "Cavenda",
+            "Nerasil",
+            "Path"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

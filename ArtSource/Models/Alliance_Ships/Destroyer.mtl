@@ -1,0 +1,12 @@
+#
+# Destroyer Material Library exported by Magic 2.0
+#
+
+newmtl (default)
+Ka 0.75294 0.75294 0.75294
+Kd 1.00000 1.00000 1.00000
+Ks 1.00000 1.00000 1.00000
+Ns 20.00000
+illum 2
+map_Kd Asher_D.jpg
+

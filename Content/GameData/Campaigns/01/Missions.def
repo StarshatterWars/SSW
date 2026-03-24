@@ -1,0 +1,105 @@
+MISSIONLIST
+
+mission: {
+	id:      0,
+	name:    "Training Introduction",
+	desc:    "Rendevous for flight training",
+	objective: "Training",
+	start:   "01/09:23:00",
+	script:  "T1",
+	type:    "Patrol"
+	system:  "Borova"
+	region:  "Borova"	
+	sitrep:  "Rendevous with the fleet carrier Archon participating in wargame exercises in the Janus system. "
+}
+mission: {
+	id:      1,
+	name:    "Basic Space Flight",
+	desc:    "Space-based fighters.  Practice launching, flying, docking, and basic spaceborne maneuvering.",
+	objective: "Training - Practice spaceborne fighter operations.",
+	start:   "01/09:23:00",
+	script:  "T1",
+	type:    "Training"
+	system:  "Janus"
+	region:  "Janek"	
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. The fleet carrier Archon has been detached to Janek orbit to practice spaceborne fighter operations.  As part of the exercise, you have been tasked with flying patrol patterns with your training instructor."
+}
+
+mission: {
+	id:      2,
+	name:    "Target Practice",
+	desc:    "Space-based fighters.  Practice pairs combat against target drones.",
+	objective: "Training - Practice spaceborne fighter operations.",
+	start:   "01/11:15:00",
+	script:  "T2",
+	type:    "Training"
+	system:  "Janus"
+	region:  "Janek"
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. The fleet carrier Archon has been detached to Janek orbit to practice spaceborne fighter operations.  As part of the exercise, you have been tasked with flying patrol patterns and destroying target drones in your sector."
+}
+
+mission: {
+	id:      3,
+	name:    "Flight School",
+	desc:    "Airborne fighters.  Practice takeoffs, landings, and basic atmospheric maneuvering.",
+	objective: "Training - Practice airborne fighter operations.",
+	start:   "01/16:23:00",
+	script:  "T3",
+	type:    "Training"
+	system:  "Janus"
+	region:  "Janek Station"
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. Your squadron, the Avengers, are on temporary detached duty to Janek Station. As part of the exercise, you have been tasked with practicing take offs and landings, flying patrol patterns and destroying target drones in your sector."
+}
+
+mission: {
+	id:      4,
+	name:    "Ground Strike",
+	desc:    "Air-to-ground action. Practice destroying ground targets.",
+	objective: "Training Strike - Destroy simulated mining operation.",
+	start:   "02/05:35:00",
+	script:  "T4",
+	type:    "Training"
+	system:  "Janus"
+	region:  "Janek Station"
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. Your squadron, the Stallions, are on temporary detached duty to Janek Station. As part of the exercise, you have been tasked with destroying support facilities for a simulated mining operation."
+}
+
+mission: {
+	id:      5,
+	name:    "Training Cruise",
+	desc:    "Learn to command starships. Practice engaging target drones with a Frigate class ship.",
+	objective: "Training - Practice starship fleet operations.",
+	start:   "03/15:20:00",
+	script:  "T5",
+	type:    "Training"
+	system:  "Janus"
+	region:  "Alystra"
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. You will be in command of the Frigate Carlisle in Alystra sector.  After you destroy the target drones in that sector, rendevous with the Archon in Janek orbit to complete the exercise."
+}
+
+mission: {
+	id:      6,
+	name:    "Advanced Starship Combat",
+	desc:    "Learn to command starships. Practice engaging starship targets with a Destroyer class ship.",
+	objective: "Training - Practice advanced starship combat maneuvers.",
+	start:   "04/11:00:00",
+	script:  "T6",
+	type:    "Training"
+	system: "Janus"
+	region: "Dante"
+	sitrep:  "The Third Fleet is participating in wargame exercises in the Janus system. You will be in command of the Destroyer Mahan in Dante sector. You have been tasked with finding and destroying the enemy Wolf-class starship Shannon. You have one hour to complete this exercise.  Good luck!"
+}
+
+mission: {
+	id:      7,
+	name:    "Carrier Operations",
+	desc:    "Learn to direct fleet operations. Practice orbital carrier operations.",
+	objective: "Training - Practice orbital carrier operations.",
+	start:   "05/09:30:00",
+	script:  "T7",
+	type:    "Training"
+	system: "Janus"
+	region: "Alystra"
+	sitrep: "The Third Fleet is participating in wargame exercises in the Janus system. The fleet carrier Archon has been detached to Alystra orbit to practice spaceborne fighter operations."
+
+}

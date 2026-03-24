@@ -1,0 +1,20 @@
+#
+# Spectre Material Library exported by Magic 2.0
+#
+
+newmtl MAIN_D
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.50000 0.50000 0.50000
+Ns 20.00000
+illum 2
+map_Kd MAIN_D.jpg
+
+newmtl Spectre_D
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.50000 0.50000 0.50000
+Ns 20.00000
+illum 2
+map_Kd Spectre_D.jpg
+

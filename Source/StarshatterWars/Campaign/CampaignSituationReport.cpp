@@ -1,0 +1,440 @@
+/*  Project Starshatter Wars
+	Fractal Dev Studios
+	Copyright (C) 2025-2026. All Rights Reserved.
+
+	SUBSYSTEM:    Stars.exe
+	FILE:         CampaignSituationReport.cpp
+	AUTHOR:       Carlos Bott
+
+	ORIGINAL AUTHOR AND STUDIO
+	==========================
+	John DiCamillo / Destroyer Studios LLC
+
+	OVERVIEW
+	========
+	CampaignSituationReport generates the situation report
+	portion of the briefing for a dynamically generated
+	mission in a dynamic campaign.
+*/
+
+#include "CampaignSituationReport.h"
+
+#include "GameStructs.h"
+
+#include "Campaign.h"
+#include "Combatant.h"
+#include "CombatAssignment.h"
+#include "CombatGroup.h"
+#include "CombatUnit.h"
+#include "CombatZone.h"
+#include "Callsign.h"
+#include "Mission.h"
+#include "Instruction.h"
+#include "Ship.h"
+#include "ShipDesign.h"
+#include "StarSystem.h"
+#include "Random.h"
+#include "PlayerCharacter.h"
+#include "GameStructs.h"
+
+#include "Logging/LogMacros.h"
+
+// +--------------------------------------------------------------------+
+
+CampaignSituationReport::CampaignSituationReport(Campaign* c, Mission* m)
+	: campaign(c), mission(m)
+{
+}
+
+CampaignSituationReport::~CampaignSituationReport()
+{
+}
+
+// +--------------------------------------------------------------------+
+
+void
+CampaignSituationReport::GenerateSituationReport()
+{
+	if (!campaign || !mission)
+		return;
+
+	sitrep = Text();
+
+	GlobalSituation();
+	MissionSituation();
+
+	mission->SetSituation(sitrep);
+}
+
+// +--------------------------------------------------------------------+
+
+static const char* outlooks[4] = { "good", "fluid", "poor", "bleak" };
+
+void
+CampaignSituationReport::GlobalSituation()
+{
+	if (campaign->GetTime() < 40 * 3600)
+		sitrep = Text(campaign->Name())
+		+ Text(" is still in its early stages and the situation is ");
+	else
+		sitrep = Text("The overall outlook for ")
+		+ Text(campaign->Name())
+		+ Text(" is ");
+
+	int score = campaign->GetPlayerTeamScore();
+
+	if (score > 1000)
+		sitrep += outlooks[0];
+	else if (score > -1000)
+		sitrep += outlooks[1];
+	else if (score > -2000)
+		sitrep += outlooks[2];
+	else
+		sitrep += outlooks[3];
+
+	sitrep += ".  ";
+
+	Text strat_dir;
+
+	CombatGroup* pg = campaign->GetPlayerGroup();
+
+	if (pg)
+		strat_dir = pg->GetStrategicDirection();
+
+	if (strat_dir.length())
+		sitrep += strat_dir;
+	else
+		sitrep += Text("Establishing and maintaining military control of the ")
+		+ mission->GetStarSystem()->Name()
+		+ Text(" System remains a key priority.");
+}
+
+// +--------------------------------------------------------------------+
+
+void
+CampaignSituationReport::MissionSituation()
+{
+	if (mission) {
+		MissionElement* player = mission->GetPlayer();
+		MissionElement* target = mission->GetTarget();
+		MissionElement* ward = mission->GetWard();
+		MissionElement* escort = FindEscort(player);
+		Text            threat = GetThreatInfo();
+		Text            sector = mission->GetRegion();
+
+		(void)escort; // currently unused in original code
+
+		sector += " sector.";
+
+		switch (mission->GetType()) {
+		case (int)EMISSIONTYPE::PATROL:
+		case (int)EMISSIONTYPE::AIR_PATROL:
+			sitrep += "\n\nThis mission is a routine patrol of the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::SWEEP:
+		case (int)EMISSIONTYPE::AIR_SWEEP:
+			sitrep += "\n\nFor this mission, you will be performing a fighter sweep of the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::INTERCEPT:
+		case (int)EMISSIONTYPE::AIR_INTERCEPT:
+			sitrep += "\n\nWe have detected hostile elements inbound.  ";
+			sitrep += "Your mission is to intercept them before they are able to engage their targets.";
+			break;
+
+		case (int)EMISSIONTYPE::STRIKE:
+			sitrep += "\n\nThe goal of this mission is to perform a strike on preplanned targets in the ";
+			sitrep += sector;
+
+			if (target) {
+				sitrep += "  Your package has been assigned to strike the ";
+
+				if (target->GetCombatGroup())
+					sitrep += target->GetCombatGroup()->GetDescription();
+				else
+					sitrep += target->Name();
+
+				sitrep += ".";
+			}
+			break;
+
+		case (int)EMISSIONTYPE::ASSAULT:
+			sitrep += "\n\nThis mission is to assault preplanned targets in the ";
+			sitrep += sector;
+
+			if (target) {
+				sitrep += "  Your package has been assigned to strike the ";
+
+				if (target->GetCombatGroup())
+					sitrep += target->GetCombatGroup()->GetDescription();
+				else
+					sitrep += target->Name();
+
+				sitrep += ".";
+			}
+			break;
+
+		case (int)EMISSIONTYPE::DEFEND:
+			if (ward) {
+				sitrep += "\n\nFor this mission, you will need to defend ";
+				sitrep += ward->Name();
+				sitrep += " in the ";
+				sitrep += sector;
+			}
+			else {
+				sitrep += "\n\nThis is a defensive patrol mission in the ";
+				sitrep += sector;
+			}
+			break;
+
+		case (int)EMISSIONTYPE::ESCORT:
+			if (ward) {
+				sitrep += "\n\nFor this mission, you will need to escort the ";
+				sitrep += ward->Name();
+				sitrep += " in the ";
+				sitrep += sector;
+			}
+			else {
+				sitrep += "\n\nThis is an escort mission in the ";
+				sitrep += sector;
+			}
+			break;
+
+		case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+			if (ward) {
+				sitrep += "\n\nFor this mission, you will need to escort the freighter ";
+				sitrep += ward->Name();
+				sitrep += ".";
+			}
+			else {
+				sitrep += "\n\nThis is a freight escort mission in the ";
+				sitrep += sector;
+			}
+			break;
+
+		case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
+			if (ward) {
+				sitrep += "\n\nFor this mission, you will need to escort the shuttle ";
+				sitrep += ward->Name();
+				sitrep += ".";
+			}
+			else {
+				sitrep += "\n\nThis is a shuttle escort mission in the ";
+				sitrep += sector;
+			}
+			break;
+
+		case (int)EMISSIONTYPE::ESCORT_STRIKE:
+			if (ward) {
+				sitrep += "\n\nFor this mission, you will need to protect the ";
+				sitrep += ward->Name();
+				sitrep += " strike package from hostile interceptors.";
+			}
+			else {
+				sitrep += "\n\nFor this mission, you will be responsible for strike escort duty.";
+			}
+			break;
+
+		case (int)EMISSIONTYPE::INTEL:
+		case (int)EMISSIONTYPE::SCOUT:
+		case (int)EMISSIONTYPE::RECON:
+			sitrep += "\n\nThis is an intelligence gathering mission in the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::BLOCKADE:
+			sitrep += "\n\nThis mission is part of the blockade operation in the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::FLEET:
+			sitrep += "\n\nThis mission is a routine fleet patrol of the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::BOMBARDMENT:
+			sitrep += "\n\nOur goal for this mission is to engage and destroy preplanned targets in the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::FLIGHT_OPS:
+			sitrep += "\n\nFor this mission, the ";
+			if (player)
+				sitrep += player->Name();
+			else
+				sitrep += "(unknown package)";
+
+			sitrep += " will be conducting combat flight operations in the ";
+			sitrep += sector;
+			break;
+
+		case (int)EMISSIONTYPE::TRAINING:
+			sitrep += "\n\nThis will be a training mission.";
+			break;
+
+		case (int)EMISSIONTYPE::TRANSPORT:
+		case (int)EMISSIONTYPE::CARGO:
+		case (int)EMISSIONTYPE::OTHER:
+		default:
+			break;
+		}
+
+		if (threat.length()) {
+			sitrep += "  ";
+			sitrep += threat;
+			sitrep += "\n\n";
+		}
+	}
+	else {
+		sitrep += "\n\n";
+	}
+
+	Text RankText;
+	Text NameText;
+
+	PlayerCharacter* PlayerPtr = PlayerCharacter::GetCurrentPlayer();
+
+	if (PlayerPtr)
+	{
+		if (PlayerPtr->GetRank() > 6)
+		{
+			RankText = ", Admiral";
+		}
+		else
+		{
+			RankText = Text(", ") + PlayerCharacter::RankName(PlayerPtr->GetRank());
+		}
+
+		// PlayerPtr->Name() is now FString (UE-side), so convert it to legacy Text:
+		NameText = Text(", ") + Text(TCHAR_TO_UTF8(*PlayerPtr->Name()));
+	}
+
+	sitrep += "You have a mission to perform.  ";
+
+	switch (RandomIndex()) {
+	case  0: sitrep += "You'd better go get to it!";                     break;
+	case  1: sitrep += "And let's be careful out there!";                break;
+	case  2: sitrep += "Good luck, sir!";                                break;
+	case  3: sitrep += "Let's keep up the good work out there.";         break;
+	case  4: sitrep += "Don't lose your focus.";                         break;
+	case  5: sitrep += "Good luck out there.";                           break;
+	case  6: sitrep += "What are you waiting for, cocktail hour?";       break;
+	case  7: sitrep += Text("Godspeed") + RankText + "!";                break;
+	case  8: sitrep += Text("Good luck") + NameText + "!";               break;
+	case  9: sitrep += Text("Good luck") + NameText + "!";               break;
+	case 10: sitrep += "If everything is clear, get your team ready and get underway."; break;
+	case 11: sitrep += Text("Go get to it") + RankText + "!";            break;
+	case 12: sitrep += "The clock is ticking, so let's move it!";        break;
+	case 13: sitrep += "Stay sharp out there!";                          break;
+	case 14: sitrep += Text("Go get 'em") + RankText + "!";              break;
+	case 15: sitrep += "Now get out of here and get to work!";           break;
+	}
+}
+
+// +--------------------------------------------------------------------+
+
+MissionElement*
+CampaignSituationReport::FindEscort(MissionElement* player)
+{
+	MissionElement* escort = 0;
+
+	if (!mission || !player)
+		return escort;
+
+	ListIter<MissionElement> iter = mission->GetElements();
+	while (++iter) {
+		MissionElement* elem = iter.value();
+		(void)elem;
+
+		// Original source had no implementation here.
+		// Keep behavior unchanged (no escort selection).
+	}
+
+	return escort;
+}
+
+// +--------------------------------------------------------------------+
+
+Text
+CampaignSituationReport::GetThreatInfo()
+{
+	Text threat_info;
+
+	int enemy_fighters = 0;
+	int enemy_starships = 0;
+	int enemy_sites = 0;
+
+	if (mission && mission->GetPlayer()) {
+		MissionElement* player = mission->GetPlayer();
+		Text            rgn0 = player->Region();
+		Text            rgn1;
+		int             iff = player->GetIFF();
+
+		ListIter<Instruction> nav = player->NavList();
+		while (++nav) {
+			if (rgn0 != nav->RegionName())
+				rgn1 = nav->RegionName();
+		}
+
+		ListIter<MissionElement> elem = mission->GetElements();
+		while (++elem) {
+			if (elem->GetIFF() > 0 && elem->GetIFF() != iff && elem->IntelLevel() > Intel::SECRET) {
+				if (elem->IsGroundUnit()) {
+					if (!elem->GetDesign() || elem->GetDesign()->type != (int)CLASSIFICATION::SAM)
+						continue;
+
+					if (elem->Region() != rgn0 && elem->Region() != rgn1)
+						continue;
+				}
+
+				int mission_role = elem->MissionRole();
+
+				if (mission_role == (int)EMISSIONTYPE::STRIKE ||
+					mission_role == (int)EMISSIONTYPE::INTEL ||
+					mission_role == (int)EMISSIONTYPE::CARGO ||
+					mission_role == (int)EMISSIONTYPE::TRANSPORT)
+					continue;
+
+				if (elem->GetDesign()->type >= (int)CLASSIFICATION::MINE && elem->GetDesign()->type <= (int)CLASSIFICATION::DEFSAT)
+					enemy_sites += elem->Count();
+
+				else if (elem->IsDropship())
+					enemy_fighters += elem->Count();
+
+				else if (elem->IsStarship())
+					enemy_starships += elem->Count();
+
+				else if (elem->IsGroundUnit())
+					enemy_sites += elem->Count();
+			}
+		}
+	}
+
+	if (enemy_starships > 0) {
+		threat_info = "We have reports of several enemy starships in the vicinity.";
+
+		if (enemy_fighters > 0) {
+			threat_info += "  Also be advised that enemy fighters may be operating nearby.";
+		}
+		else if (enemy_sites > 0) {
+			threat_info += "  And be on the lookout for mines and defense satellites.";
+		}
+	}
+	else if (enemy_fighters > 0) {
+		threat_info = "We have reports of several enemy fighters in your operating area.";
+	}
+	else if (enemy_sites > 0) {
+		if (mission->GetType() >= (int)EMISSIONTYPE::AIR_PATROL && mission->GetType() <= (int)EMISSIONTYPE::STRIKE)
+			threat_info = "Remember to check air-to-ground sensors for SAM and AAA sites.";
+		else
+			threat_info = "Be on the lookout for mines and defense satellites.";
+	}
+	else {
+		threat_info = "We have no reliable information on threats in your operating area.";
+	}
+
+	return threat_info;
+}

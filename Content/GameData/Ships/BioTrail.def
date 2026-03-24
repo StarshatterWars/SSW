@@ -1,0 +1,22 @@
+SHIP
+
+name:       BioTrail
+class:      Building
+abrv:		  BLDG
+display_name: "Elevated Bridge"
+description:  "The Elevated Bridge is a reinforced transit structure spanning hazardous terrain to link critical installations across a colony zone. Built for durability rather than elegance, it enables secure troop movement, cargo transfer, and rapid response between strategic ground assets."
+empire:       All
+hud_icon:     "hud_trail"
+secret:        false
+
+model:   "A2-0"
+
+mass:       10e3
+integrity:  10e3
+scale:      7
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

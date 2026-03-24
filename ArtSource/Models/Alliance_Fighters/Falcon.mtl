@@ -1,0 +1,20 @@
+#
+# Falcon Material Library exported by Magic 2.0
+#
+
+newmtl Falcon_D
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.40000 0.40000 0.40000
+Ns 20.00000
+illum 2
+map_Kd Falcon_D.jpg
+
+newmtl glass
+Ka 0.50196 0.50196 0.25098
+Kd 0.75294 0.75294 0.75294
+Ks 1.00392 1.00392 0.50196
+Ns 15.00000
+illum 2
+map_Kd glass.jpg
+

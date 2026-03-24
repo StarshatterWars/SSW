@@ -1,0 +1,45 @@
+Starshatter: The Open Source Project
+Copyright (c) 2021-2022, Starshatter: The Open Source Project Contributors
+Copyright (c) 2011-2012, Starshatter OpenSource Distribution Contributors
+Copyright (c) 1997-2006, Destroyer Studios LLC.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the 3-Clause BSD License.
+This program is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+You should have received a copy of the 3-Clause BSD License along with this program. If not, see
+<https://opensource.org/licenses/BSD-3-Clause>
+
+Previously published in 2011-2012 as: Starshatter OpenSource Distribution
+Previously published in 2006 as: Starshatter: The Gathering Storm
+Previously published in 2004 as: Starshatter - Ultimate Space Combat
+
+
+Starshatter: The Open Source Project uses libpng:
+Copyright (c) 1998-2011, Glenn Randers-Pehrson
+Copyright (c) 1996, 1997, Andreas Dilger
+Copyright (c) 1995, 1996, Guy Eric Shalnat, Group 42, Inc.
+libpng is released under the libpng license.
+See <contrib/libpng/LICENSE>.
+
+
+Starshatter: The Open Source Project uses ogg:
+Copyright (c) 2002, Xiph.org Foundation
+ogg is released under the 3-Clause BSD License.
+See <contrib/ogg/COPYING>.
+
+
+Starshatter: The Open Source Project uses OPCODE:
+Copyright (c) 2001, Pierre Terdiman
+
+
+Starshatter: The Open Source Project uses vorbis:
+Copyright (c) 2002-2018, Xiph.org Foundation
+vorbis is released under the 3-Clause BSD License.
+See <contrib/vorbis/COPYING>.
+
+
+Starshatter: The Open Source Project uses zlib:
+Copyright (c) 1995-2017, Jean-loup Gailly and Mark Adler
+zlib is released under the zlib license.
+See <contrib/zlib/zlib.h>.

@@ -1,0 +1,261 @@
+{
+  "name": "Silessia",
+  "sky": {
+    "nebula": "Nebula-Silessia.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    15,
+    15,
+    18
+  ],
+  "star": {
+    "name": "Siltana",
+    "map": "Suns/StarK_map.pcx",
+    "image": "Suns/K1.pcx",
+    "tscale": 6,
+    "radius": 1200000000,
+    "mass": 1e+30,
+    "light": 70000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,	
+    "color": [
+      255,
+      232,
+      220
+    ],
+    "back": [
+      45,
+      65,
+      75
+    ],
+    "planet": [
+      {
+        "name": "Silessia",
+        "map": "Silessia/silessia_map.pcx",
+        "image": "Silessia/silessia_lo.pcx",
+        "high_res": "Silessia/silessia_hi.jpg",
+        "glow_high_res": "Silessia/silessia_glow.jpg",
+        "gloss": "Silessia/silessia_gloss.jpg",
+        "radius": 5400000,
+        "mass": 3.38e+24,
+        "atmosphere": [
+          80,
+          120,
+          150
+        ],
+        "orbit": 97000000000,
+        "rotation": 19,
+        "region": {
+          "name": "Silessia",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 19000000,
+          "inclination": 0.45,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Tannis",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 1000000,
+            "mass": 8e+22,
+            "orbit": 95000000,
+            "region": {
+              "name": "Tannis",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.05,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Prosenar",
+        "map": "Giants/GasGiant8_map.pcx",
+        "image": "Giants/GasGiant8.jpg",
+		"high_res": "Giants/GasGiant8.jpg",
+        "radius": 14100000,
+        "mass": 3.6e+26,
+        "tilt": 0.2,
+        "ring": "Giants/Ring3.pcx",
+        "minrad": 1.5,
+        "maxrad": 1.9,
+        "orbit": 185000000000,
+        "rotation": 61.3,
+        "region": {
+          "name": "Prosenar",
+          "radius": 480000,
+          "grid": 20000000,
+          "orbit": 55530000,
+          "inclination": 0.3,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Proson I",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 2300000,
+            "rotation": 16.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 411000000,
+            "region": {
+              "name": "Proson I",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 19000000,
+              "inclination": 0.45,
+              "link": []
+            }
+          },
+          {
+            "name": "Proson II",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 4200000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.28e+24,
+            "orbit": 624000000,
+            "region": {
+              "name": "Proson II",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 19000000,
+              "inclination": 0.45,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Vesta",
+        "map": "Giants/GasGiant2_map.pcx",
+        "image": "Giants/GasGiant2.jpg",
+		"high_res": "Giants/GasGiant2.jpg",
+        "radius": 18100000,
+        "mass": 3.6e+26,
+        "tilt": 0.13,
+        "orbit": 315000000000,
+        "rotation": 31.3,
+        "region": {
+          "name": "Vesta",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 65300000,
+          "inclination": 0.3
+        },
+        "moon": [
+          {
+            "name": "Vesta I",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 5300000,
+            "rotation": 16.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 411000000,
+            "region": {
+              "name": "Vesta I",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 19000000,
+              "inclination": 0.05,
+              "link": []
+            }
+          },
+          {
+            "name": "Vesta II",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 3100000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.28e+24,
+            "orbit": 624000000,
+            "region": {
+              "name": "Vesta II",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 19000000,
+              "inclination": 0.25,
+              "link": []
+            }
+          },
+          {
+            "name": "Vesta III",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 6100000,
+            "rotation": 38.4,
+            "mass": 5.98e+24,
+            "orbit": 1324000000,
+            "region": {
+              "name": "Vesta III",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 19000000,
+              "inclination": 0,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Nero",
+        "map": "Silessia/nero_map.pcx",
+        "image": "Silessia/nero_lo.pcx",
+        "high_res": "Silessia/nero_hi.jpg",
+        "radius": 2640000,
+        "mass": 1.48e+24,
+        "orbit": 518000000000,
+        "rotation": 219,
+        "region": {
+          "name": "Nero",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 15000000,
+          "inclination": 0.2,
+          "link": [
+            "Tulkas",
+            "Navara",
+            "Trellis",
+            "Casalle"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

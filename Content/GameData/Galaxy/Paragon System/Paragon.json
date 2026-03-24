@@ -1,0 +1,227 @@
+{
+  "name": "Paragon",
+  "sky": {
+    "nebula": "Nebula-Paragon.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    30,
+    36,
+    38
+  ],
+  "star": {
+    "name": "Talpara",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      50,
+      70,
+      100
+    ],
+    "planet": [
+      {
+        "name": "Dorrath",
+        "map": "Paragon/dorrath_map.pcx",
+        "image": "Paragon/dorrath_lo.pcx",
+        "high_res": "Paragon/dorrath_hi.pcx",
+        "radius": 3900000,
+        "mass": 2.58e+24,
+        "orbit": 72300000000,
+        "atmosphere": [
+          121,
+          120,
+          121
+        ],
+        "rotation": 29.72,
+        "region": {
+          "name": "Dorrath",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 16000000,
+          "inclination": 0.67,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Altos",
+            "map": "Borova/maraner_map.pcx",
+            "image": "Borova/maraner_lo.pcx",
+            "high_res": "Borova/maraner_hi.pcx",
+            "radius": 850000,
+            "mass": 8e+22,
+            "orbit": 43000000,
+            "retro": true,
+            "region": {
+              "name": "Altos",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.25,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Paragon",
+        "map": "Paragon/paragon_map.pcx",
+        "image": "Paragon/paragon_lo.pcx",
+        "high_res": "Paragon/paragon_hi.jpg",
+        "gloss": "Paragon/paragon_gloss.jpg",
+        "glow_high_res": "Paragon/paragon_lights.jpg",
+        "radius": 5800000,
+        "mass": 4.98e+24,
+        "atmosphere": [
+          140,
+          170,
+          200
+        ],
+        "orbit": 140000000000,
+        "rotation": 27,
+        "region": {
+          "name": "Paragon",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 20000000,
+          "inclination": 0.5,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Porthos",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 1100000,
+            "mass": 8e+22,
+            "orbit": 39000000,
+            "region": {
+              "name": "Porthos",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.05,
+              "link": []
+            }
+          },
+          {
+            "name": "Aramis",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 500000,
+            "mass": 8e+22,
+            "orbit": 51000000,
+            "region": {
+              "name": "Aramis",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.35,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Bryn Mawr",
+        "map": "Paragon/bryn_map.pcx",
+        "image": "Paragon/bryn_lo.pcx",
+		"high_res": "Paragon/bryn_hi.jpg",
+        "radius": 3300000,
+        "mass": 2.45e+24,
+        "orbit": 257000000000,
+        "rotation": 35,
+        "region": {
+          "name": "Bryn",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 12000000,
+          "inclination": 0.7,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Atlan",
+        "map": "Giants/GasGiant4_map.pcx",
+        "image": "Giants/GasGiant4.jpg",
+		"high_res": "Giants/GasGiant4.jpg",
+        "radius": 19000000,
+        "mass": 2.1e+26,
+        "orbit": 480000000000,
+        "tscale": 2,
+        "tilt": 0.23,
+        "ring": "Giants/Ring3.pcx",
+        "minrad": 1.4,
+        "maxrad": 1.75,
+        "rotation": 21.23,
+        "region": {
+          "name": "Atlan",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 115000000,
+          "inclination": 0.42,
+          "link": [
+            "Tulkas",
+            "Dawn"
+          ]
+        },
+        "moon": [
+          {
+            "name": "Synad",
+            "map": "Moons/rock_map.pcx",
+            "image": "Moons/rock_lo.pcx",
+            "high_res": "Moons/rock_hi.pcx",
+            "radius": 2200000,
+            "mass": 1.9e+22,
+            "orbit": 144000000,
+            "rotation": 30,
+            "region": {
+              "name": "Synad",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.09,
+              "link": []
+            }
+          },
+          {
+            "name": "Olan",
+            "map": "Moons/lunar_map.pcx",
+            "image": "Moons/lunar_lo.pcx",
+            "high_res": "Moons/lunar_hi.pcx",
+            "radius": 3200000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 1.7e+24,
+            "orbit": 225100000,
+            "region": {
+              "name": "Olan",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.09,
+              "link": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

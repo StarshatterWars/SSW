@@ -1,0 +1,276 @@
+{
+  "name": "Kolchev",
+  "sky": {
+    "nebula": "Nebula-Kolchev.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Kolchev/Lovo/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    13,
+    10,
+    8
+  ],
+  "star": {
+    "name": "Kurset",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      252,
+      250
+    ],
+    "back": [
+      50,
+      45,
+      35
+    ],
+    "planet": [
+      {
+        "name": "Ilya",
+        "map": "Kolchev/ilya_map.pcx",
+        "image": "Kolchev/ilya_lo.pcx",
+        "high_res": "Kolchev/ilya_hi.pcx",
+        "radius": 3600000,
+        "mass": 4.1e+26,
+        "orbit": 103000000000,
+        "rotation": 19.3,
+        "region": {
+          "name": "Ilya",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.5,
+          "link": []
+        }
+      },
+      {
+        "name": "Kolchev",
+        "map": "Kolchev/kolchev_map.pcx",
+        "image": "Kolchev/kolchev_lo.pcx",
+        "high_res": "Kolchev/kolchev_hi.jpg",
+        "gloss": "Kolchev/kolchev_gloss.jpg",
+        "glow_high_res": "Kolchev/kolchev_lights.jpg",
+        "atmosphere": [
+          130,
+          130,
+          150
+        ],
+        "radius": 4800000,
+        "mass": 3.9e+24,
+        "orbit": 195000000000,
+        "rotation": 23.3,
+        "region": {
+          "name": "Kolchev",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 21000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Odin",
+            "map": "Borova/maraner_map.pcx",
+            "image": "Borova/maraner_lo.pcx",
+            "high_res": "Borova/maraner_hi.pcx",
+            "radius": 1400000,
+            "mass": 4.3e+23,
+            "orbit": 40000000,
+            "rotation": 9.2,
+            "region": {
+              "name": "Odin",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.1,
+              "link": []
+            }
+          },
+          {
+            "name": "Dva",
+            "map": "Moons/Moon2_map.pcx",
+			"image": "Moons/Moon2.jpg",
+            "high_res": "Moons/Moon2.jpg",
+            "radius": 850000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 6e+23,
+            "orbit": 71000000,
+            "region": {
+              "name": "Dva",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.05,
+              "link": []
+            },
+            "terrain": {
+              "name": "Lovo",
+              "radius": 480000,
+              "grid": 20000,
+              "patch": "Kolchev/Lovo/terrain.pcx",
+              "patch_texture": "Kolchev/Lovo/terrain_big.pcx",
+              "apron": "Kolchev/Lovo/terrain_apron.pcx",
+              "apron_texture": "Kolchev/Lovo/terrain_apron_tex.pcx",
+              "sky_color": "Kolchev/Lovo/terrain_sky.pcx",
+              "layer": [
+                {
+                  "tile": "Kolchev/Lovo/Layer0.pcx",
+                  "height": 0,
+                  "detail": "Kolchev/Lovo/noise0.pcx"
+                },
+                {
+                  "tile": "Kolchev/Lovo/Layer1.pcx",
+                  "height": 4500,
+                  "detail": "Kolchev/Lovo/noise0.pcx"
+                },
+                {
+                  "tile": "Kolchev/Lovo/Layer2.pcx",
+                  "height": 11500,
+                  "detail": "Kolchev/Lovo/noise0.pcx"
+                }
+              ],
+              "clouds_high": "Kolchev/Lovo/terrain_cloud0.pcx",
+              "clouds_low": "Kolchev/Lovo/terrain_cloud1.pcx",
+              "shades_low": "Kolchev/Lovo/terrain_cloud1a.pcx",
+              "clouds_alt_high": 18300,
+              "clouds_alt_low": 15100,
+              "scale": 1750,
+              "mtnscale": 75,
+              "haze_fade": 0.35,
+              "fog_density": 0.45,
+              "fog_scale": 4.5,
+              "weather_period": 49876,
+              "weather_high_clouds": 100,
+              "weather_moderate_clouds": 0,
+              "weather_overcast": 0,
+              "weather_fog": 0,
+              "weather_storm": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "Anatoly",
+        "map": "Giants/GasGiant6_map.pcx",
+        "image": "Giants/GasGiant6.jpg",
+		"high_res": "Giants/GasGiant6.jpg",
+        "radius": 29100000,
+        "mass": 3.6e+26,
+        "tscale": 2,
+        "tilt": 0.13,
+        "orbit": 295000000000,
+        "rotation": 29.3,
+        "region": {
+          "name": "Anatoly",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 79530000,
+          "inclination": 0.2,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Volova",
+        "map": "Giants/GasGiant9_map.pcx",
+        "image": "Giants/GasGiant9.jpg",
+		"high_res": "Giants/GasGiant9.jpg",
+        "radius": 20000000,
+        "mass": 5.42e+26,
+        "orbit": 375000000000,
+        "tilt": 0.25,
+        "ring": "Giants/Ring2.pcx",
+        "minrad": 1.2,
+        "maxrad": 1.9,
+        "rotation": 19.5,
+        "region": {
+          "name": "Volova",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 120000000,
+          "inclination": 0.3,
+          "link": [
+            "Kala",
+            "Aram",
+            "Solnas",
+            "Relay",
+            "Theramin",
+            "Cavenda"
+          ]
+        },
+        "moon": [
+          {
+            "name": "Anya",
+            "map": "Silessia/nero_map.pcx",
+            "image": "Silessia/nero_lo.pcx",
+            "high_res": "Silessia/nero_hi.jpg",
+            "radius": 3000000,
+            "mass": 3e+22,
+            "orbit": 265000000,
+            "rotation": 100,
+            "region": {
+              "name": "Anya",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.12,
+              "link": []
+            }
+          },
+          {
+            "name": "Vlad",
+            "map": "Moons/Moon1_map.pcx",
+            "image": "Moons/Moon1_lo.pcx",
+            "high_res": "Moons/Moon1.jpg",
+            "radius": 5200000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 6e+24,
+            "orbit": 431000000,
+            "region": {
+              "name": "Vlad",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.22,
+              "link": []
+            }
+          },
+          {
+            "name": "Dmitri",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 6000000,
+            "rotation": 18.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 814000000,
+            "region": {
+              "name": "Dmitri",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.02,
+              "link": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

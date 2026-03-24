@@ -1,0 +1,3077 @@
+GALAXY
+
+// TERRELIAN ALLIANCE
+system: 
+{
+	loc: ( 6.2,  0.3,  1.0),
+	class: G,
+	iff: 1,
+	empire: 0,
+	name: Jarnell,
+	
+	link: Athenar,
+	link: Borova,
+	link: Thralis,
+	link: Paragon ,
+
+	star: Valtala,
+	stellar: {
+		name:   Valtala,
+		class:	G,
+		map:    "StarG_map",
+		image:	"G3",
+		tscale:	6,
+		radius:	16e8,
+		mass:	2e30,
+		light:	1.4e11,
+		color:	(255, 250, 230), // - standard yellow
+		back:	( 11,  18,  15), // - nebula10
+		
+		planet: {
+			name:    Adonis,
+			icon:    "GasGiant7_map",
+			texture:  "GasGiant7",
+			radius:  18e6,
+			mass:    2.1e26,
+			orbit:   0.8e11,
+			inclination: 16.6,
+			perihelion: 0.65e11,
+			aphelion: 0.95e11,
+			eccentricity: 0.19,
+			tscale:  2,
+			tilt:    0.2,
+			ring:    "Ring3",
+			minrad:  1.5,
+			maxrad:  1.9,
+			rotation: 19.5,
+			region: {
+			   name:    Adonis,
+			   parent:  Adonis,
+			   type:	Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.15e8,
+			   inclination: 0.45
+			},
+			moon: {
+			   name:    Synad,
+			   icon:    "rock_map",
+			   texture:  "synad",
+			   radius:  2.2e6,
+			   mass:    1.9e22,
+			   orbit:   1.44e8,
+			   rotation: 30,
+			},
+			moon: {
+			   name:    Olan,
+			   icon:    "lunar_map",
+			   texture:  "olan",
+			   radius:      3.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.7e24,
+			   orbit:       2.251e8,
+			},
+			moon: {
+			   name:    Amnia,
+			   icon:    "lunar_map",
+			   texture:  "amnia",
+			   radius:      1.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.0e24,
+			   orbit:       3.771e8,
+			},
+		},
+		planet: {
+			name:    Jarnell,
+			icon:    "jarnell_map",
+			texture: "jarnell",
+			radius:  5.8e6,
+			mass:    4.98e24,
+			atmosphere: (100,180,220),
+			orbit:   1.4e11,
+			inclination: 12.54,
+			perihelion: 1.18e11,
+			aphelion: 1.62e11,
+			eccentricity: 0.157,
+			rotation: 27,
+			region: {
+			   name:    Jarnell,
+			   parent:  Jarnell,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   19e6,
+			   inclination: 0.5
+			},
+			moon: {
+			   name:    Lanora,
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   42e6,
+			},
+		},
+		planet: {
+			name:    Caladan,
+			icon:    "caladan_map",
+			texture: "caladan",
+			radius:  3.8e6,
+			mass:    2.98e24,
+			atmosphere: (50,80,70),
+			orbit:   2.01e11,
+			inclination: -4.65,
+			perihelion: 1.55e11,
+			aphelion: 2.47e11,
+			eccentricity: 0.231,
+			rotation: 32,
+			region: {
+			   name:    Caladan,
+			   parent:  Caladan,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   12e6,
+			   inclination: 0.35
+			},
+			moon: {
+			   name:    Malta,
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  0.72e6,
+			   mass:    6e22,
+			   orbit:   32e6,
+			},
+		},
+		planet:     {
+			name:    Dawn,
+			icon:    "GasGiant6_map",
+			texture: "GasGiant6",
+			radius:  28e6,
+			mass:    5.1e26,
+			orbit:   4.3e11,
+			inclination: 10.4,
+			perihelion: 3.53e11,
+			aphelion: 5.07e11,
+			eccentricity: 0.18,
+			tscale:  2,
+			tilt:    0.12,
+			rotation: 27.3,
+			region: {
+			   name:    Dawn,
+			   parent:  Dawn,
+			   parent:  Caladan,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.0e8,
+			   inclination: 0.25,
+			   link:    Pallas, // Athenar
+			   link:    Tulkas, // Borova
+			   link:    Sparta, // Thralis
+			   link:    Atlan,  // Paragon
+			},
+			moon: {
+			   name:    Kash,
+			   icon:    "rock_map",
+			   texture:  "kash",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   2.14e8,
+			   rotation: 100,
+			},
+			moon: {
+			   name:    Kara
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      5.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        6.0e24,
+			   orbit:       4.551e8,
+			},
+			moon: {
+			   name:    Soma,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6e6,
+			   rotation: 27.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   7.11e8,
+			},
+			moon: {
+			   name:    Tarina,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  4e6,
+			   rotation: 172.1,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   9.34e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 4.7, -1.9,  1.0),
+	class: F,
+	iff: 1,
+	empire: 0,
+	name: Borova,
+	
+	link: Janus,
+	link: Silessia,
+	
+	star: Talantar,
+	
+	stellar: {
+	   name:    Talantar
+	   map:     "StarF_map"
+	   image:   "F8",
+	   class:	F,
+	   tscale:  6,
+	   radius:  22e8,
+	   mass:    3e30,
+	   light:   1.9e11,
+	   color:   (240, 240, 255),// - blue-white
+	   back:    ( 25,  35,  65), // - nebula1
+
+	   region: {
+		   name:    Tulkas,
+		   parent:  Talantar,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   5.38e11,
+		   inclination: 0.13,
+		   asteroids: 70,
+		   link:    Navara, // Janus
+		   link:    Dawn,   // Jarnell
+		   link:    Atlan,  // Paragon
+		   link:    Nero,   // Silessia
+		},
+		planet: {
+			name:    Talistar
+			icon:   "lanos_map",
+			texture: "lanos",
+			radius:  2.3e6,
+			mass:    1.39e24,
+			orbit:   0.47e11,
+			inclination: 2.41,
+			perihelion: 0.37e11,
+			aphelion: 0.57e11,
+			eccentricity: 0.219,
+			rotation: 95,
+			region:     {
+			   name:    Talistar,
+			   parent:  Talistar,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   10.0e6,
+			   inclination: 0.6
+			},
+		},
+		planet:       {
+			name:     Maraner,
+			icon:     "maraner_map",
+			texture:  "maraner",
+			radius:   3.5e6,
+			mass:     2.18e24,
+			orbit:    0.89e11,
+			inclination: 3.0,
+			perihelion: 0.78e11,
+			aphelion: 1.00e11,
+			eccentricity: 0.122,
+		   rotation: 35,
+		   region:     {
+			   name:    Maraner,
+			   parent:  Maraner,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   11.0e6,
+			   inclination: 0.7
+			},
+		},
+		planet:     {
+			name:    Borova
+			icon:    "borova_map"
+			texture: "borova",
+			radius:  5.9e6,
+			mass:    4.38e24,
+			atmosphere: (120,160,210),
+			orbit:   2.1e11,
+			inclination: -16.12,
+			perihelion: 1.83e11,
+			aphelion: 2.36e11,
+			eccentricity: 0.127,
+			rotation: 29,
+			
+			region:     {
+			   name:    Borova,
+			   parent:  Borova,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18.5e6,
+			   inclination: 0.3
+			},
+
+			moon:       {
+			   name:    Bolus
+			   icon:    "garana_map",
+			   texture:  "garana",
+			   radius:  1.77e6,
+			   mass:    12.2e22,
+			   orbit:   51e6,
+			},
+			moon:       {
+			   name:    Kalan
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  0.77e6,
+			   mass:    4.2e22,
+			   orbit:   81e6,
+			},
+		},
+		planet: {
+			name:    Danova
+			icon:    "GasGiant2_map"
+			texture: "GasGiant2",
+			radius:  17.1e6,
+			mass:    3.6e26,
+			tilt:    0.13,
+			orbit:   3.95e11,
+			inclination: -2.32,
+			perihelion: 3.27e11,
+			aphelion: 4.63e11,
+			eccentricity: 0.173,
+			rotation: 31.3,
+			
+			region: {
+			   name:    Danova,
+			   parent:  Danova,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   49.53e6,
+			   inclination: 0.2
+			},
+
+			moon: {
+			   name:    "Dana I"
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  5.3e6,
+			   rotation: 16.4,
+			   mass:    5.98e24,
+			   orbit:   4.11e8,
+			},
+			moon: {
+			   name:    "Dana II"
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6.1e6,
+			   rotation: 28.4,
+			   mass:    5.98e24,
+			   orbit:   6.24e8,
+			},
+		},
+		planet: {
+			name:    Zhalisal
+			icon:    "GasGiant3_map",
+			texture: "GasGiant3",
+			radius:  20e6,
+			mass:    4.81e26,
+			orbit:   4.75e11,
+			inclination: -22.26,
+			perihelion: 5.10e11,
+			aphelion: 8.40e11,
+			eccentricity: 0.245,
+			tscale:  2,
+			tilt:    0.21,
+			rotation: 46.2,
+			
+			region: {
+			   name:    Zhalisal,
+			   parent:  Zhalisal,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.2e8,
+			   inclination: 0.3,
+			},
+			
+			moon: {
+			   name:    Vanna
+			   icon:    "rock_map",
+			   texture:  "vanna",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   5.65e8,
+			   rotation: 100,
+			},
+			moon: {
+				name:    Mara
+				icon:    "lunar_map",
+			    texture:  "lunar",
+				radius:      5.2e6,
+				rotation:    19,
+				inclination: 0.0,
+				mass:        6.0e24,
+				orbit:       6.31e8,
+			},
+			moon: {
+			   name:    Folla,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6e6,
+			   rotation: 18.4,
+			   mass:    5.98e24,
+			   orbit:   9.14e8,
+			},
+			moon: {
+			   name:    Amina,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  4e6,
+			   rotation: 32.6,
+			   mass:    3.28e24,
+			   orbit:   11.14e8,
+			},
+		},
+	},
+}
+
+system: {
+	loc: ( 4.1,  1.7,  1.0),
+	class: G,
+	iff: 1,
+	empire: 0,
+	name: Athenar,
+	
+	link: Janus,
+	link: Jarnell,
+
+	star: Talvesta,
+	
+	stellar:  {
+	   name:    Talvesta
+	   map:     "StarG_map",
+	   image:   "G3",
+	   tscale:  6,
+	   class:	G,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 230),// - standard yellow
+	   back:    ( 50,  50,  90), // - nebula6
+
+	   planet:     {
+			name:    Athenar,
+			icon:    "athenar_map",
+			texture: "athenar",
+			gloss:   "athenar_gloss",
+			radius:  5.72e6,
+			mass:    3.53e24,
+			atmosphere: (150,160,210),
+			orbit:   1.95e11,
+			inclination: -5.08,
+			perihelion: 1.47e11,
+			aphelion: 2.43e11,
+			eccentricity: 0.246,
+
+			region:     {
+			   name:    Athenar,
+			   parent:  Athenar,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.4
+			},
+			
+			moon:       {
+			   name:    Nike
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  0.72e6,
+			   mass:    4.1e22,
+			   orbit:   81e6,
+			}
+		},
+		planet:     {
+			name:    Pallas
+			icon:    "nero_map",
+			texture: "pallas",
+			radius:  3.35e6,
+			mass:    2.52e24,
+			atmosphere: (80,120,150),
+			orbit:   4.25e11,
+			inclination: -15.33,
+			perihelion: 3.37e11,
+			aphelion: 5.13e11,
+			eccentricity: 0.206,
+
+			region:     {
+			   name:    Pallas,
+			   parent:  Pallas,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   19e6,
+			   inclination: 0.2,
+			   link:    Navara, // Janus
+			   link:    Dawn,   // Jarnell
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 6.8, -2.5,  1.0),
+	class: G,
+	iff: 1,
+	empire: 0,
+	name: Paragon,
+	
+	link: Borova,
+	link: Jarnell,
+	
+	star: Talpara,
+
+	stellar:        {
+	   name:    Talpara
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 230),// - standard yellow
+	   back:    ( 50,  70, 100), // - nebula24
+
+	   planet: {
+			name:    Dorrath
+			icon:    "dorrath_map",
+			texture: "dorrath",
+			radius:  3.9e6,
+			mass:    2.58e24,
+			orbit:   0.72e11,
+			inclination: -8.34,
+			perihelion: 0.56e11,
+			aphelion: 0.88e11,
+			eccentricity: 0.222,
+			atmosphere: (121,120,121),
+			rotation: 29.72,
+			region: {
+			   name:    Dorrath,
+			   parent:  Dorrath,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   16e6,
+			   inclination: 0.67
+			},
+			moon:       {
+			   name:    Altos
+			   icon:    "maraner_map",
+			   texture:  "maraner",
+			   radius:  0.85e6,
+			   mass:    8e22,
+			   orbit:   43e6,
+			   retro:   true,
+			},
+		},
+		planet:     {
+			name:    Paragon
+			icon:    "paragon_map",
+			texture: "paragon",
+			radius:  5.8e6,
+			mass:    4.98e24,
+			atmosphere: (140,170,200),
+			orbit:   1.4e11,
+			inclination: -6.14,
+			perihelion: 1.23e11,
+			aphelion: 1.57e11,
+			eccentricity: 0.123,
+			rotation: 27,
+			region:     {
+			   name:    Paragon,
+			   parent:  Paragon,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   20e6,
+			   inclination: 0.5
+			},
+			moon:       {
+			   name:    Porthos
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  1.1e6,
+			   mass:    8e22,
+			   orbit:   39e6,
+			},
+			moon:       {
+			   name:    Aramis,
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  0.5e6,
+			   mass:    8e22,
+			   orbit:   51e6,
+			},
+		},
+	   planet: {
+			name:     "Bryn Mawr",
+			icon:     "bryn_map",
+			texture:  "bryn",
+			radius:  3.3e6,
+			mass:    2.45e24,
+			orbit:   2.57e11,
+			inclination: 15.27,
+			perihelion: 2.20e11,
+			aphelion: 2.94e11,
+			eccentricity: 0.143,
+			rotation: 35,
+			region: {
+			   name:    Bryn,
+			   parent:  "Bryn Mawr",
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   12.0e6,
+			   inclination: 0.7,
+			},
+		},
+		planet:	{
+			name:    Atlan,
+			map:     "GasGiant4_map"
+			texture:  "GasGiant4",
+			radius:  19e6,
+			mass:    2.1e26,
+			orbit:   4.8e11,
+			inclination: -22.26,
+			perihelion: 5.10e11,
+			aphelion: 8.40e11,
+			eccentricity: 0.245,
+			tscale:  2,
+			tilt:    0.23,
+			ring:    "Ring3",
+			minrad:  1.4,
+			maxrad:  1.75,
+			rotation: 21.23,
+			region:     {
+			   name:    Atlan,
+			   parent:  Atlan,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.15e8,
+			   inclination: 0.42,
+			   link:    Tulkas, // Borova
+			   link:    Dawn,   // Jarnell
+			},
+			moon: {
+			   name:    Aklan,
+			   map:     "rock_map"
+			   texture:  "rock",
+			   radius:  2.2e6,
+			   mass:    1.9e22,
+			   orbit:   1.44e8,
+			   rotation: 30
+			},
+			moon: {
+			   name:    Azlan,
+			   map:     "lunar_map"
+			   texture:  "lunar",
+			   radius:      3.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.7e24,
+			   orbit:       2.251e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 7.8,  2.3,  1.0),
+	class: K,
+	iff: 1,
+	empire: 0,
+	name: Thralis,
+	
+	link: Jarnell,
+
+	star: Apollus,
+	stellar:        {
+	   name:    Apollus
+	   map:     "StarK_map",
+	   image:   "K1",
+	   class:	K,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 240, 220),// - K Orange
+	   back:    ( 25,  28,  50), // - nebula11
+	   region: {
+		   name:    Sparta,
+		   parent:  Apollus,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   5.12e11,
+		   inclination: 0.19,
+		   asteroids: 120,
+		   link:    Dawn,
+		},
+		planet: {
+			name:    Pollux
+			icon:    "benares_map",
+			texture: "benares",
+			radius:  3.75e6,
+			mass:    2.50e24,
+			orbit:   0.632e11,
+			inclination: -3.73,
+			perihelion:0.54e11,
+			aphelion: 0.72e11,
+			eccentricity: 0.15,
+			atmosphere: (60,55,45),
+			rotation: 32.12,
+			region: {
+			   name:    Pollux,
+			   parent:  Pollux,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   17.5e6,
+			   inclination: 0.67,
+			},
+			moon:       {
+			   name:    Galad
+			   icon:    "rock_map",
+			   texture:  "galad",
+			   radius:  0.724e6,
+			   mass:    7e22,
+			   orbit:   40e6,
+			},
+		},
+		planet:     {
+			name:    Thrale
+			icon:    "thralis_map",
+			texture: "thrale",
+			radius:  5.98e6,
+			mass:    4.62e24,
+			atmosphere: (80,100,150),
+			orbit:   1.76e11,
+			inclination: 12.87,
+			perihelion: 1.54e11,
+			aphelion: 1.98e11,
+			eccentricity: 0.125,
+			rotation: 13.12,
+			region:     {
+			   name:    Thrale,
+			   parent:  Thrale,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   22e6,
+			   inclination: 0.4
+			},
+		}
+		planet: {
+			name:    Hera
+			icon:    "GasGiant5_map",
+			texture: "GasGiant5",
+			radius:  23.1e6,
+			mass:    4.2e26,
+			tscale:  2,
+			tilt:    0.1,
+			orbit:   2.95e11,
+			inclination: -16.9,
+			perihelion: 2.26e11,
+			aphelion: 3.64e11,
+			eccentricity: 0.234,
+			rotation: 29.3,
+			region: {
+			   name:    Hera,
+			   parent:  Hera,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   103.53e6,
+			   inclination: 0.2
+			},
+		},
+		planet: {
+			name:    Zeus,
+			icon:    "GasGiant10_map",
+			texture: "GasGiant10",
+			radius:  27.5e6,
+			mass:    5.42e26,
+			orbit:   4.13e11,
+			inclination: -11.68,
+			perihelion: 3.24e11,
+			aphelion: 5.02e11,
+			eccentricity: 0.216,
+			tilt:    0.2,
+			ring:    "Ring2",
+			minrad:  1.3,
+			maxrad:  1.7,
+			rotation: 22.5,
+			region: {
+			   name:    Zeus,
+			   parent:  Zeus,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.2e8,
+			   inclination: 0.3,
+			},
+			moon: {
+			   name:    Penelope
+			   icon:    "rock_map",
+			   texture:  "penelope",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   3.15e8,
+			   rotation: 60,
+			},
+			moon: {
+			   name:    Persephone,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      5.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        6.0e24,
+			   orbit:       5.131e8,
+			},
+			moon: {
+			   name:    Aenia,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   7.24e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 2.8, -0.3,  0.0),
+	class: G,
+	iff: 1,
+	empire: 0,
+	name: Janus,
+	
+	link: Solus,
+	link: ar,
+	link: Borova,
+	link: Haiche,
+	link: Silessia,
+
+	star: Janset,
+	
+	stellar: {
+	   name:    Janset,
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 230), // - standard yellow
+	   back:    ( 70,  75, 120), // - nebula12
+
+	   planet: {
+			name:    Ilon,
+			icon:    "ilon_map",
+			texture: "ilon",
+			radius:  3.5e6,
+			mass:    2.18e24,
+			orbit:   0.58e11,
+			inclination: 4.24,
+			perihelion: 0.50e11,
+			aphelion: 0.66e11,
+			eccentricity: 0.141,
+			rotation: 11,
+			region: {
+			   name:    Ilon,
+			   parent:  Ilon,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   9.3e6,
+			   inclination: 0.75
+			},
+		},
+		planet: {
+			name:    Dante,
+			icon:    "dante_map",
+			texture: "dante",
+			radius:  5.2e6,
+			atmosphere: (192,160,128),
+			mass:    4.18e24,
+			orbit:   0.72e11,
+			inclination: 3.23,
+			perihelion: 0.62e11,
+			aphelion: 0.82e11,
+			eccentricity: 0.133,
+			rotation: 8,
+			region: {
+			   name:    Dante,
+			   parent:  Dante,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.66
+			},
+			moon: {
+			   name:    Hermes,
+			   icon:    "rock_map",
+			   texture:  "hermes",
+			   radius:  5e5,
+			   mass:    2e21,
+			   orbit:   24.3e6,
+			   retro:   true,
+			},
+		},
+		planet: {
+			name:    Janek,
+			icon:    "janek_map",
+			texture: "janek",
+			radius:  5.4e6,
+			mass:    4.18e24,
+			atmosphere: (100,150,220),
+			orbit:   1.4e11,
+			inclination: -16.56,
+			perihelion: 1.09e11,
+			aphelion: 1.71e11,
+			eccentricity: 0.223,
+			rotation: 20,
+			region:     {
+			   name:    Janek,
+			   parent:  Janek,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   17e6,
+			   inclination: 0.5
+			},
+			moon:       {
+			   name:    Lanos,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   42e6,
+			},
+		},
+		planet:     {
+			name:    Alystra
+			icon:    "GasGiant12_map",
+			texture: "GasGiant12",
+			radius:  36e6,
+			mass:    5.6e26,
+			orbit:   2.84e11,
+			inclination: -17.56,
+			perihelion: 2.37e11,
+			aphelion: 3.31e11,
+			eccentricity: 0.165,
+			tscale:  2,
+			tilt:    0.2,
+			ring:    "Ring",
+			minrad:  1.3,
+			maxrad:  2.1,
+			rotation: 16.3,
+			region: {
+			   name:    Alystra,
+			   parent:  Alystra,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.55e8,
+			   inclination: 0.4
+			},
+			moon: {
+			   name:    Fenris,
+			   icon:    "rock_map",
+			   texture:  "fenris",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   2.45e8,
+			   rotation: 100,
+			},
+			moon: {
+			   name:    Navara,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      5.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        6.0e24,
+			   orbit:       4.1e8,
+			   region: {
+				   name:    Navara,
+				   parent:  Navara,
+				   type: Moon,
+				   radius:  480e3,
+				   grid:    20e3,
+				   orbit:   20e6,
+				   inclination: 0.4,
+				   link:    Trellis, // Solus
+				   link:    Pallas,  // Athenar
+				   link:    Tulkas,  // Borova
+				   link:    Kala,    // Haiche
+				   link:    Nero,    // Silessia
+				},
+			},
+		},
+	},
+}
+
+// INDEPENDENT SYSTEMS
+system: 
+{
+	loc: ( 1.0, -1.8,  0.0),
+	class: G,
+	iff: 0,
+	empire: 10,
+	name: Solus,
+	
+	link: Janus,
+	link: Renser,
+	link: Silessia,
+
+	star: Luxor,
+
+	stellar: {
+	   name:    Luxor
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  15.97e8,
+	   mass:    2.13e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 225), // standard yellow
+	   back:    ( 20,  50,  90), // nebula15 blue
+
+	   planet: {
+			name:    Meridian
+			icon:    "meridian_map",
+			texture: "meridian",
+			radius:  3.5e6,
+			mass:    2.18e24,
+			atmosphere: (200,185,165),
+			orbit:   0.68e11,
+			inclination: -6.49,
+			perihelion: 0.56e11,
+			aphelion: 0.80e11,
+			eccentricity: 0.172,
+		   rotation: 15.35,
+		   region: {
+			   name:    Meridian
+			   parent:  Meridian,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   9.5e6,
+			   inclination: 0.70
+			},
+		},
+		planet: {
+			name:    Solus
+			icon:    "solus_map",
+			texture: "solus",
+			radius:  5.4e6,
+			mass:    4.18e24,
+			atmosphere: (155,175,220),
+			orbit:   1.4e11,
+			inclination: -3.17,
+			perihelion: 1.20e11,
+			aphelion: 1.60e11,
+			eccentricity: 0.142,
+			rotation: 21.3,
+			region: {
+			   name:    Solus,
+			   parent:  Solus,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.5
+			},
+			moon: {
+			   name:    Kalon
+			   icon:    "omane_map",
+			   texture:  "omane",
+			   radius:  1.83e6,
+			   mass:    8.12e22,
+			   orbit:   45e6,
+			   rotation: 8,
+			},
+			moon: {
+			   name:    Alar
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:  0.5e6,
+			   mass:    4.3e22,
+			   orbit:   59.5e6,
+			},
+		},
+		planet: {
+			name:    Jalah,
+			icon:    "jalah_map",
+			texture: "jalah",
+			radius:  19.1e6,
+			mass:    3.6e26,
+			tscale:  2,
+			tilt:    0.13,
+			orbit:   2.95e11,
+			inclination: -5.65,
+			perihelion: 2.48e11,
+			aphelion: 3.42e11,
+			eccentricity: 0.159,
+			rotation: 29.3,
+			region: {
+			   name:    Jalah,
+			   parent:  Jalah,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   55.8e6,
+			   inclination: 0.2
+			},
+		},
+		planet: {
+			name:    Trellis
+			icon:    "GasGiant9_map",
+			texture: "GasGiant9",
+			radius:  30e6,
+			mass:    5.42e26,
+			orbit:   3.75e11,
+			inclination: 1.54,
+			perihelion: 2.99e11,
+			aphelion: 4.52e11,
+			eccentricity: 0.204,
+			tscale:  2,
+			tilt:    0.125,
+			ring:    "Ring2",
+			minrad:  1.2,
+			maxrad:  1.9,
+			rotation: 19.5,
+			region: {
+			   name:    Trellis,
+			   parent:  Trellis,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.2e8,
+			   inclination: 0.3,
+			   link:    Navara, // Janus
+			   link:    Lornas, // Renser
+			   link:    Nero,   // Silessia
+			},
+			moon: {
+			   name:    Ovid,
+			   icon:    "rock_map",
+			   texture:  "ovid",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   2.65e8,
+			   rotation: 100,
+			},
+			moon: {
+			   name:    Archimedes
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      5.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        6.0e24,
+			   orbit:       4.31e8,
+			},
+			moon: {
+			   name:    Flor,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   8.14e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 1.8, -3.1,  1.0),
+	class: K,
+	iff: 0,
+	empire: 9,
+	name: Silessia,
+	
+	link: Borova,
+	link: Janus,
+	link: Solus,
+	link: Loris,
+
+	star: Siltana,
+
+	stellar:        {
+	   name:    Siltana
+	   map:     "StarK_map",
+	   image:   "K1",
+	   class:	K,
+	   tscale:  6,
+	   radius:  12e8,
+	   mass:    1e30,
+	   light:   7e10,
+	   color:   (255, 232, 220),
+	   back:    (45, 65, 75),
+
+	   planet:       {
+			name:    Silessia
+			icon:    "silessia_map",
+			texture: "silessia",
+			radius:  5.4e6,
+			mass:    3.38e24,
+			atmosphere: (80,120,150),
+			orbit:   0.97e11,
+			inclination: -16.5,
+			perihelion: 0.85e11,
+			aphelion: 1.09e11,
+			eccentricity: 0.127,
+			rotation: 19,
+			region:     {
+			   name:    Silessia,
+			   parent:  Silessia,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   19e6,
+			   inclination: 0.45
+			},
+			moon:       {
+			   name:    Tannis
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   95e6,
+			},
+		},
+		planet: {
+			name:    Prosenar
+			icon:    "GasGiant8_map",
+			texture: "GasGiant8",
+			radius:  14.1e6,
+			mass:    3.6e26,
+			tilt:    0.2,
+			ring:    "Ring3",
+			minrad:  1.5,
+			maxrad:  1.9,
+			orbit:   1.85e11,
+			inclination: -5.8,
+			perihelion: 1.42e11,
+			aphelion: 2.28e11,
+			eccentricity: 0.232,
+			rotation: 61.3,
+			region: {
+			   name:    Prosenar,
+			   parent:  Prosenar,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   55.53e6,
+			   inclination: 0.3
+			},
+			moon: {
+			   name:    "Proson I",
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  2.3e6,
+			   rotation: 16.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   4.11e8,
+			},
+			moon: {
+			   name:    "Proson II",
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  4.2e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   6.24e8,
+			},
+		},
+		planet: {
+			name:    Vesta
+			icon:    "GasGiant2_map",
+			texture: "GasGiant2",
+			radius:  18.1e6,
+			mass:    3.6e26,
+			tilt:    0.13,
+			orbit:   3.15e11,
+			inclination: -3.4,
+			perihelion: 2.39e11,
+			aphelion: 3.91e11,
+			eccentricity: 0.24,
+			rotation: 31.3,
+			region: {
+			   name:    Vesta,
+			   parent:  Vesta,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   65.3e6,
+			   inclination: 0.3
+			},
+			moon: {
+			   name:    "Vesta I",
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  5.3e6,
+			   rotation: 16.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   4.11e8,
+			},
+			moon: {
+			   name:    "Vesta II",
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  3.1e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   6.24e8,
+			},
+			moon: {
+			   name:    "Vesta III",
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6.1e6,
+			   rotation: 38.4,
+			   mass:    5.98e24,
+			   orbit:   13.24e8,
+			},
+		},
+		planet: {
+			name:    Nero
+			icon:    "nero_map",
+			texture: "nero",
+			radius:  2.64e6,
+			mass:    1.48e24,
+			orbit:   5.18e11,
+			inclination: -9.98,
+			perihelion: 4.48e11,
+			aphelion: 5.88e11,
+			eccentricity: 0.136,
+			rotation: 219,
+			region: {
+			   name:    Nero,
+			   parent:  Nero,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   15e6,
+			   inclination: 0.2,
+			   link:    Tulkas,   // Borova
+			   link:    Navara,   // Janus
+			   link:    Trellis,  // Solus
+			   link:    Casalle,  // Loris
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: ( 0.0,  1.0,  1.0),
+	class: K,
+	iff: 0,
+	empire: 11,
+	name: Haiche,
+	
+	link: Janus,
+	link: Renser,
+	link: Ostara,
+	link: Kolchev,
+
+	star: Heron,
+
+	stellar:        {
+	   name:    Heron
+	   map:     "StarK_map",
+	   image:   "K1",
+	   class:	K,
+	   tscale:  6,
+	   radius:  12e8,
+	   mass:    1.5e30,
+	   light:   7.8e10,
+	   color:   (255, 232, 224),
+	   back:    ( 44,  66,  88),
+
+	   planet:       {
+			name:    Haiche
+			icon:    "haiche_map"
+			texture: "haiche",
+			radius:  4.8e6,
+			mass:    5.75e24,
+			atmosphere: (200,180,160),
+			orbit:   0.94e11,
+			rotation: 17.3,
+			inclination: -10.66,
+			perihelion: 0.73e11,
+			aphelion: 1.15e11,
+			eccentricity: 0.223,
+			
+			region:     {
+			   name:    Haiche,
+			   parent:  Haiche,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   19e6,
+			   inclination: 0.45
+			},
+			
+			moon:       {
+			   name:    Eiller
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   85e6,
+			},
+		},
+		planet: {
+			name:    Cygnus
+			icon:    "GasGiant5_map",
+			texture: "GasGiant5",
+			radius:  27.1e6,
+			mass:    2.6e26,
+			tscale:  2,
+			tilt:    0.13,
+			orbit:   2.35e11,
+			inclination: 15.6,
+			perihelion: 1.85e11,
+			aphelion: 2.85e11,
+			eccentricity: 0.214,
+			rotation: 31.3,
+			region: {
+			   name:    Cygnus,
+			   parent:  Cygnus,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   100e6,
+			   inclination: 0.2
+			},
+			moon: {
+			   name:    Corvus
+			   icon:    "rock_map",
+			   texture:  "corvus",
+			   radius:  1.3e6,
+			   rotation: 16.4,
+			   mass:    5.98e24,
+			   orbit:   4.81e8,
+			},
+			moon: {
+			   name:    Aquilae,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  2.1e6,
+			   rotation: 28.4,
+			   mass:    5.98e24,
+			   orbit:   6.14e8,
+			},
+		},
+		planet: {
+			name:    "Tal Amin"
+			icon:    "GasGiant11_map",
+			texture: "GasGiant11",
+			radius:  38.2e6,
+			mass:    4.0e26,
+			tscale:  2,
+			tilt:    0.13,
+			orbit:   3.41e11,
+			inclination: -17.21,
+			perihelion: 3.00e11,
+			aphelion: 3.82e11,
+			eccentricity: 0.12,
+			rotation: 31.3,
+			region: {
+			   name:    "Tal Amin",
+			   parent:  "Tal Amin",
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   150e6,
+			   inclination: 0.2
+			},
+			moon: {
+			   name:    Benares,
+			   icon:    "rock_map",
+			   texture:  "benares",
+			   radius:  2.3e6,
+			   rotation: 26.4,
+			   mass:    5.98e24,
+			   orbit:   4.21e8,
+			},
+			moon: {
+			   name:    Kala
+			   icon:    "kala_map",
+			   texture:  "kala",
+			   radius:  2.9e6,
+			   rotation: 18.4,
+			   mass:    5.98e24,
+			   orbit:   5.74e8,
+			},
+		},
+	},
+}
+
+// MARAKAN HEGEMONY
+system: 
+{
+	loc: (-0.8, -1.5,  1.0),
+	class: G,
+	iff: 2,
+	empire: 1,
+	name: Renser,
+	
+	link: Haiche,
+	link: Loris,
+	link: Silessia,
+	link: Solus,
+	link: Korius,
+	
+	star: Renset,
+	stellar: {
+	   name:    Renset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  15.97e8,
+	   mass:    2.13e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 225),
+	   back:    ( 50,  52,  55),
+	   region: {
+		   name:    Lornas,
+		   parent:  Renset,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   4.78e11,
+		   inclination: 0.23,
+		   asteroids: 100,
+		   link:    Kala,    // Haiche
+		   link:    Casalle, // Loris
+		   link:    Nero,    // Silessia
+		   link:    Trellis, // Solus
+		   link:    Solnas,  // Korius
+		},
+		planet: {
+			name:    Garana
+			icon:    "garana_map",
+			texture: "garana",
+			radius:  4.318e6,
+			mass:    3.15e24,
+			orbit:   0.62e11,
+			inclination: 6.15,
+			perihelion: 0.50e11,
+			aphelion: 0.74e11,
+			eccentricity: 0.193,
+			rotation: 13.19,
+			region: {
+			   name:    Garana,
+			   parent:  Garana,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   13.9e6,
+			   inclination: 0.62
+			},
+		},
+		planet: {
+			name:    Rhomindal
+			icon:    "rhomindal_map",
+			texture: "rhomindal",
+			radius:  5.735e6,
+			mass:    4.95e24,
+			orbit:   11.53e11,
+			inclination: 9.98,
+			perihelion: 0.87e11,
+			aphelion: 1.43e11,
+			eccentricity: 0.243,
+			rotation: 29.3,
+			region: {
+			   name:    Rhomindal,
+			   parent:  Rhomindal,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   22.0e6,
+			   inclination: 0.55
+			},
+		},
+		planet: {
+			name:    Renser
+			icon:    "renser_map",
+			texture: "renser",
+			radius:  6.437e6,
+			mass:    5.98e24,
+			atmosphere: (180,170,200),
+			orbit:   0.20e11,
+			inclination: 9.97,
+			perihelion: 0.15e11,
+			aphelion: 0.24e11,
+			eccentricity: 0.219,
+			rotation: 17,
+			region: {
+			   name:    Renser,
+			   parent:  Renser,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.49,
+			},
+		},
+		planet: {
+			name:    Marisol
+			icon:    "marisol_map",
+			texture: "marisol",
+			radius:  27.489e6,
+			mass:    4.21e26,
+			orbit:   3.75e11,
+			inclination: 3.55,
+			perihelion: 3.27e11,
+			aphelion: 4.23e11,
+			eccentricity: 0.127,
+			tilt:    0.20,
+			rotation: 39.2,
+			region: {
+			   name:    Marisol,
+			   parent:  Marisol,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   0.75e8,
+			   inclination: 0.3,
+			},
+			moon: {
+			   name:    Asur
+			   icon:    "rock_map",
+			   texture:  "asur",
+			   radius:  3.541e6,
+			   mass:    3e22,
+			   orbit:   2.65e8,
+			   rotation: 100,
+			},
+			moon: {
+			   name:    Malinus,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      5.211e6,
+			   rotation:    19,
+			   inclination: 7.53,
+			   mass:        6.0e24,
+			   orbit:       3.71e8,
+			},
+			moon: {
+			   name:    Florina,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  3.707e6,
+			   rotation: 12.1,
+			   atmosphere: (180,180,255),
+			   mass:    3.98e24,
+			   orbit:   6.24e8,
+			},
+		},
+		planet: {
+			name:    Khaital
+			icon:    "khaital_map",
+			texture: "khaital",
+			radius:  3.821e6,
+			mass:    2.87e24,
+			atmosphere: (150,160,190),
+			orbit:   5.78e11,
+			inclination: 7.53,
+			perihelion: 4.42e11,
+			aphelion: 7.14e11,
+			eccentricity: 0.236,
+			rotation: 28,
+			region: {
+			   name:    Khaital,
+			   parent:  Khaital,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.49,
+			   link:    Trellis
+			},
+		},
+	},
+}
+
+system:
+{
+	loc: (-1.2, -3.4,  1.0),
+	class: G,
+	iff: 2,
+	empire: 1,
+	name: Loris,
+	
+	link: Silessia,
+	link: Renser,
+	link: Nephrys,
+	link: Korius,
+	
+	star: Lorset,
+	
+	stellar:        {
+	   name:    Lorset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  15e8,
+	   mass:    1.8e30,
+	   light:   1.1e11,
+	   color:   (255, 250, 240), // - G Yellow
+	   back:    (100,  60,  30), // - nebula16
+
+	   planet:     {
+			name:    Duna,
+			icon:    "duna_map",
+			texture: "duna",
+			radius:  25.1e6,
+			mass:    1.38e25,
+			tilt:    0.125,
+			tscale:  2,
+			orbit:   0.81e11,
+			inclination: -3.21,
+			perihelion: 0.70e11,
+			aphelion: 0.92e11,
+			eccentricity: 0.135,
+			rotation: 36.3,
+			region:     {
+			   name:    Duna,
+			   parent:  Duna,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   65e6,
+			   inclination: 0.6
+			},
+			moon: {
+			   name:    Ansel
+			   icon:    "bryn_map",
+			   texture:  "bryn",
+			   radius:  2.4e6,
+			   mass:    1.2e22,
+			   orbit:   0.84e8,
+			   rotation: 30,
+			},
+			moon: {
+			   name:    Kaius
+			   icon:    "benares_map",
+			   texture:  "benares",
+			   radius:      3.1e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.6e24,
+			   orbit:       1.301e8,
+			},
+		},
+		planet:     {
+			name:    Loris,
+			icon:    "loris_map",
+			texture: "loris",
+			radius:  5.1e6,
+			mass:    3.88e24,
+			tilt:    0.125,
+			atmosphere: (200,180,160),
+			orbit:   1.54e11,
+			inclination: -16.94,
+			perihelion: 1.29e11,
+			aphelion: 1.79e11,
+			eccentricity: 0.161,
+			rotation: 26.3,
+			region:     {
+			   name:    Loris,
+			   parent:  Loris,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   15e6,
+			   inclination: 0.4
+			},			
+			moon: {
+			   name:    "Loris I",
+			   icon:    "rock_map",
+			   texture:  "loris1",
+			   radius:  0.4e6,
+			   mass:    4.3e23,
+			   orbit:   35e6,
+			   rotation: 9.2,
+			},
+			moon: {
+			   name:    "Loris II",
+			   icon:    "rock_map",
+			   texture:  "loris2",
+			   radius:      0.25e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        0.6e24,
+			   orbit:       61e6,
+			},
+		},
+		planet:     {
+			name:    Casalle
+			icon:    "GasGiant5_map",
+			texture: "GasGiant5",
+			radius:  38.2e6,
+			mass:    4.0e26,
+			orbit:   2.95e11,
+			inclination: 6.61,
+			perihelion: 2.22e11,
+			aphelion: 3.68e11,
+			eccentricity: 0.246,
+			tilt:    0.1,
+			tscale:  2,
+			ring:    "Ring3",
+			minrad:  1.4,
+			maxrad:  1.7,
+			rotation: 36.3,
+			region:     {
+			   name:    Casalle,
+			   parent:  Casalle,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   175e6,
+			   inclination: 0.6,
+			   link:    Nero,   // Silessia
+			   link:    Lornas, // Renser
+			   link:    Nergal, // Nephrys
+			   link:    Solnas, // Korius
+			},
+			moon: {
+			   name:    Demeter
+			   icon:    "kala_map",
+			   texture:  "kala",
+			   radius:  2.2e6,
+			   mass:    1.9e22,
+			   orbit:   1.44e8,
+			   rotation: 30,
+			},
+			moon: {
+			   name:    Thoraine,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:      3.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.7e24,
+			   orbit:       2.251e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-1.4,  2.8,  1.0),
+	class: M,
+	iff: 2,
+	empire: 1,
+	name: Ostara,
+	
+	link: Kolchev,
+	link: Haiche,
+	link: Tarsus,
+
+	star: Ostram,
+
+	stellar: {
+	   name:    Ostram,
+	   image:   "M1",
+	   map:     "StarM_map",
+	   class:	M,
+	   tscale:  6,
+	   radius:  12e8,
+	   mass:    1e30,
+	   light:   5e10,
+	   color:   (255, 170, 160),// - deep red
+	   back:    (130,  90,  50), // - nebula2
+
+	   planet: {
+			name:    Aram,
+			icon:   "ostara_map",
+			texture: "aram",
+			radius:  6.4e6,
+			mass:    5.98e24,
+			atmosphere: (180,90,60),
+			orbit:   1.03e11,
+			inclination: -13.22,
+			perihelion: 0.89e11,
+			aphelion: 1.18e11,
+			eccentricity: 0.137,
+			rotation: 15,
+			region: {
+			   name:    Aram,
+			   parent:  Aram,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   19e6,
+			   inclination: 0.45,
+			   link:    Volova,   // Kolchev
+			   link:    Kala,     // Haiche
+			   link:    Theramin, // Tarsus
+			},
+			moon: {
+			   name:    Ur,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   85e6,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-2.7,  1.1,  1.0),
+	class: G,
+	iff: 2,
+	empire: 1,
+	name: Kolchev,
+	
+	link: Haiche,
+	link: Ostara,
+	link: Kolchev,
+	link: Isham,
+	link: Tarsus,
+	link: Radix,
+
+	star: Kurset,
+
+	stellar:        {
+	   name:    Kurset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 252, 250),// - G White
+	   back:    ( 50,  45,  35), // - nebula3
+
+	   planet:     {
+			name:    Ilya
+			icon:    "ilya_map",
+			texture: "ilya",
+			radius:  3.6e6,
+			mass:    4.1e26,
+			orbit:   1.03e11,
+			inclination: -9.4,
+			perihelion: 0.89e11,
+			aphelion: 1.17e11,
+			eccentricity: 0.134,
+			rotation: 19.3,
+				region:     {
+			   name:    Ilya,
+			   parent:  Ilya,
+			   parent:  Caladan,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.5
+			},
+		},
+		planet:     {
+			name:    Kolchev
+			icon:    "kolchev_map",
+			texture: "kolchev",
+			atmosphere: (130,130,150),
+			radius:  4.8e6,
+			mass:    3.9e24,
+			orbit:   1.95e11,
+			inclination: -2.33,
+			perihelion: 1.50e11,
+			aphelion: 2.40e11,
+			eccentricity: 0.23,
+			rotation: 23.3,
+			region:     {
+			   name:    Kolchev,
+			   parent:  Kolchev,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   21e6,
+			   inclination: 0.4
+			},
+			moon: {
+			   name:    "Odin"
+			   icon:    "maraner_map",
+			   texture:  "maraner",
+			   radius:  1.4e6,
+			   mass:    4.3e23,
+			   orbit:   40e6,
+			   rotation: 9.2,
+			},
+			moon: {
+			   name:    "Dva"
+			   icon:    "Moon2_map",
+			   texture:  "Moon2",
+			   radius:      0.85e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        0.6e24,
+			   orbit:       71e6,
+			},
+		},
+		planet: {
+			name:    Anatoly
+			icon:    "GasGiant6_map",
+			texture: "GasGiant6",
+			radius:  29.1e6,
+			mass:    3.6e26,
+			tscale:  2,
+			tilt:    0.13,
+			orbit:   2.95e11,
+			inclination: 15.35,
+			perihelion: 2.57e11,
+			aphelion: 3.33e11,
+			eccentricity: 0.13,
+			rotation: 29.3,
+			region: {
+			   name:    Anatoly,
+			   parent:  Anatoly,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   79.53e6,
+			   inclination: 0.2
+			},
+		},
+		planet: {
+			name:    Volova,
+			icon:    "GasGiant9_map",
+			texture: "GasGiant9",
+			radius:  20e6,
+			mass:    5.42e26,
+			orbit:   3.75e11,
+			inclination: -5.62,
+			perihelion: 3.05e11,
+			aphelion: 4.45e11,
+			eccentricity: 0.186,
+			tilt:    0.25,
+			ring:    "Ring2",
+			minrad:  1.2,
+			maxrad:  1.9,
+			rotation: 19.5,
+			region: {
+			   name:    Volova,
+			   parent:  Volova,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1.2e8,
+			   inclination: 0.3,
+			   link:    Kala,     // Haiche
+			   link:    Aram,     // Ostara
+			   link:    Solnas,   // Kolchev
+			   link:    Relay,    // Isham
+			   link:    Theramin, // Tarsus
+			   link:    Cavenda,  // Radix
+			},
+			moon: {
+			   name:    Anya
+			   icon:    "nero_map",
+			   texture:  "nero",
+			   radius:  3e6,
+			   mass:    3e22,
+			   orbit:   2.65e8,
+			   rotation: 100,
+			},
+			moon: {
+			   name:    Vlad
+			   icon:    "Moon1_map",
+			   texture:  "Moon1",
+			   radius:      5.2e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        6.0e24,
+			   orbit:       4.31e8,
+			},
+			moon: {
+			   name:    Dmitri,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   8.14e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-2.5, -1.0,  1.0),
+	class: G,
+	iff: 2,
+	empire: 1,
+	name: Korius,
+	
+	link: Nephrys,
+	link: Renser,
+	link: Loris,
+	link: Kolchev,
+	link: Isham,
+
+	star: Koriset,
+
+	stellar:        {
+	   name:    Koriset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 240),// - G Yellow
+	   back:    (128, 90, 57),  // Nebula 5 orange
+	   region: {
+		   name:    Solnas,
+		   parent:  Koriset,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   4.18e11,
+		   inclination: 0.23,
+		   asteroids: 60,
+		   link:    Nergal,  // Nephrys
+		   link:    Lornas,  // Renser
+		   link:    Casalle, // Loris
+		   link:    Volova,  // Kolchev
+		   link:    Relay,   // Isham
+		},
+		planet: {
+			name:    Moneta
+			icon:    "bryn_map",
+			texture: "moneta",
+			radius:  3.6e6,
+			mass:    3.96e26,
+			orbit:   0.97e11,
+			inclination: -10.8,
+			perihelion: 0.75e11,
+			aphelion: 1.19e11,
+			eccentricity: 0.229,
+			rotation: 15.13,
+			region:     {
+			   name:    Moneta,
+			   parent:  Moneta,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   12e6,
+			   inclination: 0.6
+			},
+			moon: {
+			   name:    Covana
+			   icon:    "benares_map",
+			   texture:  "benares",
+			   radius:      1.1e6,
+			   rotation:    19,
+			   inclination: 0.0,
+			   mass:        1.6e24,
+			   orbit:       34.3e6,
+			},
+		},
+		planet: {
+			name:    Rhomin
+			icon:    "GasGiant11_map",
+			texture: "GasGiant11",
+			radius:  38.2e6,
+			mass:    4.0e26,
+			tilt:    0.1,
+			tscale:  2,
+			orbit:   1.61e11,
+			inclination: 6.09,
+			perihelion: 1.37e11,
+			aphelion: 1.85e11,
+			eccentricity: 0.151,
+			rotation: 31.3,
+			
+			moon:     {
+			   name:    Korius
+			   icon:    "korius_map",
+			   texture:  "korius",
+			   radius:  4e6,
+			   mass:    4.2e24,
+			   atmosphere: (130,130,130),
+			   orbit:   232e6,
+			   rotation: 24.3,
+			},
+			moon:     {
+			   name:    Adantar
+			   icon:    "adantar_map",
+			   texture:  "adantar",
+			   radius:  3.7e6,
+			   mass:    3.4e24,
+			   atmosphere: (120,100,90),
+			   orbit:   356e6,
+			   rotation: 17.8,
+			   region:     {
+				   name:    Adantar,
+				   parent:  Adantar,
+				   type: Moon,
+				   radius:  480e3,
+				   grid:    20e3,
+				   orbit:   15e6,
+				   inclination: 0.4
+				},
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-2.9,  2.6,  1.0),
+	class: K,
+	iff: 2,
+	empire: 1,
+	name: Tarsus,
+	
+	link: Kolchev,
+	link: Ostara, 
+	link: Radix,
+
+	star: Tarset,
+
+	stellar: {
+	   name:    Tarset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	K,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.5e11,
+	   color:   (255, 250, 230),// - standard yellow
+	   back:    (170, 110,  50),// - nebula7
+	   region: {
+		   name:    Sintar,
+		   parent:  Tarset,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   1.25e11,
+		   inclination: 0.45,
+		   asteroids: 200
+		},
+		planet: {
+			name:    "Tarsus"
+			icon:    "tarsus_map",
+			texture: "tarsus",
+			atmosphere: (90,70,60),
+			radius:  3.75e6,
+			mass:    5.6e26,
+			orbit:   1.95e11,
+			inclination: 11.97,
+			perihelion: 1.60e11,
+			aphelion: 2.30e11,
+			eccentricity: 0.18,
+			rotation: 21.3,
+			region: {
+			   name:    Tarsus,
+			   parent:  "Tarsus",
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   17e6,
+			   inclination: 0.45
+			},
+		},
+		planet: {
+			name:    "Theramin",
+			icon:    "oman_map",
+			texture: "oman",
+			radius:  2.15e6,
+			mass:    3.96e26,
+			orbit:   3.61e11,
+			inclination: 11.08,
+			perihelion: 2.84e11,
+			aphelion: 4.38e11,
+			eccentricity: 0.213,
+			rotation: 11.1,
+			region: {
+			   name:    "Theramin",
+			   parent:  "Theramin",
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   13e6,
+			   inclination: 0.45,
+			   link:    Volova,  // Kolchev
+			   link:    Aram,    // Ostara
+			   link:    Cavenda, // Radix
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-4.0, -3.1,  1.0),
+	class: A,
+	iff: 2,
+	empire: 1,
+	name: Nephrys,
+	
+	link: Loris, 
+	link: Korius,
+
+	star: Nephaas,
+
+	stellar:        {
+		name:    Nephaas
+		map:     "StarA_map",
+		image:   "A1",
+		class:	A,
+		tscale:  6,
+		radius:  16e8,
+		mass:    3e30,
+		light:   2.6e11,
+		color:   (245, 245, 255),// - A Blue-White
+		back:    ( 43,  40,  46), // - nebula18 (dark gray)
+
+		planet:     {
+			name:    Nergal
+			icon:    "nergal_map",
+			texture: "nergal",
+			radius:  9e6,
+			mass:    5.6e28,
+			orbit:   4.8e11,
+			inclination: 15.23,
+			perihelion: 3.94e11,
+			aphelion: 5.66e11,
+			eccentricity: 0.18,
+			rotation: 160.3,
+			region:     {
+			   name:    Nergal,
+			   type: Planet,
+			   parent:  Nergal,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   35e6,
+			   inclination: 0.1,
+			   link:    Casalle, // Loris
+			   link:    Solnas,  // Korius
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-4.6,  2.1,  1.0),
+	class: G,
+	iff: 2, 
+	empire: 1,
+	name: Radix,
+	
+	link: Kolchev,
+	link: Isham,
+	link: Tarsus,
+	link: Garrison,
+
+	star: Radset,
+
+	stellar:        {
+	   name:    Radset
+	   map:     "StarG_map"
+	   image:   "G3",
+	   class:	G,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 245),// - G Yellow
+	   back:    ( 40,  22,  14), // - nebula19
+
+	   planet:     {
+			name:    Senna
+			icon:    "senna_map",
+			texture: "senna",
+			radius:  4.5e6,
+			mass:    4.1e24,
+			atmosphere: (160,140,120),
+			orbit:   0.75e11,
+			inclination: -9.27,
+			perihelion: 0.65e11,
+			aphelion: 0.85e11,
+			eccentricity: 0.137,
+			rotation: 24.3,
+			region:     {
+			   name:    Senna,
+			   parent:  Senna,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.5
+			},
+			moon: {
+			   name:    Trump
+			   icon:    "rock_map",
+			   texture:  "trump",
+			   radius:  2.3e6,
+			   rotation: 16.4,
+			   mass:    5.98e23,
+			   orbit:   48e6,
+			},
+		},
+		planet:     {
+			name:    Radix
+			icon:    "radix_map",
+			texture: "radix",
+			radius:  5.1e6,
+			mass:    4.6e24,
+			atmosphere: (175,160,150),
+			orbit:   1.3e11,
+			inclination: -1.47,
+			perihelion: 1.11e11,
+			aphelion: 1.49e11,
+			eccentricity: 0.143,
+			rotation: 16.3,
+			region:     {
+			   name:    Radix,
+			   parent:  Radix,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.4
+			},
+			moon: {
+			   name:    Ariadne,
+			   icon:    "lunar_map",
+			   texture:  "lunar",
+			   radius:  2.9e6,
+			   rotation: 310.4,
+			   mass:    5.18e23,
+			   orbit:   53.2e6,
+			},
+		},
+		planet: {
+			name:    Cavenda
+			icon:    "GasGiant5_map",
+			texture: "GasGiant5",
+			radius:  13.7e6,
+			mass:    3.6e26,
+			tscale:  2,
+			orbit:   2.51e11,
+			inclination: 10.67,
+			perihelion: 2.20e11,
+			aphelion: 2.82e11,
+			eccentricity: 0.124,
+			rotation: 43.7,
+			region: {
+			   name:    Cavenda,
+			   parent:  Cavenda,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   55e6,
+			   inclination: 0.3,
+			   link:    Volova,   // Kolchev
+			   link:    Relay,    // Isham
+			   link:    Theramin, // Tarsus
+			   link:    Nerasil,  // Garrison
+			},	
+			moon: {
+			   name:    Oberon
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  2.3e6,
+			   rotation: 26.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   3.11e8,
+			},
+			moon: {
+			   name:    Titania
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  4.1e6,
+			   rotation: 38.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   5.24e8,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-5.1,  0.5,  1.0), 
+	class: K,
+	iff: 2, 
+	empire: 1, 
+	name: Isham, 
+	
+	link: Korius,
+	link: Kolchev,
+	link: Radix,
+	link: Korius, 
+	link: Garrison, 
+	link: Trocanther,
+
+	star: Ishtar,
+
+	stellar:        {
+	   name:    Ishtar,
+	   map:     "StarK_map",
+	   image:   "K1",
+	   class:	K,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 250, 230),// - K
+	   back:    ( 30,  18,  12), // - nebula25
+
+	   planet:     {
+			name:    Garden
+			icon:    "garden_map",
+			texture: "garden",
+			radius:  3.75e6,
+			mass:    5.6e23,
+			atmosphere: (145,170,190),
+			orbit:   1.8e11,
+			inclination: 15.64,
+			perihelion: 1.54e11,
+			aphelion: 2.06e11,
+			eccentricity: 0.146,
+			rotation: 26.3,
+			region:     {
+			   name:    Garden,
+			   parent:  Garden,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   17e6,
+			   inclination: 0.4
+			},
+		},
+		planet: {
+			name:    Senesca,
+			icon:    "GasGiant10_map",
+			texture: "GasGiant10",
+			radius:  14.1e6,
+			mass:    3.6e26,
+			tilt:    0.2,
+			ring:    "Ring2",
+			minrad:  1.5,
+			maxrad:  1.8,
+			orbit:   2.65e11,
+			inclination: -10.72,
+			perihelion: 2.11e11,
+			aphelion: 3.19e11,
+			eccentricity: 0.205,
+			rotation: 61.3,
+			region: {
+			   name:    Senesca,
+			   parent:  Senesca,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   55.53e6,
+			   inclination: 0.3
+			},	
+			moon: {
+			   name:    Tarawa
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  2.3e6,
+			   rotation: 16.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   4.11e8,
+			},
+			moon: {
+			   name:    Maia,
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  4.2e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   6.24e8,
+			},
+		},
+		planet: {
+			name:    Ramek,
+			icon:    "GasGiant9_map",
+			texture: "GasGiant9",
+			radius:  18.1e6,
+			mass:    3.6e26,
+			tscale:  2,
+			tilt:    0.13,
+			orbit:   3.35e11,
+			inclination: 5.52,
+			perihelion: 2.68e11,
+			aphelion: 4.02e11,
+			eccentricity: 0.2,
+			rotation: 31.3,
+			region: {
+			   name:    Ramek,
+			   parent:  Ramek,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   65.3e6,
+			   inclination: 0.3
+			},	
+			moon: {
+			   name:    Alin
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  5.3e6,
+			   rotation: 16.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   4.11e8,
+			},
+			moon: {
+			   name:    Orpheus
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  3.1e6,
+			   rotation: 18.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   6.24e8,
+			},
+			moon: {
+			   name:    Tenebrus,
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  6.1e6,
+			   rotation: 38.4,
+			   mass:    5.98e24,
+			   orbit:   13.24e8,
+			},
+		},
+		planet:     {
+			name:    Relay,
+			icon:    "relay_map",
+			texture: "relay",
+			radius:  3.15e6,
+			mass:    4.6e23,
+			atmosphere: (130,120,110),
+			orbit:   4.18e11,
+			inclination: 13.67,
+			perihelion: 3.58e11,
+			aphelion: 4.7e11,
+			eccentricity: 0.143,
+			rotation: 14.3,	
+			region:     {
+			   name:    Relay,
+			   parent:  Relay,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   14e6,
+			   inclination: 0.3,
+			   link:    Solnas,   // Korius
+			   link:    Volova,   // Kolchev
+			   link:    Cavenda,  // Radix
+			   link:    Nerasil,  // Garrison
+			   link:    Path,     // Trocanther
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-8.0, -2.6,  1.0),
+	class: F,
+	iff: 2,
+	empire: 1,
+	name: Marak,
+	
+	link: Trocanther,
+	star: Marakanis,
+
+	stellar:        {
+		name:    Marakanis
+		map:     "StarF_map",
+		image:   "F8",
+		class:	F,
+		tscale:  6,
+		radius:  16e8,
+		mass:    2e30,
+		light:   1.6e11,
+		color:   (255, 255, 255),
+		back:    (120,  20,  14),  
+
+		region: {
+		   name:    Xanthe,
+		   parent:  Marakanis,
+		   type: Star,
+		   radius:  480e3,
+		   grid:    20e3,
+		   orbit:   6.12e11,
+		   inclination: 0.13,
+		   asteroids: 90,
+		   link:    Path,
+		},
+
+		planet:     {
+			name:    Marak
+			icon:    "marak_map",
+			texture: "marak",
+			atmosphere: (90,90,130),
+			radius:  6.1e6,
+			mass:    5.3e24,
+			orbit:   1.1e11,
+			inclination: 9.99,
+			perihelion: 0.96e11,
+			aphelion: 1.24e11,
+			eccentricity: 0.125,
+			rotation: 23.7,
+			
+			region:     {
+			   name:    Marak,
+			   parent:  Marak,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   21e6,
+			   inclination: 0.4,
+			},
+			moon:       {
+			   name:    Manarkan,
+			   icon:    "Moon3_map",
+			   texture:  "Moon3",
+			   radius:  1e6,
+			   mass:    8e22,
+			   orbit:   42e6,
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-6.5,  2.5,  1.0), 
+	class: G, 
+	iff: 2,
+	empire: 1,
+	name: Garrison,
+	
+	link: Isham,
+	link: Radix,
+
+	star: Khaniset,
+
+	stellar: {
+	   name:    Khaniset
+	   map:     "StarG_map",
+	   image:   "G3",
+	   class:	G, 
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   2.6e11,
+	   color:   (255, 250, 238),// - standard yellow
+	   back:    ( 60,  30,  10),// - nebula8
+
+	   planet: {
+			name:    Rhofar
+			icon:    "oman_map",
+			texture: "rhofar",
+			radius:  3.1e6,
+			tilt:    0.03,
+			mass:    3.1e24,
+			orbit:	 0.94e11,
+			inclination: 15.39,
+			perihelion: 0.75e11,
+			aphelion: 1.13e11,
+			eccentricity: 0.155,
+			rotation: 32.7,
+			
+			region: {
+			   name:    Rhofar,
+			   parent:  Rhofar,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   16e6,
+			   inclination: 0.4,
+			},
+		}
+		planet: {
+			name:    Garrison
+			icon:    "garrison_map",
+			texture: "garrison",
+			radius:  6e6,
+			tilt:    0.15,
+			ring:    "garrison_ring",
+			minrad:  1.5,
+			maxrad:  1.75,
+			mass:    5.1e24,
+			orbit:   1.4e11,
+			inclination: 4.4,
+			perihelion: 1.18e11,
+			aphelion: 1.61e11,
+			eccentricity: 0.155,
+			rotation: 21.7,
+
+			region: {
+			   name:    Garrison,
+			   parent:  Garrison,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   20e6,
+			   inclination: 0.4,
+			},
+		},
+		planet: {
+			name:    Korul
+			icon:    "GasGiant10_map",
+			texture: "GasGiant10",
+			radius:  23e6,
+			tilt:    0.19,
+			ring:    "Ring2",
+			minrad:  1.6,
+			maxrad:  1.666,
+			mass:    5.1e24,
+			orbit:   2.4e11,
+			inclination: 4.38,
+			perihelion: 2.11e11,
+			aphelion: 2.69e11,
+			eccentricity: 0.122,
+			rotation: 21.7,
+			
+			region: {
+			   name:    Korul,
+			   parent:  Korul,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   1e8,
+			   inclination: 0.3,
+			},
+		},
+		planet: {
+			name:    Nerasil
+			icon:    "kala_map"
+			texture: "nerasil",
+			radius:  4e6,
+			tilt:    0.15,
+			mass:    3.7e24,
+			orbit:   4.2e11,
+			inclination: -14.43,
+			perihelion: 3.32e11,
+			aphelion: 5.08e11,
+			eccentricity: 0.21,
+			rotation: 17.2,
+			region: {
+			   name:    Nerasil,
+			   parent:  Nerasil,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   15e6,
+			   inclination: 0.2,
+			   link:    Relay,   // Isham
+			   link:    Cavenda, // Radix
+			},
+		},
+	},
+}
+
+system: 
+{
+	loc: (-7.2, -1.2,  1.0),
+	class: K,
+	iff: 2,
+	empire: 1,
+	name: Trocanther,
+	
+	link: Marak,
+	link: Isham,
+
+	star: Trocantex,
+
+	stellar:        {
+	   name:    Trocantex
+	   map:     "StarK_map",
+	   image:   "K1",
+	   class:	K,
+	   tscale:  6,
+	   radius:  16e8,
+	   mass:    2e30,
+	   light:   1.6e11,
+	   color:   (255, 240, 220),// - K Orange
+	   back:    ( 90,  50,  30), // - nebula20
+
+	   planet: {
+			name:    Volante
+			icon:    "volante_map",
+			texture: "volante",
+			radius:  6e6,
+			mass:    5.1e24,
+			orbit:   1.4e11,
+			inclination: 5.1,
+			perihelion: 1.19e11,
+			aphelion: 1.61e11,
+			eccentricity: 0.152,
+			rotation: 21.7,
+			region: {
+			   name:    Volante,
+			   parent:  Volante,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   18e6,
+			   inclination: 0.4
+			},
+		}
+		planet: {
+			name:    Narcissus
+			icon:    "GasGiant1_map",
+			texture: "GasGiant1",
+			radius:  13.7e6,
+			mass:    3.6e26,
+			orbit:   2.51e11,
+			inclination: 15.83,
+			perihelion: 2.17e11,
+			aphelion: 2.85e11,
+			eccentricity: 0.134,
+			rotation: 43.7,
+			region: {
+			   name:    Narcissus,
+			   parent:  Narcissus,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   55e6,
+			   inclination: 0.3
+			},
+			moon: {
+			   name:    Liriope
+			   icon:    "ice_map",
+			   texture:  "ice",
+			   radius:  2.3e6,
+			   rotation: 26.4,
+			   atmosphere: (180,180,255),
+			   mass:    5.98e24,
+			   orbit:   3.11e8,
+			},
+			moon: {
+			   name:    Echo
+			   icon:    "lanos_map",
+			   texture:  "lanos",
+			   radius:  4.1e6,
+			   rotation: 38.4,
+			   atmosphere: (180,180,255),
+			   mass:    3.28e24,
+			   orbit:   5.24e8,
+			},
+		}
+		planet: {
+			name:    Path
+			icon:    "path_map",
+			texture: "path",
+			radius:  4.1e6,
+			mass:    3.5e24,
+			orbit:   4.4e11,
+			inclination: 16.49,
+			perihelion: 3.65e11,
+			aphelion: 5.15e11,
+			eccentricity: 0.171,
+			rotation: 51.7,
+			region: {
+			   name:    Path,
+			   parent:  Path,
+			   type: Planet,
+			   radius:  480e3,
+			   grid:    20e3,
+			   orbit:   15e6,
+			   inclination: 0.2,
+			   link:    Xanthe, // Marak
+			   link:    Relay,  // Isham
+			},
+		},
+	},
+}
+
+// for screenshots only!
+system: { loc: ( 102,  101,  0.0), class: O, iff: 100, empire: 7, name: Black      }
+system: { loc: ( 106,  107,  0.0), class: O, iff: 100, empire: 7, name: Museum     }
+
+star:   { loc: ( 6.0,  6.0,  1.0), class: M, empire: 7, name: "GSC-3082" }
+star:   { loc: (-3.5,  5.0,  1.0), class: M, empire: 7, name: "GSC-0541" }
+star:   { loc: (-7.1, -7.5,  1.5), class: O, empire: 7, name: "GSC-2054" }
+star:   { loc: ( 4.2,  5.6,  2.1), class: M, empire: 7, name: "GSC-1027" }
+star:   { loc: (-5.1,  4.6, -1.8), class: M, empire: 7, name: "GSC-1311" }
+star:   { loc: ( 5.4, -4.6, -0.8), class: K, empire: 7, name: "GSC-1245" }
+
+star:   { loc: ( 4.3,  6.2,  3.0), class: M, name: "GSC-1952" }
+star:   { loc: (-7.7,  4.3,  3.0), class: M, name: "GSC-0163" }
+star:   { loc: (-2.1, -6.5,  2.5), class: M, name: "GSC-2690" }
+star:   { loc: ( 1.9,  4.6,  1.1), class: A, name: "GSC-0536" }
+star:   { loc: (-3.5, -7.6, -3.8), class: K, name: "GSC-1208" }
+star:   { loc: (-4.4, -5.2, -3.8), class: K, name: "GSC-0719" }
+
+
+

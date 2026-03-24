@@ -1,0 +1,11 @@
+#
+# nebula-Janus Material Library exported by Magic 2.0
+#
+
+newmtl Nebula12
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 20.00000
+illum 2
+

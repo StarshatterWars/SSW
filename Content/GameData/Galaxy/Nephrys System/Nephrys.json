@@ -1,0 +1,63 @@
+{
+  "name": "Nephrys",
+  "sky": {
+    "nebula": "Nebula-Nephrys.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    8,
+    8,
+    10
+  ],
+  "star": {
+    "name": "Nephrys",
+    "map": "Suns/StarA_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 3e+30,
+    "light": 260000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      245,
+      245,
+      255
+    ],
+    "back": [
+      43,
+      40,
+      46
+    ],
+    "planet": [
+      {
+        "name": "Nergal",
+        "map": "Nephrys/nergal_map.pcx",
+        "image": "Nephrys/nergal_lo.pcx",
+        "high_res": "Nephrys/nergal_hi.jpg",
+        "gloss": "Nephrys/nergal_gloss.jpg",
+        "glow_high_res": "Nephrys/nergal_fire.jpg",
+        "radius": 9000000,
+        "mass": 5.6e+28,
+        "orbit": 480000000000,
+        "rotation": 160.3,
+        "region": {
+          "name": "Nergal",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 35000000,
+          "inclination": 0.1,
+          "link": [
+            "Casalle",
+            "Solnas"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

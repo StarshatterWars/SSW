@@ -1,0 +1,59 @@
+{
+  "name": "Museum",
+  "sky": {
+    "nebula": "Nebula-Nephrys.mag",
+	"poly_stars": "Museum.mag",
+	"haze": ""
+  },
+  "stars": 0,
+  "dust": 0,
+  "ambient": [
+    64,
+    48,
+    32
+  ],
+  "star": {
+    "name": "Musette",
+    "image": "Suns/G3.pcx",
+	"map": "Suns/StarG_map.pcx",
+    "tscale": 6,
+    "radius": 16,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      170,
+      120,
+      70
+    ],
+    "planet": [
+      {
+        "name": "Mausoleum",
+        "map": "Moons/rock_map.pcx",
+        "image": "Moons/rock_lo.pcx",
+        "high_res": "Moons/rock_hi.pcx",
+        "radius": 300,
+        "mass": 5.6e+26,
+        "orbit": 180000000000,
+        "tscale": 2,
+        "rotation": 16.3,
+        "region": {
+          "name": "Museum",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 155000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": []
+      }
+    ]
+  }
+}

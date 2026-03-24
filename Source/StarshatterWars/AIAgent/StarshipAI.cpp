@@ -1,0 +1,914 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright(C) 2025 - 2026. All Rights Reserved.
+
+    SUBSYSTEM:    Stars.exe
+    FILE : StarshipAI.cpp
+    AUTHOR : Carlos Bott
+
+    ORIGINAL AUTHOR AND STUDIO :
+    John DiCamillo / Destroyer Studios LLC
+    Copyright © 1997 - 2007. All Rights Reserved.
+
+    OVERVIEW
+    ========
+    Starship(low - level) Artificial Intelligence class
+*/
+
+#include "StarshipAI.h"
+#include "StarshipTacticalAI.h"
+
+#include "Ship.h"
+#include "ShipDesign.h"
+#include "SimElement.h"
+#include "Mission.h"
+#include "Instruction.h"
+#include "RadioMessage.h"
+#include "SimContact.h"
+#include "WeaponGroup.h"
+#include "Drive.h"
+#include "Sim.h"
+#include "StarSystem.h"
+#include "FlightComputer.h"
+#include "Farcaster.h"
+#include "QuantumDrive.h"
+
+#include "Game.h"
+#include "Random.h"
+#include "Solid.h"
+#include "GameStructs.h"
+
+#include "CoreMinimal.h" // UE_LOG
+#include "Math/Vector.h" // FVector
+#include "Math/UnrealMathUtility.h"
+
+// +----------------------------------------------------------------------+
+
+StarshipAI::StarshipAI(SimObject * s)
+    : ShipAI(s),
+    sub_select_time(0),
+    point_defense_time(0),
+    subtarget(0),
+    tgt_point_defense(false)
+{
+    ai_type = STARSHIP;
+
+    // signifies this ship is a dead hulk:
+    if (ship && ship->Design()->auto_roll < 0) {
+        FVector Torque(
+            FMath::FRandRange(-16000.0f, 16000.0f),
+            FMath::FRandRange(-16000.0f, 16000.0f),
+            FMath::FRandRange(-16000.0f, 16000.0f)
+        );
+
+        Torque.Normalize();
+        Torque *= float(ship->Mass() / 10.0);
+
+        ship->SetFLCSMode(0);
+        if (ship->GetFLCS())
+            ship->GetFLCS()->PowerOff();
+
+        ship->ApplyTorque(Torque);
+        ship->SetVelocity(FMath::VRand() * FMath::FRandRange(20.0f, 50.0f));
+
+        for (int i = 0; i < 64; i++) {
+            Weapon* w = ship->GetWeaponByIndex(i + 1);
+            if (w)
+                w->DrainPower(0);
+            else
+                break;
+        }
+    }
+
+    else {
+        tactical = new StarshipTacticalAI(this);
+    }
+
+    this->sub_select_time = Game::GameTime() + FMath::RandRange(0, 2000);
+    point_defense_time = this->sub_select_time;
+}
+
+// +--------------------------------------------------------------------+
+
+StarshipAI::~StarshipAI()
+{
+}
+
+// +--------------------------------------------------------------------+
+
+void
+StarshipAI::FindObjective()
+{
+    distance = 0;
+
+    const RadioMessageAction order =
+        ship->GetRadioOrders()
+        ? ship->GetRadioOrders()->GetRadioAction()
+        : RadioMessageAction::NONE;
+
+    // -------------------------------------------------
+    // Quantum / Farcast orders override everything
+    // -------------------------------------------------
+    if (order == RadioMessageAction::QUANTUM_TO ||
+        order == RadioMessageAction::FARCAST_TO)
+    {
+        FindObjectiveQuantum();
+        objective = Transform(obj_w);
+        return;
+    }
+
+    // -------------------------------------------------
+    // Enum-class safe "no order" test
+    // -------------------------------------------------
+    const bool bNoOrder =
+        static_cast<int32>(order) == 0;
+
+    // Weapons hold / formation orders
+    const bool bHoldOrder =
+        order == RadioMessageAction::WEP_HOLD ||
+        order == RadioMessageAction::FORM_UP;
+
+    // Formation logic (legacy equivalent of !order)
+    const bool bForm =
+        bHoldOrder ||
+        (bNoOrder && !target) ||
+        farcaster;
+
+    Ship* ward = ship->GetWard();
+
+    // -------------------------------------------------
+    // If not element leader, stay in formation
+    // -------------------------------------------------
+    if (bForm && element_index > 1)
+    {
+        ship->SetDirectorInfo("Formation");
+
+        if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
+        {
+            FindObjectiveNavPoint();
+        }
+        else
+        {
+            navpt = nullptr;
+            FindObjectiveFormation();
+        }
+
+        objective = Transform(obj_w);
+        return;
+    }
+
+    // -------------------------------------------------
+    // Tactical context
+    // -------------------------------------------------
+    bool   directed = false;
+    double threat_level = 0.0;
+    double support_level = 1.0;
+
+    if (tactical)
+    {
+        directed = (tactical->RulesOfEngagement() == TacticalAI::DIRECTED);
+        threat_level = tactical->ThreatLevel();
+        support_level = tactical->SupportLevel();
+    }
+
+    // -------------------------------------------------
+    // Threat processing
+    // -------------------------------------------------
+    if (bHoldOrder || (!directed && threat_level >= 2.0 * support_level))
+    {
+        // Seek support
+        if (support)
+        {
+            const double d_support =
+                (support->Location() - ship->Location()).Length();
+
+            if (d_support > 35e3)
+            {
+                ship->SetDirectorInfo(Game::GetText("ai.regroup"));
+                FindObjectiveTarget(support);
+                objective = Transform(obj_w);
+                return;
+            }
+        }
+
+        // Retreat from threat
+        else if (threat && threat != target)
+        {
+            ship->SetDirectorInfo(Game::GetText("ai.retreat"));
+            obj_w = ship->Location() +
+                (ship->Location() - threat->Location()) * 100.0f;
+            objective = Transform(obj_w);
+            return;
+        }
+    }
+
+    // -------------------------------------------------
+    // Weapons hold behavior
+    // -------------------------------------------------
+    if (bHoldOrder)
+    {
+        if (navpt)
+        {
+            ship->SetDirectorInfo(Game::GetText("ai.seek-navpt"));
+            FindObjectiveNavPoint();
+        }
+        else if (patrol)
+        {
+            ship->SetDirectorInfo(Game::GetText("ai.patrol"));
+            FindObjectivePatrol();
+        }
+        else
+        {
+            ship->SetDirectorInfo(Game::GetText("ai.holding"));
+            obj_w = FVector::ZeroVector;
+            objective = FVector::ZeroVector;
+        }
+    }
+
+    // -------------------------------------------------
+    // Normal objective processing
+    // -------------------------------------------------
+    else if (target)
+    {
+        ship->SetDirectorInfo(Game::GetText("ai.seek-target"));
+        FindObjectiveTarget(target);
+    }
+    else if (patrol)
+    {
+        ship->SetDirectorInfo(Game::GetText("ai.patrol"));
+        FindObjectivePatrol();
+    }
+    else if (ward)
+    {
+        ship->SetDirectorInfo(Game::GetText("ai.seek-ward"));
+        FindObjectiveFormation();
+    }
+    else if (navpt)
+    {
+        ship->SetDirectorInfo(Game::GetText("ai.seek-navpt"));
+        FindObjectiveNavPoint();
+    }
+    else if (rumor)
+    {
+        ship->SetDirectorInfo(Game::GetText("ai.search"));
+        FindObjectiveTarget(rumor);
+    }
+    else
+    {
+        obj_w = FVector::ZeroVector;
+        objective = FVector::ZeroVector;
+    }
+
+    // -------------------------------------------------
+    // Final transform
+    // -------------------------------------------------
+    objective = Transform(obj_w);
+}
+
+// +--------------------------------------------------------------------+
+
+void
+StarshipAI::Navigator()
+{
+    // signifies this ship is a dead hulk:
+    if (ship && ship->Design()->auto_roll < 0) {
+        ship->SetDirectorInfo(Game::GetText("ai.dead"));
+        return;
+    }
+
+    accumulator.Clear();
+    magnitude = 0;
+
+    hold = false;
+    if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
+        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0))
+        hold = true;
+
+    ship->SetFLCSMode(Ship::FLCS_HELM);
+
+    if (!ship->GetDirectorInfo()) {
+        if (target)
+            ship->SetDirectorInfo("Seek Target");
+        else if (ship->GetWard())
+            ship->SetDirectorInfo("Seek Ward");
+        else
+            ship->SetDirectorInfo("Patrol");
+    }
+
+    if (farcaster && distance < 25e3) {
+        accumulator = SeekTarget();
+    }
+    else {
+        accumulator = AvoidCollision();
+
+        if (!other && !hold)
+            accumulator = SeekTarget();
+    }
+
+    HelmControl();
+    ThrottleControl();
+    FireControl();
+    AdjustDefenses();
+}
+
+// +--------------------------------------------------------------------+
+
+void
+StarshipAI::HelmControl()
+{
+    // signifies this ship is a dead hulk:
+    if (ship && ship->Design()->auto_roll < 0) {
+        return;
+    }
+
+    double trans_x = 0;
+    double trans_y = 0;
+    double trans_z = 0;
+
+    bool station_keeping = distance < 0;
+
+    if (station_keeping) {
+        accumulator.brake = 1;
+        accumulator.stop = 1;
+
+        ship->SetHelmPitch(0);
+    }
+
+    else {
+        SimElement* elem = ship->GetElement();
+
+        Ship* ward = ship->GetWard();
+        Ship* s_threat = 0;
+        if (threat && threat->Class() >= ship->Class())
+            s_threat = threat;
+
+        if (other || target || ward || s_threat || navpt || patrol || farcaster || element_index > 1) {
+            ship->SetHelmHeading(accumulator.yaw);
+
+            if (elem->Type() == (int)EMISSIONTYPE::FLIGHT_OPS) {
+                ship->SetHelmPitch(0);
+
+                if (ship->NumInbound() > 0) {
+                    ship->SetHelmHeading(ship->CompassHeading());
+                }
+            }
+
+            else if (accumulator.pitch > 60 * DEGREES) {
+                ship->SetHelmPitch(60 * DEGREES);
+            }
+
+            else if (accumulator.pitch < -60 * DEGREES) {
+                ship->SetHelmPitch(-60 * DEGREES);
+            }
+
+            else {
+                ship->SetHelmPitch(accumulator.pitch);
+            }
+        }
+        else {
+            ship->SetHelmPitch(0);
+        }
+    }
+
+    ship->SetTransX(trans_x);
+    ship->SetTransY(trans_y);
+    ship->SetTransZ(trans_z);
+
+    ship->ExecFLCSFrame();
+}
+
+void
+StarshipAI::ThrottleControl()
+{
+    // signifies this ship is a dead hulk:
+    if (ship && ship->Design()->auto_roll < 0) {
+        return;
+    }
+
+    // station keeping:
+    if (distance < 0) {
+        old_throttle = 0;
+        throttle = 0;
+
+        ship->SetThrottle(0);
+
+        if (ship->GetFLCS())
+            ship->GetFLCS()->FullStop();
+
+        return;
+    }
+
+    const FVector ShipVel = ship->Velocity();
+    const FVector ShipHeading = ship->Heading(); // assume already normalized
+    double ship_speed = FVector::DotProduct(ShipVel, ShipHeading);
+    double brakes = 0.0;
+
+    Ship* ward = ship->GetWard();
+    Ship* s_threat = 0;
+
+    if (threat && threat->Class() >= ship->Class())
+        s_threat = threat;
+
+    if (target || s_threat) {  // target pursuit, or retreat
+        throttle = 100;
+
+        if (target && distance < 50e3) {
+            double closing_speed = ship_speed;
+            const FVector DeltaDir = (target->Location() - ship->Location()).GetSafeNormal();
+            closing_speed = FVector::DotProduct(ShipVel, DeltaDir);
+
+            if (closing_speed > 300) {
+                throttle = 30;
+                brakes = 0.25;
+            }
+        }
+
+        throttle *= (1.0 - accumulator.brake);
+
+        if (throttle < 1 && ship->GetFLCS() != 0)
+            ship->GetFLCS()->FullStop();
+    }
+
+    else if (ward) {  // escort, match speed of ward
+        const double speed = ward->Velocity().Length();
+        throttle = old_throttle;
+
+        if (speed == 0) {
+            // ------------------------------------------------------------------
+            // UE FIX #3: Replace placeholder 'TODO' with a safe, UE-correct distance.
+            // Starshatter often used Point.length() here to decide whether to drift,
+            // brake, or stop near the ward. This keeps behavior intact without
+            // relying on legacy Point operators.
+            // ------------------------------------------------------------------
+            const double d = (ship->Location() - ward->Location()).Length();
+
+            // NOTE: The original code likely used 'd' to decide small corrections.
+            // Since the legacy branch was incomplete, we keep it minimal and safe:
+            (void)d; // silence unused warning if not used yet
+        }
+
+        if (speed > 0) {
+            if (ship_speed > speed) {
+                throttle = old_throttle - 1;
+                brakes = 0.2;
+            }
+            else if (ship_speed < speed - 10) {
+                throttle = old_throttle + 1;
+            }
+        }
+        else {
+            throttle = 0;
+            brakes = 0.5;
+        }
+    }
+
+    else if (patrol || farcaster) {  // seek patrol point
+        throttle = 100;
+
+        // NOTE: ship_speed can be negative if heading is opposite velocity.
+        // Preserve intent but avoid negative threshold causing weird behavior:
+        const double abs_ship_speed = FMath::Abs(ship_speed);
+
+        if (distance < 10.0 * abs_ship_speed) {
+            if (ShipVel.Length() > 200)
+                throttle = 5;
+            else
+                throttle = 50;
+        }
+    }
+
+    else if (navpt) {  // lead only, get speed from navpt
+        double speed = navpt->Speed();
+        throttle = old_throttle;
+
+        if (hold) {
+            throttle = 0;
+            brakes = 1;
+        }
+
+        else {
+            if (speed <= 0)
+                speed = 300;
+
+            if (ship_speed > speed) {
+                if (throttle > 0 && old_throttle > 1)
+                    throttle = old_throttle - 1;
+
+                brakes = 0.25;
+            }
+            else if (ship_speed < speed - 10) {
+                throttle = old_throttle + 1;
+            }
+        }
+    }
+
+    else if (element_index > 1) { // wingman
+        Ship* lead = ship->GetElement()->GetShip(1);
+        const double lv = lead ? lead->Velocity().Length() : 0.0;
+        const double sv = ship_speed;
+        const double dv = lv - sv;
+        const double dt = dv * 1e-2 * seconds;
+
+        throttle = old_throttle + dt;
+    }
+
+    else {
+        throttle = 0;
+    }
+
+    old_throttle = throttle;
+    ship->SetThrottle(throttle);
+
+    if (ship_speed > 1 && brakes > 0)
+        ship->SetTransY(-brakes * ship->Design()->trans_y);
+
+    else if (throttle > 10 && (ship->GetEMCON() < 2 || ship->GetFuelLevel() < 10))
+        ship->SetTransY(ship->Design()->trans_y);
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+StarshipAI::SeekTarget()
+{
+    if (navpt) {
+        SimRegion* self_rgn = ship->GetRegion();
+        SimRegion* nav_rgn = navpt->Region();
+        QuantumDrive* qdrive = ship->GetQuantumDrive();
+
+        if (self_rgn && !nav_rgn) {
+            nav_rgn = self_rgn;
+            navpt->SetRegion(nav_rgn);
+        }
+
+        bool use_farcaster = self_rgn != nav_rgn &&
+            (navpt->Farcast() ||
+                !qdrive ||
+                !qdrive->IsPowerOn() ||
+                qdrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
+
+        if (use_farcaster) {
+            if (!farcaster) {
+                ListIter<Ship> s = self_rgn->GetShips();
+                while (++s && !farcaster) {
+                    if (s->GetFarcaster()) {
+                        const Ship* dest = s->GetFarcaster()->GetDest();
+                        if (dest && dest->GetRegion() == nav_rgn) {
+                            farcaster = s->GetFarcaster();
+                        }
+                    }
+                }
+            }
+
+            if (farcaster) {
+                if (farcaster->GetShip()->GetRegion() != self_rgn)
+                    farcaster = farcaster->GetDest()->GetFarcaster();
+
+                obj_w = farcaster->EndPoint();
+                distance = FVector(obj_w - ship->Location()).Length();
+
+                if (distance < 1000)
+                    farcaster = 0;
+            }
+        }
+        else if (self_rgn != nav_rgn) {
+            QuantumDrive* q = ship->GetQuantumDrive();
+
+            if (q) {
+                if (q->ActiveState() == QuantumDrive::ACTIVE_READY) {
+                    q->SetDestination(navpt->Region(), navpt->Location());
+                    q->Engage();
+                }
+            }
+        }
+    }
+
+    return ShipAI::SeekTarget();
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+StarshipAI::AvoidCollision()
+{
+    if (!ship || ship->Velocity().Length() < 25)
+        return Steer();
+
+    return ShipAI::AvoidCollision();
+}
+
+// +--------------------------------------------------------------------+
+
+void
+StarshipAI::FireControl()
+{
+    // identify unknown contacts:
+    if (identify) {
+        if (fabs(ship->GetHelmHeading() - ship->CompassHeading()) < 10 * DEGREES) {
+            SimContact* contact = ship->FindContact(target);
+
+            if (contact && !contact->ActLock()) {
+                if (!ship->GetProbe()) {
+                    ship->LaunchProbe();
+                }
+            }
+        }
+
+        return;
+    }
+
+    // investigate last known location of enemy ship:
+    if (rumor && !target && ship->GetProbeLauncher() && !ship->GetProbe()) {
+        // is rumor in basket?
+        FVector Rmr = Transform(rumor->Location());
+        Rmr.Normalize();
+
+        const double dx = fabs(Rmr.X);
+        const double dy = fabs(Rmr.Y);
+
+        if (dx < 10 * DEGREES && dy < 10 * DEGREES && Rmr.Z > 0) {
+            ship->LaunchProbe();
+        }
+    }
+
+    // Corvettes and Frigates are anti-air platforms.  They need to
+    // target missile threats even when the threat is aimed at another
+    // friendly ship.  Forward facing weapons must be on auto fire,
+    // while lateral and aft facing weapons are set to point defense.
+    if (ship->Class() == CLASSIFICATION::CORVETTE || ship->Class() == CLASSIFICATION::FRIGATE)
+    {
+        ListIter<WeaponGroup> grp_iter = ship->GetWeapons();
+        while (++grp_iter)
+        {
+            WeaponGroup* group = grp_iter.value();
+
+            ListIter<Weapon> w_iter = group->GetWeapons();
+            while (++w_iter)
+            {
+                Weapon* weapon = w_iter.value();
+
+                const double weapon_az = weapon->GetAzimuth();
+
+                if (fabs(weapon_az) < 45 * DEGREES)
+                {
+                    weapon->SetFiringOrders(WeaponsOrders::AUTO);
+                    weapon->SetTarget(target, nullptr);
+                }
+                else
+                {
+                    weapon->SetFiringOrders(WeaponsOrders::POINT_DEFENSE);
+                }
+            }
+        }
+    }
+
+    // All other starships are free to engage ship targets.  Weapon
+    // fire control is managed by the type of weapon.
+    else {
+        SimSystem* subtgt = SelectSubtarget();
+
+        ListIter<WeaponGroup> grp_iter = ship->GetWeapons();
+        while (++grp_iter) {
+            WeaponGroup* group = grp_iter.value();
+
+            if (group->GetDesign()->target_type & (int)CLASSIFICATION::DROPSHIPS) { // anti-air weapon?
+                group->SetFiringOrders(WeaponsOrders::POINT_DEFENSE);
+            }
+            else if (group->IsDrone()) { // torpedoes
+                group->SetFiringOrders(WeaponsOrders::MANUAL);
+                group->SetTarget(target, 0);
+
+                if (target && target->GetRegion() == ship->GetRegion()) {
+                    const FVector Delta = target->Location() - ship->Location();
+                    const double  range = Delta.Length();
+
+                    if (range < group->GetDesign()->max_range * 0.9 &&
+                        !AssessTargetPointDefense()) {
+                        group->SetFiringOrders(WeaponsOrders::AUTO);
+                    }
+                    else if (range < group->GetDesign()->max_range * 0.5) {
+                        group->SetFiringOrders(WeaponsOrders::AUTO);
+                    }
+                }
+            }
+            else { // anti-ship weapon
+                group->SetFiringOrders(WeaponsOrders::AUTO);
+                group->SetTarget(target, subtgt);
+                group->SetSweep(subtgt ? WeaponsSweep::SWEEP_NONE : WeaponsSweep::SWEEP_TIGHT);
+            }
+        }
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+SimSystem*
+StarshipAI::SelectSubtarget()
+{
+    // NOTE: Return type is SimSystem* per your instruction.
+    // This function currently returns a Weapon* subtarget, so we cast at the return boundary
+    // to keep existing call sites intact while you finish the broader type migration.
+
+    const uint32 NowMs = Game::GameTime();
+
+    if ((NowMs - sub_select_time) < 2345u)
+        return (SimSystem*)subtarget;
+
+    subtarget = nullptr;
+
+    if (!target || target->Type() != SimObject::SIM_SHIP || GetAILevel() < 1)
+        return (SimSystem*)subtarget;
+
+    Ship* tgt_ship = (Ship*)target;
+
+    if (!tgt_ship->IsStarship())
+        return (SimSystem*)subtarget;
+
+    Weapon* subtgt = nullptr;
+    double  dist = 50e3;
+
+    // Vector from target -> ship (same directionality as original)
+    const FVector Svec = ship->Location() - tgt_ship->Location();
+
+    sub_select_time = NowMs;
+
+    // first pass: turrets
+    ListIter<WeaponGroup> g_iter = tgt_ship->GetWeapons();
+    while (++g_iter) {
+        WeaponGroup* g = g_iter.value();
+
+        if (g->GetDesign() && g->GetDesign()->turret_model) {
+            ListIter<Weapon> w_iter = g->GetWeapons();
+            while (++w_iter) {
+                Weapon* w = w_iter.value();
+
+                if (!w || w->Availability() < 35)
+                    continue;
+
+                // UE fix: dot product
+                if (FVector::DotProduct(w->GetAimVector(), Svec) < 0.0f)
+                    continue;
+
+                if (w->GetTurret()) {
+                    // C2737 FIX:
+                    // Your build is treating this as a "const object must be initialized" case.
+                    // Avoid declaring a const local here; initialize a non-const temp instead.
+                    FVector Tloc;
+                    Tloc = w->GetTurret()->Location();
+
+                    const FVector Delta = Tloc - ship->Location();
+                    const double  Dlen = (double)Delta.Length();
+
+                    if (Dlen < dist) {
+                        subtgt = w;
+                        dist = Dlen;
+                    }
+                }
+            }
+        }
+    }
+
+    // second pass: major weapons
+    if (!subtgt) {
+        g_iter.reset();
+        while (++g_iter) {
+            WeaponGroup* g = g_iter.value();
+
+            if (g->GetDesign() && !g->GetDesign()->turret_model) {
+                ListIter<Weapon> w_iter = g->GetWeapons();
+                while (++w_iter) {
+                    Weapon* w = w_iter.value();
+
+                    if (!w || w->Availability() < 35)
+                        continue;
+
+                    // UE fix: dot product
+                    if (FVector::DotProduct(w->GetAimVector(), Svec) < 0.0f)
+                        continue;
+
+                    // FIX (C2737): ensure Tloc is initialized even if MountLocation() is not const-correct
+                    // or is being treated like an lvalue on your toolchain.
+                    const FVector Tloc = w->MountLocation();
+                    const FVector Delta = Tloc - ship->Location();
+                    const double  Dlen = (double)Delta.Length();
+
+                    if (Dlen < dist) {
+                        subtgt = w;
+                        dist = Dlen;
+                    }
+                }
+            }
+        }
+    }
+
+    subtarget = subtgt;
+    return (SimSystem*)subtarget;
+}
+
+
+// +--------------------------------------------------------------------+
+
+bool
+StarshipAI::AssessTargetPointDefense()
+{
+    if (Game::GameTime() - point_defense_time < 3500)
+        return tgt_point_defense;
+
+    tgt_point_defense = false;
+
+    if (!target || target->Type() != SimObject::SIM_SHIP || GetAILevel() < 2)
+        return tgt_point_defense;
+
+    Ship* tgt_ship = (Ship*)target;
+
+    if (!tgt_ship->IsStarship())
+        return tgt_point_defense;
+
+    FVector Svec = ship->Location() - tgt_ship->Location();
+
+    point_defense_time = Game::GameTime();
+
+    // first pass: turrets
+    ListIter<WeaponGroup> g_iter = tgt_ship->GetWeapons();
+    while (++g_iter && !tgt_point_defense) {
+        WeaponGroup* g = g_iter.value();
+
+        if (g->CanTarget(1)) {
+            ListIter<Weapon> w_iter = g->GetWeapons();
+            while (++w_iter && !tgt_point_defense) {
+                Weapon* w = w_iter.value();
+
+                if (w->Availability() > 35 &&
+                    FVector::DotProduct(w->GetAimVector(), Svec) > 0.0)
+                {
+                    tgt_point_defense = true;
+                }
+            }
+        }
+    }
+
+    return tgt_point_defense;
+}
+
+// +--------------------------------------------------------------------+
+
+FVector
+StarshipAI::Transform(const FVector& Point)
+{
+    return Point - self->Location();
+}
+
+Steer
+StarshipAI::Seek(const FVector& Point)
+{
+    // the point is in relative world coordinates
+    //   X: distance east(-)  / west(+)
+    //   Y: altitude down(-)  / up(+)
+    //   Z: distance north(-) / south(+)
+
+    Steer Result;
+
+    Result.yaw = atan2(Point.X, Point.Z) + PI;
+
+    double Adjacent = sqrt(Point.X * Point.X + Point.Z * Point.Z);
+    if (fabs(Point.Y) > ship->Radius() && Adjacent > ship->Radius())
+        Result.pitch = atan(Point.Y / Adjacent);
+
+#if PLATFORM_WINDOWS
+    if (!_finite(Result.yaw))
+        Result.yaw = 0;
+
+    if (!_finite(Result.pitch))
+        Result.pitch = 0;
+#else
+    if (!isfinite(Result.yaw))
+        Result.yaw = 0;
+
+    if (!isfinite(Result.pitch))
+        Result.pitch = 0;
+#endif
+
+    return Result;
+}
+
+Steer
+StarshipAI::Flee(const FVector& Point)
+{
+    Steer Result = Seek(Point);
+    Result.yaw += PI;
+    return Result;
+}
+
+Steer
+StarshipAI::Avoid(const FVector& Point, float Radius)
+{
+    Steer Result = Seek(Point);
+
+    if ((Point | ship->BeamLine()) > 0)
+        Result.yaw -= PI / 2;
+    else
+        Result.yaw += PI / 2;
+
+    (void)Radius; // preserved signature; radius not used in original logic
+    return Result;
+}

@@ -1,0 +1,95 @@
+{
+  "name": "Tarsus",
+  "sky": {
+    "nebula": "Nebula-Tarsus.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 220,
+  "ambient": [
+    25,
+    22,
+    20
+  ],
+  "star": {
+    "name": "Tarsus",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 150000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,	
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      170,
+      110,
+      50
+    ],
+    "region": {
+      "name": "Sintar",
+      "radius": 480000,
+      "grid": 20000,
+      "orbit": 125000000000,
+      "inclination": 0.45,
+      "asteroids": 200,
+      "link": []
+    },
+    "planet": [
+      {
+        "name": "Tarsus I",
+        "map": "Tarsus/tarsus_map.pcx",
+        "image": "Tarsus/tarsus_lo.pcx",
+        "high_res": "Tarsus/tarsus_hi.jpg",
+        "atmosphere": [
+          90,
+          70,
+          60
+        ],
+        "radius": 3750000,
+        "mass": 5.6e+26,
+        "orbit": 195000000000,
+        "rotation": 21.3,
+        "region": {
+          "name": "Tarsus",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 17000000,
+          "inclination": 0.45,
+          "link": []
+        },
+        "moon": []
+      },
+      {
+        "name": "Tarsus II",
+        "map": "Tarsus/oman_map.pcx",
+        "image": "Tarsus/oman_lo.pcx",
+        "high_res": "Tarsus/oman_hi.jpg",
+        "radius": 2150000,
+        "mass": 3.96e+26,
+        "orbit": 361000000000,
+        "rotation": 11.1,
+        "region": {
+          "name": "Theramin",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 13000000,
+          "inclination": 0.45,
+          "link": [
+            "Volova",
+            "Aram",
+            "Cavenda"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

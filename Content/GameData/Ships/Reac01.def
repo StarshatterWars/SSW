@@ -1,0 +1,35 @@
+SHIP
+
+name:       Reac01
+class:      Building
+abrv:       BLDG
+display_name: Generator
+description:  "The Generator Complex provides primary power distribution for planetary installations and orbital facilities alike. Hardened against bombardment and sabotage, its reactor core feeds surrounding structures with stable, high-output energy essential for sustained operations."
+empire:      All
+hud_icon:     "hud_reac01"
+
+model:       "Reactor"
+
+mass:       5e3
+integrity:  5e3
+scale:      2
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       12,   // LARGE_BURST
+   final_loc:        (0, 64, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

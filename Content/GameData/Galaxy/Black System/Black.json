@@ -1,0 +1,59 @@
+{
+  "name": "Black",
+  "sky": {
+    "nebula": "Nebula1.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Janus/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    32,
+    32,
+    32
+  ],
+  "star": {
+    "name": "BlackStar",
+    "image": "Suns/G3.pcx",
+	"map": "Suns/StarG_map.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      230
+    ],
+    "back": [
+      70,
+      80,
+      130
+    ],
+    "planet": [
+      {
+        "name": "Blackout",
+        "image": "Moons/rock_lo.pcx",
+		"map": "Moons/rock_map.pcx",
+        "high_res": "Moons/rock_hi.pcx",	
+        "radius": 3000,
+        "mass": 5.6e+26,
+        "orbit": 180000000000,
+        "tscale": 2,
+        "rotation": 16.3,
+        "region": {
+          "name": "Medium",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 155000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,285 @@
+MISSION
+
+scene:  "T2"
+name:    "Target Practice"
+type:    "Training"
+system:  "Janus"
+region:  "Janek"
+
+objective:
+         "Training - "
+         "Practice spaceborne fighter operations."
+
+sitrep:  "The Third Fleet is participating in wargame "
+         "exercises in the Janus system. "
+         "The fleet carrier Archon has been detached "
+         "to Janek orbit to practice spaceborne fighter "
+         "operations.  As part of the exercise, you have "
+         "been tasked with flying patrol patterns "
+         "and destroying target drones in your sector."
+
+start:   "01/09:23:00"
+
+ship: {
+   name:       Archon,
+   design:     Orion,
+   loc:        (0, 0, 0),
+   count:      1,
+   iff:        1,
+   command_ai: 0,
+}
+
+/*****/
+
+element: {
+   name:    Stallions,
+   design:  Falcon,
+   count:   20,
+   maint_count: 5,
+   dead_count: 5,
+   carrier: Archon,
+   iff:     1,
+   loadout: { ship: -1, name: "ACM Medium Range" },
+   }
+
+element: {
+   name:    Echo,
+   design:  Falcon,
+   squadron: Stallions,
+   loc:     (1e3, 2e3, 0),
+   mission: sweep,
+   objective: { cmd: intercept, tgt: Alpha },
+   objective: { cmd: intercept, tgt: Bravo },
+   player:  1,
+   alert:   true,
+   count:   2,
+   iff:     1,
+   loadout: { ship: -1, name: "ACM Medium Range" },
+
+   navpt:   { cmd: vector, loc: ( 5e3,-10e3, 0), speed: 500 },
+   navpt:   { cmd: vector, loc: (12e3,-25e3, 0), speed: 500 },
+   navpt:   { cmd: sweep,  loc: (40e3,    0, 0), speed: 500 },
+   navpt:   { cmd: sweep,  loc: (30e3, 30e3, 0), speed: 500 },
+   navpt:   { cmd: rtb,    loc: (   0, 30e3, 0), speed: 250 }
+}
+
+/***/
+
+element: {
+   name:    Alpha,
+   design:  TargetDrone,
+   loc:     (-12e3, -50e3, 0),
+   count:   4,
+   iff:     2,
+
+   navpt:   { cmd: vector, loc: (-8e3, -50e3, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (30e3, -30e3, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (30e3,     0, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (50e3,  50e3, 0), speed: 400 },
+}
+
+element: {
+   name:    Bravo,
+   design:  TargetDrone,
+   loc:     (5e3,  50e3, 0),
+   count:   4,
+   iff:     2,
+
+   navpt:   { cmd: vector, loc: (10e3,  40e3, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (20e3,  25e3, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (50e3,     0, 0), speed: 400 },
+   navpt:   { cmd: vector, loc: (50e3, -50e3, 0), speed: 400 },
+}
+
+element: {
+   name:    Delta,
+   design:  Viper,
+   loc:     (40e3,  60e3, 0),
+   count:   2,
+   iff:     200,
+   loadout: { ship: -1, name: "ACM Medium Range" },
+
+   navpt:   { cmd: sweep, loc: (15e3,  -40e3, 0), speed: 750 },
+}
+
+
+event: {
+   id:              101,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Alpha 1",
+}
+
+event: {
+   id:              102,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Alpha 2",
+}
+
+event: {
+   id:              103,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Alpha 3",
+}
+
+event: {
+   id:              104,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Alpha 4",
+}
+
+
+
+event: {
+   id:              106,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Bravo 1",
+}
+
+event: {
+   id:              107,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Bravo 2",
+}
+
+event: {
+   id:              108,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Bravo 3",
+}
+
+event: {
+   id:              109,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Bravo 4",
+}
+
+
+event: {
+   id:              120,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Delta 1",
+}
+
+event: {
+   id:              121,
+   type:            Message,
+   trigger:         Destroyed,
+   trigger_ship:    "Delta 2",
+}
+
+
+// VOICE-OVER
+
+
+event: { id: 151, Type: Sound, time:   2, sound: "Vox/Train/Train-02-01.ogg",  message: "Please wait" }
+event: { id: 152, Type: Sound, time:  25, sound: "Vox/Train/Train-02-02a.ogg", message: "Raise your landing gear" }
+event: { id: 153, Type: Sound, time:  42, sound: "Vox/Train/Train-02-02b.ogg", message: "Maintain formation" }
+event: { id: 154, Type: Sound, time:  55, sound: "Vox/Train/Train-02-03.ogg",  message: "Sensor combat markers" }
+event: { id: 155, Type: Sound, time:  90, sound: "Vox/Train/Train-02-04.ogg",  message: "Missile Combat" }
+
+event: {
+   id:              199,
+   type:            Message,
+   trigger:         "Event (ANY)",
+   trigger_param:   (101, 102, 103, 104), 
+}
+
+event: {
+   id:              200, 
+   type:            Message,
+   sound:           "Vox/Train/Train-02-05.ogg",  
+   message:         "Good!",
+   trigger:         "Event (ALL)",
+   trigger_param:   (155, 199), 
+   delay:           1
+}
+
+event: {
+   id:              201,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-06.ogg",  message: "Gun Combat",
+   trigger:         Event,
+   trigger_param:   200,
+   delay:           5
+}
+
+event: { 
+   id:              205,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-07.ogg",
+   message:         "Alpha Drones Destroyed - Proceed to next navpoint",
+   trigger:         "Event (ALL)",
+   trigger_param:   (101, 102, 103, 104, 201), 
+   delay: 1
+}
+
+
+event: {
+   id:              210,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-08.ogg",
+   event_message:   "All Drones Destroyed",
+   trigger:         "Event (ALL)",
+   trigger_param:   (205, 106, 107, 108, 109),
+}
+
+event: {
+   id:              211,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-09.ogg",
+   message:         "Engage Vampires",
+   trigger:         Event,
+   trigger_param:   210,
+   delay:           3
+}
+
+
+event: {
+   id:              212,
+   type:            IFF,
+   event_param:     2,
+   event_ship:      "Delta 1",
+   trigger:         Event,
+   trigger_param:   211,
+   delay:           3
+}
+
+event: {
+   id:              213,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-10.ogg",
+   event_message:   "Inbound threat evasion techniques",
+   trigger:         "Event",
+   trigger_param:   211,
+   delay:           25
+}
+
+event: {
+   id:              215,
+   type:            Message,
+   sound:           "Vox/Train/Train-02-11.ogg",
+   event_message:   "Vampires Destroyed",
+   trigger:         "Event (ALL)",
+   trigger_param:   (120, 121),
+}
+
+event: { 
+   id:              300,
+   type:            Message, 
+   message:         "Return to base",
+   sound:           "Vox/Train/Train-02-12.ogg", 
+   trigger:         Navpoint,
+   trigger_param:   5,
+   trigger_ship:    Echo
+}
+
+event: { id: 301, Type: Sound, message: "Docking procedure", sound: "Vox/Train/Train-02-13.ogg", trigger: Event, trigger_param: 300, delay: 18 }
