@@ -70,7 +70,7 @@ static FVector GetRandomPoint()
     return P * Distance;
 }
 
-static FVector RandomDirection()
+static FVector GetRandomDirection()
 {
     FVector P(
         FMath::FRandRange(-16384.0f, 16384.0f),
@@ -81,7 +81,7 @@ static FVector RandomDirection()
     return P.GetSafeNormal();
 }
 
-static bool RandomChance(int32 Wins, int32 Tries)
+static bool GetRandomChance(int32 Wins, int32 Tries)
 {
     const float Fraction = 256.0f * Wins / Tries;
     const int32 R = (FMath::Rand() >> 4) & 0xFF;
@@ -89,7 +89,7 @@ static bool RandomChance(int32 Wins, int32 Tries)
     return R < Fraction;
 }
 
-static int32 RandomIndex()
+static int32 GetRandomIndex()
 {
     static int32 Index = 0;
     static int32 Table[16] = { 0, 9, 4, 7, 14, 11, 2, 12, 1, 5, 13, 8, 6, 10, 3, 15 };
@@ -1125,8 +1125,8 @@ void CampaignMissionFighter::CreateWardShuttle()
     else if (Carrier)
     {
         const FVector CarrierLoc = Carrier->Location();
-        const FVector Src = CarrierLoc + RandomDirection() * 150000.0f;
-        const FVector Dst = CarrierLoc + RandomDirection() * 25000.0f;
+        const FVector Src = CarrierLoc + GetRandomDirection() * 150000.0f;
+        const FVector Dst = CarrierLoc + GetRandomDirection() * 25000.0f;
 
         Instruction* N = nullptr;
 
@@ -1278,7 +1278,7 @@ void CampaignMissionFighter::CreateWardStrike()
             carrier->Location().Z
         );
 
-        src += RandomDirection() * 100000.0f;
+        src += GetRandomDirection() * 100000.0f;
         elem->SetLocation(src);
     }
 }
@@ -1430,14 +1430,14 @@ void CampaignMissionFighter::CreateTargetsPatrol()
 
         region = air_region;
 
-        const FVector Dir = RandomDirection();
+        const FVector Dir = GetRandomDirection();
         const float Dist = FMath::FRandRange(60000.0f, 100000.0f);
 
         patrol_loc = base_loc + Dir * Dist;
     }
     else
     {
-        const FVector Dir = RandomDirection();
+        const FVector Dir = GetRandomDirection();
         const float Dist = FMath::FRandRange(110000.0f, 160000.0f);
 
         patrol_loc = base_loc + Dir * Dist;
@@ -1666,7 +1666,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
         return;
     }
 
-    int ninbound = 2 + (int)(RandomIndex() < 5);
+    int ninbound = 2 + (int)(GetRandomIndex() < 5);
     bool second = ninbound > 2;
     Text attacker;
 
@@ -2284,7 +2284,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
     }
 
     int32 ntargets = 0;
-    int32 ttype = RandomIndex();
+    int32 ttype = GetRandomIndex();
     bool oca = (mission->GetType() == (int)EMISSIONTYPE::SWEEP);
 
     if (ttype < 8)
@@ -2683,13 +2683,13 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
 
     if (UnitIndex < 0 || (UnitIndex > 0 && !bExact))
     {
-        FVector Loc = RandomDirection();
+        FVector Loc = GetRandomDirection();
 
         if (!U->IsStatic())
         {
             while (FMath::Abs(Loc.Y) > FMath::Abs(Loc.X))
             {
-                Loc = RandomDirection();
+                Loc = GetRandomDirection();
             }
 
             Loc *= 10000.0f + 9000.0f * UnitIndex;

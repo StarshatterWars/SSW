@@ -497,7 +497,7 @@ Instruction::GetDescription() const
 
 	case INSTRUCTION_ACTION::DEFEND:
 		if (priority == PRIMARY) {
-			sprintf_s(desc, "Defend the %s", tgt_desc.data());
+			sprintf_s(desc, "Defend %s", tgt_desc.data());
 		}
 		else {
 			sprintf_s(desc, "Protect %s in the area", tgt_desc.data());
@@ -506,7 +506,7 @@ Instruction::GetDescription() const
 
 	case INSTRUCTION_ACTION::ESCORT:
 		if (priority == PRIMARY) {
-			sprintf_s(desc, "Escort the %s", tgt_desc.data());
+			sprintf_s(desc, "Escort %s", tgt_desc.data());
 		}
 		else {
 			sprintf_s(desc, "Protect %s in the area", tgt_desc.data());
