@@ -934,7 +934,7 @@ Sim::CreateElements()
 								sprintf_s(DesignName, "%s %s", NewShip->Abbreviation(), NewShip->Design()->display_name);
 								Stats->SetType(DesignName);
 								Stats->SetShipClass((int) NewShip->Class());
-								Stats->SetRole(Mission::RoleName(MissionElem->MissionRole()));
+								Stats->SetRole(Mission::GetRoleName(MissionElem->MissionRole()));
 								Stats->SetIFF(NewShip->GetIFF());
 								Stats->SetRegion(MissionElem->Region());
 								Stats->SetCombatGroup(MissionElem->GetCombatGroup());

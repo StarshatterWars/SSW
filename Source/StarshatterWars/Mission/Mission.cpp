@@ -246,52 +246,6 @@ Mission::AddEvent(MissionEvent* event)
 // +--------------------------------------------------------------------+
 
 bool
-Mission::Load(const char* fname, const char* pname)
-{
-	ok = false;
-
-	if (fname)
-		strcpy_s(filename, fname);
-
-	if (pname)
-		strcpy_s(path, pname);
-
-	if (!filename[0]) {
-		UE_LOG(LogStarshatterMission, Warning, TEXT("Can't Load Mission: script unspecified."));
-		return ok;
-	}
-
-	// wipe existing mission before attempting to load...
-	elements.destroy();
-	events.destroy();
-
-	UE_LOG(LogStarshatterMission, Log, TEXT("Load Mission: '%hs'"), filename);
-
-	DataLoader* loader = DataLoader::GetLoader();
-	bool        old_fs = loader->IsFileSystemEnabled();
-	BYTE* block = 0;
-
-	loader->UseFileSystem(true);
-	loader->SetDataPath(path);
-	loader->LoadBuffer(filename, block, true);
-	loader->SetDataPath(0);
-	loader->UseFileSystem(old_fs);
-
-	ok = ParseMission((const char*)block);
-
-	loader->ReleaseBuffer(block);
-
-	UE_LOG(LogStarshatterMission, Log, TEXT("Mission Loaded."));
-
-	if (ok)
-		Validate();
-
-	return ok;
-}
-
-// +--------------------------------------------------------------------+
-
-bool
 Mission::ParseMission(const char* block)
 {
 	Parser parser(new BlockReader(block));
@@ -607,7 +561,7 @@ EMISSIONTYPE Mission::EnumFromName(const char* n)
 		i <= static_cast<int32>(EMISSIONTYPE::OTHER);
 		++i)
 	{
-		if (!FCStringAnsi::Stricmp(n, RoleName(i)))
+		if (!FCStringAnsi::Stricmp(n, GetRoleName(i)))
 		{
 			return static_cast<EMISSIONTYPE>(i);
 		}
@@ -664,7 +618,7 @@ int32 Mission::TypeFromName(const char* n)
 		i <= static_cast<int32>(EMISSIONTYPE::OTHER);
 		i++)
 	{
-		if (!FCStringAnsi::Stricmp(n, RoleName(i)))
+		if (!FCStringAnsi::Stricmp(n, GetRoleName(i)))
 		{
 			return i;
 		}
@@ -1446,7 +1400,7 @@ Mission::ParseRLoc(TermStruct* val)
 	return rloc;
 }
 
-const char* Mission::RoleName(int32 role)
+const char* Mission::GetRoleName(int32 role)
 {
 	switch (static_cast<EMISSIONTYPE>(role))
 	{
@@ -2013,6 +1967,8 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 	events.destroy();
 	errmsg = "";
 	subtitles = "";
+	target = nullptr;
+	ward = nullptr;
 
 	id = InMission.Id;
 	name = TCHAR_TO_ANSI(*InMission.Name);
@@ -2023,7 +1979,7 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 	objective = TCHAR_TO_ANSI(*InMission.Objective);
 	sitrep = TCHAR_TO_ANSI(*InMission.Sitrep);
 
-	type = static_cast<int>(InMission.MissionType);
+	type = static_cast<int32>(InMission.MissionType);
 	team = InMission.Team;
 	degrees = InMission.Degrees;
 	stardate = InMission.Stardate;
@@ -2035,6 +1991,11 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 	for (const FS_MissionElement& SrcElem : InMission.Element)
 	{
 		MissionElement* Elem = new MissionElement();
+		if (!Elem)
+		{
+			continue;
+		}
+
 		Elem->name = TCHAR_TO_ANSI(*SrcElem.Name);
 		Elem->carrier = TCHAR_TO_ANSI(*SrcElem.Carrier);
 		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
@@ -2054,8 +2015,8 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 		Elem->heading = SrcElem.Heading;
 		Elem->SetLocation(SrcElem.Location);
 
-		Elem->mission_role = static_cast<int>(SrcElem.RoleName);
-		Elem->intel = (int) SrcElem.Intel;
+		Elem->mission_role = static_cast<int32>(SrcElem.RoleName);
+		Elem->intel = static_cast<int32>(SrcElem.Intel);
 
 		AddElement(Elem);
 	}
@@ -2064,11 +2025,16 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 	for (const FS_MissionEvent& SrcEvent : InMission.Event)
 	{
 		MissionEvent* Ev = new MissionEvent();
+		if (!Ev)
+		{
+			continue;
+		}
+
 		Ev->id = SrcEvent.EventId;
 		Ev->time = SrcEvent.EventTime;
 		Ev->delay = SrcEvent.EventDelay;
-		Ev->event = static_cast<int>(SrcEvent.EventType);
-		Ev->trigger = static_cast<int>(SrcEvent.EventTrigger);
+		Ev->event = static_cast<int32>(SrcEvent.EventType);
+		Ev->trigger = static_cast<int32>(SrcEvent.EventTrigger);
 		Ev->event_ship = TCHAR_TO_ANSI(*SrcEvent.EventShip);
 		Ev->event_source = TCHAR_TO_ANSI(*SrcEvent.EventSource);
 		Ev->event_target = TCHAR_TO_ANSI(*SrcEvent.EventTarget);
@@ -2080,10 +2046,14 @@ bool Mission::LoadFromCampaignMissionData(const FS_CampaignMission& InMission)
 
 	// resolve target/ward by name after elements exist
 	if (!InMission.TargetName.IsEmpty())
+	{
 		target = FindElement(TCHAR_TO_ANSI(*InMission.TargetName));
+	}
 
 	if (!InMission.WardName.IsEmpty())
+	{
 		ward = FindElement(TCHAR_TO_ANSI(*InMission.WardName));
+	}
 
 	ok = true;
 	Validate();
@@ -2173,7 +2143,7 @@ MissionElement::GetRegistry(int index) const
 Text
 MissionElement::RoleName() const
 {
-	return Mission::RoleName(mission_role);
+	return Mission::GetRoleName(mission_role);
 }
 
 FColor

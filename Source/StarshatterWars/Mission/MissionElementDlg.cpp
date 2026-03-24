@@ -249,7 +249,7 @@ void UMissionElementDlg::RebuildFromModel()
 
         for (int i = (int)EMISSIONTYPE::PATROL; i <= (int)EMISSIONTYPE::OTHER; i++)
         {
-            RoleCombo->AddOption(ANSI_TO_TCHAR(Mission::RoleName(i)));
+            RoleCombo->AddOption(ANSI_TO_TCHAR(Mission::GetRoleName(i)));
 
             if (i == 0)
             {
@@ -257,7 +257,7 @@ void UMissionElementDlg::RebuildFromModel()
             }
             else if (ElemPtr->MissionRole() == i)
             {
-                RoleCombo->SetSelectedOption(ANSI_TO_TCHAR(Mission::RoleName(i)));
+                RoleCombo->SetSelectedOption(ANSI_TO_TCHAR(Mission::GetRoleName(i)));
             }
         }
     }

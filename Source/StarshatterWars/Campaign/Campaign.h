@@ -117,6 +117,10 @@ public:
     void DumpTemplateBuckets(const FString& Label, const List<TemplateList>& SourceList) const;
     void DumpAllMissionState(const FString& Label) const;
 
+    const FS_CampaignMission* FindCampaignMissionData(int32 MissionType, CombatGroup* Squadron) const;
+
+    const FS_CampaignMission* FindCampaignMissionByScript(const char* ScriptName) const;
+
     const List<TemplateList>& GetTemplates() const { return templates; }
 
     // accessors:
@@ -163,6 +167,7 @@ public:
     Mission* GetMissionByFile(const char* filename);
     MissionInfo* GetMissionInfo(int id);
     MissionInfo* FindMissionTemplate(int msn_type, CombatGroup* player_group);
+    const FS_CampaignMission* FindCampaignMissionById(int32 id) const;
     void                 ReloadMission(int id);
     void                 LoadNetMission(int id, const char* net_mission);
     void                 StartMission();
@@ -230,6 +235,7 @@ protected:
 
     void                 SelectDefaultPlayerGroup(CombatGroup* g, int type);
     TemplateList* GetTemplateList(int msn_type, int grp_type);
+    void SetCampaignData(const FS_Campaign* InData);
 
     // attributes:
     int                  campaign_id;
@@ -269,6 +275,9 @@ protected:
 
     // NEW: optional traceability for DT-backed campaigns
     FName                SourceRowName = NAME_None;
+
+protected:
+        const FS_Campaign* CampaignData = nullptr;
 
 protected:
     void LoadCombatantsFromData(const FS_Campaign& Data);

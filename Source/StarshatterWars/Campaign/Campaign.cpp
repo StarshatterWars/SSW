@@ -46,6 +46,7 @@
 #include "FormatUtil.h"
 #include "GameScreen.h"
 #include "GameStructs.h"
+#include "StarshatterGameDataSubsystem.h"
 
 // Unreal minimal support:
 #include "CoreMinimal.h"
@@ -191,6 +192,11 @@ Campaign::~Campaign()
 }
 
 // +--------------------------------------------------------------------+
+
+void Campaign::SetCampaignData(const FS_Campaign* InData)
+{
+    CampaignData = InData;
+}
 
 void
 Campaign::Initialize()
@@ -1606,68 +1612,11 @@ Mission* Campaign::GetMission(int32 Id)
     return Info->mission;
 }
 
-Mission*
-Campaign::GetMissionByFile(const char* InFilename)
+Mission* Campaign::GetMissionByFile(const char* InFilename)
 {
-    if (!InFilename || !*InFilename) {
-        UE_LOG(LogCampaign, Error, TEXT("ERROR - Campaign::GetMissionByFile() invalid filename"));
-        return 0;
-    }
-
-    int          id = 0;
-    int          maxid = 0;
-    MissionInfo* info = 0;
-
-    for (int i = 0; !info && i < missions.size(); i++) {
-        MissionInfo* m = missions[i];
-
-        if (m->id > maxid)
-            maxid = m->id;
-
-        if (m->script == InFilename)
-            info = m;
-    }
-
-    if (info) {
-        id = info->id;
-
-        if (!info->mission) {
-            UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) loading mission..."), id);
-            info->mission = new Mission(id, info->script, path);
-            if (info->mission)
-                info->mission->Load();
-        }
-
-        if (IsDynamic()) {
-            if (info->mission) {
-                if (FCStringAnsi::Stricmp(info->mission->GetSituation(), "Unknown") == 0) {
-                    UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) generating sitrep..."), id);
-                    CampaignSituationReport sitrep(this, info->mission);
-                    sitrep.GenerateSituationReport();
-                }
-            }
-            else {
-                UE_LOG(LogCampaign, Warning, TEXT("Campaign::GetMission(%d) could not find/load mission."), id);
-            }
-        }
-    }
-    else {
-        info = new MissionInfo;
-        if (info) {
-            info->id = maxid + 1;
-            info->name = "New Custom Mission";
-            info->script = InFilename;
-
-            info->mission = new Mission(info->id, info->script, "Mods/Missions/");
-            info->mission->SetName(info->name);
-
-            info->script.setSensitive(false);
-
-            missions.append(info);
-        }
-    }
-
-    return info ? info->mission : 0;
+    UE_LOG(LogCampaign, Warning,
+        TEXT("Campaign::GetMissionByFile is legacy/unused and should not be called"));
+    return nullptr;
 }
 
 MissionInfo*
@@ -1740,33 +1689,81 @@ Campaign::DeleteMission(int id)
     }
 }
 
-MissionInfo*
-Campaign::GetMissionInfo(int id)
+MissionInfo* Campaign::GetMissionInfo(int id)
 {
-    if (id < 0) {
-        UE_LOG(LogCampaign, Error, TEXT("ERROR - Campaign::GetMissionInfo(%d) invalid mission id"), id);
+    if (id < 0)
+    {
+        UE_LOG(LogCampaign, Error,
+            TEXT("ERROR - Campaign::GetMissionInfo(%d) invalid mission id"), id);
         return 0;
     }
 
     MissionInfo* m = 0;
-    for (int i = 0; !m && i < missions.size(); i++)
-        if (missions[i]->id == id)
-            m = missions[i];
 
-    if (m) {
-        if (!m->mission) {
-            m->mission = new Mission(id, m->script);
+    for (int i = 0; !m && i < missions.size(); i++)
+    {
+        if (missions[i]->id == id)
+        {
+            m = missions[i];
+        }
+    }
+
+    if (m)
+    {
+        if (!m->mission)
+        {
+            m->mission = new Mission(id);
+
             if (m->mission)
-                m->mission->Load();
+            {
+                const FS_CampaignMission* MissionData = FindCampaignMissionById(id);
+
+                if (MissionData)
+                {
+                    if (!m->mission->LoadFromCampaignMissionData(*MissionData))
+                    {
+                        delete m->mission;
+                        m->mission = 0;
+
+                        UE_LOG(LogCampaign, Error,
+                            TEXT("ERROR - Campaign::GetMissionInfo(%d) failed to load from campaign data"),
+                            id);
+                    }
+                }
+                else
+                {
+                    delete m->mission;
+                    m->mission = 0;
+
+                    UE_LOG(LogCampaign, Error,
+                        TEXT("ERROR - Campaign::GetMissionInfo(%d) no matching FS_CampaignMission row"),
+                        id);
+                }
+            }
         }
 
         return m;
     }
 
-    UE_LOG(LogCampaign, Error, TEXT("ERROR - Campaign::GetMissionInfo(%d) could not find mission"), id);
+    UE_LOG(LogCampaign, Error,
+        TEXT("ERROR - Campaign::GetMissionInfo(%d) could not find mission"), id);
+
     return 0;
 }
 
+const FS_CampaignMission* Campaign::FindCampaignMissionById(int32 id) const
+{
+    if (!CampaignData)
+        return nullptr;
+
+    for (const FS_CampaignMission& Row : CampaignData->Missions)
+    {
+        if (Row.Id == id)
+            return &Row;
+    }
+
+    return nullptr;
+}
 void
 Campaign::ReloadMission(int id)
 {
@@ -2894,6 +2891,7 @@ Campaign* Campaign::CreateFromData(const FS_Campaign& Data)
     Campaign* NewCampaign = new Campaign(Data.Index + 1, TCHAR_TO_ANSI(*Data.Name), true);
     if (NewCampaign)
     {
+        NewCampaign->SetCampaignData(&Data);
         NewCampaign->LoadFromData(Data);
     }
 
@@ -3226,4 +3224,58 @@ void Campaign::DumpAllMissionState(const FString& Label) const
 
     DumpMissionList(TEXT("Missions"), missions);
     DumpTemplateBuckets(TEXT("Templates"), templates);
+}
+
+const FS_CampaignMission* Campaign::FindCampaignMissionData(int32 MissionType, CombatGroup* Squadron) const
+{
+    if (!CampaignData)
+    {
+        return nullptr;
+    }
+
+    const FString SquadronName =
+        Squadron ? UTF8_TO_TCHAR(Squadron->Name()) : FString();
+
+    for (const FS_CampaignMission& MissionRow : CampaignData->Missions)
+    {
+        if (static_cast<int32>(MissionRow.MissionType) != MissionType)
+        {
+            continue;
+        }
+
+        if (Squadron)
+        {
+            for (const FS_MissionElement& Elem : MissionRow.Element)
+            {
+                if (Elem.Player && Elem.Squadron.Equals(SquadronName, ESearchCase::IgnoreCase))
+                {
+                    return &MissionRow;
+                }
+            }
+        }
+
+        return &MissionRow;
+    }
+
+    return nullptr;
+}
+
+const FS_CampaignMission* Campaign::FindCampaignMissionByScript(const char* ScriptName) const
+{
+    if (!CampaignData || !ScriptName || !*ScriptName)
+    {
+        return nullptr;
+    }
+
+    const FString Script = UTF8_TO_TCHAR(ScriptName);
+
+    for (const FS_CampaignMission& Row : CampaignData->Missions)
+    {
+        if (Row.Scene.Equals(Script, ESearchCase::IgnoreCase))
+        {
+            return &Row;
+        }
+    }
+
+    return nullptr;
 }

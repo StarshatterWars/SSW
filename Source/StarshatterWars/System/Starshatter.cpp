@@ -2545,21 +2545,31 @@ Starshatter::ExecCutscene(const char* msn_file, const char* path)
 	if (!world)
 		CreateWorld();
 
-	cutscene_mission = new  Mission(0);
+	cutscene_mission = new Mission(0);
 	cutscene_basetime = StarSystem::GetBaseTime();
 
-	if (cutscene_mission->Load(msn_file, path)) {
+	const FS_CampaignMission* MissionData = nullptr;
+
+	Campaign* ActiveCampaign = Campaign::GetCampaign();
+	if (ActiveCampaign)
+	{
+		MissionData = ActiveCampaign->FindCampaignMissionByScript(msn_file);
+	}
+
+	if (cutscene_mission && MissionData && cutscene_mission->LoadFromCampaignMissionData(*MissionData))
+	{
 		Sim* sim = (Sim*)world;
 
-		if (sim) {
-			bool      dynamic = false;
+		if (sim)
+		{
+			bool dynamic = false;
 			Campaign* campaign = Campaign::GetCampaign();
 
 			if (campaign && campaign->IsDynamic())
 				dynamic = true;
 
 			sim->UnloadMission();
-			sim->LoadMission(cutscene_mission, true); // attempt to preload the tex cache
+			sim->LoadMission(cutscene_mission, true);
 			sim->ExecMission();
 			sim->ShowGrid(false);
 			player_ship = sim->GetPlayerShip();
@@ -2569,7 +2579,12 @@ Starshatter::ExecCutscene(const char* msn_file, const char* path)
 			UpdateWorld();
 		}
 	}
-	else {
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("ExecCutscene: could not resolve cutscene mission '%s'"),
+			UTF8_TO_TCHAR(msn_file));
+
 		delete cutscene_mission;
 		cutscene_mission = 0;
 		cutscene_basetime = 0;

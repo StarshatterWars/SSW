@@ -232,7 +232,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     {
         UE_LOG(LogStarshatterWars, Log,
             TEXT("CMF CreateMission() request: %s '%s'"),
-            ANSI_TO_TCHAR(Mission::RoleName(req->Type())),
+            ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
             *req->Script());
     }
     else
@@ -241,7 +241,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
 
         UE_LOG(LogStarshatterWars, Log,
             TEXT("CMF CreateMission() request: %s %s"),
-            ANSI_TO_TCHAR(Mission::RoleName(req->Type())),
+            ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
             ANSI_TO_TCHAR(ObjName));
     }
 
@@ -290,7 +290,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
             TEXT("CMF Created %03d '%s' %s"),
             info->id,
             ANSI_TO_TCHAR(info->name.data()),
-            ANSI_TO_TCHAR(Mission::RoleName(mission ? mission->GetType() : 0)));
+            ANSI_TO_TCHAR(Mission::GetRoleName(mission ? mission->GetType() : 0)));
 
         if (dump_missions && mission)
         {
@@ -324,15 +324,16 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
 
     if (request && request->Script().Len())
     {
-       const FString Script = request->Script();
-const FString Path   = campaign->Path();
+        // Still legacy/script-backed unless you convert this branch too
+        const FString Script = request->Script();
+        const FString Path = campaign->Path();
 
-MissionTemplate* mt = new MissionTemplate(
-    id,
-    TCHAR_TO_ANSI(*Script),
-    TCHAR_TO_ANSI(*Path)
-);
-        
+        MissionTemplate* mt = new MissionTemplate(
+            id,
+            TCHAR_TO_ANSI(*Script),
+            TCHAR_TO_ANSI(*Path)
+        );
+
         if (mt)
         {
             mt->SetPlayerSquadron(squadron);
@@ -343,20 +344,30 @@ MissionTemplate* mt = new MissionTemplate(
     }
     else
     {
-        mission_info = campaign->FindMissionTemplate(mission_type, squadron);
-        found = (mission_info != nullptr);
+        // NEW: get full campaign mission data row, not legacy MissionInfo
+        const FS_CampaignMission* mission_data =
+            campaign->FindCampaignMissionData(mission_type, squadron);
+
+        found = (mission_data != nullptr);
 
         if (found)
         {
-            MissionTemplate* mt = new MissionTemplate(id, mission_info->script, campaign->Path());
-            if (mt)
-            {
-                mt->SetPlayerSquadron(squadron);
-            }
+            mission = new Mission(id);
 
-            mission = mt;
+            if (mission)
+            {
+                mission->SetType(mission_type);
+
+                if (!mission->LoadFromCampaignMissionData(*mission_data))
+                {
+                    delete mission;
+                    mission = nullptr;
+                    found = false;
+                }
+            }
         }
-        else
+
+        if (!found)
         {
             mission = new Mission(id);
             if (mission)
@@ -391,8 +402,6 @@ MissionTemplate* mt = new MissionTemplate(
     }
     else
     {
-        mission->Load();
-
         if (mission->IsOK())
         {
             player_elem = mission->GetPlayer();

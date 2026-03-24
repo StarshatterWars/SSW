@@ -545,12 +545,29 @@ void UMissionEditorDlg::OnCancelClicked()
 {
     if (mission)
     {
-        mission->Load();
+        Campaign* ActiveCampaign = Campaign::GetCampaign();
+
+        if (ActiveCampaign)
+        {
+            const FS_CampaignMission* MissionData =
+                ActiveCampaign->FindCampaignMissionById(mission->GetIdentity());
+
+            if (MissionData)
+            {
+                mission->LoadFromCampaignMissionData(*MissionData);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("OnCancelClicked: No campaign data found for mission %d"),
+                    mission->GetIdentity());
+            }
+        }
     }
 
     if (Manager)
     {
-        // Manager->ShowMsnSelectDlg(); // wire to your real API
+        // Manager->ShowMsnSelectDlg();
     }
 }
 

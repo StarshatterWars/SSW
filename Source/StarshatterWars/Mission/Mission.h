@@ -74,7 +74,6 @@ public:
     int operator == (const Mission& m) const { return id == m.id; }
 
     virtual void            Validate();
-    virtual bool            Load(const char* filename = 0, const char* path = 0);
     virtual bool            Save();
     virtual bool            ParseMission(const char* buffer);
     virtual void            SetPlayer(MissionElement* player_element);
@@ -93,7 +92,7 @@ public:
     int               GetStart()        const { return start; }
     double            GetStardate()     const { return stardate; }
     int               GetType()         const { return type; }
-    const char*       GetTypeName()     const { return RoleName(type); }
+    const char*       GetTypeName()     const { return GetRoleName(type); }
     int               GetTeam()         const { return team; }
     bool              IsOK()            const { return ok; }
     bool              IsActive()        const { return active; }
@@ -141,7 +140,7 @@ public:
     void              IncreaseEventPriority(int index);
     void              DecreaseEventPriority(int index);
 
-    static const char* RoleName(int role);
+    static const char* GetRoleName(int role);
     static EMISSIONTYPE EnumFromName(const char* n);
     static int         TypeFromName(const char* n);
 

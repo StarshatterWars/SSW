@@ -418,7 +418,7 @@ void UMissionSelectDlg::UpdateDescriptionAndButtons()
     D += TEXT("<font Verdana>\n\n<color ffff80>");
     D += FString(Game::GetText("MsnSelectDlg.mission-type").data());
     D += TEXT("<color ffffff>\n\t");
-    D += FString(Mission::RoleName(SelectedItem->GetMissionType()));
+    D += FString(Mission::GetRoleName(SelectedItem->GetMissionType()));
 
     D += TEXT("\n\n<color ffff80>");
     D += FString(Game::GetText("MsnSelectDlg.scenario").data());

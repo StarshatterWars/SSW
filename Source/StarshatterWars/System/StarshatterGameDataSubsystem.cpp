@@ -1189,7 +1189,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	InitializeCampaignData();
+	//InitializeCampaignData();
 	ReadCampaignData();
 	
 	//InitializeCombatRoster();
@@ -1229,7 +1229,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 		return;
 	}
 
-	CampaignDataTable->EmptyTable();
+	//CampaignDataTable->EmptyTable();
 
 	const FString CampaignDPath = ANSI_TO_TCHAR(fs);
 

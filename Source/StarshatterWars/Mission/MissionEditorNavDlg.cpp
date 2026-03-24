@@ -36,6 +36,7 @@
 #include "Galaxy.h"
 #include "StarSystem.h"
 #include "Mission.h"
+#include "Campaign.h"
 #include "MissionInfo.h"
 #include "GameStructs.h"
 
@@ -425,10 +426,31 @@ void UMissionEditorNavDlg::OnCommitClicked()
 void UMissionEditorNavDlg::OnCancelClicked()
 {
     if (mission)
-        mission->Load();
+    {
+        Campaign* ActiveCampaign = Campaign::GetCampaign();
+
+        if (ActiveCampaign)
+        {
+            const FS_CampaignMission* MissionData =
+                ActiveCampaign->FindCampaignMissionById(mission->GetIdentity()); // or GetID()
+
+            if (MissionData)
+            {
+                mission->LoadFromCampaignMissionData(*MissionData);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("OnCancelClicked: No campaign data found for mission %d"),
+                    mission->GetIdentity());
+            }
+        }
+    }
 
     if (Manager)
+    {
         Manager->ShowMissionSelectDlg();
+    }
 }
 
 void UMissionEditorNavDlg::OnTabClicked_Sit()

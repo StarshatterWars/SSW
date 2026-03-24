@@ -88,7 +88,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         return;
     UE_LOG(LogStarshatterWars, Log, TEXT("-----------------------------------------------"));
 
-    const TCHAR* RoleT = ANSI_TO_TCHAR(Mission::RoleName(req->Type()));
+    const TCHAR* RoleT = ANSI_TO_TCHAR(Mission::GetRoleName(req->Type()));
 
     if (req->Script().Len() > 0)
     {
@@ -164,7 +164,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
             TEXT("CMS Created %03d '%s' %s"),
             info->id,
             ANSI_TO_TCHAR(info->name),
-            ANSI_TO_TCHAR(Mission::RoleName(mission->GetType()))
+            ANSI_TO_TCHAR(Mission::GetRoleName(mission->GetType()))
         );
 
         if (dump_missions) {
@@ -198,62 +198,65 @@ CampaignMissionStarship::GenerateMission(int id)
     const bool bHasRequest = (request != nullptr);
 
     // ------------------------------------------------------------
-    // CASE 1: Explicit scripted request (request provides script)
+    // CASE 1: Explicit scripted request (still legacy/file-backed)
     // ------------------------------------------------------------
-    if (bHasRequest && request->Script().Len() > 0) {
+    if (bHasRequest && request->Script().Len() > 0)
+    {
         MissionTemplate* mt = new MissionTemplate(
             id,
-            TCHAR_TO_ANSI(*request->Script()),  
-            campaign->Path()                    
+            TCHAR_TO_ANSI(*request->Script()),
+            campaign->Path()
         );
 
         if (mt)
+        {
             mt->SetPlayerSquadron(player_group);
+        }
 
         mission = mt;
         found = (mission != nullptr);
     }
 
     // ------------------------------------------------------------
-    // CASE 2: Use a campaign mission template (campaign provides script)
+    // CASE 2: Use campaign mission data from DT_Campaign
     // ------------------------------------------------------------
-    else {
-        mission_info = campaign->FindMissionTemplate(mission_type, player_group);
-        found = (mission_info != nullptr);
+    else
+    {
+        const FS_CampaignMission* mission_data =
+            campaign->FindCampaignMissionData(mission_type, player_group);
 
-        if (found) {
-            // IMPORTANT:
-            // Build the MissionTemplate from mission_info->script (NOT request->Script()).
-            // Adjust field access to match your MissionInfo definition.
-            //
-            // If MissionInfo::script is Text:
-            //   const char* ScriptCStr = mission_info->script.data();
-            //
-            // If MissionInfo::script is FString:
-            //   const char* ScriptCStr = TCHAR_TO_ANSI(*mission_info->script);
+        found = (mission_data != nullptr);
 
-            const char* ScriptCStr = mission_info->script.data(); // assuming Text
+        if (found)
+        {
+            mission = new Mission(id);
 
-            MissionTemplate* mt = new MissionTemplate(
-                id,
-                ScriptCStr,          // already const char*
-                campaign->Path()     // already const char*
-            );
+            if (mission)
+            {
+                mission->SetType(mission_type);
 
-            if (mt)
-                mt->SetPlayerSquadron(player_group);
-
-            mission = mt;
+                if (!mission->LoadFromCampaignMissionData(*mission_data))
+                {
+                    delete mission;
+                    mission = nullptr;
+                    found = false;
+                }
+            }
         }
-        else {
+
+        if (!found)
+        {
             mission = new Mission(id);
             if (mission)
+            {
                 mission->SetType(mission_type);
+            }
         }
     }
 
-    // If request is required for timing, enforce it here:
-    if (!mission || !player_group || !bHasRequest) {
+    // request is still needed for timing in current logic
+    if (!mission || !player_group || !bHasRequest)
+    {
         Exit();
         return nullptr;
     }
@@ -268,25 +271,29 @@ CampaignMissionStarship::GenerateMission(int id)
     SelectRegion();
     GenerateStandardElements();
 
-    if (!found) {
+    if (!found)
+    {
         GenerateMissionElements();
         mission->SetOK(true);
         mission->Validate();
     }
-    else {
+    else
+    {
         CreatePlayer();
-        mission->Load();
 
-        if (mission->IsOK()) {
+        if (mission->IsOK())
+        {
             player = mission->GetPlayer();
             prime_target = mission->GetTarget();
             ward = mission->GetWard();
         }
-        else {
+        else
+        {
             delete mission;
             mission = new Mission(id);
 
-            if (!mission) {
+            if (!mission)
+            {
                 Exit();
                 return nullptr;
             }
@@ -307,7 +314,6 @@ CampaignMissionStarship::GenerateMission(int id)
 
     return mission;
 }
-
 
 void
 CampaignMissionStarship::SelectType()
