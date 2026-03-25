@@ -63,13 +63,13 @@ CampaignPlanEvent::ExecFrame()
             return;
 
         // once every twenty minutes is plenty:
-        if (Campaign::Stardate() - exec_time < 1200)
+        if (Campaign::GetStardate() - exec_time < 1200)
             return;
 
         if (!ExecScriptedEvents())
             ExecStatisticalEvents();
 
-        exec_time = Campaign::Stardate();
+        exec_time = Campaign::GetStardate();
         event_time = (int)campaign->GetTime();
     }
 }
@@ -77,7 +77,7 @@ CampaignPlanEvent::ExecFrame()
 void
 CampaignPlanEvent::SetLockout(int seconds)
 {
-    exec_time = Campaign::Stardate() + seconds;
+    exec_time = Campaign::GetStardate() + seconds;
 }
 
 // +--------------------------------------------------------------------+

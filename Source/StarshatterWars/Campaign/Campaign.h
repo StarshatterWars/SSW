@@ -148,9 +148,9 @@ public:
     int                  CountNewEvents() const;
 
     int                  GetPlayerIFF();
-    CombatGroup* GetPlayerGroup() { return player_group; }
+    CombatGroup*         GetPlayerGroup() { return player_group; }
     void                 SetPlayerGroup(CombatGroup* pg);
-    CombatUnit* GetPlayerUnit() { return player_unit; }
+    CombatUnit*          GetPlayerUnit() { return player_unit; }
     void                 SetPlayerUnit(CombatUnit* pu);
 
     Combatant* GetCombatant(const char* name);
@@ -177,7 +177,7 @@ public:
     int                  GetCampaignId()   const { return campaign_id; }
     void                 SetMissionId(int id);
     int                  GetMissionId()    const { return mission_id; }
-    Bitmap* GetImage(int n) { return &image[n]; }
+    Bitmap*              GetImage(int n) { return &image[n]; }
     double               GetTime()         const { return time; }
     double               GetStartTime()    const { return startTime; }
     void                 SetStartTime(double t) { startTime = t; }
@@ -204,13 +204,13 @@ public:
 
     static void          Initialize();
     static void          Close();
-    static Campaign* GetCampaign();
+    static Campaign*     GetCampaign();
     static List<Campaign>& GetAllCampaigns();
     static int           GetLastCampaignId();
-    static Campaign* SelectCampaign(const char* name);
-    static Campaign* CreateCustomCampaign(const char* name, const char* path);
+    static Campaign*     SelectCampaign(const char* name);
+    static Campaign*     CreateCustomCampaign(const char* name, const char* path);
 
-    static double        Stardate();
+    static double        GetStardate();
 
 protected:
     void                 LoadCampaign(DataLoader* loader, bool full = false);

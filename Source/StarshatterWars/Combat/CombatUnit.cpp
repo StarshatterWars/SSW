@@ -153,7 +153,7 @@ CombatUnit::CanLaunch() const
 
     switch (type) {
     case (int)CLASSIFICATION::FIGHTER:
-    case (int)CLASSIFICATION::ATTACK:   result = (Campaign::Stardate() - launch_time) >= 300;
+    case (int)CLASSIFICATION::ATTACK:   result = (Campaign::GetStardate() - launch_time) >= 300;
         break;
 
     case (int)CLASSIFICATION::CORVETTE:
@@ -308,7 +308,7 @@ CombatUnit::AssignMission()
 
     if (assign > 0) {
         available -= assign;
-        launch_time = Campaign::Stardate();
+        launch_time = Campaign::GetStardate();
         return assign;
     }
 

@@ -43,7 +43,7 @@ CampaignPlanAssignment::ExecFrame()
 {
 	if (campaign && campaign->IsActive()) {
 		// once every few minutes is plenty:
-		if (Campaign::Stardate() - exec_time < 300)
+		if (Campaign::GetStardate() - exec_time < 300)
 			return;
 
 		ListIter<Combatant> iter = campaign->GetCombatants();
@@ -51,7 +51,7 @@ CampaignPlanAssignment::ExecFrame()
 			ProcessCombatant(iter.value());
 		}
 
-		exec_time = Campaign::Stardate();
+		exec_time = Campaign::GetStardate();
 	}
 }
 

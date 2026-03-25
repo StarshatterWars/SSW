@@ -464,7 +464,7 @@ Campaign::Unload()
     Game::ResetGameTime();
     StarSystem::SetBaseTime(0);
 
-    startTime = Stardate();
+    startTime = GetStardate();
     loadTime = startTime;
     lockout = 0;
 
@@ -1889,7 +1889,7 @@ Campaign::SetMissionId(int id)
 // +--------------------------------------------------------------------+
 
 double
-Campaign::Stardate()
+Campaign::GetStardate()
 {
     return StarSystem::Stardate();
 }
@@ -1962,7 +1962,7 @@ Campaign::ExecFrame()
     if (InCutscene())
         return;
 
-    time = Stardate() - startTime;
+    time = GetStardate() - startTime;
 
     if (campaign_status < ECampaignStatus::ACTIVE)
         return;
@@ -2187,7 +2187,7 @@ Campaign::StartMission()
 
             StarSystem::SetBaseTime(base);
 
-            double current_time = Stardate() - startTime;
+            double current_time = GetStardate() - startTime;
 
             char buffer[32];
             FormatDayTime(buffer, current_time);
@@ -2214,7 +2214,7 @@ Campaign::RollbackMission()
 
             StarSystem::SetBaseTime(base);
 
-            double current_time = Stardate() - startTime;
+            double current_time = GetStardate() - startTime;
             UE_LOG(LogCampaign, Log, TEXT("  mission start: %d"), m->GetStart());
             UE_LOG(LogCampaign, Log, TEXT("  current time:  %d"), (int)current_time);
         }

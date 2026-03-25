@@ -59,7 +59,7 @@ CampaignPlanMission::ExecFrame()
                 return;
 
             // otherwise, once every few seconds is plenty:
-            if (Campaign::Stardate() - exec_time < 1)
+            if (Campaign::GetStardate() - exec_time < 1)
                 return;
         }
 
@@ -85,7 +85,7 @@ CampaignPlanMission::ExecFrame()
             delete request;
         }
 
-        exec_time = Campaign::Stardate();
+        exec_time = Campaign::GetStardate();
     }
 }
 

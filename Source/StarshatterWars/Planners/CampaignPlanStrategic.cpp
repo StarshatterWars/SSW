@@ -33,7 +33,7 @@ void
 CampaignPlanStrategic::ExecFrame()
 {
 	if (campaign && campaign->IsActive()) {
-		if (Campaign::Stardate() - exec_time < 300)
+		if (Campaign::GetStardate() - exec_time < 300)
 			return;
 
 		ListIter<CombatZone> zone = campaign->GetZones();
@@ -59,7 +59,7 @@ CampaignPlanStrategic::ExecFrame()
 			ResolveZoneMovement(force);
 		}
 
-		exec_time = Campaign::Stardate();
+		exec_time = Campaign::GetStardate();
 	}
 }
 

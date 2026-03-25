@@ -41,7 +41,7 @@ void
 CampaignPlanMovement::ExecFrame()
 {
     if (campaign && campaign->IsActive()) {
-        if (Campaign::Stardate() - exec_time < 7200)
+        if (Campaign::GetStardate() - exec_time < 7200)
             return;
 
         campaign->GetAllCombatUnits(-1, all_units);
@@ -56,7 +56,7 @@ CampaignPlanMovement::ExecFrame()
 
         all_units.clear();
 
-        exec_time = Campaign::Stardate();
+        exec_time = Campaign::GetStardate();
     }
 }
 
