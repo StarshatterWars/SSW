@@ -538,3 +538,12 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
 
     return (((Days * 24) + Hours) * 60 + Minutes) * 60 + Seconds;
 }
+
+void UFormattingUtils::FormatDayTime(char* Out, int32 TimeValue)
+{
+    const int32 Days = TimeValue / 86400;
+    const int32 Hours = (TimeValue % 86400) / 3600;
+    const int32 Minutes = (TimeValue % 3600) / 60;
+
+    sprintf_s(Out, 32, "Day %d %02d:%02d", Days, Hours, Minutes);
+}

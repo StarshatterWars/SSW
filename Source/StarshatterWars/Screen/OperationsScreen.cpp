@@ -75,7 +75,7 @@ static FString FormatTPlus(uint64 TPlusSeconds)
 void UOperationsScreen::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	
 	UGameInstance* GIBase = GetGameInstance();
 	if (!GIBase) return;
 

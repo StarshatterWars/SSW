@@ -1,520 +1,526 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmdIntelDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmdIntelDlg implementation (Unreal port)
-*/
+// +----------------------------------------------------------------------+
+// | UCmdIntelDlg                                                         |
+// +----------------------------------------------------------------------+
+// | PURPOSE:                                                             |
+// |   Displays campaign intel events (news feed).                        |
+// |                                                                      |
+// | RESPONSIBILITIES:                                                    |
+// |   - Populate intel list from Campaign events                         |
+// |   - Track unread/visited events                                      |
+// |   - Display selected event details                                   |
+// |   - Handle scene playback (audio/video)                              |
+// |   - Route command screen navigation                                  |
+// +----------------------------------------------------------------------+
 
 #include "CmdIntelDlg.h"
 
-// UMG
 #include "Components/Button.h"
-#include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/ListView.h"
-#include "Components/RichTextBlock.h"
+#include "Components/TextBlock.h"
+#include "IntelListObject.h"
+#include "Blueprint/WidgetTree.h"
 
-// Starshatter core
-#include "Starshatter.h"
+#include "CmpnScreen.h"
 #include "Campaign.h"
 #include "CombatEvent.h"
 #include "CombatGroup.h"
-#include "Sim.h"
-#include "CameraManager.h"
-#include "FormatUtil.h"
+#include "Game.h"
+#include "Starshatter.h"
+#include "PlayerCharacter.h"
+#include "FormattingUtils.h"
 #include "Mouse.h"
 
-// Your campaign screen
-#include "CmpnScreen.h"
-
 UCmdIntelDlg::UCmdIntelDlg(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-}
-
-void UCmdIntelDlg::NativeConstruct()
-{
-    Super::NativeConstruct();
-
-    BindFormWidgets();
-
-    Stars = Starshatter::GetInstance();
-    CampaignPtr = Campaign::GetCampaign();
-    if (CampaignPtr)
-        UpdateTime = CampaignPtr->GetUpdateTime();
-
-    // Buttons
-    if (btn_save)     btn_save->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnSaveClicked);
-    if (btn_exit)     btn_exit->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnExitClicked);
-
-    if (btn_orders)   btn_orders->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnModeOrdersClicked);
-    if (btn_theater)  btn_theater->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnModeTheaterClicked);
-    if (btn_forces)   btn_forces->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnModeForcesClicked);
-    if (btn_intel)    btn_intel->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnModeIntelClicked);
-    if (btn_missions) btn_missions->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnModeMissionsClicked);
-
-    if (btn_play)     btn_play->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnPlayClicked);
-
-    // List click
-    if (lst_news)
-        lst_news->OnItemClicked().AddUObject(this, &UCmdIntelDlg::OnNewsItemClicked);
-
-    // Initial visibility
-    if (btn_play) btn_play->SetVisibility(ESlateVisibility::Collapsed);
-    if (mov_news) mov_news->SetVisibility(ESlateVisibility::Collapsed);
-}
-
-void UCmdIntelDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-    Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame();
 }
 
 void UCmdIntelDlg::SetManager(UCmpnScreen* InManager)
 {
-    Manager = InManager;
-}
-
-void UCmdIntelDlg::BindFormWidgets()
-{
-    // Intentionally empty if you are using BindWidgetOptional.
-    // Keep this function so you can add explicit binding by ID later if desired.
+	Manager = InManager;
 }
 
 void UCmdIntelDlg::SetParentCmdDlg(UCmdDlg* InParentCmdDlg)
 {
-    ParentCmdDlg = InParentCmdDlg;
+	ParentCmdDlg = InParentCmdDlg;
+}
+
+void UCmdIntelDlg::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	Stars = Starshatter::GetInstance();
+	CampaignPtr = Campaign::GetCampaign();
+	UpdateTime = CampaignPtr ? CampaignPtr->GetUpdateTime() : 0.0;
+
+	BindFormWidgets();
+
+	if (AudioButton)
+	{
+		AudioButton->OnClicked.RemoveDynamic(this, &UCmdIntelDlg::OnPlayClicked);
+		AudioButton->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnPlayClicked);
+	}
+
+	if (btn_save)
+	{
+		btn_save->OnClicked.RemoveDynamic(this, &UCmdIntelDlg::OnSaveClicked);
+		btn_save->OnClicked.AddDynamic(this, &UCmdIntelDlg::OnSaveClicked);
+	}
+
+	if (IntelList)
+	{
+		IntelList->OnItemClicked().RemoveAll(this);
+		IntelList->OnItemClicked().AddUObject(this, &UCmdIntelDlg::OnNewsItemClicked);
+	}
+
+	ClearNewsDetails();
+	AppendNewEventsIfAny();
+}
+
+void UCmdIntelDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	ExecFrame();
+}
+
+void UCmdIntelDlg::BindFormWidgets()
+{
+	// If lst_news is not directly bound, resolve the actual BP widget name.
+	if (!IntelList)
+	{
+		IntelList = Cast<UListView>(GetWidgetFromName(TEXT("IntelList")));
+	}
+
+	if (!IntelNameText)     IntelNameText = Cast<UTextBlock>(GetWidgetFromName(TEXT("IntelNameText")));
+	if (!IntelSourceText)   IntelSourceText = Cast<UTextBlock>(GetWidgetFromName(TEXT("IntelSourceText")));
+	if (!IntelLocationText) IntelLocationText = Cast<UTextBlock>(GetWidgetFromName(TEXT("IntelLocationText")));
+	if (!IntelDateText)     IntelDateText = Cast<UTextBlock>(GetWidgetFromName(TEXT("IntelDateText")));
+	if (!IntelMessageText)  IntelMessageText = Cast<UTextBlock>(GetWidgetFromName(TEXT("IntelMessageText")));
+	if (!IntelImage)        IntelImage = Cast<UImage>(GetWidgetFromName(TEXT("IntelImage")));
+	if (!AudioButton)       AudioButton = Cast<UButton>(GetWidgetFromName(TEXT("AudioButton")));
+
+	// Optional movie widget if present in the BP
+	if (!mov_news)
+	{
+		mov_news = GetWidgetFromName(TEXT("mov_news"));
+	}
 }
 
 void UCmdIntelDlg::ShowIntelDlg()
 {
-    Mode = ECOMMAND_MODE::MODE_INTEL;
-
-    // Mirror legacy: ShowCmdDlg header
-    CampaignPtr = Campaign::GetCampaign();
-    Stars = Starshatter::GetInstance();
-
-    if (txt_name)
-    {
-        if (CampaignPtr)
-            txt_name->SetText(FText::FromString(CampaignPtr->Name()));
-        else
-            txt_name->SetText(FText::FromString(TEXT("No Campaign Selected")));
-    }
-
-    // Hide movie and play button by default
-    if (btn_play) btn_play->SetVisibility(ESlateVisibility::Collapsed);
-    if (mov_news) mov_news->SetVisibility(ESlateVisibility::Collapsed);
-
-    SetVisibility(ESlateVisibility::Visible);
+	SetVisibility(ESlateVisibility::Visible);
+	AppendNewEventsIfAny();
 }
 
 void UCmdIntelDlg::ExecFrame()
 {
-    ExecHeaderFrame();
-    RebuildNewsListIfCampaignChanged();
-    AppendNewEventsIfAny();
+	RebuildNewsListIfCampaignChanged();
+	AppendNewEventsIfAny();
 
-    // Cutscene start countdown (legacy start_scene)
-    if (StartSceneCountdown > 0)
-    {
-        ShowMovie();
-        --StartSceneCountdown;
+	if (StartSceneCountdown > 0)
+	{
+		--StartSceneCountdown;
 
-        if (StartSceneCountdown == 0)
-        {
-            if (Stars && CampaignPtr && !EventScene.IsEmpty())
-            {
-                Stars->ExecCutscene(TCHAR_TO_UTF8(*EventScene), CampaignPtr->Path());
-
-                if (Stars->InCutscene())
-                {
-                    // Legacy camera view wiring happened here.
-                    // In UE, your mov_news widget should already be rendering the cutscene viewport.
-                    // If you have a custom viewport widget, update its scene/camera here.
-                    Sim* SimPtr = Sim::GetSim();
-                    (void)SimPtr;
-                }
-            }
-
-            EventScene.Empty();
-        }
-    }
-    else
-    {
-        if (Stars && Stars->InCutscene())
-            ShowMovie();
-        else
-            HideMovie();
-    }
-}
-
-void UCmdIntelDlg::ExecHeaderFrame()
-{
-    if (!CampaignPtr)
-        CampaignPtr = Campaign::GetCampaign();
-
-    if (!CampaignPtr)
-        return;
-
-    // Group
-    if (txt_group)
-    {
-        CombatGroup* G = CampaignPtr->GetPlayerGroup();
-        if (G)
-            txt_group->SetText(FText::FromString(UTF8_TO_TCHAR(G->GetDescription())));
-    }
-
-    // Score
-    if (txt_score)
-    {
-        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
-        txt_score->SetText(FText::FromString(ScoreStr));
-    }
-
-    // Time
-    if (txt_time)
-    {
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, CampaignPtr->GetTime());
-        txt_time->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
-    }
-
-    // Intel unread count label on the Intel tab button (optional):
-    // If your Intel button has a child text block, expose it and set it here.
+		if (StartSceneCountdown == 0 && !EventScene.IsEmpty())
+		{
+			// Hook your scene playback here if needed.
+		}
+	}
 }
 
 void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
 {
-    Campaign* Current = Campaign::GetCampaign();
-    if (!Current)
-        return;
+	Campaign* Current = Campaign::GetCampaign();
+	if (!Current)
+		return;
 
-    const double CurrentUpdateTime = Current->GetUpdateTime();
+	const double CurrentUpdateTime = Current->GetUpdateTime();
 
-    if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime)
-    {
-        CampaignPtr = Current;
-        UpdateTime = CurrentUpdateTime;
+	if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime)
+	{
+		CampaignPtr = Current;
+		UpdateTime = CurrentUpdateTime;
 
-        if (lst_news)
-            lst_news->ClearListItems();
+		if (IntelList)
+		{
+			IntelList->ClearListItems();
+		}
 
-        ClearNewsDetails();
-    }
+		ClearNewsDetails();
+	}
 }
+
+// +----------------------------------------------------------------------+
+// | AppendNewEventsIfAny                                                 |
+// +----------------------------------------------------------------------+
 
 void UCmdIntelDlg::AppendNewEventsIfAny()
 {
-    if (!CampaignPtr || !lst_news)
-        return;
+	if (!CampaignPtr || !IntelList)
+		return;
 
-    List<CombatEvent>& Events = CampaignPtr->GetEvents();
+	IntelList->ClearListItems();
 
-    // ListView items count
-    const int32 Existing = lst_news->GetNumItems();
-    const int32 Total = Events.size();
+	List<CombatEvent>& Events = CampaignPtr->GetEvents();
 
-    bool bAutoScroll = false;
+	for (int32 i = 0; i < Events.size(); ++i)
+	{
+		CombatEvent* Info = Events[i];
+		if (!Info)
+			continue;
 
-    if (Total > Existing)
-    {
-        for (int32 i = Existing; i < Total; ++i)
-        {
-            CombatEvent* Info = Events[i];
-            if (!Info) continue;
+		UIntelListObject* Item = NewObject<UIntelListObject>(this);
 
-            UCmdIntelNewsItem* Item = NewObject<UCmdIntelNewsItem>(this);
+		char Dateline[32] = { 0 };
+		UFormattingUtils::FormatDayTime(Dateline, Info->Time());
 
-            Item->UnreadMark = Info->Visited() ? TEXT(" ") : TEXT("*");
+		Item->NewsTitle = UTF8_TO_TCHAR(Info->Title());
+		Item->NewsLocation = UTF8_TO_TCHAR(Info->Region());
+		Item->NewsSource = Info->GetEventSourceName();
+		Item->NewsDate = UTF8_TO_TCHAR(Dateline);
+		Item->NewsInfoText = UTF8_TO_TCHAR(Info->Information());
+		Item->NewsVisited = Info->Visited();
+		Item->EventPtr = Info;
 
-            char Dateline[32] = { 0 };
-            FormatDayTime(Dateline, Info->Time());
-            Item->Date = UTF8_TO_TCHAR(Dateline);
+		Item->NewsImage = TEXT("");
+		Item->NewsAudio = TEXT("");
 
-            Item->Title = UTF8_TO_TCHAR(Info->Title());
-            Item->Loc = UTF8_TO_TCHAR(Info->Region());
-            Item->Source = UTF8_TO_TCHAR(
-                Game::GetText(
-                    TCHAR_TO_UTF8(*Info->GetEventSourceName())
-                )
-            );
-            Item->EventPtr = Info;
-
-            lst_news->AddItem(Item);
-
-            if (!Info->Visited())
-                bAutoScroll = true;
-        }
-
-        if (bAutoScroll)
-            AutoScrollToFirstUnreadIfNeeded();
-    }
-    else if (Total < Existing)
-    {
-        // Campaign likely reloaded; rebuild list
-        lst_news->ClearListItems();
-
-        bool bHasUnread = false;
-        for (int32 i = 0; i < Total; ++i)
-        {
-            CombatEvent* Info = Events[i];
-            if (!Info) continue;
-
-            UCmdIntelNewsItem* Item = NewObject<UCmdIntelNewsItem>(this);
-
-            Item->UnreadMark = Info->Visited() ? TEXT(" ") : TEXT("*");
-
-            char Dateline[32] = { 0 };
-            FormatDayTime(Dateline, Info->Time());
-            Item->Date = UTF8_TO_TCHAR(Dateline);
-
-            Item->Title = UTF8_TO_TCHAR(Info->Title());
-            Item->Loc = UTF8_TO_TCHAR(Info->Region());
-            Item->Source = UTF8_TO_TCHAR(
-                Game::GetText(
-                    TCHAR_TO_UTF8(*Info->GetEventSourceName())
-                )
-            );
-            Item->EventPtr = Info;
-
-            lst_news->AddItem(Item);
-
-            if (!Info->Visited())
-                bHasUnread = true;
-        }
-
-        ClearNewsDetails();
-
-        if (bHasUnread)
-            AutoScrollToFirstUnreadIfNeeded();
-    }
+		IntelList->AddItem(Item);
+	}
 }
 
 void UCmdIntelDlg::AutoScrollToFirstUnreadIfNeeded()
 {
-    if (!lst_news)
-        return;
+	if (!IntelList)
+		return;
 
-    const int32 Num = lst_news->GetNumItems();
-    for (int32 i = 0; i < Num; ++i)
-    {
-        UObject* Obj = lst_news->GetItemAt(i);
-        UCmdIntelNewsItem* Item = Cast<UCmdIntelNewsItem>(Obj);
-        if (Item && Item->UnreadMark == TEXT("*"))
-        {
-            lst_news->ScrollIndexIntoView(i);
-            break;
-        }
-    }
+	const int32 Num = IntelList->GetNumItems();
+	for (int32 i = 0; i < Num; ++i)
+	{
+		UObject* Obj = IntelList->GetItemAt(i);
+		UCmdIntelNewsItem* Item = Cast<UCmdIntelNewsItem>(Obj);
+		if (Item && Item->UnreadMark == TEXT("*"))
+		{
+			IntelList->ScrollIndexIntoView(i);
+			break;
+		}
+	}
 }
 
 void UCmdIntelDlg::ClearNewsDetails()
 {
-    if (txt_news)
-        txt_news->SetText(FText::GetEmpty());
+	if (IntelNameText)     IntelNameText->SetText(FText::GetEmpty());
+	if (IntelSourceText)   IntelSourceText->SetText(FText::GetEmpty());
+	if (IntelLocationText) IntelLocationText->SetText(FText::GetEmpty());
+	if (IntelDateText)     IntelDateText->SetText(FText::GetEmpty());
+	if (IntelMessageText)  IntelMessageText->SetText(FText::GetEmpty());
 
-    if (img_news && DefaultNewsTexture)
-        img_news->SetBrushFromTexture(DefaultNewsTexture, true);
+	if (IntelImage)
+	{
+		if (DefaultNewsTexture)
+		{
+			IntelImage->SetBrushFromTexture(DefaultNewsTexture, true);
+		}
+		else
+		{
+			IntelImage->SetBrush(FSlateBrush());
+		}
+	}
 
-    if (btn_play)
-        btn_play->SetVisibility(ESlateVisibility::Collapsed);
+	if (AudioButton)
+	{
+		AudioButton->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 CombatEvent* UCmdIntelDlg::GetSelectedEvent(int32& OutSelectedIndex) const
 {
-    OutSelectedIndex = -1;
+	OutSelectedIndex = -1;
 
-    if (!lst_news)
-        return nullptr;
+	if (!IntelList)
+		return nullptr;
 
-    UObject* Selected = lst_news->GetSelectedItem();
-    if (!Selected)
-        return nullptr;
+	UObject* Selected = IntelList->GetSelectedItem();
+	if (!Selected)
+		return nullptr;
 
-    OutSelectedIndex = lst_news->GetIndexForItem(Selected);
+	OutSelectedIndex = IntelList->GetIndexForItem(Selected);
 
-    UCmdIntelNewsItem* Item = Cast<UCmdIntelNewsItem>(Selected);
-    if (!Item)
-        return nullptr;
+	UCmdIntelNewsItem* Item = Cast<UCmdIntelNewsItem>(Selected);
+	if (!Item)
+		return nullptr;
 
-    return Item->EventPtr;
+	return Item->EventPtr;
 }
 
-void UCmdIntelDlg::OnNewsItemClicked(UObject* ItemObj)
+// +----------------------------------------------------------------------+
+// | OnNewsItemClicked                                                    |
+// +----------------------------------------------------------------------+
+
+void UCmdIntelDlg::OnNewsItemClicked(UObject* Item)
 {
-    if (!lst_news)
-        return;
+	UIntelListObject* IntelItem = Cast<UIntelListObject>(Item);
+	if (!IntelItem || !IntelItem->EventPtr)
+		return;
 
-    // Select it (ListView click does not always select depending on settings)
-    lst_news->SetSelectedItem(ItemObj);
+	// Populate detail panel
+	SetSelectedIntelData(IntelItem);
 
-    int32 Index = -1;
-    CombatEvent* EventPtr = GetSelectedEvent(Index);
+	// Mark visited
+	IntelItem->NewsVisited = true;
+	IntelItem->EventPtr->SetVisited(true);
 
-    ShowSelectedEvent(EventPtr, Index);
+	IntelList->RequestRefresh();
 }
 
 void UCmdIntelDlg::ShowSelectedEvent(CombatEvent* EventPtr, int32 SelectedIndex)
 {
-    if (!EventPtr)
-    {
-        ClearNewsDetails();
-        return;
-    }
+	if (!EventPtr)
+	{
+		ClearNewsDetails();
+		return;
+	}
 
-    // Build rich text similar to legacy markup.
-    // IMPORTANT: UMG RichTextBlock uses decorators; you will need matching styles in your RichTextBlock.
-    // If you do not have decorators/styles, use a plain TextBlock or strip tags.
-    FString Info;
-    Info += TEXT("<Title>");
-    Info += UTF8_TO_TCHAR(EventPtr->Title());
-    Info += TEXT("</>\n\n");
-    Info += UTF8_TO_TCHAR(EventPtr->Information());
+	if (IntelNameText)
+	{
+		IntelNameText->SetText(FText::FromString(UTF8_TO_TCHAR(EventPtr->Title())));
+	}
 
-    if (txt_news)
-    {
-        txt_news->SetText(FText::FromString(Info));
-    }
+	if (IntelLocationText)
+	{
+		IntelLocationText->SetText(FText::FromString(UTF8_TO_TCHAR(EventPtr->Region())));
+	}
 
-    // Mark unread column
-    if (SelectedIndex >= 0)
-    {
-        UObject* Obj = lst_news->GetItemAt(SelectedIndex);
-        UCmdIntelNewsItem* Item = Cast<UCmdIntelNewsItem>(Obj);
-        if (Item)
-        {
-            Item->UnreadMark = TEXT(" ");
-            // Force refresh the row
-            lst_news->RequestRefresh();
-        }
-    }
+	if (IntelSourceText)
+	{
+		IntelSourceText->SetText(FText::FromString(EventPtr->GetEventSourceName()));
+	}
 
-    // Image
-    if (img_news)
-    {
-        // Legacy used event->Image() (Bitmap). In UE, you likely have an atlas/texture mapping by name.
-        // For now, fall back to default if you do not have an asset resolver.
-        if (DefaultNewsTexture)
-            img_news->SetBrushFromTexture(DefaultNewsTexture, true);
-    }
+	if (IntelDateText)
+	{
+		char Dateline[32] = { 0 };
+		UFormattingUtils::FormatDayTime(Dateline, EventPtr->Time());
+		IntelDateText->SetText(FText::FromString(UTF8_TO_TCHAR(Dateline)));
+	}
 
-    // Play button visibility
-    const bool bHasScene = (EventPtr->SceneFile() && *EventPtr->SceneFile());
-    if (btn_play)
-        btn_play->SetVisibility(bHasScene ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	if (IntelMessageText)
+	{
+		FString Info = UTF8_TO_TCHAR(EventPtr->Information());
+		Info = Info.Replace(TEXT("\\n"), TEXT("\n"));
+		IntelMessageText->SetText(FText::FromString(Info));
+	}
 
-    // Autoplay if not visited and play is possible
-    if (!EventPtr->Visited() && bHasScene && btn_play && btn_play->GetIsEnabled())
-    {
-        OnPlayClicked();
-    }
+	if (SelectedIndex >= 0 && IntelList)
+	{
+		UObject* Obj = IntelList->GetItemAt(SelectedIndex);
+		UCmdIntelNewsItem* NewsItem = Cast<UCmdIntelNewsItem>(Obj);
+		if (NewsItem)
+		{
+			NewsItem->UnreadMark = TEXT(" ");
+			IntelList->RequestRefresh();
+		}
+	}
 
-    EventPtr->SetVisited(true);
+	if (IntelImage)
+	{
+		if (DefaultNewsTexture)
+		{
+			IntelImage->SetBrushFromTexture(DefaultNewsTexture, true);
+		}
+		else
+		{
+			IntelImage->SetBrush(FSlateBrush());
+		}
+	}
+
+	const bool bHasScene = (EventPtr->SceneFile() && *EventPtr->SceneFile());
+
+	if (AudioButton)
+	{
+		AudioButton->SetVisibility(bHasScene ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	if (!EventPtr->Visited() && bHasScene && AudioButton && AudioButton->GetIsEnabled())
+	{
+		OnPlayClicked();
+	}
+
+	EventPtr->SetVisited(true);
 }
 
 void UCmdIntelDlg::OnPlayClicked()
 {
-    if (!lst_news)
-        return;
+	int32 Index = -1;
+	CombatEvent* EventPtr = GetSelectedEvent(Index);
+	if (!EventPtr)
+		return;
 
-    int32 Index = -1;
-    CombatEvent* EventPtr = GetSelectedEvent(Index);
-    if (!EventPtr)
-        return;
+	if (!EventPtr->SceneFile() || !*EventPtr->SceneFile())
+		return;
 
-    if (!EventPtr->SceneFile() || !*EventPtr->SceneFile())
-        return;
+	EventScene = UTF8_TO_TCHAR(EventPtr->SceneFile());
+	StartSceneCountdown = 2;
 
-    EventScene = UTF8_TO_TCHAR(EventPtr->SceneFile());
-    StartSceneCountdown = 2;
-
-    ShowMovie();
+	ShowMovie();
 }
 
 void UCmdIntelDlg::ShowMovie()
 {
-    if (mov_news)
-        mov_news->SetVisibility(ESlateVisibility::Visible);
+	if (mov_news)
+	{
+		mov_news->SetVisibility(ESlateVisibility::Visible);
+	}
 
-    if (img_news) img_news->SetVisibility(ESlateVisibility::Collapsed);
-    if (txt_news) txt_news->SetVisibility(ESlateVisibility::Collapsed);
-    if (btn_play) btn_play->SetVisibility(ESlateVisibility::Collapsed);
+	if (IntelImage)       IntelImage->SetVisibility(ESlateVisibility::Collapsed);
+	if (IntelMessageText) IntelMessageText->SetVisibility(ESlateVisibility::Collapsed);
+	if (AudioButton)      AudioButton->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UCmdIntelDlg::HideMovie()
 {
-    // Determine if current selected event is playable
-    bool bPlay = false;
+	bool bPlay = false;
 
-    int32 Index = -1;
-    CombatEvent* EventPtr = GetSelectedEvent(Index);
-    if (EventPtr && EventPtr->SceneFile() && *EventPtr->SceneFile())
-        bPlay = true;
+	int32 Index = -1;
+	CombatEvent* EventPtr = GetSelectedEvent(Index);
+	if (EventPtr && EventPtr->SceneFile() && *EventPtr->SceneFile())
+	{
+		bPlay = true;
+	}
 
-    if (mov_news)
-        mov_news->SetVisibility(ESlateVisibility::Collapsed);
+	if (mov_news)
+	{
+		mov_news->SetVisibility(ESlateVisibility::Collapsed);
+	}
 
-    if (img_news) img_news->SetVisibility(ESlateVisibility::Visible);
-    if (txt_news) txt_news->SetVisibility(ESlateVisibility::Visible);
+	if (IntelImage)       IntelImage->SetVisibility(ESlateVisibility::Visible);
+	if (IntelMessageText) IntelMessageText->SetVisibility(ESlateVisibility::Visible);
 
-    if (btn_play)
-        btn_play->SetVisibility(bPlay ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	if (AudioButton)
+	{
+		AudioButton->SetVisibility(bPlay ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
 }
-
-// --------------------------------------------------------------------
-// Routing
-// --------------------------------------------------------------------
 
 void UCmdIntelDlg::SetModeAndRoute(ECOMMAND_MODE InMode)
 {
-    Mode = InMode;
+	Mode = InMode;
 
-    if (!Manager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CmdIntelDlg: Manager is null (SetModeAndRoute)."));
-        return;
-    }
-
-    switch (Mode)
-    {
-    case ECOMMAND_MODE::MODE_ORDERS:   Manager->ShowCmdOrdersDlg();   break;
-    case ECOMMAND_MODE::MODE_THEATER:  Manager->ShowCmdTheaterDlg();  break;
-    case ECOMMAND_MODE::MODE_FORCES:   Manager->ShowCmdForceDlg();    break;
-    case ECOMMAND_MODE::MODE_INTEL:    Manager->ShowCmdIntelDlg();    break;
-    case ECOMMAND_MODE::MODE_MISSIONS: Manager->ShowCmdMissionsDlg(); break;
-    default:                               Manager->ShowCmdOrdersDlg();   break;
-    }
+	if (!Manager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CmdIntelDlg: Manager is null (SetModeAndRoute)."));
+		return;
+	}
 }
-
-void UCmdIntelDlg::OnModeOrdersClicked() { SetModeAndRoute(ECOMMAND_MODE::MODE_ORDERS); }
-void UCmdIntelDlg::OnModeTheaterClicked() { SetModeAndRoute(ECOMMAND_MODE::MODE_THEATER); }
-void UCmdIntelDlg::OnModeForcesClicked() { SetModeAndRoute(ECOMMAND_MODE::MODE_FORCES); }
-void UCmdIntelDlg::OnModeIntelClicked() { SetModeAndRoute(ECOMMAND_MODE::MODE_INTEL); }
-void UCmdIntelDlg::OnModeMissionsClicked() { SetModeAndRoute(ECOMMAND_MODE::MODE_MISSIONS); }
 
 void UCmdIntelDlg::OnSaveClicked()
 {
-    if (Manager)
-        Manager->ShowCmpFileDlg();
+	if (Manager)
+	{
+		Manager->ShowCmpFileDlg();
+	}
 }
 
-void UCmdIntelDlg::OnExitClicked()
+// +----------------------------------------------------------------------+
+// | SetSelectedIntelData                                                 |
+// +----------------------------------------------------------------------+
+
+void UCmdIntelDlg::SetSelectedIntelData(UIntelListObject* Item)
 {
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
-    }
+	if (!Item)
+		return;
+
+	if (IntelNameText)
+		IntelNameText->SetText(FText::FromString(Item->NewsTitle));
+
+	if (IntelLocationText)
+		IntelLocationText->SetText(FText::FromString(Item->NewsLocation));
+
+	if (IntelSourceText)
+		IntelSourceText->SetText(FText::FromString(Item->NewsSource));
+
+	if (IntelDateText)
+		IntelDateText->SetText(FText::FromString(Item->NewsDate));
+
+	if (IntelMessageText)
+	{
+		FString Message = Item->NewsInfoText;
+		Message = Message.Replace(TEXT("\\n"), TEXT("\n"));
+		IntelMessageText->SetText(FText::FromString(Message));
+	}
+
+	GetIntelImageFile(Item->NewsImage);
+	GetIntelAudioFile(Item->NewsAudio);
+
+	UTexture2D* LoadedTexture = LoadTextureFromFile();
+	if (LoadedTexture && IntelImage)
+	{
+		FSlateBrush Brush = CreateBrushFromTexture(
+			LoadedTexture,
+			FVector2D(LoadedTexture->GetSizeX(), LoadedTexture->GetSizeY()));
+		IntelImage->SetBrush(Brush);
+	}
+}
+
+// +----------------------------------------------------------------------+
+// | GetIntelImageFile                                                    |
+// +----------------------------------------------------------------------+
+
+void UCmdIntelDlg::GetIntelImageFile(const FString& IntelImageName)
+{
+	if (!CampaignPtr)
+		return;
+
+	ImagePath = FPaths::ProjectContentDir() + TEXT("UI/Campaigns/0");
+	ImagePath.Append(FString::FromInt(CampaignPtr->GetCampaignId() + 1));
+	ImagePath.Append(TEXT("/"));
+	ImagePath.Append(IntelImageName);
+	ImagePath.Append(TEXT(".png"));
+
+	UE_LOG(LogTemp, Log, TEXT("Action Image: %s"), *ImagePath);
+}
+
+// +----------------------------------------------------------------------+
+// | GetIntelAudioFile                                                    |
+// +----------------------------------------------------------------------+
+
+void UCmdIntelDlg::GetIntelAudioFile(const FString& IntelAudioName)
+{
+	if (!CampaignPtr)
+		return;
+
+	AudioPath = TEXT("/Game/Audio/Vox/Scenes/0");
+	AudioPath.Append(FString::FromInt(CampaignPtr->GetCampaignId() + 1));
+	AudioPath.Append(TEXT("/"));
+	AudioPath.Append(IntelAudioName);
+	AudioPath.Append(TEXT("."));
+	AudioPath.Append(IntelAudioName);
+
+	UE_LOG(LogTemp, Log, TEXT("Action Audio: %s"), *AudioPath);
+}
+
+// +----------------------------------------------------------------------+
+// | LoadTextureFromFile                                                  |
+// +----------------------------------------------------------------------+
+
+UTexture2D* UCmdIntelDlg::LoadTextureFromFile()
+{
+	USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
+	if (!SSWInstance)
+		return nullptr;
+
+	return SSWInstance->LoadPNGTextureFromFile(ImagePath);
+}
+
+// +----------------------------------------------------------------------+
+// | CreateBrushFromTexture                                               |
+// +----------------------------------------------------------------------+
+
+FSlateBrush UCmdIntelDlg::CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize)
+{
+	FSlateBrush Brush;
+	Brush.SetResourceObject(Texture);
+	Brush.ImageSize = ImageSize;
+	Brush.DrawAs = ESlateBrushDrawType::Image;
+	return Brush;
 }

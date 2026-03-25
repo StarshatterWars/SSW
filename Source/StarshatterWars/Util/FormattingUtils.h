@@ -141,5 +141,7 @@ public:
     static FString FormatTPlus(uint64 TPlusSeconds);
 
     static int32 ParseStarshatterTime(const FString& InTime);
+
+    static void FormatDayTime(char* Out, int32 TimeValue);
 };
 

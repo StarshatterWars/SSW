@@ -25,6 +25,7 @@ CombatEvent::CombatEvent(Campaign* c,
     , points(FVector::ZeroVector)
     , region((rgn&&* rgn) ? rgn : "")
     , image(nullptr)
+    , audio(nullptr)
 {
     UE_LOG(LogTemp, Warning,
         TEXT("[CombatEvent] ctor: campaign=%p type=%s time=%d team=%d src=%d region='%s'"),

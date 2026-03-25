@@ -193,9 +193,6 @@ private:
     UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_save = nullptr; // 1
     UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_exit = nullptr; // 2
 
-    // Optional text blocks inside buttons (if your UMG splits text)
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_btn_intel = nullptr;
-
     // ============================================================
     // State
     // ============================================================

@@ -51,7 +51,7 @@ public:
     ECombatEventType    GetType()        const { return type; }
     int                 Time()           const { return time; }
     int                 GetIFF()         const { return team; }
-    const FVector& GetPoints()      const { return points; }
+    const FVector&      GetPoints()      const { return points; }
     ECombatEventSource  GetSource()      const { return source; }
     FVector             Location()       const { return loc; }
 
@@ -59,11 +59,14 @@ public:
     const char* Title()          const { return title; }
     const char* Information()    const { return info; }
     const char* Filename()       const { return file; }
+    const char* AudioFile()      const { return audio_file; }
     const char* ImageFile()      const { return image_file; }
     const char* SceneFile()      const { return scene_file; }
 
-    UTexture2D* Image()          const { return image; }
-    bool                Visited()        const { return visited; }
+    UTexture2D*  GetImage()       const { return image; }
+    USoundBase*  GetAudio()       const { return audio; }
+
+    bool         Visited()        const { return visited; }
 
     FString GetEventSourceName() const;
     FString GetEventTypeName()   const;
@@ -83,9 +86,12 @@ public:
     void SetInformation(Text t) { info = t; }
     void SetFilename(Text f) { file = f; }
     void SetImageFile(Text f) { image_file = f; }
+    void SetAudioFile(Text f) { audio_file = f; }
     void SetSceneFile(Text f) { scene_file = f; }
 
     void SetImage(UTexture2D* InImage) { image = InImage; }
+    void SetAudio(USoundBase* InAudio) { audio = InAudio; }
+
     void SetVisited(bool v) { visited = v; }
 
     // ------------------------------------------------------------------------
@@ -129,10 +135,12 @@ private:
     Text                info;
     Text                file;
     Text                image_file;
+    Text                audio_file;
     Text                scene_file;
 
     // ------------------------------------------------------------------------
     // Unreal Assets
     // ------------------------------------------------------------------------
     UTexture2D* image = nullptr;
+	USoundBase* audio = nullptr;
 };

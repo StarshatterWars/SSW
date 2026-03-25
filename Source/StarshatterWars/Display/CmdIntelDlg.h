@@ -1,19 +1,16 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmdIntelDlg.h
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmdIntelDlg (Unreal port of CmdIntelDlg)
-*/
+// +----------------------------------------------------------------------+
+// | UCmdIntelDlg                                                         |
+// +----------------------------------------------------------------------+
+// | PURPOSE:                                                             |
+// |   Displays campaign intel events (news feed).                        |
+// |                                                                      |
+// | RESPONSIBILITIES:                                                    |
+// |   - Populate intel list from Campaign events                         |
+// |   - Track unread/visited events                                      |
+// |   - Display selected event details                                   |
+// |   - Handle scene playback (audio/video)                              |
+// |   - Route command screen navigation                                  |
+// +----------------------------------------------------------------------+
 
 #pragma once
 
@@ -24,14 +21,13 @@
 #include "GameStructs.h"
 #include "CmdIntelDlg.generated.h"
 
-// Forward declarations (UMG)
 class UButton;
 class UTextBlock;
 class UImage;
 class UListView;
-class URichTextBlock;
+class UWidget;
+class UIntelListObject;
 
-// Starshatter core forward declarations
 class Starshatter;
 class Campaign;
 class CombatEvent;
@@ -40,134 +36,114 @@ class UCmpnScreen;
 UENUM(BlueprintType)
 enum class ECmdIntelRowType : uint8
 {
-    Event,
-    Blank
+	Event,
+	Blank
 };
 
 UCLASS()
 class STARSHATTERWARS_API UCmdIntelNewsItem : public UObject
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    // Display columns (matches legacy list columns)
-    UPROPERTY() FString UnreadMark;  // "*" or " "
-    UPROPERTY() FString Date;        // formatted day/time
-    UPROPERTY() FString Title;
-    UPROPERTY() FString Loc;
-    UPROPERTY() FString Source;
+	UPROPERTY() FString UnreadMark;
+	UPROPERTY() FString Date;
+	UPROPERTY() FString Title;
+	UPROPERTY() FString Loc;
+	UPROPERTY() FString Source;
 
-    // Backing pointer to legacy event (non-UObject). Do not UPROPERTY this.
-    CombatEvent* EventPtr = nullptr;
+	CombatEvent* EventPtr = nullptr;
 
-    UPROPERTY() ECmdIntelRowType RowType = ECmdIntelRowType::Event;
+	UPROPERTY() ECmdIntelRowType RowType = ECmdIntelRowType::Event;
 };
 
 UCLASS()
 class STARSHATTERWARS_API UCmdIntelDlg : public UBaseScreen
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UCmdIntelDlg(const FObjectInitializer& ObjectInitializer);
+	UCmdIntelDlg(const FObjectInitializer& ObjectInitializer);
 
-    virtual void NativeConstruct() override;
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-    void SetManager(UCmpnScreen* InManager);
-    void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
-    void ShowIntelDlg();
+	void SetManager(UCmpnScreen* InManager);
+	void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
+	void ShowIntelDlg();
 
 private:
-    void BindFormWidgets();
+	void BindFormWidgets();
 
-    // Core tick logic (mirrors legacy CmdIntelDlg::ExecFrame)
-    void ExecFrame();
+	void ExecFrame();
 
-    // Header refresh (mirrors CmdDlg::ExecFrame header portion)
-    void ExecHeaderFrame();
+	void RebuildNewsListIfCampaignChanged();
+	void AppendNewEventsIfAny();
+	void AutoScrollToFirstUnreadIfNeeded();
 
-    // List maintenance
-    void RebuildNewsListIfCampaignChanged();
-    void AppendNewEventsIfAny();
-    void AutoScrollToFirstUnreadIfNeeded();
+	void ShowSelectedEvent(CombatEvent* EventPtr, int32 SelectedIndex);
+	CombatEvent* GetSelectedEvent(int32& OutSelectedIndex) const;
 
-    // Selection actions
-    void ShowSelectedEvent(CombatEvent* EventPtr, int32 SelectedIndex);
-    CombatEvent* GetSelectedEvent(int32& OutSelectedIndex) const;
+	void ShowMovie();
+	void HideMovie();
 
-    // Movie overlay
-    void ShowMovie();
-    void HideMovie();
+	void ClearNewsDetails();
 
-    // Helpers
-    void ClearNewsDetails();
+	void SetModeAndRoute(ECOMMAND_MODE InMode);
 
 private:
-    // Routed mode change
-    void SetModeAndRoute(ECOMMAND_MODE InMode);
+	UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
+
+	// Existing list binding if your BP still exposes lst_news directly:
+	UPROPERTY(meta = (BindWidgetOptional)) UListView* IntelList = nullptr;
+
+	// New CmdIntelPanel detail widgets:
+	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelNameText = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelSourceText = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelLocationText = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelDateText = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelMessageText = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UImage* IntelImage = nullptr;
+	UPROPERTY(meta = (BindWidgetOptional)) UButton* AudioButton = nullptr;
+
+	// Optional movie surface container if present in BP
+	UPROPERTY(meta = (BindWidgetOptional)) UWidget* mov_news = nullptr;
 
 private:
-    // UMG bindings (name them exactly in your widget blueprint, or bind manually)
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_group = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_score = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_name = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_time = nullptr;
+	UCmpnScreen* Manager = nullptr;
+	Starshatter* Stars = nullptr;
+	Campaign* CampaignPtr = nullptr;
 
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_orders = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_theater = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_forces = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_intel = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_missions = nullptr;
+	double UpdateTime = 0.0;
+	int32 StartSceneCountdown = 0;
+	FString EventScene;
 
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_exit = nullptr;
+	ECOMMAND_MODE Mode = ECOMMAND_MODE::MODE_INTEL;
 
-    // Intel tab widgets
-    UPROPERTY(meta = (BindWidgetOptional)) UListView* lst_news = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) URichTextBlock* txt_news = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* img_news = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_play = nullptr;
-
-    // Movie surface container:
-    // In UMG, this should be a widget you can show/hide that hosts your cutscene view (e.g., a custom viewport widget).
-    UPROPERTY(meta = (BindWidgetOptional)) UWidget* mov_news = nullptr;
+	UPROPERTY() UTexture2D* DefaultNewsTexture = nullptr;
 
 private:
+	UFUNCTION() void OnSaveClicked();
 
-    UCmpnScreen* Manager = nullptr;
+	void SetSelectedIntelData(UIntelListObject* Item);
 
-    Starshatter* Stars = nullptr;
-    Campaign* CampaignPtr = nullptr;
-
-    // Legacy tracking
-    double UpdateTime = 0.0;
-    int32 StartSceneCountdown = 0;
-    FString EventScene;
-
-    ECOMMAND_MODE Mode = ECOMMAND_MODE::MODE_INTEL;
-
-    // Default image (optional): if you have a texture asset, set it in BP and apply to img_news.
-    UPROPERTY() UTexture2D* DefaultNewsTexture = nullptr;
-
-private:
-    // UFUNCTION handlers (must be UFUNCTION for AddDynamic)
-    UFUNCTION() void OnSaveClicked();
-    UFUNCTION() void OnExitClicked();
-
-    UFUNCTION() void OnModeOrdersClicked();
-    UFUNCTION() void OnModeTheaterClicked();
-    UFUNCTION() void OnModeForcesClicked();
-    UFUNCTION() void OnModeIntelClicked();
-    UFUNCTION() void OnModeMissionsClicked();
-
-    UFUNCTION() void OnPlayClicked();
-
-    // ListView delegates
-    UFUNCTION() void OnNewsItemClicked(UObject* Item);
+	UFUNCTION() void OnPlayClicked();
+	
+	UFUNCTION()
+	void OnNewsItemClicked(UObject* Item);
 
 protected:
-    UPROPERTY()
-    UCmdDlg* ParentCmdDlg = nullptr;
+	FString ImagePath;
+	FString AudioPath;
+
+	void GetIntelImageFile(const FString& IntelImageName);
+	void GetIntelAudioFile(const FString& IntelAudioName);
+
+	UTexture2D* LoadTextureFromFile();
+	FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize);
+
+protected:
+	UPROPERTY()
+	UCmdDlg* ParentCmdDlg = nullptr;
 };
