@@ -177,7 +177,7 @@ void UMissionDebriefDlg::Show()
         {
             StarSystem* Sys = MissionPtr->GetStarSystem();
             if (Sys)
-                MissionSystem->SetText(FText::FromString(ANSI_TO_TCHAR(Sys->Name())));
+                MissionSystem->SetText(FText::FromString(ANSI_TO_TCHAR(Sys->GetName())));
         }
     }
 

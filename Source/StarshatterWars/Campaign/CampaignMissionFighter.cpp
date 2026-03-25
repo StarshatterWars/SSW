@@ -3021,7 +3021,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
 
     if (mission->GetStarSystem())
     {
-        Info->system = mission->GetStarSystem()->Name();
+        Info->system = mission->GetStarSystem()->GetName();
     }
 
     Info->region = mission->GetRegion();

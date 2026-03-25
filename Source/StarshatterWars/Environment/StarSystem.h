@@ -69,15 +69,15 @@ public:
     virtual void   ExecFrame();
 
     // accessors:
-    const char* Name()         const { return name; }
-    const char* Govt()         const { return govt; }
-    const char* Description()  const { return description; }
-    int            Affiliation()  const { return affiliation; }
-    int            Sequence()     const { return seq; }
-    FVector        Location()     const { return loc; }
-    int            NumStars()     const { return sky_stars; }
-    int            NumDust()      const { return sky_dust; }
-    FColor         Ambient()      const;
+    const char*     GetName()       const { return name; }
+    const char*     Govt()          const { return govt; }
+    const char*     Description()   const { return description; }
+    int            Affiliation()    const { return affiliation; }
+    int            Sequence()       const { return seq; }
+    FVector        Location()       const { return loc; }
+    int            NumStars()       const { return sky_stars; }
+    int            NumDust()        const { return sky_dust; }
+    FColor         Ambient()        const;
 
     List<OrbitalBody>& Bodies() { return bodies; }
     List<OrbitalRegion>& Regions() { return regions; }
@@ -102,7 +102,7 @@ public:
 
     bool                  HasLinkTo(StarSystem* s) const;
 
-    const Text& GetDataPath() const { return datapath; }
+    const Text&           GetDataPath() const { return datapath; }
 
 
 
@@ -194,7 +194,7 @@ public:
 
     int operator == (const Star& s) const { return name == s.name; }
 
-    const char* Name()      const { return name; }
+    const char* GetName()      const { return name; }
     const FVector& Location()  const { return loc; }
     int                   Sequence()  const { return seq; }
 

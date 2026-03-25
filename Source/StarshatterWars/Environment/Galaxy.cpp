@@ -184,7 +184,7 @@ Galaxy::GetSystem(const char* in_name)
 {
     ListIter<StarSystem> sys = systems;
     while (++sys) {
-        if (!strcmp(sys->Name(), in_name))
+        if (!strcmp(sys->GetName(), in_name))
             return sys.value();
     }
 

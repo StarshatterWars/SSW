@@ -121,7 +121,7 @@ void UMissionBriefingDlg::ShowMsnDlg()
         if (MissionPtr)
         {
             if (StarSystem* Sys = MissionPtr->GetStarSystem())
-                MissionSystemText->SetText(ToTextFromUtf8(Sys->Name()));
+                MissionSystemText->SetText(ToTextFromUtf8(Sys->GetName()));
         }
     }
 

@@ -331,7 +331,7 @@ Menu* QuantumView::GetQuantumMenu(Ship* InShip)
 
         char TextBuf[64] = {};
         if (RgnSystem != CurrentSystem)
-            sprintf_s(TextBuf, "%d. %s/%s", n++, RgnSystem->Name(), Rgn->GetName());
+            sprintf_s(TextBuf, "%d. %s/%s", n++, RgnSystem->GetName(), Rgn->GetName());
         else
             sprintf_s(TextBuf, "%d. %s", n++, Rgn->GetName());
 

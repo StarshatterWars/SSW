@@ -1555,13 +1555,13 @@ Mission::Serialize(const char* player_elem, int player_index)
 
 		if (sys != star_system) {
 			s += "\"\nsystem: \"";
-			s += sys->Name();
+			s += sys->GetName();
 		}
 	}
 
 	s += "\"\nsystem: \"";
 	if (GetStarSystem())
-		s += SafeString(GetStarSystem()->Name());
+		s += SafeString(GetStarSystem()->GetName());
 	else
 		s += "null";
 

@@ -215,6 +215,7 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 
 	// Initialize global runtime base time ONCE and propagate to live systems
 	InitSimulationBaseTime();
+	ResetSimulationClock();
 
 	bLoaded = true;
 
@@ -262,7 +263,7 @@ void UStarshatterEnvironmentSubsystem::InitSimulationBaseTime()
 			continue;
 
 		System->SetBaseTime(EnvironmentBaseTime, true);
-		System->CalcStardate();
+		StarSystem::CalcStardate();
 		++Count;
 	}
 
@@ -286,7 +287,7 @@ void UStarshatterEnvironmentSubsystem::RegisterStarSystem(StarSystem* System)
 	if (bBaseTimeInitialized)
 	{
 		System->SetBaseTime(EnvironmentBaseTime, true);
-		System->CalcStardate();
+		StarSystem::CalcStardate();
 	}
 }
 
@@ -2059,4 +2060,35 @@ void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 
 	UE_LOG(LogStarshatterEnvironment, Log,
 		TEXT("[Environment] Caches built."));
+}
+
+// -----------------------------------------------------------------------------
+// Runtime Simulation Clock
+// -----------------------------------------------------------------------------
+
+void UStarshatterEnvironmentSubsystem::ResetSimulationClock()
+{
+	SimulationClockMs = 0;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Simulation clock reset to 0 ms"));
+}
+
+void UStarshatterEnvironmentSubsystem::SetSimulationClockMs(int64 InMs)
+{
+	SimulationClockMs = InMs;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Simulation clock set to %lld ms"),
+		SimulationClockMs);
+}
+
+void UStarshatterEnvironmentSubsystem::AdvanceSimulationClock(double DeltaSeconds)
+{
+	const int64 DeltaMs = (int64)FMath::RoundToInt64(DeltaSeconds * 1000.0);
+	SimulationClockMs += DeltaMs;
+
+	UE_LOG(LogTemp, Verbose,
+		TEXT("[Environment] Simulation clock advanced by %lld ms -> %lld ms"),
+		DeltaMs, SimulationClockMs);
 }

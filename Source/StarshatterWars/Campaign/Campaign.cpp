@@ -404,7 +404,7 @@ Campaign::Load()
         bool found = false;
 
         for (int n = 0; !found && n < systems.size(); n++) {
-            if (s == systems[n]->Name())
+            if (s == systems[n]->GetName())
                 found = true;
         }
 

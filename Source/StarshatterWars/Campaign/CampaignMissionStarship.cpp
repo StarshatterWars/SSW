@@ -1581,7 +1581,7 @@ CampaignMissionStarship::DescribeMission()
     info->start = mission->GetStart();
 
     if (mission->GetStarSystem())
-        info->system = mission->GetStarSystem()->Name();
+        info->system = mission->GetStarSystem()->GetName();
 
     info->region = mission->GetRegion();
 

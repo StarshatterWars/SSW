@@ -69,6 +69,7 @@
 // Project types
 #include "GameStructs.h"
 #include "GameStructs_System.h"
+#include "Tickable.h"
 
 #include "StarshatterEnvironmentSubsystem.generated.h"
 
@@ -110,6 +111,13 @@ public:
     void InitSimulationBaseTime(); void RegisterStarSystem(StarSystem* System); 
     double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
     bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
+
+    void ResetSimulationClock();
+    void SetSimulationClockMs(int64 InMs);
+    void AdvanceSimulationClock(double DeltaSeconds);
+
+    int64 GetSimulationClockMs() const { return SimulationClockMs; }
+    double GetSimulationClockSeconds() const { return (double)SimulationClockMs / 1000.0; }
 
     // =====================================================================
     // Project path / utility
@@ -244,6 +252,7 @@ protected:
     
     bool bBaseTimeInitialized = false; 
     double EnvironmentBaseTime = 0.0;
+    int64 SimulationClockMs = 0;
 
     TArray<StarSystem*> RuntimeStarSystems;
 

@@ -298,12 +298,12 @@ void MapView::BuildMenu()
 		ListIter<StarSystem> iter = system_list;
 		while (++iter) {
 			StarSystem* s = iter.value();
-			map_system_menu->AddItem(s->Name(), MAP_SYSTEM + i);
+			map_system_menu->AddItem(s->GetName(), MAP_SYSTEM + i);
 			i++;
 		}
 	}
 	else if (system) {
-		map_system_menu->AddItem(system->Name(), MAP_SYSTEM);
+		map_system_menu->AddItem(system->GetName(), MAP_SYSTEM);
 	}
 
 	map_sector_menu = new Menu("SECTOR");
@@ -1788,14 +1788,14 @@ MapView::DrawGalaxy()
 
 			FillEllipse(sx - sr, sy - sr, sx + sr, sy + sr, st->GetColor());
 
-			if (!strncmp(st->Name(), "GSC", 3))
+			if (!strncmp(st->GetName(), "GSC", 3))
 				font->SetColor(FColor(100, 100, 100));
 			else
 				font->SetColor(FColor::White);
 
 			Rect name_rect(sx - 60, sy + 8, 120, 20);
 			active_window->SetFont(font);
-			active_window->DrawText(st->Name(), 0, name_rect, DT_SINGLELINE | DT_CENTER);
+			active_window->DrawText(st->GetName(), 0, name_rect, DT_SINGLELINE | DT_CENTER);
 		}
 	}
 
@@ -1809,7 +1809,7 @@ MapView::DrawSystem()
 {
 	Text caption = Game::GetText("MapView.title.Starsystem");
 	caption += " ";
-	caption += system->Name();
+	caption += system->GetName();
 
 	if (current_ship) {
 		caption += "\n";

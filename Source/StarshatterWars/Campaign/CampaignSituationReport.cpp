@@ -105,7 +105,7 @@ CampaignSituationReport::GlobalSituation()
 		sitrep += strat_dir;
 	else
 		sitrep += Text("Establishing and maintaining military control of the ")
-		+ mission->GetStarSystem()->Name()
+		+ mission->GetStarSystem()->GetName()
 		+ Text(" System remains a key priority.");
 }
 

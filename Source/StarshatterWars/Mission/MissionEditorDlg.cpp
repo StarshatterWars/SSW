@@ -236,9 +236,9 @@ void UMissionEditorDlg::Show()
             while (++iter)
             {
                 StarSystem* sys = iter.value();
-                if (sys && sys->Name())
+                if (sys && sys->GetName())
                 {
-                    CmbSystem->AddOption(ANSI_TO_TCHAR(sys->Name()));
+                    CmbSystem->AddOption(ANSI_TO_TCHAR(sys->GetName()));
                 }
             }
         }
@@ -258,7 +258,7 @@ void UMissionEditorDlg::Show()
         if (sys && CmbSystem && CmbRegion)
         {
             // Select system by name
-            const FString SysName = ANSI_TO_TCHAR(sys->Name());
+            const FString SysName = ANSI_TO_TCHAR(sys->GetName());
             CmbSystem->SetSelectedOption(SysName);
 
             // Fill regions
@@ -353,7 +353,7 @@ void UMissionEditorDlg::ScrapeForm()
 
         if (mission_info)
         {
-            mission_info->system = system->Name();
+            mission_info->system = system->GetName();
         }
     }
 
@@ -490,7 +490,7 @@ void UMissionEditorDlg::OnSystemSelectChanged(FString SelectedItem, ESelectInfo:
             while (++iter)
             {
                 StarSystem* s = iter.value();
-                if (s && s->Name() && Name.Equals(ANSI_TO_TCHAR(s->Name())))
+                if (s && s->GetName() && Name.Equals(ANSI_TO_TCHAR(s->GetName())))
                 {
                     sys = s;
                     break;

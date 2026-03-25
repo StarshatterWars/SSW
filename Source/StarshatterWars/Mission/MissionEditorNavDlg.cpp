@@ -169,7 +169,7 @@ void UMissionEditorNavDlg::Show()
     StarSystem* Sys = mission->GetStarSystem();
     if (Sys)
     {
-        const FString SysName = FString(Sys->Name());
+        const FString SysName = FString(Sys->GetName());
 
         if (UComboBoxString* SysCmb = GetCombo(203))
         {
@@ -255,7 +255,7 @@ void UMissionEditorNavDlg::PopulateSystems()
     {
         StarSystem* s = iter.value();
         if (s)
-            SysCmb->AddOption(FString(s->Name()));
+            SysCmb->AddOption(FString(s->GetName()));
     }
 
     if (SysCmb->GetOptionCount() > 0 && SysCmb->GetSelectedOption().IsEmpty())
@@ -272,7 +272,7 @@ StarSystem* UMissionEditorNavDlg::FindSystemByName(const FString& Name) const
     while (++iter)
     {
         StarSystem* s = iter.value();
-        if (s && Name == FString(s->Name()))
+        if (s && Name == FString(s->GetName()))
             return s;
     }
 
@@ -347,7 +347,7 @@ void UMissionEditorNavDlg::ScrapeForm()
         mission->SetStarSystem(system);
 
         if (mission_info)
-            mission_info->system = system->Name();
+            mission_info->system = system->GetName();
     }
 
     // Region:
