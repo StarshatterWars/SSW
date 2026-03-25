@@ -35,7 +35,7 @@
 #include "Text.h"
 #include "Term.h"
 #include "Galaxy.h"
-
+#include "StarSystem.h"
 
 #include "SSWGameInstance.h"
 
@@ -132,7 +132,11 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 	}
 	
 	//GalaxyDataTable->EmptyTable();
-
+	
+	// Runtime time state
+	bBaseTimeInitialized = false;
+	EnvironmentBaseTime = 0.0;
+	RuntimeStarSystems.Reset();
     bLoaded = false;
 }
 
@@ -148,6 +152,10 @@ void UStarshatterEnvironmentSubsystem::Unload()
 {
 	ReleaseAssets();
 	bLoaded = false;
+	
+	bBaseTimeInitialized = false;
+	EnvironmentBaseTime = 0.0;
+	RuntimeStarSystems.Reset();
 }
 
 void UStarshatterEnvironmentSubsystem::ReleaseAssets()
@@ -162,7 +170,7 @@ void UStarshatterEnvironmentSubsystem::ReleaseAssets()
 	TerrainRegionsDataTable = nullptr;
 
 	// Legacy list
-	systems.clear();
+	//systems.clear();
 
 	FilePath.Reset();
 
@@ -205,6 +213,9 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 
 	Galaxy::InitializeFromEnvironment(this);
 
+	// Initialize global runtime base time ONCE and propagate to live systems
+	InitSimulationBaseTime();
+
 	bLoaded = true;
 
 	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] LoadAll complete: Galaxies=%d Systems=%d Stars=%d Planets=%d Moons=%d Regions=%d Terrain=%d Zones=%d"),
@@ -218,11 +229,70 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 		ZoneDataArray.Num());
 }
 
+void UStarshatterEnvironmentSubsystem::InitSimulationBaseTime()
+{
+	if (bBaseTimeInitialized)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Environment] BaseTime already initialized: %f"),
+			EnvironmentBaseTime);
+		return;
+	}
+
+	const FDateTime UtcNow = FDateTime::UtcNow();
+	const FDateTime UnixEpoch(1970, 1, 1);
+	const FTimespan SinceEpoch = UtcNow - UnixEpoch;
+
+	EnvironmentBaseTime = SinceEpoch.GetTotalSeconds();
+	bBaseTimeInitialized = true;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] BaseTime initialized from UE clock: %f"),
+		EnvironmentBaseTime);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] RuntimeStarSystems.Num() = %d"),
+		RuntimeStarSystems.Num());
+
+	int32 Count = 0;
+
+	for (StarSystem* System : RuntimeStarSystems)
+	{
+		if (!System)
+			continue;
+
+		System->SetBaseTime(EnvironmentBaseTime, true);
+		System->CalcStardate();
+		++Count;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] BaseTime propagated to %d systems"),
+		Count);
+}
+
+void UStarshatterEnvironmentSubsystem::RegisterStarSystem(StarSystem* System)
+{
+	if (!System)
+		return;
+
+	RuntimeStarSystems.AddUnique(System);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Registered StarSystem. Count=%d"),
+		RuntimeStarSystems.Num());
+
+	// If base time already initialized, apply immediately
+	if (bBaseTimeInitialized)
+	{
+		System->SetBaseTime(EnvironmentBaseTime, true);
+		System->CalcStardate();
+	}
+}
+
+
 void UStarshatterEnvironmentSubsystem::CreateEnvironmentTables()
 {
-	// Stub:
-	// - Create (or clear & rebuild) DTs
-	// - Add rows based on arrays (DT-first approach)
 	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] CreateEnvironmentTables (stub)"));
 
 	HydrateAllFromTables();

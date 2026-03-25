@@ -1891,7 +1891,7 @@ Campaign::SetMissionId(int id)
 double
 Campaign::GetStardate()
 {
-    return StarSystem::Stardate();
+    return StarSystem::GetStardate();
 }
 
 // +--------------------------------------------------------------------+
@@ -1916,8 +1916,6 @@ Campaign::SelectDefaultPlayerGroup(CombatGroup* g, int type)
 void Campaign::Prep()
 {
     UE_LOG(LogCampaign, Log, TEXT("[Campaign] Prep"));
-
-    StarSystem::SetBaseTime(loadTime);
 
     UE_LOG(LogCampaign, Log,
         TEXT("[Campaign] Prep: dynamic=%d scripted=%d combatants=%d actions=%d missions=%d templates=%d"),

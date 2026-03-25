@@ -95,12 +95,9 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
     if (!Env)
     {
         UE_LOG(LogStarshatterWarsGalaxy, Warning,
-            TEXT("Galaxy::LoadFromEnvironmentSubsystem: Env is null"));
+            TEXT("[Galaxy] LoadFromEnvironmentSubsystem: Env is null"));
         return;
     }
-
-    // DO NOT call Env->LoadAll() here.
-    // That creates recursion because LoadAll() calls Galaxy::InitializeFromEnvironment().
 
     radius = 10;
 
@@ -140,9 +137,14 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
 
         if (StarSys)
         {
-            // Optional: only keep this if StarSystem::Load() is still valid in DT path
-            // StarSys->Load();
             systems.append(StarSys);
+
+            // Register live runtime system with environment subsystem
+            Env->RegisterStarSystem(StarSys);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Galaxy] Registered runtime StarSystem: %s"),
+                *SystemName);
         }
 
         Star* NewStar = new Star(
@@ -157,7 +159,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
     }
 
     UE_LOG(LogStarshatterWarsGalaxy, Log,
-        TEXT("Galaxy loaded from EnvironmentSubsystem: systems=%d stars=%d"),
+        TEXT("[Galaxy] loaded from EnvironmentSubsystem: systems=%d stars=%d"),
         systems.size(),
         stars.size());
 }

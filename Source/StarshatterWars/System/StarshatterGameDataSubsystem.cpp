@@ -5224,7 +5224,7 @@ UStarshatterGameDataSubsystem::SetCampaignStatus(ECampaignStatus s)
 double
 UStarshatterGameDataSubsystem::Stardate()
 {
-	return StarSystem::Stardate();
+	return StarSystem::GetStardate();
 }
 
 Combatant*

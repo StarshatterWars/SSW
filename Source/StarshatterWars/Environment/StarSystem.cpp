@@ -31,15 +31,15 @@
 #include "SimScene.h"
 #include "ParseUtil.h"
 
+#include "Misc/DateTime.h"
+#include "Misc/Timespan.h"
+
 static const double epoch = 0.5e9;
 double StarSystem::stardate = 0;
 
 // +====================================================================+
 
 static double base_time = 0;
-
-static inline void FPU2Extended() { /* No-op in Unreal builds */ }
-static inline void FPURestore() { /* No-op in Unreal builds */ }
 
 static FORCEINLINE FColor ScaleColor(const FColor& In, float Scale)
 {
@@ -53,8 +53,6 @@ static FORCEINLINE FColor ScaleColor(const FColor& In, float Scale)
 
 void StarSystem::SetBaseTime(double t, bool absolute)
 {
-	FPU2Extended();
-
 	if (absolute) {
 		base_time = t;
 		CalcStardate();
@@ -73,25 +71,34 @@ double StarSystem::GetBaseTime()
 
 void StarSystem::CalcStardate()
 {
-	if (base_time < 1) {
-		time_t clock_seconds;
-		time(&clock_seconds);
+	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate BEGIN base_time=%f"), base_time);
 
-		base_time = (double)clock_seconds;
+	if (base_time < 1)
+	{
+		const FDateTime UtcNow = FDateTime::UtcNow();
+		const FDateTime UnixEpoch(1970, 1, 1);
+		const FTimespan SinceEpoch = UtcNow - UnixEpoch;
+
+		base_time = SinceEpoch.GetTotalSeconds();
+
+		UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate FALLBACK to UE UTC clock: %f"), base_time);
 
 		while (base_time < 0)
+		{
 			base_time += epoch;
+		}
 	}
-
-	FPU2Extended();
 
 	const double gtime = (double)Game::GameTime() / 1000.0;
 	const double sdate = gtime + base_time + epoch;
 
-	stardate = sdate;
+	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate gtime=%f base_time=%f epoch=%f"),
+		gtime, base_time, epoch);
+	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate RESULT stardate=%f"), sdate);
 
-	FPURestore();
+	stardate = sdate;
 }
+
 
 // +====================================================================+
 
@@ -1890,7 +1897,7 @@ void Orbital::Update()
 		const double grade = (retro) ? -1 : 1;
 
 		// orbits are counter clockwise:
-		phase = -2 * PI * grade * StarSystem::Stardate() / period;
+		phase = -2 * PI * grade * StarSystem::GetStardate() / period;
 
 		loc = primary->Location() + FVector((float)(orbit * FMath::Cos(phase)),
 			(float)(orbit * FMath::Sin(phase)),
@@ -1917,7 +1924,7 @@ FVector Orbital::PredictLocation(double delta_t)
 		const double grade = (retro) ? -1 : 1;
 
 		// orbits are(?) counter clockwise:
-		const double predicted_phase = (double)(-2 * PI * grade * (StarSystem::Stardate() + delta_t) / period);
+		const double predicted_phase = (double)(-2 * PI * grade * (StarSystem::GetStardate() + delta_t) / period);
 
 		predicted_loc += FVector((float)(orbit * FMath::Cos(predicted_phase)),
 			(float)(orbit * FMath::Sin(predicted_phase)),
@@ -1970,7 +1977,7 @@ void OrbitalBody::Update()
 	theta = 0.0;
 
 	if (rotation > 0.0)
-		theta = -2.0 * PI * StarSystem::Stardate() / rotation;
+		theta = -2.0 * PI * StarSystem::GetStardate() / rotation;
 
 	ListIter<OrbitalBody> BodyIter = satellites;
 	while (++BodyIter)

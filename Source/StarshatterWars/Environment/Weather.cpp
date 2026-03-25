@@ -104,7 +104,7 @@ Weather::Update()
 	// - StarSystem::Stardate() is assumed to be "days" (as in the original codebase),
 	//   and 'period' is in seconds. We preserve the legacy behavior here.
 	// - If you later standardize stardate units, adjust this expression accordingly.
-	const double stardate = StarSystem::Stardate();
+	const double stardate = StarSystem::GetStardate();
 	const double omega = 2.0 * PI / period;
 
 	const double w = (FMath::Sin(stardate * omega) + 1.0) * 0.5;

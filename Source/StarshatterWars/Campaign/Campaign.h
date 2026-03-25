@@ -178,13 +178,18 @@ public:
     void                 SetMissionId(int id);
     int                  GetMissionId()    const { return mission_id; }
     Bitmap*              GetImage(int n) { return &image[n]; }
-    double               GetTime()         const { return time; }
+
+    double               GetTime()         const { return time;      }
     double               GetStartTime()    const { return startTime; }
-    void                 SetStartTime(double t) { startTime = t; }
-    double               GetLoadTime()     const { return loadTime; }
-    void                 SetLoadTime(double t) { loadTime = t; }
+
+    void                 SetStartTime(double t)  { startTime = t;    }
+    void                 SetTime(double t)       { time = t;         }
+
+    double               GetLoadTime()     const { return loadTime;  } 
+    void                 SetLoadTime(double t) { loadTime = t;       }
+
     double               GetUpdateTime()   const { return updateTime; }
-    void                 SetUpdateTime(double t) { updateTime = t; }
+    void                 SetUpdateTime(double t) { updateTime = t;    }
 
     bool                 InCutscene()      const;
     bool                 IsDynamic()       const;
@@ -272,6 +277,8 @@ protected:
     double               startTime;
     double               updateTime;
     int                  lockout;
+
+    double                CampaignStartStardate = 0.0;
 
     // NEW: optional traceability for DT-backed campaigns
     FName                SourceRowName = NAME_None;

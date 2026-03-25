@@ -172,6 +172,8 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* PlayerScoreText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* CurrentLocationText;
 
+
+
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UMenuButton> MenuButtonClass;
 
@@ -184,10 +186,6 @@ private:
     // 300 = campaign name/title
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* txt_name = nullptr;
-
-    // 301 = daytime string
-    UPROPERTY(meta = (BindWidgetOptional), Transient)
-    UTextBlock* txt_time = nullptr;
 
     // 1 = save, 2 = exit
     UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_save = nullptr; // 1

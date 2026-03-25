@@ -377,9 +377,6 @@ void UCmdDlg::OnMenuToggleHovered(UMenuButton* HoveredButton)
 
 void UCmdDlg::BindFormWidgets()
 {
-    // Labels:
-    BindLabel(300, txt_name);
-    BindLabel(301, txt_time);
 
     BindButton(1, btn_save);
     BindButton(2, btn_exit);
@@ -446,14 +443,14 @@ void UCmdDlg::ExecFrame()
     }
 
     // Time:
-    if (txt_time)
+    if (GameTimeText)
     {
         const double T = CampaignPtr->GetTime();
 
         char DayTime[32] = { 0 };
         FormatDayTime(DayTime, T);
 
-        txt_time->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+        GameTimeText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
     }
 
     // Intel unread count -> change button label:
@@ -694,9 +691,6 @@ void UCmdDlg::LoadIntelInfo()
     {
         CmdIntelPanel->ShowIntelDlg(); // or Refresh
     }
-
-    //PopulateIntelList();
-    //SetSelectedIntelData(SSWInstance->GetSelectedActionNr());
 }
 
 void UCmdDlg::LoadTheaterInfo()
@@ -761,12 +755,12 @@ void UCmdDlg::HandleUniverseSecondTick(uint64 UniverseSecondsNow)
     UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
     if (!Timer) return;
 
-    if (GameTimeText)
-    {
-        GameTimeText->SetText(
-            FText::FromString(Timer->GetUniverseDateTimeString())
-        );
-    }
+    //if (GameTimeText)
+    //{
+    //    GameTimeText->SetText(
+    //        FText::FromString(Timer->GetUniverseDateTimeString())
+    //    );
+   // }
 }
 
 void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)

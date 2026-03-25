@@ -511,32 +511,85 @@ FString UFormattingUtils::FormatTPlus(uint64 TPlusSeconds)
         (unsigned long long)Seconds);
 }
 
+int32 UFormattingUtils::ParseDayTimeString(const FString& In)
+{
+    int32 Day = 0;
+    int32 Hour = 0;
+    int32 Minute = 0;
+    int32 Second = 0;
+
+    if (In.Split(TEXT("/"), nullptr, nullptr))
+    {
+        TArray<FString> Parts;
+        In.ParseIntoArray(Parts, TEXT("/"), true);
+
+        if (Parts.Num() == 2)
+        {
+            Day = FCString::Atoi(*Parts[0]);
+
+            TArray<FString> TimeParts;
+            Parts[1].ParseIntoArray(TimeParts, TEXT(":"), true);
+
+            if (TimeParts.Num() >= 2)
+            {
+                Hour = FCString::Atoi(*TimeParts[0]);
+                Minute = FCString::Atoi(*TimeParts[1]);
+
+                if (TimeParts.Num() >= 3)
+                {
+                    Second = FCString::Atoi(*TimeParts[2]);
+                }
+            }
+        }
+    }
+
+    return ((Day - 1) * 86400) + (Hour * 3600) + (Minute * 60) + Second;
+}
+
 int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Input = '%s'"), *InTime);
+
     FString DayPart;
     FString TimePart;
 
     if (!InTime.Split(TEXT("/"), &DayPart, &TimePart))
     {
-        UE_LOG(LogTemp, Warning, TEXT("ParseStarshatterTime: bad time string '%s'"), *InTime);
+        UE_LOG(LogTemp, Error, TEXT("[ParseStarshatterTime] FAILED split on '/' for '%s'"), *InTime);
         return 0;
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] DayPart = '%s', TimePart = '%s'"), *DayPart, *TimePart);
 
     TArray<FString> Parts;
     TimePart.ParseIntoArray(Parts, TEXT(":"), true);
 
     if (Parts.Num() != 3)
     {
-        UE_LOG(LogTemp, Warning, TEXT("ParseStarshatterTime: bad time string '%s'"), *InTime);
+        UE_LOG(LogTemp, Error, TEXT("[ParseStarshatterTime] FAILED split on ':' for '%s' (Num=%d)"), *InTime, Parts.Num());
         return 0;
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Parsed Parts = %s : %s : %s"),
+        *Parts[0], *Parts[1], *Parts[2]);
 
     const int32 Days = FCString::Atoi(*DayPart);
     const int32 Hours = FCString::Atoi(*Parts[0]);
     const int32 Minutes = FCString::Atoi(*Parts[1]);
     const int32 Seconds = FCString::Atoi(*Parts[2]);
 
-    return (((Days * 24) + Hours) * 60 + Minutes) * 60 + Seconds;
+    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Numeric = Days=%d Hours=%d Minutes=%d Seconds=%d"),
+        Days, Hours, Minutes, Seconds);
+
+    const int32 ZeroBasedDays = FMath::Max(0, Days - 1);
+
+    const int32 TotalSeconds =
+        (((ZeroBasedDays * 24) + Hours) * 60 + Minutes) * 60 + Seconds;
+
+    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] ZeroBasedDays=%d TotalSeconds=%d"),
+        ZeroBasedDays, TotalSeconds);
+
+    return TotalSeconds;
 }
 
 void UFormattingUtils::FormatDayTime(char* Out, int32 TimeValue)

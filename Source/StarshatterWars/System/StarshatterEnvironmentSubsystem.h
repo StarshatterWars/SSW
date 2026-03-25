@@ -74,7 +74,7 @@
 
 // Forward declarations
 class DataLoader;
-class AStarSystem;
+class StarSystem;
 
 class USSWGameInstance;
 
@@ -103,6 +103,13 @@ public:
     // Primary entry point
     // -----------------------------------------------------------------
     void LoadAll(bool bFull = false);
+
+    // ===================================================================== 
+    // Runtime Simulation Time System 
+    // ===================================================================== 
+    void InitSimulationBaseTime(); void RegisterStarSystem(StarSystem* System); 
+    double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
+    bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
 
     // =====================================================================
     // Project path / utility
@@ -227,60 +234,66 @@ protected:
     TArray<FS_MoonMap>   MoonMapArray;
     TArray<FS_RegionMap> RegionMapArray;
 
-    // Legacy system registry
-    List<AStarSystem> systems;
-
     // Paths
     FString ProjectPath;
     FString FilePath;
 
-    private:
-        // Cached GI (kept)
-        USSWGameInstance* SSWInstance = nullptr;
+    // ===================================================================== 
+    // Runtime Simulation Time System 
+    // ===================================================================== 
+    
+    bool bBaseTimeInitialized = false; 
+    double EnvironmentBaseTime = 0.0;
 
-            // ==================================================================== =
-            // DT -> runtime hydration
-            // =====================================================================
-            void HydrateAllFromTables();
+    TArray<StarSystem*> RuntimeStarSystems;
 
-        void ReadGalaxyDataTable();
-        void ReadStarSystemsTable();
-        void ReadStarsTable();
-        void ReadPlanetsTable();
-        void ReadMoonsTable();
-        void ReadRegionsTable();
-        void ReadTerrainRegionsTable();
+private:
+    // Cached GI (kept)
+    USSWGameInstance* SSWInstance = nullptr;
 
-        void BuildEnvironmentCaches();
+    // ==================================================================== =
+    // DT -> runtime hydration
+    // =====================================================================
+    void HydrateAllFromTables();
 
-        void ClearRuntimeCaches();
+    void ReadGalaxyDataTable();
+    void ReadStarSystemsTable();
+    void ReadStarsTable();
+    void ReadPlanetsTable();
+    void ReadMoonsTable();
+    void ReadRegionsTable();
+    void ReadTerrainRegionsTable();
 
-        // =====================================================================
-        // Lookup caches
-        // =====================================================================
-        UPROPERTY()
-        TMap<FString, FS_Galaxy> GalaxyByName;
+    void BuildEnvironmentCaches();
 
-        UPROPERTY()
-        TMap<FString, FS_StarSystem> StarSystemByName;
+    void ClearRuntimeCaches();
 
-        UPROPERTY()
-        TMap<FString, FS_Star> StarByName;
+    // =====================================================================
+    // Lookup caches
+    // =====================================================================
+    UPROPERTY()
+    TMap<FString, FS_Galaxy> GalaxyByName;
 
-        UPROPERTY()
-        TMap<FString, FS_Planet> PlanetByName;
+    UPROPERTY()
+    TMap<FString, FS_StarSystem> StarSystemByName;
 
-        UPROPERTY()
-        TMap<FString, FS_Moon> MoonByName;
+    UPROPERTY()
+    TMap<FString, FS_Star> StarByName;
 
-        UPROPERTY()
-        TMap<FString, FS_Region> RegionByName;
+    UPROPERTY()
+    TMap<FString, FS_Planet> PlanetByName;
 
-        UPROPERTY()
-        TMap<FString, FS_TerrainRegion> TerrainRegionByName;
+    UPROPERTY()
+    TMap<FString, FS_Moon> MoonByName;
 
-        UPROPERTY()
-        TMap<FString, FString> RegionParentByName;
-        TMap<FString, TArray<FString>> RegionChildrenByParent;
+    UPROPERTY()
+    TMap<FString, FS_Region> RegionByName;
+
+    UPROPERTY()
+    TMap<FString, FS_TerrainRegion> TerrainRegionByName;
+
+    UPROPERTY()
+    TMap<FString, FString> RegionParentByName;
+    TMap<FString, TArray<FString>> RegionChildrenByParent;
 };
 

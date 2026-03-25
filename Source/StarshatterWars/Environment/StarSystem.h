@@ -91,7 +91,7 @@ public:
 
     static void           SetBaseTime(double t, bool absolute = false);
     static double         GetBaseTime();
-    static double         Stardate() { return stardate; }
+    static double         GetStardate() { return stardate; }
     static void           CalcStardate();
 
     double                Radius() const { return radius; }
@@ -103,6 +103,8 @@ public:
     bool                  HasLinkTo(StarSystem* s) const;
 
     const Text& GetDataPath() const { return datapath; }
+
+
 
 protected:
     // parsing:
