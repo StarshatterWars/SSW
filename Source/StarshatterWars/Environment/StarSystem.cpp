@@ -36,10 +36,12 @@
 
 static const double epoch = 0.5e9;
 double StarSystem::stardate = 0;
+static double sim_time = 0;
+static double base_time = 0;
 
 // +====================================================================+
 
-static double base_time = 0;
+
 
 static FORCEINLINE FColor ScaleColor(const FColor& In, float Scale)
 {
@@ -102,38 +104,22 @@ double StarSystem::GetBaseTime()
 
 void StarSystem::CalcStardate()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate BEGIN base_time=%f"), base_time);
-
-	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate base_time=%f stardate=%f"), base_time, stardate);
-
-	if (base_time < 1)
+	if (base_time < 1.0)
 	{
-		const FDateTime UtcNow = FDateTime::UtcNow();
-		const FDateTime UnixEpoch(1970, 1, 1);
-		const FTimespan SinceEpoch = UtcNow - UnixEpoch;
-
-		base_time = SinceEpoch.GetTotalSeconds();
-
-		UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate FALLBACK to UE UTC clock: %f"), base_time);
-
-		while (base_time < 0)
-		{
-			base_time += epoch;
-		}
+		return;
 	}
 
-	const double gtime = (double)Game::GameTime() / 1000.0;
+	const double gtime = sim_time;
 	const double sdate = gtime + base_time + epoch;
 
-	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate gtime=%f base_time=%f epoch=%f"),
-		gtime, base_time, epoch);
-	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate RESULT stardate=%f"), sdate);
+	//UE_LOG(LogTemp, Warning,
+	//	TEXT("[StarSystem] CalcStardate base_time=%f gtime=%f sdate=%f"),
+	//	base_time, gtime, sdate);
 
 	stardate = sdate;
 }
 
-
-// +====================================================================+
+ // +====================================================================+
 
 
 static inline Bitmap* LoadMapIconTexture(const char* IconName)
@@ -2048,4 +2034,17 @@ OrbitalRegion::OrbitalRegion(StarSystem* s, const char* n, double m, double r, d
 OrbitalRegion::~OrbitalRegion()
 {
 	links.destroy();
+}
+
+void StarSystem::SetSimulationTime(double t)
+{
+	sim_time = t;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[StarSystem] SetSimulationTime=%f"), t);
+}
+
+double StarSystem::GetSimulationTime()
+{
+	return sim_time;
 }

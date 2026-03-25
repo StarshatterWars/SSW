@@ -410,8 +410,6 @@ void UCmdDlg::ShowCmdDlg()
         const bool bTraining = CampaignPtr->IsTraining();
 
         if (btn_save)     btn_save->SetIsEnabled(!bTraining);
-        //if (btn_forces)   btn_forces->SetIsEnabled(!bTraining);
-        //if (btn_intel)    btn_intel->SetIsEnabled(!bTraining);
     }
 
     SetVisibility(ESlateVisibility::Visible);
@@ -443,14 +441,14 @@ void UCmdDlg::ExecFrame()
     }
 
     // Time:
-    if (GameTimeText)
+    if (CampaignTPlusText)
     {
         const double T = CampaignPtr->GetTime();
 
         char DayTime[32] = { 0 };
         FormatDayTime(DayTime, T);
 
-        GameTimeText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+        CampaignTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
     }
 
     // Intel unread count -> change button label:
@@ -755,12 +753,12 @@ void UCmdDlg::HandleUniverseSecondTick(uint64 UniverseSecondsNow)
     UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
     if (!Timer) return;
 
-    //if (GameTimeText)
-    //{
-    //    GameTimeText->SetText(
-    //        FText::FromString(Timer->GetUniverseDateTimeString())
-    //    );
-   // }
+    if (GameTimeText)
+    {
+        GameTimeText->SetText(
+            FText::FromString(Timer->GetUniverseDateTimeString())
+        );
+    }
 }
 
 void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
@@ -787,6 +785,6 @@ void UCmdDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlus
 {
     if (!CampaignTPlusText) return;
 
-    CampaignTPlusText->SetText(FText::FromString(UFormattingUtils::FormatTPlus(TPlusSeconds)));
+    //CampaignTPlusText->SetText(FText::FromString(UFormattingUtils::FormatTPlus(TPlusSeconds)));
 }
 

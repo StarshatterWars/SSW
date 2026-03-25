@@ -85,6 +85,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogStarshatterEnvironment, Log, All);
 UCLASS()
 class STARSHATTERWARS_API UStarshatterEnvironmentSubsystem
     : public UGameInstanceSubsystem
+    , public FTickableGameObject
 {
     GENERATED_BODY()
 
@@ -100,6 +101,13 @@ public:
 
     void GetSSWInstance();
 
+public:
+    virtual void Tick(float DeltaTime) override;
+    virtual bool IsTickable() const override;
+    virtual TStatId GetStatId() const override;
+    virtual bool IsTickableInEditor() const override { return false; }
+    virtual bool IsTickableWhenPaused() const override { return false; }
+
     // -----------------------------------------------------------------
     // Primary entry point
     // -----------------------------------------------------------------
@@ -111,6 +119,7 @@ public:
     void InitSimulationBaseTime(); void RegisterStarSystem(StarSystem* System); 
     double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
     bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
+    void TickEnvironmentTime(double DeltaSeconds);
 
     void ResetSimulationClock();
     void SetSimulationClockMs(int64 InMs);

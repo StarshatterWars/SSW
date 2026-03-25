@@ -87,6 +87,9 @@ public:
     Orbital* FindOrbital(const char* in_name);
     OrbitalRegion* FindRegion(const char* in_name);
 
+    static void   SetSimulationTime(double t);
+    static double GetSimulationTime();
+
     void                  SetActiveRegion(OrbitalRegion* rgn);
 
     static void           SetBaseTime(double t, bool absolute = false);
@@ -103,7 +106,6 @@ public:
     bool                  HasLinkTo(StarSystem* s) const;
 
     const Text&           GetDataPath() const { return datapath; }
-
 
 
 protected:
@@ -175,6 +177,8 @@ protected:
     FVector               tvpn;
     FVector               tvup;
     FVector               tvrt;
+
+
 };
 
 // +--------------------------------------------------------------------+

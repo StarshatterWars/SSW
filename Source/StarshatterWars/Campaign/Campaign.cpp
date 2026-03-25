@@ -46,6 +46,7 @@
 #include "FormatUtil.h"
 #include "GameScreen.h"
 #include "GameStructs.h"
+#include "FormattingUtils.h"
 #include "StarshatterGameDataSubsystem.h"
 
 // Unreal minimal support:
@@ -1960,7 +1961,12 @@ Campaign::ExecFrame()
     if (InCutscene())
         return;
 
-    time = GetStardate() - startTime;
+    time = GetStardate() - GetStartTime();
+    UE_LOG(LogCampaign, Warning,
+        TEXT("[Campaign] StartTime=%f Stardate=%f time=%f"),
+        GetStartTime(),
+        GetStardate(),
+        time);
 
     if (campaign_status < ECampaignStatus::ACTIVE)
         return;
@@ -1986,7 +1992,11 @@ Campaign::ExecFrame()
             else
                 time += 20 * 3600;
 
-            StarSystem::SetBaseTime(startTime + time - Game::GameTime() / 1000.0);
+            const double DesiredStardate = GetStartTime() + time;
+            const double NewBaseTime = DesiredStardate - StarSystem::GetSimulationTime() - 0.5e9;
+
+            StarSystem::SetBaseTime(NewBaseTime, true);
+            StarSystem::CalcStardate();
         }
         else {
             m.reset();
@@ -2004,9 +2014,7 @@ Campaign::ExecFrame()
             }
         }
 
-        // PLAN EVENT MUST BE FIRST PLANNER:
         if (loaded_from_savegame && planners.size() > 0) {
-
             CampaignPlanEvent* plan_event = (CampaignPlanEvent*)planners.first();
             plan_event->ExecScriptedEvents();
             loaded_from_savegame = false;
@@ -2024,14 +2032,12 @@ Campaign::ExecFrame()
 
         CheckPlayerGroup();
 
-        // Auto save AFTER planners have run:
         if (completed) {
             CampaignSaveGame save(this);
             save.SaveAuto();
         }
     }
     else {
-        // PLAN EVENT MUST BE FIRST PLANNER:
         if (planners.size() > 0) {
             CampaignPlanEvent* plan_event = (CampaignPlanEvent*)planners.first();
             plan_event->ExecScriptedEvents();
@@ -2181,11 +2187,11 @@ Campaign::StartMission()
         if (!scripted) {
 
             double gtime = (double)Game::GameTime() / 1000.0;
-            double base = startTime + m->GetStart() - 15 - gtime;
+            double base = GetStartTime() + m->GetStart() - 15 - gtime;
 
             StarSystem::SetBaseTime(base);
 
-            double current_time = GetStardate() - startTime;
+            double current_time = GetStardate() -GetStartTime();
 
             char buffer[32];
             FormatDayTime(buffer, current_time);
@@ -2208,11 +2214,11 @@ Campaign::RollbackMission()
         if (!scripted) {
 
             double gtime = (double)Game::GameTime() / 1000.0;
-            double base = startTime + m->GetStart() - 60 - gtime;
+            double base = GetStartTime() + m->GetStart() - 60 - gtime;
 
             StarSystem::SetBaseTime(base);
 
-            double current_time = GetStardate() - startTime;
+            double current_time = GetStardate() - GetStartTime();
             UE_LOG(LogCampaign, Log, TEXT("  mission start: %d"), m->GetStart());
             UE_LOG(LogCampaign, Log, TEXT("  current time:  %d"), (int)current_time);
         }
@@ -2505,8 +2511,8 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
 
     scripted = Data.bScripted;
     sequential = Data.bSequential;
-
-    startTime = FCString::Atod(*Data.Start);
+    double RelativeStart = UFormattingUtils::ParseStarshatterTime(*Data.Start);
+    startTime = StarSystem::GetStardate() + RelativeStart;
     time = startTime;
     loadTime = startTime;
     updateTime = startTime;

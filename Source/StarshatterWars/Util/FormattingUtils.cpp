@@ -598,5 +598,5 @@ void UFormattingUtils::FormatDayTime(char* Out, int32 TimeValue)
     const int32 Hours = (TimeValue % 86400) / 3600;
     const int32 Minutes = (TimeValue % 3600) / 60;
 
-    sprintf_s(Out, 32, "Day %d %02d:%02d", Days, Hours, Minutes);
+    sprintf_s(Out, 32, "Day %d %02d:%02d", Days + 1, Hours, Minutes);
 }
