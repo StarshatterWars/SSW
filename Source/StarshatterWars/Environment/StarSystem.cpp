@@ -53,14 +53,45 @@ static FORCEINLINE FColor ScaleColor(const FColor& In, float Scale)
 
 void StarSystem::SetBaseTime(double t, bool absolute)
 {
-	if (absolute) {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[StarSystem] SetBaseTime CALLED t=%f absolute=%s base_time(before)=%f"),
+		t,
+		absolute ? TEXT("true") : TEXT("false"),
+		base_time);
+
+	if (absolute)
+	{
 		base_time = t;
-		CalcStardate();
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[StarSystem] SetBaseTime ABSOLUTE assigned base_time=%f"),
+			base_time);
 	}
-	else if (t > 0) {
-		if (t > epoch) t -= epoch;
+	else if (t > 0)
+	{
+		if (t > epoch)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[StarSystem] SetBaseTime RELATIVE before epoch subtract t=%f epoch=%f"),
+				t, epoch);
+
+			t -= epoch;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[StarSystem] SetBaseTime RELATIVE after epoch subtract t=%f"),
+				t);
+		}
+
 		base_time = t;
-		CalcStardate();
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[StarSystem] SetBaseTime RELATIVE assigned base_time=%f"),
+			base_time);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[StarSystem] SetBaseTime ignored because t <= 0"));
 	}
 }
 
@@ -72,6 +103,8 @@ double StarSystem::GetBaseTime()
 void StarSystem::CalcStardate()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate BEGIN base_time=%f"), base_time);
+
+	UE_LOG(LogTemp, Warning, TEXT("[StarSystem] CalcStardate base_time=%f stardate=%f"), base_time, stardate);
 
 	if (base_time < 1)
 	{
