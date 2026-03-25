@@ -686,7 +686,7 @@ CampaignSaveGame::Save(const char* name)
         fprintf(f, " type:%-18s,",
             TCHAR_TO_UTF8(*e->GetEventTypeName())
         );
-        fprintf(f, " time:0x%08x,", e->Time());
+        fprintf(f, " time:0x%08x,", e->GetTime());
         fprintf(f, " team:%d,", e->GetIFF());
        
         const FVector& P = e->GetPoints();
@@ -695,8 +695,8 @@ CampaignSaveGame::Save(const char* name)
         fprintf(f, " source:\"%s\",",
             TCHAR_TO_UTF8(*e->GetEventSourceName())
         );
-        fprintf(f, " region:\"%s\",", e->Region());
-        fprintf(f, " title:\"%s\",", e->Title());
+        fprintf(f, " region:\"%s\",", e->GetRegion());
+        fprintf(f, " title:\"%s\",", e->GetTitle());
 
         if (e->Filename())
             fprintf(f, " file:\"%s\",", e->Filename());
@@ -707,7 +707,7 @@ CampaignSaveGame::Save(const char* name)
 
         // Match original behavior: only write info if filename empty
         if (!e->Filename() || *e->Filename() == 0)
-            fprintf(f, " info:\"%s\"", FormatMultiLine(e->Information()));
+            fprintf(f, " info:\"%s\"", FormatMultiLine(e->GetInformation()));
 
         fprintf(f, " }\n");
     }

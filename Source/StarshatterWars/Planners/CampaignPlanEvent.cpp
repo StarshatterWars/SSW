@@ -108,7 +108,8 @@ CampaignPlanEvent::ExecScriptedEvents()
                     if (!event)
                         return false;
 
-                    event->SetTitle(action->GetText());
+                    event->SetTitle(action->GetTitle());
+                    event->SetInformation(action->GetText());
 
                     if (*action->Filename() != 0)
                         event->SetFilename(action->Filename());

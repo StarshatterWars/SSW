@@ -49,15 +49,15 @@ public:
     // Accessors
     // ------------------------------------------------------------------------
     ECombatEventType    GetType()        const { return type; }
-    int                 Time()           const { return time; }
+    int                 GetTime()        const { return time; }
     int                 GetIFF()         const { return team; }
     const FVector&      GetPoints()      const { return points; }
     ECombatEventSource  GetSource()      const { return source; }
     FVector             Location()       const { return loc; }
 
-    const char* Region()         const { return region; }
-    const char* Title()          const { return title; }
-    const char* Information()    const { return info; }
+    const char* GetRegion()      const { return region; }
+    const char* GetTitle()       const { return title; }
+    const char* GetInformation() const { return info; }
     const char* Filename()       const { return file; }
     const char* AudioFile()      const { return audio_file; }
     const char* ImageFile()      const { return image_file; }
