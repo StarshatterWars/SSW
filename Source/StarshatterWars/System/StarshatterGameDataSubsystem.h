@@ -357,6 +357,9 @@ public:
     List<CombatAction>   actions;
     List<CombatEvent>    events;
 
+    UPROPERTY()
+    FName SelectedCampaignRowName = NAME_None;
+
     bool                 bClearTables;
     
     TMap<int32, const FS_Campaign*> CampaignLookup;
@@ -416,7 +419,7 @@ protected:
     TArray<FName> GetCampaignGroupRowNames() const;
     CombatGroup* BuildCombatForceFromRows(const TArray<FS_CombatGroup>& Rows, EEMPIRE_NAME Empire, Combatant* CombatantOwner);
 
-
+    TMap<FName, CombatGroup*> BuildGroupMapFromDataTable(const TArray<FName>& RowNames);
 
     void LinkGroupHierarchy(
         const TArray<FName>& RowNames,
@@ -430,7 +433,6 @@ protected:
         const TArray<FName>& RowNames,
         const TMap<FName, CombatGroup*>& GroupByRowName);
     
-    TMap<FName, CombatGroup*> BuildGroupMapFromDataTable();
     FString GetEmpireRosterName(EEMPIRE_NAME Empire) const;
 
 protected:

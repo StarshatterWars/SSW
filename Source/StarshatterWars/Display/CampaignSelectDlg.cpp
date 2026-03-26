@@ -341,6 +341,7 @@ void UCampaignSelectDlg::OnPlayButtonClicked()
 
     // SET ACTIVE CAMPAIGN INDEX FOR GAME DATA SUBSYSTEM
     DataSubsystem->CampaignIndex = CampaignIndex1Based - 1;
+    DataSubsystem->SelectedCampaignRowName = PickedRowName;
 
     // BUILD RUNTIME COMBAT ROSTER NOW THAT CAMPAIGN EXISTS
     UE_LOG(LogTemp, Warning, TEXT("[Campaign] Building combat roster from data tables"));

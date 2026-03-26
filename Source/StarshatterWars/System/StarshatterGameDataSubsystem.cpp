@@ -6816,33 +6816,20 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 	return RootForce;
 }
 
-TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTable()
+TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTable(
+	const TArray<FName>& RowNames)
 {
 	TMap<FName, CombatGroup*> GroupByRowName;
 
-	if (!CombatGroupDataTable)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] CombatGroupDataTable is NULL"));
-		return GroupByRowName;
-	}
-
-	const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
-
 	for (const FName& RowName : RowNames)
 	{
-		FS_CombatGroup* Row = CombatGroupDataTable->FindRow<FS_CombatGroup>(
-			RowName,
-			TEXT("BuildGroupMapFromDataTable"));
-
+		const FS_CombatGroup* Row =
+			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT("BuildGroupMapFromDataTable"));
 		if (!Row)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[CombatRoster] Missing row for %s"),
-				*RowName.ToString());
 			continue;
 		}
 
-		// Create runtime group
 		CombatGroup* NewGroup = new CombatGroup(
 			Row->Type,
 			Row->Id,
@@ -6856,23 +6843,11 @@ TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTa
 			continue;
 		}
 
-		// Assign region safely (public API)
 		NewGroup->AssignRegion(TCHAR_TO_ANSI(*Row->Region));
-
-		// Assign location safely
 		FVector GroupLoc = Row->Location;
 		NewGroup->MoveTo(GroupLoc);
 
-		// Store using RowName (guaranteed unique)
 		GroupByRowName.Add(RowName, NewGroup);
-
-		//UE_LOG(LogTemp, Log,
-		//	TEXT("[CombatRoster] Created Group Row=%s Empire=%d Type=%d Id=%d Name=%s"),
-		//	*RowName.ToString(),
-		//	(int32)Row->EmpireId,
-		//	(int32)Row->Type,
-		//	Row->Id,
-		//	*Row->Name);
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -6999,17 +6974,12 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 		ReadCombatants();
 	}
 
-	//const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
 	const TArray<FName> RowNames = GetCampaignGroupRowNames();
-	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable();
+	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
 
 	LinkGroupHierarchy(RowNames, GroupByRowName);
 	BuildUnitsForGroups(RowNames, GroupByRowName);
 	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] BuildCombatRosterFromDataTables: COMPLETE (%d groups)"),
-		GroupByRowName.Num());
 
 	Campaign* CampaignPtr = Campaign::GetCampaign();
 	if (!CampaignPtr)
@@ -7017,10 +6987,12 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
 		return;
 	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[CombatRoster] After build: combatants=%d"),
-		CampaignPtr->GetCombatants().size());
+	else {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
+			CampaignPtr->GetCombatants().size()
+			,GroupByRowName.Num());
+	}
 
 	ListIter<Combatant> It = CampaignPtr->GetCombatants();
 	while (++It)
@@ -7160,24 +7132,35 @@ void UStarshatterGameDataSubsystem::ReadCombatants()
 {
 	CombatantData.Empty();
 
-	if (CampaignDataArray.Num() == 0)
+	if (!CampaignDataTable)
 	{
-		ReadCampaignData();
-	}
-
-	if (CampaignIndex < 0 || !CampaignDataArray.IsValidIndex(CampaignIndex))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[GameData] ReadCombatants: invalid CampaignIndex=%d"), CampaignIndex);
+		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable is NULL"));
 		return;
 	}
 
-	const FS_Campaign& CampaignRow = CampaignDataArray[CampaignIndex];
-	CombatantData = CampaignRow.Combatant;
+	if (SelectedCampaignRowName.IsNone())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: SelectedCampaignRowName is None"));
+		return;
+	}
+
+	const FS_Campaign* CampaignRow =
+		CampaignDataTable->FindRow<FS_Campaign>(SelectedCampaignRowName, TEXT("ReadCombatants"));
+
+	if (!CampaignRow)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GameData] ReadCombatants: could not find campaign row '%s'"),
+			*SelectedCampaignRowName.ToString());
+		return;
+	}
+
+	CombatantData = CampaignRow->Combatant;
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[GameData] ReadCombatants: loaded %d combatants from campaign '%s'"),
 		CombatantData.Num(),
-		*CampaignRow.Name);
+		*CampaignRow->Name);
 }
 
 void UStarshatterGameDataSubsystem::ValidateCombatRosterRuntime()
@@ -7231,6 +7214,8 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignEntryRowNames() const
 	{
 		for (const FS_CombatantGroup& GroupRef : CombatantRow.Group)
 		{
+			TArray<FName> Matches;
+
 			for (const FName& RowName : AllRowNames)
 			{
 				const FS_CombatGroup* GroupRow =
@@ -7245,9 +7230,31 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignEntryRowNames() const
 					GroupRow->Type == GroupRef.Type &&
 					GroupRow->Id == GroupRef.Id)
 				{
-					EntryRows.AddUnique(RowName);
+					Matches.Add(RowName);
 				}
 			}
+
+			if (Matches.Num() == 0)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[CombatRoster] No entry row found for Combatant=%d Type=%d Id=%d"),
+					(int32)CombatantRow.Name,
+					(int32)GroupRef.Type,
+					GroupRef.Id);
+				continue;
+			}
+
+			if (Matches.Num() > 1)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[CombatRoster] Multiple entry rows for Combatant=%d Type=%d Id=%d Count=%d"),
+					(int32)CombatantRow.Name,
+					(int32)GroupRef.Type,
+					GroupRef.Id,
+					Matches.Num());
+			}
+
+			EntryRows.AddUnique(Matches[0]);
 		}
 	}
 
@@ -7304,10 +7311,24 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignGroupRowNames() const
 	TSet<FName> AllowedRows;
 	const TArray<FName> EntryRows = GetCampaignEntryRowNames();
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CombatRoster] Campaign entry rows: %d"),
+		EntryRows.Num());
+
 	for (const FName& EntryRowName : EntryRows)
 	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] EntryRow = %s"),
+			*EntryRowName.ToString());
+
 		CollectChildRowsRecursive(EntryRowName, AllowedRows);
 	}
 
-	return AllowedRows.Array();
+	TArray<FName> Result = AllowedRows.Array();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CombatRoster] Campaign filtered row count: %d"),
+		Result.Num());
+
+	return Result;
 }
