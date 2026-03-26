@@ -304,6 +304,8 @@ public:
         virtual bool IsTickable() const override;
         virtual TStatId GetStatId() const override;
 
+        void BuildCombatRosterFromDataTables();
+
 private:
     // =====================================================================
     // Internal helpers
@@ -409,10 +411,11 @@ protected:
     // New OOB System
     void ReadCombatants();
     void ValidateCombatRosterRuntime();
+    TArray<FName> GetCampaignEntryRowNames() const;
+    void CollectChildRowsRecursive(const FName& ParentRowName, TSet<FName>& OutRows) const;
+    TArray<FName> GetCampaignGroupRowNames() const;
     CombatGroup* BuildCombatForceFromRows(const TArray<FS_CombatGroup>& Rows, EEMPIRE_NAME Empire, Combatant* CombatantOwner);
 
-    void BuildCombatantsFromData(const TArray<FS_Combatant>& CombatantRows, const TMap<int32, CombatGroup*>& GroupById, Campaign* CampaignPtr);
-    void BuildCombatRosterFromDataTables();
 
 
     void LinkGroupHierarchy(

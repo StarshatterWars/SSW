@@ -283,7 +283,6 @@ FSlateBrush UCampaignSelectDlg::CreateBrushFromTexture(UTexture2D* Texture, FVec
     Brush.DrawAs = ESlateBrushDrawType::Image;
     return Brush;
 }
-
 void UCampaignSelectDlg::OnPlayButtonClicked()
 {
     UE_LOG(LogTemp, Warning, TEXT("[UCampaignSelectDlg] Player Button Clicked BEGIN"));
@@ -340,9 +339,12 @@ void UCampaignSelectDlg::OnPlayButtonClicked()
         CampaignPtr->Start();
     }
 
-    // =========================
-    // Existing logic continues
-    // =========================
+    // SET ACTIVE CAMPAIGN INDEX FOR GAME DATA SUBSYSTEM
+    DataSubsystem->CampaignIndex = CampaignIndex1Based - 1;
+
+    // BUILD RUNTIME COMBAT ROSTER NOW THAT CAMPAIGN EXISTS
+    UE_LOG(LogTemp, Warning, TEXT("[Campaign] Building combat roster from data tables"));
+    DataSubsystem->BuildCombatRosterFromDataTables();
 
     GI->SelectedCampaignDisplayName =
         CampaignSelectDD ? CampaignSelectDD->GetSelectedOption() : TEXT("");

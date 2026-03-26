@@ -2018,10 +2018,6 @@ Campaign::ExecFrame()
             loaded_from_savegame = false;
         }
 
-        UE_LOG(LogCampaign, Warning,
-            TEXT("[Campaign] planners.size()=%d"),
-            planners.size());
-
         ListIter<CampaignPlan> plan = planners;
         while (++plan) {
             CheckPlayerGroup();

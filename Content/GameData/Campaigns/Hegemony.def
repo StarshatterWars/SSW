@@ -75,7 +75,7 @@ group: {
 group: {
   type:   wing,
   id:     1,
-  name:   "",
+  name:   "Dragon",
   intel:  known,
   iff:    2,
   empire_id: 1,

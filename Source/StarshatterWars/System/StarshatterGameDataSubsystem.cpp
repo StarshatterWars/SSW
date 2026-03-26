@@ -1222,7 +1222,6 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	ReadCombatRosterData();
 
 	ReadCombatants();
-	BuildCombatRosterFromDataTables();
 
 	//InitializeOrderOfBattleTable();
 	ReadOrderOfBattleData();
@@ -6867,13 +6866,13 @@ TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTa
 		// Store using RowName (guaranteed unique)
 		GroupByRowName.Add(RowName, NewGroup);
 
-		UE_LOG(LogTemp, Log,
-			TEXT("[CombatRoster] Created Group Row=%s Empire=%d Type=%d Id=%d Name=%s"),
-			*RowName.ToString(),
-			(int32)Row->EmpireId,
-			(int32)Row->Type,
-			Row->Id,
-			*Row->Name);
+		//UE_LOG(LogTemp, Log,
+		//	TEXT("[CombatRoster] Created Group Row=%s Empire=%d Type=%d Id=%d Name=%s"),
+		//	*RowName.ToString(),
+		//	(int32)Row->EmpireId,
+		//	(int32)Row->Type,
+		//	Row->Id,
+		//	*Row->Name);
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -6889,7 +6888,7 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 {
 	TMultiMap<FCombatGroupKey, FName> Lookup;
 
-	// Build lookup
+	// Build lookup (non-unique)
 	for (const FName& RowName : RowNames)
 	{
 		FS_CombatGroup* Row =
@@ -6901,7 +6900,26 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 			RowName);
 	}
 
-	// Link
+	// Helper: find empire root FORCE
+	auto FindEmpireRootForce = [&](EEMPIRE_NAME Empire) -> CombatGroup*
+		{
+			for (const auto& Pair : GroupByRowName)
+			{
+				FS_CombatGroup* Row =
+					CombatGroupDataTable->FindRow<FS_CombatGroup>(Pair.Key, TEXT(""));
+				if (!Row) continue;
+
+				if (Row->EmpireId == Empire &&
+					Row->Type == ECOMBATGROUP_TYPE::FORCE &&
+					Row->ParentType == ECOMBATGROUP_TYPE::NONE)
+				{
+					return Pair.Value;
+				}
+			}
+			return nullptr;
+		};
+
+	// Link hierarchy
 	for (const FName& RowName : RowNames)
 	{
 		FS_CombatGroup* Row =
@@ -6909,34 +6927,61 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 		if (!Row) continue;
 
 		if (Row->ParentType == ECOMBATGROUP_TYPE::NONE || Row->ParentId <= 0)
-			continue;
+		{
+			continue; // root-level group
+		}
 
 		CombatGroup* Child = GroupByRowName.FindRef(RowName);
 		if (!Child) continue;
 
+		// ---- NORMAL LOOKUP ----
 		FCombatGroupKey ParentKey(Row->EmpireId, Row->ParentType, Row->ParentId);
 
 		TArray<FName> Candidates;
 		Lookup.MultiFind(ParentKey, Candidates);
 
-		if (Candidates.Num() == 0)
+		CombatGroup* Parent = nullptr;
+
+		if (Candidates.Num() > 0)
+		{
+			Parent = GroupByRowName.FindRef(Candidates[0]);
+		}
+
+		// ---- FALLBACK: ParentId == 1 (civilian / infrastructure root) ----
+		if (!Parent && Row->ParentId == 1)
+		{
+			Parent = FindEmpireRootForce(Row->EmpireId);
+
+			if (Parent)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[CombatRoster] Fallback attach %s -> ROOT FORCE (%s)"),
+					*Row->Name,
+					ANSI_TO_TCHAR(Parent->GetName()));
+			}
+		}
+
+		// ---- FINAL CHECK ----
+		if (!Parent)
 		{
 			UE_LOG(LogTemp, Warning,
-				TEXT("[CombatRoster] No parent for %s"), *Row->Name);
+				TEXT("[CombatRoster] No parent for %s | Empire=%d Type=%d Id=%d ParentType=%d ParentId=%d"),
+				*Row->Name,
+				(int32)Row->EmpireId,
+				(int32)Row->Type,
+				Row->Id,
+				(int32)Row->ParentType,
+				Row->ParentId);
 			continue;
 		}
 
-		CombatGroup* Parent = GroupByRowName.FindRef(Candidates[0]);
+		// ---- LINK ----
+		Parent->AddComponent(Child);
 
-		if (Parent)
-		{
-			Parent->AddComponent(Child);
-
-			UE_LOG(LogTemp, Log,
-				TEXT("[CombatRoster] Linked %s -> %s"),
-				*Row->Name,
-				ANSI_TO_TCHAR(Parent->GetName()));
-		}
+		UE_LOG(LogTemp, Log,
+			TEXT("[CombatRoster] Linked %s -> %s"),
+			*Row->Name,
+			ANSI_TO_TCHAR(Parent->GetName()));
 	}
 }
 
@@ -6954,8 +6999,8 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 		ReadCombatants();
 	}
 
-	const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
-
+	//const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
+	const TArray<FName> RowNames = GetCampaignGroupRowNames();
 	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable();
 
 	LinkGroupHierarchy(RowNames, GroupByRowName);
@@ -6965,6 +7010,30 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 	UE_LOG(LogTemp, Warning,
 		TEXT("[GameData] BuildCombatRosterFromDataTables: COMPLETE (%d groups)"),
 		GroupByRowName.Num());
+
+	Campaign* CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CombatRoster] After build: combatants=%d"),
+		CampaignPtr->GetCombatants().size());
+
+	ListIter<Combatant> It = CampaignPtr->GetCombatants();
+	while (++It)
+	{
+		Combatant* C = It.value();
+		if (!C) continue;
+
+		CombatGroup* Root = C->GetForce();
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] Combatant=%s Root=%s"),
+			ANSI_TO_TCHAR(C->GetName()),
+			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
+	}
 }
 
 void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
@@ -7145,4 +7214,100 @@ void UStarshatterGameDataSubsystem::ValidateCombatRosterRuntime()
 			DumpGroupTree(Force, 0);
 		}
 	}
+}
+
+TArray<FName> UStarshatterGameDataSubsystem::GetCampaignEntryRowNames() const
+{
+	TArray<FName> EntryRows;
+
+	if (!CombatGroupDataTable)
+	{
+		return EntryRows;
+	}
+
+	const TArray<FName> AllRowNames = CombatGroupDataTable->GetRowNames();
+
+	for (const FS_Combatant& CombatantRow : CombatantData)
+	{
+		for (const FS_CombatantGroup& GroupRef : CombatantRow.Group)
+		{
+			for (const FName& RowName : AllRowNames)
+			{
+				const FS_CombatGroup* GroupRow =
+					CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT(""));
+
+				if (!GroupRow)
+				{
+					continue;
+				}
+
+				if (GroupRow->EmpireId == CombatantRow.Name &&
+					GroupRow->Type == GroupRef.Type &&
+					GroupRow->Id == GroupRef.Id)
+				{
+					EntryRows.AddUnique(RowName);
+				}
+			}
+		}
+	}
+
+	return EntryRows;
+}
+
+void UStarshatterGameDataSubsystem::CollectChildRowsRecursive(
+	const FName& ParentRowName,
+	TSet<FName>& OutRows) const
+{
+	if (!CombatGroupDataTable)
+	{
+		return;
+	}
+
+	if (OutRows.Contains(ParentRowName))
+	{
+		return;
+	}
+
+	const FS_CombatGroup* ParentRow =
+		CombatGroupDataTable->FindRow<FS_CombatGroup>(ParentRowName, TEXT(""));
+
+	if (!ParentRow)
+	{
+		return;
+	}
+
+	OutRows.Add(ParentRowName);
+
+	const TArray<FName> AllRowNames = CombatGroupDataTable->GetRowNames();
+
+	for (const FName& ChildRowName : AllRowNames)
+	{
+		const FS_CombatGroup* ChildRow =
+			CombatGroupDataTable->FindRow<FS_CombatGroup>(ChildRowName, TEXT(""));
+
+		if (!ChildRow)
+		{
+			continue;
+		}
+
+		if (ChildRow->EmpireId == ParentRow->EmpireId &&
+			ChildRow->ParentType == ParentRow->Type &&
+			ChildRow->ParentId == ParentRow->Id)
+		{
+			CollectChildRowsRecursive(ChildRowName, OutRows);
+		}
+	}
+}
+
+TArray<FName> UStarshatterGameDataSubsystem::GetCampaignGroupRowNames() const
+{
+	TSet<FName> AllowedRows;
+	const TArray<FName> EntryRows = GetCampaignEntryRowNames();
+
+	for (const FName& EntryRowName : EntryRows)
+	{
+		CollectChildRowsRecursive(EntryRowName, AllowedRows);
+	}
+
+	return AllowedRows.Array();
 }
