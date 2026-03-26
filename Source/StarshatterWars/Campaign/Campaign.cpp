@@ -1956,17 +1956,15 @@ Campaign::Start()
 void
 Campaign::ExecFrame()
 {
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ExecFrame()"));
-
     if (InCutscene())
         return;
 
     time = GetStardate() - GetStartTime();
-    UE_LOG(LogCampaign, Warning,
-        TEXT("[Campaign] StartTime=%f Stardate=%f time=%f"),
-        GetStartTime(),
-        GetStardate(),
-        time);
+    //UE_LOG(LogCampaign, Warning,
+    //   TEXT("[Campaign] StartTime=%f Stardate=%f time=%f"),
+    //   GetStartTime(),
+    //   GetStardate(),
+    //   time);
 
     if (campaign_status < ECampaignStatus::ACTIVE)
         return;

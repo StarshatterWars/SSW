@@ -55,40 +55,18 @@ static FORCEINLINE FColor ScaleColor(const FColor& In, float Scale)
 
 void StarSystem::SetBaseTime(double t, bool absolute)
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[StarSystem] SetBaseTime CALLED t=%f absolute=%s base_time(before)=%f"),
-		t,
-		absolute ? TEXT("true") : TEXT("false"),
-		base_time);
-
 	if (absolute)
 	{
 		base_time = t;
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[StarSystem] SetBaseTime ABSOLUTE assigned base_time=%f"),
-			base_time);
 	}
 	else if (t > 0)
 	{
 		if (t > epoch)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[StarSystem] SetBaseTime RELATIVE before epoch subtract t=%f epoch=%f"),
-				t, epoch);
-
 			t -= epoch;
-
-			UE_LOG(LogTemp, Warning,
-				TEXT("[StarSystem] SetBaseTime RELATIVE after epoch subtract t=%f"),
-				t);
 		}
 
 		base_time = t;
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[StarSystem] SetBaseTime RELATIVE assigned base_time=%f"),
-			base_time);
 	}
 	else
 	{
@@ -2039,9 +2017,6 @@ OrbitalRegion::~OrbitalRegion()
 void StarSystem::SetSimulationTime(double t)
 {
 	sim_time = t;
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[StarSystem] SetSimulationTime=%f"), t);
 }
 
 double StarSystem::GetSimulationTime()

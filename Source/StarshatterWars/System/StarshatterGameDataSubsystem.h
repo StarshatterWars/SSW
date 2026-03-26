@@ -104,6 +104,43 @@ DECLARE_LOG_CATEGORY_EXTERN(LogStarshatterGameDataCampaign, Log, All);
 // ---------------------------------------------------------------------
 // UStarshatterGameDataSubsystem
 // ---------------------------------------------------------------------
+USTRUCT()
+struct FCombatGroupKey
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    EEMPIRE_NAME EmpireId = EEMPIRE_NAME::Unknown;
+
+    UPROPERTY()
+    ECOMBATGROUP_TYPE Type = ECOMBATGROUP_TYPE::NONE;
+
+    UPROPERTY()
+    int32 Id = 0;
+
+    FCombatGroupKey() {}
+
+    FCombatGroupKey(EEMPIRE_NAME InEmpireId, ECOMBATGROUP_TYPE InType, int32 InId)
+        : EmpireId(InEmpireId), Type(InType), Id(InId)
+    {
+    }
+
+    bool operator==(const FCombatGroupKey& Other) const
+    {
+        return EmpireId == Other.EmpireId &&
+            Type == Other.Type &&
+            Id == Other.Id;
+    }
+};
+
+FORCEINLINE uint32 GetTypeHash(const FCombatGroupKey& Key)
+{
+    uint32 Hash = ::GetTypeHash((int32)Key.EmpireId);
+    Hash = HashCombine(Hash, ::GetTypeHash((int32)Key.Type));
+    Hash = HashCombine(Hash, ::GetTypeHash(Key.Id));
+    return Hash;
+}
+
 UCLASS()
 class STARSHATTERWARS_API UStarshatterGameDataSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
@@ -370,17 +407,27 @@ protected:
     void AddUnitsToCombatGroup(CombatGroup* Parent, const TArray<FS_OOBStarbaseUnit>& Units);
 
     // New OOB System
-    void BuildCombatantsFromDataTables(const TMap<int32, CombatGroup*>& GroupById);
     void ReadCombatants();
+    void ValidateCombatRosterRuntime();
     CombatGroup* BuildCombatForceFromRows(const TArray<FS_CombatGroup>& Rows, EEMPIRE_NAME Empire, Combatant* CombatantOwner);
 
     void BuildCombatantsFromData(const TArray<FS_Combatant>& CombatantRows, const TMap<int32, CombatGroup*>& GroupById, Campaign* CampaignPtr);
     void BuildCombatRosterFromDataTables();
 
-    TMap<int32, CombatGroup*> BuildGroupMapFromDataTable();
-    void LinkGroupHierarchy(const TArray<FS_CombatGroup>& InRows, TMap<int32, CombatGroup*>& GroupById);
-    void BuildUnitsForGroups(const TArray<FS_CombatGroup>& InRows, TMap<int32, CombatGroup*>& GroupById);
 
+    void LinkGroupHierarchy(
+        const TArray<FName>& RowNames,
+        TMap<FName, CombatGroup*>& GroupByRowName);
+
+    void BuildUnitsForGroups(
+        const TArray<FName>& RowNames,
+        TMap<FName, CombatGroup*>& GroupByRowName);
+
+    void BuildCombatantsFromDataTables(
+        const TArray<FName>& RowNames,
+        const TMap<FName, CombatGroup*>& GroupByRowName);
+    
+    TMap<FName, CombatGroup*> BuildGroupMapFromDataTable();
     FString GetEmpireRosterName(EEMPIRE_NAME Empire) const;
 
 protected:
