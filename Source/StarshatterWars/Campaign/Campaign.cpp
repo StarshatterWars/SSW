@@ -1610,6 +1610,7 @@ Mission* Campaign::GetMission(int32 Id)
         Info->mission->SetStart(Info->start);
         Info->mission->SetEnd(Info->end);
         Info->mission->SetScriptName(Info->script);
+        Info->mission->SetDisplayTime(Info->DisplayType);
 
         // If you still need post-build initialization:
         Info->mission->InitializeFromInfo(*Info);
@@ -2826,8 +2827,12 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->system = TCHAR_TO_ANSI(*MissionRow.System);
         Info->region = TCHAR_TO_ANSI(*MissionRow.Region);
         Info->script = TCHAR_TO_ANSI(*MissionRow.Script);
-        Info->start = FCString::Atoi(*MissionRow.Start);
+       
+       double RelativeMsnStart = UFormattingUtils::ParseStarshatterTime(*MissionRow.Start);
+        Info->start = StarSystem::GetStardate() + RelativeMsnStart;
+
         Info->type = MissionRow.Type;
+        Info->DisplayType = MissionRow.DisplayType;
 
         Info->min_rank = 0;
         Info->max_rank = 100;
@@ -2868,6 +2873,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->start_before = TemplateRow.StartBefore;
         Info->start_after = TemplateRow.StartAfter;
         Info->mission = 0;
+        Info->DisplayType = TemplateRow.DisplayType;
 
         TemplateList* Templ = GetTemplateList((int)TemplateRow.MissionType, (int)TemplateRow.GroupType);
         if (!Templ)

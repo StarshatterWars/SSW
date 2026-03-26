@@ -58,7 +58,6 @@ public:
 
 private:
     void ExecFrame();
-    void ExecHeaderFrame();
 
     void RebuildMissionList();
     void AppendNewMissionsIfAny();

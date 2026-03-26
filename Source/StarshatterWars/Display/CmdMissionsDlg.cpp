@@ -35,6 +35,16 @@
 #include "CombatGroup.h"
 #include "CmpnScreen.h"
 
+static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
+{
+    if (!Info)
+    {
+        return false;
+    }
+
+    return Info->DisplayType == EMissionDisplayType::PlayerMission;
+}
+
 UCmdMissionsDlg::UCmdMissionsDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -124,6 +134,7 @@ void UCmdMissionsDlg::ShowMissionsDlg()
             CampaignPtr->GetMissionList().size());
     }
 
+
     SetVisibility(ESlateVisibility::Visible);
 
     RebuildMissionList();
@@ -133,8 +144,6 @@ void UCmdMissionsDlg::ShowMissionsDlg()
 
 void UCmdMissionsDlg::ExecFrame()
 {
-    ExecHeaderFrame();
-
     if (!CampaignPtr)
     {
         CampaignPtr = Campaign::GetCampaign();
@@ -148,45 +157,6 @@ void UCmdMissionsDlg::ExecFrame()
     AppendNewMissionsIfAny();
     ValidateSelectionStillExists();
     UpdateAcceptEnabled();
-}
-
-void UCmdMissionsDlg::ExecHeaderFrame()
-{
-    if (!CampaignPtr)
-    {
-        CampaignPtr = Campaign::GetCampaign();
-    }
-
-    if (!CampaignPtr)
-    {
-        return;
-    }
-
-    if (txt_group)
-    {
-        CombatGroup* G = CampaignPtr->GetPlayerGroup();
-        if (G)
-        {
-            txt_group->SetText(FText::FromString(UTF8_TO_TCHAR(G->GetDescription())));
-        }
-        else
-        {
-            txt_group->SetText(FText::GetEmpty());
-        }
-    }
-
-    if (txt_score)
-    {
-        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        txt_score->SetText(FText::FromString(FString::Printf(TEXT("Team Score: %d"), TeamScore)));
-    }
-
-    if (txt_time)
-    {
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, CampaignPtr->GetTime());
-        txt_time->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
-    }
 }
 
 void UCmdMissionsDlg::RebuildMissionList()
@@ -218,6 +188,14 @@ void UCmdMissionsDlg::RebuildMissionList()
         MissionInfo* Info = Missions[i];
         if (!Info)
         {
+            continue;
+        }
+
+        if (!ShouldShowMissionInCmdMissionsDlg(Info))
+        {
+            UE_LOG(LogTemp, Log,
+                TEXT("[CmdMissionsDlg] Skipping story/cutscene mission id=%d"),
+                Info->id);
             continue;
         }
 

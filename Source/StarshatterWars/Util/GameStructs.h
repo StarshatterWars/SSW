@@ -221,6 +221,15 @@ enum ECombatActionStatus : uint8
 	INCOMPLETE				UMETA(DisplayName = "Incomplete"),
 };
 
+UENUM(BlueprintType)
+enum class EMissionDisplayType : uint8
+{
+	PlayerMission,
+	StoryOnly,
+	CutsceneOnly,
+	Hidden
+};
+
 UENUM()
 enum class EINTEL_TYPE : uint8 {
 	UNKNOWN		UMETA(DisplayName = "Unknown"), // This status should notxexist in game
@@ -2087,6 +2096,8 @@ struct FS_CampaignMissionList : public FTableRowBase {
 	EMISSIONSTATUS Status;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	bool Available;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMissionDisplayType DisplayType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	bool Complete;
 
@@ -2112,6 +2123,7 @@ struct FS_CampaignMissionList : public FTableRowBase {
 		Complete = false;
 
 		Status = EMISSIONSTATUS::Available;
+		DisplayType = EMissionDisplayType::PlayerMission;
 	}
 };
 
@@ -2132,6 +2144,8 @@ struct FS_CampaignTemplateList : public FTableRowBase {
 	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE GroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMissionDisplayType DisplayType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int MinRank;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2161,6 +2175,8 @@ struct FS_CampaignTemplateList : public FTableRowBase {
 		ExecOnce = 0;
 		StartBefore  = 0;
 		StartAfter = 0;
+
+		DisplayType = EMissionDisplayType::CutsceneOnly;
 	}
 };
 
@@ -2623,6 +2639,9 @@ struct FS_CampaignMission : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMissionDisplayType DisplayType = EMissionDisplayType::CutsceneOnly;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Team;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2693,6 +2712,10 @@ struct FS_TemplateMission : public FTableRowBase {
 	ECOMBATGROUP_TYPE TemplateGroup = ECOMBATGROUP_TYPE::NONE;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EMISSIONTYPE TemplateType = EMISSIONTYPE::PATROL;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int TemplateTeam;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)

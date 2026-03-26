@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Text.h"
+#include "GameStructs.h"
 
 // Forward declarations only (keep header light):
 class Mission;
@@ -60,6 +61,8 @@ public:
     int      exec_once;
     int      start_before;
     int      start_after;
+
+    EMissionDisplayType DisplayType;
 
     // Owned mission instance (lazy-loaded by Campaign):
     Mission* mission;

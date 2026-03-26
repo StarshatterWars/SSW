@@ -124,6 +124,7 @@ public:
     void              SetEnd(int e) { end = e; }
     void              SetType(int t) { type = t; }
     void              SetTeam(int iff) { team = iff; }
+    void              SetDisplayTime(EMissionDisplayType dt) { DisplayType = dt; }
     void              SetStarSystem(StarSystem* s);
     void              SetRegion(const char* rgn) { region = rgn; }
     void              SetOK(bool a) { ok = a; }
@@ -180,6 +181,7 @@ protected:
     bool              active;
     bool              complete;
     bool              degrees;
+    EMissionDisplayType DisplayType;
     Text              objective;
     Text              sitrep;
     Text              errmsg;

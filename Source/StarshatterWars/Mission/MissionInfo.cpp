@@ -50,6 +50,7 @@ MissionInfo::MissionInfo()
     , exec_once(0)
     , start_before(TIME_NEVER)
     , start_after(0)
+    , DisplayType(EMissionDisplayType::PlayerMission)
 {
 }
 

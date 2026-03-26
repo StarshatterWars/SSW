@@ -4084,6 +4084,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 	bool  TemplateOnce = false;
 
 	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;
 
 	FS_TemplateMission NewTemplateMission;
 
