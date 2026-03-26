@@ -2973,12 +2973,20 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
             RawClassName = Ship::GetShipClassName(prime_target->GetDesign()->type);
         }
 
-        Name = FString::Printf(
+        /*Name = FString::Printf(
             TEXT("MSN-%03d %s %s %s"),
             mission->GetIdentity(),
             *TypeName,
             *(RawClassName ? FString(ANSI_TO_TCHAR(RawClassName)) : FString(TEXT("UnknownClass"))),
             *(RawPrimeName ? FString(ANSI_TO_TCHAR(RawPrimeName)) : FString(TEXT("UnknownTarget")))
+        );*/
+
+        Name = FString::Printf(
+            TEXT("MSN-%03d %s %s %s"),
+            mission->GetIdentity(),
+            *TypeName,
+            *(RawClassName ? FString(ANSI_TO_TCHAR(RawClassName)) : FString(TEXT(""))),
+            *(RawPrimeName ? FString(ANSI_TO_TCHAR(RawPrimeName)) : FString(TEXT("")))
         );
     }
     else

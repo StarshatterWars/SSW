@@ -454,9 +454,8 @@ MissionTemplate::Load(const char* fname, const char* pname)
 							UE_LOG(LogStarshatterWars, Warning,
 								TEXT("WARNING: failed to map element %s '%s' in '%s'"),
 								ANSI_TO_TCHAR(dsn),
-								ANSI_TO_TCHAR(elem-GetName().data()),
+								ANSI_TO_TCHAR(elem->GetName().data()),
 								ANSI_TO_TCHAR(filename));
-
 							val->print();
 							delete elem;
 							ok = false;
