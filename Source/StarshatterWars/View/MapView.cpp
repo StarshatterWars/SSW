@@ -786,7 +786,7 @@ void MapView::FindShips(bool bFriendly, bool bStation, bool bStarship, bool bDro
 			if (!editor && !bFriendly && (elem->GetIFF() == 0 || elem->GetIFF() == mission->GetTeam()))
 				continue;
 
-			OutResult.append(new Text(elem->Name()));
+			OutResult.append(new Text(elem->GetName()));
 		}
 	}
 	else if (ship) {
@@ -867,7 +867,7 @@ void MapView::SetSelection(int index)
 			ListIter<MissionElement> elem = mission->GetElements();
 			while (++elem) {
 				if (elem->IsStatic()) {
-					if (elem->Identity() == index) {
+					if (elem->GetIdentity() == index) {
 						selected_elem = elem.value();
 						break;
 					}
@@ -922,7 +922,7 @@ void MapView::SetSelection(int index)
 			ListIter<MissionElement> elem = mission->GetElements();
 			while (++elem) {
 				if (elem->IsStarship()) {
-					if (elem->Identity() == index) {
+					if (elem->GetIdentity() == index) {
 						selected_elem = elem.value();
 						break;
 					}
@@ -977,7 +977,7 @@ void MapView::SetSelection(int index)
 			ListIter<MissionElement> elem = mission->GetElements();
 			while (++elem) {
 				if (elem->IsDropship() && !elem->IsSquadron()) {
-					if (elem->Identity() == index) {
+					if (elem->GetIdentity() == index) {
 						selected_elem = elem.value();
 						break;
 					}
@@ -1821,7 +1821,7 @@ MapView::DrawSystem()
 		caption += "\n";
 		caption += Game::GetText("MapView.title.Ship");
 		caption += " ";
-		caption += current_elem->Name();
+		caption += current_elem->GetName();
 	}
 
 	title = caption;
@@ -1898,7 +1898,7 @@ MapView::DrawRegion()
 		caption += "\n";
 		caption += Game::GetText("MapView.title.Ship");
 		caption += " ";
-		caption += current_elem->Name();
+		caption += current_elem->GetName();
 	}
 
 	title = caption;
@@ -2524,7 +2524,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 				sprite_width = 2;
 
 				if (!IsCrowded(s))
-					Print(shiploc.X - sprite_width, shiploc.Y + sprite_width + 2, s.Name());
+					Print(shiploc.X - sprite_width, shiploc.Y + sprite_width + 2, s.GetName());
 			}
 			else {
 				double theta = s.Heading();
@@ -2577,9 +2577,9 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 				char label[64];
 
 				if (s.Count() > 1)
-					sprintf_s(label, "%s x %d", (const char*)s.Name(), s.Count());
+					sprintf_s(label, "%s x %d", (const char*)s.GetName(), s.Count());
 				else
-					strcpy_s(label, (const char*)s.Name());
+					strcpy_s(label, (const char*)s.GetName());
 
 				Print(shiploc.X - sprite_width, shiploc.Y + sprite_width + 2, label);
 			}

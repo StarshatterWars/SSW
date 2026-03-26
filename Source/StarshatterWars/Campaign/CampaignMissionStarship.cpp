@@ -429,20 +429,20 @@ CampaignMissionStarship::GenerateMissionElements()
     CreateTargets();
 
     if (ward && player) {
-        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, ward->Name());
+        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, ward->GetName());
 
         if (obj) {
             switch (mission->GetType()) {
             case (int)EMISSIONTYPE::ESCORT_FREIGHT:
-                obj->SetTargetDesc(Text("the star freighter ") + ward->Name());
+                obj->SetTargetDesc(Text("the star freighter ") + ward->GetName());
                 break;
 
             case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
-                obj->SetTargetDesc(Text("the shuttle ") + ward->Name());
+                obj->SetTargetDesc(Text("the shuttle ") + ward->GetName());
                 break;
 
             case (int)EMISSIONTYPE::ESCORT_STRIKE:
-                obj->SetTargetDesc(Text("the ") + ward->Name() + Text(" strike package"));
+                obj->SetTargetDesc(Text("the ") + ward->GetName() + Text(" strike package"));
                 break;
 
             default:
@@ -450,7 +450,7 @@ CampaignMissionStarship::GenerateMissionElements()
                     obj->SetTargetDesc(Text("the ") + ward->GetCombatGroup()->GetDescription());
                 }
                 else {
-                    obj->SetTargetDesc(Text("the ") + ward->Name());
+                    obj->SetTargetDesc(Text("the ") + ward->GetName());
                 }
                 break;
             }
@@ -855,9 +855,9 @@ CampaignMissionStarship::CreateTargetsAssault()
                     if (!player_lead)
                         return;
 
-                    Instruction* obj = new Instruction(INSTRUCTION_ACTION::ASSAULT, prime_target->Name());
+                    Instruction* obj = new Instruction(INSTRUCTION_ACTION::ASSAULT, prime_target->GetName());
                     if (obj) {
-                        obj->SetTargetDesc(Text("preplanned target '") + prime_target->Name() + "'");
+                        obj->SetTargetDesc(Text("preplanned target '") + prime_target->GetName() + "'");
                         player_lead->AddObjective(obj);
                     }
 
@@ -950,7 +950,7 @@ CampaignMissionStarship::CreateTargetsAssault()
 
                     instr->SetSpeed(500);
                     instr->GetRLoc() = rloc;
-                    instr->SetTarget(FString(prime_target->Name().data()));
+                    instr->SetTarget(FString(prime_target->GetName().data()));
 
                     ref = &instr->GetRLoc();
 
@@ -970,7 +970,7 @@ CampaignMissionStarship::CreateTargetsAssault()
 
                         instr->SetSpeed(500);
                         instr->GetRLoc() = rloc2;;
-                        instr->SetTarget(FString(prime_target->Name().data()));
+                        instr->SetTarget(FString(prime_target->GetName().data()));
 
                         pge->AddNavPoint(instr);
                     }
@@ -1107,7 +1107,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
         elem->SetLocation(ward->Location() + ScatterInSphere(5.0f));
 
-        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ASSAULT, ward->Name());
+        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ASSAULT, ward->GetName());
         if (obj)
             elem->AddObjective(obj);
 
@@ -1119,7 +1119,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
             e2->SetLocation(elem->Location() + ScatterInSphere(0.25f));
 
-            Instruction* obj2 = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->Name());
+            Instruction* obj2 = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->GetName());
             if (obj2)
                 e2->AddObjective(obj2);
 
@@ -1252,7 +1252,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                         e2->SetRegion(rgn);
                         e2->SetLocation(elem->Location() + ScatterInSphere(0.5f));
 
-                        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->Name());
+                        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->GetName());
                         if (obj)
                             e2->AddObjective(obj);
 
@@ -1295,7 +1295,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                     Instruction* n = new Instruction(player->Region(),
                         player->Location() + ScatterInSphere(1.0f),
                         INSTRUCTION_ACTION::ASSAULT);
-                    n->SetTarget(FString(player->Name().data()));
+                    n->SetTarget(FString(player->GetName().data()));
                     elem->AddNavPoint(n);
                 }
 
@@ -1321,7 +1321,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                     Instruction* n = new Instruction(player->Region(),
                         player->Location() + ScatterInSphere(1.0f),
                         INSTRUCTION_ACTION::ASSAULT);
-                    n->SetTarget(FString(player->Name().data()));
+                    n->SetTarget(FString(player->GetName().data()));
                     elem->AddNavPoint(n);
                 }
 
@@ -1353,7 +1353,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                         e2->SetRegion(rgn);
                         e2->SetLocation(elem->Location() + ScatterInSphere(0.5f));
 
-                        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->Name());
+                        Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->GetName());
                         if (obj)
                             e2->AddObjective(obj);
 
@@ -1538,7 +1538,7 @@ CampaignMissionStarship::DescribeMission()
         sprintf_s(name, sizeof(name), "MSN-%03d %s %s",
             mission->GetIdentity(),
             Game::GetText(mission->GetTypeName()).data(),
-            ward->Name().data());
+            ward->GetName().data());
     }
     else if (prime_target) {
         const char* ClassName = "(unknown)";
@@ -1549,7 +1549,7 @@ CampaignMissionStarship::DescribeMission()
             mission->GetIdentity(),
             Game::GetText(mission->GetTypeName()).data(),
             ClassName,
-            prime_target->Name().data());
+            prime_target->GetName().data());
     }
     else {
         sprintf_s(name, sizeof(name), "MSN-%03d %s",

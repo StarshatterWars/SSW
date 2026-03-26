@@ -155,7 +155,7 @@ CampaignSituationReport::MissionSituation()
 				if (target->GetCombatGroup())
 					sitrep += target->GetCombatGroup()->GetDescription();
 				else
-					sitrep += target->Name();
+					sitrep += target->GetName();
 
 				sitrep += ".";
 			}
@@ -171,7 +171,7 @@ CampaignSituationReport::MissionSituation()
 				if (target->GetCombatGroup())
 					sitrep += target->GetCombatGroup()->GetDescription();
 				else
-					sitrep += target->Name();
+					sitrep += target->GetName();
 
 				sitrep += ".";
 			}
@@ -180,7 +180,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::DEFEND:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to defend ";
-				sitrep += ward->Name();
+				sitrep += ward->GetName();
 				sitrep += " in the ";
 				sitrep += sector;
 			}
@@ -193,7 +193,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::ESCORT:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the ";
-				sitrep += ward->Name();
+				sitrep += ward->GetName();
 				sitrep += " in the ";
 				sitrep += sector;
 			}
@@ -206,7 +206,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::ESCORT_FREIGHT:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the freighter ";
-				sitrep += ward->Name();
+				sitrep += ward->GetName();
 				sitrep += ".";
 			}
 			else {
@@ -218,7 +218,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the shuttle ";
-				sitrep += ward->Name();
+				sitrep += ward->GetName();
 				sitrep += ".";
 			}
 			else {
@@ -230,7 +230,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::ESCORT_STRIKE:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to protect the ";
-				sitrep += ward->Name();
+				sitrep += ward->GetName();
 				sitrep += " strike package from hostile interceptors.";
 			}
 			else {
@@ -263,7 +263,7 @@ CampaignSituationReport::MissionSituation()
 		case (int)EMISSIONTYPE::FLIGHT_OPS:
 			sitrep += "\n\nFor this mission, the ";
 			if (player)
-				sitrep += player->Name();
+				sitrep += player->GetName();
 			else
 				sitrep += "(unknown package)";
 

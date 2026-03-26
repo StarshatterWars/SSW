@@ -274,7 +274,7 @@ void UMissionEventDlg::FillShipList(UComboBoxString* Combo, const char* Selected
         if (elem->IsSquadron())
             continue;
 
-        const FString BaseName = ANSI_TO_TCHAR(elem->Name().data());
+        const FString BaseName = ANSI_TO_TCHAR(elem->GetName().data());
 
         if (elem->Count() == 1)
         {

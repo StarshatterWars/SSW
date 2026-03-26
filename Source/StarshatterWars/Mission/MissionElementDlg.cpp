@@ -371,7 +371,7 @@ void UMissionElementDlg::RebuildFromModel()
     UpdateTeamInfo();
 
     // Text fields:
-    if (NameEdit) NameEdit->SetText(FText::FromString(ANSI_TO_TCHAR(ElemPtr->Name())));
+    if (NameEdit) NameEdit->SetText(FText::FromString(ANSI_TO_TCHAR(ElemPtr->GetName())));
 
     if (SizeEdit)      SizeEdit->SetText(FText::AsNumber(ElemPtr->Count()));
     if (IFFEdit)       IFFEdit->SetText(FText::AsNumber(ElemPtr->GetIFF()));
@@ -566,10 +566,10 @@ void UMissionElementDlg::BuildObjectiveTargets()
 
             if (bAdd)
             {
-                const FString Opt = ANSI_TO_TCHAR(E->Name());
+                const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 TargetCombo->AddOption(Opt);
 
-                if (Instr && !_stricmp(Instr->TargetName(), E->Name()))
+                if (Instr && !_stricmp(Instr->TargetName(), E->GetName()))
                     TargetCombo->SetSelectedOption(Opt);
             }
         }
@@ -596,10 +596,10 @@ void UMissionElementDlg::UpdateTeamInfo()
 
             if (CanCommand(E, ElemPtr))
             {
-                const FString Opt = ANSI_TO_TCHAR(E->Name());
+                const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 CommanderCombo->AddOption(Opt);
 
-                if (ElemPtr->Commander() == E->Name())
+                if (ElemPtr->GetCommander() == E->GetName())
                     CommanderCombo->SetSelectedOption(Opt);
             }
         }
@@ -620,10 +620,10 @@ void UMissionElementDlg::UpdateTeamInfo()
 
             if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->IsSquadron())
             {
-                const FString Opt = ANSI_TO_TCHAR(E->Name());
+                const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 SquadronCombo->AddOption(Opt);
 
-                if (ElemPtr->Squadron() == E->Name())
+                if (ElemPtr->GetSquadron() == E->GetName())
                     SquadronCombo->SetSelectedOption(Opt);
             }
         }
@@ -644,10 +644,10 @@ void UMissionElementDlg::UpdateTeamInfo()
 
             if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->GetDesign() && E->GetDesign()->flight_decks.size())
             {
-                const FString Opt = ANSI_TO_TCHAR(E->Name());
+                const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 CarrierCombo->AddOption(Opt);
 
-                if (ElemPtr->Carrier() == E->Name())
+                if (ElemPtr->GetCarrier() == E->GetName())
                     CarrierCombo->SetSelectedOption(Opt);
             }
         }
@@ -664,13 +664,13 @@ bool UMissionElementDlg::CanCommand(const MissionElement* Commander, const Missi
         if (Commander->IsSquadron())
             return false;
 
-        if (Commander->Commander().length() == 0)
+        if (Commander->GetCommander().length() == 0)
             return true;
 
-        if (Subordinate->Name() == Commander->Commander())
+        if (Subordinate->GetName() == Commander->GetCommander())
             return false;
 
-        MissionElement* E = MissionPtr->FindElement(Commander->Commander());
+        MissionElement* E = MissionPtr->FindElement(Commander->GetCommander());
 
         if (E)
             return CanCommand(E, Subordinate);

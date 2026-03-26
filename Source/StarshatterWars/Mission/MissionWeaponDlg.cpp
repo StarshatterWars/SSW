@@ -239,7 +239,7 @@ void UMissionWeaponDlg::SetupControls()
         return;
 
     // Element name:
-    SetLabelText(601, FText::FromString(Elem->Name().data()));
+    SetLabelText(601, FText::FromString(Elem->GetName().data()));
 
     // Type:
     SetLabelText(602, FText::FromString((const char*)Design->name));

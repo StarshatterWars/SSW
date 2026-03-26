@@ -69,7 +69,7 @@ MissionTemplate::AddElement(MissionElement* elem)
 {
 	if (elem) {
 		elements.append(elem);
-		aliases.append(new MissionAlias(elem->Name(), elem));
+		aliases.append(new MissionAlias(elem->GetName(), elem));
 	}
 }
 
@@ -80,7 +80,7 @@ MissionTemplate::MapElement(MissionElement* elem)
 
 	if (elem && !elem->GetCombatUnit()) {
 		if (elem->IsDropship()) {
-			Text callsign = MapCallsign(elem->Name(), elem->GetIFF());
+			Text callsign = MapCallsign(elem->GetName(), elem->GetIFF());
 
 			if (callsign.length())
 				elem->SetName(callsign);
@@ -120,16 +120,16 @@ MissionTemplate::MapElement(MissionElement* elem)
 		}
 
 		if (elem->GetCombatUnit()) {
-			MissionElement* cmdr = FindElement(elem->Commander());
+			MissionElement* cmdr = FindElement(elem->GetCommander());
 			if (cmdr)
-				elem->SetCommander(cmdr->Name());
+				elem->SetCommander(cmdr->GetName());
 
-			MissionElement* sqdr = FindElement(elem->Squadron());
+			MissionElement* sqdr = FindElement(elem->GetSquadron());
 			if (sqdr)
-				elem->SetSquadron(sqdr->Name());
+				elem->SetSquadron(sqdr->GetName());
 
 			if (!elem->IsDropship()) {
-				aliases.append(new MissionAlias(elem->Name(), elem));
+				aliases.append(new MissionAlias(elem->GetName(), elem));
 				elem->SetName(elem->GetCombatUnit()->Name());
 			}
 
@@ -155,7 +155,7 @@ MissionTemplate::MapShip(Text inName)
 
 			elem = FindElement(elem_name);
 			if (elem)
-				result = elem->Name() + inName.substring(len - 2, 2);
+				result = elem->GetName() + inName.substring(len - 2, 2);
 		}
 
 		// full element name
@@ -164,7 +164,7 @@ MissionTemplate::MapShip(Text inName)
 			elem = FindElement(inName);
 
 			if (elem)
-				result = elem->Name();
+				result = elem->GetName();
 		}
 	}
 
@@ -283,7 +283,7 @@ MissionTemplate::FindElement(const char* InName)
 	ListIter<MissionElement> e_iter = elements;
 	while (++e_iter) {
 		MissionElement* elem = e_iter.value();
-		if (elem->Name() == element_name)
+		if (elem->GetName() == element_name)
 			return elem;
 	}
 
@@ -454,7 +454,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 							UE_LOG(LogStarshatterWars, Warning,
 								TEXT("WARNING: failed to map element %s '%s' in '%s'"),
 								ANSI_TO_TCHAR(dsn),
-								ANSI_TO_TCHAR(elem->Name().data()),
+								ANSI_TO_TCHAR(elem-GetName().data()),
 								ANSI_TO_TCHAR(filename));
 
 							val->print();
@@ -675,7 +675,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 				if (!pdef->term() || !pdef->term()->isStruct()) {
 					UE_LOG(LogStarshatterWars, Warning,
 						TEXT("WARNING: order struct missing for element '%s' in '%s'"),
-						ANSI_TO_TCHAR(elem->Name().data()),
+						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
 					ok = false;
 				}
@@ -698,7 +698,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 				if (!pdef->term() || !pdef->term()->isStruct()) {
 					UE_LOG(LogStarshatterWars, Warning,
 						TEXT("WARNING: order struct missing for element '%s' in '%s'"),
-						ANSI_TO_TCHAR(elem->Name().data()),
+						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
 					ok = false;
 				}
@@ -713,7 +713,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 				if (!pdef->term() || !pdef->term()->isStruct()) {
 					UE_LOG(LogStarshatterWars, Warning,
 						TEXT("WARNING: loadout struct missing for element '%s' in '%s'"),
-						ANSI_TO_TCHAR(elem->Name().data()),
+						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
 					ok = false;
 				}
@@ -870,7 +870,7 @@ MissionTemplate::CheckObjectives()
 					obj.removeItem();
 				}
 				else {
-					o->SetTarget(FString(tgt_elem->Name().data()));
+					o->SetTarget(FString(tgt_elem->GetName().data()));
 				}
 			}
 		}

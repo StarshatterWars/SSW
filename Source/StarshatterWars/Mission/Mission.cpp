@@ -211,7 +211,7 @@ Mission::FindElement(const char* n)
 	while (++iter) {
 		MissionElement* elem = iter.value();
 
-		if (elem->Name() == n)
+		if (elem->GetName() == n)
 			return elem;
 	}
 
@@ -570,7 +570,7 @@ Mission::Validate()
 		for (int i = 0; i < elements.size(); i++) {
 			MissionElement* elem = elements.at(i);
 
-			if (elem->Name().length() < 1) {
+			if (elem->GetName().length() < 1) {
 				sprintf_s(err, Game::GetText("Mission.error.unnamed-elem").data(), filename);
 				AddError(err);
 			}
@@ -581,14 +581,14 @@ Mission::Validate()
 
 					if (elem->Region() != GetRegion()) {
 						sprintf_s(err, Game::GetText("Mission.error.wrong-sector").data(),
-							elem->Name().data(),
+							elem->GetName().data(),
 							GetRegion());
 						AddError(err);
 					}
 				}
 				else {
 					sprintf_s(err, Game::GetText("Mission.error.extra-player").data(),
-						elem->Name().data(),
+						elem->GetName().data(),
 						filename);
 					AddError(err);
 				}
@@ -1472,7 +1472,7 @@ Mission::ParseRLoc(TermStruct* val)
 						rloc->SetReferenceLoc(ref);
 					}
 					else {
-						UE_LOG(LogStarshatterMission, Warning, TEXT("No ref found for rloc '%hs' in elem '%hs'"), refstr.data(), current ? current->Name().data() : "");
+						UE_LOG(LogStarshatterMission, Warning, TEXT("No ref found for rloc '%hs' in elem '%hs'"), refstr.data(), current ? current->GetName().data() : "");
 						rloc->SetBaseLocation(RandomPoint());
 					}
 				}
@@ -1489,7 +1489,7 @@ Mission::ParseRLoc(TermStruct* val)
 						rloc->SetReferenceLoc(ref);
 					}
 					else {
-						UE_LOG(LogStarshatterMission, Warning, TEXT("No ref found for rloc '%hs' in elem '%hs'"), refstr.data(), current ? current->Name().data() : "");
+						UE_LOG(LogStarshatterMission, Warning, TEXT("No ref found for rloc '%hs' in elem '%hs'"), refstr.data(), current ? current->GetName().data() : "");
 						rloc->SetBaseLocation(RandomPoint());
 					}
 				}
@@ -1578,7 +1578,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 		// set the mission region to that of the active player
 		while (++iter) {
 			MissionElement* e = iter.value();
-			if (e->Name() == player_elem) {
+			if (e->GetName() == player_elem) {
 				char buf[32];
 				sprintf_s(buf, "team: %d\n", e->GetIFF());
 				s += buf;
@@ -1626,12 +1626,12 @@ Mission::Serialize(const char* player_elem, int player_index)
 
 		s += "element: {\n";
 		s += "   name:      \"";
-		s += SafeString(elem->Name());
+		s += SafeString(elem->GetName());
 		s += "\"\n";
 
-		if (elem->Path().length()) {
+		if (elem->GetPath().length()) {
 			s += "   path:      \"";
-			s += SafeString(elem->Path());
+			s += SafeString(elem->GetPath());
 			s += "\"\n";
 		}
 
@@ -1647,21 +1647,21 @@ Mission::Serialize(const char* player_elem, int player_index)
 			s += "\"\n";
 		}
 
-		if (elem->Squadron().length()) {
+		if (elem->GetSquadron().length()) {
 			s += "   squadron:  \"";
-			s += SafeString(elem->Squadron());
+			s += SafeString(elem->GetSquadron());
 			s += "\"\n";
 		}
 
-		if (elem->Carrier().length()) {
+		if (elem->GetCarrier().length()) {
 			s += "   carrier:   \"";
-			s += SafeString(elem->Carrier());
+			s += SafeString(elem->GetCarrier());
 			s += "\"\n";
 		}
 
-		if (elem->Commander().length()) {
+		if (elem->GetCommander().length()) {
 			s += "   commander: \"";
-			s += SafeString(elem->Commander());
+			s += SafeString(elem->GetCommander());
 			s += "\"\n";
 		}
 
@@ -1716,7 +1716,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 		s += buffer;
 
 		if (player_elem) {
-			if (elem->Name() == player_elem) {
+			if (elem->GetName() == player_elem) {
 				if (player_index < 1)
 					player_index = 1;
 
@@ -2109,7 +2109,7 @@ MissionElement::~MissionElement()
 }
 
 Text
-MissionElement::Abbreviation() const
+MissionElement::GetAbbreviation() const
 {
 	if (design)
 		return design->abrv;

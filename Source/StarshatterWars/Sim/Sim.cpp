@@ -530,7 +530,7 @@ Sim::CreateElements()
 
 		// add element to a carrier?
 		if (MissionElem->IsSquadron()) {
-			Ship* Carrier = FindShip(MissionElem->Carrier());
+			Ship* Carrier = FindShip(MissionElem->GetCarrier());
 			if (Carrier) {
 				Hangar* HangarPtr = Carrier->GetHangar();
 
@@ -556,12 +556,12 @@ Sim::CreateElements()
 						}
 					}
 
-					HangarPtr->CreateSquadron(MissionElem->Name(), MissionElem->GetCombatGroup(),
+					HangarPtr->CreateSquadron(MissionElem->GetName(), MissionElem->GetCombatGroup(),
 						MissionElem->GetDesign(), MissionElem->Count(),
 						MissionElem->GetIFF(),
 						DefaultLoadout, MissionElem->MaintCount(), MissionElem->DeadCount());
 
-					SimElement* Element = CreateElement(MissionElem->Name(),
+					SimElement* Element = CreateElement(MissionElem->GetName(),
 						MissionElem->GetIFF(),
 						MissionElem->MissionRole());
 
@@ -584,7 +584,7 @@ Sim::CreateElements()
 			int32 SlotIndex = 0;
 
 			// first create the package element:
-			SimElement* Element = CreateElement(MissionElem->Name(),
+			SimElement* Element = CreateElement(MissionElem->GetName(),
 				MissionElem->GetIFF(),
 				MissionElem->MissionRole());
 
@@ -608,13 +608,13 @@ Sim::CreateElements()
 
 			// if element belongs to a squadron,
 			// find the carrier, squadron, flight deck, etc.:
-			if (MissionElem->Squadron().length() > 0) {
-				MissionElement* SquadronElem = mission->FindElement(MissionElem->Squadron());
+			if (MissionElem->GetSquadron().length() > 0) {
+				MissionElement* SquadronElem = mission->FindElement(MissionElem->GetSquadron());
 
 				if (SquadronElem) {
-					Element->SetSquadron(MissionElem->Squadron());
+					Element->SetSquadron(MissionElem->GetSquadron());
 
-					SimElement* Commander = FindElement(SquadronElem->Carrier());
+					SimElement* Commander = FindElement(SquadronElem->GetCarrier());
 
 					if (Commander) {
 						Element->SetCommander(Commander);
@@ -625,7 +625,7 @@ Sim::CreateElements()
 							HangarPtr = Carrier->GetHangar();
 
 							for (int32 s = 0; s < HangarPtr->NumSquadrons(); s++) {
-								if (HangarPtr->SquadronName(s) == MissionElem->Squadron()) {
+								if (HangarPtr->SquadronName(s) == MissionElem->GetSquadron()) {
 									SquadronIndex = s;
 									break;
 								}
@@ -635,8 +635,8 @@ Sim::CreateElements()
 				}
 			}
 
-			else if (MissionElem->Commander().length() > 0) {
-				SimElement* Commander = FindElement(MissionElem->Commander());
+			else if (MissionElem->GetCommander().length() > 0) {
+				SimElement* Commander = FindElement(MissionElem->GetCommander());
 
 				if (Commander) {
 					Element->SetCommander(Commander);

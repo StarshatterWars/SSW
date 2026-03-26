@@ -49,20 +49,20 @@ public:
     // ------------------------------------------------------------
     // Identity / labels (legacy noun-style accessors)
     // ------------------------------------------------------------
-    int         Identity()      const { return id; }
-    const Text& Name()          const { return name; }
-    Text        Abbreviation()  const;
-    const Text& Carrier()       const { return carrier; }
-    const Text& Commander()     const { return commander; }
-    const Text& Squadron()      const { return squadron; }
-    const Text& Path()          const { return path; }
-    int         ElementID()     const { return elem_id; }
+    int         GetIdentity()       const { return id; }
+    const Text& GetName()           const { return name; }
+    Text        GetAbbreviation()   const;
+    const Text& GetCarrier()        const { return carrier; }
+    const Text& GetCommander()      const { return commander; }
+    const Text& GetSquadron()       const { return squadron; }
+    const Text& GetPath()           const { return path; }
+    int         GetElementID()      const { return elem_id; }
 
     // ------------------------------------------------------------
     // Design / skin / counts
     // ------------------------------------------------------------
     const ShipDesign* GetDesign()      const { return design; }
-    const Skin* GetSkin()        const { return skin; }
+    const Skin*       GetSkin()        const { return skin; }
     int               Count()          const { return count; }
     int               MaintCount()     const { return maint_count; }
     int               DeadCount()      const { return dead_count; }

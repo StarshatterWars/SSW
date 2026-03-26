@@ -1442,14 +1442,14 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     {
         Instruction* obj = new Instruction(
             INSTRUCTION_ACTION::DEFEND,
-            carrier_elem->Name().data()
+            carrier_elem->GetName().data()
         );
 
         if (obj)
         {
             const FString Desc =
                 FString(TEXT("the ")) +
-                FString(ANSI_TO_TCHAR(carrier_elem->Name().data())) +
+                FString(ANSI_TO_TCHAR(carrier_elem->GetName().data())) +
                 FString(TEXT(" battle group"));
 
             obj->SetTargetDesc(TCHAR_TO_ANSI(*Desc));
@@ -1594,14 +1594,14 @@ void CampaignMissionFighter::CreateTargetsSweep()
     {
         obj = new Instruction(
             INSTRUCTION_ACTION::DEFEND,
-            carrier_elem->Name().data()
+            carrier_elem->GetName().data()
         );
 
         if (obj)
         {
             const FString Desc =
                 FString(TEXT("the ")) +
-                FString(ANSI_TO_TCHAR(carrier_elem->Name().data())) +
+                FString(ANSI_TO_TCHAR(carrier_elem->GetName().data())) +
                 FString(TEXT(" battle group"));
 
             obj->SetTargetDesc(TCHAR_TO_ANSI(*Desc));
@@ -1684,7 +1684,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
 
             mission->AddElement(elem);
 
-            attacker = elem->Name();
+            attacker = elem->GetName();
 
             if (!prime_target)
             {
@@ -1699,7 +1699,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 {
                     const FString TargetDesc =
                         FString(TEXT("inbound strike package '")) +
-                        FString(ANSI_TO_TCHAR(elem->Name().data())) +
+                        FString(ANSI_TO_TCHAR(elem->GetName().data())) +
                         FString(TEXT("'"));
 
                     obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
@@ -1728,7 +1728,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
 
                 Instruction* obj = new Instruction(
                     INSTRUCTION_ACTION::ESCORT,
-                    elem->Name().data()
+                    elem->GetName().data()
                 );
 
                 if (obj)
@@ -1825,7 +1825,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
 
         Instruction* obj = new Instruction(
             INSTRUCTION_ACTION::ASSAULT,
-            ward->Name().data()
+            ward->GetName().data()
         );
 
         if (obj)
@@ -1845,7 +1845,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
 
             Instruction* obj2 = new Instruction(
                 INSTRUCTION_ACTION::ESCORT,
-                elem->Name().data()
+                elem->GetName().data()
             );
 
             if (obj2)
@@ -1934,14 +1934,14 @@ void CampaignMissionFighter::CreateTargetsStrike()
 
                 Instruction* Obj = new Instruction(
                     INSTRUCTION_ACTION::STRIKE,
-                    Elem->Name().data()
+                    Elem->GetName().data()
                 );
 
                 if (Obj)
                 {
                     const FString TargetDesc =
                         FString(TEXT("preplanned target '")) +
-                        FString(ANSI_TO_TCHAR(Elem->Name().data())) +
+                        FString(ANSI_TO_TCHAR(Elem->GetName().data())) +
                         FString(TEXT("'"));
 
                     Obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
@@ -2103,14 +2103,14 @@ void CampaignMissionFighter::CreateTargetsAssault()
 
             Instruction* Obj = new Instruction(
                 INSTRUCTION_ACTION::ASSAULT,
-                Elem->Name().data()
+                Elem->GetName().data()
             );
 
             if (Obj)
             {
                 const FString TargetDesc =
                     FString(TEXT("preplanned target '")) +
-                    FString(ANSI_TO_TCHAR(Elem->Name().data())) +
+                    FString(ANSI_TO_TCHAR(Elem->GetName().data())) +
                     FString(TEXT("'"));
 
                 Obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
@@ -2204,7 +2204,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             {
                 Instr->SetSpeed(750);
                 Instr->GetRLoc() = Rloc;
-                Instr->SetTarget(FString(ANSI_TO_TCHAR(Elem->Name().data())));
+                Instr->SetTarget(FString(ANSI_TO_TCHAR(Elem->GetName().data())));
 
                 player_elem->AddNavPoint(Instr);
             }
@@ -2311,7 +2311,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
-                                elem->Name().data()
+                                elem->GetName().data()
                             );
                             if (obj)
                             {
@@ -2390,7 +2390,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
-                                elem->Name().data()
+                                elem->GetName().data()
                             );
                             if (obj)
                             {
@@ -2437,7 +2437,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
-                                elem->Name().data()
+                                elem->GetName().data()
                             );
                             if (obj)
                             {
@@ -2488,7 +2488,7 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
         return;
     }
 
-    MissionElement* carrier = mission->FindElement(elem->Commander());
+    MissionElement* carrier = mission->FindElement(elem->GetCommander());
     StarSystem* system = mission->GetStarSystem();
     OrbitalRegion* rgn1 = system->FindRegion(elem->Region());
     OrbitalRegion* rgn2 = system->FindRegion(air_region);
@@ -2954,7 +2954,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
     }
     else if (ward)
     {
-        const char* RawWardName = ward->Name().data();
+        const char* RawWardName = ward->GetName().data();
 
         Name = FString::Printf(
             TEXT("MSN-%03d %s %s"),
@@ -2966,7 +2966,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
     else if (prime_target)
     {
         const char* RawClassName = nullptr;
-        const char* RawPrimeName = prime_target->Name().data();
+        const char* RawPrimeName = prime_target->GetName().data();
 
         if (prime_target->GetDesign())
         {
@@ -2994,7 +2994,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
     {
         const char* RawAbrv = (const char*)player_elem->GetDesign()->abrv;
         const char* RawDesignName = (const char*)player_elem->GetDesign()->name;
-        const char* RawElemName = player_elem->Name().data();
+        const char* RawElemName = player_elem->GetName().data();
 
         PlayerInfo = FString::Printf(
             TEXT("%d x %s %s '%s'"),
