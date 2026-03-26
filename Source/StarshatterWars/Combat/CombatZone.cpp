@@ -112,14 +112,28 @@ CombatZone::AddRegion(const char* rgn)
 bool
 CombatZone::HasRegion(const char* rgn)
 {
-	if (rgn && *rgn && regions.size()) {
-		Text test(rgn);
-		return regions.contains(&test);
+	if (!rgn || !*rgn || regions.size() == 0)
+	{
+		return false;
+	}
+
+	ListIter<Text> iter = regions;
+	while (++iter)
+	{
+		Text* Region = iter.value();
+		if (!Region)
+		{
+			continue;
+		}
+
+		if (_stricmp(Region->data(), rgn) == 0)
+		{
+			return true;
+		}
 	}
 
 	return false;
 }
-
 // +--------------------------------------------------------------------+
 
 ZoneForce*

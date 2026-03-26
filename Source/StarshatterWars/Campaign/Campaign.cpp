@@ -1501,11 +1501,33 @@ Campaign::SetPlayerUnit(CombatUnit* unit)
 CombatZone*
 Campaign::GetZone(const char* rgn)
 {
+    UE_LOG(LogCampaign, Warning,
+        TEXT("[Campaign] GetZone lookup for '%s' (zones=%d)"),
+        ANSI_TO_TCHAR(rgn),
+        zones.size());
+
     ListIter<CombatZone> z = zones;
     while (++z) {
+        CombatZone* Zone = z.value();
+        if (!Zone)
+            continue;
+
+        UE_LOG(LogCampaign, Warning,
+            TEXT("[Campaign] Testing zone system=%s"),
+            ANSI_TO_TCHAR(Zone->GetSystem()));
+
         if (z->HasRegion(rgn))
+        {
+            UE_LOG(LogCampaign, Warning,
+                TEXT("[Campaign] GetZone matched '%s'"),
+                ANSI_TO_TCHAR(rgn));
             return z.value();
+        }
     }
+
+    UE_LOG(LogCampaign, Warning,
+        TEXT("[Campaign] GetZone FAILED for '%s'"),
+        ANSI_TO_TCHAR(rgn));
 
     return 0;
 }
