@@ -15,6 +15,8 @@
 
 class UTextBlock;
 class UCheckBox;
+class UBorder;
+
 
 UCLASS()
 class STARSHATTERWARS_API UIntelLVElement : public UUserWidget, public IUserObjectListEntry
@@ -23,6 +25,8 @@ class STARSHATTERWARS_API UIntelLVElement : public UUserWidget, public IUserObje
 
 public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+	virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
+	virtual void NativeOnEntryReleased() override;
 
 private:
 
@@ -32,6 +36,13 @@ private:
 	UPROPERTY(meta = (BindWidget)) UTextBlock* NewsSourceText;
 	UPROPERTY(meta = (BindWidget)) UCheckBox* NewsVisited;
 
+	UPROPERTY(meta = (BindWidgetOptional)) UBorder* SelectionBorder = nullptr;
+
+protected:
+	void ApplySelectionVisual();
+
 private:
 	UPROPERTY() UIntelListObject* IntelList;
+
+	bool bRowSelected = false;
 };

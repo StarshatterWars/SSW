@@ -78,11 +78,6 @@ private:
     void AddMissionInfoToList(MissionInfo* Info);
 
 private:
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_group = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_score = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_name = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_time = nullptr;
-
     UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_exit = nullptr;
 
