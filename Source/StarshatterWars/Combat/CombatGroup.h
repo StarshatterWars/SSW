@@ -65,38 +65,45 @@ public:
 
 	void                SetCombatant(Combatant* c) { combatant = c; }
 
-	Combatant* GetCombatant() { return combatant; }
-	CombatGroup* GetParent() { return parent; }
-	List<CombatGroup>& GetComponents() { return components; }
-	List<CombatGroup>& GetLiveComponents() { return live_comp; }
-	List<CombatUnit>& GetUnits() { return units; }
-	CombatUnit* GetRandomUnit();
-	CombatUnit* GetFirstUnit();
+	Combatant*				GetCombatant() { return combatant; }
+	CombatGroup*			GetParent() { return parent; }
+	List<CombatGroup>&		GetComponents() { return components; }
+	List<CombatGroup>&		GetLiveComponents() { return live_comp; }
+	List<CombatUnit>&		GetUnits() { return units; }
+	CombatUnit*				GetRandomUnit();
+	CombatUnit*				GetFirstUnit();
 	CombatUnit* GetNextUnit();
 	CombatUnit* FindUnit(const char* name);
 	CombatGroup* FindCarrier();
 
-	const Text& Name()               const { return name; }
-	ECOMBATGROUP_TYPE   GetType()     const { return type; }
+	const Text&			GetName()            const { return name; }
+	ECOMBATGROUP_TYPE   GetType()			 const { return type; }
+
 	int                 CountUnits()         const;
-	int                 IntelLevel()         const { return enemy_intel; }
+	int                 GetIntelLevel()      const { return enemy_intel; }
 	int                 GetID()              const { return id; }
 	int                 GetIFF()             const { return iff; }
-	FVector             Location()           const { return location; }
+	FVector             GetLocation()        const { return location; }
+	void				SetLocation(const FVector& loc) { location = loc; }
 	void                MoveTo(FVector& loc);
 	const				Text& GetRegion()          const { return region; }
 	void                SetRegion(Text rgn) { region = rgn; }
 	void                AssignRegion(Text rgn);
-	int                 Value()              const { return value; }
-	int                 Sorties()            const { return sorties; }
-	void                SetSorties(int n) { sorties = n; }
-	int                 Kills()              const { return kills; }
-	void                SetKills(int n) { kills = n; }
-	int                 Points()             const { return points; }
-	void                SetPoints(int n) { points = n; }
-	int                 UnitIndex()          const { return unit_index; }
+	int                 GetValue()				const { return value; }
+	void 				SetValue(int v)			{ value = v; }
+	int                 GetSorties()			const { return sorties; }
+	void                SetSorties(int n)		{ sorties = n; }
 
-	double              GetNextJumpTime()    const;
+	int                 GetKills()				const { return kills; }
+	void                SetKills(int n)			{ kills = n; }
+	
+	int                 GetPoints()				const { return points; }
+	void                SetPoints(int n)		{ points = n; }
+
+	int                 GetUnitIndex()          const { return unit_index; }
+	void                SetUnitIndex(int n)		{ unit_index = n; }
+	
+	double              GetNextJumpTime()		const;
 
 	double              GetPlanValue()       const { return plan_value; }
 	void                SetPlanValue(double v) { plan_value = v; }

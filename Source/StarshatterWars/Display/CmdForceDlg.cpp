@@ -385,7 +385,7 @@ bool UCmdForceDlg::IsVisibleCombatant(Combatant* C) const
                 if (G &&
                     G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
                     G->CountUnits() > 0 &&
-                    G->IntelLevel() >= Intel::KNOWN)
+                    G->GetIntelLevel() >= Intel::KNOWN)
                 {
                     ++VisibleCount;
                 }
@@ -448,7 +448,7 @@ void UCmdForceDlg::ClearDescList()
 
 void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 {
-    if (!Group || Group->IntelLevel() < Intel::KNOWN || !lst_combat)
+    if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !lst_combat)
         return;
 
     // Build prefix similar to legacy (conceptual; real glyph rendering should be in the row widget)

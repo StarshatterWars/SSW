@@ -217,7 +217,7 @@ MissionTemplate::MapCallsign(const char* InName, int iff)
 static void
 SelectCombatGroups(CombatGroup* g, const ShipDesign* d, List<CombatGroup>& list)
 {
-	if (g->IntelLevel() <= Intel::RESERVE)
+	if (g->GetIntelLevel() <= Intel::RESERVE)
 		return;
 
 	if (g->GetUnits().size() > 0) {
@@ -588,7 +588,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 					CombatGroup* carrier = player_group->FindCarrier();
 
 					if (carrier) {
-						elem = FindElement(carrier->Name());
+						elem = FindElement(carrier->GetName());
 					}
 				}
 			}
@@ -603,7 +603,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 					(player_group->GetType() == ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON ||
 						player_group->GetType() == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON ||
 						player_group->GetType() == ECOMBATGROUP_TYPE::ATTACK_SQUADRON)) {
-					elem = FindElement(player_group->Name());
+					elem = FindElement(player_group->GetName());
 				}
 			}
 
@@ -614,7 +614,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 					CombatGroup* strike_target = campaign->FindStrikeTarget(player_group->GetIFF(), player_group);
 
 					if (strike_target) {
-						elem = FindElement(strike_target->Name());
+						elem = FindElement(strike_target->GetName());
 					}
 				}
 			}

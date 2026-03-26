@@ -235,7 +235,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                                     if (!event)
                                         return false;
 
-                                    Text title = Text(g->Name()) + " Orders: Proceed to " + action->Region() + " Sector";
+                                    Text title = Text(g->GetName()) + " Orders: Proceed to " + action->Region() + " Sector";
                                     event->SetTitle(title);
 
                                     double eta = campaign->GetTime() + 3600;
@@ -271,7 +271,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                                 TEXT("WARNING: Action %d Could not find assigned zone '%s' for '%s'"),
                                 action->Identity(),
                                 ANSI_TO_TCHAR(action->Region() ? action->Region() : "NULL"),
-                                ANSI_TO_TCHAR(g->Name().data()));
+                                ANSI_TO_TCHAR(g->GetName().data()));
 
                             g->SetAssignedZone(0);
                         }
@@ -324,7 +324,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                                     if (!event)
                                         return false;
 
-                                    Text title = Text(g->Name()) + " Orders: Proceed to " + action->System() + " System";
+                                    Text title = Text(g->GetName()) + " Orders: Proceed to " + action->System() + " System";
                                     event->SetTitle(title);
 
                                     double eta = campaign->GetTime() + 3600;
@@ -360,7 +360,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                                 TEXT("WARNING: Action %d Could not find assigned system '%s' for '%s'"),
                                 action->Identity(),
                                 ANSI_TO_TCHAR(action->System() ? action->System() : "NULL"),
-                                ANSI_TO_TCHAR(g->Name().data()));
+                                ANSI_TO_TCHAR(g->GetName().data()));
 
                             g->SetAssignedSystem("");
                         }
@@ -641,7 +641,7 @@ CampaignPlanEvent::CreateEventDefend(CombatAssignment* a)
 
     bool success = Success(a);
     Text rgn = group->GetRegion();
-    Text title = Text(group->Name()) + " in Defensive Engagement";
+    Text title = Text(group->GetName()) + " in Defensive Engagement";
     Text info;
 
     event = new CombatEvent(
@@ -678,7 +678,7 @@ CampaignPlanEvent::CreateEventDefend(CombatAssignment* a)
         info = Text("EVENT:  ") + rgn + " Sector\n\n";
     }
     else {
-        info = Text("MISSION:  Escort ") + obj->Name() + ", " + rgn + " Sector\n\n";
+        info = Text("MISSION:  Escort ") + obj->GetName() + ", " + rgn + " Sector\n\n";
     }
 
     info += GetTeamName(group);
@@ -713,7 +713,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
 
     bool success = Success(a);
     Text rgn = group->GetRegion();
-    Text title = Text(group->Name());
+    Text title = Text(group->GetName());
     Text info;
 
     event = new CombatEvent(
@@ -727,7 +727,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
     if (!event)
         return 0;
 
-    title += Text(" Assault ") + obj->Name();
+    title += Text(" Assault ") + obj->GetName();
 
     int tgt_count = 0;
     int unit_count = 0;
@@ -800,7 +800,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
                 sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->Name().data());
         }
         else {
-            sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->Name().data());
+            sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->GetName().data());
         }
 
         info += text;
@@ -813,7 +813,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
         if (!friendly)
             sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->Name().data());
         else
-            sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->GetName().data());
 
         info += text;
     }
@@ -842,7 +842,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
 
     bool success = Success(a);
     Text rgn = group->GetRegion();
-    Text title = Text(group->Name());
+    Text title = Text(group->GetName());
     Text info;
 
     event = new CombatEvent(campaign,
@@ -859,10 +859,10 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
         title += Text(" ") + unit->GetDesign()->abrv + "s";
 
     if (success) {
-        title += " Successfully Strike " + obj->Name();
+        title += " Successfully Strike " + obj->GetName();
     }
     else {
-        title += " Attempt Strike on " + obj->Name();
+        title += " Attempt Strike on " + obj->GetName();
     }
 
     int tgt_count = 0;
@@ -941,7 +941,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
                 sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->Name().data());
         }
         else {
-            sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->Name().data());
+            sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->GetName().data());
         }
 
         info += text;
@@ -954,7 +954,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
         if (!friendly)
             sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->Name().data());
         else
-            sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->GetName().data());
 
         info += text;
     }
@@ -983,7 +983,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
 
     bool success = Success(a);
     Text rgn = group->GetRegion();
-    Text title = Text(group->Name());
+    Text title = Text(group->GetName());
     Text info;
 
     event = new CombatEvent(campaign,
@@ -1006,7 +1006,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
     else if (RandomChance(1, 4))  title += " Intercept ";
     else                          title += " Encounter ";
 
-    title += obj->Name();
+    title += obj->GetName();
 
     int tgt_count = 0;
     int unit_count = 0;
@@ -1093,7 +1093,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
     char text[256];
 
     if (them_count) {
-        sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->Name().data());
+        sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->GetName().data());
         info += text;
     }
     else {
@@ -1101,7 +1101,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
     }
 
     if (us_count) {
-        sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->Name().data());
+        sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->GetName().data());
         info += text;
     }
     else {
@@ -1129,7 +1129,7 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
 
     bool success = Success(a);
     Text rgn = group->GetRegion();
-    Text title = Text(group->Name());
+    Text title = Text(group->GetName());
     Text info;
 
     event = new CombatEvent(campaign,
@@ -1142,7 +1142,7 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
     if (!event)
         return 0;
 
-    title += Text(" Assaults ") + a->GetObjective()->Name();
+    title += Text(" Assaults ") + a->GetObjective()->GetName();
 
     int tgt_count = 0;
     int unit_count = 0;
@@ -1296,6 +1296,6 @@ CampaignPlanEvent::GetTeamName(CombatGroup* g)
     while (g->GetParent())
         g = g->GetParent();
 
-    return g->Name();
+    return g->GetName();
 }
 

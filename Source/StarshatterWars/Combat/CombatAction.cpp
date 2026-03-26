@@ -140,7 +140,7 @@ bool CombatAction::IsAvailable() const
 
                         if (r->intel)
                         {
-                            test = group->IntelLevel();
+                            test = group->GetIntelLevel();
                             comp = r->intel;
                         }
                         else

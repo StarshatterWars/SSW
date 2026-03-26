@@ -256,10 +256,10 @@ Sim::CommitMission()
 					c->AddScore(s->GetPoints());
 
 				if (s->GetElementIndex() == 1)
-					group->SetSorties(group->Sorties() + 1);
+					group->SetSorties(group->GetSorties() + 1);
 
-				group->SetKills(group->Kills() + s->GetGunKills() + s->GetMissileKills());
-				group->SetPoints(group->Points() + s->GetPoints());
+				group->SetKills(group->GetKills() + s->GetGunKills() + s->GetMissileKills());
+				group->SetPoints(group->GetPoints() + s->GetPoints());
 			}
 
 			if (s->IsPlayer()) {

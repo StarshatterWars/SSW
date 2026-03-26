@@ -421,8 +421,8 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
             if (unit && ship && unit->GetIFF() != ship->GetIFF()) {
                 CombatGroup* group = unit->GetCombatGroup();
 
-                if (group && group->IntelLevel() < Intel::LOCATED &&
-                    group->IntelLevel() > Intel::RESERVE) {
+                if (group && group->GetIntelLevel() < Intel::LOCATED &&
+                    group->GetIntelLevel() > Intel::RESERVE) {
                     group->SetIntelLevel(Intel::LOCATED);
                 }
             }

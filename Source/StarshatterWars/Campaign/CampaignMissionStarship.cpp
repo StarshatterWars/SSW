@@ -102,7 +102,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         // ObjName is a Starshatter Text/C-string:
         const char* ObjNameA = "(no target)";
         if (req->GetObjective())
-            ObjNameA = req->GetObjective()->Name().data();
+            ObjNameA = req->GetObjective()->GetName().data();
 
         UE_LOG(LogStarshatterWars, Log, TEXT("CMS CreateMission() request: %s %s"),
             RoleT,
@@ -349,7 +349,7 @@ CampaignMissionStarship::SelectRegion()
     }
     else {
         UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: CMS - No zone for '%s'"),
-            ANSI_TO_TCHAR(player_group->Name().data()));
+            ANSI_TO_TCHAR(player_group->GetName().data()));
 
         StarSystem* s = campaign->GetSystemList()[0];
 
@@ -489,7 +489,7 @@ CampaignMissionStarship::CreatePlayer()
     else if (player_group) {
         UE_LOG(LogStarshatterWars, Warning,
             TEXT("CMS GenerateMissionElements() could not find player element '%s'"),
-            ANSI_TO_TCHAR(player_group->Name().data()));
+            ANSI_TO_TCHAR(player_group->GetName().data()));
     }
     else {
         UE_LOG(LogStarshatterWars, Warning,
@@ -517,7 +517,7 @@ CampaignMissionStarship::CreateElements(CombatGroup* g)
                 if (player_group && player_group->GetIFF() == g->GetIFF()) {
                     PlayerCharacter* playerc = PlayerCharacter::GetCurrentPlayer();
                     if (playerc && playerc->GetRank() >= 10) {
-                        elem->SetCommander(player_group->Name());
+                        elem->SetCommander(player_group->GetName());
                     }
                 }
             }
@@ -576,7 +576,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     elem->SetDesign(u->GetDesign());
     elem->SetCount(u->LiveCount());
     elem->SetIFF(u->GetIFF());
-    elem->SetIntelLevel(g->IntelLevel());
+    elem->SetIntelLevel(g->GetIntelLevel());
     elem->SetRegion(u->GetRegion());
     elem->SetHeading(u->GetHeading());
 
@@ -585,7 +585,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     bool        exact = u->IsStatic();
 
     if (base_loc.Length() < 1.0f) {
-        base_loc = g->Location();
+        base_loc = g->GetLocation();
         exact = false;
     }
 
@@ -657,7 +657,7 @@ CampaignMissionStarship::FindCarrier(CombatGroup* g)
     CombatGroup* carrier = g->FindCarrier();
 
     if (carrier && carrier->GetUnits().size()) {
-        MissionElement* carrier_elem = mission->FindElement(carrier->Name());
+        MissionElement* carrier_elem = mission->FindElement(carrier->GetName());
         if (carrier_elem)
             return carrier->GetUnits().at(0);
     }
@@ -686,7 +686,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
         return;
     }
 
-    elem->SetName(g->Name());
+    elem->SetName(g->GetName());
     elem->SetElementID(pkg_id++);
 
     elem->SetDesign(fighter->GetDesign());
@@ -694,7 +694,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetDeadCount(fighter->DeadCount());
     elem->SetMaintCount(maint_count);
     elem->SetIFF(fighter->GetIFF());
-    elem->SetIntelLevel(g->IntelLevel());
+    elem->SetIntelLevel(g->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
 
     elem->SetCarrier(carrier->Name());
@@ -1392,7 +1392,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     if (avail < 1) {
         UE_LOG(LogStarshatterWars, Warning,
             TEXT("CMS - Insufficient fighters in squadron '%s' - %d required, %d available"),
-            ANSI_TO_TCHAR(squadron->Name().data()),
+            ANSI_TO_TCHAR(squadron->GetName().data()),
             count,
             avail);
         return nullptr;
@@ -1418,7 +1418,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     elem->SetDesign(fighter->GetDesign());
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
-    elem->SetIntelLevel(squadron->IntelLevel());
+    elem->SetIntelLevel(squadron->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
     elem->SetSquadron(fighter->Name());
     elem->SetMissionRole(role);
@@ -1461,7 +1461,7 @@ CampaignMissionStarship::FindSquadron(int iff, int type)
 
     if (!zone) {
         UE_LOG(LogStarshatterWars, Warning, TEXT("CMS Warning: no zone for %s"),
-            ANSI_TO_TCHAR(player_group->Name().data()));
+            ANSI_TO_TCHAR(player_group->GetName().data()));
         return result;
     }
 

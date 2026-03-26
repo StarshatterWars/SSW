@@ -369,6 +369,18 @@ protected:
     void AddUnitsToCombatGroup(CombatGroup* Parent, const TArray<FS_OOBStationUnit>& Units);
     void AddUnitsToCombatGroup(CombatGroup* Parent, const TArray<FS_OOBStarbaseUnit>& Units);
 
+    // New OOB System
+    void BuildCombatantsFromDataTables(const TMap<int32, CombatGroup*>& GroupById);
+    void ReadCombatants();
+    CombatGroup* BuildCombatForceFromRows(const TArray<FS_CombatGroup>& Rows, EEMPIRE_NAME Empire, Combatant* CombatantOwner);
+
+    void BuildCombatantsFromData(const TArray<FS_Combatant>& CombatantRows, const TMap<int32, CombatGroup*>& GroupById, Campaign* CampaignPtr);
+    void BuildCombatRosterFromDataTables();
+
+    TMap<int32, CombatGroup*> BuildGroupMapFromDataTable();
+    void LinkGroupHierarchy(const TArray<FS_CombatGroup>& InRows, TMap<int32, CombatGroup*>& GroupById);
+    void BuildUnitsForGroups(const TArray<FS_CombatGroup>& InRows, TMap<int32, CombatGroup*>& GroupById);
+
     FString GetEmpireRosterName(EEMPIRE_NAME Empire) const;
 
 protected:
@@ -403,6 +415,7 @@ protected:
 
     TArray<FS_Campaign>    CampaignDataArray;
     TArray<FS_CombatGroup> CombatRosterData;
+    TArray<FS_Combatant>   CombatantData;
     TArray<FS_Galaxy>      GalaxyDataArray;
     TArray<TArray<uint8>> SystemDesignStringStorage;
 

@@ -66,10 +66,10 @@ CombatAssignment::GetDescription() const
     const TCHAR* RoleT = ANSI_TO_TCHAR(Mission::GetRoleName(type));
 
     const TCHAR* ObjNameT =
-        objective ? ANSI_TO_TCHAR(objective->Name().data()) : TEXT("(null)");
+        objective ? ANSI_TO_TCHAR(objective->GetName().data()) : TEXT("(null)");
 
     const TCHAR* ResNameT =
-        resource ? ANSI_TO_TCHAR(resource->Name().data()) : TEXT("");
+        resource ? ANSI_TO_TCHAR(resource->GetName().data()) : TEXT("");
 
     if (!resource)
     {

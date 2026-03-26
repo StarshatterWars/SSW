@@ -64,7 +64,7 @@ static CombatGroup* FindCombatGroup(CombatGroup* G, ECOMBATGROUP_TYPE Type)
         return nullptr;
     }
 
-    if (G->IntelLevel() <= Intel::RESERVE)
+    if (G->GetIntelLevel() <= Intel::RESERVE)
     {
         return nullptr;
     }
@@ -189,7 +189,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     }
     else
     {
-        const char* ObjName = req->GetObjective() ? req->GetObjective()->Name().data() : "(no target)";
+        const char* ObjName = req->GetObjective() ? req->GetObjective()->GetName().data() : "(no target)";
 
         UE_LOG(LogStarshatterWars, Log,
             TEXT("CMF CreateMission() request: %s %s"),
@@ -506,7 +506,7 @@ void CampaignMissionFighter::SelectRegion()
     {
         UE_LOG(LogStarshatterWars, Warning,
             TEXT("WARNING: CMF - No zone for '%s'"),
-            ANSI_TO_TCHAR(squadron->Name().data()));
+            ANSI_TO_TCHAR(squadron->GetName().data()));
 
         StarSystem* s = campaign->GetSystemList()[0];
         mission->SetStarSystem(s);
@@ -779,7 +779,7 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
     {
         UE_LOG(LogStarshatterWars, Warning,
             TEXT("CMF CreatePlayer: failed to create player package for '%s'"),
-            ANSI_TO_TCHAR(g->Name().data()));
+            ANSI_TO_TCHAR(g->GetName().data()));
         return;
     }
 
@@ -871,7 +871,7 @@ void CampaignMissionFighter::CreatePatrols()
             }
 
             BaseLoc =
-                FVector(Base->Location().X, Base->Location().Y, Base->Location().Z) +
+                FVector(Base->GetLocation().X, Base->GetLocation().Y, Base->GetLocation().Z) +
                 FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 1.5f;
 
             if (Region->Type() == Orbital::TERRAIN)
@@ -1139,7 +1139,7 @@ void CampaignMissionFighter::CreateWardStrike()
 
     if (strike_target)
     {
-        const FString Target = FString(ANSI_TO_TCHAR(strike_target->Name().data()));
+        const FString Target = FString(ANSI_TO_TCHAR(strike_target->GetName().data()));
 
         Instruction* obj = new Instruction(
             INSTRUCTION_ACTION::ASSAULT,
@@ -1208,18 +1208,18 @@ void CampaignMissionFighter::CreateWardStrike()
     if (strike_target)
     {
         delta = FVector(
-            strike_target->Location().X - npt_loc.X,
-            strike_target->Location().Y - npt_loc.Y,
-            strike_target->Location().Z - npt_loc.Z
+            strike_target->GetLocation().X - npt_loc.X,
+            strike_target->GetLocation().Y - npt_loc.Y,
+            strike_target->GetLocation().Z - npt_loc.Z
         );
 
         delta.Normalize();
         delta *= 15000.0f;
 
         npt_loc = FVector(
-            strike_target->Location().X,
-            strike_target->Location().Y,
-            strike_target->Location().Z
+            strike_target->GetLocation().X,
+            strike_target->GetLocation().Y,
+            strike_target->GetLocation().Z
         ) + delta + FVector(0.0f, 0.0f, 8000.0f);
 
         n = new Instruction(strike_target->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
@@ -1674,9 +1674,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 );
 
                 FVector squadLoc(
-                    squadron->Location().X,
-                    squadron->Location().Y,
-                    squadron->Location().Z
+                    squadron->GetLocation().X,
+                    squadron->GetLocation().Y,
+                    squadron->GetLocation().Z
                 );
 
                 elem->SetLocation(squadLoc + randPt * 5.0f);
@@ -2627,7 +2627,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     Elem->SetDesign(U->GetDesign());
     Elem->SetCount(U->LiveCount());
     Elem->SetIFF(U->GetIFF());
-    Elem->SetIntelLevel(G->IntelLevel());
+    Elem->SetIntelLevel(G->GetIntelLevel());
     Elem->SetRegion(U->GetRegion());
     Elem->SetHeading(U->GetHeading());
 
@@ -2637,7 +2637,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
 
     if (BaseLoc.Size() < 1.0f)
     {
-        BaseLoc = G->Location();
+        BaseLoc = G->GetLocation();
         bExact = false;
     }
 
@@ -2746,7 +2746,7 @@ CombatUnit* CampaignMissionFighter::FindCarrier(CombatGroup* G)
 
     if (Carrier && Carrier->GetUnits().size())
     {
-        MissionElement* CarrierElem = mission->FindElement(Carrier->Name());
+        MissionElement* CarrierElem = mission->FindElement(Carrier->GetName());
 
         if (CarrierElem)
         {
@@ -2784,7 +2784,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     {
         UE_LOG(LogTemp, Warning,
             TEXT("CMF - Insufficient fighters in squadron '%s' - %d required, %d available"),
-            *FString(ANSI_TO_TCHAR(InSquadron->Name().data())),
+            *FString(ANSI_TO_TCHAR(InSquadron->GetName().data())),
             count,
             avail
         );
@@ -2815,9 +2815,9 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     elem->SetDesign(fighter->GetDesign());
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
-    elem->SetIntelLevel(InSquadron->IntelLevel());
+    elem->SetIntelLevel(InSquadron->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
-    elem->SetSquadron(InSquadron->Name());
+    elem->SetSquadron(InSquadron->GetName());
     elem->SetMissionRole(role);
 
     switch ((EMISSIONTYPE)role)

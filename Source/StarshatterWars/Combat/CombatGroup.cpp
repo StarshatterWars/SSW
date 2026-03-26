@@ -1211,7 +1211,7 @@ else GET_DEF_NUM(id);
 
 									if (u->GetRegion().length() < 1) {
 										u->SetRegion(g->GetRegion());
-										u->MoveTo(g->Location());
+										u->MoveTo(g->GetLocation());
 									}
 
 									if (parent_group &&
@@ -1246,7 +1246,7 @@ else GET_DEF_NUM(id);
 	} while (term);
 
 	loader->ReleaseBuffer(block);
-	Print(TEXT("Order of Battle Loaded (%s).\n"), force ? force->Name().data() : "unknown force");
+	Print(TEXT("Order of Battle Loaded (%s).\n"), force ? force->GetName().data() : "unknown force");
 
 	if (force)
 		force->CalcValue();
@@ -1492,7 +1492,7 @@ else GET_DEF_NUM(id);
 										}
 										else {
 											u->SetRegion(g->GetRegion());
-											u->MoveTo(g->Location());
+											u->MoveTo(g->GetLocation());
 										}
 										u->SetDeadCount(load_unit->DeadCount());
 										u->SetSustainedDamage(load_unit->GetSustainedDamage());
@@ -1512,7 +1512,7 @@ else GET_DEF_NUM(id);
 		}              // term
 	} while (term);
 
-	Print(TEXT("Order of Battle Loaded (%s).\n"), force ? force->Name().data() : "unknown force");
+	Print(TEXT("Order of Battle Loaded (%s).\n"), force ? force->GetName().data() : "unknown force");
 
 	if (force)
 		force->CalcValue();
@@ -1580,10 +1580,10 @@ SaveCombatGroup(FILE* f, CombatGroup* g)
 	fprintf(f, "group: {");
 	fprintf(f, " type: %s,", CombatGroup::NameFromType(g->GetType()));
 	fprintf(f, " id: %d,", g->GetID());
-	fprintf(f, " name: \"%s\",", g->Name().data());
-	fprintf(f, " intel: %s,", Intel::NameFromIntel(g->IntelLevel()));
+	fprintf(f, " name: \"%s\",", g->GetName().data());
+	fprintf(f, " intel: %s,", Intel::NameFromIntel(g->GetIntelLevel()));
 	fprintf(f, " iff: %d,", g->GetIFF());
-	fprintf(f, " unit_index: %d,", g->UnitIndex());
+	fprintf(f, " unit_index: %d,", g->GetUnitIndex());
 
 	if (g->GetRegion().length()) {
 		fprintf(f, " region:\"%s\",", g->GetRegion().data());
@@ -1604,9 +1604,9 @@ SaveCombatGroup(FILE* f, CombatGroup* g)
 		}
 	}
 
-	Text x = FormatNumber(g->Location().X);
-	Text y = FormatNumber(g->Location().Y);
-	Text z = FormatNumber(g->Location().Z);
+	Text x = FormatNumber(g->GetLocation().X);
+	Text y = FormatNumber(g->GetLocation().Y);
+	Text z = FormatNumber(g->GetLocation().Z);
 
 	fprintf(f, " loc: (%s, %s, %s),", x.data(), y.data(), z.data());
 
@@ -1616,9 +1616,9 @@ SaveCombatGroup(FILE* f, CombatGroup* g)
 		fprintf(f, " parent_id:%d,", parent->GetID());
 	}
 
-	fprintf(f, " sorties: %d,", g->Sorties());
-	fprintf(f, " kills: %d,", g->Kills());
-	fprintf(f, " points: %d,", g->Points());
+	fprintf(f, " sorties: %d,", g->GetSorties());
+	fprintf(f, " kills: %d,", g->GetKills());
+	fprintf(f, " points: %d,", g->GetPoints());
 
 	ListIter<CombatUnit> u = g->GetUnits();
 	while (++u) {

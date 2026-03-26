@@ -2909,7 +2909,7 @@ MapView::DrawCombatGroupSystem(CombatGroup* group, Orbital* rgn, int x1, int x2,
 		case ECOMBATGROUP_TYPE::BATTLE_GROUP:
 		case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
 		{
-			sprintf_s(txt, "%s '%s'", group->GetShortDescription(), group->Name().data());
+			sprintf_s(txt, "%s '%s'", group->GetShortDescription(), group->GetName().data());
 			active_window->SetFont(font);
 
 			Rect text_rect(x1, y, x2 - x1, 12);
@@ -2969,7 +2969,7 @@ MapView::DrawCombatGroup(CombatGroup* group, int rep)
 	// has group been discovered yet?
 	CombatGroup* player_group = campaign->GetPlayerGroup();
 	if (group->GetIFF() && player_group && player_group->GetIFF() != group->GetIFF())
-		if (group->IntelLevel() <= Intel::KNOWN)
+		if (group->GetIntelLevel() <= Intel::KNOWN)
 			return;
 
 	// has group been destroyed already?

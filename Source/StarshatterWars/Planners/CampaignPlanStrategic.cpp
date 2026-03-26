@@ -139,7 +139,7 @@ CampaignPlanStrategic::ScoreDefend(Combatant* c, CombatGroup* g)
 		return;
 
 	if (g->IsDefensible()) {
-		g->SetPlanValue(g->Value());
+		g->SetPlanValue(g->GetValue());
 		c->GetDefendList().append(g);
 
 		CombatZone* zone = campaign->GetZone(g->GetRegion());
@@ -170,11 +170,11 @@ CampaignPlanStrategic::ScoreTargets(Combatant* c, Combatant* t)
 void
 CampaignPlanStrategic::ScoreTarget(Combatant* c, CombatGroup* g)
 {
-	if (!c || !g || !campaign || g->IntelLevel() <= Intel::SECRET)
+	if (!c || !g || !campaign || g->GetIntelLevel() <= Intel::SECRET)
 		return;
 
 	if (g->IsTargetable()) {
-		g->SetPlanValue(g->Value() * c->GetTargetStratFactor(g->GetType()));
+		g->SetPlanValue(g->GetValue() * c->GetTargetStratFactor(g->GetType()));
 		c->GetTargetList().append(g);
 
 		CombatZone* zone = campaign->GetZone(g->GetRegion());
@@ -300,7 +300,7 @@ CampaignPlanStrategic::AssignZones(Combatant* c)
 
 				if (parent_force) {
 					g->SetAssignedZone(parent_zone);
-					parent_force->AddNeed(g->GetType(), -(g->Value()));
+					parent_force->AddNeed(g->GetType(), -(g->GetValue()));
 				}
 			}
 		}
@@ -397,19 +397,19 @@ CampaignPlanStrategic::AssignZones(Combatant* c)
 				}
 
 				g->SetAssignedZone(assigned_zone);
-				assigned_force->AddNeed(g->GetType(), -(g->Value()));
+				assigned_force->AddNeed(g->GetType(), -(g->GetValue()));
 
 				// also assign the carrier's wing and squadrons to the same zone:
 				ListIter<CombatGroup> squadron = g->GetComponents();
 				while (++squadron) {
 					squadron->SetAssignedZone(assigned_zone);
-					assigned_force->AddNeed(squadron->GetType(), -(squadron->Value()));
+					assigned_force->AddNeed(squadron->GetType(), -(squadron->GetValue()));
 
 					if (squadron->GetType() == ECOMBATGROUP_TYPE::WING) {
 						ListIter<CombatGroup> s = squadron->GetComponents();
 						while (++s) {
 							s->SetAssignedZone(assigned_zone);
-							assigned_force->AddNeed(s->GetType(), -(s->Value()));
+							assigned_force->AddNeed(s->GetType(), -(s->GetValue()));
 						}
 					}
 				}
@@ -481,7 +481,7 @@ CampaignPlanStrategic::AssignZones(Combatant* c)
 				g->SetAssignedZone(highest_zone);
 
 				if (highest_force)
-					highest_force->AddNeed(g->GetType(), -(g->Value()));
+					highest_force->AddNeed(g->GetType(), -(g->GetValue()));
 			}
 			else {
 				if (!current_zone) {
@@ -500,7 +500,7 @@ CampaignPlanStrategic::AssignZones(Combatant* c)
 				g->SetAssignedZone(current_zone);
 
 				if (current_force)
-					current_force->AddNeed(g->GetType(), -(g->Value()));
+					current_force->AddNeed(g->GetType(), -(g->GetValue()));
 
 				Text assigned_rgn;
 				if (!campaign->GetZone(g->GetRegion()) && current_zone) {

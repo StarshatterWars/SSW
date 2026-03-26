@@ -91,7 +91,7 @@ static void DumpCombatGroupTree(CombatGroup* Group, int Depth = 0)
     UE_LOG(LogCampaign, Warning,
         TEXT("%s[Group] name=%s type=%d iff=%d reserve=%d value=%d children=%d"),
         *Indent,
-        Group->Name().data() ? ANSI_TO_TCHAR(Group->Name().data()) : TEXT("NULL"),
+        Group->GetName().data() ? ANSI_TO_TCHAR(Group->GetName().data()) : TEXT("NULL"),
         (int)Group->GetType(),
         Group->GetIFF(),
         Group->IsReserve() ? 1 : 0,
@@ -1463,7 +1463,7 @@ Campaign::SetPlayerGroup(CombatGroup* pg)
 {
     if (player_group != pg) {
         UE_LOG(LogCampaign, Log, TEXT("[Campaign] SetPlayerGroup(%s)"),
-            pg ? ANSI_TO_TCHAR(pg->Name().data()) : TEXT("0"));
+            pg ? ANSI_TO_TCHAR(pg->GetName().data()) : TEXT("0"));
 
         player_group = pg;
         player_unit = 0;
@@ -1902,7 +1902,7 @@ Campaign::SelectDefaultPlayerGroup(CombatGroup* g, int type)
 {
     if (player_group || !g) return;
 
-    if ((int) g->GetType() == type && !g->IsReserve() && g->Value() > 0) {
+    if ((int) g->GetType() == type && !g->IsReserve() && g->GetValue() > 0) {
         player_group = g;
         player_unit = 0;
         return;
@@ -2104,7 +2104,7 @@ void Campaign::CheckPlayerGroup()
 
             UE_LOG(LogCampaign, Warning,
                 TEXT("[Campaign] Selecting default player group from force=%s"),
-                Force->Name().data() ? ANSI_TO_TCHAR(Force->Name().data()) : TEXT("NULL"));
+                Force->GetName().data() ? ANSI_TO_TCHAR(Force->GetName().data()) : TEXT("NULL"));
 
             SelectDefaultPlayerGroup(Force, (int)ECOMBATGROUP_TYPE::WING);
 
@@ -2126,8 +2126,8 @@ void Campaign::CheckPlayerGroup()
             {
                 UE_LOG(LogCampaign, Warning,
                     TEXT("[Campaign] PlayerGroup selected: name=%s type=%d"),
-                    player_group->Name().data()
-                    ? ANSI_TO_TCHAR(player_group->Name().data())
+                    player_group->GetName().data()
+                    ? ANSI_TO_TCHAR(player_group->GetName().data())
                     : TEXT("NULL"),
                     (int)player_group->GetType());
             }
@@ -2296,7 +2296,7 @@ Campaign::FindGroup(int iff, int type, int id)
 
 static void FindGroups(CombatGroup* g, int type, CombatGroup* near_group, List<CombatGroup>& groups)
 {
-    if ((int) g->GetType() == type && g->IntelLevel() > Intel::RESERVE) {
+    if ((int) g->GetType() == type && g->GetIntelLevel() > Intel::RESERVE) {
         if (!near_group || g->GetAssignedZone() == near_group->GetAssignedZone())
             groups.append(g);
     }
@@ -2334,7 +2334,7 @@ static void FindStrikeTargets(CombatGroup* g, CombatGroup* strike_group, List<Co
 {
     if (!strike_group || !strike_group->GetAssignedZone()) return;
 
-    if (g->IsStrikeTarget() && g->IntelLevel() > Intel::RESERVE) {
+    if (g->IsStrikeTarget() && g->GetIntelLevel() > Intel::RESERVE) {
         if (strike_group->GetAssignedZone() == g->GetAssignedZone() ||
             strike_group->GetAssignedZone()->HasRegion(g->GetRegion()))
             groups.append(g);
@@ -3238,7 +3238,7 @@ const FS_CampaignMission* Campaign::FindCampaignMissionData(int32 MissionType, C
     }
 
     const FString SquadronName =
-        Squadron ? UTF8_TO_TCHAR(Squadron->Name()) : FString();
+        Squadron ? UTF8_TO_TCHAR(Squadron->GetName()) : FString();
 
     for (const FS_CampaignMission& MissionRow : CampaignData->Missions)
     {

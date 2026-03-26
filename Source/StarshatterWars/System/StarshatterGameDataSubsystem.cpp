@@ -34,6 +34,7 @@
 #include "Mission.h"
 #include "Intel.h"
 #include "Ship.h"
+#include "ShipDesign.h"
 #include "PlayerData.h"
 
 #include "Engine/DataTable.h"
@@ -6549,7 +6550,6 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		Parent->GetUnits()[0]->SetLeader(true);
 	}
 }
-
 void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 	CombatGroup* Parent,
 	const TArray<FS_OOBStarbaseUnit>& Units)
@@ -6583,4 +6583,637 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 	{
 		Parent->GetUnits()[0]->SetLeader(true);
 	}
+}
+
+CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
+	const TArray<FS_CombatGroup>& Rows,
+	EEMPIRE_NAME Empire,
+	Combatant* CombatantOwner)
+{
+	TMap<int32, CombatGroup*> RuntimeGroupById;
+	TMap<int32, const FS_CombatGroup*> RuntimeRowById;
+
+	CombatGroup* RootForce = nullptr;
+
+	// Pass 1: create groups
+	for (const FS_CombatGroup& Row : Rows)
+	{
+		if (Row.EmpireId != Empire)
+		{
+			continue;
+		}
+
+		CombatGroup* NewGroup = new CombatGroup(
+			Row.Type,
+			Row.Id,
+			TCHAR_TO_ANSI(*Row.Name),
+			Row.Iff,
+			static_cast<int>(Row.Intel),
+			nullptr);
+
+		if (!NewGroup)
+		{
+			continue;
+		}
+
+		NewGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+		NewGroup->SetLocation(Row.Location);
+		NewGroup->SetUnitIndex(Row.UnitIndex);
+		NewGroup->SetCombatant(CombatantOwner);
+
+		RuntimeGroupById.Add(Row.Id, NewGroup);
+		RuntimeRowById.Add(Row.Id, &Row);
+
+		if (Row.Type == ECOMBATGROUP_TYPE::FORCE &&
+			Row.ParentType == ECOMBATGROUP_TYPE::NONE &&
+			Row.ParentId == 0)
+		{
+			RootForce = NewGroup;
+		}
+	}
+
+	// Pass 2: link hierarchy
+	for (const TPair<int32, CombatGroup*>& Pair : RuntimeGroupById)
+	{
+		const int32 RuntimeGroupKey = Pair.Key;
+		CombatGroup* RuntimeGroup = Pair.Value;
+		const FS_CombatGroup* SourceRow = RuntimeRowById.FindRef(RuntimeGroupKey);
+
+		if (!SourceRow)
+		{
+			continue;
+		}
+
+		if (SourceRow->ParentType == ECOMBATGROUP_TYPE::NONE || SourceRow->ParentId == 0)
+		{
+			continue;
+		}
+
+		CombatGroup** ParentPtr = RuntimeGroupById.Find(SourceRow->ParentId);
+		if (!ParentPtr || !(*ParentPtr))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing parent for group Id=%d ParentId=%d Name=%s"),
+				SourceRow->Id, SourceRow->ParentId, *SourceRow->Name);
+			continue;
+		}
+
+		(*ParentPtr)->AddComponent(RuntimeGroup);
+	}
+
+	// Pass 3: build units
+	for (const TPair<int32, CombatGroup*>& Pair : RuntimeGroupById)
+	{
+		const int32 RuntimeGroupKey = Pair.Key;
+		CombatGroup* RuntimeGroup = Pair.Value;
+		const FS_CombatGroup* SourceRow = RuntimeRowById.FindRef(RuntimeGroupKey);
+
+		if (!SourceRow)
+		{
+			continue;
+		}
+
+		bool bFirstUnit = true;
+
+		for (const FS_CombatGroupUnit& UnitRow : SourceRow->Unit)
+		{
+			const int32 ResolvedUnitClass =
+				ShipDesign::ClassForName(TCHAR_TO_ANSI(*UnitRow.UnitClass));
+
+			if (!ShipDesign::CheckName(TCHAR_TO_ANSI(*UnitRow.UnitDesign)))
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[CombatRoster] Invalid design '%s' for unit '%s' in group '%s'"),
+					*UnitRow.UnitDesign, *UnitRow.UnitName, *SourceRow->Name);
+				continue;
+			}
+
+			CombatUnit* NewUnit = new CombatUnit(
+				TCHAR_TO_ANSI(*UnitRow.UnitName),
+				TCHAR_TO_ANSI(*UnitRow.UnitRegnum),
+				ResolvedUnitClass,
+				TCHAR_TO_ANSI(*UnitRow.UnitDesign),
+				FMath::Max(UnitRow.UnitCount, 1),
+				SourceRow->Iff);
+
+			if (!NewUnit)
+			{
+				continue;
+			}
+
+			NewUnit->SetCombatGroup(RuntimeGroup);
+			NewUnit->SetSkin(TCHAR_TO_ANSI(*UnitRow.UnitSkin));
+
+			if (!UnitRow.UnitRegion.IsEmpty())
+			{
+				NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.UnitRegion));
+				NewUnit->MoveTo(UnitRow.UnitLoc);
+			}
+			else
+			{
+				NewUnit->SetRegion(TCHAR_TO_ANSI(*SourceRow->Region));
+				NewUnit->MoveTo(SourceRow->Location);
+			}
+
+			NewUnit->Kill(UnitRow.UnitDead);
+			NewUnit->SetSustainedDamage(UnitRow.UnitDamage);
+			NewUnit->SetHeading(UnitRow.UnitHeading * DEGREES);
+
+			if (bFirstUnit)
+			{
+				NewUnit->SetLeader(true);
+				bFirstUnit = false;
+			}
+
+			RuntimeGroup->GetUnits().append(NewUnit);
+		}
+	}
+
+	// Pass 4: carrier linking for fighter/attack groups
+	for (const TPair<int32, CombatGroup*>& Pair : RuntimeGroupById)
+	{
+		CombatGroup* RuntimeGroup = Pair.Value;
+		if (!RuntimeGroup)
+		{
+			continue;
+		}
+
+		const ECOMBATGROUP_TYPE RuntimeGroupType = RuntimeGroup->GetType();
+		const bool bNeedsCarrier =
+			RuntimeGroupType == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON ||
+			RuntimeGroupType == ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON ||
+			RuntimeGroupType == ECOMBATGROUP_TYPE::ATTACK_SQUADRON ||
+			RuntimeGroupType == ECOMBATGROUP_TYPE::LCA_SQUADRON;
+
+		if (!bNeedsCarrier)
+		{
+			continue;
+		}
+
+		CombatGroup* ParentGroup = RuntimeGroup->GetParent();
+		CombatUnit* CarrierUnit = nullptr;
+
+		while (ParentGroup && !CarrierUnit)
+		{
+			if (ParentGroup->GetUnits().size() > 0 &&
+				ParentGroup->GetUnits()[0]->Type() == (int)CLASSIFICATION::CARRIER)
+			{
+				CarrierUnit = ParentGroup->GetUnits()[0];
+			}
+
+			ParentGroup = ParentGroup->GetParent();
+		}
+
+		if (CarrierUnit)
+		{
+			ListIter<CombatUnit> UnitIter = RuntimeGroup->GetUnits();
+			while (++UnitIter)
+			{
+				CombatUnit* RuntimeUnit = UnitIter.value();
+				if (!RuntimeUnit)
+				{
+					continue;
+				}
+
+				RuntimeUnit->SetCarrier(CarrierUnit);
+				RuntimeUnit->SetRegion(CarrierUnit->GetRegion());
+			}
+		}
+	}
+
+	if (RootForce)
+	{
+		RootForce->CalcValue();
+	}
+
+	return RootForce;
+}
+
+void UStarshatterGameDataSubsystem::BuildCombatantsFromData(
+	const TArray<FS_Combatant>& CombatantRows,
+	const TMap<int32, CombatGroup*>& GroupById,
+	Campaign* CampaignPtr)
+{
+	if (!CampaignPtr)
+	{
+		return;
+	}
+
+	for (const FS_Combatant& Row : CombatantRows)
+	{
+		if (Row.Group.Num() == 0)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Combatant '%s' has no groups"),
+				*UEnum::GetValueAsString(Row.Name));
+			continue;
+		}
+
+		// usually first group should be the root FORCE
+		const FS_CombatantGroup& RootRef = Row.Group[0];
+
+		CombatGroup* RootForce = nullptr;
+
+		if (CombatGroup* const* Found = GroupById.Find(RootRef.Id))
+		{
+			RootForce = *Found;
+		}
+
+		if (!RootForce)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing root group for combatant '%s' (Type=%d Id=%d)"),
+				*UEnum::GetValueAsString(Row.Name),
+				(int32)RootRef.Type,
+				RootRef.Id);
+			continue;
+		}
+
+		const FString LocalCombatantName = UEnum::GetValueAsString(Row.Name);
+
+		Combatant* NewCombatant = new Combatant(
+			TCHAR_TO_ANSI(*LocalCombatantName),
+			RootForce);
+
+		CampaignPtr->GetCombatants().append(NewCombatant);
+
+		UE_LOG(LogTemp, Log,
+			TEXT("[CombatRoster] Combatant created: %s -> RootForce=%s"),
+			*LocalCombatantName,
+			ANSI_TO_TCHAR(RootForce->GetName()));
+	}
+}
+
+TMap<int32, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTable()
+{
+	TMap<int32, CombatGroup*> GroupById;
+
+	if (CombatRosterData.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] No CombatRosterData loaded"));
+		return GroupById;
+	}
+
+	for (const FS_CombatGroup& Row : CombatRosterData)
+	{
+		if (Row.Id <= 0)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Skipping invalid group Id=%d Name=%s"),
+				Row.Id, *Row.Name);
+			continue;
+		}
+
+		if (GroupById.Contains(Row.Id))
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[CombatRoster] Duplicate Group Id=%d Name=%s"),
+				Row.Id, *Row.Name);
+			continue;
+		}
+
+		CombatGroup* NewGroup = new CombatGroup(
+			Row.Type,
+			Row.Id,
+			TCHAR_TO_ANSI(*Row.Name),
+			Row.Iff,
+			static_cast<int>(Row.Intel),
+			nullptr);
+
+		if (!NewGroup)
+		{
+			continue;
+		}
+
+		// Use public methods, not direct assignment through getters:
+		NewGroup->AssignRegion(TCHAR_TO_ANSI(*Row.Region));
+
+		FVector GroupLoc = Row.Location;
+		NewGroup->MoveTo(GroupLoc);
+		NewGroup->SetUnitIndex(Row.UnitIndex);  
+
+		GroupById.Add(Row.Id, NewGroup);
+
+		UE_LOG(LogTemp, Log,
+			TEXT("[CombatRoster] Created Group Id=%d Name=%s Type=%d"),
+			Row.Id,
+			*Row.Name,
+			(int32)Row.Type);
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CombatRoster] Total Groups Created: %d"),
+		GroupById.Num());
+
+	return GroupById;
+}
+
+void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
+	const TArray<FS_CombatGroup>& InRows,
+	TMap<int32, CombatGroup*>& GroupById)
+{
+	if (InRows.Num() == 0 || GroupById.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] LinkGroupHierarchy skipped - no rows or no groups"));
+		return;
+	}
+
+	for (const FS_CombatGroup& Row : InRows)
+	{
+		// Root groups have no parent
+		if (Row.ParentType == ECOMBATGROUP_TYPE::NONE || Row.ParentId <= 0)
+		{
+			UE_LOG(LogTemp, Log,
+				TEXT("[CombatRoster] Root Group Id=%d Name=%s Type=%d"),
+				Row.Id,
+				*Row.Name,
+				(int32)Row.Type);
+			continue;
+		}
+
+		CombatGroup** ChildPtr = GroupById.Find(Row.Id);
+		if (!ChildPtr || !(*ChildPtr))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing child group Id=%d Name=%s"),
+				Row.Id,
+				*Row.Name);
+			continue;
+		}
+
+		CombatGroup** ParentPtr = GroupById.Find(Row.ParentId);
+		if (!ParentPtr || !(*ParentPtr))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing parent for child Id=%d Name=%s ParentId=%d ParentType=%d"),
+				Row.Id,
+				*Row.Name,
+				Row.ParentId,
+				(int32)Row.ParentType);
+			continue;
+		}
+
+		CombatGroup* Child = *ChildPtr;
+		CombatGroup* Parent = *ParentPtr;
+
+		// Optional safety check: make sure parent type matches expected row type
+		if (Parent->GetType() != Row.ParentType)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Parent type mismatch for child Id=%d Name=%s ExpectedParentType=%d ActualParentType=%d ParentId=%d"),
+				Row.Id,
+				*Row.Name,
+				(int32)Row.ParentType,
+				(int32)Parent->GetType(),
+				Row.ParentId);
+		}
+
+		// Avoid accidental duplicate linking
+		if (Child->GetParent() == Parent)
+		{
+			continue;
+		}
+
+		// AddComponent will set Child->parent = Parent and append to Parent->components
+		Parent->AddComponent(Child);
+
+		UE_LOG(LogTemp, Log,
+			TEXT("[CombatRoster] Linked Child Id=%d Name=%s -> Parent Id=%d Name=%s"),
+			Row.Id,
+			*Row.Name,
+			Row.ParentId,
+			ANSI_TO_TCHAR(Parent->GetName()));
+	}
+}
+
+void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: BEGIN"));
+
+	if (CombatRosterData.Num() == 0)
+	{
+		ReadCombatRosterData();
+	}
+
+	if (CombatantData.Num() == 0)
+	{
+		ReadCombatants();
+	}
+
+	TMap<int32, CombatGroup*> GroupById = BuildGroupMapFromDataTable();
+	LinkGroupHierarchy(CombatRosterData, GroupById);
+	BuildUnitsForGroups(CombatRosterData, GroupById);
+	BuildCombatantsFromDataTables(GroupById);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GameData] BuildCombatRosterFromDataTables: COMPLETE (%d groups)"),
+		GroupById.Num());
+}
+
+void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
+	const TArray<FS_CombatGroup>& InRows,
+	TMap<int32, CombatGroup*>& GroupById)
+{
+	if (InRows.Num() == 0 || GroupById.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] BuildUnitsForGroups skipped - no rows or no groups"));
+		return;
+	}
+
+	for (const FS_CombatGroup& Row : InRows)
+	{
+		CombatGroup** GroupPtr = GroupById.Find(Row.Id);
+		if (!GroupPtr || !(*GroupPtr))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing runtime group for units: Id=%d Name=%s"),
+				Row.Id,
+				*Row.Name);
+			continue;
+		}
+
+		CombatGroup* Group = *GroupPtr;
+		bool bFirstUnit = true;
+
+		for (const FS_CombatGroupUnit& UnitRow : Row.Unit)
+		{
+			const FTCHARToUTF8 ClassUtf8(*UnitRow.UnitClass);
+			const FTCHARToUTF8 DesignUtf8(*UnitRow.UnitDesign);
+
+			const int32 LocalUnitClass = ShipDesign::ClassForName(ClassUtf8.Get());
+
+			if (!ShipDesign::CheckName(DesignUtf8.Get()))
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[CombatRoster] Invalid design '%s' for unit '%s' in group '%s'"),
+					*UnitRow.UnitDesign,
+					*UnitRow.UnitName,
+					*Row.Name);
+				continue;
+			}
+
+			const FTCHARToUTF8 NameUtf8(*UnitRow.UnitName);
+			const FTCHARToUTF8 RegnumUtf8(*UnitRow.UnitRegnum);
+
+			CombatUnit* NewUnit = new CombatUnit(
+				NameUtf8.Get(),
+				RegnumUtf8.Get(),
+				LocalUnitClass,
+				DesignUtf8.Get(),
+				FMath::Max(UnitRow.UnitCount, 1),
+				Row.Iff);
+
+			NewUnit->SetCombatGroup(Group);
+
+			if (!UnitRow.UnitSkin.IsEmpty())
+			{
+				const FTCHARToUTF8 SkinUtf8(*UnitRow.UnitSkin);
+				NewUnit->SetSkin(SkinUtf8.Get());
+			}
+
+			if (!UnitRow.UnitRegion.IsEmpty())
+			{
+				const FTCHARToUTF8 RegionUtf8(*UnitRow.UnitRegion);
+				NewUnit->SetRegion(RegionUtf8.Get());
+				NewUnit->MoveTo(UnitRow.UnitLoc);
+			}
+			else
+			{
+				const FTCHARToUTF8 RegionUtf8(*Row.Region);
+				NewUnit->SetRegion(RegionUtf8.Get());
+				NewUnit->MoveTo(Row.Location);
+			}
+
+			NewUnit->Kill(UnitRow.UnitDead);
+			NewUnit->SetSustainedDamage(UnitRow.UnitDamage);
+			NewUnit->SetHeading(UnitRow.UnitHeading * DEGREES);
+
+			if (bFirstUnit)
+			{
+				NewUnit->SetLeader(true);
+				bFirstUnit = false;
+			}
+
+			Group->GetUnits().append(NewUnit);
+
+			UE_LOG(LogTemp, Log,
+				TEXT("[CombatRoster] Added Unit '%s' to Group Id=%d Name=%s"),
+				*UnitRow.UnitName,
+				Row.Id,
+				*Row.Name);
+		}
+	}
+}
+
+void UStarshatterGameDataSubsystem::BuildCombatantsFromDataTables(
+	const TMap<int32, CombatGroup*>& GroupById)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] BuildCombatantsFromDataTables: BEGIN"));
+
+	if (CombatantData.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] No CombatantData loaded"));
+		return;
+	}
+
+	Campaign* CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[CombatRoster] Campaign is null"));
+		return;
+	}
+
+	// Optional: clear existing combatants if you are rebuilding from scratch
+	// CampaignPtr->GetCombatants().destroy();
+
+	int32 CreatedCount = 0;
+
+	for (const FS_Combatant& Row : CombatantData)
+	{
+		if (Row.Group.Num() == 0)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Combatant '%s' has no Group entries"),
+				*UEnum::GetValueAsString(Row.Name));
+			continue;
+		}
+
+		// Usually the first entry should point at the root FORCE group
+		const FS_CombatantGroup& RootRef = Row.Group[0];
+
+		CombatGroup* RootForce = nullptr;
+
+		if (CombatGroup* const* Found = GroupById.Find(RootRef.Id))
+		{
+			RootForce = *Found;
+		}
+
+		if (!RootForce)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Missing root group for combatant '%s' (Type=%d Id=%d)"),
+				*UEnum::GetValueAsString(Row.Name),
+				(int32)RootRef.Type,
+				RootRef.Id);
+			continue;
+		}
+
+		// Safety check: this should normally be a FORCE root
+		if (RootForce->GetType() != RootRef.Type)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CombatRoster] Root type mismatch for combatant '%s' Expected=%d Actual=%d Id=%d"),
+				*UEnum::GetValueAsString(Row.Name),
+				(int32)RootRef.Type,
+				(int32)RootForce->GetType(),
+				RootRef.Id);
+		}
+
+		const FString LocalCombatantName = UEnum::GetValueAsString(Row.Name);
+		const FTCHARToUTF8 CombatantNameUtf8(*LocalCombatantName);
+
+		Combatant* NewCombatant = new Combatant(
+			CombatantNameUtf8.Get(),
+			RootForce);
+
+		CampaignPtr->GetCombatants().append(NewCombatant);
+		++CreatedCount;
+
+		UE_LOG(LogTemp, Log,
+			TEXT("[CombatRoster] Created Combatant '%s' -> RootForce='%s'"),
+			*LocalCombatantName,
+			ANSI_TO_TCHAR(RootForce->GetName()));
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CombatRoster] BuildCombatantsFromDataTables: COMPLETE (%d combatants created)"),
+		CreatedCount);
+}
+
+void UStarshatterGameDataSubsystem::ReadCombatants()
+{
+	CombatantData.Empty();
+
+	if (CampaignDataArray.Num() == 0)
+	{
+		ReadCampaignData();
+	}
+
+	if (CampaignIndex < 0 || !CampaignDataArray.IsValidIndex(CampaignIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[GameData] ReadCombatants: invalid CampaignIndex=%d"), CampaignIndex);
+		return;
+	}
+
+	const FS_Campaign& CampaignRow = CampaignDataArray[CampaignIndex];
+	CombatantData = CampaignRow.Combatant;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GameData] ReadCombatants: loaded %d combatants from campaign '%s'"),
+		CombatantData.Num(),
+		*CampaignRow.Name);
 }

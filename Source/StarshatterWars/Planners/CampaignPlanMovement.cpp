@@ -112,7 +112,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
         if (g && g->GetType() > ECOMBATGROUP_TYPE::FLEET && g->GetFirstUnit() == u) {
             g->MoveTo(loc);
 
-            if (g->IntelLevel() > Intel::KNOWN)
+            if (g->GetIntelLevel() > Intel::KNOWN)
                 g->SetIntelLevel(Intel::KNOWN);
         }
     }
@@ -132,7 +132,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
         if (g && g->GetType() > ECOMBATGROUP_TYPE::FLEET && g->GetFirstUnit() == u) {
             g->MoveTo(loc);
 
-            if (g->IntelLevel() > Intel::KNOWN)
+            if (g->GetIntelLevel() > Intel::KNOWN)
                 g->SetIntelLevel(Intel::KNOWN);
         }
     }
@@ -149,7 +149,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
         if (g && g->GetType() > ECOMBATGROUP_TYPE::FLEET && g->GetFirstUnit() == u) {
             g->MoveTo(loc);
 
-            if (g->IntelLevel() > Intel::KNOWN)
+            if (g->GetIntelLevel() > Intel::KNOWN)
                 g->SetIntelLevel(Intel::KNOWN);
         }
     }
@@ -192,7 +192,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
         if (g && g->GetType() > ECOMBATGROUP_TYPE::FLEET && g->GetFirstUnit() == u) {
             g->MoveTo(loc);
 
-            if (g->IntelLevel() > Intel::KNOWN)
+            if (g->GetIntelLevel() > Intel::KNOWN)
                 g->SetIntelLevel(Intel::KNOWN);
         }
     }
