@@ -37,6 +37,7 @@
 #include "Mouse.h"
 #include "UIButton.h"
 #include "CmdMsgDlg.h"
+#include "CmdDlg.h"
 #include "GameStructs.h"
 
 // Your campaign screen:
@@ -81,37 +82,18 @@ void UCmdForceDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    BindFormWidgets();
-
     // Cache pointers
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
-    if (cmb_forces)
-        cmb_forces->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
+    if (ForcesComboBox)
+        ForcesComboBox->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
 
     if (TransferButton)
         TransferButton->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
 
     if (TransferButton)
         TransferButton->SetIsEnabled(false);
-
-    // Parse/apply legacy form defaults if you use it:
-    const FString Frm = GetLegacyFormText();
-    if (!Frm.IsEmpty())
-    {
-        FString Err;
-        FParsedForm Parsed;
-        if (ParseLegacyForm(Frm, Parsed, Err))
-        {
-            ParsedForm = Parsed;
-            ApplyLegacyFormDefaults(ParsedForm);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("CmdForceDlg: ParseLegacyForm failed: %s"), *Err);
-        }
-    }
 }
 
 void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -120,26 +102,9 @@ void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     ExecFrame();
 }
 
-// --------------------------------------------------------------------
-// UBaseScreen overrides
-// --------------------------------------------------------------------
-
-void UCmdForceDlg::BindFormWidgets()
-{
-
-}
-
-
 void UCmdForceDlg::SetParentCmdDlg(UCmdDlg* InParentCmdDlg)
 {
     ParentCmdDlg = InParentCmdDlg;
-}
-
-FString UCmdForceDlg::GetLegacyFormText() const
-{
-    // Same guidance as before: return a single form block, not multiple.
-    // You pasted ONE CmdForceDlg.frm block, so you can embed it here if desired.
-    return FString();
 }
 
 // --------------------------------------------------------------------
@@ -157,9 +122,9 @@ void UCmdForceDlg::ShowForceDlg()
     CampaignPtr = Campaign::GetCampaign();
 
     // Populate forces combo:
-    if (cmb_forces)
+    if (ForcesComboBox)
     {
-        cmb_forces->ClearOptions();
+        ForcesComboBox->ClearOptions();
 
         if (CampaignPtr)
         {
@@ -168,14 +133,14 @@ void UCmdForceDlg::ShowForceDlg()
             {
                 Combatant* C = Combatants[i];
                 if (IsVisibleCombatant(C))
-                    cmb_forces->AddOption(UTF8_TO_TCHAR(C->GetName()));
+                    ForcesComboBox->AddOption(UTF8_TO_TCHAR(C->GetName()));
             }
 
             // Select first visible combatant:
-            if (cmb_forces->GetOptionCount() > 0)
+            if (ForcesComboBox->GetOptionCount() > 0)
             {
-                cmb_forces->SetSelectedIndex(0);
-                const FString Name = cmb_forces->GetSelectedOption();
+                ForcesComboBox->SetSelectedIndex(0);
+                const FString Name = ForcesComboBox->GetSelectedOption();
 
                 // resolve combatant by name:
                 const List<Combatant>& All = CampaignPtr->GetCombatants();
@@ -318,6 +283,146 @@ void UCmdForceDlg::ClearDescList()
 {
     if (DescriptionList)
         DescriptionList->ClearListItems();
+
+    if (GroupInfoText)     GroupInfoText->SetText(FText::GetEmpty());
+    if (GroupTypeText)     GroupTypeText->SetText(FText::GetEmpty());
+    if (GroupLocationText) GroupLocationText->SetText(FText::GetEmpty());
+    if (GroupEmpireText)   GroupEmpireText->SetText(FText::GetEmpty());
+}
+
+void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
+{
+    if (!Group)
+    {
+        ClearDescList();
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // NAME / DESCRIPTION
+    // ------------------------------------------------------------
+    if (GroupInfoText)
+    {
+        GroupInfoText->SetText(FText::FromString(
+            UTF8_TO_TCHAR(Group->GetDescription())));
+    }
+
+    // ------------------------------------------------------------
+    // TYPE
+    // ------------------------------------------------------------
+    if (GroupTypeText)
+    {
+        const char* TypeName = CombatGroup::NameFromType(Group->GetType());
+
+        GroupTypeText->SetText(FText::FromString(
+            TypeName ? UTF8_TO_TCHAR(TypeName) : TEXT("UNKNOWN")));
+    }
+
+    // ------------------------------------------------------------
+    // LOCATION
+    // ------------------------------------------------------------
+    if (GroupLocationText)
+    {
+        GroupLocationText->SetText(FText::FromString(
+            UTF8_TO_TCHAR(Group->GetRegion().data())));
+    }
+
+    // ------------------------------------------------------------
+    // FACTION / EMPIRE (NOT AVAILABLE YET)
+    // ------------------------------------------------------------
+    if (GroupEmpireText)
+    {
+        /*
+        // TODO: proper faction support once available in runtime model
+
+        Combatant* Owner = Group->GetCombatant();
+        if (Owner)
+        {
+            const char* FactionName = Owner->GetName();
+            GroupEmpireText->SetText(FText::FromString(
+                UTF8_TO_TCHAR(FactionName)));
+            return;
+        }
+        */
+
+        // Temporary fallback: use IFF
+        GroupEmpireText->SetText(FText::FromString(
+            FString::Printf(TEXT("IFF %d"), Group->GetIFF())));
+    }
+}
+
+void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
+{
+    if (!Unit)
+    {
+        ClearDescList();
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // NAME / DESCRIPTION
+    // ------------------------------------------------------------
+    if (GroupInfoText)
+    {
+        GroupInfoText->SetText(FText::FromString(
+            UTF8_TO_TCHAR(Unit->GetDescription())));
+    }
+
+    // ------------------------------------------------------------
+   // TYPE (from ShipDesign)
+   // ------------------------------------------------------------
+    if (GroupTypeText)
+    {
+        const ShipDesign* Design = Unit->GetDesign();
+
+        FString TypeText;
+        
+       //if (Design && Design->GetDesignClass()) // && strlen(Design->GetDesignClass()) > 0)
+        //{
+         //   TypeText = UTF8_TO_TCHAR(Design->GetDesignClass());
+        //}
+        //else
+        //{
+            TypeText = TEXT("UNKNOWN");
+        //}
+
+        GroupTypeText->SetText(FText::FromString(TypeText));
+    }
+
+    // ------------------------------------------------------------
+    // LOCATION
+    // ------------------------------------------------------------
+    if (GroupLocationText)
+    {
+        GroupLocationText->SetText(FText::FromString(
+            UTF8_TO_TCHAR(Unit->GetRegion().data())));
+    }
+
+    // ------------------------------------------------------------
+    // FACTION / EMPIRE (NOT AVAILABLE YET)
+    // ------------------------------------------------------------
+    if (GroupEmpireText)
+    {
+        /*
+        // TODO: proper faction system when available
+
+        Combatant* Owner = Unit->GetCombatant();
+        if (Owner)
+        {
+            GroupEmpireText->SetText(FText::FromString(
+                UTF8_TO_TCHAR(Owner->GetName())));
+            return;
+        }
+        */
+
+        // Correct fallback: use unit's IFF
+        GroupEmpireText->SetText(FText::FromString(
+            FString::Printf(TEXT("IFF %d"), Unit->GetIFF())));
+    }
+}
+
+void UCmdForceDlg::RebuildCombatListForCurrentCombatant()
+{
 }
 
 void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)

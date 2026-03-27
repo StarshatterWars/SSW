@@ -70,12 +70,6 @@ protected:
 
 public:
     // ============================================================
-    // UBaseScreen overrides (FORM binding)
-    // ============================================================
-    virtual void BindFormWidgets() override;
-    virtual FString GetLegacyFormText() const override;
-
-    // ============================================================
     // Public API (legacy equivalents)
     // ============================================================
 public:
@@ -130,10 +124,22 @@ private:
     Combatant* CurrentCombatant = nullptr;
 
 private:
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UComboBoxString* cmb_forces = nullptr; // 400
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* CombatantList = nullptr; // 401
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* DescriptionList = nullptr; // 402
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* TransferButton = nullptr; // 403
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UComboBoxString* ForcesComboBox = nullptr; 
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* CombatantList = nullptr; 
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* DescriptionList = nullptr; 
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* TransferButton = nullptr; 
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* GroupInfoText = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* GroupTypeText = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* GroupLocationText = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* GroupEmpireText = nullptr;
 
 private:
     // ============================================================

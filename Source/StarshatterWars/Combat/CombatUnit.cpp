@@ -83,7 +83,7 @@ const ShipDesign*
 CombatUnit::GetDesign()
 {
     if (!design)
-        design = ShipDesign::Get(design_name);
+        design = ShipDesign::GetDesignName(design_name);
 
     return design;
 }

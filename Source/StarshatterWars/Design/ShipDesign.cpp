@@ -993,6 +993,56 @@ ShipDesign::Get(const char* design_name, const char* design_path)
 	}
 }
 
+ShipDesign* ShipDesign::GetDesignName(const char* design_name, const char* design_path)
+{
+	if (!design_name || !*design_name)
+		return 0;
+
+	ShipCatalogEntry* entry = 0;
+
+	for (int i = 0; i < catalog.size(); i++) {
+		ShipCatalogEntry* e = catalog[i];
+		if (e->name == design_name) {
+			if (design_path && *design_path && e->path != design_path)
+				continue;
+			entry = e;
+			break;
+		}
+	}
+
+	if (!entry) {
+		for (int i = 0; i < mod_catalog.size(); i++) {
+			ShipCatalogEntry* e = mod_catalog[i];
+			if (e->name == design_name) {
+				if (design_path && *design_path) {
+					Text full_path = "Mods/Ships/";
+					full_path += design_path;
+
+					if (e->path != full_path)
+						continue;
+				}
+
+				entry = e;
+				break;
+			}
+		}
+	}
+
+	if (entry) {
+		if (!entry->design) {
+			entry->design = new  ShipDesign(entry->name,
+				entry->path,
+				entry->file,
+				entry->hide);
+		}
+		return entry->design;
+	}
+	else {
+		UE_LOG(LogShipDesign, Warning, TEXT("ShipDesign: no catalog entry for design '%s', checking mods..."), ANSI_TO_TCHAR(design_name));
+		return ShipDesign::FindModDesign(design_name, design_path);
+	}
+}
+
 ShipDesign*
 ShipDesign::FindModDesign(const char* design_name, const char* design_path)
 {
@@ -1103,6 +1153,23 @@ ShipDesign::ClassForName(const char* name)
 
 const char*
 ShipDesign::ClassName(int type)
+{
+	if (type != 0) {
+		int index = 0;
+
+		while (!(type & 1)) {
+			type >>= 1;
+			index++;
+		}
+
+		if (index >= 0 && index < 32)
+			return ship_design_class_name[index];
+	}
+
+	return "Unknown";
+}
+
+const char* ShipDesign::GetDesignClass(int type)
 {
 	if (type != 0) {
 		int index = 0;

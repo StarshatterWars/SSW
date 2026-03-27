@@ -131,12 +131,14 @@ public:
 	static void          Close();
 	static bool          CheckName(const char* name);
 	static ShipDesign*	 Get(const char* design_name, const char* design_path = 0);
+	static ShipDesign*	 GetDesignName(const char* design_name, const char* design_path = 0);
 	static ShipDesign*	 FindModDesign(const char* design_name, const char* design_path = 0);
 	static void          ClearModCatalog();
 	static int           GetDesignList(int type, List<Text>& designs); // never destroy the design list!
 
 	static int           ClassForName(const char* name);
 	static const char*	 ClassName(int type);
+	static const char*	 GetDesignClass(int type);
 
 	static int           LoadCatalog(const char* path, const char* file, bool mod = false);
 	static void          LoadSkins(const char* path, const char* archive = 0);

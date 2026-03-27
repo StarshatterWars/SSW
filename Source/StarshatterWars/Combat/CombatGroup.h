@@ -56,14 +56,14 @@ public:
 	static void         MergeOrderOfBattle(BYTE* block, const char* fname, int iff, Combatant* combatant, Campaign* campaign);
 
 	void                AddComponent(CombatGroup* g);
-	CombatGroup* FindGroup(ECOMBATGROUP_TYPE t, int n = -1);
-	CombatGroup* Clone(bool deep = true);
+	CombatGroup*		FindGroup(ECOMBATGROUP_TYPE t, int n = -1);
+	CombatGroup*		Clone(bool deep = true);
 
 	// accessors and mutators:
-	const char* GetDescription()      const;
-	const char* GetShortDescription() const;
+	const char*				GetDescription()      const;
+	const char*				GetShortDescription() const;
 
-	void                SetCombatant(Combatant* c) { combatant = c; }
+	void					SetCombatant(Combatant* c) { combatant = c; }
 
 	Combatant*				GetCombatant() { return combatant; }
 	CombatGroup*			GetParent() { return parent; }
@@ -72,9 +72,9 @@ public:
 	List<CombatUnit>&		GetUnits() { return units; }
 	CombatUnit*				GetRandomUnit();
 	CombatUnit*				GetFirstUnit();
-	CombatUnit* GetNextUnit();
-	CombatUnit* FindUnit(const char* name);
-	CombatGroup* FindCarrier();
+	CombatUnit*				GetNextUnit();
+	CombatUnit*				FindUnit(const char* name);
+	CombatGroup*			FindCarrier();
 
 	const Text&			GetName()            const { return name; }
 	ECOMBATGROUP_TYPE   GetType()			 const { return type; }
