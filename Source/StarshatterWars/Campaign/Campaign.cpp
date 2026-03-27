@@ -1481,7 +1481,7 @@ Campaign::SetPlayerUnit(CombatUnit* unit)
 {
     if (player_unit != unit) {
         UE_LOG(LogCampaign, Log, TEXT("Campaign::SetPlayerUnit(%s)"),
-            unit ? ANSI_TO_TCHAR(unit->Name().data()) : TEXT("0"));
+            unit ? ANSI_TO_TCHAR(unit->GetName().data()) : TEXT("0"));
 
         player_unit = unit;
 

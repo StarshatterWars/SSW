@@ -522,11 +522,11 @@ CampaignMissionStarship::CreateElements(CombatGroup* g)
                 }
             }
             else {
-                elem->SetCommander(cmdr->Name());
+                elem->SetCommander(cmdr->GetName());
 
                 if (g->GetType() == ECOMBATGROUP_TYPE::CARRIER_GROUP &&
                     elem->MissionRole() == (int)EMISSIONTYPE::ESCORT) {
-                    Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, cmdr->Name());
+                    Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, cmdr->GetName());
                     if (obj) {
                         obj->SetTargetDesc(Text("the ") + g->GetDescription());
                         elem->AddObjective(obj);
@@ -566,10 +566,10 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
         return nullptr;
     }
 
-    if (u->Name().length())
-        elem->SetName(u->Name());
+    if (u->GetName().length())
+        elem->SetName(u->GetName());
     else
-        elem->SetName(u->DesignName());
+        elem->SetName(u->GetDesignName());
 
     elem->SetElementID(pkg_id++);
 
@@ -626,7 +626,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
         elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
 
         if (u->Type() == (int)CLASSIFICATION::FARCASTER) {
-            Text name = u->Name();
+            Text name = u->GetName();
             int  dash = -1;
 
             for (int i = 0; i < (int)name.length(); i++)
@@ -697,8 +697,8 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetIntelLevel(g->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
 
-    elem->SetCarrier(carrier->Name());
-    elem->SetCommander(carrier->Name());
+    elem->SetCarrier(carrier->GetName());
+    elem->SetCommander(carrier->GetName());
 
     // scatter in a small sphere around carrier:
     auto ScatterInSphere = [](float Radius) -> FVector
@@ -1408,7 +1408,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     elem->SetElementID(pkg_id++);
 
     if (carrier) {
-        elem->SetCommander(carrier->Name());
+        elem->SetCommander(carrier->GetName());
         elem->SetHeading(carrier->GetHeading());
     }
     else {
@@ -1420,7 +1420,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(squadron->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
-    elem->SetSquadron(fighter->Name());
+    elem->SetSquadron(fighter->GetName());
     elem->SetMissionRole(role);
 
     elem->Loadouts().append(new MissionLoad(-1, "ACM Medium Range"));

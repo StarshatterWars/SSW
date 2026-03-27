@@ -631,7 +631,7 @@ CampaignSaveGame::Save(const char* name)
     }
 
     if (player_unit)
-        fprintf(f, "unit:     \"%s\"\n", player_unit->Name().data());
+        fprintf(f, "unit:     \"%s\"\n", player_unit->GetName().data());
 
     fprintf(f, "status:   %d\n", (int)campaign->GetCampaignStatus());
     fprintf(f, "basetime: %f\n", campaign->GetStartTime());

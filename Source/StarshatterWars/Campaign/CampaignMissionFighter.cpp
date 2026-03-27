@@ -1095,7 +1095,7 @@ void CampaignMissionFighter::CreateWardShuttle()
         N = new Instruction(Elem->Region(), Dst, INSTRUCTION_ACTION::DOCK);
         if (N)
         {
-            N->SetTarget(FString(ANSI_TO_TCHAR(Carrier->Name().data())));
+            N->SetTarget(FString(ANSI_TO_TCHAR(Carrier->GetName().data())));
             N->SetSpeed(500);
             Elem->AddNavPoint(N);
         }
@@ -1643,7 +1643,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             {
                 Instruction* obj = new Instruction(
                     INSTRUCTION_ACTION::ASSAULT,
-                    carrier->Name().data()
+                    carrier->GetName().data()
                 );
 
                 if (obj)
@@ -1772,14 +1772,14 @@ void CampaignMissionFighter::CreateTargetsIntercept()
     {
         Instruction* obj = new Instruction(
             INSTRUCTION_ACTION::DEFEND,
-            carrier->Name().data()
+            carrier->GetName().data()
         );
 
         if (obj)
         {
             const FString TargetDesc =
                 FString(TEXT("the ")) +
-                FString(ANSI_TO_TCHAR(carrier->Name().data())) +
+                FString(ANSI_TO_TCHAR(carrier->GetName().data())) +
                 FString(TEXT(" battle group"));
 
             obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
@@ -2613,13 +2613,13 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         return nullptr;
     }
 
-    if (U->Name().length() > 0)
+    if (U->GetName().length() > 0)
     {
-        Elem->SetName(U->Name());
+        Elem->SetName(U->GetName());
     }
     else
     {
-        Elem->SetName(U->DesignName());
+        Elem->SetName(U->GetDesignName());
     }
 
     Elem->SetElementID(pkg_id++);
@@ -2706,7 +2706,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         Elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
 
         // link farcaster to other terminus:
-        const FString Name = FString(ANSI_TO_TCHAR(U->Name().data()));
+        const FString Name = FString(ANSI_TO_TCHAR(U->GetName().data()));
         int32 Dash = INDEX_NONE;
 
         for (int32 i = 0; i < Name.Len(); i++)
@@ -2804,7 +2804,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
 
     if (carrier)
     {
-        elem->SetCommander(carrier->Name());
+        elem->SetCommander(carrier->GetName());
         elem->SetHeading(carrier->GetHeading());
     }
     else

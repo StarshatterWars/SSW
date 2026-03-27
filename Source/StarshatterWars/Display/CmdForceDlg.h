@@ -98,8 +98,7 @@ private:
     bool IsVisibleCombatant(Combatant* C) const;
     void ShowCombatant(Combatant* C);
     void RebuildCombatListForCurrentCombatant();
-    void AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild);
-
+    void AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild, int32 Depth);
     bool CanTransfer(CombatGroup* Group) const;
 
     void ClearDescList();

@@ -39,6 +39,60 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogCmdForceDlg, Log, All);
 
+static FString CombatGroupTypeToDisplayString(ECOMBATGROUP_TYPE Type)
+{
+	const char* TypeName = CombatGroup::NameFromType(Type);
+	FString Out = TypeName ? UTF8_TO_TCHAR(TypeName) : TEXT("UNKNOWN");
+	Out = Out.Replace(TEXT("_"), TEXT(" "));
+	Out = Out.ToUpper();
+	return Out;
+}
+
+static FString BuildSafeUnitDisplayText(CombatUnit* Unit)
+{
+	if (!Unit)
+	{
+		return TEXT("UNKNOWN UNIT");
+	}
+
+	const FString Name = UTF8_TO_TCHAR(Unit->GetName().data());
+	const FString Registry = UTF8_TO_TCHAR(Unit->GetRegistryNumber().data());
+	const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
+
+	FString Out;
+
+	// Build prefix like DD-343
+	if (!Indicator.IsEmpty() && !Registry.IsEmpty())
+	{
+		Out = FString::Printf(TEXT("%s-%s"), *Indicator, *Registry);
+	}
+	else if (!Registry.IsEmpty())
+	{
+		Out = Registry;
+	}
+	else if (!Indicator.IsEmpty())
+	{
+		Out = Indicator;
+	}
+
+	// Add name
+	if (!Name.IsEmpty())
+	{
+		if (!Out.IsEmpty())
+		{
+			Out += TEXT(" ");
+		}
+		Out += Name;
+	}
+
+	if (Out.IsEmpty())
+	{
+		Out = TEXT("UNKNOWN UNIT");
+	}
+
+	return Out;
+}
+
 UCmdForceDlg::UCmdForceDlg(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -308,14 +362,8 @@ void UCmdForceDlg::OnCombatItemSelected(UObject* ItemObject)
 	UCmdForceListItem* Item = Cast<UCmdForceListItem>(ItemObject);
 	if (!Item)
 	{
-		UE_LOG(LogCmdForceDlg, Warning, TEXT("OnCombatItemSelected: invalid item"));
 		return;
 	}
-
-	UE_LOG(LogCmdForceDlg, Log,
-		TEXT("OnCombatItemSelected: rowType=%d text='%s'"),
-		(int32)Item->RowType,
-		*Item->DisplayText);
 
 	CurrentGroup = nullptr;
 	CurrentUnit = nullptr;
@@ -323,13 +371,18 @@ void UCmdForceDlg::OnCombatItemSelected(UObject* ItemObject)
 	if (Item->IsGroup())
 	{
 		CurrentGroup = Item->Group;
-		UE_LOG(LogCmdForceDlg, Log, TEXT("OnCombatItemSelected: selected group=%p"), CurrentGroup);
+
+		if (CurrentGroup && Item->bHasChildren)
+		{
+			CurrentGroup->SetExpanded(!CurrentGroup->IsExpanded());
+			RebuildCombatListForCurrentCombatant();
+		}
+
 		PopulateDescForGroup(CurrentGroup);
 	}
 	else if (Item->IsUnit())
 	{
 		CurrentUnit = Item->Unit;
-		UE_LOG(LogCmdForceDlg, Log, TEXT("OnCombatItemSelected: selected unit=%p"), CurrentUnit);
 		PopulateDescForUnit(CurrentUnit);
 	}
 	else
@@ -394,7 +447,6 @@ void UCmdForceDlg::ShowCombatant(Combatant* C)
 	CurrentUnit = nullptr;
 	CurrentCombatant = C;
 
-	PipeStack.Empty();
 	bBlankLine = false;
 
 	CombatantList->ClearListItems();
@@ -457,7 +509,7 @@ void UCmdForceDlg::ShowCombatant(Combatant* C)
 		if (G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
 			G->CountUnits() > 0)
 		{
-			AddCombatGroupRecursive(G, i == Groups.size() - 1);
+			AddCombatGroupRecursive(G, i == Groups.size() - 1, 0);
 		}
 		else
 		{
@@ -490,7 +542,6 @@ void UCmdForceDlg::RebuildCombatListForCurrentCombatant()
 	}
 
 	CombatantList->ClearListItems();
-	PipeStack.Empty();
 	bBlankLine = false;
 
 	if (!CurrentCombatant)
@@ -513,7 +564,7 @@ void UCmdForceDlg::RebuildCombatListForCurrentCombatant()
 			G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
 			G->CountUnits() > 0)
 		{
-			AddCombatGroupRecursive(G, i == Groups.size() - 1);
+			AddCombatGroupRecursive(G, i == Groups.size() - 1, 0);
 		}
 	}
 }
@@ -546,77 +597,44 @@ void UCmdForceDlg::ClearDescList()
 	}
 }
 
-void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
+void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild, int32 Depth)
 {
 	if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !CombatantList)
 	{
 		return;
 	}
 
+	const bool bHasChildrenOrUnits =
+		Group->GetLiveComponents().size() > 0 ||
+		Group->GetUnits().size() > 0;
+
 	UE_LOG(LogCmdForceDlg, Log,
-		TEXT("AddCombatGroupRecursive: id=%d desc='%s' type=%d units=%d liveChildren=%d expanded=%d pipe='%s'"),
+		TEXT("AddCombatGroupRecursive: id=%d desc='%s' type=%d units=%d liveChildren=%d expanded=%d depth=%d"),
 		Group->GetID(),
 		UTF8_TO_TCHAR(Group->GetDescription()),
 		(int32)Group->GetType(),
 		Group->GetUnits().size(),
 		Group->GetLiveComponents().size(),
 		Group->IsExpanded(),
-		*PipeStack);
+		Depth);
 
-	FString Prefix;
-
-	const bool bTopLevel =
-		(!Group->GetParent() ||
-			Group->GetParent()->GetType() == ECOMBATGROUP_TYPE::FORCE);
-
-	if (bTopLevel)
-	{
-		Prefix = Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
-	}
-	else
-	{
-		Prefix = bLastChild ? TEXT("\\-") : TEXT("+-");
-
-		const bool bHasChildrenOrUnits =
-			Group->GetLiveComponents().size() > 0 ||
-			Group->GetUnits().size() > 0;
-
-		if (bHasChildrenOrUnits)
-		{
-			Prefix += Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
-		}
-		else
-		{
-			Prefix += TEXT("   ");
-		}
-	}
-
-	const FString Line = PipeStack + Prefix + UTF8_TO_TCHAR(Group->GetDescription());
-
-	const bool bHasChildrenOrUnits =
-		Group->GetLiveComponents().size() > 0 ||
-		Group->GetUnits().size() > 0;
-
+	const FString Line = UTF8_TO_TCHAR(Group->GetDescription());
 	UCmdForceListItem* GroupItem = NewObject<UCmdForceListItem>(this);
 	GroupItem->InitAsGroup(
 		Line,
-		PipeStack.Len(),
+		Depth,
 		Group,
 		Group->IsExpanded(),
 		bHasChildrenOrUnits);
 
 	CombatantList->AddItem(GroupItem);
 
-	UE_LOG(LogCmdForceDlg, Log, TEXT("AddCombatGroupRecursive: added group row '%s'"), *Line);
+	UE_LOG(LogCmdForceDlg, Log,
+		TEXT("AddCombatGroupRecursive: added group row '%s' depth=%d"),
+		*Line,
+		Depth);
 
 	bBlankLine = false;
-
-	const int32 PrevLen = PipeStack.Len();
-
-	if (!bTopLevel)
-	{
-		PipeStack += (bLastChild ? TEXT("  ") : TEXT("| "));
-	}
 
 	if (Group->IsExpanded() && Group->GetUnits().size() > 0)
 	{
@@ -629,15 +647,11 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 				continue;
 			}
 
-			FString UnitLine = PipeStack + TEXT("  ") + UTF8_TO_TCHAR(Unit->GetDescription());
+			const FString UnitLine = BuildSafeUnitDisplayText(Unit);
 
 			UCmdForceListItem* UnitItem = NewObject<UCmdForceListItem>(this);
-			UnitItem->InitAsUnit(UnitLine, PipeStack.Len(), Unit);
+			UnitItem->InitAsUnit(UnitLine, Depth + 1, Unit);
 			CombatantList->AddItem(UnitItem);
-
-			UE_LOG(LogCmdForceDlg, Log,
-				TEXT("AddCombatGroupRecursive: added unit row '%s' iff=%d"),
-				*UnitLine, Unit->GetIFF());
 		}
 
 		UCmdForceListItem* SpacerItem = NewObject<UCmdForceListItem>(this);
@@ -647,12 +661,14 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 		bBlankLine = true;
 	}
 
+	// Children
 	if (Group->IsExpanded() && Group->GetLiveComponents().size() > 0)
 	{
 		List<CombatGroup>& Groups = Group->GetLiveComponents();
+
 		for (int i = 0; i < Groups.size(); ++i)
 		{
-			AddCombatGroupRecursive(Groups[i], i == Groups.size() - 1);
+			AddCombatGroupRecursive(Groups[i], i == Groups.size() - 1, Depth + 1);
 		}
 
 		if (!bBlankLine)
@@ -664,8 +680,6 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 			bBlankLine = true;
 		}
 	}
-
-	PipeStack.LeftInline(PrevLen);
 }
 
 void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
@@ -684,10 +698,8 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 
 	if (GroupTypeText)
 	{
-		const char* TypeName = CombatGroup::NameFromType(Group->GetType());
-
 		GroupTypeText->SetText(FText::FromString(
-			TypeName ? UTF8_TO_TCHAR(TypeName) : TEXT("UNKNOWN")));
+			CombatGroupTypeToDisplayString(Group->GetType())));
 	}
 
 	if (GroupLocationText)
@@ -712,51 +724,8 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 		return;
 	}
 
-	if (GroupInfoText)
-	{
-		GroupInfoText->SetText(FText::FromString(
-			UTF8_TO_TCHAR(Unit->GetDescription())));
-	}
-
-	if (GroupTypeText)
-	{
-		FString TypeText = TEXT("UNKNOWN");
-
-		switch ((CLASSIFICATION)Unit->Type())
-		{
-		case CLASSIFICATION::FIGHTER:
-			TypeText = TEXT("FIGHTER");
-			break;
-		case CLASSIFICATION::ATTACK:
-			TypeText = TEXT("ATTACK");
-			break;
-		case CLASSIFICATION::LCA:
-			TypeText = TEXT("LANDING CRAFT");
-			break;
-		case CLASSIFICATION::DESTROYER:
-			TypeText = TEXT("DESTROYER");
-			break;
-		case CLASSIFICATION::CRUISER:
-			TypeText = TEXT("CRUISER");
-			break;
-		case CLASSIFICATION::CARRIER:
-			TypeText = TEXT("CARRIER");
-			break;
-		case CLASSIFICATION::STATION:
-			TypeText = TEXT("STATION");
-			break;
-		case CLASSIFICATION::STARBASE:
-			TypeText = TEXT("STARBASE");
-			break;
-		case CLASSIFICATION::MINE:
-			TypeText = TEXT("MINE");
-			break;
-		default:
-			break;
-		}
-
-		GroupTypeText->SetText(FText::FromString(TypeText));
-	}
+	GroupInfoText->SetText(FText::FromString(
+		BuildSafeUnitDisplayText(Unit)));
 
 	if (GroupLocationText)
 	{
@@ -768,15 +737,11 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 	{
 		CombatGroup* OwnerGroup = Unit->GetCombatGroup();
 
-		if (OwnerGroup)
-		{
-			GroupEmpireText->SetText(FText::FromString(
-				UFormattingUtils::EmpireToString(OwnerGroup->GetEmpire())));
-		}
-		else
-		{
-			GroupEmpireText->SetText(FText::FromString(TEXT("UNKNOWN")));
-		}
+		const FString EmpireText = OwnerGroup
+			? UFormattingUtils::EmpireToString(OwnerGroup->GetEmpire())
+			: TEXT("UNKNOWN");
+
+		GroupEmpireText->SetText(FText::FromString(EmpireText));
 	}
 }
 

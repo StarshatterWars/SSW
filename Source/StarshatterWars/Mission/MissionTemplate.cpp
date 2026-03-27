@@ -130,7 +130,7 @@ MissionTemplate::MapElement(MissionElement* elem)
 
 			if (!elem->IsDropship()) {
 				aliases.append(new MissionAlias(elem->GetName(), elem));
-				elem->SetName(elem->GetCombatUnit()->Name());
+				elem->SetName(elem->GetCombatUnit()->GetName());
 			}
 
 			result = true;

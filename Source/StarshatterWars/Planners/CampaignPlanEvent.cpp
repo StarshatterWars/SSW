@@ -795,9 +795,9 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
     if (them_count) {
         if (friendly) {
             if (them_count > 1)
-                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->GetName().data());
             else
-                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->GetName().data());
         }
         else {
             sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->GetName().data());
@@ -811,7 +811,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
 
     if (us_count) {
         if (!friendly)
-            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->GetName().data());
         else
             sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->GetName().data());
 
@@ -936,9 +936,9 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
     if (them_count) {
         if (friendly) {
             if (them_count > 1)
-                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->GetName().data());
             else
-                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->GetName().data());
         }
         else {
             sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, them->GetName().data());
@@ -952,7 +952,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
 
     if (us_count) {
         if (!friendly)
-            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->GetName().data());
         else
             sprintf_s(text, "ALLIED LOSSES:\t %d %s destroyed", us_count, us->GetName().data());
 
@@ -1214,18 +1214,18 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
     if (them_count) {
         if (friendly) {
             if (tgt->Count() > 1) {
-                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->GetName().data());
             }
             else {
-                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", tgt->GetName().data());
             }
         }
         else {
             if (unit->Count() > 1) {
-                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, unit->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, unit->GetName().data());
             }
             else {
-                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", unit->Name().data());
+                sprintf_s(text, "ENEMY KILLED:\t %s destroyed\n", unit->GetName().data());
             }
         }
 
@@ -1237,9 +1237,9 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
 
     if (us_count) {
         if (!friendly)
-            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed\n", tgt->GetName().data());
         else
-            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed", unit->Name().data());
+            sprintf_s(text, "ALLIED LOSSES:\t %s destroyed", unit->GetName().data());
 
         info += text;
     }

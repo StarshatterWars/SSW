@@ -42,20 +42,17 @@ void UCmdForceRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 		return;
 	}
 
-	// Main row text
 	if (RowText)
 	{
 		RowText->SetText(FText::FromString(CurrentItem->DisplayText));
 	}
 
-	// Indent
 	if (IndentSpacer)
 	{
-		const float IndentWidth = CurrentItem->IndentLevel * 12.0f;
+		const float IndentWidth = CurrentItem->IndentLevel * 24.0f;
 		IndentSpacer->SetSize(FVector2D(IndentWidth, 1.0f));
 	}
 
-	// Expand marker
 	if (ExpandText)
 	{
 		if (CurrentItem->IsGroup() && CurrentItem->bHasChildren)
@@ -65,7 +62,7 @@ void UCmdForceRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 		}
 		else
 		{
-			ExpandText->SetText(FText::GetEmpty());
+			ExpandText->SetText(FText::FromString(TEXT(" ")));
 		}
 	}
 }

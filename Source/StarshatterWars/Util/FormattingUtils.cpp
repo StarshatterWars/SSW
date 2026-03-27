@@ -14,6 +14,7 @@
 
 #include "FormattingUtils.h"
 #include "GameStructs_System.h"
+
 #include "UObject/UnrealType.h" // UEnum
 #include "Logging/LogMacros.h"
 
@@ -637,5 +638,57 @@ FString UFormattingUtils::EmpireToString(EEMPIRE_NAME Empire)
 
     default:
         return TEXT("UNKNOWN");
+    }
+}
+
+FString UFormattingUtils::GetUnitDesignIndicator(CombatUnit* Unit)
+{
+    if (!Unit)
+    {
+        return TEXT("UN");
+    }
+
+    switch ((CLASSIFICATION)Unit->Type())
+    {
+        // --- SMALL / FLIGHT ---
+    case CLASSIFICATION::DRONE:      return TEXT("DR");
+    case CLASSIFICATION::FIGHTER:    return TEXT("VF");
+    case CLASSIFICATION::ATTACK:     return TEXT("VA");
+    case CLASSIFICATION::LCA:        return TEXT("LC");
+
+        // --- SUPPORT / LOGISTICS ---
+    case CLASSIFICATION::COURIER:    return TEXT("CR");
+    case CLASSIFICATION::CARGO:      return TEXT("CG");
+    case CLASSIFICATION::FREIGHTER:  return TEXT("FT");
+
+        // --- CAPITAL SHIPS ---
+    case CLASSIFICATION::CORVETTE:   return TEXT("CVT");
+    case CLASSIFICATION::FRIGATE:    return TEXT("FF");
+    case CLASSIFICATION::DESTROYER:  return TEXT("DD");
+    case CLASSIFICATION::CRUISER:    return TEXT("CA");
+    case CLASSIFICATION::BATTLESHIP: return TEXT("BB");
+    case CLASSIFICATION::CARRIER:    return TEXT("CV");
+    case CLASSIFICATION::DREADNAUGHT:return TEXT("DN");
+
+        // --- INSTALLATIONS ---
+    case CLASSIFICATION::STATION:    return TEXT("ST");
+    case CLASSIFICATION::STARBASE:   return TEXT("SB");
+    case CLASSIFICATION::FARCASTER:  return TEXT("FC");
+
+        // --- SPACE STRUCTURES ---
+    case CLASSIFICATION::MINE:       return TEXT("MN");
+    case CLASSIFICATION::COMSAT:     return TEXT("CS");
+    case CLASSIFICATION::DEFSAT:     return TEXT("DS");
+    case CLASSIFICATION::SWACS:      return TEXT("SW");
+
+        // --- GROUND ---
+    case CLASSIFICATION::BUILDING:   return TEXT("BLD");
+    case CLASSIFICATION::FACTORY:    return TEXT("FAC");
+    case CLASSIFICATION::SAM:        return TEXT("SAM");
+    case CLASSIFICATION::EWR:        return TEXT("EWR");
+    case CLASSIFICATION::C3I:        return TEXT("C3");
+
+    default:
+        return TEXT("UN");
     }
 }

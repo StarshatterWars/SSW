@@ -888,7 +888,7 @@ CombatGroup::FindUnit(const char* iname)
 		ListIter<CombatUnit> iter = units;
 		while (++iter) {
 			CombatUnit* unit = iter.value();
-			if (unit->Name() == iname) {
+			if (unit->GetName() == iname) {
 				if (unit->Count() - unit->DeadCount() > 0)
 					return unit;
 				else
@@ -1484,7 +1484,7 @@ else GET_DEF_NUM(id);
 								ListIter<CombatUnit> u_iter = unit_list;
 								while (++u_iter) {
 									CombatUnit* load_unit = u_iter.value();
-									CombatUnit* u = g->FindUnit(load_unit->Name());
+									CombatUnit* u = g->FindUnit(load_unit->GetName());
 
 									if (u) {
 										if (load_unit->GetRegion().length() > 0) {
@@ -1548,15 +1548,15 @@ SaveCombatUnit(FILE* f, CombatUnit* u)
 		type = u->GetDesign()->type;
 
 	fprintf(f, "\n unit: {");
-	fprintf(f, " name: \"%s\",", u->Name().data());
+	fprintf(f, " name: \"%s\",", u->GetName().data());
 	fprintf(f, " type: \"%s\",", Ship::GetShipClassName(type));
-	fprintf(f, " design: \"%s\",", u->DesignName().data());
+	fprintf(f, " design: \"%s\",", u->GetDesignName().data());
 
 	if (u->Count() > 1) {
 		fprintf(f, " count: %d,", u->Count());
 	}
 	else {
-		fprintf(f, " regnum:\"%s\",", u->Registry().data());
+		fprintf(f, " regnum:\"%s\",", u->GetRegistryNumber().data());
 	}
 
 	if (u->GetRegion().length() > 0) {

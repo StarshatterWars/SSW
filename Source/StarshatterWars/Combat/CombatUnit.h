@@ -58,11 +58,12 @@ public:
     void           Disengage();
 
     // accessors and mutators:
-    const Text& Name()                        const { return name; }
-    const Text& Registry()                    const { return regnum; }
-    const Text& DesignName()                  const { return design_name; }
-    const Text& Skin()                        const { return skin; }
-    void           SetSkin(const char* s) { skin = s; }
+    const Text& GetName()                     const { return name; }
+    const Text& GetRegistryNumber()           const { return regnum; }
+    const Text& GetDesignName()               const { return design_name; }
+
+    const Text&     GetSkin()                     const { return skin; }
+    void            SetSkin(const char* s) { skin = s; }
 
     int            Type()                        const { return type; }
     int            Count()                       const { return count; }

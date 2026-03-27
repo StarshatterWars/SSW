@@ -3025,7 +3025,7 @@ MapView::DrawCombatGroup(CombatGroup* group, int rep)
 					sprite_width = 2;
 
 					char buf[256];
-					sprintf_s(buf, "%s", unit->Name().data());
+					sprintf_s(buf, "%s", unit->GetName().data());
 					SetFont(font);
 					Print(shiploc.X - sprite_width, shiploc.Y + sprite_width + 2, buf);
 				}
