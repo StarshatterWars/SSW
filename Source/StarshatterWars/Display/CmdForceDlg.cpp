@@ -87,16 +87,6 @@ void UCmdForceDlg::NativeConstruct()
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
-    // Bind clicks (no AddLambda on UButton OnClicked)
-    if (btn_save)     btn_save->OnClicked.AddDynamic(this, &UCmdForceDlg::OnSaveClicked);
-    if (btn_exit)     btn_exit->OnClicked.AddDynamic(this, &UCmdForceDlg::OnExitClicked);
-
-    if (btn_orders)   btn_orders->OnClicked.AddDynamic(this, &UCmdForceDlg::OnModeOrdersClicked);
-    if (btn_theater)  btn_theater->OnClicked.AddDynamic(this, &UCmdForceDlg::OnModeTheaterClicked);
-    if (btn_forces)   btn_forces->OnClicked.AddDynamic(this, &UCmdForceDlg::OnModeForcesClicked);
-    if (btn_intel)    btn_intel->OnClicked.AddDynamic(this, &UCmdForceDlg::OnModeIntelClicked);
-    if (btn_missions) btn_missions->OnClicked.AddDynamic(this, &UCmdForceDlg::OnModeMissionsClicked);
-
     if (cmb_forces)
         cmb_forces->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
 
@@ -136,26 +126,7 @@ void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UCmdForceDlg::BindFormWidgets()
 {
-    // Shared header:
-    BindLabel(200, txt_group);
-    BindLabel(201, txt_score);
-    BindLabel(300, txt_name);
-    BindLabel(301, txt_time);
 
-    BindButton(100, btn_orders);
-    BindButton(101, btn_theater);
-    BindButton(102, btn_forces);
-    BindButton(103, btn_intel);
-    BindButton(104, btn_missions);
-
-    BindButton(1, btn_save);
-    BindButton(2, btn_exit);
-
-    // Forces tab:
-    BindCombo(400, cmb_forces);
-    BindList(401, lst_combat);
-    BindList(402, lst_desc);
-    BindButton(403, btn_transfer);
 }
 
 
@@ -184,25 +155,6 @@ void UCmdForceDlg::ShowForceDlg()
 {
     Mode = ECOMMAND_MODE::MODE_FORCES;
     CampaignPtr = Campaign::GetCampaign();
-
-    // Title/campaign name:
-    if (txt_name)
-    {
-        if (CampaignPtr)
-            txt_name->SetText(FText::FromString(CampaignPtr->Name()));
-        else
-            txt_name->SetText(FText::FromString(TEXT("No Campaign Selected")));
-    }
-
-    // Enable/disable based on training:
-    if (CampaignPtr)
-    {
-        const bool bTraining = CampaignPtr->IsTraining();
-
-        if (btn_save)   btn_save->SetIsEnabled(!bTraining);
-        if (btn_forces) btn_forces->SetIsEnabled(!bTraining);
-        if (btn_intel)  btn_intel->SetIsEnabled(!bTraining);
-    }
 
     // Populate forces combo:
     if (cmb_forces)
@@ -256,39 +208,6 @@ void UCmdForceDlg::ExecFrame()
     if (!CampaignPtr)
         return;
 
-    // Mirrors CmdDlg::ExecFrame() for header data:
-    if (txt_group)
-    {
-        CombatGroup* G = CampaignPtr->GetPlayerGroup();
-        if (G)
-            txt_group->SetText(FText::FromString(G->GetDescription()));
-    }
-
-    if (txt_score)
-    {
-        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
-        txt_score->SetText(FText::FromString(ScoreStr));
-        txt_score->SetJustification(ETextJustify::Right);
-    }
-
-    if (txt_time)
-    {
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, CampaignPtr->GetTime());
-        txt_time->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
-    }
-
-    // Intel unread count label update (optional):
-    const int32 Unread = CampaignPtr->CountNewEvents();
-    if (txt_btn_intel)
-    {
-        if (Unread > 0)
-            txt_btn_intel->SetText(FText::FromString(FString::Printf(TEXT("INTEL (%d)"), Unread)));
-        else
-            txt_btn_intel->SetText(FText::FromString(TEXT("INTEL")));
-    }
-
     UpdateTransferEnabled();
 }
 
@@ -304,39 +223,6 @@ void UCmdForceDlg::SetModeAndHighlight(ECOMMAND_MODE InMode)
     {
         UE_LOG(LogTemp, Warning, TEXT("CmdForceDlg: Manager is null (SetModeAndHighlight)."));
         return;
-    }
-
-    switch (Mode)
-    {
-    case ECOMMAND_MODE::MODE_ORDERS:   Manager->ShowCmdOrdersDlg();   break;
-    case ECOMMAND_MODE::MODE_THEATER:  Manager->ShowCmdTheaterDlg();  break;
-    case ECOMMAND_MODE::MODE_FORCES:   Manager->ShowCmdForceDlg();    break;
-    case ECOMMAND_MODE::MODE_INTEL:    Manager->ShowCmdIntelDlg();    break;
-    case ECOMMAND_MODE::MODE_MISSIONS: Manager->ShowCmdMissionsDlg(); break;
-    default:                               Manager->ShowCmdOrdersDlg();   break;
-    }
-}
-
-void UCmdForceDlg::OnModeOrdersClicked() { SetModeAndHighlight(ECOMMAND_MODE::MODE_ORDERS); }
-void UCmdForceDlg::OnModeTheaterClicked() { SetModeAndHighlight(ECOMMAND_MODE::MODE_THEATER); }
-void UCmdForceDlg::OnModeForcesClicked() { SetModeAndHighlight(ECOMMAND_MODE::MODE_FORCES); }
-void UCmdForceDlg::OnModeIntelClicked() { SetModeAndHighlight(ECOMMAND_MODE::MODE_INTEL); }
-void UCmdForceDlg::OnModeMissionsClicked() { SetModeAndHighlight(ECOMMAND_MODE::MODE_MISSIONS); }
-
-void UCmdForceDlg::OnSaveClicked()
-{
-    if (Manager)
-        Manager->ShowCmpFileDlg();
-    else
-        UE_LOG(LogTemp, Warning, TEXT("CmdForceDlg: Manager is null (OnSaveClicked)."));
-}
-
-void UCmdForceDlg::OnExitClicked()
-{
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
     }
 }
 

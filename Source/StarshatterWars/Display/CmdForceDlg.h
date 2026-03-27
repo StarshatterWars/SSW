@@ -90,27 +90,6 @@ private:
     // ============================================================
     void SetModeAndHighlight(ECOMMAND_MODE InMode);
 
-    UFUNCTION()
-    void OnModeOrdersClicked();
-
-    UFUNCTION()
-    void OnModeTheaterClicked();
-
-    UFUNCTION()
-    void OnModeForcesClicked();
-
-    UFUNCTION()
-    void OnModeIntelClicked();
-
-    UFUNCTION()
-    void OnModeMissionsClicked();
-
-    UFUNCTION()
-    void OnSaveClicked();
-
-    UFUNCTION()
-    void OnExitClicked();
-
     // ============================================================
     // Forces / Combat list interactions
     // ============================================================
@@ -149,26 +128,6 @@ private:
     CombatGroup* CurrentGroup = nullptr;
     CombatUnit* CurrentUnit = nullptr;
     Combatant* CurrentCombatant = nullptr;
-
-private:
-    // ============================================================
-    // Shared Cmd header widgets (same IDs as CmdDlg.frm / CmdForceDlg.frm)
-    // ============================================================
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_group = nullptr; // 200
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_score = nullptr; // 201
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_name = nullptr; // 300
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_time = nullptr; // 301
-
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_orders = nullptr; // 100
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_theater = nullptr; // 101
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_forces = nullptr; // 102
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_intel = nullptr; // 103
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_missions = nullptr; // 104
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_save = nullptr; // 1
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_exit = nullptr; // 2
-
-    // Optional nested text block inside Intel button to show unread count:
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UTextBlock* txt_btn_intel = nullptr;
 
 private:
     // ============================================================
