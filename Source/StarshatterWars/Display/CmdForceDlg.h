@@ -130,16 +130,10 @@ private:
     Combatant* CurrentCombatant = nullptr;
 
 private:
-    // ============================================================
-    // Forces tab widgets (IDs 400..403)
-    // ============================================================
     UPROPERTY(meta = (BindWidgetOptional), Transient) UComboBoxString* cmb_forces = nullptr; // 400
-
-    // For UMG, use ListView entries instead of legacy ListBox:
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* lst_combat = nullptr; // 401
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* lst_desc = nullptr; // 402
-
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_transfer = nullptr; // 403
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* CombatantList = nullptr; // 401
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* DescriptionList = nullptr; // 402
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* TransferButton = nullptr; // 403
 
 private:
     // ============================================================

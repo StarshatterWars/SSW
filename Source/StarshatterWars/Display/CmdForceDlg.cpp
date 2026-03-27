@@ -90,11 +90,11 @@ void UCmdForceDlg::NativeConstruct()
     if (cmb_forces)
         cmb_forces->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
 
-    if (btn_transfer)
-        btn_transfer->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
+    if (TransferButton)
+        TransferButton->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
 
-    if (btn_transfer)
-        btn_transfer->SetIsEnabled(false);
+    if (TransferButton)
+        TransferButton->SetIsEnabled(false);
 
     // Parse/apply legacy form defaults if you use it:
     const FString Frm = GetLegacyFormText();
@@ -284,7 +284,7 @@ bool UCmdForceDlg::IsVisibleCombatant(Combatant* C) const
 
 void UCmdForceDlg::ShowCombatant(Combatant* C)
 {
-    if (!lst_combat || !C)
+    if (!CombatantList || !C)
         return;
 
     CurrentGroup = nullptr;
@@ -294,7 +294,7 @@ void UCmdForceDlg::ShowCombatant(Combatant* C)
     bBlankLine = false;
 
     // Clear combat list (ListView):
-    lst_combat->ClearListItems();
+    CombatantList->ClearListItems();
 
     CombatGroup* Force = C->GetForce();
     if (Force)
@@ -310,31 +310,19 @@ void UCmdForceDlg::ShowCombatant(Combatant* C)
 
     ClearDescList();
 
-    if (btn_transfer)
-        btn_transfer->SetIsEnabled(false);
+    if (TransferButton)
+        TransferButton->SetIsEnabled(false);
 }
 
 void UCmdForceDlg::ClearDescList()
 {
-    if (lst_desc)
-        lst_desc->ClearListItems();
+    if (DescriptionList)
+        DescriptionList->ClearListItems();
 }
-
-// NOTE:
-// The legacy listbox stored pointer data per row and a "type" column (0 group, 1 unit),
-// plus it drew pipe glyphs and clicked on the plus/minus region.
-// In Unreal, the correct approach is:
-//   - Make a UObject row item (e.g., UCmdForceListItem) holding:
-//        - DisplayText
-//        - RowType (Group/Unit/Blank)
-//        - GroupPtr / UnitPtr
-//        - bHasExpandGlyph / bExpanded
-//   - Make the row widget handle click on the expand glyph and selection.
-// I am keeping the logic intact, but you will need those row item classes to finish UI behavior.
 
 void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 {
-    if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !lst_combat)
+    if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !CombatantList)
         return;
 
     // Build prefix similar to legacy (conceptual; real glyph rendering should be in the row widget)
@@ -363,7 +351,7 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
     const FString Line = PipeStack + Prefix + UTF8_TO_TCHAR(Group->GetDescription());
 
     // TODO: replace with your row item object:
-    // lst_combat->AddItem(NewObject<UCmdForceListItem>(...));
+    // CombatantList->AddItem(NewObject<UCmdForceListItem>(...));
     // For now, we cannot add plain strings to UListView without an item class.
 
     bBlankLine = false;
@@ -393,7 +381,7 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
             if (DamagePct >= 1 && Unit->DeadCount() < Unit->Count())
                 UnitLine += FString::Printf(TEXT(" %d%% damage"), DamagePct);
 
-            // TODO: add unit row item to lst_combat (type=Unit)
+            // TODO: add unit row item to CombatantList (type=Unit)
         }
 
         // TODO: add blank line item after units
@@ -441,11 +429,11 @@ bool UCmdForceDlg::CanTransfer(CombatGroup* Group) const
 
 void UCmdForceDlg::UpdateTransferEnabled()
 {
-    if (!btn_transfer || !CampaignPtr || !CurrentGroup)
+    if (!TransferButton || !CampaignPtr || !CurrentGroup)
         return;
 
     const bool bEnable = CampaignPtr->IsActive() && CanTransfer(CurrentGroup);
-    btn_transfer->SetIsEnabled(bEnable);
+    TransferButton->SetIsEnabled(bEnable);
 }
 
 void UCmdForceDlg::OnTransferClicked()
