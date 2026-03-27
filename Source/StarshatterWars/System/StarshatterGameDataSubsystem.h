@@ -94,6 +94,7 @@ class MissionInfo;
 class AStarSystem;
 class SystemDesign;
 class ComponentDesign;
+class UStarshatterShipDesignSubsystem;
 
 // Cached GI (optional)
 class USSWGameInstance;
@@ -230,7 +231,8 @@ public:
 
     void LoadCombatRoster(const char* InFilename, int32 Team);
 
-    void ParseCombatUnit();
+    const FShipDesign* ResolveDesign(const FString& DesignName) const;
+    void ApplyDesignToUnit(CombatUnit* Unit, const FString& DesignName);
 
     // OOB helpers
     CombatGroup* CloneOver(CombatGroup* force, CombatGroup* clone, CombatGroup* group);
@@ -434,6 +436,9 @@ protected:
         const TMap<FName, CombatGroup*>& GroupByRowName);
     
     FString GetEmpireRosterName(EEMPIRE_NAME Empire) const;
+
+    UPROPERTY()
+    UStarshatterShipDesignSubsystem* ShipDesignSubsystem = nullptr;
 
 protected:
     // =====================================================================

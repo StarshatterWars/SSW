@@ -1,16 +1,17 @@
 #pragma once
 
-/*  Project Starshatter 4.5
-    Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
 
-    SUBSYSTEM:    Stars.exe
+    SUBSYSTEM:    GAME
     FILE:         CombatUnit.h
-    AUTHOR:       John DiCamillo
+    AUTHOR:       Carlos Bott
+    ORIGINAL:     John DiCamillo / Destroyer Studios LLC
 
     OVERVIEW
     ========
-    A ship, station, or ground unit in the dynamic campaign.
+    A ship, station, or ground unit in the campaign system.
 */
 
 #include "Types.h"
@@ -142,4 +143,31 @@ private:
     List<CombatUnit>     attackers;
     CombatUnit* target;
     CombatGroup* group;
+
+    private:
+        Text resolved_design_display_name;
+        Text resolved_design_abrv;
+        Text resolved_design_class;
+        int  resolved_design_type = 0;
+        bool b_has_resolved_design = false;
+
+public:
+    void SetResolvedDesignData(const char* InDisplayName,
+        const char* InAbrv,
+        const char* InClass,
+        int InType)
+    {
+        resolved_design_display_name = InDisplayName ? InDisplayName : "";
+        resolved_design_abrv = InAbrv ? InAbrv : "";
+        resolved_design_class = InClass ? InClass : "";
+        resolved_design_type = InType;
+        b_has_resolved_design = true;
+    }
+
+    bool HasResolvedDesignData() const { return b_has_resolved_design; }
+
+    const Text& ResolvedDisplayName() const { return resolved_design_display_name; }
+    const Text& ResolvedAbrv() const { return resolved_design_abrv; }
+    const Text& ResolvedClass() const { return resolved_design_class; }
+    int ResolvedType() const { return resolved_design_type; }
 };

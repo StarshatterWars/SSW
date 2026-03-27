@@ -46,6 +46,7 @@
 #include "Logging/LogMacros.h"
 
 #include "StarshatterAssetRegistrySubsystem.h"
+#include "StarshatterShipDesignSubsystem.h"
 
 template<typename TEnum>
 static bool FStringToEnum(const FString& InString, TEnum& OutEnum, bool bCaseSensitive = true)
@@ -234,6 +235,19 @@ void UStarshatterGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	{
 		UE_LOG(LogTemp, Error, TEXT("[GAMEDATA] Initialize: AssetRegistry subsystem missing"));
 		return;
+	}
+
+	ShipDesignSubsystem = GI->GetSubsystem<UStarshatterShipDesignSubsystem>();
+
+	if (!ShipDesignSubsystem)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] Failed to get ShipDesignSubsystem"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log,
+			TEXT("[GameData] ShipDesignSubsystem acquired"));
 	}
 
 	// Resolve DataTables via Asset Registry (Project Settings bindings)
@@ -5830,6 +5844,7 @@ FString UStarshatterGameDataSubsystem::GetEmpireRosterName(EEMPIRE_NAME Empire) 
 	return EnumObj->GetDisplayNameTextByValue((int64)Empire).ToString();
 }
 
+
 void UStarshatterGameDataSubsystem::BuildCombatRosterFromOrderOfBattle()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromOrderOfBattle: BEGIN"));
@@ -6468,6 +6483,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 			continue;
 		}
 
+		ApplyDesignToUnit(NewUnit, UnitRow.Design);
+
 		NewUnit->SetCombatGroup(Parent);
 		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
 		Parent->GetUnits().append(NewUnit);
@@ -6514,6 +6531,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 			continue;
 		}
 
+		ApplyDesignToUnit(NewUnit, UnitRow.Design);
+
 		NewUnit->SetCombatGroup(Parent);
 		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
 		Parent->GetUnits().append(NewUnit);
@@ -6549,6 +6568,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 			continue;
 		}
 
+		ApplyDesignToUnit(NewUnit, UnitRow.Design);
+
 		NewUnit->SetCombatGroup(Parent);
 		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
 		Parent->GetUnits().append(NewUnit);
@@ -6578,6 +6599,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 			TCHAR_TO_ANSI(*UnitRow.Design),
 			UnitRow.Count > 0 ? UnitRow.Count : 1,
 			Parent->GetIFF());
+
+		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		if (!NewUnit)
 		{
@@ -6617,6 +6640,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		{
 			continue;
 		}
+
+		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		NewUnit->SetCombatGroup(Parent);
 		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
@@ -6753,6 +6778,8 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 				TCHAR_TO_ANSI(*UnitRow.UnitDesign),
 				FMath::Max(UnitRow.UnitCount, 1),
 				SourceRow->Iff);
+
+			ApplyDesignToUnit(NewUnit, UnitRow.UnitDesign);
 
 			if (!NewUnit)
 			{
@@ -7073,6 +7100,8 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 
 			if (!NewUnit) continue;
 
+			ApplyDesignToUnit(NewUnit, UnitRow.UnitDesign);
+
 			NewUnit->SetCombatGroup(Group);
 			NewUnit->SetSkin(TCHAR_TO_ANSI(*UnitRow.UnitSkin));
 
@@ -7363,4 +7392,64 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignGroupRowNames() const
 		Result.Num());
 
 	return Result;
+}
+
+const FShipDesign* UStarshatterGameDataSubsystem::ResolveDesign(const FString& DesignName) const
+{
+	if (DesignName.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	if (!ShipDesignSubsystem)
+	{
+		UStarshatterGameDataSubsystem* MutableThis =
+			const_cast<UStarshatterGameDataSubsystem*>(this);
+
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			MutableThis->ShipDesignSubsystem =
+				GI->GetSubsystem<UStarshatterShipDesignSubsystem>();
+		}
+	}
+
+	if (!ShipDesignSubsystem)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] ResolveDesign: ShipDesignSubsystem is NULL for '%s'"),
+			*DesignName);
+		return nullptr;
+	}
+
+	const FShipDesign* DesignRow =
+		ShipDesignSubsystem->FindDesign(FName(*DesignName));
+
+	if (!DesignRow)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] ResolveDesign: Ship design row not found for '%s'"),
+			*DesignName);
+	}
+
+	return DesignRow;
+}
+
+void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FString& DesignName)
+{
+	if (!Unit)
+	{
+		return;
+	}
+
+	const FShipDesign* DesignRow = ResolveDesign(DesignName);
+	if (!DesignRow)
+	{
+		return;
+	}
+
+	Unit->SetResolvedDesignData(
+		TCHAR_TO_ANSI(*DesignRow->DisplayName),
+		TCHAR_TO_ANSI(*DesignRow->Abrv),
+		TCHAR_TO_ANSI(*DesignRow->ShipClass),
+		DesignRow->ShipType);
 }

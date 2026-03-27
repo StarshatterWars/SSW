@@ -55,42 +55,42 @@ static FString BuildSafeUnitDisplayText(CombatUnit* Unit)
 		return TEXT("UNKNOWN UNIT");
 	}
 
-	const FString Name = UTF8_TO_TCHAR(Unit->GetName().data());
 	const FString Registry = UTF8_TO_TCHAR(Unit->GetRegistryNumber().data());
 	const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
 
-	FString Out;
+	FString Name = UTF8_TO_TCHAR(Unit->GetName().data());
 
-	// Build prefix like DD-343
+	if (Name.IsEmpty() && Unit->HasResolvedDesignData())
+	{
+		Name = UTF8_TO_TCHAR(Unit->ResolvedDisplayName().data());
+	}
+
+	FString Prefix;
+
 	if (!Indicator.IsEmpty() && !Registry.IsEmpty())
 	{
-		Out = FString::Printf(TEXT("%s-%s"), *Indicator, *Registry);
+		Prefix = FString::Printf(TEXT("%s-%s"), *Indicator, *Registry);
 	}
 	else if (!Registry.IsEmpty())
 	{
-		Out = Registry;
+		Prefix = Registry;
 	}
 	else if (!Indicator.IsEmpty())
 	{
-		Out = Indicator;
+		Prefix = Indicator;
 	}
 
-	// Add name
 	if (!Name.IsEmpty())
 	{
-		if (!Out.IsEmpty())
+		if (!Prefix.IsEmpty())
 		{
-			Out += TEXT(" ");
+			return FString::Printf(TEXT("%s %s"), *Prefix, *Name);
 		}
-		Out += Name;
+
+		return Name;
 	}
 
-	if (Out.IsEmpty())
-	{
-		Out = TEXT("UNKNOWN UNIT");
-	}
-
-	return Out;
+	return Prefix.IsEmpty() ? TEXT("UNKNOWN UNIT") : Prefix;
 }
 
 UCmdForceDlg::UCmdForceDlg(const FObjectInitializer& ObjectInitializer)

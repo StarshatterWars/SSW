@@ -170,6 +170,11 @@ void UStarshatterShipDesignSubsystem::FinalizeDesignParse()
 	
 }
 
+const FShipDesign* UStarshatterShipDesignSubsystem::FindDesignByString(const FString& Name) const
+{
+	return DesignsByName.Find(FName(*Name));
+}
+
 void UStarshatterShipDesignSubsystem::LoadAll(bool bLoaded)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));

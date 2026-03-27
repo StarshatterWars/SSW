@@ -104,6 +104,8 @@ private:
 	void BeginDesignParse(const char* Fn);
 	void FinalizeDesignParse();
 
+	const FShipDesign* FindDesignByString(const FString& Name) const;
+
 	// “Ship root” parser calls these:
 	void ParsePower(TermStruct* val, const char* fn);
 	void ParseDrive(TermStruct* val, const char* fn);

@@ -1,14 +1,15 @@
-/*  Project Starshatter 4.5
-    Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
 
-    SUBSYSTEM:    Stars.exe
-    FILE:         CombatUnit.cpp
-    AUTHOR:       John DiCamillo
+    SUBSYSTEM:    GAME
+    FILE:         CombatUnit.h
+    AUTHOR:       Carlos Bott
+    ORIGINAL:     John DiCamillo / Destroyer Studios LLC
 
     OVERVIEW
     ========
-    A ship, station, or ground unit in the dynamic campaign.
+    A ship, station, or ground unit in the campaign system.
 */
 
 #include "CombatUnit.h"
