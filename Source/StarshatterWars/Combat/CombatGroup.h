@@ -40,7 +40,8 @@ class CombatGroup
 public:
 	static const char* TYPENAME() { return "CombatGroup"; }
 
-	CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int i, int e, CombatGroup* p = 0);
+	CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int i, int e, EEMPIRE_NAME InEmpire, CombatGroup* p = 0);
+	
 	~CombatGroup();
 
 	// comparison operators are used to sort combat groups into a priority list

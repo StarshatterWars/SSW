@@ -38,13 +38,13 @@
 #include <cmath>
 
 // +----------------------------------------------------------------------+
-
-CombatGroup::CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int iff_code, int e, CombatGroup* p)
+CombatGroup::CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int iff_code, int e, EEMPIRE_NAME InEmpire, CombatGroup* p)
 	: type(t)
 	, id(n)
 	, name(s)
 	, iff(iff_code)
 	, enemy_intel(e)
+	, empire_id(InEmpire)
 	, plan_value(0)
 	, units()
 	, components()
@@ -411,7 +411,7 @@ CombatGroup*
 CombatGroup::Clone(bool deep)
 {
 	CombatGroup* clone = new
-		CombatGroup(type, id, name, iff, enemy_intel);
+		CombatGroup(type, id, name, iff, enemy_intel, empire_id);
 
 	clone->combatant = combatant;
 	clone->region = region;
@@ -1057,7 +1057,7 @@ CombatGroup::LoadOrderOfBattle(const char* filename, int team, Combatant* combat
 						int   id = 0;
 						int   iff = -1;
 						Vec3  loc = Vec3(1.0e9f, 0.0f, 0.0f);
-
+						EEMPIRE_NAME empire = EEMPIRE_NAME::Terellian;
 						List<CombatUnit>  unit_list;
 						char              unit_name[64];
 						char              unit_regnum[16];
@@ -1185,8 +1185,9 @@ else GET_DEF_NUM(id);
 								parent_group = force->FindGroup(TypeFromName(parent_type), parent_id);
 							}
 
+							empire = EEMPIRE_NAME::Terellian;
 							CombatGroup* g = new
-								CombatGroup(TypeFromName(type), id, name, iff, Intel::IntelFromName(intel), parent_group);
+								CombatGroup(TypeFromName(type), id, name, iff, Intel::IntelFromName(intel), empire, parent_group);
 
 							g->region = region;
 							g->combatant = combatant;

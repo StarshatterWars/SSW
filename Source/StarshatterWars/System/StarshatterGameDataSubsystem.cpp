@@ -5892,6 +5892,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceTree(const FS_OOBFor
 		TCHAR_TO_ANSI(*ForceRow.Name),
 		ForceRow.Iff,
 		Intel::KNOWN,
+		ForceRow.Empire,
 		nullptr);
 
 	if (!ForceGroup)
@@ -5932,6 +5933,7 @@ void UStarshatterGameDataSubsystem::AddFleetToForce(CombatGroup* ForceGroup, con
 		TCHAR_TO_ANSI(*FleetRow.Name),
 		FleetRow.Iff,
 		Intel::KNOWN,
+		FleetRow.Empire,
 		ForceGroup);
 
 	if (!FleetGroup)
@@ -5975,6 +5977,7 @@ void UStarshatterGameDataSubsystem::AddCarrierGroupToFleet(CombatGroup* FleetGro
 		TCHAR_TO_ANSI(*CarrierRow.Name),
 		CarrierRow.Iff,
 		Intel::KNOWN,
+		CarrierRow.Empire,
 		FleetGroup);
 
 	if (!CarrierGroup)
@@ -6027,6 +6030,7 @@ void UStarshatterGameDataSubsystem::AddDestroyerSquadronToFleet(
 		TCHAR_TO_ANSI(*DestroyerRow.Name),
 		DestroyerRow.Iff,
 		Intel::KNOWN,
+		DestroyerRow.Empire,
 		FleetGroup);
 
 	if (!DestroyerGroup)
@@ -6053,6 +6057,7 @@ void UStarshatterGameDataSubsystem::AddBattleGroupToFleet(
 		TCHAR_TO_ANSI(*BattleRow.Name),
 		BattleRow.Iff,
 		Intel::KNOWN,
+		BattleRow.Empire,
 		FleetGroup);
 
 	if (!BattleGroup)
@@ -6079,6 +6084,7 @@ void UStarshatterGameDataSubsystem::AddBattalionToForce(
 		TCHAR_TO_ANSI(*BattalionRow.Name),
 		BattalionRow.Iff,
 		Intel::KNOWN,
+		BattalionRow.Empire,
 		ForceGroup);
 
 	if (!BattalionGroup)
@@ -6119,6 +6125,7 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 		TCHAR_TO_ANSI(*CivilianRow.Name),
 		CivilianRow.Iff,
 		Intel::KNOWN,
+		CivilianRow.Empire,
 		ForceGroup);
 
 	if (!CivilianGroup)
@@ -6144,6 +6151,7 @@ void UStarshatterGameDataSubsystem::AddWingToCarrier(
 		TCHAR_TO_ANSI(*WingRow.Name),
 		WingRow.Iff,
 		Intel::KNOWN,
+		WingRow.Empire,
 		CarrierGroup);
 
 	if (!WingGroup)
@@ -6189,6 +6197,7 @@ void UStarshatterGameDataSubsystem::AddInterceptSquadronToWing(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		WingGroup);
 
 	if (!SquadronGroup)
@@ -6215,6 +6224,7 @@ void UStarshatterGameDataSubsystem::AddAttackSquadronToWing(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		WingGroup);
 
 	if (!SquadronGroup)
@@ -6242,6 +6252,7 @@ void UStarshatterGameDataSubsystem::AddFighterSquadronToWing(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		WingGroup);
 
 	if (!SquadronGroup)
@@ -6268,6 +6279,7 @@ void UStarshatterGameDataSubsystem::AddLandingSquadronToWing(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		WingGroup);
 
 	if (!SquadronGroup)
@@ -6294,6 +6306,7 @@ void UStarshatterGameDataSubsystem::AddBatteryToBattalion(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		BattalionGroup);
 
 	if (!BatteryGroup)
@@ -6320,6 +6333,7 @@ void UStarshatterGameDataSubsystem::AddStationToBattalion(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		BattalionGroup);
 
 	if (!StationGroup)
@@ -6346,6 +6360,7 @@ void UStarshatterGameDataSubsystem::AddStarbaseToBattalion(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		BattalionGroup);
 
 	if (!StarbaseGroup)
@@ -6372,6 +6387,7 @@ void UStarshatterGameDataSubsystem::AddMinefieldToFleet(
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
 		Intel::KNOWN,
+		Row.Empire,
 		FleetGroup);
 
 	if (!MinefieldGroup)
@@ -6618,6 +6634,9 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 	EEMPIRE_NAME Empire,
 	Combatant* CombatantOwner)
 {
+	UE_LOG(LogTemp, Error,
+		TEXT("***** BuildCombatForceFromRows CALLED *****"));
+
 	TMap<int32, CombatGroup*> RuntimeGroupById;
 	TMap<int32, const FS_CombatGroup*> RuntimeRowById;
 
@@ -6626,6 +6645,11 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 	// Pass 1: create groups
 	for (const FS_CombatGroup& Row : Rows)
 	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] LOADER: Group '%s' EmpireId=%d"),
+			*Row.Name,
+			(int32)Row.EmpireId);
+
 		if (Row.EmpireId != Empire)
 		{
 			continue;
@@ -6637,6 +6661,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 			TCHAR_TO_ANSI(*Row.Name),
 			Row.Iff,
 			static_cast<int>(Row.Intel),
+			Row.EmpireId,
 			nullptr);
 
 		if (!NewGroup)
@@ -6644,16 +6669,10 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 			continue;
 		}
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[GameData] LOADER: Group '%s' EmpireId=%d"),
-			*Row.Name,
-			(int32)Row.EmpireId);
-
 		NewGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 		NewGroup->SetLocation(Row.Location);
 		NewGroup->SetUnitIndex(Row.UnitIndex);
 		NewGroup->SetCombatant(CombatantOwner);
-		NewGroup->SetEmpire(Row.EmpireId);
 
 		RuntimeGroupById.Add(Row.Id, NewGroup);
 		RuntimeRowById.Add(Row.Id, &Row);
@@ -6848,6 +6867,7 @@ TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTa
 			TCHAR_TO_ANSI(*Row->Name),
 			Row->Iff,
 			static_cast<int>(Row->Intel),
+			Row->EmpireId,
 			nullptr);
 
 		if (!NewGroup)
