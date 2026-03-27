@@ -57,7 +57,7 @@ public class StarshatterWars : ModuleRules
             }
         }
 
-        PublicIncludePaths.AddRange(new string[]
+        PrivateIncludePaths.AddRange(new string[]
         {
             Path.Combine(ModuleDirectory, "System"),
             Path.Combine(ModuleDirectory, "Player"),

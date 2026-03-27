@@ -1,21 +1,19 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026. All Rights Reserved.
+/*Project Starshatter Wars
+	Fractal Dev Studios
+	Copyright (C) 2025-2026. All Rights Reserved.
 
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
+	SUBSYSTEM:    UI
+	FILE:         CmdForceDlg.cpp
+	AUTHOR:       Carlos Bott
+	ORIGINAL:     John DiCamillo / Destroyer Studios LLC
 
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmdForceDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmdForceDlg implementation (Unreal port)
+	OVERVIEW
+	========
+	UCmdForceDlg implementation.
 */
 
 #include "CmdForceDlg.h"
+#include "CmdForceListItem.h"
 
 // UMG:
 #include "Components/Button.h"
@@ -30,605 +28,880 @@
 #include "CombatGroup.h"
 #include "CombatUnit.h"
 #include "PlayerCharacter.h"
-#include "Ship.h"
-#include "ShipDesign.h"
-#include "Weapon.h"
-#include "FormatUtil.h"
 #include "Mouse.h"
 #include "UIButton.h"
 #include "CmdMsgDlg.h"
-#include "CmdDlg.h"
 #include "GameStructs.h"
 
-// Your campaign screen:
+// Campaign screen:
 #include "CmpnScreen.h"
 
-namespace
-{
-    struct FWepGroup
-    {
-        FString Name;
-        int32 Count = 0;
-    };
-
-    static FWepGroup* FindWepGroup(TArray<FWepGroup>& Groups, const FString& Name)
-    {
-        // up to 8 groups like legacy
-        for (FWepGroup& G : Groups)
-        {
-            if (!G.Name.IsEmpty() && G.Name.Equals(Name, ESearchCase::IgnoreCase))
-                return &G;
-        }
-
-        for (FWepGroup& G : Groups)
-        {
-            if (G.Name.IsEmpty())
-            {
-                G.Name = Name;
-                return &G;
-            }
-        }
-
-        return nullptr;
-    }
-}
+DEFINE_LOG_CATEGORY_STATIC(LogCmdForceDlg, Log, All);
 
 UCmdForceDlg::UCmdForceDlg(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 }
 
 void UCmdForceDlg::NativeConstruct()
 {
-    Super::NativeConstruct();
+	Super::NativeConstruct();
 
-    // Cache pointers
-    Stars = Starshatter::GetInstance();
-    CampaignPtr = Campaign::GetCampaign();
+	UE_LOG(LogCmdForceDlg, Log, TEXT("NativeConstruct: begin"));
 
-    if (ForcesComboBox)
-        ForcesComboBox->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
+	BindFormWidgets();
 
-    if (TransferButton)
-        TransferButton->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
+	Stars = Starshatter::GetInstance();
+	CampaignPtr = Campaign::GetCampaign();
 
-    if (TransferButton)
-        TransferButton->SetIsEnabled(false);
+	UE_LOG(LogCmdForceDlg, Log, TEXT("NativeConstruct: Stars=%p Campaign=%p"), Stars, CampaignPtr);
+
+	if (ForcesComboBox)
+	{
+		ForcesComboBox->OnSelectionChanged.RemoveDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
+		ForcesComboBox->OnSelectionChanged.AddDynamic(this, &UCmdForceDlg::OnForceSelectionChanged);
+	}
+
+	if (TransferButton)
+	{
+		TransferButton->OnClicked.RemoveDynamic(this, &UCmdForceDlg::OnTransferClicked);
+		TransferButton->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
+		TransferButton->SetIsEnabled(false);
+	}
+
+	if (CombatantList)
+	{
+		CombatantList->OnItemSelectionChanged().RemoveAll(this);
+		CombatantList->OnItemSelectionChanged().AddUObject(this, &UCmdForceDlg::OnCombatItemSelected);
+	}
+
+	UE_LOG(LogCmdForceDlg, Log, TEXT("NativeConstruct: end"));
 }
 
 void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-    Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame();
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	ExecFrame();
+}
+
+void UCmdForceDlg::PopulateForcesComboBox()
+{
+	if (!ForcesComboBox)
+	{
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("PopulateForcesComboBox: ForcesComboBox is null"));
+		return;
+	}
+
+	if (!CampaignPtr)
+	{
+		CampaignPtr = Campaign::GetCampaign();
+	}
+
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("PopulateForcesComboBox: CampaignPtr is null"));
+		return;
+	}
+
+	ForcesComboBox->ClearOptions();
+
+	const List<Combatant>& Combatants = CampaignPtr->GetCombatants();
+
+	UE_LOG(LogCmdForceDlg, Log, TEXT("PopulateForcesComboBox: combatants=%d"), Combatants.size());
+
+	TSet<FString> AddedNames;
+
+	for (int i = 0; i < Combatants.size(); ++i)
+	{
+		Combatant* C = Combatants[i];
+		if (!C)
+		{
+			UE_LOG(LogCmdForceDlg, Warning, TEXT("PopulateForcesComboBox: combatant[%d] is null"), i);
+			continue;
+		}
+
+		if (!IsVisibleCombatant(C))
+		{
+			UE_LOG(LogCmdForceDlg, Log,
+				TEXT("PopulateForcesComboBox: combatant[%d] '%s' skipped (not visible)"),
+				i,
+				UTF8_TO_TCHAR(C->GetName()));
+			continue;
+		}
+
+		const FString CombatantName = UTF8_TO_TCHAR(C->GetName());
+
+		if (CombatantName.IsEmpty())
+		{
+			UE_LOG(LogCmdForceDlg, Warning,
+				TEXT("PopulateForcesComboBox: combatant[%d] has empty name"),
+				i);
+			continue;
+		}
+
+		if (!AddedNames.Contains(CombatantName))
+		{
+			AddedNames.Add(CombatantName);
+			ForcesComboBox->AddOption(CombatantName);
+
+			UE_LOG(LogCmdForceDlg, Log,
+				TEXT("PopulateForcesComboBox: added '%s'"),
+				*CombatantName);
+		}
+	}
+
+	UE_LOG(LogCmdForceDlg, Log,
+		TEXT("PopulateForcesComboBox: final option count=%d"),
+		ForcesComboBox->GetOptionCount());
+
+	if (ForcesComboBox->GetOptionCount() > 0)
+	{
+		ForcesComboBox->SetSelectedIndex(0);
+
+		const FString SelectedName = ForcesComboBox->GetSelectedOption();
+		UE_LOG(LogCmdForceDlg, Log,
+			TEXT("PopulateForcesComboBox: auto-selected '%s'"),
+			*SelectedName);
+
+		Combatant* Found = nullptr;
+
+		for (int i = 0; i < Combatants.size(); ++i)
+		{
+			Combatant* C = Combatants[i];
+			if (C && SelectedName.Equals(UTF8_TO_TCHAR(C->GetName())))
+			{
+				Found = C;
+				break;
+			}
+		}
+
+		CurrentCombatant = Found;
+
+		UE_LOG(LogCmdForceDlg, Log,
+			TEXT("PopulateForcesComboBox: resolved CurrentCombatant=%p"),
+			CurrentCombatant);
+	}
+	else
+	{
+		CurrentCombatant = nullptr;
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("PopulateForcesComboBox: no visible combatants found"));
+	}
+}
+void UCmdForceDlg::BindFormWidgets()
+{
+	// Widget bindings are done directly through BindWidgetOptional
+	// in the UPROPERTY declarations for this version of the dialog.
+}
+
+FString UCmdForceDlg::GetLegacyFormText() const
+{
+	return FString();
 }
 
 void UCmdForceDlg::SetParentCmdDlg(UCmdDlg* InParentCmdDlg)
 {
-    ParentCmdDlg = InParentCmdDlg;
+	ParentCmdDlg = InParentCmdDlg;
 }
-
-// --------------------------------------------------------------------
-// Public API
-// --------------------------------------------------------------------
 
 void UCmdForceDlg::SetManager(UCmpnScreen* InManager)
 {
-    Manager = InManager;
+	Manager = InManager;
 }
 
 void UCmdForceDlg::ShowForceDlg()
 {
-    Mode = ECOMMAND_MODE::MODE_FORCES;
-    CampaignPtr = Campaign::GetCampaign();
+	Mode = ECOMMAND_MODE::MODE_FORCES;
+	CampaignPtr = Campaign::GetCampaign();
 
-    // Populate forces combo:
-    if (ForcesComboBox)
-    {
-        ForcesComboBox->ClearOptions();
+	UE_LOG(LogCmdForceDlg, Log, TEXT("ShowForceDlg: Campaign=%p"), CampaignPtr);
 
-        if (CampaignPtr)
-        {
-            const List<Combatant>& Combatants = CampaignPtr->GetCombatants();
-            for (int i = 0; i < Combatants.size(); ++i)
-            {
-                Combatant* C = Combatants[i];
-                if (IsVisibleCombatant(C))
-                    ForcesComboBox->AddOption(UTF8_TO_TCHAR(C->GetName()));
-            }
+	PopulateForcesComboBox();
 
-            // Select first visible combatant:
-            if (ForcesComboBox->GetOptionCount() > 0)
-            {
-                ForcesComboBox->SetSelectedIndex(0);
-                const FString Name = ForcesComboBox->GetSelectedOption();
+	if (CurrentCombatant)
+	{
+		ShowCombatant(CurrentCombatant);
+	}
+	else
+	{
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("ShowForceDlg: CurrentCombatant is null after PopulateForcesComboBox"));
+	}
 
-                // resolve combatant by name:
-                const List<Combatant>& All = CampaignPtr->GetCombatants();
-                Combatant* Found = All.size() ? All[0] : nullptr;
-
-                for (int i = 0; i < All.size(); ++i)
-                {
-                    Combatant* C = All[i];
-                    if (C && Name.Equals(UTF8_TO_TCHAR(C->GetName())))
-                    {
-                        Found = C;
-                        break;
-                    }
-                }
-
-                CurrentCombatant = Found;
-                ShowCombatant(CurrentCombatant);
-            }
-        }
-    }
-
-    SetVisibility(ESlateVisibility::Visible);
+	SetVisibility(ESlateVisibility::Visible);
 }
 
 void UCmdForceDlg::ExecFrame()
 {
-    if (!CampaignPtr)
-        CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
+	{
+		CampaignPtr = Campaign::GetCampaign();
+	}
 
-    if (!CampaignPtr)
-        return;
+	if (!CampaignPtr)
+	{
+		return;
+	}
 
-    UpdateTransferEnabled();
+	UpdateTransferEnabled();
 }
-
-// --------------------------------------------------------------------
-// Tab routing
-// --------------------------------------------------------------------
 
 void UCmdForceDlg::SetModeAndHighlight(ECOMMAND_MODE InMode)
 {
-    Mode = InMode;
+	Mode = InMode;
 
-    if (!Manager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CmdForceDlg: Manager is null (SetModeAndHighlight)."));
-        return;
-    }
+	if (!Manager)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("CmdForceDlg: Manager is null (SetModeAndHighlight)."));
+	}
 }
-
-// --------------------------------------------------------------------
-// Forces selection / list interaction
-// --------------------------------------------------------------------
 
 void UCmdForceDlg::OnForceSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
-    if (!CampaignPtr)
-        CampaignPtr = Campaign::GetCampaign();
+	UE_LOG(LogCmdForceDlg, Log,
+		TEXT("OnForceSelectionChanged: item='%s' selectinfo=%d"),
+		*SelectedItem,
+		(int32)SelectionType);
 
-    if (!CampaignPtr)
-        return;
+	if (!CampaignPtr)
+	{
+		CampaignPtr = Campaign::GetCampaign();
+	}
 
-    // Resolve combatant by name:
-    Combatant* Found = nullptr;
-    ListIter<Combatant> Iter = CampaignPtr->GetCombatants();
-    while (++Iter)
-    {
-        Combatant* C = Iter.value();
-        if (C && SelectedItem.Equals(UTF8_TO_TCHAR(C->GetName())))
-        {
-            Found = C;
-            break;
-        }
-    }
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("OnForceSelectionChanged: CampaignPtr is null"));
+		return;
+	}
 
-    CurrentCombatant = Found;
-    ShowCombatant(CurrentCombatant);
+	Combatant* Found = nullptr;
+
+	ListIter<Combatant> Iter = CampaignPtr->GetCombatants();
+	while (++Iter)
+	{
+		Combatant* C = Iter.value();
+		if (C && SelectedItem.Equals(UTF8_TO_TCHAR(C->GetName())))
+		{
+			Found = C;
+			break;
+		}
+	}
+
+	CurrentCombatant = Found;
+
+	UE_LOG(LogCmdForceDlg, Log, TEXT("OnForceSelectionChanged: resolved combatant=%p"), CurrentCombatant);
+
+	ShowCombatant(CurrentCombatant);
 }
 
+void UCmdForceDlg::OnCombatItemSelected(UObject* ItemObject)
+{
+	UCmdForceListItem* Item = Cast<UCmdForceListItem>(ItemObject);
+	if (!Item)
+	{
+		UE_LOG(LogCmdForceDlg, Warning, TEXT("OnCombatItemSelected: invalid item"));
+		return;
+	}
+
+	UE_LOG(LogCmdForceDlg, Log,
+		TEXT("OnCombatItemSelected: rowType=%d text='%s'"),
+		(int32)Item->RowType,
+		*Item->DisplayText);
+
+	CurrentGroup = nullptr;
+	CurrentUnit = nullptr;
+
+	if (Item->IsGroup())
+	{
+		CurrentGroup = Item->Group;
+		UE_LOG(LogCmdForceDlg, Log, TEXT("OnCombatItemSelected: selected group=%p"), CurrentGroup);
+		PopulateDescForGroup(CurrentGroup);
+	}
+	else if (Item->IsUnit())
+	{
+		CurrentUnit = Item->Unit;
+		UE_LOG(LogCmdForceDlg, Log, TEXT("OnCombatItemSelected: selected unit=%p"), CurrentUnit);
+		PopulateDescForUnit(CurrentUnit);
+	}
+	else
+	{
+		ClearDescList();
+	}
+
+	UpdateTransferEnabled();
+}
 bool UCmdForceDlg::IsVisibleCombatant(Combatant* C) const
 {
-    int32 VisibleCount = 0;
+	int32 VisibleCount = 0;
 
-    if (C)
-    {
-        CombatGroup* Force = C->GetForce();
-        if (Force)
-        {
-            List<CombatGroup>& Groups = Force->GetComponents();
-            for (int i = 0; i < Groups.size(); ++i)
-            {
-                CombatGroup* G = Groups[i];
-                if (G &&
-                    G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
-                    G->CountUnits() > 0 &&
-                    G->GetIntelLevel() >= Intel::KNOWN)
-                {
-                    ++VisibleCount;
-                }
-            }
-        }
-    }
+	if (C)
+	{
+		CombatGroup* Force = C->GetForce();
+		if (Force)
+		{
+			List<CombatGroup>& Groups = Force->GetComponents();
 
-    return VisibleCount > 0;
+			for (int i = 0; i < Groups.size(); ++i)
+			{
+				CombatGroup* G = Groups[i];
+				if (G &&
+					G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
+					G->CountUnits() > 0 &&
+					G->GetIntelLevel() >= Intel::KNOWN)
+				{
+					++VisibleCount;
+				}
+			}
+		}
+	}
+
+	return VisibleCount > 0;
 }
 
 void UCmdForceDlg::ShowCombatant(Combatant* C)
 {
-    if (!CombatantList || !C)
-        return;
+	UE_LOG(LogCmdForceDlg, Log, TEXT("ShowCombatant: combatant=%p"), C);
 
-    CurrentGroup = nullptr;
-    CurrentUnit = nullptr;
+	if (!CombatantList || !C)
+	{
+		UE_LOG(LogCmdForceDlg, Warning,
+			TEXT("ShowCombatant: CombatantList=%p combatant=%p"),
+			CombatantList, C);
+		return;
+	}
 
-    PipeStack.Empty();
-    bBlankLine = false;
+	CurrentGroup = nullptr;
+	CurrentUnit = nullptr;
+	CurrentCombatant = C;
 
-    // Clear combat list (ListView):
-    CombatantList->ClearListItems();
+	PipeStack.Empty();
+	bBlankLine = false;
 
-    CombatGroup* Force = C->GetForce();
-    if (Force)
-    {
-        List<CombatGroup>& Groups = Force->GetComponents();
-        for (int i = 0; i < Groups.size(); ++i)
-        {
-            CombatGroup* G = Groups[i];
-            if (G && G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN && G->CountUnits() > 0)
-                AddCombatGroupRecursive(G, i == Groups.size() - 1);
-        }
-    }
+	CombatantList->ClearListItems();
 
-    ClearDescList();
+	CombatGroup* Force = C->GetForce();
+	UE_LOG(LogCmdForceDlg, Log, TEXT("ShowCombatant: force=%p"), Force);
 
-    if (TransferButton)
-        TransferButton->SetIsEnabled(false);
-}
+	if (Force)
+	{
+		List<CombatGroup>& Groups = Force->GetComponents();
 
-void UCmdForceDlg::ClearDescList()
-{
-    if (DescriptionList)
-        DescriptionList->ClearListItems();
+		UE_LOG(LogCmdForceDlg, Log, TEXT("ShowCombatant: top groups=%d"), Groups.size());
 
-    if (GroupInfoText)     GroupInfoText->SetText(FText::GetEmpty());
-    if (GroupTypeText)     GroupTypeText->SetText(FText::GetEmpty());
-    if (GroupLocationText) GroupLocationText->SetText(FText::GetEmpty());
-    if (GroupEmpireText)   GroupEmpireText->SetText(FText::GetEmpty());
-}
+		for (int i = 0; i < Groups.size(); ++i)
+		{
+			CombatGroup* G = Groups[i];
 
-void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
-{
-    if (!Group)
-    {
-        ClearDescList();
-        return;
-    }
+			if (G)
+			{
+				UE_LOG(LogCmdForceDlg, Log,
+					TEXT("ShowCombatant: group[%d] id=%d name='%s' type=%d units=%d intel=%d"),
+					i,
+					G->GetID(),
+					UTF8_TO_TCHAR(G->GetDescription()),
+					(int32)G->GetType(),
+					G->CountUnits(),
+					G->GetIntelLevel());
+			}
 
-    // ------------------------------------------------------------
-    // NAME / DESCRIPTION
-    // ------------------------------------------------------------
-    if (GroupInfoText)
-    {
-        GroupInfoText->SetText(FText::FromString(
-            UTF8_TO_TCHAR(Group->GetDescription())));
-    }
+			if (G &&
+				G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
+				G->CountUnits() > 0)
+			{
+				AddCombatGroupRecursive(G, i == Groups.size() - 1);
+			}
+		}
+	}
 
-    // ------------------------------------------------------------
-    // TYPE
-    // ------------------------------------------------------------
-    if (GroupTypeText)
-    {
-        const char* TypeName = CombatGroup::NameFromType(Group->GetType());
+	ClearDescList();
 
-        GroupTypeText->SetText(FText::FromString(
-            TypeName ? UTF8_TO_TCHAR(TypeName) : TEXT("UNKNOWN")));
-    }
+	if (TransferButton)
+	{
+		TransferButton->SetIsEnabled(false);
+	}
 
-    // ------------------------------------------------------------
-    // LOCATION
-    // ------------------------------------------------------------
-    if (GroupLocationText)
-    {
-        GroupLocationText->SetText(FText::FromString(
-            UTF8_TO_TCHAR(Group->GetRegion().data())));
-    }
-
-    // ------------------------------------------------------------
-    // FACTION / EMPIRE (NOT AVAILABLE YET)
-    // ------------------------------------------------------------
-    if (GroupEmpireText)
-    {
-        /*
-        // TODO: proper faction support once available in runtime model
-
-        Combatant* Owner = Group->GetCombatant();
-        if (Owner)
-        {
-            const char* FactionName = Owner->GetName();
-            GroupEmpireText->SetText(FText::FromString(
-                UTF8_TO_TCHAR(FactionName)));
-            return;
-        }
-        */
-
-        // Temporary fallback: use IFF
-        GroupEmpireText->SetText(FText::FromString(
-            FString::Printf(TEXT("IFF %d"), Group->GetIFF())));
-    }
-}
-
-void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
-{
-    if (!Unit)
-    {
-        ClearDescList();
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // NAME / DESCRIPTION
-    // ------------------------------------------------------------
-    if (GroupInfoText)
-    {
-        GroupInfoText->SetText(FText::FromString(
-            UTF8_TO_TCHAR(Unit->GetDescription())));
-    }
-
-    // ------------------------------------------------------------
-   // TYPE (from ShipDesign)
-   // ------------------------------------------------------------
-    if (GroupTypeText)
-    {
-        const ShipDesign* Design = Unit->GetDesign();
-
-        FString TypeText;
-        
-       //if (Design && Design->GetDesignClass()) // && strlen(Design->GetDesignClass()) > 0)
-        //{
-         //   TypeText = UTF8_TO_TCHAR(Design->GetDesignClass());
-        //}
-        //else
-        //{
-            TypeText = TEXT("UNKNOWN");
-        //}
-
-        GroupTypeText->SetText(FText::FromString(TypeText));
-    }
-
-    // ------------------------------------------------------------
-    // LOCATION
-    // ------------------------------------------------------------
-    if (GroupLocationText)
-    {
-        GroupLocationText->SetText(FText::FromString(
-            UTF8_TO_TCHAR(Unit->GetRegion().data())));
-    }
-
-    // ------------------------------------------------------------
-    // FACTION / EMPIRE (NOT AVAILABLE YET)
-    // ------------------------------------------------------------
-    if (GroupEmpireText)
-    {
-        /*
-        // TODO: proper faction system when available
-
-        Combatant* Owner = Unit->GetCombatant();
-        if (Owner)
-        {
-            GroupEmpireText->SetText(FText::FromString(
-                UTF8_TO_TCHAR(Owner->GetName())));
-            return;
-        }
-        */
-
-        // Correct fallback: use unit's IFF
-        GroupEmpireText->SetText(FText::FromString(
-            FString::Printf(TEXT("IFF %d"), Unit->GetIFF())));
-    }
+	UE_LOG(LogCmdForceDlg, Log, TEXT("ShowCombatant: list items now=%d"),
+		CombatantList ? CombatantList->GetNumItems() : -1);
 }
 
 void UCmdForceDlg::RebuildCombatListForCurrentCombatant()
 {
+	if (!CombatantList)
+	{
+		return;
+	}
+
+	CombatantList->ClearListItems();
+	PipeStack.Empty();
+	bBlankLine = false;
+
+	if (!CurrentCombatant)
+	{
+		return;
+	}
+
+	CombatGroup* Force = CurrentCombatant->GetForce();
+	if (!Force)
+	{
+		return;
+	}
+
+	List<CombatGroup>& Groups = Force->GetComponents();
+
+	for (int i = 0; i < Groups.size(); ++i)
+	{
+		CombatGroup* G = Groups[i];
+		if (G &&
+			G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
+			G->CountUnits() > 0)
+		{
+			AddCombatGroupRecursive(G, i == Groups.size() - 1);
+		}
+	}
+}
+
+void UCmdForceDlg::ClearDescList()
+{
+	if (DescList)
+	{
+		DescList->ClearListItems();
+	}
+
+	if (GroupInfoText)
+	{
+		GroupInfoText->SetText(FText::GetEmpty());
+	}
+
+	if (GroupTypeText)
+	{
+		GroupTypeText->SetText(FText::GetEmpty());
+	}
+
+	if (GroupLocationText)
+	{
+		GroupLocationText->SetText(FText::GetEmpty());
+	}
+
+	if (GroupEmpireText)
+	{
+		GroupEmpireText->SetText(FText::GetEmpty());
+	}
 }
 
 void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild)
 {
-    if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !CombatantList)
-        return;
+	if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !CombatantList)
+	{
+		return;
+	}
 
-    // Build prefix similar to legacy (conceptual; real glyph rendering should be in the row widget)
-    FString Prefix;
+	UE_LOG(LogCmdForceDlg, Log,
+		TEXT("AddCombatGroupRecursive: id=%d desc='%s' type=%d units=%d liveChildren=%d expanded=%d pipe='%s'"),
+		Group->GetID(),
+		UTF8_TO_TCHAR(Group->GetDescription()),
+		(int32)Group->GetType(),
+		Group->GetUnits().size(),
+		Group->GetLiveComponents().size(),
+		Group->IsExpanded(),
+		*PipeStack);
 
-    const bool bTopLevel = (!Group->GetParent() || Group->GetParent()->GetType() == ECOMBATGROUP_TYPE::FORCE);
+	FString Prefix;
 
-    if (bTopLevel)
-    {
-        Prefix = Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
-    }
-    else
-    {
-        // child marker (ASCII only)
-        Prefix = bLastChild ? TEXT("\\-") : TEXT("+-");
+	const bool bTopLevel =
+		(!Group->GetParent() ||
+			Group->GetParent()->GetType() == ECOMBATGROUP_TYPE::FORCE);
 
-        const bool bHasChildrenOrUnits =
-            Group->GetLiveComponents().size() > 0 || Group->GetUnits().size() > 0;
+	if (bTopLevel)
+	{
+		Prefix = Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
+	}
+	else
+	{
+		Prefix = bLastChild ? TEXT("\\-") : TEXT("+-");
 
-        if (bHasChildrenOrUnits)
-            Prefix += Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
-        else
-            Prefix += TEXT("   ");
-    }
+		const bool bHasChildrenOrUnits =
+			Group->GetLiveComponents().size() > 0 ||
+			Group->GetUnits().size() > 0;
 
-    const FString Line = PipeStack + Prefix + UTF8_TO_TCHAR(Group->GetDescription());
+		if (bHasChildrenOrUnits)
+		{
+			Prefix += Group->IsExpanded() ? TEXT("[-] ") : TEXT("[+] ");
+		}
+		else
+		{
+			Prefix += TEXT("   ");
+		}
+	}
 
-    // TODO: replace with your row item object:
-    // CombatantList->AddItem(NewObject<UCmdForceListItem>(...));
-    // For now, we cannot add plain strings to UListView without an item class.
+	const FString Line = PipeStack + Prefix + UTF8_TO_TCHAR(Group->GetDescription());
 
-    bBlankLine = false;
+	const bool bHasChildrenOrUnits =
+		Group->GetLiveComponents().size() > 0 ||
+		Group->GetUnits().size() > 0;
 
-    // Update pipe stack (ASCII only)
-    const int32 PrevLen = PipeStack.Len();
+	UCmdForceListItem* GroupItem = NewObject<UCmdForceListItem>(this);
+	GroupItem->InitAsGroup(
+		Line,
+		PipeStack.Len(),
+		Group,
+		Group->IsExpanded(),
+		bHasChildrenOrUnits);
 
-    if (!bTopLevel)
-    {
-        PipeStack += (bLastChild ? TEXT("  ") : TEXT("| "));
-    }
+	CombatantList->AddItem(GroupItem);
 
-    // Units
-    if (Group->IsExpanded() && Group->GetUnits().size() > 0)
-    {
-        ListIter<CombatUnit> UnitIter = Group->GetUnits();
-        while (++UnitIter)
-        {
-            CombatUnit* Unit = UnitIter.value();
-            if (!Unit) continue;
+	UE_LOG(LogCmdForceDlg, Log, TEXT("AddCombatGroupRecursive: added group row '%s'"), *Line);
 
-            const ShipDesign* Design = Unit->GetDesign();
-            const int32 Integrity = Design ? (int32)Design->integrity : 1;
-            const int32 DamagePct = (int32)(100.0 * Unit->GetSustainedDamage() / (double)Integrity);
+	bBlankLine = false;
 
-            FString UnitLine = PipeStack + TEXT("  ") + UTF8_TO_TCHAR(Unit->GetDescription());
-            if (DamagePct >= 1 && Unit->DeadCount() < Unit->Count())
-                UnitLine += FString::Printf(TEXT(" %d%% damage"), DamagePct);
+	const int32 PrevLen = PipeStack.Len();
 
-            // TODO: add unit row item to CombatantList (type=Unit)
-        }
+	if (!bTopLevel)
+	{
+		PipeStack += (bLastChild ? TEXT("  ") : TEXT("| "));
+	}
 
-        // TODO: add blank line item after units
-        bBlankLine = true;
-    }
+	if (Group->IsExpanded() && Group->GetUnits().size() > 0)
+	{
+		ListIter<CombatUnit> UnitIter = Group->GetUnits();
+		while (++UnitIter)
+		{
+			CombatUnit* Unit = UnitIter.value();
+			if (!Unit)
+			{
+				continue;
+			}
 
-    // Child groups
-    if (Group->IsExpanded() && Group->GetLiveComponents().size() > 0)
-    {
-        List<CombatGroup>& Groups = Group->GetLiveComponents();
-        for (int i = 0; i < Groups.size(); ++i)
-        {
-            AddCombatGroupRecursive(Groups[i], i == Groups.size() - 1);
-        }
+			FString UnitLine = PipeStack + TEXT("  ") + UTF8_TO_TCHAR(Unit->GetDescription());
 
-        // TODO: blank line after last group if needed
-        if (!bBlankLine)
-            bBlankLine = true;
-    }
+			UCmdForceListItem* UnitItem = NewObject<UCmdForceListItem>(this);
+			UnitItem->InitAsUnit(UnitLine, PipeStack.Len(), Unit);
+			CombatantList->AddItem(UnitItem);
 
-    // Pop pipe stack
-    PipeStack.LeftInline(PrevLen);
+			UE_LOG(LogCmdForceDlg, Log,
+				TEXT("AddCombatGroupRecursive: added unit row '%s' iff=%d"),
+				*UnitLine, Unit->GetIFF());
+		}
+
+		UCmdForceListItem* SpacerItem = NewObject<UCmdForceListItem>(this);
+		SpacerItem->InitAsSpacer();
+		CombatantList->AddItem(SpacerItem);
+
+		bBlankLine = true;
+	}
+
+	if (Group->IsExpanded() && Group->GetLiveComponents().size() > 0)
+	{
+		List<CombatGroup>& Groups = Group->GetLiveComponents();
+		for (int i = 0; i < Groups.size(); ++i)
+		{
+			AddCombatGroupRecursive(Groups[i], i == Groups.size() - 1);
+		}
+
+		if (!bBlankLine)
+		{
+			UCmdForceListItem* SpacerItem = NewObject<UCmdForceListItem>(this);
+			SpacerItem->InitAsSpacer();
+			CombatantList->AddItem(SpacerItem);
+
+			bBlankLine = true;
+		}
+	}
+
+	PipeStack.LeftInline(PrevLen);
+}
+
+void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
+{
+	if (!Group)
+	{
+		ClearDescList();
+		return;
+	}
+
+	if (GroupInfoText)
+	{
+		GroupInfoText->SetText(FText::FromString(
+			UTF8_TO_TCHAR(Group->GetDescription())));
+	}
+
+	if (GroupTypeText)
+	{
+		const char* TypeName = CombatGroup::NameFromType(Group->GetType());
+
+		GroupTypeText->SetText(FText::FromString(
+			TypeName ? UTF8_TO_TCHAR(TypeName) : TEXT("UNKNOWN")));
+	}
+
+	if (GroupLocationText)
+	{
+		GroupLocationText->SetText(FText::FromString(
+			UTF8_TO_TCHAR(Group->GetRegion().data())));
+	}
+
+	if (GroupEmpireText)
+	{
+		/*
+		// TODO: proper faction support once available in runtime model
+
+		Combatant* Owner = Group->GetCombatant();
+		if (Owner)
+		{
+			const char* FactionName = Owner->GetName();
+			GroupEmpireText->SetText(FText::FromString(
+				UTF8_TO_TCHAR(FactionName)));
+			return;
+		}
+		*/
+
+		GroupEmpireText->SetText(FText::FromString(
+			FString::Printf(TEXT("IFF %d"), Group->GetIFF())));
+	}
+}
+
+void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
+{
+	if (!Unit)
+	{
+		ClearDescList();
+		return;
+	}
+
+	if (GroupInfoText)
+	{
+		GroupInfoText->SetText(FText::FromString(
+			UTF8_TO_TCHAR(Unit->GetDescription())));
+	}
+
+	if (GroupTypeText)
+	{
+		FString TypeText = TEXT("UNKNOWN");
+
+		switch ((CLASSIFICATION)Unit->Type())
+		{
+		case CLASSIFICATION::FIGHTER:
+			TypeText = TEXT("FIGHTER");
+			break;
+
+		case CLASSIFICATION::ATTACK:
+			TypeText = TEXT("ATTACK");
+			break;
+
+		case CLASSIFICATION::LCA:
+			TypeText = TEXT("LANDING CRAFT");
+			break;
+
+		case CLASSIFICATION::DESTROYER:
+			TypeText = TEXT("DESTROYER");
+			break;
+
+		case CLASSIFICATION::CRUISER:
+			TypeText = TEXT("CRUISER");
+			break;
+
+		case CLASSIFICATION::CARRIER:
+			TypeText = TEXT("CARRIER");
+			break;
+
+		case CLASSIFICATION::STATION:
+			TypeText = TEXT("STATION");
+			break;
+
+		case CLASSIFICATION::STARBASE:
+			TypeText = TEXT("STARBASE");
+			break;
+
+		case CLASSIFICATION::MINE:
+			TypeText = TEXT("MINE");
+			break;
+
+		default:
+			break;
+		}
+
+		GroupTypeText->SetText(FText::FromString(TypeText));
+	}
+
+	if (GroupLocationText)
+	{
+		GroupLocationText->SetText(FText::FromString(
+			UTF8_TO_TCHAR(Unit->GetRegion().data())));
+	}
+
+	if (GroupEmpireText)
+	{
+		/*
+		// TODO: proper faction support once runtime ownership exposes a name
+
+		CombatGroup* OwnerGroup = Unit->GetCombatGroup();
+		if (OwnerGroup)
+		{
+			Combatant* Owner = OwnerGroup->GetCombatant();
+			if (Owner)
+			{
+				GroupEmpireText->SetText(FText::FromString(
+					UTF8_TO_TCHAR(Owner->GetName())));
+				return;
+			}
+		}
+		*/
+
+		GroupEmpireText->SetText(FText::FromString(
+			FString::Printf(TEXT("IFF %d"), Unit->GetIFF())));
+	}
 }
 
 bool UCmdForceDlg::CanTransfer(CombatGroup* Group) const
 {
-    if (!Group || !CampaignPtr)
-        return false;
+	if (!Group || !CampaignPtr)
+	{
+		return false;
+	}
 
-    if (Group->GetType() < ECOMBATGROUP_TYPE::WING)
-        return false;
+	if (Group->GetType() < ECOMBATGROUP_TYPE::WING)
+	{
+		return false;
+	}
 
-    if (Group->GetType() > ECOMBATGROUP_TYPE::CARRIER_GROUP)
-        return false;
+	if (Group->GetType() > ECOMBATGROUP_TYPE::CARRIER_GROUP)
+	{
+		return false;
+	}
 
-    if (Group->GetType() == ECOMBATGROUP_TYPE::FLEET || Group->GetType() == ECOMBATGROUP_TYPE::LCA_SQUADRON)
-        return false;
+	if (Group->GetType() == ECOMBATGROUP_TYPE::FLEET ||
+		Group->GetType() == ECOMBATGROUP_TYPE::LCA_SQUADRON)
+	{
+		return false;
+	}
 
-    CombatGroup* PlayerGroup = CampaignPtr->GetPlayerGroup();
-    if (!PlayerGroup || PlayerGroup->GetIFF() != Group->GetIFF())
-        return false;
+	CombatGroup* PlayerGroup = CampaignPtr->GetPlayerGroup();
+	if (!PlayerGroup || PlayerGroup->GetIFF() != Group->GetIFF())
+	{
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 void UCmdForceDlg::UpdateTransferEnabled()
 {
-    if (!TransferButton || !CampaignPtr || !CurrentGroup)
-        return;
+	if (!TransferButton || !CampaignPtr || !CurrentGroup)
+	{
+		return;
+	}
 
-    const bool bEnable = CampaignPtr->IsActive() && CanTransfer(CurrentGroup);
-    TransferButton->SetIsEnabled(bEnable);
+	const bool bEnable = CampaignPtr->IsActive() && CanTransfer(CurrentGroup);
+	TransferButton->SetIsEnabled(bEnable);
 }
 
 void UCmdForceDlg::OnTransferClicked()
 {
-    if (!CampaignPtr || !CurrentGroup || !Manager)
-        return;
+	if (!CampaignPtr || !CurrentGroup || !Manager)
+	{
+		return;
+	}
 
-    PlayerCharacter* PlayerPtr = PlayerCharacter::GetCurrentPlayer();
-    if (!PlayerPtr)
-        return;
+	PlayerCharacter* PlayerPtr = PlayerCharacter::GetCurrentPlayer();
+	if (!PlayerPtr)
+	{
+		return;
+	}
 
-    int CmdClass = (int)CLASSIFICATION::FIGHTER;
+	int CmdClass = (int)CLASSIFICATION::FIGHTER;
 
-    switch (CurrentGroup->GetType())
-    {
-    case ECOMBATGROUP_TYPE::WING:
-    case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-    case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
-        CmdClass = (int)CLASSIFICATION::FIGHTER;
-        break;
+	switch (CurrentGroup->GetType())
+	{
+	case ECOMBATGROUP_TYPE::WING:
+	case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+	case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+		CmdClass = (int)CLASSIFICATION::FIGHTER;
+		break;
 
-    case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-        CmdClass = (int)CLASSIFICATION::ATTACK;
-        break;
+	case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+		CmdClass = (int)CLASSIFICATION::ATTACK;
+		break;
 
-    case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        CmdClass = (int)CLASSIFICATION::LCA;
-        break;
+	case ECOMBATGROUP_TYPE::LCA_SQUADRON:
+		CmdClass = (int)CLASSIFICATION::LCA;
+		break;
 
-    case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
-        CmdClass = (int)CLASSIFICATION::DESTROYER;
-        break;
+	case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
+		CmdClass = (int)CLASSIFICATION::DESTROYER;
+		break;
 
-    case ECOMBATGROUP_TYPE::BATTLE_GROUP:
-        CmdClass = (int)CLASSIFICATION::CRUISER;
-        break;
+	case ECOMBATGROUP_TYPE::BATTLE_GROUP:
+		CmdClass = (int)CLASSIFICATION::CRUISER;
+		break;
 
-    case ECOMBATGROUP_TYPE::CARRIER_GROUP:
-    case ECOMBATGROUP_TYPE::FLEET:
-        CmdClass = (int)CLASSIFICATION::CARRIER;
-        break;
-    }
+	case ECOMBATGROUP_TYPE::CARRIER_GROUP:
+	case ECOMBATGROUP_TYPE::FLEET:
+		CmdClass = (int)CLASSIFICATION::CARRIER;
+		break;
+	}
 
-    FString TransferInfo;
+	FString TransferInfo;
 
-    UCmdMsgDlg* MsgDlg = Manager->GetCmdMsgDlg();
-    if (!MsgDlg)
-        return;
+	UCmdMsgDlg* MsgDlg = Manager->GetCmdMsgDlg();
+	if (!MsgDlg)
+	{
+		return;
+	}
 
-    if (PlayerPtr->CanCommand(CmdClass))
-    {
-        if (CurrentUnit)
-        {
-            CampaignPtr->SetPlayerUnit(CurrentUnit);
-            TransferInfo = FString::Printf(
-                TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-                UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-                UTF8_TO_TCHAR(*PlayerPtr->Name()),
-                UTF8_TO_TCHAR(CurrentUnit->GetDescription()));
-        }
-        else
-        {
-            CampaignPtr->SetPlayerGroup(CurrentGroup);
-            TransferInfo = FString::Printf(
-                TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-                UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-                UTF8_TO_TCHAR(*PlayerPtr->Name()),
-                UTF8_TO_TCHAR(CurrentGroup->GetDescription()));
-        }
+	if (PlayerPtr->CanCommand(CmdClass))
+	{
+		if (CurrentUnit)
+		{
+			CampaignPtr->SetPlayerUnit(CurrentUnit);
 
-        UIButton::PlaySound(UIButton::SND_ACCEPT);
+			TransferInfo = FString::Printf(
+				TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+				UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+				UTF8_TO_TCHAR(*PlayerPtr->Name()),
+				UTF8_TO_TCHAR(CurrentUnit->GetDescription()));
+		}
+		else
+		{
+			CampaignPtr->SetPlayerGroup(CurrentGroup);
 
-        MsgDlg->SetTitleText(TEXT("Transfer Approved"));
-        MsgDlg->SetMessageText(TransferInfo);
-        Manager->ShowCmdMsgDlg();
-    }
-    else
-    {
-        UIButton::PlaySound(UIButton::SND_REJECT);
+			TransferInfo = FString::Printf(
+				TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+				UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+				UTF8_TO_TCHAR(*PlayerPtr->Name()),
+				UTF8_TO_TCHAR(CurrentGroup->GetDescription()));
+		}
 
-        const char* Required = PlayerCharacter::RankName(PlayerCharacter::CommandRankRequired(CmdClass));
-        TransferInfo = FString::Printf(
-            TEXT("Your transfer request has been denied, %s %s.  The %s requires a command rank of %s.  Please return to your unit and your duties.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-            UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-            UTF8_TO_TCHAR(*PlayerPtr->Name()),
-            UTF8_TO_TCHAR(CurrentGroup->GetDescription()),
-            UTF8_TO_TCHAR(Required));
+		UIButton::PlaySound(UIButton::SND_ACCEPT);
 
-        MsgDlg->SetTitleText(TEXT("Transfer Denied"));
-        MsgDlg->SetMessageText(TransferInfo);
-        Manager->ShowCmdMsgDlg();
-    }
+		MsgDlg->SetTitleText(TEXT("Transfer Approved"));
+		MsgDlg->SetMessageText(TransferInfo);
+		Manager->ShowCmdMsgDlg();
+	}
+	else
+	{
+		UIButton::PlaySound(UIButton::SND_REJECT);
+
+		const char* Required =
+			PlayerCharacter::RankName(PlayerCharacter::CommandRankRequired(CmdClass));
+
+		TransferInfo = FString::Printf(
+			TEXT("Your transfer request has been denied, %s %s.  The %s requires a command rank of %s.  Please return to your unit and your duties.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+			UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+			UTF8_TO_TCHAR(*PlayerPtr->Name()),
+			UTF8_TO_TCHAR(CurrentGroup->GetDescription()),
+			UTF8_TO_TCHAR(Required));
+
+		MsgDlg->SetTitleText(TEXT("Transfer Denied"));
+		MsgDlg->SetMessageText(TransferInfo);
+		Manager->ShowCmdMsgDlg();
+	}
+}
+
+CombatGroup* UCmdForceDlg::GetTopForceGroup(CombatGroup* Group) const
+{
+	CombatGroup* Current = Group;
+
+	while (Current && Current->GetParent())
+	{
+		Current = Current->GetParent();
+	}
+
+	return Current;
 }

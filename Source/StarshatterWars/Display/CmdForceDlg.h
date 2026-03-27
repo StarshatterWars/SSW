@@ -14,20 +14,12 @@
     ========
     UCmdForceDlg
     - Unreal port of CmdForceDlg (Operational Command / Forces tab).
-    - In legacy, CmdForceDlg : FormWindow, CmdDlg. In Unreal we do NOT multiply inherit.
-      Instead, this widget *contains* the CmdDlg header widgets (same IDs) and routes mode/save/exit
-      back to UCmpnScreen.
-    - Maintains the same data flows:
-        * Forces ComboBox (combatants)
-        * Combat tree list (groups + units, expandable)
-        * Description list (key/value rows)
-        * Transfer button (approval/denial -> CmdMsgDlg)
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CmdDlg.h"          // for ECmdMode / shared behavior patterns
+#include "CmdDlg.h"
 #include "BaseScreen.h"
 #include "Campaign.h"
 #include "Starshatter.h"
@@ -49,10 +41,14 @@ class Starshatter;
 class UCmpnScreen;
 class UCmdMsgDlg;
 class UCmdDlg;
+class UCmdForceListItem;
 
-/**
- * Forces Tab (Order of Battle)
- */
+// ============================================================
+// Forces Tab (Order of Battle)
+// ============================================================
+
+
+
 UCLASS()
 class STARSHATTERWARS_API UCmdForceDlg : public UBaseScreen
 {
@@ -61,45 +57,50 @@ class STARSHATTERWARS_API UCmdForceDlg : public UBaseScreen
 public:
     UCmdForceDlg(const FObjectInitializer& ObjectInitializer);
 
-    // ============================================================
-    // Lifecycle
-    // ============================================================
 protected:
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
     // ============================================================
-    // Public API (legacy equivalents)
+    // UBaseScreen overrides
     // ============================================================
-public:
+    virtual void BindFormWidgets() override;
+    virtual FString GetLegacyFormText() const override;
+
+    // ============================================================
+    // Public API
+    // ============================================================
     void SetManager(UCmpnScreen* InManager);
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
     void ShowForceDlg();
     void ExecFrame();
 
-private:
-    // ============================================================
-    // Tab routing (Mode/Save/Exit)
-    // ============================================================
     void SetModeAndHighlight(ECOMMAND_MODE InMode);
 
+private:
     // ============================================================
-    // Forces / Combat list interactions
+    // UI Events
     // ============================================================
+
     UFUNCTION()
     void OnForceSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
     UFUNCTION()
     void OnTransferClicked();
 
+    CombatGroup* GetTopForceGroup(CombatGroup* Group) const;
+
+    UFUNCTION()
+    void OnCombatItemSelected(UObject* ItemObject);
+
 private:
     // ============================================================
-    // Core logic (ported)
+    // Core Logic
     // ============================================================
+
     bool IsVisibleCombatant(Combatant* C) const;
     void ShowCombatant(Combatant* C);
-
     void RebuildCombatListForCurrentCombatant();
     void AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild);
 
@@ -111,23 +112,43 @@ private:
 
     void UpdateTransferEnabled();
 
+    void PopulateForcesComboBox();
+
 private:
     // ============================================================
-    // Manager / dependencies
+    // Manager / Dependencies
     // ============================================================
+
     UCmpnScreen* Manager = nullptr;
 
     Starshatter* Stars = nullptr;
     Campaign* CampaignPtr = nullptr;
+
     CombatGroup* CurrentGroup = nullptr;
     CombatUnit* CurrentUnit = nullptr;
     Combatant* CurrentCombatant = nullptr;
 
 private:
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UComboBoxString* ForcesComboBox = nullptr; 
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* CombatantList = nullptr; 
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UListView* DescriptionList = nullptr; 
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* TransferButton = nullptr; 
+    // ============================================================
+    // UI Bindings
+    // ============================================================
+
+    // Forces tab controls
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UComboBoxString* ForcesComboBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UListView* CombatantList = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UListView* DescList = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UButton* TransferButton = nullptr;
+
+    // ------------------------------------------------------------
+    // Description panel (RIGHT SIDE)
+    // ------------------------------------------------------------
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupInfoText = nullptr;
@@ -143,8 +164,9 @@ private:
 
 private:
     // ============================================================
-    // Internal formatting state (legacy pipe stack)
+    // Internal state (tree formatting)
     // ============================================================
+
     FString PipeStack;
     bool bBlankLine = false;
 
