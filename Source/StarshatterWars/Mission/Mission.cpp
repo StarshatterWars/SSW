@@ -406,10 +406,10 @@ Mission::ParseMission(const char* block)
 					char  sysname[64];
 					GetDefText(sysname, def, filename);
 
-					Galaxy* galaxy = Galaxy::GetInstance();
+					Galaxy* galaxyx = Galaxy::GetInstance();
 
-					if (galaxy) {
-						SetStarSystem(galaxy->GetSystem(sysname));
+					if (galaxyx) {
+						SetStarSystem(galaxyx->GetSystem(sysname));
 					}
 				}
 

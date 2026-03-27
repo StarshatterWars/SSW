@@ -48,7 +48,6 @@ class UCmdForceListItem;
 // ============================================================
 
 
-
 UCLASS()
 class STARSHATTERWARS_API UCmdForceDlg : public UBaseScreen
 {
@@ -62,11 +61,6 @@ protected:
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-    // ============================================================
-    // UBaseScreen overrides
-    // ============================================================
-    virtual void BindFormWidgets() override;
-    virtual FString GetLegacyFormText() const override;
 
     // ============================================================
     // Public API
@@ -90,6 +84,8 @@ private:
     void OnTransferClicked();
 
     CombatGroup* GetTopForceGroup(CombatGroup* Group) const;
+
+    void DumpCombatGroupRecursive(CombatGroup* Group, int32 Depth);
 
     UFUNCTION()
     void OnCombatItemSelected(UObject* ItemObject);

@@ -154,7 +154,10 @@ public:
 	void                    ClearAssignments();
 
 	static ECOMBATGROUP_TYPE TypeFromName(const char* type_name);
-	static const char*		 NameFromType(ECOMBATGROUP_TYPE type);
+	static const char* NameFromType(ECOMBATGROUP_TYPE type);
+
+	EEMPIRE_NAME GetEmpire() const { return empire_id; }
+	void SetEmpire(EEMPIRE_NAME InEmpire) { empire_id = InEmpire; }
 
 private:
 	const char* GetOrdinal() const;
@@ -191,6 +194,7 @@ private:
 	List<CombatAssignment> assignments;
 
 	Text                strategic_direction;
+	EEMPIRE_NAME		empire_id;
 };
 
 // +--------------------------------------------------------------------+

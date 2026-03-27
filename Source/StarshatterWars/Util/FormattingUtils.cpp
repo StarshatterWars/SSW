@@ -600,3 +600,42 @@ void UFormattingUtils::FormatDayTime(char* Out, int32 TimeValue)
 
     sprintf_s(Out, 32, "Day %d %02d:%02d", Days + 1, Hours, Minutes);
 }
+
+FString UFormattingUtils::EmpireToString(EEMPIRE_NAME Empire)
+{
+    switch (Empire)
+    {
+    case EEMPIRE_NAME::Terellian:
+        return TEXT("TERELLIAN ALLIANCE");
+
+    case EEMPIRE_NAME::Marakan:
+        return TEXT("MARAKAN HEGEMONY");
+
+    case EEMPIRE_NAME::Independent:
+        return TEXT("INDEPENDENT SYSTEMS");
+
+    case EEMPIRE_NAME::Dantari:
+        return TEXT("DANTARI SEPARATISTS");
+
+    case EEMPIRE_NAME::Zolon:
+        return TEXT("ZOLON EMPIRE");
+
+    case EEMPIRE_NAME::Pirate:
+        return TEXT("BROTHERHOOD OF IRON");
+
+    case EEMPIRE_NAME::Neutral:
+        return TEXT("NEUTRAL");
+
+    case EEMPIRE_NAME::Silessian:
+        return TEXT("SILESSIAN CONFEDERACY");
+
+    case EEMPIRE_NAME::Solus:
+        return TEXT("INDEPENDENT SYSTEM OF SOLUS");
+
+    case EEMPIRE_NAME::Haiche:
+        return TEXT("HAICHE PROTECTORATE");
+
+    default:
+        return TEXT("UNKNOWN");
+    }
+}

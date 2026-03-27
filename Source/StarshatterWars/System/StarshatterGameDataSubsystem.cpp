@@ -6644,10 +6644,16 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 			continue;
 		}
 
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] LOADER: Group '%s' EmpireId=%d"),
+			*Row.Name,
+			(int32)Row.EmpireId);
+
 		NewGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 		NewGroup->SetLocation(Row.Location);
 		NewGroup->SetUnitIndex(Row.UnitIndex);
 		NewGroup->SetCombatant(CombatantOwner);
+		NewGroup->SetEmpire(Row.EmpireId);
 
 		RuntimeGroupById.Add(Row.Id, NewGroup);
 		RuntimeRowById.Add(Row.Id, &Row);
@@ -6658,6 +6664,11 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 		{
 			RootForce = NewGroup;
 		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[GameData] RUNTIME: Group '%s' Empire=%d"),
+			UTF8_TO_TCHAR(NewGroup->GetDescription()),
+			(int32)NewGroup->GetEmpire());;
 	}
 
 	// Pass 2: link hierarchy

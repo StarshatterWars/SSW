@@ -145,5 +145,7 @@ public:
     static void FormatDayTime(char* Out, int32 TimeValue);
     
     static int32 ParseDayTimeString(const FString& In);
+
+    static FString EmpireToString(EEMPIRE_NAME Empire);
 };
 
