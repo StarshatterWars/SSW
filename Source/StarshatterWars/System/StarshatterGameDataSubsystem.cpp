@@ -160,6 +160,35 @@ static void DumpGroupTree(CombatGroup* Group, int Depth = 0)
 	}
 }
 
+static FString NormalizeWeaponGroupLabel(const FShipWeapon& W)
+{
+	// 1. Explicit group (best)
+	if (!W.GroupName.IsEmpty())
+	{
+		return W.GroupName;
+	}
+
+	// 2. Weapon type (MOST IMPORTANT fallback)
+	if (!W.WeaponType.IsEmpty())
+	{
+		return W.WeaponType;
+	}
+
+	// 3. Design name (generic weapon type)
+	if (!W.DesignName.IsEmpty())
+	{
+		return W.DesignName;
+	}
+
+	// 4. Name (last resort, usually too specific)
+	if (!W.Name.IsEmpty())
+	{
+		return W.Name;
+	}
+
+	return TEXT("UNKNOWN");
+}
+
 void UStarshatterGameDataSubsystem::Tick(float DeltaTime)
 {
 	Galaxy* GalaxyPtr = Galaxy::GetInstance();
@@ -7465,10 +7494,7 @@ void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FS
 
 		for (const FShipWeapon& W : DesignRow->Weapon)
 		{
-			const FString Group = !W.GroupName.IsEmpty()
-				? W.GroupName
-				: TEXT("Unknown");
-
+			const FString Group = NormalizeWeaponGroupLabel(W);
 			GroupCounts.FindOrAdd(Group)++;
 		}
 
