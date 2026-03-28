@@ -93,6 +93,226 @@ static FString BuildSafeUnitDisplayText(CombatUnit* Unit)
 	return Prefix.IsEmpty() ? TEXT("UNKNOWN UNIT") : Prefix;
 }
 
+static bool IsSquadronUnitType(int UnitType)
+{
+	switch ((CLASSIFICATION)UnitType)
+	{
+	case CLASSIFICATION::FIGHTER:
+	case CLASSIFICATION::ATTACK:
+	case CLASSIFICATION::LCA:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+static void GatherGroupTypeCountsRecursive(
+	CombatGroup* Group,
+	TMap<FString, int32>& OutUnitTypeCounts,
+	TMap<FString, int32>& OutSquadronTypeCounts)
+{
+	if (!Group)
+	{
+		return;
+	}
+
+	ListIter<CombatUnit> UnitIter = Group->GetUnits();
+	while (++UnitIter)
+	{
+		CombatUnit* Unit = UnitIter.value();
+		if (!Unit)
+		{
+			continue;
+		}
+
+		FString TypeName;
+
+		if (Unit->HasResolvedDesignData())
+		{
+			const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
+			const FString DisplayName = UTF8_TO_TCHAR(Unit->ResolvedDisplayName().data());
+
+			if (!Indicator.IsEmpty() && !DisplayName.IsEmpty())
+			{
+				TypeName = FString::Printf(TEXT("%s %s"), *Indicator, *DisplayName);
+			}
+			else if (!DisplayName.IsEmpty())
+			{
+				TypeName = DisplayName;
+			}
+			else if (!Indicator.IsEmpty())
+			{
+				TypeName = Indicator;
+			}
+		}
+
+		if (TypeName.IsEmpty())
+		{
+			const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
+			const FString DesignName = UTF8_TO_TCHAR(Unit->GetDesignName().data());
+
+			if (!Indicator.IsEmpty() && !DesignName.IsEmpty())
+			{
+				TypeName = FString::Printf(TEXT("%s %s"), *Indicator, *DesignName);
+			}
+			else if (!DesignName.IsEmpty())
+			{
+				TypeName = DesignName;
+			}
+			else if (!Indicator.IsEmpty())
+			{
+				TypeName = Indicator;
+			}
+			else
+			{
+				TypeName = TEXT("UNKNOWN");
+			}
+		}
+
+		if (IsSquadronUnitType(Unit->Type()))
+		{
+			OutSquadronTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+		}
+		else
+		{
+			OutUnitTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+		}
+	}
+
+	ListIter<CombatGroup> GroupIter = Group->GetComponents();
+	while (++GroupIter)
+	{
+		CombatGroup* Child = GroupIter.value();
+		if (!Child)
+		{
+			continue;
+		}
+
+		GatherGroupTypeCountsRecursive(Child, OutUnitTypeCounts, OutSquadronTypeCounts);
+	}
+}
+
+static void GetGroupTotalsRecursive(CombatGroup* Group, int32& OutTotalCount, int32& OutLiveCount)
+{
+	OutTotalCount = 0;
+	OutLiveCount = 0;
+
+	if (!Group)
+	{
+		return;
+	}
+
+	// Direct units
+	ListIter<CombatUnit> UnitIter = Group->GetUnits();
+	while (++UnitIter)
+	{
+		CombatUnit* Unit = UnitIter.value();
+		if (!Unit)
+		{
+			continue;
+		}
+
+		OutTotalCount += Unit->Count();
+		OutLiveCount += Unit->LiveCount();
+	}
+
+	// Child groups
+	ListIter<CombatGroup> GroupIter = Group->GetComponents();
+	while (++GroupIter)
+	{
+		CombatGroup* Child = GroupIter.value();
+		if (!Child)
+		{
+			continue;
+		}
+
+		int32 ChildTotal = 0;
+		int32 ChildLive = 0;
+		GetGroupTotalsRecursive(Child, ChildTotal, ChildLive);
+
+		OutTotalCount += ChildTotal;
+		OutLiveCount += ChildLive;
+	}
+}
+
+static void GatherGroupTypeCountsRecursive(CombatGroup* Group, TMap<FString, int32>& OutTypeCounts)
+{
+	if (!Group)
+	{
+		return;
+	}
+
+	// Direct units
+	ListIter<CombatUnit> UnitIter = Group->GetUnits();
+	while (++UnitIter)
+	{
+		CombatUnit* Unit = UnitIter.value();
+		if (!Unit)
+		{
+			continue;
+		}
+
+		FString TypeName;
+
+		if (Unit->HasResolvedDesignData())
+		{
+			const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
+			const FString DisplayName = UTF8_TO_TCHAR(Unit->ResolvedDisplayName().data());
+
+			if (!Indicator.IsEmpty() && !DisplayName.IsEmpty())
+			{
+				TypeName = FString::Printf(TEXT("%s %s"), *Indicator, *DisplayName);
+			}
+			else if (!DisplayName.IsEmpty())
+			{
+				TypeName = DisplayName;
+			}
+			else if (!Indicator.IsEmpty())
+			{
+				TypeName = Indicator;
+			}
+		}
+
+		if (TypeName.IsEmpty())
+		{
+			const FString Indicator = UFormattingUtils::GetUnitDesignIndicator(Unit);
+			const FString DesignName = UTF8_TO_TCHAR(Unit->GetDesignName().data());
+
+			if (!Indicator.IsEmpty() && !DesignName.IsEmpty())
+			{
+				TypeName = FString::Printf(TEXT("%s %s"), *Indicator, *DesignName);
+			}
+			else if (!DesignName.IsEmpty())
+			{
+				TypeName = DesignName;
+			}
+			else if (!Indicator.IsEmpty())
+			{
+				TypeName = Indicator;
+			}
+			else
+			{
+				TypeName = TEXT("UNKNOWN");
+			}
+		}
+
+		OutTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+	}
+
+	// Child groups
+	ListIter<CombatGroup> GroupIter = Group->GetComponents();
+	while (++GroupIter)
+	{
+		CombatGroup* Child = GroupIter.value();
+		if (!Child)
+		{
+			continue;
+		}
+
+		GatherGroupTypeCountsRecursive(Child, OutTypeCounts);
+	}
+}
 UCmdForceDlg::UCmdForceDlg(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -706,12 +926,6 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 			UTF8_TO_TCHAR(Group->GetDescription())));
 	}
 
-	if (GroupTypeText)
-	{
-		GroupTypeText->SetText(FText::FromString(
-			CombatGroupTypeToDisplayString(Group->GetType())));
-	}
-
 	if (GroupLocationText)
 	{
 		GroupLocationText->SetText(FText::FromString(
@@ -720,17 +934,82 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 
 	if (GroupEmpireText)
 	{
-		// Uses DT-loaded empire from CombatGroup
 		GroupEmpireText->SetText(FText::FromString(
 			UFormattingUtils::EmpireToString(Group->GetEmpire())));
 	}
 
-	if (GroupInfoText)
+	if (!GroupInfoText)
 	{
-		// Uses DT-loaded empire from CombatGroup
-		GroupInfoText->SetText(FText::FromString(
-			CombatGroupTypeToDisplayString(Group->GetType()) + " Group"));
+		return;
 	}
+
+	int32 TotalCount = 0;
+	int32 LiveCount = 0;
+	GetGroupTotalsRecursive(Group, TotalCount, LiveCount);
+
+	TMap<FString, int32> UnitTypeCounts;
+	TMap<FString, int32> SquadronTypeCounts;
+	GatherGroupTypeCountsRecursive(Group, UnitTypeCounts, SquadronTypeCounts);
+
+	const FString GroupName = UTF8_TO_TCHAR(Group->GetDescription());
+	const FString GroupType = CombatGroupTypeToDisplayString(Group->GetType());
+
+	FString Info;
+	Info += FString::Printf(TEXT("%s\n"), *GroupName);
+	Info += FString::Printf(TEXT("%s\n"), *GroupType);
+
+	auto AppendSortedSection = [&Info](const FString& Header, const TMap<FString, int32>& SourceMap)
+		{
+			if (SourceMap.Num() <= 0)
+			{
+				return;
+			}
+
+			TArray<TPair<FString, int32>> SortedTypes;
+			for (const auto& KVP : SourceMap)
+			{
+				SortedTypes.Add(KVP);
+			}
+
+			SortedTypes.Sort([](const TPair<FString, int32>& A, const TPair<FString, int32>& B)
+				{
+					return A.Key < B.Key;
+				});
+
+			Info += FString::Printf(TEXT("\n%s:\n"), *Header);
+
+			for (const auto& KVP : SortedTypes)
+			{
+				Info += FString::Printf(TEXT("  %s x%d\n"), *KVP.Key, KVP.Value);
+			}
+		};
+
+	switch (Group->GetType())
+	{
+	case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+	case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+	case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+	case ECOMBATGROUP_TYPE::LCA_SQUADRON:
+		AppendSortedSection(TEXT("FIGHTER TYPES"), SquadronTypeCounts);
+		break;
+
+	default:
+		AppendSortedSection(TEXT("UNIT TYPES"), UnitTypeCounts);
+		AppendSortedSection(TEXT("SQUADRON TYPES"), SquadronTypeCounts);
+		break;
+	}
+
+	const int32 Losses = TotalCount - LiveCount;
+
+	Info += TEXT("\n");
+	Info += FString::Printf(TEXT("READY: %d / %d"), LiveCount, TotalCount);
+
+	if (Losses > 0)
+	{
+		Info += FString::Printf(TEXT("  (LOSSES: %d)"), Losses);
+	}
+
+	GroupInfoText->SetText(FText::FromString(Info.TrimEnd()));
 }
 
 void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
