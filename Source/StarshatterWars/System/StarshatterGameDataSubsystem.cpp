@@ -7436,6 +7436,11 @@ const FShipDesign* UStarshatterGameDataSubsystem::ResolveDesign(const FString& D
 
 void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FString& DesignName)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GameData] ApplyDesignToUnit: Unit=%p DesignName='%s'"),
+		Unit,
+		*DesignName);
+
 	if (!Unit)
 	{
 		return;
@@ -7447,9 +7452,50 @@ void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FS
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GameData] ApplyDesignToUnit: ResolveDesign('%s') -> %s"),
+		*DesignName,
+		DesignRow ? TEXT("FOUND") : TEXT("NULL"));
+
+	FString WeaponSummary;
+
+	if (DesignRow->Weapon.Num() > 0)
+	{
+		TMap<FString, int32> GroupCounts;
+
+		for (const FShipWeapon& W : DesignRow->Weapon)
+		{
+			const FString Group = !W.GroupName.IsEmpty()
+				? W.GroupName
+				: TEXT("Unknown");
+
+			GroupCounts.FindOrAdd(Group)++;
+		}
+
+		for (const TPair<FString, int32>& KVP : GroupCounts)
+		{
+			if (!WeaponSummary.IsEmpty())
+			{
+				WeaponSummary += TEXT("\n");
+			}
+
+			WeaponSummary += FString::Printf(TEXT("%s (%d)"), *KVP.Key, KVP.Value);
+		}
+	}
+
 	Unit->SetResolvedDesignData(
 		TCHAR_TO_ANSI(*DesignRow->DisplayName),
 		TCHAR_TO_ANSI(*DesignRow->Abrv),
 		TCHAR_TO_ANSI(*DesignRow->ShipClass),
-		DesignRow->ShipType);
+		DesignRow->ShipType,
+		DesignRow->Mass,
+		DesignRow->Scale,
+		DesignRow->Vlimit,
+		DesignRow->Agility,
+		DesignRow->Detet,
+		DesignRow->RepairTeams,
+		TCHAR_TO_ANSI(*DesignRow->Description),
+		TCHAR_TO_ANSI(*WeaponSummary));
+
+	
 }

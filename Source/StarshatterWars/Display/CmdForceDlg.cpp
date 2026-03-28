@@ -118,6 +118,11 @@ void UCmdForceDlg::NativeConstruct()
 		TransferButton->OnClicked.RemoveDynamic(this, &UCmdForceDlg::OnTransferClicked);
 		TransferButton->OnClicked.AddDynamic(this, &UCmdForceDlg::OnTransferClicked);
 		TransferButton->SetIsEnabled(false);
+
+		if(TransferButtonText)
+		 {
+			 TransferButtonText->SetText(FText::FromString(TEXT("TRANSFER")));
+		}
 	}
 
 	if (CombatantList)
@@ -576,6 +581,11 @@ void UCmdForceDlg::ClearDescList()
 		DescList->ClearListItems();
 	}
 
+	if (GroupNameText)
+	{
+		GroupNameText->SetText(FText::GetEmpty());
+	}
+
 	if (GroupInfoText)
 	{
 		GroupInfoText->SetText(FText::GetEmpty());
@@ -690,9 +700,9 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 		return;
 	}
 
-	if (GroupInfoText)
+	if (GroupNameText)
 	{
-		GroupInfoText->SetText(FText::FromString(
+		GroupNameText->SetText(FText::FromString(
 			UTF8_TO_TCHAR(Group->GetDescription())));
 	}
 
@@ -714,25 +724,55 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 		GroupEmpireText->SetText(FText::FromString(
 			UFormattingUtils::EmpireToString(Group->GetEmpire())));
 	}
+
+	if (GroupInfoText)
+	{
+		// Uses DT-loaded empire from CombatGroup
+		GroupInfoText->SetText(FText::FromString(
+			CombatGroupTypeToDisplayString(Group->GetType()) + " Group"));
+	}
 }
 
 void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CmdForceDlg] PopulateDescForUnit: Unit=%p Name='%s' HasDesign=%d HasStats=%d Class='%s' Mass=%.0f Detect=%.0f Repair=%d"),
+		Unit,
+		Unit ? UTF8_TO_TCHAR(Unit->GetName().data()) : TEXT("NULL"),
+		Unit ? Unit->HasResolvedDesignData() : 0,
+		Unit ? Unit->HasResolvedDesignStats() : 0,
+		Unit ? UTF8_TO_TCHAR(Unit->ResolvedClass().data()) : TEXT("NULL"),
+		Unit ? Unit->ResolvedMass() : 0.0,
+		Unit ? Unit->ResolvedDetect() : 0.0,
+		Unit ? Unit->ResolvedRepairTeams() : 0); 
+	
 	if (!Unit)
 	{
 		ClearDescList();
 		return;
 	}
 
-	GroupInfoText->SetText(FText::FromString(
-		BuildSafeUnitDisplayText(Unit)));
+	// ------------------------------------------------------------
+	// Header
+	// ------------------------------------------------------------
+	if (GroupNameText)
+	{
+		GroupNameText->SetText(FText::FromString(
+			BuildSafeUnitDisplayText(Unit)));
+	}
 
+	// ------------------------------------------------------------
+	// Location
+	// ------------------------------------------------------------
 	if (GroupLocationText)
 	{
 		GroupLocationText->SetText(FText::FromString(
 			UTF8_TO_TCHAR(Unit->GetRegion().data())));
 	}
 
+	// ------------------------------------------------------------
+	// Empire
+	// ------------------------------------------------------------
 	if (GroupEmpireText)
 	{
 		CombatGroup* OwnerGroup = Unit->GetCombatGroup();
@@ -743,8 +783,80 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 
 		GroupEmpireText->SetText(FText::FromString(EmpireText));
 	}
-}
 
+	// ------------------------------------------------------------
+	// Info block (ALL remaining data)
+	// ------------------------------------------------------------
+	if (GroupInfoText)
+	{
+		FString Info;
+
+		auto AddLine = [&Info](const FString& Label, const FString& Value)
+			{
+				if (!Value.IsEmpty())
+				{
+					Info += FString::Printf(TEXT("%-10s %s\n"), *Label, *Value);
+				}
+			};
+
+		// --------------------------------------------------------
+		// Core runtime info
+		// --------------------------------------------------------
+		AddLine(TEXT("UNIT:"), BuildSafeUnitDisplayText(Unit));
+		AddLine(TEXT("SECTOR:"), UTF8_TO_TCHAR(Unit->GetRegion().data()));
+
+		// Type
+		FString TypeText = TEXT("UNKNOWN");
+		switch ((CLASSIFICATION)Unit->Type())
+		{
+		case CLASSIFICATION::FIGHTER:   TypeText = TEXT("FIGHTER"); break;
+		case CLASSIFICATION::ATTACK:    TypeText = TEXT("ATTACK"); break;
+		case CLASSIFICATION::LCA:       TypeText = TEXT("LANDING CRAFT"); break;
+		case CLASSIFICATION::DESTROYER: TypeText = TEXT("DESTROYER"); break;
+		case CLASSIFICATION::CRUISER:   TypeText = TEXT("CRUISER"); break;
+		case CLASSIFICATION::CARRIER:   TypeText = TEXT("CARRIER"); break;
+		case CLASSIFICATION::STATION:   TypeText = TEXT("STATION"); break;
+		case CLASSIFICATION::STARBASE:  TypeText = TEXT("STARBASE"); break;
+		default: break;
+		}
+		AddLine(TEXT("TYPE:"), TypeText);
+
+		// --------------------------------------------------------
+		// Design data (from DT)
+		// --------------------------------------------------------
+		if (Unit->HasResolvedDesignData())
+		{
+			AddLine(TEXT("CLASS:"), UTF8_TO_TCHAR(Unit->ResolvedClass().data()));
+
+			if (Unit->HasResolvedDesignStats())
+			{
+				AddLine(TEXT("MASS:"), FString::Printf(TEXT("%.0f T"), Unit->ResolvedMass()));
+				AddLine(TEXT("SCALE:"), FString::Printf(TEXT("%.1f"), Unit->ResolvedScale()));
+				AddLine(TEXT("V LIMIT:"), FString::Printf(TEXT("%.0f"), Unit->ResolvedVLimit()));
+				AddLine(TEXT("AGILITY:"), FString::Printf(TEXT("%.1f"), Unit->ResolvedAgility()));
+				AddLine(TEXT("DETECT:"), FString::Printf(TEXT("%.0f"), Unit->ResolvedDetect()));
+				AddLine(TEXT("REPAIR:"), FString::Printf(TEXT("%d TEAMS"), Unit->ResolvedRepairTeams()));
+			}
+
+			// Description
+			if (Unit->HasResolvedDescription())
+			{
+				Info += TEXT("\n");
+				Info += UTF8_TO_TCHAR(Unit->ResolvedDescription().data());
+				Info += TEXT("\n");
+			}
+
+			// Weapons
+			if (Unit->HasResolvedWeaponSummary())
+			{
+				Info += TEXT("\nWEAPONS:\n");
+				Info += UTF8_TO_TCHAR(Unit->ResolvedWeaponSummary().data());
+			}
+		}
+
+		GroupInfoText->SetText(FText::FromString(Info.TrimEnd()));
+	}
+}
 bool UCmdForceDlg::CanTransfer(CombatGroup* Group) const
 {
 	if (!Group || !CampaignPtr)

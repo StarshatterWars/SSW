@@ -170,6 +170,59 @@ void UStarshatterShipDesignSubsystem::FinalizeDesignParse()
 	
 }
 
+void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
+{
+	if (!ShipDesignDataTable)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[SHIPDESIGN] LoadFromExistingTable: ShipDesignDataTable is NULL"));
+	}
+
+	DesignsByName.Empty();
+
+	const TMap<FName, uint8*>& RowMap = ShipDesignDataTable->GetRowMap();
+
+	if (RowMap.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[SHIPDESIGN] LoadFromExistingTable: table '%s' has no rows"),
+			*ShipDesignDataTable->GetName());
+	}
+
+	for (const TPair<FName, uint8*>& Pair : RowMap)
+	{
+		const FName RowName = Pair.Key;
+
+		const FShipDesign* Row =
+			ShipDesignDataTable->FindRow<FShipDesign>(
+				RowName,
+				TEXT("LoadFromExistingTable"),
+				/*bWarnIfRowMissing=*/false);
+
+		if (!Row)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[SHIPDESIGN] LoadFromExistingTable: failed row '%s'"),
+				*RowName.ToString());
+			continue;
+		}
+
+		DesignsByName.Add(RowName, *Row);
+
+		UE_LOG(LogTemp, Verbose,
+			TEXT("[SHIPDESIGN] Cached row '%s' Display='%s' Class='%s'"),
+			*RowName.ToString(),
+			*Row->DisplayName,
+			*Row->ShipClass);
+	}
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[SHIPDESIGN] LoadFromExistingTable: cached %d rows from '%s'"),
+		DesignsByName.Num(),
+		*ShipDesignDataTable->GetName());
+
+}
+
 const FShipDesign* UStarshatterShipDesignSubsystem::FindDesignByString(const FString& Name) const
 {
 	return DesignsByName.Find(FName(*Name));
@@ -181,11 +234,12 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bLoaded)
 	if (!bLoaded)
 		return;
 
-	LoadShipDesigns();
+	//InitializeShipDesigns();
+	LoadShipDesignTable();
 	bLoaded = true;
 }
 
-void UStarshatterShipDesignSubsystem::LoadShipDesigns()
+void UStarshatterShipDesignSubsystem::InitializeShipDesigns()
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadShipDesigns()"));
 
@@ -3910,3 +3964,28 @@ void UStarshatterShipDesignSubsystem::ParseSkin(TermStruct* Val, const char* Fn)
 	NewShipSkinArray.Add(NewSkin);
 }
 
+const FShipDesign* UStarshatterShipDesignSubsystem::GetDesignRow(const FName RowName) const
+{
+	if (!ShipDesignDataTable)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[SHIPDESIGN] GetDesignRow: ShipDesignDataTable is NULL"));
+		return nullptr;
+	}
+
+	return ShipDesignDataTable->FindRow<FShipDesign>(
+		RowName,
+		TEXT("GetDesignRow"),
+		/*bWarnIfRowMissing=*/false);
+}
+
+const FShipDesign* UStarshatterShipDesignSubsystem::GetDesignRowByName(const FString& DesignName) const
+{
+	if (DesignName.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	const FString CleanName = DesignName.TrimStartAndEnd();
+	return GetDesignRow(FName(*CleanName));
+}

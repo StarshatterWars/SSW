@@ -348,7 +348,7 @@ void UStarshatterBootSubsystem::IngestAllDesignData(bool bForceReimport)
     UE_LOG(LogTemp, Log, TEXT("[INGEST] WEAPONS: %d"), WepSS->GetDesignsByName().Num());
 
     // 3) SHIPS
-    ShipSS->LoadShipDesigns(); // your existing scan + parse
+    ShipSS->LoadAll(); // your existing scan + parse
     UE_LOG(LogTemp, Log, TEXT("[INGEST] SHIPS: %d"), ShipSS->GetDesignsByName().Num());
 
     UE_LOG(LogTemp, Log, TEXT("[INGEST] END FULL DESIGN INGESTION"));

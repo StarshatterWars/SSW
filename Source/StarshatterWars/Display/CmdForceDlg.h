@@ -141,12 +141,14 @@ private:
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UButton* TransferButton = nullptr;
 
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* TransferButtonText = nullptr;
     // ------------------------------------------------------------
     // Description panel (RIGHT SIDE)
     // ------------------------------------------------------------
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
-    UTextBlock* GroupInfoText = nullptr;
+    UTextBlock* GroupNameText = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupTypeText = nullptr;
@@ -156,6 +158,8 @@ private:
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupEmpireText = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional), Transient)
+    UTextBlock* GroupInfoText = nullptr;
 
 private:
     // ============================================================

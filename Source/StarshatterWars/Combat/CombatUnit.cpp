@@ -3,7 +3,7 @@
     Copyright (C) 2025-2026. All Rights Reserved.
 
     SUBSYSTEM:    GAME
-    FILE:         CombatUnit.h
+    FILE:         CombatUnit.cpp
     AUTHOR:       Carlos Bott
     ORIGINAL:     John DiCamillo / Destroyer Studios LLC
 
@@ -20,68 +20,196 @@
 #include "GameStructs.h"
 #include "Game.h"
 
-// +----------------------------------------------------------------------+
-
 inline double random() { return (double)rand() / (double)RAND_MAX; }
 
 // +----------------------------------------------------------------------+
 
 CombatUnit::CombatUnit(const char* n, const char* reg, int t, const char* d, int c, int i)
-    : name(n),
-    regnum(reg),
-    design_name(d),
-    skin(""),
-    type(t),
-    design(0),
-    count(c),
-    dead_count(0),
-    available(c),
-    iff(i),
-    leader(false),
-    region(""),
-    location(FVector::ZeroVector),
-    plan_value(0),
-    launch_time(-1e6),
-    jump_time(0),
-    sustained_damage(0),
-    heading(0),
-    carrier(0),
-    attackers(),
-    target(0),
-    group(0)
+    : name(n)
+    , regnum(reg)
+    , design_name(d)
+    , skin("")
+    , type(t)
+    , design(0)
+    , count(c)
+    , dead_count(0)
+    , available(c)
+    , iff(i)
+    , leader(false)
+    , region("")
+    , location(FVector::ZeroVector)
+    , plan_value(0)
+    , launch_time(-1e6)
+    , jump_time(0)
+    , sustained_damage(0)
+    , heading(0)
+    , carrier(0)
+    , attackers()
+    , target(0)
+    , group(0)
+    , resolved_design_display_name("")
+    , resolved_design_abrv("")
+    , resolved_design_class("")
+    , resolved_design_type(0)
+    , b_has_resolved_design(false)
+    , resolved_mass(0.0)
+    , resolved_scale(0.0)
+    , resolved_vlimit(0.0)
+    , resolved_agility(0.0)
+    , resolved_detect(0.0)
+    , resolved_repair_teams(0)
+    , resolved_description("")
+    , resolved_weapon_summary("")
+    , b_has_resolved_stats(false)
+    , b_has_resolved_desc(false)
+    , b_has_resolved_weapons(false)
 {
 }
 
 CombatUnit::CombatUnit(const CombatUnit& u)
-    : name(u.name),
-    regnum(u.regnum),
-    design_name(u.design_name),
-    skin(u.skin),
-    type(u.type),
-    design(u.design),
-    count(u.count),
-    dead_count(u.dead_count),
-    available(u.available),
-    iff(u.iff),
-    leader(u.leader),
-    region(u.region),
-    location(u.location),
-    plan_value(0),
-    launch_time(u.launch_time),
-    jump_time(u.jump_time),
-    sustained_damage(u.sustained_damage),
-    heading(u.heading),
-    carrier(u.carrier),
-    attackers(),     // do notxcopy attackers list (matches original intent)
-    target(0),
-    group(0)
+    : name(u.name)
+    , regnum(u.regnum)
+    , design_name(u.design_name)
+    , skin(u.skin)
+    , type(u.type)
+    , design(u.design)
+    , count(u.count)
+    , dead_count(u.dead_count)
+    , available(u.available)
+    , iff(u.iff)
+    , leader(u.leader)
+    , region(u.region)
+    , location(u.location)
+    , plan_value(u.plan_value)
+    , launch_time(u.launch_time)
+    , jump_time(u.jump_time)
+    , sustained_damage(u.sustained_damage)
+    , heading(u.heading)
+    , carrier(u.carrier)
+    , attackers()
+    , target(0)
+    , group(0)
+    , resolved_design_display_name(u.resolved_design_display_name)
+    , resolved_design_abrv(u.resolved_design_abrv)
+    , resolved_design_class(u.resolved_design_class)
+    , resolved_design_type(u.resolved_design_type)
+    , b_has_resolved_design(u.b_has_resolved_design)
+    , resolved_mass(u.resolved_mass)
+    , resolved_scale(u.resolved_scale)
+    , resolved_vlimit(u.resolved_vlimit)
+    , resolved_agility(u.resolved_agility)
+    , resolved_detect(u.resolved_detect)
+    , resolved_repair_teams(u.resolved_repair_teams)
+    , resolved_description(u.resolved_description)
+    , resolved_weapon_summary(u.resolved_weapon_summary)
+    , b_has_resolved_stats(u.b_has_resolved_stats)
+    , b_has_resolved_desc(u.b_has_resolved_desc)
+    , b_has_resolved_weapons(u.b_has_resolved_weapons)
 {
+}
+
+CombatUnit& CombatUnit::operator=(const CombatUnit& u)
+{
+    if (this == &u)
+        return *this;
+
+    name = u.name;
+    regnum = u.regnum;
+    design_name = u.design_name;
+    skin = u.skin;
+
+    type = u.type;
+    design = u.design;
+
+    count = u.count;
+    dead_count = u.dead_count;
+    available = u.available;
+
+    iff = u.iff;
+    leader = u.leader;
+
+    region = u.region;
+    location = u.location;
+
+    plan_value = u.plan_value;
+    launch_time = u.launch_time;
+    jump_time = u.jump_time;
+    sustained_damage = u.sustained_damage;
+    heading = u.heading;
+
+    carrier = u.carrier;
+    attackers.clear();
+    target = 0;
+    group = 0;
+
+    resolved_design_display_name = u.resolved_design_display_name;
+    resolved_design_abrv = u.resolved_design_abrv;
+    resolved_design_class = u.resolved_design_class;
+    resolved_design_type = u.resolved_design_type;
+    b_has_resolved_design = u.b_has_resolved_design;
+
+    resolved_mass = u.resolved_mass;
+    resolved_scale = u.resolved_scale;
+    resolved_vlimit = u.resolved_vlimit;
+    resolved_agility = u.resolved_agility;
+    resolved_detect = u.resolved_detect;
+    resolved_repair_teams = u.resolved_repair_teams;
+
+    resolved_description = u.resolved_description;
+    resolved_weapon_summary = u.resolved_weapon_summary;
+
+    b_has_resolved_stats = u.b_has_resolved_stats;
+    b_has_resolved_desc = u.b_has_resolved_desc;
+    b_has_resolved_weapons = u.b_has_resolved_weapons;
+
+    return *this;
+}
+
+void CombatUnit::SetResolvedDesignData(
+    const char* InDisplayName,
+    const char* InAbrv,
+    const char* InClass,
+    int InType,
+    double InMass,
+    double InScale,
+    double InVLimit,
+    double InAgility,
+    double InDetect,
+    int InRepairTeams,
+    const char* InDescription,
+    const char* InWeaponSummary)
+{
+    resolved_design_display_name = InDisplayName ? InDisplayName : "";
+    resolved_design_abrv = InAbrv ? InAbrv : "";
+    resolved_design_class = InClass ? InClass : "";
+    resolved_design_type = InType;
+
+    resolved_mass = InMass;
+    resolved_scale = InScale;
+    resolved_vlimit = InVLimit;
+    resolved_agility = InAgility;
+    resolved_detect = InDetect;
+    resolved_repair_teams = InRepairTeams;
+
+    resolved_description = InDescription ? InDescription : "";
+    resolved_weapon_summary = InWeaponSummary ? InWeaponSummary : "";
+
+    b_has_resolved_design = true;
+    b_has_resolved_stats = true;
+    b_has_resolved_desc = resolved_description.length() > 0;
+    b_has_resolved_weapons = resolved_weapon_summary.length() > 0;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CombatUnit] Stored: class='%s' mass=%.0f detect=%.0f repair=%d"),
+        ANSI_TO_TCHAR(resolved_design_class.data()),
+        resolved_mass,
+        resolved_detect,
+        resolved_repair_teams);
 }
 
 // +----------------------------------------------------------------------+
 
-const ShipDesign*
-CombatUnit::GetDesign()
+const ShipDesign* CombatUnit::GetDesign()
 {
     if (!design)
         design = ShipDesign::GetDesignName(design_name);
@@ -89,8 +217,7 @@ CombatUnit::GetDesign()
     return design;
 }
 
-int
-CombatUnit::GetShipClass() const
+int CombatUnit::GetShipClass() const
 {
     if (design)
         return design->type;
@@ -98,25 +225,22 @@ CombatUnit::GetShipClass() const
     return type;
 }
 
-int
-CombatUnit::GetValue() const
+int CombatUnit::GetValue() const
 {
     return GetSingleValue() * LiveCount();
 }
 
-int
-CombatUnit::GetSingleValue() const
+int CombatUnit::GetSingleValue() const
 {
     return Ship::Value(GetShipClass());
 }
 
 // +----------------------------------------------------------------------+
 
-const char*
-CombatUnit::GetDescription() const
+const char* CombatUnit::GetDescription() const
 {
     if (!design) {
-        CombatUnit* pThis = (CombatUnit*)this; // cast-away const
+        CombatUnit* pThis = (CombatUnit*)this;
         pThis->GetDesign();
     }
 
@@ -125,11 +249,9 @@ CombatUnit::GetDescription() const
     if (!design) {
         strcpy_s(desc, Game::GetText("[unknown]").data());
     }
-
     else if (count > 1) {
         sprintf_s(desc, "%dx %s %s", LiveCount(), design->abrv, design->DisplayName());
     }
-
     else {
         if (regnum.length() > 0)
             sprintf_s(desc, "%s-%s %s", design->abrv, (const char*)regnum, (const char*)name);
@@ -147,21 +269,22 @@ CombatUnit::GetDescription() const
 
 // +----------------------------------------------------------------------+
 
-bool
-CombatUnit::CanLaunch() const
+bool CombatUnit::CanLaunch() const
 {
     bool result = false;
 
     switch (type) {
     case (int)CLASSIFICATION::FIGHTER:
-    case (int)CLASSIFICATION::ATTACK:   result = (Campaign::GetStardate() - launch_time) >= 300;
+    case (int)CLASSIFICATION::ATTACK:
+        result = (Campaign::GetStardate() - launch_time) >= 300;
         break;
 
     case (int)CLASSIFICATION::CORVETTE:
     case (int)CLASSIFICATION::FRIGATE:
     case (int)CLASSIFICATION::DESTROYER:
     case (int)CLASSIFICATION::CRUISER:
-    case (int)CLASSIFICATION::CARRIER:  result = true;
+    case (int)CLASSIFICATION::CARRIER:
+        result = true;
         break;
     }
 
@@ -170,52 +293,44 @@ CombatUnit::CanLaunch() const
 
 // +----------------------------------------------------------------------+
 
-FColor
-CombatUnit::MarkerColor() const
+FColor CombatUnit::MarkerColor() const
 {
     return Ship::IFFColor(iff);
 }
 
-bool
-CombatUnit::IsGroundUnit() const
+bool CombatUnit::IsGroundUnit() const
 {
     return (design && (design->type & (int)CLASSIFICATION::GROUND_UNITS)) ? true : false;
 }
 
-bool
-CombatUnit::IsStarship() const
+bool CombatUnit::IsStarship() const
 {
     return (design && (design->type & (int)CLASSIFICATION::STARSHIPS)) ? true : false;
 }
 
-bool
-CombatUnit::IsDropship() const
+bool CombatUnit::IsDropship() const
 {
     return (design && (design->type & (int)CLASSIFICATION::DROPSHIPS)) ? true : false;
 }
 
-bool
-CombatUnit::IsStatic() const
+bool CombatUnit::IsStatic() const
 {
     return design && (design->type >= (int)CLASSIFICATION::STATION);
 }
 
 // +----------------------------------------------------------------------+
 
-double
-CombatUnit::MaxRange() const
+double CombatUnit::MaxRange() const
 {
     return 100e3;
 }
 
-double
-CombatUnit::MaxEffectiveRange() const
+double CombatUnit::MaxEffectiveRange() const
 {
     return 50e3;
 }
 
-double
-CombatUnit::OptimumRange() const
+double CombatUnit::OptimumRange() const
 {
     if (type == (int)CLASSIFICATION::FIGHTER || type == (int)CLASSIFICATION::ATTACK)
         return 15e3;
@@ -225,8 +340,7 @@ CombatUnit::OptimumRange() const
 
 // +----------------------------------------------------------------------+
 
-bool
-CombatUnit::CanDefend(CombatUnit* unit) const
+bool CombatUnit::CanDefend(CombatUnit* unit) const
 {
     if (unit == 0 || unit == this)
         return false;
@@ -247,8 +361,7 @@ CombatUnit::CanDefend(CombatUnit* unit) const
 
 // +----------------------------------------------------------------------+
 
-double
-CombatUnit::PowerVersus(CombatUnit* tgt) const
+double CombatUnit::PowerVersus(CombatUnit* tgt) const
 {
     if (tgt == 0 || tgt == this || available < 1)
         return 0;
@@ -299,8 +412,7 @@ CombatUnit::PowerVersus(CombatUnit* tgt) const
 
 // +----------------------------------------------------------------------+
 
-int
-CombatUnit::AssignMission()
+int CombatUnit::AssignMission()
 {
     int assign = count;
 
@@ -318,8 +430,7 @@ CombatUnit::AssignMission()
 
 // +----------------------------------------------------------------------+
 
-void
-CombatUnit::CompleteMission()
+void CombatUnit::CompleteMission()
 {
     Disengage();
 
@@ -331,8 +442,7 @@ CombatUnit::CompleteMission()
 
 // +----------------------------------------------------------------------+
 
-void
-CombatUnit::MoveTo(const FVector& loc)
+void CombatUnit::MoveTo(const FVector& loc)
 {
     if (!carrier)
         location = loc;
@@ -342,20 +452,17 @@ CombatUnit::MoveTo(const FVector& loc)
 
 // +----------------------------------------------------------------------+
 
-void
-CombatUnit::Engage(CombatUnit* tgt)
+void CombatUnit::Engage(CombatUnit* tgt)
 {
     if (!tgt)
         Disengage();
-
     else if (!tgt->attackers.contains(this))
         tgt->attackers.append(this);
 
     target = tgt;
 }
 
-void
-CombatUnit::Disengage()
+void CombatUnit::Disengage()
 {
     if (target)
         target->attackers.remove(this);
@@ -386,8 +493,7 @@ static int KillGroup(CombatGroup* group)
     return value_killed;
 }
 
-int
-CombatUnit::Kill(int n)
+int CombatUnit::Kill(int n)
 {
     int killed = n;
 
@@ -399,7 +505,6 @@ CombatUnit::Kill(int n)
     int value_killed = killed * GetSingleValue();
 
     if (killed) {
-        // if unit could support children, kill them too:
         if (type == (int)CLASSIFICATION::CARRIER ||
             type == (int)CLASSIFICATION::STATION ||
             type == (int)CLASSIFICATION::STARBASE) {

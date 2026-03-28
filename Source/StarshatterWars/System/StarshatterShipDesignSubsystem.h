@@ -84,9 +84,13 @@ public:
 
 	// ---------- load entry points ----------
 	// Scans directories and parses all design defs.
-	void LoadShipDesigns();
+	void InitializeShipDesigns();
 	void LoadAll(bool bFull = false);
 	void LoadShipDesign(const char* InFilename);
+	void LoadShipDesignTable();
+
+	const FShipDesign* GetDesignRowByName(const FString& DesignName) const;
+	const FShipDesign* GetDesignRow(const FName RowName) const;
 
 	void SetProjectPath();
 	FString GetProjectPath();
@@ -103,6 +107,8 @@ private:
 	// ---------- current-ship scratch ----------
 	void BeginDesignParse(const char* Fn);
 	void FinalizeDesignParse();
+
+	
 
 	const FShipDesign* FindDesignByString(const FString& Name) const;
 
@@ -126,6 +132,10 @@ private:
 	void ParseDeathSpiral(TermStruct* Val, const char* Fn);
 	void ParseMap(TermStruct* Val, const char* Fn);
 	void ParseSkin(TermStruct* Val, const char* Fn);
+
+
+
+
 
 	FExplosion ParseExplosion(TermStruct* Val, const char* Fn);
 	FDebris ParseDebris(TermStruct* Val, const char* Fn);
