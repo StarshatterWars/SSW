@@ -56,18 +56,6 @@ public:
     void ExecFrame();
 
 protected:
-    // Tab routing
-    void SetModeAndHighlight(int32 InMode);
-
-    UFUNCTION() void OnModeOrdersClicked();
-    UFUNCTION() void OnModeTheaterClicked();
-    UFUNCTION() void OnModeForcesClicked();
-    UFUNCTION() void OnModeIntelClicked();
-    UFUNCTION() void OnModeMissionsClicked();
-
-    // Save/Exit
-    UFUNCTION() void OnSaveClicked();
-    UFUNCTION() void OnExitClicked();
 
     // Theater view buttons
     UFUNCTION() void OnViewGalaxyClicked();
@@ -75,23 +63,6 @@ protected:
     UFUNCTION() void OnViewSectorClicked();
 
 protected:
-    // Header widgets (same ids as legacy in your binding system)
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_group = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_score = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_name = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* txt_time = nullptr;
-
-    // Tab buttons
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_orders = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_theater = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_forces = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_intel = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_missions = nullptr;
-
-    // Footer buttons
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_exit = nullptr;
-
     // Theater controls
     UPROPERTY(meta = (BindWidgetOptional)) UWidget* map_theater = nullptr; // placeholder for your map widget host
     UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_view_galaxy = nullptr; // legacy 401

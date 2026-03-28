@@ -172,6 +172,13 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* PlayerScoreText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* CurrentLocationText;
 
+    UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* MissionButtonText = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional)) class UButton* MissionButton = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* ReturnButtonText = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional)) class UButton* ReturnButton = nullptr;
+
+
 
 
     UPROPERTY(EditAnywhere, Category = "UI")
@@ -228,6 +235,10 @@ private:
     UFUNCTION() void OnCancelButtonClicked();
     UFUNCTION() void OnCancelButtonHovered();
     UFUNCTION() void OnCancelButtonUnHovered();
+
+    UFUNCTION() void OnMissionButtonClicked();
+    UFUNCTION() void OnMissionButtonHovered();
+    UFUNCTION() void OnMissionButtonUnHovered();
 
     void LoadForcesInfo();
     void LoadOrdersInfo();

@@ -171,31 +171,42 @@ void UCmdDlg::NativeConstruct()
         AllMenuButtons.Add(NewButton);
     }
 
-    if (auto* StyleSS = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
-    {
-        StyleSS->ApplyMenuButtonStyle(CancelButton);
-    }
-
     // =========================================================
     // BUTTON SETUP
     // =========================================================
-    if (CancelButton)
+    if (ReturnButton)
     {
-        CancelButton->OnClicked.RemoveDynamic(this, &UCmdDlg::OnCancelButtonClicked);
-        CancelButton->OnClicked.AddDynamic(this, &UCmdDlg::OnCancelButtonClicked);
+        ReturnButton->OnClicked.RemoveDynamic(this, &UCmdDlg::OnCancelButtonClicked);
+        ReturnButton->OnClicked.AddDynamic(this, &UCmdDlg::OnCancelButtonClicked);
 
-        CancelButton->OnHovered.RemoveDynamic(this, &UCmdDlg::OnCancelButtonHovered);
-        CancelButton->OnHovered.AddDynamic(this, &UCmdDlg::OnCancelButtonHovered);
+        ReturnButton->OnHovered.RemoveDynamic(this, &UCmdDlg::OnCancelButtonHovered);
+        ReturnButton->OnHovered.AddDynamic(this, &UCmdDlg::OnCancelButtonHovered);
 
-        CancelButton->OnUnhovered.RemoveDynamic(this, &UCmdDlg::OnCancelButtonUnHovered);
-        CancelButton->OnUnhovered.AddDynamic(this, &UCmdDlg::OnCancelButtonUnHovered);
+        ReturnButton->OnUnhovered.RemoveDynamic(this, &UCmdDlg::OnCancelButtonUnHovered);
+        ReturnButton->OnUnhovered.AddDynamic(this, &UCmdDlg::OnCancelButtonUnHovered);
 
-        if (CancelButtonText)
+        if (ReturnButtonText)
         {
-            CancelButtonText->SetText(FText::FromString(TEXT("CANCEL")));
+            ReturnButtonText->SetText(FText::FromString(TEXT("CANCEL")));
         }
     }
 
+    if (MissionButton)
+    {
+        MissionButton->OnClicked.RemoveDynamic(this, &UCmdDlg::OnMissionButtonClicked);
+        MissionButton->OnClicked.AddDynamic(this, &UCmdDlg::OnMissionButtonClicked);
+
+        MissionButton->OnHovered.RemoveDynamic(this, &UCmdDlg::OnMissionButtonHovered);
+        MissionButton->OnHovered.AddDynamic(this, &UCmdDlg::OnMissionButtonHovered);
+
+        MissionButton->OnUnhovered.RemoveDynamic(this, &UCmdDlg::OnMissionButtonUnHovered);
+        MissionButton->OnUnhovered.AddDynamic(this, &UCmdDlg::OnMissionButtonUnHovered);
+
+        if (MissionButtonText)
+        {
+            MissionButtonText->SetText(FText::FromString(TEXT("ACCEPT")));
+        }
+    }
     // =========================================================
     // PLAYER INFO
     // =========================================================
@@ -585,6 +596,20 @@ void UCmdDlg::OnCancelButtonHovered()
 }
 
 void UCmdDlg::OnCancelButtonUnHovered()
+{
+}
+
+void UCmdDlg::OnMissionButtonClicked()
+{
+}
+
+void UCmdDlg::OnMissionButtonHovered()
+{
+    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
+    SSWInstance->PlayHoverSound(this);
+}
+
+void UCmdDlg::OnMissionButtonUnHovered()
 {
 }
 

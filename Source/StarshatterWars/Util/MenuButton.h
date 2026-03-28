@@ -25,12 +25,11 @@ class STARSHATTERWARS_API UMenuButton : public UUserWidget
 	virtual void NativeConstruct() override;
 
 public:
-	// Button display name (e.g., "Empire", "Fleet", etc.)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
 	FString MenuOption;
 
-	// Visual label
-	UPROPERTY(meta = (BindWidgetOptional))
+	// Button display name (e.g., "Empire", "Fleet", etc.)
+	UPROPERTY(meta = (BindWidgetOptional), EditAnywhere, Category = "Data")
 	UTextBlock* Label;
 
 	// Background for color changes

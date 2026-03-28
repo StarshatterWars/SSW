@@ -45,16 +45,6 @@ void UCmdTheaterDlg::NativeConstruct()
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
-    // Bind Save/Exit
-    if (btn_save) btn_save->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnSaveClicked);
-    if (btn_exit) btn_exit->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnExitClicked);
-
-    // Bind tab buttons
-    if (btn_orders)   btn_orders->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnModeOrdersClicked);
-    if (btn_theater)  btn_theater->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnModeTheaterClicked);
-    if (btn_forces)   btn_forces->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnModeForcesClicked);
-    if (btn_intel)    btn_intel->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnModeIntelClicked);
-    if (btn_missions) btn_missions->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnModeMissionsClicked);
 
     // Bind view buttons
     if (btn_view_galaxy) btn_view_galaxy->OnClicked.AddDynamic(this, &UCmdTheaterDlg::OnViewGalaxyClicked);
@@ -94,14 +84,6 @@ void UCmdTheaterDlg::ShowTheaterDlg()
 
     CampaignPtr = Campaign::GetCampaign();
 
-    // Title/campaign name
-    if (txt_name)
-    {
-        if (CampaignPtr)
-            txt_name->SetText(FText::FromString(UTF8_TO_TCHAR(CampaignPtr->Name())));
-        else
-            txt_name->SetText(FText::FromString(TEXT("No Campaign Selected")));
-    }
 
     // TODO: map view hookup (ported MapView)
     // if (MapView && CampaignPtr) { MapView->SetCampaign(CampaignPtr); }
@@ -117,28 +99,7 @@ void UCmdTheaterDlg::ExecFrame()
     if (!CampaignPtr)
         return;
 
-    // Header updates (mirrors CmdDlg::ExecFrame style you used elsewhere)
-    if (txt_group)
-    {
-        CombatGroup* G = CampaignPtr->GetPlayerGroup();
-        if (G)
-            txt_group->SetText(FText::FromString(UTF8_TO_TCHAR(G->GetDescription())));
-    }
 
-    if (txt_score)
-    {
-        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
-        txt_score->SetText(FText::FromString(ScoreStr));
-        txt_score->SetJustification(ETextJustify::Right);
-    }
-
-    if (txt_time)
-    {
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, CampaignPtr->GetTime());
-        txt_time->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
-    }
 
     // Zoom behavior (legacy polled keyboard + mouse wheel + button state)
     // In Unreal, hook these to input:
@@ -151,49 +112,6 @@ void UCmdTheaterDlg::ExecFrame()
     // if (bZoomOut) MapView->ZoomOut();
 }
 
-void UCmdTheaterDlg::SetModeAndHighlight(int32 InMode)
-{
-    Mode = InMode;
-
-    if (!Manager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CmdTheaterDlg: Manager is null (SetModeAndHighlight)."));
-        return;
-    }
-
-    switch (Mode)
-    {
-    case 0: Manager->ShowCmdOrdersDlg();   break;
-    case 1: Manager->ShowCmdTheaterDlg();  break;
-    case 2: Manager->ShowCmdForceDlg();    break;
-    case 3: Manager->ShowCmdIntelDlg();    break;
-    case 4: Manager->ShowCmdMissionsDlg(); break;
-    default: Manager->ShowCmdOrdersDlg();  break;
-    }
-}
-
-void UCmdTheaterDlg::OnModeOrdersClicked() { SetModeAndHighlight(0); }
-void UCmdTheaterDlg::OnModeTheaterClicked() { SetModeAndHighlight(1); }
-void UCmdTheaterDlg::OnModeForcesClicked() { SetModeAndHighlight(2); }
-void UCmdTheaterDlg::OnModeIntelClicked() { SetModeAndHighlight(3); }
-void UCmdTheaterDlg::OnModeMissionsClicked() { SetModeAndHighlight(4); }
-
-void UCmdTheaterDlg::OnSaveClicked()
-{
-    if (Manager)
-        Manager->ShowCmpFileDlg();
-    else
-        UE_LOG(LogTemp, Warning, TEXT("CmdTheaterDlg: Manager is null (OnSaveClicked)."));
-}
-
-void UCmdTheaterDlg::OnExitClicked()
-{
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
-    }
-}
 
 void UCmdTheaterDlg::OnViewGalaxyClicked()
 {
