@@ -111,7 +111,7 @@ void UCmdMissionsDlg::ShowMissionsDlg()
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[CmdMissionsDlg] ShowMissionsDlg: Campaign='%s' missions=%d"),
-            ANSI_TO_TCHAR(CampaignPtr->Name()),
+            ANSI_TO_TCHAR(CampaignPtr->GetName()),
             CampaignPtr->GetMissionList().size());
     }
 

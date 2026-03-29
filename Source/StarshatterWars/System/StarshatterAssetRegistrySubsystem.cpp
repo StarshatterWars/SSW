@@ -376,6 +376,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
                 TEXT("[ASSETS] MissionSelectScreenClass is not set in Project Settings"));
         }
     }
+
+    // UI.CampaignSelectScreenClass
+    if (!Cache.Contains(TEXT("UI.MissionScreenClass")))
+    {
+        if (!Settings->MissionScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MissionScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MissionScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MissionScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MissionScreenClass is not set in Project Settings"));
+        }
+    }
     // UI.CampaignSelectScreenClass
     if (!Cache.Contains(TEXT("UI.MissionSelectScreenClass")))
     {

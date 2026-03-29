@@ -213,8 +213,7 @@ protected:
     List<Bitmap> images;
     Text         select_msg;
 
-   
- protected:
+protected:
         UPROPERTY(Transient)
         TObjectPtr<UMenuScreen> manager = nullptr;
 

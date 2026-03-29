@@ -2,10 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "GameStructs.h"
 #include "MissionBriefingDlg.generated.h"
 
 class UMissionPlanner;
 class UMenuButton;
+class UMenuScreen;
 class USelectableButtonGroup;
 class UPanelWidget;
 class UWidgetSwitcher;
@@ -42,11 +44,22 @@ public:
     virtual void ShowMsnDlg();
     virtual void OnCommit();
     virtual void OnCancel();
+    virtual void ExecFrame();
+
+    void SetCampaign(Campaign* InCampaign) { CampaignPtr = InCampaign; }
+    void SetMission(Mission* InMission) { MissionPtr = InMission; }
+
+    // Menu manager hookup (matches your existing pattern)
+    virtual void SetMenuManager(UMenuScreen* InManager);
+    virtual void InitializeDlg(UMenuScreen* InManager);
 
 protected:
+    virtual void NativePreConstruct() override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+
     virtual int32 CalcTimeOnTarget() const;
 
     void SetMode(EMissionBriefingMode NewMode);
@@ -68,6 +81,21 @@ protected:
     void HandleCancelClicked();
 
 protected:
+    UPROPERTY(Transient)
+    TObjectPtr<UMenuScreen> manager = nullptr;
+
+protected:
+    UPROPERTY(BlueprintReadOnly, Category = "Campaign")
+    FS_Campaign CurrentCampaignData;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Campaign")
+    bool bHasCurrentCampaign = false;
+
+public:
+protected:
+    UPROPERTY(meta = (BindWidgetOptional))
+    class UTextBlock* TitleText;
+    
     UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
     UTextBlock* MissionNameText = nullptr;
 
@@ -130,16 +158,16 @@ protected:
 
     // Switcher child panels
     UPROPERTY(meta = (BindWidgetOptional))
-    UMissionObjectiveDlg* SitPanel = nullptr;
+    UMissionObjectiveDlg* MissionSituationPanel = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    UMissionPackageDlg* PkgPanel = nullptr;
+    UMissionPackageDlg* MissionPackagePanel = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    UMissionNavDlg* NavPanel = nullptr;
+    UMissionNavDlg* MissionNavPanel = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    UMissionWeaponDlg* WepPanel = nullptr;
+    UMissionWeaponDlg* MissionWepPanel = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionBriefing|Options")
     bool bDisableWeaponTabInNetLobby = true;
@@ -167,4 +195,11 @@ protected:
 
 private:
     static FText ToTextFromUtf8(const char* Utf8);
+    UMissionPlanner* MissionScreen = nullptr;
+    EMissionBriefingMode CurrentScreen = EMissionBriefingMode::SIT;
+
+    UFUNCTION() void HandleGameTimers();
+    UFUNCTION() void HandleUniverseSecondTick(uint64 UniverseSecondsNow);
+    UFUNCTION() void HandleUniverseMinuteTick(uint64 UniverseSecondsNow);
+    UFUNCTION() void HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds);
 };

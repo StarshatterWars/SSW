@@ -261,12 +261,12 @@ Campaign::SelectCampaign(const char* InName)
     ListIter<Campaign> iter = campaigns;
 
     while (++iter && !c) {
-        if (InName && FCStringAnsi::Stricmp(iter->Name(), InName) == 0)
+        if (InName && FCStringAnsi::Stricmp(iter->GetName(), InName) == 0)
             c = iter.value();
     }
 
     if (c) {
-        UE_LOG(LogCampaign, Log, TEXT("Campaign: Selected '%s'"), ANSI_TO_TCHAR(c->Name()));
+        UE_LOG(LogCampaign, Log, TEXT("Campaign: Selected '%s'"), ANSI_TO_TCHAR(c->GetName()));
         current_campaign = c;
     }
     else {
@@ -276,6 +276,18 @@ Campaign::SelectCampaign(const char* InName)
     return c;
 }
 
+void Campaign::SetMission(Mission* InMission)
+{
+    ActiveMission = InMission;
+
+    UE_LOG(LogTemp, Warning, TEXT("[Campaign] SetMission: %s"),
+        ActiveMission ? ANSI_TO_TCHAR(ActiveMission->GetName()) : TEXT("NULL"));
+}
+
+Mission* Campaign::GetMission() const
+{
+    return ActiveMission;
+}
 Campaign*
 Campaign::CreateCustomCampaign(const char* InName, const char* InPath)
 {
@@ -290,7 +302,7 @@ Campaign::CreateCustomCampaign(const char* InName, const char* InPath)
             if (c->GetCampaignId() >= id)
                 id = c->GetCampaignId() + 1;
 
-            if (FCStringAnsi::Strcmp(c->Name(), InName) == 0) {
+            if (FCStringAnsi::Strcmp(c->GetName(), InName) == 0) {
                 UE_LOG(LogCampaign, Warning, TEXT("Campaign: custom campaign '%s' already exists."), ANSI_TO_TCHAR(InName));
                 return 0;
             }

@@ -253,7 +253,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
                         for (int i = 0; i < list.size() && !campaign; i++) {
                             Campaign* c = list.at(i);
 
-                            if (cname == c->Name() || cid == c->GetCampaignId()) {
+                            if (cname == c->GetName() || cid == c->GetCampaignId()) {
                                 campaign = c;
                                 campaign->Load();
                                 campaign->Prep(); // restore campaign to pristine state
@@ -534,7 +534,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
         // failed - restart current campaign:
         else if (status == ECampaignStatus::FAILED) {
             UE_LOG(LogCampaignSaveGame, Log, TEXT("CampaignSaveGame: Loading FAILED campaign, restarting '%s'"),
-                ANSI_TO_TCHAR(campaign->Name()));
+                ANSI_TO_TCHAR(campaign->GetName()));
 
             campaign->Load();
             campaign->Prep(); // restore campaign to pristine state
@@ -546,7 +546,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
         // start next campaign:
         else if (status == ECampaignStatus::SUCCESS) {
             UE_LOG(LogCampaignSaveGame, Log, TEXT("CampaignSaveGame: Loading COMPLETED campaign '%s', searching for next campaign..."),
-                ANSI_TO_TCHAR(campaign->Name()));
+                ANSI_TO_TCHAR(campaign->GetName()));
 
             bool found = false;
 
@@ -559,7 +559,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
                     campaign->Prep(); // restore campaign to pristine state
 
                     UE_LOG(LogCampaignSaveGame, Log, TEXT("Advanced to campaign %d '%s'"),
-                        campaign->GetCampaignId(), ANSI_TO_TCHAR(campaign->Name()));
+                        campaign->GetCampaignId(), ANSI_TO_TCHAR(campaign->GetName()));
 
                     loader->SetDataPath(GetSaveDirectory() + "/");
                     found = true;
@@ -576,7 +576,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
                     campaign->Prep(); // restore campaign to pristine state
 
                     UE_LOG(LogCampaignSaveGame, Log, TEXT("Completed full series, restarting at %d '%s'"),
-                        campaign->GetCampaignId(), ANSI_TO_TCHAR(campaign->Name()));
+                        campaign->GetCampaignId(), ANSI_TO_TCHAR(campaign->GetName()));
 
                     loader->SetDataPath(GetSaveDirectory() + "/");
                     found = true;
@@ -616,7 +616,7 @@ CampaignSaveGame::Save(const char* name)
     CombatUnit* player_unit = campaign->GetPlayerUnit();
 
     fprintf(f, "SAVEGAME\n\n");
-    fprintf(f, "campaign: \"%s\"\n\n", campaign->Name());
+    fprintf(f, "campaign: \"%s\"\n\n", campaign->GetName());
 
     // Guard against null player_group:
     if (player_group) {

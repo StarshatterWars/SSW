@@ -74,11 +74,11 @@ void
 CampaignSituationReport::GlobalSituation()
 {
 	if (campaign->GetTime() < 40 * 3600)
-		sitrep = Text(campaign->Name())
+		sitrep = Text(campaign->GetName())
 		+ Text(" is still in its early stages and the situation is ");
 	else
 		sitrep = Text("The overall outlook for ")
-		+ Text(campaign->Name())
+		+ Text(campaign->GetName())
 		+ Text(" is ");
 
 	int score = campaign->GetPlayerTeamScore();

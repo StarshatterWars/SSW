@@ -12,6 +12,7 @@
 #include "Components/Button.h"
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
+#include "MissionBriefingDlg.h"
 
 UMissionPackageDlg::UMissionPackageDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -36,6 +37,11 @@ void UMissionPackageDlg::NativeConstruct()
     DrawPackages();
     DrawNavPlan();
     DrawThreats();
+}
+
+void UMissionPackageDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+{
+    ParentDlg = InParentCmdDlg;
 }
 
 void UMissionPackageDlg::ExecFrame(float DeltaSeconds)

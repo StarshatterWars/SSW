@@ -22,6 +22,7 @@ class UMissionSelectDlg;
 class UCampaignSelectDlg;
 class UCmdMissionsDlg;
 class UCmdDlg;
+class UMissionBriefingDlg;
 
 class UMissionEditorDlg;
 class UMissionElementDlg;
@@ -74,6 +75,7 @@ public:
     void ShowMissionSelectDlg();
     void ShowMissionEditorDlg();
     void ShowOperationsDlg();
+    void ShowMissionDlg();
 
     void ShowMsnElemDlg();
     void HideMsnElemDlg();
@@ -156,6 +158,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UMissionSelectDlg> MsnSelectDlgClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UMissionBriefingDlg> MissionScreenClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UCampaignSelectDlg> CmpSelectDlgClass;
@@ -250,6 +255,9 @@ protected:
 
     UPROPERTY()
     TObjectPtr<UMissionSelectDlg> MissionSelectDlg;
+
+    UPROPERTY()
+    TObjectPtr<UMissionBriefingDlg> MissionBriefingDlg;
 
     UPROPERTY()
     TObjectPtr<UCmdMissionsDlg> CmdMissionsDlg;

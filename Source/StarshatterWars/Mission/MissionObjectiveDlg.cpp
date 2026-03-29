@@ -11,6 +11,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "MissionBriefingDlg.h"
 #include "Components/ComboBoxString.h"
 
 UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectInitializer)
@@ -47,6 +48,11 @@ void UMissionObjectiveDlg::NativeConstruct()
     {
         SkinCombo->OnSelectionChanged.AddDynamic(this, &UMissionObjectiveDlg::OnSelectionChangedSkin);
     }
+}
+
+void UMissionObjectiveDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+{
+    ParentDlg = InParentCmdDlg;
 }
 
 void UMissionObjectiveDlg::ExecFrame(float DeltaSeconds)

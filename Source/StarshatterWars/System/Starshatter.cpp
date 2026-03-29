@@ -453,7 +453,7 @@ Starshatter::StartOrResumeGame()
 	}
 
 	if (c)
-		Campaign::SelectCampaign(c->Name());
+		Campaign::SelectCampaign(c->GetName());
 
 	Mouse::Show(false);
 	SetGameMode(EGameMode::CLOD);

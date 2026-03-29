@@ -40,6 +40,7 @@
 #include "HardPoint.h"
 #include "MissionElement.h"
 #include "SimElement.h"
+#include "MissionBriefingDlg.h"
 
 #include "MissionPlanner.h"
 
@@ -77,6 +78,11 @@ void UMissionWeaponDlg::NativeConstruct()
     // FORM widgets should already be bound by BaseScreen::NativeOnInitialized().
     // We wire dynamic events here so designer recompile/hot reload stays stable.
     WireEvents();
+}
+
+void UMissionWeaponDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+{
+    ParentDlg = InParentCmdDlg;
 }
 
 void UMissionWeaponDlg::ExecFrame(double DeltaTime)

@@ -43,6 +43,7 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
 
 #include "CmdOrdersDlg.h"
 #include "CmdMissionsDlg.h"
@@ -365,7 +366,7 @@ void UCmdDlg::ShowCmdDlg()
     if (txt_name)
     {
         if (CampaignPtr)
-            txt_name->SetText(FText::FromString(CampaignPtr->Name()));
+            txt_name->SetText(FText::FromString(CampaignPtr->GetName()));
         else
             txt_name->SetText(FText::FromString(TEXT("No Campaign Selected")));
     }
@@ -495,36 +496,74 @@ void UCmdDlg::OnCancelButtonUnHovered()
 
 void UCmdDlg::OnMissionButtonClicked()
 {
-    CampaignPtr = Campaign::GetCampaign();
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: BEGIN"));
 
-    if (!CampaignPtr || !CmdMissionsPanel || !Stars)
+    UStarshatterEnvironmentSubsystem* EnvSubsystem =
+        GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>() : nullptr;
+
+    if (!CampaignPtr)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CampaignPtr is NULL"));
         return;
     }
+
+    if (!CmdMissionsPanel)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CmdMissionsPanel is NULL"));
+        return;
+    }
+
+    if (!EnvSubsystem)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: EnvSubsystem is NULL"));
+        return;
+    }
+
+    if (!manager)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: manager is NULL"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Preconditions passed"));
 
     if (!CmdMissionsPanel->CanAcceptSelectedMission())
     {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CanAcceptSelectedMission returned false"));
         return;
     }
 
-    UMissionListObject* SelectedItem = CmdMissionsPanel->GetSelectedMissionItem();
-    Mission* MissionToStart = CmdMissionsPanel->GetSelectedMission();
+    const int32 SelectedMissionId = CmdMissionsPanel->GetSelectedMissionId();
 
-    if (!MissionToStart && SelectedItem && SelectedItem->MissionId >= 0)
-    {
-        MissionToStart = CampaignPtr->GetMission(SelectedItem->MissionId);
-    }
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: SelectedMissionId=%d"), SelectedMissionId);
 
-    if (!MissionToStart)
+    if (SelectedMissionId <= 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnAcceptClicked: mission could not be resolved"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Invalid SelectedMissionId"));
         return;
     }
 
-    Mouse::Show(false);
-    CampaignPtr->SetMissionId(MissionToStart->GetIdentity());
-    CampaignPtr->StartMission();
-    Stars->SetGameMode(EGameMode::PREP);
+    CampaignPtr->SetMissionId(SelectedMissionId);
+
+    Mission* ActiveMission = CampaignPtr->GetMission(SelectedMissionId);
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Campaign mission now=%s"),
+        ActiveMission ? TEXT("VALID") : TEXT("NULL"));
+
+    if (ActiveMission)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: ActiveMissionName=%s"),
+            ANSI_TO_TCHAR(ActiveMission->GetName()));
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Switching to PLAN mode"));
+
+    EnvSubsystem->SetGameMode(EGameMode::PLAN);
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: About to call ShowMissionDlg"));
+
+    manager->ShowMissionDlg();
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Returned from ShowMissionDlg"));
 }
 
 void UCmdDlg::OnMissionButtonHovered()

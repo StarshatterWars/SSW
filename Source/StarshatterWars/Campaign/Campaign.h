@@ -123,9 +123,12 @@ public:
 
     const List<TemplateList>& GetTemplates() const { return templates; }
 
+    void SetMission(Mission* InMission);
+    Mission* GetMission() const;
+
     // accessors:
-    const char* Name()         const { return name; }
-    const char* Description()  const { return description; }
+    const char* GetName()         const { return name; }
+    const char* GetDescription()  const { return description; }
     const char* Path()         const { return path; }
 
     const char* Situation()    const { return situation; }
@@ -304,4 +307,7 @@ protected:
     );
 
     FString GetCombatantNameString(EEMPIRE_NAME Empire) const;
+
+private:
+    Mission* ActiveMission = nullptr;
 };

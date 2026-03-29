@@ -16,6 +16,7 @@
 #include "CampaignSelectDlg.h"
 #include "MissionEditorDlg.h"
 #include "MissionElementDlg.h"
+#include "MissionBriefingDlg.h"
 #include "MissionEventDlg.h"
 #include "MissionEditorNavDlg.h"
 #include "OptionsScreen.h"
@@ -50,6 +51,9 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
 
     if (!OperationsScreenClass)
         OperationsScreenClass = Assets->GetWidgetClass(TEXT("UI.OperationscreenClass"), true);
+
+    if (!MissionScreenClass)
+        MissionScreenClass = Assets->GetWidgetClass(TEXT("UI.MissionScreenClass"), true);
 
     if (!FirstTimeDlgClass)
         FirstTimeDlgClass = Assets->GetWidgetClass(TEXT("UI.FirstTimeDlgClass"), true);
@@ -201,6 +205,8 @@ void UMenuScreen::HideAll()
     HideDialog(CmpSelectDlg);
     HideDialog(CmdDlg);
 
+    HideDialog(MissionBriefingDlg);
+
     HideDialog(MsnEditDlg);
     HideDialog(MsnElemDlg);
     HideDialog(MsnEventDlg);
@@ -230,6 +236,7 @@ void UMenuScreen::Setup()
     EnsureDialog<UPlayerDlg>(PlayerDlgClass, PlayerDlg);
     EnsureDialog<UAwardShowDlg>(AwardDlgClass, AwardDlg);
 
+    EnsureDialog<UMissionBriefingDlg>(MissionScreenClass, MissionBriefingDlg);
     EnsureDialog<UMissionSelectDlg>(MsnSelectDlgClass, MissionSelectDlg);
     EnsureDialog<UCampaignSelectDlg>(CmpSelectDlgClass, CmpSelectDlg);
     EnsureDialog<UCmdMissionsDlg>(CmdMissionsDlgClass, CmdMissionsDlg);
@@ -270,6 +277,7 @@ void UMenuScreen::TearDown()
     Destroy(reinterpret_cast<UBaseScreen*&>(PlayerDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(AwardDlg));
 
+    Destroy(reinterpret_cast<UBaseScreen*&>(MissionBriefingDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmpSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdMissionsDlg));
@@ -541,6 +549,59 @@ void UMenuScreen::ShowOperationsDlg()
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmdDlg: SHOWN InViewport=%d Vis=%d"),
         CmdDlg->IsInViewport() ? 1 : 0,
         (int32)CmdDlg->GetVisibility());
+}
+
+void UMenuScreen::ShowMissionDlg()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: BEGIN"));
+
+    if (!MissionScreenClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionDlg: MissionScreenClass is NULL"));
+        return;
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionDlg: OwningPlayer is NULL"));
+        return;
+    }
+
+    EnsureDialog<UMissionBriefingDlg>(MissionScreenClass, MissionBriefingDlg);
+    if (!MissionBriefingDlg)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionDlg: EnsureDialog failed (MissionBriefingDlg is NULL)"));
+        return;
+    }
+
+    HideAll();
+
+    MissionBriefingDlg->SetMenuManager(this);
+    MissionBriefingDlg->InitializeDlg(this);
+
+    if (MissionBriefingDlg->IsInViewport())
+    {
+        MissionBriefingDlg->RemoveFromParent();
+    }
+
+    MissionBriefingDlg->AddToViewport(200);
+
+    MissionBriefingDlg->SetVisibility(ESlateVisibility::Visible);
+    MissionBriefingDlg->SetIsEnabled(true);
+    MissionBriefingDlg->SetIsFocusable(true);
+    MissionBriefingDlg->SetDialogInputEnabled(true);
+
+    CurrentDialog = MissionBriefingDlg;
+
+    ApplyUIFocus(PC, MissionBriefingDlg);
+
+    MissionBriefingDlg->Show();
+    MissionBriefingDlg->ShowMsnDlg();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: SHOWN InViewport=%d Vis=%d"),
+        MissionBriefingDlg->IsInViewport() ? 1 : 0,
+        (int32)MissionBriefingDlg->GetVisibility());
 }
 
 void UMenuScreen::ShowMissionSelectDlg()

@@ -50,6 +50,8 @@ public:
 
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    int32 GetSelectedMissionId() const;
+    void SetSelectedMissionId(int32 MissionId);
 
 public:
     void SetManager(UCmpnScreen* InManager);
@@ -67,8 +69,7 @@ private:
     void AppendNewMissionsIfAny();
     void ValidateSelectionStillExists();
 
-    int32 GetSelectedMissionId() const;
-    void SetSelectedMissionId(int32 MissionId);
+
 
     void ClearDescription();
     void SetDescriptionForMissionInfo(MissionInfo* Info);

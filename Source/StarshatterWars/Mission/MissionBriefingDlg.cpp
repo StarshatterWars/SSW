@@ -38,6 +38,7 @@
 #include "FormatUtil.h"
 #include "Instruction.h"
 #include "MissionElement.h"
+#include "CombatGroup.h"
 
 // UI:
 #include "MenuButton.h"
@@ -54,24 +55,129 @@
 // Optional sound:
 #include "SSWGameInstance.h"
 
-#if __has_include("NetLobby.h")
-#include "NetLobby.h"
-#define SSW_HAS_NETLOBBY 1
-#else
-#define SSW_HAS_NETLOBBY 0
-#endif
+#include "StarshatterPlayerSubsystem.h"
+#include "StarshatterGameDataSubsystem.h"
+#include "StarshatterUIStyleSubsystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
 
 UMissionBriefingDlg::UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
 }
 
+void UMissionBriefingDlg::SetMenuManager(UMenuScreen* InManager)
+{
+    manager = InManager;
+}
+
+void UMissionBriefingDlg::InitializeDlg(UMenuScreen* InManager)
+{
+    manager = InManager;
+}
+
+void UMissionBriefingDlg::NativePreConstruct()
+{
+    MenuButtonContainer->ClearChildren();
+
+    if (MissionSituationPanel)
+    {
+        MissionSituationPanel->SetParentDlg(this);
+    }
+
+    if (MissionPackagePanel)
+    {
+        MissionPackagePanel->SetParentDlg(this);
+    }
+
+    if (MissionNavPanel)
+    {
+        MissionNavPanel->SetParentDlg(this);
+    }
+
+    if (MissionWepPanel)
+    {
+        MissionWepPanel->SetParentDlg(this);
+    }
+}
+
 void UMissionBriefingDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    CampaignPtr = Campaign::GetCampaign();
-    MissionPtr = CampaignPtr ? CampaignPtr->GetMission() : nullptr;
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefingDlg] NativeConstruct: GameInstance is NULL"));
+        return;
+    }
+
+    UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!PlayerSS)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefingDlg] NativeConstruct: PlayerSubsystem is NULL"));
+        return;
+    }
+
+    UStarshatterGameDataSubsystem* DataSubsystem = GI->GetSubsystem<UStarshatterGameDataSubsystem>();
+    if (!DataSubsystem)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefingDlg] NativeConstruct: GameDataSubsystem is NULL"));
+        return;
+    }
+
+    if (!PlayerSS->HasLoaded())
+    {
+        PlayerSS->LoadPlayer();
+    }
+
+    const FS_PlayerGameInfo& PlayerInfo = PlayerSS->GetPlayerInfo();
+
+    HandleGameTimers();
+
+    const FS_Campaign* FoundCampaign = DataSubsystem->GetCampaignByIndex1Based(PlayerInfo.Campaign);
+    if (FoundCampaign)
+    {
+        CurrentCampaignData = *FoundCampaign;
+        bHasCurrentCampaign = true;
+
+        UE_LOG(LogTemp, Log,
+            TEXT("[MissionBriefingDlg] Loaded Campaign: %s (Index=%d)"),
+            *CurrentCampaignData.Name,
+            PlayerInfo.Campaign);
+    }
+    else
+    {
+        bHasCurrentCampaign = false;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] NativeConstruct: No campaign found for index %d"),
+            PlayerInfo.Campaign);
+    }
+
+    if (TitleText)
+    {
+        TitleText->SetText(FText::FromString(TEXT("MISSION OPERATIONS")));
+    }
+
+    if (PlayerNameText)
+    {
+        PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
+
+        UE_LOG(LogTemp, Log,
+            TEXT("[MissionBriefingDlg] Player Name: %s"),
+            *PlayerInfo.Name);
+    }
+
+    if (MissionSwitcher)
+    {
+        MissionSwitcher->SetActiveWidgetIndex(0);
+    }
+
+    if (bHasCurrentCampaign && CurrentLocationText)
+    {
+        CurrentLocationText->SetText(
+            FText::FromString(CurrentCampaignData.System + TEXT(" System")).ToUpper());
+    }
 
     if (MissionButton)
     {
@@ -87,7 +193,8 @@ void UMissionBriefingDlg::NativeConstruct()
 
     BuildMenuButtons();
     InitializeSubPanels();
-    ShowMsnDlg();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] NativeConstruct: UI initialized"));
 }
 
 void UMissionBriefingDlg::NativeDestruct()
@@ -114,6 +221,39 @@ void UMissionBriefingDlg::NativeDestruct()
     Super::NativeDestruct();
 }
 
+void UMissionBriefingDlg::ExecFrame()
+{
+    if (!CampaignPtr)
+        CampaignPtr = Campaign::GetCampaign();
+
+    if (!CampaignPtr)
+        return;
+
+    if (CurrentUnitText)
+    {
+        CombatGroup* G = CampaignPtr->GetPlayerGroup();
+        if (G)
+            CurrentUnitText->SetText(FText::FromString(G->GetDescription()));
+    }
+
+    if (PlayerScoreText)
+    {
+        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
+        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
+        PlayerScoreText->SetText(FText::FromString(ScoreStr));
+        PlayerScoreText->SetJustification(ETextJustify::Right);
+    }
+
+    if (MissionTPlusText)
+    {
+        const double T = CampaignPtr->GetTime();
+
+        char DayTime[32] = { 0 };
+        FormatDayTime(DayTime, T);
+
+        MissionTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+    }
+}
 void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
@@ -125,6 +265,7 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
             OnCommit();
         }
     }
+    ExecFrame();
 }
 
 FText UMissionBriefingDlg::ToTextFromUtf8(const char* Utf8)
@@ -177,36 +318,63 @@ void UMissionBriefingDlg::BuildMenuButtons()
 
 void UMissionBriefingDlg::InitializeSubPanels()
 {
-    if (SitPanel)
+    if (MissionSituationPanel)
     {
-        //SitPanel->SetParentBriefingDlg(this);
-        //SitPanel->SetManager(Manager);
+        MissionSituationPanel->SetParentDlg(this);
+		MissionSituationPanel->SetManager(MissionScreen);
     }
 
-    if (PkgPanel)
+    if (MissionPackagePanel)
     {
-       //PkgPanel->SetParentBriefingDlg(this);
-        //PkgPanel->SetManager(Manager);
+        MissionPackagePanel->SetParentDlg(this);
+        MissionPackagePanel->SetManager(MissionScreen);;
     }
 
-    if (NavPanel)
+    if (MissionNavPanel)
     {
-        //NavPanel->SetParentBriefingDlg(this);
-        //NavPanel->SetManager(Manager);
+        MissionNavPanel->SetParentDlg(this);
+		MissionNavPanel->SetManager(MissionScreen);
     }
 
-    if (WepPanel)
+    if (MissionWepPanel)
     {
-        //WepPanel->SetParentBriefingDlg(this);
-        //WepPanel->SetManager(Manager);
+        MissionWepPanel->SetParentDlg(this);
+		MissionWepPanel->SetManager(MissionScreen);
     }
 }
 
 void UMissionBriefingDlg::ShowMsnDlg()
 {
-    CampaignPtr = Campaign::GetCampaign();
-    MissionPtr = CampaignPtr ? CampaignPtr->GetMission() : nullptr;
+    if (!CampaignPtr)
+    {
+        CampaignPtr = Campaign::GetCampaign();
+    }
+
+    MissionPtr = nullptr;
+
+    if (CampaignPtr)
+    {
+        const int32 MissionId = CampaignPtr->GetMissionId();
+
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: MissionId=%d"), MissionId);
+
+        if (MissionId > 0)
+        {
+            MissionPtr = CampaignPtr->GetMission(MissionId);
+        }
+    }
+
     PackageIndex = -1;
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: CampaignPtr=%s MissionPtr=%s"),
+        CampaignPtr ? TEXT("VALID") : TEXT("NULL"),
+        MissionPtr ? TEXT("VALID") : TEXT("NULL"));
+
+    if (MissionPtr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: MissionName=%s"),
+            ANSI_TO_TCHAR(MissionPtr->GetName()));
+    }
 
     RefreshHeader();
 
@@ -224,16 +392,6 @@ void UMissionBriefingDlg::ShowMsnDlg()
         if (bDisableTabsWhenMissionNotOK)
         {
             bEnable = bMissionOK;
-        }
-
-        if (bDisableWeaponTabInNetLobby && Button->MenuOption == TEXT("WEP"))
-        {
-#if SSW_HAS_NETLOBBY
-            if (NetLobby::GetInstance())
-            {
-                bEnable = false;
-            }
-#endif
         }
 
         Button->SetIsEnabled(bEnable);
@@ -257,26 +415,6 @@ void UMissionBriefingDlg::ShowMsnDlg()
     if (ReturnButtonText)
     {
         ReturnButtonText->SetText(FText::FromString(TEXT("CANCEL")));
-    }
-
-    if (SitPanel)
-    {
-        //SitPanel->RefreshFromMission();
-    }
-
-    if (PkgPanel)
-    {
-        //PkgPanel->RefreshFromMission();
-    }
-
-    if (NavPanel)
-    {
-       // NavPanel->RefreshFromMission();
-    }
-
-    if (WepPanel)
-    {
-        //WepPanel->RefreshFromMission();
     }
 
     SetMode(EMissionBriefingMode::SIT);
@@ -365,28 +503,28 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     switch (CurrentMode)
     {
     case EMissionBriefingMode::SIT:
-        if (SitPanel)
+        if (MissionSituationPanel)
         {
-            //SitPanel->RefreshFromMission();
+            //MissionSituationPanel->RefreshFromMission();
         }
         break;
 
     case EMissionBriefingMode::PKG:
-        if (PkgPanel)
+        if (MissionPackagePanel)
         {
             //PkgPanel->RefreshFromMission();
         }
         break;
 
     case EMissionBriefingMode::NAV:
-        if (NavPanel)
+        if (MissionNavPanel)
         {
             //NavPanel->RefreshFromMission();
         }
         break;
 
     case EMissionBriefingMode::WEP:
-        if (WepPanel)
+        if (MissionWepPanel)
         {
             //WepPanel->RefreshFromMission();
         }
@@ -541,4 +679,61 @@ void UMissionBriefingDlg::HandleAcceptClicked()
 void UMissionBriefingDlg::HandleCancelClicked()
 {
     OnCancel();
+}
+
+void UMissionBriefingDlg::HandleGameTimers()
+{
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CmdDlg] HandleGameTimers: GameInstance is NULL"));
+        return;
+    }
+
+    UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
+    USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GI);
+
+    if (!SSWInstance) return;
+
+    if (Timer)
+    {
+        Timer->OnUniverseSecond.AddUObject(this, &UMissionBriefingDlg::HandleUniverseSecondTick);
+        Timer->OnUniverseMinute.AddUObject(this, &UMissionBriefingDlg::HandleUniverseMinuteTick);
+        Timer->OnCampaignTPlusChanged.AddUObject(this, &UMissionBriefingDlg::HandleCampaignTPlusChanged);
+
+        const uint64 Now = Timer->GetUniverseTimeSeconds();
+        HandleUniverseSecondTick(Now);
+
+        if (SSWInstance->CampaignSave)
+        {
+            HandleCampaignTPlusChanged(Now, SSWInstance->CampaignSave->GetTPlusSeconds(Now));
+        }
+    }
+}
+
+void UMissionBriefingDlg::HandleUniverseSecondTick(uint64 UniverseSecondsNow)
+{
+    USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
+    if (!GI) return;
+
+    UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
+    if (!Timer) return;
+
+    if (GameTimeText)
+    {
+        GameTimeText->SetText(
+            FText::FromString(Timer->GetUniverseDateTimeString())
+        );
+    }
+}
+
+void UMissionBriefingDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
+{
+    USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
+    if (!GI) return;
+}
+
+void UMissionBriefingDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
+{
+    if (!MissionTPlusText) return;
 }

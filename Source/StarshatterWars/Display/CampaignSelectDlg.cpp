@@ -605,7 +605,7 @@ void UCampaignSelectDlg::SetSelectedData(int32 OptionIndex)
     {
         UE_LOG(LogTemp, Log,
             TEXT("[CampaignScreen] Active runtime campaign='%s' missionCount=%d"),
-            ANSI_TO_TCHAR(ActiveCampaign->Name()),
+            ANSI_TO_TCHAR(ActiveCampaign->GetName()),
             ActiveCampaign->GetMissionList().size());
     }
 
@@ -796,7 +796,7 @@ void UCampaignSelectDlg::ExecFrame(double DeltaTime)
 
         if (description && btn_accept) {
             if (campaign) {
-                Campaign::SelectCampaign(campaign->Name());
+                Campaign::SelectCampaign(campaign->GetName());
 
                 if (load_index >= 0) {
                     // In classic UI, this updated the ListBox image at load_index.
@@ -809,12 +809,12 @@ void UCampaignSelectDlg::ExecFrame(double DeltaTime)
                     description->SetText(FText::FromString(
                         UTF8_TO_TCHAR(
                             (Text("<font Limerick12><color ffffff>") +
-                                campaign->Name() +
+                                campaign->GetName() +
                                 Text("<font Verdana>\n\n") +
                                 Text("<color ffff80>") +
                                 Game::GetText("CmpSelectDlg.scenario") +
                                 Text("<color ffffff>\n\t") +
-                                campaign->Description()).data()
+                                campaign->GetDescription()).data()
                         )
                     ));
                 }
@@ -828,12 +828,12 @@ void UCampaignSelectDlg::ExecFrame(double DeltaTime)
                     sprintf_s(score_buf, "%d", campaign->GetPlayerTeamScore());
 
                     Text desc = Text("<font Limerick12><color ffffff>") +
-                        campaign->Name() +
+                        campaign->GetName() +
                         Text("<font Verdana>\n\n") +
                         Text("<color ffff80>") +
                         Game::GetText("CmpSelectDlg.scenario") +
                         Text("<color ffffff>\n\t") +
-                        campaign->Description() +
+                        campaign->GetDescription() +
                         Text("\n\n<color ffff80>") +
                         Game::GetText("CmpSelectDlg.campaign-time") +
                         Text("<color ffffff>\n\t") +

@@ -45,6 +45,7 @@ class WeaponDesign;
 class HardPoint;
 class MissionLoad;
 class ShipLoad;
+class UMissionBriefingDlg;
 
 class UMissionPlanner;
 
@@ -85,6 +86,9 @@ public:
 
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
+    
+    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
+    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
 
     // ------------------------------------------------------------
     // Setup
@@ -136,6 +140,11 @@ protected:
     UFUNCTION()
     void OnMountClicked();
 
+
+protected:
+    UPROPERTY()
+    UMissionBriefingDlg* ParentDlg = nullptr;
+
 protected:
     // ------------------------------------------------------------
     // Data pointers (non-owning)
@@ -161,4 +170,8 @@ protected:
     // ------------------------------------------------------------
 
     TMap<UButton*, FMountSlot> ButtonIdToSlot;
+private:
+    UPROPERTY(Transient)
+    UMissionPlanner* Manager = nullptr;
+    UMissionPlanner* MissionScreen = nullptr;
 };

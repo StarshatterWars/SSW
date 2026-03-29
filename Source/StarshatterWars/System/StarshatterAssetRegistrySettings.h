@@ -144,8 +144,11 @@ public:
     TSoftClassPtr<UUserWidget> MissionSelectScreenClass;
     
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
-
     TSoftClassPtr<UUserWidget> OperationsScreenClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> MissionScreenClass;
+
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> PlayerLogbookScreenClass;

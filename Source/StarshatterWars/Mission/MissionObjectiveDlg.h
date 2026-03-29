@@ -21,6 +21,8 @@
 
 class UButton;
 class UTextBlock;
+class UMissionPlanner;
+class UMissionBriefingDlg;
 class UComboBoxString;
 
 UCLASS()
@@ -37,6 +39,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "MissionObjectiveDlg")
     void ExecFrame(float DeltaSeconds);
 
+    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
+    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+
     // ----------------------------------------------------------------
     // UBaseScreen overrides
     // ----------------------------------------------------------------
@@ -49,6 +54,10 @@ protected:
     // Enter/Escape behavior
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
+
+protected:
+    UPROPERTY()
+    UMissionBriefingDlg* ParentDlg = nullptr;
 
 private:
     // ----------------------------------------------------------------
@@ -99,4 +108,9 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> TabPkgButton = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UComboBoxString> SkinCombo = nullptr;
+
+private:
+    UPROPERTY(Transient)
+    UMissionPlanner* Manager = nullptr;
+    UMissionPlanner* MissionScreen = nullptr;
 };

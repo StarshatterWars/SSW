@@ -23,7 +23,7 @@
 class UButton;
 class UTextBlock;
 class UListView;
-
+class UMissionBriefingDlg;
 class UMissionPlanner;
 class Campaign;
 class Mission;
@@ -41,9 +41,16 @@ public:
     void SetMissionContext(Campaign* InCampaign, Mission* InMission, MissionInfo* InInfo);
     void ShowDlg();
 
+    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
+    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+
 protected:
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+protected:
+    UPROPERTY()
+    UMissionBriefingDlg* ParentDlg = nullptr;
 
 private:
     void RefreshHeader();
@@ -71,9 +78,6 @@ private:
     UFUNCTION() void OnFilterFighterClicked();
 
 private:
-    UPROPERTY(Transient)
-    UMissionPlanner* Manager = nullptr;
-
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
     MissionInfo* MissionInfoPtr = nullptr;
@@ -116,5 +120,10 @@ private:
 
     // ---- Footer (frm ids 1-2) ----
     UPROPERTY(meta = (BindWidgetOptional)) UButton* AcceptButton = nullptr; // 1
+
+private:
+    UPROPERTY(Transient)
+    UMissionPlanner* Manager = nullptr;
+    UMissionPlanner* MissionScreen = nullptr;
 };
 

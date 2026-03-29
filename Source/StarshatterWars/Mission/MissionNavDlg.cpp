@@ -23,11 +23,17 @@ void UMissionNavDlg::InitializeDlg(UMissionPlanner* InManager)
     Manager = InManager;
 }
 
+
 void UMissionNavDlg::SetMissionContext(Campaign* InCampaign, Mission* InMission, MissionInfo* InInfo)
 {
     CampaignPtr = InCampaign;
     MissionPtr = InMission;
     MissionInfoPtr = InInfo;
+}
+
+void UMissionNavDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+{
+    ParentDlg = InParentCmdDlg;
 }
 
 void UMissionNavDlg::NativeConstruct()

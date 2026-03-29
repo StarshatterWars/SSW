@@ -22,6 +22,8 @@
 class UButton;
 class UListView;
 class UTextBlock;
+class UMissionPlanner;
+class UMissionBriefingDlg;
 
 UCLASS()
 class STARSHATTERWARS_API UMissionPackageDlg : public UBaseScreen
@@ -38,11 +40,18 @@ public:
     virtual void BindFormWidgets() override;
     virtual FString GetLegacyFormText() const override;
 
+    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
+    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+
 protected:
     virtual void NativeConstruct() override;
 
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
+
+protected:
+    UPROPERTY()
+    UMissionBriefingDlg* ParentDlg = nullptr;
 
 private:
     // UI callbacks
@@ -81,4 +90,9 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat4 = nullptr;
 
     int32 PackageIndex = 0;
+
+private:
+    UPROPERTY(Transient)
+    UMissionPlanner* Manager = nullptr;
+    UMissionPlanner* MissionScreen = nullptr;
 };

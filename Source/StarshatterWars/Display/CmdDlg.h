@@ -195,8 +195,6 @@ private:
     void RefreshUIFromSubsystem();
 
 private:
-    void RouteMode(ECOMMAND_MODE NewMode);
-
     UFUNCTION() void OnSaveClicked();
     UFUNCTION() void OnExitClicked();
 

@@ -105,7 +105,7 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
     // Campaign name -> title label (legacy ctrl 200)
     if (LblTitle)
     {
-        LblTitle->SetText(FText::FromString(UTF8_TO_TCHAR(CampaignObj->Name())));
+        LblTitle->SetText(FText::FromString(UTF8_TO_TCHAR(CampaignObj->GetName())));
     }
 
     // Campaign image -> ImgTitle (legacy image index 3)

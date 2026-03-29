@@ -128,6 +128,9 @@ public:
     int64 GetSimulationClockMs() const { return SimulationClockMs; }
     double GetSimulationClockSeconds() const { return (double)SimulationClockMs / 1000.0; }
 
+    EGameMode GetGameMode() { return game_mode; }
+	void      SetGameMode(EGameMode mode) { game_mode = mode; }
+
     // =====================================================================
     // Project path / utility
     // =====================================================================
@@ -313,5 +316,7 @@ private:
     UPROPERTY()
     TMap<FString, FString> RegionParentByName;
     TMap<FString, TArray<FString>> RegionChildrenByParent;
+
+    EGameMode               game_mode;
 };
 

@@ -286,13 +286,13 @@ void UMissionSelectDlg::PopulateCampaigns()
         // Legacy rule: show only single/custom mission campaigns
         if (C->GetCampaignId() >= Campaign::SINGLE_MISSIONS)
         {
-            const FString CampaignName = FString(C->Name());
+            const FString CampaignName = FString(C->GetName());
             CampaignCombo->AddOption(CampaignName);
 
             // Legacy auto-select logic
             if (CampaignPtr && CampaignPtr->GetCampaignId() < Campaign::SINGLE_MISSIONS)
             {
-                CampaignPtr = Campaign::SelectCampaign(C->Name());
+                CampaignPtr = Campaign::SelectCampaign(C->GetName());
                 CampaignCombo->SetSelectedIndex(Index);
             }
             else if (CampaignPtr && CampaignPtr->GetCampaignId() == C->GetCampaignId())

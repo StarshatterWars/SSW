@@ -406,6 +406,7 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("UI.TacRefScreenClass"),
     TEXT("UI.CmdMessageDlgClass"),
     TEXT("UI.OperationsScreenClass"),
+    TEXT("UI.MissionScreenClass"),
 
     TEXT("UI.Theme.MenuButton.Normal"),
     TEXT("UI.Theme.MenuButton.Hover"),
