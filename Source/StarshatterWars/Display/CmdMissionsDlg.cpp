@@ -74,25 +74,6 @@ void UCmdMissionsDlg::NativeConstruct()
         UE_LOG(LogTemp, Error, TEXT("[CmdMissionsDlg] MissionList is NULL"));
     }
 
-    if (btn_accept)
-    {
-        btn_accept->OnClicked.RemoveDynamic(this, &UCmdMissionsDlg::OnAcceptClicked);
-        btn_accept->OnClicked.AddDynamic(this, &UCmdMissionsDlg::OnAcceptClicked);
-        btn_accept->SetIsEnabled(false);
-    }
-
-    if (btn_save)
-    {
-        btn_save->OnClicked.RemoveDynamic(this, &UCmdMissionsDlg::OnSaveClicked);
-        btn_save->OnClicked.AddDynamic(this, &UCmdMissionsDlg::OnSaveClicked);
-    }
-
-    if (btn_exit)
-    {
-        btn_exit->OnClicked.RemoveDynamic(this, &UCmdMissionsDlg::OnExitClicked);
-        btn_exit->OnClicked.AddDynamic(this, &UCmdMissionsDlg::OnExitClicked);
-    }
-
     SelectedMission = nullptr;
     SelectedMissionItem = nullptr;
 
@@ -134,12 +115,25 @@ void UCmdMissionsDlg::ShowMissionsDlg()
             CampaignPtr->GetMissionList().size());
     }
 
-
     SetVisibility(ESlateVisibility::Visible);
 
     RebuildMissionList();
-    LoadFirstMissionData();
-    UpdateAcceptEnabled();
+
+    // Preview only. Do not treat the first mission as a selected mission.
+    LoadFirstMissionPreview();
+
+    if (MissionList)
+    {
+        MissionList->ClearSelection();
+    }
+
+    SelectedMission = nullptr;
+    SelectedMissionItem = nullptr;
+
+    if (ParentCmdDlg)
+    {
+        ParentCmdDlg->UpdateMissionButton();
+    }
 }
 
 void UCmdMissionsDlg::ExecFrame()
@@ -156,7 +150,11 @@ void UCmdMissionsDlg::ExecFrame()
 
     AppendNewMissionsIfAny();
     ValidateSelectionStillExists();
-    UpdateAcceptEnabled();
+
+    if (ParentCmdDlg)
+    {
+        ParentCmdDlg->UpdateMissionButton();
+    }
 }
 
 void UCmdMissionsDlg::RebuildMissionList()
@@ -222,11 +220,10 @@ void UCmdMissionsDlg::AppendNewMissionsIfAny()
         return;
     }
 
-    List<MissionInfo>& Missions = CampaignPtr->GetMissionList();
-    const int32 Existing = MissionList->GetNumItems();
-    const int32 Total = Missions.size();
+    const int32 ExistingVisible = MissionList->GetNumItems();
+    const int32 TotalVisible = GetVisibleMissionCount();
 
-    if (Total < Existing)
+    if (TotalVisible < ExistingVisible)
     {
         const int32 PrevSelectedId = GetSelectedMissionId();
         RebuildMissionList();
@@ -237,32 +234,76 @@ void UCmdMissionsDlg::AppendNewMissionsIfAny()
         }
         else
         {
-            LoadFirstMissionData();
+            LoadFirstMissionPreview();
+
+            if (MissionList)
+            {
+                MissionList->ClearSelection();
+            }
+
+            SelectedMission = nullptr;
+            SelectedMissionItem = nullptr;
         }
+
+        if (ParentCmdDlg)
+        {
+            ParentCmdDlg->UpdateMissionButton();
+        }
+
         return;
     }
 
-    if (Total == Existing)
+    if (TotalVisible == ExistingVisible)
     {
         return;
     }
 
-    for (int32 i = Existing; i < Total; ++i)
+    List<MissionInfo>& Missions = CampaignPtr->GetMissionList();
+
+    for (int32 i = 0; i < Missions.size(); ++i)
     {
         MissionInfo* Info = Missions[i];
-        if (!Info)
+        if (!Info || !ShouldShowMissionInCmdMissionsDlg(Info))
         {
             continue;
         }
 
-        AddMissionInfoToList(Info);
+        bool bAlreadyInList = false;
+
+        for (int32 j = 0; j < MissionList->GetNumItems(); ++j)
+        {
+            UMissionListObject* ExistingItem = Cast<UMissionListObject>(MissionList->GetItemAt(j));
+            if (ExistingItem && ExistingItem->MissionId == Info->id)
+            {
+                bAlreadyInList = true;
+                break;
+            }
+        }
+
+        if (!bAlreadyInList)
+        {
+            AddMissionInfoToList(Info);
+        }
     }
 
     MissionList->RequestRefresh();
 
     if (!SelectedMissionItem)
     {
-        LoadFirstMissionData();
+        LoadFirstMissionPreview();
+
+        if (MissionList)
+        {
+            MissionList->ClearSelection();
+        }
+
+        SelectedMission = nullptr;
+        SelectedMissionItem = nullptr;
+    }
+
+    if (ParentCmdDlg)
+    {
+        ParentCmdDlg->UpdateMissionButton();
     }
 }
 
@@ -299,9 +340,9 @@ void UCmdMissionsDlg::ValidateSelectionStillExists()
         SelectedMissionItem = nullptr;
         ClearDescription();
 
-        if (btn_accept)
+        if (MissionList)
         {
-            btn_accept->SetIsEnabled(false);
+            MissionList->ClearSelection();
         }
     }
 }
@@ -362,7 +403,11 @@ void UCmdMissionsDlg::HandleMissionSelection(UObject* ItemObj)
         SelectedMission = nullptr;
         SelectedMissionItem = nullptr;
         ClearDescription();
-        UpdateAcceptEnabled();
+
+        if (ParentCmdDlg)
+        {
+            ParentCmdDlg->UpdateMissionButton();
+        }
         return;
     }
 
@@ -382,7 +427,10 @@ void UCmdMissionsDlg::HandleMissionSelection(UObject* ItemObj)
         ClearDescription();
     }
 
-    UpdateAcceptEnabled();
+    if (ParentCmdDlg)
+    {
+        ParentCmdDlg->UpdateMissionButton();
+    }
 }
 
 void UCmdMissionsDlg::UpdateMissionDetailPanel(UMissionListObject* Item)
@@ -434,22 +482,26 @@ bool UCmdMissionsDlg::CanAcceptMission(MissionInfo* Info) const
     return (Info != nullptr);
 }
 
-void UCmdMissionsDlg::UpdateAcceptEnabled()
+bool UCmdMissionsDlg::CanAcceptSelectedMission() const
 {
-    if (!btn_accept)
+    if (!MissionList)
     {
-        return;
+        return false;
     }
 
-    MissionInfo* Info = SelectedMissionItem ? SelectedMissionItem->MissionInfoPtr : nullptr;
-    btn_accept->SetIsEnabled(CanAcceptMission(Info));
+    UObject* SelectedObj = MissionList->GetSelectedItem();
+    UMissionListObject* Item = Cast<UMissionListObject>(SelectedObj);
+    MissionInfo* Info = Item ? Item->MissionInfoPtr : nullptr;
+
+    return CanAcceptMission(Info);
 }
 
-void UCmdMissionsDlg::LoadFirstMissionData()
+void UCmdMissionsDlg::LoadFirstMissionPreview()
 {
     if (!MissionList || MissionList->GetNumItems() <= 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] LoadFirstMissionData: no mission items"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] LoadFirstMissionPreview: no mission items"));
+        ClearDescription();
         return;
     }
 
@@ -457,56 +509,48 @@ void UCmdMissionsDlg::LoadFirstMissionData()
     UMissionListObject* FirstItem = Cast<UMissionListObject>(FirstObj);
     if (!FirstItem)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] LoadFirstMissionData: first item invalid"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] LoadFirstMissionPreview: first item invalid"));
+        ClearDescription();
         return;
     }
 
-    SelectedMissionItem = FirstItem;
+    // Preview only. This is not a real selection.
+    UpdateMissionDetailPanel(FirstItem);
 
     MissionInfo* Info = FirstItem->MissionInfoPtr;
     if (Info)
     {
-        SelectedMission = Info->mission;
         SetDescriptionForMissionInfo(Info);
     }
-    else
-    {
-        SelectedMission = nullptr;
-    }
 
-    UpdateMissionDetailPanel(FirstItem);
-    UpdateAcceptEnabled();
+    SelectedMission = nullptr;
+    SelectedMissionItem = nullptr;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmdMissionsDlg] LoadFirstMissionData: loaded first mission '%s'"),
+        TEXT("[CmdMissionsDlg] LoadFirstMissionPreview: previewing first mission '%s' without selecting"),
         *FirstItem->MissionName);
 }
 
-void UCmdMissionsDlg::OnAcceptClicked()
+int32 UCmdMissionsDlg::GetVisibleMissionCount() const
 {
-    CampaignPtr = Campaign::GetCampaign();
-
-    if (!CampaignPtr || !SelectedMissionItem || !Stars)
+    Campaign* LocalCampaign = Campaign::GetCampaign();
+    if (!LocalCampaign)
     {
-        return;
+        return 0;
     }
 
-    Mission* MissionToStart = SelectedMission;
-    if (!MissionToStart && SelectedMissionItem->MissionId >= 0)
+    int32 Count = 0;
+    List<MissionInfo>& Missions = LocalCampaign->GetMissionList();
+
+    for (int32 i = 0; i < Missions.size(); ++i)
     {
-        MissionToStart = CampaignPtr->GetMission(SelectedMissionItem->MissionId);
+        if (ShouldShowMissionInCmdMissionsDlg(Missions[i]))
+        {
+            ++Count;
+        }
     }
 
-    if (!MissionToStart)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] OnAcceptClicked: mission could not be resolved"));
-        return;
-    }
-
-    Mouse::Show(false);
-    CampaignPtr->SetMissionId(MissionToStart->GetIdentity());
-    CampaignPtr->StartMission();
-    Stars->SetGameMode(EGameMode::PREP);
+    return Count;
 }
 
 void UCmdMissionsDlg::OnSaveClicked()

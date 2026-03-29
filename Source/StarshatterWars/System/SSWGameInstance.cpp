@@ -43,7 +43,6 @@
 USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer) 
 {
 	InitializeCampaignLoadingScreen(ObjectInitializer);
-	InitializeMissionBriefingScreen(ObjectInitializer);
 }
 
 void USSWGameInstance::SetProjectPath()
@@ -388,16 +387,6 @@ void USSWGameInstance::InitializeScreens()
 
 		return;
 	}
-}
-
-void USSWGameInstance::InitializeMissionBriefingScreen(const FObjectInitializer& ObjectInitializer)
-{
-	static ConstructorHelpers::FClassFinder<UMissionLoading> MissionLoadingScreenWidget(TEXT("/Game/Screens/Mission/WB_MissionLoading"));
-	if (!ensure(MissionLoadingScreenWidget.Class != nullptr))
-	{
-		return;
-	}
-	MissionLoadingWidgetClass = MissionLoadingScreenWidget.Class;
 }
 
 void USSWGameInstance::InitializeCampaignLoadingScreen(const FObjectInitializer& ObjectInitializer)

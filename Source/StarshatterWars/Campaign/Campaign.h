@@ -272,6 +272,7 @@ protected:
     int                  mission_id;
     Mission* mission;
     Mission* net_mission;
+    MissionInfo current_mission;
 
     double               time;
     double               loadTime;

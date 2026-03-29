@@ -25,12 +25,11 @@
 #include "Campaign.h"
 #include "CombatGroup.h"
 #include "Starshatter.h"
-#include "FormatUtil.h"      // FormatDayTime(...)
-#include "Mouse.h"           // Mouse::Show(...)
+#include "FormatUtil.h"
+#include "Mouse.h"
 
 // Your campaign screen widget (port of CmpnScreen):
 #include "CmpnScreen.h"
-// Your campaign file dialog widget (port of CmpFileDlg):
 #include "CmpFileDlg.h"
 #include "MenuButton.h"
 #include "GameStructs.h"
@@ -50,29 +49,12 @@
 #include "CmdForceDlg.h"
 #include "CmdIntelDlg.h"
 #include "CmdTheaterDlg.h"
+#include "Mission.h"
+#include "MissionListObject.h"
 
 #include "TimerSubsystem.h"
 #include "FormattingUtils.h"
 #include "SSWGameInstance.h"
-
-/*template<typename TEnum>
-bool FStringToEnum(const FString& InString, TEnum& OutEnum, bool bCaseSensitive = true)
-{
-    UEnum* Enum = StaticEnum<TEnum>();
-    if (!Enum) return false;
-
-    for (int32 i = 0; i < Enum->NumEnums(); ++i)
-    {
-        FString Name = Enum->GetNameStringByIndex(i);
-        if ((bCaseSensitive && Name == InString) ||
-            (!bCaseSensitive && Name.Equals(InString, ESearchCase::IgnoreCase)))
-        {
-            OutEnum = static_cast<TEnum>(Enum->GetValueByIndex(i));
-            return true;
-        }
-    }
-    return true;
-}*/
 
 void UCmdDlg::NativeConstruct()
 {
@@ -99,7 +81,6 @@ void UCmdDlg::NativeConstruct()
         return;
     }
 
-    // Ensure player is loaded
     if (!PlayerSS->HasLoaded())
     {
         PlayerSS->LoadPlayer();
@@ -109,9 +90,6 @@ void UCmdDlg::NativeConstruct()
 
     HandleGameTimers();
 
-    // =========================================================
-    // RESOLVE & CACHE CURRENT CAMPAIGN (COPY SAFE VERSION)
-    // =========================================================
     const FS_Campaign* FoundCampaign =
         DataSubsystem->GetCampaignByIndex1Based(PlayerInfo.Campaign);
 
@@ -134,9 +112,6 @@ void UCmdDlg::NativeConstruct()
             PlayerInfo.Campaign);
     }
 
-    // =========================================================
-    // UI SETUP
-    // =========================================================
     if (TitleText)
     {
         TitleText->SetText(FText::FromString(TEXT("CAMPAIGN OPERATIONS")));
@@ -169,12 +144,10 @@ void UCmdDlg::NativeConstruct()
         NewButton->OnHovered.AddDynamic(this, &UCmdDlg::OnMenuToggleHovered);
 
         AllMenuButtons.Add(NewButton);
+
+        CurrentScreen = ECmdScreen::None;
     }
-    
-    
-    // =========================================================
-    // BUTTON SETUP
-    // =========================================================
+
     if (ReturnButton)
     {
         ReturnButton->OnClicked.RemoveDynamic(this, &UCmdDlg::OnCancelButtonClicked);
@@ -208,9 +181,7 @@ void UCmdDlg::NativeConstruct()
             MissionButtonText->SetText(FText::FromString(TEXT("ACCEPT")));
         }
     }
-    // =========================================================
-    // PLAYER INFO
-    // =========================================================
+
     if (PlayerNameText)
     {
         PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
@@ -222,9 +193,6 @@ void UCmdDlg::NativeConstruct()
         OperationalSwitcher->SetActiveWidgetIndex(0);
     }
 
-    // =========================================================
-    // CAMPAIGN UI (USES CACHED COPY)
-    // =========================================================
     if (bHasCurrentCampaign)
     {
         if (CurrentLocationText)
@@ -240,15 +208,9 @@ void UCmdDlg::NativeConstruct()
         }
     }
 
-    // =========================================================
-    // BUTTON BINDS
-    // =========================================================
-    if (btn_save)     btn_save->OnClicked.AddDynamic(this, &UCmdDlg::OnSaveClicked);
-    if (btn_exit)     btn_exit->OnClicked.AddDynamic(this, &UCmdDlg::OnExitClicked);
+    if (btn_save) btn_save->OnClicked.AddDynamic(this, &UCmdDlg::OnSaveClicked);
+    if (btn_exit) btn_exit->OnClicked.AddDynamic(this, &UCmdDlg::OnExitClicked);
 
-    // =========================================================
-    // LEGACY SYSTEM HOOKS
-    // =========================================================
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
@@ -268,17 +230,16 @@ void UCmdDlg::NativeConstruct()
             UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] ParseLegacyForm failed: %s"), *Err);
         }
     }
-
-    
 }
 
 void UCmdDlg::NativePreConstruct()
 {
     MenuButtonContainer->ClearChildren();
+
     if (CmdOrdersPanel)
     {
         CmdOrdersPanel->SetParentCmdDlg(this);
-        CmdOrdersPanel->ShowOrdersDlg(); // or Refresh
+        CmdOrdersPanel->ShowOrdersDlg();
     }
 
     if (CmdMissionsPanel)
@@ -304,13 +265,11 @@ void UCmdDlg::NativePreConstruct()
 
 void UCmdDlg::NativeOnInitialized()
 {
-
 }
 
 void UCmdDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-
     ExecFrame();
 }
 
@@ -346,33 +305,37 @@ void UCmdDlg::OnMenuToggleSelected(UMenuButton* SelectedButton)
 {
     if (!SelectedButton) return;
 
-    // Example action when one of the buttons is selected
     UE_LOG(LogTemp, Log, TEXT("Selected button: %s"), *GetNameSafe(SelectedButton));
 
-    // Example: compare button text, tags, or use a mapping
-    // Then trigger OOB filtering or changes in UI accordingly
     const FString& MenuOption = SelectedButton->MenuOption;
 
     if (MenuOption == MenuItems[0])
     {
+        CurrentScreen = ECmdScreen::Orders;
         LoadOrdersInfo();
     }
     else if (MenuOption == MenuItems[1])
     {
+        CurrentScreen = ECmdScreen::Theater;
         LoadTheaterInfo();
     }
     else if (MenuOption == MenuItems[2])
     {
+        CurrentScreen = ECmdScreen::Forces;
         LoadForcesInfo();
     }
     else if (MenuOption == MenuItems[3])
     {
+        CurrentScreen = ECmdScreen::Intel;
         LoadIntelInfo();
     }
     else if (MenuOption == MenuItems[4])
     {
+        CurrentScreen = ECmdScreen::Missions;
         LoadMissionsInfo();
     }
+
+    UpdateMissionButton();
 }
 
 void UCmdDlg::OnMenuToggleHovered(UMenuButton* HoveredButton)
@@ -384,20 +347,11 @@ void UCmdDlg::OnMenuToggleHovered(UMenuButton* HoveredButton)
     SSWInstance->PlayHoverSound(this);
 }
 
-// --------------------------------------------------------------------
-// UBaseScreen overrides
-// --------------------------------------------------------------------
-
 void UCmdDlg::BindFormWidgets()
 {
-
     BindButton(1, btn_save);
     BindButton(2, btn_exit);
 }
-
-// --------------------------------------------------------------------
-// Public API
-// --------------------------------------------------------------------
 
 void UCmdDlg::SetManager(UCmpnScreen* InManager)
 {
@@ -407,7 +361,6 @@ void UCmdDlg::SetManager(UCmpnScreen* InManager)
 void UCmdDlg::ShowCmdDlg()
 {
     CampaignPtr = Campaign::GetCampaign();
-
 
     if (txt_name)
     {
@@ -421,10 +374,11 @@ void UCmdDlg::ShowCmdDlg()
     {
         const bool bTraining = CampaignPtr->IsTraining();
 
-        if (btn_save)     btn_save->SetIsEnabled(!bTraining);
+        if (btn_save) btn_save->SetIsEnabled(!bTraining);
     }
 
     SetVisibility(ESlateVisibility::Visible);
+    UpdateMissionButton();
 }
 
 void UCmdDlg::ExecFrame()
@@ -435,7 +389,6 @@ void UCmdDlg::ExecFrame()
     if (!CampaignPtr)
         return;
 
-    // Player group:
     if (CurrentUnitText)
     {
         CombatGroup* G = CampaignPtr->GetPlayerGroup();
@@ -443,7 +396,6 @@ void UCmdDlg::ExecFrame()
             CurrentUnitText->SetText(FText::FromString(G->GetDescription()));
     }
 
-    // Score:
     if (PlayerScoreText)
     {
         const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
@@ -452,7 +404,6 @@ void UCmdDlg::ExecFrame()
         PlayerScoreText->SetJustification(ETextJustify::Right);
     }
 
-    // Time:
     if (CampaignTPlusText)
     {
         const double T = CampaignPtr->GetTime();
@@ -463,7 +414,6 @@ void UCmdDlg::ExecFrame()
         CampaignTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
     }
 
-    // Intel unread count -> change button label:
     const int32 Unread = CampaignPtr->CountNewEvents();
 
     RefreshCommandButtons();
@@ -473,26 +423,23 @@ void UCmdDlg::ExecFrame()
         CmdOrdersPanel->ShowOrdersDlg();
     }
 
-    if (AllMenuButtons[3])
+    if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
     {
-        if (Unread > 0) {
-            if(UTextBlock * Label = Cast<UTextBlock>(AllMenuButtons[3]->GetWidgetFromName(TEXT("Label"))))
+        if (UTextBlock* Label = Cast<UTextBlock>(AllMenuButtons[3]->GetWidgetFromName(TEXT("Label"))))
+        {
+            if (Unread > 0)
             {
                 Label->SetText(FText::FromString(FString::Printf(TEXT("INTEL (%d)"), Unread)));
             }
-        }
-        else {
-            if (UTextBlock* Label = Cast<UTextBlock>(AllMenuButtons[3]->GetWidgetFromName(TEXT("Label"))))
+            else
             {
-                Label->SetText(FText::FromString(FString::Printf(TEXT("INTEL"))));
+                Label->SetText(FText::FromString(TEXT("INTEL")));
             }
         }
     }
-}
 
-// --------------------------------------------------------------------
-// Button handlers
-// --------------------------------------------------------------------
+    UpdateMissionButton();
+}
 
 void UCmdDlg::OnSaveClicked()
 {
@@ -501,11 +448,6 @@ void UCmdDlg::OnSaveClicked()
 
     if (CampaignPtr && CmpnScreen)
     {
-        // Classic:
-        // CmpFileDlg* fdlg = cmpn_screen->GetCmpFileDlg();
-        // cmpn_screen->ShowCmpFileDlg();
-        //
-        // Unreal port depends on your UCmpnScreen API:
         CmpnScreen->ShowCmpFileDlg();
     }
     else
@@ -553,6 +495,36 @@ void UCmdDlg::OnCancelButtonUnHovered()
 
 void UCmdDlg::OnMissionButtonClicked()
 {
+    CampaignPtr = Campaign::GetCampaign();
+
+    if (!CampaignPtr || !CmdMissionsPanel || !Stars)
+    {
+        return;
+    }
+
+    if (!CmdMissionsPanel->CanAcceptSelectedMission())
+    {
+        return;
+    }
+
+    UMissionListObject* SelectedItem = CmdMissionsPanel->GetSelectedMissionItem();
+    Mission* MissionToStart = CmdMissionsPanel->GetSelectedMission();
+
+    if (!MissionToStart && SelectedItem && SelectedItem->MissionId >= 0)
+    {
+        MissionToStart = CampaignPtr->GetMission(SelectedItem->MissionId);
+    }
+
+    if (!MissionToStart)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnAcceptClicked: mission could not be resolved"));
+        return;
+    }
+
+    Mouse::Show(false);
+    CampaignPtr->SetMissionId(MissionToStart->GetIdentity());
+    CampaignPtr->StartMission();
+    Stars->SetGameMode(EGameMode::PREP);
 }
 
 void UCmdDlg::OnMissionButtonHovered()
@@ -576,10 +548,8 @@ void UCmdDlg::HideDlg()
     SetVisibility(ESlateVisibility::Collapsed);
 }
 
-
 void UCmdDlg::RefreshUIFromSubsystem()
 {
-
 }
 
 void UCmdDlg::LoadForcesInfo()
@@ -592,16 +562,19 @@ void UCmdDlg::LoadForcesInfo()
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
-    if (OperationalSwitcher) {
+    if (OperationalSwitcher)
+    {
         OperationalSwitcher->SetActiveWidgetIndex(2);
     }
-    if (OperationsModeText) {
+
+    if (OperationsModeText)
+    {
         OperationsModeText->SetText(FText::FromString("FORCES"));
     }
 
     if (CmdForcesPanel)
     {
-        CmdForcesPanel->ShowForceDlg(); // or Refresh
+        CmdForcesPanel->ShowForceDlg();
     }
 }
 
@@ -610,16 +583,19 @@ void UCmdDlg::LoadOrdersInfo()
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
-    if (OperationalSwitcher) {
+    if (OperationalSwitcher)
+    {
         OperationalSwitcher->SetActiveWidgetIndex(0);
     }
-    if (OperationsModeText) {
+
+    if (OperationsModeText)
+    {
         OperationsModeText->SetText(FText::FromString("ORDERS"));
     }
-    
+
     if (CmdOrdersPanel)
     {
-        CmdOrdersPanel->ShowOrdersDlg(); // or Refresh
+        CmdOrdersPanel->ShowOrdersDlg();
     }
 }
 
@@ -632,13 +608,16 @@ void UCmdDlg::LoadMissionsInfo()
     UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadMissionsInfo: CmdMissionsPanel=%s"),
         CmdMissionsPanel ? TEXT("VALID") : TEXT("NULL"));
 
-    if (OperationalSwitcher) {
+    if (OperationalSwitcher)
+    {
         OperationalSwitcher->SetActiveWidgetIndex(4);
     }
 
-    if (OperationsModeText) {
+    if (OperationsModeText)
+    {
         OperationsModeText->SetText(FText::FromString("MISSIONS"));
     }
+
     if (CmdMissionsPanel)
     {
         CmdMissionsPanel->ShowMissionsDlg();
@@ -647,7 +626,10 @@ void UCmdDlg::LoadMissionsInfo()
     {
         UE_LOG(LogTemp, Error, TEXT("[CmdDlg] LoadMissionsInfo: CmdMissionsPanel is NULL"));
     }
+
+    UpdateMissionButton();
 }
+
 void UCmdDlg::LoadIntelInfo()
 {
     if (ShouldDisableCommandPanels())
@@ -658,50 +640,50 @@ void UCmdDlg::LoadIntelInfo()
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
-    if (OperationalSwitcher) {
+    if (OperationalSwitcher)
+    {
         OperationalSwitcher->SetActiveWidgetIndex(3);
     }
 
-    if (OperationsModeText) {
+    if (OperationsModeText)
+    {
         OperationsModeText->SetText(FText::FromString("INTEL"));
     }
-    
+
     if (CmdIntelPanel)
     {
-        CmdIntelPanel->ShowIntelDlg(); // or Refresh
+        CmdIntelPanel->ShowIntelDlg();
     }
 }
 
 void UCmdDlg::LoadTheaterInfo()
 {
-    
     if (ShouldDisableCommandPanels())
     {
         return;
     }
-    
+
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
-    if (OperationalSwitcher) {
+    if (OperationalSwitcher)
+    {
         OperationalSwitcher->SetActiveWidgetIndex(1);
     }
 
-    if (OperationsModeText) {
+    if (OperationsModeText)
+    {
         OperationsModeText->SetText(FText::FromString("THEATER"));
     }
 
     if (CmdTheaterPanel)
     {
-        CmdTheaterPanel->ShowTheaterDlg(); // or Refresh
+        CmdTheaterPanel->ShowTheaterDlg();
     }
 }
 
 void UCmdDlg::HandleGameTimers()
 {
-    // -------------------------------
-    // PUB/SUB SUBSCRIBE  
-    // -------------------------------
     UGameInstance* GI = GetGameInstance();
     if (!GI)
     {
@@ -711,20 +693,18 @@ void UCmdDlg::HandleGameTimers()
 
     UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
     USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GI);
-    
+
     if (!SSWInstance) return;
-   
+
     if (Timer)
     {
         Timer->OnUniverseSecond.AddUObject(this, &UCmdDlg::HandleUniverseSecondTick);
         Timer->OnUniverseMinute.AddUObject(this, &UCmdDlg::HandleUniverseMinuteTick);
         Timer->OnCampaignTPlusChanged.AddUObject(this, &UCmdDlg::HandleCampaignTPlusChanged);
 
-        // Initial push:
         const uint64 Now = Timer->GetUniverseTimeSeconds();
         HandleUniverseSecondTick(Now);
 
-        // If campaign T+ depends on universe seconds, keep this:
         if (SSWInstance->CampaignSave)
         {
             HandleCampaignTPlusChanged(Now, SSWInstance->CampaignSave->GetTPlusSeconds(Now));
@@ -757,8 +737,6 @@ void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
 void UCmdDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
 {
     if (!CampaignTPlusText) return;
-
-    //CampaignTPlusText->SetText(FText::FromString(UFormattingUtils::FormatTPlus(TPlusSeconds)));
 }
 
 bool UCmdDlg::ShouldDisableCommandPanels() const
@@ -768,7 +746,6 @@ bool UCmdDlg::ShouldDisableCommandPanels() const
         return false;
     }
 
-    // Replace with your actual logic
     return CampaignPtr->IsScripted();
 }
 
@@ -780,19 +757,36 @@ void UCmdDlg::RefreshCommandButtons()
     {
         bLastDisableState = bDisable;
 
-        if (AllMenuButtons[1])
+        if (AllMenuButtons.IsValidIndex(1) && AllMenuButtons[1])
         {
             AllMenuButtons[1]->SetIsEnabled(!bDisable);
         }
 
-        if (AllMenuButtons[2])
+        if (AllMenuButtons.IsValidIndex(2) && AllMenuButtons[2])
         {
             AllMenuButtons[2]->SetIsEnabled(!bDisable);
         }
 
-        if (AllMenuButtons[3])
+        if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
         {
             AllMenuButtons[3]->SetIsEnabled(!bDisable);
         }
     }
+}
+
+void UCmdDlg::UpdateMissionButton()
+{
+    if (!MissionButton)
+    {
+        return;
+    }
+
+    bool bEnable = false;
+
+    if (CurrentScreen == ECmdScreen::Missions && CmdMissionsPanel)
+    {
+        bEnable = CmdMissionsPanel->CanAcceptSelectedMission();
+    }
+
+    MissionButton->SetIsEnabled(bEnable);
 }

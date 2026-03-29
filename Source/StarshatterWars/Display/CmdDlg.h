@@ -50,7 +50,7 @@ class UButton;
 class Starshatter;
 class Campaign;
 class CombatGroup;
-class UCmpFileDlg;      // Your file dialog widget (port of CmpFileDlg)
+class UCmpFileDlg;
 
 class UPanelWidget;
 class USelectableButtonGroup;
@@ -71,10 +71,16 @@ class UCmdIntelDlg;
 class UCmdTheaterDlg;
 class UCmdMsgDlg;
 
+enum class ECmdScreen : uint8
+{
+    None,
+    Orders,
+    Missions,
+    Intel,
+    Theater,
+    Forces
+};
 
-/**
- * Operational Command Dialog
- */
 UCLASS()
 class STARSHATTERWARS_API UCmdDlg : public UBaseScreen
 {
@@ -84,7 +90,6 @@ public:
     UCmdDlg(const FObjectInitializer& ObjectInitializer);
 
 public:
-    // Menu manager hookup (matches your existing pattern)
     virtual void SetMenuManager(UMenuScreen* InManager);
     virtual void InitializeDlg(UMenuScreen* InManager);
 
@@ -106,50 +111,31 @@ public:
     const FS_Campaign& GetCurrentCampaignData() const { return CurrentCampaignData; }
     bool HasCurrentCampaign() const { return bHasCurrentCampaign; }
 
-    // ============================================================
-    // UUserWidget lifecycle
-    // ============================================================
 protected:
     virtual void NativeOnInitialized() override;
     virtual void NativeConstruct() override;
     virtual void NativePreConstruct() override;
-
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-    // ============================================================
-    // UBaseScreen overrides
-    // ============================================================
 public:
     virtual void BindFormWidgets() override;
 
-    // ============================================================
-    // Public API (ported from CmdDlg)
-    // ============================================================
 public:
     void SetManager(UCmpnScreen* InManager);
     void ShowCmdDlg();
     void ExecFrame();
+
+    int32 CurrentMissionId = -1;
+    void UpdateMissionButton();
 
 protected:
     UPROPERTY(Transient)
     TObjectPtr<UMenuScreen> manager = nullptr;
 
 private:
-    // ============================================================
-    // Manager / dependencies
-    // ============================================================
     UCmpnScreen* CmpnScreen = nullptr;
-    
     Campaign* CampaignPtr = nullptr;
     Starshatter* Stars = nullptr;
-
-    // ============================================================
-    // FORM bound widgets (IDs match .frm)
-    // ============================================================
-
-    // Labels:
-    // 200 = group description
-
 
     UPROPERTY(meta = (BindWidgetOptional))
     class UTextBlock* TitleText;
@@ -176,7 +162,6 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* ReturnButtonText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) class UButton* ReturnButton = nullptr;
 
-
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UMenuButton> MenuButtonClass;
 
@@ -186,17 +171,12 @@ private:
     UPROPERTY(meta = (BindWidgetOptional))
     UPanelWidget* MenuButtonContainer;
 
-    // 300 = campaign name/title
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* txt_name = nullptr;
 
-    // 1 = save, 2 = exit
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_save = nullptr; // 1
-    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_exit = nullptr; // 2
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_save = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional), Transient) UButton* btn_exit = nullptr;
 
-    // ============================================================
-    // State
-    // ============================================================
     ECOMMAND_MODE Mode = ECOMMAND_MODE::MODE_ORDERS;
 
     TArray<FString> MenuItems = {
@@ -212,15 +192,11 @@ private:
 
     void ShowDlg();
     void HideDlg();
-
     void RefreshUIFromSubsystem();
 
-
-    
 private:
     void RouteMode(ECOMMAND_MODE NewMode);
 
-    // UFUNCTION handlers (must be UFUNCTION for AddDynamic)
     UFUNCTION() void OnSaveClicked();
     UFUNCTION() void OnExitClicked();
 
@@ -247,6 +223,8 @@ private:
     UFUNCTION() void HandleUniverseMinuteTick(uint64 UniverseSecondsNow);
     UFUNCTION() void HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds);
 
+    ECmdScreen CurrentScreen = ECmdScreen::None;
+
     bool ShouldDisableCommandPanels() const;
 
     TArray<UMenuButton*> MenuButtonArray;
@@ -254,5 +232,3 @@ private:
 
     bool bLastDisableState = false;
 };
-
-

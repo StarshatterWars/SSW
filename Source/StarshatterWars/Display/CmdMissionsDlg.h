@@ -56,6 +56,10 @@ public:
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
     void ShowMissionsDlg();
 
+    Mission* GetSelectedMission() const { return SelectedMission; }
+    UMissionListObject* GetSelectedMissionItem() const { return SelectedMissionItem; }
+    bool CanAcceptSelectedMission() const;
+
 private:
     void ExecFrame();
 
@@ -72,17 +76,17 @@ private:
     void HandleMissionSelection(UObject* ItemObj);
 
     bool CanAcceptMission(MissionInfo* Info) const;
-    void UpdateAcceptEnabled();
 
-    void LoadFirstMissionData();
+    // Preview first mission details without making it a real selection:
+    void LoadFirstMissionPreview();
+
+    // Count only visible/player-selectable missions:
+    int32 GetVisibleMissionCount() const;
+
     void AddMissionInfoToList(MissionInfo* Info);
 
 private:
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_exit = nullptr;
-
     UPROPERTY(meta = (BindWidget)) UListView* MissionList = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_accept = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* MissionNameText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* MissionTypeText = nullptr;
@@ -106,13 +110,12 @@ private:
 private:
     UFUNCTION() void OnSaveClicked();
     UFUNCTION() void OnExitClicked();
-    UFUNCTION() void OnAcceptClicked();
 
     UFUNCTION() void OnMissionItemClicked(UObject* Item);
     UFUNCTION() void OnMissionSelectionChanged(UObject* Item);
 
 protected:
-    UPROPERTY()
+    UPROPERTY(BlueprintReadWrite)
     UCmdDlg* ParentCmdDlg = nullptr;
 
     UPROPERTY()

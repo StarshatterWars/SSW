@@ -1,21 +1,3 @@
-// MissionBriefingDlg.h
-
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         MissionBriefingDlg.h
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    MissionBriefingDlg (Unreal)
-    - Common mission header + SIT/PKG/NAV/WEP + ACCEPT/CANCEL handling
-    - Ported from legacy MsnDlg (Starshatter 4.5)
-    - Widget components use UPROPERTY BindWidgetOptional for UMG wiring
-*/
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -23,14 +5,29 @@
 #include "MissionBriefingDlg.generated.h"
 
 class UMissionPlanner;
-
+class UMenuButton;
+class USelectableButtonGroup;
+class UPanelWidget;
+class UWidgetSwitcher;
 class UButton;
 class UTextBlock;
-
-// Legacy sim/campaign forward declarations (your ported types):
 class Campaign;
 class Mission;
 class MissionInfo;
+
+class UMissionObjectiveDlg;
+class UMissionPackageDlg;
+class UMissionNavDlg;
+class UMissionWeaponDlg;
+
+UENUM()
+enum class EMissionBriefingMode : uint8
+{
+    SIT = 0,
+    PKG,
+    NAV,
+    WEP
+};
 
 UCLASS()
 class STARSHATTERWARS_API UMissionBriefingDlg : public UBaseScreen
@@ -40,31 +37,37 @@ class STARSHATTERWARS_API UMissionBriefingDlg : public UBaseScreen
 public:
     UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer);
 
-    // External wiring:
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
 
-    // Legacy-like API:
-    virtual void ShowMsnDlg();                 // refresh header + tabs + buttons
-    virtual void OnCommit();                   // Accept
-    virtual void OnCancel();                   // Cancel
-    virtual void OnTabButton(UButton* Pressed);// SIT/PKG/NAV/WEP (Pressed is one of the tab buttons)
+    virtual void ShowMsnDlg();
+    virtual void OnCommit();
+    virtual void OnCancel();
 
 protected:
-    // UUserWidget lifecycle
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
-protected:
-    // Legacy helper:
     virtual int32 CalcTimeOnTarget() const;
 
-protected:
-    // ------------------------------------------------------------
-    // UMG Bindings (OPTIONAL so you can wire gradually in UMG)
-    // ------------------------------------------------------------
+    void SetMode(EMissionBriefingMode NewMode);
+    void RefreshHeader();
+    void BuildMenuButtons();
+    void RefreshMenuSelection();
+    void InitializeSubPanels();
 
-    // Header labels (legacy ids: 200/202/204/206/208/207)
+    UFUNCTION()
+    void OnMenuToggleSelected(UMenuButton* SelectedButton);
+
+    UFUNCTION()
+    void OnMenuToggleHovered(UMenuButton* HoveredButton);
+
+    UFUNCTION()
+    void HandleAcceptClicked();
+
+    UFUNCTION()
+    void HandleCancelClicked();
+
+protected:
     UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
     UTextBlock* MissionNameText = nullptr;
 
@@ -83,26 +86,61 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
     UTextBlock* MissionTimeTargetLabelText = nullptr;
 
-    // Tabs (legacy ids: 900/901/902/903)
-    UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
-    UButton* SitButton = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* PlayerNameText = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
-    UButton* PkgButton = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* GameTimeText = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
-    UButton* NavButton = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* MissionTPlusText = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
-    UButton* WepButton = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* CurrentLocationText = nullptr;
 
-    // Accept/Cancel (legacy ids: 1/2)
-    UPROPERTY(BlueprintReadOnly, Category = "MissionBriefing|Widgets", meta = (BindWidgetOptional))
-    UButton* AcceptButton = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* CurrentUnitText = nullptr;
 
-    // ------------------------------------------------------------
-    // Options (MUST be exposed to avoid "Category but not exposed" warnings)
-    // ------------------------------------------------------------
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* PlayerScoreText = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UWidgetSwitcher* MissionSwitcher = nullptr;
+
+    UPROPERTY(EditAnywhere, Category = "MissionBriefing|UI")
+    TSubclassOf<UMenuButton> MenuButtonClass;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USelectableButtonGroup* MenuToggleGroup = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UPanelWidget* MenuButtonContainer = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UButton* MissionButton = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UButton* ReturnButton = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* MissionButtonText = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* ReturnButtonText = nullptr;
+
+    // Switcher child panels
+    UPROPERTY(meta = (BindWidgetOptional))
+    UMissionObjectiveDlg* SitPanel = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UMissionPackageDlg* PkgPanel = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UMissionNavDlg* NavPanel = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UMissionWeaponDlg* WepPanel = nullptr;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionBriefing|Options")
     bool bDisableWeaponTabInNetLobby = true;
 
@@ -112,40 +150,21 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionBriefing|Options")
     bool bShowTimeOnTarget = true;
 
-protected:
-    // ------------------------------------------------------------
-    // Raw pointers by request (NO UPROPERTY)
-    // ------------------------------------------------------------
-    UMissionPlanner* Manager = nullptr;
+    UPROPERTY()
+    TArray<UMenuButton*> AllMenuButtons;
 
+    UPROPERTY()
+    TArray<FString> MenuItems = { TEXT("SIT"), TEXT("PKG"), TEXT("NAV"), TEXT("WEP") };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionBriefing|State")
+    EMissionBriefingMode CurrentMode = EMissionBriefingMode::SIT;
+
+    UMissionPlanner* Manager = nullptr;
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
     MissionInfo* InfoPtr = nullptr;
-
     int32 PackageIndex = -1;
 
 private:
-    // Internal click handlers
-    UFUNCTION()
-    void HandleAcceptClicked();
-
-    UFUNCTION()
-    void HandleCancelClicked();
-
-    UFUNCTION()
-    void HandleSitClicked();
-
-    UFUNCTION()
-    void HandlePkgClicked();
-
-    UFUNCTION()
-    void HandleNavClicked();
-
-    UFUNCTION()
-    void HandleWepClicked();
-
-private:
-    void BindButtons();
-    void UnbindButtons();
     static FText ToTextFromUtf8(const char* Utf8);
 };
