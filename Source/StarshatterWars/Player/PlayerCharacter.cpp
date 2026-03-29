@@ -15,7 +15,9 @@
 #include "Game.h"
 #include "Kismet/GameplayStatics.h"
 #include "SimEvent.h"
+#include "GameStructs.h"
 #include "StarshatterPlayerSubsystem.h"
+#include "PlayerData.h"
 
 // ------------------------------------------------------------------
 // Static globals (legacy style)
@@ -145,9 +147,20 @@ USound* PlayerCharacter::AwardSound() const
     return nullptr;
 }
 
-bool PlayerCharacter::CanCommand(int32 /*ShipClassMask*/) const
+bool
+PlayerCharacter::CanCommand(int32 ship_class)
 {
-    return true;
+    if (ship_class <= (int) CLASSIFICATION::ATTACK)
+        return true;
+
+    //for (int i = rank_table.size() - 1; i >= 0; i--) {
+     //   AwardInfo* award = rank_table[i];
+     //   if (GetPoints() > award->total_points) {
+     //       return (ship_class & award->granted_ship_classes) != 0;
+     //   }
+    //}
+
+    return false;
 }
 
 bool PlayerCharacter::ShowAward() const
@@ -459,7 +472,34 @@ int32 PlayerCharacter::RankFromName(const FString& InName)
 const char* PlayerCharacter::RankDescription(int32 /*RankId*/) { return ""; }
 const char* PlayerCharacter::MedalName(int32 /*MedalBit*/) { return ""; }
 const char* PlayerCharacter::MedalDescription(int32 /*MedalBit*/) { return ""; }
-int32       PlayerCharacter::CommandRankRequired(int32 /*Mask*/) { return 0; }
+
+
+int32 PlayerCharacter::CommandRankRequired(int32 Mask)
+{
+    switch (Mask)
+    {
+    case (int32)CLASSIFICATION::FIGHTER:
+        return 0;
+
+    case (int32)CLASSIFICATION::ATTACK:
+        return 1;
+
+    case (int32)CLASSIFICATION::LCA:
+        return 1;
+
+    case (int32)CLASSIFICATION::DESTROYER:
+        return 2;
+
+    case (int32)CLASSIFICATION::CRUISER:
+        return 3;
+
+    case (int32)CLASSIFICATION::CARRIER:
+        return 3;
+
+    default:
+        return 0;
+    }
+}
 
 // ------------------------------------------------------------------
 // Roster
@@ -505,7 +545,7 @@ PlayerCharacter* PlayerCharacter::Find(const char* InNameAnsi)
     for (int32 i = 0; i < GPlayerRoster.size(); ++i)
     {
         PlayerCharacter* P = GPlayerRoster.at(i);
-        if (P && P->Name().Equals(Desired, ESearchCase::IgnoreCase))
+        if (P && P->GetName().Equals(Desired, ESearchCase::IgnoreCase))
             return P;
     }
 

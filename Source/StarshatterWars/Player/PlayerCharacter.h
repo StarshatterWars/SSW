@@ -57,7 +57,7 @@ public:
     int32 GetIdentity() const { return PlayerId; }
     int32 Identity()    const { return PlayerId; } // legacy alias
 
-    const FString& Name()      const { return PlayerName; }
+    const FString& GetName()   const { return PlayerName; }
     const FString& Password()  const { return PlayerPassword; }
     const FString& Squadron()  const { return PlayerSquadron; }
     const FString& Signature() const { return PlayerSignature; }
@@ -72,20 +72,22 @@ public:
 
     int32 CreateDate() const { return CreateDateUtc; }
 
+    bool CanCommand(int ship_class);
+
     // ------------------------------------------------------------------
     // Rank / medals / points (legacy-compatible)
     // ------------------------------------------------------------------
     int32 GetRank() const;      // derived or cached
     int32 Medal(int32 N) const; // nth medal bit in 16-bit field
-    int32 Points() const { return PlayerPoints; }
-    int32 Medals() const { return MedalsMask; }
+    int32 GetPoints() const { return PlayerPoints; }
+    int32 GetMedals() const { return MedalsMask; }
 
     // Stats
-    int32 FlightTime() const { return FlightTimeSeconds; }
-    int32 Missions()   const { return MissionCount; }
-    int32 Kills()      const { return KillCount; }
-    int32 Deaths()     const { return DeathCount; }
-    int32 Losses()     const { return LossCount; }
+    int32 GetFlightTime() const { return FlightTimeSeconds; }
+    int32 GetMissions()   const { return MissionCount; }
+    int32 GetKills()      const { return KillCount; }
+    int32 GetDeaths()     const { return DeathCount; }
+    int32 GetLosses()     const { return LossCount; }
 
     // Campaign/training (modernized storage)
     int64 Campaigns() const { return CampaignCompleteMask; }

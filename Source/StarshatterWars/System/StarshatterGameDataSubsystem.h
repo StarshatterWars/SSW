@@ -248,6 +248,10 @@ public:
     void LoadContentBundle();
     void LoadAwardTables();
 
+    bool GetBestRankForPointsFromTable(const UDataTable* RanksTable, int32 PlayerPoints, FRankInfo& OutRank) const;
+    int32 GetRequiredRankIdForShipClassFromTable(const UDataTable* RanksTable, int32 ShipClassMask) const;
+    bool CanPlayerCommandFromRankTable(const UDataTable* RanksTable, int32 PlayerPoints, int32 ShipClassMask) const;
+
     bool GetRankInfo(int32 RankId, FRankInfo& Out) const;
     bool GetMedalInfo(int32 MedalId, FMedalInfo& Out) const;
 

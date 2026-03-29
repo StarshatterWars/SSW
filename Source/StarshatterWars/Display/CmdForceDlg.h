@@ -42,6 +42,7 @@ class UCmpnScreen;
 class UCmdMsgDlg;
 class UCmdDlg;
 class UCmdForceListItem;
+class UCmdMsgDlg;
 
 // ============================================================
 // Forces Tab (Order of Battle)
@@ -139,7 +140,7 @@ private:
     UListView* DescList = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
-    UButton* TransferButton = nullptr;
+    class UButton* TransferButton = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* TransferButtonText = nullptr;
@@ -174,4 +175,11 @@ private:
 protected:
     UPROPERTY()
     UCmdDlg* ParentCmdDlg = nullptr;
+
+protected:
+    UPROPERTY(meta = (BindWidgetOptional))
+    UCmdMsgDlg* CmdMsgDlg = nullptr;
+
+    void ShowTransferPopup(const FString& Title, const FString& Message, bool bApproved);
+    void UpdateTransferButtonState();
 };

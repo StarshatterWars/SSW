@@ -350,6 +350,16 @@ void UCmdForceDlg::NativeConstruct()
 		CombatantList->OnItemSelectionChanged().RemoveAll(this);
 		CombatantList->OnItemSelectionChanged().AddUObject(this, &UCmdForceDlg::OnCombatItemSelected);
 	}
+
+	if (CmdMsgDlg)
+	{
+		CmdMsgDlg->HideMsgDlg();
+
+		// (Manager)
+		//
+		//	CmdMsgDlg->SetManager(Manager);
+		//}
+	}
 }
 
 void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -603,11 +613,13 @@ void UCmdForceDlg::OnCombatItemSelected(UObject* ItemObject)
 			RebuildCombatListForCurrentCombatant();
 		}
 
+		UpdateTransferButtonState();
 		PopulateDescForGroup(CurrentGroup);
 	}
 	else if (Item->IsUnit())
 	{
 		CurrentUnit = Item->Unit;
+		UpdateTransferButtonState();
 		PopulateDescForUnit(CurrentUnit);
 	}
 	else
@@ -926,6 +938,12 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
 			UTF8_TO_TCHAR(Group->GetDescription())));
 	}
 
+	if (GroupTypeText)
+	{
+		GroupTypeText->SetText(FText::FromString(
+			CombatGroupTypeToDisplayString(Group->GetType())));
+	}
+
 	if (GroupLocationText)
 	{
 		GroupLocationText->SetText(FText::FromString(
@@ -1040,6 +1058,24 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 			BuildSafeUnitDisplayText(Unit)));
 	}
 
+	if (GroupTypeText)
+	{
+		// Type
+		FString TypeText = TEXT("UNKNOWN");
+		switch ((CLASSIFICATION)Unit->Type())
+		{
+		case CLASSIFICATION::FIGHTER:   TypeText = TEXT("FIGHTER"); break;
+		case CLASSIFICATION::ATTACK:    TypeText = TEXT("ATTACK"); break;
+		case CLASSIFICATION::LCA:       TypeText = TEXT("LANDING CRAFT"); break;
+		case CLASSIFICATION::DESTROYER: TypeText = TEXT("DESTROYER"); break;
+		case CLASSIFICATION::CRUISER:   TypeText = TEXT("CRUISER"); break;
+		case CLASSIFICATION::CARRIER:   TypeText = TEXT("CARRIER"); break;
+		case CLASSIFICATION::STATION:   TypeText = TEXT("STATION"); break;
+		case CLASSIFICATION::STARBASE:  TypeText = TEXT("STARBASE"); break;
+		default: break;
+		}
+		GroupTypeText->SetText(FText::FromString(TypeText));
+	}
 	// ------------------------------------------------------------
 	// Location
 	// ------------------------------------------------------------
@@ -1181,16 +1217,29 @@ void UCmdForceDlg::UpdateTransferEnabled()
 
 void UCmdForceDlg::OnTransferClicked()
 {
-	if (!CampaignPtr || !CurrentGroup || !Manager)
+	UE_LOG(LogTemp, Warning, TEXT("[CmdForceDlg] CmdMsgDlg=%p"), CmdMsgDlg);
+
+	if (!CampaignPtr)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Transfer] CampaignPtr NULL"));
 		return;
 	}
 
-	PlayerCharacter* PlayerPtr = PlayerCharacter::GetCurrentPlayer();
-	if (!PlayerPtr)
+	if (!CurrentGroup)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Transfer] CurrentGroup NULL"));
+		CmdMsgDlg->SetTitleText(TEXT("Transfer Denied"));
+		CmdMsgDlg->SetMessageText(TEXT("No group selected."));
+		CmdMsgDlg->ShowMsgDlg();
 		return;
 	}
+
+	PlayerCharacter* PlayerPtr = PlayerCharacter::EnsureCurrentPlayer();
+	if (!PlayerPtr)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Transfer] Player NULL"));
+	return;
+}
 
 	int CmdClass = (int)CLASSIFICATION::FIGHTER;
 
@@ -1222,62 +1271,64 @@ void UCmdForceDlg::OnTransferClicked()
 	case ECOMBATGROUP_TYPE::FLEET:
 		CmdClass = (int)CLASSIFICATION::CARRIER;
 		break;
+
+	default:
+		break;
 	}
 
 	FString TransferInfo;
 
-	UCmdMsgDlg* MsgDlg = Manager->GetCmdMsgDlg();
-	if (!MsgDlg)
+	if (!CmdMsgDlg)
 	{
 		return;
 	}
 
-	if (PlayerPtr->CanCommand(CmdClass))
+	const int32 RequiredRank = PlayerCharacter::CommandRankRequired(CmdClass);
+	const bool bCanCommand = PlayerPtr->GetRank() >= RequiredRank;
+
+	if (bCanCommand)
 	{
 		if (CurrentUnit)
 		{
 			CampaignPtr->SetPlayerUnit(CurrentUnit);
 
 			TransferInfo = FString::Printf(
-				TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-				UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-				UTF8_TO_TCHAR(*PlayerPtr->Name()),
-				UTF8_TO_TCHAR(CurrentUnit->GetDescription()));
+				TEXT("Your transfer request has been approved, %s %s. You are now assigned to the %s. Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+				ANSI_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+				*PlayerPtr->GetName(),
+				ANSI_TO_TCHAR(CurrentUnit->GetDescription()));
 		}
 		else
 		{
 			CampaignPtr->SetPlayerGroup(CurrentGroup);
 
 			TransferInfo = FString::Printf(
-				TEXT("Your transfer request has been approved, %s %s.  You are now assigned to the %s.  Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-				UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-				UTF8_TO_TCHAR(*PlayerPtr->Name()),
+				TEXT("Your transfer request has been approved, %s %s. You are now assigned to the %s. Good luck.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+				ANSI_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+				*PlayerPtr->GetName(),
 				UTF8_TO_TCHAR(CurrentGroup->GetDescription()));
 		}
 
 		UIButton::PlaySound(UIButton::SND_ACCEPT);
 
-		MsgDlg->SetTitleText(TEXT("Transfer Approved"));
-		MsgDlg->SetMessageText(TransferInfo);
-		Manager->ShowCmdMsgDlg();
+		CmdMsgDlg->SetTitleText(TEXT("Transfer Approved"));
+		CmdMsgDlg->SetMessageText(TransferInfo);
+		CmdMsgDlg->ShowMsgDlg();
 	}
 	else
 	{
 		UIButton::PlaySound(UIButton::SND_REJECT);
 
-		const char* Required =
-			PlayerCharacter::RankName(PlayerCharacter::CommandRankRequired(CmdClass));
-
 		TransferInfo = FString::Printf(
-			TEXT("Your transfer request has been denied, %s %s.  The %s requires a command rank of %s.  Please return to your unit and your duties.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
-			UTF8_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
-			UTF8_TO_TCHAR(*PlayerPtr->Name()),
+			TEXT("Your transfer request has been denied, %s %s. The %s requires a command rank of %s. Please return to your unit and your duties.\n\nFleet Admiral A. Evars FORCOM\nCommanding"),
+			ANSI_TO_TCHAR(PlayerCharacter::RankName(PlayerPtr->GetRank())),
+			*PlayerPtr->GetName(),
 			UTF8_TO_TCHAR(CurrentGroup->GetDescription()),
-			UTF8_TO_TCHAR(Required));
+			ANSI_TO_TCHAR(PlayerCharacter::RankName(RequiredRank)));
 
-		MsgDlg->SetTitleText(TEXT("Transfer Denied"));
-		MsgDlg->SetMessageText(TransferInfo);
-		Manager->ShowCmdMsgDlg();
+		CmdMsgDlg->SetTitleText(TEXT("Transfer Denied"));
+		CmdMsgDlg->SetMessageText(TransferInfo);
+		CmdMsgDlg->ShowMsgDlg();
 	}
 }
 
@@ -1340,4 +1391,35 @@ void UCmdForceDlg::DumpCombatGroupRecursive(CombatGroup* Group, int32 Depth)
 	{
 		DumpCombatGroupRecursive(Children[i], Depth + 1);
 	}
+}
+
+void UCmdForceDlg::ShowTransferPopup(const FString& TransferTitle, const FString& TransferMessage, bool bApproved)
+{
+	if (CmdMsgDlg)
+	{
+		CmdMsgDlg->SetTitleText(TransferTitle);
+		CmdMsgDlg->SetMessageText(TransferMessage);
+		CmdMsgDlg->ShowMsgDlg();
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[CmdForceDlg] %s\n%s"), *TransferTitle, *TransferMessage);
+}
+
+void UCmdForceDlg::UpdateTransferButtonState()
+{
+	if (!TransferButton)
+	{
+		return;
+	}
+
+	const bool bEnable = (CurrentUnit == nullptr && CurrentGroup != nullptr);
+
+	TransferButton->SetIsEnabled(bEnable);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[CmdForceDlg] TransferButton Enabled=%d (Unit=%p Group=%p)"),
+		bEnable ? 1 : 0,
+		CurrentUnit,
+		CurrentGroup);
 }

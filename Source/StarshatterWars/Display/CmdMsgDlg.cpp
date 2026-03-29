@@ -1,31 +1,11 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmdMsgDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmdMsgDlg implementation (Unreal port)
-*/
-
 #include "CmdMsgDlg.h"
 
-// UMG
-#include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/RichTextBlock.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
-
-// Your screen manager
-#include "CmpnScreen.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 
 UCmdMsgDlg::UCmdMsgDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -36,11 +16,11 @@ void UCmdMsgDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    if (btn_close)
-        btn_close->OnClicked.AddDynamic(this, &UCmdMsgDlg::OnCloseClicked);
-
     bExitLatch = false;
-    bWantsFocus = true;
+    bWantsFocus = false;
+
+    SetIsFocusable(true);
+    HideMsgDlg();
 }
 
 void UCmdMsgDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -54,13 +34,24 @@ void UCmdMsgDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     }
 }
 
-void UCmdMsgDlg::SetManager(UCmpnScreen* InManager)
+FReply UCmdMsgDlg::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-    Manager = InManager;
+    if (GetVisibility() == ESlateVisibility::Visible &&
+        InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        HideMsgDlg();
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 void UCmdMsgDlg::ShowMsgDlg()
 {
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMsgDlg] ShowMsgDlg called"));
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMsgDlg] Title=%p MessageRich=%p Message=%p"),
+        TitleText, MessageTextBlock, MessageText);
+
     SetVisibility(ESlateVisibility::Visible);
     bWantsFocus = true;
     bExitLatch = false;
@@ -70,86 +61,68 @@ void UCmdMsgDlg::HideMsgDlg()
 {
     SetVisibility(ESlateVisibility::Hidden);
     bWantsFocus = false;
+    bExitLatch = false;
 }
 
 void UCmdMsgDlg::SetTitleText(const FString& InTitle)
 {
-    if (txt_title)
-        txt_title->SetText(FText::FromString(InTitle));
+    if (TitleText)
+    {
+        TitleText->SetText(FText::FromString(InTitle));
+    }
 }
 
 void UCmdMsgDlg::SetMessageText(const FString& InMessage)
 {
-    if (txt_message_rich)
+    if (MessageTextBlock)
     {
-        txt_message_rich->SetText(FText::FromString(InMessage));
+        MessageTextBlock->SetText(FText::FromString(InMessage));
     }
-    else if (txt_message)
+    else if (MessageText)
     {
-        txt_message->SetText(FText::FromString(InMessage));
+        MessageText->SetText(FText::FromString(InMessage));
     }
 }
 
 void UCmdMsgDlg::UpdateFocusIfVisible()
 {
     if (!bWantsFocus)
+    {
         return;
-
-    // Mimic legacy SetFocus() by focusing the widget (or the close button)
-    if (btn_close)
-    {
-        UWidgetBlueprintLibrary::SetFocusToGameViewport();
-        btn_close->SetKeyboardFocus();
-    }
-    else
-    {
-        UWidgetBlueprintLibrary::SetFocusToGameViewport();
     }
 
+    UWidgetBlueprintLibrary::SetFocusToGameViewport();
+    SetKeyboardFocus();
     bWantsFocus = false;
 }
 
 void UCmdMsgDlg::HandleKeyboardShortcuts()
 {
-    // Legacy behavior:
-    // - Enter closes
-    // - Escape closes (with latch so holding Escape does not spam)
     const APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
     if (!PC)
-        return;
-
-    // Enter
-    if (PC->WasInputKeyJustPressed(EKeys::Enter) || PC->WasInputKeyJustPressed(EKeys::Virtual_Accept))
     {
-        OnCloseClicked();
         return;
     }
 
-    // Escape with latch
+    if (PC->WasInputKeyJustPressed(EKeys::Enter) ||
+        PC->WasInputKeyJustPressed(EKeys::Virtual_Accept))
+    {
+        HideMsgDlg();
+        return;
+    }
+
     const bool bEscapeDown = PC->IsInputKeyDown(EKeys::Escape);
     if (bEscapeDown)
     {
         if (!bExitLatch)
-            OnCloseClicked();
+        {
+            HideMsgDlg();
+        }
 
         bExitLatch = true;
     }
     else
     {
         bExitLatch = false;
-    }
-}
-
-void UCmdMsgDlg::OnCloseClicked()
-{
-    if (Manager)
-    {
-        // Legacy: manager->CloseTopmost();
-        Manager->CloseTopmost();
-    }
-    else
-    {
-        // Safe fallback: just hide
-        HideMsgDlg();
     }
 }

@@ -50,7 +50,7 @@ void UPlayerRosterEntry::RefreshFromPlayer(PlayerCharacter* player)
     // DO NOT use StringCast on ints. Convert explicitly.
 
     if (txt_name)
-        txt_name->SetText(FText::FromString(*player->Name()));
+        txt_name->SetText(FText::FromString(*player->GetName()));
 
     if (txt_rank)
     {
@@ -65,9 +65,9 @@ void UPlayerRosterEntry::RefreshFromPlayer(PlayerCharacter* player)
     if (txt_stats)
     {
         // Example: "M 12  K 5  D 1"
-        const int32 Missions = (int32)player->Missions();
-        const int32 Kills = (int32)player->Kills();
-        const int32 Deaths = (int32)player->Deaths();
+        const int32 Missions = (int32)player->GetMissions();
+        const int32 Kills = (int32)player->GetKills();
+        const int32 Deaths = (int32)player->GetDeaths();
 
         const FString Stats = FString::Printf(TEXT("M %d  K %d  D %d"), Missions, Kills, Deaths);
         txt_stats->SetText(FText::FromString(Stats));

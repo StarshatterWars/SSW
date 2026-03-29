@@ -78,8 +78,6 @@ public:
 	//Bitmap* AwardImage()   const;
 	USound* AwardSound()   const;
 
-	bool           CanCommand(int ship_class);
-
 	void           SetName(const char* n);
 	void           SetPassword(const char* p);
 	void           SetSquadron(const char* s);

@@ -1895,7 +1895,7 @@ Starshatter::DoChatMode()
 		name = player_ship->Name();
 
 	if (p)
-		name = Text(TCHAR_TO_UTF8(*p->Name()));
+		name = Text(TCHAR_TO_UTF8(*p->GetName()));
 
 	if (chat_text.length()) {
 		if (chat_text[0] >= '0' && chat_text[0] <= '9') {

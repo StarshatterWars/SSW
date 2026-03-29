@@ -309,7 +309,7 @@ CampaignSituationReport::MissionSituation()
 		}
 
 		// PlayerPtr->Name() is now FString (UE-side), so convert it to legacy Text:
-		NameText = Text(", ") + Text(TCHAR_TO_UTF8(*PlayerPtr->Name()));
+		NameText = Text(", ") + Text(TCHAR_TO_UTF8(*PlayerPtr->GetName()));
 	}
 
 	sitrep += "You have a mission to perform.  ";

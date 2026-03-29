@@ -5787,6 +5787,98 @@ bool UStarshatterGameDataSubsystem::FillMedalInfoFromTable(const UDataTable* Med
 	return false;
 }
 
+bool UStarshatterGameDataSubsystem::GetBestRankForPointsFromTable(
+	const UDataTable* RanksTable,
+	int32 PlayerPoints,
+	FRankInfo& OutRank) const
+{
+	if (!RanksTable)
+	{
+		return false;
+	}
+
+	static const FString Ctx(TEXT("GetBestRankForPointsFromTable"));
+
+	TArray<FRankInfo*> Rows;
+	RanksTable->GetAllRows<FRankInfo>(Ctx, Rows);
+
+	const FRankInfo* BestRow = nullptr;
+
+	for (const FRankInfo* Row : Rows)
+	{
+		if (!Row)
+		{
+			continue;
+		}
+
+		// Legacy behavior used ">"
+		if (PlayerPoints > Row->TotalPoints)
+		{
+			if (!BestRow || Row->TotalPoints > BestRow->TotalPoints)
+			{
+				BestRow = Row;
+			}
+		}
+	}
+
+	if (!BestRow)
+	{
+		return false;
+	}
+
+	OutRank = *BestRow;
+	return true;
+}
+
+int32 UStarshatterGameDataSubsystem::GetRequiredRankIdForShipClassFromTable(
+	const UDataTable* RanksTable,
+	int32 ShipClassMask) const
+{
+	if (!RanksTable)
+	{
+		return 0;
+	}
+
+	static const FString Ctx(TEXT("GetRequiredRankIdForShipClassFromTable"));
+
+	TArray<FRankInfo*> Rows;
+	RanksTable->GetAllRows<FRankInfo>(Ctx, Rows);
+
+	const FRankInfo* BestRow = nullptr;
+
+	for (const FRankInfo* Row : Rows)
+	{
+		if (!Row)
+		{
+			continue;
+		}
+
+		if ((ShipClassMask & Row->GrantedShipClasses) != 0)
+		{
+			if (!BestRow || Row->TotalPoints < BestRow->TotalPoints)
+			{
+				BestRow = Row;
+			}
+		}
+	}
+
+	return BestRow ? BestRow->RankId : 0;
+}
+
+bool UStarshatterGameDataSubsystem::CanPlayerCommandFromRankTable(
+	const UDataTable* RanksTable,
+	int32 PlayerPoints,
+	int32 ShipClassMask) const
+{
+	FRankInfo RankInfo;
+	if (!GetBestRankForPointsFromTable(RanksTable, PlayerPoints, RankInfo))
+	{
+		return false;
+	}
+
+	return (ShipClassMask & RankInfo.GrantedShipClasses) != 0;
+}
+
 bool UStarshatterGameDataSubsystem::GetRankInfo(int32 RankId, FRankInfo& Out) const
 {
 	if (const FRankInfo* Found = RankById.Find(RankId))

@@ -69,6 +69,8 @@ class UCmdForceDlg;
 class UCmdMissionsDlg;
 class UCmdIntelDlg;
 class UCmdTheaterDlg;
+class UCmdMsgDlg;
+
 
 /**
  * Operational Command Dialog
@@ -177,8 +179,6 @@ private:
 
     UPROPERTY(meta = (BindWidgetOptional)) class UTextBlock* ReturnButtonText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) class UButton* ReturnButton = nullptr;
-
-
 
 
     UPROPERTY(EditAnywhere, Category = "UI")

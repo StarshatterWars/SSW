@@ -62,9 +62,6 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
 
     if (!TacRefDlgClass)
         TacRefDlgClass = Assets->GetWidgetClass(TEXT("UI.TacRefScreenClass"), true);
-    // IMPORTANT: do NOT touch MenuDlgClass unless you actually bind it in registry:
-    // if (!MenuDlgClass)
-    //     MenuDlgClass = Assets->GetWidgetClass(TEXT("UI.MenuDlgClass"), true);
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s"),
         *GetNameSafe(MenuDlgClass.Get()),

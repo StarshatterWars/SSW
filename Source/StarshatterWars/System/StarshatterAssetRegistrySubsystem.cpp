@@ -483,6 +483,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.CmdMessageDlgClass")))
+    {
+        if (!Settings->CmdMessageDialogClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CmdMessageDialogClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CmdMessageDlgClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CmdMessageDlgClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CmdMessageDlgClass is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

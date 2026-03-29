@@ -303,6 +303,7 @@ void UCmdDlg::NativePreConstruct()
 
 void UCmdDlg::NativeOnInitialized()
 {
+
 }
 
 void UCmdDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

@@ -623,7 +623,7 @@ MissionEvent::Execute(bool silent)
 							event_message = FormatTextReplace(
 								event_message,
 								"$NAME",
-								TCHAR_TO_UTF8(*user->Name())
+								TCHAR_TO_UTF8(*user->GetName())
 							);
 							event_message = FormatTextReplace(event_message, "$RANK", PlayerCharacter::RankName(user->GetRank()));
 						}
