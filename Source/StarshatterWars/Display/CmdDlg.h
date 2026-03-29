@@ -129,12 +129,8 @@ public:
     void SetManager(UCmpnScreen* InManager);
     void ShowCmdDlg();
     void ExecFrame();
-    void SetMode(ECOMMAND_MODE InMode);
 
 protected:
-    /** Equivalent to ShowMode() */
-    void ShowMode();
-
     UPROPERTY(Transient)
     TObjectPtr<UMenuScreen> manager = nullptr;
 
@@ -251,5 +247,12 @@ private:
     UFUNCTION() void HandleUniverseMinuteTick(uint64 UniverseSecondsNow);
     UFUNCTION() void HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds);
 
+    bool ShouldDisableCommandPanels() const;
+
     TArray<UMenuButton*> MenuButtonArray;
+    void RefreshCommandButtons();
+
+    bool bLastDisableState = false;
 };
+
+

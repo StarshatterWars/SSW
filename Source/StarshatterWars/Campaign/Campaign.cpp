@@ -111,7 +111,7 @@ Campaign::Campaign(int id, const char* n)
     , mission_id(-1)
     , mission(0)
     , net_mission(0)
-    , scripted(false)
+    , scripted(IsScripted())
     , sequential(false)
     , time(0)
     , startTime(0)
@@ -132,7 +132,7 @@ Campaign::Campaign(int id, const char* n, const char* p)
     , mission_id(-1)
     , mission(0)
     , net_mission(0)
-    , scripted(false)
+    , scripted(IsScripted())
     , sequential(false)
     , time(0)
     , startTime(0)
@@ -155,7 +155,7 @@ Campaign::Campaign(int id, const char* n, bool bSkipLoad)
     , mission_id(-1)
     , mission(0)
     , net_mission(0)
-    , scripted(false)
+    , scripted(IsScripted())
     , sequential(false)
     , loaded_from_savegame(false)
     , player_group(0)
@@ -2201,7 +2201,7 @@ Campaign::StartMission()
         UE_LOG(LogCampaign, Log, TEXT("Campaign Start Mission - %d. '%s'"),
             m->GetIdentity(), ANSI_TO_TCHAR(m->GetName()));
 
-        if (!scripted) {
+        if (!IsScripted()) {
 
             double gtime = (double)Game::GameTime() / 1000.0;
             double base = GetStartTime() + m->GetStart() - 15 - gtime;
@@ -2228,7 +2228,7 @@ Campaign::RollbackMission()
     Mission* m = GetMission();
 
     if (m) {
-        if (!scripted) {
+        if (!IsScripted()) {
 
             double gtime = (double)Game::GameTime() / 1000.0;
             double base = GetStartTime() + m->GetStart() - 60 - gtime;
@@ -2526,7 +2526,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
 
     orders = TCHAR_TO_ANSI(*CombinedOrders);
 
-    scripted = Data.bScripted;
+    SetScripted(Data.bScripted);
     sequential = Data.bSequential;
     double RelativeStart = UFormattingUtils::ParseStarshatterTime(*Data.Start);
     startTime = StarSystem::GetStardate() + RelativeStart;

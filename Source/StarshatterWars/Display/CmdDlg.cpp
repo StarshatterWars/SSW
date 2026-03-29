@@ -170,7 +170,8 @@ void UCmdDlg::NativeConstruct()
 
         AllMenuButtons.Add(NewButton);
     }
-
+    
+    
     // =========================================================
     // BUTTON SETUP
     // =========================================================
@@ -407,6 +408,7 @@ void UCmdDlg::ShowCmdDlg()
 {
     CampaignPtr = Campaign::GetCampaign();
 
+
     if (txt_name)
     {
         if (CampaignPtr)
@@ -414,8 +416,6 @@ void UCmdDlg::ShowCmdDlg()
         else
             txt_name->SetText(FText::FromString(TEXT("No Campaign Selected")));
     }
-
-    ShowMode();
 
     if (CampaignPtr)
     {
@@ -466,6 +466,13 @@ void UCmdDlg::ExecFrame()
     // Intel unread count -> change button label:
     const int32 Unread = CampaignPtr->CountNewEvents();
 
+    RefreshCommandButtons();
+
+    if (CmdOrdersPanel)
+    {
+        CmdOrdersPanel->ShowOrdersDlg();
+    }
+
     if (AllMenuButtons[3])
     {
         if (Unread > 0) {
@@ -480,62 +487,6 @@ void UCmdDlg::ExecFrame()
                 Label->SetText(FText::FromString(FString::Printf(TEXT("INTEL"))));
             }
         }
-    }
-}
-
-void UCmdDlg::SetMode(ECOMMAND_MODE InMode)
-{
-    RouteMode(InMode);
-}
-
-// --------------------------------------------------------------------
-// Internal behavior
-// --------------------------------------------------------------------
-
-void UCmdDlg::ShowMode()
-{
-    // Classic code uses SetButtonState(0/1).
-    // In Unreal, you typically:
-    // - swap styles (pressed/normal), or
-    // - maintain an "active" visual via bindings.
-    //
-    // Here we keep it minimal: just ensure Mode is clamped.
-    const uint8 M = (uint8)Mode;
-    if (M > (uint8)ECOMMAND_MODE::MODE_MISSIONS)
-        Mode = ECOMMAND_MODE::MODE_ORDERS;
-}
-
-void UCmdDlg::RouteMode(ECOMMAND_MODE NewMode)
-{
-    Mode = NewMode;
-    ShowMode();
-
-    if (!CmpnScreen)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CmdDlg: CmpnScreen is null (RouteMode)."));
-        return;
-    }
-
-    switch (Mode)
-    {
-        case ECOMMAND_MODE::MODE_ORDERS: 
-            CmpnScreen->ShowCmdOrdersDlg();  
-            break;
-        case ECOMMAND_MODE::MODE_THEATER: 
-            CmpnScreen->ShowCmdTheaterDlg();
-            break;
-        case ECOMMAND_MODE::MODE_FORCES:   
-            CmpnScreen->ShowCmdForceDlg();
-            break;
-        case ECOMMAND_MODE::MODE_INTEL:  
-            CmpnScreen->ShowCmdIntelDlg();
-            break;
-        case ECOMMAND_MODE::MODE_MISSIONS:
-            CmpnScreen->ShowCmdMissionsDlg();
-            break;
-        default:        
-            CmpnScreen->ShowCmdOrdersDlg();
-            break;
     }
 }
 
@@ -633,6 +584,11 @@ void UCmdDlg::RefreshUIFromSubsystem()
 
 void UCmdDlg::LoadForcesInfo()
 {
+    if (ShouldDisableCommandPanels())
+    {
+        return;
+    }
+
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
@@ -647,12 +603,6 @@ void UCmdDlg::LoadForcesInfo()
     {
         CmdForcesPanel->ShowForceDlg(); // or Refresh
     }
-    //if (InformationBorder) InformationBorder->SetVisibility(ESlateVisibility::Collapsed);
-
-    //if (InformationLabel)
-    //{
-    //    InformationLabel->SetText(FText::FromString(""));
-    //}
 }
 
 void UCmdDlg::LoadOrdersInfo()
@@ -700,6 +650,11 @@ void UCmdDlg::LoadMissionsInfo()
 }
 void UCmdDlg::LoadIntelInfo()
 {
+    if (ShouldDisableCommandPanels())
+    {
+        return;
+    }
+
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
@@ -719,6 +674,12 @@ void UCmdDlg::LoadIntelInfo()
 
 void UCmdDlg::LoadTheaterInfo()
 {
+    
+    if (ShouldDisableCommandPanels())
+    {
+        return;
+    }
+    
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
@@ -791,20 +752,6 @@ void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
 {
     USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
     if (!GI) return;
-
-    // Refresh Intel only if Intel page is currently visible
-    // In your code Intel index appears to be 3 (OperationalSwitcher->SetActiveWidgetIndex(3) in LoadIntelInfo)
-    if (OperationalSwitcher && OperationalSwitcher->GetActiveWidgetIndex() == 3)
-    {
-        //PopulateIntelList();
-
-        // If you want to keep selection stable:
-        //const int32 Sel = GI->GetSelectedActionNr();
-        //if (Sel >= 0 && Sel < ActionList.Num())
-        //{
-        //    SetSelectedIntelData(Sel);
-        //}
-    }
 }
 
 void UCmdDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
@@ -814,3 +761,38 @@ void UCmdDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlus
     //CampaignTPlusText->SetText(FText::FromString(UFormattingUtils::FormatTPlus(TPlusSeconds)));
 }
 
+bool UCmdDlg::ShouldDisableCommandPanels() const
+{
+    if (!CampaignPtr)
+    {
+        return false;
+    }
+
+    // Replace with your actual logic
+    return CampaignPtr->IsScripted();
+}
+
+void UCmdDlg::RefreshCommandButtons()
+{
+    const bool bDisable = ShouldDisableCommandPanels();
+
+    if (bDisable != bLastDisableState)
+    {
+        bLastDisableState = bDisable;
+
+        if (AllMenuButtons[1])
+        {
+            AllMenuButtons[1]->SetIsEnabled(!bDisable);
+        }
+
+        if (AllMenuButtons[2])
+        {
+            AllMenuButtons[2]->SetIsEnabled(!bDisable);
+        }
+
+        if (AllMenuButtons[3])
+        {
+            AllMenuButtons[3]->SetIsEnabled(!bDisable);
+        }
+    }
+}

@@ -1423,3 +1423,4 @@ void UCmdForceDlg::UpdateTransferButtonState()
 		CurrentUnit,
 		CurrentGroup);
 }
+

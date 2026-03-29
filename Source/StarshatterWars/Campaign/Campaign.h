@@ -191,6 +191,7 @@ public:
     double               GetUpdateTime()   const { return updateTime; }
     void                 SetUpdateTime(double t) { updateTime = t;    }
 
+	void                 SetScripted(bool s) { scripted = s; }
     bool                 InCutscene()      const;
     bool                 IsDynamic()       const;
     bool                 IsTraining()      const;

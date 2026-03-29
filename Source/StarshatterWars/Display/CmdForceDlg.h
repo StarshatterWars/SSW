@@ -182,4 +182,6 @@ protected:
 
     void ShowTransferPopup(const FString& Title, const FString& Message, bool bApproved);
     void UpdateTransferButtonState();
+
 };
+
