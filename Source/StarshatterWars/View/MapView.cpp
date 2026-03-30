@@ -2535,14 +2535,14 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 				int sprite_index = (int)((theta + THETA_OFFSET) * THETA_SLICE);
 				int nsprites = 0;
 
-				if (s.GetDesign())
-					nsprites = s.GetDesign()->map_sprites.size();
+				if (s.GetShipDesign())
+					nsprites = s.GetShipDesign()->map_sprites.size();
 
 				if (nsprites > 0) {
 					if (sprite_index < 0 || sprite_index >= nsprites)
 						sprite_index = sprite_index % nsprites;
 
-					Bitmap* map_sprite = s.GetDesign()->map_sprites[sprite_index];
+					Bitmap* map_sprite = s.GetShipDesign()->map_sprites[sprite_index];
 
 					Bitmap bmp;
 					bmp.CopyBitmap(*map_sprite);

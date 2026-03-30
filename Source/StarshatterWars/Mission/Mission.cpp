@@ -1659,9 +1659,9 @@ Mission::Serialize(const char* player_elem, int player_index)
 			s += "\"\n";
 		}
 
-		if (elem->GetDesign()) {
+		if (elem->GetShipDesign()) {
 			s += "   design:    \"";
-			s += SafeString(elem->GetDesign()->name);
+			s += SafeString(elem->GetShipDesign()->name);
 			s += "\"\n";
 		}
 
@@ -2184,8 +2184,8 @@ bool
 MissionElement::IsStatic() const
 {
 	int design_type = 0;
-	if (GetDesign())
-		design_type = GetDesign()->type;
+	if (GetShipDesign())
+		design_type = GetShipDesign()->type;
 
 	return design_type >= (int)CLASSIFICATION::STATION;
 }
@@ -2194,8 +2194,8 @@ bool
 MissionElement::IsGroundUnit() const
 {
 	int design_type = 0;
-	if (GetDesign())
-		design_type = GetDesign()->type;
+	if (GetShipDesign())
+		design_type = GetShipDesign()->type;
 
 	return (design_type & (int)CLASSIFICATION::GROUND_UNITS) ? true : false;
 }
@@ -2204,8 +2204,8 @@ bool
 MissionElement::IsStarship() const
 {
 	int design_type = 0;
-	if (GetDesign())
-		design_type = GetDesign()->type;
+	if (GetShipDesign())
+		design_type = GetShipDesign()->type;
 
 	return (design_type & (int)CLASSIFICATION::STARSHIPS) ? true : false;
 }
@@ -2214,8 +2214,8 @@ bool
 MissionElement::IsDropship() const
 {
 	int design_type = 0;
-	if (GetDesign())
-		design_type = GetDesign()->type;
+	if (GetShipDesign())
+		design_type = GetShipDesign()->type;
 
 	return (design_type & (int)CLASSIFICATION::DROPSHIPS) ? true : false;
 }
@@ -2223,7 +2223,7 @@ MissionElement::IsDropship() const
 bool
 MissionElement::IsCarrier() const
 {
-	const ShipDesign* d = GetDesign();
+	const ShipDesign* d = GetShipDesign();
 	if (d && d->flight_decks.size() > 0)
 		return true;
 

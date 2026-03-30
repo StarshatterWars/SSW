@@ -585,7 +585,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
 
     elem->SetElementID(pkg_id++);
 
-    elem->SetDesign(u->GetDesign());
+    elem->SetShipDesign(u->GetDesign());
     elem->SetCount(u->LiveCount());
     elem->SetIFF(u->GetIFF());
     elem->SetIntelLevel(g->GetIntelLevel());
@@ -701,7 +701,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetName(g->GetName());
     elem->SetElementID(pkg_id++);
 
-    elem->SetDesign(fighter->GetDesign());
+    elem->SetShipDesign(fighter->GetDesign());
     elem->SetCount(fighter->Count());
     elem->SetDeadCount(fighter->DeadCount());
     elem->SetMaintCount(maint_count);
@@ -920,8 +920,8 @@ CampaignMissionStarship::CreateTargetsAssault()
 
                     double extra = 10e3;
 
-                    if (prime_target && prime_target->GetDesign()) {
-                        switch (prime_target->GetDesign()->type) {
+                    if (prime_target && prime_target->GetShipDesign()) {
+                        switch (prime_target->GetShipDesign()->type) {
                         default:                
                             extra = 20e3;
                             break;
@@ -1427,7 +1427,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
         elem->SetHeading(fighter->GetHeading());
     }
 
-    elem->SetDesign(fighter->GetDesign());
+    elem->SetShipDesign(fighter->GetDesign());
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(squadron->GetIntelLevel());
@@ -1554,8 +1554,8 @@ CampaignMissionStarship::DescribeMission()
     }
     else if (prime_target) {
         const char* ClassName = "(unknown)";
-        if (prime_target->GetDesign())
-            ClassName = Ship::GetShipClassName(prime_target->GetDesign()->type);
+        if (prime_target->GetShipDesign())
+            ClassName = Ship::GetShipClassName(prime_target->GetShipDesign()->type);
 
         sprintf_s(name, sizeof(name), "MSN-%03d %s %s %s",
             mission->GetIdentity(),

@@ -366,7 +366,7 @@ Sim::LoadMission(Mission* m, bool preload_textures)
 			ListIter<MissionElement> elem_iter = mission->GetElements();
 			while (++elem_iter) {
 				MissionElement* elem = elem_iter.value();
-				const ShipDesign* design = elem->GetDesign();
+				const ShipDesign* design = elem->GetShipDesign();
 
 				if (design) {
 					for (int i = 0; i < 4; i++) {
@@ -541,7 +541,7 @@ Sim::CreateElements()
 						MissionLoad* MissionLoadPtr = MissionElem->Loadouts().at(0);
 
 						if (MissionLoadPtr->GetName().length()) {
-							ShipDesign* ShipDesignPtr = (ShipDesign*)MissionElem->GetDesign();
+							ShipDesign* ShipDesignPtr = (ShipDesign*)MissionElem->GetShipDesign();
 							ListIter<ShipLoad> ShipLoadIter = ShipDesignPtr->loadouts;
 							while (++ShipLoadIter) {
 								ShipLoad* ShipLoadPtr = ShipLoadIter.value();
@@ -557,7 +557,7 @@ Sim::CreateElements()
 					}
 
 					HangarPtr->CreateSquadron(MissionElem->GetName(), MissionElem->GetCombatGroup(),
-						MissionElem->GetDesign(), MissionElem->Count(),
+						MissionElem->GetShipDesign(), MissionElem->Count(),
 						MissionElem->GetIFF(),
 						DefaultLoadout, MissionElem->MaintCount(), MissionElem->DeadCount());
 
@@ -692,7 +692,7 @@ Sim::CreateElements()
 			if (HangarPtr && Element && MissionElem->Count() > 0 && MissionElem->IsAlert()) {
 				FlightDeck* Deck = nullptr;
 				int32 Queue = 1000;
-				const ShipDesign* ShipDesignPtr = MissionElem->GetDesign();
+				const ShipDesign* ShipDesignPtr = MissionElem->GetShipDesign();
 
 				if (ShipDesignPtr) {
 					for (int32 i = 0; i < Carrier->NumFlightDecks(); i++) {
@@ -731,7 +731,7 @@ Sim::CreateElements()
 						int32 SquadronLocal = -1;
 						int32 SlotLocal = -1;
 
-						if (HangarPtr->FindAvailSlot(MissionElem->GetDesign(), SquadronLocal, SlotLocal)) {
+						if (HangarPtr->FindAvailSlot(MissionElem->GetShipDesign(), SquadronLocal, SlotLocal)) {
 							bAlertPrep = bAlertPrep &&
 								HangarPtr->GotoAlert(SquadronLocal,
 									SlotLocal,
@@ -803,7 +803,7 @@ Sim::CreateElements()
 					while (++LoadIter) {
 						if ((LoadIter->GetShip() == i) || (LoadIter->GetShip() < 0 && Loadout == nullptr)) {
 							if (LoadIter->GetName().length()) {
-								ListIter<ShipLoad> ShipLoadIter = ((ShipDesign*)MissionElem->GetDesign())->loadouts;
+								ListIter<ShipLoad> ShipLoadIter = ((ShipDesign*)MissionElem->GetShipDesign())->loadouts;
 								while (++ShipLoadIter) {
 									if (!_stricmp(ShipLoadIter->name, LoadIter->GetName()))
 										Loadout = ShipLoadIter->load;
@@ -819,7 +819,7 @@ Sim::CreateElements()
 					Element->SetLoadout(Loadout);
 
 					Ship* NewShip = CreateShip(ShipName, RegistryNum,
-						(ShipDesign*)MissionElem->GetDesign(),
+						(ShipDesign*)MissionElem->GetShipDesign(),
 						RegionName, SpawnLocation,
 						MissionElem->GetIFF(),
 						MissionElem->GetCommandAI(),
@@ -2146,7 +2146,7 @@ Sim::CreateMissionElement(SimElement* elem)
 				msn_elem->SetMaintCount(hangar->NumShipsMaint(squadron_index));
 
 				const ShipDesign* design = hangar->SquadronDesign(squadron_index);
-				msn_elem->SetDesign(design);
+				msn_elem->SetShipDesign(design);
 
 				Text design_path = design->path_name;
 				design_path.setSensitive(false);
@@ -2174,7 +2174,7 @@ Sim::CreateMissionElement(SimElement* elem)
 				msn_elem->SetRegion(ship->GetRegion()->GetName());
 
 			msn_elem->SetLocation(OtherHand(ship->Location()));
-			msn_elem->SetDesign(ship->Design());
+			msn_elem->SetShipDesign(ship->Design());
 
 			msn_elem->SetPlayer(elem->GetPlayer());
 			msn_elem->SetCommandAI(elem->GetCommandAILevel());

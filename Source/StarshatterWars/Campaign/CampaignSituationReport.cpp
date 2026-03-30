@@ -36,6 +36,7 @@
 #include "Random.h"
 #include "PlayerCharacter.h"
 #include "GameStructs.h"
+#include "ShipDesignRegistry.h"
 
 #include "Logging/LogMacros.h"
 
@@ -393,10 +394,16 @@ CampaignSituationReport::GetThreatInfo()
 			if (e->GetIFF() <= 0 || e->GetIFF() == iff || e->IntelLevel() <= Intel::SECRET)
 				continue;
 
-			const ShipDesign* Design = e->GetDesign();
+			const ShipDesign* LegacyDesign = e->GetShipDesign();
+			const FShipDesign* Design = nullptr;
+
+			if (LegacyDesign)
+			{
+				Design = ShipDesignRegistry::Find(LegacyDesign->name);
+			}
 
 			if (e->IsGroundUnit()) {
-				if (!Design || Design->type != (int)CLASSIFICATION::SAM)
+				if (!Design || Design->ShipType != (int)CLASSIFICATION::SAM)
 					continue;
 
 				if (e->GetRegion() != rgn0 && e->GetRegion() != rgn1)
@@ -412,8 +419,8 @@ CampaignSituationReport::GetThreatInfo()
 				continue;
 
 			if (Design &&
-				Design->type >= (int)CLASSIFICATION::MINE &&
-				Design->type <= (int)CLASSIFICATION::DEFSAT) {
+				Design->ShipType >= (int)CLASSIFICATION::MINE &&
+				Design->ShipType <= (int)CLASSIFICATION::DEFSAT) {
 				enemy_sites += e->Count();
 			}
 			else if (e->IsDropship()) {

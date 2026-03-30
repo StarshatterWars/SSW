@@ -240,7 +240,7 @@ void UMissionWeaponDlg::SetupControls()
     if (!Elem)
         return;
 
-    ShipDesign* Design = (ShipDesign*)Elem->GetDesign();
+    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
     if (!Design)
         return;
 
@@ -330,7 +330,7 @@ void UMissionWeaponDlg::BuildLists()
     if (!Elem)
         return;
 
-    ShipDesign* D = (ShipDesign*)Elem->GetDesign();
+    ShipDesign* D = (ShipDesign*)Elem->GetShipDesign();
     if (!D)
         return;
 
@@ -403,7 +403,7 @@ void UMissionWeaponDlg::BuildLists()
 
             if (MsnLoad->GetName().length())
             {
-                ListIter<ShipLoad> sl = ((ShipDesign*)Elem->GetDesign())->loadouts;
+                ListIter<ShipLoad> sl = ((ShipDesign*)Elem->GetShipDesign())->loadouts;
                 while (++sl)
                 {
                     if (!_stricmp(sl->name, MsnLoad->GetName()))
@@ -455,7 +455,7 @@ int UMissionWeaponDlg::LoadToPointIndex(int n) const
     int Index = -1;
 
     WeaponDesign* WepDesign = Designs[Loads[nn]];
-    ShipDesign* Design = (ShipDesign*)Elem->GetDesign();
+    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
     HardPoint* Hp = Design ? Design->hard_points[n] : nullptr;
 
     if (!Hp || !WepDesign)
@@ -477,7 +477,7 @@ int UMissionWeaponDlg::PointIndexToLoad(int n, int PointIndex) const
     if (!Elem || nn < 0 || nn >= 8)
         return -1;
 
-    ShipDesign* Design = (ShipDesign*)Elem->GetDesign();
+    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
     HardPoint* Hp = Design ? Design->hard_points[n] : nullptr;
     WeaponDesign* WepDesign = Hp ? Hp->GetWeaponDesign(PointIndex) : nullptr;
 
@@ -599,7 +599,7 @@ void UMissionWeaponDlg::OnMountClicked()
     // Persist into player loadouts (legacy: update all loadouts and clear their name):
     if (Elem)
     {
-        ShipDesign* Design = (ShipDesign*)Elem->GetDesign();
+        ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
         if (Design)
         {
             const int32 NumStations = (int32)Design->hard_points.size();
@@ -644,7 +644,7 @@ void UMissionWeaponDlg::OnMountClicked()
     UTextBlock* WeightLabel = GetLabel(603);
     if (WeightLabel && Elem)
     {
-        ShipDesign* Design = (ShipDesign*)Elem->GetDesign();
+        ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
         if (Design)
         {
             const int32 NumStations = (int32)Design->hard_points.size();

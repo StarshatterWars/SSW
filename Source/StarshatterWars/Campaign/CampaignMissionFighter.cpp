@@ -2688,7 +2688,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
 
     Elem->SetElementID(pkg_id++);
 
-    Elem->SetDesign(U->GetDesign());
+    Elem->SetShipDesign(U->GetDesign());
     Elem->SetCount(U->LiveCount());
     Elem->SetIFF(U->GetIFF());
     Elem->SetIntelLevel(G->GetIntelLevel());
@@ -2876,7 +2876,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
         elem->SetHeading(fighter->GetHeading());
     }
 
-    elem->SetDesign(fighter->GetDesign());
+    elem->SetShipDesign(fighter->GetDesign());
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(InSquadron->GetIntelLevel());
@@ -3032,9 +3032,9 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
         const char* RawClassName = nullptr;
         const char* RawPrimeName = prime_target->GetName().data();
 
-        if (prime_target->GetDesign())
+        if (prime_target->GetShipDesign())
         {
-            RawClassName = Ship::GetShipClassName(prime_target->GetDesign()->type);
+            RawClassName = Ship::GetShipClassName(prime_target->GetShipDesign()->type);
         }
 
         /*Name = FString::Printf(
@@ -3062,10 +3062,10 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
         );
     }
 
-    if (player_elem && player_elem->GetDesign())
+    if (player_elem && player_elem->GetShipDesign())
     {
-        const char* RawAbrv = (const char*)player_elem->GetDesign()->abrv;
-        const char* RawDesignName = (const char*)player_elem->GetDesign()->name;
+        const char* RawAbrv = (const char*)player_elem->GetShipDesign()->abrv;
+        const char* RawDesignName = (const char*)player_elem->GetShipDesign()->name;
         const char* RawElemName = player_elem->GetName().data();
 
         PlayerInfo = FString::Printf(

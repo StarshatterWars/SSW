@@ -61,7 +61,7 @@ public:
     // ------------------------------------------------------------
     // Design / skin / counts
     // ------------------------------------------------------------
-    const ShipDesign* GetDesign()      const { return design; }
+    const ShipDesign* GetShipDesign()  const { return design; }
     const Skin*       GetSkin()        const { return skin; }
     int               Count()          const { return count; }
     int               MaintCount()     const { return maint_count; }
@@ -135,7 +135,7 @@ public:
     void SetSquadron(const char* s) { squadron = s; }
     void SetPath(const char* p) { path = p; }
     void SetElementID(int elementID) { elem_id = elementID; }
-    void SetDesign(const ShipDesign* d) { design = d; }
+    void SetShipDesign(const ShipDesign* d) { design = d; }
     void SetSkin(const Skin* s) { skin = s; }
     void SetCount(int n) { count = n; }
     void SetMaintCount(int n) { maint_count = n; }

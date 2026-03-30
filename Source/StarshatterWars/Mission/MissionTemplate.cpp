@@ -108,7 +108,7 @@ MissionTemplate::MapElement(MissionElement* elem)
 			}
 		}
 
-		CombatGroup* g = FindCombatGroup(elem->GetIFF(), elem->GetDesign());
+		CombatGroup* g = FindCombatGroup(elem->GetIFF(), elem->GetShipDesign());
 
 		if (g) {
 			CombatUnit* u = g->GetNextUnit();
@@ -450,7 +450,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 							AddElement(elem);
 						}
 						else {
-							const char* dsn = elem->GetDesign() ? elem->GetDesign()->name : "NO DSN";
+							const char* dsn = elem->GetShipDesign() ? elem->GetShipDesign()->name : "NO DSN";
 							UE_LOG(LogStarshatterWars, Warning,
 								TEXT("WARNING: failed to map element %s '%s' in '%s'"),
 								ANSI_TO_TCHAR(dsn),
@@ -625,7 +625,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 
 			for (int i = 0; !elem && i < elements.size(); i++) {
 				MissionElement* e = elements[i];
-				if (e->GetIFF() == iff && design == e->GetDesign()->name) {
+				if (e->GetIFF() == iff && design == e->GetShipDesign()->name) {
 					// do we already have an alias for this element?
 					bool found = false;
 					for (int a = 0; !found && a < aliases.size(); a++)

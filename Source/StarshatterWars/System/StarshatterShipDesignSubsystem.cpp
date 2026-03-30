@@ -57,6 +57,8 @@
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 
+#include "ShipDesignRegistry.h"
+
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
 #include "StarshatterAssetRegistrySubsystem.h"
@@ -127,6 +129,7 @@ void UStarshatterShipDesignSubsystem::Deinitialize()
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] Deinitialize()"));
 	DesignsByName.Empty();
+	ShipDesignRegistry::Clear();
 	Super::Deinitialize();
 }
 
@@ -176,9 +179,11 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 	{
 		UE_LOG(LogTemp, Error,
 			TEXT("[SHIPDESIGN] LoadFromExistingTable: ShipDesignDataTable is NULL"));
+		return;
 	}
 
 	DesignsByName.Empty();
+	ShipDesignRegistry::Clear();
 
 	const TMap<FName, uint8*>& RowMap = ShipDesignDataTable->GetRowMap();
 
@@ -208,6 +213,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 		}
 
 		DesignsByName.Add(RowName, *Row);
+		ShipDesignRegistry::RegisterDesign(RowName, *Row);
 
 		UE_LOG(LogTemp, Verbose,
 			TEXT("[SHIPDESIGN] Cached row '%s' Display='%s' Class='%s'"),
@@ -221,6 +227,9 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 		DesignsByName.Num(),
 		*ShipDesignDataTable->GetName());
 
+	UE_LOG(LogTemp, Log,
+		TEXT("[SHIPDESIGN] ShipDesignRegistry now has %d rows"),
+		ShipDesignRegistry::Num());
 }
 
 const FShipDesign* UStarshatterShipDesignSubsystem::FindDesignByString(const FString& Name) const

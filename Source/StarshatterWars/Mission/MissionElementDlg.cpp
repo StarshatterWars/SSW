@@ -222,7 +222,7 @@ void UMissionElementDlg::RebuildFromModel()
         ClassCombo->AddOption(ANSI_TO_TCHAR(Ship::GetShipClassName(CLASSIFICATION::STARBASE)));
 
         // Select class based on current design:
-        const ShipDesign* Design = ElemPtr->GetDesign();
+        const ShipDesign* Design = ElemPtr->GetShipDesign();
         if (Design)
         {
             const char* DesiredClassName = Ship::GetShipClassName(Design->type);
@@ -404,7 +404,7 @@ void UMissionElementDlg::RebuildDesignListFromClass()
 
     if (Designs.size() > 0)
     {
-        const ShipDesign* Current = (ElemPtr ? ElemPtr->GetDesign() : nullptr);
+        const ShipDesign* Current = (ElemPtr ? ElemPtr->GetShipDesign() : nullptr);
         bool bFound = false;
 
         for (int i = 0; i < Designs.size(); i++)
@@ -642,7 +642,7 @@ void UMissionElementDlg::UpdateTeamInfo()
             MissionElement* E = Iter.value();
             if (!E) continue;
 
-            if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->GetDesign() && E->GetDesign()->flight_decks.size())
+            if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->GetShipDesign() && E->GetShipDesign()->flight_decks.size())
             {
                 const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 CarrierCombo->AddOption(Opt);
@@ -789,7 +789,7 @@ void UMissionElementDlg::OnAcceptClicked()
 
         if (D)
         {
-            ElemPtr->SetDesign(D);
+            ElemPtr->SetShipDesign(D);
 
             if (SkinCombo)
             {

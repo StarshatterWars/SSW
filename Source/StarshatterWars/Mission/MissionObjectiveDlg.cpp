@@ -5,6 +5,7 @@
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
+#include "ShipDesignRegistry.h"
 
 #include "Mission.h"
 #include "MissionElement.h"
@@ -117,8 +118,9 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
 
     PlayerCaptionText->SetText(FText::GetEmpty());
 
-    if (!MissionPtr || !MissionPtr->IsOK())
+    if (!MissionPtr)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshPlayerCaption: MissionPtr is null"));
         return;
     }
 
@@ -129,17 +131,69 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
         return;
     }
 
-    const ShipDesign* Design = PlayerElem->GetDesign();
+    const ShipDesign* LegacyDesign = PlayerElem->GetShipDesign();
+    const FShipDesign* DesignRow = nullptr;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionObjectiveDlg] Player='%s' LegacyDesign=%s"),
+        ANSI_TO_TCHAR(PlayerElem->GetName().data()),
+        LegacyDesign ? TEXT("VALID") : TEXT("NULL"));
+
+    if (LegacyDesign)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] LegacyDesign name='%s' display='%s' abrv='%s' type=%d"),
+            ANSI_TO_TCHAR(LegacyDesign->name),
+            ANSI_TO_TCHAR(LegacyDesign->display_name),
+            ANSI_TO_TCHAR(LegacyDesign->abrv),
+            LegacyDesign->type);
+
+        DesignRow = ShipDesignRegistry::Find(LegacyDesign->name);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Registry lookup '%s' => %s"),
+            ANSI_TO_TCHAR(LegacyDesign->name),
+            DesignRow ? TEXT("FOUND") : TEXT("NULL"));
+    }
 
     FString Caption;
 
-    if (Design)
+    if (DesignRow)
     {
-        const FString Abbrev = ANSI_TO_TCHAR(Design->abrv);
-        const FString DisplayName = ANSI_TO_TCHAR(Design->display_name);
+        const FString Abbrev =
+            !DesignRow->Abrv.IsEmpty() ? DesignRow->Abrv : TEXT("UNIT");
+
+        const FString DisplayName =
+            !DesignRow->DisplayName.IsEmpty() ? DesignRow->DisplayName : DesignRow->ShipName;
+
         const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
 
-        if (Design->type <= (int)CLASSIFICATION::ATTACK)
+        if (DesignRow->ShipType <= (int32)CLASSIFICATION::ATTACK)
+        {
+            Caption = FString::Printf(
+                TEXT("%s %s"),
+                *Abbrev,
+                DisplayName.IsEmpty() ? TEXT("UNKNOWN") : *DisplayName);
+        }
+        else
+        {
+            Caption = FString::Printf(
+                TEXT("%s %s"),
+                *Abbrev,
+                ElemName.IsEmpty() ? TEXT("UNKNOWN") : *ElemName);
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Caption from registry: '%s'"),
+            *Caption);
+    }
+    else if (LegacyDesign)
+    {
+        const FString Abbrev = ANSI_TO_TCHAR(LegacyDesign->abrv);
+        const FString DisplayName = ANSI_TO_TCHAR(LegacyDesign->display_name);
+        const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
+
+        if (LegacyDesign->type <= (int)CLASSIFICATION::ATTACK)
         {
             Caption = FString::Printf(
                 TEXT("%s %s"),
@@ -153,19 +207,23 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
                 Abbrev.IsEmpty() ? TEXT("UNIT") : *Abbrev,
                 ElemName.IsEmpty() ? TEXT("UNKNOWN") : *ElemName);
         }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Caption fallback from legacy ShipDesign: '%s'"),
+            *Caption);
     }
     else
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Player design is NULL for '%s'"),
-            ANSI_TO_TCHAR(PlayerElem->GetName().data()));
-
         Caption = ANSI_TO_TCHAR(PlayerElem->GetName().data());
 
         if (Caption.IsEmpty())
         {
             Caption = TEXT("UNKNOWN UNIT");
         }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Caption fallback from player element name: '%s'"),
+            *Caption);
     }
 
     PlayerCaptionText->SetText(FText::FromString(Caption));
