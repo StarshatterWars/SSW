@@ -55,13 +55,18 @@ CampaignSituationReport::~CampaignSituationReport()
 void
 CampaignSituationReport::GenerateSituationReport()
 {
+	
 	if (!campaign || !mission)
 		return;
 
 	sitrep = Text();
 
+	UE_LOG(LogTemp, Warning, TEXT("[CampaignSituationReport] BEGIN"));
 	GlobalSituation();
 	MissionSituation();
+	UE_LOG(LogTemp, Warning, TEXT("[CampaignSituationReport] Final sitrep='%s'"), ANSI_TO_TCHAR(sitrep.data()));
+	mission->SetSituation(sitrep);
+	UE_LOG(LogTemp, Warning, TEXT("[CampaignSituationReport] Mission->GetSituation()='%s'"), ANSI_TO_TCHAR(mission->GetSituation()));
 
 	mission->SetSituation(sitrep);
 }
@@ -369,7 +374,7 @@ CampaignSituationReport::GetThreatInfo()
 
 	if (mission && mission->GetPlayer()) {
 		MissionElement* player = mission->GetPlayer();
-		Text            rgn0 = player->Region();
+		Text            rgn0 = player->GetRegion();
 		Text            rgn1;
 		int             iff = player->GetIFF();
 
@@ -381,34 +386,44 @@ CampaignSituationReport::GetThreatInfo()
 
 		ListIter<MissionElement> elem = mission->GetElements();
 		while (++elem) {
-			if (elem->GetIFF() > 0 && elem->GetIFF() != iff && elem->IntelLevel() > Intel::SECRET) {
-				if (elem->IsGroundUnit()) {
-					if (!elem->GetDesign() || elem->GetDesign()->type != (int)CLASSIFICATION::SAM)
-						continue;
+			MissionElement* e = elem.value();
+			if (!e)
+				continue;
 
-					if (elem->Region() != rgn0 && elem->Region() != rgn1)
-						continue;
-				}
+			if (e->GetIFF() <= 0 || e->GetIFF() == iff || e->IntelLevel() <= Intel::SECRET)
+				continue;
 
-				int mission_role = elem->MissionRole();
+			const ShipDesign* Design = e->GetDesign();
 
-				if (mission_role == (int)EMISSIONTYPE::STRIKE ||
-					mission_role == (int)EMISSIONTYPE::INTEL ||
-					mission_role == (int)EMISSIONTYPE::CARGO ||
-					mission_role == (int)EMISSIONTYPE::TRANSPORT)
+			if (e->IsGroundUnit()) {
+				if (!Design || Design->type != (int)CLASSIFICATION::SAM)
 					continue;
 
-				if (elem->GetDesign()->type >= (int)CLASSIFICATION::MINE && elem->GetDesign()->type <= (int)CLASSIFICATION::DEFSAT)
-					enemy_sites += elem->Count();
+				if (e->GetRegion() != rgn0 && e->GetRegion() != rgn1)
+					continue;
+			}
 
-				else if (elem->IsDropship())
-					enemy_fighters += elem->Count();
+			int mission_role = e->MissionRole();
 
-				else if (elem->IsStarship())
-					enemy_starships += elem->Count();
+			if (mission_role == (int)EMISSIONTYPE::STRIKE ||
+				mission_role == (int)EMISSIONTYPE::INTEL ||
+				mission_role == (int)EMISSIONTYPE::CARGO ||
+				mission_role == (int)EMISSIONTYPE::TRANSPORT)
+				continue;
 
-				else if (elem->IsGroundUnit())
-					enemy_sites += elem->Count();
+			if (Design &&
+				Design->type >= (int)CLASSIFICATION::MINE &&
+				Design->type <= (int)CLASSIFICATION::DEFSAT) {
+				enemy_sites += e->Count();
+			}
+			else if (e->IsDropship()) {
+				enemy_fighters += e->Count();
+			}
+			else if (e->IsStarship()) {
+				enemy_starships += e->Count();
+			}
+			else if (e->IsGroundUnit()) {
+				enemy_sites += e->Count();
 			}
 		}
 	}
@@ -427,7 +442,8 @@ CampaignSituationReport::GetThreatInfo()
 		threat_info = "We have reports of several enemy fighters in your operating area.";
 	}
 	else if (enemy_sites > 0) {
-		if (mission->GetType() >= (int)EMISSIONTYPE::AIR_PATROL && mission->GetType() <= (int)EMISSIONTYPE::STRIKE)
+		if (mission->GetType() >= (int)EMISSIONTYPE::AIR_PATROL &&
+			mission->GetType() <= (int)EMISSIONTYPE::STRIKE)
 			threat_info = "Remember to check air-to-ground sensors for SAM and AAA sites.";
 		else
 			threat_info = "Be on the lookout for mines and defense satellites.";

@@ -53,6 +53,8 @@ public:
     virtual void SetMenuManager(UMenuScreen* InManager);
     virtual void InitializeDlg(UMenuScreen* InManager);
 
+    Mission* GetMissionPtr() const { return MissionPtr; }
+
 protected:
     virtual void NativePreConstruct() override;
     virtual void NativeConstruct() override;
@@ -91,7 +93,6 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Campaign")
     bool bHasCurrentCampaign = false;
 
-public:
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
     class UTextBlock* TitleText;

@@ -140,6 +140,7 @@ public:
 	static const char*	 ClassName(int type);
 	static const char*	 GetDesignClass(int type);
 
+	int 				 GetType() { return type; }
 	static int           LoadCatalog(const char* path, const char* file, bool mod = false);
 	static void          LoadSkins(const char* path, const char* archive = 0);
 	static void          PreloadCatalog(int index = -1);

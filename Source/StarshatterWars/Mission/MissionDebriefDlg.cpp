@@ -190,7 +190,7 @@ void UMissionDebriefDlg::Show()
         {
             MissionElement* Elem0 = MissionPtr->GetElements().size() ? MissionPtr->GetElements().at(0) : nullptr;
             if (Elem0)
-                MissionSector->SetText(FText::FromString(ANSI_TO_TCHAR(Elem0->Region())));
+                MissionSector->SetText(FText::FromString(ANSI_TO_TCHAR(Elem0->GetRegion())));
         }
     }
 

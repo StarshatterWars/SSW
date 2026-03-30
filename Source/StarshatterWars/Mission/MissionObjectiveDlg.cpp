@@ -5,14 +5,31 @@
     SUBSYSTEM:    Stars.exe
     FILE:         MissionObjectiveDlg.cpp
     AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    MissionObjectiveDlg
+
+    - Unreal mission briefing situation/objectives panel
+    - Simplified replacement for legacy MsnObjDlg
+    - Shows situation and objectives on the left
+    - Reserves right side for preview image / 3D ship widget later
+    - Shows player craft caption on the right
 */
 
 #include "MissionObjectiveDlg.h"
 
-#include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Components/Image.h"
+
 #include "MissionBriefingDlg.h"
-#include "Components/ComboBoxString.h"
+#include "MissionPlanner.h"
+
+#include "Mission.h"
+#include "MissionElement.h"
+#include "ShipDesign.h"
+#include "Ship.h"
+#include "GameStructs.h"
 
 UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -22,268 +39,158 @@ UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectIniti
 void UMissionObjectiveDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+}
 
-    // If you used UBaseScreen's optional ApplyButton/CancelButton, wire them here:
-    if (ApplyButton)
+void UMissionObjectiveDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
+{
+    ParentDlg = InParentDlg;
+}
+
+Mission* UMissionObjectiveDlg::ResolveMission() const
+{
+    if (!ParentDlg)
     {
-        ApplyButton->OnClicked.AddDynamic(this, &UMissionObjectiveDlg::OnClickedAccept);
+        return nullptr;
     }
 
-    if (CancelButton)
+    return ParentDlg->GetMissionPtr();
+}
+
+void UMissionObjectiveDlg::RefreshFromMission()
+{
+    Mission* MissionPtr = ResolveMission();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshFromMission: MissionPtr=%s IsOK=%s Player=%s"),
+        MissionPtr ? TEXT("VALID") : TEXT("NULL"),
+        (MissionPtr && MissionPtr->IsOK()) ? TEXT("true") : TEXT("false"),
+        (MissionPtr && MissionPtr->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"));
+
+    RefreshSituationAndObjectives(MissionPtr);
+    RefreshPlayerCaption(MissionPtr);
+    RefreshPreviewPlaceholder(MissionPtr);
+}
+
+void UMissionObjectiveDlg::RefreshSituationAndObjectives(Mission* MissionPtr)
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionObjectiveDlg] Raw Situation='%s' Raw Objective='%s'"),
+        MissionPtr ? ANSI_TO_TCHAR(MissionPtr->GetSituation()) : TEXT("NULL"),
+        MissionPtr ? ANSI_TO_TCHAR(MissionPtr->GetObjective()) : TEXT("NULL")); 
+    
+    if (ObjectivesText)
     {
-        CancelButton->OnClicked.AddDynamic(this, &UMissionObjectiveDlg::OnClickedCancel);
+        if (MissionPtr)
+        {
+            if (MissionPtr->IsOK())
+            {
+                ObjectivesText->SetText(FText::FromString(UTF8_TO_TCHAR(MissionPtr->GetObjective())));
+            }
+            else
+            {
+                ObjectivesText->SetText(FText::GetEmpty());
+            }
+        }
+        else
+        {
+            ObjectivesText->SetText(FText::FromString(TEXT("NO MISSION")));
+        }
     }
 
-    if (TabSitButton)
+    if (SituationText)
     {
-        TabSitButton->OnClicked.AddDynamic(this, &UMissionObjectiveDlg::OnClickedTabSit);
+        if (MissionPtr)
+        {
+            if (MissionPtr->IsOK())
+            {
+                SituationText->SetText(FText::FromString(UTF8_TO_TCHAR(MissionPtr->GetSituation())));
+            }
+            else
+            {
+                FString ErrorText = TEXT("MISSION ERRORS");
+                const char* ErrorMsg = MissionPtr->ErrorMessage();
+
+                if (ErrorMsg && ErrorMsg[0])
+                {
+                    ErrorText += TEXT("\n\n");
+                    ErrorText += UTF8_TO_TCHAR(ErrorMsg);
+                }
+
+                SituationText->SetText(FText::FromString(ErrorText));
+            }
+        }
+        else
+        {
+            SituationText->SetText(FText::FromString(TEXT("NO MISSION")));
+        }
+    }
+}
+
+void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
+{
+    if (!PlayerCaptionText)
+    {
+        return;
     }
 
-    if (TabPkgButton)
+    PlayerCaptionText->SetText(FText::GetEmpty());
+
+    if (!MissionPtr || !MissionPtr->IsOK())
     {
-        TabPkgButton->OnClicked.AddDynamic(this, &UMissionObjectiveDlg::OnClickedTabPkg);
+        return;
     }
 
-    if (SkinCombo)
+    MissionElement* PlayerElem = MissionPtr->GetPlayer();
+    if (!PlayerElem)
     {
-        SkinCombo->OnSelectionChanged.AddDynamic(this, &UMissionObjectiveDlg::OnSelectionChangedSkin);
+        return;
     }
+
+    const ShipDesign* Design = PlayerElem->GetDesign();
+    if (!Design)
+    {
+        return;
+    }
+
+    FString Caption;
+
+    if (Design->type <= (int) CLASSIFICATION::ATTACK)
+    {
+        Caption = FString::Printf(
+            TEXT("%s %s"),
+            ANSI_TO_TCHAR(Design->abrv),
+            ANSI_TO_TCHAR(Design->display_name));
+    }
+    else
+    {
+        Caption = FString::Printf(
+            TEXT("%s %s"),
+            ANSI_TO_TCHAR(Design->abrv),
+            ANSI_TO_TCHAR(PlayerElem->GetName().data()));
+    }
+
+    PlayerCaptionText->SetText(FText::FromString(Caption));
 }
 
-void UMissionObjectiveDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
 {
-    ParentDlg = InParentCmdDlg;
-}
+    if (!PreviewImage)
+    {
+        return;
+    }
 
-void UMissionObjectiveDlg::ExecFrame(float DeltaSeconds)
-{
-    // Legacy: VK_RETURN committed. In Unreal, HandleAccept() already covers Enter.
-    // Keep this hook for any per-frame refresh you want later.
-}
+    // Placeholder for now.
+    // Later this can be replaced with:
+    // - render target preview
+    // - ship actor scene capture
+    // - fighter / starship image
+    PreviewImage->SetVisibility(ESlateVisibility::Visible);
 
-void UMissionObjectiveDlg::HandleAccept()
-{
-    OnClickedAccept();
-}
-
-void UMissionObjectiveDlg::HandleCancel()
-{
-    OnClickedCancel();
-}
-
-// --------------------------------------------------------------------
-// Bind FORM widgets (IDs -> UMG widgets)
-// --------------------------------------------------------------------
-
-void UMissionObjectiveDlg::BindFormWidgets()
-{
-    // NOTE:
-    // You must create a WidgetBlueprint for this dialog with named widgets,
-    // then BindWidgetOptional pointers, OR manually call BindLabel/BindButton etc.
-    //
-    // Example if you have UTextBlock* ObjectivesText already:
-    // BindLabel(ID_OBJECTIVES, ObjectivesText);
-
-    // For now, rely on BP to bind via FormMap using calls like:
-    // BindLabel(400, ObjectivesTextBlock);
-}
-
-// --------------------------------------------------------------------
-// FORM text
-// --------------------------------------------------------------------
-
-FString UMissionObjectiveDlg::GetLegacyFormText() const
-{
-    // This is your MsnObjDlg.frm content (as provided).
-    // Keep it verbatim so BaseScreen parser applies defaults.
-
-    return TEXT(R"frm(
-form: {
-   back_color: (  0,   0,   0),
-   fore_color: (255, 255, 255),
-
-   texture:    "Frame1.pcx",
-   margins:    (1,1,64,8),
-
-   layout: {
-      x_mins:     (10, 100,  20, 100, 100, 10),
-      x_weights:  ( 0, 0.2, 0.4, 0.2, 0.2,  0),
-
-      y_mins:     (28, 30,  10,  90, 24, 60, 45),
-      y_weights:  ( 0,  0,   0,   0,  0,  1,  0)
-   },
-
-   ctrl: {
-      id:            9990
-      type:          background
-      texture:       Frame4a
-      cells:         (1,3,4,1),
-      cell_insets:   (0,0,0,0),
-      margins:       (2,2,16,16)
-      hide_partial:  false
-   }
-
-   ctrl: {
-      id:            9991,
-      type:          background,
-      texture:       Frame2a,
-      cells:         (1,4,2,3),
-      cell_insets:   (0,0,0,10),
-      margins:       (2,32,40,32)
-      hide_partial:  false
-   }
-
-   ctrl: {
-      id:            9992,
-      type:          background,
-      texture:       Frame2b,
-      cells:         (3,4,2,3),
-      cell_insets:   (0,0,0,10),
-      margins:       (0,40,40,32)
-      hide_partial:  false
-   }
-
-   ctrl: {
-      id:            10,
-      type:          label,
-      text:          "Mission Briefing",
-      align:         left,
-      font:          Limerick18,
-      fore_color:    (255,255,255),
-      transparent:   true,
-      cells:         (1,1,3,1)
-      cell_insets:   (0,0,0,0)
-      hide_partial:  false
-   },
-
-   ctrl: {
-      id:            999
-      type:          panel
-      transparent:   true
-      cells:         (1,4,4,1)
-      cell_insets:   (0,0,0,0)
-      hide_partial:  false
-
-      layout: {
-         x_mins:     (80, 80, 80, 80,  5)
-         x_weights:  ( 1,  1,  1,  1, 15)
-
-         y_mins:     (24),
-         y_weights:  ( 0)
-      }
-   }
-
-   defctrl: {
-      align:            left,
-      font:             Limerick12,
-      fore_color:       (255, 255, 255),
-      standard_image:   BlueTab_0,
-      activated_image:  BlueTab_1,
-      sticky:           true,
-      bevel_width:      6,
-      margins:          (8,8,0,0),
-      cell_insets:      (0,4,0,0)
-   },
-
-   ctrl: { id: 900 pid: 999 type: button text: SIT cells: (0,0,1,1) }
-   ctrl: { id: 901 pid: 999 type: button text: PKG cells: (1,0,1,1) }
-   ctrl: { id: 902 pid: 999 type: button text: MAP cells: (2,0,1,1) }
-   ctrl: { id: 903 pid: 999 type: button text: WEP cells: (3,0,1,1) }
-
-   ctrl: {
-      id:               700
-      type:             panel
-      transparent:      false
-      texture:          Panel
-      margins:          (12,12,12,0),
-      cells:            (1,3,4,1),
-      cell_insets:      (10,10,12,10)
-
-      layout: {
-         x_mins:     ( 20, 60, 100, 60, 100, 20)
-         x_weights:  (  0,  0,   1,  0,   1,  0)
-
-         y_mins:     (  0,  20,  15,  15,  0)
-         y_weights:  (  1,   0,   0,   0,  1)
-      }
-   }
-
-   ctrl: {
-      id:               800
-      type:             panel
-      transparent:      false
-      texture:          Panel
-      margins:          (12,12,12,0),
-      cells:            (1,5,4,2)
-      cell_insets:      (10,10,12,54)
-
-      layout: {
-         x_mins:     ( 20, 100,  10, 100,  20)
-         x_weights:  (  0,   3,   0,   2,   0)
-
-         y_mins:     ( 10,  20,  100,  20,  60,  20)
-         y_weights:  (  0,   0,    2,   0,   1,   0)
-      }
-   }
-
-   ctrl: { id: 300 pid: 800 type: label cells: (3,2,1,2) font: Limerick12 transparent: true }
-   ctrl: { id: 301 pid: 800 type: label cells: (3,4,1,1) text: "Player Desc" align: center font: Limerick12 }
-   ctrl: { id: 302 pid: 800 type: combo cells: (3,4,1,1) cell_insets: (20,20,24,0) }
-
-   ctrl: { id: 100 pid: 800 type: label cells: (1,3,1,1) text: Objectives font: Limerick12 }
-   ctrl: { id: 400 pid: 800 type: label cells: (1,4,1,1) text: "objective goes here" font: Verdana }
-
-   ctrl: { id: 101 pid: 800 type: label cells: (1,1,1,1) text: Situation font: Limerick12 }
-   ctrl: { id: 401 pid: 800 type: label cells: (1,2,1,1) text: "sitrep goes here" font: Verdana }
-
-   defctrl: {
-      align:            left
-      font:             Limerick12
-      fore_color:       (0,0,0)
-      standard_image:   Button17_0
-      activated_image:  Button17_1
-      transition_image: Button17_2
-      transparent:      false
-      bevel_width:      6
-      margins:          (3,18,0,0)
-      cell_insets:      (0,10,0,26)
-   },
-
-   ctrl: { id: 1 type: button text: Accept cells: (3,6,1,1) }
-   ctrl: { id: 2 type: button text: Cancel cells: (4,6,1,1) },
-}
-)frm");
-}
-
-// --------------------------------------------------------------------
-// UI callbacks
-// --------------------------------------------------------------------
-
-void UMissionObjectiveDlg::OnClickedAccept()
-{
-    // Hook to your mission commit logic.
-    // In legacy: MsnDlg::OnCommit(event)
-}
-
-void UMissionObjectiveDlg::OnClickedCancel()
-{
-    // Hook to your mission cancel logic.
-    // In legacy: MsnDlg::OnCancel(event)
-    RemoveFromParent();
-}
-
-void UMissionObjectiveDlg::OnClickedTabSit()
-{
-    // Already on SIT (objective/situation dialog)
-}
-
-void UMissionObjectiveDlg::OnClickedTabPkg()
-{
-    // Call up to PlanScreen or a global UI router:
-    // e.g., if you store UPlanScreen in a UI manager, switch to Package dialog.
-}
-
-void UMissionObjectiveDlg::OnSelectionChangedSkin(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-    // Hook to your skin selection logic once you have MissionElement/ShipSolid equivalents.
+    if (MissionPtr && MissionPtr->IsOK() && MissionPtr->GetPlayer())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshPreviewPlaceholder: player preview available"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshPreviewPlaceholder: no valid player preview yet"));
+    }
 }

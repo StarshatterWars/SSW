@@ -106,10 +106,10 @@ public:
     // ------------------------------------------------------------
     // Region / location / heading
     // ------------------------------------------------------------
-    const Text& Region()   const { return rgn_name; }
-    FVector     Location() const;
-    RLoc& GetRLoc() { return rloc; }
-    double      Heading()  const { return heading; }
+    const Text& GetRegion()   const { return rgn_name; }
+    FVector     GetLocation() const;
+    RLoc&       GetRLoc() { return rloc; }
+    double      GetHeading()  const { return heading; }
 
     Text        GetShipName(int n) const;
     Text        GetRegistry(int n) const;

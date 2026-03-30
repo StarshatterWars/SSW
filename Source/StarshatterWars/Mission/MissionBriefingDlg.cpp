@@ -39,6 +39,7 @@
 #include "Instruction.h"
 #include "MissionElement.h"
 #include "CombatGroup.h"
+#include "CampaignSituationReport.h"
 
 // UI:
 #include "MenuButton.h"
@@ -364,42 +365,62 @@ void UMissionBriefingDlg::ShowMsnDlg()
         }
     }
 
+    if (CampaignPtr && MissionPtr)
+    {
+        const char* Sit = MissionPtr->GetSituation();
+        const FString SitStr = Sit ? FString(UTF8_TO_TCHAR(Sit)) : FString();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] Pre-Sitrep: Mission='%s' Situation='%s'"),
+            ANSI_TO_TCHAR(MissionPtr->GetName()),
+            *SitStr);
+
+        const bool bNeedsSitrep =
+            SitStr.IsEmpty() ||
+            SitStr.Equals(TEXT("Unknown"), ESearchCase::IgnoreCase) ||
+            SitStr.Equals(TEXT("Mission Unknown"), ESearchCase::IgnoreCase) ||
+            SitStr.Equals(TEXT("Unknown Mission"), ESearchCase::IgnoreCase) ||
+            SitStr.Contains(TEXT("unknown"), ESearchCase::IgnoreCase);
+
+        if (bNeedsSitrep)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionBriefingDlg] Generating situation report for '%s'"),
+                ANSI_TO_TCHAR(MissionPtr->GetName()));
+
+            CampaignSituationReport Sitrep(CampaignPtr, MissionPtr);
+            Sitrep.GenerateSituationReport();
+
+            const char* NewSit = MissionPtr->GetSituation();
+            const FString NewSitStr = NewSit ? FString(UTF8_TO_TCHAR(NewSit)) : FString();
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionBriefingDlg] Post-Sitrep: Situation='%s'"),
+                *NewSitStr);
+        }
+    }
+
     PackageIndex = -1;
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: CampaignPtr=%s MissionPtr=%s"),
         CampaignPtr ? TEXT("VALID") : TEXT("NULL"),
         MissionPtr ? TEXT("VALID") : TEXT("NULL"));
 
-    if (MissionPtr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: MissionName=%s"),
-            ANSI_TO_TCHAR(MissionPtr->GetName()));
-    }
-
     RefreshHeader();
 
-    const bool bMissionOK = (MissionPtr && MissionPtr->IsOK());
+    const bool bHasMission = (MissionPtr != nullptr);
 
     for (UMenuButton* Button : AllMenuButtons)
     {
-        if (!Button)
+        if (Button)
         {
-            continue;
+            Button->SetIsEnabled(bHasMission);
         }
-
-        bool bEnable = true;
-
-        if (bDisableTabsWhenMissionNotOK)
-        {
-            bEnable = bMissionOK;
-        }
-
-        Button->SetIsEnabled(bEnable);
     }
 
     if (MissionButton)
     {
-        MissionButton->SetIsEnabled(bMissionOK);
+        MissionButton->SetIsEnabled(bHasMission);
     }
 
     if (ReturnButton)
@@ -505,7 +526,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     case EMissionBriefingMode::SIT:
         if (MissionSituationPanel)
         {
-            //MissionSituationPanel->RefreshFromMission();
+            MissionSituationPanel->RefreshFromMission();
         }
         break;
 
@@ -616,9 +637,9 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
     }
 
     FVector Loc(
-        Element->Location().X,
-        Element->Location().Y,
-        Element->Location().Z
+        Element->GetLocation().X,
+        Element->GetLocation().Y,
+        Element->GetLocation().Z
     );
 
     Swap(Loc.Y, Loc.Z);

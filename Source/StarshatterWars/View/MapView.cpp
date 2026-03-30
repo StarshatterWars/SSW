@@ -879,7 +879,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->Region(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -934,7 +934,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->Region(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -989,7 +989,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->Region(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -1145,7 +1145,7 @@ MapView::SetupScroll(Orbital* s)
 			}
 		}
 		else if (current_elem) {
-			FVector sloc = current_elem->Location();
+			FVector sloc = current_elem->GetLocation();
 
 			if (!IsVisible(sloc)) {
 				scroll_x = (offset_x + sloc.X) / 5.0;
@@ -1405,8 +1405,8 @@ MapView::SelectAt(int x, int y)
 				while (++elem) {
 					MissionElement* e = elem.value();
 
-					if (e->Region() == rgn->Name() && !e->IsSquadron()) {
-						FVector  sloc = e->Location();
+					if (e->GetRegion() == rgn->Name() && !e->IsSquadron()) {
+						FVector  sloc = e->GetLocation();
 						double dx = sloc.X - test_x;
 						double dy = sloc.Y - test_y;
 						double d = sqrt(dx * dx + dy * dy);
@@ -2507,9 +2507,9 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 	SetFont(font);
 
 	// draw ship icon:
-	if (!_stricmp(s.Region(), rgn->Name())) {
-		double sx = (s.Location().X + rlx) * scale;
-		double sy = (s.Location().Y + rly) * scale;
+	if (!_stricmp(s.GetRegion(), rgn->Name())) {
+		double sx = (s.GetLocation().X + rlx) * scale;
+		double sy = (s.GetLocation().Y + rly) * scale;
 
 		shiploc.X = (int)(cx + sx + ox);
 		shiploc.Y = (int)(cy + sy + oy);
@@ -2527,7 +2527,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 					Print(shiploc.X - sprite_width, shiploc.Y + sprite_width + 2, s.GetName());
 			}
 			else {
-				double theta = s.Heading();
+				double theta = s.GetHeading();
 
 				const double THETA_SLICE = 4 / PI;
 				const double THETA_OFFSET = PI / 2;
@@ -2587,7 +2587,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 	}
 
 	// draw current element marker:
-	if (current && s.Region() == regions[current_region]->Name()) {
+	if (current && s.GetRegion() == regions[current_region]->Name()) {
 		x1 = (int)(shiploc.X - sprite_width - 1);
 		x2 = (int)(shiploc.X + sprite_width + 1);
 		y1 = (int)(shiploc.Y - sprite_width - 1);
@@ -2810,10 +2810,10 @@ void MapView::DrawNavRoute(
 			}
 		}
 		else if (elem) {
-			old_in = (_stricmp(elem->Region(), rgn->Name()) == 0);
+			old_in = (_stricmp(elem->GetRegion(), rgn->Name()) == 0);
 
 			if (old_in) {
-				old_loc = FVector(elem->Location());
+				old_loc = FVector(elem->GetLocation());
 				old_x = old_loc.X * scale;
 				old_y = old_loc.Y * scale;
 			}
@@ -3213,7 +3213,7 @@ MapView::IsCrowded(MissionElement& test)
 		while (++it) {
 			MissionElement* ref = it.value();
 
-			if (ref && ref != &test && !_stricmp(ref->Region(), rgn->Name())) {
+			if (ref && ref != &test && !_stricmp(ref->GetRegion(), rgn->Name())) {
 				GetElemLoc(*ref, refloc);
 
 				double dx = testloc.X - refloc.X;
@@ -3263,9 +3263,9 @@ MapView::GetElemLoc(MissionElement& s, FVector& shiploc)
 	}
 
 	if (view_mode == VIEW_SYSTEM ||
-		(view_mode == VIEW_REGION && !_stricmp(s.Region(), rgn->Name()))) {
-		double sx = (s.Location().X + rlx) * scale;
-		double sy = (s.Location().Y + rly) * scale;
+		(view_mode == VIEW_REGION && !_stricmp(s.GetRegion(), rgn->Name()))) {
+		double sx = (s.GetLocation().X + rlx) * scale;
+		double sy = (s.GetLocation().Y + rly) * scale;
 
 		shiploc.X = (int)(cx + sx + ox);
 		shiploc.Y = (int)(cy + sy + oy);
@@ -3431,7 +3431,7 @@ MapView::OnMouseMove(int32 x, int32 y)
 					current_navpt->SetStatus(current_status);
 				}
 				else if (editor && moving_elem && current_elem) {
-					FVector loc = current_elem->Location();
+					FVector loc = current_elem->GetLocation();
 					loc.X = click_x;
 					loc.Y = click_y;
 					current_elem->SetLocation(loc);

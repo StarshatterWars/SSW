@@ -230,6 +230,12 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
 
     static int id_key = 1;
     GenerateMission(id_key++);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After GenerateMission: mission=%s IsOK=%s"),
+        mission ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
     DefineMissionObjectives();
 
     MissionInfo* info = DescribeMission();
@@ -615,10 +621,38 @@ CampaignMissionFighter::GenerateStandardElements()
 
 void CampaignMissionFighter::GenerateMissionElements()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] GenerateMissionElements: mission=%s squadron=%s"),
+        mission ? TEXT("VALID") : TEXT("NULL"),
+        squadron ? TEXT("VALID") : TEXT("NULL"));
+
     CreateWards();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateWards: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
     CreatePlayer(squadron);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreatePlayer: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
     CreateTargets();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateTargets: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
     CreateEscorts();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateEscorts: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
 }
 
 void CampaignMissionFighter::CreateElements(CombatGroup* g)
@@ -740,30 +774,36 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
 
 void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] CreatePlayer: BEGIN mission=%s group=%s"),
+        mission ? TEXT("VALID") : TEXT("NULL"),
+        g ? TEXT("VALID") : TEXT("NULL"));
+
     if (!g || !mission)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[CMF] CreatePlayer: early return (g or mission null)"));
         return;
     }
 
-    int role = (int) EMISSIONFIGHTER::FIGHTER;
+    int role = (int)EMISSIONFIGHTER::FIGHTER;
 
     switch ((ECOMBATGROUP_TYPE)g->GetType())
     {
     case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-        role = (int) EMISSIONFIGHTER::INTERCEPT;
+        role = (int)EMISSIONFIGHTER::INTERCEPT;
         break;
 
     case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-        role = (int) EMISSIONFIGHTER::ATTACK;
+        role = (int)EMISSIONFIGHTER::ATTACK;
         break;
 
     case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        role = (int) EMISSIONFIGHTER::LANDING;
+        role = (int)EMISSIONFIGHTER::LANDING;
         break;
 
     case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
     default:
-        role = (int) EMISSIONFIGHTER::FIGHTER;
+        role = (int)EMISSIONFIGHTER::FIGHTER;
         break;
     }
 
@@ -774,7 +814,17 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
         count = g->GetUnits().size();
     }
 
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] CreatePlayer: role=%d unit_count=%d"),
+        role,
+        g->GetUnits().size());
+
     player_elem = CreateFighterPackage(g, count, role);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] CreatePlayer: CreateFighterPackage returned %s"),
+        player_elem ? TEXT("VALID") : TEXT("NULL"));
+
     if (!player_elem)
     {
         UE_LOG(LogStarshatterWars, Warning,
@@ -796,13 +846,22 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
         OrbitalInsertion(player_elem);
     }
 
-    mission->SetPlayer(player_elem);
     mission->AddElement(player_elem);
+    mission->SetPlayer(player_elem);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] CreatePlayer: after AddElement+SetPlayer mission->GetPlayer()=%s"),
+        mission->GetPlayer() ? TEXT("VALID") : TEXT("NULL"));
 
     CombatUnit* carrier = FindCarrier(g);
     if (carrier)
     {
         carrier_elem = CreateSingleElement(g->FindCarrier(), carrier);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CMF] CreatePlayer: carrier=%s carrier_elem=%s"),
+            TEXT("VALID"),
+            carrier_elem ? TEXT("VALID") : TEXT("NULL"));
 
         if (carrier_elem)
         {
@@ -822,6 +881,11 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
             mission->AddElement(carrier_elem);
         }
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] CreatePlayer: END mission->GetPlayer()=%s IsOK=%s"),
+        mission->GetPlayer() ? TEXT("VALID") : TEXT("NULL"),
+        mission->IsOK() ? TEXT("true") : TEXT("false"));
 }
 
 void CampaignMissionFighter::CreatePatrols()
@@ -960,7 +1024,7 @@ void CampaignMissionFighter::CreateWardFreight()
     mission->AddElement(elem);
 
     StarSystem* system = mission->GetStarSystem();
-    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->Region()) : nullptr;
+    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->GetRegion()) : nullptr;
     if (!rgn1 || !rgn1->Primary())
     {
         return;
@@ -972,9 +1036,9 @@ void CampaignMissionFighter::CreateWardFreight()
         rgn1->Location().Z - rgn1->Primary()->Location().Z);
 
     FVector npt_loc(
-        elem->Location().X,
-        elem->Location().Y,
-        elem->Location().Z);
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z);
 
     Instruction* n = nullptr;
 
@@ -982,14 +1046,14 @@ void CampaignMissionFighter::CreateWardFreight()
     delta *= 200000.0f;
     npt_loc += delta;
 
-    n = new Instruction(elem->Region(), npt_loc, INSTRUCTION_ACTION::VECTOR);
+    n = new Instruction(elem->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
     if (n)
     {
         n->SetSpeed(500);
         elem->AddNavPoint(n);
     }
 
-    Text rgn2 = elem->Region();
+    Text rgn2 = elem->GetRegion();
     List<CombatZone>& zones = campaign->GetZones();
 
     if (zones.size() > 0)
@@ -1052,7 +1116,7 @@ void CampaignMissionFighter::CreateWardShuttle()
     if (air_region.length() > 0)
     {
         StarSystem* System = mission->GetStarSystem();
-        OrbitalRegion* Rgn1 = System ? System->FindRegion(Elem->Region()) : nullptr;
+        OrbitalRegion* Rgn1 = System ? System->FindRegion(Elem->GetRegion()) : nullptr;
         if (!Rgn1 || !Rgn1->Primary())
         {
             return;
@@ -1060,13 +1124,13 @@ void CampaignMissionFighter::CreateWardShuttle()
 
         FVector Delta = Rgn1->Location() - Rgn1->Primary()->Location();
 
-        FVector NptLoc = Elem->Location();
+        FVector NptLoc = Elem->GetLocation();
         Instruction* N = nullptr;
 
         Delta = Delta.GetSafeNormal() * -200000.0f;
         NptLoc += Delta;
 
-        N = new Instruction(Elem->Region(), NptLoc, INSTRUCTION_ACTION::VECTOR);
+        N = new Instruction(Elem->GetRegion(), NptLoc, INSTRUCTION_ACTION::VECTOR);
         if (N)
         {
             N->SetSpeed(500);
@@ -1092,7 +1156,7 @@ void CampaignMissionFighter::CreateWardShuttle()
 
         Elem->SetLocation(Src);
 
-        N = new Instruction(Elem->Region(), Dst, INSTRUCTION_ACTION::DOCK);
+        N = new Instruction(Elem->GetRegion(), Dst, INSTRUCTION_ACTION::DOCK);
         if (N)
         {
             N->SetTarget(FString(ANSI_TO_TCHAR(Carrier->GetName().data())));
@@ -1161,7 +1225,7 @@ void CampaignMissionFighter::CreateWardStrike()
     mission->AddElement(elem);
 
     StarSystem* system = mission->GetStarSystem();
-    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->Region()) : nullptr;
+    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->GetRegion()) : nullptr;
     if (!rgn1 || !rgn1->Primary())
     {
         return;
@@ -1174,9 +1238,9 @@ void CampaignMissionFighter::CreateWardStrike()
     );
 
     FVector npt_loc(
-        elem->Location().X,
-        elem->Location().Y,
-        elem->Location().Z
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z
     );
 
     Instruction* n = nullptr;
@@ -1187,7 +1251,7 @@ void CampaignMissionFighter::CreateWardStrike()
         delta *= -30000.0f;
         npt_loc += delta;
 
-        n = new Instruction(elem->Region(), npt_loc, INSTRUCTION_ACTION::VECTOR);
+        n = new Instruction(elem->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
         if (n)
         {
             n->SetSpeed(500);
@@ -1359,9 +1423,9 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     Text region = squadron->GetRegion();
 
     FVector base_loc(
-        player_elem->Location().X,
-        player_elem->Location().Y,
-        player_elem->Location().Z
+        player_elem->GetLocation().X,
+        player_elem->GetLocation().Y,
+        player_elem->GetLocation().Z
     );
 
     FVector patrol_loc(0.0f, 0.0f, 0.0f);
@@ -1375,9 +1439,9 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     else if (carrier_elem)
     {
         base_loc = FVector(
-            carrier_elem->Location().X,
-            carrier_elem->Location().Y,
-            carrier_elem->Location().Z
+            carrier_elem->GetLocation().X,
+            carrier_elem->GetLocation().Y,
+            carrier_elem->GetLocation().Z
         );
     }
 
@@ -1470,21 +1534,21 @@ void CampaignMissionFighter::CreateTargetsSweep()
     double a = FMath::FRandRange(-PI / 2.0, PI / 2.0);
 
     FVector base_loc(
-        player_elem->Location().X,
-        player_elem->Location().Y,
-        player_elem->Location().Z
+        player_elem->GetLocation().X,
+        player_elem->GetLocation().Y,
+        player_elem->GetLocation().Z
     );
 
     FVector sweep_loc = base_loc;
-    Text region = player_elem->Region();
+    Text region = player_elem->GetRegion();
     Instruction* n = nullptr;
 
     if (carrier_elem)
     {
         base_loc = FVector(
-            carrier_elem->Location().X,
-            carrier_elem->Location().Y,
-            carrier_elem->Location().Z
+            carrier_elem->GetLocation().X,
+            carrier_elem->GetLocation().Y,
+            carrier_elem->GetLocation().Z
         );
     }
 
@@ -1560,7 +1624,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
     if (airborne && !airbase)
     {
         OrbitalInsertion(player_elem);
-        region = player_elem->Region();
+        region = player_elem->GetRegion();
     }
 
     sweep_loc = base_loc;
@@ -1719,9 +1783,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 );
 
                 FVector elemLoc(
-                    elem->Location().X,
-                    elem->Location().Y,
-                    elem->Location().Z
+                    elem->GetLocation().X,
+                    elem->GetLocation().Y,
+                    elem->GetLocation().Z
                 );
 
                 e2->SetLocation(elemLoc + randPt * 0.25f);
@@ -1821,7 +1885,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         elem->SetIntelLevel(Intel::KNOWN);
 
         const FVector RandPt = GetRandomPoint();
-        elem->SetLocation(ward->Location() + RandPt * 5.0f);
+        elem->SetLocation(ward->GetLocation() + RandPt * 5.0f);
 
         Instruction* obj = new Instruction(
             INSTRUCTION_ACTION::ASSAULT,
@@ -1841,7 +1905,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
             e2->SetIntelLevel(Intel::KNOWN);
 
             const FVector EscortOffset = GetRandomPoint();
-            e2->SetLocation(elem->Location() + EscortOffset * 0.25f);
+            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.25f);
 
             Instruction* obj2 = new Instruction(
                 INSTRUCTION_ACTION::ESCORT,
@@ -1956,7 +2020,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 PlanetaryInsertion(player_elem);
 
                 // target approach and strike:
-                FVector Delta = prime_target->Location() - Loc;
+                FVector Delta = prime_target->GetLocation() - Loc;
 
                 if (Delta.Size() >= 100000.0f)
                 {
@@ -1971,7 +2035,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     Rloc.SetAzimuthVar(25 * DEGREES);
 
                     N = new Instruction(
-                        prime_target->Region(),
+                        prime_target->GetRegion(),
                         FVector::ZeroVector,
                         INSTRUCTION_ACTION::VECTOR
                     );
@@ -1986,15 +2050,15 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     Loc = Mid;
                 }
 
-                Delta = Loc - prime_target->Location();
+                Delta = Loc - prime_target->GetLocation();
                 Delta.Normalize();
                 Delta *= 25000.0f;
 
-                Loc = prime_target->Location() + Delta;
+                Loc = prime_target->GetLocation() + Delta;
                 Loc.Z = 8000.0f;
 
                 N = new Instruction(
-                    prime_target->Region(),
+                    prime_target->GetRegion(),
                     Loc,
                     INSTRUCTION_ACTION::STRIKE
                 );
@@ -2014,7 +2078,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 Rloc.SetAzimuthVar(25 * DEGREES);
 
                 N = new Instruction(
-                    prime_target->Region(),
+                    prime_target->GetRegion(),
                     FVector::ZeroVector,
                     INSTRUCTION_ACTION::VECTOR
                 );
@@ -2029,14 +2093,14 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 if (carrier_elem)
                 {
                     Rloc.SetReferenceLoc(0);
-                    Rloc.SetBaseLocation(carrier_elem->Location());
+                    Rloc.SetBaseLocation(carrier_elem->GetLocation());
                     Rloc.SetDistance(60000.0f);
                     Rloc.SetDistanceVar(10000.0f);
                     Rloc.SetAzimuth(180 * DEGREES);
                     Rloc.SetAzimuthVar(30 * DEGREES);
 
                     N = new Instruction(
-                        carrier_elem->Region(),
+                        carrier_elem->GetRegion(),
                         FVector::ZeroVector,
                         INSTRUCTION_ACTION::RTB
                     );
@@ -2123,15 +2187,15 @@ void CampaignMissionFighter::CreateTargetsAssault()
             Instruction* Instr = nullptr;
 
             FVector Loc(
-                player_elem->Location().X,
-                player_elem->Location().Y,
-                player_elem->Location().Z
+                player_elem->GetLocation().X,
+                player_elem->GetLocation().Y,
+                player_elem->GetLocation().Z
             );
 
             FVector Tgt(
-                Elem->Location().X,
-                Elem->Location().Y,
-                Elem->Location().Z
+                Elem->GetLocation().X,
+                Elem->GetLocation().Y,
+                Elem->GetLocation().Z
             );
 
             FVector Mid(0.0f, 0.0f, 0.0f);
@@ -2149,16 +2213,16 @@ void CampaignMissionFighter::CreateTargetsAssault()
             if (carrier_elem)
             {
                 Loc = FVector(
-                    carrier_elem->Location().X,
-                    carrier_elem->Location().Y,
-                    carrier_elem->Location().Z
+                    carrier_elem->GetLocation().X,
+                    carrier_elem->GetLocation().Y,
+                    carrier_elem->GetLocation().Z
                 );
             }
 
             Mid = Loc + (FVector(
-                Elem->Location().X,
-                Elem->Location().Y,
-                Elem->Location().Z
+                Elem->GetLocation().X,
+                Elem->GetLocation().Y,
+                Elem->GetLocation().Z
             ) - Loc) * 0.5f;
 
             Rloc.SetReferenceLoc(0);
@@ -2169,7 +2233,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             Rloc.SetAzimuthVar(45 * DEGREES);
 
             Instr = new Instruction(
-                Elem->Region(),
+                Elem->GetRegion(),
                 Dummy,
                 INSTRUCTION_ACTION::VECTOR
             );
@@ -2183,7 +2247,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
 
                 if (FMath::FRand() < 0.5f)
                 {
-                    CreateRandomTarget(Elem->Region(), Rloc.Location());
+                    CreateRandomTarget(Elem->GetRegion(), Rloc.Location());
                 }
             }
 
@@ -2195,7 +2259,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             Rloc.SetAzimuthVar(15 * DEGREES);
 
             Instr = new Instruction(
-                Elem->Region(),
+                Elem->GetRegion(),
                 Dummy,
                 INSTRUCTION_ACTION::ASSAULT
             );
@@ -2219,7 +2283,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
                 Rloc.SetAzimuthVar(60 * DEGREES);
 
                 Instr = new Instruction(
-                    carrier_elem->Region(),
+                    carrier_elem->GetRegion(),
                     Dummy,
                     INSTRUCTION_ACTION::RTB
                 );
@@ -2307,7 +2371,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
-                            e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
@@ -2386,7 +2450,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
-                            e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
@@ -2433,7 +2497,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
-                            e2->SetLocation(elem->Location() + EscortOffset * 0.5f);
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
                                 INSTRUCTION_ACTION::ESCORT,
@@ -2490,13 +2554,13 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
 
     MissionElement* carrier = mission->FindElement(elem->GetCommander());
     StarSystem* system = mission->GetStarSystem();
-    OrbitalRegion* rgn1 = system->FindRegion(elem->Region());
+    OrbitalRegion* rgn1 = system->FindRegion(elem->GetRegion());
     OrbitalRegion* rgn2 = system->FindRegion(air_region);
 
     FVector npt_loc(
-        elem->Location().X,
-        elem->Location().Y,
-        elem->Location().Z
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z
     );
 
     Instruction* n = nullptr;
@@ -2507,9 +2571,9 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
     if (carrier && !flying_start)
     {
         FVector carrierLoc(
-            carrier->Location().X,
-            carrier->Location().Y,
-            carrier->Location().Z
+            carrier->GetLocation().X,
+            carrier->GetLocation().Y,
+            carrier->GetLocation().Z
         );
 
         npt_loc = carrierLoc + FVector(1000.0f, -5000.0f, 0.0f);
@@ -2531,7 +2595,7 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
         npt_loc += Delta;
 
         n = new Instruction(
-            elem->Region(),
+            elem->GetRegion(),
             npt_loc,
             INSTRUCTION_ACTION::VECTOR
         );

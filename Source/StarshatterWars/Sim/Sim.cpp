@@ -600,7 +600,7 @@ Sim::CreateElements()
 
 			// if this is the player's element, make sure to activate the region:
 			if (MissionElem->IsPlayer()) {
-				SimRegion* Region = FindRegion(MissionElem->Region());
+				SimRegion* Region = FindRegion(MissionElem->GetRegion());
 
 				if (Region && Region != active_region)
 					ActivateRegion(Region);
@@ -665,7 +665,7 @@ Sim::CreateElements()
 				SimRegion* Region = FindRegion(NavIter->RegionName());
 
 				if (!Region)
-					Region = FindRegion(MissionElem->Region());
+					Region = FindRegion(MissionElem->GetRegion());
 
 				if (Region) {
 					Instruction* NavPoint = new
@@ -769,7 +769,7 @@ Sim::CreateElements()
 					MissionShip* MissionShipPtr = nullptr;
 					Text ShipName = MissionElem->GetShipName(i);
 					Text RegistryNum = MissionElem->GetRegistry(i);
-					Text RegionName = MissionElem->Region();
+					Text RegionName = MissionElem->GetRegion();
 
 					if (MissionElem->Ships().size() > i) {
 						MissionShipPtr = MissionElem->Ships()[i];
@@ -778,7 +778,7 @@ Sim::CreateElements()
 						RegionName = MissionShipPtr->Region();
 					}
 
-					FVector SpawnLocation = OtherHand(MissionElem->Location());
+					FVector SpawnLocation = OtherHand(MissionElem->GetLocation());
 
 					if (MissionShipPtr && fabs(MissionShipPtr->Location().X) < 1e9) {
 						SpawnLocation = OtherHand(MissionShipPtr->Location());
@@ -826,7 +826,7 @@ Sim::CreateElements()
 						Loadout);
 
 					if (NewShip) {
-						double Heading = MissionElem->Heading();
+						double Heading = MissionElem->GetHeading();
 						const Skin* SkinPtr = MissionElem->GetSkin();
 
 						if (MissionShipPtr) {
@@ -936,7 +936,7 @@ Sim::CreateElements()
 								Stats->SetShipClass((int) NewShip->Class());
 								Stats->SetRole(Mission::GetRoleName(MissionElem->MissionRole()));
 								Stats->SetIFF(NewShip->GetIFF());
-								Stats->SetRegion(MissionElem->Region());
+								Stats->SetRegion(MissionElem->GetRegion());
 								Stats->SetCombatGroup(MissionElem->GetCombatGroup());
 								Stats->SetCombatUnit(MissionElem->GetCombatUnit());
 								Stats->SetPlayer(MissionElem->IsPlayer());

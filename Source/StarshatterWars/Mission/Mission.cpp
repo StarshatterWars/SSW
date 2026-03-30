@@ -292,16 +292,40 @@ Mission::ClearSystemList()
 
 // +--------------------------------------------------------------------+
 
-void
-Mission::SetPlayer(MissionElement* player_element)
+void Mission::SetPlayer(MissionElement* player_element)
 {
+	if (!player_element)
+	{
+		return;
+	}
+
+	bool bFound = false;
+
 	ListIter<MissionElement> elem = elements;
-	while (++elem) {
+	while (++elem)
+	{
 		MissionElement* element = elem.value();
 		if (element == player_element)
+		{
 			element->player = 1;
+			bFound = true;
+		}
 		else
+		{
 			element->player = 0;
+		}
+	}
+
+	if (!bFound)
+	{
+		AddElement(player_element);
+
+		ListIter<MissionElement> elem2 = elements;
+		while (++elem2)
+		{
+			MissionElement* element = elem2.value();
+			element->player = (element == player_element) ? 1 : 0;
+		}
 	}
 }
 
@@ -579,7 +603,7 @@ Mission::Validate()
 				if (!found_player) {
 					found_player = true;
 
-					if (elem->Region() != GetRegion()) {
+					if (elem->GetRegion() != GetRegion()) {
 						sprintf_s(err, Game::GetText("Mission.error.wrong-sector").data(),
 							elem->GetName().data(),
 							GetRegion());
@@ -1584,7 +1608,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 				s += buf;
 
 				s += "region: \"";
-				s += SafeString(e->Region());
+				s += SafeString(e->GetRegion());
 				s += "\"\n\n";
 
 				region_set = true;
@@ -1740,16 +1764,16 @@ Mission::Serialize(const char* player_elem, int player_index)
 		}
 
 		s += "   region:    \"";
-		s += elem->Region();
+		s += elem->GetRegion();
 		s += "\"\n";
 
-		const FVector ElemLoc = elem->Location();
+		const FVector ElemLoc = elem->GetLocation();
 		sprintf_s(buffer, "   loc:       (%.0f, %.0f, %.0f)\n",
 			ElemLoc.X, ElemLoc.Y, ElemLoc.Z);
 		s += buffer;
 
-		if (elem->Heading() != 0) {
-			sprintf_s(buffer, "   head:      %d\n", (int)(elem->Heading() / DEGREES));
+		if (elem->GetHeading() != 0) {
+			sprintf_s(buffer, "   head:      %d\n", (int)(elem->GetHeading() / DEGREES));
 			s += buffer;
 		}
 
@@ -2218,7 +2242,7 @@ MissionElement::IsSquadron() const
 // +--------------------------------------------------------------------+
 
 FVector
-MissionElement::Location() const
+MissionElement::GetLocation() const
 {
 	MissionElement* pThis = (MissionElement*)this;
 	// NOTE: RLoc remains a Starshatter core type; we convert Point/Vec3 to FVector at the boundary.

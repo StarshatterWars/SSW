@@ -284,7 +284,7 @@ void UMissionElementDlg::RebuildFromModel()
 
                     RegionCombo->AddOption(ANSI_TO_TCHAR(R->Name()));
 
-                    if (!strcmp(ElemPtr->Region(), R->Name()))
+                    if (!strcmp(ElemPtr->GetRegion(), R->Name()))
                         RegionCombo->SetSelectedOption(ANSI_TO_TCHAR(R->Name()));
                 }
             }
@@ -300,7 +300,7 @@ void UMissionElementDlg::RebuildFromModel()
         HeadingCombo->AddOption(TEXT("South"));
         HeadingCombo->AddOption(TEXT("West"));
 
-        double Heading = ElemPtr->Heading();
+        double Heading = ElemPtr->GetHeading();
         while (Heading > 2 * PI) Heading -= 2 * PI;
         while (Heading < 0)      Heading += 2 * PI;
 
@@ -377,7 +377,7 @@ void UMissionElementDlg::RebuildFromModel()
     if (IFFEdit)       IFFEdit->SetText(FText::AsNumber(ElemPtr->GetIFF()));
 
     // Legacy uses km in UI; internal is meters:
-    const FVector Loc = ElemPtr->Location();
+    const FVector Loc = ElemPtr->GetLocation();
 
     if (LocXEdit) LocXEdit->SetText(FText::AsNumber((int32)(Loc.X / 1000)));
     if (LocYEdit) LocYEdit->SetText(FText::AsNumber((int32)(Loc.Y / 1000)));
