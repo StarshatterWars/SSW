@@ -228,15 +228,16 @@ const FShipDesign* UStarshatterShipDesignSubsystem::FindDesignByString(const FSt
 	return DesignsByName.Find(FName(*Name));
 }
 
-void UStarshatterShipDesignSubsystem::LoadAll(bool bLoaded)
+void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
-	if (!bLoaded)
-		return;
 
-	//InitializeShipDesigns();
+	if (bFull)
+	{
+		InitializeShipDesigns();
+	}
+
 	LoadShipDesignTable();
-	bLoaded = true;
 }
 
 void UStarshatterShipDesignSubsystem::InitializeShipDesigns()
@@ -264,7 +265,8 @@ void UStarshatterShipDesignSubsystem::InitializeShipDesigns()
 
 void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 {
-	//BeginDesignParse();
+	BeginDesignParse(InFilename);
+	
 	if (!InFilename || !*InFilename)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("LoadShipDesign: null/empty filename"));
@@ -981,6 +983,30 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		TermPtr = nullptr;
 	}
 
+	ResolveWeaponsForCurrentShip();
+	ValidateLoadoutsForCurrentShip();
+
+	// push final resolved arrays back into the row
+	NewShipDesign.Power = NewShipPowerArray;
+	NewShipDesign.Drive = NewShipDriveArray;
+	NewShipDesign.Quantum = NewShipQuantumArray;
+	NewShipDesign.Farcaster = NewShipFarcasterArray;
+	NewShipDesign.Thruster = NewShipThrusterArray;
+	NewShipDesign.Navlight = NewShipNavLightArray;
+	NewShipDesign.FlightDeck = NewShipFlightDeckArray;
+	NewShipDesign.LandingGear = NewShipLandingGearArray;
+	NewShipDesign.Weapon = NewShipWeaponArray;
+	NewShipDesign.Hardpoint = NewShipHardPointArray;
+	NewShipDesign.Loadout = NewShipLoadoutArray;
+	NewShipDesign.Sensor = NewShipSensorArray;
+	NewShipDesign.NavSys = NewShipNavSystemArray;
+	NewShipDesign.Computer = NewShipComputerArray;
+	NewShipDesign.Shield = NewShipShieldArray;
+	NewShipDesign.Squadron = NewShipSquadronArray;
+	NewShipDesign.DeathSpiral = NewShipDeathSpiralArray;
+	NewShipDesign.Map = NewShipMapSpriteArray;
+	NewShipDesign.Skin = NewShipSkinArray;
+	
 	// ------------------------------------------------------------
 	// Add row ONCE after parse
 	// ------------------------------------------------------------
@@ -1005,8 +1031,8 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	const FName CleanRowName(*ShipName);
 
 	// ------------------------------------------------------------------
-	// DataTable UPSERT (same pattern as systems)
-	// ------------------------------------------------------------------
+// DataTable UPSERT (same pattern as systems)
+// ------------------------------------------------------------------
 	if (ShipDesignDataTable)
 	{
 		if (FShipDesign* Existing =
@@ -1015,7 +1041,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 				TEXT("LoadShipDesign"),
 				/*bWarnIfRowMissing=*/false))
 		{
-			*Existing = NewShipDesign;   // overwrite in place
+			*Existing = NewShipDesign;
 		}
 		else
 		{
@@ -1031,6 +1057,8 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		UE_LOG(LogTemp, Error,
 			TEXT("[SHIPDESIGN] ShipDesignDataTable is null"));
 	}
+
+	FinalizeDesignParse();
 }
 
 // +--------------------------------------------------------------------+

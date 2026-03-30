@@ -151,7 +151,7 @@ void UStarshatterBootSubsystem::BootShipDesignLoader(const FBootContext& Ctx)
     if (!Ctx.ShipDesignSS)
         return;
 
-    Ctx.ShipDesignSS->LoadAll(true);
+    Ctx.ShipDesignSS->LoadAll(false);
 }
 
 void UStarshatterBootSubsystem::BootGalaxyLoader(const FBootContext& Ctx)
