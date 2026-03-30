@@ -142,30 +142,48 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
     MissionElement* PlayerElem = MissionPtr->GetPlayer();
     if (!PlayerElem)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] No player element"));
         return;
     }
 
     const ShipDesign* Design = PlayerElem->GetDesign();
-    if (!Design)
-    {
-        return;
-    }
 
     FString Caption;
 
-    if (Design->type <= (int) CLASSIFICATION::ATTACK)
+    if (Design)
     {
-        Caption = FString::Printf(
-            TEXT("%s %s"),
-            ANSI_TO_TCHAR(Design->abrv),
-            ANSI_TO_TCHAR(Design->display_name));
+        const FString Abbrev = ANSI_TO_TCHAR(Design->abrv);
+        const FString DisplayName = ANSI_TO_TCHAR(Design->display_name);
+        const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
+
+        // Fallback-safe formatting
+        if (Design->type <= (int)CLASSIFICATION::ATTACK)
+        {
+            Caption = FString::Printf(
+                TEXT("%s %s"),
+                Abbrev.IsEmpty() ? TEXT("UNIT") : *Abbrev,
+                DisplayName.IsEmpty() ? TEXT("UNKNOWN") : *DisplayName);
+        }
+        else
+        {
+            Caption = FString::Printf(
+                TEXT("%s %s"),
+                Abbrev.IsEmpty() ? TEXT("UNIT") : *Abbrev,
+                ElemName.IsEmpty() ? TEXT("UNKNOWN") : *ElemName);
+        }
     }
     else
     {
-        Caption = FString::Printf(
-            TEXT("%s %s"),
-            ANSI_TO_TCHAR(Design->abrv),
+        // HARD fallback when design is missing
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Player design is NULL for '%s'"),
             ANSI_TO_TCHAR(PlayerElem->GetName().data()));
+
+        Caption = ANSI_TO_TCHAR(PlayerElem->GetName().data());
+        if (Caption.IsEmpty())
+        {
+            Caption = TEXT("UNKNOWN UNIT");
+        }
     }
 
     PlayerCaptionText->SetText(FText::FromString(Caption));
