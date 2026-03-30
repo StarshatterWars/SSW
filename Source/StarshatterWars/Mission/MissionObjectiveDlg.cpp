@@ -1,22 +1,3 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         MissionObjectiveDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    MissionObjectiveDlg
-
-    - Unreal mission briefing situation/objectives panel
-    - Simplified replacement for legacy MsnObjDlg
-    - Shows situation and objectives on the left
-    - Reserves right side for preview image / 3D ship widget later
-    - Shows player craft caption on the right
-*/
-
 #include "MissionObjectiveDlg.h"
 
 #include "Components/TextBlock.h"
@@ -39,11 +20,17 @@ UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectIniti
 void UMissionObjectiveDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] NativeConstruct"));
 }
 
 void UMissionObjectiveDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 {
     ParentDlg = InParentDlg;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionObjectiveDlg] SetParentDlg: %s"),
+        ParentDlg ? TEXT("VALID") : TEXT("NULL"));
 }
 
 Mission* UMissionObjectiveDlg::ResolveMission() const
@@ -60,10 +47,13 @@ void UMissionObjectiveDlg::RefreshFromMission()
 {
     Mission* MissionPtr = ResolveMission();
 
-    UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshFromMission: MissionPtr=%s IsOK=%s Player=%s"),
-        MissionPtr ? TEXT("VALID") : TEXT("NULL"),
-        (MissionPtr && MissionPtr->IsOK()) ? TEXT("true") : TEXT("false"),
-        (MissionPtr && MissionPtr->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"));
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionObjectiveDlg] RefreshFromMission: Mission=%p Name='%s' Sit='%s' Obj='%s' Scripted=%s"),
+        MissionPtr,
+        (MissionPtr && MissionPtr->GetName()) ? ANSI_TO_TCHAR(MissionPtr->GetName()) : TEXT("NULL"),
+        (MissionPtr && MissionPtr->GetSituation()) ? UTF8_TO_TCHAR(MissionPtr->GetSituation()) : TEXT("NULL"),
+        (MissionPtr && MissionPtr->GetObjective()) ? UTF8_TO_TCHAR(MissionPtr->GetObjective()) : TEXT("NULL"),
+        (MissionPtr && MissionPtr->IsScripted()) ? TEXT("true") : TEXT("false"));
 
     RefreshSituationAndObjectives(MissionPtr);
     RefreshPlayerCaption(MissionPtr);
@@ -72,23 +62,29 @@ void UMissionObjectiveDlg::RefreshFromMission()
 
 void UMissionObjectiveDlg::RefreshSituationAndObjectives(Mission* MissionPtr)
 {
+    const FString SitStr = (MissionPtr && MissionPtr->GetSituation())
+        ? FString(UTF8_TO_TCHAR(MissionPtr->GetSituation()))
+        : FString();
+
+    const FString ObjStr = (MissionPtr && MissionPtr->GetObjective())
+        ? FString(UTF8_TO_TCHAR(MissionPtr->GetObjective()))
+        : FString();
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[MissionObjectiveDlg] Raw Situation='%s' Raw Objective='%s'"),
-        MissionPtr ? ANSI_TO_TCHAR(MissionPtr->GetSituation()) : TEXT("NULL"),
-        MissionPtr ? ANSI_TO_TCHAR(MissionPtr->GetObjective()) : TEXT("NULL")); 
-    
+        TEXT("[MissionObjectiveDlg] RefreshSituationAndObjectives: Mission=%p IsOK=%s Sit='%s' Obj='%s'"),
+        MissionPtr,
+        (MissionPtr && MissionPtr->IsOK()) ? TEXT("true") : TEXT("false"),
+        *SitStr,
+        *ObjStr);
+
     if (ObjectivesText)
     {
         if (MissionPtr)
         {
-            if (MissionPtr->IsOK())
-            {
-                ObjectivesText->SetText(FText::FromString(UTF8_TO_TCHAR(MissionPtr->GetObjective())));
-            }
-            else
-            {
-                ObjectivesText->SetText(FText::GetEmpty());
-            }
+            ObjectivesText->SetText(
+                ObjStr.IsEmpty()
+                ? FText::FromString(TEXT("NO OBJECTIVES"))
+                : FText::FromString(ObjStr));
         }
         else
         {
@@ -100,23 +96,10 @@ void UMissionObjectiveDlg::RefreshSituationAndObjectives(Mission* MissionPtr)
     {
         if (MissionPtr)
         {
-            if (MissionPtr->IsOK())
-            {
-                SituationText->SetText(FText::FromString(UTF8_TO_TCHAR(MissionPtr->GetSituation())));
-            }
-            else
-            {
-                FString ErrorText = TEXT("MISSION ERRORS");
-                const char* ErrorMsg = MissionPtr->ErrorMessage();
-
-                if (ErrorMsg && ErrorMsg[0])
-                {
-                    ErrorText += TEXT("\n\n");
-                    ErrorText += UTF8_TO_TCHAR(ErrorMsg);
-                }
-
-                SituationText->SetText(FText::FromString(ErrorText));
-            }
+            SituationText->SetText(
+                SitStr.IsEmpty()
+                ? FText::FromString(TEXT("NO SITUATION"))
+                : FText::FromString(SitStr));
         }
         else
         {
@@ -156,7 +139,6 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
         const FString DisplayName = ANSI_TO_TCHAR(Design->display_name);
         const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
 
-        // Fallback-safe formatting
         if (Design->type <= (int)CLASSIFICATION::ATTACK)
         {
             Caption = FString::Printf(
@@ -174,12 +156,12 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
     }
     else
     {
-        // HARD fallback when design is missing
         UE_LOG(LogTemp, Warning,
             TEXT("[MissionObjectiveDlg] Player design is NULL for '%s'"),
             ANSI_TO_TCHAR(PlayerElem->GetName().data()));
 
         Caption = ANSI_TO_TCHAR(PlayerElem->GetName().data());
+
         if (Caption.IsEmpty())
         {
             Caption = TEXT("UNKNOWN UNIT");
@@ -196,19 +178,16 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
         return;
     }
 
-    // Placeholder for now.
-    // Later this can be replaced with:
-    // - render target preview
-    // - ship actor scene capture
-    // - fighter / starship image
     PreviewImage->SetVisibility(ESlateVisibility::Visible);
 
     if (MissionPtr && MissionPtr->IsOK() && MissionPtr->GetPlayer())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshPreviewPlaceholder: player preview available"));
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Preview: player available"));
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] RefreshPreviewPlaceholder: no valid player preview yet"));
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionObjectiveDlg] Preview: no valid player"));
     }
 }

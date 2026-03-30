@@ -132,6 +132,7 @@ public:
     void              SetComplete(bool c) { complete = c; }
     void              SetTarget(MissionElement* t) { target = t; }
     void              SetWard(MissionElement* w) { ward = w; }
+    
 
     void              ClearSystemList();
     void              InitializeFromInfo(const MissionInfo& Info);
@@ -140,6 +141,12 @@ public:
     void              DecreaseElemPriority(int index);
     void              IncreaseEventPriority(int index);
     void              DecreaseEventPriority(int index);
+
+    EMissionSource GetSource() const { return Source; }
+    void SetSource(EMissionSource InSource) { Source = InSource; }
+
+    bool IsScripted() const { return Source == EMissionSource::Scripted; }
+    bool IsTemplate() const { return Source == EMissionSource::Template; }
 
     static const char* GetRoleName(int role);
     static EMISSIONTYPE EnumFromName(const char* n);
@@ -188,6 +195,7 @@ protected:
     Text              subtitles;
     StarSystem*       star_system;
     List<StarSystem>  system_list;
+    bool              bTemplate;
 
     List<MissionElement> elements;
     List<MissionEvent>   events;
@@ -195,6 +203,8 @@ protected:
     MissionElement* target;
     MissionElement* ward;
     MissionElement* current;
+
+    EMissionSource Source = EMissionSource::Unknown;
 };
 
 // +--------------------------------------------------------------------+

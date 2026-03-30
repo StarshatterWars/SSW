@@ -479,6 +479,26 @@ void UCmdMissionsDlg::ClearDescription()
 
 bool UCmdMissionsDlg::CanAcceptMission(MissionInfo* Info) const
 {
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: BEGIN"));
+
+    if (!Info)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: Info is NULL"));
+        return false;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: id=%d"), Info->id);
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: name=%s"),
+        ANSI_TO_TCHAR(Info->name));
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: mission=%s"),
+        Info->mission ? TEXT("VALID") : TEXT("NULL"));
+
+    if (Info->mission)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptMission: IsOK=%s"),
+            Info->mission->IsOK() ? TEXT("true") : TEXT("false"));
+    }
+    
     return (Info != nullptr);
 }
 

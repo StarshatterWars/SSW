@@ -46,6 +46,16 @@ enum class EBodyUISizeClass : uint8 {
 };
 
 UENUM(BlueprintType)
+enum class EMissionSource : uint8
+{
+	Unknown = 0,
+	Dynamic,
+	Scripted,
+	Template,
+	Cutscene
+};
+
+UENUM(BlueprintType)
 enum class EGraphicsRHI : uint8 {
 	RHI_DX11 UMETA(DisplayName = "DirectX 11"),
 	RHI_DX12 UMETA(DisplayName = "DirectX 12"),
@@ -2096,6 +2106,8 @@ struct FS_CampaignMissionList : public FTableRowBase {
 	EMISSIONSTATUS Status;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	bool Available;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EMissionSource Source = EMissionSource::Scripted;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMissionDisplayType DisplayType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2144,6 +2156,8 @@ struct FS_CampaignTemplateList : public FTableRowBase {
 	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE GroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EMissionSource Source = EMissionSource::Template;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMissionDisplayType DisplayType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2638,6 +2652,8 @@ struct FS_CampaignMission : public FTableRowBase {
 	ECOMBATGROUP_TYPE Group = ECOMBATGROUP_TYPE::NONE;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EMissionSource Source = EMissionSource::Scripted;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMissionDisplayType DisplayType = EMissionDisplayType::CutsceneOnly;
@@ -2715,6 +2731,9 @@ struct FS_TemplateMission : public FTableRowBase {
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EMissionSource TemplateSource = EMissionSource::Scripted;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int TemplateTeam;

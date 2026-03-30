@@ -2420,19 +2420,22 @@ MissionShip::SetFuel(const int* f)
 
 void Mission::InitializeFromInfo(const MissionInfo& Info)
 {
-	id = Info.id;
-	name = Info.name;
-	desc = Info.description;
-	type = Info.type;
-	system = Info.system;
-	region = Info.region;
-	script = Info.script;
-	start = Info.start;
-	end = Info.end;
+	SetIdentity(Info.id);
+	SetName(Info.name.data());
+	SetDescription(Info.description.data());
+	SetSystem(Info.system.data());
+	SetRegion(Info.region.data());
+	SetObjective(Info.objective.data());
+	SetSituation(Info.situation.data());
+	SetScriptName(Info.script.data());
+	SetStart(Info.start);
+	SetType(Info.type);
+	SetSource(Info.Source);
 
-	// If dynamic/generated mission content exists, set defaults here:
-	if (sitrep[0] == 0)
-	{
-		SetSituation("Unknown");
-	}
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Mission] InitializeFromInfo: Id=%d Name='%s' Source=%d Scripted=%s"),
+		Info.id,
+		ANSI_TO_TCHAR(Info.name.data()),
+		(int32)GetSource(),
+		IsScripted() ? TEXT("true") : TEXT("false"));
 }

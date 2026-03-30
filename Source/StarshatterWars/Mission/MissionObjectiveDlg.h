@@ -29,6 +29,7 @@ protected:
 
 private:
     Mission* ResolveMission() const;
+
     void RefreshSituationAndObjectives(Mission* MissionPtr);
     void RefreshPlayerCaption(Mission* MissionPtr);
     void RefreshPreviewPlaceholder(Mission* MissionPtr);

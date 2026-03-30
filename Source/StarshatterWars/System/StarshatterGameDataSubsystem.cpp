@@ -2334,6 +2334,7 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 					Text  MissionAudio = "";
 					Text  Start = "";
 					int   Type = 0;
+					EMissionSource Source = EMissionSource::Scripted;
 
 					ECOMBATGROUP_TYPE LocalGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
 					EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
@@ -2408,6 +2409,7 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 						}
 
 						// Preserve legacy defaults (set repeatedly in your original loop):
+						NewMissionList.Source = EMissionSource::Scripted;
 						NewMissionList.Available = true;
 						NewMissionList.Complete = false;
 						NewMissionList.Status = EMISSIONSTATUS::Available;
@@ -2872,14 +2874,12 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 		else if (Key == "objective")
 		{
 			GetDefText(Objective, def, fn);
-			if (Objective.length() > 0 && Objective.length() < 32)
-				NewMission.Objective = FString(Objective);
+			NewMission.Objective = FString(Objective);
 		}
 		else if (Key == "sitrep")
 		{
 			GetDefText(Sitrep, def, fn);
-			if (Sitrep.length() > 0 && Sitrep.length() < 32)
-				NewMission.Sitrep = FString(Sitrep);
+			NewMission.Sitrep = FString(Sitrep);
 		}
 		else if (Key == "subtitles")
 		{
@@ -4126,6 +4126,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 	bool  TemplateDegrees = false;
 	bool  TemplateOnce = false;
 
+	EMissionSource TemplateSource = EMissionSource::Scripted;
+
 	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
 	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;
 
@@ -4280,6 +4282,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 				ParseEvent(def->term()->isStruct(), fn);
 				NewTemplateMission.Event = MissionEventArray;
 			}
+			NewTemplateMission.TemplateSource = EMissionSource::Scripted;
 		}
 
 	} while (term);
@@ -4365,6 +4368,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	ECOMBATGROUP_TYPE TemplateGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
 	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
 
+	EMissionSource TemplateSource = EMissionSource::Template;
 	FS_TemplateMission NewTemplateMission;
 
 	do
@@ -4545,6 +4549,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 				ParseEvent(def->term()->isStruct(), fn);
 				NewTemplateMission.Event = MissionEventArray;
 			}
+			NewTemplateMission.TemplateSource = EMissionSource::Template;
+
 		}
 
 	} while (term);

@@ -1612,39 +1612,36 @@ Mission* Campaign::GetMission(int32 Id)
             return nullptr;
         }
 
-        // Fill from MissionInfo / DT_Campaign-backed data:
-        Info->mission->SetIdentity(Info->id);
-        Info->mission->SetName(Info->name);
-        Info->mission->SetDescription(Info->description);
-        Info->mission->SetType(Info->type);
-        Info->mission->SetSystem(Info->system);
-        Info->mission->SetRegion(Info->region);
-        Info->mission->SetStart(Info->start);
-        Info->mission->SetEnd(Info->end);
-        Info->mission->SetScriptName(Info->script);
-        Info->mission->SetDisplayTime(Info->DisplayType);
-
-        // If you still need post-build initialization:
         Info->mission->InitializeFromInfo(*Info);
+
+        UE_LOG(LogCampaign, Log,
+            TEXT("Campaign::GetMission(%d) initialized mission Name='%s' Scripted=%s Script='%s' Objective='%s' Sitrep='%s'"),
+            Id,
+            ANSI_TO_TCHAR(Info->mission->GetName()),
+            Info->mission->IsScripted() ? TEXT("true") : TEXT("false"),
+            ANSI_TO_TCHAR(Info->mission->GetScriptName()),
+            ANSI_TO_TCHAR(Info->mission->GetObjective()),
+            ANSI_TO_TCHAR(Info->mission->GetSituation()));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Campaign::GetMission] returning mission=%p Id=%d Name='%s' Scripted=%s"),
+            Info->mission,
+            Id,
+            ANSI_TO_TCHAR(Info->mission->GetName()),
+            Info->mission->IsScripted() ? TEXT("true") : TEXT("false"));
     }
 
-    if (IsDynamic())
+    if (IsDynamic() && Info->mission && !Info->mission->IsScripted())
     {
-        if (Info->mission)
+        if (FCStringAnsi::Stricmp(Info->mission->GetSituation(), "Unknown") == 0)
         {
-            if (FCStringAnsi::Stricmp(Info->mission->GetSituation(), "Unknown") == 0)
-            {
-                UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) generating sitrep..."), Id);
-                CampaignSituationReport Sitrep(this, Info->mission);
-                Sitrep.GenerateSituationReport();
-            }
-        }
-        else
-        {
-            UE_LOG(LogCampaign, Warning, TEXT("Campaign::GetMission(%d) could not create mission"), Id);
+            UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) generating sitrep..."), Id);
+            CampaignSituationReport Sitrep(this, Info->mission);
+            Sitrep.GenerateSituationReport();
         }
     }
 
+    mission = Info->mission;
     return Info->mission;
 }
 
@@ -2839,7 +2836,10 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->system = TCHAR_TO_ANSI(*MissionRow.System);
         Info->region = TCHAR_TO_ANSI(*MissionRow.Region);
         Info->script = TCHAR_TO_ANSI(*MissionRow.Script);
-       
+        Info->objective   = TCHAR_TO_ANSI(*MissionRow.Objective);
+        Info->situation   = TCHAR_TO_ANSI(*MissionRow.Sitrep);
+        Info->Source = MissionRow.Source;
+
        double RelativeMsnStart = UFormattingUtils::ParseStarshatterTime(*MissionRow.Start);
         Info->start = StarSystem::GetStardate() + RelativeMsnStart;
 

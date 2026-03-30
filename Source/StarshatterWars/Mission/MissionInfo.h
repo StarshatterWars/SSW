@@ -50,6 +50,7 @@ public:
     Text     system;
     Text     region;
     Text     script;
+    Text     situation;
     int      start;
     int      end;
     int      type;
@@ -63,6 +64,7 @@ public:
     int      start_after;
 
     EMissionDisplayType DisplayType;
+    EMissionSource      Source;
 
     // Owned mission instance (lazy-loaded by Campaign):
     Mission* mission;

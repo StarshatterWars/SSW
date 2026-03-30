@@ -346,18 +346,22 @@ void UMissionBriefingDlg::InitializeSubPanels()
 
 void UMissionBriefingDlg::ShowMsnDlg()
 {
-    if (!CampaignPtr)
-    {
-        CampaignPtr = Campaign::GetCampaign();
-    }
-
+    // Always reacquire the current campaign.
+    // The dialog can be reused across campaign switches.
+    CampaignPtr = Campaign::GetCampaign();
     MissionPtr = nullptr;
+    PackageIndex = -1;
+
+    int32 MissionId = -1;
 
     if (CampaignPtr)
     {
-        const int32 MissionId = CampaignPtr->GetMissionId();
+        MissionId = CampaignPtr->GetMissionId();
 
-        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: MissionId=%d"), MissionId);
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] ShowMsnDlg: Campaign=%p MissionId=%d"),
+            CampaignPtr,
+            MissionId);
 
         if (MissionId > 0)
         {
@@ -365,46 +369,74 @@ void UMissionBriefingDlg::ShowMsnDlg()
         }
     }
 
-    if (CampaignPtr && MissionPtr)
-    {
-        const char* Sit = MissionPtr->GetSituation();
-        const FString SitStr = Sit ? FString(UTF8_TO_TCHAR(Sit)) : FString();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionBriefingDlg] Pre-Sitrep: Mission='%s' Situation='%s'"),
-            ANSI_TO_TCHAR(MissionPtr->GetName()),
-            *SitStr);
-
-        const bool bNeedsSitrep =
-            SitStr.IsEmpty() ||
-            SitStr.Equals(TEXT("Unknown"), ESearchCase::IgnoreCase) ||
-            SitStr.Equals(TEXT("Mission Unknown"), ESearchCase::IgnoreCase) ||
-            SitStr.Equals(TEXT("Unknown Mission"), ESearchCase::IgnoreCase) ||
-            SitStr.Contains(TEXT("unknown"), ESearchCase::IgnoreCase);
-
-        if (bNeedsSitrep)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[MissionBriefingDlg] Generating situation report for '%s'"),
-                ANSI_TO_TCHAR(MissionPtr->GetName()));
-
-            CampaignSituationReport Sitrep(CampaignPtr, MissionPtr);
-            Sitrep.GenerateSituationReport();
-
-            const char* NewSit = MissionPtr->GetSituation();
-            const FString NewSitStr = NewSit ? FString(UTF8_TO_TCHAR(NewSit)) : FString();
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[MissionBriefingDlg] Post-Sitrep: Situation='%s'"),
-                *NewSitStr);
-        }
-    }
-
-    PackageIndex = -1;
-
-    UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] ShowMsnDlg: CampaignPtr=%s MissionPtr=%s"),
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionBriefingDlg] ShowMsnDlg: CampaignPtr=%s MissionPtr=%s"),
         CampaignPtr ? TEXT("VALID") : TEXT("NULL"),
         MissionPtr ? TEXT("VALID") : TEXT("NULL"));
+
+    if (MissionPtr)
+    {
+        const FString NameStr = ANSI_TO_TCHAR(MissionPtr->GetName());
+        const FString DescStr = ANSI_TO_TCHAR(MissionPtr->GetDescription());
+        const FString ObjStr = ANSI_TO_TCHAR(MissionPtr->GetObjective());
+        const FString SitStr = ANSI_TO_TCHAR(MissionPtr->GetSituation());
+        const FString SysStr = ANSI_TO_TCHAR(MissionPtr->GetSystem());
+        const FString RegionStr = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+        const bool bIsScripted = MissionPtr->IsScripted();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] Mission Data: Name='%s' Desc='%s' Obj='%s' Sit='%s' Sys='%s' Region='%s' Scripted=%s Mission=%p Campaign=%p"),
+            *NameStr,
+            *DescStr,
+            *ObjStr,
+            *SitStr,
+            *SysStr,
+            *RegionStr,
+            bIsScripted ? TEXT("true") : TEXT("false"),
+            MissionPtr,
+            CampaignPtr);
+
+        if (!bIsScripted)
+        {
+            const bool bNeedsSitrep =
+                SitStr.IsEmpty() ||
+                SitStr.Equals(TEXT("Unknown"), ESearchCase::IgnoreCase) ||
+                SitStr.Equals(TEXT("Mission Unknown"), ESearchCase::IgnoreCase) ||
+                SitStr.Equals(TEXT("Unknown Mission"), ESearchCase::IgnoreCase) ||
+                SitStr.Contains(TEXT("unknown"), ESearchCase::IgnoreCase);
+
+            if (bNeedsSitrep)
+            {
+                if (CampaignPtr && MissionPtr->GetStarSystem())
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[MissionBriefingDlg] Generating situation report for '%s'"),
+                        *NameStr);
+
+                    CampaignSituationReport Sitrep(CampaignPtr, MissionPtr);
+                    Sitrep.GenerateSituationReport();
+
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[MissionBriefingDlg] Post-Sitrep: Situation='%s'"),
+                        ANSI_TO_TCHAR(MissionPtr->GetSituation()));
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[MissionBriefingDlg] Skipping sitrep for '%s': CampaignPtr=%s StarSystem=%s"),
+                        *NameStr,
+                        CampaignPtr ? TEXT("VALID") : TEXT("NULL"),
+                        MissionPtr->GetStarSystem() ? TEXT("VALID") : TEXT("NULL"));
+                }
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionBriefingDlg] Scripted mission '%s': skipping CampaignSituationReport"),
+                *NameStr);
+        }
+    }
 
     RefreshHeader();
 
@@ -439,6 +471,19 @@ void UMissionBriefingDlg::ShowMsnDlg()
     }
 
     SetMode(EMissionBriefingMode::SIT);
+
+    // Refresh the actual visible child panel.
+    // Your bound child appears to be MissionSituationPanel. :contentReference[oaicite:0]{index=0}
+    if (MissionSituationPanel)
+    {
+        MissionSituationPanel->SetParentDlg(this);
+        MissionSituationPanel->RefreshFromMission();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] MissionSituationPanel widget is null"));
+    }
 }
 
 void UMissionBriefingDlg::RefreshHeader()
@@ -456,7 +501,13 @@ void UMissionBriefingDlg::RefreshHeader()
 
         if (MissionPtr)
         {
-            if (StarSystem* Sys = MissionPtr->GetStarSystem())
+            const char* SystemName = MissionPtr->GetSystem();
+
+            if (SystemName && SystemName[0])
+            {
+                MissionSystemText->SetText(ToTextFromUtf8(SystemName));
+            }
+            else if (StarSystem* Sys = MissionPtr->GetStarSystem())
             {
                 MissionSystemText->SetText(ToTextFromUtf8(Sys->GetName()));
             }
@@ -686,9 +737,11 @@ void UMissionBriefingDlg::OnCommit()
 
 void UMissionBriefingDlg::OnCancel()
 {
-    if (Manager)
-    {
-        Manager->Hide();
+    if (manager) {
+        manager->ShowOperationsDlg();
+    }
+    else {
+        Hide();
     }
 }
 
