@@ -29,11 +29,17 @@
 
 class UTextBlock;
 class UBorder;
+class USizeBox;
 
 UCLASS()
-class STARSHATTERWARS_API UMissionPackageLVElement : public UUserWidget, public IUserObjectListEntry
+class STARSHATTERWARS_API UMissionPackageLVElement
+    : public UUserWidget
+    , public IUserObjectListEntry
 {
     GENERATED_BODY()
+
+public:
+    virtual void NativeConstruct() override;
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -51,12 +57,30 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     UBorder* SelectionBorder = nullptr;
 
+    // Optional fixed-size layout boxes from the Widget Blueprint:
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RowSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* MarkerSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* ElementNameSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RoleSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* PackageSizeBox = nullptr;
+
 protected:
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
     virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
     virtual void NativeOnEntryReleased() override;
 
     void ApplySelectionVisual();
+    void ApplyColumnLayout();
+    void ApplyTextRules();
 
 protected:
     UPROPERTY()

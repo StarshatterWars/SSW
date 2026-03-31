@@ -44,6 +44,8 @@
 // UI:
 #include "MenuButton.h"
 #include "SelectableButtonGroup.h"
+#include "Components/SizeBox.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/PanelWidget.h"
@@ -104,6 +106,20 @@ void UMissionBriefingDlg::NativePreConstruct()
 void UMissionBriefingDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    if (RootSizeBox)
+    {
+        RootSizeBox->SetWidthOverride(1920.f);
+        RootSizeBox->SetHeightOverride(1080.f);
+    }
+
+    UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(RootSizeBox->Slot);
+    if (Slot)
+    {
+        CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+        CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+        CanvasSlot->SetPosition(FVector2D(0.f, 0.f));
+    }
 
     UGameInstance* GI = GetGameInstance();
     if (!GI)

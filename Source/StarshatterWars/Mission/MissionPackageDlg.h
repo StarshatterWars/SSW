@@ -33,6 +33,9 @@
 
 class UListView;
 class UTextBlock;
+class USizeBox;
+class UHorizontalBox;
+class UWidget;
 class UMissionPlanner;
 class UMissionBriefingDlg;
 class UMissionPackageListObject;
@@ -64,10 +67,25 @@ private:
     void DrawNavPlan();
     void DrawThreats();
 
+    void BuildHeaders();
+    void BuildPackageHeaderRow();
+    void BuildNavHeaderRow();
+    UWidget* MakeHeaderCell(const FString& Text, float Width) const;
+
     UFUNCTION()
     void OnPackageSelectionChanged(UObject* Item);
 
 private:
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* PanelSizeBox = nullptr;
+
+    // Add these in the widget blueprint as empty HorizontalBoxes:
+    UPROPERTY(meta = (BindWidgetOptional))
+    UHorizontalBox* PackageHeaderRow = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UHorizontalBox* NavHeaderRow = nullptr;
+
     UPROPERTY(meta = (BindWidgetOptional))
     UListView* PackageList = nullptr;
 

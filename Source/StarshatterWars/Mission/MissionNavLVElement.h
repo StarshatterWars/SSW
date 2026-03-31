@@ -29,11 +29,15 @@
 
 class UTextBlock;
 class UBorder;
+class USizeBox;
 
 UCLASS()
 class STARSHATTERWARS_API UMissionNavLVElement : public UUserWidget, public IUserObjectListEntry
 {
     GENERATED_BODY()
+
+public:
+    virtual void NativeConstruct() override;
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -54,12 +58,33 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     UBorder* SelectionBorder = nullptr;
 
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RowSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* StepSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* ActionSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RegionSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* DistanceSizeBox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* SpeedSizeBox = nullptr;
+
 protected:
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
     virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
     virtual void NativeOnEntryReleased() override;
 
     void ApplySelectionVisual();
+    void ApplySlotRules();
+    void ApplyColumnLayout();
+    void ApplyTextRules();
 
 protected:
     UPROPERTY()

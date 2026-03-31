@@ -19,8 +19,22 @@
 */
 
 #include "MissionNavLVElement.h"
+#include "MissionListLayout.h"
+
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
+#include "Components/SizeBox.h"
+#include "Components/HorizontalBoxSlot.h"
+
+void UMissionNavLVElement::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+    ApplySlotRules();
+    ApplyColumnLayout();
+    ApplyTextRules();
+    ApplySelectionVisual();
+}
 
 void UMissionNavLVElement::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
@@ -28,6 +42,32 @@ void UMissionNavLVElement::NativeOnListItemObjectSet(UObject* ListItemObject)
     if (!NavItem)
     {
         bRowSelected = false;
+
+        if (StepText)
+        {
+            StepText->SetText(FText::GetEmpty());
+        }
+
+        if (ActionText)
+        {
+            ActionText->SetText(FText::GetEmpty());
+        }
+
+        if (RegionText)
+        {
+            RegionText->SetText(FText::GetEmpty());
+        }
+
+        if (DistanceText)
+        {
+            DistanceText->SetText(FText::GetEmpty());
+        }
+
+        if (SpeedText)
+        {
+            SpeedText->SetText(FText::GetEmpty());
+        }
+
         ApplySelectionVisual();
         return;
     }
@@ -74,6 +114,32 @@ void UMissionNavLVElement::NativeOnEntryReleased()
 
     NavItem = nullptr;
     bRowSelected = false;
+
+    if (StepText)
+    {
+        StepText->SetText(FText::GetEmpty());
+    }
+
+    if (ActionText)
+    {
+        ActionText->SetText(FText::GetEmpty());
+    }
+
+    if (RegionText)
+    {
+        RegionText->SetText(FText::GetEmpty());
+    }
+
+    if (DistanceText)
+    {
+        DistanceText->SetText(FText::GetEmpty());
+    }
+
+    if (SpeedText)
+    {
+        SpeedText->SetText(FText::GetEmpty());
+    }
+
     ApplySelectionVisual();
 }
 
@@ -92,4 +158,81 @@ void UMissionNavLVElement::ApplySelectionVisual()
     {
         SelectionBorder->SetBrushColor(FLinearColor(0, 0, 0, 0));
     }
+}
+
+void UMissionNavLVElement::ApplySlotRules()
+{
+    auto FixSlot = [](UWidget* Widget)
+        {
+            if (!Widget)
+            {
+                return;
+            }
+
+            if (UHorizontalBoxSlot* Slot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+            {
+                Slot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+                Slot->SetHorizontalAlignment(HAlign_Left);
+                Slot->SetVerticalAlignment(VAlign_Center);
+            }
+        };
+
+    FixSlot(StepSizeBox);
+    FixSlot(ActionSizeBox);
+    FixSlot(RegionSizeBox);
+    FixSlot(DistanceSizeBox);
+    FixSlot(SpeedSizeBox);
+}
+
+void UMissionNavLVElement::ApplyColumnLayout()
+{
+    if (RowSizeBox)
+    {
+        RowSizeBox->SetHeightOverride(MissionListLayout::RowHeight);
+    }
+
+    if (StepSizeBox)
+    {
+        StepSizeBox->SetWidthOverride(MissionListLayout::NavCol1);
+    }
+
+    if (ActionSizeBox)
+    {
+        ActionSizeBox->SetWidthOverride(MissionListLayout::NavCol2);
+    }
+
+    if (RegionSizeBox)
+    {
+        RegionSizeBox->SetWidthOverride(MissionListLayout::NavCol3);
+    }
+
+    if (DistanceSizeBox)
+    {
+        DistanceSizeBox->SetWidthOverride(MissionListLayout::NavCol4);
+    }
+
+    if (SpeedSizeBox)
+    {
+        SpeedSizeBox->SetWidthOverride(MissionListLayout::NavCol5);
+    }
+}
+
+void UMissionNavLVElement::ApplyTextRules()
+{
+    auto FixText = [](UTextBlock* Text)
+        {
+            if (!Text)
+            {
+                return;
+            }
+
+            Text->SetAutoWrapText(false);
+            Text->SetJustification(ETextJustify::Left);
+        };
+
+    FixText(StepText);
+    FixText(ActionText);
+    FixText(RegionText);
+    FixText(DistanceText);
+    FixText(SpeedText);
 }

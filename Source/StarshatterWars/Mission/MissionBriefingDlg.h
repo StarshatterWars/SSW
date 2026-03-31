@@ -8,6 +8,7 @@
 class UMissionPlanner;
 class UMenuButton;
 class UMenuScreen;
+class USizeBox;
 class USelectableButtonGroup;
 class UPanelWidget;
 class UWidgetSwitcher;
@@ -94,6 +95,9 @@ protected:
     bool bHasCurrentCampaign = false;
 
 protected:
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RootSizeBox = nullptr;
+    
     UPROPERTY(meta = (BindWidgetOptional))
     class UTextBlock* TitleText;
     
