@@ -1,18 +1,24 @@
-/*  Project Starshatter Wars
+/*
+    Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         MissionPackageDlg.cpp
-    AUTHOR:       Carlos Bott
+    Copyright (C) 2025-2026. All Rights Reserved.
 */
 
 #include "MissionPackageDlg.h"
 
-#include "Components/Button.h"
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
+
 #include "MissionBriefingDlg.h"
+#include "MissionPlanner.h"
+
+#include "Mission.h"
+#include "MissionElement.h"
+#include "Instruction.h"
+#include "GameStructs_System.h"
+
+#include "MissionPackageListObject.h"
+#include "MissionNavListObject.h"
 
 UMissionPackageDlg::UMissionPackageDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -23,123 +29,232 @@ void UMissionPackageDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    if (ApplyButton)
+    if (PackageList)
     {
-        ApplyButton->OnClicked.AddDynamic(this, &UMissionPackageDlg::OnClickedAccept);
+        PackageList->OnItemSelectionChanged().Clear();
+        PackageList->OnItemSelectionChanged().AddUObject(this, &UMissionPackageDlg::OnPackageSelectionChanged);
     }
+}
 
-    if (CancelButton)
-    {
-        CancelButton->OnClicked.AddDynamic(this, &UMissionPackageDlg::OnClickedCancel);
-    }
+void UMissionPackageDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
+{
+    ParentDlg = InParentDlg;
+}
 
-    // Initial draw (legacy Show() did this)
+Mission* UMissionPackageDlg::ResolveMission() const
+{
+    return ParentDlg ? ParentDlg->GetMissionPtr() : nullptr;
+}
+
+void UMissionPackageDlg::RefreshFromMission()
+{
+    PackageIndex = INDEX_NONE;
+
     DrawPackages();
     DrawNavPlan();
     DrawThreats();
 }
 
-void UMissionPackageDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+MissionElement* UMissionPackageDlg::ResolveSelectedPackageElement() const
 {
-    ParentDlg = InParentCmdDlg;
+    Mission* MissionPtr = ResolveMission();
+    if (!MissionPtr)
+        return nullptr;
+
+    int32 VisibleIndex = 0;
+
+    ListIter<MissionElement> Iter = MissionPtr->GetElements();
+    while (++Iter)
+    {
+        MissionElement* Elem = Iter.value();
+        if (!Elem)
+            continue;
+
+        const FShipDesign* Design = Elem->GetShipDesign();
+        if (!Design)
+            continue;
+
+        if (Elem->GetIFF() == MissionPtr->GetTeam() &&
+            !Elem->IsSquadron() &&
+            Elem->GetRegion() == MissionPtr->GetRegion() &&
+            Design->ShipType < (int32)CLASSIFICATION::STATION)
+        {
+            if (VisibleIndex == PackageIndex)
+                return Elem;
+
+            ++VisibleIndex;
+        }
+    }
+
+    return nullptr;
 }
-
-void UMissionPackageDlg::ExecFrame(float DeltaSeconds)
-{
-    // Legacy: VK_RETURN commits. BaseScreen already maps Enter->HandleAccept.
-}
-
-void UMissionPackageDlg::HandleAccept()
-{
-    OnClickedAccept();
-}
-
-void UMissionPackageDlg::HandleCancel()
-{
-    OnClickedCancel();
-}
-
-void UMissionPackageDlg::BindFormWidgets()
-{
-    // BindList(ID_PKG_LIST, PackageList);
-    // BindList(ID_NAV_LIST, NavList);
-    //
-    // BindLabel(ID_THREAT_0, Threat0); etc...
-}
-
-FString UMissionPackageDlg::GetLegacyFormText() const
-{
-    // This is the FORM block you pasted for MsnPkgDlg.
-    // Kept verbatim; BaseScreen currently ignores "column:" parsing (unless you extend it),
-    // but it will still apply label/font/colors where supported.
-
-    return TEXT(R"frm(
-form: {
-   back_color: (  0,   0,   0),
-   fore_color: (255, 255, 255),
-
-   texture:    "Frame1.pcx",
-   margins:    (1,1,64,8),
-
-   layout: {
-      x_mins:     (10, 100,  20, 100, 100, 10),
-      x_weights:  ( 0, 0.2, 0.4, 0.2, 0.2,  0),
-
-      y_mins:     (28, 30,  10,  90, 24, 60, 45),
-      y_weights:  ( 0,  0,   0,   0,  0,  1,  0)
-   },
-
-   // (snip) — keep the rest exactly as provided in your paste.
-}
-)frm");
-}
-
-// --------------------------------------------------------------------
-// Populate (wire to your mission data once Mission/Campaign are Unreal-available)
-// --------------------------------------------------------------------
 
 void UMissionPackageDlg::DrawPackages()
 {
-    // TODO: create UObject row items and feed PackageList->SetListItems(...)
-    // Legacy logic filtered MissionElements by IFF/region/type and built columns.
+    Mission* MissionPtr = ResolveMission();
+
+    PackageItems.Empty();
+    if (PackageList)
+        PackageList->ClearListItems();
+
+    if (!MissionPtr || !PackageList)
+        return;
+
+    int32 VisibleIndex = 0;
+
+    ListIter<MissionElement> Iter = MissionPtr->GetElements();
+    while (++Iter)
+    {
+        MissionElement* Elem = Iter.value();
+        if (!Elem)
+            continue;
+
+        const FShipDesign* Design = Elem->GetShipDesign();
+        if (!Design)
+            continue;
+
+        if (Elem->GetIFF() == MissionPtr->GetTeam() &&
+            !Elem->IsSquadron() &&
+            Elem->GetRegion() == MissionPtr->GetRegion() &&
+            Design->ShipType < (int32)CLASSIFICATION::STATION)
+        {
+            UMissionPackageListObject* Item = NewObject<UMissionPackageListObject>(this);
+            if (!Item)
+                continue;
+
+            Item->InitFromMissionElement(Elem, VisibleIndex, Elem->IsPlayer());
+
+            PackageItems.Add(Item);
+            PackageList->AddItem(Item);
+
+            if (Elem->IsPlayer() && PackageIndex == INDEX_NONE)
+            {
+                PackageIndex = VisibleIndex;
+            }
+
+            ++VisibleIndex;
+        }
+    }
+
+    if (PackageIndex == INDEX_NONE && PackageItems.Num() > 0)
+    {
+        PackageIndex = 0;
+    }
+
+    if (PackageItems.IsValidIndex(PackageIndex))
+    {
+        PackageList->SetSelectedItem(PackageItems[PackageIndex]);
+    }
 }
 
 void UMissionPackageDlg::DrawNavPlan()
 {
-    // TODO: read selected package element, fill nav list items
+    Mission* MissionPtr = ResolveMission();
+
+    NavItems.Empty();
+    if (NavList)
+        NavList->ClearListItems();
+
+    if (!MissionPtr || !NavList)
+        return;
+
+    MissionElement* Element = ResolveSelectedPackageElement();
+    if (!Element)
+        return;
+
+    FVector Loc = Element->GetLocation();
+    int32 NavIndex = 0;
+
+    ListIter<Instruction> NavPt = Element->NavList();
+    while (++NavPt)
+    {
+        Instruction* Nav = NavPt.value();
+        if (!Nav)
+            continue;
+
+        const double Dist = FVector::Dist(Loc, Nav->Location());
+
+        UMissionNavListObject* Item = NewObject<UMissionNavListObject>(this);
+        if (Item)
+        {
+            Item->InitFromInstruction(Nav, NavIndex, Dist);
+            NavItems.Add(Item);
+            NavList->AddItem(Item);
+        }
+
+        Loc = Nav->Location();
+        NavIndex++;
+    }
 }
 
 void UMissionPackageDlg::DrawThreats()
 {
-    if (Threat0) Threat0->SetText(FText::GetEmpty());
-    if (Threat1) Threat1->SetText(FText::GetEmpty());
-    if (Threat2) Threat2->SetText(FText::GetEmpty());
-    if (Threat3) Threat3->SetText(FText::GetEmpty());
-    if (Threat4) Threat4->SetText(FText::GetEmpty());
+    auto SetThreat = [](UTextBlock* Block, const FString& Value)
+        {
+            if (Block)
+                Block->SetText(FText::FromString(Value));
+        };
 
-    // TODO: compute threats similar to legacy DrawThreats()
+    SetThreat(Threat0, TEXT(""));
+    SetThreat(Threat1, TEXT(""));
+    SetThreat(Threat2, TEXT(""));
+    SetThreat(Threat3, TEXT(""));
+    SetThreat(Threat4, TEXT(""));
+
+    Mission* MissionPtr = ResolveMission();
+    if (!MissionPtr)
+        return;
+
+    MissionElement* Player = MissionPtr->GetPlayer();
+    if (!Player)
+        return;
+
+    FVector BaseLoc = Player->GetLocation();
+
+    int32 ThreatIndex = 0;
+
+    ListIter<MissionElement> Iter = MissionPtr->GetElements();
+    while (++Iter)
+    {
+        MissionElement* Elem = Iter.value();
+        if (!Elem)
+            continue;
+
+        if (Elem->GetIFF() == 0 ||
+            Elem->GetIFF() == Player->GetIFF() ||
+            Elem->IntelLevel() <= Intel::SECRET)
+            continue;
+
+        const FShipDesign* Design = Elem->GetShipDesign();
+        if (!Design)
+            continue;
+
+        const double Dist = FVector::Dist(BaseLoc, Elem->GetLocation());
+
+        FString Text = FString::Printf(
+            TEXT("%d %s - %.0f"),
+            Elem->Count(),
+            Design->Abrv.IsEmpty() ? TEXT("UNK") : *Design->Abrv,
+            Dist);
+
+        if (ThreatIndex == 0) SetThreat(Threat0, Text);
+        if (ThreatIndex == 1) SetThreat(Threat1, Text);
+        if (ThreatIndex == 2) SetThreat(Threat2, Text);
+        if (ThreatIndex == 3) SetThreat(Threat3, Text);
+        if (ThreatIndex == 4) SetThreat(Threat4, Text);
+
+        ThreatIndex++;
+        if (ThreatIndex >= 5)
+            break;
+    }
 }
 
-// --------------------------------------------------------------------
-// UI callbacks
-// --------------------------------------------------------------------
-
-void UMissionPackageDlg::OnClickedAccept()
+void UMissionPackageDlg::OnPackageSelectionChanged(UObject* Item)
 {
-    // Hook to mission commit logic
-}
+    UMissionPackageListObject* PackageItem = Cast<UMissionPackageListObject>(Item);
+    if (!PackageItem)
+        return;
 
-void UMissionPackageDlg::OnClickedCancel()
-{
-    RemoveFromParent();
-}
-
-void UMissionPackageDlg::OnClickedTabSit()
-{
-    // Switch back to objective dialog via PlanScreen/UI router
-}
-
-void UMissionPackageDlg::OnClickedTabPkg()
-{
-    // Already on package dialog
+    PackageIndex = PackageItem->GetIndex();
+    DrawNavPlan();
 }

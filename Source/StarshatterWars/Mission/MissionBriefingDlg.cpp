@@ -472,8 +472,6 @@ void UMissionBriefingDlg::ShowMsnDlg()
 
     SetMode(EMissionBriefingMode::SIT);
 
-    // Refresh the actual visible child panel.
-    // Your bound child appears to be MissionSituationPanel. :contentReference[oaicite:0]{index=0}
     if (MissionSituationPanel)
     {
         MissionSituationPanel->SetParentDlg(this);
@@ -584,7 +582,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     case EMissionBriefingMode::PKG:
         if (MissionPackagePanel)
         {
-            //PkgPanel->RefreshFromMission();
+            MissionPackagePanel->RefreshFromMission();
         }
         break;
 

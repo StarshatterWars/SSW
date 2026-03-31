@@ -1,6 +1,11 @@
-/*  Project Starshatter Wars
+/*
+    Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025-2026.
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    ORIGINAL AUTHOR AND STUDIO
+    =========================
+    John DiCamillo / Destroyer Studios LLC
 
     SUBSYSTEM:    Stars.exe
     FILE:         MissionPackageDlg.h
@@ -8,9 +13,16 @@
 
     OVERVIEW
     ========
-    MissionPackageDlg
-    - Unreal conversion of MsnPkgDlg (Package Elements / Nav Plan / Threat Analysis).
-    - FORM-driven via UBaseScreen.
+    Mission Package Subpanel.
+
+    Displays:
+    - Friendly package list
+    - Navigation plan
+    - Threat summary
+
+    DATA FLOW
+    =========
+    DataTable -> FShipDesign -> MissionElement -> UI
 */
 
 #pragma once
@@ -19,11 +31,14 @@
 #include "BaseScreen.h"
 #include "MissionPackageDlg.generated.h"
 
-class UButton;
 class UListView;
 class UTextBlock;
 class UMissionPlanner;
 class UMissionBriefingDlg;
+class UMissionPackageListObject;
+class UMissionNavListObject;
+class Mission;
+class MissionElement;
 
 UCLASS()
 class STARSHATTERWARS_API UMissionPackageDlg : public UBaseScreen
@@ -33,66 +48,59 @@ class STARSHATTERWARS_API UMissionPackageDlg : public UBaseScreen
 public:
     UMissionPackageDlg(const FObjectInitializer& ObjectInitializer);
 
-    UFUNCTION(BlueprintCallable, Category = "MissionPackageDlg")
-    void ExecFrame(float DeltaSeconds);
-
-    // UBaseScreen
-    virtual void BindFormWidgets() override;
-    virtual FString GetLegacyFormText() const override;
-
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
-    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+    void SetParentDlg(UMissionBriefingDlg* InParentDlg);
+
+    void RefreshFromMission();
 
 protected:
     virtual void NativeConstruct() override;
 
-    virtual void HandleAccept() override;
-    virtual void HandleCancel() override;
-
-protected:
-    UPROPERTY()
-    UMissionBriefingDlg* ParentDlg = nullptr;
-
 private:
-    // UI callbacks
-    UFUNCTION() void OnClickedAccept();
-    UFUNCTION() void OnClickedCancel();
-    UFUNCTION() void OnClickedTabSit();
-    UFUNCTION() void OnClickedTabPkg();
+    Mission* ResolveMission() const;
+    MissionElement* ResolveSelectedPackageElement() const;
 
-    // Populate
     void DrawPackages();
     void DrawNavPlan();
     void DrawThreats();
 
-private:
-    // IDs from FORM
-    static constexpr int32 ID_ACCEPT = 1;
-    static constexpr int32 ID_CANCEL = 2;
-
-    static constexpr int32 ID_TAB_SIT = 900;
-    static constexpr int32 ID_TAB_PKG = 901;
-
-    static constexpr int32 ID_PKG_LIST = 320;
-    static constexpr int32 ID_NAV_LIST = 330;
-
-    static constexpr int32 ID_THREAT_0 = 251; // ..255
+    UFUNCTION()
+    void OnPackageSelectionChanged(UObject* Item);
 
 private:
-    // Widgets (bind in BP or via BindFormWidgets)
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UListView> PackageList = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UListView> NavList = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UListView* PackageList = nullptr;
 
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat0 = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat1 = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat2 = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat3 = nullptr;
-    UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> Threat4 = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UListView* NavList = nullptr;
 
-    int32 PackageIndex = 0;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* Threat0 = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* Threat1 = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* Threat2 = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* Threat3 = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* Threat4 = nullptr;
 
 private:
+    UPROPERTY()
+    TArray<TObjectPtr<UMissionPackageListObject>> PackageItems;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMissionNavListObject>> NavItems;
+
+    UPROPERTY()
+    UMissionBriefingDlg* ParentDlg = nullptr;
+
     UPROPERTY(Transient)
     UMissionPlanner* Manager = nullptr;
-    UMissionPlanner* MissionScreen = nullptr;
+
+    int32 PackageIndex = INDEX_NONE;
 };
