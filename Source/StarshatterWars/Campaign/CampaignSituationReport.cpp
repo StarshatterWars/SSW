@@ -394,13 +394,7 @@ CampaignSituationReport::GetThreatInfo()
 			if (e->GetIFF() <= 0 || e->GetIFF() == iff || e->IntelLevel() <= Intel::SECRET)
 				continue;
 
-			const ShipDesign* LegacyDesign = e->GetShipDesign();
-			const FShipDesign* Design = nullptr;
-
-			if (LegacyDesign)
-			{
-				Design = ShipDesignRegistry::Find(LegacyDesign->name);
-			}
+			const FShipDesign* Design = e->GetShipDesign();
 
 			if (e->IsGroundUnit()) {
 				if (!Design || Design->ShipType != (int)CLASSIFICATION::SAM)

@@ -37,8 +37,10 @@
 #include "StarSystem.h"
 #include "PlayerCharacter.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 #include "StarshatterWarsLog.h"
+#include "ShipDesignRegistry.h"
 
 // Unreal:
 #include "Math/Vector.h"               // FVector
@@ -572,6 +574,29 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
             return nullptr;
     }
 
+    // Resolve Unreal design row:
+    const FShipDesign* ShipRow = nullptr;
+
+    if (u->GetDesignName().length() > 0)
+    {
+        ShipRow = ShipDesignRegistry::Find(u->GetDesignName().data());
+    }
+
+    if (!ShipRow && u->GetDesign())
+    {
+        ShipRow = ShipDesignRegistry::Find(u->GetDesign()->name);
+    }
+
+    if (!ShipRow)
+    {
+        UE_LOG(LogStarshatterWars, Warning,
+            TEXT("CMS CreateSingleElement: missing ship design row for group '%s', unit '%s', design '%s'"),
+            ANSI_TO_TCHAR(g->GetName().data()),
+            ANSI_TO_TCHAR(u->GetName().data()),
+            ANSI_TO_TCHAR(u->GetDesignName().data()));
+        return nullptr;
+    }
+
     MissionElement* elem = new MissionElement;
     if (!elem) {
         Exit();
@@ -585,7 +610,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
 
     elem->SetElementID(pkg_id++);
 
-    elem->SetShipDesign(u->GetDesign());
+    elem->SetShipDesign(ShipRow);
     elem->SetCount(u->LiveCount());
     elem->SetIFF(u->GetIFF());
     elem->SetIntelLevel(g->GetIntelLevel());
@@ -601,7 +626,6 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
         exact = false;
     }
 
-    // Uniform scatter in a sphere:
     auto ScatterInSphere = [](float Radius) -> FVector
         {
             const float r = Radius * FMath::Pow(FMath::FRand(), 1.0f / 3.0f);
@@ -627,17 +651,18 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     }
 
     if (g->GetType() == ECOMBATGROUP_TYPE::CARRIER_GROUP) {
-        if (u->Type() == (int)CLASSIFICATION::CARRIER) {
+        if (ShipRow->ShipType == (int32)CLASSIFICATION::CARRIER) {
             elem->SetMissionRole((int)EMISSIONTYPE::FLIGHT_OPS);
         }
         else {
             elem->SetMissionRole((int)EMISSIONTYPE::ESCORT);
         }
     }
-    else if (u->Type() == (int)CLASSIFICATION::STATION || u->Type() == (int)CLASSIFICATION::FARCASTER) {
+    else if (ShipRow->ShipType == (int32)CLASSIFICATION::STATION ||
+        ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER) {
         elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
 
-        if (u->Type() == (int)CLASSIFICATION::FARCASTER) {
+        if (ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER) {
             Text name = u->GetName();
             int  dash = -1;
 
@@ -653,7 +678,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
                 elem->AddObjective(obj);
         }
     }
-    else if ((u->Type() & (int)CLASSIFICATION::STARSHIPS) != 0) {
+    else if ((ShipRow->ShipType & (int32)CLASSIFICATION::STARSHIPS) != 0) {
         elem->SetMissionRole((int)EMISSIONTYPE::FLEET);
     }
 
@@ -689,6 +714,28 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     if (!fighter || !carrier)
         return;
 
+    const FShipDesign* ShipRow = nullptr;
+
+    if (fighter->GetDesignName().length() > 0)
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesignName().data());
+    }
+
+    if (!ShipRow && fighter->GetDesign())
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesign()->name);
+    }
+
+    if (!ShipRow)
+    {
+        UE_LOG(LogStarshatterWars, Warning,
+            TEXT("CMS CreateSquadron: missing ship design row for squadron '%s', unit '%s', design '%s'"),
+            ANSI_TO_TCHAR(g->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetDesignName().data()));
+        return;
+    }
+
     int live_count = fighter->LiveCount();
     int maint_count = (live_count > 4) ? live_count / 2 : 0;
 
@@ -701,7 +748,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetName(g->GetName());
     elem->SetElementID(pkg_id++);
 
-    elem->SetShipDesign(fighter->GetDesign());
+    elem->SetShipDesign(ShipRow);
     elem->SetCount(fighter->Count());
     elem->SetDeadCount(fighter->DeadCount());
     elem->SetMaintCount(maint_count);
@@ -712,7 +759,6 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetCarrier(carrier->GetName());
     elem->SetCommander(carrier->GetName());
 
-    // scatter in a small sphere around carrier:
     auto ScatterInSphere = [](float Radius) -> FVector
         {
             const float r = Radius * FMath::Pow(FMath::FRand(), 1.0f / 3.0f);
@@ -920,31 +966,40 @@ CampaignMissionStarship::CreateTargetsAssault()
 
                     double extra = 10e3;
 
-                    if (prime_target && prime_target->GetShipDesign()) {
-                        switch (prime_target->GetShipDesign()->type) {
-                        default:                
+                    if (prime_target && prime_target->GetShipDesign())
+                    {
+                        switch (prime_target->GetShipDesign()->ShipType)
+                        {
+                        default:
                             extra = 20e3;
                             break;
-                        case (int)CLASSIFICATION::FRIGATE: 
-                            extra = 25e3; 
+
+                        case (int)CLASSIFICATION::FRIGATE:
+                            extra = 25e3;
                             break;
-                        case (int)CLASSIFICATION::DESTROYER: 
+
+                        case (int)CLASSIFICATION::DESTROYER:
                             extra = 30e3;
                             break;
-                        case (int)CLASSIFICATION::CRUISER:    
+
+                        case (int)CLASSIFICATION::CRUISER:
                             extra = 50e3;
                             break;
-                        case (int)CLASSIFICATION::BATTLESHIP:  
+
+                        case (int)CLASSIFICATION::BATTLESHIP:
                             extra = 70e3;
                             break;
-                        case (int)CLASSIFICATION::DREADNAUGHT: 
-                            extra = 80e3; 
+
+                        case (int)CLASSIFICATION::DREADNAUGHT:
+                            extra = 80e3;
                             break;
-                        case (int)CLASSIFICATION::SWACS: 
+
+                        case (int)CLASSIFICATION::SWACS:
                             extra = 30e3;
                             break;
-                        case (int)CLASSIFICATION::CARRIER:   
-                            extra = 90e3; 
+
+                        case (int)CLASSIFICATION::CARRIER:
+                            extra = 90e3;
                             break;
                         }
                     }
@@ -1395,6 +1450,28 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     if (!fighter)
         return nullptr;
 
+    const FShipDesign* ShipRow = nullptr;
+
+    if (fighter->GetDesignName().length() > 0)
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesignName().data());
+    }
+
+    if (!ShipRow && fighter->GetDesign())
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesign()->name);
+    }
+
+    if (!ShipRow)
+    {
+        UE_LOG(LogStarshatterWars, Warning,
+            TEXT("CMS CreateFighterPackage: missing ship design row for squadron '%s', unit '%s', design '%s'"),
+            ANSI_TO_TCHAR(squadron->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetDesignName().data()));
+        return nullptr;
+    }
+
     int avail = fighter->LiveCount();
     int actual = count;
 
@@ -1427,7 +1504,7 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
         elem->SetHeading(fighter->GetHeading());
     }
 
-    elem->SetShipDesign(fighter->GetDesign());
+    elem->SetShipDesign(ShipRow);
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(squadron->GetIntelLevel());
@@ -1437,7 +1514,6 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
 
     elem->Loadouts().append(new MissionLoad(-1, "ACM Medium Range"));
 
-    // Uniform random scatter inside a sphere:
     auto ScatterInSphere = [](float Radius) -> FVector
         {
             const float r = Radius * FMath::Pow(FMath::FRand(), 1.0f / 3.0f);
@@ -1541,7 +1617,6 @@ CampaignMissionStarship::DescribeMission()
     char name[256] = { 0 };
 
     if (mission_info && mission_info->name.length() > 0) {
-        // mission_info->name is Text (ANSI), so format into char buffer:
         sprintf_s(name, sizeof(name), "MSN-%03d %s",
             mission->GetIdentity(),
             mission_info->name.data());
@@ -1553,9 +1628,11 @@ CampaignMissionStarship::DescribeMission()
             ward->GetName().data());
     }
     else if (prime_target) {
-        const char* ClassName = "(unknown)";
-        if (prime_target->GetShipDesign())
-            ClassName = Ship::GetShipClassName(prime_target->GetShipDesign()->type);
+        const char* ClassName = "";
+        const FShipDesign* PrimeDesign = prime_target->GetShipDesign();
+
+        if (PrimeDesign)
+            ClassName = Ship::GetShipClassName(PrimeDesign->ShipType);
 
         sprintf_s(name, sizeof(name), "MSN-%03d %s %s %s",
             mission->GetIdentity(),
@@ -1570,7 +1647,28 @@ CampaignMissionStarship::DescribeMission()
     }
 
     char player_info[256] = { 0 };
-    if (player && player->GetCombatGroup()) {
+    if (player && player->GetShipDesign()) {
+        const FShipDesign* PlayerDesign = player->GetShipDesign();
+
+        const FString Abbrev =
+            !PlayerDesign->Abrv.IsEmpty() ? PlayerDesign->Abrv : TEXT("UNK");
+
+        const FString DesignName =
+            !PlayerDesign->DisplayName.IsEmpty() ? PlayerDesign->DisplayName :
+            (!PlayerDesign->ShipName.IsEmpty() ? PlayerDesign->ShipName : TEXT("UnknownDesign"));
+
+        const FString ElemName = ANSI_TO_TCHAR(player->GetName().data());
+
+        const FString PlayerInfoStr = FString::Printf(
+            TEXT("%d x %s %s '%s'"),
+            player->Count(),
+            *Abbrev,
+            *DesignName,
+            *ElemName);
+
+        strcpy_s(player_info, sizeof(player_info), TCHAR_TO_ANSI(*PlayerInfoStr));
+    }
+    else if (player && player->GetCombatGroup()) {
         const Text desc = player->GetCombatGroup()->GetDescription();
         strcpy_s(player_info, sizeof(player_info), desc.data());
     }
@@ -1597,7 +1695,6 @@ CampaignMissionStarship::DescribeMission()
 
     info->region = mission->GetRegion();
 
-    // Apply the computed name once:
     mission->SetName(name);
 
     return info;

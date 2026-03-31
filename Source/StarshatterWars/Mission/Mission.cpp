@@ -34,6 +34,7 @@
 #include "Skin.h"
 #include "GameStructs.h"
 #include "FormattingUtils.h"
+#include "ShipDesignRegistry.h"
 
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/Paths.h"
@@ -793,23 +794,33 @@ Mission::ParseElement(TermStruct* val)
 
 			else if (defname == "design") {
 				GetDefText(design, pdef, filename);
-				element->design = ShipDesign::Get(design, element->path);
+				const FShipDesign* DesignRow = nullptr;
 
-				if (!element->design) {
+				if (design.length() > 0)
+				{
+					DesignRow = ShipDesignRegistry::Find(design.data());
+				}
+
+				element->SetShipDesign(DesignRow);
+
+				if (!DesignRow) {
 					sprintf_s(err, Game::GetText("Mission.error.unknown-ship").data(), design.data(), filename);
 					AddError(err);
 				}
 			}
 
 			else if (defname == "skin") {
-				if (!element->design) {
+				if (!element->ship_design) {
 					sprintf_s(err, Game::GetText("Mission.error.out-of-order").data(), filename);
 					AddError(err);
 				}
 
 				else if (pdef->term()->isText()) {
 					GetDefText(skin_name, pdef, filename);
-					element->skin = element->design->FindSkin(skin_name);
+
+					// Skin lookup is still legacy-only. Until skins are migrated to FShipDesign,
+					// leave skin unset here.
+					element->skin = nullptr;
 				}
 
 				else if (pdef->term()->isStruct()) {
@@ -937,8 +948,8 @@ Mission::ParseElement(TermStruct* val)
 					MissionShip* s = ParseShip(v, element);
 					element->ships.append(s);
 
-					if (s->Integrity() < 0 && element->design)
-						s->SetIntegrity(element->design->integrity);
+					if (s->Integrity() < 0 && element->GetShipDesign())
+						s->SetIntegrity(element->GetShipDesign()->Integrity);
 				}
 			}
 
@@ -972,7 +983,7 @@ Mission::ParseElement(TermStruct* val)
 		AddError(err);
 	}
 
-	else if (element->design == 0) {
+	else if (element->GetShipDesign() == nullptr) {
 		sprintf_s(err, Game::GetText("Mission.error.unknown-ship").data(), element->name.data(), filename);
 		AddError(err);
 	}
@@ -1134,19 +1145,16 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 			}
 
 			else if (DefName == "skin") {
-				if (!Element || !Element->design) {
+				if (!Element || !Element->GetShipDesign()) {
 					sprintf_s(ErrorText, Game::GetText("Mission.error.out-of-order").data(), filename);
 					AddError(ErrorText);
 				}
 
 				else if (Def->term()->isText()) {
 					GetDefText(SkinName, Def, filename);
-					MissionShipObj->skin = Element->design->FindSkin(SkinName);
-				}
 
-				else if (Def->term()->isStruct()) {
-					sprintf_s(ErrorText, Game::GetText("Mission.error.bad-skin").data(), filename);
-					AddError(ErrorText);
+					// Temporary: skins not yet migrated to FShipDesign
+					MissionShipObj->skin = nullptr;
 				}
 			}
 
@@ -1661,7 +1669,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 
 		if (elem->GetShipDesign()) {
 			s += "   design:    \"";
-			s += SafeString(elem->GetShipDesign()->name);
+			s += TCHAR_TO_ANSI(*elem->GetShipDesign()->ShipName);
 			s += "\"\n";
 		}
 
@@ -2100,7 +2108,7 @@ static int elem_idkey = 1;
 MissionElement::MissionElement()
 	: id(elem_idkey++),
 	elem_id(0),
-	design(0),
+	ship_design(nullptr),
 	skin(0),
 	count(1),
 	maint_count(0),
@@ -2135,8 +2143,8 @@ MissionElement::~MissionElement()
 Text
 MissionElement::GetAbbreviation() const
 {
-	if (design)
-		return design->abrv;
+	if (ship_design && !ship_design->Abrv.IsEmpty())
+		return TCHAR_TO_ANSI(*ship_design->Abrv);
 
 	return "UNK";
 }
@@ -2185,7 +2193,7 @@ MissionElement::IsStatic() const
 {
 	int design_type = 0;
 	if (GetShipDesign())
-		design_type = GetShipDesign()->type;
+		design_type = GetShipDesign()->ShipType;
 
 	return design_type >= (int)CLASSIFICATION::STATION;
 }
@@ -2195,7 +2203,7 @@ MissionElement::IsGroundUnit() const
 {
 	int design_type = 0;
 	if (GetShipDesign())
-		design_type = GetShipDesign()->type;
+		design_type = GetShipDesign()->ShipType;
 
 	return (design_type & (int)CLASSIFICATION::GROUND_UNITS) ? true : false;
 }
@@ -2205,7 +2213,7 @@ MissionElement::IsStarship() const
 {
 	int design_type = 0;
 	if (GetShipDesign())
-		design_type = GetShipDesign()->type;
+		design_type = GetShipDesign()->ShipType;
 
 	return (design_type & (int)CLASSIFICATION::STARSHIPS) ? true : false;
 }
@@ -2215,7 +2223,7 @@ MissionElement::IsDropship() const
 {
 	int design_type = 0;
 	if (GetShipDesign())
-		design_type = GetShipDesign()->type;
+		design_type = GetShipDesign()->ShipType;
 
 	return (design_type & (int)CLASSIFICATION::DROPSHIPS) ? true : false;
 }
@@ -2223,8 +2231,8 @@ MissionElement::IsDropship() const
 bool
 MissionElement::IsCarrier() const
 {
-	const ShipDesign* d = GetShipDesign();
-	if (d && d->flight_decks.size() > 0)
+	const FShipDesign* d = GetShipDesign();
+	if (d && d->FlightDeck.Num() > 0)
 		return true;
 
 	return false;

@@ -131,44 +131,36 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
         return;
     }
 
-    const ShipDesign* LegacyDesign = PlayerElem->GetShipDesign();
-    const FShipDesign* DesignRow = nullptr;
+    const FShipDesign* Design = PlayerElem->GetShipDesign();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[MissionObjectiveDlg] Player='%s' LegacyDesign=%s"),
+        TEXT("[MissionObjectiveDlg] Player='%s' Design=%s"),
         ANSI_TO_TCHAR(PlayerElem->GetName().data()),
-        LegacyDesign ? TEXT("VALID") : TEXT("NULL"));
+        Design ? TEXT("VALID") : TEXT("NULL"));
 
-    if (LegacyDesign)
+    if (Design)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] LegacyDesign name='%s' display='%s' abrv='%s' type=%d"),
-            ANSI_TO_TCHAR(LegacyDesign->name),
-            ANSI_TO_TCHAR(LegacyDesign->display_name),
-            ANSI_TO_TCHAR(LegacyDesign->abrv),
-            LegacyDesign->type);
-
-        DesignRow = ShipDesignRegistry::Find(LegacyDesign->name);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Registry lookup '%s' => %s"),
-            ANSI_TO_TCHAR(LegacyDesign->name),
-            DesignRow ? TEXT("FOUND") : TEXT("NULL"));
+            TEXT("[MissionObjectiveDlg] Design ship='%s' display='%s' abrv='%s' type=%d"),
+            *Design->ShipName,
+            *Design->DisplayName,
+            *Design->Abrv,
+            Design->ShipType);
     }
 
     FString Caption;
 
-    if (DesignRow)
+    if (Design)
     {
         const FString Abbrev =
-            !DesignRow->Abrv.IsEmpty() ? DesignRow->Abrv : TEXT("UNIT");
+            !Design->Abrv.IsEmpty() ? Design->Abrv : TEXT("UNIT");
 
         const FString DisplayName =
-            !DesignRow->DisplayName.IsEmpty() ? DesignRow->DisplayName : DesignRow->ShipName;
+            !Design->DisplayName.IsEmpty() ? Design->DisplayName : Design->ShipName;
 
         const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
 
-        if (DesignRow->ShipType <= (int32)CLASSIFICATION::ATTACK)
+        if (Design->ShipType <= (int32)CLASSIFICATION::ATTACK)
         {
             Caption = FString::Printf(
                 TEXT("%s %s"),
@@ -184,32 +176,7 @@ void UMissionObjectiveDlg::RefreshPlayerCaption(Mission* MissionPtr)
         }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Caption from registry: '%s'"),
-            *Caption);
-    }
-    else if (LegacyDesign)
-    {
-        const FString Abbrev = ANSI_TO_TCHAR(LegacyDesign->abrv);
-        const FString DisplayName = ANSI_TO_TCHAR(LegacyDesign->display_name);
-        const FString ElemName = ANSI_TO_TCHAR(PlayerElem->GetName().data());
-
-        if (LegacyDesign->type <= (int)CLASSIFICATION::ATTACK)
-        {
-            Caption = FString::Printf(
-                TEXT("%s %s"),
-                Abbrev.IsEmpty() ? TEXT("UNIT") : *Abbrev,
-                DisplayName.IsEmpty() ? TEXT("UNKNOWN") : *DisplayName);
-        }
-        else
-        {
-            Caption = FString::Printf(
-                TEXT("%s %s"),
-                Abbrev.IsEmpty() ? TEXT("UNIT") : *Abbrev,
-                ElemName.IsEmpty() ? TEXT("UNKNOWN") : *ElemName);
-        }
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Caption fallback from legacy ShipDesign: '%s'"),
+            TEXT("[MissionObjectiveDlg] Caption from FShipDesign: '%s'"),
             *Caption);
     }
     else

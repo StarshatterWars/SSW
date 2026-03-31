@@ -21,6 +21,7 @@
 #include "RLoc.h"
 #include "List.h"
 #include "Text.h"
+#include "GameStructs_System.h"
 
 #include "Math/Vector.h"
 #include "Math/Color.h"
@@ -61,12 +62,21 @@ public:
     // ------------------------------------------------------------
     // Design / skin / counts
     // ------------------------------------------------------------
-    const ShipDesign* GetShipDesign()  const { return design; }
+
     const Skin*       GetSkin()        const { return skin; }
     int               Count()          const { return count; }
     int               MaintCount()     const { return maint_count; }
     int               DeadCount()      const { return dead_count; }
 
+    void SetShipDesign(const FShipDesign* d)
+    {
+        ship_design = d;
+    }
+
+    const FShipDesign* GetShipDesign() const
+    {
+        return ship_design;
+    }
     // ------------------------------------------------------------
     // Team / role / flags
     // ------------------------------------------------------------
@@ -135,7 +145,6 @@ public:
     void SetSquadron(const char* s) { squadron = s; }
     void SetPath(const char* p) { path = p; }
     void SetElementID(int elementID) { elem_id = elementID; }
-    void SetShipDesign(const ShipDesign* d) { design = d; }
     void SetSkin(const Skin* s) { skin = s; }
     void SetCount(int n) { count = n; }
     void SetMaintCount(int n) { maint_count = n; }
@@ -186,7 +195,7 @@ protected:
     Text              path;
     int               elem_id = 0;
 
-    const ShipDesign* design = nullptr;
+    const FShipDesign* ship_design = nullptr;
     const Skin* skin = nullptr;
 
     int               count = 0;

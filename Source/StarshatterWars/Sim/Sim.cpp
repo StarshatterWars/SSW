@@ -20,7 +20,7 @@
 #include "StarSystem.h"
 #include "SimContact.h"
 #include "Ship.h"
-#include "ShipDesign.h"
+//#include "ShipDesign.h"
 #include "SimElement.h"
 #include "Instruction.h"
 #include "RadioTraffic.h"
@@ -58,7 +58,6 @@
 #include "Terrain.h"
 #include "TerrainPatch.h"
 #include "SimScene.h"
-
 #include "Game.h"
 #include "Sound.h"
 #include "Bolt.h"
@@ -74,6 +73,10 @@
 #include "Video.h"
 #include "Graphic.h"
 #include "GameStructs.h"
+
+#include "ShipDesignRegistry.h"
+#include "GameStructs_System.h"
+
 
 // Minimal Unreal includes (logging + FVector):
 #include "CoreMinimal.h"
@@ -151,6 +154,32 @@ public:
 // +--------------------------------------------------------------------+
 
 static bool first_frame = true;
+
+static ShipDesign* ResolveLegacyShipDesign(const FShipDesign* DesignRow, const Text& PathHint = Text())
+{
+	if (!DesignRow)
+		return nullptr;
+
+	const char* DesignName = TCHAR_TO_ANSI(*DesignRow->ShipName);
+
+	if (PathHint.length() > 0)
+	{
+		ShipDesign* D = ShipDesign::Get(DesignName, PathHint);
+		if (D)
+			return D;
+	}
+
+	return ShipDesign::Get(DesignName);
+}
+
+static const FShipDesign* ResolveRowFromLegacyShipDesign(const ShipDesign* LegacyDesign)
+{
+	if (!LegacyDesign)
+		return nullptr;
+
+	return ShipDesignRegistry::Find(LegacyDesign->name);
+}
+
 Sim* Sim::sim = 0;
 
 Sim::Sim(MotionController* InCtrl)
@@ -366,7 +395,7 @@ Sim::LoadMission(Mission* m, bool preload_textures)
 			ListIter<MissionElement> elem_iter = mission->GetElements();
 			while (++elem_iter) {
 				MissionElement* elem = elem_iter.value();
-				const ShipDesign* design = elem->GetShipDesign();
+				ShipDesign* design = ResolveLegacyShipDesign(elem->GetShipDesign(), elem->GetPath());
 
 				if (design) {
 					for (int i = 0; i < 4; i++) {
@@ -541,8 +570,15 @@ Sim::CreateElements()
 						MissionLoad* MissionLoadPtr = MissionElem->Loadouts().at(0);
 
 						if (MissionLoadPtr->GetName().length()) {
-							ShipDesign* ShipDesignPtr = (ShipDesign*)MissionElem->GetShipDesign();
-							ListIter<ShipLoad> ShipLoadIter = ShipDesignPtr->loadouts;
+							ShipDesign* LegacyDesign = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+
+							HangarPtr->CreateSquadron(MissionElem->GetName(), MissionElem->GetCombatGroup(),
+								LegacyDesign, MissionElem->Count(),
+								MissionElem->GetIFF(),
+								DefaultLoadout, MissionElem->MaintCount(), MissionElem->DeadCount());
+
+							ListIter<ShipLoad> ShipLoadIter = LegacyDesign->loadouts;
+
 							while (++ShipLoadIter) {
 								ShipLoad* ShipLoadPtr = ShipLoadIter.value();
 
@@ -556,8 +592,10 @@ Sim::CreateElements()
 						}
 					}
 
+					ShipDesign* LegacyDesign = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+
 					HangarPtr->CreateSquadron(MissionElem->GetName(), MissionElem->GetCombatGroup(),
-						MissionElem->GetShipDesign(), MissionElem->Count(),
+						LegacyDesign, MissionElem->Count(),
 						MissionElem->GetIFF(),
 						DefaultLoadout, MissionElem->MaintCount(), MissionElem->DeadCount());
 
@@ -692,7 +730,7 @@ Sim::CreateElements()
 			if (HangarPtr && Element && MissionElem->Count() > 0 && MissionElem->IsAlert()) {
 				FlightDeck* Deck = nullptr;
 				int32 Queue = 1000;
-				const ShipDesign* ShipDesignPtr = MissionElem->GetShipDesign();
+				ShipDesign* ShipDesignPtr = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
 
 				if (ShipDesignPtr) {
 					for (int32 i = 0; i < Carrier->NumFlightDecks(); i++) {
@@ -712,14 +750,19 @@ Sim::CreateElements()
 					// choose best loadout:
 					if (MissionElem->Loadouts().size()) {
 						MissionLoad* MissionLoadPtr = MissionElem->Loadouts().at(0);
+
 						if (MissionLoadPtr->GetName().length()) {
-							ListIter<ShipLoad> ShipLoadIter = ((ShipDesign*)ShipDesignPtr)->loadouts;
-							while (++ShipLoadIter) {
-								if (!_stricmp(ShipLoadIter->name, MissionLoadPtr->GetName()))
-									Loadout = ShipLoadIter->load;
+							ShipDesign* LocalShipDesignPtr =
+								ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+
+							if (LocalShipDesignPtr) {
+								ListIter<ShipLoad> ShipLoadIter = LocalShipDesignPtr->loadouts;
+								while (++ShipLoadIter) {
+									if (!_stricmp(ShipLoadIter->name, MissionLoadPtr->GetName()))
+										Loadout = ShipLoadIter->load;
+								}
 							}
 						}
-
 						else {
 							Loadout = MissionLoadPtr->GetStations();
 						}
@@ -731,7 +774,10 @@ Sim::CreateElements()
 						int32 SquadronLocal = -1;
 						int32 SlotLocal = -1;
 
-						if (HangarPtr->FindAvailSlot(MissionElem->GetShipDesign(), SquadronLocal, SlotLocal)) {
+						ShipDesign* LegacyDesign =
+							ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+
+						if (LegacyDesign && HangarPtr->FindAvailSlot(LegacyDesign, SquadronLocal, SlotLocal)) {
 							bAlertPrep = bAlertPrep &&
 								HangarPtr->GotoAlert(SquadronLocal,
 									SlotLocal,
@@ -803,13 +849,17 @@ Sim::CreateElements()
 					while (++LoadIter) {
 						if ((LoadIter->GetShip() == i) || (LoadIter->GetShip() < 0 && Loadout == nullptr)) {
 							if (LoadIter->GetName().length()) {
-								ListIter<ShipLoad> ShipLoadIter = ((ShipDesign*)MissionElem->GetShipDesign())->loadouts;
-								while (++ShipLoadIter) {
-									if (!_stricmp(ShipLoadIter->name, LoadIter->GetName()))
-										Loadout = ShipLoadIter->load;
+								ShipDesign* ShipDesignPtr =
+									ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+
+								if (ShipDesignPtr) {
+									ListIter<ShipLoad> ShipLoadIter = ShipDesignPtr->loadouts;
+									while (++ShipLoadIter) {
+										if (!_stricmp(ShipLoadIter->name, LoadIter->GetName()))
+											Loadout = ShipLoadIter->load;
+									}
 								}
 							}
-
 							else {
 								Loadout = LoadIter->GetStations();
 							}
@@ -2145,15 +2195,20 @@ Sim::CreateMissionElement(SimElement* elem)
 				msn_elem->SetDeadCount(hangar->NumShipsDead(squadron_index));
 				msn_elem->SetMaintCount(hangar->NumShipsMaint(squadron_index));
 
-				const ShipDesign* design = hangar->SquadronDesign(squadron_index);
-				msn_elem->SetShipDesign(design);
+				const ShipDesign* LegacyDesign = hangar->SquadronDesign(squadron_index);
+				const FShipDesign* DesignRow = ResolveRowFromLegacyShipDesign(LegacyDesign);
 
-				Text design_path = design->path_name;
-				design_path.setSensitive(false);
+				msn_elem->SetShipDesign(DesignRow);
 
-				if (design_path.indexOf("/Mods/Ships") == 0) {
-					design_path = design_path.substring(11, 1000);
-					msn_elem->SetPath(design_path);
+				if (LegacyDesign)
+				{
+					Text design_path = LegacyDesign->path_name;
+					design_path.setSensitive(false);
+
+					if (design_path.indexOf("/Mods/Ships") == 0) {
+						design_path = design_path.substring(11, 1000);
+						msn_elem->SetPath(design_path);
+					}
 				}
 			}
 		}
@@ -2174,7 +2229,22 @@ Sim::CreateMissionElement(SimElement* elem)
 				msn_elem->SetRegion(ship->GetRegion()->GetName());
 
 			msn_elem->SetLocation(OtherHand(ship->Location()));
-			msn_elem->SetShipDesign(ship->Design());
+
+			const ShipDesign* LegacyDesign = ship->Design();
+			const FShipDesign* DesignRow = ResolveRowFromLegacyShipDesign(LegacyDesign);
+
+			msn_elem->SetShipDesign(DesignRow);
+
+			if (LegacyDesign)
+			{
+				Text design_path = LegacyDesign->path_name;
+				design_path.setSensitive(false);
+
+				if (design_path.indexOf("/Mods/Ships") == 0) {
+					design_path = design_path.substring(11, 1000);
+					msn_elem->SetPath(design_path);
+				}
+			}
 
 			msn_elem->SetPlayer(elem->GetPlayer());
 			msn_elem->SetCommandAI(elem->GetCommandAILevel());
@@ -2185,14 +2255,6 @@ Sim::CreateMissionElement(SimElement* elem)
 			msn_elem->SetPlayable(elem->IsPlayable());
 			msn_elem->SetRogue(elem->IsRogue());
 			msn_elem->SetIntelLevel(elem->IntelLevel());
-
-			Text design_path = ship->Design()->path_name;
-			design_path.setSensitive(false);
-
-			if (design_path.indexOf("/Mods/Ships") == 0) {
-				design_path = design_path.substring(11, 1000);
-				msn_elem->SetPath(design_path);
-			}
 
 			msn_elem->SetRespawnCount(ship->RespawnCount());
 		}

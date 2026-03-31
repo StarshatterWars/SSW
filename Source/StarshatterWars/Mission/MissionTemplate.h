@@ -23,7 +23,8 @@
 
 // Unreal (required per project convention):
 #include "Math/Vector.h"               // FVector
-#include "Math/Color.h"                // FColor
+#include "Math/Color.h" 
+#include "GameStructs_System.h"
 #include "Math/UnrealMathUtility.h"    // FMath
 
 // +--------------------------------------------------------------------+
@@ -63,7 +64,7 @@ public:
     virtual bool            MapEvent(MissionEvent* event);
 
 protected:
-    CombatGroup*          FindCombatGroup(int iff, const ShipDesign* dsn);
+    CombatGroup* FindCombatGroup(int iff, const FShipDesign* dsn);
     void                  ParseAlias(TermStruct* val);
     void                  ParseCallsign(TermStruct* val);
     bool                  ParseOptional(TermStruct* val);

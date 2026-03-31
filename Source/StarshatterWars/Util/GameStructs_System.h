@@ -1479,7 +1479,8 @@ struct FShipDesign : public FTableRowBase {
 	float Scuttle;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float RepairSpeed;
-
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	float Integrity = 500.0f;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	bool Secret;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)

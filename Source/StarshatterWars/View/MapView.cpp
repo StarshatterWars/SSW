@@ -2536,13 +2536,24 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 				int nsprites = 0;
 
 				if (s.GetShipDesign())
-					nsprites = s.GetShipDesign()->map_sprites.size();
+					nsprites = s.GetShipDesign()->Map.Num();
 
 				if (nsprites > 0) {
 					if (sprite_index < 0 || sprite_index >= nsprites)
 						sprite_index = sprite_index % nsprites;
 
-					Bitmap* map_sprite = s.GetShipDesign()->map_sprites[sprite_index];
+					const FShipDesign* Design = s.GetShipDesign();
+
+					Bitmap* map_sprite = nullptr;
+
+					if (Design && Design->Map.IsValidIndex(sprite_index))
+					{
+						const FString& SpriteName = Design->Map[sprite_index].SpriteName;
+
+						//map_sprite = Bitmap::GetBitmap(TCHAR_TO_ANSI(*SpriteName));
+					    // TODO: resolve SpriteName through your actual bitmap/texture cache
+						// map_sprite = ...;
+					}
 
 					Bitmap bmp;
 					bmp.CopyBitmap(*map_sprite);

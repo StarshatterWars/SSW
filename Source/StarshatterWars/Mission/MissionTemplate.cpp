@@ -35,6 +35,7 @@
 #include "DataLoader.h"
 #include "ParseUtil.h"
 #include "GameStructs.h"
+#include "ShipDesignRegistry.h"
 
 // Unreal:
 #include "Math/Vector.h"               // FVector
@@ -215,15 +216,33 @@ MissionTemplate::MapCallsign(const char* InName, int iff)
 // +--------------------------------------------------------------------+
 
 static void
-SelectCombatGroups(CombatGroup* g, const ShipDesign* d, List<CombatGroup>& list)
+SelectCombatGroups(CombatGroup* g, const FShipDesign* d, List<CombatGroup>& list)
 {
+	if (!g || !d)
+		return;
+
 	if (g->GetIntelLevel() <= Intel::RESERVE)
 		return;
 
 	if (g->GetUnits().size() > 0) {
 		for (int i = 0; i < g->GetUnits().size(); i++) {
 			CombatUnit* u = g->GetUnits().at(i);
-			if (u->GetDesign() == d && u->Count() - u->DeadCount() > 0) {
+			if (!u)
+				continue;
+
+			const FShipDesign* UnitDesign = nullptr;
+
+			if (u->GetDesignName().length() > 0)
+			{
+				UnitDesign = ShipDesignRegistry::Find(u->GetDesignName().data());
+			}
+
+			if (!UnitDesign && u->GetDesign())
+			{
+				UnitDesign = ShipDesignRegistry::Find(u->GetDesign()->name);
+			}
+
+			if (UnitDesign == d && u->Count() - u->DeadCount() > 0) {
 				list.append(g);
 			}
 		}
@@ -235,7 +254,7 @@ SelectCombatGroups(CombatGroup* g, const ShipDesign* d, List<CombatGroup>& list)
 }
 
 CombatGroup*
-MissionTemplate::FindCombatGroup(int iff, const ShipDesign* d)
+MissionTemplate::FindCombatGroup(int iff, const FShipDesign* d)
 {
 	CombatGroup* result = nullptr;
 	Campaign* campaign = Campaign::GetCampaign();
@@ -450,7 +469,15 @@ MissionTemplate::Load(const char* fname, const char* pname)
 							AddElement(elem);
 						}
 						else {
-							const char* dsn = elem->GetShipDesign() ? elem->GetShipDesign()->name : "NO DSN";
+							const char* dsn = "NO DSN";
+							FString DsnString;
+
+							if (elem->GetShipDesign())
+							{
+								DsnString = elem->GetShipDesign()->ShipName;
+								dsn = TCHAR_TO_ANSI(*DsnString);
+							}
+
 							UE_LOG(LogStarshatterWars, Warning,
 								TEXT("WARNING: failed to map element %s '%s' in '%s'"),
 								ANSI_TO_TCHAR(dsn),
@@ -625,7 +652,11 @@ MissionTemplate::ParseAlias(TermStruct* val)
 
 			for (int i = 0; !elem && i < elements.size(); i++) {
 				MissionElement* e = elements[i];
-				if (e->GetIFF() == iff && design == e->GetShipDesign()->name) {
+				if (!e || !e->GetShipDesign())
+					continue;
+
+				if (e->GetIFF() == iff &&
+					design == TCHAR_TO_ANSI(*e->GetShipDesign()->ShipName)) {
 					// do we already have an alias for this element?
 					bool found = false;
 					for (int a = 0; !found && a < aliases.size(); a++)

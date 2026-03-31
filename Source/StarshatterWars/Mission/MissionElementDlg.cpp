@@ -38,6 +38,7 @@
 #include "Game.h"
 #include "ParseUtil.h"
 #include "GameStructs.h"
+#include "ShipDesignRegistry.h"
 
 // +--------------------------------------------------------------------+
 // Local helpers (no Unreal containers; keep it simple)
@@ -222,10 +223,10 @@ void UMissionElementDlg::RebuildFromModel()
         ClassCombo->AddOption(ANSI_TO_TCHAR(Ship::GetShipClassName(CLASSIFICATION::STARBASE)));
 
         // Select class based on current design:
-        const ShipDesign* Design = ElemPtr->GetShipDesign();
+        const FShipDesign* Design = ElemPtr->GetShipDesign();
         if (Design)
         {
-            const char* DesiredClassName = Ship::GetShipClassName(Design->type);
+            const char* DesiredClassName = Ship::GetShipClassName(Design->ShipType);
             if (DesiredClassName)
                 ClassCombo->SetSelectedOption(ANSI_TO_TCHAR(DesiredClassName));
         }
@@ -404,7 +405,7 @@ void UMissionElementDlg::RebuildDesignListFromClass()
 
     if (Designs.size() > 0)
     {
-        const ShipDesign* Current = (ElemPtr ? ElemPtr->GetShipDesign() : nullptr);
+        const FShipDesign* Current = (ElemPtr ? ElemPtr->GetShipDesign() : nullptr);
         bool bFound = false;
 
         for (int i = 0; i < Designs.size(); i++)
@@ -415,7 +416,7 @@ void UMissionElementDlg::RebuildDesignListFromClass()
             const FString Opt = ANSI_TO_TCHAR(Dsn);
             DesignCombo->AddOption(Opt);
 
-            if (Current && !_stricmp(Dsn, Current->name))
+            if (Current && !_stricmp(Dsn, TCHAR_TO_ANSI(*Current->ShipName)))
             {
                 DesignCombo->SetSelectedOption(Opt);
                 bFound = true;
@@ -592,7 +593,8 @@ void UMissionElementDlg::UpdateTeamInfo()
         while (++Iter)
         {
             MissionElement* E = Iter.value();
-            if (!E) continue;
+            if (!E)
+                continue;
 
             if (CanCommand(E, ElemPtr))
             {
@@ -600,7 +602,9 @@ void UMissionElementDlg::UpdateTeamInfo()
                 CommanderCombo->AddOption(Opt);
 
                 if (ElemPtr->GetCommander() == E->GetName())
+                {
                     CommanderCombo->SetSelectedOption(Opt);
+                }
             }
         }
     }
@@ -616,15 +620,20 @@ void UMissionElementDlg::UpdateTeamInfo()
         while (++Iter)
         {
             MissionElement* E = Iter.value();
-            if (!E) continue;
+            if (!E)
+                continue;
 
-            if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->IsSquadron())
+            if (E->GetIFF() == ElemPtr->GetIFF() &&
+                E != ElemPtr &&
+                E->IsSquadron())
             {
                 const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 SquadronCombo->AddOption(Opt);
 
                 if (ElemPtr->GetSquadron() == E->GetName())
+                {
                     SquadronCombo->SetSelectedOption(Opt);
+                }
             }
         }
     }
@@ -640,15 +649,23 @@ void UMissionElementDlg::UpdateTeamInfo()
         while (++Iter)
         {
             MissionElement* E = Iter.value();
-            if (!E) continue;
+            if (!E)
+                continue;
 
-            if (E->GetIFF() == ElemPtr->GetIFF() && E != ElemPtr && E->GetShipDesign() && E->GetShipDesign()->flight_decks.size())
+            const FShipDesign* Design = E->GetShipDesign();
+
+            if (E->GetIFF() == ElemPtr->GetIFF() &&
+                E != ElemPtr &&
+                Design &&
+                Design->FlightDeck.Num() > 0)
             {
                 const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 CarrierCombo->AddOption(Opt);
 
                 if (ElemPtr->GetCarrier() == E->GetName())
+                {
                     CarrierCombo->SetSelectedOption(Opt);
+                }
             }
         }
     }
@@ -785,7 +802,7 @@ void UMissionElementDlg::OnAcceptClicked()
     if (DesignCombo)
     {
         const FString DName = DesignCombo->GetSelectedOption();
-        ShipDesign* D = DName.IsEmpty() ? nullptr : ShipDesign::Get(TCHAR_TO_ANSI(*DName));
+        const FShipDesign* D = DName.IsEmpty() ? nullptr : ShipDesignRegistry::Find(DName);
 
         if (D)
         {
@@ -793,17 +810,9 @@ void UMissionElementDlg::OnAcceptClicked()
 
             if (SkinCombo)
             {
-                const FString SkinSel = SkinCombo->GetSelectedOption();
-                const FString DefaultSkin = ANSI_TO_TCHAR(Game::GetText("MsnDlg.default").data());
-
-                if (!SkinSel.IsEmpty() && !SkinSel.Equals(DefaultSkin, ESearchCase::CaseSensitive))
-                {
-                    ElemPtr->SetSkin(D->FindSkin(TCHAR_TO_ANSI(*SkinSel)));
-                }
-                else
-                {
-                    ElemPtr->SetSkin(nullptr);
-                }
+                // Temporary: skin resolution is still legacy-driven.
+                // Leave null for now until skins are migrated to FShipDesign.
+                ElemPtr->SetSkin(nullptr);
             }
         }
     }

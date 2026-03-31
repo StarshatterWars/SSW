@@ -42,11 +42,7 @@ public:
 
     static const FShipDesign* ResolveDesignRow(const MissionElement* Elem)
     {
-        if (!Elem)
-            return nullptr;
-
-        const ShipDesign* LegacyDesign = Elem->GetShipDesign();
-        return LegacyDesign ? ShipDesignRegistry::Find(LegacyDesign->name) : nullptr;
+        return Elem ? Elem->GetShipDesign() : nullptr;
     }
 
 private:

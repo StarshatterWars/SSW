@@ -343,6 +343,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 
 	int32 LocalPcs = 3;
 	int32 LocalAcs = 1;
+	float LocalIntegrity = 500.0f;
 	float LocalDetec = 250.0e3f;
 	float LocalScale = 1.0f;
 	float LocalExplosionScale = 0.0f;
@@ -505,6 +506,11 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		{
 			GetDefNumber(LocalDetec, Def, fn);
 			NewShipDesign.Detet = LocalDetec;
+		}
+		else if (Key == "integrity")
+		{
+			GetDefNumber(LocalIntegrity, Def, fn);
+			NewShipDesign.Integrity = LocalIntegrity;
 		}
 		else if (Key == "scale")
 		{
