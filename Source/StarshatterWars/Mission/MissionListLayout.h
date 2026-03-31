@@ -10,8 +10,8 @@ namespace MissionListLayout
     constexpr float PackageTextCol = 400.0f; 
 
     constexpr float NavCol1 = 70.0f;   // NO.
-    constexpr float NavCol2 = 220.0f;  // ACTION
-    constexpr float NavCol3 = 220.0f;  // SECTOR
-    constexpr float NavCol4 = 220.0f;  // DIST
-    constexpr float NavCol5 = 220.0f;  // SPEED
+    constexpr float NavCol2 = 300.0f;  // ACTION
+    constexpr float NavCol3 = 300.0f;  // SECTOR
+    constexpr float NavCol4 = 300.0f;  // DIST
+    constexpr float NavCol5 = 300.0f;  // SPEED
 }

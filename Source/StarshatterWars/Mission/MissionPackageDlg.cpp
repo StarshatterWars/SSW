@@ -9,14 +9,14 @@
 #include "MissionListLayout.h"
 
 #include "Blueprint/WidgetTree.h"
-#include "Fonts/SlateFontInfo.h"
 
-#include "Components/ListView.h"
-#include "Components/TextBlock.h"
-#include "Components/SizeBox.h"
-#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/ListView.h"
+#include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
+#include "Components/CanvasPanelSlot.h"
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
@@ -38,26 +38,48 @@ void UMissionPackageDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    bHeadersBuiltFromGeometry = false;
+
     if (PanelSizeBox)
     {
         PanelSizeBox->SetWidthOverride(1490.f);
         PanelSizeBox->SetHeightOverride(685.f);
 
-        if (UCanvasPanelSlot* PanelSlot = Cast<UCanvasPanelSlot>(PanelSizeBox->Slot))
+        if (UCanvasPanelSlot* PanelCanvasSlot = Cast<UCanvasPanelSlot>(PanelSizeBox->Slot))
         {
-            PanelSlot->SetAnchors(FAnchors(0.5f, 0.5f));
-            PanelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-            PanelSlot->SetPosition(FVector2D(0.f, 0.f));
-            PanelSlot->SetSize(FVector2D(1490.0f, 685.0f));
+            PanelCanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+            PanelCanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+            PanelCanvasSlot->SetPosition(FVector2D(0.f, 0.f));
+            PanelCanvasSlot->SetSize(FVector2D(1490.f, 685.f));
         }
     }
-
-    BuildHeaders();
 
     if (PackageList)
     {
         PackageList->OnItemSelectionChanged().Clear();
         PackageList->OnItemSelectionChanged().AddUObject(this, &UMissionPackageDlg::OnPackageSelectionChanged);
+    }
+
+    // First pass build. This may use fallback widths.
+    BuildHeaders();
+}
+
+void UMissionPackageDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (bHeadersBuiltFromGeometry)
+    {
+        return;
+    }
+
+    const float PackageWidth = GetPackageHeaderClampWidth();
+    const float NavWidth = GetNavHeaderClampWidth();
+
+    if (PackageWidth > 1.f && NavWidth > 1.f)
+    {
+        BuildHeaders();
+        bHeadersBuiltFromGeometry = true;
     }
 }
 
@@ -78,6 +100,9 @@ void UMissionPackageDlg::RefreshFromMission()
     DrawPackages();
     DrawNavPlan();
     DrawThreats();
+
+    // Layout may change after content refresh, so allow one rebuild.
+    bHeadersBuiltFromGeometry = false;
 }
 
 MissionElement* UMissionPackageDlg::ResolveSelectedPackageElement() const
@@ -321,6 +346,61 @@ void UMissionPackageDlg::BuildHeaders()
     BuildNavHeaderRow();
 }
 
+float UMissionPackageDlg::GetPackageHeaderClampWidth() const
+{
+    // Best source: the package table size box if it has a width override.
+    if (PackageTableSizebox)
+    {
+        const float WidthOverride = PackageTableSizebox->GetWidthOverride();
+        if (WidthOverride > 1.f)
+        {
+            return WidthOverride;
+        }
+
+        const float CachedWidth = PackageTableSizebox->GetCachedGeometry().GetLocalSize().X;
+        if (CachedWidth > 1.f)
+        {
+            return CachedWidth;
+        }
+    }
+
+    // Next best source: list geometry.
+    if (PackageList)
+    {
+        const float CachedWidth = PackageList->GetCachedGeometry().GetLocalSize().X;
+        if (CachedWidth > 1.f)
+        {
+            return CachedWidth;
+        }
+    }
+
+    // Fallback: column sum.
+    return
+        MissionListLayout::PackageMarkerCol +
+        MissionListLayout::PackageNameCol +
+        MissionListLayout::PackageRoleCol +
+        MissionListLayout::PackageTextCol;
+}
+
+float UMissionPackageDlg::GetNavHeaderClampWidth() const
+{
+    if (NavList)
+    {
+        const float CachedWidth = NavList->GetCachedGeometry().GetLocalSize().X;
+        if (CachedWidth > 1.f)
+        {
+            return CachedWidth;
+        }
+    }
+
+    return
+        MissionListLayout::NavCol1 +
+        MissionListLayout::NavCol2 +
+        MissionListLayout::NavCol3 +
+        MissionListLayout::NavCol4 +
+        MissionListLayout::NavCol5;
+}
+
 void UMissionPackageDlg::BuildPackageHeaderRow()
 {
     if (!PackageHeaderRow || !WidgetTree)
@@ -330,36 +410,59 @@ void UMissionPackageDlg::BuildPackageHeaderRow()
 
     PackageHeaderRow->ClearChildren();
 
-    if (UHorizontalBoxSlot* HeaderSlot = PackageHeaderRow->AddChildToHorizontalBox(
+    const float ClampWidth = GetPackageHeaderClampWidth();
+
+    USizeBox* ClampedRowBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+    ClampedRowBox->SetWidthOverride(ClampWidth);
+    ClampedRowBox->SetMinDesiredHeight(MissionListLayout::RowHeight);
+
+    UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+    RowBorder->SetBrushColor(FLinearColor(0.20f, 0.30f, 0.45f, 1.0f));
+    RowBorder->SetPadding(FMargin(0.f));
+
+    UHorizontalBox* RowContent = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("PKG"), MissionListLayout::PackageMarkerCol)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = PackageHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("CALLSIGN"), MissionListLayout::PackageNameCol)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = PackageHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("ROLE"), MissionListLayout::PackageRoleCol)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = PackageHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("TYPE"), MissionListLayout::PackageTextCol)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
+    }
+
+    RowBorder->SetContent(RowContent);
+    ClampedRowBox->AddChild(RowBorder);
+
+    if (UHorizontalBoxSlot* HeaderRowSlot = PackageHeaderRow->AddChildToHorizontalBox(ClampedRowBox))
+    {
+        HeaderRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderRowSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderRowSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderRowSlot->SetPadding(FMargin(0.f));
     }
 }
 
@@ -372,44 +475,67 @@ void UMissionPackageDlg::BuildNavHeaderRow()
 
     NavHeaderRow->ClearChildren();
 
-    if (UHorizontalBoxSlot* HeaderSlot = NavHeaderRow->AddChildToHorizontalBox(
+    const float ClampWidth = GetNavHeaderClampWidth();
+
+    USizeBox* ClampedRowBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+    ClampedRowBox->SetWidthOverride(ClampWidth);
+    ClampedRowBox->SetMinDesiredHeight(MissionListLayout::RowHeight);
+
+    UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+    RowBorder->SetBrushColor(FLinearColor(0.20f, 0.30f, 0.45f, 1.0f));
+    RowBorder->SetPadding(FMargin(0.f));
+
+    UHorizontalBox* RowContent = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("NO."), MissionListLayout::NavCol1)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = NavHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("ACTION"), MissionListLayout::NavCol2)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = NavHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("SECTOR"), MissionListLayout::NavCol3)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = NavHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("DIST"), MissionListLayout::NavCol4)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
     }
 
-    if (UHorizontalBoxSlot* HeaderSlot = NavHeaderRow->AddChildToHorizontalBox(
+    if (UHorizontalBoxSlot* HeaderCellSlot = RowContent->AddChildToHorizontalBox(
         MakeHeaderCell(TEXT("SPEED"), MissionListLayout::NavCol5)))
     {
-        HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        HeaderSlot->SetHorizontalAlignment(HAlign_Left);
-        HeaderSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderCellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderCellSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderCellSlot->SetVerticalAlignment(VAlign_Center);
+    }
+
+    RowBorder->SetContent(RowContent);
+    ClampedRowBox->AddChild(RowBorder);
+
+    if (UHorizontalBoxSlot* HeaderRowSlot = NavHeaderRow->AddChildToHorizontalBox(ClampedRowBox))
+    {
+        HeaderRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        HeaderRowSlot->SetHorizontalAlignment(HAlign_Left);
+        HeaderRowSlot->SetVerticalAlignment(VAlign_Center);
+        HeaderRowSlot->SetPadding(FMargin(0.f));
     }
 }
 
@@ -422,28 +548,31 @@ UWidget* UMissionPackageDlg::MakeHeaderCell(const FString& Text, float Width) co
 
     USizeBox* CellBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
     CellBox->SetWidthOverride(Width);
-    CellBox->SetHeightOverride(MissionListLayout::RowHeight);
+    CellBox->SetMinDesiredHeight(MissionListLayout::RowHeight);
+
+    UBorder* CellBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+    CellBorder->SetPadding(FMargin(6.f, 0.f, 0.f, 0.f));
+    CellBorder->SetHorizontalAlignment(HAlign_Left);
+    CellBorder->SetVerticalAlignment(VAlign_Center);
+    CellBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
 
     UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
     Label->SetText(FText::FromString(Text));
     Label->SetJustification(ETextJustify::Left);
     Label->SetAutoWrapText(false);
 
-    // FONT SET HERE
-    FSlateFontInfo FontInfo;
-    FontInfo.Size = 16; // adjust as needed
-    FontInfo.TypefaceFontName = FName("Bold"); // or "Regular"
-
-    // Optional: set a specific font asset
-    static ConstructorHelpers::FObjectFinder<UFont> FontObj(TEXT("/Game/Font/SERPNTB"));
-    if (FontObj.Succeeded())
+    if (MissionRosterLabel)
     {
-        FontInfo.FontObject = FontObj.Object;
+        FSlateFontInfo FontInfo = MissionRosterLabel->GetFont();
+        FontInfo.Size = 16;
+        Label->SetFont(FontInfo);
+        Label->SetColorAndOpacity(MissionRosterLabel->GetColorAndOpacity());
+        Label->SetShadowOffset(MissionRosterLabel->GetShadowOffset());
+        Label->SetShadowColorAndOpacity(MissionRosterLabel->GetShadowColorAndOpacity());
     }
 
-    Label->SetFont(FontInfo);
-
-    CellBox->AddChild(Label);
+    CellBorder->AddChild(Label);
+    CellBox->AddChild(CellBorder);
 
     return CellBox;
 }
@@ -458,4 +587,7 @@ void UMissionPackageDlg::OnPackageSelectionChanged(UObject* Item)
 
     PackageIndex = PackageItem->GetIndex();
     DrawNavPlan();
+
+    // Nav rows may affect visible nav width after refresh.
+    bHeadersBuiltFromGeometry = false;
 }

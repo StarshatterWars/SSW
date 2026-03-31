@@ -58,6 +58,7 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:
     Mission* ResolveMission() const;
@@ -70,7 +71,11 @@ private:
     void BuildHeaders();
     void BuildPackageHeaderRow();
     void BuildNavHeaderRow();
+
     UWidget* MakeHeaderCell(const FString& Text, float Width) const;
+
+    float GetPackageHeaderClampWidth() const;
+    float GetNavHeaderClampWidth() const;
 
     UFUNCTION()
     void OnPackageSelectionChanged(UObject* Item);
@@ -79,7 +84,6 @@ private:
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* PanelSizeBox = nullptr;
 
-    // Add these in the widget blueprint as empty HorizontalBoxes:
     UPROPERTY(meta = (BindWidgetOptional))
     UHorizontalBox* PackageHeaderRow = nullptr;
 
@@ -87,10 +91,16 @@ private:
     UHorizontalBox* NavHeaderRow = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* PackageTableSizebox = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
     UListView* PackageList = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
     UListView* NavList = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* MissionRosterLabel = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
     UTextBlock* Threat0 = nullptr;
@@ -121,4 +131,6 @@ private:
     UMissionPlanner* Manager = nullptr;
 
     int32 PackageIndex = INDEX_NONE;
+
+    bool bHeadersBuiltFromGeometry = false;
 };
