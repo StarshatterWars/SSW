@@ -1,3 +1,23 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    ORIGINAL AUTHOR AND STUDIO
+    ==========================
+    John DiCamillo / Destroyer Studios LLC
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         MissionWeaponDlg.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Mission weapon dialog implementation.
+
+    Displays preset loadouts for the selected player ship and
+    shows the currently selected runtime MissionLoad stations.
+*/
+
 #include "MissionWeaponDlg.h"
 
 #include "MissionBriefingDlg.h"
@@ -5,6 +25,7 @@
 #include "MissionWeaponLoadoutListObject.h"
 #include "MissionWeaponStationRowObject.h"
 #include "MissionLoadoutListView.h"
+#include "MissionWeaponStationLVElement.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -28,6 +49,7 @@
 // +--------------------------------------------------------------------+
 // Runtime Loadout Helpers
 // +--------------------------------------------------------------------+
+
 static const bool bLogLoadoutsVerbose = false;
 static const bool bLogRuntimeLoadout = true;
 
@@ -92,27 +114,36 @@ static void ApplyShipLoadoutToMissionLoad(
 
     const int32 Count = FMath::Min(Load->GetNumStations(), Src.Stations.Num());
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] ApplyShipLoadoutToMissionLoad: Name='%s' Count=%d"),
-        *Src.Name,
-        Count);
+    if (bLogLoadoutsVerbose)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] ApplyShipLoadoutToMissionLoad: Name='%s' Count=%d"),
+            *Src.Name,
+            Count);
+    }
 
     for (int32 i = 0; i < Count; ++i)
     {
         Load->SetStation(i, Src.Stations[i]);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg]   Apply Station[%d] = %d"),
-            i,
-            Src.Stations[i]);
+        if (bLogLoadoutsVerbose)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionWeaponDlg]   Apply Station[%d] = %d"),
+                i,
+                Src.Stations[i]);
+        }
     }
 
-    for (int32 i = 0; i < Count; ++i)
+    if (bLogLoadoutsVerbose)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg]   Verify Station[%d] = %d"),
-            i,
-            Load->GetStation(i));
+        for (int32 i = 0; i < Count; ++i)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionWeaponDlg]   Verify Station[%d] = %d"),
+                i,
+                Load->GetStation(i));
+        }
     }
 }
 
@@ -282,10 +313,13 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
     FString SelectedName;
     const bool bHasSelected = GetSelectedLoadoutName(Element, SelectedName);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] BuildLoadouts: Count BEFORE = %d DesignLoadouts = %d"),
-        Items.Num(),
-        Design->Loadout.Num());
+    if (bLogLoadoutsVerbose)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] BuildLoadouts: Count BEFORE = %d DesignLoadouts = %d"),
+            Items.Num(),
+            Design->Loadout.Num());
+    }
 
     for (int32 i = 0; i < Design->Loadout.Num(); ++i)
     {
@@ -321,9 +355,12 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
         WeaponListView->SetSelectedItem(Items[0]);
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] BuildLoadouts: Count AFTER = %d"),
-        Items.Num());
+    if (bLogLoadoutsVerbose)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] BuildLoadouts: Count AFTER = %d"),
+            Items.Num());
+    }
 }
 
 FString UMissionWeaponDlg::GetElementName(MissionElement* E) const
@@ -581,6 +618,11 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     {
         StationListView->SetEntryWidgetClassPublic(StationEntryWidgetClass);
     }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] StationEntryWidgetClass is null"));
+    }
 
     StationHost->SetContent(StationListView);
 
@@ -686,43 +728,49 @@ void UMissionWeaponDlg::RefreshWeaponList()
 
     const FMissionRuntimeLoadout RuntimeLoadout = ConvertMissionLoad(ActiveLoad);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] Runtime Loadout='%s' ShipIndex=%d Stations=%d Hardpoints=%d"),
-        *RuntimeLoadout.Name,
-        RuntimeLoadout.ShipIndex,
-        RuntimeLoadout.Stations.Num(),
-        ShipDesign->Hardpoint.Num());
-
-    for (int32 i = 0; i < RuntimeLoadout.Stations.Num(); ++i)
+    if (bLogRuntimeLoadout)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg]   Runtime Station[%d] = %d"),
-            i,
-            RuntimeLoadout.Stations[i]);
+            TEXT("[MissionWeaponDlg] Runtime Loadout='%s' ShipIndex=%d Stations=%d Hardpoints=%d"),
+            *RuntimeLoadout.Name,
+            RuntimeLoadout.ShipIndex,
+            RuntimeLoadout.Stations.Num(),
+            ShipDesign->Hardpoint.Num());
+
+        for (int32 i = 0; i < RuntimeLoadout.Stations.Num(); ++i)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionWeaponDlg]   Runtime Station[%d] = %d"),
+                i,
+                RuntimeLoadout.Stations[i]);
+        }
     }
 
-    const int32 NumStations = ShipDesign->Hardpoint.Num();
-
-    for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
+    if (bLogLoadoutsVerbose)
     {
-        const int32 PointIndex =
-            RuntimeLoadout.Stations.IsValidIndex(StationIndex)
-            ? RuntimeLoadout.Stations[StationIndex]
-            : INDEX_NONE;
+        const int32 NumStations = ShipDesign->Hardpoint.Num();
 
-        const FWeaponDesign* Weapon =
-            ResolveWeaponDesignForStationSelection(
-                ShipDesign,
+        for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
+        {
+            const int32 PointIndex =
+                RuntimeLoadout.Stations.IsValidIndex(StationIndex)
+                ? RuntimeLoadout.Stations[StationIndex]
+                : INDEX_NONE;
+
+            const FWeaponDesign* Weapon =
+                ResolveWeaponDesignForStationSelection(
+                    ShipDesign,
+                    StationIndex,
+                    PointIndex);
+
+            const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionWeaponDlg]   Display Station=%d Point=%d Weapon='%s'"),
                 StationIndex,
-                PointIndex);
-
-        const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg]   Display Station=%d Point=%d Weapon='%s'"),
-            StationIndex,
-            PointIndex,
-            *WeaponName);
+                PointIndex,
+                *WeaponName);
+        }
     }
 }
 

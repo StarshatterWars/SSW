@@ -2,7 +2,7 @@
     Fractal Dev Studios
 
     SUBSYSTEM:    Stars.exe
-    FILE:         MissionWeaponStationLVElement.h
+    FILE:         MissionWeaponStationLVElement.cpp
 
     OVERVIEW
     ========

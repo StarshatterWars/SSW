@@ -1,10 +1,8 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (C) 2025-2026. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         MissionWeaponStationRowObject.h
-    AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========

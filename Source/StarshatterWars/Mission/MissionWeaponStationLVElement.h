@@ -32,8 +32,8 @@ public:
 
 protected:
     UPROPERTY(meta = (BindWidget))
-    UTextBlock* StationText;
+    UTextBlock* StationText = nullptr;
 
     UPROPERTY(meta = (BindWidget))
-    UTextBlock* WeaponText;
+    UTextBlock* WeaponText = nullptr;
 };
