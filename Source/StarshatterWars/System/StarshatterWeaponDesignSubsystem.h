@@ -70,6 +70,12 @@ public:
     const TMap<FName, FWeaponDesign>& GetDesignsByName() const { return DesignsByName; }
     const FWeaponDesign* FindDesign(const FName Name) const { return DesignsByName.Find(Name); }
 
+    UFUNCTION(BlueprintCallable, Category = "Starshatter|WeaponDesign")
+    void ReadWeaponDesignData();
+
+    UFUNCTION(BlueprintCallable, Category = "Starshatter|WeaponDesign")
+    void RebuildWeaponRegistryFromDataTable();
+
 public:
     // Target DT (optional; can be null if you only want in-memory cache)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|WeaponDesign")

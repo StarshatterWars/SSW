@@ -175,7 +175,7 @@ void UStarshatterBootSubsystem::BootWeaponDesignLoader(const FBootContext& Ctx)
     if (!Ctx.WeaponDesignSS)
         return;
 
-    Ctx.WeaponDesignSS->LoadAll(true);
+    Ctx.WeaponDesignSS->LoadAll(false);
 }
 
 
@@ -344,11 +344,11 @@ void UStarshatterBootSubsystem::IngestAllDesignData(bool bForceReimport)
     UE_LOG(LogTemp, Log, TEXT("[INGEST] SYSTEMS: %d"), SysSS->GetDesignsByName().Num());
 
     // 2) WEAPONS
-    WepSS->LoadWeaponDesigns();
+    WepSS->LoadAll(false);
     UE_LOG(LogTemp, Log, TEXT("[INGEST] WEAPONS: %d"), WepSS->GetDesignsByName().Num());
 
     // 3) SHIPS
-    ShipSS->LoadAll(); // your existing scan + parse
+    ShipSS->LoadAll(false); // your existing scan + parse
     UE_LOG(LogTemp, Log, TEXT("[INGEST] SHIPS: %d"), ShipSS->GetDesignsByName().Num());
 
     UE_LOG(LogTemp, Log, TEXT("[INGEST] END FULL DESIGN INGESTION"));

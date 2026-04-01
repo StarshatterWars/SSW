@@ -1,667 +1,524 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    ORIGINAL AUTHOR AND STUDIO:
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         MissionWeaponDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UMissionWeaponDlg (Unreal)
-    - Port of legacy MsnWepDlg.
-    - Mission briefing WEAPON / LOADOUT dialog.
-    - Uses UBaseScreen FORM ID binding and legacy control IDs.
-    - No lambdas. No direct UPROPERTY widget members.
-*/
-
 #include "MissionWeaponDlg.h"
 
-// Unreal:
-#include "Logging/LogMacros.h"
-#include "Components/Button.h"
-#include "Components/TextBlock.h"
-#include "Components/Image.h"
-#include "Components/ListView.h"
-
-// Slate (used to infer which button fired OnClicked without lambdas):
-#include "Framework/Application/SlateApplication.h"
-#include "Widgets/SWidget.h"
-
-// Starshatter core / sim (ported headers; keep names consistent with your project):
-#include "Campaign.h"
-#include "Mission.h"
-#include "Ship.h"
-#include "ShipDesign.h"
-#include "WeaponDesign.h"
-#include "HardPoint.h"
-#include "MissionElement.h"
-#include "SimElement.h"
 #include "MissionBriefingDlg.h"
-
 #include "MissionPlanner.h"
+#include "MissionWeaponLoadoutListObject.h"
+#include "MissionLoadoutListView.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogMissionWeaponDlg, Log, All);
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/SizeBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 
-// --------------------------------------------------------------------
-// CTOR
-// --------------------------------------------------------------------
+#include "WeaponDesignRegistry.h"
+#include "GameStructs_System.h"
+#include "MissionUIStyle.h"
+
+#include "Mission.h"
+#include "MissionElement.h"
 
 UMissionWeaponDlg::UMissionWeaponDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    CampaignPtr = nullptr;
-    MissionPtr = nullptr;
-    MissionPlanner = nullptr;
-
-    Elem = nullptr;
-    FirstStation = 0;
-
-    FMemory::Memzero(Designs, sizeof(Designs));
-    FMemory::Memzero(Mounts, sizeof(Mounts));
-
-    for (int32 i = 0; i < 8; ++i)
-        Loads[i] = -1;
 }
-
-// --------------------------------------------------------------------
-// LIFECYCLE
-// --------------------------------------------------------------------
 
 void UMissionWeaponDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    // FORM widgets should already be bound by BaseScreen::NativeOnInitialized().
-    // We wire dynamic events here so designer recompile/hot reload stays stable.
-    WireEvents();
+    BuildRuntimeLayout();
+    RefreshFromMission();
 }
 
-void UMissionWeaponDlg::SetParentDlg(UMissionBriefingDlg* InParentCmdDlg)
+void UMissionWeaponDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 {
-    ParentDlg = InParentCmdDlg;
+    ParentDlg = InParentDlg;
 }
 
-void UMissionWeaponDlg::ExecFrame(double DeltaTime)
+Mission* UMissionWeaponDlg::ResolveMission() const
 {
-    Super::ExecFrame(DeltaTime);
-
-    // Legacy behavior:
-    // if (Keyboard::KeyDown(VK_RETURN)) OnCommit(0);
-    // Centralized in UBaseScreen -> HandleAccept() on Enter.
-    (void)DeltaTime;
+    return ParentDlg ? ParentDlg->GetMissionPtr() : nullptr;
 }
 
-void UMissionWeaponDlg::Show()
+MissionElement* UMissionWeaponDlg::ResolvePlayerElement() const
 {
-    Super::Show();
+    Mission* M = ResolveMission();
+    if (!M) return nullptr;
 
-    Elem = nullptr;
-
-    if (MissionPtr)
+    ListIter<MissionElement> It = M->GetElements();
+    while (++It)
     {
-        ListIter<MissionElement> it = MissionPtr->GetElements();
-        while (++it)
-        {
-            MissionElement* ME = it.value();
-            if (ME && ME->IsPlayer())   // if you added IsPlayer()
-            {
-                Elem = ME;
-                break;
-            }
-        }
+        MissionElement* E = It.value();
+        if (E && E->IsPlayer())
+            return E;
     }
 
-    if (Elem)
-    {
-        BuildLists();
-        SetupControls();
-    }
-    else
-    {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::Show - no player element found"));
-    }
+    return M->GetPlayer();
 }
 
-
-// --------------------------------------------------------------------
-// DIALOG INPUT HOOKS (Enter/Escape)
-// --------------------------------------------------------------------
-
-void UMissionWeaponDlg::HandleAccept()
+const FShipDesign* UMissionWeaponDlg::ResolvePlayerShipDesign() const
 {
-    Super::HandleAccept();
-
-    // Legacy: MsnDlg::OnCommit(event)
-    // In Unreal: route to MissionPlanner navigation/flow.
-    if (MissionPlanner)
-    {
-        // If you later implement a distinct “commit mission” path, swap here.
-        MissionPlanner->OnMissionBriefingAccept();
-    }
-    else
-    {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::HandleAccept - MissionPlanner is null"));
-    }
+    MissionElement* E = ResolvePlayerElement();
+    return E ? E->GetShipDesign() : nullptr;
 }
 
-void UMissionWeaponDlg::HandleCancel()
+void UMissionWeaponDlg::RefreshFromMission()
 {
-    Super::HandleCancel();
+    ClearLoadouts();
 
-    // Legacy: MsnDlg::OnCancel(event)
-    if (MissionPlanner)
-    {
-        MissionPlanner->OnMissionBriefingCancel();
-    }
-    else
-    {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::HandleCancel - MissionPlanner is null"));
-    }
-}
+    MissionElement* Elem = ResolvePlayerElement();
+    const FShipDesign* Design = ResolvePlayerShipDesign();
 
-// --------------------------------------------------------------------
-// EVENT WIRING (NO LAMBDAS)
-// --------------------------------------------------------------------
-
-void UMissionWeaponDlg::WireEvents()
-{
-    // Accept / Cancel:
-    if (UButton* Accept = GetButton(1))
-    {
-        if (!Accept->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnAcceptClicked))
-            Accept->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnAcceptClicked);
-    }
-
-    if (UButton* Cancel = GetButton(2))
-    {
-        if (!Cancel->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnCancelClicked))
-            Cancel->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnCancelClicked);
-    }
-
-    // Tabs: 900 SIT, 901 PKG, 902 MAP, 903 WEP
-    if (UButton* B = GetButton(900))
-    {
-        if (!B->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnTabSit))
-            B->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnTabSit);
-    }
-
-    if (UButton* B = GetButton(901))
-    {
-        if (!B->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnTabPkg))
-            B->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnTabPkg);
-    }
-
-    if (UButton* B = GetButton(902))
-    {
-        if (!B->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnTabMap))
-            B->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnTabMap);
-    }
-
-    if (UButton* B = GetButton(903))
-    {
-        if (!B->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnTabWep))
-            B->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnTabWep);
-    }
-
-    // Mount buttons grid:
-    // ids: 500 + i*10 + (n+1), i=weapon row [0..7], n=station col [0..7]
-    ButtonIdToSlot.Empty();
-
-    for (int32 i = 0; i < 8; ++i)
-    {
-        for (int32 n = 0; n < 8; ++n)
-        {
-            const int32 Id = 500 + i * 10 + (n + 1);
-
-            if (UButton* Btn = GetButton(Id))
-            {
-                FMountSlot Slotx;
-                Slotx.WeaponIndex = i;
-                Slotx.StationIndex = n;
-                ButtonIdToSlot.Add(Btn, Slotx);
-
-                if (!Btn->OnClicked.IsAlreadyBound(this, &UMissionWeaponDlg::OnMountClicked))
-                    Btn->OnClicked.AddDynamic(this, &UMissionWeaponDlg::OnMountClicked);
-            }
-        }
-    }
-}
-
-// --------------------------------------------------------------------
-// UI SETUP (LEGACY LOGIC)
-// --------------------------------------------------------------------
-
-void UMissionWeaponDlg::SetupControls()
-{
-    if (!Elem)
+    if (!Elem || !Design)
         return;
 
-    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
+    if (ElementNameValueText)
+        ElementNameValueText->SetText(FText::FromString(GetElementName(Elem)));
+
+    if (DesignNameValueText)
+        DesignNameValueText->SetText(FText::FromString(GetDesignName(Design)));
+
+    if (WeightValueText)
+    {
+        const double CurrentMass = ComputeCurrentCustomMass(Elem, Design);
+        WeightValueText->SetText(FText::FromString(FormatWeight(CurrentMass)));
+    }
+
+    BuildLoadouts(Elem, Design);
+}
+
+void UMissionWeaponDlg::ClearLoadouts()
+{
+    Items.Empty();
+
+    if (WeaponListView)
+    {
+        WeaponListView->ClearListItems();
+    }
+}
+
+bool UMissionWeaponDlg::GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const
+{
+    if (!Element || Element->Loadouts().size() == 0)
+        return false;
+
+    MissionLoad* Load = Element->Loadouts().at(0);
+    if (!Load) return false;
+
+    if (Load->GetName().length() > 0)
+    {
+        OutName = ANSI_TO_TCHAR(Load->GetName().data());
+        return true;
+    }
+
+    return false;
+}
+
+void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign* Design)
+{
+    FString SelectedName;
+    const bool bHasSelected = GetSelectedLoadoutName(Element, SelectedName);
+
+    for (int32 i = 0; i < Design->Loadout.Num(); i++)
+    {
+        const FShipLoadout& L = Design->Loadout[i];
+
+        bool bSelected =
+            bHasSelected &&
+            L.Name.Equals(SelectedName, ESearchCase::IgnoreCase);
+
+        const double LoadoutMass = ComputeLoadoutMass(Design, L);
+        FString WeightStr = FormatWeight(LoadoutMass);
+
+        UMissionWeaponLoadoutListObject* Item =
+            NewObject<UMissionWeaponLoadoutListObject>(this);
+
+        Item->InitFromShipLoadout(L, i, WeightStr, bSelected);
+
+        Items.Add(Item);
+
+        if (WeaponListView)
+        {
+            WeaponListView->AddItem(Item);
+
+            if (bSelected)
+            {
+                WeaponListView->SetSelectedItem(Item);
+            }
+        }
+    }
+
+    if (!bHasSelected && Items.Num() > 0 && WeaponListView)
+    {
+        WeaponListView->SetSelectedItem(Items[0]);
+    }
+}
+
+FString UMissionWeaponDlg::GetElementName(MissionElement* E) const
+{
+    return E ? ANSI_TO_TCHAR(E->GetName().data()) : TEXT("UNKNOWN");
+}
+
+FString UMissionWeaponDlg::GetDesignName(const FShipDesign* D) const
+{
+    if (!D) return TEXT("UNKNOWN");
+
+    if (!D->DisplayName.IsEmpty())
+        return D->DisplayName;
+
+    return D->ShipName;
+}
+
+FString UMissionWeaponDlg::FormatWeight(double Mass) const
+{
+    return FString::Printf(TEXT("%d KG"), FMath::RoundToInt(Mass * 1000));
+}
+
+UTextBlock* UMissionWeaponDlg::BuildLabelText(const FString& Text) const
+{
+    UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
+    T->SetText(FText::FromString(Text));
+    T->SetColorAndOpacity(MissionUIStyle::InfoLabelText);
+    T->SetFont(MissionUIStyle::GetInfoLabelFont(13));
+    return T;
+}
+
+UTextBlock* UMissionWeaponDlg::BuildValueText(const FString& Text) const
+{
+    UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
+    T->SetText(FText::FromString(Text));
+    T->SetColorAndOpacity(MissionUIStyle::InfoValueText);
+    T->SetFont(MissionUIStyle::GetInfoValueFont(14));
+    return T;
+}
+
+UBorder* UMissionWeaponDlg::BuildHeader(const FString& Text) const
+{
+    UBorder* Outer = WidgetTree->ConstructWidget<UBorder>();
+    Outer->SetBrushColor(MissionUIStyle::HeaderBG);
+
+    UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
+    T->SetText(FText::FromString(Text));
+    T->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    T->SetFont(MissionUIStyle::GetHeaderFont(18));
+
+    Outer->SetContent(T);
+    return Outer;
+}
+
+void UMissionWeaponDlg::BuildRuntimeLayout()
+{
+    if (!WidgetTree || !RuntimeHost)
+    {
+        return;
+    }
+
+    if (WeaponListView)
+    {
+        return;
+    }
+
+    RuntimeHost->SetContent(nullptr);
+
+    USizeBox* Root = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponRoot"));
+    Root->SetWidthOverride(1400.f);
+    Root->SetHeightOverride(700.f);
+    RuntimeHost->SetContent(Root);
+
+    UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionWeaponRootRow"));
+    Root->AddChild(Row);
+
+    // LEFT INFO COLUMN
+    UVerticalBox* Left = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponLeftColumn"));
+
+    if (UHorizontalBoxSlot* S = Row->AddChildToHorizontalBox(Left))
+    {
+        S->SetPadding(FMargin(12.f, 12.f, 16.f, 12.f));
+        S->SetHorizontalAlignment(HAlign_Left);
+        S->SetVerticalAlignment(VAlign_Top);
+    }
+
+    auto AddRow = [this, Left](const FString& Label, UTextBlock*& OutText)
+        {
+            UHorizontalBox* InfoRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+
+            if (UVerticalBoxSlot* VS = Left->AddChildToVerticalBox(InfoRow))
+            {
+                VS->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+            }
+
+            UTextBlock* LabelText = BuildLabelText(Label);
+            OutText = BuildValueText(TEXT("-"));
+
+            if (UHorizontalBoxSlot* LabelSlot = InfoRow->AddChildToHorizontalBox(LabelText))
+            {
+                LabelSlot->SetPadding(FMargin(0.f, 0.f, 6.f, 0.f));
+                LabelSlot->SetHorizontalAlignment(HAlign_Left);
+                LabelSlot->SetVerticalAlignment(VAlign_Center);
+            }
+
+            if (UHorizontalBoxSlot* ValueSlot = InfoRow->AddChildToHorizontalBox(OutText))
+            {
+                ValueSlot->SetHorizontalAlignment(HAlign_Left);
+                ValueSlot->SetVerticalAlignment(VAlign_Center);
+                ValueSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            }
+        };
+
+    AddRow(TEXT("ELEMENT:"), ElementNameValueText);
+    AddRow(TEXT("TYPE:"), DesignNameValueText);
+    AddRow(TEXT("WEIGHT:"), WeightValueText);
+
+    // RIGHT COLUMN
+    UVerticalBox* Right = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponRightColumn"));
+
+    if (UHorizontalBoxSlot* S = Row->AddChildToHorizontalBox(Right))
+    {
+        S->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        S->SetHorizontalAlignment(HAlign_Fill);
+        S->SetVerticalAlignment(VAlign_Fill);
+    }
+
+    if (UBorder* Header = BuildHeader(TEXT("STANDARD LOADOUTS")))
+    {
+        if (UVerticalBoxSlot* HeaderSlot = Right->AddChildToVerticalBox(Header))
+        {
+            HeaderSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+        }
+    }
+
+    UScrollBox* ScrollBox = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("MissionWeaponScrollBox"));
+    ScrollBox->SetOrientation(EOrientation::Orient_Vertical);
+    ScrollBox->SetAllowOverscroll(false);
+    ScrollBox->SetScrollBarVisibility(ESlateVisibility::Visible);
+
+    if (UVerticalBoxSlot* ScrollSlot = Right->AddChildToVerticalBox(ScrollBox))
+    {
+        ScrollSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        ScrollSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 0.f));
+    }
+
+    WeaponListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
+        UMissionLoadoutListView::StaticClass(),
+        TEXT("RuntimeWeaponList"));
+
+    if (EntryWidgetClass)
+    {
+        WeaponListView->SetEntryWidgetClassPublic(EntryWidgetClass);
+    }
+
+    ScrollBox->AddChild(WeaponListView);
+}
+
+const FWeaponDesign* UMissionWeaponDlg::ResolveWeaponDesignForStationSelection(
+    const FShipDesign* Design,
+    int32 StationIndex,
+    int32 PointIndex) const
+{
     if (!Design)
-        return;
-
-    // Element name:
-    SetLabelText(601, FText::FromString(Elem->GetName().data()));
-
-    // Type:
-    SetLabelText(602, FText::FromString((const char*)Design->name));
-
-    // Station labels & weapon rows:
-    for (int32 i = 0; i < 8; ++i)
     {
-        const int32 DescId = 500 + i * 10; // label
-        UTextBlock* Desc = GetLabel(DescId);
+        return nullptr;
+    }
 
-        if (Designs[i])
+    if (!Design->Hardpoint.IsValidIndex(StationIndex))
+    {
+        return nullptr;
+    }
+
+    if (PointIndex < 0)
+    {
+        return nullptr;
+    }
+
+    const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+
+    if (!Hardpoint.AllowedWeaponTypes.IsValidIndex(PointIndex))
+    {
+        return nullptr;
+    }
+
+    const FString& WeaponKey = Hardpoint.AllowedWeaponTypes[PointIndex];
+    if (WeaponKey.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    // 1. Direct row-name lookup
+    if (const FWeaponDesign* WeaponRow = WeaponDesignRegistry::Find(WeaponKey))
+    {
+        return WeaponRow;
+    }
+
+    // 2. Fallback by Name / Group
+    const TMap<FName, FWeaponDesign>& AllWeapons = WeaponDesignRegistry::GetAll();
+
+    for (const TPair<FName, FWeaponDesign>& Pair : AllWeapons)
+    {
+        const FWeaponDesign& WeaponRow = Pair.Value;
+
+        if (WeaponRow.Name.Equals(WeaponKey, ESearchCase::IgnoreCase) ||
+            WeaponRow.Group.Equals(WeaponKey, ESearchCase::IgnoreCase))
         {
-            if (Desc)
-            {
-                Desc->SetVisibility(ESlateVisibility::Visible);
-
-                const FString WeaponText =
-                    FString(Designs[i]->group.data()) + TEXT(" ") + FString(Designs[i]->name.data());
-
-                Desc->SetText(FText::FromString(WeaponText));
-            }
-
-            for (int32 n = 0; n < 8; ++n)
-            {
-                const int32 BtnId = 500 + i * 10 + (n + 1);
-                if (UButton* Btn = GetButton(BtnId))
-                {
-                    // show only if that weapon is mountable at that station:
-                    const bool bShow = Mounts[i][n];
-                    Btn->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-
-                    // NOTE: legacy toggled LED bitmap on/off.
-                    // In UE, you can drive a visual state in the button style or child image.
-                    // For now, we preserve the selection logic via Loads[] and update by caller.
-                }
-            }
-        }
-        else
-        {
-            if (Desc)
-                Desc->SetVisibility(ESlateVisibility::Collapsed);
-
-            for (int32 n = 0; n < 8; ++n)
-            {
-                const int32 BtnId = 500 + i * 10 + (n + 1);
-                if (UButton* Btn = GetButton(BtnId))
-                    Btn->SetVisibility(ESlateVisibility::Collapsed);
-            }
+            return &WeaponRow;
         }
     }
 
-    // Weight label:
-    // Legacy: base ship mass + carried mass for selected mounts / or chosen loadout
-    if (UTextBlock* LblWeight = GetLabel(603))
-    {
-        const int32 NStations = (int32)Design->hard_points.size();
-        double Mass = Design->mass;
-
-        for (int32 n = 0; n < NStations; ++n)
-        {
-            const int32 SlotIndex = n + FirstStation;
-            const int32 Item = (SlotIndex >= 0 && SlotIndex < 8) ? Loads[SlotIndex] : -1;
-            Mass += Design->hard_points[n]->GetCarryMass(Item);
-        }
-
-        const int32 Kg = (int32)(Mass * 1000.0);
-        LblWeight->SetText(FText::FromString(FString::Printf(TEXT("%d kg"), Kg)));
-    }
-
-    // Beauty (id 300) and PlayerDesc (id 301) were commented out in the legacy FORM.
-    // If you re-enable them in UMG, BaseScreen can bind them and you can extend here.
+    return nullptr;
 }
 
-void UMissionWeaponDlg::BuildLists()
+double UMissionWeaponDlg::ComputeCurrentCustomMass(
+    MissionElement* Element,
+    const FShipDesign* Design) const
 {
-    FMemory::Memzero(Designs, sizeof(Designs));
-    FMemory::Memzero(Mounts, sizeof(Mounts));
-
-    for (int32 i = 0; i < 8; ++i)
-        Loads[i] = -1;
-
-    if (!Elem)
-        return;
-
-    ShipDesign* D = (ShipDesign*)Elem->GetShipDesign();
-    if (!D)
-        return;
-
-    const int32 NStations = (int32)D->hard_points.size();
-    FirstStation = (8 - NStations) / 2;
-
-    // Clear station headings:
-    for (int32 s = 0; s < 8; ++s)
+    if (!Element || !Design)
     {
-        const int32 StationLblId = 401 + s;
-        SetLabelText(StationLblId, FText::FromString(TEXT("")));
+        return 0.0;
     }
 
-    int32 Index = 0;
-    int32 Station = FirstStation;
+    double TotalMass = Design->Mass;
 
-    // Build unique weapon list + mount matrix:
-    ListIter<HardPoint> it = D->hard_points;
-    while (++it)
+    if (Element->Loadouts().size() < 1)
     {
-        HardPoint* Hp = it.value();
-        if (!Hp)
+        return TotalMass;
+    }
+
+    MissionLoad* Load = Element->Loadouts().at(0);
+    if (!Load)
+    {
+        return TotalMass;
+    }
+
+    // Named loadout path:
+    if (Load->GetName().length() > 0)
+    {
+        const FString SelectedName = ANSI_TO_TCHAR(Load->GetName().data());
+
+        for (const FShipLoadout& ShipLoadout : Design->Loadout)
         {
-            Station++;
+            if (ShipLoadout.Name.Equals(SelectedName, ESearchCase::IgnoreCase))
+            {
+                return ComputeLoadoutMass(Design, ShipLoadout);
+            }
+        }
+
+        return TotalMass;
+    }
+
+    // Custom station selection path:
+    const int32* Stations = Load->GetStations();
+    if (!Stations)
+    {
+        return TotalMass;
+    }
+
+    const int32 NumStations = Design->Hardpoint.Num();
+
+    for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
+    {
+        const int32 PointIndex = Stations[StationIndex];
+        if (PointIndex < 0)
+        {
             continue;
         }
 
-        // Station abbreviation:
-        SetLabelText(
-            401 + Station,
-            FText::FromString((const char*)Hp->GetAbbreviation())
-        );
+        const FWeaponDesign* WeaponRow =
+            ResolveWeaponDesignForStationSelection(Design, StationIndex, PointIndex);
 
-        for (int32 n = 0; n < HardPoint::MAX_DESIGNS; ++n)
+        if (WeaponRow)
         {
-            WeaponDesign* Wep = Hp->GetWeaponDesign(n);
-            if (!Wep)
-                continue;
-
-            bool bFound = false;
-
-            for (int32 i = 0; i < 8 && !bFound; ++i)
-            {
-                if (Designs[i] == Wep)
-                {
-                    bFound = true;
-                    Mounts[i][Station] = true;
-                }
-            }
-
-            if (!bFound && Index < 8)
-            {
-                Designs[Index] = Wep;
-                Mounts[Index][Station] = true;
-                ++Index;
-            }
-        }
-
-        Station++;
-    }
-
-    // Map existing element loadout into Loads[]:
-    if (Elem->Loadouts().size())
-    {
-        MissionLoad* MsnLoad = Elem->Loadouts().at(0);
-        if (MsnLoad)
-        {
-            // map loadout:
-            int* Loadout = nullptr;
-
-            if (MsnLoad->GetName().length())
-            {
-                ListIter<ShipLoad> sl = ((ShipDesign*)Elem->GetShipDesign())->loadouts;
-                while (++sl)
-                {
-                    if (!_stricmp(sl->name, MsnLoad->GetName()))
-                    {
-                        Loadout = sl->load;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                Loadout = MsnLoad->GetStations();
-            }
-
-            if (Loadout)
-            {
-                for (int32 i = 0; i < NStations; ++i)
-                {
-                    const int32 LSlot = i + FirstStation;
-                    if (LSlot >= 0 && LSlot < 8)
-                        Loads[LSlot] = Loadout[i];
-                }
-            }
+            TotalMass += WeaponRow->CarryMass;
         }
     }
 
-    // Loadout list population:
-    // Legacy used a ListBox with multiple columns; UE UListView requires an item UObject type.
-    // Your UMG entry widget determines how items render.
-    // We keep this method “complete” by clearing the list (so it never shows stale data)
-    // and preserving the weapon mounting logic which is the core of this dialog.
-    if (UListView* LV = GetList(604))
-    {
-        LV->ClearListItems();
-    }
+    return TotalMass;
 }
 
-// --------------------------------------------------------------------
-// LOADOUT / HARDPOINT MAPPING (LEGACY)
-// --------------------------------------------------------------------
-
-int UMissionWeaponDlg::LoadToPointIndex(int n) const
+double UMissionWeaponDlg::ComputeLoadoutMass(
+    const FShipDesign* Design,
+    const FShipLoadout& Loadout) const
 {
-    const int nn = n + FirstStation;
-
-    if (!Elem || nn < 0 || nn >= 8 || Loads[nn] == -1)
-        return -1;
-
-    int Index = -1;
-
-    WeaponDesign* WepDesign = Designs[Loads[nn]];
-    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
-    HardPoint* Hp = Design ? Design->hard_points[n] : nullptr;
-
-    if (!Hp || !WepDesign)
-        return -1;
-
-    for (int i = 0; i < 8 && Index < 0; ++i)
+    if (!Design)
     {
-        if (Hp->GetWeaponDesign(i) == WepDesign)
-            Index = i;
+        return 0.0;
     }
 
-    return Index;
-}
+    double TotalMass = Design->Mass;
 
-int UMissionWeaponDlg::PointIndexToLoad(int n, int PointIndex) const
-{
-    const int nn = n + FirstStation;
+    const int32 NumStations = FMath::Min(Design->Hardpoint.Num(), Loadout.Stations.Num());
 
-    if (!Elem || nn < 0 || nn >= 8)
-        return -1;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Runtime '%s' hardpoints=%d"),
+        *Design->ShipName,
+        Design->Hardpoint.Num());
 
-    ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
-    HardPoint* Hp = Design ? Design->hard_points[n] : nullptr;
-    WeaponDesign* WepDesign = Hp ? Hp->GetWeaponDesign(PointIndex) : nullptr;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Design hardpoints=%d loadout stations=%d using=%d for '%s'"),
+        Design->Hardpoint.Num(),
+        Loadout.Stations.Num(),
+        NumStations,
+        *Loadout.Name);
 
-    if (!WepDesign)
-        return -1;
-
-    int Result = -1;
-
-    for (int i = 0; i < 8 && Result < 0; ++i)
+    for (int32 i = 0; i < Loadout.Stations.Num(); ++i)
     {
-        if (Designs[i] == WepDesign)
-            Result = i;
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg]   Loadout '%s' raw stations[%d]=%d"),
+            *Loadout.Name,
+            i,
+            Loadout.Stations[i]);
     }
 
-    return Result;
-}
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Loadout '%s' base mass = %f"),
+        *Loadout.Name,
+        Design->Mass);
 
-// --------------------------------------------------------------------
-// CLICK HANDLERS
-// --------------------------------------------------------------------
-
-void UMissionWeaponDlg::OnAcceptClicked()
-{
-    HandleAccept();
-}
-
-void UMissionWeaponDlg::OnCancelClicked()
-{
-    HandleCancel();
-}
-
-void UMissionWeaponDlg::OnTabSit()
-{
-    if (MissionPlanner)
-        MissionPlanner->ShowMsnObjDlg();
-}
-
-void UMissionWeaponDlg::OnTabPkg()
-{
-    if (MissionPlanner)
-        MissionPlanner->ShowMsnPkgDlg();
-}
-
-void UMissionWeaponDlg::OnTabMap()
-{
-    if (MissionPlanner)
-        MissionPlanner->ShowNavDlg();
-}
-
-void UMissionWeaponDlg::OnTabWep()
-{
-    if (MissionPlanner)
-        MissionPlanner->ShowMsnWepDlg();
-}
-
-void UMissionWeaponDlg::OnMountClicked()
-{
-    // UE: UButton::OnClicked has no sender param.
-    // We infer sender via Slate focus and map it back to a UButton in ButtonIdToSlot.
-
-    if (!FSlateApplication::IsInitialized())
+    for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
     {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::OnMountClicked - Slate not initialized"));
-        return;
-    }
-
-    UButton* ClickedButton = nullptr;
-
-    // Prefer keyboard focus; fallback to user focus.
-    TSharedPtr<SWidget> FocusedWidget = FSlateApplication::Get().GetKeyboardFocusedWidget();
-    if (!FocusedWidget.IsValid())
-    {
-        FocusedWidget = FSlateApplication::Get().GetUserFocusedWidget(0);
-    }
-
-    if (!FocusedWidget.IsValid())
-    {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::OnMountClicked - no focused widget"));
-        return;
-    }
-
-    // Resolve focus -> button by comparing cached slate widgets.
-    for (auto It = ButtonIdToSlot.CreateIterator(); It; ++It)
-    {
-        UButton* CandidateButton = It.Key();
-        if (!CandidateButton)
+        const int32 PointIndex = Loadout.Stations[StationIndex];
+        if (PointIndex < 0)
+        {
             continue;
-
-        if (CandidateButton->GetCachedWidget().Get() == FocusedWidget.Get())
-        {
-            ClickedButton = CandidateButton;
-            break;
         }
-    }
 
-    if (!ClickedButton)
-    {
-        UE_LOG(LogMissionWeaponDlg, Warning, TEXT("MissionWeaponDlg::OnMountClicked - unable to resolve clicked button"));
-        return;
-    }
+        const FString WeaponKey =
+            Design->Hardpoint.IsValidIndex(StationIndex) &&
+            Design->Hardpoint[StationIndex].AllowedWeaponTypes.IsValidIndex(PointIndex)
+            ? Design->Hardpoint[StationIndex].AllowedWeaponTypes[PointIndex]
+            : TEXT("INVALID");
 
-    const FMountSlot* SlotInfoPtr = ButtonIdToSlot.Find(ClickedButton);
-    if (!SlotInfoPtr)
-        return;
+        const FWeaponDesign* WeaponRow =
+            ResolveWeaponDesignForStationSelection(Design, StationIndex, PointIndex);
 
-    const int32 WeaponIndex = SlotInfoPtr->WeaponIndex;
-    const int32 StationIndex = SlotInfoPtr->StationIndex;
-
-    if (WeaponIndex < 0 || WeaponIndex >= 8 || StationIndex < 0 || StationIndex >= 8)
-        return;
-
-    // Toggle selection for this station (legacy behavior):
-    int32 NewWeaponIndex = WeaponIndex;
-    if (Loads[StationIndex] == WeaponIndex)
-        NewWeaponIndex = -1;
-
-    Loads[StationIndex] = NewWeaponIndex;
-
-    // Persist into player loadouts (legacy: update all loadouts and clear their name):
-    if (Elem)
-    {
-        ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
-        if (Design)
+        if (!WeaponRow)
         {
-            const int32 NumStations = (int32)Design->hard_points.size();
-
-            if (Elem->Loadouts().size() < 1)
-            {
-                MissionLoad* NewLoadout = new MissionLoad;
-                Elem->Loadouts().append(NewLoadout);
-
-                for (int32 n = 0; n < NumStations; ++n)
-                {
-                    NewLoadout->SetStation(n, LoadToPointIndex(n));
-                }
-            }
-            else
-            {
-                ListIter<MissionLoad> LoadoutIter = Elem->Loadouts();
-                while (++LoadoutIter)
-                {
-                    MissionLoad* Loadout = LoadoutIter.value();
-                    if (!Loadout)
-                        continue;
-
-                    Loadout->SetName("");
-
-                    for (int32 n = 0; n < NumStations; ++n)
-                    {
-                        Loadout->SetStation(n, LoadToPointIndex(n));
-                    }
-                }
-            }
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionWeaponDlg] station=%d point=%d key='%s' -> NO WEAPON ROW"),
+                StationIndex,
+                PointIndex,
+                *WeaponKey);
+            continue;
         }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] station=%d point=%d key='%s' weapon='%s' carry=%f"),
+            StationIndex,
+            PointIndex,
+            *WeaponKey,
+            *WeaponRow->Name,
+            WeaponRow->CarryMass);
+
+        TotalMass += WeaponRow->CarryMass;
     }
 
-    // Clear list selection (legacy listbox behavior):
-    if (UListView* LoadoutListView = GetList(604))
-    {
-        LoadoutListView->ClearSelection();
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Loadout '%s' total mass = %f"),
+        *Loadout.Name,
+        TotalMass);
 
-    // Update weight readout:
-    UTextBlock* WeightLabel = GetLabel(603);
-    if (WeightLabel && Elem)
-    {
-        ShipDesign* Design = (ShipDesign*)Elem->GetShipDesign();
-        if (Design)
-        {
-            const int32 NumStations = (int32)Design->hard_points.size();
-            double TotalMass = Design->mass;
-
-            for (int32 n = 0; n < NumStations; ++n)
-            {
-                const int32 UiSlotIndex = n + FirstStation;
-
-                const int32 SelectedWeapon =
-                    (UiSlotIndex >= 0 && UiSlotIndex < 8) ? Loads[UiSlotIndex] : -1;
-
-                TotalMass += Design->hard_points[n]->GetCarryMass(SelectedWeapon);
-            }
-
-            const int32 Kg = (int32)(TotalMass * 1000.0);
-            WeightLabel->SetText(FText::FromString(FString::Printf(TEXT("%d kg"), Kg)));
-        }
-    }
+    return TotalMass;
 }

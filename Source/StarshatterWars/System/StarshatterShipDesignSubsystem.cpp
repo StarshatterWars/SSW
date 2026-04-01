@@ -212,6 +212,13 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 			continue;
 		}
 
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[SHIPDESIGN] DT row '%s' hardpoints=%d loadouts=%d"),
+			*Row->ShipName,
+			Row->Hardpoint.Num(),
+			Row->Loadout.Num());
+
 		DesignsByName.Add(RowName, *Row);
 		ShipDesignRegistry::RegisterDesign(RowName, *Row);
 
@@ -226,6 +233,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 		TEXT("[SHIPDESIGN] LoadFromExistingTable: cached %d rows from '%s'"),
 		DesignsByName.Num(),
 		*ShipDesignDataTable->GetName());
+
 
 	UE_LOG(LogTemp, Log,
 		TEXT("[SHIPDESIGN] ShipDesignRegistry now has %d rows"),
@@ -2911,7 +2919,7 @@ void UStarshatterShipDesignSubsystem::ValidateLoadoutsForCurrentShip() const
 
 void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseLoadout()"));
+	UE_LOG(LogTemp, Log, TEXT("UStarshatterShipDesignSubsystem::ParseLoadout()"));
 
 	if (!Val || !Fn || !*Fn)
 	{
@@ -2923,16 +2931,25 @@ void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* 
 	NewLoadout.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
 	const int32 MaxStations = 16;
-	NewLoadout.Stations.Reserve(MaxStations);
+
+	// Fixed-size legacy-style station array.
+	NewLoadout.Stations.SetNum(MaxStations);
+	for (int32 i = 0; i < MaxStations; ++i)
+	{
+		NewLoadout.Stations[i] = -1;
+	}
 
 	const int32 ElemCount = (int32)Val->elements()->size();
 	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
 	{
 		TermDef* PDef = Val->elements()->at(ElemIdx)->isDef();
 		if (!PDef)
+		{
 			continue;
+		}
 
-		const Text& Key = PDef->name()->value();
+		Text Key = PDef->name()->value();
+		Key.setSensitive(false);
 
 		if (Key == "name")
 		{
@@ -2944,22 +2961,101 @@ void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* 
 		}
 		else if (Key == "stations")
 		{
-			// Legacy: GetDefArray(int*, max, ...)
-			// We emulate this safely using a temp buffer.
-			int32 Temp[MaxStations];
-			FMemory::Memzero(Temp, sizeof(Temp));
-
-			const int32 Count = GetDefArray(Temp, MaxStations, PDef, Fn);
-			for (int32 i = 0; i < Count; ++i)
+			Term* TermValue = PDef->term();
+			if (!TermValue)
 			{
-				NewLoadout.Stations.Add(Temp[i]);
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipDesign] ParseLoadout '%s': stations term is null"),
+					*NewLoadout.Name);
+				continue;
+			}
+
+			// Legacy parser arrays/tuples may come through as a struct-like term
+			// with ordered elements. Handle both array and struct safely.
+			int32 Count = 0;
+
+			if (TermArray* Arr = TermValue->isArray())
+			{
+				Count = FMath::Min((int32)Arr->elements()->size(), MaxStations);
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipDesign] ParseLoadout '%s' stations array count=%d"),
+					*NewLoadout.Name,
+					Count);
+
+				for (int32 i = 0; i < Count; ++i)
+				{
+					Term* Elem = Arr->elements()->at(i);
+					if (!Elem)
+					{
+						continue;
+					}
+
+					if (TermNumber* Num = Elem->isNumber())
+					{
+						NewLoadout.Stations[i] = (int32)Num->value();
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning,
+							TEXT("[ShipDesign] ParseLoadout '%s': stations[%d] is not numeric"),
+							*NewLoadout.Name,
+							i);
+					}
+				}
+			}
+			else if (TermStruct* StructVals = TermValue->isStruct())
+			{
+				Count = FMath::Min((int32)StructVals->elements()->size(), MaxStations);
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipDesign] ParseLoadout '%s' stations struct count=%d"),
+					*NewLoadout.Name,
+					Count);
+
+				for (int32 i = 0; i < Count; ++i)
+				{
+					Term* Elem = StructVals->elements()->at(i);
+					if (!Elem)
+					{
+						continue;
+					}
+
+					if (TermNumber* Num = Elem->isNumber())
+					{
+						NewLoadout.Stations[i] = (int32)Num->value();
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning,
+							TEXT("[ShipDesign] ParseLoadout '%s': stations[%d] is not numeric"),
+							*NewLoadout.Name,
+							i);
+					}
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipDesign] ParseLoadout '%s': stations term is not array/struct"),
+					*NewLoadout.Name);
+			}
+
+			for (int32 i = 0; i < MaxStations; ++i)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipDesign]   loadout '%s' stations[%d]=%d"),
+					*NewLoadout.Name,
+					i,
+					NewLoadout.Stations[i]);
 			}
 		}
 		else
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("ParseLoadout: unknown parameter '%s' in '%s'"),
-				ANSI_TO_TCHAR(Key.data()), ANSI_TO_TCHAR(Fn));
+				ANSI_TO_TCHAR(Key.data()),
+				ANSI_TO_TCHAR(Fn));
 		}
 	}
 

@@ -612,7 +612,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     case EMissionBriefingMode::WEP:
         if (MissionWepPanel)
         {
-            //WepPanel->RefreshFromMission();
+            MissionWepPanel->RefreshFromMission();
         }
         break;
 

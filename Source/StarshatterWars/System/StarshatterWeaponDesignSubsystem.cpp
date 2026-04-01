@@ -19,7 +19,7 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "Engine/DataTable.h"
-
+#include "WeaponDesignRegistry.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
 // If you have constants like DEGREES (rad-per-degree), include where defined:
@@ -72,10 +72,6 @@ void UStarshatterWeaponDesignSubsystem::Initialize(FSubsystemCollectionBase& Col
     Super::Initialize(Collection);
     UE_LOG(LogTemp, Log, TEXT("[WEAPONDESIGN] Initialize()"));
 
-    /*------------------------------------------------------------------
-    Resolve Ship Design DataTable via Asset Registry
-------------------------------------------------------------------*/
-
     UStarshatterAssetRegistrySubsystem* Assets =
         GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
 
@@ -93,11 +89,6 @@ void UStarshatterWeaponDesignSubsystem::Initialize(FSubsystemCollectionBase& Col
         UE_LOG(LogTemp, Error, TEXT("[WEAPONDESIGN] WeaponDesignTable not found"));
         return;
     }
-
-    if (bClearTables)
-    {
-        WeaponDesignDataTable->EmptyTable();
-    }
 }
 
 void UStarshatterWeaponDesignSubsystem::Deinitialize()
@@ -110,10 +101,12 @@ void UStarshatterWeaponDesignSubsystem::Deinitialize()
 void UStarshatterWeaponDesignSubsystem::LoadAll(bool bFull)
 {
     UE_LOG(LogTemp, Log, TEXT("UStarshatterWeaponDesignSubsystem::LoadAll()"));
-    if (!bFull)
-        return;
-
-    LoadWeaponDesigns();
+    if (!bFull) {
+        LoadWeaponDesigns();
+    }
+    
+    // Runtime path:
+    ReadWeaponDesignData();
 }
 
 void UStarshatterWeaponDesignSubsystem::LoadWeaponDesigns()
@@ -144,7 +137,10 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
     if (bClearTables)
     {
         DesignsByName.Empty();
-        UE_LOG(LogTemp, Log, TEXT("[WEAPON] bClearTables=true: cleared in-memory cache (DT rows overwritten as parsed)"));
+        WeaponDesignRegistry::Clear();
+
+        UE_LOG(LogTemp, Log,
+            TEXT("[WEAPON] bClearTables=true: cleared in-memory cache and weapon registry"));
     }
 
     // Load file into bytes for legacy parser (char* buffer expected)
@@ -194,11 +190,15 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
         TermObj = ParserObj.ParseTerm();
 
         if (!TermObj)
+        {
             break;
+        }
 
         TermDef* Def = TermObj->isDef();
         if (!Def)
+        {
             continue;
+        }
 
         Text DefName = Def->name()->value();
         DefName.setSensitive(false);
@@ -267,7 +267,9 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
             {
                 TermDef* PDef = Val->elements()->at(i)->isDef();
                 if (!PDef)
+                {
                     continue;
+                }
 
                 Text Key = PDef->name()->value();
                 Key.setSensitive(false);
@@ -411,7 +413,6 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 }
                 else if (Key == "light_color")
                 {
-                    // You already used GetDefFColor in legacy; keep that helper.
                     GetDefFColor(W.LightColor, PDef, fn);
                 }
                 else if (Key == "muzzle")
@@ -450,29 +451,21 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 }
                 else if (Key == "decoy")
                 {
-                    // Legacy: string -> ShipDesign::ClassForName -> int
-                    // We keep it as int (DecoyType) but you decide how to map.
-                    // If you already have a helper, call it here. Otherwise keep 0.
                     Text T = "";
                     GetDefText(T, PDef, fn);
-
-                    // Placeholder: leave as 0 if you don't want coupling here.
-                    // If you DO have UFormattingUtils::GetDesignClassFromName or similar, use it:
-                    // W.DecoyType = UFormattingUtils::GetDesignClassFromName(T);
                     W.DecoyType = 0;
                 }
                 else if (Key == "damage_type")
                 {
-                    // Legacy parsed string into DMG_* ints.
                     Text T = "";
                     GetDefText(T, PDef, fn);
 
                     FString S(T.data());
                     S = S.ToLower();
 
-                    if (S == TEXT("normal"))      W.DamageType = 0; // DMG_NORMAL
-                    else if (S == TEXT("emp"))    W.DamageType = 1; // DMG_EMP
-                    else if (S == TEXT("power"))  W.DamageType = 2; // DMG_POWER
+                    if (S == TEXT("normal"))      W.DamageType = 0;
+                    else if (S == TEXT("emp"))    W.DamageType = 1;
+                    else if (S == TEXT("power"))  W.DamageType = 2;
                     else
                     {
                         UE_LOG(LogTemp, Warning, TEXT("[WEAPON] WARNING: unknown damage_type '%s' in '%s'"),
@@ -482,7 +475,6 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 else if (Key == "slew_rate")
                 {
                     GetDefNumber(W.SlewRate, PDef, fn);
-                    // legacy doesn’t degrees-convert slew_rate, it is already in radians or scaled; keep as-authored
                 }
                 else if (Key == "turret_axis")
                 {
@@ -527,7 +519,6 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
             if (W.bBeam)
                 W.bFlak = false;
 
-            // Self aiming expands firing cone in legacy:
             if (W.bSelfAiming)
             {
                 auto AbsF = [](float X) { return (float)FMath::Abs(X); };
@@ -538,7 +529,6 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 if (AbsF(W.AimElMin) > W.FiringCone) W.FiringCone = AbsF(W.AimElMin);
             }
 
-            // Lock fixed arrays + clamp counters:
             ClampStores(W);
 
             if (W.Name.IsEmpty())
@@ -552,21 +542,33 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
 
             const FName RowName(*CleanName);
 
-            // Cache:
+            // Subsystem cache:
             DesignsByName.Add(RowName, W);
 
+            // Global runtime registry:
+            WeaponDesignRegistry::RegisterDesign(RowName, W);
+
             if (WeaponDesignDataTable)
-{   
-    if (FWeaponDesign* Existing =
-        WeaponDesignDataTable->FindRow<FWeaponDesign>(RowName, TEXT("LoadWeaponDesign"), /*bWarnIfRowMissing=*/false))
-    {
-        *Existing = W; // overwrite row data in place (safe)
-    }
-    else
-    {
-        WeaponDesignDataTable->AddRow(RowName, W);
-    }
-}
+            {
+                if (FWeaponDesign* Existing =
+                    WeaponDesignDataTable->FindRow<FWeaponDesign>(RowName, TEXT("LoadWeaponDesign"), false))
+                {
+                    *Existing = W;
+                }
+                else
+                {
+                    WeaponDesignDataTable->AddRow(RowName, W);
+                }
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[WEAPON] Registered row='%s' name='%s' group='%s' carry=%f registry=%d"),
+                *RowName.ToString(),
+                *W.Name,
+                *W.Group,
+                W.CarryMass,
+                WeaponDesignRegistry::GetAll().Num());
+
             ++ParsedWeapons;
         }
         else
@@ -584,6 +586,71 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
         TermObj = nullptr;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("[WEAPON] Loaded %d weapon designs (cache=%d) from '%s'"),
-        ParsedWeapons, DesignsByName.Num(), *FilePath);
+    UE_LOG(LogTemp, Log, TEXT("[WEAPON] Loaded %d weapon designs (cache=%d registry=%d) from '%s'"),
+        ParsedWeapons,
+        DesignsByName.Num(),
+        WeaponDesignRegistry::GetAll().Num(),
+        *FilePath);
+}
+
+void UStarshatterWeaponDesignSubsystem::ReadWeaponDesignData()
+{
+    if (!WeaponDesignDataTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[WEAPON] ReadWeaponDesignData: WeaponDesignDataTable is null"));
+        return;
+    }
+
+    DesignsByName.Empty();
+    WeaponDesignRegistry::Clear();
+
+    static const FString Context = TEXT("ReadWeaponDesignData");
+
+    TArray<FWeaponDesign*> Rows;
+    WeaponDesignDataTable->GetAllRows(Context, Rows);
+
+    for (FWeaponDesign* Row : Rows)
+    {
+        if (!Row)
+        {
+            continue;
+        }
+
+        FString CleanName = Row->Name;
+        CleanName.TrimStartAndEndInline();
+
+        const FName RowName = !CleanName.IsEmpty()
+            ? FName(*CleanName)
+            : NAME_None;
+
+        if (RowName.IsNone())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[WEAPON] ReadWeaponDesignData: skipped row with empty weapon name"));
+            continue;
+        }
+
+        // subsystem cache
+        DesignsByName.Add(RowName, *Row);
+
+        // global runtime registry
+        WeaponDesignRegistry::RegisterDesign(RowName, *Row);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[WEAPON] Read row='%s' name='%s' group='%s' carry=%f"),
+            *RowName.ToString(),
+            *Row->Name,
+            *Row->Group,
+            Row->CarryMass);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[WEAPON] ReadWeaponDesignData complete: cache=%d registry=%d"),
+        DesignsByName.Num(),
+        WeaponDesignRegistry::GetAll().Num());
+}
+
+void UStarshatterWeaponDesignSubsystem::RebuildWeaponRegistryFromDataTable()
+{
+    ReadWeaponDesignData();
 }

@@ -659,7 +659,7 @@ WeaponDesign::LoadDesign(const char* path, const char* filename, bool mod)
 // +--------------------------------------------------------------------+
 
 WeaponDesign*
-WeaponDesign::Get(int type)
+WeaponDesign::GetWeaponDesign(int type)
 {
 	WeaponDesign  test;
 	test.type = type;

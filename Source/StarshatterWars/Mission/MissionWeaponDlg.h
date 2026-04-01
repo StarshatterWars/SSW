@@ -1,67 +1,40 @@
-/*  Project Starshatter Wars
+/*
+    Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025-2026.
 
-    ORIGINAL AUTHOR AND STUDIO:
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
+    SUBSYSTEM:    Mission UI
     FILE:         MissionWeaponDlg.h
-    AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========
-    UMissionWeaponDlg (Unreal)
-    - Port of legacy MsnWepDlg.
-    - Mission briefing WEAPON / LOADOUT dialog.
-    - Parses legacy FORM (.frm) via UBaseScreen.
-    - Uses FORM control IDs (no direct widget UPROPERTYs).
-    - Handles weapon hardpoint mounting and loadout selection.
+    Code-first Mission Weapon panel using UMG host.
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
-
-#include "Math/Vector.h"               // FVector
-#include "Math/Color.h"                // FColor
-#include "Math/UnrealMathUtility.h"    // Math
-
-#include "GameStructs.h"
-
 #include "MissionWeaponDlg.generated.h"
 
-// --------------------------------------------------------------------
-// Forward declarations (keep header light)
-// --------------------------------------------------------------------
-
-class Campaign;
-class Mission;
-class MissionElement; 
-class SimElement;
-class ShipDesign;
-class WeaponDesign;
-class HardPoint;
-class MissionLoad;
-class ShipLoad;
-class UMissionBriefingDlg;
+class UBorder;
+class UHorizontalBox;
+class USizeBox;
+class UTextBlock;
+class UVerticalBox;
 
 class UMissionPlanner;
+class UMissionBriefingDlg;
+class UMissionWeaponLoadoutListObject;
+class UMissionLoadoutListView;
 
-// --------------------------------------------------------------------
-// Helper struct: mount button -> weapon/station mapping
-// --------------------------------------------------------------------
+class Mission;
+class MissionElement;
+class MissionLoad;
 
-struct FMountSlot
-{
-    int32 WeaponIndex = -1;
-    int32 StationIndex = -1;
-};
-
-// --------------------------------------------------------------------
-// UMissionWeaponDlg
-// --------------------------------------------------------------------
+struct FShipDesign;
+struct FShipLoadout;
+struct FShipHardPoint;
+struct FWeaponDesign;
 
 UCLASS()
 class STARSHATTERWARS_API UMissionWeaponDlg : public UBaseScreen
@@ -71,107 +44,72 @@ class STARSHATTERWARS_API UMissionWeaponDlg : public UBaseScreen
 public:
     UMissionWeaponDlg(const FObjectInitializer& ObjectInitializer);
 
-    // ------------------------------------------------------------
-    // Screen lifecycle
-    // ------------------------------------------------------------
+    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
+    void SetParentDlg(UMissionBriefingDlg* InParentDlg);
 
+    void RefreshFromMission();
+
+protected:
     virtual void NativeConstruct() override;
 
-    virtual void Show();
-    virtual void ExecFrame(double DeltaTime) override;
+private:
+    void BuildRuntimeLayout();
 
-    // ------------------------------------------------------------
-    // Dialog input hooks (Enter / Escape)
-    // ------------------------------------------------------------
+    UTextBlock* BuildLabelText(const FString& Text) const;
+    UTextBlock* BuildValueText(const FString& Text) const;
+    UBorder* BuildHeader(const FString& Text) const;
 
-    virtual void HandleAccept() override;
-    virtual void HandleCancel() override;
-    
-    void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
-    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+    Mission* ResolveMission() const;
+    MissionElement* ResolvePlayerElement() const;
+    const FShipDesign* ResolvePlayerShipDesign() const;
 
-    // ------------------------------------------------------------
-    // Setup
-    // ------------------------------------------------------------
+    void ClearLoadouts();
+    void BuildLoadouts(MissionElement* Element, const FShipDesign* Design);
 
-    void SetMissionPlanner(UMissionPlanner* InPlanner) { MissionPlanner = InPlanner; }
-    void SetCampaign(Campaign* InCampaign) { CampaignPtr = InCampaign; }
-    void SetMission(Mission* InMission) { MissionPtr = InMission; }
+    bool GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const;
 
-protected:
-    // ------------------------------------------------------------
-    // Legacy logic ports
-    // ------------------------------------------------------------
+    FString GetElementName(MissionElement* Element) const;
+    FString GetDesignName(const FShipDesign* Design) const;
 
-    void SetupControls();
-    void BuildLists();
+    FString FormatWeight(double Mass) const;
 
-    int  LoadToPointIndex(int Station) const;
-    int  PointIndexToLoad(int Station, int PointIndex) const;
+private:
+    // UMG host (ONLY bind from BP)
+    UPROPERTY(meta = (BindWidgetOptional))
+    UBorder* RuntimeHost = nullptr;
 
-    // ------------------------------------------------------------
-    // Event wiring
-    // ------------------------------------------------------------
-
-    void WireEvents();
-
-    // ------------------------------------------------------------
-    // Button handlers (no lambdas)
-    // ------------------------------------------------------------
-
-    UFUNCTION()
-    void OnAcceptClicked();
-
-    UFUNCTION()
-    void OnCancelClicked();
-
-    UFUNCTION()
-    void OnTabSit();
-
-    UFUNCTION()
-    void OnTabPkg();
-
-    UFUNCTION()
-    void OnTabMap();
-
-    UFUNCTION()
-    void OnTabWep();
-
-    UFUNCTION()
-    void OnMountClicked();
-
-
-protected:
+private:
     UPROPERTY()
     UMissionBriefingDlg* ParentDlg = nullptr;
 
-protected:
-    // ------------------------------------------------------------
-    // Data pointers (non-owning)
-    // ------------------------------------------------------------
-
-    Campaign* CampaignPtr = nullptr;
-    Mission* MissionPtr = nullptr;
-    UMissionPlanner* MissionPlanner = nullptr;
-
-    MissionElement* Elem = nullptr;
-
-    // ------------------------------------------------------------
-    // Weapon / loadout state (legacy layout preserved)
-    // ------------------------------------------------------------
-
-    WeaponDesign* Designs[8];
-    bool              Mounts[8][8];
-    int               Loads[8];
-    int               FirstStation = 0;
-
-    // ------------------------------------------------------------
-    // Button -> mount slot mapping
-    // ------------------------------------------------------------
-
-    TMap<UButton*, FMountSlot> ButtonIdToSlot;
-private:
     UPROPERTY(Transient)
     UMissionPlanner* Manager = nullptr;
-    UMissionPlanner* MissionScreen = nullptr;
+
+    // Code-created widgets (NO BP name collisions)
+    UPROPERTY()
+    UTextBlock* ElementNameValueText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* DesignNameValueText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* WeightValueText = nullptr;
+
+    UPROPERTY()
+    UMissionLoadoutListView* WeaponListView = nullptr;
+
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<UUserWidget> EntryWidgetClass;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMissionWeaponLoadoutListObject>> Items;
+
+private:
+    double ComputeLoadoutMass(const FShipDesign* Design, const FShipLoadout& Loadout) const;
+    double ComputeCurrentCustomMass(MissionElement* Element, const FShipDesign* Design) const;
+
+    const FWeaponDesign* ResolveWeaponDesignForStationSelection(
+        const FShipDesign* Design,
+        int32 StationIndex,
+        int32 PointIndex) const;
 };

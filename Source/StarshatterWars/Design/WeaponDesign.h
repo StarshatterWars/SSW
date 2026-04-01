@@ -53,7 +53,7 @@ public:
 	static void            Initialize(const char* filename);
 	static void            Close();
 
-	static WeaponDesign* Get(int type);
+	static WeaponDesign* GetWeaponDesign(int type);
 	static WeaponDesign* Find(const char* name);
 	static int             GetDesignList(List<Text>& designs);
 
