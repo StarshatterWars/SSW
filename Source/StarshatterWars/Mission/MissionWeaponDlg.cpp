@@ -529,7 +529,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
-    // PRESET LOADOUTS LIST (DO NOT CHANGE)
+    // PRESET LOADOUTS LIST (UNCHANGED)
     // ------------------------------------------------------------
 
     UBorder* ListBorder =
@@ -549,7 +549,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             USizeBox::StaticClass(),
             TEXT("MissionWeaponListHost"));
     ListHost->SetWidthOverride(900.f);
-    ListHost->SetHeightOverride(260.f);
+    ListHost->SetHeightOverride(250.0f);
     ListBorder->SetContent(ListHost);
 
     WeaponListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
@@ -587,8 +587,8 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
-    // SELECTED LOADOUT STATION LIST (MATCHED TO ABOVE)
-    // ------------------------------------------------------------
+// SELECTED LOADOUT STATION LIST
+// ------------------------------------------------------------
 
     UBorder* StationBorder =
         WidgetTree->ConstructWidget<UBorder>(
@@ -607,10 +607,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             USizeBox::StaticClass(),
             TEXT("MissionWeaponStationHost"));
     StationHost->SetWidthOverride(900.f);
-
-    // IMPORTANT: match height to WeaponListView
-    StationHost->SetHeightOverride(260.f);
-
+    StationHost->SetHeightOverride(220.f);
     StationBorder->SetContent(StationHost);
 
     StationListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
@@ -962,7 +959,7 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
                 PointIndex);
 
         const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
-        const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex);
+        const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex + 1);
 
         UMissionWeaponStationRowObject* Row =
             NewObject<UMissionWeaponStationRowObject>(this);
