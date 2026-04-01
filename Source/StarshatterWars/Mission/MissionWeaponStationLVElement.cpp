@@ -57,6 +57,50 @@ void UMissionWeaponStationLVElement::NativeConstruct()
         WeaponCombo->OnSelectionChanged.AddDynamic(
             this,
             &UMissionWeaponStationLVElement::HandleWeaponSelectionChanged);
+
+        // Closed combo button colors:
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.Normal.TintColor =
+            FSlateColor(MissionUIStyle::ComboBG);
+
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor =
+            FSlateColor(MissionUIStyle::ComboHoverBG);
+
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.Pressed.TintColor =
+            FSlateColor(MissionUIStyle::ComboPressedBG);
+
+        // Text/foreground colors:
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.NormalForeground =
+            FSlateColor(MissionUIStyle::ComboText);
+
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.HoveredForeground =
+            FSlateColor(MissionUIStyle::ComboText);
+
+        WeaponCombo->WidgetStyle.ComboButtonStyle.ButtonStyle.PressedForeground =
+            FSlateColor(MissionUIStyle::ComboText);
+
+        // Popup/menu border tint:
+        WeaponCombo->WidgetStyle.ComboButtonStyle.MenuBorderBrush.TintColor =
+            FSlateColor(MissionUIStyle::ComboMenuBG);
+
+        // Dropdown row text:
+        WeaponCombo->ItemStyle.TextColor =
+            FSlateColor(MissionUIStyle::ComboText);
+
+        WeaponCombo->ItemStyle.SelectedTextColor =
+            FSlateColor(MissionUIStyle::ComboText);
+
+        // Dropdown row background states:
+        WeaponCombo->ItemStyle.ActiveBrush.TintColor =
+            FSlateColor(MissionUIStyle::ComboItemSelectedBG);
+
+        WeaponCombo->ItemStyle.ActiveHoveredBrush.TintColor =
+            FSlateColor(MissionUIStyle::ComboItemSelectedBG);
+
+        WeaponCombo->ItemStyle.InactiveBrush.TintColor =
+            FSlateColor(MissionUIStyle::ComboItemBG);
+
+        WeaponCombo->ItemStyle.InactiveHoveredBrush.TintColor =
+            FSlateColor(MissionUIStyle::ComboItemHoverBG);
     }
 }
 

@@ -36,6 +36,15 @@ namespace MissionUIStyle
     extern const FLinearColor InfoValueText;
 
     extern const FLinearColor RowSelectedBG;
+
+    extern const FLinearColor ComboBG;
+    extern const FLinearColor ComboHoverBG;
+    extern const FLinearColor ComboPressedBG;
+    extern const FLinearColor ComboText;
+    extern const FLinearColor ComboMenuBG;
+    extern const FLinearColor ComboItemBG;
+    extern const FLinearColor ComboItemHoverBG;
+    extern const FLinearColor ComboItemSelectedBG;
     // -----------------------------------------------------------------
     // Font paths
     // -----------------------------------------------------------------
