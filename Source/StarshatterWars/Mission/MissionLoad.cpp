@@ -111,23 +111,3 @@ void MissionLoad::Clear()
     }
 }
 
-MissionLoad* GetActivePlayerMissionLoad(Mission* InMission)
-{
-    if (!InMission)
-    {
-        return nullptr;
-    }
-
-    MissionElement* PlayerElem = InMission->GetPlayer();
-    if (!PlayerElem)
-    {
-        return nullptr;
-    }
-
-    if (PlayerElem->Loadouts().size() < 1)
-    {
-        return nullptr;
-    }
-
-    return PlayerElem->Loadouts().at(0);
-}
