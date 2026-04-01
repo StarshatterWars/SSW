@@ -29,6 +29,8 @@ namespace MissionUIStyle
     const FLinearColor InfoLabelText = FLinearColor(0.80f, 0.82f, 0.85f, 1.0f);
     const FLinearColor InfoValueText = FLinearColor(0.92f, 0.94f, 0.97f, 1.0f);
 
+    const FLinearColor RowSelectedBG = FLinearColor(0.15f, 0.25f, 0.45f, 1.f);
+
     const TCHAR* GetSerpentineFontPath()
     {
         return TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font");

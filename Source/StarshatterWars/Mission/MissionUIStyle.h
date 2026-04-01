@@ -35,6 +35,7 @@ namespace MissionUIStyle
     extern const FLinearColor InfoLabelText;
     extern const FLinearColor InfoValueText;
 
+    extern const FLinearColor RowSelectedBG;
     // -----------------------------------------------------------------
     // Font paths
     // -----------------------------------------------------------------
@@ -65,4 +66,6 @@ namespace MissionUIStyle
 
     // Convenience
     FSlateFontInfo GetTableRowFont(); // always 16 Limerick
+
+
 }

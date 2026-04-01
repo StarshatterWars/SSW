@@ -6,20 +6,27 @@
 
     OVERVIEW
     ========
-    ListView entry widget for displaying a single
-    station and its selected weapon.
+    Interactive station row widget for runtime MissionLoad editing.
+
+    Displays:
+      - Station label
+      - Current weapon text
+      - Combo box of allowed weapons
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
+#include "Blueprint/UserWidget.h"
 #include "MissionWeaponStationLVElement.generated.h"
 
 class UBorder;
+class UComboBoxString;
 class USizeBox;
 class UTextBlock;
+class UObject;
+class UMissionWeaponDlg;
 class UMissionWeaponStationRowObject;
 
 UCLASS()
@@ -32,31 +39,41 @@ class STARSHATTERWARS_API UMissionWeaponStationLVElement
 public:
     virtual void NativeConstruct() override;
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-    virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
-    virtual void NativeOnEntryReleased() override;
+
+    void SetOwningWeaponDlg(UMissionWeaponDlg* InDlg) { OwningWeaponDlg = InDlg; }
 
 protected:
-    void ApplySelectionVisual();
+    UFUNCTION()
+    void HandleWeaponSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
+
     void ApplyTextRules();
+    void ApplySelectionVisual();
 
 protected:
-    UPROPERTY(meta = (BindWidget))
-    UBorder* SelectionBorder = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UBorder* RowBorder = nullptr;
 
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* StationSizeBox = nullptr;
 
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* WeaponSizeBox = nullptr;
 
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(meta = (BindWidgetOptional))
     UTextBlock* StationText = nullptr;
 
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(meta = (BindWidgetOptional))
     UTextBlock* WeaponText = nullptr;
 
-    UPROPERTY(Transient)
+    UPROPERTY(meta = (BindWidgetOptional))
+    UComboBoxString* WeaponCombo = nullptr;
+
+    UPROPERTY()
     UMissionWeaponStationRowObject* StationItem = nullptr;
 
+    UPROPERTY()
+    UMissionWeaponDlg* OwningWeaponDlg = nullptr;
+
     bool bRowSelected = false;
+    bool bUpdatingCombo = false;
 };

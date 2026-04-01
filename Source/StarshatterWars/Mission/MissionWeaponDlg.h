@@ -66,6 +66,8 @@ public:
 
     void RefreshFromMission();
 
+    void HandleStationChanged(int32 StationIndex, int32 NewSelection);
+
 protected:
     // ------------------------------------------------------------
     // Mission / player resolution
@@ -74,6 +76,8 @@ protected:
     Mission* ResolveMission() const;
     MissionElement* ResolvePlayerElement() const;
     const FShipDesign* ResolvePlayerShipDesign() const;
+
+    
 
     // ------------------------------------------------------------
     // UI build / refresh

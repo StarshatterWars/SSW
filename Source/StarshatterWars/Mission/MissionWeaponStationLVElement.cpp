@@ -6,25 +6,19 @@
 
     OVERVIEW
     ========
-    ListView entry widget for displaying a single
-    station and its selected weapon.
-
-    Mirrors behavior of MissionWeaponLoadoutLVElement:
-    - consistent text styling
-    - selection highlighting
-    - entry lifecycle handling
+    Interactive station row widget for runtime MissionLoad editing.
 */
 
 #include "MissionWeaponStationLVElement.h"
 
+#include "MissionWeaponDlg.h"
 #include "MissionWeaponStationRowObject.h"
 #include "MissionUIStyle.h"
 
 #include "Components/Border.h"
+#include "Components/ComboBoxString.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
-
-// ------------------------------------------------------------
 
 void UMissionWeaponStationLVElement::NativeConstruct()
 {
@@ -56,9 +50,15 @@ void UMissionWeaponStationLVElement::NativeConstruct()
         WeaponText->SetColorAndOpacity(MissionUIStyle::RowText);
         WeaponText->SetFont(MissionUIStyle::GetRowFont(16));
     }
-}
 
-// ------------------------------------------------------------
+    if (WeaponCombo)
+    {
+        WeaponCombo->OnSelectionChanged.RemoveAll(this);
+        WeaponCombo->OnSelectionChanged.AddDynamic(
+            this,
+            &UMissionWeaponStationLVElement::HandleWeaponSelectionChanged);
+    }
+}
 
 void UMissionWeaponStationLVElement::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
@@ -76,6 +76,21 @@ void UMissionWeaponStationLVElement::NativeOnListItemObjectSet(UObject* ListItem
         if (WeaponText)
         {
             WeaponText->SetText(FText::GetEmpty());
+        }
+
+        if (WeaponCombo)
+        {
+            bUpdatingCombo = true;
+
+            WeaponCombo->OnSelectionChanged.RemoveAll(this);
+            WeaponCombo->ClearOptions();
+            WeaponCombo->ClearSelection();
+
+            WeaponCombo->OnSelectionChanged.AddDynamic(
+                this,
+                &UMissionWeaponStationLVElement::HandleWeaponSelectionChanged);
+
+            bUpdatingCombo = false;
         }
 
         ApplySelectionVisual();
@@ -98,79 +113,104 @@ void UMissionWeaponStationLVElement::NativeOnListItemObjectSet(UObject* ListItem
         WeaponText->SetFont(MissionUIStyle::GetRowFont(16));
     }
 
+    if (WeaponCombo)
+    {
+        bUpdatingCombo = true;
+
+        WeaponCombo->OnSelectionChanged.RemoveAll(this);
+        WeaponCombo->ClearOptions();
+
+        const TArray<FString>& AllowedWeapons = StationItem->GetAllowedWeapons();
+
+        for (const FString& WeaponName : AllowedWeapons)
+        {
+            WeaponCombo->AddOption(WeaponName);
+        }
+
+        const int32 CurrentSelection = StationItem->GetCurrentSelection();
+
+        if (AllowedWeapons.IsValidIndex(CurrentSelection))
+        {
+            WeaponCombo->SetSelectedOption(AllowedWeapons[CurrentSelection]);
+        }
+        else
+        {
+            WeaponCombo->ClearSelection();
+        }
+
+        WeaponCombo->OnSelectionChanged.AddDynamic(
+            this,
+            &UMissionWeaponStationLVElement::HandleWeaponSelectionChanged);
+
+        bUpdatingCombo = false;
+    }
+
     bRowSelected = false;
     ApplySelectionVisual();
 }
 
-// ------------------------------------------------------------
-
-void UMissionWeaponStationLVElement::NativeOnItemSelectionChanged(bool bIsSelected)
+void UMissionWeaponStationLVElement::HandleWeaponSelectionChanged(
+    FString SelectedItem,
+    ESelectInfo::Type SelectionType)
 {
-    IUserObjectListEntry::NativeOnItemSelectionChanged(bIsSelected);
-
-    bRowSelected = bIsSelected;
-    ApplySelectionVisual();
-}
-
-// ------------------------------------------------------------
-
-void UMissionWeaponStationLVElement::NativeOnEntryReleased()
-{
-    IUserObjectListEntry::NativeOnEntryReleased();
-
-    StationItem = nullptr;
-    bRowSelected = false;
-
-    if (StationText)
-    {
-        StationText->SetText(FText::GetEmpty());
-    }
-
-    if (WeaponText)
-    {
-        WeaponText->SetText(FText::GetEmpty());
-    }
-
-    ApplySelectionVisual();
-}
-
-// ------------------------------------------------------------
-
-void UMissionWeaponStationLVElement::ApplySelectionVisual()
-{
-    if (!SelectionBorder)
+    if (bUpdatingCombo)
     {
         return;
     }
 
-    if (bRowSelected)
+    if (!StationItem)
     {
-        SelectionBorder->SetBrushColor(MissionUIStyle::RowSelected);
+        return;
     }
-    else
+
+    const int32 NewSelection =
+        StationItem->GetAllowedWeapons().IndexOfByKey(SelectedItem);
+
+    if (NewSelection == INDEX_NONE)
     {
-        SelectionBorder->SetBrushColor(MissionUIStyle::RowBG);
-        SelectionBorder->SetPadding(FMargin(6.f, 4.f));
+        return;
+    }
+
+    StationItem->SetCurrentSelection(NewSelection);
+    StationItem->SetWeaponName(SelectedItem);
+
+    if (WeaponText)
+    {
+        WeaponText->SetText(FText::FromString(SelectedItem));
+    }
+
+    if (OwningWeaponDlg)
+    {
+        OwningWeaponDlg->HandleStationChanged(
+            StationItem->GetStationIndex(),
+            NewSelection);
     }
 }
-
-// ------------------------------------------------------------
 
 void UMissionWeaponStationLVElement::ApplyTextRules()
 {
     if (StationText)
     {
         StationText->SetAutoWrapText(false);
-        StationText->SetJustification(ETextJustify::Left);
-        StationText->SetColorAndOpacity(MissionUIStyle::RowText);
-        StationText->SetFont(MissionUIStyle::GetRowFont(16));
+        StationText->SetMinDesiredWidth(1.f);
     }
 
     if (WeaponText)
     {
         WeaponText->SetAutoWrapText(false);
-        WeaponText->SetJustification(ETextJustify::Left);
-        WeaponText->SetColorAndOpacity(MissionUIStyle::RowText);
-        WeaponText->SetFont(MissionUIStyle::GetRowFont(16));
+        WeaponText->SetMinDesiredWidth(1.f);
     }
+}
+
+void UMissionWeaponStationLVElement::ApplySelectionVisual()
+{
+    if (!RowBorder)
+    {
+        return;
+    }
+
+    RowBorder->SetBrushColor(
+        bRowSelected
+        ? MissionUIStyle::RowSelected
+        : MissionUIStyle::RowBG);
 }

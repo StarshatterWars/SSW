@@ -964,7 +964,15 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
         UMissionWeaponStationRowObject* Row =
             NewObject<UMissionWeaponStationRowObject>(this);
 
-        Row->Init(StationIndex, StationLabel, WeaponName);
+        const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+
+        Row->Init(
+            StationIndex,
+            StationLabel,
+            WeaponName,
+            Hardpoint.AllowedWeaponTypes,
+            PointIndex
+        );
 
         StationItems.Add(Row);
 
@@ -972,5 +980,33 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
         {
             StationListView->AddItem(Row);
         }
+    }
+}
+
+void UMissionWeaponDlg::HandleStationChanged(int32 StationIndex, int32 NewSelection)
+{
+    Mission* MissionPtr = ResolveMission();
+    if (!MissionPtr)
+    {
+        return;
+    }
+
+    MissionLoad* Load = GetActivePlayerMissionLoad(MissionPtr);
+    if (!Load)
+    {
+        return;
+    }
+
+    Load->SetStation(StationIndex, NewSelection);
+
+    RefreshSelectedLoadoutStations();
+
+    MissionElement* Elem = ResolvePlayerElement();
+    const FShipDesign* Design = ResolvePlayerShipDesign();
+
+    if (WeightValueText && Elem && Design)
+    {
+        const double CurrentMass = ComputeCurrentCustomMass(Elem, Design);
+        WeightValueText->SetText(FText::FromString(FormatWeight(CurrentMass)));
     }
 }
