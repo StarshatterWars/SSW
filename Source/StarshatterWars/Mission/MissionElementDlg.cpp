@@ -39,6 +39,7 @@
 #include "ParseUtil.h"
 #include "GameStructs.h"
 #include "ShipDesignRegistry.h"
+#include "MissionLoad.h"
 
 // +--------------------------------------------------------------------+
 // Local helpers (no Unreal containers; keep it simple)

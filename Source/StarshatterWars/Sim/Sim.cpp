@@ -73,6 +73,8 @@
 #include "Video.h"
 #include "Graphic.h"
 #include "GameStructs.h"
+#include "MissionLoad.h"
+#include "MissionShip.h"
 
 #include "ShipDesignRegistry.h"
 #include "GameStructs_System.h"
@@ -819,15 +821,15 @@ Sim::CreateElements()
 
 					if (MissionElem->Ships().size() > i) {
 						MissionShipPtr = MissionElem->Ships()[i];
-						ShipName = MissionShipPtr->Name();
-						RegistryNum = MissionShipPtr->RegNum();
-						RegionName = MissionShipPtr->Region();
+						ShipName = MissionShipPtr->GetName();
+						RegistryNum = MissionShipPtr->GetRegNum();
+						RegionName = MissionShipPtr->GetRegion();
 					}
 
 					FVector SpawnLocation = OtherHand(MissionElem->GetLocation());
 
-					if (MissionShipPtr && fabs(MissionShipPtr->Location().X) < 1e9) {
-						SpawnLocation = OtherHand(MissionShipPtr->Location());
+					if (MissionShipPtr && fabs(MissionShipPtr->GetLocation().X) < 1e9) {
+						SpawnLocation = OtherHand(MissionShipPtr->GetLocation());
 					}
 					else if (i) {
 						FVector Offset = OtherHand(FVector(
@@ -880,7 +882,7 @@ Sim::CreateElements()
 						const Skin* SkinPtr = MissionElem->GetSkin();
 
 						if (MissionShipPtr) {
-							Heading = MissionShipPtr->Heading();
+							Heading = MissionShipPtr->GetHeading();
 
 							if (MissionShipPtr->GetSkin())
 								SkinPtr = MissionShipPtr->GetSkin();
@@ -920,39 +922,39 @@ Sim::CreateElements()
 						}
 
 						if (MissionShipPtr) {
-							NewShip->SetVelocity(OtherHand(MissionShipPtr->Velocity()));
-							NewShip->SetIntegrity((float)MissionShipPtr->Integrity());
-							NewShip->SetRespawnCount(MissionShipPtr->Respawns());
+							NewShip->SetVelocity(OtherHand(MissionShipPtr->GetVelocity()));
+							NewShip->SetIntegrity((float)MissionShipPtr->GetIntegrity());
+							NewShip->SetRespawnCount(MissionShipPtr->GetRespawns());
 
-							if (MissionShipPtr->Ammo()[0] > -10) {
+							if (MissionShipPtr->GetAmmo()[0] > -10) {
 								for (int32 AmmoIndex = 0; AmmoIndex < 64; AmmoIndex++) {
 									Weapon* WeaponPtr = NewShip->GetWeaponByIndex(AmmoIndex + 1);
 									if (WeaponPtr)
-										WeaponPtr->SetAmmo(MissionShipPtr->Ammo()[AmmoIndex]);
+										WeaponPtr->SetAmmo(MissionShipPtr->GetAmmo()[AmmoIndex]);
 									else
 										break;
 								}
 							}
 
-							if (MissionShipPtr->Fuel()[0] > -10) {
+							if (MissionShipPtr->GetFuel()[0] > -10) {
 								for (int32 ReactorIndex = 0; ReactorIndex < 4; ReactorIndex++) {
 									if (NewShip->Reactors().size() > ReactorIndex) {
 										PowerSource* PowerSourcePtr = NewShip->Reactors()[ReactorIndex];
-										PowerSourcePtr->SetCapacity(MissionShipPtr->Fuel()[ReactorIndex]);
+										PowerSourcePtr->SetCapacity(MissionShipPtr->GetFuel()[ReactorIndex]);
 									}
 								}
 							}
 
-							if (MissionShipPtr->Decoys() > -10) {
+							if (MissionShipPtr->GetDecoys() > -10) {
 								Weapon* DecoyWeapon = NewShip->GetDecoy();
 								if (DecoyWeapon)
-									DecoyWeapon->SetAmmo(MissionShipPtr->Decoys());
+									DecoyWeapon->SetAmmo(MissionShipPtr->GetDecoys());
 							}
 
-							if (MissionShipPtr->Probes() > -10) {
+							if (MissionShipPtr->GetProbes() > -10) {
 								Weapon* ProbeWeapon = NewShip->GetProbeLauncher();
 								if (ProbeWeapon)
-									ProbeWeapon->SetAmmo(MissionShipPtr->Probes());
+									ProbeWeapon->SetAmmo(MissionShipPtr->GetProbes());
 							}
 						}
 

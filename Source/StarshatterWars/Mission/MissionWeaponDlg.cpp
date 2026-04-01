@@ -10,7 +10,6 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/SizeBox.h"
-#include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -19,8 +18,94 @@
 #include "GameStructs_System.h"
 #include "MissionUIStyle.h"
 
+#include "MissionLoad.h"
+#include "MissionLoadoutTypes.h"
+
 #include "Mission.h"
 #include "MissionElement.h"
+
+// +--------------------------------------------------------------------+
+// Runtime Loadout Helpers
+// +--------------------------------------------------------------------+
+
+static FMissionRuntimeLoadout ConvertMissionLoad(const MissionLoad* InLoad)
+{
+    FMissionRuntimeLoadout Out;
+
+    if (!InLoad)
+    {
+        return Out;
+    }
+
+    Out.ShipIndex = InLoad->GetShip();
+    Out.Name = FString(InLoad->GetName().data());
+
+    const int32 NumStations = InLoad->GetNumStations();
+    Out.Stations.SetNum(NumStations);
+
+    for (int32 i = 0; i < NumStations; ++i)
+    {
+        const int32 Selection = InLoad->GetStation(i);
+        Out.Stations[i] = (Selection >= 0) ? Selection : INDEX_NONE;
+    }
+
+    return Out;
+}
+
+static MissionLoad* GetActivePlayerMissionLoad(Mission* InMission)
+{
+    if (!InMission)
+    {
+        return nullptr;
+    }
+
+    MissionElement* PlayerElem = InMission->GetPlayer();
+    if (!PlayerElem)
+    {
+        return nullptr;
+    }
+
+    if (PlayerElem->Loadouts().size() < 1)
+    {
+        return nullptr;
+    }
+
+    return PlayerElem->Loadouts().at(0);
+}
+
+static void ApplyShipLoadoutToMissionLoad(
+    MissionLoad* Load,
+    const FShipLoadout& Src)
+{
+    if (!Load)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] ApplyShipLoadoutToMissionLoad: Load is null"));
+        return;
+    }
+
+    Load->Clear();
+    Load->SetName(TCHAR_TO_ANSI(*Src.Name));
+
+    const int32 Count = FMath::Min(Load->GetNumStations(), Src.Stations.Num());
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] ApplyShipLoadoutToMissionLoad: Name='%s' Count=%d"),
+        *Src.Name,
+        Count);
+
+    for (int32 i = 0; i < Count; ++i)
+    {
+        Load->SetStation(i, Src.Stations[i]);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg]   Apply Station[%d] = %d"),
+            i,
+            Src.Stations[i]);
+    }
+}
+
+// +--------------------------------------------------------------------+
 
 UMissionWeaponDlg::UMissionWeaponDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -30,14 +115,17 @@ UMissionWeaponDlg::UMissionWeaponDlg(const FObjectInitializer& ObjectInitializer
 void UMissionWeaponDlg::NativeConstruct()
 {
     Super::NativeConstruct();
-
     BuildRuntimeLayout();
-    RefreshFromMission();
 }
 
 void UMissionWeaponDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 {
     ParentDlg = InParentDlg;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] SetParentDlg: ParentDlg=%p Mission=%p"),
+        ParentDlg,
+        ParentDlg ? ParentDlg->GetMissionPtr() : nullptr);
 }
 
 Mission* UMissionWeaponDlg::ResolveMission() const
@@ -48,14 +136,19 @@ Mission* UMissionWeaponDlg::ResolveMission() const
 MissionElement* UMissionWeaponDlg::ResolvePlayerElement() const
 {
     Mission* M = ResolveMission();
-    if (!M) return nullptr;
+    if (!M)
+    {
+        return nullptr;
+    }
 
     ListIter<MissionElement> It = M->GetElements();
     while (++It)
     {
         MissionElement* E = It.value();
         if (E && E->IsPlayer())
+        {
             return E;
+        }
     }
 
     return M->GetPlayer();
@@ -69,19 +162,52 @@ const FShipDesign* UMissionWeaponDlg::ResolvePlayerShipDesign() const
 
 void UMissionWeaponDlg::RefreshFromMission()
 {
+    if (bRefreshingLoadouts)
+    {
+        return;
+    }
+
+    bRefreshingLoadouts = true;
+
+    Mission* MissionPtr = ResolveMission();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] RefreshFromMission: this=%p ParentDlg=%p Mission=%p"),
+        this,
+        ParentDlg,
+        MissionPtr);
+
+    if (!MissionPtr)
+    {
+        bRefreshingLoadouts = false;
+        return;
+    }
+
     ClearLoadouts();
 
     MissionElement* Elem = ResolvePlayerElement();
     const FShipDesign* Design = ResolvePlayerShipDesign();
 
     if (!Elem || !Design)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] RefreshFromMission: Elem=%p Design=%p"),
+            Elem,
+            Design);
+
+        bRefreshingLoadouts = false;
         return;
+    }
 
     if (ElementNameValueText)
+    {
         ElementNameValueText->SetText(FText::FromString(GetElementName(Elem)));
+    }
 
     if (DesignNameValueText)
+    {
         DesignNameValueText->SetText(FText::FromString(GetDesignName(Design)));
+    }
 
     if (WeightValueText)
     {
@@ -90,6 +216,9 @@ void UMissionWeaponDlg::RefreshFromMission()
     }
 
     BuildLoadouts(Elem, Design);
+    RefreshWeaponList();
+
+    bRefreshingLoadouts = false;
 }
 
 void UMissionWeaponDlg::ClearLoadouts()
@@ -105,10 +234,15 @@ void UMissionWeaponDlg::ClearLoadouts()
 bool UMissionWeaponDlg::GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const
 {
     if (!Element || Element->Loadouts().size() == 0)
+    {
         return false;
+    }
 
     MissionLoad* Load = Element->Loadouts().at(0);
-    if (!Load) return false;
+    if (!Load)
+    {
+        return false;
+    }
 
     if (Load->GetName().length() > 0)
     {
@@ -121,19 +255,29 @@ bool UMissionWeaponDlg::GetSelectedLoadoutName(MissionElement* Element, FString&
 
 void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign* Design)
 {
+    if (!Element || !Design)
+    {
+        return;
+    }
+
     FString SelectedName;
     const bool bHasSelected = GetSelectedLoadoutName(Element, SelectedName);
 
-    for (int32 i = 0; i < Design->Loadout.Num(); i++)
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] BuildLoadouts: Count BEFORE = %d DesignLoadouts = %d"),
+        Items.Num(),
+        Design->Loadout.Num());
+
+    for (int32 i = 0; i < Design->Loadout.Num(); ++i)
     {
         const FShipLoadout& L = Design->Loadout[i];
 
-        bool bSelected =
+        const bool bSelected =
             bHasSelected &&
             L.Name.Equals(SelectedName, ESearchCase::IgnoreCase);
 
         const double LoadoutMass = ComputeLoadoutMass(Design, L);
-        FString WeightStr = FormatWeight(LoadoutMass);
+        const FString WeightStr = FormatWeight(LoadoutMass);
 
         UMissionWeaponLoadoutListObject* Item =
             NewObject<UMissionWeaponLoadoutListObject>(this);
@@ -157,6 +301,10 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
     {
         WeaponListView->SetSelectedItem(Items[0]);
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] BuildLoadouts: Count AFTER = %d"),
+        Items.Num());
 }
 
 FString UMissionWeaponDlg::GetElementName(MissionElement* E) const
@@ -166,10 +314,15 @@ FString UMissionWeaponDlg::GetElementName(MissionElement* E) const
 
 FString UMissionWeaponDlg::GetDesignName(const FShipDesign* D) const
 {
-    if (!D) return TEXT("UNKNOWN");
+    if (!D)
+    {
+        return TEXT("UNKNOWN");
+    }
 
     if (!D->DisplayName.IsEmpty())
+    {
         return D->DisplayName;
+    }
 
     return D->ShipName;
 }
@@ -235,7 +388,6 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionWeaponRootRow"));
     Root->SetContent(MainRow);
 
-    // LEFT COLUMN
     UVerticalBox* Left =
         WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponLeftColumn"));
 
@@ -280,7 +432,6 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     AddInfoRow(TEXT("TYPE:"), DesignNameValueText);
     AddInfoRow(TEXT("WEIGHT:"), WeightValueText);
 
-    // RIGHT COLUMN
     UVerticalBox* Right =
         WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponRightColumn"));
 
@@ -327,6 +478,154 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     ListHost->SetContent(WeaponListView);
+
+    if (WeaponListView)
+    {
+        WeaponListView->OnItemSelectionChanged().AddUObject(
+            this,
+            &UMissionWeaponDlg::HandleLoadoutSelectionChanged);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] BuildRuntimeLayout: Selection binding complete"));
+    }
+}
+
+void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
+{
+    UMissionWeaponLoadoutListObject* SelectedItem =
+        Cast<UMissionWeaponLoadoutListObject>(Item);
+
+    if (!SelectedItem)
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Selection changed -> Index=%d"),
+        SelectedItem->GetLoadoutIndex());
+
+    OnLoadoutSelected(SelectedItem);
+}
+
+void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* SelectedItem)
+{
+    if (!SelectedItem)
+    {
+        return;
+    }
+
+    MissionElement* Elem = ResolvePlayerElement();
+    const FShipDesign* Design = ResolvePlayerShipDesign();
+
+    if (!Elem || !Design)
+    {
+        return;
+    }
+
+    const int32 Index = SelectedItem->GetLoadoutIndex();
+
+    if (!Design->Loadout.IsValidIndex(Index))
+    {
+        return;
+    }
+
+    MissionLoad* Load = nullptr;
+
+    if (Elem->Loadouts().size() > 0)
+    {
+        Load = Elem->Loadouts().at(0);
+    }
+
+    if (!Load)
+    {
+        return;
+    }
+
+    const FShipLoadout& Src = Design->Loadout[Index];
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("APPLYING LOADOUT '%s'"),
+        *Src.Name);
+
+    ApplyShipLoadoutToMissionLoad(Load, Src);
+
+    RefreshFromMission();
+}
+
+void UMissionWeaponDlg::RefreshWeaponList()
+{
+    Mission* MissionPtr = ResolveMission();
+    if (!MissionPtr)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] RefreshWeaponList: MissionPtr is null"));
+        return;
+    }
+
+    MissionElement* PlayerElem = ResolvePlayerElement();
+    if (!PlayerElem)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] RefreshWeaponList: PlayerElem is null"));
+        return;
+    }
+
+    const FShipDesign* ShipDesign = ResolvePlayerShipDesign();
+    if (!ShipDesign)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] RefreshWeaponList: ShipDesign is null"));
+        return;
+    }
+
+    MissionLoad* ActiveLoad = GetActivePlayerMissionLoad(MissionPtr);
+    if (!ActiveLoad)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg] RefreshWeaponList: ActiveLoad is null"));
+        return;
+    }
+
+    const FMissionRuntimeLoadout RuntimeLoadout = ConvertMissionLoad(ActiveLoad);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] Runtime Loadout='%s' ShipIndex=%d Stations=%d Hardpoints=%d"),
+        *RuntimeLoadout.Name,
+        RuntimeLoadout.ShipIndex,
+        RuntimeLoadout.Stations.Num(),
+        ShipDesign->Hardpoint.Num());
+
+    for (int32 i = 0; i < RuntimeLoadout.Stations.Num(); ++i)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg]   Runtime Station[%d] = %d"),
+            i,
+            RuntimeLoadout.Stations[i]);
+    }
+
+    const int32 NumStations = ShipDesign->Hardpoint.Num();
+
+    for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
+    {
+        const int32 PointIndex =
+            RuntimeLoadout.Stations.IsValidIndex(StationIndex)
+            ? RuntimeLoadout.Stations[StationIndex]
+            : INDEX_NONE;
+
+        const FWeaponDesign* Weapon =
+            ResolveWeaponDesignForStationSelection(
+                ShipDesign,
+                StationIndex,
+                PointIndex);
+
+        const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg]   Display Station=%d Point=%d Weapon='%s'"),
+            StationIndex,
+            PointIndex,
+            *WeaponName);
+    }
 }
 
 const FWeaponDesign* UMissionWeaponDlg::ResolveWeaponDesignForStationSelection(
@@ -362,13 +661,11 @@ const FWeaponDesign* UMissionWeaponDlg::ResolveWeaponDesignForStationSelection(
         return nullptr;
     }
 
-    // 1. Direct row-name lookup
     if (const FWeaponDesign* WeaponRow = WeaponDesignRegistry::Find(WeaponKey))
     {
         return WeaponRow;
     }
 
-    // 2. Fallback by Name / Group
     const TMap<FName, FWeaponDesign>& AllWeapons = WeaponDesignRegistry::GetAll();
 
     for (const TPair<FName, FWeaponDesign>& Pair : AllWeapons)
@@ -407,7 +704,6 @@ double UMissionWeaponDlg::ComputeCurrentCustomMass(
         return TotalMass;
     }
 
-    // Named loadout path:
     if (Load->GetName().length() > 0)
     {
         const FString SelectedName = ANSI_TO_TCHAR(Load->GetName().data());
@@ -423,7 +719,6 @@ double UMissionWeaponDlg::ComputeCurrentCustomMass(
         return TotalMass;
     }
 
-    // Custom station selection path:
     const int32* Stations = Load->GetStations();
     if (!Stations)
     {

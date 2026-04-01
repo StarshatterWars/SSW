@@ -610,6 +610,12 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
         break;
 
     case EMissionBriefingMode::WEP:
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] Enter WEP: this=%p MissionPtr=%p MissionWepPanel=%p"),
+            this,
+            GetMissionPtr(),
+            MissionWepPanel);
+        
         if (MissionWepPanel)
         {
             MissionWepPanel->RefreshFromMission();

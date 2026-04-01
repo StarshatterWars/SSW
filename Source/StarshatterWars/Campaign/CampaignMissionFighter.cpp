@@ -44,6 +44,7 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "Callsign.h"
+#include "MissionLoad.h"
 #include "PlayerCharacter.h"
 #include "ShipDesignRegistry.h"
 

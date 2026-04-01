@@ -25,6 +25,8 @@
 #include "Instruction.h"
 #include "WeaponDesign.h"
 #include "Sim.h"
+#include "MissionLoad.h"
+#include "MissionShip.h"
 
 #include "Game.h"
 #include "DataLoader.h"
@@ -948,7 +950,7 @@ Mission::ParseElement(TermStruct* val)
 					MissionShip* s = ParseShip(v, element);
 					element->ships.append(s);
 
-					if (s->Integrity() < 0 && element->GetShipDesign())
+					if (s->GetIntegrity() < 0 && element->GetShipDesign())
 						s->SetIntegrity(element->GetShipDesign()->Integrity);
 				}
 			}
@@ -1154,7 +1156,7 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 					GetDefText(SkinName, Def, filename);
 
 					// Temporary: skins not yet migrated to FShipDesign
-					MissionShipObj->skin = nullptr;
+					//MissionShipObj->GetSkin() = nullptr;
 				}
 			}
 
@@ -1902,70 +1904,70 @@ Mission::Serialize(const char* player_elem, int player_index)
 
 				s += "\n   ship: {\n";
 
-				if (ship->Name().length()) {
+				if (ship->GetName().length()) {
 					s += "      name:      \"";
-					s += SafeString(ship->Name());
+					s += SafeString(ship->GetName());
 					s += "\"\n";
 				}
 
-				if (ship->RegNum().length()) {
+				if (ship->GetRegNum().length()) {
 					s += "      regnum:    \"";
-					s += SafeString(ship->RegNum());
+					s += SafeString(ship->GetRegNum());
 					s += "\"\n";
 				}
 
-				if (ship->Region().length()) {
+				if (ship->GetRegion().length()) {
 					s += "      region:    \"";
-					s += SafeString(ship->Region());
+					s += SafeString(ship->GetRegion());
 					s += "\"\n";
 				}
 
-				if (fabs(ship->Location().X) < 1e9) {
+				if (fabs(ship->GetLocation().X) < 1e9) {
 					sprintf_s(buffer, "      loc:       (%.0f, %.0f, %.0f),\n",
-						ship->Location().X,
-						ship->Location().Y,
-						ship->Location().Z);
+						ship->GetLocation().X,
+						ship->GetLocation().Y,
+						ship->GetLocation().Z);
 					s += buffer;
 				}
 
-				if (fabs(ship->Velocity().X) < 1e9) {
+				if (fabs(ship->GetVelocity().X) < 1e9) {
 					sprintf_s(buffer, "      velocity:  (%.1f, %.1f, %.1f),\n",
-						ship->Velocity().X,
-						ship->Velocity().Y,
-						ship->Velocity().Z);
+						ship->GetVelocity().X,
+						ship->GetVelocity().Y,
+						ship->GetVelocity().Z);
 					s += buffer;
 				}
 
-				if (ship->Respawns() > -1) {
-					sprintf_s(buffer, "      respawns:  %d,\n", ship->Respawns());
+				if (ship->GetRespawns() > -1) {
+					sprintf_s(buffer, "      respawns:  %d,\n", ship->GetRespawns());
 					s += buffer;
 				}
 
-				if (ship->Heading() > -1e9) {
-					sprintf_s(buffer, "      heading:   %d,\n", (int)(ship->Heading() / DEGREES));
+				if (ship->GetHeading() > -1e9) {
+					sprintf_s(buffer, "      heading:   %d,\n", (int)(ship->GetHeading() / DEGREES));
 					s += buffer;
 				}
 
-				if (ship->Integrity() > -1) {
-					sprintf_s(buffer, "      integrity: %d,\n", (int)ship->Integrity());
+				if (ship->GetIntegrity() > -1) {
+					sprintf_s(buffer, "      integrity: %d,\n", (int)ship->GetIntegrity());
 					s += buffer;
 				}
 
-				if (ship->Decoys() > -1) {
-					sprintf_s(buffer, "      decoys:    %d,\n", ship->Decoys());
+				if (ship->GetDecoys() > -1) {
+					sprintf_s(buffer, "      decoys:    %d,\n", ship->GetDecoys());
 					s += buffer;
 				}
 
-				if (ship->Probes() > -1) {
-					sprintf_s(buffer, "      probes:    %d,\n", ship->Probes());
+				if (ship->GetProbes() > -1) {
+					sprintf_s(buffer, "      probes:    %d,\n", ship->GetProbes());
 					s += buffer;
 				}
 
-				if (ship->Ammo()[0] > -10) {
+				if (ship->GetAmmo()[0] > -10) {
 					s += "\n      ammo: (";
 
 					for (int i = 0; i < 16; i++) {
-						sprintf_s(buffer, "%d", ship->Ammo()[i]);
+						sprintf_s(buffer, "%d", ship->GetAmmo()[i]);
 						s += buffer;
 
 						if (i < 15)
@@ -1975,11 +1977,11 @@ Mission::Serialize(const char* player_elem, int player_index)
 					s += ")\n";
 				}
 
-				if (ship->Fuel()[0] > -10) {
+				if (ship->GetFuel()[0] > -10) {
 					s += "\n      fuel: (";
 
 					for (int i = 0; i < 4; i++) {
-						sprintf_s(buffer, "%d", ship->Fuel()[i]);
+						sprintf_s(buffer, "%d", ship->GetFuel()[i]);
 						s += buffer;
 
 						if (i < 3)
@@ -2163,7 +2165,7 @@ MissionElement::GetShipName(int index) const
 		}
 	}
 
-	return ships.at(index)->Name();
+	return ships.at(index)->GetName();
 }
 
 Text
@@ -2173,7 +2175,7 @@ MissionElement::GetRegistry(int index) const
 		return Text();
 	}
 
-	return ships.at(index)->RegNum();
+	return ships.at(index)->GetRegNum();
 }
 
 Text
@@ -2323,107 +2325,6 @@ MissionElement::GetNavIndex(const Instruction* n)
 	}
 
 	return 0;
-}
-
-// +====================================================================+
-
-MissionLoad::MissionLoad(int s, const char* n)
-	: ship(s)
-{
-	for (int i = 0; i < 16; i++)
-		load[i] = -1; // default: no weapon mounted
-
-	if (n)
-		name = n;
-}
-
-MissionLoad::~MissionLoad()
-{
-}
-
-// +--------------------------------------------------------------------+
-
-int
-MissionLoad::GetShip() const
-{
-	return ship;
-}
-
-void
-MissionLoad::SetShip(int s)
-{
-	ship = s;
-}
-
-Text
-MissionLoad::GetName() const
-{
-	return name;
-}
-
-void
-MissionLoad::SetName(Text n)
-{
-	name = n;
-}
-
-int*
-MissionLoad::GetStations()
-{
-	return load;
-}
-
-int
-MissionLoad::GetStation(int index)
-{
-	if (index >= 0 && index < 16)
-		return load[index];
-
-	return 0;
-}
-
-void
-MissionLoad::SetStation(int index, int selection)
-{
-	if (index >= 0 && index < 16)
-		load[index] = selection;
-}
-
-// +====================================================================+
-
-MissionShip::MissionShip()
-	: loc(-1e9f, -1e9f, -1e9f),
-	velocity(-1e9f, -1e9f, -1e9f),
-	respawns(0),
-	heading(0),
-	integrity(100),
-	decoys(-10),
-	probes(-10),
-	skin(0)
-{
-	for (int i = 0; i < 16; i++)
-		ammo[i] = -10;
-
-	for (int i = 0; i < 4; i++)
-		fuel[i] = -10;
-}
-
-void
-MissionShip::SetAmmo(const int* a)
-{
-	if (a) {
-		for (int i = 0; i < 16; i++)
-			ammo[i] = a[i];
-	}
-}
-
-void
-MissionShip::SetFuel(const int* f)
-{
-	if (f) {
-		for (int i = 0; i < 4; i++)
-			fuel[i] = f[i];
-	}
 }
 
 void Mission::InitializeFromInfo(const MissionInfo& Info)

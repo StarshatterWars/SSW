@@ -1,22 +1,32 @@
-/*
-    Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
-    ORIGINAL AUTHOR AND STUDIO
-    =========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    UI / Mission Briefing
+    SUBSYSTEM:    Stars.exe
     FILE:         MissionWeaponLoadoutListObject.h
     AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========
-    UObject row-model for standard mission weapon loadouts.
+    UObject wrapper for ship loadout presets used by the
+    Mission Weapon dialog ListView.
 
-    This class wraps one FShipLoadout entry from FShipDesign into
-    a UObject suitable for UListView.
+    Each instance represents one FShipLoadout entry and
+    exposes display data for UI rendering and selection.
+
+    ARCHITECTURE ROLE
+    =================
+    FShipDesign::Loadout
+        ->
+    UMissionWeaponLoadoutListObject
+        ->
+    UListView / EntryWidget
+
+    NOTES
+    =====
+    - Stores LoadoutIndex for resolving back to FShipDesign::Loadout
+    - Used for selection -> MissionLoad population
+    - Pure UI adapter
 */
 
 #pragma once
@@ -27,32 +37,43 @@
 
 struct FShipLoadout;
 
-UCLASS()
+// +--------------------------------------------------------------------+
+
+UCLASS(BlueprintType)
 class STARSHATTERWARS_API UMissionWeaponLoadoutListObject : public UObject
 {
     GENERATED_BODY()
 
 public:
-    UMissionWeaponLoadoutListObject();
-
     void InitFromShipLoadout(
         const FShipLoadout& InLoadout,
-        int32 InIndex,
+        int32 InLoadoutIndex,
         const FString& InWeightText,
         bool bInSelected);
+
+    // ------------------------------------------------------------
+    // Accessors
+    // ------------------------------------------------------------
+
+    int32 GetLoadoutIndex() const { return LoadoutIndex; }
 
     const FString& GetLoadoutName() const { return LoadoutName; }
     const FString& GetWeightText() const { return WeightText; }
 
-    int32 GetIndex() const { return Index; }
     bool IsSelected() const { return bSelected; }
-
     void SetSelected(bool bInSelected) { bSelected = bInSelected; }
 
-private:
+public:
+    UPROPERTY(BlueprintReadOnly)
     FString LoadoutName;
+
+    UPROPERTY(BlueprintReadOnly)
     FString WeightText;
 
-    int32 Index = INDEX_NONE;
+    UPROPERTY(BlueprintReadOnly)
     bool bSelected = false;
+
+private:
+    UPROPERTY()
+    int32 LoadoutIndex = INDEX_NONE;
 };

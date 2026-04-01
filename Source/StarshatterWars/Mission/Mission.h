@@ -34,6 +34,7 @@
 #include "Math/UnrealMathUtility.h"    // Math
 
 #include "MissionElement.h"
+#include "MissionLoad.h"
 
 #include "GameStructs.h"
 
@@ -207,92 +208,3 @@ protected:
     EMissionSource Source = EMissionSource::Unknown;
 };
 
-// +--------------------------------------------------------------------+
-
-class MissionLoad
-{
-    friend class Mission;
-
-public:
-    static const char* TYPENAME() { return "MissionLoad"; }
-
-    MissionLoad(int ship = -1, const char* name = 0);
-    ~MissionLoad();
-
-    int               GetShip() const;
-    void              SetShip(int ship);
-
-    Text              GetName() const;
-    void              SetName(Text name);
-
-    int*              GetStations();
-    int               GetStation(int index);
-    void              SetStation(int index, int selection);
-
-protected:
-    int               ship;
-    Text              name;
-    int               load[16];
-};
-
-// +--------------------------------------------------------------------+
-
-class MissionShip
-{
-    friend class Mission;
-
-public:
-    static const char* TYPENAME() { return "MissionShip"; }
-
-    MissionShip();
-    ~MissionShip() {}
-
-    const Text& Name()      const { return name; }
-    const Text& RegNum()    const { return regnum; }
-    const Text& Region()    const { return region; }
-    const Skin* GetSkin()   const { return skin; }
-
-    const FVector& Location()  const { return loc; }
-    const FVector& Velocity()  const { return velocity; }
-
-    int               Respawns()  const { return respawns; }
-    double            Heading()   const { return heading; }
-    double            Integrity() const { return integrity; }
-    int               Decoys()    const { return decoys; }
-    int               Probes()    const { return probes; }
-    const int* Ammo()      const { return ammo; }
-    const int* Fuel()      const { return fuel; }
-
-    void              SetName(const char* n) { name = n; }
-    void              SetRegNum(const char* n) { regnum = n; }
-    void              SetRegion(const char* n) { region = n; }
-    void              SetSkin(const Skin* s) { skin = s; }
-
-    void              SetLocation(const FVector& p) { loc = p; }
-    void              SetVelocity(const FVector& p) { velocity = p; }
-
-    void              SetRespawns(int r) { respawns = r; }
-    void              SetHeading(double h) { heading = h; }
-    void              SetIntegrity(double n) { integrity = n; }
-    void              SetDecoys(int d) { decoys = d; }
-    void              SetProbes(int p) { probes = p; }
-    void              SetAmmo(const int* a);
-    void              SetFuel(const int* f);
-
-protected:
-    Text              name;
-    Text              regnum;
-    Text              region;
-    const Skin* skin;
-
-    FVector           loc;
-    FVector           velocity;
-
-    int               respawns;
-    double            heading;
-    double            integrity;
-    int               decoys;
-    int               probes;
-    int               ammo[16];
-    int               fuel[4];
-};

@@ -36,6 +36,7 @@
 #include "Starshatter.h"
 #include "StarSystem.h"
 #include "PlayerCharacter.h"
+#include "MissionLoad.h"
 #include "GameStructs.h"
 #include "GameStructs_System.h"
 
