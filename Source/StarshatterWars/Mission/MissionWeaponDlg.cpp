@@ -974,6 +974,8 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
             PointIndex
         );
 
+        Row->SetOwningWeaponDlg(this);
+
         StationItems.Add(Row);
 
         if (StationListView)
@@ -998,6 +1000,9 @@ void UMissionWeaponDlg::HandleStationChanged(int32 StationIndex, int32 NewSelect
     }
 
     Load->SetStation(StationIndex, NewSelection);
+
+    // This is no longer an untouched preset loadout.
+    Load->SetName("");
 
     RefreshSelectedLoadoutStations();
 

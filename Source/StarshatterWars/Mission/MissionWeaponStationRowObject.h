@@ -16,6 +16,8 @@
 #include "UObject/Object.h"
 #include "MissionWeaponStationRowObject.generated.h"
 
+class UMissionWeaponDlg;
+
 UCLASS(BlueprintType)
 class STARSHATTERWARS_API UMissionWeaponStationRowObject : public UObject
 {
@@ -45,6 +47,10 @@ public:
     void SetWeaponName(const FString& InWeaponName) { WeaponName = InWeaponName; }
     void SetCurrentSelection(int32 InCurrentSelection) { CurrentSelection = InCurrentSelection; }
 
+public:
+    void SetOwningWeaponDlg(UMissionWeaponDlg* InDlg) { OwningWeaponDlg = InDlg; }
+    UMissionWeaponDlg* GetOwningWeaponDlg() const { return OwningWeaponDlg; }
+
 private:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int32 StationIndex = INDEX_NONE;
@@ -60,4 +66,7 @@ private:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int32 CurrentSelection = INDEX_NONE;
+    
+    UPROPERTY()
+    UMissionWeaponDlg* OwningWeaponDlg = nullptr;
 };

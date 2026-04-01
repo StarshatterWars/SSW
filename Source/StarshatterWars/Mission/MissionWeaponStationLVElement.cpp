@@ -164,7 +164,14 @@ void UMissionWeaponStationLVElement::NativeOnListItemObjectSet(UObject* ListItem
         WeaponCombo->OnSelectionChanged.RemoveAll(this);
         WeaponCombo->ClearOptions();
 
+        WeaponCombo->AddOption(TEXT("EMPTY"));
+
         const TArray<FString>& AllowedWeapons = StationItem->GetAllowedWeapons();
+
+        for (const FString& WeaponName : AllowedWeapons)
+        {
+            WeaponCombo->AddOption(WeaponName);
+        }
 
         for (const FString& WeaponName : AllowedWeapons)
         {
@@ -179,7 +186,7 @@ void UMissionWeaponStationLVElement::NativeOnListItemObjectSet(UObject* ListItem
         }
         else
         {
-            WeaponCombo->ClearSelection();
+            WeaponCombo->SetSelectedOption(TEXT("EMPTY"));
         }
 
         WeaponCombo->OnSelectionChanged.AddDynamic(
@@ -207,25 +214,33 @@ void UMissionWeaponStationLVElement::HandleWeaponSelectionChanged(
         return;
     }
 
-    const int32 NewSelection =
-        StationItem->GetAllowedWeapons().IndexOfByKey(SelectedItem);
+    int32 NewSelection = INDEX_NONE;
 
-    if (NewSelection == INDEX_NONE)
+    if (SelectedItem.Equals(TEXT("EMPTY"), ESearchCase::IgnoreCase))
     {
-        return;
+        NewSelection = INDEX_NONE;
+    }
+    else
+    {
+        NewSelection =
+            StationItem->GetAllowedWeapons().IndexOfByKey(SelectedItem);
     }
 
+    // Update UI state
     StationItem->SetCurrentSelection(NewSelection);
-    StationItem->SetWeaponName(SelectedItem);
+    StationItem->SetWeaponName(
+        (NewSelection == INDEX_NONE) ? TEXT("Empty") : SelectedItem);
 
     if (WeaponText)
     {
-        WeaponText->SetText(FText::FromString(SelectedItem));
+        WeaponText->SetText(FText::FromString(
+            (NewSelection == INDEX_NONE) ? TEXT("Empty") : SelectedItem));
     }
 
-    if (OwningWeaponDlg)
+    // Push to MissionLoad
+    if (UMissionWeaponDlg* Dlg = StationItem->GetOwningWeaponDlg())
     {
-        OwningWeaponDlg->HandleStationChanged(
+        Dlg->HandleStationChanged(
             StationItem->GetStationIndex(),
             NewSelection);
     }
