@@ -225,31 +225,36 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
 
     RuntimeHost->SetContent(nullptr);
 
-    USizeBox* Root = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponRoot"));
+    USizeBox* Root =
+        WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponRoot"));
     Root->SetWidthOverride(1400.f);
-    Root->SetHeightOverride(700.f);
+    Root->SetHeightOverride(500.f);
     RuntimeHost->SetContent(Root);
 
-    UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionWeaponRootRow"));
-    Root->AddChild(Row);
+    UHorizontalBox* MainRow =
+        WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionWeaponRootRow"));
+    Root->SetContent(MainRow);
 
-    // LEFT INFO COLUMN
-    UVerticalBox* Left = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponLeftColumn"));
+    // LEFT COLUMN
+    UVerticalBox* Left =
+        WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponLeftColumn"));
 
-    if (UHorizontalBoxSlot* S = Row->AddChildToHorizontalBox(Left))
+    if (UHorizontalBoxSlot* LeftSlot = MainRow->AddChildToHorizontalBox(Left))
     {
-        S->SetPadding(FMargin(12.f, 12.f, 16.f, 12.f));
-        S->SetHorizontalAlignment(HAlign_Left);
-        S->SetVerticalAlignment(VAlign_Top);
+        LeftSlot->SetPadding(FMargin(12.f, 12.f, 16.f, 12.f));
+        LeftSlot->SetHorizontalAlignment(HAlign_Left);
+        LeftSlot->SetVerticalAlignment(VAlign_Top);
+        LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
-    auto AddRow = [this, Left](const FString& Label, UTextBlock*& OutText)
+    auto AddInfoRow = [this, Left](const FString& Label, UTextBlock*& OutText)
         {
-            UHorizontalBox* InfoRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+            UHorizontalBox* InfoRow =
+                WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 
-            if (UVerticalBoxSlot* VS = Left->AddChildToVerticalBox(InfoRow))
+            if (UVerticalBoxSlot* RowSlot = Left->AddChildToVerticalBox(InfoRow))
             {
-                VS->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+                RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
             }
 
             UTextBlock* LabelText = BuildLabelText(Label);
@@ -260,28 +265,31 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
                 LabelSlot->SetPadding(FMargin(0.f, 0.f, 6.f, 0.f));
                 LabelSlot->SetHorizontalAlignment(HAlign_Left);
                 LabelSlot->SetVerticalAlignment(VAlign_Center);
+                LabelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
             }
 
             if (UHorizontalBoxSlot* ValueSlot = InfoRow->AddChildToHorizontalBox(OutText))
             {
                 ValueSlot->SetHorizontalAlignment(HAlign_Left);
                 ValueSlot->SetVerticalAlignment(VAlign_Center);
-                ValueSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+                ValueSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
             }
         };
 
-    AddRow(TEXT("ELEMENT:"), ElementNameValueText);
-    AddRow(TEXT("TYPE:"), DesignNameValueText);
-    AddRow(TEXT("WEIGHT:"), WeightValueText);
+    AddInfoRow(TEXT("ELEMENT:"), ElementNameValueText);
+    AddInfoRow(TEXT("TYPE:"), DesignNameValueText);
+    AddInfoRow(TEXT("WEIGHT:"), WeightValueText);
 
     // RIGHT COLUMN
-    UVerticalBox* Right = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponRightColumn"));
+    UVerticalBox* Right =
+        WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponRightColumn"));
 
-    if (UHorizontalBoxSlot* S = Row->AddChildToHorizontalBox(Right))
+    if (UHorizontalBoxSlot* RightSlot = MainRow->AddChildToHorizontalBox(Right))
     {
-        S->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        S->SetHorizontalAlignment(HAlign_Fill);
-        S->SetVerticalAlignment(VAlign_Fill);
+        RightSlot->SetPadding(FMargin(0.f, 12.f, 12.f, 12.f));
+        RightSlot->SetHorizontalAlignment(HAlign_Fill);
+        RightSlot->SetVerticalAlignment(VAlign_Fill);
+        RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
     if (UBorder* Header = BuildHeader(TEXT("STANDARD LOADOUTS")))
@@ -289,19 +297,25 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         if (UVerticalBoxSlot* HeaderSlot = Right->AddChildToVerticalBox(Header))
         {
             HeaderSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+            HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
         }
     }
 
-    UScrollBox* ScrollBox = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("MissionWeaponScrollBox"));
-    ScrollBox->SetOrientation(EOrientation::Orient_Vertical);
-    ScrollBox->SetAllowOverscroll(false);
-    ScrollBox->SetScrollBarVisibility(ESlateVisibility::Visible);
+    UBorder* ListBorder =
+        WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("MissionWeaponListBorder"));
+    ListBorder->SetBrushColor(MissionUIStyle::PanelBG);
 
-    if (UVerticalBoxSlot* ScrollSlot = Right->AddChildToVerticalBox(ScrollBox))
+    if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(ListBorder))
     {
-        ScrollSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        ScrollSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 0.f));
+        BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        BorderSlot->SetPadding(FMargin(0.f));
     }
+
+    USizeBox* ListHost =
+        WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponListHost"));
+    ListHost->SetWidthOverride(900.f);
+    ListHost->SetHeightOverride(320.f);
+    ListBorder->SetContent(ListHost);
 
     WeaponListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
         UMissionLoadoutListView::StaticClass(),
@@ -312,7 +326,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         WeaponListView->SetEntryWidgetClassPublic(EntryWidgetClass);
     }
 
-    ScrollBox->AddChild(WeaponListView);
+    ListHost->SetContent(WeaponListView);
 }
 
 const FWeaponDesign* UMissionWeaponDlg::ResolveWeaponDesignForStationSelection(

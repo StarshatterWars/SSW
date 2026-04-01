@@ -6,10 +6,12 @@
 
 #include "MissionWeaponLoadoutLVElement.h"
 
-#include "Components/TextBlock.h"
-#include "Components/Border.h"
+#include "MissionWeaponLoadoutListObject.h"
 #include "MissionUIStyle.h"
+
+#include "Components/Border.h"
 #include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
 
 void UMissionWeaponLoadoutLVElement::NativeConstruct()
 {
@@ -27,11 +29,26 @@ void UMissionWeaponLoadoutLVElement::NativeConstruct()
     {
         WeightSizeBox->SetWidthOverride(180.f);
     }
+
+    if (LoadoutNameText)
+    {
+        LoadoutNameText->SetJustification(ETextJustify::Left);
+        LoadoutNameText->SetColorAndOpacity(MissionUIStyle::RowText);
+        LoadoutNameText->SetFont(MissionUIStyle::GetRowFont(16));
+    }
+
+    if (WeightText)
+    {
+        WeightText->SetJustification(ETextJustify::Right);
+        WeightText->SetColorAndOpacity(MissionUIStyle::RowText);
+        WeightText->SetFont(MissionUIStyle::GetRowFont(16));
+    }
 }
 
 void UMissionWeaponLoadoutLVElement::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
     LoadoutItem = Cast<UMissionWeaponLoadoutListObject>(ListItemObject);
+
     if (!LoadoutItem)
     {
         bRowSelected = false;
@@ -118,6 +135,7 @@ void UMissionWeaponLoadoutLVElement::ApplySelectionVisual()
     else
     {
         SelectionBorder->SetBrushColor(MissionUIStyle::RowBG);
+        SelectionBorder->SetPadding(FMargin(6.f, 4.f));
     }
 }
 
@@ -126,10 +144,16 @@ void UMissionWeaponLoadoutLVElement::ApplyTextRules()
     if (LoadoutNameText)
     {
         LoadoutNameText->SetAutoWrapText(false);
+        LoadoutNameText->SetJustification(ETextJustify::Left);
+        LoadoutNameText->SetColorAndOpacity(MissionUIStyle::RowText);
+        LoadoutNameText->SetFont(MissionUIStyle::GetRowFont(16));
     }
 
     if (WeightText)
     {
         WeightText->SetAutoWrapText(false);
+        WeightText->SetJustification(ETextJustify::Right);
+        WeightText->SetColorAndOpacity(MissionUIStyle::RowText);
+        WeightText->SetFont(MissionUIStyle::GetRowFont(16));
     }
 }

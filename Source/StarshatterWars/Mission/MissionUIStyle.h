@@ -36,18 +36,33 @@ namespace MissionUIStyle
     extern const FLinearColor InfoValueText;
 
     // -----------------------------------------------------------------
-    // Fonts
-    // -----------------------------------------------------------------
-
-    FSlateFontInfo GetSerpentineFont(int32 Size);
-    FSlateFontInfo GetHeaderFont(int32 Size = 18);
-    FSlateFontInfo GetRowFont(int32 Size = 16);
-    FSlateFontInfo GetInfoLabelFont(int32 Size = 13);
-    FSlateFontInfo GetInfoValueFont(int32 Size = 14);
-
-    // -----------------------------------------------------------------
     // Font paths
     // -----------------------------------------------------------------
 
     const TCHAR* GetSerpentineFontPath();
+    const TCHAR* GetLimerickFontPath();
+
+    // -----------------------------------------------------------------
+    // Font helpers
+    // -----------------------------------------------------------------
+
+    FSlateFontInfo GetSerpentineFont(int32 Size);
+    FSlateFontInfo GetLimerickFont(int32 Size);
+
+    // -----------------------------------------------------------------
+    // Standard UI roles
+    // -----------------------------------------------------------------
+
+    // Headers (Serpentine)
+    FSlateFontInfo GetHeaderFont(int32 Size = 18);
+
+    // Table rows (Limerick 16)
+    FSlateFontInfo GetRowFont(int32 Size = 16);
+
+    // Info panels (Limerick, smaller)
+    FSlateFontInfo GetInfoLabelFont(int32 Size = 13);
+    FSlateFontInfo GetInfoValueFont(int32 Size = 14);
+
+    // Convenience
+    FSlateFontInfo GetTableRowFont(); // always 16 Limerick
 }

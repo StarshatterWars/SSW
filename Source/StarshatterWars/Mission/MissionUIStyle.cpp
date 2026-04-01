@@ -15,10 +15,6 @@
 
 namespace MissionUIStyle
 {
-    // -----------------------------------------------------------------
-    // Colors
-    // -----------------------------------------------------------------
-
     const FLinearColor HeaderBG = FLinearColor(0.18f, 0.20f, 0.24f, 1.0f);
     const FLinearColor HeaderTopLine = FLinearColor(0.35f, 0.40f, 0.50f, 1.0f);
     const FLinearColor HeaderBottomLine = FLinearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -26,41 +22,59 @@ namespace MissionUIStyle
 
     const FLinearColor PanelBG = FLinearColor(0.06f, 0.07f, 0.08f, 0.95f);
 
-    const FLinearColor RowBG = FLinearColor(0.05f, 0.05f, 0.06f, 1.0f);
-    const FLinearColor RowText = FLinearColor(0.90f, 0.92f, 0.95f, 1.0f);
+    const FLinearColor RowBG = FLinearColor(0.04f, 0.04f, 0.05f, 1.0f);
+    const FLinearColor RowText = FLinearColor::White;
     const FLinearColor RowSelected = FLinearColor(0.65f, 0.65f, 0.35f, 0.35f);
 
     const FLinearColor InfoLabelText = FLinearColor(0.80f, 0.82f, 0.85f, 1.0f);
     const FLinearColor InfoValueText = FLinearColor(0.92f, 0.94f, 0.97f, 1.0f);
 
-    // -----------------------------------------------------------------
-    // Font path
-    // -----------------------------------------------------------------
-
     const TCHAR* GetSerpentineFontPath()
     {
-        // Update this path if your actual asset name/path differs.
         return TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font");
     }
 
-    // -----------------------------------------------------------------
-    // Font helpers
-    // -----------------------------------------------------------------
+    const TCHAR* GetLimerickFontPath()
+    {
+        return TEXT("/Game/Font/Limerick-Serial_Bold_Font.Limerick-Serial_Bold_Font");
+    }
+
+    static UObject* GetCachedFontObject(const TCHAR* Path)
+    {
+        static TMap<FString, UObject*> Cache;
+
+        const FString Key(Path);
+
+        if (UObject** Found = Cache.Find(Key))
+        {
+            return *Found;
+        }
+
+        UObject* FontObj = LoadObject<UObject>(nullptr, Path);
+
+        if (FontObj)
+        {
+            Cache.Add(Key, FontObj);
+        }
+
+        return FontObj;
+    }
 
     FSlateFontInfo GetSerpentineFont(int32 Size)
     {
-        static UObject* CachedFontObject = nullptr;
-
-        if (!CachedFontObject)
-        {
-            CachedFontObject = LoadObject<UObject>(nullptr, GetSerpentineFontPath());
-        }
-
         FSlateFontInfo FontInfo;
-        FontInfo.FontObject = CachedFontObject;
+        FontInfo.FontObject = GetCachedFontObject(GetSerpentineFontPath());
+        FontInfo.Size = Size;
+        FontInfo.TypefaceFontName = NAME_None;
+        return FontInfo;
+    }
+
+    FSlateFontInfo GetLimerickFont(int32 Size)
+    {
+        FSlateFontInfo FontInfo;
+        FontInfo.FontObject = GetCachedFontObject(GetLimerickFontPath());
         FontInfo.Size = Size;
         FontInfo.TypefaceFontName = FName(TEXT("Default"));
-
         return FontInfo;
     }
 
@@ -71,16 +85,21 @@ namespace MissionUIStyle
 
     FSlateFontInfo GetRowFont(int32 Size)
     {
-        return GetSerpentineFont(Size);
+        return GetLimerickFont(Size);
     }
 
     FSlateFontInfo GetInfoLabelFont(int32 Size)
     {
-        return GetSerpentineFont(Size);
+        return GetLimerickFont(Size);
     }
 
     FSlateFontInfo GetInfoValueFont(int32 Size)
     {
-        return GetSerpentineFont(Size);
+        return GetLimerickFont(Size);
+    }
+
+    FSlateFontInfo GetTableRowFont()
+    {
+        return GetLimerickFont(16);
     }
 }
