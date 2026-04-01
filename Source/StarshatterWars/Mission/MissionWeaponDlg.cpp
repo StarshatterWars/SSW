@@ -529,7 +529,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
-    // PRESET LOADOUTS LIST
+    // PRESET LOADOUTS LIST (DO NOT CHANGE)
     // ------------------------------------------------------------
 
     UBorder* ListBorder =
@@ -587,7 +587,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
-    // SELECTED LOADOUT STATION LIST
+    // SELECTED LOADOUT STATION LIST (MATCHED TO ABOVE)
     // ------------------------------------------------------------
 
     UBorder* StationBorder =
@@ -607,7 +607,10 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             USizeBox::StaticClass(),
             TEXT("MissionWeaponStationHost"));
     StationHost->SetWidthOverride(900.f);
-    StationHost->SetHeightOverride(220.f);
+
+    // IMPORTANT: match height to WeaponListView
+    StationHost->SetHeightOverride(260.f);
+
     StationBorder->SetContent(StationHost);
 
     StationListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
@@ -618,16 +621,11 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     {
         StationListView->SetEntryWidgetClassPublic(StationEntryWidgetClass);
     }
-    else
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg] StationEntryWidgetClass is null"));
-    }
 
     StationHost->SetContent(StationListView);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] BuildRuntimeLayout: Layout complete"));
+        TEXT("[MissionWeaponDlg] BuildRuntimeLayout: StationListView build complete"));
 }
 
 void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
