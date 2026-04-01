@@ -34,6 +34,7 @@ class UObject;
 class UMissionBriefingDlg;
 class UMissionLoadoutListView;
 class UMissionWeaponLoadoutListObject;
+class UMissionWeaponStationRowObject;
 class UWidget;
 class UMissionPlanner;
 
@@ -68,6 +69,8 @@ protected:
     void ClearLoadouts();
     void BuildLoadouts(MissionElement* Element, const FShipDesign* Design);
     void RefreshWeaponList();
+
+    void RefreshSelectedLoadoutStations();
 
     bool GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const;
 
@@ -106,7 +109,13 @@ protected:
     UMissionLoadoutListView* WeaponListView = nullptr;
 
     UPROPERTY()
+    UMissionLoadoutListView* StationListView = nullptr;
+
+    UPROPERTY()
     TArray<TObjectPtr<UMissionWeaponLoadoutListObject>> Items;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMissionWeaponStationRowObject>> StationItems;
 
     UPROPERTY()
     UTextBlock* ElementNameValueText = nullptr;
@@ -119,6 +128,9 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Mission Weapon")
     TSubclassOf<UUserWidget> EntryWidgetClass;
+
+    UPROPERTY(EditAnywhere, Category = "Mission Weapon")
+    TSubclassOf<UUserWidget> StationEntryWidgetClass;
 
     bool bRefreshingLoadouts = false;
 

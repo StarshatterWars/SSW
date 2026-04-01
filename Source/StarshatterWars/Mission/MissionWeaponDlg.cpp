@@ -3,6 +3,7 @@
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
 #include "MissionWeaponLoadoutListObject.h"
+#include "MissionWeaponStationRowObject.h"
 #include "MissionLoadoutListView.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -27,6 +28,8 @@
 // +--------------------------------------------------------------------+
 // Runtime Loadout Helpers
 // +--------------------------------------------------------------------+
+static const bool bLogLoadoutsVerbose = false;
+static const bool bLogRuntimeLoadout = true;
 
 static FMissionRuntimeLoadout ConvertMissionLoad(const MissionLoad* InLoad)
 {
@@ -102,6 +105,14 @@ static void ApplyShipLoadoutToMissionLoad(
             TEXT("[MissionWeaponDlg]   Apply Station[%d] = %d"),
             i,
             Src.Stations[i]);
+    }
+
+    for (int32 i = 0; i < Count; ++i)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionWeaponDlg]   Verify Station[%d] = %d"),
+            i,
+            Load->GetStation(i));
     }
 }
 
@@ -217,6 +228,7 @@ void UMissionWeaponDlg::RefreshFromMission()
 
     BuildLoadouts(Elem, Design);
     RefreshWeaponList();
+    RefreshSelectedLoadoutStations();
 
     bRefreshingLoadouts = false;
 }
@@ -228,6 +240,13 @@ void UMissionWeaponDlg::ClearLoadouts()
     if (WeaponListView)
     {
         WeaponListView->ClearListItems();
+    }
+
+    StationItems.Empty();
+
+    if (StationListView)
+    {
+        StationListView->ClearListItems();
     }
 }
 
@@ -371,7 +390,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         return;
     }
 
-    if (WeaponListView)
+    if (WeaponListView || StationListView)
     {
         return;
     }
@@ -379,17 +398,27 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     RuntimeHost->SetContent(nullptr);
 
     USizeBox* Root =
-        WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponRoot"));
+        WidgetTree->ConstructWidget<USizeBox>(
+            USizeBox::StaticClass(),
+            TEXT("MissionWeaponRoot"));
     Root->SetWidthOverride(1400.f);
-    Root->SetHeightOverride(500.f);
+    Root->SetHeightOverride(650.f);
     RuntimeHost->SetContent(Root);
 
     UHorizontalBox* MainRow =
-        WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionWeaponRootRow"));
+        WidgetTree->ConstructWidget<UHorizontalBox>(
+            UHorizontalBox::StaticClass(),
+            TEXT("MissionWeaponRootRow"));
     Root->SetContent(MainRow);
 
+    // ------------------------------------------------------------
+    // LEFT COLUMN
+    // ------------------------------------------------------------
+
     UVerticalBox* Left =
-        WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponLeftColumn"));
+        WidgetTree->ConstructWidget<UVerticalBox>(
+            UVerticalBox::StaticClass(),
+            TEXT("MissionWeaponLeftColumn"));
 
     if (UHorizontalBoxSlot* LeftSlot = MainRow->AddChildToHorizontalBox(Left))
     {
@@ -432,8 +461,14 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     AddInfoRow(TEXT("TYPE:"), DesignNameValueText);
     AddInfoRow(TEXT("WEIGHT:"), WeightValueText);
 
+    // ------------------------------------------------------------
+    // RIGHT COLUMN
+    // ------------------------------------------------------------
+
     UVerticalBox* Right =
-        WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MissionWeaponRightColumn"));
+        WidgetTree->ConstructWidget<UVerticalBox>(
+            UVerticalBox::StaticClass(),
+            TEXT("MissionWeaponRightColumn"));
 
     if (UHorizontalBoxSlot* RightSlot = MainRow->AddChildToHorizontalBox(Right))
     {
@@ -442,6 +477,10 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         RightSlot->SetVerticalAlignment(VAlign_Fill);
         RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
+
+    // ------------------------------------------------------------
+    // PRESET LOADOUTS HEADER
+    // ------------------------------------------------------------
 
     if (UBorder* Header = BuildHeader(TEXT("STANDARD LOADOUTS")))
     {
@@ -452,8 +491,14 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         }
     }
 
+    // ------------------------------------------------------------
+    // PRESET LOADOUTS LIST
+    // ------------------------------------------------------------
+
     UBorder* ListBorder =
-        WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("MissionWeaponListBorder"));
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionWeaponListBorder"));
     ListBorder->SetBrushColor(MissionUIStyle::PanelBG);
 
     if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(ListBorder))
@@ -463,9 +508,11 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     USizeBox* ListHost =
-        WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MissionWeaponListHost"));
+        WidgetTree->ConstructWidget<USizeBox>(
+            USizeBox::StaticClass(),
+            TEXT("MissionWeaponListHost"));
     ListHost->SetWidthOverride(900.f);
-    ListHost->SetHeightOverride(320.f);
+    ListHost->SetHeightOverride(260.f);
     ListBorder->SetContent(ListHost);
 
     WeaponListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
@@ -486,8 +533,59 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             &UMissionWeaponDlg::HandleLoadoutSelectionChanged);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg] BuildRuntimeLayout: Selection binding complete"));
+            TEXT("[MissionWeaponDlg] BuildRuntimeLayout: WeaponListView selection binding complete"));
     }
+
+    // ------------------------------------------------------------
+    // SELECTED LOADOUT HEADER
+    // ------------------------------------------------------------
+
+    if (UBorder* Header = BuildHeader(TEXT("SELECTED LOADOUT")))
+    {
+        if (UVerticalBoxSlot* HeaderSlot = Right->AddChildToVerticalBox(Header))
+        {
+            HeaderSlot->SetPadding(FMargin(0.f, 12.f, 0.f, 6.f));
+            HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        }
+    }
+
+    // ------------------------------------------------------------
+    // SELECTED LOADOUT STATION LIST
+    // ------------------------------------------------------------
+
+    UBorder* StationBorder =
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionWeaponStationBorder"));
+    StationBorder->SetBrushColor(MissionUIStyle::PanelBG);
+
+    if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(StationBorder))
+    {
+        BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        BorderSlot->SetPadding(FMargin(0.f));
+    }
+
+    USizeBox* StationHost =
+        WidgetTree->ConstructWidget<USizeBox>(
+            USizeBox::StaticClass(),
+            TEXT("MissionWeaponStationHost"));
+    StationHost->SetWidthOverride(900.f);
+    StationHost->SetHeightOverride(220.f);
+    StationBorder->SetContent(StationHost);
+
+    StationListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
+        UMissionLoadoutListView::StaticClass(),
+        TEXT("RuntimeStationList"));
+
+    if (StationEntryWidgetClass)
+    {
+        StationListView->SetEntryWidgetClassPublic(StationEntryWidgetClass);
+    }
+
+    StationHost->SetContent(StationListView);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionWeaponDlg] BuildRuntimeLayout: Layout complete"));
 }
 
 void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
@@ -757,34 +855,7 @@ double UMissionWeaponDlg::ComputeLoadoutMass(
     }
 
     double TotalMass = Design->Mass;
-
     const int32 NumStations = FMath::Min(Design->Hardpoint.Num(), Loadout.Stations.Num());
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] Runtime '%s' hardpoints=%d"),
-        *Design->ShipName,
-        Design->Hardpoint.Num());
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] Design hardpoints=%d loadout stations=%d using=%d for '%s'"),
-        Design->Hardpoint.Num(),
-        Loadout.Stations.Num(),
-        NumStations,
-        *Loadout.Name);
-
-    for (int32 i = 0; i < Loadout.Stations.Num(); ++i)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg]   Loadout '%s' raw stations[%d]=%d"),
-            *Loadout.Name,
-            i,
-            Loadout.Stations[i]);
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] Loadout '%s' base mass = %f"),
-        *Loadout.Name,
-        Design->Mass);
 
     for (int32 StationIndex = 0; StationIndex < NumStations; ++StationIndex)
     {
@@ -794,40 +865,69 @@ double UMissionWeaponDlg::ComputeLoadoutMass(
             continue;
         }
 
-        const FString WeaponKey =
-            Design->Hardpoint.IsValidIndex(StationIndex) &&
-            Design->Hardpoint[StationIndex].AllowedWeaponTypes.IsValidIndex(PointIndex)
-            ? Design->Hardpoint[StationIndex].AllowedWeaponTypes[PointIndex]
-            : TEXT("INVALID");
-
         const FWeaponDesign* WeaponRow =
             ResolveWeaponDesignForStationSelection(Design, StationIndex, PointIndex);
 
         if (!WeaponRow)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[MissionWeaponDlg] station=%d point=%d key='%s' -> NO WEAPON ROW"),
-                StationIndex,
-                PointIndex,
-                *WeaponKey);
             continue;
         }
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionWeaponDlg] station=%d point=%d key='%s' weapon='%s' carry=%f"),
-            StationIndex,
-            PointIndex,
-            *WeaponKey,
-            *WeaponRow->Name,
-            WeaponRow->CarryMass);
 
         TotalMass += WeaponRow->CarryMass;
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[MissionWeaponDlg] Loadout '%s' total mass = %f"),
-        *Loadout.Name,
-        TotalMass);
-
     return TotalMass;
+}
+
+void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
+{
+    StationItems.Empty();
+
+    if (StationListView)
+    {
+        StationListView->ClearListItems();
+    }
+
+    Mission* MissionPtr = ResolveMission();
+    MissionElement* Elem = ResolvePlayerElement();
+    const FShipDesign* Design = ResolvePlayerShipDesign();
+
+    if (!MissionPtr || !Elem || !Design)
+    {
+        return;
+    }
+
+    MissionLoad* Load = GetActivePlayerMissionLoad(MissionPtr);
+    if (!Load)
+    {
+        return;
+    }
+
+    const int32 NumHardpoints = Design->Hardpoint.Num();
+
+    for (int32 StationIndex = 0; StationIndex < NumHardpoints; ++StationIndex)
+    {
+        const int32 PointIndex = Load->GetStation(StationIndex);
+
+        const FWeaponDesign* Weapon =
+            ResolveWeaponDesignForStationSelection(
+                Design,
+                StationIndex,
+                PointIndex);
+
+        const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+        const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex);
+
+        UMissionWeaponStationRowObject* Row =
+            NewObject<UMissionWeaponStationRowObject>(this);
+
+        Row->Init(StationIndex, StationLabel, WeaponName);
+
+        StationItems.Add(Row);
+
+        if (StationListView)
+        {
+            StationListView->AddItem(Row);
+        }
+    }
 }
