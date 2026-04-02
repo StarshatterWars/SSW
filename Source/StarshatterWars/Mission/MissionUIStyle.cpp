@@ -40,7 +40,7 @@ namespace MissionUIStyle
     const FLinearColor ComboItemHoverBG = FLinearColor(0.18f, 0.22f, 0.30f, 1.0f);
     const FLinearColor ComboItemSelectedBG = FLinearColor(0.42f, 0.42f, 0.18f, 1.0f);
 
-    const FLinearColor SSWHeaderBG = FLinearColor(0.42f, 0.45f, 0.50f, 1.0f);
+    const FLinearColor SSWHeaderBG = FLinearColor(0.08f, 0.10f, 0.14f, 1.0f);
 
     const TCHAR* GetSerpentineFontPath()
     {
