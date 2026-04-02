@@ -79,6 +79,45 @@ void UMenuButton::SetSelected(bool bInSelected)
     UpdateVisuals();
 }
 
+void UMenuButton::SetButtonText(const FText& InText)
+{
+    MenuOption = InText.ToString();
+
+    if (Label)
+    {
+        Label->SetText(InText);
+    }
+}
+
+void UMenuButton::SetMenuOption(const FString& InMenuOption)
+{
+    MenuOption = InMenuOption;
+
+    if (Label)
+    {
+        Label->SetText(FText::FromString(MenuOption));
+    }
+}
+
+void UMenuButton::SetButtonSize(float InWidth, float InHeight)
+{
+    WidthOverride = InWidth;
+    HeightOverride = InHeight;
+    ApplyLayoutOverrides();
+}
+
+void UMenuButton::SetLabelFontSizeValue(int32 InFontSize)
+{
+    LabelFontSize = InFontSize;
+
+    if (Label && LabelFontSize > 0)
+    {
+        FSlateFontInfo FontInfo = Label->GetFont();
+        FontInfo.Size = LabelFontSize;
+        Label->SetFont(FontInfo);
+    }
+}
+
 void UMenuButton::HandleClicked()
 {
     OnSelected.Broadcast(this);

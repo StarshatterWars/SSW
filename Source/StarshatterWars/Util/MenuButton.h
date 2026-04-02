@@ -104,6 +104,17 @@ public:
     bool IsSelected() const { return bIsSelected; }
 
     // -----------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------
+
+    void SetButtonText(const FText& InText);
+    void SetMenuOption(const FString& InMenuOption);
+    void SetButtonSize(float InWidth, float InHeight);
+    void SetLabelFontSizeValue(int32 InFontSize);
+
+    FString GetMenuOption() const { return MenuOption; }
+
+    // -----------------------------------------------------------------
     // Events
     // -----------------------------------------------------------------
 
