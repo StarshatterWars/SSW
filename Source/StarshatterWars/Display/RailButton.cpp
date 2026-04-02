@@ -3,15 +3,15 @@
     Copyright (C) 2024-2026. All Rights Reserved.
 
     SUBSYSTEM:    SSW
-    FILE:         MenuButton.cpp
+    FILE:         RailButton.cpp
     AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========
-    Shared menu button widget implementation.
+    Dedicated stretch-style button for dialog rails.
 */
 
-#include "MenuButton.h"
+#include "RailButton.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -19,24 +19,24 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 
-void UMenuButton::NativeConstruct()
+void URailButton::NativeConstruct()
 {
     Super::NativeConstruct();
 
     if (Button)
     {
         Button->OnClicked.RemoveAll(this);
-        Button->OnClicked.AddUniqueDynamic(this, &UMenuButton::HandleClicked);
+        Button->OnClicked.AddUniqueDynamic(this, &URailButton::HandleClicked);
 
         Button->OnHovered.RemoveAll(this);
-        Button->OnHovered.AddUniqueDynamic(this, &UMenuButton::HandleHovered);
+        Button->OnHovered.AddUniqueDynamic(this, &URailButton::HandleHovered);
 
         Button->OnUnhovered.RemoveAll(this);
-        Button->OnUnhovered.AddUniqueDynamic(this, &UMenuButton::HandleUnhovered);
+        Button->OnUnhovered.AddUniqueDynamic(this, &URailButton::HandleUnhovered);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("[MenuButton] Button is null"));
+        UE_LOG(LogTemp, Error, TEXT("[RailButton] Button is null"));
     }
 
     if (Label)
@@ -55,43 +55,37 @@ void UMenuButton::NativeConstruct()
     UpdateVisuals();
 }
 
-void UMenuButton::ApplyLayoutOverrides()
+void URailButton::ApplyLayoutOverrides()
 {
-    if (!RootSizeBox)
-    {
-        return;
-    }
-
     // IMPORTANT:
-    // WidthOverride <= 0 means "do not lock width; let parent layout fill it"
-    if (WidthOverride > 0.f)
-    {
-        RootSizeBox->SetWidthOverride(WidthOverride);
-        RootSizeBox->ClearWidthOverride();
-        RootSizeBox->SetWidthOverride(WidthOverride);
-    }
-    else
+    // Do NOT apply width override here.
+    // Width is controlled by the parent layout so the button can fill horizontally.
+
+    if (RootSizeBox)
     {
         RootSizeBox->ClearWidthOverride();
+
+        if (HeightOverride > 0.f)
+        {
+            RootSizeBox->SetHeightOverride(HeightOverride);
+        }
+        else
+        {
+            RootSizeBox->ClearHeightOverride();
+        }
     }
 
-    if (HeightOverride > 0.f)
-    {
-        RootSizeBox->SetHeightOverride(HeightOverride);
-    }
-    else
-    {
-        RootSizeBox->ClearHeightOverride();
-    }
+    // If no RootSizeBox exists, do nothing.
+    // Let the widget hierarchy/padding determine height.
 }
 
-void UMenuButton::SetSelected(bool bInSelected)
+void URailButton::SetSelected(bool bInSelected)
 {
     bIsSelected = bInSelected;
     UpdateVisuals();
 }
 
-void UMenuButton::SetButtonText(const FText& InText)
+void URailButton::SetButtonText(const FText& InText)
 {
     MenuOption = InText.ToString();
 
@@ -101,7 +95,7 @@ void UMenuButton::SetButtonText(const FText& InText)
     }
 }
 
-void UMenuButton::SetMenuOption(const FString& InMenuOption)
+void URailButton::SetMenuOption(const FString& InMenuOption)
 {
     MenuOption = InMenuOption;
 
@@ -111,14 +105,13 @@ void UMenuButton::SetMenuOption(const FString& InMenuOption)
     }
 }
 
-void UMenuButton::SetButtonSize(float InWidth, float InHeight)
+void URailButton::SetButtonHeight(float InHeight)
 {
-    WidthOverride = InWidth;
     HeightOverride = InHeight;
     ApplyLayoutOverrides();
 }
 
-void UMenuButton::SetLabelFontSizeValue(int32 InFontSize)
+void URailButton::SetLabelFontSizeValue(int32 InFontSize)
 {
     LabelFontSize = InFontSize;
 
@@ -130,7 +123,7 @@ void UMenuButton::SetLabelFontSizeValue(int32 InFontSize)
     }
 }
 
-void UMenuButton::HandleClicked()
+void URailButton::HandleClicked()
 {
     OnSelected.Broadcast(this);
 
@@ -140,7 +133,7 @@ void UMenuButton::HandleClicked()
     }
 }
 
-void UMenuButton::HandleHovered()
+void URailButton::HandleHovered()
 {
     bIsHovered = true;
     UpdateVisuals();
@@ -153,13 +146,13 @@ void UMenuButton::HandleHovered()
     }
 }
 
-void UMenuButton::HandleUnhovered()
+void URailButton::HandleUnhovered()
 {
     bIsHovered = false;
     UpdateVisuals();
 }
 
-void UMenuButton::UpdateVisuals()
+void URailButton::UpdateVisuals()
 {
     if (!BackgroundImage)
     {

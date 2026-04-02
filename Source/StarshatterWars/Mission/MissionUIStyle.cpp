@@ -15,7 +15,7 @@
 
 namespace MissionUIStyle
 {
-    const FLinearColor HeaderBG = FLinearColor(0.48f, 0.52f, 0.58f, 1.0f);
+    const FLinearColor HeaderBG = FLinearColor(0.08f, 0.08f, 0.08f, 1.0f);
     const FLinearColor HeaderTopLine = FLinearColor(0.35f, 0.40f, 0.50f, 1.0f);
     const FLinearColor HeaderBottomLine = FLinearColor(0.05f, 0.05f, 0.05f, 1.0f);
     const FLinearColor HeaderText = FLinearColor(0.85f, 0.87f, 0.90f, 1.0f);
