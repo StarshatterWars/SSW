@@ -131,15 +131,15 @@ void UCmdDlg::NativeConstruct()
         if (!NewButton)
             continue;
 
-        NewButton->WidthOverride = 256.f;
-        NewButton->HeightOverride = 42.f;
-        NewButton->LabelFontSize = 16;
 
         if (UTextBlock* Label = Cast<UTextBlock>(NewButton->GetWidgetFromName(TEXT("Label"))))
         {
             Label->SetText(FText::FromString(MenuItems[i]).ToUpper());
         }
 
+        NewButton->WidthOverride = 256.0f;
+        NewButton->HeightOverride = 40.f;
+        NewButton->LabelFontSize = 16;
         NewButton->MenuOption = MenuItems[i];
 
         if (UVerticalBoxSlot* VBoxSlot = Cast<UVerticalBoxSlot>(NewButton->Slot))
