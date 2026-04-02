@@ -15,7 +15,7 @@
 
 namespace MissionUIStyle
 {
-    const FLinearColor HeaderBG = FLinearColor(0.18f, 0.20f, 0.24f, 1.0f);
+    const FLinearColor HeaderBG = FLinearColor(0.48f, 0.52f, 0.58f, 1.0f);
     const FLinearColor HeaderTopLine = FLinearColor(0.35f, 0.40f, 0.50f, 1.0f);
     const FLinearColor HeaderBottomLine = FLinearColor(0.05f, 0.05f, 0.05f, 1.0f);
     const FLinearColor HeaderText = FLinearColor(0.85f, 0.87f, 0.90f, 1.0f);
@@ -39,6 +39,8 @@ namespace MissionUIStyle
     const FLinearColor ComboItemBG = FLinearColor(0.08f, 0.09f, 0.11f, 1.0f);
     const FLinearColor ComboItemHoverBG = FLinearColor(0.18f, 0.22f, 0.30f, 1.0f);
     const FLinearColor ComboItemSelectedBG = FLinearColor(0.42f, 0.42f, 0.18f, 1.0f);
+
+    const FLinearColor SSWHeaderBG = FLinearColor(0.42f, 0.45f, 0.50f, 1.0f);
 
     const TCHAR* GetSerpentineFontPath()
     {

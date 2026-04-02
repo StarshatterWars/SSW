@@ -78,7 +78,11 @@ protected:
     const FShipDesign* ResolvePlayerShipDesign() const;
 
     
-
+    UWidget* BuildListHeaderRow(
+        const FString& LeftText,
+        const FString& RightText,
+        float LeftWidth,
+        float RightWidth) const;
     // ------------------------------------------------------------
     // UI build / refresh
     // ------------------------------------------------------------

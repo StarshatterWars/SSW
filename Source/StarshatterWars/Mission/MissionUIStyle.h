@@ -21,11 +21,14 @@ namespace MissionUIStyle
     // Colors
     // -----------------------------------------------------------------
 
+    extern const FLinearColor SSWHeaderBG;
+    
     extern const FLinearColor HeaderBG;
     extern const FLinearColor HeaderTopLine;
     extern const FLinearColor HeaderBottomLine;
     extern const FLinearColor HeaderText;
 
+   
     extern const FLinearColor PanelBG;
 
     extern const FLinearColor RowBG;

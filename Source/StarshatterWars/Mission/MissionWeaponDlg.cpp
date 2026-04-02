@@ -530,6 +530,22 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
+    // LOADOUT COLUMN HEADER ROW  
+    // ------------------------------------------------------------
+
+    if (UWidget* HeaderRow = BuildListHeaderRow(
+        TEXT("LOADOUT"),
+        TEXT("WEIGHT"),
+        860.f,
+        180.0f))
+    {
+        if (UVerticalBoxSlot* RowSlot = Right->AddChildToVerticalBox(HeaderRow))
+        {
+            RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+        }
+    }
+
+    // ------------------------------------------------------------
     // PRESET LOADOUTS LIST (UNCHANGED)
     // ------------------------------------------------------------
 
@@ -549,7 +565,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionWeaponListHost"));
-    ListHost->SetWidthOverride(900.f);
+    ListHost->SetWidthOverride(900.0f);
     ListHost->SetHeightOverride(250.0f);
     ListBorder->SetContent(ListHost);
 
@@ -588,8 +604,25 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     }
 
     // ------------------------------------------------------------
-// SELECTED LOADOUT STATION LIST
-// ------------------------------------------------------------
+    // STATION COLUMN HEADER ROW
+    // ------------------------------------------------------------
+
+    if (UWidget* HeaderRow = BuildListHeaderRow(
+        TEXT("STATION"),
+        TEXT("WEAPON"),
+        240.f,
+        660.f))
+    {
+        if (UVerticalBoxSlot* RowSlot = Right->AddChildToVerticalBox(HeaderRow))
+        {
+            RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+            RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        }
+    }
+
+    // ------------------------------------------------------------
+    // SELECTED LOADOUT STATION LIST
+    // ------------------------------------------------------------
 
     UBorder* StationBorder =
         WidgetTree->ConstructWidget<UBorder>(
@@ -599,7 +632,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
 
     if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(StationBorder))
     {
-        BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill)); //  THIS FIXES SCROLL
         BorderSlot->SetPadding(FMargin(0.f));
     }
 
@@ -608,7 +641,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             USizeBox::StaticClass(),
             TEXT("MissionWeaponStationHost"));
     StationHost->SetWidthOverride(900.f);
-    StationHost->SetHeightOverride(220.f);
+    StationHost->SetHeightOverride(250.0f);
     StationBorder->SetContent(StationHost);
 
     StationListView = WidgetTree->ConstructWidget<UMissionLoadoutListView>(
@@ -1015,4 +1048,55 @@ void UMissionWeaponDlg::HandleStationChanged(int32 StationIndex, int32 NewSelect
         const double CurrentMass = ComputeCurrentCustomMass(Elem, Design);
         WeightValueText->SetText(FText::FromString(FormatWeight(CurrentMass)));
     }
+}
+
+UWidget* UMissionWeaponDlg::BuildListHeaderRow(
+    const FString& LeftText,
+    const FString& RightText,
+    float LeftWidth,
+    float RightWidth) const
+{
+    UBorder* HeaderBorder = WidgetTree->ConstructWidget<UBorder>();
+    HeaderBorder->SetBrushColor(MissionUIStyle::SSWHeaderBG);
+
+    UHorizontalBox* HeaderRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    HeaderBorder->SetContent(HeaderRow);
+
+    USizeBox* LeftBox = WidgetTree->ConstructWidget<USizeBox>();
+    LeftBox->SetWidthOverride(LeftWidth);
+
+    UTextBlock* LeftLabel = WidgetTree->ConstructWidget<UTextBlock>();
+    LeftLabel->SetText(FText::FromString(LeftText));
+    LeftLabel->SetColorAndOpacity(FLinearColor::White);
+    LeftLabel->SetFont(MissionUIStyle::GetRowFont(15));
+    LeftLabel->SetJustification(ETextJustify::Left);
+    LeftBox->SetContent(LeftLabel);
+
+    if (UHorizontalBoxSlot* LeftSlot = HeaderRow->AddChildToHorizontalBox(LeftBox))
+    {
+        LeftSlot->SetPadding(FMargin(8.f, 4.f, 12.f, 4.f));
+        LeftSlot->SetHorizontalAlignment(HAlign_Left);
+        LeftSlot->SetVerticalAlignment(VAlign_Center);
+        LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    USizeBox* RightBox = WidgetTree->ConstructWidget<USizeBox>();
+    RightBox->SetWidthOverride(RightWidth);
+
+    UTextBlock* RightLabel = WidgetTree->ConstructWidget<UTextBlock>();
+    RightLabel->SetText(FText::FromString(RightText));
+    RightLabel->SetColorAndOpacity(FLinearColor::White);
+    RightLabel->SetFont(MissionUIStyle::GetRowFont(15));
+    RightLabel->SetJustification(ETextJustify::Right);
+    RightBox->SetContent(RightLabel);
+
+    if (UHorizontalBoxSlot* RightSlot = HeaderRow->AddChildToHorizontalBox(RightBox))
+    {
+        RightSlot->SetPadding(FMargin(8.f, 4.f, 8.f, 4.f));
+        RightSlot->SetHorizontalAlignment(HAlign_Left);
+        RightSlot->SetVerticalAlignment(VAlign_Center);
+        RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    return HeaderBorder;
 }
