@@ -1,4 +1,21 @@
-// /*  Project nGenEx	Fractal Dev Games	Copyright (C) 2024. All Rights Reserved.	SUBSYSTEM:    SSW	FILE:         Game.cpp	AUTHOR:       Carlos Bott*/
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2024-2026. All Rights Reserved.
+
+    SUBSYSTEM:    SSW
+    FILE:         MenuButton.h
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Shared menu button widget.
+
+    Supports:
+      - selected / hovered / normal visual states
+      - optional compact sizing through RootSizeBox
+      - optional label font size override
+      - click / hover sounds
+*/
 
 #pragma once
 
@@ -8,79 +25,107 @@
 
 class UButton;
 class UImage;
+class USizeBox;
 class UTextBlock;
 class USoundBase;
-/**
- * 
- */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMenuButtonSelected, UMenuButton*, SelectedButton);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMenuButtonHovered, UMenuButton*, HoveredButton);
 
-
 UCLASS()
 class STARSHATTERWARS_API UMenuButton : public UUserWidget
 {
-	GENERATED_BODY()
-	virtual void NativeConstruct() override;
+    GENERATED_BODY()
+
+protected:
+    virtual void NativeConstruct() override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-	FString MenuOption;
+    // -----------------------------------------------------------------
+    // Data
+    // -----------------------------------------------------------------
 
-	// Button display name (e.g., "Empire", "Fleet", etc.)
-	UPROPERTY(meta = (BindWidgetOptional), EditAnywhere, Category = "Data")
-	UTextBlock* Label;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
+    FString MenuOption;
 
-	// Background for color changes
-	UPROPERTY(meta = (BindWidgetOptional))
-	UImage* BackgroundImage;
+    // -----------------------------------------------------------------
+    // Widget Bindings
+    // -----------------------------------------------------------------
 
-	// The actual button
-	UPROPERTY(meta = (BindWidget))
-	UButton* Button;
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RootSizeBox = nullptr;
 
-	// Sound cues
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* ClickSound;
+    UPROPERTY(meta = (BindWidgetOptional), EditAnywhere, Category = "Data")
+    UTextBlock* Label = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HoverSound;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UImage* BackgroundImage = nullptr;
 
-	// Appearance colors
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
-	FLinearColor SelectedColor = FLinearColor(0.1f, 0.4f, 1.0f);
+    UPROPERTY(meta = (BindWidget))
+    UButton* Button = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
-	FLinearColor HoveredColor = FLinearColor(0.7f, 0.7f, 1.0f);
+    // -----------------------------------------------------------------
+    // Sound
+    // -----------------------------------------------------------------
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
-	FLinearColor NormalColor = FLinearColor::Transparent;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* ClickSound = nullptr;
 
-	// Selection state
-	void SetSelected(bool bInSelected);
-	bool IsSelected() const { return bIsSelected; }
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* HoverSound = nullptr;
 
-	// Delegates
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FOnMenuButtonSelected OnSelected;
+    // -----------------------------------------------------------------
+    // Appearance
+    // -----------------------------------------------------------------
 
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FOnMenuButtonHovered OnHovered;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    FLinearColor SelectedColor = FLinearColor(0.1f, 0.4f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    FLinearColor HoveredColor = FLinearColor(0.7f, 0.7f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    FLinearColor NormalColor = FLinearColor::Transparent;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    float WidthOverride = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    float HeightOverride = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance")
+    int32 LabelFontSize = 0;
+
+    // -----------------------------------------------------------------
+    // State
+    // -----------------------------------------------------------------
+
+    void SetSelected(bool bInSelected);
+    bool IsSelected() const { return bIsSelected; }
+
+    // -----------------------------------------------------------------
+    // Events
+    // -----------------------------------------------------------------
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnMenuButtonSelected OnSelected;
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnMenuButtonHovered OnHovered;
 
 private:
-	bool bIsSelected = false;
-	bool bIsHovered = false;
+    bool bIsSelected = false;
+    bool bIsHovered = false;
 
-	void UpdateVisuals();
+    void UpdateVisuals();
+    void ApplyLayoutOverrides();
 
-	// Event Handlers
-	UFUNCTION()
-	void HandleClicked();
+    UFUNCTION()
+    void HandleClicked();
 
-	UFUNCTION()
-	void HandleHovered();
+    UFUNCTION()
+    void HandleHovered();
 
-	UFUNCTION()
-	void HandleUnhovered();
+    UFUNCTION()
+    void HandleUnhovered();
 };

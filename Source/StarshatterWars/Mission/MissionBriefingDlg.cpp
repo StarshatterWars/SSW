@@ -313,6 +313,11 @@ void UMissionBriefingDlg::BuildMenuButtons()
             continue;
         }
 
+        // MAIN BRIEFING BUTTON SIZE
+        NewButton->WidthOverride = 256.f;
+        NewButton->HeightOverride = 42.f;
+        NewButton->LabelFontSize = 16;
+
         if (UTextBlock* Label = Cast<UTextBlock>(NewButton->GetWidgetFromName(TEXT("Label"))))
         {
             Label->SetText(FText::FromString(Item));
@@ -605,7 +610,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     case EMissionBriefingMode::NAV:
         if (MissionNavPanel)
         {
-            //NavPanel->RefreshFromMission();
+            MissionNavPanel->RefreshFromMission();
         }
         break;
 

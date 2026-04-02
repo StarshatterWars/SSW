@@ -39,6 +39,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/VerticalBoxSlot.h"
 
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
@@ -130,12 +131,24 @@ void UCmdDlg::NativeConstruct()
         if (!NewButton)
             continue;
 
+        NewButton->WidthOverride = 256.f;
+        NewButton->HeightOverride = 42.f;
+        NewButton->LabelFontSize = 16;
+
         if (UTextBlock* Label = Cast<UTextBlock>(NewButton->GetWidgetFromName(TEXT("Label"))))
         {
             Label->SetText(FText::FromString(MenuItems[i]).ToUpper());
         }
 
         NewButton->MenuOption = MenuItems[i];
+
+        if (UVerticalBoxSlot* VBoxSlot = Cast<UVerticalBoxSlot>(NewButton->Slot))
+        {
+            VBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+            VBoxSlot->SetHorizontalAlignment(HAlign_Left);
+            VBoxSlot->SetVerticalAlignment(VAlign_Center);
+        }
 
         MenuButtonContainer->AddChild(NewButton);
         MenuToggleGroup->RegisterButton(NewButton);

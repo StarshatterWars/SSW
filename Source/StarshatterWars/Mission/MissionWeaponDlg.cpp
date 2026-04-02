@@ -52,6 +52,7 @@
 
 static const bool bLogLoadoutsVerbose = false;
 static const bool bLogRuntimeLoadout = true;
+static const TCHAR* CustomLoadoutName = TEXT("CUSTOM LOADOUT");
 
 static FMissionRuntimeLoadout ConvertMissionLoad(const MissionLoad* InLoad)
 {

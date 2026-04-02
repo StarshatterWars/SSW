@@ -1,6 +1,10 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios LLC
-    Copyright (c) 2025-2026
+    Copyright (c) 2025-2026. All Rights Reserved.
+
+    ORIGINAL SYSTEM
+    ===============
+    Starshatter 4.5 (Destroyer Studios)
 
     SUBSYSTEM:    Stars.exe (Unreal Port)
     FILE:         MissionNavDlg.h
@@ -8,26 +12,68 @@
 
     OVERVIEW
     ========
-    UMissionEventDlg
-    - Unreal UUserWidget replacement for legacy MsnEventDlg.
-    - Uses standard UMG widget bindings (BindWidgetOptional).
-    - Bindings correspond to MsnNavDlg.frm control IDs.
+    UMissionNavDlg
+
+    Navigation panel hosted by UMissionBriefingDlg.
+
+    This widget owns NAV-local UI only:
+
+      - Top NAV mode buttons (GALAXY / SYSTEM / SECTOR)
+      - Zoom buttons (- / +)
+      - Local NAV mode switcher
+      - Right-side radio filter buttons
+      - Object list panel
+      - Detail panel
+
+    The parent UMissionBriefingDlg owns:
+
+      - Main briefing header
+      - SIT / PKG / NAV / WEP switching
+      - Accept / Cancel flow
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseScreen.h"                // <- your Unreal BaseScreen
+#include "BaseScreen.h"
 #include "MissionNavDlg.generated.h"
 
+class UBorder;
 class UButton;
-class UTextBlock;
+class UHorizontalBox;
 class UListView;
+class UMenuButton;
+class USizeBox;
+class UTextBlock;
+class UUniformGridPanel;
+class UVerticalBox;
+class UWidgetSwitcher;
+
 class UMissionBriefingDlg;
 class UMissionPlanner;
+
 class Campaign;
 class Mission;
 class MissionInfo;
+
+UENUM()
+enum class EMissionNavMode : uint8
+{
+    GALAXY = 0,
+    SYSTEM,
+    SECTOR
+};
+
+UENUM()
+enum class EMissionNavFilterMode : uint8
+{
+    SYSTEM = 0,
+    PLANET,
+    SECTOR,
+    STATION,
+    STARSHIP,
+    FIGHTER
+};
 
 UCLASS()
 class STARSHATTERWARS_API UMissionNavDlg : public UBaseScreen
@@ -37,93 +83,217 @@ class STARSHATTERWARS_API UMissionNavDlg : public UBaseScreen
 public:
     UMissionNavDlg(const FObjectInitializer& ObjectInitializer);
 
-    void InitializeDlg(UMissionPlanner* InManager);
-    void SetMissionContext(Campaign* InCampaign, Mission* InMission, MissionInfo* InInfo);
-    void ShowDlg();
+    // -----------------------------------------------------------------
+    // Initialization / Context
+    // -----------------------------------------------------------------
 
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
-    void SetParentDlg(UMissionBriefingDlg* InParentCmdDlg);
+    void SetParentDlg(UMissionBriefingDlg* InParentDlg);
+
+    void RefreshFromMission();
 
 protected:
+    // -----------------------------------------------------------------
+    // UE Overrides
+    // -----------------------------------------------------------------
+
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
+    // -----------------------------------------------------------------
+    // Internal Helpers
+    // -----------------------------------------------------------------
+
+    Mission* ResolveMission() const;
+
+    void BuildRuntimeLayout();
+    void BuildNavModeButtons();
+    void BuildRightPanels();
+    void BuildFilterButtons();
+
+    void RefreshNavModeSelection();
+    void RefreshFilterSelection();
+    void RefreshObjectListPanel();
+    void RefreshDetailPanel();
+
+    void SetNavMode(EMissionNavMode NewMode);
+    void SetFilterMode(EMissionNavFilterMode NewMode);
+
+    FString GetFilterModeLabel(EMissionNavFilterMode Mode) const;
+
+    UMenuButton* CreateNavModeButton(const FString& Label, UHorizontalBox* ParentBox);
+    UMenuButton* CreateFilterButton(const FString& Label, int32 Row, int32 Column);
+
 protected:
+    // -----------------------------------------------------------------
+    // Parent / Manager
+    // -----------------------------------------------------------------
+
     UPROPERTY()
     UMissionBriefingDlg* ParentDlg = nullptr;
 
-private:
-    void RefreshHeader();
-    void RefreshLists();
-
-    UFUNCTION() void OnAcceptClicked();
-    UFUNCTION() void OnCancelClicked();
-
-    UFUNCTION() void OnTabSitClicked();
-    UFUNCTION() void OnTabPkgClicked();
-    UFUNCTION() void OnTabMapClicked();
-    UFUNCTION() void OnTabWepClicked();
-
-    UFUNCTION() void OnNavGalaxyClicked();
-    UFUNCTION() void OnNavSystemClicked();
-    UFUNCTION() void OnNavSectorClicked();
-    UFUNCTION() void OnZoomInClicked();
-    UFUNCTION() void OnZoomOutClicked();
-
-    UFUNCTION() void OnFilterSystemClicked();
-    UFUNCTION() void OnFilterPlanetClicked();
-    UFUNCTION() void OnFilterSectorClicked();
-    UFUNCTION() void OnFilterStationClicked();
-    UFUNCTION() void OnFilterStarshipClicked();
-    UFUNCTION() void OnFilterFighterClicked();
+    UPROPERTY(Transient)
+    UMissionPlanner* Manager = nullptr;
 
 private:
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
     MissionInfo* MissionInfoPtr = nullptr;
 
-    // ---- Tabs (frm ids 900-903) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* TabSitButton = nullptr; // 900
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* TabPkgButton = nullptr; // 901
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* TabMapButton = nullptr; // 902
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* TabWepButton = nullptr; // 903
+    // -----------------------------------------------------------------
+    // Runtime Host
+    // -----------------------------------------------------------------
 
-    // ---- Header (frm ids 200,202,204,206) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* HeaderTitleText = nullptr; // 200
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* SystemValueText = nullptr; // 202
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* SectorValueText = nullptr; // 204
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* TimeText = nullptr;        // 206
+    UPROPERTY(meta = (BindWidgetOptional))
+    USizeBox* RuntimeHost = nullptr;
 
-    // ---- Briefing body (frm id 100) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* BriefingBodyText = nullptr; // 100
+    // -----------------------------------------------------------------
+    // Runtime Layout
+    // -----------------------------------------------------------------
 
-    // ---- Nav buttons (frm ids 101-103) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* GalaxyButton = nullptr; // 101
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* SystemButton = nullptr; // 102
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* SectorButton = nullptr; // 103
+    UPROPERTY()
+    UVerticalBox* MainColumn = nullptr;
 
-    // ---- Zoom (frm ids 110-111) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* ZoomInButton = nullptr;  // 110
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* ZoomOutButton = nullptr; // 111
+    UPROPERTY()
+    UHorizontalBox* TopButtonRow = nullptr;
 
-    // ---- Filters (frm ids 401-406) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterSystemButton = nullptr;   // 401
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterPlanetButton = nullptr;   // 402
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterSectorButton = nullptr;   // 403
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterStationButton = nullptr;  // 404
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterStarshipButton = nullptr; // 405
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* FilterFighterButton = nullptr;  // 406
+    UPROPERTY()
+    UHorizontalBox* NavModeButtonBox = nullptr;
 
-    // ---- Lists (frm ids 801-802) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UListView* ObjectList = nullptr; // 801
-    UPROPERTY(meta = (BindWidgetOptional)) UListView* DetailList = nullptr; // 802
+    UPROPERTY()
+    UHorizontalBox* ZoomButtonBox = nullptr;
 
-    // ---- Footer (frm ids 1-2) ----
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* AcceptButton = nullptr; // 1
+    UPROPERTY()
+    UHorizontalBox* ContentRow = nullptr;
+
+    UPROPERTY()
+    USizeBox* MainViewHost = nullptr;
+
+    UPROPERTY()
+    UVerticalBox* RightPanelColumn = nullptr;
+
+    // -----------------------------------------------------------------
+    // Top Buttons
+    // -----------------------------------------------------------------
+
+    UPROPERTY(EditAnywhere, Category = "Mission Nav")
+    TSubclassOf<UMenuButton> MenuButtonClass;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMenuButton>> NavModeButtons;
+
+    UPROPERTY()
+    UButton* ZoomOutButton = nullptr;
+
+    UPROPERTY()
+    UButton* ZoomInButton = nullptr;
+
+    UPROPERTY()
+    UTextBlock* ZoomOutText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* ZoomInText = nullptr;
+
+    // -----------------------------------------------------------------
+    // Local NAV Switcher
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UWidgetSwitcher* NavSwitcher = nullptr;
+
+    UPROPERTY()
+    USizeBox* GalaxyPanelHost = nullptr;
+
+    UPROPERTY()
+    USizeBox* SystemPanelHost = nullptr;
+
+    UPROPERTY()
+    USizeBox* SectorPanelHost = nullptr;
+
+    UPROPERTY()
+    UTextBlock* NavBodyText = nullptr;
+
+    // -----------------------------------------------------------------
+    // Right Panel - Filter Selection
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UVerticalBox* FilterPanelHost = nullptr;
+
+    UPROPERTY()
+    UUniformGridPanel* FilterButtonGrid = nullptr;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMenuButton>> FilterButtons;
+
+    // -----------------------------------------------------------------
+    // Right Panel - Object List
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UBorder* ObjectListBorder = nullptr;
+
+    UPROPERTY()
+    UVerticalBox* ObjectListPanel = nullptr;
+
+    UPROPERTY()
+    UTextBlock* ObjectListTitleText = nullptr;
+
+    UPROPERTY()
+    USizeBox* ObjectListHost = nullptr;
+
+    UPROPERTY()
+    UListView* ObjectListView = nullptr;
+
+    // -----------------------------------------------------------------
+    // Right Panel - Detail Panel
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UBorder* DetailBorder = nullptr;
+
+    UPROPERTY()
+    UVerticalBox* DetailPanel = nullptr;
+
+    UPROPERTY()
+    UTextBlock* DetailTitleText = nullptr;
+
+    UPROPERTY()
+    USizeBox* DetailHost = nullptr;
+
+    UPROPERTY()
+    UTextBlock* DetailBodyText = nullptr;
+
+    // -----------------------------------------------------------------
+    // State
+    // -----------------------------------------------------------------
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionNav|State", meta = (AllowPrivateAccess = "true"))
+    EMissionNavMode CurrentNavMode = EMissionNavMode::SYSTEM;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionNav|State", meta = (AllowPrivateAccess = "true"))
+    EMissionNavFilterMode CurrentFilterMode = EMissionNavFilterMode::SYSTEM;
 
 private:
-    UPROPERTY(Transient)
-    UMissionPlanner* Manager = nullptr;
-    UMissionPlanner* MissionScreen = nullptr;
-};
+    // -----------------------------------------------------------------
+    // Event Handlers
+    // -----------------------------------------------------------------
 
+    UFUNCTION()
+    void OnNavModeButtonSelected(UMenuButton* SelectedButton);
+
+    UFUNCTION()
+    void OnNavModeButtonHovered(UMenuButton* HoveredButton);
+
+    UFUNCTION()
+    void OnFilterButtonSelected(UMenuButton* SelectedButton);
+
+    UFUNCTION()
+    void OnFilterButtonHovered(UMenuButton* HoveredButton);
+
+    UFUNCTION()
+    void OnZoomInClicked();
+
+    UFUNCTION()
+    void OnZoomOutClicked();
+};
