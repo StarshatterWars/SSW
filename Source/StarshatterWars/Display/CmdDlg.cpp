@@ -52,6 +52,8 @@
 #include "CmdIntelDlg.h"
 #include "CmdTheaterDlg.h"
 #include "Mission.h"
+#include "GameStructs_UI.h"
+
 #include "MissionListObject.h"
 
 #include "TimerSubsystem.h"
@@ -129,37 +131,33 @@ void UCmdDlg::NativeConstruct()
     {
         UMenuButton* NewButton = CreateWidget<UMenuButton>(this, MenuButtonClass);
         if (!NewButton)
-            continue;
-
-
-        if (UTextBlock* Label = Cast<UTextBlock>(NewButton->GetWidgetFromName(TEXT("Label"))))
         {
-            Label->SetText(FText::FromString(MenuItems[i]).ToUpper());
+            continue;
         }
 
-        NewButton->WidthOverride = 256.0f;
-        NewButton->HeightOverride = 40.f;
-        NewButton->LabelFontSize = 16;
-        NewButton->MenuOption = MenuItems[i];
+        NewButton->SetLayoutMode(ELayoutMode::FillWidth);
+        NewButton->SetButtonSize(256.0f, 32.0f);
+        NewButton->SetLabelFontSizeValue(16);
+        NewButton->SetMenuOption(MenuItems[i]);
+        NewButton->SetButtonText(FText::FromString(MenuItems[i]).ToUpper());
 
-        if (UVerticalBoxSlot* VBoxSlot = Cast<UVerticalBoxSlot>(NewButton->Slot))
+        if (UVerticalBoxSlot* VBoxSlot = MenuButtonContainer->AddChildToVerticalBox(NewButton))
         {
             VBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
-            VBoxSlot->SetHorizontalAlignment(HAlign_Left);
+            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 0.f));
+            VBoxSlot->SetHorizontalAlignment(HAlign_Fill);
             VBoxSlot->SetVerticalAlignment(VAlign_Center);
         }
 
-        MenuButtonContainer->AddChild(NewButton);
         MenuToggleGroup->RegisterButton(NewButton);
 
         NewButton->OnSelected.RemoveDynamic(this, &UCmdDlg::OnMenuToggleSelected);
         NewButton->OnSelected.AddDynamic(this, &UCmdDlg::OnMenuToggleSelected);
+
+        NewButton->OnHovered.RemoveDynamic(this, &UCmdDlg::OnMenuToggleHovered);
         NewButton->OnHovered.AddDynamic(this, &UCmdDlg::OnMenuToggleHovered);
 
         AllMenuButtons.Add(NewButton);
-
-        CurrentScreen = ECmdScreen::None;
     }
 
     if (ReturnButton)
@@ -248,7 +246,7 @@ void UCmdDlg::NativeConstruct()
 
 void UCmdDlg::NativePreConstruct()
 {
-    MenuButtonContainer->ClearChildren();
+    
 
     if (CmdOrdersPanel)
     {

@@ -169,7 +169,7 @@ private:
     USelectableButtonGroup* MenuToggleGroup;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    UPanelWidget* MenuButtonContainer;
+    UVerticalBox* MenuButtonContainer = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* txt_name = nullptr;

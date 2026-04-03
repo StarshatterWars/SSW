@@ -41,6 +41,14 @@ enum class EUIControlType : uint8
 	Background UMETA(DisplayName = "Background"),  
 };
 
+	UENUM(BlueprintType)
+	enum class ELayoutMode : uint8
+	{
+		FixedSize   UMETA(DisplayName = "Fixed Size"),
+		FillWidth   UMETA(DisplayName = "Fill Width"),
+		DesiredSize UMETA(DisplayName = "Desired Size")
+	};
+
 // -----------------------------------------------------------------------------
 // ESSWThemeFont
 // -----------------------------------------------------------------------------

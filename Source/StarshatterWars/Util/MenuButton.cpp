@@ -16,8 +16,10 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
+#include "Components/SizeBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameStructs_UI.h"
 
 void UMenuButton::NativeConstruct()
 {
@@ -42,17 +44,21 @@ void UMenuButton::NativeConstruct()
     if (Label)
     {
         Label->SetText(FText::FromString(MenuOption));
-
-        if (LabelFontSize > 0)
-        {
-            FSlateFontInfo FontInfo = Label->GetFont();
-            FontInfo.Size = LabelFontSize;
-            Label->SetFont(FontInfo);
-        }
     }
 
+    ApplyFontOverride();
     ApplyLayoutOverrides();
     UpdateVisuals();
+}
+
+void UMenuButton::ApplyFontOverride()
+{
+    if (Label && LabelFontSize > 0)
+    {
+        FSlateFontInfo FontInfo = Label->GetFont();
+        FontInfo.Size = LabelFontSize;
+        Label->SetFont(FontInfo);
+    }
 }
 
 void UMenuButton::ApplyLayoutOverrides()
@@ -62,26 +68,68 @@ void UMenuButton::ApplyLayoutOverrides()
         return;
     }
 
-    // IMPORTANT:
-    // WidthOverride <= 0 means "do not lock width; let parent layout fill it"
-    if (WidthOverride > 0.f)
-    {
-        RootSizeBox->SetWidthOverride(WidthOverride);
-        RootSizeBox->ClearWidthOverride();
-        RootSizeBox->SetWidthOverride(WidthOverride);
-    }
-    else
-    {
-        RootSizeBox->ClearWidthOverride();
-    }
+    USizeBoxSlot* InnerSlot = Cast<USizeBoxSlot>(RootSizeBox->GetContentSlot());
 
-    if (HeightOverride > 0.f)
+    switch (LayoutMode)
     {
-        RootSizeBox->SetHeightOverride(HeightOverride);
-    }
-    else
-    {
+    case ELayoutMode::FixedSize:
+        if (WidthOverride > 0.f)
+        {
+            RootSizeBox->SetWidthOverride(WidthOverride);
+        }
+        else
+        {
+            RootSizeBox->ClearWidthOverride();
+        }
+
+        if (HeightOverride > 0.f)
+        {
+            RootSizeBox->SetHeightOverride(HeightOverride);
+        }
+        else
+        {
+            RootSizeBox->ClearHeightOverride();
+        }
+
+        if (InnerSlot)
+        {
+            InnerSlot->SetHorizontalAlignment(HAlign_Center);
+            InnerSlot->SetVerticalAlignment(VAlign_Center);
+        }
+        break;
+
+    case ELayoutMode::FillWidth:
+        RootSizeBox->ClearWidthOverride();
+
+        if (HeightOverride > 0.f)
+        {
+            RootSizeBox->SetHeightOverride(HeightOverride);
+        }
+        else
+        {
+            RootSizeBox->ClearHeightOverride();
+        }
+
+        if (InnerSlot)
+        {
+            InnerSlot->SetHorizontalAlignment(HAlign_Fill);
+            InnerSlot->SetVerticalAlignment(VAlign_Fill);
+        }
+        break;
+
+    case ELayoutMode::DesiredSize:
+        RootSizeBox->ClearWidthOverride();
         RootSizeBox->ClearHeightOverride();
+
+        if (InnerSlot)
+        {
+            InnerSlot->SetHorizontalAlignment(HAlign_Center);
+            InnerSlot->SetVerticalAlignment(VAlign_Center);
+        }
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -121,13 +169,13 @@ void UMenuButton::SetButtonSize(float InWidth, float InHeight)
 void UMenuButton::SetLabelFontSizeValue(int32 InFontSize)
 {
     LabelFontSize = InFontSize;
+    ApplyFontOverride();
+}
 
-    if (Label && LabelFontSize > 0)
-    {
-        FSlateFontInfo FontInfo = Label->GetFont();
-        FontInfo.Size = LabelFontSize;
-        Label->SetFont(FontInfo);
-    }
+void UMenuButton::SetLayoutMode(ELayoutMode InLayoutMode)
+{
+    LayoutMode = InLayoutMode;
+    ApplyLayoutOverrides();
 }
 
 void UMenuButton::HandleClicked()
