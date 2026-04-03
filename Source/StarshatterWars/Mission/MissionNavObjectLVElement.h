@@ -35,6 +35,7 @@ class STARSHATTERWARS_API UMissionNavObjectLVElement : public UUserWidget, publi
 
 public:
     virtual void NativeConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
 
 protected:
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;

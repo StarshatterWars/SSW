@@ -24,6 +24,8 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 
+#include "Widgets/SNullWidget.h"
+
 namespace MissionNavObjectLayout
 {
     static constexpr float RowHeight = 28.0f;
@@ -36,7 +38,6 @@ void UMissionNavObjectLVElement::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    BuildRuntimeWidget();
     ApplySlotRules();
     ApplyColumnLayout();
     ApplyTextRules();
@@ -263,4 +264,16 @@ void UMissionNavObjectLVElement::ApplyTextRules()
 
     FixText(PrimaryText);
     FixText(SecondaryText);
+}
+
+TSharedRef<SWidget> UMissionNavObjectLVElement::RebuildWidget()
+{
+    BuildRuntimeWidget();
+
+    if (WidgetTree && WidgetTree->RootWidget)
+    {
+        return Super::RebuildWidget();
+    }
+
+    return SNullWidget::NullWidget;
 }

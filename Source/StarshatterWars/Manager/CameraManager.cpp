@@ -542,7 +542,7 @@ CameraManager::ExecFrame(double seconds)
 	if (hud && hud->Ambient() != FColor::Black)
 		sim->GetScene()->SetAmbient(hud->Ambient());
 	else
-		sim->GetScene()->SetAmbient(sim->GetStarSystem()->Ambient());
+		sim->GetScene()->SetAmbient(sim->GetStarSystem()->GetAmbient());
 
 	switch (op_mode) {
 	default:

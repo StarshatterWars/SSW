@@ -1276,8 +1276,8 @@ MapView::SelectAt(int x, int y)
 		while (++iter) {
 			StarSystem* sys = iter.value();
 
-			double dx = (sys->Location().X - test_x);
-			double dy = (sys->Location().Y - test_y);
+			double dx = (sys->GetLocation().X - test_x);
+			double dy = (sys->GetLocation().Y - test_y);
 			double d = sqrt(dx * dx + dy * dy);
 
 			if (d < dist) {
@@ -1707,9 +1707,9 @@ MapView::DrawGalaxy()
 		StarSystem* sys = iter.value();
 
 		if (system == sys) {
-			if (fabs(sys->Location().X) > 10 || fabs(sys->Location().Y) > 10) {
-				int sx = (int)sys->Location().X;
-				int sy = (int)sys->Location().Y;
+			if (fabs(sys->GetLocation().X) > 10 || fabs(sys->GetLocation().Y) > 10) {
+				int sx = (int)sys->GetLocation().X;
+				int sy = (int)sys->GetLocation().Y;
 
 				sx -= sx % 10;
 				sy -= sy % 10;
@@ -1725,13 +1725,13 @@ MapView::DrawGalaxy()
 	while (++iter) {
 		StarSystem* sys = iter.value();
 
-		int sx = (int)(cx + ox + sys->Location().X * scale);
-		int sy = (int)(cy + oy + sys->Location().Y * scale);
+		int sx = (int)(cx + ox + sys->GetLocation().X * scale);
+		int sy = (int)(cy + oy + sys->GetLocation().Y * scale);
 
 		if (sx < 4 || sx > rect.w - 4 || sy < 4 || sy > rect.h - 4)
 			continue;
 
-		DrawEllipse(sx - 7, sy - 7, sx + 7, sy + 7, Ship::IFFColor(sys->Affiliation()));
+		DrawEllipse(sx - 7, sy - 7, sx + 7, sy + 7, Ship::IFFColor(sys->GetAffiliation()));
 
 		if (sys == system) {
 			DrawLine(0, sy, rect.w, sy, FColor(128, 128, 128), Video::BLEND_ADDITIVE);
@@ -1746,8 +1746,8 @@ MapView::DrawGalaxy()
 				int ax = sx;
 				int ay = sy;
 
-				int bx = (int)(cx + ox + sys2->Location().X * scale);
-				int by = (int)(cy + oy + sys2->Location().Y * scale);
+				int bx = (int)(cx + ox + sys2->GetLocation().X * scale);
+				int by = (int)(cy + oy + sys2->GetLocation().Y * scale);
 
 				if (ax == bx) {
 					if (ay < by) { ay += 8; by -= 8; }
@@ -1907,7 +1907,7 @@ MapView::DrawRegion()
 	double cy = rect.h / 2;
 
 	int size = (int)rgn->Radius();
-	int step = (int)rgn->GridSpace();
+	int step = (int)rgn->GetGridSpace();
 
 	c = (cx < cy) ? cx : cy;
 	r = rgn->Radius() * zoom;

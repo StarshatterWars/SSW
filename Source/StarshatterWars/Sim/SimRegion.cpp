@@ -144,7 +144,7 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
 
         grid = new Grid(
             (int32)orbital_region->Radius(),
-            (int32)orbital_region->GridSpace()
+            (int32)orbital_region->GetGridSpace()
         );
 
         if (orbital_region->Type() == Orbital::TERRAIN) {

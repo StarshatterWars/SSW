@@ -41,18 +41,22 @@ class USizeBox;
 class UTextBlock;
 class UTexture2D;
 class UUniformGridPanel;
+class UUserWidget;
 class UVerticalBox;
 class UWidgetSwitcher;
-class UUserWidget;
 
 class UMissionBriefingDlg;
 class UMissionPlanner;
-class UMissionNavObjectListObject;
 class UMissionNavObjectListView;
 
 class Campaign;
+class MapView;
 class Mission;
+class MissionElement;
 class MissionInfo;
+class OrbitalBody;
+class OrbitalRegion;
+class StarSystem;
 
 UENUM()
 enum class EMissionNavMode : uint8
@@ -118,6 +122,20 @@ protected:
     UMenuButton* CreateNavModeButton(const FString& Label, UHorizontalBox* ParentBox);
     UMenuButton* CreateFilterButton(const FString& Label, int32 Row, int32 Column);
 
+    // Real data builders:
+    void BuildSystemObjects();
+    void BuildPlanetObjects();
+    void BuildSectorObjects();
+    void BuildMissionElementObjects(EMissionNavObjectType ObjectType);
+
+    // Utility:
+    void AddObjectItem(
+        EMissionNavObjectType ObjectType,
+        int32 Index,
+        const FString& PrimaryText,
+        const FString& SecondaryText,
+        const FString& DetailText);
+
 protected:
     UPROPERTY()
     UMissionBriefingDlg* ParentDlg = nullptr;
@@ -129,20 +147,13 @@ private:
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
     MissionInfo* MissionInfoPtr = nullptr;
+    MapView* MapViewPtr = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* RuntimeHost = nullptr;
 
-    // -----------------------------------------------------------------
-    // Root Layout
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UHorizontalBox* RootContentRow = nullptr;
-
-    // -----------------------------------------------------------------
-    // Left Panel
-    // -----------------------------------------------------------------
 
     UPROPERTY()
     UBorder* LeftPanelBorder = nullptr;
@@ -162,19 +173,11 @@ private:
     UPROPERTY()
     USizeBox* MainViewHost = nullptr;
 
-    // -----------------------------------------------------------------
-    // Right Panel
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UBorder* RightPanelBorder = nullptr;
 
     UPROPERTY()
     UVerticalBox* RightPanelColumn = nullptr;
-
-    // -----------------------------------------------------------------
-    // Top Buttons
-    // -----------------------------------------------------------------
 
     UPROPERTY(EditAnywhere, Category = "Mission Nav")
     TSubclassOf<UMenuButton> MenuButtonClass;
@@ -197,10 +200,6 @@ private:
     UPROPERTY()
     UTextBlock* ZoomInText = nullptr;
 
-    // -----------------------------------------------------------------
-    // Local NAV Switcher
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UWidgetSwitcher* NavSwitcher = nullptr;
 
@@ -216,10 +215,6 @@ private:
     UPROPERTY()
     UTextBlock* NavBodyText = nullptr;
 
-    // -----------------------------------------------------------------
-    // Right Panel - Filter Selection
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UVerticalBox* FilterPanelHost = nullptr;
 
@@ -228,10 +223,6 @@ private:
 
     UPROPERTY()
     TArray<TObjectPtr<UMenuButton>> FilterButtons;
-
-    // -----------------------------------------------------------------
-    // Right Panel - Object List
-    // -----------------------------------------------------------------
 
     UPROPERTY()
     UBorder* ObjectListBorder = nullptr;
@@ -257,10 +248,6 @@ private:
     UPROPERTY()
     UMissionNavObjectListObject* SelectedObjectItem = nullptr;
 
-    // -----------------------------------------------------------------
-    // Right Panel - Detail Panel
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UBorder* DetailBorder = nullptr;
 
@@ -279,16 +266,8 @@ private:
     UPROPERTY()
     UTextBlock* DetailBodyText = nullptr;
 
-    // -----------------------------------------------------------------
-    // Style Assets
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UTexture2D* RightPanelBackgroundTexture = nullptr;
-
-    // -----------------------------------------------------------------
-    // State
-    // -----------------------------------------------------------------
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MissionNav|State", meta = (AllowPrivateAccess = "true"))
     EMissionNavMode CurrentNavMode = EMissionNavMode::SYSTEM;

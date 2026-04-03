@@ -69,15 +69,15 @@ public:
     virtual void   ExecFrame();
 
     // accessors:
-    const char*     GetName()       const { return name; }
-    const char*     Govt()          const { return govt; }
-    const char*     Description()   const { return description; }
-    int            Affiliation()    const { return affiliation; }
-    int            Sequence()       const { return seq; }
-    FVector        Location()       const { return loc; }
-    int            NumStars()       const { return sky_stars; }
-    int            NumDust()        const { return sky_dust; }
-    FColor         Ambient()        const;
+    const char*     GetName()           const { return name; }
+    const char*     GetGovt()           const { return govt; }
+    const char*     GetDescription()    const { return description; }
+    int             GetAffiliation()    const { return affiliation; }
+    int             GetSequence()       const { return seq; }
+    FVector         GetLocation()       const { return loc; }
+    int             GetNumStars()       const { return sky_stars; }
+    int             GetNumDust()        const { return sky_dust; }
+    FColor          GetAmbient()        const;
 
     List<OrbitalBody>& Bodies() { return bodies; }
     List<OrbitalRegion>& Regions() { return regions; }

@@ -30,4 +30,5 @@ public:
     UMissionNavObjectListView(const FObjectInitializer& ObjectInitializer);
 
     void SetEntryWidgetClassPublic(TSubclassOf<UUserWidget> InEntryWidgetClass);
+
 };

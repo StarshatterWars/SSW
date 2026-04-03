@@ -13,18 +13,6 @@
     OVERVIEW
     ========
     UMissionNavDlg
-
-    Runtime NAV layout:
-
-      - Left panel contains:
-          * NAV mode buttons
-          * zoom buttons
-          * GALAXY / SYSTEM / SECTOR switcher content
-
-      - Right panel contains:
-          * filter buttons
-          * object list panel with title bar
-          * detail panel with title bar
 */
 
 #include "MissionNavDlg.h"
@@ -38,8 +26,13 @@
 #include "MissionUIStyle.h"
 
 #include "Campaign.h"
+#include "MapView.h"
 #include "Mission.h"
+#include "MissionElement.h"
 #include "MissionInfo.h"
+#include "Orbital.h"
+#include "OrbitalRegion.h"
+#include "StarSystem.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -134,28 +127,74 @@ void UMissionNavDlg::RefreshFromMission()
 {
     MissionPtr = ResolveMission();
 
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
+
     if (NavBodyText)
     {
         NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-        NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(20));
+        NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
 
-        switch (CurrentNavMode)
+        if (!MissionPtr)
         {
-        case EMissionNavMode::GALAXY:
-            NavBodyText->SetText(FText::FromString(TEXT("GALAXY NAVIGATION")));
-            break;
+            NavBodyText->SetText(FText::FromString(TEXT("NO MISSION DATA")));
+        }
+        else
+        {
+            FString DisplayText;
 
-        case EMissionNavMode::SYSTEM:
-            NavBodyText->SetText(FText::FromString(TEXT("SYSTEM NAVIGATION")));
-            break;
+            switch (CurrentNavMode)
+            {
+            case EMissionNavMode::GALAXY:
+            {
+                DisplayText = TEXT("GALAXY MODE");
 
-        case EMissionNavMode::SECTOR:
-            NavBodyText->SetText(FText::FromString(TEXT("SECTOR NAVIGATION")));
-            break;
+                if (MissionPtr->GetStarSystem())
+                {
+                    DisplayText += FString::Printf(
+                        TEXT("\n\nCURRENT SYSTEM: %s"),
+                        *FString(MissionPtr->GetStarSystem()->GetName()));
+                }
+                break;
+            }
 
-        default:
-            NavBodyText->SetText(FText::GetEmpty());
-            break;
+            case EMissionNavMode::SYSTEM:
+            {
+                StarSystem* System = MissionPtr->GetStarSystem();
+
+                if (System)
+                {
+                    DisplayText = FString::Printf(
+                        TEXT("SYSTEM MODE\n\nSYSTEM: %s\nRADIUS: %.0f"),
+                        *FString(System->GetName()),
+                        System->Radius());
+                }
+                else
+                {
+                    DisplayText = TEXT("SYSTEM MODE\n\nNO STAR SYSTEM");
+                }
+                break;
+            }
+
+            case EMissionNavMode::SECTOR:
+            {
+                DisplayText = TEXT("SECTOR MODE");
+
+                if (MissionPtr->GetStarSystem())
+                {
+                    DisplayText += FString::Printf(
+                        TEXT("\n\nSYSTEM: %s"),
+                        *FString(MissionPtr->GetStarSystem()->GetName()));
+                }
+
+                break;
+            }
+
+            default:
+                DisplayText = TEXT("NO NAV DATA");
+                break;
+            }
+
+            NavBodyText->SetText(FText::FromString(DisplayText));
         }
     }
 
@@ -183,10 +222,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
             TEXT("MissionNavRootContentRow"));
 
     RuntimeHost->SetContent(RootContentRow);
-
-    // -----------------------------------------------------------------
-    // LEFT PANEL
-    // -----------------------------------------------------------------
 
     LeftPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
@@ -345,10 +380,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
     NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(20));
     SystemPanelHost->SetContent(NavBodyText);
 
-    // -----------------------------------------------------------------
-    // RIGHT PANEL
-    // -----------------------------------------------------------------
-
     RightPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -430,59 +461,6 @@ UMenuButton* UMissionNavDlg::CreateNavModeButton(const FString& Label, UHorizont
     return NewButton;
 }
 
-void UMissionNavDlg::RefreshNavModeSelection()
-{
-    FString ActiveLabel;
-
-    switch (CurrentNavMode)
-    {
-    case EMissionNavMode::GALAXY: ActiveLabel = TEXT("GALAXY"); break;
-    case EMissionNavMode::SYSTEM: ActiveLabel = TEXT("SYSTEM"); break;
-    case EMissionNavMode::SECTOR: ActiveLabel = TEXT("SECTOR"); break;
-    default: break;
-    }
-
-    for (UMenuButton* Button : NavModeButtons)
-    {
-        if (Button)
-        {
-            Button->SetSelected(Button->MenuOption == ActiveLabel);
-        }
-    }
-}
-
-void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
-{
-    CurrentNavMode = NewMode;
-
-    if (NavSwitcher)
-    {
-        NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
-    }
-
-    RefreshNavModeSelection();
-
-    switch (CurrentNavMode)
-    {
-    case EMissionNavMode::GALAXY:
-        if (Manager) Manager->NavModeGalaxy();
-        break;
-
-    case EMissionNavMode::SYSTEM:
-        if (Manager) Manager->NavModeSystem();
-        break;
-
-    case EMissionNavMode::SECTOR:
-        if (Manager) Manager->NavModeSector();
-        break;
-
-    default:
-        break;
-    }
-
-    RefreshFromMission();
-}
-
 void UMissionNavDlg::BuildRightPanels()
 {
     if (!WidgetTree || !RightPanelColumn)
@@ -491,10 +469,6 @@ void UMissionNavDlg::BuildRightPanels()
     }
 
     RightPanelColumn->ClearChildren();
-
-    // -------------------------------------------------------------
-    // FILTER PANEL
-    // -------------------------------------------------------------
 
     FilterPanelHost =
         WidgetTree->ConstructWidget<UVerticalBox>(
@@ -520,10 +494,6 @@ void UMissionNavDlg::BuildRightPanels()
 
     BuildFilterButtons();
 
-    // -------------------------------------------------------------
-    // OBJECT LIST PANEL
-    // -------------------------------------------------------------
-
     ObjectListBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -541,8 +511,6 @@ void UMissionNavDlg::BuildRightPanels()
             TEXT("MissionNavObjectListPanel"));
     ObjectListBorder->SetContent(ObjectListPanel);
 
-    // ---- TITLE BAR ----
-
     ObjectListTitleBar =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -557,21 +525,16 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavObjectListTitleText"));
-
     ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
     ObjectListTitleText->SetJustification(ETextJustify::Left);
     ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
-
     ObjectListTitleBar->SetContent(ObjectListTitleText);
-
-    // ---- LIST HOST ----
 
     ObjectListHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavObjectListHost"));
-
     ObjectListHost->SetWidthOverride(300.f);
     ObjectListHost->SetHeightOverride(220.f);
 
@@ -581,8 +544,6 @@ void UMissionNavDlg::BuildRightPanels()
         ObjectListHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
-    // ---- LIST VIEW (CRITICAL FIX) ----
-
     ObjectListView =
         WidgetTree->ConstructWidget<UMissionNavObjectListView>(
             UMissionNavObjectListView::StaticClass(),
@@ -590,8 +551,6 @@ void UMissionNavDlg::BuildRightPanels()
 
     if (ObjectListView)
     {
-        // Already safe because constructor sets EntryWidgetClass,
-        // but we reinforce it here for clarity.
         if (!ObjectListEntryWidgetClass)
         {
             ObjectListEntryWidgetClass = UMissionNavObjectLVElement::StaticClass();
@@ -599,16 +558,10 @@ void UMissionNavDlg::BuildRightPanels()
 
         ObjectListView->SetEntryWidgetClassPublic(ObjectListEntryWidgetClass);
         ObjectListView->SetSelectionMode(ESelectionMode::Single);
-
         ObjectListView->OnItemSelectionChanged().Clear();
         ObjectListView->OnItemSelectionChanged().AddUObject(this, &UMissionNavDlg::OnObjectSelectionChanged);
-
         ObjectListHost->SetContent(ObjectListView);
     }
-
-    // -------------------------------------------------------------
-    // DETAIL PANEL
-    // -------------------------------------------------------------
 
     DetailBorder =
         WidgetTree->ConstructWidget<UBorder>(
@@ -627,37 +580,30 @@ void UMissionNavDlg::BuildRightPanels()
             TEXT("MissionNavDetailPanel"));
     DetailBorder->SetContent(DetailPanel);
 
-    // ---- TITLE ----
-
     DetailTitleBar =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
             TEXT("MissionNavDetailTitleBar"));
 
-    if (UVerticalBoxSlot* TitleSlot = DetailPanel->AddChildToVerticalBox(DetailTitleBar))
+    if (UVerticalBoxSlot* DetailTitleSlot = DetailPanel->AddChildToVerticalBox(DetailTitleBar))
     {
-        TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        DetailTitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
     DetailTitleText =
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailTitleText"));
-
     DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
     DetailTitleText->SetJustification(ETextJustify::Left);
     DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
-
     DetailTitleBar->SetContent(DetailTitleText);
-
-    // ---- BODY ----
 
     DetailHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavDetailHost"));
-
     DetailHost->SetWidthOverride(300.f);
     DetailHost->SetHeightOverride(140.f);
 
@@ -671,17 +617,11 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailBodyText"));
-
     DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
     DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
     DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
     DetailBodyText->SetJustification(ETextJustify::Left);
-
     DetailHost->SetContent(DetailBodyText);
-
-    // -------------------------------------------------------------
-    // FINALIZE
-    // -------------------------------------------------------------
 
     ApplyPanelStyles();
     RefreshFilterSelection();
@@ -793,11 +733,128 @@ void UMissionNavDlg::ApplyPanelStyles()
     }
 
     ApplyTexturedPanelDark(RightPanelBorder);
-
     ApplyTexturedPanelWhite(ObjectListBorder);
     ApplyTexturedPanelWhite(ObjectListTitleBar);
     ApplyTexturedPanelWhite(DetailBorder);
     ApplyTexturedPanelWhite(DetailTitleBar);
+}
+
+void UMissionNavDlg::RefreshNavModeSelection()
+{
+    FString ActiveLabel;
+
+    switch (CurrentNavMode)
+    {
+    case EMissionNavMode::GALAXY: ActiveLabel = TEXT("GALAXY"); break;
+    case EMissionNavMode::SYSTEM: ActiveLabel = TEXT("SYSTEM"); break;
+    case EMissionNavMode::SECTOR: ActiveLabel = TEXT("SECTOR"); break;
+    default: break;
+    }
+
+    for (UMenuButton* Button : NavModeButtons)
+    {
+        if (Button)
+        {
+            Button->SetSelected(Button->MenuOption == ActiveLabel);
+        }
+    }
+}
+
+void UMissionNavDlg::RefreshFilterSelection()
+{
+    const FString ActiveLabel = GetFilterModeLabel(CurrentFilterMode);
+
+    for (UMenuButton* Button : FilterButtons)
+    {
+        if (Button)
+        {
+            Button->SetSelected(Button->MenuOption == ActiveLabel);
+        }
+    }
+
+    if (ObjectListTitleText)
+    {
+        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
+        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+    }
+}
+
+void UMissionNavDlg::RefreshObjectListPanel()
+{
+    if (ObjectListTitleText)
+    {
+        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
+        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+    }
+
+    RebuildObjectList();
+}
+
+void UMissionNavDlg::RefreshDetailPanel()
+{
+    if (DetailTitleText)
+    {
+        DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
+        DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+    }
+
+    if (DetailBodyText)
+    {
+        DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
+        DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
+
+        if (SelectedObjectItem)
+        {
+            DetailBodyText->SetText(FText::FromString(SelectedObjectItem->GetDetailText()));
+        }
+        else
+        {
+            DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
+        }
+    }
+}
+
+void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
+{
+    CurrentNavMode = NewMode;
+
+    if (NavSwitcher)
+    {
+        NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
+    }
+
+    RefreshNavModeSelection();
+
+    switch (CurrentNavMode)
+    {
+    case EMissionNavMode::GALAXY:
+        if (Manager) Manager->NavModeGalaxy();
+        break;
+
+    case EMissionNavMode::SYSTEM:
+        if (Manager) Manager->NavModeSystem();
+        break;
+
+    case EMissionNavMode::SECTOR:
+        if (Manager) Manager->NavModeSector();
+        break;
+
+    default:
+        break;
+    }
+
+    RefreshFromMission();
+}
+
+void UMissionNavDlg::SetFilterMode(EMissionNavFilterMode NewMode)
+{
+    CurrentFilterMode = NewMode;
+    RefreshFilterSelection();
+    RefreshObjectListPanel();
+    RefreshDetailPanel();
 }
 
 FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
@@ -838,44 +895,40 @@ EMissionNavObjectType UMissionNavDlg::GetCurrentObjectType() const
     }
 }
 
-void UMissionNavDlg::RefreshFilterSelection()
+void UMissionNavDlg::AddObjectItem(
+    EMissionNavObjectType ObjectType,
+    int32 Index,
+    const FString& PrimaryText,
+    const FString& SecondaryText,
+    const FString& DetailText)
 {
-    const FString ActiveLabel = GetFilterModeLabel(CurrentFilterMode);
-
-    for (UMenuButton* Button : FilterButtons)
+    if (!ObjectListView)
     {
-        if (Button)
-        {
-            Button->SetSelected(Button->MenuOption == ActiveLabel);
-        }
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] AddObjectItem: ObjectListView is null"));
+        return;
     }
 
-    if (ObjectListTitleText)
+    UMissionNavObjectListObject* Item = NewObject<UMissionNavObjectListObject>(this);
+    if (!Item)
     {
-        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
-        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
-    }
-}
-
-void UMissionNavDlg::SetFilterMode(EMissionNavFilterMode NewMode)
-{
-    CurrentFilterMode = NewMode;
-    RefreshFilterSelection();
-    RefreshObjectListPanel();
-    RefreshDetailPanel();
-}
-
-void UMissionNavDlg::RefreshObjectListPanel()
-{
-    if (ObjectListTitleText)
-    {
-        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
-        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] AddObjectItem: Failed to allocate item"));
+        return;
     }
 
-    RebuildObjectList();
+    Item->InitObjectRow(
+        ObjectType,
+        Index,
+        PrimaryText,
+        SecondaryText,
+        DetailText);
+
+    ObjectItems.Add(Item);
+    ObjectListView->AddItem(Item);
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] AddObjectItem: [%d] %s / %s"),
+        Index,
+        *PrimaryText,
+        *SecondaryText);
 }
 
 void UMissionNavDlg::RebuildObjectList()
@@ -885,63 +938,297 @@ void UMissionNavDlg::RebuildObjectList()
 
     if (!ObjectListView)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: ObjectListView is null"));
         return;
     }
 
     ObjectListView->ClearListItems();
 
-    const EMissionNavObjectType ObjectType = GetCurrentObjectType();
-
-    for (int32 Index = 0; Index < 8; ++Index)
+    MissionPtr = ResolveMission();
+    if (!MissionPtr)
     {
-        UMissionNavObjectListObject* Item = NewObject<UMissionNavObjectListObject>(this);
-        if (!Item)
-        {
-            continue;
-        }
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: MissionPtr is null"));
+        RefreshDetailPanel();
+        return;
+    }
 
-        const FString Primary = FString::Printf(TEXT("%s %02d"), *GetFilterModeLabel(CurrentFilterMode), Index + 1);
-        const FString Secondary = FString::Printf(TEXT("ID %02d"), Index + 1);
-        const FString Detail = FString::Printf(
-            TEXT("%s\n\nINDEX: %d\nFILTER: %s\n\nDETAIL TEXT PLACEHOLDER."),
-            *Primary,
-            Index,
-            *GetFilterModeLabel(CurrentFilterMode));
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: Filter=%s Mission=%p"),
+        *GetFilterModeLabel(CurrentFilterMode),
+        MissionPtr);
 
-        Item->InitObjectRow(ObjectType, Index, Primary, Secondary, Detail);
+    switch (GetCurrentObjectType())
+    {
+    case EMissionNavObjectType::System:
+        BuildSystemObjects();
+        break;
 
-        ObjectItems.Add(Item);
-        ObjectListView->AddItem(Item);
+    case EMissionNavObjectType::Planet:
+        BuildPlanetObjects();
+        break;
+
+    case EMissionNavObjectType::Sector:
+        BuildSectorObjects();
+        break;
+
+    case EMissionNavObjectType::Station:
+        BuildMissionElementObjects(EMissionNavObjectType::Station);
+        break;
+
+    case EMissionNavObjectType::Starship:
+        BuildMissionElementObjects(EMissionNavObjectType::Starship);
+        break;
+
+    case EMissionNavObjectType::Fighter:
+        BuildMissionElementObjects(EMissionNavObjectType::Fighter);
+        break;
+
+    default:
+        break;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: Added %d items"), ObjectItems.Num());
+
+    if (ObjectItems.Num() == 0)
+    {
+        AddObjectItem(
+            GetCurrentObjectType(),
+            0,
+            TEXT("NO DATA"),
+            TEXT("DEBUG"),
+            TEXT("MISSION NAV PANEL RECEIVED NO REAL DATA FOR THIS FILTER."));
     }
 
     if (ObjectItems.Num() > 0)
     {
         ObjectListView->SetSelectedItem(ObjectItems[0]);
+        SelectedObjectItem = ObjectItems[0];
+    }
+
+    RefreshDetailPanel();
+}
+
+void UMissionNavDlg::BuildSystemObjects()
+{
+    if (!MissionPtr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSystemObjects: MissionPtr is null"));
+        return;
+    }
+
+    StarSystem* System = MissionPtr->GetStarSystem();
+    if (!System)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSystemObjects: Mission star system is null"));
+        return;
+    }
+
+    const FString Primary = FString(System->GetName());
+    const FString Secondary = TEXT("STARSYSTEM");
+    const FString Detail = FString::Printf(
+        TEXT("%s\n\nTYPE: STAR SYSTEM\nRADIUS: %.0f"),
+        *Primary,
+        System->Radius());
+
+    AddObjectItem(
+        EMissionNavObjectType::System,
+        0,
+        Primary,
+        Secondary,
+        Detail);
+}
+
+void UMissionNavDlg::BuildPlanetObjects()
+{
+    if (!MissionPtr)
+    {
+        return;
+    }
+
+    StarSystem* System = MissionPtr->GetStarSystem();
+    if (!System)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects: Mission star system is null"));
+        return;
+    }
+
+    int32 Index = 0;
+
+    ListIter<OrbitalBody> StarIter = System->Bodies();
+    while (++StarIter)
+    {
+        OrbitalBody* StarBody = StarIter.value();
+        if (!StarBody)
+        {
+            continue;
+        }
+
+        ListIter<OrbitalBody> PlanetIter = StarBody->Satellites();
+        while (++PlanetIter)
+        {
+            OrbitalBody* Planet = PlanetIter.value();
+            if (!Planet)
+            {
+                continue;
+            }
+
+            const FString Primary = FString(Planet->Name());
+            const FString Secondary = (Planet->Type() == Orbital::MOON) ? TEXT("MOON") : TEXT("PLANET");
+            const FString Detail = FString::Printf(
+                TEXT("%s\n\nTYPE: %s\nORBIT: %.0f\nRADIUS: %.0f"),
+                *Primary,
+                *Secondary,
+                Planet->Orbit(),
+                Planet->Radius());
+
+            AddObjectItem(
+                EMissionNavObjectType::Planet,
+                Index++,
+                Primary,
+                Secondary,
+                Detail);
+
+            ListIter<OrbitalBody> MoonIter = Planet->Satellites();
+            while (++MoonIter)
+            {
+                OrbitalBody* Moon = MoonIter.value();
+                if (!Moon)
+                {
+                    continue;
+                }
+
+                const FString MoonPrimary = FString(Moon->Name());
+                const FString MoonSecondary = TEXT("MOON");
+                const FString MoonDetail = FString::Printf(
+                    TEXT("%s\n\nTYPE: MOON\nORBIT: %.0f\nRADIUS: %.0f"),
+                    *MoonPrimary,
+                    Moon->Orbit(),
+                    Moon->Radius());
+
+                AddObjectItem(
+                    EMissionNavObjectType::Planet,
+                    Index++,
+                    MoonPrimary,
+                    MoonSecondary,
+                    MoonDetail);
+            }
+        }
     }
 }
 
-void UMissionNavDlg::RefreshDetailPanel()
+void UMissionNavDlg::BuildSectorObjects()
 {
-    if (DetailTitleText)
+    if (!MissionPtr)
     {
-        DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
-        DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-        DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+        return;
     }
 
-    if (DetailBodyText)
+    StarSystem* System = MissionPtr->GetStarSystem();
+    if (!System)
     {
-        DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
-        DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSectorObjects: Mission star system is null"));
+        return;
+    }
 
-        if (SelectedObjectItem)
+    int32 Index = 0;
+
+    ListIter<OrbitalRegion> RegionIter = System->AllRegions();
+    while (++RegionIter)
+    {
+        OrbitalRegion* Region = RegionIter.value();
+        if (!Region)
         {
-            DetailBodyText->SetText(FText::FromString(SelectedObjectItem->GetDetailText()));
+            continue;
         }
-        else
+
+        const FString RegionName = FString(Region->Name());
+
+        const FString Primary = RegionName;
+        const FString Secondary = TEXT("SECTOR");
+        const FString Detail = FString::Printf(
+            TEXT("%s\n\nTYPE: SECTOR\nRADIUS: %.0f\nGRID: %.0f"),
+            *RegionName,
+            Region->Radius(),
+            Region->GetGridSpace());
+
+        AddObjectItem(
+            EMissionNavObjectType::Sector,
+            Index++,
+            Primary,
+            Secondary,
+            Detail);
+    }
+}
+
+void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType)
+{
+    if (!MissionPtr)
+    {
+        return;
+    }
+
+    int32 VisibleIndex = 0;
+
+    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
+    while (++ElemIter)
+    {
+        MissionElement* Elem = ElemIter.value();
+        if (!Elem)
         {
-            DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
+            continue;
         }
+
+        if (Elem->IsSquadron())
+        {
+            continue;
+        }
+
+        bool bMatches = false;
+        FString TypeLabel;
+
+        switch (ObjectType)
+        {
+        case EMissionNavObjectType::Station:
+            bMatches = Elem->IsStatic();
+            TypeLabel = TEXT("STATION");
+            break;
+
+        case EMissionNavObjectType::Starship:
+            bMatches = Elem->IsStarship();
+            TypeLabel = TEXT("STARSHIP");
+            break;
+
+        case EMissionNavObjectType::Fighter:
+            bMatches = Elem->IsDropship() && !Elem->IsSquadron();
+            TypeLabel = TEXT("FIGHTER");
+            break;
+
+        default:
+            break;
+        }
+
+        if (!bMatches)
+        {
+            continue;
+        }
+
+        const FString Primary = FString(Elem->GetName().data());
+        const FString Secondary = TypeLabel;
+        const FString RegionName = FString(Elem->GetRegion().data());
+
+        const FString Detail = FString::Printf(
+            TEXT("%s\n\nTYPE: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
+            *Primary,
+            *TypeLabel,
+            *RegionName,
+            Elem->GetIFF(),
+            Elem->Count());
+
+        AddObjectItem(
+            ObjectType,
+            VisibleIndex++,
+            Primary,
+            Secondary,
+            Detail);
     }
 }
 

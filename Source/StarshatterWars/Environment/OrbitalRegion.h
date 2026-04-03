@@ -50,12 +50,12 @@ public:
     virtual ~OrbitalRegion();
 
     // Accessors:
-    double      GridSpace()   const { return grid; }
-    double      Inclination() const { return inclination; }
-    int         Asteroids()   const { return asteroids; }
+    double      GetGridSpace()   const { return grid; }
+    double      GetInclination() const { return inclination; }
+    int         GetAsteroids()   const { return asteroids; }
 
-    List<Text>& Links() { return links; }
-    const List<Text>& Links() const { return links; }
+    List<Text>& GetLinks() { return links; }
+    const List<Text>& GetLinks() const { return links; }
 
 protected:
     // Region parameters:

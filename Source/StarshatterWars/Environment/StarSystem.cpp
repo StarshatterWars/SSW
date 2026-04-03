@@ -1518,9 +1518,9 @@ void StarSystem::ExecFrame()
 		while (++star_iter) {
 			OrbitalBody* star_body = star_iter.value();
 
-			if (active_region->Inclination() != 0) {
+			if (active_region->GetInclination() != 0) {
 				const double distance = (active_region->Location() - star_body->Location()).Size();
-				star_alt = FMath::Sin(active_region->Inclination()) * distance;
+				star_alt = FMath::Sin(active_region->GetInclination()) * distance;
 			}
 
 			if (terrain) {
@@ -1705,7 +1705,7 @@ bool StarSystem::HasLinkTo(StarSystem* s) const
 	while (++iter) {
 		OrbitalRegion* rgn = iter.value();
 
-		ListIter<Text> lnk_iter = rgn->Links();
+		ListIter<Text> lnk_iter = rgn->GetLinks();
 		while (++lnk_iter) {
 			Text* t = lnk_iter.value();
 
@@ -1731,7 +1731,7 @@ FVector StarSystem::TerrainTransform(const FVector& in_loc)
 	return result;
 }
 
-FColor StarSystem::Ambient() const
+FColor StarSystem::GetAmbient() const
 {
 	FColor result = ambient;
 	const bool terrain = (active_region && active_region->Type() == Orbital::TERRAIN);

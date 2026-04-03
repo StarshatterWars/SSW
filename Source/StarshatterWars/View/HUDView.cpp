@@ -3188,7 +3188,7 @@ HUDView::Ambient() const
 
 	// Legacy: Color c = sim->GetStarSystem()->Ambient();
 	// Now: assume StarSystem ambient returns FColor (or adapt at call site).
-	FColor c = sim->GetStarSystem()->Ambient();
+	FColor c = sim->GetStarSystem()->GetAmbient();
 
 	if (c.R > 32 || c.G > 32 || c.B > 32)
 		return FColor::Black;

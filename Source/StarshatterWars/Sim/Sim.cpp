@@ -458,8 +458,8 @@ Sim::ExecMission()
 	if (Starshatter::GetInstance())
 		dust_factor = Starshatter::GetInstance()->Dust();
 
-	if (star_system->NumDust() * dust_factor) {
-		dust = new Dust(star_system->NumDust() * 2 * (dust_factor + 1), dust_factor > 1);
+	if (star_system->GetNumDust() * dust_factor) {
+		dust = new Dust(star_system->GetNumDust() * 2 * (dust_factor + 1), dust_factor > 1);
 		scene->AddGraphic(dust);
 	}
 
@@ -539,7 +539,7 @@ Sim::BuildLinks()
 		OrbitalRegion* orb = rgn->GetOrbitalRegion();
 
 		if (orb) {
-			ListIter<Text> lnk_iter = orb->Links();
+			ListIter<Text> lnk_iter = orb->GetLinks();
 			while (++lnk_iter) {
 				Text* t = lnk_iter.value();
 
