@@ -14,16 +14,17 @@
     ========
     UMissionNavDlg
 
-    Stage 3 runtime NAV layout:
+    Runtime NAV layout:
 
-      - Compact NAV mode buttons across the top
-      - Plain zoom buttons on the top right
-      - Local WidgetSwitcher for GALAXY / SYSTEM / SECTOR
-      - Right-side radio filter button block
-      - Object list panel below filters
-      - Detail panel below object list
+      - Left panel contains:
+          * NAV mode buttons
+          * zoom buttons
+          * GALAXY / SYSTEM / SECTOR switcher content
 
-    This pass builds structure and placeholder content.
+      - Right panel contains:
+          * filter buttons
+          * object list panel with title bar
+          * detail panel with title bar
 */
 
 #include "MissionNavDlg.h"
@@ -31,6 +32,10 @@
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
 #include "MenuButton.h"
+#include "MissionNavObjectListObject.h"
+#include "MissionNavObjectListView.h"
+#include "MissionNavObjectLVElement.h"
+#include "MissionUIStyle.h"
 
 #include "Campaign.h"
 #include "Mission.h"
@@ -39,10 +44,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
-#include "Components/ButtonSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
-#include "Components/ListView.h"
 #include "Components/SizeBox.h"
 #include "Components/Spacer.h"
 #include "Components/TextBlock.h"
@@ -52,45 +55,55 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 
+#include "Engine/Texture2D.h"
 #include "Input/Reply.h"
 #include "InputCoreTypes.h"
-
-// -----------------------------------------------------------------------------
-// Construction
-// -----------------------------------------------------------------------------
+#include "Styling/SlateBrush.h"
+#include "UObject/ConstructorHelpers.h"
 
 UMissionNavDlg::UMissionNavDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-}
+    static ConstructorHelpers::FObjectFinder<UTexture2D> PanelTexObj(
+        TEXT("/Game/UI/Panel.Panel"));
 
-// -----------------------------------------------------------------------------
-// Setup
-// -----------------------------------------------------------------------------
+    if (PanelTexObj.Succeeded())
+    {
+        RightPanelBackgroundTexture = PanelTexObj.Object;
+    }
+}
 
 void UMissionNavDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 {
     ParentDlg = InParentDlg;
 }
 
-// -----------------------------------------------------------------------------
-// Mission Resolution
-// -----------------------------------------------------------------------------
-
 Mission* UMissionNavDlg::ResolveMission() const
 {
     return ParentDlg ? ParentDlg->GetMissionPtr() : nullptr;
 }
-
-// -----------------------------------------------------------------------------
-// UE Lifecycle
-// -----------------------------------------------------------------------------
 
 void UMissionNavDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
     ensureMsgf(RuntimeHost, TEXT("MissionNavDlg: RuntimeHost is not bound"));
+
+    if (!ObjectListEntryWidgetClass)
+    {
+        UClass* RowWidgetClass = LoadClass<UUserWidget>(
+            nullptr,
+            TEXT("/Game/Screens/Mission/WBP_MissionNavObjectRow.WBP_MissionNavObjectRow_C"));
+
+        if (RowWidgetClass)
+        {
+            ObjectListEntryWidgetClass = RowWidgetClass;
+        }
+        else
+        {
+            ObjectListEntryWidgetClass = UMissionNavObjectLVElement::StaticClass();
+        }
+    }
 
     BuildRuntimeLayout();
     BuildNavModeButtons();
@@ -117,16 +130,15 @@ FReply UMissionNavDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
     return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
-// -----------------------------------------------------------------------------
-// Refresh
-// -----------------------------------------------------------------------------
-
 void UMissionNavDlg::RefreshFromMission()
 {
     MissionPtr = ResolveMission();
 
     if (NavBodyText)
     {
+        NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(20));
+
         switch (CurrentNavMode)
         {
         case EMissionNavMode::GALAXY:
@@ -151,10 +163,6 @@ void UMissionNavDlg::RefreshFromMission()
     RefreshDetailPanel();
 }
 
-// -----------------------------------------------------------------------------
-// Runtime Layout
-// -----------------------------------------------------------------------------
-
 void UMissionNavDlg::BuildRuntimeLayout()
 {
     if (!WidgetTree || !RuntimeHost)
@@ -162,30 +170,52 @@ void UMissionNavDlg::BuildRuntimeLayout()
         return;
     }
 
-    if (MainColumn)
+    if (RootContentRow)
     {
         return;
     }
 
     RuntimeHost->SetContent(nullptr);
 
-    MainColumn =
+    RootContentRow =
+        WidgetTree->ConstructWidget<UHorizontalBox>(
+            UHorizontalBox::StaticClass(),
+            TEXT("MissionNavRootContentRow"));
+
+    RuntimeHost->SetContent(RootContentRow);
+
+    // -----------------------------------------------------------------
+    // LEFT PANEL
+    // -----------------------------------------------------------------
+
+    LeftPanelBorder =
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionNavLeftPanelBorder"));
+
+    LeftPanelBorder->SetPadding(FMargin(0.f));
+    LeftPanelBorder->SetBrushColor(FLinearColor(1.f, 1.f, 1.f, 0.f));
+
+    if (UHorizontalBoxSlot* LeftPanelSlot = RootContentRow->AddChildToHorizontalBox(LeftPanelBorder))
+    {
+        LeftPanelSlot->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
+        LeftPanelSlot->SetHorizontalAlignment(HAlign_Fill);
+        LeftPanelSlot->SetVerticalAlignment(VAlign_Fill);
+        LeftPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    }
+
+    LeftPanelColumn =
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
-            TEXT("MissionNavMainColumn"));
-
-    RuntimeHost->SetContent(MainColumn);
-
-    // -----------------------------------------------------------------
-    // TOP CONTROL ROW
-    // -----------------------------------------------------------------
+            TEXT("MissionNavLeftPanelColumn"));
+    LeftPanelBorder->SetContent(LeftPanelColumn);
 
     TopButtonRow =
         WidgetTree->ConstructWidget<UHorizontalBox>(
             UHorizontalBox::StaticClass(),
             TEXT("MissionNavTopButtonRow"));
 
-    if (UVerticalBoxSlot* TopRowSlot = MainColumn->AddChildToVerticalBox(TopButtonRow))
+    if (UVerticalBoxSlot* TopRowSlot = LeftPanelColumn->AddChildToVerticalBox(TopButtonRow))
     {
         TopRowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
         TopRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
@@ -243,6 +273,8 @@ void UMissionNavDlg::BuildRuntimeLayout()
             UTextBlock::StaticClass(),
             TEXT("MissionNavZoomOutText"));
     ZoomOutText->SetText(FText::FromString(TEXT("-")));
+    ZoomOutText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    ZoomOutText->SetFont(MissionUIStyle::GetHeaderFont(18));
     ZoomOutButton->SetContent(ZoomOutText);
 
     ZoomInButton =
@@ -263,32 +295,18 @@ void UMissionNavDlg::BuildRuntimeLayout()
             UTextBlock::StaticClass(),
             TEXT("MissionNavZoomInText"));
     ZoomInText->SetText(FText::FromString(TEXT("+")));
+    ZoomInText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    ZoomInText->SetFont(MissionUIStyle::GetHeaderFont(18));
     ZoomInButton->SetContent(ZoomInText);
 
-    // -----------------------------------------------------------------
-    // CONTENT ROW
-    // -----------------------------------------------------------------
-
-    ContentRow =
-        WidgetTree->ConstructWidget<UHorizontalBox>(
-            UHorizontalBox::StaticClass(),
-            TEXT("MissionNavContentRow"));
-
-    if (UVerticalBoxSlot* ContentRowSlot = MainColumn->AddChildToVerticalBox(ContentRow))
-    {
-        ContentRowSlot->SetPadding(FMargin(0.f));
-        ContentRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    }
-
-    // Left side: switcher host
     MainViewHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavMainViewHost"));
 
-    if (UHorizontalBoxSlot* MainViewSlot = ContentRow->AddChildToHorizontalBox(MainViewHost))
+    if (UVerticalBoxSlot* MainViewSlot = LeftPanelColumn->AddChildToVerticalBox(MainViewHost))
     {
-        MainViewSlot->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+        MainViewSlot->SetPadding(FMargin(0.f));
         MainViewSlot->SetHorizontalAlignment(HAlign_Fill);
         MainViewSlot->SetVerticalAlignment(VAlign_Fill);
         MainViewSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -323,15 +341,22 @@ void UMissionNavDlg::BuildRuntimeLayout()
             UTextBlock::StaticClass(),
             TEXT("MissionNavBodyText"));
     NavBodyText->SetText(FText::FromString(TEXT("SYSTEM NAVIGATION")));
+    NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(20));
     SystemPanelHost->SetContent(NavBodyText);
 
-    // Right side: filter + list + detail
-    RightPanelColumn =
-        WidgetTree->ConstructWidget<UVerticalBox>(
-            UVerticalBox::StaticClass(),
-            TEXT("MissionNavRightPanelColumn"));
+    // -----------------------------------------------------------------
+    // RIGHT PANEL
+    // -----------------------------------------------------------------
 
-    if (UHorizontalBoxSlot* RightPanelSlot = ContentRow->AddChildToHorizontalBox(RightPanelColumn))
+    RightPanelBorder =
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionNavRightPanelBorder"));
+
+    RightPanelBorder->SetPadding(FMargin(0.f));
+
+    if (UHorizontalBoxSlot* RightPanelSlot = RootContentRow->AddChildToHorizontalBox(RightPanelBorder))
     {
         RightPanelSlot->SetPadding(FMargin(0.f));
         RightPanelSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -339,12 +364,15 @@ void UMissionNavDlg::BuildRuntimeLayout()
         RightPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
-    BuildRightPanels();
-}
+    RightPanelColumn =
+        WidgetTree->ConstructWidget<UVerticalBox>(
+            UVerticalBox::StaticClass(),
+            TEXT("MissionNavRightPanelColumn"));
+    RightPanelBorder->SetContent(RightPanelColumn);
 
-// -----------------------------------------------------------------------------
-// Top NAV Mode Buttons
-// -----------------------------------------------------------------------------
+    BuildRightPanels();
+    ApplyPanelStyles();
+}
 
 void UMissionNavDlg::BuildNavModeButtons()
 {
@@ -455,10 +483,6 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
     RefreshFromMission();
 }
 
-// -----------------------------------------------------------------------------
-// Right Panels
-// -----------------------------------------------------------------------------
-
 void UMissionNavDlg::BuildRightPanels()
 {
     if (!WidgetTree || !RightPanelColumn)
@@ -466,8 +490,10 @@ void UMissionNavDlg::BuildRightPanels()
         return;
     }
 
+    RightPanelColumn->ClearChildren();
+
     // -------------------------------------------------------------
-    // Filter radio-button panel
+    // FILTER PANEL
     // -------------------------------------------------------------
 
     FilterPanelHost =
@@ -477,7 +503,7 @@ void UMissionNavDlg::BuildRightPanels()
 
     if (UVerticalBoxSlot* FilterPanelSlot = RightPanelColumn->AddChildToVerticalBox(FilterPanelHost))
     {
-        FilterPanelSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+        FilterPanelSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
         FilterPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -495,7 +521,7 @@ void UMissionNavDlg::BuildRightPanels()
     BuildFilterButtons();
 
     // -------------------------------------------------------------
-    // Object list panel
+    // OBJECT LIST PANEL
     // -------------------------------------------------------------
 
     ObjectListBorder =
@@ -505,7 +531,7 @@ void UMissionNavDlg::BuildRightPanels()
 
     if (UVerticalBoxSlot* ObjectListBorderSlot = RightPanelColumn->AddChildToVerticalBox(ObjectListBorder))
     {
-        ObjectListBorderSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 8.f));
+        ObjectListBorderSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
         ObjectListBorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
@@ -515,22 +541,37 @@ void UMissionNavDlg::BuildRightPanels()
             TEXT("MissionNavObjectListPanel"));
     ObjectListBorder->SetContent(ObjectListPanel);
 
+    // ---- TITLE BAR ----
+
+    ObjectListTitleBar =
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionNavObjectTitleBar"));
+
+    if (UVerticalBoxSlot* TitleSlot = ObjectListPanel->AddChildToVerticalBox(ObjectListTitleBar))
+    {
+        TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
     ObjectListTitleText =
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavObjectListTitleText"));
-    ObjectListTitleText->SetText(FText::FromString(GetFilterModeLabel(CurrentFilterMode)));
 
-    if (UVerticalBoxSlot* ObjectTitleSlot = ObjectListPanel->AddChildToVerticalBox(ObjectListTitleText))
-    {
-        ObjectTitleSlot->SetPadding(FMargin(8.f, 6.f, 8.f, 6.f));
-        ObjectTitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
+    ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
+    ObjectListTitleText->SetJustification(ETextJustify::Left);
+    ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+
+    ObjectListTitleBar->SetContent(ObjectListTitleText);
+
+    // ---- LIST HOST ----
 
     ObjectListHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavObjectListHost"));
+
     ObjectListHost->SetWidthOverride(300.f);
     ObjectListHost->SetHeightOverride(220.f);
 
@@ -540,14 +581,33 @@ void UMissionNavDlg::BuildRightPanels()
         ObjectListHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
+    // ---- LIST VIEW (CRITICAL FIX) ----
+
     ObjectListView =
-        WidgetTree->ConstructWidget<UListView>(
-            UListView::StaticClass(),
+        WidgetTree->ConstructWidget<UMissionNavObjectListView>(
+            UMissionNavObjectListView::StaticClass(),
             TEXT("MissionNavObjectListView"));
-    ObjectListHost->SetContent(ObjectListView);
+
+    if (ObjectListView)
+    {
+        // Already safe because constructor sets EntryWidgetClass,
+        // but we reinforce it here for clarity.
+        if (!ObjectListEntryWidgetClass)
+        {
+            ObjectListEntryWidgetClass = UMissionNavObjectLVElement::StaticClass();
+        }
+
+        ObjectListView->SetEntryWidgetClassPublic(ObjectListEntryWidgetClass);
+        ObjectListView->SetSelectionMode(ESelectionMode::Single);
+
+        ObjectListView->OnItemSelectionChanged().Clear();
+        ObjectListView->OnItemSelectionChanged().AddUObject(this, &UMissionNavDlg::OnObjectSelectionChanged);
+
+        ObjectListHost->SetContent(ObjectListView);
+    }
 
     // -------------------------------------------------------------
-    // Detail panel
+    // DETAIL PANEL
     // -------------------------------------------------------------
 
     DetailBorder =
@@ -567,24 +627,39 @@ void UMissionNavDlg::BuildRightPanels()
             TEXT("MissionNavDetailPanel"));
     DetailBorder->SetContent(DetailPanel);
 
+    // ---- TITLE ----
+
+    DetailTitleBar =
+        WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            TEXT("MissionNavDetailTitleBar"));
+
+    if (UVerticalBoxSlot* TitleSlot = DetailPanel->AddChildToVerticalBox(DetailTitleBar))
+    {
+        TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
     DetailTitleText =
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailTitleText"));
-    DetailTitleText->SetText(FText::FromString(TEXT("DETAILS")));
 
-    if (UVerticalBoxSlot* DetailTitleSlot = DetailPanel->AddChildToVerticalBox(DetailTitleText))
-    {
-        DetailTitleSlot->SetPadding(FMargin(8.f, 6.f, 8.f, 6.f));
-        DetailTitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
+    DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
+    DetailTitleText->SetJustification(ETextJustify::Left);
+    DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+
+    DetailTitleBar->SetContent(DetailTitleText);
+
+    // ---- BODY ----
 
     DetailHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavDetailHost"));
+
     DetailHost->SetWidthOverride(300.f);
-    DetailHost->SetHeightOverride(120.f);
+    DetailHost->SetHeightOverride(140.f);
 
     if (UVerticalBoxSlot* DetailHostSlot = DetailPanel->AddChildToVerticalBox(DetailHost))
     {
@@ -596,11 +671,21 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailBodyText"));
+
     DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
+    DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
+    DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
+    DetailBodyText->SetJustification(ETextJustify::Left);
+
     DetailHost->SetContent(DetailBodyText);
 
+    // -------------------------------------------------------------
+    // FINALIZE
+    // -------------------------------------------------------------
+
+    ApplyPanelStyles();
     RefreshFilterSelection();
-    RefreshObjectListPanel();
+    RebuildObjectList();
     RefreshDetailPanel();
 }
 
@@ -661,9 +746,59 @@ UMenuButton* UMissionNavDlg::CreateFilterButton(const FString& Label, int32 Row,
     return NewButton;
 }
 
-// -----------------------------------------------------------------------------
-// Filter State
-// -----------------------------------------------------------------------------
+void UMissionNavDlg::ApplyPanelStyles()
+{
+    auto ApplyTexturedPanelWhite = [this](UBorder* BorderWidget)
+        {
+            if (!BorderWidget)
+            {
+                return;
+            }
+
+            if (RightPanelBackgroundTexture)
+            {
+                FSlateBrush Brush;
+                Brush.SetResourceObject(RightPanelBackgroundTexture);
+                Brush.ImageSize = FVector2D(256.f, 256.f);
+                Brush.DrawAs = ESlateBrushDrawType::Image;
+                BorderWidget->SetBrush(Brush);
+            }
+
+            BorderWidget->SetBrushColor(FLinearColor::White);
+        };
+
+    auto ApplyTexturedPanelDark = [this](UBorder* BorderWidget)
+        {
+            if (!BorderWidget)
+            {
+                return;
+            }
+
+            if (RightPanelBackgroundTexture)
+            {
+                FSlateBrush Brush;
+                Brush.SetResourceObject(RightPanelBackgroundTexture);
+                Brush.ImageSize = FVector2D(256.f, 256.f);
+                Brush.DrawAs = ESlateBrushDrawType::Image;
+                BorderWidget->SetBrush(Brush);
+            }
+
+            BorderWidget->SetBrushColor(MissionUIStyle::PanelBG);
+        };
+
+    if (LeftPanelBorder)
+    {
+        LeftPanelBorder->SetBrush(FSlateBrush());
+        LeftPanelBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
+    }
+
+    ApplyTexturedPanelDark(RightPanelBorder);
+
+    ApplyTexturedPanelWhite(ObjectListBorder);
+    ApplyTexturedPanelWhite(ObjectListTitleBar);
+    ApplyTexturedPanelWhite(DetailBorder);
+    ApplyTexturedPanelWhite(DetailTitleBar);
+}
 
 FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
 {
@@ -676,6 +811,30 @@ FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
     case EMissionNavFilterMode::STARSHIP: return TEXT("STARSHIP");
     case EMissionNavFilterMode::FIGHTER:  return TEXT("FIGHTER");
     default:                              return TEXT("UNKNOWN");
+    }
+}
+
+FString UMissionNavDlg::GetObjectPanelTitle() const
+{
+    return FString::Printf(TEXT("%s LIST"), *GetFilterModeLabel(CurrentFilterMode));
+}
+
+FString UMissionNavDlg::GetDetailPanelTitle() const
+{
+    return TEXT("DETAIL PANEL");
+}
+
+EMissionNavObjectType UMissionNavDlg::GetCurrentObjectType() const
+{
+    switch (CurrentFilterMode)
+    {
+    case EMissionNavFilterMode::SYSTEM:   return EMissionNavObjectType::System;
+    case EMissionNavFilterMode::PLANET:   return EMissionNavObjectType::Planet;
+    case EMissionNavFilterMode::SECTOR:   return EMissionNavObjectType::Sector;
+    case EMissionNavFilterMode::STATION:  return EMissionNavObjectType::Station;
+    case EMissionNavFilterMode::STARSHIP: return EMissionNavObjectType::Starship;
+    case EMissionNavFilterMode::FIGHTER:  return EMissionNavObjectType::Fighter;
+    default:                              return EMissionNavObjectType::None;
     }
 }
 
@@ -693,7 +852,9 @@ void UMissionNavDlg::RefreshFilterSelection()
 
     if (ObjectListTitleText)
     {
-        ObjectListTitleText->SetText(FText::FromString(ActiveLabel));
+        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
+        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
     }
 }
 
@@ -705,20 +866,57 @@ void UMissionNavDlg::SetFilterMode(EMissionNavFilterMode NewMode)
     RefreshDetailPanel();
 }
 
-// -----------------------------------------------------------------------------
-// Right Panel Refresh
-// -----------------------------------------------------------------------------
-
 void UMissionNavDlg::RefreshObjectListPanel()
 {
     if (ObjectListTitleText)
     {
-        ObjectListTitleText->SetText(FText::FromString(GetFilterModeLabel(CurrentFilterMode)));
+        ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
+        ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
     }
 
-    if (ObjectListView)
+    RebuildObjectList();
+}
+
+void UMissionNavDlg::RebuildObjectList()
+{
+    ObjectItems.Empty();
+    SelectedObjectItem = nullptr;
+
+    if (!ObjectListView)
     {
-        ObjectListView->ClearListItems();
+        return;
+    }
+
+    ObjectListView->ClearListItems();
+
+    const EMissionNavObjectType ObjectType = GetCurrentObjectType();
+
+    for (int32 Index = 0; Index < 8; ++Index)
+    {
+        UMissionNavObjectListObject* Item = NewObject<UMissionNavObjectListObject>(this);
+        if (!Item)
+        {
+            continue;
+        }
+
+        const FString Primary = FString::Printf(TEXT("%s %02d"), *GetFilterModeLabel(CurrentFilterMode), Index + 1);
+        const FString Secondary = FString::Printf(TEXT("ID %02d"), Index + 1);
+        const FString Detail = FString::Printf(
+            TEXT("%s\n\nINDEX: %d\nFILTER: %s\n\nDETAIL TEXT PLACEHOLDER."),
+            *Primary,
+            Index,
+            *GetFilterModeLabel(CurrentFilterMode));
+
+        Item->InitObjectRow(ObjectType, Index, Primary, Secondary, Detail);
+
+        ObjectItems.Add(Item);
+        ObjectListView->AddItem(Item);
+    }
+
+    if (ObjectItems.Num() > 0)
+    {
+        ObjectListView->SetSelectedItem(ObjectItems[0]);
     }
 }
 
@@ -726,18 +924,26 @@ void UMissionNavDlg::RefreshDetailPanel()
 {
     if (DetailTitleText)
     {
-        DetailTitleText->SetText(FText::FromString(TEXT("DETAILS")));
+        DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
+        DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
     }
 
     if (DetailBodyText)
     {
-        DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
+        DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
+        DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
+
+        if (SelectedObjectItem)
+        {
+            DetailBodyText->SetText(FText::FromString(SelectedObjectItem->GetDetailText()));
+        }
+        else
+        {
+            DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
+        }
     }
 }
-
-// -----------------------------------------------------------------------------
-// Event Handlers
-// -----------------------------------------------------------------------------
 
 void UMissionNavDlg::OnNavModeButtonSelected(UMenuButton* SelectedButton)
 {
@@ -803,6 +1009,12 @@ void UMissionNavDlg::OnFilterButtonSelected(UMenuButton* SelectedButton)
 
 void UMissionNavDlg::OnFilterButtonHovered(UMenuButton* HoveredButton)
 {
+}
+
+void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
+{
+    SelectedObjectItem = Cast<UMissionNavObjectListObject>(SelectedItem);
+    RefreshDetailPanel();
 }
 
 void UMissionNavDlg::OnZoomInClicked()

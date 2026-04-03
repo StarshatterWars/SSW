@@ -19,38 +19,36 @@
     This widget owns NAV-local UI only:
 
       - Top NAV mode buttons (GALAXY / SYSTEM / SECTOR)
-      - Zoom buttons (- / +)
+      - Zoom buttons (- / +) on the LEFT map panel
       - Local NAV mode switcher
       - Right-side radio filter buttons
-      - Object list panel
-      - Detail panel
-
-    The parent UMissionBriefingDlg owns:
-
-      - Main briefing header
-      - SIT / PKG / NAV / WEP switching
-      - Accept / Cancel flow
+      - Object list panel with title box
+      - Detail panel with title box
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "MissionNavObjectListObject.h"
 #include "MissionNavDlg.generated.h"
 
 class UBorder;
 class UButton;
 class UHorizontalBox;
-class UListView;
 class UMenuButton;
 class USizeBox;
 class UTextBlock;
+class UTexture2D;
 class UUniformGridPanel;
 class UVerticalBox;
 class UWidgetSwitcher;
+class UUserWidget;
 
 class UMissionBriefingDlg;
 class UMissionPlanner;
+class UMissionNavObjectListObject;
+class UMissionNavObjectListView;
 
 class Campaign;
 class Mission;
@@ -83,26 +81,14 @@ class STARSHATTERWARS_API UMissionNavDlg : public UBaseScreen
 public:
     UMissionNavDlg(const FObjectInitializer& ObjectInitializer);
 
-    // -----------------------------------------------------------------
-    // Initialization / Context
-    // -----------------------------------------------------------------
-
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
     void SetParentDlg(UMissionBriefingDlg* InParentDlg);
 
     void RefreshFromMission();
 
 protected:
-    // -----------------------------------------------------------------
-    // UE Overrides
-    // -----------------------------------------------------------------
-
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
-
-    // -----------------------------------------------------------------
-    // Internal Helpers
-    // -----------------------------------------------------------------
 
     Mission* ResolveMission() const;
 
@@ -111,24 +97,28 @@ protected:
     void BuildRightPanels();
     void BuildFilterButtons();
 
+    void ApplyPanelStyles();
+
     void RefreshNavModeSelection();
     void RefreshFilterSelection();
     void RefreshObjectListPanel();
     void RefreshDetailPanel();
 
+    void RebuildObjectList();
+
     void SetNavMode(EMissionNavMode NewMode);
     void SetFilterMode(EMissionNavFilterMode NewMode);
 
     FString GetFilterModeLabel(EMissionNavFilterMode Mode) const;
+    FString GetObjectPanelTitle() const;
+    FString GetDetailPanelTitle() const;
+
+    EMissionNavObjectType GetCurrentObjectType() const;
 
     UMenuButton* CreateNavModeButton(const FString& Label, UHorizontalBox* ParentBox);
     UMenuButton* CreateFilterButton(const FString& Label, int32 Row, int32 Column);
 
 protected:
-    // -----------------------------------------------------------------
-    // Parent / Manager
-    // -----------------------------------------------------------------
-
     UPROPERTY()
     UMissionBriefingDlg* ParentDlg = nullptr;
 
@@ -140,19 +130,25 @@ private:
     Mission* MissionPtr = nullptr;
     MissionInfo* MissionInfoPtr = nullptr;
 
-    // -----------------------------------------------------------------
-    // Runtime Host
-    // -----------------------------------------------------------------
-
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* RuntimeHost = nullptr;
 
     // -----------------------------------------------------------------
-    // Runtime Layout
+    // Root Layout
     // -----------------------------------------------------------------
 
     UPROPERTY()
-    UVerticalBox* MainColumn = nullptr;
+    UHorizontalBox* RootContentRow = nullptr;
+
+    // -----------------------------------------------------------------
+    // Left Panel
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UBorder* LeftPanelBorder = nullptr;
+
+    UPROPERTY()
+    UVerticalBox* LeftPanelColumn = nullptr;
 
     UPROPERTY()
     UHorizontalBox* TopButtonRow = nullptr;
@@ -164,10 +160,14 @@ private:
     UHorizontalBox* ZoomButtonBox = nullptr;
 
     UPROPERTY()
-    UHorizontalBox* ContentRow = nullptr;
+    USizeBox* MainViewHost = nullptr;
+
+    // -----------------------------------------------------------------
+    // Right Panel
+    // -----------------------------------------------------------------
 
     UPROPERTY()
-    USizeBox* MainViewHost = nullptr;
+    UBorder* RightPanelBorder = nullptr;
 
     UPROPERTY()
     UVerticalBox* RightPanelColumn = nullptr;
@@ -178,6 +178,9 @@ private:
 
     UPROPERTY(EditAnywhere, Category = "Mission Nav")
     TSubclassOf<UMenuButton> MenuButtonClass;
+
+    UPROPERTY(EditAnywhere, Category = "Mission Nav")
+    TSubclassOf<UUserWidget> ObjectListEntryWidgetClass;
 
     UPROPERTY()
     TArray<TObjectPtr<UMenuButton>> NavModeButtons;
@@ -237,13 +240,22 @@ private:
     UVerticalBox* ObjectListPanel = nullptr;
 
     UPROPERTY()
+    UBorder* ObjectListTitleBar = nullptr;
+
+    UPROPERTY()
     UTextBlock* ObjectListTitleText = nullptr;
 
     UPROPERTY()
     USizeBox* ObjectListHost = nullptr;
 
     UPROPERTY()
-    UListView* ObjectListView = nullptr;
+    UMissionNavObjectListView* ObjectListView = nullptr;
+
+    UPROPERTY()
+    TArray<TObjectPtr<UMissionNavObjectListObject>> ObjectItems;
+
+    UPROPERTY()
+    UMissionNavObjectListObject* SelectedObjectItem = nullptr;
 
     // -----------------------------------------------------------------
     // Right Panel - Detail Panel
@@ -256,6 +268,9 @@ private:
     UVerticalBox* DetailPanel = nullptr;
 
     UPROPERTY()
+    UBorder* DetailTitleBar = nullptr;
+
+    UPROPERTY()
     UTextBlock* DetailTitleText = nullptr;
 
     UPROPERTY()
@@ -263,6 +278,13 @@ private:
 
     UPROPERTY()
     UTextBlock* DetailBodyText = nullptr;
+
+    // -----------------------------------------------------------------
+    // Style Assets
+    // -----------------------------------------------------------------
+
+    UPROPERTY()
+    UTexture2D* RightPanelBackgroundTexture = nullptr;
 
     // -----------------------------------------------------------------
     // State
@@ -275,10 +297,6 @@ private:
     EMissionNavFilterMode CurrentFilterMode = EMissionNavFilterMode::SYSTEM;
 
 private:
-    // -----------------------------------------------------------------
-    // Event Handlers
-    // -----------------------------------------------------------------
-
     UFUNCTION()
     void OnNavModeButtonSelected(UMenuButton* SelectedButton);
 
@@ -290,6 +308,9 @@ private:
 
     UFUNCTION()
     void OnFilterButtonHovered(UMenuButton* HoveredButton);
+
+    UFUNCTION()
+    void OnObjectSelectionChanged(UObject* SelectedItem);
 
     UFUNCTION()
     void OnZoomInClicked();
