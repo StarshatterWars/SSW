@@ -147,7 +147,7 @@ protected:
     USelectableButtonGroup* MenuToggleGroup = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    UPanelWidget* MenuButtonContainer = nullptr;
+    UVerticalBox* MenuButtonContainer = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
     UButton* MissionButton = nullptr;

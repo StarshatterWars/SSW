@@ -80,7 +80,6 @@ void UMissionBriefingDlg::InitializeDlg(UMenuScreen* InManager)
 
 void UMissionBriefingDlg::NativePreConstruct()
 {
-    MenuButtonContainer->ClearChildren();
 
     if (MissionSituationPanel)
     {
@@ -302,7 +301,14 @@ void UMissionBriefingDlg::BuildMenuButtons()
         return;
     }
 
-    MenuButtonContainer->ClearChildren();
+    UVerticalBox* MenuVBox = Cast<UVerticalBox>(MenuButtonContainer);
+    if (!MenuVBox)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] MenuButtonContainer is not a VerticalBox"));
+        return;
+    }
+
+    MenuVBox->ClearChildren();
     AllMenuButtons.Empty();
 
     for (const FString& Item : MenuItems)
@@ -313,19 +319,20 @@ void UMissionBriefingDlg::BuildMenuButtons()
             continue;
         }
 
-        // MAIN BRIEFING BUTTON SIZE
-        NewButton->WidthOverride = 256.f;
-        NewButton->HeightOverride = 42.f;
-        NewButton->LabelFontSize = 16;
+        NewButton->SetLayoutMode(ELayoutMode::FillWidth);
+        NewButton->SetButtonSize(0.f, 42.f);
+        NewButton->SetLabelFontSizeValue(16);
+        NewButton->SetMenuOption(Item);
+        NewButton->SetButtonText(FText::FromString(Item).ToUpper());
 
-        if (UTextBlock* Label = Cast<UTextBlock>(NewButton->GetWidgetFromName(TEXT("Label"))))
+        if (UVerticalBoxSlot* VBoxSlot = MenuVBox->AddChildToVerticalBox(NewButton))
         {
-            Label->SetText(FText::FromString(Item));
+            VBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 0.f));
+            VBoxSlot->SetHorizontalAlignment(HAlign_Fill);
+            VBoxSlot->SetVerticalAlignment(VAlign_Center);
         }
 
-        NewButton->MenuOption = Item;
-
-        MenuButtonContainer->AddChild(NewButton);
         MenuToggleGroup->RegisterButton(NewButton);
 
         NewButton->OnSelected.RemoveDynamic(this, &UMissionBriefingDlg::OnMenuToggleSelected);
