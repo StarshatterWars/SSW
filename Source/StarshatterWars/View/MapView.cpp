@@ -165,7 +165,7 @@ void MapView::SetSystem(StarSystem* s)
 		if (system) {
 			ListIter<OrbitalBody> star = system->Bodies();
 			while (++star) {
-				switch (star->Type()) {
+				switch (star->GetType()) {
 				case Orbital::STAR:       stars.append(star.value());
 					break;
 				case Orbital::PLANET:
@@ -309,7 +309,7 @@ void MapView::BuildMenu()
 	map_sector_menu = new Menu("SECTOR");
 	for (int i = 0; i < regions.size(); i++) {
 		Orbital* rgn = regions[i];
-		map_sector_menu->AddItem(rgn->Name(), MAP_SECTOR + i);
+		map_sector_menu->AddItem(rgn->GetName(), MAP_SECTOR + i);
 	}
 
 	map_menu = new Menu("MAP");
@@ -496,7 +496,7 @@ void MapView::ProcessMenuItem(int action)
 	}
 
 	else if (action == MAP_ADDNAV) {
-		Text         rgn_name = regions[current_region]->Name();
+		Text         rgn_name = regions[current_region]->GetName();
 		Instruction* prior = current_navpt;
 		Instruction* n = 0;
 
@@ -532,7 +532,7 @@ void MapView::ProcessMenuItem(int action)
 		else if (current_elem && can_command) {
 			FVector init_pt(0.0f, 0.0f, 0.0f);
 
-			if (regions[current_region]->Type() == Orbital::TERRAIN)
+			if (regions[current_region]->GetType() == Orbital::TERRAIN)
 				init_pt.Z = 10e3f;
 
 			n = new Instruction(rgn_name, init_pt);
@@ -879,7 +879,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->GetName())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -934,7 +934,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->GetName())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -989,7 +989,7 @@ void MapView::SetSelection(int index)
 			if (selected_elem && regions.size()) {
 				ListIter<Orbital> rgn = regions;
 				while (++rgn) {
-					if (!_stricmp(selected_elem->GetRegion(), rgn->Name())) {
+					if (!_stricmp(selected_elem->GetRegion(), rgn->GetName())) {
 						Orbital* elem_region = rgn.value();
 						current_region = regions.index(elem_region);
 					}
@@ -1234,7 +1234,7 @@ MapView::SetRegionByName(const char* rgn_name)
 
 	for (int i = 0; i < regions.size(); i++) {
 		Orbital* ro = regions[i];
-		if (!strcmp(rgn_name, ro->Name())) {
+		if (!strcmp(rgn_name, ro->GetName())) {
 			rgn = (OrbitalRegion*)ro;
 			break;
 		}
@@ -1378,7 +1378,7 @@ MapView::SelectAt(int x, int y)
 					while (++navpt) {
 						Instruction* n = navpt.value();
 
-						if (!_stricmp(n->RegionName(), rgn->Name())) {
+						if (!_stricmp(n->RegionName(), rgn->GetName())) {
 							FVector  nloc = n->Location();
 							double dx = nloc.X - test_x;
 							double dy = nloc.Y - test_y;
@@ -1405,7 +1405,7 @@ MapView::SelectAt(int x, int y)
 				while (++elem) {
 					MissionElement* e = elem.value();
 
-					if (e->GetRegion() == rgn->Name() && !e->IsSquadron()) {
+					if (e->GetRegion() == rgn->GetName() && !e->IsSquadron()) {
 						FVector  sloc = e->GetLocation();
 						double dx = sloc.X - test_x;
 						double dy = sloc.Y - test_y;
@@ -1432,7 +1432,7 @@ MapView::SelectAt(int x, int y)
 			Instruction* sel_nav = 0;
 
 			if (sim && rgn)
-				simrgn = sim->FindRegion(rgn->Name());
+				simrgn = sim->FindRegion(rgn->GetName());
 
 			// check nav points:
 			if (simrgn) {
@@ -1447,7 +1447,7 @@ MapView::SelectAt(int x, int y)
 							while (++navpt) {
 								Instruction* n = navpt.value();
 
-								if (!_stricmp(n->RegionName(), rgn->Name())) {
+								if (!_stricmp(n->RegionName(), rgn->GetName())) {
 									FVector  nloc = n->Location();
 									double dx = nloc.X - test_x;
 									double dy = nloc.Y - test_y;
@@ -1570,7 +1570,7 @@ MapView::GetSelectionIndex()
 		SimRegion* simrgn = 0;
 
 		if (sim && rgn)
-			simrgn = sim->FindRegion(rgn->Name());
+			simrgn = sim->FindRegion(rgn->GetName());
 
 		if (simrgn) {
 			if (current_ship && simrgn->GetNumShips()) {
@@ -1886,7 +1886,7 @@ MapView::DrawRegion()
 
 	Text caption = Game::GetText("MapView.title.Sector");
 	caption += " ";
-	caption += rgn->Name();
+	caption += rgn->GetName();
 
 	if (current_ship) {
 		caption += "\n";
@@ -1988,7 +1988,7 @@ MapView::DrawRegion()
 		SimRegion* simrgn = 0;
 
 		if (sim && rgn)
-			simrgn = sim->FindRegion(rgn->Name());
+			simrgn = sim->FindRegion(rgn->GetName());
 
 		if (simrgn) {
 			ListIter<SimContact> cIter = simrgn->TrackList(ship->GetIFF());
@@ -2078,7 +2078,7 @@ MapView::DrawGrid()
 
 void MapView::DrawOrbital(Orbital& body, int index)
 {
-	int type = body.Type();
+	int type = body.GetType();
 	if (type == Orbital::NOTHING)
 		return;
 
@@ -2113,7 +2113,7 @@ void MapView::DrawOrbital(Orbital& body, int index)
 	double py = 0;
 
 	if (body.Primary()) {
-		double min_pr = GetMinRadius(body.Primary()->Type());
+		double min_pr = GetMinRadius(body.Primary()->GetType());
 
 		if (index) {
 			if (min_pr < 4) min_pr = 4;
@@ -2214,7 +2214,7 @@ void MapView::DrawOrbital(Orbital& body, int index)
 		label_rect.h = label_h;
 
 		active_window->SetFont(font);
-		active_window->DrawText(body.Name(), -1, label_rect, DT_SINGLELINE | DT_CENTER);
+		active_window->DrawText(body.GetName(), -1, label_rect, DT_SINGLELINE | DT_CENTER);
 	}
 }
 
@@ -2449,7 +2449,7 @@ void MapView::DrawShip(Ship& s, bool current, int rep)
 	// ----------------------------------------------------
 	if (current &&
 		s.GetRegion() &&
-		Text(s.GetRegion()->GetName()) == regions[current_region]->Name())
+		Text(s.GetRegion()->GetName()) == regions[current_region]->GetName())
 	{
 		x1 = (int)(shiploc.X - sprite_width - 1);
 		x2 = (int)(shiploc.X + sprite_width + 1);
@@ -2507,7 +2507,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 	SetFont(font);
 
 	// draw ship icon:
-	if (!_stricmp(s.GetRegion(), rgn->Name())) {
+	if (!_stricmp(s.GetRegion(), rgn->GetName())) {
 		double sx = (s.GetLocation().X + rlx) * scale;
 		double sy = (s.GetLocation().Y + rly) * scale;
 
@@ -2598,7 +2598,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 	}
 
 	// draw current element marker:
-	if (current && s.GetRegion() == regions[current_region]->Name()) {
+	if (current && s.GetRegion() == regions[current_region]->GetName()) {
 		x1 = (int)(shiploc.X - sprite_width - 1);
 		x2 = (int)(shiploc.X + sprite_width + 1);
 		y1 = (int)(shiploc.Y - sprite_width - 1);
@@ -2690,7 +2690,7 @@ void MapView::DrawNavRoute(
 			continue;
 
 		// Only draw navpoints that belong to this region:
-		if (_stricmp(navpt->RegionName(), rgn->Name()) != 0) {
+		if (_stricmp(navpt->RegionName(), rgn->GetName()) != 0) {
 			old_loc = FVector(navpt->Location());
 			old_x = 0;
 			old_y = 0;
@@ -2821,7 +2821,7 @@ void MapView::DrawNavRoute(
 			}
 		}
 		else if (elem) {
-			old_in = (_stricmp(elem->GetRegion(), rgn->Name()) == 0);
+			old_in = (_stricmp(elem->GetRegion(), rgn->GetName()) == 0);
 
 			if (old_in) {
 				old_loc = FVector(elem->GetLocation());
@@ -2914,7 +2914,7 @@ MapView::DrawCombatGroupSystem(CombatGroup* group, Orbital* rgn, int x1, int x2,
 
 	char txt[80];
 
-	if (group->GetRegion() == rgn->Name()) {
+	if (group->GetRegion() == rgn->GetName()) {
 		switch (group->GetType()) {
 		case ECOMBATGROUP_TYPE::CARRIER_GROUP:
 		case ECOMBATGROUP_TYPE::BATTLE_GROUP:
@@ -3019,7 +3019,7 @@ MapView::DrawCombatGroup(CombatGroup* group, int rep)
 		}
 
 		// draw unit icon:
-		if (unit && unit->GetRegion() == rgn->Name() && unit->Type() > (int) CLASSIFICATION::LCA && unit->Count() > 0) {
+		if (unit && unit->GetRegion() == rgn->GetName() && unit->Type() > (int) CLASSIFICATION::LCA && unit->Count() > 0) {
 			double sx = (unit->Location().X + rlx) * scale;
 			double sy = (unit->Location().Y + rly) * scale;
 
@@ -3134,7 +3134,7 @@ MapView::IsCrowded(Ship& test)
 	FVector      testloc{}, refloc{};
 	Sim* sim = Sim::GetSim();
 	Orbital* rgn = regions[current_region];
-	SimRegion* simrgn = sim ? sim->FindRegion(rgn->Name()) : 0;
+	SimRegion* simrgn = sim ? sim->FindRegion(rgn->GetName()) : 0;
 
 	if (simrgn) {
 		GetShipLoc(test, testloc);
@@ -3224,7 +3224,7 @@ MapView::IsCrowded(MissionElement& test)
 		while (++it) {
 			MissionElement* ref = it.value();
 
-			if (ref && ref != &test && !_stricmp(ref->GetRegion(), rgn->Name())) {
+			if (ref && ref != &test && !_stricmp(ref->GetRegion(), rgn->GetName())) {
 				GetElemLoc(*ref, refloc);
 
 				double dx = testloc.X - refloc.X;
@@ -3274,7 +3274,7 @@ MapView::GetElemLoc(MissionElement& s, FVector& shiploc)
 	}
 
 	if (view_mode == VIEW_SYSTEM ||
-		(view_mode == VIEW_REGION && !_stricmp(s.GetRegion(), rgn->Name()))) {
+		(view_mode == VIEW_REGION && !_stricmp(s.GetRegion(), rgn->GetName()))) {
 		double sx = (s.GetLocation().X + rlx) * scale;
 		double sy = (s.GetLocation().Y + rly) * scale;
 

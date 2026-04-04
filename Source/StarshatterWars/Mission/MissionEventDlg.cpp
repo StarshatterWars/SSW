@@ -329,7 +329,7 @@ void UMissionEventDlg::FillRgnList(UComboBoxString* Combo, const char* SelectedA
             OrbitalRegion* region = iter2.value();
             if (!region) continue;
 
-            const FString RegionName = ANSI_TO_TCHAR(region->Name());
+            const FString RegionName = ANSI_TO_TCHAR(region->GetName());
 
             if (SelectedAnsi && RegionName.Equals(ANSI_TO_TCHAR(SelectedAnsi), ESearchCase::IgnoreCase))
                 selected_index = i;

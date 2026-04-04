@@ -56,6 +56,14 @@ public:
 
     List<Text>& GetLinks() { return links; }
     const List<Text>& GetLinks() const { return links; }
+     
+    void SetGrid(double In) { grid = In; }
+	void SetInclination(double In) { inclination = In; }
+	void SetAsteroids(int In) { asteroids = In; }
+    void AddLink(const char* InLink)    
+	{
+		if (InLink) links.append(new Text(InLink));
+	}
 
 protected:
     // Region parameters:

@@ -416,7 +416,7 @@ bool CampaignMissionFighter::IsGroundObjective(CombatGroup* obj)
         return false;
 
     OrbitalRegion* region = system->FindRegion(obj->GetRegion());
-    return region && region->Type() == Orbital::TERRAIN;
+    return region && region->GetType() == Orbital::TERRAIN;
 }
 
 // +--------------------------------------------------------------------+
@@ -478,7 +478,7 @@ void CampaignMissionFighter::SelectRegion()
             if (system)
                 rgn = system->FindRegion(air_region);
 
-            if (!rgn || rgn->Type() != Orbital::TERRAIN)
+            if (!rgn || rgn->GetType() != Orbital::TERRAIN)
                 air_region = "";
         }
 
@@ -519,7 +519,7 @@ void CampaignMissionFighter::SelectRegion()
 
         StarSystem* s = campaign->GetSystemList()[0];
         mission->SetStarSystem(s);
-        mission->SetRegion(s->Regions()[0]->Name());
+        mission->SetRegion(s->Regions()[0]->GetName());
     }
 
     if (!airborne)
@@ -927,7 +927,7 @@ void CampaignMissionFighter::CreatePatrols()
             int PatrolType = (int)EMISSIONTYPE::PATROL;
             FVector BaseLoc;
 
-            if (Region->Type() == Orbital::TERRAIN)
+            if (Region->GetType() == Orbital::TERRAIN)
             {
                 PatrolType = (int)EMISSIONTYPE::AIR_PATROL;
 
@@ -941,7 +941,7 @@ void CampaignMissionFighter::CreatePatrols()
                 FVector(Base->GetLocation().X, Base->GetLocation().Y, Base->GetLocation().Z) +
                 FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 1.5f;
 
-            if (Region->Type() == Orbital::TERRAIN)
+            if (Region->GetType() == Orbital::TERRAIN)
             {
                 BaseLoc += FVector(0.0f, 0.0f, 14000.0f);
             }

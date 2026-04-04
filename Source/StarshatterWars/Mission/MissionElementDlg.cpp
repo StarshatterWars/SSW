@@ -284,10 +284,10 @@ void UMissionElementDlg::RebuildFromModel()
                     OrbitalRegion* R = Iter.value();
                     if (!R) continue;
 
-                    RegionCombo->AddOption(ANSI_TO_TCHAR(R->Name()));
+                    RegionCombo->AddOption(ANSI_TO_TCHAR(R->GetName()));
 
-                    if (!strcmp(ElemPtr->GetRegion(), R->Name()))
-                        RegionCombo->SetSelectedOption(ANSI_TO_TCHAR(R->Name()));
+                    if (!strcmp(ElemPtr->GetRegion(), R->GetName()))
+                        RegionCombo->SetSelectedOption(ANSI_TO_TCHAR(R->GetName()));
                 }
             }
         }

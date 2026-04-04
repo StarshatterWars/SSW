@@ -24,6 +24,7 @@
 #include "MissionNavObjectListView.h"
 #include "MissionNavObjectLVElement.h"
 #include "MissionUIStyle.h"
+#include "FormattingUtils.h"
 
 #include "Campaign.h"
 #include "MapView.h"
@@ -1044,12 +1045,19 @@ void UMissionNavDlg::BuildPlanetObjects()
         return;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects called"));
+
     StarSystem* System = MissionPtr->GetStarSystem();
     if (!System)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects: Mission star system is null"));
         return;
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] System = %p Name=%s Radius=%.0f"),
+        System,
+        *FString(System->GetName()),
+        System->Radius());
 
     int32 Index = 0;
 
@@ -1071,8 +1079,8 @@ void UMissionNavDlg::BuildPlanetObjects()
                 continue;
             }
 
-            const FString Primary = FString(Planet->Name());
-            const FString Secondary = (Planet->Type() == Orbital::MOON) ? TEXT("MOON") : TEXT("PLANET");
+            const FString Primary = FString(Planet->GetName());
+            const FString Secondary = (Planet->GetType() == Orbital::MOON) ? TEXT("MOON") : TEXT("PLANET");
             const FString Detail = FString::Printf(
                 TEXT("%s\n\nTYPE: %s\nORBIT: %.0f\nRADIUS: %.0f"),
                 *Primary,
@@ -1096,7 +1104,7 @@ void UMissionNavDlg::BuildPlanetObjects()
                     continue;
                 }
 
-                const FString MoonPrimary = FString(Moon->Name());
+                const FString MoonPrimary = FString(Moon->GetName());
                 const FString MoonSecondary = TEXT("MOON");
                 const FString MoonDetail = FString::Printf(
                     TEXT("%s\n\nTYPE: MOON\nORBIT: %.0f\nRADIUS: %.0f"),
@@ -1140,7 +1148,7 @@ void UMissionNavDlg::BuildSectorObjects()
             continue;
         }
 
-        const FString RegionName = FString(Region->Name());
+        const FString RegionName = FString(Region->GetName());
 
         const FString Primary = RegionName;
         const FString Secondary = TEXT("SECTOR");
@@ -1212,13 +1220,14 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         }
 
         const FString Primary = FString(Elem->GetName().data());
-        const FString Secondary = TypeLabel;
+        const FString Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
         const FString RegionName = FString(Elem->GetRegion().data());
 
         const FString Detail = FString::Printf(
-            TEXT("%s\n\nTYPE: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
+            TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
             *Primary,
             *TypeLabel,
+            *Secondary,
             *RegionName,
             Elem->GetIFF(),
             Elem->Count());

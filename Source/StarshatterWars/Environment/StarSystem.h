@@ -15,7 +15,7 @@
     StarSystem
     - Defines a stellar system and its orbiting objects (bodies, regions, terrain)
     - Parses system definition data and provides runtime access to orbitals
-    - Implementation remains in StarSystem.cpp
+    - Also supports runtime hydration from Galaxy table data
 */
 
 #pragma once
@@ -32,7 +32,7 @@
 // Core orbital base:
 #include "Orbital.h"
 
-// Optional: bodies/regions are now split headers (thin, implementation stays in StarSystem.cpp)
+// Split headers:
 #include "OrbitalBody.h"
 #include "OrbitalRegion.h"
 
@@ -58,7 +58,9 @@ public:
 
     int operator == (const StarSystem& s) const { return name == s.name; }
 
+    // -----------------------------------------------------------------
     // operations:
+    // -----------------------------------------------------------------
     virtual void   Load();
     virtual void   Create();
     virtual void   Destroy();
@@ -68,10 +70,12 @@ public:
 
     virtual void   ExecFrame();
 
+    // -----------------------------------------------------------------
     // accessors:
-    const char*     GetName()           const { return name; }
-    const char*     GetGovt()           const { return govt; }
-    const char*     GetDescription()    const { return description; }
+    // -----------------------------------------------------------------
+    const char* GetName()           const { return name; }
+    const char* GetGovt()           const { return govt; }
+    const char* GetDescription()    const { return description; }
     int             GetAffiliation()    const { return affiliation; }
     int             GetSequence()       const { return seq; }
     FVector         GetLocation()       const { return loc; }
@@ -90,36 +94,81 @@ public:
     static void   SetSimulationTime(double t);
     static double GetSimulationTime();
 
-    void                  SetActiveRegion(OrbitalRegion* rgn);
+    static void   SetBaseTime(double t, bool absolute = false);
+    static double GetBaseTime();
+    static double GetStardate() { return stardate; }
+    static void   CalcStardate();
 
-    static void           SetBaseTime(double t, bool absolute = false);
-    static double         GetBaseTime();
-    static double         GetStardate() { return stardate; }
-    static void           CalcStardate();
+    double        Radius() const { return radius; }
 
-    double                Radius() const { return radius; }
+    bool          HasLinkTo(StarSystem* s) const;
 
-    void                  SetSunlight(FColor color, double brightness = 1);
-    void                  SetBacklight(FColor color, double brightness = 1);
-    void                  RestoreTrueSunColor();
+    const Text& GetDataPath() const { return datapath; }
 
-    bool                  HasLinkTo(StarSystem* s) const;
+    void RecalculateRadius();
 
-    const Text&           GetDataPath() const { return datapath; }
+    void AddRootRegion(OrbitalRegion* Region);
 
+    // -----------------------------------------------------------------
+    // runtime hydration helpers:
+    // -----------------------------------------------------------------
+    Orbital* GetCenter() const;
+
+    void          AddBody(OrbitalBody* Body);
+    void          AddRegion(OrbitalRegion* Region);
+
+    void          SetName(const char* InName) { if (InName) name = InName; }
+    void          SetGovt(const char* InGovt) { if (InGovt) govt = InGovt; }
+    void          SetDescription(const char* InDesc) { if (InDesc) description = InDesc; }
+    void          SetDataPath(const char* InPath) { if (InPath) datapath = InPath; }
+
+    void          SetAffiliation(int InAffiliation) { affiliation = InAffiliation; }
+    void          SetSequence(int InSeq) { seq = InSeq; }
+    void          SetLocation(const FVector& InLoc) { loc = InLoc; }
+
+    void          SetSkyCounts(int InStars, int InDust)
+    {
+        sky_stars = InStars;
+        sky_dust = InDust;
+    }
+
+    void          SetSkyTextures(
+        const char* InPolyStars,
+        const char* InNebula,
+        const char* InHaze)
+    {
+        sky_poly_stars = InPolyStars ? InPolyStars : "";
+        sky_nebula = InNebula ? InNebula : "";
+        sky_haze = InHaze ? InHaze : "";
+    }
+
+    void          SetAmbientColor(const FColor& InAmbient)
+    {
+        ambient = InAmbient;
+    }
+
+    void          SetSunlight(FColor color, double brightness = 1);
+    void          SetBacklight(FColor color, double brightness = 1);
+    void          RestoreTrueSunColor();
+
+    void          SetActiveRegion(OrbitalRegion* rgn);
 
 protected:
+    // -----------------------------------------------------------------
     // parsing:
-    void                  ParseStar(TermStruct* val);
-    void                  ParsePlanet(TermStruct* val);
-    void                  ParseMoon(TermStruct* val);
-    void                  ParseRegion(TermStruct* val);
-    void                  ParseTerrain(TermStruct* val);
-    void                  ParseLayer(TerrainRegion* rgn, TermStruct* val);
+    // -----------------------------------------------------------------
+    void          ParseStar(TermStruct* val);
+    void          ParsePlanet(TermStruct* val);
+    void          ParseMoon(TermStruct* val);
+    void          ParseRegion(TermStruct* val);
+    void          ParseTerrain(TermStruct* val);
+    void          ParseLayer(TerrainRegion* rgn, TermStruct* val);
 
+    // -----------------------------------------------------------------
     // creation helpers:
-    void                  CreateBody(OrbitalBody& body);
-    FVector               TerrainTransform(const FVector& in_loc);
+    // -----------------------------------------------------------------
+    void          CreateBody(OrbitalBody& body);
+    FVector       TerrainTransform(const FVector& in_loc);
 
 protected:
     char                  filename[64];
@@ -177,8 +226,6 @@ protected:
     FVector               tvpn;
     FVector               tvup;
     FVector               tvrt;
-
-
 };
 
 // +--------------------------------------------------------------------+
@@ -191,25 +238,26 @@ public:
     Star(const char* n, const FVector& l, int s) : name(n), loc(l), seq(s) {}
     virtual ~Star() {}
 
-    enum SPECTRAL_CLASS {
+    enum SPECTRAL_CLASS
+    {
         BLACK_HOLE, WHITE_DWARF, RED_GIANT,
         O, B, A, F, G, K, M
     };
 
     int operator == (const Star& s) const { return name == s.name; }
 
-    const char* GetName()      const { return name; }
-    const FVector& Location()  const { return loc; }
-    int                   Sequence()  const { return seq; }
+    const char* GetName()     const { return name; }
+    const FVector& Location()    const { return loc; }
+    int            Sequence()    const { return seq; }
 
-    FColor                GetColor() const;
-    int                   GetSize()  const;
+    FColor         GetColor() const;
+    int            GetSize()  const;
 
-    static FColor         GetColor(int spectral_class);
-    static int            GetSize(int spectral_class);
+    static FColor  GetColor(int spectral_class);
+    static int     GetSize(int spectral_class);
 
 protected:
-    Text                  name;
-    FVector               loc;
-    int                   seq;
+    Text           name;
+    FVector        loc;
+    int            seq;
 };

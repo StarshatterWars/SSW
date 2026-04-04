@@ -369,7 +369,7 @@ CampaignMissionStarship::SelectRegion()
         StarSystem* s = campaign->GetSystemList()[0];
 
         mission->SetStarSystem(s);
-        mission->SetRegion(s->Regions()[0]->Name());
+        mission->SetRegion(s->Regions()[0]->GetName());
     }
 }
 
@@ -564,7 +564,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     StarSystem* system = mission->GetStarSystem();
     OrbitalRegion* rgn = system->FindRegion(u->GetRegion());
 
-    if (!rgn || rgn->Type() == Orbital::TERRAIN)
+    if (!rgn || rgn->GetType() == Orbital::TERRAIN)
         return nullptr;
 
     // ensure this unit isn't already in the mission:

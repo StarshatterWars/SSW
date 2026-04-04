@@ -353,7 +353,7 @@ CampaignPlanMission::PlanRandomFighterMission()
             if (system) {
                 OrbitalRegion* rgn = system->FindRegion(air_region);
 
-                if (rgn && rgn->Type() == Orbital::TERRAIN)
+                if (rgn && rgn->GetType() == Orbital::TERRAIN)
                     airborne = true;
             }
         }

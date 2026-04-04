@@ -30,6 +30,7 @@
 #include "GameStructs.h" // ECOMBATGROUP_TYPE, ECOMBATUNIT_TYPE, EEMPIRE_NAME, CLASSIFICATION
 #include "Color.h"
 #include "CombatUnit.h"
+#include "MissionElement.h"
 #include "GameStructs_System.h"
 #include "FormattingUtils.generated.h"
 
@@ -150,5 +151,7 @@ public:
     static FString EmpireToString(EEMPIRE_NAME Empire);
 
     static FString GetUnitDesignIndicator(CombatUnit* Unit);
+
+    static FString GetMissionElementIndicator(MissionElement* Elem);
 };
 

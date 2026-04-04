@@ -84,9 +84,9 @@ public:
     FVector PredictLocation(double delta_t);
 
     // accessors:
-    const char* Name() const { return name; }
-    OrbitalType Type() const { return type; }
-    int         SubType() const { return subtype; }
+    const char* GetName()       const { return name; }
+    OrbitalType GetType()       const { return type; }
+    int         GetSubType()    const { return subtype; }
 
     const char* Description() const { return description; }
     double      Mass() const { return mass; }
@@ -109,6 +109,14 @@ public:
 
     // Legacy region iterator:
     ListIter<OrbitalRegion> Regions() { return regions; }
+
+    void AddRegion(OrbitalRegion* Region)
+    {
+        if (Region)
+        {
+            regions.append(Region);
+        }
+    }
 
 protected:
     // Identity and classification:

@@ -1339,7 +1339,7 @@ void StarSystem::SetActiveRegion(OrbitalRegion* rgn)
 		active_region = rgn;
 
 		if (active_region) {
-			if (active_region->Type() != Orbital::TERRAIN) {
+			if (active_region->GetType() != Orbital::TERRAIN) {
 				if (point_stars) point_stars->Hide();
 				if (poly_stars)  poly_stars->Show();
 				if (nebula)      nebula->Show();
@@ -1438,7 +1438,7 @@ void StarSystem::ExecFrame()
 
 		SimScene* scene = 0;
 		TerrainRegion* trgn = 0;
-		const bool      terrain = (active_region->Type() == Orbital::TERRAIN);
+		const bool      terrain = (active_region->GetType() == Orbital::TERRAIN);
 
 		// UE FIX: Solid/Graphic orientation is now FMatrix (not legacy Matrix):
 		FMatrix         terrain_orientation = FMatrix::Identity;
@@ -1638,34 +1638,34 @@ Orbital* StarSystem::FindOrbital(const char* in_name)
 
 	ListIter<OrbitalBody> star = bodies;
 	while (++star) {
-		if (!FCStringAnsi::Stricmp(star->Name(), in_name))
+		if (!FCStringAnsi::Stricmp(star->GetName(), in_name))
 			return star.value();
 
 		ListIter<OrbitalRegion> star_rgn = star->Regions();
 		while (++star_rgn) {
-			if (!FCStringAnsi::Stricmp(star_rgn->Name(), in_name))
+			if (!FCStringAnsi::Stricmp(star_rgn->GetName(), in_name))
 				return star_rgn.value();
 		}
 
 		ListIter<OrbitalBody> planet = star->Satellites();
 		while (++planet) {
-			if (!FCStringAnsi::Stricmp(planet->Name(), in_name))
+			if (!FCStringAnsi::Stricmp(planet->GetName(), in_name))
 				return planet.value();
 
 			ListIter<OrbitalRegion> planet_rgn = planet->Regions();
 			while (++planet_rgn) {
-				if (!FCStringAnsi::Stricmp(planet_rgn->Name(), in_name))
+				if (!FCStringAnsi::Stricmp(planet_rgn->GetName(), in_name))
 					return planet_rgn.value();
 			}
 
 			ListIter<OrbitalBody> moon = planet->Satellites();
 			while (++moon) {
-				if (!FCStringAnsi::Stricmp(moon->Name(), in_name))
+				if (!FCStringAnsi::Stricmp(moon->GetName(), in_name))
 					return moon.value();
 
 				ListIter<OrbitalRegion> moon_rgn = moon->Regions();
 				while (++moon_rgn) {
-					if (!FCStringAnsi::Stricmp(moon_rgn->Name(), in_name))
+					if (!FCStringAnsi::Stricmp(moon_rgn->GetName(), in_name))
 						return moon_rgn.value();
 				}
 			}
@@ -1674,7 +1674,7 @@ Orbital* StarSystem::FindOrbital(const char* in_name)
 
 	ListIter<OrbitalRegion> region = regions;
 	while (++region) {
-		if (!FCStringAnsi::Stricmp(region->Name(), in_name))
+		if (!FCStringAnsi::Stricmp(region->GetName(), in_name))
 			return region.value();
 	}
 
@@ -1690,7 +1690,7 @@ OrbitalRegion* StarSystem::FindRegion(const char* in_name)
 
 	ListIter<OrbitalRegion> region = all_regions;
 	while (++region) {
-		if (!FCStringAnsi::Stricmp(region->Name(), in_name))
+		if (!FCStringAnsi::Stricmp(region->GetName(), in_name))
 			return region.value();
 	}
 
@@ -1734,7 +1734,7 @@ FVector StarSystem::TerrainTransform(const FVector& in_loc)
 FColor StarSystem::GetAmbient() const
 {
 	FColor result = ambient;
-	const bool terrain = (active_region && active_region->Type() == Orbital::TERRAIN);
+	const bool terrain = (active_region && active_region->GetType() == Orbital::TERRAIN);
 
 	if (terrain) {
 		TerrainRegion* trgn = static_cast<TerrainRegion*>(active_region);
@@ -1949,6 +1949,7 @@ OrbitalBody::OrbitalBody(StarSystem* s, const char* n, OrbitalType t, double m, 
 	, tilt(0)
 	, light_rep(0)
 	, back_light(0)
+	, subtype(0)
 	, color(FColor::White)
 	, back(FColor::Black)
 	, atmosphere(FColor::Black)
@@ -2022,4 +2023,109 @@ void StarSystem::SetSimulationTime(double t)
 double StarSystem::GetSimulationTime()
 {
 	return sim_time;
+}
+
+Orbital* StarSystem::GetCenter() const
+{
+	return center;
+}
+
+void StarSystem::AddBody(OrbitalBody* Body)
+{
+	if (!Body)
+	{
+		return;
+	}
+
+	bodies.append(Body);
+
+	if (Body->Orbit() > radius)
+	{
+		radius = Body->Orbit();
+	}
+}
+
+void StarSystem::AddRegion(OrbitalRegion* Region)
+{
+	if (!Region)
+	{
+		return;
+	}
+
+	regions.append(Region);
+	all_regions.append(Region);
+
+	if (Region->Orbit() > radius)
+	{
+		radius = Region->Orbit();
+	}
+}
+
+void StarSystem::RecalculateRadius()
+{
+	radius = 0.0;
+
+	ListIter<OrbitalBody> StarIter = bodies;
+	while (++StarIter)
+	{
+		OrbitalBody* Star = StarIter.value();
+		if (!Star)
+		{
+			continue;
+		}
+
+		radius = FMath::Max(radius, Star->Orbit());
+
+		ListIter<OrbitalBody> PlanetIter = Star->Satellites();
+		while (++PlanetIter)
+		{
+			OrbitalBody* Planet = PlanetIter.value();
+			if (!Planet)
+			{
+				continue;
+			}
+
+			radius = FMath::Max(radius, Planet->Orbit());
+
+			ListIter<OrbitalBody> MoonIter = Planet->Satellites();
+			while (++MoonIter)
+			{
+				OrbitalBody* Moon = MoonIter.value();
+				if (!Moon)
+				{
+					continue;
+				}
+
+				radius = FMath::Max(radius, Moon->Orbit());
+			}
+		}
+	}
+
+	ListIter<OrbitalRegion> RegionIter = all_regions;
+	while (++RegionIter)
+	{
+		OrbitalRegion* Region = RegionIter.value();
+		if (!Region)
+		{
+			continue;
+		}
+
+		radius = FMath::Max(radius, Region->Orbit());
+	}
+}
+
+void StarSystem::AddRootRegion(OrbitalRegion* Region)
+{
+	if (!Region)
+	{
+		return;
+	}
+
+	regions.append(Region);
+	all_regions.append(Region);
+
+	if (Region->Orbit() > radius)
+	{
+		radius = Region->Orbit();
+	}
 }

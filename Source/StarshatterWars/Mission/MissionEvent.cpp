@@ -578,7 +578,7 @@ MissionEvent::Execute(bool silent)
 
 					if (orb) {
 						UE_LOG(LogStarshatterWarsMissionEvent, Verbose,
-							TEXT("   found body %hs"), orb->Name());
+							TEXT("   found body %hs"), orb->GetName());
 						cam_dir->SetViewOrbital(orb);
 					}
 				}

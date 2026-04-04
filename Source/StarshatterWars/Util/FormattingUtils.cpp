@@ -14,6 +14,7 @@
 
 #include "FormattingUtils.h"
 #include "GameStructs_System.h"
+#include "ShipDesign.h"
 
 #include "UObject/UnrealType.h" // UEnum
 #include "Logging/LogMacros.h"
@@ -691,4 +692,53 @@ FString UFormattingUtils::GetUnitDesignIndicator(CombatUnit* Unit)
     default:
         return TEXT("UN");
     }
+}
+
+FString UFormattingUtils::GetMissionElementIndicator(MissionElement* Elem)
+{
+    if (!Elem)
+    {
+        return TEXT("UN");
+    }
+
+    if (CombatUnit* Unit = Elem->GetCombatUnit())
+    {
+        return GetUnitDesignIndicator(Unit);
+    }
+
+    // Fallbacks
+    if (Elem->IsStatic())
+    {
+        return TEXT("ST");
+    }
+
+    const auto* Design = Elem->GetShipDesign();
+    const FString DesignName = Design ? Design->ShipName.ToUpper() : FString();
+
+    if (Elem->IsStarship())
+    {
+        if (DesignName.Contains(TEXT("CORVETTE")))    return TEXT("CVT");
+        if (DesignName.Contains(TEXT("FRIGATE")))     return TEXT("FF");
+        if (DesignName.Contains(TEXT("DESTROYER")))   return TEXT("DD");
+        if (DesignName.Contains(TEXT("CRUISER")))     return TEXT("CA");
+        if (DesignName.Contains(TEXT("BATTLESHIP")))  return TEXT("BB");
+        if (DesignName.Contains(TEXT("CARRIER")))     return TEXT("CV");
+        if (DesignName.Contains(TEXT("DREADNAUGHT"))) return TEXT("DN");
+
+        return TEXT("SHP");
+    }
+
+    if (Elem->IsDropship())
+    {
+        if (DesignName.Contains(TEXT("DRONE")))       return TEXT("DR");
+        if (DesignName.Contains(TEXT("INTERCEPT")))   return TEXT("VF");
+        if (DesignName.Contains(TEXT("FIGHTER")))     return TEXT("VF");
+        if (DesignName.Contains(TEXT("ATTACK")))      return TEXT("VA");
+        if (DesignName.Contains(TEXT("LCA")))         return TEXT("LC");
+        if (DesignName.Contains(TEXT("TRANSPORT")))   return TEXT("TR");
+
+        return TEXT("VF");
+    }
+
+    return TEXT("UN");
 }

@@ -32,6 +32,269 @@ DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsGalaxy, Log, All);
 
 static Galaxy* galaxy = nullptr;
 
+static int ConvertSpectralClass(ESPECTRAL_CLASS InClass)
+{
+    switch (InClass)
+    {
+    case ESPECTRAL_CLASS::O:           return Star::O;
+    case ESPECTRAL_CLASS::B:           return Star::B;
+    case ESPECTRAL_CLASS::A:           return Star::A;
+    case ESPECTRAL_CLASS::F:           return Star::F;
+    case ESPECTRAL_CLASS::G:           return Star::G;
+    case ESPECTRAL_CLASS::K:           return Star::K;
+    case ESPECTRAL_CLASS::M:           return Star::M;
+    case ESPECTRAL_CLASS::RED_GIANT:   return Star::RED_GIANT;
+    case ESPECTRAL_CLASS::WHITE_DWARF: return Star::WHITE_DWARF;
+    case ESPECTRAL_CLASS::BLACK_HOLE:  return Star::BLACK_HOLE;
+    default:                           return Star::G;
+    }
+}
+
+static bool RegionAlreadyExists(StarSystem* System, const FString& RegionName)
+{
+    if (!System || RegionName.IsEmpty())
+    {
+        return false;
+    }
+
+    return System->FindRegion(TCHAR_TO_ANSI(*RegionName)) != nullptr;
+}
+
+static OrbitalRegion* BuildRegionFromTable(
+    StarSystem* System,
+    const FS_Region& RegionRow)
+{
+    if (!System || RegionRow.Name.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    Orbital* Parent = nullptr;
+
+    if (!RegionRow.Parent.IsEmpty())
+    {
+        Parent = System->FindOrbital(TCHAR_TO_ANSI(*RegionRow.Parent));
+    }
+
+    OrbitalRegion* Region = new OrbitalRegion(
+        System,
+        TCHAR_TO_ANSI(*RegionRow.Name),
+        0.0,
+        RegionRow.Size,
+        RegionRow.Orbit,
+        Parent);
+
+    if (!Region)
+    {
+        return nullptr;
+    }
+
+    Region->SetGrid(RegionRow.Grid);
+    Region->SetInclination(RegionRow.Inclination);
+    Region->SetAsteroids(RegionRow.Asteroids);
+
+    for (const FString& LinkName : RegionRow.Link)
+    {
+        Region->AddLink(TCHAR_TO_ANSI(*LinkName));
+    }
+
+    if (Parent)
+    {
+        Parent->AddRegion(Region);
+    }
+    else
+    {
+        System->Regions().append(Region);
+    }
+
+    System->AllRegions().append(Region);
+
+    return Region;
+}
+
+static OrbitalRegion* BuildRegionFromMap(
+    StarSystem* System,
+    const FS_RegionMap& RegionRow,
+    Orbital* Parent)
+{
+    if (!System)
+    {
+        return nullptr;
+    }
+
+    OrbitalRegion* Region = new OrbitalRegion(
+        System,
+        TCHAR_TO_ANSI(*RegionRow.Name),
+        0.0,
+        RegionRow.Size,
+        RegionRow.Orbit,
+        Parent);
+
+    if (!Region)
+    {
+        return nullptr;
+    }
+
+    Region->SetGrid(RegionRow.Grid);
+    Region->SetInclination(RegionRow.Inclination);
+    Region->SetAsteroids(RegionRow.Asteroids);
+
+    for (const FString& LinkName : RegionRow.Link)
+    {
+        Region->AddLink(TCHAR_TO_ANSI(*LinkName));
+    }
+
+    if (Parent)
+    {
+        Parent->AddRegion(Region);
+    }
+    else
+    {
+        System->AddRegion(Region);
+    }
+
+    return Region;
+}
+
+static OrbitalBody* BuildMoonFromMap(
+    StarSystem* System,
+    const FS_MoonMap& MoonRow,
+    OrbitalBody* ParentPlanet)
+{
+    if (!System || !ParentPlanet)
+    {
+        return nullptr;
+    }
+
+    OrbitalBody* Moon = new OrbitalBody(
+        System,
+        TCHAR_TO_ANSI(*MoonRow.Name),
+        Orbital::MOON,
+        MoonRow.Mass,
+        MoonRow.Radius,
+        MoonRow.Orbit,
+        ParentPlanet);
+
+    if (!Moon)
+    {
+        return nullptr;
+    }
+
+    Moon->SetMapName(TCHAR_TO_ANSI(*MoonRow.Icon));
+    Moon->SetTexture(TCHAR_TO_ANSI(*MoonRow.Texture));
+    Moon->SetRotation(MoonRow.Rot * 3600.0);
+    Moon->SetRetro(MoonRow.Retro);
+    Moon->SetTimeScale(MoonRow.Tscale);
+    Moon->SetTilt(MoonRow.Tilt);
+    Moon->SetAtmosphere(MoonRow.Atmos);
+
+    ParentPlanet->AddSatellite(Moon);
+
+    for (const FS_RegionMap& RegionRow : MoonRow.Region)
+    {
+        BuildRegionFromMap(System, RegionRow, Moon);
+    }
+
+    return Moon;
+}
+
+static OrbitalBody* BuildPlanetFromMap(
+    StarSystem* System,
+    const FS_PlanetMap& PlanetRow,
+    OrbitalBody* ParentStar)
+{
+    if (!System || !ParentStar)
+    {
+        return nullptr;
+    }
+
+    OrbitalBody* Planet = new OrbitalBody(
+        System,
+        TCHAR_TO_ANSI(*PlanetRow.Name),
+        Orbital::PLANET,
+        PlanetRow.Mass,
+        PlanetRow.Radius,
+        PlanetRow.Orbit,
+        ParentStar);
+
+    if (!Planet)
+    {
+        return nullptr;
+    }
+
+    Planet->SetMapName(TCHAR_TO_ANSI(*PlanetRow.Icon));
+    Planet->SetTexture(TCHAR_TO_ANSI(*PlanetRow.Texture));
+    Planet->SetRingTexture(TCHAR_TO_ANSI(*PlanetRow.Ring));
+    Planet->SetGlossTexture(TCHAR_TO_ANSI(*PlanetRow.Gloss));
+    Planet->SetRingRange(PlanetRow.Minrad, PlanetRow.Maxrad);
+    Planet->SetRotation(PlanetRow.Rot * 3600.0);
+    Planet->SetRetro(PlanetRow.Retro);
+    Planet->SetTimeScale(PlanetRow.Tscale);
+    Planet->SetTilt(PlanetRow.Tilt);
+    Planet->SetAtmosphere(PlanetRow.Atmos);
+
+    ParentStar->AddSatellite(Planet);
+
+    for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+    {
+        BuildRegionFromMap(System, RegionRow, Planet);
+    }
+
+    for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+    {
+        BuildMoonFromMap(System, MoonRow, Planet);
+    }
+
+    return Planet;
+}
+
+static OrbitalBody* BuildStarFromMap(
+    StarSystem* System,
+    const FS_StarMap& StarRow)
+{
+    if (!System)
+    {
+        return nullptr;
+    }
+
+    OrbitalBody* StarBody = new OrbitalBody(
+        System,
+        TCHAR_TO_ANSI(*StarRow.Name),
+        Orbital::STAR,
+        StarRow.Mass,
+        StarRow.Radius,
+        StarRow.Orbit,
+        System->GetCenter());
+
+    if (!StarBody)
+    {
+        return nullptr;
+    }
+
+    StarBody->SetMapName(TCHAR_TO_ANSI(*StarRow.Map));
+    StarBody->SetTexture(TCHAR_TO_ANSI(*StarRow.Image));
+    StarBody->SetLighting(StarRow.Light, StarRow.Color);
+    StarBody->SetBackColor(StarRow.Back);
+    StarBody->SetRotation(StarRow.Rot * 3600.0);
+    StarBody->SetRetro(StarRow.Retro);
+    StarBody->SetTimeScale(StarRow.Tscale);
+    StarBody->SetSubtype(ConvertSpectralClass(StarRow.Class));
+
+    System->AddBody(StarBody);
+
+    for (const FS_RegionMap& RegionRow : StarRow.Region)
+    {
+        BuildRegionFromMap(System, RegionRow, StarBody);
+    }
+
+    for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+    {
+        BuildPlanetFromMap(System, PlanetRow, StarBody);
+    }
+
+    return StarBody;
+}
+
 // +--------------------------------------------------------------------+
 
 Galaxy::Galaxy(const char* n)
@@ -99,7 +362,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
         return;
     }
 
-    radius = 10;
+    radius = 10.0;
 
     for (const FS_Galaxy& GalaxyRow : Env->GalaxyDataArray)
     {
@@ -111,23 +374,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
         const FString SystemName = GalaxyRow.Name;
         const FVector SystemLoc = GalaxyRow.Location;
         const int32 SystemIFF = GalaxyRow.Iff;
-
-        int StarClass = Star::G;
-
-        switch (GalaxyRow.Class)
-        {
-        case ESPECTRAL_CLASS::O:           StarClass = Star::O;           break;
-        case ESPECTRAL_CLASS::B:           StarClass = Star::B;           break;
-        case ESPECTRAL_CLASS::A:           StarClass = Star::A;           break;
-        case ESPECTRAL_CLASS::F:           StarClass = Star::F;           break;
-        case ESPECTRAL_CLASS::G:           StarClass = Star::G;           break;
-        case ESPECTRAL_CLASS::K:           StarClass = Star::K;           break;
-        case ESPECTRAL_CLASS::M:           StarClass = Star::M;           break;
-        case ESPECTRAL_CLASS::RED_GIANT:   StarClass = Star::RED_GIANT;   break;
-        case ESPECTRAL_CLASS::WHITE_DWARF: StarClass = Star::WHITE_DWARF; break;
-        case ESPECTRAL_CLASS::BLACK_HOLE:  StarClass = Star::BLACK_HOLE;  break;
-        default:                           StarClass = Star::G;           break;
-        }
+        const int32 StarClass = ConvertSpectralClass(GalaxyRow.Class);
 
         StarSystem* StarSys = new StarSystem(
             TCHAR_TO_ANSI(*SystemName),
@@ -135,18 +382,57 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
             SystemIFF,
             StarClass);
 
-        if (StarSys)
+        if (!StarSys)
         {
-            systems.append(StarSys);
-
-            // Register live runtime system with environment subsystem
-            Env->RegisterStarSystem(StarSys);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Galaxy] Registered runtime StarSystem: %s"),
-                *SystemName);
+            continue;
         }
 
+        systems.append(StarSys);
+        Env->RegisterStarSystem(StarSys);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Galaxy] Registered runtime StarSystem: %s"),
+            *SystemName);
+
+        // 1. Hydrate stars / planets / moons / nested regions from Galaxy table:
+        for (const FS_StarMap& StarRow : GalaxyRow.Stellar)
+        {
+            BuildStarFromMap(StarSys, StarRow);
+        }
+
+        // 2. Merge standalone regions table rows:
+        for (const FS_Region& RegionRow : Env->RegionDataArray)
+        {
+            if (RegionRow.Name.IsEmpty())
+            {
+                continue;
+            }
+
+            // Skip duplicates if region already came from GalaxyRow.Stellar:
+            if (StarSys->FindRegion(TCHAR_TO_ANSI(*RegionRow.Name)))
+            {
+                continue;
+            }
+
+            // Only attach rows whose parent resolves inside this system:
+            Orbital* Parent = nullptr;
+
+            if (!RegionRow.Parent.IsEmpty())
+            {
+                Parent = StarSys->FindOrbital(TCHAR_TO_ANSI(*RegionRow.Parent));
+                if (!Parent)
+                {
+                    continue;
+                }
+            }
+
+            BuildRegionFromTable(StarSys, RegionRow);
+        }
+
+        // 3. Recompute final system radius AFTER all bodies and regions exist:
+        StarSys->RecalculateRadius();
+
+        // Build galaxy display star
         Star* NewStar = new Star(
             TCHAR_TO_ANSI(*SystemName),
             SystemLoc,
@@ -156,15 +442,28 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
         {
             stars.append(NewStar);
         }
+
+        // Track overall galaxy radius from system positions:
+        const double Dist = FVector(SystemLoc.X, SystemLoc.Y, SystemLoc.Z).Size();
+        if (Dist > radius)
+        {
+            radius = Dist;
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Galaxy] Hydrated system '%s' Stellar=%d BodiesRadius=%.0f Regions=%d"),
+            *SystemName,
+            GalaxyRow.Stellar.Num(),
+            StarSys->Radius(),
+            StarSys->AllRegions().size());
     }
 
     UE_LOG(LogStarshatterWarsGalaxy, Log,
-        TEXT("[Galaxy] loaded from EnvironmentSubsystem: systems=%d stars=%d"),
+        TEXT("[Galaxy] loaded from EnvironmentSubsystem: systems=%d stars=%d radius=%.0f"),
         systems.size(),
-        stars.size());
+        stars.size(),
+        radius);
 }
-
-// +--------------------------------------------------------------------+
 
 // +--------------------------------------------------------------------+
 
@@ -205,3 +504,4 @@ Galaxy::FindSystemByRegion(const char* rgn_name)
 
     return nullptr;
 }
+

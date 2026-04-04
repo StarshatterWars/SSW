@@ -299,7 +299,7 @@ void UMissionEditorNavDlg::PopulateRegionsForSystem(StarSystem* Sys)
     {
         OrbitalRegion* r = iter.value();
         if (r)
-            RgnCmb->AddOption(FString(r->Name()));
+            RgnCmb->AddOption(FString(r->GetName()));
     }
 
     if (RgnCmb->GetOptionCount() > 0)

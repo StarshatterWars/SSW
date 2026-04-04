@@ -139,7 +139,7 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
 
     if (orbital_region) {
         star_system = orbital_region->System();
-        name = orbital_region->Name();
+        name = orbital_region->GetName();
         location = orbital_region->Location();
 
         grid = new Grid(
@@ -147,7 +147,7 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
             (int32)orbital_region->GetGridSpace()
         );
 
-        if (orbital_region->Type() == Orbital::TERRAIN) {
+        if (orbital_region->GetType() == Orbital::TERRAIN) {
             TerrainRegion* TerrainRegionPtr = (TerrainRegion*)orbital_region;
             terrain = new Terrain(TerrainRegionPtr);
             type = AIR_SPACE;

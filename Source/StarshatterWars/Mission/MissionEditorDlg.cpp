@@ -277,12 +277,12 @@ void UMissionEditorDlg::Show()
             while (++riter)
             {
                 OrbitalRegion* region = riter.value();
-                if (!region || !region->Name())
+                if (!region || !region->GetName())
                     continue;
 
-                CmbRegion->AddOption(ANSI_TO_TCHAR(region->Name()));
+                CmbRegion->AddOption(ANSI_TO_TCHAR(region->GetName()));
 
-                if (!FCStringAnsi::Strcmp(mission->GetRegion(), region->Name()))
+                if (!FCStringAnsi::Strcmp(mission->GetRegion(), region->GetName()))
                 {
                     sel_rgn = idx;
                 }
@@ -511,9 +511,9 @@ void UMissionEditorDlg::OnSystemSelectChanged(FString SelectedItem, ESelectInfo:
         while (++iter)
         {
             OrbitalRegion* region = iter.value();
-            if (region && region->Name())
+            if (region && region->GetName())
             {
-                CmbRegion->AddOption(ANSI_TO_TCHAR(region->Name()));
+                CmbRegion->AddOption(ANSI_TO_TCHAR(region->GetName()));
             }
         }
     }

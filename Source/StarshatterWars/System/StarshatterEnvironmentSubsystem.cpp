@@ -1930,7 +1930,7 @@ void UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 	ClearRuntimeCaches();
 
 	ReadGalaxyDataTable();
-	//ReadStarSystemsTable();
+	ReadStarSystemsTable();
 	//ReadStarsTable();
 	//ReadPlanetsTable();
 	//ReadMoonsTable();

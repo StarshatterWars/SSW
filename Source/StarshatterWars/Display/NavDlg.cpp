@@ -205,7 +205,7 @@ UNavDlg::SetSystem(StarSystem* s)
         // insert objects from star system:
         ListIter<OrbitalBody> star = star_system->Bodies();
         while (++star) {
-            switch (star->Type()) {
+            switch (star->GetType()) {
             case Orbital::STAR:
                 stars.append(star.value());
                 break;
