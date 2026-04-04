@@ -1325,8 +1325,6 @@ struct FS_TerrainRegion : public FTableRowBase
 	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString ApronTexture;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString WaterTexture;
-
-	// These are FILE NAMES in the legacy data, so keep them as strings:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString EnvPosX;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString EnvNegX;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString EnvPosY;

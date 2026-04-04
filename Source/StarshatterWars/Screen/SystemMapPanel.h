@@ -22,7 +22,11 @@
     - Renders the central star using texture-based rendering
     - Uses spectral-class-based star textures
     - Uses FS_Galaxy::Iff to tint the UI ring around the star
-    - Designed to be extended with planets, moons, and orbit rings
+    - Draws larger, clamped, legacy-style tilted orbit ellipses
+    - Draws planets above the orbit rings using FS_PlanetMap::Icon
+    - Scales planets from FS_PlanetMap::Radius
+    - Draws procedural rings for planets that define ring data
+    - Provides moon texture lookup using FS_MoonMap::Icon
 */
 
 #include "CoreMinimal.h"
@@ -63,19 +67,34 @@ protected:
     const FS_StarMap* GetPrimaryStarMap(const FS_Galaxy& InGalaxy) const;
 
     UTexture2D* GetStarTextureForClass(ESPECTRAL_CLASS InClass) const;
+    UTexture2D* GetPlanetTexture(const FS_PlanetMap& InPlanet) const;
+    UTexture2D* GetMoonTexture(const FS_MoonMap& InMoon) const;
+    UTexture2D* LoadPlanetMapTextureByName(const FString& TextureName) const;
 
     float ComputeStarDrawSize(const FS_StarMap& InStar) const;
     float ComputeRingDrawSize(const FS_StarMap& InStar) const;
 
-    FLinearColor ComputeStarTint(const FS_StarMap& InStar) const;
-    FLinearColor ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const;
-
-protected:
+    float ComputeMaxDrawOrbitRadius(const FVector2D& PanelSize, float StarSize) const;
     float ComputePlanetOrbitRadius(const FS_PlanetMap& InPlanet, float MaxOrbitInSystem, float MaxDrawRadius) const;
     float ComputePlanetDrawSize(const FS_PlanetMap& InPlanet) const;
     float ComputePlanetAngleRadians(const FS_PlanetMap& InPlanet, int32 PlanetIndex) const;
 
-    UTexture2D* PlanetFallbackTexture = nullptr;
+    float ComputeMoonOrbitRadius(const FS_MoonMap& InMoon, float MaxMoonOrbitForPlanet, float ParentPlanetDrawSize) const;
+    float ComputeMoonDrawSize(const FS_MoonMap& InMoon) const;
+    float ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const;
+
+    float ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const;
+    float ComputeOrbitVerticalScale(const FS_PlanetMap& InPlanet) const;
+
+    FVector2D ComputeOrbitPosition(
+        const FVector2D& SystemCenter,
+        float OrbitRadius,
+        float OrbitAngleRadians,
+        float OrbitTiltRadians,
+        float VerticalScale) const;
+
+    FLinearColor ComputeStarTint(const FS_StarMap& InStar) const;
+    FLinearColor ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const;
 
 protected:
     UPROPERTY()
