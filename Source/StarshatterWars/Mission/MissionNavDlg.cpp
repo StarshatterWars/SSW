@@ -23,6 +23,10 @@
 #include "MissionNavObjectListObject.h"
 #include "MissionNavObjectListView.h"
 #include "MissionNavObjectLVElement.h"
+
+#include "GalaxyMapPanel.h"
+#include "StarshatterEnvironmentSubsystem.h"
+
 #include "MissionUIStyle.h"
 #include "FormattingUtils.h"
 
@@ -34,6 +38,7 @@
 #include "Orbital.h"
 #include "OrbitalRegion.h"
 #include "StarSystem.h"
+#include "GalaxyMapPanel.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -199,6 +204,11 @@ void UMissionNavDlg::RefreshFromMission()
         }
     }
 
+    if (GalaxyMapPanel && MissionPtr && MissionPtr->GetStarSystem())
+    {
+        GalaxyMapPanel->SetSelectedSystem(FString(MissionPtr->GetStarSystem()->GetName()));
+    }
+
     RefreshObjectListPanel();
     RefreshDetailPanel();
 }
@@ -217,6 +227,9 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     RuntimeHost->SetContent(nullptr);
 
+    // ------------------------------------------------------------
+    // ROOT ROW
+    // ------------------------------------------------------------
     RootContentRow =
         WidgetTree->ConstructWidget<UHorizontalBox>(
             UHorizontalBox::StaticClass(),
@@ -224,6 +237,9 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     RuntimeHost->SetContent(RootContentRow);
 
+    // ------------------------------------------------------------
+    // LEFT PANEL
+    // ------------------------------------------------------------
     LeftPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -244,8 +260,12 @@ void UMissionNavDlg::BuildRuntimeLayout()
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
             TEXT("MissionNavLeftPanelColumn"));
+
     LeftPanelBorder->SetContent(LeftPanelColumn);
 
+    // ------------------------------------------------------------
+    // TOP BUTTON ROW (NAV + ZOOM)
+    // ------------------------------------------------------------
     TopButtonRow =
         WidgetTree->ConstructWidget<UHorizontalBox>(
             UHorizontalBox::StaticClass(),
@@ -262,19 +282,14 @@ void UMissionNavDlg::BuildRuntimeLayout()
             UHorizontalBox::StaticClass(),
             TEXT("MissionNavModeButtonBox"));
 
-    if (UHorizontalBoxSlot* LeftSlot = TopButtonRow->AddChildToHorizontalBox(NavModeButtonBox))
-    {
-        LeftSlot->SetHorizontalAlignment(HAlign_Left);
-        LeftSlot->SetVerticalAlignment(VAlign_Center);
-        LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
+    TopButtonRow->AddChildToHorizontalBox(NavModeButtonBox);
 
-    USpacer* MiddleSpacer =
+    USpacer* Spacer =
         WidgetTree->ConstructWidget<USpacer>(
             USpacer::StaticClass(),
-            TEXT("MissionNavTopSpacer"));
+            TEXT("MissionNavSpacer"));
 
-    if (UHorizontalBoxSlot* SpacerSlot = TopButtonRow->AddChildToHorizontalBox(MiddleSpacer))
+    if (UHorizontalBoxSlot* SpacerSlot = TopButtonRow->AddChildToHorizontalBox(Spacer))
     {
         SpacerSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
@@ -284,122 +299,103 @@ void UMissionNavDlg::BuildRuntimeLayout()
             UHorizontalBox::StaticClass(),
             TEXT("MissionNavZoomButtonBox"));
 
-    if (UHorizontalBoxSlot* RightSlot = TopButtonRow->AddChildToHorizontalBox(ZoomButtonBox))
-    {
-        RightSlot->SetHorizontalAlignment(HAlign_Right);
-        RightSlot->SetVerticalAlignment(VAlign_Center);
-        RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
+    TopButtonRow->AddChildToHorizontalBox(ZoomButtonBox);
 
-    ZoomOutButton =
-        WidgetTree->ConstructWidget<UButton>(
-            UButton::StaticClass(),
-            TEXT("MissionNavZoomOutButton"));
-
-    if (UHorizontalBoxSlot* ZoomOutSlot = ZoomButtonBox->AddChildToHorizontalBox(ZoomOutButton))
-    {
-        ZoomOutSlot->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-        ZoomOutSlot->SetHorizontalAlignment(HAlign_Left);
-        ZoomOutSlot->SetVerticalAlignment(VAlign_Center);
-        ZoomOutSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
-
-    ZoomOutText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            TEXT("MissionNavZoomOutText"));
-    ZoomOutText->SetText(FText::FromString(TEXT("-")));
-    ZoomOutText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    ZoomOutText->SetFont(MissionUIStyle::GetHeaderFont(18));
-    ZoomOutButton->SetContent(ZoomOutText);
-
-    ZoomInButton =
-        WidgetTree->ConstructWidget<UButton>(
-            UButton::StaticClass(),
-            TEXT("MissionNavZoomInButton"));
-
-    if (UHorizontalBoxSlot* ZoomInSlot = ZoomButtonBox->AddChildToHorizontalBox(ZoomInButton))
-    {
-        ZoomInSlot->SetPadding(FMargin(0.f));
-        ZoomInSlot->SetHorizontalAlignment(HAlign_Left);
-        ZoomInSlot->SetVerticalAlignment(VAlign_Center);
-        ZoomInSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
-
-    ZoomInText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            TEXT("MissionNavZoomInText"));
-    ZoomInText->SetText(FText::FromString(TEXT("+")));
-    ZoomInText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    ZoomInText->SetFont(MissionUIStyle::GetHeaderFont(18));
-    ZoomInButton->SetContent(ZoomInText);
-
+    // ------------------------------------------------------------
+    // MAIN VIEW HOST
+    // ------------------------------------------------------------
     MainViewHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavMainViewHost"));
 
-    if (UVerticalBoxSlot* MainViewSlot = LeftPanelColumn->AddChildToVerticalBox(MainViewHost))
+    if (UVerticalBoxSlot* VSlot = LeftPanelColumn->AddChildToVerticalBox(MainViewHost))
     {
-        MainViewSlot->SetPadding(FMargin(0.f));
-        MainViewSlot->SetHorizontalAlignment(HAlign_Fill);
-        MainViewSlot->SetVerticalAlignment(VAlign_Fill);
-        MainViewSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        VSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
     NavSwitcher =
         WidgetTree->ConstructWidget<UWidgetSwitcher>(
             UWidgetSwitcher::StaticClass(),
             TEXT("MissionNavSwitcher"));
+
     MainViewHost->SetContent(NavSwitcher);
 
+    // ------------------------------------------------------------
+    // GALAXY PANEL HOST
+    // ------------------------------------------------------------
     GalaxyPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavGalaxyPanelHost"));
+
     NavSwitcher->AddChild(GalaxyPanelHost);
 
+    if (!GalaxyMapPanelClass)
+    {
+        GalaxyMapPanelClass = LoadClass<UGalaxyMapPanel>(
+            nullptr,
+            TEXT("/Game/Screens/Mission/WBP_GalaxyMapPanel.WBP_GalaxyMapPanel_C"));
+    }
+
+    if (!GalaxyMapPanelClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("MissionNavDlg: Failed to load WBP_GalaxyMapPanel"));
+    }
+    else
+    {
+        GalaxyMapPanel = CreateWidget<UGalaxyMapPanel>(GetWorld(), GalaxyMapPanelClass);
+
+        if (!GalaxyMapPanel)
+        {
+            UE_LOG(LogTemp, Error, TEXT("MissionNavDlg: Failed to create GalaxyMapPanel widget"));
+        }
+        else
+        {
+            GalaxyMapPanel->SetOwnerNavDlg(this);
+            GalaxyPanelHost->SetContent(GalaxyMapPanel);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("MissionNavDlg: Created GalaxyMapPanel from %s"),
+                *GetNameSafe(GalaxyMapPanelClass));
+        }
+    }
+
+    // ------------------------------------------------------------
+    // SYSTEM + SECTOR HOSTS (unchanged)
+    // ------------------------------------------------------------
     SystemPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavSystemPanelHost"));
+
     NavSwitcher->AddChild(SystemPanelHost);
 
     SectorPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavSectorPanelHost"));
+
     NavSwitcher->AddChild(SectorPanelHost);
 
-    NavBodyText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            TEXT("MissionNavBodyText"));
-    NavBodyText->SetText(FText::FromString(TEXT("SYSTEM NAVIGATION")));
-    NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(20));
-    SystemPanelHost->SetContent(NavBodyText);
-
+    // ------------------------------------------------------------
+    // RIGHT PANEL (unchanged)
+    // ------------------------------------------------------------
     RightPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
             TEXT("MissionNavRightPanelBorder"));
 
-    RightPanelBorder->SetPadding(FMargin(0.f));
-
-    if (UHorizontalBoxSlot* RightPanelSlot = RootContentRow->AddChildToHorizontalBox(RightPanelBorder))
+    if (UHorizontalBoxSlot* RightSlot = RootContentRow->AddChildToHorizontalBox(RightPanelBorder))
     {
-        RightPanelSlot->SetPadding(FMargin(0.f));
-        RightPanelSlot->SetHorizontalAlignment(HAlign_Fill);
-        RightPanelSlot->SetVerticalAlignment(VAlign_Fill);
-        RightPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
     RightPanelColumn =
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
             TEXT("MissionNavRightPanelColumn"));
+
     RightPanelBorder->SetContent(RightPanelColumn);
 
     BuildRightPanels();
@@ -1315,6 +1311,11 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 
 void UMissionNavDlg::OnZoomInClicked()
 {
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        GalaxyMapPanel->ZoomIn();
+    }
+
     if (Manager)
     {
         Manager->NavZoomIn();
@@ -1323,8 +1324,14 @@ void UMissionNavDlg::OnZoomInClicked()
 
 void UMissionNavDlg::OnZoomOutClicked()
 {
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        GalaxyMapPanel->ZoomOut();
+    }
+
     if (Manager)
     {
         Manager->NavZoomOut();
     }
 }
+

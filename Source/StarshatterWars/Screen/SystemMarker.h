@@ -1,71 +1,75 @@
-// /*  Project nGenEx	Fractal Dev Games	Copyright (C) 2024. All Rights Reserved.	SUBSYSTEM:    SSW	FILE:         Game.cpp	AUTHOR:       Carlos Bott*/
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    SUBSYSTEM:    SSW
+    FILE:         SystemMarker.h
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Galaxy system marker widget.
+*/
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameStructs.h"
-#include "Components/Image.h"
-#include "Components/TextBlock.h"
-#include "Components/Border.h"
-#include "Engine/Texture2D.h"
-#include "SSWGameInstance.h"
 #include "SystemMarker.generated.h"
 
-/**
- * 
- */
+class UBorder;
+class UImage;
+class UTextBlock;
+class UTexture2D;
 
-DECLARE_DELEGATE_OneParam(FOnMarkerClicked, const FString&);
+DECLARE_DELEGATE_OneParam(FOnSystemMarkerClicked, const FString&);
 
 UCLASS()
 class STARSHATTERWARS_API USystemMarker : public UUserWidget
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 public:
-    UPROPERTY(meta = (BindWidgetOptional))
-    UImage* StarImage;
-    UPROPERTY(meta = (BindWidgetOptional))
-    UImage* IffImage;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* SystemNameText;
-
-    UPROPERTY(meta = (BindWidgetOptional))
-    UBorder* HighlightBorder;
-
-    FS_Galaxy SystemData;
-
-    FOnMarkerClicked OnClicked;
-
-    // Initialize with system data and available textures
-    UFUNCTION()
-    void Init(const FS_Galaxy& System);
-    UTexture2D* LoadTextureFromFile(FString Path);
-    FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize);
-    
-    UFUNCTION()
+    void Init(const FS_Galaxy& System, UTexture2D* InStarTexture);
     void SetSelected(bool bIsSelected);
 
-    FString GetSystemName() const { return SystemData.Name; }
+    virtual void NativeConstruct() override;
+    virtual FReply NativeOnMouseButtonDown(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "Galaxy")
-    void PlayGlow();
+    FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize) const;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "Galaxy")
-    void StopGlow();
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Galaxy")
-    void PlayIFFPulse();
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Galaxy")
-    void StopIFFPulse();
+public:
+    FOnSystemMarkerClicked OnClicked;
 
 protected:
-    void NativeConstruct() override;
-    virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UTextBlock* SystemNameText = nullptr;
 
- private:
-    FLinearColor Tint;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UImage* StarImage = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UImage* IffImage = nullptr;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UBorder* HighlightBorder = nullptr;
+
+    UPROPERTY(BlueprintReadOnly, Category = "System Marker")
+    FS_Galaxy SystemData;
+
+    UPROPERTY(BlueprintReadOnly, Category = "System Marker")
     FString SystemName;
+
+    UPROPERTY(BlueprintReadOnly, Category = "System Marker")
+    FLinearColor Tint = FLinearColor::Gray;
+
+protected:
+    UFUNCTION(BlueprintImplementableEvent)
+    void PlayGlow();
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void StopGlow();
 };

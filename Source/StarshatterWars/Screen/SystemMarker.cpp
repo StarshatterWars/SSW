@@ -1,141 +1,155 @@
-// /*  Project nGenEx	Fractal Dev Games	Copyright (C) 2024. All Rights Reserved.	SUBSYSTEM:    SSW	FILE:         Game.cpp	AUTHOR:       Carlos Bott*/
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
 
+    SUBSYSTEM:    SSW
+    FILE:         SystemMarker.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Galaxy system marker widget.
+*/
 
 #include "SystemMarker.h"
+
 #include "Components/Border.h"
+#include "Components/Image.h"
+#include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
+#include "Input/Reply.h"
+#include "InputCoreTypes.h"
 
-void USystemMarker::Init(const FS_Galaxy& System)
-{    
-    UE_LOG(LogTemp, Log, TEXT("USystemMarker::Init() Creating Widget: %s"), *System.Name);
-
-    SystemData = System;
-
-    SetToolTipText(FText::FromString(System.Name));
-
-    // Optional: Add border color by faction
-    FLinearColor EmpireColor;
-    SystemName = System.Name;
-
-    switch (System.Empire) {
-    case EEMPIRE_NAME::Terellian: EmpireColor = FLinearColor::Green; break;
-    case EEMPIRE_NAME::Marakan: EmpireColor = FLinearColor::Red; break;
-    default: EmpireColor = FLinearColor::Gray; break;
-    }
-
-    if (SystemNameText) {
-        SystemNameText->SetText(FText::FromString(System.Name));
-        SystemNameText->SetColorAndOpacity(EmpireColor);
-    }
-
-    FString ProjectPath = FPaths::ProjectContentDir();
-    ProjectPath.Append(TEXT("GameData/Galaxy/StarIcons/"));
-    
-    switch (System.Stellar[0].Class) {
-        case ESPECTRAL_CLASS::A:
-            ProjectPath.Append(TEXT("StarA_map.png"));
-            break;
-        case ESPECTRAL_CLASS::B:
-            ProjectPath.Append(TEXT("StarB_map.png"));
-            break;
-        case ESPECTRAL_CLASS::F:
-            ProjectPath.Append(TEXT("StarF_map.png"));
-            break;
-        case ESPECTRAL_CLASS::G:
-            ProjectPath.Append(TEXT("StarG_map.png"));
-            break;
-        case ESPECTRAL_CLASS::K:
-            ProjectPath.Append(TEXT("StarK_map.png"));
-            break;
-        case ESPECTRAL_CLASS::M:
-            ProjectPath.Append(TEXT("StarM_map.png"));
-            break;
-        case ESPECTRAL_CLASS::O:
-            ProjectPath.Append(TEXT("StarO_map.png"));
-            break;
-        default:
-            ProjectPath.Append(TEXT("StarG_map.png"));
-            break;
-    }
-
-    UTexture2D* LoadedTexture = LoadTextureFromFile(ProjectPath);
-    if (LoadedTexture)
+namespace
+{
+    static FLinearColor GetEmpireColor(EEMPIRE_NAME Empire)
     {
-        UE_LOG(LogTemp, Log, TEXT("USystemMarker::Init() Creating Image: %s"), *ProjectPath);
-        FSlateBrush Brush = CreateBrushFromTexture(LoadedTexture, FVector2D(LoadedTexture->GetSizeX(), LoadedTexture->GetSizeY()));
-        
-        if(!StarImage) {
-            UE_LOG(LogTemp, Log, TEXT("USystemMarker::Init() StarImage notxFound")); 
-        } else {
-            StarImage->SetBrush(Brush);
+        switch (Empire)
+        {
+        case EEMPIRE_NAME::Terellian:
+            return FLinearColor::Green;
+
+        case EEMPIRE_NAME::Marakan:
+            return FLinearColor::Red;
+
+        case EEMPIRE_NAME::Independent:
+        case EEMPIRE_NAME::Neutral:
+            return FLinearColor::Gray;
+
+        default:
+            return FLinearColor::Gray;
         }
-
-        SetSelected(false);
     }
 
-    // Optional: Add border color by faction
-
-    switch (System.Iff) {
-    case 0: Tint = FLinearColor::Gray; break;
-    case 1: Tint = FLinearColor::Green; break;
-    case 2: Tint = FLinearColor::Red; break;
-    default: Tint = FLinearColor::Gray; break;
+    static FLinearColor GetIffTint(int32 Iff)
+    {
+        switch (Iff)
+        {
+        case 0:  return FLinearColor::Gray;
+        case 1:  return FLinearColor::Green;
+        case 2:  return FLinearColor::Red;
+        default: return FLinearColor::Gray;
+        }
     }
-
-    if (IffImage) {
-        IffImage->SetColorAndOpacity(Tint);
-    }
-}
-
-UTexture2D* USystemMarker::LoadTextureFromFile(FString Path)
-{
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    UTexture2D* LoadedTexture = SSWInstance->LoadPNGTextureFromFile(Path);
-    return LoadedTexture;
-}
-
-FSlateBrush USystemMarker::CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize)
-{
-    FSlateBrush Brush;
-    Brush.SetResourceObject(Texture);
-    Brush.ImageSize = ImageSize;
-    Brush.DrawAs = ESlateBrushDrawType::Image;
-    return Brush;
 }
 
 void USystemMarker::NativeConstruct()
 {
     Super::NativeConstruct();
-    //UE_LOG(LogTemp, Log, TEXT("StarImage is %s"), StarImage ? TEXT("Valid") : TEXT("NULL"));
+
+    UE_LOG(LogTemp, Log,
+        TEXT("USystemMarker::NativeConstruct() StarImage=%s SystemNameText=%s IffImage=%s HighlightBorder=%s"),
+        StarImage ? TEXT("VALID") : TEXT("NULL"),
+        SystemNameText ? TEXT("VALID") : TEXT("NULL"),
+        IffImage ? TEXT("VALID") : TEXT("NULL"),
+        HighlightBorder ? TEXT("VALID") : TEXT("NULL"));
 }
 
-void USystemMarker::SetSelected(bool bIsSelected)
+void USystemMarker::Init(const FS_Galaxy& System, UTexture2D* InStarTexture)
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    
-    SSWInstance->SelectedSystem = SystemName;
+    UE_LOG(LogTemp, Log, TEXT("USystemMarker::Init() Creating Widget: %s"), *System.Name);
 
-    if (HighlightBorder)
+    SystemData = System;
+    SystemName = System.Name;
+    Tint = GetIffTint(System.Iff);
+
+    SetToolTipText(FText::FromString(System.Name));
+
+    const FLinearColor EmpireColor = GetEmpireColor(System.Empire);
+
+    if (SystemNameText)
     {
-        HighlightBorder->SetVisibility(bIsSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+        SystemNameText->SetText(FText::FromString(System.Name));
+        SystemNameText->SetColorAndOpacity(EmpireColor);
+        SystemNameText->SetVisibility(ESlateVisibility::Hidden);
     }
 
     if (IffImage)
     {
-        if(bIsSelected) {     
-            IffImage->SetColorAndOpacity(FLinearColor::Yellow);
-        }
-        else {
-            IffImage->SetColorAndOpacity(Tint);
-        }
-     }
+        IffImage->SetColorAndOpacity(Tint);
+    }
 
-    if (bIsSelected)
+    if (InStarTexture && StarImage)
     {
-        PlayGlow();   // Blueprint event
+        const FSlateBrush Brush = CreateBrushFromTexture(
+            InStarTexture,
+            FVector2D((float)InStarTexture->GetSizeX(), (float)InStarTexture->GetSizeY()));
+
+        StarImage->SetBrush(Brush);
     }
     else
     {
-        StopGlow();   // Blueprint event
+        UE_LOG(LogTemp, Warning,
+            TEXT("USystemMarker::Init() Missing star texture or StarImage for %s"),
+            *System.Name);
+    }
+
+    SetSelected(false);
+}
+
+FSlateBrush USystemMarker::CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize) const
+{
+    FSlateBrush Brush;
+
+    if (!Texture)
+    {
+        return Brush;
+    }
+
+    Brush.SetResourceObject(Texture);
+    Brush.ImageSize = ImageSize;
+    Brush.DrawAs = ESlateBrushDrawType::Image;
+
+    return Brush;
+}
+
+void USystemMarker::SetSelected(bool bIsSelected)
+{
+    if (HighlightBorder)
+    {
+        HighlightBorder->SetVisibility(
+            bIsSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+    }
+
+    if (IffImage)
+    {
+        IffImage->SetColorAndOpacity(
+            bIsSelected ? FLinearColor::Yellow : Tint);
+    }
+
+    if (SystemNameText)
+    {
+        SystemNameText->SetVisibility(
+            bIsSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+    }
+
+    if (bIsSelected)
+    {
+        PlayGlow();
+    }
+    else
+    {
+        StopGlow();
     }
 }
 
@@ -149,4 +163,3 @@ FReply USystemMarker::NativeOnMouseButtonDown(const FGeometry& InGeometry, const
 
     return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
-

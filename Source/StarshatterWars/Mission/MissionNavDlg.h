@@ -35,6 +35,7 @@
 
 class UBorder;
 class UButton;
+class UGalaxyMapPanel;
 class UHorizontalBox;
 class UMenuButton;
 class USizeBox;
@@ -122,13 +123,11 @@ protected:
     UMenuButton* CreateNavModeButton(const FString& Label, UHorizontalBox* ParentBox);
     UMenuButton* CreateFilterButton(const FString& Label, int32 Row, int32 Column);
 
-    // Real data builders:
     void BuildSystemObjects();
     void BuildPlanetObjects();
     void BuildSectorObjects();
     void BuildMissionElementObjects(EMissionNavObjectType ObjectType);
 
-    // Utility:
     void AddObjectItem(
         EMissionNavObjectType ObjectType,
         int32 Index,
@@ -143,6 +142,8 @@ protected:
     UPROPERTY(Transient)
     UMissionPlanner* Manager = nullptr;
 
+    UPROPERTY(EditAnywhere, Category = "Mission Nav")
+    TSubclassOf<UGalaxyMapPanel> GalaxyMapPanelClass;
 private:
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
@@ -205,6 +206,9 @@ private:
 
     UPROPERTY()
     USizeBox* GalaxyPanelHost = nullptr;
+
+    UPROPERTY()
+    UGalaxyMapPanel* GalaxyMapPanel = nullptr;
 
     UPROPERTY()
     USizeBox* SystemPanelHost = nullptr;

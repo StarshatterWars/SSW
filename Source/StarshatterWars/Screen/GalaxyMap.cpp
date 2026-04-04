@@ -37,7 +37,7 @@ void UGalaxyMap::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UGalaxyMap::BuildGalaxyMap(const TArray<FS_Galaxy>& Systems)
 {
-	USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
+	/*USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
 	if (!MapRoot)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UGalaxyMap::BuildGalaxyMap(): Missing MapRoot"));
@@ -108,7 +108,7 @@ void UGalaxyMap::BuildGalaxyMap(const TArray<FS_Galaxy>& Systems)
 		}
 	}
 
-	for (const FS_Galaxy& System : Systems)
+	/*for (const FS_Galaxy& System : Systems)
 	{
 		SystemLookup.Add(System.Name, System);
 		// Step 1: Register all systems
@@ -116,9 +116,8 @@ void UGalaxyMap::BuildGalaxyMap(const TArray<FS_Galaxy>& Systems)
 		if (!Marker) continue;
 		MapCanvas->AddChildToCanvas(Marker);
 		
-		Marker->Init(System);
+		//Marker->Init(System);
 
-	
 		USystemMarker* LocalMarker = Marker; // capture marker per loop
 
 		/*LocalMarker->OnClicked.BindLambda([this, LocalMarker](const FString& SystemName)
@@ -162,7 +161,7 @@ void UGalaxyMap::BuildGalaxyMap(const TArray<FS_Galaxy>& Systems)
 			});
 			*/
 
-		LocalMarker->OnClicked.BindLambda([this, LocalMarker](const FString& SystemName)
+		/*LocalMarker->OnClicked.BindLambda([this, LocalMarker](const FString& SystemName)
 			{
 				if (CurrentSystemName == SystemName)
 				{
@@ -269,7 +268,7 @@ void UGalaxyMap::BuildGalaxyMap(const TArray<FS_Galaxy>& Systems)
 				DrawLinkBetween(System, *LinkedSystem);
 			}
 		}
-	}
+	}*/
 }
 
 
