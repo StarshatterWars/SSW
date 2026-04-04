@@ -1,33 +1,38 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios LLC
-    Copyright (c) 2025-2026. All Rights Reserved.
+#pragma once
 
-    ORIGINAL SYSTEM
-    ===============
-    Starshatter 4.5 (Destroyer Studios)
+/*
+    Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2024-2026. All Rights Reserved.
 
-    SUBSYSTEM:    Stars.exe (Unreal Port)
+    ORIGINAL AUTHOR AND STUDIO:
+    John DiCamillo / Destroyer Studios LLC
+
+    SUBSYSTEM:    UI
     FILE:         SystemMapPanel.h
     AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========
-    USystemMapPanel
+    System-level map panel for Mission Navigation.
 
-    System-level navigation panel hosted by UMissionNavDlg.
-    Displays the currently selected star system and will later
-    render the full orbital/system map.
+    This panel renders a star system using map-driven data:
+
+    - Uses FS_Galaxy and FS_StarMap as the data source
+    - Renders the central star using texture-based rendering
+    - Uses spectral-class-based star textures
+    - Uses FS_Galaxy::Iff to tint the UI ring around the star
+    - Designed to be extended with planets, moons, and orbit rings
 */
-
-#pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "GameStructs.h"
 #include "SystemMapPanel.generated.h"
 
-class UBorder;
 class UCanvasPanel;
 class UTextBlock;
+class UTexture2D;
 
 UCLASS()
 class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
@@ -37,26 +42,66 @@ class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
 public:
     virtual void NativeConstruct() override;
 
+    virtual int32 NativePaint(
+        const FPaintArgs& Args,
+        const FGeometry& AllottedGeometry,
+        const FSlateRect& MyCullingRect,
+        FSlateWindowElementList& OutDrawElements,
+        int32 LayerId,
+        const FWidgetStyle& InWidgetStyle,
+        bool bParentEnabled) const override;
+
+public:
     void SetViewedSystemName(const FString& InSystemName);
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
 
 protected:
-    void BuildRuntimeLayout();
+    void BuildLayout();
     void RefreshView();
 
-protected:
-    UPROPERTY(meta = (BindWidgetOptional))
-    UCanvasPanel* RootCanvas = nullptr;
+    bool ResolveViewedGalaxy(FS_Galaxy& OutGalaxy) const;
+    const FS_StarMap* GetPrimaryStarMap(const FS_Galaxy& InGalaxy) const;
 
+    UTexture2D* GetStarTextureForClass(ESPECTRAL_CLASS InClass) const;
+
+    float ComputeStarDrawSize(const FS_StarMap& InStar) const;
+    float ComputeRingDrawSize(const FS_StarMap& InStar) const;
+
+    FLinearColor ComputeStarTint(const FS_StarMap& InStar) const;
+    FLinearColor ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const;
+
+protected:
+    float ComputePlanetOrbitRadius(const FS_PlanetMap& InPlanet, float MaxOrbitInSystem, float MaxDrawRadius) const;
+    float ComputePlanetDrawSize(const FS_PlanetMap& InPlanet) const;
+    float ComputePlanetAngleRadians(const FS_PlanetMap& InPlanet, int32 PlanetIndex) const;
+
+    UTexture2D* PlanetFallbackTexture = nullptr;
+
+protected:
     UPROPERTY()
-    UBorder* RootBorder = nullptr;
+    UCanvasPanel* RootCanvas = nullptr;
 
     UPROPERTY()
     UTextBlock* HeaderText = nullptr;
 
     UPROPERTY()
-    UTextBlock* BodyText = nullptr;
+    UTextBlock* InfoText = nullptr;
 
     UPROPERTY()
     FString ViewedSystemName;
+
+    UPROPERTY()
+    bool bValidSystem = false;
+
+    UPROPERTY()
+    FS_Galaxy CachedGalaxyRow;
+
+    UPROPERTY()
+    FS_StarMap CachedPrimaryStarMap;
+
+    UPROPERTY()
+    TMap<ESPECTRAL_CLASS, TObjectPtr<UTexture2D>> StarTextureCache;
+
+    UPROPERTY()
+    UTexture2D* IFFRingTexture = nullptr;
 };
