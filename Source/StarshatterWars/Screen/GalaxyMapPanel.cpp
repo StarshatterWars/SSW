@@ -33,6 +33,41 @@
 #include "InputCoreTypes.h"
 #include "Rendering/DrawElements.h"
 
+void DrawCircle(
+    FSlateWindowElementList& OutDrawElements,
+    int32 LayerId,
+    const FGeometry& Geometry,
+    const FVector2D& Center,
+    float Radius,
+    const FLinearColor& Color,
+    float Thickness = 1.5f,
+    int32 NumSegments = 24)
+{
+    TArray<FVector2D> Points;
+    Points.Reserve(NumSegments + 1);
+
+    for (int32 i = 0; i <= NumSegments; ++i)
+    {
+        float Angle = (2.0f * PI * i) / NumSegments;
+
+        FVector2D P(
+            Center.X + FMath::Cos(Angle) * Radius,
+            Center.Y + FMath::Sin(Angle) * Radius);
+
+        Points.Add(P);
+    }
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId,
+        Geometry.ToPaintGeometry(),
+        Points,
+        ESlateDrawEffect::None,
+        Color,
+        true,
+        Thickness);
+}
+
 UGalaxyMapPanel::UGalaxyMapPanel(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -231,31 +266,23 @@ int32 UGalaxyMapPanel::NativePaint(
         {
             continue;
         }
-
+        
         // -------------------------------------------------
-        // IFF ring
+        // IFF ring (CIRCLE)
         // -------------------------------------------------
         {
-            const float RingPad = 6.0f;
-            const FVector2D RingMin = DrawPos - FVector2D(RingPad, RingPad);
-            const FVector2D RingMax = DrawPos + DrawSize + FVector2D(RingPad, RingPad);
+            const float Radius = 0.5f * DrawSize.X + 4.0f;
 
-            TArray<FVector2D> RingPoints;
-            RingPoints.Add(FVector2D(RingMin.X, RingMin.Y));
-            RingPoints.Add(FVector2D(RingMax.X, RingMin.Y));
-            RingPoints.Add(FVector2D(RingMax.X, RingMax.Y));
-            RingPoints.Add(FVector2D(RingMin.X, RingMax.Y));
-            RingPoints.Add(FVector2D(RingMin.X, RingMin.Y));
-
-            FSlateDrawElement::MakeLines(
+            DrawCircle(
                 OutDrawElements,
                 LayerId + 2,
-                AllottedGeometry.ToPaintGeometry(),
-                RingPoints,
-                ESlateDrawEffect::None,
+                AllottedGeometry,
+                ScreenPos,
+                Radius,
                 GetIFFRingColor(SystemRow),
-                true,
-                1.5f);
+                1.5f,
+                28 // smoother circle
+            );
         }
 
         // -------------------------------------------------
