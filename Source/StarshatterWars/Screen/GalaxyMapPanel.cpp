@@ -150,15 +150,11 @@ int32 UGalaxyMapPanel::NativePaint(
         return LayerId;
     }
 
-    // Projection/layout rect:
-    const FSlateRect SafeRect = GetUsablePanelRect(PanelSize);
-
-    // Visibility/culling rect:
     const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
 
-    // ---------------------------------------------------------------------
-    // Draw jump links
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------
+    // Draw links
+    // -------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -178,7 +174,7 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            if (SystemName.Compare(LinkedName, ESearchCase::IgnoreCase) >= 0)
+            if (SystemName >= LinkedName)
             {
                 continue;
             }
@@ -196,9 +192,7 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            TArray<FVector2D> Points;
-            Points.Add(Start);
-            Points.Add(End);
+            TArray<FVector2D> Points = { Start, End };
 
             FLinearColor LinkColor = FLinearColor(0.70f, 0.78f, 0.92f, 0.65f);
 
@@ -219,9 +213,9 @@ int32 UGalaxyMapPanel::NativePaint(
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Draw star markers + IFF rings + selection ring
-    // ---------------------------------------------------------------------
+    // -------------------------------------------------
+    // Draw markers + rings + labels
+    // -------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -241,37 +235,35 @@ int32 UGalaxyMapPanel::NativePaint(
             continue;
         }
 
-        float BaseMarkerSize = 28.0f;
+        float BaseSize = 28.0f;
 
         if (SystemName == SelectedSystemName)
         {
-            BaseMarkerSize = 38.0f;
+            BaseSize = 38.0f;
         }
         else if (SystemName == CurrentMissionSystemName)
         {
-            BaseMarkerSize = 34.0f;
+            BaseSize = 34.0f;
         }
 
-        const FVector2D DrawSize(BaseMarkerSize * MarkerRenderScale, BaseMarkerSize * MarkerRenderScale);
-        const FVector2D DrawPos = ScreenPos - (DrawSize * 0.5f);
+        const FVector2D DrawSize(BaseSize * MarkerRenderScale);
+        const FVector2D DrawPos = ScreenPos - DrawSize * 0.5f;
 
-        const float Pad = 48.0f;
-        const bool bOutside =
+        // Coarse culling
+        const float Pad = 64.0f;
+        if (DrawPos.X > ClipRect.Right + Pad ||
             DrawPos.X + DrawSize.X < ClipRect.Left - Pad ||
-            DrawPos.X > ClipRect.Right + Pad ||
-            DrawPos.Y + DrawSize.Y < ClipRect.Top - Pad ||
-            DrawPos.Y > ClipRect.Bottom + Pad;
-
-        if (bOutside)
+            DrawPos.Y > ClipRect.Bottom + Pad ||
+            DrawPos.Y + DrawSize.Y < ClipRect.Top - Pad)
         {
             continue;
         }
-        
+
         // -------------------------------------------------
-        // IFF ring (CIRCLE)
+        // IFF ring (circle)
         // -------------------------------------------------
         {
-            const float Radius = 0.5f * DrawSize.X + 4.0f;
+            const float Radius = 0.5f * DrawSize.X + 5.0f;
 
             DrawCircle(
                 OutDrawElements,
@@ -281,62 +273,84 @@ int32 UGalaxyMapPanel::NativePaint(
                 Radius,
                 GetIFFRingColor(SystemRow),
                 1.5f,
-                28 // smoother circle
-            );
+                28);
         }
 
         // -------------------------------------------------
-        // Star marker
+        // Star
         // -------------------------------------------------
-        FSlateBrush MarkerBrush;
-        MarkerBrush.DrawAs = ESlateBrushDrawType::Image;
-        MarkerBrush.SetResourceObject(StarTex);
-        MarkerBrush.ImageSize = DrawSize;
-
-        FLinearColor StarTint = FLinearColor::White;
-
-        if (SystemName == CurrentMissionSystemName)
-        {
-            StarTint = FLinearColor(0.85f, 1.00f, 0.85f, 1.0f);
-        }
+        FSlateBrush Brush;
+        Brush.SetResourceObject(StarTex);
+        Brush.ImageSize = DrawSize;
 
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             LayerId + 3,
             AllottedGeometry.ToPaintGeometry(DrawPos, DrawSize),
-            &MarkerBrush,
+            &Brush,
             ESlateDrawEffect::None,
-            StarTint);
+            FLinearColor::White);
 
         // -------------------------------------------------
-        // Selected system ring
+        // Selection ring (circle)
         // -------------------------------------------------
         if (SystemName == SelectedSystemName)
         {
-            const float SelPad = 12.0f;
-            const FVector2D SelMin = DrawPos - FVector2D(SelPad, SelPad);
-            const FVector2D SelMax = DrawPos + DrawSize + FVector2D(SelPad, SelPad);
+            const float Radius = 0.5f * DrawSize.X + 12.0f;
 
-            TArray<FVector2D> SelPoints;
-            SelPoints.Add(FVector2D(SelMin.X, SelMin.Y));
-            SelPoints.Add(FVector2D(SelMax.X, SelMin.Y));
-            SelPoints.Add(FVector2D(SelMax.X, SelMax.Y));
-            SelPoints.Add(FVector2D(SelMin.X, SelMax.Y));
-            SelPoints.Add(FVector2D(SelMin.X, SelMin.Y));
-
-            FSlateDrawElement::MakeLines(
+            DrawCircle(
                 OutDrawElements,
                 LayerId + 4,
-                AllottedGeometry.ToPaintGeometry(),
-                SelPoints,
+                AllottedGeometry,
+                ScreenPos,
+                Radius,
+                FLinearColor(1.0f, 0.95f, 0.4f, 1.0f),
+                2.0f,
+                32);
+        }
+
+        // -------------------------------------------------
+        // Name label
+        // -------------------------------------------------
+        const bool bShowName =
+            (SystemName == SelectedSystemName) ||
+            (SystemName == CurrentMissionSystemName) ||
+            (MapZoomLevel >= 1.1f);
+
+        if (bShowName)
+        {
+            const float LabelWidth = 140.0f;
+            const float LabelHeight = 20.0f;
+
+            const FVector2D TextPos(
+                ScreenPos.X - (LabelWidth * 0.5f),
+                ScreenPos.Y + (0.5f * DrawSize.Y) + 8.0f);
+
+            FSlateFontInfo FontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 10);
+
+            FLinearColor TextColor = FLinearColor(0.90f, 0.95f, 1.0f, 0.95f);
+
+            if (SystemName == SelectedSystemName)
+            {
+                TextColor = FLinearColor(1.0f, 0.95f, 0.55f, 1.0f);
+            }
+            else if (SystemName == CurrentMissionSystemName)
+            {
+                TextColor = FLinearColor(0.75f, 1.0f, 0.75f, 1.0f);
+            }
+
+            FSlateDrawElement::MakeText(
+                OutDrawElements,
+                LayerId + 5,
+                AllottedGeometry.ToPaintGeometry(TextPos, FVector2D(LabelWidth, LabelHeight)),
+                SystemName,
+                FontInfo,
                 ESlateDrawEffect::None,
-                FLinearColor(1.00f, 0.95f, 0.40f, 1.0f),
-                true,
-                1.75f);
+                TextColor);
         }
     }
 
-    return LayerId + 4;
+    return LayerId + 5;
 }
 
 void UGalaxyMapPanel::CacheStarTextures()
