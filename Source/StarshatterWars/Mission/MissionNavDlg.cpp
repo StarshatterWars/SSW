@@ -1496,11 +1496,14 @@ void UMissionNavDlg::BuildPlanetObjects()
                     continue;
                 }
 
-                const FString MoonPrimary = FString(Moon->GetName());
+                const FString MoonPrimary = FString::Printf(
+                    TEXT("- %s"),
+                    *FString(Moon->GetName()));
+
                 const FString MoonSecondary = TEXT("MOON");
                 const FString MoonDetail = FString::Printf(
                     TEXT("%s\n\nTYPE: MOON\nORBIT: %.0f\nRADIUS: %.0f"),
-                    *MoonPrimary,
+                    *FString(Moon->GetName()),
                     Moon->Orbit(),
                     Moon->Radius());
 
