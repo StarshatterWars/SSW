@@ -893,7 +893,7 @@ void UMissionNavDlg::BuildRightPanels()
             UTextBlock::StaticClass(),
             TEXT("MissionNavObjectListTitleText"));
     ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
-    ObjectListTitleText->SetJustification(ETextJustify::Left);
+    ObjectListTitleText->SetJustification(ETextJustify::Center);
     ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
     ObjectListTitleBar->SetContent(ObjectListTitleText);
@@ -962,7 +962,7 @@ void UMissionNavDlg::BuildRightPanels()
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailTitleText"));
     DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
-    DetailTitleText->SetJustification(ETextJustify::Left);
+    DetailTitleText->SetJustification(ETextJustify::Center);
     DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
     DetailTitleBar->SetContent(DetailTitleText);
@@ -1212,24 +1212,20 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
 {
     CurrentNavMode = NewMode;
 
-    if (NavSwitcher)
-    {
-        NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
-    }
-
-    RefreshNavModeSelection();
-
     switch (CurrentNavMode)
     {
     case EMissionNavMode::GALAXY:
+        CurrentFilterMode = EMissionNavFilterMode::SYSTEM;
         if (Manager) Manager->NavModeGalaxy();
         break;
 
     case EMissionNavMode::SYSTEM:
+        CurrentFilterMode = EMissionNavFilterMode::SECTOR;
         if (Manager) Manager->NavModeSystem();
         break;
 
     case EMissionNavMode::SECTOR:
+        CurrentFilterMode = EMissionNavFilterMode::STARSHIP;
         if (Manager) Manager->NavModeSector();
         break;
 
@@ -1237,6 +1233,13 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
         break;
     }
 
+    if (NavSwitcher)
+    {
+        NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
+    }
+
+    RefreshNavModeSelection();
+    RefreshFilterSelection();
     RefreshFromMission();
 }
 
@@ -1265,7 +1268,7 @@ FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
 
 FString UMissionNavDlg::GetObjectPanelTitle() const
 {
-    return FString::Printf(TEXT("%s LIST"), *GetFilterModeLabel(CurrentFilterMode));
+    return GetFilterModeLabel(CurrentFilterMode);
 }
 
 FString UMissionNavDlg::GetDetailPanelTitle() const
