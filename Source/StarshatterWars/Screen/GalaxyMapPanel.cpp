@@ -227,6 +227,8 @@ int32 UGalaxyMapPanel::NativePaint(
 
     const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
 
+    int32 PaintLayer = LayerId;
+
     if (!CurrentMissionSystemName.IsEmpty())
     {
         const FString HeaderText = CurrentMissionSystemName.ToUpper() + TEXT(" SYSTEM");
@@ -234,7 +236,7 @@ int32 UGalaxyMapPanel::NativePaint(
 
         FSlateDrawElement::MakeText(
             OutDrawElements,
-            LayerId + 1,
+            ++PaintLayer,
             AllottedGeometry.ToPaintGeometry(
                 FVector2D(ClipRect.Left + 8.0f, ClipRect.Top + 8.0f),
                 FVector2D(260.0f, 24.0f)),
@@ -244,6 +246,9 @@ int32 UGalaxyMapPanel::NativePaint(
             FLinearColor(1.0f, 0.95f, 0.55f, 1.0f));
     }
 
+    // ---------------------------------------------------------------------
+    // PASS 1: draw only the base jump-link network first
+    // ---------------------------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -285,32 +290,23 @@ int32 UGalaxyMapPanel::NativePaint(
             Points.Add(Start);
             Points.Add(End);
 
-            FLinearColor LinkColor = FLinearColor(0.35f, 0.45f, 0.65f, 0.45f);
-            float LinkThickness = 1.5f;
-
-            if (IsRouteLink(SystemName, LinkedName))
-            {
-                LinkColor = FLinearColor(0.20f, 0.85f, 1.00f, 0.95f);
-                LinkThickness = 3.0f;
-            }
-            else if (SystemName == SelectedSystemName || LinkedName == SelectedSystemName)
-            {
-                LinkColor = FLinearColor(1.0f, 0.95f, 0.55f, 0.85f);
-                LinkThickness = 2.0f;
-            }
-
             FSlateDrawElement::MakeLines(
                 OutDrawElements,
-                LayerId + 2,
+                PaintLayer + 1,
                 AllottedGeometry.ToPaintGeometry(),
                 Points,
                 ESlateDrawEffect::None,
-                LinkColor,
+                FLinearColor(0.35f, 0.45f, 0.65f, 0.45f),
                 true,
-                LinkThickness);
+                1.5f);
         }
     }
 
+    PaintLayer += 1;
+
+    // ---------------------------------------------------------------------
+    // PASS 2: draw stars, rings, mission highlight, selection ring
+    // ---------------------------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -332,11 +328,11 @@ int32 UGalaxyMapPanel::NativePaint(
 
         float BaseSize = 28.0f;
 
-        if (SystemName == CurrentMissionSystemName)
+        if (SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
         {
             BaseSize = 42.0f;
         }
-        else if (SystemName == SelectedSystemName)
+        else if (SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase))
         {
             BaseSize = 36.0f;
         }
@@ -358,7 +354,7 @@ int32 UGalaxyMapPanel::NativePaint(
 
             DrawCircle(
                 OutDrawElements,
-                LayerId + 3,
+                PaintLayer + 1,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
@@ -374,20 +370,20 @@ int32 UGalaxyMapPanel::NativePaint(
 
         FSlateDrawElement::MakeBox(
             OutDrawElements,
-            LayerId + 4,
+            PaintLayer + 2,
             AllottedGeometry.ToPaintGeometry(DrawPos, DrawSize),
             &Brush,
             ESlateDrawEffect::None,
             FLinearColor::White);
 
-        if (SystemName == CurrentMissionSystemName)
+        if (SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
         {
             const float Radius = 0.5f * DrawSize.X + 12.0f;
             const FLinearColor MissionColor = FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
 
             DrawCircle(
                 OutDrawElements,
-                LayerId + 5,
+                PaintLayer + 3,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
@@ -397,7 +393,7 @@ int32 UGalaxyMapPanel::NativePaint(
 
             DrawSelectionGuides(
                 OutDrawElements,
-                LayerId + 6,
+                PaintLayer + 4,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
@@ -406,13 +402,14 @@ int32 UGalaxyMapPanel::NativePaint(
                 1.5f);
         }
 
-        if (SystemName == SelectedSystemName && SystemName != CurrentMissionSystemName)
+        if (SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase) &&
+            !SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
         {
             const float Radius = 0.5f * DrawSize.X + 12.0f;
 
             DrawCircle(
                 OutDrawElements,
-                LayerId + 7,
+                PaintLayer + 5,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
@@ -420,10 +417,155 @@ int32 UGalaxyMapPanel::NativePaint(
                 2.0f,
                 32);
         }
+    }
+
+    PaintLayer += 5;
+
+    // ---------------------------------------------------------------------
+    // PASS 3: draw selected-system adjacency highlight above the stars
+    // ---------------------------------------------------------------------
+    if (!SelectedSystemName.IsEmpty())
+    {
+        for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+        {
+            const FString& SystemName = Pair.Key;
+            const FS_Galaxy& SystemRow = Pair.Value;
+
+            const FVector2D* RawStart = CachedSystemPositions.Find(SystemName);
+            if (!RawStart)
+            {
+                continue;
+            }
+
+            for (const FString& LinkedName : SystemRow.Link)
+            {
+                const FVector2D* RawEnd = CachedSystemPositions.Find(LinkedName);
+                if (!RawEnd)
+                {
+                    continue;
+                }
+
+                if (SystemName.Compare(LinkedName, ESearchCase::IgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                const bool bTouchesSelection =
+                    SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase) ||
+                    LinkedName.Equals(SelectedSystemName, ESearchCase::IgnoreCase);
+
+                if (!bTouchesSelection || IsRouteLink(SystemName, LinkedName))
+                {
+                    continue;
+                }
+
+                const FVector2D Start = ApplyViewTransformToPoint(*RawStart, PanelSize);
+                const FVector2D End = ApplyViewTransformToPoint(*RawEnd, PanelSize);
+
+                TArray<FVector2D> Points;
+                Points.Add(Start);
+                Points.Add(End);
+
+                FSlateDrawElement::MakeLines(
+                    OutDrawElements,
+                    PaintLayer + 1,
+                    AllottedGeometry.ToPaintGeometry(),
+                    Points,
+                    ESlateDrawEffect::None,
+                    FLinearColor(1.0f, 0.95f, 0.55f, 0.85f),
+                    true,
+                    2.0f);
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // PASS 4: draw mission route LAST so it always wins visually
+    // ---------------------------------------------------------------------
+    if (RoutePathSystems.Num() >= 2)
+    {
+        for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+        {
+            const FString& SystemName = Pair.Key;
+            const FS_Galaxy& SystemRow = Pair.Value;
+
+            const FVector2D* RawStart = CachedSystemPositions.Find(SystemName);
+            if (!RawStart)
+            {
+                continue;
+            }
+
+            for (const FString& LinkedName : SystemRow.Link)
+            {
+                const FVector2D* RawEnd = CachedSystemPositions.Find(LinkedName);
+                if (!RawEnd)
+                {
+                    continue;
+                }
+
+                if (SystemName.Compare(LinkedName, ESearchCase::IgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                if (!IsRouteLink(SystemName, LinkedName))
+                {
+                    continue;
+                }
+
+                const FVector2D Start = ApplyViewTransformToPoint(*RawStart, PanelSize);
+                const FVector2D End = ApplyViewTransformToPoint(*RawEnd, PanelSize);
+
+                TArray<FVector2D> Points;
+                Points.Add(Start);
+                Points.Add(End);
+
+                FSlateDrawElement::MakeLines(
+                    OutDrawElements,
+                    PaintLayer + 2,
+                    AllottedGeometry.ToPaintGeometry(),
+                    Points,
+                    ESlateDrawEffect::None,
+                    FLinearColor(0.20f, 0.85f, 1.00f, 0.98f),
+                    true,
+                    3.5f);
+            }
+        }
+    }
+
+    PaintLayer += 2;
+
+    // ---------------------------------------------------------------------
+    // PASS 5: labels
+    // ---------------------------------------------------------------------
+    for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+    {
+        const FString& SystemName = Pair.Key;
+        const FS_Galaxy& SystemRow = Pair.Value;
+
+        const FVector2D* RawPos = CachedSystemPositions.Find(SystemName);
+        if (!RawPos)
+        {
+            continue;
+        }
+
+        const FVector2D ScreenPos = ApplyViewTransformToPoint(*RawPos, PanelSize);
+
+        float BaseSize = 28.0f;
+        if (SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
+        {
+            BaseSize = 42.0f;
+        }
+        else if (SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase))
+        {
+            BaseSize = 36.0f;
+        }
+
+        const FVector2D DrawSize(BaseSize * MarkerRenderScale);
 
         const bool bShowName =
-            (SystemName == SelectedSystemName) ||
-            (SystemName == CurrentMissionSystemName) ||
+            SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase) ||
+            SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase) ||
             (MapZoomLevel >= 1.1f);
 
         if (bShowName)
@@ -439,18 +581,18 @@ int32 UGalaxyMapPanel::NativePaint(
 
             FLinearColor TextColor = FLinearColor(0.90f, 0.95f, 1.0f, 0.95f);
 
-            if (SystemName == CurrentMissionSystemName)
+            if (SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
             {
                 TextColor = FLinearColor(1.0f, 0.35f, 0.35f, 1.0f);
             }
-            else if (SystemName == SelectedSystemName)
+            else if (SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase))
             {
                 TextColor = FLinearColor(1.0f, 0.95f, 0.55f, 1.0f);
             }
 
             FSlateDrawElement::MakeText(
                 OutDrawElements,
-                LayerId + 8,
+                PaintLayer + 1,
                 AllottedGeometry.ToPaintGeometry(TextPos, FVector2D(LabelWidth, LabelHeight)),
                 SystemName,
                 FontInfo,
@@ -459,7 +601,7 @@ int32 UGalaxyMapPanel::NativePaint(
         }
     }
 
-    return LayerId + 8;
+    return PaintLayer + 1;
 }
 
 void UGalaxyMapPanel::CacheStarTextures()
@@ -586,20 +728,27 @@ void UGalaxyMapPanel::ClearGalaxyMap()
 
 void UGalaxyMapPanel::SetSelectedSystem(const FString& InSystemName)
 {
-    SelectedSystemName = InSystemName;
+    SelectedSystemName = InSystemName.TrimStartAndEnd();
     RefreshSelectionVisuals();
     Invalidate(EInvalidateWidget::Paint);
 }
 
 void UGalaxyMapPanel::SetCurrentMissionSystem(const FString& InSystemName)
 {
-    CurrentMissionSystemName = InSystemName;
+    CurrentMissionSystemName = InSystemName.TrimStartAndEnd();
     Invalidate(EInvalidateWidget::Paint);
 }
 
 void UGalaxyMapPanel::SetRoutePath(const TArray<FString>& InRouteSystems)
 {
-    RoutePathSystems = InRouteSystems;
+    RoutePathSystems.Empty();
+    RoutePathSystems.Reserve(InRouteSystems.Num());
+
+    for (const FString& Name : InRouteSystems)
+    {
+        RoutePathSystems.Add(Name.TrimStartAndEnd());
+    }
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -609,7 +758,7 @@ void UGalaxyMapPanel::RefreshSelectionVisuals()
     {
         if (Pair.Value)
         {
-            Pair.Value->SetSelected(Pair.Key == SelectedSystemName);
+            Pair.Value->SetSelected(Pair.Key.Equals(SelectedSystemName, ESearchCase::IgnoreCase));
         }
     }
 }
@@ -746,11 +895,11 @@ bool UGalaxyMapPanel::HitTestSystemAtLocalPoint(const FVector2D& LocalPoint, FSt
         const FVector2D ScreenPos = ApplyViewTransformToPoint(*RawPos, PanelSize);
 
         float BaseMarkerSize = 28.0f;
-        if (SystemName == SelectedSystemName)
+        if (SystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase))
         {
             BaseMarkerSize = 38.0f;
         }
-        else if (SystemName == CurrentMissionSystemName)
+        else if (SystemName.Equals(CurrentMissionSystemName, ESearchCase::IgnoreCase))
         {
             BaseMarkerSize = 34.0f;
         }
@@ -876,12 +1025,23 @@ bool UGalaxyMapPanel::IsRouteLink(const FString& A, const FString& B) const
         return false;
     }
 
+    const FString AKey = A.TrimStartAndEnd();
+    const FString BKey = B.TrimStartAndEnd();
+
     for (int32 i = 0; i < RoutePathSystems.Num() - 1; ++i)
     {
-        const FString& R0 = RoutePathSystems[i];
-        const FString& R1 = RoutePathSystems[i + 1];
+        const FString R0 = RoutePathSystems[i].TrimStartAndEnd();
+        const FString R1 = RoutePathSystems[i + 1].TrimStartAndEnd();
 
-        if ((R0 == A && R1 == B) || (R0 == B && R1 == A))
+        const bool bForward =
+            R0.Equals(AKey, ESearchCase::IgnoreCase) &&
+            R1.Equals(BKey, ESearchCase::IgnoreCase);
+
+        const bool bReverse =
+            R0.Equals(BKey, ESearchCase::IgnoreCase) &&
+            R1.Equals(AKey, ESearchCase::IgnoreCase);
+
+        if (bForward || bReverse)
         {
             return true;
         }

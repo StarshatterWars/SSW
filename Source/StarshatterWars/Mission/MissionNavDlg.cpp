@@ -51,6 +51,7 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
+#include "Components/ScrollBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "Containers/Queue.h"
@@ -888,19 +889,42 @@ void UMissionNavDlg::BuildRightPanels()
 
     if (UVerticalBoxSlot* DetailHostSlot = DetailPanel->AddChildToVerticalBox(DetailHost))
     {
-        DetailHostSlot->SetPadding(FMargin(0.f));
+        DetailHostSlot->SetPadding(FMargin(6.f, 4.f, 6.f, 6.f));
         DetailHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
+    // Scroll box container
+    UScrollBox* DetailScrollBox =
+        WidgetTree->ConstructWidget<UScrollBox>(
+            UScrollBox::StaticClass(),
+            TEXT("MissionNavDetailScrollBox"));
+
+    DetailScrollBox->SetScrollBarVisibility(ESlateVisibility::Visible);
+    DetailScrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+
+    // Optional: nicer feel
+    DetailScrollBox->SetAnimateWheelScrolling(true);
+
+    // Text block inside scroll
     DetailBodyText =
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailBodyText"));
+
     DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
     DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
     DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
     DetailBodyText->SetJustification(ETextJustify::Left);
-    DetailHost->SetContent(DetailBodyText);
+
+    // IMPORTANT: wrapping
+    DetailBodyText->SetAutoWrapText(true);
+    DetailBodyText->SetWrapTextAt(280.0f);
+
+    // Add text to scroll box
+    DetailScrollBox->AddChild(DetailBodyText);
+
+    // Set scroll box as host content
+    DetailHost->SetContent(DetailScrollBox);
 
     ApplyPanelStyles();
     RefreshFilterSelection();
