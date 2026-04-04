@@ -29,7 +29,10 @@ class UButton;
 class UGalaxyMapPanel;
 class UHorizontalBox;
 class UMenuButton;
+class UScrollBox;
+class USectorMapPanel;
 class USizeBox;
+class USystemMapPanel;
 class UTextBlock;
 class UTexture2D;
 class UUniformGridPanel;
@@ -85,6 +88,10 @@ public:
     UFUNCTION()
     void HandleGalaxySystemSelected(const FString& InSystemName);
 
+    void HandleGalaxySystemActivated(const FString& InSystemName);
+
+    const FString& GetSelectedGalaxySystemName() const { return SelectedSystemName; }
+
 protected:
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
@@ -135,6 +142,7 @@ protected:
 
     void UpdateSystemDetailsPanel(const FString& InSystemName);
     void SyncGalaxyMissionAndSelectionState();
+    void SyncSubPanels();
     FString BuildGalaxySystemDetailText(const FString& InSystemName) const;
 
 protected:
@@ -146,6 +154,12 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Mission Nav")
     TSubclassOf<UGalaxyMapPanel> GalaxyMapPanelClass;
+
+    UPROPERTY(EditAnywhere, Category = "Mission Nav")
+    TSubclassOf<USystemMapPanel> SystemMapPanelClass;
+
+    UPROPERTY(EditAnywhere, Category = "Mission Nav")
+    TSubclassOf<USectorMapPanel> SectorMapPanelClass;
 
 private:
     Campaign* CampaignPtr = nullptr;
@@ -217,7 +231,13 @@ private:
     USizeBox* SystemPanelHost = nullptr;
 
     UPROPERTY()
+    USystemMapPanel* SystemMapPanel = nullptr;
+
+    UPROPERTY()
     USizeBox* SectorPanelHost = nullptr;
+
+    UPROPERTY()
+    USectorMapPanel* SectorMapPanel = nullptr;
 
     UPROPERTY()
     UTextBlock* NavBodyText = nullptr;
@@ -269,6 +289,9 @@ private:
 
     UPROPERTY()
     USizeBox* DetailHost = nullptr;
+
+    UPROPERTY()
+    UScrollBox* DetailScrollBox = nullptr;
 
     UPROPERTY()
     UTextBlock* DetailBodyText = nullptr;

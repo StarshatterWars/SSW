@@ -18,6 +18,7 @@
     - Draws IFF rings in NativePaint
     - Supports zoom and right-mouse panning
     - Supports left-click selection using hit-testing
+    - Supports left-button double-click activation
     - Uses separate projection rect and clip rect
 */
 
@@ -246,9 +247,6 @@ int32 UGalaxyMapPanel::NativePaint(
             FLinearColor(1.0f, 0.95f, 0.55f, 1.0f));
     }
 
-    // ---------------------------------------------------------------------
-    // PASS 1: draw only the base jump-link network first
-    // ---------------------------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -304,9 +302,6 @@ int32 UGalaxyMapPanel::NativePaint(
 
     PaintLayer += 1;
 
-    // ---------------------------------------------------------------------
-    // PASS 2: draw stars, rings, mission highlight, selection ring
-    // ---------------------------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -421,9 +416,6 @@ int32 UGalaxyMapPanel::NativePaint(
 
     PaintLayer += 5;
 
-    // ---------------------------------------------------------------------
-    // PASS 3: draw selected-system adjacency highlight above the stars
-    // ---------------------------------------------------------------------
     if (!SelectedSystemName.IsEmpty())
     {
         for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
@@ -479,9 +471,6 @@ int32 UGalaxyMapPanel::NativePaint(
         }
     }
 
-    // ---------------------------------------------------------------------
-    // PASS 4: draw mission route LAST so it always wins visually
-    // ---------------------------------------------------------------------
     if (RoutePathSystems.Num() >= 2)
     {
         for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
@@ -535,13 +524,9 @@ int32 UGalaxyMapPanel::NativePaint(
 
     PaintLayer += 2;
 
-    // ---------------------------------------------------------------------
-    // PASS 5: labels
-    // ---------------------------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
-        const FS_Galaxy& SystemRow = Pair.Value;
 
         const FVector2D* RawPos = CachedSystemPositions.Find(SystemName);
         if (!RawPos)
@@ -1014,6 +999,39 @@ FReply UGalaxyMapPanel::NativeOnMouseWheel(const FGeometry& InGeometry, const FP
     {
         ZoomOut();
     }
+
+    return FReply::Handled();
+}
+
+FReply UGalaxyMapPanel::NativeOnMouseButtonDoubleClick(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+    {
+        return Super::NativeOnMouseButtonDoubleClick(InGeometry, InMouseEvent);
+    }
+
+    const FVector2D LocalPoint =
+        InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+
+    FString HitSystemName;
+    if (!HitTestSystemAtLocalPoint(LocalPoint, HitSystemName))
+    {
+        return Super::NativeOnMouseButtonDoubleClick(InGeometry, InMouseEvent);
+    }
+
+    SetSelectedSystem(HitSystemName);
+
+    if (OwnerNavDlg)
+    {
+        OwnerNavDlg->HandleGalaxySystemSelected(HitSystemName);
+        OwnerNavDlg->HandleGalaxySystemActivated(HitSystemName);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[GalaxyMapPanel] Activated system via double-click: %s"),
+        *HitSystemName);
 
     return FReply::Handled();
 }

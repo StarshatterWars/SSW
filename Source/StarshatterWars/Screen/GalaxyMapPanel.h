@@ -20,6 +20,7 @@
     - Draws highlighted route links
     - Supports zoom and right-mouse panning
     - Supports left-click selection using hit-testing
+    - Supports left-button double-click activation
     - Clips all content to panel bounds
 */
 
@@ -60,6 +61,7 @@ public:
     virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    virtual FReply NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 public:
     void SetOwnerNavDlg(UMissionNavDlg* InOwner) { OwnerNavDlg = InOwner; }

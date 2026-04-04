@@ -25,6 +25,8 @@
 #include "MissionNavObjectLVElement.h"
 
 #include "GalaxyMapPanel.h"
+#include "SectorMapPanel.h"
+#include "SystemMapPanel.h"
 #include "StarshatterEnvironmentSubsystem.h"
 
 #include "MissionUIStyle.h"
@@ -45,13 +47,14 @@
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/Spacer.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
-#include "Components/ScrollBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "Containers/Queue.h"
@@ -136,6 +139,23 @@ void UMissionNavDlg::RefreshFromMission()
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
 
+    if (MissionPtr && MissionPtr->GetStarSystem())
+    {
+        CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
+
+        if (SelectedSystemName.IsEmpty())
+        {
+            SelectedSystemName = CurrentMissionSystemName;
+        }
+    }
+    else
+    {
+        CurrentMissionSystemName.Empty();
+    }
+
+    SyncGalaxyMissionAndSelectionState();
+    SyncSubPanels();
+
     if (NavBodyText)
     {
         NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
@@ -166,14 +186,18 @@ void UMissionNavDlg::RefreshFromMission()
 
             case EMissionNavMode::SYSTEM:
             {
-                StarSystem* System = MissionPtr->GetStarSystem();
+                FString SystemNameToShow = SelectedSystemName;
 
-                if (System)
+                if (SystemNameToShow.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
+                {
+                    SystemNameToShow = FString(MissionPtr->GetStarSystem()->GetName());
+                }
+
+                if (!SystemNameToShow.IsEmpty())
                 {
                     DisplayText = FString::Printf(
-                        TEXT("SYSTEM MODE\n\nSYSTEM: %s\nRADIUS: %.0f"),
-                        *FString(System->GetName()),
-                        System->Radius());
+                        TEXT("SYSTEM MODE\n\nSYSTEM: %s"),
+                        *SystemNameToShow);
                 }
                 else
                 {
@@ -184,13 +208,22 @@ void UMissionNavDlg::RefreshFromMission()
 
             case EMissionNavMode::SECTOR:
             {
-                DisplayText = TEXT("SECTOR MODE");
+                FString SystemNameToShow = SelectedSystemName;
 
-                if (MissionPtr->GetStarSystem())
+                if (SystemNameToShow.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
                 {
-                    DisplayText += FString::Printf(
-                        TEXT("\n\nSYSTEM: %s"),
-                        *FString(MissionPtr->GetStarSystem()->GetName()));
+                    SystemNameToShow = FString(MissionPtr->GetStarSystem()->GetName());
+                }
+
+                if (!SystemNameToShow.IsEmpty())
+                {
+                    DisplayText = FString::Printf(
+                        TEXT("SECTOR MODE\n\nSYSTEM: %s"),
+                        *SystemNameToShow);
+                }
+                else
+                {
+                    DisplayText = TEXT("SECTOR MODE\n\nNO STAR SYSTEM");
                 }
 
                 break;
@@ -204,22 +237,6 @@ void UMissionNavDlg::RefreshFromMission()
             NavBodyText->SetText(FText::FromString(DisplayText));
         }
     }
-
-    if (MissionPtr && MissionPtr->GetStarSystem())
-    {
-        CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
-
-        if (SelectedSystemName.IsEmpty())
-        {
-            SelectedSystemName = CurrentMissionSystemName;
-        }
-    }
-    else
-    {
-        CurrentMissionSystemName.Empty();
-    }
-
-    SyncGalaxyMissionAndSelectionState();
 
     RefreshObjectListPanel();
     RefreshDetailPanel();
@@ -245,6 +262,36 @@ void UMissionNavDlg::SyncGalaxyMissionAndSelectionState()
     }
 
     GalaxyMapPanel->SetRoutePath(Route);
+}
+
+void UMissionNavDlg::SyncSubPanels()
+{
+    FString SystemNameForPanels = SelectedSystemName;
+
+    if (SystemNameForPanels.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
+    {
+        SystemNameForPanels = FString(MissionPtr->GetStarSystem()->GetName());
+    }
+
+    if (SystemMapPanel)
+    {
+        SystemMapPanel->SetViewedSystemName(SystemNameForPanels);
+    }
+
+    if (SectorMapPanel)
+    {
+        SectorMapPanel->SetViewedSystemName(SystemNameForPanels);
+
+        if (SelectedObjectItem &&
+            SelectedObjectItem->GetObjectType() == EMissionNavObjectType::Sector)
+        {
+            SectorMapPanel->SetViewedSectorName(SelectedObjectItem->GetPrimaryText());
+        }
+        else
+        {
+            SectorMapPanel->SetViewedSectorName(TEXT(""));
+        }
+    }
 }
 
 TArray<FString> UMissionNavDlg::FindShortestGalaxyRoute(
@@ -637,15 +684,35 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     NavSwitcher->AddChild(SystemPanelHost);
 
-    NavBodyText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            TEXT("MissionNavSystemBodyText"));
-    NavBodyText->SetText(FText::FromString(TEXT("SYSTEM MODE")));
-    NavBodyText->SetJustification(ETextJustify::Left);
-    NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
-    SystemPanelHost->SetContent(NavBodyText);
+    if (!SystemMapPanelClass)
+    {
+        SystemMapPanelClass = USystemMapPanel::StaticClass();
+    }
+
+    SystemMapPanel = CreateWidget<USystemMapPanel>(GetWorld(), SystemMapPanelClass);
+
+    if (!SystemMapPanel)
+    {
+        UE_LOG(LogTemp, Error, TEXT("MissionNavDlg: Failed to create SystemMapPanel widget"));
+
+        NavBodyText =
+            WidgetTree->ConstructWidget<UTextBlock>(
+                UTextBlock::StaticClass(),
+                TEXT("MissionNavSystemBodyText"));
+        NavBodyText->SetText(FText::FromString(TEXT("SYSTEM MODE")));
+        NavBodyText->SetJustification(ETextJustify::Left);
+        NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
+        SystemPanelHost->SetContent(NavBodyText);
+    }
+    else
+    {
+        SystemPanelHost->SetContent(SystemMapPanel);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("MissionNavDlg: Created SystemMapPanel from %s"),
+            *GetNameSafe(SystemMapPanelClass));
+    }
 
     SectorPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
@@ -654,15 +721,35 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     NavSwitcher->AddChild(SectorPanelHost);
 
-    UTextBlock* SectorBodyText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            TEXT("MissionNavSectorBodyText"));
-    SectorBodyText->SetText(FText::FromString(TEXT("SECTOR MODE")));
-    SectorBodyText->SetJustification(ETextJustify::Left);
-    SectorBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    SectorBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
-    SectorPanelHost->SetContent(SectorBodyText);
+    if (!SectorMapPanelClass)
+    {
+        SectorMapPanelClass = USectorMapPanel::StaticClass();
+    }
+
+    SectorMapPanel = CreateWidget<USectorMapPanel>(GetWorld(), SectorMapPanelClass);
+
+    if (!SectorMapPanel)
+    {
+        UE_LOG(LogTemp, Error, TEXT("MissionNavDlg: Failed to create SectorMapPanel widget"));
+
+        UTextBlock* SectorBodyText =
+            WidgetTree->ConstructWidget<UTextBlock>(
+                UTextBlock::StaticClass(),
+                TEXT("MissionNavSectorBodyText"));
+        SectorBodyText->SetText(FText::FromString(TEXT("SECTOR MODE")));
+        SectorBodyText->SetJustification(ETextJustify::Left);
+        SectorBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        SectorBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
+        SectorPanelHost->SetContent(SectorBodyText);
+    }
+    else
+    {
+        SectorPanelHost->SetContent(SectorMapPanel);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("MissionNavDlg: Created SectorMapPanel from %s"),
+            *GetNameSafe(SectorMapPanelClass));
+    }
 
     RightPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
@@ -885,45 +972,42 @@ void UMissionNavDlg::BuildRightPanels()
             USizeBox::StaticClass(),
             TEXT("MissionNavDetailHost"));
     DetailHost->SetWidthOverride(300.f);
-    DetailHost->SetHeightOverride(140.f);
+    DetailHost->SetHeightOverride(180.f);
 
     if (UVerticalBoxSlot* DetailHostSlot = DetailPanel->AddChildToVerticalBox(DetailHost))
     {
-        DetailHostSlot->SetPadding(FMargin(6.f, 4.f, 6.f, 6.f));
+        DetailHostSlot->SetPadding(FMargin(0.f));
         DetailHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
-    // Scroll box container
-    UScrollBox* DetailScrollBox =
+    DetailScrollBox =
         WidgetTree->ConstructWidget<UScrollBox>(
             UScrollBox::StaticClass(),
             TEXT("MissionNavDetailScrollBox"));
 
     DetailScrollBox->SetScrollBarVisibility(ESlateVisibility::Visible);
     DetailScrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
-
-    // Optional: nicer feel
     DetailScrollBox->SetAnimateWheelScrolling(true);
+    DetailScrollBox->SetIsFocusable(true);
 
-    // Text block inside scroll
     DetailBodyText =
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailBodyText"));
-
     DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
     DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
     DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
     DetailBodyText->SetJustification(ETextJustify::Left);
-
-    // IMPORTANT: wrapping
     DetailBodyText->SetAutoWrapText(true);
     DetailBodyText->SetWrapTextAt(280.0f);
 
-    // Add text to scroll box
     DetailScrollBox->AddChild(DetailBodyText);
 
-    // Set scroll box as host content
+    if (UScrollBoxSlot* ScrollSlot = Cast<UScrollBoxSlot>(DetailBodyText->Slot))
+    {
+        ScrollSlot->SetPadding(FMargin(6.f, 4.f, 6.f, 6.f));
+    }
+
     DetailHost->SetContent(DetailScrollBox);
 
     ApplyPanelStyles();
@@ -1162,6 +1246,7 @@ void UMissionNavDlg::SetFilterMode(EMissionNavFilterMode NewMode)
     RefreshFilterSelection();
     RefreshObjectListPanel();
     RefreshDetailPanel();
+    SyncSubPanels();
 }
 
 FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
@@ -1311,6 +1396,7 @@ void UMissionNavDlg::RebuildObjectList()
         SelectedObjectItem = ObjectItems[0];
     }
 
+    SyncSubPanels();
     RefreshDetailPanel();
 }
 
@@ -1616,6 +1702,7 @@ void UMissionNavDlg::OnFilterButtonHovered(UMenuButton* HoveredButton)
 void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 {
     SelectedObjectItem = Cast<UMissionNavObjectListObject>(SelectedItem);
+    SyncSubPanels();
     RefreshDetailPanel();
 }
 
@@ -1655,10 +1742,32 @@ void UMissionNavDlg::HandleGalaxySystemSelected(const FString& InSystemName)
     SelectedSystemName = InSystemName;
 
     SyncGalaxyMissionAndSelectionState();
+    SyncSubPanels();
     UpdateSystemDetailsPanel(SelectedSystemName);
 
     UE_LOG(LogTemp, Warning,
         TEXT("[MissionNavDlg] HandleGalaxySystemSelected: Mission=%s Selected=%s"),
         *CurrentMissionSystemName,
         *SelectedSystemName);
+}
+
+void UMissionNavDlg::HandleGalaxySystemActivated(const FString& InSystemName)
+{
+    if (InSystemName.IsEmpty())
+    {
+        return;
+    }
+
+    SelectedSystemName = InSystemName;
+
+    if (SystemMapPanel)
+    {
+        SystemMapPanel->SetViewedSystemName(SelectedSystemName);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionNavDlg] HandleGalaxySystemActivated: %s"),
+        *SelectedSystemName);
+
+    SetNavMode(EMissionNavMode::SYSTEM);
 }
