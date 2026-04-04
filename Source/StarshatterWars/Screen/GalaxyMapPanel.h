@@ -12,10 +12,14 @@
 
     - Loads galaxy systems from the environment subsystem
     - Caches star textures once
-    - Spawns all system markers
     - Uses origin-centered projection: world (0,0) -> panel center
     - Draws jump links in NativePaint
+    - Draws star markers in NativePaint using Slate
+    - Draws IFF rings in NativePaint
+    - Draws mission-system selection guides
+    - Draws highlighted route links
     - Supports zoom and right-mouse panning
+    - Supports left-click selection using hit-testing
     - Clips all content to panel bounds
 */
 
@@ -70,6 +74,9 @@ public:
     void SetSelectedSystem(const FString& InSystemName);
     const FString& GetSelectedSystem() const { return SelectedSystemName; }
 
+    void SetCurrentMissionSystem(const FString& InSystemName);
+    void SetRoutePath(const TArray<FString>& InRouteSystems);
+
     FVector2D ProjectToPanel(const FVector& WorldLocation) const;
     FVector2D NormalizeToPanel(const FVector2D& RawXY, const FVector2D& PanelSize) const;
     FVector2D ApplyViewTransformToPoint(const FVector2D& InPoint, const FVector2D& PanelSize) const;
@@ -79,14 +86,15 @@ protected:
     void RefreshSelectionVisuals();
 
     bool HitTestSystemAtLocalPoint(const FVector2D& LocalPoint, FString& OutSystemName) const;
+    FSlateRect GetUsablePanelRect(const FVector2D& PanelSize) const;
     FSlateRect GetClipPanelRect(const FVector2D& PanelSize) const;
-    FLinearColor GetIFFRingColor(const FS_Galaxy& SystemRow) const;;
 
     void CacheStarTextures();
     UTexture2D* LoadGalaxyTexture(const TCHAR* AssetPath) const;
     UTexture2D* GetCachedStarTextureForClass(ESPECTRAL_CLASS InClass) const;
 
-    FSlateRect GetUsablePanelRect(const FVector2D& PanelSize) const;
+    FLinearColor GetIFFRingColor(const FS_Galaxy& SystemRow) const;
+    bool IsRouteLink(const FString& A, const FString& B) const;
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -145,6 +153,9 @@ protected:
 
     UPROPERTY()
     FString CurrentMissionSystemName;
+
+    UPROPERTY()
+    TArray<FString> RoutePathSystems;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Galaxy Map")
     float MapZoomLevel = 1.0f;

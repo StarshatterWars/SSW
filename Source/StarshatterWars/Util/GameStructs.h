@@ -1297,6 +1297,20 @@ struct FS_PlayerGameInfo : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
+struct FJumpLiks : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere) FString Name;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere) int Cost;
+	
+	FJumpLiks()
+	{
+		Name = "";
+		Cost = 0;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FS_TerrainRegion : public FTableRowBase
 {
 	GENERATED_BODY()

@@ -38,8 +38,8 @@
 #include "Orbital.h"
 #include "OrbitalRegion.h"
 #include "StarSystem.h"
-#include "GalaxyMapPanel.h"
 
+#include "Algo/Reverse.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -53,7 +53,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
-
+#include "Containers/Queue.h"
 #include "Engine/Texture2D.h"
 #include "Input/Reply.h"
 #include "InputCoreTypes.h"
@@ -204,13 +204,250 @@ void UMissionNavDlg::RefreshFromMission()
         }
     }
 
-    if (GalaxyMapPanel && MissionPtr && MissionPtr->GetStarSystem())
+    if (MissionPtr && MissionPtr->GetStarSystem())
     {
-        GalaxyMapPanel->SetSelectedSystem(FString(MissionPtr->GetStarSystem()->GetName()));
+        CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
+
+        if (SelectedSystemName.IsEmpty())
+        {
+            SelectedSystemName = CurrentMissionSystemName;
+        }
     }
+    else
+    {
+        CurrentMissionSystemName.Empty();
+    }
+
+    SyncGalaxyMissionAndSelectionState();
 
     RefreshObjectListPanel();
     RefreshDetailPanel();
+}
+
+void UMissionNavDlg::SyncGalaxyMissionAndSelectionState()
+{
+    if (!GalaxyMapPanel)
+    {
+        return;
+    }
+
+    GalaxyMapPanel->SetCurrentMissionSystem(CurrentMissionSystemName);
+    GalaxyMapPanel->SetSelectedSystem(SelectedSystemName);
+
+    TArray<FString> Route;
+
+    if (!CurrentMissionSystemName.IsEmpty() &&
+        !SelectedSystemName.IsEmpty() &&
+        !CurrentMissionSystemName.Equals(SelectedSystemName, ESearchCase::IgnoreCase))
+    {
+        Route = FindShortestGalaxyRoute(CurrentMissionSystemName, SelectedSystemName);
+    }
+
+    GalaxyMapPanel->SetRoutePath(Route);
+}
+
+TArray<FString> UMissionNavDlg::FindShortestGalaxyRoute(
+    const FString& StartSystem,
+    const FString& GoalSystem) const
+{
+    TArray<FString> EmptyRoute;
+
+    if (StartSystem.IsEmpty() || GoalSystem.IsEmpty())
+    {
+        return EmptyRoute;
+    }
+
+    if (StartSystem.Equals(GoalSystem, ESearchCase::IgnoreCase))
+    {
+        TArray<FString> SelfRoute;
+        SelfRoute.Add(StartSystem);
+        return SelfRoute;
+    }
+
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        return EmptyRoute;
+    }
+
+    UStarshatterEnvironmentSubsystem* Env =
+        GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+
+    if (!Env)
+    {
+        return EmptyRoute;
+    }
+
+    TMap<FString, const FS_Galaxy*> NodeMap;
+    for (const FS_Galaxy& Row : Env->GalaxyDataArray)
+    {
+        if (!Row.Name.IsEmpty())
+        {
+            NodeMap.Add(Row.Name, &Row);
+        }
+    }
+
+    if (!NodeMap.Contains(StartSystem) || !NodeMap.Contains(GoalSystem))
+    {
+        return EmptyRoute;
+    }
+
+    TQueue<FString> Frontier;
+    TSet<FString> Visited;
+    TMap<FString, FString> CameFrom;
+
+    Frontier.Enqueue(StartSystem);
+    Visited.Add(StartSystem);
+
+    bool bFound = false;
+
+    while (!Frontier.IsEmpty())
+    {
+        FString Current;
+        Frontier.Dequeue(Current);
+
+        if (Current.Equals(GoalSystem, ESearchCase::IgnoreCase))
+        {
+            bFound = true;
+            break;
+        }
+
+        const FS_Galaxy* const* CurrentRowPtr = NodeMap.Find(Current);
+        if (!CurrentRowPtr || !(*CurrentRowPtr))
+        {
+            continue;
+        }
+
+        const FS_Galaxy* CurrentRow = *CurrentRowPtr;
+
+        for (const FString& Neighbor : CurrentRow->Link)
+        {
+            if (Neighbor.IsEmpty() || !NodeMap.Contains(Neighbor) || Visited.Contains(Neighbor))
+            {
+                continue;
+            }
+
+            Visited.Add(Neighbor);
+            CameFrom.Add(Neighbor, Current);
+            Frontier.Enqueue(Neighbor);
+
+            if (Neighbor.Equals(GoalSystem, ESearchCase::IgnoreCase))
+            {
+                bFound = true;
+                break;
+            }
+        }
+
+        if (bFound)
+        {
+            break;
+        }
+    }
+
+    if (!bFound)
+    {
+        return EmptyRoute;
+    }
+
+    TArray<FString> ReversePath;
+    FString Step = GoalSystem;
+    ReversePath.Add(Step);
+
+    while (!Step.Equals(StartSystem, ESearchCase::IgnoreCase))
+    {
+        const FString* Prev = CameFrom.Find(Step);
+        if (!Prev)
+        {
+            EmptyRoute.Empty();
+            return EmptyRoute;
+        }
+
+        Step = *Prev;
+        ReversePath.Add(Step);
+    }
+
+    Algo::Reverse(ReversePath);
+    return ReversePath;
+}
+
+FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName) const
+{
+    if (InSystemName.IsEmpty())
+    {
+        return TEXT("NO SYSTEM SELECTED");
+    }
+
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        return InSystemName;
+    }
+
+    UStarshatterEnvironmentSubsystem* Env =
+        GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+
+    if (!Env)
+    {
+        return InSystemName;
+    }
+
+    const FS_Galaxy* FoundSystem = nullptr;
+
+    for (const FS_Galaxy& Row : Env->GalaxyDataArray)
+    {
+        if (Row.Name.Equals(InSystemName, ESearchCase::IgnoreCase))
+        {
+            FoundSystem = &Row;
+            break;
+        }
+    }
+
+    if (!FoundSystem)
+    {
+        return FString::Printf(
+            TEXT("%s\n\nTYPE: STAR SYSTEM\nNO DATA FOUND"),
+            *InSystemName);
+    }
+
+    const TArray<FString> Route =
+        FindShortestGalaxyRoute(CurrentMissionSystemName, InSystemName);
+
+    const int32 JumpCount = Route.Num() > 0 ? Route.Num() - 1 : 0;
+    const FString IffText = FString::Printf(TEXT("%d"), FoundSystem->Iff);
+
+    FString LinkText = TEXT("NONE");
+    if (FoundSystem->Link.Num() > 0)
+    {
+        LinkText = FString::Join(FoundSystem->Link, TEXT(", "));
+    }
+
+    return FString::Printf(
+        TEXT("%s\n\nTYPE: STAR SYSTEM\nIFF: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nLINKS: %d\nJUMPS FROM MISSION: %d\nCONNECTED TO: %s"),
+        *FoundSystem->Name,
+        *IffText,
+        FoundSystem->Location.X,
+        FoundSystem->Location.Y,
+        FoundSystem->Location.Z,
+        FoundSystem->Link.Num(),
+        JumpCount,
+        *LinkText);
+}
+
+void UMissionNavDlg::UpdateSystemDetailsPanel(const FString& InSystemName)
+{
+    if (DetailTitleText)
+    {
+        DetailTitleText->SetText(FText::FromString(TEXT("DETAIL PANEL")));
+        DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+        DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+    }
+
+    if (DetailBodyText)
+    {
+        DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
+        DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
+        DetailBodyText->SetText(FText::FromString(BuildGalaxySystemDetailText(InSystemName)));
+    }
 }
 
 void UMissionNavDlg::BuildRuntimeLayout()
@@ -227,9 +464,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     RuntimeHost->SetContent(nullptr);
 
-    // ------------------------------------------------------------
-    // ROOT ROW
-    // ------------------------------------------------------------
     RootContentRow =
         WidgetTree->ConstructWidget<UHorizontalBox>(
             UHorizontalBox::StaticClass(),
@@ -237,9 +471,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     RuntimeHost->SetContent(RootContentRow);
 
-    // ------------------------------------------------------------
-    // LEFT PANEL
-    // ------------------------------------------------------------
     LeftPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -263,9 +494,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     LeftPanelBorder->SetContent(LeftPanelColumn);
 
-    // ------------------------------------------------------------
-    // TOP BUTTON ROW (NAV + ZOOM)
-    // ------------------------------------------------------------
     TopButtonRow =
         WidgetTree->ConstructWidget<UHorizontalBox>(
             UHorizontalBox::StaticClass(),
@@ -301,9 +529,52 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     TopButtonRow->AddChildToHorizontalBox(ZoomButtonBox);
 
-    // ------------------------------------------------------------
-    // MAIN VIEW HOST
-    // ------------------------------------------------------------
+    ZoomOutButton =
+        WidgetTree->ConstructWidget<UButton>(
+            UButton::StaticClass(),
+            TEXT("MissionNavZoomOutButton"));
+
+    ZoomOutText =
+        WidgetTree->ConstructWidget<UTextBlock>(
+            UTextBlock::StaticClass(),
+            TEXT("MissionNavZoomOutText"));
+    ZoomOutText->SetText(FText::FromString(TEXT("-")));
+    ZoomOutText->SetJustification(ETextJustify::Center);
+    ZoomOutText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    ZoomOutText->SetFont(MissionUIStyle::GetHeaderFont(18));
+    ZoomOutButton->AddChild(ZoomOutText);
+
+    if (UHorizontalBoxSlot* ZoomOutSlot = ZoomButtonBox->AddChildToHorizontalBox(ZoomOutButton))
+    {
+        ZoomOutSlot->SetPadding(FMargin(0.f, 0.f, 6.f, 0.f));
+        ZoomOutSlot->SetHorizontalAlignment(HAlign_Left);
+        ZoomOutSlot->SetVerticalAlignment(VAlign_Center);
+        ZoomOutSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    ZoomInButton =
+        WidgetTree->ConstructWidget<UButton>(
+            UButton::StaticClass(),
+            TEXT("MissionNavZoomInButton"));
+
+    ZoomInText =
+        WidgetTree->ConstructWidget<UTextBlock>(
+            UTextBlock::StaticClass(),
+            TEXT("MissionNavZoomInText"));
+    ZoomInText->SetText(FText::FromString(TEXT("+")));
+    ZoomInText->SetJustification(ETextJustify::Center);
+    ZoomInText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    ZoomInText->SetFont(MissionUIStyle::GetHeaderFont(18));
+    ZoomInButton->AddChild(ZoomInText);
+
+    if (UHorizontalBoxSlot* ZoomInSlot = ZoomButtonBox->AddChildToHorizontalBox(ZoomInButton))
+    {
+        ZoomInSlot->SetPadding(FMargin(0.f));
+        ZoomInSlot->SetHorizontalAlignment(HAlign_Left);
+        ZoomInSlot->SetVerticalAlignment(VAlign_Center);
+        ZoomInSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
     MainViewHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
@@ -321,9 +592,6 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     MainViewHost->SetContent(NavSwitcher);
 
-    // ------------------------------------------------------------
-    // GALAXY PANEL HOST
-    // ------------------------------------------------------------
     GalaxyPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
@@ -361,15 +629,22 @@ void UMissionNavDlg::BuildRuntimeLayout()
         }
     }
 
-    // ------------------------------------------------------------
-    // SYSTEM + SECTOR HOSTS (unchanged)
-    // ------------------------------------------------------------
     SystemPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavSystemPanelHost"));
 
     NavSwitcher->AddChild(SystemPanelHost);
+
+    NavBodyText =
+        WidgetTree->ConstructWidget<UTextBlock>(
+            UTextBlock::StaticClass(),
+            TEXT("MissionNavSystemBodyText"));
+    NavBodyText->SetText(FText::FromString(TEXT("SYSTEM MODE")));
+    NavBodyText->SetJustification(ETextJustify::Left);
+    NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
+    SystemPanelHost->SetContent(NavBodyText);
 
     SectorPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
@@ -378,9 +653,16 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     NavSwitcher->AddChild(SectorPanelHost);
 
-    // ------------------------------------------------------------
-    // RIGHT PANEL (unchanged)
-    // ------------------------------------------------------------
+    UTextBlock* SectorBodyText =
+        WidgetTree->ConstructWidget<UTextBlock>(
+            UTextBlock::StaticClass(),
+            TEXT("MissionNavSectorBodyText"));
+    SectorBodyText->SetText(FText::FromString(TEXT("SECTOR MODE")));
+    SectorBodyText->SetJustification(ETextJustify::Left);
+    SectorBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
+    SectorBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
+    SectorPanelHost->SetContent(SectorBodyText);
+
     RightPanelBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -803,7 +1085,11 @@ void UMissionNavDlg::RefreshDetailPanel()
         DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
         DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
 
-        if (SelectedObjectItem)
+        if (CurrentNavMode == EMissionNavMode::GALAXY && !SelectedSystemName.IsEmpty())
+        {
+            DetailBodyText->SetText(FText::FromString(BuildGalaxySystemDetailText(SelectedSystemName)));
+        }
+        else if (SelectedObjectItem)
         {
             DetailBodyText->SetText(FText::FromString(SelectedObjectItem->GetDetailText()));
         }
@@ -1335,3 +1621,20 @@ void UMissionNavDlg::OnZoomOutClicked()
     }
 }
 
+void UMissionNavDlg::HandleGalaxySystemSelected(const FString& InSystemName)
+{
+    if (InSystemName.IsEmpty())
+    {
+        return;
+    }
+
+    SelectedSystemName = InSystemName;
+
+    SyncGalaxyMissionAndSelectionState();
+    UpdateSystemDetailsPanel(SelectedSystemName);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionNavDlg] HandleGalaxySystemSelected: Mission=%s Selected=%s"),
+        *CurrentMissionSystemName,
+        *SelectedSystemName);
+}

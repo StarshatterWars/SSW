@@ -15,15 +15,6 @@
     UMissionNavDlg
 
     Navigation panel hosted by UMissionBriefingDlg.
-
-    This widget owns NAV-local UI only:
-
-      - Top NAV mode buttons (GALAXY / SYSTEM / SECTOR)
-      - Zoom buttons (- / +) on the LEFT map panel
-      - Local NAV mode switcher
-      - Right-side radio filter buttons
-      - Object list panel with title box
-      - Detail panel with title box
 */
 
 #pragma once
@@ -91,6 +82,9 @@ public:
 
     void RefreshFromMission();
 
+    UFUNCTION()
+    void HandleGalaxySystemSelected(const FString& InSystemName);
+
 protected:
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
@@ -135,6 +129,14 @@ protected:
         const FString& SecondaryText,
         const FString& DetailText);
 
+    TArray<FString> FindShortestGalaxyRoute(
+        const FString& StartSystem,
+        const FString& GoalSystem) const;
+
+    void UpdateSystemDetailsPanel(const FString& InSystemName);
+    void SyncGalaxyMissionAndSelectionState();
+    FString BuildGalaxySystemDetailText(const FString& InSystemName) const;
+
 protected:
     UPROPERTY()
     UMissionBriefingDlg* ParentDlg = nullptr;
@@ -144,6 +146,7 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Mission Nav")
     TSubclassOf<UGalaxyMapPanel> GalaxyMapPanelClass;
+
 private:
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
@@ -300,4 +303,10 @@ private:
 
     UFUNCTION()
     void OnZoomOutClicked();
+
+    UPROPERTY()
+    FString SelectedSystemName;
+
+    UPROPERTY()
+    FString CurrentMissionSystemName;
 };

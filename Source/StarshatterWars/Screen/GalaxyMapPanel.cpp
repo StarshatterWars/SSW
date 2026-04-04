@@ -33,7 +33,82 @@
 #include "InputCoreTypes.h"
 #include "Rendering/DrawElements.h"
 
-void DrawCircle(
+static void DrawSelectionGuides(
+    FSlateWindowElementList& OutDrawElements,
+    int32 LayerId,
+    const FGeometry& Geometry,
+    const FVector2D& Center,
+    float Radius,
+    const FSlateRect& ClipRect,
+    const FLinearColor& Color,
+    float Thickness = 1.5f)
+{
+    {
+        TArray<FVector2D> Points;
+        Points.Add(FVector2D(ClipRect.Left, Center.Y));
+        Points.Add(FVector2D(Center.X - Radius, Center.Y));
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            Geometry.ToPaintGeometry(),
+            Points,
+            ESlateDrawEffect::None,
+            Color,
+            true,
+            Thickness);
+    }
+
+    {
+        TArray<FVector2D> Points;
+        Points.Add(FVector2D(Center.X + Radius, Center.Y));
+        Points.Add(FVector2D(ClipRect.Right, Center.Y));
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            Geometry.ToPaintGeometry(),
+            Points,
+            ESlateDrawEffect::None,
+            Color,
+            true,
+            Thickness);
+    }
+
+    {
+        TArray<FVector2D> Points;
+        Points.Add(FVector2D(Center.X, ClipRect.Top));
+        Points.Add(FVector2D(Center.X, Center.Y - Radius));
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            Geometry.ToPaintGeometry(),
+            Points,
+            ESlateDrawEffect::None,
+            Color,
+            true,
+            Thickness);
+    }
+
+    {
+        TArray<FVector2D> Points;
+        Points.Add(FVector2D(Center.X, Center.Y + Radius));
+        Points.Add(FVector2D(Center.X, ClipRect.Bottom));
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            Geometry.ToPaintGeometry(),
+            Points,
+            ESlateDrawEffect::None,
+            Color,
+            true,
+            Thickness);
+    }
+}
+
+static void DrawCircle(
     FSlateWindowElementList& OutDrawElements,
     int32 LayerId,
     const FGeometry& Geometry,
@@ -48,7 +123,7 @@ void DrawCircle(
 
     for (int32 i = 0; i <= NumSegments; ++i)
     {
-        float Angle = (2.0f * PI * i) / NumSegments;
+        const float Angle = (2.0f * PI * i) / NumSegments;
 
         FVector2D P(
             Center.X + FMath::Cos(Angle) * Radius,
@@ -152,9 +227,23 @@ int32 UGalaxyMapPanel::NativePaint(
 
     const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
 
-    // -------------------------------------------------
-    // Draw links
-    // -------------------------------------------------
+    if (!CurrentMissionSystemName.IsEmpty())
+    {
+        const FString HeaderText = CurrentMissionSystemName.ToUpper() + TEXT(" SYSTEM");
+        const FSlateFontInfo HeaderFont = FCoreStyle::GetDefaultFontStyle("Regular", 14);
+
+        FSlateDrawElement::MakeText(
+            OutDrawElements,
+            LayerId + 1,
+            AllottedGeometry.ToPaintGeometry(
+                FVector2D(ClipRect.Left + 8.0f, ClipRect.Top + 8.0f),
+                FVector2D(260.0f, 24.0f)),
+            HeaderText,
+            HeaderFont,
+            ESlateDrawEffect::None,
+            FLinearColor(1.0f, 0.95f, 0.55f, 1.0f));
+    }
+
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -174,7 +263,7 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            if (SystemName >= LinkedName)
+            if (SystemName.Compare(LinkedName, ESearchCase::IgnoreCase) >= 0)
             {
                 continue;
             }
@@ -192,30 +281,36 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            TArray<FVector2D> Points = { Start, End };
+            TArray<FVector2D> Points;
+            Points.Add(Start);
+            Points.Add(End);
 
-            FLinearColor LinkColor = FLinearColor(0.70f, 0.78f, 0.92f, 0.65f);
+            FLinearColor LinkColor = FLinearColor(0.35f, 0.45f, 0.65f, 0.45f);
+            float LinkThickness = 1.5f;
 
-            if (SystemName == SelectedSystemName || LinkedName == SelectedSystemName)
+            if (IsRouteLink(SystemName, LinkedName))
             {
-                LinkColor = FLinearColor(1.0f, 0.95f, 0.55f, 0.95f);
+                LinkColor = FLinearColor(0.20f, 0.85f, 1.00f, 0.95f);
+                LinkThickness = 3.0f;
+            }
+            else if (SystemName == SelectedSystemName || LinkedName == SelectedSystemName)
+            {
+                LinkColor = FLinearColor(1.0f, 0.95f, 0.55f, 0.85f);
+                LinkThickness = 2.0f;
             }
 
             FSlateDrawElement::MakeLines(
                 OutDrawElements,
-                LayerId + 1,
+                LayerId + 2,
                 AllottedGeometry.ToPaintGeometry(),
                 Points,
                 ESlateDrawEffect::None,
                 LinkColor,
                 true,
-                1.5f);
+                LinkThickness);
         }
     }
 
-    // -------------------------------------------------
-    // Draw markers + rings + labels
-    // -------------------------------------------------
     for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
@@ -237,19 +332,18 @@ int32 UGalaxyMapPanel::NativePaint(
 
         float BaseSize = 28.0f;
 
-        if (SystemName == SelectedSystemName)
+        if (SystemName == CurrentMissionSystemName)
         {
-            BaseSize = 38.0f;
+            BaseSize = 42.0f;
         }
-        else if (SystemName == CurrentMissionSystemName)
+        else if (SystemName == SelectedSystemName)
         {
-            BaseSize = 34.0f;
+            BaseSize = 36.0f;
         }
 
         const FVector2D DrawSize(BaseSize * MarkerRenderScale);
         const FVector2D DrawPos = ScreenPos - DrawSize * 0.5f;
 
-        // Coarse culling
         const float Pad = 64.0f;
         if (DrawPos.X > ClipRect.Right + Pad ||
             DrawPos.X + DrawSize.X < ClipRect.Left - Pad ||
@@ -259,15 +353,12 @@ int32 UGalaxyMapPanel::NativePaint(
             continue;
         }
 
-        // -------------------------------------------------
-        // IFF ring (circle)
-        // -------------------------------------------------
         {
             const float Radius = 0.5f * DrawSize.X + 5.0f;
 
             DrawCircle(
                 OutDrawElements,
-                LayerId + 2,
+                LayerId + 3,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
@@ -276,42 +367,60 @@ int32 UGalaxyMapPanel::NativePaint(
                 28);
         }
 
-        // -------------------------------------------------
-        // Star
-        // -------------------------------------------------
         FSlateBrush Brush;
+        Brush.DrawAs = ESlateBrushDrawType::Image;
         Brush.SetResourceObject(StarTex);
         Brush.ImageSize = DrawSize;
 
         FSlateDrawElement::MakeBox(
             OutDrawElements,
-            LayerId + 3,
+            LayerId + 4,
             AllottedGeometry.ToPaintGeometry(DrawPos, DrawSize),
             &Brush,
             ESlateDrawEffect::None,
             FLinearColor::White);
 
-        // -------------------------------------------------
-        // Selection ring (circle)
-        // -------------------------------------------------
-        if (SystemName == SelectedSystemName)
+        if (SystemName == CurrentMissionSystemName)
+        {
+            const float Radius = 0.5f * DrawSize.X + 12.0f;
+            const FLinearColor MissionColor = FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+
+            DrawCircle(
+                OutDrawElements,
+                LayerId + 5,
+                AllottedGeometry,
+                ScreenPos,
+                Radius,
+                MissionColor,
+                2.5f,
+                32);
+
+            DrawSelectionGuides(
+                OutDrawElements,
+                LayerId + 6,
+                AllottedGeometry,
+                ScreenPos,
+                Radius,
+                ClipRect,
+                MissionColor,
+                1.5f);
+        }
+
+        if (SystemName == SelectedSystemName && SystemName != CurrentMissionSystemName)
         {
             const float Radius = 0.5f * DrawSize.X + 12.0f;
 
             DrawCircle(
                 OutDrawElements,
-                LayerId + 4,
+                LayerId + 7,
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
-                FLinearColor(1.0f, 0.95f, 0.4f, 1.0f),
+                FLinearColor(1.0f, 0.95f, 0.40f, 1.0f),
                 2.0f,
                 32);
         }
 
-        // -------------------------------------------------
-        // Name label
-        // -------------------------------------------------
         const bool bShowName =
             (SystemName == SelectedSystemName) ||
             (SystemName == CurrentMissionSystemName) ||
@@ -326,22 +435,22 @@ int32 UGalaxyMapPanel::NativePaint(
                 ScreenPos.X - (LabelWidth * 0.5f),
                 ScreenPos.Y + (0.5f * DrawSize.Y) + 8.0f);
 
-            FSlateFontInfo FontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 10);
+            const FSlateFontInfo FontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 10);
 
             FLinearColor TextColor = FLinearColor(0.90f, 0.95f, 1.0f, 0.95f);
 
-            if (SystemName == SelectedSystemName)
+            if (SystemName == CurrentMissionSystemName)
+            {
+                TextColor = FLinearColor(1.0f, 0.35f, 0.35f, 1.0f);
+            }
+            else if (SystemName == SelectedSystemName)
             {
                 TextColor = FLinearColor(1.0f, 0.95f, 0.55f, 1.0f);
-            }
-            else if (SystemName == CurrentMissionSystemName)
-            {
-                TextColor = FLinearColor(0.75f, 1.0f, 0.75f, 1.0f);
             }
 
             FSlateDrawElement::MakeText(
                 OutDrawElements,
-                LayerId + 5,
+                LayerId + 8,
                 AllottedGeometry.ToPaintGeometry(TextPos, FVector2D(LabelWidth, LabelHeight)),
                 SystemName,
                 FontInfo,
@@ -350,7 +459,7 @@ int32 UGalaxyMapPanel::NativePaint(
         }
     }
 
-    return LayerId + 5;
+    return LayerId + 8;
 }
 
 void UGalaxyMapPanel::CacheStarTextures()
@@ -464,6 +573,7 @@ void UGalaxyMapPanel::ClearGalaxyMap()
     MarkerMap.Empty();
     SelectedSystemName.Empty();
     CurrentMissionSystemName.Empty();
+    RoutePathSystems.Empty();
     bHasBounds = false;
 
     if (MapCanvas)
@@ -478,6 +588,18 @@ void UGalaxyMapPanel::SetSelectedSystem(const FString& InSystemName)
 {
     SelectedSystemName = InSystemName;
     RefreshSelectionVisuals();
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void UGalaxyMapPanel::SetCurrentMissionSystem(const FString& InSystemName)
+{
+    CurrentMissionSystemName = InSystemName;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void UGalaxyMapPanel::SetRoutePath(const TArray<FString>& InRouteSystems)
+{
+    RoutePathSystems = InRouteSystems;
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -693,6 +815,11 @@ FReply UGalaxyMapPanel::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
         {
             SetSelectedSystem(HitSystemName);
 
+            if (OwnerNavDlg)
+            {
+                OwnerNavDlg->HandleGalaxySystemSelected(HitSystemName);
+            }
+
             UE_LOG(LogTemp, Warning, TEXT("[GalaxyMapPanel] Selected system: %s"), *HitSystemName);
 
             return FReply::Handled();
@@ -740,4 +867,25 @@ FReply UGalaxyMapPanel::NativeOnMouseWheel(const FGeometry& InGeometry, const FP
     }
 
     return FReply::Handled();
+}
+
+bool UGalaxyMapPanel::IsRouteLink(const FString& A, const FString& B) const
+{
+    if (RoutePathSystems.Num() < 2)
+    {
+        return false;
+    }
+
+    for (int32 i = 0; i < RoutePathSystems.Num() - 1; ++i)
+    {
+        const FString& R0 = RoutePathSystems[i];
+        const FString& R1 = RoutePathSystems[i + 1];
+
+        if ((R0 == A && R1 == B) || (R0 == B && R1 == A))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
