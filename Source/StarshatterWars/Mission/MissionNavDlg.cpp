@@ -1766,8 +1766,8 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         if (SystemMapPanel)
         {
             SystemMapPanel->SetViewedSystemName(SelectedSystemName);
-            SystemMapPanel->SetSelectedBodyName(TEXT(""));
-            SystemMapPanel->ShowSystemOverview();
+            SystemMapPanel->SetSelectedBodyName(TEXT("")); 
+            SystemMapPanel->ShowSystemOverview();           
         }
 
         CurrentNavMode = EMissionNavMode::SYSTEM;

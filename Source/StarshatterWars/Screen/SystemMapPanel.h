@@ -188,10 +188,10 @@ protected:
     float ZoomScale = 1.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
-    float MinZoomScale = 0.75f;
+    float MinZoomScale = 0.5f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
-    float MaxZoomScale = 2.50f;
+    float MaxZoomScale = 16.0f;
 
     UPROPERTY()
     FString SelectedBodyName;

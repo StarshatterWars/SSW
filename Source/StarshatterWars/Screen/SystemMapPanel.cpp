@@ -520,11 +520,11 @@ float USystemMapPanel::ComputeMoonDrawSize(const FS_MoonMap& InMoon) const
 
     if (RawRadius <= 0.0f)
     {
-        return 3.0f;
+        return 1.0f;
     }
 
-    const float VisualSize = FMath::LogX(10.0f, RawRadius + 1.0f) * 2.0f;
-    return FMath::Clamp(VisualSize, 2.5f, 7.0f);
+    const float VisualSize = FMath::LogX(10.0f, RawRadius + 1.0f) * 1.0f;
+    return FMath::Clamp(VisualSize, 1.0f, 3.0f);
 }
 
 float USystemMapPanel::ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const
@@ -1067,6 +1067,34 @@ int32 USystemMapPanel::NativePaint(
                 FLinearColor::White);
         }
 
+        bool bHighlightMoonOrbitsForThisPlanet = false;
+        const FString CleanPlanetName = PlanetRow.Name.TrimStartAndEnd();
+
+        if (!SelectedBodyName.IsEmpty())
+        {
+            if (CleanPlanetName.Equals(SelectedBodyName, ESearchCase::IgnoreCase))
+            {
+                bHighlightMoonOrbitsForThisPlanet = true;
+            }
+            else
+            {
+                for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+                {
+                    if (MoonRow.Name.TrimStartAndEnd().Equals(SelectedBodyName, ESearchCase::IgnoreCase))
+                    {
+                        bHighlightMoonOrbitsForThisPlanet = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        const FLinearColor MoonOrbitColor = bHighlightMoonOrbitsForThisPlanet
+            ? FLinearColor(0.75f, 0.85f, 1.0f, 0.40f)
+            : FLinearColor(0.55f, 0.55f, 0.60f, 0.12f);
+
+        const float MoonOrbitThickness = bHighlightMoonOrbitsForThisPlanet ? 1.1f : 0.5f;
+
         float MaxMoonOrbitForPlanet = 0.0f;
         for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
         {
@@ -1110,9 +1138,9 @@ int32 USystemMapPanel::NativePaint(
                 AllottedGeometry.ToPaintGeometry(),
                 MoonOrbitPoints,
                 ESlateDrawEffect::None,
-                FLinearColor(0.55f, 0.55f, 0.60f, 0.12f),
+                MoonOrbitColor,
                 true,
-                0.5f);
+                MoonOrbitThickness);
 
             const FVector2D MoonCenter(
                 PlanetCenter.X + FMath::Cos(MoonAngleRadians) * MoonOrbitRadius,
@@ -1152,24 +1180,14 @@ int32 USystemMapPanel::NativePaint(
         {
             const float MarkerSize = SelectedDrawSize + 10.0f;
 
-            TArray<FVector2D> MarkerPoints;
-            MarkerPoints.Add(FVector2D(SelectedCenter.X - MarkerSize, SelectedCenter.Y));
-            MarkerPoints.Add(FVector2D(SelectedCenter.X - (SelectedDrawSize * 0.5f) - 2.0f, SelectedCenter.Y));
-
-            MarkerPoints.Add(FVector2D(SelectedCenter.X + MarkerSize, SelectedCenter.Y));
-            MarkerPoints.Add(FVector2D(SelectedCenter.X + (SelectedDrawSize * 0.5f) + 2.0f, SelectedCenter.Y));
-
-            MarkerPoints.Add(FVector2D(SelectedCenter.X, SelectedCenter.Y - MarkerSize));
-            MarkerPoints.Add(FVector2D(SelectedCenter.X, SelectedCenter.Y - (SelectedDrawSize * 0.5f) - 2.0f));
-
-            MarkerPoints.Add(FVector2D(SelectedCenter.X, SelectedCenter.Y + MarkerSize));
-            MarkerPoints.Add(FVector2D(SelectedCenter.X, SelectedCenter.Y + (SelectedDrawSize * 0.5f) + 2.0f));
-
             FSlateDrawElement::MakeLines(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(),
-                { MarkerPoints[0], MarkerPoints[1] },
+                {
+                    FVector2D(SelectedCenter.X - MarkerSize, SelectedCenter.Y),
+                    FVector2D(SelectedCenter.X - (SelectedDrawSize * 0.5f) - 2.0f, SelectedCenter.Y)
+                },
                 ESlateDrawEffect::None,
                 FLinearColor(0.25f, 1.0f, 1.0f, 1.0f),
                 true,
@@ -1179,7 +1197,10 @@ int32 USystemMapPanel::NativePaint(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(),
-                { MarkerPoints[2], MarkerPoints[3] },
+                {
+                    FVector2D(SelectedCenter.X + MarkerSize, SelectedCenter.Y),
+                    FVector2D(SelectedCenter.X + (SelectedDrawSize * 0.5f) + 2.0f, SelectedCenter.Y)
+                },
                 ESlateDrawEffect::None,
                 FLinearColor(0.25f, 1.0f, 1.0f, 1.0f),
                 true,
@@ -1189,7 +1210,10 @@ int32 USystemMapPanel::NativePaint(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(),
-                { MarkerPoints[4], MarkerPoints[5] },
+                {
+                    FVector2D(SelectedCenter.X, SelectedCenter.Y - MarkerSize),
+                    FVector2D(SelectedCenter.X, SelectedCenter.Y - (SelectedDrawSize * 0.5f) - 2.0f)
+                },
                 ESlateDrawEffect::None,
                 FLinearColor(0.25f, 1.0f, 1.0f, 1.0f),
                 true,
@@ -1199,7 +1223,10 @@ int32 USystemMapPanel::NativePaint(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(),
-                { MarkerPoints[6], MarkerPoints[7] },
+                {
+                    FVector2D(SelectedCenter.X, SelectedCenter.Y + MarkerSize),
+                    FVector2D(SelectedCenter.X, SelectedCenter.Y + (SelectedDrawSize * 0.5f) + 2.0f)
+                },
                 ESlateDrawEffect::None,
                 FLinearColor(0.25f, 1.0f, 1.0f, 1.0f),
                 true,
