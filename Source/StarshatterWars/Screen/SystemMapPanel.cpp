@@ -317,6 +317,37 @@ void USystemMapPanel::NativeConstruct()
     RefreshView();
 }
 
+void USystemMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (bCameraAnimating)
+    {
+        PanOffset = FMath::Vector2DInterpTo(
+            PanOffset,
+            TargetPan,
+            InDeltaTime,
+            CameraInterpSpeed);
+
+        ZoomScale = FMath::FInterpTo(
+            ZoomScale,
+            TargetZoom,
+            InDeltaTime,
+            CameraInterpSpeed);
+
+        const bool bPanDone = PanOffset.Equals(TargetPan, 0.5f);
+        const bool bZoomDone = FMath::IsNearlyEqual(ZoomScale, TargetZoom, 0.01f);
+
+        if (bPanDone && bZoomDone)
+        {
+            PanOffset = TargetPan;
+            ZoomScale = TargetZoom;
+            bCameraAnimating = false;
+        }
+
+        Invalidate(EInvalidateWidget::Paint);
+    }
+}
 void USystemMapPanel::SetViewedSystemName(const FString& InSystemName)
 {
     const FString NewSystemName = InSystemName.TrimStartAndEnd();
@@ -354,14 +385,12 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
         return false;
     }
 
+    // star = reset view (legacy behavior)
     if (TargetName.Equals(ANSI_TO_TCHAR(CachedPrimaryStarBody->GetName()), ESearchCase::IgnoreCase))
     {
         ResetSystemView();
         return true;
     }
-
-    ZoomScale = 1.0f;
-    PanOffset = FVector2D::ZeroVector;
 
     FVector2D UnzoomedOffset = FVector2D::ZeroVector;
     if (!FindBodyOffsetByName(TargetName, UnzoomedOffset))
@@ -370,8 +399,38 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
     }
 
     const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
-    FocusOnPlanet(UnzoomedOffset, PanelSize);
-    Invalidate(EInvalidateWidget::Paint);
+
+    // determine body type for zoom policy
+    OrbitalBody* TargetBody = nullptr;
+
+    for (OrbitalBody* Planet : CachedPlanetBodies)
+    {
+        if (!Planet) continue;
+
+        if (TargetName.Equals(ANSI_TO_TCHAR(Planet->GetName()), ESearchCase::IgnoreCase))
+        {
+            TargetBody = Planet;
+            break;
+        }
+
+        ListIter<OrbitalBody> MoonIter = Planet->Satellites();
+        while (++MoonIter)
+        {
+            OrbitalBody* Moon = MoonIter.value();
+            if (Moon && TargetName.Equals(ANSI_TO_TCHAR(Moon->GetName()), ESearchCase::IgnoreCase))
+            {
+                TargetBody = Moon;
+                break;
+            }
+        }
+    }
+
+    const float DesiredZoom = GetFocusZoomForBody(TargetBody);
+    const FVector2D DesiredPan = -(UnzoomedOffset * DesiredZoom);
+
+    TargetZoom = DesiredZoom;
+    TargetPan = ClampPanOffset(DesiredPan, PanelSize);
+    bCameraAnimating = true;
 
     return true;
 }
@@ -975,14 +1034,23 @@ bool USystemMapPanel::HandleClickSelection(
 
 void USystemMapPanel::ZoomIn()
 {
+    bCameraAnimating = false;
+
     ZoomScale = FMath::Clamp(ZoomScale + 0.1f, MinZoomScale, MaxZoomScale);
+
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
 void USystemMapPanel::ZoomOut()
 {
+    bCameraAnimating = false;
+
     ZoomScale = FMath::Clamp(ZoomScale - 0.1f, MinZoomScale, MaxZoomScale);
+
     PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -995,10 +1063,14 @@ void USystemMapPanel::ResetSystemView()
     Invalidate(EInvalidateWidget::Paint);
 }
 
-void USystemMapPanel::FocusOnPlanet(const FVector2D& RelativeOffset, const FVector2D& PanelSize)
+void USystemMapPanel::FocusOnPlanet(
+    const FVector2D& RelativeOffset,
+    const FVector2D& PanelSize)
 {
-    const FVector2D TargetPan = -(RelativeOffset * ZoomScale);
-    PanOffset = ClampPanOffset(TargetPan, PanelSize);
+    const FVector2D DesiredPan = -(RelativeOffset * ZoomScale);
+
+    PanOffset = ClampPanOffset(DesiredPan, PanelSize);
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -1008,9 +1080,13 @@ FReply USystemMapPanel::NativeOnMouseButtonDown(
 {
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
+        // stop animation immediately (critical)
+        bCameraAnimating = false;
+
         bDraggingMap = true;
         DragStartScreenPosition = InMouseEvent.GetScreenSpacePosition();
         DragStartPanOffset = PanOffset;
+
         return FReply::Handled();
     }
 
@@ -1481,6 +1557,13 @@ int32 USystemMapPanel::NativePaint(
 void USystemMapPanel::SetSelectedBodyName(const FString& InName)
 {
     SelectedBodyName = InName.TrimStartAndEnd();
+
+    // optional auto-focus hook (legacy style)
+    if (!SelectedBodyName.IsEmpty())
+    {
+        CenterOnBodyByName(SelectedBodyName);
+    }
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -1605,4 +1688,27 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
     }
 
     return false;
+}
+
+float USystemMapPanel::GetFocusZoomForBody(const OrbitalBody* Body) const
+{
+    if (!Body)
+    {
+        return 1.0f;
+    }
+
+    switch (Body->GetType())
+    {
+    case Orbital::STAR:
+        return 1.0f;
+
+    case Orbital::PLANET:
+        return FMath::Max(ZoomScale, FocusMinPlanetZoom);
+
+    case Orbital::MOON:
+        return FMath::Max(ZoomScale, FocusMinMoonZoom);
+
+    default:
+        return ZoomScale;
+    }
 }

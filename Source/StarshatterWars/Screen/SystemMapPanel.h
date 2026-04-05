@@ -45,6 +45,7 @@ class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
 
 public:
     virtual void NativeConstruct() override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
     virtual int32 NativePaint(
         const FPaintArgs& Args,
@@ -229,6 +230,18 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
     float MaxZoomScale = 16.0f;
+
+protected:
+        float GetFocusZoomForBody(const OrbitalBody* Body) const;
+
+protected:
+    bool bCameraAnimating = false;
+    FVector2D TargetPan = FVector2D::ZeroVector;
+    float TargetZoom = 1.0f;
+
+    float CameraInterpSpeed = 8.0f;
+    float FocusMinPlanetZoom = 1.75f;
+    float FocusMinMoonZoom = 2.75f;
 
     // ------------------------------------------------------------
     // Selection
