@@ -257,6 +257,72 @@ FReply UMissionNavDlg::NativeOnMouseWheel(
     return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
 }
 
+FReply UMissionNavDlg::NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        return SectorMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        return SystemMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        return GalaxyMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+    }
+
+    return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UMissionNavDlg::NativeOnMouseButtonUp(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        return SectorMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        return SystemMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        return GalaxyMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+    }
+
+    return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+FReply UMissionNavDlg::NativeOnMouseMove(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        return SectorMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        return SystemMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+    }
+
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        return GalaxyMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+    }
+
+    return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
 void UMissionNavDlg::RefreshFromMission()
 {
     MissionPtr = ResolveMission();

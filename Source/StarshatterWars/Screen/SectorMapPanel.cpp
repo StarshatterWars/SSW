@@ -199,7 +199,8 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
         bDraggingMap = true;
         DragStartScreenPosition = InMouseEvent.GetScreenSpacePosition();
         DragStartPanOffset = PanOffset;
-        return FReply::Handled();
+
+        return FReply::Handled().CaptureMouse(TakeWidget());
     }
 
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
@@ -231,8 +232,6 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
             {
                 OwnerNavDlg->HandleSectorMissionElementSelected(HitElement);
             }
-
-            return FReply::Handled();
         }
 
         return FReply::Handled();
@@ -248,7 +247,7 @@ FReply USectorMapPanel::NativeOnMouseButtonUp(
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
         bDraggingMap = false;
-        return FReply::Handled();
+        return FReply::Handled().ReleaseMouseCapture();
     }
 
     return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
