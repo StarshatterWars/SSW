@@ -200,6 +200,33 @@ void UGalaxyMapPanel::NativeConstruct()
 void UGalaxyMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (bCameraAnimating)
+    {
+        CurrentPan = FMath::Vector2DInterpTo(
+            CurrentPan,
+            TargetPan,
+            InDeltaTime,
+            CameraInterpSpeed);
+
+        MapZoomLevel = FMath::FInterpTo(
+            MapZoomLevel,
+            TargetZoom,
+            InDeltaTime,
+            CameraInterpSpeed);
+
+        const bool bPanDone = CurrentPan.Equals(TargetPan, 0.5f);
+        const bool bZoomDone = FMath::IsNearlyEqual(MapZoomLevel, TargetZoom, 0.01f);
+
+        if (bPanDone && bZoomDone)
+        {
+            CurrentPan = TargetPan;
+            MapZoomLevel = TargetZoom;
+            bCameraAnimating = false;
+        }
+
+        Invalidate(EInvalidateWidget::Paint);
+    }
 }
 
 int32 UGalaxyMapPanel::NativePaint(
@@ -1006,12 +1033,14 @@ bool UGalaxyMapPanel::HitTestSystemAtLocalPoint(const FVector2D& LocalPoint, FSt
 
 void UGalaxyMapPanel::ZoomIn()
 {
+    StopCameraAnimation();
     MapZoomLevel = FMath::Clamp(MapZoomLevel + 0.1f, MinZoom, MaxZoom);
     Invalidate(EInvalidateWidget::Paint);
 }
 
 void UGalaxyMapPanel::ZoomOut()
 {
+    StopCameraAnimation();
     MapZoomLevel = FMath::Clamp(MapZoomLevel - 0.1f, MinZoom, MaxZoom);
     Invalidate(EInvalidateWidget::Paint);
 }
@@ -1026,31 +1055,47 @@ void UGalaxyMapPanel::ResetView()
     Invalidate(EInvalidateWidget::Paint);
 }
 
-FReply UGalaxyMapPanel::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply UGalaxyMapPanel::NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
 {
+    // ---------------------------------------------------
+    // RIGHT MOUSE -> PAN (STOP CAMERA ANIMATION FIRST)
+    // ---------------------------------------------------
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
+        // CRITICAL: stop any focus animation so user control wins
+        StopCameraAnimation();
+
         bIsPanning = true;
         PanStartMouse = InMouseEvent.GetScreenSpacePosition();
         PanStartOffset = CurrentPan;
+
         return FReply::Handled();
     }
 
+    // ---------------------------------------------------
+    // LEFT MOUSE -> SELECTION
+    // ---------------------------------------------------
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
     {
-        const FVector2D LocalPoint = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+        const FVector2D LocalPoint =
+            InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 
         FString HitSystemName;
         if (HitTestSystemAtLocalPoint(LocalPoint, HitSystemName))
         {
-            SetSelectedSystem(HitSystemName);
+            // Selection now optionally drives focus (handled inside)
+            SetSelectedSystem(HitSystemName, true);
 
             if (OwnerNavDlg)
             {
                 OwnerNavDlg->HandleGalaxySystemSelected(HitSystemName);
             }
 
-            UE_LOG(LogTemp, Warning, TEXT("[GalaxyMapPanel] Selected system: %s"), *HitSystemName);
+            UE_LOG(LogTemp, Warning,
+                TEXT("[GalaxyMapPanel] Selected system: %s"),
+                *HitSystemName);
 
             return FReply::Handled();
         }
@@ -1162,4 +1207,165 @@ bool UGalaxyMapPanel::IsRouteLink(const FString& A, const FString& B) const
     }
 
     return false;
+}
+
+
+void UGalaxyMapPanel::SetSelectedSystem(const FString& InSystemName, bool bAutoFocus)
+{
+    SelectedSystemName = InSystemName.TrimStartAndEnd();
+    RefreshSelectionVisuals();
+
+    if (bAutoFocus && !SelectedSystemName.IsEmpty())
+    {
+        FVector2D PanelSize(1024.0f, 768.0f);
+
+        if (MapCanvas)
+        {
+            const FVector2D Cached = MapCanvas->GetCachedGeometry().GetLocalSize();
+            if (Cached.X > 1.0f && Cached.Y > 1.0f)
+            {
+                PanelSize = Cached;
+            }
+        }
+
+        if (!IsSystemComfortablyVisible(SelectedSystemName, PanelSize))
+        {
+            FocusOnSystem(SelectedSystemName, true, false);
+        }
+    }
+
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+bool UGalaxyMapPanel::GetSystemRawPosition(const FString& InSystemName, FVector2D& OutRawPos) const
+{
+    if (const FVector2D* Found = CachedSystemPositions.Find(InSystemName))
+    {
+        OutRawPos = *Found;
+        return true;
+    }
+
+    return false;
+}
+
+float UGalaxyMapPanel::GetFocusZoomForSystem(const FString& InSystemName) const
+{
+    return FMath::Clamp(
+        FMath::Max(MapZoomLevel, FocusMinReadableZoom),
+        MinZoom,
+        MaxZoom);
+}
+
+FVector2D UGalaxyMapPanel::ComputeFocusPanForRawPoint(
+    const FVector2D& RawPoint,
+    const FVector2D& PanelSize,
+    float InZoom) const
+{
+    const FVector2D PanelCenter = PanelSize * 0.5f;
+
+    FVector2D FocusedPoint = PanelCenter + (RawPoint - PanelCenter) * InZoom;
+    FocusedPoint += ScreenOffset;
+
+    return PanelCenter - FocusedPoint;
+}
+
+bool UGalaxyMapPanel::IsSystemComfortablyVisible(
+    const FString& InSystemName,
+    const FVector2D& PanelSize) const
+{
+    const FVector2D* RawPos = CachedSystemPositions.Find(InSystemName);
+    if (!RawPos)
+    {
+        return false;
+    }
+
+    const FVector2D ScreenPos = ApplyViewTransformToPoint(*RawPos, PanelSize);
+    const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
+
+    return
+        ScreenPos.X >= (ClipRect.Left + FocusVisibleMargin) &&
+        ScreenPos.X <= (ClipRect.Right - FocusVisibleMargin) &&
+        ScreenPos.Y >= (ClipRect.Top + FocusVisibleMargin) &&
+        ScreenPos.Y <= (ClipRect.Bottom - FocusVisibleMargin);
+}
+
+void UGalaxyMapPanel::FocusOnSystem(
+    const FString& InSystemName,
+    bool bAnimate,
+    bool bAllowZoomAdjust)
+{
+    FVector2D RawPos;
+    if (!GetSystemRawPosition(InSystemName, RawPos))
+    {
+        return;
+    }
+
+    FVector2D PanelSize(1024.0f, 768.0f);
+
+    if (MapCanvas)
+    {
+        const FVector2D Cached = MapCanvas->GetCachedGeometry().GetLocalSize();
+        if (Cached.X > 1.0f && Cached.Y > 1.0f)
+        {
+            PanelSize = Cached;
+        }
+    }
+
+    const float DesiredZoom =
+        bAllowZoomAdjust ? GetFocusZoomForSystem(InSystemName) : MapZoomLevel;
+
+    const FVector2D DesiredPan =
+        ComputeFocusPanForRawPoint(RawPos, PanelSize, DesiredZoom);
+
+    if (bAnimate)
+    {
+        TargetZoom = DesiredZoom;
+        TargetPan = DesiredPan;
+        bCameraAnimating = true;
+    }
+    else
+    {
+        MapZoomLevel = DesiredZoom;
+        CurrentPan = DesiredPan;
+        bCameraAnimating = false;
+        Invalidate(EInvalidateWidget::Paint);
+    }
+}
+
+void UGalaxyMapPanel::SaveViewState()
+{
+    SavedZoom = MapZoomLevel;
+    SavedPan = CurrentPan;
+    SavedScreenOffset = ScreenOffset;
+    bHasSavedViewState = true;
+}
+
+void UGalaxyMapPanel::RestoreViewState(bool bAnimate)
+{
+    if (!bHasSavedViewState)
+    {
+        return;
+    }
+
+    if (bAnimate)
+    {
+        TargetZoom = SavedZoom;
+        TargetPan = SavedPan;
+        bCameraAnimating = true;
+    }
+    else
+    {
+        MapZoomLevel = SavedZoom;
+        CurrentPan = SavedPan;
+        ScreenOffset = SavedScreenOffset;
+        bCameraAnimating = false;
+        Invalidate(EInvalidateWidget::Paint);
+    }
+}
+
+void UGalaxyMapPanel::StopCameraAnimation()
+{
+    bCameraAnimating = false;
+    TargetZoom = MapZoomLevel;
+    TargetPan = CurrentPan;
 }

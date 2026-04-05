@@ -187,4 +187,41 @@ protected:
     float MaxAbsX = 1.0f;
     float MaxAbsY = 1.0f;
     bool bHasBounds = false;
+
+    public:
+        void SetSelectedSystem(const FString& InSystemName, bool bAutoFocus);
+        void FocusOnSystem(const FString& InSystemName, bool bAnimate = true, bool bAllowZoomAdjust = false);
+        void SaveViewState();
+        void RestoreViewState(bool bAnimate = false);
+        void StopCameraAnimation();
+
+protected:
+    bool GetSystemRawPosition(const FString& InSystemName, FVector2D& OutRawPos) const;
+    FVector2D ComputeFocusPanForRawPoint(
+        const FVector2D& RawPoint,
+        const FVector2D& PanelSize,
+        float InZoom) const;
+    bool IsSystemComfortablyVisible(
+        const FString& InSystemName,
+        const FVector2D& PanelSize) const;
+    float GetFocusZoomForSystem(const FString& InSystemName) const;
+
+protected:
+    bool bCameraAnimating = false;
+    FVector2D TargetPan = FVector2D::ZeroVector;
+    float TargetZoom = 1.0f;
+
+    bool bHasSavedViewState = false;
+    float SavedZoom = 1.0f;
+    FVector2D SavedPan = FVector2D::ZeroVector;
+    FVector2D SavedScreenOffset = FVector2D::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Galaxy Map")
+    float CameraInterpSpeed = 8.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Galaxy Map")
+    float FocusVisibleMargin = 80.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Galaxy Map")
+    float FocusMinReadableZoom = 1.10f;
 };
