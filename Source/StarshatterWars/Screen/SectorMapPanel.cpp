@@ -24,6 +24,7 @@
 #include "OrbitalRegion.h"
 #include "Mission.h"
 #include "MissionElement.h"
+#include "Instruction.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -149,6 +150,15 @@ int32 USectorMapPanel::NativePaint(
         Center,
         Scale,
         Rep);
+
+    DrawMissionNavRoutes(
+        OutDrawElements,
+        AllottedGeometry,
+        LayerId + 100,
+        Center,
+        Scale,
+        Rep);
+
 
     const FString InfoString = FString::Printf(
         TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
@@ -527,7 +537,8 @@ void USectorMapPanel::DrawMissionElement(
     const FLinearColor MarkerColor = ToLinearColor(Element->MarkerColor());
 
     float HalfSize = 3.0f;
-    if (Rep < 3)
+
+    if (Rep <= 1)
     {
         HalfSize = 2.0f;
     }
@@ -547,6 +558,7 @@ void USectorMapPanel::DrawMissionElement(
     const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
     const FVector2D DrawSize(HalfSize * 2.0f, HalfSize * 2.0f);
 
+    // Always draw marker
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         BaseLayerId + 1,
@@ -555,22 +567,22 @@ void USectorMapPanel::DrawMissionElement(
         ESlateDrawEffect::None,
         MarkerColor);
 
-    FSlateDrawElement::MakeBox(
-        OutDrawElements,
-        BaseLayerId + 2,
-        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
-        FCoreStyle::Get().GetBrush("WhiteBrush"),
-        ESlateDrawEffect::None,
-        FLinearColor::Transparent);
+    // Selected element highlight box
+    const bool bIsSelected = (Element == SelectedElement);
 
-    if (Element == SelectedElement)
+    if (bIsSelected)
     {
-        const FVector2D SelTopLeft(ScreenPos.X - HalfSize - 2.0f, ScreenPos.Y - HalfSize - 2.0f);
-        const FVector2D SelSize((HalfSize + 2.0f) * 2.0f, (HalfSize + 2.0f) * 2.0f);
+        const FVector2D SelTopLeft(
+            ScreenPos.X - HalfSize - 2.0f,
+            ScreenPos.Y - HalfSize - 2.0f);
+
+        const FVector2D SelSize(
+            (HalfSize + 2.0f) * 2.0f,
+            (HalfSize + 2.0f) * 2.0f);
 
         FSlateDrawElement::MakeLines(
             OutDrawElements,
-            BaseLayerId + 3,
+            BaseLayerId + 2,
             AllottedGeometry.ToPaintGeometry(),
             {
                 FVector2D(SelTopLeft.X, SelTopLeft.Y),
@@ -585,12 +597,38 @@ void USectorMapPanel::DrawMissionElement(
             1.0f);
     }
 
-    if (Rep >= 2)
+    // Crowd-aware label policy
+    const bool bCrowded = IsElementCrowded(Element, Scale);
+    bool bDrawLabel = false;
+
+    if (bIsSelected)
+    {
+        bDrawLabel = true;
+    }
+    else if (Rep >= 3)
+    {
+        bDrawLabel = !bCrowded;
+    }
+    else if (Rep == 2)
+    {
+        bDrawLabel = !bCrowded;
+    }
+    else
+    {
+        // Rep 1: markers only
+        bDrawLabel = false;
+    }
+
+    if (bDrawLabel)
     {
         FString LabelText;
+
         if (Element->Count() > 1)
         {
-            LabelText = FString::Printf(TEXT("%s x %d"), ANSI_TO_TCHAR(Element->GetName()), Element->Count());
+            LabelText = FString::Printf(
+                TEXT("%s x %d"),
+                ANSI_TO_TCHAR(Element->GetName()),
+                Element->Count());
         }
         else
         {
@@ -599,7 +637,7 @@ void USectorMapPanel::DrawMissionElement(
 
         FSlateDrawElement::MakeText(
             OutDrawElements,
-            BaseLayerId + 4,
+            BaseLayerId + 3,
             AllottedGeometry.ToPaintGeometry(
                 FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y - 6.0f),
                 FVector2D(220.0f, 16.0f)),
@@ -659,4 +697,230 @@ void USectorMapPanel::ZoomOut()
     UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
 
     Invalidate(EInvalidateWidget::Paint);
+}
+
+bool USectorMapPanel::IsElementCrowded(MissionElement* TestElement, float Scale) const
+{
+    if (!CachedMission || !CachedRegion || !TestElement)
+    {
+        return false;
+    }
+
+    const FVector TestLocation = TestElement->GetLocation();
+
+    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
+    while (++ElementIter)
+    {
+        MissionElement* RefElement = ElementIter.value();
+        if (!RefElement || RefElement == TestElement)
+        {
+            continue;
+        }
+
+        if (RefElement->IsSquadron())
+        {
+            continue;
+        }
+
+        if (_stricmp(RefElement->GetRegion(), CachedRegion->GetName()) != 0)
+        {
+            continue;
+        }
+
+        const FVector RefLocation = RefElement->GetLocation();
+
+        const double DX = (TestLocation.X - RefLocation.X) * Scale;
+        const double DY = (TestLocation.Y - RefLocation.Y) * Scale;
+        const double DistSq = (DX * DX) + (DY * DY);
+
+        // Legacy-style crowd threshold in screen space
+        if (DistSq <= 64.0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void USectorMapPanel::DrawMissionNavRoutes(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep) const
+{
+    if (!CachedMission || !CachedRegion)
+    {
+        return;
+    }
+
+    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
+    while (++ElementIter)
+    {
+        MissionElement* Element = ElementIter.value();
+        if (!Element)
+        {
+            continue;
+        }
+
+        if (Element->IsSquadron())
+        {
+            continue;
+        }
+
+        DrawMissionNavRouteForElement(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId,
+            Center,
+            Scale,
+            Rep,
+            Element);
+    }
+}
+
+void USectorMapPanel::DrawMissionNavRouteForElement(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep,
+    MissionElement* Element) const
+{
+    if (!Element || !CachedRegion)
+    {
+        return;
+    }
+
+    const bool bIsSelected = (Element == SelectedElement);
+
+    FLinearColor RouteColor = ToLinearColor(Element->MarkerColor());
+    RouteColor.A = bIsSelected ? 0.95f : 0.55f;
+
+    const float RouteThickness = bIsSelected ? 2.0f : 1.0f;
+
+    const FVector ElementLocation = Element->GetLocation();
+    const FVector2D ElementScreenPos(
+        Center.X + (ElementLocation.X * Scale),
+        Center.Y + (ElementLocation.Y * Scale));
+
+    bool bHaveFirstPointInRegion = false;
+    FVector FirstNavWorld = FVector::ZeroVector;
+    FVector2D FirstNavScreen = FVector2D::ZeroVector;
+
+    bool bHavePrevPointInRegion = false;
+    FVector PrevNavWorld = FVector::ZeroVector;
+    FVector2D PrevNavScreen = FVector2D::ZeroVector;
+
+    int32 NavIndex = 0;
+
+    ListIter<Instruction> NavIter = Element->NavList();
+    while (++NavIter)
+    {
+        Instruction* Nav = NavIter.value();
+        if (!Nav)
+        {
+            ++NavIndex;
+            continue;
+        }
+
+        if (_stricmp(Nav->RegionName(), CachedRegion->GetName()) != 0)
+        {
+            ++NavIndex;
+            continue;
+        }
+
+        const FVector NavWorld = Nav->Location();
+        const FVector2D NavScreen(
+            Center.X + (NavWorld.X * Scale),
+            Center.Y + (NavWorld.Y * Scale));
+
+        if (!bHaveFirstPointInRegion)
+        {
+            bHaveFirstPointInRegion = true;
+            FirstNavWorld = NavWorld;
+            FirstNavScreen = NavScreen;
+        }
+
+        if (bHavePrevPointInRegion)
+        {
+            FSlateDrawElement::MakeLines(
+                OutDrawElements,
+                BaseLayerId + 1,
+                AllottedGeometry.ToPaintGeometry(),
+                { PrevNavScreen, NavScreen },
+                ESlateDrawEffect::None,
+                RouteColor,
+                true,
+                RouteThickness);
+        }
+
+        // Draw navpoint X marker
+        const float MarkerHalf = (Rep <= 1) ? 2.0f : 3.0f;
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 2,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(NavScreen.X - MarkerHalf, NavScreen.Y - MarkerHalf),
+                FVector2D(NavScreen.X + MarkerHalf, NavScreen.Y + MarkerHalf)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 2,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(NavScreen.X - MarkerHalf, NavScreen.Y + MarkerHalf),
+                FVector2D(NavScreen.X + MarkerHalf, NavScreen.Y - MarkerHalf)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+
+        // Draw navpoint number when detail allows
+        if (Rep >= 2)
+        {
+            const FString NavLabel = FString::Printf(TEXT("%d"), NavIndex + 1);
+
+            FSlateDrawElement::MakeText(
+                OutDrawElements,
+                BaseLayerId + 3,
+                AllottedGeometry.ToPaintGeometry(
+                    FVector2D(NavScreen.X + MarkerHalf + 2.0f, NavScreen.Y - 8.0f),
+                    FVector2D(24.0f, 14.0f)),
+                NavLabel,
+                FCoreStyle::GetDefaultFontStyle("Regular", 9),
+                ESlateDrawEffect::None,
+                FLinearColor::White);
+        }
+
+        PrevNavWorld = NavWorld;
+        PrevNavScreen = NavScreen;
+        bHavePrevPointInRegion = true;
+        ++NavIndex;
+    }
+
+    // Draw line from element to first navpoint in this region
+    if (bHaveFirstPointInRegion)
+    {
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 1,
+            AllottedGeometry.ToPaintGeometry(),
+            { ElementScreenPos, FirstNavScreen },
+            ESlateDrawEffect::None,
+            RouteColor,
+            true,
+            RouteThickness);
+    }
 }

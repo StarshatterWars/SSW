@@ -83,6 +83,8 @@ protected:
     bool ResolveViewedSystem(StarSystem*& OutSystem) const;
     bool ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& OutRegion) const;
 
+    bool IsElementCrowded(MissionElement* TestElement, float Scale) const;
+
     void DrawRegionGrid(
         FSlateWindowElementList& OutDrawElements,
         const FGeometry& AllottedGeometry,
@@ -101,6 +103,23 @@ protected:
         int32 Rep) const;
 
     void DrawMissionElement(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep,
+        MissionElement* Element) const;
+
+    void DrawMissionNavRoutes(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep) const;
+
+    void DrawMissionNavRouteForElement(
         FSlateWindowElementList& OutDrawElements,
         const FGeometry& AllottedGeometry,
         int32 BaseLayerId,
