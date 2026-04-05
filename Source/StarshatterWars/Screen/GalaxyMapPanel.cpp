@@ -10,7 +10,7 @@
     ========
     Galaxy map panel.
 
-    - Loads galaxy systems from the environment subsystem
+    - Loads runtime star systems from the environment subsystem
     - Caches star textures once
     - Projects all systems into panel space
     - Draws jump links in NativePaint
@@ -27,6 +27,7 @@
 #include "MissionNavDlg.h"
 #include "SystemMarker.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "StarSystem.h"
 
 #include "Components/CanvasPanel.h"
 #include "Engine/Texture2D.h"
@@ -191,7 +192,7 @@ void UGalaxyMapPanel::NativeConstruct()
     {
         if (UStarshatterEnvironmentSubsystem* Env = GI->GetSubsystem<UStarshatterEnvironmentSubsystem>())
         {
-            BuildGalaxyMap(Env->GalaxyDataArray);
+            LoadFromRuntimeSystems(Env->GetRuntimeStarSystems());
         }
     }
 }
@@ -247,10 +248,14 @@ int32 UGalaxyMapPanel::NativePaint(
             FLinearColor(1.0f, 0.95f, 0.55f, 1.0f));
     }
 
-    for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
-        const FS_Galaxy& SystemRow = Pair.Value;
+        StarSystem* System = Pair.Value;
+        if (!System)
+        {
+            continue;
+        }
 
         const FVector2D* RawStart = CachedSystemPositions.Find(SystemName);
         if (!RawStart)
@@ -258,7 +263,9 @@ int32 UGalaxyMapPanel::NativePaint(
             continue;
         }
 
-        for (const FString& LinkedName : SystemRow.Link)
+        const TArray<FString> LinkedNames = GetLinkedSystemNames(System);
+
+        for (const FString& LinkedName : LinkedNames)
         {
             const FVector2D* RawEnd = CachedSystemPositions.Find(LinkedName);
             if (!RawEnd)
@@ -302,10 +309,14 @@ int32 UGalaxyMapPanel::NativePaint(
 
     PaintLayer += 1;
 
-    for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
-        const FS_Galaxy& SystemRow = Pair.Value;
+        StarSystem* System = Pair.Value;
+        if (!System)
+        {
+            continue;
+        }
 
         const FVector2D* RawPos = CachedSystemPositions.Find(SystemName);
         if (!RawPos)
@@ -315,7 +326,7 @@ int32 UGalaxyMapPanel::NativePaint(
 
         const FVector2D ScreenPos = ApplyViewTransformToPoint(*RawPos, PanelSize);
 
-        UTexture2D* StarTex = GetCachedStarTextureForClass(SystemRow.Class);
+        UTexture2D* StarTex = GetCachedStarTextureForClass(GetSpectralClassForSystem(System));
         if (!StarTex)
         {
             continue;
@@ -353,7 +364,7 @@ int32 UGalaxyMapPanel::NativePaint(
                 AllottedGeometry,
                 ScreenPos,
                 Radius,
-                GetIFFRingColor(SystemRow),
+                GetIFFRingColor(System),
                 1.5f,
                 28);
         }
@@ -418,10 +429,14 @@ int32 UGalaxyMapPanel::NativePaint(
 
     if (!SelectedSystemName.IsEmpty())
     {
-        for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+        for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
         {
             const FString& SystemName = Pair.Key;
-            const FS_Galaxy& SystemRow = Pair.Value;
+            StarSystem* System = Pair.Value;
+            if (!System)
+            {
+                continue;
+            }
 
             const FVector2D* RawStart = CachedSystemPositions.Find(SystemName);
             if (!RawStart)
@@ -429,7 +444,9 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            for (const FString& LinkedName : SystemRow.Link)
+            const TArray<FString> LinkedNames = GetLinkedSystemNames(System);
+
+            for (const FString& LinkedName : LinkedNames)
             {
                 const FVector2D* RawEnd = CachedSystemPositions.Find(LinkedName);
                 if (!RawEnd)
@@ -473,10 +490,14 @@ int32 UGalaxyMapPanel::NativePaint(
 
     if (RoutePathSystems.Num() >= 2)
     {
-        for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+        for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
         {
             const FString& SystemName = Pair.Key;
-            const FS_Galaxy& SystemRow = Pair.Value;
+            StarSystem* System = Pair.Value;
+            if (!System)
+            {
+                continue;
+            }
 
             const FVector2D* RawStart = CachedSystemPositions.Find(SystemName);
             if (!RawStart)
@@ -484,7 +505,9 @@ int32 UGalaxyMapPanel::NativePaint(
                 continue;
             }
 
-            for (const FString& LinkedName : SystemRow.Link)
+            const TArray<FString> LinkedNames = GetLinkedSystemNames(System);
+
+            for (const FString& LinkedName : LinkedNames)
             {
                 const FVector2D* RawEnd = CachedSystemPositions.Find(LinkedName);
                 if (!RawEnd)
@@ -524,7 +547,7 @@ int32 UGalaxyMapPanel::NativePaint(
 
     PaintLayer += 2;
 
-    for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
 
@@ -646,19 +669,47 @@ UTexture2D* UGalaxyMapPanel::GetCachedStarTextureForClass(ESPECTRAL_CLASS InClas
     return nullptr;
 }
 
-FLinearColor UGalaxyMapPanel::GetIFFRingColor(const FS_Galaxy& SystemRow) const
+ESPECTRAL_CLASS UGalaxyMapPanel::GetSpectralClassForSystem(StarSystem* InSystem) const
 {
-    if (SystemRow.Iff == 1)
+    if (!InSystem)
+    {
+        return ESPECTRAL_CLASS::G;
+    }
+
+    switch (InSystem->GetSequence())
+    {
+    case Star::O:           return ESPECTRAL_CLASS::O;
+    case Star::B:           return ESPECTRAL_CLASS::B;
+    case Star::A:           return ESPECTRAL_CLASS::A;
+    case Star::F:           return ESPECTRAL_CLASS::F;
+    case Star::G:           return ESPECTRAL_CLASS::G;
+    case Star::K:           return ESPECTRAL_CLASS::K;
+    case Star::M:           return ESPECTRAL_CLASS::M;
+    case Star::RED_GIANT:   return ESPECTRAL_CLASS::RED_GIANT;
+    case Star::WHITE_DWARF: return ESPECTRAL_CLASS::WHITE_DWARF;
+    case Star::BLACK_HOLE:  return ESPECTRAL_CLASS::BLACK_HOLE;
+    default:                return ESPECTRAL_CLASS::G;
+    }
+}
+
+FLinearColor UGalaxyMapPanel::GetIFFRingColor(StarSystem* InSystem) const
+{
+    if (!InSystem)
+    {
+        return FLinearColor(0.55f, 0.75f, 1.00f, 0.90f);
+    }
+
+    if (InSystem->GetAffiliation() == 1)
     {
         return FLinearColor(0.20f, 1.00f, 0.20f, 0.95f);
     }
 
-    if (SystemRow.Iff == 2)
+    if (InSystem->GetAffiliation() == 2)
     {
         return FLinearColor(1.00f, 0.25f, 0.25f, 0.95f);
     }
 
-    if (SystemRow.Iff == 3)
+    if (InSystem->GetAffiliation() == 3)
     {
         return FLinearColor(1.00f, 0.85f, 0.25f, 0.95f);
     }
@@ -666,27 +717,64 @@ FLinearColor UGalaxyMapPanel::GetIFFRingColor(const FS_Galaxy& SystemRow) const
     return FLinearColor(0.55f, 0.75f, 1.00f, 0.90f);
 }
 
-void UGalaxyMapPanel::BuildGalaxyMap(const TArray<FS_Galaxy>& InSystems)
+TArray<FString> UGalaxyMapPanel::GetLinkedSystemNames(StarSystem* InSystem) const
 {
-    GalaxySystems = InSystems;
+    TArray<FString> Result;
 
+    if (!InSystem)
+    {
+        return Result;
+    }
+
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
+    {
+        StarSystem* Other = Pair.Value;
+        if (!Other || Other == InSystem)
+        {
+            continue;
+        }
+
+        if (InSystem->HasLinkTo(Other))
+        {
+            Result.Add(Pair.Key);
+        }
+    }
+
+    Result.Sort();
+    return Result;
+}
+
+void UGalaxyMapPanel::LoadFromRuntimeSystems(const TArray<StarSystem*>& InSystems)
+{
+    RuntimeSystemRefs.Empty();
     SystemLookup.Empty();
     CachedSystemPositions.Empty();
 
-    for (const FS_Galaxy& SystemRow : GalaxySystems)
+    for (StarSystem* System : InSystems)
     {
-        if (!SystemRow.Name.IsEmpty())
+        if (!System)
         {
-            SystemLookup.Add(SystemRow.Name, SystemRow);
+            continue;
         }
+
+        RuntimeSystemRefs.Add(System);
+
+        const FString SystemName = ANSI_TO_TCHAR(System->GetName());
+        SystemLookup.Add(SystemName, System);
     }
 
     RebuildNormalizationBounds();
 
-    for (const FS_Galaxy& SystemRow : GalaxySystems)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
-        const FVector2D Pos = ProjectToPanel(SystemRow.Location);
-        CachedSystemPositions.Add(SystemRow.Name, Pos);
+        StarSystem* System = Pair.Value;
+        if (!System)
+        {
+            continue;
+        }
+
+        const FVector2D Pos = ProjectToPanel(System->GetLocation());
+        CachedSystemPositions.Add(Pair.Key, Pos);
     }
 
     Invalidate(EInvalidateWidget::Paint);
@@ -694,7 +782,7 @@ void UGalaxyMapPanel::BuildGalaxyMap(const TArray<FS_Galaxy>& InSystems)
 
 void UGalaxyMapPanel::ClearGalaxyMap()
 {
-    GalaxySystems.Empty();
+    RuntimeSystemRefs.Empty();
     SystemLookup.Empty();
     CachedSystemPositions.Empty();
     MarkerMap.Empty();
@@ -757,10 +845,18 @@ void UGalaxyMapPanel::RebuildNormalizationBounds()
 
     int32 Count = 0;
 
-    for (const FS_Galaxy& SystemRow : GalaxySystems)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
-        const float RawX = (float)SystemRow.Location.X;
-        const float RawY = (float)(-SystemRow.Location.Y * VerticalDisplayScale);
+        StarSystem* System = Pair.Value;
+        if (!System)
+        {
+            continue;
+        }
+
+        const FVector SystemLoc = System->GetLocation();
+
+        const float RawX = (float)SystemLoc.X;
+        const float RawY = (float)(-SystemLoc.Y * VerticalDisplayScale);
 
         MaxAbsX = FMath::Max(MaxAbsX, FMath::Abs(RawX));
         MaxAbsY = FMath::Max(MaxAbsY, FMath::Abs(RawY));
@@ -867,7 +963,7 @@ bool UGalaxyMapPanel::HitTestSystemAtLocalPoint(const FVector2D& LocalPoint, FSt
     float BestDistSq = TNumericLimits<float>::Max();
     FString BestName;
 
-    for (const TPair<FString, FS_Galaxy>& Pair : SystemLookup)
+    for (const TPair<FString, StarSystem*>& Pair : SystemLookup)
     {
         const FString& SystemName = Pair.Key;
 

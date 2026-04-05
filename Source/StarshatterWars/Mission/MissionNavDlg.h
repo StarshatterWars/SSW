@@ -52,6 +52,7 @@ class MissionInfo;
 class OrbitalBody;
 class OrbitalRegion;
 class StarSystem;
+class UStarshatterEnvironmentSubsystem;
 
 UENUM()
 enum class EMissionNavMode : uint8
@@ -144,6 +145,10 @@ protected:
     void SyncGalaxyMissionAndSelectionState();
     void SyncSubPanels();
     FString BuildGalaxySystemDetailText(const FString& InSystemName) const;
+
+    UStarshatterEnvironmentSubsystem* GetEnvironmentSubsystem() const;
+    StarSystem* FindRuntimeSystemByName(const FString& InSystemName) const;
+    TArray<FString> GetRuntimeLinkedSystemNames(StarSystem* InSystem) const;
 
 protected:
     UPROPERTY()

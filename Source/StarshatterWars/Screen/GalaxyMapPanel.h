@@ -10,7 +10,7 @@
     ========
     Galaxy map panel.
 
-    - Loads galaxy systems from the environment subsystem
+    - Loads runtime star systems from the environment subsystem
     - Caches star textures once
     - Uses origin-centered projection: world (0,0) -> panel center
     - Draws jump links in NativePaint
@@ -35,6 +35,7 @@ class UCanvasPanel;
 class UTexture2D;
 class UMissionNavDlg;
 class USystemMarker;
+class StarSystem;
 
 UCLASS()
 class STARSHATTERWARS_API UGalaxyMapPanel : public UUserWidget
@@ -66,7 +67,7 @@ public:
 public:
     void SetOwnerNavDlg(UMissionNavDlg* InOwner) { OwnerNavDlg = InOwner; }
 
-    void BuildGalaxyMap(const TArray<FS_Galaxy>& InSystems);
+    void LoadFromRuntimeSystems(const TArray<StarSystem*>& InSystems);
     void ClearGalaxyMap();
 
     void ZoomIn();
@@ -95,8 +96,10 @@ protected:
     UTexture2D* LoadGalaxyTexture(const TCHAR* AssetPath) const;
     UTexture2D* GetCachedStarTextureForClass(ESPECTRAL_CLASS InClass) const;
 
-    FLinearColor GetIFFRingColor(const FS_Galaxy& SystemRow) const;
+    FLinearColor GetIFFRingColor(StarSystem* InSystem) const;
     bool IsRouteLink(const FString& A, const FString& B) const;
+    ESPECTRAL_CLASS GetSpectralClassForSystem(StarSystem* InSystem) const;
+    TArray<FString> GetLinkedSystemNames(StarSystem* InSystem) const;
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -135,11 +138,9 @@ protected:
     UPROPERTY()
     UMissionNavDlg* OwnerNavDlg = nullptr;
 
-    UPROPERTY()
-    TArray<FS_Galaxy> GalaxySystems;
-
-    UPROPERTY()
-    TMap<FString, FS_Galaxy> SystemLookup;
+    // Converted from fake UObject storage to direct runtime StarSystem pointers.
+    TArray<StarSystem*> RuntimeSystemRefs;
+    TMap<FString, StarSystem*> SystemLookup;
 
     UPROPERTY()
     TMap<FString, FVector2D> CachedSystemPositions;

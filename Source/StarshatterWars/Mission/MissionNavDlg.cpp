@@ -28,6 +28,7 @@
 #include "SectorMapPanel.h"
 #include "SystemMapPanel.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "StarSystemRegistry.h"
 
 #include "MissionUIStyle.h"
 #include "FormattingUtils.h"
@@ -38,6 +39,7 @@
 #include "MissionElement.h"
 #include "MissionInfo.h"
 #include "Orbital.h"
+#include "OrbitalBody.h"
 #include "OrbitalRegion.h"
 #include "StarSystem.h"
 
@@ -84,6 +86,78 @@ void UMissionNavDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 Mission* UMissionNavDlg::ResolveMission() const
 {
     return ParentDlg ? ParentDlg->GetMissionPtr() : nullptr;
+}
+
+UStarshatterEnvironmentSubsystem* UMissionNavDlg::GetEnvironmentSubsystem() const
+{
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        return nullptr;
+    }
+
+    return GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+}
+
+StarSystem* UMissionNavDlg::FindRuntimeSystemByName(const FString& InSystemName) const
+{
+    if (InSystemName.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
+    if (!Env)
+    {
+        return nullptr;
+    }
+
+    for (StarSystem* Sys : Env->GetRuntimeStarSystems())
+    {
+        if (!Sys)
+        {
+            continue;
+        }
+
+        if (InSystemName.Equals(ANSI_TO_TCHAR(Sys->GetName()), ESearchCase::IgnoreCase))
+        {
+            return Sys;
+        }
+    }
+
+    return nullptr;
+}
+
+TArray<FString> UMissionNavDlg::GetRuntimeLinkedSystemNames(StarSystem* InSystem) const
+{
+    TArray<FString> Result;
+
+    if (!InSystem)
+    {
+        return Result;
+    }
+
+    UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
+    if (!Env)
+    {
+        return Result;
+    }
+
+    for (StarSystem* Candidate : Env->GetRuntimeStarSystems())
+    {
+        if (!Candidate || Candidate == InSystem)
+        {
+            continue;
+        }
+
+        if (InSystem->HasLinkTo(Candidate))
+        {
+            Result.Add(ANSI_TO_TCHAR(Candidate->GetName()));
+        }
+    }
+
+    Result.Sort();
+    return Result;
 }
 
 void UMissionNavDlg::NativeConstruct()
@@ -312,26 +386,18 @@ TArray<FString> UMissionNavDlg::FindShortestGalaxyRoute(
         return SelfRoute;
     }
 
-    UGameInstance* GI = GetGameInstance();
-    if (!GI)
-    {
-        return EmptyRoute;
-    }
-
-    UStarshatterEnvironmentSubsystem* Env =
-        GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
-
+    UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
     if (!Env)
     {
         return EmptyRoute;
     }
 
-    TMap<FString, const FS_Galaxy*> NodeMap;
-    for (const FS_Galaxy& Row : Env->GalaxyDataArray)
+    TMap<FString, StarSystem*> NodeMap;
+    for (StarSystem* Sys : Env->GetRuntimeStarSystems())
     {
-        if (!Row.Name.IsEmpty())
+        if (Sys)
         {
-            NodeMap.Add(Row.Name, &Row);
+            NodeMap.Add(ANSI_TO_TCHAR(Sys->GetName()), Sys);
         }
     }
 
@@ -360,15 +426,16 @@ TArray<FString> UMissionNavDlg::FindShortestGalaxyRoute(
             break;
         }
 
-        const FS_Galaxy* const* CurrentRowPtr = NodeMap.Find(Current);
-        if (!CurrentRowPtr || !(*CurrentRowPtr))
+        StarSystem** CurrentSysPtr = NodeMap.Find(Current);
+        if (!CurrentSysPtr || !(*CurrentSysPtr))
         {
             continue;
         }
 
-        const FS_Galaxy* CurrentRow = *CurrentRowPtr;
+        StarSystem* CurrentSys = *CurrentSysPtr;
+        const TArray<FString> NeighborNames = GetRuntimeLinkedSystemNames(CurrentSys);
 
-        for (const FString& Neighbor : CurrentRow->Link)
+        for (const FString& Neighbor : NeighborNames)
         {
             if (Neighbor.IsEmpty() || !NodeMap.Contains(Neighbor) || Visited.Contains(Neighbor))
             {
@@ -425,31 +492,7 @@ FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName)
         return TEXT("NO SYSTEM SELECTED");
     }
 
-    UGameInstance* GI = GetGameInstance();
-    if (!GI)
-    {
-        return InSystemName;
-    }
-
-    UStarshatterEnvironmentSubsystem* Env =
-        GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
-
-    if (!Env)
-    {
-        return InSystemName;
-    }
-
-    const FS_Galaxy* FoundSystem = nullptr;
-
-    for (const FS_Galaxy& Row : Env->GalaxyDataArray)
-    {
-        if (Row.Name.Equals(InSystemName, ESearchCase::IgnoreCase))
-        {
-            FoundSystem = &Row;
-            break;
-        }
-    }
-
+    StarSystem* FoundSystem = FindRuntimeSystemByName(InSystemName);
     if (!FoundSystem)
     {
         return FString::Printf(
@@ -461,24 +504,29 @@ FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName)
         FindShortestGalaxyRoute(CurrentMissionSystemName, InSystemName);
 
     const int32 JumpCount = Route.Num() > 0 ? Route.Num() - 1 : 0;
-    const FString IffText = FString::Printf(TEXT("%d"), FoundSystem->Iff);
+    const FString IffText = FString::Printf(TEXT("%d"), FoundSystem->GetAffiliation());
+
+    const TArray<FString> LinkedNames = GetRuntimeLinkedSystemNames(FoundSystem);
 
     FString LinkText = TEXT("NONE");
-    if (FoundSystem->Link.Num() > 0)
+    if (LinkedNames.Num() > 0)
     {
-        LinkText = FString::Join(FoundSystem->Link, TEXT(", "));
+        LinkText = FString::Join(LinkedNames, TEXT(", "));
     }
 
+    const FVector SystemLoc = FoundSystem->GetLocation();
+
     return FString::Printf(
-        TEXT("%s\n\nTYPE: STAR SYSTEM\nIFF: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nLINKS: %d\nJUMPS FROM MISSION: %d\nCONNECTED TO: %s"),
-        *FoundSystem->Name,
+        TEXT("%s\n\nTYPE: STAR SYSTEM\nIFF: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nLINKS: %d\nJUMPS FROM MISSION: %d\nCONNECTED TO: %s\nRADIUS: %.0f"),
+        ANSI_TO_TCHAR(FoundSystem->GetName()),
         *IffText,
-        FoundSystem->Location.X,
-        FoundSystem->Location.Y,
-        FoundSystem->Location.Z,
-        FoundSystem->Link.Num(),
+        SystemLoc.X,
+        SystemLoc.Y,
+        SystemLoc.Z,
+        LinkedNames.Num(),
         JumpCount,
-        *LinkText);
+        *LinkText,
+        FoundSystem->Radius());
 }
 
 void UMissionNavDlg::UpdateSystemDetailsPanel(const FString& InSystemName)
@@ -673,6 +721,12 @@ void UMissionNavDlg::BuildRuntimeLayout()
         else
         {
             GalaxyMapPanel->SetOwnerNavDlg(this);
+
+            if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+            {
+                GalaxyMapPanel->LoadFromRuntimeSystems(Env->GetRuntimeStarSystems());
+            }
+
             GalaxyPanelHost->SetContent(GalaxyMapPanel);
 
             UE_LOG(LogTemp, Warning,
@@ -1226,12 +1280,12 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
         break;
 
     case EMissionNavMode::SYSTEM:
-        CurrentFilterMode = EMissionNavFilterMode::SECTOR;
+        CurrentFilterMode = EMissionNavFilterMode::PLANET;
         if (Manager) Manager->NavModeSystem();
         break;
 
     case EMissionNavMode::SECTOR:
-        CurrentFilterMode = EMissionNavFilterMode::STARSHIP;
+        CurrentFilterMode = EMissionNavFilterMode::SECTOR;
         if (Manager) Manager->NavModeSector();
         break;
 
@@ -1766,8 +1820,8 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         if (SystemMapPanel)
         {
             SystemMapPanel->SetViewedSystemName(SelectedSystemName);
-            SystemMapPanel->SetSelectedBodyName(TEXT("")); 
-            SystemMapPanel->ShowSystemOverview();           
+            SystemMapPanel->SetSelectedBodyName(TEXT(""));
+            SystemMapPanel->ShowSystemOverview();
         }
 
         CurrentNavMode = EMissionNavMode::SYSTEM;
@@ -1840,7 +1894,6 @@ void UMissionNavDlg::OnZoomInClicked()
     {
         GalaxyMapPanel->ZoomIn();
     }
-
     else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
         SystemMapPanel->ZoomIn();
@@ -1858,7 +1911,6 @@ void UMissionNavDlg::OnZoomOutClicked()
     {
         GalaxyMapPanel->ZoomOut();
     }
-
     else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
         SystemMapPanel->ZoomOut();
