@@ -14,35 +14,29 @@
 
     OVERVIEW
     ========
-    System-level map panel for Mission Navigation.
+    System-level map panel (runtime StarSystem driven)
 
-    This panel renders a star system using map-driven data:
-
-    - Uses FS_Galaxy and FS_StarMap as the data source
-    - Renders the central star using texture-based rendering
-    - Uses spectral-class-based star textures
-    - Uses FS_Galaxy::Iff to tint the UI ring around the star
-    - Draws larger, clamped, legacy-style tilted orbit ellipses
-    - Draws planets above the orbit rings using FS_PlanetMap::Icon
-    - Scales planets from FS_PlanetMap::Radius
-    - Draws procedural rings for planets that define ring data
-    - Provides moon texture lookup using FS_MoonMap::Icon
-    - Mirrors GalaxyMapPanel input behavior:
-      right mouse drag = pan
-      left click = hit-test / selection
-      mouse wheel = zoom
+    - Uses StarSystem / OrbitalBody (NO DataTables)
+    - Renders star, planets, moons from runtime hierarchy
+    - Supports zoom, pan, selection
 */
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameStructs.h"
 #include "Input/Reply.h"
-#include "Math/Vector2D.h"
+
 #include "SystemMapPanel.generated.h"
 
+// Forward declarations
 class UCanvasPanel;
 class UTextBlock;
 class UTexture2D;
+
+class StarSystem;
+class OrbitalBody;
+
+// ------------------------------------------------------------
 
 UCLASS()
 class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
@@ -88,34 +82,52 @@ public:
     void ZoomIn();
     void ZoomOut();
 
+    void SetSelectedBodyName(const FString& InName);
+
 protected:
+
+    // ------------------------------------------------------------
+    // Layout / View
+    // ------------------------------------------------------------
     void BuildLayout();
     void RefreshView();
 
-    bool ResolveViewedGalaxy(FS_Galaxy& OutGalaxy) const;
-    const FS_StarMap* GetPrimaryStarMap(const FS_Galaxy& InGalaxy) const;
+    bool ResolveViewedSystem(StarSystem*& OutSystem) const;
 
+    // ------------------------------------------------------------
+    // Texture helpers
+    // ------------------------------------------------------------
     UTexture2D* GetStarTextureForClass(ESPECTRAL_CLASS InClass) const;
-    UTexture2D* GetPlanetTexture(const FS_PlanetMap& InPlanet) const;
-    UTexture2D* GetMoonTexture(const FS_MoonMap& InMoon) const;
+    UTexture2D* GetPlanetTexture(const OrbitalBody* InPlanet) const;
+    UTexture2D* GetMoonTexture(const OrbitalBody* InMoon) const;
     UTexture2D* LoadPlanetMapTextureByName(const FString& TextureName) const;
 
-    float ComputeStarDrawSize(const FS_StarMap& InStar) const;
-    float ComputeRingDrawSize(const FS_StarMap& InStar) const;
+    // ------------------------------------------------------------
+    // Size / Orbit calculations
+    // ------------------------------------------------------------
+    float ComputeStarDrawSize(const OrbitalBody* InStar) const;
+    float ComputeRingDrawSize(const OrbitalBody* InStar) const;
 
     float ComputeMaxDrawOrbitRadius(const FVector2D& PanelSize, float StarSize) const;
-    float ComputePlanetOrbitRadius(const FS_PlanetMap& InPlanet, float MaxOrbitInSystem, float MaxDrawRadius) const;
-    float ComputePlanetDrawSize(const FS_PlanetMap& InPlanet) const;
-    float ComputePlanetAngleRadians(const FS_PlanetMap& InPlanet, int32 PlanetIndex) const;
 
-    float ComputeMoonOrbitRadius(const FS_MoonMap& InMoon, float MaxMoonOrbitForPlanet, float ParentPlanetDrawSize) const;
-    float ComputeMoonDrawSize(const FS_MoonMap& InMoon) const;
-    float ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const;
+    float ComputePlanetOrbitRadius(
+        const OrbitalBody* InPlanet,
+        float MaxOrbitInSystem,
+        float MaxDrawRadius) const;
 
-    float ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const;
-    float ComputeOrbitVerticalScale(const FS_PlanetMap& InPlanet) const;
+    float ComputePlanetDrawSize(const OrbitalBody* InPlanet) const;
+    float ComputePlanetAngleRadians(const OrbitalBody* InPlanet, int32 PlanetIndex) const;
 
-    bool FindBodyOffsetByName(const FString& InBodyName, FVector2D& OutUnzoomedOffset) const;
+    float ComputeMoonOrbitRadius(
+        const OrbitalBody* InMoon,
+        float MaxMoonOrbitForPlanet,
+        float ParentPlanetDrawSize) const;
+
+    float ComputeMoonDrawSize(const OrbitalBody* InMoon) const;
+    float ComputeMoonAngleRadians(const OrbitalBody* InMoon, int32 MoonIndex) const;
+
+    float ComputeOrbitTiltRadians(const OrbitalBody* InPlanet) const;
+    float ComputeOrbitVerticalScale(const OrbitalBody* InPlanet) const;
 
     FVector2D ComputeOrbitPosition(
         const FVector2D& SystemCenter,
@@ -124,27 +136,41 @@ protected:
         float OrbitTiltRadians,
         float VerticalScale) const;
 
+    // ------------------------------------------------------------
+    // Interaction / Camera
+    // ------------------------------------------------------------
     float GetZoomedValue(float InValue) const;
     FVector2D ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const;
 
-    FLinearColor ComputeStarTint(const FS_StarMap& InStar) const;
-    FLinearColor ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const;
-
-    bool HandleClickSelection(const FVector2D& LocalPos, const FGeometry& InGeometry);
     void ResetSystemView();
     void FocusOnPlanet(const FVector2D& RelativeOffset, const FVector2D& PanelSize);
 
-public:
-    void SetSelectedBodyName(const FString& InName);
+    bool HandleClickSelection(const FVector2D& LocalPos, const FGeometry& InGeometry);
 
-protected:
+    // ------------------------------------------------------------
+    // Lookup / selection helpers
+    // ------------------------------------------------------------
+    bool FindBodyOffsetByName(
+        const FString& InBodyName,
+        FVector2D& OutUnzoomedOffset) const;
+
     bool FindBodyScreenPositionByName(
         const FString& InBodyName,
         const FGeometry& AllottedGeometry,
         FVector2D& OutScreenPosition,
         float& OutDrawSize) const;
 
+    // ------------------------------------------------------------
+    // Color helpers
+    // ------------------------------------------------------------
+    FLinearColor ComputeStarTint(const OrbitalBody* InStar) const;
+    FLinearColor ComputeSystemIFFRingTint(StarSystem* InSystem) const;
+
 protected:
+
+    // ------------------------------------------------------------
+    // UI
+    // ------------------------------------------------------------
     UPROPERTY()
     UCanvasPanel* RootCanvas = nullptr;
 
@@ -154,24 +180,35 @@ protected:
     UPROPERTY()
     UTextBlock* InfoText = nullptr;
 
+    // ------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------
     UPROPERTY()
     FString ViewedSystemName;
 
     UPROPERTY()
     bool bValidSystem = false;
 
-    UPROPERTY()
-    FS_Galaxy CachedGalaxyRow;
+    // ------------------------------------------------------------
+    // Runtime data (REPLACES DataTables)
+    // ------------------------------------------------------------
+    StarSystem* CachedRuntimeSystem = nullptr;
+    OrbitalBody* CachedPrimaryStarBody = nullptr;
 
-    UPROPERTY()
-    FS_StarMap CachedPrimaryStarMap;
+    TArray<OrbitalBody*> CachedPlanetBodies;
 
+    // ------------------------------------------------------------
+    // Rendering
+    // ------------------------------------------------------------
     UPROPERTY()
     TMap<ESPECTRAL_CLASS, TObjectPtr<UTexture2D>> StarTextureCache;
 
     UPROPERTY()
     UTexture2D* IFFRingTexture = nullptr;
 
+    // ------------------------------------------------------------
+    // Camera / Input
+    // ------------------------------------------------------------
     UPROPERTY()
     bool bDraggingMap = false;
 
@@ -193,6 +230,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
     float MaxZoomScale = 16.0f;
 
+    // ------------------------------------------------------------
+    // Selection
+    // ------------------------------------------------------------
     UPROPERTY()
     FString SelectedBodyName;
 };

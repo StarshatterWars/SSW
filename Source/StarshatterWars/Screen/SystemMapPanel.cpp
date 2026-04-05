@@ -15,13 +15,13 @@
     System-level map panel for Mission Navigation.
 
     - Resolves the selected system from UStarshatterEnvironmentSubsystem
-    - Uses FS_Galaxy::Stellar as the map hierarchy source
+    - Uses runtime StarSystem / OrbitalBody / OrbitalRegion as the map hierarchy source
     - Draws the primary star using GalaxyMap textures
-    - Tints the surrounding ring using FS_Galaxy::Iff
+    - Tints the surrounding ring using StarSystem affiliation
     - Draws planetary orbit rings
-    - Draws planets above those rings using FS_PlanetMap::Icon
-    - Scales planets from FS_PlanetMap::Radius
-    - Draws moons using FS_MoonMap::Icon
+    - Draws planets above those rings using map/icon texture names from OrbitalBody
+    - Scales planets from OrbitalBody radius
+    - Draws moons using map/icon texture names from OrbitalBody
     - Mirrors GalaxyMapPanel input behavior:
         * right mouse drag = pan
         * mouse wheel = zoom
@@ -34,6 +34,10 @@
 
 #include "MissionUIStyle.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "StarSystem.h"
+#include "Orbital.h"
+#include "OrbitalBody.h"
+#include "OrbitalRegion.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -148,6 +152,116 @@ static void DrawPlanetRingEllipseLines(
         Thickness);
 }
 
+// ------------------------------------------------------------
+// local runtime helpers
+// ------------------------------------------------------------
+
+namespace
+{
+    static StarSystem* ResolveRuntimeSystemByName(
+        UGameInstance* GameInstance,
+        const FString& ViewedSystemName)
+    {
+        if (!GameInstance || ViewedSystemName.IsEmpty())
+        {
+            return nullptr;
+        }
+
+        UStarshatterEnvironmentSubsystem* EnvironmentSubsystem =
+            GameInstance->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+
+        if (!EnvironmentSubsystem)
+        {
+            return nullptr;
+        }
+
+        for (StarSystem* System : EnvironmentSubsystem->GetRuntimeStarSystems())
+        {
+            if (!System)
+            {
+                continue;
+            }
+
+            if (ViewedSystemName.Equals(ANSI_TO_TCHAR(System->GetName()), ESearchCase::IgnoreCase))
+            {
+                return System;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static OrbitalBody* GetPrimaryStarBody(StarSystem* InSystem)
+    {
+        if (!InSystem)
+        {
+            return nullptr;
+        }
+
+        ListIter<OrbitalBody> StarIter = InSystem->Bodies();
+        while (++StarIter)
+        {
+            OrbitalBody* StarBody = StarIter.value();
+            if (StarBody && StarBody->GetType() == Orbital::STAR)
+            {
+                return StarBody;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static FString GetBodyTextureName(const OrbitalBody* Body)
+    {
+        if (!Body)
+        {
+            return FString();
+        }
+
+        const char* MapName = Body->GetMapName();
+        if (MapName && MapName[0] != '\0')
+        {
+            return ANSI_TO_TCHAR(MapName);
+        }
+
+        const char* TexName = Body->GetTextureName();
+        if (TexName && TexName[0] != '\0')
+        {
+            return ANSI_TO_TCHAR(TexName);
+        }
+
+        return FString();
+    }
+
+    static bool BodyHasRing(const OrbitalBody* Body)
+    {
+        return Body && Body->GetRingMax() > 0.0;
+    }
+
+    static ESPECTRAL_CLASS ToUISpectralClass(const OrbitalBody* Body)
+    {
+        if (!Body)
+        {
+            return ESPECTRAL_CLASS::G;
+        }
+
+        switch (Body->GetSubtype())
+        {
+        case Star::O:           return ESPECTRAL_CLASS::O;
+        case Star::B:           return ESPECTRAL_CLASS::B;
+        case Star::A:           return ESPECTRAL_CLASS::A;
+        case Star::F:           return ESPECTRAL_CLASS::F;
+        case Star::G:           return ESPECTRAL_CLASS::G;
+        case Star::K:           return ESPECTRAL_CLASS::K;
+        case Star::M:           return ESPECTRAL_CLASS::M;
+        case Star::WHITE_DWARF: return ESPECTRAL_CLASS::WHITE_DWARF;
+        case Star::RED_GIANT:   return ESPECTRAL_CLASS::RED_GIANT;
+        case Star::BLACK_HOLE:  return ESPECTRAL_CLASS::BLACK_HOLE;
+        default:                return ESPECTRAL_CLASS::G;
+        }
+    }
+}
+
 void USystemMapPanel::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -228,7 +342,7 @@ void USystemMapPanel::ShowSystemOverview()
 
 bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
 {
-    if (!bValidSystem || CachedPrimaryStarMap.Name.IsEmpty())
+    if (!bValidSystem || !CachedPrimaryStarBody)
     {
         return false;
     }
@@ -240,13 +354,12 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
         return false;
     }
 
-    if (TargetName.Equals(CachedPrimaryStarMap.Name, ESearchCase::IgnoreCase))
+    if (TargetName.Equals(ANSI_TO_TCHAR(CachedPrimaryStarBody->GetName()), ESearchCase::IgnoreCase))
     {
         ResetSystemView();
         return true;
     }
 
-    // Legacy behavior: centering is reliable only at system zoom.
     ZoomScale = 1.0f;
     PanOffset = FVector2D::ZeroVector;
 
@@ -323,49 +436,17 @@ void USystemMapPanel::BuildLayout()
     }
 }
 
-bool USystemMapPanel::ResolveViewedGalaxy(FS_Galaxy& OutGalaxy) const
+bool USystemMapPanel::ResolveViewedSystem(StarSystem*& OutSystem) const
 {
-    OutGalaxy = FS_Galaxy();
+    OutSystem = nullptr;
 
     if (ViewedSystemName.IsEmpty())
     {
         return false;
     }
 
-    UGameInstance* GameInstance = GetGameInstance();
-    if (!GameInstance)
-    {
-        return false;
-    }
-
-    UStarshatterEnvironmentSubsystem* EnvironmentSubsystem =
-        GameInstance->GetSubsystem<UStarshatterEnvironmentSubsystem>();
-
-    if (!EnvironmentSubsystem)
-    {
-        return false;
-    }
-
-    for (const FS_Galaxy& GalaxyRow : EnvironmentSubsystem->GalaxyDataArray)
-    {
-        if (GalaxyRow.Name.Equals(ViewedSystemName, ESearchCase::IgnoreCase))
-        {
-            OutGalaxy = GalaxyRow;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-const FS_StarMap* USystemMapPanel::GetPrimaryStarMap(const FS_Galaxy& InGalaxy) const
-{
-    if (InGalaxy.Stellar.Num() > 0)
-    {
-        return &InGalaxy.Stellar[0];
-    }
-
-    return nullptr;
+    OutSystem = ResolveRuntimeSystemByName(GetGameInstance(), ViewedSystemName);
+    return (OutSystem != nullptr);
 }
 
 UTexture2D* USystemMapPanel::GetStarTextureForClass(ESPECTRAL_CLASS InClass) const
@@ -406,19 +487,24 @@ UTexture2D* USystemMapPanel::LoadPlanetMapTextureByName(const FString& TextureNa
     return LoadedTexture;
 }
 
-UTexture2D* USystemMapPanel::GetPlanetTexture(const FS_PlanetMap& InPlanet) const
+UTexture2D* USystemMapPanel::GetPlanetTexture(const OrbitalBody* InPlanet) const
 {
-    return LoadPlanetMapTextureByName(InPlanet.Icon);
+    return LoadPlanetMapTextureByName(GetBodyTextureName(InPlanet));
 }
 
-UTexture2D* USystemMapPanel::GetMoonTexture(const FS_MoonMap& InMoon) const
+UTexture2D* USystemMapPanel::GetMoonTexture(const OrbitalBody* InMoon) const
 {
-    return LoadPlanetMapTextureByName(InMoon.Icon);
+    return LoadPlanetMapTextureByName(GetBodyTextureName(InMoon));
 }
 
-float USystemMapPanel::ComputeStarDrawSize(const FS_StarMap& InStar) const
+float USystemMapPanel::ComputeStarDrawSize(const OrbitalBody* InStar) const
 {
-    const float RawRadius = static_cast<float>(InStar.Radius);
+    if (!InStar)
+    {
+        return 28.0f;
+    }
+
+    const float RawRadius = static_cast<float>(InStar->Radius());
 
     if (RawRadius <= 0.0f)
     {
@@ -429,7 +515,7 @@ float USystemMapPanel::ComputeStarDrawSize(const FS_StarMap& InStar) const
     return FMath::Clamp(VisualSize, 24.0f, 64.0f);
 }
 
-float USystemMapPanel::ComputeRingDrawSize(const FS_StarMap& InStar) const
+float USystemMapPanel::ComputeRingDrawSize(const OrbitalBody* InStar) const
 {
     return ComputeStarDrawSize(InStar) + 12.0f;
 }
@@ -444,11 +530,16 @@ float USystemMapPanel::ComputeMaxDrawOrbitRadius(const FVector2D& PanelSize, flo
 }
 
 float USystemMapPanel::ComputePlanetOrbitRadius(
-    const FS_PlanetMap& InPlanet,
+    const OrbitalBody* InPlanet,
     float MaxOrbitInSystem,
     float MaxDrawRadius) const
 {
-    const float OrbitValue = static_cast<float>(InPlanet.Orbit);
+    if (!InPlanet)
+    {
+        return 0.0f;
+    }
+
+    const float OrbitValue = static_cast<float>(InPlanet->Orbit());
 
     if (OrbitValue <= 0.0f || MaxOrbitInSystem <= 0.0f)
     {
@@ -464,16 +555,21 @@ float USystemMapPanel::ComputePlanetOrbitRadius(
     return FMath::Lerp(MinOrbitRadius, MaxDrawRadius, SpreadOrbit);
 }
 
-float USystemMapPanel::ComputePlanetDrawSize(const FS_PlanetMap& InPlanet) const
+float USystemMapPanel::ComputePlanetDrawSize(const OrbitalBody* InPlanet) const
 {
-    const float RawRadius = static_cast<float>(InPlanet.Radius);
+    if (!InPlanet)
+    {
+        return 10.0f;
+    }
+
+    const float RawRadius = static_cast<float>(InPlanet->Radius());
 
     if (RawRadius <= 0.0f)
     {
         return 10.0f;
     }
 
-    const FString IconName = InPlanet.Icon.ToLower();
+    const FString IconName = GetBodyTextureName(InPlanet).ToLower();
 
     const bool bGasGiant =
         IconName.Contains(TEXT("gasgiant")) ||
@@ -487,24 +583,39 @@ float USystemMapPanel::ComputePlanetDrawSize(const FS_PlanetMap& InPlanet) const
     return FMath::Clamp(6.0f + (RawRadius / 1.2e6f), 8.0f, 24.0f);
 }
 
-float USystemMapPanel::ComputePlanetAngleRadians(const FS_PlanetMap& InPlanet, int32 PlanetIndex) const
+float USystemMapPanel::ComputePlanetAngleRadians(const OrbitalBody* InPlanet, int32 PlanetIndex) const
 {
-    const float OrbitAngleDegrees = static_cast<float>(InPlanet.OrbitAngle);
-
-    if (!FMath::IsNearlyZero(OrbitAngleDegrees))
+    if (!InPlanet)
     {
-        return FMath::DegreesToRadians(OrbitAngleDegrees);
+        return FMath::DegreesToRadians(PlanetIndex * 57.0f);
+    }
+
+    const FVector PlanetLocation = InPlanet->Location();
+    const Orbital* Primary = InPlanet->Primary();
+
+    if (Primary)
+    {
+        const FVector Delta = PlanetLocation - Primary->Location();
+        if (!Delta.IsNearlyZero())
+        {
+            return FMath::Atan2(Delta.Y, Delta.X);
+        }
     }
 
     return FMath::DegreesToRadians(PlanetIndex * 57.0f);
 }
 
 float USystemMapPanel::ComputeMoonOrbitRadius(
-    const FS_MoonMap& InMoon,
+    const OrbitalBody* InMoon,
     float MaxMoonOrbitForPlanet,
     float ParentPlanetDrawSize) const
 {
-    const float OrbitValue = static_cast<float>(InMoon.Orbit);
+    if (!InMoon)
+    {
+        return ParentPlanetDrawSize * 0.78f;
+    }
+
+    const float OrbitValue = static_cast<float>(InMoon->Orbit());
 
     if (OrbitValue <= 0.0f || MaxMoonOrbitForPlanet <= 0.0f)
     {
@@ -520,9 +631,14 @@ float USystemMapPanel::ComputeMoonOrbitRadius(
     return FMath::Lerp(MinMoonOrbitRadius, MaxMoonOrbitRadius, NormalizedOrbit);
 }
 
-float USystemMapPanel::ComputeMoonDrawSize(const FS_MoonMap& InMoon) const
+float USystemMapPanel::ComputeMoonDrawSize(const OrbitalBody* InMoon) const
 {
-    const float RawRadius = static_cast<float>(InMoon.Radius);
+    if (!InMoon)
+    {
+        return 1.0f;
+    }
+
+    const float RawRadius = static_cast<float>(InMoon->Radius());
 
     if (RawRadius <= 0.0f)
     {
@@ -533,26 +649,49 @@ float USystemMapPanel::ComputeMoonDrawSize(const FS_MoonMap& InMoon) const
     return FMath::Clamp(VisualSize, 1.0f, 3.0f);
 }
 
-float USystemMapPanel::ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const
+float USystemMapPanel::ComputeMoonAngleRadians(const OrbitalBody* InMoon, int32 MoonIndex) const
 {
-    const float OrbitAngleDegrees = static_cast<float>(InMoon.OrbitAngle);
-
-    if (!FMath::IsNearlyZero(OrbitAngleDegrees))
+    if (!InMoon)
     {
-        return FMath::DegreesToRadians(OrbitAngleDegrees);
+        return FMath::DegreesToRadians(MoonIndex * 83.0f);
+    }
+
+    const FVector MoonLocation = InMoon->Location();
+    const Orbital* Primary = InMoon->Primary();
+
+    if (Primary)
+    {
+        const FVector Delta = MoonLocation - Primary->Location();
+        if (!Delta.IsNearlyZero())
+        {
+            return FMath::Atan2(Delta.Y, Delta.X);
+        }
     }
 
     return FMath::DegreesToRadians(MoonIndex * 83.0f);
 }
 
-float USystemMapPanel::ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const
+float USystemMapPanel::ComputeOrbitTiltRadians(const OrbitalBody* InPlanet) const
 {
-    return 0.0f;
+    if (!InPlanet)
+    {
+        return 0.0f;
+    }
+
+    return static_cast<float>(InPlanet->Tilt());
 }
 
-float USystemMapPanel::ComputeOrbitVerticalScale(const FS_PlanetMap& InPlanet) const
+float USystemMapPanel::ComputeOrbitVerticalScale(const OrbitalBody* InPlanet) const
 {
-    return 1.0f;
+    if (!InPlanet)
+    {
+        return 1.0f;
+    }
+
+    const float Tilt = FMath::Abs(static_cast<float>(InPlanet->Tilt()));
+    const float Scale = FMath::Cos(Tilt);
+
+    return FMath::Clamp(Scale, 0.35f, 1.0f);
 }
 
 FVector2D USystemMapPanel::ComputeOrbitPosition(
@@ -591,7 +730,7 @@ FVector2D USystemMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVect
         PanelSize.X * 0.5f,
         ((ExtendedPanelSize.Y * 0.5f) - TopPadding) - 10.0f);
 
-    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarMap));
+    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarBody));
     const float Margin = FMath::Max(StarSize * 0.5f, 20.0f);
 
     const float MinPanXFromVisibility = Margin - BaseCenter.X;
@@ -614,14 +753,19 @@ FVector2D USystemMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVect
         FMath::Clamp(InOffset.Y, MinPanY, MaxPanY));
 }
 
-FLinearColor USystemMapPanel::ComputeStarTint(const FS_StarMap& InStar) const
+FLinearColor USystemMapPanel::ComputeStarTint(const OrbitalBody* InStar) const
 {
-    if (InStar.Color != FColor(0, 0, 0, 0))
+    if (!InStar)
     {
-        return FLinearColor(InStar.Color);
+        return FLinearColor(1.00f, 0.90f, 0.35f, 1.0f);
     }
 
-    switch (InStar.Class)
+    if (InStar->GetColor() != FColor(0, 0, 0, 0))
+    {
+        return FLinearColor(InStar->GetColor());
+    }
+
+    switch (ToUISpectralClass(InStar))
     {
     case ESPECTRAL_CLASS::O:           return FLinearColor(0.72f, 0.82f, 1.00f, 1.0f);
     case ESPECTRAL_CLASS::B:           return FLinearColor(0.78f, 0.86f, 1.00f, 1.0f);
@@ -637,9 +781,14 @@ FLinearColor USystemMapPanel::ComputeStarTint(const FS_StarMap& InStar) const
     }
 }
 
-FLinearColor USystemMapPanel::ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const
+FLinearColor USystemMapPanel::ComputeSystemIFFRingTint(StarSystem* InSystem) const
 {
-    switch (InGalaxy.Iff)
+    if (!InSystem)
+    {
+        return FLinearColor(0.60f, 0.75f, 1.00f, 0.80f);
+    }
+
+    switch (InSystem->GetAffiliation())
     {
     case 1:  return FLinearColor(0.20f, 1.00f, 0.20f, 0.90f);
     case 2:  return FLinearColor(1.00f, 0.25f, 0.25f, 0.90f);
@@ -650,7 +799,11 @@ FLinearColor USystemMapPanel::ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy
 
 void USystemMapPanel::RefreshView()
 {
-    bValidSystem = ResolveViewedGalaxy(CachedGalaxyRow);
+    CachedRuntimeSystem = nullptr;
+    CachedPrimaryStarBody = nullptr;
+    CachedPlanetBodies.Empty();
+
+    bValidSystem = ResolveViewedSystem(CachedRuntimeSystem);
 
     if (HeaderText)
     {
@@ -660,10 +813,8 @@ void USystemMapPanel::RefreshView()
             : FString::Printf(TEXT("SYSTEM: %s"), *ViewedSystemName.ToUpper())));
     }
 
-    if (!bValidSystem)
+    if (!bValidSystem || !CachedRuntimeSystem)
     {
-        CachedPrimaryStarMap = FS_StarMap();
-
         if (InfoText)
         {
             InfoText->SetText(FText::FromString(TEXT("NO SYSTEM")));
@@ -672,11 +823,9 @@ void USystemMapPanel::RefreshView()
         return;
     }
 
-    const FS_StarMap* PrimaryStarMap = GetPrimaryStarMap(CachedGalaxyRow);
-    if (!PrimaryStarMap)
+    CachedPrimaryStarBody = GetPrimaryStarBody(CachedRuntimeSystem);
+    if (!CachedPrimaryStarBody)
     {
-        CachedPrimaryStarMap = FS_StarMap();
-
         if (InfoText)
         {
             InfoText->SetText(FText::FromString(TEXT("NO STAR DATA")));
@@ -685,13 +834,21 @@ void USystemMapPanel::RefreshView()
         return;
     }
 
-    CachedPrimaryStarMap = *PrimaryStarMap;
+    ListIter<OrbitalBody> PlanetIter = CachedPrimaryStarBody->Satellites();
+    while (++PlanetIter)
+    {
+        OrbitalBody* Planet = PlanetIter.value();
+        if (Planet)
+        {
+            CachedPlanetBodies.Add(Planet);
+        }
+    }
 
     if (InfoText)
     {
         InfoText->SetText(FText::FromString(FString::Printf(
             TEXT("STAR: %s"),
-            *CachedPrimaryStarMap.Name)));
+            ANSI_TO_TCHAR(CachedPrimaryStarBody->GetName()))));
     }
 }
 
@@ -699,7 +856,7 @@ bool USystemMapPanel::FindBodyOffsetByName(const FString& InBodyName, FVector2D&
 {
     OutUnzoomedOffset = FVector2D::ZeroVector;
 
-    if (!bValidSystem || CachedPrimaryStarMap.Name.IsEmpty())
+    if (!bValidSystem || !CachedPrimaryStarBody)
     {
         return false;
     }
@@ -714,29 +871,36 @@ bool USystemMapPanel::FindBodyOffsetByName(const FString& InBodyName, FVector2D&
         PanelSize.Y + TopPadding + BottomPadding);
 
     float MaxOrbitInSystem = 0.0f;
-    for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
+    for (OrbitalBody* PlanetBody : CachedPlanetBodies)
     {
-        MaxOrbitInSystem = FMath::Max(
-            MaxOrbitInSystem,
-            static_cast<float>(PlanetRow.Orbit));
+        if (PlanetBody)
+        {
+            MaxOrbitInSystem = FMath::Max(
+                MaxOrbitInSystem,
+                static_cast<float>(PlanetBody->Orbit()));
+        }
     }
 
-    const float UnzoomedStarSize = ComputeStarDrawSize(CachedPrimaryStarMap);
+    const float UnzoomedStarSize = ComputeStarDrawSize(CachedPrimaryStarBody);
     const float UnzoomedMaxDrawOrbitRadius =
         ComputeMaxDrawOrbitRadius(ExtendedPanelSize, UnzoomedStarSize);
 
-    for (int32 PlanetIndex = 0; PlanetIndex < CachedPrimaryStarMap.Planet.Num(); ++PlanetIndex)
+    for (int32 PlanetIndex = 0; PlanetIndex < CachedPlanetBodies.Num(); ++PlanetIndex)
     {
-        const FS_PlanetMap& PlanetRow = CachedPrimaryStarMap.Planet[PlanetIndex];
+        OrbitalBody* PlanetBody = CachedPlanetBodies[PlanetIndex];
+        if (!PlanetBody)
+        {
+            continue;
+        }
 
         const float OrbitRadius = ComputePlanetOrbitRadius(
-            PlanetRow,
+            PlanetBody,
             MaxOrbitInSystem,
             UnzoomedMaxDrawOrbitRadius);
 
-        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
-        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
-        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetBody);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
+        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetBody, PlanetIndex);
 
         const FVector2D PlanetOffset = ComputeOrbitPosition(
             FVector2D::ZeroVector,
@@ -745,38 +909,53 @@ bool USystemMapPanel::FindBodyOffsetByName(const FString& InBodyName, FVector2D&
             OrbitTiltRadians,
             OrbitVerticalScale);
 
-        if (PlanetRow.Name.Equals(InBodyName, ESearchCase::IgnoreCase))
+        const FString PlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
+
+        if (PlanetName.Equals(InBodyName, ESearchCase::IgnoreCase))
         {
             OutUnzoomedOffset = PlanetOffset;
             return true;
         }
 
         float MaxMoonOrbitForPlanet = 0.0f;
-        for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+        ListIter<OrbitalBody> MoonOrbitIter = PlanetBody->Satellites();
+        while (++MoonOrbitIter)
         {
-            MaxMoonOrbitForPlanet = FMath::Max(
-                MaxMoonOrbitForPlanet,
-                static_cast<float>(MoonRow.Orbit));
+            OrbitalBody* MoonBody = MoonOrbitIter.value();
+            if (MoonBody)
+            {
+                MaxMoonOrbitForPlanet = FMath::Max(
+                    MaxMoonOrbitForPlanet,
+                    static_cast<float>(MoonBody->Orbit()));
+            }
         }
 
-        const float ParentPlanetDrawSize = ComputePlanetDrawSize(PlanetRow);
+        const float ParentPlanetDrawSize = ComputePlanetDrawSize(PlanetBody);
 
-        for (int32 MoonIndex = 0; MoonIndex < PlanetRow.Moon.Num(); ++MoonIndex)
+        int32 MoonIndex = 0;
+        ListIter<OrbitalBody> MoonIter = PlanetBody->Satellites();
+        while (++MoonIter)
         {
-            const FS_MoonMap& MoonRow = PlanetRow.Moon[MoonIndex];
+            OrbitalBody* MoonBody = MoonIter.value();
+            if (!MoonBody)
+            {
+                continue;
+            }
 
             const float MoonOrbitRadius = ComputeMoonOrbitRadius(
-                MoonRow,
+                MoonBody,
                 MaxMoonOrbitForPlanet,
                 ParentPlanetDrawSize);
 
-            const float MoonAngleRadians = ComputeMoonAngleRadians(MoonRow, MoonIndex);
+            const float MoonAngleRadians = ComputeMoonAngleRadians(MoonBody, MoonIndex++);
 
             const FVector2D MoonOffset = PlanetOffset + FVector2D(
                 FMath::Cos(MoonAngleRadians) * MoonOrbitRadius,
                 FMath::Sin(MoonAngleRadians) * MoonOrbitRadius);
 
-            if (MoonRow.Name.Equals(InBodyName, ESearchCase::IgnoreCase))
+            const FString MoonName = ANSI_TO_TCHAR(MoonBody->GetName());
+
+            if (MoonName.Equals(InBodyName, ESearchCase::IgnoreCase))
             {
                 OutUnzoomedOffset = MoonOffset;
                 return true;
@@ -917,7 +1096,7 @@ int32 USystemMapPanel::NativePaint(
         InWidgetStyle,
         bParentEnabled);
 
-    if (!bValidSystem || CachedPrimaryStarMap.Name.IsEmpty())
+    if (!bValidSystem || !CachedRuntimeSystem || !CachedPrimaryStarBody)
     {
         return LayerId;
     }
@@ -935,34 +1114,42 @@ int32 USystemMapPanel::NativePaint(
         (PanelSize.X * 0.5f) + PanOffset.X,
         (((ExtendedPanelSize.Y * 0.5f) - TopPadding) - 10.0f) + PanOffset.Y);
 
-    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarMap));
-    const float RingSize = GetZoomedValue(ComputeRingDrawSize(CachedPrimaryStarMap));
+    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarBody));
+    const float RingSize = GetZoomedValue(ComputeRingDrawSize(CachedPrimaryStarBody));
 
-    UTexture2D* StarTexture = GetStarTextureForClass(CachedPrimaryStarMap.Class);
+    UTexture2D* StarTexture = GetStarTextureForClass(ToUISpectralClass(CachedPrimaryStarBody));
 
-    const FLinearColor StarTint = ComputeStarTint(CachedPrimaryStarMap);
-    const FLinearColor IFFRingTint = ComputeSystemIFFRingTint(CachedGalaxyRow);
+    const FLinearColor StarTint = ComputeStarTint(CachedPrimaryStarBody);
+    const FLinearColor IFFRingTint = ComputeSystemIFFRingTint(CachedRuntimeSystem);
 
     int32 PaintLayer = LayerId;
 
     float MaxOrbitInSystem = 0.0f;
-    for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
+    for (OrbitalBody* PlanetBody : CachedPlanetBodies)
     {
-        MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetRow.Orbit));
+        if (PlanetBody)
+        {
+            MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetBody->Orbit()));
+        }
     }
 
     const float MaxDrawOrbitRadius =
         GetZoomedValue(ComputeMaxDrawOrbitRadius(ExtendedPanelSize, StarSize));
 
-    for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
+    for (OrbitalBody* PlanetBody : CachedPlanetBodies)
     {
+        if (!PlanetBody)
+        {
+            continue;
+        }
+
         const float OrbitRadius = ComputePlanetOrbitRadius(
-            PlanetRow,
+            PlanetBody,
             MaxOrbitInSystem,
             MaxDrawOrbitRadius);
 
-        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
-        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetBody);
 
         DrawOrbitEllipseLines(
             OutDrawElements,
@@ -1013,19 +1200,23 @@ int32 USystemMapPanel::NativePaint(
             StarTint);
     }
 
-    for (int32 PlanetIndex = 0; PlanetIndex < CachedPrimaryStarMap.Planet.Num(); ++PlanetIndex)
+    for (int32 PlanetIndex = 0; PlanetIndex < CachedPlanetBodies.Num(); ++PlanetIndex)
     {
-        const FS_PlanetMap& PlanetRow = CachedPrimaryStarMap.Planet[PlanetIndex];
+        OrbitalBody* PlanetBody = CachedPlanetBodies[PlanetIndex];
+        if (!PlanetBody)
+        {
+            continue;
+        }
 
         const float OrbitRadius = ComputePlanetOrbitRadius(
-            PlanetRow,
+            PlanetBody,
             MaxOrbitInSystem,
             MaxDrawOrbitRadius);
 
-        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
-        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
-        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
-        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetRow));
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetBody);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
+        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetBody, PlanetIndex);
+        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetBody));
 
         const FVector2D PlanetCenter = ComputeOrbitPosition(
             SystemCenter,
@@ -1034,7 +1225,7 @@ int32 USystemMapPanel::NativePaint(
             OrbitTiltRadians,
             OrbitVerticalScale);
 
-        if (!PlanetRow.Ring.IsEmpty())
+        if (BodyHasRing(PlanetBody))
         {
             const float PlanetRingRadiusX = PlanetDrawSize * 0.58f;
             const float PlanetRingRadiusY = PlanetDrawSize * 0.58f;
@@ -1054,7 +1245,7 @@ int32 USystemMapPanel::NativePaint(
             PaintLayer += 1;
         }
 
-        UTexture2D* PlanetTexture = GetPlanetTexture(PlanetRow);
+        UTexture2D* PlanetTexture = GetPlanetTexture(PlanetBody);
         if (PlanetTexture)
         {
             FSlateBrush PlanetBrush;
@@ -1074,7 +1265,7 @@ int32 USystemMapPanel::NativePaint(
         }
 
         bool bHighlightMoonOrbitsForThisPlanet = false;
-        const FString CleanPlanetName = PlanetRow.Name.TrimStartAndEnd();
+        const FString CleanPlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
 
         if (!SelectedBodyName.IsEmpty())
         {
@@ -1084,9 +1275,17 @@ int32 USystemMapPanel::NativePaint(
             }
             else
             {
-                for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+                ListIter<OrbitalBody> MoonCheckIter = PlanetBody->Satellites();
+                while (++MoonCheckIter)
                 {
-                    if (MoonRow.Name.TrimStartAndEnd().Equals(SelectedBodyName, ESearchCase::IgnoreCase))
+                    OrbitalBody* MoonBody = MoonCheckIter.value();
+                    if (!MoonBody)
+                    {
+                        continue;
+                    }
+
+                    const FString MoonName = ANSI_TO_TCHAR(MoonBody->GetName());
+                    if (MoonName.Equals(SelectedBodyName, ESearchCase::IgnoreCase))
                     {
                         bHighlightMoonOrbitsForThisPlanet = true;
                         break;
@@ -1102,27 +1301,38 @@ int32 USystemMapPanel::NativePaint(
         const float MoonOrbitThickness = bHighlightMoonOrbitsForThisPlanet ? 1.1f : 0.5f;
 
         float MaxMoonOrbitForPlanet = 0.0f;
-        for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+        ListIter<OrbitalBody> MoonOrbitIter = PlanetBody->Satellites();
+        while (++MoonOrbitIter)
         {
-            MaxMoonOrbitForPlanet = FMath::Max(
-                MaxMoonOrbitForPlanet,
-                static_cast<float>(MoonRow.Orbit));
+            OrbitalBody* MoonBody = MoonOrbitIter.value();
+            if (MoonBody)
+            {
+                MaxMoonOrbitForPlanet = FMath::Max(
+                    MaxMoonOrbitForPlanet,
+                    static_cast<float>(MoonBody->Orbit()));
+            }
         }
 
-        for (int32 MoonIndex = 0; MoonIndex < PlanetRow.Moon.Num(); ++MoonIndex)
+        int32 MoonIndex = 0;
+        ListIter<OrbitalBody> MoonIter = PlanetBody->Satellites();
+        while (++MoonIter)
         {
-            const FS_MoonMap& MoonRow = PlanetRow.Moon[MoonIndex];
+            OrbitalBody* MoonBody = MoonIter.value();
+            if (!MoonBody)
+            {
+                continue;
+            }
 
             const float MoonOrbitRadius = ComputeMoonOrbitRadius(
-                MoonRow,
+                MoonBody,
                 MaxMoonOrbitForPlanet,
                 PlanetDrawSize);
 
             const float MoonAngleRadians = ComputeMoonAngleRadians(
-                MoonRow,
-                MoonIndex);
+                MoonBody,
+                MoonIndex++);
 
-            const float MoonDrawSize = GetZoomedValue(ComputeMoonDrawSize(MoonRow));
+            const float MoonDrawSize = GetZoomedValue(ComputeMoonDrawSize(MoonBody));
 
             TArray<FVector2D> MoonOrbitPoints;
             MoonOrbitPoints.Reserve(49);
@@ -1152,7 +1362,7 @@ int32 USystemMapPanel::NativePaint(
                 PlanetCenter.X + FMath::Cos(MoonAngleRadians) * MoonOrbitRadius,
                 PlanetCenter.Y + FMath::Sin(MoonAngleRadians) * MoonOrbitRadius);
 
-            UTexture2D* MoonTexture = GetMoonTexture(MoonRow);
+            UTexture2D* MoonTexture = GetMoonTexture(MoonBody);
             if (MoonTexture)
             {
                 FSlateBrush MoonBrush;
@@ -1260,7 +1470,7 @@ int32 USystemMapPanel::NativePaint(
         AllottedGeometry.ToPaintGeometry(
             FVector2D(SystemCenter.X - 100.0f, SystemCenter.Y + StarSize * 0.5f + 22.0f),
             FVector2D(200.0f, 20.0f)),
-        CachedPrimaryStarMap.Name,
+        ANSI_TO_TCHAR(CachedPrimaryStarBody->GetName()),
         FCoreStyle::GetDefaultFontStyle("Regular", 11),
         ESlateDrawEffect::None,
         FLinearColor::White);
@@ -1283,7 +1493,7 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
     OutScreenPosition = FVector2D::ZeroVector;
     OutDrawSize = 0.0f;
 
-    if (!bValidSystem || CachedPrimaryStarMap.Name.IsEmpty() || InBodyName.IsEmpty())
+    if (!bValidSystem || !CachedRuntimeSystem || !CachedPrimaryStarBody || InBodyName.IsEmpty())
     {
         return false;
     }
@@ -1302,28 +1512,35 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
         (((ExtendedPanelSize.Y * 0.5f) - TopPadding) - 10.0f) + PanOffset.Y);
 
     float MaxOrbitInSystem = 0.0f;
-    for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
+    for (OrbitalBody* PlanetBody : CachedPlanetBodies)
     {
-        MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetRow.Orbit));
+        if (PlanetBody)
+        {
+            MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetBody->Orbit()));
+        }
     }
 
-    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarMap));
+    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarBody));
     const float MaxDrawOrbitRadius =
         GetZoomedValue(ComputeMaxDrawOrbitRadius(ExtendedPanelSize, StarSize));
 
-    for (int32 PlanetIndex = 0; PlanetIndex < CachedPrimaryStarMap.Planet.Num(); ++PlanetIndex)
+    for (int32 PlanetIndex = 0; PlanetIndex < CachedPlanetBodies.Num(); ++PlanetIndex)
     {
-        const FS_PlanetMap& PlanetRow = CachedPrimaryStarMap.Planet[PlanetIndex];
+        OrbitalBody* PlanetBody = CachedPlanetBodies[PlanetIndex];
+        if (!PlanetBody)
+        {
+            continue;
+        }
 
         const float OrbitRadius = ComputePlanetOrbitRadius(
-            PlanetRow,
+            PlanetBody,
             MaxOrbitInSystem,
             MaxDrawOrbitRadius);
 
-        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
-        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
-        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
-        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetRow));
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetBody);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
+        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetBody, PlanetIndex);
+        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetBody));
 
         const FVector2D PlanetCenter = ComputeOrbitPosition(
             SystemCenter,
@@ -1332,7 +1549,7 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
             OrbitTiltRadians,
             OrbitVerticalScale);
 
-        const FString PlanetName = PlanetRow.Name.TrimStartAndEnd();
+        const FString PlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
 
         if (PlanetName.Equals(InBodyName, ESearchCase::IgnoreCase))
         {
@@ -1342,30 +1559,41 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
         }
 
         float MaxMoonOrbitForPlanet = 0.0f;
-        for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+        ListIter<OrbitalBody> MoonOrbitIter = PlanetBody->Satellites();
+        while (++MoonOrbitIter)
         {
-            MaxMoonOrbitForPlanet = FMath::Max(
-                MaxMoonOrbitForPlanet,
-                static_cast<float>(MoonRow.Orbit));
+            OrbitalBody* MoonBody = MoonOrbitIter.value();
+            if (MoonBody)
+            {
+                MaxMoonOrbitForPlanet = FMath::Max(
+                    MaxMoonOrbitForPlanet,
+                    static_cast<float>(MoonBody->Orbit()));
+            }
         }
 
-        for (int32 MoonIndex = 0; MoonIndex < PlanetRow.Moon.Num(); ++MoonIndex)
+        int32 MoonIndex = 0;
+        ListIter<OrbitalBody> MoonIter = PlanetBody->Satellites();
+        while (++MoonIter)
         {
-            const FS_MoonMap& MoonRow = PlanetRow.Moon[MoonIndex];
+            OrbitalBody* MoonBody = MoonIter.value();
+            if (!MoonBody)
+            {
+                continue;
+            }
 
             const float MoonOrbitRadius = ComputeMoonOrbitRadius(
-                MoonRow,
+                MoonBody,
                 MaxMoonOrbitForPlanet,
                 PlanetDrawSize);
 
-            const float MoonAngleRadians = ComputeMoonAngleRadians(MoonRow, MoonIndex);
-            const float MoonDrawSize = GetZoomedValue(ComputeMoonDrawSize(MoonRow));
+            const float MoonAngleRadians = ComputeMoonAngleRadians(MoonBody, MoonIndex++);
+            const float MoonDrawSize = GetZoomedValue(ComputeMoonDrawSize(MoonBody));
 
             const FVector2D MoonCenter(
                 PlanetCenter.X + FMath::Cos(MoonAngleRadians) * MoonOrbitRadius,
                 PlanetCenter.Y + FMath::Sin(MoonAngleRadians) * MoonOrbitRadius);
 
-            const FString MoonName = MoonRow.Name.TrimStartAndEnd();
+            const FString MoonName = ANSI_TO_TCHAR(MoonBody->GetName());
 
             if (MoonName.Equals(InBodyName, ESearchCase::IgnoreCase))
             {
