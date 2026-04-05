@@ -81,6 +81,10 @@ public:
     void SetViewedSystemName(const FString& InSystemName);
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
 
+public:
+    void ShowSystemOverview();
+    bool CenterOnBodyByName(const FString& InBodyName);
+
     void ZoomIn();
     void ZoomOut();
 
@@ -111,6 +115,8 @@ protected:
     float ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const;
     float ComputeOrbitVerticalScale(const FS_PlanetMap& InPlanet) const;
 
+    bool FindBodyOffsetByName(const FString& InBodyName, FVector2D& OutUnzoomedOffset) const;
+
     FVector2D ComputeOrbitPosition(
         const FVector2D& SystemCenter,
         float OrbitRadius,
@@ -127,6 +133,16 @@ protected:
     bool HandleClickSelection(const FVector2D& LocalPos, const FGeometry& InGeometry);
     void ResetSystemView();
     void FocusOnPlanet(const FVector2D& RelativeOffset, const FVector2D& PanelSize);
+
+public:
+    void SetSelectedBodyName(const FString& InName);
+
+protected:
+    bool FindBodyScreenPositionByName(
+        const FString& InBodyName,
+        const FGeometry& AllottedGeometry,
+        FVector2D& OutScreenPosition,
+        float& OutDrawSize) const;
 
 protected:
     UPROPERTY()
@@ -176,4 +192,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
     float MaxZoomScale = 2.50f;
+
+    UPROPERTY()
+    FString SelectedBodyName;
 };

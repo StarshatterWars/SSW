@@ -1334,8 +1334,9 @@ void UMissionNavDlg::AddObjectItem(
 
 void UMissionNavDlg::RebuildObjectList()
 {
+    UMissionNavObjectListObject* PreviousSelection = SelectedObjectItem;
+
     ObjectItems.Empty();
-    SelectedObjectItem = nullptr;
 
     if (!ObjectListView)
     {
@@ -1348,6 +1349,7 @@ void UMissionNavDlg::RebuildObjectList()
     MissionPtr = ResolveMission();
     if (!MissionPtr)
     {
+        SelectedObjectItem = nullptr;
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: MissionPtr is null"));
         RefreshDetailPanel();
         return;
@@ -1399,10 +1401,32 @@ void UMissionNavDlg::RebuildObjectList()
             TEXT("MISSION NAV PANEL RECEIVED NO REAL DATA FOR THIS FILTER."));
     }
 
-    if (ObjectItems.Num() > 0)
+    SelectedObjectItem = nullptr;
+
+    if (PreviousSelection)
     {
-        ObjectListView->SetSelectedItem(ObjectItems[0]);
-        SelectedObjectItem = ObjectItems[0];
+        const FString PreviousPrimary = PreviousSelection->GetPrimaryText();
+        const EMissionNavObjectType PreviousType = PreviousSelection->GetObjectType();
+
+        for (UMissionNavObjectListObject* Item : ObjectItems)
+        {
+            if (!Item)
+            {
+                continue;
+            }
+
+            if (Item->GetObjectType() == PreviousType &&
+                Item->GetPrimaryText().Equals(PreviousPrimary, ESearchCase::IgnoreCase))
+            {
+                SelectedObjectItem = Item;
+                break;
+            }
+        }
+    }
+
+    if (SelectedObjectItem)
+    {
+        ObjectListView->SetSelectedItem(SelectedObjectItem);
     }
 
     SyncSubPanels();
@@ -1683,26 +1707,32 @@ void UMissionNavDlg::OnFilterButtonSelected(UMenuButton* SelectedButton)
 
     if (Option == TEXT("SYSTEM"))
     {
+        SetNavMode(EMissionNavMode::GALAXY);
         SetFilterMode(EMissionNavFilterMode::SYSTEM);
     }
     else if (Option == TEXT("PLANET"))
     {
+        SetNavMode(EMissionNavMode::SYSTEM);
         SetFilterMode(EMissionNavFilterMode::PLANET);
     }
     else if (Option == TEXT("SECTOR"))
     {
+        SetNavMode(EMissionNavMode::SECTOR);
         SetFilterMode(EMissionNavFilterMode::SECTOR);
     }
     else if (Option == TEXT("STATION"))
     {
+        SetNavMode(EMissionNavMode::SECTOR);
         SetFilterMode(EMissionNavFilterMode::STATION);
     }
     else if (Option == TEXT("STARSHIP"))
     {
+        SetNavMode(EMissionNavMode::SECTOR);
         SetFilterMode(EMissionNavFilterMode::STARSHIP);
     }
     else if (Option == TEXT("FIGHTER"))
     {
+        SetNavMode(EMissionNavMode::SECTOR);
         SetFilterMode(EMissionNavFilterMode::FIGHTER);
     }
 }
@@ -1714,7 +1744,93 @@ void UMissionNavDlg::OnFilterButtonHovered(UMenuButton* HoveredButton)
 void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 {
     SelectedObjectItem = Cast<UMissionNavObjectListObject>(SelectedItem);
-    SyncSubPanels();
+
+    if (!SelectedObjectItem)
+    {
+        RefreshDetailPanel();
+        return;
+    }
+
+    const EMissionNavObjectType ObjectType = SelectedObjectItem->GetObjectType();
+
+    if (ObjectType == EMissionNavObjectType::System)
+    {
+        const FString TargetSystemName =
+            SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+
+        if (!TargetSystemName.IsEmpty())
+        {
+            SelectedSystemName = TargetSystemName;
+        }
+
+        if (SystemMapPanel)
+        {
+            SystemMapPanel->SetViewedSystemName(SelectedSystemName);
+            SystemMapPanel->SetSelectedBodyName(TEXT(""));
+            SystemMapPanel->ShowSystemOverview();
+        }
+
+        CurrentNavMode = EMissionNavMode::SYSTEM;
+
+        if (NavSwitcher)
+        {
+            NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(EMissionNavMode::SYSTEM));
+        }
+
+        RefreshNavModeSelection();
+        SyncSubPanels();
+        RefreshDetailPanel();
+        return;
+    }
+
+    if (ObjectType == EMissionNavObjectType::Planet)
+    {
+        FString TargetName = SelectedObjectItem->GetPrimaryText();
+        TargetName = TargetName.Replace(TEXT("- "), TEXT(""));
+        TargetName = TargetName.TrimStartAndEnd();
+
+        CurrentNavMode = EMissionNavMode::SYSTEM;
+
+        if (NavSwitcher)
+        {
+            NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(EMissionNavMode::SYSTEM));
+        }
+
+        if (SystemMapPanel)
+        {
+            if (!SelectedSystemName.IsEmpty())
+            {
+                SystemMapPanel->SetViewedSystemName(SelectedSystemName);
+            }
+
+            SystemMapPanel->SetSelectedBodyName(TargetName);
+            SystemMapPanel->CenterOnBodyByName(TargetName);
+        }
+
+        RefreshNavModeSelection();
+        SyncSubPanels();
+        RefreshDetailPanel();
+        return;
+    }
+
+    if (ObjectType == EMissionNavObjectType::Sector ||
+        ObjectType == EMissionNavObjectType::Station ||
+        ObjectType == EMissionNavObjectType::Starship ||
+        ObjectType == EMissionNavObjectType::Fighter)
+    {
+        CurrentNavMode = EMissionNavMode::SECTOR;
+
+        if (NavSwitcher)
+        {
+            NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(EMissionNavMode::SECTOR));
+        }
+
+        RefreshNavModeSelection();
+        SyncSubPanels();
+        RefreshDetailPanel();
+        return;
+    }
+
     RefreshDetailPanel();
 }
 
