@@ -1,44 +1,80 @@
+/*
+    Project Starshatter Wars
+    Fractal Dev Studios LLC
+    Copyright (c) 2025-2026.
+
+    SUBSYSTEM:    UI
+    FILE:         SectorMapPanel.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Sector (Region) Map Panel - Read Only Pass 2
+
+    - Runtime StarSystem + OrbitalRegion driven
+    - Legacy DrawRegion() style grid and rep scaling
+    - Read-only mission element rendering
+    - No nav editing
+*/
+
 #include "SectorMapPanel.h"
 
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"
 #include "OrbitalRegion.h"
+#include "Mission.h"
+#include "MissionElement.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
-#include "Components/TextBlock.h"
 #include "Engine/GameInstance.h"
 #include "InputCoreTypes.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
 
-static StarSystem* ResolveRuntimeSystem(
-    UGameInstance* GI,
-    const FString& Name)
+namespace
 {
-    if (!GI || Name.IsEmpty())
+    static StarSystem* ResolveRuntimeSystem(
+        UGameInstance* GameInstance,
+        const FString& SystemName)
     {
-        return nullptr;
-    }
-
-    UStarshatterEnvironmentSubsystem* Env =
-        GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
-
-    if (!Env)
-    {
-        return nullptr;
-    }
-
-    for (StarSystem* Sys : Env->GetRuntimeStarSystems())
-    {
-        if (Sys && Name.Equals(ANSI_TO_TCHAR(Sys->GetName()), ESearchCase::IgnoreCase))
+        if (!GameInstance || SystemName.IsEmpty())
         {
-            return Sys;
+            return nullptr;
         }
+
+        UStarshatterEnvironmentSubsystem* EnvironmentSubsystem =
+            GameInstance->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+
+        if (!EnvironmentSubsystem)
+        {
+            return nullptr;
+        }
+
+        for (StarSystem* System : EnvironmentSubsystem->GetRuntimeStarSystems())
+        {
+            if (!System)
+            {
+                continue;
+            }
+
+            if (SystemName.Equals(ANSI_TO_TCHAR(System->GetName()), ESearchCase::IgnoreCase))
+            {
+                return System;
+            }
+        }
+
+        return nullptr;
     }
 
-    return nullptr;
+    static FLinearColor ToLinearColor(const FColor& InColor)
+    {
+        return FLinearColor(
+            InColor.R / 255.0f,
+            InColor.G / 255.0f,
+            InColor.B / 255.0f,
+            InColor.A / 255.0f);
+    }
 }
 
 void USectorMapPanel::NativeConstruct()
@@ -47,8 +83,11 @@ void USectorMapPanel::NativeConstruct()
 
     BuildRuntimeLayout();
 
+    SetVisibility(ESlateVisibility::Visible);
+    SetIsFocusable(true);
+
     PanOffset = FVector2D::ZeroVector;
-    ZoomScale = 1.0f;
+    ZoomScale = 4.0f;
     bDraggingMap = false;
 
     RefreshView();
@@ -56,142 +95,156 @@ void USectorMapPanel::NativeConstruct()
 
 int32 USectorMapPanel::NativePaint(
     const FPaintArgs& Args,
-    const FGeometry& Geo,
-    const FSlateRect& Clip,
-    FSlateWindowElementList& Out,
-    int32 Layer,
-    const FWidgetStyle& Style,
+    const FGeometry& AllottedGeometry,
+    const FSlateRect& MyCullingRect,
+    FSlateWindowElementList& OutDrawElements,
+    int32 LayerId,
+    const FWidgetStyle& InWidgetStyle,
     bool bParentEnabled) const
 {
-    Layer = Super::NativePaint(Args, Geo, Clip, Out, Layer, Style, bParentEnabled);
+    LayerId = Super::NativePaint(
+        Args,
+        AllottedGeometry,
+        MyCullingRect,
+        OutDrawElements,
+        LayerId,
+        InWidgetStyle,
+        bParentEnabled);
 
-    if (!bValidView || !CachedRegion)
+    if (!bValidView || !CachedRuntimeSystem || !CachedRegion)
     {
-        return Layer;
+        return LayerId;
     }
 
-    const FVector2D Size = Geo.GetLocalSize();
-    const FVector2D Center = (Size * 0.5f) + PanOffset;
+    const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
+    const FVector2D Center = (PanelSize * 0.5f) + PanOffset;
 
-    const int32 Radius = (int32)CachedRegion->Radius();
-    const int32 Step = (int32)CachedRegion->GetGridSpace();
+    const int32 RegionRadius = static_cast<int32>(CachedRegion->Radius());
+    const int32 GridStep = static_cast<int32>(CachedRegion->GetGridSpace());
 
-    if (Radius <= 0 || Step <= 0)
+    if (RegionRadius <= 0 || GridStep <= 0)
     {
-        return Layer;
+        return LayerId;
     }
 
-    const double C = FMath::Min(Size.X * 0.5, Size.Y * 0.5);
-    const double R = CachedRegion->Radius() * ZoomScale;
-    const float Scale = (R > 0.0) ? (float)(C / R) : 1.0f;
+    const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
+    const double R = CachedRegion->Radius() / ZoomScale;
+    const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
-    DrawRegionGrid(Out, Geo, Layer + 1, Center, Scale, Radius, Step);
+    DrawRegionGrid(
+        OutDrawElements,
+        AllottedGeometry,
+        LayerId + 1,
+        Center,
+        Scale,
+        RegionRadius,
+        GridStep);
 
     const int32 Rep = ComputeRepLevel(R);
 
-    const FString Info = FString::Printf(
-        TEXT("SECTOR: %s  REP: %d  SCALE: %.4f"),
-        *ViewedSectorName,
+    DrawMissionElements(
+        OutDrawElements,
+        AllottedGeometry,
+        LayerId + 20,
+        Center,
+        Scale,
+        Rep);
+
+    const FString InfoString = FString::Printf(
+        TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
+        ViewedSectorName.IsEmpty() ? TEXT("NONE") : *ViewedSectorName,
         Rep,
-        Scale);
+        Scale,
+        R * 2.0);
 
     FSlateDrawElement::MakeText(
-        Out,
-        Layer + 20,
-        Geo.ToPaintGeometry(FVector2D(10, 30), FVector2D(400, 20)),
-        Info,
-        FCoreStyle::GetDefaultFontStyle("Regular", 10),
+        OutDrawElements,
+        LayerId + 200,
+        AllottedGeometry.ToPaintGeometry(
+            FVector2D(12.0f, 10.0f),
+            FVector2D(520.0f, 20.0f)),
+        InfoString,
+        FCoreStyle::GetDefaultFontStyle("Regular", 11),
         ESlateDrawEffect::None,
-        FLinearColor::White);
+        FLinearColor(0.85f, 0.90f, 1.0f, 0.95f));
 
-    return Layer + 20;
+    return LayerId + 200;
 }
 
-void USectorMapPanel::BuildRuntimeLayout()
+FReply USectorMapPanel::NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
 {
-    if (!WidgetTree)
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
-        return;
+        bDraggingMap = true;
+        DragStartScreenPosition = InMouseEvent.GetScreenSpacePosition();
+        DragStartPanOffset = PanOffset;
+        return FReply::Handled();
     }
 
-    // Root canvas only (paint-driven panel)
-    if (!RootCanvas)
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
     {
-        RootCanvas =
-            WidgetTree->ConstructWidget<UCanvasPanel>(
-                UCanvasPanel::StaticClass(),
-                TEXT("SectorMapRootCanvas"));
-
-        WidgetTree->RootWidget = RootCanvas;
+        return FReply::Handled();
     }
 
-    // Remove all text UI — everything rendered in NativePaint
-    HeaderText = nullptr;
-    InfoText = nullptr;
+    return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
-void USectorMapPanel::DrawRegionGrid(
-    FSlateWindowElementList& Out,
-    const FGeometry& Geo,
-    int32 Layer,
-    const FVector2D& Center,
-    float Scale,
-    int32 Radius,
-    int32 Step) const
+FReply USectorMapPanel::NativeOnMouseButtonUp(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
 {
-    const int32 Left = (int32)(-Radius * Scale + Center.X);
-    const int32 Right = (int32)(Radius * Scale + Center.X);
-    const int32 Top = (int32)(-Radius * Scale + Center.Y);
-    const int32 Bottom = (int32)(Radius * Scale + Center.Y);
-
-    int Tick = 0;
-
-    for (int X = 0; X <= Radius; X += Step)
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
-        const float SX = X * Scale;
-
-        const FLinearColor Col = (Tick == 0)
-            ? FLinearColor(0.2f, 0.2f, 0.2f)
-            : FLinearColor(0.08f, 0.08f, 0.08f);
-
-        FSlateDrawElement::MakeLines(Out, Layer, Geo.ToPaintGeometry(),
-            { FVector2D(Center.X + SX, Top), FVector2D(Center.X + SX, Bottom) },
-            ESlateDrawEffect::None, Col, true);
-
-        FSlateDrawElement::MakeLines(Out, Layer, Geo.ToPaintGeometry(),
-            { FVector2D(Center.X - SX, Top), FVector2D(Center.X - SX, Bottom) },
-            ESlateDrawEffect::None, Col, true);
-
-        Tick = (Tick + 1) % 4;
+        bDraggingMap = false;
+        return FReply::Handled();
     }
 
-    Tick = 0;
-
-    for (int Y = 0; Y <= Radius; Y += Step)
-    {
-        const float SY = Y * Scale;
-
-        const FLinearColor Col = (Tick == 0)
-            ? FLinearColor(0.2f, 0.2f, 0.2f)
-            : FLinearColor(0.08f, 0.08f, 0.08f);
-
-        FSlateDrawElement::MakeLines(Out, Layer, Geo.ToPaintGeometry(),
-            { FVector2D(Left, Center.Y + SY), FVector2D(Right, Center.Y + SY) },
-            ESlateDrawEffect::None, Col, true);
-
-        FSlateDrawElement::MakeLines(Out, Layer, Geo.ToPaintGeometry(),
-            { FVector2D(Left, Center.Y - SY), FVector2D(Right, Center.Y - SY) },
-            ESlateDrawEffect::None, Col, true);
-
-        Tick = (Tick + 1) % 4;
-    }
+    return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
-int32 USectorMapPanel::ComputeRepLevel(double R) const
+FReply USectorMapPanel::NativeOnMouseMove(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
 {
-    if (R > 250000.0) return 1;
-    if (R > 70000.0) return 2;
-    return 3;
+    if (bDraggingMap)
+    {
+        const FVector2D MouseDelta =
+            InMouseEvent.GetScreenSpacePosition() - DragStartScreenPosition;
+
+        PanOffset = ClampPanOffset(
+            DragStartPanOffset + MouseDelta,
+            InGeometry.GetLocalSize());
+
+        Invalidate(EInvalidateWidget::Paint);
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+FReply USectorMapPanel::NativeOnMouseWheel(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    const float WheelDelta = InMouseEvent.GetWheelDelta();
+
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] MouseWheel Delta=%.3f"), WheelDelta);
+
+    if (WheelDelta > 0.0f)
+    {
+        ZoomIn();
+        return FReply::Handled();
+    }
+
+    if (WheelDelta < 0.0f)
+    {
+        ZoomOut();
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
 }
 
 void USectorMapPanel::SetViewedSystemName(const FString& InSystemName)
@@ -206,156 +259,404 @@ void USectorMapPanel::SetViewedSectorName(const FString& InSectorName)
     RefreshView();
 }
 
+void USectorMapPanel::SetMission(Mission* InMission)
+{
+    CachedMission = InMission;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::SetSelectedElement(MissionElement* InElement)
+{
+    SelectedElement = InElement;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::BuildRuntimeLayout()
+{
+    if (!WidgetTree)
+    {
+        return;
+    }
+
+    if (!RootCanvas)
+    {
+        RootCanvas =
+            WidgetTree->ConstructWidget<UCanvasPanel>(
+                UCanvasPanel::StaticClass(),
+                TEXT("SectorMapRootCanvas"));
+
+        WidgetTree->RootWidget = RootCanvas;
+    }
+}
+
 void USectorMapPanel::RefreshView()
 {
-    CachedRuntimeSystem = ResolveRuntimeSystem(GetGameInstance(), ViewedSystemName);
+    CachedRuntimeSystem = nullptr;
     CachedRegion = nullptr;
     bValidView = false;
 
-    if (!CachedRuntimeSystem)
+    if (!ResolveViewedSystem(CachedRuntimeSystem) || !CachedRuntimeSystem)
     {
         Invalidate(EInvalidateWidget::Paint);
         return;
     }
 
-    // 1. Try explicit viewed sector name first
-    if (!ViewedSectorName.IsEmpty())
-    {
-        ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
-        while (++RegionIter)
-        {
-            OrbitalRegion* Region = RegionIter.value();
-            if (!Region)
-            {
-                continue;
-            }
-
-            if (ViewedSectorName.Equals(ANSI_TO_TCHAR(Region->GetName()), ESearchCase::IgnoreCase))
-            {
-                CachedRegion = Region;
-                break;
-            }
-        }
-    }
-
-    // 2. Fallback to active region if no named sector was resolved
-    if (!CachedRegion)
+    if (!ResolveViewedRegion(CachedRuntimeSystem, CachedRegion) || !CachedRegion)
     {
         CachedRegion = CachedRuntimeSystem->ActiveRegion();
-    }
 
-    // 3. Final fallback to first available region
-    if (!CachedRegion)
-    {
-        ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
-        while (++RegionIter)
+        if (!CachedRegion)
         {
-            OrbitalRegion* Region = RegionIter.value();
-            if (Region)
+            ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
+            while (++RegionIter)
             {
-                CachedRegion = Region;
-                break;
+                OrbitalRegion* Region = RegionIter.value();
+                if (Region)
+                {
+                    CachedRegion = Region;
+                    break;
+                }
             }
+        }
+
+        if (CachedRegion && ViewedSectorName.IsEmpty())
+        {
+            ViewedSectorName = ANSI_TO_TCHAR(CachedRegion->GetName());
         }
     }
 
     bValidView = (CachedRegion != nullptr);
 
-    if (bValidView && ViewedSectorName.IsEmpty())
-    {
-        ViewedSectorName = ANSI_TO_TCHAR(CachedRegion->GetName());
-    }
-
     Invalidate(EInvalidateWidget::Paint);
 }
 
-FReply USectorMapPanel::NativeOnMouseButtonDown(
-    const FGeometry& Geo,
-    const FPointerEvent& Event)
+bool USectorMapPanel::ResolveViewedSystem(StarSystem*& OutSystem) const
 {
-    if (Event.GetEffectingButton() == EKeys::RightMouseButton)
-    {
-        bDraggingMap = true;
-        DragStartScreenPosition = Event.GetScreenSpacePosition();
-        DragStartPanOffset = PanOffset;
-        return FReply::Handled();
-    }
-
-    return Super::NativeOnMouseButtonDown(Geo, Event);
+    OutSystem = ResolveRuntimeSystem(GetGameInstance(), ViewedSystemName);
+    return (OutSystem != nullptr);
 }
 
-FReply USectorMapPanel::NativeOnMouseButtonUp(
-    const FGeometry& Geo,
-    const FPointerEvent& Event)
+bool USectorMapPanel::ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& OutRegion) const
 {
-    if (Event.GetEffectingButton() == EKeys::RightMouseButton)
+    OutRegion = nullptr;
+
+    if (!InSystem || ViewedSectorName.IsEmpty())
     {
-        bDraggingMap = false;
-        return FReply::Handled();
+        return false;
     }
 
-    return Super::NativeOnMouseButtonUp(Geo, Event);
+    ListIter<OrbitalRegion> RegionIter = InSystem->AllRegions();
+    while (++RegionIter)
+    {
+        OrbitalRegion* Region = RegionIter.value();
+        if (!Region)
+        {
+            continue;
+        }
+
+        if (ViewedSectorName.Equals(ANSI_TO_TCHAR(Region->GetName()), ESearchCase::IgnoreCase))
+        {
+            OutRegion = Region;
+            return true;
+        }
+    }
+
+    return false;
 }
 
-FReply USectorMapPanel::NativeOnMouseMove(
-    const FGeometry& Geo,
-    const FPointerEvent& Event)
+void USectorMapPanel::DrawRegionGrid(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 LayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 RegionRadius,
+    int32 GridStep) const
 {
-    if (bDraggingMap)
+    const FLinearColor MajorColor(0.19f, 0.19f, 0.19f, 0.85f);
+    const FLinearColor MinorColor(0.09f, 0.09f, 0.09f, 0.80f);
+
+    const int32 Left = FMath::RoundToInt((-RegionRadius * Scale) + Center.X);
+    const int32 Right = FMath::RoundToInt((RegionRadius * Scale) + Center.X);
+    const int32 Top = FMath::RoundToInt((-RegionRadius * Scale) + Center.Y);
+    const int32 Bottom = FMath::RoundToInt((RegionRadius * Scale) + Center.Y);
+
+    int32 Tick = 0;
+
+    for (int32 X = 0; X <= RegionRadius; X += GridStep)
     {
-        const FVector2D Delta =
-            Event.GetScreenSpacePosition() - DragStartScreenPosition;
+        const int32 LX1 = FMath::RoundToInt((X * Scale) + Center.X);
+        const int32 LX2 = FMath::RoundToInt((-X * Scale) + Center.X);
+        const FLinearColor LineColor = (Tick == 0) ? MajorColor : MinorColor;
 
-        PanOffset = ClampPanOffset(
-            DragStartPanOffset + Delta,
-            Geo.GetLocalSize());
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            AllottedGeometry.ToPaintGeometry(),
+            { FVector2D(LX1, Top), FVector2D(LX1, Bottom) },
+            ESlateDrawEffect::None,
+            LineColor,
+            true,
+            1.0f);
 
-        Invalidate(EInvalidateWidget::Paint);
-        return FReply::Handled();
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            AllottedGeometry.ToPaintGeometry(),
+            { FVector2D(LX2, Top), FVector2D(LX2, Bottom) },
+            ESlateDrawEffect::None,
+            LineColor,
+            true,
+            1.0f);
+
+        ++Tick;
+        if (Tick > 3)
+        {
+            Tick = 0;
+        }
     }
 
-    return Super::NativeOnMouseMove(Geo, Event);
+    Tick = 0;
+
+    for (int32 Y = 0; Y <= RegionRadius; Y += GridStep)
+    {
+        const int32 LY1 = FMath::RoundToInt((Y * Scale) + Center.Y);
+        const int32 LY2 = FMath::RoundToInt((-Y * Scale) + Center.Y);
+        const FLinearColor LineColor = (Tick == 0) ? MajorColor : MinorColor;
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            AllottedGeometry.ToPaintGeometry(),
+            { FVector2D(Left, LY1), FVector2D(Right, LY1) },
+            ESlateDrawEffect::None,
+            LineColor,
+            true,
+            1.0f);
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            LayerId,
+            AllottedGeometry.ToPaintGeometry(),
+            { FVector2D(Left, LY2), FVector2D(Right, LY2) },
+            ESlateDrawEffect::None,
+            LineColor,
+            true,
+            1.0f);
+
+        ++Tick;
+        if (Tick > 3)
+        {
+            Tick = 0;
+        }
+    }
 }
 
-FReply USectorMapPanel::NativeOnMouseWheel(
-    const FGeometry& Geo,
-    const FPointerEvent& Event)
+void USectorMapPanel::DrawMissionElements(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep) const
 {
-    if (Event.GetWheelDelta() > 0)
+    if (!CachedMission || !CachedRegion)
     {
-        ZoomIn();
-        return FReply::Handled();
+        return;
     }
 
-    if (Event.GetWheelDelta() < 0)
+    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
+    while (++ElementIter)
     {
-        ZoomOut();
-        return FReply::Handled();
-    }
+        MissionElement* Element = ElementIter.value();
+        if (!Element)
+        {
+            continue;
+        }
 
-    return Super::NativeOnMouseWheel(Geo, Event);
+        if (Element->IsSquadron())
+        {
+            continue;
+        }
+
+        if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
+        {
+            continue;
+        }
+
+        DrawMissionElement(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId,
+            Center,
+            Scale,
+            Rep,
+            Element);
+    }
 }
 
-FVector2D USectorMapPanel::ClampPanOffset(
-    const FVector2D& In,
-    const FVector2D& Size) const
+void USectorMapPanel::DrawMissionElement(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep,
+    MissionElement* Element) const
 {
-    const float LimitX = FMath::Max(100.0f, Size.X * (ZoomScale - 1.0f));
-    const float LimitY = FMath::Max(100.0f, Size.Y * (ZoomScale - 1.0f));
+    if (!Element)
+    {
+        return;
+    }
+
+    const FVector ElementLocation = Element->GetLocation();
+
+    const FVector2D ScreenPos(
+        Center.X + (ElementLocation.X * Scale),
+        Center.Y + (ElementLocation.Y * Scale));
+
+    const bool bVisible =
+        ScreenPos.X >= 0.0f && ScreenPos.X < AllottedGeometry.GetLocalSize().X &&
+        ScreenPos.Y >= 0.0f && ScreenPos.Y < AllottedGeometry.GetLocalSize().Y;
+
+    if (!bVisible)
+    {
+        return;
+    }
+
+    const FLinearColor MarkerColor = ToLinearColor(Element->MarkerColor());
+
+    float HalfSize = 3.0f;
+    if (Rep < 3)
+    {
+        HalfSize = 2.0f;
+    }
+    else if (Element->IsStatic())
+    {
+        HalfSize = 6.0f;
+    }
+    else if (Element->IsStarship())
+    {
+        HalfSize = 4.0f;
+    }
+    else
+    {
+        HalfSize = 3.0f;
+    }
+
+    const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
+    const FVector2D DrawSize(HalfSize * 2.0f, HalfSize * 2.0f);
+
+    FSlateDrawElement::MakeBox(
+        OutDrawElements,
+        BaseLayerId + 1,
+        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+        FCoreStyle::Get().GetBrush("WhiteBrush"),
+        ESlateDrawEffect::None,
+        MarkerColor);
+
+    FSlateDrawElement::MakeBox(
+        OutDrawElements,
+        BaseLayerId + 2,
+        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+        FCoreStyle::Get().GetBrush("WhiteBrush"),
+        ESlateDrawEffect::None,
+        FLinearColor::Transparent);
+
+    if (Element == SelectedElement)
+    {
+        const FVector2D SelTopLeft(ScreenPos.X - HalfSize - 2.0f, ScreenPos.Y - HalfSize - 2.0f);
+        const FVector2D SelSize((HalfSize + 2.0f) * 2.0f, (HalfSize + 2.0f) * 2.0f);
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 3,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(SelTopLeft.X, SelTopLeft.Y),
+                FVector2D(SelTopLeft.X + SelSize.X, SelTopLeft.Y),
+                FVector2D(SelTopLeft.X + SelSize.X, SelTopLeft.Y + SelSize.Y),
+                FVector2D(SelTopLeft.X, SelTopLeft.Y + SelSize.Y),
+                FVector2D(SelTopLeft.X, SelTopLeft.Y)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+    }
+
+    if (Rep >= 2)
+    {
+        FString LabelText;
+        if (Element->Count() > 1)
+        {
+            LabelText = FString::Printf(TEXT("%s x %d"), ANSI_TO_TCHAR(Element->GetName()), Element->Count());
+        }
+        else
+        {
+            LabelText = ANSI_TO_TCHAR(Element->GetName());
+        }
+
+        FSlateDrawElement::MakeText(
+            OutDrawElements,
+            BaseLayerId + 4,
+            AllottedGeometry.ToPaintGeometry(
+                FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y - 6.0f),
+                FVector2D(220.0f, 16.0f)),
+            LabelText,
+            FCoreStyle::GetDefaultFontStyle("Regular", 10),
+            ESlateDrawEffect::None,
+            FLinearColor::White);
+    }
+}
+
+int32 USectorMapPanel::ComputeRepLevel(double ZoomedRadius) const
+{
+    int32 Rep = 3;
+
+    if (ZoomedRadius > 70000.0)
+    {
+        Rep = 2;
+    }
+
+    if (ZoomedRadius > 250000.0)
+    {
+        Rep = 1;
+    }
+
+    return Rep;
+}
+
+FVector2D USectorMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const
+{
+    const float DragAllowanceX = FMath::Max(120.0f, PanelSize.X * (ZoomScale - 1.0f) * 0.75f);
+    const float DragAllowanceY = FMath::Max(120.0f, PanelSize.Y * (ZoomScale - 1.0f) * 0.75f);
 
     return FVector2D(
-        FMath::Clamp(In.X, -LimitX, LimitX),
-        FMath::Clamp(In.Y, -LimitY, LimitY));
+        FMath::Clamp(InOffset.X, -DragAllowanceX, DragAllowanceX),
+        FMath::Clamp(InOffset.Y, -DragAllowanceY, DragAllowanceY));
 }
 
 void USectorMapPanel::ZoomIn()
 {
-    ZoomScale = FMath::Clamp(ZoomScale + 0.1f, MinZoomScale, MaxZoomScale);
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn before: %.3f"), ZoomScale);
+
+    ZoomScale = FMath::Clamp(ZoomScale * 1.25f, MinZoomScale, MaxZoomScale);
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn after: %.3f"), ZoomScale);
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
 void USectorMapPanel::ZoomOut()
 {
-    ZoomScale = FMath::Clamp(ZoomScale - 0.1f, MinZoomScale, MaxZoomScale);
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut before: %.3f"), ZoomScale);
+
+    ZoomScale = FMath::Clamp(ZoomScale * 0.8f, MinZoomScale, MaxZoomScale);
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
+
     Invalidate(EInvalidateWidget::Paint);
 }

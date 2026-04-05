@@ -230,6 +230,11 @@ void UMissionNavDlg::RefreshFromMission()
     SyncGalaxyMissionAndSelectionState();
     SyncSubPanels();
 
+    if (SectorMapPanel)
+    {
+        SectorMapPanel->SetMission(MissionPtr);
+    }
+
     if (NavBodyText)
     {
         NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
@@ -365,6 +370,8 @@ void UMissionNavDlg::SyncSubPanels()
         {
             SectorMapPanel->SetViewedSectorName(TEXT(""));
         }
+
+        SectorMapPanel->SetMission(MissionPtr);
     }
 }
 
@@ -1898,6 +1905,10 @@ void UMissionNavDlg::OnZoomInClicked()
     {
         SystemMapPanel->ZoomIn();
     }
+    else if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        SectorMapPanel->ZoomIn();
+    }
 
     if (Manager)
     {
@@ -1914,6 +1925,10 @@ void UMissionNavDlg::OnZoomOutClicked()
     else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
         SystemMapPanel->ZoomOut();
+    }
+    else if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        SectorMapPanel->ZoomOut();
     }
 
     if (Manager)

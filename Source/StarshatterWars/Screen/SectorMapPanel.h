@@ -11,11 +11,12 @@
 
     OVERVIEW
     ========
-    Sector (Region) Map Panel - First Pass
+    Sector (Region) Map Panel - Read Only Pass 2
 
     - Runtime StarSystem + OrbitalRegion driven
-    - DrawRegion() equivalent (grid + scaling)
-    - Read-only (no nav editing)
+    - Legacy DrawRegion() style grid and rep scaling
+    - Read-only mission element rendering
+    - No nav editing
 */
 
 #include "CoreMinimal.h"
@@ -23,10 +24,11 @@
 #include "SectorMapPanel.generated.h"
 
 class UCanvasPanel;
-class UTextBlock;
 
 class StarSystem;
 class OrbitalRegion;
+class Mission;
+class MissionElement;
 
 UCLASS()
 class STARSHATTERWARS_API USectorMapPanel : public UUserWidget
@@ -65,6 +67,15 @@ public:
     void SetViewedSystemName(const FString& InSystemName);
     void SetViewedSectorName(const FString& InSectorName);
 
+    void SetMission(Mission* InMission);
+    void SetSelectedElement(MissionElement* InElement);
+
+    const FString& GetViewedSystemName() const { return ViewedSystemName; }
+    const FString& GetViewedSectorName() const { return ViewedSectorName; }
+
+    void ZoomIn();
+    void ZoomOut();
+
 protected:
     void BuildRuntimeLayout();
     void RefreshView();
@@ -81,22 +92,32 @@ protected:
         int32 RegionRadius,
         int32 GridStep) const;
 
+    void DrawMissionElements(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep) const;
+
+    void DrawMissionElement(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep,
+        MissionElement* Element) const;
+
     int32 ComputeRepLevel(double ZoomedRadius) const;
 
     FVector2D ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const;
 
-    void ZoomIn();
-    void ZoomOut();
+
 
 protected:
     UPROPERTY()
     UCanvasPanel* RootCanvas = nullptr;
-
-    UPROPERTY()
-    UTextBlock* HeaderText = nullptr;
-
-    UPROPERTY()
-    UTextBlock* InfoText = nullptr;
 
     UPROPERTY()
     FString ViewedSystemName;
@@ -107,15 +128,17 @@ protected:
     StarSystem* CachedRuntimeSystem = nullptr;
     OrbitalRegion* CachedRegion = nullptr;
 
+    Mission* CachedMission = nullptr;
+    MissionElement* SelectedElement = nullptr;
+
     bool bValidView = false;
 
     bool bDraggingMap = false;
     FVector2D DragStartScreenPosition = FVector2D::ZeroVector;
     FVector2D DragStartPanOffset = FVector2D::ZeroVector;
-
     FVector2D PanOffset = FVector2D::ZeroVector;
 
     float ZoomScale = 1.0f;
-    float MinZoomScale = 0.5f;
-    float MaxZoomScale = 8.0f;
+    float MinZoomScale = 0.25f;
+    float MaxZoomScale = 32.0f;
 };
