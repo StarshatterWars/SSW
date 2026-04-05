@@ -18,10 +18,16 @@
     - Uses FS_Galaxy::Stellar as the map hierarchy source
     - Draws the primary star using GalaxyMap textures
     - Tints the surrounding ring using FS_Galaxy::Iff
-    - Draws larger, clamped, legacy-style tilted orbit ellipses
+    - Draws planetary orbit rings
     - Draws planets above those rings using FS_PlanetMap::Icon
     - Scales planets from FS_PlanetMap::Radius
-    - Draws procedural planet rings when ring data is present
+    - Draws moons using FS_MoonMap::Icon
+    - Mirrors GalaxyMapPanel input behavior:
+        * right mouse drag = pan
+        * left click = hit-test / selection
+        * mouse wheel = zoom
+    - Clicking the star resets the view
+    - Clicking a planet centers the view
 */
 
 #include "SystemMapPanel.h"
@@ -35,9 +41,15 @@
 #include "Components/TextBlock.h"
 #include "Engine/GameInstance.h"
 #include "Engine/Texture2D.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
 #include "Styling/SlateBrush.h"
+
+#include "Input/Reply.h"
+#include "Math/Vector2D.h"
+#include "Input/Events.h"
 
 static void DrawOrbitEllipseLines(
     FSlateWindowElementList& OutDrawElements,
@@ -54,22 +66,19 @@ static void DrawOrbitEllipseLines(
     TArray<FVector2D> OrbitPoints;
     OrbitPoints.Reserve(Segments + 1);
 
-    const float CosTilt = FMath::Cos(TiltRadians);
-    const float SinTilt = FMath::Sin(TiltRadians);
-
     for (int32 SegmentIndex = 0; SegmentIndex <= Segments; ++SegmentIndex)
     {
         const float Angle = (2.0f * PI * SegmentIndex) / Segments;
 
-        const float LocalX = FMath::Cos(Angle) * OrbitRadius;
-        const float LocalY = FMath::Sin(Angle) * OrbitRadius * VerticalScale;
+        const float BaseX = FMath::Cos(Angle) * OrbitRadius;
+        const float BaseY = FMath::Sin(Angle) * OrbitRadius * VerticalScale;
 
-        const float RotatedX = (LocalX * CosTilt) - (LocalY * SinTilt);
-        const float RotatedY = (LocalX * SinTilt) + (LocalY * CosTilt);
+        const float RotX = BaseX * FMath::Cos(TiltRadians) - BaseY * FMath::Sin(TiltRadians);
+        const float RotY = BaseX * FMath::Sin(TiltRadians) + BaseY * FMath::Cos(TiltRadians);
 
         OrbitPoints.Add(FVector2D(
-            Center.X + RotatedX,
-            Center.Y + RotatedY));
+            Center.X + RotX,
+            Center.Y + RotY));
     }
 
     FSlateDrawElement::MakeLines(
@@ -104,7 +113,6 @@ static void DrawPlanetRingEllipseLines(
             for (int32 SegmentIndex = 0; SegmentIndex <= Segments; ++SegmentIndex)
             {
                 const float Angle = (2.0f * PI * SegmentIndex) / Segments;
-
                 const float OffsetX = FMath::Cos(Angle) * RadiusX;
                 const float OffsetY = FMath::Sin(Angle) * RadiusY;
 
@@ -148,7 +156,22 @@ void USystemMapPanel::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    SetVisibility(ESlateVisibility::Visible);
+    SetIsFocusable(true);
+
     BuildLayout();
+
+    if (RootCanvas)
+    {
+        RootCanvas->SetVisibility(ESlateVisibility::Visible);
+        RootCanvas->SetClipping(EWidgetClipping::ClipToBounds);
+    }
+
+    ZoomScale = 1.0f;
+    PanOffset = FVector2D::ZeroVector;
+    bDraggingMap = false;
+    DragStartScreenPosition = FVector2D::ZeroVector;
+    DragStartPanOffset = FVector2D::ZeroVector;
 
     StarTextureCache.Empty();
 
@@ -187,6 +210,7 @@ void USystemMapPanel::NativeConstruct()
 void USystemMapPanel::SetViewedSystemName(const FString& InSystemName)
 {
     ViewedSystemName = InSystemName.TrimStartAndEnd();
+    ResetSystemView();
     RefreshView();
     Invalidate(EInvalidateWidget::Paint);
 }
@@ -205,6 +229,8 @@ void USystemMapPanel::BuildLayout()
                 UCanvasPanel::StaticClass(),
                 TEXT("SystemMapRootCanvas"));
 
+        RootCanvas->SetVisibility(ESlateVisibility::Visible);
+
         WidgetTree->RootWidget = RootCanvas;
     }
 
@@ -219,11 +245,11 @@ void USystemMapPanel::BuildLayout()
         HeaderText->SetColorAndOpacity(MissionUIStyle::HeaderText);
         HeaderText->SetJustification(ETextJustify::Left);
 
-        if (UCanvasPanelSlot* HeaderSlot = RootCanvas->AddChildToCanvas(HeaderText))
+        if (UCanvasPanelSlot* HeaderCanvasSlot = RootCanvas->AddChildToCanvas(HeaderText))
         {
-            HeaderSlot->SetAnchors(FAnchors(0.f, 0.f, 0.f, 0.f));
-            HeaderSlot->SetPosition(FVector2D(8.f, 8.f));
-            HeaderSlot->SetSize(FVector2D(420.f, 24.f));
+            HeaderCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 0.f, 0.f));
+            HeaderCanvasSlot->SetPosition(FVector2D(8.f, 8.f));
+            HeaderCanvasSlot->SetSize(FVector2D(420.f, 24.f));
         }
     }
 
@@ -238,12 +264,12 @@ void USystemMapPanel::BuildLayout()
         InfoText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
         InfoText->SetJustification(ETextJustify::Right);
 
-        if (UCanvasPanelSlot* InfoSlot = RootCanvas->AddChildToCanvas(InfoText))
+        if (UCanvasPanelSlot* InfoCanvasSlot = RootCanvas->AddChildToCanvas(InfoText))
         {
-            InfoSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
-            InfoSlot->SetAlignment(FVector2D(1.f, 0.f));
-            InfoSlot->SetPosition(FVector2D(-8.f, 8.f));
-            InfoSlot->SetSize(FVector2D(320.f, 24.f));
+            InfoCanvasSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
+            InfoCanvasSlot->SetAlignment(FVector2D(1.f, 0.f));
+            InfoCanvasSlot->SetPosition(FVector2D(-8.f, 8.f));
+            InfoCanvasSlot->SetSize(FVector2D(320.f, 24.f));
         }
     }
 }
@@ -363,7 +389,6 @@ float USystemMapPanel::ComputeMaxDrawOrbitRadius(const FVector2D& PanelSize, flo
 {
     const float HorizontalLimit = (PanelSize.X * 0.5f) - 60.0f;
     const float VerticalLimit = (PanelSize.Y * 0.5f) - 60.0f;
-
     const float SafeLimit = FMath::Min(HorizontalLimit, VerticalLimit);
 
     return FMath::Clamp(SafeLimit - (StarSize * 0.10f), 320.0f, 520.0f);
@@ -425,25 +450,59 @@ float USystemMapPanel::ComputePlanetAngleRadians(const FS_PlanetMap& InPlanet, i
     return FMath::DegreesToRadians(PlanetIndex * 57.0f);
 }
 
-float USystemMapPanel::ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const
+float USystemMapPanel::ComputeMoonOrbitRadius(
+    const FS_MoonMap& InMoon,
+    float MaxMoonOrbitForPlanet,
+    float ParentPlanetDrawSize) const
 {
-    const float TiltDegrees = static_cast<float>(InPlanet.Inclination);
+    const float OrbitValue = static_cast<float>(InMoon.Orbit);
 
-    if (FMath::IsNearlyZero(TiltDegrees))
+    if (OrbitValue <= 0.0f || MaxMoonOrbitForPlanet <= 0.0f)
     {
-        return 0.0f;
+        return ParentPlanetDrawSize * 0.78f;
     }
 
-    //return FMath::DegreesToRadians(TiltDegrees);
+    const float NormalizedOrbit =
+        FMath::Clamp(OrbitValue / MaxMoonOrbitForPlanet, 0.0f, 1.0f);
+
+    const float MinMoonOrbitRadius = ParentPlanetDrawSize * 0.78f;
+    const float MaxMoonOrbitRadius = ParentPlanetDrawSize * 1.20f;
+
+    return FMath::Lerp(MinMoonOrbitRadius, MaxMoonOrbitRadius, NormalizedOrbit);
+}
+
+float USystemMapPanel::ComputeMoonDrawSize(const FS_MoonMap& InMoon) const
+{
+    const float RawRadius = static_cast<float>(InMoon.Radius);
+
+    if (RawRadius <= 0.0f)
+    {
+        return 3.0f;
+    }
+
+    const float VisualSize = FMath::LogX(10.0f, RawRadius + 1.0f) * 2.0f;
+    return FMath::Clamp(VisualSize, 2.5f, 7.0f);
+}
+
+float USystemMapPanel::ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const
+{
+    const float OrbitAngleDegrees = static_cast<float>(InMoon.OrbitAngle);
+
+    if (!FMath::IsNearlyZero(OrbitAngleDegrees))
+    {
+        return FMath::DegreesToRadians(OrbitAngleDegrees);
+    }
+
+    return FMath::DegreesToRadians(MoonIndex * 83.0f);
+}
+
+float USystemMapPanel::ComputeOrbitTiltRadians(const FS_PlanetMap& InPlanet) const
+{
     return 0.0f;
 }
 
 float USystemMapPanel::ComputeOrbitVerticalScale(const FS_PlanetMap& InPlanet) const
 {
-    const float InclinationDegrees = FMath::Abs(static_cast<float>(InPlanet.Inclination));
-
-    const float Flatten = 0.58f - FMath::Clamp(InclinationDegrees / 220.0f, 0.0f, 0.16f);
-    //return FMath::Clamp(Flatten, 0.38f, 0.60f);
     return 1.0f;
 }
 
@@ -454,18 +513,30 @@ FVector2D USystemMapPanel::ComputeOrbitPosition(
     float OrbitTiltRadians,
     float VerticalScale) const
 {
-    const float LocalX = FMath::Cos(OrbitAngleRadians) * OrbitRadius;
-    const float LocalY = FMath::Sin(OrbitAngleRadians) * OrbitRadius * VerticalScale;
+    const float BaseX = FMath::Cos(OrbitAngleRadians) * OrbitRadius;
+    const float BaseY = FMath::Sin(OrbitAngleRadians) * OrbitRadius * VerticalScale;
 
-    const float CosTilt = FMath::Cos(OrbitTiltRadians);
-    const float SinTilt = FMath::Sin(OrbitTiltRadians);
-
-    const float RotatedX = (LocalX * CosTilt) - (LocalY * SinTilt);
-    const float RotatedY = (LocalX * SinTilt) + (LocalY * CosTilt);
+    const float RotX = BaseX * FMath::Cos(OrbitTiltRadians) - BaseY * FMath::Sin(OrbitTiltRadians);
+    const float RotY = BaseX * FMath::Sin(OrbitTiltRadians) + BaseY * FMath::Cos(OrbitTiltRadians);
 
     return FVector2D(
-        SystemCenter.X + RotatedX,
-        SystemCenter.Y + RotatedY);
+        SystemCenter.X + RotX,
+        SystemCenter.Y + RotY);
+}
+
+float USystemMapPanel::GetZoomedValue(float InValue) const
+{
+    return InValue * ZoomScale;
+}
+
+FVector2D USystemMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const
+{
+    const float MaxPanX = FMath::Max(0.0f, PanelSize.X * (ZoomScale - 1.0f) * 0.35f);
+    const float MaxPanY = FMath::Max(0.0f, PanelSize.Y * (ZoomScale - 1.0f) * 0.35f);
+
+    return FVector2D(
+        FMath::Clamp(InOffset.X, -MaxPanX, MaxPanX),
+        FMath::Clamp(InOffset.Y, -MaxPanY, MaxPanY));
 }
 
 FLinearColor USystemMapPanel::ComputeStarTint(const FS_StarMap& InStar) const
@@ -549,6 +620,185 @@ void USystemMapPanel::RefreshView()
     }
 }
 
+bool USystemMapPanel::HandleClickSelection(
+    const FVector2D& LocalPos,
+    const FGeometry& InGeometry)
+{
+    if (!bValidSystem || CachedPrimaryStarMap.Name.IsEmpty())
+    {
+        return false;
+    }
+
+    const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
+
+    const FVector2D BaseCenter(
+        PanelSize.X * 0.5f,
+        (PanelSize.Y * 0.55f) - 10.0f);
+
+    const FVector2D SystemCenter = BaseCenter + PanOffset;
+
+    const float StarSize =
+        GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarMap));
+
+    const float StarHitRadius = (StarSize * 0.5f) + 10.0f;
+
+    if (FVector2D::Distance(LocalPos, SystemCenter) <= StarHitRadius)
+    {
+        ResetSystemView();
+        return true;
+    }
+
+    float MaxOrbitInSystem = 0.0f;
+    for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
+    {
+        MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetRow.Orbit));
+    }
+
+    const float MaxDrawOrbitRadius =
+        GetZoomedValue(ComputeMaxDrawOrbitRadius(PanelSize, StarSize));
+
+    for (int32 PlanetIndex = 0; PlanetIndex < CachedPrimaryStarMap.Planet.Num(); ++PlanetIndex)
+    {
+        const FS_PlanetMap& PlanetRow = CachedPrimaryStarMap.Planet[PlanetIndex];
+
+        const float OrbitRadius = ComputePlanetOrbitRadius(
+            PlanetRow,
+            MaxOrbitInSystem,
+            MaxDrawOrbitRadius);
+
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
+        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
+        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetRow));
+
+        const FVector2D PlanetCenter = ComputeOrbitPosition(
+            SystemCenter,
+            OrbitRadius,
+            PlanetAngleRadians,
+            OrbitTiltRadians,
+            OrbitVerticalScale);
+
+        const float PlanetHitRadius = (PlanetDrawSize * 0.5f) + 6.0f;
+
+        if (FVector2D::Distance(LocalPos, PlanetCenter) <= PlanetHitRadius)
+        {
+            const FVector2D RelativeOffset = PlanetCenter - SystemCenter;
+            FocusOnPlanet(RelativeOffset, PanelSize);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void USystemMapPanel::ZoomIn()
+{
+    ZoomScale = FMath::Clamp(ZoomScale + 0.1f, MinZoomScale, MaxZoomScale);
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USystemMapPanel::ZoomOut()
+{
+    ZoomScale = FMath::Clamp(ZoomScale - 0.1f, MinZoomScale, MaxZoomScale);
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USystemMapPanel::ResetSystemView()
+{
+    ZoomScale = 1.0f;
+    PanOffset = FVector2D::ZeroVector;
+    bDraggingMap = false;
+
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USystemMapPanel::FocusOnPlanet(const FVector2D& RelativeOffset, const FVector2D& PanelSize)
+{
+    PanOffset = ClampPanOffset(-RelativeOffset, PanelSize);
+    Invalidate(EInvalidateWidget::Paint);
+}
+FReply USystemMapPanel::NativeOnMouseButtonDown(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        bDraggingMap = true;
+        DragStartScreenPosition = InMouseEvent.GetScreenSpacePosition();
+        DragStartPanOffset = PanOffset;
+
+        return FReply::Handled().SetUserFocus(TakeWidget(), EFocusCause::SetDirectly);
+    }
+
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        const FVector2D LocalPos =
+            InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+
+        HandleClickSelection(LocalPos, InGeometry);
+        return FReply::Handled().SetUserFocus(TakeWidget(), EFocusCause::SetDirectly);
+    }
+
+    return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply USystemMapPanel::NativeOnMouseButtonUp(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        bDraggingMap = false;
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+FReply USystemMapPanel::NativeOnMouseMove(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (bDraggingMap)
+    {
+        const FVector2D MouseDelta =
+            InMouseEvent.GetScreenSpacePosition() - DragStartScreenPosition;
+
+        PanOffset = ClampPanOffset(
+            DragStartPanOffset + MouseDelta,
+            InGeometry.GetLocalSize());
+
+        Invalidate(EInvalidateWidget::Paint);
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+FReply USystemMapPanel::NativeOnMouseWheel(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    const float Delta = InMouseEvent.GetWheelDelta();
+
+    UE_LOG(LogTemp, Warning, TEXT("[SystemMapPanel] Mouse wheel delta: %f"), Delta);
+
+    if (Delta > 0.0f)
+    {
+        ZoomIn();
+        return FReply::Handled();
+    }
+
+    if (Delta < 0.0f)
+    {
+        ZoomOut();
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
 int32 USystemMapPanel::NativePaint(
     const FPaintArgs& Args,
     const FGeometry& AllottedGeometry,
@@ -574,11 +824,11 @@ int32 USystemMapPanel::NativePaint(
 
     const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
     const FVector2D SystemCenter(
-        PanelSize.X * 0.5f,
-        (PanelSize.Y * 0.55f) - 10.0f);
+        (PanelSize.X * 0.5f) + PanOffset.X,
+        (PanelSize.Y * 0.50f) + PanOffset.Y);
 
-    const float StarSize = ComputeStarDrawSize(CachedPrimaryStarMap);
-    const float RingSize = ComputeRingDrawSize(CachedPrimaryStarMap);
+    const float StarSize = GetZoomedValue(ComputeStarDrawSize(CachedPrimaryStarMap));
+    const float RingSize = GetZoomedValue(ComputeRingDrawSize(CachedPrimaryStarMap));
 
     UTexture2D* StarTexture = GetStarTextureForClass(CachedPrimaryStarMap.Class);
 
@@ -590,15 +840,12 @@ int32 USystemMapPanel::NativePaint(
     float MaxOrbitInSystem = 0.0f;
     for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
     {
-        MaxOrbitInSystem = FMath::Max(
-            MaxOrbitInSystem,
-            static_cast<float>(PlanetRow.Orbit));
+        MaxOrbitInSystem = FMath::Max(MaxOrbitInSystem, static_cast<float>(PlanetRow.Orbit));
     }
 
     const float MaxDrawOrbitRadius =
-        ComputeMaxDrawOrbitRadius(PanelSize, StarSize);
+        GetZoomedValue(ComputeMaxDrawOrbitRadius(PanelSize, StarSize));
 
-    // System orbit rings
     for (const FS_PlanetMap& PlanetRow : CachedPrimaryStarMap.Planet)
     {
         const float OrbitRadius = ComputePlanetOrbitRadius(
@@ -606,20 +853,22 @@ int32 USystemMapPanel::NativePaint(
             MaxOrbitInSystem,
             MaxDrawOrbitRadius);
 
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
+
         DrawOrbitEllipseLines(
             OutDrawElements,
             ++PaintLayer,
             AllottedGeometry,
             SystemCenter,
             OrbitRadius,
-            1.0f,
-            0.0f,
+            OrbitVerticalScale,
+            OrbitTiltRadians,
             FLinearColor(0.35f, 0.45f, 0.65f, 0.40f),
             1.0f,
             96);
     }
 
-    // System IFF ring
     if (IFFRingTexture)
     {
         FSlateBrush IFFRingBrush;
@@ -631,16 +880,13 @@ int32 USystemMapPanel::NativePaint(
             OutDrawElements,
             ++PaintLayer,
             AllottedGeometry.ToPaintGeometry(
-                FVector2D(
-                    SystemCenter.X - RingSize * 0.5f,
-                    SystemCenter.Y - RingSize * 0.5f),
+                FVector2D(SystemCenter.X - RingSize * 0.5f, SystemCenter.Y - RingSize * 0.5f),
                 FVector2D(RingSize, RingSize)),
             &IFFRingBrush,
             ESlateDrawEffect::None,
             IFFRingTint);
     }
 
-    // Central star
     if (StarTexture)
     {
         FSlateBrush StarBrush;
@@ -652,16 +898,13 @@ int32 USystemMapPanel::NativePaint(
             OutDrawElements,
             ++PaintLayer,
             AllottedGeometry.ToPaintGeometry(
-                FVector2D(
-                    SystemCenter.X - StarSize * 0.5f,
-                    SystemCenter.Y - StarSize * 0.5f),
+                FVector2D(SystemCenter.X - StarSize * 0.5f, SystemCenter.Y - StarSize * 0.5f),
                 FVector2D(StarSize, StarSize)),
             &StarBrush,
             ESlateDrawEffect::None,
             StarTint);
     }
 
-    // Planets and moons
     for (int32 PlanetIndex = 0; PlanetIndex < CachedPrimaryStarMap.Planet.Num(); ++PlanetIndex)
     {
         const FS_PlanetMap& PlanetRow = CachedPrimaryStarMap.Planet[PlanetIndex];
@@ -671,32 +914,30 @@ int32 USystemMapPanel::NativePaint(
             MaxOrbitInSystem,
             MaxDrawOrbitRadius);
 
-        const float PlanetAngleRadians =
-            ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
-
-        const float PlanetDrawSize =
-            ComputePlanetDrawSize(PlanetRow);
+        const float OrbitTiltRadians = ComputeOrbitTiltRadians(PlanetRow);
+        const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetRow);
+        const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetRow, PlanetIndex);
+        const float PlanetDrawSize = GetZoomedValue(ComputePlanetDrawSize(PlanetRow));
 
         const FVector2D PlanetCenter = ComputeOrbitPosition(
             SystemCenter,
             OrbitRadius,
             PlanetAngleRadians,
-            0.0f,
-            1.0f);
+            OrbitTiltRadians,
+            OrbitVerticalScale);
 
-        // Planet ring
         if (!PlanetRow.Ring.IsEmpty())
         {
-            const float RingRadiusX = PlanetDrawSize * 0.58f;
-            const float RingRadiusY = PlanetDrawSize * 0.58f;
+            const float PlanetRingRadiusX = PlanetDrawSize * 0.58f;
+            const float PlanetRingRadiusY = PlanetDrawSize * 0.58f;
 
             DrawPlanetRingEllipseLines(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry,
                 PlanetCenter,
-                RingRadiusX,
-                RingRadiusY,
+                PlanetRingRadiusX,
+                PlanetRingRadiusY,
                 FLinearColor(0.56f, 0.56f, 0.56f, 0.90f),
                 0.9f,
                 1.0f,
@@ -705,7 +946,6 @@ int32 USystemMapPanel::NativePaint(
             PaintLayer += 1;
         }
 
-        // Planet sprite
         UTexture2D* PlanetTexture = GetPlanetTexture(PlanetRow);
         if (PlanetTexture)
         {
@@ -718,16 +958,13 @@ int32 USystemMapPanel::NativePaint(
                 OutDrawElements,
                 ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(
-                    FVector2D(
-                        PlanetCenter.X - PlanetDrawSize * 0.5f,
-                        PlanetCenter.Y - PlanetDrawSize * 0.5f),
+                    FVector2D(PlanetCenter.X - PlanetDrawSize * 0.5f, PlanetCenter.Y - PlanetDrawSize * 0.5f),
                     FVector2D(PlanetDrawSize, PlanetDrawSize)),
                 &PlanetBrush,
                 ESlateDrawEffect::None,
                 FLinearColor::White);
         }
 
-        // Moons
         float MaxMoonOrbitForPlanet = 0.0f;
         for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
         {
@@ -749,7 +986,7 @@ int32 USystemMapPanel::NativePaint(
                 MoonRow,
                 MoonIndex);
 
-            const float MoonDrawSize = ComputeMoonDrawSize(MoonRow);
+            const float MoonDrawSize = GetZoomedValue(ComputeMoonDrawSize(MoonRow));
 
             TArray<FVector2D> MoonOrbitPoints;
             MoonOrbitPoints.Reserve(49);
@@ -757,7 +994,6 @@ int32 USystemMapPanel::NativePaint(
             for (int32 SegmentIndex = 0; SegmentIndex <= 48; ++SegmentIndex)
             {
                 const float Angle = (2.0f * PI * SegmentIndex) / 48.0f;
-
                 const float OffsetX = FMath::Cos(Angle) * MoonOrbitRadius;
                 const float OffsetY = FMath::Sin(Angle) * MoonOrbitRadius;
 
@@ -772,9 +1008,9 @@ int32 USystemMapPanel::NativePaint(
                 AllottedGeometry.ToPaintGeometry(),
                 MoonOrbitPoints,
                 ESlateDrawEffect::None,
-                FLinearColor(0.55f, 0.55f, 0.60f, 0.18f),
+                FLinearColor(0.55f, 0.55f, 0.60f, 0.12f),
                 true,
-                0.6f);
+                0.5f);
 
             const FVector2D MoonCenter(
                 PlanetCenter.X + FMath::Cos(MoonAngleRadians) * MoonOrbitRadius,
@@ -792,9 +1028,7 @@ int32 USystemMapPanel::NativePaint(
                     OutDrawElements,
                     ++PaintLayer,
                     AllottedGeometry.ToPaintGeometry(
-                        FVector2D(
-                            MoonCenter.X - MoonDrawSize * 0.5f,
-                            MoonCenter.Y - MoonDrawSize * 0.5f),
+                        FVector2D(MoonCenter.X - MoonDrawSize * 0.5f, MoonCenter.Y - MoonDrawSize * 0.5f),
                         FVector2D(MoonDrawSize, MoonDrawSize)),
                     &MoonBrush,
                     ESlateDrawEffect::None,
@@ -803,14 +1037,11 @@ int32 USystemMapPanel::NativePaint(
         }
     }
 
-    // Star label
     FSlateDrawElement::MakeText(
         OutDrawElements,
         ++PaintLayer,
         AllottedGeometry.ToPaintGeometry(
-            FVector2D(
-                SystemCenter.X - 100.0f,
-                SystemCenter.Y + StarSize * 0.5f + 22.0f),
+            FVector2D(SystemCenter.X - 100.0f, SystemCenter.Y + StarSize * 0.5f + 22.0f),
             FVector2D(200.0f, 20.0f)),
         CachedPrimaryStarMap.Name,
         FCoreStyle::GetDefaultFontStyle("Regular", 11),
@@ -818,50 +1049,4 @@ int32 USystemMapPanel::NativePaint(
         FLinearColor::White);
 
     return PaintLayer;
-}
-
-float USystemMapPanel::ComputeMoonOrbitRadius(
-    const FS_MoonMap& InMoon,
-    float MaxMoonOrbitForPlanet,
-    float ParentPlanetDrawSize) const
-{
-    const float OrbitValue = static_cast<float>(InMoon.Orbit);
-
-    if (OrbitValue <= 0.0f || MaxMoonOrbitForPlanet <= 0.0f)
-    {
-        return ParentPlanetDrawSize * 1.4f;
-    }
-
-    const float NormalizedOrbit =
-        FMath::Clamp(OrbitValue / MaxMoonOrbitForPlanet, 0.0f, 1.0f);
-
-    const float MinMoonOrbitRadius = ParentPlanetDrawSize * 1.35f;
-    const float MaxMoonOrbitRadius = ParentPlanetDrawSize * 2.35f;
-
-    return FMath::Lerp(MinMoonOrbitRadius, MaxMoonOrbitRadius, NormalizedOrbit);
-}
-
-float USystemMapPanel::ComputeMoonDrawSize(const FS_MoonMap& InMoon) const
-{
-    const float RawRadius = static_cast<float>(InMoon.Radius);
-
-    if (RawRadius <= 0.0f)
-    {
-        return 5.0f;
-    }
-
-    const float VisualSize = FMath::LogX(10.0f, RawRadius + 1.0f) * 2.8f;
-    return FMath::Clamp(VisualSize, 4.0f, 12.0f);
-}
-
-float USystemMapPanel::ComputeMoonAngleRadians(const FS_MoonMap& InMoon, int32 MoonIndex) const
-{
-    const float OrbitAngleDegrees = static_cast<float>(InMoon.OrbitAngle);
-
-    if (!FMath::IsNearlyZero(OrbitAngleDegrees))
-    {
-        return FMath::DegreesToRadians(OrbitAngleDegrees);
-    }
-
-    return FMath::DegreesToRadians(MoonIndex * 83.0f);
 }

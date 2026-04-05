@@ -27,11 +27,17 @@
     - Scales planets from FS_PlanetMap::Radius
     - Draws procedural rings for planets that define ring data
     - Provides moon texture lookup using FS_MoonMap::Icon
+    - Mirrors GalaxyMapPanel input behavior:
+      right mouse drag = pan
+      left click = hit-test / selection
+      mouse wheel = zoom
 */
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameStructs.h"
+#include "Input/Reply.h"
+#include "Math/Vector2D.h"
 #include "SystemMapPanel.generated.h"
 
 class UCanvasPanel;
@@ -55,9 +61,28 @@ public:
         const FWidgetStyle& InWidgetStyle,
         bool bParentEnabled) const override;
 
+    virtual FReply NativeOnMouseButtonDown(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
+
+    virtual FReply NativeOnMouseButtonUp(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
+
+    virtual FReply NativeOnMouseMove(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
+
+    virtual FReply NativeOnMouseWheel(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
+
 public:
     void SetViewedSystemName(const FString& InSystemName);
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
+
+    void ZoomIn();
+    void ZoomOut();
 
 protected:
     void BuildLayout();
@@ -93,8 +118,15 @@ protected:
         float OrbitTiltRadians,
         float VerticalScale) const;
 
+    float GetZoomedValue(float InValue) const;
+    FVector2D ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const;
+
     FLinearColor ComputeStarTint(const FS_StarMap& InStar) const;
     FLinearColor ComputeSystemIFFRingTint(const FS_Galaxy& InGalaxy) const;
+
+    bool HandleClickSelection(const FVector2D& LocalPos, const FGeometry& InGeometry);
+    void ResetSystemView();
+    void FocusOnPlanet(const FVector2D& RelativeOffset, const FVector2D& PanelSize);
 
 protected:
     UPROPERTY()
@@ -123,4 +155,25 @@ protected:
 
     UPROPERTY()
     UTexture2D* IFFRingTexture = nullptr;
+
+    UPROPERTY()
+    bool bDraggingMap = false;
+
+    UPROPERTY()
+    FVector2D DragStartScreenPosition = FVector2D::ZeroVector;
+
+    UPROPERTY()
+    FVector2D DragStartPanOffset = FVector2D::ZeroVector;
+
+    UPROPERTY()
+    FVector2D PanOffset = FVector2D::ZeroVector;
+
+    UPROPERTY()
+    float ZoomScale = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
+    float MinZoomScale = 0.75f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System Map")
+    float MaxZoomScale = 2.50f;
 };

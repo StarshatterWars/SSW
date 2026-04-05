@@ -640,12 +640,16 @@ void UMissionNavDlg::BuildRuntimeLayout()
 
     MainViewHost->SetContent(NavSwitcher);
 
+    MainViewHost->SetClipping(EWidgetClipping::ClipToBounds);
+    NavSwitcher->SetClipping(EWidgetClipping::ClipToBounds);
+
     GalaxyPanelHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavGalaxyPanelHost"));
 
     NavSwitcher->AddChild(GalaxyPanelHost);
+    GalaxyPanelHost->SetClipping(EWidgetClipping::ClipToBounds);
 
     if (!GalaxyMapPanelClass)
     {
@@ -683,6 +687,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
             TEXT("MissionNavSystemPanelHost"));
 
     NavSwitcher->AddChild(SystemPanelHost);
+    SystemPanelHost->SetClipping(EWidgetClipping::ClipToBounds);
 
     if (!SystemMapPanelClass)
     {
@@ -720,6 +725,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
             TEXT("MissionNavSectorPanelHost"));
 
     NavSwitcher->AddChild(SectorPanelHost);
+    SectorPanelHost->SetClipping(EWidgetClipping::ClipToBounds);
 
     if (!SectorMapPanelClass)
     {
@@ -1719,6 +1725,11 @@ void UMissionNavDlg::OnZoomInClicked()
         GalaxyMapPanel->ZoomIn();
     }
 
+    else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        SystemMapPanel->ZoomIn();
+    }
+
     if (Manager)
     {
         Manager->NavZoomIn();
@@ -1730,6 +1741,11 @@ void UMissionNavDlg::OnZoomOutClicked()
     if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
     {
         GalaxyMapPanel->ZoomOut();
+    }
+
+    else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        SystemMapPanel->ZoomOut();
     }
 
     if (Manager)
