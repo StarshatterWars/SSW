@@ -207,6 +207,56 @@ FReply UMissionNavDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
     return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
+FReply UMissionNavDlg::NativeOnMouseWheel(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    const float WheelDelta = InMouseEvent.GetWheelDelta();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] NativeOnMouseWheel Delta=%.3f Mode=%d"),
+        WheelDelta,
+        static_cast<int32>(CurrentNavMode));
+
+    if (WheelDelta > 0.0f)
+    {
+        if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+        {
+            GalaxyMapPanel->ZoomIn();
+            return FReply::Handled();
+        }
+        else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+        {
+            SystemMapPanel->ZoomIn();
+            return FReply::Handled();
+        }
+        else if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+        {
+            SectorMapPanel->ZoomIn();
+            return FReply::Handled();
+        }
+    }
+    else if (WheelDelta < 0.0f)
+    {
+        if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+        {
+            GalaxyMapPanel->ZoomOut();
+            return FReply::Handled();
+        }
+        else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+        {
+            SystemMapPanel->ZoomOut();
+            return FReply::Handled();
+        }
+        else if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+        {
+            SectorMapPanel->ZoomOut();
+            return FReply::Handled();
+        }
+    }
+
+    return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
 void UMissionNavDlg::RefreshFromMission()
 {
     MissionPtr = ResolveMission();
@@ -361,16 +411,58 @@ void UMissionNavDlg::SyncSubPanels()
     {
         SectorMapPanel->SetViewedSystemName(SystemNameForPanels);
 
-        if (SelectedObjectItem &&
-            SelectedObjectItem->GetObjectType() == EMissionNavObjectType::Sector)
+        FString SectorNameForPanel;
+
+        if (SelectedObjectItem)
         {
-            SectorMapPanel->SetViewedSectorName(SelectedObjectItem->GetPrimaryText());
-        }
-        else
-        {
-            SectorMapPanel->SetViewedSectorName(TEXT(""));
+            const EMissionNavObjectType ObjectType = SelectedObjectItem->GetObjectType();
+
+            if (ObjectType == EMissionNavObjectType::Sector)
+            {
+                SectorNameForPanel =
+                    SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+            }
+            else if (ObjectType == EMissionNavObjectType::Station ||
+                ObjectType == EMissionNavObjectType::Starship ||
+                ObjectType == EMissionNavObjectType::Fighter)
+            {
+                if (MissionPtr)
+                {
+                    const FString TargetName =
+                        SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+
+                    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
+                    while (++ElemIter)
+                    {
+                        MissionElement* Elem = ElemIter.value();
+                        if (!Elem)
+                        {
+                            continue;
+                        }
+
+                        const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
+
+                        if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
+                        {
+                            SectorNameForPanel = ANSI_TO_TCHAR(Elem->GetRegion());
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
+        // Default to active region when nothing explicit is selected
+        if (SectorNameForPanel.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
+        {
+            OrbitalRegion* ActiveRegion = MissionPtr->GetStarSystem()->ActiveRegion();
+            if (ActiveRegion)
+            {
+                SectorNameForPanel = ANSI_TO_TCHAR(ActiveRegion->GetName());
+            }
+        }
+
+        SectorMapPanel->SetViewedSectorName(SectorNameForPanel);
         SectorMapPanel->SetMission(MissionPtr);
     }
 }
@@ -773,6 +865,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
     }
     else
     {
+        SystemMapPanel->SetOwnerNavDlg(this);
         SystemPanelHost->SetContent(SystemMapPanel);
 
         UE_LOG(LogTemp, Warning,
@@ -812,6 +905,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
     else
     {
         SectorPanelHost->SetContent(SectorMapPanel);
+        SectorMapPanel->SetOwnerNavDlg(this);
 
         UE_LOG(LogTemp, Warning,
             TEXT("MissionNavDlg: Created SectorMapPanel from %s"),
@@ -1294,6 +1388,18 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
     case EMissionNavMode::SECTOR:
         CurrentFilterMode = EMissionNavFilterMode::SECTOR;
         if (Manager) Manager->NavModeSector();
+
+        // Default sector button behavior:
+        // if we are not already looking at a sector/unit selection,
+        // clear object selection so SyncSubPanels falls back to active region.
+        if (!SelectedObjectItem ||
+            (SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Sector &&
+                SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Station &&
+                SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Starship &&
+                SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Fighter))
+        {
+            SelectedObjectItem = nullptr;
+        }
         break;
 
     default:
@@ -1303,6 +1409,19 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
     if (NavSwitcher)
     {
         NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
+    }
+
+    if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
+    {
+        GalaxyMapPanel->SetFocus();
+    }
+    else if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
+    {
+        SystemMapPanel->SetFocus();
+    }
+    else if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
+    {
+        SectorMapPanel->SetFocus();
     }
 
     RefreshNavModeSelection();
@@ -1829,6 +1948,7 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
             SystemMapPanel->SetViewedSystemName(SelectedSystemName);
             SystemMapPanel->SetSelectedBodyName(TEXT(""));
             SystemMapPanel->ShowSystemOverview();
+            SystemMapPanel->SetFocus();
         }
 
         CurrentNavMode = EMissionNavMode::SYSTEM;
@@ -1866,6 +1986,7 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 
             SystemMapPanel->SetSelectedBodyName(TargetName);
             SystemMapPanel->CenterOnBodyByName(TargetName);
+            SystemMapPanel->SetFocus();
         }
 
         RefreshNavModeSelection();
@@ -1888,6 +2009,42 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 
         RefreshNavModeSelection();
         SyncSubPanels();
+
+        if (SectorMapPanel)
+        {
+            SectorMapPanel->SetFocus();
+
+            if (ObjectType == EMissionNavObjectType::Station ||
+                ObjectType == EMissionNavObjectType::Starship ||
+                ObjectType == EMissionNavObjectType::Fighter)
+            {
+                if (MissionPtr)
+                {
+                    const FString TargetName =
+                        SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+
+                    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
+                    while (++ElemIter)
+                    {
+                        MissionElement* Elem = ElemIter.value();
+                        if (!Elem)
+                        {
+                            continue;
+                        }
+
+                        const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
+
+                        if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
+                        {
+                            SectorMapPanel->SetSelectedElement(Elem);
+                            SectorMapPanel->CenterOnElement(Elem);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         RefreshDetailPanel();
         return;
     }
@@ -1975,4 +2132,50 @@ void UMissionNavDlg::HandleGalaxySystemActivated(const FString& InSystemName)
         *SelectedSystemName);
 
     SetNavMode(EMissionNavMode::SYSTEM);
+}
+
+void UMissionNavDlg::HandleSectorMissionElementSelected(MissionElement* InElement)
+{
+    if (!InElement)
+    {
+        return;
+    }
+
+    const FString ElementName = ANSI_TO_TCHAR(InElement->GetName());
+
+    for (UMissionNavObjectListObject* Item : ObjectItems)
+    {
+        if (!Item)
+        {
+            continue;
+        }
+
+        const EMissionNavObjectType ObjectType = Item->GetObjectType();
+
+        if (ObjectType != EMissionNavObjectType::Station &&
+            ObjectType != EMissionNavObjectType::Starship &&
+            ObjectType != EMissionNavObjectType::Fighter)
+        {
+            continue;
+        }
+
+        if (Item->GetPrimaryText().Equals(ElementName, ESearchCase::IgnoreCase))
+        {
+            SelectedObjectItem = Item;
+
+            if (ObjectListView)
+            {
+                ObjectListView->SetSelectedItem(Item);
+            }
+
+            break;
+        }
+    }
+
+    if (SectorMapPanel)
+    {
+        SectorMapPanel->SetSelectedElement(InElement);
+    }
+
+    RefreshDetailPanel();
 }

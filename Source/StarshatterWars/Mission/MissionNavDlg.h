@@ -92,10 +92,15 @@ public:
     void HandleGalaxySystemActivated(const FString& InSystemName);
 
     const FString& GetSelectedGalaxySystemName() const { return SelectedSystemName; }
+    void HandleSectorMissionElementSelected(MissionElement* InElement);
 
 protected:
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+    virtual FReply NativeOnMouseWheel(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
 
     Mission* ResolveMission() const;
 

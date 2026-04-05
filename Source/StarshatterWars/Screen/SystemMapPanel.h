@@ -35,6 +35,7 @@ class UTexture2D;
 
 class StarSystem;
 class OrbitalBody;
+class UMissionNavDlg;
 
 // ------------------------------------------------------------
 
@@ -75,6 +76,7 @@ public:
 public:
     void SetViewedSystemName(const FString& InSystemName);
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
+    void SetOwnerNavDlg(UMissionNavDlg* InOwner) { OwnerNavDlg = InOwner; }
 
 public:
     void ShowSystemOverview();
@@ -221,6 +223,9 @@ protected:
 
     UPROPERTY()
     FVector2D PanOffset = FVector2D::ZeroVector;
+
+    UPROPERTY()
+    UMissionNavDlg* OwnerNavDlg = nullptr;
 
     UPROPERTY()
     float ZoomScale = 1.0f;

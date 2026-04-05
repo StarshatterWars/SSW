@@ -1,24 +1,26 @@
 /*
     Project Starshatter Wars
     Fractal Dev Studios LLC
-    Copyright (c) 2025-2026.
+    Copyright (c) 2025-2026. All Rights Reserved.
 
-    SUBSYSTEM:    UI
+    ORIGINAL SYSTEM
+    ===============
+    Starshatter 4.5 (Destroyer Studios)
+
+    SUBSYSTEM:    Stars.exe (Unreal Port)
     FILE:         SectorMapPanel.cpp
     AUTHOR:       Carlos Bott
 
     OVERVIEW
     ========
-    Sector (Region) Map Panel - Read Only Pass 2
+    USectorMapPanel
 
-    - Runtime StarSystem + OrbitalRegion driven
-    - Legacy DrawRegion() style grid and rep scaling
-    - Read-only mission element rendering
-    - No nav editing
+    Read-only region view for Mission Navigation.
 */
 
 #include "SectorMapPanel.h"
 
+#include "MissionNavDlg.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"
 #include "OrbitalRegion.h"
@@ -87,9 +89,17 @@ void USectorMapPanel::NativeConstruct()
     SetVisibility(ESlateVisibility::Visible);
     SetIsFocusable(true);
 
+    if (RootCanvas)
+    {
+        RootCanvas->SetVisibility(ESlateVisibility::Visible);
+        RootCanvas->SetClipping(EWidgetClipping::ClipToBounds);
+    }
+
     PanOffset = FVector2D::ZeroVector;
     ZoomScale = 4.0f;
     bDraggingMap = false;
+    DragStartScreenPosition = FVector2D::ZeroVector;
+    DragStartPanOffset = FVector2D::ZeroVector;
 
     RefreshView();
 }
@@ -143,14 +153,6 @@ int32 USectorMapPanel::NativePaint(
 
     const int32 Rep = ComputeRepLevel(R);
 
-    DrawMissionElements(
-        OutDrawElements,
-        AllottedGeometry,
-        LayerId + 20,
-        Center,
-        Scale,
-        Rep);
-
     DrawMissionNavRoutes(
         OutDrawElements,
         AllottedGeometry,
@@ -159,6 +161,13 @@ int32 USectorMapPanel::NativePaint(
         Scale,
         Rep);
 
+    DrawMissionElements(
+        OutDrawElements,
+        AllottedGeometry,
+        LayerId + 200,
+        Center,
+        Scale,
+        Rep);
 
     const FString InfoString = FString::Printf(
         TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
@@ -169,7 +178,7 @@ int32 USectorMapPanel::NativePaint(
 
     FSlateDrawElement::MakeText(
         OutDrawElements,
-        LayerId + 200,
+        LayerId + 500,
         AllottedGeometry.ToPaintGeometry(
             FVector2D(12.0f, 10.0f),
             FVector2D(520.0f, 20.0f)),
@@ -178,7 +187,7 @@ int32 USectorMapPanel::NativePaint(
         ESlateDrawEffect::None,
         FLinearColor(0.85f, 0.90f, 1.0f, 0.95f));
 
-    return LayerId + 200;
+    return LayerId + 500;
 }
 
 FReply USectorMapPanel::NativeOnMouseButtonDown(
@@ -195,6 +204,37 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
 
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
     {
+        if (!bValidView || !CachedRegion)
+        {
+            return FReply::Handled();
+        }
+
+        const FVector2D PanelSize = InGeometry.GetLocalSize();
+        const FVector2D Center = (PanelSize * 0.5f) + PanOffset;
+
+        const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
+        const double R = CachedRegion->Radius() / ZoomScale;
+        const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
+
+        const FVector2D LocalPoint =
+            InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+
+        MissionElement* HitElement =
+            HitTestMissionElementAtLocalPoint(LocalPoint, Center, Scale);
+
+        if (HitElement)
+        {
+            SelectedElement = HitElement;
+            Invalidate(EInvalidateWidget::Paint);
+
+            if (OwnerNavDlg)
+            {
+                OwnerNavDlg->HandleSectorMissionElementSelected(HitElement);
+            }
+
+            return FReply::Handled();
+        }
+
         return FReply::Handled();
     }
 
@@ -240,7 +280,7 @@ FReply USectorMapPanel::NativeOnMouseWheel(
 {
     const float WheelDelta = InMouseEvent.GetWheelDelta();
 
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] MouseWheel Delta=%.3f"), WheelDelta);
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] NativeOnMouseWheel Delta=%.3f"), WheelDelta);
 
     if (WheelDelta > 0.0f)
     {
@@ -255,6 +295,11 @@ FReply USectorMapPanel::NativeOnMouseWheel(
     }
 
     return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
+void USectorMapPanel::SetOwnerNavDlg(UMissionNavDlg* InOwnerNavDlg)
+{
+    OwnerNavDlg = InOwnerNavDlg;
 }
 
 void USectorMapPanel::SetViewedSystemName(const FString& InSystemName)
@@ -279,6 +324,35 @@ void USectorMapPanel::SetSelectedElement(MissionElement* InElement)
 {
     SelectedElement = InElement;
     Invalidate(EInvalidateWidget::Paint);
+}
+
+bool USectorMapPanel::CenterOnElement(MissionElement* InElement)
+{
+    if (!InElement || !CachedRegion)
+    {
+        return false;
+    }
+
+    const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
+    if (PanelSize.X <= 1.0f || PanelSize.Y <= 1.0f)
+    {
+        return false;
+    }
+
+    const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
+    const double R = CachedRegion->Radius() / ZoomScale;
+    const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
+
+    const FVector ElementLocation = InElement->GetLocation();
+    const FVector2D Offset(
+        ElementLocation.X * Scale,
+        ElementLocation.Y * Scale);
+
+    PanOffset = -Offset;
+    PanOffset = ClampPanOffset(PanOffset, PanelSize);
+
+    Invalidate(EInvalidateWidget::Paint);
+    return true;
 }
 
 void USectorMapPanel::BuildRuntimeLayout()
@@ -311,10 +385,13 @@ void USectorMapPanel::RefreshView()
         return;
     }
 
+    // 1. Try explicitly requested sector first
     if (!ResolveViewedRegion(CachedRuntimeSystem, CachedRegion) || !CachedRegion)
     {
+        // 2. Fall back to the runtime active region
         CachedRegion = CachedRuntimeSystem->ActiveRegion();
 
+        // 3. Final fallback to first available region
         if (!CachedRegion)
         {
             ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
@@ -329,7 +406,8 @@ void USectorMapPanel::RefreshView()
             }
         }
 
-        if (CachedRegion && ViewedSectorName.IsEmpty())
+        // Keep the viewed sector name in sync with the actual displayed region
+        if (CachedRegion)
         {
             ViewedSectorName = ANSI_TO_TCHAR(CachedRegion->GetName());
         }
@@ -558,7 +636,6 @@ void USectorMapPanel::DrawMissionElement(
     const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
     const FVector2D DrawSize(HalfSize * 2.0f, HalfSize * 2.0f);
 
-    // Always draw marker
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         BaseLayerId + 1,
@@ -567,7 +644,6 @@ void USectorMapPanel::DrawMissionElement(
         ESlateDrawEffect::None,
         MarkerColor);
 
-    // Selected element highlight box
     const bool bIsSelected = (Element == SelectedElement);
 
     if (bIsSelected)
@@ -595,9 +671,15 @@ void USectorMapPanel::DrawMissionElement(
             FLinearColor::White,
             true,
             1.0f);
+
+        DrawSelectionCrosshair(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId + 3,
+            ScreenPos,
+            HalfSize + 8.0f);
     }
 
-    // Crowd-aware label policy
     const bool bCrowded = IsElementCrowded(Element, Scale);
     bool bDrawLabel = false;
 
@@ -615,7 +697,6 @@ void USectorMapPanel::DrawMissionElement(
     }
     else
     {
-        // Rep 1: markers only
         bDrawLabel = false;
     }
 
@@ -637,7 +718,7 @@ void USectorMapPanel::DrawMissionElement(
 
         FSlateDrawElement::MakeText(
             OutDrawElements,
-            BaseLayerId + 3,
+            BaseLayerId + 4,
             AllottedGeometry.ToPaintGeometry(
                 FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y - 6.0f),
                 FVector2D(220.0f, 16.0f)),
@@ -646,101 +727,6 @@ void USectorMapPanel::DrawMissionElement(
             ESlateDrawEffect::None,
             FLinearColor::White);
     }
-}
-
-int32 USectorMapPanel::ComputeRepLevel(double ZoomedRadius) const
-{
-    int32 Rep = 3;
-
-    if (ZoomedRadius > 70000.0)
-    {
-        Rep = 2;
-    }
-
-    if (ZoomedRadius > 250000.0)
-    {
-        Rep = 1;
-    }
-
-    return Rep;
-}
-
-FVector2D USectorMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const
-{
-    const float DragAllowanceX = FMath::Max(120.0f, PanelSize.X * (ZoomScale - 1.0f) * 0.75f);
-    const float DragAllowanceY = FMath::Max(120.0f, PanelSize.Y * (ZoomScale - 1.0f) * 0.75f);
-
-    return FVector2D(
-        FMath::Clamp(InOffset.X, -DragAllowanceX, DragAllowanceX),
-        FMath::Clamp(InOffset.Y, -DragAllowanceY, DragAllowanceY));
-}
-
-void USectorMapPanel::ZoomIn()
-{
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn before: %.3f"), ZoomScale);
-
-    ZoomScale = FMath::Clamp(ZoomScale * 1.25f, MinZoomScale, MaxZoomScale);
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn after: %.3f"), ZoomScale);
-
-    Invalidate(EInvalidateWidget::Paint);
-}
-
-void USectorMapPanel::ZoomOut()
-{
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut before: %.3f"), ZoomScale);
-
-    ZoomScale = FMath::Clamp(ZoomScale * 0.8f, MinZoomScale, MaxZoomScale);
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
-
-    Invalidate(EInvalidateWidget::Paint);
-}
-
-bool USectorMapPanel::IsElementCrowded(MissionElement* TestElement, float Scale) const
-{
-    if (!CachedMission || !CachedRegion || !TestElement)
-    {
-        return false;
-    }
-
-    const FVector TestLocation = TestElement->GetLocation();
-
-    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
-    while (++ElementIter)
-    {
-        MissionElement* RefElement = ElementIter.value();
-        if (!RefElement || RefElement == TestElement)
-        {
-            continue;
-        }
-
-        if (RefElement->IsSquadron())
-        {
-            continue;
-        }
-
-        if (_stricmp(RefElement->GetRegion(), CachedRegion->GetName()) != 0)
-        {
-            continue;
-        }
-
-        const FVector RefLocation = RefElement->GetLocation();
-
-        const double DX = (TestLocation.X - RefLocation.X) * Scale;
-        const double DY = (TestLocation.Y - RefLocation.Y) * Scale;
-        const double DistSq = (DX * DX) + (DY * DY);
-
-        // Legacy-style crowd threshold in screen space
-        if (DistSq <= 64.0)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void USectorMapPanel::DrawMissionNavRoutes(
@@ -808,11 +794,9 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
         Center.Y + (ElementLocation.Y * Scale));
 
     bool bHaveFirstPointInRegion = false;
-    FVector FirstNavWorld = FVector::ZeroVector;
     FVector2D FirstNavScreen = FVector2D::ZeroVector;
 
     bool bHavePrevPointInRegion = false;
-    FVector PrevNavWorld = FVector::ZeroVector;
     FVector2D PrevNavScreen = FVector2D::ZeroVector;
 
     int32 NavIndex = 0;
@@ -841,7 +825,6 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
         if (!bHaveFirstPointInRegion)
         {
             bHaveFirstPointInRegion = true;
-            FirstNavWorld = NavWorld;
             FirstNavScreen = NavScreen;
         }
 
@@ -858,7 +841,6 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
                 RouteThickness);
         }
 
-        // Draw navpoint X marker
         const float MarkerHalf = (Rep <= 1) ? 2.0f : 3.0f;
 
         FSlateDrawElement::MakeLines(
@@ -887,7 +869,6 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
             true,
             1.0f);
 
-        // Draw navpoint number when detail allows
         if (Rep >= 2)
         {
             const FString NavLabel = FString::Printf(TEXT("%d"), NavIndex + 1);
@@ -904,13 +885,11 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
                 FLinearColor::White);
         }
 
-        PrevNavWorld = NavWorld;
         PrevNavScreen = NavScreen;
         bHavePrevPointInRegion = true;
         ++NavIndex;
     }
 
-    // Draw line from element to first navpoint in this region
     if (bHaveFirstPointInRegion)
     {
         FSlateDrawElement::MakeLines(
@@ -923,4 +902,241 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
             true,
             RouteThickness);
     }
+}
+
+void USectorMapPanel::DrawSelectionCrosshair(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 LayerId,
+    const FVector2D& Center,
+    float Radius) const
+{
+    const float Gap = Radius * 0.45f;
+    const float Reach = Radius + 8.0f;
+    const FLinearColor CrosshairColor(0.25f, 1.0f, 1.0f, 1.0f);
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(Center.X - Reach, Center.Y),
+            FVector2D(Center.X - Gap, Center.Y)
+        },
+        ESlateDrawEffect::None,
+        CrosshairColor,
+        true,
+        1.5f);
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(Center.X + Gap, Center.Y),
+            FVector2D(Center.X + Reach, Center.Y)
+        },
+        ESlateDrawEffect::None,
+        CrosshairColor,
+        true,
+        1.5f);
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(Center.X, Center.Y - Reach),
+            FVector2D(Center.X, Center.Y - Gap)
+        },
+        ESlateDrawEffect::None,
+        CrosshairColor,
+        true,
+        1.5f);
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(Center.X, Center.Y + Gap),
+            FVector2D(Center.X, Center.Y + Reach)
+        },
+        ESlateDrawEffect::None,
+        CrosshairColor,
+        true,
+        1.5f);
+}
+
+bool USectorMapPanel::IsElementCrowded(MissionElement* TestElement, float Scale) const
+{
+    if (!CachedMission || !CachedRegion || !TestElement)
+    {
+        return false;
+    }
+
+    const FVector TestLocation = TestElement->GetLocation();
+
+    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
+    while (++ElementIter)
+    {
+        MissionElement* RefElement = ElementIter.value();
+        if (!RefElement || RefElement == TestElement)
+        {
+            continue;
+        }
+
+        if (RefElement->IsSquadron())
+        {
+            continue;
+        }
+
+        if (_stricmp(RefElement->GetRegion(), CachedRegion->GetName()) != 0)
+        {
+            continue;
+        }
+
+        const FVector RefLocation = RefElement->GetLocation();
+
+        const double DX = (TestLocation.X - RefLocation.X) * Scale;
+        const double DY = (TestLocation.Y - RefLocation.Y) * Scale;
+        const double DistSq = (DX * DX) + (DY * DY);
+
+        if (DistSq <= 64.0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+MissionElement* USectorMapPanel::HitTestMissionElementAtLocalPoint(
+    const FVector2D& LocalPoint,
+    const FVector2D& Center,
+    float Scale) const
+{
+    if (!CachedMission || !CachedRegion)
+    {
+        return nullptr;
+    }
+
+    MissionElement* BestElement = nullptr;
+    double BestDistSq = TNumericLimits<double>::Max();
+
+    ListIter<MissionElement> ElementIter = CachedMission->GetElements();
+    while (++ElementIter)
+    {
+        MissionElement* Element = ElementIter.value();
+        if (!Element)
+        {
+            continue;
+        }
+
+        if (Element->IsSquadron())
+        {
+            continue;
+        }
+
+        if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
+        {
+            continue;
+        }
+
+        const FVector ElementLocation = Element->GetLocation();
+        const FVector2D ScreenPos(
+            Center.X + (ElementLocation.X * Scale),
+            Center.Y + (ElementLocation.Y * Scale));
+
+        const double DX = LocalPoint.X - ScreenPos.X;
+        const double DY = LocalPoint.Y - ScreenPos.Y;
+        const double DistSq = (DX * DX) + (DY * DY);
+        const double PickRadiusSq = 100.0;
+
+        if (DistSq <= PickRadiusSq && DistSq < BestDistSq)
+        {
+            BestDistSq = DistSq;
+            BestElement = Element;
+        }
+    }
+
+    return BestElement;
+}
+
+bool USectorMapPanel::FindMissionElementScreenPosition(
+    MissionElement* Element,
+    const FVector2D& Center,
+    float Scale,
+    FVector2D& OutScreenPos) const
+{
+    OutScreenPos = FVector2D::ZeroVector;
+
+    if (!Element || !CachedRegion)
+    {
+        return false;
+    }
+
+    if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
+    {
+        return false;
+    }
+
+    const FVector ElementLocation = Element->GetLocation();
+
+    OutScreenPos = FVector2D(
+        Center.X + (ElementLocation.X * Scale),
+        Center.Y + (ElementLocation.Y * Scale));
+
+    return true;
+}
+
+int32 USectorMapPanel::ComputeRepLevel(double ZoomedRadius) const
+{
+    int32 Rep = 3;
+
+    if (ZoomedRadius > 70000.0)
+    {
+        Rep = 2;
+    }
+
+    if (ZoomedRadius > 250000.0)
+    {
+        Rep = 1;
+    }
+
+    return Rep;
+}
+
+FVector2D USectorMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const
+{
+    const float DragAllowanceX = FMath::Max(120.0f, PanelSize.X * (ZoomScale - 1.0f) * 0.75f);
+    const float DragAllowanceY = FMath::Max(120.0f, PanelSize.Y * (ZoomScale - 1.0f) * 0.75f);
+
+    return FVector2D(
+        FMath::Clamp(InOffset.X, -DragAllowanceX, DragAllowanceX),
+        FMath::Clamp(InOffset.Y, -DragAllowanceY, DragAllowanceY));
+}
+
+void USectorMapPanel::ZoomIn()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn before: %.3f"), ZoomScale);
+
+    ZoomScale = FMath::Clamp(ZoomScale * 1.25f, MinZoomScale, MaxZoomScale);
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn after: %.3f"), ZoomScale);
+
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::ZoomOut()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut before: %.3f"), ZoomScale);
+
+    ZoomScale = FMath::Clamp(ZoomScale * 0.8f, MinZoomScale, MaxZoomScale);
+    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+
+    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
+
+    Invalidate(EInvalidateWidget::Paint);
 }
