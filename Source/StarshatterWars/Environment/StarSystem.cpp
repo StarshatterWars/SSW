@@ -2129,3 +2129,218 @@ void StarSystem::AddRootRegion(OrbitalRegion* Region)
 		radius = Region->Orbit();
 	}
 }
+
+void StarSystem::ResetHydratedContents()
+{
+	active_region = nullptr;
+	radius = 0.0;
+
+	if (instantiated)
+	{
+		Deactivate();
+		Destroy();
+	}
+
+	bodies.destroy();
+	regions.destroy();
+	all_regions.clear();
+}
+
+int32 StarSystem::ToLegacyStarClass(ESPECTRAL_CLASS InClass) const
+{
+	switch (InClass)
+	{
+	case ESPECTRAL_CLASS::O:            return Star::O;
+	case ESPECTRAL_CLASS::B:            return Star::B;
+	case ESPECTRAL_CLASS::A:            return Star::A;
+	case ESPECTRAL_CLASS::F:            return Star::F;
+	case ESPECTRAL_CLASS::G:            return Star::G;
+	case ESPECTRAL_CLASS::K:            return Star::K;
+	case ESPECTRAL_CLASS::M:            return Star::M;
+	case ESPECTRAL_CLASS::RED_GIANT:    return Star::RED_GIANT;
+	case ESPECTRAL_CLASS::WHITE_DWARF:  return Star::WHITE_DWARF;
+	case ESPECTRAL_CLASS::BLACK_HOLE:   return Star::BLACK_HOLE;
+	default:                            return Star::G;
+	}
+}
+
+void StarSystem::HydrateFromEnvironment(
+	const FS_Galaxy& GalaxyRow,
+	const FS_StarSystem* OptionalSystemMeta)
+{
+	ResetHydratedContents();
+
+	SetName(TCHAR_TO_ANSI(*GalaxyRow.Name));
+	SetLocation(GalaxyRow.Location);
+	SetAffiliation(GalaxyRow.Iff);
+	SetSequence(ToLegacyStarClass(GalaxyRow.Class));
+
+	if (OptionalSystemMeta)
+	{
+		SetSkyCounts(OptionalSystemMeta->SkyStars, OptionalSystemMeta->SkyDust);
+		SetSkyTextures(
+			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyPolyStars),
+			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyNebula),
+			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyHaze));
+		SetAmbientColor(OptionalSystemMeta->AmbientColor);
+	}
+
+	for (const FS_StarMap& StarRow : GalaxyRow.Stellar)
+	{
+		OrbitalBody* StarBody = HydrateStar(StarRow);
+		if (!StarBody)
+		{
+			continue;
+		}
+
+		for (const FS_RegionMap& RegionRow : StarRow.Region)
+		{
+			HydrateRegion(StarBody, RegionRow);
+		}
+
+		for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+		{
+			OrbitalBody* PlanetBody = HydratePlanet(StarBody, PlanetRow);
+			if (!PlanetBody)
+			{
+				continue;
+			}
+
+			for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+			{
+				HydrateRegion(PlanetBody, RegionRow);
+			}
+
+			for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+			{
+				OrbitalBody* MoonBody = HydrateMoon(PlanetBody, MoonRow);
+				if (!MoonBody)
+				{
+					continue;
+				}
+
+				for (const FS_RegionMap& RegionRow : MoonRow.Region)
+				{
+					HydrateRegion(MoonBody, RegionRow);
+				}
+			}
+		}
+	}
+
+	RecalculateRadius();
+}
+
+OrbitalBody* StarSystem::HydrateStar(const FS_StarMap& Row)
+{
+	OrbitalBody* StarBody = new OrbitalBody(
+		this,
+		TCHAR_TO_ANSI(*Row.Name),
+		Orbital::STAR,
+		Row.Mass,
+		Row.Radius,
+		Row.Orbit,
+		GetCenter());
+
+	StarBody->map_name = TCHAR_TO_ANSI(*Row.Map);
+	StarBody->tex_name = TCHAR_TO_ANSI(*Row.Image);
+	StarBody->light = Row.Light;
+	StarBody->tscale = Row.Tscale;
+	StarBody->retro = Row.Retro;
+	StarBody->rotation = Row.Rot * 3600.0;
+	StarBody->color = Row.Color;
+	StarBody->back = Row.Back;
+	StarBody->subtype = ToLegacyStarClass(Row.Class);
+
+	AddBody(StarBody);
+	return StarBody;
+}
+
+OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetMap& Row)
+{
+	if (!ParentStar)
+	{
+		return nullptr;
+	}
+
+	OrbitalBody* PlanetBody = new OrbitalBody(
+		this,
+		TCHAR_TO_ANSI(*Row.Name),
+		Orbital::PLANET,
+		Row.Mass,
+		Row.Radius,
+		Row.Orbit,
+		ParentStar);
+
+	PlanetBody->map_name = TCHAR_TO_ANSI(*Row.Icon);
+	PlanetBody->tex_name = TCHAR_TO_ANSI(*Row.Texture);
+	PlanetBody->tex_gloss = TCHAR_TO_ANSI(*Row.Gloss);
+	PlanetBody->tex_ring = TCHAR_TO_ANSI(*Row.Ring);
+	PlanetBody->ring_min = Row.Minrad;
+	PlanetBody->ring_max = Row.Maxrad;
+	PlanetBody->tscale = Row.Tscale;
+	PlanetBody->tilt = Row.Tilt;
+	PlanetBody->retro = Row.Retro;
+	PlanetBody->rotation = Row.Rot * 3600.0;
+	PlanetBody->atmosphere = Row.Atmos;
+
+	ParentStar->satellites.append(PlanetBody);
+	return PlanetBody;
+}
+
+OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap& Row)
+{
+	if (!ParentPlanet)
+	{
+		return nullptr;
+	}
+
+	OrbitalBody* MoonBody = new OrbitalBody(
+		this,
+		TCHAR_TO_ANSI(*Row.Name),
+		Orbital::MOON,
+		Row.Mass,
+		Row.Radius,
+		Row.Orbit,
+		ParentPlanet);
+
+	MoonBody->map_name = TCHAR_TO_ANSI(*Row.Icon);
+	MoonBody->tex_name = TCHAR_TO_ANSI(*Row.Texture);
+	MoonBody->tscale = Row.Tscale;
+	MoonBody->tilt = Row.Tilt;
+	MoonBody->retro = Row.Retro;
+	MoonBody->rotation = Row.Rot * 3600.0;
+	MoonBody->atmosphere = Row.Atmos;
+
+	ParentPlanet->satellites.append(MoonBody);
+	return MoonBody;
+}
+
+OrbitalRegion* StarSystem::HydrateRegion(Orbital* Parent, const FS_RegionMap& Row)
+{
+	if (!Parent)
+	{
+		return nullptr;
+	}
+
+	OrbitalRegion* Region = new OrbitalRegion(
+		this,
+		TCHAR_TO_ANSI(*Row.Name),
+		0,
+		Row.Size,
+		Row.Orbit,
+		Parent);
+
+	Region->grid = Row.Grid;
+	Region->inclination = Row.Inclination;
+	Region->asteroids = Row.Asteroids;
+
+	for (const FString& LinkName : Row.Link)
+	{
+		Region->links.append(new Text(TCHAR_TO_ANSI(*LinkName)));
+	}
+
+	Parent->regions.append(Region);
+	all_regions.append(Region);
+
+	return Region;
+}

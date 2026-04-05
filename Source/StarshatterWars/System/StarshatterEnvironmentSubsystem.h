@@ -77,6 +77,9 @@
 class DataLoader;
 class StarSystem;
 
+class OrbitalBody;
+class OrbitalRegion;
+
 class USSWGameInstance;
 
 // Logging
@@ -105,8 +108,11 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual bool IsTickable() const override;
     virtual TStatId GetStatId() const override;
+    void BuildRuntimeStarSystems();
     virtual bool IsTickableInEditor() const override { return false; }
     virtual bool IsTickableWhenPaused() const override { return false; }
+
+    const TArray<StarSystem*>& GetRuntimeStarSystems() const { return RuntimeStarSystems; }
 
     // -----------------------------------------------------------------
     // Primary entry point
@@ -116,7 +122,15 @@ public:
     // ===================================================================== 
     // Runtime Simulation Time System 
     // ===================================================================== 
-    void InitSimulationBaseTime(); void RegisterStarSystem(StarSystem* System); 
+    void InitSimulationBaseTime(); 
+    
+    void RegisterStarSystem(StarSystem* System); 
+ 
+    void RegisterStar(OrbitalBody* Body);
+    void RegisterPlanet(OrbitalBody* Body);
+    void RegisterMoon(OrbitalBody* Body);
+    void RegisterRegion(OrbitalRegion* Region);
+    
     double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
     bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
     void TickEnvironmentTime(double DeltaSeconds);
@@ -266,7 +280,11 @@ protected:
     double EnvironmentBaseTime = 0.0;
     int64 SimulationClockMs = 0;
 
-    TArray<StarSystem*> RuntimeStarSystems;
+    TArray<StarSystem*>    RuntimeStarSystems;
+    TArray<OrbitalBody*>   RuntimeStars;
+    TArray<OrbitalBody*>   RuntimePlanets;
+    TArray<OrbitalBody*>   RuntimeMoons;
+    TArray<OrbitalRegion*> RuntimeRegions;
 
 private:
     // Cached GI (kept)

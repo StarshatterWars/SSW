@@ -364,75 +364,23 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
 
     radius = 10.0;
 
-    for (const FS_Galaxy& GalaxyRow : Env->GalaxyDataArray)
+    const TArray<StarSystem*>& RuntimeSystems = Env->GetRuntimeStarSystems();
+
+    for (StarSystem* StarSys : RuntimeSystems)
     {
-        if (GalaxyRow.Name.IsEmpty())
-        {
-            continue;
-        }
-
-        const FString SystemName = GalaxyRow.Name;
-        const FVector SystemLoc = GalaxyRow.Location;
-        const int32 SystemIFF = GalaxyRow.Iff;
-        const int32 StarClass = ConvertSpectralClass(GalaxyRow.Class);
-
-        StarSystem* StarSys = new StarSystem(
-            TCHAR_TO_ANSI(*SystemName),
-            SystemLoc,
-            SystemIFF,
-            StarClass);
-
         if (!StarSys)
         {
             continue;
         }
 
+        // Reuse existing runtime StarSystem built by StarSystemRegistry
         systems.append(StarSys);
-        Env->RegisterStarSystem(StarSys);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Galaxy] Registered runtime StarSystem: %s"),
-            *SystemName);
+        const FString SystemName = ANSI_TO_TCHAR(StarSys->GetName());
+        const FVector SystemLoc = StarSys->GetLocation();
+        const int32 StarClass = StarSys->GetSequence();
 
-        // 1. Hydrate stars / planets / moons / nested regions from Galaxy table:
-        for (const FS_StarMap& StarRow : GalaxyRow.Stellar)
-        {
-            BuildStarFromMap(StarSys, StarRow);
-        }
-
-        // 2. Merge standalone regions table rows:
-        for (const FS_Region& RegionRow : Env->RegionDataArray)
-        {
-            if (RegionRow.Name.IsEmpty())
-            {
-                continue;
-            }
-
-            // Skip duplicates if region already came from GalaxyRow.Stellar:
-            if (StarSys->FindRegion(TCHAR_TO_ANSI(*RegionRow.Name)))
-            {
-                continue;
-            }
-
-            // Only attach rows whose parent resolves inside this system:
-            Orbital* Parent = nullptr;
-
-            if (!RegionRow.Parent.IsEmpty())
-            {
-                Parent = StarSys->FindOrbital(TCHAR_TO_ANSI(*RegionRow.Parent));
-                if (!Parent)
-                {
-                    continue;
-                }
-            }
-
-            BuildRegionFromTable(StarSys, RegionRow);
-        }
-
-        // 3. Recompute final system radius AFTER all bodies and regions exist:
-        StarSys->RecalculateRadius();
-
-        // Build galaxy display star
+        // Build lightweight galaxy/theater display star only
         Star* NewStar = new Star(
             TCHAR_TO_ANSI(*SystemName),
             SystemLoc,
@@ -443,7 +391,6 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
             stars.append(NewStar);
         }
 
-        // Track overall galaxy radius from system positions:
         const double Dist = FVector(SystemLoc.X, SystemLoc.Y, SystemLoc.Z).Size();
         if (Dist > radius)
         {
@@ -451,9 +398,8 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
         }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[Galaxy] Hydrated system '%s' Stellar=%d BodiesRadius=%.0f Regions=%d"),
+            TEXT("[Galaxy] Using existing runtime StarSystem: %s  BodiesRadius=%.0f Regions=%d"),
             *SystemName,
-            GalaxyRow.Stellar.Num(),
             StarSys->Radius(),
             StarSys->AllRegions().size());
     }

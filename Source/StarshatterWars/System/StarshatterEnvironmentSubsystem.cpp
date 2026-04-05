@@ -36,6 +36,7 @@
 #include "Term.h"
 #include "Galaxy.h"
 #include "StarSystem.h"
+#include "StarSystemRegistry.h"
 
 #include "SSWGameInstance.h"
 
@@ -95,9 +96,10 @@ static FColor Vec3ToColor255(const Vec3& a)
 
 void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    Super::Initialize(Collection);
+	Super::Initialize(Collection);
 
-    UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] Initialize"));
+	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] Initialize"));
+
 	UGameInstance* GI = GetGameInstance();
 	if (!GI)
 	{
@@ -114,7 +116,7 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 		return;
 	}
 
-    SetProjectPath();
+	SetProjectPath();
 
 	GalaxyDataTable = Assets->GetDataTable(TEXT("Data.GalaxyMapTable"), true);
 	RegionsDataTable = Assets->GetDataTable(TEXT("Data.RegionsTable"), true);
@@ -127,17 +129,24 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 	// Ensure we actually have a data table to fill:
 	if (!GalaxyDataTable)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[Environment] GalaxyDataTable is null. Assign a DT asset with RowStruct=FS_Galaxy in defaults."));
+		UE_LOG(LogTemp, Error,
+			TEXT("[Environment] GalaxyDataTable is null. Assign a DT asset with RowStruct=FS_Galaxy in defaults."));
 		return;
 	}
-	
-	//GalaxyDataTable->EmptyTable();
-	
+
 	// Runtime time state
 	bBaseTimeInitialized = false;
 	EnvironmentBaseTime = 0.0;
+	SimulationClockMs = 0;
+
+	// Runtime object caches
 	RuntimeStarSystems.Reset();
-    bLoaded = false;
+	RuntimeStars.Reset();
+	RuntimePlanets.Reset();
+	RuntimeMoons.Reset();
+	RuntimeRegions.Reset();
+
+	bLoaded = false;
 }
 
 void UStarshatterEnvironmentSubsystem::Deinitialize()
@@ -151,11 +160,28 @@ void UStarshatterEnvironmentSubsystem::Deinitialize()
 void UStarshatterEnvironmentSubsystem::Unload()
 {
 	ReleaseAssets();
+
 	bLoaded = false;
-	
+
+	// Reset time state
 	bBaseTimeInitialized = false;
 	EnvironmentBaseTime = 0.0;
+	SimulationClockMs = 0;
+
+	// Reset ALL runtime caches (not just systems)
 	RuntimeStarSystems.Reset();
+	RuntimeStars.Reset();
+	RuntimePlanets.Reset();
+	RuntimeMoons.Reset();
+	RuntimeRegions.Reset();
+
+	UE_LOG(LogStarshatterEnvironment, Log,
+		TEXT("[Environment] Unload complete: Systems=%d Stars=%d Planets=%d Moons=%d Regions=%d"),
+		RuntimeStarSystems.Num(),
+		RuntimeStars.Num(),
+		RuntimePlanets.Num(),
+		RuntimeMoons.Num(),
+		RuntimeRegions.Num());
 }
 
 void UStarshatterEnvironmentSubsystem::ReleaseAssets()
@@ -199,16 +225,19 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 {
 	if (bLoaded)
 	{
-		UE_LOG(LogStarshatterEnvironment, Verbose, TEXT("[Environment] LoadAll skipped (already loaded)"));
+		UE_LOG(LogStarshatterEnvironment, Verbose,
+			TEXT("[Environment] LoadAll skipped (already loaded)"));
 		return;
 	}
 
-	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] LoadAll (Full=%s)"), bFull ? TEXT("true") : TEXT("false"));
-	 
+	UE_LOG(LogStarshatterEnvironment, Log,
+		TEXT("[Environment] LoadAll (Full=%s)"),
+		bFull ? TEXT("true") : TEXT("false"));
+
 	ClearRuntimeCaches();
 
-	//LoadGalaxyMap();
-	//LoadStarsystems();
+	// LoadGalaxyMap();
+	// LoadStarsystems();
 	CreateEnvironmentTables();
 
 	Galaxy::InitializeFromEnvironment(this);
@@ -219,13 +248,15 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 
 	bLoaded = true;
 
-	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] LoadAll complete: Galaxies=%d Systems=%d Stars=%d Planets=%d Moons=%d Regions=%d Terrain=%d Zones=%d"),
+	UE_LOG(LogStarshatterEnvironment, Log,
+		TEXT("[Environment] LoadAll complete: DT_Galaxies=%d DT_Systems=%d RuntimeSystems=%d RuntimeStars=%d RuntimePlanets=%d RuntimeMoons=%d RuntimeRegions=%d Terrain=%d Zones=%d"),
 		GalaxyDataArray.Num(),
 		StarSystemDataArray.Num(),
-		StarDataArray.Num(),
-		PlanetDataArray.Num(),
-		MoonDataArray.Num(),
-		RegionDataArray.Num(),
+		RuntimeStarSystems.Num(),
+		RuntimeStars.Num(),
+		RuntimePlanets.Num(),
+		RuntimeMoons.Num(),
+		RuntimeRegions.Num(),
 		TerrainRegionsArray.Num(),
 		ZoneDataArray.Num());
 }
@@ -297,12 +328,60 @@ void UStarshatterEnvironmentSubsystem::RegisterStarSystem(StarSystem* System)
 
 void UStarshatterEnvironmentSubsystem::CreateEnvironmentTables()
 {
-	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] CreateEnvironmentTables (stub)"));
+	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] CreateEnvironmentTables"));
 
 	HydrateAllFromTables();
-	
-	// NOTE: If you are using UObjectPtr-managed DTs elsewhere, you can switch these
-	// raw pointers to TObjectPtr<UDataTable> in the header later.
+
+	// Clear any prior runtime registry ownership before rebuild:
+	StarSystemRegistry::Clear(true);
+
+	// Clear local runtime arrays before registering fresh objects:
+	RuntimeStarSystems.Reset();
+	RuntimeStars.Reset();
+	RuntimePlanets.Reset();
+	RuntimeMoons.Reset();
+	RuntimeRegions.Reset();
+
+	// Build runtime StarSystem hierarchy from hydrated FS_Galaxy rows:
+	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
+	{
+		StarSystem* RuntimeSystem =
+			StarSystemRegistry::BuildAndRegister(GalaxyRow, this);
+
+		if (!RuntimeSystem)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[Environment] Failed to build runtime StarSystem for '%s'"),
+				*GalaxyRow.Name);
+			continue;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("===== RUNTIME STAR SYSTEM CHECK ====="));
+	UE_LOG(LogTemp, Warning,
+		TEXT("RuntimeSystems=%d Stars=%d Planets=%d Moons=%d Regions=%d"),
+		RuntimeStarSystems.Num(),
+		RuntimeStars.Num(),
+		RuntimePlanets.Num(),
+		RuntimeMoons.Num(),
+		RuntimeRegions.Num());
+
+	for (StarSystem* System : RuntimeStarSystems)
+	{
+		if (!System)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Runtime system is null"));
+			continue;
+		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("System: %s  Loc=(%.2f, %.2f, %.2f)  Radius=%.2f"),
+			ANSI_TO_TCHAR(System->GetName()),
+			System->GetLocation().X,
+			System->GetLocation().Y,
+			System->GetLocation().Z,
+			System->Radius());
+	}
 }
 
 // +--------------------------------------------------------------------+
@@ -1942,6 +2021,9 @@ void UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 
 void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 {
+	// -----------------------------------------------------------------
+	// DT / hydrated row arrays
+	// -----------------------------------------------------------------
 	GalaxyDataArray.Reset();
 	StarSystemDataArray.Reset();
 	StarDataArray.Reset();
@@ -1950,6 +2032,9 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 	RegionDataArray.Reset();
 	TerrainRegionsArray.Reset();
 
+	// -----------------------------------------------------------------
+	// Lookup caches
+	// -----------------------------------------------------------------
 	GalaxyByName.Reset();
 	StarSystemByName.Reset();
 	StarByName.Reset();
@@ -1960,6 +2045,18 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 
 	RegionParentByName.Reset();
 	RegionChildrenByParent.Reset();
+
+	// -----------------------------------------------------------------
+	// Runtime object caches
+	// -----------------------------------------------------------------
+	RuntimeStarSystems.Reset();
+	RuntimeStars.Reset();
+	RuntimePlanets.Reset();
+	RuntimeMoons.Reset();
+	RuntimeRegions.Reset();
+
+	UE_LOG(LogStarshatterEnvironment, Verbose,
+		TEXT("[Environment] ClearRuntimeCaches complete"));
 }
 
 void UStarshatterEnvironmentSubsystem::ReadGalaxyDataTable()
@@ -2136,4 +2233,88 @@ bool UStarshatterEnvironmentSubsystem::IsTickable() const
 TStatId UStarshatterEnvironmentSubsystem::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UStarshatterEnvironmentSubsystem, STATGROUP_Tickables);
+}
+
+void UStarshatterEnvironmentSubsystem::BuildRuntimeStarSystems()
+{
+	for (StarSystem* System : RuntimeStarSystems)
+	{
+		delete System;
+	}
+	RuntimeStarSystems.Reset();
+
+	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
+	{
+		StarSystem* RuntimeSystem = new StarSystem(
+			TCHAR_TO_ANSI(*GalaxyRow.Name),
+			GalaxyRow.Location,
+			GalaxyRow.Iff,
+			Star::G);
+
+		if (!RuntimeSystem)
+		{
+			continue;
+		}
+
+		const FS_StarSystem* Meta = StarSystemByName.Find(GalaxyRow.Name);
+		RuntimeSystem->HydrateFromEnvironment(GalaxyRow, Meta);
+
+		RegisterStarSystem(RuntimeSystem);
+	}
+}
+
+void UStarshatterEnvironmentSubsystem::RegisterStar(OrbitalBody* Body)
+{
+	if (!Body)
+	{
+		return;
+	}
+
+	RuntimeStars.AddUnique(Body);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Registered Star. Count=%d"),
+		RuntimeStars.Num());
+}
+
+void UStarshatterEnvironmentSubsystem::RegisterPlanet(OrbitalBody* Body)
+{
+	if (!Body)
+	{
+		return;
+	}
+
+	RuntimePlanets.AddUnique(Body);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Registered Planet. Count=%d"),
+		RuntimePlanets.Num());
+}
+
+void UStarshatterEnvironmentSubsystem::RegisterMoon(OrbitalBody* Body)
+{
+	if (!Body)
+	{
+		return;
+	}
+
+	RuntimeMoons.AddUnique(Body);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Registered Moon. Count=%d"),
+		RuntimeMoons.Num());
+}
+
+void UStarshatterEnvironmentSubsystem::RegisterRegion(OrbitalRegion* Region)
+{
+	if (!Region)
+	{
+		return;
+	}
+
+	RuntimeRegions.AddUnique(Region);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] Registered Region. Count=%d"),
+		RuntimeRegions.Num());
 }

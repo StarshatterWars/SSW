@@ -153,6 +153,15 @@ public:
 
     void          SetActiveRegion(OrbitalRegion* rgn);
 
+    // -----------------------------------------------------------------
+    // runtime hydration from subsystem data:
+    // -----------------------------------------------------------------
+    void HydrateFromEnvironment(
+        const FS_Galaxy& GalaxyRow,
+        const FS_StarSystem* OptionalSystemMeta = nullptr);
+
+    void ResetHydratedContents();
+
 protected:
     // -----------------------------------------------------------------
     // parsing:
@@ -226,6 +235,14 @@ protected:
     FVector               tvpn;
     FVector               tvup;
     FVector               tvrt;
+
+private:
+    int32 ToLegacyStarClass(ESPECTRAL_CLASS InClass) const;
+
+    OrbitalBody* HydrateStar(const FS_StarMap& Row);
+    OrbitalBody* HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetMap& Row);
+    OrbitalBody* HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap& Row);
+    OrbitalRegion* HydrateRegion(Orbital* Parent, const FS_RegionMap& Row);
 };
 
 // +--------------------------------------------------------------------+
