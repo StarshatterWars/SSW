@@ -246,6 +246,10 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
         return true;
     }
 
+    // Legacy behavior: centering is reliable only at system zoom.
+    ZoomScale = 1.0f;
+    PanOffset = FVector2D::ZeroVector;
+
     FVector2D UnzoomedOffset = FVector2D::ZeroVector;
     if (!FindBodyOffsetByName(TargetName, UnzoomedOffset))
     {
@@ -254,6 +258,8 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
 
     const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
     FocusOnPlanet(UnzoomedOffset, PanelSize);
+    Invalidate(EInvalidateWidget::Paint);
+
     return true;
 }
 
