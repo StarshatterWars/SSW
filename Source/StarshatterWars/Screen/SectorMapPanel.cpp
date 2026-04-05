@@ -385,10 +385,10 @@ void USectorMapPanel::RefreshView()
         return;
     }
 
-    // 1. Try explicitly requested sector first
+    // 1. Try the explicitly requested sector first
     if (!ResolveViewedRegion(CachedRuntimeSystem, CachedRegion) || !CachedRegion)
     {
-        // 2. Fall back to the runtime active region
+        // 2. Fallback to active region only if no valid mission/requested region was found
         CachedRegion = CachedRuntimeSystem->ActiveRegion();
 
         // 3. Final fallback to first available region
@@ -406,7 +406,6 @@ void USectorMapPanel::RefreshView()
             }
         }
 
-        // Keep the viewed sector name in sync with the actual displayed region
         if (CachedRegion)
         {
             ViewedSectorName = ANSI_TO_TCHAR(CachedRegion->GetName());

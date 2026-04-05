@@ -452,14 +452,11 @@ void UMissionNavDlg::SyncSubPanels()
             }
         }
 
-        // Default to active region when nothing explicit is selected
-        if (SectorNameForPanel.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
+        // Default to the sector/region listed in the mission brief
+        if (SectorNameForPanel.IsEmpty() && MissionPtr)
         {
-            OrbitalRegion* ActiveRegion = MissionPtr->GetStarSystem()->ActiveRegion();
-            if (ActiveRegion)
-            {
-                SectorNameForPanel = ANSI_TO_TCHAR(ActiveRegion->GetName());
-            }
+            SectorNameForPanel = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+            SectorNameForPanel = SectorNameForPanel.TrimStartAndEnd();
         }
 
         SectorMapPanel->SetViewedSectorName(SectorNameForPanel);
@@ -1782,7 +1779,60 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         return;
     }
 
-    int32 VisibleIndex = 0;
+    FString ActiveSectorName;
+
+    if (CurrentNavMode == EMissionNavMode::SECTOR)
+    {
+        if (SelectedObjectItem)
+        {
+            const EMissionNavObjectType SelectedType = SelectedObjectItem->GetObjectType();
+
+            if (SelectedType == EMissionNavObjectType::Sector)
+            {
+                ActiveSectorName = SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+            }
+            else if (SelectedType == EMissionNavObjectType::Station ||
+                SelectedType == EMissionNavObjectType::Starship ||
+                SelectedType == EMissionNavObjectType::Fighter)
+            {
+                const FString TargetName =
+                    SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+
+                ListIter<MissionElement> RegionElemIter = MissionPtr->GetElements();
+                while (++RegionElemIter)
+                {
+                    MissionElement* Elem = RegionElemIter.value();
+                    if (!Elem)
+                    {
+                        continue;
+                    }
+
+                    const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
+
+                    if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
+                    {
+                        ActiveSectorName = ANSI_TO_TCHAR(Elem->GetRegion());
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (ActiveSectorName.IsEmpty())
+        {
+            ActiveSectorName = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+            ActiveSectorName = ActiveSectorName.TrimStartAndEnd();
+        }
+    }
+
+    struct FMissionElementRow
+    {
+        FString Primary;
+        FString Secondary;
+        FString Detail;
+    };
+
+    TArray<FMissionElementRow> Rows;
 
     ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
     while (++ElemIter)
@@ -1796,6 +1846,16 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         if (Elem->IsSquadron())
         {
             continue;
+        }
+
+        if (!ActiveSectorName.IsEmpty())
+        {
+            const FString ElemRegion = ANSI_TO_TCHAR(Elem->GetRegion());
+
+            if (!ElemRegion.Equals(ActiveSectorName, ESearchCase::IgnoreCase))
+            {
+                continue;
+            }
         }
 
         bool bMatches = false;
@@ -1827,25 +1887,34 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
-        const FString Primary = FString(Elem->GetName().data());
-        const FString Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
-        const FString RegionName = FString(Elem->GetRegion().data());
-
-        const FString Detail = FString::Printf(
+        FMissionElementRow Row;
+        Row.Primary = FString(Elem->GetName().data());
+        Row.Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
+        Row.Detail = FString::Printf(
             TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
-            *Primary,
+            *Row.Primary,
             *TypeLabel,
-            *Secondary,
-            *RegionName,
+            *Row.Secondary,
+            *FString(Elem->GetRegion().data()),
             Elem->GetIFF(),
             Elem->Count());
 
+        Rows.Add(Row);
+    }
+
+    Rows.Sort([](const FMissionElementRow& A, const FMissionElementRow& B)
+        {
+            return A.Primary < B.Primary;
+        });
+
+    for (int32 Index = 0; Index < Rows.Num(); ++Index)
+    {
         AddObjectItem(
             ObjectType,
-            VisibleIndex++,
-            Primary,
-            Secondary,
-            Detail);
+            Index,
+            Rows[Index].Primary,
+            Rows[Index].Secondary,
+            Rows[Index].Detail);
     }
 }
 
@@ -1868,6 +1937,14 @@ void UMissionNavDlg::OnNavModeButtonSelected(UMenuButton* SelectedButton)
     }
     else if (Option == TEXT("SECTOR"))
     {
+        // Force sector button to default back to the mission brief sector
+        SelectedObjectItem = nullptr;
+
+        if (ObjectListView)
+        {
+            ObjectListView->ClearSelection();
+        }
+
         SetNavMode(EMissionNavMode::SECTOR);
     }
 }
