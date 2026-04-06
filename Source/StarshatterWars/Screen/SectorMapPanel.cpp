@@ -579,6 +579,8 @@ void USectorMapPanel::DrawMissionElements(
         return;
     }
 
+    const FString ActiveRegionName = FString(ANSI_TO_TCHAR(CachedRegion->GetName())).TrimStartAndEnd();
+
     ListIter<MissionElement> ElementIter = CachedMission->GetElements();
     while (++ElementIter)
     {
@@ -598,7 +600,9 @@ void USectorMapPanel::DrawMissionElements(
             continue;
         }
 
-        if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
+        const FString ElemRegion = FString(ANSI_TO_TCHAR(Element->GetRegion())).TrimStartAndEnd();
+
+        if (!ElemRegion.Equals(ActiveRegionName, ESearchCase::IgnoreCase))
         {
             continue;
         }

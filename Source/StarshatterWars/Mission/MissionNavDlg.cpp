@@ -329,6 +329,15 @@ void UMissionNavDlg::RefreshFromMission()
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
 
+    if (MissionPtr)
+    {
+        const FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg] RefreshFromMission: MissionRegion='%s'"),
+            *MissionRegion);
+    }
+
     if (MissionPtr && MissionPtr->GetStarSystem())
     {
         CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
@@ -349,88 +358,6 @@ void UMissionNavDlg::RefreshFromMission()
     if (SectorMapPanel)
     {
         SectorMapPanel->SetMission(MissionPtr);
-    }
-
-    if (NavBodyText)
-    {
-        NavBodyText->SetColorAndOpacity(MissionUIStyle::HeaderText);
-        NavBodyText->SetFont(MissionUIStyle::GetHeaderFont(18));
-
-        if (!MissionPtr)
-        {
-            NavBodyText->SetText(FText::FromString(TEXT("NO MISSION DATA")));
-        }
-        else
-        {
-            FString DisplayText;
-
-            switch (CurrentNavMode)
-            {
-            case EMissionNavMode::GALAXY:
-            {
-                DisplayText = TEXT("GALAXY MODE");
-
-                if (MissionPtr->GetStarSystem())
-                {
-                    DisplayText += FString::Printf(
-                        TEXT("\n\nCURRENT SYSTEM: %s"),
-                        *FString(MissionPtr->GetStarSystem()->GetName()));
-                }
-                break;
-            }
-
-            case EMissionNavMode::SYSTEM:
-            {
-                FString SystemNameToShow = SelectedSystemName;
-
-                if (SystemNameToShow.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
-                {
-                    SystemNameToShow = FString(MissionPtr->GetStarSystem()->GetName());
-                }
-
-                if (!SystemNameToShow.IsEmpty())
-                {
-                    DisplayText = FString::Printf(
-                        TEXT("SYSTEM MODE\n\nSYSTEM: %s"),
-                        *SystemNameToShow);
-                }
-                else
-                {
-                    DisplayText = TEXT("SYSTEM MODE\n\nNO STAR SYSTEM");
-                }
-                break;
-            }
-
-            case EMissionNavMode::SECTOR:
-            {
-                FString SystemNameToShow = SelectedSystemName;
-
-                if (SystemNameToShow.IsEmpty() && MissionPtr && MissionPtr->GetStarSystem())
-                {
-                    SystemNameToShow = FString(MissionPtr->GetStarSystem()->GetName());
-                }
-
-                if (!SystemNameToShow.IsEmpty())
-                {
-                    DisplayText = FString::Printf(
-                        TEXT("SECTOR MODE\n\nSYSTEM: %s"),
-                        *SystemNameToShow);
-                }
-                else
-                {
-                    DisplayText = TEXT("SECTOR MODE\n\nNO STAR SYSTEM");
-                }
-
-                break;
-            }
-
-            default:
-                DisplayText = TEXT("NO NAV DATA");
-                break;
-            }
-
-            NavBodyText->SetText(FText::FromString(DisplayText));
-        }
     }
 
     RefreshObjectListPanel();
@@ -477,55 +404,15 @@ void UMissionNavDlg::SyncSubPanels()
     {
         SectorMapPanel->SetViewedSystemName(SystemNameForPanels);
 
-        FString SectorNameForPanel;
-
-        if (SelectedObjectItem)
+        FString MissionRegionName;
+        if (MissionPtr)
         {
-            const EMissionNavObjectType ObjectType = SelectedObjectItem->GetObjectType();
-
-            if (ObjectType == EMissionNavObjectType::Sector)
-            {
-                SectorNameForPanel =
-                    SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
-            }
-            else if (ObjectType == EMissionNavObjectType::Station ||
-                ObjectType == EMissionNavObjectType::Starship ||
-                ObjectType == EMissionNavObjectType::Fighter)
-            {
-                if (MissionPtr)
-                {
-                    const FString TargetName =
-                        SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
-
-                    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
-                    while (++ElemIter)
-                    {
-                        MissionElement* Elem = ElemIter.value();
-                        if (!Elem)
-                        {
-                            continue;
-                        }
-
-                        const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
-
-                        if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
-                        {
-                            SectorNameForPanel = ANSI_TO_TCHAR(Elem->GetRegion());
-                            break;
-                        }
-                    }
-                }
-            }
+            MissionRegionName = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+            MissionRegionName = MissionRegionName.TrimStartAndEnd();
         }
 
-        // Default to the sector/region listed in the mission brief
-        if (SectorNameForPanel.IsEmpty() && MissionPtr)
-        {
-            SectorNameForPanel = ANSI_TO_TCHAR(MissionPtr->GetRegion());
-            SectorNameForPanel = SectorNameForPanel.TrimStartAndEnd();
-        }
-
-        SectorMapPanel->SetViewedSectorName(SectorNameForPanel);
+        // Lock sector view to the selected mission region only.
+        SectorMapPanel->SetViewedSectorName(MissionRegionName);
         SectorMapPanel->SetMission(MissionPtr);
     }
 }
@@ -1452,9 +1339,8 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
         CurrentFilterMode = EMissionNavFilterMode::SECTOR;
         if (Manager) Manager->NavModeSector();
 
-        // Default sector button behavior:
-        // if we are not already looking at a sector/unit selection,
-        // clear object selection so SyncSubPanels falls back to active region.
+        // Sector mode is mission-region locked.
+        // Clear selection unless it is a sector/unit row for detail focus only.
         if (!SelectedObjectItem ||
             (SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Sector &&
                 SelectedObjectItem->GetObjectType() != EMissionNavObjectType::Station &&
@@ -1495,10 +1381,13 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
 void UMissionNavDlg::SetFilterMode(EMissionNavFilterMode NewMode)
 {
     CurrentFilterMode = NewMode;
+
     RefreshFilterSelection();
+
+    // Update sector/system context first, then rebuild list against that locked context.
+    SyncSubPanels();
     RefreshObjectListPanel();
     RefreshDetailPanel();
-    SyncSubPanels();
 }
 
 FString UMissionNavDlg::GetFilterModeLabel(EMissionNavFilterMode Mode) const
@@ -1808,7 +1697,14 @@ void UMissionNavDlg::BuildSectorObjects()
         return;
     }
 
-    int32 Index = 0;
+    FString MissionRegionName = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+    MissionRegionName = MissionRegionName.TrimStartAndEnd();
+
+    if (MissionRegionName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSectorObjects: Mission region is empty"));
+        return;
+    }
 
     ListIter<OrbitalRegion> RegionIter = System->AllRegions();
     while (++RegionIter)
@@ -1819,7 +1715,12 @@ void UMissionNavDlg::BuildSectorObjects()
             continue;
         }
 
-        const FString RegionName = FString(Region->GetName());
+        const FString RegionName = FString(Region->GetName()).TrimStartAndEnd();
+
+        if (!RegionName.Equals(MissionRegionName, ESearchCase::IgnoreCase))
+        {
+            continue;
+        }
 
         const FString Primary = RegionName;
         const FString Secondary = TEXT("SECTOR");
@@ -1831,65 +1732,36 @@ void UMissionNavDlg::BuildSectorObjects()
 
         AddObjectItem(
             EMissionNavObjectType::Sector,
-            Index++,
+            0,
             Primary,
             Secondary,
             Detail);
+
+        return;
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionNavDlg] BuildSectorObjects: Mission region '%s' was not found in runtime system '%s'"),
+        *MissionRegionName,
+        *FString(System->GetName()));
 }
 
 void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType)
 {
     if (!MissionPtr)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildMissionElementObjects: MissionPtr is null"));
         return;
     }
 
-    FString ActiveSectorName;
+    FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
+    const FString MissionRegionUpper = MissionRegion.ToUpper();
 
-    if (CurrentNavMode == EMissionNavMode::SECTOR)
-    {
-        if (SelectedObjectItem)
-        {
-            const EMissionNavObjectType SelectedType = SelectedObjectItem->GetObjectType();
-
-            if (SelectedType == EMissionNavObjectType::Sector)
-            {
-                ActiveSectorName = SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
-            }
-            else if (SelectedType == EMissionNavObjectType::Station ||
-                SelectedType == EMissionNavObjectType::Starship ||
-                SelectedType == EMissionNavObjectType::Fighter)
-            {
-                const FString TargetName =
-                    SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
-
-                ListIter<MissionElement> RegionElemIter = MissionPtr->GetElements();
-                while (++RegionElemIter)
-                {
-                    MissionElement* Elem = RegionElemIter.value();
-                    if (!Elem)
-                    {
-                        continue;
-                    }
-
-                    const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
-
-                    if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
-                    {
-                        ActiveSectorName = ANSI_TO_TCHAR(Elem->GetRegion());
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (ActiveSectorName.IsEmpty())
-        {
-            ActiveSectorName = ANSI_TO_TCHAR(MissionPtr->GetRegion());
-            ActiveSectorName = ActiveSectorName.TrimStartAndEnd();
-        }
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionNavDlg] BuildMissionElementObjects: Mission='%s' MissionRegion='%s' FilterType=%d"),
+        MissionPtr ? *FString(MissionPtr->GetName()) : TEXT("NONE"),
+        *MissionRegion,
+        static_cast<int32>(ObjectType));
 
     struct FMissionElementRow
     {
@@ -1919,14 +1791,27 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
-        if (!ActiveSectorName.IsEmpty())
-        {
-            const FString ElemRegion = ANSI_TO_TCHAR(Elem->GetRegion());
+        const FString ElemName = FString(ANSI_TO_TCHAR(Elem->GetName())).TrimStartAndEnd();
+        const FString ElemRegion = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+        const FString ElemRegionUpper = ElemRegion.ToUpper();
 
-            if (!ElemRegion.Equals(ActiveSectorName, ESearchCase::IgnoreCase))
-            {
-                continue;
-            }
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg]   Candidate Elem='%s' Region='%s' Static=%d Starship=%d Dropship=%d"),
+            *ElemName,
+            *ElemRegion,
+            Elem->IsStatic() ? 1 : 0,
+            Elem->IsStarship() ? 1 : 0,
+            Elem->IsDropship() ? 1 : 0);
+
+        // Hard region lock:
+        if (MissionRegionUpper.IsEmpty() || ElemRegionUpper != MissionRegionUpper)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionNavDlg]   REJECT region mismatch: Elem='%s' ElemRegion='%s' MissionRegion='%s'"),
+                *ElemName,
+                *ElemRegion,
+                *MissionRegion);
+            continue;
         }
 
         bool bMatches = false;
@@ -1955,20 +1840,28 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
 
         if (!bMatches)
         {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[MissionNavDlg]   REJECT type mismatch: Elem='%s'"),
+                *ElemName);
             continue;
         }
 
         FMissionElementRow Row;
-        Row.Primary = FString(Elem->GetName().data());
+        Row.Primary = ElemName;
         Row.Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
         Row.Detail = FString::Printf(
             TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
             *Row.Primary,
             *TypeLabel,
             *Row.Secondary,
-            *FString(Elem->GetRegion().data()),
+            *ElemRegion,
             Elem->GetIFF(),
             Elem->Count());
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg]   ACCEPT: Elem='%s' Region='%s'"),
+            *Row.Primary,
+            *ElemRegion);
 
         Rows.Add(Row);
     }
@@ -2008,7 +1901,7 @@ void UMissionNavDlg::OnNavModeButtonSelected(UMenuButton* SelectedButton)
     }
     else if (Option == TEXT("SECTOR"))
     {
-        // Force sector button to default back to the mission brief sector
+        // Force sector mode back to mission-region baseline.
         SelectedObjectItem = nullptr;
 
         if (ObjectListView)
@@ -2181,6 +2074,17 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
                         }
 
                         const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
+                       
+                        FString ElemRegion = ANSI_TO_TCHAR(Elem->GetRegion());
+                        ElemRegion = ElemRegion.TrimStartAndEnd();
+
+                        FString MissionRegion = ANSI_TO_TCHAR(MissionPtr->GetRegion());
+                        MissionRegion = MissionRegion.TrimStartAndEnd();
+
+                        if (!ElemRegion.Equals(MissionRegion, ESearchCase::IgnoreCase))
+                        {
+                            continue;
+                        }
 
                         if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
                         {
@@ -2284,12 +2188,19 @@ void UMissionNavDlg::HandleGalaxySystemActivated(const FString& InSystemName)
 
 void UMissionNavDlg::HandleSectorMissionElementSelected(MissionElement* InElement)
 {
-    if (!InElement)
+    if (!InElement || !MissionPtr)
     {
         return;
     }
 
     const FString ElementName = ANSI_TO_TCHAR(InElement->GetName());
+    const FString ElementRegion = FString(ANSI_TO_TCHAR(InElement->GetRegion())).TrimStartAndEnd().ToUpper();
+    const FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd().ToUpper();
+
+    if (!ElementRegion.Equals(MissionRegion, ESearchCase::IgnoreCase))
+    {
+        return;
+    }
 
     for (UMissionNavObjectListObject* Item : ObjectItems)
     {
