@@ -36,6 +36,7 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "PlayerData.h"
+#include "CombatGroupRegistry.h"
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
@@ -1915,7 +1916,9 @@ void UStarshatterGameDataSubsystem::ReadCombatRosterData()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] ReadCombatRosterData: BEGIN"));
 
+	// Clear existing data
 	CombatRosterData.Empty();
+	CombatGroupRegistry::Clear();
 
 	if (!CombatGroupDataTable)
 	{
@@ -1944,18 +1947,23 @@ void UStarshatterGameDataSubsystem::ReadCombatRosterData()
 			continue;
 		}
 
+		// Copy row into runtime struct
 		FS_CombatGroup Group = *Row;
 
-		// Preserve / normalize display name if needed
+		// Normalize display name
 		if (Group.DisplayName.IsEmpty())
 		{
 			Group.DisplayName = RowName.ToString();
 		}
 
+		// Store in local array (existing behavior)
 		CombatRosterData.Add(Group);
 
+		// Register in global registry (NEW)
+		CombatGroupRegistry::RegisterGroup(RowName, Group);
+
 		UE_LOG(LogTemp, Log,
-			TEXT("[GameData] CombatGroup Loaded: Row=%s Type=%d Id=%d ParentType=%d ParentId=%d Empire=%d Iff=%d Name=%s"),
+			TEXT("[GameData] CombatGroup Loaded: Row=%s Type=%d Id=%d ParentType=%d ParentId=%d Empire=%d Iff=%d Name=%s Region=%s"),
 			*RowName.ToString(),
 			(int32)Group.Type,
 			Group.Id,
@@ -1963,12 +1971,14 @@ void UStarshatterGameDataSubsystem::ReadCombatRosterData()
 			Group.ParentId,
 			(int32)Group.EmpireId,
 			Group.Iff,
-			*Group.DisplayName);
+			*Group.DisplayName,
+			*Group.Region);
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] ReadCombatRosterData: COMPLETE (%d groups)"),
-		CombatRosterData.Num());
+		TEXT("[GameData] ReadCombatRosterData: COMPLETE (%d groups, registry=%d)"),
+		CombatRosterData.Num(),
+		CombatGroupRegistry::Num());
 }
 
 void UStarshatterGameDataSubsystem::ReadCampaignData()
