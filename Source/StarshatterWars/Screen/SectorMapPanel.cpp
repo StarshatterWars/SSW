@@ -27,6 +27,11 @@
 #include "Mission.h"
 #include "MissionElement.h"
 #include "Instruction.h"
+#include "GameStructs.h"
+#include "GameStructs_System.h"
+
+#include "CombatUnit.h"
+#include "ShipDesignRegistry.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -610,6 +615,7 @@ void USectorMapPanel::DrawMissionElement(
         return;
     }
 
+    const bool bIsSelected = (Element == SelectedElement);
     const FLinearColor MarkerColor = ToLinearColor(Element->MarkerColor());
 
     float HalfSize = 3.0f;
@@ -631,19 +637,86 @@ void USectorMapPanel::DrawMissionElement(
         HalfSize = 3.0f;
     }
 
-    const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
-    const FVector2D DrawSize(HalfSize * 2.0f, HalfSize * 2.0f);
+    bool bDrewSprite = false;
 
-    FSlateDrawElement::MakeBox(
-        OutDrawElements,
-        BaseLayerId + 1,
-        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
-        FCoreStyle::Get().GetBrush("WhiteBrush"),
-        ESlateDrawEffect::None,
-        MarkerColor);
+    // ------------------------------------------------------------
+    // Try sprite rendering for ship-like objects first
+    // ------------------------------------------------------------
+    if (Element->IsStarship() || Element->IsDropship())
+    {
+        const FShipDesign* Design = ResolveShipDesignForElement(Element);
+        if (Design && Design->Map.Num() == 8)
+        {
+            const float HeadingRadians = Element->GetHeading();
+            const int32 FacingIndex = ComputeFacingIndex(HeadingRadians);
 
-    const bool bIsSelected = (Element == SelectedElement);
+            if (Design->Map.IsValidIndex(FacingIndex))
+            {
+                const FString ShipName = Design->ShipName;
+                const FString SpriteName = Design->Map[FacingIndex].SpriteName;
 
+                if (!ShipName.IsEmpty() && !SpriteName.IsEmpty())
+                {
+                    UTexture2D* SpriteTex = const_cast<USectorMapPanel*>(this)->GetShipMapSprite(
+                        ShipName,
+                        SpriteName);
+
+                    if (SpriteTex)
+                    {
+                        FSlateBrush Brush;
+                        Brush.SetResourceObject(SpriteTex);
+
+                        float SpriteSize = 24.0f;
+                        if (Element->IsStarship())
+                        {
+                            SpriteSize = 28.0f;
+                        }
+                        else if (Rep <= 1)
+                        {
+                            SpriteSize = 20.0f;
+                        }
+
+                        Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
+
+                        const FVector2D DrawPos =
+                            ScreenPos - (Brush.ImageSize * 0.5f);
+
+                        FSlateDrawElement::MakeBox(
+                            OutDrawElements,
+                            BaseLayerId + 1,
+                            AllottedGeometry.ToPaintGeometry(DrawPos, Brush.ImageSize),
+                            &Brush,
+                            ESlateDrawEffect::None,
+                            FLinearColor::White);
+
+                        bDrewSprite = true;
+                        HalfSize = SpriteSize * 0.5f;
+                    }
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Fallback marker box
+    // ------------------------------------------------------------
+    if (!bDrewSprite)
+    {
+        const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
+        const FVector2D DrawSize(HalfSize * 2.0f, HalfSize * 2.0f);
+
+        FSlateDrawElement::MakeBox(
+            OutDrawElements,
+            BaseLayerId + 1,
+            AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+            FCoreStyle::Get().GetBrush("WhiteBrush"),
+            ESlateDrawEffect::None,
+            MarkerColor);
+    }
+
+    // ------------------------------------------------------------
+    // Selection box + crosshair
+    // ------------------------------------------------------------
     if (bIsSelected)
     {
         const FVector2D SelTopLeft(
@@ -678,6 +751,9 @@ void USectorMapPanel::DrawMissionElement(
             HalfSize + 8.0f);
     }
 
+    // ------------------------------------------------------------
+    // Label logic
+    // ------------------------------------------------------------
     const bool bCrowded = IsElementCrowded(Element, Scale);
     bool bDrawLabel = false;
 
@@ -1137,4 +1213,50 @@ void USectorMapPanel::ZoomOut()
     UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
 
     Invalidate(EInvalidateWidget::Paint);
+}
+
+const FShipDesign* USectorMapPanel::ResolveShipDesignForElement(MissionElement* Element) const
+{
+    if (!Element)
+    {
+        return nullptr;
+    }
+
+    return Element->GetShipDesign();
+}
+
+UTexture2D* USectorMapPanel::GetShipMapSprite(
+    const FString& ShipName,
+    const FString& SpriteName)
+{
+    const FString Key = ShipName + TEXT("_") + SpriteName;
+
+    if (UTexture2D** Found = MapSpriteCache.Find(Key))
+    {
+        return *Found;
+    }
+
+    const FString Path = FString::Printf(
+        TEXT("/Game/UI/Ships/%s/%s.%s"),
+        *ShipName,
+        *SpriteName,
+        *SpriteName);
+
+    UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path);
+
+    MapSpriteCache.Add(Key, Tex);
+
+    return Tex;
+}
+
+int32 USectorMapPanel::ComputeFacingIndex(float YawRadians) const
+{
+    float Angle = FMath::Fmod(YawRadians, 2.0f * PI);
+    if (Angle < 0.0f)
+    {
+        Angle += 2.0f * PI;
+    }
+
+    const float Slice = (2.0f * PI) / 8.0f;
+    return FMath::FloorToInt((Angle + Slice * 0.5f) / Slice) % 8;
 }

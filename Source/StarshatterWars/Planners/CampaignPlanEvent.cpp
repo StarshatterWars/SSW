@@ -414,7 +414,7 @@ CampaignPlanEvent::ProsecuteKills(CombatAction* action)
                 CombatUnit* asset = g->FindUnit(*name);
 
                 if (asset) {
-                    int value_killed = asset->Kill(1);
+                    int value_killed = asset->GetKill(1);
 
                     ListIter<Combatant> iter2 = campaign->GetCombatants();
                     while (++iter2) {
@@ -444,7 +444,7 @@ CampaignPlanEvent::ProsecuteKills(CombatAction* action)
                 CombatUnit* target = g->FindUnit(*name);
 
                 if (target) {
-                    int value_killed = target->Kill(1);
+                    int value_killed = target->GetKill(1);
 
                     ListIter<Combatant> iter2 = campaign->GetCombatants();
                     while (++iter2) {
@@ -660,14 +660,14 @@ CampaignPlanEvent::CreateEventDefend(CombatAssignment* a)
 
     if (!success) {
         if (tgt) {
-            if (tgt->Kill(1) > 0)
+            if (tgt->GetKill(1) > 0)
                 tgt_count++;
             Combatant* c = group->GetCombatant();
             if (c)     c->AddScore(tgt->GetSingleValue());
         }
 
         if (unit && RandomChance(1, 5)) {
-            if (unit->Kill(1) > 0)
+            if (unit->GetKill(1) > 0)
                 unit_count++;
             Combatant* c = obj->GetCombatant();
             if (c)     c->AddScore(unit->GetSingleValue());
@@ -734,7 +734,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
 
     if (success) {
         if (tgt) {
-            int killed = tgt->Kill(1 + tgt->Count() / 2);
+            int killed = tgt->GetKill(1 + tgt->GetCount() / 2);
             if (killed > 0)
                 tgt_count += killed / tgt->GetSingleValue();
             Combatant* c = group->GetCombatant();
@@ -742,7 +742,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
         }
 
         if (unit && RandomChance(1, 5)) {
-            if (unit->Kill(1) > 0)
+            if (unit->GetKill(1) > 0)
                 unit_count++;
             Combatant* c = obj->GetCombatant();
             if (c)     c->AddScore(unit->GetSingleValue());
@@ -751,7 +751,7 @@ CampaignPlanEvent::CreateEventFighterAssault(CombatAssignment* a)
     else {
         for (int i = 0; i < 2; i++) {
             if (unit && RandomChance(1, 4)) {
-                if (unit->Kill(1) > 0)
+                if (unit->GetKill(1) > 0)
                     unit_count++;
                 Combatant* c = obj->GetCombatant();
                 if (c)     c->AddScore(unit->GetSingleValue());
@@ -870,7 +870,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
 
     if (success) {
         if (tgt) {
-            int killed = tgt->Kill(1 + tgt->Count() / 2);
+            int killed = tgt->GetKill(1 + tgt->GetCount() / 2);
             if (killed > 0)
                 tgt_count += killed / tgt->GetSingleValue();
             Combatant* c = group->GetCombatant();
@@ -878,7 +878,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
         }
 
         if (unit && RandomChance(1, 5)) {
-            if (unit->Kill(1) > 0)
+            if (unit->GetKill(1) > 0)
                 unit_count++;
             Combatant* c = obj->GetCombatant();
             if (c)     c->AddScore(unit->GetSingleValue());
@@ -887,7 +887,7 @@ CampaignPlanEvent::CreateEventFighterStrike(CombatAssignment* a)
     else {
         for (int i = 0; i < 2; i++) {
             if (unit && RandomChance(1, 4)) {
-                if (unit->Kill(1) > 0)
+                if (unit->GetKill(1) > 0)
                     unit_count++;
                 Combatant* c = obj->GetCombatant();
                 if (c)     c->AddScore(unit->GetSingleValue());
@@ -1014,7 +1014,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
     if (success) {
         for (int i = 0; i < 2; i++) {
             if (tgt && RandomChance(3, 4)) {
-                if (tgt->Kill(1) > 0)
+                if (tgt->GetKill(1) > 0)
                     tgt_count++;
                 Combatant* c = group->GetCombatant();
                 if (c)     c->AddScore(tgt->GetSingleValue());
@@ -1023,7 +1023,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
 
         if (tgt_count > 1) {
             if (tgt && RandomChance(1, 4)) {
-                if (tgt->Kill(1) > 0)
+                if (tgt->GetKill(1) > 0)
                     tgt_count++;
                 Combatant* c = group->GetCombatant();
                 if (c)     c->AddScore(tgt->GetSingleValue());
@@ -1031,7 +1031,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
         }
         else {
             if (unit && RandomChance(1, 5)) {
-                if (unit->Kill(1) > 0)
+                if (unit->GetKill(1) > 0)
                     unit_count++;
                 Combatant* c = obj->GetCombatant();
                 if (c)     c->AddScore(unit->GetSingleValue());
@@ -1041,7 +1041,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
     else {
         for (int i = 0; i < 2; i++) {
             if (unit && RandomChance(3, 4)) {
-                if (unit->Kill(1) > 0)
+                if (unit->GetKill(1) > 0)
                     unit_count++;
                 Combatant* c = obj->GetCombatant();
                 if (c)     c->AddScore(unit->GetSingleValue());
@@ -1049,7 +1049,7 @@ CampaignPlanEvent::CreateEventFighterSweep(CombatAssignment* a)
         }
 
         if (tgt && RandomChance(1, 4)) {
-            if (tgt->Kill(1) > 0)
+            if (tgt->GetKill(1) > 0)
                 tgt_count++;
             Combatant* c = group->GetCombatant();
             if (c)     c->AddScore(tgt->GetSingleValue());
@@ -1149,14 +1149,14 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
 
     if (success) {
         if (tgt) {
-            if (tgt->Kill(1) > 0)
+            if (tgt->GetKill(1) > 0)
                 tgt_count++;
             Combatant* c = group->GetCombatant();
             if (c)     c->AddScore(tgt->GetSingleValue());
         }
 
         if (unit && RandomChance(1, 5)) {
-            if (unit->Kill(1) > 0)
+            if (unit->GetKill(1) > 0)
                 unit_count++;
             Combatant* c = obj->GetCombatant();
             if (c)     c->AddScore(unit->GetSingleValue());
@@ -1165,7 +1165,7 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
     else {
         for (int i = 0; i < 2; i++) {
             if (unit && RandomChance(1, 4)) {
-                if (unit->Kill(1) > 0)
+                if (unit->GetKill(1) > 0)
                     unit_count++;
                 Combatant* c = obj->GetCombatant();
                 if (c)     c->AddScore(unit->GetSingleValue());
@@ -1213,7 +1213,7 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
 
     if (them_count) {
         if (friendly) {
-            if (tgt->Count() > 1) {
+            if (tgt->GetCount() > 1) {
                 sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, tgt->GetName().data());
             }
             else {
@@ -1221,7 +1221,7 @@ CampaignPlanEvent::CreateEventStarship(CombatAssignment* a)
             }
         }
         else {
-            if (unit->Count() > 1) {
+            if (unit->GetCount() > 1) {
                 sprintf_s(text, "ENEMY KILLED:\t %d %s destroyed\n", them_count, unit->GetName().data());
             }
             else {

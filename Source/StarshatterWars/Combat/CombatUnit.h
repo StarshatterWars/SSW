@@ -65,12 +65,12 @@ public:
     const Text& GetSkin() const { return skin; }
     void SetSkin(const char* s) { skin = s; }
 
-    int  Type() const { return type; }
-    int  Count() const { return count; }
+    int  GetType() const { return type; }
+    int  GetCount() const { return count; }
     int  LiveCount() const { return count - dead_count; }
     int  DeadCount() const { return dead_count; }
     void SetDeadCount(int n) { dead_count = n; }
-    int  Kill(int n);
+    int  GetKill(int n);
 
     int  Available() const { return available; }
     int  GetIFF() const { return iff; }
@@ -78,7 +78,7 @@ public:
     bool IsLeader() const { return leader; }
     void SetLeader(bool l) { leader = l; }
 
-    FVector Location() const { return location; }
+    FVector GetLocation() const { return location; }
     void MoveTo(const FVector& loc);
 
     Text GetRegion() const { return region; }

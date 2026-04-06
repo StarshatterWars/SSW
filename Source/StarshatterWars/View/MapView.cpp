@@ -3014,14 +3014,14 @@ MapView::DrawCombatGroup(CombatGroup* group, int rep)
 		for (int i = 0; i < group->GetUnits().size(); i++) {
 			unit = group->GetUnits().at(i);
 
-			if (unit->Count() - unit->DeadCount() > 0)
+			if (unit->GetCount() - unit->DeadCount() > 0)
 				break;
 		}
 
 		// draw unit icon:
-		if (unit && unit->GetRegion() == rgn->GetName() && unit->Type() > (int) CLASSIFICATION::LCA && unit->Count() > 0) {
-			double sx = (unit->Location().X + rlx) * scale;
-			double sy = (unit->Location().Y + rly) * scale;
+		if (unit && unit->GetRegion() == rgn->GetName() && unit->GetType() > (int) CLASSIFICATION::LCA && unit->GetCount() > 0) {
+			double sx = (unit->GetLocation().X + rlx) * scale;
+			double sy = (unit->GetLocation().Y + rly) * scale;
 
 			shiploc.X = (int)(cx + sx + ox);
 			shiploc.Y = (int)(cy + sy + oy);

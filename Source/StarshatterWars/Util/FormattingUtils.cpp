@@ -649,7 +649,7 @@ FString UFormattingUtils::GetUnitDesignIndicator(CombatUnit* Unit)
         return TEXT("UN");
     }
 
-    switch ((CLASSIFICATION)Unit->Type())
+    switch ((CLASSIFICATION)Unit->GetType())
     {
         // --- SMALL / FLIGHT ---
     case CLASSIFICATION::DRONE:      return TEXT("DR");

@@ -1019,7 +1019,7 @@ void CampaignMissionFighter::CreateWardFreight()
     if (carrier)
     {
         elem->SetLocation(
-            FVector(carrier->Location().X, carrier->Location().Y, carrier->Location().Z) +
+            FVector(carrier->GetLocation().X, carrier->GetLocation().Y, carrier->GetLocation().Z) +
             FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 2.0f);
     }
 
@@ -1106,7 +1106,7 @@ void CampaignMissionFighter::CreateWardShuttle()
 
     if (Carrier)
     {
-        const FVector CarrierLoc = Carrier->Location();
+        const FVector CarrierLoc = Carrier->GetLocation();
         const FVector Offset = GetRandomPoint() * 2.0f;
 
         Elem->SetLocation(CarrierLoc + Offset);
@@ -1151,7 +1151,7 @@ void CampaignMissionFighter::CreateWardShuttle()
     // Otherwise escort the shuttle toward a carrier landing:
     else if (Carrier)
     {
-        const FVector CarrierLoc = Carrier->Location();
+        const FVector CarrierLoc = Carrier->GetLocation();
         const FVector Src = CarrierLoc + GetRandomDirection() * 150000.0f;
         const FVector Dst = CarrierLoc + GetRandomDirection() * 25000.0f;
 
@@ -1300,9 +1300,9 @@ void CampaignMissionFighter::CreateWardStrike()
     if (carrier)
     {
         FVector src(
-            carrier->Location().X,
-            carrier->Location().Y,
-            carrier->Location().Z
+            carrier->GetLocation().X,
+            carrier->GetLocation().Y,
+            carrier->GetLocation().Z
         );
 
         src += GetRandomDirection() * 100000.0f;
@@ -1724,9 +1724,9 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                     );
 
                     FVector carrierLoc(
-                        carrier->Location().X,
-                        carrier->Location().Y,
-                        carrier->Location().Z
+                        carrier->GetLocation().X,
+                        carrier->GetLocation().Y,
+                        carrier->GetLocation().Z
                     );
 
                     elem->SetLocation(carrierLoc + randPt * 6.0f);
@@ -2207,9 +2207,9 @@ void CampaignMissionFighter::CreateTargetsAssault()
             if (TgtGroup && TgtGroup->GetFirstUnit() && TgtGroup->IsMovable())
             {
                 Tgt = FVector(
-                    TgtGroup->GetFirstUnit()->Location().X,
-                    TgtGroup->GetFirstUnit()->Location().Y,
-                    TgtGroup->GetFirstUnit()->Location().Z
+                    TgtGroup->GetFirstUnit()->GetLocation().X,
+                    TgtGroup->GetFirstUnit()->GetLocation().Y,
+                    TgtGroup->GetFirstUnit()->GetLocation().Z
                 );
             }
 
@@ -2723,7 +2723,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     Elem->SetHeading(U->GetHeading());
 
     const int32 UnitIndex = G->GetUnits().index(U);
-    FVector BaseLoc = U->Location();
+    FVector BaseLoc = U->GetLocation();
     bool bExact = U->IsStatic(); // exact unit-level placement
 
     if (BaseLoc.Size() < 1.0f)
@@ -2967,12 +2967,12 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
         Offset.Y = FMath::Abs(Offset.Y);
         Offset.Z += 2000.0f;
 
-        elem->SetLocation(carrier->Location() + Offset);
+        elem->SetLocation(carrier->GetLocation() + Offset);
     }
     else
     {
         const FVector RandPt = GetRandomPoint();
-        elem->SetLocation(fighter->Location() + RandPt);
+        elem->SetLocation(fighter->GetLocation() + RandPt);
     }
 
     elem->SetCombatGroup(InSquadron);

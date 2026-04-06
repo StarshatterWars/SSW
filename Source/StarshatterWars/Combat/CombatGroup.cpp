@@ -441,8 +441,8 @@ CombatGroup::Clone(bool deep)
 					for (int u = 0; u < g->GetUnits().size(); u++) {
 						CombatUnit* unit = g->GetUnits()[u];
 
-						if (unit->Type() >= (int)CLASSIFICATION::FIGHTER ||
-							unit->Type() <= (int)CLASSIFICATION::LCA) {
+						if (unit->GetType() >= (int)CLASSIFICATION::FIGHTER ||
+							unit->GetType() <= (int)CLASSIFICATION::LCA) {
 							unit->SetCarrier(carrier);
 							unit->SetRegion(carrier->GetRegion());
 						}
@@ -757,7 +757,7 @@ CombatGroup::CountUnits() const
 
 	ListIter<CombatUnit> unit = g->units;
 	while (++unit)
-		n += unit->Count() - unit->DeadCount();
+		n += unit->GetCount() - unit->DeadCount();
 
 	CombatGroup* pThis = ((CombatGroup*)this);
 	pThis->live_comp.clear();
@@ -817,7 +817,7 @@ CombatGroup::GetRandomUnit()
 
 	ListIter<CombatUnit> unit = units;
 	while (++unit) {
-		if (unit->Count() - unit->DeadCount() > 0)
+		if (unit->GetCount() - unit->DeadCount() > 0)
 			live.append(unit.value());
 	}
 
@@ -865,7 +865,7 @@ CombatGroup::GetNextUnit()
 
 		ListIter<CombatUnit> unit = units;
 		while (++unit) {
-			if (unit->Count() - unit->DeadCount() > 0)
+			if (unit->GetCount() - unit->DeadCount() > 0)
 				live.append(unit.value());
 		}
 
@@ -889,7 +889,7 @@ CombatGroup::FindUnit(const char* iname)
 		while (++iter) {
 			CombatUnit* unit = iter.value();
 			if (unit->GetName() == iname) {
-				if (unit->Count() - unit->DeadCount() > 0)
+				if (unit->GetCount() - unit->DeadCount() > 0)
 					return unit;
 				else
 					return 0;
@@ -1169,7 +1169,7 @@ else GET_DEF_NUM(id);
 										cu->SetRegion(unit_region);
 										cu->SetSkin(unit_skin);
 										cu->MoveTo(unit_loc);
-										cu->Kill(unit_dead);
+										cu->GetKill(unit_dead);
 										cu->SetSustainedDamage(unit_damage);
 										cu->SetHeading(unit_heading * DEGREES);
 										unit_list.append(cu);
@@ -1216,14 +1216,14 @@ else GET_DEF_NUM(id);
 									}
 
 									if (parent_group &&
-										(u->Type() == (int)CLASSIFICATION::FIGHTER ||
-											u->Type() == (int)CLASSIFICATION::ATTACK)) {
+										(u->GetType() == (int)CLASSIFICATION::FIGHTER ||
+											u->GetType() == (int)CLASSIFICATION::ATTACK)) {
 
 										CombatUnit* carrier = 0;
 										CombatGroup* p = parent_group;
 
 										while (p && !carrier) {
-											if (p->units.size() && p->units[0]->Type() == (int)CLASSIFICATION::CARRIER) {
+											if (p->units.size() && p->units[0]->GetType() == (int)CLASSIFICATION::CARRIER) {
 												carrier = p->units[0];
 												u->SetCarrier(carrier);
 												u->SetRegion(carrier->GetRegion());
@@ -1415,7 +1415,7 @@ else GET_DEF_NUM(id);
 											CombatUnit* cu = new CombatUnit(unit_name, unit_regnum, unit_class, unit_design, unit_count, iff);
 											cu->SetRegion(unit_region);
 											cu->MoveTo(unit_loc);
-											cu->Kill(unit_dead);
+											cu->GetKill(unit_dead);
 											cu->SetSustainedDamage(unit_damage);
 											cu->SetHeading(unit_heading * DEGREES);
 											unit_list.append(cu);
@@ -1489,7 +1489,7 @@ else GET_DEF_NUM(id);
 									if (u) {
 										if (load_unit->GetRegion().length() > 0) {
 											u->SetRegion(load_unit->GetRegion());
-											u->MoveTo(load_unit->Location());
+											u->MoveTo(load_unit->GetLocation());
 										}
 										else {
 											u->SetRegion(g->GetRegion());
@@ -1542,7 +1542,7 @@ Text FormatNumber(double n)
 void
 SaveCombatUnit(FILE* f, CombatUnit* u)
 {
-	int type = u->Type();
+	int type = u->GetType();
 
 	if (type == 0 && u->GetDesign())
 		type = u->GetDesign()->type;
@@ -1552,8 +1552,8 @@ SaveCombatUnit(FILE* f, CombatUnit* u)
 	fprintf(f, " type: \"%s\",", Ship::GetShipClassName(type));
 	fprintf(f, " design: \"%s\",", u->GetDesignName().data());
 
-	if (u->Count() > 1) {
-		fprintf(f, " count: %d,", u->Count());
+	if (u->GetCount() > 1) {
+		fprintf(f, " count: %d,", u->GetCount());
 	}
 	else {
 		fprintf(f, " regnum:\"%s\",", u->GetRegistryNumber().data());
@@ -1562,9 +1562,9 @@ SaveCombatUnit(FILE* f, CombatUnit* u)
 	if (u->GetRegion().length() > 0) {
 		fprintf(f, " region:\"%s\",", u->GetRegion().data());
 
-		Text x = FormatNumber(u->Location().X);
-		Text y = FormatNumber(u->Location().Y);
-		Text z = FormatNumber(u->Location().Z);
+		Text x = FormatNumber(u->GetLocation().X);
+		Text y = FormatNumber(u->GetLocation().Y);
+		Text z = FormatNumber(u->GetLocation().Z);
 
 		fprintf(f, " loc:(%s, %s, %s),", x.data(), y.data(), z.data());
 	}

@@ -6927,7 +6927,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 				NewUnit->MoveTo(SourceRow->Location);
 			}
 
-			NewUnit->Kill(UnitRow.UnitDead);
+			NewUnit->GetKill(UnitRow.UnitDead);
 			NewUnit->SetSustainedDamage(UnitRow.UnitDamage);
 			NewUnit->SetHeading(UnitRow.UnitHeading * DEGREES);
 
@@ -6968,7 +6968,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 		while (ParentGroup && !CarrierUnit)
 		{
 			if (ParentGroup->GetUnits().size() > 0 &&
-				ParentGroup->GetUnits()[0]->Type() == (int)CLASSIFICATION::CARRIER)
+				ParentGroup->GetUnits()[0]->GetType() == (int)CLASSIFICATION::CARRIER)
 			{
 				CarrierUnit = ParentGroup->GetUnits()[0];
 			}
@@ -7243,7 +7243,7 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 				NewUnit->MoveTo(Row->Location);
 			}
 
-			NewUnit->Kill(UnitRow.UnitDead);
+			NewUnit->GetKill(UnitRow.UnitDead);
 			NewUnit->SetSustainedDamage(UnitRow.UnitDamage);
 			NewUnit->SetHeading(UnitRow.UnitHeading * DEGREES);
 

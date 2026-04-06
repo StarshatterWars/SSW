@@ -35,12 +35,15 @@
 #include "SectorMapPanel.generated.h"
 
 class UCanvasPanel;
+class UTexture2D;
 class UMissionNavDlg;
 
 class StarSystem;
 class OrbitalRegion;
 class Mission;
 class MissionElement;
+
+struct FShipDesign;
 
 UCLASS()
 class STARSHATTERWARS_API USectorMapPanel : public UUserWidget
@@ -163,6 +166,14 @@ protected:
     int32 ComputeRepLevel(double ZoomedRadius) const;
     FVector2D ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const;
 
+    // ------------------------------------------------------------
+    // Sprite system (NEW)
+    // ------------------------------------------------------------
+
+    UTexture2D* GetShipMapSprite(const FString& ShipName, const FString& SpriteName);
+    int32 ComputeFacingIndex(float YawRadians) const;
+    const FShipDesign* ResolveShipDesignForElement(MissionElement* Element) const;
+
 protected:
     UPROPERTY()
     UCanvasPanel* RootCanvas = nullptr;
@@ -190,4 +201,11 @@ protected:
     float ZoomScale = 4.0f;
     float MinZoomScale = 0.25f;
     float MaxZoomScale = 32.0f;
+
+    // ------------------------------------------------------------
+    // Sprite cache (NEW)
+    // ------------------------------------------------------------
+
+    UPROPERTY()
+    TMap<FString, UTexture2D*> MapSpriteCache;
 };

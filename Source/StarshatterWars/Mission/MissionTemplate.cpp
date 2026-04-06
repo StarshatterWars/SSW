@@ -242,7 +242,7 @@ SelectCombatGroups(CombatGroup* g, const FShipDesign* d, List<CombatGroup>& list
 				UnitDesign = ShipDesignRegistry::Find(u->GetDesign()->name);
 			}
 
-			if (UnitDesign == d && u->Count() - u->DeadCount() > 0) {
+			if (UnitDesign == d && u->GetCount() - u->DeadCount() > 0) {
 				list.append(g);
 			}
 		}

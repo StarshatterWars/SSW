@@ -480,7 +480,7 @@ static int KillGroup(CombatGroup* group)
         ListIter<CombatUnit> u_iter = group->GetUnits();
         while (++u_iter) {
             CombatUnit* u = u_iter.value();
-            value_killed += u->Kill(u->LiveCount());
+            value_killed += u->GetKill(u->LiveCount());
         }
 
         ListIter<CombatGroup> g_iter = group->GetComponents();
@@ -493,7 +493,7 @@ static int KillGroup(CombatGroup* group)
     return value_killed;
 }
 
-int CombatUnit::Kill(int n)
+int CombatUnit::GetKill(int n)
 {
     int killed = n;
 

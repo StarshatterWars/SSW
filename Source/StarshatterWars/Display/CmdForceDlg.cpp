@@ -170,13 +170,13 @@ static void GatherGroupTypeCountsRecursive(
 			}
 		}
 
-		if (IsSquadronUnitType(Unit->Type()))
+		if (IsSquadronUnitType(Unit->GetType()))
 		{
-			OutSquadronTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+			OutSquadronTypeCounts.FindOrAdd(TypeName) += Unit->GetCount();
 		}
 		else
 		{
-			OutUnitTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+			OutUnitTypeCounts.FindOrAdd(TypeName) += Unit->GetCount();
 		}
 	}
 
@@ -213,7 +213,7 @@ static void GetGroupTotalsRecursive(CombatGroup* Group, int32& OutTotalCount, in
 			continue;
 		}
 
-		OutTotalCount += Unit->Count();
+		OutTotalCount += Unit->GetCount();
 		OutLiveCount += Unit->LiveCount();
 	}
 
@@ -297,7 +297,7 @@ static void GatherGroupTypeCountsRecursive(CombatGroup* Group, TMap<FString, int
 			}
 		}
 
-		OutTypeCounts.FindOrAdd(TypeName) += Unit->Count();
+		OutTypeCounts.FindOrAdd(TypeName) += Unit->GetCount();
 	}
 
 	// Child groups
@@ -1062,7 +1062,7 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 	{
 		// Type
 		FString TypeText = TEXT("UNKNOWN");
-		switch ((CLASSIFICATION)Unit->Type())
+		switch ((CLASSIFICATION)Unit->GetType())
 		{
 		case CLASSIFICATION::FIGHTER:   TypeText = TEXT("FIGHTER"); break;
 		case CLASSIFICATION::ATTACK:    TypeText = TEXT("ATTACK"); break;
@@ -1122,7 +1122,7 @@ void UCmdForceDlg::PopulateDescForUnit(CombatUnit* Unit)
 
 		// Type
 		FString TypeText = TEXT("UNKNOWN");
-		switch ((CLASSIFICATION)Unit->Type())
+		switch ((CLASSIFICATION)Unit->GetType())
 		{
 		case CLASSIFICATION::FIGHTER:   TypeText = TEXT("FIGHTER"); break;
 		case CLASSIFICATION::ATTACK:    TypeText = TEXT("ATTACK"); break;
@@ -1380,7 +1380,7 @@ void UCmdForceDlg::DumpCombatGroupRecursive(CombatGroup* Group, int32 Depth)
 			TEXT("%s  UNIT: name='%s' type=%d iff=%d"),
 			*Indent,
 			UTF8_TO_TCHAR(Unit->GetDescription()),
-			Unit->Type(),
+			Unit->GetType(),
 			Unit->GetIFF());
 	}
 

@@ -79,7 +79,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
         }
     }
 
-    FVector loc = u->Location();
+    FVector loc = u->GetLocation();
 
     // dir = normalized vector from origin to loc, dist = magnitude:
     FVector dir = loc;
@@ -165,7 +165,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
             unit->GetRegion() == u->GetRegion() &&
             !unit->IsDropship()) {
 
-            FVector delta = loc - unit->Location();
+            FVector delta = loc - unit->GetLocation();
             const double d = (double)delta.Size();
 
             if (d < closest_dist) {
@@ -176,7 +176,7 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
     }
 
     if (closest_unit && closest_dist < MIN_DIST) {
-        FVector delta = loc - closest_unit->Location();
+        FVector delta = loc - closest_unit->GetLocation();
         const double d = (double)delta.Size();
 
         if (d > 0.0)

@@ -619,7 +619,7 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     elem->SetHeading(u->GetHeading());
 
     const int   unit_index = g->GetUnits().index(u);
-    FVector     base_loc = u->Location();
+    FVector     base_loc = u->GetLocation();
     bool        exact = u->IsStatic();
 
     if (base_loc.Length() < 1.0f) {
@@ -750,7 +750,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetElementID(pkg_id++);
 
     elem->SetShipDesign(ShipRow);
-    elem->SetCount(fighter->Count());
+    elem->SetCount(fighter->GetCount());
     elem->SetDeadCount(fighter->DeadCount());
     elem->SetMaintCount(maint_count);
     elem->SetIFF(fighter->GetIFF());
@@ -766,7 +766,7 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
             return FMath::VRand() * r;
         };
 
-    elem->SetLocation(carrier->Location() + ScatterInSphere(1.0f));
+    elem->SetLocation(carrier->GetLocation() + ScatterInSphere(1.0f));
 
     elem->SetCombatGroup(g);
     elem->SetCombatUnit(fighter);
@@ -1522,10 +1522,10 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
         };
 
     if (carrier) {
-        elem->SetLocation(carrier->Location() + ScatterInSphere(0.3f));
+        elem->SetLocation(carrier->GetLocation() + ScatterInSphere(0.3f));
     }
     else {
-        elem->SetLocation(fighter->Location() + ScatterInSphere(1.0f));
+        elem->SetLocation(fighter->GetLocation() + ScatterInSphere(1.0f));
     }
 
     elem->SetCombatGroup(squadron);

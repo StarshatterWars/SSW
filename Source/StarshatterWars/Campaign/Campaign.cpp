@@ -2467,7 +2467,7 @@ static void GetCombatUnits(CombatGroup* g, List<CombatUnit>& units)
         while (++unit) {
             CombatUnit* u = unit.value();
 
-            if (u->Count() - u->DeadCount() > 0)
+            if (u->GetCount() - u->DeadCount() > 0)
                 units.append(u);
         }
 
