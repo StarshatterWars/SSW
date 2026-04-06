@@ -1845,23 +1845,6 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         return;
     }
 
-    auto RadiansToDegrees360 = [](double Radians) -> float
-        {
-            float Degrees = FMath::RadiansToDegrees((float)Radians);
-
-            while (Degrees < 0.0f)
-            {
-                Degrees += 360.0f;
-            }
-
-            while (Degrees >= 360.0f)
-            {
-                Degrees -= 360.0f;
-            }
-
-            return Degrees;
-        };
-
     FString ActiveSectorName;
 
     if (CurrentNavMode == EMissionNavMode::SECTOR)
@@ -1931,6 +1914,11 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
+        if (!ShouldShowMissionElementInBriefing(Elem))
+        {
+            continue;
+        }
+
         if (!ActiveSectorName.IsEmpty())
         {
             const FString ElemRegion = ANSI_TO_TCHAR(Elem->GetRegion());
@@ -1952,12 +1940,12 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             break;
 
         case EMissionNavObjectType::Starship:
-            bMatches = Elem->IsStarship();
+            bMatches = Elem->IsStarship() && !Elem->IsStatic();
             TypeLabel = TEXT("STARSHIP");
             break;
 
         case EMissionNavObjectType::Fighter:
-            bMatches = Elem->IsDropship() && !Elem->IsSquadron();
+            bMatches = Elem->IsDropship() && !Elem->IsSquadron() && !Elem->IsStatic();
             TypeLabel = TEXT("FIGHTER");
             break;
 
@@ -1970,27 +1958,17 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
-        double HeadingRad = Elem->GetHeading();
-
-        if (SectorMapPanel)
-        {
-            HeadingRad = SectorMapPanel->ResolveElementHeadingRadians(Elem);
-        }
-
-        const float HeadingDeg = UFormattingUtils::RadiansToDegrees360(HeadingRad);
-
         FMissionElementRow Row;
         Row.Primary = FString(Elem->GetName().data());
         Row.Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
         Row.Detail = FString::Printf(
-            TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d\nHEADING: %.1f DEG"),
+            TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
             *Row.Primary,
             *TypeLabel,
             *Row.Secondary,
             *FString(Elem->GetRegion().data()),
             Elem->GetIFF(),
-            Elem->Count(),
-            HeadingDeg);
+            Elem->Count());
 
         Rows.Add(Row);
     }
@@ -2348,4 +2326,32 @@ void UMissionNavDlg::HandleSectorMissionElementSelected(MissionElement* InElemen
     }
 
     RefreshDetailPanel();
+}
+
+bool UMissionNavDlg::ShouldShowMissionElementInBriefing(const MissionElement* Elem) const
+{
+    if (!Elem || !MissionPtr)
+    {
+        return false;
+    }
+
+    const int32 ElemIFF = Elem->GetIFF();
+    const int32 MissionTeam = MissionPtr->GetTeam();
+
+    if (ElemIFF == 0)
+    {
+        return true;
+    }
+
+    if (ElemIFF == MissionTeam)
+    {
+        return true;
+    }
+
+    if (Elem->IntelLevel() >= Intel::KNOWN)
+    {
+        return true;
+    }
+
+    return false;
 }

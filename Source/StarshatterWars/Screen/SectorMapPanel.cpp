@@ -593,6 +593,11 @@ void USectorMapPanel::DrawMissionElements(
             continue;
         }
 
+        if (!ShouldShowMissionElementInBriefing(Element))
+        {
+            continue;
+        }
+
         if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
         {
             continue;
@@ -761,6 +766,13 @@ void USectorMapPanel::DrawMissionElement(
             BaseLayerId + 3,
             ScreenPos,
             HalfSize + 8.0f);
+
+        DrawSelectedElementTag(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId + 5,
+            ScreenPos,
+            Element);
     }
 
     const bool bCrowded = IsElementCrowded(Element, Scale);
@@ -1309,4 +1321,124 @@ double USectorMapPanel::ResolveElementHeadingRadians(MissionElement* Element) co
     }
 
     return 0.0;
+}
+
+bool USectorMapPanel::ShouldShowMissionElementInBriefing(const MissionElement* Element) const
+{
+    if (!Element || !CachedMission)
+    {
+        return false;
+    }
+
+    const int32 ElemIFF = Element->GetIFF();
+    const int32 MissionTeam = CachedMission->GetTeam();
+
+    if (ElemIFF == 0)
+    {
+        return true;
+    }
+
+    if (ElemIFF == MissionTeam)
+    {
+        return true;
+    }
+
+    if (Element->IntelLevel() >= Intel::KNOWN)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void USectorMapPanel::DrawSelectedElementTag(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 LayerId,
+    const FVector2D& ScreenPos,
+    MissionElement* Element) const
+{
+    if (!Element)
+    {
+        return;
+    }
+
+    const FVector Loc = Element->GetLocation();
+    const FLinearColor IFFColor = GetMapIFFColor(Element);
+
+    const FString NameLine = ANSI_TO_TCHAR(Element->GetName());
+
+    const FString LocLine = FString::Printf(
+        TEXT("LOC %.0f, %.0f, %.0f"),
+        Loc.X,
+        Loc.Y,
+        Loc.Z);
+
+    const FVector2D TagPos(ScreenPos.X + 18.0f, ScreenPos.Y - 28.0f);
+    const FVector2D TagSize(220.0f, 34.0f);
+
+    FSlateDrawElement::MakeBox(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(TagPos, TagSize),
+        FCoreStyle::Get().GetBrush("WhiteBrush"),
+        ESlateDrawEffect::None,
+        FLinearColor(IFFColor.R * 0.10f, IFFColor.G * 0.10f, IFFColor.B * 0.10f, 0.82f));
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId + 1,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(TagPos.X, TagPos.Y),
+            FVector2D(TagPos.X + TagSize.X, TagPos.Y)
+        },
+        ESlateDrawEffect::None,
+        IFFColor,
+        true,
+        1.5f);
+
+    FSlateDrawElement::MakeText(
+        OutDrawElements,
+        LayerId + 2,
+        AllottedGeometry.ToPaintGeometry(
+            FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f),
+            FVector2D(210.0f, 14.0f)),
+        NameLine,
+        FCoreStyle::GetDefaultFontStyle("Regular", 10),
+        ESlateDrawEffect::None,
+        IFFColor);
+
+    FSlateDrawElement::MakeText(
+        OutDrawElements,
+        LayerId + 2,
+        AllottedGeometry.ToPaintGeometry(
+            FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f),
+            FVector2D(210.0f, 14.0f)),
+        LocLine,
+        FCoreStyle::GetDefaultFontStyle("Regular", 9),
+        ESlateDrawEffect::None,
+        FLinearColor(0.85f, 0.90f, 1.0f, 1.0f));
+}
+
+FLinearColor USectorMapPanel::GetMapIFFColor(const MissionElement* Element) const
+{
+    if (!Element)
+    {
+        return FLinearColor::White;
+    }
+
+    const int32 IFF = Element->GetIFF();
+
+    if (CachedMission && IFF == CachedMission->GetTeam())
+    {
+        return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
+    }
+
+    if (IFF == 0)
+    {
+        return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
+    }
+
+    return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f); // enemy red
 }

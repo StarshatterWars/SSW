@@ -146,6 +146,7 @@ protected:
     void BuildPlanetObjects();
     void BuildSectorObjects();
     void BuildMissionElementObjects(EMissionNavObjectType ObjectType);
+    bool ShouldShowMissionElementInBriefing(const MissionElement* Elem) const;
 
     void AddObjectItem(
         EMissionNavObjectType ObjectType,

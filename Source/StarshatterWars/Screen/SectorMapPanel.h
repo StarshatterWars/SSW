@@ -93,6 +93,7 @@ public:
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
     const FString& GetViewedSectorName() const { return ViewedSectorName; }
     double ResolveElementHeadingRadians(MissionElement* Element) const;
+    bool ShouldShowMissionElementInBriefing(const MissionElement* Element) const;
 
 protected:
     void BuildRuntimeLayout();
@@ -164,8 +165,16 @@ protected:
         float Scale,
         FVector2D& OutScreenPos) const;
 
+    void DrawSelectedElementTag(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 LayerId,
+        const FVector2D& ScreenPos,
+        MissionElement* Element) const;
+
     int32 ComputeRepLevel(double ZoomedRadius) const;
     FVector2D ClampPanOffset(const FVector2D& InOffset, const FVector2D& PanelSize) const;
+    FLinearColor GetMapIFFColor(const MissionElement* Element) const;
 
     // ------------------------------------------------------------
     // Sprite system (NEW)
