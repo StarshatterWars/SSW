@@ -201,9 +201,9 @@ protected:
     FVector2D DragStartPanOffset = FVector2D::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;
 
-    float ZoomScale = 4.0f;
+    float ZoomScale = 12.0f;
     float MinZoomScale = 0.25f;
-    float MaxZoomScale = 32.0f;
+    float MaxZoomScale = 96.0f;
 
     // ------------------------------------------------------------
     // Sprite cache (NEW)

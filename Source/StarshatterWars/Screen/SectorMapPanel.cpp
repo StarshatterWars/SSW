@@ -83,6 +83,29 @@ namespace
             InColor.B / 255.0f,
             InColor.A / 255.0f);
     }
+
+    static FLinearColor GetMapIFFColor(const MissionElement* Element)
+    {
+        if (!Element)
+        {
+            return FLinearColor::White;
+        }
+
+        const int32 IFF = Element->GetIFF();
+
+        // Adjust these to your actual alliance/player IFF rules if needed
+        if (IFF == 1)
+        {
+            return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
+        }
+
+        if (IFF == 0)
+        {
+            return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
+        }
+
+        return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f); // enemy red
+    }
 }
 
 void USectorMapPanel::NativeConstruct()
@@ -101,7 +124,7 @@ void USectorMapPanel::NativeConstruct()
     }
 
     PanOffset = FVector2D::ZeroVector;
-    ZoomScale = 4.0f;
+    ZoomScale = 12.0f;
     bDraggingMap = false;
     DragStartScreenPosition = FVector2D::ZeroVector;
     DragStartPanOffset = FVector2D::ZeroVector;
@@ -639,16 +662,12 @@ void USectorMapPanel::DrawMissionElement(
 
     bool bDrewSprite = false;
 
-    // ------------------------------------------------------------
-    // Try sprite rendering for ship-like objects first
-    // ------------------------------------------------------------
     if (Element->IsStarship() || Element->IsDropship())
     {
         const FShipDesign* Design = ResolveShipDesignForElement(Element);
-        if (Design && Design->Map.Num() == 8)
+        if (Design && Design->Map.Num() > 0)
         {
-            const float HeadingRadians = static_cast<float>(ResolveElementHeadingRadians(Element));
-            const int32 FacingIndex = ComputeFacingIndex(HeadingRadians);
+            const int32 FacingIndex = 0;
 
             if (Design->Map.IsValidIndex(FacingIndex))
             {
@@ -657,23 +676,22 @@ void USectorMapPanel::DrawMissionElement(
 
                 if (!ShipName.IsEmpty() && !SpriteName.IsEmpty())
                 {
-                    UTexture2D* SpriteTex = const_cast<USectorMapPanel*>(this)->GetShipMapSprite(
-                        ShipName,
-                        SpriteName);
+                    UTexture2D* SpriteTex =
+                        const_cast<USectorMapPanel*>(this)->GetShipMapSprite(ShipName, SpriteName);
 
                     if (SpriteTex)
                     {
                         FSlateBrush Brush;
                         Brush.SetResourceObject(SpriteTex);
 
-                        float SpriteSize = 24.0f;
-                        if (Element->IsStarship())
+                        float SpriteSize = 28.0f;
+                        if (Element->IsDropship())
                         {
-                            SpriteSize = 28.0f;
+                            SpriteSize = 22.0f;
                         }
-                        else if (Rep <= 1)
+                        if (Rep <= 1)
                         {
-                            SpriteSize = 20.0f;
+                            SpriteSize *= 0.85f;
                         }
 
                         Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
@@ -687,7 +705,7 @@ void USectorMapPanel::DrawMissionElement(
                             AllottedGeometry.ToPaintGeometry(DrawPos, Brush.ImageSize),
                             &Brush,
                             ESlateDrawEffect::None,
-                            FLinearColor::White);
+                            GetMapIFFColor(Element));
 
                         bDrewSprite = true;
                         HalfSize = SpriteSize * 0.5f;
@@ -697,9 +715,6 @@ void USectorMapPanel::DrawMissionElement(
         }
     }
 
-    // ------------------------------------------------------------
-    // Fallback marker box
-    // ------------------------------------------------------------
     if (!bDrewSprite)
     {
         const FVector2D TopLeft(ScreenPos.X - HalfSize, ScreenPos.Y - HalfSize);
@@ -714,9 +729,6 @@ void USectorMapPanel::DrawMissionElement(
             MarkerColor);
     }
 
-    // ------------------------------------------------------------
-    // Selection box + crosshair
-    // ------------------------------------------------------------
     if (bIsSelected)
     {
         const FVector2D SelTopLeft(
@@ -751,9 +763,6 @@ void USectorMapPanel::DrawMissionElement(
             HalfSize + 8.0f);
     }
 
-    // ------------------------------------------------------------
-    // Label logic
-    // ------------------------------------------------------------
     const bool bCrowded = IsElementCrowded(Element, Scale);
     bool bDrawLabel = false;
 
@@ -801,7 +810,7 @@ void USectorMapPanel::DrawMissionElement(
             ESlateDrawEffect::None,
             FLinearColor::White);
     }
-}
+}  
 
 void USectorMapPanel::DrawMissionNavRoutes(
     FSlateWindowElementList& OutDrawElements,
