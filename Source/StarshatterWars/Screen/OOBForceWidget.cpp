@@ -129,7 +129,7 @@ void UOOBForceWidget::BuildChildren(const FS_OOBForce& ForceDataStruct)
 void UOOBForceWidget::ShowUnitData()
 {
     USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
-    SSWInstance->SetActiveUnit(true, Data.Name, Data.Empire, Data.Type, Data.Location);
+    SSWInstance->SetActiveUnit(true, Data.Name, Data.Empire, Data.Type, Data.Region);
     SSWInstance->SetActiveWidget(this);
     SSWInstance->bIsDisplayUnitChanged = true;
 }

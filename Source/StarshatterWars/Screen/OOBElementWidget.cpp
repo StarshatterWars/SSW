@@ -46,7 +46,7 @@ void UOOBElementWidget::ShowElementData()
 {
     USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
     SSWInstance->SetActiveWidget(this);
-    SSWInstance->SetActiveElement(true, Data.DisplayName, Data.Empire, Data.Type, Data.Location);
+    SSWInstance->SetActiveElement(true, Data.DisplayName, Data.Empire, Data.Type, Data.Region);
     SSWInstance->bIsDisplayElementChanged = true;
 }
 

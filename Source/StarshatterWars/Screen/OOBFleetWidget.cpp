@@ -145,7 +145,7 @@ void UOOBFleetWidget::ShowUnitData()
 {
     USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
     SSWInstance->SetActiveWidget(this);
-    SSWInstance->SetActiveUnit(true, Data.Name, Data.Empire, Data.Type, Data.Location);
+    SSWInstance->SetActiveUnit(true, Data.Name, Data.Empire, Data.Type, Data.Region);
     SSWInstance->bIsDisplayUnitChanged = true;
 }
 

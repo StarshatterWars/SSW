@@ -2906,7 +2906,9 @@ struct FS_OOBUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2921,8 +2923,8 @@ struct FS_OOBUnit : public FTableRowBase {
 	FS_OOBUnit() {
 		Name = "";
 		DisplayName = "";
+		Region = "";
 		Regnum = "";
-		Location = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::NONE;
@@ -2940,7 +2942,9 @@ struct FS_OOBBatteryUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2954,7 +2958,7 @@ struct FS_OOBBatteryUnit : public FTableRowBase {
 
 	FS_OOBBatteryUnit() {
 		Name = "";
-		Location = "";
+		Region = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::BATTERY;
@@ -2972,7 +2976,9 @@ struct FS_OOBStationUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2986,7 +2992,7 @@ struct FS_OOBStationUnit : public FTableRowBase {
 
 	FS_OOBStationUnit() {
 		Name = "";
-		Location = "";
+		Region = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::STATION;
@@ -3004,7 +3010,9 @@ struct FS_OOBStarbaseUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3018,7 +3026,7 @@ struct FS_OOBStarbaseUnit : public FTableRowBase {
 
 	FS_OOBStarbaseUnit() {
 		Name = "";
-		Location = "";
+		Region = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::STARBASE;
@@ -3035,7 +3043,9 @@ struct FS_OOBMinefieldUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3049,7 +3059,7 @@ struct FS_OOBMinefieldUnit : public FTableRowBase {
 
 	FS_OOBMinefieldUnit() {
 		Name = "";
-		Location = "";
+		Region = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::MINE;
@@ -3067,7 +3077,9 @@ struct FS_OOBFighterUnit : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EEMPIRE_NAME Empire;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Design;	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3081,7 +3093,7 @@ struct FS_OOBFighterUnit : public FTableRowBase {
 
 	FS_OOBFighterUnit() {
 		Name = "";
-		Location = "";
+		Region = "";
 		ParentId = 0;
 		Count = -1;
 		Type = ECOMBATUNIT_TYPE::NONE;
@@ -3103,7 +3115,9 @@ struct FS_OOBCivilian : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3118,7 +3132,7 @@ struct FS_OOBCivilian : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::CIVILIAN;
 		ParentType = ECOMBATGROUP_TYPE::FORCE;
@@ -3138,7 +3152,9 @@ struct FS_OOBLanding : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3155,7 +3171,7 @@ struct FS_OOBLanding : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::LCA_SQUADRON;
 		ParentType = ECOMBATGROUP_TYPE::NONE;
@@ -3177,7 +3193,9 @@ struct FS_OOBFighter : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3194,7 +3212,7 @@ struct FS_OOBFighter : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::FIGHTER_SQUADRON;
 		ParentType = ECOMBATGROUP_TYPE::NONE;
@@ -3215,7 +3233,9 @@ struct FS_OOBAttack : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3232,7 +3252,7 @@ struct FS_OOBAttack : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::ATTACK_SQUADRON;
 		ParentType = ECOMBATGROUP_TYPE::NONE;
@@ -3253,7 +3273,9 @@ struct FS_OOBIntercept : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3270,7 +3292,7 @@ struct FS_OOBIntercept : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
 		ParentType = ECOMBATGROUP_TYPE::NONE;
@@ -3291,7 +3313,9 @@ struct FS_OOBStarbase : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3316,7 +3340,7 @@ struct FS_OOBStarbase : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::STARBASE;
 		ParentType = ECOMBATGROUP_TYPE::BATTALION;
@@ -3336,7 +3360,9 @@ struct FS_OOBStation : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3361,7 +3387,7 @@ struct FS_OOBStation : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::STATION;
 		ParentType = ECOMBATGROUP_TYPE::BATTALION;
@@ -3382,7 +3408,9 @@ struct FS_OOBBattery : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3399,7 +3427,7 @@ struct FS_OOBBattery : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::BATTERY;
 		ParentType = ECOMBATGROUP_TYPE::BATTALION;
@@ -3420,7 +3448,9 @@ struct FS_OOBBattalion : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3441,7 +3471,7 @@ struct FS_OOBBattalion : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::BATTALION;
 		ParentType = ECOMBATGROUP_TYPE::FORCE;
@@ -3462,7 +3492,9 @@ struct FS_OOBMinefield : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3479,7 +3511,7 @@ struct FS_OOBMinefield : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::MINEFIELD;
 		ParentType = ECOMBATGROUP_TYPE::FORCE;
@@ -3500,7 +3532,9 @@ struct FS_OOBWing : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3523,7 +3557,7 @@ struct FS_OOBWing : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::WING;
 		ParentType = ECOMBATGROUP_TYPE::CARRIER_GROUP;
@@ -3544,7 +3578,9 @@ struct FS_OOBBattle : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3561,7 +3597,7 @@ struct FS_OOBBattle : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::BATTLE_GROUP;
 		ParentType = ECOMBATGROUP_TYPE::FLEET;
@@ -3582,7 +3618,9 @@ struct FS_OOBDestroyer : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3599,7 +3637,7 @@ struct FS_OOBDestroyer : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
 		ParentType = ECOMBATGROUP_TYPE::FLEET;
@@ -3620,7 +3658,9 @@ struct FS_OOBCarrier : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3647,7 +3687,7 @@ struct FS_OOBCarrier : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::CARRIER_GROUP;
 		ParentType = ECOMBATGROUP_TYPE::FLEET;
@@ -3668,7 +3708,9 @@ struct FS_OOBFleet : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int ParentId;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3691,7 +3733,7 @@ struct FS_OOBFleet : public FTableRowBase {
 		Iff = -1;
 		ParentId = 0;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::FLEET;
 		ParentType = ECOMBATGROUP_TYPE::FORCE;
@@ -3712,7 +3754,9 @@ struct FS_OOBForce : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Iff;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Location;
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EINTEL_TYPE Intel;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -3729,7 +3773,7 @@ struct FS_OOBForce : public FTableRowBase {
 		Id = 0; 
 		Iff = -1;
 		Name = "";
-		Location = "";
+		Region = "";
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::FORCE;
 		Empire = EEMPIRE_NAME::Unknown;

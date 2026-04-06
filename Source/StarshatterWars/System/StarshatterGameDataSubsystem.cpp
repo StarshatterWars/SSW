@@ -618,7 +618,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewForce.Id = Item.Id;
 			NewForce.Name = Item.DisplayName;
 			NewForce.Iff = Item.Iff;
-			NewForce.Location = Item.Region;
+			NewForce.Region = Item.Region;
+			NewForce.Location = Item.Location;
 			NewForce.Empire = Item.EmpireId;
 			NewForce.Intel = Item.Intel;
 
@@ -650,7 +651,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewFleet.ParentId = Item.ParentId;
 				NewFleet.Name = Item.DisplayName;
 				NewFleet.Iff = Item.Iff;
-				NewFleet.Location = Item.Region;
+				NewFleet.Region = Item.Region;
+				NewFleet.Location = Item.Location;
 				NewFleet.Empire = Item.EmpireId;
 				NewFleet.Intel = Item.Intel;
 
@@ -672,7 +674,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewBattalion.ParentId = Item.ParentId;
 				NewBattalion.Name = Item.DisplayName;
 				NewBattalion.Iff = Item.Iff;
-				NewBattalion.Location = Item.Region;
+				NewBattalion.Region = Item.Region;
+				NewBattalion.Location = Item.Location;
 				NewBattalion.Empire = Item.EmpireId;
 				NewBattalion.Intel = Item.Intel;
 
@@ -694,7 +697,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewCivilian.ParentId = Item.ParentId;
 				NewCivilian.Name = Item.DisplayName;
 				NewCivilian.Iff = Item.Iff;
-				NewCivilian.Location = Item.Region;
+				NewCivilian.Region = Item.Region;
+				NewCivilian.Location = Item.Location;
 				NewCivilian.Empire = Item.EmpireId;
 				NewCivilian.Intel = Item.Intel;
 				NewCivilian.Type = Item.Type;
@@ -716,7 +720,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewStation.ParentId = Item.ParentId;
 			NewStation.Name = Item.DisplayName;
 			NewStation.Iff = Item.Iff;
-			NewStation.Location = Item.Region;
+			NewStation.Region = Item.Region;
+			NewStation.Location = Item.Location;
 			NewStation.Empire = Item.EmpireId;
 			NewStation.Intel = Item.Intel;
 
@@ -730,7 +735,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewStation.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewStation.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewStation.Unit[UnitIndex].Location = Item.Region;
+				NewStation.Unit[UnitIndex].Region = Item.Region;
+				NewStation.Unit[UnitIndex].Location = Item.Location;
 				NewStation.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewStation.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewStation.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::STATION;
@@ -753,7 +759,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewStarbase.ParentId = Item.ParentId;
 			NewStarbase.Name = Item.DisplayName;
 			NewStarbase.Iff = Item.Iff;
-			NewStarbase.Location = Item.Region;
+			NewStarbase.Region = Item.Region;
+			NewStarbase.Location = Item.Location;
 			NewStarbase.Empire = Item.EmpireId;
 			NewStarbase.Intel = Item.Intel;
 
@@ -767,7 +774,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewStarbase.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewStarbase.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewStarbase.Unit[UnitIndex].Location = Item.Region;
+				NewStarbase.Unit[UnitIndex].Region = Item.Region;
+				NewStarbase.Unit[UnitIndex].Location = Item.Location;
 				NewStarbase.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewStarbase.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewStarbase.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::STARBASE;
@@ -790,7 +798,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewBattery.ParentId = Item.ParentId;
 			NewBattery.Name = Item.DisplayName;
 			NewBattery.Iff = Item.Iff;
-			NewBattery.Location = Item.Region;
+			NewBattery.Location = Item.Location;
+			NewBattery.Region = Item.Region;
 			NewBattery.Empire = Item.EmpireId;
 			NewBattery.Intel = Item.Intel;
 
@@ -804,7 +813,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewBattery.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewBattery.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewBattery.Unit[UnitIndex].Location = Item.Region;
+				NewBattery.Unit[UnitIndex].Region = Item.Region;
+				NewBattery.Unit[UnitIndex].Location = Item.Location;
 				NewBattery.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewBattery.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewBattery.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::BATTERY;
@@ -827,7 +837,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewMinefield.ParentId = Item.ParentId;
 			NewMinefield.Name = Item.DisplayName;
 			NewMinefield.Iff = Item.Iff;
-			NewMinefield.Location = Item.Region;
+			NewMinefield.Region = Item.Region;
+			NewMinefield.Location = Item.Location;
 			NewMinefield.Empire = Item.EmpireId;
 			NewMinefield.Intel = Item.Intel;
 
@@ -841,7 +852,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewMinefield.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewMinefield.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewMinefield.Unit[UnitIndex].Location = Item.Region;
+				NewMinefield.Unit[UnitIndex].Region = Item.Region;
+				NewMinefield.Unit[UnitIndex].Location = Item.Location;
 				NewMinefield.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewMinefield.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewMinefield.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::MINE;
@@ -864,7 +876,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewCarrier.ParentId = Item.ParentId;
 			NewCarrier.Name = Item.DisplayName;
 			NewCarrier.Iff = Item.Iff;
-			NewCarrier.Location = Item.Region;
+			NewCarrier.Region = Item.Region;
+			NewCarrier.Location = Item.Location;
 			NewCarrier.Empire = Item.EmpireId;
 			NewCarrier.Intel = Item.Intel;
 
@@ -881,7 +894,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewCarrier.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewCarrier.Unit[UnitIndex].Regnum = UnitItem.UnitRegnum;
 				NewCarrier.Unit[UnitIndex].Empire = Item.EmpireId;
-				NewCarrier.Unit[UnitIndex].Location = Item.Region;
+				NewCarrier.Unit[UnitIndex].Region = Item.Region;
+				NewCarrier.Unit[UnitIndex].Location = Item.Location;
 				NewCarrier.Unit[UnitIndex].ParentType = ECOMBATGROUP_TYPE::CARRIER_GROUP;
 				NewCarrier.Unit[UnitIndex].Design = UnitItem.UnitDesign;
 
@@ -915,7 +929,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewDestroyer.ParentId = Item.ParentId;
 			NewDestroyer.Name = Item.DisplayName;
 			NewDestroyer.Iff = Item.Iff;
-			NewDestroyer.Location = Item.Region;
+			NewDestroyer.Region = Item.Region;
+			NewDestroyer.Location = Item.Location;
 			NewDestroyer.Empire = Item.EmpireId;
 			NewDestroyer.Intel = Item.Intel;
 
@@ -932,7 +947,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewDestroyer.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewDestroyer.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewDestroyer.Unit[UnitIndex].Regnum = UnitItem.UnitRegnum;
-				NewDestroyer.Unit[UnitIndex].Location = Item.Region;
+				NewDestroyer.Unit[UnitIndex].Region = Item.Region;
+				NewDestroyer.Unit[UnitIndex].Location = Item.Location;
 				NewDestroyer.Unit[UnitIndex].ParentType = ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
 				NewDestroyer.Unit[UnitIndex].Design = UnitItem.UnitDesign;
 
@@ -966,7 +982,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewBattle.ParentId = Item.ParentId;
 			NewBattle.Name = Item.DisplayName;
 			NewBattle.Iff = Item.Iff;
-			NewBattle.Location = Item.Region;
+			NewBattle.Region = Item.Region;
+			NewBattle.Location = Item.Location;
 			NewBattle.Empire = Item.EmpireId;
 			NewBattle.Intel = Item.Intel;
 
@@ -983,7 +1000,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				NewBattle.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewBattle.Unit[UnitIndex].Regnum = UnitItem.UnitRegnum;
 				NewBattle.Unit[UnitIndex].Empire = Item.EmpireId;
-				NewBattle.Unit[UnitIndex].Location = Item.Region;
+				NewBattle.Unit[UnitIndex].Region = Item.Region;
+				NewBattle.Unit[UnitIndex].Location = Item.Location;
 				NewBattle.Unit[UnitIndex].ParentType = ECOMBATGROUP_TYPE::BATTLE_GROUP;
 				NewBattle.Unit[UnitIndex].Design = UnitItem.UnitDesign;
 
@@ -1017,7 +1035,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewWing.ParentId = Item.ParentId;
 			NewWing.Name = Item.DisplayName;
 			NewWing.Iff = Item.Iff;
-			NewWing.Location = Item.Region;
+			NewWing.Region = Item.Region;
+			NewWing.Location = Item.Location;
 			NewWing.Empire = Item.EmpireId;
 			NewWing.Intel = Item.Intel;
 
@@ -1035,7 +1054,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewFighter.ParentId = Item.ParentId;
 			NewFighter.Name = Item.DisplayName;
 			NewFighter.Iff = Item.Iff;
-			NewFighter.Location = Item.Region;
+			NewFighter.Region = Item.Region;
+			NewFighter.Location = Item.Location;
 			NewFighter.ParentType = Item.ParentType;
 			NewFighter.Empire = Item.EmpireId;
 			NewFighter.Intel = Item.Intel;
@@ -1050,7 +1070,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewFighter.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewFighter.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewFighter.Unit[UnitIndex].Location = Item.Region;
+				NewFighter.Unit[UnitIndex].Region = Item.Region;
+				NewFighter.Unit[UnitIndex].Location = Item.Location;
 				NewFighter.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewFighter.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewFighter.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::FIGHTER;
@@ -1073,7 +1094,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewIntercept.ParentId = Item.ParentId;
 			NewIntercept.Name = Item.DisplayName;
 			NewIntercept.Iff = Item.Iff;
-			NewIntercept.Location = Item.Region;
+			NewIntercept.Region = Item.Region;
+			NewIntercept.Location = Item.Location;
 			NewIntercept.ParentType = Item.ParentType;
 			NewIntercept.Empire = Item.EmpireId;
 			NewIntercept.Intel = Item.Intel;
@@ -1088,7 +1110,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewIntercept.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewIntercept.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewIntercept.Unit[UnitIndex].Location = Item.Region;
+				NewIntercept.Unit[UnitIndex].Region = Item.Region;
+				NewIntercept.Unit[UnitIndex].Location = Item.Location;
 				NewIntercept.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewIntercept.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewIntercept.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::INTERCEPT;
@@ -1111,7 +1134,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewAttack.ParentId = Item.ParentId;
 			NewAttack.Name = Item.DisplayName;
 			NewAttack.Iff = Item.Iff;
-			NewAttack.Location = Item.Region;
+			NewAttack.Region = Item.Region;
+			NewAttack.Location = Item.Location;
 			NewAttack.ParentType = Item.ParentType;
 			NewAttack.Empire = Item.EmpireId;
 			NewAttack.Intel = Item.Intel;
@@ -1126,7 +1150,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewAttack.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewAttack.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewAttack.Unit[UnitIndex].Location = Item.Region;
+				NewAttack.Unit[UnitIndex].Region = Item.Region;
+				NewAttack.Unit[UnitIndex].Location = Item.Location;
 				NewAttack.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewAttack.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewAttack.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::ATTACK;
@@ -1149,7 +1174,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			NewLanding.ParentId = Item.ParentId;
 			NewLanding.Name = Item.DisplayName;
 			NewLanding.Iff = Item.Iff;
-			NewLanding.Location = Item.Region;
+			NewLanding.Region = Item.Region;
+			NewLanding.Location = Item.Location;
 			NewLanding.ParentType = Item.ParentType;
 			NewLanding.Empire = Item.EmpireId;
 			NewLanding.Intel = Item.Intel;
@@ -1164,7 +1190,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 				NewLanding.Unit[UnitIndex].Name = UnitItem.UnitName;
 				NewLanding.Unit[UnitIndex].Count = UnitItem.UnitCount;
-				NewLanding.Unit[UnitIndex].Location = Item.Region;
+				NewLanding.Unit[UnitIndex].Region = Item.Region;
+				NewLanding.Unit[UnitIndex].Location = Item.Location;
 				NewLanding.Unit[UnitIndex].ParentId = Item.ParentId;
 				NewLanding.Unit[UnitIndex].Empire = Item.EmpireId;
 				NewLanding.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::LCA;
@@ -6042,7 +6069,8 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceTree(const FS_OOBFor
 		return nullptr;
 	}
 
-	ForceGroup->SetRegion(TCHAR_TO_ANSI(*ForceRow.Location));
+	ForceGroup->SetLocation(ForceRow.Location);
+	ForceGroup->SetRegion(TCHAR_TO_ANSI(*ForceRow.Region));
 
 	for (const FS_OOBFleet& FleetRow : ForceRow.Fleet)
 	{
@@ -6083,7 +6111,8 @@ void UStarshatterGameDataSubsystem::AddFleetToForce(CombatGroup* ForceGroup, con
 		return;
 	}
 
-	FleetGroup->SetRegion(TCHAR_TO_ANSI(*FleetRow.Location));
+	FleetGroup->SetRegion(TCHAR_TO_ANSI(*FleetRow.Region));
+	FleetGroup->SetLocation(FleetRow.Location);
 
 	for (const FS_OOBCarrier& CarrierRow : FleetRow.Carrier)
 	{
@@ -6127,7 +6156,7 @@ void UStarshatterGameDataSubsystem::AddCarrierGroupToFleet(CombatGroup* FleetGro
 		return;
 	}
 
-	CarrierGroup->SetRegion(TCHAR_TO_ANSI(*CarrierRow.Location));
+	CarrierGroup->SetRegion(TCHAR_TO_ANSI(*CarrierRow.Region));
 
 	AddUnitsToCombatGroup(CarrierGroup, CarrierRow.Unit);
 
@@ -6180,7 +6209,7 @@ void UStarshatterGameDataSubsystem::AddDestroyerSquadronToFleet(
 		return;
 	}
 
-	DestroyerGroup->SetRegion(TCHAR_TO_ANSI(*DestroyerRow.Location));
+	DestroyerGroup->SetRegion(TCHAR_TO_ANSI(*DestroyerRow.Region));
 	AddUnitsToCombatGroup(DestroyerGroup, DestroyerRow.Unit);
 }
 
@@ -6207,7 +6236,7 @@ void UStarshatterGameDataSubsystem::AddBattleGroupToFleet(
 		return;
 	}
 
-	BattleGroup->SetRegion(TCHAR_TO_ANSI(*BattleRow.Location));
+	BattleGroup->SetRegion(TCHAR_TO_ANSI(*BattleRow.Region));
 	AddUnitsToCombatGroup(BattleGroup, BattleRow.Unit);
 }
 
@@ -6234,7 +6263,7 @@ void UStarshatterGameDataSubsystem::AddBattalionToForce(
 		return;
 	}
 
-	BattalionGroup->SetRegion(TCHAR_TO_ANSI(*BattalionRow.Location));
+	BattalionGroup->SetRegion(TCHAR_TO_ANSI(*BattalionRow.Region));
 
 	for (const FS_OOBBattery& BatteryRow : BattalionRow.Battery)
 	{
@@ -6275,7 +6304,7 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 		return;
 	}
 
-	CivilianGroup->SetRegion(TCHAR_TO_ANSI(*CivilianRow.Location));
+	CivilianGroup->SetRegion(TCHAR_TO_ANSI(*CivilianRow.Region));
 }
 
 void UStarshatterGameDataSubsystem::AddWingToCarrier(
@@ -6301,7 +6330,8 @@ void UStarshatterGameDataSubsystem::AddWingToCarrier(
 		return;
 	}
 
-	WingGroup->SetRegion(TCHAR_TO_ANSI(*WingRow.Location));
+	WingGroup->SetLocation(WingRow.Location);
+	WingGroup->SetRegion(TCHAR_TO_ANSI(*WingRow.Region));
 
 	for (const FS_OOBIntercept& InterceptRow : WingRow.Intercept)
 	{
@@ -6347,7 +6377,8 @@ void UStarshatterGameDataSubsystem::AddInterceptSquadronToWing(
 		return;
 	}
 
-	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	SquadronGroup->SetLocation(Row.Location);
+	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(SquadronGroup, Row.Unit);
 }
 
@@ -6373,8 +6404,8 @@ void UStarshatterGameDataSubsystem::AddAttackSquadronToWing(
 	{
 		return;
 	}
-
-	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	SquadronGroup->SetLocation(Row.Location);
+	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(SquadronGroup, Row.Unit);
 }
 
@@ -6402,7 +6433,8 @@ void UStarshatterGameDataSubsystem::AddFighterSquadronToWing(
 		return;
 	}
 
-	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	SquadronGroup->SetLocation(Row.Location);
+	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(SquadronGroup, Row.Unit);
 }
 
@@ -6429,7 +6461,8 @@ void UStarshatterGameDataSubsystem::AddLandingSquadronToWing(
 		return;
 	}
 
-	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	SquadronGroup->SetLocation(Row.Location);
+	SquadronGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(SquadronGroup, Row.Unit);
 }
 
@@ -6456,7 +6489,8 @@ void UStarshatterGameDataSubsystem::AddBatteryToBattalion(
 		return;
 	}
 
-	BatteryGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	BatteryGroup->SetLocation(Row.Location);
+	BatteryGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(BatteryGroup, Row.Unit);
 }
 
@@ -6483,7 +6517,8 @@ void UStarshatterGameDataSubsystem::AddStationToBattalion(
 		return;
 	}
 
-	StationGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	StationGroup->SetLocation(Row.Location);
+	StationGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(StationGroup, Row.Unit);
 }
 
@@ -6510,7 +6545,8 @@ void UStarshatterGameDataSubsystem::AddStarbaseToBattalion(
 		return;
 	}
 
-	StarbaseGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	StarbaseGroup->SetLocation(Row.Location);
+	StarbaseGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(StarbaseGroup, Row.Unit);
 }
 
@@ -6537,7 +6573,8 @@ void UStarshatterGameDataSubsystem::AddMinefieldToFleet(
 		return;
 	}
 
-	MinefieldGroup->SetRegion(TCHAR_TO_ANSI(*Row.Location));
+	MinefieldGroup->SetLocation(Row.Location);
+	MinefieldGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
 	AddUnitsToCombatGroup(MinefieldGroup, Row.Unit);
 }
 
@@ -6613,7 +6650,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		NewUnit->SetCombatGroup(Parent);
-		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
+		NewUnit->MoveTo(UnitRow.Location);
+		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Region));
 		Parent->GetUnits().append(NewUnit);
 	}
 
@@ -6661,7 +6699,9 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		NewUnit->SetCombatGroup(Parent);
-		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
+		
+		NewUnit->MoveTo(UnitRow.Location);
+		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Region));
 		Parent->GetUnits().append(NewUnit);
 	}
 
@@ -6698,7 +6738,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		NewUnit->SetCombatGroup(Parent);
-		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
+		NewUnit->MoveTo(UnitRow.Location);
+		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Region));
 		Parent->GetUnits().append(NewUnit);
 	}
 
@@ -6735,7 +6776,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		}
 
 		NewUnit->SetCombatGroup(Parent);
-		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
+		NewUnit->MoveTo(UnitRow.Location);
+		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Region));
 		Parent->GetUnits().append(NewUnit);
 	}
 
@@ -6771,7 +6813,8 @@ void UStarshatterGameDataSubsystem::AddUnitsToCombatGroup(
 		ApplyDesignToUnit(NewUnit, UnitRow.Design);
 
 		NewUnit->SetCombatGroup(Parent);
-		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Location));
+		NewUnit->MoveTo(UnitRow.Location);
+		NewUnit->SetRegion(TCHAR_TO_ANSI(*UnitRow.Region));
 		Parent->GetUnits().append(NewUnit);
 	}
 
