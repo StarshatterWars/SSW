@@ -2060,6 +2060,9 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 
     const EMissionNavObjectType ObjectType = SelectedObjectItem->GetObjectType();
 
+    // -------------------------------------------------
+    // SYSTEM
+    // -------------------------------------------------
     if (ObjectType == EMissionNavObjectType::System)
     {
         const FString TargetSystemName =
@@ -2069,6 +2072,7 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         {
             SelectedSystemName = TargetSystemName;
         }
+        
 
         if (SystemMapPanel)
         {
@@ -2091,6 +2095,9 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         return;
     }
 
+    // -------------------------------------------------
+    // PLANET
+    // -------------------------------------------------
     if (ObjectType == EMissionNavObjectType::Planet)
     {
         FString TargetName = SelectedObjectItem->GetPrimaryText();
@@ -2122,6 +2129,9 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         return;
     }
 
+    // -------------------------------------------------
+    // SECTOR OBJECTS (Station / Ship / Fighter)
+    // -------------------------------------------------
     if (ObjectType == EMissionNavObjectType::Sector ||
         ObjectType == EMissionNavObjectType::Station ||
         ObjectType == EMissionNavObjectType::Starship ||
@@ -2150,6 +2160,20 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
                     const FString TargetName =
                         SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
 
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[MissionNavDlg] Selected row: Type=%d Name='%s'"),
+                        (int32)ObjectType,
+                        *TargetName);
+
+                    const FString MissionRegion =
+                        FString(ANSI_TO_TCHAR(MissionPtr->GetRegion()))
+                        .TrimStartAndEnd();
+
+                    MissionElement* BestMatch = nullptr;
+
+                    // -------------------------------------------------
+                    // EXACT NAME MATCH ONLY (NO NORMALIZATION)
+                    // -------------------------------------------------
                     ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
                     while (++ElemIter)
                     {
@@ -2159,25 +2183,51 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
                             continue;
                         }
 
-                        const FString ElemName = ANSI_TO_TCHAR(Elem->GetName());
-                       
-                        FString ElemRegion = ANSI_TO_TCHAR(Elem->GetRegion());
-                        ElemRegion = ElemRegion.TrimStartAndEnd();
-
-                        FString MissionRegion = ANSI_TO_TCHAR(MissionPtr->GetRegion());
-                        MissionRegion = MissionRegion.TrimStartAndEnd();
+                        const FString ElemRegion =
+                            FString(ANSI_TO_TCHAR(Elem->GetRegion()))
+                            .TrimStartAndEnd();
 
                         if (!ElemRegion.Equals(MissionRegion, ESearchCase::IgnoreCase))
                         {
                             continue;
                         }
 
+                        const FString ElemName =
+                            FString(ANSI_TO_TCHAR(Elem->GetName()))
+                            .TrimStartAndEnd();
+
                         if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
                         {
-                            SectorMapPanel->SetSelectedElement(Elem);
-                            SectorMapPanel->CenterOnElement(Elem);
+                            BestMatch = Elem;
                             break;
                         }
+                        
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[MissionNavDlg] Candidate MissionElement: Name='%s' Region='%s' IsStatic=%d IsStarship=%d IsSquadron=%d"),
+                            ANSI_TO_TCHAR(Elem->GetName()),
+                            ANSI_TO_TCHAR(Elem->GetRegion()),
+                            Elem->IsStatic() ? 1 : 0,
+                            Elem->IsStarship() ? 1 : 0,
+                            Elem->IsSquadron() ? 1 : 0);
+                    }
+
+                    // -------------------------------------------------
+                    // APPLY SELECTION + CENTER
+                    // -------------------------------------------------
+                    if (BestMatch)
+                    {
+                        SectorMapPanel->SetSelectedElement(BestMatch);
+                        SectorMapPanel->CenterOnElement(BestMatch);
+
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[MissionNavDlg] Exact match: '%s'"),
+                            ANSI_TO_TCHAR(BestMatch->GetName()));
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[MissionNavDlg] No match for '%s'"),
+                            *TargetName);
                     }
                 }
             }
