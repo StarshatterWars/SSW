@@ -357,10 +357,22 @@ CampaignMissionStarship::SelectRegion()
     if (zone) {
         mission->SetStarSystem(campaign->GetSystem(zone->GetSystem()));
 
-        if (zone->HasRegion(player_group->GetRegion()))
-            mission->SetRegion(player_group->GetRegion());
-        else
-            mission->SetRegion(*zone->GetRegions().at(0));
+        if (zone->HasRegion(player_group->GetRegion())) {
+            Existing = FString(ANSI_TO_TCHAR(player_group->GetRegion())).TrimStartAndEnd();
+
+            if (Existing.IsEmpty())
+            {
+                player_group->SetRegion(player_group->GetRegion());
+            }
+        }
+        else {
+            Existing = FString(ANSI_TO_TCHAR(player_group->GetRegion())).TrimStartAndEnd();
+
+            if (Existing.IsEmpty())
+            {
+                player_group->SetRegion(*zone->GetRegions().at(0));
+            }
+        }
     }
     else {
         UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: CMS - No zone for '%s'"),
@@ -369,7 +381,12 @@ CampaignMissionStarship::SelectRegion()
         StarSystem* s = campaign->GetSystemList()[0];
 
         mission->SetStarSystem(s);
-        mission->SetRegion(s->Regions()[0]->GetName());
+        Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+        if (Existing.IsEmpty())
+        {
+            mission->SetRegion(s->Regions()[0]->GetName());
+        }
     }
 }
 
@@ -615,7 +632,13 @@ CampaignMissionStarship::CreateSingleElement(CombatGroup* g, CombatUnit* u)
     elem->SetCount(u->LiveCount());
     elem->SetIFF(u->GetIFF());
     elem->SetIntelLevel(g->GetIntelLevel());
-    elem->SetRegion(u->GetRegion());
+    Existing = FString(ANSI_TO_TCHAR(u->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        u->SetRegion(u->GetRegion());
+    }
+
     elem->SetHeading(u->GetHeading());
 
     const int   unit_index = g->GetUnits().index(u);
@@ -755,7 +778,13 @@ CampaignMissionStarship::CreateSquadron(CombatGroup* g)
     elem->SetMaintCount(maint_count);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(g->GetIntelLevel());
-    elem->SetRegion(fighter->GetRegion());
+
+    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        elem->SetRegion(fighter->GetRegion());
+    }
 
     elem->SetCarrier(carrier->GetName());
     elem->SetCommander(carrier->GetName());
@@ -815,7 +844,12 @@ CampaignMissionStarship::CreateWardFreight()
 
     elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
     elem->SetIntelLevel(Intel::KNOWN);
-    elem->SetRegion(player_group->GetRegion());
+    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        elem->SetRegion(player_group->GetRegion());
+    }
 
     ward = elem;
     mission->AddElement(elem);
@@ -1289,7 +1323,13 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 MissionElement* elem = CreateSingleElement(s, u);
                 if (elem) {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    elem->SetRegion(rgn);
+                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                    if (Existing.IsEmpty())
+                    {
+                        elem->SetRegion(rgn);
+                    }
+         
                     elem->SetLocation(base_loc + ScatterInSphere(1.5f));
                     elem->SetMissionRole((int)EMISSIONTYPE::FLEET);
                     mission->AddElement(elem);
@@ -1306,7 +1346,13 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
             MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::CARGO);
             if (elem) {
                 elem->SetIntelLevel(Intel::KNOWN);
-                elem->SetRegion(rgn);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
+ 
                 elem->SetLocation(base_loc + ScatterInSphere(2.0f));
                 mission->AddElement(elem);
                 ntargets++;
@@ -1317,7 +1363,13 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                     MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
                     if (e2) {
                         e2->SetIntelLevel(Intel::KNOWN);
-                        e2->SetRegion(rgn);
+                        Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
+
+                        if (Existing.IsEmpty())
+                        {
+                            e2->SetRegion(rgn);
+                        }
+         
                         e2->SetLocation(elem->GetLocation() + ScatterInSphere(0.5f));
 
                         Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->GetName());
@@ -1338,7 +1390,13 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
             MissionElement* elem = CreateFighterPackage(s, 4, (int)EMISSIONTYPE::PATROL);
             if (elem) {
                 elem->SetIntelLevel(Intel::SECRET);
-                elem->SetRegion(rgn);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
+   
                 elem->SetLocation(base_loc);
                 mission->AddElement(elem);
                 ntargets++;
@@ -1355,7 +1413,14 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 elem->SetIntelLevel(Intel::KNOWN);
                 elem->GetLoadouts().destroy();
                 elem->GetLoadouts().append(new MissionLoad(-1, "Ship Strike"));
-                elem->SetRegion(rgn);
+                elem->SetIntelLevel(Intel::SECRET);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
+       
                 elem->SetLocation(base_loc + ScatterInSphere(1.0f));
                 mission->AddElement(elem);
 
@@ -1381,7 +1446,14 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 elem->SetIntelLevel(Intel::KNOWN);
                 elem->Loadouts().destroy();
                 elem->Loadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
-                elem->SetRegion(rgn);
+                elem->SetIntelLevel(Intel::SECRET);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
+
                 elem->SetLocation(base_loc + ScatterInSphere(1.3f));
                 mission->AddElement(elem);
 
@@ -1406,7 +1478,14 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
             MissionElement* elem = CreateSingleElement(s, u);
             if (elem) {
                 elem->SetIntelLevel(Intel::KNOWN);
-                elem->SetRegion(rgn);
+                elem->SetIntelLevel(Intel::SECRET);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
+ 
                 elem->SetLocation(base_loc + ScatterInSphere(2.0f));
                 elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
                 mission->AddElement(elem);
@@ -1418,7 +1497,14 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                     MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
                     if (e2) {
                         e2->SetIntelLevel(Intel::KNOWN);
-                        e2->SetRegion(rgn);
+                        elem->SetIntelLevel(Intel::SECRET);
+                        Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
+
+                        if (Existing.IsEmpty())
+                        {
+                            e2->SetRegion(rgn);
+                        }
+                
                         e2->SetLocation(elem->GetLocation() + ScatterInSphere(0.5f));
 
                         Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, elem->GetName());
@@ -1510,6 +1596,13 @@ CampaignMissionStarship::CreateFighterPackage(CombatGroup* squadron, int count, 
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(squadron->GetIntelLevel());
     elem->SetRegion(fighter->GetRegion());
+    elem->SetIntelLevel(Intel::SECRET);
+    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        elem->SetRegion(fighter->GetName());
+    }
     elem->SetSquadron(fighter->GetName());
     elem->SetMissionRole(role);
 

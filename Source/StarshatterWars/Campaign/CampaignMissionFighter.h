@@ -123,4 +123,6 @@ protected:
     int                     ownside = 0;
     int                     enemy = -1;
     int                     mission_type = 0;
+
+    FString                 Existing;
 };

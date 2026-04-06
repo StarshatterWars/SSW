@@ -464,7 +464,12 @@ void CampaignMissionFighter::SelectRegion()
     if (zone)
     {
         mission->SetStarSystem(campaign->GetSystem(zone->GetSystem()));
-        mission->SetRegion(*zone->GetRegions().at(0));
+        Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+        if (Existing.IsEmpty())
+        {
+            mission->SetRegion(*zone->GetRegions().at(0));
+        }
 
         orb_region = mission->GetRegion();
 
@@ -507,7 +512,12 @@ void CampaignMissionFighter::SelectRegion()
 
             if (airbase)
             {
-                mission->SetRegion(air_region);
+                Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    mission->SetRegion(air_region);
+                }
             }
         }
     }
@@ -519,7 +529,12 @@ void CampaignMissionFighter::SelectRegion()
 
         StarSystem* s = campaign->GetSystemList()[0];
         mission->SetStarSystem(s);
-        mission->SetRegion(s->Regions()[0]->GetName());
+        Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+        if (Existing.IsEmpty())
+        {
+            mission->SetRegion(s->Regions()[0]->GetName());
+        }
     }
 
     if (!airborne)
@@ -687,7 +702,7 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
         // Assign region
         if (airborne && air_region.length() > 0)
         {
-            FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+            Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
             if (Existing.IsEmpty())
             {
@@ -696,7 +711,7 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
         }
         else
         {
-            FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+            Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
             if (Existing.IsEmpty())
             {
@@ -772,7 +787,7 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
 
     if (airborne && air_region.length() > 0)
     {
-        FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+        Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
         if (Existing.IsEmpty())
         {
@@ -782,7 +797,7 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
     }
     else
     {
-        FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+        Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
         if (Existing.IsEmpty())
         {
@@ -859,12 +874,22 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 
     if (airborne && air_region.length() > 0)
     {
-        player_elem->SetRegion(air_region);
+        const FString ExistingRegion = FString(ANSI_TO_TCHAR(player_elem->GetRegion())).TrimStartAndEnd();
+
+        if (ExistingRegion.IsEmpty())
+        {
+            player_elem->SetRegion(air_region);
+        }
         PlanetaryInsertion(player_elem);
     }
     else
     {
-        player_elem->SetRegion(orb_region);
+        const FString ExistingRegion = FString(ANSI_TO_TCHAR(player_elem->GetRegion())).TrimStartAndEnd();
+
+        if (ExistingRegion.IsEmpty())
+        {
+            player_elem->SetRegion(orb_region);
+        }
         OrbitalInsertion(player_elem);
     }
 
@@ -891,12 +916,22 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 
             if (airbase && air_region.length() > 0)
             {
-                carrier_elem->SetRegion(air_region);
+                const FString ExistingRegion = FString(ANSI_TO_TCHAR(carrier_elem->GetRegion())).TrimStartAndEnd();
+
+                if (ExistingRegion.IsEmpty())
+                {
+                    carrier_elem->SetRegion(air_region);
+                }
                 PlanetaryInsertion(carrier_elem);
             }
             else
             {
-                carrier_elem->SetRegion(orb_region);
+                const FString ExistingRegion = FString(ANSI_TO_TCHAR(carrier_elem->GetRegion())).TrimStartAndEnd();
+
+                if (ExistingRegion.IsEmpty())
+                {
+                    carrier_elem->SetRegion(orb_region);
+                }
                 OrbitalInsertion(carrier_elem);
             }
 
@@ -969,6 +1004,12 @@ void CampaignMissionFighter::CreatePatrols()
             if (Elem)
             {
                 Elem->SetIntelLevel(Intel::KNOWN);
+                const FString ExistingRegion = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+
+                if (ExistingRegion.IsEmpty())
+                {
+                    Elem->GetRegion();
+                }
                 Elem->SetRegion(Base->GetRegion());
                 Elem->SetLocation(BaseLoc);
                 Patrols.append(Elem);
@@ -1033,8 +1074,13 @@ void CampaignMissionFighter::CreateWardFreight()
 
     elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
     elem->SetIntelLevel(Intel::KNOWN);
-    elem->SetRegion(squadron->GetRegion());
 
+    const FString ExistingRegion = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (ExistingRegion.IsEmpty())
+    {
+        elem->SetRegion(squadron->GetRegion());
+    }
     if (carrier)
     {
         elem->SetLocation(
@@ -1120,7 +1166,13 @@ void CampaignMissionFighter::CreateWardShuttle()
     }
 
     Elem->SetIntelLevel(Intel::KNOWN);
-    Elem->SetRegion(orb_region);
+
+    Existing = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        Elem->SetRegion(orb_region);
+    }
     Elem->Loadouts().destroy();
 
     if (Carrier)
@@ -1221,7 +1273,14 @@ void CampaignMissionFighter::CreateWardStrike()
     // if (strike->GetParent() == squadron->GetParent()) { ... }
 
     elem->SetIntelLevel(Intel::KNOWN);
-    elem->SetRegion(squadron->GetRegion());
+
+
+    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        elem->SetRegion(squadron->GetRegion());
+    }
 
     if (strike_target)
     {
@@ -2352,7 +2411,13 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             if (elem)
             {
                 elem->SetIntelLevel(Intel::KNOWN);
-                elem->SetRegion(rgn);
+
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
 
                 const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 1.5f);
@@ -2374,7 +2439,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    elem->SetRegion(rgn);
+                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                    if (Existing.IsEmpty())
+                    {
+                        elem->SetRegion(rgn);
+                    }
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2390,7 +2460,13 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-                            e2->SetRegion(rgn);
+
+                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
+
+                            if (Existing.IsEmpty())
+                            {
+                                e2->SetRegion(rgn);
+                            }
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2421,7 +2497,13 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    elem->SetRegion(rgn);
+
+                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                    if (Existing.IsEmpty())
+                    {
+                        elem->SetRegion(rgn);
+                    }
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.3f);
@@ -2453,7 +2535,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    elem->SetRegion(rgn);
+                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                    if (Existing.IsEmpty())
+                    {
+                        elem->SetRegion(rgn);
+                    }
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2469,7 +2556,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-                            e2->SetRegion(rgn);
+                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
+
+                            if (Existing.IsEmpty())
+                            {
+                                e2->SetRegion(rgn);
+                            }
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2500,7 +2592,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    elem->SetRegion(rgn);
+                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                    if (Existing.IsEmpty())
+                    {
+                        elem->SetRegion(rgn);
+                    }
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.1f);
@@ -2516,7 +2613,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-                            e2->SetRegion(rgn);
+                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
+
+                            if (Existing.IsEmpty())
+                            {
+                                e2->SetRegion(rgn);
+                            }
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2548,7 +2650,12 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             if (elem)
             {
                 elem->SetIntelLevel(Intel::KNOWN);
-                elem->SetRegion(rgn);
+                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+                if (Existing.IsEmpty())
+                {
+                    elem->SetRegion(rgn);
+                }
 
                 const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2738,7 +2845,12 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     Elem->SetCount(U->LiveCount());
     Elem->SetIFF(U->GetIFF());
     Elem->SetIntelLevel(G->GetIntelLevel());
-    Elem->SetRegion(U->GetRegion());
+    Existing = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        Elem->SetRegion(U->GetRegion());
+    }
     Elem->SetHeading(U->GetHeading());
 
     const int32 UnitIndex = G->GetUnits().index(U);
@@ -2953,7 +3065,13 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(InSquadron->GetIntelLevel());
-    elem->SetRegion(fighter->GetRegion());
+    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+    if (Existing.IsEmpty())
+    {
+        elem->SetRegion(fighter->GetRegion());
+    }
+
     elem->SetSquadron(InSquadron->GetName());
     elem->SetMissionRole(role);
 

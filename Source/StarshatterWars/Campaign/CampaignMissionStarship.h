@@ -108,4 +108,7 @@ protected:
     int                     ownside;
     int                     enemy;
     int                     mission_type;
+
+    FString                 Existing;
+
 };
