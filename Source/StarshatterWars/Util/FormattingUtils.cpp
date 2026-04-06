@@ -742,3 +742,17 @@ FString UFormattingUtils::GetMissionElementIndicator(MissionElement* Elem)
 
     return TEXT("UN");
 }
+
+float UFormattingUtils::RadiansToDegrees360(double Radians)
+{
+    float Degrees = FMath::RadiansToDegrees(static_cast<float>(Radians));
+    while (Degrees < 0.0f)
+    {
+        Degrees += 360.0f;
+    }
+    while (Degrees >= 360.0f)
+    {
+        Degrees -= 360.0f;
+    }
+    return Degrees;
+}

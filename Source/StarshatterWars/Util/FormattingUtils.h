@@ -153,5 +153,7 @@ public:
     static FString GetUnitDesignIndicator(CombatUnit* Unit);
 
     static FString GetMissionElementIndicator(MissionElement* Elem);
+
+    static float RadiansToDegrees360(double Radians);
 };
 

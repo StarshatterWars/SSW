@@ -1845,6 +1845,23 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         return;
     }
 
+    auto RadiansToDegrees360 = [](double Radians) -> float
+        {
+            float Degrees = FMath::RadiansToDegrees((float)Radians);
+
+            while (Degrees < 0.0f)
+            {
+                Degrees += 360.0f;
+            }
+
+            while (Degrees >= 360.0f)
+            {
+                Degrees -= 360.0f;
+            }
+
+            return Degrees;
+        };
+
     FString ActiveSectorName;
 
     if (CurrentNavMode == EMissionNavMode::SECTOR)
@@ -1953,17 +1970,27 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
+        double HeadingRad = Elem->GetHeading();
+
+        if (SectorMapPanel)
+        {
+            HeadingRad = SectorMapPanel->ResolveElementHeadingRadians(Elem);
+        }
+
+        const float HeadingDeg = UFormattingUtils::RadiansToDegrees360(HeadingRad);
+
         FMissionElementRow Row;
         Row.Primary = FString(Elem->GetName().data());
         Row.Secondary = UFormattingUtils::GetMissionElementIndicator(Elem);
         Row.Detail = FString::Printf(
-            TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d"),
+            TEXT("%s\n\nTYPE: %s\nINDICATOR: %s\nREGION: %s\nIFF: %d\nCOUNT: %d\nHEADING: %.1f DEG"),
             *Row.Primary,
             *TypeLabel,
             *Row.Secondary,
             *FString(Elem->GetRegion().data()),
             Elem->GetIFF(),
-            Elem->Count());
+            Elem->Count(),
+            HeadingDeg);
 
         Rows.Add(Row);
     }

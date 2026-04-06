@@ -92,6 +92,7 @@ public:
 
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
     const FString& GetViewedSectorName() const { return ViewedSectorName; }
+    double ResolveElementHeadingRadians(MissionElement* Element) const;
 
 protected:
     void BuildRuntimeLayout();
@@ -173,6 +174,8 @@ protected:
     UTexture2D* GetShipMapSprite(const FString& ShipName, const FString& SpriteName);
     int32 ComputeFacingIndex(float YawRadians) const;
     const FShipDesign* ResolveShipDesignForElement(MissionElement* Element) const;
+
+
 
 protected:
     UPROPERTY()

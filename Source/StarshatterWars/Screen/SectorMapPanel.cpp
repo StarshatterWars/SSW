@@ -647,7 +647,7 @@ void USectorMapPanel::DrawMissionElement(
         const FShipDesign* Design = ResolveShipDesignForElement(Element);
         if (Design && Design->Map.Num() == 8)
         {
-            const float HeadingRadians = Element->GetHeading();
+            const float HeadingRadians = static_cast<float>(ResolveElementHeadingRadians(Element));
             const int32 FacingIndex = ComputeFacingIndex(HeadingRadians);
 
             if (Design->Map.IsValidIndex(FacingIndex))
@@ -1259,4 +1259,45 @@ int32 USectorMapPanel::ComputeFacingIndex(float YawRadians) const
 
     const float Slice = (2.0f * PI) / 8.0f;
     return FMath::FloorToInt((Angle + Slice * 0.5f) / Slice) % 8;
+}
+
+double USectorMapPanel::ResolveElementHeadingRadians(MissionElement* Element) const
+{
+    if (!Element)
+    {
+        return 0.0;
+    }
+
+    const double StoredHeading = Element->GetHeading();
+    if (!FMath::IsNearlyZero(StoredHeading, 0.0001))
+    {
+        return StoredHeading;
+    }
+
+    const FVector ElemLoc = Element->GetLocation();
+
+    ListIter<Instruction> NavIter = Element->NavList();
+    while (++NavIter)
+    {
+        Instruction* Nav = NavIter.value();
+        if (!Nav)
+        {
+            continue;
+        }
+
+        if (_stricmp(Nav->RegionName(), Element->GetRegion()) != 0)
+        {
+            continue;
+        }
+
+        const FVector NavLoc = Nav->Location();
+        const FVector Delta = NavLoc - ElemLoc;
+
+        if (!Delta.IsNearlyZero())
+        {
+            return FMath::Atan2(Delta.Y, Delta.X);
+        }
+    }
+
+    return 0.0;
 }
