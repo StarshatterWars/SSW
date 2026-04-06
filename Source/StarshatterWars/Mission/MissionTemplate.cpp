@@ -87,7 +87,7 @@ MissionTemplate::MapElement(MissionElement* elem)
 				elem->SetName(callsign);
 		}
 
-		ListIter<Instruction> obj = elem->Objectives();
+		ListIter<Instruction> obj = elem->GetObjectives();
 		while (++obj) {
 			Instruction* i = obj.value();
 			if (strlen(i->TargetName())) {
@@ -712,14 +712,14 @@ MissionTemplate::ParseAlias(TermStruct* val)
 				else {
 					TermStruct* sval = pdef->term()->isStruct();
 					Instruction* obj = ParseInstruction(sval, elem);
-					elem->Objectives().append(obj);
+					elem->GetObjectives().append(obj);
 				}
 			}
 
 			else if (defname == "instr") {
 				Text* obj = new Text;
 				if (GetDefText(*obj, pdef, filename))
-					elem->Instructions().append(obj);
+					elem->GetInstructions().append(obj);
 				else
 					delete obj;
 			}
@@ -886,7 +886,7 @@ MissionTemplate::CheckObjectives()
 	while (++iter) {
 		MissionElement* elem = iter.value();
 
-		ListIter<Instruction> obj = elem->Objectives();
+		ListIter<Instruction> obj = elem->GetObjectives();
 		while (++obj) {
 			Instruction* o = obj.value();
 			Text tgt = o->TargetName();

@@ -341,8 +341,8 @@ void UMissionElementDlg::RebuildFromModel()
         ObjectiveCombo->ClearOptions();
 
         Instruction* Instr = nullptr;
-        if (ElemPtr->Objectives().size() > 0)
-            Instr = ElemPtr->Objectives().at(0);
+        if (ElemPtr->GetObjectives().size() > 0)
+            Instr = ElemPtr->GetObjectives().at(0);
 
         const UEnum* Enum = StaticEnum<INSTRUCTION_ACTION>();
         if (!Enum || !ObjectiveCombo)
@@ -525,8 +525,8 @@ void UMissionElementDlg::BuildObjectiveTargets()
     TargetCombo->SetSelectedIndex(0);
 
     Instruction* Instr = nullptr;
-    if (ElemPtr->Objectives().size() > 0)
-        Instr = ElemPtr->Objectives().at(0);
+    if (ElemPtr->GetObjectives().size() > 0)
+        Instr = ElemPtr->GetObjectives().at(0);
 
     // Legacy: objid = selectedIndex - 1, but here the first option is "".
     // We stored options as "" + actions by name.
@@ -894,7 +894,7 @@ void UMissionElementDlg::OnAcceptClicked()
     // Objective + Target:
     if (ObjectiveCombo && TargetCombo)
     {
-        List<Instruction>& Objectives = ElemPtr->Objectives();
+        List<Instruction>& Objectives = ElemPtr->GetObjectives();
         Objectives.destroy();
 
         const FString ObjSel = ObjectiveCombo->GetSelectedOption();

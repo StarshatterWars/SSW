@@ -687,11 +687,21 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
         // Assign region
         if (airborne && air_region.length() > 0)
         {
-            elem->SetRegion(air_region);
+            FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+            if (Existing.IsEmpty())
+            {
+                elem->SetRegion(air_region);
+            }
         }
         else
         {
-            elem->SetRegion(orb_region);
+            FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+            if (Existing.IsEmpty())
+            {
+                elem->SetRegion(orb_region);
+            }
         }
 
         // Add to mission
@@ -758,17 +768,26 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
     {
         return;
     }
-
     elem->SetIFF(g->GetIFF());
 
     if (airborne && air_region.length() > 0)
     {
-        elem->SetRegion(air_region);
+        FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+        if (Existing.IsEmpty())
+        {
+            elem->SetRegion(air_region);
+        }
         PlanetaryInsertion(elem);
     }
     else
     {
-        elem->SetRegion(orb_region);
+        FString Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
+
+        if (Existing.IsEmpty())
+        {
+            elem->SetRegion(orb_region);
+        }
         OrbitalInsertion(elem);
     }
 
@@ -3033,9 +3052,9 @@ void CampaignMissionFighter::DefineMissionObjectives()
 
     FString Objectives;
 
-    for (int32 i = 0; i < player_elem->Objectives().size(); i++)
+    for (int32 i = 0; i < player_elem->GetObjectives().size(); i++)
     {
-        Instruction* Obj = player_elem->Objectives().at(i);
+        Instruction* Obj = player_elem->GetObjectives().at(i);
         if (!Obj)
         {
             continue;

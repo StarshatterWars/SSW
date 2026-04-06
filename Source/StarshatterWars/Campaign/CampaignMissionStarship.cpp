@@ -1590,9 +1590,9 @@ CampaignMissionStarship::DefineMissionObjectives()
 
     Text objectives;
 
-    if (player->Objectives().size() > 0) {
-        for (int i = 0; i < player->Objectives().size(); i++) {
-            Instruction* obj = player->Objectives().at(i);
+    if (player->GetObjectives().size() > 0) {
+        for (int i = 0; i < player->GetObjectives().size(); i++) {
+            Instruction* obj = player->GetObjectives().at(i);
             objectives += "* ";
             objectives += obj->GetDescription();
             objectives += ".\n";

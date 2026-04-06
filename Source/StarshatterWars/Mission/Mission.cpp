@@ -90,11 +90,22 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		if (!Elem)
 			continue;
 
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
+			*SrcElem.Name,
+			*SrcElem.RegionName);
+
 		Elem->name = TCHAR_TO_ANSI(*SrcElem.Name);
 		Elem->carrier = TCHAR_TO_ANSI(*SrcElem.Carrier);
 		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
 		Elem->squadron = TCHAR_TO_ANSI(*SrcElem.Squadron);
-		Elem->rgn_name = TCHAR_TO_ANSI(*SrcElem.RegionName);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
+			*SrcElem.Name,
+			*SrcElem.RegionName);
+
+		Elem->SetRegion(TCHAR_TO_ANSI(*SrcElem.RegionName));
 		Elem->IFF_code = SrcElem.IFFCode;
 		Elem->count = SrcElem.Count;
 		Elem->player = SrcElem.Player ? 1 : 0;
@@ -768,7 +779,12 @@ Mission::ParseElement(TermStruct* val)
 	char  err[256];
 
 	MissionElement* element = new MissionElement();
-	element->rgn_name = region;
+	const FString ExistingRegion = FString(ANSI_TO_TCHAR(element->GetRegion())).TrimStartAndEnd();
+
+	if (ExistingRegion.IsEmpty())
+	{
+		element->SetRegion(region);
+	}
 	element->elem_id = elem_id++;
 
 	current = element;
@@ -1818,10 +1834,10 @@ Mission::Serialize(const char* player_elem, int player_index)
 			}
 		}
 
-		if (elem->Objectives().size()) {
+		if (elem->GetObjectives().size()) {
 			s += "\n";
 
-			ListIter<Instruction> obj_iter = elem->Objectives();
+			ListIter<Instruction> obj_iter = elem->GetObjectives();
 			while (++obj_iter) {
 				Instruction* inst = obj_iter.value();
 
@@ -1886,10 +1902,10 @@ Mission::Serialize(const char* player_elem, int player_index)
 			}
 		}
 
-		if (elem->Instructions().size()) {
+		if (elem->GetInstructions().size()) {
 			s += "\n";
 
-			ListIter<Text> i_iter = elem->Instructions();
+			ListIter<Text> i_iter = elem->GetInstructions();
 			while (++i_iter) {
 				s += "   instr:     \"";
 				s += SafeString(*i_iter.value());

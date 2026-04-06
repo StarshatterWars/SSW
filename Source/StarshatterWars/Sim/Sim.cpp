@@ -683,7 +683,7 @@ Sim::CreateElements()
 				}
 			}
 
-			ListIter<Instruction> ObjectiveIter = MissionElem->Objectives();
+			ListIter<Instruction> ObjectiveIter = MissionElem->GetObjectives();
 			while (++ObjectiveIter) {
 				Instruction* Objective = ObjectiveIter.value();
 				Instruction* NewInstruction = nullptr;
@@ -693,8 +693,8 @@ Sim::CreateElements()
 				Element->AddObjective(NewInstruction);
 			}
 
-			if (MissionElem->Instructions().size() > 0) {
-				ListIter<Text> InstructionIter = MissionElem->Instructions();
+			if (MissionElem->GetInstructions().size() > 0) {
+				ListIter<Text> InstructionIter = MissionElem->GetInstructions();
 				while (++InstructionIter) {
 					Element->AddInstruction(*InstructionIter);
 				}

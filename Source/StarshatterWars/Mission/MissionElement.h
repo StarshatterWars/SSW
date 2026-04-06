@@ -128,8 +128,8 @@ public:
     // ------------------------------------------------------------
     // Lists (legacy container API)
     // ------------------------------------------------------------
-    List<Instruction>& Objectives() { return objectives; }
-    List<Text>& Instructions() { return instructions; }
+    List<Instruction>& GetObjectives() { return objectives; }
+    List<Text>&        GetInstructions() { return instructions; }
     List<Instruction>& NavList() { return navlist; }
     List<MissionLoad>& Loadouts() { return loadouts; }
     List<MissionShip>& Ships() { return ships; }
@@ -184,7 +184,7 @@ public:
     CombatGroup* GetCombatGroup() { return combat_group; }
     void         SetCombatGroup(CombatGroup* g) { combat_group = g; }
 
-    CombatUnit* GetCombatUnit() { return combat_unit; }
+    CombatUnit*  GetCombatUnit() { return combat_unit; }
     void         SetCombatUnit(CombatUnit* u) { combat_unit = u; }
 
 protected:
@@ -218,7 +218,7 @@ protected:
     bool              rogue = false;
     bool              invulnerable = false;
 
-    Text              rgn_name;
+    
     RLoc              rloc;
     double            heading = 0.0;
 
@@ -230,4 +230,7 @@ protected:
     List<Instruction> navlist;
     List<MissionLoad> loadouts;
     List<MissionShip> ships;
+
+private:
+    Text              rgn_name;
 };
