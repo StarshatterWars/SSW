@@ -21,6 +21,7 @@
 #include "MissionEditorNavDlg.h"
 #include "OptionsScreen.h"
 #include "LoadDlg.h"
+#include "CmpLoadDlg.h"
 #include "CmdDlg.h"
 #include "TacRefDlg.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -39,7 +40,6 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
     UStarshatterAssetRegistrySubsystem* Assets = InGI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
     if (!Assets) return;
 
-    // Only assign if currently unset (preserve BP defaults):
     if (!OptionsScreenClass)
         OptionsScreenClass = Assets->GetWidgetClass(TEXT("UI.OptionsScreenClass"), true);
 
@@ -67,11 +67,15 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
     if (!TacRefDlgClass)
         TacRefDlgClass = Assets->GetWidgetClass(TEXT("UI.TacRefScreenClass"), true);
 
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s"),
+    if (!CmpLoadDlgClass)
+        CmpLoadDlgClass = Assets->GetWidgetClass(TEXT("UI.CampaignLoadClass"), true);
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s CmpLoad=%s"),
         *GetNameSafe(MenuDlgClass.Get()),
         *GetNameSafe(OptionsScreenClass.Get()),
         *GetNameSafe(FirstTimeDlgClass.Get()),
-        *GetNameSafe(ExitDlgClass.Get()));
+        *GetNameSafe(ExitDlgClass.Get()),
+        *GetNameSafe(CmpLoadDlgClass.Get()));
 }
 
 static void ApplyUIFocus(APlayerController* PC, UUserWidget* FocusWidget)
@@ -83,7 +87,6 @@ static void ApplyUIFocus(APlayerController* PC, UUserWidget* FocusWidget)
     PC->bEnableClickEvents = true;
     PC->bEnableMouseOverEvents = true;
 
-    // Use GameAndUI for reliability (especially with Enhanced Input / legacy code)
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(FocusWidget->TakeWidget());
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
@@ -107,10 +110,6 @@ void UMenuScreen::NativeConstruct()
     }
 }
 
-// ------------------------------------------------------------
-// Dialog creation (GC-safe via UPROPERTY storage)
-// ------------------------------------------------------------
-
 template<typename TDialog>
 TDialog* UMenuScreen::EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage)
 {
@@ -131,10 +130,7 @@ TDialog* UMenuScreen::EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr
     if (!Created)
         return nullptr;
 
-    // Router assignment (BaseScreen owns MenuManager)
     Created->SetMenuManager(this);
-
-    // Park hidden; real Z-order is applied by ShowDialog(...)
     Created->AddToViewport(10);
     Created->SetVisibility(ESlateVisibility::Hidden);
     Created->SetIsEnabled(false);
@@ -143,13 +139,10 @@ TDialog* UMenuScreen::EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr
     return Created;
 }
 
-// ------------------------------------------------------------
-// Show/Hide helpers
-// ------------------------------------------------------------
-
 void UMenuScreen::ShowDialog(UBaseScreen* Dialog, int32 ZOrder)
 {
-    if (!Dialog) {
+    if (!Dialog)
+    {
         return;
     }
 
@@ -162,7 +155,6 @@ void UMenuScreen::ShowDialog(UBaseScreen* Dialog, int32 ZOrder)
 
     CurrentDialog = Dialog;
 
-    // Always restore UI input to the visible dialog
     if (APlayerController* PC = GetOwningPlayer())
     {
         PC->bShowMouseCursor = true;
@@ -184,7 +176,6 @@ void UMenuScreen::HideDialog(UBaseScreen* Dialog)
 
     Dialog->SetDialogInputEnabled(false);
     Dialog->SetVisibility(ESlateVisibility::Collapsed);
-
 
     if (CurrentDialog == Dialog)
         CurrentDialog = nullptr;
@@ -213,16 +204,13 @@ void UMenuScreen::HideAll()
     HideDialog(MsnEditNavDlg);
 
     HideDialog(LoadDlg);
+    HideDialog(CmpLoadDlg);
     HideDialog(TacRefDlg);
 
     HideDialog(OptionsScreen);
 
     CurrentDialog = nullptr;
 }
-
-// ------------------------------------------------------------
-// Setup / TearDown
-// ------------------------------------------------------------
 
 void UMenuScreen::Setup()
 {
@@ -248,6 +236,7 @@ void UMenuScreen::Setup()
     EnsureDialog<UMissionEditorNavDlg>(MsnEditNavDlgClass, MsnEditNavDlg);
 
     EnsureDialog<ULoadDlg>(LoadDlgClass, LoadDlg);
+    EnsureDialog<UCmpLoadDlg>(CmpLoadDlgClass, CmpLoadDlg);
     EnsureDialog<UTacRefDlg>(TacRefDlgClass, TacRefDlg);
 
     ShowMenuDlg();
@@ -257,8 +246,6 @@ void UMenuScreen::TearDown()
 {
     HideAll();
 
-    // If you truly want to destroy them, RemoveFromParent and null them.
-    // Usually unnecessary; a menu screen lifetime is short.
     auto Destroy = [](UBaseScreen*& W)
         {
             if (W)
@@ -289,6 +276,7 @@ void UMenuScreen::TearDown()
     Destroy(reinterpret_cast<UBaseScreen*&>(MsnEditNavDlg));
 
     Destroy(reinterpret_cast<UBaseScreen*&>(LoadDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(CmpLoadDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(TacRefDlg));
 
     Destroy(reinterpret_cast<UBaseScreen*&>(OptionsScreen));
@@ -297,24 +285,16 @@ void UMenuScreen::TearDown()
     bIsShown = false;
 }
 
-// ------------------------------------------------------------
-
 void UMenuScreen::ExecFrame(double DeltaTime)
 {
     (void)DeltaTime;
 }
 
-// ------------------------------------------------------------
-// CloseTopmost
-// ------------------------------------------------------------
-
 bool UMenuScreen::CloseTopmost()
 {
-    // Mission editor overlays (top-most first)
     if (MsnElemDlg && MsnElemDlg->GetVisibility() == ESlateVisibility::Visible) { HideMsnElemDlg(); return true; }
     if (MsnEventDlg && MsnEventDlg->GetVisibility() == ESlateVisibility::Visible) { HideMsnEventDlg(); return true; }
 
-    // Options hub
     if (OptionsScreen && OptionsScreen->GetVisibility() == ESlateVisibility::Visible)
     {
         ReturnFromOptions();
@@ -336,37 +316,28 @@ bool UMenuScreen::CloseTopmost()
     return false;
 }
 
-// ------------------------------------------------------------
-
-/* --------------------------------------------------------------------
-   Show
-   -------------------------------------------------------------------- */
-
 void UMenuScreen::Show()
 {
-   UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] UMenuScreen::Show()"));
-   if (bIsShown)
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] UMenuScreen::Show()"));
+    if (bIsShown)
         return;
 
     bool bHasSaveNow = false;
 
     if (UGameInstance* GI = GetGameInstance())
     {
-        if (UStarshatterPlayerSubsystem* PlayerSS =
-            GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+        if (UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
         {
             UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] UStarshatterPlayerSubsystem"));
-           
-           if (!PlayerSS->HasLoaded())
+
+            if (!PlayerSS->HasLoaded())
             {
                 PlayerSS->LoadFromBoot();
             }
 
             bHasSaveNow = PlayerSS->DoesSaveExistNow();
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[MenuScreen] SaveExistsNow=%d"),
-                bHasSaveNow ? 1 : 0);
+            UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] SaveExistsNow=%d"), bHasSaveNow ? 1 : 0);
         }
     }
 
@@ -391,13 +362,8 @@ void UMenuScreen::Hide()
     bIsShown = false;
 }
 
-// ------------------------------------------------------------
-// Show* routing
-// ------------------------------------------------------------
-
 void UMenuScreen::ShowMenuDlg()
 {
-    // Optional: single-dialog policy
     HideAll();
 
     if (!MenuDlgClass)
@@ -413,7 +379,6 @@ void UMenuScreen::ShowMenuDlg()
         return;
     }
 
-    // Lazy create once
     if (!MenuDlg)
     {
         MenuDlg = CreateWidget<UMenuDlg>(PC, MenuDlgClass);
@@ -424,15 +389,13 @@ void UMenuScreen::ShowMenuDlg()
         }
 
         MenuDlg->Manager = this;
-        MenuDlg->AddToViewport((int32) EMenuZOrder::Z_MENU_BASE);                    // added once; Z handled below
+        MenuDlg->AddToViewport((int32)EMenuZOrder::Z_MENU_BASE);
         MenuDlg->SetDialogInputEnabled(false);
         MenuDlg->SetVisibility(ESlateVisibility::Hidden);
     }
 
-    // Always re-assert manager in case of re-instancing
     MenuDlg->Manager = this;
 
-    // Bring to front (no SetZOrderInViewport dependency)
     ++ZCounter;
     if (MenuDlg->IsInViewport())
         MenuDlg->RemoveFromParent();
@@ -445,7 +408,6 @@ void UMenuScreen::ShowMenuDlg()
 
     CurrentDialog = MenuDlg;
 }
-
 
 void UMenuScreen::ShowCampaignSelectDlg()
 {
@@ -668,7 +630,6 @@ void UMenuScreen::ShowMsnElemDlg()
     EnsureDialog<UMissionElementDlg>(MsnElemDlgClass, MsnElemDlg);
     if (!MsnElemDlg) return;
 
-    // Keep editor + nav visible behind it (non-topmost)
     if (MsnEditDlg && MsnEditDlg->GetVisibility() == ESlateVisibility::Visible)
         ShowDialog(MsnEditDlg, false);
 
@@ -738,11 +699,9 @@ bool UMenuScreen::IsNavShown() const
 
 void UMenuScreen::ShowFirstTimeDlg()
 {
-    // Ensure Menu exists
     if (!MenuDlg)
         ShowMenuDlg();
 
-    // Ensure FirstTimeDlg exists
     if (!FirstTimeDlg && FirstTimeDlgClass)
     {
         FirstTimeDlg = CreateWidget<UFirstTimeDlg>(GetOwningPlayer(), FirstTimeDlgClass);
@@ -753,15 +712,9 @@ void UMenuScreen::ShowFirstTimeDlg()
         FirstTimeDlg->AddToViewport((int32)EMenuZOrder::Z_MODAL);
     }
 
-    // ----------------------------------------------------
-    // Z-ORDER + INPUT CONTROL
-    // ----------------------------------------------------
-
-    // Menu stays visible but cannot receive input
     ShowDialog(MenuDlg, (int32)EMenuZOrder::Z_MENU_BASE);
     MenuDlg->SetDialogInputEnabled(false);
 
-    // FirstTimeDlg is modal and interactive
     ShowDialog(FirstTimeDlg, (int32)EMenuZOrder::Z_MODAL);
     FirstTimeDlg->SetDialogInputEnabled(true);
 
@@ -800,7 +753,6 @@ void UMenuScreen::ShowPlayerDlg()
     if (PlayerDlg->IsInViewport())
         PlayerDlg->RemoveFromParent();
 
- 
     PlayerDlg->AddToViewport(200);
 
     PlayerDlg->SetVisibility(ESlateVisibility::Visible);
@@ -811,9 +763,6 @@ void UMenuScreen::ShowPlayerDlg()
     CurrentDialog = PlayerDlg;
 
     ApplyUIFocus(PC, PlayerDlg);
-
-    // TEMP: comment this out if you still see "nothing shows"
-    // PlayerDlg->ShowDlg();
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowPlayerDlg: SHOWN InViewport=%d Vis=%d"),
         PlayerDlg->IsInViewport() ? 1 : 0,
@@ -852,7 +801,6 @@ void UMenuScreen::ShowTacRefDlg()
     if (TacRefDlg->IsInViewport())
         TacRefDlg->RemoveFromParent();
 
-    // Pick a Z-order consistent with your other screens:
     TacRefDlg->AddToViewport(200);
 
     TacRefDlg->SetVisibility(ESlateVisibility::Visible);
@@ -864,7 +812,6 @@ void UMenuScreen::ShowTacRefDlg()
 
     ApplyUIFocus(PC, TacRefDlg);
 
-    // If your dialogs require a manual "ShowDlg" or "Show" call:
     TacRefDlg->Show();
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowTacRefDlg: SHOWN InViewport=%d Vis=%d"),
@@ -889,11 +836,9 @@ void UMenuScreen::ShowExitDlg()
     MenuDlg->SetMenuManager(this);
     ExitDlg->SetMenuManager(this);
 
-    // Menu behind, inert:
     MenuDlg->SetDialogInputEnabled(false);
     ShowDialog(MenuDlg, 100);
 
-    // ExitDlg on top, interactive:
     ExitDlg->SetDialogInputEnabled(true);
     ShowDialog(ExitDlg, 200);
 }
@@ -916,7 +861,7 @@ void UMenuScreen::ShowLoadDlg()
     EnsureDialog<ULoadDlg>(LoadDlgClass, LoadDlg);
     if (!LoadDlg) return;
 
-    ShowDialog(LoadDlg, true);
+    ShowDialog(LoadDlg, 250);
 }
 
 void UMenuScreen::HideLoadDlg()
@@ -924,20 +869,68 @@ void UMenuScreen::HideLoadDlg()
     HideDialog(LoadDlg);
 }
 
-// ------------------------------------------------------------
-// Options hub
-// ------------------------------------------------------------
+void UMenuScreen::ShowCmpLoadDlg()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpLoadDlg: BEGIN"));
+
+    if (!CmpLoadDlgClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpLoadDlg: CmpLoadDlgClass is NULL"));
+        return;
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpLoadDlg: OwningPlayer is NULL"));
+        return;
+    }
+
+    EnsureDialog<UCmpLoadDlg>(CmpLoadDlgClass, CmpLoadDlg);
+    if (!CmpLoadDlg)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpLoadDlg: EnsureDialog failed (CmpLoadDlg is NULL)"));
+        return;
+    }
+
+    HideAll();
+
+    CmpLoadDlg->SetMenuManager(this);
+
+    if (CmpLoadDlg->IsInViewport())
+    {
+        CmpLoadDlg->RemoveFromParent();
+    }
+
+    CmpLoadDlg->AddToViewport(250);
+    CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
+    CmpLoadDlg->SetIsEnabled(true);
+    CmpLoadDlg->SetIsFocusable(true);
+    CmpLoadDlg->SetDialogInputEnabled(true);
+
+    CurrentDialog = CmpLoadDlg;
+
+    ApplyUIFocus(PC, CmpLoadDlg);
+
+    CmpLoadDlg->Show();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpLoadDlg: SHOWN InViewport=%d Vis=%d"),
+        CmpLoadDlg->IsInViewport() ? 1 : 0,
+        (int32)CmpLoadDlg->GetVisibility());
+}
+
+void UMenuScreen::HideCmpLoadDlg()
+{
+    HideDialog(CmpLoadDlg);
+}
 
 void UMenuScreen::ShowOptionsScreen()
 {
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowOptionsScreen: BEGIN"));
 
-    // DO NOT HideAll yet — if creation fails you'll blank the UI.
-
     if (!OptionsScreenClass)
     {
         UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowOptionsScreen: OptionsScreenClass is NULL"));
-        // Keep whatever is currently visible:
         return;
     }
 
@@ -955,16 +948,14 @@ void UMenuScreen::ShowOptionsScreen()
         return;
     }
 
-    // Now that we know we have a valid widget, we can hide everything else:
     HideAll();
 
     OptionsScreen->SetMenuManager(this);
 
-    // HARD FORCE visibility + viewport, bypass any weird state:
     if (OptionsScreen->IsInViewport())
         OptionsScreen->RemoveFromParent();
 
-    OptionsScreen->AddToViewport(200);                 // force top
+    OptionsScreen->AddToViewport(200);
     OptionsScreen->SetVisibility(ESlateVisibility::Visible);
     OptionsScreen->SetIsEnabled(true);
     OptionsScreen->SetIsFocusable(true);
@@ -992,10 +983,6 @@ void UMenuScreen::ReturnFromPlayerDlg()
     ShowMenuDlg();
 }
 
-// ------------------------------------------------------------
-// BaseScreen unified key handling targets
-// ------------------------------------------------------------
-
 void UMenuScreen::HandleAccept()
 {
     if (CurrentDialog && CurrentDialog != this)
@@ -1014,6 +1001,3 @@ void UMenuScreen::HandleCancel()
 
     Super::HandleCancel();
 }
-
-
-

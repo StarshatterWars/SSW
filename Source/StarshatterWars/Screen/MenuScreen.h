@@ -30,6 +30,7 @@ class UMissionEventDlg;
 class UMissionEditorNavDlg;
 
 class ULoadDlg;
+class UCmpLoadDlg;
 class UTacRefDlg;
 
 class UOptionsScreen;
@@ -42,7 +43,7 @@ class STARSHATTERWARS_API UMenuScreen : public UBaseScreen
     GENERATED_BODY()
 
 public:
-    
+
     void Initialize(UGameInstance* InGI);
     UMenuScreen(const FObjectInitializer& ObjectInitializer);
 
@@ -99,6 +100,9 @@ public:
     void ShowLoadDlg();
     void HideLoadDlg();
 
+    void ShowCmpLoadDlg();
+    void HideCmpLoadDlg();
+
     // Options hub
     void ShowOptionsScreen();
     void HideOptionsScreen();
@@ -114,6 +118,7 @@ public:
 
     UMenuDlg* GetMenuDlg() const { return MenuDlg; }
     ULoadDlg* GetLoadDlg() const { return LoadDlg; }
+    UCmpLoadDlg* GetCmpLoadDlg() const { return CmpLoadDlg; }
 
     // ------------------------------------------------------------
     // Close / back navigation
@@ -187,6 +192,9 @@ protected:
     TSubclassOf<ULoadDlg> LoadDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UCmpLoadDlg> CmpLoadDlgClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UTacRefDlg> TacRefDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
@@ -216,7 +224,6 @@ protected:
             return nullptr;
         }
 
-        // Typed cast (safe runtime check):
         TSubclassOf<TWidget> Typed = Raw.Get();
         if (!Typed)
         {
@@ -284,12 +291,13 @@ protected:
     TObjectPtr<ULoadDlg> LoadDlg;
 
     UPROPERTY()
+    TObjectPtr<UCmpLoadDlg> CmpLoadDlg;
+
+    UPROPERTY()
     TObjectPtr<UTacRefDlg> TacRefDlg;
 
     UPROPERTY()
     TObjectPtr<UOptionsScreen> OptionsScreen;
-
-
 
 protected:
     // ------------------------------------------------------------
@@ -301,10 +309,4 @@ protected:
 
     int32 ZCounter = 0;
     bool  bIsShown = false;
-
-    //TSubclassOf<UUserWidget> MenuScreenWidgetClass;
-    //TSubclassOf<UUserWidget> FirstTimeDlgWidgetClass;
-    //TSubclassOf<UUserWidget> QuitDlgWidgetClass;
 };
-
-

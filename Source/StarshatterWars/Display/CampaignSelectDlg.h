@@ -34,6 +34,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SSWGameInstance.h"
 #include "TimerSubsystem.h"
+#include "TimerManager.h"
 
 #include "CampaignSelectDlg.generated.h"
 
@@ -114,6 +115,14 @@ protected:
     // ----------------------------------------------------------------
     virtual void BindFormWidgets() override;
     virtual FString GetLegacyFormText() const override;
+
+protected:
+    void StartSelectedCampaignFlow(bool bRestart);
+    void FinishSelectedCampaignFlow(bool bRestart);
+    void TryFinishCampaignLoadTransition();
+
+protected:
+    FTimerHandle CampaignLoadFinishTimer;
 
 protected:
     // ----------------------------------------------------------------

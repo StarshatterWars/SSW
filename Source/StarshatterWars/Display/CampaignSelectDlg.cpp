@@ -52,6 +52,9 @@
 #include "StarshatterUIStyleSubsystem.h"
 
 #include "CampaignSave.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "CmpLoadDlg.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
@@ -1212,5 +1215,205 @@ void UCampaignSelectDlg::ShowDlg()
 void UCampaignSelectDlg::HideDlg()
 {
     SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
+{
+    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
+        ? CampaignRowNamesByOptionIndex[Selected]
+        : NAME_None;
+
+    if (PickedRowName.IsNone())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Campaign] StartSelectedCampaignFlow: PickedRowName is None"));
+        return;
+    }
+
+    if (!manager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Campaign] StartSelectedCampaignFlow: manager is null"));
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Campaign] StartSelectedCampaignFlow: World is null"));
+        return;
+    }
+
+    // Show the campaign load screen first so it can paint.
+    manager->ShowCmpLoadDlg();
+
+    // Run the actual campaign startup work on the next tick.
+    World->GetTimerManager().SetTimerForNextTick(
+        FTimerDelegate::CreateUObject(this, &UCampaignSelectDlg::FinishSelectedCampaignFlow, bRestart));
+}
+
+void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
+{
+    UGameInstance* GIBase = GetGameInstance();
+    if (!GIBase)
+        return;
+
+    UStarshatterPlayerSubsystem* PlayerSS = GIBase->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!PlayerSS)
+        return;
+
+    USSWGameInstance* GI = Cast<USSWGameInstance>(GIBase);
+    if (!GI)
+        return;
+
+    UStarshatterGameDataSubsystem* DataSubsystem =
+        GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
+    if (!DataSubsystem)
+        return;
+
+    if (PickedRowName.IsNone())
+        return;
+
+    const int32 CampaignIndex1Based =
+        CampaignIndexByOptionIndex.IsValidIndex(Selected)
+        ? CampaignIndexByOptionIndex[Selected]
+        : (Selected + 1);
+
+    const FS_Campaign* CampaignData =
+        DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
+
+    if (!CampaignData)
+        return;
+
+    if (!Campaign::SelectFromData(*CampaignData))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[Campaign] Failed to activate runtime campaign '%s'"),
+            *CampaignData->Name);
+        return;
+    }
+
+    Campaign* CampaignPtr = Campaign::GetCampaign();
+    if (CampaignPtr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Campaign] %s campaign"),
+            bRestart ? TEXT("Restarting") : TEXT("Starting"));
+        CampaignPtr->Start();
+    }
+
+    DataSubsystem->CampaignIndex = CampaignIndex1Based - 1;
+    DataSubsystem->SelectedCampaignRowName = PickedRowName;
+
+    UE_LOG(LogTemp, Warning, TEXT("[Campaign] Building combat roster from data tables"));
+    DataSubsystem->BuildCombatRosterFromDataTables();
+
+    GI->SelectedCampaignDisplayName =
+        CampaignSelectDD ? CampaignSelectDD->GetSelectedOption() : TEXT("");
+
+    GI->SelectedCampaignIndex = CampaignIndex1Based;
+    GI->SelectedCampaignRowName = PickedRowName;
+
+    if (!PlayerSS->HasLoaded())
+    {
+        PlayerSS->LoadPlayer();
+    }
+
+    {
+        FS_PlayerGameInfo& PlayerInfo = PlayerSS->GetMutablePlayerInfo();
+        PlayerInfo.Campaign = CampaignIndex1Based;
+        PlayerInfo.CampaignRowName = PickedRowName;
+        PlayerSS->SavePlayer(true);
+    }
+
+    if (bRestart)
+    {
+        GI->CreateNewCampaignSave(
+            GI->SelectedCampaignIndex,
+            GI->SelectedCampaignRowName,
+            GI->SelectedCampaignDisplayName
+        );
+    }
+    else
+    {
+        const bool bHasSave = DoesSelectedCampaignSaveExist();
+
+        if (bHasSave)
+        {
+            GI->LoadOrCreateSelectedCampaignSave();
+        }
+        else
+        {
+            GI->CreateNewCampaignSave(
+                GI->SelectedCampaignIndex,
+                GI->SelectedCampaignRowName,
+                GI->SelectedCampaignDisplayName
+            );
+        }
+
+        if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
+        {
+            Timer->SetCampaignSave(GI->CampaignSave);
+
+            if (!bHasSave)
+            {
+                Timer->RestartCampaignClock(true);
+            }
+        }
+    }
+
+    if (bRestart)
+    {
+        if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
+        {
+            Timer->SetCampaignSave(GI->CampaignSave);
+            Timer->RestartCampaignClock(true);
+        }
+    }
+
+    Mouse::Show(false);
+
+    if (stars)
+        stars->SetGameMode(EGameMode::CLOD);
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        manager->ShowOperationsDlg();
+        return;
+    }
+
+    // Respect the CmpLoadDlg minimum display time.
+    World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
+    World->GetTimerManager().SetTimer(
+        CampaignLoadFinishTimer,
+        this,
+        &UCampaignSelectDlg::TryFinishCampaignLoadTransition,
+        0.05f,
+        true);
+}
+
+void UCampaignSelectDlg::TryFinishCampaignLoadTransition()
+{
+    if (!manager)
+    {
+        return;
+    }
+
+    UCmpLoadDlg* LoadDlg = manager->GetCmpLoadDlg();
+    if (!LoadDlg)
+    {
+        manager->ShowOperationsDlg();
+        return;
+    }
+
+    if (!LoadDlg->IsDone())
+    {
+        return;
+    }
+
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
+    }
+
+    manager->ShowOperationsDlg();
 }
 
