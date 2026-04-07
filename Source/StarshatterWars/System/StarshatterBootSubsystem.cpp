@@ -159,7 +159,7 @@ void UStarshatterBootSubsystem::BootGalaxyLoader(const FBootContext& Ctx)
     if (!Ctx.EnvironmentSS)
         return;
 
-    Ctx.EnvironmentSS->LoadAll(true);
+    Ctx.EnvironmentSS->LoadAll(false);
 }
 
 void UStarshatterBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
