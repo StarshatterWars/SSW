@@ -357,6 +357,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 	TArray<FS_OOBStarbase> LocalStarbases;
 
 	TArray<FS_OOBCivilian> LocalCivilians;
+	TArray<FS_OOBTransport> LocalTransports;
+	TArray<FS_OOBInfrastructure> LocalInfrastructure;
 	TArray<FS_OOBMinefield> LocalMinefields;
 
 	FS_OOBForce NewForce;

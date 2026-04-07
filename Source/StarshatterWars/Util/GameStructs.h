@@ -391,6 +391,7 @@ enum class ECOMBATUNIT_TYPE : uint8
 	BATTERY				UMETA(DisplayName = "Battery"),
 	STATION				UMETA(DisplayName = "Station"),
 	STARBASE			UMETA(DisplayName = "Starbase"),
+	TRANSPORT			UMETA(DisplayName = "Transport"),
 };
 
 UENUM(BlueprintType)
@@ -3002,6 +3003,74 @@ struct FS_OOBStationUnit : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
+struct FS_OOBInfrastructureUnit : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Design;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATUNIT_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Count;
+
+	FS_OOBInfrastructureUnit() {
+		Name = "";
+		Region = "";
+		ParentId = 0;
+		Count = -1;
+		Type = ECOMBATUNIT_TYPE::NONE;
+		ParentType = ECOMBATGROUP_TYPE::INFRASTRUCTURE;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FS_OOBTransportUnit : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Design;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATUNIT_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Count;
+
+	FS_OOBTransportUnit() {
+		Name = "";
+		Region = "";
+		ParentId = 0;
+		Count = -1;
+		Type = ECOMBATUNIT_TYPE::NONE;
+		ParentType = ECOMBATGROUP_TYPE::TRANSPORT;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FS_OOBStarbaseUnit : public FTableRowBase {
 	GENERATED_BODY()
 
@@ -3034,6 +3103,7 @@ struct FS_OOBStarbaseUnit : public FTableRowBase {
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
+
 USTRUCT(BlueprintType)
 struct FS_OOBMinefieldUnit : public FTableRowBase {
 	GENERATED_BODY()
@@ -3102,43 +3172,7 @@ struct FS_OOBFighterUnit : public FTableRowBase {
 	}
 };
 
-USTRUCT(BlueprintType)
-struct FS_OOBCivilian : public FTableRowBase {
-	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Id;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EEMPIRE_NAME Empire;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Iff;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector Location = FVector::Zero();
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Region;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int ParentId;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EINTEL_TYPE Intel;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	ECOMBATGROUP_TYPE Type;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	ECOMBATGROUP_TYPE ParentType;
-	
-	FS_OOBCivilian() {
-		Id = 0;
-		Iff = -1;
-		ParentId = 0;
-		Name = "";
-		Region = "";
-		Intel = EINTEL_TYPE::KNOWN;
-		Type = ECOMBATGROUP_TYPE::CIVILIAN;
-		ParentType = ECOMBATGROUP_TYPE::FORCE;
-		Empire = EEMPIRE_NAME::Unknown;
-	}
-};
 USTRUCT(BlueprintType)
 struct FS_OOBLanding : public FTableRowBase {
 	GENERATED_BODY()
@@ -3347,6 +3381,7 @@ struct FS_OOBStarbase : public FTableRowBase {
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
+
 USTRUCT(BlueprintType)
 struct FS_OOBStation : public FTableRowBase {
 	GENERATED_BODY()
@@ -3431,6 +3466,128 @@ struct FS_OOBBattery : public FTableRowBase {
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::BATTERY;
 		ParentType = ECOMBATGROUP_TYPE::BATTALION;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FS_OOBInfrastructure : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBInfrastructureUnit> Unit;
+
+	FS_OOBInfrastructure() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::TRANSPORT;
+		ParentType = ECOMBATGROUP_TYPE::CIVILIAN;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+USTRUCT(BlueprintType)
+struct FS_OOBTransport : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBStation> Station;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBStarbase> Starbase;
+
+	FS_OOBTransport() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::TRANSPORT;
+		ParentType = ECOMBATGROUP_TYPE::CIVILIAN;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+USTRUCT(BlueprintType)
+struct FS_OOBCivilian : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBTransport> Transport;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBInfrastructure> Infrastructure;
+
+	FS_OOBCivilian() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::CIVILIAN;
+		ParentType = ECOMBATGROUP_TYPE::FORCE;
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
