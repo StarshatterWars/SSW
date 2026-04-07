@@ -400,6 +400,8 @@ protected:
     void AddBattalionToForce(CombatGroup* ForceGroup, const FS_OOBBattalion& BattalionRow);
     void AddCivilianToForce(CombatGroup* ForceGroup, const FS_OOBCivilian& CivilianRow);
 
+    void AddTransportToForce(CombatGroup* ForceGroup, const FS_OOBTransport& TransportRow);
+    void AddInfrastructureToForce(CombatGroup* ForceGroup, const FS_OOBInfrastructure& InfrastructureRow);
     void AddWingToCarrier(CombatGroup* CarrierGroup, const FS_OOBWing& WingRow);
     void AddInterceptSquadronToWing(CombatGroup* WingGroup, const FS_OOBIntercept& Row);
     void AddAttackSquadronToWing(CombatGroup* WingGroup, const FS_OOBAttack& Row);
@@ -408,7 +410,9 @@ protected:
 
     void AddBatteryToBattalion(CombatGroup* BattalionGroup, const FS_OOBBattery& Row);
     void AddStationToBattalion(CombatGroup* BattalionGroup, const FS_OOBStation& Row);
+    void AddStarbaseToTransport(CombatGroup* TransportGroup, const FS_OOBStarbase& Row);
     void AddStarbaseToBattalion(CombatGroup* BattalionGroup, const FS_OOBStarbase& Row);
+    void AddStationToTransport(CombatGroup* TransportGroup, const FS_OOBStation& Row);
     void AddMinefieldToFleet(CombatGroup* FleetGroup, const FS_OOBMinefield& Row);
 
     void AddUnitsToCombatGroup(CombatGroup* Parent, const TArray<FS_OOBUnit>& Units);

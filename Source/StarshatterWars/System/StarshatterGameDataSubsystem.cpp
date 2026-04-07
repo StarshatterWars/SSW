@@ -37,6 +37,7 @@
 #include "ShipDesign.h"
 #include "PlayerData.h"
 #include "CombatGroupRegistry.h"
+#include "GameStructs.h"
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
@@ -6197,6 +6198,15 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceTree(const FS_OOBFor
 		AddCivilianToForce(ForceGroup, CivilianRow);
 	}
 
+	for (const FS_OOBInfrastructure& InfrastructureRow : ForceRow.Infrastructure)
+	{
+		AddInfrastructureToForce(ForceGroup, InfrastructureRow);
+	}
+
+	for (const FS_OOBTransport& TransportRow : ForceRow.Transport)
+	{
+		AddTransportToForce(ForceGroup, TransportRow);
+	}
 	return ForceGroup;
 }
 
@@ -6405,7 +6415,7 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 		CivilianRow.Id,
 		TCHAR_TO_ANSI(*CivilianRow.Name),
 		CivilianRow.Iff,
-		Intel::KNOWN,
+		(int) CivilianRow.Intel,
 		CivilianRow.Empire,
 		ForceGroup);
 
@@ -6415,6 +6425,64 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 	}
 
 	CivilianGroup->SetRegion(TCHAR_TO_ANSI(*CivilianRow.Region));
+}
+
+void UStarshatterGameDataSubsystem::AddTransportToForce(CombatGroup* ForceGroup, const FS_OOBTransport& TransportRow)
+{
+	if (!ForceGroup)
+	{
+		return;
+	}
+
+	CombatGroup* TransportGroup = new CombatGroup(
+		TransportRow.Type,
+		TransportRow.Id,
+		TCHAR_TO_ANSI(*TransportRow.Name),
+		TransportRow.Iff,
+		(int) TransportRow.Intel,
+		TransportRow.Empire,
+		ForceGroup);
+
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	TransportGroup->SetRegion(TCHAR_TO_ANSI(*TransportRow.Region));
+
+	for (const FS_OOBStation& StationRow : TransportRow.Station)
+	{
+		AddStationToTransport(TransportGroup, StationRow);
+	}
+
+	for (const FS_OOBStarbase& StarbaseRow : TransportRow.Starbase)
+	{
+		AddStarbaseToTransport(TransportGroup, StarbaseRow);
+	}
+}
+
+void UStarshatterGameDataSubsystem::AddInfrastructureToForce(CombatGroup* ForceGroup, const FS_OOBInfrastructure& InfrastructureRow)
+{
+	if (!ForceGroup)
+	{
+		return;
+	}
+
+	CombatGroup* InfrastructureGroup = new CombatGroup(
+		InfrastructureRow.Type,
+		InfrastructureRow.Id,
+		TCHAR_TO_ANSI(*InfrastructureRow.Name),
+		InfrastructureRow.Iff,
+		(int) InfrastructureRow.Intel,
+		InfrastructureRow.Empire,
+		ForceGroup);
+
+	if (!InfrastructureGroup)
+	{
+		return;
+	}
+
+	InfrastructureGroup->SetRegion(TCHAR_TO_ANSI(*InfrastructureRow.Region));
 }
 
 void UStarshatterGameDataSubsystem::AddWingToCarrier(
@@ -6431,7 +6499,7 @@ void UStarshatterGameDataSubsystem::AddWingToCarrier(
 		WingRow.Id,
 		TCHAR_TO_ANSI(*WingRow.Name),
 		WingRow.Iff,
-		Intel::KNOWN,
+		(int) WingRow.Intel,
 		WingRow.Empire,
 		CarrierGroup);
 
@@ -6478,7 +6546,7 @@ void UStarshatterGameDataSubsystem::AddInterceptSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6506,7 +6574,7 @@ void UStarshatterGameDataSubsystem::AddAttackSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6534,7 +6602,7 @@ void UStarshatterGameDataSubsystem::AddFighterSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6562,7 +6630,7 @@ void UStarshatterGameDataSubsystem::AddLandingSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6590,7 +6658,7 @@ void UStarshatterGameDataSubsystem::AddBatteryToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6618,7 +6686,7 @@ void UStarshatterGameDataSubsystem::AddStationToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int)Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6646,9 +6714,65 @@ void UStarshatterGameDataSubsystem::AddStarbaseToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		BattalionGroup);
+
+	if (!StarbaseGroup)
+	{
+		return;
+	}
+
+	StarbaseGroup->SetLocation(Row.Location);
+	StarbaseGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+	AddUnitsToCombatGroup(StarbaseGroup, Row.Unit);
+}
+
+void UStarshatterGameDataSubsystem::AddStationToTransport(
+	CombatGroup* TransportGroup,
+	const FS_OOBStation& Row)
+{
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	CombatGroup* StationGroup = new CombatGroup(
+		ECOMBATGROUP_TYPE::STATION,
+		Row.Id,
+		TCHAR_TO_ANSI(*Row.Name),
+		Row.Iff,
+		(int)Row.Intel,
+		Row.Empire,
+		TransportGroup);
+
+	if (!StationGroup)
+	{
+		return;
+	}
+
+	StationGroup->SetLocation(Row.Location);
+	StationGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+	AddUnitsToCombatGroup(StationGroup, Row.Unit);
+}
+
+void UStarshatterGameDataSubsystem::AddStarbaseToTransport(
+	CombatGroup* TransportGroup,
+	const FS_OOBStarbase& Row)
+{
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	CombatGroup* StarbaseGroup = new CombatGroup(
+		ECOMBATGROUP_TYPE::STARBASE,
+		Row.Id,
+		TCHAR_TO_ANSI(*Row.Name),
+		Row.Iff,
+		(int)Row.Intel,
+		Row.Empire,
+		TransportGroup);
 
 	if (!StarbaseGroup)
 	{
@@ -6674,7 +6798,7 @@ void UStarshatterGameDataSubsystem::AddMinefieldToFleet(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		FleetGroup);
 
