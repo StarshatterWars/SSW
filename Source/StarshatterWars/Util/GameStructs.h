@@ -3574,10 +3574,6 @@ struct FS_OOBCivilian : public FTableRowBase {
 	ECOMBATGROUP_TYPE Type;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE ParentType;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray <FS_OOBTransport> Transport;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray <FS_OOBInfrastructure> Infrastructure;
 
 	FS_OOBCivilian() {
 		Id = 0;
@@ -3924,6 +3920,10 @@ struct FS_OOBForce : public FTableRowBase {
 	TArray<FS_OOBBattalion> Battalion;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_OOBCivilian> Civilian;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray<FS_OOBTransport> Transport;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray<FS_OOBInfrastructure> Infrastructure;
 	
 	FS_OOBForce() {
 		

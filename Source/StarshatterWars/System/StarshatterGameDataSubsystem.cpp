@@ -358,7 +358,7 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 	TArray<FS_OOBCivilian> LocalCivilians;
 	TArray<FS_OOBTransport> LocalTransports;
-	TArray<FS_OOBInfrastructure> LocalInfrastructure;
+	TArray<FS_OOBInfrastructure> LocalInfrastructures;
 	TArray<FS_OOBMinefield> LocalMinefields;
 
 	FS_OOBForce NewForce;
@@ -560,6 +560,33 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			}
 
 			// -------------------------------------------------
+			// Build transport children for THIS force
+			// -------------------------------------------------
+			for (FS_OOBTransport& Transport : LocalTransports)
+			{
+				Transport.Station.Reset();
+				Transport.Starbase.Reset();
+
+				for (const FS_OOBStation& Station : LocalStations)
+				{
+					if (Station.ParentId == Transport.Id &&
+						Station.Empire == Transport.Empire)
+					{
+						Transport.Station.Add(Station);
+					}
+				}
+
+				for (const FS_OOBStarbase& Starbase : LocalStarbases)
+				{
+					if (Starbase.ParentId == Transport.Id &&
+						Starbase.Empire == Transport.Empire)
+					{
+						Transport.Starbase.Add(Starbase);
+					}
+				}
+			}
+
+			// -------------------------------------------------
 			// Write fully-built data into the force row
 			// -------------------------------------------------
 			ForceRow = OrderOfBattleDataTable->FindRow<FS_OOBForce>(
@@ -574,13 +601,17 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			ForceRow->Fleet = LocalFleets;
 			ForceRow->Battalion = LocalBattalions;
 			ForceRow->Civilian = LocalCivilians;
+			ForceRow->Transport = LocalTransports;
+			ForceRow->Infrastructure = LocalInfrastructures;
 
 			UE_LOG(LogTemp, Log,
-				TEXT("[OrderOfBattle] Finalized OOB Force '%s': Fleets=%d Battalions=%d Civilians=%d"),
+				TEXT("[OrderOfBattle] Finalized OOB Force '%s': Fleets=%d Battalions=%d Civilians=%d Transports=%d Infrastructure=%d"),
 				*CurrentForceRowName.ToString(),
 				LocalFleets.Num(),
 				LocalBattalions.Num(),
-				LocalCivilians.Num());
+				LocalCivilians.Num(),
+				LocalTransports.Num(),
+				LocalInfrastructures.Num());
 		};
 
 	// ---------------------------------------------
@@ -611,6 +642,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			LocalStarbases.Empty();
 
 			LocalCivilians.Empty();
+			LocalTransports.Empty();
+			LocalInfrastructures.Empty();
 			LocalMinefields.Empty();
 
 			CurrentForceId = Item.Id;
@@ -685,6 +718,70 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				LocalBattalions.Add(NewBattalion);
 			}
 
+			continue;
+		}
+
+		// ---------------------------------------------
+		// Transport
+		// ---------------------------------------------
+		if (Item.Type == ECOMBATGROUP_TYPE::TRANSPORT)
+		{
+			FS_OOBTransport NewTransport;
+			NewTransport.Id = Item.Id;
+			NewTransport.ParentId = Item.ParentId;
+			NewTransport.Name = Item.DisplayName;
+			NewTransport.Iff = Item.Iff;
+			NewTransport.Region = Item.Region;
+			NewTransport.Location = Item.Location;
+			NewTransport.Empire = Item.EmpireId;
+			NewTransport.Intel = Item.Intel;
+			NewTransport.Type = Item.Type;
+			NewTransport.ParentType = Item.ParentType;
+
+			LocalTransports.Add(NewTransport);
+			continue;
+		}
+
+		// ---------------------------------------------
+		// Infrastructure
+		// ---------------------------------------------
+		if (Item.Type == ECOMBATGROUP_TYPE::INFRASTRUCTURE)
+		{
+			FS_OOBInfrastructure NewInfrastructure;
+			NewInfrastructure.Id = Item.Id;
+			NewInfrastructure.ParentId = Item.ParentId;
+			NewInfrastructure.Name = Item.DisplayName;
+			NewInfrastructure.Iff = Item.Iff;
+			NewInfrastructure.Region = Item.Region;
+			NewInfrastructure.Location = Item.Location;
+			NewInfrastructure.Empire = Item.EmpireId;
+			NewInfrastructure.Intel = Item.Intel;
+			NewInfrastructure.Type = Item.Type;
+			NewInfrastructure.ParentType = Item.ParentType;
+
+			NewInfrastructure.Unit.SetNum(Item.Unit.Num());
+
+			int32 UnitIndex = 0;
+			for (const auto& UnitItem : Item.Unit)
+			{
+				if (!NewInfrastructure.Unit.IsValidIndex(UnitIndex))
+				{
+					break;
+				}
+
+				NewInfrastructure.Unit[UnitIndex].Name = UnitItem.UnitName;
+				NewInfrastructure.Unit[UnitIndex].Count = UnitItem.UnitCount;
+				NewInfrastructure.Unit[UnitIndex].Region = Item.Region;
+				NewInfrastructure.Unit[UnitIndex].Location = Item.Location;
+				NewInfrastructure.Unit[UnitIndex].ParentId = Item.ParentId;
+				NewInfrastructure.Unit[UnitIndex].Empire = Item.EmpireId;
+				NewInfrastructure.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::NONE;
+				NewInfrastructure.Unit[UnitIndex].ParentType = Item.Type;
+				NewInfrastructure.Unit[UnitIndex].Design = UnitItem.UnitDesign;
+				++UnitIndex;
+			}
+
+			LocalInfrastructures.Add(NewInfrastructure);
 			continue;
 		}
 
@@ -1212,7 +1309,6 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 	FinalizeCurrentForce();
 }
 
-
 void UStarshatterGameDataSubsystem::ExportDataToCSV(UDataTable* DataTable, const FString& FileName)
 {
 	if (!DataTable)
@@ -1291,12 +1387,12 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	//InitializeCampaignData();
 	ReadCampaignData();
 	
-	InitializeCombatRoster();
+	//InitializeCombatRoster();
 	ReadCombatRosterData();
 
 	ReadCombatants();
 
-	InitializeOrderOfBattleTable();
+	//InitializeOrderOfBattleTable();
 	ReadOrderOfBattleData();
 	BuildCombatRosterFromOrderOfBattle();	
 	
