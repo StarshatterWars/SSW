@@ -233,7 +233,7 @@ group: {
     regnum: "308",
     },
 
-  unit: {
+  unit: { 
     name:   "Baionne",
     type:   "Frigate",
     design: "Baikal",
@@ -263,7 +263,7 @@ group: {
   unit: {
     name:   "Minefield A",
     type:   "MINE",
-    design: "BlockadeMine",
+    design: "Blockade Mine",
     count:  6,
     },
 }
@@ -283,7 +283,7 @@ group: {
   unit: {
     name:   "Minefield B",
     type:   "MINE",
-    design: "BlockadeMine",
+    design: "Blockade Mine",
     count:  6,
     },
 }
@@ -303,7 +303,7 @@ group: {
   unit: {
     name:   "Minefield C",
     type:   "MINE",
-    design: "BlockadeMine",
+    design: "Blockade Mine",
     count:  6,
     },
 }
@@ -323,7 +323,7 @@ group: {
   unit: {
     name:   "Minefield D",
     type:   "MINE",
-    design: "BlockadeMine",
+    design: "Blockade Mine",
     count:  6,
     },
 }
@@ -343,7 +343,7 @@ group: {
   unit: {
     name:   "Minefield E",
     type:   "MINE",
-    design: "BlockadeMine",
+    design: "Blockade Mine",
     count:  6,
     },
 }

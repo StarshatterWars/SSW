@@ -7022,10 +7022,18 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 
 		while (ParentGroup && !CarrierUnit)
 		{
-			if (ParentGroup->GetUnits().size() > 0 &&
-				ParentGroup->GetUnits()[0]->GetType() == (int)CLASSIFICATION::CARRIER)
+			const auto& Units = ParentGroup->GetUnits();
+
+			if (Units.size() > 0)
 			{
-				CarrierUnit = ParentGroup->GetUnits()[0];
+				CombatUnit* FirstUnit = Units[0];
+
+				if (FirstUnit &&
+					FirstUnit->GetType() == (int)CLASSIFICATION::CARRIER)
+				{
+					CarrierUnit = FirstUnit;
+					break;
+				}
 			}
 
 			ParentGroup = ParentGroup->GetParent();

@@ -15,13 +15,6 @@
     CampaignMissionFighter generates missions and mission
     info for the player's FIGHTER SQUADRON as part of a
     dynamic campaign.
-
-    UE PORT NOTES
-    =============
-    - Keeps original class/member naming and overall structure.
-    - Uses UE-compatible includes and logging.
-    - Keeps legacy Text fields instead of forcing FString.
-    - Does NOT yet reintroduce the full original mission-generation logic.
 */
 
 #pragma once
@@ -59,6 +52,7 @@ protected:
     virtual void     SelectType();
     virtual void     SelectRegion();
     virtual void     GenerateStandardElements();
+    virtual void     ProcessGroupRecursive(CombatGroup* g, const FString& MissionRegion);
     virtual void     GenerateMissionElements();
     virtual void     CreateElements(CombatGroup* g);
     virtual void     CreateSquadron(CombatGroup* g);
@@ -125,4 +119,7 @@ protected:
     int                     mission_type = 0;
 
     FString                 Existing;
+
+    TSet<CombatGroup*>      ProcessedGroups;
+    TSet<FString> ProcessedGroupKeys;
 };
