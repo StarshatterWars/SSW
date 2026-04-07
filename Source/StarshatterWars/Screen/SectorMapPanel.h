@@ -102,6 +102,8 @@ protected:
     bool ResolveViewedSystem(StarSystem*& OutSystem) const;
     bool ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& OutRegion) const;
 
+    float GetElementSpriteSize(const MissionElement* Element, int32 Rep) const;
+
     void DrawRegionGrid(
         FSlateWindowElementList& OutDrawElements,
         const FGeometry& AllottedGeometry,
@@ -127,6 +129,8 @@ protected:
         float Scale,
         int32 Rep,
         MissionElement* Element) const;
+
+   
 
     void DrawMissionNavRoutes(
         FSlateWindowElementList& OutDrawElements,
