@@ -1289,12 +1289,12 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	//InitializeCampaignData();
 	ReadCampaignData();
 	
-	//InitializeCombatRoster();
+	InitializeCombatRoster();
 	ReadCombatRosterData();
 
 	ReadCombatants();
 
-	//InitializeOrderOfBattleTable();
+	InitializeOrderOfBattleTable();
 	ReadOrderOfBattleData();
 	BuildCombatRosterFromOrderOfBattle();	
 	
@@ -4937,6 +4937,13 @@ void UStarshatterGameDataSubsystem::ParseOptional(TermStruct* val, const char* f
 
 void UStarshatterGameDataSubsystem::InitializeCombatRoster()
 {
+	if (!CombatGroupDataTable)
+	{
+		return;
+	}
+
+	CombatGroupDataTable->EmptyTable();
+
 	//CombatGroupDataTable->EmptyTable();
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::InitializeCombatRoster()"));
 
@@ -4965,12 +4972,7 @@ void UStarshatterGameDataSubsystem::InitializeCombatRoster()
 
 void UStarshatterGameDataSubsystem::LoadCombatRoster(const char* InFilename, int32 Team)
 {
-	if (!CombatGroupDataTable)
-	{
-		return;
-	}
 
-	CombatGroupDataTable->EmptyTable();
 
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadCombatRoster"));
 

@@ -1,6 +1,6 @@
 SHIP
 
-name:         "Blockade Mine"
+name:         "BlockadeMine"
 display_name:  Mine
 class:         Mine
 abrv:          MINE
