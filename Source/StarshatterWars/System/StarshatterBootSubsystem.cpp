@@ -398,6 +398,7 @@ bool UStarshatterBootSubsystem::BootAssets()
 
     TEXT("UI.MenuScreenClass"),
     TEXT("UI.CampaignSelectScreenClass"),
+    TEXT("UI.CampaignLoadClass"),
     TEXT("UI.MissionSelectScreenClass"),
     TEXT("UI.ExitDlgClass"),
     TEXT("UI.FirstRunDlgClass"),

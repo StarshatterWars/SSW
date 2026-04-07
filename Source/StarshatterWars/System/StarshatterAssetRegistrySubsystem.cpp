@@ -519,6 +519,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.OptionsScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignLoadClass")))
+    {
+        if (!Settings->CampaignLoadScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignLoadScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignLoadClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignLoadClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignLoadClass is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

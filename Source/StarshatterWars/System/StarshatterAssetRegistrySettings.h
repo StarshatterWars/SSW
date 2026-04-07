@@ -168,6 +168,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> CmdMessageDialogClass;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> CampaignLoadScreenClass;
+
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)
 // ------------------------------------------------------------------
