@@ -549,24 +549,38 @@ void UMenuScreen::ShowMissionDlg()
         return;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before EnsureDialog"));
     EnsureDialog<UMissionBriefingDlg>(MissionScreenClass, MissionBriefingDlg);
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: after EnsureDialog MissionBriefingDlg=%s"),
+        *GetNameSafe(MissionBriefingDlg));
+
     if (!MissionBriefingDlg)
     {
         UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionDlg: EnsureDialog failed (MissionBriefingDlg is NULL)"));
         return;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before HideAll"));
     HideAll();
 
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before SetMenuManager/InitializeDlg"));
     MissionBriefingDlg->SetMenuManager(this);
     MissionBriefingDlg->InitializeDlg(this);
 
     if (MissionBriefingDlg->IsInViewport())
     {
+        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: removing existing viewport instance"));
         MissionBriefingDlg->RemoveFromParent();
     }
+    if (CmpnScreen)
+    {
+        CmpnScreen->Hide();
+        CmpnScreen->SetVisibility(ESlateVisibility::Collapsed);
+    }
 
-    MissionBriefingDlg->AddToViewport(200);
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before AddToViewport"));
+    MissionBriefingDlg->AddToViewport(700);
 
     MissionBriefingDlg->SetVisibility(ESlateVisibility::Visible);
     MissionBriefingDlg->SetIsEnabled(true);
@@ -575,12 +589,16 @@ void UMenuScreen::ShowMissionDlg()
 
     CurrentDialog = MissionBriefingDlg;
 
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ApplyUIFocus"));
     ApplyUIFocus(PC, MissionBriefingDlg);
 
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before Show"));
     MissionBriefingDlg->Show();
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ShowMsnDlg"));
     MissionBriefingDlg->ShowMsnDlg();
 
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: SHOWN InViewport=%d Vis=%d"),
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: END InViewport=%d Vis=%d"),
         MissionBriefingDlg->IsInViewport() ? 1 : 0,
         (int32)MissionBriefingDlg->GetVisibility());
 }
