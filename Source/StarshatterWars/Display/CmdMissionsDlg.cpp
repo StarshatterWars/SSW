@@ -106,29 +106,83 @@ void UCmdMissionsDlg::ShowMissionsDlg()
     if (!CampaignPtr)
     {
         UE_LOG(LogTemp, Error, TEXT("[CmdMissionsDlg] ShowMissionsDlg: CampaignPtr NULL"));
+        ClearDescription();
+        SelectedMission = nullptr;
+        SelectedMissionItem = nullptr;
+
+        if (MissionList)
+        {
+            MissionList->ClearSelection();
+        }
+
+        if (ParentCmdDlg)
+        {
+            ParentCmdDlg->UpdateMissionButton();
+        }
+
+        return;
     }
-    else
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmdMissionsDlg] ShowMissionsDlg: Campaign='%s' missions=%d"),
-            ANSI_TO_TCHAR(CampaignPtr->GetName()),
-            CampaignPtr->GetMissionList().size());
-    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdMissionsDlg] ShowMissionsDlg: Campaign='%s' missions=%d"),
+        ANSI_TO_TCHAR(CampaignPtr->GetName()),
+        CampaignPtr->GetMissionList().size());
 
     SetVisibility(ESlateVisibility::Visible);
 
     RebuildMissionList();
 
-    // Preview only. Do not treat the first mission as a selected mission.
-    LoadFirstMissionPreview();
-
-    if (MissionList)
-    {
-        MissionList->ClearSelection();
-    }
-
     SelectedMission = nullptr;
     SelectedMissionItem = nullptr;
+
+    if (MissionList && MissionList->GetNumItems() > 0)
+    {
+        UObject* FirstObj = MissionList->GetItemAt(0);
+        UMissionListObject* FirstItem = Cast<UMissionListObject>(FirstObj);
+
+        if (FirstItem)
+        {
+            // Visual selection
+            MissionList->SetSelectedItem(FirstObj);
+
+            // Force internal selection state
+            SelectedMissionItem = FirstItem;
+            SelectedMission = FirstItem->MissionInfoPtr
+                ? FirstItem->MissionInfoPtr->mission
+                : nullptr;
+
+            UpdateMissionDetailPanel(FirstItem);
+
+            if (FirstItem->MissionInfoPtr)
+            {
+                SetDescriptionForMissionInfo(FirstItem->MissionInfoPtr);
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CmdMissionsDlg] FORCE SELECT: id=%d name=%s"),
+                FirstItem->MissionId,
+                *FirstItem->MissionName);
+        }
+        else
+        {
+            ClearDescription();
+
+            if (MissionList)
+            {
+                MissionList->ClearSelection();
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] ShowMissionsDlg: no mission items after rebuild"));
+        ClearDescription();
+
+        if (MissionList)
+        {
+            MissionList->ClearSelection();
+        }
+    }
 
     if (ParentCmdDlg)
     {
@@ -504,16 +558,13 @@ bool UCmdMissionsDlg::CanAcceptMission(MissionInfo* Info) const
 
 bool UCmdMissionsDlg::CanAcceptSelectedMission() const
 {
-    if (!MissionList)
+    if (!SelectedMissionItem)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdMissionsDlg] CanAcceptSelectedMission: SelectedMissionItem is NULL"));
         return false;
     }
 
-    UObject* SelectedObj = MissionList->GetSelectedItem();
-    UMissionListObject* Item = Cast<UMissionListObject>(SelectedObj);
-    MissionInfo* Info = Item ? Item->MissionInfoPtr : nullptr;
-
-    return CanAcceptMission(Info);
+    return CanAcceptMission(SelectedMissionItem->MissionInfoPtr);
 }
 
 void UCmdMissionsDlg::LoadFirstMissionPreview()
