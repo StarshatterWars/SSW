@@ -309,4 +309,9 @@ protected:
 
     int32 ZCounter = 0;
     bool  bIsShown = false;
+
+    double TimeTilChange = 0.0;
+    bool bExitLatch = false;
+    bool bShowMissionsRequested = false;
+    bool bRequestVideoChange = false;
 };

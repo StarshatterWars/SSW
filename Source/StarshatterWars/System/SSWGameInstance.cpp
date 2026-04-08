@@ -45,6 +45,24 @@ USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer)
 	InitializeCampaignLoadingScreen(ObjectInitializer);
 }
 
+void USSWGameInstance::OnStart()
+{
+	// ---------------------------------------------------------
+	// Show Main Menu (safe timing)
+	// ---------------------------------------------------------
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			this,
+			&USSWGameInstance::ShowMainMenuScreen
+		);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Init: World is NULL, cannot show menu yet"));
+	}
+}
+
 void USSWGameInstance::SetProjectPath()
 {
 	ProjectPath = FPaths::ProjectDir();
@@ -122,35 +140,51 @@ void USSWGameInstance::ShowMainMenuScreen()
 	RemoveScreens();
 
 	UWorld* World = GetWorld();
-	if (!World) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: World is NULL")); return; }
-
-	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-	if (!PC) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: PC is NULL")); return; }
-
-	if (!MenuScreenWidgetClass)
+	if (!World)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: MenuScreenWidgetClass is NULL"));
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: World is NULL"));
 		return;
 	}
 
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: PC is NULL"));
+		return;
+	}
+
+	if (!MenuScreenWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: MenuScreenWidgetClass is NULL"));
+		return;
+	}
+
+	if (!MenuScreenWidgetClass->IsChildOf(UMenuScreen::StaticClass()))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: MenuScreenWidgetClass '%s' is not derived from UMenuScreen"),
+			*GetNameSafe(MenuScreenWidgetClass));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[ShowMainMenuScreen]: Creating MenuScreen from class '%s'"),
+		*GetNameSafe(MenuScreenWidgetClass));
+
 	MenuScreen = CreateWidget<UMenuScreen>(PC, MenuScreenWidgetClass);
-	if (!MenuScreen) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: Failed to create MenuScreen")); return; }
+	if (!MenuScreen)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: Failed to create MenuScreen"));
+		return;
+	}
 
 	UMenuScreen* Screen = MenuScreen.Get();
 
 	Screen->AddToViewport(100);
 	Screen->SetVisibility(ESlateVisibility::Visible);
 
-	// *** THIS IS THE MISSING PIECE ***
-	Screen->Initialize(this);
-
-	// Create dialogs AFTER Initialize resolved classes
+	// Let NativeConstruct() handle Initialize(GetGameInstance()).
 	Screen->Setup();
-
-	// MenuScreen decides Menu vs FirstRun
 	Screen->Show();
 
-	// Focus whatever MenuScreen decided is current
 	if (UBaseScreen* Top = Screen->GetCurrentDialog())
 	{
 		FInputModeUIOnly InputMode;
@@ -218,6 +252,10 @@ void USSWGameInstance::LoadGameLevel(FString LevelName)
 void USSWGameInstance::Init()
 {
 	Super::Init();
+
+	// ---------------------------------------------------------
+	// Core App State
+	// ---------------------------------------------------------
 	bIsWindowed = false;
 	bIsGameActive = false;
 	bIsDeviceLost = false;
@@ -227,51 +265,72 @@ void USSWGameInstance::Init()
 	bIsDeviceInitialized = false;
 	bIsDeviceRestored = false;
 
+	// ---------------------------------------------------------
+	// Save Slots
+	// ---------------------------------------------------------
 	PlayerSaveName = "PlayerSaveSlot";
 	PlayerSaveSlot = 0;
+
 	UniverseSaveSlotName = "Universe_Main";
 	UniverseSaveUserIndex = 0;
+
 	CampaignSaveSlotName = "Campaign";
 	CampaignSaveIndex = 0;
 
-	FDateTime GameDate(2228, 1, 1);
+	// ---------------------------------------------------------
+	// Time Init
+	// ---------------------------------------------------------
+	const FDateTime GameDate(2228, 1, 1);
 	SetGameTime(GameDate.ToUnixTimestamp());
-	SetProjectPath();
 
-	CampaignData.SetNum(5); // number of campaigns
+	// ---------------------------------------------------------
+	// Paths + Data Loader
+	// ---------------------------------------------------------
+	SetProjectPath();
+	CampaignData.SetNum(5);
 
 	loader = DataLoader::GetLoader();
 
 	Status = EGAMESTATUS::OK;
-	UE_LOG(LogTemp, Log, TEXT("Initializing Game\n."));
 
-	if (Status == EGAMESTATUS::OK) {
-		UE_LOG(LogTemp, Log, TEXT("\n  Initializing instance...\n"));
-	}
+	UE_LOG(LogTemp, Log, TEXT("Initializing Game"));
 
-	if (Status == EGAMESTATUS::OK) {
-		UE_LOG(LogTemp, Log, TEXT("  Initializing content...\n"));
+	// ---------------------------------------------------------
+	// Content Init
+	// ---------------------------------------------------------
+	if (Status == EGAMESTATUS::OK)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Initializing content..."));
 		InitContent();
 	}
 
-	/*if (UGameplayStatics::DoesSaveGameExist(PlayerSaveName, PlayerSaveSlot)) {
-		LoadGame(PlayerSaveName, PlayerSaveSlot);
-		UE_LOG(LogTemp, Log, TEXT("Player Name: %s"), *PlayerInfo.Name);
-
-		if (PlayerInfo.Campaign >= 0) {
-			ReadCampaignData();
-		}
-	}*/
-
+	// ---------------------------------------------------------
+	// Audio System
+	// ---------------------------------------------------------
 	SetupMusicController();
-	//ExportDataTableToCSV(OrderOfBattleDataTable, TEXT("OOBExport.csv"));
+
+	// ---------------------------------------------------------
+	// Timer Subsystem Hook
+	// ---------------------------------------------------------
 	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
 	{
-		Timer->OnUniverseMinute.AddUObject(this, &USSWGameInstance::HandleUniverseMinuteAutosave);
-		// optional: OnUniverseSecond for finer cadence, but minute is safer.
+		Timer->OnUniverseMinute.AddUObject(
+			this,
+			&USSWGameInstance::HandleUniverseMinuteAutosave
+		);
 	}
 
+	// ---------------------------------------------------------
+	// Fonts
+	// ---------------------------------------------------------
 	FontManager::RegisterAllFonts(this);
+
+	// =========================================================
+	// REPLACEMENT FOR GameLoader
+	// =========================================================
+	LoadOrCreateUniverse();
+
+	
 }
 
 void USSWGameInstance::SetActiveUnit(bool bShow, FString Name, EEMPIRE_NAME Empire, ECOMBATGROUP_TYPE Type, FString Loc)
@@ -1729,4 +1788,71 @@ void USSWGameInstance::HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow)
 
 	// Campaign autosave (only if you actually have mutable campaign state)
 	SaveCampaign();
+}
+
+void USSWGameInstance::LoadOrCreateUniverse()
+{
+	const FString Slot = GetUniverseSlotName();
+	constexpr int32 UserIndex = 0;
+
+	UUniverseSaveGame* LoadedSave = nullptr;
+
+	if (UGameplayStatics::DoesSaveGameExist(Slot, UserIndex))
+	{
+		if (USaveGame* Raw = UGameplayStatics::LoadGameFromSlot(Slot, UserIndex))
+		{
+			LoadedSave = Cast<UUniverseSaveGame>(Raw);
+		}
+	}
+
+	CachedUniverseSave = LoadedSave;
+
+	if (!CachedUniverseSave)
+	{
+		CachedUniverseSave = Cast<UUniverseSaveGame>(
+			UGameplayStatics::CreateSaveGameObject(UUniverseSaveGame::StaticClass())
+		);
+
+		if (!CachedUniverseSave)
+		{
+			UE_LOG(LogTemp, Error, TEXT("LoadOrCreateUniverse: Failed to create UUniverseSaveGame"));
+			return;
+		}
+
+		CachedUniverseSave->UniverseId = FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphensLower);
+		CachedUniverseSave->UniverseSeed = FPlatformTime::Cycles64();
+
+		const FDateTime BaseDate(2228, 1, 1);
+		CachedUniverseSave->UniverseBaseUnixSeconds = BaseDate.ToUnixTimestamp();
+		CachedUniverseSave->UniverseTimeSeconds = 0;
+
+		UGameplayStatics::SaveGameToSlot(CachedUniverseSave, Slot, UserIndex);
+	}
+	else if (CachedUniverseSave->UniverseBaseUnixSeconds <= 0)
+	{
+		const FDateTime BaseDate(2228, 1, 1);
+		CachedUniverseSave->UniverseBaseUnixSeconds = BaseDate.ToUnixTimestamp();
+		UGameplayStatics::SaveGameToSlot(CachedUniverseSave, Slot, UserIndex);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Universe loaded: Id=%s Seed=%llu Base=%lld Time=%llu"),
+		*CachedUniverseSave->UniverseId,
+		(unsigned long long)CachedUniverseSave->UniverseSeed,
+		(long long)CachedUniverseSave->UniverseBaseUnixSeconds,
+		(unsigned long long)CachedUniverseSave->UniverseTimeSeconds);
+
+	UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>();
+	if (!Timer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("LoadOrCreateUniverse: TimerSubsystem is NULL"));
+		return;
+	}
+
+	UniverseId = CachedUniverseSave->UniverseId;
+	UniverseSeed = CachedUniverseSave->UniverseSeed;
+
+	Timer->UniverseBaseUnixSeconds = CachedUniverseSave->UniverseBaseUnixSeconds;
+	Timer->UniverseTimeSeconds = CachedUniverseSave->UniverseTimeSeconds;
+
+	SetUniverseSaveContext(Slot, UserIndex, CachedUniverseSave);
 }

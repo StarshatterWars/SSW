@@ -6,7 +6,7 @@
 void AL_MainMenu::BeginPlay()
 {
 	Super::BeginPlay();
-	ShowMainMenu();
+	//ShowMainMenu();
 }
 
 void AL_MainMenu::Tick(float DeltaTime)
@@ -19,7 +19,7 @@ void AL_MainMenu::ShowMainMenu()
 	USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
 	SSWInstance->InitializeAudioSystem();
 	SSWInstance->PlayMenuMusic();
-	SSWInstance->ShowMainMenuScreen();
+	//SSWInstance->ShowMainMenuScreen();
 }
 
 

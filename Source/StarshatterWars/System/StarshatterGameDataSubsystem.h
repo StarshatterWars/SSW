@@ -60,7 +60,6 @@
 #include "FormatUtil.h"
 #include "Text.h"
 #include "Term.h"
-#include "GameLoader.h"
 
 // Engine / file helpers
 #include "Misc/FileHelper.h"

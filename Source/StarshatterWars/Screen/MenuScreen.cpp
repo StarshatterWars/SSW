@@ -25,6 +25,7 @@
 #include "CmdDlg.h"
 #include "CmpnScreen.h"
 #include "TacRefDlg.h"
+#include "Keyboard.h"
 
 #include "StarshatterPlayerSubsystem.h"
 #include "Blueprint/UserWidget.h"
@@ -295,7 +296,55 @@ void UMenuScreen::TearDown()
 
 void UMenuScreen::ExecFrame(double DeltaTime)
 {
-    (void)DeltaTime;
+    if (TimeTilChange > 0.0)
+    {
+        TimeTilChange -= DeltaTime;
+        if (TimeTilChange < 0.0)
+        {
+            TimeTilChange = 0.0;
+        }
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC)
+    {
+        PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    }
+
+    const bool bExitDown = PC && PC->WasInputKeyJustPressed(EKeys::Escape);
+
+    if (bExitDown)
+    {
+        if (TimeTilChange <= 0.0)
+        {
+            TimeTilChange = 0.5;
+
+            if (!bExitLatch && !CloseTopmost())
+            {
+                ShowExitDlg();
+            }
+        }
+
+        bExitLatch = true;
+    }
+    else
+    {
+        bExitLatch = false;
+    }
+
+    if (bShowMissionsRequested)
+    {
+        ShowMissionSelectDlg();
+        bShowMissionsRequested = false;
+    }
+
+    if (bRequestVideoChange)
+    {
+        bRequestVideoChange = false;
+
+        //ChangeVideo();
+        Setup();
+    }
 }
 
 bool UMenuScreen::CloseTopmost()

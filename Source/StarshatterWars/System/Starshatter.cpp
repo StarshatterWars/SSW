@@ -1038,8 +1038,6 @@ Starshatter::DoMenuScreenFrame()
 		show_missions = false;
 	}
 
-	menuscreen->ExecFrame(0);
-
 	if (req_change_video) {
 		ChangeVideo();
 		SetupMenuScreen();
