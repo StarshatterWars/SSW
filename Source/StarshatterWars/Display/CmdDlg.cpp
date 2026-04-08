@@ -122,7 +122,14 @@ void UCmdDlg::NativeConstruct()
     }
 
     if (!MenuButtonClass || !MenuToggleGroup || !MenuButtonContainer)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmdDlg] Missing bindings: MenuButtonClass=%s MenuToggleGroup=%s MenuButtonContainer=%s"),
+            *GetNameSafe(MenuButtonClass.Get()),
+            *GetNameSafe(MenuToggleGroup),
+            *GetNameSafe(MenuButtonContainer));
         return;
+    }
 
     MenuButtonContainer->ClearChildren();
     AllMenuButtons.Empty();
@@ -246,7 +253,7 @@ void UCmdDlg::NativeConstruct()
 
 void UCmdDlg::NativePreConstruct()
 {
-    
+    Super::NativePreConstruct();
 
     if (CmdOrdersPanel)
     {
@@ -282,7 +289,7 @@ void UCmdDlg::NativeOnInitialized()
 void UCmdDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame();
+    ExecFrame(InDeltaTime);
 }
 
 UCmdDlg::UCmdDlg(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -386,71 +393,24 @@ void UCmdDlg::ShowCmdDlg()
     {
         const bool bTraining = CampaignPtr->IsTraining();
 
-        if (btn_save) btn_save->SetIsEnabled(!bTraining);
+        if (btn_save)
+            btn_save->SetIsEnabled(!bTraining);
     }
 
     SetVisibility(ESlateVisibility::Visible);
+
+    if (CurrentScreen == ECmdScreen::None)
+    {
+        CurrentScreen = ECmdScreen::Orders;
+        LoadOrdersInfo();
+    }
+
     UpdateMissionButton();
 }
 
-void UCmdDlg::ExecFrame()
+void UCmdDlg::ExecFrame(double DeltaTime)
 {
-    if (!CampaignPtr)
-        CampaignPtr = Campaign::GetCampaign();
 
-    if (!CampaignPtr)
-        return;
-
-    if (CurrentUnitText)
-    {
-        CombatGroup* G = CampaignPtr->GetPlayerGroup();
-        if (G)
-            CurrentUnitText->SetText(FText::FromString(G->GetDescription()));
-    }
-
-    if (PlayerScoreText)
-    {
-        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
-        PlayerScoreText->SetText(FText::FromString(ScoreStr));
-        PlayerScoreText->SetJustification(ETextJustify::Right);
-    }
-
-    if (CampaignTPlusText)
-    {
-        const double T = CampaignPtr->GetTime();
-
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, T);
-
-        CampaignTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
-    }
-
-    const int32 Unread = CampaignPtr->CountNewEvents();
-
-    RefreshCommandButtons();
-
-    if (CmdOrdersPanel)
-    {
-        CmdOrdersPanel->ShowOrdersDlg();
-    }
-
-    if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
-    {
-        if (UTextBlock* Label = Cast<UTextBlock>(AllMenuButtons[3]->GetWidgetFromName(TEXT("Label"))))
-        {
-            if (Unread > 0)
-            {
-                Label->SetText(FText::FromString(FString::Printf(TEXT("INTEL (%d)"), Unread)));
-            }
-            else
-            {
-                Label->SetText(FText::FromString(TEXT("INTEL")));
-            }
-        }
-    }
-
-    UpdateMissionButton();
 }
 
 void UCmdDlg::OnSaveClicked()
@@ -839,4 +799,11 @@ void UCmdDlg::UpdateMissionButton()
     }
 
     MissionButton->SetIsEnabled(bEnable);
+}
+
+void UCmdDlg::ShowMissionsPanel()
+{
+    CurrentScreen = ECmdScreen::Missions;
+    LoadMissionsInfo();
+    UpdateMissionButton();
 }

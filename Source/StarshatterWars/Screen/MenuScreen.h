@@ -5,7 +5,6 @@
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "MenuScreen.generated.h"
 
-
 // ------------------------------------------------------------
 // Forward declarations (dialogs)
 // ------------------------------------------------------------
@@ -22,6 +21,7 @@ class UMissionSelectDlg;
 class UCampaignSelectDlg;
 class UCmdMissionsDlg;
 class UCmdDlg;
+class UCmpnScreen;
 class UMissionBriefingDlg;
 
 class UMissionEditorDlg;
@@ -43,7 +43,6 @@ class STARSHATTERWARS_API UMenuScreen : public UBaseScreen
     GENERATED_BODY()
 
 public:
-
     void Initialize(UGameInstance* InGI);
     UMenuScreen(const FObjectInitializer& ObjectInitializer);
 
@@ -68,14 +67,21 @@ public:
     void TearDown();
 
     // ------------------------------------------------------------
-    // Dialog routing API (called by dialogs)
+    // Dialog routing API
     // ------------------------------------------------------------
 
     void ShowMenuDlg();
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg();
     void ShowMissionEditorDlg();
+
+    // Legacy alias route:
     void ShowOperationsDlg();
+
+    // New campaign hub:
+    void ShowCmpnScreen();
+    void HideCmpnScreen();
+
     void ShowMissionDlg();
 
     void ShowMsnElemDlg();
@@ -103,7 +109,6 @@ public:
     void ShowCmpLoadDlg();
     void HideCmpLoadDlg();
 
-    // Options hub
     void ShowOptionsScreen();
     void HideOptionsScreen();
     void ReturnFromOptions();
@@ -119,18 +124,11 @@ public:
     UMenuDlg* GetMenuDlg() const { return MenuDlg; }
     ULoadDlg* GetLoadDlg() const { return LoadDlg; }
     UCmpLoadDlg* GetCmpLoadDlg() const { return CmpLoadDlg; }
-
-    // ------------------------------------------------------------
-    // Close / back navigation
-    // ------------------------------------------------------------
+    UCmpnScreen* GetCmpnScreen() const { return CmpnScreen; }
 
     bool CloseTopmost();
 
 protected:
-    // ------------------------------------------------------------
-    // Internal helpers
-    // ------------------------------------------------------------
-
     template<typename TDialog>
     TDialog* EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage);
 
@@ -140,7 +138,7 @@ protected:
 
 protected:
     // ------------------------------------------------------------
-    // Class references (set in MenuScreen BP)
+    // Class references
     // ------------------------------------------------------------
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
@@ -175,6 +173,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UCmdDlg> CmdDlgClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UCmpnScreen> CmpnScreenClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UMissionEditorDlg> MsnEditDlgClass;
@@ -239,7 +240,7 @@ protected:
 
 protected:
     // ------------------------------------------------------------
-    // Dialog instances (GC-safe)
+    // Dialog instances
     // ------------------------------------------------------------
 
     UPROPERTY()
@@ -273,6 +274,9 @@ protected:
     TObjectPtr<UCmdDlg> CmdDlg;
 
     UPROPERTY()
+    TObjectPtr<UCmpnScreen> CmpnScreen;
+
+    UPROPERTY()
     TObjectPtr<UCampaignSelectDlg> CmpSelectDlg;
 
     UPROPERTY()
@@ -300,10 +304,6 @@ protected:
     TObjectPtr<UOptionsScreen> OptionsScreen;
 
 protected:
-    // ------------------------------------------------------------
-    // State
-    // ------------------------------------------------------------
-
     UPROPERTY()
     TObjectPtr<UBaseScreen> CurrentDialog;
 

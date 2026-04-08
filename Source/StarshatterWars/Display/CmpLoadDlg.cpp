@@ -1,3 +1,33 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (c) 2025-2026.
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         CmpLoadDlg.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Code-built campaign loading dialog.
+
+    This replaces the legacy FORM-driven CmpLoadDlg layout with a
+    native Unreal UMG screen built entirely in C++.
+
+    Visual layout:
+    - Full-screen background image (starfield fallback tint if missing)
+    - Centered scrCampaignLoad texture
+    - Campaign name centered over the art in large Serpentine font
+    - Bottom panel with loading activity text and progress bar
+
+    Behavior parity:
+    - Show() captures display time
+    - ExecFrame() refreshes activity/progress
+    - IsDone() enforces a 5 second minimum display duration
+    - When complete, transitions to UCmpnScreen once
+*/
+
+
+
 #include "CmpLoadDlg.h"
 
 // UMG:
@@ -27,6 +57,7 @@
 // Starshatter:
 #include "Campaign.h"
 #include "Starshatter.h"
+#include "MenuScreen.h"
 
 UCmpLoadDlg::UCmpLoadDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -61,11 +92,14 @@ void UCmpLoadDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UCmpLoadDlg::Show()
 {
+    bTransitionedToCmpnScreen = false;
+
     BuildScreen();
     LoadArtAssets();
     ApplyStaticArt();
     ApplyTitleFont();
     ApplyCampaignTitleCard();
+    ApplyInitialVisualState();
     RefreshLoadState();
 
     ShowTimeMs = GetRealTimeMs();
@@ -85,7 +119,18 @@ void UCmpLoadDlg::Hide()
 void UCmpLoadDlg::ExecFrame(double DeltaTime)
 {
     (void)DeltaTime;
+
     RefreshLoadState();
+
+    if (!bTransitionedToCmpnScreen && IsDone())
+    {
+        bTransitionedToCmpnScreen = true;
+
+        if (MenuManager)
+        {
+            MenuManager->ShowCmpnScreen();
+        }
+    }
 }
 
 bool UCmpLoadDlg::IsDone() const

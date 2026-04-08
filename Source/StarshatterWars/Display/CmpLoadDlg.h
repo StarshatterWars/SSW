@@ -21,8 +21,9 @@
 
     Behavior parity:
     - Show() captures display time
-    - ExecFrame() refreshes activity/progress while visible
+    - ExecFrame() refreshes activity/progress
     - IsDone() enforces a 5 second minimum display duration
+    - When complete, transitions to UCmpnScreen once
 */
 
 #pragma once
@@ -84,6 +85,7 @@ protected:
 
 protected:
     bool bScreenBuilt = false;
+    bool bTransitionedToCmpnScreen = false;
     uint32 ShowTimeMs = 0;
 
 protected:

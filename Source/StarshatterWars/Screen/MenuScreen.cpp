@@ -23,12 +23,13 @@
 #include "LoadDlg.h"
 #include "CmpLoadDlg.h"
 #include "CmdDlg.h"
+#include "CmpnScreen.h"
 #include "TacRefDlg.h"
+
 #include "StarshatterPlayerSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameStructs.h"
-
 #include "StarshatterAssetRegistrySubsystem.h"
 
 // ------------------------------------------------------------
@@ -70,12 +71,16 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
     if (!CmpLoadDlgClass)
         CmpLoadDlgClass = Assets->GetWidgetClass(TEXT("UI.CampaignLoadClass"), true);
 
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s CmpLoad=%s"),
+    if (!CmpnScreenClass)
+        CmpnScreenClass = Assets->GetWidgetClass(TEXT("UI.CampaignScreenClass"), true);
+
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s CmpLoad=%s CmpnScreen=%s"),
         *GetNameSafe(MenuDlgClass.Get()),
         *GetNameSafe(OptionsScreenClass.Get()),
         *GetNameSafe(FirstTimeDlgClass.Get()),
         *GetNameSafe(ExitDlgClass.Get()),
-        *GetNameSafe(CmpLoadDlgClass.Get()));
+        *GetNameSafe(CmpLoadDlgClass.Get()),
+        *GetNameSafe(CmpnScreenClass.Get()));
 }
 
 static void ApplyUIFocus(APlayerController* PC, UUserWidget* FocusWidget)
@@ -193,8 +198,9 @@ void UMenuScreen::HideAll()
 
     HideDialog(MissionSelectDlg);
     HideDialog(CmdMissionsDlg);
-    HideDialog(CmpSelectDlg);
     HideDialog(CmdDlg);
+    HideDialog(CmpnScreen);
+    HideDialog(CmpSelectDlg);
 
     HideDialog(MissionBriefingDlg);
 
@@ -229,6 +235,7 @@ void UMenuScreen::Setup()
     EnsureDialog<UCampaignSelectDlg>(CmpSelectDlgClass, CmpSelectDlg);
     EnsureDialog<UCmdMissionsDlg>(CmdMissionsDlgClass, CmdMissionsDlg);
     EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg);
+    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
 
     EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
     EnsureDialog<UMissionElementDlg>(MsnElemDlgClass, MsnElemDlg);
@@ -269,6 +276,7 @@ void UMenuScreen::TearDown()
     Destroy(reinterpret_cast<UBaseScreen*&>(CmpSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdMissionsDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(CmpnScreen));
 
     Destroy(reinterpret_cast<UBaseScreen*&>(MsnEditDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(MsnElemDlg));
@@ -463,54 +471,65 @@ void UMenuScreen::ShowCampaignSelectDlg()
 
 void UMenuScreen::ShowOperationsDlg()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowOperationsDlg: BEGIN"));
+    // Legacy alias route during transition:
+    ShowCmpnScreen();
+}
 
-    if (!CmdDlgClass)
+void UMenuScreen::ShowCmpnScreen()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpnScreen: BEGIN"));
+
+    if (!CmpnScreenClass)
     {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowOperationsDlg: CmdMissionsDlgClass is NULL"));
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: CmpnScreenClass is NULL"));
         return;
     }
 
     APlayerController* PC = GetOwningPlayer();
     if (!PC)
     {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowOperationsDlg: OwningPlayer is NULL"));
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: OwningPlayer is NULL"));
         return;
     }
 
-    EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg);
-    if (!CmdDlg)
+    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
+    if (!CmpnScreen)
     {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowOperationsDlg: EnsureDialog failed (CmdDlg is NULL)"));
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: EnsureDialog failed (CmpnScreen is NULL)"));
         return;
     }
 
     HideAll();
 
-    CmdDlg->SetMenuManager(this);
-    CmdDlg->InitializeDlg(this);
+    CmpnScreen->SetMenuManager(this);
+    CmpnScreen->InitializeDlg(this);
 
-    if (CmdDlg->IsInViewport())
+    if (CmpnScreen->IsInViewport())
     {
-        CmdDlg->RemoveFromParent();
+        CmpnScreen->RemoveFromParent();
     }
 
-    CmdDlg->AddToViewport(200);
+    CmpnScreen->AddToViewport(300);
 
-    CmdDlg->SetVisibility(ESlateVisibility::Visible);
-    CmdDlg->SetIsEnabled(true);
-    CmdDlg->SetIsFocusable(true);
-    CmdDlg->SetDialogInputEnabled(true);
+    CmpnScreen->SetVisibility(ESlateVisibility::Visible);
+    CmpnScreen->SetIsEnabled(true);
+    CmpnScreen->SetIsFocusable(true);
+    CmpnScreen->SetDialogInputEnabled(true);
 
-    CurrentDialog = CmdDlg;
+    CurrentDialog = CmpnScreen;
 
-    ApplyUIFocus(PC, CmdDlg);
+    ApplyUIFocus(PC, CmpnScreen);
 
-    CmdDlg->Show();
+    CmpnScreen->Show();
 
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmdDlg: SHOWN InViewport=%d Vis=%d"),
-        CmdDlg->IsInViewport() ? 1 : 0,
-        (int32)CmdDlg->GetVisibility());
+    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpnScreen: SHOWN InViewport=%d Vis=%d"),
+        CmpnScreen->IsInViewport() ? 1 : 0,
+        (int32)CmpnScreen->GetVisibility());
+}
+
+void UMenuScreen::HideCmpnScreen()
+{
+    HideDialog(CmpnScreen);
 }
 
 void UMenuScreen::ShowMissionDlg()

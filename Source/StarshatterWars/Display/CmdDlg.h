@@ -29,7 +29,6 @@
 #include "BaseScreen.h"
 #include "Campaign.h"
 #include "Starshatter.h"
-#include "CmpnScreen.h"
 #include "GameStructs.h"
 
 #include "Engine/Texture2D.h"
@@ -123,10 +122,11 @@ public:
 public:
     void SetManager(UCmpnScreen* InManager);
     void ShowCmdDlg();
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime) override;
 
     int32 CurrentMissionId = -1;
     void UpdateMissionButton();
+    void ShowMissionsPanel();
 
 protected:
     UPROPERTY(Transient)

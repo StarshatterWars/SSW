@@ -397,6 +397,7 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("Data.ZonesTable"),
 
     TEXT("UI.MenuScreenClass"),
+    TEXT("UI.CampaignScreenClass"),
     TEXT("UI.CampaignSelectScreenClass"),
     TEXT("UI.CampaignLoadClass"),
     TEXT("UI.MissionSelectScreenClass"),

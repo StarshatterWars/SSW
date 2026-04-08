@@ -1,4 +1,23 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    ORIGINAL AUTHOR AND STUDIO:
+    John DiCamillo / Destroyer Studios LLC
+
+    SUBSYSTEM:    UI
+    FILE:         CmdMsgDlg.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Campaign message dialog (modal).
+    Handles input (mouse, Enter, Escape) and routes closing
+    through UCmpnScreen to preserve UI flow.
+*/
+
 #include "CmdMsgDlg.h"
+#include "CmpnScreen.h"
 
 #include "Components/TextBlock.h"
 #include "Components/RichTextBlock.h"
@@ -7,10 +26,14 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 
+// +-------------------------------------------------------------------+
+
 UCmdMsgDlg::UCmdMsgDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
 }
+
+// +-------------------------------------------------------------------+
 
 void UCmdMsgDlg::NativeConstruct()
 {
@@ -23,6 +46,8 @@ void UCmdMsgDlg::NativeConstruct()
     HideMsgDlg();
 }
 
+// +-------------------------------------------------------------------+
+
 void UCmdMsgDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
@@ -34,35 +59,53 @@ void UCmdMsgDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     }
 }
 
+// +-------------------------------------------------------------------+
+
 FReply UCmdMsgDlg::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     if (GetVisibility() == ESlateVisibility::Visible &&
         InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
     {
-        HideMsgDlg();
+        if (CmpnScreen)
+        {
+            CmpnScreen->HideCmdMsgDlg();
+        }
+        else
+        {
+            HideMsgDlg();
+        }
+
         return FReply::Handled();
     }
 
     return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
+// +-------------------------------------------------------------------+
+
 void UCmdMsgDlg::ShowMsgDlg()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[CmdMsgDlg] ShowMsgDlg called"));
-    UE_LOG(LogTemp, Warning, TEXT("[CmdMsgDlg] Title=%p MessageRich=%p Message=%p"),
-        TitleText, MessageTextBlock, MessageText);
+    UE_LOG(LogTemp, Warning, TEXT("[CmdMsgDlg] ShowMsgDlg"));
 
     SetVisibility(ESlateVisibility::Visible);
+    SetIsEnabled(true);
+
     bWantsFocus = true;
     bExitLatch = false;
 }
 
+// +-------------------------------------------------------------------+
+
 void UCmdMsgDlg::HideMsgDlg()
 {
     SetVisibility(ESlateVisibility::Hidden);
+    SetIsEnabled(false);
+
     bWantsFocus = false;
     bExitLatch = false;
 }
+
+// +-------------------------------------------------------------------+
 
 void UCmdMsgDlg::SetTitleText(const FString& InTitle)
 {
@@ -71,6 +114,8 @@ void UCmdMsgDlg::SetTitleText(const FString& InTitle)
         TitleText->SetText(FText::FromString(InTitle));
     }
 }
+
+// +-------------------------------------------------------------------+
 
 void UCmdMsgDlg::SetMessageText(const FString& InMessage)
 {
@@ -84,6 +129,8 @@ void UCmdMsgDlg::SetMessageText(const FString& InMessage)
     }
 }
 
+// +-------------------------------------------------------------------+
+
 void UCmdMsgDlg::UpdateFocusIfVisible()
 {
     if (!bWantsFocus)
@@ -93,8 +140,11 @@ void UCmdMsgDlg::UpdateFocusIfVisible()
 
     UWidgetBlueprintLibrary::SetFocusToGameViewport();
     SetKeyboardFocus();
+
     bWantsFocus = false;
 }
+
+// +-------------------------------------------------------------------+
 
 void UCmdMsgDlg::HandleKeyboardShortcuts()
 {
@@ -104,19 +154,36 @@ void UCmdMsgDlg::HandleKeyboardShortcuts()
         return;
     }
 
+    // ENTER / ACCEPT
     if (PC->WasInputKeyJustPressed(EKeys::Enter) ||
         PC->WasInputKeyJustPressed(EKeys::Virtual_Accept))
     {
-        HideMsgDlg();
+        if (CmpnScreen)
+        {
+            CmpnScreen->HideCmdMsgDlg();
+        }
+        else
+        {
+            HideMsgDlg();
+        }
+
         return;
     }
 
+    // ESCAPE
     const bool bEscapeDown = PC->IsInputKeyDown(EKeys::Escape);
     if (bEscapeDown)
     {
         if (!bExitLatch)
         {
-            HideMsgDlg();
+            if (CmpnScreen)
+            {
+                CmpnScreen->HideCmdMsgDlg();
+            }
+            else
+            {
+                HideMsgDlg();
+            }
         }
 
         bExitLatch = true;
@@ -125,4 +192,11 @@ void UCmdMsgDlg::HandleKeyboardShortcuts()
     {
         bExitLatch = false;
     }
+}
+
+// +-------------------------------------------------------------------+
+
+void UCmdMsgDlg::SetCmpnScreen(UCmpnScreen* InScreen)
+{
+    CmpnScreen = InScreen;
 }

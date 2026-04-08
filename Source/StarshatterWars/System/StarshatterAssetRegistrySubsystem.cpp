@@ -341,6 +341,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignScreenClass")))
+    {
+        if (!Settings->CampaignScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignScreenClass is not set in Project Settings"));
+        }
+    }
+
     // UI.CampaignSelectScreenClass
     if (!Cache.Contains(TEXT("UI.CampaignSelectScreenClass")))
     {

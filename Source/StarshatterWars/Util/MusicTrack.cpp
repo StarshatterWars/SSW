@@ -23,6 +23,7 @@
 #include "MusicManager.h"
 #include "Sound.h"
 #include "Starshatter.h"
+#include "GameStructs.h"
 
 #include "Logging/LogMacros.h"
 
@@ -35,7 +36,7 @@ static const double SILENCE = -5000;
 
 // +-------------------------------------------------------------------+
 
-MusicTrack::MusicTrack(const Text& txt, int m, int n)
+MusicTrack::MusicTrack(const Text& txt, MusicMode m, int n)
     : name(txt)
     , sound(nullptr)
     , state(NONE)
@@ -46,7 +47,7 @@ MusicTrack::MusicTrack(const Text& txt, int m, int n)
 {
     long max_vol = 0;
 
-    if (mode >= MusicManager::FLIGHT)
+    if (mode >= MusicMode::FLIGHT)
         max_vol = AudioConfig::GameMusic();
     else
         max_vol = AudioConfig::MenuMusic();
@@ -249,7 +250,7 @@ MusicTrack::SetVolume(long v)
     if (sound) {
         long max_vol = 0;
 
-        if (mode >= MusicManager::FLIGHT)
+        if (mode >= MusicMode::FLIGHT)
             max_vol = AudioConfig::GameMusic();
         else
             max_vol = AudioConfig::MenuMusic();

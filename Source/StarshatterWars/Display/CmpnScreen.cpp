@@ -9,73 +9,169 @@
     OVERVIEW
     ========
     UCmpnScreen
-    - Unreal port of legacy CmpnScreen (campaign screen manager).
+    - Legacy-faithful campaign screen manager.
+    - UCmdDlg is the main campaign hub.
+    - UCmpnScreen owns campaign overlays and preserves
+      legacy campaign flow logic.
 */
 
 #include "CmpnScreen.h"
 
-// UMG:
+// UE:
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
-#include "Camera/PlayerCameraManager.h"
 
-// Dialog headers (adjust include paths to match your folder layout):
-#include "CmdOrdersDlg.h"
-#include "CmdForceDlg.h"
-#include "CmdMissionsDlg.h"
-#include "CmdIntelDlg.h"
-#include "CmdTheaterDlg.h"
-#include "CmpFileDlg.h"
+// Dialogs:
+#include "CmdDlg.h"
 #include "CmdMsgDlg.h"
+#include "CmpFileDlg.h"
 #include "CmpCompleteDlg.h"
 #include "CampaignSceneDlg.h"
+#include "MenuScreen.h"
 
-// Legacy:
+// Legacy/runtime:
 #include "Campaign.h"
 #include "Starshatter.h"
+#include "CombatEvent.h"
+#include "PlayerCharacter.h"
+#include "Mouse.h"
+#include "Game.h"
+#include "MusicManager.h"
+#include "Sim.h"
+#include "Ship.h"
+#include "Keyboard.h"
+#include "GameStructs.h"
 
 UCmpnScreen::UCmpnScreen(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
 }
 
-UUserWidget* UCmpnScreen::MakeDlg(TSubclassOf<UUserWidget> Class)
+void UCmpnScreen::NativeConstruct()
 {
-    if (!Class)
-        return nullptr;
+    Super::NativeConstruct();
 
-    UWorld* World = GetWorld();
-    if (!World)
-        return nullptr;
+    Setup();
 
-    UUserWidget* W = CreateWidget<UUserWidget>(World, Class);
-    if (W)
+    SetVisibility(ESlateVisibility::Hidden);
+    SetDialogInputEnabled(false);
+}
+
+void UCmpnScreen::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (bIsShown)
     {
-        W->AddToViewport();
-        W->SetVisibility(ESlateVisibility::Hidden);
+        ExecFrame((double)InDeltaTime);
+    }
+}
+
+template<typename TDialog>
+TDialog* UCmpnScreen::EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage, int32 ZOrder)
+{
+    if (Storage)
+    {
+        return Storage.Get();
     }
 
-    return W;
+    if (!ClassToSpawn)
+    {
+        return nullptr;
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC)
+    {
+        UWorld* World = GetWorld();
+        if (World)
+        {
+            PC = UGameplayStatics::GetPlayerController(World, 0);
+        }
+    }
+
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] EnsureDialog: no player controller"));
+        return nullptr;
+    }
+
+    TDialog* Created = CreateWidget<TDialog>(PC, ClassToSpawn);
+    if (!Created)
+    {
+        return nullptr;
+    }
+
+    Created->AddToViewport(ZOrder);
+    Created->SetVisibility(ESlateVisibility::Hidden);
+    Created->SetIsEnabled(false);
+
+    Storage = Created;
+    return Created;
+}
+
+void UCmpnScreen::RefreshRuntimePointers()
+{
+    Stars = Starshatter::GetInstance();
+    CampaignPtr = Campaign::GetCampaign();
+}
+
+void UCmpnScreen::ApplyManagerToChildren()
+{
+    if (CmdDlg)
+    {
+        CmdDlg->SetManager(this);
+
+        if (MenuManager)
+        {
+            CmdDlg->SetMenuManager(MenuManager);
+            CmdDlg->InitializeDlg(MenuManager);
+        }
+    }
+
+    if (CmdMsgDlg)
+    {
+        CmdMsgDlg->SetCmpnScreen(this);
+    }
+}
+
+void UCmpnScreen::SetMenuManager(UMenuScreen* InManager)
+{
+    MenuManager = InManager;
+    ApplyManagerToChildren();
+}
+
+void UCmpnScreen::InitializeDlg(UMenuScreen* InManager)
+{
+    MenuManager = InManager;
+    ApplyManagerToChildren();
 }
 
 void UCmpnScreen::Setup()
 {
-    stars = Starshatter::GetInstance();
-    campaign = Campaign::GetCampaign();
+    if (bSetupComplete)
+    {
+        return;
+    }
 
-    cmd_orders_dlg = Cast<UCmdOrdersDlg>(MakeDlg(CmdOrdersDlgClass));
-    cmd_force_dlg = Cast<UCmdForceDlg>(MakeDlg(CmdForceDlgClass));
-    cmd_missions_dlg = Cast<UCmdMissionsDlg>(MakeDlg(CmdMissionsDlgClass));
-    cmd_intel_dlg = Cast<UCmdIntelDlg>(MakeDlg(CmdIntelDlgClass));
-    cmd_theater_dlg = Cast<UCmdTheaterDlg>(MakeDlg(CmdTheaterDlgClass));
+    RefreshRuntimePointers();
 
-    cmp_file_dlg = Cast<UCmpFileDlg>(MakeDlg(CmpFileDlgClass));
-    cmd_msg_dlg = Cast<UCmdMsgDlg>(MakeDlg(CmdMsgDlgClass));
-    cmp_end_dlg = Cast<UCmpCompleteDlg>(MakeDlg(CmpCompleteDlgClass));
-    cmp_scene_dlg = Cast<UCampaignSceneDlg>(MakeDlg(CmpSceneDlgClass));
+    EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg, 200);
+    EnsureDialog<UCmpFileDlg>(CmpFileDlgClass, CmpFileDlg, 300);
+    EnsureDialog<UCmdMsgDlg>(CmdMsgDlgClass, CmdMsgDlg, 310);
+    EnsureDialog<UCmpCompleteDlg>(CmpCompleteDlgClass, CmpCompleteDlg, 320);
+    EnsureDialog<UCampaignSceneDlg>(CmpSceneDlgClass, CmpSceneDlg, 330);
+
+    ApplyManagerToChildren();
 
     HideAll();
+
+    CompletionStage = 0;
+    TimeTilChange = 0.0;
+    bExitLatch = false;
+    bShowMissionsRequested = false;
+    bSetupComplete = true;
 }
 
 void UCmpnScreen::TearDown()
@@ -91,225 +187,88 @@ void UCmpnScreen::TearDown()
 
     UUserWidget* W = nullptr;
 
-    W = cmd_orders_dlg;   Kill(W); cmd_orders_dlg = nullptr;
-    W = cmd_force_dlg;    Kill(W); cmd_force_dlg = nullptr;
-    W = cmd_missions_dlg; Kill(W); cmd_missions_dlg = nullptr;
-    W = cmd_intel_dlg;    Kill(W); cmd_intel_dlg = nullptr;
-    W = cmd_theater_dlg;  Kill(W); cmd_theater_dlg = nullptr;
+    W = CmdDlg.Get();         Kill(W); CmdDlg = nullptr;
+    W = CmpFileDlg.Get();     Kill(W); CmpFileDlg = nullptr;
+    W = CmdMsgDlg.Get();      Kill(W); CmdMsgDlg = nullptr;
+    W = CmpCompleteDlg.Get(); Kill(W); CmpCompleteDlg = nullptr;
+    W = CmpSceneDlg.Get();    Kill(W); CmpSceneDlg = nullptr;
 
-    W = cmp_file_dlg;     Kill(W); cmp_file_dlg = nullptr;
-    W = cmd_msg_dlg;      Kill(W); cmd_msg_dlg = nullptr;
-    W = cmp_end_dlg;      Kill(W); cmp_end_dlg = nullptr;
-    W = cmp_scene_dlg;    Kill(W); cmp_scene_dlg = nullptr;
-
-    isShown = false;
+    bSetupComplete = false;
+    bIsShown = false;
+    bShowMissionsRequested = false;
+    bExitLatch = false;
+    TimeTilChange = 0.0;
+    CompletionStage = 0;
 }
 
 void UCmpnScreen::Show()
 {
-    if (isShown)
+    if (bIsShown)
+    {
         return;
+    }
 
-    isShown = true;
+    RefreshRuntimePointers();
+    ApplyManagerToChildren();
 
-    campaign = Campaign::GetCampaign();
-    stars = Starshatter::GetInstance();
+    bIsShown = true;
+    CompletionStage = 0;
+    DesiredFieldOfView = GetFieldOfView();
+    bCampaignPaused = false;
 
-    ShowCmdDlg();
+    bool bCutscene = false;
+
+    if (CampaignPtr && CampaignPtr->IsActive() && !CampaignPtr->GetEvents().isEmpty())
+    {
+        ListIter<CombatEvent> Iter = CampaignPtr->GetEvents();
+        while (++Iter)
+        {
+            CombatEvent* Event = Iter.value();
+
+            if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+            {
+                //Stars->ExecCutscene(Event->SceneFile(), CampaignPtr->Path());
+
+                //if (Stars->InCutscene())
+                //{
+                //    bCutscene = true;
+                //    ShowCmpSceneDlg();
+                //}
+
+                Event->SetVisited(true);
+                break;
+            }
+        }
+    }
+
+    if (!bCutscene)
+    {
+        ShowCmdDlg();
+    }
 }
 
 void UCmpnScreen::Hide()
 {
-    if (!isShown)
+    if (!bIsShown)
+    {
         return;
+    }
 
     HideAll();
-    isShown = false;
+    bIsShown = false;
 }
 
 void UCmpnScreen::HideAll()
 {
-    auto HideW = [](UUserWidget* W)
-        {
-            if (W)
-                W->SetVisibility(ESlateVisibility::Hidden);
-        };
+    bHidingAll = true;
 
-    HideW(cmd_orders_dlg);
-    HideW(cmd_force_dlg);
-    HideW(cmd_missions_dlg);
-    HideW(cmd_intel_dlg);
-    HideW(cmd_theater_dlg);
+    HideCmdDlg();
+    HideCmpFileDlg();
+    HideCmdMsgDlg();
+    HideCmpCompleteDlg();
+    HideCmpSceneDlg();
 
-    HideW(cmp_file_dlg);
-    HideW(cmd_msg_dlg);
-    HideW(cmp_end_dlg);
-    HideW(cmp_scene_dlg);
-}
-
-void UCmpnScreen::ShowCmdDlg()
-{
-    ShowCmdOrdersDlg();
-}
-
-void UCmpnScreen::ShowCmdOrdersDlg()
-{
-    HideAll();
-    if (cmd_orders_dlg)
-        cmd_orders_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdOrdersDlg()
-{
-    if (cmd_orders_dlg && IsCmdOrdersShown())
-        cmd_orders_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdOrdersShown() const
-{
-    return cmd_orders_dlg && cmd_orders_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmdForceDlg()
-{
-    HideAll();
-    if (cmd_force_dlg)
-        cmd_force_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdForceDlg()
-{
-    if (cmd_force_dlg && IsCmdForceShown())
-        cmd_force_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdForceShown() const
-{
-    return cmd_force_dlg && cmd_force_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmdMissionsDlg()
-{
-    HideAll();
-    if (cmd_missions_dlg)
-        cmd_missions_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdMissionsDlg()
-{
-    if (cmd_missions_dlg && IsCmdMissionsShown())
-        cmd_missions_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdMissionsShown() const
-{
-    return cmd_missions_dlg && cmd_missions_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmdIntelDlg()
-{
-    HideAll();
-    if (cmd_intel_dlg)
-        cmd_intel_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdIntelDlg()
-{
-    if (cmd_intel_dlg && IsCmdIntelShown())
-        cmd_intel_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdIntelShown() const
-{
-    return cmd_intel_dlg && cmd_intel_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmdTheaterDlg()
-{
-    HideAll();
-    if (cmd_theater_dlg)
-        cmd_theater_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdTheaterDlg()
-{
-    if (cmd_theater_dlg && IsCmdTheaterShown())
-        cmd_theater_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdTheaterShown() const
-{
-    return cmd_theater_dlg && cmd_theater_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmpFileDlg()
-{
-    if (cmp_file_dlg)
-        cmp_file_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmpFileDlg()
-{
-    if (cmp_file_dlg)
-        cmp_file_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmpFileShown() const
-{
-    return cmp_file_dlg && cmp_file_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmdMsgDlg()
-{
-    if (cmd_msg_dlg)
-        cmd_msg_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmdMsgDlg()
-{
-    if (cmd_msg_dlg)
-        cmd_msg_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmdMsgShown() const
-{
-    return cmd_msg_dlg && cmd_msg_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmpCompleteDlg()
-{
-    HideAll();
-    if (cmp_end_dlg)
-        cmp_end_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmpCompleteDlg()
-{
-    if (cmp_end_dlg && IsCmpCompleteShown())
-        cmp_end_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmpCompleteShown() const
-{
-    return cmp_end_dlg && cmp_end_dlg->GetVisibility() == ESlateVisibility::Visible;
-}
-
-void UCmpnScreen::ShowCmpSceneDlg()
-{
-    HideAll();
-    if (cmp_scene_dlg)
-        cmp_scene_dlg->SetVisibility(ESlateVisibility::Visible);
-}
-
-void UCmpnScreen::HideCmpSceneDlg()
-{
-    if (cmp_scene_dlg && IsCmpSceneShown())
-        cmp_scene_dlg->SetVisibility(ESlateVisibility::Hidden);
-}
-
-bool UCmpnScreen::IsCmpSceneShown() const
-{
-    return cmp_scene_dlg && cmp_scene_dlg->GetVisibility() == ESlateVisibility::Visible;
+    bHidingAll = false;
 }
 
 bool UCmpnScreen::CloseTopmost()
@@ -329,21 +288,397 @@ bool UCmpnScreen::CloseTopmost()
     return false;
 }
 
+void UCmpnScreen::ExecFrame(double DeltaTime)
+{
+    RefreshRuntimePointers();
+
+    if (!Stars)
+    {
+        return;
+    }
+
+    Mouse::SetCursor(Mouse::ARROW);
+
+    if (TimeTilChange > 0.0)
+    {
+        TimeTilChange -= DeltaTime;
+        if (TimeTilChange < 0.0)
+        {
+            TimeTilChange = 0.0;
+        }
+    }
+
+    const bool bInCutscene = Stars->InCutscene();
+    bExitLatch = Keyboard::KeyDown(KEY_EXIT) ? true : false;
+
+    Sim* sim = Sim::GetSim();
+    Ship* PlayerShip = sim ? sim->GetPlayerShip() : nullptr;
+    const bool bHasPlayerShip = (PlayerShip != nullptr);
+
+    if (bInCutscene && bHasPlayerShip)
+    {
+        const float WarpFactor = PlayerShip->WarpFactor();
+
+        if (WarpFactor > 1.0f)
+        {
+            if (WarpFactor > DesiredFieldOfView)
+                SetFieldOfView(WarpFactor);
+            else
+                SetFieldOfView(DesiredFieldOfView);
+        }
+        else
+        {
+            if (GetFieldOfView() != DesiredFieldOfView)
+                SetFieldOfView(DesiredFieldOfView);
+        }
+    }
+
+    if (bInCutscene && bExitLatch)
+    {
+        TimeTilChange = 1.0;
+        Stars->EndCutscene();
+        Stars->EndMission();
+        SetFieldOfView(DesiredFieldOfView);
+    }
+
+    else if (TimeTilChange <= 0.0 && bExitLatch)
+    {
+        TimeTilChange = 1.0;
+
+        if (!CloseTopmost())
+        {
+            Stars->SetGameMode(EGameMode::MENU);
+        }
+    }
+
+    else if (Stars->GetGameMode() == EGameMode::CMPN)
+    {
+        if (TimeTilChange <= 0.0)
+        {
+            if (Keyboard::KeyDown(KEY_PAUSE))
+            {
+                TimeTilChange = 1.0;
+                bCampaignPaused = !bCampaignPaused;
+                Stars->Pause(bCampaignPaused);
+            }
+
+            else if (Keyboard::KeyDown(KEY_TIME_COMPRESS))
+            {
+                TimeTilChange = 1.0;
+
+                switch (Stars->TimeCompression())
+                {
+                case 1:  Stars->SetTimeCompression(2); break;
+                case 2:  Stars->SetTimeCompression(4); break;
+                case 4:  Stars->SetTimeCompression(8); break;
+                }
+            }
+
+            else if (Keyboard::KeyDown(KEY_TIME_EXPAND))
+            {
+                TimeTilChange = 1.0;
+
+                switch (Stars->TimeCompression())
+                {
+                case 8:  Stars->SetTimeCompression(4); break;
+                case 4:  Stars->SetTimeCompression(2); break;
+                default: Stars->SetTimeCompression(1); break;
+                }
+            }
+        }
+    }
+
+    if (bShowMissionsRequested && !bInCutscene)
+    {
+        if (CmdDlg)
+        {
+            ShowCmdDlg();
+            CmdDlg->ShowMissionsPanel();
+        }
+
+        bShowMissionsRequested = false;
+    }
+
+    if (!CampaignPtr)
+    {
+        return;
+    }
+
+    if (IsCmdMsgShown())
+    {
+        // modal active
+    }
+    else if (IsCmpCompleteShown())
+    {
+        CompletionStage = 2;
+    }
+    else if (IsCmpSceneShown())
+    {
+        if (CompletionStage > 0)
+        {
+            CompletionStage = 2;
+        }
+    }
+    else
+    {
+        if (CompletionStage == 0)
+        {
+            PlayerCharacter* PlayerPtr = PlayerCharacter::GetCurrentPlayer();
+            if (!PlayerPtr)
+            {
+                return;
+            }
+
+            if (CampaignPtr->IsTraining())
+            {
+                const int32 AllMissionsMask = (1 << CampaignPtr->GetMissionList().size()) - 1;
+
+                if (PlayerPtr->Trained() >= AllMissionsMask && PlayerPtr->Trained() < 255)
+                {
+                    PlayerPtr->SetTrained(255);
+
+                    if (CmdMsgDlg)
+                    {
+                        CmdMsgDlg->SetTitleText(TEXT("TRAINING"));
+                        CmdMsgDlg->SetMessageText(TEXT("Congratulations. Training complete."));
+                        ShowCmdMsgDlg();
+                    }
+
+                    CompletionStage = 1;
+                }
+            }
+            else if (CampaignPtr->IsComplete() || CampaignPtr->IsFailed())
+            {
+                bool bCutscene = false;
+                CombatEvent* Event = CampaignPtr->GetLastEvent();
+
+                if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+                {
+                    Stars->ExecCutscene(Event->SceneFile(), CampaignPtr->Path());
+
+                    if (Stars->InCutscene())
+                    {
+                        bCutscene = true;
+                        ShowCmpSceneDlg();
+                    }
+                }
+
+                if (!bCutscene)
+                {
+                    ShowCmpCompleteDlg();
+                }
+
+                if (CampaignPtr->IsComplete())
+                    MusicManager::SetMode(MusicMode::VICTORY);
+                else
+                    MusicManager::SetMode(MusicMode::DEFEAT);
+
+                CompletionStage = 1;
+            }
+        }
+        else if (CompletionStage > 1)
+        {
+            CompletionStage = 0;
+
+            if (CampaignPtr->IsTraining())
+            {
+                List<Campaign>& CampaignList = Campaign::GetAllCampaigns();
+                Campaign* NextCampaign = CampaignList[1];
+
+                if (NextCampaign)
+                {
+                    NextCampaign->Load();
+                    Campaign::SelectCampaign(NextCampaign->GetName());
+                    Stars->SetGameMode(EGameMode::CLOD);
+                    return;
+                }
+            }
+
+            if (CampaignPtr->GetCampaignId() < Campaign::GetLastCampaignId())
+            {
+                Stars->StartOrResumeGame();
+            }
+            else
+            {
+                Mouse::Show(false);
+                MusicManager::SetMode(MusicMode::MENU);
+                Stars->SetGameMode(EGameMode::MENU);
+                return;
+            }
+        }
+    }
+
+    if (CompletionStage < 1)
+    {
+        MusicManager::SetMode(MusicMode::MENU);
+        Mouse::Show(!IsCmpSceneShown());
+    }
+}
+
+void UCmpnScreen::ShowCmdDlg()
+{
+    HideAll();
+
+    if (CmdDlg)
+    {
+        CmdDlg->SetVisibility(ESlateVisibility::Visible);
+        CmdDlg->SetIsEnabled(true);
+        CmdDlg->SetDialogInputEnabled(true);
+        CmdDlg->ShowCmdDlg();
+        Mouse::Show(true);
+    }
+}
+
+void UCmpnScreen::HideCmdDlg()
+{
+    if (CmdDlg)
+    {
+        CmdDlg->SetDialogInputEnabled(false);
+        CmdDlg->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
+bool UCmpnScreen::IsCmdShown() const
+{
+    return CmdDlg && CmdDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
+void UCmpnScreen::ShowCmpFileDlg()
+{
+    if (CmpFileDlg)
+    {
+        CmpFileDlg->SetVisibility(ESlateVisibility::Visible);
+        CmpFileDlg->SetIsEnabled(true);
+        Mouse::Show(true);
+    }
+}
+
+void UCmpnScreen::HideCmpFileDlg()
+{
+    if (CmpFileDlg)
+    {
+        CmpFileDlg->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
+bool UCmpnScreen::IsCmpFileShown() const
+{
+    return CmpFileDlg && CmpFileDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
+// +-------------------------------------------------------------------+
+
+void UCmpnScreen::ShowCmdMsgDlg()
+{
+    if (!CmdMsgDlg)
+    {
+        return;
+    }
+
+    CmdMsgDlg->SetCmpnScreen(this);
+    CmdMsgDlg->ShowMsgDlg();
+
+    Mouse::Show(true);
+}
+
+// +-------------------------------------------------------------------+
+
+void UCmpnScreen::HideCmdMsgDlg()
+{
+    if (CmdMsgDlg)
+    {
+        CmdMsgDlg->HideMsgDlg();
+    }
+
+    // Restore the command hub only when this is a real close,
+    // not when HideAll() is sweeping the screen.
+    if (!bHidingAll && bIsShown && !IsCmpCompleteShown() && !IsCmpSceneShown())
+    {
+        ShowCmdDlg();
+    }
+}
+
+// +-------------------------------------------------------------------+
+
+bool UCmpnScreen::IsCmdMsgShown() const
+{
+    return CmdMsgDlg && CmdMsgDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
+void UCmpnScreen::ShowCmpCompleteDlg()
+{
+    HideAll();
+
+    if (CmpCompleteDlg)
+    {
+        CmpCompleteDlg->SetVisibility(ESlateVisibility::Visible);
+        CmpCompleteDlg->SetIsEnabled(true);
+        Mouse::Show(true);
+    }
+}
+
+void UCmpnScreen::HideCmpCompleteDlg()
+{
+    if (CmpCompleteDlg)
+    {
+        CmpCompleteDlg->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
+bool UCmpnScreen::IsCmpCompleteShown() const
+{
+    return CmpCompleteDlg && CmpCompleteDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
+void UCmpnScreen::ShowCmpSceneDlg()
+{
+    HideAll();
+
+    if (CmpSceneDlg)
+    {
+        CmpSceneDlg->SetVisibility(ESlateVisibility::Visible);
+        CmpSceneDlg->SetIsEnabled(true);
+        Mouse::Show(false);
+    }
+    else
+    {
+        ShowCmdDlg();
+    }
+}
+
+void UCmpnScreen::HideCmpSceneDlg()
+{
+    if (CmpSceneDlg)
+    {
+        CmpSceneDlg->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
+bool UCmpnScreen::IsCmpSceneShown() const
+{
+    return CmpSceneDlg && CmpSceneDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
 void UCmpnScreen::SetFieldOfView(float InFOV)
 {
-    CurrentFOV = FMath::Clamp(InFOV, MinFOV, MaxFOV);
+    DesiredFieldOfView = InFOV;
 
-    // Apply to the active player camera (works for “screen overlays” too):
-    UWorld* World = GetWorld();
-    if (!World)
-        return;
-
-    APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-    if (!PC)
-        return;
-
-    if (PC->PlayerCameraManager)
+    if (CmpSceneDlg)
     {
-        PC->PlayerCameraManager->SetFOV(CurrentFOV);
+        //CmpSceneDlg->SetFieldOfView(InFOV);
     }
+    else
+    {
+        DefaultFallbackFOV = InFOV;
+    }
+}
+
+float UCmpnScreen::GetFieldOfView() const
+{
+    if (CmpSceneDlg)
+    {
+        //return CmpSceneDlg->GetFieldOfView();
+    }
+
+    return DefaultFallbackFOV;
 }

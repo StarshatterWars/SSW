@@ -1672,20 +1672,20 @@ Sim::ExecFrame(double DeltaSeconds)
 				const int32 Phase = PlayerShip->GetFlightPhase();
 
 				if (Phase < Ship::ACTIVE) {
-					MusicManager::SetMode(MusicManager::LAUNCH);
+					MusicManager::SetMode(MusicMode::LAUNCH);
 				}
 
 				else if (Phase > Ship::ACTIVE) {
-					MusicManager::SetMode(MusicManager::RECOVERY);
+					MusicManager::SetMode(MusicMode::RECOVERY);
 				}
 
 				else {
 					if (PlayerShip->IsInCombat()) {
-						MusicManager::SetMode(MusicManager::COMBAT);
+						MusicManager::SetMode(MusicMode::COMBAT);
 					}
 
 					else {
-						MusicManager::SetMode(MusicManager::FLIGHT);
+						MusicManager::SetMode(MusicMode::FLIGHT);
 					}
 				}
 			}

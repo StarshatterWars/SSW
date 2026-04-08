@@ -4,12 +4,11 @@
 
     ORIGINAL AUTHOR AND STUDIO:
     John DiCamillo, Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+    Copyright (c) 1997-2004. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         MusicManager.cpp
     AUTHOR:       Carlos Bott
-
 
     OVERVIEW
     ========
@@ -29,6 +28,7 @@
 #include "HAL/PlatformMisc.h"
 #include "Misc/AssertionMacros.h"
 #include "Logging/LogMacros.h"
+#include "GameStructs.h"
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
@@ -43,8 +43,8 @@ static MusicManager* music_manager = nullptr;
 // +-------------------------------------------------------------------+
 
 MusicManager::MusicManager()
-    : mode(0)
-    , transition(0)
+    : mode(MusicMode::NONE)
+    , transition(MuisicTransition::CROSS_FADE)
     , track(nullptr)
     , next_track(nullptr)
     , no_music(true)
@@ -84,8 +84,7 @@ MusicManager::~MusicManager()
 
 // +--------------------------------------------------------------------+
 
-void
-MusicManager::Initialize()
+void MusicManager::Initialize()
 {
     if (music_manager)
         delete music_manager;
@@ -93,23 +92,20 @@ MusicManager::Initialize()
     music_manager = new MusicManager();
 }
 
-void
-MusicManager::Close()
+void MusicManager::Close()
 {
     delete music_manager;
     music_manager = nullptr;
 }
 
-MusicManager*
-MusicManager::GetInstance()
+MusicManager* MusicManager::GetInstance()
 {
     return music_manager;
 }
 
 // +-------------------------------------------------------------------+
 
-void
-MusicManager::ExecFrame()
+void MusicManager::ExecFrame()
 {
     if (no_music)
         return;
@@ -123,7 +119,7 @@ MusicManager::ExecFrame()
 
     if (track) {
         if (track->IsDone()) {
-            if (mode != NONE && mode != SHUTDOWN && next_track == nullptr) {
+            if (mode != MusicMode::NONE && mode != MusicMode::SHUTDOWN && next_track == nullptr) {
                 GetNextTrack(track->GetIndex() + 1);
             }
 
@@ -133,7 +129,7 @@ MusicManager::ExecFrame()
         }
 
         else if (track->IsLooped()) {
-            if (mode != NONE && mode != SHUTDOWN && next_track == nullptr) {
+            if (mode != MusicMode::NONE && mode != MusicMode::SHUTDOWN && next_track == nullptr) {
                 GetNextTrack(track->GetIndex() + 1);
             }
 
@@ -165,8 +161,7 @@ MusicManager::ExecFrame()
 
 // +-------------------------------------------------------------------+
 
-void
-MusicManager::ScanTracks()
+void MusicManager::ScanTracks()
 {
     DataLoader* loader = DataLoader::GetLoader();
 
@@ -254,25 +249,24 @@ MusicManager::ScanTracks()
 
 // +-------------------------------------------------------------------+
 
-const char*
-MusicManager::GetModeName(int inMode)
+const char* MusicManager::GetModeName(MusicMode InMode)
 {
-    switch (inMode) {
-    case NONE:        return "NONE";
-    case MENU:        return "MENU";
-    case INTRO:       return "INTRO";
-    case BRIEFING:    return "BRIEFING";
-    case DEBRIEFING:  return "DEBRIEFING";
-    case PROMOTION:   return "PROMOTION";
-    case FLIGHT:      return "FLIGHT";
-    case COMBAT:      return "COMBAT";
-    case LAUNCH:      return "LAUNCH";
-    case RECOVERY:    return "RECOVERY";
-    case VICTORY:     return "VICTORY";
-    case DEFEAT:      return "DEFEAT";
-    case CREDITS:     return "CREDITS";
-    case SHUTDOWN:    return "SHUTDOWN";
-    default:          break;
+    switch (InMode) {
+    case MusicMode::NONE:        return "NONE";
+    case MusicMode::MENU:        return "MENU";
+    case MusicMode::INTRO:       return "INTRO";
+    case MusicMode::BRIEFING:    return "BRIEFING";
+    case MusicMode::DEBRIEFING:  return "DEBRIEFING";
+    case MusicMode::PROMOTION:   return "PROMOTION";
+    case MusicMode::FLIGHT:      return "FLIGHT";
+    case MusicMode::COMBAT:      return "COMBAT";
+    case MusicMode::LAUNCH:      return "LAUNCH";
+    case MusicMode::RECOVERY:    return "RECOVERY";
+    case MusicMode::VICTORY:     return "VICTORY";
+    case MusicMode::DEFEAT:      return "DEFEAT";
+    case MusicMode::CREDITS:     return "CREDITS";
+    case MusicMode::SHUTDOWN:    return "SHUTDOWN";
+    default:                     break;
     }
 
     return "UNKNOWN?";
@@ -280,8 +274,7 @@ MusicManager::GetModeName(int inMode)
 
 // +-------------------------------------------------------------------+
 
-void
-MusicManager::SetMode(int inMode)
+void MusicManager::SetMode(MusicMode InMode)
 {
     if (!music_manager || music_manager->no_music)
         return;
@@ -289,21 +282,24 @@ MusicManager::SetMode(int inMode)
     AutoThreadSync a(music_manager->sync);
 
     // stay in intro mode until it is complete:
-    if (inMode == MENU && (music_manager->GetMode() == NONE || music_manager->GetMode() == INTRO))
-        inMode = INTRO;
+    if (InMode == MusicMode::MENU &&
+        (music_manager->GetMode() == MusicMode::NONE || music_manager->GetMode() == MusicMode::INTRO))
+    {
+        InMode = MusicMode::INTRO;
+    }
 
-    inMode = music_manager->CheckMode(inMode);
+    InMode = music_manager->CheckMode(InMode);
 
-    if (inMode != music_manager->mode) {
+    if (InMode != music_manager->mode) {
         UE_LOG(LogStarshatterMusic, Log, TEXT("MusicManager::SetMode() old: %hs  new: %hs"),
             GetModeName(music_manager->mode),
-            GetModeName(inMode));
+            GetModeName(InMode));
 
-        music_manager->mode = inMode;
+        music_manager->mode = InMode;
 
         MusicTrack* t = music_manager->track;
         if (t && t->GetState() && !t->IsDone()) {
-            if (inMode == NONE || inMode == SHUTDOWN)
+            if (InMode == MusicMode::NONE || InMode == MusicMode::SHUTDOWN)
                 t->SetFadeTime(0.5);
 
             t->FadeOut();
@@ -311,7 +307,7 @@ MusicManager::SetMode(int inMode)
 
         t = music_manager->next_track;
         if (t && t->GetState() && !t->IsDone()) {
-            if (inMode == NONE || inMode == SHUTDOWN)
+            if (InMode == MusicMode::NONE || InMode == MusicMode::SHUTDOWN)
                 t->SetFadeTime(0.5);
 
             t->FadeOut();
@@ -329,52 +325,50 @@ MusicManager::SetMode(int inMode)
     }
 }
 
-int
-MusicManager::CheckMode(int req_mode)
+MusicMode MusicManager::CheckMode(MusicMode ReqMode)
 {
-    if (req_mode == RECOVERY && recovery_tracks.size() == 0)
-        req_mode = LAUNCH;
+    if (ReqMode == MusicMode::RECOVERY && recovery_tracks.size() == 0)
+        ReqMode = MusicMode::LAUNCH;
 
-    if (req_mode == LAUNCH && launch_tracks.size() == 0)
-        req_mode = FLIGHT;
+    if (ReqMode == MusicMode::LAUNCH && launch_tracks.size() == 0)
+        ReqMode = MusicMode::FLIGHT;
 
-    if (req_mode == COMBAT && combat_tracks.size() == 0)
-        req_mode = FLIGHT;
+    if (ReqMode == MusicMode::COMBAT && combat_tracks.size() == 0)
+        ReqMode = MusicMode::FLIGHT;
 
-    if (req_mode == FLIGHT && flight_tracks.size() == 0)
-        req_mode = NONE;
+    if (ReqMode == MusicMode::FLIGHT && flight_tracks.size() == 0)
+        ReqMode = MusicMode::NONE;
 
-    if (req_mode == PROMOTION && promote_tracks.size() == 0)
-        req_mode = VICTORY;
+    if (ReqMode == MusicMode::PROMOTION && promote_tracks.size() == 0)
+        ReqMode = MusicMode::VICTORY;
 
-    if (req_mode == DEBRIEFING && debrief_tracks.size() == 0)
-        req_mode = BRIEFING;
+    if (ReqMode == MusicMode::DEBRIEFING && debrief_tracks.size() == 0)
+        ReqMode = MusicMode::BRIEFING;
 
-    if (req_mode == BRIEFING && brief_tracks.size() == 0)
-        req_mode = MENU;
+    if (ReqMode == MusicMode::BRIEFING && brief_tracks.size() == 0)
+        ReqMode = MusicMode::MENU;
 
-    if (req_mode == INTRO && intro_tracks.size() == 0)
-        req_mode = MENU;
+    if (ReqMode == MusicMode::INTRO && intro_tracks.size() == 0)
+        ReqMode = MusicMode::MENU;
 
-    if (req_mode == VICTORY && victory_tracks.size() == 0)
-        req_mode = MENU;
+    if (ReqMode == MusicMode::VICTORY && victory_tracks.size() == 0)
+        ReqMode = MusicMode::MENU;
 
-    if (req_mode == DEFEAT && defeat_tracks.size() == 0)
-        req_mode = MENU;
+    if (ReqMode == MusicMode::DEFEAT && defeat_tracks.size() == 0)
+        ReqMode = MusicMode::MENU;
 
-    if (req_mode == CREDITS && credit_tracks.size() == 0)
-        req_mode = MENU;
+    if (ReqMode == MusicMode::CREDITS && credit_tracks.size() == 0)
+        ReqMode = MusicMode::MENU;
 
-    if (req_mode == MENU && menu_tracks.size() == 0)
-        req_mode = NONE;
+    if (ReqMode == MusicMode::MENU && menu_tracks.size() == 0)
+        ReqMode = MusicMode::NONE;
 
-    return req_mode;
+    return ReqMode;
 }
 
 // +-------------------------------------------------------------------+
 
-bool
-MusicManager::IsNoMusic()
+bool MusicManager::IsNoMusic()
 {
     if (music_manager)
         return music_manager->no_music;
@@ -384,36 +378,35 @@ MusicManager::IsNoMusic()
 
 // +-------------------------------------------------------------------+
 
-void
-MusicManager::GetNextTrack(int index)
+void MusicManager::GetNextTrack(int TrackIndex)
 {
     List<Text>* tracks = nullptr;
 
     switch (mode) {
-    case MENU:        tracks = &menu_tracks;     break;
-    case INTRO:       tracks = &intro_tracks;    break;
-    case BRIEFING:    tracks = &brief_tracks;    break;
-    case DEBRIEFING:  tracks = &debrief_tracks;  break;
-    case PROMOTION:   tracks = &promote_tracks;  break;
-    case FLIGHT:      tracks = &flight_tracks;   break;
-    case COMBAT:      tracks = &combat_tracks;   break;
-    case LAUNCH:      tracks = &launch_tracks;   break;
-    case RECOVERY:    tracks = &recovery_tracks; break;
-    case VICTORY:     tracks = &victory_tracks;  break;
-    case DEFEAT:      tracks = &defeat_tracks;   break;
-    case CREDITS:     tracks = &credit_tracks;   break;
-    default:          tracks = nullptr;          break;
+    case MusicMode::MENU:        tracks = &menu_tracks;     break;
+    case MusicMode::INTRO:       tracks = &intro_tracks;    break;
+    case MusicMode::BRIEFING:    tracks = &brief_tracks;    break;
+    case MusicMode::DEBRIEFING:  tracks = &debrief_tracks;  break;
+    case MusicMode::PROMOTION:   tracks = &promote_tracks;  break;
+    case MusicMode::FLIGHT:      tracks = &flight_tracks;   break;
+    case MusicMode::COMBAT:      tracks = &combat_tracks;   break;
+    case MusicMode::LAUNCH:      tracks = &launch_tracks;   break;
+    case MusicMode::RECOVERY:    tracks = &recovery_tracks; break;
+    case MusicMode::VICTORY:     tracks = &victory_tracks;  break;
+    case MusicMode::DEFEAT:      tracks = &defeat_tracks;   break;
+    case MusicMode::CREDITS:     tracks = &credit_tracks;   break;
+    default:                     tracks = nullptr;           break;
     }
 
     if (tracks && tracks->size()) {
         if (next_track)
             delete next_track;
 
-        if (index < 0 || index >= tracks->size()) {
-            index = 0;
+        if (TrackIndex < 0 || TrackIndex >= tracks->size()) {
+            TrackIndex = 0;
 
-            if (mode == INTRO) {
-                mode = MENU;
+            if (mode == MusicMode::INTRO) {
+                mode = MusicMode::MENU;
                 ShuffleTracks();
                 tracks = &menu_tracks;
 
@@ -424,7 +417,7 @@ MusicManager::GetNextTrack(int index)
             }
         }
 
-        next_track = new MusicTrack(*tracks->at(index), mode, index);
+        next_track = new MusicTrack(*tracks->at(TrackIndex), mode, TrackIndex);
         next_track->FadeIn();
     }
     else if (next_track) {
@@ -434,25 +427,24 @@ MusicManager::GetNextTrack(int index)
 
 // +-------------------------------------------------------------------+
 
-void
-MusicManager::ShuffleTracks()
+void MusicManager::ShuffleTracks()
 {
     List<Text>* tracks = nullptr;
 
     switch (mode) {
-    case MENU:        tracks = &menu_tracks;     break;
-    case INTRO:       tracks = &intro_tracks;    break;
-    case BRIEFING:    tracks = &brief_tracks;    break;
-    case DEBRIEFING:  tracks = &debrief_tracks;  break;
-    case PROMOTION:   tracks = &promote_tracks;  break;
-    case FLIGHT:      tracks = &flight_tracks;   break;
-    case COMBAT:      tracks = &combat_tracks;   break;
-    case LAUNCH:      tracks = &launch_tracks;   break;
-    case RECOVERY:    tracks = &recovery_tracks; break;
-    case VICTORY:     tracks = &victory_tracks;  break;
-    case DEFEAT:      tracks = &defeat_tracks;   break;
-    case CREDITS:     tracks = &credit_tracks;   break;
-    default:          tracks = nullptr;          break;
+    case MusicMode::MENU:        tracks = &menu_tracks;     break;
+    case MusicMode::INTRO:       tracks = &intro_tracks;    break;
+    case MusicMode::BRIEFING:    tracks = &brief_tracks;    break;
+    case MusicMode::DEBRIEFING:  tracks = &debrief_tracks;  break;
+    case MusicMode::PROMOTION:   tracks = &promote_tracks;  break;
+    case MusicMode::FLIGHT:      tracks = &flight_tracks;   break;
+    case MusicMode::COMBAT:      tracks = &combat_tracks;   break;
+    case MusicMode::LAUNCH:      tracks = &launch_tracks;   break;
+    case MusicMode::RECOVERY:    tracks = &recovery_tracks; break;
+    case MusicMode::VICTORY:     tracks = &victory_tracks;  break;
+    case MusicMode::DEFEAT:      tracks = &defeat_tracks;   break;
+    case MusicMode::CREDITS:     tracks = &credit_tracks;   break;
+    default:                     tracks = nullptr;           break;
     }
 
     if (tracks && tracks->size() > 1) {
@@ -460,8 +452,7 @@ MusicManager::ShuffleTracks()
 
         Text* t = tracks->at(0);
 
-        // Preserve original logic: if first entry isn't numbered, shuffle:
-        if (!isdigit(*t[0]))
+        if (!isdigit((*t)[0]))
             tracks->shuffle();
     }
 }
@@ -472,8 +463,7 @@ MusicManager::ShuffleTracks()
 static DWORD WINAPI MusicManagerThreadProc(LPVOID link);
 #endif
 
-void
-MusicManager::StartThread()
+void MusicManager::StartThread()
 {
 #if PLATFORM_WINDOWS
     if (hproc != 0) {
@@ -513,12 +503,11 @@ MusicManager::StartThread()
 #endif
 }
 
-void
-MusicManager::StopThread()
+void MusicManager::StopThread()
 {
 #if PLATFORM_WINDOWS
     if (hproc != 0) {
-        SetMode(SHUTDOWN);
+        SetMode(MusicMode::SHUTDOWN);
         ::WaitForSingleObject(hproc, 1500);
         ::CloseHandle(hproc);
         hproc = 0;
@@ -532,7 +521,7 @@ static DWORD WINAPI MusicManagerThreadProc(LPVOID link)
     MusicManager* mgr = (MusicManager*)link;
 
     if (mgr) {
-        while (mgr->GetMode() != MusicManager::SHUTDOWN) {
+        while (mgr->GetMode() != MusicMode::SHUTDOWN) {
             mgr->ExecFrame();
             ::Sleep(100);
         }

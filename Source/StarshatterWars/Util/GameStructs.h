@@ -841,6 +841,41 @@ enum class TacticalViewMenu : uint32 {
 	FARCAST = 2001
 };
 
+UENUM()
+enum class MusicMode : uint8
+{
+	NONE,
+
+	// menu modes:
+	MENU,
+	INTRO,
+	BRIEFING,
+	DEBRIEFING,
+	PROMOTION,
+	VICTORY,
+	DEFEAT,
+	CREDITS,
+
+	// in game modes:
+	FLIGHT,
+	COMBAT,
+	LAUNCH,
+	RECOVERY,
+
+	// special modes:
+	SHUTDOWN
+};
+
+UENUM()
+enum class MuisicTransition : uint8
+{
+	CUT,
+	FADE_OUT,
+	FADE_IN,
+	FADE_BOTH,
+	CROSS_FADE
+};
+
 /*static enum ETXT : int32
 {
 	MAX_CONTACT = 50,

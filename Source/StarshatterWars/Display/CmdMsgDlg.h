@@ -1,3 +1,20 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    ORIGINAL AUTHOR AND STUDIO:
+    John DiCamillo / Destroyer Studios LLC
+
+    SUBSYSTEM:    UI
+    FILE:         CmdMsgDlg.h
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Campaign message dialog (modal).
+    Displays simple text messages and blocks input until dismissed.
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -6,6 +23,7 @@
 
 class UTextBlock;
 class URichTextBlock;
+class UCmpnScreen;
 
 UCLASS()
 class STARSHATTERWARS_API UCmdMsgDlg : public UUserWidget
@@ -26,6 +44,8 @@ public:
     void SetTitleText(const FString& InTitle);
     void SetMessageText(const FString& InMessage);
 
+    void SetCmpnScreen(UCmpnScreen* InScreen);
+
 private:
     void UpdateFocusIfVisible();
     void HandleKeyboardShortcuts();
@@ -39,6 +59,9 @@ private:
 
     UPROPERTY(meta = (BindWidgetOptional))
     UTextBlock* MessageText = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UCmpnScreen> CmpnScreen = nullptr;
 
     bool bExitLatch = false;
     bool bWantsFocus = false;
