@@ -157,11 +157,11 @@ void UCmpnScreen::Setup()
 
     RefreshRuntimePointers();
 
-    EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg, 200);
-    EnsureDialog<UCmpFileDlg>(CmpFileDlgClass, CmpFileDlg, 300);
-    EnsureDialog<UCmdMsgDlg>(CmdMsgDlgClass, CmdMsgDlg, 310);
-    EnsureDialog<UCmpCompleteDlg>(CmpCompleteDlgClass, CmpCompleteDlg, 320);
-    EnsureDialog<UCampaignSceneDlg>(CmpSceneDlgClass, CmpSceneDlg, 330);
+    EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg, 400);
+    EnsureDialog<UCmpFileDlg>(CmpFileDlgClass, CmpFileDlg, 500);
+    EnsureDialog<UCmdMsgDlg>(CmdMsgDlgClass, CmdMsgDlg, 510);
+    EnsureDialog<UCmpCompleteDlg>(CmpCompleteDlgClass, CmpCompleteDlg, 520);
+    EnsureDialog<UCampaignSceneDlg>(CmpSceneDlgClass, CmpSceneDlg, 530);
 
     ApplyManagerToChildren();
 
@@ -523,8 +523,23 @@ void UCmpnScreen::ShowCmdDlg()
     {
         CmdDlg->SetVisibility(ESlateVisibility::Visible);
         CmdDlg->SetIsEnabled(true);
+        CmdDlg->SetIsFocusable(true);
         CmdDlg->SetDialogInputEnabled(true);
         CmdDlg->ShowCmdDlg();
+
+        if (APlayerController* PC = GetOwningPlayer())
+        {
+            PC->bShowMouseCursor = true;
+            PC->bEnableClickEvents = true;
+            PC->bEnableMouseOverEvents = true;
+
+            FInputModeGameAndUI Mode;
+            Mode.SetWidgetToFocus(CmdDlg->TakeWidget());
+            Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+            Mode.SetHideCursorDuringCapture(false);
+            PC->SetInputMode(Mode);
+        }
+
         Mouse::Show(true);
     }
 }

@@ -410,7 +410,62 @@ void UCmdDlg::ShowCmdDlg()
 
 void UCmdDlg::ExecFrame(double DeltaTime)
 {
+    if (!CampaignPtr)
+        CampaignPtr = Campaign::GetCampaign();
 
+    if (!CampaignPtr)
+        return;
+
+    if (CurrentUnitText)
+    {
+        CombatGroup* G = CampaignPtr->GetPlayerGroup();
+        if (G)
+            CurrentUnitText->SetText(FText::FromString(G->GetDescription()));
+    }
+
+    if (PlayerScoreText)
+    {
+        const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
+        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
+        PlayerScoreText->SetText(FText::FromString(ScoreStr));
+        PlayerScoreText->SetJustification(ETextJustify::Right);
+    }
+
+    if (CampaignTPlusText)
+    {
+        const double T = CampaignPtr->GetTime();
+
+        char DayTime[32] = { 0 };
+        FormatDayTime(DayTime, T);
+
+        CampaignTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+    }
+
+    const int32 Unread = CampaignPtr->CountNewEvents();
+
+    RefreshCommandButtons();
+
+    if (CmdOrdersPanel)
+    {
+        CmdOrdersPanel->ShowOrdersDlg();
+    }
+
+    if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
+    {
+        if (UTextBlock* Label = Cast<UTextBlock>(AllMenuButtons[3]->GetWidgetFromName(TEXT("Label"))))
+        {
+            if (Unread > 0)
+            {
+                Label->SetText(FText::FromString(FString::Printf(TEXT("INTEL (%d)"), Unread)));
+            }
+            else
+            {
+                Label->SetText(FText::FromString(TEXT("INTEL")));
+            }
+        }
+    }
+
+    UpdateMissionButton();
 }
 
 void UCmdDlg::OnSaveClicked()
@@ -443,16 +498,19 @@ void UCmdDlg::OnExitClicked()
 
 void UCmdDlg::OnCancelButtonClicked()
 {
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
-    }
+    SetDialogInputEnabled(false);
+    SetVisibility(ESlateVisibility::Hidden);
+
+    Mouse::Show(true);
 
     if (manager)
-        manager->ShowMenuDlg();
+    {
+        manager->ShowCampaignSelectDlg();
+    }
     else
+    {
         HideDlg();
+    }
 }
 
 void UCmdDlg::OnCancelButtonHovered()
