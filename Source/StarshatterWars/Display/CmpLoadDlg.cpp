@@ -263,7 +263,7 @@ void UCmpLoadDlg::LoadArtAssets()
     {
         SerpentineFontObject = LoadObject<UObject>(
             nullptr,
-            TEXT("/Game/Font/SERPNTB.SERPNTB"));
+            TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font"));
     }
 }
 
