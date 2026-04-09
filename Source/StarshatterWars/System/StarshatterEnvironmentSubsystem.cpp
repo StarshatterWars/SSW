@@ -237,8 +237,8 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 
 	ClearRuntimeCaches();
 
-	// LoadGalaxyMap();
-	// LoadStarsystems();
+	//LoadGalaxyMap();
+	//LoadStarsystems();
 	CreateEnvironmentTables();
 
 	Galaxy::InitializeFromEnvironment(this);
@@ -2238,30 +2238,47 @@ TStatId UStarshatterEnvironmentSubsystem::GetStatId() const
 
 void UStarshatterEnvironmentSubsystem::BuildRuntimeStarSystems()
 {
-	for (StarSystem* System : RuntimeStarSystems)
-	{
-		delete System;
-	}
-	RuntimeStarSystems.Reset();
+	RuntimeStarSystems.Empty();
 
 	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
 	{
-		StarSystem* RuntimeSystem = new StarSystem(
-			TCHAR_TO_ANSI(*GalaxyRow.Name),
-			GalaxyRow.Location,
-			GalaxyRow.Iff,
-			Star::G);
-
-		if (!RuntimeSystem)
+		if (GalaxyRow.Name.IsEmpty())
 		{
 			continue;
 		}
 
-		const FS_StarSystem* Meta = StarSystemByName.Find(GalaxyRow.Name);
-		RuntimeSystem->HydrateFromEnvironment(GalaxyRow, Meta);
+		const float GalaxyRuntimeScale = 10.0f;
+		const FVector RuntimeLoc = GalaxyRow.Location * GalaxyRuntimeScale;
 
-		RegisterStarSystem(RuntimeSystem);
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Env] %s raw=(%.2f %.2f %.2f) scaled=(%.2f %.2f %.2f)"),
+			*GalaxyRow.Name,
+			GalaxyRow.Location.X, GalaxyRow.Location.Y, GalaxyRow.Location.Z,
+			RuntimeLoc.X, RuntimeLoc.Y, RuntimeLoc.Z);
+
+		StarSystem* StarSys = new StarSystem(
+			TCHAR_TO_ANSI(*GalaxyRow.Name),
+			RuntimeLoc,
+			GalaxyRow.Iff,
+			Star::G);
+
+		if (!StarSys)
+		{
+			continue;
+		}
+
+		StarSys->HydrateFromEnvironment(GalaxyRow, nullptr);
+
+		RuntimeStarSystems.Add(StarSys);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Env] Built StarSystem: %s"),
+			*GalaxyRow.Name);
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Env] Total Runtime Systems: %d"),
+		RuntimeStarSystems.Num());
 }
 
 void UStarshatterEnvironmentSubsystem::RegisterStar(OrbitalBody* Body)
