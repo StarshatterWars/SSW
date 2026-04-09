@@ -239,38 +239,6 @@ void USSWGameInstance::LoadTransitionScreen()
 	}
 }
 
-void USSWGameInstance::LoadMissionBriefingScreen()
-{
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(false);
-			PlayerController->bShowMouseCursor = false; UGameplayStatics::OpenLevel(this, "MissionBriefing");
-		}
-	}
-}
-
-void USSWGameInstance::LoadGameLevel(FString LevelName)
-{
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeGameAndUI InputModeData;
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(false);
-			PlayerController->bShowMouseCursor = false; UGameplayStatics::OpenLevel(this, FName(LevelName));
-		}
-	}
-}
-
 void USSWGameInstance::Init()
 {
 	Super::Init();
