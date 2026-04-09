@@ -1,20 +1,3 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (C) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmpCompleteDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmpCompleteDlg implementation.
-*/
-
 #include "CmpCompleteDlg.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -23,11 +6,10 @@
 #include "Components/Image.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Engine/Texture2D.h"
 
 #include "Campaign.h"
-#include "CombatEvent.h"
 #include "CmpnScreen.h"
+#include "SSWGameInstance.h"
 
 UCmpCompleteDlg::UCmpCompleteDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -86,10 +68,18 @@ void UCmpCompleteDlg::BuildTopBackground()
     {
         TopSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
         TopSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 120.f));
-        TopSlot->SetZOrder(0);
     }
 
-    BgTop->SetColorAndOpacity(FLinearColor(0.02f, 0.02f, 0.04f, 1.0f));
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (GI->GetActiveCampaignUIBundle().LoadTop)
+        {
+            BgTop->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().LoadTop);
+            return;
+        }
+    }
+
+    BgTop->SetColorAndOpacity(FLinearColor::Black);
 }
 
 void UCmpCompleteDlg::BuildCenterBanner()
@@ -99,11 +89,9 @@ void UCmpCompleteDlg::BuildCenterBanner()
     UCanvasPanelSlot* CenterSlot = RootCanvas->AddChildToCanvas(TitleImage);
     if (CenterSlot)
     {
-        CenterSlot->SetAnchors(FAnchors(0.5f, 0.45f, 0.5f, 0.45f));
+        CenterSlot->SetAnchors(FAnchors(0.5f, 0.5f));
         CenterSlot->SetAlignment(FVector2D(0.5f, 0.5f));
         CenterSlot->SetSize(FVector2D(1024.f, 512.f));
-        CenterSlot->SetPosition(FVector2D(0.f, 0.f));
-        CenterSlot->SetZOrder(10);
     }
 }
 
@@ -111,86 +99,51 @@ void UCmpCompleteDlg::BuildBottomPanel()
 {
     BgBottom = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("BgBottom"));
 
-    UCanvasPanelSlot* BgSlot = RootCanvas->AddChildToCanvas(BgBottom);
-    if (BgSlot)
+    UCanvasPanelSlot* BottomSlot = RootCanvas->AddChildToCanvas(BgBottom);
+    if (BottomSlot)
     {
-        BgSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
-        BgSlot->SetAlignment(FVector2D(0.f, 1.f));
-        BgSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 140.f));
-        BgSlot->SetZOrder(1);
+        BottomSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
+        BottomSlot->SetAlignment(FVector2D(0.f, 1.f));
+        BottomSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 140.f));
     }
 
-    BgBottom->SetColorAndOpacity(FLinearColor(0.05f, 0.05f, 0.08f, 0.95f));
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (GI->GetActiveCampaignUIBundle().LoadBottom)
+        {
+            BgBottom->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().LoadBottom);
+        }
+    }
 
     InfoLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InfoLabel"));
-    UCanvasPanelSlot* InfoSlot = RootCanvas->AddChildToCanvas(InfoLabel);
-    if (InfoSlot)
-    {
-        InfoSlot->SetAnchors(FAnchors(0.5f, 1.f, 0.5f, 1.f));
-        InfoSlot->SetAlignment(FVector2D(0.5f, 1.f));
-        InfoSlot->SetPosition(FVector2D(0.f, -72.f));
-        InfoSlot->SetSize(FVector2D(600.f, 32.f));
-        InfoSlot->SetZOrder(20);
-    }
-
     InfoLabel->SetText(FText::FromString(TEXT("CAMPAIGN COMPLETE")));
     InfoLabel->SetJustification(ETextJustify::Center);
 
+    RootCanvas->AddChildToCanvas(InfoLabel);
+
     CloseButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("CloseButton"));
-    UCanvasPanelSlot* ButtonSlot = RootCanvas->AddChildToCanvas(CloseButton);
-    if (ButtonSlot)
-    {
-        ButtonSlot->SetAnchors(FAnchors(0.5f, 1.f, 0.5f, 1.f));
-        ButtonSlot->SetAlignment(FVector2D(0.5f, 1.f));
-        ButtonSlot->SetPosition(FVector2D(0.f, -20.f));
-        ButtonSlot->SetSize(FVector2D(180.f, 36.f));
-        ButtonSlot->SetZOrder(30);
-    }
+    RootCanvas->AddChildToCanvas(CloseButton);
 
     CloseButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CloseButtonText"));
     CloseButtonText->SetText(FText::FromString(TEXT("CLOSE")));
-    CloseButtonText->SetJustification(ETextJustify::Center);
+
     CloseButton->AddChild(CloseButtonText);
 }
 
 void UCmpCompleteDlg::ShowCompleteDlg()
 {
     ShowTime = 0.0f;
-    CampaignPtr = Campaign::GetCampaign();
 
     SetVisibility(ESlateVisibility::Visible);
     SetIsEnabled(true);
-    SetIsFocusable(true);
     SetDialogInputEnabled(true);
 
-    if (!CampaignPtr || !TitleImage)
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
     {
-        return;
-    }
-
-    CombatEvent* Event = CampaignPtr->GetLastEvent();
-    if (!Event)
-    {
-        return;
-    }
-
-    FString ImageName = UTF8_TO_TCHAR(Event->ImageFile());
-    FString CampaignPath = UTF8_TO_TCHAR(CampaignPtr->Path());
-
-    if (ImageName.IsEmpty() || CampaignPath.IsEmpty())
-    {
-        return;
-    }
-
-    if (!ImageName.EndsWith(TEXT(".pcx"), ESearchCase::IgnoreCase))
-    {
-        ImageName += TEXT(".pcx");
-    }
-
-    BannerTexture = LoadCampaignTexture(CampaignPath, ImageName);
-    if (BannerTexture)
-    {
-        TitleImage->SetBrushFromTexture(BannerTexture, false);
+        if (GI->GetActiveCampaignUIBundle().CampaignComplete)
+        {
+            TitleImage->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().CampaignComplete);
+        }
     }
 }
 
@@ -208,13 +161,4 @@ void UCmpCompleteDlg::HandleCloseClicked()
     {
         Manager->ShowCmdDlg();
     }
-}
-
-UTexture2D* UCmpCompleteDlg::LoadCampaignTexture(const FString& CampaignPath, const FString& ImageFile) const
-{
-    // Stub for now.
-    // Hook your DataLoader/bitmap bridge here later.
-    (void)CampaignPath;
-    (void)ImageFile;
-    return nullptr;
 }

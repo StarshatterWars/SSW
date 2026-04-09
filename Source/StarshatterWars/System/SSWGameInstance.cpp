@@ -22,6 +22,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Engine/Texture2D.h"
 #include "UObject/Package.h" // For data asset support
 
 #include "MusicController.h"
@@ -85,14 +86,6 @@ void USSWGameInstance::OnStart()
 
 }
 
-void USSWGameInstance::SetProjectPath()
-{
-	ProjectPath = FPaths::ProjectDir();
-	ProjectPath.Append(TEXT("GameData/")); 
-
-	UE_LOG(LogTemp, Log, TEXT("Setting Game Data Directory %s"), *ProjectPath);
-}
-
 void USSWGameInstance::StartGameTimers()
 {
 	UWorld* World = GetWorld();
@@ -100,11 +93,6 @@ void USSWGameInstance::StartGameTimers()
 	{
 		World->GetTimerManager().SetTimer(TimerHandle, this, &USSWGameInstance::OnGameTimerTick, 1.0f, true);
 	}
-}
-
-FString USSWGameInstance::GetProjectPath()
-{
-	return ProjectPath;
 }
 
 void USSWGameInstance::Print(const FString& A, const FString& B)
@@ -276,7 +264,6 @@ void USSWGameInstance::Init()
 	// ---------------------------------------------------------
 	// Paths + Data Loader
 	// ---------------------------------------------------------
-	SetProjectPath();
 	CampaignData.SetNum(5);
 
 	loader = DataLoader::GetLoader();
@@ -311,6 +298,7 @@ void USSWGameInstance::Shutdown()
 	{
 		AudioDevice->Flush(nullptr); // Stops all active sounds immediately
 	}
+	ClearCampaignUIBundle();
 }
 
 bool USSWGameInstance::InitGame()
@@ -850,6 +838,77 @@ void USSWGameInstance::EnsureSystemOverview(
 	}
 }
 
+void USSWGameInstance::LoadCampaignUIBundle(const FString& CampaignFolder)
+{
+	ActiveCampaignUIBundle = FS_CampaignUIBundle{};
+	ActiveCampaignUIBundle.CampaignFolder = CampaignFolder.TrimStartAndEnd();
+
+	static const TCHAR* TopTexturePath =
+		TEXT("/Game/UI/LoadDlg2.LoadDlg2");
+
+	static const TCHAR* BottomTexturePath =
+		TEXT("/Game/UI/LoadDlg1.LoadDlg1");
+
+	ActiveCampaignUIBundle.LoadTop =
+		LoadObject<UTexture2D>(nullptr, TopTexturePath);
+
+	if (!ActiveCampaignUIBundle.LoadTop)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load top texture: %s"),
+			TopTexturePath);
+	}
+
+	ActiveCampaignUIBundle.LoadBottom =
+		LoadObject<UTexture2D>(nullptr, BottomTexturePath);
+
+	if (!ActiveCampaignUIBundle.LoadBottom)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load bottom texture: %s"),
+			BottomTexturePath);
+	}
+
+	const FString CompleteTexturePath = FString::Printf(
+		TEXT("/Game/UI/Campaigns/%s/campaign-complete.campaign-complete"),
+		*ActiveCampaignUIBundle.CampaignFolder);
+
+	ActiveCampaignUIBundle.CampaignComplete =
+		LoadObject<UTexture2D>(nullptr, *CompleteTexturePath);
+
+	if (!ActiveCampaignUIBundle.CampaignComplete)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load campaign completion texture: %s"),
+			*CompleteTexturePath);
+
+		ActiveCampaignUIBundle.CampaignComplete =
+			LoadObject<UTexture2D>(nullptr,
+				TEXT("/Game/UI/Campaigns/01/campaign-complete.campaign-complete"));
+
+		if (ActiveCampaignUIBundle.CampaignComplete)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CampaignUI] Fallback loaded: /Game/UI/Campaigns/01/campaign-complete.campaign-complete"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[CampaignUI] Failed to load fallback campaign completion texture"));
+		}
+	}
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[CampaignUI] Bundle loaded for folder '%s'"),
+		*ActiveCampaignUIBundle.CampaignFolder);
+}
+
+void USSWGameInstance::ClearCampaignUIBundle()
+{
+	ActiveCampaignUIBundle = FS_CampaignUIBundle{};
+
+	UE_LOG(LogTemp, Log, TEXT("[CampaignUI] Bundle cleared"));
+}
 //void USSWGameInstance::SetTimeScale(double NewTimeScale)
 //{
 //	TimeScale = FMath::Clamp(NewTimeScale, 0.0, 1.0e7);
@@ -1052,6 +1111,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 	// Normalize
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 
+	const FString CampaignFolder = FString::Printf(TEXT("%02d"), CampaignIndex);
 	const FString Slot = UCampaignSave::MakeSlotNameFromRowName(RowName);
 	constexpr int32 UserIndex = 0;
 
@@ -1080,15 +1140,17 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 
 			CampaignSave = LoadedSave;
 
+			// Load campaign UI bundle for this campaign
+			LoadCampaignUIBundle(CampaignFolder);
+
 			if (Timer)
 			{
-				// ---- One-time repair for older saves that never stored the anchor ----
+				// One-time repair for older saves that never stored the anchor
 				if (!CampaignSave->bInitialized || CampaignSave->CampaignStartUniverseSeconds == 0)
 				{
 					const uint64 Now = Timer->GetUniverseTimeSeconds();
 					CampaignSave->InitializeCampaignClock(Now);
 
-					// Persist the repaired anchor so it doesn't "reset" next load:
 					UGameplayStatics::SaveGameToSlot(CampaignSave, Slot, UserIndex);
 				}
 
@@ -1102,7 +1164,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 					(unsigned long long)LoadedSave->CampaignStartUniverseSeconds,
 					LoadedSave->bInitialized ? 1 : 0);
 
-				Timer->SetCampaignSave(LoadedSave);  // explicitly LoadedSave
+				Timer->SetCampaignSave(LoadedSave);
 			}
 
 			return CampaignSave;
@@ -1123,7 +1185,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 	NewSave->CampaignRowName = RowName;
 	NewSave->CampaignDisplayName = DisplayName;
 
-	// Anchor campaign clock to CURRENT universe time (from subsystem)
+	// Anchor campaign clock to current universe time
 	const uint64 NowUniverse = Timer ? Timer->GetUniverseTimeSeconds() : 0ULL;
 	NewSave->InitializeCampaignClock(NowUniverse);
 
@@ -1135,6 +1197,9 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 
 	// Assign + inject
 	CampaignSave = NewSave;
+
+	// Load campaign UI bundle for this campaign
+	LoadCampaignUIBundle(CampaignFolder);
 
 	if (Timer)
 	{

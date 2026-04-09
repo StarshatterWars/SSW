@@ -1,22 +1,5 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (C) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO
-    ==========================
-    John DiCamillo / Destroyer Studios LLC
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmpCompleteDlg.h
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    UCmpCompleteDlg
-    - Unreal port of legacy CmpCompleteDlg.
-    - Fully code-generated dialog owned by CmpnScreen.
-    - Displays the last campaign event image if available.
-    - Close returns to CmdDlg.
 */
 
 #pragma once
@@ -58,8 +41,6 @@ protected:
     UFUNCTION()
     void HandleCloseClicked();
 
-    virtual UTexture2D* LoadCampaignTexture(const FString& CampaignPath, const FString& ImageFile) const;
-
 protected:
     UPROPERTY()
     TObjectPtr<UImage> BgTop = nullptr;
@@ -82,9 +63,6 @@ protected:
 protected:
     UCmpnScreen* Manager = nullptr;
     Campaign* CampaignPtr = nullptr;
-
-    UPROPERTY(Transient)
-    TObjectPtr<UTexture2D> BannerTexture = nullptr;
 
     float ShowTime = 0.0f;
     bool bScreenBuilt = false;

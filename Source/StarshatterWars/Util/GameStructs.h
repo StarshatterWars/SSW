@@ -943,6 +943,24 @@ enum class MuisicTransition : uint8
  * STRUCTS
  */
 
+USTRUCT(BlueprintType)
+struct FS_CampaignUIBundle
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Campaign UI")
+	FString CampaignFolder;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> LoadTop = nullptr;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> LoadBottom = nullptr;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> CampaignComplete = nullptr;
+};
+
 USTRUCT()
 struct FJumpLink
 {
