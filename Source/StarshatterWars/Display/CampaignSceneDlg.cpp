@@ -9,7 +9,7 @@
     OVERVIEW
     ========
     CampaignSceneDlg (Unreal)
-    - Ported from legacy CmpSceneDlg (Starshatter 4.5).
+    - Timer-driven V1 cutscene viewer.
 */
 
 #include "CampaignSceneDlg.h"
@@ -18,6 +18,7 @@
 #include "Components/PanelWidget.h"
 #include "Components/RichTextBlock.h"
 #include "Kismet/GameplayStatics.h"
+#include "CampaignScreen.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -30,8 +31,13 @@ void UCampaignSceneDlg::NativeConstruct()
 
     RegisterControls();
 
-    // Dialog starts hidden by default in most flows; if you want auto-show, call Show() externally.
     bCutsceneInitialized = false;
+    bSceneRunning = false;
+    SceneStartRealSeconds = 0.0f;
+    SceneDurationSeconds = 0.0f;
+    ActiveSceneName.Empty();
+
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UCampaignSceneDlg::NativeDestruct()
@@ -42,74 +48,114 @@ void UCampaignSceneDlg::NativeDestruct()
 void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame(InDeltaTime);
+
+    // Intentionally inert in V1.
+    // Scene advancement is driven externally by the shared timer/event callback.
 }
 
 void UCampaignSceneDlg::RegisterControls()
 {
-    // BindWidgetOptional members are already assigned by UMG if names match.
-    // Nothing else to do here unless you want runtime widget discovery.
+    // BindWidgetOptional members are assigned automatically if names match in WBP.
+    // No runtime discovery required for V1.
 }
 
 void UCampaignSceneDlg::Show()
 {
     SetVisibility(ESlateVisibility::Visible);
 
-    bCutsceneInitialized = false;
-
     if (bEnableSubtitles)
     {
-        BuildSubtitlesCache();
-        SubtitleTopLine = 0;
-        SubtitlesDelaySeconds = 0.0f;
-        NextSubtitleTimeSeconds = 0.0f;
-
         if (SubtitlesText)
         {
-            SubtitlesText->SetText(FText::FromString(TEXT("")));
+            SubtitlesText->SetText(FText::GetEmpty());
         }
     }
 
-    // NOTE:
-    // The legacy code wires CameraView/DisplayView to a window and scene.
-    // In Unreal, SceneHost is typically a panel that contains:
-    // - a SceneCapture2D render target image, OR
-    // - a viewport/UMG wrapper you already built.
-    //
-    // Hook your existing cutscene/camera pipeline here.
+    // V1 hook point:
+    // SceneHost can later contain a render target image or your existing scene view widget.
 }
 
 void UCampaignSceneDlg::Hide()
 {
     SetVisibility(ESlateVisibility::Collapsed);
-
-    // Undo any "DisplayView set window" behavior here if your port has an equivalent.
 }
 
 void UCampaignSceneDlg::ExecFrame(float DeltaSeconds)
 {
-    // If you have a manager-driven flow:
-    // - If cutscene is missing/over, bounce back to command dialog.
-    //
-    // Legacy behavior:
-    // if (!cutscene_mission) manager->ShowCmdDlg();
+    // Retained for interface compatibility.
+    // V1 scene progression is driven by AdvanceSceneFromTimer().
+    (void)DeltaSeconds;
+}
 
-    const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
+{
+    ActiveSceneName = InSceneName;
+    SceneDurationSeconds = FMath::Max(0.0f, InDurationSeconds);
+    SceneStartRealSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+    bSceneRunning = true;
+    bCutsceneInitialized = false;
+
+    SubtitleLines.Reset();
+    SubtitleTopLine = 0;
+    SubtitlesDelaySeconds = 0.0f;
+    NextSubtitleTimeSeconds = 0.0f;
+
+    Show();
+
+    if (bEnableSubtitles)
+    {
+        BuildSubtitlesCache();
+
+        if (SubtitlesText)
+        {
+            SubtitlesText->SetText(FText::GetEmpty());
+        }
+    }
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[CampaignSceneDlg] BeginSceneByName: Scene=%s Duration=%.2f"),
+        *ActiveSceneName,
+        SceneDurationSeconds);
+}
+
+void UCampaignSceneDlg::AdvanceSceneFromTimer(float NowSeconds)
+{
+    if (!bSceneRunning)
+    {
+        return;
+    }
 
     if (!bCutsceneInitialized)
     {
         bCutsceneInitialized = true;
 
-        // Initialize lens flare/corona elements if your camera view supports it.
-        // In Unreal, usually handled by post process/materials; keep flags for parity.
-        //
-        // bEnableLensFlare: use flare1..flare4
-        // bEnableCoronaOnly: flare1 only
+        UE_LOG(LogTemp, Log,
+            TEXT("[CampaignSceneDlg] Initializing scene: %s"),
+            *ActiveSceneName);
+
+        // Future hook:
+        // initialize scene render / camera / display pipeline here.
     }
 
     if (bEnableSubtitles)
     {
         AdvanceSubtitlesIfNeeded(NowSeconds);
+    }
+
+    const float Elapsed = NowSeconds - SceneStartRealSeconds;
+    if (SceneDurationSeconds > 0.0f && Elapsed >= SceneDurationSeconds)
+    {
+        UE_LOG(LogTemp, Log,
+            TEXT("[CampaignSceneDlg] Scene complete: %s"),
+            *ActiveSceneName);
+
+        bSceneRunning = false;
+        Hide();
+
+        if (Manager)
+        {
+            Manager->ShowCmdDlg();
+        }
     }
 }
 
@@ -117,10 +163,8 @@ void UCampaignSceneDlg::BuildSubtitlesCache()
 {
     SubtitleLines.Reset();
 
-    // Legacy: stars->GetSubtitles()
-    // In Unreal: you can push subtitles text into the widget before Show(), or fetch from a subsystem.
-    //
-    // For now, read whatever is currently in SubtitlesText as the source (safe default).
+    // V1 safe default:
+    // use current widget text as subtitle source if pre-seeded externally.
     FString Raw;
     if (SubtitlesText)
     {
@@ -134,13 +178,11 @@ void UCampaignSceneDlg::BuildSubtitlesCache()
 
     Raw.ReplaceInline(TEXT("\r\n"), TEXT("\n"));
     Raw.ReplaceInline(TEXT("\r"), TEXT("\n"));
-
     Raw.ParseIntoArrayLines(SubtitleLines, false);
 
-    // Reset displayed text
     if (SubtitlesText)
     {
-        SubtitlesText->SetText(FText::FromString(TEXT("")));
+        SubtitlesText->SetText(FText::GetEmpty());
     }
 }
 
@@ -156,16 +198,12 @@ void UCampaignSceneDlg::AdvanceSubtitlesIfNeeded(float NowSeconds)
         return;
     }
 
-    // Legacy computes delay from (END_SCENE - BEGIN_SCENE) / nlines.
-    // If you have that mission event timing, set SubtitlesDelaySeconds before calling Show().
-    //
-    // Fallback: 2.5 seconds per line.
+    // Fallback delay per line for V1.
+    // Later this can be derived from BeginScene/EndScene timing from mission data.
     if (SubtitlesDelaySeconds == 0.0f)
     {
         SubtitlesDelaySeconds = 2.5f;
         NextSubtitleTimeSeconds = NowSeconds + SubtitlesDelaySeconds;
-
-        // Render initial block
         SubtitleTopLine = 0;
     }
 
@@ -185,14 +223,17 @@ void UCampaignSceneDlg::AdvanceSubtitlesIfNeeded(float NowSeconds)
         SubtitleTopLine = SubtitleLines.Num() - 1;
     }
 
-    // Render a window of lines like a scrolling box
     const int32 Start = FMath::Clamp(SubtitleTopLine, 0, SubtitleLines.Num() - 1);
-    const int32 EndExclusive = FMath::Clamp(Start + FMath::Max(1, MaxSubtitleLinesVisible), 0, SubtitleLines.Num());
+    const int32 EndExclusive = FMath::Clamp(
+        Start + FMath::Max(1, MaxSubtitleLinesVisible),
+        0,
+        SubtitleLines.Num());
 
     FString Out;
     for (int32 i = Start; i < EndExclusive; ++i)
     {
         Out += SubtitleLines[i];
+
         if (i + 1 < EndExclusive)
         {
             Out += TEXT("\n");

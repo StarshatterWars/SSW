@@ -119,6 +119,10 @@ protected:
     void ApplyManagerToChildren();
 
 protected:
+    FString ActiveSceneName;
+    float ActiveSceneDurationSeconds = 0.0f;
+
+protected:
     UPROPERTY()
     TObjectPtr<UCmdDlg> CmdDlg = nullptr;
 

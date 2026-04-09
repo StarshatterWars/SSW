@@ -9,9 +9,10 @@
     OVERVIEW
     ========
     CampaignSceneDlg (Unreal)
-    - Campaign title card and load/cutscene dialog.
-    - Ported from legacy CmpSceneDlg (Starshatter 4.5).
-    - Hosts a "scene" view area plus optional subtitles.
+    - Campaign title card / cutscene viewer.
+    - Timer-driven V1 implementation.
+    - Scene progression is advanced externally by the existing
+      campaign/event timer callback, not by widget tick.
 */
 
 #pragma once
@@ -22,10 +23,9 @@
 
 class UPanelWidget;
 class URichTextBlock;
+class UTexture2D;
 
 class UCampaignScreen;
-
-class UTexture2D;
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -40,7 +40,18 @@ public:
     virtual void Show();
     virtual void Hide();
 
+    // Legacy-style entry point retained for compatibility,
+    // but V1 scene progression is driven externally.
     virtual void ExecFrame(float DeltaSeconds);
+
+    // ------------------------------------------------------------
+    // Timer-driven V1 API
+    // ------------------------------------------------------------
+    void BeginSceneByName(const FString& InSceneName, float InDurationSeconds);
+    void AdvanceSceneFromTimer(float NowSeconds);
+
+    bool IsSceneRunning() const { return bSceneRunning; }
+    const FString& GetActiveSceneName() const { return ActiveSceneName; }
 
 protected:
     virtual void NativeConstruct() override;
@@ -53,7 +64,7 @@ protected:
     void AdvanceSubtitlesIfNeeded(float NowSeconds);
 
 protected:
-    // UMG bind points (wire these in the widget blueprint)
+    // UMG bind points
     UPROPERTY(VisibleAnywhere, Category = "CampaignScene|Widgets", meta = (BindWidgetOptional))
     UPanelWidget* SceneHost = nullptr;
 
@@ -73,7 +84,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Options")
     int32 MaxSubtitleLinesVisible = 6;
 
-    // Assets (assign in defaults/BP)
+    // Assets
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
     TSoftObjectPtr<UTexture2D> Flare1;
 
@@ -86,8 +97,23 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
     TSoftObjectPtr<UTexture2D> Flare4;
 
+    // ------------------------------------------------------------
+    // Timer-driven scene state
+    // ------------------------------------------------------------
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|State")
+    FString ActiveSceneName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|State")
+    float SceneStartRealSeconds = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|State")
+    float SceneDurationSeconds = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|State")
+    bool bSceneRunning = false;
+
 protected:
-    // Raw pointers by request (no UPROPERTY)
+    // Raw pointer by request
     UCampaignScreen* Manager = nullptr;
 
     // Subtitles state
@@ -96,6 +122,6 @@ protected:
     float SubtitlesDelaySeconds = 0.0f;
     float NextSubtitleTimeSeconds = 0.0f;
 
-    // One-shot init each Show()
+    // One-shot init per scene start
     bool bCutsceneInitialized = false;
 };
