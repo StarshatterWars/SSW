@@ -1707,7 +1707,7 @@ void UMissionNavDlg::BuildSectorObjects()
         return;
     }
 
-    ListIter<OrbitalRegion> RegionIter = System->AllRegions();
+    ListIter<OrbitalRegion> RegionIter = System->GetAllRegions();
     while (++RegionIter)
     {
         OrbitalRegion* Region = RegionIter.value();

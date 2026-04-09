@@ -267,7 +267,7 @@ void UMissionEditorDlg::Show()
             // NOTE: depending on your List<T> semantics, copying OrbitalRegion by value may be heavy.
             // Keeping as-is to match legacy code patterns:
             List<OrbitalRegion> regions;
-            regions.append(sys->AllRegions());
+            regions.append(sys->GetAllRegions());
             regions.sort();
 
             int32 sel_rgn = 0;
@@ -504,7 +504,7 @@ void UMissionEditorDlg::OnSystemSelectChanged(FString SelectedItem, ESelectInfo:
         CmbRegion->ClearOptions();
 
         List<OrbitalRegion> regions;
-        regions.append(sys->AllRegions());
+        regions.append(sys->GetAllRegions());
         regions.sort();
 
         ListIter<OrbitalRegion> iter = regions;

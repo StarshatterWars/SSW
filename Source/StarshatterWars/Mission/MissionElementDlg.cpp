@@ -275,7 +275,7 @@ void UMissionElementDlg::RebuildFromModel()
             if (Sys)
             {
                 List<OrbitalRegion> Regions;
-                Regions.append(Sys->AllRegions());
+                Regions.append(Sys->GetAllRegions());
                 Regions.sort();
 
                 ListIter<OrbitalRegion> Iter = Regions;

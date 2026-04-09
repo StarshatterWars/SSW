@@ -83,9 +83,9 @@ public:
     int             GetNumDust()        const { return sky_dust; }
     FColor          GetAmbient()        const;
 
-    List<OrbitalBody>& Bodies() { return bodies; }
-    List<OrbitalRegion>& Regions() { return regions; }
-    List<OrbitalRegion>& AllRegions() { return all_regions; }
+    List<OrbitalBody>& GetBodies() { return bodies; }
+    List<OrbitalRegion>& GetRegions() { return regions; }
+    List<OrbitalRegion>& GetAllRegions() { return all_regions; }
     OrbitalRegion* ActiveRegion() { return active_region; }
 
     Orbital* FindOrbital(const char* in_name);
@@ -99,7 +99,7 @@ public:
     static double GetStardate() { return stardate; }
     static void   CalcStardate();
 
-    double        Radius() const { return radius; }
+    double        GetRadius() const { return radius; }
 
     bool          HasLinkTo(StarSystem* s) const;
 

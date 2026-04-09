@@ -36,6 +36,7 @@
 #include "Term.h"
 #include "Galaxy.h"
 #include "StarSystem.h"
+
 #include "StarSystemRegistry.h"
 
 #include "SSWGameInstance.h"

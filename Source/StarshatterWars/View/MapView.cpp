@@ -184,7 +184,7 @@ void MapView::SetSystem(StarSystem* s)
 				}
 			}
 
-			ListIter<OrbitalRegion> rgn = system->AllRegions();
+			ListIter<OrbitalRegion> rgn = system->GetAllRegions();
 			while (++rgn)
 				regions.append(rgn.value());
 

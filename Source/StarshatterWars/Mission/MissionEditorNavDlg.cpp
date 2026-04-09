@@ -291,7 +291,7 @@ void UMissionEditorNavDlg::PopulateRegionsForSystem(StarSystem* Sys)
         return;
 
     List<OrbitalRegion> regions;
-    regions.append(Sys->AllRegions());
+    regions.append(Sys->GetAllRegions());
     regions.sort();
 
     ListIter<OrbitalRegion> iter = regions;

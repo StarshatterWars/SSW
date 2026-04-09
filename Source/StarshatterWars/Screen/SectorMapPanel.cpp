@@ -421,7 +421,7 @@ void USectorMapPanel::RefreshView()
         // 3. Final fallback to first available region
         if (!CachedRegion)
         {
-            ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
+            ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->GetAllRegions();
             while (++RegionIter)
             {
                 OrbitalRegion* Region = RegionIter.value();
@@ -459,7 +459,7 @@ bool USectorMapPanel::ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& 
         return false;
     }
 
-    ListIter<OrbitalRegion> RegionIter = InSystem->AllRegions();
+    ListIter<OrbitalRegion> RegionIter = InSystem->GetAllRegions();
     while (++RegionIter)
     {
         OrbitalRegion* Region = RegionIter.value();

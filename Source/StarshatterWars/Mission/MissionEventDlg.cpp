@@ -323,7 +323,7 @@ void UMissionEventDlg::FillRgnList(UComboBoxString* Combo, const char* SelectedA
         StarSystem* sys = iter.value();
         if (!sys) continue;
 
-        ListIter<OrbitalRegion> iter2 = sys->AllRegions();
+        ListIter<OrbitalRegion> iter2 = sys->GetAllRegions();
         while (++iter2)
         {
             OrbitalRegion* region = iter2.value();

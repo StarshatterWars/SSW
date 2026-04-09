@@ -226,7 +226,7 @@ UNavDlg::SetSystem(StarSystem* s)
             }
         }
 
-        ListIter<OrbitalRegion> rgn = star_system->AllRegions();
+        ListIter<OrbitalRegion> rgn = star_system->GetAllRegions();
         while (++rgn)
             regions.append(rgn.value());
     }
