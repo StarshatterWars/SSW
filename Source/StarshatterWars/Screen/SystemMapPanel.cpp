@@ -198,7 +198,7 @@ namespace
             return nullptr;
         }
 
-        ListIter<OrbitalBody> StarIter = InSystem->Bodies();
+        ListIter<OrbitalBody> StarIter = InSystem->GetBodies();
         while (++StarIter)
         {
             OrbitalBody* StarBody = StarIter.value();

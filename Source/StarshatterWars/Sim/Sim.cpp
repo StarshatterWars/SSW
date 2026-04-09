@@ -490,7 +490,7 @@ Sim::CreateRegions()
 		StarSystem* sys = iter.value();
 
 		// insert objects from star system:
-		ListIter<OrbitalBody> star = sys->Bodies();
+		ListIter<OrbitalBody> star = sys->GetBodies();
 		while (++star) {
 			ListIter<OrbitalBody> planet = star->Satellites();
 			while (++planet) {

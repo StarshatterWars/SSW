@@ -13,7 +13,6 @@
 #include "ExitDlg.h"
 #include "FirstTimeDlg.h"
 #include "CampaignScreen.h"
-#include "OperationsScreen.h"
 #include "MissionLoading.h"
 #include "CampaignLoading.h"
 
@@ -42,7 +41,6 @@
 
 USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer) 
 {
-	InitializeCampaignLoadingScreen(ObjectInitializer);
 }
 
 void USSWGameInstance::OnStart()
@@ -61,6 +59,30 @@ void USSWGameInstance::OnStart()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Init: World is NULL, cannot show menu yet"));
 	}
+
+	// ---------------------------------------------------------
+	// Timer Subsystem Hook
+	// ---------------------------------------------------------
+	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
+	{
+		Timer->OnUniverseMinute.AddUObject(
+			this,
+			&USSWGameInstance::HandleUniverseMinuteAutosave
+		);
+	}
+
+	SetupMusicController();
+
+	// ---------------------------------------------------------
+	// Fonts
+	// ---------------------------------------------------------
+	FontManager::RegisterAllFonts(this);
+
+	// =========================================================
+	// REPLACEMENT FOR GameLoader
+	// =========================================================
+	LoadOrCreateUniverse();
+
 }
 
 void USSWGameInstance::SetProjectPath()
@@ -301,54 +323,7 @@ void USSWGameInstance::Init()
 	if (Status == EGAMESTATUS::OK)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Initializing content..."));
-		InitContent();
 	}
-
-	// ---------------------------------------------------------
-	// Audio System
-	// ---------------------------------------------------------
-	SetupMusicController();
-
-	// ---------------------------------------------------------
-	// Timer Subsystem Hook
-	// ---------------------------------------------------------
-	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
-	{
-		Timer->OnUniverseMinute.AddUObject(
-			this,
-			&USSWGameInstance::HandleUniverseMinuteAutosave
-		);
-	}
-
-	// ---------------------------------------------------------
-	// Fonts
-	// ---------------------------------------------------------
-	FontManager::RegisterAllFonts(this);
-
-	// =========================================================
-	// REPLACEMENT FOR GameLoader
-	// =========================================================
-	LoadOrCreateUniverse();
-
-	
-}
-
-void USSWGameInstance::SetActiveUnit(bool bShow, FString Name, EEMPIRE_NAME Empire, ECOMBATGROUP_TYPE Type, FString Loc)
-{
-	DisplayUnit.bShowUnit = bShow;
-	DisplayUnit.Name = Name;
-	DisplayUnit.Empire = Empire;
-	DisplayUnit.Type = Type;
-	DisplayUnit.Location = Loc;
-}
-
-void USSWGameInstance::SetActiveElement(bool bShow, FString Name, EEMPIRE_NAME Empire, ECOMBATUNIT_TYPE Type, FString Loc)
-{
-	DisplayElement.bShowUnit = bShow;
-	DisplayElement.Name = Name;
-	DisplayElement.Empire = Empire;
-	DisplayElement.Type = Type;
-	DisplayElement.Location = Loc;
 }
 
 void USSWGameInstance::SetActiveWidget(UUserWidget* Widget)
@@ -360,20 +335,6 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 	return ActiveWidget;
 }
 
-FS_DisplayUnit USSWGameInstance::GetActiveUnit()
-{
-	return DisplayUnit;
-}
-
-FS_DisplayElement USSWGameInstance::GetActiveElement()
-{
-	return DisplayElement;
-}
-
-FS_OOBForce USSWGameInstance::GetActiveOOBForce() {
-	return CurrentForce;
-}
-
 void USSWGameInstance::Shutdown()
 {
 	Super::Shutdown();
@@ -382,24 +343,6 @@ void USSWGameInstance::Shutdown()
 	{
 		AudioDevice->Flush(nullptr); // Stops all active sounds immediately
 	}
-}
-
-bool USSWGameInstance::InitContent()
-{
-	List<Text>  bundles;
-	
-	FString ContentProjectPath = FPaths::ProjectDir();
-	ProjectPath.Append(TEXT("GameData/Content/"));
-
-	loader->SetDataPath(TCHAR_TO_ANSI(*ContentProjectPath));
-	//loader->ListFiles("content*", bundles);
-
-	FString GameDataProjectPath = FPaths::ProjectDir(); 
-	GameDataProjectPath = FPaths::ProjectDir();
-	GameDataProjectPath.Append(TEXT("GameData/"));
-	loader->SetDataPath(TCHAR_TO_ANSI(*GameDataProjectPath));
-
-	return true;
 }
 
 bool USSWGameInstance::InitGame()
@@ -448,16 +391,6 @@ void USSWGameInstance::InitializeScreens()
 	}
 }
 
-void USSWGameInstance::InitializeCampaignLoadingScreen(const FObjectInitializer& ObjectInitializer)
-{
-	static ConstructorHelpers::FClassFinder<UCampaignLoading> CampaignLoadingWidget(TEXT("/Game/Screens/Campaign/WB_CampaignLoading"));
-	if (!ensure(CampaignLoadingWidget.Class != nullptr))
-	{
-		return;
-	}
-	CampaignLoadingWidgetClass = CampaignLoadingWidget.Class;
-}
-
 void USSWGameInstance::RemoveScreens()
 {
 	if (MenuScreen)
@@ -491,74 +424,6 @@ void USSWGameInstance::OnGameTimerTick()
 	UE_LOG(LogTemp, Log, TEXT("Campaign Timer: %d"), GetCampaignTime());
 }
 
-void USSWGameInstance::ShowCampaignLoading()
-{
-	//RemoveScreens();
-
-	// Create widget
-	//if (!CampaignLoading) {
-	CampaignLoading = CreateWidget<UCampaignLoading>(this, CampaignLoadingWidgetClass);
-	//}
-	// Add it to viewport
-	CampaignLoading->AddToViewport(102);
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(CampaignLoading->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(true);
-		}
-	}
-	ToggleCampaignLoading(true);
-}
-
-void USSWGameInstance::ShowMissionBriefingScreen()
-{
-	//RemoveScreens();
-
-	// Create widget
-	//if (!MissionLoadingScreen) {
-		// Create widget
-	MissionLoadingScreen = CreateWidget<UMissionLoading>(this, MissionLoadingWidgetClass);
-	//}
-
-	// Add it to viewport
-	MissionLoadingScreen->AddToViewport(101);
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(MissionLoadingScreen->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(true);
-		}
-	}
-	ToggleMissionBriefingScreen(true);
-}
-
-void USSWGameInstance::ToggleMissionBriefingScreen(bool bVisible)
-{
-	if (MissionLoadingScreen) {
-		if (bVisible) {
-			MissionLoadingScreen->SetVisibility(ESlateVisibility::Visible);
-		}
-		else {
-			MissionLoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-}
-
 void USSWGameInstance::RemoveMainMenuScreen()
 {
 	if (MainMenuDlg) {
@@ -567,42 +432,6 @@ void USSWGameInstance::RemoveMainMenuScreen()
 		MainMenuDlg = nullptr;
 		if (GEngine) {
 			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::RemoveCampaignLoadScreen()
-{
-	if (CampaignLoading) {
-		CampaignLoading->RemoveFromParent();
-
-		CampaignLoading = nullptr;
-		if (GEngine) {
-			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::RemoveMissionBriefingScreen()
-{
-	if (MissionLoadingScreen) {
-		MissionLoadingScreen->RemoveFromParent();
-
-		MissionLoadingScreen = nullptr;
-		if (GEngine) {
-			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::ToggleCampaignLoading(bool bVisible)
-{
-	if (CampaignLoading) {
-		if (bVisible) {
-			CampaignLoading->SetVisibility(ESlateVisibility::Visible);
-		}
-		else {
-			CampaignLoading->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 }
@@ -828,231 +657,6 @@ void USSWGameInstance::GetCampaignCombatant(int id, ECOMBATGROUP_TYPE Type) {
 TArray<FS_Combatant> USSWGameInstance::GetCombatantList()
 {
 	return CampaignData[PlayerInfo.Campaign].Combatant;
-}
-
-void USSWGameInstance::FlattenForce(const FS_OOBForce& Force, TArray<FS_OOBFlatEntry>& OutFlatList)
-{
-	int32 CurrentId = 0;
-	RecursivelyFlattenForce(Force, INDEX_NONE, 0, CurrentId, OutFlatList);
-}
-
-void USSWGameInstance::RecursivelyFlattenForce(
-	const FS_OOBForce& Force,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry ForceEntry;
-	ForceEntry.Id = ThisId;
-	ForceEntry.ParentId = ParentId;
-	ForceEntry.DisplayName = Force.Name;
-	ForceEntry.IndentLevel = IndentLevel;
-	ForceEntry.GroupType = ECOMBATGROUP_TYPE::FORCE;
-
-	OutFlatList.Add(ForceEntry);
-
-	for (const FS_OOBFleet& Fleet : Force.Fleet)
-	{
-		RecursivelyFlattenFleet(Fleet, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenFleet(
-	const FS_OOBFleet& Fleet,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry FleetEntry;
-	FleetEntry.Id = ThisId;
-	FleetEntry.ParentId = ParentId;
-	FleetEntry.DisplayName = Fleet.Name;
-	FleetEntry.IndentLevel = IndentLevel;
-	FleetEntry.GroupType = ECOMBATGROUP_TYPE::FLEET;
-
-	OutFlatList.Add(FleetEntry);
-
-	for (const FS_OOBCarrier& Carrier : Fleet.Carrier)
-	{
-		RecursivelyFlattenCarrier(Carrier, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBDestroyer& Destroyer : Fleet.Destroyer)
-	{
-		RecursivelyFlattenDestroyer(Destroyer, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenCarrier(
-	const FS_OOBCarrier& Carrier,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Carrier.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::CARRIER_GROUP;
-
-	OutFlatList.Add(Entry);
-
-	for (const FS_OOBWing& Wing : Carrier.Wing)
-	{
-		RecursivelyFlattenWing(Wing, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenDestroyer(
-	const FS_OOBDestroyer& Destroyer,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Destroyer.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenWing(
-	const FS_OOBWing& Wing,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Wing.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::WING;
-
-	OutFlatList.Add(Entry);
-
-	for (const FS_OOBFighter& Unit : Wing.Fighter)
-	{
-		RecursivelyFlattenFighter(Unit, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBAttack& Attack : Wing.Attack)
-	{
-		RecursivelyFlattenAttack(Attack, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBIntercept& Intercept : Wing.Intercept)
-	{
-		RecursivelyFlattenIntercept(Intercept, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBLanding& Landing : Wing.Landing)
-	{
-		RecursivelyFlattenLanding(Landing, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenFighter(
-	const FS_OOBFighter& Unit,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Unit.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::FIGHTER_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-void USSWGameInstance::RecursivelyFlattenAttack(
-	const FS_OOBAttack& Attack,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Attack.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::ATTACK_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenIntercept(
-	const FS_OOBIntercept& Intercept,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Intercept.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenLanding(
-	const FS_OOBLanding& Landing,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Landing.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::LCA_SQUADRON;
-
-	OutFlatList.Add(Entry);
 }
 
 void USSWGameInstance::SetupMusicController()

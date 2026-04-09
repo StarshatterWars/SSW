@@ -380,7 +380,7 @@ void UStarshatterEnvironmentSubsystem::CreateEnvironmentTables()
 			System->GetLocation().X,
 			System->GetLocation().Y,
 			System->GetLocation().Z,
-			System->Radius());
+			System->GetRadius());
 	}
 }
 

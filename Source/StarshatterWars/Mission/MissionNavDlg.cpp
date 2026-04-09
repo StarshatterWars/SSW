@@ -576,7 +576,7 @@ FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName)
         LinkedNames.Num(),
         JumpCount,
         *LinkText,
-        FoundSystem->Radius());
+        FoundSystem->GetRadius());
 }
 
 void UMissionNavDlg::UpdateSystemDetailsPanel(const FString& InSystemName)
@@ -1586,7 +1586,7 @@ void UMissionNavDlg::BuildSystemObjects()
     const FString Detail = FString::Printf(
         TEXT("%s\n\nTYPE: STAR SYSTEM\nRADIUS: %.0f"),
         *Primary,
-        System->Radius());
+        System->GetRadius());
 
     AddObjectItem(
         EMissionNavObjectType::System,
@@ -1615,11 +1615,11 @@ void UMissionNavDlg::BuildPlanetObjects()
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] System = %p Name=%s Radius=%.0f"),
         System,
         *FString(System->GetName()),
-        System->Radius());
+        System->GetRadius());
 
     int32 Index = 0;
 
-    ListIter<OrbitalBody> StarIter = System->Bodies();
+    ListIter<OrbitalBody> StarIter = System->GetBodies();
     while (++StarIter)
     {
         OrbitalBody* StarBody = StarIter.value();

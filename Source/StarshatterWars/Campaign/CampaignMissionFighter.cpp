@@ -513,7 +513,7 @@ void CampaignMissionFighter::SelectRegion()
 
         StarSystem* s = campaign->GetSystemList()[0];
         mission->SetStarSystem(s);
-        mission->SetRegion(s->Regions()[0]->GetName());
+        mission->SetRegion(s->GetRegions()[0]->GetName());
     }
 
     if (!airborne)

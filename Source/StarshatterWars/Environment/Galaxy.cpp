@@ -104,7 +104,7 @@ static OrbitalRegion* BuildRegionFromTable(
     }
     else
     {
-        System->Regions().append(Region);
+        System->GetRegions().append(Region);
     }
 
     System->AllRegions().append(Region);
@@ -400,7 +400,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
         UE_LOG(LogTemp, Warning,
             TEXT("[Galaxy] Using existing runtime StarSystem: %s  BodiesRadius=%.0f Regions=%d"),
             *SystemName,
-            StarSys->Radius(),
+            StarSys->GetRadius(),
             StarSys->AllRegions().size());
     }
 

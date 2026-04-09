@@ -379,7 +379,7 @@ void CampaignMissionStarship::SelectRegion()
         if (s)
         {
             mission->SetStarSystem(s);
-            mission->SetRegion(s->Regions()[0]->GetName());
+            mission->SetRegion(s->GetRegions()[0]->GetName());
         }
     }
 }
