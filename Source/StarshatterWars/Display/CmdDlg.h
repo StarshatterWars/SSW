@@ -215,6 +215,9 @@ private:
     void LoadMissionsInfo();
     void LoadIntelInfo();
     void LoadTheaterInfo();
+    void RefreshIntelPanel();
+    int32 GetIntelEntryCount() const;
+    void RefreshIntelDataBackground();
 
     UFUNCTION() void HandleGameTimers();
     UFUNCTION() void HandleUniverseSecondTick(uint64 UniverseSecondsNow);
@@ -229,4 +232,9 @@ private:
     void RefreshCommandButtons();
 
     bool bLastDisableState = false;
+    
+
+
+    int32 IntelRefreshCounterSeconds = 0;
+
 };
