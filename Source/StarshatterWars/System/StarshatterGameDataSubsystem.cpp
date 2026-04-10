@@ -2907,6 +2907,8 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 
 	FS_CampaignMission NewMission;
 
+	LastParsedMissionEventTime = 0.0;
+
 	int     id = 0;
 
 	Text    Region = "";
@@ -3710,7 +3712,11 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	int32  EventId = 1;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
-	double EventTime = 0.0;
+
+	// IMPORTANT:
+	// inherit the last parsed event time unless this event overrides it
+	double EventTime = LastParsedMissionEventTime;
+	bool bHasExplicitTime = false;
 
 	// ---- FVector only ----
 	FVector EventPoint = FVector::ZeroVector;
@@ -3734,6 +3740,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
 	FS_MissionEvent NewMissionEvent;
+	NewMissionEvent.EventTime = EventTime;
 
 	const int32 ElemCount = (int32)Val->elements()->size();
 	for (int32 i = 0; i < ElemCount; ++i)
@@ -3765,7 +3772,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 
 			NewMissionEvent.EventType = EventType;
 		}
-		if (Key == "trigger")
+		else if (Key == "trigger")
 		{
 			char typestr[64];
 			GetDefText(typestr, PDef, Fn);
@@ -3778,7 +3785,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 				EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
 				UE_LOG(LogTemp, Warning,
-					TEXT("[ParseEvent] unknown type '%s' normalized to '%s' in '%s'"),
+					TEXT("[ParseEvent] unknown trigger '%s' normalized to '%s' in '%s'"),
 					*FString(typestr),
 					*NormalizedType,
 					UTF8_TO_TCHAR(Fn));
@@ -3794,6 +3801,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		else if (Key == "time")
 		{
 			GetDefNumber(EventTime, PDef, Fn);
+			bHasExplicitTime = true;
 			NewMissionEvent.EventTime = EventTime;
 		}
 		else if (Key == "delay")
@@ -3835,7 +3843,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 				TriggerNParams = 1;
 
 				NewMissionEvent.TriggerParam[0] = TriggerParam[0];
-				NewMissionEvent.TriggerNParams = TriggerNParams; // correct
+				NewMissionEvent.TriggerNParams = TriggerNParams;
 			}
 			else if (PDef->term() && PDef->term()->isArray())
 			{
@@ -3893,16 +3901,12 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		{
 			GetDefRect(EventRect, PDef, Fn);
 
-			// Store rect as XYWH (x,y,w,h) in FVector4:
 			NewMissionEvent.EventRect = FVector4(
 				(float)EventRect.x,
 				(float)EventRect.y,
 				(float)EventRect.w,
 				(float)EventRect.h
 			);
-
-			// Alternative if your FS_MissionEvent uses FIntRect:
-			// NewMissionEvent.EventRect = FIntRect(EventRect.x, EventRect.y, EventRect.x + EventRect.w, EventRect.y + EventRect.h);
 		}
 		else if (Key == "trigger_ship")
 		{
@@ -3916,9 +3920,25 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		}
 	}
 
-	MissionEventArray.Add(NewMissionEvent);
-}
+	// If no explicit time was provided, inherit the prior event time.
+	if (!bHasExplicitTime)
+	{
+		NewMissionEvent.EventTime = LastParsedMissionEventTime;
+	}
+	else
+	{
+		LastParsedMissionEventTime = EventTime;
+	}
 
+	MissionEventArray.Add(NewMissionEvent);
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[ParseEvent] Added Event Type=%d Time=%.2f Message='%s' Target='%s'"),
+		(int32)NewMissionEvent.EventType,
+		NewMissionEvent.EventTime,
+		*NewMissionEvent.EventMessage,
+		*NewMissionEvent.EventTarget);
+}
 
 // +--------------------------------------------------------------------+
 
@@ -4246,6 +4266,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 	// ----------------------------
 	// Template-level locals
 	// ----------------------------
+	LastParsedMissionEventTime = 0.0;
+
 	Text  TargetName = "";
 	Text  WardName = "";
 	Text  MissionName = "";
@@ -4483,6 +4505,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("MISSIONTEMPLATE file '%s'"), *TemplatePath);
+
+	LastParsedMissionEventTime = 0.0;
 
 	Text TargetName = "";
 	Text WardName = "";

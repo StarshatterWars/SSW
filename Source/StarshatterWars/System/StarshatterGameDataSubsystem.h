@@ -171,7 +171,7 @@ public:
     FString GetProjectPath();
 
     bool GetRegionTypeFromString(const FString& InString, EOrbitalType& OutValue);
-
+    const FS_Campaign* GetActiveCampaignPtr() const { return &ActiveCampaign; }
 
     // =====================================================================
     // Campaigns (static load + DT hydration)
@@ -595,6 +595,8 @@ protected:
     int     UnitDamage;
     int     UnitDead;
     int     UnitHeading;
+
+    double LastParsedMissionEventTime = 0.0;
     
     float    CurrentShipScale = 1.0f;
 

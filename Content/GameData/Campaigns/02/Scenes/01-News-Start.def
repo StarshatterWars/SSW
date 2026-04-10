@@ -219,19 +219,19 @@ element: {
 }
 
 
-event: { type: BeginScene, time:   0, message: "Scene 1" }
+event: { type: BeginScene, time:   0, message: "Operation Highland Briefing" }
 event: { type: Hold,                  param: 20, event_ship: Kitts }
 event: { type: Hold,                  param: 20, event_ship: Lovo  }
 
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/02/Scenes/News.pcx",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3,  target: "body:Solus",  vec: (0,0,1e7)           }
 event: { type: Camera,                param: 5,                         vec: (0.12, 0.01, 0.02)  }
 
 event: { type: Display,    time:   5, message: "Solus System", font: Limerick18,   color: 0xffffff80, fade: (1,7,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Capitol",      font: Limerick12,   color: 0xffffff80, fade: (1,7,1), rect: (20,40, 300,100) }
-event: { type: Messasge,              sound: "Vox/Scenes/02/News_01_Campaign_Start.ogg" }
+event: { type: Messasge,              sound: News_01_Campaign_Start }
 
 
 event: { type: Camera,     time:  12, param: (6, 15),  target: "Blockade Runner" }
@@ -263,7 +263,7 @@ event: { type: Camera,     time:  80, param: 3,  target: "body:Solus",   vec: (6
 event: { type: Camera,                param: 5,                          vec: (0.14, 0.01, 0.02) }
 
 
-event: { type: EndScene,   time:  95, message: "Scene 1" }
+event: { type: EndScene,   time:  95, message: "Briefing End" }
 event: { type: Exit }
 
 // EOF
