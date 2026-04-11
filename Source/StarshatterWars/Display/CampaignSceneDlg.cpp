@@ -10,7 +10,6 @@
 #include "Components/TextBlock.h"
 #include "Engine/Font.h"
 #include "Kismet/GameplayStatics.h"
-#include "Sound/SoundBase.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -77,57 +76,6 @@ FString UCampaignSceneDlg::FixEscapedText(const FString& InText)
     Out.ReplaceInline(TEXT("\\n"), TEXT("\n"));
     Out.ReplaceInline(TEXT("\\\""), TEXT("\""));
     return Out.TrimStartAndEnd();
-}
-
-int32 UCampaignSceneDlg::ResolveCampaignNumber() const
-{
-    return CurrentCampaignNumber > 0 ? CurrentCampaignNumber : 2;
-}
-
-FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) const
-{
-    const FString CleanToken = FixEscapedText(SoundToken);
-    if (CleanToken.IsEmpty())
-    {
-        return FString();
-    }
-
-    return FString::Printf(
-        TEXT("/Game/Audio/Vox/Scenes/%02d/%s.%s"),
-        ResolveCampaignNumber(),
-        *CleanToken,
-        *CleanToken);
-}
-
-USoundBase* UCampaignSceneDlg::ResolveSceneSound(const FString& SoundToken) const
-{
-    static TMap<FString, TObjectPtr<USoundBase>> SoundCache;
-
-    const FString AssetPath = ResolveSceneSoundPath(SoundToken);
-    if (AssetPath.IsEmpty())
-    {
-        return nullptr;
-    }
-
-    if (const TObjectPtr<USoundBase>* Found = SoundCache.Find(AssetPath))
-    {
-        return Found->Get();
-    }
-
-    USoundBase* Sound = LoadObject<USoundBase>(nullptr, *AssetPath);
-    if (Sound)
-    {
-        SoundCache.Add(AssetPath, Sound);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ResolveSceneSound failed: Token=%s Path=%s"),
-            *SoundToken,
-            *AssetPath);
-    }
-
-    return Sound;
 }
 
 void UCampaignSceneDlg::BuildRuntimeWidgets()
@@ -514,15 +462,12 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 
     if (!Event.EventSound.IsEmpty())
     {
-        if (USoundBase* SceneSound = ResolveSceneSound(Event.EventSound))
-        {
-            UGameplayStatics::PlaySound2D(this, SceneSound);
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
+            Event.EventTime,
+            *Event.EventSound);
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
-                Event.EventTime,
-                *Event.EventSound);
-        }
+        // TODO: play the sound cue here
     }
 }
 

@@ -24,6 +24,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "GameStructs.h"
 #include "CmpnScreen.generated.h"
 
 class UCmdDlg;
@@ -32,9 +33,11 @@ class UCmpFileDlg;
 class UCmpCompleteDlg;
 class UCampaignSceneDlg;
 class UMenuScreen;
+class ULevelStreamingDynamic;
 
 class Campaign;
 class Starshatter;
+class CombatEvent;
 
 UCLASS()
 class STARSHATTERWARS_API UCmpnScreen : public UBaseScreen
@@ -118,6 +121,17 @@ protected:
     void RefreshRuntimePointers();
     void ApplyManagerToChildren();
 
+    bool TryStartSceneForEvent(CombatEvent* Event);
+    float GetSceneDurationSeconds(const FString& SceneName) const;
+
+    bool StreamSceneSystemLevel(const FS_CampaignMission& SceneMission);
+    FName ResolveSceneSystemLevelName(const FString& SystemName) const;
+    bool IsSceneSystemLevelLoaded(const FString& SystemName) const;
+
+protected:
+    const FS_CampaignMission* FindCampaignMissionByScene(const FString& SceneName) const;
+    void AdvanceCampaignScene();
+
 protected:
     FString ActiveSceneName;
     float ActiveSceneDurationSeconds = 0.0f;
@@ -138,6 +152,9 @@ protected:
     UPROPERTY()
     TObjectPtr<UCampaignSceneDlg> CmpSceneDlg = nullptr;
 
+    UPROPERTY()
+    TObjectPtr<ULevelStreamingDynamic> ActiveSceneStreamingLevel = nullptr;
+
 protected:
     Campaign* CampaignPtr = nullptr;
     Starshatter* Stars = nullptr;
@@ -146,7 +163,6 @@ protected:
     bool bIsShown = false;
     bool bShowMissionsRequested = false;
     bool bExitLatch = false;
-
     bool bHidingAll = false;
 
     int32 CompletionStage = 0;

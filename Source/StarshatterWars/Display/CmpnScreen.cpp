@@ -22,6 +22,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Engine/LevelStreaming.h"
+#include "Engine/LevelStreamingDynamic.h"
 
 // Dialogs:
 #include "CmdDlg.h"
@@ -47,8 +49,6 @@
 #include "Engine/DataTable.h"
 #include "StarshatterGameDataSubsystem.h"
 
-#include "GameStructs.h"
-
 UCmpnScreen::UCmpnScreen(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -72,21 +72,6 @@ void UCmpnScreen::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     {
         ExecFrame((double)InDeltaTime);
     }
-
-    // ------------------------------------------------------------
-    // Force timer-driven campaign scene advancement even if
-    // the normal ExecFrame flow is not progressing as expected.
-    // ------------------------------------------------------------
-    /*if (CmpSceneDlg && CmpSceneDlg->IsSceneRunning())
-    {
-        const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] NativeTick driving scene now=%.2f"),
-            NowSeconds);
-
-        CmpSceneDlg->AdvanceSceneFromTimer(NowSeconds);
-    }*/
 }
 
 template<typename TDialog>
@@ -105,8 +90,7 @@ TDialog* UCmpnScreen::EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr
     APlayerController* PC = GetOwningPlayer();
     if (!PC)
     {
-        UWorld* World = GetWorld();
-        if (World)
+        if (UWorld* World = GetWorld())
         {
             PC = UGameplayStatics::GetPlayerController(World, 0);
         }
@@ -160,6 +144,80 @@ void UCmpnScreen::ApplyManagerToChildren()
     {
         CmpSceneDlg->SetManager(this);
     }
+}
+
+const FS_CampaignMission* UCmpnScreen::FindCampaignMissionByScene(const FString& SceneName) const
+{
+    if (SceneName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] FindCampaignMissionByScene: SceneName is empty"));
+        return nullptr;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] FindCampaignMissionByScene: World is null"));
+        return nullptr;
+    }
+
+    UGameInstance* GI = World->GetGameInstance();
+    if (!GI)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] FindCampaignMissionByScene: GameInstance is null"));
+        return nullptr;
+    }
+
+    UStarshatterGameDataSubsystem* DataSys = GI->GetSubsystem<UStarshatterGameDataSubsystem>();
+    if (!DataSys)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] FindCampaignMissionByScene: Data subsystem is null"));
+        return nullptr;
+    }
+
+    const FS_Campaign* CampaignRow = nullptr;
+
+    if (DataSys->SelectedCampaignRowName != NAME_None)
+    {
+        CampaignRow = DataSys->GetCampaignByRow(DataSys->SelectedCampaignRowName);
+    }
+
+    if (!CampaignRow)
+    {
+        CampaignRow = DataSys->GetActiveCampaignPtr();
+    }
+
+    if (!CampaignRow)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] No campaign available for Scene=%s"),
+            *SceneName);
+        return nullptr;
+    }
+
+    for (const FS_CampaignMission& MissionRow : CampaignRow->Missions)
+    {
+        if (MissionRow.Scene.Equals(SceneName, ESearchCase::IgnoreCase))
+        {
+            UE_LOG(LogTemp, Log,
+                TEXT("[CmpnScreen] Found scene mission: MissionId=%d Scene=%s MissionName=%s"),
+                MissionRow.MissionId,
+                *MissionRow.Scene,
+                *MissionRow.MissionName);
+
+            return &MissionRow;
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] No campaign mission found for Scene=%s"),
+        *SceneName);
+
+    return nullptr;
 }
 
 void UCmpnScreen::SetMenuManager(UMenuScreen* InManager)
@@ -218,6 +276,8 @@ void UCmpnScreen::TearDown()
     W = CmdMsgDlg.Get();      Kill(W); CmdMsgDlg = nullptr;
     W = CmpCompleteDlg.Get(); Kill(W); CmpCompleteDlg = nullptr;
     W = CmpSceneDlg.Get();    Kill(W); CmpSceneDlg = nullptr;
+
+    ActiveSceneStreamingLevel = nullptr;
 
     bSetupComplete = false;
     bIsShown = false;
@@ -321,11 +381,40 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
 {
     RefreshRuntimePointers();
 
+    // ------------------------------------------------------------
+    // Retry pending startup cutscenes after streaming
+    // ------------------------------------------------------------
+    if (!IsCmpSceneShown() && CampaignPtr && CampaignPtr->IsActive() && !CampaignPtr->GetEvents().isEmpty())
+    {
+        ListIter<CombatEvent> SceneIter = CampaignPtr->GetEvents();
+        while (++SceneIter)
+        {
+            CombatEvent* PendingEvent = SceneIter.value();
+
+            if (PendingEvent && !PendingEvent->Visited() && PendingEvent->SceneFile() && *PendingEvent->SceneFile())
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CmpnScreen] Retry startup scene check: %s  SceneShown=%d  SceneRunning=%d"),
+                    UTF8_TO_TCHAR(PendingEvent->SceneFile()),
+                    IsCmpSceneShown() ? 1 : 0,
+                    (CmpSceneDlg && CmpSceneDlg->IsSceneRunning()) ? 1 : 0);
+
+                if (TryStartSceneForEvent(PendingEvent))
+                {
+                    break;
+                }
+            }
+        }
+    }
+
     if (!Stars)
     {
         return;
     }
 
+    // ------------------------------------------------------------
+    // Advance active cutscene
+    // ------------------------------------------------------------
     AdvanceCampaignScene();
 
     Mouse::SetCursor(Mouse::ARROW);
@@ -413,7 +502,6 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
                 bCampaignPaused = !bCampaignPaused;
                 Stars->Pause(bCampaignPaused);
             }
-
             else if (Keyboard::KeyDown(KEY_TIME_COMPRESS))
             {
                 TimeTilChange = 1.0;
@@ -425,7 +513,6 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
                 case 4:  Stars->SetTimeCompression(8); break;
                 }
             }
-
             else if (Keyboard::KeyDown(KEY_TIME_EXPAND))
             {
                 TimeTilChange = 1.0;
@@ -715,42 +802,29 @@ bool UCmpnScreen::IsCmpSceneShown() const
 void UCmpnScreen::SetFieldOfView(float InFOV)
 {
     DesiredFieldOfView = InFOV;
-
-    if (CmpSceneDlg)
-    {
-        //CmpSceneDlg->SetFieldOfView(InFOV);
-    }
-    else
-    {
-        DefaultFallbackFOV = InFOV;
-    }
+    DefaultFallbackFOV = InFOV;
 }
 
 float UCmpnScreen::GetFieldOfView() const
 {
-    if (CmpSceneDlg)
-    {
-        //return CmpSceneDlg->GetFieldOfView();
-    }
-
     return DefaultFallbackFOV;
 }
 
 float UCmpnScreen::GetSceneDurationSeconds(const FString& SceneName) const
 {
-    if (SceneName.Equals(TEXT("01-News-Start"), ESearchCase::IgnoreCase))      return 95.0f;
-    if (SceneName.Equals(TEXT("02-Coup-Failure"), ESearchCase::IgnoreCase))    return 75.0f;
-    if (SceneName.Equals(TEXT("03-Blockade-Broken"), ESearchCase::IgnoreCase)) return 65.0f;
-    if (SceneName.Equals(TEXT("04-Harmony-Risk"), ESearchCase::IgnoreCase))    return 50.0f;
-    if (SceneName.Equals(TEXT("05-Foothill-Ridge"), ESearchCase::IgnoreCase))  return 60.0f;
-    if (SceneName.Equals(TEXT("06-Renser-Buildup"), ESearchCase::IgnoreCase))  return 60.0f;
-    if (SceneName.Equals(TEXT("07-Research-Lab"), ESearchCase::IgnoreCase))    return 75.0f;
+    if (SceneName.Equals(TEXT("01-News-Start"), ESearchCase::IgnoreCase))        return 95.0f;
+    if (SceneName.Equals(TEXT("02-Coup-Failure"), ESearchCase::IgnoreCase))      return 75.0f;
+    if (SceneName.Equals(TEXT("03-Blockade-Broken"), ESearchCase::IgnoreCase))   return 65.0f;
+    if (SceneName.Equals(TEXT("04-Harmony-Risk"), ESearchCase::IgnoreCase))      return 50.0f;
+    if (SceneName.Equals(TEXT("05-Foothill-Ridge"), ESearchCase::IgnoreCase))    return 60.0f;
+    if (SceneName.Equals(TEXT("06-Renser-Buildup"), ESearchCase::IgnoreCase))    return 60.0f;
+    if (SceneName.Equals(TEXT("07-Research-Lab"), ESearchCase::IgnoreCase))      return 75.0f;
     if (SceneName.Equals(TEXT("08-Renser-Accusation"), ESearchCase::IgnoreCase)) return 75.0f;
     if (SceneName.Equals(TEXT("09-Senate-Resolution"), ESearchCase::IgnoreCase)) return 75.0f;
-    if (SceneName.Equals(TEXT("10-Renser-Arrival"), ESearchCase::IgnoreCase))  return 60.0f;
-    if (SceneName.Equals(TEXT("11-Dantari-Pullback"), ESearchCase::IgnoreCase)) return 60.0f;
-    if (SceneName.Equals(TEXT("12-Cease-Fire"), ESearchCase::IgnoreCase))      return 60.0f;
-    if (SceneName.Equals(TEXT("13-Renser-Invasion"), ESearchCase::IgnoreCase)) return 60.0f;
+    if (SceneName.Equals(TEXT("10-Renser-Arrival"), ESearchCase::IgnoreCase))    return 60.0f;
+    if (SceneName.Equals(TEXT("11-Dantari-Pullback"), ESearchCase::IgnoreCase))  return 60.0f;
+    if (SceneName.Equals(TEXT("12-Cease-Fire"), ESearchCase::IgnoreCase))        return 60.0f;
+    if (SceneName.Equals(TEXT("13-Renser-Invasion"), ESearchCase::IgnoreCase))   return 60.0f;
 
     return 30.0f;
 }
@@ -759,17 +833,23 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
 {
     if (!Event || !CmpSceneDlg)
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] TryStartSceneForEvent: Event or CmpSceneDlg invalid"));
         return false;
     }
 
     if (!Event->SceneFile() || !*Event->SceneFile())
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] TryStartSceneForEvent: Event has no SceneFile"));
         return false;
     }
 
     const FString SceneName = UTF8_TO_TCHAR(Event->SceneFile());
     if (SceneName.IsEmpty())
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] TryStartSceneForEvent: SceneName is empty"));
         return false;
     }
 
@@ -777,26 +857,88 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
     ActiveSceneDurationSeconds = GetSceneDurationSeconds(SceneName);
 
     const FS_CampaignMission* SceneMission = FindCampaignMissionByScene(ActiveSceneName);
-    if (SceneMission)
-    {
-        CmpSceneDlg->LoadSceneFromMissionData(*SceneMission);
-    }
-    else
+    if (!SceneMission)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[CmpnScreen] TryStartSceneForEvent: No mission row found for scene %s"),
             *ActiveSceneName);
+        return false;
     }
 
+    if (CmpSceneDlg->IsSceneRunning())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] TryStartSceneForEvent: Scene already running"));
+        return true;
+    }
+
+    if (!StreamSceneSystemLevel(*SceneMission))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] Failed to request stream for system %s"),
+            *SceneMission->MissionSystem);
+        return false;
+    }
+
+    const bool bLoaded = IsSceneSystemLevelLoaded(SceneMission->MissionSystem);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] TryStartSceneForEvent: System=%s Loaded=%d SceneShown=%d"),
+        *SceneMission->MissionSystem,
+        bLoaded ? 1 : 0,
+        IsCmpSceneShown() ? 1 : 0);
+
+    if (!bLoaded)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] Waiting for level %s before starting scene"),
+            *SceneMission->MissionSystem);
+
+        return true;
+    }
+
+    if (IsCmpSceneShown())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] TryStartSceneForEvent: Scene overlay already shown"));
+        return true;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] Level loaded, starting scene %s now"),
+        *ActiveSceneName);
+
+    if (CampaignPtr)
+    {
+        CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
+    }
+    else
+    {
+        CmpSceneDlg->SetCampaignNumber(2);
+    }
+
+    CmpSceneDlg->LoadSceneFromMissionData(*SceneMission);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] Scene mission loaded into dialog"));
+
     ShowCmpSceneDlg();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] Scene dialog shown"));
+
     CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] BeginSceneByName called"));
 
     Event->SetVisited(true);
 
-    UE_LOG(LogTemp, Log,
-        TEXT("[CmpnScreen] Started campaign scene: %s (%.2fs)"),
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] Started campaign scene: %s (%.2fs) System=%s"),
         *ActiveSceneName,
-        ActiveSceneDurationSeconds);
+        ActiveSceneDurationSeconds,
+        *SceneMission->MissionSystem);
 
     return true;
 }
@@ -812,82 +954,90 @@ void UCmpnScreen::AdvanceCampaignScene()
     CmpSceneDlg->AdvanceSceneFromTimer(NowSeconds);
 }
 
-const FS_CampaignMission* UCmpnScreen::FindCampaignMissionByScene(const FString& SceneName) const
+bool UCmpnScreen::IsSceneSystemLevelLoaded(const FString& SystemName) const
 {
-    if (SceneName.IsEmpty())
+    if (!ActiveSceneStreamingLevel)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] FindCampaignMissionByScene: SceneName is empty"));
-        return nullptr;
+        return false;
     }
 
+    return ActiveSceneStreamingLevel->GetLoadedLevel() != nullptr;
+}
+
+FName UCmpnScreen::ResolveSceneSystemLevelName(const FString& SystemName) const
+{
+    const FString CleanSystem = SystemName.TrimStartAndEnd();
+
+    if (CleanSystem.IsEmpty())
+    {
+        return NAME_None;
+    }
+
+    const FString PackageName = FString::Printf(TEXT("/Game/Maps/%s"), *CleanSystem);
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[CmpnScreen] ResolveSceneSystemLevelName: %s -> %s"),
+        *SystemName,
+        *PackageName);
+
+    return FName(*PackageName);
+}
+
+bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
+{
     UWorld* World = GetWorld();
     if (!World)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] FindCampaignMissionByScene: World is null"));
-        return nullptr;
+            TEXT("[CmpnScreen] StreamSceneSystemLevel: World is null"));
+        return false;
     }
 
-    UGameInstance* GI = World->GetGameInstance();
-    if (!GI)
+    const FString SystemName = SceneMission.MissionSystem.TrimStartAndEnd();
+    if (SystemName.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] FindCampaignMissionByScene: GameInstance is null"));
-        return nullptr;
+        return false;
     }
 
-    UStarshatterGameDataSubsystem* DataSys = GI->GetSubsystem<UStarshatterGameDataSubsystem>();
-    if (!DataSys)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] FindCampaignMissionByScene: Data subsystem is null"));
-        return nullptr;
-    }
+    const FString PackagePath = FString::Printf(TEXT("/Game/Maps/%s"), *SystemName);
 
-    // ------------------------------------------------------------
-    // Resolve campaign source (selected first, fallback to active)
-    // ------------------------------------------------------------
-    const FS_Campaign* CampaignRow = nullptr;
-
-    if (DataSys->SelectedCampaignRowName != NAME_None)
+    // DO NOT recreate the streaming level every frame
+    if (ActiveSceneStreamingLevel)
     {
-        CampaignRow = DataSys->GetCampaignByRow(DataSys->SelectedCampaignRowName);
-    }
-
-    if (!CampaignRow)
-    {
-        CampaignRow = DataSys->GetActiveCampaignPtr();
-    }
-
-    if (!CampaignRow)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] No campaign available for Scene=%s"),
-            *SceneName);
-        return nullptr;
-    }
-
-    // ------------------------------------------------------------
-    // Search missions
-    // ------------------------------------------------------------
-    for (const FS_CampaignMission& MissionRow : CampaignRow->Missions)
-    {
-        if (MissionRow.Scene.Equals(SceneName, ESearchCase::IgnoreCase))
+        if (ActiveSceneStreamingLevel->GetLoadedLevel())
         {
             UE_LOG(LogTemp, Log,
-                TEXT("[CmpnScreen] Found scene mission: MissionId=%d Scene=%s MissionName=%s"),
-                MissionRow.MissionId,
-                *MissionRow.Scene,
-                *MissionRow.MissionName);
-
-            return &MissionRow;
+                TEXT("[CmpnScreen] StreamSceneSystemLevel: Level already loaded"));
         }
+        else
+        {
+            UE_LOG(LogTemp, Log,
+                TEXT("[CmpnScreen] StreamSceneSystemLevel: Waiting on existing stream"));
+        }
+
+        return true;
+    }
+
+    bool bSuccess = false;
+
+    ActiveSceneStreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
+        World,
+        PackagePath,
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        bSuccess);
+
+    if (!bSuccess || !ActiveSceneStreamingLevel)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] Failed to dynamically stream %s"),
+            *PackagePath);
+        return false;
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] No campaign mission found for Scene=%s"),
-        *SceneName);
+        TEXT("[CmpnScreen] Streaming started: %s"),
+        *PackagePath);
 
-    return nullptr;
+    return true;
 }
