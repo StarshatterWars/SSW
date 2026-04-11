@@ -33,7 +33,7 @@ public:
 
     void LoadSceneFromMissionData(const FS_CampaignMission& MissionData);
 
-    // Backward-compatible wrapper so old call sites still compile:
+    // Backward-compatible wrapper:
     void LoadCaptionsFromMissionData(const FS_CampaignMission& MissionData)
     {
         LoadSceneFromMissionData(MissionData);
@@ -49,10 +49,14 @@ protected:
     void ResetSceneState();
     void BuildSortedEventQueue();
     void ProcessPendingEvents(float ElapsedSeconds);
-    void ExecuteEventBlockAtTime(double BlockTime);
+
+    void ExecuteDisplayBlockAtTime(double BlockTime);
+    void ExecuteMessageEvent(const FS_MissionEvent& Event);
 
     FString BuildBodyTextFromDisplayBlock(const TArray<FString>& Lines) const;
     float ResolveSceneDurationSeconds() const;
+
+    static FString FixEscapedNewlines(const FString& InText);
 
     UFont* GetRegularLimerickFont() const;
     UFont* GetBoldLimerickFont() const;
@@ -64,17 +68,21 @@ protected:
     UPROPERTY()
     UOverlay* RuntimeOverlay = nullptr;
 
-    // Scene header from mission objective:
+    // Mission objective / scene heading:
     UPROPERTY()
     UTextBlock* HeaderText = nullptr;
 
-    // Current display title line:
+    // Current display title card line:
     UPROPERTY()
     UTextBlock* MessageTitleText = nullptr;
 
-    // Current display subtitle/body lines:
+    // Current display subtitle/body line(s):
     UPROPERTY()
     UTextBlock* MessageSubtitleText = nullptr;
+
+    // Bottom-of-screen narration captions:
+    UPROPERTY()
+    UTextBlock* CaptionTextBottom = nullptr;
 
 protected:
     UPROPERTY()
@@ -86,9 +94,13 @@ protected:
     UPROPERTY()
     TArray<FS_MissionEvent> SortedEvents;
 
+    // Grouped DISPLAY lines by timestamp:
     TMap<double, TArray<FString>> DisplayBlocks;
     TArray<double> SortedDisplayTimes;
     int32 NextDisplayBlockIndex = 0;
+
+    // Raw timed MESSAGE events with captions:
+    int32 NextMessageEventIndex = 0;
 
     FString ActiveSceneName;
     float SceneStartRealSeconds = 0.0f;

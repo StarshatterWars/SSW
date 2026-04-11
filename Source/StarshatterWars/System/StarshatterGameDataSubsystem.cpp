@@ -1385,7 +1385,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	//InitializeCampaignData();
+	InitializeCampaignData();
 	ReadCampaignData();
 	
 	//InitializeCombatRoster();
@@ -3808,6 +3808,12 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		{
 			GetDefNumber(EventDelay, PDef, Fn);
 			NewMissionEvent.EventDelay = EventDelay;
+		}
+		else if (Key == "caption")
+		{
+			Text CaptionText = "";
+			GetDefText(CaptionText, PDef, Fn);
+			NewMissionEvent.EventCaption = FString(CaptionText);
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{

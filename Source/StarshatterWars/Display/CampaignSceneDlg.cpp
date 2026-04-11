@@ -68,6 +68,14 @@ UFont* UCampaignSceneDlg::GetBoldLimerickFont() const
     return CachedFont;
 }
 
+FString UCampaignSceneDlg::FixEscapedNewlines(const FString& InText)
+{
+    FString Out = InText;
+    Out.ReplaceInline(TEXT("\\r\\n"), TEXT("\n"));
+    Out.ReplaceInline(TEXT("\\n"), TEXT("\n"));
+    return Out;
+}
+
 void UCampaignSceneDlg::BuildRuntimeWidgets()
 {
     if (!WidgetTree)
@@ -99,12 +107,10 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
     const FLinearColor HalfAlphaWhite(1.f, 1.f, 1.f, 0.5f);
     UFont* BoldLimerick = GetBoldLimerickFont();
 
-    // Use near full-screen width while still allowing wrap:
     const float WrapWidth = 1800.0f;
-    const FMargin FullWidthMargin(32.0f, 0.0f, 32.0f, 0.0f);
 
     // ------------------------------------------------------------
-    // HEADER TEXT (mission objective)
+    // HEADER TEXT
     // ------------------------------------------------------------
     HeaderText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HeaderText"));
     if (HeaderText)
@@ -134,7 +140,7 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
     }
 
     // ------------------------------------------------------------
-    // MESSAGE TITLE
+    // DISPLAY TITLE
     // ------------------------------------------------------------
     MessageTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageTitleText"));
     if (MessageTitleText)
@@ -164,7 +170,7 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
     }
 
     // ------------------------------------------------------------
-    // MESSAGE SUBTITLE
+    // DISPLAY SUBTITLE
     // ------------------------------------------------------------
     MessageSubtitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageSubtitleText"));
     if (MessageSubtitleText)
@@ -193,6 +199,36 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
         }
     }
 
+    // ------------------------------------------------------------
+    // BOTTOM CAPTION TEXT
+    // ------------------------------------------------------------
+    CaptionTextBottom = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CaptionTextBottom"));
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
+        CaptionTextBottom->SetColorAndOpacity(FSlateColor(HalfAlphaWhite));
+        CaptionTextBottom->SetAutoWrapText(true);
+        CaptionTextBottom->SetWrapTextAt(WrapWidth);
+        CaptionTextBottom->SetJustification(ETextJustify::Center);
+        CaptionTextBottom->SetMinDesiredWidth(WrapWidth);
+
+        if (BoldLimerick)
+        {
+            FSlateFontInfo FontInfo;
+            FontInfo.FontObject = BoldLimerick;
+            FontInfo.Size = 18;
+            CaptionTextBottom->SetFont(FontInfo);
+        }
+
+        UOverlaySlot* CaptionSlot = RuntimeOverlay->AddChildToOverlay(CaptionTextBottom);
+        if (CaptionSlot)
+        {
+            CaptionSlot->SetHorizontalAlignment(HAlign_Fill);
+            CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
+            CaptionSlot->SetPadding(FMargin(100.0f, 0.0f, 100.0f, 60.0f));
+        }
+    }
+
     UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Runtime widgets created"));
 }
 
@@ -204,6 +240,7 @@ void UCampaignSceneDlg::ResetSceneState()
     DisplayBlocks.Empty();
     SortedDisplayTimes.Empty();
     NextDisplayBlockIndex = 0;
+    NextMessageEventIndex = 0;
 
     ActiveSceneName.Empty();
     SceneStartRealSeconds = 0.0f;
@@ -223,6 +260,11 @@ void UCampaignSceneDlg::ResetSceneState()
     if (MessageSubtitleText)
     {
         MessageSubtitleText->SetText(FText::GetEmpty());
+    }
+
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
     }
 }
 
@@ -256,7 +298,7 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
             !MissionData.Scene.IsEmpty() ? MissionData.Scene :
             TEXT("MISSION BRIEFING");
 
-        HeaderText->SetText(FText::FromString(Header));
+        HeaderText->SetText(FText::FromString(FixEscapedNewlines(Header)));
     }
 
     BuildSortedEventQueue();
@@ -279,6 +321,7 @@ void UCampaignSceneDlg::BuildSortedEventQueue()
         });
 
     DisplayBlocks.Empty();
+    SortedDisplayTimes.Empty();
 
     for (const FS_MissionEvent& Event : SortedEvents)
     {
@@ -287,7 +330,7 @@ void UCampaignSceneDlg::BuildSortedEventQueue()
             continue;
         }
 
-        const FString Line = Event.EventMessage.TrimStartAndEnd();
+        const FString Line = FixEscapedNewlines(Event.EventMessage).TrimStartAndEnd();
         if (Line.IsEmpty())
         {
             continue;
@@ -355,12 +398,8 @@ float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
         LatestTime = FMath::Max(LatestTime, Event.EventTime);
     }
 
-    if (LatestTime <= 0.0)
-    {
-        return 10.0f;
-    }
-
-    return static_cast<float>(LatestTime);
+    const float FinalHoldSeconds = 4.0f;
+    return static_cast<float>(LatestTime) + FinalHoldSeconds;
 }
 
 void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
@@ -379,6 +418,7 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
 
     bSceneRunning = true;
     NextDisplayBlockIndex = 0;
+    NextMessageEventIndex = 0;
 
     if (MessageTitleText)
     {
@@ -390,6 +430,11 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         MessageSubtitleText->SetText(FText::GetEmpty());
     }
 
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
+    }
+
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -399,23 +444,7 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         SceneStartRealSeconds);
 }
 
-void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
-{
-    while (NextDisplayBlockIndex < SortedDisplayTimes.Num())
-    {
-        const double BlockTime = SortedDisplayTimes[NextDisplayBlockIndex];
-
-        if (ElapsedSeconds + KINDA_SMALL_NUMBER < BlockTime)
-        {
-            break;
-        }
-
-        ExecuteEventBlockAtTime(BlockTime);
-        ++NextDisplayBlockIndex;
-    }
-}
-
-void UCampaignSceneDlg::ExecuteEventBlockAtTime(double BlockTime)
+void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
 {
     const TArray<FString>* Lines = DisplayBlocks.Find(BlockTime);
     if (!Lines || Lines->Num() == 0)
@@ -423,8 +452,8 @@ void UCampaignSceneDlg::ExecuteEventBlockAtTime(double BlockTime)
         return;
     }
 
-    const FString TitleLine = (*Lines)[0];
-    const FString SubtitleLines = BuildBodyTextFromDisplayBlock(*Lines);
+    const FString TitleLine = FixEscapedNewlines((*Lines)[0]);
+    const FString SubtitleLines = FixEscapedNewlines(BuildBodyTextFromDisplayBlock(*Lines));
 
     if (MessageTitleText)
     {
@@ -441,6 +470,65 @@ void UCampaignSceneDlg::ExecuteEventBlockAtTime(double BlockTime)
         BlockTime,
         *TitleLine,
         *SubtitleLines);
+}
+
+void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
+{
+    const FString Caption = FixEscapedNewlines(Event.EventCaption);
+
+    if (!Caption.IsEmpty() && CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::FromString(Caption));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] CAPTION @ %.2f '%s'"),
+            Event.EventTime,
+            *Caption);
+    }
+
+    if (!Event.EventSound.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
+            Event.EventTime,
+            *Event.EventSound);
+
+        // Stub for later:
+        // Play audio cue here
+    }
+}
+
+void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
+{
+    while (NextDisplayBlockIndex < SortedDisplayTimes.Num())
+    {
+        const double BlockTime = SortedDisplayTimes[NextDisplayBlockIndex];
+
+        if (ElapsedSeconds + KINDA_SMALL_NUMBER < BlockTime)
+        {
+            break;
+        }
+
+        ExecuteDisplayBlockAtTime(BlockTime);
+        ++NextDisplayBlockIndex;
+    }
+
+    while (NextMessageEventIndex < SortedEvents.Num())
+    {
+        const FS_MissionEvent& Event = SortedEvents[NextMessageEventIndex];
+
+        if (ElapsedSeconds + KINDA_SMALL_NUMBER < Event.EventTime)
+        {
+            break;
+        }
+
+        if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE)
+        {
+            ExecuteMessageEvent(Event);
+        }
+
+        ++NextMessageEventIndex;
+    }
 }
 
 void UCampaignSceneDlg::AdvanceSceneFromTimer(float NowSeconds)

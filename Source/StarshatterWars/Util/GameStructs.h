@@ -2606,54 +2606,77 @@ struct FS_MissionOptional : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_MissionEvent : public FTableRowBase {
-
+struct FS_MissionEvent : public FTableRowBase
+{
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	MISSIONEVENT_TYPE EventType = MISSIONEVENT_TYPE::MESSAGE;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventShip;
+	FString EventShip;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventSource;
+	FString EventSource;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventTarget;
+	FString EventTarget;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventMessage;
+	FString EventMessage;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventSound;
+	FString EventCaption;   
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	TriggerShip;
+	FString EventSound;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString TriggerShip;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString TriggerTarget;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventId;
+	int EventId;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventChance;
+	int EventChance;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventDelay;
+	int EventDelay;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double	EventTime;
+	double EventTime;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector	EventPoint;
+	FVector EventPoint;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FVector4 EventRect;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<int> EventParam;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<int> TriggerParam;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventNParams;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	TriggerNParams;
 
-	FS_MissionEvent() {
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int EventNParams;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int TriggerNParams;
+
+	FS_MissionEvent()
+	{
 		EventShip = "";
 		EventSource = "";
 		EventTarget = "";
 		EventMessage = "";
+		EventCaption = "";
 		EventSound = "";
 		TriggerShip = "";
 		TriggerTarget = "";
@@ -2661,8 +2684,7 @@ struct FS_MissionEvent : public FTableRowBase {
 		EventId = 1;
 		EventChance = 0;
 		EventDelay = 0;
-
-		EventTime = 0;
+		EventTime = 0.0;
 
 		EventPoint = FVector::ZeroVector;
 		EventRect = FVector4::Zero();
@@ -2673,11 +2695,13 @@ struct FS_MissionEvent : public FTableRowBase {
 		EventParam.SetNum(10);
 		TriggerParam.SetNum(10);
 
-		for (int EventIndex = 0; EventIndex < EventParam.Num(); EventIndex++) {
+		for (int EventIndex = 0; EventIndex < EventParam.Num(); EventIndex++)
+		{
 			EventParam[EventIndex] = 0;
 		}
 
-		for (int TriggerIndex = 0; TriggerIndex < TriggerParam.Num(); TriggerIndex++) {
+		for (int TriggerIndex = 0; TriggerIndex < TriggerParam.Num(); TriggerIndex++)
+		{
 			TriggerParam[TriggerIndex] = 0;
 		}
 	}
