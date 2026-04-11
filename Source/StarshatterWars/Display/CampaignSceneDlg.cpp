@@ -1,6 +1,7 @@
 #include "CampaignSceneDlg.h"
 
 #include "CmpnScreen.h"
+#include "MissionUIStyle.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -9,6 +10,7 @@
 #include "Components/TextBlock.h"
 #include "Engine/Font.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -68,12 +70,64 @@ UFont* UCampaignSceneDlg::GetBoldLimerickFont() const
     return CachedFont;
 }
 
-FString UCampaignSceneDlg::FixEscapedNewlines(const FString& InText)
+FString UCampaignSceneDlg::FixEscapedText(const FString& InText)
 {
     FString Out = InText;
     Out.ReplaceInline(TEXT("\\r\\n"), TEXT("\n"));
     Out.ReplaceInline(TEXT("\\n"), TEXT("\n"));
-    return Out;
+    Out.ReplaceInline(TEXT("\\\""), TEXT("\""));
+    return Out.TrimStartAndEnd();
+}
+
+int32 UCampaignSceneDlg::ResolveCampaignNumber() const
+{
+    return CurrentCampaignNumber > 0 ? CurrentCampaignNumber : 2;
+}
+
+FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) const
+{
+    const FString CleanToken = FixEscapedText(SoundToken);
+    if (CleanToken.IsEmpty())
+    {
+        return FString();
+    }
+
+    return FString::Printf(
+        TEXT("/Game/Audio/Vox/Scenes/%02d/%s.%s"),
+        ResolveCampaignNumber(),
+        *CleanToken,
+        *CleanToken);
+}
+
+USoundBase* UCampaignSceneDlg::ResolveSceneSound(const FString& SoundToken) const
+{
+    static TMap<FString, TObjectPtr<USoundBase>> SoundCache;
+
+    const FString AssetPath = ResolveSceneSoundPath(SoundToken);
+    if (AssetPath.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    if (const TObjectPtr<USoundBase>* Found = SoundCache.Find(AssetPath))
+    {
+        return Found->Get();
+    }
+
+    USoundBase* Sound = LoadObject<USoundBase>(nullptr, *AssetPath);
+    if (Sound)
+    {
+        SoundCache.Add(AssetPath, Sound);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveSceneSound failed: Token=%s Path=%s"),
+            *SoundToken,
+            *AssetPath);
+    }
+
+    return Sound;
 }
 
 void UCampaignSceneDlg::BuildRuntimeWidgets()
@@ -104,31 +158,27 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
 
     RuntimeHost->SetContent(RuntimeOverlay);
 
-    const FLinearColor HalfAlphaWhite(1.f, 1.f, 1.f, 0.5f);
-    UFont* BoldLimerick = GetBoldLimerickFont();
+    FLinearColor SceneGold = MissionUIStyle::RowSelected;
+    SceneGold.A = 0.85f;
 
     const float WrapWidth = 1800.0f;
+    const FSlateFontInfo HeaderFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo TitleFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo SubtitleFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo CaptionFont = MissionUIStyle::GetLimerickFont(18);
 
-    // ------------------------------------------------------------
-    // HEADER TEXT
-    // ------------------------------------------------------------
     HeaderText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HeaderText"));
     if (HeaderText)
     {
         HeaderText->SetText(FText::GetEmpty());
-        HeaderText->SetColorAndOpacity(FSlateColor(HalfAlphaWhite));
+        HeaderText->SetColorAndOpacity(FSlateColor(SceneGold));
         HeaderText->SetAutoWrapText(true);
         HeaderText->SetWrapTextAt(WrapWidth);
         HeaderText->SetJustification(ETextJustify::Left);
         HeaderText->SetMinDesiredWidth(WrapWidth);
-
-        if (BoldLimerick)
-        {
-            FSlateFontInfo FontInfo;
-            FontInfo.FontObject = BoldLimerick;
-            FontInfo.Size = 18;
-            HeaderText->SetFont(FontInfo);
-        }
+        HeaderText->SetFont(HeaderFont);
+        HeaderText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        HeaderText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
 
         UOverlaySlot* HeaderSlot = RuntimeOverlay->AddChildToOverlay(HeaderText);
         if (HeaderSlot)
@@ -139,26 +189,18 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
         }
     }
 
-    // ------------------------------------------------------------
-    // DISPLAY TITLE
-    // ------------------------------------------------------------
     MessageTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageTitleText"));
     if (MessageTitleText)
     {
         MessageTitleText->SetText(FText::GetEmpty());
-        MessageTitleText->SetColorAndOpacity(FSlateColor(HalfAlphaWhite));
+        MessageTitleText->SetColorAndOpacity(FSlateColor(SceneGold));
         MessageTitleText->SetAutoWrapText(true);
         MessageTitleText->SetWrapTextAt(WrapWidth);
         MessageTitleText->SetJustification(ETextJustify::Left);
         MessageTitleText->SetMinDesiredWidth(WrapWidth);
-
-        if (BoldLimerick)
-        {
-            FSlateFontInfo FontInfo;
-            FontInfo.FontObject = BoldLimerick;
-            FontInfo.Size = 18;
-            MessageTitleText->SetFont(FontInfo);
-        }
+        MessageTitleText->SetFont(TitleFont);
+        MessageTitleText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        MessageTitleText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
 
         UOverlaySlot* TitleSlot = RuntimeOverlay->AddChildToOverlay(MessageTitleText);
         if (TitleSlot)
@@ -169,26 +211,18 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
         }
     }
 
-    // ------------------------------------------------------------
-    // DISPLAY SUBTITLE
-    // ------------------------------------------------------------
     MessageSubtitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageSubtitleText"));
     if (MessageSubtitleText)
     {
         MessageSubtitleText->SetText(FText::GetEmpty());
-        MessageSubtitleText->SetColorAndOpacity(FSlateColor(HalfAlphaWhite));
+        MessageSubtitleText->SetColorAndOpacity(FSlateColor(SceneGold));
         MessageSubtitleText->SetAutoWrapText(true);
         MessageSubtitleText->SetWrapTextAt(WrapWidth);
         MessageSubtitleText->SetJustification(ETextJustify::Left);
         MessageSubtitleText->SetMinDesiredWidth(WrapWidth);
-
-        if (BoldLimerick)
-        {
-            FSlateFontInfo FontInfo;
-            FontInfo.FontObject = BoldLimerick;
-            FontInfo.Size = 18;
-            MessageSubtitleText->SetFont(FontInfo);
-        }
+        MessageSubtitleText->SetFont(SubtitleFont);
+        MessageSubtitleText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        MessageSubtitleText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
 
         UOverlaySlot* SubtitleSlot = RuntimeOverlay->AddChildToOverlay(MessageSubtitleText);
         if (SubtitleSlot)
@@ -199,26 +233,18 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
         }
     }
 
-    // ------------------------------------------------------------
-    // BOTTOM CAPTION TEXT
-    // ------------------------------------------------------------
     CaptionTextBottom = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CaptionTextBottom"));
     if (CaptionTextBottom)
     {
         CaptionTextBottom->SetText(FText::GetEmpty());
-        CaptionTextBottom->SetColorAndOpacity(FSlateColor(HalfAlphaWhite));
+        CaptionTextBottom->SetColorAndOpacity(FSlateColor(SceneGold));
         CaptionTextBottom->SetAutoWrapText(true);
         CaptionTextBottom->SetWrapTextAt(WrapWidth);
         CaptionTextBottom->SetJustification(ETextJustify::Center);
         CaptionTextBottom->SetMinDesiredWidth(WrapWidth);
-
-        if (BoldLimerick)
-        {
-            FSlateFontInfo FontInfo;
-            FontInfo.FontObject = BoldLimerick;
-            FontInfo.Size = 18;
-            CaptionTextBottom->SetFont(FontInfo);
-        }
+        CaptionTextBottom->SetFont(CaptionFont);
+        CaptionTextBottom->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        CaptionTextBottom->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
 
         UOverlaySlot* CaptionSlot = RuntimeOverlay->AddChildToOverlay(CaptionTextBottom);
         if (CaptionSlot)
@@ -298,7 +324,7 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
             !MissionData.Scene.IsEmpty() ? MissionData.Scene :
             TEXT("MISSION BRIEFING");
 
-        HeaderText->SetText(FText::FromString(FixEscapedNewlines(Header)));
+        HeaderText->SetText(FText::FromString(FixEscapedText(Header)));
     }
 
     BuildSortedEventQueue();
@@ -330,7 +356,7 @@ void UCampaignSceneDlg::BuildSortedEventQueue()
             continue;
         }
 
-        const FString Line = FixEscapedNewlines(Event.EventMessage).TrimStartAndEnd();
+        const FString Line = FixEscapedText(Event.EventMessage);
         if (Line.IsEmpty())
         {
             continue;
@@ -452,8 +478,8 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
         return;
     }
 
-    const FString TitleLine = FixEscapedNewlines((*Lines)[0]);
-    const FString SubtitleLines = FixEscapedNewlines(BuildBodyTextFromDisplayBlock(*Lines));
+    const FString TitleLine = FixEscapedText((*Lines)[0]);
+    const FString SubtitleLines = FixEscapedText(BuildBodyTextFromDisplayBlock(*Lines));
 
     if (MessageTitleText)
     {
@@ -474,7 +500,7 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
 
 void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 {
-    const FString Caption = FixEscapedNewlines(Event.EventCaption);
+    const FString Caption = FixEscapedText(Event.EventCaption);
 
     if (!Caption.IsEmpty() && CaptionTextBottom)
     {
@@ -488,13 +514,15 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 
     if (!Event.EventSound.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
-            Event.EventTime,
-            *Event.EventSound);
+        if (USoundBase* SceneSound = ResolveSceneSound(Event.EventSound))
+        {
+            UGameplayStatics::PlaySound2D(this, SceneSound);
 
-        // Stub for later:
-        // Play audio cue here
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
+                Event.EventTime,
+                *Event.EventSound);
+        }
     }
 }
 
