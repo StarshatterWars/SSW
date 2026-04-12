@@ -10,69 +10,71 @@
     ==========================
     John DiCamillo / Destroyer Studios LLC
 
-    UNREAL PORT:
-    - Converted from FormWindow/AWEvent mapping to UBaseScreen (UUserWidget-derived).
-    - Preserves original member names and intent where applicable.
-    - Removes MemDebug and allocation tags.
-    - Converts Print-style debugging to UE_LOG.
+    OVERVIEW
+    ========
+    Code-built campaign selection screen.
+    Intended for use with an empty WBP shell whose root is a CanvasPanel.
+    Visuals use MissionUIStyle for consistency with the mission UI.
 */
 
 #include "CampaignSelectDlg.h"
 
-#include "GameStructs.h"
+#include "MissionUIStyle.h"
 
-// Unreal:
-#include "CoreMinimal.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/BorderSlot.h"
 #include "Components/Button.h"
-#include "Components/ListView.h"
-#include "Components/TextBlock.h"
+#include "Components/ButtonSlot.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/ComboBoxString.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 
-// Starshatter (ported core/gameplay):
-#include "ConfirmDlg.h"
-#include "MenuScreen.h"
-#include "Starshatter.h"
 #include "Campaign.h"
-#include "CampaignSaveGame.h"
-#include "CombatGroup.h"
-#include "ShipDesign.h"
-#include "PlayerCharacter.h"
-
-#include "Game.h"
-#include "DataLoader.h"
-#include "Keyboard.h"
-#include "Mouse.h"
-#include "ParseUtil.h"
-#include "FormatUtil.h"
-
-#include "TimerSubsystem.h"
-#include "SSWGameInstance.h"
-#include "StarshatterPlayerSubsystem.h"
-#include "StarshatterGameDataSubsystem.h"
-#include "StarshatterUIStyleSubsystem.h"
-
 #include "CampaignSave.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
 #include "CmpLoadDlg.h"
+#include "Game.h"
+#include "Keyboard.h"
+#include "MenuScreen.h"
+#include "Mouse.h"
+#include "SSWGameInstance.h"
+#include "Starshatter.h"
+#include "StarshatterGameDataSubsystem.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "StarshatterUIStyleSubsystem.h"
+#include "TimerSubsystem.h"
 
-#include "Kismet/GameplayStatics.h"
-#include "Misc/Paths.h"
 #include "Engine/Texture2D.h"
-#include "Styling/SlateBrush.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
-// +--------------------------------------------------------------------+
+namespace
+{
+    static int32 GCampaignSelectUniqueNameCounter = 0;
+
+    static FName MakeUniqueWidgetName(const TCHAR* BaseName)
+    {
+        return FName(*FString::Printf(TEXT("%s_%d"), BaseName, ++GCampaignSelectUniqueNameCounter));
+    }
+}
 
 UCampaignSelectDlg::UCampaignSelectDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    // stars/select_msg initialized in NativeOnInitialized to ensure systems exist.
 }
 
 void UCampaignSelectDlg::NativePreConstruct()
 {
     Super::NativePreConstruct();
-    SetCampaignDDList();
+    // Intentionally empty.
 }
 
 void UCampaignSelectDlg::NativeOnInitialized()
@@ -81,76 +83,403 @@ void UCampaignSelectDlg::NativeOnInitialized()
 
     stars = Starshatter::GetInstance();
     select_msg = Game::GetText("CmpSelectDlg.select_msg");
-
-    RegisterControls();
 }
 
 void UCampaignSelectDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    UGameInstance* GI = GetGameInstance();
-    if (!GI)
+    BuildWidgetTreeIfNeeded();
+    HookupEvents();
+    RegisterControls();
+    RefreshUIFromSubsystem();
+}
+
+void UCampaignSelectDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
+void UCampaignSelectDlg::SetMenuManager(UMenuScreen* InManager)
+{
+    manager = InManager;
+}
+
+void UCampaignSelectDlg::InitializeDlg(UMenuScreen* InManager)
+{
+    manager = InManager;
+}
+
+void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
+{
+    if (!WidgetTree)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] NativeConstruct: GameInstance is NULL"));
         return;
     }
 
-    UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if (!PlayerSS)
+    RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+
+    if (!RootCanvas)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] NativeConstruct: PlayerSubsystem is NULL"));
+        RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
+            UCanvasPanel::StaticClass(),
+            TEXT("RootCanvas"));
+        WidgetTree->RootWidget = RootCanvas;
+    }
+
+    if (WidgetTree->FindWidget(TEXT("CampaignSelect_MainBorder")) != nullptr)
+    {
         return;
     }
 
-    // Player save should already be loaded by Boot, but allow a safe fallback:
-    if (!PlayerSS->HasLoaded())
+    BackgroundImage = WidgetTree->ConstructWidget<UImage>(
+        UImage::StaticClass(),
+        TEXT("CampaignSelect_Background"));
+
+    if (UCanvasPanelSlot* BgCanvasSlot = RootCanvas->AddChildToCanvas(BackgroundImage))
     {
-        PlayerSS->LoadPlayer();
+        BgCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        BgCanvasSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 0.f));
+        BgCanvasSlot->SetZOrder(0);
     }
 
-   if (auto* StyleSS = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
+    if (UTexture2D* FrameTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Frame1.Frame1")))
     {
-        StyleSS->ApplyMenuButtonStyle(CancelButton);
-        StyleSS->ApplyMenuButtonStyle(PlayButton);
-        StyleSS->ApplyMenuButtonStyle(RestartButton);
+        BackgroundImage->SetBrushFromTexture(FrameTex, true);
     }
 
-    const FS_PlayerGameInfo& PlayerInfo = PlayerSS->GetPlayerInfo();
+    TitleText = CreateText(
+        TEXT("CampaignSelect_TitleText"),
+        TEXT("DYNAMIC CAMPAIGNS"),
+        18,
+        MissionUIStyle::HeaderText,
+        ETextJustify::Left,
+        false);
 
-    UStarshatterGameDataSubsystem* DataSubsystem =
-        GI->GetSubsystem<UStarshatterGameDataSubsystem>();
-
-    if (!DataSubsystem)
+    if (UCanvasPanelSlot* TitleCanvasSlot = RootCanvas->AddChildToCanvas(TitleText))
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] NativeConstruct: GameDataSubsystem is NULL"));
-        return;
+        TitleCanvasSlot->SetPosition(FVector2D(12.f, 32.f));
+        TitleCanvasSlot->SetAutoSize(true);
+        TitleCanvasSlot->SetZOrder(1);
     }
 
-    const TArray<FS_Campaign>& Campaigns = DataSubsystem->GetAllCampaigns();
-    UE_LOG(LogTemp, Log, TEXT("[CampaignScreen] NativeConstruct: Campaign count = %d"), Campaigns.Num());
+    MainBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_MainBorder"),
+        MissionUIStyle::PanelBG);
 
-    if (TitleText)
+    if (UCanvasPanelSlot* MainCanvasSlot = RootCanvas->AddChildToCanvas(MainBorder))
     {
-        TitleText->SetText(FText::FromString(TEXT("DYNAMIC CAMPAIGNS")));
+        MainCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        MainCanvasSlot->SetOffsets(FMargin(36.f, 120.f, 36.f, 32.f));
+        MainCanvasSlot->SetZOrder(1);
     }
 
-    // Buttons
-    if (CancelButton)
+    UCanvasPanel* MainCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
+        UCanvasPanel::StaticClass(),
+        TEXT("CampaignSelect_MainCanvas"));
+    MainBorder->SetContent(MainCanvas);
+
+    UBorder* NameBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_NameBorder"),
+        MissionUIStyle::HeaderBG);
+
+    if (UCanvasPanelSlot* NameCanvasSlot = MainCanvas->AddChildToCanvas(NameBorder))
     {
-        CancelButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
-        CancelButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
+        NameCanvasSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
+        NameCanvasSlot->SetAlignment(FVector2D(1.f, 0.f));
+        NameCanvasSlot->SetPosition(FVector2D(-14.f, 18.f));
+        NameCanvasSlot->SetSize(FVector2D(256.f, 32.f));
+    }
 
-        CancelButton->OnHovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
-        CancelButton->OnHovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
+    PlayerNameText = CreateText(
+        TEXT("CampaignSelect_PlayerNameText"),
+        TEXT("PLAYER"),
+        16,
+        MissionUIStyle::InfoValueText,
+        ETextJustify::Right,
+        false);
 
-        CancelButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
-        CancelButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
+    NameBorder->SetContent(PlayerNameText);
 
-        if (CancelButtonText)
+    CampaignNameText = CreateText(
+        TEXT("CampaignSelect_CampaignNameText"),
+        TEXT("CAMPAIGN"),
+        20,
+        MissionUIStyle::HeaderText,
+        ETextJustify::Center,
+        false);
+
+    if (UCanvasPanelSlot* CampaignNameCanvasSlot = MainCanvas->AddChildToCanvas(CampaignNameText))
+    {
+        CampaignNameCanvasSlot->SetAnchors(FAnchors(0.5f, 0.f, 0.5f, 0.f));
+        CampaignNameCanvasSlot->SetAlignment(FVector2D(0.5f, 0.f));
+        CampaignNameCanvasSlot->SetPosition(FVector2D(0.f, 52.f));
+        CampaignNameCanvasSlot->SetSize(FVector2D(512.f, 32.f));
+    }
+
+    UBorder* CampaignSelectBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_DropdownBorder"),
+        MissionUIStyle::HeaderBG);
+
+    if (UCanvasPanelSlot* DropdownBorderCanvasSlot = MainCanvas->AddChildToCanvas(CampaignSelectBorder))
+    {
+        DropdownBorderCanvasSlot->SetPosition(FVector2D(36.f, 44.f));
+        DropdownBorderCanvasSlot->SetSize(FVector2D(300.f, 32.f));
+    }
+
+    CampaignSelectDD = WidgetTree->ConstructWidget<UComboBoxString>(
+        UComboBoxString::StaticClass(),
+        TEXT("CampaignSelect_CampaignSelectDD"));
+
+    CampaignSelectBorder->SetContent(CampaignSelectDD);
+
+    UHorizontalBox* MainRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(),
+        TEXT("CampaignSelect_MainRow"));
+
+    if (UCanvasPanelSlot* MainRowCanvasSlot = MainCanvas->AddChildToCanvas(MainRow))
+    {
+        MainRowCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        MainRowCanvasSlot->SetOffsets(FMargin(32.f, 160.f, 32.f, 100.f));
+    }
+
+    UBorder* LeftBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_LeftBorder"),
+        MissionUIStyle::PanelBG);
+
+    UBorder* RightBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_RightBorder"),
+        MissionUIStyle::PanelBG);
+
+    {
+        UHorizontalBoxSlot* LeftHBoxSlot = MainRow->AddChildToHorizontalBox(LeftBorder);
+        LeftHBoxSlot->SetPadding(FMargin(0.f, 0.f, 24.f, 0.f));
+        LeftHBoxSlot->SetHorizontalAlignment(HAlign_Left);
+        LeftHBoxSlot->SetVerticalAlignment(VAlign_Fill);
+        LeftHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    {
+        UHorizontalBoxSlot* RightHBoxSlot = MainRow->AddChildToHorizontalBox(RightBorder);
+        RightHBoxSlot->SetPadding(FMargin(0.f));
+        RightHBoxSlot->SetHorizontalAlignment(HAlign_Fill);
+        RightHBoxSlot->SetVerticalAlignment(VAlign_Fill);
+        RightHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    }
+
+    USizeBox* LeftSize = WidgetTree->ConstructWidget<USizeBox>(
+        USizeBox::StaticClass(),
+        TEXT("CampaignSelect_LeftSize"));
+    LeftSize->SetWidthOverride(520.f);
+    LeftSize->SetHeightOverride(384.f);
+    LeftBorder->SetContent(LeftSize);
+
+    UBorder* PictureInnerBorder = CreatePanelBorder(
+        TEXT("CampaignSelect_PictureInnerBorder"),
+        MissionUIStyle::HeaderBG);
+    LeftSize->SetContent(PictureInnerBorder);
+
+    CampaignImage = WidgetTree->ConstructWidget<UImage>(
+        UImage::StaticClass(),
+        TEXT("CampaignSelect_CampaignImage"));
+    PictureInnerBorder->SetContent(CampaignImage);
+
+    UVerticalBox* RightVBox = WidgetTree->ConstructWidget<UVerticalBox>(
+        UVerticalBox::StaticClass(),
+        TEXT("CampaignSelect_RightVBox"));
+    RightBorder->SetContent(RightVBox);
+
+    auto AddHeader = [&](const FString& HeaderText, const TCHAR* BaseName) -> void
         {
-            CancelButtonText->SetText(FText::FromString(TEXT("CANCEL")));
-        }
+            UBorder* HeaderBorder = CreatePanelBorder(
+                MakeUniqueWidgetName(BaseName),
+                MissionUIStyle::HeaderBG);
+
+            UTextBlock* HeaderLabel = CreateText(
+                MakeUniqueWidgetName(TEXT("CampaignSelect_HeaderLabel")),
+                HeaderText,
+                20,
+                MissionUIStyle::HeaderText,
+                ETextJustify::Left,
+                false);
+
+            HeaderBorder->SetContent(HeaderLabel);
+
+            UVerticalBoxSlot* HeaderVBoxSlot = RightVBox->AddChildToVerticalBox(HeaderBorder);
+            HeaderVBoxSlot->SetPadding(FMargin(4.f, 2.f, 4.f, 2.f));
+            HeaderVBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        };
+
+    auto AddBodyText = [&](TObjectPtr<UTextBlock>& OutText, float Height, const TCHAR* SizeBoxBase, const TCHAR* TextBase, bool bWrap = true) -> void
+        {
+            USizeBox* BodySizeBox = WidgetTree->ConstructWidget<USizeBox>(
+                USizeBox::StaticClass(),
+                MakeUniqueWidgetName(SizeBoxBase));
+            BodySizeBox->SetHeightOverride(Height);
+
+            OutText = CreateText(
+                MakeUniqueWidgetName(TextBase),
+                TEXT(""),
+                16,
+                MissionUIStyle::InfoValueText,
+                ETextJustify::Left,
+                bWrap);
+
+            BodySizeBox->SetContent(OutText);
+
+            UVerticalBoxSlot* BodyVBoxSlot = RightVBox->AddChildToVerticalBox(BodySizeBox);
+            BodyVBoxSlot->SetPadding(FMargin(6.f, 0.f, 6.f, 0.f));
+            BodyVBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        };
+
+    AddHeader(TEXT("Description"), TEXT("CampaignSelect_DescriptionHeaderBorder"));
+    AddBodyText(DescriptionText, 128.f, TEXT("CampaignSelect_DescriptionSizeBox"), TEXT("CampaignSelect_DescriptionText"), true);
+
+    AddHeader(TEXT("Situation"), TEXT("CampaignSelect_SituationHeaderBorder"));
+    AddBodyText(SituationText, 192.f, TEXT("CampaignSelect_SituationSizeBox"), TEXT("CampaignSelect_SituationText"), true);
+
+    AddHeader(TEXT("Orders"), TEXT("CampaignSelect_OrdersHeaderBorder"));
+    AddBodyText(Orders1Text, 28.f, TEXT("CampaignSelect_Orders1SizeBox"), TEXT("CampaignSelect_Orders1Text"), true);
+    AddBodyText(Orders2Text, 28.f, TEXT("CampaignSelect_Orders2SizeBox"), TEXT("CampaignSelect_Orders2Text"), true);
+    AddBodyText(Orders3Text, 28.f, TEXT("CampaignSelect_Orders3SizeBox"), TEXT("CampaignSelect_Orders3Text"), true);
+    AddBodyText(Orders4Text, 28.f, TEXT("CampaignSelect_Orders4SizeBox"), TEXT("CampaignSelect_Orders4Text"), true);
+
+    UHorizontalBox* MetaHeaderRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(),
+        TEXT("CampaignSelect_MetaHeaderRow"));
+    {
+        UVerticalBoxSlot* MetaHeaderVBoxSlot = RightVBox->AddChildToVerticalBox(MetaHeaderRow);
+        MetaHeaderVBoxSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
+    }
+
+    UBorder* LocationHeader = CreatePanelBorder(
+        TEXT("CampaignSelect_LocationHeader"),
+        MissionUIStyle::HeaderBG);
+    UTextBlock* LocationLabel = CreateText(
+        TEXT("CampaignSelect_LocationLabel"),
+        TEXT("Location"),
+        20,
+        MissionUIStyle::HeaderText,
+        ETextJustify::Left,
+        false);
+    LocationHeader->SetContent(LocationLabel);
+
+    UBorder* StartHeader = CreatePanelBorder(
+        TEXT("CampaignSelect_StartHeader"),
+        MissionUIStyle::HeaderBG);
+    UTextBlock* StartLabel = CreateText(
+        TEXT("CampaignSelect_StartLabel"),
+        TEXT("Start"),
+        20,
+        MissionUIStyle::HeaderText,
+        ETextJustify::Left,
+        false);
+    StartHeader->SetContent(StartLabel);
+
+    {
+        UHorizontalBoxSlot* LocationHeaderHBoxSlot = MetaHeaderRow->AddChildToHorizontalBox(LocationHeader);
+        LocationHeaderHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        LocationHeaderHBoxSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+    }
+
+    {
+        UHorizontalBoxSlot* StartHeaderHBoxSlot = MetaHeaderRow->AddChildToHorizontalBox(StartHeader);
+        StartHeaderHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    UHorizontalBox* MetaValueRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(),
+        TEXT("CampaignSelect_MetaValueRow"));
+    {
+        UVerticalBoxSlot* MetaValueVBoxSlot = RightVBox->AddChildToVerticalBox(MetaValueRow);
+        MetaValueVBoxSlot->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
+    }
+
+    LocationSystemText = CreateText(
+        TEXT("CampaignSelect_LocationSystemText"),
+        TEXT(""),
+        12,
+        MissionUIStyle::InfoValueText,
+        ETextJustify::Left,
+        true);
+
+    CampaignStartTimeText = CreateText(
+        TEXT("CampaignSelect_CampaignStartTimeText"),
+        TEXT(""),
+        12,
+        MissionUIStyle::InfoValueText,
+        ETextJustify::Left,
+        true);
+
+    {
+        UHorizontalBoxSlot* LocationValueHBoxSlot = MetaValueRow->AddChildToHorizontalBox(LocationSystemText);
+        LocationValueHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        LocationValueHBoxSlot->SetPadding(FMargin(0.f, 0.f, 24.f, 0.f));
+    }
+
+    {
+        UHorizontalBoxSlot* StartValueHBoxSlot = MetaValueRow->AddChildToHorizontalBox(CampaignStartTimeText);
+        StartValueHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    UHorizontalBox* ButtonRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(),
+        TEXT("CampaignSelect_ButtonRow"));
+
+    if (UCanvasPanelSlot* ButtonRowCanvasSlot = MainCanvas->AddChildToCanvas(ButtonRow))
+    {
+        ButtonRowCanvasSlot->SetAnchors(FAnchors(1.f, 1.f, 1.f, 1.f));
+        ButtonRowCanvasSlot->SetAlignment(FVector2D(1.f, 1.f));
+        ButtonRowCanvasSlot->SetPosition(FVector2D(-100.f, -53.f));
+        ButtonRowCanvasSlot->SetAutoSize(true);
+    }
+
+    UWidget* PlayButtonWidget = CreateMenuButton(
+        TEXT("CampaignSelect_PlayButton"),
+        PlayButton,
+        PlayButtonText,
+        TEXT("START"));
+
+    UWidget* RestartButtonWidget = CreateMenuButton(
+        TEXT("CampaignSelect_RestartButton"),
+        RestartButton,
+        RestartButtonText,
+        TEXT("RESTART"));
+
+    UWidget* CancelButtonWidget = CreateMenuButton(
+        TEXT("CampaignSelect_CancelButton"),
+        CancelButton,
+        CancelButtonText,
+        TEXT("CANCEL"));
+
+    {
+        UHorizontalBoxSlot* PlayButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(PlayButtonWidget);
+        PlayButtonHBoxSlot->SetPadding(FMargin(0.f, 0.f, 36.f, 0.f));
+        PlayButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    {
+        UHorizontalBoxSlot* RestartButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(RestartButtonWidget);
+        RestartButtonHBoxSlot->SetPadding(FMargin(0.f, 0.f, 36.f, 0.f));
+        RestartButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    {
+        UHorizontalBoxSlot* CancelButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(CancelButtonWidget);
+        CancelButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    }
+
+    ApplyButtonStyle(PlayButton);
+    ApplyButtonStyle(RestartButton);
+    ApplyButtonStyle(CancelButton);
+}
+
+void UCampaignSelectDlg::HookupEvents()
+{
+    if (CampaignSelectDD)
+    {
+        CampaignSelectDD->OnSelectionChanged.RemoveDynamic(this, &UCampaignSelectDlg::OnSetSelected);
+        CampaignSelectDD->OnSelectionChanged.AddDynamic(this, &UCampaignSelectDlg::OnSetSelected);
     }
 
     if (PlayButton)
@@ -163,12 +492,6 @@ void UCampaignSelectDlg::NativeConstruct()
 
         PlayButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnPlayButtonUnHovered);
         PlayButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnPlayButtonUnHovered);
-
-        if (PlayButtonText)
-        {
-            // Will be updated by UpdateCampaignButtons()
-            PlayButtonText->SetText(FText::FromString(TEXT("START")));
-        }
     }
 
     if (RestartButton)
@@ -181,173 +504,48 @@ void UCampaignSelectDlg::NativeConstruct()
 
         RestartButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnRestartButtonUnHovered);
         RestartButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnRestartButtonUnHovered);
-
-        if (RestartButtonText)
-        {
-            RestartButtonText->SetText(FText::FromString(TEXT("RESTART")));
-        }
     }
 
-    // Dropdown
-    if (CampaignSelectDD)
+    if (CancelButton)
     {
-        CampaignSelectDD->OnSelectionChanged.RemoveDynamic(this, &UCampaignSelectDlg::OnSetSelected);
-        CampaignSelectDD->OnSelectionChanged.AddDynamic(this, &UCampaignSelectDlg::OnSetSelected);
+        CancelButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
+        CancelButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
+
+        CancelButton->OnHovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
+        CancelButton->OnHovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
+
+        CancelButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
+        CancelButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
     }
-
-    // Player name
-    if (PlayerNameText)
-    {
-        PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
-        UE_LOG(LogTemp, Log, TEXT("[CampaignScreen] Player Name: %s"), *PlayerInfo.Name);
-    }
-
-    // Restore selection: PlayerInfo.Campaign is ALWAYS 1-based campaign index
-    int32 SelectedOptionIndex = 0;
-    if (PlayerInfo.Campaign > 0)
-    {
-        const int32 Found = CampaignIndexByOptionIndex.IndexOfByKey(PlayerInfo.Campaign);
-        if (Found != INDEX_NONE)
-        {
-            SelectedOptionIndex = Found;
-        }
-    }
-
-    Selected = SelectedOptionIndex;
-
-    PickedRowName = CampaignRowNamesByOptionIndex[Selected + 1];
-   
-    UE_LOG(LogTemp, Log, TEXT("[CampaignScreen] NativeConstruct: Selected=%d Row=%s"),
-        Selected,
-        *CampaignRowNamesByOptionIndex[Selected].ToString());
-    
-    CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
-        ? CampaignRowNamesByOptionIndex[Selected]
-        : NAME_None;
-
-    if (CampaignSelectDD && CampaignRowNamesByOptionIndex.IsValidIndex(SelectedOptionIndex))
-    {
-        // Programmatic selection; OnSetSelected should ignore Direct if needed
-        CampaignSelectDD->SetSelectedIndex(SelectedOptionIndex);
-    }
-
-    // Update right panel and buttons
-    SetSelectedData(Selected);
-    UpdateCampaignButtons();
 }
-
-void UCampaignSelectDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-    Super::NativeTick(MyGeometry, InDeltaTime);
-
-    //ExecFrame(InDeltaTime);
-}
-
-void UCampaignSelectDlg::SetMenuManager(UMenuScreen* InManager)
-{
-    manager = InManager;
-}
-
-void UCampaignSelectDlg::InitializeDlg(UMenuScreen* InManager)
-{
-    manager = InManager;
-}
-// +--------------------------------------------------------------------+
 
 void UCampaignSelectDlg::RegisterControls()
 {
-    // List selection:
-    // UListView selection is UObject-driven. You should bind OnItemSelectionChanged and
-    // map it to OnCampaignSelect(). For now, we keep the method and invoke it from your
-    // entry widget / list item logic.
-    //
-    // Example (if you use UObject items):
-    // lst_campaigns->OnItemSelectionChanged().AddUObject(this, &UCampaignSelectDlg::HandleSelectionChanged);
-
-    ShowNewCampaigns();
+    PopulateCampaignDropdown();
 }
 
-UTexture2D* UCampaignSelectDlg::LoadTextureFromFile()
+void UCampaignSelectDlg::PopulateCampaignDropdown()
 {
-    USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
-    if (!GI)
+    UGameInstance* GI = GetGameInstance();
+    if (!GI || !CampaignSelectDD)
     {
-        return nullptr;
-    }
-
-    return GI->LoadPNGTextureFromFile(ImagePath);
-}
-
-FSlateBrush UCampaignSelectDlg::CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize)
-{
-    FSlateBrush Brush;
-    Brush.SetResourceObject(Texture);
-    Brush.ImageSize = ImageSize;
-    Brush.DrawAs = ESlateBrushDrawType::Image;
-    return Brush;
-}
-
-void UCampaignSelectDlg::OnPlayButtonClicked()
-{
-    UE_LOG(LogTemp, Warning, TEXT("[UCampaignSelectDlg] OnPlayButtonClicked: BEGIN"));
-    PlayUISound(this, AcceptSound);
-    StartSelectedCampaignFlow(false);
-}
-
-void UCampaignSelectDlg::OnRestartButtonClicked()
-{
-    UE_LOG(LogTemp, Warning, TEXT("[UCampaignSelectDlg] OnRestartButtonClicked: BEGIN"));
-    PlayUISound(this, AcceptSound);
-    StartSelectedCampaignFlow(true);
-}
-
-void UCampaignSelectDlg::OnPlayButtonHovered()
-{
-    PlayUISound(this, HoverSound);
-}
-
-void UCampaignSelectDlg::OnPlayButtonUnHovered()
-{
-}
-
-void UCampaignSelectDlg::OnRestartButtonHovered()
-{
-    PlayUISound(this, HoverSound);
-}
-
-void UCampaignSelectDlg::OnRestartButtonUnHovered()
-{
-}
-
-void UCampaignSelectDlg::OnCancelButtonHovered()
-{
-    PlayUISound(this, HoverSound);
-}
-
-void UCampaignSelectDlg::OnCancelButtonUnHovered()
-{
-}
-
-void UCampaignSelectDlg::SetCampaignDDList()
-{
-    UStarshatterGameDataSubsystem* DataSubsystem =
-        GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
-
-    if (!CampaignSelectDD)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] SetCampaignDDList: CampaignSelectDD is NULL"));
         return;
     }
 
-    if (!DataSubsystem)
+    UStarshatterGameDataSubsystem* DataSubsystem = GI->GetSubsystem<UStarshatterGameDataSubsystem>();
+    UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>();
+
+    if (!DataSubsystem || !PlayerSS)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] SetCampaignDDList: GameDataSubsystem is NULL"));
         return;
+    }
+
+    if (!PlayerSS->HasLoaded())
+    {
+        PlayerSS->LoadPlayer();
     }
 
     CampaignSelectDD->ClearOptions();
-    CampaignSelectDD->ClearSelection();
-
     CampaignRowNamesByOptionIndex.Reset();
     CampaignIndexByOptionIndex.Reset();
 
@@ -360,101 +558,93 @@ void UCampaignSelectDlg::SetCampaignDDList()
             continue;
         }
 
-        // Assumes FS_Campaign preserves its source row name:
-        CampaignRowNamesByOptionIndex.Add(Row.RowName);
-
-        // Store 1-based stable campaign index:
-        CampaignIndexByOptionIndex.Add(Row.Index + 1);
-
         CampaignSelectDD->AddOption(Row.Name);
+        CampaignRowNamesByOptionIndex.Add(Row.RowName);
+        CampaignIndexByOptionIndex.Add(Row.Index + 1);
     }
 
-    UE_LOG(LogTemp, Log, TEXT("[CampaignScreen] SetCampaignDDList: Added %d campaigns"),
-        CampaignRowNamesByOptionIndex.Num());
+    if (PlayerNameText)
+    {
+        PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().Name));
+    }
+
+    int32 SelectedOptionIndex = 0;
+    const int32 SavedCampaignIndex1Based = PlayerSS->GetPlayerInfo().Campaign;
+
+    if (SavedCampaignIndex1Based > 0)
+    {
+        const int32 Found = CampaignIndexByOptionIndex.IndexOfByKey(SavedCampaignIndex1Based);
+        if (Found != INDEX_NONE)
+        {
+            SelectedOptionIndex = Found;
+        }
+    }
+
+    if (!CampaignIndexByOptionIndex.IsValidIndex(SelectedOptionIndex))
+    {
+        SelectedOptionIndex = CampaignIndexByOptionIndex.Num() > 0 ? 0 : INDEX_NONE;
+    }
+
+    Selected = SelectedOptionIndex;
+    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
+        ? CampaignRowNamesByOptionIndex[Selected]
+        : NAME_None;
+
+    if (Selected != INDEX_NONE && CampaignSelectDD->GetOptionCount() > 0)
+    {
+        CampaignSelectDD->SetSelectedIndex(Selected);
+        RefreshFromSelection();
+    }
+    else
+    {
+        UpdateCampaignButtons();
+    }
 }
 
-void UCampaignSelectDlg::SetSelectedData(int32 OptionIndex)
+void UCampaignSelectDlg::RefreshFromSelection()
 {
     UGameInstance* GIBase = GetGameInstance();
     if (!GIBase)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] SetSelectedData: GameInstance is NULL"));
         return;
     }
 
-    UStarshatterGameDataSubsystem* DataSubsystem =
-        GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
+    UStarshatterGameDataSubsystem* DataSubsystem = GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
     if (!DataSubsystem)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CampaignScreen] SetSelectedData: GameDataSubsystem is NULL"));
         return;
     }
-
-    Selected = OptionIndex;
 
     if (!CampaignIndexByOptionIndex.IsValidIndex(Selected))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CampaignScreen] SetSelectedData: Invalid option index %d"), Selected);
         return;
     }
 
     const int32 CampaignIndex1Based = CampaignIndexByOptionIndex[Selected];
-
     const FS_Campaign* CampaignData = DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
     if (!CampaignData)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignScreen] SetSelectedData: No campaign found for index %d"),
-            CampaignIndex1Based);
         return;
     }
+
+    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
+        ? CampaignRowNamesByOptionIndex[Selected]
+        : NAME_None;
 
     if (!Campaign::SelectFromData(*CampaignData))
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[CampaignScreen] SetSelectedData: Failed to create runtime campaign from '%s'"),
+            TEXT("[CampaignScreen] RefreshFromSelection: Failed to build runtime campaign '%s'"),
             *CampaignData->Name);
         return;
-    }
-
-    Campaign* ActiveCampaign = Campaign::GetCampaign();
-    if (ActiveCampaign)
-    {
-        UE_LOG(LogTemp, Log,
-            TEXT("[CampaignScreen] Active runtime campaign='%s' missionCount=%d"),
-            ANSI_TO_TCHAR(ActiveCampaign->GetName()),
-            ActiveCampaign->GetMissionList().size());
     }
 
     TArray<FString> Orders = CampaignData->Orders;
     Orders.SetNum(4);
 
-    if (CampaignImage)
-    {
-        UTexture2D* Texture = LoadCampaignTexture(CampaignIndex1Based);
-
-        if (Texture)
-        {
-            CampaignImage->SetBrushFromTexture(Texture, true);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignScreen] Failed to load campaign image from code for '%s'"),
-                *CampaignData->Name);
-
-            CampaignImage->SetBrush(FSlateBrush());
-        }
-    }
-
     if (CampaignNameText)
     {
         CampaignNameText->SetText(FText::FromString(CampaignData->Name));
-    }
-
-    if (CampaignStartTimeText)
-    {
-        CampaignStartTimeText->SetText(FText::FromString(CampaignData->Start));
     }
 
     if (DescriptionText)
@@ -489,87 +679,33 @@ void UCampaignSelectDlg::SetSelectedData(int32 OptionIndex)
 
     if (LocationSystemText)
     {
-        const FString LocationText = CampaignData->System + TEXT("/") + CampaignData->Region;
-        LocationSystemText->SetText(FText::FromString(LocationText));
+        LocationSystemText->SetText(
+            FText::FromString(CampaignData->System + TEXT("/") + CampaignData->Region));
     }
 
-    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
-        ? CampaignRowNamesByOptionIndex[Selected]
-        : NAME_None;
+    if (CampaignStartTimeText)
+    {
+        CampaignStartTimeText->SetText(FText::FromString(CampaignData->Start));
+    }
 
-    UE_LOG(LogTemp, Log,
-        TEXT("[CampaignScreen] SetSelectedData: Selected=%d Campaign=%s Row=%s Index=%d"),
-        Selected,
-        *CampaignData->Name,
-        *PickedRowName.ToString(),
-        CampaignIndex1Based);
-}
+    if (CampaignImage)
+    {
+        if (UTexture2D* Texture = LoadCampaignTexture(CampaignIndex1Based))
+        {
+            CampaignImage->SetBrushFromTexture(Texture, true);
+        }
+        else
+        {
+            CampaignImage->SetBrush(FSlateBrush());
+        }
+    }
 
-void UCampaignSelectDlg::OnSetSelected(FString SelectedItem, ESelectInfo::Type Type)
-{
-    // Ignore programmatic SetSelectedIndex calls
-    if (Type == ESelectInfo::Direct)
-        return;
-
-    if (!CampaignSelectDD)
-        return;
-
-    const int32 NewIndex = CampaignSelectDD->FindOptionIndex(SelectedItem);
-    if (NewIndex == INDEX_NONE)
-        return;
-
-    Selected = NewIndex;
-
-    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(NewIndex)
-        ? CampaignRowNamesByOptionIndex[NewIndex]
-        : NAME_None;
-
-    SetSelectedData(NewIndex);
     UpdateCampaignButtons();
 }
 
-void UCampaignSelectDlg::GetCampaignImageFile(int32 OptionIndex)
+void UCampaignSelectDlg::RefreshUIFromSubsystem()
 {
-    USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
-    if (!GI || !GI->CampaignData.IsValidIndex(OptionIndex))
-    {
-        ImagePath.Empty();
-        return;
-    }
-
-    // This is UI folder convention based on dropdown ordering (legacy)
-    // If you prefer folder to follow campaign index (1-based), switch to CampaignIndexByOptionIndex[OptionIndex].
-    ImagePath = FPaths::ProjectContentDir() + TEXT("UI/Campaigns/0");
-    ImagePath.Append(FString::FromInt(OptionIndex + 1));
-    ImagePath.Append(TEXT("/"));
-    ImagePath.Append(GI->CampaignData[OptionIndex].MainImage);
-    ImagePath.Append(TEXT(".png"));
-
-    UE_LOG(LogTemp, Log, TEXT("Campaign Image: %s"), *ImagePath);
-}
-
-
-
-void UCampaignSelectDlg::PlayUISound(UObject* WorldContext, USoundBase* UISound)
-{
-    if (UISound)
-    {
-        UGameplayStatics::PlaySound2D(WorldContext, UISound);
-    }
-}
-
-bool UCampaignSelectDlg::DoesSelectedCampaignSaveExist() const
-{
-    const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
-    if (!GI)
-        return false;
-
-    if (PickedRowName.IsNone())
-        return false;
-
-    const FString GameSlot = UCampaignSave::MakeSlotNameFromRowName(PickedRowName);
-    constexpr int32 UserIndex = 0;
-    return UGameplayStatics::DoesSaveGameExist(GameSlot, UserIndex);
+    PopulateCampaignDropdown();
 }
 
 void UCampaignSelectDlg::UpdateCampaignButtons()
@@ -578,457 +714,116 @@ void UCampaignSelectDlg::UpdateCampaignButtons()
 
     if (PlayButton)
     {
-        PlayButton->SetIsEnabled(true);
+        PlayButton->SetIsEnabled(Selected != INDEX_NONE);
     }
 
     if (PlayButtonText)
     {
-        PlayButtonText->SetText(FText::FromString(bHasSave ? TEXT("CONTINUE") : TEXT("START")));
+        PlayButtonText->SetText(FText::FromString(
+            bHasSave ? TEXT("CONTINUE") : TEXT("START")));
     }
 
     if (RestartButton)
     {
         RestartButton->SetIsEnabled(bHasSave);
     }
-}
 
-
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::ExecFrame(double DeltaTime)
-{
-    if (Keyboard::KeyDown(VK_RETURN)) {
-        if (btn_accept && btn_accept->GetIsEnabled()) {
-            OnAccept();
-        }
-    }
-
-    AutoThreadSync a(sync);
-
-    if (loaded) {
-        loaded = false;
-
-        if (btn_cancel)
-            btn_cancel->SetIsEnabled(true);
-
-        if (description && btn_accept) {
-            if (campaign) {
-                Campaign::SelectCampaign(campaign->GetName());
-
-                if (load_index >= 0) {
-                    // In classic UI, this updated the ListBox image at load_index.
-                    // With UListView, images are part of the item object / entry widget.
-                    // Keep the image-copy logic for the legacy Bitmap list:
-                    if (load_index >= 0 && load_index < images.size()) {
-                        images[load_index]->CopyBitmap(*campaign->GetImage(1));
-                    }
-
-                    description->SetText(FText::FromString(
-                        UTF8_TO_TCHAR(
-                            (Text("<font Limerick12><color ffffff>") +
-                                campaign->GetName() +
-                                Text("<font Verdana>\n\n") +
-                                Text("<color ffff80>") +
-                                Game::GetText("CmpSelectDlg.scenario") +
-                                Text("<color ffffff>\n\t") +
-                                campaign->GetDescription()).data()
-                        )
-                    ));
-                }
-                else {
-                    char time_buf[32];
-                    char score_buf[32];
-
-                    double t = campaign->GetLoadTime() - campaign->GetStartTime();
-                    FormatDayTime(time_buf, t);
-
-                    sprintf_s(score_buf, "%d", campaign->GetPlayerTeamScore());
-
-                    Text desc = Text("<font Limerick12><color ffffff>") +
-                        campaign->GetName() +
-                        Text("<font Verdana>\n\n") +
-                        Text("<color ffff80>") +
-                        Game::GetText("CmpSelectDlg.scenario") +
-                        Text("<color ffffff>\n\t") +
-                        campaign->GetDescription() +
-                        Text("\n\n<color ffff80>") +
-                        Game::GetText("CmpSelectDlg.campaign-time") +
-                        Text("<color ffffff>\n\t") +
-                        time_buf +
-                        Text("\n\n<color ffff80>") +
-                        Game::GetText("CmpSelectDlg.assignment") +
-                        Text("<color ffffff>\n\t");
-
-                    if (campaign->GetPlayerGroup())
-                        desc += campaign->GetPlayerGroup()->GetDescription();
-                    else
-                        desc += "n/a";
-
-                    desc += Text("\n\n<color ffff80>") +
-                        Game::GetText("CmpSelectDlg.team-score") +
-                        Text("<color ffffff>\n\t") +
-                        score_buf;
-
-                    description->SetText(FText::FromString(UTF8_TO_TCHAR(desc.data())));
-                }
-
-                btn_accept->SetIsEnabled(true);
-
-                if (btn_delete)
-                    btn_delete->SetIsEnabled(show_saved);
-            }
-            else {
-                description->SetText(FText::FromString(UTF8_TO_TCHAR(select_msg.data())));
-                btn_accept->SetIsEnabled(true);
-            }
-        }
+    if (CancelButton)
+    {
+        CancelButton->SetIsEnabled(true);
     }
 }
 
-bool UCampaignSelectDlg::CanClose()
+bool UCampaignSelectDlg::DoesSelectedCampaignSaveExist() const
 {
-    AutoThreadSync a(sync);
-    return !loading;
+    const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
+    if (!GI || PickedRowName.IsNone())
+    {
+        return false;
+    }
+
+    const FString SlotName = UCampaignSave::MakeSlotNameFromRowName(PickedRowName);
+    return UGameplayStatics::DoesSaveGameExist(SlotName, 0);
 }
 
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::ShowNewCampaigns()
+void UCampaignSelectDlg::OnSetSelected(FString SelectedItem, ESelectInfo::Type Type)
 {
-    AutoThreadSync a(sync);
-
-    if (loading && description) {
-        description->SetText(FText::FromString(UTF8_TO_TCHAR(Game::GetText("CmpSelectDlg.already-loading").data())));
-        // Button::PlaySound(Button::SND_REJECT); // classic UI sound; hook into your UE sound layer
+    if (!CampaignSelectDD)
+    {
         return;
     }
 
-    // UMG button visual state is handled by styles; we keep logical intent only.
-
-    if (btn_delete)
-        btn_delete->SetIsEnabled(false);
-
-    if (lst_campaigns) {
-        images.destroy();
-
-        // UListView population is UObject-driven; you will create item objects for each entry.
-        // We keep legacy Bitmap generation here for later entry widgets to reference.
-
-        PlayerCharacter* player = PlayerCharacter::GetCurrentPlayer();
-        if (!player)
-            return;
-
-        ListIter<Campaign> iter = Campaign::GetAllCampaigns();
-        while (++iter) {
-            Campaign* c = iter.value();
-
-            if (c->GetCampaignId() < Campaign::SINGLE_MISSIONS) {
-                Bitmap* bmp = new Bitmap;
-                bmp->CopyBitmap(*c->GetImage(0));
-                images.append(bmp);
-
-                // ListView item creation is TODO: create a UObject item holding name + bmp index.
-                // Example: UCampaignSelectItem* Item = NewObject<UCampaignSelectItem>(this); ...
-                // lst_campaigns->AddItem(Item);
-
-                // FULL GAME CRITERIA (based on player record):
-                const int cid = c->GetCampaignId();
-                const bool locked_full =
-                    (cid > 2 && cid < 10 && !player->HasCompletedCampaign(cid - 1));
-
-                const bool locked_extra =
-                    (cid >= 10 && cid < 30 && (cid % 10) != 0 && !player->HasCompletedCampaign(cid - 1));
-
-                if (locked_full || locked_extra) {
-                    const int n = images.size() - 1;
-                    images[n]->CopyBitmap(*c->GetImage(2));
-                }
-            }
-        }
-    }
-
-    if (description)
-        description->SetText(FText::FromString(UTF8_TO_TCHAR(select_msg.data())));
-
-    if (btn_accept)
-        btn_accept->SetIsEnabled(false);
-
-    show_saved = false;
-}
-
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::ShowSavedCampaigns()
-{
-    AutoThreadSync a(sync);
-
-    if (loading && description) {
-        description->SetText(FText::FromString(UTF8_TO_TCHAR(Game::GetText("CmpSelectDlg.already-loading").data())));
-        // Button::PlaySound(Button::SND_REJECT);
+    const int32 NewIndex = CampaignSelectDD->FindOptionIndex(SelectedItem);
+    if (NewIndex == INDEX_NONE)
+    {
         return;
     }
 
-    if (btn_delete)
-        btn_delete->SetIsEnabled(false);
+    Selected = NewIndex;
+    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(NewIndex)
+        ? CampaignRowNamesByOptionIndex[NewIndex]
+        : NAME_None;
 
-    if (lst_campaigns) {
-        // UListView population is UObject-driven. Build save list here:
-        List<Text> save_list;
-
-        CampaignSaveGame::GetSaveGameList(save_list);
-        save_list.sort();
-
-        // TODO: create UObjects for each save entry and set as list items.
-        // for (int i=0; i<save_list.size(); ++i) { ... }
-
-        save_list.destroy();
-    }
-
-    if (description)
-        description->SetText(FText::FromString(UTF8_TO_TCHAR(select_msg.data())));
-
-    if (btn_accept)
-        btn_accept->SetIsEnabled(false);
-
-    show_saved = true;
+    RefreshFromSelection();
 }
 
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::OnCampaignSelect()
+void UCampaignSelectDlg::OnPlayButtonClicked()
 {
-    if (description && lst_campaigns) {
-        AutoThreadSync a(sync);
-
-        if (loading) {
-            description->SetText(FText::FromString(UTF8_TO_TCHAR(Game::GetText("CmpSelectDlg.already-loading").data())));
-            // Button::PlaySound(Button::SND_REJECT);
-            return;
-        }
-
-        load_index = -1;
-        load_file = "";
-
-        PlayerCharacter* player = PlayerCharacter::GetCurrentPlayer();
-        if (!player)
-            return;
-
-        // NOTE:
-        // In classic, selection came from ListBox indices.
-        // In UE, you must fetch the selected UObject item from UListView and map it:
-        //
-        // UObject* Sel = lst_campaigns->GetSelectedItem();
-        // Determine if it's a "new campaign" entry (index) or "save file" entry (Text).
-        //
-        // For now, preserve behavior by requiring external code to set load_index/load_file
-        // prior to calling StartLoadProc().
-
-        if (btn_accept)
-            btn_accept->SetIsEnabled(false);
-    }
-
-    if (!loading && (load_index >= 0 || load_file.length() > 0)) {
-        if (btn_cancel)
-            btn_cancel->SetIsEnabled(false);
-
-        StartLoadProc();
-    }
+    PlayUISound(this, AcceptSound);
+    StartSelectedCampaignFlow(false);
 }
 
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::RefreshUIFromSubsystem()
+void UCampaignSelectDlg::OnRestartButtonClicked()
 {
-
+    PlayUISound(this, AcceptSound);
+    StartSelectedCampaignFlow(true);
 }
 
-void UCampaignSelectDlg::OnNew()
+void UCampaignSelectDlg::OnPlayButtonHovered()
 {
-    ShowNewCampaigns();
+    PlayUISound(this, HoverSound);
 }
 
-void UCampaignSelectDlg::OnSaved()
+void UCampaignSelectDlg::OnPlayButtonUnHovered()
 {
-    ShowSavedCampaigns();
 }
 
-void UCampaignSelectDlg::OnDelete()
+void UCampaignSelectDlg::OnRestartButtonHovered()
 {
-    load_file = "";
-
-    // In UE, selection comes from UListView selected item.
-    // This port keeps the deletion logic but requires load_file be set from selection mapping.
-
-    if (load_file.length()) {
-        // Confirm dialog flow:
-        // ConfirmDlg* confirm = manager->GetConfirmDlg();
-        // confirm->SetMessage(...); confirm->SetTitle(...); manager->ShowConfirmDlg();
-        // Else: OnConfirmDelete();
-        UE_LOG(LogTemp, Verbose, TEXT("CampaignSelectDlg: Request delete for save '%s'"), UTF8_TO_TCHAR(load_file.data()));
-    }
-
-    ShowSavedCampaigns();
+    PlayUISound(this, HoverSound);
 }
 
-void UCampaignSelectDlg::OnConfirmDelete()
+void UCampaignSelectDlg::OnRestartButtonUnHovered()
 {
-    if (load_file.length()) {
-        CampaignSaveGame::Delete(load_file);
-    }
-
-    ShowSavedCampaigns();
-}
-
-// +--------------------------------------------------------------------+
-
-void UCampaignSelectDlg::OnAccept()
-{
-    AutoThreadSync a(sync);
-
-    if (loading)
-        return;
-
-    // if this is to be a new campaign, re-instantiate the campaign object
-    // NOTE: classic used btn_new->GetButtonState(). In UE, track a bool or enum state.
-    // We preserve original intent by using show_saved as a proxy:
-    if (!show_saved)
-        Campaign::GetCampaign()->Load();
-    else
-        Game::ResetGameTime();
-
-    Mouse::Show(false);
-    if (stars)
-        stars->SetGameMode(EGameMode::CLOD);
 }
 
 void UCampaignSelectDlg::OnCancelButtonClicked()
 {
-    //RefreshUIFromSubsystem();
-
     if (manager)
+    {
         manager->ShowMenuDlg();
+    }
     else
+    {
         HideDlg();
-}
-
-// +--------------------------------------------------------------------+
-// Thread proc helpers (ported)
-// +--------------------------------------------------------------------+
-
-static uint32 CampaignSelectDlgLoadProc(void* link)
-{
-    UCampaignSelectDlg* dlg = static_cast<UCampaignSelectDlg*>(link);
-
-    if (dlg)
-        return dlg->LoadProc();
-
-    return 0;
-}
-
-void UCampaignSelectDlg::StartLoadProc()
-{
-    // NOTE:
-    // This is a minimal, legacy-style thread port. For production UE:
-    // - Prefer Async(EAsyncExecution::ThreadPool, ...) or UE::Tasks.
-    // - Avoid raw Win32 thread handles in cross-platform builds.
-
-    if (hproc != nullptr) {
-        // If you keep a platform thread handle wrapper, check and close it here.
-        return;
     }
-
-    campaign = 0;
-    loading = true;
-    loaded = false;
-
-    if (description)
-        description->SetText(FText::FromString(UTF8_TO_TCHAR(Game::GetText("CmpSelectDlg.loading").data())));
-
-    // Placeholder: no raw CreateThread in this port layer.
-    // Hook this to UE async when you are ready; for now, run synchronously:
-    const uint32 Result = LoadProc();
-    UE_LOG(LogTemp, Verbose, TEXT("CampaignSelectDlg: LoadProc result=%u"), Result);
 }
 
-void UCampaignSelectDlg::StopLoadProc()
+void UCampaignSelectDlg::OnCancelButtonHovered()
 {
-    // Placeholder: if you implement an async task/thread, signal stop/join here.
-    hproc = nullptr;
+    PlayUISound(this, HoverSound);
 }
 
-uint32 UCampaignSelectDlg::LoadProc()
+void UCampaignSelectDlg::OnCancelButtonUnHovered()
 {
-    Campaign* c = 0;
+}
 
-    // NEW CAMPAIGN:
-    if (load_index >= 0) {
-        List<Campaign>& list = Campaign::GetAllCampaigns();
-
-        if (load_index < list.size()) {
-            c = list[load_index];
-            c->Load();
-        }
+void UCampaignSelectDlg::PlayUISound(UObject* WorldContext, USoundBase* UISound)
+{
+    if (UISound)
+    {
+        UGameplayStatics::PlaySound2D(WorldContext, UISound);
     }
-
-    // SAVED CAMPAIGN:
-    else {
-        CampaignSaveGame savegame;
-        savegame.Load(load_file);
-        c = savegame.GetCampaign();
-    }
-
-    sync.acquire();
-
-    loading = false;
-    loaded = true;
-    campaign = c;
-
-    sync.release();
-
-    return 0;
-}
-
-// --------------------------------------------------------------------
-// UBaseScreen overrides
-// --------------------------------------------------------------------
-
-void UCampaignSelectDlg::BindFormWidgets()
-{
-    // Map FORM ids to widgets (optional – only if present in your UMG):
-    BindButton(100, btn_new);
-    BindButton(101, btn_saved);
-    BindButton(102, btn_delete);
-    BindButton(1, btn_accept);
-    BindButton(2, btn_cancel);
-
-    BindList(201, lst_campaigns);
-    BindText(200, description);
-
-    BindLabel(10, lbl_title);
-    BindLabel(901, lbl_hdr_campaign);
-    BindLabel(902, lbl_hdr_desc);
-
-    // Backgrounds are typically Images:
-    BindImage(9991, bg_9991);
-    BindImage(9992, bg_9992);
-}
-
-FString UCampaignSelectDlg::GetLegacyFormText() const
-{
-    // Keep the original FORM as a raw string, or load it from an asset/datatable later.
-    // Returning empty disables auto-application.
-    return FString();
-}
-
-void UCampaignSelectDlg::ShowDlg()
-{
-    SetVisibility(ESlateVisibility::Visible);
-    RefreshUIFromSubsystem();
-}
-
-void UCampaignSelectDlg::HideDlg()
-{
-    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
@@ -1039,7 +834,7 @@ void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
 
     if (PickedRowName.IsNone())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[Campaign] StartSelectedCampaignFlow: PickedRowName is None"));
+        UE_LOG(LogTemp, Warning, TEXT("[Campaign] StartSelectedCampaignFlow: no campaign selected"));
         return;
     }
 
@@ -1052,14 +847,12 @@ void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
     UWorld* World = GetWorld();
     if (!World)
     {
-        UE_LOG(LogTemp, Error, TEXT("[Campaign] StartSelectedCampaignFlow: World is null"));
+        UE_LOG(LogTemp, Error, TEXT("[Campaign] StartSelectedCampaignFlow: world is null"));
         return;
     }
 
-    // Show the campaign load screen first so it can paint.
     manager->ShowCmpLoadDlg();
 
-    // Run the actual campaign startup work on the next tick.
     World->GetTimerManager().SetTimerForNextTick(
         FTimerDelegate::CreateUObject(this, &UCampaignSelectDlg::FinishSelectedCampaignFlow, bRestart));
 }
@@ -1068,39 +861,35 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
 {
     UGameInstance* GIBase = GetGameInstance();
     if (!GIBase)
+    {
         return;
+    }
 
     UStarshatterPlayerSubsystem* PlayerSS = GIBase->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if (!PlayerSS)
-        return;
-
+    UStarshatterGameDataSubsystem* DataSubsystem = GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
     USSWGameInstance* GI = Cast<USSWGameInstance>(GIBase);
-    if (!GI)
+
+    if (!PlayerSS || !DataSubsystem || !GI)
+    {
         return;
+    }
 
-    UStarshatterGameDataSubsystem* DataSubsystem =
-        GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
-    if (!DataSubsystem)
+    if (!CampaignIndexByOptionIndex.IsValidIndex(Selected))
+    {
         return;
+    }
 
-    if (PickedRowName.IsNone())
-        return;
-
-    const int32 CampaignIndex1Based =
-        CampaignIndexByOptionIndex.IsValidIndex(Selected)
-        ? CampaignIndexByOptionIndex[Selected]
-        : (Selected + 1);
-
-    const FS_Campaign* CampaignData =
-        DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
-
+    const int32 CampaignIndex1Based = CampaignIndexByOptionIndex[Selected];
+    const FS_Campaign* CampaignData = DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
     if (!CampaignData)
+    {
         return;
+    }
 
     if (!Campaign::SelectFromData(*CampaignData))
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[Campaign] Failed to activate runtime campaign '%s'"),
+            TEXT("[Campaign] Failed to activate campaign '%s'"),
             *CampaignData->Name);
         return;
     }
@@ -1108,20 +897,14 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     Campaign* CampaignPtr = Campaign::GetCampaign();
     if (CampaignPtr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[Campaign] %s campaign"),
-            bRestart ? TEXT("Restarting") : TEXT("Starting"));
         CampaignPtr->Start();
     }
 
     DataSubsystem->CampaignIndex = CampaignIndex1Based - 1;
     DataSubsystem->SelectedCampaignRowName = PickedRowName;
-
-    UE_LOG(LogTemp, Warning, TEXT("[Campaign] Building combat roster from data tables"));
     DataSubsystem->BuildCombatRosterFromDataTables();
 
-    GI->SelectedCampaignDisplayName =
-        CampaignSelectDD ? CampaignSelectDD->GetSelectedOption() : TEXT("");
-
+    GI->SelectedCampaignDisplayName = CampaignData->Name;
     GI->SelectedCampaignIndex = CampaignIndex1Based;
     GI->SelectedCampaignRowName = PickedRowName;
 
@@ -1142,8 +925,7 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
         GI->CreateNewCampaignSave(
             GI->SelectedCampaignIndex,
             GI->SelectedCampaignRowName,
-            GI->SelectedCampaignDisplayName
-        );
+            GI->SelectedCampaignDisplayName);
     }
     else
     {
@@ -1158,8 +940,7 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
             GI->CreateNewCampaignSave(
                 GI->SelectedCampaignIndex,
                 GI->SelectedCampaignRowName,
-                GI->SelectedCampaignDisplayName
-            );
+                GI->SelectedCampaignDisplayName);
         }
 
         if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
@@ -1185,23 +966,24 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     Mouse::Show(false);
 
     if (stars)
-        stars->SetGameMode(EGameMode::CLOD);
-
-    UWorld* World = GetWorld();
-    if (!World)
     {
-        manager->ShowOperationsDlg();
-        return;
+        stars->SetGameMode(EGameMode::CLOD);
     }
 
-    // Respect the CmpLoadDlg minimum display time.
-    World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
-    World->GetTimerManager().SetTimer(
-        CampaignLoadFinishTimer,
-        this,
-        &UCampaignSelectDlg::TryFinishCampaignLoadTransition,
-        0.05f,
-        true);
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
+        World->GetTimerManager().SetTimer(
+            CampaignLoadFinishTimer,
+            this,
+            &UCampaignSelectDlg::TryFinishCampaignLoadTransition,
+            0.05f,
+            true);
+    }
+    else if (manager)
+    {
+        manager->ShowOperationsDlg();
+    }
 }
 
 void UCampaignSelectDlg::TryFinishCampaignLoadTransition()
@@ -1243,14 +1025,207 @@ UTexture2D* UCampaignSelectDlg::LoadCampaignTexture(int32 CampaignIndex1Based) c
         TEXT("/Game/UI/Campaigns/%s/main.main"),
         *IndexStr);
 
-    UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *AssetPath);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignScreen] LoadCampaignTextureFromCode: Index=%d Path=%s Result=%p"),
-        CampaignIndex1Based,
-        *AssetPath,
-        Texture);
-
-    return Texture;
+    return LoadObject<UTexture2D>(nullptr, *AssetPath);
 }
 
+UTextBlock* UCampaignSelectDlg::CreateText(
+    const FName Name,
+    const FString& InText,
+    int32 FontSize,
+    const FLinearColor& Color,
+    ETextJustify::Type Justification,
+    bool bWrap)
+{
+    UTextBlock* TextWidget = WidgetTree->ConstructWidget<UTextBlock>(
+        UTextBlock::StaticClass(),
+        Name);
+
+    if (!TextWidget)
+    {
+        return nullptr;
+    }
+
+    TextWidget->SetText(FText::FromString(InText));
+    TextWidget->SetColorAndOpacity(FSlateColor(Color));
+    TextWidget->SetJustification(Justification);
+    TextWidget->SetAutoWrapText(bWrap);
+
+    if (FontSize >= 18)
+    {
+        TextWidget->SetFont(MissionUIStyle::GetHeaderFont(FontSize));
+    }
+    else if (FontSize <= 13)
+    {
+        TextWidget->SetFont(MissionUIStyle::GetInfoLabelFont(FontSize));
+    }
+    else if (FontSize == 14)
+    {
+        TextWidget->SetFont(MissionUIStyle::GetInfoValueFont(FontSize));
+    }
+    else
+    {
+        TextWidget->SetFont(MissionUIStyle::GetRowFont(FontSize));
+    }
+
+    return TextWidget;
+}
+
+UBorder* UCampaignSelectDlg::CreatePanelBorder(const FName Name, const FLinearColor& Color)
+{
+    UBorder* Border = WidgetTree->ConstructWidget<UBorder>(
+        UBorder::StaticClass(),
+        Name);
+
+    if (!Border)
+    {
+        return nullptr;
+    }
+
+    Border->SetBrushColor(Color);
+    return Border;
+}
+
+UWidget* UCampaignSelectDlg::CreateMenuButton(
+    const FName Name,
+    TObjectPtr<UButton>& OutButton,
+    TObjectPtr<UTextBlock>& OutText,
+    const FString& Label)
+{
+    if (!WidgetTree)
+    {
+        return nullptr;
+    }
+
+    USizeBox* SizeWrapper = WidgetTree->ConstructWidget<USizeBox>(
+        USizeBox::StaticClass(),
+        MakeUniqueWidgetName(TEXT("CampaignSelect_ButtonSizeWrapper")));
+
+    SizeWrapper->SetWidthOverride(256.f);
+    SizeWrapper->SetHeightOverride(40.f);
+
+    OutButton = WidgetTree->ConstructWidget<UButton>(
+        UButton::StaticClass(),
+        Name);
+
+    OutText = CreateText(
+        MakeUniqueWidgetName(TEXT("CampaignSelect_ButtonText")),
+        Label,
+        16,
+        FLinearColor::Black,
+        ETextJustify::Center,
+        false);
+
+    if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(OutButton->AddChild(OutText)))
+    {
+        ButtonSlot->SetHorizontalAlignment(HAlign_Center);
+        ButtonSlot->SetVerticalAlignment(VAlign_Center);
+        ButtonSlot->SetPadding(FMargin(4.f, 2.f));
+    }
+
+    SizeWrapper->SetContent(OutButton);
+
+    return SizeWrapper;
+}
+
+void UCampaignSelectDlg::ApplyButtonStyle(UButton* Button) const
+{
+    if (!Button)
+    {
+        return;
+    }
+
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UStarshatterUIStyleSubsystem* StyleSS = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
+        {
+            StyleSS->ApplyMenuButtonStyle(Button);
+        }
+    }
+}
+
+void UCampaignSelectDlg::ExecFrame(double DeltaTime)
+{
+    if (Keyboard::KeyDown(VK_RETURN))
+    {
+        if (PlayButton && PlayButton->GetIsEnabled())
+        {
+            OnPlayButtonClicked();
+        }
+    }
+}
+
+bool UCampaignSelectDlg::CanClose()
+{
+    AutoThreadSync a(sync);
+    return !loading;
+}
+
+void UCampaignSelectDlg::ShowNewCampaigns()
+{
+    show_saved = false;
+}
+
+void UCampaignSelectDlg::ShowSavedCampaigns()
+{
+    show_saved = true;
+}
+
+void UCampaignSelectDlg::OnCampaignSelect()
+{
+}
+
+void UCampaignSelectDlg::OnNew()
+{
+    ShowNewCampaigns();
+}
+
+void UCampaignSelectDlg::OnSaved()
+{
+    ShowSavedCampaigns();
+}
+
+void UCampaignSelectDlg::OnDelete()
+{
+}
+
+void UCampaignSelectDlg::OnConfirmDelete()
+{
+}
+
+void UCampaignSelectDlg::OnAccept()
+{
+    OnPlayButtonClicked();
+}
+
+void UCampaignSelectDlg::StartLoadProc()
+{
+}
+
+void UCampaignSelectDlg::StopLoadProc()
+{
+}
+
+uint32 UCampaignSelectDlg::LoadProc()
+{
+    return 0;
+}
+
+void UCampaignSelectDlg::BindFormWidgets()
+{
+}
+
+FString UCampaignSelectDlg::GetLegacyFormText() const
+{
+    return FString();
+}
+
+void UCampaignSelectDlg::ShowDlg()
+{
+    SetVisibility(ESlateVisibility::Visible);
+    RefreshUIFromSubsystem();
+}
+
+void UCampaignSelectDlg::HideDlg()
+{
+    SetVisibility(ESlateVisibility::Collapsed);
+}
