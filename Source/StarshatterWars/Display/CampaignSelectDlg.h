@@ -120,6 +120,7 @@ protected:
     void StartSelectedCampaignFlow(bool bRestart);
     void FinishSelectedCampaignFlow(bool bRestart);
     void TryFinishCampaignLoadTransition();
+    UTexture2D* LoadCampaignTexture(int32 CampaignIndex1Based) const;
 
 protected:
     FTimerHandle CampaignLoadFinishTimer;

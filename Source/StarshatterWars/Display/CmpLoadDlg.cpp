@@ -8,25 +8,22 @@
 
     OVERVIEW
     ========
-    Code-built campaign loading dialog.
+    Campaign loading dialog (modernized).
 
-    This replaces the legacy FORM-driven CmpLoadDlg layout with a
-    native Unreal UMG screen built entirely in C++.
+    This is now a NON-BLOCKING VISUAL LAYER used to:
+    - mask level streaming
+    - hide shader/material pop-in
+    - present campaign branding
 
-    Visual layout:
-    - Full-screen background image (starfield fallback tint if missing)
-    - Centered scrCampaignLoad texture
-    - Campaign name centered over the art in large Serpentine font
-    - Bottom panel with loading activity text and progress bar
+    It does NOT control flow.
 
-    Behavior parity:
-    - Show() captures display time
-    - ExecFrame() refreshes activity/progress
-    - IsDone() enforces a 5 second minimum display duration
-    - When complete, transitions to UCmpnScreen once
+    UCmpnScreen is responsible for:
+    - when loading begins
+    - when loading ends
+    - when to reveal the scene
+
+    This dialog simply renders UI and updates status.
 */
-
-
 
 #include "CmpLoadDlg.h"
 
@@ -57,7 +54,7 @@
 // Starshatter:
 #include "Campaign.h"
 #include "Starshatter.h"
-#include "MenuScreen.h"
+#include "CmpnScreen.h"
 
 UCmpLoadDlg::UCmpLoadDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -92,8 +89,6 @@ void UCmpLoadDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UCmpLoadDlg::Show()
 {
-    bTransitionedToCmpnScreen = false;
-
     BuildScreen();
     LoadArtAssets();
     ApplyStaticArt();
@@ -122,27 +117,16 @@ void UCmpLoadDlg::ExecFrame(double DeltaTime)
 
     RefreshLoadState();
 
-    if (!bTransitionedToCmpnScreen && IsDone())
-    {
-        bTransitionedToCmpnScreen = true;
-
-        if (MenuManager)
-        {
-            MenuManager->ShowCmpnScreen();
-        }
-    }
+    // Visual-only overlay now.
+    // Transition flow is controlled by UCmpnScreen.
 }
 
 bool UCmpLoadDlg::IsDone() const
 {
     const uint32 Now = GetRealTimeMs();
 
-    if (Now - ShowTimeMs < 5000u)
-    {
-        return false;
-    }
-
-    return true;
+    // Optional cosmetic minimum display time only:
+    return (Now - ShowTimeMs) >= 1000u;
 }
 
 void UCmpLoadDlg::BuildScreen()

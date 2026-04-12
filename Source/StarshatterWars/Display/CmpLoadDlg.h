@@ -8,22 +8,28 @@
 
     OVERVIEW
     ========
-    Code-built campaign loading dialog.
+    Campaign loading dialog (modernized).
 
-    This replaces the legacy FORM-driven CmpLoadDlg layout with a
-    native Unreal UMG screen built entirely in C++.
+    This class is now a PURE VISUAL OVERLAY used during:
+    - Campaign startup
+    - Level streaming transitions
+    - Scene preparation
 
-    Visual layout:
-    - Full-screen background image (starfield fallback tint if missing)
-    - Centered scrCampaignLoad texture
-    - Campaign name centered over the art in large Serpentine font
-    - Bottom panel with loading activity text and progress bar
+    IMPORTANT CHANGE:
+    -----------------
+    This class NO LONGER controls flow or transitions.
 
-    Behavior parity:
-    - Show() captures display time
-    - ExecFrame() refreshes activity/progress
-    - IsDone() enforces a 5 second minimum display duration
-    - When complete, transitions to UCmpnScreen once
+    It does NOT:
+    - switch screens
+    - trigger campaign start
+    - gate timing decisions
+
+    All transition logic is handled by UCmpnScreen.
+
+    This class ONLY:
+    - displays loading UI
+    - shows activity text and progress
+    - provides optional minimum display timing
 */
 
 #pragma once
@@ -32,6 +38,7 @@
 #include "BaseScreen.h"
 #include "CmpLoadDlg.generated.h"
 
+class UCmpnScreen;
 class UBorder;
 class UCanvasPanel;
 class UImage;
@@ -54,7 +61,11 @@ public:
     virtual void Show() override;
     virtual void Hide() override;
     virtual void ExecFrame(double DeltaTime) override;
+
+    // Optional helper: minimum display time (cosmetic only)
     virtual bool IsDone() const;
+
+    void SetCmpnScreen(UCmpnScreen* InScreen) { CmpnScreen = InScreen; }
 
 protected:
     virtual void NativeConstruct() override;
@@ -85,47 +96,31 @@ protected:
 
 protected:
     bool bScreenBuilt = false;
-    bool bTransitionedToCmpnScreen = false;
+
+    // Minimum display tracking (NO LONGER controls flow)
     uint32 ShowTimeMs = 0;
 
 protected:
     UPROPERTY()
-    TObjectPtr<UImage> BackgroundImage = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UVerticalBox> MainVBox = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<USizeBox> CenterArtBox = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UOverlay> CenterArtOverlay = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UImage> CenterImage = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UTextBlock> CenterTitleText = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UBorder> BottomPanel = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UVerticalBox> BottomPanelVBox = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UTextBlock> LblActivity = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UProgressBar> ProgressBar = nullptr;
+    TObjectPtr<UCmpnScreen> CmpnScreen = nullptr;
 
 protected:
-    UPROPERTY()
-    TObjectPtr<UTexture2D> DefaultCenterTexture = nullptr;
+    // UI
+    UPROPERTY() TObjectPtr<UImage> BackgroundImage = nullptr;
+    UPROPERTY() TObjectPtr<UVerticalBox> MainVBox = nullptr;
+    UPROPERTY() TObjectPtr<USizeBox> CenterArtBox = nullptr;
+    UPROPERTY() TObjectPtr<UOverlay> CenterArtOverlay = nullptr;
+    UPROPERTY() TObjectPtr<UImage> CenterImage = nullptr;
+    UPROPERTY() TObjectPtr<UTextBlock> CenterTitleText = nullptr;
 
-    UPROPERTY()
-    TObjectPtr<UTexture2D> DefaultBackgroundTexture = nullptr;
+    UPROPERTY() TObjectPtr<UBorder> BottomPanel = nullptr;
+    UPROPERTY() TObjectPtr<UVerticalBox> BottomPanelVBox = nullptr;
+    UPROPERTY() TObjectPtr<UTextBlock> LblActivity = nullptr;
+    UPROPERTY() TObjectPtr<UProgressBar> ProgressBar = nullptr;
 
-    UPROPERTY()
-    TObjectPtr<UObject> SerpentineFontObject = nullptr;
+protected:
+    // Assets
+    UPROPERTY() TObjectPtr<UTexture2D> DefaultCenterTexture = nullptr;
+    UPROPERTY() TObjectPtr<UTexture2D> DefaultBackgroundTexture = nullptr;
+    UPROPERTY() TObjectPtr<UObject> SerpentineFontObject = nullptr;
 };

@@ -30,7 +30,9 @@
 #include "CmdMsgDlg.h"
 #include "CmpFileDlg.h"
 #include "CmpCompleteDlg.h"
+#include "CmpLoadDlg.h"
 #include "CampaignSceneDlg.h"
+#include "ShaderPipelineCache.h"
 #include "MenuScreen.h"
 
 // Legacy/runtime:
@@ -144,6 +146,11 @@ void UCmpnScreen::ApplyManagerToChildren()
     {
         CmpSceneDlg->SetManager(this);
     }
+
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->SetCmpnScreen(this);
+    }
 }
 
 const FS_CampaignMission* UCmpnScreen::FindCampaignMissionByScene(const FString& SceneName) const
@@ -246,6 +253,7 @@ void UCmpnScreen::Setup()
     EnsureDialog<UCmdMsgDlg>(CmdMsgDlgClass, CmdMsgDlg, 510);
     EnsureDialog<UCmpCompleteDlg>(CmpCompleteDlgClass, CmpCompleteDlg, 520);
     EnsureDialog<UCampaignSceneDlg>(CmpSceneDlgClass, CmpSceneDlg, 530);
+    EnsureDialog<UCmpLoadDlg>(CmpLoadDlgClass, CmpLoadDlg, 525);
 
     ApplyManagerToChildren();
 
@@ -356,6 +364,7 @@ void UCmpnScreen::HideAll()
     HideCmdMsgDlg();
     HideCmpCompleteDlg();
     HideCmpSceneDlg();
+    HideCmpLoadDlg();
 
     bHidingAll = false;
 }
@@ -805,6 +814,37 @@ void UCmpnScreen::SetFieldOfView(float InFOV)
     DefaultFallbackFOV = InFOV;
 }
 
+void UCmpnScreen::ShowCmpLoadDlg()
+{
+    HideAll();
+
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
+        CmpLoadDlg->SetIsEnabled(true);
+        CmpLoadDlg->SetIsFocusable(true);
+        CmpLoadDlg->SetDialogInputEnabled(true);
+        CmpLoadDlg->Show();
+        Mouse::Show(false);
+
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] ShowCmpLoadDlg"));
+    }
+}
+
+void UCmpnScreen::HideCmpLoadDlg()
+{
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->Hide();
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] HideCmpLoadDlg"));
+    }
+}
+
+bool UCmpnScreen::IsCmpLoadShown() const
+{
+    return CmpLoadDlg && CmpLoadDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
 float UCmpnScreen::GetFieldOfView() const
 {
     return DefaultFallbackFOV;
@@ -867,9 +907,17 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
 
     if (CmpSceneDlg->IsSceneRunning())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: Scene already running"));
         return true;
+    }
+
+    if (!bSceneTransitionActive)
+    {
+        BeginSceneTransition();
+        ShowCmpLoadDlg();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] Scene transition begun for %s"),
+            *ActiveSceneName);
     }
 
     if (!StreamSceneSystemLevel(*SceneMission))
@@ -880,32 +928,43 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
         return false;
     }
 
-    const bool bLoaded = IsSceneSystemLevelLoaded(SceneMission->MissionSystem);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] TryStartSceneForEvent: System=%s Loaded=%d SceneShown=%d"),
-        *SceneMission->MissionSystem,
-        bLoaded ? 1 : 0,
-        IsCmpSceneShown() ? 1 : 0);
+    const bool bLoaded = IsSceneVisualReady();
 
     if (!bLoaded)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[CmpnScreen] Waiting for level %s before starting scene"),
             *SceneMission->MissionSystem);
+        return true;
+    }
 
+    // Level exists now. Start a short post-load warmup once.
+    if (!bSceneWarmupStarted)
+    {
+        bSceneWarmupStarted = true;
+        SceneWarmupReadyTime =
+            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + ScenePostLoadWarmupSeconds;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] Level loaded for %s, warming visuals for %.2f sec"),
+            *ActiveSceneName,
+            ScenePostLoadWarmupSeconds);
+
+        return true;
+    }
+
+    if (!CanRevealSceneNow())
+    {
         return true;
     }
 
     if (IsCmpSceneShown())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: Scene overlay already shown"));
         return true;
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Level loaded, starting scene %s now"),
+        TEXT("[CmpnScreen] Reveal conditions met, starting scene %s now"),
         *ActiveSceneName);
 
     if (CampaignPtr)
@@ -919,20 +978,18 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
 
     CmpSceneDlg->LoadSceneFromMissionData(*SceneMission);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Scene mission loaded into dialog"));
+    // Hide your fullscreen loading panel here:
+    // HideCmpLoadDlg();
 
+    HideCmpLoadDlg();
     ShowCmpSceneDlg();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Scene dialog shown"));
-
     CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] BeginSceneByName called"));
-
     Event->SetVisited(true);
+
+    bSceneTransitionActive = false;
+    bSceneWarmupStarted = false;
+    SceneWarmupReadyTime = 0.0f;
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CmpnScreen] Started campaign scene: %s (%.2fs) System=%s"),
@@ -942,6 +999,7 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
 
     return true;
 }
+
 
 void UCmpnScreen::AdvanceCampaignScene()
 {
@@ -1041,3 +1099,50 @@ bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
 
     return true;
 }
+
+void UCmpnScreen::BeginSceneTransition()
+{
+    bSceneTransitionActive = true;
+    bSceneWarmupStarted = false;
+
+    SceneLoadScreenStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+    SceneWarmupReadyTime = 0.0f;
+}
+
+bool UCmpnScreen::IsSceneVisualReady() const
+{
+    if (!ActiveSceneStreamingLevel)
+    {
+        return false;
+    }
+
+    return ActiveSceneStreamingLevel->GetLoadedLevel() != nullptr;
+}
+
+bool UCmpnScreen::AreShadersReadyForReveal() const
+{
+    return FShaderPipelineCache::NumPrecompilesRemaining() == 0;
+}
+
+bool UCmpnScreen::CanRevealSceneNow() const
+{
+    const UWorld* World = GetWorld();
+    if (!World)
+    {
+        return false;
+    }
+
+    const float Now = UGameplayStatics::GetRealTimeSeconds(World);
+
+    const bool bMinTimeSatisfied =
+        (Now - SceneLoadScreenStartTime) >= SceneMinLoadScreenSeconds;
+
+    const bool bLevelReady = IsSceneVisualReady();
+    const bool bWarmupSatisfied =
+        bSceneWarmupStarted && (Now >= SceneWarmupReadyTime);
+
+    const bool bShadersReady = AreShadersReadyForReveal();
+
+    return bMinTimeSatisfied && bLevelReady && bWarmupSatisfied && bShadersReady;
+}
+

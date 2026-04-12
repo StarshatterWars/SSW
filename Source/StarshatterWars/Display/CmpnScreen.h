@@ -30,6 +30,7 @@
 class UCmdDlg;
 class UCmdMsgDlg;
 class UCmpFileDlg;
+class UCmpLoadDlg;
 class UCmpCompleteDlg;
 class UCampaignSceneDlg;
 class UMenuScreen;
@@ -90,6 +91,12 @@ public:
     bool IsCmpSceneShown() const;
     UCampaignSceneDlg* GetCmpSceneDlg() const { return CmpSceneDlg; }
 
+
+    void ShowCmpLoadDlg();
+    void HideCmpLoadDlg();
+    bool IsCmpLoadShown() const;
+    UCmpLoadDlg* GetCmpLoadDlg() const { return CmpLoadDlg; }
+
     void SetFieldOfView(float InFOV);
     float GetFieldOfView() const;
 
@@ -114,6 +121,10 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Campaign|Classes")
     TSubclassOf<UCampaignSceneDlg> CmpSceneDlgClass;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Campaign|Classes")
+    TSubclassOf<UCmpLoadDlg> CmpLoadDlgClass;
+
+
 protected:
     template<typename TDialog>
     TDialog* EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage, int32 ZOrder);
@@ -131,6 +142,11 @@ protected:
 protected:
     const FS_CampaignMission* FindCampaignMissionByScene(const FString& SceneName) const;
     void AdvanceCampaignScene();
+
+    bool IsSceneVisualReady() const;
+    bool CanRevealSceneNow() const;
+    bool AreShadersReadyForReveal() const;
+    void BeginSceneTransition();
 
 protected:
     FString ActiveSceneName;
@@ -153,6 +169,9 @@ protected:
     TObjectPtr<UCampaignSceneDlg> CmpSceneDlg = nullptr;
 
     UPROPERTY()
+    TObjectPtr<UCmpLoadDlg> CmpLoadDlg = nullptr;
+
+    UPROPERTY()
     TObjectPtr<ULevelStreamingDynamic> ActiveSceneStreamingLevel = nullptr;
 
 protected:
@@ -169,7 +188,14 @@ protected:
 
     double TimeTilChange = 0.0;
     float DefaultFallbackFOV = 90.0f;
-
     float DesiredFieldOfView = 90.0f;
+
     bool  bCampaignPaused = false;
+    bool bSceneTransitionActive = false;
+    bool bSceneWarmupStarted = false;
+
+    float SceneLoadScreenStartTime = 5.0f;
+    float SceneMinLoadScreenSeconds = 1.0f;
+    float SceneWarmupReadyTime = 0.0f;
+    float ScenePostLoadWarmupSeconds = 1.0f;
 };

@@ -431,7 +431,7 @@ void UCampaignSelectDlg::SetSelectedData(int32 OptionIndex)
 
     if (CampaignImage)
     {
-        UTexture2D* Texture = CampaignData->CampaignImage.LoadSynchronous();
+        UTexture2D* Texture = LoadCampaignTexture(CampaignIndex1Based);
 
         if (Texture)
         {
@@ -440,7 +440,7 @@ void UCampaignSelectDlg::SetSelectedData(int32 OptionIndex)
         else
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignScreen] Failed to load image for '%s'"),
+                TEXT("[CampaignScreen] Failed to load campaign image from code for '%s'"),
                 *CampaignData->Name);
 
             CampaignImage->SetBrush(FSlateBrush());
@@ -1229,5 +1229,28 @@ void UCampaignSelectDlg::TryFinishCampaignLoadTransition()
     }
 
     manager->ShowOperationsDlg();
+}
+
+UTexture2D* UCampaignSelectDlg::LoadCampaignTexture(int32 CampaignIndex1Based) const
+{
+    if (CampaignIndex1Based <= 0)
+    {
+        return nullptr;
+    }
+
+    const FString IndexStr = FString::Printf(TEXT("%02d"), CampaignIndex1Based);
+    const FString AssetPath = FString::Printf(
+        TEXT("/Game/UI/Campaigns/%s/main.main"),
+        *IndexStr);
+
+    UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *AssetPath);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignScreen] LoadCampaignTextureFromCode: Index=%d Path=%s Result=%p"),
+        CampaignIndex1Based,
+        *AssetPath,
+        Texture);
+
+    return Texture;
 }
 
