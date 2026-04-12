@@ -12,9 +12,8 @@
 
     OVERVIEW
     ========
-    Code-built campaign selection screen.
-    Intended for use with an empty WBP shell whose root is a CanvasPanel.
-    Visuals use MissionUIStyle for consistency with the mission UI.
+    Code-built campaign selection screen with a custom styled
+    campaign dropdown list.
 */
 
 #include "CampaignSelectDlg.h"
@@ -28,10 +27,11 @@
 #include "Components/ButtonSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
@@ -74,7 +74,6 @@ UCampaignSelectDlg::UCampaignSelectDlg(const FObjectInitializer& ObjectInitializ
 void UCampaignSelectDlg::NativePreConstruct()
 {
     Super::NativePreConstruct();
-    // Intentionally empty.
 }
 
 void UCampaignSelectDlg::NativeOnInitialized()
@@ -139,7 +138,7 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     if (UCanvasPanelSlot* BgCanvasSlot = RootCanvas->AddChildToCanvas(BackgroundImage))
     {
         BgCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-        BgCanvasSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 0.f));
+        BgCanvasSlot->SetOffsets(FMargin(0.f));
         BgCanvasSlot->SetZOrder(0);
     }
 
@@ -217,21 +216,7 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         CampaignNameCanvasSlot->SetSize(FVector2D(512.f, 32.f));
     }
 
-    UBorder* CampaignSelectBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_DropdownBorder"),
-        MissionUIStyle::HeaderBG);
-
-    if (UCanvasPanelSlot* DropdownBorderCanvasSlot = MainCanvas->AddChildToCanvas(CampaignSelectBorder))
-    {
-        DropdownBorderCanvasSlot->SetPosition(FVector2D(36.f, 44.f));
-        DropdownBorderCanvasSlot->SetSize(FVector2D(300.f, 32.f));
-    }
-
-    CampaignSelectDD = WidgetTree->ConstructWidget<UComboBoxString>(
-        UComboBoxString::StaticClass(),
-        TEXT("CampaignSelect_CampaignSelectDD"));
-
-    CampaignSelectBorder->SetContent(CampaignSelectDD);
+    BuildCampaignDropdown(MainCanvas);
 
     UHorizontalBox* MainRow = WidgetTree->ConstructWidget<UHorizontalBox>(
         UHorizontalBox::StaticClass(),
@@ -282,6 +267,9 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     CampaignImage = WidgetTree->ConstructWidget<UImage>(
         UImage::StaticClass(),
         TEXT("CampaignSelect_CampaignImage"));
+
+    CampaignImage->SetBrushSize(FVector2D(520.f, 520.f));
+
     PictureInnerBorder->SetContent(CampaignImage);
 
     UVerticalBox* RightVBox = WidgetTree->ConstructWidget<UVerticalBox>(
@@ -474,12 +462,215 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     ApplyButtonStyle(CancelButton);
 }
 
+void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
+{
+    UBorder* CampaignSelectHeader = WidgetTree->ConstructWidget<UBorder>(
+        UBorder::StaticClass(),
+        TEXT("CampaignSelect_DropdownHeader"));
+    CampaignSelectHeader->SetBrushColor(MissionUIStyle::HeaderBG);
+
+    UTextBlock* CampaignSelectHeaderText = CreateText(
+        TEXT("CampaignSelect_DropdownHeaderText"),
+        TEXT("CAMPAIGN"),
+        18,
+        MissionUIStyle::HeaderText,
+        ETextJustify::Left,
+        false);
+
+    CampaignSelectHeader->SetContent(CampaignSelectHeaderText);
+
+    if (UCanvasPanelSlot* DropdownHeaderCanvasSlot = MainCanvas->AddChildToCanvas(CampaignSelectHeader))
+    {
+        DropdownHeaderCanvasSlot->SetPosition(FVector2D(36.f, 8.f));
+        DropdownHeaderCanvasSlot->SetSize(FVector2D(300.f, 28.f));
+        DropdownHeaderCanvasSlot->SetZOrder(3);
+    }
+
+    UBorder* CampaignDropdownFrame = WidgetTree->ConstructWidget<UBorder>(
+        UBorder::StaticClass(),
+        TEXT("CampaignSelect_DropdownFrame"));
+    CampaignDropdownFrame->SetBrushColor(MissionUIStyle::HeaderBG);
+
+    if (UCanvasPanelSlot* FrameCanvasSlot = MainCanvas->AddChildToCanvas(CampaignDropdownFrame))
+    {
+        FrameCanvasSlot->SetPosition(FVector2D(36.f, 44.f));
+        FrameCanvasSlot->SetSize(FVector2D(300.f, 40.f));
+        FrameCanvasSlot->SetZOrder(3);
+    }
+
+    UBorder* CampaignDropdownInner = WidgetTree->ConstructWidget<UBorder>(
+        UBorder::StaticClass(),
+        TEXT("CampaignSelect_DropdownInner"));
+    CampaignDropdownInner->SetBrushColor(MissionUIStyle::PanelBG);
+    CampaignDropdownFrame->SetContent(CampaignDropdownInner);
+
+    CampaignDropdownButton = WidgetTree->ConstructWidget<UButton>(
+        UButton::StaticClass(),
+        TEXT("CampaignSelect_DropdownButton"));
+    CampaignDropdownInner->SetContent(CampaignDropdownButton);
+
+    CampaignDropdownButtonText = CreateText(
+        TEXT("CampaignSelect_DropdownButtonText"),
+        TEXT("SELECT CAMPAIGN"),
+        16,
+        MissionUIStyle::ComboMenuBG,   
+        ETextJustify::Left,
+        false);
+
+    if (UButtonSlot* DropdownButtonSlot = Cast<UButtonSlot>(CampaignDropdownButton->AddChild(CampaignDropdownButtonText)))
+    {
+        DropdownButtonSlot->SetPadding(FMargin(8.f, 4.f, 8.f, 4.f));
+        DropdownButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+        DropdownButtonSlot->SetVerticalAlignment(VAlign_Center);
+    }
+
+    CampaignDropdownPopupBorder = WidgetTree->ConstructWidget<UBorder>(
+        UBorder::StaticClass(),
+        TEXT("CampaignSelect_DropdownPopupBorder"));
+    CampaignDropdownPopupBorder->SetBrushColor(MissionUIStyle::PanelBG);
+    CampaignDropdownPopupBorder->SetVisibility(ESlateVisibility::Collapsed);
+
+    if (UCanvasPanelSlot* PopupCanvasSlot = MainCanvas->AddChildToCanvas(CampaignDropdownPopupBorder))
+    {
+        PopupCanvasSlot->SetPosition(FVector2D(36.f, 80.f));
+        PopupCanvasSlot->SetSize(FVector2D(300.f, 220.f));
+        PopupCanvasSlot->SetZOrder(20);
+    }
+
+    CampaignDropdownScrollBox = WidgetTree->ConstructWidget<UScrollBox>(
+        UScrollBox::StaticClass(),
+        TEXT("CampaignSelect_DropdownScrollBox"));
+    CampaignDropdownPopupBorder->SetContent(CampaignDropdownScrollBox);
+
+    CampaignDropdownListBox = WidgetTree->ConstructWidget<UVerticalBox>(
+        UVerticalBox::StaticClass(),
+        TEXT("CampaignSelect_DropdownListBox"));
+    CampaignDropdownScrollBox->AddChild(CampaignDropdownListBox);
+}
+
+void UCampaignSelectDlg::RebuildCampaignDropdownOptions()
+{
+    if (!CampaignDropdownListBox || !WidgetTree)
+    {
+        return;
+    }
+
+    CampaignDropdownListBox->ClearChildren();
+    CampaignOptionButtons.Reset();
+    CampaignOptionButtonTexts.Reset();
+
+    const FLinearColor PopupBG = FLinearColor(0.10f, 0.11f, 0.13f, 1.0f);
+    const FLinearColor RowBG = FLinearColor(0.18f, 0.18f, 0.20f, 1.0f);
+    const FLinearColor RowSelectedBG = FLinearColor(0.32f, 0.42f, 0.58f, 1.0f);
+    const FLinearColor RowTextColor = FLinearColor(0.92f, 0.93f, 0.95f, 1.0f);
+
+    if (CampaignDropdownPopupBorder)
+    {
+        CampaignDropdownPopupBorder->SetBrushColor(PopupBG);
+    }
+
+    for (int32 i = 0; i < CampaignDisplayNamesByOptionIndex.Num(); ++i)
+    {
+        const bool bSelected = (i == Selected);
+
+        UBorder* RowBorder = WidgetTree->ConstructWidget<UBorder>(
+            UBorder::StaticClass(),
+            MakeUniqueWidgetName(TEXT("CampaignSelect_OptionRowBorder")));
+        RowBorder->SetBrushColor(bSelected ? RowSelectedBG : RowBG);
+
+        UButton* RowButton = WidgetTree->ConstructWidget<UButton>(
+            UButton::StaticClass(),
+            MakeUniqueWidgetName(TEXT("CampaignSelect_OptionButton")));
+
+        // Keep button visually transparent so the border drives the row color.
+        FButtonStyle TransparentButtonStyle = RowButton->GetStyle();
+        TransparentButtonStyle.Normal.TintColor = FSlateColor(FLinearColor::Transparent);
+        TransparentButtonStyle.Hovered.TintColor = FSlateColor(FLinearColor::Transparent);
+        TransparentButtonStyle.Pressed.TintColor = FSlateColor(FLinearColor::Transparent);
+        TransparentButtonStyle.Disabled.TintColor = FSlateColor(FLinearColor::Transparent);
+        RowButton->SetStyle(TransparentButtonStyle);
+
+        UTextBlock* RowText = CreateText(
+            MakeUniqueWidgetName(TEXT("CampaignSelect_OptionText")),
+            CampaignDisplayNamesByOptionIndex[i],
+            14,
+            RowTextColor,
+            ETextJustify::Left,
+            false);
+
+        if (UButtonSlot* RowButtonSlot = Cast<UButtonSlot>(RowButton->AddChild(RowText)))
+        {
+            RowButtonSlot->SetPadding(FMargin(12.f, 3.f, 8.f, 3.f));
+            RowButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+            RowButtonSlot->SetVerticalAlignment(VAlign_Center);
+        }
+
+        RowButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCampaignOptionClicked);
+        RowButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCampaignOptionClicked);
+
+        RowBorder->SetContent(RowButton);
+
+        if (UVerticalBoxSlot* RowVBoxSlot = CampaignDropdownListBox->AddChildToVerticalBox(RowBorder))
+        {
+            RowVBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+            RowVBoxSlot->SetHorizontalAlignment(HAlign_Fill);
+            RowVBoxSlot->SetVerticalAlignment(VAlign_Top);
+        }
+
+        CampaignOptionButtons.Add(RowButton);
+        CampaignOptionButtonTexts.Add(RowText);
+    }
+}
+
+void UCampaignSelectDlg::UpdateCampaignDropdownLabel()
+{
+    if (!CampaignDropdownButtonText)
+    {
+        return;
+    }
+
+    const FString Label =
+        CampaignDisplayNamesByOptionIndex.IsValidIndex(Selected)
+        ? CampaignDisplayNamesByOptionIndex[Selected]
+        : TEXT("SELECT CAMPAIGN");
+
+    CampaignDropdownButtonText->SetText(FText::FromString(Label));
+}
+
+void UCampaignSelectDlg::HideCampaignDropdown()
+{
+    bCampaignDropdownOpen = false;
+
+    if (CampaignDropdownPopupBorder)
+    {
+        CampaignDropdownPopupBorder->SetVisibility(ESlateVisibility::Collapsed);
+    }
+}
+
+void UCampaignSelectDlg::SelectCampaignOption(int32 NewIndex)
+{
+    if (!CampaignIndexByOptionIndex.IsValidIndex(NewIndex))
+    {
+        return;
+    }
+
+    Selected = NewIndex;
+    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(NewIndex)
+        ? CampaignRowNamesByOptionIndex[NewIndex]
+        : NAME_None;
+
+    UpdateCampaignDropdownLabel();
+    HideCampaignDropdown();
+    RefreshFromSelection();
+    RebuildCampaignDropdownOptions();
+}
+
 void UCampaignSelectDlg::HookupEvents()
 {
-    if (CampaignSelectDD)
+    if (CampaignDropdownButton)
     {
-        CampaignSelectDD->OnSelectionChanged.RemoveDynamic(this, &UCampaignSelectDlg::OnSetSelected);
-        CampaignSelectDD->OnSelectionChanged.AddDynamic(this, &UCampaignSelectDlg::OnSetSelected);
+        CampaignDropdownButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCampaignDropdownClicked);
+        CampaignDropdownButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCampaignDropdownClicked);
     }
 
     if (PlayButton)
@@ -527,7 +718,7 @@ void UCampaignSelectDlg::RegisterControls()
 void UCampaignSelectDlg::PopulateCampaignDropdown()
 {
     UGameInstance* GI = GetGameInstance();
-    if (!GI || !CampaignSelectDD)
+    if (!GI)
     {
         return;
     }
@@ -545,9 +736,9 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
         PlayerSS->LoadPlayer();
     }
 
-    CampaignSelectDD->ClearOptions();
     CampaignRowNamesByOptionIndex.Reset();
     CampaignIndexByOptionIndex.Reset();
+    CampaignDisplayNamesByOptionIndex.Reset();
 
     const TArray<FS_Campaign>& Campaigns = DataSubsystem->GetAllCampaigns();
 
@@ -558,7 +749,7 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
             continue;
         }
 
-        CampaignSelectDD->AddOption(Row.Name);
+        CampaignDisplayNamesByOptionIndex.Add(Row.Name);
         CampaignRowNamesByOptionIndex.Add(Row.RowName);
         CampaignIndexByOptionIndex.Add(Row.Index + 1);
     }
@@ -590,9 +781,11 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
         ? CampaignRowNamesByOptionIndex[Selected]
         : NAME_None;
 
-    if (Selected != INDEX_NONE && CampaignSelectDD->GetOptionCount() > 0)
+    UpdateCampaignDropdownLabel();
+    RebuildCampaignDropdownOptions();
+
+    if (Selected != INDEX_NONE)
     {
-        CampaignSelectDD->SetSelectedIndex(Selected);
         RefreshFromSelection();
     }
     else
@@ -609,7 +802,8 @@ void UCampaignSelectDlg::RefreshFromSelection()
         return;
     }
 
-    UStarshatterGameDataSubsystem* DataSubsystem = GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
+    UStarshatterGameDataSubsystem* DataSubsystem =
+        GIBase->GetSubsystem<UStarshatterGameDataSubsystem>();
     if (!DataSubsystem)
     {
         return;
@@ -746,25 +940,28 @@ bool UCampaignSelectDlg::DoesSelectedCampaignSaveExist() const
     return UGameplayStatics::DoesSaveGameExist(SlotName, 0);
 }
 
-void UCampaignSelectDlg::OnSetSelected(FString SelectedItem, ESelectInfo::Type Type)
+void UCampaignSelectDlg::OnCampaignDropdownClicked()
 {
-    if (!CampaignSelectDD)
+    bCampaignDropdownOpen = !bCampaignDropdownOpen;
+
+    if (CampaignDropdownPopupBorder)
     {
-        return;
+        CampaignDropdownPopupBorder->SetVisibility(
+            bCampaignDropdownOpen ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     }
+}
 
-    const int32 NewIndex = CampaignSelectDD->FindOptionIndex(SelectedItem);
-    if (NewIndex == INDEX_NONE)
+void UCampaignSelectDlg::OnCampaignOptionClicked()
+{
+    for (int32 i = 0; i < CampaignOptionButtons.Num(); ++i)
     {
-        return;
+        UButton* Button = CampaignOptionButtons[i];
+        if (Button && (Button->IsHovered() || Button->HasKeyboardFocus()))
+        {
+            SelectCampaignOption(i);
+            return;
+        }
     }
-
-    Selected = NewIndex;
-    PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(NewIndex)
-        ? CampaignRowNamesByOptionIndex[NewIndex]
-        : NAME_None;
-
-    RefreshFromSelection();
 }
 
 void UCampaignSelectDlg::OnPlayButtonClicked()
@@ -799,6 +996,8 @@ void UCampaignSelectDlg::OnRestartButtonUnHovered()
 
 void UCampaignSelectDlg::OnCancelButtonClicked()
 {
+    HideCampaignDropdown();
+
     if (manager)
     {
         manager->ShowMenuDlg();
@@ -970,20 +1169,23 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
         stars->SetGameMode(EGameMode::CLOD);
     }
 
-    if (UWorld* World = GetWorld())
+    UWorld* World = GetWorld();
+    if (!World)
     {
-        World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
-        World->GetTimerManager().SetTimer(
-            CampaignLoadFinishTimer,
-            this,
-            &UCampaignSelectDlg::TryFinishCampaignLoadTransition,
-            0.05f,
-            true);
+        if (manager)
+        {
+            manager->ShowOperationsDlg();
+        }
+        return;
     }
-    else if (manager)
-    {
-        manager->ShowOperationsDlg();
-    }
+
+    World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
+    World->GetTimerManager().SetTimer(
+        CampaignLoadFinishTimer,
+        this,
+        &UCampaignSelectDlg::TryFinishCampaignLoadTransition,
+        0.05f,
+        true);
 }
 
 void UCampaignSelectDlg::TryFinishCampaignLoadTransition()

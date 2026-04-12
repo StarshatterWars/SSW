@@ -12,8 +12,8 @@
 
     OVERVIEW
     ========
-    Code-built campaign selection screen.
-    Replaces Blueprint widget dependencies for stability.
+    Code-built campaign selection screen with a custom styled
+    campaign dropdown list.
 */
 
 #pragma once
@@ -28,13 +28,13 @@
 class UButton;
 class UTextBlock;
 class UImage;
-class UComboBoxString;
 class UMenuScreen;
 class UCanvasPanel;
 class UBorder;
 class UHorizontalBox;
 class UVerticalBox;
 class UWidget;
+class UScrollBox;
 class USoundBase;
 
 class Campaign;
@@ -100,6 +100,12 @@ protected:
     void FinishSelectedCampaignFlow(bool bRestart);
     void TryFinishCampaignLoadTransition();
 
+    void BuildCampaignDropdown(UCanvasPanel* MainCanvas);
+    void RebuildCampaignDropdownOptions();
+    void UpdateCampaignDropdownLabel();
+    void HideCampaignDropdown();
+    void SelectCampaignOption(int32 NewIndex);
+
     UTextBlock* CreateText(
         const FName Name,
         const FString& InText,
@@ -131,7 +137,8 @@ protected:
     UFUNCTION() void OnCancelButtonHovered();
     UFUNCTION() void OnCancelButtonUnHovered();
 
-    UFUNCTION() void OnSetSelected(FString SelectedItem, ESelectInfo::Type Type);
+    UFUNCTION() void OnCampaignDropdownClicked();
+    UFUNCTION() void OnCampaignOptionClicked();
 
 protected:
     FTimerHandle CampaignLoadFinishTimer;
@@ -144,7 +151,6 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> TitleText = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerNameText = nullptr;
 
-    UPROPERTY(Transient) TObjectPtr<UComboBoxString> CampaignSelectDD = nullptr;
     UPROPERTY(Transient) TObjectPtr<UImage> CampaignImage = nullptr;
 
     UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignNameText = nullptr;
@@ -163,6 +169,15 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayButtonText = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> RestartButtonText = nullptr;
 
+    // Custom campaign dropdown:
+    UPROPERTY(Transient) TObjectPtr<UButton> CampaignDropdownButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignDropdownButtonText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UBorder> CampaignDropdownPopupBorder = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UScrollBox> CampaignDropdownScrollBox = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> CampaignDropdownListBox = nullptr;
+    UPROPERTY(Transient) TArray<TObjectPtr<UButton>> CampaignOptionButtons;
+    UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CampaignOptionButtonTexts;
+
     UPROPERTY(EditAnywhere, Category = "UI Sound")
     TObjectPtr<USoundBase> HoverSound = nullptr;
 
@@ -179,6 +194,7 @@ protected:
 
     bool loading = false;
     bool loaded = false;
+    bool bCampaignDropdownOpen = false;
 
     Text load_file;
     int load_index = -1;
@@ -191,4 +207,5 @@ protected:
     FName PickedRowName = NAME_None;
     TArray<FName> CampaignRowNamesByOptionIndex;
     TArray<int32> CampaignIndexByOptionIndex;
+    TArray<FString> CampaignDisplayNamesByOptionIndex;
 };
