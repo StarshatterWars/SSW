@@ -159,7 +159,7 @@ void UStarshatterBootSubsystem::BootGalaxyLoader(const FBootContext& Ctx)
     if (!Ctx.EnvironmentSS)
         return;
 
-    Ctx.EnvironmentSS->LoadAll(true);
+    Ctx.EnvironmentSS->LoadAll(false);
 }
 
 void UStarshatterBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
@@ -389,6 +389,8 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("Data.CampaignOOBTable"),
     TEXT("Data.CombatGroupTable"),
     TEXT("Data.GalaxyMapTable"),
+    TEXT("Data.SystemMapTable"),
+
     TEXT("Data.OrderOfBattleTable"),
     TEXT("Data.MedalsTable"),
     TEXT("Data.RanksTable"),
@@ -397,7 +399,9 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("Data.ZonesTable"),
 
     TEXT("UI.MenuScreenClass"),
+    TEXT("UI.CampaignScreenClass"),
     TEXT("UI.CampaignSelectScreenClass"),
+    TEXT("UI.CampaignLoadClass"),
     TEXT("UI.MissionSelectScreenClass"),
     TEXT("UI.ExitDlgClass"),
     TEXT("UI.FirstRunDlgClass"),
@@ -407,6 +411,7 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("UI.CmdMessageDlgClass"),
     TEXT("UI.OperationsScreenClass"),
     TEXT("UI.MissionScreenClass"),
+    TEXT("UI.CampaignSceneClass"),
 
     TEXT("UI.Theme.MenuButton.Normal"),
     TEXT("UI.Theme.MenuButton.Hover"),

@@ -421,7 +421,7 @@ void USectorMapPanel::RefreshView()
         // 3. Final fallback to first available region
         if (!CachedRegion)
         {
-            ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->AllRegions();
+            ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->GetAllRegions();
             while (++RegionIter)
             {
                 OrbitalRegion* Region = RegionIter.value();
@@ -459,7 +459,7 @@ bool USectorMapPanel::ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& 
         return false;
     }
 
-    ListIter<OrbitalRegion> RegionIter = InSystem->AllRegions();
+    ListIter<OrbitalRegion> RegionIter = InSystem->GetAllRegions();
     while (++RegionIter)
     {
         OrbitalRegion* Region = RegionIter.value();
@@ -478,6 +478,65 @@ bool USectorMapPanel::ResolveViewedRegion(StarSystem* InSystem, OrbitalRegion*& 
     return false;
 }
 
+float USectorMapPanel::GetElementSpriteSize(const MissionElement* Element, int32 Rep) const
+{
+    float Size = 24.0f;
+
+    if (!Element)
+        return Size;
+
+    if (Element->IsStatic())
+    {
+        CombatUnit* Unit = Element->GetCombatUnit();
+        if (Unit)
+        {
+            const CLASSIFICATION Type = (CLASSIFICATION)Unit->GetType();
+
+            switch (Type)
+            {
+            case CLASSIFICATION::STATION:
+            case CLASSIFICATION::STARBASE:
+                Size = 34.0f; // large
+                break;
+
+            case CLASSIFICATION::MINE:
+                Size = 12.0f; // small
+                break;
+
+            default:
+                Size = 20.0f;
+                break;
+            }
+        }
+        else
+        {
+            Size = 22.0f;
+        }
+    }
+    else if (Element->IsStarship())
+    {
+        Size = 28.0f;
+    }
+    else if (Element->IsDropship())
+    {
+        Size = 22.0f;
+    }
+    else
+    {
+        Size = 20.0f;
+    }
+
+    if (Rep <= 1)
+    {
+        Size *= 0.85f;
+    }
+    else if (Rep >= 3)
+    {
+        Size *= 1.05f;
+    }
+
+    return Size;
+}
 void USectorMapPanel::DrawRegionGrid(
     FSlateWindowElementList& OutDrawElements,
     const FGeometry& AllottedGeometry,
@@ -671,54 +730,43 @@ void USectorMapPanel::DrawMissionElement(
 
     bool bDrewSprite = false;
 
-    if (Element->IsStarship() || Element->IsDropship())
+    const FShipDesign* Design = ResolveShipDesignForElement(Element);
+    if (Design && Design->Map.Num() > 0)
     {
-        const FShipDesign* Design = ResolveShipDesignForElement(Element);
-        if (Design && Design->Map.Num() > 0)
+        const int32 FacingIndex = 0;
+
+        if (Design->Map.IsValidIndex(FacingIndex))
         {
-            const int32 FacingIndex = 0;
+            const FString ShipName = Design->ShipName;
+            const FString SpriteName = Design->Map[FacingIndex].SpriteName;
 
-            if (Design->Map.IsValidIndex(FacingIndex))
+            if (!ShipName.IsEmpty() && !SpriteName.IsEmpty())
             {
-                const FString ShipName = Design->ShipName;
-                const FString SpriteName = Design->Map[FacingIndex].SpriteName;
+                UTexture2D* SpriteTex =
+                    const_cast<USectorMapPanel*>(this)->GetShipMapSprite(ShipName, SpriteName);
 
-                if (!ShipName.IsEmpty() && !SpriteName.IsEmpty())
+                if (SpriteTex)
                 {
-                    UTexture2D* SpriteTex =
-                        const_cast<USectorMapPanel*>(this)->GetShipMapSprite(ShipName, SpriteName);
+                    FSlateBrush Brush;
+                    Brush.SetResourceObject(SpriteTex);
 
-                    if (SpriteTex)
-                    {
-                        FSlateBrush Brush;
-                        Brush.SetResourceObject(SpriteTex);
+                    float SpriteSize = GetElementSpriteSize(Element, Rep);
 
-                        float SpriteSize = 28.0f;
-                        if (Element->IsDropship())
-                        {
-                            SpriteSize = 22.0f;
-                        }
-                        if (Rep <= 1)
-                        {
-                            SpriteSize *= 0.85f;
-                        }
+                    Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
 
-                        Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
+                    const FVector2D DrawPos =
+                        ScreenPos - (Brush.ImageSize * 0.5f);
 
-                        const FVector2D DrawPos =
-                            ScreenPos - (Brush.ImageSize * 0.5f);
+                    FSlateDrawElement::MakeBox(
+                        OutDrawElements,
+                        BaseLayerId + 1,
+                        AllottedGeometry.ToPaintGeometry(DrawPos, Brush.ImageSize),
+                        &Brush,
+                        ESlateDrawEffect::None,
+                        GetMapIFFColor(Element));
 
-                        FSlateDrawElement::MakeBox(
-                            OutDrawElements,
-                            BaseLayerId + 1,
-                            AllottedGeometry.ToPaintGeometry(DrawPos, Brush.ImageSize),
-                            &Brush,
-                            ESlateDrawEffect::None,
-                            GetMapIFFColor(Element));
-
-                        bDrewSprite = true;
-                        HalfSize = SpriteSize * 0.5f;
-                    }
+                    bDrewSprite = true;
+                    HalfSize = SpriteSize * 0.5f;
                 }
             }
         }

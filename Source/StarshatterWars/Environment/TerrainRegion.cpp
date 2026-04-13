@@ -94,8 +94,8 @@ TerrainRegion::Update()
 	// Calc day phase
 	// -----------------------------
 	OrbitalBody* star = nullptr;
-	if (system->Bodies().size() > 0)
-		star = system->Bodies()[0];
+	if (system->GetBodies().size() > 0)
+		star = system->GetBodies()[0];
 
 	if (!star)
 		return;

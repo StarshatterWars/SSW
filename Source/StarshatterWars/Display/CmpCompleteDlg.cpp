@@ -1,219 +1,164 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CmpCompleteDlg.cpp
-    AUTHOR:       Carlos Bott
-*/
-
 #include "CmpCompleteDlg.h"
 
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Engine/Texture2D.h"
-#include "Kismet/GameplayStatics.h"
 
-// If you have these, include them. Otherwise remove and wire Campaign via Manager.
-//#include "CampaignSubsystem.h"
 #include "Campaign.h"
 #include "CmpnScreen.h"
+#include "SSWGameInstance.h"
 
 UCmpCompleteDlg::UCmpCompleteDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
 }
 
-void UCmpCompleteDlg::NativeOnInitialized()
+void UCmpCompleteDlg::NativeConstruct()
 {
-    Super::NativeOnInitialized();
+    Super::NativeConstruct();
 
-    // Bind Close clicked -> legacy OnClose:
+    BuildScreen();
+
     if (CloseButton)
     {
+        CloseButton->OnClicked.RemoveDynamic(this, &UCmpCompleteDlg::HandleCloseClicked);
         CloseButton->OnClicked.AddDynamic(this, &UCmpCompleteDlg::HandleCloseClicked);
     }
 
-    ShowTime = 0.0f;
-
-    // Optional: if you have a campaign subsystem, resolve it here:
-    // if (UGameInstance* GI = UGameplayStatics::GetGameInstance(this))
-    // {
-    //     CampaignSubsystem = GI->GetSubsystem<UCampaignSubsystem>();
-    //     Campaign = CampaignSubsystem ? CampaignSubsystem->GetCampaign() : nullptr;
-    // }
+    SetVisibility(ESlateVisibility::Collapsed);
+    SetDialogInputEnabled(false);
 }
 
 void UCmpCompleteDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
-    ShowTime += InDeltaTime;
-    ExecFrame(InDeltaTime);
-}
-
-void UCmpCompleteDlg::BindFormWidgets()
-{
-    // Legacy IDs:
-    BindImage(100, TitleImage);
-    BindLabel(101, InfoLabel);
-    BindButton(1, CloseButton);
-
-    // Optional background IDs if your UMG exposes them as images:
-    BindImage(300, BgTop);
-    BindImage(400, BgBottom);
-}
-
-FString UCmpCompleteDlg::GetLegacyFormText() const
-{
-    // Embedded legacy .frm text exactly as provided:
-    return TEXT(R"FORM(
-form: {
-   back_color: (  0,   0,   0)
-   fore_color: (255, 255, 255)
-   font:       Limerick12,
-
-   layout: {
-      x_mins:     (0)
-      x_weights:  (1)
-
-      y_mins:     (0, 0, 0)
-      y_weights:  (1, 6, 2)
-   }
-
-   defctrl: {
-      fore_color:       (0,0,0)
-      cell_insets:      (0,0,0,0)
-   }
-
-   ctrl: {
-      id:            300
-      type:          background
-      texture:       LoadDlg1
-      cells:         (0,0,1,1)
-      margins:       (248,2,2,32)
-      hide_partial:  false
-   }
-
-   ctrl: {
-      id:            100
-      type:          image
-      cells:         (0,1,1,1)
-      hide_partial:  false
-   }
-
-   ctrl: {
-      id:            400
-      type:          background
-      texture:       LoadDlg2
-      cells:         (0,2,1,1)
-      margins:       (2,248,48,2)
-      hide_partial:  false
-
-      layout: {
-         x_mins:     (20, 100, 100, 20)
-         x_weights:  ( 0,   1,   0,  0)
-
-         y_mins:     (20, 20, 30)
-         y_weights:  ( 1,  0,  0)
-      }
-   }
-
-   ctrl: {
-      id:               1
-      pid:              400
-      type:             button
-      text:             Close
-
-      align:            left
-      font:             Limerick12
-      fore_color:       (0,0,0)
-      standard_image:   Button17_0
-      activated_image:  Button17_1
-      transition_image: Button17_2
-      transparent:      false
-      bevel_width:      6
-      margins:          (3,18,0,0)
-      fixed_height:     19
-
-      cells:            (2,1,1,1)
-   }
-}
-)FORM");
-}
-
-void UCmpCompleteDlg::Show()
-{
-    // Resolve Campaign if not already set:
-    // If you do not have CampaignSubsystem/Campaign UObject types, route through Manager.
-    Campaign = Campaign->GetCampaign();
-
-    if (!TitleImage)
-        return;
-
-    // If you have no campaign object at this layer, you can still display a default image or do nothing.
-    if (!Campaign)
-        return;
-
-    // PSEUDOCODE you will replace with your campaign API:
-    CombatEvent* event = Campaign->GetLastEvent();
-    if (!event) return;
-    //FString ImageName = UTF8_TO_TCHAR(event->ImageFile());
-
-    // Since we cannot assume your exact UObject campaign API here, keep it as a clearly isolated step:
-    FString ImageName;       // set from Campaign->GetLastEvent()->ImageFile()
-    FString CampaignPath;    // set from Campaign->Path()
-
-    if (ImageName.IsEmpty() || CampaignPath.IsEmpty())
-        return;
-
-    // Ensure .pcx extension (legacy behavior):
-    if (!ImageName.EndsWith(TEXT(".pcx"), ESearchCase::IgnoreCase))
+    if (GetVisibility() == ESlateVisibility::Visible)
     {
-        ImageName += TEXT(".pcx");
-    }
-
-    BannerTexture = LoadCampaignTexture(CampaignPath, ImageName);
-    if (BannerTexture)
-    {
-        TitleImage->SetBrushFromTexture(BannerTexture, /*bMatchSize*/ false);
+        ShowTime += InDeltaTime;
     }
 }
 
-void UCmpCompleteDlg::ExecFrame(float DeltaTime)
+void UCmpCompleteDlg::BuildScreen()
 {
-    (void)DeltaTime;
-    // Legacy ExecFrame() was empty.
+    if (bScreenBuilt || !WidgetTree)
+    {
+        return;
+    }
+
+    RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+    WidgetTree->RootWidget = RootCanvas;
+
+    BuildTopBackground();
+    BuildCenterBanner();
+    BuildBottomPanel();
+
+    bScreenBuilt = true;
+}
+
+void UCmpCompleteDlg::BuildTopBackground()
+{
+    BgTop = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("BgTop"));
+
+    UCanvasPanelSlot* TopSlot = RootCanvas->AddChildToCanvas(BgTop);
+    if (TopSlot)
+    {
+        TopSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
+        TopSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 120.f));
+    }
+
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (GI->GetActiveCampaignUIBundle().LoadTop)
+        {
+            BgTop->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().LoadTop);
+            return;
+        }
+    }
+
+    BgTop->SetColorAndOpacity(FLinearColor::Black);
+}
+
+void UCmpCompleteDlg::BuildCenterBanner()
+{
+    TitleImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("TitleImage"));
+
+    UCanvasPanelSlot* CenterSlot = RootCanvas->AddChildToCanvas(TitleImage);
+    if (CenterSlot)
+    {
+        CenterSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+        CenterSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+        CenterSlot->SetSize(FVector2D(1024.f, 512.f));
+    }
+}
+
+void UCmpCompleteDlg::BuildBottomPanel()
+{
+    BgBottom = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("BgBottom"));
+
+    UCanvasPanelSlot* BottomSlot = RootCanvas->AddChildToCanvas(BgBottom);
+    if (BottomSlot)
+    {
+        BottomSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
+        BottomSlot->SetAlignment(FVector2D(0.f, 1.f));
+        BottomSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 140.f));
+    }
+
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (GI->GetActiveCampaignUIBundle().LoadBottom)
+        {
+            BgBottom->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().LoadBottom);
+        }
+    }
+
+    InfoLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InfoLabel"));
+    InfoLabel->SetText(FText::FromString(TEXT("CAMPAIGN COMPLETE")));
+    InfoLabel->SetJustification(ETextJustify::Center);
+
+    RootCanvas->AddChildToCanvas(InfoLabel);
+
+    CloseButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("CloseButton"));
+    RootCanvas->AddChildToCanvas(CloseButton);
+
+    CloseButtonText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CloseButtonText"));
+    CloseButtonText->SetText(FText::FromString(TEXT("CLOSE")));
+
+    CloseButton->AddChild(CloseButtonText);
+}
+
+void UCmpCompleteDlg::ShowCompleteDlg()
+{
+    ShowTime = 0.0f;
+
+    SetVisibility(ESlateVisibility::Visible);
+    SetIsEnabled(true);
+    SetDialogInputEnabled(true);
+
+    if (const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (GI->GetActiveCampaignUIBundle().CampaignComplete)
+        {
+            TitleImage->SetBrushFromTexture(GI->GetActiveCampaignUIBundle().CampaignComplete);
+        }
+    }
+}
+
+void UCmpCompleteDlg::HideCompleteDlg()
+{
+    SetDialogInputEnabled(false);
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UCmpCompleteDlg::HandleCloseClicked()
 {
-    // Legacy:
-    // if (manager) manager->ShowCmdDlg();
+    HideCompleteDlg();
 
     if (Manager)
     {
-        // If your manager is a UObject with a ShowCmdDlg() UFUNCTION, call it here.
-        // Manager->ShowCmdDlg();
-        OnRequestShowCmdDlg(); // keep BP event available even with manager
-        return;
+        Manager->ShowCmdDlg();
     }
-
-    // No manager wired: raise BP event so the owning screen can transition.
-    OnRequestShowCmdDlg();
-}
-
-UTexture2D* UCmpCompleteDlg::LoadCampaignTexture(const FString& CampaignPath, const FString& ImageFile) const
-{
-    // Intentionally returns nullptr here.
-    // Override this in your project where your Bitmap/DataLoader bridge exists:
-    //
-    // - loader->SetDataPath(campaignPath)
-    // - loader->LoadBitmap(pcx, bannerBitmap)
-    // - convert bannerBitmap -> UTexture2D
-    //
-    (void)CampaignPath;
-    (void)ImageFile;
-    return nullptr;
 }

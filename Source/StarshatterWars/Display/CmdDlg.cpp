@@ -122,7 +122,14 @@ void UCmdDlg::NativeConstruct()
     }
 
     if (!MenuButtonClass || !MenuToggleGroup || !MenuButtonContainer)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmdDlg] Missing bindings: MenuButtonClass=%s MenuToggleGroup=%s MenuButtonContainer=%s"),
+            *GetNameSafe(MenuButtonClass.Get()),
+            *GetNameSafe(MenuToggleGroup),
+            *GetNameSafe(MenuButtonContainer));
         return;
+    }
 
     MenuButtonContainer->ClearChildren();
     AllMenuButtons.Empty();
@@ -246,7 +253,7 @@ void UCmdDlg::NativeConstruct()
 
 void UCmdDlg::NativePreConstruct()
 {
-    
+    Super::NativePreConstruct();
 
     if (CmdOrdersPanel)
     {
@@ -282,7 +289,7 @@ void UCmdDlg::NativeOnInitialized()
 void UCmdDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame();
+    ExecFrame(InDeltaTime);
 }
 
 UCmdDlg::UCmdDlg(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -386,14 +393,26 @@ void UCmdDlg::ShowCmdDlg()
     {
         const bool bTraining = CampaignPtr->IsTraining();
 
-        if (btn_save) btn_save->SetIsEnabled(!bTraining);
+        if (btn_save)
+            btn_save->SetIsEnabled(!bTraining);
     }
 
     SetVisibility(ESlateVisibility::Visible);
+
+    if (CurrentScreen == ECmdScreen::None)
+    {
+        CurrentScreen = ECmdScreen::Orders;
+        LoadOrdersInfo();
+    }
+
     UpdateMissionButton();
+
+    // Prime intel data immediately on command dialog open
+    IntelRefreshCounterSeconds = 0;
+    RefreshIntelDataBackground();
 }
 
-void UCmdDlg::ExecFrame()
+void UCmdDlg::ExecFrame(double DeltaTime)
 {
     if (!CampaignPtr)
         CampaignPtr = Campaign::GetCampaign();
@@ -483,16 +502,19 @@ void UCmdDlg::OnExitClicked()
 
 void UCmdDlg::OnCancelButtonClicked()
 {
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
-    }
+    SetDialogInputEnabled(false);
+    SetVisibility(ESlateVisibility::Hidden);
+
+    Mouse::Show(true);
 
     if (manager)
-        manager->ShowMenuDlg();
+    {
+        manager->ShowCampaignSelectDlg();
+    }
     else
+    {
         HideDlg();
+    }
 }
 
 void UCmdDlg::OnCancelButtonHovered()
@@ -602,6 +624,17 @@ void UCmdDlg::RefreshUIFromSubsystem()
 {
 }
 
+int32 UCmdDlg::GetIntelEntryCount() const
+{
+    Campaign* CurrentCampaign = Campaign::GetCampaign();
+    if (!CurrentCampaign)
+    {
+        return 0;
+    }
+
+    return CurrentCampaign->GetEvents().size();
+}
+
 void UCmdDlg::LoadForcesInfo()
 {
     if (ShouldDisableCommandPanels())
@@ -687,6 +720,12 @@ void UCmdDlg::LoadIntelInfo()
         return;
     }
 
+    if (GetIntelEntryCount() <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadIntelInfo: no intel entries"));
+        return;
+    }
+
     USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
     SSWInstance->PlayAcceptSound(this);
 
@@ -700,10 +739,8 @@ void UCmdDlg::LoadIntelInfo()
         OperationsModeText->SetText(FText::FromString("INTEL"));
     }
 
-    if (CmdIntelPanel)
-    {
-        CmdIntelPanel->ShowIntelDlg();
-    }
+    IntelRefreshCounterSeconds = 0;
+    RefreshIntelPanel();
 }
 
 void UCmdDlg::LoadTheaterInfo()
@@ -732,6 +769,21 @@ void UCmdDlg::LoadTheaterInfo()
     }
 }
 
+void UCmdDlg::RefreshIntelPanel()
+{
+    if (ShouldDisableCommandPanels())
+    {
+        return;
+    }
+
+    if (!CmdIntelPanel)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] RefreshIntelPanel: CmdIntelPanel is NULL"));
+        return;
+    }
+
+    CmdIntelPanel->ShowIntelDlg();
+}
 void UCmdDlg::HandleGameTimers()
 {
     UGameInstance* GI = GetGameInstance();
@@ -776,6 +828,18 @@ void UCmdDlg::HandleUniverseSecondTick(uint64 UniverseSecondsNow)
             FText::FromString(Timer->GetUniverseDateTimeString())
         );
     }
+
+    // Keep intel data fresh every 10 seconds even when hidden.
+    ++IntelRefreshCounterSeconds;
+
+    if (IntelRefreshCounterSeconds >= 10)
+    {
+        IntelRefreshCounterSeconds = 0;
+        RefreshIntelDataBackground();
+
+        UE_LOG(LogTemp, Verbose,
+            TEXT("[CmdDlg] Intel data refreshed in background"));
+    }
 }
 
 void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
@@ -801,27 +865,25 @@ bool UCmdDlg::ShouldDisableCommandPanels() const
 
 void UCmdDlg::RefreshCommandButtons()
 {
-    const bool bDisable = ShouldDisableCommandPanels();
+    const bool bDisablePanels = ShouldDisableCommandPanels();
+    const bool bHasIntelEntries = GetIntelEntryCount() > 0;
 
-    if (bDisable != bLastDisableState)
+    if (AllMenuButtons.IsValidIndex(1) && AllMenuButtons[1])
     {
-        bLastDisableState = bDisable;
-
-        if (AllMenuButtons.IsValidIndex(1) && AllMenuButtons[1])
-        {
-            AllMenuButtons[1]->SetIsEnabled(!bDisable);
-        }
-
-        if (AllMenuButtons.IsValidIndex(2) && AllMenuButtons[2])
-        {
-            AllMenuButtons[2]->SetIsEnabled(!bDisable);
-        }
-
-        if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
-        {
-            AllMenuButtons[3]->SetIsEnabled(!bDisable);
-        }
+        AllMenuButtons[1]->SetIsEnabled(!bDisablePanels);
     }
+
+    if (AllMenuButtons.IsValidIndex(2) && AllMenuButtons[2])
+    {
+        AllMenuButtons[2]->SetIsEnabled(!bDisablePanels);
+    }
+
+    if (AllMenuButtons.IsValidIndex(3) && AllMenuButtons[3])
+    {
+        AllMenuButtons[3]->SetIsEnabled(!bDisablePanels && bHasIntelEntries);
+    }
+
+    bLastDisableState = bDisablePanels;
 }
 
 void UCmdDlg::UpdateMissionButton()
@@ -839,4 +901,21 @@ void UCmdDlg::UpdateMissionButton()
     }
 
     MissionButton->SetIsEnabled(bEnable);
+}
+
+void UCmdDlg::ShowMissionsPanel()
+{
+    CurrentScreen = ECmdScreen::Missions;
+    LoadMissionsInfo();
+    UpdateMissionButton();
+}
+
+void UCmdDlg::RefreshIntelDataBackground()
+{
+    if (!CmdIntelPanel)
+    {
+        return;
+    }
+
+    CmdIntelPanel->RefreshIntelData();
 }

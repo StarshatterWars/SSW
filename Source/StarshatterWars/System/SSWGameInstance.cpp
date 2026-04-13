@@ -13,7 +13,6 @@
 #include "ExitDlg.h"
 #include "FirstTimeDlg.h"
 #include "CampaignScreen.h"
-#include "OperationsScreen.h"
 #include "MissionLoading.h"
 #include "CampaignLoading.h"
 
@@ -23,6 +22,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Engine/Texture2D.h"
 #include "UObject/Package.h" // For data asset support
 
 #include "MusicController.h"
@@ -42,15 +42,48 @@
 
 USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer) 
 {
-	InitializeCampaignLoadingScreen(ObjectInitializer);
 }
 
-void USSWGameInstance::SetProjectPath()
+void USSWGameInstance::OnStart()
 {
-	ProjectPath = FPaths::ProjectDir();
-	ProjectPath.Append(TEXT("GameData/")); 
+	// ---------------------------------------------------------
+	// Show Main Menu (safe timing)
+	// ---------------------------------------------------------
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			this,
+			&USSWGameInstance::ShowMainMenuScreen
+		);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Init: World is NULL, cannot show menu yet"));
+	}
 
-	UE_LOG(LogTemp, Log, TEXT("Setting Game Data Directory %s"), *ProjectPath);
+	// ---------------------------------------------------------
+	// Timer Subsystem Hook
+	// ---------------------------------------------------------
+	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
+	{
+		Timer->OnUniverseMinute.AddUObject(
+			this,
+			&USSWGameInstance::HandleUniverseMinuteAutosave
+		);
+	}
+
+	SetupMusicController();
+
+	// ---------------------------------------------------------
+	// Fonts
+	// ---------------------------------------------------------
+	FontManager::RegisterAllFonts(this);
+
+	// =========================================================
+	// REPLACEMENT FOR GameLoader
+	// =========================================================
+	LoadOrCreateUniverse();
+
 }
 
 void USSWGameInstance::StartGameTimers()
@@ -60,11 +93,6 @@ void USSWGameInstance::StartGameTimers()
 	{
 		World->GetTimerManager().SetTimer(TimerHandle, this, &USSWGameInstance::OnGameTimerTick, 1.0f, true);
 	}
-}
-
-FString USSWGameInstance::GetProjectPath()
-{
-	return ProjectPath;
 }
 
 void USSWGameInstance::Print(const FString& A, const FString& B)
@@ -122,35 +150,51 @@ void USSWGameInstance::ShowMainMenuScreen()
 	RemoveScreens();
 
 	UWorld* World = GetWorld();
-	if (!World) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: World is NULL")); return; }
-
-	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-	if (!PC) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: PC is NULL")); return; }
-
-	if (!MenuScreenWidgetClass)
+	if (!World)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: MenuScreenWidgetClass is NULL"));
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: World is NULL"));
 		return;
 	}
 
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: PC is NULL"));
+		return;
+	}
+
+	if (!MenuScreenWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: MenuScreenWidgetClass is NULL"));
+		return;
+	}
+
+	if (!MenuScreenWidgetClass->IsChildOf(UMenuScreen::StaticClass()))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: MenuScreenWidgetClass '%s' is not derived from UMenuScreen"),
+			*GetNameSafe(MenuScreenWidgetClass));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[ShowMainMenuScreen]: Creating MenuScreen from class '%s'"),
+		*GetNameSafe(MenuScreenWidgetClass));
+
 	MenuScreen = CreateWidget<UMenuScreen>(PC, MenuScreenWidgetClass);
-	if (!MenuScreen) { UE_LOG(LogTemp, Error, TEXT("ShowMainMenuScreen: Failed to create MenuScreen")); return; }
+	if (!MenuScreen)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ShowMainMenuScreen]: Failed to create MenuScreen"));
+		return;
+	}
 
 	UMenuScreen* Screen = MenuScreen.Get();
 
 	Screen->AddToViewport(100);
 	Screen->SetVisibility(ESlateVisibility::Visible);
 
-	// *** THIS IS THE MISSING PIECE ***
-	Screen->Initialize(this);
-
-	// Create dialogs AFTER Initialize resolved classes
+	// Let NativeConstruct() handle Initialize(GetGameInstance()).
 	Screen->Setup();
-
-	// MenuScreen decides Menu vs FirstRun
 	Screen->Show();
 
-	// Focus whatever MenuScreen decided is current
 	if (UBaseScreen* Top = Screen->GetCurrentDialog())
 	{
 		FInputModeUIOnly InputMode;
@@ -183,41 +227,13 @@ void USSWGameInstance::LoadTransitionScreen()
 	}
 }
 
-void USSWGameInstance::LoadMissionBriefingScreen()
-{
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(false);
-			PlayerController->bShowMouseCursor = false; UGameplayStatics::OpenLevel(this, "MissionBriefing");
-		}
-	}
-}
-
-void USSWGameInstance::LoadGameLevel(FString LevelName)
-{
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeGameAndUI InputModeData;
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(false);
-			PlayerController->bShowMouseCursor = false; UGameplayStatics::OpenLevel(this, FName(LevelName));
-		}
-	}
-}
-
 void USSWGameInstance::Init()
 {
 	Super::Init();
+
+	// ---------------------------------------------------------
+	// Core App State
+	// ---------------------------------------------------------
 	bIsWindowed = false;
 	bIsGameActive = false;
 	bIsDeviceLost = false;
@@ -227,69 +243,42 @@ void USSWGameInstance::Init()
 	bIsDeviceInitialized = false;
 	bIsDeviceRestored = false;
 
+	// ---------------------------------------------------------
+	// Save Slots
+	// ---------------------------------------------------------
 	PlayerSaveName = "PlayerSaveSlot";
 	PlayerSaveSlot = 0;
+
 	UniverseSaveSlotName = "Universe_Main";
 	UniverseSaveUserIndex = 0;
+
 	CampaignSaveSlotName = "Campaign";
 	CampaignSaveIndex = 0;
 
-	FDateTime GameDate(2228, 1, 1);
+	// ---------------------------------------------------------
+	// Time Init
+	// ---------------------------------------------------------
+	const FDateTime GameDate(2228, 1, 1);
 	SetGameTime(GameDate.ToUnixTimestamp());
-	SetProjectPath();
 
-	CampaignData.SetNum(5); // number of campaigns
+	// ---------------------------------------------------------
+	// Paths + Data Loader
+	// ---------------------------------------------------------
+	CampaignData.SetNum(5);
 
 	loader = DataLoader::GetLoader();
 
 	Status = EGAMESTATUS::OK;
-	UE_LOG(LogTemp, Log, TEXT("Initializing Game\n."));
 
-	if (Status == EGAMESTATUS::OK) {
-		UE_LOG(LogTemp, Log, TEXT("\n  Initializing instance...\n"));
-	}
+	UE_LOG(LogTemp, Log, TEXT("Initializing Game"));
 
-	if (Status == EGAMESTATUS::OK) {
-		UE_LOG(LogTemp, Log, TEXT("  Initializing content...\n"));
-		InitContent();
-	}
-
-	/*if (UGameplayStatics::DoesSaveGameExist(PlayerSaveName, PlayerSaveSlot)) {
-		LoadGame(PlayerSaveName, PlayerSaveSlot);
-		UE_LOG(LogTemp, Log, TEXT("Player Name: %s"), *PlayerInfo.Name);
-
-		if (PlayerInfo.Campaign >= 0) {
-			ReadCampaignData();
-		}
-	}*/
-
-	SetupMusicController();
-	//ExportDataTableToCSV(OrderOfBattleDataTable, TEXT("OOBExport.csv"));
-	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
+	// ---------------------------------------------------------
+	// Content Init
+	// ---------------------------------------------------------
+	if (Status == EGAMESTATUS::OK)
 	{
-		Timer->OnUniverseMinute.AddUObject(this, &USSWGameInstance::HandleUniverseMinuteAutosave);
-		// optional: OnUniverseSecond for finer cadence, but minute is safer.
+		UE_LOG(LogTemp, Log, TEXT("Initializing content..."));
 	}
-
-	FontManager::RegisterAllFonts(this);
-}
-
-void USSWGameInstance::SetActiveUnit(bool bShow, FString Name, EEMPIRE_NAME Empire, ECOMBATGROUP_TYPE Type, FString Loc)
-{
-	DisplayUnit.bShowUnit = bShow;
-	DisplayUnit.Name = Name;
-	DisplayUnit.Empire = Empire;
-	DisplayUnit.Type = Type;
-	DisplayUnit.Location = Loc;
-}
-
-void USSWGameInstance::SetActiveElement(bool bShow, FString Name, EEMPIRE_NAME Empire, ECOMBATUNIT_TYPE Type, FString Loc)
-{
-	DisplayElement.bShowUnit = bShow;
-	DisplayElement.Name = Name;
-	DisplayElement.Empire = Empire;
-	DisplayElement.Type = Type;
-	DisplayElement.Location = Loc;
 }
 
 void USSWGameInstance::SetActiveWidget(UUserWidget* Widget)
@@ -301,20 +290,6 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 	return ActiveWidget;
 }
 
-FS_DisplayUnit USSWGameInstance::GetActiveUnit()
-{
-	return DisplayUnit;
-}
-
-FS_DisplayElement USSWGameInstance::GetActiveElement()
-{
-	return DisplayElement;
-}
-
-FS_OOBForce USSWGameInstance::GetActiveOOBForce() {
-	return CurrentForce;
-}
-
 void USSWGameInstance::Shutdown()
 {
 	Super::Shutdown();
@@ -323,24 +298,7 @@ void USSWGameInstance::Shutdown()
 	{
 		AudioDevice->Flush(nullptr); // Stops all active sounds immediately
 	}
-}
-
-bool USSWGameInstance::InitContent()
-{
-	List<Text>  bundles;
-	
-	FString ContentProjectPath = FPaths::ProjectDir();
-	ProjectPath.Append(TEXT("GameData/Content/"));
-
-	loader->SetDataPath(TCHAR_TO_ANSI(*ContentProjectPath));
-	//loader->ListFiles("content*", bundles);
-
-	FString GameDataProjectPath = FPaths::ProjectDir(); 
-	GameDataProjectPath = FPaths::ProjectDir();
-	GameDataProjectPath.Append(TEXT("GameData/"));
-	loader->SetDataPath(TCHAR_TO_ANSI(*GameDataProjectPath));
-
-	return true;
+	ClearCampaignUIBundle();
 }
 
 bool USSWGameInstance::InitGame()
@@ -389,16 +347,6 @@ void USSWGameInstance::InitializeScreens()
 	}
 }
 
-void USSWGameInstance::InitializeCampaignLoadingScreen(const FObjectInitializer& ObjectInitializer)
-{
-	static ConstructorHelpers::FClassFinder<UCampaignLoading> CampaignLoadingWidget(TEXT("/Game/Screens/Campaign/WB_CampaignLoading"));
-	if (!ensure(CampaignLoadingWidget.Class != nullptr))
-	{
-		return;
-	}
-	CampaignLoadingWidgetClass = CampaignLoadingWidget.Class;
-}
-
 void USSWGameInstance::RemoveScreens()
 {
 	if (MenuScreen)
@@ -432,74 +380,6 @@ void USSWGameInstance::OnGameTimerTick()
 	UE_LOG(LogTemp, Log, TEXT("Campaign Timer: %d"), GetCampaignTime());
 }
 
-void USSWGameInstance::ShowCampaignLoading()
-{
-	//RemoveScreens();
-
-	// Create widget
-	//if (!CampaignLoading) {
-	CampaignLoading = CreateWidget<UCampaignLoading>(this, CampaignLoadingWidgetClass);
-	//}
-	// Add it to viewport
-	CampaignLoading->AddToViewport(102);
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(CampaignLoading->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(true);
-		}
-	}
-	ToggleCampaignLoading(true);
-}
-
-void USSWGameInstance::ShowMissionBriefingScreen()
-{
-	//RemoveScreens();
-
-	// Create widget
-	//if (!MissionLoadingScreen) {
-		// Create widget
-	MissionLoadingScreen = CreateWidget<UMissionLoading>(this, MissionLoadingWidgetClass);
-	//}
-
-	// Add it to viewport
-	MissionLoadingScreen->AddToViewport(101);
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(MissionLoadingScreen->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(true);
-		}
-	}
-	ToggleMissionBriefingScreen(true);
-}
-
-void USSWGameInstance::ToggleMissionBriefingScreen(bool bVisible)
-{
-	if (MissionLoadingScreen) {
-		if (bVisible) {
-			MissionLoadingScreen->SetVisibility(ESlateVisibility::Visible);
-		}
-		else {
-			MissionLoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-}
-
 void USSWGameInstance::RemoveMainMenuScreen()
 {
 	if (MainMenuDlg) {
@@ -508,42 +388,6 @@ void USSWGameInstance::RemoveMainMenuScreen()
 		MainMenuDlg = nullptr;
 		if (GEngine) {
 			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::RemoveCampaignLoadScreen()
-{
-	if (CampaignLoading) {
-		CampaignLoading->RemoveFromParent();
-
-		CampaignLoading = nullptr;
-		if (GEngine) {
-			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::RemoveMissionBriefingScreen()
-{
-	if (MissionLoadingScreen) {
-		MissionLoadingScreen->RemoveFromParent();
-
-		MissionLoadingScreen = nullptr;
-		if (GEngine) {
-			GEngine->ForceGarbageCollection();
-		}
-	}
-}
-
-void USSWGameInstance::ToggleCampaignLoading(bool bVisible)
-{
-	if (CampaignLoading) {
-		if (bVisible) {
-			CampaignLoading->SetVisibility(ESlateVisibility::Visible);
-		}
-		else {
-			CampaignLoading->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 }
@@ -771,231 +615,6 @@ TArray<FS_Combatant> USSWGameInstance::GetCombatantList()
 	return CampaignData[PlayerInfo.Campaign].Combatant;
 }
 
-void USSWGameInstance::FlattenForce(const FS_OOBForce& Force, TArray<FS_OOBFlatEntry>& OutFlatList)
-{
-	int32 CurrentId = 0;
-	RecursivelyFlattenForce(Force, INDEX_NONE, 0, CurrentId, OutFlatList);
-}
-
-void USSWGameInstance::RecursivelyFlattenForce(
-	const FS_OOBForce& Force,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry ForceEntry;
-	ForceEntry.Id = ThisId;
-	ForceEntry.ParentId = ParentId;
-	ForceEntry.DisplayName = Force.Name;
-	ForceEntry.IndentLevel = IndentLevel;
-	ForceEntry.GroupType = ECOMBATGROUP_TYPE::FORCE;
-
-	OutFlatList.Add(ForceEntry);
-
-	for (const FS_OOBFleet& Fleet : Force.Fleet)
-	{
-		RecursivelyFlattenFleet(Fleet, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenFleet(
-	const FS_OOBFleet& Fleet,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry FleetEntry;
-	FleetEntry.Id = ThisId;
-	FleetEntry.ParentId = ParentId;
-	FleetEntry.DisplayName = Fleet.Name;
-	FleetEntry.IndentLevel = IndentLevel;
-	FleetEntry.GroupType = ECOMBATGROUP_TYPE::FLEET;
-
-	OutFlatList.Add(FleetEntry);
-
-	for (const FS_OOBCarrier& Carrier : Fleet.Carrier)
-	{
-		RecursivelyFlattenCarrier(Carrier, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBDestroyer& Destroyer : Fleet.Destroyer)
-	{
-		RecursivelyFlattenDestroyer(Destroyer, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenCarrier(
-	const FS_OOBCarrier& Carrier,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Carrier.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::CARRIER_GROUP;
-
-	OutFlatList.Add(Entry);
-
-	for (const FS_OOBWing& Wing : Carrier.Wing)
-	{
-		RecursivelyFlattenWing(Wing, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenDestroyer(
-	const FS_OOBDestroyer& Destroyer,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Destroyer.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenWing(
-	const FS_OOBWing& Wing,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Wing.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::WING;
-
-	OutFlatList.Add(Entry);
-
-	for (const FS_OOBFighter& Unit : Wing.Fighter)
-	{
-		RecursivelyFlattenFighter(Unit, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBAttack& Attack : Wing.Attack)
-	{
-		RecursivelyFlattenAttack(Attack, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBIntercept& Intercept : Wing.Intercept)
-	{
-		RecursivelyFlattenIntercept(Intercept, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-
-	for (const FS_OOBLanding& Landing : Wing.Landing)
-	{
-		RecursivelyFlattenLanding(Landing, ThisId, IndentLevel + 1, CurrentId, OutFlatList);
-	}
-}
-
-void USSWGameInstance::RecursivelyFlattenFighter(
-	const FS_OOBFighter& Unit,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Unit.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::FIGHTER_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-void USSWGameInstance::RecursivelyFlattenAttack(
-	const FS_OOBAttack& Attack,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Attack.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::ATTACK_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenIntercept(
-	const FS_OOBIntercept& Intercept,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Intercept.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
-void USSWGameInstance::RecursivelyFlattenLanding(
-	const FS_OOBLanding& Landing,
-	int32 ParentId,
-	int32 IndentLevel,
-	int32& CurrentId,
-	TArray<FS_OOBFlatEntry>& OutFlatList
-)
-{
-	int32 ThisId = CurrentId++;
-
-	FS_OOBFlatEntry Entry;
-	Entry.Id = ThisId;
-	Entry.ParentId = ParentId;
-	Entry.DisplayName = Landing.Name;
-	Entry.IndentLevel = IndentLevel;
-	Entry.GroupType = ECOMBATGROUP_TYPE::LCA_SQUADRON;
-
-	OutFlatList.Add(Entry);
-}
-
 void USSWGameInstance::SetupMusicController()
 {
 	UWorld* World = GetWorld();
@@ -1219,6 +838,77 @@ void USSWGameInstance::EnsureSystemOverview(
 	}
 }
 
+void USSWGameInstance::LoadCampaignUIBundle(const FString& CampaignFolder)
+{
+	ActiveCampaignUIBundle = FS_CampaignUIBundle{};
+	ActiveCampaignUIBundle.CampaignFolder = CampaignFolder.TrimStartAndEnd();
+
+	static const TCHAR* TopTexturePath =
+		TEXT("/Game/UI/LoadDlg2.LoadDlg2");
+
+	static const TCHAR* BottomTexturePath =
+		TEXT("/Game/UI/LoadDlg1.LoadDlg1");
+
+	ActiveCampaignUIBundle.LoadTop =
+		LoadObject<UTexture2D>(nullptr, TopTexturePath);
+
+	if (!ActiveCampaignUIBundle.LoadTop)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load top texture: %s"),
+			TopTexturePath);
+	}
+
+	ActiveCampaignUIBundle.LoadBottom =
+		LoadObject<UTexture2D>(nullptr, BottomTexturePath);
+
+	if (!ActiveCampaignUIBundle.LoadBottom)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load bottom texture: %s"),
+			BottomTexturePath);
+	}
+
+	const FString CompleteTexturePath = FString::Printf(
+		TEXT("/Game/UI/Campaigns/%s/campaign-complete.campaign-complete"),
+		*ActiveCampaignUIBundle.CampaignFolder);
+
+	ActiveCampaignUIBundle.CampaignComplete =
+		LoadObject<UTexture2D>(nullptr, *CompleteTexturePath);
+
+	if (!ActiveCampaignUIBundle.CampaignComplete)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CampaignUI] Failed to load campaign completion texture: %s"),
+			*CompleteTexturePath);
+
+		ActiveCampaignUIBundle.CampaignComplete =
+			LoadObject<UTexture2D>(nullptr,
+				TEXT("/Game/UI/Campaigns/01/campaign-complete.campaign-complete"));
+
+		if (ActiveCampaignUIBundle.CampaignComplete)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[CampaignUI] Fallback loaded: /Game/UI/Campaigns/01/campaign-complete.campaign-complete"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[CampaignUI] Failed to load fallback campaign completion texture"));
+		}
+	}
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[CampaignUI] Bundle loaded for folder '%s'"),
+		*ActiveCampaignUIBundle.CampaignFolder);
+}
+
+void USSWGameInstance::ClearCampaignUIBundle()
+{
+	ActiveCampaignUIBundle = FS_CampaignUIBundle{};
+
+	UE_LOG(LogTemp, Log, TEXT("[CampaignUI] Bundle cleared"));
+}
 //void USSWGameInstance::SetTimeScale(double NewTimeScale)
 //{
 //	TimeScale = FMath::Clamp(NewTimeScale, 0.0, 1.0e7);
@@ -1421,6 +1111,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 	// Normalize
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 
+	const FString CampaignFolder = FString::Printf(TEXT("%02d"), CampaignIndex);
 	const FString Slot = UCampaignSave::MakeSlotNameFromRowName(RowName);
 	constexpr int32 UserIndex = 0;
 
@@ -1449,15 +1140,17 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 
 			CampaignSave = LoadedSave;
 
+			// Load campaign UI bundle for this campaign
+			LoadCampaignUIBundle(CampaignFolder);
+
 			if (Timer)
 			{
-				// ---- One-time repair for older saves that never stored the anchor ----
+				// One-time repair for older saves that never stored the anchor
 				if (!CampaignSave->bInitialized || CampaignSave->CampaignStartUniverseSeconds == 0)
 				{
 					const uint64 Now = Timer->GetUniverseTimeSeconds();
 					CampaignSave->InitializeCampaignClock(Now);
 
-					// Persist the repaired anchor so it doesn't "reset" next load:
 					UGameplayStatics::SaveGameToSlot(CampaignSave, Slot, UserIndex);
 				}
 
@@ -1471,7 +1164,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 					(unsigned long long)LoadedSave->CampaignStartUniverseSeconds,
 					LoadedSave->bInitialized ? 1 : 0);
 
-				Timer->SetCampaignSave(LoadedSave);  // explicitly LoadedSave
+				Timer->SetCampaignSave(LoadedSave);
 			}
 
 			return CampaignSave;
@@ -1492,7 +1185,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 	NewSave->CampaignRowName = RowName;
 	NewSave->CampaignDisplayName = DisplayName;
 
-	// Anchor campaign clock to CURRENT universe time (from subsystem)
+	// Anchor campaign clock to current universe time
 	const uint64 NowUniverse = Timer ? Timer->GetUniverseTimeSeconds() : 0ULL;
 	NewSave->InitializeCampaignClock(NowUniverse);
 
@@ -1504,6 +1197,9 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 
 	// Assign + inject
 	CampaignSave = NewSave;
+
+	// Load campaign UI bundle for this campaign
+	LoadCampaignUIBundle(CampaignFolder);
 
 	if (Timer)
 	{
@@ -1729,4 +1425,71 @@ void USSWGameInstance::HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow)
 
 	// Campaign autosave (only if you actually have mutable campaign state)
 	SaveCampaign();
+}
+
+void USSWGameInstance::LoadOrCreateUniverse()
+{
+	const FString Slot = GetUniverseSlotName();
+	constexpr int32 UserIndex = 0;
+
+	UUniverseSaveGame* LoadedSave = nullptr;
+
+	if (UGameplayStatics::DoesSaveGameExist(Slot, UserIndex))
+	{
+		if (USaveGame* Raw = UGameplayStatics::LoadGameFromSlot(Slot, UserIndex))
+		{
+			LoadedSave = Cast<UUniverseSaveGame>(Raw);
+		}
+	}
+
+	CachedUniverseSave = LoadedSave;
+
+	if (!CachedUniverseSave)
+	{
+		CachedUniverseSave = Cast<UUniverseSaveGame>(
+			UGameplayStatics::CreateSaveGameObject(UUniverseSaveGame::StaticClass())
+		);
+
+		if (!CachedUniverseSave)
+		{
+			UE_LOG(LogTemp, Error, TEXT("LoadOrCreateUniverse: Failed to create UUniverseSaveGame"));
+			return;
+		}
+
+		CachedUniverseSave->UniverseId = FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphensLower);
+		CachedUniverseSave->UniverseSeed = FPlatformTime::Cycles64();
+
+		const FDateTime BaseDate(2228, 1, 1);
+		CachedUniverseSave->UniverseBaseUnixSeconds = BaseDate.ToUnixTimestamp();
+		CachedUniverseSave->UniverseTimeSeconds = 0;
+
+		UGameplayStatics::SaveGameToSlot(CachedUniverseSave, Slot, UserIndex);
+	}
+	else if (CachedUniverseSave->UniverseBaseUnixSeconds <= 0)
+	{
+		const FDateTime BaseDate(2228, 1, 1);
+		CachedUniverseSave->UniverseBaseUnixSeconds = BaseDate.ToUnixTimestamp();
+		UGameplayStatics::SaveGameToSlot(CachedUniverseSave, Slot, UserIndex);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Universe loaded: Id=%s Seed=%llu Base=%lld Time=%llu"),
+		*CachedUniverseSave->UniverseId,
+		(unsigned long long)CachedUniverseSave->UniverseSeed,
+		(long long)CachedUniverseSave->UniverseBaseUnixSeconds,
+		(unsigned long long)CachedUniverseSave->UniverseTimeSeconds);
+
+	UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>();
+	if (!Timer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("LoadOrCreateUniverse: TimerSubsystem is NULL"));
+		return;
+	}
+
+	UniverseId = CachedUniverseSave->UniverseId;
+	UniverseSeed = CachedUniverseSave->UniverseSeed;
+
+	Timer->UniverseBaseUnixSeconds = CachedUniverseSave->UniverseBaseUnixSeconds;
+	Timer->UniverseTimeSeconds = CachedUniverseSave->UniverseTimeSeconds;
+
+	SetUniverseSaveContext(Slot, UserIndex, CachedUniverseSave);
 }

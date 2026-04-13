@@ -5,7 +5,6 @@
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "MenuScreen.generated.h"
 
-
 // ------------------------------------------------------------
 // Forward declarations (dialogs)
 // ------------------------------------------------------------
@@ -20,8 +19,11 @@ class UAwardShowDlg;
 
 class UMissionSelectDlg;
 class UCampaignSelectDlg;
+class UCampaignSceneDlg;
+
 class UCmdMissionsDlg;
 class UCmdDlg;
+class UCmpnScreen;
 class UMissionBriefingDlg;
 
 class UMissionEditorDlg;
@@ -30,6 +32,7 @@ class UMissionEventDlg;
 class UMissionEditorNavDlg;
 
 class ULoadDlg;
+class UCmpLoadDlg;
 class UTacRefDlg;
 
 class UOptionsScreen;
@@ -42,7 +45,6 @@ class STARSHATTERWARS_API UMenuScreen : public UBaseScreen
     GENERATED_BODY()
 
 public:
-    
     void Initialize(UGameInstance* InGI);
     UMenuScreen(const FObjectInitializer& ObjectInitializer);
 
@@ -67,14 +69,21 @@ public:
     void TearDown();
 
     // ------------------------------------------------------------
-    // Dialog routing API (called by dialogs)
+    // Dialog routing API
     // ------------------------------------------------------------
 
     void ShowMenuDlg();
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg();
     void ShowMissionEditorDlg();
+
+    // Legacy alias route:
     void ShowOperationsDlg();
+
+    // New campaign hub:
+    void ShowCmpnScreen();
+    void HideCmpnScreen();
+
     void ShowMissionDlg();
 
     void ShowMsnElemDlg();
@@ -99,7 +108,9 @@ public:
     void ShowLoadDlg();
     void HideLoadDlg();
 
-    // Options hub
+    void ShowCmpLoadDlg();
+    void HideCmpLoadDlg();
+
     void ShowOptionsScreen();
     void HideOptionsScreen();
     void ReturnFromOptions();
@@ -114,18 +125,12 @@ public:
 
     UMenuDlg* GetMenuDlg() const { return MenuDlg; }
     ULoadDlg* GetLoadDlg() const { return LoadDlg; }
-
-    // ------------------------------------------------------------
-    // Close / back navigation
-    // ------------------------------------------------------------
+    UCmpLoadDlg* GetCmpLoadDlg() const { return CmpLoadDlg; }
+    UCmpnScreen* GetCmpnScreen() const { return CmpnScreen; }
 
     bool CloseTopmost();
 
 protected:
-    // ------------------------------------------------------------
-    // Internal helpers
-    // ------------------------------------------------------------
-
     template<typename TDialog>
     TDialog* EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage);
 
@@ -135,7 +140,7 @@ protected:
 
 protected:
     // ------------------------------------------------------------
-    // Class references (set in MenuScreen BP)
+    // Class references
     // ------------------------------------------------------------
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
@@ -172,6 +177,9 @@ protected:
     TSubclassOf<UCmdDlg> CmdDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UCmpnScreen> CmpnScreenClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UMissionEditorDlg> MsnEditDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
@@ -187,6 +195,9 @@ protected:
     TSubclassOf<ULoadDlg> LoadDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UCmpLoadDlg> CmpLoadDlgClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UTacRefDlg> TacRefDlgClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
@@ -197,6 +208,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UCampaignSelectDlg> MissionSelectScreenClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
+    TSubclassOf<UCampaignSceneDlg> CampaignSceneScreenClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "Menu|Classes")
     TSubclassOf<UCmdDlg> OperationsScreenClass;
@@ -216,7 +230,6 @@ protected:
             return nullptr;
         }
 
-        // Typed cast (safe runtime check):
         TSubclassOf<TWidget> Typed = Raw.Get();
         if (!Typed)
         {
@@ -232,7 +245,7 @@ protected:
 
 protected:
     // ------------------------------------------------------------
-    // Dialog instances (GC-safe)
+    // Dialog instances
     // ------------------------------------------------------------
 
     UPROPERTY()
@@ -266,6 +279,9 @@ protected:
     TObjectPtr<UCmdDlg> CmdDlg;
 
     UPROPERTY()
+    TObjectPtr<UCmpnScreen> CmpnScreen;
+
+    UPROPERTY()
     TObjectPtr<UCampaignSelectDlg> CmpSelectDlg;
 
     UPROPERTY()
@@ -284,27 +300,23 @@ protected:
     TObjectPtr<ULoadDlg> LoadDlg;
 
     UPROPERTY()
+    TObjectPtr<UCmpLoadDlg> CmpLoadDlg;
+
+    UPROPERTY()
     TObjectPtr<UTacRefDlg> TacRefDlg;
 
     UPROPERTY()
     TObjectPtr<UOptionsScreen> OptionsScreen;
 
-
-
 protected:
-    // ------------------------------------------------------------
-    // State
-    // ------------------------------------------------------------
-
     UPROPERTY()
     TObjectPtr<UBaseScreen> CurrentDialog;
 
     int32 ZCounter = 0;
     bool  bIsShown = false;
 
-    //TSubclassOf<UUserWidget> MenuScreenWidgetClass;
-    //TSubclassOf<UUserWidget> FirstTimeDlgWidgetClass;
-    //TSubclassOf<UUserWidget> QuitDlgWidgetClass;
+    double TimeTilChange = 0.0;
+    bool bExitLatch = false;
+    bool bShowMissionsRequested = false;
+    bool bRequestVideoChange = false;
 };
-
-

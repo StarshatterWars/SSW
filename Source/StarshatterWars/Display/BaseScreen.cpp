@@ -1371,6 +1371,15 @@ void UBaseScreen::SetDialogInputEnabled(bool bEnable)
 {
     bDialogInputEnabled = bEnable;
 
+
+    if (IsTemplate() || HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[%s] SetDialogInputEnabled(%d)"),
+        *GetName(), bEnable ? 1 : 0);
+
     // IMPORTANT:
     // Never SetIsEnabled(false) here. That disables the entire widget tree,
     // makes everything look grey, and overrides per-button SetIsEnabled(true).
@@ -1381,6 +1390,7 @@ void UBaseScreen::SetDialogInputEnabled(bool bEnable)
 
     // Focus should track interactivity
     SetIsFocusable(bEnable);
+
 }
 
 void UBaseScreen::SetOptionsManager_Implementation(UOptionsScreen* InManager)

@@ -233,7 +233,7 @@ group: {
     regnum: "308",
     },
 
-  unit: {
+  unit: { 
     name:   "Baionne",
     type:   "Frigate",
     design: "Baikal",

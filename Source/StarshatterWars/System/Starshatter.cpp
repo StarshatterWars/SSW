@@ -262,7 +262,7 @@ Starshatter::~Starshatter()
 void
 Starshatter::Exit()
 {
-	MusicManager::SetMode(MusicManager::NONE);
+	MusicManager::SetMode(MusicMode::NONE);
 	SetGameMode(EGameMode::EXIT);
 }
 
@@ -860,8 +860,8 @@ Starshatter::GameState()
 		}
 
 		if (MusicManager::GetInstance() &&
-			MusicManager::GetInstance()->GetMode() != MusicManager::CREDITS)
-			MusicManager::SetMode(MusicManager::MENU);
+			MusicManager::GetInstance()->GetMode() != MusicMode::CREDITS)
+			MusicManager::SetMode(MusicMode::MENU);
 
 		DoMenuScreenFrame();
 	}
@@ -884,9 +884,9 @@ Starshatter::GameState()
 			loadscreen->Show();
 
 		if (game_mode == EGameMode::CLOD)
-			MusicManager::SetMode(MusicManager::MENU);
+			MusicManager::SetMode(MusicMode::MENU);
 		else
-			MusicManager::SetMode(MusicManager::BRIEFING);
+			MusicManager::SetMode(MusicMode::BRIEFING);
 
 		DoLoadScreenFrame();
 	}
@@ -927,7 +927,7 @@ Starshatter::GameState()
 				planscreen->ShowMsnDlg();
 		}
 
-		MusicManager::SetMode(MusicManager::BRIEFING);
+		MusicManager::SetMode(MusicMode::BRIEFING);
 
 		DoPlanScreenFrame();
 	}
@@ -1038,8 +1038,6 @@ Starshatter::DoMenuScreenFrame()
 		show_missions = false;
 	}
 
-	menuscreen->ExecFrame(0);
-
 	if (req_change_video) {
 		ChangeVideo();
 		SetupMenuScreen();
@@ -1076,7 +1074,10 @@ Starshatter::DoPlanScreenFrame()
 	}
 
 	planscreen->ExecFrame(0);
-	show_missions = true;
+	if (cmpnscreen)
+	{
+		cmpnscreen->SetShowMissionsRequested(true);
+	}
 }
 
 // +--------------------------------------------------------------------+
@@ -1084,79 +1085,7 @@ Starshatter::DoPlanScreenFrame()
 void
 Starshatter::DoCmpnScreenFrame()
 {
-	Mouse::SetCursor(Mouse::ARROW);
 
-	if (time_til_change > 0)
-		time_til_change -= Game::GUITime();
-
-	exit_latch = KeyDown(KEY_EXIT) ? true : false;
-
-	if (InCutscene() && player_ship) {
-		// warp effect:
-		if (player_ship->WarpFactor() > 1) {
-			if (player_ship->WarpFactor() > field_of_view)
-				cmpnscreen->SetFieldOfView(player_ship->WarpFactor());
-			else
-				cmpnscreen->SetFieldOfView(field_of_view);
-		}
-
-		else {
-			if (cmpnscreen->GetFieldOfView() != field_of_view)
-				cmpnscreen->SetFieldOfView(field_of_view);
-		}
-	}
-
-	if (InCutscene() && exit_latch) {
-		time_til_change = 1;
-		EndCutscene();
-		EndMission();
-		cmpnscreen->SetFieldOfView(field_of_view);
-	}
-
-	else if (time_til_change <= 0 && exit_latch) {
-		time_til_change = 1;
-
-		if (!cmpnscreen || !cmpnscreen->CloseTopmost()) {
-			SetGameMode(EGameMode::MENU);
-		}
-	}
-
-	// time control for campaign mode:
-	else if (game_mode == EGameMode::CMPN) {
-		if (time_til_change <= 0) {
-			if (KeyDown(KEY_PAUSE)) {
-				time_til_change = 1;
-				Pause(!paused);
-			}
-
-			else if (KeyDown(KEY_TIME_COMPRESS)) {
-				time_til_change = 1;
-
-				switch (TimeCompression()) {
-				case 1:  SetTimeCompression(2);  break;
-				case 2:  SetTimeCompression(4);  break;
-				case 4:  SetTimeCompression(8);  break;
-				}
-			}
-
-			else if (KeyDown(KEY_TIME_EXPAND)) {
-				time_til_change = 1;
-
-				switch (TimeCompression()) {
-				case  8: SetTimeCompression(4); break;
-				case  4: SetTimeCompression(2); break;
-				default: SetTimeCompression(1); break;
-				}
-			}
-		}
-	}
-
-	if (show_missions && !InCutscene()) {
-		cmpnscreen->ShowCmdMissionsDlg();
-		show_missions = false;
-	}
-
-	cmpnscreen->ExecFrame(0);
 }
 
 // +--------------------------------------------------------------------+
@@ -2539,7 +2468,7 @@ Starshatter::InvalidateTextureCache()
 void
 Starshatter::ExecCutscene(const char* msn_file, const char* path)
 {
-	if (InCutscene() || !msn_file || !*msn_file)
+	/*(if (InCutscene() || !msn_file || !*msn_file)
 		return;
 
 	if (!world)
@@ -2588,7 +2517,7 @@ Starshatter::ExecCutscene(const char* msn_file, const char* path)
 		delete cutscene_mission;
 		cutscene_mission = 0;
 		cutscene_basetime = 0;
-	}
+	}*/
 }
 
 void

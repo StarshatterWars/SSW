@@ -21,6 +21,7 @@
 #include "Types.h"
 #include "List.h"
 #include "Text.h"
+#include "GameStructs.h"
 
 // +-------------------------------------------------------------------+
 
@@ -33,7 +34,7 @@ class MusicTrack
 public:
     enum STATE { NONE, FADE_IN, PLAY, FADE_OUT, STOP };
 
-    MusicTrack(const Text& name, int mode = 0, int index = 0);
+    MusicTrack(const Text& name, MusicMode mode = MusicMode::NONE, int index = 0);
     virtual ~MusicTrack();
 
     // Operations:
@@ -48,7 +49,7 @@ public:
     const Text& Name()      const { return name; }
     USound* GetSound()  const { return sound; }
     int               GetState()  const { return state; }
-    int               GetMode()   const { return mode; }
+    MusicMode         GetMode()   const { return mode; }
     int               GetIndex()  const { return index; }
 
     int               IsReady()   const;
@@ -70,7 +71,7 @@ protected:
     Text              name;
     USound* sound;
     int               state;
-    int               mode;
+    MusicMode         mode;
     int               index;
     double            fade;
     double            fade_time;

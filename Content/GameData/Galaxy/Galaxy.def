@@ -1551,6 +1551,17 @@ system:
 			   rotation: 18.4,
 			   mass:    5.98e24,
 			   orbit:   5.74e8,
+			   region: {
+				   name:    Kala,
+				   radius:  480e3,
+				   grid:    20e3,
+				   orbit:   11e6,
+				   inclination: 0.2,
+				   link:    Navara,  // Janus
+				   link:    Lornas,  // Renser
+				   link:    Aram,    // Ostara
+				   link:    Volova,  // Kolchev
+				},			  
 			},
 		},
 	},

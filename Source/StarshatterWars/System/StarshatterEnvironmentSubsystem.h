@@ -180,6 +180,8 @@ public:
     // -----------------------------------------------------------------
     void CreateEnvironmentTables();
 
+    void ResolveDataTables();
+
     // -----------------------------------------------------------------
     // Lifetime control
     // -----------------------------------------------------------------
@@ -192,7 +194,6 @@ public:
     // DataTable accessors
     // -----------------------------------------------------------------
     UDataTable* GetGalaxyTable() const { return GalaxyDataTable; }
-    UDataTable* GetStarSystemsTable() const { return StarSystemDataTable; }
     UDataTable* GetStarsTable() const { return StarsDataTable; }
     UDataTable* GetPlanetsTable() const { return PlanetsDataTable; }
     UDataTable* GetMoonsTable() const { return MoonsDataTable; }
@@ -243,7 +244,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Starshatter|Environment|DataTables")
     TObjectPtr<UDataTable> RegionsDataTable = nullptr;
 
-    UDataTable* StarSystemDataTable = nullptr;
     UDataTable* StarsDataTable = nullptr;
     UDataTable* PlanetsDataTable = nullptr;
     UDataTable* MoonsDataTable = nullptr;
@@ -296,7 +296,7 @@ private:
     void HydrateAllFromTables();
 
     void ReadGalaxyDataTable();
-    void ReadStarSystemsTable();
+    void BuildStarSystemArrayFromGalaxy();
     void ReadStarsTable();
     void ReadPlanetsTable();
     void ReadMoonsTable();

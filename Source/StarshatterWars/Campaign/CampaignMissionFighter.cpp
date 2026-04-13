@@ -15,14 +15,6 @@
     CampaignMissionFighter generates missions and mission
     info for the player's FIGHTER SQUADRON as part of a
     dynamic campaign.
-
-    UE PORT NOTES
-    =============
-    - Legacy logging replaced with UE_LOG.
-    - MemDebug / placement-new removed.
-    - Legacy Text retained for compatibility.
-    - Current implementation remains a compatibility shell;
-      full original generation logic can be merged back in later.
 */
 
 #include "CampaignMissionFighter.h"
@@ -149,6 +141,7 @@ CampaignMissionFighter::CampaignMissionFighter(Campaign* c)
     case (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
     case (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
     case (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+    case (int)ECOMBATGROUP_TYPE::LCA_SQUADRON:
         squadron = player_group;
         break;
 
@@ -210,12 +203,14 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
         case (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
         case (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
         case (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+        case (int)ECOMBATGROUP_TYPE::LCA_SQUADRON:
             squadron = request->GetPrimaryGroup();
             break;
         }
     }
 
     ownside = squadron->GetIFF();
+    enemy = -1;
 
     for (int i = 0; i < campaign->GetCombatants().size(); i++)
     {
@@ -285,7 +280,6 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
 
     if (request && request->Script().Len())
     {
-        // Still legacy/script-backed unless you convert this branch too
         const FString Script = request->Script();
         const FString Path = campaign->Path();
 
@@ -423,13 +417,13 @@ bool CampaignMissionFighter::IsGroundObjective(CombatGroup* obj)
 
 void CampaignMissionFighter::SelectType()
 {
-    int type = (int) EMISSIONTYPE::PATROL;
+    int type = (int)EMISSIONTYPE::PATROL;
 
     if (request)
     {
         type = request->Type();
 
-        if (type == (int) EMISSIONTYPE::STRIKE)
+        if (type == (int)EMISSIONTYPE::STRIKE)
         {
             strike_group = request->GetPrimaryGroup();
 
@@ -464,12 +458,7 @@ void CampaignMissionFighter::SelectRegion()
     if (zone)
     {
         mission->SetStarSystem(campaign->GetSystem(zone->GetSystem()));
-        Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
-
-        if (Existing.IsEmpty())
-        {
-            mission->SetRegion(*zone->GetRegions().at(0));
-        }
+        mission->SetRegion(*zone->GetRegions().at(0));
 
         orb_region = mission->GetRegion();
 
@@ -512,12 +501,7 @@ void CampaignMissionFighter::SelectRegion()
 
             if (airbase)
             {
-                Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
-
-                if (Existing.IsEmpty())
-                {
-                    mission->SetRegion(air_region);
-                }
+                mission->SetRegion(air_region);
             }
         }
     }
@@ -529,37 +513,46 @@ void CampaignMissionFighter::SelectRegion()
 
         StarSystem* s = campaign->GetSystemList()[0];
         mission->SetStarSystem(s);
-        Existing = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
-
-        if (Existing.IsEmpty())
-        {
-            mission->SetRegion(s->Regions()[0]->GetName());
-        }
+        mission->SetRegion(s->GetRegions()[0]->GetName());
     }
 
     if (!airborne)
     {
         switch (mission->GetType())
         {
-        case (int)EMISSIONTYPE::AIR_PATROL: 
-            mission->SetType((int) EMISSIONTYPE::PATROL); 
+        case (int)EMISSIONTYPE::AIR_PATROL:
+            mission->SetType((int)EMISSIONTYPE::PATROL);
             break;
-        case (int)EMISSIONTYPE::AIR_SWEEP: 
-            mission->SetType((int)EMISSIONTYPE::SWEEP);  
+        case (int)EMISSIONTYPE::AIR_SWEEP:
+            mission->SetType((int)EMISSIONTYPE::SWEEP);
             break;
         case (int)EMISSIONTYPE::AIR_INTERCEPT:
-            mission->SetType((int)EMISSIONTYPE::INTERCEPT); 
+            mission->SetType((int)EMISSIONTYPE::INTERCEPT);
             break;
-        default: break;
+        default:
+            break;
         }
     }
 }
 
 // +--------------------------------------------------------------------+
 
-void
-CampaignMissionFighter::GenerateStandardElements()
+void CampaignMissionFighter::GenerateStandardElements()
 {
+    if (!campaign || !mission)
+    {
+        return;
+    }
+
+    ProcessedGroups.Empty();
+    ProcessedGroupKeys.Empty();
+
+    const FString MissionRegion = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] GenerateStandardElements BEGIN: MissionRegion='%s'"),
+        *MissionRegion);
+
     ListIter<CombatZone> z_iter = campaign->GetZones();
     while (++z_iter)
     {
@@ -587,53 +580,110 @@ CampaignMissionFighter::GenerateStandardElements()
                     continue;
                 }
 
-                switch (g->GetType())
-                {
-                case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-                case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
-                case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-                case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-                    CreateSquadron(g);
-                    break;
-
-                case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
-                case ECOMBATGROUP_TYPE::BATTLE_GROUP:
-                case ECOMBATGROUP_TYPE::CARRIER_GROUP:
-                    CreateElements(g);
-                    break;
-
-                case ECOMBATGROUP_TYPE::MINEFIELD:
-                case ECOMBATGROUP_TYPE::BATTERY:
-                case ECOMBATGROUP_TYPE::MISSILE:
-                case ECOMBATGROUP_TYPE::STATION:
-                case ECOMBATGROUP_TYPE::STARBASE:
-                case ECOMBATGROUP_TYPE::SUPPORT:
-                case ECOMBATGROUP_TYPE::COURIER:
-                case ECOMBATGROUP_TYPE::MEDICAL:
-                case ECOMBATGROUP_TYPE::SUPPLY:
-                case ECOMBATGROUP_TYPE::REPAIR:
-                    CreateElements(g);
-                    break;
-
-                case ECOMBATGROUP_TYPE::CIVILIAN:
-                case ECOMBATGROUP_TYPE::WAR_PRODUCTION:
-                case ECOMBATGROUP_TYPE::FACTORY:
-                case ECOMBATGROUP_TYPE::REFINERY:
-                case ECOMBATGROUP_TYPE::RESOURCE:
-                case ECOMBATGROUP_TYPE::INFRASTRUCTURE:
-                case ECOMBATGROUP_TYPE::TRANSPORT:
-                case ECOMBATGROUP_TYPE::NETWORK:
-                case ECOMBATGROUP_TYPE::HABITAT:
-                case ECOMBATGROUP_TYPE::STORAGE:
-                case ECOMBATGROUP_TYPE::NON_COM:
-                    CreateElements(g);
-                    break;
-
-                default:
-                    break;
-                }
+                ProcessGroupRecursive(g, MissionRegion);
             }
         }
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[CMF] GenerateStandardElements END"));
+}
+
+void CampaignMissionFighter::ProcessGroupRecursive(CombatGroup* g, const FString& MissionRegion)
+{
+    if (!g)
+    {
+        return;
+    }
+
+    // ---- POINTER DEDUPE ----
+    if (ProcessedGroups.Contains(g))
+    {
+        return;
+    }
+    ProcessedGroups.Add(g);
+
+    // ---- ALWAYS RECURSE FIRST ----
+    ListIter<CombatGroup> sub = g->GetComponents();
+    while (++sub)
+    {
+        ProcessGroupRecursive(sub.value(), MissionRegion);
+    }
+
+    const FString GroupRegion = FString(ANSI_TO_TCHAR(g->GetRegion())).TrimStartAndEnd();
+
+    if (!MissionRegion.Equals(GroupRegion, ESearchCase::IgnoreCase))
+    {
+        return;
+    }
+
+    // ---- LOGICAL DEDUPE ----
+    const FString GroupKey = FString::Printf(
+        TEXT("%s|%d|%s|%d"),
+        ANSI_TO_TCHAR(g->GetName().data()),
+        (int32)g->GetType(),
+        *GroupRegion,
+        g->GetUnits().size());
+
+    if (ProcessedGroupKeys.Contains(GroupKey))
+    {
+        return;
+    }
+    ProcessedGroupKeys.Add(GroupKey);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] PROCESS Group: '%s' Type=%d Units=%d"),
+        ANSI_TO_TCHAR(g->GetName().data()),
+        (int32)g->GetType(),
+        g->GetUnits().size());
+
+    if (g->GetType() == ECOMBATGROUP_TYPE::NETWORK)
+    {
+        return;
+    }
+
+    switch (g->GetType())
+    {
+    case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+    case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+    case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+    case ECOMBATGROUP_TYPE::LCA_SQUADRON:
+        if (g->GetUnits().size() > 0 && g != squadron)
+        {
+            CreateSquadron(g);
+        }
+        break;
+
+    case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
+    case ECOMBATGROUP_TYPE::BATTLE_GROUP:
+    case ECOMBATGROUP_TYPE::CARRIER_GROUP:
+    case ECOMBATGROUP_TYPE::MINEFIELD:
+    case ECOMBATGROUP_TYPE::BATTERY:
+    case ECOMBATGROUP_TYPE::MISSILE:
+    case ECOMBATGROUP_TYPE::STATION:
+    case ECOMBATGROUP_TYPE::STARBASE:
+    case ECOMBATGROUP_TYPE::SUPPORT:
+    case ECOMBATGROUP_TYPE::COURIER:
+    case ECOMBATGROUP_TYPE::MEDICAL:
+    case ECOMBATGROUP_TYPE::SUPPLY:
+    case ECOMBATGROUP_TYPE::REPAIR:
+    case ECOMBATGROUP_TYPE::CIVILIAN:
+    case ECOMBATGROUP_TYPE::WAR_PRODUCTION:
+    case ECOMBATGROUP_TYPE::FACTORY:
+    case ECOMBATGROUP_TYPE::REFINERY:
+    case ECOMBATGROUP_TYPE::RESOURCE:
+    case ECOMBATGROUP_TYPE::INFRASTRUCTURE:
+    case ECOMBATGROUP_TYPE::TRANSPORT:
+    case ECOMBATGROUP_TYPE::HABITAT:
+    case ECOMBATGROUP_TYPE::STORAGE:
+    case ECOMBATGROUP_TYPE::NON_COM:
+        if (g->GetUnits().size() > 0)
+        {
+            CreateElements(g);
+        }
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -680,7 +730,6 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
         return;
     }
 
-    // Iterate all units in this group
     ListIter<CombatUnit> iter = g->GetUnits();
     while (++iter)
     {
@@ -696,30 +745,17 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
             continue;
         }
 
-        // Assign team
         elem->SetIFF(g->GetIFF());
 
-        // Assign region
         if (airborne && air_region.length() > 0)
         {
-            Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-            if (Existing.IsEmpty())
-            {
-                elem->SetRegion(air_region);
-            }
+            elem->SetRegion(air_region);
         }
         else
         {
-            Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-            if (Existing.IsEmpty())
-            {
-                elem->SetRegion(orb_region);
-            }
+            elem->SetRegion(orb_region);
         }
 
-        // Add to mission
         mission->AddElement(elem);
     }
 }
@@ -741,27 +777,25 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
         return;
     }
 
-    // Player squadron is handled specially:
     if (g == squadron)
     {
-        CreatePlayer(g);
         return;
     }
 
-    int role = (int) EMISSIONFIGHTER::FIGHTER;
+    int role = (int)EMISSIONFIGHTER::FIGHTER;
 
     switch ((ECOMBATGROUP_TYPE)g->GetType())
     {
     case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-        role = (int) EMISSIONFIGHTER::INTERCEPT;
+        role = (int)EMISSIONFIGHTER::INTERCEPT;
         break;
 
     case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-        role = (int) EMISSIONFIGHTER::ATTACK;
+        role = (int)EMISSIONFIGHTER::ATTACK;
         break;
 
     case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        role = (int) EMISSIONFIGHTER::LANDING;
+        role = (int)EMISSIONFIGHTER::LANDING;
         break;
 
     case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
@@ -770,7 +804,6 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
         break;
     }
 
-    // Use the squadron strength if available, otherwise fall back to a basic package size.
     int count = 4;
 
     if (g->GetUnits().size() > 0)
@@ -783,26 +816,17 @@ void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
     {
         return;
     }
+
     elem->SetIFF(g->GetIFF());
 
     if (airborne && air_region.length() > 0)
     {
-        Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-        if (Existing.IsEmpty())
-        {
-            elem->SetRegion(air_region);
-        }
+        elem->SetRegion(air_region);
         PlanetaryInsertion(elem);
     }
     else
     {
-        Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-        if (Existing.IsEmpty())
-        {
-            elem->SetRegion(orb_region);
-        }
+        elem->SetRegion(orb_region);
         OrbitalInsertion(elem);
     }
 
@@ -819,6 +843,12 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
     if (!g || !mission)
     {
         UE_LOG(LogTemp, Warning, TEXT("[CMF] CreatePlayer: early return (g or mission null)"));
+        return;
+    }
+
+    if (mission->GetPlayer())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CMF] CreatePlayer: already has player, skipping"));
         return;
     }
 
@@ -874,22 +904,12 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 
     if (airborne && air_region.length() > 0)
     {
-        const FString ExistingRegion = FString(ANSI_TO_TCHAR(player_elem->GetRegion())).TrimStartAndEnd();
-
-        if (ExistingRegion.IsEmpty())
-        {
-            player_elem->SetRegion(air_region);
-        }
+        player_elem->SetRegion(air_region);
         PlanetaryInsertion(player_elem);
     }
     else
     {
-        const FString ExistingRegion = FString(ANSI_TO_TCHAR(player_elem->GetRegion())).TrimStartAndEnd();
-
-        if (ExistingRegion.IsEmpty())
-        {
-            player_elem->SetRegion(orb_region);
-        }
+        player_elem->SetRegion(orb_region);
         OrbitalInsertion(player_elem);
     }
 
@@ -916,22 +936,12 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 
             if (airbase && air_region.length() > 0)
             {
-                const FString ExistingRegion = FString(ANSI_TO_TCHAR(carrier_elem->GetRegion())).TrimStartAndEnd();
-
-                if (ExistingRegion.IsEmpty())
-                {
-                    carrier_elem->SetRegion(air_region);
-                }
+                carrier_elem->SetRegion(air_region);
                 PlanetaryInsertion(carrier_elem);
             }
             else
             {
-                const FString ExistingRegion = FString(ANSI_TO_TCHAR(carrier_elem->GetRegion())).TrimStartAndEnd();
-
-                if (ExistingRegion.IsEmpty())
-                {
-                    carrier_elem->SetRegion(orb_region);
-                }
+                carrier_elem->SetRegion(orb_region);
                 OrbitalInsertion(carrier_elem);
             }
 
@@ -1004,13 +1014,7 @@ void CampaignMissionFighter::CreatePatrols()
             if (Elem)
             {
                 Elem->SetIntelLevel(Intel::KNOWN);
-                const FString ExistingRegion = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
-
-                if (ExistingRegion.IsEmpty())
-                {
-                    Elem->GetRegion();
-                }
-                Elem->SetRegion(Base->GetRegion());
+                Elem->SetRegion(mission->GetRegion());
                 Elem->SetLocation(BaseLoc);
                 Patrols.append(Elem);
             }
@@ -1028,9 +1032,9 @@ void CampaignMissionFighter::CreateWards()
 {
     switch (mission ? mission->GetType() : mission_type)
     {
-    case (int) EMISSIONTYPE::ESCORT_FREIGHT: CreateWardFreight(); break;
-    case (int) EMISSIONTYPE::ESCORT_SHUTTLE: CreateWardShuttle(); break;
-    case (int) EMISSIONTYPE::ESCORT_STRIKE:  CreateWardStrike();  break;
+    case (int)EMISSIONTYPE::ESCORT_FREIGHT: CreateWardFreight(); break;
+    case (int)EMISSIONTYPE::ESCORT_SHUTTLE: CreateWardShuttle(); break;
+    case (int)EMISSIONTYPE::ESCORT_STRIKE:  CreateWardStrike();  break;
     default: break;
     }
 }
@@ -1074,13 +1078,8 @@ void CampaignMissionFighter::CreateWardFreight()
 
     elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
     elem->SetIntelLevel(Intel::KNOWN);
+    elem->SetRegion(mission->GetRegion());
 
-    const FString ExistingRegion = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-    if (ExistingRegion.IsEmpty())
-    {
-        elem->SetRegion(squadron->GetRegion());
-    }
     if (carrier)
     {
         elem->SetLocation(
@@ -1166,13 +1165,7 @@ void CampaignMissionFighter::CreateWardShuttle()
     }
 
     Elem->SetIntelLevel(Intel::KNOWN);
-
-    Existing = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
-
-    if (Existing.IsEmpty())
-    {
-        Elem->SetRegion(orb_region);
-    }
+    Elem->SetRegion(mission->GetRegion());
     Elem->Loadouts().destroy();
 
     if (Carrier)
@@ -1186,7 +1179,6 @@ void CampaignMissionFighter::CreateWardShuttle()
     ward = Elem;
     mission->AddElement(Elem);
 
-    // If there is terrain nearby, have the shuttle descend toward it:
     if (air_region.length() > 0)
     {
         StarSystem* System = mission->GetStarSystem();
@@ -1218,8 +1210,6 @@ void CampaignMissionFighter::CreateWardShuttle()
             Elem->AddNavPoint(N);
         }
     }
-
-    // Otherwise escort the shuttle toward a carrier landing:
     else if (Carrier)
     {
         const FVector CarrierLoc = Carrier->GetLocation();
@@ -1267,20 +1257,8 @@ void CampaignMissionFighter::CreateWardStrike()
         return;
     }
 
-    // Original logic toggled alert state if the strike package shares the same parent.
-    // Keep the structure, but leave this line out unless your current player object
-    // still exposes FlyingStart().
-    // if (strike->GetParent() == squadron->GetParent()) { ... }
-
     elem->SetIntelLevel(Intel::KNOWN);
-
-
-    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-    if (Existing.IsEmpty())
-    {
-        elem->SetRegion(squadron->GetRegion());
-    }
+    elem->SetRegion(mission->GetRegion());
 
     if (strike_target)
     {
@@ -1349,7 +1327,6 @@ void CampaignMissionFighter::CreateWardStrike()
         }
     }
 
-    // IP:
     if (strike_target)
     {
         delta = FVector(
@@ -1392,15 +1369,15 @@ void CampaignMissionFighter::CreateEscorts()
 {
     bool escort_needed = false;
 
-    if (mission->GetType() == (int) EMISSIONTYPE::STRIKE || mission->GetType() == (int) EMISSIONTYPE::ASSAULT)
+    if (mission->GetType() == (int)EMISSIONTYPE::STRIKE || mission->GetType() == (int)EMISSIONTYPE::ASSAULT)
     {
         if (request && request->GetObjective())
         {
-            int tgt_type = (int) request->GetObjective()->GetType();
+            int tgt_type = (int)request->GetObjective()->GetType();
 
-            if (tgt_type == (int) ECOMBATGROUP_TYPE::CARRIER_GROUP ||
-                tgt_type == (int) ECOMBATGROUP_TYPE::STATION ||
-                tgt_type == (int) ECOMBATGROUP_TYPE::STARBASE)
+            if (tgt_type == (int)ECOMBATGROUP_TYPE::CARRIER_GROUP ||
+                tgt_type == (int)ECOMBATGROUP_TYPE::STATION ||
+                tgt_type == (int)ECOMBATGROUP_TYPE::STARBASE)
             {
                 escort_needed = true;
             }
@@ -1409,11 +1386,11 @@ void CampaignMissionFighter::CreateEscorts()
 
     if (player_elem && escort_needed)
     {
-        CombatGroup* s = FindSquadron(ownside, (int) ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
+        CombatGroup* s = FindSquadron(ownside, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
 
         if (s && s->IsAssignable())
         {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int) EMISSIONTYPE::ESCORT_STRIKE);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ESCORT_STRIKE);
 
             if (elem)
             {
@@ -1453,38 +1430,38 @@ void CampaignMissionFighter::CreateTargets()
 {
     switch (mission ? mission->GetType() : mission_type)
     {
-    case (int) EMISSIONTYPE::PATROL:
-    case (int) EMISSIONTYPE::AIR_PATROL:
+    case (int)EMISSIONTYPE::PATROL:
+    case (int)EMISSIONTYPE::AIR_PATROL:
         CreateTargetsPatrol();
         break;
 
-    case (int) EMISSIONTYPE::SWEEP:
-    case (int) EMISSIONTYPE::AIR_SWEEP:
+    case (int)EMISSIONTYPE::SWEEP:
+    case (int)EMISSIONTYPE::AIR_SWEEP:
         CreateTargetsSweep();
         break;
 
-    case (int) EMISSIONTYPE::INTERCEPT:
-    case (int) EMISSIONTYPE::AIR_INTERCEPT:
+    case (int)EMISSIONTYPE::INTERCEPT:
+    case (int)EMISSIONTYPE::AIR_INTERCEPT:
         CreateTargetsIntercept();
         break;
 
-    case (int) EMISSIONTYPE::ESCORT_FREIGHT:
+    case (int)EMISSIONTYPE::ESCORT_FREIGHT:
         CreateTargetsFreightEscort();
         break;
 
-    case (int) EMISSIONTYPE::ESCORT_SHUTTLE:
+    case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
         CreateTargetsShuttleEscort();
         break;
 
-    case (int) EMISSIONTYPE::ESCORT_STRIKE:
+    case (int)EMISSIONTYPE::ESCORT_STRIKE:
         CreateTargetsStrikeEscort();
         break;
 
-    case (int) EMISSIONTYPE::STRIKE:
+    case (int)EMISSIONTYPE::STRIKE:
         CreateTargetsStrike();
         break;
 
-    case (int) EMISSIONTYPE::ASSAULT:
+    case (int)EMISSIONTYPE::ASSAULT:
         CreateTargetsAssault();
         break;
 
@@ -1611,7 +1588,6 @@ void CampaignMissionFighter::CreateTargetsSweep()
     }
 
     double traverse = PI;
-
     double a = FMath::FRandRange(-PI / 2.0, PI / 2.0);
 
     FVector base_loc(
@@ -1640,7 +1616,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
 
         sweep_loc =
             FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) +
-            FVector(0.0f, 0.0f, 10000.0f); // keep it airborne!
+            FVector(0.0f, 0.0f, 10000.0f);
     }
 
     sweep_loc += FVector(
@@ -1744,12 +1720,12 @@ void CampaignMissionFighter::CreateTargetsSweep()
 
         if (obj)
         {
-            const FString Desc =
+            const FString TargetDesc =
                 FString(TEXT("the ")) +
                 FString(ANSI_TO_TCHAR(carrier_elem->GetName().data())) +
                 FString(TEXT(" battle group"));
 
-            obj->SetTargetDesc(TCHAR_TO_ANSI(*Desc));
+            obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
             player_elem->AddObjective(obj);
         }
     }
@@ -1763,7 +1739,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
     }
 
     CombatUnit* carrier = FindCarrier(squadron);
-    CombatGroup* s = FindSquadron(enemy, (int) ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+    CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
     CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
 
     if (!s || !s2)
@@ -1783,6 +1759,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             elem->SetIntelLevel(Intel::KNOWN);
             elem->Loadouts().destroy();
             elem->Loadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
+            elem->SetRegion(mission->GetRegion());
 
             if (carrier)
             {
@@ -1856,6 +1833,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             if (e2)
             {
                 e2->SetIntelLevel(Intel::KNOWN);
+                e2->SetRegion(mission->GetRegion());
 
                 FVector randPt(
                     GetRandomPoint().X,
@@ -1947,7 +1925,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     }
 
     CombatUnit* carrier = FindCarrier(squadron);
-    CombatGroup* s = FindSquadron(enemy, (int) ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+    CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
     CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
 
     if (!s)
@@ -1964,6 +1942,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     if (elem)
     {
         elem->SetIntelLevel(Intel::KNOWN);
+        elem->SetRegion(mission->GetRegion());
 
         const FVector RandPt = GetRandomPoint();
         elem->SetLocation(ward->GetLocation() + RandPt * 5.0f);
@@ -1984,9 +1963,10 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         if (e2)
         {
             e2->SetIntelLevel(Intel::KNOWN);
+            e2->SetRegion(mission->GetRegion());
 
             const FVector EscortOffset = GetRandomPoint();
-            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.25f);
+            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
             Instruction* obj2 = new Instruction(
                 INSTRUCTION_ACTION::ESCORT,
@@ -2015,8 +1995,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     }
 }
 
-void
-CampaignMissionFighter::CreateTargetsShuttleEscort()
+void CampaignMissionFighter::CreateTargetsShuttleEscort()
 {
     CreateTargetsFreightEscort();
 }
@@ -2093,14 +2072,12 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     player_elem->AddObjective(Obj);
                 }
 
-                // create flight plan:
                 RLoc Rloc;
                 FVector Loc(0.0f, 0.0f, 15000.0f);
                 Instruction* N = nullptr;
 
                 PlanetaryInsertion(player_elem);
 
-                // target approach and strike:
                 FVector Delta = prime_target->GetLocation() - Loc;
 
                 if (Delta.Size() >= 100000.0f)
@@ -2150,7 +2127,6 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     player_elem->AddNavPoint(N);
                 }
 
-                // exeunt:
                 Rloc.SetReferenceLoc(0);
                 Rloc.SetBaseLocation(FVector(0.0f, 0.0f, 30000.0f));
                 Rloc.SetDistance(50000.0f);
@@ -2218,15 +2194,17 @@ void CampaignMissionFighter::CreateTargetsAssault()
     {
         if (Assigned->GetType() > ECOMBATGROUP_TYPE::WING && Assigned->GetType() < ECOMBATGROUP_TYPE::FLEET)
         {
-            mission->AddElement(CreateFighterPackage(Assigned, 2, (int)EMISSIONTYPE::CARGO));
+            MissionElement* TargetElem = CreateFighterPackage(Assigned, 2, (int)EMISSIONTYPE::CARGO);
+            if (TargetElem)
+            {
+                TargetElem->SetRegion(mission->GetRegion());
+                mission->AddElement(TargetElem);
+            }
         }
         else
         {
             CreateElements(Assigned);
         }
-
-        // select the prime target element - choose the lowest ranking
-        // unit of a DESRON, CBG, or CVBG:
 
         ListIter<MissionElement> EIter = mission->GetElements();
         while (++EIter)
@@ -2262,7 +2240,6 @@ void CampaignMissionFighter::CreateTargetsAssault()
                 player_elem->AddObjective(Obj);
             }
 
-            // create flight plan:
             RLoc Rloc;
             FVector Dummy(0.0f, 0.0f, 0.0f);
             Instruction* Instr = nullptr;
@@ -2411,13 +2388,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             if (elem)
             {
                 elem->SetIntelLevel(Intel::KNOWN);
-
-                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                if (Existing.IsEmpty())
-                {
-                    elem->SetRegion(rgn);
-                }
+                elem->SetRegion(rgn);
 
                 const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 1.5f);
@@ -2439,12 +2410,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                    if (Existing.IsEmpty())
-                    {
-                        elem->SetRegion(rgn);
-                    }
+                    elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2460,13 +2426,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-
-                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
-
-                            if (Existing.IsEmpty())
-                            {
-                                e2->SetRegion(rgn);
-                            }
+                            e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2497,13 +2457,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-
-                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                    if (Existing.IsEmpty())
-                    {
-                        elem->SetRegion(rgn);
-                    }
+                    elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.3f);
@@ -2535,12 +2489,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                    if (Existing.IsEmpty())
-                    {
-                        elem->SetRegion(rgn);
-                    }
+                    elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2556,12 +2505,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
-
-                            if (Existing.IsEmpty())
-                            {
-                                e2->SetRegion(rgn);
-                            }
+                            e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2592,12 +2536,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 if (elem)
                 {
                     elem->SetIntelLevel(Intel::KNOWN);
-                    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                    if (Existing.IsEmpty())
-                    {
-                        elem->SetRegion(rgn);
-                    }
+                    elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
                     elem->SetLocation(base_loc + RandPt * 1.1f);
@@ -2613,12 +2552,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         if (e2)
                         {
                             e2->SetIntelLevel(Intel::KNOWN);
-                            Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
-
-                            if (Existing.IsEmpty())
-                            {
-                                e2->SetRegion(rgn);
-                            }
+                            e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
@@ -2650,12 +2584,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             if (elem)
             {
                 elem->SetIntelLevel(Intel::KNOWN);
-                Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-                if (Existing.IsEmpty())
-                {
-                    elem->SetRegion(rgn);
-                }
+                elem->SetRegion(rgn);
 
                 const FVector RandPt = GetRandomPoint();
                 elem->SetLocation(base_loc + RandPt * 2.0f);
@@ -2776,7 +2705,6 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         return nullptr;
     }
 
-    // make sure this unit is actually in the right star system:
     Galaxy* GalaxyInst = Galaxy::GetInstance();
     if (GalaxyInst)
     {
@@ -2787,7 +2715,6 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         }
     }
 
-    // make sure this unit isn't already in the mission:
     ListIter<MissionElement> EIter = mission->GetElements();
     while (++EIter)
     {
@@ -2799,7 +2726,6 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         }
     }
 
-    // Resolve Unreal ship design row first:
     const FShipDesign* ShipRow = nullptr;
 
     if (U->GetDesignName().length() > 0)
@@ -2840,22 +2766,16 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     }
 
     Elem->SetElementID(pkg_id++);
-
     Elem->SetShipDesign(ShipRow);
     Elem->SetCount(U->LiveCount());
     Elem->SetIFF(U->GetIFF());
     Elem->SetIntelLevel(G->GetIntelLevel());
-    Existing = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
-
-    if (Existing.IsEmpty())
-    {
-        Elem->SetRegion(U->GetRegion());
-    }
+    Elem->SetRegion(mission->GetRegion());
     Elem->SetHeading(U->GetHeading());
 
     const int32 UnitIndex = G->GetUnits().index(U);
     FVector BaseLoc = U->GetLocation();
-    bool bExact = U->IsStatic(); // exact unit-level placement
+    bool bExact = U->IsStatic();
 
     if (BaseLoc.Size() < 1.0f)
     {
@@ -2927,7 +2847,6 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     {
         Elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
 
-        // link farcaster to other terminus:
         const FString Name = FString(ANSI_TO_TCHAR(U->GetName().data()));
         int32 Dash = INDEX_NONE;
 
@@ -2941,7 +2860,6 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
 
         const FString Src = (Dash != INDEX_NONE) ? Name.Left(Dash) : Name;
         const FString Dst = (Dash != INDEX_NONE) ? Name.Mid(Dash + 1) : FString();
-
         const FString Link = Dst + TEXT("-") + Src;
 
         Instruction* Obj = new Instruction(
@@ -2984,7 +2902,7 @@ CombatUnit* CampaignMissionFighter::FindCarrier(CombatGroup* G)
 
 MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSquadron, int32 count, int32 role)
 {
-    if (!InSquadron)
+    if (!InSquadron || InSquadron->GetUnits().size() < 1)
     {
         return nullptr;
     }
@@ -3017,7 +2935,6 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
         return nullptr;
     }
 
-    // Resolve Unreal ship design row first:
     const FShipDesign* ShipRow = nullptr;
 
     if (fighter->GetDesignName().length() > 0)
@@ -3065,13 +2982,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     elem->SetCount(actual);
     elem->SetIFF(fighter->GetIFF());
     elem->SetIntelLevel(InSquadron->GetIntelLevel());
-    Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
-
-    if (Existing.IsEmpty())
-    {
-        elem->SetRegion(fighter->GetRegion());
-    }
-
+    elem->SetRegion(mission->GetRegion());
     elem->SetSquadron(InSquadron->GetName());
     elem->SetMissionRole(role);
 
@@ -3290,6 +3201,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
 
     return Info;
 }
+
 // +--------------------------------------------------------------------+
 
 void CampaignMissionFighter::Exit()
@@ -3317,4 +3229,6 @@ void CampaignMissionFighter::Exit()
     ownside = 0;
     enemy = -1;
     mission_type = 0;
+
+    ProcessedGroups.Empty();
 }

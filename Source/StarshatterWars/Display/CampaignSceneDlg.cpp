@@ -1,22 +1,14 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CampaignSceneDlg.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    CampaignSceneDlg (Unreal)
-    - Ported from legacy CmpSceneDlg (Starshatter 4.5).
-*/
-
 #include "CampaignSceneDlg.h"
 
+#include "CmpnScreen.h"
+#include "MissionUIStyle.h"
+
 #include "Blueprint/WidgetTree.h"
-#include "Components/PanelWidget.h"
-#include "Components/RichTextBlock.h"
+#include "Components/Border.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/TextBlock.h"
+#include "Engine/Font.h"
 #include "Kismet/GameplayStatics.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
@@ -28,176 +20,513 @@ void UCampaignSceneDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    RegisterControls();
+    BuildRuntimeWidgets();
 
-    // Dialog starts hidden by default in most flows; if you want auto-show, call Show() externally.
-    bCutsceneInitialized = false;
-}
+    SetVisibility(ESlateVisibility::Collapsed);
+    SetIsEnabled(false);
 
-void UCampaignSceneDlg::NativeDestruct()
-{
-    Super::NativeDestruct();
+    ResetSceneState();
 }
 
 void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame(InDeltaTime);
+
+    if (!bSceneRunning)
+    {
+        return;
+    }
+
+    const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+    AdvanceSceneFromTimer(NowSeconds);
 }
 
-void UCampaignSceneDlg::RegisterControls()
+UFont* UCampaignSceneDlg::GetRegularLimerickFont() const
 {
-    // BindWidgetOptional members are already assigned by UMG if names match.
-    // Nothing else to do here unless you want runtime widget discovery.
+    static UFont* CachedFont = nullptr;
+
+    if (!CachedFont)
+    {
+        CachedFont = LoadObject<UFont>(
+            nullptr,
+            TEXT("/Game/Font/limerick-7_Font.limerick-7_Font"));
+    }
+
+    return CachedFont;
+}
+
+UFont* UCampaignSceneDlg::GetBoldLimerickFont() const
+{
+    static UFont* CachedFont = nullptr;
+
+    if (!CachedFont)
+    {
+        CachedFont = LoadObject<UFont>(
+            nullptr,
+            TEXT("/Game/Font/Limerick-Serial_Bold_Font.Limerick-Serial_Bold_Font"));
+    }
+
+    return CachedFont;
+}
+
+FString UCampaignSceneDlg::FixEscapedText(const FString& InText)
+{
+    FString Out = InText;
+    Out.ReplaceInline(TEXT("\\r\\n"), TEXT("\n"));
+    Out.ReplaceInline(TEXT("\\n"), TEXT("\n"));
+    Out.ReplaceInline(TEXT("\\\""), TEXT("\""));
+    return Out.TrimStartAndEnd();
+}
+
+void UCampaignSceneDlg::BuildRuntimeWidgets()
+{
+    if (!WidgetTree)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: WidgetTree is null"));
+        return;
+    }
+
+    if (!RuntimeHost)
+    {
+        RuntimeHost = Cast<UBorder>(GetWidgetFromName(TEXT("RuntimeHost")));
+    }
+
+    if (!RuntimeHost)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: RuntimeHost not found"));
+        return;
+    }
+
+    RuntimeOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("RuntimeOverlay"));
+    if (!RuntimeOverlay)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create RuntimeOverlay"));
+        return;
+    }
+
+    RuntimeHost->SetContent(RuntimeOverlay);
+
+    FLinearColor SceneGold = MissionUIStyle::RowSelected;
+    SceneGold.A = 0.85f;
+
+    const float WrapWidth = 1800.0f;
+    const FSlateFontInfo HeaderFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo TitleFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo SubtitleFont = MissionUIStyle::GetLimerickFont(18);
+    const FSlateFontInfo CaptionFont = MissionUIStyle::GetLimerickFont(18);
+
+    HeaderText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("HeaderText"));
+    if (HeaderText)
+    {
+        HeaderText->SetText(FText::GetEmpty());
+        HeaderText->SetColorAndOpacity(FSlateColor(SceneGold));
+        HeaderText->SetAutoWrapText(true);
+        HeaderText->SetWrapTextAt(WrapWidth);
+        HeaderText->SetJustification(ETextJustify::Left);
+        HeaderText->SetMinDesiredWidth(WrapWidth);
+        HeaderText->SetFont(HeaderFont);
+        HeaderText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        HeaderText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
+
+        UOverlaySlot* HeaderSlot = RuntimeOverlay->AddChildToOverlay(HeaderText);
+        if (HeaderSlot)
+        {
+            HeaderSlot->SetHorizontalAlignment(HAlign_Fill);
+            HeaderSlot->SetVerticalAlignment(VAlign_Top);
+            HeaderSlot->SetPadding(FMargin(32.0f, 24.0f, 32.0f, 0.0f));
+        }
+    }
+
+    MessageTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageTitleText"));
+    if (MessageTitleText)
+    {
+        MessageTitleText->SetText(FText::GetEmpty());
+        MessageTitleText->SetColorAndOpacity(FSlateColor(SceneGold));
+        MessageTitleText->SetAutoWrapText(true);
+        MessageTitleText->SetWrapTextAt(WrapWidth);
+        MessageTitleText->SetJustification(ETextJustify::Left);
+        MessageTitleText->SetMinDesiredWidth(WrapWidth);
+        MessageTitleText->SetFont(TitleFont);
+        MessageTitleText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        MessageTitleText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
+
+        UOverlaySlot* TitleSlot = RuntimeOverlay->AddChildToOverlay(MessageTitleText);
+        if (TitleSlot)
+        {
+            TitleSlot->SetHorizontalAlignment(HAlign_Fill);
+            TitleSlot->SetVerticalAlignment(VAlign_Top);
+            TitleSlot->SetPadding(FMargin(32.0f, 88.0f, 32.0f, 0.0f));
+        }
+    }
+
+    MessageSubtitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageSubtitleText"));
+    if (MessageSubtitleText)
+    {
+        MessageSubtitleText->SetText(FText::GetEmpty());
+        MessageSubtitleText->SetColorAndOpacity(FSlateColor(SceneGold));
+        MessageSubtitleText->SetAutoWrapText(true);
+        MessageSubtitleText->SetWrapTextAt(WrapWidth);
+        MessageSubtitleText->SetJustification(ETextJustify::Left);
+        MessageSubtitleText->SetMinDesiredWidth(WrapWidth);
+        MessageSubtitleText->SetFont(SubtitleFont);
+        MessageSubtitleText->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        MessageSubtitleText->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
+
+        UOverlaySlot* SubtitleSlot = RuntimeOverlay->AddChildToOverlay(MessageSubtitleText);
+        if (SubtitleSlot)
+        {
+            SubtitleSlot->SetHorizontalAlignment(HAlign_Fill);
+            SubtitleSlot->SetVerticalAlignment(VAlign_Top);
+            SubtitleSlot->SetPadding(FMargin(32.0f, 122.0f, 32.0f, 0.0f));
+        }
+    }
+
+    CaptionTextBottom = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CaptionTextBottom"));
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
+        CaptionTextBottom->SetColorAndOpacity(FSlateColor(SceneGold));
+        CaptionTextBottom->SetAutoWrapText(true);
+        CaptionTextBottom->SetWrapTextAt(WrapWidth);
+        CaptionTextBottom->SetJustification(ETextJustify::Center);
+        CaptionTextBottom->SetMinDesiredWidth(WrapWidth);
+        CaptionTextBottom->SetFont(CaptionFont);
+        CaptionTextBottom->SetShadowOffset(FVector2D(1.0f, 1.0f));
+        CaptionTextBottom->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f));
+
+        UOverlaySlot* CaptionSlot = RuntimeOverlay->AddChildToOverlay(CaptionTextBottom);
+        if (CaptionSlot)
+        {
+            CaptionSlot->SetHorizontalAlignment(HAlign_Fill);
+            CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
+            CaptionSlot->SetPadding(FMargin(100.0f, 0.0f, 100.0f, 60.0f));
+        }
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Runtime widgets created"));
+}
+
+void UCampaignSceneDlg::ResetSceneState()
+{
+    ActiveMissionData = FS_CampaignMission();
+    SortedEvents.Empty();
+
+    DisplayBlocks.Empty();
+    SortedDisplayTimes.Empty();
+    NextDisplayBlockIndex = 0;
+    NextMessageEventIndex = 0;
+
+    ActiveSceneName.Empty();
+    SceneStartRealSeconds = 0.0f;
+    SceneDurationSeconds = 0.0f;
+    bSceneRunning = false;
+
+    if (HeaderText)
+    {
+        HeaderText->SetText(FText::GetEmpty());
+    }
+
+    if (MessageTitleText)
+    {
+        MessageTitleText->SetText(FText::GetEmpty());
+    }
+
+    if (MessageSubtitleText)
+    {
+        MessageSubtitleText->SetText(FText::GetEmpty());
+    }
+
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
+    }
 }
 
 void UCampaignSceneDlg::Show()
 {
     SetVisibility(ESlateVisibility::Visible);
+    SetIsEnabled(true);
 
-    bCutsceneInitialized = false;
-
-    if (bEnableSubtitles)
-    {
-        BuildSubtitlesCache();
-        SubtitleTopLine = 0;
-        SubtitlesDelaySeconds = 0.0f;
-        NextSubtitleTimeSeconds = 0.0f;
-
-        if (SubtitlesText)
-        {
-            SubtitlesText->SetText(FText::FromString(TEXT("")));
-        }
-    }
-
-    // NOTE:
-    // The legacy code wires CameraView/DisplayView to a window and scene.
-    // In Unreal, SceneHost is typically a panel that contains:
-    // - a SceneCapture2D render target image, OR
-    // - a viewport/UMG wrapper you already built.
-    //
-    // Hook your existing cutscene/camera pipeline here.
+    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] SHOW"));
 }
 
 void UCampaignSceneDlg::Hide()
 {
     SetVisibility(ESlateVisibility::Collapsed);
+    SetIsEnabled(false);
 
-    // Undo any "DisplayView set window" behavior here if your port has an equivalent.
+    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] HIDE"));
 }
 
-void UCampaignSceneDlg::ExecFrame(float DeltaSeconds)
+void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& MissionData)
 {
-    // If you have a manager-driven flow:
-    // - If cutscene is missing/over, bounce back to command dialog.
-    //
-    // Legacy behavior:
-    // if (!cutscene_mission) manager->ShowCmdDlg();
+    ResetSceneState();
 
-    const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+    ActiveMissionData = MissionData;
 
-    if (!bCutsceneInitialized)
+    if (HeaderText)
     {
-        bCutsceneInitialized = true;
+        const FString Header =
+            !MissionData.Objective.IsEmpty() ? MissionData.Objective :
+            !MissionData.MissionName.IsEmpty() ? MissionData.MissionName :
+            !MissionData.Scene.IsEmpty() ? MissionData.Scene :
+            TEXT("MISSION BRIEFING");
 
-        // Initialize lens flare/corona elements if your camera view supports it.
-        // In Unreal, usually handled by post process/materials; keep flags for parity.
-        //
-        // bEnableLensFlare: use flare1..flare4
-        // bEnableCoronaOnly: flare1 only
+        HeaderText->SetText(FText::FromString(FixEscapedText(Header)));
     }
 
-    if (bEnableSubtitles)
+    BuildSortedEventQueue();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] LoadSceneFromMissionData: Mission=%s Scene=%s Objective=%s Events=%d"),
+        *MissionData.MissionName,
+        *MissionData.Scene,
+        *MissionData.Objective,
+        MissionData.Event.Num());
+}
+
+void UCampaignSceneDlg::BuildSortedEventQueue()
+{
+    SortedEvents = ActiveMissionData.Event;
+
+    SortedEvents.Sort([](const FS_MissionEvent& A, const FS_MissionEvent& B)
+        {
+            return A.EventTime < B.EventTime;
+        });
+
+    DisplayBlocks.Empty();
+    SortedDisplayTimes.Empty();
+
+    for (const FS_MissionEvent& Event : SortedEvents)
     {
-        AdvanceSubtitlesIfNeeded(NowSeconds);
+        if (Event.EventType != MISSIONEVENT_TYPE::DISPLAY)
+        {
+            continue;
+        }
+
+        const FString Line = FixEscapedText(Event.EventMessage);
+        if (Line.IsEmpty())
+        {
+            continue;
+        }
+
+        DisplayBlocks.FindOrAdd(Event.EventTime).Add(Line);
+    }
+
+    DisplayBlocks.GetKeys(SortedDisplayTimes);
+    SortedDisplayTimes.Sort();
+
+    for (const double BlockTime : SortedDisplayTimes)
+    {
+        const TArray<FString>* Lines = DisplayBlocks.Find(BlockTime);
+
+        FString Joined;
+        if (Lines)
+        {
+            for (int32 i = 0; i < Lines->Num(); ++i)
+            {
+                if (i > 0)
+                {
+                    Joined += TEXT(" | ");
+                }
+                Joined += (*Lines)[i];
+            }
+        }
+
+        UE_LOG(LogTemp, Log,
+            TEXT("[SceneDlg] Display block time=%.2f lines=%d [%s]"),
+            BlockTime,
+            Lines ? Lines->Num() : 0,
+            *Joined);
     }
 }
 
-void UCampaignSceneDlg::BuildSubtitlesCache()
+FString UCampaignSceneDlg::BuildBodyTextFromDisplayBlock(const TArray<FString>& Lines) const
 {
-    SubtitleLines.Reset();
-
-    // Legacy: stars->GetSubtitles()
-    // In Unreal: you can push subtitles text into the widget before Show(), or fetch from a subsystem.
-    //
-    // For now, read whatever is currently in SubtitlesText as the source (safe default).
-    FString Raw;
-    if (SubtitlesText)
-    {
-        Raw = SubtitlesText->GetText().ToString();
-    }
-
-    if (Raw.IsEmpty())
-    {
-        return;
-    }
-
-    Raw.ReplaceInline(TEXT("\r\n"), TEXT("\n"));
-    Raw.ReplaceInline(TEXT("\r"), TEXT("\n"));
-
-    Raw.ParseIntoArrayLines(SubtitleLines, false);
-
-    // Reset displayed text
-    if (SubtitlesText)
-    {
-        SubtitlesText->SetText(FText::FromString(TEXT("")));
-    }
-}
-
-void UCampaignSceneDlg::AdvanceSubtitlesIfNeeded(float NowSeconds)
-{
-    if (!SubtitlesText)
-    {
-        return;
-    }
-
-    if (SubtitleLines.Num() <= 0)
-    {
-        return;
-    }
-
-    // Legacy computes delay from (END_SCENE - BEGIN_SCENE) / nlines.
-    // If you have that mission event timing, set SubtitlesDelaySeconds before calling Show().
-    //
-    // Fallback: 2.5 seconds per line.
-    if (SubtitlesDelaySeconds == 0.0f)
-    {
-        SubtitlesDelaySeconds = 2.5f;
-        NextSubtitleTimeSeconds = NowSeconds + SubtitlesDelaySeconds;
-
-        // Render initial block
-        SubtitleTopLine = 0;
-    }
-
-    if (SubtitlesDelaySeconds > 0.0f && NowSeconds >= NextSubtitleTimeSeconds)
-    {
-        NextSubtitleTimeSeconds = NowSeconds + SubtitlesDelaySeconds;
-        SubtitleTopLine++;
-    }
-
-    if (SubtitleTopLine < 0)
-    {
-        SubtitleTopLine = 0;
-    }
-
-    if (SubtitleTopLine >= SubtitleLines.Num())
-    {
-        SubtitleTopLine = SubtitleLines.Num() - 1;
-    }
-
-    // Render a window of lines like a scrolling box
-    const int32 Start = FMath::Clamp(SubtitleTopLine, 0, SubtitleLines.Num() - 1);
-    const int32 EndExclusive = FMath::Clamp(Start + FMath::Max(1, MaxSubtitleLinesVisible), 0, SubtitleLines.Num());
-
     FString Out;
-    for (int32 i = Start; i < EndExclusive; ++i)
+
+    if (Lines.Num() <= 1)
     {
-        Out += SubtitleLines[i];
-        if (i + 1 < EndExclusive)
+        return Out;
+    }
+
+    for (int32 i = 1; i < Lines.Num(); ++i)
+    {
+        if (!Out.IsEmpty())
         {
             Out += TEXT("\n");
         }
+
+        Out += Lines[i];
     }
 
-    SubtitlesText->SetText(FText::FromString(Out));
+    return Out;
+}
+
+float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
+{
+    double LatestTime = 0.0;
+
+    for (const FS_MissionEvent& Event : SortedEvents)
+    {
+        LatestTime = FMath::Max(LatestTime, Event.EventTime);
+    }
+
+    const float FinalHoldSeconds = 4.0f;
+    return static_cast<float>(LatestTime) + FinalHoldSeconds;
+}
+
+void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
+{
+    ActiveSceneName = InSceneName;
+    SceneStartRealSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+
+    if (InDurationSeconds > 0.0f)
+    {
+        SceneDurationSeconds = InDurationSeconds;
+    }
+    else
+    {
+        SceneDurationSeconds = ResolveSceneDurationSeconds();
+    }
+
+    bSceneRunning = true;
+    NextDisplayBlockIndex = 0;
+    NextMessageEventIndex = 0;
+
+    if (MessageTitleText)
+    {
+        MessageTitleText->SetText(FText::GetEmpty());
+    }
+
+    if (MessageSubtitleText)
+    {
+        MessageSubtitleText->SetText(FText::GetEmpty());
+    }
+
+    if (CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::GetEmpty());
+    }
+
+    Show();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] BeginSceneByName: Scene=%s Duration=%.2f Start=%.2f"),
+        *ActiveSceneName,
+        SceneDurationSeconds,
+        SceneStartRealSeconds);
+}
+
+void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
+{
+    const TArray<FString>* Lines = DisplayBlocks.Find(BlockTime);
+    if (!Lines || Lines->Num() == 0)
+    {
+        return;
+    }
+
+    const FString TitleLine = FixEscapedText((*Lines)[0]);
+    const FString SubtitleLines = FixEscapedText(BuildBodyTextFromDisplayBlock(*Lines));
+
+    if (MessageTitleText)
+    {
+        MessageTitleText->SetText(FText::FromString(TitleLine));
+    }
+
+    if (MessageSubtitleText)
+    {
+        MessageSubtitleText->SetText(FText::FromString(SubtitleLines));
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] DISPLAY BLOCK @ %.2f Title='%s' Subtitle='%s'"),
+        BlockTime,
+        *TitleLine,
+        *SubtitleLines);
+}
+
+void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
+{
+    const FString Caption = FixEscapedText(Event.EventCaption);
+
+    if (!Caption.IsEmpty() && CaptionTextBottom)
+    {
+        CaptionTextBottom->SetText(FText::FromString(Caption));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] CAPTION @ %.2f '%s'"),
+            Event.EventTime,
+            *Caption);
+    }
+
+    if (!Event.EventSound.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] MESSAGE SOUND @ %.2f '%s'"),
+            Event.EventTime,
+            *Event.EventSound);
+
+        // TODO: play the sound cue here
+    }
+}
+
+void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
+{
+    while (NextDisplayBlockIndex < SortedDisplayTimes.Num())
+    {
+        const double BlockTime = SortedDisplayTimes[NextDisplayBlockIndex];
+
+        if (ElapsedSeconds + KINDA_SMALL_NUMBER < BlockTime)
+        {
+            break;
+        }
+
+        ExecuteDisplayBlockAtTime(BlockTime);
+        ++NextDisplayBlockIndex;
+    }
+
+    while (NextMessageEventIndex < SortedEvents.Num())
+    {
+        const FS_MissionEvent& Event = SortedEvents[NextMessageEventIndex];
+
+        if (ElapsedSeconds + KINDA_SMALL_NUMBER < Event.EventTime)
+        {
+            break;
+        }
+
+        if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE)
+        {
+            ExecuteMessageEvent(Event);
+        }
+
+        ++NextMessageEventIndex;
+    }
+}
+
+void UCampaignSceneDlg::AdvanceSceneFromTimer(float NowSeconds)
+{
+    if (!bSceneRunning)
+    {
+        return;
+    }
+
+    const float Elapsed = NowSeconds - SceneStartRealSeconds;
+
+    ProcessPendingEvents(Elapsed);
+
+    if (Elapsed >= SceneDurationSeconds)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] COMPLETE -> Returning to CmdDlg"));
+
+        bSceneRunning = false;
+        Hide();
+
+        if (Manager)
+        {
+            Manager->HideCmpSceneDlg();
+            Manager->ShowCmdDlg();
+        }
+    }
 }

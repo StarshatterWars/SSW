@@ -10,9 +10,10 @@
     ==========================
     John DiCamillo / Destroyer Studios LLC
 
-    UNREAL PORT:
-    - Converted from FormWindow/AWEvent mapping to UBaseScreen (UUserWidget-derived).
-    - Preserves original member names and intent where applicable.
+    OVERVIEW
+    ========
+    Code-built campaign selection screen with a custom styled
+    campaign dropdown list.
 */
 
 #pragma once
@@ -21,42 +22,27 @@
 #include "BaseScreen.h"
 #include "Text.h"
 #include "List.h"
-
 #include "GameStructs.h"
-#include "Blueprint/UserWidget.h"
-#include "Engine/Texture2D.h"
-#include "Components/Image.h"
-#include "Components/Button.h"
-#include "Components/TextBlock.h"
-#include "Components/ComboBoxString.h"
-
-#include "Components/EditableTextBox.h"
-#include "Kismet/GameplayStatics.h"
-#include "SSWGameInstance.h"
-#include "TimerSubsystem.h"
-
 #include "CampaignSelectDlg.generated.h"
 
-
-
-// UMG fwd:
 class UButton;
-class UListView;
-class UMenuScreen;
 class UTextBlock;
-class URichTextBlock;
 class UImage;
+class UMenuScreen;
+class UCanvasPanel;
+class UBorder;
+class UHorizontalBox;
+class UVerticalBox;
+class UWidget;
+class UScrollBox;
+class USoundBase;
 
-// Starshatter fwd:
 class Campaign;
 class Starshatter;
 
-// Legacy containers/types (ported in your codebase):
 template<typename T> class List;
 class Bitmap;
-class Text;
 class ThreadSync;
-
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSelectDlg : public UBaseScreen
@@ -66,33 +52,21 @@ class STARSHATTERWARS_API UCampaignSelectDlg : public UBaseScreen
 public:
     UCampaignSelectDlg(const FObjectInitializer& ObjectInitializer);
 
-    // ----------------------------------------------------------------
-    // UUserWidget lifecycle
-    // ----------------------------------------------------------------
     virtual void NativeOnInitialized() override;
     virtual void NativeConstruct() override;
     virtual void NativePreConstruct() override;
-
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-    // Menu manager hookup (matches your existing pattern)
     virtual void SetMenuManager(UMenuScreen* InManager);
     virtual void InitializeDlg(UMenuScreen* InManager);
 
-    // ----------------------------------------------------------------
-    // Legacy dialog surface (ported)
-    // ----------------------------------------------------------------
-    virtual void      RegisterControls();
-
-
-    virtual void      ExecFrame(double DeltaTime);
-    virtual bool      CanClose();
-
+    virtual void RegisterControls();
+    virtual void ExecFrame(double DeltaTime);
+    virtual bool CanClose();
 
     void ShowDlg();
     void HideDlg();
 
-    // Operations (AWEvent -> UFUNCTION handlers):
     UFUNCTION() virtual void OnCampaignSelect();
     UFUNCTION() virtual void OnNew();
     UFUNCTION() virtual void OnSaved();
@@ -100,173 +74,138 @@ public:
     UFUNCTION() virtual void OnConfirmDelete();
     UFUNCTION() virtual void OnAccept();
 
-    virtual uint32    LoadProc();
+    virtual uint32 LoadProc();
 
 protected:
-    virtual void      StartLoadProc();
-    virtual void      StopLoadProc();
-    virtual void      ShowNewCampaigns();
-    virtual void      ShowSavedCampaigns();
+    virtual void StartLoadProc();
+    virtual void StopLoadProc();
+    virtual void ShowNewCampaigns();
+    virtual void ShowSavedCampaigns();
 
 protected:
-    // ----------------------------------------------------------------
-    // UBaseScreen overrides
-    // ----------------------------------------------------------------
     virtual void BindFormWidgets() override;
     virtual FString GetLegacyFormText() const override;
 
 protected:
-    // ----------------------------------------------------------------
-    // Bound UMG controls (match FORM ids)
-    // ----------------------------------------------------------------
+    void BuildWidgetTreeIfNeeded();
+    void HookupEvents();
+    void PopulateCampaignDropdown();
+    void RefreshFromSelection();
+    void RefreshUIFromSubsystem();
+    void UpdateCampaignButtons();
+    bool DoesSelectedCampaignSaveExist() const;
+    UTexture2D* LoadCampaignTexture(int32 CampaignIndex1Based) const;
 
-    // Buttons:
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_new = nullptr;       // id 100
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_saved = nullptr;     // id 101
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_delete = nullptr;    // id 102
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_accept = nullptr;    // id 1
-    UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_cancel = nullptr;    // id 2
+    void StartSelectedCampaignFlow(bool bRestart);
+    void FinishSelectedCampaignFlow(bool bRestart);
+    void TryFinishCampaignLoadTransition();
 
-    // List:
-    UPROPERTY(meta = (BindWidgetOptional)) UListView* lst_campaigns = nullptr; // id 201
+    void BuildCampaignDropdown(UCanvasPanel* MainCanvas);
+    void RebuildCampaignDropdownOptions();
+    void UpdateCampaignDropdownLabel();
+    void HideCampaignDropdown();
+    void SelectCampaignOption(int32 NewIndex);
 
-    // Text description (FORM type "text" -> URichTextBlock in BaseScreen):
-    UPROPERTY(meta = (BindWidgetOptional)) URichTextBlock* description = nullptr; // id 200
+    UTextBlock* CreateText(
+        const FName Name,
+        const FString& InText,
+        int32 FontSize = 16,
+        const FLinearColor& Color = FLinearColor::White,
+        ETextJustify::Type Justification = ETextJustify::Left,
+        bool bWrap = false);
 
-    // Optional labels (if your UMG includes them):
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* lbl_title = nullptr;         // id 10
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* lbl_hdr_campaign = nullptr;  // id 901
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* lbl_hdr_desc = nullptr;      // id 902
+    UBorder* CreatePanelBorder(const FName Name, const FLinearColor& Color);
 
-    // Optional background images (if you mapped them in UMG):
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* bg_9991 = nullptr; // id 9991
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* bg_9992 = nullptr; // id 9992
+    UWidget* CreateMenuButton(
+        const FName Name,
+        TObjectPtr<UButton>& OutButton,
+        TObjectPtr<UTextBlock>& OutText,
+        const FString& Label);
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* TitleText;
+    void ApplyButtonStyle(UButton* Button) const;
+    void PlayUISound(UObject* WorldContext, USoundBase* UISound);
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* PlayerNameText;
+    UFUNCTION() void OnPlayButtonClicked();
+    UFUNCTION() void OnPlayButtonHovered();
+    UFUNCTION() void OnPlayButtonUnHovered();
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* GameTimeText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* CampaignNameText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* DescriptionText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* SituationText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* Orders1Text;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* Orders2Text;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* Orders3Text;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* Orders4Text;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* LocationSystemText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* LocationRegionText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* CampaignStartTimeText;
+    UFUNCTION() void OnRestartButtonClicked();
+    UFUNCTION() void OnRestartButtonHovered();
+    UFUNCTION() void OnRestartButtonUnHovered();
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UImage* CampaignImage;
+    UFUNCTION() void OnCancelButtonClicked();
+    UFUNCTION() void OnCancelButtonHovered();
+    UFUNCTION() void OnCancelButtonUnHovered();
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UComboBoxString* CampaignSelectDD;
+    UFUNCTION() void OnCampaignDropdownClicked();
+    UFUNCTION() void OnCampaignOptionClicked();
 
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* PlayButtonText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UTextBlock* RestartButtonText;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UButton* PlayButton;
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UButton* RestartButton;
-    UPROPERTY(meta = (BindWidgetOptional))
-    USoundBase* HoverSound;
+protected:
+    FTimerHandle CampaignLoadFinishTimer;
+
+protected:
+    UPROPERTY(Transient) TObjectPtr<UMenuScreen> manager = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UImage> BackgroundImage = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UBorder> MainBorder = nullptr;
+
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> TitleText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerNameText = nullptr;
+
+    UPROPERTY(Transient) TObjectPtr<UImage> CampaignImage = nullptr;
+
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignNameText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> DescriptionText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SituationText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> Orders1Text = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> Orders2Text = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> Orders3Text = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> Orders4Text = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> LocationSystemText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignStartTimeText = nullptr;
+
+    UPROPERTY(Transient) TObjectPtr<UButton> PlayButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> RestartButton = nullptr;
+
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayButtonText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> RestartButtonText = nullptr;
+
+    // Custom campaign dropdown:
+    UPROPERTY(Transient) TObjectPtr<UButton> CampaignDropdownButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignDropdownButtonText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UBorder> CampaignDropdownPopupBorder = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UScrollBox> CampaignDropdownScrollBox = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> CampaignDropdownListBox = nullptr;
+    UPROPERTY(Transient) TArray<TObjectPtr<UButton>> CampaignOptionButtons;
+    UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CampaignOptionButtonTexts;
 
     UPROPERTY(EditAnywhere, Category = "UI Sound")
-    USoundBase* AcceptSound;
+    TObjectPtr<USoundBase> HoverSound = nullptr;
+
+    UPROPERTY(EditAnywhere, Category = "UI Sound")
+    TObjectPtr<USoundBase> AcceptSound = nullptr;
 
 protected:
-    // ----------------------------------------------------------------
-    // Legacy state (ported)
-    // ----------------------------------------------------------------
     Starshatter* stars = nullptr;
     Campaign* campaign = nullptr;
-    int          selected_mission = 0;
+    int selected_mission = 0;
 
-    // Threading placeholders (keep names; avoid Win32 HANDLE in UE headers):
     void* hproc = nullptr;
-    ThreadSync   sync;
+    ThreadSync sync;
 
-    bool         loading = false;
-    bool         loaded = false;
+    bool loading = false;
+    bool loaded = false;
+    bool bCampaignDropdownOpen = false;
 
-    Text         load_file;
-    int          load_index = -1;
-    bool         show_saved = false;
+    Text load_file;
+    int load_index = -1;
+    bool show_saved = false;
 
     List<Bitmap> images;
-    Text         select_msg;
+    Text select_msg;
 
-protected:
-        UPROPERTY(Transient)
-        TObjectPtr<UMenuScreen> manager = nullptr;
-
-protected:
-    UTexture2D* LoadTextureFromFile();
-    FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize);
-
-    // UI selection state
-    int32 Selected = 0;
+    int32 Selected = INDEX_NONE;
     FName PickedRowName = NAME_None;
     TArray<FName> CampaignRowNamesByOptionIndex;
     TArray<int32> CampaignIndexByOptionIndex;
-
-    void RefreshUIFromSubsystem();         // PlayerInfo -> UI
-
-    UFUNCTION()
-    void OnPlayButtonClicked();
-    UFUNCTION()
-    void OnPlayButtonHovered();
-    UFUNCTION()
-    void OnPlayButtonUnHovered();
-    UFUNCTION()
-    void OnRestartButtonClicked();
-    UFUNCTION()
-    void OnRestartButtonHovered();
-    UFUNCTION()
-    void OnRestartButtonUnHovered();
-    UFUNCTION()
-    void OnCancelButtonClicked();
-    UFUNCTION()
-    void OnCancelButtonHovered();
-    UFUNCTION()
-    void OnCancelButtonUnHovered();
-
-    UFUNCTION()
-    void SetCampaignDDList();
-
-    UFUNCTION()
-    void SetSelectedData(int selected);
-
-    UFUNCTION()
-    void OnSetSelected(FString dropDownInt, ESelectInfo::Type type);
-
-    UFUNCTION()
-    void GetCampaignImageFile(int selected);
-    UFUNCTION()
-    void PlayUISound(UObject* WorldContext, USoundBase* UISound);
-    UFUNCTION()
-    bool DoesSelectedCampaignSaveExist() const;
-
-    UFUNCTION()
-    void UpdateCampaignButtons();
-
-    UPROPERTY()
-    FString ImagePath;
+    TArray<FString> CampaignDisplayNamesByOptionIndex;
 };

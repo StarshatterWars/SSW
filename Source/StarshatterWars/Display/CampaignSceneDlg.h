@@ -1,31 +1,20 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025-2026.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         CampaignSceneDlg.h
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    CampaignSceneDlg (Unreal)
-    - Campaign title card and load/cutscene dialog.
-    - Ported from legacy CmpSceneDlg (Starshatter 4.5).
-    - Hosts a "scene" view area plus optional subtitles.
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "GameStructs.h"
 #include "CampaignSceneDlg.generated.h"
 
-class UPanelWidget;
-class URichTextBlock;
-
-class UCampaignScreen;
-
-class UTexture2D;
+class UBorder;
+class UOverlay;
+class UTextBlock;
+class UFont;
+class UCmpnScreen;
+class USoundBase;
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -35,67 +24,91 @@ class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
 public:
     UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer);
 
-    void SetManager(UCampaignScreen* InManager) { Manager = InManager; }
+    void SetManager(UCmpnScreen* InManager) { Manager = InManager; }
 
-    virtual void Show();
-    virtual void Hide();
+    // Safe additive setter for audio lookup:
+    void SetCampaignNumber(int32 InCampaignNumber) { CurrentCampaignNumber = InCampaignNumber; }
 
-    virtual void ExecFrame(float DeltaSeconds);
-
-protected:
     virtual void NativeConstruct() override;
-    virtual void NativeDestruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-protected:
-    void RegisterControls();
-    void BuildSubtitlesCache();
-    void AdvanceSubtitlesIfNeeded(float NowSeconds);
+    void Show();
+    void Hide();
+
+    void LoadSceneFromMissionData(const FS_CampaignMission& MissionData);
+
+    // Backward-compatible wrapper:
+    void LoadCaptionsFromMissionData(const FS_CampaignMission& MissionData)
+    {
+        LoadSceneFromMissionData(MissionData);
+    }
+
+    void BeginSceneByName(const FString& InSceneName, float InDurationSeconds);
+    void AdvanceSceneFromTimer(float NowSeconds);
+
+    bool IsSceneRunning() const { return bSceneRunning; }
 
 protected:
-    // UMG bind points (wire these in the widget blueprint)
-    UPROPERTY(VisibleAnywhere, Category = "CampaignScene|Widgets", meta = (BindWidgetOptional))
-    UPanelWidget* SceneHost = nullptr;
+    void BuildRuntimeWidgets();
+    void ResetSceneState();
+    void BuildSortedEventQueue();
+    void ProcessPendingEvents(float ElapsedSeconds);
 
-    UPROPERTY(VisibleAnywhere, Category = "CampaignScene|Widgets", meta = (BindWidgetOptional))
-    URichTextBlock* SubtitlesText = nullptr;
+    void ExecuteDisplayBlockAtTime(double BlockTime);
+    void ExecuteMessageEvent(const FS_MissionEvent& Event);
 
-    // Options
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Options")
-    bool bEnableLensFlare = true;
+    FString BuildBodyTextFromDisplayBlock(const TArray<FString>& Lines) const;
+    float ResolveSceneDurationSeconds() const;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Options")
-    bool bEnableCoronaOnly = false;
+    static FString FixEscapedText(const FString& InText);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Options")
-    bool bEnableSubtitles = true;
+    UFont* GetRegularLimerickFont() const;
+    UFont* GetBoldLimerickFont() const;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Options")
-    int32 MaxSubtitleLinesVisible = 6;
-
-    // Assets (assign in defaults/BP)
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
-    TSoftObjectPtr<UTexture2D> Flare1;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
-    TSoftObjectPtr<UTexture2D> Flare2;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
-    TSoftObjectPtr<UTexture2D> Flare3;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CampaignScene|Assets")
-    TSoftObjectPtr<UTexture2D> Flare4;
+    USoundBase* ResolveSceneSound(const FString& SoundToken) const;
+    FString ResolveSceneSoundPath(const FString& SoundToken) const;
+    int32 ResolveCampaignNumber() const;
 
 protected:
-    // Raw pointers by request (no UPROPERTY)
-    UCampaignScreen* Manager = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional))
+    UBorder* RuntimeHost = nullptr;
 
-    // Subtitles state
-    TArray<FString> SubtitleLines;
-    int32 SubtitleTopLine = 0;
-    float SubtitlesDelaySeconds = 0.0f;
-    float NextSubtitleTimeSeconds = 0.0f;
+    UPROPERTY()
+    UOverlay* RuntimeOverlay = nullptr;
 
-    // One-shot init each Show()
-    bool bCutsceneInitialized = false;
+    UPROPERTY()
+    UTextBlock* HeaderText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* MessageTitleText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* MessageSubtitleText = nullptr;
+
+    UPROPERTY()
+    UTextBlock* CaptionTextBottom = nullptr;
+
+protected:
+    UPROPERTY()
+    TObjectPtr<UCmpnScreen> Manager = nullptr;
+
+    UPROPERTY()
+    FS_CampaignMission ActiveMissionData;
+
+    UPROPERTY()
+    TArray<FS_MissionEvent> SortedEvents;
+
+    TMap<double, TArray<FString>> DisplayBlocks;
+    TArray<double> SortedDisplayTimes;
+    int32 NextDisplayBlockIndex = 0;
+
+    int32 NextMessageEventIndex = 0;
+
+    FString ActiveSceneName;
+    float SceneStartRealSeconds = 0.0f;
+    float SceneDurationSeconds = 0.0f;
+
+    bool bSceneRunning = false;
+
+    int32 CurrentCampaignNumber = 0;
 };

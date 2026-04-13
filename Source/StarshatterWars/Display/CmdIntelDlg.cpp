@@ -10,6 +10,7 @@
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Texture2D.h"
 
 #include "IntelListObject.h"
 #include "CmpnScreen.h"
@@ -130,7 +131,7 @@ void UCmdIntelDlg::BindFormWidgets()
 void UCmdIntelDlg::ShowIntelDlg()
 {
 	SetVisibility(ESlateVisibility::Visible);
-	AppendNewEventsIfAny();
+	RefreshIntelData();
 }
 
 // +----------------------------------------------------------------------+
@@ -217,6 +218,7 @@ void UCmdIntelDlg::AppendNewEventsIfAny()
 	}
 
 	AutoScrollToFirstUnreadIfNeeded();
+	AutoSelectFirstItemIfNeeded();
 }
 
 // +----------------------------------------------------------------------+
@@ -359,16 +361,27 @@ void UCmdIntelDlg::SetSelectedIntelData(UIntelListObject* Item)
 		IntelMessageText->SetText(FText::FromString(Message));
 	}
 
-	GetIntelImageFile(Item->NewsImage);
+	const FString IntelImageAssetPath = GetIntelImageAssetPath(Item->NewsImage);
 	GetIntelAudioFile(Item->NewsAudio);
 
-	UTexture2D* LoadedTexture = LoadTextureFromFile();
+	UTexture2D* LoadedTexture = LoadTextureFromAssetPath(IntelImageAssetPath);
 	if (LoadedTexture && IntelImage)
 	{
 		FSlateBrush Brush = CreateBrushFromTexture(
 			LoadedTexture,
 			FVector2D(LoadedTexture->GetSizeX(), LoadedTexture->GetSizeY()));
 		IntelImage->SetBrush(Brush);
+	}
+	else if (IntelImage)
+	{
+		if (DefaultNewsTexture)
+		{
+			IntelImage->SetBrushFromTexture(DefaultNewsTexture, true);
+		}
+		else
+		{
+			IntelImage->SetBrush(FSlateBrush());
+		}
 	}
 
 	const bool bHasAudio = !Item->NewsAudio.IsEmpty();
@@ -481,22 +494,41 @@ void UCmdIntelDlg::OnSaveClicked()
 }
 
 // +----------------------------------------------------------------------+
-// | GetIntelImageFile                                                    |
+// | GetIntelImageAssetPath                                               |
 // +----------------------------------------------------------------------+
 
-void UCmdIntelDlg::GetIntelImageFile(const FString& IntelImageName)
+FString UCmdIntelDlg::GetIntelImageAssetPath(const FString& IntelImageName) const
 {
-	USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
-	if (!SSWInstance)
-		return;
+	if (IntelImageName.IsEmpty() ||
+		IntelImageName.Equals(TEXT("Empty"), ESearchCase::IgnoreCase))
+	{
+		return FString();
+	}
 
-	ImagePath = FPaths::ProjectContentDir() + TEXT("UI/Campaigns/0");
-	ImagePath.Append(FString::FromInt(SSWInstance->GetActiveCampaign().Index + 1));
-	ImagePath.Append(TEXT("/"));
-	ImagePath.Append(IntelImageName);
-	ImagePath.Append(TEXT(".png"));
+	Campaign* CurrentCampaign = Campaign::GetCampaign();
+	if (!CurrentCampaign)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CmdIntelDlg] No Campaign when resolving intel image"));
+		return FString();
+	}
 
-	UE_LOG(LogTemp, Log, TEXT("Action Image: %s"), *ImagePath);
+	int32 CampaignIndex = CurrentCampaign->GetCampaignId();
+	CampaignIndex = FMath::Max(1, CampaignIndex);
+
+	const FString CampaignFolder = FString::Printf(TEXT("%02d"), CampaignIndex);
+
+	const FString AssetPath = FString::Printf(
+		TEXT("/Game/UI/Campaigns/%s/%s.%s"),
+		*CampaignFolder,
+		*IntelImageName,
+		*IntelImageName);
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[CmdIntelDlg] Intel Image Asset: %s"),
+		*AssetPath);
+
+	return AssetPath;
 }
 
 // +----------------------------------------------------------------------+
@@ -520,16 +552,26 @@ void UCmdIntelDlg::GetIntelAudioFile(const FString& IntelAudioName)
 }
 
 // +----------------------------------------------------------------------+
-// | LoadTextureFromFile                                                  |
+// | LoadTextureFromAssetPath                                             |
 // +----------------------------------------------------------------------+
 
-UTexture2D* UCmdIntelDlg::LoadTextureFromFile()
+UTexture2D* UCmdIntelDlg::LoadTextureFromAssetPath(const FString& AssetPath) const
 {
-	USSWGameInstance* SSWInstance = Cast<USSWGameInstance>(GetGameInstance());
-	if (!SSWInstance)
+	if (AssetPath.IsEmpty())
+	{
 		return nullptr;
+	}
 
-	return SSWInstance->LoadPNGTextureFromFile(ImagePath);
+	UTexture2D* LoadedTexture = LoadObject<UTexture2D>(nullptr, *AssetPath);
+
+	if (!LoadedTexture)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CmdIntelDlg] Failed to load intel image asset: %s"),
+			*AssetPath);
+	}
+
+	return LoadedTexture;
 }
 
 // +----------------------------------------------------------------------+
@@ -543,4 +585,63 @@ FSlateBrush UCmdIntelDlg::CreateBrushFromTexture(UTexture2D* Texture, FVector2D 
 	Brush.ImageSize = ImageSize;
 	Brush.DrawAs = ESlateBrushDrawType::Image;
 	return Brush;
+}
+
+void UCmdIntelDlg::AutoSelectFirstItemIfNeeded()
+{
+	if (!IntelList || IntelList->GetNumItems() <= 0)
+	{
+		return;
+	}
+
+	UObject* Selected = IntelList->GetSelectedItem();
+	if (Selected)
+	{
+		return;
+	}
+
+	// Prefer first unread item
+	for (int32 i = 0; i < IntelList->GetNumItems(); ++i)
+	{
+		UObject* Obj = IntelList->GetItemAt(i);
+		UIntelListObject* Item = Cast<UIntelListObject>(Obj);
+		if (Item && !Item->NewsVisited)
+		{
+			IntelList->SetSelectedItem(Item);
+			SetSelectedIntelData(Item);
+
+			Item->NewsVisited = true;
+			if (Item->EventPtr)
+			{
+				Item->EventPtr->SetVisited(true);
+			}
+
+			IntelList->RequestRefresh();
+			return;
+		}
+	}
+
+	// Fallback to first item
+	if (UObject* FirstObj = IntelList->GetItemAt(0))
+	{
+		if (UIntelListObject* FirstItem = Cast<UIntelListObject>(FirstObj))
+		{
+			IntelList->SetSelectedItem(FirstItem);
+			SetSelectedIntelData(FirstItem);
+
+			FirstItem->NewsVisited = true;
+			if (FirstItem->EventPtr)
+			{
+				FirstItem->EventPtr->SetVisited(true);
+			}
+
+			IntelList->RequestRefresh();
+		}
+	}
+}
+
+void UCmdIntelDlg::RefreshIntelData()
+{
+	RebuildNewsListIfCampaignChanged();
+	AppendNewEventsIfAny();
 }

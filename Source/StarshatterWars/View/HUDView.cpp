@@ -2811,7 +2811,7 @@ HUDView::DrawStarSystem()
 	if (sim && sim->GetStarSystem()) {
 		StarSystem* sys = sim->GetStarSystem();
 
-		ListIter<OrbitalBody> iter = sys->Bodies();
+		ListIter<OrbitalBody> iter = sys->GetBodies();
 		while (++iter) {
 			OrbitalBody* body = iter.value();
 			DrawOrbitalBody(body);

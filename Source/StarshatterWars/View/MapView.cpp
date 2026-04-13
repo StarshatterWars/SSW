@@ -163,7 +163,7 @@ void MapView::SetSystem(StarSystem* s)
 
 		// insert objects from star system:
 		if (system) {
-			ListIter<OrbitalBody> star = system->Bodies();
+			ListIter<OrbitalBody> star = system->GetBodies();
 			while (++star) {
 				switch (star->GetType()) {
 				case Orbital::STAR:       stars.append(star.value());
@@ -184,7 +184,7 @@ void MapView::SetSystem(StarSystem* s)
 				}
 			}
 
-			ListIter<OrbitalRegion> rgn = system->AllRegions();
+			ListIter<OrbitalRegion> rgn = system->GetAllRegions();
 			while (++rgn)
 				regions.append(rgn.value());
 
@@ -1826,7 +1826,7 @@ MapView::DrawSystem()
 
 	title = caption;
 
-	ListIter<OrbitalBody> star = system->Bodies();
+	ListIter<OrbitalBody> star = system->GetBodies();
 	while (++star) {
 		int p_orb = 1;
 
@@ -1861,7 +1861,7 @@ MapView::DrawSystem()
 	}
 
 	char r_txt[32];
-	FormatNumber(r_txt, system->Radius() * zoom);
+	FormatNumber(r_txt, system->GetRadius() * zoom);
 
 	char resolution[64];
 	sprintf_s(resolution, "%s: %s", Game::GetText("MapView.info.Resolution").data(), r_txt);
@@ -2091,7 +2091,7 @@ void MapView::DrawOrbital(Orbital& body, int index)
 	double cy = rect.h / 2;
 
 	c = (cx < cy) ? cx : cy;
-	r = system->Radius() * zoom;
+	r = system->GetRadius() * zoom;
 
 	if ((r > 300e9) && (type > Orbital::PLANET))
 		return;
@@ -2632,7 +2632,7 @@ void MapView::DrawNavRoute(
 	const double cy = rect.h * 0.5;
 
 	c = (cx < cy) ? cx : cy;
-	r = system ? (system->Radius() * zoom) : 1.0;
+	r = system ? (system->GetRadius() * zoom) : 1.0;
 
 	if (view_mode == VIEW_REGION) {
 		r = rgn->Radius() * zoom;
@@ -3166,7 +3166,7 @@ MapView::GetShipLoc(Ship& s, FVector& shiploc)
 	double cy = rect.h / 2;
 
 	c = (cx < cy) ? cx : cy;
-	r = system->Radius() * zoom;
+	r = system->GetRadius() * zoom;
 
 	OrbitalRegion* rgn = (OrbitalRegion*)regions[current_region];
 
@@ -3247,7 +3247,7 @@ MapView::GetElemLoc(MissionElement& s, FVector& shiploc)
 	double cy = rect.h / 2;
 
 	c = (cx < cy) ? cx : cy;
-	r = system->Radius() * zoom;
+	r = system->GetRadius() * zoom;
 
 	OrbitalRegion* rgn = (OrbitalRegion*)regions[current_region];
 
@@ -3308,8 +3308,8 @@ MapView::ZoomIn()
 	zoom *= 0.9;
 
 	if (view_mode == VIEW_SYSTEM) {
-		if (system && zoom * system->Radius() < 2e6) {
-			zoom = 2e6 / system->Radius();
+		if (system && zoom * system->GetRadius() < 2e6) {
+			zoom = 2e6 / system->GetRadius();
 		}
 	}
 	else if (view_mode == VIEW_REGION) {
@@ -3326,8 +3326,8 @@ MapView::ZoomOut()
 	zoom *= 1.1;
 
 	if (view_mode == VIEW_SYSTEM) {
-		if (system && zoom * system->Radius() > 500e9) {
-			zoom = 500e9 / system->Radius();
+		if (system && zoom * system->GetRadius() > 500e9) {
+			zoom = 500e9 / system->GetRadius();
 		}
 	}
 	else if (view_mode == VIEW_REGION) {

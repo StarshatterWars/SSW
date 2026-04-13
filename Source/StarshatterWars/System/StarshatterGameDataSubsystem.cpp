@@ -37,6 +37,7 @@
 #include "ShipDesign.h"
 #include "PlayerData.h"
 #include "CombatGroupRegistry.h"
+#include "GameStructs.h"
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
@@ -357,6 +358,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 	TArray<FS_OOBStarbase> LocalStarbases;
 
 	TArray<FS_OOBCivilian> LocalCivilians;
+	TArray<FS_OOBTransport> LocalTransports;
+	TArray<FS_OOBInfrastructure> LocalInfrastructures;
 	TArray<FS_OOBMinefield> LocalMinefields;
 
 	FS_OOBForce NewForce;
@@ -558,6 +561,33 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			}
 
 			// -------------------------------------------------
+			// Build transport children for THIS force
+			// -------------------------------------------------
+			for (FS_OOBTransport& Transport : LocalTransports)
+			{
+				Transport.Station.Reset();
+				Transport.Starbase.Reset();
+
+				for (const FS_OOBStation& Station : LocalStations)
+				{
+					if (Station.ParentId == Transport.Id &&
+						Station.Empire == Transport.Empire)
+					{
+						Transport.Station.Add(Station);
+					}
+				}
+
+				for (const FS_OOBStarbase& Starbase : LocalStarbases)
+				{
+					if (Starbase.ParentId == Transport.Id &&
+						Starbase.Empire == Transport.Empire)
+					{
+						Transport.Starbase.Add(Starbase);
+					}
+				}
+			}
+
+			// -------------------------------------------------
 			// Write fully-built data into the force row
 			// -------------------------------------------------
 			ForceRow = OrderOfBattleDataTable->FindRow<FS_OOBForce>(
@@ -572,13 +602,17 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			ForceRow->Fleet = LocalFleets;
 			ForceRow->Battalion = LocalBattalions;
 			ForceRow->Civilian = LocalCivilians;
+			ForceRow->Transport = LocalTransports;
+			ForceRow->Infrastructure = LocalInfrastructures;
 
 			UE_LOG(LogTemp, Log,
-				TEXT("[OrderOfBattle] Finalized OOB Force '%s': Fleets=%d Battalions=%d Civilians=%d"),
+				TEXT("[OrderOfBattle] Finalized OOB Force '%s': Fleets=%d Battalions=%d Civilians=%d Transports=%d Infrastructure=%d"),
 				*CurrentForceRowName.ToString(),
 				LocalFleets.Num(),
 				LocalBattalions.Num(),
-				LocalCivilians.Num());
+				LocalCivilians.Num(),
+				LocalTransports.Num(),
+				LocalInfrastructures.Num());
 		};
 
 	// ---------------------------------------------
@@ -609,6 +643,8 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 			LocalStarbases.Empty();
 
 			LocalCivilians.Empty();
+			LocalTransports.Empty();
+			LocalInfrastructures.Empty();
 			LocalMinefields.Empty();
 
 			CurrentForceId = Item.Id;
@@ -683,6 +719,70 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 				LocalBattalions.Add(NewBattalion);
 			}
 
+			continue;
+		}
+
+		// ---------------------------------------------
+		// Transport
+		// ---------------------------------------------
+		if (Item.Type == ECOMBATGROUP_TYPE::TRANSPORT)
+		{
+			FS_OOBTransport NewTransport;
+			NewTransport.Id = Item.Id;
+			NewTransport.ParentId = Item.ParentId;
+			NewTransport.Name = Item.DisplayName;
+			NewTransport.Iff = Item.Iff;
+			NewTransport.Region = Item.Region;
+			NewTransport.Location = Item.Location;
+			NewTransport.Empire = Item.EmpireId;
+			NewTransport.Intel = Item.Intel;
+			NewTransport.Type = Item.Type;
+			NewTransport.ParentType = Item.ParentType;
+
+			LocalTransports.Add(NewTransport);
+			continue;
+		}
+
+		// ---------------------------------------------
+		// Infrastructure
+		// ---------------------------------------------
+		if (Item.Type == ECOMBATGROUP_TYPE::INFRASTRUCTURE)
+		{
+			FS_OOBInfrastructure NewInfrastructure;
+			NewInfrastructure.Id = Item.Id;
+			NewInfrastructure.ParentId = Item.ParentId;
+			NewInfrastructure.Name = Item.DisplayName;
+			NewInfrastructure.Iff = Item.Iff;
+			NewInfrastructure.Region = Item.Region;
+			NewInfrastructure.Location = Item.Location;
+			NewInfrastructure.Empire = Item.EmpireId;
+			NewInfrastructure.Intel = Item.Intel;
+			NewInfrastructure.Type = Item.Type;
+			NewInfrastructure.ParentType = Item.ParentType;
+
+			NewInfrastructure.Unit.SetNum(Item.Unit.Num());
+
+			int32 UnitIndex = 0;
+			for (const auto& UnitItem : Item.Unit)
+			{
+				if (!NewInfrastructure.Unit.IsValidIndex(UnitIndex))
+				{
+					break;
+				}
+
+				NewInfrastructure.Unit[UnitIndex].Name = UnitItem.UnitName;
+				NewInfrastructure.Unit[UnitIndex].Count = UnitItem.UnitCount;
+				NewInfrastructure.Unit[UnitIndex].Region = Item.Region;
+				NewInfrastructure.Unit[UnitIndex].Location = Item.Location;
+				NewInfrastructure.Unit[UnitIndex].ParentId = Item.ParentId;
+				NewInfrastructure.Unit[UnitIndex].Empire = Item.EmpireId;
+				NewInfrastructure.Unit[UnitIndex].Type = ECOMBATUNIT_TYPE::NONE;
+				NewInfrastructure.Unit[UnitIndex].ParentType = Item.Type;
+				NewInfrastructure.Unit[UnitIndex].Design = UnitItem.UnitDesign;
+				++UnitIndex;
+			}
+
+			LocalInfrastructures.Add(NewInfrastructure);
 			continue;
 		}
 
@@ -1210,7 +1310,6 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 	FinalizeCurrentForce();
 }
 
-
 void UStarshatterGameDataSubsystem::ExportDataToCSV(UDataTable* DataTable, const FString& FileName)
 {
 	if (!DataTable)
@@ -1289,7 +1388,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	//InitializeCampaignData();
 	ReadCampaignData();
 	
-	//InitializeCombatRoster();
+	InitializeCombatRoster();
 	ReadCombatRosterData();
 
 	ReadCombatants();
@@ -2808,6 +2907,8 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 
 	FS_CampaignMission NewMission;
 
+	LastParsedMissionEventTime = 0.0;
+
 	int     id = 0;
 
 	Text    Region = "";
@@ -3611,7 +3712,11 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	int32  EventId = 1;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
-	double EventTime = 0.0;
+
+	// IMPORTANT:
+	// inherit the last parsed event time unless this event overrides it
+	double EventTime = LastParsedMissionEventTime;
+	bool bHasExplicitTime = false;
 
 	// ---- FVector only ----
 	FVector EventPoint = FVector::ZeroVector;
@@ -3635,6 +3740,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
 	FS_MissionEvent NewMissionEvent;
+	NewMissionEvent.EventTime = EventTime;
 
 	const int32 ElemCount = (int32)Val->elements()->size();
 	for (int32 i = 0; i < ElemCount; ++i)
@@ -3666,7 +3772,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 
 			NewMissionEvent.EventType = EventType;
 		}
-		if (Key == "trigger")
+		else if (Key == "trigger")
 		{
 			char typestr[64];
 			GetDefText(typestr, PDef, Fn);
@@ -3679,7 +3785,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 				EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
 				UE_LOG(LogTemp, Warning,
-					TEXT("[ParseEvent] unknown type '%s' normalized to '%s' in '%s'"),
+					TEXT("[ParseEvent] unknown trigger '%s' normalized to '%s' in '%s'"),
 					*FString(typestr),
 					*NormalizedType,
 					UTF8_TO_TCHAR(Fn));
@@ -3695,12 +3801,19 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		else if (Key == "time")
 		{
 			GetDefNumber(EventTime, PDef, Fn);
+			bHasExplicitTime = true;
 			NewMissionEvent.EventTime = EventTime;
 		}
 		else if (Key == "delay")
 		{
 			GetDefNumber(EventDelay, PDef, Fn);
 			NewMissionEvent.EventDelay = EventDelay;
+		}
+		else if (Key == "caption")
+		{
+			Text CaptionText = "";
+			GetDefText(CaptionText, PDef, Fn);
+			NewMissionEvent.EventCaption = FString(CaptionText);
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{
@@ -3736,7 +3849,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 				TriggerNParams = 1;
 
 				NewMissionEvent.TriggerParam[0] = TriggerParam[0];
-				NewMissionEvent.TriggerNParams = TriggerNParams; // correct
+				NewMissionEvent.TriggerNParams = TriggerNParams;
 			}
 			else if (PDef->term() && PDef->term()->isArray())
 			{
@@ -3794,16 +3907,12 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		{
 			GetDefRect(EventRect, PDef, Fn);
 
-			// Store rect as XYWH (x,y,w,h) in FVector4:
 			NewMissionEvent.EventRect = FVector4(
 				(float)EventRect.x,
 				(float)EventRect.y,
 				(float)EventRect.w,
 				(float)EventRect.h
 			);
-
-			// Alternative if your FS_MissionEvent uses FIntRect:
-			// NewMissionEvent.EventRect = FIntRect(EventRect.x, EventRect.y, EventRect.x + EventRect.w, EventRect.y + EventRect.h);
 		}
 		else if (Key == "trigger_ship")
 		{
@@ -3817,9 +3926,25 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		}
 	}
 
-	MissionEventArray.Add(NewMissionEvent);
-}
+	// If no explicit time was provided, inherit the prior event time.
+	if (!bHasExplicitTime)
+	{
+		NewMissionEvent.EventTime = LastParsedMissionEventTime;
+	}
+	else
+	{
+		LastParsedMissionEventTime = EventTime;
+	}
 
+	MissionEventArray.Add(NewMissionEvent);
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[ParseEvent] Added Event Type=%d Time=%.2f Message='%s' Target='%s'"),
+		(int32)NewMissionEvent.EventType,
+		NewMissionEvent.EventTime,
+		*NewMissionEvent.EventMessage,
+		*NewMissionEvent.EventTarget);
+}
 
 // +--------------------------------------------------------------------+
 
@@ -4147,6 +4272,8 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 	// ----------------------------
 	// Template-level locals
 	// ----------------------------
+	LastParsedMissionEventTime = 0.0;
+
 	Text  TargetName = "";
 	Text  WardName = "";
 	Text  MissionName = "";
@@ -4384,6 +4511,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("MISSIONTEMPLATE file '%s'"), *TemplatePath);
+
+	LastParsedMissionEventTime = 0.0;
 
 	Text TargetName = "";
 	Text WardName = "";
@@ -4937,6 +5066,13 @@ void UStarshatterGameDataSubsystem::ParseOptional(TermStruct* val, const char* f
 
 void UStarshatterGameDataSubsystem::InitializeCombatRoster()
 {
+	if (!CombatGroupDataTable)
+	{
+		return;
+	}
+
+	CombatGroupDataTable->EmptyTable();
+
 	//CombatGroupDataTable->EmptyTable();
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::InitializeCombatRoster()"));
 
@@ -4965,12 +5101,7 @@ void UStarshatterGameDataSubsystem::InitializeCombatRoster()
 
 void UStarshatterGameDataSubsystem::LoadCombatRoster(const char* InFilename, int32 Team)
 {
-	if (!CombatGroupDataTable)
-	{
-		return;
-	}
 
-	CombatGroupDataTable->EmptyTable();
 
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadCombatRoster"));
 
@@ -6008,6 +6139,102 @@ FString UStarshatterGameDataSubsystem::GetEmpireRosterName(EEMPIRE_NAME Empire) 
 	return EnumObj->GetDisplayNameTextByValue((int64)Empire).ToString();
 }
 
+void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables_Internal()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables_Internal: BEGIN"));
+
+	if (CombatRosterData.Num() == 0)
+	{
+		ReadCombatRosterData();
+	}
+
+	if (CombatantData.Num() == 0)
+	{
+		ReadCombatants();
+	}
+
+	const TArray<FName> RowNames = GetCampaignGroupRowNames();
+	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
+
+	LinkGroupHierarchy(RowNames, GroupByRowName);
+	BuildUnitsForGroups(RowNames, GroupByRowName);
+	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
+
+	Campaign* CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
+		return;
+	}
+	else {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
+			CampaignPtr->GetCombatants().size()
+			, GroupByRowName.Num());
+	}
+
+	ListIter<Combatant> It = CampaignPtr->GetCombatants();
+	while (++It)
+	{
+		Combatant* C = It.value();
+		if (!C) continue;
+
+		CombatGroup* Root = C->GetForce();
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] Combatant=%s Root=%s"),
+			ANSI_TO_TCHAR(C->GetName()),
+			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
+	}
+}
+
+void UStarshatterGameDataSubsystem::ReadCombatants_Internal()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables_Internal: BEGIN"));
+
+	if (CombatRosterData.Num() == 0)
+	{
+		ReadCombatRosterData();
+	}
+
+	if (CombatantData.Num() == 0)
+	{
+		ReadCombatants();
+	}
+
+	const TArray<FName> RowNames = GetCampaignGroupRowNames();
+	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
+
+	LinkGroupHierarchy(RowNames, GroupByRowName);
+	BuildUnitsForGroups(RowNames, GroupByRowName);
+	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
+
+	Campaign* CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
+		return;
+	}
+	else {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
+			CampaignPtr->GetCombatants().size()
+			, GroupByRowName.Num());
+	}
+
+	ListIter<Combatant> It = CampaignPtr->GetCombatants();
+	while (++It)
+	{
+		Combatant* C = It.value();
+		if (!C) continue;
+
+		CombatGroup* Root = C->GetForce();
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] Combatant=%s Root=%s"),
+			ANSI_TO_TCHAR(C->GetName()),
+			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
+	}
+}
+
 
 void UStarshatterGameDataSubsystem::BuildCombatRosterFromOrderOfBattle()
 {
@@ -6097,6 +6324,15 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceTree(const FS_OOBFor
 		AddCivilianToForce(ForceGroup, CivilianRow);
 	}
 
+	for (const FS_OOBInfrastructure& InfrastructureRow : ForceRow.Infrastructure)
+	{
+		AddInfrastructureToForce(ForceGroup, InfrastructureRow);
+	}
+
+	for (const FS_OOBTransport& TransportRow : ForceRow.Transport)
+	{
+		AddTransportToForce(ForceGroup, TransportRow);
+	}
 	return ForceGroup;
 }
 
@@ -6305,7 +6541,7 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 		CivilianRow.Id,
 		TCHAR_TO_ANSI(*CivilianRow.Name),
 		CivilianRow.Iff,
-		Intel::KNOWN,
+		(int) CivilianRow.Intel,
 		CivilianRow.Empire,
 		ForceGroup);
 
@@ -6315,6 +6551,64 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 	}
 
 	CivilianGroup->SetRegion(TCHAR_TO_ANSI(*CivilianRow.Region));
+}
+
+void UStarshatterGameDataSubsystem::AddTransportToForce(CombatGroup* ForceGroup, const FS_OOBTransport& TransportRow)
+{
+	if (!ForceGroup)
+	{
+		return;
+	}
+
+	CombatGroup* TransportGroup = new CombatGroup(
+		TransportRow.Type,
+		TransportRow.Id,
+		TCHAR_TO_ANSI(*TransportRow.Name),
+		TransportRow.Iff,
+		(int) TransportRow.Intel,
+		TransportRow.Empire,
+		ForceGroup);
+
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	TransportGroup->SetRegion(TCHAR_TO_ANSI(*TransportRow.Region));
+
+	for (const FS_OOBStation& StationRow : TransportRow.Station)
+	{
+		AddStationToTransport(TransportGroup, StationRow);
+	}
+
+	for (const FS_OOBStarbase& StarbaseRow : TransportRow.Starbase)
+	{
+		AddStarbaseToTransport(TransportGroup, StarbaseRow);
+	}
+}
+
+void UStarshatterGameDataSubsystem::AddInfrastructureToForce(CombatGroup* ForceGroup, const FS_OOBInfrastructure& InfrastructureRow)
+{
+	if (!ForceGroup)
+	{
+		return;
+	}
+
+	CombatGroup* InfrastructureGroup = new CombatGroup(
+		InfrastructureRow.Type,
+		InfrastructureRow.Id,
+		TCHAR_TO_ANSI(*InfrastructureRow.Name),
+		InfrastructureRow.Iff,
+		(int) InfrastructureRow.Intel,
+		InfrastructureRow.Empire,
+		ForceGroup);
+
+	if (!InfrastructureGroup)
+	{
+		return;
+	}
+
+	InfrastructureGroup->SetRegion(TCHAR_TO_ANSI(*InfrastructureRow.Region));
 }
 
 void UStarshatterGameDataSubsystem::AddWingToCarrier(
@@ -6331,7 +6625,7 @@ void UStarshatterGameDataSubsystem::AddWingToCarrier(
 		WingRow.Id,
 		TCHAR_TO_ANSI(*WingRow.Name),
 		WingRow.Iff,
-		Intel::KNOWN,
+		(int) WingRow.Intel,
 		WingRow.Empire,
 		CarrierGroup);
 
@@ -6378,7 +6672,7 @@ void UStarshatterGameDataSubsystem::AddInterceptSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6406,7 +6700,7 @@ void UStarshatterGameDataSubsystem::AddAttackSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6434,7 +6728,7 @@ void UStarshatterGameDataSubsystem::AddFighterSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6462,7 +6756,7 @@ void UStarshatterGameDataSubsystem::AddLandingSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6490,7 +6784,7 @@ void UStarshatterGameDataSubsystem::AddBatteryToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6518,7 +6812,7 @@ void UStarshatterGameDataSubsystem::AddStationToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int)Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6546,9 +6840,65 @@ void UStarshatterGameDataSubsystem::AddStarbaseToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		BattalionGroup);
+
+	if (!StarbaseGroup)
+	{
+		return;
+	}
+
+	StarbaseGroup->SetLocation(Row.Location);
+	StarbaseGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+	AddUnitsToCombatGroup(StarbaseGroup, Row.Unit);
+}
+
+void UStarshatterGameDataSubsystem::AddStationToTransport(
+	CombatGroup* TransportGroup,
+	const FS_OOBStation& Row)
+{
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	CombatGroup* StationGroup = new CombatGroup(
+		ECOMBATGROUP_TYPE::STATION,
+		Row.Id,
+		TCHAR_TO_ANSI(*Row.Name),
+		Row.Iff,
+		(int)Row.Intel,
+		Row.Empire,
+		TransportGroup);
+
+	if (!StationGroup)
+	{
+		return;
+	}
+
+	StationGroup->SetLocation(Row.Location);
+	StationGroup->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+	AddUnitsToCombatGroup(StationGroup, Row.Unit);
+}
+
+void UStarshatterGameDataSubsystem::AddStarbaseToTransport(
+	CombatGroup* TransportGroup,
+	const FS_OOBStarbase& Row)
+{
+	if (!TransportGroup)
+	{
+		return;
+	}
+
+	CombatGroup* StarbaseGroup = new CombatGroup(
+		ECOMBATGROUP_TYPE::STARBASE,
+		Row.Id,
+		TCHAR_TO_ANSI(*Row.Name),
+		Row.Iff,
+		(int)Row.Intel,
+		Row.Empire,
+		TransportGroup);
 
 	if (!StarbaseGroup)
 	{
@@ -6574,7 +6924,7 @@ void UStarshatterGameDataSubsystem::AddMinefieldToFleet(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		Intel::KNOWN,
+		(int) Row.Intel,
 		Row.Empire,
 		FleetGroup);
 
@@ -7020,10 +7370,18 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 
 		while (ParentGroup && !CarrierUnit)
 		{
-			if (ParentGroup->GetUnits().size() > 0 &&
-				ParentGroup->GetUnits()[0]->GetType() == (int)CLASSIFICATION::CARRIER)
+			const auto& Units = ParentGroup->GetUnits();
+
+			if (Units.size() > 0)
 			{
-				CarrierUnit = ParentGroup->GetUnits()[0];
+				CombatUnit* FirstUnit = Units[0];
+
+				if (FirstUnit &&
+					FirstUnit->GetType() == (int)CLASSIFICATION::CARRIER)
+				{
+					CarrierUnit = FirstUnit;
+					break;
+				}
 			}
 
 			ParentGroup = ParentGroup->GetParent();
@@ -7203,48 +7561,44 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: BEGIN"));
 
-	if (CombatRosterData.Num() == 0)
+	if (!CampaignDataTable)
 	{
-		ReadCombatRosterData();
-	}
-
-	if (CombatantData.Num() == 0)
-	{
-		ReadCombatants();
-	}
-
-	const TArray<FName> RowNames = GetCampaignGroupRowNames();
-	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
-
-	LinkGroupHierarchy(RowNames, GroupByRowName);
-	BuildUnitsForGroups(RowNames, GroupByRowName);
-	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
-
-	Campaign* CampaignPtr = Campaign::GetCampaign();
-	if (!CampaignPtr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
+		UE_LOG(LogTemp, Error,
+			TEXT("[GameData] BuildCombatRosterFromDataTables: CampaignDataTable is null"));
 		return;
 	}
-	else {
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
-			CampaignPtr->GetCombatants().size()
-			,GroupByRowName.Num());
-	}
 
-	ListIter<Combatant> It = CampaignPtr->GetCombatants();
-	while (++It)
+	if (SelectedCampaignRowName.IsNone())
 	{
-		Combatant* C = It.value();
-		if (!C) continue;
-
-		CombatGroup* Root = C->GetForce();
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] Combatant=%s Root=%s"),
-			ANSI_TO_TCHAR(C->GetName()),
-			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
+		UE_LOG(LogTemp, Error,
+			TEXT("[GameData] BuildCombatRosterFromDataTables: SelectedCampaignRowName is None"));
+		return;
 	}
+
+	const FS_Campaign* CampaignRow =
+		CampaignDataTable->FindRow<FS_Campaign>(
+			SelectedCampaignRowName,
+			TEXT("BuildCombatRosterFromDataTables"),
+			false);
+
+	if (!CampaignRow)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GameData] BuildCombatRosterFromDataTables: missing campaign row '%s' in table '%s'"),
+			*SelectedCampaignRowName.ToString(),
+			*GetNameSafe(CampaignDataTable));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GameData] BuildCombatRosterFromDataTables: Campaign='%s' Row='%s' Index=%d"),
+		*CampaignRow->Name,
+		*SelectedCampaignRowName.ToString(),
+		CampaignRow->Index);
+
+	BuildCombatRosterFromDataTables_Internal();
+
+	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: COMPLETE"));
 }
 
 void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
@@ -7371,37 +7725,46 @@ void UStarshatterGameDataSubsystem::BuildCombatantsFromDataTables(
 
 void UStarshatterGameDataSubsystem::ReadCombatants()
 {
-	CombatantData.Empty();
+	UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] ReadCombatants: BEGIN"));
 
 	if (!CampaignDataTable)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable is NULL"));
+		UE_LOG(LogTemp, Error,
+			TEXT("[CombatRoster] CampaignDataTable is null"));
 		return;
 	}
 
 	if (SelectedCampaignRowName.IsNone())
 	{
-		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: SelectedCampaignRowName is None"));
+		UE_LOG(LogTemp, Error,
+			TEXT("[CombatRoster] SelectedCampaignRowName is None"));
 		return;
 	}
 
 	const FS_Campaign* CampaignRow =
-		CampaignDataTable->FindRow<FS_Campaign>(SelectedCampaignRowName, TEXT("ReadCombatants"));
+		CampaignDataTable->FindRow<FS_Campaign>(
+			SelectedCampaignRowName,
+			TEXT("ReadCombatants"),
+			false);
 
 	if (!CampaignRow)
 	{
 		UE_LOG(LogTemp, Error,
-			TEXT("[GameData] ReadCombatants: could not find campaign row '%s'"),
-			*SelectedCampaignRowName.ToString());
+			TEXT("[CombatRoster] Could not find FS_Campaign row '%s' in CampaignDataTable '%s'"),
+			*SelectedCampaignRowName.ToString(),
+			*GetNameSafe(CampaignDataTable));
 		return;
 	}
 
-	CombatantData = CampaignRow->Combatant;
-
 	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] ReadCombatants: loaded %d combatants from campaign '%s'"),
-		CombatantData.Num(),
-		*CampaignRow->Name);
+		TEXT("[CombatRoster] Using campaign row '%s' Name='%s' Index=%d"),
+		*SelectedCampaignRowName.ToString(),
+		*CampaignRow->Name,
+		CampaignRow->Index);
+
+	ReadCombatants_Internal();
+
+	UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] ReadCombatants: COMPLETE"));
 }
 
 void UStarshatterGameDataSubsystem::ValidateCombatRosterRuntime()

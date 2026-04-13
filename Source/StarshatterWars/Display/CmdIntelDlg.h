@@ -49,6 +49,7 @@ public:
 	void SetManager(UCmpnScreen* InManager);
 	void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
 	void ShowIntelDlg();
+	void RefreshIntelData();
 
 private:
 	void BindFormWidgets();
@@ -67,11 +68,12 @@ private:
 
 	CombatEvent* GetSelectedEvent(int32& OutSelectedIndex) const;
 
-	void GetIntelImageFile(const FString& IntelImageName);
+	FString GetIntelImageAssetPath(const FString& IntelImageName) const;
 	void GetIntelAudioFile(const FString& IntelAudioName);
 
-	UTexture2D* LoadTextureFromFile();
+	UTexture2D* LoadTextureFromAssetPath(const FString& AssetPath) const;
 	FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize);
+	void AutoSelectFirstItemIfNeeded();
 
 private:
 	UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;
@@ -98,10 +100,10 @@ private:
 
 	ECOMMAND_MODE Mode = ECOMMAND_MODE::MODE_INTEL;
 
-	UPROPERTY() UTexture2D* DefaultNewsTexture = nullptr;
+	UPROPERTY()
+	UTexture2D* DefaultNewsTexture = nullptr;
 
 protected:
-	FString ImagePath;
 	FString AudioPath;
 
 protected:

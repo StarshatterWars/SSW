@@ -391,6 +391,7 @@ enum class ECOMBATUNIT_TYPE : uint8
 	BATTERY				UMETA(DisplayName = "Battery"),
 	STATION				UMETA(DisplayName = "Station"),
 	STARBASE			UMETA(DisplayName = "Starbase"),
+	TRANSPORT			UMETA(DisplayName = "Transport"),
 };
 
 UENUM(BlueprintType)
@@ -840,6 +841,41 @@ enum class TacticalViewMenu : uint32 {
 	FARCAST = 2001
 };
 
+UENUM()
+enum class MusicMode : uint8
+{
+	NONE,
+
+	// menu modes:
+	MENU,
+	INTRO,
+	BRIEFING,
+	DEBRIEFING,
+	PROMOTION,
+	VICTORY,
+	DEFEAT,
+	CREDITS,
+
+	// in game modes:
+	FLIGHT,
+	COMBAT,
+	LAUNCH,
+	RECOVERY,
+
+	// special modes:
+	SHUTDOWN
+};
+
+UENUM()
+enum class MuisicTransition : uint8
+{
+	CUT,
+	FADE_OUT,
+	FADE_IN,
+	FADE_BOTH,
+	CROSS_FADE
+};
+
 /*static enum ETXT : int32
 {
 	MAX_CONTACT = 50,
@@ -906,6 +942,24 @@ enum class TacticalViewMenu : uint32 {
 /**
  * STRUCTS
  */
+
+USTRUCT(BlueprintType)
+struct FS_CampaignUIBundle
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Campaign UI")
+	FString CampaignFolder;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> LoadTop = nullptr;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> LoadBottom = nullptr;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Campaign UI")
+	TObjectPtr<UTexture2D> CampaignComplete = nullptr;
+};
 
 USTRUCT()
 struct FJumpLink
@@ -2552,54 +2606,77 @@ struct FS_MissionOptional : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_MissionEvent : public FTableRowBase {
-
+struct FS_MissionEvent : public FTableRowBase
+{
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	MISSIONEVENT_TYPE EventType = MISSIONEVENT_TYPE::MESSAGE;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventShip;
+	FString EventShip;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventSource;
+	FString EventSource;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventTarget;
+	FString EventTarget;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventMessage;
+	FString EventMessage;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	EventSound;
+	FString EventCaption;   
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString	TriggerShip;
+	FString EventSound;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString TriggerShip;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString TriggerTarget;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventId;
+	int EventId;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventChance;
+	int EventChance;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventDelay;
+	int EventDelay;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double	EventTime;
+	double EventTime;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector	EventPoint;
+	FVector EventPoint;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FVector4 EventRect;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<int> EventParam;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<int> TriggerParam;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	EventNParams;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int	TriggerNParams;
 
-	FS_MissionEvent() {
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int EventNParams;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int TriggerNParams;
+
+	FS_MissionEvent()
+	{
 		EventShip = "";
 		EventSource = "";
 		EventTarget = "";
 		EventMessage = "";
+		EventCaption = "";
 		EventSound = "";
 		TriggerShip = "";
 		TriggerTarget = "";
@@ -2607,8 +2684,7 @@ struct FS_MissionEvent : public FTableRowBase {
 		EventId = 1;
 		EventChance = 0;
 		EventDelay = 0;
-
-		EventTime = 0;
+		EventTime = 0.0;
 
 		EventPoint = FVector::ZeroVector;
 		EventRect = FVector4::Zero();
@@ -2619,11 +2695,13 @@ struct FS_MissionEvent : public FTableRowBase {
 		EventParam.SetNum(10);
 		TriggerParam.SetNum(10);
 
-		for (int EventIndex = 0; EventIndex < EventParam.Num(); EventIndex++) {
+		for (int EventIndex = 0; EventIndex < EventParam.Num(); EventIndex++)
+		{
 			EventParam[EventIndex] = 0;
 		}
 
-		for (int TriggerIndex = 0; TriggerIndex < TriggerParam.Num(); TriggerIndex++) {
+		for (int TriggerIndex = 0; TriggerIndex < TriggerParam.Num(); TriggerIndex++)
+		{
 			TriggerParam[TriggerIndex] = 0;
 		}
 	}
@@ -3002,6 +3080,74 @@ struct FS_OOBStationUnit : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
+struct FS_OOBInfrastructureUnit : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Design;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATUNIT_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Count;
+
+	FS_OOBInfrastructureUnit() {
+		Name = "";
+		Region = "";
+		ParentId = 0;
+		Count = -1;
+		Type = ECOMBATUNIT_TYPE::NONE;
+		ParentType = ECOMBATGROUP_TYPE::INFRASTRUCTURE;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FS_OOBTransportUnit : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Design;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATUNIT_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Count;
+
+	FS_OOBTransportUnit() {
+		Name = "";
+		Region = "";
+		ParentId = 0;
+		Count = -1;
+		Type = ECOMBATUNIT_TYPE::NONE;
+		ParentType = ECOMBATGROUP_TYPE::TRANSPORT;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FS_OOBStarbaseUnit : public FTableRowBase {
 	GENERATED_BODY()
 
@@ -3034,6 +3180,7 @@ struct FS_OOBStarbaseUnit : public FTableRowBase {
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
+
 USTRUCT(BlueprintType)
 struct FS_OOBMinefieldUnit : public FTableRowBase {
 	GENERATED_BODY()
@@ -3102,43 +3249,7 @@ struct FS_OOBFighterUnit : public FTableRowBase {
 	}
 };
 
-USTRUCT(BlueprintType)
-struct FS_OOBCivilian : public FTableRowBase {
-	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Id;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EEMPIRE_NAME Empire;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Iff;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector Location = FVector::Zero();
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Region;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int ParentId;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EINTEL_TYPE Intel;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	ECOMBATGROUP_TYPE Type;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	ECOMBATGROUP_TYPE ParentType;
-	
-	FS_OOBCivilian() {
-		Id = 0;
-		Iff = -1;
-		ParentId = 0;
-		Name = "";
-		Region = "";
-		Intel = EINTEL_TYPE::KNOWN;
-		Type = ECOMBATGROUP_TYPE::CIVILIAN;
-		ParentType = ECOMBATGROUP_TYPE::FORCE;
-		Empire = EEMPIRE_NAME::Unknown;
-	}
-};
 USTRUCT(BlueprintType)
 struct FS_OOBLanding : public FTableRowBase {
 	GENERATED_BODY()
@@ -3347,6 +3458,7 @@ struct FS_OOBStarbase : public FTableRowBase {
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
+
 USTRUCT(BlueprintType)
 struct FS_OOBStation : public FTableRowBase {
 	GENERATED_BODY()
@@ -3431,6 +3543,124 @@ struct FS_OOBBattery : public FTableRowBase {
 		Intel = EINTEL_TYPE::KNOWN;
 		Type = ECOMBATGROUP_TYPE::BATTERY;
 		ParentType = ECOMBATGROUP_TYPE::BATTALION;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FS_OOBInfrastructure : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBInfrastructureUnit> Unit;
+
+	FS_OOBInfrastructure() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::TRANSPORT;
+		ParentType = ECOMBATGROUP_TYPE::CIVILIAN;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+USTRUCT(BlueprintType)
+struct FS_OOBTransport : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBStation> Station;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray <FS_OOBStarbase> Starbase;
+
+	FS_OOBTransport() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::TRANSPORT;
+		ParentType = ECOMBATGROUP_TYPE::CIVILIAN;
+		Empire = EEMPIRE_NAME::Unknown;
+	}
+};
+USTRUCT(BlueprintType)
+struct FS_OOBCivilian : public FTableRowBase {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Id;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Name;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EEMPIRE_NAME Empire;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int Iff;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector Location = FVector::Zero();
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString Region;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int ParentId;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EINTEL_TYPE Intel;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE Type;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	ECOMBATGROUP_TYPE ParentType;
+
+	FS_OOBCivilian() {
+		Id = 0;
+		Iff = -1;
+		ParentId = 0;
+		Name = "";
+		Region = "";
+		Intel = EINTEL_TYPE::KNOWN;
+		Type = ECOMBATGROUP_TYPE::CIVILIAN;
+		ParentType = ECOMBATGROUP_TYPE::FORCE;
 		Empire = EEMPIRE_NAME::Unknown;
 	}
 };
@@ -3767,6 +3997,10 @@ struct FS_OOBForce : public FTableRowBase {
 	TArray<FS_OOBBattalion> Battalion;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_OOBCivilian> Civilian;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray<FS_OOBTransport> Transport;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray<FS_OOBInfrastructure> Infrastructure;
 	
 	FS_OOBForce() {
 		
@@ -4199,8 +4433,10 @@ enum class EStarshatterInputAction : uint8
 	// ------------------------------------------------------------
 	// CORE / META
 	// ------------------------------------------------------------
+	None					UMETA(DisplayName = "None"),                 // None
+
 	ExitGame                UMETA(DisplayName = "Exit Game"),            // legacy KEY_EXIT
-	Pause                   UMETA(DisplayName = "Pause"),               // legacy KEY_PAUSE
+	Pause                   UMETA(DisplayName = "Pause"),                // legacy KEY_PAUSE
 
 	// ------------------------------------------------------------
 	// TIME
@@ -4408,7 +4644,7 @@ struct FStarshatterInputBinding
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Input")
-	EStarshatterInputAction Action;
+	EStarshatterInputAction Action = EStarshatterInputAction::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Input")
 	FKey Key;

@@ -185,6 +185,7 @@ public:
     void         SetCombatGroup(CombatGroup* g) { combat_group = g; }
 
     CombatUnit*  GetCombatUnit() { return combat_unit; }
+    CombatUnit*  GetCombatUnit() const { return combat_unit; }
     void         SetCombatUnit(CombatUnit* u) { combat_unit = u; }
 
 protected:

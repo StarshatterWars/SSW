@@ -60,7 +60,6 @@
 #include "FormatUtil.h"
 #include "Text.h"
 #include "Term.h"
-#include "GameLoader.h"
 
 // Engine / file helpers
 #include "Misc/FileHelper.h"
@@ -172,7 +171,7 @@ public:
     FString GetProjectPath();
 
     bool GetRegionTypeFromString(const FString& InString, EOrbitalType& OutValue);
-
+    const FS_Campaign* GetActiveCampaignPtr() const { return &ActiveCampaign; }
 
     // =====================================================================
     // Campaigns (static load + DT hydration)
@@ -366,6 +365,8 @@ public:
     UPROPERTY()
     FName SelectedCampaignRowName = NAME_None;
 
+    UDataTable* CampaignDataTable;
+
     bool                 bClearTables;
     
     TMap<int32, const FS_Campaign*> CampaignLookup;
@@ -400,6 +401,8 @@ protected:
     void AddBattalionToForce(CombatGroup* ForceGroup, const FS_OOBBattalion& BattalionRow);
     void AddCivilianToForce(CombatGroup* ForceGroup, const FS_OOBCivilian& CivilianRow);
 
+    void AddTransportToForce(CombatGroup* ForceGroup, const FS_OOBTransport& TransportRow);
+    void AddInfrastructureToForce(CombatGroup* ForceGroup, const FS_OOBInfrastructure& InfrastructureRow);
     void AddWingToCarrier(CombatGroup* CarrierGroup, const FS_OOBWing& WingRow);
     void AddInterceptSquadronToWing(CombatGroup* WingGroup, const FS_OOBIntercept& Row);
     void AddAttackSquadronToWing(CombatGroup* WingGroup, const FS_OOBAttack& Row);
@@ -408,7 +411,9 @@ protected:
 
     void AddBatteryToBattalion(CombatGroup* BattalionGroup, const FS_OOBBattery& Row);
     void AddStationToBattalion(CombatGroup* BattalionGroup, const FS_OOBStation& Row);
+    void AddStarbaseToTransport(CombatGroup* TransportGroup, const FS_OOBStarbase& Row);
     void AddStarbaseToBattalion(CombatGroup* BattalionGroup, const FS_OOBStarbase& Row);
+    void AddStationToTransport(CombatGroup* TransportGroup, const FS_OOBStation& Row);
     void AddMinefieldToFleet(CombatGroup* FleetGroup, const FS_OOBMinefield& Row);
 
     void AddUnitsToCombatGroup(CombatGroup* Parent, const TArray<FS_OOBUnit>& Units);
@@ -462,7 +467,7 @@ protected:
     // =====================================================================
     // DataTables (kept intact)
     // =====================================================================
-    UDataTable* CampaignDataTable;
+    //UDataTable* CampaignDataTable;
     UDataTable* CampaignActionDataTable;
     UDataTable* CombatGroupDataTable;
     UDataTable* OrderOfBattleDataTable;
@@ -592,6 +597,8 @@ protected:
     int     UnitDamage;
     int     UnitDead;
     int     UnitHeading;
+
+    double LastParsedMissionEventTime = 0.0;
     
     float    CurrentShipScale = 1.0f;
 
@@ -634,6 +641,10 @@ protected:
     
     UPROPERTY()
     TMap<int32, int32> CampaignIndexLookup;
+
+private:
+    void BuildCombatRosterFromDataTables_Internal();
+    void ReadCombatants_Internal();
 };
 
 static FSkinMtlCell ParseSkinMtlCell(TermStruct* Val, const char* Fn);

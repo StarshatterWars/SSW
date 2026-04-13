@@ -112,7 +112,7 @@ void ULoadScreen::ExecFrame()
     if (CmpLoadDlg && CmpLoadDlg->IsVisible())
     {
         // Optional: only if your UCmpLoadDlg class has ExecFrame()
-        CmpLoadDlg->ExecFrame();
+        CmpLoadDlg->ExecFrame(0.0);
     }
 }
 

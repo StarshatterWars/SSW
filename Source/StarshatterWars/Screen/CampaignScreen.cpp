@@ -254,7 +254,7 @@ void UCampaignScreen::OnPlayButtonClicked()
 		}
 	}
 
-	GI->ShowCampaignLoading();
+	//GI->ShowCampaignLoading();
 }
 
 void UCampaignScreen::OnRestartButtonClicked()
@@ -310,7 +310,7 @@ void UCampaignScreen::OnRestartButtonClicked()
 	}
 
 	// Restart campaign runtime
-	GI->ShowCampaignLoading();
+	//GI->ShowCampaignLoading();
 }
 
 

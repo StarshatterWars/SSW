@@ -8,11 +8,28 @@
 
     OVERVIEW
     ========
-    UCmpLoadDlg
-    - Unreal UMG dialog equivalent of legacy CmpLoadDlg (FormWindow).
-    - Inherits from UBaseScreen to use FORM parsing + ID binding.
-    - Updates activity/progress each tick (ExecFrame).
-    - Captures show time on Show(); IsDone() gates dismissal at 5s.
+    Campaign loading dialog (modernized).
+
+    This class is now a PURE VISUAL OVERLAY used during:
+    - Campaign startup
+    - Level streaming transitions
+    - Scene preparation
+
+    IMPORTANT CHANGE:
+    -----------------
+    This class NO LONGER controls flow or transitions.
+
+    It does NOT:
+    - switch screens
+    - trigger campaign start
+    - gate timing decisions
+
+    All transition logic is handled by UCmpnScreen.
+
+    This class ONLY:
+    - displays loading UI
+    - shows activity text and progress
+    - provides optional minimum display timing
 */
 
 #pragma once
@@ -21,9 +38,17 @@
 #include "BaseScreen.h"
 #include "CmpLoadDlg.generated.h"
 
+class UCmpnScreen;
+class UBorder;
+class UCanvasPanel;
 class UImage;
+class UOverlay;
+class UProgressBar;
+class USizeBox;
+class USpacer;
 class UTextBlock;
-class USlider;
+class UVerticalBox;
+class UTexture2D;
 
 UCLASS()
 class STARSHATTERWARS_API UCmpLoadDlg : public UBaseScreen
@@ -33,37 +58,70 @@ class STARSHATTERWARS_API UCmpLoadDlg : public UBaseScreen
 public:
     UCmpLoadDlg(const FObjectInitializer& ObjectInitializer);
 
-    // Legacy dialog operations:
-    virtual void ExecFrame();
-    virtual void Show();
+    virtual void Show() override;
+    virtual void Hide() override;
+    virtual void ExecFrame(double DeltaTime) override;
+
+    // Optional helper: minimum display time (cosmetic only)
     virtual bool IsDone() const;
 
-    // UBaseScreen:
-    virtual void BindFormWidgets() override;
-    virtual FString GetLegacyFormText() const override;
+    void SetCmpnScreen(UCmpnScreen* InScreen) { CmpnScreen = InScreen; }
+    void SetCampaignName(const FString& InName);
 
 protected:
-    // UUserWidget:
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:
-    // FORM controls (match IDs from CmpLoadDlg.frm)
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* ImgTitle = nullptr; // id 100
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* LblTitle = nullptr; // id 200 (legacy C++ used it)
-    UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* LblActivity = nullptr; // id 101
-    UPROPERTY(meta = (BindWidgetOptional)) USlider* SldProgress = nullptr; // id 102
+    void BuildScreen();
+    void BuildBackgroundLayer();
+    void BuildMainLayout();
+    void BuildBottomPanel();
 
-    // Optional background images if you model them in UMG:
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* BgTop = nullptr; // id 300
-    UPROPERTY(meta = (BindWidgetOptional)) UImage* BgPanel = nullptr; // id 400
+    void LoadArtAssets();
+    void ApplyStaticArt();
+    void ApplyTitleFont();
+    void ApplyCampaignTitleCard();
+    void ApplyInitialVisualState();
+    void RefreshLoadState();
+
+    uint32 GetRealTimeMs() const;
+
+    UTextBlock* BuildVBoxLabel(
+        UVerticalBox* Parent,
+        const FString& Text,
+        int32 FontSize,
+        const FLinearColor& Color);
+
+    USpacer* BuildVBoxSpacer(UVerticalBox* Parent, float Height);
 
 protected:
-    // Show timestamp in milliseconds (legacy behavior)
+    bool bScreenBuilt = false;
+
+    // Minimum display tracking (NO LONGER controls flow)
     uint32 ShowTimeMs = 0;
 
 protected:
-    // Internal helpers (kept private to the class, no extra modules)
-    uint32 GetRealTimeMs() const;
-    void   ApplyCampaignTitleCard();
+    UPROPERTY()
+    TObjectPtr<UCmpnScreen> CmpnScreen = nullptr;
+
+protected:
+    // UI
+    UPROPERTY() TObjectPtr<UImage> BackgroundImage = nullptr;
+    UPROPERTY() TObjectPtr<UVerticalBox> MainVBox = nullptr;
+    UPROPERTY() TObjectPtr<USizeBox> CenterArtBox = nullptr;
+    UPROPERTY() TObjectPtr<UOverlay> CenterArtOverlay = nullptr;
+    UPROPERTY() TObjectPtr<UImage> CenterImage = nullptr;
+    UPROPERTY() TObjectPtr<UTextBlock> CenterTitleText = nullptr;
+
+    UPROPERTY() TObjectPtr<UBorder> BottomPanel = nullptr;
+    UPROPERTY() TObjectPtr<UVerticalBox> BottomPanelVBox = nullptr;
+    UPROPERTY() TObjectPtr<UTextBlock> LblActivity = nullptr;
+    UPROPERTY() TObjectPtr<UProgressBar> ProgressBar = nullptr;
+
+protected:
+    // Assets
+    UPROPERTY() TObjectPtr<UTexture2D> DefaultCenterTexture = nullptr;
+    UPROPERTY() TObjectPtr<UTexture2D> DefaultBackgroundTexture = nullptr;
+    UPROPERTY() TObjectPtr<UObject> SerpentineFontObject = nullptr;
 };

@@ -234,6 +234,21 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.SystemMapTable
+    if (!Cache.Contains(TEXT("Data.SystemMapTable")))
+    {
+        if (!Settings->SystemMapTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->SystemMapTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.SystemMapTable"), TSoftObjectPtr<UObject>(Path));
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind Data.SystemMapTable -> %s"), *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning, TEXT("[ASSETS] SystemMapTable is not set in Project Settings"));
+        }
+    }
+
     // Data.OrderOfBattleTable
     if (!Cache.Contains(TEXT("Data.OrderOfBattleTable")))
     {
@@ -338,6 +353,42 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] MenuScreenClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignScreenClass")))
+    {
+        if (!Settings->CampaignScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignScreenClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignSceneClass")))
+    {
+        if (!Settings->CampaignSceneClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignSceneClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignSceneClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignScreenClass is not set in Project Settings"));
         }
     }
 
@@ -516,6 +567,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] CmdMessageDlgClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.OptionsScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignLoadClass")))
+    {
+        if (!Settings->CampaignLoadScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignLoadScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignLoadClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignLoadClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignLoadClass is not set in Project Settings"));
         }
     }
 
