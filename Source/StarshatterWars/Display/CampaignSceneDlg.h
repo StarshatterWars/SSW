@@ -25,7 +25,7 @@ class UPanelWidget;
 class URichTextBlock;
 class UTexture2D;
 
-class UCampaignScreen;
+class UCmpnScreen;
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -35,7 +35,7 @@ class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
 public:
     UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer);
 
-    void SetManager(UCampaignScreen* InManager) { Manager = InManager; }
+    void SetManager(UCmpnScreen* InManager) { Manager = InManager; }
 
     virtual void Show();
     virtual void Hide();
@@ -114,7 +114,7 @@ protected:
 
 protected:
     // Raw pointer by request
-    UCampaignScreen* Manager = nullptr;
+    UCmpnScreen* Manager = nullptr;
 
     // Subtitles state
     TArray<FString> SubtitleLines;

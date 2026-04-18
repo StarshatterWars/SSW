@@ -18,7 +18,7 @@
 #include "Components/PanelWidget.h"
 #include "Components/RichTextBlock.h"
 #include "Kismet/GameplayStatics.h"
-#include "CampaignScreen.h"
+#include "CmpnScreen.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)

@@ -362,9 +362,6 @@ void USSWGameInstance::RemoveScreens()
 	if (CampaignLoading) {
 		//RemoveCampaignLoadScreen();
 	}
-	if (OperationsScreen) {
-		//RemoveOperationsScreen();
-	}
 	if (MainMenuDlg) {
 		//RemoveMainMenuScreen();
 	}
@@ -380,17 +377,6 @@ void USSWGameInstance::OnGameTimerTick()
 	UE_LOG(LogTemp, Log, TEXT("Campaign Timer: %d"), GetCampaignTime());
 }
 
-void USSWGameInstance::RemoveMainMenuScreen()
-{
-	if (MainMenuDlg) {
-		MainMenuDlg->RemoveFromParent();
-
-		MainMenuDlg = nullptr;
-		if (GEngine) {
-			GEngine->ForceGarbageCollection();
-		}
-	}
-}
 
 void USSWGameInstance::SetGameMode(EGameMode gm)
 {
@@ -1493,3 +1479,6 @@ void USSWGameInstance::LoadOrCreateUniverse()
 
 	SetUniverseSaveContext(Slot, UserIndex, CachedUniverseSave);
 }
+
+
+
