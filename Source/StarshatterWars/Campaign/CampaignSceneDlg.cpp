@@ -553,6 +553,31 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
 
     Show();
 
+    if (ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor())
+    {
+        const FS_CampaignMission* SceneMission = ResolveMissionDataForScene(ActiveSceneName);
+
+        if (SceneMission)
+        {
+            SceneActor->BuildSceneActorsFromMission(*SceneMission);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] Built scene actors for '%s'"),
+                *ActiveSceneName);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] No mission data found for scene '%s'"),
+                *ActiveSceneName);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] No CampaignSceneActor found in level"));
+    }
+
     UE_LOG(LogTemp, Warning,
         TEXT("[SceneDlg] BeginSceneByName: Scene=%s Duration=%.2f Start=%.2f"),
         *ActiveSceneName,
