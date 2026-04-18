@@ -30,6 +30,8 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystemRegistry.h"
 
+#include "ShipDesign.h"
+
 #include "MissionUIStyle.h"
 #include "FormattingUtils.h"
 #include "CombatGroupRegistry.h"
@@ -1019,6 +1021,9 @@ void UMissionNavDlg::BuildRightPanels()
 
     RightPanelColumn->ClearChildren();
 
+    // -------------------------------------------------
+    // FILTER PANEL
+    // -------------------------------------------------
     FilterPanelHost =
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
@@ -1027,6 +1032,8 @@ void UMissionNavDlg::BuildRightPanels()
     if (UVerticalBoxSlot* FilterPanelSlot = RightPanelColumn->AddChildToVerticalBox(FilterPanelHost))
     {
         FilterPanelSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+        FilterPanelSlot->SetHorizontalAlignment(HAlign_Fill);
+        FilterPanelSlot->SetVerticalAlignment(VAlign_Fill);
         FilterPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -1038,11 +1045,16 @@ void UMissionNavDlg::BuildRightPanels()
     if (UVerticalBoxSlot* GridSlot = FilterPanelHost->AddChildToVerticalBox(FilterButtonGrid))
     {
         GridSlot->SetPadding(FMargin(0.f));
+        GridSlot->SetHorizontalAlignment(HAlign_Fill);
+        GridSlot->SetVerticalAlignment(VAlign_Fill);
         GridSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
     BuildFilterButtons();
 
+    // -------------------------------------------------
+    // OBJECT LIST PANEL
+    // -------------------------------------------------
     ObjectListBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -1051,6 +1063,8 @@ void UMissionNavDlg::BuildRightPanels()
     if (UVerticalBoxSlot* ObjectListBorderSlot = RightPanelColumn->AddChildToVerticalBox(ObjectListBorder))
     {
         ObjectListBorderSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+        ObjectListBorderSlot->SetHorizontalAlignment(HAlign_Fill);
+        ObjectListBorderSlot->SetVerticalAlignment(VAlign_Fill);
         ObjectListBorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
@@ -1058,6 +1072,7 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
             TEXT("MissionNavObjectListPanel"));
+
     ObjectListBorder->SetContent(ObjectListPanel);
 
     ObjectListTitleBar =
@@ -1065,8 +1080,15 @@ void UMissionNavDlg::BuildRightPanels()
             UBorder::StaticClass(),
             TEXT("MissionNavObjectTitleBar"));
 
+    ObjectListTitleBar->SetHorizontalAlignment(HAlign_Fill);
+    ObjectListTitleBar->SetVerticalAlignment(VAlign_Fill);
+    ObjectListTitleBar->SetPadding(FMargin(0.f));
+
     if (UVerticalBoxSlot* TitleSlot = ObjectListPanel->AddChildToVerticalBox(ObjectListTitleBar))
     {
+        TitleSlot->SetPadding(FMargin(0.f));
+        TitleSlot->SetHorizontalAlignment(HAlign_Fill);
+        TitleSlot->SetVerticalAlignment(VAlign_Fill);
         TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -1074,22 +1096,27 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavObjectListTitleText"));
+
     ObjectListTitleText->SetText(FText::FromString(GetObjectPanelTitle()));
     ObjectListTitleText->SetJustification(ETextJustify::Center);
     ObjectListTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     ObjectListTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+
     ObjectListTitleBar->SetContent(ObjectListTitleText);
 
     ObjectListHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavObjectListHost"));
+
     ObjectListHost->SetWidthOverride(300.f);
     ObjectListHost->SetHeightOverride(220.f);
 
     if (UVerticalBoxSlot* ObjectListHostSlot = ObjectListPanel->AddChildToVerticalBox(ObjectListHost))
     {
         ObjectListHostSlot->SetPadding(FMargin(0.f));
+        ObjectListHostSlot->SetHorizontalAlignment(HAlign_Fill);
+        ObjectListHostSlot->SetVerticalAlignment(VAlign_Fill);
         ObjectListHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
@@ -1109,9 +1136,13 @@ void UMissionNavDlg::BuildRightPanels()
         ObjectListView->SetSelectionMode(ESelectionMode::Single);
         ObjectListView->OnItemSelectionChanged().Clear();
         ObjectListView->OnItemSelectionChanged().AddUObject(this, &UMissionNavDlg::OnObjectSelectionChanged);
+
         ObjectListHost->SetContent(ObjectListView);
     }
 
+    // -------------------------------------------------
+    // DETAIL PANEL
+    // -------------------------------------------------
     DetailBorder =
         WidgetTree->ConstructWidget<UBorder>(
             UBorder::StaticClass(),
@@ -1120,6 +1151,8 @@ void UMissionNavDlg::BuildRightPanels()
     if (UVerticalBoxSlot* DetailBorderSlot = RightPanelColumn->AddChildToVerticalBox(DetailBorder))
     {
         DetailBorderSlot->SetPadding(FMargin(0.f));
+        DetailBorderSlot->SetHorizontalAlignment(HAlign_Fill);
+        DetailBorderSlot->SetVerticalAlignment(VAlign_Fill);
         DetailBorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -1127,6 +1160,7 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UVerticalBox>(
             UVerticalBox::StaticClass(),
             TEXT("MissionNavDetailPanel"));
+
     DetailBorder->SetContent(DetailPanel);
 
     DetailTitleBar =
@@ -1134,8 +1168,15 @@ void UMissionNavDlg::BuildRightPanels()
             UBorder::StaticClass(),
             TEXT("MissionNavDetailTitleBar"));
 
+    DetailTitleBar->SetHorizontalAlignment(HAlign_Fill);
+    DetailTitleBar->SetVerticalAlignment(VAlign_Fill);
+    DetailTitleBar->SetPadding(FMargin(0.f));
+
     if (UVerticalBoxSlot* DetailTitleSlot = DetailPanel->AddChildToVerticalBox(DetailTitleBar))
     {
+        DetailTitleSlot->SetPadding(FMargin(0.f));
+        DetailTitleSlot->SetHorizontalAlignment(HAlign_Fill);
+        DetailTitleSlot->SetVerticalAlignment(VAlign_Fill);
         DetailTitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -1143,22 +1184,27 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailTitleText"));
+
     DetailTitleText->SetText(FText::FromString(GetDetailPanelTitle()));
     DetailTitleText->SetJustification(ETextJustify::Center);
     DetailTitleText->SetColorAndOpacity(MissionUIStyle::HeaderText);
     DetailTitleText->SetFont(MissionUIStyle::GetHeaderFont(16));
+
     DetailTitleBar->SetContent(DetailTitleText);
 
     DetailHost =
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("MissionNavDetailHost"));
+
     DetailHost->SetWidthOverride(300.f);
     DetailHost->SetHeightOverride(180.f);
 
     if (UVerticalBoxSlot* DetailHostSlot = DetailPanel->AddChildToVerticalBox(DetailHost))
     {
         DetailHostSlot->SetPadding(FMargin(0.f));
+        DetailHostSlot->SetHorizontalAlignment(HAlign_Fill);
+        DetailHostSlot->SetVerticalAlignment(VAlign_Fill);
         DetailHostSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
 
@@ -1176,6 +1222,7 @@ void UMissionNavDlg::BuildRightPanels()
         WidgetTree->ConstructWidget<UTextBlock>(
             UTextBlock::StaticClass(),
             TEXT("MissionNavDetailBodyText"));
+
     DetailBodyText->SetText(FText::FromString(TEXT("NO OBJECT SELECTED")));
     DetailBodyText->SetColorAndOpacity(MissionUIStyle::InfoValueText);
     DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont());
@@ -1274,6 +1321,9 @@ void UMissionNavDlg::ApplyPanelStyles()
             }
 
             BorderWidget->SetBrushColor(FLinearColor::White);
+            BorderWidget->SetHorizontalAlignment(HAlign_Fill);
+            BorderWidget->SetVerticalAlignment(VAlign_Fill);
+            BorderWidget->SetPadding(FMargin(0.f));
         };
 
     auto ApplyTexturedPanelDark = [this](UBorder* BorderWidget)
@@ -1293,12 +1343,16 @@ void UMissionNavDlg::ApplyPanelStyles()
             }
 
             BorderWidget->SetBrushColor(MissionUIStyle::PanelBG);
+            BorderWidget->SetHorizontalAlignment(HAlign_Fill);
+            BorderWidget->SetVerticalAlignment(VAlign_Fill);
+            BorderWidget->SetPadding(FMargin(0.f));
         };
 
     if (LeftPanelBorder)
     {
         LeftPanelBorder->SetBrush(FSlateBrush());
         LeftPanelBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
+        LeftPanelBorder->SetPadding(FMargin(0.f));
     }
 
     ApplyTexturedPanelDark(RightPanelBorder);
@@ -1978,7 +2032,7 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             continue;
         }
 
-        const FString Primary =
+        FString Primary =
             FString(ANSI_TO_TCHAR(Elem->GetName())).TrimStartAndEnd();
 
         FString Secondary = TEXT("UN");
@@ -1998,6 +2052,31 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         {
             Secondary = TEXT("ST");
         }
+        if (ObjectType == EMissionNavObjectType::Fighter)
+        {
+            const int32 TotalCount = Elem->Count();
+
+            FString FighterType =
+                FString(ANSI_TO_TCHAR(Elem->GetName())).TrimStartAndEnd();
+
+            if (const FShipDesign* Design = Elem->GetShipDesign())
+            {
+                if (!Design->DisplayName.IsEmpty())
+                {
+                    FighterType = Design->DisplayName;
+                }
+                else if (!Design->ShipName.IsEmpty())
+                {
+                    FighterType = Design->ShipName;
+                }
+            }
+
+            if (TotalCount > 0)
+            {
+                Primary = FString::Printf(TEXT("%dx %s"), TotalCount, *FighterType);
+            }
+        }
+
 
         const FVector Loc = Elem->GetLocation();
 
