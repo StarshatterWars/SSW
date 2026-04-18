@@ -24,6 +24,7 @@
 #include "InputCoreTypes.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LevelStreamingDynamic.h"
+#include "ContentStreaming.h"
 
 // Dialogs:
 #include "CmdDlg.h"
@@ -72,7 +73,7 @@ void UCmpnScreen::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
     if (bIsShown)
     {
-        ExecFrame((double)InDeltaTime);
+        ExecFrame((double) InDeltaTime);
     }
 }
 
@@ -227,6 +228,26 @@ const FS_CampaignMission* UCmpnScreen::FindCampaignMissionByScene(const FString&
     return nullptr;
 }
 
+CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
+{
+    if (!CampaignPtr || !CampaignPtr->IsActive() || CampaignPtr->GetEvents().isEmpty())
+    {
+        return nullptr;
+    }
+
+    ListIter<CombatEvent> Iter = CampaignPtr->GetEvents();
+    while (++Iter)
+    {
+        CombatEvent* Event = Iter.value();
+        if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+        {
+            return Event;
+        }
+    }
+
+    return nullptr;
+}
+
 void UCmpnScreen::SetMenuManager(UMenuScreen* InManager)
 {
     MenuManager = InManager;
@@ -263,19 +284,23 @@ void UCmpnScreen::Setup()
     TimeTilChange = 0.0;
     bExitLatch = false;
     bShowMissionsRequested = false;
+    bCampaignPaused = false;
+
+    ClearPendingSceneTransition();
+
     bSetupComplete = true;
 }
 
 void UCmpnScreen::TearDown()
 {
     auto Kill = [](UUserWidget*& W)
+    {
+        if (W)
         {
-            if (W)
-            {
-                W->RemoveFromParent();
-                W = nullptr;
-            }
-        };
+            W->RemoveFromParent();
+            W = nullptr;
+        }
+    };
 
     UUserWidget* W = nullptr;
 
@@ -284,6 +309,7 @@ void UCmpnScreen::TearDown()
     W = CmdMsgDlg.Get();      Kill(W); CmdMsgDlg = nullptr;
     W = CmpCompleteDlg.Get(); Kill(W); CmpCompleteDlg = nullptr;
     W = CmpSceneDlg.Get();    Kill(W); CmpSceneDlg = nullptr;
+    W = CmpLoadDlg.Get();     Kill(W); CmpLoadDlg = nullptr;
 
     ActiveSceneStreamingLevel = nullptr;
 
@@ -291,10 +317,18 @@ void UCmpnScreen::TearDown()
     bIsShown = false;
     bShowMissionsRequested = false;
     bExitLatch = false;
+    bCampaignPaused = false;
     TimeTilChange = 0.0;
     CompletionStage = 0;
+
+    DefaultFallbackFOV = 90.0f;
+    DesiredFieldOfView = 90.0f;
+
     ActiveSceneName.Empty();
     ActiveSceneDurationSeconds = 0.0f;
+    ActiveCampaignName.Empty();
+
+    ClearPendingSceneTransition();
 }
 
 void UCmpnScreen::Show()
@@ -316,30 +350,13 @@ void UCmpnScreen::Show()
     DesiredFieldOfView = GetFieldOfView();
     bCampaignPaused = false;
 
-    bool bStartedScene = false;
-
-    if (CampaignPtr && CampaignPtr->IsActive() && !CampaignPtr->GetEvents().isEmpty())
+    CombatEvent* StartupSceneEvent = FindFirstPendingSceneEvent();
+    if (StartupSceneEvent && PrimeSceneTransitionForEvent(StartupSceneEvent))
     {
-        ListIter<CombatEvent> Iter = CampaignPtr->GetEvents();
-        while (++Iter)
-        {
-            CombatEvent* Event = Iter.value();
-
-            if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
-            {
-                bStartedScene = TryStartSceneForEvent(Event);
-                if (bStartedScene)
-                {
-                    break;
-                }
-            }
-        }
+        return;
     }
 
-    if (!bStartedScene)
-    {
-        ShowCmdDlg();
-    }
+    ShowCmdDlg();
 }
 
 void UCmpnScreen::Hide()
@@ -390,29 +407,16 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
 {
     RefreshRuntimePointers();
 
-    // ------------------------------------------------------------
-    // Retry pending startup cutscenes after streaming
-    // ------------------------------------------------------------
-    if (!IsCmpSceneShown() && CampaignPtr && CampaignPtr->IsActive() && !CampaignPtr->GetEvents().isEmpty())
+    if (bSceneTransitionActive && bHasPendingSceneMission)
     {
-        ListIter<CombatEvent> SceneIter = CampaignPtr->GetEvents();
-        while (++SceneIter)
+        ContinuePendingSceneTransition();
+    }
+    else if (!IsCmpSceneShown())
+    {
+        CombatEvent* PendingEvent = FindFirstPendingSceneEvent();
+        if (PendingEvent)
         {
-            CombatEvent* PendingEvent = SceneIter.value();
-
-            if (PendingEvent && !PendingEvent->Visited() && PendingEvent->SceneFile() && *PendingEvent->SceneFile())
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CmpnScreen] Retry startup scene check: %s  SceneShown=%d  SceneRunning=%d"),
-                    UTF8_TO_TCHAR(PendingEvent->SceneFile()),
-                    IsCmpSceneShown() ? 1 : 0,
-                    (CmpSceneDlg && CmpSceneDlg->IsSceneRunning()) ? 1 : 0);
-
-                if (TryStartSceneForEvent(PendingEvent))
-                {
-                    break;
-                }
-            }
+            PrimeSceneTransitionForEvent(PendingEvent);
         }
     }
 
@@ -421,9 +425,6 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
         return;
     }
 
-    // ------------------------------------------------------------
-    // Advance active cutscene
-    // ------------------------------------------------------------
     AdvanceCampaignScene();
 
     Mouse::SetCursor(Mouse::ARROW);
@@ -808,41 +809,58 @@ bool UCmpnScreen::IsCmpSceneShown() const
     return CmpSceneDlg && CmpSceneDlg->GetVisibility() == ESlateVisibility::Visible;
 }
 
-void UCmpnScreen::SetFieldOfView(float InFOV)
-{
-    DesiredFieldOfView = InFOV;
-    DefaultFallbackFOV = InFOV;
-}
-
 void UCmpnScreen::ShowCmpLoadDlg()
 {
+    EnsureDialog(CmpLoadDlgClass, CmpLoadDlg, 95);
+
     HideAll();
 
-    if (CmpLoadDlg)
+    if (!CmpLoadDlg)
     {
-        CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
-        CmpLoadDlg->SetIsEnabled(true);
-        CmpLoadDlg->SetIsFocusable(true);
-        CmpLoadDlg->SetDialogInputEnabled(true);
-        CmpLoadDlg->Show();
-        Mouse::Show(false);
-
-        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] ShowCmpLoadDlg"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] ShowCmpLoadDlg: CmpLoadDlg is null"));
+        return;
     }
+
+    if (!ActiveCampaignName.IsEmpty())
+    {
+        CmpLoadDlg->SetCampaignName(ActiveCampaignName);
+    }
+
+    CmpLoadDlg->SetLoadingStage(TEXT("LOADING..."), 0.0f);
+    CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
+    CmpLoadDlg->SetIsEnabled(true);
+    CmpLoadDlg->SetIsFocusable(true);
+    CmpLoadDlg->SetDialogInputEnabled(true);
+    CmpLoadDlg->Show();
+
+    Mouse::Show(false);
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] ShowCmpLoadDlg"));
 }
 
 void UCmpnScreen::HideCmpLoadDlg()
 {
-    if (CmpLoadDlg)
+    if (!CmpLoadDlg)
     {
-        CmpLoadDlg->Hide();
-        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] HideCmpLoadDlg"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] HideCmpLoadDlg: CmpLoadDlg is null"));
+        return;
     }
+
+    CmpLoadDlg->ClearManualLoadingStage();
+    CmpLoadDlg->Hide();
+
+    UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] HideCmpLoadDlg"));
 }
 
 bool UCmpnScreen::IsCmpLoadShown() const
 {
     return CmpLoadDlg && CmpLoadDlg->GetVisibility() == ESlateVisibility::Visible;
+}
+
+void UCmpnScreen::SetFieldOfView(float InFOV)
+{
+    DesiredFieldOfView = InFOV;
+    DefaultFallbackFOV = InFOV;
 }
 
 float UCmpnScreen::GetFieldOfView() const
@@ -871,17 +889,49 @@ float UCmpnScreen::GetSceneDurationSeconds(const FString& SceneName) const
 
 bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
 {
-    if (!Event || !CmpSceneDlg)
+    if (CmpSceneDlg && CmpSceneDlg->IsSceneRunning())
+    {
+        return true;
+    }
+
+    if (bSceneTransitionActive)
+    {
+        return ContinuePendingSceneTransition();
+    }
+
+    return PrimeSceneTransitionForEvent(Event);
+}
+
+bool UCmpnScreen::PrimeSceneTransitionForEvent(CombatEvent* Event)
+{
+    if (!Event)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: Event or CmpSceneDlg invalid"));
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: Event is null"));
+        return false;
+    }
+
+    EnsureDialog(CmpSceneDlgClass, CmpSceneDlg, 90);
+    EnsureDialog(CmpLoadDlgClass, CmpLoadDlg, 95);
+
+    if (!CmpSceneDlg)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: CmpSceneDlg is null"));
+        return false;
+    }
+
+    if (!CmpLoadDlg)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: CmpLoadDlg is null"));
         return false;
     }
 
     if (!Event->SceneFile() || !*Event->SceneFile())
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: Event has no SceneFile"));
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: SceneFile is empty"));
         return false;
     }
 
@@ -889,83 +939,143 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
     if (SceneName.IsEmpty())
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: SceneName is empty"));
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: SceneName is empty"));
         return false;
     }
+
+    const FS_CampaignMission* SceneMission = FindCampaignMissionByScene(SceneName);
+    if (!SceneMission)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: No mission found for scene '%s'"),
+            *SceneName);
+        return false;
+    }
+
+    PendingSceneEvent = Event;
+    PendingSceneMission = *SceneMission;
+    bHasPendingSceneMission = true;
 
     ActiveSceneName = SceneName;
     ActiveSceneDurationSeconds = GetSceneDurationSeconds(SceneName);
 
-    const FS_CampaignMission* SceneMission = FindCampaignMissionByScene(ActiveSceneName);
-    if (!SceneMission)
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: BEGIN Scene='%s' System='%s'"),
+        *SceneName,
+        *PendingSceneMission.MissionSystem);
+
+    BeginSceneTransition();
+    ShowCmpLoadDlg();
+
+    if (CmpLoadDlg)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] TryStartSceneForEvent: No mission row found for scene %s"),
-            *ActiveSceneName);
+        CmpLoadDlg->SetLoadingStage(TEXT("LOADING SYSTEM..."), 0.10f);
+    }
+
+    if (!StreamSceneSystemLevel(PendingSceneMission))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: FAILED TO STREAM Scene='%s' Mission='%s' System='%s'"),
+            *SceneName,
+            *PendingSceneMission.MissionName,
+            *PendingSceneMission.MissionSystem);
+
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("FAILED TO LOAD SYSTEM"), 1.0f);
+        }
+
+        // DO NOT hide dialog or clear transition
+        // Leave it visible for debugging
+
         return false;
-    }
-
-    if (CmpSceneDlg->IsSceneRunning())
-    {
-        return true;
-    }
-
-    if (!bSceneTransitionActive)
-    {
-        BeginSceneTransition();
-        ShowCmpLoadDlg();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] Scene transition begun for %s"),
-            *ActiveSceneName);
-    }
-
-    if (!StreamSceneSystemLevel(*SceneMission))
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] Failed to request stream for system %s"),
-            *SceneMission->MissionSystem);
-        return false;
-    }
-
-    const bool bLoaded = IsSceneVisualReady();
-
-    if (!bLoaded)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] Waiting for level %s before starting scene"),
-            *SceneMission->MissionSystem);
-        return true;
-    }
-
-    // Level exists now. Start a short post-load warmup once.
-    if (!bSceneWarmupStarted)
-    {
-        bSceneWarmupStarted = true;
-        SceneWarmupReadyTime =
-            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + ScenePostLoadWarmupSeconds;
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] Level loaded for %s, warming visuals for %.2f sec"),
-            *ActiveSceneName,
-            ScenePostLoadWarmupSeconds);
-
-        return true;
-    }
-
-    if (!CanRevealSceneNow())
-    {
-        return true;
-    }
-
-    if (IsCmpSceneShown())
-    {
-        return true;
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Reveal conditions met, starting scene %s now"),
-        *ActiveSceneName);
+        TEXT("[CmpnScreen] PrimeSceneTransitionForEvent: STREAM STARTED for '%s'"),
+        *SceneName);
+
+    return true;
+}
+bool UCmpnScreen::ContinuePendingSceneTransition()
+{
+    if (!bSceneTransitionActive || !bHasPendingSceneMission)
+    {
+        return false;
+    }
+
+    if (CmpLoadDlg && CmpLoadDlg->GetVisibility() != ESlateVisibility::Visible)
+    {
+        ShowCmpLoadDlg();
+    }
+
+    if (!StreamSceneSystemLevel(PendingSceneMission))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] ContinuePendingSceneTransition: FAILED streaming Mission='%s' System='%s'"),
+            *PendingSceneMission.MissionName,
+            *PendingSceneMission.MissionSystem);
+
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("FAILED TO LOAD SYSTEM"), 1.0f);
+        }
+
+        return false;
+    }
+
+    if (!bSceneStreamingBlockedOnce)
+    {
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("PREPARING TEXTURES..."), 0.60f);
+        }
+
+        if (UWorld* World = GetWorld())
+        {
+            World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+
+            FStreamingManagerCollection& StreamingManager = FStreamingManagerCollection::Get();
+            StreamingManager.BlockTillAllRequestsFinished(0.0f, true);
+        }
+
+        bSceneStreamingBlockedOnce = true;
+        bSceneWarmupStarted = true;
+
+        // Increased hold to suppress shader/material flash
+        SceneWarmupReadyTime =
+            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + 4.0f;
+
+        return true;
+    }
+
+    const float Now = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+
+    if (Now < SceneWarmupReadyTime)
+    {
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("WARMING UP SCENE..."), 0.85f);
+        }
+
+        return true;
+    }
+
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE..."), 0.95f);
+    }
+
+    if (ActiveSceneStreamingLevel)
+    {
+        ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
+        ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+    }
+
+    if (UWorld* World = GetWorld())
+    {
+        World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+    }
 
     if (CampaignPtr)
     {
@@ -976,30 +1086,39 @@ bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
         CmpSceneDlg->SetCampaignNumber(2);
     }
 
-    CmpSceneDlg->LoadSceneFromMissionData(*SceneMission);
-
-    // Hide your fullscreen loading panel here:
-    // HideCmpLoadDlg();
+    CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
 
     HideCmpLoadDlg();
     ShowCmpSceneDlg();
     CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
 
-    Event->SetVisited(true);
-
-    bSceneTransitionActive = false;
-    bSceneWarmupStarted = false;
-    SceneWarmupReadyTime = 0.0f;
+    if (PendingSceneEvent)
+    {
+        PendingSceneEvent->SetVisited(true);
+    }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Started campaign scene: %s (%.2fs) System=%s"),
-        *ActiveSceneName,
-        ActiveSceneDurationSeconds,
-        *SceneMission->MissionSystem);
+        TEXT("[CmpnScreen] ContinuePendingSceneTransition: COMPLETE"));
 
+    ClearPendingSceneTransition();
     return true;
 }
+void UCmpnScreen::ClearPendingSceneTransition()
+{
+    PendingSceneEvent = nullptr;
+    PendingSceneMission = FS_CampaignMission();
+    bHasPendingSceneMission = false;
 
+    bSceneTransitionActive = false;
+    bSceneStreamingBlockedOnce = false;
+    bSceneWarmupStarted = false;
+
+    SceneLoadScreenStartTime = 0.0f;
+    SceneWarmupReadyTime = 0.0f;
+    SceneReadyFrameCount = 0;
+
+    ActiveSceneStreamingLevel = nullptr;
+}
 
 void UCmpnScreen::AdvanceCampaignScene()
 {
@@ -1012,41 +1131,12 @@ void UCmpnScreen::AdvanceCampaignScene()
     CmpSceneDlg->AdvanceSceneFromTimer(NowSeconds);
 }
 
-bool UCmpnScreen::IsSceneSystemLevelLoaded(const FString& SystemName) const
-{
-    if (!ActiveSceneStreamingLevel)
-    {
-        return false;
-    }
-
-    return ActiveSceneStreamingLevel->GetLoadedLevel() != nullptr;
-}
-
-FName UCmpnScreen::ResolveSceneSystemLevelName(const FString& SystemName) const
-{
-    const FString CleanSystem = SystemName.TrimStartAndEnd();
-
-    if (CleanSystem.IsEmpty())
-    {
-        return NAME_None;
-    }
-
-    const FString PackageName = FString::Printf(TEXT("/Game/Maps/%s"), *CleanSystem);
-
-    UE_LOG(LogTemp, Log,
-        TEXT("[CmpnScreen] ResolveSceneSystemLevelName: %s -> %s"),
-        *SystemName,
-        *PackageName);
-
-    return FName(*PackageName);
-}
-
 bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
 {
     UWorld* World = GetWorld();
     if (!World)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Error,
             TEXT("[CmpnScreen] StreamSceneSystemLevel: World is null"));
         return false;
     }
@@ -1054,24 +1144,34 @@ bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
     const FString SystemName = SceneMission.MissionSystem.TrimStartAndEnd();
     if (SystemName.IsEmpty())
     {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] StreamSceneSystemLevel: MissionSystem is empty for Scene='%s' Mission='%s'"),
+            *SceneMission.Scene,
+            *SceneMission.MissionName);
         return false;
     }
 
     const FString PackagePath = FString::Printf(TEXT("/Game/Maps/%s"), *SystemName);
 
-    // DO NOT recreate the streaming level every frame
+    FString ResolvedPackageFilename;
+    if (!FPackageName::DoesPackageExist(PackagePath, &ResolvedPackageFilename))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] StreamSceneSystemLevel: Map package does not exist: %s (Scene='%s' Mission='%s')"),
+            *PackagePath,
+            *SceneMission.Scene,
+            *SceneMission.MissionName);
+        return false;
+    }
+
     if (ActiveSceneStreamingLevel)
     {
-        if (ActiveSceneStreamingLevel->GetLoadedLevel())
-        {
-            UE_LOG(LogTemp, Log,
-                TEXT("[CmpnScreen] StreamSceneSystemLevel: Level already loaded"));
-        }
-        else
-        {
-            UE_LOG(LogTemp, Log,
-                TEXT("[CmpnScreen] StreamSceneSystemLevel: Waiting on existing stream"));
-        }
+        ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
+        ActiveSceneStreamingLevel->SetShouldBeVisible(false);
+
+        UE_LOG(LogTemp, Log,
+            TEXT("[CmpnScreen] StreamSceneSystemLevel: reusing existing streaming level for %s"),
+            *PackagePath);
 
         return true;
     }
@@ -1087,26 +1187,23 @@ bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
 
     if (!bSuccess || !ActiveSceneStreamingLevel)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmpnScreen] Failed to dynamically stream %s"),
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] StreamSceneSystemLevel: failed to dynamically stream %s"),
             *PackagePath);
+
+        ActiveSceneStreamingLevel = nullptr;
         return false;
     }
 
+    ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
+    ActiveSceneStreamingLevel->SetShouldBeVisible(false);
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmpnScreen] Streaming started: %s"),
+        TEXT("[CmpnScreen] StreamSceneSystemLevel: started hidden stream for System='%s' Package='%s'"),
+        *SystemName,
         *PackagePath);
 
     return true;
-}
-
-void UCmpnScreen::BeginSceneTransition()
-{
-    bSceneTransitionActive = true;
-    bSceneWarmupStarted = false;
-
-    SceneLoadScreenStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());
-    SceneWarmupReadyTime = 0.0f;
 }
 
 bool UCmpnScreen::IsSceneVisualReady() const
@@ -1116,7 +1213,19 @@ bool UCmpnScreen::IsSceneVisualReady() const
         return false;
     }
 
-    return ActiveSceneStreamingLevel->GetLoadedLevel() != nullptr;
+    return ActiveSceneStreamingLevel->IsLevelLoaded() &&
+           !ActiveSceneStreamingLevel->IsStreamingStatePending();
+}
+
+void UCmpnScreen::BeginSceneTransition()
+{
+    bSceneTransitionActive = true;
+    bSceneStreamingBlockedOnce = false;
+    bSceneWarmupStarted = false;
+
+    SceneLoadScreenStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+    SceneWarmupReadyTime = 0.0f;
+    SceneReadyFrameCount = 0;
 }
 
 bool UCmpnScreen::AreShadersReadyForReveal() const
@@ -1140,9 +1249,17 @@ bool UCmpnScreen::CanRevealSceneNow() const
     const bool bLevelReady = IsSceneVisualReady();
     const bool bWarmupSatisfied =
         bSceneWarmupStarted && (Now >= SceneWarmupReadyTime);
-
     const bool bShadersReady = AreShadersReadyForReveal();
 
-    return bMinTimeSatisfied && bLevelReady && bWarmupSatisfied && bShadersReady;
+    return bMinTimeSatisfied &&
+           bLevelReady &&
+           bWarmupSatisfied &&
+           bShadersReady &&
+           (SceneReadyFrameCount >= SceneRequiredReadyFrames);
 }
 
+void UCmpnScreen::SetActiveCampaignName(const FString& InName)
+{
+    ActiveCampaignName = InName;
+    UE_LOG(LogTemp, Log, TEXT("[CmpnScreen] ActiveCampaignName set to: %s"), *ActiveCampaignName);
+}

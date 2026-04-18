@@ -18,6 +18,7 @@
         * topmost modal close handling
         * message / complete / scene overlays
         * campaign screen ticking
+        * early scene preload through UCmpLoadDlg
 */
 
 #pragma once
@@ -91,7 +92,6 @@ public:
     bool IsCmpSceneShown() const;
     UCampaignSceneDlg* GetCmpSceneDlg() const { return CmpSceneDlg; }
 
-
     void ShowCmpLoadDlg();
     void HideCmpLoadDlg();
     bool IsCmpLoadShown() const;
@@ -104,6 +104,9 @@ public:
     Starshatter* GetStars() const { return Stars; }
 
     void SetShowMissionsRequested(bool bRequested) { bShowMissionsRequested = bRequested; }
+
+    void SetActiveCampaignName(const FString& InName);
+    const FString& GetActiveCampaignName() const { return ActiveCampaignName; }
 
 public:
     UPROPERTY(EditDefaultsOnly, Category = "Campaign|Classes")
@@ -124,7 +127,6 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Campaign|Classes")
     TSubclassOf<UCmpLoadDlg> CmpLoadDlgClass;
 
-
 protected:
     template<typename TDialog>
     TDialog* EnsureDialog(TSubclassOf<TDialog> ClassToSpawn, TObjectPtr<TDialog>& Storage, int32 ZOrder);
@@ -132,25 +134,22 @@ protected:
     void RefreshRuntimePointers();
     void ApplyManagerToChildren();
 
+    CombatEvent* FindFirstPendingSceneEvent() const;
     bool TryStartSceneForEvent(CombatEvent* Event);
+
+    bool PrimeSceneTransitionForEvent(CombatEvent* Event);
+    bool ContinuePendingSceneTransition();
+    void ClearPendingSceneTransition();
+
     float GetSceneDurationSeconds(const FString& SceneName) const;
-
     bool StreamSceneSystemLevel(const FS_CampaignMission& SceneMission);
-    FName ResolveSceneSystemLevelName(const FString& SystemName) const;
-    bool IsSceneSystemLevelLoaded(const FString& SystemName) const;
-
-protected:
-    const FS_CampaignMission* FindCampaignMissionByScene(const FString& SceneName) const;
+    bool IsSceneVisualReady() const;
+    bool AreShadersReadyForReveal() const;
+    bool CanRevealSceneNow() const;
+    void BeginSceneTransition();
     void AdvanceCampaignScene();
 
-    bool IsSceneVisualReady() const;
-    bool CanRevealSceneNow() const;
-    bool AreShadersReadyForReveal() const;
-    void BeginSceneTransition();
-
-protected:
-    FString ActiveSceneName;
-    float ActiveSceneDurationSeconds = 0.0f;
+    const FS_CampaignMission* FindCampaignMissionByScene(const FString& SceneName) const;
 
 protected:
     UPROPERTY()
@@ -183,19 +182,35 @@ protected:
     bool bShowMissionsRequested = false;
     bool bExitLatch = false;
     bool bHidingAll = false;
+    bool bCampaignPaused = false;
 
     int32 CompletionStage = 0;
-
     double TimeTilChange = 0.0;
     float DefaultFallbackFOV = 90.0f;
     float DesiredFieldOfView = 90.0f;
 
-    bool  bCampaignPaused = false;
+protected:
+    CombatEvent* PendingSceneEvent = nullptr;
+
+    UPROPERTY()
+    FS_CampaignMission PendingSceneMission;
+
+    bool bHasPendingSceneMission = false;
     bool bSceneTransitionActive = false;
+    bool bSceneStreamingBlockedOnce = false;
     bool bSceneWarmupStarted = false;
 
-    float SceneLoadScreenStartTime = 5.0f;
-    float SceneMinLoadScreenSeconds = 1.0f;
+    FString ActiveSceneName;
+    float ActiveSceneDurationSeconds = 0.0f;
+
+    int32 SceneReadyFrameCount = 0;
+    int32 SceneRequiredReadyFrames = 20;
+
+    float SceneLoadScreenStartTime = 0.0f;
+    float SceneMinLoadScreenSeconds = 3.5f;
     float SceneWarmupReadyTime = 0.0f;
-    float ScenePostLoadWarmupSeconds = 1.0f;
+    float ScenePostLoadWarmupSeconds = 2.0f;
+
+protected:
+    FString ActiveCampaignName;
 };

@@ -297,7 +297,6 @@ void UCampaignSceneDlg::Show()
 
 void UCampaignSceneDlg::Hide()
 {
-    ResetSceneState();
     SetVisibility(ESlateVisibility::Collapsed);
     SetIsEnabled(false);
 
@@ -547,6 +546,10 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
+    UTexture2D* TestTexture =
+        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
+    ApplyPanelTexture(TestTexture);
+
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -631,6 +634,7 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
         }
     }
 }
+
 void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 {
     const FString Caption = FixEscapedText(Event.EventCaption);
