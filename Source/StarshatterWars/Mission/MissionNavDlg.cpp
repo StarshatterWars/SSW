@@ -33,6 +33,7 @@
 #include "MissionUIStyle.h"
 #include "FormattingUtils.h"
 #include "CombatGroupRegistry.h"
+#include "CombatGroup.h"
 
 #include "Campaign.h"
 #include "MapView.h"
@@ -66,6 +67,75 @@
 #include "InputCoreTypes.h"
 #include "Styling/SlateBrush.h"
 #include "UObject/ConstructorHelpers.h"
+
+
+FString UMissionNavDlg::NormalizeMissionElementName(const FString& InName) const
+{
+    FString Name = InName.TrimStartAndEnd();
+
+    TArray<FString> Parts;
+    Name.ParseIntoArray(Parts, TEXT(" "), true);
+
+    // Strip leading ordinal token: "1st", "2nd", "3rd", "4th", etc.
+    if (Parts.Num() > 0)
+    {
+        const FString First = Parts[0].ToLower();
+
+        const bool bLooksOrdinal =
+            First.EndsWith(TEXT("st")) ||
+            First.EndsWith(TEXT("nd")) ||
+            First.EndsWith(TEXT("rd")) ||
+            First.EndsWith(TEXT("th"));
+
+        bool bAllDigitsPrefix = true;
+        for (int32 i = 0; i < First.Len(); ++i)
+        {
+            const TCHAR Ch = First[i];
+            if (!FChar::IsDigit(Ch))
+            {
+                if (i >= First.Len() - 2)
+                {
+                    break;
+                }
+
+                bAllDigitsPrefix = false;
+                break;
+            }
+        }
+
+        if (bLooksOrdinal && bAllDigitsPrefix)
+        {
+            Parts.RemoveAt(0);
+        }
+    }
+
+    // Strip common trailing container words
+    static const TSet<FString> TrailingWords =
+    {
+        TEXT("station"),
+        TEXT("starbase"),
+        TEXT("battery"),
+        TEXT("minefield"),
+        TEXT("squadron"),
+        TEXT("wing"),
+        TEXT("group")
+    };
+
+    while (Parts.Num() > 0)
+    {
+        const FString Last = Parts.Last().ToLower();
+        if (TrailingWords.Contains(Last))
+        {
+            Parts.RemoveAt(Parts.Num() - 1);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return FString::Join(Parts, TEXT(" ")).TrimStartAndEnd();
+}
 
 UMissionNavDlg::UMissionNavDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -1755,10 +1825,14 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         return;
     }
 
+    if (!ObjectListView)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildMissionElementObjects: ObjectListView is null"));
+        return;
+    }
+
     const FString MissionRegion =
         FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
-
-    const FString MissionRegionUpper = MissionRegion.ToUpper();
 
     UE_LOG(LogTemp, Warning,
         TEXT("[MissionNavDlg] BuildMissionElementObjects: Mission='%s' MissionRegion='%s' FilterType=%d"),
@@ -1766,47 +1840,35 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
         *MissionRegion,
         static_cast<int32>(ObjectType));
 
-    // -------------------------------------------------------------
-    // Local indicator helper (matches your existing system)
-    // -------------------------------------------------------------
-    auto GetCombatGroupUnitIndicator =
-        [](const FS_CombatGroup& Group, const FS_CombatGroupUnit& Unit) -> FString
+    auto IsFighterGroupType = [](ECOMBATGROUP_TYPE GroupType) -> bool
         {
-            const FString UnitClass = Unit.UnitClass.TrimStartAndEnd().ToUpper();
+            return
+                GroupType == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON ||
+                GroupType == ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON ||
+                GroupType == ECOMBATGROUP_TYPE::ATTACK_SQUADRON ||
+                GroupType == ECOMBATGROUP_TYPE::LCA_SQUADRON;
+        };
 
-            if (UnitClass == TEXT("DRONE"))       return TEXT("DR");
-            if (UnitClass == TEXT("FIGHTER"))     return TEXT("VF");
-            if (UnitClass == TEXT("ATTACK"))      return TEXT("VA");
-            if (UnitClass == TEXT("LCA"))         return TEXT("LC");
+    auto IsStarshipGroupType = [](ECOMBATGROUP_TYPE GroupType) -> bool
+        {
+            return
+                GroupType == ECOMBATGROUP_TYPE::CARRIER_GROUP ||
+                GroupType == ECOMBATGROUP_TYPE::BATTLE_GROUP ||
+                GroupType == ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
+        };
 
-            if (UnitClass == TEXT("COURIER"))     return TEXT("CR");
-            if (UnitClass == TEXT("CARGO"))       return TEXT("CG");
-            if (UnitClass == TEXT("FREIGHTER"))   return TEXT("FT");
+    auto IsStationGroupType = [](ECOMBATGROUP_TYPE GroupType) -> bool
+        {
+            return
+                GroupType == ECOMBATGROUP_TYPE::STATION ||
+                GroupType == ECOMBATGROUP_TYPE::STARBASE ||
+                GroupType == ECOMBATGROUP_TYPE::BATTERY ||
+                GroupType == ECOMBATGROUP_TYPE::MINEFIELD;
+        };
 
-            if (UnitClass == TEXT("CORVETTE"))    return TEXT("CVT");
-            if (UnitClass == TEXT("FRIGATE"))     return TEXT("FF");
-            if (UnitClass == TEXT("DESTROYER"))   return TEXT("DD");
-            if (UnitClass == TEXT("CRUISER"))     return TEXT("CA");
-            if (UnitClass == TEXT("BATTLESHIP"))  return TEXT("BB");
-            if (UnitClass == TEXT("CARRIER"))     return TEXT("CV");
-            if (UnitClass == TEXT("DREADNAUGHT")) return TEXT("DN");
-
-            if (UnitClass == TEXT("STATION"))     return TEXT("ST");
-            if (UnitClass == TEXT("STARBASE"))    return TEXT("SB");
-            if (UnitClass == TEXT("FARCASTER"))   return TEXT("FC");
-
-            if (UnitClass == TEXT("MINE"))        return TEXT("MN");
-            if (UnitClass == TEXT("COMSAT"))      return TEXT("CS");
-            if (UnitClass == TEXT("DEFSAT"))      return TEXT("DS");
-            if (UnitClass == TEXT("SWACS"))       return TEXT("SW");
-
-            if (UnitClass == TEXT("BUILDING"))    return TEXT("BLD");
-            if (UnitClass == TEXT("FACTORY"))     return TEXT("FAC");
-            if (UnitClass == TEXT("SAM"))         return TEXT("SAM");
-            if (UnitClass == TEXT("EWR"))         return TEXT("EWR");
-            if (UnitClass == TEXT("C3I"))         return TEXT("C3");
-
-            switch (Group.Type)
+    auto GetIndicatorFromGroupType = [](ECOMBATGROUP_TYPE GroupType) -> FString
+        {
+            switch (GroupType)
             {
             case ECOMBATGROUP_TYPE::STATION:             return TEXT("ST");
             case ECOMBATGROUP_TYPE::STARBASE:            return TEXT("SB");
@@ -1827,60 +1889,72 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             }
         };
 
-    struct FNavRow
+    struct FRowData
     {
         FString Primary;
         FString Secondary;
         FString Detail;
+        MissionElement* SourceElement = nullptr;
     };
 
-    TArray<FNavRow> Rows;
+    TArray<FRowData> Rows;
 
-    const TMap<FName, FS_CombatGroup>& AllGroups = CombatGroupRegistry::GetAll();
-
-    for (const TPair<FName, FS_CombatGroup>& Pair : AllGroups)
+    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
+    while (++ElemIter)
     {
-        const FS_CombatGroup& Group = Pair.Value;
-
-        const FString GroupRegion = Group.Region.TrimStartAndEnd();
-        const FString GroupRegionUpper = GroupRegion.ToUpper();
-
-        // -------------------------------------------------------------
-        // Hard region lock
-        // -------------------------------------------------------------
-        if (MissionRegionUpper.IsEmpty() || GroupRegionUpper != MissionRegionUpper)
+        MissionElement* Elem = ElemIter.value();
+        if (!Elem)
         {
             continue;
         }
 
-        bool bUseUnits = false;
+        if (!ShouldShowMissionElementInBriefing(Elem))
+        {
+            continue;
+        }
+
+        const FString ElemRegion =
+            FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+
+        if (!ElemRegion.Equals(MissionRegion, ESearchCase::IgnoreCase))
+        {
+            continue;
+        }
+
+        CombatGroup* Group = Elem->GetCombatGroup();
+        const bool bHasGroup = (Group != nullptr);
+        const ECOMBATGROUP_TYPE GroupType =
+            bHasGroup ? Group->GetType() : ECOMBATGROUP_TYPE::NONE;
+
+        const bool bIsStation =
+            Elem->IsStatic() ||
+            (bHasGroup && IsStationGroupType(GroupType));
+
+        const bool bIsStarship =
+            Elem->IsStarship() ||
+            (bHasGroup && IsStarshipGroupType(GroupType));
+
+        const bool bIsFighter =
+            Elem->IsSquadron() ||
+            (bHasGroup && IsFighterGroupType(GroupType));
+
+        bool bUseElement = false;
         FString TypeLabel;
 
         switch (ObjectType)
         {
         case EMissionNavObjectType::Station:
-            bUseUnits =
-                Group.Type == ECOMBATGROUP_TYPE::STATION ||
-                Group.Type == ECOMBATGROUP_TYPE::STARBASE ||
-                Group.Type == ECOMBATGROUP_TYPE::BATTERY ||
-                Group.Type == ECOMBATGROUP_TYPE::MINEFIELD;
+            bUseElement = bIsStation;
             TypeLabel = TEXT("STATION");
             break;
 
         case EMissionNavObjectType::Starship:
-            bUseUnits =
-                Group.Type == ECOMBATGROUP_TYPE::CARRIER_GROUP ||
-                Group.Type == ECOMBATGROUP_TYPE::BATTLE_GROUP ||
-                Group.Type == ECOMBATGROUP_TYPE::DESTROYER_SQUADRON;
+            bUseElement = bIsStarship;
             TypeLabel = TEXT("STARSHIP");
             break;
 
         case EMissionNavObjectType::Fighter:
-            bUseUnits =
-                Group.Type == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON ||
-                Group.Type == ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON ||
-                Group.Type == ECOMBATGROUP_TYPE::ATTACK_SQUADRON ||
-                Group.Type == ECOMBATGROUP_TYPE::LCA_SQUADRON;
+            bUseElement = bIsFighter;
             TypeLabel = TEXT("FIGHTER");
             break;
 
@@ -1888,83 +1962,104 @@ void UMissionNavDlg::BuildMissionElementObjects(EMissionNavObjectType ObjectType
             break;
         }
 
-        if (!bUseUnits)
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg] Candidate Element: Name='%s' Region='%s' Static=%d Starship=%d Squadron=%d HasGroup=%d GroupType=%d Use=%d"),
+            ANSI_TO_TCHAR(Elem->GetName()),
+            *ElemRegion,
+            Elem->IsStatic() ? 1 : 0,
+            Elem->IsStarship() ? 1 : 0,
+            Elem->IsSquadron() ? 1 : 0,
+            bHasGroup ? 1 : 0,
+            static_cast<int32>(GroupType),
+            bUseElement ? 1 : 0);
+
+        if (!bUseElement)
         {
             continue;
         }
 
-        // -------------------------------------------------------------
-        // Build rows from UNITS (not groups)
-        // -------------------------------------------------------------
-        for (const FS_CombatGroupUnit& Unit : Group.Unit)
+        const FString Primary =
+            FString(ANSI_TO_TCHAR(Elem->GetName())).TrimStartAndEnd();
+
+        FString Secondary = TEXT("UN");
+        if (bHasGroup)
         {
-            const FString RawName = Unit.UnitName.TrimStartAndEnd();
-            if (RawName.IsEmpty())
-            {
-                continue;
-            }
-
-            FString UnitRegion = Unit.UnitRegion.TrimStartAndEnd();
-            if (UnitRegion.IsEmpty())
-            {
-                UnitRegion = GroupRegion;
-            }
-
-            const FString UnitRegionUpper = UnitRegion.ToUpper();
-
-            if (MissionRegionUpper.IsEmpty() || UnitRegionUpper != MissionRegionUpper)
-            {
-                continue;
-            }
-
-            const FString Indicator = GetCombatGroupUnitIndicator(Group, Unit);
-
-            const FString Primary = RawName;
-            const FString Secondary = Indicator;
-
-            const FVector UnitLoc =
-                !Unit.UnitLoc.IsNearlyZero() ? Unit.UnitLoc : Group.Location;
-
-            FNavRow Row;
-            Row.Primary = Primary;
-            Row.Secondary = Secondary;
-            Row.Detail = FString::Printf(
-                TEXT("%s\n\nTYPE: %s\nDESIGN: %s\nREGION: %s\nIFF: %d\nLOCATION: X %.0f  Y %.0f  Z %.0f\nGROUP: %s\nGROUP TYPE: %s\nCOUNT: %d"),
-                *Primary,
-                *TypeLabel,
-                Unit.UnitDesign.IsEmpty() ? TEXT("UNKNOWN") : *Unit.UnitDesign,
-                *UnitRegion,
-                Group.Iff,
-                UnitLoc.X,
-                UnitLoc.Y,
-                UnitLoc.Z,
-                Group.DisplayName.IsEmpty() ? *Pair.Key.ToString() : *Group.DisplayName,
-                *UFormattingUtils::GetGroupTypeDisplayName(Group.Type),
-                Unit.UnitCount);
-
-            Rows.Add(Row);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[MissionNavDlg]   ACCEPT UNIT: Name='%s' Indicator='%s' Region='%s'"),
-                *Primary,
-                *Secondary,
-                *UnitRegion);
+            Secondary = GetIndicatorFromGroupType(GroupType);
         }
+        else if (bIsFighter)
+        {
+            Secondary = TEXT("VF");
+        }
+        else if (bIsStarship)
+        {
+            Secondary = TEXT("CA");
+        }
+        else if (bIsStation)
+        {
+            Secondary = TEXT("ST");
+        }
+
+        const FVector Loc = Elem->GetLocation();
+
+        FString GroupLabel = TEXT("NONE");
+        if (bHasGroup)
+        {
+            GroupLabel = UFormattingUtils::GetGroupTypeDisplayName(GroupType);
+        }
+
+        FRowData Row;
+        Row.Primary = Primary;
+        Row.Secondary = Secondary;
+        Row.Detail = FString::Printf(
+            TEXT("%s\n\nTYPE: %s\nREGION: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nGROUP TYPE: %s"),
+            *Primary,
+            *TypeLabel,
+            *ElemRegion,
+            Loc.X,
+            Loc.Y,
+            Loc.Z,
+            *GroupLabel);
+        Row.SourceElement = Elem;
+
+        Rows.Add(Row);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg] ACCEPT ELEMENT: Name='%s' Secondary='%s'"),
+            *Row.Primary,
+            *Row.Secondary);
     }
 
-    Rows.Sort([](const FNavRow& A, const FNavRow& B)
+    Rows.Sort([](const FRowData& A, const FRowData& B)
         {
             return A.Primary < B.Primary;
         });
 
     for (int32 Index = 0; Index < Rows.Num(); ++Index)
     {
-        AddObjectItem(
+        UMissionNavObjectListObject* Item = NewObject<UMissionNavObjectListObject>(this);
+        if (!Item)
+        {
+            continue;
+        }
+
+        Item->InitObjectRow(
             ObjectType,
             Index,
             Rows[Index].Primary,
             Rows[Index].Secondary,
             Rows[Index].Detail);
+
+        Item->SetSourceMissionElement(Rows[Index].SourceElement);
+
+        ObjectItems.Add(Item);
+        ObjectListView->AddItem(Item);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionNavDlg] AddItem: [%d] %s / %s Source=%s"),
+            Index,
+            *Rows[Index].Primary,
+            *Rows[Index].Secondary,
+            Rows[Index].SourceElement ? ANSI_TO_TCHAR(Rows[Index].SourceElement->GetName()) : TEXT("NULL"));
     }
 }
 
@@ -2072,7 +2167,6 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         {
             SelectedSystemName = TargetSystemName;
         }
-        
 
         if (SystemMapPanel)
         {
@@ -2130,7 +2224,7 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
     }
 
     // -------------------------------------------------
-    // SECTOR OBJECTS (Station / Ship / Fighter)
+    // SECTOR OBJECTS (Sector / Station / Ship / Fighter)
     // -------------------------------------------------
     if (ObjectType == EMissionNavObjectType::Sector ||
         ObjectType == EMissionNavObjectType::Station ||
@@ -2151,84 +2245,35 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
         {
             SectorMapPanel->SetFocus();
 
-            if (ObjectType == EMissionNavObjectType::Station ||
-                ObjectType == EMissionNavObjectType::Starship ||
-                ObjectType == EMissionNavObjectType::Fighter)
+            // Selecting the region/sector row itself:
+            if (ObjectType == EMissionNavObjectType::Sector)
             {
-                if (MissionPtr)
+                SectorMapPanel->SetSelectedElement(nullptr);
+            }
+            else
+            {
+                MissionElement* SourceElem = SelectedObjectItem->GetSourceMissionElement();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[MissionNavDlg] OnObjectSelectionChanged: RowType=%d Row='%s' SourceElem=%s"),
+                    static_cast<int32>(ObjectType),
+                    *SelectedObjectItem->GetPrimaryText(),
+                    SourceElem ? ANSI_TO_TCHAR(SourceElem->GetName()) : TEXT("NULL"));
+
+                if (SourceElem)
                 {
-                    const FString TargetName =
-                        SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
+                    SectorMapPanel->SetSelectedElement(SourceElem);
+                    SectorMapPanel->CenterOnElement(SourceElem);
+                    SectorMapPanel->SetFocus();
 
                     UE_LOG(LogTemp, Warning,
-                        TEXT("[MissionNavDlg] Selected row: Type=%d Name='%s'"),
-                        (int32)ObjectType,
-                        *TargetName);
-
-                    const FString MissionRegion =
-                        FString(ANSI_TO_TCHAR(MissionPtr->GetRegion()))
-                        .TrimStartAndEnd();
-
-                    MissionElement* BestMatch = nullptr;
-
-                    // -------------------------------------------------
-                    // EXACT NAME MATCH ONLY (NO NORMALIZATION)
-                    // -------------------------------------------------
-                    ListIter<MissionElement> ElemIter = MissionPtr->GetElements();
-                    while (++ElemIter)
-                    {
-                        MissionElement* Elem = ElemIter.value();
-                        if (!Elem)
-                        {
-                            continue;
-                        }
-
-                        const FString ElemRegion =
-                            FString(ANSI_TO_TCHAR(Elem->GetRegion()))
-                            .TrimStartAndEnd();
-
-                        if (!ElemRegion.Equals(MissionRegion, ESearchCase::IgnoreCase))
-                        {
-                            continue;
-                        }
-
-                        const FString ElemName =
-                            FString(ANSI_TO_TCHAR(Elem->GetName()))
-                            .TrimStartAndEnd();
-
-                        if (ElemName.Equals(TargetName, ESearchCase::IgnoreCase))
-                        {
-                            BestMatch = Elem;
-                            break;
-                        }
-                        
-                        UE_LOG(LogTemp, Warning,
-                            TEXT("[MissionNavDlg] Candidate MissionElement: Name='%s' Region='%s' IsStatic=%d IsStarship=%d IsSquadron=%d"),
-                            ANSI_TO_TCHAR(Elem->GetName()),
-                            ANSI_TO_TCHAR(Elem->GetRegion()),
-                            Elem->IsStatic() ? 1 : 0,
-                            Elem->IsStarship() ? 1 : 0,
-                            Elem->IsSquadron() ? 1 : 0);
-                    }
-
-                    // -------------------------------------------------
-                    // APPLY SELECTION + CENTER
-                    // -------------------------------------------------
-                    if (BestMatch)
-                    {
-                        SectorMapPanel->SetSelectedElement(BestMatch);
-                        SectorMapPanel->CenterOnElement(BestMatch);
-
-                        UE_LOG(LogTemp, Warning,
-                            TEXT("[MissionNavDlg] Exact match: '%s'"),
-                            ANSI_TO_TCHAR(BestMatch->GetName()));
-                    }
-                    else
-                    {
-                        UE_LOG(LogTemp, Warning,
-                            TEXT("[MissionNavDlg] No match for '%s'"),
-                            *TargetName);
-                    }
+                        TEXT("[MissionNavDlg] Centered directly on MissionElement='%s'"),
+                        ANSI_TO_TCHAR(SourceElem->GetName()));
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[MissionNavDlg] Selected row has no SourceMissionElement"));
                 }
             }
         }

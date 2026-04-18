@@ -160,9 +160,6 @@ public:
 	void ShowMainMenuScreen();
 
 	UFUNCTION()
-	void RemoveMainMenuScreen();
-
-	UFUNCTION()
 	void RemoveScreens();
 
 	// =====================================================================
