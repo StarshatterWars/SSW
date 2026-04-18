@@ -45,6 +45,7 @@
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "SSWCombatGroupSubsystem.h"
 
 #include "Logging/LogMacros.h"
 
@@ -72,6 +73,7 @@ void UStarshatterBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency(UStarshatterWeaponDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterEnvironmentSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterUIStyleSubsystem::StaticClass());
+    Collection.InitializeDependency(USSWCombatGroupSubsystem::StaticClass());
 
     // Establish BOOT lifecycle state immediately
     if (USSWGameInstance* SSWGI = Cast<USSWGameInstance>(GetGameInstance()))
@@ -119,6 +121,7 @@ void UStarshatterBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         BootWeaponDesignLoader(Ctx);
         BootShipDesignLoader(Ctx);
         BootGalaxyLoader(Ctx);
+        BootCombatGroupLoader(Ctx);
     }
 
     // Keep existing behavior
@@ -202,6 +205,7 @@ bool UStarshatterBootSubsystem::BuildContext(FBootContext& OutCtx)
     OutCtx.SystemDesignSS = OutCtx.GI->GetSubsystem<UStarshatterSystemDesignSubsystem>();
     OutCtx.WeaponDesignSS = OutCtx.GI->GetSubsystem<UStarshatterWeaponDesignSubsystem>();
     OutCtx.EnvironmentSS = OutCtx.GI->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+    OutCtx.CombatGroupSS = OutCtx.GI->GetSubsystem<USSWCombatGroupSubsystem>();
     OutCtx.UIStyleSS = OutCtx.GI->GetSubsystem<UStarshatterUIStyleSubsystem>();
    
     OutCtx.FormSS = OutCtx.GI->GetSubsystem<UStarshatterFormSubsystem>();
@@ -389,6 +393,8 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("Data.CampaignOOBTable"),
     TEXT("Data.CombatGroupTable"),
     TEXT("Data.GalaxyMapTable"),
+    TEXT("Data.SystemMapTable"),
+
     TEXT("Data.OrderOfBattleTable"),
     TEXT("Data.MedalsTable"),
     TEXT("Data.RanksTable"),
@@ -409,6 +415,7 @@ bool UStarshatterBootSubsystem::BootAssets()
     TEXT("UI.CmdMessageDlgClass"),
     TEXT("UI.OperationsScreenClass"),
     TEXT("UI.MissionScreenClass"),
+    TEXT("UI.CampaignSceneClass"),
 
     TEXT("UI.Theme.MenuButton.Normal"),
     TEXT("UI.Theme.MenuButton.Hover"),
@@ -441,4 +448,12 @@ void UStarshatterBootSubsystem::BootUIStyle(const FBootContext& Ctx)
     Ctx.UIStyleSS->ReloadFromSettings(true);
 
     UE_LOG(LogStarshatterBoot, Log, TEXT("[BOOT] UIStyle loaded from Project Settings"));
+}
+
+void UStarshatterBootSubsystem::BootCombatGroupLoader(const FBootContext& Ctx)
+{
+    if (!Ctx.CombatGroupSS)
+        return;
+
+    Ctx.CombatGroupSS->LoadAll(false);
 }

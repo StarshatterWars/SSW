@@ -1,0 +1,87 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         SystemLevelScriptActor.h
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Level script actor that drives system scene initialization.
+
+    - Resolves target system from Campaign/Mission
+    - Ensures a SystemSceneBuilder exists (find or spawn)
+    - Configures builder and triggers build
+*/
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/LevelScriptActor.h"
+#include "SystemLevelScriptActor.generated.h"
+
+class ASystemSceneBuilder;
+
+UCLASS()
+class STARSHATTERWARS_API ASystemLevelScriptActor : public ALevelScriptActor
+{
+    GENERATED_BODY()
+
+public:
+    ASystemLevelScriptActor();
+
+    virtual void BeginPlay() override;
+
+    UFUNCTION(BlueprintCallable, Category = "System")
+    void InitializeSystemLevel();
+
+    UFUNCTION(BlueprintCallable, Category = "System")
+    void BuildCurrentSystem();
+
+    UFUNCTION(BlueprintCallable, Category = "System")
+    void ClearCurrentSystem();
+
+    UFUNCTION(BlueprintCallable, Category = "System")
+    void RebuildCurrentSystem();
+
+    UFUNCTION(BlueprintCallable, Category = "System")
+    FString ResolveStartupSystemName() const;
+
+    UFUNCTION(BlueprintPure, Category = "System")
+    ASystemSceneBuilder* GetSystemSceneBuilder() const { return CachedBuilder.Get(); }
+
+protected:
+    ASystemSceneBuilder* ResolveBuilder();
+
+protected:
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    bool bInitializeOnBeginPlay = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    bool bBuildOnBeginPlay = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    bool bAutoFindBuilder = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    bool bAutoSpawnBuilderIfMissing = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    TSubclassOf<ASystemSceneBuilder> BuilderClass;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    FVector BuilderSpawnLocation = FVector::ZeroVector;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    FRotator BuilderSpawnRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    TObjectPtr<ASystemSceneBuilder> BuilderOverride = nullptr;
+
+    UPROPERTY(EditInstanceOnly, Category = "System")
+    FString DefaultSystemName = TEXT("Solus");
+
+protected:
+    UPROPERTY(VisibleInstanceOnly, Category = "Runtime")
+    TObjectPtr<ASystemSceneBuilder> CachedBuilder = nullptr;
+};

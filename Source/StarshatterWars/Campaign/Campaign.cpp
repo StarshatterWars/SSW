@@ -1814,23 +1814,6 @@ Campaign::ReloadMission(int id)
     }
 }
 
-void
-Campaign::LoadNetMission(int id, const char* net_mission_script)
-{
-    if (mission && mission == net_mission) {
-        delete net_mission;
-        net_mission = 0;
-    }
-
-    mission_id = id;
-    mission = new Mission(id);
-
-    if (mission && mission->ParseMission(net_mission_script))
-        mission->Validate();
-
-    net_mission = mission;
-}
-
 // +--------------------------------------------------------------------+
 
 CombatAction*

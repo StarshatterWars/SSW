@@ -56,6 +56,39 @@ DEFINE_LOG_CATEGORY(LogStarshatterEnvironment);
 // UStarshatterEnvironmentSubsystem
 // -----------------------------------------------------------------------------
 
+static EPlanetType ParsePlanetTypeToken(const FString& InToken)
+{
+	FString Token = InToken;
+	Token = Token.TrimStartAndEnd().ToLower();
+	Token.ReplaceInline(TEXT(" "), TEXT(""));
+	Token.ReplaceInline(TEXT("_"), TEXT(""));
+	Token.ReplaceInline(TEXT("-"), TEXT(""));
+	Token.ReplaceInline(TEXT(","), TEXT(""));
+
+	if (Token == TEXT("terran"))
+	{
+		return EPlanetType::Terran;
+	}
+	if (Token == TEXT("ice"))
+	{
+		return EPlanetType::Ice;
+	}
+	if (Token == TEXT("volcanic"))
+	{
+		return EPlanetType::Volcanic;
+	}
+	if (Token == TEXT("barren"))
+	{
+		return EPlanetType::Barren;
+	}
+	if (Token == TEXT("gasgiant"))
+	{
+		return EPlanetType::GasGiant;
+	}
+
+	return EPlanetType::Unknown;
+}
+
 template<typename TRowStruct>
 static void ReadTableToArray(
 	const UDataTable* Table,
@@ -71,24 +104,40 @@ static void ReadTableToArray(
 		return;
 	}
 
-	const TMap<FName, uint8*>& Rows = Table->GetRowMap();
-	OutArray.Reserve(Rows.Num());
-
-	for (const TPair<FName, uint8*>& Pair : Rows)
+	if (Table->GetRowStruct() != TRowStruct::StaticStruct())
 	{
-		if (!Pair.Value)
-			continue;
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] %s row struct mismatch. Expected=%s Actual=%s"),
+			Label,
+			*GetNameSafe(TRowStruct::StaticStruct()),
+			*GetNameSafe(Table->GetRowStruct()));
+		return;
+	}
 
+
+
+
+	static const FString Context(TEXT("ReadTableToArray"));
+	const TArray<FName> RowNames = Table->GetRowNames();
+
+	OutArray.Reserve(RowNames.Num());
+
+	for (const FName& RowName : RowNames)
+	{
 		const TRowStruct* Row =
-			reinterpret_cast<const TRowStruct*>(Pair.Value);
+			Table->FindRow<TRowStruct>(RowName, Context, false);
 
-		OutArray.Add(*Row);
+		if (Row)
+		{
+			OutArray.Add(*Row);
+		}
 	}
 
 	UE_LOG(LogStarshatterEnvironment, Log,
 		TEXT("[Environment] Read %d rows from %s."),
 		OutArray.Num(), Label);
 }
+
 
 static FColor Vec3ToColor255(const Vec3& a)
 {
@@ -119,12 +168,14 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 
 	SetProjectPath();
 
-	GalaxyDataTable = Assets->GetDataTable(TEXT("Data.GalaxyMapTable"), true);
-	RegionsDataTable = Assets->GetDataTable(TEXT("Data.RegionsTable"), true);
+	ResolveDataTables();
 
 	if (Assets)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Environment] Assets=%s"), *GetNameSafe(Assets));
+		UE_LOG(LogStarshatterEnvironment, Warning,
+			TEXT("[Environment] DTs -> StarSystems=%s Regions=%s"),
+			*GetNameSafe(GalaxyDataTable),
+			*GetNameSafe(RegionsDataTable));
 	}
 
 	// Ensure we actually have a data table to fill:
@@ -134,6 +185,7 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 			TEXT("[Environment] GalaxyDataTable is null. Assign a DT asset with RowStruct=FS_Galaxy in defaults."));
 		return;
 	}
+
 
 	// Runtime time state
 	bBaseTimeInitialized = false;
@@ -147,7 +199,13 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 	RuntimeMoons.Reset();
 	RuntimeRegions.Reset();
 
-	bLoaded = false;
+	if (bLoaded)
+	{
+		UE_LOG(LogStarshatterEnvironment, Warning,
+			TEXT("[Environment] LoadAll forced reload (previous state detected)"));
+
+		Unload(); // force clean state
+	}
 }
 
 void UStarshatterEnvironmentSubsystem::Deinitialize()
@@ -156,6 +214,18 @@ void UStarshatterEnvironmentSubsystem::Deinitialize()
 
     Unload();
     Super::Deinitialize();
+}
+
+void UStarshatterEnvironmentSubsystem::ResolveDataTables()
+{
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) return;
+
+	UStarshatterAssetRegistrySubsystem* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
+	if (!Assets) return;
+
+	GalaxyDataTable = Assets->GetDataTable(TEXT("Data.GalaxyMapTable"), true);
+	RegionsDataTable = Assets->GetDataTable(TEXT("Data.RegionsTable"), true);
 }
 
 void UStarshatterEnvironmentSubsystem::Unload()
@@ -189,7 +259,6 @@ void UStarshatterEnvironmentSubsystem::ReleaseAssets()
 {
 	// Only if you truly want to drop hard refs (usually Deinitialize)
 	GalaxyDataTable = nullptr;
-	StarSystemDataTable = nullptr;
 	StarsDataTable = nullptr;
 	PlanetsDataTable = nullptr;
 	MoonsDataTable = nullptr;
@@ -236,8 +305,8 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 		bFull ? TEXT("true") : TEXT("false"));
 
 	ClearRuntimeCaches();
-
-	//LoadGalaxyMap();
+	ResolveDataTables();
+	LoadGalaxyMap();
 	//LoadStarsystems();
 	CreateEnvironmentTables();
 
@@ -1229,6 +1298,20 @@ void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char*
 			GetDefText(MoonName, pdef, fn);
 			NewMoonMap.Name = FString(MoonName);
 		}
+		else if (Key == "type")
+		{
+			Text PType = "";
+			GetDefText(PType, pdef, fn);
+
+			const FString RawType = FString(PType).TrimStartAndEnd();
+			NewMoonMap.PlanetType = ParsePlanetTypeToken(RawType);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[MoonMap] Name='%s' RawType='%s' ParsedType=%d"),
+				*NewMoonMap.Name,
+				*RawType,
+				(int32)NewMoonMap.PlanetType);
+		}
 		else if (Key == "icon")
 		{
 			GetDefText(MoonIcon, pdef, fn);
@@ -1300,6 +1383,14 @@ void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char*
 	}
 
 	MoonMapArray.Add(NewMoonMap);
+	MoonMapByName.Add(NewMoonMap.Name.TrimStartAndEnd(), NewMoonMap);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[MoonMap] Cached Moon '%s' Type=%d TotalCached=%d"),
+		*NewMoonMap.Name,
+		(int32)NewMoonMap.PlanetType,
+		MoonMapByName.Num());
+
 }
 
 void UStarshatterEnvironmentSubsystem::ParseStarMap(TermStruct* val, const char* fn)
@@ -1496,6 +1587,20 @@ void UStarshatterEnvironmentSubsystem::ParsePlanetMap(TermStruct* val, const cha
 			GetDefText(PlanetName, pdef, fn);
 			NewPlanetMap.Name = FString(PlanetName);
 		}
+		else if (Key == "type")
+		{
+			Text PType = "";
+			GetDefText(PType, pdef, fn);
+
+			const FString RawType = FString(PType).TrimStartAndEnd();
+			NewPlanetMap.PlanetType = ParsePlanetTypeToken(RawType);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[PlanetMap] Name='%s' RawType='%s' ParsedType=%d"),
+				*NewPlanetMap.Name,
+				*RawType,
+				(int32)NewPlanetMap.PlanetType);
+		}
 		else if (Key == "icon")
 		{
 			GetDefText(PlanetIcon, pdef, fn);
@@ -1620,6 +1725,14 @@ void UStarshatterEnvironmentSubsystem::ParsePlanetMap(TermStruct* val, const cha
 	}
 
 	PlanetMapArray.Add(NewPlanetMap);
+
+	PlanetMapByName.Add(NewPlanetMap.Name.TrimStartAndEnd(), NewPlanetMap);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[PlanetMap] Cached Planet '%s' Type=%d TotalCached=%d"),
+		*NewPlanetMap.Name,
+		(int32)NewPlanetMap.PlanetType,
+		PlanetMapByName.Num());
 }
 
 void UStarshatterEnvironmentSubsystem::ParseTerrain(TermStruct* val, const char* fn)
@@ -1996,26 +2109,14 @@ void UStarshatterEnvironmentSubsystem::ParseStarSystem(const char* fn)
 		delete term;
 		term = nullptr;
 	}
-
-	// Add datatable row ONCE after parse:
-	if (StarSystemDataTable)
-	{
-		const FName RowName(*FString(SystemName));
-		StarSystemDataTable->AddRow(RowName, NewStarSystem);
-	}
 }
-
 void UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 {
 	ClearRuntimeCaches();
 
 	ReadGalaxyDataTable();
-	ReadStarSystemsTable();
-	//ReadStarsTable();
-	//ReadPlanetsTable();
-	//ReadMoonsTable();
+	BuildStarSystemArrayFromGalaxy();
 	ReadRegionsTable();
-	//ReadTerrainRegionsTable();
 
 	BuildEnvironmentCaches();
 }
@@ -2032,6 +2133,9 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 	MoonDataArray.Reset();
 	RegionDataArray.Reset();
 	TerrainRegionsArray.Reset();
+
+	//PlanetMapByName.Empty();
+	//MoonMapByName.Empty();
 
 	// -----------------------------------------------------------------
 	// Lookup caches
@@ -2068,12 +2172,29 @@ void UStarshatterEnvironmentSubsystem::ReadGalaxyDataTable()
 		TEXT("GalaxyDataTable (FS_Galaxy)"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadStarSystemsTable()
+void UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 {
-	ReadTableToArray<FS_StarSystem>(
-		StarSystemDataTable,
-		StarSystemDataArray,
-		TEXT("StarSystemDataTable (FS_StarSystem)"));
+	StarSystemDataArray.Reset();
+
+	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
+	{
+		if (GalaxyRow.Name.IsEmpty())
+			continue;
+
+		FS_StarSystem SystemRow;
+		SystemRow.SystemName = GalaxyRow.Name;
+
+		// Optional mapping
+		// SystemRow.Location = GalaxyRow.Location;
+		// SystemRow.Iff      = GalaxyRow.Iff;
+		// SystemRow.Empire   = GalaxyRow.Empire;
+
+		StarSystemDataArray.Add(SystemRow);
+	}
+
+	UE_LOG(LogStarshatterEnvironment, Log,
+		TEXT("[Environment] Built %d FS_StarSystem rows from GalaxyDataArray."),
+		StarSystemDataArray.Num());
 }
 
 void UStarshatterEnvironmentSubsystem::ReadStarsTable()
@@ -2336,3 +2457,122 @@ void UStarshatterEnvironmentSubsystem::RegisterRegion(OrbitalRegion* Region)
 		TEXT("[Environment] Registered Region. Count=%d"),
 		RuntimeRegions.Num());
 }
+
+const FS_Galaxy* UStarshatterEnvironmentSubsystem::FindGalaxyByName(const FString& InName) const
+{
+	if (InName.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	for (const FS_Galaxy& Row : GalaxyDataArray)
+	{
+		if (Row.Name.Equals(InName, ESearchCase::IgnoreCase))
+		{
+			return &Row;
+		}
+	}
+
+	return nullptr;
+}
+
+const FS_StarSystem* UStarshatterEnvironmentSubsystem::FindStarSystemByName(const FString& InName) const
+{
+	if (InName.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	for (const FS_StarSystem& Row : StarSystemDataArray)
+	{
+		if (Row.SystemName.Equals(InName, ESearchCase::IgnoreCase))
+		{
+			return &Row;
+		}
+	}
+
+	return nullptr;
+}
+
+const FS_PlanetMap* UStarshatterEnvironmentSubsystem::FindPlanetMapByName(const FString& Name) const
+{
+	const FString SearchName = Name.TrimStartAndEnd();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] FindPlanetMapByName: searching for '%s' PlanetMapByName.Num=%d"),
+		*SearchName,
+		PlanetMapByName.Num());
+
+	const FS_PlanetMap* Found = PlanetMapByName.Find(SearchName);
+	if (Found)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Environment] FindPlanetMapByName: FOUND '%s' -> Type=%d"),
+			*SearchName,
+			(int32)Found->PlanetType);
+
+		return Found;
+	}
+
+	for (const TPair<FString, FS_PlanetMap>& Pair : PlanetMapByName)
+	{
+		if (Pair.Key.Equals(SearchName, ESearchCase::IgnoreCase))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Environment] FindPlanetMapByName: FOUND (IgnoreCase) '%s' -> Key='%s' Type=%d"),
+				*SearchName,
+				*Pair.Key,
+				(int32)Pair.Value.PlanetType);
+
+			return &Pair.Value;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] FindPlanetMapByName: NOT FOUND '%s'"),
+		*SearchName);
+
+	return nullptr;
+}
+
+const FS_MoonMap* UStarshatterEnvironmentSubsystem::FindMoonMapByName(const FString& Name) const
+{
+	const FString SearchName = Name.TrimStartAndEnd();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] FindMoonMapByName: searching for '%s' MoonMapByName.Num=%d"),
+		*SearchName,
+		MoonMapByName.Num());
+
+	const FS_MoonMap* Found = MoonMapByName.Find(SearchName);
+	if (Found)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Environment] FindMoonMapByName: FOUND '%s' -> Type=%d"),
+			*SearchName,
+			(int32)Found->PlanetType);
+
+		return Found;
+	}
+
+	for (const TPair<FString, FS_MoonMap>& Pair : MoonMapByName)
+	{
+		if (Pair.Key.Equals(SearchName, ESearchCase::IgnoreCase))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Environment] FindMoonMapByName: FOUND (IgnoreCase) '%s' -> Key='%s' Type=%d"),
+				*SearchName,
+				*Pair.Key,
+				(int32)Pair.Value.PlanetType);
+
+			return &Pair.Value;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] FindMoonMapByName: NOT FOUND '%s'"),
+		*SearchName);
+
+	return nullptr;
+}
+

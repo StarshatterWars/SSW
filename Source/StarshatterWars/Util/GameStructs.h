@@ -205,6 +205,18 @@ enum ECOMMAND_MODE : uint8 {
 	NUM_MODES 
 };
 
+
+UENUM(BlueprintType)
+enum class EPlanetType : uint8
+{
+	Unknown   UMETA(DisplayName = "Unknown"),
+	Terran    UMETA(DisplayName = "Terran"),
+	Ice       UMETA(DisplayName = "Ice"),
+	Volcanic  UMETA(DisplayName = "Volcanic"),
+	Barren    UMETA(DisplayName = "Barren"),
+	GasGiant  UMETA(DisplayName = "Gas Giant")
+};
+
 UENUM()
 enum ECombatActionType : uint8
 {
@@ -1489,6 +1501,8 @@ struct FS_MoonMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EBodyUISizeClass  BodyType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EPlanetType  PlanetType = EPlanetType::Terran;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RegionMap> Region; 
 
 	FS_MoonMap() {
@@ -1557,7 +1571,9 @@ struct FS_PlanetMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FColor  Atmos;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EBodyUISizeClass  BodyType;
+	EBodyUISizeClass  BodyType = EBodyUISizeClass::Planet;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EPlanetType  PlanetType = EPlanetType::Terran;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RegionMap> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -1582,7 +1598,6 @@ struct FS_PlanetMap : public FTableRowBase {
 		Eccentricity = 0.0f;
 		Retro = false;
 		Atmos = FColor::Black;
-		BodyType = EBodyUISizeClass::Planet;
 	}
 };
 
@@ -1833,6 +1848,10 @@ struct FS_Planet : public FTableRowBase {
 	bool   Lumin;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FColor  Atmos;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EBodyUISizeClass  BodyType = EBodyUISizeClass::Planet;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EPlanetType  PlanetType = EPlanetType::Terran;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_Moon> Moon;
 
@@ -2626,10 +2645,16 @@ struct FS_MissionEvent : public FTableRowBase
 	FString EventTarget;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString EventImage;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString EventMessage;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString EventCaption;   
+	FString EventCaption;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector EventFade = FVector::ZeroVector;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString EventSound;
@@ -2675,6 +2700,7 @@ struct FS_MissionEvent : public FTableRowBase
 		EventShip = "";
 		EventSource = "";
 		EventTarget = "";
+		EventImage = "";
 		EventMessage = "";
 		EventCaption = "";
 		EventSound = "";
@@ -4433,8 +4459,10 @@ enum class EStarshatterInputAction : uint8
 	// ------------------------------------------------------------
 	// CORE / META
 	// ------------------------------------------------------------
+	None					UMETA(DisplayName = "None"),                 // None
+
 	ExitGame                UMETA(DisplayName = "Exit Game"),            // legacy KEY_EXIT
-	Pause                   UMETA(DisplayName = "Pause"),               // legacy KEY_PAUSE
+	Pause                   UMETA(DisplayName = "Pause"),                // legacy KEY_PAUSE
 
 	// ------------------------------------------------------------
 	// TIME
@@ -4642,7 +4670,7 @@ struct FStarshatterInputBinding
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Input")
-	EStarshatterInputAction Action;
+	EStarshatterInputAction Action = EStarshatterInputAction::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Input")
 	FKey Key;

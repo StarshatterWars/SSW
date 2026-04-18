@@ -15,6 +15,9 @@ class UTextBlock;
 class UFont;
 class UCmpnScreen;
 class USoundBase;
+class UImage;
+class UTexture2D;
+class ASystemSceneBuilder;
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -32,6 +35,10 @@ public:
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+    virtual FReply NativeOnKeyDown(
+        const FGeometry& InGeometry,
+        const FKeyEvent& InKeyEvent) override;
+
     void Show();
     void Hide();
 
@@ -47,6 +54,12 @@ public:
     void AdvanceSceneFromTimer(float NowSeconds);
 
     bool IsSceneRunning() const { return bSceneRunning; }
+
+
+
+    void SkipCutscene();
+
+    void FinishCutscene();
 
 protected:
     void BuildRuntimeWidgets();
@@ -70,6 +83,20 @@ protected:
     int32 ResolveCampaignNumber() const;
 
 protected:
+    void ExecuteDisplayEvent(const FS_MissionEvent& Event);
+    void UpdatePanelFade(float NowSeconds);
+    void ClearPanelTexture();
+    UTexture2D* ResolveScenePanelTexture(const FString& ImageToken) const;
+    FString ResolveScenePanelPath(const FString& ImageToken) const;
+    void ApplyPanelTexture(UTexture2D* Texture);
+
+protected:
+    void ExecuteCameraEvent(const FS_MissionEvent& Event);
+    void DebugCameraEventTarget(const FS_MissionEvent& Event);
+    ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
+
+
+protected:
     UPROPERTY(meta = (BindWidgetOptional))
     UBorder* RuntimeHost = nullptr;
 
@@ -87,6 +114,16 @@ protected:
 
     UPROPERTY()
     UTextBlock* CaptionTextBottom = nullptr;
+
+protected:
+    UPROPERTY()
+    UImage* ScenePanelImage = nullptr;
+
+    float PanelStartTime = 0.0f;
+    float PanelFadeInTime = 0.0f;
+    float PanelHoldTime = 0.0f;
+    float PanelFadeOutTime = 0.0f;
+    bool bPanelActive = false;
 
 protected:
     UPROPERTY()
@@ -111,4 +148,5 @@ protected:
     bool bSceneRunning = false;
 
     int32 CurrentCampaignNumber = 0;
+
 };

@@ -114,6 +114,12 @@ public:
 
     const TArray<StarSystem*>& GetRuntimeStarSystems() const { return RuntimeStarSystems; }
 
+    const FS_Galaxy* FindGalaxyByName(const FString& InName) const;
+    const FS_StarSystem* FindStarSystemByName(const FString& InName) const;
+
+    const FS_PlanetMap* FindPlanetMapByName(const FString& Name) const;
+    const FS_MoonMap* FindMoonMapByName(const FString& Name) const;
+
     // -----------------------------------------------------------------
     // Primary entry point
     // -----------------------------------------------------------------
@@ -180,6 +186,8 @@ public:
     // -----------------------------------------------------------------
     void CreateEnvironmentTables();
 
+    void ResolveDataTables();
+
     // -----------------------------------------------------------------
     // Lifetime control
     // -----------------------------------------------------------------
@@ -188,11 +196,16 @@ public:
 
     bool IsLoaded() const { return bLoaded; }
 
+    UPROPERTY()
+    TMap<FString, FS_PlanetMap> PlanetMapByName;
+
+    UPROPERTY()
+    TMap<FString, FS_MoonMap> MoonMapByName;
+
     // -----------------------------------------------------------------
     // DataTable accessors
     // -----------------------------------------------------------------
     UDataTable* GetGalaxyTable() const { return GalaxyDataTable; }
-    UDataTable* GetStarSystemsTable() const { return StarSystemDataTable; }
     UDataTable* GetStarsTable() const { return StarsDataTable; }
     UDataTable* GetPlanetsTable() const { return PlanetsDataTable; }
     UDataTable* GetMoonsTable() const { return MoonsDataTable; }
@@ -243,7 +256,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Starshatter|Environment|DataTables")
     TObjectPtr<UDataTable> RegionsDataTable = nullptr;
 
-    UDataTable* StarSystemDataTable = nullptr;
     UDataTable* StarsDataTable = nullptr;
     UDataTable* PlanetsDataTable = nullptr;
     UDataTable* MoonsDataTable = nullptr;
@@ -296,7 +308,7 @@ private:
     void HydrateAllFromTables();
 
     void ReadGalaxyDataTable();
-    void ReadStarSystemsTable();
+    void BuildStarSystemArrayFromGalaxy();
     void ReadStarsTable();
     void ReadPlanetsTable();
     void ReadMoonsTable();

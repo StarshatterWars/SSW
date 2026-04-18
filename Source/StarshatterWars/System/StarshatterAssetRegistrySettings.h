@@ -114,6 +114,9 @@ public:
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> GalaxyMapTable;
+    
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
+    TSoftObjectPtr<UDataTable> SystemMapTable;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> OrderOfBattleTable;
@@ -173,6 +176,9 @@ public:
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> CampaignLoadScreenClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> CampaignSceneClass;
 
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)

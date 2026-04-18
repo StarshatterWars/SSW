@@ -13,7 +13,7 @@ group: {
 group: {
   type:   civilian,
   id:     1,
-  name:   "Civilian Infrastructure",
+  name:   "Solus Civilian Infrastructure",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -670,10 +670,11 @@ group: {
 group: {
   type:   non_com,
   id:     2300,
-  name:   "Freight",
+  name:   "Solus Freight",
   intel:  known,
   iff:    0,
   empire_id: 10,
+  region: "Trellis",
   loc:    (0, -20e3, 0),
   parent_type: force,
   parent_id:   1,
@@ -682,7 +683,7 @@ group: {
 group: {
   type:   freight,
   id:     3000,
-  name:   "Independent Shipping",
+  name:   "Trellis Independent Shipping",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -695,7 +696,7 @@ group: {
 group: {
   type:   freight,
   id:     3798,
-  name:   "ISS White Dawn",
+  name:   "Trellis ISS White Dawn",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -716,7 +717,7 @@ group: {
 group: {
   type:   freight,
   id:     3780,
-  name:   "ISS Fairlight",
+  name:   "Trellis ISS Fairlight",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -737,7 +738,7 @@ group: {
 group: {
   type:   freight,
   id:     3354,
-  name:   "ISS Turimo",
+  name:   "Trellis ISS Turimo",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -758,7 +759,7 @@ group: {
 group: {
   type:   freight,
   id:     3843,
-  name:   "ISS Farlook",
+  name:   "Trellis ISS Farlook",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -779,7 +780,7 @@ group: {
 group: {
   type:   freight,
   id:     3235,
-  name:   "ISS Grayhawke",
+  name:   "Trellis ISS Grayhawke",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -800,7 +801,7 @@ group: {
 group: {
   type:   freight,
   id:     3493,
-  name:   "ISS Ulmo",
+  name:   "Trellis ISS Ulmo",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -821,7 +822,7 @@ group: {
 group: {
   type:   freight,
   id:     3219,
-  name:   "ISS Wayward",
+  name:   "Trellis ISS Wayward",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -842,7 +843,7 @@ group: {
 group: {
   type:   freight,
   id:     3381,
-  name:   "ISS Sutter",
+  name:   "Trellis ISS Sutter",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -863,7 +864,7 @@ group: {
 group: {
   type:   freight,
   id:     3521,
-  name:   "ISS Alen Carl",
+  name:   "Trellis ISS Alen Carl",
   intel:  known,
   iff:    0,
   empire_id: 10,
@@ -884,7 +885,7 @@ group: {
 group: {
   type:   freight,
   id:     3617,
-  name:   "ISS Hal Bennet",
+  name:   "Trellis ISS Hal Bennet",
   intel:  known,
   iff:    0,
   empire_id: 10,

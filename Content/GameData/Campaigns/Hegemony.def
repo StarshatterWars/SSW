@@ -2822,7 +2822,7 @@ group: {
 group: {
   type:   battery,
   id:     41,
-  name:   "SAM",
+  name:   "Tantalus SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -2849,7 +2849,7 @@ group: {
 group: {
   type:   battery,
   id:     42,
-  name:   "SAM",
+  name:   "Tantalus SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -2869,7 +2869,7 @@ group: {
 group: {
   type:   battery,
   id:     43,
-  name:   "SAM",
+  name:   "Tantalus SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3199,7 +3199,7 @@ group: {
 group: {
   type:   battery,
   id:     1,
-  name:   "AAA",
+  name:   "Lovo AAA",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3226,7 +3226,7 @@ group: {
 group: {
   type:   battery,
   id:     2,
-  name:   "AAA",
+  name:   "Lovo AAA",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3246,7 +3246,7 @@ group: {
 group: {
   type:   battery,
   id:     3,
-  name:   "SAM",
+  name:   "Lovo SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3266,7 +3266,7 @@ group: {
 group: {
   type:   battery,
   id:     4,
-  name:   "AAA",
+  name:   "Lovo AAA",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3383,7 +3383,7 @@ group: {
 group: {
   type:   battery,
   id:     11,
-  name:   "AAA",
+  name:   "Tiger Bay AAA",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3434,7 +3434,7 @@ group: {
 group: {
   type:   battery,
   id:     13,
-  name:   "SAM",
+  name:   "Tiger Bay SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3666,7 +3666,7 @@ group: {
 group: {
   type:   battery,
   id:     11,
-  name:   "AAA",
+  name:   "Shadow Canyon AAA",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3697,7 +3697,7 @@ group: {
 group: {
   type:   battery,
   id:     13,
-  name:   "SAM",
+  name:   "Shadow Canyon SAM",
   intel:  secret,
   iff:    2,
   empire_id: 1,
@@ -3791,7 +3791,7 @@ group: {
 group: {
   type:   civilian,
   id:     1,
-  name:   "Civilian Infrastructure",
+  name:   "Marakan Civilian Infrastructure",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4440,7 +4440,7 @@ group: {
 group: {
   type:   resource,
   id:     3001,
-  name:   "Mining Station",
+  name:   "Tantalus Mining Station",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4460,7 +4460,7 @@ group: {
 group: {
   type:   resource,
   id:     3002,
-  name:   "Administration",
+  name:   "Tantalus Administration",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4480,7 +4480,7 @@ group: {
 group: {
   type:   refinery,
   id:     3003,
-  name:   "Refinery",
+  name:   "Tantalus Refinery",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4542,7 +4542,7 @@ group: {
 group: {
   type:   resource,
   id:     3004,
-  name:   "Reactor",
+  name:   "Tantalus Reactor",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4562,7 +4562,7 @@ group: {
 group: {
   type:   habitat,
   id:     3005,
-  name:   "Downtown",
+  name:   "Tantalus Downtown",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4589,7 +4589,7 @@ group: {
 group: {
   type:   habitat,
   id:     3006,
-  name:   "Outpost",
+  name:   "Tantalus Outpost",
   intel:  known,
   iff:    2,
   empire_id: 1,
@@ -4609,7 +4609,7 @@ group: {
 group: {
   type:   war_production,
   id:     4000,
-  name:   "War Production - Lovo",
+  name:   "Lovo War Production",
   intel:  known,
   iff:    2,
   empire_id: 1,

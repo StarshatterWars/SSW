@@ -818,7 +818,7 @@ group: {
 group: {
   type:   infrastructure,
   id:     2101,
-  name:   "Reactor",
+  name:   "Telmera Reactor",
   intel:  secret,
   iff:    2,
   empire_id: 3,
@@ -838,7 +838,7 @@ group: {
 group: {
   type:   factory,
   id:     2102,
-  name:   "Factory 1",
+  name:   "Telmera Factory 1",
   intel:  secret,
   iff:    2,
   empire_id: 3,
@@ -858,7 +858,7 @@ group: {
 group: {
   type:   factory,
   id:     2103,
-  name:   "Factory 2",
+  name:   "Telmera Factory 2",
   intel:  secret,
   iff:    2,
   empire_id: 3,
@@ -891,7 +891,7 @@ group: {
 group: {
   type:   battery,
   id:     31,
-  name:   "SAM",
+  name:   "Tanis SAM",
   intel:  secret,
   iff:    2,
   empire_id: 3,
@@ -1025,7 +1025,7 @@ group: {
 group: {
   type:   non_com,
   id:     2300,
-  name:   "Freight",
+  name:   "Dantari Freight",
   intel:  secret,
   iff:    2,
   loc:    (0, -20e3, 7e3),

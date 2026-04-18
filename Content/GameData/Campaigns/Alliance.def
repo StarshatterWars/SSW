@@ -1999,7 +1999,7 @@ group: {
 group: {
   type:   battery,
   id:     1,
-  name:   "SAM",
+  name:   "Telmera SAM",
   intel:  secret,
   iff:    1,
   empire_id: 0,
@@ -2026,7 +2026,7 @@ group: {
 group: {
   type:   battery,
   id:     2,
-  name:   "SAM",
+  name:   "Telmera SAM",
   intel:  secret,
   iff:    1,
   empire_id: 0,
@@ -2046,7 +2046,7 @@ group: {
 group: {
   type:   battery,
   id:     3,
-  name:   "SAM",
+  name:   "Telmera SAM",
   intel:  secret,
   iff:    1,
   empire_id: 0,

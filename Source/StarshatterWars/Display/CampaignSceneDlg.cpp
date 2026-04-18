@@ -8,7 +8,14 @@
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
+#include "Components/Image.h"
+
+#include "SystemSceneBuilder.h"
+#include "EngineUtils.h"
+#include "Engine/World.h"
+
 #include "Engine/Font.h"
+#include "Engine/Texture2D.h"
 #include "Kismet/GameplayStatics.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
@@ -24,6 +31,8 @@ void UCampaignSceneDlg::NativeConstruct()
 
     SetVisibility(ESlateVisibility::Collapsed);
     SetIsEnabled(false);
+    SetIsFocusable(true);
+    SetKeyboardFocus();
 
     ResetSceneState();
 }
@@ -38,7 +47,9 @@ void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
     }
 
     const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+
     AdvanceSceneFromTimer(NowSeconds);
+    UpdatePanelFade(NowSeconds);
 }
 
 UFont* UCampaignSceneDlg::GetRegularLimerickFont() const
@@ -106,6 +117,24 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
 
     RuntimeHost->SetContent(RuntimeOverlay);
 
+    ScenePanelImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("ScenePanelImage"));
+    if (ScenePanelImage)
+    {
+        ScenePanelImage->SetOpacity(0.0f);
+
+        UOverlaySlot* ImageSlot = RuntimeOverlay->AddChildToOverlay(ScenePanelImage);
+        if (ImageSlot)
+        {
+            ImageSlot->SetHorizontalAlignment(HAlign_Fill);
+            ImageSlot->SetVerticalAlignment(VAlign_Fill);
+            ImageSlot->SetPadding(FMargin(0.0f));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create ScenePanelImage"));
+    }
+
     FLinearColor SceneGold = MissionUIStyle::RowSelected;
     SceneGold.A = 0.85f;
 
@@ -136,6 +165,10 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
             HeaderSlot->SetPadding(FMargin(32.0f, 24.0f, 32.0f, 0.0f));
         }
     }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create HeaderText"));
+    }
 
     MessageTitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageTitleText"));
     if (MessageTitleText)
@@ -157,6 +190,10 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
             TitleSlot->SetVerticalAlignment(VAlign_Top);
             TitleSlot->SetPadding(FMargin(32.0f, 88.0f, 32.0f, 0.0f));
         }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create MessageTitleText"));
     }
 
     MessageSubtitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MessageSubtitleText"));
@@ -180,6 +217,10 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
             SubtitleSlot->SetPadding(FMargin(32.0f, 122.0f, 32.0f, 0.0f));
         }
     }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create MessageSubtitleText"));
+    }
 
     CaptionTextBottom = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CaptionTextBottom"));
     if (CaptionTextBottom)
@@ -201,6 +242,10 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
             CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
             CaptionSlot->SetPadding(FMargin(100.0f, 0.0f, 100.0f, 60.0f));
         }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create CaptionTextBottom"));
     }
 
     UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Runtime widgets created"));
@@ -363,6 +408,98 @@ FString UCampaignSceneDlg::BuildBodyTextFromDisplayBlock(const TArray<FString>& 
     return Out;
 }
 
+USoundBase* UCampaignSceneDlg::ResolveSceneSound(const FString& SoundToken) const
+{
+    const FString SoundPath = ResolveSceneSoundPath(SoundToken);
+    if (SoundPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] ResolveSceneSound: no path resolved for token '%s'"),
+            *SoundToken);
+        return nullptr;
+    }
+
+    USoundBase* Sound = LoadObject<USoundBase>(nullptr, *SoundPath);
+    if (!Sound)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] ResolveSceneSound: failed to load '%s'"),
+            *SoundPath);
+    }
+
+    return Sound;
+}
+
+int32 UCampaignSceneDlg::ResolveCampaignNumber() const
+{
+    return CurrentCampaignNumber > 0 ? CurrentCampaignNumber : 1;
+}
+
+FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) const
+{
+    FString Token = SoundToken.TrimStartAndEnd();
+    if (Token.IsEmpty())
+    {
+        return FString();
+    }
+
+    // Full quoted Unreal object reference:
+    // /Script/Engine.SoundWave'/Game/Audio/Vox/Scenes/02/Briefing_06.Briefing_06'
+    const int32 FirstQuote = Token.Find(TEXT("'"));
+    const int32 LastQuote = Token.Find(TEXT("'"), ESearchCase::CaseSensitive, ESearchDir::FromEnd);
+
+    if (FirstQuote != INDEX_NONE && LastQuote != INDEX_NONE && LastQuote > FirstQuote)
+    {
+        const FString InnerPath = Token.Mid(FirstQuote + 1, LastQuote - FirstQuote - 1).TrimStartAndEnd();
+        if (InnerPath.StartsWith(TEXT("/Game/")))
+        {
+            return InnerPath;
+        }
+    }
+
+    // Already a direct object path:
+    if (Token.StartsWith(TEXT("/Game/")))
+    {
+        return Token;
+    }
+
+    // Bare token fallback:
+    const int32 CampaignNum = ResolveCampaignNumber();
+
+    TArray<FString> CandidatePaths;
+    CandidatePaths.Add(FString::Printf(
+        TEXT("/Game/Audio/Vox/Scenes/%02d/%s.%s"),
+        CampaignNum,
+        *Token,
+        *Token));
+
+    CandidatePaths.Add(FString::Printf(
+        TEXT("/Game/Audio/Campaigns/%02d/%s.%s"),
+        CampaignNum,
+        *Token,
+        *Token));
+
+    CandidatePaths.Add(FString::Printf(
+        TEXT("/Game/Audio/%s.%s"),
+        *Token,
+        *Token));
+
+    CandidatePaths.Add(FString::Printf(
+        TEXT("/Game/Sounds/%s.%s"),
+        *Token,
+        *Token));
+
+    for (const FString& Path : CandidatePaths)
+    {
+        if (LoadObject<USoundBase>(nullptr, *Path))
+        {
+            return Path;
+        }
+    }
+
+    return FString();
+}
+
 float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
 {
     double LatestTime = 0.0;
@@ -409,6 +546,10 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
+    UTexture2D* TestTexture =
+        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
+    ApplyPanelTexture(TestTexture);
+
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -446,6 +587,45 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
         *SubtitleLines);
 }
 
+void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ExecuteDisplayEvent: Time=%.2f Image='%s' Message='%s' Fade=(%.2f, %.2f, %.2f)"),
+        Event.EventTime,
+        *Event.EventImage,
+        *Event.EventMessage,
+        Event.EventFade.X,
+        Event.EventFade.Y,
+        Event.EventFade.Z);
+
+    if (!Event.EventImage.IsEmpty())
+    {
+        UTexture2D* PanelTexture = ResolveScenePanelTexture(Event.EventImage);
+        ApplyPanelTexture(PanelTexture);
+
+        PanelStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+        PanelFadeInTime = FMath::Max(0.0f, Event.EventFade.X);
+        PanelHoldTime = FMath::Max(0.0f, Event.EventFade.Y);
+        PanelFadeOutTime = FMath::Max(0.0f, Event.EventFade.Z);
+        bPanelActive = (PanelTexture != nullptr);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] Panel state started: FadeIn=%.2f Hold=%.2f FadeOut=%.2f"),
+            PanelFadeInTime,
+            PanelHoldTime,
+            PanelFadeOutTime);
+    }
+
+    const FString Message = FixEscapedText(Event.EventMessage);
+    if (!Message.IsEmpty())
+    {
+        if (MessageTitleText)
+        {
+            MessageTitleText->SetText(FText::FromString(Message));
+        }
+    }
+} 
+
 void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 {
     const FString Caption = FixEscapedText(Event.EventCaption);
@@ -467,25 +647,26 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
             Event.EventTime,
             *Event.EventSound);
 
-        // TODO: play the sound cue here
+        USoundBase* Sound = ResolveSceneSound(Event.EventSound);
+        if (Sound)
+        {
+            UGameplayStatics::PlaySound2D(this, Sound);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] PLAYED SOUND '%s'"),
+                *GetNameSafe(Sound));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[SceneDlg] FAILED TO RESOLVE SOUND '%s'"),
+                *Event.EventSound);
+        }
     }
 }
 
 void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
 {
-    while (NextDisplayBlockIndex < SortedDisplayTimes.Num())
-    {
-        const double BlockTime = SortedDisplayTimes[NextDisplayBlockIndex];
-
-        if (ElapsedSeconds + KINDA_SMALL_NUMBER < BlockTime)
-        {
-            break;
-        }
-
-        ExecuteDisplayBlockAtTime(BlockTime);
-        ++NextDisplayBlockIndex;
-    }
-
     while (NextMessageEventIndex < SortedEvents.Num())
     {
         const FS_MissionEvent& Event = SortedEvents[NextMessageEventIndex];
@@ -495,9 +676,32 @@ void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
             break;
         }
 
-        if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE)
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ProcessPendingEvents: firing EventIndex=%d Type=%d Time=%.2f Target='%s' Message='%s' Caption='%s'"),
+            NextMessageEventIndex,
+            (int32)Event.EventType,
+            Event.EventTime,
+            *Event.EventTarget,
+            *Event.EventMessage,
+            *Event.EventCaption);
+
+        if (Event.EventType == MISSIONEVENT_TYPE::DISPLAY)
+        {
+            ExecuteDisplayEvent(Event);
+        }
+        else if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE)
         {
             ExecuteMessageEvent(Event);
+        }
+        else if (Event.EventType == MISSIONEVENT_TYPE::CAMERA)
+        {
+            DebugCameraEventTarget(Event);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ProcessPendingEvents: unhandled event type %d"),
+                (int32)Event.EventType);
         }
 
         ++NextMessageEventIndex;
@@ -517,16 +721,350 @@ void UCampaignSceneDlg::AdvanceSceneFromTimer(float NowSeconds)
 
     if (Elapsed >= SceneDurationSeconds)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] COMPLETE -> Returning to CmdDlg"));
+        FinishCutscene();
+    }
+}
 
-        bSceneRunning = false;
-        Hide();
+FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) const
+{
+    FString Token = ImageToken.TrimStartAndEnd();
+    if (Token.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] ResolveScenePanelPath: empty token"));
+        return FString();
+    }
 
-        if (Manager)
+    const int32 FirstQuote = Token.Find(TEXT("'"));
+    const int32 LastQuote = Token.Find(TEXT("'"), ESearchCase::CaseSensitive, ESearchDir::FromEnd);
+
+    if (FirstQuote != INDEX_NONE && LastQuote != INDEX_NONE && LastQuote > FirstQuote)
+    {
+        const FString InnerPath = Token.Mid(FirstQuote + 1, LastQuote - FirstQuote - 1).TrimStartAndEnd();
+        if (InnerPath.StartsWith(TEXT("/Game/")))
         {
-            Manager->HideCmpSceneDlg();
-            Manager->ShowCmdDlg();
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ResolveScenePanelPath: quoted -> %s"),
+                *InnerPath);
+            return InnerPath;
         }
     }
+
+    if (Token.StartsWith(TEXT("/Game/")))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveScenePanelPath: direct -> %s"),
+            *Token);
+        return Token;
+    }
+
+    const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/02/%s.%s"), *Token, *Token);
+    if (LoadObject<UTexture2D>(nullptr, *CampaignPath))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveScenePanelPath: token '%s' -> '%s'"),
+            *Token, *CampaignPath);
+        return CampaignPath;
+    }
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[SceneDlg] ResolveScenePanelPath: failed for '%s'"),
+        *Token);
+
+    return FString();
+}
+
+UTexture2D* UCampaignSceneDlg::ResolveScenePanelTexture(const FString& ImageToken) const
+{
+    const FString TexturePath = ResolveScenePanelPath(ImageToken);
+    if (TexturePath.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *TexturePath);
+    if (!Texture)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] ResolveScenePanelTexture: failed to load '%s'"),
+            *TexturePath);
+        return nullptr;
+    }
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[SceneDlg] ResolveScenePanelTexture: loaded '%s'"),
+        *TexturePath);
+
+    return Texture;
+}
+
+void UCampaignSceneDlg::ApplyPanelTexture(UTexture2D* Texture)
+{
+    if (!ScenePanelImage)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] ApplyPanelTexture: ScenePanelImage is null"));
+        return;
+    }
+
+    if (!Texture)
+    {
+        ScenePanelImage->SetBrush(FSlateBrush());
+        ScenePanelImage->SetOpacity(0.0f);
+        UE_LOG(LogTemp, Error, TEXT("[SceneDlg] ApplyPanelTexture: Texture is null"));
+        return;
+    }
+
+    FSlateBrush Brush;
+    Brush.SetResourceObject(Texture);
+    Brush.ImageSize = FVector2D(1920.0f, 1080.0f);
+
+    ScenePanelImage->SetBrush(Brush);
+    ScenePanelImage->SetOpacity(1.0f);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ApplyPanelTexture: applied %s"),
+        *GetNameSafe(Texture));
+}
+
+void UCampaignSceneDlg::ClearPanelTexture()
+{
+    if (!ScenePanelImage)
+    {
+        return;
+    }
+
+    ScenePanelImage->SetBrush(FSlateBrush());
+    ScenePanelImage->SetOpacity(0.0f);
+
+    UE_LOG(LogTemp, Log, TEXT("[SceneDlg] ClearPanelTexture"));
+}
+
+void UCampaignSceneDlg::UpdatePanelFade(float NowSeconds)
+{
+    if (!bPanelActive || !ScenePanelImage)
+    {
+        return;
+    }
+
+    const float Elapsed = NowSeconds - PanelStartTime;
+
+    const float FadeInEnd = PanelFadeInTime;
+    const float HoldEnd = FadeInEnd + PanelHoldTime;
+    const float FadeOutEnd = HoldEnd + PanelFadeOutTime;
+
+    float NewOpacity = 0.0f;
+
+    if (Elapsed <= FadeInEnd)
+    {
+        if (PanelFadeInTime <= KINDA_SMALL_NUMBER)
+        {
+            NewOpacity = 1.0f;
+        }
+        else
+        {
+            NewOpacity = FMath::Clamp(Elapsed / PanelFadeInTime, 0.0f, 1.0f);
+        }
+    }
+    else if (Elapsed <= HoldEnd)
+    {
+        NewOpacity = 1.0f;
+    }
+    else if (Elapsed <= FadeOutEnd)
+    {
+        if (PanelFadeOutTime <= KINDA_SMALL_NUMBER)
+        {
+            NewOpacity = 0.0f;
+        }
+        else
+        {
+            const float T = (Elapsed - HoldEnd) / PanelFadeOutTime;
+            NewOpacity = 1.0f - FMath::Clamp(T, 0.0f, 1.0f);
+        }
+    }
+    else
+    {
+        NewOpacity = 0.0f;
+        bPanelActive = false;
+        ClearPanelTexture();
+    }
+
+    ScenePanelImage->SetOpacity(NewOpacity);
+}
+
+ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveSystemSceneBuilder: World is null"));
+        return nullptr;
+    }
+
+    for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+    {
+        ASystemSceneBuilder* Builder = *It;
+        if (Builder)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ResolveSystemSceneBuilder: found builder '%s'"),
+                *Builder->GetName());
+
+            return Builder;
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ResolveSystemSceneBuilder: no builder found"));
+
+    return nullptr;
+}
+
+void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
+{
+    FString EventParamText = TEXT("[");
+    const int32 ParamCount = FMath::Clamp(Event.EventNParams, 0, Event.EventParam.Num());
+
+    for (int32 Index = 0; Index < ParamCount; ++Index)
+    {
+        if (Index > 0)
+        {
+            EventParamText += TEXT(", ");
+        }
+
+        EventParamText += FString::FromInt(Event.EventParam[Index]);
+    }
+
+    EventParamText += TEXT("]");
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ExecuteCameraEvent: Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
+        Event.EventTime,
+        *Event.EventTarget,
+        *Event.EventPoint.ToString(),
+        *EventParamText,
+        Event.EventNParams);
+
+    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+    if (!Builder)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] ExecuteCameraEvent: no SystemSceneBuilder found"));
+        return;
+    }
+
+    if (!Event.EventTarget.IsEmpty())
+    {
+        const bool bFocused = Builder->FocusCameraOnBodyByName(
+            Event.EventTarget,
+            Event.EventPoint,
+            0.0f);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ExecuteCameraEvent: Focus target '%s' result=%s"),
+            *Event.EventTarget,
+            bFocused ? TEXT("true") : TEXT("false"));
+
+        return;
+    }
+
+    if (!Event.EventPoint.IsNearlyZero())
+    {
+        const bool bApplied = Builder->ApplyCameraViewVector(
+            Event.EventPoint,
+            0.0f);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ExecuteCameraEvent: Apply view vector result=%s"),
+            bApplied ? TEXT("true") : TEXT("false"));
+
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ExecuteCameraEvent: no target and no usable point"));
+}
+
+void UCampaignSceneDlg::DebugCameraEventTarget(const FS_MissionEvent& Event)
+{
+    FString EventParamText = TEXT("[");
+    const int32 ParamCount = FMath::Clamp(Event.EventNParams, 0, Event.EventParam.Num());
+
+    for (int32 Index = 0; Index < ParamCount; ++Index)
+    {
+        if (Index > 0)
+        {
+            EventParamText += TEXT(", ");
+        }
+
+        EventParamText += FString::FromInt(Event.EventParam[Index]);
+    }
+
+    EventParamText += TEXT("]");
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] DebugCameraEventTarget: Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
+        Event.EventTime,
+        *Event.EventTarget,
+        *Event.EventPoint.ToString(),
+        *EventParamText,
+        Event.EventNParams);
+
+    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+    if (!Builder)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] DebugCameraEventTarget: no SystemSceneBuilder found"));
+        return;
+    }
+
+    if (Event.EventTarget.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] DebugCameraEventTarget: no target"));
+        return;
+    }
+
+    const bool bFocused = Builder->DebugFocusCameraOnBodyByName(
+        Event.EventTarget,
+        Event.EventPoint);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] DebugCameraEventTarget: focus result for '%s' = %s"),
+        *Event.EventTarget,
+        bFocused ? TEXT("true") : TEXT("false"));
+}
+
+FReply UCampaignSceneDlg::NativeOnKeyDown(
+    const FGeometry& InGeometry,
+    const FKeyEvent& InKeyEvent)
+{
+    if (InKeyEvent.GetKey() == EKeys::SpaceBar)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] SPACE pressed ? SkipCutscene"));
+        SkipCutscene();
+        return FReply::Handled();
+    }
+
+    return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+void UCampaignSceneDlg::SkipCutscene()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] SkipCutscene triggered"));
+    FinishCutscene();
+}
+
+void UCampaignSceneDlg::FinishCutscene()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Cutscene finished"));
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] COMPLETE -> Returning to CmdDlg"));
+    bSceneRunning = false;
+    Hide();
+
+    if (Manager)
+    {
+        Manager->HideCmpSceneDlg();
+        Manager->ShowCmdDlg();
+    }   
 }
