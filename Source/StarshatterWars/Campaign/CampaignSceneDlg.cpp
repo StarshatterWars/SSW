@@ -11,6 +11,7 @@
 #include "Components/Image.h"
 
 #include "SystemSceneBuilder.h"
+#include "CampaignSceneActor.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
@@ -924,6 +925,51 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SceneDlg] ResolveSystemSceneBuilder: no builder found"));
+
+    return nullptr;
+}
+
+ACampaignSceneActor* UCampaignSceneDlg::ResolveCampaignSceneActor() const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    for (TActorIterator<ACampaignSceneActor> It(World); It; ++It)
+    {
+        ACampaignSceneActor* FoundActor = *It;
+        if (FoundActor)
+        {
+            return FoundActor;
+        }
+    }
+
+    return nullptr;
+}
+
+const FS_CampaignMission* UCampaignSceneDlg::ResolveMissionDataForScene(const FString& SceneName) const
+{
+    if (SceneName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveMissionDataForScene: empty SceneName"));
+        return nullptr;
+    }
+
+    // Your current system already stores the active mission here:
+    if (ActiveMissionData.Scene.Equals(SceneName, ESearchCase::IgnoreCase) ||
+        ActiveMissionData.MissionName.Equals(SceneName, ESearchCase::IgnoreCase))
+    {
+        return &ActiveMissionData;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ResolveMissionDataForScene: no match for '%s' (ActiveScene='%s', Mission='%s')"),
+        *SceneName,
+        *ActiveMissionData.Scene,
+        *ActiveMissionData.MissionName);
 
     return nullptr;
 }
