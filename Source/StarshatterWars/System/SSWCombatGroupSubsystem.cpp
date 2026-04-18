@@ -193,7 +193,7 @@ void USSWCombatGroupSubsystem::LoadAll(bool bFull /*= false*/)
         return;
     }
 
-    InitializeCombatRoster();
+    //InitializeCombatRoster();
     //ReadCombatRosterData();
 
     const int32 TableRows = CombatGroupDataTable ? CombatGroupDataTable->GetRowNames().Num() : -1;

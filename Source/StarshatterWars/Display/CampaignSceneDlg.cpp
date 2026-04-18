@@ -297,6 +297,7 @@ void UCampaignSceneDlg::Show()
 
 void UCampaignSceneDlg::Hide()
 {
+    ResetSceneState();
     SetVisibility(ESlateVisibility::Collapsed);
     SetIsEnabled(false);
 
@@ -546,10 +547,6 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
-    UTexture2D* TestTexture =
-        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
-    ApplyPanelTexture(TestTexture);
-
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -590,17 +587,25 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
 void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] ExecuteDisplayEvent: Time=%.2f Image='%s' Message='%s' Fade=(%.2f, %.2f, %.2f)"),
+        TEXT("[SceneDlg] ExecuteDisplayEvent: Time=%.2f Image='%s' Target='%s' Message='%s' Fade=(%.2f, %.2f, %.2f)"),
         Event.EventTime,
         *Event.EventImage,
+        *Event.EventTarget,
         *Event.EventMessage,
         Event.EventFade.X,
         Event.EventFade.Y,
         Event.EventFade.Z);
 
-    if (!Event.EventImage.IsEmpty())
+    // DISPLAY panel token can arrive in EventImage or EventTarget.
+    FString PanelToken = Event.EventImage.TrimStartAndEnd();
+    if (PanelToken.IsEmpty())
     {
-        UTexture2D* PanelTexture = ResolveScenePanelTexture(Event.EventImage);
+        PanelToken = Event.EventTarget.TrimStartAndEnd();
+    }
+
+    if (!PanelToken.IsEmpty())
+    {
+        UTexture2D* PanelTexture = ResolveScenePanelTexture(PanelToken);
         ApplyPanelTexture(PanelTexture);
 
         PanelStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());
@@ -610,7 +615,8 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
         bPanelActive = (PanelTexture != nullptr);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] Panel state started: FadeIn=%.2f Hold=%.2f FadeOut=%.2f"),
+            TEXT("[SceneDlg] Panel state started from token '%s': FadeIn=%.2f Hold=%.2f FadeOut=%.2f"),
+            *PanelToken,
             PanelFadeInTime,
             PanelHoldTime,
             PanelFadeOutTime);
@@ -624,8 +630,7 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
             MessageTitleText->SetText(FText::FromString(Message));
         }
     }
-} 
-
+}
 void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 {
     const FString Caption = FixEscapedText(Event.EventCaption);

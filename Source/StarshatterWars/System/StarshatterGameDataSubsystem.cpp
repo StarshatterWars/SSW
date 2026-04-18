@@ -1385,7 +1385,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	InitializeCampaignData();
+	//InitializeCampaignData();
 	ReadCampaignData();
 	
 	//InitializeCombatRoster();
@@ -3815,6 +3815,18 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(CaptionText, PDef, Fn);
 			NewMissionEvent.EventCaption = FString(CaptionText);
 		}
+		else if (Key == "image")
+		{
+			Text ImageText = "";
+			GetDefText(ImageText, PDef, Fn);
+			NewMissionEvent.EventImage = FString(ImageText);
+		}
+		else if (Key == "fade")
+		{
+			FVector V = FVector::ZeroVector;
+			GetDefVec(V, PDef, Fn);
+			NewMissionEvent.EventFade;
+		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{
 			if (PDef->term() && PDef->term()->isNumber())
@@ -3897,7 +3909,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(EventSound, PDef, Fn);
 			NewMissionEvent.EventSound = FString(EventSound);
 		}
-		else if (Key == "loc" || Key == "vec" || Key == "fade")
+		else if (Key == "loc" || Key == "vec")
 		{
 			FVector V = FVector::ZeroVector;
 			GetDefVec(V, PDef, Fn);
