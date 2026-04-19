@@ -218,10 +218,17 @@ void UStarshatterEnvironmentSubsystem::Deinitialize()
 void UStarshatterEnvironmentSubsystem::ResolveDataTables()
 {
 	UGameInstance* GI = GetGameInstance();
-	if (!GI) return;
+	if (!GI)
+	{
+		return;
+	}
 
-	UStarshatterAssetRegistrySubsystem* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
-	if (!Assets) return;
+	UStarshatterAssetRegistrySubsystem* Assets =
+		GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
+	if (!Assets)
+	{
+		return;
+	}
 
 	GalaxyDataTable = Assets->GetDataTable(TEXT("Data.GalaxyMapTable"), true);
 	RegionsDataTable = Assets->GetDataTable(TEXT("Data.RegionsTable"), true);
@@ -1518,25 +1525,24 @@ bool UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 		return false;
 	}
 
-	// Optional tables may be absent; read if configured.
-	if (StarsDataTable)
-	{
-		ReadStarsTable();
-	}
-	if (PlanetsDataTable)
-	{
-		ReadPlanetsTable();
-	}
-	if (MoonsDataTable)
-	{
-		ReadMoonsTable();
-	}
+	// Terrain/zones are still optional if you really have them elsewhere.
 	if (TerrainRegionsDataTable)
 	{
 		ReadTerrainRegionsTable();
 	}
 
 	BuildEnvironmentCaches();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] HydrateAllFromTables: Galaxy=%d Systems=%d Stars=%d Planets=%d Moons=%d Regions=%d Terrain=%d Zones=%d"),
+		GalaxyDataArray.Num(),
+		StarSystemDataArray.Num(),
+		StarDataArray.Num(),
+		PlanetDataArray.Num(),
+		MoonDataArray.Num(),
+		RegionDataArray.Num(),
+		TerrainRegionsArray.Num(),
+		ZoneDataArray.Num());
 
 	if (GalaxyDataArray.Num() == 0)
 	{
@@ -1557,9 +1563,6 @@ bool UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 
 void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 {
-	// -----------------------------------------------------------------
-	// DT / hydrated row arrays
-	// -----------------------------------------------------------------
 	GalaxyDataArray.Reset();
 	StarSystemDataArray.Reset();
 	StarDataArray.Reset();
@@ -1568,12 +1571,9 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 	RegionDataArray.Reset();
 	TerrainRegionsArray.Reset();
 
-	//PlanetMapByName.Empty();
-	//MoonMapByName.Empty();
+	PlanetMapByName.Reset();
+	MoonMapByName.Reset();
 
-	// -----------------------------------------------------------------
-	// Lookup caches
-	// -----------------------------------------------------------------
 	GalaxyByName.Reset();
 	StarSystemByName.Reset();
 	StarByName.Reset();
@@ -1585,9 +1585,6 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 	RegionParentByName.Reset();
 	RegionChildrenByParent.Reset();
 
-	// -----------------------------------------------------------------
-	// Runtime object caches
-	// -----------------------------------------------------------------
 	RuntimeStarSystems.Reset();
 	RuntimeStars.Reset();
 	RuntimePlanets.Reset();
@@ -1605,10 +1602,12 @@ bool UStarshatterEnvironmentSubsystem::ReadGalaxyDataTable()
 		GalaxyDataArray,
 		TEXT("GalaxyDataTable (FS_Galaxy)"));
 }
-
 bool UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 {
 	StarSystemDataArray.Reset();
+	StarDataArray.Reset();
+	PlanetDataArray.Reset();
+	MoonDataArray.Reset();
 
 	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
 	{
@@ -1617,20 +1616,70 @@ bool UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 			continue;
 		}
 
+		// Build one system row per galaxy/system entry.
+		// FStarSystem does not contain Location/Iff/Star/Empire/Link, so only fill valid fields.
 		FStarSystem SystemRow;
+		SystemRow.Name = GalaxyRow.Name;
 		SystemRow.SystemName = GalaxyRow.Name;
-
-		// Optional mapping
-		// SystemRow.Location = GalaxyRow.Location;
-		// SystemRow.Iff      = GalaxyRow.Iff;
-		// SystemRow.Empire   = GalaxyRow.Empire;
+		SystemRow.Class = GalaxyRow.Class;
 
 		StarSystemDataArray.Add(SystemRow);
+
+		// Flatten nested stellar data into StarDataArray
+		for (const FStarSystem& StarRowFromGalaxy : GalaxyRow.Stellar)
+		{
+			if (StarRowFromGalaxy.Name.IsEmpty())
+			{
+				continue;
+			}
+
+			FStarSystem StarRow = StarRowFromGalaxy;
+
+			if (StarRow.SystemName.IsEmpty())
+			{
+				StarRow.SystemName = GalaxyRow.Name;
+			}
+
+			StarDataArray.Add(StarRow);
+
+			// Flatten planets from each star
+			for (const FPlanet& PlanetRowFromStar : StarRowFromGalaxy.Planet)
+			{
+				if (PlanetRowFromStar.Name.IsEmpty())
+				{
+					continue;
+				}
+
+				FPlanet PlanetRow = PlanetRowFromStar;
+				PlanetDataArray.Add(PlanetRow);
+
+				// Flatten moons from each planet
+				for (const FMoon& MoonRowFromPlanet : PlanetRowFromStar.Moon)
+				{
+					if (MoonRowFromPlanet.Name.IsEmpty())
+					{
+						continue;
+					}
+
+					FMoon MoonRow = MoonRowFromPlanet;
+
+					if (MoonRow.Parent.IsEmpty())
+					{
+						MoonRow.Parent = PlanetRowFromStar.Name;
+					}
+
+					MoonDataArray.Add(MoonRow);
+				}
+			}
+		}
 	}
 
 	UE_LOG(LogStarshatterEnvironment, Log,
-		TEXT("[Environment] Built %d FStarSystem rows from GalaxyDataArray."),
-		StarSystemDataArray.Num());
+		TEXT("[Environment] Built from GalaxyDataArray: Systems=%d Stars=%d Planets=%d Moons=%d"),
+		StarSystemDataArray.Num(),
+		StarDataArray.Num(),
+		PlanetDataArray.Num(),
+		MoonDataArray.Num());
 
 	return StarSystemDataArray.Num() > 0;
 }
@@ -1687,9 +1736,16 @@ void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 	RegionParentByName.Reset();
 	RegionChildrenByParent.Reset();
 
+	PlanetMapByName.Reset();
+	MoonMapByName.Reset();
+
 	for (const FS_Galaxy& G : GalaxyDataArray)
+	{
 		if (!G.Name.IsEmpty())
+		{
 			GalaxyByName.Add(G.Name, G);
+		}
+	}
 
 	for (const FStarSystem& S : StarSystemDataArray)
 	{
@@ -1708,36 +1764,62 @@ void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 	}
 
 	for (const FPlanet& P : PlanetDataArray)
-		if (!P.Name.IsEmpty())
-			PlanetByName.Add(P.Name, P);
+	{
+		if (P.Name.IsEmpty())
+		{
+			continue;
+		}
+
+		const FString Key = P.Name.TrimStartAndEnd();
+
+		PlanetByName.Add(Key, P);
+		PlanetMapByName.Add(Key, P);
+	}
 
 	for (const FMoon& M : MoonDataArray)
-		if (!M.Name.IsEmpty())
-			MoonByName.Add(M.Name, M);
+	{
+		if (M.Name.IsEmpty())
+		{
+			continue;
+		}
+
+		const FString Key = M.Name.TrimStartAndEnd();
+
+		MoonByName.Add(Key, M);
+		MoonMapByName.Add(Key, M);
+	}
 
 	for (const FRegion& R : RegionDataArray)
 	{
 		if (R.Name.IsEmpty())
+		{
 			continue;
+		}
 
 		RegionByName.Add(R.Name, R);
 		RegionParentByName.Add(R.Name, R.Parent);
 
 		if (!R.Parent.IsEmpty())
 		{
-			TArray<FString>& Children =
-				RegionChildrenByParent.FindOrAdd(R.Parent);
-
+			TArray<FString>& Children = RegionChildrenByParent.FindOrAdd(R.Parent);
 			Children.Add(R.Name);
 		}
 	}
 
 	for (const FS_TerrainRegion& T : TerrainRegionsArray)
+	{
 		if (!T.Name.IsEmpty())
+		{
 			TerrainRegionByName.Add(T.Name, T);
+		}
+	}
 
 	UE_LOG(LogStarshatterEnvironment, Log,
-		TEXT("[Environment] Caches built."));
+		TEXT("[Environment] Caches built. PlanetByName=%d PlanetMapByName=%d MoonByName=%d MoonMapByName=%d"),
+		PlanetByName.Num(),
+		PlanetMapByName.Num(),
+		MoonByName.Num(),
+		MoonMapByName.Num());
 }
 
 // -----------------------------------------------------------------------------
@@ -1959,8 +2041,7 @@ const FPlanet* UStarshatterEnvironmentSubsystem::FindPlanetMapByName(const FStri
 		*SearchName,
 		PlanetMapByName.Num());
 
-	const FPlanet* Found = PlanetMapByName.Find(SearchName);
-	if (Found)
+	if (const FPlanet* Found = PlanetMapByName.Find(SearchName))
 	{
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Environment] FindPlanetMapByName: FOUND '%s' -> Type=%d"),
@@ -1972,7 +2053,7 @@ const FPlanet* UStarshatterEnvironmentSubsystem::FindPlanetMapByName(const FStri
 
 	for (const TPair<FString, FPlanet>& Pair : PlanetMapByName)
 	{
-		if (Pair.Key.Equals(SearchName, ESearchCase::IgnoreCase))
+		if (Pair.Key.TrimStartAndEnd().Equals(SearchName, ESearchCase::IgnoreCase))
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Environment] FindPlanetMapByName: FOUND (IgnoreCase) '%s' -> Key='%s' Type=%d"),
@@ -2000,8 +2081,7 @@ const FMoon* UStarshatterEnvironmentSubsystem::FindMoonMapByName(const FString& 
 		*SearchName,
 		MoonMapByName.Num());
 
-	const FMoon* Found = MoonMapByName.Find(SearchName);
-	if (Found)
+	if (const FMoon* Found = MoonMapByName.Find(SearchName))
 	{
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Environment] FindMoonMapByName: FOUND '%s' -> Type=%d"),
@@ -2013,7 +2093,7 @@ const FMoon* UStarshatterEnvironmentSubsystem::FindMoonMapByName(const FString& 
 
 	for (const TPair<FString, FMoon>& Pair : MoonMapByName)
 	{
-		if (Pair.Key.Equals(SearchName, ESearchCase::IgnoreCase))
+		if (Pair.Key.TrimStartAndEnd().Equals(SearchName, ESearchCase::IgnoreCase))
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Environment] FindMoonMapByName: FOUND (IgnoreCase) '%s' -> Key='%s' Type=%d"),
