@@ -1382,26 +1382,17 @@ bool ASystemSceneBuilder::FindSpawnedBodyByName(
         return false;
     }
 
-    for (const FSpawnedSystemBody& Entry : SpawnedBodies)
-    {
-        if (Entry.bIsOrbit)
+    auto IsStarEntry = [](const FSpawnedSystemBody& Entry) -> bool
         {
-            continue;
-        }
+            return !Entry.bIsOrbit &&
+                !Entry.bIsMoon &&
+                Entry.ParentActor == nullptr;
+        };
 
-        if (Entry.BodyName.Equals(SearchName, ESearchCase::IgnoreCase))
-        {
-            OutBody = Entry;
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: exact match '%s' -> Actor=%s Loc=%s"),
-                *SearchName,
-                *GetNameSafe(Entry.Actor),
-                *Entry.SpawnLocation.ToString());
-
-            return true;
-        }
-    }
+    const FSpawnedSystemBody* ExactNonStarMatch = nullptr;
+    const FSpawnedSystemBody* PartialNonStarMatch = nullptr;
+    const FSpawnedSystemBody* ExactStarMatch = nullptr;
+    const FSpawnedSystemBody* PartialStarMatch = nullptr;
 
     for (const FSpawnedSystemBody& Entry : SpawnedBodies)
     {
@@ -1410,26 +1401,104 @@ bool ASystemSceneBuilder::FindSpawnedBodyByName(
             continue;
         }
 
-        if (Entry.BodyName.Contains(SearchName, ESearchCase::IgnoreCase))
+        const bool bIsStar = IsStarEntry(Entry);
+        const bool bExact = Entry.BodyName.Equals(SearchName, ESearchCase::IgnoreCase);
+        const bool bPartial = Entry.BodyName.Contains(SearchName, ESearchCase::IgnoreCase);
+
+        if (bExact)
         {
-            OutBody = Entry;
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: partial match '%s' -> '%s' Actor=%s Loc=%s"),
-                *SearchName,
-                *Entry.BodyName,
-                *GetNameSafe(Entry.Actor),
-                *Entry.SpawnLocation.ToString());
-
-            return true;
+            if (!bIsStar && !ExactNonStarMatch)
+            {
+                ExactNonStarMatch = &Entry;
+            }
+            else if (bIsStar && !ExactStarMatch)
+            {
+                ExactStarMatch = &Entry;
+            }
+        }
+        else if (bPartial)
+        {
+            if (!bIsStar && !PartialNonStarMatch)
+            {
+                PartialNonStarMatch = &Entry;
+            }
+            else if (bIsStar && !PartialStarMatch)
+            {
+                PartialStarMatch = &Entry;
+            }
         }
     }
+
+    const FSpawnedSystemBody* BestMatch = nullptr;
+
+    if (ExactNonStarMatch)
+    {
+        BestMatch = ExactNonStarMatch;
+    }
+    else if (PartialNonStarMatch)
+    {
+        BestMatch = PartialNonStarMatch;
+    }
+    else if (ExactStarMatch)
+    {
+        BestMatch = ExactStarMatch;
+    }
+    else if (PartialStarMatch)
+    {
+        BestMatch = PartialStarMatch;
+    }
+
+    if (!BestMatch)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: no match for '%s'"),
+            *SearchName);
+        return false;
+    }
+
+    OutBody = *BestMatch;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: no match for '%s'"),
-        *SearchName);
+        TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: '%s' -> '%s' IsStar=%s IsMoon=%s"),
+        *SearchName,
+        *BestMatch->BodyName,
+        IsStarEntry(*BestMatch) ? TEXT("true") : TEXT("false"),
+        BestMatch->bIsMoon ? TEXT("true") : TEXT("false"));
 
-    return false;
+    return true;
+}
+
+bool ASystemSceneBuilder::GetBodyWorldLocationByName(
+    const FString& BodyName,
+    FVector& OutWorldLocation) const
+{
+    OutWorldLocation = FVector::ZeroVector;
+
+    FSpawnedSystemBody FoundBody;
+    if (!FindSpawnedBodyByName(BodyName, FoundBody))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] GetBodyWorldLocationByName: body not found '%s'"),
+            *BodyName);
+        return false;
+    }
+
+    if (!FoundBody.Actor)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] GetBodyWorldLocationByName: found '%s' but actor is null"),
+            *BodyName);
+        return false;
+    }
+
+    OutWorldLocation = FoundBody.Actor->GetActorLocation();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] GetBodyWorldLocationByName: '%s' -> %s"),
+        *BodyName,
+        *OutWorldLocation.ToString());
+
+    return true;
 }
 
 bool ASystemSceneBuilder::FocusCameraOnBodyByName(
@@ -1466,10 +1535,28 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
 
     FVector SceneOffset = ConvertLegacyCameraOffsetToSceneOffset(CameraOffset);
 
-    const bool bIsPlanetOrMoon = !FoundBody.bIsOrbit && !FoundBody.BodyName.Contains(TEXT("Luxor"), ESearchCase::IgnoreCase);
+    const bool bIsPlanetOrMoon =
+        !FoundBody.bIsOrbit &&
+        !FoundBody.BodyName.Contains(TEXT("Luxor"), ESearchCase::IgnoreCase);
+
     if (bIsPlanetOrMoon)
     {
         SceneOffset *= ScaleSettings.LegacyPlanetCameraFactor;
+
+        const float MinPlanetCameraDistance = 600.0f;
+        const float MaxPlanetCameraDistance = 3500.0f;
+
+        const float Dist = SceneOffset.Size();
+        if (Dist > KINDA_SMALL_NUMBER)
+        {
+            const FVector Dir = SceneOffset.GetSafeNormal();
+            const float ClampedDist = FMath::Clamp(
+                Dist,
+                MinPlanetCameraDistance,
+                MaxPlanetCameraDistance);
+
+            SceneOffset = Dir * ClampedDist;
+        }
     }
 
     if (SceneOffset.IsNearlyZero())
@@ -1753,7 +1840,7 @@ EPlanetType ASystemSceneBuilder::ResolvePlanetTypeFromData(const FString& BodyNa
 
     if (bIsMoon)
     {
-        const FS_MoonMap* Moon = Env->FindMoonMapByName(SearchName);
+        const FMoon* Moon = Env->FindMoonMapByName(SearchName);
         if (Moon)
         {
             UE_LOG(LogTemp, Warning,
@@ -1769,7 +1856,7 @@ EPlanetType ASystemSceneBuilder::ResolvePlanetTypeFromData(const FString& BodyNa
     }
     else
     {
-        const FS_PlanetMap* Planet = Env->FindPlanetMapByName(SearchName);
+        const FPlanet* Planet = Env->FindPlanetMapByName(SearchName);
         if (Planet)
         {
             UE_LOG(LogTemp, Warning,

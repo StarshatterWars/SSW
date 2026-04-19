@@ -768,7 +768,7 @@ void USSWGameInstance::RebuildSystemOverview(const FS_StarMap& StarMap)
 	const int32 StarIndex = 0;
 
 	// Planets
-	for (const FS_PlanetMap& Planet : StarMap.Planet)
+	for (const FPlanet& Planet : StarMap.Planet)
 	{
 		FOverviewBody PlanetBody;
 		PlanetBody.Name = Planet.Name;
@@ -780,7 +780,7 @@ void USSWGameInstance::RebuildSystemOverview(const FS_StarMap& StarMap)
 		const int32 ThisPlanetIndex = Bodies.Add(PlanetBody);
 
 		// Moons (parent = this planet)
-		for (const FS_MoonMap& Moon : Planet.Moon)
+		for (const FMoon& Moon : Planet.Moon)
 		{
 			FOverviewBody MoonBody;
 			MoonBody.Name = Moon.Name;

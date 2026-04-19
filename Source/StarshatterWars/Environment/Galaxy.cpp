@@ -158,7 +158,7 @@ static OrbitalRegion* BuildRegionFromMap(
 
 static OrbitalBody* BuildMoonFromMap(
     StarSystem* System,
-    const FS_MoonMap& MoonRow,
+    const FMoon& MoonRow,
     OrbitalBody* ParentPlanet)
 {
     if (!System || !ParentPlanet)
@@ -200,7 +200,7 @@ static OrbitalBody* BuildMoonFromMap(
 
 static OrbitalBody* BuildPlanetFromMap(
     StarSystem* System,
-    const FS_PlanetMap& PlanetRow,
+    const FPlanet& PlanetRow,
     OrbitalBody* ParentStar)
 {
     if (!System || !ParentStar)
@@ -240,7 +240,7 @@ static OrbitalBody* BuildPlanetFromMap(
         BuildRegionFromMap(System, RegionRow, Planet);
     }
 
-    for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+    for (const FMoon& MoonRow : PlanetRow.Moon)
     {
         BuildMoonFromMap(System, MoonRow, Planet);
     }
@@ -287,7 +287,7 @@ static OrbitalBody* BuildStarFromMap(
         BuildRegionFromMap(System, RegionRow, StarBody);
     }
 
-    for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+    for (const FPlanet& PlanetRow : StarRow.Planet)
     {
         BuildPlanetFromMap(System, PlanetRow, StarBody);
     }

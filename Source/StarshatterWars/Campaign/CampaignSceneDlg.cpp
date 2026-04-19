@@ -9,11 +9,13 @@
 #include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
+#include "TimerManager.h"
 
 #include "SystemSceneBuilder.h"
 #include "CampaignSceneActor.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
+#include "GameStructs.h"
 
 #include "Engine/Font.h"
 #include "Engine/Texture2D.h"
@@ -732,7 +734,7 @@ void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
         }
         else if (Event.EventType == MISSIONEVENT_TYPE::CAMERA)
         {
-            DebugCameraEventTarget(Event);
+            ExecuteCameraEvent(Event);
         }
         else
         {
@@ -1026,8 +1028,168 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         *EventParamText,
         Event.EventNParams);
 
+    static bool bInitialCameraDeferred = false;
+
+    if (!bInitialCameraDeferred &&
+        Event.EventTime <= KINDA_SMALL_NUMBER &&
+        !Event.EventTarget.IsEmpty())
+    {
+        UWorld* World = GetWorld();
+        if (World)
+        {
+            bInitialCameraDeferred = true;
+
+            const FS_MissionEvent DeferredEvent = Event;
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: deferring initial camera target '%s' to next tick"),
+                *DeferredEvent.EventTarget);
+
+            World->GetTimerManager().SetTimerForNextTick(
+                FTimerDelegate::CreateWeakLambda(this, [this, DeferredEvent]()
+                    {
+                        if (!IsValid(this))
+                        {
+                            return;
+                        }
+
+                        FString DeferredParamText = TEXT("[");
+                        const int32 DeferredParamCount =
+                            FMath::Clamp(DeferredEvent.EventNParams, 0, DeferredEvent.EventParam.Num());
+
+                        for (int32 ParamIndex = 0; ParamIndex < DeferredParamCount; ++ParamIndex)
+                        {
+                            if (ParamIndex > 0)
+                            {
+                                DeferredParamText += TEXT(", ");
+                            }
+
+                            DeferredParamText += FString::FromInt(DeferredEvent.EventParam[ParamIndex]);
+                        }
+
+                        DeferredParamText += TEXT("]");
+
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[SceneDlg] ExecuteCameraEvent: running deferred initial camera Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
+                            DeferredEvent.EventTime,
+                            *DeferredEvent.EventTarget,
+                            *DeferredEvent.EventPoint.ToString(),
+                            *DeferredParamText,
+                            DeferredEvent.EventNParams);
+
+                        if (!DeferredEvent.EventTarget.IsEmpty())
+                        {
+                            if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+                            {
+                                const bool bBodyFocused =
+                                    Builder->FocusCameraOnBodyByName(
+                                        DeferredEvent.EventTarget,
+                                        DeferredEvent.EventPoint,
+                                        0.0f);
+
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred system focus '%s' result=%s"),
+                                    *DeferredEvent.EventTarget,
+                                    bBodyFocused ? TEXT("true") : TEXT("false"));
+
+                                if (bBodyFocused)
+                                {
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred ResolveSystemSceneBuilder returned null"));
+                            }
+
+                            if (ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor())
+                            {
+                                const bool bSceneFocused =
+                                    SceneActor->FocusCameraOnSceneActorByName(
+                                        DeferredEvent.EventTarget,
+                                        DeferredEvent.EventPoint,
+                                        0.0f);
+
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred scene focus '%s' result=%s"),
+                                    *DeferredEvent.EventTarget,
+                                    bSceneFocused ? TEXT("true") : TEXT("false"));
+
+                                if (bSceneFocused)
+                                {
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred ResolveCampaignSceneActor returned null"));
+                            }
+
+                            UE_LOG(LogTemp, Warning,
+                                TEXT("[SceneDlg] ExecuteCameraEvent: deferred target '%s' not resolved"),
+                                *DeferredEvent.EventTarget);
+
+                            return;
+                        }
+
+                        if (!DeferredEvent.EventPoint.IsNearlyZero())
+                        {
+                            if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+                            {
+                                const bool bApplied =
+                                    Builder->ApplyCameraViewVector(
+                                        DeferredEvent.EventPoint,
+                                        0.0f);
+
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred Apply view vector result=%s"),
+                                    bApplied ? TEXT("true") : TEXT("false"));
+
+                                return;
+                            }
+                            else
+                            {
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[SceneDlg] ExecuteCameraEvent: deferred ResolveSystemSceneBuilder returned null for view-vector-only event"));
+                            }
+                        }
+
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[SceneDlg] ExecuteCameraEvent: deferred event had no target and no usable point"));
+                    }));
+
+            return;
+        }
+    }
+
     if (!Event.EventTarget.IsEmpty())
     {
+        if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+        {
+            const bool bBodyFocused =
+                Builder->FocusCameraOnBodyByName(
+                    Event.EventTarget,
+                    Event.EventPoint,
+                    0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: system focus '%s' result=%s"),
+                *Event.EventTarget,
+                bBodyFocused ? TEXT("true") : TEXT("false"));
+
+            if (bBodyFocused)
+            {
+                return;
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: ResolveSystemSceneBuilder returned null"));
+        }
+
         if (ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor())
         {
             const bool bSceneFocused =
@@ -1052,25 +1214,6 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                 TEXT("[SceneDlg] ExecuteCameraEvent: ResolveCampaignSceneActor returned null"));
         }
 
-        if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
-        {
-            const bool bBodyFocused =
-                Builder->FocusCameraOnBodyByName(
-                    Event.EventTarget,
-                    Event.EventPoint,
-                    0.0f);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] ExecuteCameraEvent: system focus '%s' result=%s"),
-                *Event.EventTarget,
-                bBodyFocused ? TEXT("true") : TEXT("false"));
-
-            if (bBodyFocused)
-            {
-                return;
-            }
-        }
-
         UE_LOG(LogTemp, Warning,
             TEXT("[SceneDlg] ExecuteCameraEvent: target '%s' not resolved"),
             *Event.EventTarget);
@@ -1092,6 +1235,11 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                 bApplied ? TEXT("true") : TEXT("false"));
 
             return;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: ResolveSystemSceneBuilder returned null for view-vector-only event"));
         }
     }
 

@@ -86,13 +86,13 @@ private:
     static OrbitalBody* BuildPlanet(
         StarSystem* System,
         OrbitalBody* ParentStar,
-        const FS_PlanetMap& Row,
+        const FPlanet& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalBody* BuildMoon(
         StarSystem* System,
         OrbitalBody* ParentPlanet,
-        const FS_MoonMap& Row,
+        const FMoon& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalRegion* BuildRegion(

@@ -223,7 +223,7 @@ event: { type: Hold, param: 20, event_ship: Lovo }
 
 event: { type: Display, time: 0, image: "News",  fade: (1.0f, 4.0f, 1.0f)  }
 
-event: { type: Camera, param: 3, target: "Solus", vec: (0,0,1e7) }
+event: { type: Camera, time: 0.15, param: 3, target: "Solus", vec: (0,0,1e7) }
 event: { type: Camera, param: 5, vec: (0.12,0.01,0.02) }
 
 event: { type: Display, time: 5, message: "Solus System" }
@@ -307,7 +307,6 @@ event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 
 event: { type: Camera, time: 60.50, param: 3, target: "Farcaster", vec: (0,0,2e3) }
-event: { type: Camera, time: 60.50, param: 5, vec: (-0.13,0.01,0.02) }
 
 event: { type: Message, time: 63.85,
          caption: "on the many Alliance citizens\nin the Solus system." }

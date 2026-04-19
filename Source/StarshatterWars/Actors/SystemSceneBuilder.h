@@ -164,6 +164,11 @@ public:
         const FVector& CameraOffset,
         float BlendSeconds = 0.0f);
 
+        UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
+    bool GetBodyWorldLocationByName(
+        const FString& BodyName,
+        FVector& OutWorldLocation) const;
+
     UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
     bool ApplyCameraViewVector(
         const FVector& ViewVector,

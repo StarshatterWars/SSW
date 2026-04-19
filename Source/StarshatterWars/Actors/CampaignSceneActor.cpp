@@ -7,6 +7,9 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
 
+#include "SystemSceneBuilder.h"
+#include "EngineUtils.h"
+
 #include "Engine/World.h"
 #include "ShipDesignRegistry.h"
 #include "GameFramework/PlayerController.h"
@@ -48,6 +51,88 @@ void ACampaignSceneActor::ClearSceneActors()
 FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const
 {
     return GetActorLocation() + SceneOriginOffset + (LegacyLoc * LegacyUnitsPerKm);
+}
+
+ASystemSceneBuilder* ACampaignSceneActor::ResolveSystemSceneBuilder() const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+    {
+        if (IsValid(*It))
+        {
+            return *It;
+        }
+    }
+
+    return nullptr;
+}
+
+bool ACampaignSceneActor::ResolveRegionAnchorLocation(
+    const FString& RegionName,
+    FVector& OutWorldLocation) const
+{
+    OutWorldLocation = FVector::ZeroVector;
+
+    const FString CleanRegion = RegionName.TrimStartAndEnd();
+    if (CleanRegion.IsEmpty())
+    {
+        return false;
+    }
+
+    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+    if (!Builder)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveRegionAnchorLocation: no SystemSceneBuilder for region '%s'"),
+            *CleanRegion);
+        return false;
+    }
+
+    const bool bFound = Builder->GetBodyWorldLocationByName(CleanRegion, OutWorldLocation);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveRegionAnchorLocation: Region='%s' Found=%s Loc=%s"),
+        *CleanRegion,
+        bFound ? TEXT("true") : TEXT("false"),
+        *OutWorldLocation.ToString());
+
+    return bFound;
+}
+
+FVector ACampaignSceneActor::ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const
+{
+    const FVector LocalOffset = Elem.Location * LegacyUnitsPerKm;
+
+    FVector RegionAnchor = FVector::ZeroVector;
+    if (!Elem.RegionName.IsEmpty() && ResolveRegionAnchorLocation(Elem.RegionName, RegionAnchor))
+    {
+        const FVector WorldLoc = RegionAnchor + LocalOffset;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' Local=%s Anchor=%s World=%s"),
+            *Elem.Name,
+            *Elem.RegionName,
+            *Elem.Location.ToString(),
+            *RegionAnchor.ToString(),
+            *WorldLoc.ToString());
+
+        return WorldLoc;
+    }
+
+    const FVector Fallback = ConvertLegacySceneLocToWorld(Elem.Location);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' using fallback World=%s"),
+        *Elem.Name,
+        *Elem.RegionName,
+        *Fallback.ToString());
+
+    return Fallback;
 }
 
 FString ACampaignSceneActor::ResolveModelNameForDesign(const FString& DesignName) const
@@ -233,7 +318,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
-        const FVector WorldLoc = ConvertLegacySceneLocToWorld(Elem.Location);
+        const FVector WorldLoc = ConvertMissionElementLocToWorld(Elem);
 
         AActor* Spawned = SpawnSceneElementActor(
             Elem.Name,
@@ -379,3 +464,4 @@ void ACampaignSceneActor::DumpSceneActors() const
     UE_LOG(LogTemp, Warning,
         TEXT("========================================"));
 }
+

@@ -117,8 +117,8 @@ public:
     const FS_Galaxy* FindGalaxyByName(const FString& InName) const;
     const FS_StarSystem* FindStarSystemByName(const FString& InName) const;
 
-    const FS_PlanetMap* FindPlanetMapByName(const FString& Name) const;
-    const FS_MoonMap* FindMoonMapByName(const FString& Name) const;
+    const FPlanet* FindPlanetMapByName(const FString& Name) const;
+    const FMoon* FindMoonMapByName(const FString& Name) const;
 
     // -----------------------------------------------------------------
     // Primary entry point
@@ -197,10 +197,10 @@ public:
     bool IsLoaded() const { return bLoaded; }
 
     UPROPERTY()
-    TMap<FString, FS_PlanetMap> PlanetMapByName;
+    TMap<FString, FPlanet> PlanetMapByName;
 
     UPROPERTY()
-    TMap<FString, FS_MoonMap> MoonMapByName;
+    TMap<FString, FMoon> MoonMapByName;
 
     // -----------------------------------------------------------------
     // DataTable accessors
@@ -226,10 +226,10 @@ public:
     TArray<FS_Star> StarDataArray;
 
     UPROPERTY()
-    TArray<FS_Planet> PlanetDataArray;
+    TArray<FPlanet> PlanetDataArray;
 
     UPROPERTY()
-    TArray<FS_Moon> MoonDataArray;
+    TArray<FMoon> MoonDataArray;
 
     UPROPERTY()
     TArray<FS_Region> RegionDataArray;
@@ -269,15 +269,15 @@ protected:
     FS_Galaxy         GalaxyData;
     FS_StarSystem     StarSystemData;
     FS_Star           StarData;
-    FS_Planet         PlanetData;
-    FS_Moon           MoonData;
+    FPlanet           PlanetData;
+    FMoon             MoonData;
     FS_Region         RegionData;
     FS_TerrainRegion  TerrainRegionData;
 
     // Map format arrays
     TArray<FS_StarMap>   StarMapArray;
-    TArray<FS_PlanetMap> PlanetMapArray;
-    TArray<FS_MoonMap>   MoonMapArray;
+    TArray<FPlanet>      PlanetMapArray;
+    TArray<FMoon>        MoonMapArray;
     TArray<FS_RegionMap> RegionMapArray;
 
     // Paths
@@ -332,10 +332,10 @@ private:
     TMap<FString, FS_Star> StarByName;
 
     UPROPERTY()
-    TMap<FString, FS_Planet> PlanetByName;
+    TMap<FString, FPlanet> PlanetByName;
 
     UPROPERTY()
-    TMap<FString, FS_Moon> MoonByName;
+    TMap<FString, FMoon> MoonByName;
 
     UPROPERTY()
     TMap<FString, FS_Region> RegionByName;

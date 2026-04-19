@@ -3,7 +3,7 @@
 
 #include "PlanetOrbitUtils.h"
 
-FVector PlanetOrbitUtils::GetPlanetOrbitPositionWithAngle(const FS_PlanetMap& PlanetData, const FVector& StarLocation, float OrbitAngleDegrees)
+FVector PlanetOrbitUtils::GetPlanetOrbitPositionWithAngle(const FPlanet& PlanetData, const FVector& StarLocation, float OrbitAngleDegrees)
 {
 	const float OrbitRadiusCM = PlanetData.Orbit * 100.0f;
 	const float OrbitAngleRad = FMath::DegreesToRadians(OrbitAngleDegrees);
@@ -19,7 +19,7 @@ FVector PlanetOrbitUtils::GetPlanetOrbitPositionWithAngle(const FS_PlanetMap& Pl
 	return StarLocation + TiltedOrbit;
 }
 
-FVector PlanetOrbitUtils::GetPlanetOrbitPositionFlat(const FS_PlanetMap& PlanetData, const FVector& StarLocation, float OrbitAngleDegrees)
+FVector PlanetOrbitUtils::GetPlanetOrbitPositionFlat(const FPlanet& PlanetData, const FVector& StarLocation, float OrbitAngleDegrees)
 {
 	const float OrbitRadiusCM = PlanetData.Orbit * 100.0f; // km to cm
 	const float OrbitAngleRad = FMath::DegreesToRadians(OrbitAngleDegrees);

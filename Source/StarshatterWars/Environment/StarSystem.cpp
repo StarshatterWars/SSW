@@ -2198,7 +2198,7 @@ void StarSystem::HydrateFromEnvironment(
 			HydrateRegion(StarBody, RegionRow);
 		}
 
-		for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+		for (const FPlanet& PlanetRow : StarRow.Planet)
 		{
 			OrbitalBody* PlanetBody = HydratePlanet(StarBody, PlanetRow);
 			if (!PlanetBody)
@@ -2211,7 +2211,7 @@ void StarSystem::HydrateFromEnvironment(
 				HydrateRegion(PlanetBody, RegionRow);
 			}
 
-			for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+			for (const FMoon& MoonRow : PlanetRow.Moon)
 			{
 				OrbitalBody* MoonBody = HydrateMoon(PlanetBody, MoonRow);
 				if (!MoonBody)
@@ -2255,7 +2255,7 @@ OrbitalBody* StarSystem::HydrateStar(const FS_StarMap& Row)
 	return StarBody;
 }
 
-OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetMap& Row)
+OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FPlanet& Row)
 {
 	if (!ParentStar)
 	{
@@ -2287,7 +2287,7 @@ OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetM
 	return PlanetBody;
 }
 
-OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap& Row)
+OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row)
 {
 	if (!ParentPlanet)
 	{

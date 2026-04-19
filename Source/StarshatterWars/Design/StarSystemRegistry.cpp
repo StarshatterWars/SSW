@@ -206,7 +206,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
             BuildRegion(System, StarBody, RegionRow, Env);
         }
 
-        for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+        for (const FPlanet& PlanetRow : StarRow.Planet)
         {
             OrbitalBody* PlanetBody = BuildPlanet(System, StarBody, PlanetRow, Env);
             if (!PlanetBody)
@@ -219,7 +219,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
                 BuildRegion(System, PlanetBody, RegionRow, Env);
             }
 
-            for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+            for (const FMoon& MoonRow : PlanetRow.Moon)
             {
                 OrbitalBody* MoonBody = BuildMoon(System, PlanetBody, MoonRow, Env);
                 if (!MoonBody)
@@ -277,7 +277,7 @@ OrbitalBody* StarSystemRegistry::BuildStar(
 OrbitalBody* StarSystemRegistry::BuildPlanet(
     StarSystem* System,
     OrbitalBody* ParentStar,
-    const FS_PlanetMap& Row,
+    const FPlanet& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !ParentStar || !Env)
@@ -314,7 +314,7 @@ OrbitalBody* StarSystemRegistry::BuildPlanet(
 OrbitalBody* StarSystemRegistry::BuildMoon(
     StarSystem* System,
     OrbitalBody* ParentPlanet,
-    const FS_MoonMap& Row,
+    const FMoon& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !ParentPlanet || !Env)

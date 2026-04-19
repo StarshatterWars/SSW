@@ -8,6 +8,7 @@
 class USceneComponent;
 class UStaticMesh;
 class ASceneMeshActor;
+class ASystemSceneBuilder;
 
 USTRUCT()
 struct FCampaignSceneSpawnedActor
@@ -63,6 +64,12 @@ protected:
     FString ResolveModelNameForDesign(const FString& DesignName) const;
     FString ResolveMeshPathForDesign(const FString& DesignName) const;
     UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
+
+    FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
+    ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
+    bool ResolveRegionAnchorLocation(
+        const FString& RegionName,
+        FVector& OutWorldLocation) const;
 
 protected:
     UPROPERTY(VisibleAnywhere)

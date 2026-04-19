@@ -1467,7 +1467,7 @@ struct FS_RegionMap : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_MoonMap : public FTableRowBase {
+struct FMoon : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -1505,7 +1505,7 @@ struct FS_MoonMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RegionMap> Region; 
 
-	FS_MoonMap() {
+	FMoon() {
 		Name = "";
 		Parent = "";
 		Icon = "";
@@ -1525,7 +1525,7 @@ struct FS_MoonMap : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_PlanetMap : public FTableRowBase {
+struct FPlanet : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
@@ -1577,9 +1577,9 @@ struct FS_PlanetMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RegionMap> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_MoonMap> Moon;
+	TArray<FMoon> Moon;
 
-	FS_PlanetMap() {
+	FPlanet() {
 		Name = "";
 		Icon = "";
 		Ring = "";
@@ -1640,7 +1640,7 @@ struct FS_StarMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RegionMap> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_PlanetMap> Planet;
+	TArray<FPlanet> Planet;
 
 	FS_StarMap() {
 		Name = "";
@@ -1749,136 +1749,7 @@ struct FS_Region : public FTableRowBase {
 	}
 };
 
-USTRUCT(BlueprintType)
-struct FS_Moon : public FTableRowBase {
-	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Image;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Map;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString High;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Glow;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString GlowHigh;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Gloss;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Radius;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Mass;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Orbit;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Rot;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Tscale;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Tilt;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	bool   Retro;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FColor  Atmos;
-
-	FS_Moon() {
-		Name = "";
-		Image = "";
-		Map = "";
-		High = "";
-		Glow = "";
-		GlowHigh = "";
-		Gloss = "";
-
-		Radius = 0.0;
-		Mass = 0.0;
-		Orbit = 0.0;
-		Rot = 0.0;
-		Tscale = 1.0;
-		Tilt = 0.0;
-		Retro = false;
-		Atmos = FColor::Black;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct FS_Planet : public FTableRowBase {
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Image;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Map;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString High;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Rings;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Glow;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString GlowHigh;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Gloss;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Radius;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Mass;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Orbit;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Inclination;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Rot;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Minrad;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Maxrad;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Tscale;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Tilt;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	bool   Retro;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	bool   Lumin;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FColor  Atmos;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EBodyUISizeClass  BodyType = EBodyUISizeClass::Planet;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EPlanetType  PlanetType = EPlanetType::Terran;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_Moon> Moon;
-
-	FS_Planet() {
-		Name = "";
-		Image = "";
-		Map = "";
-		High = "";
-		Rings = "";
-		Glow = "";
-		GlowHigh = "";
-		Gloss = "";
-
-		Radius = 0.0;
-		Mass = 0.0;
-		Orbit = 0.0;
-		Inclination = 0.0;
-		Rot = 0.0;
-		Minrad = 0.0;
-		Maxrad = 0.0;
-		Tscale = 1.0;
-		Tilt = 0.0;
-		Retro = false;
-		Lumin = false;
-		Atmos = FColor::Black;
-	}
-};
 
 USTRUCT(BlueprintType)
 struct FS_Star : public FTableRowBase {
@@ -1909,7 +1780,7 @@ struct FS_Star : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FColor  Back;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_Planet> Planet;
+	TArray<FPlanet> Planet;
 
 	FS_Star() {
 		Name = "";

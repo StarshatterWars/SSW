@@ -403,7 +403,7 @@ public:
 	FString SelectedSectorName;
 
 	UPROPERTY()
-	FS_PlanetMap SelectedSector;
+	FPlanet SelectedSector;
 
 	UPROPERTY()
 	FS_StarMap SelectedStarSystem;
