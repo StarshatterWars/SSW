@@ -1,36 +1,16 @@
-/*=============================================================================
-    Project:        Starshatter Wars
-    Studio:         Fractal Dev Studios
-    Copyright:      (C) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO:
-        John DiCamillo / Destroyer Studios LLC
-
-    AUTHOR:
-        Carlos Bott
-
-    FILE:
-        CampaignSceneActor.cpp
-
-    MODULE:
-        Campaign Scene System
-
-    OVERVIEW:
-        Runtime implementation of cutscene scene actor system.
-
-        Responsible for:
-        - Spawning ships/stations from mission data
-        - Maintaining name-based lookup
-        - Camera targeting for cutscene events
-
-=============================================================================*/
-
 #include "CampaignSceneActor.h"
 
-#include "Engine/World.h"
-#include "GameFramework/PlayerController.h"
+#include "SceneMeshActor.h"
+#include "StarshatterShipDesignSubsystem.h"
+
 #include "Camera/PlayerCameraManager.h"
 #include "Components/SceneComponent.h"
+#include "Engine/StaticMesh.h"
+
+#include "Engine/World.h"
+#include "ShipDesignRegistry.h"
+#include "GameFramework/PlayerController.h"
+#include "Engine/GameInstance.h"
 
 ACampaignSceneActor::ACampaignSceneActor()
 {
@@ -70,6 +50,178 @@ FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyL
     return GetActorLocation() + SceneOriginOffset + (LegacyLoc * LegacyUnitsPerKm);
 }
 
+FString ACampaignSceneActor::ResolveModelNameForDesign(const FString& DesignName) const
+{
+    if (DesignName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: empty design name"));
+        return FString();
+    }
+
+    const FShipDesign* ShipRow = ShipDesignRegistry::Find(DesignName);
+    if (!ShipRow)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: no ship row for design '%s'"),
+            *DesignName);
+        return FString();
+    }
+
+    if (ShipRow->Model.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: row found for '%s' but Model is empty"),
+            *DesignName);
+        return FString();
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveModelNameForDesign: Design='%s' Model='%s'"),
+        *DesignName,
+        *ShipRow->Model);
+
+    return ShipRow->Model;
+}
+
+FString ACampaignSceneActor::ResolveMeshPathForDesign(const FString& DesignName) const
+{
+    const FString ModelName = ResolveModelNameForDesign(DesignName);
+    if (ModelName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveMeshPathForDesign: no model for design '%s'"),
+            *DesignName);
+        return FString();
+    }
+
+    const FString MeshPath = FString::Printf(
+        TEXT("/Script/Engine.StaticMesh'/Game/Models/%s/%s.%s'"),
+        *ModelName,
+        *ModelName,
+        *ModelName);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveMeshPathForDesign: Design='%s' Path='%s'"),
+        *DesignName,
+        *MeshPath);
+
+    return MeshPath;
+}
+
+UStaticMesh* ACampaignSceneActor::ResolveStaticMeshFromPath(const FString& MeshPath) const
+{
+    const FString CleanPath = MeshPath.TrimStartAndEnd();
+
+    if (CleanPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: empty path"));
+        return nullptr;
+    }
+
+    UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *CleanPath);
+    if (!Mesh)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: failed to load '%s'"),
+            *CleanPath);
+        return nullptr;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: loaded '%s'"),
+        *CleanPath);
+
+    return Mesh;
+}
+
+AActor* ACampaignSceneActor::SpawnSceneElementActor(
+    const FString& ElementName,
+    const FString& DesignName,
+    const FVector& WorldLocation)
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: World is null"));
+        return nullptr;
+    }
+
+    TSubclassOf<ASceneMeshActor> SpawnClass = DefaultSceneMeshActorClass;
+    if (!SpawnClass)
+    {
+        SpawnClass = ASceneMeshActor::StaticClass();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: DefaultSceneMeshActorClass is null, using native ASceneMeshActor"));
+    }
+
+    const FString MeshPath = ResolveMeshPathForDesign(DesignName);
+    if (MeshPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: no mesh path for design '%s'"),
+            *DesignName);
+        return nullptr;
+    }
+
+    UStaticMesh* Mesh = ResolveStaticMeshFromPath(MeshPath);
+    if (!Mesh)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed mesh load Name='%s' Design='%s' Path='%s'"),
+            *ElementName,
+            *DesignName,
+            *MeshPath);
+        return nullptr;
+    }
+
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    ASceneMeshActor* SpawnedActor = World->SpawnActor<ASceneMeshActor>(
+        SpawnClass,
+        WorldLocation,
+        FRotator::ZeroRotator,
+        Params);
+
+    if (!SpawnedActor)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed spawn Name='%s' Design='%s'"),
+            *ElementName,
+            *DesignName);
+        return nullptr;
+    }
+
+#if WITH_EDITOR
+    SpawnedActor->SetActorLabel(ElementName);
+#endif
+
+    SpawnedActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+
+    if (!SpawnedActor->SetSceneMesh(Mesh))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: SetSceneMesh failed Name='%s' Design='%s' Mesh='%s'"),
+            *ElementName,
+            *DesignName,
+            *GetNameSafe(Mesh));
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Design='%s' Mesh='%s' Loc=%s"),
+        *ElementName,
+        *DesignName,
+        *GetNameSafe(Mesh),
+        *WorldLocation.ToString());
+
+    return SpawnedActor;
+}
+
 void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& MissionData)
 {
     ClearSceneActors();
@@ -105,65 +257,11 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 
         SpawnedSceneActors.Add(Entry);
         OwnedActors.Add(Spawned);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Spawned '%s' (%s)"),
-            *Elem.Name,
-            *Elem.Design);
-    }
-}
-
-AActor* ACampaignSceneActor::SpawnSceneElementActor(
-    const FString& ElementName,
-    const FString& DesignName,
-    const FVector& WorldLocation)
-{
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        return nullptr;
     }
 
-    TSubclassOf<AActor> SpawnClass = ResolveActorClassForDesign(DesignName);
-
-    if (!SpawnClass)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] No class for design '%s'"),
-            *DesignName);
-        return nullptr;
-    }
-
-    FActorSpawnParameters Params;
-    Params.Owner = this;
-    Params.SpawnCollisionHandlingOverride =
-        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    AActor* Actor = World->SpawnActor<AActor>(
-        SpawnClass,
-        WorldLocation,
-        FRotator::ZeroRotator,
-        Params);
-
-    if (Actor)
-    {
-#if WITH_EDITOR
-        Actor->SetActorLabel(ElementName);
-#endif
-        Actor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-    }
-
-    return Actor;
-}
-
-TSubclassOf<AActor> ACampaignSceneActor::ResolveActorClassForDesign(const FString& DesignName) const
-{
-    if (const TSubclassOf<AActor>* Found = DesignActorClasses.Find(DesignName))
-    {
-        return *Found;
-    }
-
-    return nullptr;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: spawned=%d"),
+        SpawnedSceneActors.Num());
 }
 
 bool ACampaignSceneActor::FindSceneActorByName(
@@ -228,8 +326,34 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Camera focus '%s'"),
-        *TargetName);
+        TEXT("[CampaignSceneActor] Camera focus '%s' Blend=%.2f"),
+        *TargetName,
+        BlendSeconds);
 
     return true;
+}
+
+void ACampaignSceneActor::DumpSceneActors() const
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("========================================"));
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] DumpSceneActors: count=%d"),
+        SpawnedSceneActors.Num());
+
+    for (int32 i = 0; i < SpawnedSceneActors.Num(); ++i)
+    {
+        const FCampaignSceneSpawnedActor& Entry = SpawnedSceneActors[i];
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("  [%d] Name='%s' Design='%s' Actor=%s Loc=%s"),
+            i,
+            *Entry.ElementName,
+            *Entry.DesignName,
+            *GetNameSafe(Entry.Actor),
+            *Entry.SpawnLocation.ToString());
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("========================================"));
 }

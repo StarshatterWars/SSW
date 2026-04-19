@@ -1,0 +1,29 @@
+# Wavefront material file
+# Converted by OBJ Translator, version 9.7.0.0
+# SAP SE
+# http://www.sap.com
+#
+
+newmtl HANG_D
+Ka 0.50196 0.50196 0.50196
+Kd 1 1 1
+Ks 0 0 0
+illum 2
+Ns 20
+map_Kd HANG_D.jpg
+
+newmtl Goliath_D
+Ka 0.50196 0.50196 0.50196
+Kd 1 1 1
+Ks 0.69961 0.67137 0.59922
+illum 2
+Ns 20
+map_Kd Goliath_D.jpg
+
+newmtl mat_1
+Ka 0.117647 0.117647 0.117647
+Kd 0.752941 0.752941 0.752941
+Ks 0.752941 0.752941 0.752941
+illum 2
+Ns 8
+

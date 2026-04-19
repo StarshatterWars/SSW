@@ -1,36 +1,13 @@
-/*=============================================================================
-    Project:        Starshatter Wars
-    Studio:         Fractal Dev Studios
-    Copyright:      (C) 2025-2026. All Rights Reserved.
-
-    ORIGINAL AUTHOR AND STUDIO:
-        John DiCamillo / Destroyer Studios LLC
-
-    AUTHOR:
-        Carlos Bott
-
-    FILE:
-        CampaignSceneActor.h
-
-    MODULE:
-        Campaign Scene System
-
-    OVERVIEW:
-        Handles cutscene scene elements (ships, stations, etc.)
-        separate from orbital system builder.
-
-        - Spawns mission "element" actors
-        - Maintains lookup by name
-        - Supports camera focus on scene elements
-
-=============================================================================*/
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameStructs.h"
 #include "CampaignSceneActor.generated.h"
+
+class USceneComponent;
+class UStaticMesh;
+class ASceneMeshActor;
 
 USTRUCT()
 struct FCampaignSceneSpawnedActor
@@ -56,7 +33,6 @@ class STARSHATTERWARS_API ACampaignSceneActor : public AActor
     GENERATED_BODY()
 
 public:
-
     ACampaignSceneActor();
 
     virtual void BeginPlay() override;
@@ -74,8 +50,9 @@ public:
         const FString& TargetName,
         FCampaignSceneSpawnedActor& OutEntry) const;
 
-protected:
+    void DumpSceneActors() const;
 
+protected:
     FVector ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const;
 
     AActor* SpawnSceneElementActor(
@@ -83,24 +60,25 @@ protected:
         const FString& DesignName,
         const FVector& WorldLocation);
 
-    TSubclassOf<AActor> ResolveActorClassForDesign(const FString& DesignName) const;
+    FString ResolveModelNameForDesign(const FString& DesignName) const;
+    FString ResolveMeshPathForDesign(const FString& DesignName) const;
+    UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
 
 protected:
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<USceneComponent> SceneRoot = nullptr;
 
-    UPROPERTY()
-    TObjectPtr<USceneComponent> SceneRoot;
-
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
     bool bEnableDebugLogs = true;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
     float LegacyUnitsPerKm = 0.01f;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
     FVector SceneOriginOffset = FVector::ZeroVector;
 
-    UPROPERTY(EditAnywhere)
-    TMap<FString, TSubclassOf<AActor>> DesignActorClasses;
+    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
+    TSubclassOf<ASceneMeshActor> DefaultSceneMeshActorClass;
 
     UPROPERTY()
     TArray<FCampaignSceneSpawnedActor> SpawnedSceneActors;

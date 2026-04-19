@@ -564,6 +564,8 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
             UE_LOG(LogTemp, Warning,
                 TEXT("[SceneDlg] Built scene actors for '%s'"),
                 *ActiveSceneName);
+
+            SceneActor->DumpSceneActors();
         }
         else
         {
@@ -1148,3 +1150,4 @@ void UCampaignSceneDlg::FinishCutscene()
         Manager->ShowCmdDlg();
     }   
 }
+
