@@ -268,14 +268,36 @@ bool ACampaignSceneActor::FindSceneActorByName(
     const FString& TargetName,
     FCampaignSceneSpawnedActor& OutEntry) const
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] FindSceneActorByName: Target='%s' Spawned=%d"),
+        *TargetName,
+        SpawnedSceneActors.Num());
+
     for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
     {
-        if (Entry.ElementName.Equals(TargetName, ESearchCase::IgnoreCase))
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor]   Compare Target='%s' Element='%s' Design='%s'"),
+            *TargetName,
+            *Entry.ElementName,
+            *Entry.DesignName);
+
+        if (Entry.ElementName.Equals(TargetName, ESearchCase::IgnoreCase) ||
+            Entry.DesignName.Equals(TargetName, ESearchCase::IgnoreCase))
         {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor]   MATCH Target='%s' Element='%s' Design='%s'"),
+                *TargetName,
+                *Entry.ElementName,
+                *Entry.DesignName);
+
             OutEntry = Entry;
             return true;
         }
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor]   NO MATCH for '%s'"),
+        *TargetName);
 
     return false;
 }

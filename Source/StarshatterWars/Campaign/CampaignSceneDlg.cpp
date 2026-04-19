@@ -1026,40 +1026,73 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         *EventParamText,
         Event.EventNParams);
 
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-    if (!Builder)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] ExecuteCameraEvent: no SystemSceneBuilder found"));
-        return;
-    }
-
     if (!Event.EventTarget.IsEmpty())
     {
-        const bool bFocused = Builder->FocusCameraOnBodyByName(
-            Event.EventTarget,
-            Event.EventPoint,
-            0.0f);
+        if (ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor())
+        {
+            const bool bSceneFocused =
+                SceneActor->FocusCameraOnSceneActorByName(
+                    Event.EventTarget,
+                    Event.EventPoint,
+                    0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: scene focus '%s' result=%s"),
+                *Event.EventTarget,
+                bSceneFocused ? TEXT("true") : TEXT("false"));
+
+            if (bSceneFocused)
+            {
+                return;
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: ResolveCampaignSceneActor returned null"));
+        }
+
+        if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+        {
+            const bool bBodyFocused =
+                Builder->FocusCameraOnBodyByName(
+                    Event.EventTarget,
+                    Event.EventPoint,
+                    0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: system focus '%s' result=%s"),
+                *Event.EventTarget,
+                bBodyFocused ? TEXT("true") : TEXT("false"));
+
+            if (bBodyFocused)
+            {
+                return;
+            }
+        }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: Focus target '%s' result=%s"),
-            *Event.EventTarget,
-            bFocused ? TEXT("true") : TEXT("false"));
+            TEXT("[SceneDlg] ExecuteCameraEvent: target '%s' not resolved"),
+            *Event.EventTarget);
 
         return;
     }
 
     if (!Event.EventPoint.IsNearlyZero())
     {
-        const bool bApplied = Builder->ApplyCameraViewVector(
-            Event.EventPoint,
-            0.0f);
+        if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+        {
+            const bool bApplied =
+                Builder->ApplyCameraViewVector(
+                    Event.EventPoint,
+                    0.0f);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: Apply view vector result=%s"),
-            bApplied ? TEXT("true") : TEXT("false"));
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: Apply view vector result=%s"),
+                bApplied ? TEXT("true") : TEXT("false"));
 
-        return;
+            return;
+        }
     }
 
     UE_LOG(LogTemp, Warning,
