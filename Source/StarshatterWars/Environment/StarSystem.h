@@ -158,7 +158,7 @@ public:
     // -----------------------------------------------------------------
     void HydrateFromEnvironment(
         const FS_Galaxy& GalaxyRow,
-        const FS_StarSystem* OptionalSystemMeta = nullptr);
+        const FStarSystem* OptionalSystemMeta = nullptr);
 
     void ResetHydratedContents();
 

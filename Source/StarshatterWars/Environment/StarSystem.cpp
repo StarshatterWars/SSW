@@ -2166,7 +2166,7 @@ int32 StarSystem::ToLegacyStarClass(ESPECTRAL_CLASS InClass) const
 
 void StarSystem::HydrateFromEnvironment(
 	const FS_Galaxy& GalaxyRow,
-	const FS_StarSystem* OptionalSystemMeta)
+	const FStarSystem* OptionalSystemMeta)
 {
 	ResetHydratedContents();
 
@@ -2174,16 +2174,6 @@ void StarSystem::HydrateFromEnvironment(
 	SetLocation(GalaxyRow.Location);
 	SetAffiliation(GalaxyRow.Iff);
 	SetSequence(ToLegacyStarClass(GalaxyRow.Class));
-
-	if (OptionalSystemMeta)
-	{
-		SetSkyCounts(OptionalSystemMeta->SkyStars, OptionalSystemMeta->SkyDust);
-		SetSkyTextures(
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyPolyStars),
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyNebula),
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyHaze));
-		SetAmbientColor(OptionalSystemMeta->AmbientColor);
-	}
 
 	for (const FStarSystem& StarRow : GalaxyRow.Stellar)
 	{

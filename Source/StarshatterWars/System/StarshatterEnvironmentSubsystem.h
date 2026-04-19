@@ -15,7 +15,7 @@
     normalizing, and caching all static environment data required at runtime:
 
         - Galaxy definitions (FS_Galaxy)
-        - Star systems (FS_StarSystem)
+        - Star systems (FStarSystem)
         - Stars (FS_Star)
         - Planets (FS_Planet)
         - Moons (FS_Moon)
@@ -115,7 +115,7 @@ public:
     const TArray<StarSystem*>& GetRuntimeStarSystems() const { return RuntimeStarSystems; }
 
     const FS_Galaxy* FindGalaxyByName(const FString& InName) const;
-    const FS_StarSystem* FindStarSystemByName(const FString& InName) const;
+    const FStarSystem* FindStarSystemByName(const FString& InName) const;
 
     const FPlanet* FindPlanetMapByName(const FString& Name) const;
     const FMoon* FindMoonMapByName(const FString& Name) const;
@@ -164,9 +164,6 @@ public:
     // -----------------------------------------------------------------
     void LoadGalaxyMap();
 
-    void ParseStar(TermStruct* Val, const char* Fn);
-    void ParsePlanet(TermStruct* Val, const char* Fn);
-    void ParseMoon(TermStruct* Val, const char* Fn);
     void ParseRegion(TermStruct* Val, const char* Fn);
 
     void ParseStarMap(TermStruct* Val, const char* Fn);
@@ -174,12 +171,6 @@ public:
     void ParseMoonMap(TermStruct* Val, const char* Fn);
 
     void ParseTerrain(TermStruct* Val, const char* Fn);
-
-    // -----------------------------------------------------------------
-    // Star systems
-    // -----------------------------------------------------------------
-    void LoadStarsystems();
-    void ParseStarSystem(const char* FileName);
 
     // -----------------------------------------------------------------
     // DataTable creation and export
@@ -220,10 +211,10 @@ public:
     TArray<FS_Galaxy> GalaxyDataArray;
 
     UPROPERTY()
-    TArray<FS_StarSystem> StarSystemDataArray;
+    TArray<FStarSystem> StarSystemDataArray;
 
     UPROPERTY()
-    TArray<FS_Star> StarDataArray;
+    TArray<FStarSystem> StarDataArray;
 
     UPROPERTY()
     TArray<FPlanet> PlanetDataArray;
@@ -267,8 +258,8 @@ protected:
     // Working row scratch
     // -----------------------------------------------------------------
     FS_Galaxy         GalaxyData;
-    FS_StarSystem     StarSystemData;
-    FS_Star           StarData;
+    FStarSystem       StarSystemData;
+    FStarSystem       StarData;
     FPlanet           PlanetData;
     FMoon             MoonData;
     FRegion           RegionData;
@@ -326,10 +317,10 @@ private:
     TMap<FString, FS_Galaxy> GalaxyByName;
 
     UPROPERTY()
-    TMap<FString, FS_StarSystem> StarSystemByName;
+    TMap<FString, FStarSystem> StarSystemByName;
 
     UPROPERTY()
-    TMap<FString, FS_Star> StarByName;
+    TMap<FString, FStarSystem> StarByName;
 
     UPROPERTY()
     TMap<FString, FPlanet> PlanetByName;

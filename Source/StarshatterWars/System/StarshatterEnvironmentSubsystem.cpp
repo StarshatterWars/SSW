@@ -307,7 +307,6 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 	ClearRuntimeCaches();
 	ResolveDataTables();
 	LoadGalaxyMap();
-	//LoadStarsystems();
 	CreateEnvironmentTables();
 
 	Galaxy::InitializeFromEnvironment(this);
@@ -1552,7 +1551,7 @@ void UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 		if (GalaxyRow.Name.IsEmpty())
 			continue;
 
-		FS_StarSystem SystemRow;
+		FStarSystem SystemRow;
 		SystemRow.SystemName = GalaxyRow.Name;
 
 		// Optional mapping
@@ -1564,13 +1563,13 @@ void UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 	}
 
 	UE_LOG(LogStarshatterEnvironment, Log,
-		TEXT("[Environment] Built %d FS_StarSystem rows from GalaxyDataArray."),
+		TEXT("[Environment] Built %d FStarSystem rows from GalaxyDataArray."),
 		StarSystemDataArray.Num());
 }
 
 void UStarshatterEnvironmentSubsystem::ReadStarsTable()
 {
-	ReadTableToArray<FS_Star>(
+	ReadTableToArray<FStarSystem>(
 		StarsDataTable,
 		StarDataArray,
 		TEXT("StarsDataTable (FS_Star)"));
@@ -1614,7 +1613,7 @@ void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 		if (!G.Name.IsEmpty())
 			GalaxyByName.Add(G.Name, G);
 
-	for (const FS_Star& S : StarDataArray)
+	for (const FStarSystem& S : StarDataArray)
 		if (!S.Name.IsEmpty())
 			StarByName.Add(S.Name, S);
 
@@ -1843,14 +1842,14 @@ const FS_Galaxy* UStarshatterEnvironmentSubsystem::FindGalaxyByName(const FStrin
 	return nullptr;
 }
 
-const FS_StarSystem* UStarshatterEnvironmentSubsystem::FindStarSystemByName(const FString& InName) const
+const FStarSystem* UStarshatterEnvironmentSubsystem::FindStarSystemByName(const FString& InName) const
 {
 	if (InName.IsEmpty())
 	{
 		return nullptr;
 	}
 
-	for (const FS_StarSystem& Row : StarSystemDataArray)
+	for (const FStarSystem& Row : StarSystemDataArray)
 	{
 		if (Row.SystemName.Equals(InName, ESearchCase::IgnoreCase))
 		{

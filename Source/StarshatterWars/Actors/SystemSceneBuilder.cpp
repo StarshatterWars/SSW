@@ -177,7 +177,7 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
     BodyActorMap.Empty();
 }
 
-bool ASystemSceneBuilder::ResolveStarSystemRow(FS_StarSystem& OutRow) const
+bool ASystemSceneBuilder::ResolveStarSystemRow(FStarSystem& OutRow) const
 {
     UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
     if (!Env)
@@ -187,7 +187,7 @@ bool ASystemSceneBuilder::ResolveStarSystemRow(FS_StarSystem& OutRow) const
         return false;
     }
 
-    const FS_StarSystem* Found = Env->FindStarSystemByName(TargetSystemName);
+    const FStarSystem* Found = Env->FindStarSystemByName(TargetSystemName);
     if (!Found)
     {
         UE_LOG(LogTemp, Warning,

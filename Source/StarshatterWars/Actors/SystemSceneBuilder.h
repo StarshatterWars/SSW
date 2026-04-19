@@ -189,7 +189,7 @@ public:
     }
 
 protected:
-    bool ResolveStarSystemRow(FS_StarSystem& OutRow) const;
+    bool ResolveStarSystemRow(FStarSystem& OutRow) const;
     bool ResolveGalaxyRow(FS_Galaxy& OutRow) const;
 
     StarSystem* ResolveRuntimeSystem() const;
