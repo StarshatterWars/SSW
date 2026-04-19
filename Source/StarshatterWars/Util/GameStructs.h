@@ -4451,3 +4451,6 @@ struct FStarshatterKeyMap
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Input")
 	TArray<FStarshatterInputBinding> Bindings;
 };
+
+static int pkg_id = 1000;
+static int dump_missions = 0;

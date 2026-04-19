@@ -47,9 +47,6 @@
 
 #include "Logging/LogMacros.h"
 
-static int pkg_id = 1000;
-static int dump_missions = 0;
-
 // +--------------------------------------------------------------------+
 
 static CombatGroup* FindCombatGroup(CombatGroup* G, ECOMBATGROUP_TYPE Type)
