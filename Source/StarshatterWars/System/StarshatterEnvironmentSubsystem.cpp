@@ -986,7 +986,7 @@ void UStarshatterEnvironmentSubsystem::ParseStarMap(TermStruct* val, const char*
 
 	ESPECTRAL_CLASS StarClass = ESPECTRAL_CLASS::G;
 
-	FS_StarMap NewStarMap;
+	FStarSystem NewStarMap;
 
 	// Reset per-star:
 	PlanetMapArray.Empty();

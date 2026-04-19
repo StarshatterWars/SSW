@@ -2185,7 +2185,7 @@ void StarSystem::HydrateFromEnvironment(
 		SetAmbientColor(OptionalSystemMeta->AmbientColor);
 	}
 
-	for (const FS_StarMap& StarRow : GalaxyRow.Stellar)
+	for (const FStarSystem& StarRow : GalaxyRow.Stellar)
 	{
 		OrbitalBody* StarBody = HydrateStar(StarRow);
 		if (!StarBody)
@@ -2230,7 +2230,7 @@ void StarSystem::HydrateFromEnvironment(
 	RecalculateRadius();
 }
 
-OrbitalBody* StarSystem::HydrateStar(const FS_StarMap& Row)
+OrbitalBody* StarSystem::HydrateStar(const FStarSystem& Row)
 {
 	OrbitalBody* StarBody = new OrbitalBody(
 		this,

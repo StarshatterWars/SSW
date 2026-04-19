@@ -1602,7 +1602,7 @@ struct FPlanet : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_StarMap : public FTableRowBase {
+struct FStarSystem : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -1642,7 +1642,7 @@ struct FS_StarMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FPlanet> Planet;
 
-	FS_StarMap() {
+	FStarSystem() {
 		Name = "";
 		SystemName = "";
 		Map = "";
@@ -1683,7 +1683,7 @@ struct FS_Galaxy : public FTableRowBase {
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TArray<FString> Link;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	TArray <FS_StarMap> Stellar;
+	TArray <FStarSystem> Stellar;
 
 	FS_Galaxy() {
 		Name = "";

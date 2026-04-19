@@ -747,7 +747,7 @@ void USSWGameInstance::DestroySystemOverview()
 	// OverviewRT = nullptr;
 }
 
-void USSWGameInstance::RebuildSystemOverview(const FS_StarMap& StarMap)
+void USSWGameInstance::RebuildSystemOverview(const FStarSystem& StarMap)
 {
 	if (!OverviewActor)
 	{
@@ -800,7 +800,7 @@ void USSWGameInstance::RebuildSystemOverview(const FS_StarMap& StarMap)
 
 void USSWGameInstance::EnsureSystemOverview(
 	UObject* Context,
-	const FS_StarMap& StarMap,
+	const FStarSystem& StarMap,
 	int32 Resolution)
 {
 	if (!Context) return;

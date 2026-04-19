@@ -250,7 +250,7 @@ static OrbitalBody* BuildPlanetFromMap(
 
 static OrbitalBody* BuildStarFromMap(
     StarSystem* System,
-    const FS_StarMap& StarRow)
+    const FStarSystem& StarRow)
 {
     if (!System)
     {

@@ -80,7 +80,7 @@ private:
 
     static OrbitalBody* BuildStar(
         StarSystem* System,
-        const FS_StarMap& Row,
+        const FStarSystem& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalBody* BuildPlanet(

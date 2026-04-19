@@ -275,7 +275,7 @@ protected:
     FS_TerrainRegion  TerrainRegionData;
 
     // Map format arrays
-    TArray<FS_StarMap>   StarMapArray;
+    TArray<FStarSystem>  StarMapArray;
     TArray<FPlanet>      PlanetMapArray;
     TArray<FMoon>        MoonMapArray;
     TArray<FRegion>      RegionMapArray;

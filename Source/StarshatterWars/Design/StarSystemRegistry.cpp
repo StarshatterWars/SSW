@@ -193,7 +193,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
     System->SetLocation(Row.Location);
     System->SetSequence(ToLegacyStarClass(Row.Class));
 
-    for (const FS_StarMap& StarRow : Row.Stellar)
+    for (const FStarSystem& StarRow : Row.Stellar)
     {
         OrbitalBody* StarBody = BuildStar(System, StarRow, Env);
         if (!StarBody)
@@ -241,7 +241,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
 
 OrbitalBody* StarSystemRegistry::BuildStar(
     StarSystem* System,
-    const FS_StarMap& Row,
+    const FStarSystem& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !Env)

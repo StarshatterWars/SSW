@@ -239,7 +239,7 @@ protected:
 private:
     int32 ToLegacyStarClass(ESPECTRAL_CLASS InClass) const;
 
-    OrbitalBody* HydrateStar(const FS_StarMap& Row);
+    OrbitalBody* HydrateStar(const FStarSystem& Row);
     OrbitalBody* HydratePlanet(OrbitalBody* ParentStar, const FPlanet& Row);
     OrbitalBody* HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row);
     OrbitalRegion* HydrateRegion(Orbital* Parent, const FRegion& Row);
