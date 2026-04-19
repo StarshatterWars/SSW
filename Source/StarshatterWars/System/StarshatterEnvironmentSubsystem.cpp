@@ -726,7 +726,7 @@ void UStarshatterEnvironmentSubsystem::ParseRegion(TermStruct* Val, const char* 
 	TArray<FString> LinksName;
 	LinksName.Reserve(8);
 
-	FS_RegionMap NewRegionData;
+	FRegion NewRegionData;
 
 	// ----------------------------
 	// Parse fields (order-independent)
@@ -1594,7 +1594,7 @@ void UStarshatterEnvironmentSubsystem::ReadMoonsTable()
 
 void UStarshatterEnvironmentSubsystem::ReadRegionsTable()
 {
-	ReadTableToArray<FS_Region>(
+	ReadTableToArray<FRegion>(
 		RegionsDataTable,
 		RegionDataArray,
 		TEXT("RegionsDataTable (FS_Region)"));
@@ -1626,7 +1626,7 @@ void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 		if (!M.Name.IsEmpty())
 			MoonByName.Add(M.Name, M);
 
-	for (const FS_Region& R : RegionDataArray)
+	for (const FRegion& R : RegionDataArray)
 	{
 		if (R.Name.IsEmpty())
 			continue;

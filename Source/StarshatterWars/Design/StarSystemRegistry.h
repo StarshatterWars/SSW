@@ -98,7 +98,7 @@ private:
     static OrbitalRegion* BuildRegion(
         StarSystem* System,
         Orbital* Parent,
-        const FS_RegionMap& Row,
+        const FRegion& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
 private:

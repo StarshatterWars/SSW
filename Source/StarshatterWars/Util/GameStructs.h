@@ -1432,7 +1432,7 @@ struct FS_TerrainRegion : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FS_RegionMap : public FTableRowBase {
+struct FRegion : public FTableRowBase {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -1454,7 +1454,7 @@ struct FS_RegionMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TEnumAsByte<EOrbitalType> Type;
 
-	FS_RegionMap() {
+	FRegion() {
 		Name = "";
 		Size = 1.0e6;
 		Orbit = 0.0;
@@ -1503,7 +1503,7 @@ struct FMoon : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EPlanetType  PlanetType = EPlanetType::Terran;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_RegionMap> Region; 
+	TArray<FRegion> Region; 
 
 	FMoon() {
 		Name = "";
@@ -1575,7 +1575,7 @@ struct FPlanet : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EPlanetType  PlanetType = EPlanetType::Terran;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_RegionMap> Region;
+	TArray<FRegion> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FMoon> Moon;
 
@@ -1638,7 +1638,7 @@ struct FS_StarMap : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EBodyUISizeClass  BodyType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_RegionMap> Region;
+	TArray<FRegion> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FPlanet> Planet;
 
@@ -1715,43 +1715,6 @@ struct FS_StarSky : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
-struct FS_Region : public FTableRowBase {
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Name;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FString> Link;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Size;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Orbit;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Grid;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	double Inclination;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Asteroids;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString Parent;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TEnumAsByte<EOrbitalType> Type;
-
-	FS_Region() {
-		Name = "";
-		Size = 1.0e6;
-		Orbit = 0.0;
-		Grid = 25000;
-		Inclination = 0;
-		Asteroids = 0;
-		Parent = "";
-		Type = EOrbitalType::NOTHING;
-	}
-};
-
-
-
-USTRUCT(BlueprintType)
 struct FS_Star : public FTableRowBase {
 	GENERATED_BODY()
 
@@ -1817,7 +1780,7 @@ struct FS_StarSystem : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FString> Link;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TArray<FS_Region> Region;
+	TArray<FRegion> Region;
 	
 	FS_StarSystem() {
 		SystemName = "";

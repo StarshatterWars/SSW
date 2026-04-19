@@ -62,7 +62,7 @@ static bool RegionAlreadyExists(StarSystem* System, const FString& RegionName)
 
 static OrbitalRegion* BuildRegionFromTable(
     StarSystem* System,
-    const FS_Region& RegionRow)
+    const FRegion& RegionRow)
 {
     if (!System || RegionRow.Name.IsEmpty())
     {
@@ -114,7 +114,7 @@ static OrbitalRegion* BuildRegionFromTable(
 
 static OrbitalRegion* BuildRegionFromMap(
     StarSystem* System,
-    const FS_RegionMap& RegionRow,
+    const FRegion& RegionRow,
     Orbital* Parent)
 {
     if (!System)
@@ -190,7 +190,7 @@ static OrbitalBody* BuildMoonFromMap(
 
     ParentPlanet->AddSatellite(Moon);
 
-    for (const FS_RegionMap& RegionRow : MoonRow.Region)
+    for (const FRegion& RegionRow : MoonRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, Moon);
     }
@@ -235,7 +235,7 @@ static OrbitalBody* BuildPlanetFromMap(
 
     ParentStar->AddSatellite(Planet);
 
-    for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+    for (const FRegion& RegionRow : PlanetRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, Planet);
     }
@@ -282,7 +282,7 @@ static OrbitalBody* BuildStarFromMap(
 
     System->AddBody(StarBody);
 
-    for (const FS_RegionMap& RegionRow : StarRow.Region)
+    for (const FRegion& RegionRow : StarRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, StarBody);
     }

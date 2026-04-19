@@ -232,7 +232,7 @@ public:
     TArray<FMoon> MoonDataArray;
 
     UPROPERTY()
-    TArray<FS_Region> RegionDataArray;
+    TArray<FRegion> RegionDataArray;
 
     UPROPERTY()
     TArray<FS_TerrainRegion> TerrainRegionsArray;
@@ -271,14 +271,14 @@ protected:
     FS_Star           StarData;
     FPlanet           PlanetData;
     FMoon             MoonData;
-    FS_Region         RegionData;
+    FRegion           RegionData;
     FS_TerrainRegion  TerrainRegionData;
 
     // Map format arrays
     TArray<FS_StarMap>   StarMapArray;
     TArray<FPlanet>      PlanetMapArray;
     TArray<FMoon>        MoonMapArray;
-    TArray<FS_RegionMap> RegionMapArray;
+    TArray<FRegion>      RegionMapArray;
 
     // Paths
     FString ProjectPath;
@@ -338,7 +338,7 @@ private:
     TMap<FString, FMoon> MoonByName;
 
     UPROPERTY()
-    TMap<FString, FS_Region> RegionByName;
+    TMap<FString, FRegion> RegionByName;
 
     UPROPERTY()
     TMap<FString, FS_TerrainRegion> TerrainRegionByName;

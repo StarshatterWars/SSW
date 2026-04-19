@@ -2193,7 +2193,7 @@ void StarSystem::HydrateFromEnvironment(
 			continue;
 		}
 
-		for (const FS_RegionMap& RegionRow : StarRow.Region)
+		for (const FRegion& RegionRow : StarRow.Region)
 		{
 			HydrateRegion(StarBody, RegionRow);
 		}
@@ -2206,7 +2206,7 @@ void StarSystem::HydrateFromEnvironment(
 				continue;
 			}
 
-			for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+			for (const FRegion& RegionRow : PlanetRow.Region)
 			{
 				HydrateRegion(PlanetBody, RegionRow);
 			}
@@ -2219,7 +2219,7 @@ void StarSystem::HydrateFromEnvironment(
 					continue;
 				}
 
-				for (const FS_RegionMap& RegionRow : MoonRow.Region)
+				for (const FRegion& RegionRow : MoonRow.Region)
 				{
 					HydrateRegion(MoonBody, RegionRow);
 				}
@@ -2315,7 +2315,7 @@ OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row
 	return MoonBody;
 }
 
-OrbitalRegion* StarSystem::HydrateRegion(Orbital* Parent, const FS_RegionMap& Row)
+OrbitalRegion* StarSystem::HydrateRegion(Orbital* Parent, const FRegion& Row)
 {
 	if (!Parent)
 	{
