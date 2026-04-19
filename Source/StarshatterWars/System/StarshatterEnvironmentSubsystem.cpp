@@ -1,20 +1,20 @@
 /*=============================================================================
-    Project:        Starshatter Wars
-    Studio:         Fractal Dev Games
-    Copyright:      (C) 2024-2026. All Rights Reserved.
+	Project:        Starshatter Wars
+	Studio:         Fractal Dev Games
+	Copyright:      (C) 2024-2026. All Rights Reserved.
 
-    SUBSYSTEM:      StarshatterWars (Unreal Engine)
-    FILE:           StarshatterEnvironmentSubsystem.cpp
-    AUTHOR:         Carlos Bott
+	SUBSYSTEM:      StarshatterWars (Unreal Engine)
+	FILE:           StarshatterEnvironmentSubsystem.cpp
+	AUTHOR:         Carlos Bott
 
-    OVERVIEW
-    ========
-    Implementation skeleton for UStarshatterEnvironmentSubsystem.
+	OVERVIEW
+	========
+	Implementation skeleton for UStarshatterEnvironmentSubsystem.
 
-    NOTE:
-    Parsing and hydration logic will be copied from the existing
-    UStarshatterGameDataSubsystem. This file intentionally provides the
-    lifecycle, load flow, and safe guardrails without duplicating parsing.
+	NOTE:
+	Parsing and hydration logic will be copied from the existing
+	UStarshatterGameDataSubsystem. This file intentionally provides the
+	lifecycle, load flow, and safe guardrails without duplicating parsing.
 =============================================================================*/
 
 #include "StarshatterEnvironmentSubsystem.h"
@@ -90,7 +90,7 @@ static EPlanetType ParsePlanetTypeToken(const FString& InToken)
 }
 
 template<typename TRowStruct>
-static void ReadTableToArray(
+static bool ReadTableToArray(
 	const UDataTable* Table,
 	TArray<TRowStruct>& OutArray,
 	const TCHAR* Label)
@@ -101,7 +101,7 @@ static void ReadTableToArray(
 	{
 		UE_LOG(LogStarshatterEnvironment, Error,
 			TEXT("[Environment] %s is null."), Label);
-		return;
+		return false;
 	}
 
 	if (Table->GetRowStruct() != TRowStruct::StaticStruct())
@@ -111,11 +111,8 @@ static void ReadTableToArray(
 			Label,
 			*GetNameSafe(TRowStruct::StaticStruct()),
 			*GetNameSafe(Table->GetRowStruct()));
-		return;
+		return false;
 	}
-
-
-
 
 	static const FString Context(TEXT("ReadTableToArray"));
 	const TArray<FName> RowNames = Table->GetRowNames();
@@ -136,6 +133,8 @@ static void ReadTableToArray(
 	UE_LOG(LogStarshatterEnvironment, Log,
 		TEXT("[Environment] Read %d rows from %s."),
 		OutArray.Num(), Label);
+
+	return true;
 }
 
 
@@ -210,10 +209,10 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 
 void UStarshatterEnvironmentSubsystem::Deinitialize()
 {
-    UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] Deinitialize"));
+	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] Deinitialize"));
 
-    Unload();
-    Super::Deinitialize();
+	Unload();
+	Super::Deinitialize();
 }
 
 void UStarshatterEnvironmentSubsystem::ResolveDataTables()
@@ -304,10 +303,18 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 		TEXT("[Environment] LoadAll (Full=%s)"),
 		bFull ? TEXT("true") : TEXT("false"));
 
+	//LoadGalaxyMap();
 	ClearRuntimeCaches();
 	ResolveDataTables();
-	LoadGalaxyMap();
 	CreateEnvironmentTables();
+
+	if (RuntimeStarSystems.Num() == 0)
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] LoadAll failed: no runtime star systems built"));
+		bLoaded = false;
+		return;
+	}
 
 	Galaxy::InitializeFromEnvironment(this);
 
@@ -399,7 +406,13 @@ void UStarshatterEnvironmentSubsystem::CreateEnvironmentTables()
 {
 	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] CreateEnvironmentTables"));
 
-	HydrateAllFromTables();
+	const bool bHydrateOk = HydrateAllFromTables();
+	if (!bHydrateOk)
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] CreateEnvironmentTables aborted: hydration failed. Registry left untouched."));
+		return;
+	}
 
 	// Clear any prior runtime registry ownership before rebuild:
 	StarSystemRegistry::Clear(true);
@@ -1480,15 +1493,66 @@ void UStarshatterEnvironmentSubsystem::ParseTerrain(TermStruct* val, const char*
 
 // +--------------------------------------------------------------------+
 
-void UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
+bool UStarshatterEnvironmentSubsystem::HydrateAllFromTables()
 {
 	ClearRuntimeCaches();
 
-	ReadGalaxyDataTable();
-	BuildStarSystemArrayFromGalaxy();
-	ReadRegionsTable();
+	if (!ReadGalaxyDataTable())
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] HydrateAllFromTables failed: GalaxyDataTable invalid"));
+		return false;
+	}
+
+	if (!BuildStarSystemArrayFromGalaxy())
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] HydrateAllFromTables failed: StarSystemDataArray build failed"));
+		return false;
+	}
+
+	if (!ReadRegionsTable())
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] HydrateAllFromTables failed: RegionsDataTable invalid"));
+		return false;
+	}
+
+	// Optional tables may be absent; read if configured.
+	if (StarsDataTable)
+	{
+		ReadStarsTable();
+	}
+	if (PlanetsDataTable)
+	{
+		ReadPlanetsTable();
+	}
+	if (MoonsDataTable)
+	{
+		ReadMoonsTable();
+	}
+	if (TerrainRegionsDataTable)
+	{
+		ReadTerrainRegionsTable();
+	}
 
 	BuildEnvironmentCaches();
+
+	if (GalaxyDataArray.Num() == 0)
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] HydrateAllFromTables failed: GalaxyDataArray is empty"));
+		return false;
+	}
+
+	if (StarSystemDataArray.Num() == 0)
+	{
+		UE_LOG(LogStarshatterEnvironment, Error,
+			TEXT("[Environment] HydrateAllFromTables failed: StarSystemDataArray is empty"));
+		return false;
+	}
+
+	return true;
 }
 
 void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
@@ -1534,22 +1598,24 @@ void UStarshatterEnvironmentSubsystem::ClearRuntimeCaches()
 		TEXT("[Environment] ClearRuntimeCaches complete"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadGalaxyDataTable()
+bool UStarshatterEnvironmentSubsystem::ReadGalaxyDataTable()
 {
-	ReadTableToArray<FS_Galaxy>(
+	return ReadTableToArray<FS_Galaxy>(
 		GalaxyDataTable,
 		GalaxyDataArray,
 		TEXT("GalaxyDataTable (FS_Galaxy)"));
 }
 
-void UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
+bool UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 {
 	StarSystemDataArray.Reset();
 
 	for (const FS_Galaxy& GalaxyRow : GalaxyDataArray)
 	{
 		if (GalaxyRow.Name.IsEmpty())
+		{
 			continue;
+		}
 
 		FStarSystem SystemRow;
 		SystemRow.SystemName = GalaxyRow.Name;
@@ -1565,43 +1631,45 @@ void UStarshatterEnvironmentSubsystem::BuildStarSystemArrayFromGalaxy()
 	UE_LOG(LogStarshatterEnvironment, Log,
 		TEXT("[Environment] Built %d FStarSystem rows from GalaxyDataArray."),
 		StarSystemDataArray.Num());
+
+	return StarSystemDataArray.Num() > 0;
 }
 
-void UStarshatterEnvironmentSubsystem::ReadStarsTable()
+bool UStarshatterEnvironmentSubsystem::ReadStarsTable()
 {
-	ReadTableToArray<FStarSystem>(
+	return ReadTableToArray<FStarSystem>(
 		StarsDataTable,
 		StarDataArray,
 		TEXT("StarsDataTable (FS_Star)"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadPlanetsTable()
+bool UStarshatterEnvironmentSubsystem::ReadPlanetsTable()
 {
-	ReadTableToArray<FPlanet>(
+	return ReadTableToArray<FPlanet>(
 		PlanetsDataTable,
 		PlanetDataArray,
 		TEXT("PlanetsDataTable (FS_Planet)"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadMoonsTable()
+bool UStarshatterEnvironmentSubsystem::ReadMoonsTable()
 {
-	ReadTableToArray<FMoon>(
+	return ReadTableToArray<FMoon>(
 		MoonsDataTable,
 		MoonDataArray,
 		TEXT("MoonsDataTable (FS_Moon)"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadRegionsTable()
+bool UStarshatterEnvironmentSubsystem::ReadRegionsTable()
 {
-	ReadTableToArray<FRegion>(
+	return ReadTableToArray<FRegion>(
 		RegionsDataTable,
 		RegionDataArray,
-		TEXT("RegionsDataTable (FS_Region)"));
+		TEXT("RegionsDataTable (FRegion)"));
 }
 
-void UStarshatterEnvironmentSubsystem::ReadTerrainRegionsTable()
+bool UStarshatterEnvironmentSubsystem::ReadTerrainRegionsTable()
 {
-	ReadTableToArray<FS_TerrainRegion>(
+	return ReadTableToArray<FS_TerrainRegion>(
 		TerrainRegionsDataTable,
 		TerrainRegionsArray,
 		TEXT("TerrainRegionsDataTable (FS_TerrainRegion)"));
@@ -1609,13 +1677,35 @@ void UStarshatterEnvironmentSubsystem::ReadTerrainRegionsTable()
 
 void UStarshatterEnvironmentSubsystem::BuildEnvironmentCaches()
 {
+	GalaxyByName.Reset();
+	StarSystemByName.Reset();
+	StarByName.Reset();
+	PlanetByName.Reset();
+	MoonByName.Reset();
+	RegionByName.Reset();
+	TerrainRegionByName.Reset();
+	RegionParentByName.Reset();
+	RegionChildrenByParent.Reset();
+
 	for (const FS_Galaxy& G : GalaxyDataArray)
 		if (!G.Name.IsEmpty())
 			GalaxyByName.Add(G.Name, G);
 
+	for (const FStarSystem& S : StarSystemDataArray)
+	{
+		if (!S.SystemName.IsEmpty())
+		{
+			StarSystemByName.Add(S.SystemName, S);
+		}
+	}
+
 	for (const FStarSystem& S : StarDataArray)
+	{
 		if (!S.Name.IsEmpty())
+		{
 			StarByName.Add(S.Name, S);
+		}
+	}
 
 	for (const FPlanet& P : PlanetDataArray)
 		if (!P.Name.IsEmpty())

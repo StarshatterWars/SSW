@@ -25,6 +25,7 @@
 #include "StarshatterEnvironmentSubsystem.h"
 
 TMap<FName, StarSystem*> StarSystemRegistry::SystemsByName;
+TArray<StarSystem*> StarSystemRegistry::OwnedSystems;
 
 // -----------------------------------------------------------------------------
 // Lifecycle
@@ -32,14 +33,32 @@ TMap<FName, StarSystem*> StarSystemRegistry::SystemsByName;
 
 void StarSystemRegistry::Clear(bool bDeleteSystems)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Registry] Clear: OwnedSystems=%d Lookups=%d Delete=%s"),
+        OwnedSystems.Num(),
+        SystemsByName.Num(),
+        bDeleteSystems ? TEXT("true") : TEXT("false"));
+
     if (bDeleteSystems)
     {
-        for (TPair<FName, StarSystem*>& Pair : SystemsByName)
+        for (int32 Index = 0; Index < OwnedSystems.Num(); ++Index)
         {
-            delete Pair.Value;
+            StarSystem*& System = OwnedSystems[Index];
+            if (!System)
+            {
+                continue;
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Registry] Destroying Star System %s"),
+                ANSI_TO_TCHAR(System->GetName()));
+
+            delete System;
+            System = nullptr;
         }
     }
 
+    OwnedSystems.Empty();
     SystemsByName.Empty();
 }
 
@@ -52,6 +71,11 @@ void StarSystemRegistry::RegisterSystem(const FName& RowName, StarSystem* System
     if (!RowName.IsNone() && System)
     {
         SystemsByName.Add(RowName, System);
+
+        if (!OwnedSystems.Contains(System))
+        {
+            OwnedSystems.Add(System);
+        }
     }
 }
 
@@ -60,6 +84,11 @@ void StarSystemRegistry::RegisterSystem(const FString& Name, StarSystem* System)
     if (!Name.IsEmpty() && System)
     {
         SystemsByName.Add(FName(*Name), System);
+
+        if (!OwnedSystems.Contains(System))
+        {
+            OwnedSystems.Add(System);
+        }
     }
 }
 
@@ -118,12 +147,17 @@ bool StarSystemRegistry::Has(const char* Name)
 
 int32 StarSystemRegistry::Num()
 {
-    return SystemsByName.Num();
+    return OwnedSystems.Num();
 }
 
 const TMap<FName, StarSystem*>& StarSystemRegistry::GetAll()
 {
     return SystemsByName;
+}
+
+const TArray<StarSystem*>& StarSystemRegistry::GetOwnedSystems()
+{
+    return OwnedSystems;
 }
 
 // -----------------------------------------------------------------------------

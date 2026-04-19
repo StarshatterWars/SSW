@@ -16,10 +16,10 @@
 
         - Galaxy definitions (FS_Galaxy)
         - Star systems (FStarSystem)
-        - Stars (FS_Star)
-        - Planets (FS_Planet)
-        - Moons (FS_Moon)
-        - Regions (FS_Region)
+        - Stars (FStarystem)
+        - Planets (FPlanet)
+        - Moons (FMoon)
+        - Regions (FRegion)
         - Terrain regions (FS_TerrainRegion)
         - Campaign zones (FS_CampaignZone)
 
@@ -128,16 +128,16 @@ public:
     // ===================================================================== 
     // Runtime Simulation Time System 
     // ===================================================================== 
-    void InitSimulationBaseTime(); 
-    
-    void RegisterStarSystem(StarSystem* System); 
- 
+    void InitSimulationBaseTime();
+
+    void RegisterStarSystem(StarSystem* System);
+
     void RegisterStar(OrbitalBody* Body);
     void RegisterPlanet(OrbitalBody* Body);
     void RegisterMoon(OrbitalBody* Body);
     void RegisterRegion(OrbitalRegion* Region);
-    
-    double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
+
+    double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; }
     bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
     void TickEnvironmentTime(double DeltaSeconds);
 
@@ -149,7 +149,7 @@ public:
     double GetSimulationClockSeconds() const { return (double)SimulationClockMs / 1000.0; }
 
     EGameMode GetGameMode() { return game_mode; }
-	void      SetGameMode(EGameMode mode) { game_mode = mode; }
+    void      SetGameMode(EGameMode mode) { game_mode = mode; }
 
     // =====================================================================
     // Project path / utility
@@ -278,8 +278,8 @@ protected:
     // ===================================================================== 
     // Runtime Simulation Time System 
     // ===================================================================== 
-    
-    bool bBaseTimeInitialized = false; 
+
+    bool bBaseTimeInitialized = false;
     double EnvironmentBaseTime = 0.0;
     int64 SimulationClockMs = 0;
 
@@ -296,15 +296,15 @@ private:
     // ==================================================================== =
     // DT -> runtime hydration
     // =====================================================================
-    void HydrateAllFromTables();
+    bool HydrateAllFromTables();
 
-    void ReadGalaxyDataTable();
-    void BuildStarSystemArrayFromGalaxy();
-    void ReadStarsTable();
-    void ReadPlanetsTable();
-    void ReadMoonsTable();
-    void ReadRegionsTable();
-    void ReadTerrainRegionsTable();
+    bool ReadGalaxyDataTable();
+    bool BuildStarSystemArrayFromGalaxy();
+    bool ReadStarsTable();
+    bool ReadPlanetsTable();
+    bool ReadMoonsTable();
+    bool ReadRegionsTable();
+    bool ReadTerrainRegionsTable();
 
     void BuildEnvironmentCaches();
 

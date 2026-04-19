@@ -170,18 +170,48 @@ StarSystem::StarSystem(const char* sys_name, FVector l, int iff, int s)
 
 StarSystem::~StarSystem()
 {
-	UE_LOG(LogTemp, Log, TEXT("   Destroying Star System %s"), ANSI_TO_TCHAR((const char*)name));
+	UE_LOG(LogTemp, Log,
+		TEXT("   Destroying Star System %s"),
+		ANSI_TO_TCHAR((const char*)name));
 
 	if (instantiated) {
 		Deactivate();
 		Destroy();
 	}
 
-	bodies.destroy();
-	regions.destroy();
-	all_regions.clear(); // do not destroy these!
+	// SAFE DELETE: bodies (sole owner)
+	{
+		ListIter<OrbitalBody> BodyIter = bodies;
+		while (++BodyIter)
+		{
+			OrbitalBody* Body = BodyIter.value();
+			if (Body)
+			{
+				delete Body;
+			}
+		}
+		bodies.clear();
+	}
+
+	// SAFE DELETE: root regions only
+	{
+		ListIter<OrbitalRegion> RegionIter = regions;
+		while (++RegionIter)
+		{
+			OrbitalRegion* Region = RegionIter.value();
+			if (Region)
+			{
+				delete Region;
+			}
+		}
+		regions.clear();
+	}
+
+	// NON-OWNING CACHE
+	all_regions.clear();
 
 	delete center;
+	center = nullptr;
 }
 
 // +--------------------------------------------------------------------+
@@ -1883,7 +1913,10 @@ Orbital::Orbital(StarSystem* s, const char* n, OrbitalType t, double m, double r
 Orbital::~Orbital()
 {
 	delete rep;
-	regions.destroy();
+	rep = nullptr;
+
+	// DO NOT DELETE regions here (owned by StarSystem)
+	regions.clear();
 }
 
 // +--------------------------------------------------------------------+
@@ -1963,7 +1996,8 @@ OrbitalBody::OrbitalBody(StarSystem* s, const char* n, OrbitalType t, double m, 
 
 OrbitalBody::~OrbitalBody()
 {
-	satellites.destroy();
+	// DO NOT DELETE satellites here
+	satellites.clear();
 }
 
 // +--------------------------------------------------------------------+
@@ -2012,7 +2046,8 @@ OrbitalRegion::OrbitalRegion(StarSystem* s, const char* n, double m, double r, d
 
 OrbitalRegion::~OrbitalRegion()
 {
-	links.destroy();
+	// DO NOT DELETE links here
+	links.clear();
 }
 
 void StarSystem::SetSimulationTime(double t)
@@ -2141,8 +2176,35 @@ void StarSystem::ResetHydratedContents()
 		Destroy();
 	}
 
-	bodies.destroy();
-	regions.destroy();
+	// SAFE DELETE: bodies
+	{
+		ListIter<OrbitalBody> BodyIter = bodies;
+		while (++BodyIter)
+		{
+			OrbitalBody* Body = BodyIter.value();
+			if (Body)
+			{
+				delete Body;
+			}
+		}
+		bodies.clear();
+	}
+
+	// SAFE DELETE: root regions only
+	{
+		ListIter<OrbitalRegion> RegionIter = regions;
+		while (++RegionIter)
+		{
+			OrbitalRegion* Region = RegionIter.value();
+			if (Region)
+			{
+				delete Region;
+			}
+		}
+		regions.clear();
+	}
+
+	// NON-OWNING CACHE
 	all_regions.clear();
 }
 

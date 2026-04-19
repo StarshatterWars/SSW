@@ -20,10 +20,12 @@
 #include "Starshatter.h"
 
 #include "Game.h"
+#include "List.h"
 
 #include "StarshatterEnvironmentSubsystem.h"
 #include "GameStructs.h"
 #include "GameStructs_System.h"
+#include "StarSystemRegistry.h"
 
 #include "Math/Vector.h"
 #include "Logging/LogMacros.h"
@@ -308,14 +310,13 @@ Galaxy::Galaxy(const char* n)
 Galaxy::~Galaxy()
 {
     UE_LOG(LogStarshatterWarsGalaxy, Log, TEXT("DESTROYING GALAXY %s"), ANSI_TO_TCHAR((const char*)name));
-    systems.destroy();
-    stars.destroy();
+    systems.clear();
+    stars.clear();
 }
 
 // +--------------------------------------------------------------------+
 
-void
-Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
+void Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
 {
     if (galaxy) {
         delete galaxy;
@@ -323,6 +324,14 @@ Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
     }
 
     galaxy = new Galaxy("Galaxy");
+
+    if (!galaxy)
+    {
+        UE_LOG(LogStarshatterWarsGalaxy, Error,
+            TEXT("[Galaxy] InitializeFromEnvironment: failed to allocate galaxy"));
+        return;
+    }
+
     galaxy->LoadFromEnvironmentSubsystem(Env);
 }
 
@@ -344,8 +353,8 @@ Galaxy::GetInstance()
 void
 Galaxy::ClearSystems()
 {
-    systems.destroy();
-    stars.destroy();
+    systems.clear();
+    stars.clear();
     radius = 10;
 }
 

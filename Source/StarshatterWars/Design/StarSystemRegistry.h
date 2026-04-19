@@ -66,6 +66,7 @@ public:
     static int32 Num();
 
     static const TMap<FName, StarSystem*>& GetAll();
+    static const TArray<StarSystem*>& GetOwnedSystems();
 
 private:
 
@@ -103,4 +104,5 @@ private:
 
 private:
     static TMap<FName, StarSystem*> SystemsByName;
+    static TArray<StarSystem*> OwnedSystems;
 };
