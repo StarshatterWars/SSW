@@ -26,6 +26,9 @@ struct FCampaignSceneSpawnedActor
 
     UPROPERTY()
     FVector SpawnLocation = FVector::ZeroVector;
+
+    UPROPERTY()
+    int32 HeadingDegrees = 0;
 };
 
 UCLASS()
@@ -59,7 +62,8 @@ protected:
     AActor* SpawnSceneElementActor(
         const FString& ElementName,
         const FString& DesignName,
-        const FVector& WorldLocation);
+        const FVector& WorldLocation,
+        int32 HeadingDegrees);
 
     FString ResolveModelNameForDesign(const FString& DesignName) const;
     FString ResolveMeshPathForDesign(const FString& DesignName) const;
@@ -67,6 +71,7 @@ protected:
 
     FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
     ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
+
     bool ResolveRegionAnchorLocation(
         const FString& RegionName,
         FVector& OutWorldLocation) const;

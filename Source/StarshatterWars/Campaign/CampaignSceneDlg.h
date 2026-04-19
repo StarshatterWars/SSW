@@ -18,7 +18,6 @@ class USoundBase;
 class UImage;
 class UTexture2D;
 class ASystemSceneBuilder;
-class ACampaignSceneActor;
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -95,8 +94,7 @@ protected:
     void ExecuteCameraEvent(const FS_MissionEvent& Event);
     void DebugCameraEventTarget(const FS_MissionEvent& Event);
     ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
-    ACampaignSceneActor* ResolveCampaignSceneActor() const;
-    const FS_CampaignMission* ResolveMissionDataForScene(const FString& SceneName) const;
+
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -150,6 +148,5 @@ protected:
     bool bSceneRunning = false;
 
     int32 CurrentCampaignNumber = 0;
-
 
 };

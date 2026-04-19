@@ -11,6 +11,7 @@
 
     - Resolves target system from Campaign/Mission
     - Ensures a SystemSceneBuilder exists (find or spawn)
+    - Ensures a CampaignSceneActor exists (find or spawn)
     - Configures builder and triggers build
 */
 
@@ -21,6 +22,7 @@
 #include "SystemLevelScriptActor.generated.h"
 
 class ASystemSceneBuilder;
+class ACampaignSceneActor;
 
 UCLASS()
 class STARSHATTERWARS_API ASystemLevelScriptActor : public ALevelScriptActor
@@ -48,10 +50,20 @@ public:
     FString ResolveStartupSystemName() const;
 
     UFUNCTION(BlueprintPure, Category = "System")
-    ASystemSceneBuilder* GetSystemSceneBuilder() const { return CachedBuilder.Get(); }
+    ASystemSceneBuilder* GetSystemSceneBuilder() const
+    {
+        return CachedBuilder.Get();
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Scene")
+    ACampaignSceneActor* GetCampaignSceneActor() const
+    {
+        return CachedSceneActor.Get();
+    }
 
 protected:
     ASystemSceneBuilder* ResolveBuilder();
+    ACampaignSceneActor* ResolveSceneActor();
 
 protected:
     UPROPERTY(EditInstanceOnly, Category = "System")
@@ -82,6 +94,28 @@ protected:
     FString DefaultSystemName = TEXT("Solus");
 
 protected:
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    bool bAutoFindSceneActor = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    bool bAutoSpawnSceneActorIfMissing = true;
+
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    TSubclassOf<ACampaignSceneActor> SceneActorClass;
+
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    FVector SceneActorSpawnLocation = FVector::ZeroVector;
+
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    FRotator SceneActorSpawnRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(EditInstanceOnly, Category = "Scene")
+    TObjectPtr<ACampaignSceneActor> SceneActorOverride = nullptr;
+
+protected:
     UPROPERTY(VisibleInstanceOnly, Category = "Runtime")
     TObjectPtr<ASystemSceneBuilder> CachedBuilder = nullptr;
+
+    UPROPERTY(VisibleInstanceOnly, Category = "Runtime")
+    TObjectPtr<ACampaignSceneActor> CachedSceneActor = nullptr;
 };
