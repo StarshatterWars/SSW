@@ -704,7 +704,7 @@ void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
         }
         else if (Event.EventType == MISSIONEVENT_TYPE::CAMERA)
         {
-            DebugCameraEventTarget(Event);
+            ExecuteCameraEvent(Event);
         }
         else
         {
@@ -963,13 +963,33 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     if (!Event.EventTarget.IsEmpty())
     {
+        FString RegionName;
+        if (ResolveElementRegionForTarget(Event.EventTarget, RegionName))
+        {
+            const bool bFocusedRegion = Builder->FocusCameraOnBodyByName(
+                RegionName,
+                Event.EventPoint,
+                0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: Region focus Target='%s' Region='%s' result=%s"),
+                *Event.EventTarget,
+                *RegionName,
+                bFocusedRegion ? TEXT("true") : TEXT("false"));
+
+            if (bFocusedRegion)
+            {
+                return;
+            }
+        }
+
         const bool bFocused = Builder->FocusCameraOnBodyByName(
             Event.EventTarget,
             Event.EventPoint,
             0.0f);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: Focus target '%s' result=%s"),
+            TEXT("[SceneDlg] ExecuteCameraEvent: Direct target focus '%s' result=%s"),
             *Event.EventTarget,
             bFocused ? TEXT("true") : TEXT("false"));
 
@@ -1076,4 +1096,67 @@ void UCampaignSceneDlg::FinishCutscene()
         Manager->HideCmpSceneDlg();
         Manager->ShowCmdDlg();
     }   
+}
+bool UCampaignSceneDlg::ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const
+{
+    OutRegionName.Empty();
+
+    const FString SearchName = TargetName.TrimStartAndEnd();
+    if (SearchName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveElementRegionForTarget: empty target"));
+        return false;
+    }
+
+    const FS_MissionElement* FirstDesignMatch = nullptr;
+
+    for (const FS_MissionElement& Elem : ActiveMissionData.Element)
+    {
+        const FString ElemName = Elem.Name.TrimStartAndEnd();
+        const FString ElemDesign = Elem.Design.TrimStartAndEnd();
+        const FString ElemRegion = Elem.RegionName.TrimStartAndEnd();
+
+        if (ElemRegion.IsEmpty())
+        {
+            continue;
+        }
+
+        if (ElemName.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            OutRegionName = ElemRegion;
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ResolveElementRegionForTarget: exact name match Target='%s' -> Region='%s'"),
+                *SearchName,
+                *OutRegionName);
+
+            return true;
+        }
+
+        if (!FirstDesignMatch &&
+            !ElemDesign.IsEmpty() &&
+            ElemDesign.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            FirstDesignMatch = &Elem;
+        }
+    }
+
+    if (FirstDesignMatch)
+    {
+        OutRegionName = FirstDesignMatch->RegionName.TrimStartAndEnd();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveElementRegionForTarget: design match Target='%s' -> Region='%s'"),
+            *SearchName,
+            *OutRegionName);
+
+        return !OutRegionName.IsEmpty();
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ResolveElementRegionForTarget: no region found for Target='%s'"),
+        *SearchName);
+
+    return false;
 }

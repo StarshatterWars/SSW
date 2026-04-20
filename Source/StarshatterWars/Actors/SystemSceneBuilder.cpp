@@ -24,6 +24,7 @@
 #include "Orbital.h"
 #include "OrbitalBody.h"
 #include "OrbitalRegion.h"
+#include "GasGiantActor.h"
 
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
@@ -799,7 +800,23 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
         }
     }
 
-    Spawned->SetActorScale3D(FVector(VisualRadiusUnits));
+    if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
+    {
+        Spawned->SetActorScale3D(FVector(1.0f));
+
+        const float GasGiantRadiusForBP = FMath::Max(1.0f, VisualRadiusUnits);
+        GasGiant->SetPlanetRadius(GasGiantRadiusForBP);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnBodyActor: Gas giant '%s' VisualRadiusUnits=%.2f BPRadius=%.2f"),
+            *BodyName,
+            VisualRadiusUnits,
+            GasGiantRadiusForBP);
+    }
+    else
+    {
+        Spawned->SetActorScale3D(FVector(VisualRadiusUnits));
+    }
 
     if (ParentActor)
     {
@@ -819,11 +836,11 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] Spawned '%s' Actor=%s Loc=%s Scale=%.2f Parent=%s bIsStar=%s bIsMoon=%s"),
+            TEXT("[SystemSceneBuilder] Spawned '%s' Actor=%s Loc=%s Scale=%s Parent=%s bIsStar=%s bIsMoon=%s"),
             *FullName,
             *GetNameSafe(Spawned),
             *WorldLocation.ToString(),
-            VisualRadiusUnits,
+            *Spawned->GetActorScale3D().ToString(),
             *GetNameSafe(ParentActor),
             bIsStar ? TEXT("true") : TEXT("false"),
             bIsMoon ? TEXT("true") : TEXT("false"));
@@ -1531,20 +1548,32 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
         return false;
     }
 
-    const FVector FocusPoint = FoundBody.SpawnLocation;
-
     FVector SceneOffset = ConvertLegacyCameraOffsetToSceneOffset(CameraOffset);
+    
+    FVector FocusPoint = FoundBody.SpawnLocation;
+
+    if (!FoundBody.bIsOrbit)
+    {
+        const float Radius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
+
+        // push focus point toward camera slightly (surface bias)
+        const FVector ViewDir = SceneOffset.GetSafeNormal();
+        const float SurfaceBias = Radius * 0.85f; // tweak: 0.5 - 0.8 range
+
+        FocusPoint += ViewDir * SurfaceBias;
+    }
 
     const bool bIsPlanetOrMoon =
         !FoundBody.bIsOrbit &&
-        !FoundBody.BodyName.Contains(TEXT("Luxor"), ESearchCase::IgnoreCase);
+        (FoundBody.bIsMoon || FoundBody.ParentActor != nullptr);
 
     if (bIsPlanetOrMoon)
     {
         SceneOffset *= ScaleSettings.LegacyPlanetCameraFactor;
 
-        const float MinPlanetCameraDistance = 600.0f;
-        const float MaxPlanetCameraDistance = 3500.0f;
+        const float VisualRadius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
+        const float MinPlanetCameraDistance = FMath::Max(VisualRadius * 4.5f, 1200.0f);
+        const float MaxPlanetCameraDistance = FMath::Max(VisualRadius * 14.0f, 8000.0f);
 
         const float Dist = SceneOffset.Size();
         if (Dist > KINDA_SMALL_NUMBER)
@@ -1556,6 +1585,10 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
                 MaxPlanetCameraDistance);
 
             SceneOffset = Dir * ClampedDist;
+        }
+        else
+        {
+            SceneOffset = FVector(-MinPlanetCameraDistance, -MinPlanetCameraDistance * 0.20f, MinPlanetCameraDistance * 0.60f);
         }
     }
 
@@ -1576,11 +1609,12 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: Target='%s' Focus=%s LegacyOffset=%s SceneOffset=%s PlanetOrMoon=%s Camera=%s Rotation=%s Blend=%.2f"),
+        TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: Target='%s' Focus=%s LegacyOffset=%s SceneOffset=%s VisualRadius=%.2f PlanetOrMoon=%s Camera=%s Rotation=%s Blend=%.2f"),
         *BodyName,
         *FocusPoint.ToString(),
         *CameraOffset.ToString(),
         *SceneOffset.ToString(),
+        FoundBody.VisualRadiusUnits,
         bIsPlanetOrMoon ? TEXT("true") : TEXT("false"),
         *CameraLocation.ToString(),
         *CameraRotation.ToString(),
@@ -1694,13 +1728,35 @@ bool ASystemSceneBuilder::DebugFocusCameraOnBodyByName(
     }
 
     const FVector FocusPoint = FoundBody.SpawnLocation;
-
     FVector SceneOffset = ConvertLegacyCameraOffsetToSceneOffset(CameraOffset);
 
-    const bool bIsPlanetOrMoon = !FoundBody.bIsOrbit && !FoundBody.BodyName.Contains(TEXT("Luxor"), ESearchCase::IgnoreCase);
+    const bool bIsPlanetOrMoon =
+        !FoundBody.bIsOrbit &&
+        (FoundBody.bIsMoon || FoundBody.ParentActor != nullptr);
+
     if (bIsPlanetOrMoon)
     {
         SceneOffset *= ScaleSettings.LegacyPlanetCameraFactor;
+
+        const float VisualRadius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
+        const float MinPlanetCameraDistance = FMath::Max(VisualRadius * 4.5f, 1200.0f);
+        const float MaxPlanetCameraDistance = FMath::Max(VisualRadius * 14.0f, 8000.0f);
+
+        const float Dist = SceneOffset.Size();
+        if (Dist > KINDA_SMALL_NUMBER)
+        {
+            const FVector Dir = SceneOffset.GetSafeNormal();
+            const float ClampedDist = FMath::Clamp(
+                Dist,
+                MinPlanetCameraDistance,
+                MaxPlanetCameraDistance);
+
+            SceneOffset = Dir * ClampedDist;
+        }
+        else
+        {
+            SceneOffset = FVector(-MinPlanetCameraDistance, -MinPlanetCameraDistance * 0.20f, MinPlanetCameraDistance * 0.60f);
+        }
     }
 
     if (SceneOffset.IsNearlyZero())
@@ -1720,11 +1776,12 @@ bool ASystemSceneBuilder::DebugFocusCameraOnBodyByName(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] DebugFocusCameraOnBodyByName: Target='%s' Focus=%s LegacyOffset=%s SceneOffset=%s PlanetOrMoon=%s Camera=%s Rotation=%s"),
+        TEXT("[SystemSceneBuilder] DebugFocusCameraOnBodyByName: Target='%s' Focus=%s LegacyOffset=%s SceneOffset=%s VisualRadius=%.2f PlanetOrMoon=%s Camera=%s Rotation=%s"),
         *BodyName,
         *FocusPoint.ToString(),
         *CameraOffset.ToString(),
         *SceneOffset.ToString(),
+        FoundBody.VisualRadiusUnits,
         bIsPlanetOrMoon ? TEXT("true") : TEXT("false"),
         *CameraLocation.ToString(),
         *CameraRotation.ToString());

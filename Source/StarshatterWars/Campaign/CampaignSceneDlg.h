@@ -94,7 +94,7 @@ protected:
     void ExecuteCameraEvent(const FS_MissionEvent& Event);
     void DebugCameraEventTarget(const FS_MissionEvent& Event);
     ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
-
+    bool ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const;
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
