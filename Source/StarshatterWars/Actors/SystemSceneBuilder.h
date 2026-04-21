@@ -11,6 +11,7 @@ class StarSystem;
 class OrbitalBody;
 class OrbitalRegion;
 class ACameraActor;
+class ASkyLight;
 
 UENUM(BlueprintType)
 enum class ESystemSceneSource : uint8
@@ -230,6 +231,8 @@ public:
         const FString& RegionName,
         FSpawnedSystemRegion& OutRegion) const;
 
+    void SpawnSkyLight();
+
     bool GetRegionWorldLocationByName(
         const FString& RegionName,
         FVector& OutWorldLocation) const;
@@ -428,6 +431,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime")
     FString LastResolvedName;
+
+    UPROPERTY()
+    ASkyLight* SceneSkyLight = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime")
     TArray<FSpawnedSystemBody> SpawnedBodies;

@@ -1372,7 +1372,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	//InitializeCampaignData();
+	InitializeCampaignData();
 	ReadCampaignData();
 	
 	ReadCombatRosterData();

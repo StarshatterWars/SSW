@@ -27,6 +27,10 @@
 #include "OrbitalRegion.h"
 #include "GasGiantActor.h"
 
+#include "Engine/SkyLight.h"
+#include "Components/SkyLightComponent.h"
+#include "Engine/TextureCube.h"
+
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
 
@@ -84,6 +88,7 @@ void ASystemSceneBuilder::BeginPlay()
     }
 
     bAnimateBodies = false;
+    SpawnSkyLight();
 }
 
 void ASystemSceneBuilder::Tick(float DeltaTime)
@@ -2218,3 +2223,68 @@ bool ASystemSceneBuilder::GetRegionByName(
     return false;
 }
 
+void ASystemSceneBuilder::SpawnSkyLight()
+{
+    // Prevent duplicate skylights
+    if (SceneSkyLight)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnSkyLight: already exists"));
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnSkyLight: World is null"));
+        return;
+    }
+
+    // Spawn actor
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    SceneSkyLight = World->SpawnActor<ASkyLight>(
+        ASkyLight::StaticClass(),
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        Params);
+
+    if (!SceneSkyLight)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnSkyLight: spawn failed"));
+        return;
+    }
+
+    // Get component
+    USkyLightComponent* SkyComp = SceneSkyLight->GetLightComponent();
+    if (!SkyComp)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnSkyLight: SkyLightComponent missing"));
+        return;
+    }
+
+    // Mobility (required for runtime scenes)
+    SkyComp->SetMobility(EComponentMobility::Movable);
+
+    // Use captured scene (no cubemap required)
+    SkyComp->SourceType = ESkyLightSourceType::SLS_CapturedScene;
+
+    // Global ambient strength
+    SkyComp->Intensity = 0.15f;
+
+    // Important for space scenes (prevents weird ground lighting)
+    SkyComp->bLowerHemisphereIsBlack = true;
+
+    // Ensure it updates immediately
+    SkyComp->RecaptureSky();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] SpawnSkyLight: created intensity=%.2f"),
+        SkyComp->Intensity);
+}
