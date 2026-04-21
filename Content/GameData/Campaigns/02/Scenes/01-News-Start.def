@@ -307,10 +307,13 @@ event: { type: Messasge, time: 52.55,
 event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
 
+         
+event: { type: Camera, time: 58.00, param: (6,20), target: "Trellis-Solus" }
+
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 
-event: { type: Camera, time: 60.50, param: 3, target: "Farcaster", vec: (0,0,2e3) }
+event: { type: Camera, time: 60.50, param: 3, target: "Farcaster", vec: (0,0,6e3) }
 
 event: { type: Message, time: 63.85,
          caption: "on the many Alliance citizens\nin the Solus system." }

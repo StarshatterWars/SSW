@@ -83,6 +83,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Debug")
     bool bEnableDebugLogs = true;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Scaling")
+    float ShipLengthToSceneUnits = 0.01f;
+
     UPROPERTY()
     TArray<AActor*> OwnedActors;
 

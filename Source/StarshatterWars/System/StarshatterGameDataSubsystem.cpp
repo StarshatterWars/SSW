@@ -1367,19 +1367,6 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 		return;
 	
 	LoadContentBundle();
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		if (UStarshatterGameDataSubsystem* GD = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
-		{
-			//GD->LoadForms();
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("GameData subsystem is NULL at LoadForms call site"));
-		}
-	}
-
-	//LoadAwardTables();
 
 	BuildRankCache(RanksDataTable, RankById);
 	BuildMedalCache(MedalsDataTable, MedalById);
@@ -1397,8 +1384,6 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildCombatRosterFromOrderOfBattle();	
 	
 	SSWInstance->StartGameTimers();
-
-	// USystemDesign::Initialize(SystemDesignTable);
 }
 
 void UStarshatterGameDataSubsystem::InitializeCampaignData() {

@@ -205,14 +205,6 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
         *ModelName,
         *ModelName);
 
-    if (MeshPath.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: empty mesh path for model '%s'"),
-            *ModelName);
-        return nullptr;
-    }
-
     UStaticMesh* Mesh = ResolveStaticMeshFromPath(MeshPath);
     if (!Mesh)
     {
@@ -251,9 +243,6 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
     SpawnedActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 
-    // Scale up mission elements so they read in the cinematic system scene.
-    SpawnedActor->SetActorScale3D(FVector(MissionElementScaleMultiplier));
-
     if (!SpawnedActor->SetSceneMesh(Mesh))
     {
         UE_LOG(LogTemp, Warning,
@@ -263,14 +252,48 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             *GetNameSafe(Mesh));
     }
 
+    UStaticMeshComponent* MeshComp = SpawnedActor->GetMeshComponent();
+    if (!MeshComp)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: MeshComponent missing for '%s'"),
+            *ElementName);
+        return SpawnedActor;
+    }
+
+    float FinalScale = MissionElementScaleMultiplier;
+
+    // Per-model override for assets that import at a radically different size.
+    if (ModelName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+    {
+        FinalScale *= 4.0f;
+    }
+
+    SpawnedActor->SetActorScale3D(FVector(FinalScale));
+
+    MeshComp->SetVisibility(true, true);
+    MeshComp->SetHiddenInGame(false, true);
+    MeshComp->SetComponentTickEnabled(false);
+    MeshComp->SetCastShadow(true);
+
+    SpawnedActor->SetActorHiddenInGame(false);
+    SpawnedActor->SetActorEnableCollision(false);
+
+    const FBoxSphereBounds LocalBounds = Mesh->GetBounds();
+    const FBox WorldBox = MeshComp->Bounds.GetBox();
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d Scale=%s"),
+        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d Scale=%.2f LocalOrigin=%s LocalExtent=%s WorldCenter=%s WorldExtent=%s"),
         *ElementName,
         *ModelName,
         *GetNameSafe(Mesh),
         *WorldLocation.ToString(),
         HeadingDegrees,
-        *SpawnedActor->GetActorScale3D().ToString());
+        FinalScale,
+        *LocalBounds.Origin.ToString(),
+        *LocalBounds.BoxExtent.ToString(),
+        *WorldBox.GetCenter().ToString(),
+        *WorldBox.GetExtent().ToString());
 
     return SpawnedActor;
 }
