@@ -224,9 +224,15 @@ public:
         return SpawnedRegions;
     }
 
-    ACameraActor* GetOrCreateSceneCameraActor();
+    //ACameraActor* GetOrCreateSceneCameraActor();
 
-    bool GetRegionWorldLocationByName(const FString& RegionName, FVector& OutWorldLocation) const;
+    bool GetRegionByName(
+        const FString& RegionName,
+        FSpawnedSystemRegion& OutRegion) const;
+
+    bool GetRegionWorldLocationByName(
+        const FString& RegionName,
+        FVector& OutWorldLocation) const;
 
 
 protected:

@@ -5,30 +5,21 @@
 #include "GameStructs.h"
 #include "CampaignSceneActor.generated.h"
 
-class USceneComponent;
-class UStaticMesh;
 class ASceneMeshActor;
 class ASystemSceneBuilder;
+class Mission;
 
 USTRUCT()
 struct FCampaignSceneSpawnedActor
 {
     GENERATED_BODY()
 
-    UPROPERTY()
-    FString ElementName;
-
-    UPROPERTY()
-    FString DesignName;
-
-    UPROPERTY()
-    TObjectPtr<AActor> Actor = nullptr;
-
-    UPROPERTY()
-    FVector SpawnLocation = FVector::ZeroVector;
-
-    UPROPERTY()
-    int32 HeadingDegrees = 0;
+    UPROPERTY() FString ElementName;
+    UPROPERTY() FString DesignName;
+    UPROPERTY() FString RegionName;
+    UPROPERTY() AActor* Actor = nullptr;
+    UPROPERTY() FVector SpawnLocation = FVector::ZeroVector;
+    UPROPERTY() int32 HeadingDegrees = 0;
 };
 
 UCLASS()
@@ -41,23 +32,24 @@ public:
 
     virtual void BeginPlay() override;
 
-    void ClearSceneActors();
-
+    void BuildSceneActorsFromRuntimeMission(Mission* MissionPtr);
     void BuildSceneActorsFromMission(const FS_CampaignMission& MissionData);
 
-    bool FocusCameraOnSceneActorByName(
-        const FString& TargetName,
-        const FVector& CameraOffset,
-        float BlendSeconds = 0.0f);
-
-    bool FindSceneActorByName(
-        const FString& TargetName,
-        FCampaignSceneSpawnedActor& OutEntry) const;
-
+    void ClearSceneActors();
     void DumpSceneActors() const;
 
 protected:
     FVector ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const;
+    FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
+
+    bool ResolveRegionAnchorLocation(const FString& RegionName, FVector& OutWorldLocation) const;
+    bool ResolveRegionCenterLocation(const FString& RegionName, FVector& OutWorldLocation) const;
+
+    FString ResolveModelNameForDesign(const FString& DesignName) const;
+    FString ResolveMeshPathForDesign(const FString& DesignName) const;
+    UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
+
+
 
     AActor* SpawnSceneElementActor(
         const FString& ElementName,
@@ -65,41 +57,25 @@ protected:
         const FVector& WorldLocation,
         int32 HeadingDegrees);
 
-    FString ResolveModelNameForDesign(const FString& DesignName) const;
-    FString ResolveMeshPathForDesign(const FString& DesignName) const;
-    UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
-
-    FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
-    ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
-
-    bool ResolveRegionAnchorLocation(
-        const FString& RegionName,
-        FVector& OutWorldLocation) const;
-
 protected:
-    bool ResolveRegionCenterLocation(
-        const FString& RegionName,
-        FVector& OutWorldLocation) const;
+    UPROPERTY()
+    USceneComponent* SceneRoot;
 
-protected:
-    UPROPERTY(VisibleAnywhere)
-    TObjectPtr<USceneComponent> SceneRoot = nullptr;
+    UPROPERTY(EditAnywhere, Category = "Scene")
+    TSubclassOf<ASceneMeshActor> DefaultSceneMeshActorClass;
 
-    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
-    bool bEnableDebugLogs = true;
-
-    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
-    float LegacyUnitsPerKm = 0.01f;
-
-    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
+    UPROPERTY(EditAnywhere, Category = "Scene")
     FVector SceneOriginOffset = FVector::ZeroVector;
 
-    UPROPERTY(EditAnywhere, Category = "Campaign Scene")
-    TSubclassOf<ASceneMeshActor> DefaultSceneMeshActorClass;
+    UPROPERTY(EditAnywhere, Category = "Scene")
+    float LegacyUnitsPerKm = 1.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bEnableDebugLogs = true;
+
+    UPROPERTY()
+    TArray<AActor*> OwnedActors;
 
     UPROPERTY()
     TArray<FCampaignSceneSpawnedActor> SpawnedSceneActors;
-
-    UPROPERTY()
-    TArray<TObjectPtr<AActor>> OwnedActors;
 };

@@ -2163,26 +2163,58 @@ bool ASystemSceneBuilder::GetRegionWorldLocationByName(
 {
     OutWorldLocation = FVector::ZeroVector;
 
+    FSpawnedSystemRegion FoundRegion;
+    if (!GetRegionByName(RegionName, FoundRegion))
+    {
+        return false;
+    }
+
+    if (FoundRegion.Actor)
+    {
+        OutWorldLocation = FoundRegion.Actor->GetActorLocation();
+        return true;
+    }
+
+    OutWorldLocation = FoundRegion.SpawnLocation;
+    return true;
+}
+
+bool ASystemSceneBuilder::GetRegionByName(
+    const FString& RegionName,
+    FSpawnedSystemRegion& OutRegion) const
+{
     const FString SearchName = RegionName.TrimStartAndEnd();
+
     if (SearchName.IsEmpty())
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] GetRegionByName: empty RegionName"));
         return false;
     }
 
     for (const FSpawnedSystemRegion& Entry : SpawnedRegions)
     {
-        if (Entry.RegionName.Equals(SearchName, ESearchCase::IgnoreCase))
-        {
-            if (Entry.Actor)
-            {
-                OutWorldLocation = Entry.Actor->GetActorLocation();
-                return true;
-            }
+        const FString EntryName = Entry.RegionName.TrimStartAndEnd();
 
-            OutWorldLocation = Entry.SpawnLocation;
+        if (EntryName.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            OutRegion = Entry;
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SystemSceneBuilder] GetRegionByName: '%s' -> Anchor='%s' Inner=%.2f Outer=%.2f"),
+                *SearchName,
+                *OutRegion.AnchorBodyName,
+                OutRegion.InnerRadiusUnits,
+                OutRegion.OuterRadiusUnits);
+
             return true;
         }
     }
 
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] GetRegionByName: no match for '%s'"),
+        *SearchName);
+
     return false;
 }
+

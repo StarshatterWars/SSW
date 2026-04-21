@@ -1,20 +1,3 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         SystemLevelScriptActor.h
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    Level script actor that drives system scene initialization.
-
-    - Resolves target system from Campaign/Mission
-    - Ensures a SystemSceneBuilder exists (find or spawn)
-    - Ensures a CampaignSceneActor exists (find or spawn)
-    - Configures builder and triggers build
-*/
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -76,7 +59,7 @@ protected:
     bool bAutoFindBuilder = true;
 
     UPROPERTY(EditInstanceOnly, Category = "System")
-    bool bAutoSpawnBuilderIfMissing = true;
+    bool bAutoSpawnBuilderIfMissing = false;
 
     UPROPERTY(EditInstanceOnly, Category = "System")
     TSubclassOf<ASystemSceneBuilder> BuilderClass;

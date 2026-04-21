@@ -3,14 +3,13 @@
 #include "SceneMeshActor.h"
 #include "SystemSceneBuilder.h"
 
-#include "Camera/PlayerCameraManager.h"
-#include "Components/SceneComponent.h"
-#include "Engine/StaticMesh.h"
-#include "Engine/World.h"
-#include "EngineUtils.h"
-#include "GameFramework/PlayerController.h"
-
+#include "Mission.h"
+#include "MissionElement.h"
 #include "ShipDesignRegistry.h"
+
+#include "EngineUtils.h"
+#include "Engine/World.h"
+#include "Engine/StaticMesh.h"
 
 ACampaignSceneActor::ACampaignSceneActor()
 {
@@ -38,11 +37,8 @@ void ACampaignSceneActor::ClearSceneActors()
     OwnedActors.Empty();
     SpawnedSceneActors.Empty();
 
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Cleared scene actors"));
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Cleared scene actors"));
 }
 
 FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const
@@ -50,214 +46,48 @@ FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyL
     return GetActorLocation() + SceneOriginOffset + (LegacyLoc * LegacyUnitsPerKm);
 }
 
-ASystemSceneBuilder* ACampaignSceneActor::ResolveSystemSceneBuilder() const
-{
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        return nullptr;
-    }
-
-    for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
-    {
-        if (IsValid(*It))
-        {
-            return *It;
-        }
-    }
-
-    return nullptr;
-}
-
-bool ACampaignSceneActor::ResolveRegionAnchorLocation(
-    const FString& RegionName,
-    FVector& OutWorldLocation) const
-{
-    OutWorldLocation = FVector::ZeroVector;
-
-    const FString CleanRegion = RegionName.TrimStartAndEnd();
-    if (CleanRegion.IsEmpty())
-    {
-        return false;
-    }
-
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-    if (!Builder)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveRegionAnchorLocation: no SystemSceneBuilder for region '%s'"),
-            *CleanRegion);
-        return false;
-    }
-
-    const bool bFound = Builder->GetBodyWorldLocationByName(CleanRegion, OutWorldLocation);
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveRegionAnchorLocation: Region='%s' Found=%s Loc=%s"),
-            *CleanRegion,
-            bFound ? TEXT("true") : TEXT("false"),
-            *OutWorldLocation.ToString());
-    }
-
-    return bFound;
-}
-
 FVector ACampaignSceneActor::ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const
 {
-    const FVector LocalOffset = Elem.Location * LegacyUnitsPerKm;
-
-    FVector RegionCenter = FVector::ZeroVector;
-    if (!Elem.RegionName.IsEmpty() && ResolveRegionCenterLocation(Elem.RegionName, RegionCenter))
-    {
-        const FVector WorldLoc = RegionCenter + LocalOffset;
-
-        if (bEnableDebugLogs)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' Local=%s RegionCenter=%s World=%s"),
-                *Elem.Name,
-                *Elem.RegionName,
-                *Elem.Location.ToString(),
-                *RegionCenter.ToString(),
-                *WorldLoc.ToString());
-        }
-
-        return WorldLoc;
-    }
-
-    FVector RegionAnchor = FVector::ZeroVector;
-    if (!Elem.RegionName.IsEmpty() && ResolveRegionAnchorLocation(Elem.RegionName, RegionAnchor))
-    {
-        const FVector WorldLoc = RegionAnchor + LocalOffset;
-
-        if (bEnableDebugLogs)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' Local=%s Anchor=%s World=%s"),
-                *Elem.Name,
-                *Elem.RegionName,
-                *Elem.Location.ToString(),
-                *RegionAnchor.ToString(),
-                *WorldLoc.ToString());
-        }
-
-        return WorldLoc;
-    }
-
-    const FVector Fallback = ConvertLegacySceneLocToWorld(Elem.Location);
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' using fallback World=%s"),
-            *Elem.Name,
-            *Elem.RegionName,
-            *Fallback.ToString());
-    }
-
-    return Fallback;
+    return ConvertLegacySceneLocToWorld(Elem.Location);
 }
 
 FString ACampaignSceneActor::ResolveModelNameForDesign(const FString& DesignName) const
 {
-    if (DesignName.IsEmpty())
+    const FShipDesign* Row = ShipDesignRegistry::Find(DesignName);
+    if (!Row)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: empty design name"));
-        return FString();
-    }
-
-    const FShipDesign* ShipRow = ShipDesignRegistry::Find(DesignName);
-    if (!ShipRow)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: no ship row for design '%s'"),
+            TEXT("[CampaignSceneActor] No ship design row for '%s'"),
             *DesignName);
         return FString();
     }
 
-    if (ShipRow->Model.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: row found for '%s' but Model is empty"),
-            *DesignName);
-        return FString();
-    }
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveModelNameForDesign: Design='%s' Model='%s'"),
-            *DesignName,
-            *ShipRow->Model);
-    }
-
-    return ShipRow->Model;
+    return Row->Model;
 }
 
 FString ACampaignSceneActor::ResolveMeshPathForDesign(const FString& DesignName) const
 {
-    const FString ModelName = ResolveModelNameForDesign(DesignName);
-    if (ModelName.IsEmpty())
+    const FString Model = ResolveModelNameForDesign(DesignName);
+    if (Model.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveMeshPathForDesign: no model for design '%s'"),
-            *DesignName);
         return FString();
     }
 
-    const FString MeshPath = FString::Printf(
+    return FString::Printf(
         TEXT("/Script/Engine.StaticMesh'/Game/Models/%s/%s.%s'"),
-        *ModelName,
-        *ModelName,
-        *ModelName);
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveMeshPathForDesign: Design='%s' Path='%s'"),
-            *DesignName,
-            *MeshPath);
-    }
-
-    return MeshPath;
+        *Model,
+        *Model,
+        *Model);
 }
 
 UStaticMesh* ACampaignSceneActor::ResolveStaticMeshFromPath(const FString& MeshPath) const
 {
-    const FString CleanPath = MeshPath.TrimStartAndEnd();
-
-    if (CleanPath.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: empty path"));
-        return nullptr;
-    }
-
-    UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *CleanPath);
-    if (!Mesh)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: failed to load '%s'"),
-            *CleanPath);
-        return nullptr;
-    }
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveStaticMeshFromPath: loaded '%s'"),
-            *CleanPath);
-    }
-
-    return Mesh;
+    return LoadObject<UStaticMesh>(nullptr, *MeshPath);
 }
 
 AActor* ACampaignSceneActor::SpawnSceneElementActor(
     const FString& ElementName,
-    const FString& DesignName,
+    const FString& ModelName,
     const FVector& WorldLocation,
     int32 HeadingDegrees)
 {
@@ -270,6 +100,7 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     }
 
     TSubclassOf<ASceneMeshActor> SpawnClass = DefaultSceneMeshActorClass;
+
     if (!SpawnClass)
     {
         SpawnClass = ASceneMeshActor::StaticClass();
@@ -278,12 +109,17 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             TEXT("[CampaignSceneActor] SpawnSceneElementActor: DefaultSceneMeshActorClass is null, using native ASceneMeshActor"));
     }
 
-    const FString MeshPath = ResolveMeshPathForDesign(DesignName);
+    const FString MeshPath = FString::Printf(
+        TEXT("/Script/Engine.StaticMesh'/Game/Models/%s/%s.%s'"),
+        *ModelName,
+        *ModelName,
+        *ModelName);
+
     if (MeshPath.IsEmpty())
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: no mesh path for design '%s'"),
-            *DesignName);
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: empty mesh path for model '%s'"),
+            *ModelName);
         return nullptr;
     }
 
@@ -291,9 +127,9 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     if (!Mesh)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed mesh load Name='%s' Design='%s' Path='%s'"),
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed mesh load Name='%s' Model='%s' Path='%s'"),
             *ElementName,
-            *DesignName,
+            *ModelName,
             *MeshPath);
         return nullptr;
     }
@@ -313,9 +149,9 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     if (!SpawnedActor)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed spawn Name='%s' Design='%s'"),
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed spawn Name='%s' Model='%s'"),
             *ElementName,
-            *DesignName);
+            *ModelName);
         return nullptr;
     }
 
@@ -328,29 +164,139 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     if (!SpawnedActor->SetSceneMesh(Mesh))
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: SetSceneMesh failed Name='%s' Design='%s' Mesh='%s'"),
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: SetSceneMesh failed Name='%s' Model='%s' Mesh='%s'"),
             *ElementName,
-            *DesignName,
+            *ModelName,
             *GetNameSafe(Mesh));
     }
 
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Design='%s' Mesh='%s' Loc=%s Heading=%d"),
-            *ElementName,
-            *DesignName,
-            *GetNameSafe(Mesh),
-            *WorldLocation.ToString(),
-            HeadingDegrees);
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d"),
+        *ElementName,
+        *ModelName,
+        *GetNameSafe(Mesh),
+        *WorldLocation.ToString(),
+        HeadingDegrees);
 
     return SpawnedActor;
+}
+
+void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr)
+{
+    ClearSceneActors();
+
+    if (!MissionPtr)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] MissionPtr is null"));
+        return;
+    }
+
+    int32 Count = 0;
+
+    ListIter<MissionElement> It = MissionPtr->GetElements();
+    while (++It)
+    {
+        MissionElement* Elem = It.value();
+        if (!Elem)
+        {
+            continue;
+        }
+
+        const FString Name = ANSI_TO_TCHAR(Elem->GetName());
+        const FString Region = ANSI_TO_TCHAR(Elem->GetRegion());
+
+        const FShipDesign* Ship = Elem->GetShipDesign();
+        if (!Ship)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] Elem '%s' has no ship design"),
+                *Name);
+            continue;
+        }
+
+        const FString ModelName = Ship->Model;
+        if (ModelName.IsEmpty())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] Elem '%s' has empty model"),
+                *Name);
+            continue;
+        }
+
+        FS_MissionElement Temp;
+        Temp.Name = Name;
+        Temp.Design = ModelName;
+        Temp.RegionName = Region;
+        Temp.Location = Elem->GetLocation();
+        Temp.Heading = (int32)Elem->GetHeading();
+
+        const FVector WorldLoc = ConvertMissionElementLocToWorld(Temp);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Runtime Elem Name='%s' Model='%s' Region='%s' Local=%s World=%s Heading=%d"),
+            *Temp.Name,
+            *Temp.Design,
+            *Temp.RegionName,
+            *Temp.Location.ToString(),
+            *WorldLoc.ToString(),
+            Temp.Heading);
+
+        AActor* Spawned = SpawnSceneElementActor(
+            Temp.Name,
+            Temp.Design,
+            WorldLoc,
+            Temp.Heading);
+
+        if (!Spawned)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] Failed spawn Name='%s' Model='%s'"),
+                *Temp.Name,
+                *Temp.Design);
+            continue;
+        }
+
+        FCampaignSceneSpawnedActor Entry;
+        Entry.ElementName = Temp.Name;
+        Entry.DesignName = Temp.Design;
+        Entry.RegionName = Temp.RegionName;
+        Entry.Actor = Spawned;
+        Entry.SpawnLocation = WorldLoc;
+        Entry.HeadingDegrees = Temp.Heading;
+
+        SpawnedSceneActors.Add(Entry);
+        OwnedActors.Add(Spawned);
+
+        Count++;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Spawned actors = %d"),
+        Count);
+}
+
+void ACampaignSceneActor::DumpSceneActors() const
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("SceneActor count = %d"),
+        SpawnedSceneActors.Num());
+
+    for (const FCampaignSceneSpawnedActor& E : SpawnedSceneActors)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("Name='%s' Design='%s' Actor=%s"),
+            *E.ElementName,
+            *E.DesignName,
+            *GetNameSafe(E.Actor));
+    }
 }
 
 void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& MissionData)
 {
     ClearSceneActors();
+
+    int32 Count = 0;
 
     for (const FS_MissionElement& Elem : MissionData.Element)
     {
@@ -359,205 +305,68 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
+        const FString ElementName = Elem.Name;
+        const FString RegionName = Elem.RegionName;
+        const FString DesignName = Elem.Design;
+
+        FString ModelName = DesignName;
+
+        const FShipDesign* Ship = ShipDesignRegistry::Find(DesignName);
+        if (Ship && !Ship->Model.IsEmpty())
+        {
+            ModelName = Ship->Model;
+        }
+
+        if (ModelName.IsEmpty())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: '%s' has empty model/design"),
+                *ElementName);
+            continue;
+        }
+
         const FVector WorldLoc = ConvertMissionElementLocToWorld(Elem);
 
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FS Elem Name='%s' Design='%s' Model='%s' Region='%s' Local=%s World=%s Heading=%d"),
+            *ElementName,
+            *DesignName,
+            *ModelName,
+            *RegionName,
+            *Elem.Location.ToString(),
+            *WorldLoc.ToString(),
+            Elem.Heading);
+
         AActor* Spawned = SpawnSceneElementActor(
-            Elem.Name,
-            Elem.Design,
+            ElementName,
+            ModelName,
             WorldLoc,
             Elem.Heading);
 
         if (!Spawned)
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Failed spawn Name='%s' Design='%s'"),
-                *Elem.Name,
-                *Elem.Design);
+                TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: failed spawn Name='%s' Model='%s'"),
+                *ElementName,
+                *ModelName);
             continue;
         }
 
         FCampaignSceneSpawnedActor Entry;
-        Entry.ElementName = Elem.Name;
-        Entry.DesignName = Elem.Design;
+        Entry.ElementName = ElementName;
+        Entry.DesignName = ModelName;
+        Entry.RegionName = RegionName;
         Entry.Actor = Spawned;
         Entry.SpawnLocation = WorldLoc;
         Entry.HeadingDegrees = Elem.Heading;
 
         SpawnedSceneActors.Add(Entry);
         OwnedActors.Add(Spawned);
+
+        Count++;
     }
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: spawned=%d"),
-        SpawnedSceneActors.Num());
-}
-
-bool ACampaignSceneActor::FindSceneActorByName(
-    const FString& TargetName,
-    FCampaignSceneSpawnedActor& OutEntry) const
-{
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FindSceneActorByName: Target='%s' Spawned=%d"),
-            *TargetName,
-            SpawnedSceneActors.Num());
-    }
-
-    for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
-    {
-        if (bEnableDebugLogs)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor]   Compare Target='%s' Element='%s' Design='%s'"),
-                *TargetName,
-                *Entry.ElementName,
-                *Entry.DesignName);
-        }
-
-        if (Entry.ElementName.Equals(TargetName, ESearchCase::IgnoreCase) ||
-            Entry.DesignName.Equals(TargetName, ESearchCase::IgnoreCase))
-        {
-            if (bEnableDebugLogs)
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor]   MATCH Target='%s' Element='%s' Design='%s'"),
-                    *TargetName,
-                    *Entry.ElementName,
-                    *Entry.DesignName);
-            }
-
-            OutEntry = Entry;
-            return true;
-        }
-    }
-
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor]   NO MATCH for '%s'"),
-            *TargetName);
-    }
-
-    return false;
-}
-
-bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
-    const FString& TargetName,
-    const FVector& CameraOffset,
-    float BlendSeconds)
-{
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        return false;
-    }
-
-    APlayerController* PC = World->GetFirstPlayerController();
-    if (!PC)
-    {
-        return false;
-    }
-
-    FCampaignSceneSpawnedActor Entry;
-    if (!FindSceneActorByName(TargetName, Entry) || !Entry.Actor)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Target not found '%s'"),
-            *TargetName);
-        return false;
-    }
-
-    const FVector Focus = Entry.Actor->GetActorLocation();
-
-    FVector Offset = CameraOffset;
-    if (Offset.IsNearlyZero())
-    {
-        Offset = FVector(-2500.0f, -750.0f, 1200.0f);
-    }
-
-    const FVector CamLoc = Focus + Offset;
-    const FRotator CamRot = (Focus - CamLoc).Rotation();
-
-    PC->SetInitialLocationAndRotation(CamLoc, CamRot);
-    PC->SetControlRotation(CamRot);
-
-    if (PC->PlayerCameraManager)
-    {
-        PC->PlayerCameraManager->SetGameCameraCutThisFrame();
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Camera focus '%s' Blend=%.2f"),
-        *TargetName,
-        BlendSeconds);
-
-    return true;
-}
-
-void ACampaignSceneActor::DumpSceneActors() const
-{
-    UE_LOG(LogTemp, Warning,
-        TEXT("========================================"));
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] DumpSceneActors: count=%d"),
-        SpawnedSceneActors.Num());
-
-    for (int32 i = 0; i < SpawnedSceneActors.Num(); ++i)
-    {
-        const FCampaignSceneSpawnedActor& Entry = SpawnedSceneActors[i];
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("  [%d] Name='%s' Design='%s' Actor=%s Loc=%s Heading=%d"),
-            i,
-            *Entry.ElementName,
-            *Entry.DesignName,
-            *GetNameSafe(Entry.Actor),
-            *Entry.SpawnLocation.ToString(),
-            Entry.HeadingDegrees);
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("========================================"));
-}
-
-bool ACampaignSceneActor::ResolveRegionCenterLocation(
-    const FString& RegionName,
-    FVector& OutWorldLocation) const
-{
-    OutWorldLocation = FVector::ZeroVector;
-
-    const FString CleanRegion = RegionName.TrimStartAndEnd();
-    if (CleanRegion.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: RegionName is empty"));
-        return false;
-    }
-
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-    if (!Builder)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: no SystemSceneBuilder for '%s'"),
-            *CleanRegion);
-        return false;
-    }
-
-    const FString RegionActorName = CleanRegion + TEXT("_REGION");
-
-    if (Builder->GetRegionWorldLocationByName(RegionActorName, OutWorldLocation))
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: '%s' -> %s"),
-            *RegionActorName,
-            *OutWorldLocation.ToString());
-        return true;
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: region actor not found '%s'"),
-        *RegionActorName);
-
-    return false;
+        Count);
 }

@@ -1,11 +1,3 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         SystemLevelScriptActor.cpp
-    AUTHOR:       Carlos Bott
-*/
-
 #include "SystemLevelScriptActor.h"
 
 #include "SystemSceneBuilder.h"
@@ -23,6 +15,7 @@ ASystemLevelScriptActor::ASystemLevelScriptActor()
 {
     bInitializeOnBeginPlay = true;
     bBuildOnBeginPlay = true;
+
     bAutoFindBuilder = true;
     bAutoSpawnBuilderIfMissing = false;
 
@@ -42,7 +35,6 @@ void ASystemLevelScriptActor::BeginPlay()
         InitializeSystemLevel();
     }
 
-    // Ensure the scene actor exists for mission ship/station spawning.
     ResolveSceneActor();
 
     if (bBuildOnBeginPlay)
@@ -64,9 +56,6 @@ void ASystemLevelScriptActor::InitializeSystemLevel()
     const FString SystemName = ResolveStartupSystemName();
 
     Builder->bBuildOnBeginPlay = false;
-
-    // IMPORTANT:
-    // This must be System, not Galaxy. "Solus" is a system name.
     Builder->DataSource = ESystemSceneSource::StarSystem;
     Builder->TargetSystemName = SystemName;
     Builder->TargetGalaxyName.Empty();
@@ -89,14 +78,14 @@ void ASystemLevelScriptActor::BuildCurrentSystem()
         return;
     }
 
-    // Ensure scene actor is present before the dialog tries to use it.
+    // Ensure scene actor exists (but do NOT drive it here)
     ResolveSceneActor();
 
     if (Builder->DataSource != ESystemSceneSource::StarSystem || Builder->TargetSystemName.IsEmpty())
     {
         InitializeSystemLevel();
-        Builder = ResolveBuilder();
 
+        Builder = ResolveBuilder();
         if (!Builder)
         {
             UE_LOG(LogTemp, Error,
@@ -106,9 +95,20 @@ void ASystemLevelScriptActor::BuildCurrentSystem()
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemLevelScriptActor] Calling Builder->BuildSystemScene()"));
+        TEXT("[SystemLevelScriptActor] BEFORE Builder->BuildSystemScene()"));
 
     Builder->BuildSystemScene();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemLevelScriptActor] AFTER Builder->BuildSystemScene()"));
+
+    // IMPORTANT:
+    // DO NOT attempt to spawn ships here.
+    // Scene ships must be spawned from SceneDlg / scene transition logic,
+    // because Campaign::GetMission() is not valid in this flow.
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemLevelScriptActor] System build complete (ships handled externally)"));
 }
 
 void ASystemLevelScriptActor::ClearCurrentSystem()
@@ -131,6 +131,8 @@ void ASystemLevelScriptActor::RebuildCurrentSystem()
     ASystemSceneBuilder* Builder = ResolveBuilder();
     if (!Builder)
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemLevelScriptActor] RebuildCurrentSystem: builder is null"));
         return;
     }
 
@@ -157,36 +159,10 @@ FString ASystemLevelScriptActor::ResolveStartupSystemName() const
             StarSystem* Sys = MissionPtr->GetStarSystem();
             if (Sys && Sys->GetName() && *Sys->GetName())
             {
-                const FString Name = ANSI_TO_TCHAR(Sys->GetName());
-
-                UE_LOG(LogTemp, Log,
-                    TEXT("[SystemLevelScriptActor] Resolved from Mission: %s"),
-                    *Name);
-
-                return Name;
-            }
-        }
-
-        const List<StarSystem>& Systems = CampaignPtr->GetSystemList();
-        if (Systems.size() > 0 && Systems[0])
-        {
-            const char* SysName = Systems[0]->GetName();
-            if (SysName && *SysName)
-            {
-                const FString Name = ANSI_TO_TCHAR(SysName);
-
-                UE_LOG(LogTemp, Log,
-                    TEXT("[SystemLevelScriptActor] Resolved from Campaign list: %s"),
-                    *Name);
-
-                return Name;
+                return ANSI_TO_TCHAR(Sys->GetName());
             }
         }
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SystemLevelScriptActor] Falling back to default system: %s"),
-        *DefaultSystemName);
 
     return DefaultSystemName;
 }
@@ -224,53 +200,7 @@ ASystemSceneBuilder* ASystemLevelScriptActor::ResolveBuilder()
         }
     }
 
-    if (!bAutoSpawnBuilderIfMissing)
-    {
-        return nullptr;
-    }
-
-    TSubclassOf<ASystemSceneBuilder> SpawnClass = BuilderClass;
-    if (!SpawnClass)
-    {
-        SpawnClass = ASystemSceneBuilder::StaticClass();
-    }
-
-    const FString ResolvedSystemName = ResolveStartupSystemName();
-    const FTransform SpawnTransform(
-        BuilderSpawnRotation,
-        GetActorLocation() + BuilderSpawnLocation);
-
-    ASystemSceneBuilder* Spawned = World->SpawnActorDeferred<ASystemSceneBuilder>(
-        SpawnClass,
-        SpawnTransform,
-        this,
-        nullptr,
-        ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-
-    if (!Spawned)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SystemLevelScriptActor] Failed to deferred-spawn SystemSceneBuilder"));
-        return nullptr;
-    }
-
-    Spawned->bBuildOnBeginPlay = false;
-
-    // IMPORTANT:
-    // This must be System, not Galaxy.
-    Spawned->DataSource = ESystemSceneSource::StarSystem;
-    Spawned->TargetSystemName = ResolvedSystemName;
-    Spawned->TargetGalaxyName.Empty();
-
-    UGameplayStatics::FinishSpawningActor(Spawned, SpawnTransform);
-
-    CachedBuilder = Spawned;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SystemLevelScriptActor] Auto-spawned builder: %s"),
-        *Spawned->GetName());
-
-    return CachedBuilder.Get();
+    return nullptr;
 }
 
 ACampaignSceneActor* ASystemLevelScriptActor::ResolveSceneActor()
@@ -306,42 +236,5 @@ ACampaignSceneActor* ASystemLevelScriptActor::ResolveSceneActor()
         }
     }
 
-    if (!bAutoSpawnSceneActorIfMissing)
-    {
-        return nullptr;
-    }
-
-    TSubclassOf<ACampaignSceneActor> SpawnClass = SceneActorClass;
-    if (!SpawnClass)
-    {
-        SpawnClass = ACampaignSceneActor::StaticClass();
-    }
-
-    const FTransform SpawnTransform(
-        SceneActorSpawnRotation,
-        GetActorLocation() + SceneActorSpawnLocation);
-
-    ACampaignSceneActor* Spawned = World->SpawnActorDeferred<ACampaignSceneActor>(
-        SpawnClass,
-        SpawnTransform,
-        this,
-        nullptr,
-        ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-
-    if (!Spawned)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SystemLevelScriptActor] Failed to deferred-spawn CampaignSceneActor"));
-        return nullptr;
-    }
-
-    UGameplayStatics::FinishSpawningActor(Spawned, SpawnTransform);
-
-    CachedSceneActor = Spawned;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SystemLevelScriptActor] Auto-spawned CampaignSceneActor: %s"),
-        *Spawned->GetName());
-
-    return CachedSceneActor.Get();
+    return nullptr;
 }

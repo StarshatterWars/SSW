@@ -11,6 +11,8 @@
 #include "Components/Image.h"
 
 #include "SystemSceneBuilder.h"
+#include "CampaignSceneActor.h"
+
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
@@ -328,6 +330,42 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
         *MissionData.Scene,
         *MissionData.Objective,
         MissionData.Event.Num());
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] World is null"));
+    }
+    else
+    {
+        ACampaignSceneActor* SceneActor = nullptr;
+
+        for (TActorIterator<ACampaignSceneActor> It(World); It; ++It)
+        {
+            SceneActor = *It;
+            if (SceneActor)
+            {
+                break;
+            }
+        }
+
+        if (SceneActor)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] Spawning ships from FS_CampaignMission"));
+
+            SceneActor->BuildSceneActorsFromMission(MissionData);
+            SceneActor->DumpSceneActors();
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] No CampaignSceneActor found"));
+        }
+    }
+
+    BeginSceneByName(MissionData.Scene, 0.0f);
 }
 
 void UCampaignSceneDlg::BuildSortedEventQueue()
@@ -443,8 +481,6 @@ FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) cons
         return FString();
     }
 
-    // Full quoted Unreal object reference:
-    // /Script/Engine.SoundWave'/Game/Audio/Vox/Scenes/02/Briefing_06.Briefing_06'
     const int32 FirstQuote = Token.Find(TEXT("'"));
     const int32 LastQuote = Token.Find(TEXT("'"), ESearchCase::CaseSensitive, ESearchDir::FromEnd);
 
@@ -457,13 +493,11 @@ FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) cons
         }
     }
 
-    // Already a direct object path:
     if (Token.StartsWith(TEXT("/Game/")))
     {
         return Token;
     }
 
-    // Bare token fallback:
     const int32 CampaignNum = ResolveCampaignNumber();
 
     TArray<FString> CandidatePaths;
@@ -599,7 +633,6 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
         Event.EventFade.Y,
         Event.EventFade.Z);
 
-    // DISPLAY panel token can arrive in EventImage or EventTarget.
     FString PanelToken = Event.EventImage.TrimStartAndEnd();
     if (PanelToken.IsEmpty())
     {
@@ -1095,8 +1128,9 @@ void UCampaignSceneDlg::FinishCutscene()
     {
         Manager->HideCmpSceneDlg();
         Manager->ShowCmdDlg();
-    }   
+    }
 }
+
 bool UCampaignSceneDlg::ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const
 {
     OutRegionName.Empty();
