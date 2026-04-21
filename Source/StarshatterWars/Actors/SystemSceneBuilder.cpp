@@ -519,6 +519,7 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         PlanetName,
         PlanetWorldLocation,
         PlanetActor,
+        RadiusUnits,
         false);
 
     if (bEnableDebugLogs)
@@ -620,6 +621,7 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
         MoonName,
         MoonWorldLocation,
         MoonActor,
+        RadiusUnits,
         true);
 
     if (bEnableDebugLogs)
@@ -1938,6 +1940,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
     const FString& BodyName,
     const FVector& BodyWorldLocation,
     AActor* BodyActor,
+    float BodyVisualRadiusUnits,
     bool bIsMoon)
 {
     if (!bSpawnRegionActors)
@@ -1962,24 +1965,28 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
         return;
     }
 
-    const float RegionRadiusUnits =
+    const float StandardRegionRadiusUnits =
         ConvertOrbitKmToSceneUnits(DefaultRegionRadiusKm, bIsMoon);
 
     const float GridUnits =
         ConvertOrbitKmToSceneUnits(DefaultRegionGridKm, bIsMoon);
 
+    const float InnerRadiusUnits = FMath::Max(BodyVisualRadiusUnits, 1.0f);
+    const float OuterRadiusUnits = InnerRadiusUnits + StandardRegionRadiusUnits;
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s RadiusUnits=%.2f GridUnits=%.2f bIsMoon=%s"),
+        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s"),
         *BodyName,
         *BodyWorldLocation.ToString(),
-        RegionRadiusUnits,
+        InnerRadiusUnits,
+        OuterRadiusUnits,
         GridUnits,
         bIsMoon ? TEXT("true") : TEXT("false"));
 
     AActor* RegionActor = SpawnRegionActor(
         BodyName,
         BodyWorldLocation,
-        RegionRadiusUnits,
+        OuterRadiusUnits,
         BodyActor);
 
     RegisterSpawnedRegion(
@@ -1988,17 +1995,19 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
         RegionActor,
         BodyActor,
         BodyWorldLocation,
-        RegionRadiusUnits,
+        InnerRadiusUnits,
+        OuterRadiusUnits,
         GridUnits);
 
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s RadiusUnits=%.2f GridUnits=%.2f Actor=%s"),
+            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s"),
             *BodyName,
             *BodyName,
             *BodyWorldLocation.ToString(),
-            RegionRadiusUnits,
+            InnerRadiusUnits,
+            OuterRadiusUnits,
             GridUnits,
             *GetNameSafe(RegionActor));
     }
@@ -2007,7 +2016,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
 AActor* ASystemSceneBuilder::SpawnRegionActor(
     const FString& RegionName,
     const FVector& WorldLocation,
-    float RegionRadiusUnits,
+    float OuterRadiusUnits,
     AActor* ParentActor)
 {
     UWorld* World = GetWorld();
@@ -2066,7 +2075,7 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
         SMC->SetHiddenInGame(false);
     }
 
-    Spawned->SetActorScale3D(FVector(RegionRadiusUnits));
+    Spawned->SetActorScale3D(FVector(OuterRadiusUnits));
 
     if (ParentActor)
     {
@@ -2084,41 +2093,14 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
     SpawnedActors.Add(Spawned);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s RadiusUnits=%.2f Parent=%s"),
+        TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s OuterRadiusUnits=%.2f Parent=%s"),
         *FullName,
         *GetNameSafe(Spawned),
         *WorldLocation.ToString(),
-        RegionRadiusUnits,
+        OuterRadiusUnits,
         *GetNameSafe(ParentActor));
 
     return Spawned;
-}
-
-void ASystemSceneBuilder::RegisterSpawnedRegion(
-    const FString& RegionName,
-    const FString& AnchorBodyName,
-    AActor* Actor,
-    AActor* ParentActor,
-    const FVector& SpawnLocation,
-    float RegionRadiusUnits,
-    float GridUnits)
-{
-    FSpawnedSystemRegion Entry;
-    Entry.RegionName = RegionName;
-    Entry.AnchorBodyName = AnchorBodyName;
-    Entry.Actor = Actor;
-    Entry.ParentActor = ParentActor;
-    Entry.SpawnLocation = SpawnLocation;
-    Entry.RegionRadiusUnits = RegionRadiusUnits;
-    Entry.GridUnits = GridUnits;
-
-    SpawnedRegions.Add(Entry);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Count=%d"),
-        *RegionName,
-        *AnchorBodyName,
-        SpawnedRegions.Num());
 }
 
 void ASystemSceneBuilder::RegisterSpawnedBody(
@@ -2142,4 +2124,65 @@ void ASystemSceneBuilder::RegisterSpawnedBody(
     Entry.OrbitRadiusUnits = OrbitRadiusUnits;
 
     SpawnedBodies.Add(Entry);
+}
+
+void ASystemSceneBuilder::RegisterSpawnedRegion(
+    const FString& RegionName,
+    const FString& AnchorBodyName,
+    AActor* Actor,
+    AActor* ParentActor,
+    const FVector& SpawnLocation,
+    float InnerRadiusUnits,
+    float OuterRadiusUnits,
+    float GridUnits)
+{
+    FSpawnedSystemRegion Entry;
+    Entry.RegionName = RegionName;
+    Entry.AnchorBodyName = AnchorBodyName;
+    Entry.Actor = Actor;
+    Entry.ParentActor = ParentActor;
+    Entry.SpawnLocation = SpawnLocation;
+    Entry.InnerRadiusUnits = InnerRadiusUnits;
+    Entry.OuterRadiusUnits = OuterRadiusUnits;
+    Entry.GridUnits = GridUnits;
+
+    SpawnedRegions.Add(Entry);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Inner=%.2f Outer=%.2f Count=%d"),
+        *RegionName,
+        *AnchorBodyName,
+        InnerRadiusUnits,
+        OuterRadiusUnits,
+        SpawnedRegions.Num());
+}
+
+bool ASystemSceneBuilder::GetRegionWorldLocationByName(
+    const FString& RegionName,
+    FVector& OutWorldLocation) const
+{
+    OutWorldLocation = FVector::ZeroVector;
+
+    const FString SearchName = RegionName.TrimStartAndEnd();
+    if (SearchName.IsEmpty())
+    {
+        return false;
+    }
+
+    for (const FSpawnedSystemRegion& Entry : SpawnedRegions)
+    {
+        if (Entry.RegionName.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            if (Entry.Actor)
+            {
+                OutWorldLocation = Entry.Actor->GetActorLocation();
+                return true;
+            }
+
+            OutWorldLocation = Entry.SpawnLocation;
+            return true;
+        }
+    }
+
+    return false;
 }

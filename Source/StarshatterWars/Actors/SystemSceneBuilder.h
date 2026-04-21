@@ -158,7 +158,10 @@ struct FSpawnedSystemRegion
     FVector SpawnLocation = FVector::ZeroVector;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    float RegionRadiusUnits = 0.0f;
+    float InnerRadiusUnits = 0.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    float OuterRadiusUnits = 0.0f;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     float GridUnits = 0.0f;
@@ -223,6 +226,9 @@ public:
 
     ACameraActor* GetOrCreateSceneCameraActor();
 
+    bool GetRegionWorldLocationByName(const FString& RegionName, FVector& OutWorldLocation) const;
+
+
 protected:
     bool ResolveStarSystemRow(FStarSystem& OutRow) const;
     bool ResolveGalaxyRow(FS_Galaxy& OutRow) const;
@@ -254,6 +260,7 @@ protected:
         const FString& BodyName,
         const FVector& BodyWorldLocation,
         AActor* BodyActor,
+        float BodyVisualRadiusUnits,
         bool bIsMoon);
 
     void TrackRuntimeBody(
@@ -300,8 +307,18 @@ protected:
     AActor* SpawnRegionActor(
         const FString& RegionName,
         const FVector& WorldLocation,
-        float RegionRadiusUnits,
+        float OuterRadiusUnits,
         AActor* ParentActor);
+
+    void RegisterSpawnedRegion(
+        const FString& RegionName,
+        const FString& AnchorBodyName,
+        AActor* Actor,
+        AActor* ParentActor,
+        const FVector& SpawnLocation,
+        float InnerRadiusUnits,
+        float OuterRadiusUnits,
+        float GridUnits);
 
     void RegisterSpawnedBody(
         const FString& BodyName,
@@ -313,15 +330,6 @@ protected:
         float VisualRadiusUnits,
         float OrbitRadiusUnits);
 
-    void RegisterSpawnedRegion(
-        const FString& RegionName,
-        const FString& AnchorBodyName,
-        AActor* Actor,
-        AActor* ParentActor,
-        const FVector& SpawnLocation,
-        float RegionRadiusUnits,
-        float GridUnits);
-
     UStarshatterEnvironmentSubsystem* GetEnvironmentSubsystem() const;
 
     void FocusPlayerCameraOnSystem(const FVector& FocusPoint, float Distance) const;
@@ -329,7 +337,6 @@ protected:
 
     void LogRuntimeSystemSummary(StarSystem* RuntimeSystem) const;
     void LogTrackedBodies(const TCHAR* Label) const;
-
 
 
 public:

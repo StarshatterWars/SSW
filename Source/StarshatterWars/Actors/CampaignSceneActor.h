@@ -77,6 +77,11 @@ protected:
         FVector& OutWorldLocation) const;
 
 protected:
+    bool ResolveRegionCenterLocation(
+        const FString& RegionName,
+        FVector& OutWorldLocation) const;
+
+protected:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<USceneComponent> SceneRoot = nullptr;
 

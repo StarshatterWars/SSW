@@ -108,6 +108,25 @@ FVector ACampaignSceneActor::ConvertMissionElementLocToWorld(const FS_MissionEle
 {
     const FVector LocalOffset = Elem.Location * LegacyUnitsPerKm;
 
+    FVector RegionCenter = FVector::ZeroVector;
+    if (!Elem.RegionName.IsEmpty() && ResolveRegionCenterLocation(Elem.RegionName, RegionCenter))
+    {
+        const FVector WorldLoc = RegionCenter + LocalOffset;
+
+        if (bEnableDebugLogs)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] ConvertMissionElementLocToWorld: Name='%s' Region='%s' Local=%s RegionCenter=%s World=%s"),
+                *Elem.Name,
+                *Elem.RegionName,
+                *Elem.Location.ToString(),
+                *RegionCenter.ToString(),
+                *WorldLoc.ToString());
+        }
+
+        return WorldLoc;
+    }
+
     FVector RegionAnchor = FVector::ZeroVector;
     if (!Elem.RegionName.IsEmpty() && ResolveRegionAnchorLocation(Elem.RegionName, RegionAnchor))
     {
@@ -500,4 +519,45 @@ void ACampaignSceneActor::DumpSceneActors() const
 
     UE_LOG(LogTemp, Warning,
         TEXT("========================================"));
+}
+
+bool ACampaignSceneActor::ResolveRegionCenterLocation(
+    const FString& RegionName,
+    FVector& OutWorldLocation) const
+{
+    OutWorldLocation = FVector::ZeroVector;
+
+    const FString CleanRegion = RegionName.TrimStartAndEnd();
+    if (CleanRegion.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: RegionName is empty"));
+        return false;
+    }
+
+    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+    if (!Builder)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: no SystemSceneBuilder for '%s'"),
+            *CleanRegion);
+        return false;
+    }
+
+    const FString RegionActorName = CleanRegion + TEXT("_REGION");
+
+    if (Builder->GetRegionWorldLocationByName(RegionActorName, OutWorldLocation))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: '%s' -> %s"),
+            *RegionActorName,
+            *OutWorldLocation.ToString());
+        return true;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveRegionCenterLocation: region actor not found '%s'"),
+        *RegionActorName);
+
+    return false;
 }
