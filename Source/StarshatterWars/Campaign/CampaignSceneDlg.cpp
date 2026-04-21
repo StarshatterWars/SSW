@@ -986,18 +986,38 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         *EventParamText,
         Event.EventNParams);
 
+    ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-    if (!Builder)
+
+    if (!SceneActor && !Builder)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] ExecuteCameraEvent: no SystemSceneBuilder found"));
+            TEXT("[SceneDlg] ExecuteCameraEvent: no CampaignSceneActor or SystemSceneBuilder found"));
         return;
     }
 
     if (!Event.EventTarget.IsEmpty())
     {
+        if (SceneActor)
+        {
+            const bool bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
+                Event.EventTarget,
+                Event.EventPoint,
+                0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor focus '%s' result=%s"),
+                *Event.EventTarget,
+                bFocusedSceneActor ? TEXT("true") : TEXT("false"));
+
+            if (bFocusedSceneActor)
+            {
+                return;
+            }
+        }
+
         FString RegionName;
-        if (ResolveElementRegionForTarget(Event.EventTarget, RegionName))
+        if (Builder && ResolveElementRegionForTarget(Event.EventTarget, RegionName))
         {
             const bool bFocusedRegion = Builder->FocusCameraOnBodyByName(
                 RegionName,
@@ -1016,20 +1036,31 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
             }
         }
 
-        const bool bFocused = Builder->FocusCameraOnBodyByName(
-            Event.EventTarget,
-            Event.EventPoint,
-            0.0f);
+        if (Builder)
+        {
+            const bool bFocused = Builder->FocusCameraOnBodyByName(
+                Event.EventTarget,
+                Event.EventPoint,
+                0.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ExecuteCameraEvent: Direct target focus '%s' result=%s"),
+                *Event.EventTarget,
+                bFocused ? TEXT("true") : TEXT("false"));
+
+            if (bFocused)
+            {
+                return;
+            }
+        }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: Direct target focus '%s' result=%s"),
-            *Event.EventTarget,
-            bFocused ? TEXT("true") : TEXT("false"));
-
+            TEXT("[SceneDlg] ExecuteCameraEvent: target '%s' could not be resolved as scene actor, region, or body"),
+            *Event.EventTarget);
         return;
     }
 
-    if (!Event.EventPoint.IsNearlyZero())
+    if (!Event.EventPoint.IsNearlyZero() && Builder)
     {
         const bool bApplied = Builder->ApplyCameraViewVector(
             Event.EventPoint,
@@ -1193,4 +1224,32 @@ bool UCampaignSceneDlg::ResolveElementRegionForTarget(const FString& TargetName,
         *SearchName);
 
     return false;
+}
+
+ACampaignSceneActor* UCampaignSceneDlg::ResolveCampaignSceneActor() const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveCampaignSceneActor: World is null"));
+        return nullptr;
+    }
+
+    for (TActorIterator<ACampaignSceneActor> It(World); It; ++It)
+    {
+        ACampaignSceneActor* SceneActor = *It;
+        if (IsValid(SceneActor))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] ResolveCampaignSceneActor: found '%s'"),
+                *GetNameSafe(SceneActor));
+            return SceneActor;
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ResolveCampaignSceneActor: no CampaignSceneActor found"));
+
+    return nullptr;
 }

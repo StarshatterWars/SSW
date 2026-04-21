@@ -38,6 +38,14 @@ public:
     void ClearSceneActors();
     void DumpSceneActors() const;
 
+public:
+    bool FocusCameraOnSceneActorByName(
+        const FString& ElementName,
+        const FVector& CameraOffset,
+        float BlendSeconds = 0.0f) const;
+
+    AActor* FindSceneActorByName(const FString& ElementName) const;
+
 protected:
     ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
 

@@ -95,6 +95,8 @@ protected:
     ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
     bool ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const;
 
+    ACampaignSceneActor* ResolveCampaignSceneActor() const;
+
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
     UBorder* RuntimeHost = nullptr;

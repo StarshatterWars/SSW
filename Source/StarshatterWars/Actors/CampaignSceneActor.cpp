@@ -11,6 +11,9 @@
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
 
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
+
 ACampaignSceneActor::ACampaignSceneActor()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -520,4 +523,89 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: spawned=%d"),
         Count);
+}
+
+AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) const
+{
+    const FString SearchName = ElementName.TrimStartAndEnd();
+    if (SearchName.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
+    {
+        if (!Entry.Actor)
+        {
+            continue;
+        }
+
+        if (Entry.ElementName.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            return Entry.Actor;
+        }
+    }
+
+    return nullptr;
+}
+
+bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
+    const FString& ElementName,
+    const FVector& CameraOffset,
+    float BlendSeconds) const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: World is null"));
+        return false;
+    }
+
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: PlayerController is null"));
+        return false;
+    }
+
+    AActor* TargetActor = FindSceneActorByName(ElementName);
+    if (!TargetActor)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: actor not found '%s'"),
+            *ElementName);
+        return false;
+    }
+
+    FVector SceneOffset = CameraOffset;
+
+    if (SceneOffset.IsNearlyZero())
+    {
+        SceneOffset = FVector(-2500.0f, -500.0f, 1500.0f);
+    }
+
+    const FVector FocusPoint = TargetActor->GetActorLocation();
+    const FVector CameraLocation = FocusPoint + SceneOffset;
+    const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
+
+    PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
+    PC->SetControlRotation(CameraRotation);
+
+    if (PC->PlayerCameraManager)
+    {
+        PC->PlayerCameraManager->SetGameCameraCutThisFrame();
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: Target='%s' Focus=%s Offset=%s Camera=%s Rotation=%s Blend=%.2f"),
+        *ElementName,
+        *FocusPoint.ToString(),
+        *SceneOffset.ToString(),
+        *CameraLocation.ToString(),
+        *CameraRotation.ToString(),
+        BlendSeconds);
+
+    return true;
 }
