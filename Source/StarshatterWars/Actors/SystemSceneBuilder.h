@@ -330,6 +330,8 @@ protected:
     void LogRuntimeSystemSummary(StarSystem* RuntimeSystem) const;
     void LogTrackedBodies(const TCHAR* Label) const;
 
+
+
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
     bool bBuildOnBeginPlay = false;
@@ -373,6 +375,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System|Debug")
     float DebugLogIntervalSeconds = 1.0f;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
+    bool bAnimateBodies = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     TSubclassOf<AActor> StarActorClass;
 
@@ -402,6 +407,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Planet Types")
     TSubclassOf<AActor> GasGiantPlanetActorClass;
+
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

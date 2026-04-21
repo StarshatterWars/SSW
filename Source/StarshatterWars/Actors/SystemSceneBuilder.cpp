@@ -82,6 +82,8 @@ void ASystemSceneBuilder::BeginPlay()
     {
         BuildSystemScene();
     }
+
+    bAnimateBodies = false;
 }
 
 void ASystemSceneBuilder::Tick(float DeltaTime)
@@ -91,7 +93,10 @@ void ASystemSceneBuilder::Tick(float DeltaTime)
     ++TickCounter;
     DebugTickAccumulator += DeltaTime;
 
-    RefreshRuntimeBodyTransforms();
+    if (bAnimateBodies)
+    {
+        RefreshRuntimeBodyTransforms();
+    }
 
     const bool bShouldLogThisTick =
         bEnableDebugLogs &&
@@ -718,7 +723,13 @@ void ASystemSceneBuilder::RefreshRuntimeBodyTransforms()
         const FVector OldLocation = Actor->GetActorLocation();
         const bool bMoved = !OldLocation.Equals(NewLocation, 0.01f);
 
-        Actor->SetActorLocation(NewLocation);
+        const FVector SmoothedLocation = FMath::VInterpTo(
+            OldLocation,
+            NewLocation,
+            GetWorld()->GetDeltaSeconds(),
+            3.0f);
+
+        Actor->SetActorLocation(SmoothedLocation);
 
         for (FSpawnedSystemBody& Entry : SpawnedBodies)
         {
