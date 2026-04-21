@@ -85,6 +85,11 @@ UStaticMesh* ACampaignSceneActor::ResolveStaticMeshFromPath(const FString& MeshP
     return LoadObject<UStaticMesh>(nullptr, *MeshPath);
 }
 
+AActor* ACampaignSceneActor::FindRegionActorByName(const FString& RegionName) const
+{
+    return nullptr;
+}
+
 AActor* ACampaignSceneActor::SpawnSceneElementActor(
     const FString& ElementName,
     const FString& ModelName,
@@ -305,9 +310,9 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
-        const FString ElementName = Elem.Name;
-        const FString RegionName = Elem.RegionName;
-        const FString DesignName = Elem.Design;
+        const FString ElementName = Elem.Name.TrimStartAndEnd();
+        const FString RegionName = Elem.RegionName.TrimStartAndEnd();
+        const FString DesignName = Elem.Design.TrimStartAndEnd();
 
         FString ModelName = DesignName;
 
@@ -370,3 +375,4 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: spawned=%d"),
         Count);
 }
+

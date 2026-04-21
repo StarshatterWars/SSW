@@ -48,8 +48,8 @@ protected:
     FString ResolveModelNameForDesign(const FString& DesignName) const;
     FString ResolveMeshPathForDesign(const FString& DesignName) const;
     UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
-
-
+    
+    AActor* FindRegionActorByName(const FString& RegionName) const;
 
     AActor* SpawnSceneElementActor(
         const FString& ElementName,
