@@ -88,4 +88,7 @@ protected:
 
     UPROPERTY()
     TArray<FCampaignSceneSpawnedActor> SpawnedSceneActors;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scene|MissionElements")
+    float MissionElementScaleMultiplier = 50.0f;
 };

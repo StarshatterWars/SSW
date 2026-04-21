@@ -251,6 +251,9 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
     SpawnedActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 
+    // Scale up mission elements so they read in the cinematic system scene.
+    SpawnedActor->SetActorScale3D(FVector(MissionElementScaleMultiplier));
+
     if (!SpawnedActor->SetSceneMesh(Mesh))
     {
         UE_LOG(LogTemp, Warning,
@@ -261,12 +264,13 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d"),
+        TEXT("[CampaignSceneActor] Spawned scene mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d Scale=%s"),
         *ElementName,
         *ModelName,
         *GetNameSafe(Mesh),
         *WorldLocation.ToString(),
-        HeadingDegrees);
+        HeadingDegrees,
+        *SpawnedActor->GetActorScale3D().ToString());
 
     return SpawnedActor;
 }
