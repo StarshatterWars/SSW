@@ -1716,7 +1716,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 							}
 							else if (pdef->name()->value() == "location" ||
 								pdef->name()->value() == "loc") {
-								GetDefVec(ActionLocation, pdef, filename);
+									GetDefVector(ActionLocation, pdef, filename);
 								NewCampaignAction.Location.X = ActionLocation.X;
 								NewCampaignAction.Location.Y = ActionLocation.Y;
 								NewCampaignAction.Location.Z = ActionLocation.Z;
@@ -3163,7 +3163,7 @@ void UStarshatterGameDataSubsystem::ParseNavpoint(TermStruct* Val, const char* F
 		{
 			// Use FVector only
 			FVector V;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewInstr.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3297,7 +3297,7 @@ void UStarshatterGameDataSubsystem::ParseObjective(TermStruct* Val, const char* 
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewObj.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3430,7 +3430,7 @@ void UStarshatterGameDataSubsystem::ParseInstruction(TermStruct* Val, const char
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewInstr.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3574,13 +3574,13 @@ void UStarshatterGameDataSubsystem::ParseShip(TermStruct* Val, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionShip.Location = V;
 		}
 		else if (Key == "velocity")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionShip.Velocity = V;
 		}
 		else if (Key == "respawns")
@@ -3823,8 +3823,10 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		else if (Key == "fade")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
-			NewMissionEvent.EventFade;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventFade = V;
+			}
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{
@@ -3908,11 +3910,21 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(EventSound, PDef, Fn);
 			NewMissionEvent.EventSound = FString(EventSound);
 		}
+		else if (Key == "fade")
+		{
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventFade = V;
+			}
+		}
 		else if (Key == "loc" || Key == "vec")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
-			NewMissionEvent.EventPoint = V;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventPoint = V;
+			}
 		}
 		else if (Key == "rect")
 		{
@@ -4081,7 +4093,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionElement.Location = V;
 		}
 		else if (Key == "rloc")
@@ -4817,7 +4829,7 @@ void UStarshatterGameDataSubsystem::ParseAlias(TermStruct* Val, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 
 			Location = V;
 			bUseLocation = true;
@@ -4940,7 +4952,7 @@ void UStarshatterGameDataSubsystem::ParseRLoc(TermStruct* RVal, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, RDef, Fn);
+			GetDefVector(V, RDef, Fn);
 
 			BaseLocation = V;
 			NewRLocElement.BaseLocation = BaseLocation;
