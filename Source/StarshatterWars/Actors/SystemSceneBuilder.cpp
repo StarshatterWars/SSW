@@ -19,6 +19,7 @@
 #include "SystemUtils.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystemRegistry.h"
+#include "SystemUtils.h"
 
 #include "StarSystem.h"
 #include "Orbital.h"
@@ -152,14 +153,56 @@ void ASystemSceneBuilder::BuildSystemScene()
     BuildFromRuntimeSystem(RuntimeSystem);
 }
 
+float ASystemSceneBuilder::ConvertOrbitKmToSceneUnits(float OrbitKm, bool bIsMoonOrbit) const
+{
+    if (ScaleSettings.ScaleMode == ESystemSceneScaleMode::LegacyCinematic)
+    {
+        const float UnitsPerKm = bIsMoonOrbit
+            ? ScaleSettings.LegacyMoonUnitsPerKm
+            : ScaleSettings.LegacyUnitsPerKm;
+
+        return FMath::Min(
+            OrbitKm * UnitsPerKm,
+            ScaleSettings.LegacyMaxOrbitUnits);
+    }
+
+    float Units = 0.0f;
+
+    if (ScaleSettings.bUseLogOrbitScaling)
+    {
+        Units = USystemUtils::OrbitKmToSceneUnitsLog(
+            OrbitKm,
+            ScaleSettings.MinOrbitKm,
+            ScaleSettings.MaxOrbitKm,
+            ScaleSettings.MinOrbitUnits,
+            ScaleSettings.MaxOrbitUnits);
+    }
+    else
+    {
+        Units = USystemUtils::OrbitKmToSceneUnitsClamped(
+            OrbitKm,
+            ScaleSettings.OrbitUnitsPerMillionKm,
+            ScaleSettings.MinOrbitUnits,
+            ScaleSettings.MaxOrbitUnits);
+    }
+
+    if (bIsMoonOrbit)
+    {
+        Units *= ScaleSettings.MoonOrbitMultiplier;
+    }
+
+    return Units;
+}
+
 void ASystemSceneBuilder::ClearSpawnedBodies()
 {
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] ClearSpawnedBodies Actors=%d Bodies=%d RuntimeBodyMap=%d BodyActorMap=%d"),
+            TEXT("[SystemSceneBuilder] ClearSpawnedBodies Actors=%d Bodies=%d Regions=%d RuntimeBodyMap=%d BodyActorMap=%d"),
             SpawnedActors.Num(),
             SpawnedBodies.Num(),
+            SpawnedRegions.Num(),
             RuntimeBodyMap.Num(),
             BodyActorMap.Num());
     }
@@ -174,6 +217,7 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
 
     SpawnedActors.Empty();
     SpawnedBodies.Empty();
+    SpawnedRegions.Empty();
     RuntimeBodyMap.Empty();
     BodyActorMap.Empty();
 }
@@ -466,6 +510,12 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
     TrackRuntimeBody(PlanetName, PlanetBody, PlanetActor);
 
+    BuildRuntimeRegionForBody(
+        PlanetName,
+        PlanetWorldLocation,
+        PlanetActor,
+        false);
+
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
@@ -560,6 +610,12 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
         OrbitRadiusUnits);
 
     TrackRuntimeBody(MoonName, MoonBody, MoonActor);
+
+    BuildRuntimeRegionForBody(
+        MoonName,
+        MoonWorldLocation,
+        MoonActor,
+        true);
 
     if (bEnableDebugLogs)
     {
@@ -959,70 +1015,6 @@ AActor* ASystemSceneBuilder::SpawnOrbitActor(
     }
 
     return Spawned;
-}
-
-void ASystemSceneBuilder::RegisterSpawnedBody(
-    const FString& BodyName,
-    AActor* Actor,
-    AActor* ParentActor,
-    bool bIsMoon,
-    bool bIsOrbit,
-    const FVector& SpawnLocation,
-    float VisualRadiusUnits,
-    float OrbitRadiusUnits)
-{
-    FSpawnedSystemBody Entry;
-    Entry.BodyName = BodyName;
-    Entry.Actor = Actor;
-    Entry.ParentActor = ParentActor;
-    Entry.bIsMoon = bIsMoon;
-    Entry.bIsOrbit = bIsOrbit;
-    Entry.SpawnLocation = SpawnLocation;
-    Entry.VisualRadiusUnits = VisualRadiusUnits;
-    Entry.OrbitRadiusUnits = OrbitRadiusUnits;
-
-    SpawnedBodies.Add(Entry);
-}
-
-float ASystemSceneBuilder::ConvertOrbitKmToSceneUnits(float OrbitKm, bool bIsMoonOrbit) const
-{
-    if (ScaleSettings.ScaleMode == ESystemSceneScaleMode::LegacyCinematic)
-    {
-        const float UnitsPerKm = bIsMoonOrbit
-            ? ScaleSettings.LegacyMoonUnitsPerKm
-            : ScaleSettings.LegacyUnitsPerKm;
-
-        return FMath::Min(
-            OrbitKm * UnitsPerKm,
-            ScaleSettings.LegacyMaxOrbitUnits);
-    }
-
-    float Units = 0.0f;
-
-    if (ScaleSettings.bUseLogOrbitScaling)
-    {
-        Units = USystemUtils::OrbitKmToSceneUnitsLog(
-            OrbitKm,
-            ScaleSettings.MinOrbitKm,
-            ScaleSettings.MaxOrbitKm,
-            ScaleSettings.MinOrbitUnits,
-            ScaleSettings.MaxOrbitUnits);
-    }
-    else
-    {
-        Units = USystemUtils::OrbitKmToSceneUnitsClamped(
-            OrbitKm,
-            ScaleSettings.OrbitUnitsPerMillionKm,
-            ScaleSettings.MinOrbitUnits,
-            ScaleSettings.MaxOrbitUnits);
-    }
-
-    if (bIsMoonOrbit)
-    {
-        Units *= ScaleSettings.MoonOrbitMultiplier;
-    }
-
-    return Units;
 }
 
 float ASystemSceneBuilder::ConvertRadiusKmToSceneUnits(float RadiusKm) const
@@ -1929,4 +1921,214 @@ EPlanetType ASystemSceneBuilder::ResolvePlanetTypeFromData(const FString& BodyNa
     }
 
     return EPlanetType::Unknown;
+}
+
+void ASystemSceneBuilder::BuildRuntimeRegionForBody(
+    const FString& BodyName,
+    const FVector& BodyWorldLocation,
+    AActor* BodyActor,
+    bool bIsMoon)
+{
+    if (!bSpawnRegionActors)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: bSpawnRegionActors is false"));
+        return;
+    }
+
+    if (BodyName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: BodyName is empty"));
+        return;
+    }
+
+    if (!BodyActor)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: BodyActor is null for '%s'"),
+            *BodyName);
+        return;
+    }
+
+    const float RegionRadiusUnits =
+        ConvertOrbitKmToSceneUnits(DefaultRegionRadiusKm, bIsMoon);
+
+    const float GridUnits =
+        ConvertOrbitKmToSceneUnits(DefaultRegionGridKm, bIsMoon);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s RadiusUnits=%.2f GridUnits=%.2f bIsMoon=%s"),
+        *BodyName,
+        *BodyWorldLocation.ToString(),
+        RegionRadiusUnits,
+        GridUnits,
+        bIsMoon ? TEXT("true") : TEXT("false"));
+
+    AActor* RegionActor = SpawnRegionActor(
+        BodyName,
+        BodyWorldLocation,
+        RegionRadiusUnits,
+        BodyActor);
+
+    RegisterSpawnedRegion(
+        BodyName + TEXT("_REGION"),
+        BodyName,
+        RegionActor,
+        BodyActor,
+        BodyWorldLocation,
+        RegionRadiusUnits,
+        GridUnits);
+
+    if (bEnableDebugLogs)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s RadiusUnits=%.2f GridUnits=%.2f Actor=%s"),
+            *BodyName,
+            *BodyName,
+            *BodyWorldLocation.ToString(),
+            RegionRadiusUnits,
+            GridUnits,
+            *GetNameSafe(RegionActor));
+    }
+}
+
+AActor* ASystemSceneBuilder::SpawnRegionActor(
+    const FString& RegionName,
+    const FVector& WorldLocation,
+    float RegionRadiusUnits,
+    AActor* ParentActor)
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SystemSceneBuilder] SpawnRegionActor: World is null for '%s'"),
+            *RegionName);
+        return nullptr;
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = this;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    const FString FullName = RegionName + TEXT("_REGION");
+
+    AStaticMeshActor* Spawned = World->SpawnActor<AStaticMeshActor>(
+        AStaticMeshActor::StaticClass(),
+        WorldLocation,
+        FRotator::ZeroRotator,
+        SpawnParams);
+
+    if (!Spawned)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SystemSceneBuilder] SpawnRegionActor: failed to spawn '%s'"),
+            *FullName);
+        return nullptr;
+    }
+
+#if WITH_EDITOR
+    Spawned->SetActorLabel(FullName);
+#endif
+
+    UStaticMeshComponent* SMC = Spawned->GetStaticMeshComponent();
+    if (SMC)
+    {
+        SMC->SetMobility(EComponentMobility::Movable);
+
+        static UStaticMesh* SphereMesh = nullptr;
+        if (!SphereMesh)
+        {
+            SphereMesh = LoadObject<UStaticMesh>(
+                nullptr,
+                TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+        }
+
+        if (SphereMesh)
+        {
+            SMC->SetStaticMesh(SphereMesh);
+        }
+
+        SMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        SMC->SetVisibility(true);
+        SMC->SetHiddenInGame(false);
+    }
+
+    Spawned->SetActorScale3D(FVector(RegionRadiusUnits));
+
+    if (ParentActor)
+    {
+        Spawned->AttachToActor(
+            ParentActor,
+            FAttachmentTransformRules::KeepWorldTransform);
+    }
+    else
+    {
+        Spawned->AttachToActor(
+            this,
+            FAttachmentTransformRules::KeepWorldTransform);
+    }
+
+    SpawnedActors.Add(Spawned);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s RadiusUnits=%.2f Parent=%s"),
+        *FullName,
+        *GetNameSafe(Spawned),
+        *WorldLocation.ToString(),
+        RegionRadiusUnits,
+        *GetNameSafe(ParentActor));
+
+    return Spawned;
+}
+
+void ASystemSceneBuilder::RegisterSpawnedRegion(
+    const FString& RegionName,
+    const FString& AnchorBodyName,
+    AActor* Actor,
+    AActor* ParentActor,
+    const FVector& SpawnLocation,
+    float RegionRadiusUnits,
+    float GridUnits)
+{
+    FSpawnedSystemRegion Entry;
+    Entry.RegionName = RegionName;
+    Entry.AnchorBodyName = AnchorBodyName;
+    Entry.Actor = Actor;
+    Entry.ParentActor = ParentActor;
+    Entry.SpawnLocation = SpawnLocation;
+    Entry.RegionRadiusUnits = RegionRadiusUnits;
+    Entry.GridUnits = GridUnits;
+
+    SpawnedRegions.Add(Entry);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Count=%d"),
+        *RegionName,
+        *AnchorBodyName,
+        SpawnedRegions.Num());
+}
+
+void ASystemSceneBuilder::RegisterSpawnedBody(
+    const FString& BodyName,
+    AActor* Actor,
+    AActor* ParentActor,
+    bool bIsMoon,
+    bool bIsOrbit,
+    const FVector& SpawnLocation,
+    float VisualRadiusUnits,
+    float OrbitRadiusUnits)
+{
+    FSpawnedSystemBody Entry;
+    Entry.BodyName = BodyName;
+    Entry.Actor = Actor;
+    Entry.ParentActor = ParentActor;
+    Entry.bIsMoon = bIsMoon;
+    Entry.bIsOrbit = bIsOrbit;
+    Entry.SpawnLocation = SpawnLocation;
+    Entry.VisualRadiusUnits = VisualRadiusUnits;
+    Entry.OrbitRadiusUnits = OrbitRadiusUnits;
+
+    SpawnedBodies.Add(Entry);
 }

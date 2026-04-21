@@ -10,6 +10,7 @@ class UStarshatterEnvironmentSubsystem;
 class StarSystem;
 class OrbitalBody;
 class OrbitalRegion;
+class ACameraActor;
 
 UENUM(BlueprintType)
 enum class ESystemSceneSource : uint8
@@ -31,7 +32,7 @@ struct FSystemSceneScaleSettings
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
-    ESystemSceneScaleMode ScaleMode = ESystemSceneScaleMode::PreviewCompressed;
+    ESystemSceneScaleMode ScaleMode = ESystemSceneScaleMode::LegacyCinematic;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
     bool bUseLogOrbitScaling = true;
@@ -61,19 +62,19 @@ struct FSystemSceneScaleSettings
     float MaxOrbitKm = 8000000000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
-    float LegacyUnitsPerKm = 0.05f;
+    float LegacyUnitsPerKm = 0.20f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
-    float LegacyMoonUnitsPerKm = 0.05f;
+    float LegacyMoonUnitsPerKm = 0.20f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
-    float LegacyMaxOrbitUnits = 100000000.0f;
+    float LegacyMaxOrbitUnits = 500000000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|LegacyCamera")
     float LegacyPlanetCameraFactor = 0.10f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
-    float MoonOrbitMultiplier = 0.20f;
+    float MoonOrbitMultiplier = 1.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
     float VerticalOffset = 0.0f;
@@ -104,7 +105,6 @@ struct FSystemSceneScaleSettings
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
     float GasGiantScaleMultiplier = 1.0f;
-
 };
 
 USTRUCT(BlueprintType)
@@ -137,6 +137,33 @@ struct FSpawnedSystemBody
     float OrbitRadiusUnits = 0.0f;
 };
 
+USTRUCT(BlueprintType)
+struct FSpawnedSystemRegion
+{
+    GENERATED_BODY()
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FString RegionName;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FString AnchorBodyName;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<AActor> Actor = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<AActor> ParentActor = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FVector SpawnLocation = FVector::ZeroVector;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    float RegionRadiusUnits = 0.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    float GridUnits = 0.0f;
+};
+
 UCLASS()
 class STARSHATTERWARS_API ASystemSceneBuilder : public AActor
 {
@@ -164,7 +191,7 @@ public:
         const FVector& CameraOffset,
         float BlendSeconds = 0.0f);
 
-        UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
+    UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
     bool GetBodyWorldLocationByName(
         const FString& BodyName,
         FVector& OutWorldLocation) const;
@@ -187,6 +214,14 @@ public:
     {
         return SpawnedBodies;
     }
+
+    UFUNCTION(BlueprintPure, Category = "Starshatter|SystemScene")
+    const TArray<FSpawnedSystemRegion>& GetSpawnedRegions() const
+    {
+        return SpawnedRegions;
+    }
+
+    ACameraActor* GetOrCreateSceneCameraActor();
 
 protected:
     bool ResolveStarSystemRow(FStarSystem& OutRow) const;
@@ -214,6 +249,12 @@ protected:
         const FVector& StarAnchorWorldLocation,
         const FVector& PrimaryStarRuntimeLocation,
         AActor* ParentActor);
+
+    void BuildRuntimeRegionForBody(
+        const FString& BodyName,
+        const FVector& BodyWorldLocation,
+        AActor* BodyActor,
+        bool bIsMoon);
 
     void TrackRuntimeBody(
         const FString& BodyName,
@@ -256,6 +297,12 @@ protected:
         float OrbitRadiusUnits,
         AActor* ParentActor);
 
+    AActor* SpawnRegionActor(
+        const FString& RegionName,
+        const FVector& WorldLocation,
+        float RegionRadiusUnits,
+        AActor* ParentActor);
+
     void RegisterSpawnedBody(
         const FString& BodyName,
         AActor* Actor,
@@ -265,6 +312,15 @@ protected:
         const FVector& SpawnLocation,
         float VisualRadiusUnits,
         float OrbitRadiusUnits);
+
+    void RegisterSpawnedRegion(
+        const FString& RegionName,
+        const FString& AnchorBodyName,
+        AActor* Actor,
+        AActor* ParentActor,
+        const FVector& SpawnLocation,
+        float RegionRadiusUnits,
+        float GridUnits);
 
     UStarshatterEnvironmentSubsystem* GetEnvironmentSubsystem() const;
 
@@ -297,7 +353,16 @@ public:
     bool bSpawnOrbitActors = true;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
+    bool bSpawnRegionActors = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
     bool bDestroyPreviousBodiesOnBuild = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System|Regions")
+    float DefaultRegionRadiusKm = 480000.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System|Regions")
+    float DefaultRegionGridKm = 20000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System|Debug")
     bool bEnableDebugLogs = true;
@@ -319,6 +384,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     TSubclassOf<AActor> OrbitActorClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    TSubclassOf<AActor> RegionActorClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Planet Types")
     TSubclassOf<AActor> TerranPlanetActorClass;
@@ -345,8 +413,14 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime")
     TArray<FSpawnedSystemBody> SpawnedBodies;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime")
+    TArray<FSpawnedSystemRegion> SpawnedRegions;
+
     UPROPERTY()
     TArray<TObjectPtr<AActor>> SpawnedActors;
+
+    UPROPERTY()
+    TObjectPtr<ACameraActor> SceneCameraActor = nullptr;
 
     TMap<FString, OrbitalBody*> RuntimeBodyMap;
     TMap<FString, TObjectPtr<AActor>> BodyActorMap;
