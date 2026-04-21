@@ -39,6 +39,8 @@ public:
     void DumpSceneActors() const;
 
 protected:
+    ASystemSceneBuilder* ResolveSystemSceneBuilder() const;
+
     FVector ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const;
     FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
 
@@ -48,7 +50,7 @@ protected:
     FString ResolveModelNameForDesign(const FString& DesignName) const;
     FString ResolveMeshPathForDesign(const FString& DesignName) const;
     UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
-    
+
     AActor* FindRegionActorByName(const FString& RegionName) const;
 
     AActor* SpawnSceneElementActor(
