@@ -3817,6 +3817,18 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 				);
 			}
 		}
+		else if (Key == "offset")
+		{
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventOffset = FVector(
+					V.X, // X
+					V.Y, // Y
+					V.Z  // Z
+				);
+			}
+		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{
 			if (PDef->term() && PDef->term()->isNumber())

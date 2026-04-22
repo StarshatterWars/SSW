@@ -2436,6 +2436,9 @@ struct FS_MissionEvent : public FTableRowBase
 	FRotator EventRotator = FRotator::ZeroRotator;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector EventOffset = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double EventTime;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)

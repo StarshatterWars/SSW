@@ -579,67 +579,6 @@ AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) co
 bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     const FString& ElementName,
     const FVector& CameraOffset,
-    float BlendSeconds) const
-{
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: World is null"));
-        return false;
-    }
-
-    APlayerController* PC = World->GetFirstPlayerController();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: PlayerController is null"));
-        return false;
-    }
-
-    AActor* TargetActor = FindSceneActorByName(ElementName);
-    if (!TargetActor)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: actor not found '%s'"),
-            *ElementName);
-        return false;
-    }
-
-    FVector SceneOffset = CameraOffset;
-
-    if (SceneOffset.IsNearlyZero())
-    {
-        SceneOffset = FVector(-2500.0f, -500.0f, 1500.0f);
-    }
-
-    const FVector FocusPoint = TargetActor->GetActorLocation();
-    const FVector CameraLocation = FocusPoint + SceneOffset;
-    const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
-
-    PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
-    PC->SetControlRotation(CameraRotation);
-
-    if (PC->PlayerCameraManager)
-    {
-        PC->PlayerCameraManager->SetGameCameraCutThisFrame();
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName: Target='%s' Focus=%s Offset=%s Camera=%s Rotation=%s Blend=%.2f"),
-        *ElementName,
-        *FocusPoint.ToString(),
-        *SceneOffset.ToString(),
-        *CameraLocation.ToString(),
-        *CameraRotation.ToString(),
-        BlendSeconds);
-
-    return true;
-}
-
-bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
-    const FString& ElementName,
-    const FVector& CameraOffset,
     const FRotator& CameraRotator,
     float BlendSeconds) const
 {
@@ -647,7 +586,7 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     if (!World)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): World is null"));
+            TEXT("[SceneActor] FocusCameraOnSceneActorByName: World is null"));
         return false;
     }
 
@@ -655,7 +594,7 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     if (!PC)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): PlayerController is null"));
+            TEXT("[SceneActor] FocusCameraOnSceneActorByName: PC is null"));
         return false;
     }
 
@@ -663,24 +602,25 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     if (!TargetActor)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): actor not found '%s'"),
+            TEXT("[SceneActor] FocusCameraOnSceneActorByName: actor not found '%s'"),
             *ElementName);
         return false;
     }
 
     FVector SceneOffset = CameraOffset;
-
-    // Keep the last-known-good baseline if caller gives no explicit offset.
     if (SceneOffset.IsNearlyZero())
     {
-        SceneOffset = FVector(-2500.0f, -500.0f, 1500.0f);
+        SceneOffset = FVector(0.0f, 0.0f, -2500.0f);
     }
 
-    // Yaw / Pitch / Roll rotate the baseline offset around the target.
+    const FVector FocusPoint = TargetActor->GetActorLocation();
+
+    // Rotate the offset using the full event rotator:
     const FVector RotatedOffset = CameraRotator.RotateVector(SceneOffset);
 
-    const FVector FocusPoint = TargetActor->GetActorLocation();
     const FVector CameraLocation = FocusPoint + RotatedOffset;
+
+    // Always look back at the target from the final camera position:
     const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
 
     PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
@@ -692,9 +632,11 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): Target='%s' Offset=%s Rotator=%s Camera=%s Rotation=%s Blend=%.2f"),
+        TEXT("[SceneActor Camera] Target='%s' Focus=%s RawOffset=%s RotatedOffset=%s EventRotator=%s Camera=%s Rotation=%s Blend=%.2f"),
         *ElementName,
+        *FocusPoint.ToString(),
         *SceneOffset.ToString(),
+        *RotatedOffset.ToString(),
         *CameraRotator.ToString(),
         *CameraLocation.ToString(),
         *CameraRotation.ToString(),

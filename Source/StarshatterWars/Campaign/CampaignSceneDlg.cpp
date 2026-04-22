@@ -963,29 +963,12 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
 
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
-    FString EventParamText = TEXT("[");
-    const int32 ParamCount = FMath::Clamp(Event.EventNParams, 0, Event.EventParam.Num());
-
-    for (int32 Index = 0; Index < ParamCount; ++Index)
-    {
-        if (Index > 0)
-        {
-            EventParamText += TEXT(", ");
-        }
-
-        EventParamText += FString::FromInt(Event.EventParam[Index]);
-    }
-
-    EventParamText += TEXT("]");
-
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] ExecuteCameraEvent: Time=%.2f Target='%s' Point=%s Rotator=%s EventParam=%s EventNParams=%d"),
-        Event.EventTime,
+        TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Offset=%s Rotator=%s"),
+        (double)Event.EventTime,
         *Event.EventTarget,
-        *Event.EventPoint.ToString(),
-        *Event.EventRotator.ToString(),
-        *EventParamText,
-        Event.EventNParams);
+        *Event.EventOffset.ToString(),
+        *Event.EventRotator.ToString());
 
     ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
@@ -993,91 +976,25 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     if (!SceneActor && !Builder)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] ExecuteCameraEvent: no CampaignSceneActor or SystemSceneBuilder found"));
+            TEXT("[SceneDlg] No SceneActor or Builder"));
         return;
     }
 
-    if (!Event.EventTarget.IsEmpty())
+    // ----------------------------------------------------
+    // SCENE ACTOR CAMERA (ships, stations)
+    // ----------------------------------------------------
+    if (!Event.EventTarget.IsEmpty() && SceneActor)
     {
-        if (SceneActor)
+        if (SceneActor->FindSceneActorByName(Event.EventTarget))
         {
-            const bool bIsSceneTarget =
-                (SceneActor->FindSceneActorByName(Event.EventTarget) != nullptr);
-
-            if (bIsSceneTarget)
-            {
-                bool bFocusedSceneActor = false;
-
-                // New rotator-driven ship/object camera:
-                if (!Event.EventRotator.IsNearlyZero())
-                {
-                    bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
-                        Event.EventTarget,
-                        Event.EventPoint,
-                        Event.EventRotator,
-                        0.0f);
-
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor ROTATOR focus '%s' result=%s"),
-                        *Event.EventTarget,
-                        bFocusedSceneActor ? TEXT("true") : TEXT("false"));
-
-                    if (bFocusedSceneActor)
-                    {
-                        return;
-                    }
-                }
-
-                // Legacy scene actor vector fallback:
-                if (!Event.EventPoint.IsNearlyZero())
-                {
-                    bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
-                        Event.EventTarget,
-                        Event.EventPoint,
-                        0.0f);
-
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor VECTOR focus '%s' result=%s"),
-                        *Event.EventTarget,
-                        bFocusedSceneActor ? TEXT("true") : TEXT("false"));
-
-                    if (bFocusedSceneActor)
-                    {
-                        return;
-                    }
-                }
-            }
-        }
-
-        FString RegionName;
-        if (Builder && ResolveElementRegionForTarget(Event.EventTarget, RegionName))
-        {
-            const bool bFocusedRegion = Builder->FocusCameraOnBodyByName(
-                RegionName,
-                Event.EventPoint,
-                0.0f);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] ExecuteCameraEvent: Region focus Target='%s' Region='%s' result=%s"),
-                *Event.EventTarget,
-                *RegionName,
-                bFocusedRegion ? TEXT("true") : TEXT("false"));
-
-            if (bFocusedRegion)
-            {
-                return;
-            }
-        }
-
-        if (Builder)
-        {
-            const bool bFocused = Builder->FocusCameraOnBodyByName(
+            bool bFocused = SceneActor->FocusCameraOnSceneActorByName(
                 Event.EventTarget,
-                Event.EventPoint,
+                Event.EventOffset,
+                Event.EventRotator,
                 0.0f);
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] ExecuteCameraEvent: Direct target focus '%s' result=%s"),
+                TEXT("[SceneDlg] Scene Actor Camera '%s' result=%s"),
                 *Event.EventTarget,
                 bFocused ? TEXT("true") : TEXT("false"));
 
@@ -1086,28 +1003,52 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                 return;
             }
         }
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: target '%s' could not be resolved as scene actor, region, or body"),
-            *Event.EventTarget);
-        return;
     }
 
-    if (!Event.EventPoint.IsNearlyZero() && Builder)
+    // ----------------------------------------------------
+    // REGION CAMERA (fallback)
+    // ----------------------------------------------------
+    FString RegionName;
+    if (Builder && ResolveElementRegionForTarget(Event.EventTarget, RegionName))
     {
-        const bool bApplied = Builder->ApplyCameraViewVector(
+        bool bFocused = Builder->FocusCameraOnBodyByName(
+            RegionName,
             Event.EventPoint,
             0.0f);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ExecuteCameraEvent: Apply view vector result=%s"),
-            bApplied ? TEXT("true") : TEXT("false"));
+        if (bFocused)
+        {
+            return;
+        }
+    }
 
+    // ----------------------------------------------------
+    // DIRECT BODY CAMERA (planets, stars)
+    // ----------------------------------------------------
+    if (Builder && !Event.EventTarget.IsEmpty())
+    {
+        bool bFocused = Builder->FocusCameraOnBodyByName(
+            Event.EventTarget,
+            Event.EventPoint,
+            0.0f);
+
+        if (bFocused)
+        {
+            return;
+        }
+    }
+
+    // ----------------------------------------------------
+    // VECTOR CAMERA (legacy fallback)
+    // ----------------------------------------------------
+    if (Builder && !Event.EventPoint.IsNearlyZero())
+    {
+        Builder->ApplyCameraViewVector(Event.EventPoint, 0.0f);
         return;
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] ExecuteCameraEvent: no target and no usable point"));
+        TEXT("[SceneDlg] Camera Event: nothing applied"));
 }
 
 void UCampaignSceneDlg::DebugCameraEventTarget(const FS_MissionEvent& Event)
