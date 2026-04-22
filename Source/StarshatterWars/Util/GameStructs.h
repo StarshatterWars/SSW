@@ -2433,6 +2433,9 @@ struct FS_MissionEvent : public FTableRowBase
 	int EventDelay;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int EventAngle;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double EventTime;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
