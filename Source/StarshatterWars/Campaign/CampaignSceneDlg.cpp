@@ -979,10 +979,11 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     EventParamText += TEXT("]");
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] ExecuteCameraEvent: Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
+        TEXT("[SceneDlg] ExecuteCameraEvent: Time=%.2f Target='%s' Point=%s Rotator=%s EventParam=%s EventNParams=%d"),
         Event.EventTime,
         *Event.EventTarget,
         *Event.EventPoint.ToString(),
+        *Event.EventRotator.ToString(),
         *EventParamText,
         Event.EventNParams);
 
@@ -1000,19 +1001,51 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     {
         if (SceneActor)
         {
-            const bool bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
-                Event.EventTarget,
-                Event.EventPoint,
-                0.0f);
+            const bool bIsSceneTarget =
+                (SceneActor->FindSceneActorByName(Event.EventTarget) != nullptr);
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor focus '%s' result=%s"),
-                *Event.EventTarget,
-                bFocusedSceneActor ? TEXT("true") : TEXT("false"));
-
-            if (bFocusedSceneActor)
+            if (bIsSceneTarget)
             {
-                return;
+                bool bFocusedSceneActor = false;
+
+                // New rotator-driven ship/object camera:
+                if (!Event.EventRotator.IsNearlyZero())
+                {
+                    bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
+                        Event.EventTarget,
+                        Event.EventPoint,
+                        Event.EventRotator,
+                        0.0f);
+
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor ROTATOR focus '%s' result=%s"),
+                        *Event.EventTarget,
+                        bFocusedSceneActor ? TEXT("true") : TEXT("false"));
+
+                    if (bFocusedSceneActor)
+                    {
+                        return;
+                    }
+                }
+
+                // Legacy scene actor vector fallback:
+                if (!Event.EventPoint.IsNearlyZero())
+                {
+                    bFocusedSceneActor = SceneActor->FocusCameraOnSceneActorByName(
+                        Event.EventTarget,
+                        Event.EventPoint,
+                        0.0f);
+
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[SceneDlg] ExecuteCameraEvent: Scene actor VECTOR focus '%s' result=%s"),
+                        *Event.EventTarget,
+                        bFocusedSceneActor ? TEXT("true") : TEXT("false"));
+
+                    if (bFocusedSceneActor)
+                    {
+                        return;
+                    }
+                }
             }
         }
 

@@ -3810,7 +3810,11 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			FVector V = FVector::ZeroVector;
 			if (GetDefVector(V, PDef, Fn))
 			{
-				NewMissionEvent.EventRotator = V;
+				NewMissionEvent.EventRotator = FRotator(
+					V.Y, // Pitch
+					V.X, // Yaw
+					V.Z  // Roll
+				);
 			}
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")

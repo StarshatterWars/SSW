@@ -636,3 +636,69 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
 
     return true;
 }
+
+bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
+    const FString& ElementName,
+    const FVector& CameraOffset,
+    const FRotator& CameraRotator,
+    float BlendSeconds) const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): World is null"));
+        return false;
+    }
+
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): PlayerController is null"));
+        return false;
+    }
+
+    AActor* TargetActor = FindSceneActorByName(ElementName);
+    if (!TargetActor)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): actor not found '%s'"),
+            *ElementName);
+        return false;
+    }
+
+    FVector SceneOffset = CameraOffset;
+
+    // Keep the last-known-good baseline if caller gives no explicit offset.
+    if (SceneOffset.IsNearlyZero())
+    {
+        SceneOffset = FVector(-2500.0f, -500.0f, 1500.0f);
+    }
+
+    // Yaw / Pitch / Roll rotate the baseline offset around the target.
+    const FVector RotatedOffset = CameraRotator.RotateVector(SceneOffset);
+
+    const FVector FocusPoint = TargetActor->GetActorLocation();
+    const FVector CameraLocation = FocusPoint + RotatedOffset;
+    const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
+
+    PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
+    PC->SetControlRotation(CameraRotation);
+
+    if (PC->PlayerCameraManager)
+    {
+        PC->PlayerCameraManager->SetGameCameraCutThisFrame();
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] FocusCameraOnSceneActorByName(Rotator): Target='%s' Offset=%s Rotator=%s Camera=%s Rotation=%s Blend=%.2f"),
+        *ElementName,
+        *SceneOffset.ToString(),
+        *CameraRotator.ToString(),
+        *CameraLocation.ToString(),
+        *CameraRotation.ToString(),
+        BlendSeconds);
+
+    return true;
+}

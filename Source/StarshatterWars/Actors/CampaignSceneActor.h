@@ -44,6 +44,12 @@ public:
         const FVector& CameraOffset,
         float BlendSeconds = 0.0f) const;
 
+    bool FocusCameraOnSceneActorByName(
+        const FString& ElementName,
+        const FVector& CameraOffset,
+        const FRotator& CameraRotator,
+        float BlendSeconds) const;
+
     AActor* FindSceneActorByName(const FString& ElementName) const;
 
 protected:
