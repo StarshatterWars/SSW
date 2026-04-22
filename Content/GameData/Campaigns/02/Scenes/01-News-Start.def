@@ -258,6 +258,8 @@ event: { type: Message, time: 16.18,
 event: { type: Message, time: 19.64,
          caption: "of the Trellis Farcaster,\" said\nAdministrator Lars of the Directorate." }
 
+event: { type: Camera, time: 19.64, param: (6,15), rotator: (90, 45, 0), target: "Trellis-Solus" }
+
 event: { type: Message, time: 23.75,
          caption: "\"We have suffered a great deal of damage\nin the fighting," }
 
