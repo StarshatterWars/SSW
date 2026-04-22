@@ -16,9 +16,9 @@
     CourierShipActor applies Courier.def defaults to the
     generic ShipActor base class.
 
-    This class is intended to be the native parent for
-    BP_Courier so that the Blueprint only needs to supply
-    visual assets and FX.
+    This class is intended to preload the base actor's
+    editable arrays and fixed points so that BP_Courier
+    can focus on visuals, FX, and final art tuning.
 */
 
 #pragma once
@@ -38,5 +38,6 @@ public:
     virtual void OnConstruction(const FTransform& Transform) override;
 
 protected:
-    void ApplyCourierDefDefaults();
+    void ApplyCourierDefaults();
+    void ApplyCourierFixedPoints();
 };

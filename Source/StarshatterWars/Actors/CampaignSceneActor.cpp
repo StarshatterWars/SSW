@@ -212,15 +212,18 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
      *
      * Convention:
      *     DesignName = Courier
-     *     Blueprint  = /Game/Ships/BP_Courier.BP_Courier_C
-     *
-     * You can add more search paths later if needed.
+     *     Blueprint  = /Game/Models/Courier/BP_Courier.BP_Courier_C
      */
     {
         const FString BPClassPath = FString::Printf(
-            TEXT("/Game/Ships/BP_%s.BP_%s_C"),
+            TEXT("/Game/Models/%s/BP_%s.BP_%s_C"),
+            *ResolvedName,
             *ResolvedName,
             *ResolvedName);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Trying BP: %s"),
+            *BPClassPath);
 
         UClass* BPClass = LoadClass<AActor>(nullptr, *BPClassPath);
 
@@ -254,20 +257,40 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             SpawnedBPActor->SetActorEnableCollision(false);
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] SpawnSceneElementActor: spawned Blueprint actor Name='%s' Design='%s' Class='%s' Loc=%s Heading=%d"),
+                TEXT("[CampaignSceneActor] BP Spawned PreScale=%s"),
+                *SpawnedBPActor->GetActorScale3D().ToString());
+
+            float FinalScale = MissionElementScaleMultiplier;
+
+            /*
+             * Per-model override for assets that import at a radically different size.
+             */
+            if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+            {
+                FinalScale *= 4.0f;
+            }
+
+            SpawnedBPActor->SetActorScale3D(FVector(FinalScale));
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] BP Spawned PostScale=%s"),
+                *SpawnedBPActor->GetActorScale3D().ToString());
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] SpawnSceneElementActor: spawned Blueprint actor Name='%s' Design='%s' Class='%s' Loc=%s Heading=%d Scale=%.2f"),
                 *ElementName,
                 *ResolvedName,
                 *GetNameSafe(BPClass),
                 *WorldLocation.ToString(),
-                HeadingDegrees);
+                HeadingDegrees,
+                FinalScale);
 
             return SpawnedBPActor;
         }
         else
         {
-            UE_LOG(LogTemp, Verbose,
-                TEXT("[CampaignSceneActor] SpawnSceneElementActor: no Blueprint found for Design='%s' Path='%s', falling back to static mesh"),
-                *ResolvedName,
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] BP NOT FOUND: %s"),
                 *BPClassPath);
         }
     }
