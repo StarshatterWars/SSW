@@ -186,11 +186,7 @@ void AShipActor::BeginPlay()
 void AShipActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    /*
-     * Nav light blinking is intentionally not implemented yet.
-     * Most structural components are anchors only at this stage.
-     */
+    UpdateNavLights(DeltaTime);
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -324,6 +320,7 @@ void AShipActor::RebuildNavLights()
 
     ClearNavLightArray(NavLightComponents);
     ClearEmitterArray(NavLightEmitters);
+    NavLightRuntimeStates.Empty();
 
     if (!bEnableNavLights || !LightRoot)
     {
@@ -383,7 +380,7 @@ void AShipActor::RebuildNavLights()
             }
 
             // scale small but visible
-            Emitter->SetWorldScale3D(FVector(0.1f));
+            Emitter->SetRelativeScale3D(FVector(0.0025f));
 
             if (NavLightMaterial)
             {
@@ -396,7 +393,11 @@ void AShipActor::RebuildNavLights()
                     Emitter->SetMaterial(0, MID);
                 }
             }
-
+            
+            FShipNavLightRuntimeState State;
+            State.bVisible = true;
+            State.TimeAccumulator = 0.0f;
+            NavLightRuntimeStates.Add(State);
             NavLightEmitters.Add(Emitter);
         }
 
@@ -767,4 +768,49 @@ void AShipActor::ClearEmitterArray(TArray<UStaticMeshComponent*>& Components)
     }
 
     Components.Empty();
+}
+
+void AShipActor::UpdateNavLights(float DeltaTime)
+{
+    const int32 Count = FMath::Min3(
+        NavLightDefs.Num(),
+        NavLightComponents.Num(),
+        NavLightRuntimeStates.Num());
+
+    for (int32 Index = 0; Index < Count; ++Index)
+    {
+        const FShipNavLightDef& Def = NavLightDefs[Index];
+        UPointLightComponent* Light = NavLightComponents[Index];
+        FShipNavLightRuntimeState& State = NavLightRuntimeStates[Index];
+
+        if (!Light)
+        {
+            continue;
+        }
+
+        if (!Def.bBlink)
+        {
+            if (!State.bVisible)
+            {
+                Light->SetVisibility(true);
+                State.bVisible = true;
+            }
+            continue;
+        }
+
+        const float Interval = FMath::Max(0.05f, Def.BlinkInterval);
+        State.TimeAccumulator += DeltaTime;
+
+        if (State.TimeAccumulator >= Interval)
+        {
+            State.TimeAccumulator = 0.0f;
+            State.bVisible = !State.bVisible;
+            Light->SetVisibility(State.bVisible);
+
+            if (NavLightEmitters.IsValidIndex(Index) && NavLightEmitters[Index])
+            {
+                NavLightEmitters[Index]->SetVisibility(State.bVisible);
+            }
+        }
+    }
 }

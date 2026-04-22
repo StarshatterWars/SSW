@@ -87,6 +87,18 @@ struct FShipPointDef
     FRotator LocalRotation = FRotator::ZeroRotator;
 };
 
+USTRUCT()
+struct FShipNavLightRuntimeState
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    bool bVisible = true;
+
+    UPROPERTY()
+    float TimeAccumulator = 0.0f;
+};
+
 UCLASS()
 class STARSHATTERWARS_API AShipActor : public AActor
 {
@@ -283,6 +295,9 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
     TArray<UStaticMeshComponent*> NavLightEmitters;
 
+    UPROPERTY(Transient)
+    TArray<FShipNavLightRuntimeState> NavLightRuntimeStates;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     UStaticMesh* NavLightMesh;
 
@@ -370,6 +385,7 @@ protected:
     void CreateTurretBasePoints();
     void CreateDockPoints();
     void CreateLandingPoints();
+    void UpdateNavLights(float DeltaTime);
 
     USceneComponent* CreateGeneratedPoint(
         const FString& BaseName,
