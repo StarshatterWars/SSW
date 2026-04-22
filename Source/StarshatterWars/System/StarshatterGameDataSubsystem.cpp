@@ -3696,7 +3696,6 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	int32  EventId = 1;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
-	int32  EventAngle = 0;
 
 	// IMPORTANT:
 	// inherit the last parsed event time unless this event overrides it
@@ -3806,10 +3805,13 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(ImageText, PDef, Fn);
 			NewMissionEvent.EventImage = FString(ImageText);
 		}
-		else if (Key == "angle")
+		else if (Key == "rotator")
 		{
-			GetDefNumber(EventAngle, PDef, Fn);
-			NewMissionEvent.EventAngle = EventAngle;
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventRotator = V;
+			}
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{

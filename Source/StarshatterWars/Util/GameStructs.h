@@ -2433,7 +2433,7 @@ struct FS_MissionEvent : public FTableRowBase
 	int EventDelay;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int EventAngle;
+	FVector EventRotator = FVector::ZeroVector;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double EventTime;
