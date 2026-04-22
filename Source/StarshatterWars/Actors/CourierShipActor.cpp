@@ -129,45 +129,40 @@ void ACourierShipActor::ApplyCourierDefaults()
      * can edit later in defaults.
      */
     NavLightDefs.Empty();
+
     {
         FShipNavLightDef Port;
         Port.LocalOffset = FVector(0.0f, -90.0f, 20.0f);
-        Port.LocalRotation = FRotator::ZeroRotator;
         Port.Color = FLinearColor::Red;
-        Port.Intensity = 3000.0f;
-        Port.Radius = 300.0f;
-        Port.bBlink = false;
-        Port.BlinkInterval = 1.0f;
+        Port.Intensity = 12000.0f;
+        Port.Radius = 500.0f;
         NavLightDefs.Add(Port);
+    }
 
+    {
         FShipNavLightDef Starboard;
         Starboard.LocalOffset = FVector(0.0f, 90.0f, 20.0f);
-        Starboard.LocalRotation = FRotator::ZeroRotator;
         Starboard.Color = FLinearColor::Green;
-        Starboard.Intensity = 3000.0f;
-        Starboard.Radius = 300.0f;
-        Starboard.bBlink = false;
-        Starboard.BlinkInterval = 1.0f;
+        Starboard.Intensity = 12000.0f;
+        Starboard.Radius = 500.0f;
         NavLightDefs.Add(Starboard);
+    }
 
+    {
         FShipNavLightDef Dorsal;
         Dorsal.LocalOffset = FVector(-40.0f, 0.0f, 60.0f);
-        Dorsal.LocalRotation = FRotator::ZeroRotator;
         Dorsal.Color = FLinearColor::White;
-        Dorsal.Intensity = 2500.0f;
-        Dorsal.Radius = 250.0f;
-        Dorsal.bBlink = false;
-        Dorsal.BlinkInterval = 1.0f;
+        Dorsal.Intensity = 9000.0f;
+        Dorsal.Radius = 450.0f;
         NavLightDefs.Add(Dorsal);
+    }
 
+    {
         FShipNavLightDef Ventral;
         Ventral.LocalOffset = FVector(-40.0f, 0.0f, -60.0f);
-        Ventral.LocalRotation = FRotator::ZeroRotator;
         Ventral.Color = FLinearColor(0.6f, 0.6f, 1.0f);
-        Ventral.Intensity = 2000.0f;
-        Ventral.Radius = 250.0f;
-        Ventral.bBlink = false;
-        Ventral.BlinkInterval = 1.0f;
+        Ventral.Intensity = 8000.0f;
+        Ventral.Radius = 450.0f;
         NavLightDefs.Add(Ventral);
     }
 

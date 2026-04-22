@@ -161,6 +161,13 @@ AShipActor::AShipActor()
 
 void AShipActor::OnConstruction(const FTransform& Transform)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] OnConstruction: %s  Auto=%d Rebuild=%d Defs=%d"),
+        *GetName(),
+        bAutoRebuildGeneratedComponents ? 1 : 0,
+        bRebuildOnConstruction ? 1 : 0,
+        NavLightDefs.Num());
+
     Super::OnConstruction(Transform);
 
     UpdateDerivedPointsFromHull();
@@ -303,15 +310,35 @@ void AShipActor::RebuildLandingPoints()
     CreateLandingPoints();
 }
 
+void AShipActor::RefreshNavLights()
+{
+    RebuildNavLights();
+}
+
 void AShipActor::RebuildNavLights()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildNavLights: BEGIN Ship='%s' DefCount=%d"),
+        *GetName(),
+        NavLightDefs.Num());
+
     ClearNavLightArray(NavLightComponents);
+    ClearEmitterArray(NavLightEmitters);
+
+    if (!bEnableNavLights || !LightRoot)
+    {
+        return;
+    }
 
     for (int32 Index = 0; Index < NavLightDefs.Num(); ++Index)
     {
         const FShipNavLightDef& Def = NavLightDefs[Index];
 
         const FString Name = FString::Printf(TEXT("NavLight_%d"), Index);
+
+        /*
+         * === LIGHT ===
+         */
         UPointLightComponent* Light = NewObject<UPointLightComponent>(this, *Name);
 
         if (!Light)
@@ -325,13 +352,62 @@ void AShipActor::RebuildNavLights()
         Light->SetRelativeLocation(Def.LocalOffset);
         Light->SetRelativeRotation(Def.LocalRotation);
         Light->SetLightColor(Def.Color);
-        Light->SetIntensity(Def.Intensity);
-        Light->SetAttenuationRadius(Def.Radius);
+
+        const float FinalIntensity = Def.Intensity * NavLightIntensityMultiplier;
+        const float FinalRadius = Def.Radius * NavLightRadiusMultiplier;
+
+        Light->SetUseInverseSquaredFalloff(false);
+        Light->SetIntensity(FinalIntensity);
+        Light->SetAttenuationRadius(FinalRadius);
         Light->SetCastShadows(false);
-        Light->SetVisibility(true);
 
         NavLightComponents.Add(Light);
+
+        /*
+         * === VISIBLE EMITTER ===
+         */
+        UStaticMeshComponent* Emitter = NewObject<UStaticMeshComponent>(this);
+
+        if (Emitter)
+        {
+            Emitter->SetupAttachment(Light);
+            Emitter->RegisterComponent();
+
+            Emitter->SetRelativeLocation(FVector::ZeroVector);
+            Emitter->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Emitter->SetCastShadow(false);
+
+            if (NavLightMesh)
+            {
+                Emitter->SetStaticMesh(NavLightMesh);
+            }
+
+            // scale small but visible
+            Emitter->SetWorldScale3D(FVector(0.1f));
+
+            if (NavLightMaterial)
+            {
+                UMaterialInstanceDynamic* MID =
+                    UMaterialInstanceDynamic::Create(NavLightMaterial, this);
+
+                if (MID)
+                {
+                    MID->SetVectorParameterValue("EmissiveColor", Def.Color);
+                    Emitter->SetMaterial(0, MID);
+                }
+            }
+
+            NavLightEmitters.Add(Emitter);
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] NavLight_%d created (Light + Emitter)"),
+            Index);
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildNavLights: END Created=%d"),
+        NavLightComponents.Num());
 }
 
 void AShipActor::ApplyLegacyTransform(const FVector& Loc, const FVector& Rot)
@@ -674,6 +750,19 @@ void AShipActor::ClearNavLightArray(TArray<UPointLightComponent*>& Components)
         if (Component)
         {
             Component->DestroyComponent();
+        }
+    }
+
+    Components.Empty();
+}
+
+void AShipActor::ClearEmitterArray(TArray<UStaticMeshComponent*>& Components)
+{
+    for (UStaticMeshComponent* Comp : Components)
+    {
+        if (Comp)
+        {
+            Comp->DestroyComponent();
         }
     }
 

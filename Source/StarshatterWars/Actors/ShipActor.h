@@ -71,6 +71,8 @@ struct FShipNavLightDef
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     float BlinkInterval = 1.0f;
+
+
 };
 
 USTRUCT(BlueprintType)
@@ -278,6 +280,27 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
     TArray<UPointLightComponent*> NavLightComponents;
 
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
+    TArray<UStaticMeshComponent*> NavLightEmitters;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    UStaticMesh* NavLightMesh;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    UMaterialInterface* NavLightMaterial;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    bool bEnableNavLights = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    float NavLightIntensityMultiplier = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    float NavLightRadiusMultiplier = 1.0f;
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
+    void RefreshNavLights();
+
 public:
 
     /*
@@ -356,4 +379,5 @@ protected:
 
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
     void ClearNavLightArray(TArray<UPointLightComponent*>& Components);
+    void ClearEmitterArray(TArray<UStaticMeshComponent*>& Components);
 };
