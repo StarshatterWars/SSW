@@ -36,6 +36,12 @@ AShipActor::AShipActor()
     VisualRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VisualRoot"));
     VisualRoot->SetupAttachment(ShipRoot);
 
+    PointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PointRoot"));
+    PointRoot->SetupAttachment(ShipRoot);
+
+    LightRoot = CreateDefaultSubobject<USceneComponent>(TEXT("LightRoot"));
+    LightRoot->SetupAttachment(ShipRoot);
+
     HullMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HullMesh"));
     HullMesh->SetupAttachment(VisualRoot);
     HullMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -43,37 +49,37 @@ AShipActor::AShipActor()
     HullMesh->SetMobility(EComponentMobility::Movable);
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
-    FocusPoint->SetupAttachment(ShipRoot);
+    FocusPoint->SetupAttachment(PointRoot);
 
     BridgePoint = CreateDefaultSubobject<USceneComponent>(TEXT("BridgePoint"));
-    BridgePoint->SetupAttachment(ShipRoot);
+    BridgePoint->SetupAttachment(PointRoot);
 
     ChasePoint = CreateDefaultSubobject<USceneComponent>(TEXT("ChasePoint"));
-    ChasePoint->SetupAttachment(ShipRoot);
+    ChasePoint->SetupAttachment(PointRoot);
 
     DriveCenterPoint = CreateDefaultSubobject<USceneComponent>(TEXT("DriveCenterPoint"));
-    DriveCenterPoint->SetupAttachment(ShipRoot);
+    DriveCenterPoint->SetupAttachment(PointRoot);
 
     QuantumPoint = CreateDefaultSubobject<USceneComponent>(TEXT("QuantumPoint"));
-    QuantumPoint->SetupAttachment(ShipRoot);
+    QuantumPoint->SetupAttachment(PointRoot);
 
     ShieldPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ShieldPoint"));
-    ShieldPoint->SetupAttachment(ShipRoot);
+    ShieldPoint->SetupAttachment(PointRoot);
 
     SensorPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SensorPoint"));
-    SensorPoint->SetupAttachment(ShipRoot);
+    SensorPoint->SetupAttachment(PointRoot);
 
     NavPoint = CreateDefaultSubobject<USceneComponent>(TEXT("NavPoint"));
-    NavPoint->SetupAttachment(ShipRoot);
+    NavPoint->SetupAttachment(PointRoot);
 
     ComputerPointA = CreateDefaultSubobject<USceneComponent>(TEXT("ComputerPointA"));
-    ComputerPointA->SetupAttachment(ShipRoot);
+    ComputerPointA->SetupAttachment(PointRoot);
 
     ComputerPointB = CreateDefaultSubobject<USceneComponent>(TEXT("ComputerPointB"));
-    ComputerPointB->SetupAttachment(ShipRoot);
+    ComputerPointB->SetupAttachment(PointRoot);
 
     ReactorPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ReactorPoint"));
-    ReactorPoint->SetupAttachment(ShipRoot);
+    ReactorPoint->SetupAttachment(PointRoot);
 
     VisualActor = nullptr;
 
@@ -93,6 +99,9 @@ AShipActor::AShipActor()
 
     MainEngineX = -250.0f;
     ThrusterX = -180.0f;
+
+    bAutoRebuildGeneratedComponents = true;
+    bRebuildOnConstruction = true;
 
     FocusPoint->SetRelativeLocation(FocusPointOffset);
     BridgePoint->SetRelativeLocation(BridgePointOffset);
@@ -155,7 +164,11 @@ void AShipActor::OnConstruction(const FTransform& Transform)
     Super::OnConstruction(Transform);
 
     UpdateDerivedPointsFromHull();
-    RebuildAllGeneratedComponents();
+
+    if (bAutoRebuildGeneratedComponents && bRebuildOnConstruction)
+    {
+        RebuildAllGeneratedComponents();
+    }
 }
 
 void AShipActor::BeginPlay()
@@ -306,7 +319,7 @@ void AShipActor::RebuildNavLights()
             continue;
         }
 
-        Light->SetupAttachment(ShipRoot);
+        Light->SetupAttachment(LightRoot);
         Light->RegisterComponent();
 
         Light->SetRelativeLocation(Def.LocalOffset);
@@ -355,164 +368,290 @@ void AShipActor::UpdateDerivedPointsFromHull()
 
 void AShipActor::CreateMainEnginePoints()
 {
+    if (MainEnginePointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < MainEnginePointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = MainEnginePointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("MainEnginePoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                MainEnginePoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumMainEnginePoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("MainEnginePoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         float YOffset = 0.0f;
+
         if (Count > 1)
         {
             const float Alpha = (float)Index / (float)(Count - 1);
             YOffset = -MainEngineSpread + (2.0f * MainEngineSpread * Alpha);
         }
 
-        Point->SetRelativeLocation(FVector(MainEngineX, YOffset, 0.0f));
-        MainEnginePoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("MainEnginePoint"),
+            Index,
+            FVector(MainEngineX, YOffset, 0.0f),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            MainEnginePoints.Add(Point);
+        }
     }
 }
 
 void AShipActor::CreateThrusterPoints()
 {
+    if (ThrusterPointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < ThrusterPointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = ThrusterPointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("ThrusterPoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                ThrusterPoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumThrusterPoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("ThrusterPoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         float YOffset = 0.0f;
+
         if (Count > 1)
         {
             const float Alpha = (float)Index / (float)(Count - 1);
             YOffset = -ThrusterSpread + (2.0f * ThrusterSpread * Alpha);
         }
 
-        Point->SetRelativeLocation(FVector(ThrusterX, YOffset, 0.0f));
-        ThrusterPoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("ThrusterPoint"),
+            Index,
+            FVector(ThrusterX, YOffset, 0.0f),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            ThrusterPoints.Add(Point);
+        }
     }
 }
 
 void AShipActor::CreateWeaponMountPoints()
 {
+    if (WeaponMountPointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = WeaponMountPointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("WeaponMountPoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                WeaponMountPoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumWeaponMountPoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("WeaponMountPoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         const float X = 100.0f + (Index * 25.0f);
         const float Y = ((Index % 2) == 0) ? -50.0f : 50.0f;
         const float Z = 0.0f;
 
-        Point->SetRelativeLocation(FVector(X, Y, Z));
-        WeaponMountPoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("WeaponMountPoint"),
+            Index,
+            FVector(X, Y, Z),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            WeaponMountPoints.Add(Point);
+        }
     }
 }
 
 void AShipActor::CreateTurretBasePoints()
 {
+    if (TurretBasePointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = TurretBasePointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("TurretBasePoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                TurretBasePoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumTurretBasePoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("TurretBasePoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         const float X = (Index < 2) ? 50.0f : -50.0f;
         const float Y = ((Index % 2) == 0) ? -60.0f : 60.0f;
         const float Z = (Index < 2) ? 40.0f : -40.0f;
 
-        Point->SetRelativeLocation(FVector(X, Y, Z));
-        TurretBasePoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("TurretBasePoint"),
+            Index,
+            FVector(X, Y, Z),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            TurretBasePoints.Add(Point);
+        }
     }
 }
 
 void AShipActor::CreateDockPoints()
 {
+    if (DockPointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < DockPointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = DockPointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("DockPoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                DockPoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumDockPoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("DockPoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         const float X = 0.0f;
         const float Y = ((Index % 2) == 0) ? -120.0f : 120.0f;
         const float Z = 0.0f;
 
-        Point->SetRelativeLocation(FVector(X, Y, Z));
-        DockPoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("DockPoint"),
+            Index,
+            FVector(X, Y, Z),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            DockPoints.Add(Point);
+        }
     }
 }
 
 void AShipActor::CreateLandingPoints()
 {
+    if (LandingPointDefs.Num() > 0)
+    {
+        for (int32 Index = 0; Index < LandingPointDefs.Num(); ++Index)
+        {
+            const FShipPointDef& Def = LandingPointDefs[Index];
+            USceneComponent* Point = CreateGeneratedPoint(
+                TEXT("LandingPoint"),
+                Index,
+                Def.LocalOffset,
+                Def.LocalRotation);
+
+            if (Point)
+            {
+                LandingPoints.Add(Point);
+            }
+        }
+
+        return;
+    }
+
     const int32 Count = FMath::Max(0, NumLandingPoints);
 
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        const FString Name = FString::Printf(TEXT("LandingPoint_%d"), Index);
-        USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
-
-        if (!Point)
-        {
-            continue;
-        }
-
-        Point->SetupAttachment(ShipRoot);
-        Point->RegisterComponent();
-
         const float X = 0.0f;
         const float Y = (float)(Index * 80.0f);
         const float Z = -40.0f;
 
-        Point->SetRelativeLocation(FVector(X, Y, Z));
-        LandingPoints.Add(Point);
+        USceneComponent* Point = CreateGeneratedPoint(
+            TEXT("LandingPoint"),
+            Index,
+            FVector(X, Y, Z),
+            FRotator::ZeroRotator);
+
+        if (Point)
+        {
+            LandingPoints.Add(Point);
+        }
     }
+}
+
+USceneComponent* AShipActor::CreateGeneratedPoint(
+    const FString& BaseName,
+    int32 Index,
+    const FVector& LocalOffset,
+    const FRotator& LocalRotation)
+{
+    const FString Name = FString::Printf(TEXT("%s_%d"), *BaseName, Index);
+    USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
+
+    if (!Point)
+    {
+        return nullptr;
+    }
+
+    Point->SetupAttachment(PointRoot);
+    Point->RegisterComponent();
+    Point->SetRelativeLocation(LocalOffset);
+    Point->SetRelativeRotation(LocalRotation);
+
+    return Point;
 }
 
 void AShipActor::ClearSceneComponentArray(TArray<USceneComponent*>& Components)

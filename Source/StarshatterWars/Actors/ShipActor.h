@@ -30,8 +30,10 @@
         - optional system marker points
         - navigation light definitions and components
 
-    Most systems are structural only at this stage and
-    may not yet have gameplay functionality.
+    This version uses editable data arrays with fallback
+    generated components. Blueprint children can edit the
+    data arrays directly or disable auto rebuild and manage
+    authoring manually.
 */
 
 #pragma once
@@ -71,6 +73,18 @@ struct FShipNavLightDef
     float BlinkInterval = 1.0f;
 };
 
+USTRUCT(BlueprintType)
+struct FShipPointDef
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector LocalOffset = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FRotator LocalRotation = FRotator::ZeroRotator;
+};
+
 UCLASS()
 class STARSHATTERWARS_API AShipActor : public AActor
 {
@@ -96,16 +110,22 @@ public:
     USceneComponent* VisualRoot;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
+    USceneComponent* PointRoot;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
+    USceneComponent* LightRoot;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
     UStaticMeshComponent* HullMesh;
 
     /*
      * Optional spawned Blueprint visual actor
      */
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Visual")
     TSubclassOf<AActor> ShipVisualBP;
 
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Visual")
     AActor* VisualActor;
 
     /*
@@ -131,67 +151,11 @@ public:
     FVector ChasePointOffset;
 
     /*
-     * Drive / movement points
+     * Fixed system marker points
      */
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
     USceneComponent* DriveCenterPoint;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> MainEnginePoints;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> ThrusterPoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumMainEnginePoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumThrusterPoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    float MainEngineSpread;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    float ThrusterSpread;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    float MainEngineX;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    float ThrusterX;
-
-    /*
-     * Weapons / docking / landing structural points
-     */
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> WeaponMountPoints;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> TurretBasePoints;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> DockPoints;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
-    TArray<USceneComponent*> LandingPoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumWeaponMountPoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumTurretBasePoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumDockPoints;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
-    int32 NumLandingPoints;
-
-    /*
-     * Optional system marker points
-     */
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
     USceneComponent* QuantumPoint;
@@ -213,6 +177,96 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
     USceneComponent* ReactorPoint;
+
+    /*
+     * Build control
+     */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Build")
+    bool bAutoRebuildGeneratedComponents;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Build")
+    bool bRebuildOnConstruction;
+
+    /*
+     * Legacy fallback generation controls
+     */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumMainEnginePoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumThrusterPoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumWeaponMountPoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumTurretBasePoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumDockPoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    int32 NumLandingPoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    float MainEngineSpread;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    float ThrusterSpread;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    float MainEngineX;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    float ThrusterX;
+
+    /*
+     * Editable point definition arrays
+     * If these arrays are populated, they take priority over
+     * the count/spread fallback generation logic.
+     */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> MainEnginePointDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> ThrusterPointDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> WeaponMountPointDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> TurretBasePointDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> DockPointDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
+    TArray<FShipPointDef> LandingPointDefs;
+
+    /*
+     * Generated component arrays
+     */
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> MainEnginePoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> ThrusterPoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> WeaponMountPoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> TurretBasePoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> DockPoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
+    TArray<USceneComponent*> LandingPoints;
 
     /*
      * Nav lights
@@ -242,28 +296,28 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Ship")
     void SetHullMesh(UStaticMesh* Mesh);
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildAllGeneratedComponents();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildMainEnginePoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildThrusterPoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildWeaponMountPoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildTurretBasePoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildDockPoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildLandingPoints();
 
-    UFUNCTION(BlueprintCallable, Category = "Ship")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildNavLights();
 
     /*
@@ -293,6 +347,12 @@ protected:
     void CreateTurretBasePoints();
     void CreateDockPoints();
     void CreateLandingPoints();
+
+    USceneComponent* CreateGeneratedPoint(
+        const FString& BaseName,
+        int32 Index,
+        const FVector& LocalOffset,
+        const FRotator& LocalRotation);
 
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
     void ClearNavLightArray(TArray<UPointLightComponent*>& Components);
