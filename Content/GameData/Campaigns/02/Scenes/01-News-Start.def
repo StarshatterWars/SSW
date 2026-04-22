@@ -274,13 +274,15 @@ event: { type: Message, time: 16.18,
 event: { type: Message, time: 19.64,
          caption: "of the Trellis Farcaster,\" said\nAdministrator Lars of the Directorate." }
 
-event: { type: Camera,
-         time: 19.64,
-         param: (6,15),
-         rotator: (90, 0, 0),
-         offset: (0, 0, -12000),
-         target: "Trellis-Solus" 
-       }
+event: 
+{
+    type: Camera,
+    time: 19.64,
+    param: (6,15),
+    rotator: (90, 0, 0),
+    offset: (0, 0, -12000),
+    target: "Trellis-Solus" 
+}
 
 event: { type: Message, time: 23.75,
          caption: "\"We have suffered a great deal of damage\nin the fighting," }
@@ -328,8 +330,15 @@ event: { type: Messasge, time: 52.55,
 event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
         
-event: { type: Camera, time: 58.00, param: (6,20), rotator: (0, 0, 90), target: "Trellis-Solus" }
-
+event: 
+{
+    type: Camera,
+    time: 58.00,
+    param: (6,15),
+    rotator: (90, 0, 0),
+    offset: (0, 0, -12000),
+    target: "Trellis-Solus" 
+}
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 

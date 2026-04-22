@@ -815,14 +815,14 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-    // Do NOT set SpawnParams.Name for now
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] SpawnBodyActor: Class=%s FullName=%s World=%s Loc=%s"),
+        TEXT("[SystemSceneBuilder] SpawnBodyActor: Class=%s FullName=%s World=%s Loc=%s VisualRadiusUnits=%.2f"),
         *GetNameSafe(BodyClass.Get()),
         *FullName,
         *GetNameSafe(World),
-        *WorldLocation.ToString());
+        *WorldLocation.ToString(),
+        VisualRadiusUnits);
 
     AActor* Spawned = World->SpawnActor<AActor>(
         BodyClass,
@@ -889,7 +889,34 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     }
     else
     {
-        Spawned->SetActorScale3D(FVector(VisualRadiusUnits));
+        float RawSize = FMath::Max(VisualRadiusUnits, 1.0f);
+
+        if (RawSize < 100.0f)
+        {
+            RawSize = 100.0f;
+        }
+
+        float T = FMath::Clamp(RawSize / 5000.0f, 0.0f, 1.0f);
+        T = FMath::Pow(T, 0.4f);
+
+        float FinalScale = FMath::Lerp(2.5f, 10.0f, T);
+
+        if (bIsMoon)
+        {
+            FinalScale *= 0.65f;
+        }
+        else if (bIsStar)
+        {
+            FinalScale *= 2.0f;
+        }
+
+        Spawned->SetActorScale3D(FVector(FinalScale));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] SpawnBodyActor: NonGas '%s' RawSize=%.2f FinalScale=%.2f"),
+            *BodyName,
+            RawSize,
+            FinalScale);
     }
 
     if (ParentActor)
