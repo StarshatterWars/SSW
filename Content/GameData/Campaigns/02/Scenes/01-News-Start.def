@@ -219,13 +219,13 @@ element: {
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 
+event: { type: Camera, time: 0.01, param: 3, target: "Jalah", vec: (0,0,8e7) }
+event: { type: Camera, time: 0.01, param: 5, vec: (-0.15,0.01,0.02) }
+
 event: { type: Hold, param: 20, event_ship: Kitts }
 event: { type: Hold, param: 20, event_ship: Lovo }
 
 event: { type: Display, time: 0, image: "News",  fade: (1, 4, 1)  }
-
-event: { type: Camera, time: 0.15, param: 3, target: "Solus", vec: (0,0,1e7) }
-event: { type: Camera, param: 5, vec: (0.12,0.01,0.02) }
 
 event: { type: Display, time: 5, message: "Solus System" }
 event: { type: Display, message: "Capitol" }
@@ -235,9 +235,6 @@ event: { type: Message, time: 0.27, sound: News_01_Campaign_Start,
 
 event: { type: Message, time: 4.30,
          caption: "formally requested military assistance\nfrom Terellian Alliance Force Command this morning." }
-
-event: { type: Camera, time: 8.30, param: 3, target: "Trellis", vec: (0,0,1e8) }
-event: { type: Camera, time: 8.30, param: 5, vec: (-0.15,0.01,0.02) }
 
 event: { type: Camera, time: 9.00, param: (6,15), target: "Blockade Runner" }
 

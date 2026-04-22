@@ -2276,7 +2276,9 @@ void ASystemSceneBuilder::SpawnSkyLight()
     SkyComp->SourceType = ESkyLightSourceType::SLS_CapturedScene;
 
     // Global ambient strength
-    SkyComp->Intensity = 0.15f;
+    SkyComp->Intensity = 1.0f;
+
+    SkyComp->SetLightColor(FLinearColor(0.6f, 0.7f, 1.0f));
 
     // Important for space scenes (prevents weird ground lighting)
     SkyComp->bLowerHemisphereIsBlack = true;
