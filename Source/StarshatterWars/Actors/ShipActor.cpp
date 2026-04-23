@@ -131,6 +131,15 @@ AShipActor::AShipActor()
     BridgePointOffset = FVector(0.0f, 200.0f, 30.0f);
     ChasePointOffset = FVector(0.0f, -1000.0f, 200.0f);
 
+    DriveCenterPointOffset = FVector::ZeroVector;
+    QuantumPointOffset = FVector::ZeroVector;
+    ShieldPointOffset = FVector::ZeroVector;
+    SensorPointOffset = FVector::ZeroVector;
+    NavPointOffset = FVector::ZeroVector;
+    ComputerPointAOffset = FVector::ZeroVector;
+    ComputerPointBOffset = FVector::ZeroVector;
+    ReactorPointOffset = FVector::ZeroVector;
+
     NumMainEnginePoints = 2;
     NumThrusterPoints = 2;
     NumWeaponMountPoints = 0;
@@ -155,14 +164,14 @@ AShipActor::AShipActor()
     BridgePoint->SetRelativeLocation(BridgePointOffset);
     ChasePoint->SetRelativeLocation(ChasePointOffset);
 
-    DriveCenterPoint->SetRelativeLocation(FVector::ZeroVector);
-    QuantumPoint->SetRelativeLocation(FVector::ZeroVector);
-    ShieldPoint->SetRelativeLocation(FVector::ZeroVector);
-    SensorPoint->SetRelativeLocation(FVector::ZeroVector);
-    NavPoint->SetRelativeLocation(FVector::ZeroVector);
-    ComputerPointA->SetRelativeLocation(FVector::ZeroVector);
-    ComputerPointB->SetRelativeLocation(FVector::ZeroVector);
-    ReactorPoint->SetRelativeLocation(FVector::ZeroVector);
+    DriveCenterPoint->SetRelativeLocation(DriveCenterPointOffset);
+    QuantumPoint->SetRelativeLocation(QuantumPointOffset);
+    ShieldPoint->SetRelativeLocation(ShieldPointOffset);
+    SensorPoint->SetRelativeLocation(SensorPointOffset);
+    NavPoint->SetRelativeLocation(NavPointOffset);
+    ComputerPointA->SetRelativeLocation(ComputerPointAOffset);
+    ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
+    ReactorPoint->SetRelativeLocation(ReactorPointOffset);
 
     /*
      * Default fallback nav lights.
@@ -214,7 +223,6 @@ AShipActor::AShipActor()
         NavLightDefs.Add(Ventral);
     }
 }
-
 void AShipActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
@@ -531,6 +539,15 @@ void AShipActor::UpdateDerivedPointsFromHull()
 
     BridgePoint->SetRelativeLocation(BridgePointOffset);
     ChasePoint->SetRelativeLocation(ChasePointOffset);
+
+    DriveCenterPoint->SetRelativeLocation(DriveCenterPointOffset);
+    QuantumPoint->SetRelativeLocation(QuantumPointOffset);
+    ShieldPoint->SetRelativeLocation(ShieldPointOffset);
+    SensorPoint->SetRelativeLocation(SensorPointOffset);
+    NavPoint->SetRelativeLocation(NavPointOffset);
+    ComputerPointA->SetRelativeLocation(ComputerPointAOffset);
+    ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
+    ReactorPoint->SetRelativeLocation(ReactorPointOffset);
 }
 
 void AShipActor::UpdateNavLights(float DeltaTime)
@@ -915,3 +932,70 @@ void AShipActor::RebuildThrusterEmitters()
         ThrusterEmitters.Add(Emitter);
     }
 }
+
+USceneComponent* AShipActor::GetMainEnginePoint(int32 Index) const
+{
+    return MainEnginePoints.IsValidIndex(Index) ? MainEnginePoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::GetThrusterPoint(int32 Index) const
+{
+    return ThrusterPoints.IsValidIndex(Index) ? ThrusterPoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::GetWeaponMountPoint(int32 Index) const
+{
+    return WeaponMountPoints.IsValidIndex(Index) ? WeaponMountPoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::GetTurretBasePoint(int32 Index) const
+{
+    return TurretBasePoints.IsValidIndex(Index) ? TurretBasePoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::GetDockPoint(int32 Index) const
+{
+    return DockPoints.IsValidIndex(Index) ? DockPoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::GetLandingPoint(int32 Index) const
+{
+    return LandingPoints.IsValidIndex(Index) ? LandingPoints[Index] : nullptr;
+}
+
+USceneComponent* AShipActor::FindWeaponMountPointByName(FName PointName) const
+{
+    if (PointName.IsNone())
+    {
+        return nullptr;
+    }
+
+    for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
+    {
+        if (WeaponMountPointDefs[Index].PointName == PointName)
+        {
+            return WeaponMountPoints.IsValidIndex(Index) ? WeaponMountPoints[Index] : nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+USceneComponent* AShipActor::FindTurretBasePointByName(FName PointName) const
+{
+    if (PointName.IsNone())
+    {
+        return nullptr;
+    }
+
+    for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
+    {
+        if (TurretBasePointDefs[Index].PointName == PointName)
+        {
+            return TurretBasePoints.IsValidIndex(Index) ? TurretBasePoints[Index] : nullptr;
+        }
+    }
+
+    return nullptr;
+}
+

@@ -159,15 +159,15 @@ void ACourierShipActor::ApplyCourierDefaults()
         {
             FShipPointDef T;
             T.LocalOffset = FVector(4.0f, 0.0f, 115.0f);
-            T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
+            T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
 
         // ventral
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(-2.0f, 0.0f, -60.0f);
-            T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
+            T.LocalOffset = FVector(-2.0f, 0.0f, -55.0f);
+            T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
     }
@@ -187,8 +187,8 @@ void ACourierShipActor::ApplyCourierDefaults()
         Port.LocalOffset = FVector(0.0f, -142.5f, 20.0f);
         Port.LocalRotation = FRotator::ZeroRotator;
         Port.Color = FLinearColor::Red;
-        Port.Intensity = 12000.0f;
-        Port.Radius = 400.0f;
+        Port.Intensity = 1200.0f;
+        Port.Radius = 200.0f;
         Port.Mode = EShipNavLightMode::Blink;
         Port.BlinkInterval = 0.50f;
         Port.PhaseOffset = 0.00f;
@@ -200,8 +200,8 @@ void ACourierShipActor::ApplyCourierDefaults()
         Starboard.LocalOffset = FVector(0.0f, 142.5f, 20.0f);
         Starboard.LocalRotation = FRotator::ZeroRotator;
         Starboard.Color = FLinearColor::Green;
-        Starboard.Intensity = 12000.0f;
-        Starboard.Radius = 400.0f;
+        Starboard.Intensity = 1200.0f;
+        Starboard.Radius = 200.0f;
         Starboard.Mode = EShipNavLightMode::Blink;
         Starboard.BlinkInterval = 0.50f;
         Starboard.PhaseOffset = 0.25f;

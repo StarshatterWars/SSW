@@ -1,44 +1,3 @@
-/*
-    Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright 2025-2026. All Rights Reserved.
-
-    SUBSYSTEM:    Stars.exe
-    FILE:         ShipActor.h
-    AUTHOR:       Carlos Bott
-
-    ORIGINAL AUTHOR AND STUDIO
-    =========================
-    John DiCamillo / Destroyer Studios LLC
-
-    OVERVIEW
-    ========
-    ShipActor provides a base Unreal Engine actor for
-    rendering ships in the system scene.
-
-    Supports Blueprint-based visual actors for full
-    cinematic rendering, with fallback support for
-    static meshes.
-
-    Provides common scene points for:
-        - focus / bridge / chase camera framing
-        - engine exhaust locations
-        - thruster locations
-        - weapon mount locations
-        - turret base locations
-        - docking and landing locations
-        - optional system marker points
-        - navigation light definitions and components
-
-    This version uses editable data arrays with fallback
-    generated components. Blueprint children can edit the
-    data arrays directly or disable auto rebuild and manage
-    authoring manually.
-
-    Nav lights are handled by UNavLightComponent and are
-    advanced by the owning ship tick.
-*/
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -50,6 +9,7 @@ class USceneComponent;
 class UStaticMeshComponent;
 class UNiagaraComponent;
 class UNiagaraSystem;
+class UPointLightComponent;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -58,9 +18,12 @@ struct FShipPointDef
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
     FVector LocalOffset = FVector::ZeroVector;
-    
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
     FRotator LocalRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FName PointName = NAME_None;
 };
 
 UCLASS()
@@ -155,6 +118,30 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Points")
     USceneComponent* ReactorPoint;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector DriveCenterPointOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector QuantumPointOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector ShieldPointOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector SensorPointOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector NavPointOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector ComputerPointAOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector ComputerPointBOffset;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    FVector ReactorPointOffset;
 
     /*
      * Build control
@@ -265,10 +252,9 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|FX")
     TArray<TObjectPtr<UNiagaraComponent>> MainEngineEmitters;
 
-
     /*
-    * Thruster emitters
-    */
+     * Thruster emitters
+     */
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
     bool bEnableThrusterEmitters = true;
@@ -284,7 +270,7 @@ public:
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|FX")
     TArray<TObjectPtr<UNiagaraComponent>> ThrusterEmitters;
-    
+
     /*
      * Nav lights
      */
@@ -302,7 +288,7 @@ public:
     float NavLightRadiusMultiplier = 1.0f;
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
-    TArray<UNavLightComponent*> NavLights;\
+    TArray<UNavLightComponent*> NavLights;
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UPointLightComponent>> MainEngineLights;
@@ -364,7 +350,34 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildThrusterEmitters();
 
+    /*
+     * Accessors
+     */
 
+public:
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetMainEnginePoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetThrusterPoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetWeaponMountPoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetTurretBasePoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetDockPoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* GetLandingPoint(int32 Index) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* FindWeaponMountPointByName(FName PointName) const;
+
+    UFUNCTION(BlueprintPure, Category = "Ship|Points")
+    USceneComponent* FindTurretBasePointByName(FName PointName) const;
 
     /*
      * Legacy transform helpers
