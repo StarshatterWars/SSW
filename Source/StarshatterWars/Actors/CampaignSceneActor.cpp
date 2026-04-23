@@ -719,7 +719,7 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     FVector SceneOffset = CameraOffset;
     if (SceneOffset.IsNearlyZero())
     {
-        SceneOffset = FVector(0.0f, 0.0f, -2500.0f);
+        SceneOffset = FVector(0.0f, 0.0f, -100.0f);
     }
 
     const FVector FocusPoint = TargetActor->GetActorLocation();
