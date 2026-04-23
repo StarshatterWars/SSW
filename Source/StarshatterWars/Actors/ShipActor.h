@@ -10,6 +10,8 @@ class UStaticMeshComponent;
 class UNiagaraComponent;
 class UNiagaraSystem;
 class UPointLightComponent;
+class UMaterialInterface;
+class UMaterialInstanceDynamic;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -290,6 +292,15 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
     TArray<UNavLightComponent*> NavLights;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    UStaticMesh* NavLightBulbMesh = nullptr;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UStaticMeshComponent>> NavLightBulbMeshes;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UPointLightComponent>> NavLightPointLights;
+
     UPROPERTY(Transient)
     TArray<TObjectPtr<UPointLightComponent>> MainEngineLights;
 
@@ -298,6 +309,12 @@ public:
 
     UPROPERTY(Transient)
     int32 NavLightSequenceIndex = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    UMaterialInterface* NavLightBulbMaterial = nullptr;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UMaterialInstanceDynamic>> NavLightBulbMIDs;
 
 public:
 
@@ -354,7 +371,6 @@ public:
      * Accessors
      */
 
-public:
     UFUNCTION(BlueprintPure, Category = "Ship|Points")
     USceneComponent* GetMainEnginePoint(int32 Index) const;
 
@@ -416,4 +432,5 @@ protected:
 
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
     void ClearNavLightArray(TArray<UNavLightComponent*>& Components);
+    void ClearNavLightVisuals();
 };

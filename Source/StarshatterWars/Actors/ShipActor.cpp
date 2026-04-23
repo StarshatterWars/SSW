@@ -23,6 +23,8 @@
 #include "ShipActor.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/PointLightComponent.h"
+
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "NiagaraComponent.h"
@@ -461,14 +463,27 @@ void AShipActor::RebuildNavLights()
         *GetName(),
         NavLightDefs.Num());
 
-    ClearNavLightArray(NavLights);
+    // ----------------------------------------------------
+    // Clear existing
+    // ----------------------------------------------------
 
-    if (!bEnableNavLights || !LightRoot)
+    ClearNavLightArray(NavLights);
+    ClearNavLightVisuals();
+
+    // ----------------------------------------------------
+    // Early out
+    // ----------------------------------------------------
+
+    if (!bEnableNavLights || !LightRoot || NavLightDefs.Num() == 0)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[ShipActor] RebuildNavLights: SKIPPED"));
         return;
     }
+
+    // ----------------------------------------------------
+    // Build lights
+    // ----------------------------------------------------
 
     for (int32 Index = 0; Index < NavLightDefs.Num(); ++Index)
     {
@@ -476,19 +491,21 @@ void AShipActor::RebuildNavLights()
 
         const FString Name = FString::Printf(TEXT("NavLight_%d"), Index);
 
+        // ----------------------------------------------------
+        // LOGIC COMPONENT
+        // ----------------------------------------------------
+
         UNavLightComponent* NavLight =
             NewObject<UNavLightComponent>(this, *Name);
 
         if (!NavLight)
         {
-            UE_LOG(LogTemp, Error,
-                TEXT("[ShipActor] FAILED to create %s"),
-                *Name);
             continue;
         }
 
         NavLight->SetupAttachment(LightRoot);
         NavLight->RegisterComponent();
+
         NavLight->ApplyDefinition(Def);
         NavLight->SetGlobalMultipliers(
             NavLightIntensityMultiplier,
@@ -496,10 +513,100 @@ void AShipActor::RebuildNavLights()
 
         NavLights.Add(NavLight);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] CREATED %s"),
-            *Name);
+        // ----------------------------------------------------
+        // BULB MESH + MATERIAL (FIXED SCALE)
+        // ----------------------------------------------------
+
+        if (NavLightBulbMesh)
+        {
+            const FString BulbName = FString::Printf(TEXT("NavLightBulb_%d"), Index);
+
+            UStaticMeshComponent* Bulb =
+                NewObject<UStaticMeshComponent>(this, *BulbName);
+
+            if (Bulb)
+            {
+                Bulb->SetupAttachment(LightRoot);
+                Bulb->RegisterComponent();
+
+                Bulb->SetStaticMesh(NavLightBulbMesh);
+                Bulb->SetRelativeLocation(Def.LocalOffset);
+                Bulb->SetRelativeRotation(Def.LocalRotation);
+
+                Bulb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                Bulb->SetGenerateOverlapEvents(false);
+                Bulb->SetMobility(EComponentMobility::Movable);
+
+                Bulb->SetRelativeScale3D(FVector(0.02f));
+
+                // ---- MATERIAL ----
+
+                if (NavLightBulbMaterial)
+                {
+                    UMaterialInstanceDynamic* MID =
+                        UMaterialInstanceDynamic::Create(NavLightBulbMaterial, this);
+
+                    if (MID)
+                    {
+                        MID->SetVectorParameterValue(TEXT("GlowColor"), Def.Color);
+
+                         MID->SetScalarParameterValue(
+                            TEXT("GlowIntensity"),
+                            FMath::Max(1.0f, Def.Intensity * 0.002f));
+
+                        Bulb->SetMaterial(0, MID);
+                        NavLightBulbMIDs.Add(MID);
+                    }
+                    else
+                    {
+                        NavLightBulbMIDs.Add(nullptr);
+                    }
+                }
+                else
+                {
+                    NavLightBulbMIDs.Add(nullptr);
+                }
+
+                NavLightBulbMeshes.Add(Bulb);
+            }
+        }
+
+        // ----------------------------------------------------
+        // POINT LIGHT (CLAMPED)
+        // ----------------------------------------------------
+
+        const FString PointLightName = FString::Printf(TEXT("NavLightPoint_%d"), Index);
+
+        UPointLightComponent* PointLight =
+            NewObject<UPointLightComponent>(this, *PointLightName);
+
+        if (PointLight)
+        {
+            PointLight->SetupAttachment(LightRoot);
+            PointLight->RegisterComponent();
+
+            PointLight->SetRelativeLocation(Def.LocalOffset);
+            PointLight->SetRelativeRotation(Def.LocalRotation);
+
+            PointLight->SetLightColor(Def.Color);
+
+            PointLight->SetIntensity(
+                FMath::Clamp(Def.Intensity * NavLightIntensityMultiplier, 50.0f, 500.0f));
+
+            PointLight->SetAttenuationRadius(
+                FMath::Clamp(Def.Radius * NavLightRadiusMultiplier, 10.0f, 80.0f));
+
+            PointLight->SetCastShadows(false);
+            PointLight->SetUseInverseSquaredFalloff(true);
+            PointLight->SetMobility(EComponentMobility::Movable);
+
+            NavLightPointLights.Add(PointLight);
+        }
     }
+
+    // ----------------------------------------------------
+    // Reset sequence system
+    // ----------------------------------------------------
 
     NavLightSequenceTimer = 0.0f;
     NavLightSequenceIndex = 0;
@@ -508,7 +615,6 @@ void AShipActor::RebuildNavLights()
         TEXT("[ShipActor] RebuildNavLights: END Created=%d"),
         NavLights.Num());
 }
-
 void AShipActor::ApplyLegacyTransform(const FVector& Loc, const FVector& Rot)
 {
     SetActorLocation(ConvertLegacyLocation(Loc));
@@ -563,7 +669,8 @@ void AShipActor::UpdateNavLights(float DeltaTime)
     if (NavLightSequenceTimer >= SequenceInterval)
     {
         NavLightSequenceTimer = 0.0f;
-        NavLightSequenceIndex = (NavLightSequenceIndex + 1) % FMath::Max(1, NavLights.Num());
+        NavLightSequenceIndex =
+            (NavLightSequenceIndex + 1) % FMath::Max(1, NavLights.Num());
     }
 
     for (int32 Index = 0; Index < NavLights.Num(); ++Index)
@@ -575,10 +682,72 @@ void AShipActor::UpdateNavLights(float DeltaTime)
         }
 
         const FShipNavLightDef& Def = NavLight->GetDefinition();
+
         const bool bSequenceActive =
-            (Def.Mode != EShipNavLightMode::Sequence) ? true : (Index == NavLightSequenceIndex);
+            (Def.Mode != EShipNavLightMode::Sequence)
+            ? true
+            : (Index == NavLightSequenceIndex);
 
         NavLight->AdvanceLight(DeltaTime, bSequenceActive);
+
+        const bool bVisible =
+            NavLight->IsVisible() && !NavLight->bHiddenInGame;
+
+        // ----------------------------------------------------
+        // Bulb mesh visibility
+        // ----------------------------------------------------
+
+        if (NavLightBulbMeshes.IsValidIndex(Index))
+        {
+            UStaticMeshComponent* BulbMesh = NavLightBulbMeshes[Index];
+            if (BulbMesh)
+            {
+                BulbMesh->SetVisibility(bVisible);
+                BulbMesh->SetHiddenInGame(!bVisible);
+            }
+        }
+
+        // ----------------------------------------------------
+        // Point light visibility and intensity
+        // ----------------------------------------------------
+
+        if (NavLightPointLights.IsValidIndex(Index))
+        {
+            UPointLightComponent* PointLight = NavLightPointLights[Index];
+            if (PointLight)
+            {
+                PointLight->SetVisibility(bVisible);
+                PointLight->SetHiddenInGame(!bVisible);
+
+                if (bVisible)
+                {
+                    PointLight->SetLightColor(Def.Color);
+                    PointLight->SetIntensity(
+                        Def.Intensity * NavLightIntensityMultiplier);
+                    PointLight->SetAttenuationRadius(
+                        Def.Radius * NavLightRadiusMultiplier);
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // Bulb material emissive
+        // ----------------------------------------------------
+
+        if (NavLightBulbMIDs.IsValidIndex(Index))
+        {
+            UMaterialInstanceDynamic* MID = NavLightBulbMIDs[Index];
+            if (MID)
+            {
+                const float Glow =
+                    bVisible
+                    ? FMath::Max(1.0f, Def.Intensity * 0.01f)
+                    : 0.0f;
+
+                MID->SetVectorParameterValue(TEXT("GlowColor"), Def.Color);
+                MID->SetScalarParameterValue(TEXT("GlowIntensity"), Glow);
+            }
+        }
     }
 }
 
@@ -894,6 +1063,30 @@ void AShipActor::ClearNavLightArray(TArray<UNavLightComponent*>& Components)
     }
 
     Components.Empty();
+}
+
+void AShipActor::ClearNavLightVisuals()
+{
+    for (int32 i = 0; i < NavLightBulbMeshes.Num(); ++i)
+    {
+        UStaticMeshComponent* Comp = NavLightBulbMeshes[i];
+        if (Comp)
+        {
+            Comp->DestroyComponent();
+        }
+    }
+    NavLightBulbMeshes.Empty();
+
+    for (int32 i = 0; i < NavLightPointLights.Num(); ++i)
+    {
+        UPointLightComponent* Light = NavLightPointLights[i];
+        if (Light)
+        {
+            Light->DestroyComponent();
+        }
+    }
+    NavLightPointLights.Empty();
+    NavLightBulbMIDs.Empty();
 }
 
 void AShipActor::RebuildThrusterEmitters()
