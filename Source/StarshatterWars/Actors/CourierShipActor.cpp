@@ -72,10 +72,10 @@ void ACourierShipActor::ApplyCourierDefaults()
      * These are safe first-pass defaults.
      * Adjust once you see how the Niagara system is authored.
      */
-    MainEngineEmitterRelativeScale = FVector(0.10f, 0.04f, 0.04f);
+    MainEngineEmitterRelativeScale = FVector(1.00f, 0.40f, 0.40f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
 
-    ThrusterEmitterRelativeScale = FVector(0.05f, 0.02f, 0.02f);
+    ThrusterEmitterRelativeScale = FVector(0.50f, 0.20f, 0.20f);
     ThrusterEmitterRelativeRotation = FRotator(0.0f, 0.0f, 0.0f);
 
     /*
@@ -101,19 +101,19 @@ void ACourierShipActor::ApplyCourierDefaults()
     MainEnginePointDefs.Empty();
     {
         FShipPointDef P0;
-        P0.LocalOffset = FVector(-55.0f, 3.1f, -0.3f);
+        P0.LocalOffset = FVector(-550.0f, 31.f, -3.0f);
         MainEnginePointDefs.Add(P0);
 
         FShipPointDef P1;
-        P1.LocalOffset = FVector(-55.0f, 3.1f, 2.0f);
+        P1.LocalOffset = FVector(-550.0f, 31.0f, 20.0f);
         MainEnginePointDefs.Add(P1);
 
         FShipPointDef P2;
-        P2.LocalOffset = FVector(-55.0f, -3.1f, -0.3f);
+        P2.LocalOffset = FVector(-550.0f, -31.01f, -3.0f);
         MainEnginePointDefs.Add(P2);
 
         FShipPointDef P3;
-        P3.LocalOffset = FVector(-55.0f, -3.1f, 2.2f);
+        P3.LocalOffset = FVector(-550.0f, -31.0f, 22.0f);
         MainEnginePointDefs.Add(P3);
     }
 
@@ -126,7 +126,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // central forward
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(46.0f, 0.0f, 1.0f);
+            T.LocalOffset = FVector(460.0f, 0.0f, 10.0f);
             T.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -134,7 +134,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // central aft
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(-48.0f, 0.0f, 2.5f);
+            T.LocalOffset = FVector(-480.0f, 0.0f, 25.f);
             T.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -142,7 +142,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // port
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(0.0f, -14.0f, 2.0f);
+            T.LocalOffset = FVector(0.0f, -140.0f, 20.0f);
             T.LocalRotation = FRotator(0.0f, -90.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -150,7 +150,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // starboard
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(0.0f, 14.0f, 2.0f);
+            T.LocalOffset = FVector(0.0f, 140.0f, 20.0f);
             T.LocalRotation = FRotator(0.0f, 90.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -158,7 +158,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // dorsal
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(4.0f, 0.0f, 11.5f);
+            T.LocalOffset = FVector(4.0f, 0.0f, 115.0f);
             T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -166,7 +166,7 @@ void ACourierShipActor::ApplyCourierDefaults()
         // ventral
         {
             FShipPointDef T;
-            T.LocalOffset = FVector(-2.0f, 0.0f, -6.0f);
+            T.LocalOffset = FVector(-2.0f, 0.0f, -60.0f);
             T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
             ThrusterPointDefs.Add(T);
         }
@@ -184,7 +184,7 @@ void ACourierShipActor::ApplyCourierDefaults()
 
     {
         FShipNavLightDef Port;
-        Port.LocalOffset = FVector(0.0f, -14.25f, 2.0f);
+        Port.LocalOffset = FVector(0.0f, -142.5f, 20.0f);
         Port.LocalRotation = FRotator::ZeroRotator;
         Port.Color = FLinearColor::Red;
         Port.Intensity = 12000.0f;
@@ -197,7 +197,7 @@ void ACourierShipActor::ApplyCourierDefaults()
 
     {
         FShipNavLightDef Starboard;
-        Starboard.LocalOffset = FVector(0.0f, 14.25f, 2.0f);
+        Starboard.LocalOffset = FVector(0.0f, 142.5f, 20.0f);
         Starboard.LocalRotation = FRotator::ZeroRotator;
         Starboard.Color = FLinearColor::Green;
         Starboard.Intensity = 12000.0f;
@@ -210,7 +210,7 @@ void ACourierShipActor::ApplyCourierDefaults()
 
     {
         FShipNavLightDef Dorsal;
-        Dorsal.LocalOffset = FVector(12.5f, 0.0f, 11.5f);
+        Dorsal.LocalOffset = FVector(125.0f, 0.0f, 115.0f);
         Dorsal.LocalRotation = FRotator::ZeroRotator;
         Dorsal.Color = FLinearColor::White;
         Dorsal.Intensity = 6000.0f;
@@ -223,7 +223,7 @@ void ACourierShipActor::ApplyCourierDefaults()
 
     {
         FShipNavLightDef Ventral;
-        Ventral.LocalOffset = FVector(-4.0f, 0.0f, -3.9f);
+        Ventral.LocalOffset = FVector(-40.0f, 0.0f, -39.0f);
         Ventral.LocalRotation = FRotator::ZeroRotator;
         Ventral.Color = FLinearColor(0.6f, 0.6f, 1.0f);
         Ventral.Intensity = 6000.0f;
