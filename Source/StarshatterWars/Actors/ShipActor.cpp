@@ -43,6 +43,19 @@ static void ClearComponentArray(TArray<TObjectPtr<T>>& Components)
     Components.Empty();
 }
 
+static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
+{
+    for (TObjectPtr<UPointLightComponent>& L : Lights)
+    {
+        if (L)
+        {
+            L->DestroyComponent();
+        }
+    }
+    Lights.Empty();
+}
+
+
 AShipActor::AShipActor()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -306,6 +319,7 @@ void AShipActor::RebuildMainEnginePoints()
 void AShipActor::RebuildMainEngineEmitters()
 {
     ClearComponentArray(MainEngineEmitters);
+    ClearPointLights(MainEngineLights);
 
     if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
     {
@@ -320,6 +334,7 @@ void AShipActor::RebuildMainEngineEmitters()
             continue;
         }
 
+        // ---- Niagara (you already have this) ----
         const FString Name = FString::Printf(TEXT("MainEngineEmitter_%d"), Index);
         UNiagaraComponent* Emitter = NewObject<UNiagaraComponent>(this, *Name);
         if (!Emitter)
@@ -327,15 +342,39 @@ void AShipActor::RebuildMainEngineEmitters()
             continue;
         }
 
+        const float Jitter = FMath::FRandRange(0.9f, 1.1f);
+        Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale * Jitter);
+
         Emitter->SetAsset(MainEngineEmitterSystem);
         Emitter->SetupAttachment(AttachPoint);
-        Emitter->SetAutoActivate(true);
         Emitter->RegisterComponent();
         Emitter->SetRelativeLocation(FVector::ZeroVector);
         Emitter->SetRelativeRotation(MainEngineEmitterRelativeRotation);
-        Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale);
+        Emitter->SetAutoActivate(true);
 
         MainEngineEmitters.Add(Emitter);
+
+        // ---- POINT LIGHT (add THIS here) ----
+        const FString LightName = FString::Printf(TEXT("MainEngineLight_%d"), Index);
+        UPointLightComponent* Core = NewObject<UPointLightComponent>(this, *LightName);
+        if (!Core)
+        {
+            continue;
+        }
+
+        Core->SetupAttachment(AttachPoint);
+        Core->RegisterComponent();
+
+        Core->SetRelativeLocation(FVector::ZeroVector);
+
+        // Tune these for your scene:
+        Core->SetIntensity(3000.0f);          // try 1500–6000
+        Core->SetAttenuationRadius(50.0f);    // try 30–80
+        Core->SetLightColor(FLinearColor(0.6f, 0.8f, 1.0f));
+        Core->SetCastShadows(false);          // usually off for performance
+        Core->SetUseInverseSquaredFalloff(true);
+
+        MainEngineLights.Add(Core);
     }
 }
 

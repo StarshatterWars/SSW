@@ -72,7 +72,7 @@ void ACourierShipActor::ApplyCourierDefaults()
      * These are safe first-pass defaults.
      * Adjust once you see how the Niagara system is authored.
      */
-    MainEngineEmitterRelativeScale = FVector(0.10f, 0.05f, 0.05f);
+    MainEngineEmitterRelativeScale = FVector(0.10f, 0.04f, 0.04f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
 
     ThrusterEmitterRelativeScale = FVector(0.35f, 0.35f, 0.35f);

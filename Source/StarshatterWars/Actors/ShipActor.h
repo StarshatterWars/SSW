@@ -302,7 +302,10 @@ public:
     float NavLightRadiusMultiplier = 1.0f;
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
-    TArray<UNavLightComponent*> NavLights;
+    TArray<UNavLightComponent*> NavLights;\
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UPointLightComponent>> MainEngineLights;
 
     UPROPERTY(Transient)
     float NavLightSequenceTimer = 0.0f;
@@ -360,6 +363,8 @@ public:
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildThrusterEmitters();
+
+
 
     /*
      * Legacy transform helpers
