@@ -58,13 +58,25 @@ void ACourierShipActor::ApplyCourierDefaults()
      * nav loc:      (0, 16, 60)
      */
 
-     /*
-      * Keep base class automated. The child provides exact
-      * point definitions, so fallback spread logic will not
-      * be used for engines/thrusters.
-      */
     bAutoRebuildGeneratedComponents = true;
     bRebuildOnConstruction = true;
+
+    /*
+     * Turn FX on.
+     * Assign the Niagara systems in BP_Courier defaults.
+     */
+    bEnableMainEngineEmitters = true;
+    bEnableThrusterEmitters = true;
+
+    /*
+     * These are safe first-pass defaults.
+     * Adjust once you see how the Niagara system is authored.
+     */
+    MainEngineEmitterRelativeScale = FVector(0.10f, 0.05f, 0.05f);
+    MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
+
+    ThrusterEmitterRelativeScale = FVector(0.35f, 0.35f, 0.35f);
+    ThrusterEmitterRelativeRotation = FRotator(0.0f, 0.0f, 0.0f);
 
     /*
      * Camera and framing points
@@ -74,10 +86,10 @@ void ACourierShipActor::ApplyCourierDefaults()
     ChasePointOffset = FVector(0.0f, -1000.0f, 200.0f);
 
     /*
-     * Explicit engine/thruster counts
+     * Explicit generated point counts
      */
     NumMainEnginePoints = 4;
-    NumThrusterPoints = 1;
+    NumThrusterPoints = 0;
     NumWeaponMountPoints = 0;
     NumTurretBasePoints = 0;
     NumDockPoints = 0;
@@ -89,44 +101,60 @@ void ACourierShipActor::ApplyCourierDefaults()
     MainEnginePointDefs.Empty();
     {
         FShipPointDef P0;
-        P0.LocalOffset = FVector(-25.0f, 0.0f, -448.0f);
+        P0.LocalOffset = FVector(-55.0f, 3.1f, -0.3f);
         MainEnginePointDefs.Add(P0);
 
         FShipPointDef P1;
-        P1.LocalOffset = FVector(25.0f, 0.0f, -448.0f);
+        P1.LocalOffset = FVector(-55.0f, 3.1f, 2.0f);
         MainEnginePointDefs.Add(P1);
 
         FShipPointDef P2;
-        P2.LocalOffset = FVector(-25.0f, 20.0f, -448.0f);
+        P2.LocalOffset = FVector(-55.0f, -3.1f, -0.3f);
         MainEnginePointDefs.Add(P2);
 
         FShipPointDef P3;
-        P3.LocalOffset = FVector(25.0f, 20.0f, -448.0f);
+        P3.LocalOffset = FVector(-55.0f, -3.1f, 2.2f);
         MainEnginePointDefs.Add(P3);
     }
 
     /*
-     * Courier.def has one thruster system location.
+     * Courier.def only gives one thruster system location.
+     * Build a practical first-pass maneuvering set around it.
      */
     ThrusterPointDefs.Empty();
     {
-        FShipPointDef T0;
+        /*FShipPointDef T0;
         T0.LocalOffset = FVector(0.0f, 0.0f, 64.0f);
         ThrusterPointDefs.Add(T0);
+
+        FShipPointDef T1;
+        T1.LocalOffset = FVector(36.0f, 0.0f, 64.0f);
+        ThrusterPointDefs.Add(T1);
+
+        FShipPointDef T2;
+        T2.LocalOffset = FVector(-36.0f, 0.0f, 64.0f);
+        ThrusterPointDefs.Add(T2);
+
+        FShipPointDef T3;
+        T3.LocalOffset = FVector(0.0f, 26.0f, 64.0f);
+        ThrusterPointDefs.Add(T3);
+
+        FShipPointDef T4;
+        T4.LocalOffset = FVector(0.0f, -26.0f, 64.0f);
+        ThrusterPointDefs.Add(T4);
+
+        FShipPointDef T5;
+        T5.LocalOffset = FVector(0.0f, 0.0f, 28.0f);
+        ThrusterPointDefs.Add(T5);*/
     }
 
-    /*
-     * No explicit weapon/turret/dock/landing layout authored yet.
-     */
     WeaponMountPointDefs.Empty();
     TurretBasePointDefs.Empty();
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
     /*
-     * Courier.def snippet does not expose navlight entries.
-     * Keep a tailored first-pass set here that BP_Courier
-     * can edit later in defaults.
+     * Nav lights
      */
     NavLightDefs.Empty();
 
@@ -182,9 +210,6 @@ void ACourierShipActor::ApplyCourierDefaults()
         NavLightDefs.Add(Ventral);
     }
 
-    /*
-     * Courier.def scale
-     */
     SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
 }
 
