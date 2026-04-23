@@ -43,6 +43,20 @@ static void ClearComponentArray(TArray<TObjectPtr<T>>& Components)
     Components.Empty();
 }
 
+template<typename T>
+static void ClearComponentArray(TArray<T*>& Components)
+{
+    for (T* Comp : Components)
+    {
+        if (Comp)
+        {
+            Comp->DestroyComponent();
+        }
+    }
+
+    Components.Empty();
+}
+
 static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
 {
     for (TObjectPtr<UPointLightComponent>& L : Lights)
@@ -380,8 +394,27 @@ void AShipActor::RebuildMainEngineEmitters()
 
 void AShipActor::RebuildThrusterPoints()
 {
-    ClearSceneComponentArray(ThrusterPoints);
-    CreateThrusterPoints();
+    ClearComponentArray(ThrusterPoints);
+
+    for (int32 Index = 0; Index < ThrusterPointDefs.Num(); ++Index)
+    {
+        const FShipPointDef& PointDef = ThrusterPointDefs[Index];
+
+        const FString Name = FString::Printf(TEXT("ThrusterPoint_%d"), Index);
+
+        USceneComponent* PointComp = NewObject<USceneComponent>(this, *Name);
+        if (!PointComp)
+        {
+            continue;
+        }
+
+        PointComp->SetupAttachment(RootComponent);
+        PointComp->RegisterComponent();
+        PointComp->SetRelativeLocation(PointDef.LocalOffset);
+        PointComp->SetRelativeRotation(PointDef.LocalRotation);
+
+        ThrusterPoints.Add(PointComp);
+    }
 }
 
 void AShipActor::RebuildWeaponMountPoints()

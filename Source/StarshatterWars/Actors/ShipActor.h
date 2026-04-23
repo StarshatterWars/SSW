@@ -58,8 +58,8 @@ struct FShipPointDef
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
     FVector LocalOffset = FVector::ZeroVector;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FRotator LocalRotation = FRotator::ZeroRotator;
 };
 

@@ -75,7 +75,7 @@ void ACourierShipActor::ApplyCourierDefaults()
     MainEngineEmitterRelativeScale = FVector(0.10f, 0.04f, 0.04f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
 
-    ThrusterEmitterRelativeScale = FVector(0.35f, 0.35f, 0.35f);
+    ThrusterEmitterRelativeScale = FVector(0.05f, 0.02f, 0.02f);
     ThrusterEmitterRelativeRotation = FRotator(0.0f, 0.0f, 0.0f);
 
     /*
@@ -123,29 +123,53 @@ void ACourierShipActor::ApplyCourierDefaults()
      */
     ThrusterPointDefs.Empty();
     {
-        /*FShipPointDef T0;
-        T0.LocalOffset = FVector(0.0f, 0.0f, 64.0f);
-        ThrusterPointDefs.Add(T0);
+        // central forward
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(46.0f, 0.0f, 1.0f);
+            T.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
 
-        FShipPointDef T1;
-        T1.LocalOffset = FVector(36.0f, 0.0f, 64.0f);
-        ThrusterPointDefs.Add(T1);
+        // central aft
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(-48.0f, 0.0f, 2.5f);
+            T.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
 
-        FShipPointDef T2;
-        T2.LocalOffset = FVector(-36.0f, 0.0f, 64.0f);
-        ThrusterPointDefs.Add(T2);
+        // port
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(0.0f, -14.0f, 2.0f);
+            T.LocalRotation = FRotator(0.0f, -90.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
 
-        FShipPointDef T3;
-        T3.LocalOffset = FVector(0.0f, 26.0f, 64.0f);
-        ThrusterPointDefs.Add(T3);
+        // starboard
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(0.0f, 14.0f, 2.0f);
+            T.LocalRotation = FRotator(0.0f, 90.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
 
-        FShipPointDef T4;
-        T4.LocalOffset = FVector(0.0f, -26.0f, 64.0f);
-        ThrusterPointDefs.Add(T4);
+        // dorsal
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(4.0f, 0.0f, 11.5f);
+            T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
 
-        FShipPointDef T5;
-        T5.LocalOffset = FVector(0.0f, 0.0f, 28.0f);
-        ThrusterPointDefs.Add(T5);*/
+        // ventral
+        {
+            FShipPointDef T;
+            T.LocalOffset = FVector(-2.0f, 0.0f, -6.0f);
+            T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
+            ThrusterPointDefs.Add(T);
+        }
     }
 
     WeaponMountPointDefs.Empty();
