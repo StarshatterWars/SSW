@@ -25,6 +25,23 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+
+
+template<typename T>
+static void ClearComponentArray(TArray<TObjectPtr<T>>& Components)
+{
+    for (TObjectPtr<T>& Comp : Components)
+    {
+        if (Comp)
+        {
+            Comp->DestroyComponent();
+        }
+    }
+
+    Components.Empty();
+}
 
 AShipActor::AShipActor()
 {
@@ -268,7 +285,11 @@ void AShipActor::SetHullMesh(UStaticMesh* Mesh)
 void AShipActor::RebuildAllGeneratedComponents()
 {
     RebuildMainEnginePoints();
+    RebuildMainEngineEmitters();
+
     RebuildThrusterPoints();
+    RebuildThrusterEmitters();
+
     RebuildWeaponMountPoints();
     RebuildTurretBasePoints();
     RebuildDockPoints();
@@ -280,6 +301,42 @@ void AShipActor::RebuildMainEnginePoints()
 {
     ClearSceneComponentArray(MainEnginePoints);
     CreateMainEnginePoints();
+}
+
+void AShipActor::RebuildMainEngineEmitters()
+{
+    ClearComponentArray(MainEngineEmitters);
+
+    if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
+    {
+        return;
+    }
+
+    for (int32 Index = 0; Index < MainEnginePoints.Num(); ++Index)
+    {
+        USceneComponent* AttachPoint = MainEnginePoints[Index];
+        if (!AttachPoint)
+        {
+            continue;
+        }
+
+        const FString Name = FString::Printf(TEXT("MainEngineEmitter_%d"), Index);
+        UNiagaraComponent* Emitter = NewObject<UNiagaraComponent>(this, *Name);
+        if (!Emitter)
+        {
+            continue;
+        }
+
+        Emitter->SetAsset(MainEngineEmitterSystem);
+        Emitter->SetupAttachment(AttachPoint);
+        Emitter->SetAutoActivate(true);
+        Emitter->RegisterComponent();
+        Emitter->SetRelativeLocation(FVector::ZeroVector);
+        Emitter->SetRelativeRotation(MainEngineEmitterRelativeRotation);
+        Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale);
+
+        MainEngineEmitters.Add(Emitter);
+    }
 }
 
 void AShipActor::RebuildThrusterPoints()
@@ -748,4 +805,41 @@ void AShipActor::ClearNavLightArray(TArray<UNavLightComponent*>& Components)
     }
 
     Components.Empty();
+}
+
+void AShipActor::RebuildThrusterEmitters()
+{
+    ClearComponentArray(ThrusterEmitters);
+
+    if (!bEnableThrusterEmitters || !ThrusterEmitterSystem)
+    {
+        return;
+    }
+
+    for (int32 Index = 0; Index < ThrusterPoints.Num(); ++Index)
+    {
+        USceneComponent* AttachPoint = ThrusterPoints[Index];
+        if (!AttachPoint)
+        {
+            continue;
+        }
+
+        const FString Name = FString::Printf(TEXT("ThrusterEmitter_%d"), Index);
+
+        UNiagaraComponent* Emitter = NewObject<UNiagaraComponent>(this, *Name);
+        if (!Emitter)
+        {
+            continue;
+        }
+
+        Emitter->SetAsset(ThrusterEmitterSystem);
+        Emitter->SetupAttachment(AttachPoint);
+        Emitter->SetAutoActivate(true);
+        Emitter->RegisterComponent();
+        Emitter->SetRelativeLocation(FVector::ZeroVector);
+        Emitter->SetRelativeRotation(ThrusterEmitterRelativeRotation);
+        Emitter->SetRelativeScale3D(ThrusterEmitterRelativeScale);
+
+        ThrusterEmitters.Add(Emitter);
+    }
 }

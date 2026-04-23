@@ -48,6 +48,8 @@
 
 class USceneComponent;
 class UStaticMeshComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -245,6 +247,45 @@ public:
     TArray<USceneComponent*> LandingPoints;
 
     /*
+     * Main engine emitters
+     */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    bool bEnableMainEngineEmitters = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    TObjectPtr<UNiagaraSystem> MainEngineEmitterSystem = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    FVector MainEngineEmitterRelativeScale = FVector(1.0f, 1.0f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    FRotator MainEngineEmitterRelativeRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|FX")
+    TArray<TObjectPtr<UNiagaraComponent>> MainEngineEmitters;
+
+
+    /*
+    * Thruster emitters
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    bool bEnableThrusterEmitters = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    TObjectPtr<UNiagaraSystem> ThrusterEmitterSystem = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    FVector ThrusterEmitterRelativeScale = FVector(1.0f, 1.0f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
+    FRotator ThrusterEmitterRelativeRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|FX")
+    TArray<TObjectPtr<UNiagaraComponent>> ThrusterEmitters;
+    
+    /*
      * Nav lights
      */
 
@@ -308,11 +349,17 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildLandingPoints();
 
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|FX")
+    void RebuildMainEngineEmitters();
+
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
     void RefreshNavLights();
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
     void RebuildNavLights();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
+    void RebuildThrusterEmitters();
 
     /*
      * Legacy transform helpers
