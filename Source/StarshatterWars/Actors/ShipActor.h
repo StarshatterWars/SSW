@@ -34,46 +34,20 @@
     generated components. Blueprint children can edit the
     data arrays directly or disable auto rebuild and manage
     authoring manually.
+
+    Nav lights are handled by UNavLightComponent and are
+    advanced by the owning ship tick.
 */
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/PointLightComponent.h"
+#include "NavLightComponent.h"
 #include "ShipActor.generated.h"
 
 class USceneComponent;
 class UStaticMeshComponent;
-
-USTRUCT(BlueprintType)
-struct FShipNavLightDef
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    FVector LocalOffset = FVector::ZeroVector;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    FRotator LocalRotation = FRotator::ZeroRotator;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    FLinearColor Color = FLinearColor::White;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    float Intensity = 3000.0f;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    float Radius = 300.0f;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    bool bBlink = false;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    float BlinkInterval = 1.0f;
-
-
-};
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -85,18 +59,6 @@ struct FShipPointDef
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
     FRotator LocalRotation = FRotator::ZeroRotator;
-};
-
-USTRUCT()
-struct FShipNavLightRuntimeState
-{
-    GENERATED_BODY()
-
-    UPROPERTY()
-    bool bVisible = true;
-
-    UPROPERTY()
-    float TimeAccumulator = 0.0f;
 };
 
 UCLASS()
@@ -289,21 +251,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     TArray<FShipNavLightDef> NavLightDefs;
 
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
-    TArray<UPointLightComponent*> NavLightComponents;
-
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
-    TArray<UStaticMeshComponent*> NavLightEmitters;
-
-    UPROPERTY(Transient)
-    TArray<FShipNavLightRuntimeState> NavLightRuntimeStates;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    UStaticMesh* NavLightMesh;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
-    UMaterialInterface* NavLightMaterial;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     bool bEnableNavLights = true;
 
@@ -313,8 +260,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     float NavLightRadiusMultiplier = 1.0f;
 
-    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
-    void RefreshNavLights();
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|NavLights")
+    TArray<UNavLightComponent*> NavLights;
+
+    UPROPERTY(Transient)
+    float NavLightSequenceTimer = 0.0f;
+
+    UPROPERTY(Transient)
+    int32 NavLightSequenceIndex = 0;
 
 public:
 
@@ -355,7 +308,10 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildLandingPoints();
 
-    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
+    void RefreshNavLights();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|NavLights")
     void RebuildNavLights();
 
     /*
@@ -378,6 +334,7 @@ protected:
      */
 
     void UpdateDerivedPointsFromHull();
+    void UpdateNavLights(float DeltaTime);
 
     void CreateMainEnginePoints();
     void CreateThrusterPoints();
@@ -385,7 +342,6 @@ protected:
     void CreateTurretBasePoints();
     void CreateDockPoints();
     void CreateLandingPoints();
-    void UpdateNavLights(float DeltaTime);
 
     USceneComponent* CreateGeneratedPoint(
         const FString& BaseName,
@@ -394,6 +350,5 @@ protected:
         const FRotator& LocalRotation);
 
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
-    void ClearNavLightArray(TArray<UPointLightComponent*>& Components);
-    void ClearEmitterArray(TArray<UStaticMeshComponent*>& Components);
+    void ClearNavLightArray(TArray<UNavLightComponent*>& Components);
 };

@@ -137,8 +137,9 @@ void ACourierShipActor::ApplyCourierDefaults()
         Port.Color = FLinearColor::Red;
         Port.Intensity = 12000.0f;
         Port.Radius = 400.0f;
-        Port.bBlink = true;
+        Port.Mode = EShipNavLightMode::Blink;
         Port.BlinkInterval = 0.50f;
+        Port.PhaseOffset = 0.00f;
         NavLightDefs.Add(Port);
     }
 
@@ -149,8 +150,9 @@ void ACourierShipActor::ApplyCourierDefaults()
         Starboard.Color = FLinearColor::Green;
         Starboard.Intensity = 12000.0f;
         Starboard.Radius = 400.0f;
-        Starboard.bBlink = true;
+        Starboard.Mode = EShipNavLightMode::Blink;
         Starboard.BlinkInterval = 0.50f;
+        Starboard.PhaseOffset = 0.25f;
         NavLightDefs.Add(Starboard);
     }
 
@@ -161,8 +163,9 @@ void ACourierShipActor::ApplyCourierDefaults()
         Dorsal.Color = FLinearColor::White;
         Dorsal.Intensity = 6000.0f;
         Dorsal.Radius = 300.0f;
-        Dorsal.bBlink = false;
+        Dorsal.Mode = EShipNavLightMode::Steady;
         Dorsal.BlinkInterval = 1.0f;
+        Dorsal.PhaseOffset = 0.0f;
         NavLightDefs.Add(Dorsal);
     }
 
@@ -173,8 +176,9 @@ void ACourierShipActor::ApplyCourierDefaults()
         Ventral.Color = FLinearColor(0.6f, 0.6f, 1.0f);
         Ventral.Intensity = 6000.0f;
         Ventral.Radius = 300.0f;
-        Ventral.bBlink = false;
+        Ventral.Mode = EShipNavLightMode::Steady;
         Ventral.BlinkInterval = 1.0f;
+        Ventral.PhaseOffset = 0.0f;
         NavLightDefs.Add(Ventral);
     }
 
