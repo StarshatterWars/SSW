@@ -260,7 +260,7 @@ event:
     type: Camera,
     time: 16.18,
     param: (6,20),
-    rotator: (-10, 05, 0),
+    rotator: (90, 05, 0),
     offset: (0,0,1500),
     target: "Kitts"
 }
@@ -280,7 +280,7 @@ event:
     time: 19.64,
     param: (6,15),
     rotator: (90, 0, 0),
-    offset: (0, 0, -12000),
+    offset: (0, 0, -2000),
     target: "Trellis-Solus" 
 }
 
