@@ -260,8 +260,8 @@ event:
     type: Camera,
     time: 16.18,
     param: (6,20),
-    rotator: (-10, 45, 0),
-    offset: (0,0,-750),
+    rotator: (-10, 05, 0),
+    offset: (0,0,1500),
     target: "Kitts"
 }
 
