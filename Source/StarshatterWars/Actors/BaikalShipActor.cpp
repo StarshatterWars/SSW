@@ -22,42 +22,170 @@ void ABaikalShipActor::ApplyBaikalDefaults()
     bEnableMainEngineEmitters = true;
     bEnableThrusterEmitters = true;
 
-    MainEngineEmitterRelativeScale = FVector(1.20f, 0.50f, 0.50f);
-    MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
+    SetActorScale3D(FVector(1.6f));
 
-    ThrusterEmitterRelativeScale = FVector(0.60f, 0.25f, 0.25f);
-    ThrusterEmitterRelativeRotation = FRotator::ZeroRotator;
+    FocusPointOffset = FVector(50.0f, 0.0f, 0.0f);
+    BridgePointOffset = FVector(92.0f, 0.0f, 0.0f);
+    ChasePointOffset = FVector(200.0f, -1000.0f, 0.0f);
 
-    FocusPointOffset = FVector(0.0f, 0.0f, 92.0f);
-    BridgePointOffset = FVector(0.0f, 0.0f, 92.0f);
-    ChasePointOffset = FVector(0.0f, -1000.0f, 200.0f);
+    DriveCenterPointOffset = FVector(-220.0f, 0.0f, 0.0f);
+    QuantumPointOffset = FVector(-120.0f, 0.0f, 0.0f);
+    ShieldPointOffset = FVector(-80.0f, 20.0f, 0.0f);
+    SensorPointOffset = FVector(180.0f, 0.0f, 0.0f);
+    NavPointOffset = FVector(60.0f, 16.0f, 0.0f);
+    ComputerPointAOffset = FVector(80.0f, 16.0f, 20.0f);
+    ComputerPointBOffset = FVector(80.0f, -16.0f, -20.0f);
+    ReactorPointOffset = FVector(-60.0f, 0.0f, 0.0f);
 
     NumMainEnginePoints = 4;
-    NumThrusterPoints = 18;
-
-    // Adjust these counts if your Baikal.def has more exact weapon/turret entries:
+    NumThrusterPoints = 16;
     NumWeaponMountPoints = 4;
-    NumTurretBasePoints = 2;
-    NumDockPoints = 1;
-    NumLandingPoints = 0;
+
+    // --------------------------------------------------
+    // MAIN ENGINES (drive ports)
+    // --------------------------------------------------
 
     MainEnginePointDefs.Empty();
+    {
+        FShipPointDef P;
+
+        P.LocalOffset = FVector(-435.0f, 43.0f, 0.0f);
+        P.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
+        P.PointName = TEXT("Drive_0");
+        MainEnginePointDefs.Add(P);
+
+        P.LocalOffset = FVector(-435.0f, 0.0f, 42.0f);
+        P.PointName = TEXT("Drive_1");
+        MainEnginePointDefs.Add(P);
+
+        P.LocalOffset = FVector(-435.0f, 0.0f, -42.0f);
+        P.PointName = TEXT("Drive_2");
+        MainEnginePointDefs.Add(P);
+
+        P.LocalOffset = FVector(-435.0f, -43.0f, 0.0f);
+        P.PointName = TEXT("Drive_3");
+        MainEnginePointDefs.Add(P);
+    }
+
+    // --------------------------------------------------
+    // THRUSTERS
+    // --------------------------------------------------
+
     ThrusterPointDefs.Empty();
+    {
+        FShipPointDef T;
+
+        T.LocalOffset = FVector(-356.0f, 0.0f, -88.0f);
+        T.LocalRotation = FRotator(0.0f, -90.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Left_Aft");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(453.0f, -19.0f, -72.0f);
+        T.PointName = TEXT("Thruster_Left_Fore_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(453.0f, 19.0f, -72.0f);
+        T.PointName = TEXT("Thruster_Left_Fore_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(-356.0f, 0.0f, 88.0f);
+        T.LocalRotation = FRotator(0.0f, 90.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Right_Aft");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(453.0f, -19.0f, 72.0f);
+        T.PointName = TEXT("Thruster_Right_Fore_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(453.0f, 19.0f, 72.0f);
+        T.PointName = TEXT("Thruster_Right_Fore_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(498.0f, -19.0f, -54.0f);
+        T.PointName = TEXT("Thruster_Fore_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(498.0f, -41.0f, -21.0f);
+        T.PointName = TEXT("Thruster_Fore_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(498.0f, -41.0f, 21.0f);
+        T.PointName = TEXT("Thruster_Fore_2");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(498.0f, -19.0f, 54.0f);
+        T.PointName = TEXT("Thruster_Fore_3");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(-319.0f, 29.0f, -64.0f);
+        T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Top_Aft_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(-319.0f, 29.0f, 64.0f);
+        T.PointName = TEXT("Thruster_Top_Aft_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(-319.0f, -29.0f, -64.0f);
+        T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Bottom_Aft_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(-319.0f, -29.0f, 64.0f);
+        T.PointName = TEXT("Thruster_Bottom_Aft_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(452.0f, 60.0f, -19.0f);
+        T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Top_Fore_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(452.0f, 60.0f, 19.0f);
+        T.PointName = TEXT("Thruster_Top_Fore_1");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(452.0f, -60.0f, -19.0f);
+        T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
+        T.PointName = TEXT("Thruster_Bottom_Fore_0");
+        ThrusterPointDefs.Add(T);
+
+        T.LocalOffset = FVector(452.0f, -60.0f, 19.0f);
+        T.PointName = TEXT("Thruster_Bottom_Fore_1");
+        ThrusterPointDefs.Add(T);
+    }
+
+    // --------------------------------------------------
+    // WEAPONS
+    // --------------------------------------------------
+
     WeaponMountPointDefs.Empty();
-    TurretBasePointDefs.Empty();
-    DockPointDefs.Empty();
-    LandingPointDefs.Empty();
+    {
+        FShipPointDef W;
+
+        W.LocalOffset = FVector(500.0f, 25.0f, 0.0f);
+        W.PointName = TEXT("Fwd_Cannon");
+        WeaponMountPointDefs.Add(W);
+
+        W.LocalOffset = FVector(450.0f, 0.0f, -20.0f);
+        W.PointName = TEXT("Missile_Left");
+        WeaponMountPointDefs.Add(W);
+
+        W.LocalOffset = FVector(450.0f, 0.0f, 20.0f);
+        W.PointName = TEXT("Missile_Right");
+        WeaponMountPointDefs.Add(W);
+
+        W.LocalOffset = FVector(-30.0f, 0.0f, 85.0f);
+        W.LocalRotation = FRotator(0.0f, 90.0f, 0.0f);
+        W.PointName = TEXT("Starboard_Cannon");
+        WeaponMountPointDefs.Add(W);
+
+        W.LocalOffset = FVector(-30.0f, 0.0f, -85.0f);
+        W.LocalRotation = FRotator(0.0f, -90.0f, 0.0f);
+        W.PointName = TEXT("Port_Cannon");
+        WeaponMountPointDefs.Add(W);
+    }
+
     NavLightDefs.Empty();
-
-    BuildBaikalMainEnginePoints();
-    BuildBaikalThrusterPoints();
-    BuildBaikalWeaponMountPoints();
-    BuildBaikalTurretBasePoints();
-    BuildBaikalDockPoints();
-    BuildBaikalLandingPoints();
-    BuildBaikalNavLights();
-
-    SetActorScale3D(FVector(1.6f));
 }
 
 void ABaikalShipActor::ApplyBaikalFixedPoints()
