@@ -342,64 +342,111 @@ void AShipActor::RebuildMainEnginePoints()
 
 void AShipActor::RebuildMainEngineEmitters()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildMainEngineEmitters: BEGIN Ship='%s' Points=%d"),
+        *GetName(),
+        MainEnginePoints.Num());
+
+    // ----------------------------------------------------
+    // Clear existing
+    // ----------------------------------------------------
+
     ClearComponentArray(MainEngineEmitters);
     ClearPointLights(MainEngineLights);
 
+    // ----------------------------------------------------
+    // Early out
+    // ----------------------------------------------------
+
     if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] RebuildMainEngineEmitters: SKIPPED (disabled or no system)"));
         return;
     }
 
+    // ----------------------------------------------------
+    // Spawn emitters
+    // ----------------------------------------------------
+
     for (int32 Index = 0; Index < MainEnginePoints.Num(); ++Index)
     {
-        USceneComponent* AttachPoint = MainEnginePoints[Index];
-        if (!AttachPoint)
+        USceneComponent* Point = MainEnginePoints[Index];
+        if (!Point)
         {
             continue;
         }
 
-        // ---- Niagara (you already have this) ----
         const FString Name = FString::Printf(TEXT("MainEngineEmitter_%d"), Index);
-        UNiagaraComponent* Emitter = NewObject<UNiagaraComponent>(this, *Name);
+
+        UNiagaraComponent* Emitter =
+            NewObject<UNiagaraComponent>(this, *Name);
+
         if (!Emitter)
         {
             continue;
         }
 
-        const float Jitter = FMath::FRandRange(0.9f, 1.1f);
-        Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale * Jitter);
+        Emitter->SetupAttachment(Point);
+        Emitter->RegisterComponent();
 
         Emitter->SetAsset(MainEngineEmitterSystem);
-        Emitter->SetupAttachment(AttachPoint);
-        Emitter->RegisterComponent();
         Emitter->SetRelativeLocation(FVector::ZeroVector);
         Emitter->SetRelativeRotation(MainEngineEmitterRelativeRotation);
-        Emitter->SetAutoActivate(true);
+        Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale);
+
+        // ----------------------------------------------------
+        // Engine ON/OFF control
+        // ----------------------------------------------------
+
+        Emitter->SetAutoActivate(bMainEnginesActive);
+
+        if (bMainEnginesActive)
+        {
+            Emitter->Activate(true);
+        }
+        else
+        {
+            Emitter->Deactivate();
+        }
 
         MainEngineEmitters.Add(Emitter);
 
-        // ---- POINT LIGHT (add THIS here) ----
+        // ----------------------------------------------------
+        // Engine glow light
+        // ----------------------------------------------------
+
         const FString LightName = FString::Printf(TEXT("MainEngineLight_%d"), Index);
-        UPointLightComponent* Core = NewObject<UPointLightComponent>(this, *LightName);
-        if (!Core)
+
+        UPointLightComponent* Light =
+            NewObject<UPointLightComponent>(this, *LightName);
+
+        if (Light)
         {
-            continue;
+            Light->SetupAttachment(Point);
+            Light->RegisterComponent();
+
+            Light->SetRelativeLocation(FVector::ZeroVector);
+
+            Light->SetLightColor(FLinearColor(0.6f, 0.7f, 1.0f)); // bluish engine glow
+
+            Light->SetIntensity(1500.0f);
+            Light->SetAttenuationRadius(300.0f);
+
+            Light->SetCastShadows(false);
+            Light->SetUseInverseSquaredFalloff(true);
+            Light->SetMobility(EComponentMobility::Movable);
+
+            Light->SetVisibility(bMainEnginesActive);
+            Light->SetHiddenInGame(!bMainEnginesActive);
+
+            MainEngineLights.Add(Light);
         }
-
-        Core->SetupAttachment(AttachPoint);
-        Core->RegisterComponent();
-
-        Core->SetRelativeLocation(FVector::ZeroVector);
-
-        // Tune these for your scene:
-        Core->SetIntensity(3000.0f);          // try 1500–6000
-        Core->SetAttenuationRadius(50.0f);    // try 30–80
-        Core->SetLightColor(FLinearColor(0.6f, 0.8f, 1.0f));
-        Core->SetCastShadows(false);          // usually off for performance
-        Core->SetUseInverseSquaredFalloff(true);
-
-        MainEngineLights.Add(Core);
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildMainEngineEmitters: END Created=%d"),
+        MainEngineEmitters.Num());
 }
 
 void AShipActor::RebuildThrusterPoints()
@@ -1091,39 +1138,79 @@ void AShipActor::ClearNavLightVisuals()
 
 void AShipActor::RebuildThrusterEmitters()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildThrusterEmitters: BEGIN Ship='%s' Points=%d"),
+        *GetName(),
+        ThrusterPoints.Num());
+
+    // ----------------------------------------------------
+    // Clear existing
+    // ----------------------------------------------------
+
     ClearComponentArray(ThrusterEmitters);
+
+    // ----------------------------------------------------
+    // Early out
+    // ----------------------------------------------------
 
     if (!bEnableThrusterEmitters || !ThrusterEmitterSystem)
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] RebuildThrusterEmitters: SKIPPED (disabled or no system)"));
         return;
     }
 
+    // ----------------------------------------------------
+    // Spawn emitters
+    // ----------------------------------------------------
+
     for (int32 Index = 0; Index < ThrusterPoints.Num(); ++Index)
     {
-        USceneComponent* AttachPoint = ThrusterPoints[Index];
-        if (!AttachPoint)
+        USceneComponent* Point = ThrusterPoints[Index];
+        if (!Point)
         {
             continue;
         }
 
         const FString Name = FString::Printf(TEXT("ThrusterEmitter_%d"), Index);
 
-        UNiagaraComponent* Emitter = NewObject<UNiagaraComponent>(this, *Name);
+        UNiagaraComponent* Emitter =
+            NewObject<UNiagaraComponent>(this, *Name);
+
         if (!Emitter)
         {
             continue;
         }
 
-        Emitter->SetAsset(ThrusterEmitterSystem);
-        Emitter->SetupAttachment(AttachPoint);
-        Emitter->SetAutoActivate(true);
+        Emitter->SetupAttachment(Point);
         Emitter->RegisterComponent();
+
+        Emitter->SetAsset(ThrusterEmitterSystem);
         Emitter->SetRelativeLocation(FVector::ZeroVector);
         Emitter->SetRelativeRotation(ThrusterEmitterRelativeRotation);
         Emitter->SetRelativeScale3D(ThrusterEmitterRelativeScale);
 
+        // ----------------------------------------------------
+        // Thruster ON/OFF control
+        // ----------------------------------------------------
+
+        Emitter->SetAutoActivate(bThrustersActive);
+
+        if (bThrustersActive)
+        {
+            Emitter->Activate(true);
+        }
+        else
+        {
+            Emitter->Deactivate();
+        }
+
         ThrusterEmitters.Add(Emitter);
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] RebuildThrusterEmitters: END Created=%d"),
+        ThrusterEmitters.Num());
 }
 
 USceneComponent* AShipActor::GetMainEnginePoint(int32 Index) const
@@ -1192,3 +1279,61 @@ USceneComponent* AShipActor::FindTurretBasePointByName(FName PointName) const
     return nullptr;
 }
 
+bool AShipActor::AreMainEnginesActive() const
+{
+    return bMainEnginesActive;
+}
+
+bool AShipActor::AreThrustersActive() const
+{
+    return bThrustersActive;
+}
+
+void AShipActor::SetMainEnginesActive(bool bActive)
+{
+    bMainEnginesActive = bActive;
+
+    for (TObjectPtr<UNiagaraComponent>& Emitter : MainEngineEmitters)
+    {
+        if (Emitter)
+        {
+            if (bMainEnginesActive)
+            {
+                Emitter->Activate(true);
+            }
+            else
+            {
+                Emitter->Deactivate();
+            }
+        }
+    }
+
+    for (TObjectPtr<UPointLightComponent>& Light : MainEngineLights)
+    {
+        if (Light)
+        {
+            Light->SetVisibility(bMainEnginesActive);
+            Light->SetHiddenInGame(!bMainEnginesActive);
+        }
+    }
+}
+
+void AShipActor::SetThrustersActive(bool bActive)
+{
+    bThrustersActive = bActive;
+
+    for (TObjectPtr<UNiagaraComponent>& Emitter : ThrusterEmitters)
+    {
+        if (Emitter)
+        {
+            if (bThrustersActive)
+            {
+                Emitter->Activate(true);
+            }
+            else
+            {
+                Emitter->Deactivate();
+            }
+        }
+    }
+}

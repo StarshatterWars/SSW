@@ -94,7 +94,7 @@ static FMargin ToFMargin(const Insets& in)
 	return FMargin((float)in.left, (float)in.top, (float)in.right, (float)in.bottom);
 }
 
-static FString NormalizeCombatGroupTypeToken(const FString& InValue)
+static FString NormalizeCombatGroupType(const FString& InValue)
 {
 	FString Out = InValue;
 	Out = Out.TrimStartAndEnd();
@@ -2666,7 +2666,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 							GetDefText(typestr, pdef, fn);
 
 							const FString NormalizedType =
-								NormalizeCombatGroupTypeToken(FString(typestr));
+								NormalizeCombatGroupType(FString(typestr));
 
 							if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, MissionType, false))
 							{
@@ -2687,7 +2687,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 							GetDefText(typestr, pdef, fn);
 
 							const FString NormalizedType =
-								NormalizeCombatGroupTypeToken(FString(typestr));
+								NormalizeCombatGroupType(FString(typestr));
 							if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, TemplateGroupType, false))
 							{
 								TemplateGroupType = ECOMBATGROUP_TYPE::NONE;
@@ -2958,7 +2958,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -3048,7 +3048,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			GetDefText(LocalType, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(LocalType));
+				NormalizeCombatGroupType(FString(LocalType));
 
 			if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, LocalGroupType, false))
 			{
@@ -3741,7 +3741,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(typestr, PDef, Fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<MISSIONEVENT_TYPE>(NormalizedType, EventType, false))
 			{
@@ -3762,7 +3762,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(typestr, PDef, Fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<MISSIONEVENT_TRIGGER>(NormalizedType, EventTrigger, false))
 			{
@@ -4346,7 +4346,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -4586,7 +4586,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -4666,7 +4666,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 			GetDefText(LocalGroup, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(LocalGroup));
+				NormalizeCombatGroupType(FString(LocalGroup));
 			if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, TemplateGroupType, false))
 			{
 				TemplateGroupType = ECOMBATGROUP_TYPE::NONE;

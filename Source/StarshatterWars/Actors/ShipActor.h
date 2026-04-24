@@ -395,6 +395,19 @@ public:
     UFUNCTION(BlueprintPure, Category = "Ship|Points")
     USceneComponent* FindTurretBasePointByName(FName PointName) const;
 
+ public:
+    UFUNCTION(BlueprintCallable, Category = "Ship|FX")
+    void SetMainEnginesActive(bool bActive);
+
+    UFUNCTION(BlueprintPure, Category = "Ship|FX")
+    bool AreMainEnginesActive() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Ship|FX")
+    void SetThrustersActive(bool bActive);
+
+    UFUNCTION(BlueprintPure, Category = "Ship|FX")
+    bool AreThrustersActive() const;
+
     /*
      * Legacy transform helpers
      */
@@ -433,4 +446,11 @@ protected:
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
     void ClearNavLightArray(TArray<UNavLightComponent*>& Components);
     void ClearNavLightVisuals();
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ship|FX")
+    bool bMainEnginesActive = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ship|FX")
+    bool bThrustersActive = false;
 };
