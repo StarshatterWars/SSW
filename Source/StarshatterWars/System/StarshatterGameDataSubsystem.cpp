@@ -3696,6 +3696,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	int32  EventId = 1;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
+	float  EventScale = 1.0f;
 
 	// IMPORTANT:
 	// inherit the last parsed event time unless this event overrides it
@@ -3792,6 +3793,11 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 		{
 			GetDefNumber(EventDelay, PDef, Fn);
 			NewMissionEvent.EventDelay = EventDelay;
+		}
+		else if (Key == "scale")
+		{
+			GetDefNumber(EventScale, PDef, Fn);
+			NewMissionEvent.EventScale = EventScale;
 		}
 		else if (Key == "caption")
 		{

@@ -225,7 +225,9 @@ public:
         return SpawnedRegions;
     }
 
-    //ACameraActor* GetOrCreateSceneCameraActor();
+    void SetTemporaryCutsceneBodyScale(
+        const FString& BodyName,
+        float ScaleMultiplier);
 
     bool GetRegionByName(
         const FString& RegionName,
@@ -237,6 +239,7 @@ public:
         const FString& RegionName,
         FVector& OutWorldLocation) const;
 
+    void ResetTemporaryCutsceneBodyScales();
 
 protected:
     bool ResolveStarSystemRow(FStarSystem& OutRow) const;
@@ -425,6 +428,8 @@ public:
     TSubclassOf<AActor> GasGiantPlanetActorClass;
 
 
+
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<USceneComponent> SceneRoot = nullptr;
@@ -452,4 +457,8 @@ protected:
 
     float DebugTickAccumulator = 0.0f;
     int32 TickCounter = 0;
+
+private:
+    UPROPERTY(Transient)
+    TMap<TObjectPtr<AActor>, FVector> OriginalCutsceneBodyScales;
 };

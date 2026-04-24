@@ -217,6 +217,14 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
             BodyActorMap.Num());
     }
 
+    // ----------------------------------------------------
+    // RESET CUTSCENE SCALES FIRST
+    // ----------------------------------------------------
+    ResetTemporaryCutsceneBodyScales();
+
+    // ----------------------------------------------------
+    // Destroy spawned actors
+    // ----------------------------------------------------
     for (AActor* Spawned : SpawnedActors)
     {
         if (IsValid(Spawned))
@@ -225,6 +233,9 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
         }
     }
 
+    // ----------------------------------------------------
+    // Clear containers
+    // ----------------------------------------------------
     SpawnedActors.Empty();
     SpawnedBodies.Empty();
     SpawnedRegions.Empty();
@@ -2316,4 +2327,73 @@ void ASystemSceneBuilder::SpawnSkyLight()
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemSceneBuilder] SpawnSkyLight: created intensity=%.2f"),
         SkyComp->Intensity);
+}
+
+void ASystemSceneBuilder::SetTemporaryCutsceneBodyScale(
+    const FString& BodyName,
+    float ScaleMultiplier)
+{
+    if (BodyName.IsEmpty() || ScaleMultiplier <= 0.0f)
+    {
+        return;
+    }
+
+    const FString SearchName = BodyName.TrimStartAndEnd();
+
+    for (FSpawnedSystemBody& Body : SpawnedBodies)
+    {
+        if (Body.bIsOrbit || !Body.Actor)
+        {
+            continue;
+        }
+
+        if (!Body.BodyName.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            continue;
+        }
+
+        AActor* BodyActor = Body.Actor;
+        if (!BodyActor)
+        {
+            return;
+        }
+
+        if (!OriginalCutsceneBodyScales.Contains(BodyActor))
+        {
+            OriginalCutsceneBodyScales.Add(
+                BodyActor,
+                BodyActor->GetActorScale3D());
+        }
+
+        const FVector OriginalScale = OriginalCutsceneBodyScales[BodyActor];
+        const FVector NewScale = OriginalScale * ScaleMultiplier;
+
+        BodyActor->SetActorScale3D(NewScale);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] Cutscene body scale: Body='%s' Multiplier=%.2f Original=%s New=%s"),
+            *Body.BodyName,
+            ScaleMultiplier,
+            *OriginalScale.ToString(),
+            *NewScale.ToString());
+
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] Cutscene body scale failed: Body='%s' not found"),
+        *BodyName);
+}
+
+void ASystemSceneBuilder::ResetTemporaryCutsceneBodyScales()
+{
+    for (TPair<TObjectPtr<AActor>, FVector>& Pair : OriginalCutsceneBodyScales)
+    {
+        if (Pair.Key)
+        {
+            Pair.Key->SetActorScale3D(Pair.Value);
+        }
+    }
+
+    OriginalCutsceneBodyScales.Empty();
 }

@@ -964,11 +964,12 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Offset=%s Rotator=%s"),
+        TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Offset=%s Rotator=%s Scale=%.2f"),
         (double)Event.EventTime,
         *Event.EventTarget,
         *Event.EventOffset.ToString(),
-        *Event.EventRotator.ToString());
+        *Event.EventRotator.ToString(),
+        Event.EventScale);
 
     ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
@@ -982,6 +983,7 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     // ----------------------------------------------------
     // SCENE ACTOR CAMERA (ships, stations)
+    // Do NOT apply EventScale here.
     // ----------------------------------------------------
     if (!Event.EventTarget.IsEmpty() && SceneActor)
     {
@@ -1007,10 +1009,18 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     // ----------------------------------------------------
     // REGION CAMERA (fallback)
+    // Apply scale to resolved region/body if requested.
     // ----------------------------------------------------
     FString RegionName;
     if (Builder && ResolveElementRegionForTarget(Event.EventTarget, RegionName))
     {
+        if (Event.EventScale > 0.0f)
+        {
+            Builder->SetTemporaryCutsceneBodyScale(
+                RegionName,
+                Event.EventScale);
+        }
+
         bool bFocused = Builder->FocusCameraOnBodyByName(
             RegionName,
             Event.EventPoint,
@@ -1024,9 +1034,17 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     // ----------------------------------------------------
     // DIRECT BODY CAMERA (planets, stars)
+    // Apply scale to direct body target if requested.
     // ----------------------------------------------------
     if (Builder && !Event.EventTarget.IsEmpty())
     {
+        if (Event.EventScale > 0.0f)
+        {
+            Builder->SetTemporaryCutsceneBodyScale(
+                Event.EventTarget,
+                Event.EventScale);
+        }
+
         bool bFocused = Builder->FocusCameraOnBodyByName(
             Event.EventTarget,
             Event.EventPoint,
