@@ -28,18 +28,21 @@
 #include "PlanetActor.h"
 #include "GasGiantActor.h"
 
-#include "Engine/SkyLight.h"
 #include "Components/SkyLightComponent.h"
-#include "Engine/DirectionalLight.h"
 #include "Components/DirectionalLightComponent.h"
-#include "Engine/TextureCube.h"
+#include "Components/SceneComponent.h"
 
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
 
-#include "Components/SceneComponent.h"
+#include "Misc/PackageName.h"
+
+#include "Engine/SkyLight.h"
 #include "Engine/GameInstance.h"
+#include "Engine/DirectionalLight.h"
+#include "Engine/TextureCube.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/Texture2D.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 
@@ -497,11 +500,18 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
     }
 
     const FString PlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
-    const FVector RuntimeOffsetKm = PlanetBody->Location() - PrimaryStarRuntimeLocation;
-    const FVector SceneOffset = ConvertRuntimeOffsetToSceneOffset(RuntimeOffsetKm, false);
-    const FVector PlanetWorldLocation = StarAnchorWorldLocation + SceneOffset;
 
-    const EPlanetType PlanetType = ResolvePlanetTypeFromData(PlanetName, false);
+    const FVector RuntimeOffsetKm =
+        PlanetBody->Location() - PrimaryStarRuntimeLocation;
+
+    const FVector SceneOffset =
+        ConvertRuntimeOffsetToSceneOffset(RuntimeOffsetKm, false);
+
+    const FVector PlanetWorldLocation =
+        StarAnchorWorldLocation + SceneOffset;
+
+    const EPlanetType PlanetType =
+        ResolvePlanetTypeFromData(PlanetName, false);
 
     const float PlanetRadiusKm =
         PlanetBody->Radius() > 0.0 ? (float)PlanetBody->Radius() : 2000.0f;
@@ -511,10 +521,12 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         ? ConvertGasGiantRadiusKmToSceneUnits(PlanetRadiusKm)
         : ConvertPlanetRadiusKmToSceneUnits(PlanetRadiusKm);
 
-    const float OrbitRadiusUnits = ConvertOrbitKmToSceneUnits(
-        (float)RuntimeOffsetKm.Size(),
-        false);
+    const float OrbitRadiusUnits =
+        ConvertOrbitKmToSceneUnits((float)RuntimeOffsetKm.Size(), false);
 
+    // -----------------------------------------
+    // Orbit actor
+    // -----------------------------------------
     if (bSpawnOrbitActors && OrbitActorClass && OrbitRadiusUnits > 0.0f)
     {
         SpawnOrbitActor(
@@ -524,6 +536,9 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             ParentActor);
     }
 
+    // -----------------------------------------
+    // Spawn planet
+    // -----------------------------------------
     const TSubclassOf<AActor> ResolvedPlanetClass =
         ResolvePlanetActorClass(PlanetType, false);
 
@@ -536,6 +551,101 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         false,
         false);
 
+    if (APlanetActor* PlanetVisual = Cast<APlanetActor>(PlanetActor))
+    {
+        const FVector LightDir =
+            (StarAnchorWorldLocation - PlanetWorldLocation).GetSafeNormal();
+
+        PlanetVisual->SetLightDirection(LightDir);
+
+        UE_LOG(LogTemp, Error,
+            TEXT("[SystemSceneBuilder] SET LIGHTDIR Planet=%s Star=%s Planet=%s Light Dir=%s"),
+            *PlanetName,
+            *StarAnchorWorldLocation.ToString(),
+            *PlanetWorldLocation.ToString(),
+            *LightDir.ToString());
+        
+        UE_LOG(LogTemp, Error,
+            TEXT("[DEBUG] ENTERED APlanetActor texture block for Planet=%s"),
+            *PlanetName);
+
+        UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
+
+        if (!Env)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[SystemSceneBuilder] Env is NULL for planet '%s'"),
+                *PlanetName);
+        }
+        else
+        {
+            const FPlanet* PlanetData =
+                Env->FindPlanetMapByName(PlanetName);
+
+            if (!PlanetData)
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[SystemSceneBuilder] No FPlanet data for '%s'"),
+                    *PlanetName);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[DEBUG] PlanetData Texture='%s' Gloss='%s' Lights='%s'"),
+                    *PlanetData->Texture,
+                    *PlanetData->Gloss,
+                    *PlanetData->Lights);
+
+                auto LoadPlanetTexture = [](const FString& RawName) -> UTexture2D*
+                    {
+                        FString Name = RawName.TrimStartAndEnd();
+
+                        if (Name.IsEmpty())
+                        {
+                            return nullptr;
+                        }
+
+                        FString Path = FString::Printf(
+                            TEXT("/Script/Engine.Texture2D'/Game/GameData/Galaxy/PlanetMaterials/%s.%s'"),
+                            *Name,
+                            *Name);
+
+                        UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path);
+
+                        UE_LOG(LogTemp, Error,
+                            TEXT("[PlanetTextureLoad] Raw='%s' Final='%s' Result=%s"),
+                            *RawName,
+                            *Path,
+                            Tex ? *Tex->GetName() : TEXT("NULL"));
+
+                        return Tex;
+                    };
+
+                UTexture2D* BaseTex = LoadPlanetTexture(PlanetData->Texture);
+                UTexture2D* GlossTex = LoadPlanetTexture(PlanetData->Gloss);
+                UTexture2D* LightsTex = LoadPlanetTexture(PlanetData->Lights);
+
+                UE_LOG(LogTemp, Error,
+                    TEXT("[SystemSceneBuilder] APPLY Planet='%s' Base=%s Gloss=%s Lights=%s"),
+                    *PlanetName,
+                    *GetNameSafe(BaseTex),
+                    *GetNameSafe(GlossTex),
+                    *GetNameSafe(LightsTex));
+
+                PlanetVisual->SetPlanetTextures(BaseTex, GlossTex, LightsTex);
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SystemSceneBuilder] Spawned actor is NOT APlanetActor for '%s'"),
+            *PlanetName);
+    }
+
+    // -----------------------------------------
+    // Register + track
+    // -----------------------------------------
     RegisterSpawnedBody(
         PlanetName,
         PlanetActor,
@@ -546,37 +656,48 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         RadiusUnits,
         OrbitRadiusUnits);
 
-    TrackRuntimeBody(PlanetName, PlanetBody, PlanetActor);
-
-    BuildRuntimeRegionForBody(
+    TrackRuntimeBody(
         PlanetName,
-        PlanetWorldLocation,
-        PlanetActor,
-        RadiusUnits,
-        false);
+        PlanetBody,
+        PlanetActor);
 
+    // -----------------------------------------
+    // Region (optional)
+    // -----------------------------------------
+    if (bSpawnRegionActors)
+    {
+        BuildRuntimeRegionForBody(
+            PlanetName,
+            PlanetWorldLocation,
+            PlanetActor,
+            RadiusUnits,
+            false);
+    }
+
+    // -----------------------------------------
+    // Debug
+    // -----------------------------------------
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] PLANET '%s' Type=%d Class=%s RuntimeLoc=%s RuntimeOffset=%s SceneOffset=%s SceneLoc=%s OrbitKm=%.2f OrbitUnits=%.2f RadiusKm=%.2f RadiusUnits=%.2f Parent=%s"),
+            TEXT("[SystemSceneBuilder] PLANET '%s' Type=%d Class=%s SceneLoc=%s RadiusUnits=%.2f"),
             *PlanetName,
             (int32)PlanetType,
             *GetNameSafe(ResolvedPlanetClass.Get()),
-            *PlanetBody->Location().ToString(),
-            *RuntimeOffsetKm.ToString(),
-            *SceneOffset.ToString(),
             *PlanetWorldLocation.ToString(),
-            RuntimeOffsetKm.Size(),
-            OrbitRadiusUnits,
-            PlanetRadiusKm,
-            RadiusUnits,
-            *GetNameSafe(ParentActor));
+            RadiusUnits);
     }
 
-    ListIter<OrbitalBody> MoonIter = PlanetBody->Satellites();
+    // -----------------------------------------
+    // Moons
+    // -----------------------------------------
+    ListIter<OrbitalBody> MoonIter =
+        PlanetBody->Satellites();
+
     while (++MoonIter)
     {
         OrbitalBody* MoonBody = MoonIter.value();
+
         if (!MoonBody)
         {
             continue;
@@ -950,7 +1071,6 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
 
     return Spawned;
 }
-
 AActor* ASystemSceneBuilder::SpawnOrbitActor(
     const FString& OrbitName,
     const FVector& WorldLocation,
@@ -2004,23 +2124,34 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
     const float GridUnits =
         ConvertOrbitKmToSceneUnits(DefaultRegionGridKm, bIsMoon);
 
-    const float InnerRadiusUnits = FMath::Max(BodyVisualRadiusUnits, 1.0f);
-    const float OuterRadiusUnits = InnerRadiusUnits + StandardRegionRadiusUnits;
+    const float InnerRadiusUnits =
+        FMath::Max(BodyVisualRadiusUnits, 1.0f);
+
+    const float OuterRadiusUnits =
+        InnerRadiusUnits + StandardRegionRadiusUnits;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s"),
+        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s BodyActor=%s"),
         *BodyName,
         *BodyWorldLocation.ToString(),
         InnerRadiusUnits,
         OuterRadiusUnits,
         GridUnits,
-        bIsMoon ? TEXT("true") : TEXT("false"));
+        bIsMoon ? TEXT("true") : TEXT("false"),
+        *GetNameSafe(BodyActor));
 
     AActor* RegionActor = SpawnRegionActor(
         BodyName,
         BodyWorldLocation,
         OuterRadiusUnits,
         BodyActor);
+
+    /*
+     * IMPORTANT:
+     * Do NOT call RegionActor->SetActorHiddenInGame(true) here.
+     * The region actor is attached to the planet/moon actor.
+     * Hide only its mesh inside SpawnRegionActor().
+     */
 
     RegisterSpawnedRegion(
         BodyName + TEXT("_REGION"),
@@ -2035,14 +2166,15 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s"),
+            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s HiddenActor=%d"),
             *BodyName,
             *BodyName,
             *BodyWorldLocation.ToString(),
             InnerRadiusUnits,
             OuterRadiusUnits,
             GridUnits,
-            *GetNameSafe(RegionActor));
+            *GetNameSafe(RegionActor),
+            RegionActor ? (RegionActor->IsHidden() ? 1 : 0) : -1);
     }
 }
 
@@ -2103,9 +2235,18 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
             SMC->SetStaticMesh(SphereMesh);
         }
 
+        SMC->SetVisibility(true, true);
+        SMC->SetHiddenInGame(true, true);
+        SMC->SetCastShadow(false);
         SMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        SMC->SetVisibility(true);
-        SMC->SetHiddenInGame(false);
+
+        UE_LOG(LogTemp, Error,
+            TEXT("[RegionDebug] %s ActorHidden=%d MeshVisible=%d MeshHiddenInGame=%d Mat=%s"),
+            *FullName,
+            Spawned->IsHidden() ? 1 : 0,
+            SMC->IsVisible() ? 1 : 0,
+            SMC->bHiddenInGame ? 1 : 0,
+            *GetNameSafe(SMC->GetMaterial(0)));
     }
 
     Spawned->SetActorScale3D(FVector(OuterRadiusUnits));

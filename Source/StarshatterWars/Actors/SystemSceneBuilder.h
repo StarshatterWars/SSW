@@ -42,7 +42,7 @@ struct FSystemSceneScaleSettings
     float OrbitUnitsPerMillionKm = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
-    float RadiusUnitsPerThousandKm = 8.0f;
+    float RadiusUnitsPerThousandKm = 1000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
     float MinOrbitUnits = 400.0f;
@@ -87,10 +87,10 @@ struct FSystemSceneScaleSettings
     float MaxStarScaleUnits = 1.25f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MinPlanetScaleUnits = 0.20f;
+    float MinPlanetScaleUnits = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MaxPlanetScaleUnits = 1.00f;
+    float MaxPlanetScaleUnits = 1000.00f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
     float MinMoonScaleUnits = 0.08f;

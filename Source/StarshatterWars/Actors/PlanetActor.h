@@ -9,11 +9,6 @@
     OVERVIEW
     ========
     Visual planet actor for runtime star system scenes.
-
-    This actor owns only the planet visual mesh and material behavior.
-    Region anchors, ships, stations, and mission actors should not attach
-    to the spinning mesh. They should attach to the stable system/region
-    actor hierarchy instead.
 */
 
 #pragma once
@@ -22,10 +17,11 @@
 #include "GameFramework/Actor.h"
 #include "PlanetActor.generated.h"
 
-class UStaticMeshComponent;
 class UStaticMesh;
+class UStaticMeshComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class UTexture;
 
 UCLASS()
 class STARSHATTERWARS_API APlanetActor : public AActor
@@ -46,7 +42,34 @@ public:
     void SetPlanetMaterial(UMaterialInterface* InMaterial);
 
     UFUNCTION(BlueprintCallable, Category = "Planet")
-    void SetPlanetTexture(UTexture* InTexture);
+    void SetBaseTexture(UTexture* InTexture);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetGlossTexture(UTexture* InTexture);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetLightsTexture(UTexture* InTexture);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetPlanetTextures(
+        UTexture* InBaseTexture,
+        UTexture* InGlossTexture,
+        UTexture* InLightsTexture);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetLightDirection(const FVector& InDirection);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetLightsIntensity(float InIntensity);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetNightFalloff(float InFalloff);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetAtmosphereColor(const FLinearColor& InColor);
+
+    UFUNCTION(BlueprintCallable, Category = "Planet")
+    void SetAtmosphereIntensity(float InIntensity);
 
     UFUNCTION(BlueprintCallable, Category = "Planet")
     void SetAxialRotationDegreesPerSecond(float DegreesPerSecond);
@@ -57,8 +80,14 @@ public:
     UFUNCTION(BlueprintPure, Category = "Planet")
     UStaticMeshComponent* GetPlanetMeshComponent() const { return PlanetMesh; }
 
+    UFUNCTION(BlueprintCallable, Category = "Planet|Debug")
+    void DumpPlanetMaterialState(const FString& Context) const;
+
 protected:
     void EnsureDynamicMaterial();
+    void ApplyMaterialParameters();
+    void DebugLogTextureState(const FString& Context) const;
+
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Planet")
@@ -75,6 +104,30 @@ protected:
 
     UPROPERTY(Transient)
     TObjectPtr<UMaterialInstanceDynamic> DynamicPlanetMaterial = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTexture> BaseTexture = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTexture> GlossTexture = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTexture> LightsTexture = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    FVector LightDirection = FVector(0.0f, 0.0f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    float LightsIntensity = 8.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    float NightFalloff = 2.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    FLinearColor AtmosphereColor = FLinearColor(0.25f, 0.55f, 1.0f, 1.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    float AtmosphereIntensity = 0.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Rotation")
     bool bEnableAxialRotation = false;

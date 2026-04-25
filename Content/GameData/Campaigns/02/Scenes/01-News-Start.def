@@ -219,7 +219,7 @@ element: {
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 
-event: { type: Camera, time: 0.01, param: 3, scale: 5, target: "Jalah", vec: (0,0,8e7) }
+event: { type: Camera, time: 0.01, param: 3, scale: 5, target: "Solus", vec: (0,0,8e7) }
 event: { type: Camera, time: 0.01, param: 5, vec: (-0.15,0.01,0.02) }
 
 event: { type: Hold, param: 20, event_ship: Kitts }
