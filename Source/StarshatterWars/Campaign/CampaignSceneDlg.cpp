@@ -12,7 +12,7 @@
 
 #include "SystemSceneBuilder.h"
 #include "CampaignSceneActor.h"
-
+#include "SSWCameraManager.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
@@ -584,6 +584,14 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
     ApplyPanelTexture(TestTexture);
 
+    ASSWCameraManager* Cam = ResolveSceneCamera();
+    if (Cam)
+    {
+        Cam->SetStaticView(
+            FVector(0.0f, 0.0f, 50000.0f),
+            FRotator(-20.0f, 0.0f, 0.0f));
+    }
+
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -964,109 +972,129 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Offset=%s Rotator=%s Scale=%.2f"),
+        TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Point=%s Offset=%s Rotator=%s Params=%d"),
         (double)Event.EventTime,
         *Event.EventTarget,
+        *Event.EventPoint.ToString(),
         *Event.EventOffset.ToString(),
         *Event.EventRotator.ToString(),
-        Event.EventScale);
+        Event.EventParam.Num());
 
-    ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-
-    if (!SceneActor && !Builder)
+    // ----------------------------------------------------
+    // Resolve camera manager
+    // ----------------------------------------------------
+    ASSWCameraManager* Cam = ResolveSceneCamera();
+    if (!Cam)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] No SceneActor or Builder"));
+            TEXT("[SceneDlg] ExecuteCameraEvent: no camera manager"));
         return;
     }
 
     // ----------------------------------------------------
-    // SCENE ACTOR CAMERA (ships, stations)
-    // Do NOT apply EventScale here.
+    // Resolve target actor (SceneActor first, then Builder)
     // ----------------------------------------------------
-    if (!Event.EventTarget.IsEmpty() && SceneActor)
+    AActor* TargetActor = nullptr;
+
+    if (!Event.EventTarget.IsEmpty())
     {
-        if (SceneActor->FindSceneActorByName(Event.EventTarget))
+        // Try scene actors (ships, stations)
+        ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
+        if (SceneActor)
         {
-            bool bFocused = SceneActor->FocusCameraOnSceneActorByName(
-                Event.EventTarget,
-                Event.EventOffset,
-                Event.EventRotator,
-                0.0f);
+            TargetActor = SceneActor->FindSceneActorByName(Event.EventTarget);
+        }
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] Scene Actor Camera '%s' result=%s"),
-                *Event.EventTarget,
-                bFocused ? TEXT("true") : TEXT("false"));
-
-            if (bFocused)
+        // Fallback to planets / moons
+        if (!TargetActor)
+        {
+            ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+            if (Builder)
             {
-                return;
+                FSpawnedSystemBody FoundBody;
+
+                if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+                {
+                    TargetActor = FoundBody.Actor;
+                }
             }
         }
     }
 
     // ----------------------------------------------------
-    // REGION CAMERA (fallback)
-    // Apply scale to resolved region/body if requested.
+    // Decode legacy camera param
     // ----------------------------------------------------
-    FString RegionName;
-    if (Builder && ResolveElementRegionForTarget(Event.EventTarget, RegionName))
+    const int32 Param =
+        Event.EventParam.Num() > 0 ? Event.EventParam[0] : 0;
+
+    // ----------------------------------------------------
+    // PARAM 3 -> ORBIT CAMERA (planets, cinematic shots)
+    // ----------------------------------------------------
+    if (Param == 3 && TargetActor)
     {
-        if (Event.EventScale > 0.0f)
-        {
-            Builder->SetTemporaryCutsceneBodyScale(
-                RegionName,
-                Event.EventScale);
-        }
+        FVector Orbit = Event.EventPoint;
 
-        bool bFocused = Builder->FocusCameraOnBodyByName(
-            RegionName,
-            Event.EventPoint,
-            0.0f);
+        // X/Y are legacy orbit angles.
+        // Do not axis-swap here.
+        // Convert only if your DEF angles are degrees.
+        Orbit.X = FMath::DegreesToRadians(Orbit.X);
+        Orbit.Y = FMath::DegreesToRadians(Orbit.Y);
 
-        if (bFocused)
-        {
-            return;
-        }
-    }
+        // Camera distance correction for cutscene scale.
+        Orbit.Z *= 0.1f;
 
-    // ----------------------------------------------------
-    // DIRECT BODY CAMERA (planets, stars)
-    // Apply scale to direct body target if requested.
-    // ----------------------------------------------------
-    if (Builder && !Event.EventTarget.IsEmpty())
-    {
-        if (Event.EventScale > 0.0f)
-        {
-            Builder->SetTemporaryCutsceneBodyScale(
-                Event.EventTarget,
-                Event.EventScale);
-        }
+        Cam->SetBodyOrbitView(TargetActor, Orbit);
 
-        bool bFocused = Builder->FocusCameraOnBodyByName(
-            Event.EventTarget,
-            Event.EventPoint,
-            0.0f);
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] param 3 -> Orbit Target='%s' Orbit=%s"),
+            *Event.EventTarget,
+            *Orbit.ToString());
 
-        if (bFocused)
-        {
-            return;
-        }
-    }
-
-    // ----------------------------------------------------
-    // VECTOR CAMERA (legacy fallback)
-    // ----------------------------------------------------
-    if (Builder && !Event.EventPoint.IsNearlyZero())
-    {
-        Builder->ApplyCameraViewVector(Event.EventPoint, 0.0f);
         return;
     }
 
+    // ----------------------------------------------------
+    // PARAM 5 -> ORBIT RATES (continuous motion)
+    // ----------------------------------------------------
+    if (Param == 5)
+    {
+        FVector Rates = Event.EventPoint;
+
+        Cam->SetOrbitRates(Rates);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] param 5 -> OrbitRates %s"),
+            *Rates.ToString());
+
+        return;
+    }
+
+    // ----------------------------------------------------
+    // PARAM 6 -> FOLLOW TARGET (ships, hero shots)
+    // ----------------------------------------------------
+    if (Param == 6 && TargetActor)
+    {
+        Cam->SetActorFollowView(
+            TargetActor,
+            Event.EventOffset,
+            Event.EventRotator);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] param 6 -> Follow Target='%s' Offset=%s Rotator=%s"),
+            *Event.EventTarget,
+            *Event.EventOffset.ToString(),
+            *Event.EventRotator.ToString());
+
+        return;
+    }
+
+    // ----------------------------------------------------
+    // FALLBACK
+    // ----------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] Camera Event: nothing applied"));
+        TEXT("[SceneDlg] Camera Event: no match param=%d TargetFound=%s"),
+        Param,
+        TargetActor ? TEXT("true") : TEXT("false"));
 }
 
 void UCampaignSceneDlg::DebugCameraEventTarget(const FS_MissionEvent& Event)
@@ -1244,4 +1272,45 @@ ACampaignSceneActor* UCampaignSceneDlg::ResolveCampaignSceneActor() const
         TEXT("[SceneDlg] ResolveCampaignSceneActor: no CampaignSceneActor found"));
 
     return nullptr;
+}
+
+ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
+{
+    if (SceneCamera)
+    {
+        return SceneCamera;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    for (TActorIterator<ASSWCameraManager> It(World); It; ++It)
+    {
+        SceneCamera = *It;
+        break;
+    }
+
+    if (!SceneCamera)
+    {
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride =
+            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        SceneCamera =
+            World->SpawnActor<ASSWCameraManager>(
+                ASSWCameraManager::StaticClass(),
+                FVector::ZeroVector,
+                FRotator::ZeroRotator,
+                Params);
+    }
+
+    if (SceneCamera)
+    {
+        SceneCamera->ActivateCamera(0.0f);
+    }
+
+    return SceneCamera;
 }

@@ -233,6 +233,7 @@ public:
         const FString& RegionName,
         FSpawnedSystemRegion& OutRegion) const;
 
+    void SpawnDirectionalLight();
     void SpawnSkyLight();
 
     bool GetRegionWorldLocationByName(
@@ -240,6 +241,12 @@ public:
         FVector& OutWorldLocation) const;
 
     void ResetTemporaryCutsceneBodyScales();
+
+    bool FindSpawnedBodyByName(
+        const FString& BodyName,
+        FSpawnedSystemBody& OutBody) const;
+
+    float ConvertOrbitKmToSceneUnits(float OrbitKm, bool bIsMoonOrbit = false) const;
 
 protected:
     bool ResolveStarSystemRow(FStarSystem& OutRow) const;
@@ -280,9 +287,7 @@ protected:
         OrbitalBody* Body,
         AActor* Actor);
 
-    bool FindSpawnedBodyByName(
-        const FString& BodyName,
-        FSpawnedSystemBody& OutBody) const;
+
 
     TSubclassOf<AActor> ResolvePlanetActorClass(EPlanetType PlanetType, bool bIsMoon) const;
     EPlanetType ResolvePlanetTypeFromData(const FString& BodyName, bool bIsMoon) const;
@@ -292,7 +297,7 @@ protected:
     float ConvertMoonRadiusKmToSceneUnits(float RadiusKm) const;
     float ConvertGasGiantRadiusKmToSceneUnits(float RadiusKm) const;
 
-    float ConvertOrbitKmToSceneUnits(float OrbitKm, bool bIsMoonOrbit = false) const;
+    
     float ConvertRadiusKmToSceneUnits(float RadiusKm) const;
 
     FVector ConvertRuntimeOffsetToSceneOffset(

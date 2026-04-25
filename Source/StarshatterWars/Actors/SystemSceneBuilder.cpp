@@ -25,10 +25,13 @@
 #include "Orbital.h"
 #include "OrbitalBody.h"
 #include "OrbitalRegion.h"
+#include "PlanetActor.h"
 #include "GasGiantActor.h"
 
 #include "Engine/SkyLight.h"
 #include "Components/SkyLightComponent.h"
+#include "Engine/DirectionalLight.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Engine/TextureCube.h"
 
 #include "Camera/PlayerCameraManager.h"
@@ -49,6 +52,19 @@ ASystemSceneBuilder::ASystemSceneBuilder()
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
     SceneRoot->SetMobility(EComponentMobility::Movable);
     RootComponent = SceneRoot;
+
+    // ----------------------------------------------------
+    // DEFAULT ACTOR CLASSES (fallbacks if not set in editor)
+    // ----------------------------------------------------
+    PlanetActorClass = APlanetActor::StaticClass();
+    TerranPlanetActorClass = APlanetActor::StaticClass();
+    BarrenPlanetActorClass = APlanetActor::StaticClass();
+    IcePlanetActorClass = APlanetActor::StaticClass();
+    VolcanicPlanetActorClass = APlanetActor::StaticClass();
+    MoonActorClass = APlanetActor::StaticClass();
+
+    // Gas giant should stay its own class
+    GasGiantPlanetActorClass = AGasGiantActor::StaticClass();
 
     bBuildOnBeginPlay = false;
     DataSource = ESystemSceneSource::Galaxy;
@@ -89,6 +105,7 @@ void ASystemSceneBuilder::BeginPlay()
 
     bAnimateBodies = false;
     SpawnSkyLight();
+    SpawnDirectionalLight();
 }
 
 void ASystemSceneBuilder::Tick(float DeltaTime)
@@ -805,158 +822,131 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     UWorld* World = GetWorld();
     if (!World)
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SystemSceneBuilder] SpawnBodyActor: World is null for '%s'"),
-            *BodyName);
         return nullptr;
     }
 
-    FString TypeSuffix = TEXT("PLANET");
-    if (bIsStar)
-    {
-        TypeSuffix = TEXT("STAR");
-    }
-    else if (bIsMoon)
-    {
-        TypeSuffix = TEXT("MOON");
-    }
-
-    const FString FullName = BodyName + TEXT("_") + TypeSuffix;
-
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = this;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] SpawnBodyActor: Class=%s FullName=%s World=%s Loc=%s VisualRadiusUnits=%.2f"),
-        *GetNameSafe(BodyClass.Get()),
-        *FullName,
-        *GetNameSafe(World),
-        *WorldLocation.ToString(),
-        VisualRadiusUnits);
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
     AActor* Spawned = World->SpawnActor<AActor>(
         BodyClass,
         WorldLocation,
         FRotator::ZeroRotator,
-        SpawnParams);
+        Params);
 
     if (!Spawned)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[SystemSceneBuilder] FAILED to spawn '%s' Class=%s"),
-            *FullName,
-            *GetNameSafe(BodyClass.Get()));
+            TEXT("[SystemSceneBuilder] SpawnBodyActor: FAILED to spawn '%s'"),
+            *BodyName);
         return nullptr;
     }
 
-#if WITH_EDITOR
-    Spawned->SetActorLabel(FullName);
-#endif
+    Spawned->SetActorLabel(BodyName);
 
-    USceneComponent* Root = Spawned->GetRootComponent();
-    if (Root)
-    {
-        Root->SetMobility(EComponentMobility::Movable);
-    }
-
-    AStaticMeshActor* SMA = Cast<AStaticMeshActor>(Spawned);
-    if (SMA && SMA->GetStaticMeshComponent())
-    {
-        SMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
-
-        static UStaticMesh* SphereMesh = nullptr;
-        if (!SphereMesh)
-        {
-            SphereMesh = LoadObject<UStaticMesh>(
-                nullptr,
-                TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-        }
-
-        if (SphereMesh)
-        {
-            SMA->GetStaticMeshComponent()->SetStaticMesh(SphereMesh);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SystemSceneBuilder] Failed to load debug sphere mesh for '%s'"),
-                *BodyName);
-        }
-    }
-
-    if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
-    {
-        Spawned->SetActorScale3D(FVector(1.0f));
-
-        const float GasGiantRadiusForBP = FMath::Max(1.0f, VisualRadiusUnits);
-        GasGiant->SetPlanetRadius(GasGiantRadiusForBP);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] SpawnBodyActor: Gas giant '%s' VisualRadiusUnits=%.2f BPRadius=%.2f"),
-            *BodyName,
-            VisualRadiusUnits,
-            GasGiantRadiusForBP);
-    }
-    else
-    {
-        float RawSize = FMath::Max(VisualRadiusUnits, 1.0f);
-
-        if (RawSize < 100.0f)
-        {
-            RawSize = 100.0f;
-        }
-
-        float T = FMath::Clamp(RawSize / 5000.0f, 0.0f, 1.0f);
-        T = FMath::Pow(T, 0.4f);
-
-        float FinalScale = FMath::Lerp(2.5f, 10.0f, T);
-
-        if (bIsMoon)
-        {
-            FinalScale *= 0.65f;
-        }
-        else if (bIsStar)
-        {
-            FinalScale *= 2.0f;
-        }
-
-        Spawned->SetActorScale3D(FVector(FinalScale));
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] SpawnBodyActor: NonGas '%s' RawSize=%.2f FinalScale=%.2f"),
-            *BodyName,
-            RawSize,
-            FinalScale);
-    }
-
+    // ----------------------------------------------------
+    // ATTACH TO PARENT (region / system)
+    // ----------------------------------------------------
     if (ParentActor)
     {
         Spawned->AttachToActor(
             ParentActor,
             FAttachmentTransformRules::KeepWorldTransform);
     }
+
+    // ----------------------------------------------------
+    // APPLY SCALE (CORRECTED SYSTEM)
+    // ----------------------------------------------------
+
+    if (APlanetActor* Planet = Cast<APlanetActor>(Spawned))
+    {
+        // PlanetActor handles its own scaling + materials
+        Planet->SetPlanetRadius(VisualRadiusUnits);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] Planet '%s' RadiusUnits=%.2f"),
+            *BodyName,
+            VisualRadiusUnits);
+    }
+    else if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
+    {
+        // Gas giant uses its own BP scaling
+        Spawned->SetActorScale3D(FVector(1.0f));
+
+        const float Radius = FMath::Max(1.0f, VisualRadiusUnits);
+        GasGiant->SetPlanetRadius(Radius);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] GasGiant '%s' RadiusUnits=%.2f"),
+            *BodyName,
+            Radius);
+    }
     else
     {
-        Spawned->AttachToActor(
-            this,
-            FAttachmentTransformRules::KeepWorldTransform);
+        // Generic fallback (stations, debug, etc.)
+        float FinalScale = 1.0f;
+
+        if (VisualRadiusUnits > 0.0f)
+        {
+            FinalScale = FMath::Clamp(
+                VisualRadiusUnits,
+                ScaleSettings.MinBodyScaleUnits,
+                ScaleSettings.MaxBodyScaleUnits);
+        }
+
+        Spawned->SetActorScale3D(FVector(FinalScale));
     }
+
+    // ----------------------------------------------------
+    // STATIC MESH OVERRIDE (SAFE VERSION)
+    // ----------------------------------------------------
+
+    AStaticMeshActor* SMA = Cast<AStaticMeshActor>(Spawned);
+    if (SMA && SMA->GetStaticMeshComponent())
+    {
+        SMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+
+        // ONLY override if this is a raw StaticMeshActor
+        if (Spawned->GetClass() == AStaticMeshActor::StaticClass())
+        {
+            static UStaticMesh* SphereMesh = nullptr;
+
+            if (!SphereMesh)
+            {
+                SphereMesh = LoadObject<UStaticMesh>(
+                    nullptr,
+                    TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+            }
+
+            if (SphereMesh)
+            {
+                SMA->GetStaticMeshComponent()->SetStaticMesh(SphereMesh);
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    // TRACK SPAWNED ACTORS
+    // ----------------------------------------------------
 
     SpawnedActors.Add(Spawned);
 
-    if (bEnableDebugLogs)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] Spawned '%s' Actor=%s Loc=%s Scale=%s Parent=%s bIsStar=%s bIsMoon=%s"),
-            *FullName,
-            *GetNameSafe(Spawned),
-            *WorldLocation.ToString(),
-            *Spawned->GetActorScale3D().ToString(),
-            *GetNameSafe(ParentActor),
-            bIsStar ? TEXT("true") : TEXT("false"),
-            bIsMoon ? TEXT("true") : TEXT("false"));
-    }
+    FSpawnedSystemBody Entry;
+    Entry.BodyName = BodyName;
+    Entry.Actor = Spawned;
+    Entry.bIsMoon = bIsMoon;
+    Entry.bIsOrbit = false;
+    Entry.ParentActor = ParentActor;
+
+    SpawnedBodies.Add(Entry);
+
+    BodyActorMap.Add(BodyName, Spawned);
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[SystemSceneBuilder] SpawnBodyActor: '%s' spawned successfully"),
+        *BodyName);
 
     return Spawned;
 }
@@ -2259,6 +2249,44 @@ bool ASystemSceneBuilder::GetRegionByName(
         *SearchName);
 
     return false;
+}
+
+void ASystemSceneBuilder::SpawnDirectionalLight()
+{
+    if (!GetWorld())
+    {
+        return;
+    }
+
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    ADirectionalLight* SunLight =
+        GetWorld()->SpawnActor<ADirectionalLight>(
+            ADirectionalLight::StaticClass(),
+            FVector::ZeroVector,
+            FRotator(-35.0f, 45.0f, 0.0f),
+            Params);
+
+    if (!SunLight)
+    {
+        return;
+    }
+
+    UDirectionalLightComponent* LightComp =
+        SunLight->FindComponentByClass<UDirectionalLightComponent>();
+
+    if (!LightComp)
+    {
+        return;
+    }
+
+    LightComp->SetMobility(EComponentMobility::Movable);
+    LightComp->SetIntensity(10.0f);
+    LightComp->SetLightColor(FLinearColor(1.0f, 0.95f, 0.85f));
+    LightComp->SetCastShadows(false);
 }
 
 void ASystemSceneBuilder::SpawnSkyLight()

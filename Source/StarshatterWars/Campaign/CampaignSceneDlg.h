@@ -1,5 +1,17 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
+    Copyright (c) 2025-2026. All Rights Reserved.
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         CampaignSceneDlg.h
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Campaign scene dialog widget responsible for driving cutscene playback,
+    UI overlays, and routing mission events (including camera control) to
+    runtime systems such as SystemSceneBuilder, CampaignSceneActor, and
+    SSWCameraManager.
 */
 
 #pragma once
@@ -19,6 +31,9 @@ class UImage;
 class UTexture2D;
 class ASystemSceneBuilder;
 class ACampaignSceneActor;
+class ASSWCameraManager;
+
+// +--------------------------------------------------------------------+
 
 UCLASS()
 class STARSHATTERWARS_API UCampaignSceneDlg : public UBaseScreen
@@ -96,6 +111,7 @@ protected:
     bool ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const;
 
     ACampaignSceneActor* ResolveCampaignSceneActor() const;
+    ASSWCameraManager* ResolveSceneCamera();
 
 protected:
     UPROPERTY(meta = (BindWidgetOptional))
@@ -127,8 +143,11 @@ protected:
     bool bPanelActive = false;
 
 protected:
-    UPROPERTY()
+    UPROPERTY(Transient)
     TObjectPtr<UCmpnScreen> Manager = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<ASSWCameraManager> SceneCamera = nullptr;
 
     UPROPERTY()
     FS_CampaignMission ActiveMissionData;
