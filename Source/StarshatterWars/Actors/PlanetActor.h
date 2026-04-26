@@ -36,7 +36,7 @@ public:
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Planet")
-    void SetPlanetRadius(float InRadiusUnits);
+    virtual void SetPlanetRadius(float InRadiusUnits);
 
     UFUNCTION(BlueprintCallable, Category = "Planet")
     void SetPlanetMaterial(UMaterialInterface* InMaterial);

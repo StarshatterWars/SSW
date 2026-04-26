@@ -11,6 +11,8 @@
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
 
+#include "PlanetActor.h"
+
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 
@@ -175,6 +177,7 @@ AActor* ACampaignSceneActor::FindRegionActorByName(const FString& RegionName) co
     return nullptr;
 }
 
+
 AActor* ACampaignSceneActor::SpawnSceneElementActor(
     const FString& ElementName,
     const FString& DesignName,
@@ -205,25 +208,15 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
     const FRotator SpawnRotation(0.0f, (float)HeadingDegrees, 0.0f);
 
-    /*
-     * ---------------------------------------------------------
-     * 1. Try Blueprint first
-     * ---------------------------------------------------------
-     *
-     * Convention:
-     *     DesignName = Courier
-     *     Blueprint  = /Game/Models/Courier/BP_Courier.BP_Courier_C
-     */
+    // -----------------------------------------
+    // 1. Try Blueprint first
+    // -----------------------------------------
     {
         const FString BPClassPath = FString::Printf(
             TEXT("/Game/Models/%s/BP_%s.BP_%s_C"),
             *ResolvedName,
             *ResolvedName,
             *ResolvedName);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Trying BP: %s"),
-            *BPClassPath);
 
         UClass* BPClass = LoadClass<AActor>(nullptr, *BPClassPath);
 
@@ -237,11 +230,6 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
             if (!SpawnedBPActor)
             {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] SpawnSceneElementActor: BP class found but spawn failed Name='%s' Design='%s' ClassPath='%s'"),
-                    *ElementName,
-                    *ResolvedName,
-                    *BPClassPath);
                 return nullptr;
             }
 
@@ -260,54 +248,41 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
                 TEXT("[CampaignSceneActor] BP Spawned PreScale=%s"),
                 *SpawnedBPActor->GetActorScale3D().ToString());
 
-            float FinalScale = MissionElementScaleMultiplier;
 
-            /*
-             * Per-model override for assets that import at a radically different size.
-             */
-            if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+            // -----------------------------------------
+            if (!SpawnedBPActor->IsA(APlanetActor::StaticClass()))
             {
-                FinalScale *= 4.0f;
+                float FinalScale = MissionElementScaleMultiplier;
+
+                if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+                {
+                    FinalScale *= 4.0f;
+                }
+
+                SpawnedBPActor->SetActorScale3D(FVector(FinalScale));
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] BP PostScale=%s"),
+                    *SpawnedBPActor->GetActorScale3D().ToString());
             }
-
-            SpawnedBPActor->SetActorScale3D(FVector(FinalScale));
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BP Spawned PostScale=%s"),
-                *SpawnedBPActor->GetActorScale3D().ToString());
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] SpawnSceneElementActor: spawned Blueprint actor Name='%s' Design='%s' Class='%s' Loc=%s Heading=%d Scale=%.2f"),
-                *ElementName,
-                *ResolvedName,
-                *GetNameSafe(BPClass),
-                *WorldLocation.ToString(),
-                HeadingDegrees,
-                FinalScale);
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] PlanetActor detected — skipping MissionElementScaleMultiplier"));
+            }
 
             return SpawnedBPActor;
         }
-        else
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BP NOT FOUND: %s"),
-                *BPClassPath);
-        }
     }
 
-    /*
-     * ---------------------------------------------------------
-     * 2. Fallback to existing static mesh actor flow
-     * ---------------------------------------------------------
-     */
+    // -----------------------------------------
+    // 2. Static mesh fallback
+    // -----------------------------------------
     TSubclassOf<ASceneMeshActor> SpawnClass = DefaultSceneMeshActorClass;
 
     if (!SpawnClass)
     {
         SpawnClass = ASceneMeshActor::StaticClass();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: DefaultSceneMeshActorClass is null, using native ASceneMeshActor"));
     }
 
     const FString MeshPath = FString::Printf(
@@ -319,11 +294,6 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     UStaticMesh* Mesh = ResolveStaticMeshFromPath(MeshPath);
     if (!Mesh)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed mesh load Name='%s' Model='%s' Path='%s'"),
-            *ElementName,
-            *ResolvedName,
-            *MeshPath);
         return nullptr;
     }
 
@@ -335,10 +305,6 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
     if (!SpawnedActor)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: failed static mesh actor spawn Name='%s' Model='%s'"),
-            *ElementName,
-            *ResolvedName);
         return nullptr;
     }
 
@@ -350,59 +316,32 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
         this,
         FAttachmentTransformRules::KeepWorldTransform);
 
-    if (!SpawnedActor->SetSceneMesh(Mesh))
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: SetSceneMesh failed Name='%s' Model='%s' Mesh='%s'"),
-            *ElementName,
-            *ResolvedName,
-            *GetNameSafe(Mesh));
-    }
+    SpawnedActor->SetSceneMesh(Mesh);
 
     UStaticMeshComponent* MeshComp = SpawnedActor->GetMeshComponent();
     if (!MeshComp)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] SpawnSceneElementActor: MeshComponent missing for '%s'"),
-            *ElementName);
         return SpawnedActor;
     }
 
-    float FinalScale = MissionElementScaleMultiplier;
-
-    /*
-     * Per-model override for assets that import at a radically different size.
-     */
-    if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+    // -----------------------------------------
+    if (!SpawnedActor->IsA(APlanetActor::StaticClass()))
     {
-        FinalScale *= 4.0f;
-    }
+        float FinalScale = MissionElementScaleMultiplier;
 
-    SpawnedActor->SetActorScale3D(FVector(FinalScale));
+        if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+        {
+            FinalScale *= 4.0f;
+        }
+
+        SpawnedActor->SetActorScale3D(FVector(FinalScale));
+    }
 
     MeshComp->SetVisibility(true, true);
     MeshComp->SetHiddenInGame(false, true);
-    MeshComp->SetComponentTickEnabled(false);
-    MeshComp->SetCastShadow(true);
 
     SpawnedActor->SetActorHiddenInGame(false);
     SpawnedActor->SetActorEnableCollision(false);
-
-    const FBoxSphereBounds LocalBounds = Mesh->GetBounds();
-    const FBox WorldBox = MeshComp->Bounds.GetBox();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] SpawnSceneElementActor: spawned static mesh actor Name='%s' Model='%s' Mesh='%s' Loc=%s Heading=%d Scale=%.2f LocalOrigin=%s LocalExtent=%s WorldCenter=%s WorldExtent=%s"),
-        *ElementName,
-        *ResolvedName,
-        *GetNameSafe(Mesh),
-        *WorldLocation.ToString(),
-        HeadingDegrees,
-        FinalScale,
-        *LocalBounds.Origin.ToString(),
-        *LocalBounds.BoxExtent.ToString(),
-        *WorldBox.GetCenter().ToString(),
-        *WorldBox.GetExtent().ToString());
 
     return SpawnedActor;
 }

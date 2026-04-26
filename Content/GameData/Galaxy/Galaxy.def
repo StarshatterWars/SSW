@@ -1197,7 +1197,7 @@ system:
 		},
 		planet: {
 			name:    Jalah,
-			type:    Terran,
+			type:    GasGiant,
 			icon:    "jalah_map",
 			texture: "jalah",
 			radius:  19.1e6,
@@ -1224,7 +1224,7 @@ system:
 			name:    Trellis,
 			type:    GasGiant,
 			icon:    "GasGiant9_map",
-			texture: "GasGiant9",
+			texture: "Trellis",
 			radius:  30e6,
 			mass:    5.42e26,
 			orbit:   3.75e11,

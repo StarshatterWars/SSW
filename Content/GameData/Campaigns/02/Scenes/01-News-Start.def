@@ -219,7 +219,7 @@ element: {
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 
-event: { type: Camera, time: 0.01, param: 3, scale: 5, target: "Solus", vec: (0,0,8e7) }
+event: { type: Camera, time: 0.01, param: 3, target: "Solus", vec: (0,0,8e5) }
 event: { type: Camera, time: 0.01, param: 5, vec: (-0.15,0.01,0.02) }
 
 event: { type: Hold, param: 20, event_ship: Kitts }
@@ -290,7 +290,7 @@ event: { type: Message, time: 23.75,
 event: { type: Message, time: 26.63,
          caption: "and we need help to reestablish\nbasic services here.\"" }
 
-event: { type: Camera, time: 30.00, scale: 8, param: 3, target: "Trellis", vec: (0,0,1e8) }
+event: { type: Camera, time: 30.00, param: 3, target: "Trellis", vec: (0,0,1e6) }
 event: { type: Camera, time: 30.00, param: 5, vec: (-0.15,0.01,0.02) }
 
 event: { type: Display, time: 30.00, message: "Trellis" }
@@ -301,7 +301,7 @@ event: { type: Message, time: 30.00,
 event: { type: Message, time: 33.83,
          caption: "that erupted between the Loyalist\nand Separatist factions of the system government." }
 
-event: { type: Camera, time: 37.85, scale: 5, param: 3, target: "Jalah", vec: (0,0,8e7) }
+event: { type: Camera, time: 37.85, param: 3, target: "Jalah", vec: (0,0,8e5) }
 event: { type: Camera, time: 37.85, param: 5, vec: (0.12,0.01,0.02) }
 
 event: { type: Display, time: 37.85, message: "Jalah" }
@@ -343,7 +343,7 @@ event: { type: Message, time: 60.50,
 event: { type: Message, time: 63.85,
          caption: "on the many Alliance citizens\nin the Solus system." }
 
-event: { type: Camera, time: 68.50, scale: 5, param: 3, target: "Meridian", vec: (60,0,1e7) }
+event: { type: Camera, time: 68.50, param: 3, target: "Meridian", vec: (60,0,1e5) }
 event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 
 event: { type: Message, time: 68.50,

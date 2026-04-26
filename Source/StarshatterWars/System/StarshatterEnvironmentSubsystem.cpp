@@ -310,7 +310,7 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 		TEXT("[Environment] LoadAll (Full=%s)"),
 		bFull ? TEXT("true") : TEXT("false"));
 
-	//LoadGalaxyMap();
+	LoadGalaxyMap();
 	ClearRuntimeCaches();
 	ResolveDataTables();
 	CreateEnvironmentTables();

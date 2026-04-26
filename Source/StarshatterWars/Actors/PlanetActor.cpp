@@ -29,7 +29,7 @@ APlanetActor::APlanetActor()
     PlanetMesh->SetMobility(EComponentMobility::Movable);
     PlanetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     PlanetMesh->SetGenerateOverlapEvents(false);
-    PlanetMesh->SetCastShadow(true);
+    PlanetMesh->SetCastShadow(false);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshFinder(
         TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
@@ -38,15 +38,6 @@ APlanetActor::APlanetActor()
     {
         DefaultSphereMesh = SphereMeshFinder.Object;
         PlanetMesh->SetStaticMesh(DefaultSphereMesh);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] Constructor: Sphere mesh assigned: %s"),
-            *DefaultSphereMesh->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] Constructor: FAILED to load sphere mesh"));
     }
 
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> PlanetMaterialFinder(
@@ -56,28 +47,74 @@ APlanetActor::APlanetActor()
     {
         DefaultPlanetMaterial = PlanetMaterialFinder.Object;
         PlanetMesh->SetMaterial(0, DefaultPlanetMaterial);
+    }
+}
+
+void APlanetActor::BeginPlay()
+{
+    Super::BeginPlay();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[PlanetActor] BeginPlay: Actor=%s Class=%s"),
+        *GetName(),
+        *GetClass()->GetName());
+
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const bool bIsMainPlanetMesh = (MeshComp == PlanetMesh);
+
+        MeshComp->SetVisibility(bIsMainPlanetMesh, true);
+        MeshComp->SetHiddenInGame(!bIsMainPlanetMesh, true);
+        MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        MeshComp->SetGenerateOverlapEvents(false);
+        MeshComp->SetCastShadow(false);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] Constructor: Default planet material assigned: %s"),
-            *DefaultPlanetMaterial->GetName());
+            TEXT("[PlanetActor] MeshVisibility Actor=%s Mesh=%s IsPlanetMesh=%d Visible=%d Hidden=%d"),
+            *GetName(),
+            *MeshComp->GetName(),
+            bIsMainPlanetMesh ? 1 : 0,
+            MeshComp->IsVisible() ? 1 : 0,
+            MeshComp->bHiddenInGame ? 1 : 0);
     }
-    else
+
+    if (PlanetMesh)
     {
+        PlanetMesh->SetVisibility(true, true);
+        PlanetMesh->SetHiddenInGame(false, true);
+        PlanetMesh->SetCullDistance(0.0f);
+        PlanetMesh->SetBoundsScale(10000.0f);
+
         UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] Constructor: FAILED to load M_Planet"));
+            TEXT("[PlanetActor] FORCE VISIBLE Actor=%s ActorLoc=%s ActorScale=%s MeshScale=%s MeshWorldScale=%s Mesh=%s Mat=%s"),
+            *GetName(),
+            *GetActorLocation().ToString(),
+            *GetActorScale3D().ToString(),
+            *PlanetMesh->GetRelativeScale3D().ToString(),
+            *PlanetMesh->GetComponentScale().ToString(),
+            *GetNameSafe(PlanetMesh->GetStaticMesh()),
+            *GetNameSafe(PlanetMesh->GetMaterial(0)));
     }
+
+    EnsureDynamicMaterial();
+    ApplyMaterialParameters();
+
+    DumpPlanetMaterialState(TEXT("BeginPlay"));
 }
 
 void APlanetActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (!bEnableAxialRotation)
-    {
-        return;
-    }
-
-    if (FMath::IsNearlyZero(AxialRotationDegreesPerSecond))
+    if (!bEnableAxialRotation || FMath::IsNearlyZero(AxialRotationDegreesPerSecond))
     {
         return;
     }
@@ -93,19 +130,16 @@ void APlanetActor::SetPlanetRadius(float InRadiusUnits)
 {
     if (!PlanetMesh)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] SetPlanetRadius: PlanetMesh is null"));
         return;
     }
 
-    const float ScaleMultiplier = 100.0f; 
+    const float MeshRadius = 50.0f;
+    const float Scale = FMath::Max(InRadiusUnits, 1.0f) / MeshRadius;
 
-    const float Scale = InRadiusUnits * ScaleMultiplier;
-
-    PlanetMesh->SetWorldScale3D(FVector(Scale));
+    PlanetMesh->SetRelativeScale3D(FVector(Scale));
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetPlanetRadius: Actor=%s RadiusUnits=%.2f FinalScale=%.2f"),
+        TEXT("[PlanetActor] SetPlanetRadius: Actor=%s RadiusUnits=%.2f MeshScale=%.3f"),
         *GetName(),
         InRadiusUnits,
         Scale);
@@ -128,46 +162,24 @@ void APlanetActor::SetPlanetMaterial(UMaterialInterface* InMaterial)
     PlanetMesh->SetMaterial(0, InMaterial);
     DynamicPlanetMaterial = PlanetMesh->CreateAndSetMaterialInstanceDynamic(0);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] Created MID: %s"),
-        *GetNameSafe(DynamicPlanetMaterial));
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetBaseTexture(UTexture* InTexture)
 {
     BaseTexture = InTexture;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetBaseTexture: Actor=%s Base=%s"),
-        *GetName(),
-        BaseTexture ? *BaseTexture->GetName() : TEXT("NULL"));
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetGlossTexture(UTexture* InTexture)
 {
     GlossTexture = InTexture;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetGlossTexture: Actor=%s Gloss=%s"),
-        *GetName(),
-        GlossTexture ? *GlossTexture->GetName() : TEXT("NULL"));
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetLightsTexture(UTexture* InTexture)
 {
     LightsTexture = InTexture;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetLightsTexture: Actor=%s Lights=%s"),
-        *GetName(),
-        LightsTexture ? *LightsTexture->GetName() : TEXT("NULL"));
-
     ApplyMaterialParameters();
 }
 
@@ -181,14 +193,13 @@ void APlanetActor::SetPlanetTextures(
     LightsTexture = InLightsTexture;
 
     UE_LOG(LogTemp, Error,
-        TEXT("[PlanetActor] SetPlanetTextures CALLED: Actor=%s Base=%s Gloss=%s Lights=%s"),
+        TEXT("[PlanetActor] SetPlanetTextures Actor=%s Base=%s Gloss=%s Lights=%s"),
         *GetName(),
-        BaseTexture ? *BaseTexture->GetName() : TEXT("NULL"),
-        GlossTexture ? *GlossTexture->GetName() : TEXT("NULL"),
-        LightsTexture ? *LightsTexture->GetName() : TEXT("NULL"));
+        *GetNameSafe(BaseTexture),
+        *GetNameSafe(GlossTexture),
+        *GetNameSafe(LightsTexture));
 
     ApplyMaterialParameters();
-    DumpPlanetMaterialState(TEXT("After SetPlanetTextures"));
 }
 
 void APlanetActor::SetLightDirection(const FVector& InDirection)
@@ -197,64 +208,34 @@ void APlanetActor::SetLightDirection(const FVector& InDirection)
 
     if (SafeDirection.IsNearlyZero())
     {
-        SafeDirection = FVector(0.0f, 0.0f, 1.0f);
+        SafeDirection = FVector(1.0f, 0.0f, 0.0f);
     }
 
     LightDirection = SafeDirection.GetSafeNormal();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetLightDirection: Actor=%s Direction=%s"),
-        *GetName(),
-        *LightDirection.ToString());
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetLightsIntensity(float InIntensity)
 {
     LightsIntensity = FMath::Max(0.0f, InIntensity);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetLightsIntensity: Actor=%s Intensity=%.3f"),
-        *GetName(),
-        LightsIntensity);
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetNightFalloff(float InFalloff)
 {
     NightFalloff = FMath::Max(0.01f, InFalloff);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetNightFalloff: Actor=%s Falloff=%.3f"),
-        *GetName(),
-        NightFalloff);
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetAtmosphereColor(const FLinearColor& InColor)
 {
     AtmosphereColor = InColor;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetAtmosphereColor: Actor=%s Color=%s"),
-        *GetName(),
-        *AtmosphereColor.ToString());
-
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetAtmosphereIntensity(float InIntensity)
 {
     AtmosphereIntensity = FMath::Max(0.0f, InIntensity);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetAtmosphereIntensity: Actor=%s Intensity=%.3f"),
-        *GetName(),
-        AtmosphereIntensity);
-
     ApplyMaterialParameters();
 }
 
@@ -262,31 +243,17 @@ void APlanetActor::SetAxialRotationDegreesPerSecond(float DegreesPerSecond)
 {
     AxialRotationDegreesPerSecond = DegreesPerSecond;
     bEnableAxialRotation = !FMath::IsNearlyZero(AxialRotationDegreesPerSecond);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetAxialRotationDegreesPerSecond: Actor=%s DegreesPerSecond=%.3f Enabled=%d"),
-        *GetName(),
-        AxialRotationDegreesPerSecond,
-        bEnableAxialRotation ? 1 : 0);
 }
 
 void APlanetActor::SetAxialRotationEnabled(bool bEnabled)
 {
     bEnableAxialRotation = bEnabled;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetAxialRotationEnabled: Actor=%s Enabled=%d"),
-        *GetName(),
-        bEnableAxialRotation ? 1 : 0);
 }
 
 void APlanetActor::EnsureDynamicMaterial()
 {
     if (!PlanetMesh)
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] EnsureDynamicMaterial FAILED: PlanetMesh is NULL on %s"),
-            *GetName());
         return;
     }
 
@@ -307,18 +274,6 @@ void APlanetActor::EnsureDynamicMaterial()
     if (CurrentMaterial)
     {
         DynamicPlanetMaterial = PlanetMesh->CreateAndSetMaterialInstanceDynamic(0);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] EnsureDynamicMaterial: Actor=%s Created MID=%s From=%s"),
-            *GetName(),
-            DynamicPlanetMaterial ? *DynamicPlanetMaterial->GetName() : TEXT("NULL"),
-            *CurrentMaterial->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] EnsureDynamicMaterial FAILED: No material available on %s"),
-            *GetName());
     }
 }
 
@@ -328,9 +283,6 @@ void APlanetActor::ApplyMaterialParameters()
 
     if (!DynamicPlanetMaterial)
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] ApplyMaterialParameters FAILED: DynamicPlanetMaterial is NULL on %s"),
-            *GetName());
         return;
     }
 
@@ -339,31 +291,11 @@ void APlanetActor::ApplyMaterialParameters()
         PlanetMesh->SetMaterial(0, DynamicPlanetMaterial);
     }
 
-    DebugLogTextureState(TEXT("ApplyMaterialParameters"));
-
     if (BaseTexture)
     {
         DynamicPlanetMaterial->SetTextureParameterValue(TEXT("BaseTexture"), BaseTexture);
         DynamicPlanetMaterial->SetTextureParameterValue(TEXT("PlanetTexture"), BaseTexture);
         DynamicPlanetMaterial->SetTextureParameterValue(TEXT("AlbedoTexture"), BaseTexture);
-
-        UTexture* VerifyTexture = nullptr;
-
-        const bool bGotTexture = DynamicPlanetMaterial->GetTextureParameterValue(
-            TEXT("BaseTexture"),
-            VerifyTexture);
-
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] VERIFY BaseTexture Param Got=%d Input=%s ReadBack=%s"),
-            bGotTexture ? 1 : 0,
-            *GetNameSafe(BaseTexture),
-            *GetNameSafe(VerifyTexture));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] ApplyMaterialParameters: BaseTexture is NULL on %s"),
-            *GetName());
     }
 
     if (GlossTexture)
@@ -380,172 +312,45 @@ void APlanetActor::ApplyMaterialParameters()
 
     DynamicPlanetMaterial->SetVectorParameterValue(
         TEXT("LightDirection"),
-        FLinearColor(
-            LightDirection.X,
-            LightDirection.Y,
-            LightDirection.Z,
-            0.0f));
+        FLinearColor(LightDirection.X, LightDirection.Y, LightDirection.Z, 0.0f));
 
-    DynamicPlanetMaterial->SetScalarParameterValue(
-        TEXT("LightsIntensity"),
-        LightsIntensity);
-
-    DynamicPlanetMaterial->SetScalarParameterValue(
-        TEXT("NightFalloff"),
-        NightFalloff);
-
-    DynamicPlanetMaterial->SetVectorParameterValue(
-        TEXT("AtmosColor"),
-        AtmosphereColor);
-
-    DynamicPlanetMaterial->SetScalarParameterValue(
-        TEXT("AtmosIntensity"),
-        AtmosphereIntensity);
-
-    FLinearColor VerifyLightDir;
-    const bool bGotLightDir = DynamicPlanetMaterial->GetVectorParameterValue(
-        TEXT("LightDirection"),
-        VerifyLightDir);
-
-    UE_LOG(LogTemp, Error,
-        TEXT("[PlanetActor] VERIFY LightDirection Got=%d Stored=%s Param=%s"),
-        bGotLightDir ? 1 : 0,
-        *LightDirection.ToString(),
-        *VerifyLightDir.ToString());
-}
-
-void APlanetActor::BeginPlay()
-{
-    Super::BeginPlay();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] BeginPlay: Actor=%s Class=%s"),
-        *GetName(),
-        *GetClass()->GetName());
-
-    TArray<UStaticMeshComponent*> Meshes;
-    GetComponents<UStaticMeshComponent>(Meshes);
-
-    for (UStaticMeshComponent* MeshComp : Meshes)
-    {
-        if (!MeshComp)
-        {
-            continue;
-        }
-
-        if (MeshComp != PlanetMesh)
-        {
-            MeshComp->SetVisibility(false, true);
-            MeshComp->SetHiddenInGame(true, true);
-            MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            MeshComp->SetGenerateOverlapEvents(false);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[PlanetActor] Hiding BP mesh '%s'"),
-                *MeshComp->GetName());
-        }
-
-        if (PlanetMesh)
-        {
-            PlanetMesh->SetVisibility(true, true);
-            PlanetMesh->SetHiddenInGame(false, true);
-            PlanetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            PlanetMesh->SetCastShadow(false);
-
-            // Stop distance/frustum culling from hiding the tiny planet mesh.
-            PlanetMesh->SetCullDistance(0.0f);
-            PlanetMesh->SetBoundsScale(10000.0f);
-
-            UE_LOG(LogTemp, Error,
-                TEXT("[PlanetActor] FORCE VISIBLE Actor=%s Loc=%s Scale=%s BoundsScale=10000"),
-                *GetName(),
-                *GetActorLocation().ToString(),
-                *GetActorScale3D().ToString());
-        }
-    }
-
-    DrawDebugSphere(
-        GetWorld(),
-        GetActorLocation(),
-        100000.0f, // BIG
-        32,
-        FColor::Green,
-        true,
-        10.0f,
-        0,
-        100.0f);
-
-    EnsureDynamicMaterial();
-    ApplyMaterialParameters();
-
-    DumpPlanetMaterialState(TEXT("BeginPlay"));
+    DynamicPlanetMaterial->SetScalarParameterValue(TEXT("LightsIntensity"), LightsIntensity);
+    DynamicPlanetMaterial->SetScalarParameterValue(TEXT("NightFalloff"), NightFalloff);
+    DynamicPlanetMaterial->SetVectorParameterValue(TEXT("AtmosColor"), AtmosphereColor);
+    DynamicPlanetMaterial->SetScalarParameterValue(TEXT("AtmosIntensity"), AtmosphereIntensity);
 }
 
 void APlanetActor::DumpPlanetMaterialState(const FString& Context) const
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] DumpPlanetMaterialState: Context=%s Actor=%s Class=%s"),
+        TEXT("[PlanetActor] DumpPlanetMaterialState Context=%s Actor=%s Class=%s"),
         *Context,
         *GetName(),
         *GetClass()->GetName());
 
     if (!PlanetMesh)
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] DumpPlanetMaterialState: PlanetMesh is NULL"));
         return;
     }
 
-    UStaticMesh* Mesh = PlanetMesh->GetStaticMesh();
-    UMaterialInterface* SlotMaterial = PlanetMesh->GetMaterial(0);
-
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] MainPlanetMesh: Name=%s Mesh=%s Visible=%d HiddenInGame=%d Slot0=%s DefaultMat=%s MID=%s"),
-        *PlanetMesh->GetName(),
-        Mesh ? *Mesh->GetName() : TEXT("NULL"),
+        TEXT("[PlanetActor] MainMesh Mesh=%s Visible=%d Hidden=%d RelativeScale=%s WorldScale=%s Mat0=%s MID=%s"),
+        *GetNameSafe(PlanetMesh->GetStaticMesh()),
         PlanetMesh->IsVisible() ? 1 : 0,
         PlanetMesh->bHiddenInGame ? 1 : 0,
-        SlotMaterial ? *SlotMaterial->GetName() : TEXT("NULL"),
-        DefaultPlanetMaterial ? *DefaultPlanetMaterial->GetName() : TEXT("NULL"),
-        DynamicPlanetMaterial ? *DynamicPlanetMaterial->GetName() : TEXT("NULL"));
-
-    TArray<UStaticMeshComponent*> Meshes;
-    GetComponents<UStaticMeshComponent>(Meshes);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] StaticMeshComponent count=%d"),
-        Meshes.Num());
-
-    for (int32 Index = 0; Index < Meshes.Num(); ++Index)
-    {
-        UStaticMeshComponent* MeshComp = Meshes[Index];
-
-        if (!MeshComp)
-        {
-            continue;
-        }
-
-        UStaticMesh* CompMesh = MeshComp->GetStaticMesh();
-        UMaterialInterface* CompMaterial = MeshComp->GetMaterial(0);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] MeshComp[%d]: Name=%s IsPlanetMesh=%d Visible=%d HiddenInGame=%d Mesh=%s Mat0=%s"),
-            Index,
-            *MeshComp->GetName(),
-            MeshComp == PlanetMesh ? 1 : 0,
-            MeshComp->IsVisible() ? 1 : 0,
-            MeshComp->bHiddenInGame ? 1 : 0,
-            CompMesh ? *CompMesh->GetName() : TEXT("NULL"),
-            CompMaterial ? *CompMaterial->GetName() : TEXT("NULL"));
-    }
+        *PlanetMesh->GetRelativeScale3D().ToString(),
+        *PlanetMesh->GetComponentScale().ToString(),
+        *GetNameSafe(PlanetMesh->GetMaterial(0)),
+        *GetNameSafe(DynamicPlanetMaterial));
 }
+
 void APlanetActor::DebugLogTextureState(const FString& Context) const
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] TextureState: Context=%s Actor=%s Base=%s Gloss=%s Lights=%s"),
+        TEXT("[PlanetActor] TextureState Context=%s Actor=%s Base=%s Gloss=%s Lights=%s"),
         *Context,
         *GetName(),
-        BaseTexture ? *BaseTexture->GetName() : TEXT("NULL"),
-        GlossTexture ? *GlossTexture->GetName() : TEXT("NULL"),
-        LightsTexture ? *LightsTexture->GetName() : TEXT("NULL"));
+        *GetNameSafe(BaseTexture),
+        *GetNameSafe(GlossTexture),
+        *GetNameSafe(LightsTexture));
 }

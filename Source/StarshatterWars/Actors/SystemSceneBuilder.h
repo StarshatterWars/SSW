@@ -63,13 +63,13 @@ struct FSystemSceneScaleSettings
     float MaxOrbitKm = 8000000000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
-    float LegacyUnitsPerKm = 0.20f;
+    float LegacyUnitsPerKm = 0.01f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
     float LegacyMoonUnitsPerKm = 0.20f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Legacy")
-    float LegacyMaxOrbitUnits = 500000000.0f;
+    float LegacyMaxOrbitUnits = 10000000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|LegacyCamera")
     float LegacyPlanetCameraFactor = 0.10f;
@@ -99,10 +99,10 @@ struct FSystemSceneScaleSettings
     float MaxMoonScaleUnits = 0.50f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MinGasGiantScaleUnits = 1.0f;
+    float MinGasGiantScaleUnits = 600.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MaxGasGiantScaleUnits = 6.0f;
+    float MaxGasGiantScaleUnits = 3000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
     float GasGiantScaleMultiplier = 1.0f;
@@ -293,9 +293,7 @@ protected:
     EPlanetType ResolvePlanetTypeFromData(const FString& BodyName, bool bIsMoon) const;
 
     float ConvertStarRadiusKmToSceneUnits(float RadiusKm) const;
-    float ConvertPlanetRadiusKmToSceneUnits(float RadiusKm) const;
-    float ConvertMoonRadiusKmToSceneUnits(float RadiusKm) const;
-    float ConvertGasGiantRadiusKmToSceneUnits(float RadiusKm) const;
+    float ConvertPlanetRadiusToSceneUnits(float RadiusKm) const;
 
     
     float ConvertRadiusKmToSceneUnits(float RadiusKm) const;
