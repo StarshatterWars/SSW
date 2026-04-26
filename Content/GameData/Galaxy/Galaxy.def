@@ -2352,7 +2352,7 @@ system:
 		},
 		planet: {
 			name:    Rhomin,
-			type:    Terran,
+			type:    GasGiant,
 			icon:    "GasGiant11_map",
 			texture: "GasGiant11",
 			radius:  38.2e6,
