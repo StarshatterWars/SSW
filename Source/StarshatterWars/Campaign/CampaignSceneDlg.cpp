@@ -1034,22 +1034,60 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     {
         FVector Orbit = Event.EventPoint;
 
-        // X/Y are legacy orbit angles.
-        // Do not axis-swap here.
-        // Convert only if your DEF angles are degrees.
-        Orbit.X = FMath::DegreesToRadians(Orbit.X);
-        Orbit.Y = FMath::DegreesToRadians(Orbit.Y);
+        ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
 
-        // Camera distance correction for cutscene scale.
-        Orbit.Z *= 0.1f;
+        float VisualRadiusUnits = 1000.0f;
+        bool bTargetIsSystemBody = false;
+
+        if (Builder)
+        {
+            FSpawnedSystemBody FoundBody;
+            if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+            {
+                bTargetIsSystemBody = true;
+                VisualRadiusUnits = FMath::Max(FoundBody.VisualRadiusUnits, 100.0f);
+            }
+        }
+
+        if (bTargetIsSystemBody)
+        {
+            // For planets/moons, ignore legacy Z range.
+            // Old Starshatter scene values like 80000 are too large in UE scene space.
+            Orbit.Z = FMath::Clamp(
+                VisualRadiusUnits * 6.0f,
+                2000.0f,
+                30000.0f);
+
+            // If legacy azimuth/elevation are zero, force a usable 3D view angle.
+            if (FMath::IsNearlyZero(Orbit.X) && FMath::IsNearlyZero(Orbit.Y))
+            {
+                Orbit.X = -35.0f;
+                Orbit.Y = 18.0f;
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] param 3 -> PlanetOrbit FIXED Target='%s' Radius=%.2f Orbit=%s"),
+                *Event.EventTarget,
+                VisualRadiusUnits,
+                *Orbit.ToString());
+        }
+        else
+        {
+            // Non-planet legacy behavior.
+            if (Builder)
+            {
+                Orbit.Z = Builder->ConvertOrbitKmToSceneUnits(Orbit.Z, false);
+            }
+
+            Orbit.Z = FMath::Clamp(Orbit.Z, 1200.0f, 50000.0f);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] param 3 -> LegacyOrbit Target='%s' Orbit=%s"),
+                *Event.EventTarget,
+                *Orbit.ToString());
+        }
 
         Cam->SetBodyOrbitView(TargetActor, Orbit);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] param 3 -> Orbit Target='%s' Orbit=%s"),
-            *Event.EventTarget,
-            *Orbit.ToString());
-
         return;
     }
 

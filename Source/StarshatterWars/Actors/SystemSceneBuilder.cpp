@@ -505,8 +505,13 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
     const FString PlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
 
-    const FVector RuntimeOffsetKm =
+    FVector RuntimeOffsetKm =
         PlanetBody->Location() - PrimaryStarRuntimeLocation;
+
+    if (ScaleSettings.bRuntimeLocationsAreMeters)
+    {
+        RuntimeOffsetKm /= 1000.0f;
+    }
 
     const FVector SceneOffset =
         ConvertRuntimeOffsetToSceneOffset(RuntimeOffsetKm, false);
@@ -517,10 +522,32 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
     const EPlanetType PlanetType =
         ResolvePlanetTypeFromData(PlanetName, false);
 
-    const float PlanetRadiusMeters =
-        PlanetBody->Radius() > 0.0f ? (float)PlanetBody->Radius() : 2000000.0f;
+    float PlanetRadiusMeters =
+        PlanetBody->Radius() > 0.0f
+        ? static_cast<float>(PlanetBody->Radius())
+        : 2000000.0f;
 
-    const float RadiusUnits = ConvertPlanetRadiusToSceneUnits(PlanetRadiusMeters);
+    if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+    {
+        if (const FPlanet* PlanetData = Env->FindPlanetMapByName(PlanetName))
+        {
+            if (PlanetData->Radius > 0.0f)
+            {
+                PlanetRadiusMeters = PlanetData->Radius;
+            }
+        }
+    }
+
+    const float RadiusUnits =
+        ConvertPlanetRadiusToSceneUnits(PlanetRadiusMeters);
+
+    // DEBUG LOG — ADD HERE
+    UE_LOG(LogTemp, Warning,
+        TEXT("[PlanetRadius] %s RuntimeRadius=%.2f FinalRadiusMeters=%.2f RadiusUnits=%.2f"),
+        *PlanetName,
+        PlanetBody->Radius(),
+        PlanetRadiusMeters,
+        RadiusUnits);
 
     const float OrbitRadiusUnits =
         ConvertOrbitKmToSceneUnits((float)RuntimeOffsetKm.Size(), false);
@@ -716,6 +743,7 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
         BuildRuntimeMoon(
             MoonBody,
+            PlanetBody,
             StarAnchorWorldLocation,
             PrimaryStarRuntimeLocation,
             PlanetActor);
@@ -724,6 +752,7 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
 void ASystemSceneBuilder::BuildRuntimeMoon(
     OrbitalBody* MoonBody,
+    OrbitalBody* ParentPlanetBody,
     const FVector& StarAnchorWorldLocation,
     const FVector& PrimaryStarRuntimeLocation,
     AActor* ParentActor)
@@ -735,31 +764,66 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
         return;
     }
 
+    if (!ParentPlanetBody)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] BuildRuntimeMoon: ParentPlanetBody is null for moon '%s'"),
+            ANSI_TO_TCHAR(MoonBody->GetName()));
+        return;
+    }
+
     const FString MoonName = ANSI_TO_TCHAR(MoonBody->GetName());
-    const FVector RuntimeOffsetKm = MoonBody->Location() - PrimaryStarRuntimeLocation;
-    const FVector SceneOffset = ConvertRuntimeOffsetToSceneOffset(RuntimeOffsetKm, true);
-    const FVector MoonWorldLocation = StarAnchorWorldLocation + SceneOffset;
 
-    const float MoonRadiusMeters =
-        MoonBody->Radius() > 0.0f ? (float)MoonBody->Radius() : 500000.0f;
+    const FVector ParentWorldLocation =
+        ParentActor ? ParentActor->GetActorLocation() : StarAnchorWorldLocation;
 
-    const float RadiusUnits =
+    FVector RuntimeOffsetKm =
+        MoonBody->Location() - ParentPlanetBody->Location();
+
+    if (ScaleSettings.bRuntimeLocationsAreMeters)
+    {
+        RuntimeOffsetKm /= 1000.0f;
+    }
+
+    const FVector SceneOffset =
+        ConvertRuntimeOffsetToSceneOffset(RuntimeOffsetKm, true);
+
+    const FVector MoonWorldLocation =
+        ParentWorldLocation + SceneOffset;
+
+    float MoonRadiusMeters =
+        MoonBody->Radius() > 0.0f
+        ? static_cast<float>(MoonBody->Radius())
+        : 500000.0f;
+
+    if (MoonRadiusMeters > 0.0f && MoonRadiusMeters < 100000.0f)
+    {
+        MoonRadiusMeters *= 1000.0f;
+    }
+
+    const float RawRadiusUnits =
         ConvertPlanetRadiusToSceneUnits(MoonRadiusMeters);
 
-    const float OrbitRadiusUnits = ConvertOrbitKmToSceneUnits(
-        (float)RuntimeOffsetKm.Size(),
-        true);
+    const float RadiusUnits =
+        FMath::Clamp(
+            RawRadiusUnits,
+            ScaleSettings.MinMoonScaleUnits,
+            ScaleSettings.MaxMoonScaleUnits);
 
-    const EPlanetType PlanetType = ResolvePlanetTypeFromData(MoonName, true);
+    const float OrbitRadiusUnits =
+        ConvertOrbitKmToSceneUnits(RuntimeOffsetKm.Size(), true);
 
     if (bSpawnOrbitActors && OrbitActorClass && OrbitRadiusUnits > 0.0f)
     {
         SpawnOrbitActor(
             MoonName,
-            StarAnchorWorldLocation,
+            ParentWorldLocation,
             OrbitRadiusUnits,
             ParentActor);
     }
+
+    const EPlanetType PlanetType =
+        ResolvePlanetTypeFromData(MoonName, true);
 
     const TSubclassOf<AActor> ResolvedMoonClass =
         ResolvePlanetActorClass(PlanetType, true);
@@ -783,32 +847,33 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
         RadiusUnits,
         OrbitRadiusUnits);
 
-    TrackRuntimeBody(MoonName, MoonBody, MoonActor);
-
-    BuildRuntimeRegionForBody(
+    TrackRuntimeBody(
         MoonName,
-        MoonWorldLocation,
-        MoonActor,
-        RadiusUnits,
-        true);
+        MoonBody,
+        MoonActor);
 
-    if (bEnableDebugLogs)
+    if (bSpawnRegionActors)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] MOON '%s' Type=%d Class=%s RuntimeLoc=%s RuntimeOffset=%s SceneOffset=%s SceneLoc=%s OrbitKm=%.2f OrbitUnits=%.2f RadiusKm=%.2f RadiusUnits=%.2f Parent=%s"),
-            *MoonName,
-            (int32)PlanetType,
-            *GetNameSafe(ResolvedMoonClass.Get()),
-            *MoonBody->Location().ToString(),
-            *RuntimeOffsetKm.ToString(),
-            *SceneOffset.ToString(),
-            *MoonWorldLocation.ToString(),
-            RuntimeOffsetKm.Size(),
-            OrbitRadiusUnits,
-            MoonBody->Radius(),
+        BuildRuntimeRegionForBody(
+            MoonName,
+            MoonWorldLocation,
+            MoonActor,
             RadiusUnits,
-            *GetNameSafe(ParentActor));
+            true);
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] MOON '%s' Parent='%s' ParentWorld=%s RuntimeOffsetKm=%s SceneOffset=%s SceneLoc=%s RadiusMeters=%.2f RadiusUnits=%.2f OrbitUnits=%.2f Actor=%s"),
+        *MoonName,
+        ANSI_TO_TCHAR(ParentPlanetBody->GetName()),
+        *ParentWorldLocation.ToString(),
+        *RuntimeOffsetKm.ToString(),
+        *SceneOffset.ToString(),
+        *MoonWorldLocation.ToString(),
+        MoonRadiusMeters,
+        RadiusUnits,
+        OrbitRadiusUnits,
+        *GetNameSafe(MoonActor));
 }
 
 void ASystemSceneBuilder::TrackRuntimeBody(
@@ -957,6 +1022,9 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     UWorld* World = GetWorld();
     if (!World)
     {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SystemSceneBuilder] SpawnBodyActor: World is null for '%s'"),
+            *BodyName);
         return nullptr;
     }
 
@@ -979,7 +1047,9 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
         return nullptr;
     }
 
+#if WITH_EDITOR
     Spawned->SetActorLabel(BodyName);
+#endif
 
     // ----------------------------------------------------
     // ATTACH TO PARENT
@@ -992,55 +1062,47 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     }
 
     // ----------------------------------------------------
-    // APPLY SCALE (CORRECT ORDER)
+    // APPLY SCALE / RADIUS
     // ----------------------------------------------------
-
-    // GAS GIANT FIRST (inherits from PlanetActor)
-    if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
+    if (APlanetActor* Planet = Cast<APlanetActor>(Spawned))
     {
-        const float Radius = FMath::Max(1.0f, VisualRadiusUnits);
+        const float SafeRadius = FMath::Max(VisualRadiusUnits, 1.0f);
 
-        GasGiant->SetPlanetRadius(Radius);
+        Planet->SetPlanetRadius(SafeRadius);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] GasGiant '%s' RadiusUnits=%.2f"),
+            TEXT("[SystemSceneBuilder] PlanetActor '%s' RadiusUnits=%.2f"),
             *BodyName,
-            Radius);
-    }
-    else if (APlanetActor* Planet = Cast<APlanetActor>(Spawned))
-    {
-        Planet->SetPlanetRadius(VisualRadiusUnits);
+            SafeRadius);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] Planet '%s' RadiusUnits=%.2f"),
-            *BodyName,
-            VisualRadiusUnits);
+   
     }
     else
     {
-        float FinalScale = 1.0f;
-
-        if (VisualRadiusUnits > 0.0f)
-        {
-            FinalScale = FMath::Clamp(
-                VisualRadiusUnits,
-                ScaleSettings.MinBodyScaleUnits,
-                ScaleSettings.MaxBodyScaleUnits);
-        }
+        // Fallback for non-planet actors
+        const float FinalScale = FMath::Clamp(
+            VisualRadiusUnits,
+            ScaleSettings.MinBodyScaleUnits,
+            ScaleSettings.MaxBodyScaleUnits);
 
         Spawned->SetActorScale3D(FVector(FinalScale));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] GenericActor '%s' Scale=%.2f"),
+            *BodyName,
+            FinalScale);
     }
 
     // ----------------------------------------------------
-    // STATIC MESH OVERRIDE (SAFE)
+    // STATIC MESH FALLBACK (FOR BASIC ACTORS)
     // ----------------------------------------------------
-
     if (AStaticMeshActor* SMA = Cast<AStaticMeshActor>(Spawned))
     {
         if (UStaticMeshComponent* SMC = SMA->GetStaticMeshComponent())
         {
             SMC->SetMobility(EComponentMobility::Movable);
 
+            // If it's just a plain StaticMeshActor, force a sphere
             if (Spawned->GetClass() == AStaticMeshActor::StaticClass())
             {
                 static UStaticMesh* SphereMesh = nullptr;
@@ -1061,24 +1123,18 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     }
 
     // ----------------------------------------------------
-    // TRACK
+    // TRACK (ONLY ACTORS — NOT SpawnedBodies)
     // ----------------------------------------------------
-
     SpawnedActors.Add(Spawned);
-
-    FSpawnedSystemBody Entry;
-    Entry.BodyName = BodyName;
-    Entry.Actor = Spawned;
-    Entry.bIsMoon = bIsMoon;
-    Entry.bIsOrbit = false;
-    Entry.ParentActor = ParentActor;
-
-    SpawnedBodies.Add(Entry);
     BodyActorMap.Add(BodyName, Spawned);
 
-    UE_LOG(LogTemp, Log,
-        TEXT("[SystemSceneBuilder] SpawnBodyActor: '%s' spawned successfully"),
-        *BodyName);
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SystemSceneBuilder] SpawnBodyActor SUCCESS '%s' Actor=%s Loc=%s RadiusUnits=%.2f Parent=%s"),
+        *BodyName,
+        *GetNameSafe(Spawned),
+        *WorldLocation.ToString(),
+        VisualRadiusUnits,
+        *GetNameSafe(ParentActor));
 
     return Spawned;
 }
@@ -1424,7 +1480,16 @@ float ASystemSceneBuilder::ConvertStarRadiusKmToSceneUnits(float RadiusKm) const
 
 float ASystemSceneBuilder::ConvertPlanetRadiusToSceneUnits(float RadiusMeters) const
 {
-    return RadiusMeters * 0.01f;
+    const float RadiusKm = RadiusMeters / 1000.0f;
+
+    const float Units =
+        (RadiusKm / 1000.0f) *
+        ScaleSettings.RadiusUnitsPerThousandKm;
+
+    return FMath::Clamp(
+        Units,
+        ScaleSettings.MinPlanetScaleUnits,
+        ScaleSettings.MaxPlanetScaleUnits);
 }
 
 void ASystemSceneBuilder::LogRuntimeSystemSummary(StarSystem* RuntimeSystem) const
@@ -1532,76 +1597,52 @@ bool ASystemSceneBuilder::FindSpawnedBodyByName(
         return false;
     }
 
-    auto IsStarEntry = [](const FSpawnedSystemBody& Entry) -> bool
-        {
-            return !Entry.bIsOrbit &&
-                !Entry.bIsMoon &&
-                Entry.ParentActor == nullptr;
-        };
+    UE_LOG(LogTemp, Warning,
+        TEXT("[FindBody] Searching='%s' SpawnedBodies=%d"),
+        *SearchName,
+        SpawnedBodies.Num());
 
-    const FSpawnedSystemBody* ExactNonStarMatch = nullptr;
-    const FSpawnedSystemBody* PartialNonStarMatch = nullptr;
-    const FSpawnedSystemBody* ExactStarMatch = nullptr;
-    const FSpawnedSystemBody* PartialStarMatch = nullptr;
+    const FSpawnedSystemBody* ExactBodyMatch = nullptr;
+    const FSpawnedSystemBody* PartialBodyMatch = nullptr;
 
     for (const FSpawnedSystemBody& Entry : SpawnedBodies)
     {
+        const FString EntryName = Entry.BodyName.TrimStartAndEnd();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[FindBody] Candidate BodyName='%s' Actor=%s IsOrbit=%d IsMoon=%d Parent=%s Radius=%.2f"),
+            *EntryName,
+            *GetNameSafe(Entry.Actor),
+            Entry.bIsOrbit ? 1 : 0,
+            Entry.bIsMoon ? 1 : 0,
+            *GetNameSafe(Entry.ParentActor),
+            Entry.VisualRadiusUnits);
+
         if (Entry.bIsOrbit)
         {
             continue;
         }
 
-        const bool bIsStar = IsStarEntry(Entry);
-        const bool bExact = Entry.BodyName.Equals(SearchName, ESearchCase::IgnoreCase);
-        const bool bPartial = Entry.BodyName.Contains(SearchName, ESearchCase::IgnoreCase);
-
-        if (bExact)
+        if (EntryName.Equals(SearchName, ESearchCase::IgnoreCase))
         {
-            if (!bIsStar && !ExactNonStarMatch)
-            {
-                ExactNonStarMatch = &Entry;
-            }
-            else if (bIsStar && !ExactStarMatch)
-            {
-                ExactStarMatch = &Entry;
-            }
+            ExactBodyMatch = &Entry;
+            break;
         }
-        else if (bPartial)
+
+        if (!PartialBodyMatch &&
+            EntryName.Contains(SearchName, ESearchCase::IgnoreCase))
         {
-            if (!bIsStar && !PartialNonStarMatch)
-            {
-                PartialNonStarMatch = &Entry;
-            }
-            else if (bIsStar && !PartialStarMatch)
-            {
-                PartialStarMatch = &Entry;
-            }
+            PartialBodyMatch = &Entry;
         }
     }
 
-    const FSpawnedSystemBody* BestMatch = nullptr;
-
-    if (ExactNonStarMatch)
-    {
-        BestMatch = ExactNonStarMatch;
-    }
-    else if (PartialNonStarMatch)
-    {
-        BestMatch = PartialNonStarMatch;
-    }
-    else if (ExactStarMatch)
-    {
-        BestMatch = ExactStarMatch;
-    }
-    else if (PartialStarMatch)
-    {
-        BestMatch = PartialStarMatch;
-    }
+    const FSpawnedSystemBody* BestMatch =
+        ExactBodyMatch ? ExactBodyMatch : PartialBodyMatch;
 
     if (!BestMatch)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: no match for '%s'"),
+        UE_LOG(LogTemp, Error,
+            TEXT("[FindBody] FAILED Search='%s'. No body match."),
             *SearchName);
         return false;
     }
@@ -1609,11 +1650,12 @@ bool ASystemSceneBuilder::FindSpawnedBodyByName(
     OutBody = *BestMatch;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] FindSpawnedBodyByName: '%s' -> '%s' IsStar=%s IsMoon=%s"),
+        TEXT("[FindBody] FOUND Search='%s' -> BodyName='%s' Actor=%s Loc=%s Radius=%.2f"),
         *SearchName,
-        *BestMatch->BodyName,
-        IsStarEntry(*BestMatch) ? TEXT("true") : TEXT("false"),
-        BestMatch->bIsMoon ? TEXT("true") : TEXT("false"));
+        *OutBody.BodyName,
+        *GetNameSafe(OutBody.Actor),
+        OutBody.Actor ? *OutBody.Actor->GetActorLocation().ToString() : TEXT("NULL"),
+        OutBody.VisualRadiusUnits);
 
     return true;
 }
@@ -1672,6 +1714,12 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
         return false;
     }
 
+    UE_LOG(LogTemp, Error,
+        TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: Body='%s' CameraOffset=%s Blend=%.2f"),
+        *BodyName,
+        *CameraOffset.ToString(),
+        BlendSeconds);
+
     FSpawnedSystemBody FoundBody;
     if (!FindSpawnedBodyByName(BodyName, FoundBody))
     {
@@ -1681,57 +1729,77 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
         return false;
     }
 
-    FVector SceneOffset = ConvertLegacyCameraOffsetToSceneOffset(CameraOffset);
-    
-    FVector FocusPoint = FoundBody.SpawnLocation;
+    UE_LOG(LogTemp, Error,
+        TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: Target='%s' Found='%s' Actor=%s Parent=%s IsOrbit=%d IsMoon=%d Radius=%.2f Loc=%s"),
+        *BodyName,
+        *FoundBody.BodyName,
+        *GetNameSafe(FoundBody.Actor),
+        *GetNameSafe(FoundBody.ParentActor),
+        FoundBody.bIsOrbit ? 1 : 0,
+        FoundBody.bIsMoon ? 1 : 0,
+        FoundBody.VisualRadiusUnits,
+        FoundBody.Actor ? *FoundBody.Actor->GetActorLocation().ToString() : TEXT("NULL"));
 
-    if (!FoundBody.bIsOrbit)
+    if (!FoundBody.Actor)
     {
-        const float Radius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
-
-        // push focus point toward camera slightly (surface bias)
-        const FVector ViewDir = SceneOffset.GetSafeNormal();
-        const float SurfaceBias = Radius * 0.85f; // tweak: 0.5 - 0.8 range
-
-        FocusPoint += ViewDir * SurfaceBias;
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: found '%s' but Actor is null"),
+            *BodyName);
+        return false;
     }
+
+    const FVector FocusPoint = FoundBody.Actor->GetActorLocation();
 
     const bool bIsPlanetOrMoon =
         !FoundBody.bIsOrbit &&
         (FoundBody.bIsMoon || FoundBody.ParentActor != nullptr);
 
+    FVector FinalOffset = FVector::ZeroVector;
+
     if (bIsPlanetOrMoon)
     {
-        SceneOffset *= ScaleSettings.LegacyPlanetCameraFactor;
+        const float VisualRadius =
+            FMath::Max(FoundBody.VisualRadiusUnits, 100.0f);
 
-        const float VisualRadius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
-        const float MinPlanetCameraDistance = FMath::Max(VisualRadius * 4.5f, 1200.0f);
-        const float MaxPlanetCameraDistance = FMath::Max(VisualRadius * 14.0f, 8000.0f);
+        const float CameraDistance = FMath::Clamp(
+            VisualRadius * 6.0f,
+            2000.0f,
+            30000.0f);
 
-        const float Dist = SceneOffset.Size();
-        if (Dist > KINDA_SMALL_NUMBER)
+        if (!CameraOffset.IsNearlyZero())
         {
-            const FVector Dir = SceneOffset.GetSafeNormal();
-            const float ClampedDist = FMath::Clamp(
-                Dist,
-                MinPlanetCameraDistance,
-                MaxPlanetCameraDistance);
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName Ignoring legacy CameraOffset for planet '%s': %s"),
+                *BodyName,
+                *CameraOffset.ToString());
+        }
 
-            SceneOffset = Dir * ClampedDist;
-        }
-        else
-        {
-            SceneOffset = FVector(-MinPlanetCameraDistance, -MinPlanetCameraDistance * 0.20f, MinPlanetCameraDistance * 0.60f);
-        }
+        const FVector Dir =
+            FVector(-1.0f, -0.25f, 0.45f).GetSafeNormal();
+
+        FinalOffset = Dir * CameraDistance;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetCameraDistance FIXED] Target='%s' VisualRadius=%.2f CameraDistance=%.2f Dir=%s FinalOffset=%s"),
+            *BodyName,
+            VisualRadius,
+            CameraDistance,
+            *Dir.ToString(),
+            *FinalOffset.ToString());
     }
-
-    if (SceneOffset.IsNearlyZero())
+    else
     {
-        SceneOffset = FVector(-2500.0f, -500.0f, 1500.0f);
+        FinalOffset = ConvertLegacyCameraOffsetToSceneOffset(CameraOffset);
+
+        if (FinalOffset.IsNearlyZero())
+        {
+            FinalOffset = FVector(-2500.0f, -500.0f, 1500.0f);
+        }
     }
 
-    const FVector CameraLocation = FocusPoint + SceneOffset;
-    const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
+    const FVector CameraLocation = FocusPoint + FinalOffset;
+    const FRotator CameraRotation =
+        (FocusPoint - CameraLocation).Rotation();
 
     PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
     PC->SetControlRotation(CameraRotation);
@@ -1742,17 +1810,24 @@ bool ASystemSceneBuilder::FocusCameraOnBodyByName(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] FocusCameraOnBodyByName: Target='%s' Focus=%s LegacyOffset=%s SceneOffset=%s VisualRadius=%.2f PlanetOrMoon=%s Camera=%s Rotation=%s Blend=%.2f"),
+        TEXT("[CameraFinal] Target='%s' PlanetOrMoon=%s Focus=%s Camera=%s Offset=%s Dist=%.2f Radius=%.2f Blend=%.2f"),
         *BodyName,
-        *FocusPoint.ToString(),
-        *CameraOffset.ToString(),
-        *SceneOffset.ToString(),
-        FoundBody.VisualRadiusUnits,
         bIsPlanetOrMoon ? TEXT("true") : TEXT("false"),
+        *FocusPoint.ToString(),
         *CameraLocation.ToString(),
-        *CameraRotation.ToString(),
+        *FinalOffset.ToString(),
+        FinalOffset.Size(),
+        FoundBody.VisualRadiusUnits,
         BlendSeconds);
 
+    if (PC->PlayerCameraManager)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[FOCUS CAMERA ACTUAL] Body='%s' CameraManagerLoc=%s CameraManagerRot=%s"),
+            *BodyName,
+            *PC->PlayerCameraManager->GetCameraLocation().ToString(),
+            *PC->PlayerCameraManager->GetCameraRotation().ToString());
+    }
     return true;
 }
 
@@ -1872,8 +1947,8 @@ bool ASystemSceneBuilder::DebugFocusCameraOnBodyByName(
         SceneOffset *= ScaleSettings.LegacyPlanetCameraFactor;
 
         const float VisualRadius = FMath::Max(FoundBody.VisualRadiusUnits, 1.0f);
-        const float MinPlanetCameraDistance = FMath::Max(VisualRadius * 4.5f, 1200.0f);
-        const float MaxPlanetCameraDistance = FMath::Max(VisualRadius * 14.0f, 8000.0f);
+        const float MinPlanetCameraDistance = FMath::Max(VisualRadius * 5.0f, 2000.0f);
+        const float MaxPlanetCameraDistance = FMath::Max(VisualRadius * 12.0f, 20000.0f);
 
         const float Dist = SceneOffset.Size();
         if (Dist > KINDA_SMALL_NUMBER)

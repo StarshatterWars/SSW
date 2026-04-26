@@ -38,17 +38,20 @@ struct FSystemSceneScaleSettings
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
     bool bUseLogOrbitScaling = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
-    float OrbitUnitsPerMillionKm = 100.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Runtime Units")
+    bool bRuntimeLocationsAreMeters = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
-    float RadiusUnitsPerThousandKm = 1000.0f;
+    float OrbitUnitsPerMillionKm = 250.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
-    float MinOrbitUnits = 400.0f;
+    float RadiusUnitsPerThousandKm = 500.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
-    float MaxOrbitUnits = 12000.0f;
+    float MinOrbitUnits = 2000.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
+    float MaxOrbitUnits = 100000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Preview")
     float MinBodyScaleUnits = 20.0f;
@@ -90,13 +93,13 @@ struct FSystemSceneScaleSettings
     float MinPlanetScaleUnits = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MaxPlanetScaleUnits = 1000.00f;
+    float MaxPlanetScaleUnits = 5000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MinMoonScaleUnits = 0.08f;
+    float MinMoonScaleUnits = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MaxMoonScaleUnits = 0.50f;
+    float MaxMoonScaleUnits = 1000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
     float MinGasGiantScaleUnits = 600.0f;
@@ -271,6 +274,7 @@ protected:
 
     void BuildRuntimeMoon(
         OrbitalBody* MoonBody,
+        OrbitalBody* ParentPlanetBody,
         const FVector& StarAnchorWorldLocation,
         const FVector& PrimaryStarRuntimeLocation,
         AActor* ParentActor);
