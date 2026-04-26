@@ -1,53 +1,65 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlanetActor.h"
+#include "GameFramework/Actor.h"
 #include "GasGiantActor.generated.h"
 
-UCLASS(Blueprintable)
-class STARSHATTERWARS_API AGasGiantActor : public APlanetActor
+class UStaticMeshComponent;
+
+UCLASS()
+class STARSHATTERWARS_API AGasGiantActor : public AActor
 {
     GENERATED_BODY()
 
 public:
     AGasGiantActor();
 
-    UFUNCTION(BlueprintCallable, Category = "Planet")
-    virtual void SetPlanetVisualValues(
-        float InPlanetRadius,
-        float InAtmosphereHeight,
-        float InAtmosphereSteps);
+protected:
+    virtual void BeginPlay() override;
 
-    virtual void SetPlanetRadius(float InPlanetRadius) override;
+public:
+    virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "Planet")
-    void ApplyPlanetVisuals();
+    // -----------------------------
+    // Core planet-like behavior
+    // -----------------------------
 
-    UFUNCTION(BlueprintPure, Category = "Planet")
-    float GetPlanetRadius() const
-    {
-        return GasGiantRadius;
-    }
+    UFUNCTION(BlueprintCallable)
+    void SetLightDirection(const FVector& InDirection);
 
-    UFUNCTION(BlueprintPure, Category = "Planet")
-    float GetAtmosphereHeight() const
-    {
-        return AtmosphereHeight;
-    }
+    UFUNCTION(BlueprintCallable)
+    void SetAxialRotationDegreesPerSecond(float DegreesPerSecond);
 
-    UFUNCTION(BlueprintPure, Category = "Planet")
-    float GetAtmosphereSteps() const
-    {
-        return AtmosphereSteps;
-    }
+    UFUNCTION(BlueprintCallable)
+    void SetAxialRotationEnabled(bool bEnabled);
+
+    UFUNCTION(BlueprintCallable, Category = "GasGiant")
+    void SetPlanetRadius(float InRadiusUnits);
+
+    UFUNCTION(BlueprintPure, Category = "GasGiant")
+    float GetPlanetRadius() const;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
+    float PlanetRadiusUnits = 1.0f;
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|GasGiant")
-    float GasGiantRadius = 1.0f;
+    // Root
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* SceneRoot;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|GasGiant")
-    float AtmosphereHeight = 1.0f;
+    // Optional base mesh (can be hidden if BP has its own)
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* CoreMesh;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|GasGiant")
-    float AtmosphereSteps = 8.0f;
+    // -----------------------------
+    // Visual parameters (for BP)
+    // -----------------------------
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
+    FVector LightDirection = FVector(1, 0, 0);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
+    float AxialRotationDegreesPerSecond = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
+    bool bEnableAxialRotation = false;
 };

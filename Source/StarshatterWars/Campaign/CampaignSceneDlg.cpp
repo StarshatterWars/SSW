@@ -1051,12 +1051,26 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
         if (bTargetIsSystemBody)
         {
-            // For planets/moons, ignore legacy Z range.
-            // Old Starshatter scene values like 80000 are too large in UE scene space.
+            float CameraMultiplier = 2.75f;
+
+            // Push camera further back for gas giants so they don't fill entire screen
+            ASystemSceneBuilder* BuilderX = ResolveSystemSceneBuilder();
+            if (Builder)
+            {
+                FSpawnedSystemBody FoundBody;
+                if (BuilderX->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+                {
+                    if (FoundBody.VisualRadiusUnits > 1200.0f) // simple gas giant heuristic
+                    {
+                        CameraMultiplier = 3.5f;
+                    }
+                }
+            }
+
             Orbit.Z = FMath::Clamp(
-                VisualRadiusUnits * 2.25f,
-                1200.0f,
-                15000.0f);
+                VisualRadiusUnits * CameraMultiplier,
+                3000.0f,
+                25000.0f);
 
 
             // If legacy azimuth/elevation are zero, force a usable 3D view angle.

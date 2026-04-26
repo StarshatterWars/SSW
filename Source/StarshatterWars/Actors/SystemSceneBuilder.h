@@ -104,10 +104,10 @@ struct FSystemSceneScaleSettings
     float MaxMoonScaleUnits = 1000.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MinGasGiantScaleUnits = 600.0f;
+    float MinGasGiantScaleUnits = 1200.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
-    float MaxGasGiantScaleUnits = 3000.0f;
+    float MaxGasGiantScaleUnits = 3500.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale|Bodies")
     float GasGiantScaleMultiplier = 1.0f;
