@@ -124,6 +124,12 @@ protected:
     float NightFalloff = 2.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    bool bUseInternalBlueprintMaterials = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
+    bool bHideNativePlanetMeshWhenUsingInternalMaterials = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")
     FLinearColor AtmosphereColor = FLinearColor(0.25f, 0.55f, 1.0f, 1.0f);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Material")

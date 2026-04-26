@@ -12,6 +12,8 @@ class OrbitalBody;
 class OrbitalRegion;
 class ACameraActor;
 class ASkyLight;
+class APlanetActor;
+class AGasGiantActor;
 
 UENUM(BlueprintType)
 enum class ESystemSceneSource : uint8
@@ -432,7 +434,7 @@ public:
     TSubclassOf<AActor> BarrenPlanetActorClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Planet Types")
-    TSubclassOf<AActor> GasGiantPlanetActorClass;
+    TSubclassOf<AGasGiantActor> GasGiantPlanetActorClass;
 
 
 

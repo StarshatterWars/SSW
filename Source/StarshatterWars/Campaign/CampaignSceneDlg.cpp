@@ -1054,9 +1054,10 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
             // For planets/moons, ignore legacy Z range.
             // Old Starshatter scene values like 80000 are too large in UE scene space.
             Orbit.Z = FMath::Clamp(
-                VisualRadiusUnits * 6.0f,
-                2000.0f,
-                30000.0f);
+                VisualRadiusUnits * 2.25f,
+                1200.0f,
+                15000.0f);
+
 
             // If legacy azimuth/elevation are zero, force a usable 3D view angle.
             if (FMath::IsNearlyZero(Orbit.X) && FMath::IsNearlyZero(Orbit.Y))

@@ -46,7 +46,6 @@ APlanetActor::APlanetActor()
     if (PlanetMaterialFinder.Succeeded())
     {
         DefaultPlanetMaterial = PlanetMaterialFinder.Object;
-        PlanetMesh->SetMaterial(0, DefaultPlanetMaterial);
     }
 }
 
@@ -55,9 +54,15 @@ void APlanetActor::BeginPlay()
     Super::BeginPlay();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] BeginPlay: Actor=%s Class=%s"),
+        TEXT("[PlanetActor] BeginPlay: Actor=%s Class=%s UseInternalBPMaterials=%d HideNative=%d"),
         *GetName(),
-        *GetClass()->GetName());
+        *GetClass()->GetName(),
+        bUseInternalBlueprintMaterials ? 1 : 0,
+        bHideNativePlanetMeshWhenUsingInternalMaterials ? 1 : 0);
+
+    const bool bShouldHideNativePlanetMesh =
+        bUseInternalBlueprintMaterials &&
+        bHideNativePlanetMeshWhenUsingInternalMaterials;
 
     TArray<UStaticMeshComponent*> Meshes;
     GetComponents<UStaticMeshComponent>(Meshes);
@@ -71,31 +76,58 @@ void APlanetActor::BeginPlay()
 
         const bool bIsMainPlanetMesh = (MeshComp == PlanetMesh);
 
-        MeshComp->SetVisibility(bIsMainPlanetMesh, true);
-        MeshComp->SetHiddenInGame(!bIsMainPlanetMesh, true);
+        bool bShouldShowMesh = false;
+
+        if (bUseInternalBlueprintMaterials)
+        {
+            // Gas giant / BP-controlled planet:
+            // show BP child meshes, optionally hide native C++ PlanetMesh.
+            bShouldShowMesh = !(bShouldHideNativePlanetMesh && bIsMainPlanetMesh);
+        }
+        else
+        {
+            // Normal data-driven planet:
+            // only show native C++ PlanetMesh.
+            bShouldShowMesh = bIsMainPlanetMesh;
+        }
+
+        MeshComp->SetVisibility(bShouldShowMesh, true);
+        MeshComp->SetHiddenInGame(!bShouldShowMesh, true);
         MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         MeshComp->SetGenerateOverlapEvents(false);
         MeshComp->SetCastShadow(false);
+        MeshComp->SetCullDistance(0.0f);
+        MeshComp->SetBoundsScale(10000.0f);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetActor] MeshVisibility Actor=%s Mesh=%s IsPlanetMesh=%d Visible=%d Hidden=%d"),
+            TEXT("[PlanetActor] MeshVisibility Actor=%s Mesh=%s IsPlanetMesh=%d Show=%d Hidden=%d Mat=%s"),
             *GetName(),
             *MeshComp->GetName(),
             bIsMainPlanetMesh ? 1 : 0,
-            MeshComp->IsVisible() ? 1 : 0,
-            MeshComp->bHiddenInGame ? 1 : 0);
+            bShouldShowMesh ? 1 : 0,
+            MeshComp->bHiddenInGame ? 1 : 0,
+            *GetNameSafe(MeshComp->GetMaterial(0)));
     }
 
     if (PlanetMesh)
     {
-        PlanetMesh->SetVisibility(true, true);
-        PlanetMesh->SetHiddenInGame(false, true);
+        const bool bShowNativePlanetMesh =
+            !bShouldHideNativePlanetMesh;
+
+        PlanetMesh->SetVisibility(bShowNativePlanetMesh, true);
+        PlanetMesh->SetHiddenInGame(!bShowNativePlanetMesh, true);
         PlanetMesh->SetCullDistance(0.0f);
         PlanetMesh->SetBoundsScale(10000.0f);
 
+        if (!bUseInternalBlueprintMaterials && DefaultPlanetMaterial)
+        {
+            PlanetMesh->SetMaterial(0, DefaultPlanetMaterial);
+        }
+
         UE_LOG(LogTemp, Error,
-            TEXT("[PlanetActor] FORCE VISIBLE Actor=%s ActorLoc=%s ActorScale=%s MeshScale=%s MeshWorldScale=%s Mesh=%s Mat=%s"),
+            TEXT("[PlanetActor] NATIVE PLANET MESH Actor=%s ShowNative=%d ActorLoc=%s ActorScale=%s MeshScale=%s MeshWorldScale=%s Mesh=%s Mat=%s"),
             *GetName(),
+            bShowNativePlanetMesh ? 1 : 0,
             *GetActorLocation().ToString(),
             *GetActorScale3D().ToString(),
             *PlanetMesh->GetRelativeScale3D().ToString(),
@@ -104,8 +136,17 @@ void APlanetActor::BeginPlay()
             *GetNameSafe(PlanetMesh->GetMaterial(0)));
     }
 
-    EnsureDynamicMaterial();
-    ApplyMaterialParameters();
+    if (!bUseInternalBlueprintMaterials)
+    {
+        EnsureDynamicMaterial();
+        ApplyMaterialParameters();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetActor] Skipping material init. Blueprint controls materials/rings. Actor=%s"),
+            *GetName());
+    }
 
     DumpPlanetMaterialState(TEXT("BeginPlay"));
 }
@@ -136,17 +177,30 @@ void APlanetActor::SetPlanetRadius(float InRadiusUnits)
     const float MeshRadius = 50.0f;
     const float Scale = FMath::Max(InRadiusUnits, 1.0f) / MeshRadius;
 
+    /*
+     * Scale the root mesh. Blueprint-controlled gas giants can add their
+     * own child ring/cloud meshes under the same actor.
+     */
     PlanetMesh->SetRelativeScale3D(FVector(Scale));
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] SetPlanetRadius: Actor=%s RadiusUnits=%.2f MeshScale=%.3f"),
+        TEXT("[PlanetActor] SetPlanetRadius: Actor=%s RadiusUnits=%.2f MeshScale=%.3f UseInternalBPMaterials=%d"),
         *GetName(),
         InRadiusUnits,
-        Scale);
+        Scale,
+        bUseInternalBlueprintMaterials ? 1 : 0);
 }
 
 void APlanetActor::SetPlanetMaterial(UMaterialInterface* InMaterial)
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetActor] SetPlanetMaterial skipped. Blueprint controls materials. Actor=%s"),
+            *GetName());
+        return;
+    }
+
     if (!PlanetMesh || !InMaterial)
     {
         return;
@@ -167,18 +221,33 @@ void APlanetActor::SetPlanetMaterial(UMaterialInterface* InMaterial)
 
 void APlanetActor::SetBaseTexture(UTexture* InTexture)
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        return;
+    }
+
     BaseTexture = InTexture;
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetGlossTexture(UTexture* InTexture)
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        return;
+    }
+
     GlossTexture = InTexture;
     ApplyMaterialParameters();
 }
 
 void APlanetActor::SetLightsTexture(UTexture* InTexture)
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        return;
+    }
+
     LightsTexture = InTexture;
     ApplyMaterialParameters();
 }
@@ -188,6 +257,14 @@ void APlanetActor::SetPlanetTextures(
     UTexture* InGlossTexture,
     UTexture* InLightsTexture)
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetActor] SetPlanetTextures skipped. Blueprint controls materials. Actor=%s"),
+            *GetName());
+        return;
+    }
+
     BaseTexture = InBaseTexture;
     GlossTexture = InGlossTexture;
     LightsTexture = InLightsTexture;
@@ -212,31 +289,51 @@ void APlanetActor::SetLightDirection(const FVector& InDirection)
     }
 
     LightDirection = SafeDirection.GetSafeNormal();
-    ApplyMaterialParameters();
+
+    if (!bUseInternalBlueprintMaterials)
+    {
+        ApplyMaterialParameters();
+    }
 }
 
 void APlanetActor::SetLightsIntensity(float InIntensity)
 {
     LightsIntensity = FMath::Max(0.0f, InIntensity);
-    ApplyMaterialParameters();
+
+    if (!bUseInternalBlueprintMaterials)
+    {
+        ApplyMaterialParameters();
+    }
 }
 
 void APlanetActor::SetNightFalloff(float InFalloff)
 {
     NightFalloff = FMath::Max(0.01f, InFalloff);
-    ApplyMaterialParameters();
+
+    if (!bUseInternalBlueprintMaterials)
+    {
+        ApplyMaterialParameters();
+    }
 }
 
 void APlanetActor::SetAtmosphereColor(const FLinearColor& InColor)
 {
     AtmosphereColor = InColor;
-    ApplyMaterialParameters();
+
+    if (!bUseInternalBlueprintMaterials)
+    {
+        ApplyMaterialParameters();
+    }
 }
 
 void APlanetActor::SetAtmosphereIntensity(float InIntensity)
 {
     AtmosphereIntensity = FMath::Max(0.0f, InIntensity);
-    ApplyMaterialParameters();
+
+    if (!bUseInternalBlueprintMaterials)
+    {
+        ApplyMaterialParameters();
+    }
 }
 
 void APlanetActor::SetAxialRotationDegreesPerSecond(float DegreesPerSecond)
@@ -252,6 +349,11 @@ void APlanetActor::SetAxialRotationEnabled(bool bEnabled)
 
 void APlanetActor::EnsureDynamicMaterial()
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        return;
+    }
+
     if (!PlanetMesh)
     {
         return;
@@ -279,6 +381,11 @@ void APlanetActor::EnsureDynamicMaterial()
 
 void APlanetActor::ApplyMaterialParameters()
 {
+    if (bUseInternalBlueprintMaterials)
+    {
+        return;
+    }
+
     EnsureDynamicMaterial();
 
     if (!DynamicPlanetMaterial)
@@ -323,10 +430,11 @@ void APlanetActor::ApplyMaterialParameters()
 void APlanetActor::DumpPlanetMaterialState(const FString& Context) const
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] DumpPlanetMaterialState Context=%s Actor=%s Class=%s"),
+        TEXT("[PlanetActor] DumpPlanetMaterialState Context=%s Actor=%s Class=%s UseInternalBPMaterials=%d"),
         *Context,
         *GetName(),
-        *GetClass()->GetName());
+        *GetClass()->GetName(),
+        bUseInternalBlueprintMaterials ? 1 : 0);
 
     if (!PlanetMesh)
     {
@@ -347,9 +455,10 @@ void APlanetActor::DumpPlanetMaterialState(const FString& Context) const
 void APlanetActor::DebugLogTextureState(const FString& Context) const
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[PlanetActor] TextureState Context=%s Actor=%s Base=%s Gloss=%s Lights=%s"),
+        TEXT("[PlanetActor] TextureState Context=%s Actor=%s UseInternalBPMaterials=%d Base=%s Gloss=%s Lights=%s"),
         *Context,
         *GetName(),
+        bUseInternalBlueprintMaterials ? 1 : 0,
         *GetNameSafe(BaseTexture),
         *GetNameSafe(GlossTexture),
         *GetNameSafe(LightsTexture));

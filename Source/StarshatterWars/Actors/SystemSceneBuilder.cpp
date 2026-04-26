@@ -541,7 +541,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
     const float RadiusUnits =
         ConvertPlanetRadiusToSceneUnits(PlanetRadiusMeters);
 
-    // DEBUG LOG — ADD HERE
     UE_LOG(LogTemp, Warning,
         TEXT("[PlanetRadius] %s RuntimeRadius=%.2f FinalRadiusMeters=%.2f RadiusUnits=%.2f"),
         *PlanetName,
@@ -579,22 +578,20 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         false,
         false);
 
+    // -----------------------------------------
+    // VISUAL SETUP (LIGHT + TEXTURES)
+    // -----------------------------------------
     if (APlanetActor* PlanetVisual = Cast<APlanetActor>(PlanetActor))
     {
-        const FVector LightDir =
-            (StarAnchorWorldLocation - PlanetWorldLocation).GetSafeNormal();
-
         const FVector RawLightDir =
             (StarAnchorWorldLocation - PlanetWorldLocation).GetSafeNormal();
 
-        /*
-         * Axis correction for planet material/UV orientation.
-         * This rotates the lighting direction 90 degrees around world Y.
-         */
         const FVector CorrectedLightDir(
             -RawLightDir.Z,
             RawLightDir.Y,
             RawLightDir.X);
+
+        PlanetVisual->SetLightDirection(CorrectedLightDir);
 
         UE_LOG(LogTemp, Warning,
             TEXT("[SystemSceneBuilder] LightDir Planet='%s' Raw=%s Corrected=%s"),
@@ -602,75 +599,70 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             *RawLightDir.ToString(),
             *CorrectedLightDir.ToString());
 
-        PlanetVisual->SetLightDirection(CorrectedLightDir);
-        UE_LOG(LogTemp, Error,
-            TEXT("[DEBUG] ENTERED APlanetActor texture block for Planet=%s"),
-            *PlanetName);
-
-        UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
-
-        if (!Env)
+        // ====================================================
+        //  GAS GIANT TEXTURE GUARD
+        // ====================================================
+        if (PlanetType == EPlanetType::GasGiant)
         {
-            UE_LOG(LogTemp, Error,
-                TEXT("[SystemSceneBuilder] Env is NULL for planet '%s'"),
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SystemSceneBuilder] GasGiant '%s': using BP internal materials/rings"),
                 *PlanetName);
+
+            // DO NOT override BP material/rings
         }
         else
         {
-            const FPlanet* PlanetData =
-                Env->FindPlanetMapByName(PlanetName);
+            // -----------------------------------------
+            // NORMAL PLANET TEXTURES
+            // -----------------------------------------
+            UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
 
-            if (!PlanetData)
+            if (!Env)
             {
                 UE_LOG(LogTemp, Error,
-                    TEXT("[SystemSceneBuilder] No FPlanet data for '%s'"),
+                    TEXT("[SystemSceneBuilder] Env is NULL for planet '%s'"),
                     *PlanetName);
             }
             else
             {
-                UE_LOG(LogTemp, Error,
-                    TEXT("[DEBUG] PlanetData Texture='%s' Gloss='%s' Lights='%s'"),
-                    *PlanetData->Texture,
-                    *PlanetData->Gloss,
-                    *PlanetData->Lights);
+                const FPlanet* PlanetData =
+                    Env->FindPlanetMapByName(PlanetName);
 
-                auto LoadPlanetTexture = [](const FString& RawName) -> UTexture2D*
-                    {
-                        FString Name = RawName.TrimStartAndEnd();
-
-                        if (Name.IsEmpty())
+                if (!PlanetData)
+                {
+                    UE_LOG(LogTemp, Error,
+                        TEXT("[SystemSceneBuilder] No FPlanet data for '%s'"),
+                        *PlanetName);
+                }
+                else
+                {
+                    auto LoadPlanetTexture = [](const FString& RawName) -> UTexture2D*
                         {
-                            return nullptr;
-                        }
+                            FString Name = RawName.TrimStartAndEnd();
 
-                        FString Path = FString::Printf(
-                            TEXT("/Script/Engine.Texture2D'/Game/GameData/Galaxy/PlanetMaterials/%s.%s'"),
-                            *Name,
-                            *Name);
+                            if (Name.IsEmpty())
+                            {
+                                return nullptr;
+                            }
 
-                        UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path);
+                            FString Path = FString::Printf(
+                                TEXT("/Script/Engine.Texture2D'/Game/GameData/Galaxy/PlanetMaterials/%s.%s'"),
+                                *Name,
+                                *Name);
 
-                        UE_LOG(LogTemp, Error,
-                            TEXT("[PlanetTextureLoad] Raw='%s' Final='%s' Result=%s"),
-                            *RawName,
-                            *Path,
-                            Tex ? *Tex->GetName() : TEXT("NULL"));
+                            return LoadObject<UTexture2D>(nullptr, *Path);
+                        };
 
-                        return Tex;
-                    };
+                    UTexture2D* BaseTex = LoadPlanetTexture(PlanetData->Texture);
+                    UTexture2D* GlossTex = LoadPlanetTexture(PlanetData->Gloss);
+                    UTexture2D* LightsTex = LoadPlanetTexture(PlanetData->Lights);
 
-                UTexture2D* BaseTex = LoadPlanetTexture(PlanetData->Texture);
-                UTexture2D* GlossTex = LoadPlanetTexture(PlanetData->Gloss);
-                UTexture2D* LightsTex = LoadPlanetTexture(PlanetData->Lights);
+                    PlanetVisual->SetPlanetTextures(BaseTex, GlossTex, LightsTex);
 
-                UE_LOG(LogTemp, Error,
-                    TEXT("[SystemSceneBuilder] APPLY Planet='%s' Base=%s Gloss=%s Lights=%s"),
-                    *PlanetName,
-                    *GetNameSafe(BaseTex),
-                    *GetNameSafe(GlossTex),
-                    *GetNameSafe(LightsTex));
-
-                PlanetVisual->SetPlanetTextures(BaseTex, GlossTex, LightsTex);
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[SystemSceneBuilder] Planet '%s': textures applied"),
+                        *PlanetName);
+                }
             }
         }
     }
