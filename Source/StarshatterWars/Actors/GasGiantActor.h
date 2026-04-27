@@ -43,6 +43,12 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant")
     void OnGasGiantRadiusChanged();
 
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "GasGiant|Rings")
+    UMaterialInstance* CurrentRingMaterial = nullptr;
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant|Rings")
+    void OnRingMaterialChanged(UMaterialInstance* NewRingMaterial);
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
     FVector InitialActorScale = FVector::OneVector;
 
@@ -67,6 +73,7 @@ public:
     void UpdateRingParameters(float PlanetScale);
     void ApplyRingSettingsToBlueprint();
     void ApplyRingRadiusSettings();
+
     UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
     void DrawDebugRingOutline(float InnerRadius, float OuterRadius) const;
 
@@ -85,6 +92,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     TObjectPtr<UMaterialInterface> RingBaseMaterial = nullptr;
+
 
 protected:
 

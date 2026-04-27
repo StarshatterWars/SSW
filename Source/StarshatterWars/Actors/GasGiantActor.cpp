@@ -9,6 +9,59 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
+static void SetBPObjectPropertyByName(UObject* Object, const FString& WantedName, UObject* Value)
+{
+    if (!Object)
+    {
+        return;
+    }
+
+    const FString WantedCompact =
+        WantedName.Replace(TEXT(" "), TEXT(""))
+        .Replace(TEXT("_"), TEXT(""));
+
+    for (TFieldIterator<FObjectProperty> It(Object->GetClass()); It; ++It)
+    {
+        FObjectProperty* Prop = *It;
+
+        if (!Prop)
+        {
+            continue;
+        }
+
+        const FString InternalName = Prop->GetName();
+        const FString DisplayName = Prop->GetMetaData(TEXT("DisplayName"));
+
+        const FString InternalCompact =
+            InternalName.Replace(TEXT(" "), TEXT(""))
+            .Replace(TEXT("_"), TEXT(""));
+
+        const FString DisplayCompact =
+            DisplayName.Replace(TEXT(" "), TEXT(""))
+            .Replace(TEXT("_"), TEXT(""));
+
+        if (InternalName.Equals(WantedName, ESearchCase::IgnoreCase) ||
+            DisplayName.Equals(WantedName, ESearchCase::IgnoreCase) ||
+            InternalCompact.Equals(WantedCompact, ESearchCase::IgnoreCase) ||
+            DisplayCompact.Equals(WantedCompact, ESearchCase::IgnoreCase))
+        {
+            Prop->SetObjectPropertyValue_InContainer(Object, Value);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[GasGiantActor] Set BP object Wanted='%s' Internal='%s' Display='%s' Value=%s"),
+                *WantedName,
+                *InternalName,
+                *DisplayName,
+                *GetNameSafe(Value));
+
+            return;
+        }
+    }
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[GasGiantActor] BP object property not found: %s"),
+        *WantedName);
+}
 
 static void SetBPFloatProperty(UObject* Object, const FName PropertyName, float Value)
 {
@@ -172,9 +225,6 @@ void AGasGiantActor::SetLightDirection(const FVector& InDirection)
                 LightDirection.Z));
     }
 }
-
-#include "UObject/UnrealType.h"
-#include "Components/StaticMeshComponent.h"
 
 void AGasGiantActor::SetGasGiantMaterialByName(const FString& MaterialName)
 {
@@ -486,69 +536,72 @@ void AGasGiantActor::ApplyRingRadiusSettings()
             MeshComp->SetVisibility(false, true);
             MeshComp->SetHiddenInGame(true, true);
             MeshComp->SetRelativeScale3D(FVector::OneVector);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[GasGiantActor] RING HIDDEN Actor=%s Mesh=%s RingMaterialName='%s' Inner=%.2f Outer=%.2f"),
-                *GetName(),
-                *MeshName,
-                *RingMaterialName,
-                InnerRingRadius,
-                OuterRingRadius);
-
             continue;
         }
 
         MeshComp->SetVisibility(true, true);
         MeshComp->SetHiddenInGame(false, true);
-        MeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, RingPosition));
+        MeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, PlanetRadiusUnits * 0.02f));
         MeshComp->SetRelativeRotation(FRotator::ZeroRotator);
-        MeshComp->SetRelativeScale3D(FVector(RingScale, RingScale, 0.01f));
+        MeshComp->SetRelativeScale3D(FVector(RingScale, RingScale, 0.1f));
         MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         MeshComp->SetCullDistance(0.0f);
         MeshComp->SetBoundsScale(10000.0f);
 
-        const FString AssetName = RingMaterialName.StartsWith(TEXT("MI_"))
-            ? RingMaterialName
-            : FString(TEXT("MI_")) + RingMaterialName;
-
-        const FString Path = FString::Printf(
-            TEXT("/Script/Engine.MaterialInterface'/Game/GameData/Galaxy/GasGiants/%s.%s'"),
-            *AssetName,
-            *AssetName);
-
-        UMaterialInterface* BaseMat =
-            LoadObject<UMaterialInterface>(nullptr, *Path);
-
-        if (!BaseMat)
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("[GasGiantActor] FAILED to load ring material Actor=%s Mesh=%s Ring='%s' Path=%s"),
-                *GetName(),
-                *MeshName,
-                *RingMaterialName,
-                *Path);
-            continue;
-        }
-
         UMaterialInstanceDynamic* RingMID =
-            UMaterialInstanceDynamic::Create(BaseMat, this);
+            Cast<UMaterialInstanceDynamic>(MeshComp->GetMaterial(0));
 
-        MeshComp->SetMaterial(0, RingMID);
+        if (!RingMID)
+        {
+            UMaterialInterface* BaseMat = CurrentRingMaterial
+                ? CurrentRingMaterial
+                : MeshComp->GetMaterial(0);
+
+            if (!BaseMat)
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[GasGiantActor] Ring has no material Actor=%s Mesh=%s"),
+                    *GetName(),
+                    *MeshName);
+                continue;
+            }
+
+            RingMID = UMaterialInstanceDynamic::Create(BaseMat, this);
+            MeshComp->SetMaterial(0, RingMID);
+        }
 
         RingMID->SetScalarParameterValue(TEXT("Inner_Radius"), InnerMaterial);
         RingMID->SetScalarParameterValue(TEXT("Outer_Radius"), OuterMaterial);
-        RingMID->SetScalarParameterValue(TEXT("Position"), RingPosition);
-        RingMID->SetScalarParameterValue(TEXT("Rings_Opacity"), 128.0f);
+        RingMID->SetScalarParameterValue(TEXT("Inner Radius"), InnerMaterial);
+        RingMID->SetScalarParameterValue(TEXT("Outer Radius"), OuterMaterial);
+
+        RingMID->SetScalarParameterValue(TEXT("Inner Edge"), InnerMaterial);
+        RingMID->SetScalarParameterValue(TEXT("Outer Edge"), OuterMaterial);
+
+        RingMID->SetScalarParameterValue(TEXT("Rings_Opacity"), 1000.0f);
+        RingMID->SetScalarParameterValue(TEXT("Rings Opacity"), 1000.0f);
+        RingMID->SetScalarParameterValue(TEXT("Density"), 1.0f);
+
         RingMID->SetScalarParameterValue(TEXT("Edge_Hardness"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Edge Hardness"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Rings Edge Hardness"), 2.0f);
+
         RingMID->SetScalarParameterValue(TEXT("Frequency"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Frequency_1"), 2.0f);
         RingMID->SetScalarParameterValue(TEXT("Frequency_2"), 0.1f);
+        RingMID->SetScalarParameterValue(TEXT("Frequency 2"), 0.1f);
+
+        RingMID->SetScalarParameterValue(TEXT("Position"), RingPosition);
+        RingMID->SetScalarParameterValue(TEXT("Shadow Strength"), 0.2f);
+        RingMID->SetScalarParameterValue(TEXT("Shadow Hardness"), 0.2f);
+        RingMID->SetScalarParameterValue(TEXT("Scattering Size"), 1.0f);
+        RingMID->SetScalarParameterValue(TEXT("Scattering Power"), 1.0f);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] RING APPLY Actor=%s Mesh=%s Ring='%s' Enabled=%d Inner=%.3f Outer=%.3f Scale=%.3f Mat=%s"),
+            TEXT("[GasGiantActor] RING VISIBLE TEST Actor=%s Mesh=%s Ring=%s Inner=%.3f Outer=%.3f Scale=%.3f Mat=%s"),
             *GetName(),
             *MeshName,
             *RingMaterialName,
-            bEnableRings ? 1 : 0,
             InnerMaterial,
             OuterMaterial,
             RingScale,
@@ -559,11 +612,108 @@ void AGasGiantActor::ApplyRingRadiusSettings()
 void AGasGiantActor::SetRingMaterialByName(const FString& InRingName)
 {
     RingMaterialName = InRingName.TrimStartAndEnd();
+    CurrentRingMaterial = nullptr;
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] SetRingMaterialByName Actor=%s RingMaterialName='%s'"),
-        *GetName(),
-        *RingMaterialName);
+    if (RingMaterialName.IsEmpty())
+    {
+        TArray<UStaticMeshComponent*> Meshes;
+        GetComponents<UStaticMeshComponent>(Meshes);
+
+        for (UStaticMeshComponent* MeshComp : Meshes)
+        {
+            if (!MeshComp)
+            {
+                continue;
+            }
+
+            const FString MeshName = MeshComp->GetName();
+
+            const bool bIsRing =
+                MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+                MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
+                MeshComp->ComponentHasTag(TEXT("Ring"));
+
+            if (bIsRing)
+            {
+                MeshComp->SetVisibility(false, true);
+                MeshComp->SetHiddenInGame(true, true);
+            }
+        }
+
+        OnRingMaterialChanged(nullptr);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] Ring material cleared Actor=%s"),
+            *GetName());
+
+        return;
+    }
+
+    FString CleanRingName = RingMaterialName;
+
+    const FString AssetName = CleanRingName.StartsWith(TEXT("MI_"))
+        ? CleanRingName
+        : FString(TEXT("MI_")) + CleanRingName;
+
+    const FString Path = FString::Printf(
+        TEXT("/Script/Engine.MaterialInstanceConstant'/Game/GameData/Galaxy/GasGiants/%s.%s'"),
+        *AssetName,
+        *AssetName);
+
+    UMaterialInstance* LoadedMat =
+        LoadObject<UMaterialInstance>(nullptr, *Path);
+
+    if (!LoadedMat)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[GasGiantActor] FAILED Ring Material Actor=%s DEF='%s' Asset='%s' Path=%s"),
+            *GetName(),
+            *RingMaterialName,
+            *AssetName,
+            *Path);
+
+        OnRingMaterialChanged(nullptr);
+        return;
+    }
+
+    CurrentRingMaterial = LoadedMat;
+
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const FString MeshName = MeshComp->GetName();
+
+        const bool bIsRing =
+            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
+            MeshComp->ComponentHasTag(TEXT("Ring"));
+
+        if (!bIsRing)
+        {
+            continue;
+        }
+
+        MeshComp->SetMaterial(0, CurrentRingMaterial);
+        MeshComp->SetVisibility(true, true);
+        MeshComp->SetHiddenInGame(false, true);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] Ring mesh material SET Actor=%s Mesh=%s DEF='%s' Asset='%s' Mat=%s"),
+            *GetName(),
+            *MeshName,
+            *RingMaterialName,
+            *AssetName,
+            *GetNameSafe(CurrentRingMaterial));
+    }
+
+    OnRingMaterialChanged(CurrentRingMaterial);
 }
 
 UMaterialInterface* AGasGiantActor::LoadRingMaterialByName(const FString& RingName)
