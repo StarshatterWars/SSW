@@ -422,93 +422,15 @@ void AGasGiantActor::UpdateRingParameters(float PlanetScale)
     }
 }
 
-void AGasGiantActor::ApplyRingSettingsToBlueprint()
-{
-    auto SetFloat = [&](const FString& DisplayName, float Value)
-        {
-            for (TFieldIterator<FFloatProperty> It(GetClass()); It; ++It)
-            {
-                FFloatProperty* Prop = *It;
-
-                if (!Prop)
-                {
-                    continue;
-                }
-
-                const FString Friendly =
-                    Prop->GetMetaData(TEXT("DisplayName"));
-
-                const FString Internal =
-                    Prop->GetName();
-
-                if (Friendly.Equals(DisplayName, ESearchCase::IgnoreCase) ||
-                    Internal.Equals(DisplayName, ESearchCase::IgnoreCase))
-                {
-                    Prop->SetPropertyValue_InContainer(this, Value);
-
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[GasGiantActor] Set BP '%s' (Internal=%s) = %.3f Actor=%s"),
-                        *DisplayName,
-                        *Internal,
-                        Value,
-                        *GetName());
-
-                    return;
-                }
-            }
-
-            UE_LOG(LogTemp, Error,
-                TEXT("[GasGiantActor] BP variable NOT FOUND: %s Actor=%s"),
-                *DisplayName,
-                *GetName());
-        };
-
-    // ----------------------------------------------------
-    // APPLY VALUES
-    // ----------------------------------------------------
-    SetFloat(TEXT("Inner Radius"), InnerRingRadius);
-    SetFloat(TEXT("Outer Radius"), OuterRingRadius);
-    SetFloat(TEXT("Position"), RingPosition);
-
-    // ----------------------------------------------------
-    // NOTIFY BP TO REBUILD RINGS
-    // ----------------------------------------------------
-    OnGasGiantRadiusChanged();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] ApplyRingSettingsToBlueprint Complete Inner=%.2f Outer=%.2f Position=%.2f"),
-        InnerRingRadius,
-        OuterRingRadius,
-        RingPosition);
-}
-
-/*void AGasGiantActor::ApplyRingRadiusSettings()
+void AGasGiantActor::ApplyRingRadiusSettings()
 {
     const bool bEnableRings =
         InnerRingRadius > 0.0f &&
         OuterRingRadius > InnerRingRadius &&
-        PlanetRadiusUnits > 0.0f &&
-        !RingMaterialName.IsEmpty();
+        PlanetRadiusUnits > 0.0f;
 
-    const float SafeInner = InnerRingRadius;
-    const float SafeOuter = OuterRingRadius;
-
-    const float InnerMaterial =
-        bEnableRings ? SafeInner / PlanetRadiusUnits : 0.0f;
-
-    const float OuterMaterial =
-        bEnableRings ? SafeOuter / PlanetRadiusUnits : 0.0f;
-
-    const float BaseMeshRadius =
-        GasGiantBaseMeshRadius > KINDA_SMALL_NUMBER
-        ? GasGiantBaseMeshRadius
-        : 50.0f;
-
-    const float PlanetScale = PlanetRadiusUnits / BaseMeshRadius;
-    const float RingScale = bEnableRings ? PlanetScale * OuterMaterial : 1.0f;
-
-    DebugInnerRadius = bEnableRings ? SafeInner : 0.0f;
-    DebugOuterRadius = bEnableRings ? SafeOuter : 0.0f;
+    DebugInnerRadius = bEnableRings ? InnerRingRadius : 0.0f;
+    DebugOuterRadius = bEnableRings ? OuterRingRadius : 0.0f;
 
     TArray<UStaticMeshComponent*> Meshes;
     GetComponents<UStaticMeshComponent>(Meshes);
@@ -536,16 +458,17 @@ void AGasGiantActor::ApplyRingSettingsToBlueprint()
         {
             MeshComp->SetVisibility(false, true);
             MeshComp->SetHiddenInGame(true, true);
-            MeshComp->SetRelativeScale3D(FVector::OneVector);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[GasGiantActor] RING DISABLED Actor=%s Mesh=%s"),
+                *GetName(),
+                *MeshName);
+
             continue;
         }
 
         MeshComp->SetVisibility(true, true);
         MeshComp->SetHiddenInGame(false, true);
-        MeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, PlanetRadiusUnits * 0.02f));
-        MeshComp->SetRelativeRotation(FRotator::ZeroRotator);
-        MeshComp->SetRelativeScale3D(FVector(RingScale, RingScale, 0.1f));
-        MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         MeshComp->SetCullDistance(0.0f);
         MeshComp->SetBoundsScale(10000.0f);
 
@@ -554,14 +477,13 @@ void AGasGiantActor::ApplyRingSettingsToBlueprint()
 
         if (!RingMID)
         {
-            UMaterialInterface* BaseMat = CurrentRingMaterial
-                ? CurrentRingMaterial
-                : MeshComp->GetMaterial(0);
+            UMaterialInterface* BaseMat =
+                CurrentRingMaterial ? CurrentRingMaterial : MeshComp->GetMaterial(0);
 
             if (!BaseMat)
             {
                 UE_LOG(LogTemp, Error,
-                    TEXT("[GasGiantActor] Ring has no material Actor=%s Mesh=%s"),
+                    TEXT("[GasGiantActor] RING NO BASE MATERIAL Actor=%s Mesh=%s"),
                     *GetName(),
                     *MeshName);
                 continue;
@@ -571,109 +493,28 @@ void AGasGiantActor::ApplyRingSettingsToBlueprint()
             MeshComp->SetMaterial(0, RingMID);
         }
 
-        RingMID->SetScalarParameterValue(TEXT("Inner_Radius"), InnerMaterial);
-        RingMID->SetScalarParameterValue(TEXT("Outer_Radius"), OuterMaterial);
-        RingMID->SetScalarParameterValue(TEXT("Inner Radius"), InnerMaterial);
-        RingMID->SetScalarParameterValue(TEXT("Outer Radius"), OuterMaterial);
+        const float InnerNorm =
+            FMath::Clamp(InnerRingRadius / OuterRingRadius, 0.0f, 0.99f);
 
-        RingMID->SetScalarParameterValue(TEXT("Inner Edge"), InnerMaterial);
-        RingMID->SetScalarParameterValue(TEXT("Outer Edge"), OuterMaterial);
+        const float OuterNorm = 1.0f;
 
-        RingMID->SetScalarParameterValue(TEXT("Rings_Opacity"), 1000.0f);
-        RingMID->SetScalarParameterValue(TEXT("Rings Opacity"), 1000.0f);
+        RingMID->SetScalarParameterValue(TEXT("Inner Edge"), InnerNorm);
+        RingMID->SetScalarParameterValue(TEXT("Outer Edge"), OuterNorm);
         RingMID->SetScalarParameterValue(TEXT("Density"), 1.0f);
 
-        RingMID->SetScalarParameterValue(TEXT("Edge_Hardness"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Rings Opacity"), 128.0f);
         RingMID->SetScalarParameterValue(TEXT("Edge Hardness"), 2.0f);
-        RingMID->SetScalarParameterValue(TEXT("Rings Edge Hardness"), 2.0f);
-
         RingMID->SetScalarParameterValue(TEXT("Frequency"), 2.0f);
-        RingMID->SetScalarParameterValue(TEXT("Frequency_1"), 2.0f);
-        RingMID->SetScalarParameterValue(TEXT("Frequency_2"), 0.1f);
         RingMID->SetScalarParameterValue(TEXT("Frequency 2"), 0.1f);
-
         RingMID->SetScalarParameterValue(TEXT("Position"), RingPosition);
-        RingMID->SetScalarParameterValue(TEXT("Shadow Strength"), 0.2f);
-        RingMID->SetScalarParameterValue(TEXT("Shadow Hardness"), 0.2f);
-        RingMID->SetScalarParameterValue(TEXT("Scattering Size"), 1.0f);
-        RingMID->SetScalarParameterValue(TEXT("Scattering Power"), 1.0f);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] RING VISIBLE TEST Actor=%s Mesh=%s Ring=%s Inner=%.3f Outer=%.3f Scale=%.3f Mat=%s"),
+            TEXT("[GasGiantActor] FINAL RING FIX Actor=%s Mesh=%s InnerNorm=%.3f OuterNorm=%.3f Mat=%s"),
             *GetName(),
             *MeshName,
-            *RingMaterialName,
-            InnerMaterial,
-            OuterMaterial,
-            RingScale,
+            InnerNorm,
+            OuterNorm,
             *GetNameSafe(RingMID));
-    }
-}*/ 
-
-
-void AGasGiantActor::ApplyRingRadiusSettings()
-{
-    const bool bEnableRings =
-        InnerRingRadius > 0.0f &&
-        OuterRingRadius > InnerRingRadius &&
-        PlanetRadiusUnits > 0.0f;
-
-    const float InnerMaterial =
-        bEnableRings ? InnerRingRadius / PlanetRadiusUnits : 0.0f;
-
-    const float OuterMaterial =
-        bEnableRings ? OuterRingRadius / PlanetRadiusUnits : 0.0f;
-
-    DebugInnerRadius = bEnableRings ? InnerRingRadius : 0.0f;
-    DebugOuterRadius = bEnableRings ? OuterRingRadius : 0.0f;
-
-    SetBPFloatProperty(this, TEXT("Inner_Radius"), InnerMaterial);
-    SetBPFloatProperty(this, TEXT("Outer_Radius"), OuterMaterial);
-    SetBPFloatProperty(this, TEXT("Position"), RingPosition);
-
-    TArray<UStaticMeshComponent*> Meshes;
-    GetComponents<UStaticMeshComponent>(Meshes);
-
-    for (UStaticMeshComponent* MeshComp : Meshes)
-    {
-        if (!MeshComp)
-        {
-            continue;
-        }
-
-        const FString MeshName = MeshComp->GetName();
-
-        const bool bIsRing =
-            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
-            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
-            MeshComp->ComponentHasTag(TEXT("Ring"));
-
-        if (!bIsRing)
-        {
-            continue;
-        }
-
-        MeshComp->SetVisibility(bEnableRings, true);
-        MeshComp->SetHiddenInGame(!bEnableRings, true);
-        MeshComp->SetCullDistance(0.0f);
-        MeshComp->SetBoundsScale(10000.0f);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] RING BP CONTROL Actor=%s Mesh=%s Enabled=%d Inner=%.3f Outer=%.3f KeepScale=%s Mat=%s"),
-            *GetName(),
-            *MeshName,
-            bEnableRings ? 1 : 0,
-            InnerMaterial,
-            OuterMaterial,
-            *MeshComp->GetRelativeScale3D().ToString(),
-            *GetNameSafe(MeshComp->GetMaterial(0)));
-    }
-
-    OnGasGiantRadiusChanged();
-
-    if (CurrentRingMaterial)
-    {
-        OnRingMaterialChanged(CurrentRingMaterial);
     }
 }
 
