@@ -3009,7 +3009,7 @@ system:
 			texture: "garrison",
 			radius:  6e6,
 			tilt:    0.15,
-			ring:    "garrison_ring",
+			ring:    "Ring1",
 			minrad:  1.5,
 			maxrad:  1.75,
 			mass:    5.1e24,

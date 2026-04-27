@@ -505,9 +505,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
     const FString PlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
 
-    // ----------------------------------------------------
-    // POSITION
-    // ----------------------------------------------------
     FVector RuntimeOffsetKm =
         PlanetBody->Location() - PrimaryStarRuntimeLocation;
 
@@ -522,34 +519,29 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
     const FVector PlanetWorldLocation =
         StarAnchorWorldLocation + SceneOffset;
 
-    // ----------------------------------------------------
-    // TYPE + RADIUS
-    // ----------------------------------------------------
     const EPlanetType PlanetType =
         ResolvePlanetTypeFromData(PlanetName, false);
+
+    const FPlanet* PlanetData = nullptr;
+
+    if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+    {
+        PlanetData = Env->FindPlanetMapByName(PlanetName);
+    }
 
     float PlanetRadiusMeters =
         PlanetBody->Radius() > 0.0f
         ? static_cast<float>(PlanetBody->Radius())
         : 2000000.0f;
 
-    if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+    if (PlanetData && PlanetData->Radius > 0.0)
     {
-        if (const FPlanet* PlanetData = Env->FindPlanetMapByName(PlanetName))
-        {
-            if (PlanetData->Radius > 0.0f)
-            {
-                PlanetRadiusMeters = PlanetData->Radius;
-            }
-        }
+        PlanetRadiusMeters = static_cast<float>(PlanetData->Radius);
     }
 
     float RadiusUnits =
         ConvertPlanetRadiusToSceneUnits(PlanetRadiusMeters);
 
-    // ----------------------------------------------------
-    // GAS GIANT SIZE CLAMP (IMPORTANT)
-    // ----------------------------------------------------
     if (PlanetType == EPlanetType::GasGiant)
     {
         RadiusUnits = FMath::Clamp(
@@ -565,9 +557,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         PlanetRadiusMeters,
         RadiusUnits);
 
-    // ----------------------------------------------------
-    // ORBIT
-    // ----------------------------------------------------
     const float OrbitRadiusUnits =
         ConvertOrbitKmToSceneUnits((float)RuntimeOffsetKm.Size(), false);
 
@@ -580,9 +569,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             ParentActor);
     }
 
-    // ----------------------------------------------------
-    // SELECT CLASS
-    // ----------------------------------------------------
     TSubclassOf<AActor> ResolvedClass = nullptr;
 
     if (PlanetType == EPlanetType::GasGiant && GasGiantPlanetActorClass)
@@ -594,9 +580,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         ResolvedClass = ResolvePlanetActorClass(PlanetType, false);
     }
 
-    // ----------------------------------------------------
-    // SPAWN
-    // ----------------------------------------------------
     AActor* PlanetActor = SpawnBodyActor(
         ResolvedClass,
         PlanetName,
@@ -611,9 +594,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         return;
     }
 
-    // ----------------------------------------------------
-    // LIGHTING (COMMON)
-    // ----------------------------------------------------
     const FVector RawLightDir =
         (StarAnchorWorldLocation - PlanetWorldLocation).GetSafeNormal();
 
@@ -622,24 +602,63 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         RawLightDir.Y,
         RawLightDir.X);
 
-    // ----------------------------------------------------
-    // GAS GIANT (procedural)
-    // ----------------------------------------------------
     if (AGasGiantActor* Gas = Cast<AGasGiantActor>(PlanetActor))
     {
+        Gas->SetPlanetRadius(RadiusUnits);
         Gas->SetLightDirection(CorrectedLightDir);
 
-        if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+        if (PlanetData)
         {
-            if (const FPlanet* PlanetData = Env->FindPlanetMapByName(PlanetName))
+            Gas->SetGasGiantMaterialByName(PlanetData->Texture);
+
+            const bool bHasRing =
+                !PlanetData->Ring.TrimStartAndEnd().IsEmpty() &&
+                PlanetData->Minrad > 0.0 &&
+                PlanetData->Maxrad > PlanetData->Minrad &&
+                PlanetData->Radius > 0.0;
+
+            if (bHasRing)
             {
-                Gas->SetGasGiantMaterialByName(PlanetData->Texture);
+                const float InnerUnits =
+                    RadiusUnits * static_cast<float>(PlanetData->Minrad / PlanetData->Radius);
+
+                const float OuterUnits =
+                    RadiusUnits * static_cast<float>(PlanetData->Maxrad / PlanetData->Radius);
+
+                Gas->InnerRingRadius = InnerUnits;
+                Gas->OuterRingRadius = OuterUnits;
+                Gas->RingPosition = 0.0f;
+                Gas->ApplyRingRadiusSettings();
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[SystemSceneBuilder] GasGiant '%s' TextureSelector='%s'"),
+                    TEXT("[SystemSceneBuilder] GasGiant Ring '%s' Ring='%s' Minrad=%.2f Maxrad=%.2f InnerUnits=%.2f OuterUnits=%.2f"),
                     *PlanetName,
-                    *PlanetData->Texture);
+                    *PlanetData->Ring,
+                    PlanetData->Minrad,
+                    PlanetData->Maxrad,
+                    InnerUnits,
+                    OuterUnits);
             }
+            else
+            {
+                Gas->InnerRingRadius = 0.0f;
+                Gas->OuterRingRadius = 0.0f;
+                Gas->RingPosition = 0.0f;
+                Gas->ApplyRingRadiusSettings();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[SystemSceneBuilder] GasGiant Ring Disabled '%s' Ring='%s' Minrad=%.2f Maxrad=%.2f Radius=%.2f"),
+                    *PlanetName,
+                    *PlanetData->Ring,
+                    PlanetData->Minrad,
+                    PlanetData->Maxrad,
+                    PlanetData->Radius);
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SystemSceneBuilder] GasGiant '%s' TextureSelector='%s'"),
+                *PlanetName,
+                *PlanetData->Texture);
         }
 
         UE_LOG(LogTemp, Warning,
@@ -647,43 +666,34 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             *PlanetName,
             *CorrectedLightDir.ToString());
     }
-    // ----------------------------------------------------
-    // NORMAL PLANET (data-driven textures)
-    // ----------------------------------------------------
     else if (APlanetActor* PlanetVisual = Cast<APlanetActor>(PlanetActor))
     {
         PlanetVisual->SetLightDirection(CorrectedLightDir);
 
-        UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem();
-        if (Env)
+        if (PlanetData)
         {
-            const FPlanet* PlanetData =
-                Env->FindPlanetMapByName(PlanetName);
-
-            if (PlanetData)
-            {
-                auto LoadTex = [](const FString& Name) -> UTexture2D*
+            auto LoadTex = [](const FString& Name) -> UTexture2D*
+                {
+                    if (Name.IsEmpty())
                     {
-                        if (Name.IsEmpty()) return nullptr;
+                        return nullptr;
+                    }
 
-                        FString Path = FString::Printf(
-                            TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"),
-                            *Name, *Name);
+                    const FString Path = FString::Printf(
+                        TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"),
+                        *Name,
+                        *Name);
 
-                        return LoadObject<UTexture2D>(nullptr, *Path);
-                    };
+                    return LoadObject<UTexture2D>(nullptr, *Path);
+                };
 
-                PlanetVisual->SetPlanetTextures(
-                    LoadTex(PlanetData->Texture),
-                    LoadTex(PlanetData->Gloss),
-                    LoadTex(PlanetData->Lights));
-            }
+            PlanetVisual->SetPlanetTextures(
+                LoadTex(PlanetData->Texture),
+                LoadTex(PlanetData->Gloss),
+                LoadTex(PlanetData->Lights));
         }
     }
 
-    // ----------------------------------------------------
-    // REGISTER
-    // ----------------------------------------------------
     RegisterSpawnedBody(
         PlanetName,
         PlanetActor,
@@ -699,9 +709,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         PlanetBody,
         PlanetActor);
 
-    // ----------------------------------------------------
-    // REGION
-    // ----------------------------------------------------
     if (bSpawnRegionActors)
     {
         BuildRuntimeRegionForBody(
@@ -712,9 +719,6 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             false);
     }
 
-    // ----------------------------------------------------
-    // MOONS
-    // ----------------------------------------------------
     ListIter<OrbitalBody> MoonIter =
         PlanetBody->Satellites();
 

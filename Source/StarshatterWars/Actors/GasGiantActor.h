@@ -40,6 +40,15 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant|Material")
     void OnGasGiantMaterialChanged();
 
+    UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant")
+    void OnGasGiantRadiusChanged();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
+    FVector InitialActorScale = FVector::OneVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
+    float GasGiantBaseMeshRadius = 50.0f;
+
     // -----------------------------
     // Visual controls (optional)
     // -----------------------------
@@ -48,6 +57,20 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "GasGiant")
     void SetStormIntensity(float InIntensity);
+
+    void UpdateRingParameters(float PlanetScale);
+    void ApplyRingSettingsToBlueprint();
+    void ApplyRingRadiusSettings();
+
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    float InnerRingRadius = 1.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    float OuterRingRadius = 2.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    float RingPosition = 0.0f;
 
 protected:
 
