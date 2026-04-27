@@ -2,7 +2,10 @@
 
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "UObject/UnrealType.h"
+
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
 AGasGiantActor::AGasGiantActor()
@@ -19,9 +22,8 @@ AGasGiantActor::AGasGiantActor()
     CoreMesh->SetGenerateOverlapEvents(false);
     CoreMesh->SetCastShadow(false);
 
-    // Optional fallback sphere (can be hidden in BP)
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshFinder(
-        TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
+        TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 
     if (SphereMeshFinder.Succeeded())
     {
@@ -33,25 +35,31 @@ void AGasGiantActor::BeginPlay()
 {
     Super::BeginPlay();
 
+    CreateMID();
+
     UE_LOG(LogTemp, Warning,
         TEXT("[GasGiantActor] BeginPlay Actor=%s"),
         *GetName());
-
-    // Do NOT touch materials here
-    // Blueprint owns materials + rings
 }
 
 void AGasGiantActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+}
 
-    if (!bEnableAxialRotation || FMath::IsNearlyZero(AxialRotationDegreesPerSecond))
+void AGasGiantActor::CreateMID()
+{
+    if (!CoreMesh)
     {
         return;
     }
 
-    AddActorLocalRotation(
-        FRotator(0.0f, AxialRotationDegreesPerSecond * DeltaTime, 0.0f));
+    UMaterialInterface* BaseMat = CoreMesh->GetMaterial(0);
+
+    if (BaseMat)
+    {
+        DynamicMaterial = CoreMesh->CreateAndSetMaterialInstanceDynamic(0);
+    }
 }
 
 void AGasGiantActor::SetPlanetRadius(float InRadiusUnits)
@@ -64,42 +72,162 @@ void AGasGiantActor::SetPlanetRadius(float InRadiusUnits)
     SetActorScale3D(FVector(Scale));
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] SetPlanetRadius Actor=%s RadiusUnits=%.2f Scale=%.3f"),
-        *GetName(),
+        TEXT("[GasGiantActor] Radius=%f Scale=%f"),
         PlanetRadiusUnits,
         Scale);
-}
-
-void AGasGiantActor::SetLightDirection(const FVector& InDirection)
-{
-    FVector SafeDirection = InDirection;
-
-    if (SafeDirection.IsNearlyZero())
-    {
-        SafeDirection = FVector(1, 0, 0);
-    }
-
-    LightDirection = SafeDirection.GetSafeNormal();
-
-    // Blueprint can read this variable and drive material parameters
-    UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] LightDirection Actor=%s Dir=%s"),
-        *GetName(),
-        *LightDirection.ToString());
-}
-
-void AGasGiantActor::SetAxialRotationDegreesPerSecond(float DegreesPerSecond)
-{
-    AxialRotationDegreesPerSecond = DegreesPerSecond;
-    bEnableAxialRotation = !FMath::IsNearlyZero(DegreesPerSecond);
-}
-
-void AGasGiantActor::SetAxialRotationEnabled(bool bEnabled)
-{
-    bEnableAxialRotation = bEnabled;
 }
 
 float AGasGiantActor::GetPlanetRadius() const
 {
     return PlanetRadiusUnits;
+}
+
+void AGasGiantActor::SetLightDirection(const FVector& InDirection)
+{
+    LightDirection = InDirection.IsNearlyZero()
+        ? FVector(1, 0, 0)
+        : InDirection.GetSafeNormal();
+
+    if (DynamicMaterial)
+    {
+        DynamicMaterial->SetVectorParameterValue(
+            TEXT("LightDirection"),
+            FLinearColor(
+                LightDirection.X,
+                LightDirection.Y,
+                LightDirection.Z));
+    }
+}
+
+void AGasGiantActor::SetGasGiantMaterialByName(const FString& MaterialName)
+{
+    const FString CleanName = MaterialName.TrimStartAndEnd();
+
+    if (CleanName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] Empty material name Actor=%s"),
+            *GetName());
+        return;
+    }
+
+    // ----------------------------------------------------
+    // BUILD MATERIAL PATH
+    // ----------------------------------------------------
+    const FString AssetName = CleanName.StartsWith(TEXT("MI_"))
+        ? CleanName
+        : FString(TEXT("MI_")) + CleanName;
+
+    const FString Path = FString::Printf(
+        TEXT("/Script/Engine.MaterialInterface'%s%s.%s'"),
+        *MaterialBasePath,   // "/Game/GameData/Galaxy/GasGiants/"
+        *AssetName,
+        *AssetName);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[GasGiantActor] Loading Material Path=%s"),
+        *Path);
+
+    UMaterialInterface* Mat =
+        LoadObject<UMaterialInterface>(nullptr, *Path);
+
+    if (!Mat)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[GasGiantActor] FAILED to load material '%s' Actor=%s"),
+            *AssetName,
+            *GetName());
+        return;
+    }
+
+    // ----------------------------------------------------
+    // SET BLUEPRINT VARIABLE (Planet Material)
+    // ----------------------------------------------------
+    FObjectProperty* MaterialProperty =
+        FindFProperty<FObjectProperty>(GetClass(), TEXT("Planet Material"));
+
+    if (MaterialProperty)
+    {
+        MaterialProperty->SetObjectPropertyValue_InContainer(this, Mat);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] Set BP variable 'Planet Material' = %s Actor=%s"),
+            *GetNameSafe(Mat),
+            *GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[GasGiantActor] BP variable 'Planet Material' NOT FOUND Actor=%s"),
+            *GetName());
+    }
+
+    // ----------------------------------------------------
+    // APPLY DIRECTLY TO MESHES (CRITICAL FALLBACK)
+    // ----------------------------------------------------
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const FString MeshName = MeshComp->GetName();
+
+        // Skip rings
+        if (MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase))
+        {
+            continue;
+        }
+
+        MeshComp->SetMaterial(0, Mat);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] Direct-applied %s to %s"),
+            *GetNameSafe(Mat),
+            *MeshName);
+
+        // ------------------------------------------------
+        // CREATE MID + SET BASIC PARAMS (avoid black)
+        // ------------------------------------------------
+        UMaterialInstanceDynamic* MID =
+            MeshComp->CreateAndSetMaterialInstanceDynamic(0);
+
+        if (MID)
+        {
+            MID->SetScalarParameterValue(TEXT("LightIntensity"), 1.0f);
+
+            MID->SetVectorParameterValue(
+                TEXT("LightDirection"),
+                FLinearColor(
+                    LightDirection.X,
+                    LightDirection.Y,
+                    LightDirection.Z,
+                    0.0f));
+        }
+    }
+
+    // ----------------------------------------------------
+    // TRIGGER BP REFRESH (procedural systems)
+    // ----------------------------------------------------
+    OnGasGiantMaterialChanged();
+}
+
+void AGasGiantActor::SetBandSpeed(float InSpeed)
+{
+    if (DynamicMaterial)
+    {
+        DynamicMaterial->SetScalarParameterValue(TEXT("BandSpeed"), InSpeed);
+    }
+}
+
+void AGasGiantActor::SetStormIntensity(float InIntensity)
+{
+    if (DynamicMaterial)
+    {
+        DynamicMaterial->SetScalarParameterValue(TEXT("StormIntensity"), InIntensity);
+    }
 }

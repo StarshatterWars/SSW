@@ -2,9 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UObject/UnrealType.h"
 #include "GasGiantActor.generated.h"
 
 class UStaticMeshComponent;
+class UMaterialInstanceDynamic;
 
 UCLASS()
 class STARSHATTERWARS_API AGasGiantActor : public AActor
@@ -21,45 +23,66 @@ public:
     virtual void Tick(float DeltaTime) override;
 
     // -----------------------------
-    // Core planet-like behavior
+    // Core
     // -----------------------------
-
-    UFUNCTION(BlueprintCallable)
-    void SetLightDirection(const FVector& InDirection);
-
-    UFUNCTION(BlueprintCallable)
-    void SetAxialRotationDegreesPerSecond(float DegreesPerSecond);
-
-    UFUNCTION(BlueprintCallable)
-    void SetAxialRotationEnabled(bool bEnabled);
-
     UFUNCTION(BlueprintCallable, Category = "GasGiant")
     void SetPlanetRadius(float InRadiusUnits);
 
     UFUNCTION(BlueprintPure, Category = "GasGiant")
     float GetPlanetRadius() const;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
-    float PlanetRadiusUnits = 1.0f;
+    UFUNCTION(BlueprintCallable, Category = "GasGiant")
+    void SetLightDirection(const FVector& InDirection);
+
+    UFUNCTION(BlueprintCallable, Category = "GasGiant")
+    void SetGasGiantMaterialByName(const FString& MaterialName);
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant|Material")
+    void OnGasGiantMaterialChanged();
+
+    // -----------------------------
+    // Visual controls (optional)
+    // -----------------------------
+    UFUNCTION(BlueprintCallable, Category = "GasGiant")
+    void SetBandSpeed(float InSpeed);
+
+    UFUNCTION(BlueprintCallable, Category = "GasGiant")
+    void SetStormIntensity(float InIntensity);
 
 protected:
+
     // Root
     UPROPERTY(VisibleAnywhere)
     USceneComponent* SceneRoot;
 
-    // Optional base mesh (can be hidden if BP has its own)
+    // Core sphere (gas giant body)
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* CoreMesh;
 
+    // Dynamic material
+    UPROPERTY()
+    UMaterialInstanceDynamic* DynamicMaterial;
+
     // -----------------------------
-    // Visual parameters (for BP)
+    // Runtime data
     // -----------------------------
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
+    float PlanetRadiusUnits = 1.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GasGiant")
     FVector LightDirection = FVector(1, 0, 0);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
-    float AxialRotationDegreesPerSecond = 0.0f;
+    // -----------------------------
+    // Config
+    // -----------------------------
+    UPROPERTY(EditAnywhere, Category = "GasGiant|Material")
+    FString MaterialBasePath = TEXT("/Game/GameData/Galaxy/GasGiants/");
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
-    bool bEnableAxialRotation = false;
+    UPROPERTY(EditAnywhere, Category = "GasGiant|Material")
+    FString MaterialPrefix = TEXT("MI_");
+
+    // -----------------------------
+    // Internal
+    // -----------------------------
+    void CreateMID();
 };

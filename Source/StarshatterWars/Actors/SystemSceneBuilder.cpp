@@ -629,6 +629,19 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
     {
         Gas->SetLightDirection(CorrectedLightDir);
 
+        if (UStarshatterEnvironmentSubsystem* Env = GetEnvironmentSubsystem())
+        {
+            if (const FPlanet* PlanetData = Env->FindPlanetMapByName(PlanetName))
+            {
+                Gas->SetGasGiantMaterialByName(PlanetData->Texture);
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[SystemSceneBuilder] GasGiant '%s' TextureSelector='%s'"),
+                    *PlanetName,
+                    *PlanetData->Texture);
+            }
+        }
+
         UE_LOG(LogTemp, Warning,
             TEXT("[SystemSceneBuilder] GasGiant '%s' LightDir=%s"),
             *PlanetName,
