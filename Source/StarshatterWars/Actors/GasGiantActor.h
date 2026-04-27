@@ -49,6 +49,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant")
     float GasGiantBaseMeshRadius = 50.0f;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    FString RingMaterialName;
+
     // -----------------------------
     // Visual controls (optional)
     // -----------------------------
@@ -58,9 +61,14 @@ public:
     UFUNCTION(BlueprintCallable, Category = "GasGiant")
     void SetStormIntensity(float InIntensity);
 
+    UFUNCTION(BlueprintCallable, Category = "GasGiant|Rings")
+    void SetRingMaterialByName(const FString& InRingName);
+
     void UpdateRingParameters(float PlanetScale);
     void ApplyRingSettingsToBlueprint();
     void ApplyRingRadiusSettings();
+    UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
+    void DrawDebugRingOutline(float InnerRadius, float OuterRadius) const;
 
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
@@ -71,6 +79,12 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float RingPosition = 0.0f;
+
+    UPROPERTY()
+    UMaterialInstanceDynamic* RingDynamicMaterial = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    TObjectPtr<UMaterialInterface> RingBaseMaterial = nullptr;
 
 protected:
 
@@ -104,8 +118,26 @@ protected:
     UPROPERTY(EditAnywhere, Category = "GasGiant|Material")
     FString MaterialPrefix = TEXT("MI_");
 
+    UPROPERTY(EditAnywhere, Category = "GasGiant|Rings")
+    FString RingMaterialBasePath = TEXT("/Game/GameData/Galaxy/GasGiants/");
+
+    UPROPERTY(EditAnywhere, Category = "GasGiant|Rings")
+    FString RingMaterialPrefix = TEXT("MI_");
+
     // -----------------------------
     // Internal
     // -----------------------------
     void CreateMID();
+
+    // -----------------------------
+    // Debug
+    // -----------------------------
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+    bool bDebugDrawRings = true;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
+    float DebugInnerRadius = 0.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
+    float DebugOuterRadius = 0.0f;
 };

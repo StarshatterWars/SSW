@@ -3,6 +3,7 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/UnrealType.h"
+#include "DrawDebugHelpers.h"
 
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -72,6 +73,13 @@ void AGasGiantActor::BeginPlay()
 void AGasGiantActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (bDebugDrawRings &&
+        DebugOuterRadius > DebugInnerRadius &&
+        DebugOuterRadius > 0.0f)
+    {
+        DrawDebugRingOutline(DebugInnerRadius, DebugOuterRadius);
+    }
 }
 
 void AGasGiantActor::CreateMID()
@@ -256,21 +264,11 @@ void AGasGiantActor::SetGasGiantMaterialByName(const FString& MaterialName)
             MeshComp->SetCullDistance(0.0f);
             MeshComp->SetBoundsScale(10000.0f);
 
-            UMaterialInterface* RingMat = MeshComp->GetMaterial(0);
-
-            if (!RingMat)
-            {
-                UE_LOG(LogTemp, Error,
-                    TEXT("[GasGiantActor] Ring mesh has no material Mesh=%s"),
-                    *MeshName);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[GasGiantActor] Ring visible/preserved Mesh=%s Mat=%s"),
-                    *MeshName,
-                    *GetNameSafe(RingMat));
-            }
+            // DO NOT touch material here
+            UE_LOG(LogTemp, Warning,
+                TEXT("[GasGiantActor] Ring preserved Mesh=%s Mat=%s"),
+                *MeshName,
+                *GetNameSafe(MeshComp->GetMaterial(0)));
 
             continue;
         }
@@ -435,21 +433,219 @@ void AGasGiantActor::ApplyRingSettingsToBlueprint()
 
 void AGasGiantActor::ApplyRingRadiusSettings()
 {
-    // These are normalized ring values used by the asset BP/material.
-    // Do NOT use world radius here.
-    const float InnerRadius = 1.2f;
-    const float OuterRadius = 2.0f;
-    const float Position = 0.0f;
+    const bool bEnableRings =
+        InnerRingRadius > 0.0f &&
+        OuterRingRadius > InnerRingRadius &&
+        PlanetRadiusUnits > 0.0f &&
+        !RingMaterialName.IsEmpty();
 
-    SetBPFloatProperty(this, TEXT("Inner Radius"), InnerRadius);
-    SetBPFloatProperty(this, TEXT("Outer Radius"), OuterRadius);
-    SetBPFloatProperty(this, TEXT("Position"), Position);
+    const float SafeInner = InnerRingRadius;
+    const float SafeOuter = OuterRingRadius;
 
-    OnGasGiantRadiusChanged();
+    const float InnerMaterial =
+        bEnableRings ? SafeInner / PlanetRadiusUnits : 0.0f;
+
+    const float OuterMaterial =
+        bEnableRings ? SafeOuter / PlanetRadiusUnits : 0.0f;
+
+    const float BaseMeshRadius =
+        GasGiantBaseMeshRadius > KINDA_SMALL_NUMBER
+        ? GasGiantBaseMeshRadius
+        : 50.0f;
+
+    const float PlanetScale = PlanetRadiusUnits / BaseMeshRadius;
+    const float RingScale = bEnableRings ? PlanetScale * OuterMaterial : 1.0f;
+
+    DebugInnerRadius = bEnableRings ? SafeInner : 0.0f;
+    DebugOuterRadius = bEnableRings ? SafeOuter : 0.0f;
+
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const FString MeshName = MeshComp->GetName();
+
+        const bool bIsRing =
+            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
+            MeshComp->ComponentHasTag(TEXT("Ring"));
+
+        if (!bIsRing)
+        {
+            continue;
+        }
+
+        if (!bEnableRings)
+        {
+            MeshComp->SetVisibility(false, true);
+            MeshComp->SetHiddenInGame(true, true);
+            MeshComp->SetRelativeScale3D(FVector::OneVector);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[GasGiantActor] RING HIDDEN Actor=%s Mesh=%s RingMaterialName='%s' Inner=%.2f Outer=%.2f"),
+                *GetName(),
+                *MeshName,
+                *RingMaterialName,
+                InnerRingRadius,
+                OuterRingRadius);
+
+            continue;
+        }
+
+        MeshComp->SetVisibility(true, true);
+        MeshComp->SetHiddenInGame(false, true);
+        MeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, RingPosition));
+        MeshComp->SetRelativeRotation(FRotator::ZeroRotator);
+        MeshComp->SetRelativeScale3D(FVector(RingScale, RingScale, 0.01f));
+        MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        MeshComp->SetCullDistance(0.0f);
+        MeshComp->SetBoundsScale(10000.0f);
+
+        const FString AssetName = RingMaterialName.StartsWith(TEXT("MI_"))
+            ? RingMaterialName
+            : FString(TEXT("MI_")) + RingMaterialName;
+
+        const FString Path = FString::Printf(
+            TEXT("/Script/Engine.MaterialInterface'/Game/GameData/Galaxy/GasGiants/%s.%s'"),
+            *AssetName,
+            *AssetName);
+
+        UMaterialInterface* BaseMat =
+            LoadObject<UMaterialInterface>(nullptr, *Path);
+
+        if (!BaseMat)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[GasGiantActor] FAILED to load ring material Actor=%s Mesh=%s Ring='%s' Path=%s"),
+                *GetName(),
+                *MeshName,
+                *RingMaterialName,
+                *Path);
+            continue;
+        }
+
+        UMaterialInstanceDynamic* RingMID =
+            UMaterialInstanceDynamic::Create(BaseMat, this);
+
+        MeshComp->SetMaterial(0, RingMID);
+
+        RingMID->SetScalarParameterValue(TEXT("Inner_Radius"), InnerMaterial);
+        RingMID->SetScalarParameterValue(TEXT("Outer_Radius"), OuterMaterial);
+        RingMID->SetScalarParameterValue(TEXT("Position"), RingPosition);
+        RingMID->SetScalarParameterValue(TEXT("Rings_Opacity"), 128.0f);
+        RingMID->SetScalarParameterValue(TEXT("Edge_Hardness"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Frequency"), 2.0f);
+        RingMID->SetScalarParameterValue(TEXT("Frequency_2"), 0.1f);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] RING APPLY Actor=%s Mesh=%s Ring='%s' Enabled=%d Inner=%.3f Outer=%.3f Scale=%.3f Mat=%s"),
+            *GetName(),
+            *MeshName,
+            *RingMaterialName,
+            bEnableRings ? 1 : 0,
+            InnerMaterial,
+            OuterMaterial,
+            RingScale,
+            *GetNameSafe(RingMID));
+    }
+}
+
+void AGasGiantActor::SetRingMaterialByName(const FString& InRingName)
+{
+    RingMaterialName = InRingName.TrimStartAndEnd();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] ApplyRingRadiusSettings Inner=%.2f Outer=%.2f Position=%.2f"),
-        InnerRadius,
+        TEXT("[GasGiantActor] SetRingMaterialByName Actor=%s RingMaterialName='%s'"),
+        *GetName(),
+        *RingMaterialName);
+}
+
+UMaterialInterface* AGasGiantActor::LoadRingMaterialByName(const FString& RingName)
+{
+    const FString CleanName = RingName.TrimStartAndEnd();
+
+    if (CleanName.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    const FString AssetName = CleanName.StartsWith(TEXT("MI_"))
+        ? CleanName
+        : RingMaterialPrefix + CleanName;
+
+    const FString Path = FString::Printf(
+        TEXT("/Script/Engine.MaterialInterface'%s%s.%s'"),
+        *RingMaterialBasePath,
+        *AssetName,
+        *AssetName);
+
+    return LoadObject<UMaterialInterface>(nullptr, *Path);
+}
+
+void AGasGiantActor::DrawDebugRingOutline(float InnerRadius, float OuterRadius) const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return;
+    }
+
+    if (InnerRadius <= 0.0f || OuterRadius <= InnerRadius)
+    {
+        return;
+    }
+
+    const FVector Center = GetActorLocation();
+
+    const FVector AxisX = GetActorRightVector();
+    const FVector AxisY = GetActorForwardVector();
+
+    const int32 Segments = 128;
+    const float Lifetime = 0.0f;
+    const float Thickness = 8.0f;
+
+    DrawDebugSphere(
+        World,
+        Center,
+        50.0f,
+        16,
+        FColor::Yellow,
+        false,
+        Lifetime,
+        0,
+        4.0f);
+
+    DrawDebugCircle(
+        World,
+        Center,
         OuterRadius,
-        Position);
+        Segments,
+        FColor::Red,
+        false,
+        Lifetime,
+        0,
+        Thickness,
+        AxisX,
+        AxisY,
+        false);
+
+    DrawDebugCircle(
+        World,
+        Center,
+        InnerRadius,
+        Segments,
+        FColor::Green,
+        false,
+        Lifetime,
+        0,
+        Thickness,
+        AxisX,
+        AxisY,
+        false);
 }

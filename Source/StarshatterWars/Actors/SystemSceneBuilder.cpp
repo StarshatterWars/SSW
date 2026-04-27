@@ -616,26 +616,27 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
                 PlanetData->Minrad > 0.0 &&
                 PlanetData->Maxrad > PlanetData->Minrad &&
                 PlanetData->Radius > 0.0;
-
             if (bHasRing)
             {
                 const float InnerUnits =
-                    RadiusUnits * static_cast<float>(PlanetData->Minrad / PlanetData->Radius);
+                    RadiusUnits * static_cast<float>(PlanetData->Minrad);
 
                 const float OuterUnits =
-                    RadiusUnits * static_cast<float>(PlanetData->Maxrad / PlanetData->Radius);
+                    RadiusUnits * static_cast<float>(PlanetData->Maxrad);
 
                 Gas->InnerRingRadius = InnerUnits;
                 Gas->OuterRingRadius = OuterUnits;
                 Gas->RingPosition = 0.0f;
+                Gas->SetRingMaterialByName(PlanetData->Ring);
                 Gas->ApplyRingRadiusSettings();
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[SystemSceneBuilder] GasGiant Ring '%s' Ring='%s' Minrad=%.2f Maxrad=%.2f InnerUnits=%.2f OuterUnits=%.2f"),
+                    TEXT("[SystemSceneBuilder] GasGiant Ring '%s' Ring='%s' MinradRatio=%.3f MaxradRatio=%.3f RadiusUnits=%.2f InnerUnits=%.2f OuterUnits=%.2f"),
                     *PlanetName,
                     *PlanetData->Ring,
                     PlanetData->Minrad,
                     PlanetData->Maxrad,
+                    RadiusUnits,
                     InnerUnits,
                     OuterUnits);
             }
