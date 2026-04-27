@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "UObject/UnrealType.h"
+#include "ProceduralMeshComponent.h"
 #include "GasGiantActor.generated.h"
 
 class UStaticMeshComponent;
@@ -99,7 +100,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     TObjectPtr<UMaterialInterface> RingBaseMaterial = nullptr;
 
+    UPROPERTY(Transient)
+    UProceduralMeshComponent* RuntimeRingMesh = nullptr;
 
+    void EnsureRuntimeRingMesh();
+    void RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius);
+    void HideLegacyBPRings();
 protected:
 
     // Root
