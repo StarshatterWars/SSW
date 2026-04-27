@@ -1398,6 +1398,7 @@ void AShipActor::SetCutsceneNavMovement(
         CutsceneMoveSpeed);
 }
 
+
 void AShipActor::SetCutsceneLocalMovement(
     const FVector& InStartLocal,
     const FVector& InTargetLocal,
