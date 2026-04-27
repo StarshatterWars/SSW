@@ -30,6 +30,7 @@
 class UTextBlock;
 class UBorder;
 class USizeBox;
+class UImage;
 
 UCLASS()
 class STARSHATTERWARS_API UMissionPackageLVElement
@@ -39,6 +40,7 @@ class STARSHATTERWARS_API UMissionPackageLVElement
     GENERATED_BODY()
 
 public:
+    UMissionPackageLVElement(const FObjectInitializer& ObjectInitializer);
     virtual void NativeConstruct() override;
 
 protected:
@@ -73,6 +75,9 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* PackageSizeBox = nullptr;
 
+    UPROPERTY(meta = (BindWidgetOptional))
+    UImage* MarkerImage = nullptr;
+
 protected:
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
     virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
@@ -87,4 +92,7 @@ protected:
     UMissionPackageListObject* PackageItem = nullptr;
 
     bool bRowSelected = false;
+
+    UPROPERTY()
+    UTexture2D* PlayerArrowTexture = nullptr;
 };

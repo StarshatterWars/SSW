@@ -94,7 +94,7 @@ static FMargin ToFMargin(const Insets& in)
 	return FMargin((float)in.left, (float)in.top, (float)in.right, (float)in.bottom);
 }
 
-static FString NormalizeCombatGroupTypeToken(const FString& InValue)
+static FString NormalizeCombatGroupType(const FString& InValue)
 {
 	FString Out = InValue;
 	Out = Out.TrimStartAndEnd();
@@ -1367,28 +1367,14 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 		return;
 	
 	LoadContentBundle();
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		if (UStarshatterGameDataSubsystem* GD = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
-		{
-			//GD->LoadForms();
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("GameData subsystem is NULL at LoadForms call site"));
-		}
-	}
-
-	//LoadAwardTables();
 
 	BuildRankCache(RanksDataTable, RankById);
 	BuildMedalCache(MedalsDataTable, MedalById);
 	BuildMedalCache_ByFlag(MedalsDataTable);
 	
-	//InitializeCampaignData();
+	InitializeCampaignData();
 	ReadCampaignData();
 	
-	InitializeCombatRoster();
 	ReadCombatRosterData();
 
 	ReadCombatants();
@@ -1398,8 +1384,6 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	BuildCombatRosterFromOrderOfBattle();	
 	
 	SSWInstance->StartGameTimers();
-
-	// USystemDesign::Initialize(SystemDesignTable);
 }
 
 void UStarshatterGameDataSubsystem::InitializeCampaignData() {
@@ -1717,7 +1701,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 							}
 							else if (pdef->name()->value() == "location" ||
 								pdef->name()->value() == "loc") {
-								GetDefVec(ActionLocation, pdef, filename);
+									GetDefVector(ActionLocation, pdef, filename);
 								NewCampaignAction.Location.X = ActionLocation.X;
 								NewCampaignAction.Location.Y = ActionLocation.Y;
 								NewCampaignAction.Location.Z = ActionLocation.Z;
@@ -2682,7 +2666,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 							GetDefText(typestr, pdef, fn);
 
 							const FString NormalizedType =
-								NormalizeCombatGroupTypeToken(FString(typestr));
+								NormalizeCombatGroupType(FString(typestr));
 
 							if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, MissionType, false))
 							{
@@ -2703,7 +2687,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 							GetDefText(typestr, pdef, fn);
 
 							const FString NormalizedType =
-								NormalizeCombatGroupTypeToken(FString(typestr));
+								NormalizeCombatGroupType(FString(typestr));
 							if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, TemplateGroupType, false))
 							{
 								TemplateGroupType = ECOMBATGROUP_TYPE::NONE;
@@ -2974,7 +2958,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -3064,7 +3048,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			GetDefText(LocalType, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(LocalType));
+				NormalizeCombatGroupType(FString(LocalType));
 
 			if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, LocalGroupType, false))
 			{
@@ -3164,7 +3148,7 @@ void UStarshatterGameDataSubsystem::ParseNavpoint(TermStruct* Val, const char* F
 		{
 			// Use FVector only
 			FVector V;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewInstr.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3298,7 +3282,7 @@ void UStarshatterGameDataSubsystem::ParseObjective(TermStruct* Val, const char* 
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewObj.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3431,7 +3415,7 @@ void UStarshatterGameDataSubsystem::ParseInstruction(TermStruct* Val, const char
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewInstr.Location = V;
 		}
 		else if (Key == "rloc")
@@ -3575,13 +3559,13 @@ void UStarshatterGameDataSubsystem::ParseShip(TermStruct* Val, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionShip.Location = V;
 		}
 		else if (Key == "velocity")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionShip.Velocity = V;
 		}
 		else if (Key == "respawns")
@@ -3712,6 +3696,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	int32  EventId = 1;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
+	float  EventScale = 1.0f;
 
 	// IMPORTANT:
 	// inherit the last parsed event time unless this event overrides it
@@ -3757,7 +3742,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(typestr, PDef, Fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<MISSIONEVENT_TYPE>(NormalizedType, EventType, false))
 			{
@@ -3778,7 +3763,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(typestr, PDef, Fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<MISSIONEVENT_TRIGGER>(NormalizedType, EventTrigger, false))
 			{
@@ -3809,11 +3794,46 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefNumber(EventDelay, PDef, Fn);
 			NewMissionEvent.EventDelay = EventDelay;
 		}
+		else if (Key == "scale")
+		{
+			GetDefNumber(EventScale, PDef, Fn);
+			NewMissionEvent.EventScale = EventScale;
+		}
 		else if (Key == "caption")
 		{
 			Text CaptionText = "";
 			GetDefText(CaptionText, PDef, Fn);
 			NewMissionEvent.EventCaption = FString(CaptionText);
+		}
+		else if (Key == "image")
+		{
+			Text ImageText = "";
+			GetDefText(ImageText, PDef, Fn);
+			NewMissionEvent.EventImage = FString(ImageText);
+		}
+		else if (Key == "rotator")
+		{
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventRotator = FRotator(
+					V.Y, // Pitch
+					V.X, // Yaw
+					V.Z  // Roll
+				);
+			}
+		}
+		else if (Key == "offset")
+		{
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventOffset = FVector(
+					V.X, // X
+					V.Y, // Y
+					V.Z  // Z
+				);
+			}
 		}
 		else if (Key == "event_param" || Key == "param" || Key == "color")
 		{
@@ -3897,11 +3917,21 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			GetDefText(EventSound, PDef, Fn);
 			NewMissionEvent.EventSound = FString(EventSound);
 		}
-		else if (Key == "loc" || Key == "vec" || Key == "fade")
+		else if (Key == "fade")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
-			NewMissionEvent.EventPoint = V;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventFade = V;
+			}
+		}
+		else if (Key == "loc" || Key == "vec")
+		{
+			FVector V = FVector::ZeroVector;
+			if (GetDefVector(V, PDef, Fn))
+			{
+				NewMissionEvent.EventPoint = V;
+			}
 		}
 		else if (Key == "rect")
 		{
@@ -4070,7 +4100,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 			NewMissionElement.Location = V;
 		}
 		else if (Key == "rloc")
@@ -4322,7 +4352,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -4562,7 +4592,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 			GetDefText(typestr, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(typestr));
+				NormalizeCombatGroupType(FString(typestr));
 
 			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
 			{
@@ -4642,7 +4672,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 			GetDefText(LocalGroup, def, fn);
 
 			const FString NormalizedType =
-				NormalizeCombatGroupTypeToken(FString(LocalGroup));
+				NormalizeCombatGroupType(FString(LocalGroup));
 			if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, TemplateGroupType, false))
 			{
 				TemplateGroupType = ECOMBATGROUP_TYPE::NONE;
@@ -4806,7 +4836,7 @@ void UStarshatterGameDataSubsystem::ParseAlias(TermStruct* Val, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, PDef, Fn);
+			GetDefVector(V, PDef, Fn);
 
 			Location = V;
 			bUseLocation = true;
@@ -4929,7 +4959,7 @@ void UStarshatterGameDataSubsystem::ParseRLoc(TermStruct* RVal, const char* Fn)
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
-			GetDefVec(V, RDef, Fn);
+			GetDefVector(V, RDef, Fn);
 
 			BaseLocation = V;
 			NewRLocElement.BaseLocation = BaseLocation;
@@ -5064,360 +5094,7 @@ void UStarshatterGameDataSubsystem::ParseOptional(TermStruct* val, const char* f
 
 // +-------------------------------------------------------------------+
 
-void UStarshatterGameDataSubsystem::InitializeCombatRoster()
-{
-	if (!CombatGroupDataTable)
-	{
-		return;
-	}
 
-	CombatGroupDataTable->EmptyTable();
-
-	//CombatGroupDataTable->EmptyTable();
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::InitializeCombatRoster()"));
-
-	// Content/GameData/Campaigns/
-	ProjectPath = FPaths::ProjectContentDir();
-	ProjectPath /= TEXT("GameData/Campaigns/");
-
-	TArray<FString> Files;
-	Files.Empty();
-
-	// FindFiles wants the full wildcard path:
-	const FString Wildcard = ProjectPath / TEXT("*.def");
-
-	IFileManager::Get().FindFiles(Files, *Wildcard, /*Files=*/true, /*Directories=*/false);
-
-	for (const FString& File : Files)
-	{
-		const FString FullPath = ProjectPath / File;
-
-		// LoadOrderOfBattle expects const char* (legacy).
-		// Convert for the call only (do NOT store the pointer).
-		const FTCHARToUTF8 Utf8Path(*FullPath);
-		LoadCombatRoster(Utf8Path.Get(), -1);
-	}
-}
-
-void UStarshatterGameDataSubsystem::LoadCombatRoster(const char* InFilename, int32 Team)
-{
-
-
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadCombatRoster"));
-
-	if (!InFilename || !*InFilename)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[LoadCombatRoster] null/empty filename"));
-		return;
-	}
-
-	const FString OobFilePath = ANSI_TO_TCHAR(InFilename);
-
-	UE_LOG(LogTemp, Log, TEXT("[LoadCombatRoster] Loading Data: %s"), *OobFilePath);
-
-	if (!FPaths::FileExists(OobFilePath))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[LoadCombatRoster] file not found: %s"), *OobFilePath);
-		return;
-	}
-
-	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *OobFilePath))
-	{
-		UE_LOG(LogTemp, Error, TEXT("[LoadCombatRoster] failed to read: %s"), *OobFilePath);
-		return;
-	}
-
-	Bytes.Add(0);
-
-	const FTCHARToUTF8 Utf8Path(*OobFilePath);
-	const char* fn = Utf8Path.Get();
-
-	Parser ParserObj(new BlockReader(reinterpret_cast<const char*>(Bytes.GetData())));
-	Term* TermPtr = ParserObj.ParseTerm();
-
-	if (!TermPtr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[LoadCombatRoster] could not parse: %s"), *OobFilePath);
-		return; 
-	}
-
-	{
-		TermText* FileType = TermPtr->isText();
-		if (!FileType || FileType->value() != "ORDER_OF_BATTLE")
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[LoadCombatRoster] Invalid Order of Battle File: %s"), *OobFilePath);
-			delete TermPtr;
-			return;
-		}
-	}
-
-	delete TermPtr;
-	TermPtr = nullptr;
-
-	while ((TermPtr = ParserObj.ParseTerm()) != nullptr)
-	{
-		TermDef* Def = TermPtr->isDef();
-		if (!Def || Def->name()->value() != "group")
-		{
-			delete TermPtr;
-			TermPtr = nullptr;
-			continue;
-		}
-
-		if (!Def->term() || !Def->term()->isStruct())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("WARNING: group struct missing in '%s'"), *OobFilePath);
-			delete TermPtr;
-			TermPtr = nullptr;
-			continue;
-		}
-
-		TermStruct* GroupStruct = Def->term()->isStruct();
-
-		FS_CombatGroup NewCombatGroup;
-		NewCombatUnitArray.Empty();
-
-		Text LocalName = "";
-		Text LocalType = "";
-		Text LocalRegion = "";
-		Text LocalSystem = "";
-		Text LocalParentType = "";
-
-		EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
-		ECOMBATGROUP_TYPE LocalGroupType = ECOMBATGROUP_TYPE::NONE;
-		ECOMBATGROUP_TYPE LocalParentGroupType = ECOMBATGROUP_TYPE::NONE;
-
-		int32 LocalParentId = 0;
-		int32 LocalEmpireId = 0;
-		int32 LocalIff = -1;
-		int32 LocalUnitIndex = 0;
-
-		Vec3 LocalLoc(1.0e9f, 0.0f, 0.0f);
-
-		const int32 GroupElemCount = (int32)GroupStruct->elements()->size();
-		for (int32 FieldIdx = 0; FieldIdx < GroupElemCount; ++FieldIdx)
-		{
-			TermDef* PDef = GroupStruct->elements()->at(FieldIdx)->isDef();
-			if (!PDef)
-				continue;
-
-			const Text& Key = PDef->name()->value();
-
-			if (Key == "name")
-			{
-				GetDefText(LocalName, PDef, fn);
-				NewCombatGroup.Name = FString(LocalName);
-				UE_LOG(LogTemp, Warning,
-					TEXT("[LoadCombatRoster] name parsed: '%s'"),
-					*FString(LocalName));
-			}
-			else if (Key == "intel")
-			{
-				Text Intel = "";
-				GetDefText(Intel, PDef, fn);
-
-				if (!FStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
-					LocalIntelType = EINTEL_TYPE::KNOWN;
-
-				NewCombatGroup.Intel = LocalIntelType;
-			}
-			else if (Key == "region")
-			{
-				GetDefText(LocalRegion, PDef, fn);
-				NewCombatGroup.Region = FString(LocalRegion);
-			}
-			else if (Key == "system")
-			{
-				GetDefText(LocalSystem, PDef, fn);
-				NewCombatGroup.System = FString(LocalSystem);
-			}
-			else if (Key == "loc")
-			{
-				GetDefVec(LocalLoc, PDef, fn);
-				NewCombatGroup.Location = FVector(LocalLoc.X, LocalLoc.Y, LocalLoc.Z);
-			}
-			else if (Key == "parent_type")
-			{
-				GetDefText(LocalParentType, PDef, fn);
-
-				const FString NormalizedParentType =
-					NormalizeCombatGroupTypeToken(FString(LocalParentType));
-
-				if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedParentType, LocalParentGroupType, false))
-				{
-					LocalParentGroupType = ECOMBATGROUP_TYPE::NONE;
-
-					UE_LOG(LogTemp, Warning,
-						TEXT("[LoadCombatRoster] unknown parent_type '%s' normalized to '%s' in '%s'"),
-						*FString(LocalParentType),
-						*NormalizedParentType,
-						*OobFilePath);
-				}
-
-				NewCombatGroup.ParentType = LocalParentGroupType;
-			}
-			else if (Key == "parent_id")
-			{
-				GetDefNumber(LocalParentId, PDef, fn);
-				NewCombatGroup.ParentId = LocalParentId;
-			}
-			else if (Key == "empire_id")
-			{
-				GetDefNumber(LocalEmpireId, PDef, fn);
-				NewCombatGroup.EmpireId = UFormattingUtils::GetEmpireTypeFromIndex(LocalEmpireId);
-			}
-			else if (Key == "iff")
-			{
-				GetDefNumber(LocalIff, PDef, fn);
-				NewCombatGroup.Iff = LocalIff;
-			}
-			else if (Key == "id")
-			{
-				int32 LocalId = 0;
-				GetDefNumber(LocalId, PDef, fn);
-				NewCombatGroup.Id = LocalId;
-			}
-			else if (Key == "unit_index")
-			{
-				GetDefNumber(LocalUnitIndex, PDef, fn);
-				NewCombatGroup.UnitIndex = LocalUnitIndex;
-			}
-			else if (Key == "type")
-			{
-				GetDefText(LocalType, PDef, fn);
-
-				const FString NormalizedType =
-					NormalizeCombatGroupTypeToken(FString(LocalType));
-
-				if (!FStringToEnum<ECOMBATGROUP_TYPE>(NormalizedType, LocalGroupType, false))
-				{
-					LocalGroupType = ECOMBATGROUP_TYPE::NONE;
-
-					UE_LOG(LogTemp, Warning,
-						TEXT("[LoadCombatRoster] unknown type '%s' normalized to '%s' in '%s'"),
-						*FString(LocalType),
-						*NormalizedType,
-						*OobFilePath);
-				}
-
-				NewCombatGroup.Type = LocalGroupType;
-			}
-			else if (Key == "unit")
-			{
-				TermStruct* UnitStruct = (PDef->term() ? PDef->term()->isStruct() : nullptr);
-				if (!UnitStruct)
-					continue;
-
-				FS_CombatGroupUnit NewUnit;
-
-				Text LocalUnitName = "";
-				Text LocalUnitRegnum = "";
-				Text LocalUnitRegion = "";
-				Text LocalUnitClass = "";
-				Text LocalUnitDesign = "";
-				Text LocalUnitSkin = "";
-
-				int32 LocalUnitCount = 1;
-				int32 LocalUnitDamage = 0;
-				int32 LocalUnitDead = 0;
-				int32 LocalUnitHeading = 0;
-				Vec3  LocalUnitLoc(1.0e9f, 0.0f, 0.0f);
-
-				const int32 UnitElemCount = (int32)UnitStruct->elements()->size();
-				for (int32 UnitFieldIdx = 0; UnitFieldIdx < UnitElemCount; ++UnitFieldIdx)
-				{
-					TermDef* UDef = UnitStruct->elements()->at(UnitFieldIdx)->isDef();
-					if (!UDef)
-						continue;
-
-					const Text& UKey = UDef->name()->value();
-
-					if (UKey == "name")
-					{
-						GetDefText(LocalUnitName, UDef, fn);
-						NewUnit.UnitName = FString(LocalUnitName);
-					}
-					else if (UKey == "regnum")
-					{
-						GetDefText(LocalUnitRegnum, UDef, fn);
-					}
-					else if (UKey == "region")
-					{
-						GetDefText(LocalUnitRegion, UDef, fn);
-					}
-					else if (UKey == "loc")
-					{
-						GetDefVec(LocalUnitLoc, UDef, fn);
-					}
-					else if (UKey == "type")
-					{
-						GetDefText(LocalUnitClass, UDef, fn);
-					}
-					else if (UKey == "design")
-					{
-						GetDefText(LocalUnitDesign, UDef, fn);
-					}
-					else if (UKey == "skin")
-					{
-						GetDefText(LocalUnitSkin, UDef, fn);
-					}
-					else if (UKey == "count")
-					{
-						GetDefNumber(LocalUnitCount, UDef, fn);
-					}
-					else if (UKey == "dead_count")
-					{
-						GetDefNumber(LocalUnitDead, UDef, fn);
-					}
-					else if (UKey == "damage")
-					{
-						GetDefNumber(LocalUnitDamage, UDef, fn);
-					}
-					else if (UKey == "heading")
-					{
-						GetDefNumber(LocalUnitHeading, UDef, fn);
-					}
-				}
-
-				NewUnit.UnitRegnum = FString(LocalUnitRegnum);
-				NewUnit.UnitRegion = FString(LocalUnitRegion);
-				NewUnit.UnitLoc = FVector(LocalUnitLoc.X, LocalUnitLoc.Y, LocalUnitLoc.Z);
-				NewUnit.UnitClass = FString(LocalUnitClass);
-				NewUnit.UnitDesign = FString(LocalUnitDesign);
-				NewUnit.UnitSkin = FString(LocalUnitSkin);
-				NewUnit.UnitCount = LocalUnitCount;
-				NewUnit.UnitDead = LocalUnitDead;
-				NewUnit.UnitDamage = LocalUnitDamage;
-				NewUnit.UnitHeading = LocalUnitHeading;
-
-				NewCombatUnitArray.Add(NewUnit);
-				NewCombatGroup.Unit = NewCombatUnitArray;
-			}
-		}
-
-		const bool bPassTeam = (Team < 0) || (NewCombatGroup.Iff == Team);
-
-		if (NewCombatGroup.Iff > -1 && bPassTeam)
-		{
-			const FName RowName(*(
-				UFormattingUtils::GetOrdinal(NewCombatGroup.Id) + TEXT(" ") +
-				FString(UFormattingUtils::GetGroupTypeDisplayName(NewCombatGroup.Type)) +
-				TEXT(" [") + NewCombatGroup.Name + TEXT("]")
-				)); 
-
-			NewCombatGroup.DisplayName = RowName.ToString();
-			CombatGroupDataTable->AddRow(RowName, NewCombatGroup);
-		}
-
-		CombatGroupData = NewCombatGroup;
-
-		delete TermPtr;
-		TermPtr = nullptr;
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("[LoadCombatRoster] complete: %s"), *OobFilePath);
-}
 
 // +--------------------------------------------------------------------+
 
@@ -6137,102 +5814,6 @@ FString UStarshatterGameDataSubsystem::GetEmpireRosterName(EEMPIRE_NAME Empire) 
 	}
 
 	return EnumObj->GetDisplayNameTextByValue((int64)Empire).ToString();
-}
-
-void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables_Internal()
-{
-	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables_Internal: BEGIN"));
-
-	if (CombatRosterData.Num() == 0)
-	{
-		ReadCombatRosterData();
-	}
-
-	if (CombatantData.Num() == 0)
-	{
-		ReadCombatants();
-	}
-
-	const TArray<FName> RowNames = GetCampaignGroupRowNames();
-	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
-
-	LinkGroupHierarchy(RowNames, GroupByRowName);
-	BuildUnitsForGroups(RowNames, GroupByRowName);
-	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
-
-	Campaign* CampaignPtr = Campaign::GetCampaign();
-	if (!CampaignPtr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
-		return;
-	}
-	else {
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
-			CampaignPtr->GetCombatants().size()
-			, GroupByRowName.Num());
-	}
-
-	ListIter<Combatant> It = CampaignPtr->GetCombatants();
-	while (++It)
-	{
-		Combatant* C = It.value();
-		if (!C) continue;
-
-		CombatGroup* Root = C->GetForce();
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] Combatant=%s Root=%s"),
-			ANSI_TO_TCHAR(C->GetName()),
-			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
-	}
-}
-
-void UStarshatterGameDataSubsystem::ReadCombatants_Internal()
-{
-	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables_Internal: BEGIN"));
-
-	if (CombatRosterData.Num() == 0)
-	{
-		ReadCombatRosterData();
-	}
-
-	if (CombatantData.Num() == 0)
-	{
-		ReadCombatants();
-	}
-
-	const TArray<FName> RowNames = GetCampaignGroupRowNames();
-	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
-
-	LinkGroupHierarchy(RowNames, GroupByRowName);
-	BuildUnitsForGroups(RowNames, GroupByRowName);
-	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
-
-	Campaign* CampaignPtr = Campaign::GetCampaign();
-	if (!CampaignPtr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
-		return;
-	}
-	else {
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
-			CampaignPtr->GetCombatants().size()
-			, GroupByRowName.Num());
-	}
-
-	ListIter<Combatant> It = CampaignPtr->GetCombatants();
-	while (++It)
-	{
-		Combatant* C = It.value();
-		if (!C) continue;
-
-		CombatGroup* Root = C->GetForce();
-		UE_LOG(LogTemp, Warning,
-			TEXT("[CombatRoster] Combatant=%s Root=%s"),
-			ANSI_TO_TCHAR(C->GetName()),
-			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
-	}
 }
 
 
@@ -7561,44 +7142,48 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: BEGIN"));
 
-	if (!CampaignDataTable)
+	if (CombatRosterData.Num() == 0)
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[GameData] BuildCombatRosterFromDataTables: CampaignDataTable is null"));
-		return;
+		ReadCombatRosterData();
 	}
 
-	if (SelectedCampaignRowName.IsNone())
+	if (CombatantData.Num() == 0)
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[GameData] BuildCombatRosterFromDataTables: SelectedCampaignRowName is None"));
-		return;
+		ReadCombatants();
 	}
 
-	const FS_Campaign* CampaignRow =
-		CampaignDataTable->FindRow<FS_Campaign>(
-			SelectedCampaignRowName,
-			TEXT("BuildCombatRosterFromDataTables"),
-			false);
+	const TArray<FName> RowNames = GetCampaignGroupRowNames();
+	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);
 
-	if (!CampaignRow)
+	LinkGroupHierarchy(RowNames, GroupByRowName);
+	BuildUnitsForGroups(RowNames, GroupByRowName);
+	BuildCombatantsFromDataTables(RowNames, GroupByRowName);
+
+	Campaign* CampaignPtr = Campaign::GetCampaign();
+	if (!CampaignPtr)
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[GameData] BuildCombatRosterFromDataTables: missing campaign row '%s' in table '%s'"),
-			*SelectedCampaignRowName.ToString(),
-			*GetNameSafe(CampaignDataTable));
+		UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Campaign is NULL after build"));
 		return;
 	}
+	else {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] COMPLETE combatants=%d (%d groups)"),
+			CampaignPtr->GetCombatants().size()
+			,GroupByRowName.Num());
+	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] BuildCombatRosterFromDataTables: Campaign='%s' Row='%s' Index=%d"),
-		*CampaignRow->Name,
-		*SelectedCampaignRowName.ToString(),
-		CampaignRow->Index);
+	ListIter<Combatant> It = CampaignPtr->GetCombatants();
+	while (++It)
+	{
+		Combatant* C = It.value();
+		if (!C) continue;
 
-	BuildCombatRosterFromDataTables_Internal();
-
-	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: COMPLETE"));
+		CombatGroup* Root = C->GetForce();
+		UE_LOG(LogTemp, Warning,
+			TEXT("[CombatRoster] Combatant=%s Root=%s"),
+			ANSI_TO_TCHAR(C->GetName()),
+			Root ? ANSI_TO_TCHAR(Root->GetName()) : TEXT("NULL"));
+	}
 }
 
 void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
@@ -7725,46 +7310,37 @@ void UStarshatterGameDataSubsystem::BuildCombatantsFromDataTables(
 
 void UStarshatterGameDataSubsystem::ReadCombatants()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] ReadCombatants: BEGIN"));
+	CombatantData.Empty();
 
 	if (!CampaignDataTable)
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[CombatRoster] CampaignDataTable is null"));
+		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable is NULL"));
 		return;
 	}
 
 	if (SelectedCampaignRowName.IsNone())
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[CombatRoster] SelectedCampaignRowName is None"));
+		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: SelectedCampaignRowName is None"));
 		return;
 	}
 
 	const FS_Campaign* CampaignRow =
-		CampaignDataTable->FindRow<FS_Campaign>(
-			SelectedCampaignRowName,
-			TEXT("ReadCombatants"),
-			false);
+		CampaignDataTable->FindRow<FS_Campaign>(SelectedCampaignRowName, TEXT("ReadCombatants"));
 
 	if (!CampaignRow)
 	{
 		UE_LOG(LogTemp, Error,
-			TEXT("[CombatRoster] Could not find FS_Campaign row '%s' in CampaignDataTable '%s'"),
-			*SelectedCampaignRowName.ToString(),
-			*GetNameSafe(CampaignDataTable));
+			TEXT("[GameData] ReadCombatants: could not find campaign row '%s'"),
+			*SelectedCampaignRowName.ToString());
 		return;
 	}
 
+	CombatantData = CampaignRow->Combatant;
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[CombatRoster] Using campaign row '%s' Name='%s' Index=%d"),
-		*SelectedCampaignRowName.ToString(),
-		*CampaignRow->Name,
-		CampaignRow->Index);
-
-	ReadCombatants_Internal();
-
-	UE_LOG(LogTemp, Warning, TEXT("[CombatRoster] ReadCombatants: COMPLETE"));
+		TEXT("[GameData] ReadCombatants: loaded %d combatants from campaign '%s'"),
+		CombatantData.Num(),
+		*CampaignRow->Name);
 }
 
 void UStarshatterGameDataSubsystem::ValidateCombatRosterRuntime()
@@ -8037,5 +7613,4 @@ void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FS
 		TCHAR_TO_ANSI(*DesignRow->Description),
 		TCHAR_TO_ANSI(*WeaponSummary));
 
-	
 }

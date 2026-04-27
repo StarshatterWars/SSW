@@ -45,11 +45,15 @@ void UMissionPackageListObject::InitFromMissionElement(
     ElementID = 0;
 
     if (!ElementPtr)
+    {
         return;
+    }
 
     const FShipDesign* Design = ElementPtr->GetShipDesign();
 
-    Marker = bIsPlayerElement ? TEXT("==>") : TEXT(" ");
+    // No more ASCII marker text here. The row widget will render the arrow texture.
+    Marker = bIsPlayerElement ? TEXT("PLAYER") : TEXT("");
+
     ElementName = ANSI_TO_TCHAR(ElementPtr->GetName().data());
     RoleText = ANSI_TO_TCHAR(ElementPtr->RoleName().data());
     ElementID = ElementPtr->GetElementID();
@@ -57,6 +61,42 @@ void UMissionPackageListObject::InitFromMissionElement(
     if (!Design)
     {
         PackageText = TEXT("UNKNOWN");
+        return;
+    }
+
+    // Fighters: match MissionNav formatting, e.g. "2x F-32"
+    if (ElementPtr->IsSquadron())
+    {
+        const int32 TotalCount = ElementPtr->Count();
+
+        FString FighterType;
+
+        if (!Design->DisplayName.IsEmpty())
+        {
+            FighterType = Design->DisplayName;
+        }
+        else if (!Design->ShipName.IsEmpty())
+        {
+            FighterType = Design->ShipName;
+        }
+        else if (!Design->Abrv.IsEmpty())
+        {
+            FighterType = Design->Abrv;
+        }
+        else
+        {
+            FighterType = ElementName.IsEmpty() ? TEXT("FTR") : ElementName;
+        }
+
+        if (TotalCount > 0)
+        {
+            PackageText = FString::Printf(TEXT("%dx %s"), TotalCount, *FighterType);
+        }
+        else
+        {
+            PackageText = FighterType;
+        }
+
         return;
     }
 

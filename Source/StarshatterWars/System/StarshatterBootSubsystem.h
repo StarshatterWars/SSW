@@ -64,6 +64,7 @@ class UStarshatterWeaponDesignSubsystem;
 class UStarshatterAssetRegistrySubsystem;
 class UStarshatterEnvironmentSubsystem;
 class UStarshatterUIStyleSubsystem;
+class USSWCombatGroupSubsystem;
 
 
 // NEW: Player save subsystem
@@ -120,6 +121,7 @@ private:
         UStarshatterWeaponDesignSubsystem* WeaponDesignSS = nullptr;
         UStarshatterEnvironmentSubsystem* EnvironmentSS = nullptr;
         UStarshatterUIStyleSubsystem* UIStyleSS = nullptr;
+        USSWCombatGroupSubsystem* CombatGroupSS = nullptr;
     };
 
     bool BuildContext(FBootContext& OutCtx);
@@ -135,6 +137,7 @@ private:
     void BootGalaxyLoader(const FBootContext& Ctx);
     void BootSystemDesignLoader(const FBootContext& Ctx);
     void BootWeaponDesignLoader(const FBootContext& Ctx);
+    void BootCombatGroupLoader(const FBootContext& Ctx);
 
     // NEW:
     void BootPlayerSave(const FBootContext& Ctx);

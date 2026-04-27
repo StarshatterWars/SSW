@@ -23,6 +23,7 @@ public class StarshatterWars : ModuleRules
             "UMG",
             "MediaAssets",
             "CommonUI",
+            "ProceduralMeshComponent",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]

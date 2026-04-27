@@ -48,9 +48,6 @@
 #include "Math/UnrealMathUtility.h"    // FMath
 #include "Logging/LogMacros.h"         // UE_LOG
 
-static int pkg_id = 1000;
-static int dump_missions;
-
 // +--------------------------------------------------------------------+
 
 CampaignMissionStarship::CampaignMissionStarship(Campaign* c)

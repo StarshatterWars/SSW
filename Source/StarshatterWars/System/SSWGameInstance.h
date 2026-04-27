@@ -160,9 +160,6 @@ public:
 	void ShowMainMenuScreen();
 
 	UFUNCTION()
-	void RemoveMainMenuScreen();
-
-	UFUNCTION()
 	void RemoveScreens();
 
 	// =====================================================================
@@ -300,8 +297,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "System Overview")
 	void DestroySystemOverview();
 
-	void RebuildSystemOverview(const FS_StarMap& Star);
-	void EnsureSystemOverview(UObject* Context, const FS_StarMap& StarMap, int32 Resolution);
+	void RebuildSystemOverview(const FStarSystem& Star);
+	void EnsureSystemOverview(UObject* Context, const FStarSystem& StarMap, int32 Resolution);
 
 	void LoadOrCreateUniverse();
 
@@ -406,10 +403,10 @@ public:
 	FString SelectedSectorName;
 
 	UPROPERTY()
-	FS_PlanetMap SelectedSector;
+	FPlanet SelectedSector;
 
 	UPROPERTY()
-	FS_StarMap SelectedStarSystem;
+	FStarSystem SelectedStarSystem;
 
 	UPROPERTY(Transient)
 	TObjectPtr<ASystemOverview> OverviewActor = nullptr;

@@ -14,7 +14,7 @@ group: {
 group: {
   type:   civilian,
   id:     1,
-  name:   "Civilian Infrastructure",
+  name:   "Haiche Civilian Infrastructure",
   intel:  known,
   iff:    0,
   empire_id: 11,

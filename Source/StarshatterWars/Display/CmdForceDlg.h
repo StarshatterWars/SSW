@@ -13,7 +13,10 @@
     OVERVIEW
     ========
     UCmdForceDlg
-    - Unreal port of CmdForceDlg (Operational Command / Forces tab).
+    - Operational Command / Forces tab.
+    - Uses a single hierarchical ListView rooted at the selected combatant force.
+    - Dropdown options are mapped directly to combatants and display:
+      <Empire Name>: <Force Name>
 */
 
 #pragma once
@@ -42,12 +45,6 @@ class UCmpnScreen;
 class UCmdMsgDlg;
 class UCmdDlg;
 class UCmdForceListItem;
-class UCmdMsgDlg;
-
-// ============================================================
-// Forces Tab (Order of Battle)
-// ============================================================
-
 
 UCLASS()
 class STARSHATTERWARS_API UCmdForceDlg : public UBaseScreen
@@ -55,6 +52,7 @@ class STARSHATTERWARS_API UCmdForceDlg : public UBaseScreen
     GENERATED_BODY()
 
 public:
+    FString GetEmpireDisplayName(EEMPIRE_NAME Empire) const;
     UCmdForceDlg(const FObjectInitializer& ObjectInitializer);
 
 protected:
@@ -62,40 +60,23 @@ protected:
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-
-    // ============================================================
-    // Public API
-    // ============================================================
     void SetManager(UCmpnScreen* InManager);
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
     void ShowForceDlg();
     void ExecFrame();
-
     void SetModeAndHighlight(ECOMMAND_MODE InMode);
 
 private:
-    // ============================================================
-    // UI Events
-    // ============================================================
-
     UFUNCTION()
     void OnForceSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
     UFUNCTION()
     void OnTransferClicked();
 
-    CombatGroup* GetTopForceGroup(CombatGroup* Group) const;
-
-    void DumpCombatGroupRecursive(CombatGroup* Group, int32 Depth);
-
     UFUNCTION()
     void OnCombatItemSelected(UObject* ItemObject);
 
 private:
-    // ============================================================
-    // Core Logic
-    // ============================================================
-
     bool IsVisibleCombatant(Combatant* C) const;
     void ShowCombatant(Combatant* C);
     void RebuildCombatListForCurrentCombatant();
@@ -107,14 +88,13 @@ private:
     void PopulateDescForUnit(CombatUnit* Unit);
 
     void UpdateTransferEnabled();
+    void UpdateTransferButtonState();
 
     void PopulateForcesComboBox();
+    FString BuildCombatantDropdownLabel(Combatant* C) const;
+    Combatant* ResolveCombatantFromDropdownLabel(const FString& SelectedItem) const;
 
 private:
-    // ============================================================
-    // Manager / Dependencies
-    // ============================================================
-
     UCmpnScreen* Manager = nullptr;
 
     Starshatter* Stars = nullptr;
@@ -124,12 +104,11 @@ private:
     CombatUnit* CurrentUnit = nullptr;
     Combatant* CurrentCombatant = nullptr;
 
-private:
-    // ============================================================
-    // UI Bindings
-    // ============================================================
+    bool bBlankLine = false;
 
-    // Forces tab controls
+    TMap<FString, Combatant*> DropdownCombatantMap;
+
+private:
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UComboBoxString* ForcesComboBox = nullptr;
 
@@ -140,13 +119,10 @@ private:
     UListView* DescList = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
-    class UButton* TransferButton = nullptr;
+    UButton* TransferButton = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* TransferButtonText = nullptr;
-    // ------------------------------------------------------------
-    // Description panel (RIGHT SIDE)
-    // ------------------------------------------------------------
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupNameText = nullptr;
@@ -159,29 +135,29 @@ private:
 
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupEmpireText = nullptr;
+
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UTextBlock* GroupInfoText = nullptr;
 
 private:
-    // ============================================================
-    // Internal state (tree formatting)
-    // ============================================================
-
-    FString PipeStack;
-    bool bBlankLine = false;
-
     ECOMMAND_MODE Mode = ECOMMAND_MODE::MODE_FORCES;
 
 protected:
     UPROPERTY()
     UCmdDlg* ParentCmdDlg = nullptr;
 
-protected:
     UPROPERTY(meta = (BindWidgetOptional))
     UCmdMsgDlg* CmdMsgDlg = nullptr;
 
     void ShowTransferPopup(const FString& Title, const FString& Message, bool bApproved);
-    void UpdateTransferButtonState();
 
+    /*
+    // ---------------------------------------------------------------------
+    // OLD OOB / PIPE-STACK HELPERS (DISABLED)
+    // ---------------------------------------------------------------------
+    CombatGroup* GetTopForceGroup(CombatGroup* Group) const;
+    void DumpCombatGroupRecursive(CombatGroup* Group, int32 Depth);
+
+    FString PipeStack;
+    */
 };
-

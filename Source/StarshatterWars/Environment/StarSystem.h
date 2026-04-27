@@ -158,7 +158,7 @@ public:
     // -----------------------------------------------------------------
     void HydrateFromEnvironment(
         const FS_Galaxy& GalaxyRow,
-        const FS_StarSystem* OptionalSystemMeta = nullptr);
+        const FStarSystem* OptionalSystemMeta = nullptr);
 
     void ResetHydratedContents();
 
@@ -239,10 +239,10 @@ protected:
 private:
     int32 ToLegacyStarClass(ESPECTRAL_CLASS InClass) const;
 
-    OrbitalBody* HydrateStar(const FS_StarMap& Row);
-    OrbitalBody* HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetMap& Row);
-    OrbitalBody* HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap& Row);
-    OrbitalRegion* HydrateRegion(Orbital* Parent, const FS_RegionMap& Row);
+    OrbitalBody* HydrateStar(const FStarSystem& Row);
+    OrbitalBody* HydratePlanet(OrbitalBody* ParentStar, const FPlanet& Row);
+    OrbitalBody* HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row);
+    OrbitalRegion* HydrateRegion(Orbital* Parent, const FRegion& Row);
 };
 
 // +--------------------------------------------------------------------+

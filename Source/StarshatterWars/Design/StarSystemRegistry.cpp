@@ -25,6 +25,7 @@
 #include "StarshatterEnvironmentSubsystem.h"
 
 TMap<FName, StarSystem*> StarSystemRegistry::SystemsByName;
+TArray<StarSystem*> StarSystemRegistry::OwnedSystems;
 
 // -----------------------------------------------------------------------------
 // Lifecycle
@@ -32,14 +33,32 @@ TMap<FName, StarSystem*> StarSystemRegistry::SystemsByName;
 
 void StarSystemRegistry::Clear(bool bDeleteSystems)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Registry] Clear: OwnedSystems=%d Lookups=%d Delete=%s"),
+        OwnedSystems.Num(),
+        SystemsByName.Num(),
+        bDeleteSystems ? TEXT("true") : TEXT("false"));
+
     if (bDeleteSystems)
     {
-        for (TPair<FName, StarSystem*>& Pair : SystemsByName)
+        for (int32 Index = 0; Index < OwnedSystems.Num(); ++Index)
         {
-            delete Pair.Value;
+            StarSystem*& System = OwnedSystems[Index];
+            if (!System)
+            {
+                continue;
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Registry] Destroying Star System %s"),
+                ANSI_TO_TCHAR(System->GetName()));
+
+            delete System;
+            System = nullptr;
         }
     }
 
+    OwnedSystems.Empty();
     SystemsByName.Empty();
 }
 
@@ -52,6 +71,11 @@ void StarSystemRegistry::RegisterSystem(const FName& RowName, StarSystem* System
     if (!RowName.IsNone() && System)
     {
         SystemsByName.Add(RowName, System);
+
+        if (!OwnedSystems.Contains(System))
+        {
+            OwnedSystems.Add(System);
+        }
     }
 }
 
@@ -60,6 +84,11 @@ void StarSystemRegistry::RegisterSystem(const FString& Name, StarSystem* System)
     if (!Name.IsEmpty() && System)
     {
         SystemsByName.Add(FName(*Name), System);
+
+        if (!OwnedSystems.Contains(System))
+        {
+            OwnedSystems.Add(System);
+        }
     }
 }
 
@@ -118,12 +147,17 @@ bool StarSystemRegistry::Has(const char* Name)
 
 int32 StarSystemRegistry::Num()
 {
-    return SystemsByName.Num();
+    return OwnedSystems.Num();
 }
 
 const TMap<FName, StarSystem*>& StarSystemRegistry::GetAll()
 {
     return SystemsByName;
+}
+
+const TArray<StarSystem*>& StarSystemRegistry::GetOwnedSystems()
+{
+    return OwnedSystems;
 }
 
 // -----------------------------------------------------------------------------
@@ -193,7 +227,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
     System->SetLocation(Row.Location);
     System->SetSequence(ToLegacyStarClass(Row.Class));
 
-    for (const FS_StarMap& StarRow : Row.Stellar)
+    for (const FStarSystem& StarRow : Row.Stellar)
     {
         OrbitalBody* StarBody = BuildStar(System, StarRow, Env);
         if (!StarBody)
@@ -201,12 +235,12 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
             continue;
         }
 
-        for (const FS_RegionMap& RegionRow : StarRow.Region)
+        for (const FRegion& RegionRow : StarRow.Region)
         {
             BuildRegion(System, StarBody, RegionRow, Env);
         }
 
-        for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+        for (const FPlanet& PlanetRow : StarRow.Planet)
         {
             OrbitalBody* PlanetBody = BuildPlanet(System, StarBody, PlanetRow, Env);
             if (!PlanetBody)
@@ -214,12 +248,12 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
                 continue;
             }
 
-            for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+            for (const FRegion& RegionRow : PlanetRow.Region)
             {
                 BuildRegion(System, PlanetBody, RegionRow, Env);
             }
 
-            for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+            for (const FMoon& MoonRow : PlanetRow.Moon)
             {
                 OrbitalBody* MoonBody = BuildMoon(System, PlanetBody, MoonRow, Env);
                 if (!MoonBody)
@@ -227,7 +261,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
                     continue;
                 }
 
-                for (const FS_RegionMap& RegionRow : MoonRow.Region)
+                for (const FRegion& RegionRow : MoonRow.Region)
                 {
                     BuildRegion(System, MoonBody, RegionRow, Env);
                 }
@@ -241,7 +275,7 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
 
 OrbitalBody* StarSystemRegistry::BuildStar(
     StarSystem* System,
-    const FS_StarMap& Row,
+    const FStarSystem& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !Env)
@@ -277,7 +311,7 @@ OrbitalBody* StarSystemRegistry::BuildStar(
 OrbitalBody* StarSystemRegistry::BuildPlanet(
     StarSystem* System,
     OrbitalBody* ParentStar,
-    const FS_PlanetMap& Row,
+    const FPlanet& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !ParentStar || !Env)
@@ -314,7 +348,7 @@ OrbitalBody* StarSystemRegistry::BuildPlanet(
 OrbitalBody* StarSystemRegistry::BuildMoon(
     StarSystem* System,
     OrbitalBody* ParentPlanet,
-    const FS_MoonMap& Row,
+    const FMoon& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !ParentPlanet || !Env)
@@ -348,7 +382,7 @@ OrbitalBody* StarSystemRegistry::BuildMoon(
 OrbitalRegion* StarSystemRegistry::BuildRegion(
     StarSystem* System,
     Orbital* Parent,
-    const FS_RegionMap& Row,
+    const FRegion& Row,
     UStarshatterEnvironmentSubsystem* Env)
 {
     if (!System || !Parent || !Env)

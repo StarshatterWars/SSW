@@ -1,0 +1,70 @@
++====================================================================+
+| Magic 2.0                                                          |
++====================================================================+
+|                                                                    |
+| Windows XP 6.2 (Build 9200)                                        |
+|                                                                    |
+| Registered Owner: Carlos.bott@gmail.com,                           |
+|                                                                    |
+| CPUs Detected: 24    CPU Level: 6.198.2    CPU Speed: 2497         |
+| Intel64 Family 6 Model 198 Stepping 2                              |
+| GenuineIntel                                                       |
+|                                                                    |
+| 2048 MB RAM    4095 MB Max Swap    4095 MB Avail Swap              |
+|                                                                    |
+| DirectX 9 installed.                                               |
+|   DDRAW   10.0.26100.7934 (WinBuild.160101.0800)                   |
+|   D3DIM   10.0.26100.7934 (WinBuild.160101.0800)                   |
+|   DINPUT  10.0.26100.7934 (WinBuild.160101.0800)                   |
+|   DSOUND  10.0.26100.7934 (WinBuild.160101.0800)                   |
+|   DMUSIC  10.0.26100.2 (WinBuild.160101.0800)                      |
+|                                                                    |
+|                                                                    |
++====================================================================+
+
+
+********************************
+*   Direct 3D version 9        *
+********************************
+
+Video DX9 Enumerate Adapters and Devices
+----------------------------------------
+
+Adapter 0. NVIDIA GeForce RTX 5080
+   GUID: d7b71e3e-6f42-11cf-9b53-1e730ec2ed35
+   Device 0 - D3DDEVTYPE_HAL
+      Max Texture Width:    16384
+      Max Texture Height:   16384
+   Device 2 - D3DDEVTYPE_REF
+      Max Texture Width:    8192
+      Max Texture Height:   8192
+
+
+D3DPRESENT_PARAMETERS:
+   BackBufferWidth:       2560
+   BackBufferHeight:      956
+   BackBufferCount:       2
+   BackBufferFormat:      X8R8G8B8
+   Multisample Type:      0
+   Multisample Qual:      0
+   Swap Effect:           1
+   Device Window:         010E102E
+   Windowed:              true
+   Enable Depth/Stencil:  true
+   Depth/Stencil Format:  D24S8
+   Flags:                 00000006
+   Fullscreen Refresh:    0 Hz
+   Present Interval:      IMMEDIATE
+
+   Creating Video Device for HWND = 010e102e
+   Available Texture Memory: 4058 MB
+
+  Created screen object (2560 x 956).
+  Established requested video parameters.
+  ---------------------------------------
+
+ResizeVideo() 2560 x 907
+TexCacheDX9: final used count = 0
+   VideoDX9: shutdown
++====================================================================+
+ END OF LINE.

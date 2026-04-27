@@ -170,18 +170,48 @@ StarSystem::StarSystem(const char* sys_name, FVector l, int iff, int s)
 
 StarSystem::~StarSystem()
 {
-	UE_LOG(LogTemp, Log, TEXT("   Destroying Star System %s"), ANSI_TO_TCHAR((const char*)name));
+	UE_LOG(LogTemp, Log,
+		TEXT("   Destroying Star System %s"),
+		ANSI_TO_TCHAR((const char*)name));
 
 	if (instantiated) {
 		Deactivate();
 		Destroy();
 	}
 
-	bodies.destroy();
-	regions.destroy();
-	all_regions.clear(); // do not destroy these!
+	// SAFE DELETE: bodies (sole owner)
+	{
+		ListIter<OrbitalBody> BodyIter = bodies;
+		while (++BodyIter)
+		{
+			OrbitalBody* Body = BodyIter.value();
+			if (Body)
+			{
+				delete Body;
+			}
+		}
+		bodies.clear();
+	}
+
+	// SAFE DELETE: root regions only
+	{
+		ListIter<OrbitalRegion> RegionIter = regions;
+		while (++RegionIter)
+		{
+			OrbitalRegion* Region = RegionIter.value();
+			if (Region)
+			{
+				delete Region;
+			}
+		}
+		regions.clear();
+	}
+
+	// NON-OWNING CACHE
+	all_regions.clear();
 
 	delete center;
+	center = nullptr;
 }
 
 // +--------------------------------------------------------------------+
@@ -1883,7 +1913,10 @@ Orbital::Orbital(StarSystem* s, const char* n, OrbitalType t, double m, double r
 Orbital::~Orbital()
 {
 	delete rep;
-	regions.destroy();
+	rep = nullptr;
+
+	// DO NOT DELETE regions here (owned by StarSystem)
+	regions.clear();
 }
 
 // +--------------------------------------------------------------------+
@@ -1963,7 +1996,8 @@ OrbitalBody::OrbitalBody(StarSystem* s, const char* n, OrbitalType t, double m, 
 
 OrbitalBody::~OrbitalBody()
 {
-	satellites.destroy();
+	// DO NOT DELETE satellites here
+	satellites.clear();
 }
 
 // +--------------------------------------------------------------------+
@@ -2012,7 +2046,8 @@ OrbitalRegion::OrbitalRegion(StarSystem* s, const char* n, double m, double r, d
 
 OrbitalRegion::~OrbitalRegion()
 {
-	links.destroy();
+	// DO NOT DELETE links here
+	links.clear();
 }
 
 void StarSystem::SetSimulationTime(double t)
@@ -2141,8 +2176,35 @@ void StarSystem::ResetHydratedContents()
 		Destroy();
 	}
 
-	bodies.destroy();
-	regions.destroy();
+	// SAFE DELETE: bodies
+	{
+		ListIter<OrbitalBody> BodyIter = bodies;
+		while (++BodyIter)
+		{
+			OrbitalBody* Body = BodyIter.value();
+			if (Body)
+			{
+				delete Body;
+			}
+		}
+		bodies.clear();
+	}
+
+	// SAFE DELETE: root regions only
+	{
+		ListIter<OrbitalRegion> RegionIter = regions;
+		while (++RegionIter)
+		{
+			OrbitalRegion* Region = RegionIter.value();
+			if (Region)
+			{
+				delete Region;
+			}
+		}
+		regions.clear();
+	}
+
+	// NON-OWNING CACHE
 	all_regions.clear();
 }
 
@@ -2166,7 +2228,7 @@ int32 StarSystem::ToLegacyStarClass(ESPECTRAL_CLASS InClass) const
 
 void StarSystem::HydrateFromEnvironment(
 	const FS_Galaxy& GalaxyRow,
-	const FS_StarSystem* OptionalSystemMeta)
+	const FStarSystem* OptionalSystemMeta)
 {
 	ResetHydratedContents();
 
@@ -2175,17 +2237,7 @@ void StarSystem::HydrateFromEnvironment(
 	SetAffiliation(GalaxyRow.Iff);
 	SetSequence(ToLegacyStarClass(GalaxyRow.Class));
 
-	if (OptionalSystemMeta)
-	{
-		SetSkyCounts(OptionalSystemMeta->SkyStars, OptionalSystemMeta->SkyDust);
-		SetSkyTextures(
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyPolyStars),
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyNebula),
-			TCHAR_TO_ANSI(*OptionalSystemMeta->StarSky.SkyHaze));
-		SetAmbientColor(OptionalSystemMeta->AmbientColor);
-	}
-
-	for (const FS_StarMap& StarRow : GalaxyRow.Stellar)
+	for (const FStarSystem& StarRow : GalaxyRow.Stellar)
 	{
 		OrbitalBody* StarBody = HydrateStar(StarRow);
 		if (!StarBody)
@@ -2193,12 +2245,12 @@ void StarSystem::HydrateFromEnvironment(
 			continue;
 		}
 
-		for (const FS_RegionMap& RegionRow : StarRow.Region)
+		for (const FRegion& RegionRow : StarRow.Region)
 		{
 			HydrateRegion(StarBody, RegionRow);
 		}
 
-		for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+		for (const FPlanet& PlanetRow : StarRow.Planet)
 		{
 			OrbitalBody* PlanetBody = HydratePlanet(StarBody, PlanetRow);
 			if (!PlanetBody)
@@ -2206,12 +2258,12 @@ void StarSystem::HydrateFromEnvironment(
 				continue;
 			}
 
-			for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+			for (const FRegion& RegionRow : PlanetRow.Region)
 			{
 				HydrateRegion(PlanetBody, RegionRow);
 			}
 
-			for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+			for (const FMoon& MoonRow : PlanetRow.Moon)
 			{
 				OrbitalBody* MoonBody = HydrateMoon(PlanetBody, MoonRow);
 				if (!MoonBody)
@@ -2219,7 +2271,7 @@ void StarSystem::HydrateFromEnvironment(
 					continue;
 				}
 
-				for (const FS_RegionMap& RegionRow : MoonRow.Region)
+				for (const FRegion& RegionRow : MoonRow.Region)
 				{
 					HydrateRegion(MoonBody, RegionRow);
 				}
@@ -2230,7 +2282,7 @@ void StarSystem::HydrateFromEnvironment(
 	RecalculateRadius();
 }
 
-OrbitalBody* StarSystem::HydrateStar(const FS_StarMap& Row)
+OrbitalBody* StarSystem::HydrateStar(const FStarSystem& Row)
 {
 	OrbitalBody* StarBody = new OrbitalBody(
 		this,
@@ -2255,7 +2307,7 @@ OrbitalBody* StarSystem::HydrateStar(const FS_StarMap& Row)
 	return StarBody;
 }
 
-OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetMap& Row)
+OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FPlanet& Row)
 {
 	if (!ParentStar)
 	{
@@ -2287,7 +2339,7 @@ OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FS_PlanetM
 	return PlanetBody;
 }
 
-OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap& Row)
+OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row)
 {
 	if (!ParentPlanet)
 	{
@@ -2315,7 +2367,7 @@ OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FS_MoonMap
 	return MoonBody;
 }
 
-OrbitalRegion* StarSystem::HydrateRegion(Orbital* Parent, const FS_RegionMap& Row)
+OrbitalRegion* StarSystem::HydrateRegion(Orbital* Parent, const FRegion& Row)
 {
 	if (!Parent)
 	{

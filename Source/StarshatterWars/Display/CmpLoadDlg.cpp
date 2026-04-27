@@ -10,7 +10,7 @@
     ========
     Campaign loading dialog (modernized).
 
-    This is now a NON-BLOCKING VISUAL LAYER used to:
+    This is a NON-BLOCKING VISUAL LAYER used to:
     - mask level streaming
     - hide shader/material pop-in
     - present campaign branding
@@ -94,7 +94,13 @@ void UCmpLoadDlg::Show()
     ApplyStaticArt();
     ApplyTitleFont();
     ApplyCampaignTitleCard();
-    ApplyInitialVisualState();
+
+    // Do not stomp manual stage pushed in by UCmpnScreen.
+    if (!bUseManualStage)
+    {
+        ApplyInitialVisualState();
+    }
+
     RefreshLoadState();
 
     ShowTimeMs = GetRealTimeMs();
@@ -114,18 +120,12 @@ void UCmpLoadDlg::Hide()
 void UCmpLoadDlg::ExecFrame(double DeltaTime)
 {
     (void)DeltaTime;
-
     RefreshLoadState();
-
-    // Visual-only overlay now.
-    // Transition flow is controlled by UCmpnScreen.
 }
 
 bool UCmpLoadDlg::IsDone() const
 {
     const uint32 Now = GetRealTimeMs();
-
-    // Optional cosmetic minimum display time only:
     return (Now - ShowTimeMs) >= 1000u;
 }
 
@@ -152,6 +152,18 @@ void UCmpLoadDlg::BuildBackgroundLayer()
         return;
     }
 
+    UBorder* BlackBackdrop = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("BlackBackdrop"));
+    BlackBackdrop->SetBrushColor(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f));
+
+    if (UCanvasPanelSlot* BackdropSlot = RootCanvas->AddChildToCanvas(BlackBackdrop))
+    {
+        BackdropSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        BackdropSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 0.f));
+        BackdropSlot->SetAlignment(FVector2D(0.f, 0.f));
+        BackdropSlot->SetAutoSize(false);
+        BackdropSlot->SetZOrder(0);
+    }
+
     BackgroundImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("BackgroundImage"));
 
     if (UCanvasPanelSlot* BgSlot = RootCanvas->AddChildToCanvas(BackgroundImage))
@@ -160,7 +172,7 @@ void UCmpLoadDlg::BuildBackgroundLayer()
         BgSlot->SetOffsets(FMargin(0.f, 0.f, 0.f, 0.f));
         BgSlot->SetAlignment(FVector2D(0.f, 0.f));
         BgSlot->SetAutoSize(false);
-        BgSlot->SetZOrder(0);
+        BgSlot->SetZOrder(1);
     }
 }
 
@@ -355,7 +367,6 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
         return;
     }
 
-    // Do not override a title that was explicitly pushed in from CampaignSelectDlg.
     const FString CurrentTitle = CenterTitleText->GetText().ToString();
 
     if (CurrentTitle.IsEmpty() || CurrentTitle.Equals(TEXT("CAMPAIGN"), ESearchCase::IgnoreCase))
@@ -363,8 +374,7 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
         Campaign* CampaignObj = Campaign::GetCampaign();
         if (CampaignObj && CampaignObj->GetName())
         {
-            CenterTitleText->SetText(
-                FText::FromString(UTF8_TO_TCHAR(CampaignObj->GetName())));
+            CenterTitleText->SetText(FText::FromString(UTF8_TO_TCHAR(CampaignObj->GetName())));
         }
         else
         {
@@ -386,25 +396,43 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
 
 void UCmpLoadDlg::ApplyInitialVisualState()
 {
+    ManualStageText = TEXT("LOADING...");
+    ManualStagePercent = 0.0f;
+
     if (LblActivity)
     {
-        LblActivity->SetText(FText::FromString(TEXT("LOADING...")));
+        LblActivity->SetText(FText::FromString(ManualStageText));
     }
 
     if (ProgressBar)
     {
-        ProgressBar->SetPercent(0.0f);
+        ProgressBar->SetPercent(ManualStagePercent);
     }
 }
 
 void UCmpLoadDlg::RefreshLoadState()
 {
+    if (bUseManualStage)
+    {
+        if (LblActivity)
+        {
+            LblActivity->SetText(FText::FromString(ManualStageText));
+        }
+
+        if (ProgressBar)
+        {
+            ProgressBar->SetPercent(ManualStagePercent);
+        }
+
+        return;
+    }
+
     Starshatter* Stars = Starshatter::GetInstance();
     if (!Stars)
     {
         if (LblActivity)
         {
-            LblActivity->SetText(FText::FromString(TEXT("INITIALIZING...")));
+            LblActivity->SetText(FText::FromString(TEXT("LOADING...")));
         }
 
         if (ProgressBar)
@@ -504,4 +532,21 @@ void UCmpLoadDlg::SetCampaignName(const FString& InName)
     }
 
     UE_LOG(LogTemp, Log, TEXT("[CmpLoadDlg] CampaignName set to: %s"), *InName);
+}
+
+void UCmpLoadDlg::SetLoadingStage(const FString& InStageText, float InPercent)
+{
+    bUseManualStage = true;
+    ManualStageText = InStageText;
+    ManualStagePercent = FMath::Clamp(InPercent, 0.0f, 1.0f);
+
+    RefreshLoadState();
+}
+
+void UCmpLoadDlg::ClearManualLoadingStage()
+{
+    bUseManualStage = false;
+    ManualStageText = TEXT("LOADING...");
+    ManualStagePercent = 0.0f;
+    RefreshLoadState();
 }

@@ -26,6 +26,8 @@
 #include "UObject/Object.h"
 #include "MissionNavObjectListObject.generated.h"
 
+class MissionElement;
+
 UENUM(BlueprintType)
 enum class EMissionNavObjectType : uint8
 {
@@ -60,6 +62,9 @@ public:
     EMissionNavObjectType GetObjectType() const { return ObjectType; }
     int32 GetIndex() const { return Index; }
 
+    void SetSourceMissionElement(MissionElement* InElement) { SourceMissionElement = InElement; }
+    MissionElement* GetSourceMissionElement() const { return SourceMissionElement; }
+
 private:
     UPROPERTY()
     EMissionNavObjectType ObjectType = EMissionNavObjectType::None;
@@ -75,4 +80,7 @@ private:
 
     UPROPERTY()
     FString DetailText;
+
+    MissionElement* SourceMissionElement = nullptr;
+
 };

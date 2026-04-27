@@ -226,9 +226,6 @@ public:
     // =====================================================================
 
     void InitializeCampaignData();
-    void InitializeCombatRoster();
-
-    void LoadCombatRoster(const char* InFilename, int32 Team);
 
     const FShipDesign* ResolveDesign(const FString& DesignName) const;
     void ApplyDesignToUnit(CombatUnit* Unit, const FString& DesignName);

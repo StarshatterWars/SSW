@@ -15,11 +15,11 @@
     normalizing, and caching all static environment data required at runtime:
 
         - Galaxy definitions (FS_Galaxy)
-        - Star systems (FS_StarSystem)
-        - Stars (FS_Star)
-        - Planets (FS_Planet)
-        - Moons (FS_Moon)
-        - Regions (FS_Region)
+        - Star systems (FStarSystem)
+        - Stars (FStarystem)
+        - Planets (FPlanet)
+        - Moons (FMoon)
+        - Regions (FRegion)
         - Terrain regions (FS_TerrainRegion)
         - Campaign zones (FS_CampaignZone)
 
@@ -114,6 +114,12 @@ public:
 
     const TArray<StarSystem*>& GetRuntimeStarSystems() const { return RuntimeStarSystems; }
 
+    const FS_Galaxy* FindGalaxyByName(const FString& InName) const;
+    const FStarSystem* FindStarSystemByName(const FString& InName) const;
+
+    const FPlanet* FindPlanetMapByName(const FString& Name) const;
+    const FMoon* FindMoonMapByName(const FString& Name) const;
+
     // -----------------------------------------------------------------
     // Primary entry point
     // -----------------------------------------------------------------
@@ -122,16 +128,16 @@ public:
     // ===================================================================== 
     // Runtime Simulation Time System 
     // ===================================================================== 
-    void InitSimulationBaseTime(); 
-    
-    void RegisterStarSystem(StarSystem* System); 
- 
+    void InitSimulationBaseTime();
+
+    void RegisterStarSystem(StarSystem* System);
+
     void RegisterStar(OrbitalBody* Body);
     void RegisterPlanet(OrbitalBody* Body);
     void RegisterMoon(OrbitalBody* Body);
     void RegisterRegion(OrbitalRegion* Region);
-    
-    double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; } 
+
+    double GetEnvironmentBaseTime() const { return EnvironmentBaseTime; }
     bool IsBaseTimeInitialized() const { return bBaseTimeInitialized; }
     void TickEnvironmentTime(double DeltaSeconds);
 
@@ -143,7 +149,7 @@ public:
     double GetSimulationClockSeconds() const { return (double)SimulationClockMs / 1000.0; }
 
     EGameMode GetGameMode() { return game_mode; }
-	void      SetGameMode(EGameMode mode) { game_mode = mode; }
+    void      SetGameMode(EGameMode mode) { game_mode = mode; }
 
     // =====================================================================
     // Project path / utility
@@ -158,9 +164,6 @@ public:
     // -----------------------------------------------------------------
     void LoadGalaxyMap();
 
-    void ParseStar(TermStruct* Val, const char* Fn);
-    void ParsePlanet(TermStruct* Val, const char* Fn);
-    void ParseMoon(TermStruct* Val, const char* Fn);
     void ParseRegion(TermStruct* Val, const char* Fn);
 
     void ParseStarMap(TermStruct* Val, const char* Fn);
@@ -168,12 +171,6 @@ public:
     void ParseMoonMap(TermStruct* Val, const char* Fn);
 
     void ParseTerrain(TermStruct* Val, const char* Fn);
-
-    // -----------------------------------------------------------------
-    // Star systems
-    // -----------------------------------------------------------------
-    void LoadStarsystems();
-    void ParseStarSystem(const char* FileName);
 
     // -----------------------------------------------------------------
     // DataTable creation and export
@@ -189,6 +186,12 @@ public:
     void Clear();
 
     bool IsLoaded() const { return bLoaded; }
+
+    UPROPERTY()
+    TMap<FString, FPlanet> PlanetMapByName;
+
+    UPROPERTY()
+    TMap<FString, FMoon> MoonMapByName;
 
     // -----------------------------------------------------------------
     // DataTable accessors
@@ -208,19 +211,19 @@ public:
     TArray<FS_Galaxy> GalaxyDataArray;
 
     UPROPERTY()
-    TArray<FS_StarSystem> StarSystemDataArray;
+    TArray<FStarSystem> StarSystemDataArray;
 
     UPROPERTY()
-    TArray<FS_Star> StarDataArray;
+    TArray<FStarSystem> StarDataArray;
 
     UPROPERTY()
-    TArray<FS_Planet> PlanetDataArray;
+    TArray<FPlanet> PlanetDataArray;
 
     UPROPERTY()
-    TArray<FS_Moon> MoonDataArray;
+    TArray<FMoon> MoonDataArray;
 
     UPROPERTY()
-    TArray<FS_Region> RegionDataArray;
+    TArray<FRegion> RegionDataArray;
 
     UPROPERTY()
     TArray<FS_TerrainRegion> TerrainRegionsArray;
@@ -255,18 +258,18 @@ protected:
     // Working row scratch
     // -----------------------------------------------------------------
     FS_Galaxy         GalaxyData;
-    FS_StarSystem     StarSystemData;
-    FS_Star           StarData;
-    FS_Planet         PlanetData;
-    FS_Moon           MoonData;
-    FS_Region         RegionData;
+    FStarSystem       StarSystemData;
+    FStarSystem       StarData;
+    FPlanet           PlanetData;
+    FMoon             MoonData;
+    FRegion           RegionData;
     FS_TerrainRegion  TerrainRegionData;
 
     // Map format arrays
-    TArray<FS_StarMap>   StarMapArray;
-    TArray<FS_PlanetMap> PlanetMapArray;
-    TArray<FS_MoonMap>   MoonMapArray;
-    TArray<FS_RegionMap> RegionMapArray;
+    TArray<FStarSystem>  StarMapArray;
+    TArray<FPlanet>      PlanetMapArray;
+    TArray<FMoon>        MoonMapArray;
+    TArray<FRegion>      RegionMapArray;
 
     // Paths
     FString ProjectPath;
@@ -275,8 +278,8 @@ protected:
     // ===================================================================== 
     // Runtime Simulation Time System 
     // ===================================================================== 
-    
-    bool bBaseTimeInitialized = false; 
+
+    bool bBaseTimeInitialized = false;
     double EnvironmentBaseTime = 0.0;
     int64 SimulationClockMs = 0;
 
@@ -293,15 +296,15 @@ private:
     // ==================================================================== =
     // DT -> runtime hydration
     // =====================================================================
-    void HydrateAllFromTables();
+    bool HydrateAllFromTables();
 
-    void ReadGalaxyDataTable();
-    void BuildStarSystemArrayFromGalaxy();
-    void ReadStarsTable();
-    void ReadPlanetsTable();
-    void ReadMoonsTable();
-    void ReadRegionsTable();
-    void ReadTerrainRegionsTable();
+    bool ReadGalaxyDataTable();
+    bool BuildStarSystemArrayFromGalaxy();
+    bool ReadStarsTable();
+    bool ReadPlanetsTable();
+    bool ReadMoonsTable();
+    bool ReadRegionsTable();
+    bool ReadTerrainRegionsTable();
 
     void BuildEnvironmentCaches();
 
@@ -314,19 +317,19 @@ private:
     TMap<FString, FS_Galaxy> GalaxyByName;
 
     UPROPERTY()
-    TMap<FString, FS_StarSystem> StarSystemByName;
+    TMap<FString, FStarSystem> StarSystemByName;
 
     UPROPERTY()
-    TMap<FString, FS_Star> StarByName;
+    TMap<FString, FStarSystem> StarByName;
 
     UPROPERTY()
-    TMap<FString, FS_Planet> PlanetByName;
+    TMap<FString, FPlanet> PlanetByName;
 
     UPROPERTY()
-    TMap<FString, FS_Moon> MoonByName;
+    TMap<FString, FMoon> MoonByName;
 
     UPROPERTY()
-    TMap<FString, FS_Region> RegionByName;
+    TMap<FString, FRegion> RegionByName;
 
     UPROPERTY()
     TMap<FString, FS_TerrainRegion> TerrainRegionByName;

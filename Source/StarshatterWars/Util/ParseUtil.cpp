@@ -61,6 +61,19 @@ bool GetDefVec(Vec3& dst, TermDef* def, const char* file)
 	return false;
 }
 
+bool GetDefVector(FVector& dst, TermDef* def, const char* file)
+{
+	Vec3 Temp;
+
+	if (!GetDefVec(Temp, def, file))
+	{
+		return false;
+	}
+
+	dst = FVector(Temp.X, Temp.Y, Temp.Z);
+	return true;
+}
+
 bool GetDefRect(Rect& dst, TermDef* def, const char* file)
 {
 	if (!def || !def->term()) {

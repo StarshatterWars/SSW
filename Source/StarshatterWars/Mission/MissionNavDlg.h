@@ -79,6 +79,7 @@ class STARSHATTERWARS_API UMissionNavDlg : public UBaseScreen
     GENERATED_BODY()
 
 public:
+    FString NormalizeMissionElementName(const FString& InName) const;
     UMissionNavDlg(const FObjectInitializer& ObjectInitializer);
 
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
@@ -189,6 +190,8 @@ private:
     Mission* MissionPtr = nullptr;
     MissionInfo* MissionInfoPtr = nullptr;
     MapView* MapViewPtr = nullptr;
+    
+    MissionElement* SourceElement;
 
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* RuntimeHost = nullptr;

@@ -56,7 +56,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Solus"
-   loc:       (-200e3, -100e3, 0)
+   loc:       (-200000, -120000, 0)
 
    objective: { cmd: Vector, tgt: "Trellis-Solus" }
 }
@@ -72,7 +72,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Solus"
-   loc:       (150e3, -180e3, 0)
+   loc:        (120000, -200000, 0)
 
    objective: { cmd: Vector, tgt: "Jalah-Solus" }
 }
@@ -88,7 +88,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Jalah"
-   loc:       (0, 0, 0)
+   loc:       (-180000, -100000, 0)
 
    objective: { cmd: Vector, tgt: "Solus-Jalah" }
 }
@@ -104,11 +104,11 @@ element: {
    iff:       0
    playable:  false
    region:    "Jalah"
-   loc:       (120e3, -200e3, 0)
+   loc:       (100000, -180000, 0)
 
    objective: { cmd: Vector, tgt: "Trellis-Jalah" }
 }
-
+ 
 element: {
    name:      "Trellis-Solus"
    design:    "Farcaster"
@@ -120,7 +120,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-   loc:       (-100e3, -150e3, 0)
+   loc:       (-200000, -120000, 0)
 
    objective: { cmd: Vector, tgt: "Solus-Trellis" }
 }
@@ -136,7 +136,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-   loc:       (50e3, -100e3, 0)
+   loc:       (120000, -200000, 0)
 
    objective: { cmd: Vector, tgt: "Jalah-Trellis" }
 }
@@ -152,7 +152,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-   loc:       (0, 0, 0)
+             loc: (0, -150000, 0)
 }
 
 element: {
@@ -170,6 +170,7 @@ element: {
 
    navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 1000, rgn: "Trellis" }
 }
+
 
 element: {
    name:      "Kitts"
@@ -218,82 +219,114 @@ element: {
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 
+event: { type: Camera, time: 0.01, param: 3, target: "Solus", vec: (0,0,8e5) }
+event: { type: Camera, time: 0.01, param: 5, vec: (-0.15,0.01,0.02) }
+
 event: { type: Hold, param: 20, event_ship: Kitts }
 event: { type: Hold, param: 20, event_ship: Lovo }
 
-event: { type: Display, image: "Black", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
-event: { type: Display, image: "News",  color: 0xffffffff, fade: (1,4,1), rect: (0,0,-512,-128) }
-
-event: { type: Camera, param: 3, target: "body:Solus", vec: (0,0,1e7) }
-event: { type: Camera, param: 5, vec: (0.12,0.01,0.02) }
+event: { type: Display, time: 0, image: "News",  fade: (1, 4, 1)  }
 
 event: { type: Display, time: 5, message: "Solus System" }
 event: { type: Display, message: "Capitol" }
 
-event: { type: Messasge, time: 0.27, sound: News_01_Campaign_Start,
+event: { type: Message, time: 0.27, sound: News_01_Campaign_Start,
          caption: "SOLUS - The Provisional Security Directorate\nof the Independent System of Solus" }
 
-event: { type: Messasge, time: 4.30,
+event: { type: Message, time: 4.30,
          caption: "formally requested military assistance\nfrom Terellian Alliance Force Command this morning." }
 
-event: { type: Camera, time: 9.00, param: (6,15), target: "Blockade Runner" }
+event: 
+{
+    type: Camera,
+    time: 9.00,
+    param: (6,15),
+    rotator: (225, 25, 0),
+    offset: (-350,0,800),
+    target: "Blockade Runner" 
+}
 
 event: { type: Display, time: 9.00, message: "Trellis Sector" }
 event: { type: Display, time: 9.00, message: "Blockade Runner" }
 
-event: { type: Messasge, time: 9.00,
+event: { type: Message, time: 9.00,
          caption: "Special couriers ran the Trellis blockade\nto deliver the message" }
 
 event: { type: Messasge, time: 12.56,
          caption: "to the Force outpost\nin the nearby Janek system." }
 
-event: { type: Camera, time: 16.18, param: (6,20), target: "Kitts" }
+event: 
+{
+    type: Camera,
+    time: 16.18,
+    param: (6,20),
+    rotator: (225, 80, 0),
+    offset: (0,0,1500),
+    target: "Kitts"
+}
 
 event: { type: Display, time: 16.18, message: "Dantari Separatists" }
 event: { type: Display, time: 16.18, message: "Destroyer Squadron 'Kitts'" }
 
-event: { type: Messasge, time: 16.18,
+event: { type: Message, time: 16.18,
          caption: "The official government of this system\nhas been cut off by the illegal blockade" }
 
-event: { type: Messasge, time: 19.64,
+event: { type: Message, time: 19.64,
          caption: "of the Trellis Farcaster,\" said\nAdministrator Lars of the Directorate." }
 
-event: { type: Messasge, time: 23.75,
+event: 
+{
+    type: Camera,
+    time: 19.64,
+    param: (6,15),
+    rotator: (90, 0, 0),
+    offset: (0, 0, -2000),
+    target: "Trellis-Solus" 
+}
+
+event: { type: Message, time: 23.75,
          caption: "\"We have suffered a great deal of damage\nin the fighting," }
 
-event: { type: Messasge, time: 26.63,
+event: { type: Message, time: 26.63,
          caption: "and we need help to reestablish\nbasic services here.\"" }
 
-event: { type: Camera, time: 30.00, param: 3, target: "body:Trellis", vec: (0,0,1e8) }
+event: { type: Camera, time: 30.00, param: 3, target: "Trellis", vec: (0,0,1e6) }
 event: { type: Camera, time: 30.00, param: 5, vec: (-0.15,0.01,0.02) }
 
 event: { type: Display, time: 30.00, message: "Trellis" }
 
-event: { type: Messasge, time: 30.00,
+event: { type: Message, time: 30.00,
          caption: "Solus has been ripped nearly in two\nby the bloody civil war" }
 
-event: { type: Messasge, time: 33.83,
+event: { type: Message, time: 33.83,
          caption: "that erupted between the Loyalist\nand Separatist factions of the system government." }
 
-event: { type: Camera, time: 37.85, param: 3, target: "body:Jalah", vec: (0,0,8e7) }
+event: { type: Camera, time: 37.85, param: 3, target: "Jalah", vec: (0,0,8e5) }
 event: { type: Camera, time: 37.85, param: 5, vec: (0.12,0.01,0.02) }
 
 event: { type: Display, time: 37.85, message: "Jalah" }
 
-event: { type: Messasge, time: 37.85,
+event: { type: Message, time: 37.85,
          caption: "Dantari Separatists, under the leadership\nof Senator Masil Gannet," }
 
-event: { type: Messasge, time: 41.60,
+event: { type: Message, time: 41.60,
          caption: "after months of pressing for an official alliance\nwith the Hegemony Prefecture of Renser," }
 
-event: { type: Messasge, time: 46.55,
+event: { type: Message, time: 46.55,
          caption: "have seized much of the Solus star fleet\nand taken control" }
 
-event: { type: Messasge, time: 49.49,
+event: { type: Message, time: 49.49,
          caption: "of the outer worlds\nof Trellis and Jalah." }
 
-event: { type: Camera, time: 52.55, param: 3, target: "Tal Vesta Stellar Observatory", vec: (0,0,2e3) }
-event: { type: Camera, time: 52.55, param: 5, vec: (-0.13,0.01,0.02) }
+event: 
+{
+    type: Camera,
+    time: 52.55,
+    param: (6,15),
+    rotator: (0, 90, 90),
+    offset: (0, 0, -2000),
+    target: "Tal Vesta Stellar Observatory" 
+}
 
 event: { type: Display, time: 52.55, message: "Meridian Sector" }
 event: { type: Display, time: 52.55, message: "Tal Vesta Stellar Observatory" }
@@ -301,31 +334,31 @@ event: { type: Display, time: 52.55, message: "Tal Vesta Stellar Observatory" }
 event: { type: Messasge, time: 52.55,
          caption: "The Loyalist faction, although still\ntechnically in control of the official government," }
 
-event: { type: Messasge, time: 56.50,
+event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
-
-event: { type: Messasge, time: 60.50,
+       
+event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 
-event: { type: Messasge, time: 63.85,
+event: { type: Message, time: 63.85,
          caption: "on the many Alliance citizens\nin the Solus system." }
 
-event: { type: Camera, time: 68.50, param: 3, target: "body:Solus", vec: (60,0,1e7) }
+event: { type: Camera, time: 68.50, param: 3, target: "Meridian", vec: (60,0,1e5) }
 event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 
-event: { type: Messasge, time: 68.50,
+event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
 
-event: { type: Messasge, time: 72.55,
+event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }
 
 event: { type: Messasge, time: 77.50,
          caption: "An estimated 375,000 Terellians\nare trapped by the blockade." }
 
-event: { type: Messasge, time: 81.53,
+event: { type: Message, time: 81.53,
          caption: "So far they have been unable to convince\nthe Dantari Separatists" }
 
-event: { type: Messasge, time: 85.50,
+event: { type: Message, time: 85.50,
          caption: "to grant them safe passage\nback to the main Alliance systems." }
 
 event: { type: EndScene, time: 89.50, message: "Briefing End" }

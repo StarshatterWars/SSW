@@ -23,7 +23,20 @@
 
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
+#include "Components/Image.h"
 #include "Components/SizeBox.h"
+
+UMissionPackageLVElement::UMissionPackageLVElement(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+{
+    static ConstructorHelpers::FObjectFinder<UTexture2D> ArrowTex(
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/64x64/T_Arrow_R_64x64.T_Arrow_R_64x64"));
+
+    if (ArrowTex.Succeeded())
+    {
+        PlayerArrowTexture = ArrowTex.Object;
+    }
+}
 
 void UMissionPackageLVElement::NativeConstruct()
 {
@@ -37,13 +50,17 @@ void UMissionPackageLVElement::NativeConstruct()
 void UMissionPackageLVElement::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
     PackageItem = Cast<UMissionPackageListObject>(ListItemObject);
+
     if (!PackageItem)
     {
-        bRowSelected = false;
+        if (MarkerImage)
+        {
+            MarkerImage->SetVisibility(ESlateVisibility::Collapsed);
+        }
 
         if (MarkerText)
         {
-            MarkerText->SetText(FText::GetEmpty());
+            MarkerText->SetVisibility(ESlateVisibility::Collapsed);
         }
 
         if (ElementNameText)
@@ -61,34 +78,54 @@ void UMissionPackageLVElement::NativeOnListItemObjectSet(UObject* ListItemObject
             PackageText->SetText(FText::GetEmpty());
         }
 
-        ApplySelectionVisual();
         return;
     }
 
+    // ---------------------------------------
+    //  REPLACE TEXT MARKER WITH TEXTURE
+    // ---------------------------------------
+
     if (MarkerText)
     {
-        MarkerText->SetText(FText::FromString(PackageItem->GetMarker()));
-        MarkerText->SetJustification(ETextJustify::Left);
+        MarkerText->SetVisibility(ESlateVisibility::Collapsed);
     }
+
+    if (MarkerImage)
+    {
+        const bool bIsPlayer = !PackageItem->GetMarker().IsEmpty();
+
+        if (bIsPlayer && PlayerArrowTexture)
+        {
+            MarkerImage->SetBrushFromTexture(PlayerArrowTexture);
+            MarkerImage->SetVisibility(ESlateVisibility::Visible);
+            MarkerImage->SetColorAndOpacity(FLinearColor(0.2f, 0.6f, 1.0f));
+        }
+        else
+        {
+            MarkerImage->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+
+    // ---------------------------------------
+    // NORMAL TEXT BINDING
+    // ---------------------------------------
 
     if (ElementNameText)
     {
         ElementNameText->SetText(FText::FromString(PackageItem->GetElementName()));
-        ElementNameText->SetJustification(ETextJustify::Left);
     }
 
     if (RoleText)
     {
         RoleText->SetText(FText::FromString(PackageItem->GetRoleText()));
-        RoleText->SetJustification(ETextJustify::Left);
     }
 
     if (PackageText)
     {
         PackageText->SetText(FText::FromString(PackageItem->GetPackageText()));
-        PackageText->SetJustification(ETextJustify::Left);
     }
 
+    ApplyTextRules();
     ApplySelectionVisual();
 }
 
@@ -104,6 +141,8 @@ void UMissionPackageLVElement::NativeOnEntryReleased()
 {
     IUserObjectListEntry::NativeOnEntryReleased();
 
+   
+
     PackageItem = nullptr;
     bRowSelected = false;
 
@@ -111,6 +150,11 @@ void UMissionPackageLVElement::NativeOnEntryReleased()
     {
         MarkerText->SetText(FText::GetEmpty());
     }
+    if (MarkerImage)
+    {
+        MarkerImage->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
 
     if (ElementNameText)
     {

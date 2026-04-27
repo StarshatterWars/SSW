@@ -66,6 +66,7 @@ public:
     static int32 Num();
 
     static const TMap<FName, StarSystem*>& GetAll();
+    static const TArray<StarSystem*>& GetOwnedSystems();
 
 private:
 
@@ -80,27 +81,28 @@ private:
 
     static OrbitalBody* BuildStar(
         StarSystem* System,
-        const FS_StarMap& Row,
+        const FStarSystem& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalBody* BuildPlanet(
         StarSystem* System,
         OrbitalBody* ParentStar,
-        const FS_PlanetMap& Row,
+        const FPlanet& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalBody* BuildMoon(
         StarSystem* System,
         OrbitalBody* ParentPlanet,
-        const FS_MoonMap& Row,
+        const FMoon& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
     static OrbitalRegion* BuildRegion(
         StarSystem* System,
         Orbital* Parent,
-        const FS_RegionMap& Row,
+        const FRegion& Row,
         UStarshatterEnvironmentSubsystem* Env);
 
 private:
     static TMap<FName, StarSystem*> SystemsByName;
+    static TArray<StarSystem*> OwnedSystems;
 };

@@ -20,10 +20,12 @@
 #include "Starshatter.h"
 
 #include "Game.h"
+#include "List.h"
 
 #include "StarshatterEnvironmentSubsystem.h"
 #include "GameStructs.h"
 #include "GameStructs_System.h"
+#include "StarSystemRegistry.h"
 
 #include "Math/Vector.h"
 #include "Logging/LogMacros.h"
@@ -62,7 +64,7 @@ static bool RegionAlreadyExists(StarSystem* System, const FString& RegionName)
 
 static OrbitalRegion* BuildRegionFromTable(
     StarSystem* System,
-    const FS_Region& RegionRow)
+    const FRegion& RegionRow)
 {
     if (!System || RegionRow.Name.IsEmpty())
     {
@@ -114,7 +116,7 @@ static OrbitalRegion* BuildRegionFromTable(
 
 static OrbitalRegion* BuildRegionFromMap(
     StarSystem* System,
-    const FS_RegionMap& RegionRow,
+    const FRegion& RegionRow,
     Orbital* Parent)
 {
     if (!System)
@@ -158,7 +160,7 @@ static OrbitalRegion* BuildRegionFromMap(
 
 static OrbitalBody* BuildMoonFromMap(
     StarSystem* System,
-    const FS_MoonMap& MoonRow,
+    const FMoon& MoonRow,
     OrbitalBody* ParentPlanet)
 {
     if (!System || !ParentPlanet)
@@ -190,7 +192,7 @@ static OrbitalBody* BuildMoonFromMap(
 
     ParentPlanet->AddSatellite(Moon);
 
-    for (const FS_RegionMap& RegionRow : MoonRow.Region)
+    for (const FRegion& RegionRow : MoonRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, Moon);
     }
@@ -200,7 +202,7 @@ static OrbitalBody* BuildMoonFromMap(
 
 static OrbitalBody* BuildPlanetFromMap(
     StarSystem* System,
-    const FS_PlanetMap& PlanetRow,
+    const FPlanet& PlanetRow,
     OrbitalBody* ParentStar)
 {
     if (!System || !ParentStar)
@@ -235,12 +237,12 @@ static OrbitalBody* BuildPlanetFromMap(
 
     ParentStar->AddSatellite(Planet);
 
-    for (const FS_RegionMap& RegionRow : PlanetRow.Region)
+    for (const FRegion& RegionRow : PlanetRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, Planet);
     }
 
-    for (const FS_MoonMap& MoonRow : PlanetRow.Moon)
+    for (const FMoon& MoonRow : PlanetRow.Moon)
     {
         BuildMoonFromMap(System, MoonRow, Planet);
     }
@@ -250,7 +252,7 @@ static OrbitalBody* BuildPlanetFromMap(
 
 static OrbitalBody* BuildStarFromMap(
     StarSystem* System,
-    const FS_StarMap& StarRow)
+    const FStarSystem& StarRow)
 {
     if (!System)
     {
@@ -282,12 +284,12 @@ static OrbitalBody* BuildStarFromMap(
 
     System->AddBody(StarBody);
 
-    for (const FS_RegionMap& RegionRow : StarRow.Region)
+    for (const FRegion& RegionRow : StarRow.Region)
     {
         BuildRegionFromMap(System, RegionRow, StarBody);
     }
 
-    for (const FS_PlanetMap& PlanetRow : StarRow.Planet)
+    for (const FPlanet& PlanetRow : StarRow.Planet)
     {
         BuildPlanetFromMap(System, PlanetRow, StarBody);
     }
@@ -308,14 +310,13 @@ Galaxy::Galaxy(const char* n)
 Galaxy::~Galaxy()
 {
     UE_LOG(LogStarshatterWarsGalaxy, Log, TEXT("DESTROYING GALAXY %s"), ANSI_TO_TCHAR((const char*)name));
-    systems.destroy();
-    stars.destroy();
+    systems.clear();
+    stars.clear();
 }
 
 // +--------------------------------------------------------------------+
 
-void
-Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
+void Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
 {
     if (galaxy) {
         delete galaxy;
@@ -323,6 +324,14 @@ Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
     }
 
     galaxy = new Galaxy("Galaxy");
+
+    if (!galaxy)
+    {
+        UE_LOG(LogStarshatterWarsGalaxy, Error,
+            TEXT("[Galaxy] InitializeFromEnvironment: failed to allocate galaxy"));
+        return;
+    }
+
     galaxy->LoadFromEnvironmentSubsystem(Env);
 }
 
@@ -344,8 +353,8 @@ Galaxy::GetInstance()
 void
 Galaxy::ClearSystems()
 {
-    systems.destroy();
-    stars.destroy();
+    systems.clear();
+    stars.clear();
     radius = 10;
 }
 

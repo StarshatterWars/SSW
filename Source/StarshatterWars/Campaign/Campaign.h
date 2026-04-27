@@ -141,7 +141,10 @@ public:
     List<MissionInfo>& GetMissionList() { return missions; }
     List<Combatant>& GetCombatants() { return combatants; }
     List<CombatZone>& GetZones() { return zones; }
+    
     List<StarSystem>& GetSystemList() { return systems; }
+    const List<StarSystem>& GetSystemList() const { return systems; }
+
     List<CombatAction>& GetActions() { return actions; }
     List<CombatEvent>& GetEvents() { return events; }
     CombatEvent* GetLastEvent();
@@ -172,7 +175,6 @@ public:
     MissionInfo* FindMissionTemplate(int msn_type, CombatGroup* player_group);
     const FS_CampaignMission* FindCampaignMissionById(int32 id) const;
     void                 ReloadMission(int id);
-    void                 LoadNetMission(int id, const char* net_mission);
     void                 StartMission();
     void                 RollbackMission();
 
