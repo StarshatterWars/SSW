@@ -171,24 +171,50 @@ void ASSWCameraManager::UpdateOrbit(float DeltaTime)
 
 void ASSWCameraManager::UpdateActorFollow(float DeltaTime)
 {
-    if (!TargetActor) return;
+    if (!TargetActor)
+    {
+        return;
+    }
+
+    FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
 
     FVector Target = TargetActor->GetActorLocation();
+    float TargetSize = 500.0f;
+
+    if (Bounds.IsValid)
+    {
+        Target = Bounds.GetCenter();
+        TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
+    }
 
     FVector Offset = FollowOffset;
 
     if (Offset.IsNearlyZero())
     {
-        float Size = TargetActor->GetComponentsBoundingBox().GetExtent().Size();
-        Offset = FVector(0, 0, -Size * 4.0f);
+        const float Distance = FMath::Clamp(
+            TargetSize * 1.5f,
+            500.0f,
+            6000.0f);
+
+        Offset = FVector(
+            -Distance,
+            Distance * 0.25f,
+            Distance * 0.35f);
     }
 
-    FVector Rotated = FollowRotator.RotateVector(Offset);
-
-    FVector CamLoc = Target + Rotated;
+    FVector RotatedOffset = FollowRotator.RotateVector(Offset);
+    FVector CamLoc = Target + RotatedOffset;
 
     SetActorLocation(CamLoc);
     LookAt(Target);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SSWCameraManager] ActorFollow Target=%s Focus=%s Size=%.2f Offset=%s Cam=%s"),
+        *GetNameSafe(TargetActor),
+        *Target.ToString(),
+        TargetSize,
+        *Offset.ToString(),
+        *CamLoc.ToString());
 }
 
 // ----------------------------------------------------
