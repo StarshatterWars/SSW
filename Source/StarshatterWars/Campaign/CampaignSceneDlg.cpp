@@ -980,9 +980,6 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         *Event.EventRotator.ToString(),
         Event.EventParam.Num());
 
-    // ----------------------------------------------------
-    // Resolve camera manager
-    // ----------------------------------------------------
     ASSWCameraManager* Cam = ResolveSceneCamera();
     if (!Cam)
     {
@@ -991,29 +988,29 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         return;
     }
 
-    // ----------------------------------------------------
-    // Resolve target actor (SceneActor first, then Builder)
-    // ----------------------------------------------------
     AActor* TargetActor = nullptr;
+    bool bTargetIsSystemBody = false;
+    float VisualRadiusUnits = 1000.0f;
 
     if (!Event.EventTarget.IsEmpty())
     {
-        // Try scene actors (ships, stations)
         ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
         if (SceneActor)
         {
             TargetActor = SceneActor->FindSceneActorByName(Event.EventTarget);
         }
 
-        // Fallback to planets / moons
-        if (!TargetActor)
+        ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+        if (Builder)
         {
-            ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-            if (Builder)
-            {
-                FSpawnedSystemBody FoundBody;
+            FSpawnedSystemBody FoundBody;
 
-                if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+            if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+            {
+                bTargetIsSystemBody = true;
+                VisualRadiusUnits = FMath::Max(FoundBody.VisualRadiusUnits, 100.0f);
+
+                if (!TargetActor)
                 {
                     TargetActor = FoundBody.Actor;
                 }
@@ -1021,50 +1018,22 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         }
     }
 
-    // ----------------------------------------------------
-    // Decode legacy camera param
-    // ----------------------------------------------------
     const int32 Param =
         Event.EventParam.Num() > 0 ? Event.EventParam[0] : 0;
 
-    // ----------------------------------------------------
-    // PARAM 3 -> ORBIT CAMERA (planets, cinematic shots)
-    // ----------------------------------------------------
     if (Param == 3 && TargetActor)
     {
         FVector Orbit = Event.EventPoint;
 
         ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
 
-        float VisualRadiusUnits = 1000.0f;
-        bool bTargetIsSystemBody = false;
-
-        if (Builder)
-        {
-            FSpawnedSystemBody FoundBody;
-            if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
-            {
-                bTargetIsSystemBody = true;
-                VisualRadiusUnits = FMath::Max(FoundBody.VisualRadiusUnits, 100.0f);
-            }
-        }
-
         if (bTargetIsSystemBody)
         {
             float CameraMultiplier = 2.75f;
 
-            // Push camera further back for gas giants so they don't fill entire screen
-            ASystemSceneBuilder* BuilderX = ResolveSystemSceneBuilder();
-            if (Builder)
+            if (VisualRadiusUnits > 1200.0f)
             {
-                FSpawnedSystemBody FoundBody;
-                if (BuilderX->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
-                {
-                    if (FoundBody.VisualRadiusUnits > 1200.0f) // simple gas giant heuristic
-                    {
-                        CameraMultiplier = 3.5f;
-                    }
-                }
+                CameraMultiplier = 3.5f;
             }
 
             Orbit.Z = FMath::Clamp(
@@ -1072,8 +1041,6 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                 3000.0f,
                 25000.0f);
 
-
-            // If legacy azimuth/elevation are zero, force a usable 3D view angle.
             if (FMath::IsNearlyZero(Orbit.X) && FMath::IsNearlyZero(Orbit.Y))
             {
                 Orbit.X = -35.0f;
@@ -1088,7 +1055,6 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         }
         else
         {
-            // Non-planet legacy behavior.
             if (Builder)
             {
                 Orbit.Z = Builder->ConvertOrbitKmToSceneUnits(Orbit.Z, false);
@@ -1106,13 +1072,9 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         return;
     }
 
-    // ----------------------------------------------------
-    // PARAM 5 -> ORBIT RATES (continuous motion)
-    // ----------------------------------------------------
     if (Param == 5)
     {
         FVector Rates = Event.EventPoint;
-
         Cam->SetOrbitRates(Rates);
 
         UE_LOG(LogTemp, Warning,
@@ -1122,82 +1084,84 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         return;
     }
 
-    // ----------------------------------------------------
-    // PARAM 6 -> FOLLOW TARGET (ships, hero shots)
-    // ----------------------------------------------------
     if (Param == 6 && TargetActor)
     {
-        Cam->SetActorFollowView(
-            TargetActor,
-            Event.EventOffset,
-            Event.EventRotator);
+        FVector FollowOffset = Event.EventOffset;
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] param 6 -> Follow Target='%s' Offset=%s Rotator=%s"),
-            *Event.EventTarget,
-            *Event.EventOffset.ToString(),
-            *Event.EventRotator.ToString());
-
-        return;
-    }
-
-    // ----------------------------------------------------
-    // FALLBACK
-    // ----------------------------------------------------
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] Camera Event: no match param=%d TargetFound=%s"),
-        Param,
-        TargetActor ? TEXT("true") : TEXT("false"));
-}
-
-void UCampaignSceneDlg::DebugCameraEventTarget(const FS_MissionEvent& Event)
-{
-    FString EventParamText = TEXT("[");
-    const int32 ParamCount = FMath::Clamp(Event.EventNParams, 0, Event.EventParam.Num());
-
-    for (int32 Index = 0; Index < ParamCount; ++Index)
-    {
-        if (Index > 0)
+        if (!bTargetIsSystemBody)
         {
-            EventParamText += TEXT(", ");
+            FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
+
+            FVector FocusPoint = TargetActor->GetActorLocation();
+            float TargetSize = 500.0f;
+
+            if (Bounds.IsValid)
+            {
+                FocusPoint = Bounds.GetCenter();
+                TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
+            }
+
+            /*
+             * Important:
+             * Ships/stations use a CLOSE camera.
+             * Do not use TargetSize * 4.0 here.
+             * That made the ship look tiny.
+             */
+            const float CloseDistance = FMath::Clamp(
+                TargetSize * 1.25f,
+                250.0f,
+                6000.0f);
+
+            if (FollowOffset.IsNearlyZero())
+            {
+                FollowOffset = FVector(
+                    -CloseDistance,
+                    CloseDistance * 0.25f,
+                    CloseDistance * 0.30f);
+            }
+            else
+            {
+                FVector Direction = FollowOffset.GetSafeNormal();
+
+                if (Direction.IsNearlyZero())
+                {
+                    Direction = FVector(-1.0f, 0.25f, 0.30f).GetSafeNormal();
+                }
+
+                FollowOffset = Direction * CloseDistance;
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] param 6 -> CLOSE SceneActorFollow Target='%s' Size=%.2f RawOffset=%s FinalOffset=%s Rotator=%s Focus=%s"),
+                *Event.EventTarget,
+                TargetSize,
+                *Event.EventOffset.ToString(),
+                *FollowOffset.ToString(),
+                *Event.EventRotator.ToString(),
+                *FocusPoint.ToString());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneDlg] param 6 -> BodyFollow unchanged Target='%s' Offset=%s Rotator=%s"),
+                *Event.EventTarget,
+                *FollowOffset.ToString(),
+                *Event.EventRotator.ToString());
         }
 
-        EventParamText += FString::FromInt(Event.EventParam[Index]);
-    }
+        Cam->SetActorFollowView(
+            TargetActor,
+            FollowOffset,
+            Event.EventRotator);
 
-    EventParamText += TEXT("]");
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] DebugCameraEventTarget: Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
-        Event.EventTime,
-        *Event.EventTarget,
-        *Event.EventPoint.ToString(),
-        *EventParamText,
-        Event.EventNParams);
-
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-    if (!Builder)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] DebugCameraEventTarget: no SystemSceneBuilder found"));
         return;
     }
 
-    if (Event.EventTarget.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] DebugCameraEventTarget: no target"));
-        return;
-    }
-
-    const bool bFocused = Builder->DebugFocusCameraOnBodyByName(
-        Event.EventTarget,
-        Event.EventPoint);
-
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] DebugCameraEventTarget: focus result for '%s' = %s"),
-        *Event.EventTarget,
-        bFocused ? TEXT("true") : TEXT("false"));
+        TEXT("[SceneDlg] Camera Event: no match param=%d TargetFound=%s Body=%s"),
+        Param,
+        TargetActor ? TEXT("true") : TEXT("false"),
+        bTargetIsSystemBody ? TEXT("true") : TEXT("false"));
 }
 
 FReply UCampaignSceneDlg::NativeOnKeyDown(

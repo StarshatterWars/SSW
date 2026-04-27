@@ -7,6 +7,7 @@
 
 class ASceneMeshActor;
 class ASystemSceneBuilder;
+class ASSWCameraManager;
 class Mission;
 
 USTRUCT()
@@ -37,6 +38,8 @@ public:
 
     void ClearSceneActors();
     void DumpSceneActors() const;
+
+    ASSWCameraManager* ResolveSSWCameraManager() const;
 
 public:
     bool FocusCameraOnSceneActorByName(

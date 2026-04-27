@@ -1,4 +1,5 @@
 #include "CampaignSceneActor.h"
+#include "SSWCameraManager.h"
 
 #include "SceneMeshActor.h"
 #include "SystemSceneBuilder.h"
@@ -206,7 +207,12 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     Params.Owner = this;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    const FRotator SpawnRotation(0.0f, (float)HeadingDegrees, 0.0f);
+    const float ModelYawFix = 90.0f;
+
+    const FRotator SpawnRotation(
+        0.0f,
+        (float)HeadingDegrees + ModelYawFix,
+        0.0f);
 
     // -----------------------------------------
     // 1. Try Blueprint first
@@ -394,12 +400,16 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
 
         AActor* RegionActor = FindRegionActorByName(RegionName);
 
-        FVector RegionCenter = FVector::ZeroVector;
-        const bool bHasRegionCenter = ResolveRegionCenterLocation(RegionName, RegionCenter);
+        FVector WorldLoc = FVector::ZeroVector;
 
-        const FVector WorldLoc = bHasRegionCenter
-            ? (RegionCenter + RelativeLoc)
-            : ConvertLegacySceneLocToWorld(RelativeLoc);
+        if (RegionActor)
+        {
+            WorldLoc = RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
+        }
+        else
+        {
+            WorldLoc = ConvertLegacySceneLocToWorld(RelativeLoc);
+        }
 
         UE_LOG(LogTemp, Warning,
             TEXT("[CampaignSceneActor] Runtime Elem Name='%s' Model='%s' Region='%s' Rel=%s World=%s Heading=%d Parent=%s"),
@@ -432,14 +442,12 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
                 RegionActor,
                 FAttachmentTransformRules::KeepWorldTransform);
 
-            Spawned->SetActorRelativeLocation(RelativeLoc);
-
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Runtime attach '%s' -> Region='%s' Parent=%s Rel=%s"),
+                TEXT("[CampaignSceneActor] Runtime attach '%s' -> Region='%s' Parent=%s World=%s"),
                 *ElementName,
                 *RegionName,
                 *GetNameSafe(RegionActor),
-                *RelativeLoc.ToString());
+                *Spawned->GetActorLocation().ToString());
         }
 
         FCampaignSceneSpawnedActor Entry;
@@ -513,6 +521,10 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
+        //--------------------------------------------------
+        // Resolve region
+        //--------------------------------------------------
+
         AActor* RegionActor = nullptr;
         FVector RegionCenter = FVector::ZeroVector;
         bool bHasRegionCenter = false;
@@ -520,24 +532,44 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         if (Builder && !RegionName.IsEmpty())
         {
             FSpawnedSystemRegion Region;
+
             if (Builder->GetRegionByName(RegionName + TEXT("_REGION"), Region) ||
                 Builder->GetRegionByName(RegionName, Region))
             {
                 RegionActor = Region.Actor;
-                RegionCenter = Region.Actor ? Region.Actor->GetActorLocation() : Region.SpawnLocation;
+                RegionCenter = Region.Actor
+                    ? Region.Actor->GetActorLocation()
+                    : Region.SpawnLocation;
+
                 bHasRegionCenter = true;
             }
             else if (Builder->GetBodyWorldLocationByName(RegionName, RegionCenter))
             {
                 bHasRegionCenter = true;
-                RegionActor = nullptr;
             }
         }
 
+        //--------------------------------------------------
+        // FIXED TRANSFORM (NO DOUBLE OFFSET)
+        //--------------------------------------------------
+
         const FVector RelativeLoc = Elem.Location;
-        const FVector WorldLoc = bHasRegionCenter
-            ? (RegionCenter + RelativeLoc)
-            : ConvertMissionElementLocToWorld(Elem);
+
+        FVector WorldLoc = FVector::ZeroVector;
+
+        if (RegionActor)
+        {
+            WorldLoc =
+                RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
+        }
+        else if (bHasRegionCenter)
+        {
+            WorldLoc = RegionCenter + RelativeLoc;
+        }
+        else
+        {
+            WorldLoc = ConvertMissionElementLocToWorld(Elem);
+        }
 
         UE_LOG(LogTemp, Warning,
             TEXT("[CampaignSceneActor] FS Elem Name='%s' Design='%s' Model='%s' Region='%s' Rel=%s World=%s Heading=%d Parent=%s"),
@@ -549,6 +581,10 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             *WorldLoc.ToString(),
             Elem.Heading,
             *GetNameSafe(RegionActor));
+
+        //--------------------------------------------------
+        // Spawn
+        //--------------------------------------------------
 
         AActor* Spawned = SpawnSceneElementActor(
             ElementName,
@@ -565,21 +601,27 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
+        //--------------------------------------------------
+        // Attach ONLY (no relative reset)
+        //--------------------------------------------------
+
         if (RegionActor)
         {
             Spawned->AttachToActor(
                 RegionActor,
                 FAttachmentTransformRules::KeepWorldTransform);
 
-            Spawned->SetActorRelativeLocation(RelativeLoc);
-
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Attached '%s' to region '%s' Parent=%s Rel=%s"),
+                TEXT("[CampaignSceneActor] Attached '%s' to region '%s' Parent=%s World=%s"),
                 *ElementName,
                 *RegionName,
                 *GetNameSafe(RegionActor),
-                *RelativeLoc.ToString());
+                *Spawned->GetActorLocation().ToString());
         }
+
+        //--------------------------------------------------
+        // Track
+        //--------------------------------------------------
 
         FCampaignSceneSpawnedActor Entry;
         Entry.ElementName = ElementName;
@@ -630,65 +672,76 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     const FRotator& CameraRotator,
     float BlendSeconds) const
 {
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneActor] FocusCameraOnSceneActorByName: World is null"));
-        return false;
-    }
-
-    APlayerController* PC = World->GetFirstPlayerController();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneActor] FocusCameraOnSceneActorByName: PC is null"));
-        return false;
-    }
-
     AActor* TargetActor = FindSceneActorByName(ElementName);
     if (!TargetActor)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SceneActor] FocusCameraOnSceneActorByName: actor not found '%s'"),
+            TEXT("[SceneActor Camera] Target not found '%s'"),
             *ElementName);
         return false;
     }
 
-    FVector SceneOffset = CameraOffset;
-    if (SceneOffset.IsNearlyZero())
+    ASSWCameraManager* CameraManager = ResolveSSWCameraManager();
+    if (!CameraManager)
     {
-        SceneOffset = FVector(0.0f, 0.0f, -100.0f);
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneActor Camera] Existing SSWCameraManager not found"));
+        return false;
     }
 
-    const FVector FocusPoint = TargetActor->GetActorLocation();
+    FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
 
-    // Rotate the offset using the full event rotator:
-    const FVector RotatedOffset = CameraRotator.RotateVector(SceneOffset);
-
-    const FVector CameraLocation = FocusPoint + RotatedOffset;
-
-    // Always look back at the target from the final camera position:
-    const FRotator CameraRotation = (FocusPoint - CameraLocation).Rotation();
-
-    PC->SetInitialLocationAndRotation(CameraLocation, CameraRotation);
-    PC->SetControlRotation(CameraRotation);
-
-    if (PC->PlayerCameraManager)
+    float TargetSize = 500.0f;
+    if (Bounds.IsValid)
     {
-        PC->PlayerCameraManager->SetGameCameraCutThisFrame();
+        TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
     }
+
+    FVector FinalOffset = CameraOffset;
+
+    if (FinalOffset.IsNearlyZero())
+    {
+        FinalOffset = FVector(-TargetSize * 4.0f, TargetSize * 1.5f, TargetSize * 0.75f);
+    }
+    else
+    {
+        FinalOffset *= TargetSize;
+    }
+
+    CameraManager->SetActorFollowView(
+        TargetActor,
+        FinalOffset,
+        CameraRotator);
+
+    CameraManager->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] Target='%s' Focus=%s RawOffset=%s RotatedOffset=%s EventRotator=%s Camera=%s Rotation=%s Blend=%.2f"),
+        TEXT("[SceneActor Camera] ExistingCamera=%s Target='%s' Size=%.2f Offset=%s Rot=%s"),
+        *GetNameSafe(CameraManager),
         *ElementName,
-        *FocusPoint.ToString(),
-        *SceneOffset.ToString(),
-        *RotatedOffset.ToString(),
-        *CameraRotator.ToString(),
-        *CameraLocation.ToString(),
-        *CameraRotation.ToString(),
-        BlendSeconds);
+        TargetSize,
+        *FinalOffset.ToString(),
+        *CameraRotator.ToString());
 
     return true;
+}
+
+ASSWCameraManager* ACampaignSceneActor::ResolveSSWCameraManager() const
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    for (TActorIterator<ASSWCameraManager> It(World); It; ++It)
+    {
+        ASSWCameraManager* CameraManager = *It;
+        if (IsValid(CameraManager))
+        {
+            return CameraManager;
+        }
+    }
+
+    return nullptr;
 }

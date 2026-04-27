@@ -20,13 +20,40 @@ void ASSWCameraManager::BeginPlay()
 
 void ASSWCameraManager::ActivateCamera(float BlendTime)
 {
-    APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (PC)
+    UWorld* World = GetWorld();
+    if (!World)
     {
-        PC->SetViewTargetWithBlend(this, BlendTime);
+        UE_LOG(LogTemp, Error,
+            TEXT("[SSWCameraManager] ActivateCamera failed: World is null"));
+        return;
     }
-}
 
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SSWCameraManager] ActivateCamera failed: PlayerController is null"));
+        return;
+    }
+
+    PC->bAutoManageActiveCameraTarget = false;
+
+    PC->SetViewTargetWithBlend(
+        this,
+        FMath::Max(0.0f, BlendTime));
+
+    PC->SetControlRotation(GetActorRotation());
+
+    AActor* ViewTarget = PC->GetViewTarget();
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[SSWCameraManager] ActivateCamera Camera=%s Loc=%s Rot=%s Blend=%.2f ViewTarget=%s"),
+        *GetName(),
+        *GetActorLocation().ToString(),
+        *GetActorRotation().ToString(),
+        BlendTime,
+        *GetNameSafe(ViewTarget));
+}
 // ----------------------------------------------------
 // CAMERA MODES
 // ----------------------------------------------------

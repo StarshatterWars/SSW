@@ -236,15 +236,7 @@ event: { type: Message, time: 0.27, sound: News_01_Campaign_Start,
 event: { type: Message, time: 4.30,
          caption: "formally requested military assistance\nfrom Terellian Alliance Force Command this morning." }
 
-event: 
-{
-    type: Camera,
-    time: 9.00,
-    param: (6,15),
-    rotator: (225, 25, 0),
-    offset: (-350,0,800),
-    target: "Blockade Runner" 
-}
+event: { type: Camera,     time:  9, param: (6, 15),  target: "Blockade Runner" }
 
 event: { type: Display, time: 9.00, message: "Trellis Sector" }
 event: { type: Display, time: 9.00, message: "Blockade Runner" }
