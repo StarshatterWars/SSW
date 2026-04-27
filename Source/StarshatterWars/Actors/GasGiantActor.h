@@ -77,8 +77,10 @@ public:
     UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
     void DrawDebugRingOutline(float InnerRadius, float OuterRadius) const;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-    bool bForceDebugRingMesh = true;
+    UPROPERTY(Transient)
+    UStaticMeshComponent* RuntimeRingDisc = nullptr;
+
+    void EnsureRuntimeRingDisc();
 
     void ForceDebugRingMesh();
 public:
