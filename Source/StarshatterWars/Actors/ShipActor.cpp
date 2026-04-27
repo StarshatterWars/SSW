@@ -25,6 +25,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
 
+#include"Ship.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "NiagaraComponent.h"
@@ -247,6 +248,17 @@ void AShipActor::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     UpdateNavLights(DeltaTime);
+
+    if (bUseCutsceneNavMovement)
+    {
+        UpdateCutsceneNavMovement(DeltaTime);
+        return;
+    }
+
+    if (RuntimeShip)
+    {
+        RuntimeShip->ExecFrame(DeltaTime);
+    }
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -1336,4 +1348,125 @@ void AShipActor::SetThrustersActive(bool bActive)
             }
         }
     }
+}
+
+FVector AShipActor::ConvertLegacyRegionLocToUELocal(const FVector& LegacyLoc) const
+{
+    /*
+     * Starshatter legacy local axes:
+     * X = side
+     * Y = forward/depth
+     * Z = up
+     *
+     * Unreal local axes:
+     * X = forward/depth
+     * Y = side
+     * Z = up
+     */
+    return FVector(
+        LegacyLoc.Y,
+        LegacyLoc.X,
+        LegacyLoc.Z);
+}
+
+void AShipActor::SetCutsceneNavMovement(
+    const FVector& InStartLegacy,
+    const FVector& InTargetLegacy,
+    float InSpeed)
+{
+    CutsceneStartLocal = ConvertLegacyRegionLocToUELocal(InStartLegacy);
+    CutsceneTargetLocal = ConvertLegacyRegionLocToUELocal(InTargetLegacy);
+    CutsceneMoveSpeed = FMath::Max(InSpeed, 1.0f);
+    bUseCutsceneNavMovement = true;
+
+    SetActorRelativeLocation(CutsceneStartLocal);
+
+    const FVector Direction = CutsceneTargetLocal - CutsceneStartLocal;
+    if (!Direction.IsNearlyZero())
+    {
+        const FRotator MoveRotation = Direction.Rotation();
+        SetActorRelativeRotation(MoveRotation);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] SetCutsceneNavMovement Actor=%s StartLegacy=%s TargetLegacy=%s StartUE=%s TargetUE=%s Speed=%.2f"),
+        *GetName(),
+        *InStartLegacy.ToString(),
+        *InTargetLegacy.ToString(),
+        *CutsceneStartLocal.ToString(),
+        *CutsceneTargetLocal.ToString(),
+        CutsceneMoveSpeed);
+}
+
+void AShipActor::SetCutsceneLocalMovement(
+    const FVector& InStartLocal,
+    const FVector& InTargetLocal,
+    float InSpeed)
+{
+    CutsceneStartLocal = InStartLocal;
+    CutsceneTargetLocal = InTargetLocal;
+    CutsceneMoveSpeed = FMath::Max(InSpeed, 1.0f);
+    bUseCutsceneNavMovement = true;
+
+    if (GetRootComponent())
+    {
+        GetRootComponent()->SetRelativeLocation(CutsceneStartLocal);
+    }
+
+    const FVector Direction = CutsceneTargetLocal - CutsceneStartLocal;
+    if (!Direction.IsNearlyZero())
+    {
+        GetRootComponent()->SetRelativeRotation(Direction.Rotation());
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] SetCutsceneLocalMovement Actor=%s Start=%s Target=%s Speed=%.2f"),
+        *GetName(),
+        *CutsceneStartLocal.ToString(),
+        *CutsceneTargetLocal.ToString(),
+        CutsceneMoveSpeed);
+}
+
+void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
+{
+    if (!GetRootComponent())
+    {
+        return;
+    }
+
+    const FVector CurrentLocal = GetRootComponent()->GetRelativeLocation();
+
+    const FVector ToTarget = CutsceneTargetLocal - CurrentLocal;
+    const float DistanceRemaining = ToTarget.Size();
+
+    if (DistanceRemaining <= KINDA_SMALL_NUMBER)
+    {
+        GetRootComponent()->SetRelativeLocation(CutsceneTargetLocal);
+        bUseCutsceneNavMovement = false;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] Cutscene movement complete Actor=%s Final=%s"),
+            *GetName(),
+            *CutsceneTargetLocal.ToString());
+
+        return;
+    }
+
+    const FVector Direction = ToTarget / DistanceRemaining;
+    const float Step = CutsceneMoveSpeed * DeltaTime;
+
+    FVector NewLocal;
+
+    if (Step >= DistanceRemaining)
+    {
+        NewLocal = CutsceneTargetLocal;
+        bUseCutsceneNavMovement = false;
+    }
+    else
+    {
+        NewLocal = CurrentLocal + (Direction * Step);
+    }
+
+    GetRootComponent()->SetRelativeLocation(NewLocal);
+    GetRootComponent()->SetRelativeRotation(Direction.Rotation());
 }

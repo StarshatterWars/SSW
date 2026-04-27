@@ -4,6 +4,7 @@
 #include "SceneMeshActor.h"
 #include "SystemSceneBuilder.h"
 
+#include "Instruction.h"
 #include "Mission.h"
 #include "MissionElement.h"
 #include "ShipDesignRegistry.h"
@@ -13,6 +14,7 @@
 #include "Engine/StaticMesh.h"
 
 #include "PlanetActor.h"
+#include "ShipActor.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -359,7 +361,7 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
     if (!MissionPtr)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] BuildSceneActorsFromRuntimeMission: MissionPtr is null"));
+            TEXT("[CampaignSceneActor] MissionPtr is null"));
         return;
     }
 
@@ -381,7 +383,7 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
         if (!Ship)
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BuildSceneActorsFromRuntimeMission: Elem '%s' has no ship design"),
+                TEXT("[CampaignSceneActor] '%s' has no ship design"),
                 *ElementName);
             continue;
         }
@@ -390,12 +392,12 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
         if (ModelName.IsEmpty())
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BuildSceneActorsFromRuntimeMission: Elem '%s' has empty model"),
+                TEXT("[CampaignSceneActor] '%s' has empty model"),
                 *ElementName);
             continue;
         }
 
-        const FVector RelativeLoc = Elem->GetLocation();
+        const FVector LegacyLoc = Elem->GetLocation();
         const int32 Heading = (int32)Elem->GetHeading();
 
         AActor* RegionActor = FindRegionActorByName(RegionName);
@@ -404,22 +406,19 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
 
         if (RegionActor)
         {
-            WorldLoc = RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
+            WorldLoc = RegionActor->GetActorTransform().TransformPosition(LegacyLoc);
         }
         else
         {
-            WorldLoc = ConvertLegacySceneLocToWorld(RelativeLoc);
+            WorldLoc = ConvertLegacySceneLocToWorld(LegacyLoc);
         }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Runtime Elem Name='%s' Model='%s' Region='%s' Rel=%s World=%s Heading=%d Parent=%s"),
+            TEXT("[CampaignSceneActor] Spawn '%s' Model='%s' Region='%s' World=%s"),
             *ElementName,
             *ModelName,
             *RegionName,
-            *RelativeLoc.ToString(),
-            *WorldLoc.ToString(),
-            Heading,
-            *GetNameSafe(RegionActor));
+            *WorldLoc.ToString());
 
         AActor* Spawned = SpawnSceneElementActor(
             ElementName,
@@ -430,9 +429,8 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
         if (!Spawned)
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BuildSceneActorsFromRuntimeMission: failed spawn Name='%s' Model='%s'"),
-                *ElementName,
-                *ModelName);
+                TEXT("[CampaignSceneActor] Failed to spawn '%s'"),
+                *ElementName);
             continue;
         }
 
@@ -443,12 +441,61 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
                 FAttachmentTransformRules::KeepWorldTransform);
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Runtime attach '%s' -> Region='%s' Parent=%s World=%s"),
+                TEXT("[CampaignSceneActor] Attached '%s' -> '%s'"),
                 *ElementName,
-                *RegionName,
-                *GetNameSafe(RegionActor),
-                *Spawned->GetActorLocation().ToString());
+                *RegionName);
         }
+
+        //--------------------------------------------------
+        // MOVEMENT
+        //--------------------------------------------------
+
+        if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
+        {
+            List<Instruction>& Navs = Elem->NavList();
+
+            ListIter<Instruction> NavIt = Navs;
+            if (++NavIt)
+            {
+                Instruction* Nav = NavIt.value();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] NAV DEBUG '%s' Action=%d Loc=%s Speed=%d"),
+                    *ElementName,
+                    Nav ? (int32)Nav->GetAction() : -1,
+                    Nav ? *Nav->Location().ToString() : TEXT("NULL"),
+                    Nav ? Nav->Speed() : -1);
+
+                if (Nav)
+                {
+                    const FVector StartLegacy = Elem->GetLocation();
+                    const FVector TargetLegacy = Nav->Location();
+                    const float Speed = Nav->Speed() > 0 ? (float)Nav->Speed() : 1000.0f;
+
+                    ShipActor->SetCutsceneNavMovement(
+                        StartLegacy,
+                        TargetLegacy,
+                        Speed);
+
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[CampaignSceneActor] MOVEMENT SET '%s' Start=%s Target=%s Speed=%.2f"),
+                        *ElementName,
+                        *StartLegacy.ToString(),
+                        *TargetLegacy.ToString(),
+                        Speed);
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] NO NAVPOINTS '%s'"),
+                    *ElementName);
+            }
+        }
+
+        //--------------------------------------------------
+        // Store
+        //--------------------------------------------------
 
         FCampaignSceneSpawnedActor Entry;
         Entry.ElementName = ElementName;
@@ -465,7 +512,7 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] BuildSceneActorsFromRuntimeMission: spawned=%d"),
+        TEXT("[CampaignSceneActor] Build complete: %d actors"),
         Count);
 }
 
@@ -521,10 +568,6 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             continue;
         }
 
-        //--------------------------------------------------
-        // Resolve region
-        //--------------------------------------------------
-
         AActor* RegionActor = nullptr;
         FVector RegionCenter = FVector::ZeroVector;
         bool bHasRegionCenter = false;
@@ -549,18 +592,13 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             }
         }
 
-        //--------------------------------------------------
-        // FIXED TRANSFORM (NO DOUBLE OFFSET)
-        //--------------------------------------------------
-
         const FVector RelativeLoc = Elem.Location;
 
         FVector WorldLoc = FVector::ZeroVector;
 
         if (RegionActor)
         {
-            WorldLoc =
-                RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
+            WorldLoc = RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
         }
         else if (bHasRegionCenter)
         {
@@ -582,10 +620,6 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             Elem.Heading,
             *GetNameSafe(RegionActor));
 
-        //--------------------------------------------------
-        // Spawn
-        //--------------------------------------------------
-
         AActor* Spawned = SpawnSceneElementActor(
             ElementName,
             ModelName,
@@ -600,10 +634,6 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
                 *ModelName);
             continue;
         }
-
-        //--------------------------------------------------
-        // Attach ONLY (no relative reset)
-        //--------------------------------------------------
 
         if (RegionActor)
         {
@@ -620,8 +650,45 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         }
 
         //--------------------------------------------------
-        // Track
+        // FS NAVPOINT MOVEMENT
         //--------------------------------------------------
+
+        if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
+        {
+            if (Elem.Navpoint.Num() > 0)
+            {
+                const FS_MissionInstruction& Nav = Elem.Navpoint[0];
+
+                const FVector StartLegacy = Elem.Location;
+                const FVector TargetLegacy = Nav.Location;
+                const float Speed = Nav.Speed > 0 ? (float)Nav.Speed : 1000.0f;
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] FS NAV DEBUG '%s' NavCount=%d Target=%s Speed=%.2f"),
+                    *ElementName,
+                    Elem.Navpoint.Num(),
+                    *TargetLegacy.ToString(),
+                    Speed);
+
+                ShipActor->SetCutsceneLocalMovement(
+                    StartLegacy,
+                    TargetLegacy,
+                    Speed);
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] FS MOVEMENT SET '%s' Start=%s Target=%s Speed=%.2f"),
+                    *ElementName,
+                    *StartLegacy.ToString(),
+                    *TargetLegacy.ToString(),
+                    Speed);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] FS NO NAVPOINTS '%s'"),
+                    *ElementName);
+            }
+        }
 
         FCampaignSceneSpawnedActor Entry;
         Entry.ElementName = ElementName;

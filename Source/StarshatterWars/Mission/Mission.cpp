@@ -84,6 +84,10 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		end = 0;
 	}
 
+	//--------------------------------------------------
+	// ELEMENTS
+	//--------------------------------------------------
+
 	for (const FS_MissionElement& SrcElem : InData.Element)
 	{
 		MissionElement* Elem = new MissionElement();
@@ -100,11 +104,6 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
 		Elem->squadron = TCHAR_TO_ANSI(*SrcElem.Squadron);
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
-			*SrcElem.Name,
-			*SrcElem.RegionName);
-
 		Elem->SetRegion(TCHAR_TO_ANSI(*SrcElem.RegionName));
 		Elem->IFF_code = SrcElem.IFFCode;
 		Elem->count = SrcElem.Count;
@@ -118,12 +117,54 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		Elem->hold_time = SrcElem.HoldTime;
 		Elem->zone_lock = SrcElem.ZoneLock;
 		Elem->heading = SrcElem.Heading;
+
+		// LOCATION
 		Elem->SetLocation(SrcElem.Location);
+
 		Elem->mission_role = static_cast<int32>(SrcElem.RoleName);
 		Elem->intel = static_cast<int32>(SrcElem.Intel);
 
+		//--------------------------------------------------
+		// NAVPOINT ->INSTRUCTION BRIDGE
+		//--------------------------------------------------
+
+		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
+		{
+			Instruction* Nav = new Instruction(
+				TCHAR_TO_ANSI(*SrcNav.OrderRegionName),
+				SrcNav.Location,
+				INSTRUCTION_ACTION::VECTOR);
+
+			if (!Nav)
+				continue;
+
+			Nav->SetSpeed(SrcNav.Speed);
+			Nav->SetPriority(SrcNav.Priority);
+			Nav->SetFarcast(SrcNav.Farcast);
+
+			if (!SrcNav.TargetName.IsEmpty())
+			{
+				Nav->SetTarget(SrcNav.TargetName);
+			}
+
+			Elem->AddNavPoint(Nav);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Mission.cpp] Added navpoint Elem='%s' Region='%s' Loc=%s Speed=%d"),
+				*SrcElem.Name,
+				*SrcNav.OrderRegionName,
+				*SrcNav.Location.ToString(),
+				SrcNav.Speed);
+		}
+
+		//--------------------------------------------------
+
 		AddElement(Elem);
 	}
+
+	//--------------------------------------------------
+	// EVENTS
+	//--------------------------------------------------
 
 	for (const FS_MissionEvent& SrcEvent : InData.Event)
 	{
@@ -145,6 +186,10 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		AddEvent(Ev);
 	}
 
+	//--------------------------------------------------
+	// TARGET / WARD
+	//--------------------------------------------------
+
 	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
 	{
 		if (!InData.TargetName.IsEmpty())
@@ -156,8 +201,14 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 
 	ok = true;
 	Validate();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Mission.cpp] LoadMissionCommon COMPLETE Elements=%d"),
+		elements.size());
+
 	return ok;
 }
+
 Mission::Mission()
 	: id(0)
 {

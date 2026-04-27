@@ -12,6 +12,7 @@ class UNiagaraSystem;
 class UPointLightComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class Ship;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -421,6 +422,8 @@ public:
     UFUNCTION(BlueprintPure, Category = "Ship|Legacy")
     static FRotator ConvertLegacyRotation(const FVector& V);
 
+    Ship* RuntimeShip = nullptr;
+
 protected:
 
     /*
@@ -453,4 +456,36 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ship|FX")
     bool bThrustersActive = false;
+
+    public:
+        UFUNCTION(BlueprintCallable, Category = "Ship|Cutscene")
+        void SetCutsceneNavMovement(
+            const FVector& InStartLegacy,
+            const FVector& InTargetLegacy,
+            float InSpeed);
+
+        UFUNCTION(BlueprintCallable, Category = "Ship|Cutscene")
+        void SetCutsceneLocalMovement(
+            const FVector& InStartLocal,
+            const FVector& InTargetLocal,
+            float InSpeed);
+
+        UFUNCTION(BlueprintCallable, Category = "Ship|Legacy")
+        FVector ConvertLegacyRegionLocToUELocal(const FVector& LegacyLoc) const;
+
+private:
+    void UpdateCutsceneNavMovement(float DeltaTime);
+
+private:
+    UPROPERTY(Transient)
+    bool bUseCutsceneNavMovement = false;
+
+    UPROPERTY(Transient)
+    FVector CutsceneStartLocal = FVector::ZeroVector;
+
+    UPROPERTY(Transient)
+    FVector CutsceneTargetLocal = FVector::ZeroVector;
+
+    UPROPERTY(Transient)
+    float CutsceneMoveSpeed = 0.0f;
 };

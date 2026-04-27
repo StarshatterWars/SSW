@@ -1075,6 +1075,7 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     if (Param == 5)
     {
         FVector Rates = Event.EventPoint;
+
         Cam->SetOrbitRates(Rates);
 
         UE_LOG(LogTemp, Warning,
@@ -1092,22 +1093,14 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         {
             FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
 
-            FVector FocusPoint = TargetActor->GetActorLocation();
             float TargetSize = 500.0f;
 
             if (Bounds.IsValid)
             {
-                FocusPoint = Bounds.GetCenter();
                 TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
             }
 
-            /*
-             * Important:
-             * Ships/stations use a CLOSE camera.
-             * Do not use TargetSize * 4.0 here.
-             * That made the ship look tiny.
-             */
-            const float CloseDistance = FMath::Clamp(
+            const float Distance = FMath::Clamp(
                 TargetSize * 1.25f,
                 250.0f,
                 6000.0f);
@@ -1115,9 +1108,9 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
             if (FollowOffset.IsNearlyZero())
             {
                 FollowOffset = FVector(
-                    -CloseDistance,
-                    CloseDistance * 0.25f,
-                    CloseDistance * 0.30f);
+                    -Distance,
+                    Distance * 0.25f,
+                    Distance * 0.35f);
             }
             else
             {
@@ -1125,20 +1118,20 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
                 if (Direction.IsNearlyZero())
                 {
-                    Direction = FVector(-1.0f, 0.25f, 0.30f).GetSafeNormal();
+                    Direction = FVector(-1.0f, 0.25f, 0.35f).GetSafeNormal();
                 }
 
-                FollowOffset = Direction * CloseDistance;
+                FollowOffset = Direction * Distance;
             }
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] param 6 -> CLOSE SceneActorFollow Target='%s' Size=%.2f RawOffset=%s FinalOffset=%s Rotator=%s Focus=%s"),
+                TEXT("[SceneDlg] param 6 -> CLOSE SceneActorFollow Target='%s' Size=%.2f Distance=%.2f RawOffset=%s FinalOffset=%s Rotator=%s"),
                 *Event.EventTarget,
                 TargetSize,
+                Distance,
                 *Event.EventOffset.ToString(),
                 *FollowOffset.ToString(),
-                *Event.EventRotator.ToString(),
-                *FocusPoint.ToString());
+                *Event.EventRotator.ToString());
         }
         else
         {
@@ -1162,6 +1155,56 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         Param,
         TargetActor ? TEXT("true") : TEXT("false"),
         bTargetIsSystemBody ? TEXT("true") : TEXT("false"));
+}
+
+void UCampaignSceneDlg::DebugCameraEventTarget(const FS_MissionEvent& Event)
+{
+    FString EventParamText = TEXT("[");
+    const int32 ParamCount = FMath::Clamp(Event.EventNParams, 0, Event.EventParam.Num());
+
+    for (int32 Index = 0; Index < ParamCount; ++Index)
+    {
+        if (Index > 0)
+        {
+            EventParamText += TEXT(", ");
+        }
+
+        EventParamText += FString::FromInt(Event.EventParam[Index]);
+    }
+
+    EventParamText += TEXT("]");
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] DebugCameraEventTarget: Time=%.2f Target='%s' Point=%s EventParam=%s EventNParams=%d"),
+        Event.EventTime,
+        *Event.EventTarget,
+        *Event.EventPoint.ToString(),
+        *EventParamText,
+        Event.EventNParams);
+
+    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
+    if (!Builder)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] DebugCameraEventTarget: no SystemSceneBuilder found"));
+        return;
+    }
+
+    if (Event.EventTarget.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] DebugCameraEventTarget: no target"));
+        return;
+    }
+
+    const bool bFocused = Builder->DebugFocusCameraOnBodyByName(
+        Event.EventTarget,
+        Event.EventPoint);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] DebugCameraEventTarget: focus result for '%s' = %s"),
+        *Event.EventTarget,
+        bFocused ? TEXT("true") : TEXT("false"));
 }
 
 FReply UCampaignSceneDlg::NativeOnKeyDown(
