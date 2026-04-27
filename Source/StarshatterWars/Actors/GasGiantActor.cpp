@@ -127,6 +127,7 @@ void AGasGiantActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+
     if (bDebugDrawRings &&
         DebugOuterRadius > DebugInnerRadius &&
         DebugOuterRadius > 0.0f)
@@ -363,7 +364,7 @@ void AGasGiantActor::SetGasGiantMaterialByName(const FString& MaterialName)
         }
     }
 
-    OnGasGiantMaterialChanged();
+    OnGasGiantMaterialChanged(DynamicMaterial);
 }
 
 void AGasGiantActor::SetBandSpeed(float InSpeed)
@@ -481,7 +482,7 @@ void AGasGiantActor::ApplyRingSettingsToBlueprint()
         RingPosition);
 }
 
-void AGasGiantActor::ApplyRingRadiusSettings()
+/*void AGasGiantActor::ApplyRingRadiusSettings()
 {
     const bool bEnableRings =
         InnerRingRadius > 0.0f &&
@@ -606,6 +607,73 @@ void AGasGiantActor::ApplyRingRadiusSettings()
             OuterMaterial,
             RingScale,
             *GetNameSafe(RingMID));
+    }
+}*/ 
+
+
+void AGasGiantActor::ApplyRingRadiusSettings()
+{
+    const bool bEnableRings =
+        InnerRingRadius > 0.0f &&
+        OuterRingRadius > InnerRingRadius &&
+        PlanetRadiusUnits > 0.0f;
+
+    const float InnerMaterial =
+        bEnableRings ? InnerRingRadius / PlanetRadiusUnits : 0.0f;
+
+    const float OuterMaterial =
+        bEnableRings ? OuterRingRadius / PlanetRadiusUnits : 0.0f;
+
+    DebugInnerRadius = bEnableRings ? InnerRingRadius : 0.0f;
+    DebugOuterRadius = bEnableRings ? OuterRingRadius : 0.0f;
+
+    SetBPFloatProperty(this, TEXT("Inner_Radius"), InnerMaterial);
+    SetBPFloatProperty(this, TEXT("Outer_Radius"), OuterMaterial);
+    SetBPFloatProperty(this, TEXT("Position"), RingPosition);
+
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const FString MeshName = MeshComp->GetName();
+
+        const bool bIsRing =
+            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
+            MeshComp->ComponentHasTag(TEXT("Ring"));
+
+        if (!bIsRing)
+        {
+            continue;
+        }
+
+        MeshComp->SetVisibility(bEnableRings, true);
+        MeshComp->SetHiddenInGame(!bEnableRings, true);
+        MeshComp->SetCullDistance(0.0f);
+        MeshComp->SetBoundsScale(10000.0f);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] RING BP CONTROL Actor=%s Mesh=%s Enabled=%d Inner=%.3f Outer=%.3f KeepScale=%s Mat=%s"),
+            *GetName(),
+            *MeshName,
+            bEnableRings ? 1 : 0,
+            InnerMaterial,
+            OuterMaterial,
+            *MeshComp->GetRelativeScale3D().ToString(),
+            *GetNameSafe(MeshComp->GetMaterial(0)));
+    }
+
+    OnGasGiantRadiusChanged();
+
+    if (CurrentRingMaterial)
+    {
+        OnRingMaterialChanged(CurrentRingMaterial);
     }
 }
 
@@ -798,4 +866,77 @@ void AGasGiantActor::DrawDebugRingOutline(float InnerRadius, float OuterRadius) 
         AxisX,
         AxisY,
         false);
+}
+
+void AGasGiantActor::ForceDebugRingMesh()
+{
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+
+    for (UStaticMeshComponent* MeshComp : Meshes)
+    {
+        if (!MeshComp)
+        {
+            continue;
+        }
+
+        const FString MeshName = MeshComp->GetName();
+
+        const bool bIsRing =
+            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
+            MeshComp->ComponentHasTag(TEXT("Ring"));
+
+        if (!bIsRing)
+        {
+            continue;
+        }
+
+        MeshComp->SetVisibility(true, true);
+        MeshComp->SetHiddenInGame(false, true);
+        MeshComp->SetRenderInMainPass(true);
+        MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        MeshComp->SetCullDistance(0.0f);
+        MeshComp->SetBoundsScale(10000.0f);
+        MeshComp->SetCastShadow(false);
+
+        MeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
+        MeshComp->SetRelativeRotation(FRotator::ZeroRotator);
+        MeshComp->SetRelativeScale3D(FVector(5.0f, 5.0f, 5.0f));
+
+        UMaterialInterface* DebugMat =
+            LoadObject<UMaterialInterface>(
+                nullptr,
+                TEXT("/Script/Engine.Material'/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial'"));
+
+        if (DebugMat)
+        {
+            MeshComp->SetMaterial(0, DebugMat);
+        }
+
+        DrawDebugBox(
+            GetWorld(),
+            MeshComp->Bounds.Origin,
+            MeshComp->Bounds.BoxExtent,
+            FColor::Cyan,
+            false,
+            0.0f,
+            0,
+            10.0f);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] FORCE RING DEBUG Actor=%s Mesh=%s Visible=%d Hidden=%d Loc=%s Scale=%s WorldScale=%s Mat=%s BoundsOrigin=%s BoundsExtent=%s"),
+            *GetName(),
+            *MeshName,
+            MeshComp->IsVisible() ? 1 : 0,
+            MeshComp->bHiddenInGame ? 1 : 0,
+            *MeshComp->GetRelativeLocation().ToString(),
+            *MeshComp->GetRelativeScale3D().ToString(),
+            *MeshComp->GetComponentScale().ToString(),
+            *GetNameSafe(MeshComp->GetMaterial(0)),
+            *MeshComp->Bounds.Origin.ToString(),
+            *MeshComp->Bounds.BoxExtent.ToString());
+
+        return;
+    }
 }

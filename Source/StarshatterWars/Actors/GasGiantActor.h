@@ -38,7 +38,7 @@ public:
     void SetGasGiantMaterialByName(const FString& MaterialName);
 
     UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant|Material")
-    void OnGasGiantMaterialChanged();
+    void OnGasGiantMaterialChanged(UMaterialInstanceDynamic* NewPlanetMaterial);
 
     UFUNCTION(BlueprintImplementableEvent, Category = "GasGiant")
     void OnGasGiantRadiusChanged();
@@ -77,6 +77,10 @@ public:
     UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
     void DrawDebugRingOutline(float InnerRadius, float OuterRadius) const;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+    bool bForceDebugRingMesh = true;
+
+    void ForceDebugRingMesh();
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float InnerRingRadius = 1.2f;
