@@ -128,12 +128,12 @@ void AGasGiantActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (bDebugDrawRings &&
+    /*if (bDebugDrawRings &&
         DebugOuterRadius > DebugInnerRadius &&
         DebugOuterRadius > 0.0f)
     {
         DrawDebugRingOutline(DebugInnerRadius, DebugOuterRadius);
-    }
+    }*/
 }
 
 void AGasGiantActor::CreateMID()
@@ -610,6 +610,7 @@ void AGasGiantActor::UpdateRingParameters(float PlanetScale)
 void AGasGiantActor::ApplyRingRadiusSettings()
 {
     const bool bEnableRings =
+        !RingMaterialName.IsEmpty() &&
         InnerRingRadius > 0.0f &&
         OuterRingRadius > InnerRingRadius &&
         PlanetRadiusUnits > 0.0f;
@@ -623,7 +624,17 @@ void AGasGiantActor::ApplyRingRadiusSettings()
         {
             RuntimeRingMesh->SetVisibility(false, true);
             RuntimeRingMesh->SetHiddenInGame(true, true);
+            RuntimeRingMesh->ClearAllMeshSections();
         }
+
+        HideLegacyBPRings();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[GasGiantActor] RING DISABLED Actor=%s Inner=%.2f Outer=%.2f PlanetRadius=%.2f"),
+            *GetName(),
+            InnerRingRadius,
+            OuterRingRadius,
+            PlanetRadiusUnits);
 
         return;
     }
