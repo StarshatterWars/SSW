@@ -1049,7 +1049,7 @@ system:
 			eccentricity: 0.165,
 			tscale:  2,
 			tilt:    0.2,
-			ring:    "Ring",
+			ring:    "Ring1",
 			minrad:  1.3,
 			maxrad:  2.1,
 			rotation: 16.3,
