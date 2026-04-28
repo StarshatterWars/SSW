@@ -22,6 +22,27 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 
+namespace
+{
+    static INSTRUCTION_FORMATION ResolveInstructionFormation(int32 Formation)
+    {
+        switch (Formation)
+        {
+        case 1:
+            return INSTRUCTION_FORMATION::DIAMOND;
+        case 2:
+            return INSTRUCTION_FORMATION::SPREAD;
+        case 3:
+            return INSTRUCTION_FORMATION::BOX;
+        case 4:
+            return INSTRUCTION_FORMATION::TRAIL;
+        case 0:
+        default:
+            return INSTRUCTION_FORMATION::NONE;
+        }
+    }
+}
+
 ACampaignSceneActor::ACampaignSceneActor()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -1010,12 +1031,15 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
         *Elem.Name,
         *Elem.Design);
 
-    const FShipDesign* Design = ShipDesignRegistry::Find(Elem.Design);
+    //-------------------------------------------------------------
+    // 1. Resolve legacy ShipDesign
+    //-------------------------------------------------------------
+    ShipDesign* Design = ShipDesignRegistry::FindLegacy(Elem.Design);
 
     if (!Design)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[CampaignSceneActor] FShipDesign NOT FOUND '%s' for '%s'. RegistryCount=%d"),
+            TEXT("[CampaignSceneActor] Legacy ShipDesign NOT FOUND '%s' for '%s'. RegistryCount=%d"),
             *Elem.Design,
             *Elem.Name,
             ShipDesignRegistry::Num());
@@ -1023,6 +1047,9 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
         return nullptr;
     }
 
+    //-------------------------------------------------------------
+    // 2. Construct Ship
+    //-------------------------------------------------------------
     const FTCHARToUTF8 ShipNameUtf8(*Elem.Name);
     const FTCHARToUTF8 RegistryUtf8(*Elem.Name);
 
@@ -1038,56 +1065,104 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
     if (!NewShip)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[CampaignSceneActor] Failed to create runtime Ship '%s'"),
+            TEXT("[CampaignSceneActor] Failed to create Ship '%s'"),
             *Elem.Name);
         return nullptr;
     }
 
+    //-------------------------------------------------------------
+    // 3. Initial state
+    //-------------------------------------------------------------
     NewShip->SetInvulnerable(Elem.Invulnerable);
 
-    if (Elem.Alert)
+    NewShip->SetFlightPhase(
+        Elem.Alert ? Ship::ALERT : Ship::ACTIVE
+    );
+
+    //-------------------------------------------------------------
+    // 4. Navpoints -> Instructions
+    //-------------------------------------------------------------
+    for (const FS_MissionInstruction& Nav : Elem.Navpoint)
     {
-        NewShip->SetFlightPhase(Ship::ALERT);
-    }
-    else
-    {
-        NewShip->SetFlightPhase(Ship::ACTIVE);
+        const FString RegionName =
+            !Nav.OrderRegionName.IsEmpty()
+            ? Nav.OrderRegionName
+            : Elem.RegionName;
+
+        Instruction* Inst = new Instruction(
+            TCHAR_TO_ANSI(*RegionName),
+            Nav.Location,
+            INSTRUCTION_ACTION::VECTOR
+        );
+
+        //---------------------------------------------------------
+        // Core movement
+        //---------------------------------------------------------
+        Inst->SetSpeed(Nav.Speed);
+        Inst->SetHoldTime((double)Nav.Hold);
+
+        //---------------------------------------------------------
+        // Tactical settings
+        //---------------------------------------------------------
+        Inst->SetPriority(Nav.Priority);
+        Inst->SetFarcast(Nav.Farcast);
+        Inst->SetEMCON(Nav.EMCON);
+
+        //---------------------------------------------------------
+        // Formation (SAFE)
+        //---------------------------------------------------------
+        Inst->SetFormation(ResolveInstructionFormation(Nav.Formation));
+
+        //---------------------------------------------------------
+        // Status (basic mapping)
+        //---------------------------------------------------------
+        if (!Nav.StatusName.IsEmpty())
+        {
+            if (Nav.StatusName.Equals("ACTIVE", ESearchCase::IgnoreCase))
+            {
+                Inst->SetStatus(INSTRUCTION_STATUS::ACTIVE);
+            }
+            else if (Nav.StatusName.Equals("COMPLETE", ESearchCase::IgnoreCase))
+            {
+                Inst->SetStatus(INSTRUCTION_STATUS::COMPLETE);
+            }
+        }
+
+        //---------------------------------------------------------
+        // Targeting
+        //---------------------------------------------------------
+        if (!Nav.TargetName.IsEmpty())
+        {
+            Inst->SetTarget(Nav.TargetName);
+        }
+
+        if (!Nav.TargetDesc.IsEmpty())
+        {
+            Inst->SetTargetDesc(TCHAR_TO_ANSI(*Nav.TargetDesc));
+        }
+
+        //---------------------------------------------------------
+        // Add to ship
+        //---------------------------------------------------------
+        NewShip->AddNavPoint(Inst);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Nav] Ship='%s' Region='%s' Loc=%s Speed=%d Formation=%d Priority=%d"),
+            *Elem.Name,
+            *RegionName,
+            *Nav.Location.ToString(),
+            Nav.Speed,
+            Nav.Formation,
+            Nav.Priority);
     }
 
+    //-------------------------------------------------------------
+    // 5. Final log
+    //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d"),
+        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' NavPoints=%d"),
         *Elem.Name,
-        *Elem.Design,
-        *Elem.Location.ToString(),
-        Elem.Heading);
+        Elem.Navpoint.Num());
 
     return NewShip;
-}
-
-void ACampaignSceneActor::BindRuntimeShipToActor(
-    AShipActor* ShipActor,
-    const FS_MissionElement& Elem)
-{
-    if (!ShipActor)
-    {
-        return;
-    }
-
-    Ship* RuntimeShip = CreateRuntimeShipForMissionElement(Elem);
-
-    if (!RuntimeShip)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Runtime ship not created for '%s'. Actor will use fake cutscene movement fallback."),
-            *Elem.Name);
-        return;
-    }
-
-    ShipActor->BindRuntimeShip(RuntimeShip);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Bound runtime Ship to actor. Elem='%s' Actor='%s' RuntimeShip=%p"),
-        *Elem.Name,
-        *ShipActor->GetName(),
-        RuntimeShip);
 }
