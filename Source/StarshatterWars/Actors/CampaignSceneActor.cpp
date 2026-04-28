@@ -234,7 +234,7 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     Params.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    const float ModelYawFix = 90.0f;
+    const float ModelYawFix = -90.0f;
 
     const FRotator SpawnRotation(
         0.0f,
@@ -960,7 +960,6 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     }
 
     FBox Box(ForceInit);
-
     FVector AverageVelocity = FVector::ZeroVector;
 
     for (AActor* Actor : GroupActors)
@@ -978,11 +977,17 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
         VelocityDir = GroupActors[0]->GetActorForwardVector();
     }
 
-    const float Radius = FMath::Max(Extent.Size(), 800.0f);
-    const float Distance = FMath::Clamp(Radius * 1.4f, 650.0f, 2200.0f);
+    const float Radius = FMath::Max(Extent.Size(), 400.0f);
 
-    const FVector LocalOffset =
-        FVector(-Distance, Distance * 0.30f, Distance * 0.18f);
+    const float Distance = FMath::Clamp(
+        Radius * 1.05f,
+        450.0f,
+        1800.0f);
+
+    const FVector LocalOffset(
+        -Distance,
+        Distance * 0.22f,
+        Distance * 0.12f);
 
     Cam->SetGroupFollowView(
         GroupActors,
@@ -993,11 +998,12 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     Cam->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] CommanderGroup FOLLOW '%s' Count=%d Center=%s Radius=%.2f Offset=%s"),
+        TEXT("[SceneActor Camera] CommanderGroup FOLLOW '%s' Count=%d Center=%s Radius=%.2f Distance=%.2f Offset=%s"),
         *CommanderName,
         GroupActors.Num(),
         *Center.ToString(),
         Radius,
+        Distance,
         *LocalOffset.ToString());
 
     return true;

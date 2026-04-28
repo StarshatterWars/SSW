@@ -1496,21 +1496,12 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    // ------------------------------------------------------------
-    // 1. Pull runtime simulation state
-    // ------------------------------------------------------------
     const FVector RuntimeLocation = RuntimeShip->Location();
-    FVector RuntimeVelocity = RuntimeShip->Velocity();
+    const FVector RuntimeVelocity = RuntimeShip->Velocity();
 
-    if (!RuntimeVelocity.IsNearlyZero())
-    {
-        LastRuntimeVelocity = RuntimeVelocity;
-    }
-
-    // ------------------------------------------------------------
-    // 2. Build desired rotation
-    // ------------------------------------------------------------
     FRotator DesiredRotation = GetActorRotation();
+
+    const float ModelYawFix = 180.0f;
 
     const bool bHasUsableVelocity =
         RuntimeVelocity.SizeSquared() >
@@ -1519,6 +1510,7 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     if (bRuntimeUseVelocityForYaw && bHasUsableVelocity)
     {
         DesiredRotation = RuntimeVelocity.GetSafeNormal().Rotation();
+        DesiredRotation.Yaw += ModelYawFix;
     }
     else
     {
@@ -1527,27 +1519,22 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
         DesiredRotation = FRotator(
             PitchDegrees,
-            HeadingDegrees,
+            HeadingDegrees + ModelYawFix,
             0.0f
         );
     }
 
-    // ------------------------------------------------------------
-    // 3. First-frame snap
-    // ------------------------------------------------------------
     if (!bHasRuntimeTransform)
     {
         SetActorLocation(RuntimeLocation);
         SetActorRotation(DesiredRotation);
 
         LastRuntimeLocation = RuntimeLocation;
+        LastRuntimeVelocity = RuntimeVelocity;
         bHasRuntimeTransform = true;
         return;
     }
 
-    // ------------------------------------------------------------
-    // 4. Smooth position
-    // ------------------------------------------------------------
     const FVector SmoothedLocation = FMath::VInterpTo(
         GetActorLocation(),
         RuntimeLocation,
@@ -1555,9 +1542,6 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         RuntimeLocationInterpSpeed
     );
 
-    // ------------------------------------------------------------
-    // 5. Smooth rotation
-    // ------------------------------------------------------------
     const FRotator SmoothedRotation = FMath::RInterpTo(
         GetActorRotation(),
         DesiredRotation,
@@ -1569,9 +1553,7 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     SetActorRotation(SmoothedRotation);
 
     LastRuntimeLocation = RuntimeLocation;
+    LastRuntimeVelocity = RuntimeVelocity;
 
-    // ------------------------------------------------------------
-    // 6. Thruster visibility
-    // ------------------------------------------------------------
     SetThrustersActive(bHasUsableVelocity);
 }
