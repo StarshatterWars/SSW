@@ -2287,7 +2287,7 @@ struct FS_MissionElement : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EINTEL_TYPE Intel = EINTEL_TYPE::KNOWN;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector Location;
+	FVector Location = FVector::ZeroVector;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Deck;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2339,8 +2339,6 @@ struct FS_MissionElement : public FTableRowBase {
 		SkinName = "";
 		RegionName = "";
 		Instr = "";
-
-		Location = FVector::ZeroVector;
 
 		Deck = 1;
 		IFFCode = 0;

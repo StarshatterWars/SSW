@@ -139,7 +139,7 @@ Instruction::operator=(const Instruction& n)
 // +--------------------------------------------------------------------+
 
 FVector
-Instruction::Location() const
+Instruction::GetLocation() const
 {
 	Instruction* pThis = (Instruction*)this;
 	return pThis->rloc.Location();

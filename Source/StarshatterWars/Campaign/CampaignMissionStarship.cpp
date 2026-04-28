@@ -1529,8 +1529,8 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
             MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
             if (elem) {
                 elem->SetIntelLevel(Intel::KNOWN);
-                elem->Loadouts().destroy();
-                elem->Loadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
+                elem->GetLoadouts().destroy();
+                elem->GetLoadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
                 elem->SetIntelLevel(Intel::SECRET);
                 Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
@@ -1687,7 +1687,7 @@ MissionElement* CampaignMissionStarship::CreateFighterPackage(CombatGroup* squad
     elem->SetSquadron(squadron->GetName());
     elem->SetMissionRole(role);
 
-    elem->Loadouts().append(new MissionLoad(-1, "ACM Medium Range"));
+    elem->GetLoadouts().append(new MissionLoad(-1, "ACM Medium Range"));
 
     auto ScatterInSphere = [](float Radius) -> FVector
         {

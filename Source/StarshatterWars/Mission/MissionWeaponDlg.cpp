@@ -91,12 +91,12 @@ static MissionLoad* GetActivePlayerMissionLoad(Mission* InMission)
         return nullptr;
     }
 
-    if (PlayerElem->Loadouts().size() < 1)
+    if (PlayerElem->GetLoadouts().size() < 1)
     {
         return nullptr;
     }
 
-    return PlayerElem->Loadouts().at(0);
+    return PlayerElem->GetLoadouts().at(0);
 }
 
 static void ApplyShipLoadoutToMissionLoad(
@@ -284,12 +284,12 @@ void UMissionWeaponDlg::ClearLoadouts()
 
 bool UMissionWeaponDlg::GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const
 {
-    if (!Element || Element->Loadouts().size() == 0)
+    if (!Element || Element->GetLoadouts().size() == 0)
     {
         return false;
     }
 
-    MissionLoad* Load = Element->Loadouts().at(0);
+    MissionLoad* Load = Element->GetLoadouts().at(0);
     if (!Load)
     {
         return false;
@@ -700,9 +700,9 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
 
     MissionLoad* Load = nullptr;
 
-    if (Elem->Loadouts().size() > 0)
+    if (Elem->GetLoadouts().size() > 0)
     {
-        Load = Elem->Loadouts().at(0);
+        Load = Elem->GetLoadouts().at(0);
     }
 
     if (!Load)
@@ -868,12 +868,12 @@ double UMissionWeaponDlg::ComputeCurrentCustomMass(
 
     double TotalMass = Design->Mass;
 
-    if (Element->Loadouts().size() < 1)
+    if (Element->GetLoadouts().size() < 1)
     {
         return TotalMass;
     }
 
-    MissionLoad* Load = Element->Loadouts().at(0);
+    MissionLoad* Load = Element->GetLoadouts().at(0);
     if (!Load)
     {
         return TotalMass;

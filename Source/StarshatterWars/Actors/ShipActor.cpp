@@ -252,17 +252,19 @@ void AShipActor::Tick(float DeltaTime)
 
     UpdateNavLights(DeltaTime);
 
+    if (RuntimeShip)
+    {
+        RuntimeShip->ExecFrame((double)DeltaTime);
+        UpdateFromRuntimeShip(DeltaTime);
+        return;
+    }
+
     if (bUseCutsceneNavMovement)
     {
         UpdateCutsceneNavMovement(DeltaTime);
         return;
     }
 
-    if (RuntimeShip)
-    {
-        RuntimeShip->ExecFrame(DeltaTime);
-    }
-    
     SetThrustersActive(false);
 }
 
@@ -1475,4 +1477,101 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
 
     GetRootComponent()->SetRelativeLocation(NewLocal);
     GetRootComponent()->SetRelativeRotation(Direction.Rotation());
+}
+
+void AShipActor::BindRuntimeShip(Ship* InShip)
+{
+    RuntimeShip = InShip;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] BindRuntimeShip Actor=%s RuntimeShip=%p"),
+        *GetName(),
+        RuntimeShip);
+}
+
+void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 1. Pull runtime simulation state
+    // ------------------------------------------------------------
+    const FVector RuntimeLocation = RuntimeShip->Location();
+    FVector RuntimeVelocity = RuntimeShip->Velocity();
+
+    if (!RuntimeVelocity.IsNearlyZero())
+    {
+        LastRuntimeVelocity = RuntimeVelocity;
+    }
+
+    // ------------------------------------------------------------
+    // 2. Build desired rotation
+    // ------------------------------------------------------------
+    FRotator DesiredRotation = GetActorRotation();
+
+    const bool bHasUsableVelocity =
+        RuntimeVelocity.SizeSquared() >
+        FMath::Square(RuntimeVelocityVisibleThreshold);
+
+    if (bRuntimeUseVelocityForYaw && bHasUsableVelocity)
+    {
+        DesiredRotation = RuntimeVelocity.GetSafeNormal().Rotation();
+    }
+    else
+    {
+        const float HeadingDegrees = (float)RuntimeShip->CompassHeading();
+        const float PitchDegrees = (float)RuntimeShip->CompassPitch();
+
+        DesiredRotation = FRotator(
+            PitchDegrees,
+            HeadingDegrees,
+            0.0f
+        );
+    }
+
+    // ------------------------------------------------------------
+    // 3. First-frame snap
+    // ------------------------------------------------------------
+    if (!bHasRuntimeTransform)
+    {
+        SetActorLocation(RuntimeLocation);
+        SetActorRotation(DesiredRotation);
+
+        LastRuntimeLocation = RuntimeLocation;
+        bHasRuntimeTransform = true;
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 4. Smooth position
+    // ------------------------------------------------------------
+    const FVector SmoothedLocation = FMath::VInterpTo(
+        GetActorLocation(),
+        RuntimeLocation,
+        DeltaTime,
+        RuntimeLocationInterpSpeed
+    );
+
+    // ------------------------------------------------------------
+    // 5. Smooth rotation
+    // ------------------------------------------------------------
+    const FRotator SmoothedRotation = FMath::RInterpTo(
+        GetActorRotation(),
+        DesiredRotation,
+        DeltaTime,
+        RuntimeRotationInterpSpeed
+    );
+
+    SetActorLocation(SmoothedLocation);
+    SetActorRotation(SmoothedRotation);
+
+    LastRuntimeLocation = RuntimeLocation;
+
+    // ------------------------------------------------------------
+    // 6. Thruster visibility
+    // ------------------------------------------------------------
+    SetThrustersActive(bHasUsableVelocity);
 }

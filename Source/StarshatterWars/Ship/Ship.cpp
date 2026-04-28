@@ -146,6 +146,8 @@ static FORCEINLINE FMatrix ToFMatrix(const Matrix& InM)
 
 // +----------------------------------------------------------------------+
 
+
+
 Ship::Ship(const char* ship_name, const char* reg_num, ShipDesign* ship_dsn, int IFF, int cmd_ai, const int* load)
 	: IFF_code(IFF), killer(0), throttle(0), augmenter(false), throttle_request(0),
 	shield(0), shieldRep(0), main_drive(0), quantum_drive(0), farcaster(0),
@@ -581,6 +583,18 @@ Ship::Ship(const char* ship_name, const char* reg_num, ShipDesign* ship_dsn, int
 		missile_eta[i] = 0;
 		trigger[i] = false;
 	}
+}
+
+Ship::Ship(
+	const char* ship_name,
+	const char* reg_num,
+	const FShipDesign* unreal_design,
+	int IFF,
+	int cmd_ai,
+	const int* loadout)
+	: Ship(ship_name, reg_num, (ShipDesign*)nullptr, IFF, cmd_ai, loadout)
+{
+	UnrealDesign = unreal_design;
 }
 
 // +--------------------------------------------------------------------+
@@ -2233,8 +2247,8 @@ Ship::RangeToNavPoint(const Instruction* NavPoint)
 {
 	double Distance = 0.0;
 
-	if (NavPoint && NavPoint->Region() && GetRegion()) {
-		FVector NavLoc = NavPoint->Region()->GetLocation() + NavPoint->Location();
+	if (NavPoint && NavPoint->GetRegion() && GetRegion()) {
+		FVector NavLoc = NavPoint->GetRegion()->GetLocation() + NavPoint->GetLocation();
 		NavLoc -= GetRegion()->GetLocation();
 
 		Distance = (NavLoc - Location()).Size();
@@ -2640,11 +2654,11 @@ Ship::ExecNavFrame(double Seconds)
 
 	Instruction* NavPt = GetNextNavPoint();
 	if (NavPt && !AutoPilot) {
-		if (NavPt->Region() == GetRegion()) {
-			FVector NavLoc = NavPt->Location();
+		if (NavPt->GetRegion() == GetRegion()) {
+			FVector NavLoc = NavPt->GetLocation();
 
-			if (NavPt->Region())
-				NavLoc += NavPt->Region()->GetLocation();
+			if (NavPt->GetRegion())
+				NavLoc += NavPt->GetRegion()->GetLocation();
 
 			Sim* SimInst = Sim::GetSim();
 			if (SimInst && SimInst->GetActiveRegion())
@@ -3644,12 +3658,12 @@ Ship::CanTimeSkip()
 		bCanSkip = true;
 
 		// Must be in the same region
-		if (NavPt->Region() != GetRegion()) {
+		if (NavPt->GetRegion() != GetRegion()) {
 			bCanSkip = false;
 		}
 		else {
 			// Removed OtherHand(); unified coordinate system
-			const FVector TargetLoc = NavPt->Location();
+			const FVector TargetLoc = NavPt->GetLocation();
 
 			// Use UE vector API
 			const double Distance = FVector::Dist(TargetLoc, Location());
@@ -3829,7 +3843,7 @@ Ship::CompleteTransition()
 		Instruction* NavPt = GetNextNavPoint();
 
 		if (NavPt && sim) {
-			const FVector Delta = NavPt->Location() - Location(); // removed OtherHand()
+			const FVector Delta = NavPt->GetLocation() - Location(); // removed OtherHand()
 
 			FVector Unit = Delta;
 			Unit.Normalize();
@@ -3837,7 +3851,7 @@ Ship::CompleteTransition()
 			const FVector Trans = Delta + Unit * -20000.0f;
 			const double Dist = Trans.Size();
 
-			double Speed = NavPt->Speed();
+			double Speed = NavPt->GetSpeed();
 			if (Speed < 50.0)
 				Speed = 500.0;
 

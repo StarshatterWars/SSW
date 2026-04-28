@@ -90,9 +90,9 @@ MissionTemplate::MapElement(MissionElement* elem)
 		ListIter<Instruction> obj = elem->GetObjectives();
 		while (++obj) {
 			Instruction* i = obj.value();
-			if (strlen(i->TargetName())) {
+			if (strlen(i->GetTargetName())) {
 				// find a callsign, only if one already exists:
-				Text callsign = MapCallsign(i->TargetName(), -1);
+				Text callsign = MapCallsign(i->GetTargetName(), -1);
 				if (callsign.length())
 					i->SetTarget(callsign.data());
 			}
@@ -101,9 +101,9 @@ MissionTemplate::MapElement(MissionElement* elem)
 		ListIter<Instruction> nav = elem->NavList();
 		while (++nav) {
 			Instruction* i = nav.value();
-			if (strlen(i->TargetName())) {
+			if (strlen(i->GetTargetName())) {
 				// find a callsign, only if one already exists:
-				Text callsign = MapCallsign(i->TargetName(), -1);
+				Text callsign = MapCallsign(i->GetTargetName(), -1);
 				if (callsign.length())
 					i->SetTarget(callsign.data());
 			}
@@ -889,7 +889,7 @@ MissionTemplate::CheckObjectives()
 		ListIter<Instruction> obj = elem->GetObjectives();
 		while (++obj) {
 			Instruction* o = obj.value();
-			Text tgt = o->TargetName();
+			Text tgt = o->GetTargetName();
 
 			MissionElement* tgt_elem = nullptr;
 

@@ -93,7 +93,7 @@ Farcaster::ExecFrame(double seconds)
 				Instruction* obj = elem->GetObjective(0);
 
 				if (sim && obj)
-					dest = sim->FindShip(obj->TargetName());
+					dest = sim->FindShip(obj->GetTargetName());
 			}
 
 			if (!dest)

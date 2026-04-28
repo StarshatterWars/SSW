@@ -29,6 +29,7 @@
 #include "Math/Vector.h" // FVector
 #include "Math/Color.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -100,6 +101,15 @@ public:
 
     // CONSTRUCTORS:
     Ship(const char* ship_name, const char* reg_num, ShipDesign* design, int IFF = 0, int cmd_ai = 0, const int* loadout = 0);
+    
+    Ship(
+        const char* ship_name,
+        const char* reg_num,
+        const FShipDesign* unreal_design,
+        int IFF = 0,
+        int cmd_ai = 0,
+        const int* loadout = nullptr
+    );
     virtual ~Ship();
 
     int operator==(const Ship& s) const { return id == s.id; }
@@ -553,4 +563,6 @@ protected:
     static int        flight_model;
     static int        landing_model;
     static double     friendly_fire_level;
+
+    const FShipDesign* UnrealDesign = nullptr;
 };

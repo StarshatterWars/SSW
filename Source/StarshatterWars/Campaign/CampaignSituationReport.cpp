@@ -381,8 +381,8 @@ CampaignSituationReport::GetThreatInfo()
 
 		ListIter<Instruction> nav = player->NavList();
 		while (++nav) {
-			if (rgn0 != nav->RegionName())
-				rgn1 = nav->RegionName();
+			if (rgn0 != nav->GetRegionName())
+				rgn1 = nav->GetRegionName();
 		}
 
 		ListIter<MissionElement> elem = mission->GetElements();

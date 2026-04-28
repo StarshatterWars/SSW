@@ -99,24 +99,24 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 			*SrcElem.Name,
 			*SrcElem.RegionName);
 
-		Elem->name = TCHAR_TO_ANSI(*SrcElem.Name);
-		Elem->carrier = TCHAR_TO_ANSI(*SrcElem.Carrier);
-		Elem->commander = TCHAR_TO_ANSI(*SrcElem.Commander);
-		Elem->squadron = TCHAR_TO_ANSI(*SrcElem.Squadron);
+		Elem->SetName(TCHAR_TO_ANSI(*SrcElem.Name));
+		Elem->SetCarrier(TCHAR_TO_ANSI(*SrcElem.Carrier));
+		Elem->SetCommander(TCHAR_TO_ANSI(*SrcElem.Commander));
+		Elem->SetSquadron(TCHAR_TO_ANSI(*SrcElem.Squadron));
 
 		Elem->SetRegion(TCHAR_TO_ANSI(*SrcElem.RegionName));
-		Elem->IFF_code = SrcElem.IFFCode;
-		Elem->count = SrcElem.Count;
-		Elem->player = SrcElem.Player ? 1 : 0;
-		Elem->alert = SrcElem.Alert;
-		Elem->playable = SrcElem.Playable;
-		Elem->invulnerable = SrcElem.Invulnerable;
-		Elem->rogue = SrcElem.Rogue;
-		Elem->command_ai = SrcElem.CommandAI;
-		Elem->respawns = SrcElem.Respawns;
-		Elem->hold_time = SrcElem.HoldTime;
-		Elem->zone_lock = SrcElem.ZoneLock;
-		Elem->heading = SrcElem.Heading;
+		Elem->SetIFF(SrcElem.IFFCode);
+		Elem->SetCount(SrcElem.Count);
+		Elem->SetPlayer(SrcElem.Player ? 1 : 0);
+		Elem->SetAlert(SrcElem.Alert);
+		Elem->SetPlayable(SrcElem.Playable);
+		Elem->SetInvulnerable(SrcElem.Invulnerable);
+		Elem->SetRogue(SrcElem.Rogue);
+		Elem->SetCommandAI(SrcElem.CommandAI);
+		Elem->SetRespawnCount(SrcElem.Respawns);
+		Elem->SetHoldTime(SrcElem.HoldTime);
+		Elem->SetZoneLock(SrcElem.ZoneLock);
+		Elem->SetHeading(SrcElem.Heading);
 
 		// LOCATION
 		Elem->SetLocation(SrcElem.Location);
@@ -1424,7 +1424,7 @@ Mission::ParseInstruction(TermStruct* val, MissionElement* element)
 		rgn = order_rgn_name;
 
 	else if (element->navlist.size() > 0)
-		rgn = element->navlist[element->navlist.size() - 1]->RegionName();
+		rgn = element->navlist[element->navlist.size() - 1]->GetRegionName();
 
 	else
 		rgn = region;
@@ -1767,7 +1767,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 		}
 
 		s += "   mission:   \"";
-		s += elem->RoleName();
+		s += elem->GetRoleName();
 		s += "\"\n\n";
 
 		if (elem->IntelLevel()) {
@@ -1854,10 +1854,10 @@ Mission::Serialize(const char* player_elem, int player_index)
 			s += buffer;
 		}
 
-		if (elem->Loadouts().size()) {
+		if (elem->GetLoadouts().size()) {
 			s += "\n";
 
-			ListIter<MissionLoad> load_iter = elem->Loadouts();
+			ListIter<MissionLoad> load_iter = elem->GetLoadouts();
 			while (++load_iter) {
 				MissionLoad* load = load_iter.value();
 
@@ -1895,7 +1895,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 				s += "   objective: { cmd: ";
 				s += Instruction::ActionName(inst->GetAction());
 				s += ", tgt: \"";
-				s += SafeString(inst->TargetName());
+				s += SafeString(inst->GetTargetName());
 				s += "\" }\n";
 			}
 		}
@@ -1912,30 +1912,30 @@ Mission::Serialize(const char* player_elem, int player_index)
 				s += ", status: ";
 				s += Instruction::StatusName(inst->GetStatus());
 
-				if (inst->TargetName() && *inst->TargetName()) {
+				if (inst->GetTargetName() && *inst->GetTargetName()) {
 					s += ", tgt: \"";
-					s += SafeString(inst->TargetName());
+					s += SafeString(inst->GetTargetName());
 					s += "\"";
 				}
 
-				const FVector NLoc = inst->Location();
+				const FVector NLoc = inst->GetLocation();
 				sprintf_s(buffer, ", loc: (%.0f, %.0f, %.0f), speed: %d",
 					NLoc.X, NLoc.Y, NLoc.Z,
-					inst->Speed());
+					inst->GetSpeed());
 				s += buffer;
 
-				if (inst->RegionName() && *inst->RegionName()) {
+				if (inst->GetRegionName() && *inst->GetRegionName()) {
 					s += ", rgn: \"";
-					s += inst->RegionName();
+					s += inst->GetRegionName();
 					s += "\"";
 				}
 
-				if (inst->HoldTime()) {
-					sprintf_s(buffer, ", hold: %d", (int)inst->HoldTime());
+				if (inst->GetHoldTime()) {
+					sprintf_s(buffer, ", hold: %d", (int)inst->GetHoldTime());
 					s += buffer;
 				}
 
-				if (inst->Farcast()) {
+				if (inst->GetFarcast()) {
 					s += ", farcast: true";
 				}
 
@@ -1944,8 +1944,8 @@ Mission::Serialize(const char* player_elem, int player_index)
 					s += buffer;
 				}
 
-				if (inst->Priority() > Instruction::PRIMARY) {
-					sprintf_s(buffer, ", priority: %d", (int)inst->Priority());
+				if (inst->GetPriority() > Instruction::PRIMARY) {
+					sprintf_s(buffer, ", priority: %d", (int)inst->GetPriority());
 					s += buffer;
 				}
 
@@ -1964,8 +1964,8 @@ Mission::Serialize(const char* player_elem, int player_index)
 			}
 		}
 
-		if (elem->Ships().size()) {
-			ListIter<MissionShip> s_iter = elem->Ships();
+		if (elem->GetShips().size()) {
+			ListIter<MissionShip> s_iter = elem->GetShips();
 			while (++s_iter) {
 				MissionShip* ship = s_iter.value();
 
@@ -2246,13 +2246,13 @@ MissionElement::GetRegistry(int index) const
 }
 
 Text
-MissionElement::RoleName() const
+MissionElement::GetRoleName() const
 {
 	return Mission::GetRoleName(mission_role);
 }
 
 FColor
-MissionElement::MarkerColor() const
+MissionElement::GetMarkerColor() const
 {
 	return Ship::IFFColor(IFF_code);
 }

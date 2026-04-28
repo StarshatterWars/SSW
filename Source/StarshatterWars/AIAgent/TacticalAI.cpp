@@ -203,8 +203,8 @@ bool TacticalAI::ProcessOrders()
 	if (ship_ai)
 		ship_ai->ClearPatrol();
 
-	if (orders && orders->EMCON() > 0) {
-		int desired_emcon = orders->EMCON();
+	if (orders && orders->GetEMCON() > 0) {
+		int desired_emcon = orders->GetEMCON();
 
 		if (ship_ai && (ship_ai->GetThreat() || ship_ai->GetThreatMissile()))
 			desired_emcon = 3;
@@ -272,7 +272,7 @@ bool TacticalAI::ProcessOrders()
 
 		case RadioMessageAction::MOVE_PATROL:
 			roe = SELF_DEFENSIVE;
-			ship_ai->SetPatrol(orders->Location());
+			ship_ai->SetPatrol(orders->GetLocation());
 			ship_ai->SetNavPoint(0);
 			ship_ai->DropTarget(FMath::FRandRange(5.0, 10.0));
 			break;
@@ -411,8 +411,8 @@ bool TacticalAI::CheckFlightPlan()
 				ward = (Ship*)tgt;
 		}
 
-		if (navpt->EMCON() > 0) {
-			int desired_emcon = navpt->EMCON();
+		if (navpt->GetEMCON() > 0) {
+			int desired_emcon = navpt->GetEMCON();
 
 			if (ship_ai && (ship_ai->GetThreat() || ship_ai->GetThreatMissile()))
 				desired_emcon = 3;

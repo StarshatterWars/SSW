@@ -281,7 +281,7 @@ StarshipAI::Navigator()
 
     hold = false;
     if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
-        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0))
+        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
     ship->SetFLCSMode(Ship::FLCS_HELM);
@@ -478,7 +478,7 @@ StarshipAI::ThrottleControl()
     }
 
     else if (navpt) {  // lead only, get speed from navpt
-        double speed = navpt->Speed();
+        double speed = navpt->GetSpeed();
         throttle = old_throttle;
 
         if (hold) {
@@ -533,7 +533,7 @@ StarshipAI::SeekTarget()
 {
     if (navpt) {
         SimRegion* self_rgn = ship->GetRegion();
-        SimRegion* nav_rgn = navpt->Region();
+        SimRegion* nav_rgn = navpt->GetRegion();
         QuantumDrive* qdrive = ship->GetQuantumDrive();
 
         if (self_rgn && !nav_rgn) {
@@ -542,7 +542,7 @@ StarshipAI::SeekTarget()
         }
 
         bool use_farcaster = self_rgn != nav_rgn &&
-            (navpt->Farcast() ||
+            (navpt->GetFarcast() ||
                 !qdrive ||
                 !qdrive->IsPowerOn() ||
                 qdrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
@@ -576,7 +576,7 @@ StarshipAI::SeekTarget()
 
             if (q) {
                 if (q->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                    q->SetDestination(navpt->Region(), navpt->Location());
+                    q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
                     q->Engage();
                 }
             }

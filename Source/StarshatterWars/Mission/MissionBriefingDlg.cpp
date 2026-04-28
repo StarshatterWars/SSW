@@ -735,14 +735,14 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
         const int32 Action = static_cast<int32>(NavPt->GetAction());
 
         FVector NavLoc(
-            NavPt->Location().X,
-            NavPt->Location().Y,
-            NavPt->Location().Z
+            NavPt->GetLocation().X,
+            NavPt->GetLocation().Y,
+            NavPt->GetLocation().Z
         );
 
         const double Dist = FVector::Dist(Loc, NavLoc);
 
-        const double Speed = NavPt->Speed();
+        const double Speed = NavPt->GetSpeed();
         const int32 ETR = (Speed > 0.0)
             ? static_cast<int32>(Dist / Speed)
             : static_cast<int32>(Dist / 500.0);

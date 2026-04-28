@@ -266,7 +266,7 @@ SimElement::IsObjectiveTargetOf(const Ship* s) const
 
 	Instruction* orders = s->GetRadioOrders();
 	if (orders && orders->GetAction() > INSTRUCTION_ACTION::SWEEP) {
-		const char* o_name = orders->TargetName();
+		const char* o_name = orders->GetTargetName();
 		int         o_len = 0;
 
 		if (o_name && *o_name)
@@ -285,7 +285,7 @@ SimElement::IsObjectiveTargetOf(const Ship* s) const
 			Instruction* obj = elem->GetObjective(i);
 
 			if (obj) {
-				const char* o_name = obj->TargetName();
+				const char* o_name = obj->GetTargetName();
 				int         o_len = 0;
 
 				if (o_name && *o_name)
@@ -447,7 +447,7 @@ SimElement::GetNextNavPoint()
 		while (++iter) {
 			Instruction* navpt = iter.value();
 
-			if (navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0)
+			if (navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0)
 				return navpt;
 
 			if (navpt->GetStatus() <= INSTRUCTION_STATUS::ACTIVE)
@@ -675,8 +675,8 @@ SimElement::ExecFrame(double seconds)
 	while (++iter) {
 		Instruction* instr = iter.value();
 
-		if (instr->GetStatus() == INSTRUCTION_STATUS::COMPLETE && instr->HoldTime() > 0)
-			instr->SetHoldTime(instr->HoldTime() - seconds);
+		if (instr->GetStatus() == INSTRUCTION_STATUS::COMPLETE && instr->GetHoldTime() > 0)
+			instr->SetHoldTime(instr->GetHoldTime() - seconds);
 	}
 }
 

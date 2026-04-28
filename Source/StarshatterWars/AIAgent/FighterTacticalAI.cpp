@@ -286,7 +286,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 				if (roe == FLEXIBLE && navpt) {
 					// UE: FVector has no OtherHand(). Use the navpoint location directly.
 					// If you still need Starshatter axis remapping, do it explicitly here.
-					const double NDist = (navpt->Location() - ContactShip->Location()).Length();
+					const double NDist = (navpt->GetLocation() - ContactShip->Location()).Length();
 					if (NDist > 80e3)
 						continue;
 				}

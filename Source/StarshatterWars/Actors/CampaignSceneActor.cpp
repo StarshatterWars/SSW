@@ -15,6 +15,9 @@
 
 #include "PlanetActor.h"
 #include "ShipActor.h"
+#include "ShipDesign.h"
+
+#include "Ship.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -479,14 +482,14 @@ void ACampaignSceneActor::BuildSceneActorsFromRuntimeMission(Mission* MissionPtr
                     TEXT("[CampaignSceneActor] NAV DEBUG '%s' Action=%d Loc=%s Speed=%d"),
                     *ElementName,
                     Nav ? (int32)Nav->GetAction() : -1,
-                    Nav ? *Nav->Location().ToString() : TEXT("NULL"),
-                    Nav ? Nav->Speed() : -1);
+                    Nav ? *Nav->GetLocation().ToString() : TEXT("NULL"),
+                    Nav ? Nav->GetSpeed() : -1);
 
                 if (Nav)
                 {
                     const FVector StartLegacy = Elem->GetLocation();
-                    const FVector TargetLegacy = Nav->Location();
-                    const float Speed = Nav->Speed() > 0 ? (float)Nav->Speed() : 1000.0f;
+                    const FVector TargetLegacy = Nav->GetLocation();
+                    const float Speed = Nav->GetSpeed() > 0 ? (float)Nav->GetSpeed() : 1000.0f;
 
                     ShipActor->SetCutsceneNavMovement(
                         StartLegacy,
@@ -998,4 +1001,93 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
         *LocalOffset.ToString());
 
     return true;
+}
+
+Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionElement& Elem)
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] CreateRuntimeShipForMissionElement Name='%s' Design='%s'"),
+        *Elem.Name,
+        *Elem.Design);
+
+    const FShipDesign* Design = ShipDesignRegistry::Find(Elem.Design);
+
+    if (!Design)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignSceneActor] FShipDesign NOT FOUND '%s' for '%s'. RegistryCount=%d"),
+            *Elem.Design,
+            *Elem.Name,
+            ShipDesignRegistry::Num());
+
+        return nullptr;
+    }
+
+    const FTCHARToUTF8 ShipNameUtf8(*Elem.Name);
+    const FTCHARToUTF8 RegistryUtf8(*Elem.Name);
+
+    Ship* NewShip = new Ship(
+        ShipNameUtf8.Get(),
+        RegistryUtf8.Get(),
+        Design,
+        Elem.IFFCode,
+        Elem.CommandAI,
+        nullptr
+    );
+
+    if (!NewShip)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignSceneActor] Failed to create runtime Ship '%s'"),
+            *Elem.Name);
+        return nullptr;
+    }
+
+    NewShip->SetInvulnerable(Elem.Invulnerable);
+
+    if (Elem.Alert)
+    {
+        NewShip->SetFlightPhase(Ship::ALERT);
+    }
+    else
+    {
+        NewShip->SetFlightPhase(Ship::ACTIVE);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d"),
+        *Elem.Name,
+        *Elem.Design,
+        *Elem.Location.ToString(),
+        Elem.Heading);
+
+    return NewShip;
+}
+
+void ACampaignSceneActor::BindRuntimeShipToActor(
+    AShipActor* ShipActor,
+    const FS_MissionElement& Elem)
+{
+    if (!ShipActor)
+    {
+        return;
+    }
+
+    Ship* RuntimeShip = CreateRuntimeShipForMissionElement(Elem);
+
+    if (!RuntimeShip)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Runtime ship not created for '%s'. Actor will use fake cutscene movement fallback."),
+            *Elem.Name);
+        return;
+    }
+
+    ShipActor->BindRuntimeShip(RuntimeShip);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Bound runtime Ship to actor. Elem='%s' Actor='%s' RuntimeShip=%p"),
+        *Elem.Name,
+        *ShipActor->GetName(),
+        RuntimeShip);
 }

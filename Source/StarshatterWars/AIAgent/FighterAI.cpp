@@ -469,7 +469,7 @@ void
 FighterAI::FindObjectiveNavPoint()
 {
     SimRegion* self_rgn = ship->GetRegion();
-    SimRegion* nav_rgn = navpt->Region();
+    SimRegion* nav_rgn = navpt->GetRegion();
 
     if (self_rgn && !nav_rgn) {
         nav_rgn = self_rgn;
@@ -504,7 +504,7 @@ FighterAI::FindObjectiveNavPoint()
 
             if (q) {
                 if (q->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                    q->SetDestination(navpt->Region(), navpt->Location());
+                    q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
                     q->Engage();
                     return;
                 }
@@ -666,7 +666,7 @@ FighterAI::Navigator()
 
     hold = false;
     if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
-        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0))
+        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
     if (ship->MissionClock() < 10000) {
@@ -1076,7 +1076,7 @@ FighterAI::ThrottleControl()
         }
 
         else if (navpt) {
-            desired = navpt->Speed();
+            desired = navpt->GetSpeed();
 
             if (hold) {
                 // go into a slow orbit if airborne:
@@ -1157,7 +1157,7 @@ FighterAI::AvoidTerrain()
     if (ship->IsAirborne() && ship->GetFlightPhase() == Ship::ACTIVE) {
         // too high?
         if (ship->AltitudeMSL() > 25e3) {
-            if (!navpt || (navpt->Region() == ship->GetRegion() && navpt->Location().Z < 27e3)) {
+            if (!navpt || (navpt->GetRegion() == ship->GetRegion() && navpt->GetLocation().Z < 27e3)) {
                 terrain_warning = true;
                 ship->SetDirectorInfo("Too High");
 

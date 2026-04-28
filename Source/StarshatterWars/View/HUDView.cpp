@@ -1392,7 +1392,7 @@ HUDView::DrawNavInfo()
 			DrawHUDText(TXT_NAV_ACTION, Instruction::ActionName(Action), info_rect, DT_RIGHT);;
 
 		info_rect.y += 10;
-		FormatNumber(txt, navpt->Speed());
+		FormatNumber(txt, navpt->GetSpeed());
 		DrawHUDText(TXT_NAV_SPEED, txt, info_rect, DT_RIGHT);
 
 		if (etr > 3600) {
@@ -1409,10 +1409,10 @@ HUDView::DrawNavInfo()
 			DrawHUDText(TXT_NAV_ETR, txt, info_rect, DT_RIGHT);
 		}
 
-		if (navpt->HoldTime() > 0) {
+		if (navpt->GetHoldTime() > 0) {
 			info_rect.y += 10;
 
-			int hold = (int)navpt->HoldTime();
+			int hold = (int)navpt->GetHoldTime();
 			int minutes = (hold / 60) % 60;
 			int seconds = (hold) % 60;
 			sprintf_s(txt, "%s %2d:%02d", "HOLD", minutes, seconds);
@@ -2274,10 +2274,10 @@ HUDView::DrawObjective()
 
 void HUDView::DrawNavPoint(Instruction& navpt, int index, int next)
 {
-	if (index >= 15 || !navpt.Region())
+	if (index >= 15 || !navpt.GetRegion())
 		return;
 
-	FVector npt = navpt.Region()->GetLocation() + navpt.Location();
+	FVector npt = navpt.GetRegion()->GetLocation() + navpt.GetLocation();
 
 	if (active_region)
 		npt -= active_region->GetLocation();
@@ -2296,7 +2296,7 @@ void HUDView::DrawNavPoint(Instruction& navpt, int index, int next)
 		if (x > 4 && x < width - 4 && y > 4 && y < height - 4)
 		{
 			FColor c = FColor::White;
-			if (navpt.GetStatus() > INSTRUCTION_STATUS::ACTIVE && navpt.HoldTime() <= 0)
+			if (navpt.GetStatus() > INSTRUCTION_STATUS::ACTIVE && navpt.GetHoldTime() <= 0)
 				c = FColor(64, 64, 64);
 
 			if (next)
@@ -2310,10 +2310,10 @@ void HUDView::DrawNavPoint(Instruction& navpt, int index, int next)
 				char npt_buf[32] = { 0 };
 				Rect npt_rect(x + 10, y - 4, 200, 12);
 
-				if (navpt.GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt.HoldTime() > 0)
+				if (navpt.GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt.GetHoldTime() > 0)
 				{
 					char hold_time[32] = { 0 };
-					FormatTime(hold_time, navpt.HoldTime());
+					FormatTime(hold_time, navpt.GetHoldTime());
 					snprintf(npt_buf, sizeof(npt_buf), "%d %s", index, hold_time);
 				}
 				else
@@ -2326,9 +2326,9 @@ void HUDView::DrawNavPoint(Instruction& navpt, int index, int next)
 		}
 	}
 
-	if (next && mode == EHUDMode::Navigation && navpt.Region() == ship->GetRegion())
+	if (next && mode == EHUDMode::Navigation && navpt.GetRegion() == ship->GetRegion())
 	{
-		FVector tloc = OtherHand(navpt.Location());
+		FVector tloc = OtherHand(navpt.GetLocation());
 		projector->Transform(tloc);
 
 		const bool behind = (tloc.Z < 0);

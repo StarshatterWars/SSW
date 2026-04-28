@@ -10,6 +10,10 @@ class ASystemSceneBuilder;
 class ASSWCameraManager;
 class Mission;
 
+class Ship;
+class AShipActor;
+struct FS_MissionElement;
+
 USTRUCT()
 struct FCampaignSceneSpawnedActor
 {
@@ -122,4 +126,8 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scene|MissionElements")
     float MissionElementScaleMultiplier = 1.0f;
+
+private:
+    Ship* CreateRuntimeShipForMissionElement(const FS_MissionElement& Elem);
+    void BindRuntimeShipToActor(AShipActor* ShipActor, const FS_MissionElement& Elem);
 };

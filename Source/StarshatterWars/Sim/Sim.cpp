@@ -568,8 +568,8 @@ Sim::CreateElements()
 				if (HangarPtr) {
 					int32* DefaultLoadout = nullptr;
 
-					if (MissionElem->Loadouts().size()) {
-						MissionLoad* MissionLoadPtr = MissionElem->Loadouts().at(0);
+					if (MissionElem->GetLoadouts().size()) {
+						MissionLoad* MissionLoadPtr = MissionElem->GetLoadouts().at(0);
 
 						if (MissionLoadPtr->GetName().length()) {
 							ShipDesign* LegacyDesign = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
@@ -702,22 +702,22 @@ Sim::CreateElements()
 
 			ListIter<Instruction> NavIter = MissionElem->NavList();
 			while (++NavIter) {
-				SimRegion* Region = FindRegion(NavIter->RegionName());
+				SimRegion* Region = FindRegion(NavIter->GetRegionName());
 
 				if (!Region)
 					Region = FindRegion(MissionElem->GetRegion());
 
 				if (Region) {
 					Instruction* NavPoint = new
-						Instruction(Region, OtherHand(NavIter->Location()), NavIter->GetAction());
+						Instruction(Region, OtherHand(NavIter->GetLocation()), NavIter->GetAction());
 
 					NavPoint->SetStatus(NavIter->GetStatus());
-					NavPoint->SetEMCON(NavIter->EMCON());
+					NavPoint->SetEMCON(NavIter->GetEMCON());
 					NavPoint->SetFormation(NavIter->GetFormation());
-					NavPoint->SetSpeed(NavIter->Speed());
-					NavPoint->SetTarget(NavIter->TargetName());
-					NavPoint->SetHoldTime(NavIter->HoldTime());
-					NavPoint->SetFarcast(NavIter->Farcast());
+					NavPoint->SetSpeed(NavIter->GetSpeed());
+					NavPoint->SetTarget(NavIter->GetTargetName());
+					NavPoint->SetHoldTime(NavIter->GetHoldTime());
+					NavPoint->SetFarcast(NavIter->GetFarcast());
 
 					Element->AddNavPoint(NavPoint);
 				}
@@ -750,8 +750,8 @@ Sim::CreateElements()
 					bAlertPrep = true;
 
 					// choose best loadout:
-					if (MissionElem->Loadouts().size()) {
-						MissionLoad* MissionLoadPtr = MissionElem->Loadouts().at(0);
+					if (MissionElem->GetLoadouts().size()) {
+						MissionLoad* MissionLoadPtr = MissionElem->GetLoadouts().at(0);
 
 						if (MissionLoadPtr->GetName().length()) {
 							ShipDesign* LocalShipDesignPtr =
@@ -819,8 +819,8 @@ Sim::CreateElements()
 					Text RegistryNum = MissionElem->GetRegistry(i);
 					Text RegionName = MissionElem->GetRegion();
 
-					if (MissionElem->Ships().size() > i) {
-						MissionShipPtr = MissionElem->Ships()[i];
+					if (MissionElem->GetShips().size() > i) {
+						MissionShipPtr = MissionElem->GetShips()[i];
 						ShipName = MissionShipPtr->GetName();
 						RegistryNum = MissionShipPtr->GetRegNum();
 						RegionName = MissionShipPtr->GetRegion();
@@ -847,7 +847,7 @@ Sim::CreateElements()
 					}
 
 					// choose best loadout:
-					ListIter<MissionLoad> LoadIter = MissionElem->Loadouts();
+					ListIter<MissionLoad> LoadIter = MissionElem->GetLoadouts();
 					while (++LoadIter) {
 						if ((LoadIter->GetShip() == i) || (LoadIter->GetShip() < 0 && Loadout == nullptr)) {
 							if (LoadIter->GetName().length()) {
@@ -2263,7 +2263,7 @@ Sim::CreateMissionElement(SimElement* elem)
 
 		MissionLoad* loadout = new MissionLoad;
 		FMemory::Memcpy(loadout->GetStations(), elem->Loadout(), 16 * sizeof(int));
-		msn_elem->Loadouts().append(loadout);
+		msn_elem->GetLoadouts().append(loadout);
 
 		const int num_obj = elem->NumObjectives();
 		for (int i = 0; i < num_obj; i++) {
@@ -2281,13 +2281,13 @@ Sim::CreateMissionElement(SimElement* elem)
 		ListIter<Instruction> nav_iter = elem->GetFlightPlan();
 		while (++nav_iter) {
 			Instruction* nav = nav_iter.value();
-			Instruction* npt = new Instruction(nav->RegionName(), nav->Location(), nav->GetAction());
+			Instruction* npt = new Instruction(nav->GetRegionName(), nav->GetLocation(), nav->GetAction());
 
 			npt->SetFormation(nav->GetFormation());
-			npt->SetSpeed(nav->Speed());
-			npt->SetTarget(nav->TargetName());
-			npt->SetHoldTime(nav->HoldTime());
-			npt->SetFarcast(nav->Farcast());
+			npt->SetSpeed(nav->GetSpeed());
+			npt->SetTarget(nav->GetTargetName());
+			npt->SetHoldTime(nav->GetHoldTime());
+			npt->SetFarcast(nav->GetFarcast());
 			npt->SetStatus(nav->GetStatus());
 
 			msn_elem->AddNavPoint(npt);
@@ -2338,7 +2338,7 @@ Sim::CreateMissionElement(SimElement* elem)
 				s->SetAmmo(ammo);
 				s->SetFuel(fuel);
 
-				msn_elem->Ships().append(s);
+				msn_elem->GetShips().append(s);
 			}
 		}
 	}

@@ -60,10 +60,10 @@ public:
 	static const char* FormationName(INSTRUCTION_FORMATION f);
 	static const char* PriorityName(int p);
 
-	const char* RegionName()  const { return rgn_name; }
-	SimRegion* Region()      const { return region; }
-	FVector      Location()    const;
-	RLoc& GetRLoc() { return rloc; }
+	const char*		GetRegionName()  const { return rgn_name; }
+	SimRegion*		GetRegion()      const { return region; }
+	FVector			GetLocation()    const;
+	RLoc&			GetRLoc() { return rloc; }
 
 	INSTRUCTION_ACTION          GetAction()      const { return action; }
 	INSTRUCTION_STATUS			GetStatus()      const { return status; }
@@ -71,15 +71,15 @@ public:
 
 	RadioMessageAction          GetRadioAction()  const { return RadioAction; }
 
-	int          Speed()       const { return speed; }
-	int          EMCON()       const { return emcon; }
-	int          WeaponsFree() const { return wep_free; }
-	int          Priority()    const { return priority; }
-	int          Farcast()     const { return farcast; }
-	double       HoldTime()    const { return hold_time; }
+	int          GetSpeed()       const { return speed; }
+	int          GetEMCON()       const { return emcon; }
+	int          GetWeaponsFree() const { return wep_free; }
+	int          GetPriority()    const { return priority; }
+	int          GetFarcast()     const { return farcast; }
+	double       GetHoldTime()    const { return hold_time; }
 
-	const char* TargetName() const { return tgt_name; }
-	const char* TargetDesc() const { return tgt_desc; }
+	const char* GetTargetName() const { return tgt_name; }
+	const char* GetTargetDesc() const { return tgt_desc; }
 	SimObject*	GetTarget();
 
 	void         Evaluate(Ship* s);

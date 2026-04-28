@@ -569,7 +569,7 @@ void
 ShipAI::FindObjectiveNavPoint()
 {
 	SimRegion* SelfRgn = ship ? ship->GetRegion() : nullptr;
-	SimRegion* NavRgn = navpt ? navpt->Region() : nullptr;
+	SimRegion* NavRgn = navpt ? navpt->GetRegion() : nullptr;
 	QuantumDrive* QDrive = ship ? ship->GetQuantumDrive() : nullptr;
 
 	if (!SelfRgn || !navpt)
@@ -582,7 +582,7 @@ ShipAI::FindObjectiveNavPoint()
 
 	const bool bUseFarcaster =
 		(SelfRgn != NavRgn) &&
-		(navpt->Farcast() ||
+		(navpt->GetFarcast() ||
 			!QDrive ||
 			!QDrive->IsPowerOn() ||
 			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
@@ -612,7 +612,7 @@ ShipAI::FindObjectiveNavPoint()
 		// UE port assumption:
 		// - Region::Location() returns FVector (world/region origin)
 		// - NavPoint::Location() returns FVector (local within region)
-		FVector Npt = navpt->Region()->GetLocation() + navpt->Location();
+		FVector Npt = navpt->GetRegion()->GetLocation() + navpt->GetLocation();
 
 		SimRegion* ActiveRegion = ship->GetRegion();
 		if (ActiveRegion)
@@ -645,7 +645,7 @@ ShipAI::FindObjectiveQuantum()
 {
 	Instruction* Orders = ship ? ship->GetRadioOrders() : nullptr;
 	SimRegion* SelfRgn = ship ? ship->GetRegion() : nullptr;
-	SimRegion* NavRgn = Orders ? Orders->Region() : nullptr;
+	SimRegion* NavRgn = Orders ? Orders->GetRegion() : nullptr;
 	QuantumDrive* QDrive = ship ? ship->GetQuantumDrive() : nullptr;
 
 	if (!Orders || !SelfRgn || !NavRgn)
@@ -653,7 +653,7 @@ ShipAI::FindObjectiveQuantum()
 
 	const bool bUseFarcaster =
 		(SelfRgn != NavRgn) &&
-		(Orders->Farcast() ||
+		(Orders->GetFarcast() ||
 			!QDrive ||
 			!QDrive->IsPowerOn() ||
 			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
@@ -680,7 +680,7 @@ ShipAI::FindObjectiveQuantum()
 
 	if (!farcaster) {
 		// Transform from StarSystem space to active region space:
-		FVector Npt = Orders->Region()->GetLocation() + Orders->Location();
+		FVector Npt = Orders->GetRegion()->GetLocation() + Orders->GetLocation();
 
 		SimRegion* ActiveRegion = ship->GetRegion();
 		if (ActiveRegion)
@@ -693,7 +693,7 @@ ShipAI::FindObjectiveQuantum()
 
 		// If the QDrive is ready, set destination and engage immediately:
 		if (QDrive && QDrive->ActiveState() == QuantumDrive::ACTIVE_READY) {
-			QDrive->SetDestination(NavRgn, Orders->Location());
+			QDrive->SetDestination(NavRgn, Orders->GetLocation());
 			QDrive->Engage();
 			return;
 		}
@@ -825,7 +825,7 @@ ShipAI::FindObjectiveFormation()
 		}
 
 		SimRegion* SelfRegion = ship->GetRegion();
-		SimRegion* NavRegion = NavPointLocal->Region();
+		SimRegion* NavRegion = NavPointLocal->GetRegion();
 		QuantumDrive* QDrive = ship->GetQuantumDrive();
 
 		if (SelfRegion && !NavRegion) {
@@ -835,7 +835,7 @@ ShipAI::FindObjectiveFormation()
 
 		const bool bUseFarcaster =
 			SelfRegion != NavRegion &&
-			(NavPointLocal->Farcast() ||
+			(NavPointLocal->GetFarcast() ||
 				!QDrive ||
 				!QDrive->IsPowerOn() ||
 				QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
@@ -926,7 +926,7 @@ ShipAI::Navigator()
 
 	hold = false;
 	if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
-		(navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0))
+		(navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
 		hold = true;
 
 	ship->SetFLCSMode(Ship::FLCS_HELM);
@@ -989,7 +989,7 @@ void
 ShipAI::ThrottleControl()
 {
 	if (navpt && !threat && !target) {     // lead only, get speed from navpt
-		double speed = navpt->Speed();
+		double speed = navpt->GetSpeed();
 
 		if (speed > 0)
 			throttle = speed / ship->VelocityLimit() * 100;

@@ -455,8 +455,8 @@ void UMissionElementDlg::RebuildSkinAndLoadoutFromDesign()
         if (Design)
         {
             MissionLoad* MLoad = nullptr;
-            if (ElemPtr && ElemPtr->Loadouts().size() > 0)
-                MLoad = ElemPtr->Loadouts().at(0);
+            if (ElemPtr && ElemPtr->GetLoadouts().size() > 0)
+                MLoad = ElemPtr->GetLoadouts().at(0);
 
             const List<ShipLoad>& Loadouts = Design->loadouts;
 
@@ -571,7 +571,7 @@ void UMissionElementDlg::BuildObjectiveTargets()
                 const FString Opt = ANSI_TO_TCHAR(E->GetName());
                 TargetCombo->AddOption(Opt);
 
-                if (Instr && !_stricmp(Instr->TargetName(), E->GetName()))
+                if (Instr && !_stricmp(Instr->GetTargetName(), E->GetName()))
                     TargetCombo->SetSelectedOption(Opt);
             }
         }
@@ -881,13 +881,13 @@ void UMissionElementDlg::OnAcceptClicked()
     // Loadout:
     if (LoadoutCombo && LoadoutCombo->GetOptionCount() > 0)
     {
-        ElemPtr->Loadouts().destroy();
+        ElemPtr->GetLoadouts().destroy();
 
         const FString LoadName = LoadoutCombo->GetSelectedOption();
         if (!LoadName.IsEmpty())
         {
             MissionLoad* MLoad = new MissionLoad(-1, TCHAR_TO_ANSI(*LoadName));
-            ElemPtr->Loadouts().append(MLoad);
+            ElemPtr->GetLoadouts().append(MLoad);
         }
     }
 

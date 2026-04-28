@@ -707,7 +707,7 @@ void USectorMapPanel::DrawMissionElement(
     }
 
     const bool bIsSelected = (Element == SelectedElement);
-    const FLinearColor MarkerColor = ToLinearColor(Element->MarkerColor());
+    const FLinearColor MarkerColor = ToLinearColor(Element->GetMarkerColor());
 
     float HalfSize = 3.0f;
 
@@ -930,7 +930,7 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
 
     const bool bIsSelected = (Element == SelectedElement);
 
-    FLinearColor RouteColor = ToLinearColor(Element->MarkerColor());
+    FLinearColor RouteColor = ToLinearColor(Element->GetMarkerColor());
     RouteColor.A = bIsSelected ? 0.95f : 0.55f;
 
     const float RouteThickness = bIsSelected ? 2.0f : 1.0f;
@@ -958,13 +958,13 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
             continue;
         }
 
-        if (_stricmp(Nav->RegionName(), CachedRegion->GetName()) != 0)
+        if (_stricmp(Nav->GetRegionName(), CachedRegion->GetName()) != 0)
         {
             ++NavIndex;
             continue;
         }
 
-        const FVector NavWorld = Nav->Location();
+        const FVector NavWorld = Nav->GetLocation();
         const FVector2D NavScreen(
             Center.X + (NavWorld.X * Scale),
             Center.Y + (NavWorld.Y * Scale));
@@ -1358,12 +1358,12 @@ double USectorMapPanel::ResolveElementHeadingRadians(MissionElement* Element) co
             continue;
         }
 
-        if (_stricmp(Nav->RegionName(), Element->GetRegion()) != 0)
+        if (_stricmp(Nav->GetRegionName(), Element->GetRegion()) != 0)
         {
             continue;
         }
 
-        const FVector NavLoc = Nav->Location();
+        const FVector NavLoc = Nav->GetLocation();
         const FVector Delta = NavLoc - ElemLoc;
 
         if (!Delta.IsNearlyZero())

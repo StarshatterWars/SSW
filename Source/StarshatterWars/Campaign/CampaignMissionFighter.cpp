@@ -1163,7 +1163,7 @@ void CampaignMissionFighter::CreateWardShuttle()
 
     Elem->SetIntelLevel(Intel::KNOWN);
     Elem->SetRegion(mission->GetRegion());
-    Elem->Loadouts().destroy();
+    Elem->GetLoadouts().destroy();
 
     if (Carrier)
     {
@@ -1399,20 +1399,20 @@ void CampaignMissionFighter::CreateEscorts()
                     Instruction* npt = npt_iter.value();
 
                     FVector loc(
-                        npt->Location().X + offset.X,
-                        npt->Location().Y + offset.Y,
-                        npt->Location().Z + offset.Z
+                        npt->GetLocation().X + offset.X,
+                        npt->GetLocation().Y + offset.Y,
+                        npt->GetLocation().Z + offset.Z
                     );
 
                     Instruction* n = new Instruction(
-                        npt->RegionName(),
+                        npt->GetRegionName(),
                         loc,
                         INSTRUCTION_ACTION::ESCORT
                     );
 
                     if (n)
                     {
-                        n->SetSpeed(npt->Speed());
+                        n->SetSpeed(npt->GetSpeed());
                         elem->AddNavPoint(n);
                     }
                 }
@@ -1754,8 +1754,8 @@ void CampaignMissionFighter::CreateTargetsIntercept()
         if (elem)
         {
             elem->SetIntelLevel(Intel::KNOWN);
-            elem->Loadouts().destroy();
-            elem->Loadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
+            elem->GetLoadouts().destroy();
+            elem->GetLoadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
             elem->SetRegion(mission->GetRegion());
 
             if (carrier)
@@ -2014,14 +2014,14 @@ void CampaignMissionFighter::CreateTargetsStrikeEscort()
             Instruction* Npt = NptIter.value();
 
             Instruction* N = new Instruction(
-                Npt->RegionName(),
-                Npt->Location() + Offset,
+                Npt->GetRegionName(),
+                Npt->GetLocation() + Offset,
                 INSTRUCTION_ACTION::ESCORT
             );
 
             if (N)
             {
-                N->SetSpeed(Npt->Speed());
+                N->SetSpeed(Npt->GetSpeed());
                 player_elem->AddNavPoint(N);
             }
         }
@@ -2989,20 +2989,20 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
         if (request && request->GetObjective() &&
             request->GetObjective()->GetType() == ECOMBATGROUP_TYPE::MINEFIELD)
         {
-            elem->Loadouts().append(new MissionLoad(-1, "Rockets"));
+            elem->GetLoadouts().append(new MissionLoad(-1, "Rockets"));
         }
         else
         {
-            elem->Loadouts().append(new MissionLoad(-1, "Ship Strike"));
+            elem->GetLoadouts().append(new MissionLoad(-1, "Ship Strike"));
         }
         break;
 
     case EMISSIONTYPE::STRIKE:
-        elem->Loadouts().append(new MissionLoad(-1, "Ground Strike"));
+        elem->GetLoadouts().append(new MissionLoad(-1, "Ground Strike"));
         break;
 
     default:
-        elem->Loadouts().append(new MissionLoad(-1, "ACM Medium Range"));
+        elem->GetLoadouts().append(new MissionLoad(-1, "ACM Medium Range"));
         break;
     }
 

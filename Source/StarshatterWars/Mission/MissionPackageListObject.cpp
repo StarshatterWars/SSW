@@ -55,7 +55,7 @@ void UMissionPackageListObject::InitFromMissionElement(
     Marker = bIsPlayerElement ? TEXT("PLAYER") : TEXT("");
 
     ElementName = ANSI_TO_TCHAR(ElementPtr->GetName().data());
-    RoleText = ANSI_TO_TCHAR(ElementPtr->RoleName().data());
+    RoleText = ANSI_TO_TCHAR(ElementPtr->GetRoleName().data());
     ElementID = ElementPtr->GetElementID();
 
     if (!Design)

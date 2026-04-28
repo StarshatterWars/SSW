@@ -195,10 +195,10 @@ void NavAI::FindObjective()
         return;
 
     // PART II: Compute Objective from NavPoint:
-    const FVector npt = navpt->Location();
+    const FVector npt = navpt->GetLocation();
 
     SimRegion* self_rgn = ship->GetRegion();
-    SimRegion* nav_rgn = navpt->Region();
+    SimRegion* nav_rgn = navpt->GetRegion();
 
     if (self_rgn && !nav_rgn) {
         nav_rgn = self_rgn;
@@ -320,7 +320,7 @@ void NavAI::FindObjective()
 
         // UE: FVector supports + and -=. navpt->Location() is already a world-space point in most ports.
         // Original code mixed region offsets; keep the intent but remove OtherHand().
-        FVector npt_rel = nav_rgn->GetLocation() + navpt->Location();
+        FVector npt_rel = nav_rgn->GetLocation() + navpt->GetLocation();
         npt_rel -= self_rgn->GetLocation();
 
         obj_w = npt_rel;
@@ -342,7 +342,7 @@ NavAI::Navigator()
     hold = false;
 
     if (navpt) {
-        if (navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->HoldTime() > 0) {
+        if (navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0) {
             ship->SetDirectorInfo("AutoHold");
             hold = true;
         }
@@ -454,7 +454,7 @@ void NavAI::ThrottleControl()
         brakes = 1.0;
     }
     else if (navpt) {
-        double DesiredSpeed = navpt->Speed();
+        double DesiredSpeed = navpt->GetSpeed();
         if (DesiredSpeed < 10.0)
             DesiredSpeed = 250.0;
 
@@ -531,7 +531,7 @@ NavAI::SeekTarget()
 
             if (q) {
                 if (q->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                    q->SetDestination(navpt->Region(), navpt->Location());
+                    q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
                     q->Engage();
                 }
 

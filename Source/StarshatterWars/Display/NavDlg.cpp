@@ -394,14 +394,14 @@ void UNavDlg::ExecFrame()
 
         // Destination block (ported):
         Instruction* navpt = ship->GetNextNavPoint();
-        if (navpt && navpt->Region())
+        if (navpt && navpt->GetRegion())
         {
-            const FVector NavLoc = navpt->Location();
+            const FVector NavLoc = navpt->GetLocation();
             FormatNumber(x, NavLoc.X);
             FormatNumber(y, NavLoc.Y);
             FormatNumber(z, NavLoc.Z);
 
-            FVector Npt = navpt->Region()->GetLocation() + NavLoc;
+            FVector Npt = navpt->GetRegion()->GetLocation() + NavLoc;
 
             if (sim->GetActiveRegion())
                 Npt -= sim->GetActiveRegion()->GetLocation();

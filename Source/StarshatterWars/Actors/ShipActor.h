@@ -41,6 +41,12 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
+    void BindRuntimeShip(Ship* InShip);
+    void UpdateFromRuntimeShip(float DeltaTime);
+
+    bool HasRuntimeShip() const { return RuntimeShip != nullptr; }
+
+
 public:
 
     /*
@@ -422,8 +428,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Ship|Legacy")
     static FRotator ConvertLegacyRotation(const FVector& V);
 
-    Ship* RuntimeShip = nullptr;
-
 protected:
 
     /*
@@ -488,4 +492,29 @@ private:
 
     UPROPERTY(Transient)
     float CutsceneMoveSpeed = 0.0f;
+
+    protected:
+        UPROPERTY(Transient)
+        bool bUseRuntimeShipTransform = true;
+
+private:
+    Ship* RuntimeShip = nullptr;
+
+    protected:
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Runtime")
+        float RuntimeLocationInterpSpeed = 8.0f;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Runtime")
+        float RuntimeRotationInterpSpeed = 6.0f;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Runtime")
+        float RuntimeVelocityVisibleThreshold = 5.0f;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Runtime")
+        bool bRuntimeUseVelocityForYaw = true;
+
+private:
+    FVector LastRuntimeLocation = FVector::ZeroVector;
+    FVector LastRuntimeVelocity = FVector::ZeroVector;
+    bool bHasRuntimeTransform = false;
 };

@@ -250,7 +250,7 @@ void UMissionPackageDlg::DrawNavPlan()
             continue;
         }
 
-        const double Dist = FVector::Dist(Loc, Nav->Location());
+        const double Dist = FVector::Dist(Loc, Nav->GetLocation());
 
         UMissionNavListObject* Item = NewObject<UMissionNavListObject>(this);
         if (Item)
@@ -260,7 +260,7 @@ void UMissionPackageDlg::DrawNavPlan()
             NavList->AddItem(Item);
         }
 
-        Loc = Nav->Location();
+        Loc = Nav->GetLocation();
         ++NavIndex;
     }
 }

@@ -522,7 +522,7 @@ void MapView::ProcessMenuItem(int action)
 			if (prior) {
 				n->SetAction(prior->GetAction());
 				n->SetFormation(prior->GetFormation());
-				n->SetSpeed(prior->Speed());
+				n->SetSpeed(prior->GetSpeed());
 				n->SetTarget(prior->GetTarget());
 			}
 
@@ -541,7 +541,7 @@ void MapView::ProcessMenuItem(int action)
 			if (prior) {
 				n->SetAction(prior->GetAction());
 				n->SetFormation(prior->GetFormation());
-				n->SetSpeed(prior->Speed());
+				n->SetSpeed(prior->GetSpeed());
 				n->SetTarget(prior->GetTarget());
 			}
 
@@ -1378,8 +1378,8 @@ MapView::SelectAt(int x, int y)
 					while (++navpt) {
 						Instruction* n = navpt.value();
 
-						if (!_stricmp(n->RegionName(), rgn->GetName())) {
-							FVector  nloc = n->Location();
+						if (!_stricmp(n->GetRegionName(), rgn->GetName())) {
+							FVector  nloc = n->GetLocation();
 							double dx = nloc.X - test_x;
 							double dy = nloc.Y - test_y;
 							double d = sqrt(dx * dx + dy * dy);
@@ -1447,8 +1447,8 @@ MapView::SelectAt(int x, int y)
 							while (++navpt) {
 								Instruction* n = navpt.value();
 
-								if (!_stricmp(n->RegionName(), rgn->GetName())) {
-									FVector  nloc = n->Location();
+								if (!_stricmp(n->GetRegionName(), rgn->GetName())) {
+									FVector  nloc = n->GetLocation();
 									double dx = nloc.X - test_x;
 									double dy = nloc.Y - test_y;
 									double d = sqrt(dx * dx + dy * dy);
@@ -2520,7 +2520,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 
 		if (ship_visible) {
 			if (rep < 3) {
-				FillRect(shiploc.X - 2, shiploc.Y - 2, shiploc.X + 2, shiploc.Y + 2, s.MarkerColor());
+				FillRect(shiploc.X - 2, shiploc.Y - 2, shiploc.X + 2, shiploc.Y + 2, s.GetMarkerColor());
 				sprite_width = 2;
 
 				if (!IsCrowded(s))
@@ -2557,7 +2557,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 
 					Bitmap bmp;
 					bmp.CopyBitmap(*map_sprite);
-					ColorizeBitmap(bmp, s.MarkerColor());
+					ColorizeBitmap(bmp, s.GetMarkerColor());
 					sprite_width = bmp.Width() / 2;
 					int h = bmp.Height() / 2;
 
@@ -2572,15 +2572,15 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 					theta -= PI / 2;
 
 					if (s.IsStatic()) {
-						FillRect(shiploc.X - 6, shiploc.Y - 6, shiploc.X + 6, shiploc.Y + 6, s.MarkerColor());
+						FillRect(shiploc.X - 6, shiploc.Y - 6, shiploc.X + 6, shiploc.Y + 6, s.GetMarkerColor());
 						DrawRect(shiploc.X - 6, shiploc.Y - 6, shiploc.X + 6, shiploc.Y + 6, FColor::White);
 					}
 					else if (s.IsStarship()) {
-						FillRect(shiploc.X - 4, shiploc.Y - 4, shiploc.X + 4, shiploc.Y + 4, s.MarkerColor());
+						FillRect(shiploc.X - 4, shiploc.Y - 4, shiploc.X + 4, shiploc.Y + 4, s.GetMarkerColor());
 						DrawRect(shiploc.X - 4, shiploc.Y - 4, shiploc.X + 4, shiploc.Y + 4, FColor::White);
 					}
 					else {
-						FillRect(shiploc.X - 3, shiploc.Y - 3, shiploc.X + 3, shiploc.Y + 3, s.MarkerColor());
+						FillRect(shiploc.X - 3, shiploc.Y - 3, shiploc.X + 3, shiploc.Y + 3, s.GetMarkerColor());
 						DrawRect(shiploc.X - 3, shiploc.Y - 3, shiploc.X + 3, shiploc.Y + 3, FColor::White);
 					}
 				}
@@ -2609,7 +2609,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 
 	// only see routes for your own team:
 	if (editor || s.GetIFF() == 0 || (mission && s.GetIFF() == mission->GetTeam())) {
-		DrawNavRoute(rgn, s.NavList(), s.MarkerColor(), 0, &s);
+		DrawNavRoute(rgn, s.NavList(), s.GetMarkerColor(), 0, &s);
 	}
 }
 
@@ -2690,15 +2690,15 @@ void MapView::DrawNavRoute(
 			continue;
 
 		// Only draw navpoints that belong to this region:
-		if (_stricmp(navpt->RegionName(), rgn->GetName()) != 0) {
-			old_loc = FVector(navpt->Location());
+		if (_stricmp(navpt->GetRegionName(), rgn->GetName()) != 0) {
+			old_loc = FVector(navpt->GetLocation());
 			old_x = 0;
 			old_y = 0;
 			old_in = false;
 			continue;
 		}
 
-		const FVector nav_loc = FVector(navpt->Location());
+		const FVector nav_loc = FVector(navpt->GetLocation());
 
 		const double nav_x = nav_loc.X * scale;
 		const double nav_y = nav_loc.Y * scale;
@@ -2771,10 +2771,10 @@ void MapView::DrawNavRoute(
 
 			// expanded info for selected navpoint:
 			if (navpt == current_navpt) {
-				if (navpt->TargetName() && strlen(navpt->TargetName())) {
+				if (navpt->GetTargetName() && strlen(navpt->GetTargetName())) {
 					sprintf_s(buf, "%s %s",
 						Game::GetText(Text("MapView.item.") + Instruction::ActionName(navpt->GetAction())).data(),
-						navpt->TargetName());
+						navpt->GetTargetName());
 					Print(x2 + 3, y1 + 10, buf);
 				}
 				else {
@@ -2787,12 +2787,12 @@ void MapView::DrawNavRoute(
 					Game::GetText(Text("MapView.item.") + Instruction::FormationName(navpt->GetFormation())).data());
 				Print(x2 + 3, y1 + 20, buf);
 
-				sprintf_s(buf, "%d", navpt->Speed());
+				sprintf_s(buf, "%d", navpt->GetSpeed());
 				Print(x2 + 3, y1 + 30, buf);
 
-				if (navpt->HoldTime()) {
+				if (navpt->GetHoldTime()) {
 					char hold_time[32];
-					FormatTime(hold_time, navpt->HoldTime());
+					FormatTime(hold_time, navpt->GetHoldTime());
 
 					sprintf_s(buf, "%s %s", "Hold", hold_time);
 					Print(x2 + 3, y1 + 40, buf);
@@ -3435,7 +3435,7 @@ MapView::OnMouseMove(int32 x, int32 y)
 				click_y = (y - rect.y - rect.h / 2) * scale - offset_y;
 
 				if ((adding_navpt || moving_navpt) && current_navpt) {
-					FVector loc = current_navpt->Location();
+					FVector loc = current_navpt->GetLocation();
 					loc.X = click_x;
 					loc.Y = click_y;
 					current_navpt->SetLocation(loc);
@@ -3513,7 +3513,7 @@ MapView::OnLButtonDown(int32 x, int32 y)
 			click_y = (y - rect.y - rect.h / 2) * scale - offset_y;
 
 			if (current_navpt) {
-				FVector  nloc = current_navpt->Location();
+				FVector  nloc = current_navpt->GetLocation();
 				double dx = nloc.X - click_x;
 				double dy = nloc.Y - click_y;
 				double d = sqrt(dx * dx + dy * dy);

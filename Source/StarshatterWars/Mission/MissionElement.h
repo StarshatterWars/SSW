@@ -93,8 +93,8 @@ public:
     bool IsInvulnerable() const { return invulnerable; }
 
     // legacy “what kind of element is it” queries:
-    Text RoleName()       const;
-    FColor MarkerColor()  const;
+    Text GetRoleName()    const;
+    FColor GetMarkerColor()  const;
     bool  IsStarship()    const;
     bool  IsDropship()    const;
     bool  IsStatic()      const;
@@ -131,8 +131,7 @@ public:
     List<Instruction>& GetObjectives() { return objectives; }
     List<Text>&        GetInstructions() { return instructions; }
     List<Instruction>& NavList() { return navlist; }
-    List<MissionLoad>& Loadouts() { return loadouts; }
-    List<MissionShip>& Ships() { return ships; }
+    List<MissionShip>& GetShips() { return ships; }
 
     // Compatibility wrappers for refactored call sites:
     List<MissionLoad>& GetLoadouts() { return loadouts; }   // matches your error sites
@@ -165,6 +164,7 @@ public:
     void SetHeading(double h) { heading = h; }
     void SetRespawnCount(int r) { respawns = r; }
     void SetHoldTime(int t) { hold_time = t; }
+	void SetRoleName(int r) { mission_role = r; }
 
     // ------------------------------------------------------------
     // Missing methods causing your compile errors

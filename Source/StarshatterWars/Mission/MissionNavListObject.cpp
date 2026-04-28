@@ -49,7 +49,7 @@ void UMissionNavListObject::InitFromInstruction(
 
     StepText = FString::FromInt(InIndex + 1);
     ActionText = ANSI_TO_TCHAR(Instruction::ActionName(InstructionPtr->GetAction()));
-    RegionText = ANSI_TO_TCHAR(InstructionPtr->RegionName());
+    RegionText = ANSI_TO_TCHAR(InstructionPtr->GetRegionName());
     DistanceText = FString::Printf(TEXT("%.0f"), InDistance);
-    SpeedText = FString::FromInt(InstructionPtr->Speed());
+    SpeedText = FString::FromInt(InstructionPtr->GetSpeed());
 }
