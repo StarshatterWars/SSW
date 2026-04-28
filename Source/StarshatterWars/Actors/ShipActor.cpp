@@ -225,7 +225,10 @@ AShipActor::AShipActor()
         Ventral.PhaseOffset = 0.0f;
         NavLightDefs.Add(Ventral);
     }
+
+    SetThrustersActive(false);
 }
+
 void AShipActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
@@ -259,6 +262,8 @@ void AShipActor::Tick(float DeltaTime)
     {
         RuntimeShip->ExecFrame(DeltaTime);
     }
+    
+    SetThrustersActive(false);
 }
 
 void AShipActor::ConfigureForCutscene()

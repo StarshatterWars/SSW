@@ -176,45 +176,83 @@ void ASSWCameraManager::UpdateActorFollow(float DeltaTime)
         return;
     }
 
-    FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
+    //--------------------------------------------------
+    // TARGET + VELOCITY
+    //--------------------------------------------------
 
-    FVector Target = TargetActor->GetActorLocation();
-    float TargetSize = 500.0f;
+    const FVector TargetLoc = TargetActor->GetActorLocation();
 
-    if (Bounds.IsValid)
+    FVector VelocityDir = TargetActor->GetVelocity().GetSafeNormal();
+
+    if (VelocityDir.IsNearlyZero())
     {
-        Target = Bounds.GetCenter();
-        TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
+        VelocityDir = TargetActor->GetActorForwardVector();
     }
 
-    FVector Offset = FollowOffset;
+    //--------------------------------------------------
+    // OFFSET (CAMERA POSITION RELATIVE TO SHIP)
+    //--------------------------------------------------
 
-    if (Offset.IsNearlyZero())
+    FVector LocalOffset = FollowOffset;
+
+    if (LocalOffset.IsNearlyZero())
     {
-        const float Distance = FMath::Clamp(
-            TargetSize * 1.5f,
-            500.0f,
-            6000.0f);
-
-        Offset = FVector(
-            -Distance,
-            Distance * 0.25f,
-            Distance * 0.35f);
+        LocalOffset = FVector(-2500.0f, 900.0f, 650.0f);
     }
 
-    FVector RotatedOffset = FollowRotator.RotateVector(Offset);
-    FVector CamLoc = Target + RotatedOffset;
+    const FRotator MovementRot = VelocityDir.Rotation();
 
-    SetActorLocation(CamLoc);
-    LookAt(Target);
+    const FVector DesiredCamLoc =
+        TargetLoc + MovementRot.RotateVector(LocalOffset);
+
+    //--------------------------------------------------
+    // POSITION DAMPING
+    //--------------------------------------------------
+
+    const float LagSpeed = 5.0f;
+
+    const FVector SmoothedCamLoc = FMath::VInterpTo(
+        GetActorLocation(),
+        DesiredCamLoc,
+        DeltaTime,
+        LagSpeed);
+
+    SetActorLocation(SmoothedCamLoc);
+
+    //--------------------------------------------------
+    // LOOK TARGET (CENTERED ON SHIP)
+    //--------------------------------------------------
+
+    const float LookAheadAmount = 0.0f; // keep ship centered
+
+    const FVector LookTarget =
+        TargetLoc + (VelocityDir * LookAheadAmount);
+
+    const FRotator DesiredRot =
+        (LookTarget - SmoothedCamLoc).Rotation();
+
+    //--------------------------------------------------
+    // ROTATION DAMPING
+    //--------------------------------------------------
+
+    const FRotator SmoothedRot = FMath::RInterpTo(
+        GetActorRotation(),
+        DesiredRot,
+        DeltaTime,
+        LagSpeed);
+
+    SetActorRotation(SmoothedRot);
+
+    //--------------------------------------------------
+    // DEBUG
+    //--------------------------------------------------
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SSWCameraManager] ActorFollow Target=%s Focus=%s Size=%.2f Offset=%s Cam=%s"),
+        TEXT("[SSWCameraManager] ActorFollow CENTERED Target=%s TargetLoc=%s Cam=%s VelDir=%s"),
         *GetNameSafe(TargetActor),
-        *Target.ToString(),
-        TargetSize,
-        *Offset.ToString(),
-        *CamLoc.ToString());
+        *TargetLoc.ToString(),
+        *SmoothedCamLoc.ToString(),
+        *VelocityDir.ToString());
 }
 
 // ----------------------------------------------------

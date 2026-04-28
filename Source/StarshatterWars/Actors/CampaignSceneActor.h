@@ -42,6 +42,16 @@ public:
     ASSWCameraManager* ResolveSSWCameraManager() const;
 
 public:
+    FVector ConvertLegacyRegionOffsetToSceneOffset(const FVector& LegacyOffset) const;
+    FVector ConvertLegacyRegionOffsetToWorld(AActor* RegionActor, const FVector& LegacyOffset) const;
+
+    float ConvertLegacyRegionSpeedToSceneSpeed(float LegacySpeed) const;
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scene|Scale")
+    float MissionRegionOffsetScale = 8300.0f;
+
+public:
     bool FocusCameraOnSceneActorByName(
         const FString& ElementName,
         const FVector& CameraOffset,

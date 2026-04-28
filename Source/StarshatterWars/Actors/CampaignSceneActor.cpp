@@ -563,14 +563,18 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         if (ModelName.IsEmpty())
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: '%s' has empty model/design"),
+                TEXT("[CampaignSceneActor] '%s' missing model/design"),
                 *ElementName);
             continue;
         }
 
+        //--------------------------------------------------
+        // REGION RESOLVE
+        //--------------------------------------------------
+
         AActor* RegionActor = nullptr;
         FVector RegionCenter = FVector::ZeroVector;
-        bool bHasRegionCenter = false;
+        bool bHasRegion = false;
 
         if (Builder && !RegionName.IsEmpty())
         {
@@ -584,25 +588,31 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
                     ? Region.Actor->GetActorLocation()
                     : Region.SpawnLocation;
 
-                bHasRegionCenter = true;
+                bHasRegion = true;
             }
             else if (Builder->GetBodyWorldLocationByName(RegionName, RegionCenter))
             {
-                bHasRegionCenter = true;
+                bHasRegion = true;
             }
         }
 
-        const FVector RelativeLoc = Elem.Location;
+        //--------------------------------------------------
+        // SCALE CONVERSION
+        //--------------------------------------------------
+
+        const FVector LocalOffset =
+            ConvertLegacyRegionOffsetToSceneOffset(Elem.Location);
 
         FVector WorldLoc = FVector::ZeroVector;
 
         if (RegionActor)
         {
-            WorldLoc = RegionActor->GetActorTransform().TransformPosition(RelativeLoc);
+            WorldLoc =
+                RegionActor->GetActorTransform().TransformPosition(LocalOffset);
         }
-        else if (bHasRegionCenter)
+        else if (bHasRegion)
         {
-            WorldLoc = RegionCenter + RelativeLoc;
+            WorldLoc = RegionCenter + LocalOffset;
         }
         else
         {
@@ -610,15 +620,15 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         }
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] FS Elem Name='%s' Design='%s' Model='%s' Region='%s' Rel=%s World=%s Heading=%d Parent=%s"),
+            TEXT("[CampaignSceneActor] Spawn '%s' Region='%s' Local=%s World=%s"),
             *ElementName,
-            *DesignName,
-            *ModelName,
             *RegionName,
-            *RelativeLoc.ToString(),
-            *WorldLoc.ToString(),
-            Elem.Heading,
-            *GetNameSafe(RegionActor));
+            *LocalOffset.ToString(),
+            *WorldLoc.ToString());
+
+        //--------------------------------------------------
+        // SPAWN
+        //--------------------------------------------------
 
         AActor* Spawned = SpawnSceneElementActor(
             ElementName,
@@ -628,10 +638,6 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 
         if (!Spawned)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: failed spawn Name='%s' Model='%s'"),
-                *ElementName,
-                *ModelName);
             continue;
         }
 
@@ -640,17 +646,10 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             Spawned->AttachToActor(
                 RegionActor,
                 FAttachmentTransformRules::KeepWorldTransform);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Attached '%s' to region '%s' Parent=%s World=%s"),
-                *ElementName,
-                *RegionName,
-                *GetNameSafe(RegionActor),
-                *Spawned->GetActorLocation().ToString());
         }
 
         //--------------------------------------------------
-        // FS NAVPOINT MOVEMENT
+        // SHIP MOVEMENT (FIXED SCALE)
         //--------------------------------------------------
 
         if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
@@ -659,36 +658,35 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             {
                 const FS_MissionInstruction& Nav = Elem.Navpoint[0];
 
-                const FVector StartLegacy = Elem.Location;
-                const FVector TargetLegacy = Nav.Location;
-                const float Speed = Nav.Speed > 0 ? (float)Nav.Speed : 1000.0f;
+                const FVector StartLocal = LocalOffset;
+
+                const FVector TargetLocal =
+                    ConvertLegacyRegionOffsetToSceneOffset(Nav.Location);
+
+                const float Speed =
+                    Nav.Speed > 0
+                    ? (float)Nav.Speed
+                    : ((Ship && Ship->Vlimit > 0.0f)
+                        ? Ship->Vlimit
+                        : 1000.0f);
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] FS NAV DEBUG '%s' NavCount=%d Target=%s Speed=%.2f"),
+                    TEXT("[CampaignSceneActor] NAV '%s' Start=%s Target=%s Speed=%.2f"),
                     *ElementName,
-                    Elem.Navpoint.Num(),
-                    *TargetLegacy.ToString(),
+                    *StartLocal.ToString(),
+                    *TargetLocal.ToString(),
                     Speed);
 
                 ShipActor->SetCutsceneLocalMovement(
-                    StartLegacy,
-                    TargetLegacy,
+                    StartLocal,
+                    TargetLocal,
                     Speed);
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] FS MOVEMENT SET '%s' Start=%s Target=%s Speed=%.2f"),
-                    *ElementName,
-                    *StartLegacy.ToString(),
-                    *TargetLegacy.ToString(),
-                    Speed);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] FS NO NAVPOINTS '%s'"),
-                    *ElementName);
             }
         }
+
+        //--------------------------------------------------
+        // TRACK
+        //--------------------------------------------------
 
         FCampaignSceneSpawnedActor Entry;
         Entry.ElementName = ElementName;
@@ -705,7 +703,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission: spawned=%d"),
+        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d"),
         Count);
 }
 
@@ -811,4 +809,56 @@ ASSWCameraManager* ACampaignSceneActor::ResolveSSWCameraManager() const
     }
 
     return nullptr;
+}
+
+FVector ACampaignSceneActor::ConvertLegacyRegionOffsetToSceneOffset(
+    const FVector& LegacyOffset) const
+{
+    /*
+     * Legacy mission locs are large Starshatter region coordinates.
+     * Example: -120000, -90000.
+     *
+     * Region anchors in the visual scene use ring radius scale around
+     * a few thousand units, so mission offsets must be compressed into
+     * the same visual scene scale.
+     */
+
+    const float LegacyReference = 200000.0f;
+
+    const float Scale =
+        LegacyReference > 0.0f
+        ? MissionRegionOffsetScale / LegacyReference
+        : 1.0f;
+
+    return FVector(
+        LegacyOffset.X * Scale,
+        LegacyOffset.Y * Scale,
+        LegacyOffset.Z * Scale);
+}
+
+FVector ACampaignSceneActor::ConvertLegacyRegionOffsetToWorld(
+    AActor* RegionActor,
+    const FVector& LegacyOffset) const
+{
+    const FVector SceneOffset =
+        ConvertLegacyRegionOffsetToSceneOffset(LegacyOffset);
+
+    if (RegionActor)
+    {
+        return RegionActor->GetActorTransform().TransformPosition(SceneOffset);
+    }
+
+    return GetActorLocation() + SceneOffset;
+}
+
+float ACampaignSceneActor::ConvertLegacyRegionSpeedToSceneSpeed(float LegacySpeed) const
+{
+    const float LegacyReference = 200000.0f;
+
+    const float Scale =
+        LegacyReference > 0.0f
+        ? MissionRegionOffsetScale / LegacyReference
+        : 1.0f;
+
+    return LegacySpeed * Scale;
 }

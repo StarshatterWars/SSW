@@ -247,15 +247,8 @@ event: { type: Message, time: 9.00,
 event: { type: Messasge, time: 12.56,
          caption: "to the Force outpost\nin the nearby Janek system." }
 
-event: 
-{
-    type: Camera,
-    time: 16.18,
-    param: (6,20),
-    rotator: (225, 80, 0),
-    offset: (0,0,1500),
-    target: "Kitts"
-}
+event: { type: Camera,     time:  16.18, param: (6, 20),  target: "Kitts" }
+event: { type: Camera,     time: 23.75,  param: (6,15), target: "Lovo" }
 
 event: { type: Display, time: 16.18, message: "Dantari Separatists" }
 event: { type: Display, time: 16.18, message: "Destroyer Squadron 'Kitts'" }
@@ -265,16 +258,6 @@ event: { type: Message, time: 16.18,
 
 event: { type: Message, time: 19.64,
          caption: "of the Trellis Farcaster,\" said\nAdministrator Lars of the Directorate." }
-
-event: 
-{
-    type: Camera,
-    time: 19.64,
-    param: (6,15),
-    rotator: (90, 0, 0),
-    offset: (0, 0, -2000),
-    target: "Trellis-Solus" 
-}
 
 event: { type: Message, time: 23.75,
          caption: "\"We have suffered a great deal of damage\nin the fighting," }
@@ -310,16 +293,6 @@ event: { type: Message, time: 46.55,
 event: { type: Message, time: 49.49,
          caption: "of the outer worlds\nof Trellis and Jalah." }
 
-event: 
-{
-    type: Camera,
-    time: 52.55,
-    param: (6,15),
-    rotator: (0, 90, 90),
-    offset: (0, 0, -2000),
-    target: "Tal Vesta Stellar Observatory" 
-}
-
 event: { type: Display, time: 52.55, message: "Meridian Sector" }
 event: { type: Display, time: 52.55, message: "Tal Vesta Stellar Observatory" }
 
@@ -329,6 +302,8 @@ event: { type: Messasge, time: 52.55,
 event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
        
+event: { type: Camera, time: 60.50, param: (6, 20),  target: "Trellis-Solus" }
+
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 
@@ -340,6 +315,8 @@ event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 
 event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
+
+event: { type: Camera, time: 72.55,  param: (6, 20),  target: "Tal Vesta Stellar Observatory" }
 
 event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }
