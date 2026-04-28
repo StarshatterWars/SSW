@@ -264,10 +264,10 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             {
                 float FinalScale = MissionElementScaleMultiplier;
 
-                if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
-                {
-                    FinalScale *= 4.0f;
-                }
+                //if (ResolvedName.Equals(TEXT("Farcaster"), ESearchCase::IgnoreCase))
+                //{
+                //    FinalScale *= 4.0f;
+                //}
 
                 FinalScale = FMath::Max(FinalScale, 1.0f);
 
@@ -958,36 +958,44 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
 
     FBox Box(ForceInit);
 
+    FVector AverageVelocity = FVector::ZeroVector;
+
     for (AActor* Actor : GroupActors)
     {
         Box += Actor->GetActorLocation();
+        AverageVelocity += Actor->GetVelocity();
     }
 
     const FVector Center = Box.GetCenter();
     const FVector Extent = Box.GetExtent();
 
-    const float Radius = FMath::Max(Extent.Size(), 500.0f);
-    const float Distance = FMath::Clamp(Radius * 3.0f, 1200.0f, 3500.0f);
+    FVector VelocityDir = AverageVelocity.GetSafeNormal();
+    if (VelocityDir.IsNearlyZero())
+    {
+        VelocityDir = GroupActors[0]->GetActorForwardVector();
+    }
 
-    const FVector CameraLocation =
-        Center + FVector(-Distance, Distance * 0.45f, Distance * 0.28f);
+    const float Radius = FMath::Max(Extent.Size(), 800.0f);
+    const float Distance = FMath::Clamp(Radius * 4.0f, 1800.0f, 6500.0f);
 
-    const FRotator CameraRotation =
-        (Center - CameraLocation).Rotation();
+    const FVector LocalOffset =
+        FVector(-Distance, Distance * 0.45f, Distance * 0.30f);
 
-    Cam->SetStaticView(CameraLocation, CameraRotation);
+    Cam->SetGroupFollowView(
+        GroupActors,
+        LocalOffset,
+        VelocityDir,
+        0.0f);
+
     Cam->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] CommanderGroup '%s' Count=%d Center=%s Extent=%s Radius=%.2f Distance=%.2f Cam=%s Rot=%s"),
+        TEXT("[SceneActor Camera] CommanderGroup FOLLOW '%s' Count=%d Center=%s Radius=%.2f Offset=%s"),
         *CommanderName,
         GroupActors.Num(),
         *Center.ToString(),
-        *Extent.ToString(),
         Radius,
-        Distance,
-        *CameraLocation.ToString(),
-        *CameraRotation.ToString());
+        *LocalOffset.ToString());
 
     return true;
 }

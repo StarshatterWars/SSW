@@ -31,6 +31,14 @@ APlanetActor::APlanetActor()
     PlanetMesh->SetGenerateOverlapEvents(false);
     PlanetMesh->SetCastShadow(false);
 
+    RegionAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("RegionAnchor"));
+    RegionAnchor->SetupAttachment(RootComponent);
+
+    // CRITICAL: must stay identity
+    RegionAnchor->SetRelativeLocation(FVector::ZeroVector);
+    RegionAnchor->SetRelativeRotation(FRotator::ZeroRotator);
+    RegionAnchor->SetRelativeScale3D(FVector::OneVector);
+
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshFinder(
         TEXT("/Script/Engine.StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 

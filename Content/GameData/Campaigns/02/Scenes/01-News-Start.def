@@ -198,7 +198,7 @@ element: {
    iff:       2
    playable:  false
    region:    "Trellis"
-   loc:       (187e3, -281e3, 0)
+   loc:       (195e3, -300e3, 0)
 }
 
 element: {

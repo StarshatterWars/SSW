@@ -10,9 +10,10 @@ UENUM()
 enum class ESSWCameraMode : uint8
 {
     None,
+    Static,
     BodyOrbit,
     ActorFollow,
-    Static
+    GroupFollow
 };
 
 UCLASS()
@@ -54,6 +55,13 @@ public:
     void SetStaticView(const FVector& Location, const FRotator& Rotation);
 
     void ClearCamera();
+
+public:
+    void SetGroupFollowView(
+        const TArray<AActor*>& InTargets,
+        const FVector& Offset,
+        const FVector& InVelocityDir,
+        float InLookAhead);
 
 protected:
 
@@ -98,4 +106,16 @@ protected:
 
     UPROPERTY(EditAnywhere)
     bool bLegacyAxisMapping = true;
+
+private:
+    void UpdateGroupFollow(float DeltaTime);
+
+private:
+    UPROPERTY()
+    TArray<TObjectPtr<AActor>> GroupTargets;
+
+    FVector GroupFollowOffset = FVector(-3000.0f, 1200.0f, 800.0f);
+    FVector GroupVelocityDir = FVector::ForwardVector;
+    float GroupLookAhead = 0.0f;
+    float GroupLagSpeed = 5.0f;
 };

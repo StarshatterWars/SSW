@@ -83,6 +83,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Planet|Debug")
     void DumpPlanetMaterialState(const FString& Context) const;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Planet|Anchors")
+    TObjectPtr<USceneComponent> RegionAnchor;
+
+
 protected:
     void EnsureDynamicMaterial();
     void ApplyMaterialParameters();
@@ -92,6 +96,7 @@ protected:
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Planet")
     TObjectPtr<USceneComponent> SceneRoot = nullptr;
+
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Planet")
     TObjectPtr<UStaticMeshComponent> PlanetMesh = nullptr;

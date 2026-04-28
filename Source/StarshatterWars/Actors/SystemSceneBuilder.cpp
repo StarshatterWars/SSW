@@ -2173,27 +2173,21 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
         InnerRadiusUnits + StandardRegionRadiusUnits;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s BodyActor=%s"),
+        TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s BodyActor=%s BodyScale=%s"),
         *BodyName,
         *BodyWorldLocation.ToString(),
         InnerRadiusUnits,
         OuterRadiusUnits,
         GridUnits,
         bIsMoon ? TEXT("true") : TEXT("false"),
-        *GetNameSafe(BodyActor));
+        *GetNameSafe(BodyActor),
+        *BodyActor->GetActorScale3D().ToString());
 
     AActor* RegionActor = SpawnRegionActor(
         BodyName,
         BodyWorldLocation,
         OuterRadiusUnits,
         BodyActor);
-
-    /*
-     * IMPORTANT:
-     * Do NOT call RegionActor->SetActorHiddenInGame(true) here.
-     * The region actor is attached to the planet/moon actor.
-     * Hide only its mesh inside SpawnRegionActor().
-     */
 
     RegisterSpawnedRegion(
         BodyName + TEXT("_REGION"),
@@ -2208,7 +2202,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s HiddenActor=%d"),
+            TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s ActorScale=%s HiddenActor=%d"),
             *BodyName,
             *BodyName,
             *BodyWorldLocation.ToString(),
@@ -2216,6 +2210,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
             OuterRadiusUnits,
             GridUnits,
             *GetNameSafe(RegionActor),
+            RegionActor ? *RegionActor->GetActorScale3D().ToString() : TEXT("NULL"),
             RegionActor ? (RegionActor->IsHidden() ? 1 : 0) : -1);
     }
 }
@@ -2237,7 +2232,8 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    SpawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
     const FString FullName = RegionName + TEXT("_REGION");
 
@@ -2258,6 +2254,9 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
 #if WITH_EDITOR
     Spawned->SetActorLabel(FullName);
 #endif
+
+    Spawned->SetActorHiddenInGame(false);
+    Spawned->SetActorEnableCollision(false);
 
     UStaticMeshComponent* SMC = Spawned->GetStaticMeshComponent();
     if (SMC)
@@ -2282,22 +2281,65 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
         SMC->SetCastShadow(false);
         SMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-        UE_LOG(LogTemp, Error,
-            TEXT("[RegionDebug] %s ActorHidden=%d MeshVisible=%d MeshHiddenInGame=%d Mat=%s"),
+        /*
+         * IMPORTANT:
+         * Visual scale goes on the mesh component only.
+         * The region actor itself must stay usable as a logical anchor.
+         */
+        SMC->SetRelativeScale3D(FVector(OuterRadiusUnits));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[RegionDebug] %s ActorHidden=%d MeshVisible=%d MeshHiddenInGame=%d MeshScale=%s Mat=%s"),
             *FullName,
             Spawned->IsHidden() ? 1 : 0,
             SMC->IsVisible() ? 1 : 0,
             SMC->bHiddenInGame ? 1 : 0,
+            *SMC->GetRelativeScale3D().ToString(),
             *GetNameSafe(SMC->GetMaterial(0)));
     }
 
-    Spawned->SetActorScale3D(FVector(OuterRadiusUnits));
+    /*
+     * IMPORTANT:
+     * Do NOT scale the region actor by OuterRadiusUnits.
+     * That was the source of child ship scale corruption.
+     */
+    Spawned->SetActorScale3D(FVector::OneVector);
 
+    if (USceneComponent* Root = Spawned->GetRootComponent())
+    {
+        Root->SetWorldLocation(WorldLocation);
+        Root->SetWorldRotation(FRotator::ZeroRotator);
+        Root->SetWorldScale3D(FVector::OneVector);
+    }
+
+    /*
+     * Keep the parent relationship, but prefer PlanetActor::RegionAnchor.
+     * Since PlanetActor may still be actor-scaled for now, we force the
+     * region root back to world scale 1 immediately after attach.
+     */
     if (ParentActor)
     {
-        Spawned->AttachToActor(
-            ParentActor,
-            FAttachmentTransformRules::KeepWorldTransform);
+        if (APlanetActor* PlanetActor = Cast<APlanetActor>(ParentActor))
+        {
+            if (PlanetActor->RegionAnchor)
+            {
+                Spawned->AttachToComponent(
+                    PlanetActor->RegionAnchor,
+                    FAttachmentTransformRules::KeepWorldTransform);
+            }
+            else
+            {
+                Spawned->AttachToActor(
+                    ParentActor,
+                    FAttachmentTransformRules::KeepWorldTransform);
+            }
+        }
+        else
+        {
+            Spawned->AttachToActor(
+                ParentActor,
+                FAttachmentTransformRules::KeepWorldTransform);
+        }
     }
     else
     {
@@ -2306,13 +2348,28 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
             FAttachmentTransformRules::KeepWorldTransform);
     }
 
+    Spawned->SetActorLocation(WorldLocation);
+    Spawned->SetActorRotation(FRotator::ZeroRotator);
+    Spawned->SetActorScale3D(FVector::OneVector);
+
+    if (USceneComponent* Root = Spawned->GetRootComponent())
+    {
+        Root->SetWorldLocation(WorldLocation);
+        Root->SetWorldRotation(FRotator::ZeroRotator);
+        Root->SetWorldScale3D(FVector::OneVector);
+    }
+
     SpawnedActors.Add(Spawned);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s OuterRadiusUnits=%.2f Parent=%s"),
+        TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s ActorScale=%s RootWorldScale=%s OuterRadiusUnits=%.2f Parent=%s"),
         *FullName,
         *GetNameSafe(Spawned),
-        *WorldLocation.ToString(),
+        *Spawned->GetActorLocation().ToString(),
+        *Spawned->GetActorScale3D().ToString(),
+        Spawned->GetRootComponent()
+        ? *Spawned->GetRootComponent()->GetComponentScale().ToString()
+        : TEXT("NoRoot"),
         OuterRadiusUnits,
         *GetNameSafe(ParentActor));
 
@@ -2365,6 +2422,18 @@ void ASystemSceneBuilder::RegisterSpawnedRegion(
     float OuterRadiusUnits,
     float GridUnits)
 {
+    if (Actor)
+    {
+        Actor->SetActorLocation(SpawnLocation);
+        Actor->SetActorScale3D(FVector::OneVector);
+
+        if (USceneComponent* Root = Actor->GetRootComponent())
+        {
+            Root->SetWorldLocation(SpawnLocation);
+            Root->SetWorldScale3D(FVector::OneVector);
+        }
+    }
+
     FSpawnedSystemRegion Entry;
     Entry.RegionName = RegionName;
     Entry.AnchorBodyName = AnchorBodyName;
@@ -2378,12 +2447,13 @@ void ASystemSceneBuilder::RegisterSpawnedRegion(
     SpawnedRegions.Add(Entry);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Inner=%.2f Outer=%.2f Count=%d"),
+        TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Inner=%.2f Outer=%.2f Count=%d ActorScale=%s"),
         *RegionName,
         *AnchorBodyName,
         InnerRadiusUnits,
         OuterRadiusUnits,
-        SpawnedRegions.Num());
+        SpawnedRegions.Num(),
+        Actor ? *Actor->GetActorScale3D().ToString() : TEXT("NULL"));
 }
 
 bool ASystemSceneBuilder::GetRegionWorldLocationByName(

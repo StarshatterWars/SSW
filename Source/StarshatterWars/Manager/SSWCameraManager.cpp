@@ -125,6 +125,10 @@ void ASSWCameraManager::Tick(float DeltaTime)
         UpdateActorFollow(DeltaTime);
         break;
 
+    case ESSWCameraMode::GroupFollow:
+        UpdateGroupFollow(DeltaTime);
+        break;
+
     default:
         break;
     }
@@ -263,4 +267,125 @@ void ASSWCameraManager::LookAt(const FVector& Target)
 {
     FVector Dir = Target - GetActorLocation();
     SetActorRotation(Dir.Rotation());
+}
+
+void ASSWCameraManager::SetGroupFollowView(
+    const TArray<AActor*>& InTargets,
+    const FVector& Offset,
+    const FVector& InVelocityDir,
+    float InLookAhead)
+{
+    GroupTargets.Empty();
+
+    for (AActor* Actor : InTargets)
+    {
+        if (Actor)
+        {
+            GroupTargets.Add(Actor);
+        }
+    }
+
+    GroupFollowOffset = Offset.IsNearlyZero()
+        ? FVector(-3000.0f, 1200.0f, 800.0f)
+        : Offset;
+
+    GroupVelocityDir = InVelocityDir.GetSafeNormal();
+
+    if (GroupVelocityDir.IsNearlyZero())
+    {
+        GroupVelocityDir = FVector::ForwardVector;
+    }
+
+    GroupLookAhead = InLookAhead;
+    Mode = ESSWCameraMode::GroupFollow;
+
+    UpdateGroupFollow(0.0f);
+}
+
+void ASSWCameraManager::UpdateGroupFollow(float DeltaTime)
+{
+    TArray<AActor*> ValidTargets;
+
+    for (AActor* Actor : GroupTargets)
+    {
+        if (Actor)
+        {
+            ValidTargets.Add(Actor);
+        }
+    }
+
+    if (ValidTargets.Num() <= 0)
+    {
+        return;
+    }
+
+    FBox GroupBox(ForceInit);
+    FVector AverageVelocity = FVector::ZeroVector;
+
+    for (AActor* Actor : ValidTargets)
+    {
+        GroupBox += Actor->GetActorLocation();
+        AverageVelocity += Actor->GetVelocity();
+    }
+
+    const FVector Center = GroupBox.GetCenter();
+    const FVector Extent = GroupBox.GetExtent();
+
+    FVector VelocityDir = AverageVelocity.GetSafeNormal();
+
+    if (VelocityDir.IsNearlyZero())
+    {
+        VelocityDir = GroupVelocityDir;
+    }
+
+    if (VelocityDir.IsNearlyZero())
+    {
+        VelocityDir = ValidTargets[0]->GetActorForwardVector();
+    }
+
+    if (VelocityDir.IsNearlyZero())
+    {
+        VelocityDir = FVector::ForwardVector;
+    }
+
+    const float Radius = FMath::Max(Extent.Size(), 800.0f);
+    const float DistanceScale = FMath::Clamp(Radius / 800.0f, 1.0f, 3.0f);
+
+    const FVector LocalOffset = GroupFollowOffset * DistanceScale;
+    const FRotator MovementRot = VelocityDir.Rotation();
+
+    const FVector DesiredCamLoc =
+        Center + MovementRot.RotateVector(LocalOffset);
+
+    const float SafeDelta = FMath::Clamp(DeltaTime, 0.0f, 0.1f);
+
+    const FVector SmoothedCamLoc = FMath::VInterpTo(
+        GetActorLocation(),
+        DesiredCamLoc,
+        SafeDelta,
+        GroupLagSpeed);
+
+    SetActorLocation(SmoothedCamLoc);
+
+    const FVector LookTarget =
+        Center + (VelocityDir * GroupLookAhead);
+
+    const FRotator DesiredRot =
+        (LookTarget - SmoothedCamLoc).Rotation();
+
+    const FRotator SmoothedRot = FMath::RInterpTo(
+        GetActorRotation(),
+        DesiredRot,
+        SafeDelta,
+        GroupLagSpeed);
+
+    SetActorRotation(SmoothedRot);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SSWCameraManager] GroupFollow Count=%d Center=%s Radius=%.2f VelDir=%s Cam=%s"),
+        ValidTargets.Num(),
+        *Center.ToString(),
+        Radius,
+        *VelocityDir.ToString(),
+        *SmoothedCamLoc.ToString());
 }

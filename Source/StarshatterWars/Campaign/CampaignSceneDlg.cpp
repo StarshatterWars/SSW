@@ -1124,8 +1124,32 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     // ----------------------------------------------------
     // PARAM 6 -> FOLLOW TARGET (ships, hero shots)
+    // ----------------------------------------------------
     if (Param == 6 && TargetActor)
     {
+        ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
+
+        const float BlendSeconds =
+            Event.EventNParams > 1
+            ? FMath::Max(0.0f, (float)Event.EventParam[1])
+            : 0.5f;
+
+        if (SceneActor)
+        {
+            const int32 GroupCount =
+                SceneActor->GetCommanderGroupActorCount(Event.EventTarget);
+
+            if (GroupCount >= 2)
+            {
+                if (SceneActor->FocusCameraOnCommanderGroup(
+                    Event.EventTarget,
+                    BlendSeconds))
+                {
+                    return;
+                }
+            }
+        }
+
         FVector FollowOffset = Event.EventOffset;
 
         if (FollowOffset.IsNearlyZero())
@@ -1138,7 +1162,7 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
             FollowOffset,
             Event.EventRotator);
 
-        Cam->ActivateCamera(0.5f);
+        Cam->ActivateCamera(BlendSeconds);
 
         return;
     }
