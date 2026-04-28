@@ -248,7 +248,6 @@ event: { type: Messasge, time: 12.56,
          caption: "to the Force outpost\nin the nearby Janek system." }
 
 event: { type: Camera,     time:  16.18, param: (6, 20),  target: "Kitts" }
-event: { type: Camera,     time: 23.75,  param: (6,15), target: "Lovo" }
 
 event: { type: Display, time: 16.18, message: "Dantari Separatists" }
 event: { type: Display, time: 16.18, message: "Destroyer Squadron 'Kitts'" }

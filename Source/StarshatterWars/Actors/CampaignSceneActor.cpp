@@ -695,6 +695,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         Entry.Actor = Spawned;
         Entry.SpawnLocation = Spawned->GetActorLocation();
         Entry.HeadingDegrees = Elem.Heading;
+        Entry.CommanderName = Elem.Commander;
 
         SpawnedSceneActors.Add(Entry);
         OwnedActors.Add(Spawned);
@@ -861,4 +862,153 @@ float ACampaignSceneActor::ConvertLegacyRegionSpeedToSceneSpeed(float LegacySpee
         : 1.0f;
 
     return LegacySpeed * Scale;
+}
+
+FString ACampaignSceneActor::GetCommanderForElement(const FString& ElementName) const
+{
+    for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
+    {
+        if (Entry.ElementName.Equals(ElementName, ESearchCase::IgnoreCase))
+        {
+            return Entry.CommanderName; // <- ADD THIS FIELD (see below)
+        }
+    }
+
+    return FString();
+}
+
+bool ACampaignSceneActor::FocusCameraOnSceneActorGroup(
+    const TArray<FString>& ElementNames,
+    float BlendSeconds) const
+{
+    ASSWCameraManager* Cam = ResolveSSWCameraManager();
+    if (!Cam)
+    {
+        return false;
+    }
+
+    FBox GroupBox(ForceInit);
+
+    int32 FoundCount = 0;
+
+    for (const FString& Name : ElementNames)
+    {
+        AActor* Actor = FindSceneActorByName(Name);
+        if (!Actor)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SceneActor Camera] Group target missing '%s'"),
+                *Name);
+            continue;
+        }
+
+        GroupBox += Actor->GetActorLocation();
+        FoundCount++;
+    }
+
+    if (FoundCount <= 0 || !GroupBox.IsValid)
+    {
+        return false;
+    }
+
+    const FVector Center = GroupBox.GetCenter();
+    const float Radius = FMath::Max(GroupBox.GetExtent().Size(), 1500.0f);
+
+    const FVector CameraLocation =
+        Center + FVector(-Radius * 2.5f, Radius * 1.1f, Radius * 0.75f);
+
+    const FRotator CameraRotation =
+        (Center - CameraLocation).Rotation();
+
+    Cam->SetStaticView(CameraLocation, CameraRotation);
+    Cam->ActivateCamera(BlendSeconds);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneActor Camera] GroupCamera Count=%d Center=%s Radius=%.2f Cam=%s"),
+        FoundCount,
+        *Center.ToString(),
+        Radius,
+        *CameraLocation.ToString());
+
+    return true;
+}
+
+bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
+    const FString& CommanderName,
+    float BlendSeconds) const
+{
+    ASSWCameraManager* Cam = ResolveSSWCameraManager();
+    if (!Cam)
+    {
+        return false;
+    }
+
+    TArray<AActor*> GroupActors;
+
+    //--------------------------------------------------
+    // FIND COMMANDER + SUBORDINATES
+    //--------------------------------------------------
+
+    for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
+    {
+        if (!Entry.Actor)
+        {
+            continue;
+        }
+
+        if (Entry.ElementName.Equals(CommanderName, ESearchCase::IgnoreCase))
+        {
+            GroupActors.Add(Entry.Actor);
+        }
+        else
+        {
+            // match commander relationship
+            const FString Commander = GetCommanderForElement(Entry.ElementName);
+
+            if (Commander.Equals(CommanderName, ESearchCase::IgnoreCase))
+            {
+                GroupActors.Add(Entry.Actor);
+            }
+        }
+    }
+
+    if (GroupActors.Num() <= 0)
+    {
+        return false;
+    }
+
+    //--------------------------------------------------
+    // BUILD GROUP BOX
+    //--------------------------------------------------
+
+    FBox Box(ForceInit);
+
+    for (AActor* Actor : GroupActors)
+    {
+        Box += Actor->GetActorLocation();
+    }
+
+    const FVector Center = Box.GetCenter();
+    float Radius = FMath::Max(Box.GetExtent().Size(), 1500.0f);
+
+    //--------------------------------------------------
+    // CAMERA
+    //--------------------------------------------------
+
+    const FVector CamLoc =
+        Center + FVector(-Radius * 2.5f, Radius * 1.2f, Radius * 0.8f);
+
+    const FRotator CamRot =
+        (Center - CamLoc).Rotation();
+
+    Cam->SetStaticView(CamLoc, CamRot);
+    Cam->ActivateCamera(BlendSeconds);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneActor Camera] CommanderGroup '%s' Count=%d Center=%s"),
+        *CommanderName,
+        GroupActors.Num(),
+        *Center.ToString());
+
+    return true;
 }

@@ -18,6 +18,7 @@ struct FCampaignSceneSpawnedActor
     UPROPERTY() FString ElementName;
     UPROPERTY() FString DesignName;
     UPROPERTY() FString RegionName;
+    UPROPERTY() FString CommanderName; // ?? ADD THIS
     UPROPERTY() AActor* Actor = nullptr;
     UPROPERTY() FVector SpawnLocation = FVector::ZeroVector;
     UPROPERTY() int32 HeadingDegrees = 0;
@@ -46,6 +47,12 @@ public:
     FVector ConvertLegacyRegionOffsetToWorld(AActor* RegionActor, const FVector& LegacyOffset) const;
 
     float ConvertLegacyRegionSpeedToSceneSpeed(float LegacySpeed) const;
+
+    FString GetCommanderForElement(const FString& ElementName) const;
+
+    bool FocusCameraOnSceneActorGroup(const TArray<FString>& ElementNames, float BlendSeconds) const;
+
+    bool FocusCameraOnCommanderGroup(const FString& CommanderName, float BlendSeconds) const;
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scene|Scale")
