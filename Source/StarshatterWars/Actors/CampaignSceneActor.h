@@ -206,4 +206,12 @@ private:
 
     TMap<FString, Ship*> RuntimeShipByElementName;
     TMap<FString, AShipActor*> ShipActorByElementName;
+
+private:
+    FVector GetFormationOffsetForElement(
+        const FS_MissionElement& Elem,
+        int32 FollowerIndex,
+        int32 FollowerCount) const;
+
+    void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
 };

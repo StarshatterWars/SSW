@@ -1745,6 +1745,41 @@ Ship::GetLeader() const
 	return (Ship*)this;
 }
 
+void Ship::SetLeader(Ship* Leader)
+{
+	if (!Leader || Leader == this)
+	{
+		return;
+	}
+
+	SimElement* LeaderElement = Leader->GetElement();
+
+	// If leader has no element, create one and assign leader as index 1
+	if (!LeaderElement)
+	{
+		LeaderElement = new SimElement(Leader->Name(), Leader->GetIFF(), (int)Leader->Class());
+
+		// Leader MUST be index 1
+		LeaderElement->AddShip(Leader, 1);
+	}
+
+	// Add this ship as follower (next slot)
+	if (!LeaderElement->Contains(this))
+	{
+		LeaderElement->AddShip(this);
+	}
+
+	// Ensure this ship references the same element
+	element = LeaderElement;
+
+	UE_LOG(LogStarshatterWars, Warning,
+		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' Element='%hs' Index=%d"),
+		Name(),
+		Leader->Name(),
+		LeaderElement->Name().data(),
+		LeaderElement->FindIndex(this));
+}
+
 int
 Ship::GetElementIndex() const
 {
@@ -2122,7 +2157,6 @@ Ship::ExecFrame(double seconds)
 		}
 	}
 
-	// observers do notxrun out of power:
 	if (IsNetObserver()) {
 		for (int i = 0; i < reactors.size(); i++)
 			reactors[i]->SetFuelRange(1e6);
@@ -2138,7 +2172,6 @@ Ship::ExecFrame(double seconds)
 	ExecEvalFrame(seconds);
 
 	if (IsAirborne()) {
-		// are we trying to make orbit?
 		if (Location().Y >= TERRAIN_ALTITUDE_LIMIT)
 			MakeOrbit();
 	}
@@ -2157,12 +2190,16 @@ Ship::ExecFrame(double seconds)
 
 	ExecPhysics(seconds);
 
+	//-------------------------------------------------------------
+	// Formation correction
+	//-------------------------------------------------------------
+	ApplyLeaderFormation(seconds);
+
 	if (!InTransition()) {
 		UpdateTrack();
 	}
 
-	// are we docking?
-	if (IsDropship()) {
+	if (IsDropship() && GetRegion()) {
 		ListIter<Ship> iter = GetRegion()->GetCarriers();
 
 		while (++iter) {
@@ -5148,3 +5185,45 @@ Ship::AIValue() const
 	return value;
 }
 
+void Ship::SetFormationOffset(const FVector& Offset)
+{
+	formation_offset = Offset;
+}
+
+FVector Ship::GetFormationOffset() const
+{
+	return formation_offset;
+}
+
+void Ship::ApplyLeaderFormation(double seconds)
+{
+	Ship* Leader = GetLeader();
+
+	if (!Leader || Leader == this)
+	{
+		return;
+	}
+
+	if (formation_offset.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FRotator LeaderRot(
+		0.0f,
+		(float)Leader->GetHelmHeading(),
+		0.0f);
+
+	const FVector DesiredLoc =
+		Leader->Location() + LeaderRot.RotateVector(formation_offset);
+
+	const FVector CurrentLoc = Location();
+
+	const double FollowRate = 4.0;
+	const double Alpha = FMath::Clamp(seconds * FollowRate, 0.0, 1.0);
+
+	const FVector NewLoc = FMath::Lerp(CurrentLoc, DesiredLoc, (float)Alpha);
+
+	MoveTo(NewLoc);
+	SetHelmHeading(Leader->GetHelmHeading());
+}

@@ -726,6 +726,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     // PASS 2: COMMANDER LINKING (CRITICAL)
     //-------------------------------------------------------------
     LinkRuntimeShipCommanders(MissionData.Element);
+    ApplyRuntimeFormationOffsets(MissionData.Element);
 
     //-------------------------------------------------------------
     // FINAL LOG
@@ -978,10 +979,10 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     }
 
     const float Radius = FMath::Max(Extent.Size(), 800.0f);
-    const float Distance = FMath::Clamp(Radius * 4.0f, 1800.0f, 6500.0f);
+    const float Distance = FMath::Clamp(Radius * 1.4f, 650.0f, 2200.0f);
 
     const FVector LocalOffset =
-        FVector(-Distance, Distance * 0.45f, Distance * 0.30f);
+        FVector(-Distance, Distance * 0.30f, Distance * 0.18f);
 
     Cam->SetGroupFollowView(
         GroupActors,
@@ -1237,21 +1238,140 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
             continue;
         }
 
-        /*
-            Temporary clean bridge:
-            Ship.h currently exposes SetWard(Ship*) but not SetLeader(Ship*).
-            Use SetWard for now as the runtime relationship hook.
-
-            Later, if you expose SetLeader or SimElement-based formation logic,
-            swap this single line only.
-        */
-        ChildShip->SetWard(CommanderShip);
+        ChildShip->SetLeader(CommanderShip);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] CommanderLink Child='%s' Commander='%s'"),
+            TEXT("[CampaignSceneActor] CommanderLink Child='%s' Leader='%s'"),
             *Elem.Name,
             *Elem.Commander);
     }
 }
 
+void ACampaignSceneActor::ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements)
+{
+    TMap<FString, TArray<const FS_MissionElement*>> FollowersByCommander;
 
+    for (const FS_MissionElement& Elem : Elements)
+    {
+        if (!Elem.Commander.IsEmpty())
+        {
+            FollowersByCommander.FindOrAdd(Elem.Commander).Add(&Elem);
+        }
+    }
+
+    for (const TPair<FString, TArray<const FS_MissionElement*>>& Pair : FollowersByCommander)
+    {
+        const FString& CommanderName = Pair.Key;
+        const TArray<const FS_MissionElement*>& Followers = Pair.Value;
+
+        Ship* CommanderShip = RuntimeShipByElementName.FindRef(CommanderName);
+        AShipActor* CommanderActor = ShipActorByElementName.FindRef(CommanderName);
+
+        if (!CommanderShip || !CommanderActor)
+        {
+            continue;
+        }
+
+        const FVector CommanderLoc = CommanderActor->GetActorLocation();
+        const FRotator CommanderRot = CommanderActor->GetActorRotation();
+
+        for (int32 Index = 0; Index < Followers.Num(); ++Index)
+        {
+            const FS_MissionElement* FollowerElem = Followers[Index];
+
+            if (!FollowerElem)
+            {
+                continue;
+            }
+
+            Ship* FollowerShip = RuntimeShipByElementName.FindRef(FollowerElem->Name);
+            AShipActor* FollowerActor = ShipActorByElementName.FindRef(FollowerElem->Name);
+
+            if (!FollowerShip || !FollowerActor)
+            {
+                continue;
+            }
+
+            const FVector LocalOffset =
+                GetFormationOffsetForElement(*FollowerElem, Index, Followers.Num());
+
+            const FVector WorldOffset =
+                CommanderRot.RotateVector(LocalOffset);
+
+            const FVector DesiredWorldLoc =
+                CommanderLoc + WorldOffset;
+
+            FollowerShip->SetFormationOffset(LocalOffset);
+
+            FollowerShip->MoveTo(DesiredWorldLoc);
+            FollowerShip->SetHelmHeading(CommanderShip->GetHelmHeading());
+
+            FollowerActor->SetActorLocation(DesiredWorldLoc);
+            FollowerActor->SetActorRotation(CommanderRot);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] FormationOffset Commander='%s' Follower='%s' Offset=%s World=%s"),
+                *CommanderName,
+                *FollowerElem->Name,
+                *LocalOffset.ToString(),
+                *DesiredWorldLoc.ToString());
+        }
+    }
+}
+
+FVector ACampaignSceneActor::GetFormationOffsetForElement(
+    const FS_MissionElement& Elem,
+    int32 FollowerIndex,
+    int32 FollowerCount) const
+{
+    const float Spacing = 3500.0f;
+
+    const int32 SafeIndex = FollowerIndex + 1;
+
+    INSTRUCTION_FORMATION Formation = INSTRUCTION_FORMATION::DIAMOND;
+
+    if (Elem.Navpoint.Num() > 0)
+    {
+        Formation = ResolveInstructionFormation(Elem.Navpoint[0].Formation);
+    }
+
+    switch (Formation)
+    {
+        case INSTRUCTION_FORMATION::TRAIL:
+            return FVector(-Spacing * SafeIndex, 0.0f, 0.0f);
+
+        case INSTRUCTION_FORMATION::SPREAD:
+        {
+            const float Side = (FollowerIndex % 2 == 0) ? -1.0f : 1.0f;
+            const float Rank = FMath::FloorToFloat((float)FollowerIndex / 2.0f) + 1.0f;
+            return FVector(-Spacing * Rank, Side * Spacing * Rank, 0.0f);
+        }
+
+        case INSTRUCTION_FORMATION::BOX:
+        {
+            const int32 Col = FollowerIndex % 2;
+            const int32 Row = FollowerIndex / 2;
+            return FVector(
+                -Spacing * (Row + 1),
+                (Col == 0 ? -Spacing : Spacing),
+                0.0f);
+        }
+
+        case INSTRUCTION_FORMATION::DIAMOND:
+        default:
+        {
+            switch (FollowerIndex)
+            {
+                case 0: return FVector(-Spacing, -Spacing, 0.0f);
+                case 1: return FVector(-Spacing, Spacing, 0.0f);
+                case 2: return FVector(-Spacing * 2.0f, 0.0f, 0.0f);
+                default:
+                {
+                    const float Side = (FollowerIndex % 2 == 0) ? -1.0f : 1.0f;
+                    const float Rank = FMath::FloorToFloat((float)FollowerIndex / 2.0f) + 1.0f;
+                    return FVector(-Spacing * (Rank + 1.0f), Side * Spacing, 0.0f);
+                }
+            }
+        }
+    }
+}

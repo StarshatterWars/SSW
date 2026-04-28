@@ -183,12 +183,12 @@ public:
     Ship* GetController() const;
     int               NumInbound() const;
     int               NumFlightDecks() const;
-    FlightDeck* GetFlightDeck(int i = 0) const;
-    Ship* GetCarrier() const { return carrier; }
-    FlightDeck* GetDock() const { return dock; }
+    FlightDeck*       GetFlightDeck(int i = 0) const;
+    Ship*             GetCarrier() const { return carrier; }
+    FlightDeck*       GetDock() const { return dock; }
     void              SetCarrier(Ship* c, FlightDeck* d);
     void              Stow();
-    InboundSlot* GetInbound() const { return inbound; }
+    InboundSlot*      GetInbound() const { return inbound; }
     void              SetInbound(InboundSlot* s);
 
     // DRIVE SYSTEMS:
@@ -197,12 +197,11 @@ public:
     void              SetAugmenter(bool enable);
     double            Thrust(double seconds) const;
     double            VelocityLimit() const { return vlimit; }
-    Drive* GetDrive() const { return main_drive; }
+    Drive*            GetDrive() const { return main_drive; }
     double            Throttle() const { return throttle; }
     bool              Augmenter() const { return augmenter; }
-    QuantumDrive* GetQuantumDrive() const { return quantum_drive; }
-    Farcaster* GetFarcaster() const { return farcaster; }
-
+    QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
+    Farcaster*        GetFarcaster() const { return farcaster; }
     bool              IsAirborne() const;
     bool              IsDropCam() const { return transition_type == TRANSITION_DROP_CAM; }
     bool              IsDropping() const { return transition_type == TRANSITION_DROP_ORBIT; }
@@ -255,12 +254,12 @@ public:
     virtual bool      FireDecoy();
     virtual void      CyclePrimary();
     virtual void      CycleSecondary();
-    virtual Weapon* GetPrimary() const;
-    virtual Weapon* GetSecondary() const;
-    virtual Weapon* GetWeaponByIndex(int n);
+    virtual Weapon*    GetPrimary() const;
+    virtual Weapon*    GetSecondary() const;
+    virtual Weapon*    GetWeaponByIndex(int n);
     virtual WeaponGroup* GetPrimaryGroup() const;
     virtual WeaponGroup* GetSecondaryGroup() const;
-    virtual Weapon* GetDecoy() const;
+    virtual Weapon*    GetDecoy() const;
     virtual List<SimShot>& GetActiveDecoys();
     virtual void      AddActiveDecoy(Drone* d);
     virtual int* GetLoadout() { return loadout; }
@@ -289,7 +288,7 @@ public:
     virtual bool      GetTrigger(int i) const;
     virtual void      SetTrigger(int i);
 
-    Ship* GetWard() const { return ward; }
+    Ship*             GetWard() const { return ward; }
     void              SetWard(Ship* s);
 
     // SHIELD SYSTEMS:
@@ -391,7 +390,10 @@ public:
     int                     FlightPlanLength();
     CombatUnit*             GetCombatUnit() const { return combat_unit; }
     SimElement*             GetElement() const { return element; }
+
     Ship*                   GetLeader() const;
+    void                    SetLeader(Ship* Leader);
+
     int                     GetElementIndex() const;
     int                     GetOrigElementIndex() const;
     void                    SetElement(SimElement* e);
@@ -575,4 +577,12 @@ protected:
     static double     friendly_fire_level;
 
     const FShipDesign* UnrealDesign = nullptr;
+
+public:
+    void SetFormationOffset(const FVector& Offset);
+    FVector GetFormationOffset() const;
+    void ApplyLeaderFormation(double seconds);
+
+private:
+    FVector formation_offset = FVector::ZeroVector;
 };
