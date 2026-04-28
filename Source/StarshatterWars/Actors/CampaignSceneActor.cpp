@@ -207,7 +207,8 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
 
     FActorSpawnParameters Params;
     Params.Owner = this;
-    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
     const float ModelYawFix = 90.0f;
 
@@ -216,9 +217,10 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
         (float)HeadingDegrees + ModelYawFix,
         0.0f);
 
-    // -----------------------------------------
-    // 1. Try Blueprint first
-    // -----------------------------------------
+    // --------------------------------------------------
+    // 1. Blueprint path
+    // --------------------------------------------------
+
     {
         const FString BPClassPath = FString::Printf(
             TEXT("/Game/Models/%s/BP_%s.BP_%s_C"),
@@ -253,11 +255,11 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             SpawnedBPActor->SetActorEnableCollision(false);
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] BP Spawned PreScale=%s"),
+                TEXT("[CampaignSceneActor] BP Spawned '%s' Class=%s PreScale=%s"),
+                *ElementName,
+                *GetNameSafe(SpawnedBPActor->GetClass()),
                 *SpawnedBPActor->GetActorScale3D().ToString());
 
-
-            // -----------------------------------------
             if (!SpawnedBPActor->IsA(APlanetActor::StaticClass()))
             {
                 float FinalScale = MissionElementScaleMultiplier;
@@ -267,25 +269,30 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
                     FinalScale *= 4.0f;
                 }
 
+                FinalScale = FMath::Max(FinalScale, 1.0f);
+
                 SpawnedBPActor->SetActorScale3D(FVector(FinalScale));
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] BP PostScale=%s"),
-                    *SpawnedBPActor->GetActorScale3D().ToString());
+                    TEXT("[CampaignSceneActor] BP PostScale '%s' Scale=%s FinalScale=%.6f"),
+                    *ElementName,
+                    *SpawnedBPActor->GetActorScale3D().ToString(),
+                    FinalScale);
             }
             else
             {
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] PlanetActor detected — skipping MissionElementScaleMultiplier"));
+                    TEXT("[CampaignSceneActor] PlanetActor detected, skipping mission element scale"));
             }
 
             return SpawnedBPActor;
         }
     }
 
-    // -----------------------------------------
-    // 2. Static mesh fallback
-    // -----------------------------------------
+    // --------------------------------------------------
+    // 2. Static mesh fallback path
+    // --------------------------------------------------
+
     TSubclassOf<ASceneMeshActor> SpawnClass = DefaultSceneMeshActorClass;
 
     if (!SpawnClass)
@@ -302,6 +309,9 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     UStaticMesh* Mesh = ResolveStaticMeshFromPath(MeshPath);
     if (!Mesh)
     {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] SpawnSceneElementActor: mesh not found '%s'"),
+            *MeshPath);
         return nullptr;
     }
 
@@ -327,12 +337,7 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
     SpawnedActor->SetSceneMesh(Mesh);
 
     UStaticMeshComponent* MeshComp = SpawnedActor->GetMeshComponent();
-    if (!MeshComp)
-    {
-        return SpawnedActor;
-    }
 
-    // -----------------------------------------
     if (!SpawnedActor->IsA(APlanetActor::StaticClass()))
     {
         float FinalScale = MissionElementScaleMultiplier;
@@ -342,11 +347,22 @@ AActor* ACampaignSceneActor::SpawnSceneElementActor(
             FinalScale *= 4.0f;
         }
 
+        FinalScale = FMath::Max(FinalScale, 1.0f);
+
         SpawnedActor->SetActorScale3D(FVector(FinalScale));
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Mesh PostScale '%s' Scale=%s FinalScale=%.6f"),
+            *ElementName,
+            *SpawnedActor->GetActorScale3D().ToString(),
+            FinalScale);
     }
 
-    MeshComp->SetVisibility(true, true);
-    MeshComp->SetHiddenInGame(false, true);
+    if (MeshComp)
+    {
+        MeshComp->SetVisibility(true, true);
+        MeshComp->SetHiddenInGame(false, true);
+    }
 
     SpawnedActor->SetActorHiddenInGame(false);
     SpawnedActor->SetActorEnableCollision(false);
@@ -700,8 +716,17 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         SpawnedSceneActors.Add(Entry);
         OwnedActors.Add(Spawned);
 
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] STORED Entry='%s' Commander='%s' Actor=%s Loc=%s"),
+            *Entry.ElementName,
+            *Entry.CommanderName,
+            *GetNameSafe(Entry.Actor),
+            *Entry.SpawnLocation.ToString());
+
         Count++;
     }
+
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d"),
@@ -877,60 +902,27 @@ FString ACampaignSceneActor::GetCommanderForElement(const FString& ElementName) 
     return FString();
 }
 
-bool ACampaignSceneActor::FocusCameraOnSceneActorGroup(
-    const TArray<FString>& ElementNames,
-    float BlendSeconds) const
+
+int32 ACampaignSceneActor::GetCommanderGroupActorCount(
+    const FString& CommanderName) const
 {
-    ASSWCameraManager* Cam = ResolveSSWCameraManager();
-    if (!Cam)
+    int32 Count = 0;
+
+    for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
     {
-        return false;
-    }
-
-    FBox GroupBox(ForceInit);
-
-    int32 FoundCount = 0;
-
-    for (const FString& Name : ElementNames)
-    {
-        AActor* Actor = FindSceneActorByName(Name);
-        if (!Actor)
+        if (!Entry.Actor)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneActor Camera] Group target missing '%s'"),
-                *Name);
             continue;
         }
 
-        GroupBox += Actor->GetActorLocation();
-        FoundCount++;
+        if (Entry.ElementName.Equals(CommanderName, ESearchCase::IgnoreCase) ||
+            Entry.CommanderName.Equals(CommanderName, ESearchCase::IgnoreCase))
+        {
+            Count++;
+        }
     }
 
-    if (FoundCount <= 0 || !GroupBox.IsValid)
-    {
-        return false;
-    }
-
-    const FVector Center = GroupBox.GetCenter();
-    const float Radius = FMath::Max(GroupBox.GetExtent().Size(), 1500.0f);
-
-    const FVector CameraLocation =
-        Center + FVector(-Radius * 2.5f, Radius * 1.1f, Radius * 0.75f);
-
-    const FRotator CameraRotation =
-        (Center - CameraLocation).Rotation();
-
-    Cam->SetStaticView(CameraLocation, CameraRotation);
-    Cam->ActivateCamera(BlendSeconds);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] GroupCamera Count=%d Center=%s Radius=%.2f Cam=%s"),
-        FoundCount,
-        *Center.ToString(),
-        Radius,
-        *CameraLocation.ToString());
-
-    return true;
+    return Count;
 }
 
 bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
@@ -945,10 +937,6 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
 
     TArray<AActor*> GroupActors;
 
-    //--------------------------------------------------
-    // FIND COMMANDER + SUBORDINATES
-    //--------------------------------------------------
-
     for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
     {
         if (!Entry.Actor)
@@ -956,30 +944,17 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
             continue;
         }
 
-        if (Entry.ElementName.Equals(CommanderName, ESearchCase::IgnoreCase))
+        if (Entry.ElementName.Equals(CommanderName, ESearchCase::IgnoreCase) ||
+            Entry.CommanderName.Equals(CommanderName, ESearchCase::IgnoreCase))
         {
             GroupActors.Add(Entry.Actor);
         }
-        else
-        {
-            // match commander relationship
-            const FString Commander = GetCommanderForElement(Entry.ElementName);
-
-            if (Commander.Equals(CommanderName, ESearchCase::IgnoreCase))
-            {
-                GroupActors.Add(Entry.Actor);
-            }
-        }
     }
 
-    if (GroupActors.Num() <= 0)
+    if (GroupActors.Num() < 2)
     {
         return false;
     }
-
-    //--------------------------------------------------
-    // BUILD GROUP BOX
-    //--------------------------------------------------
 
     FBox Box(ForceInit);
 
@@ -989,26 +964,30 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     }
 
     const FVector Center = Box.GetCenter();
-    float Radius = FMath::Max(Box.GetExtent().Size(), 1500.0f);
+    const FVector Extent = Box.GetExtent();
 
-    //--------------------------------------------------
-    // CAMERA
-    //--------------------------------------------------
+    const float Radius = FMath::Max(Extent.Size(), 500.0f);
+    const float Distance = FMath::Clamp(Radius * 3.0f, 1200.0f, 3500.0f);
 
-    const FVector CamLoc =
-        Center + FVector(-Radius * 2.5f, Radius * 1.2f, Radius * 0.8f);
+    const FVector CameraLocation =
+        Center + FVector(-Distance, Distance * 0.45f, Distance * 0.28f);
 
-    const FRotator CamRot =
-        (Center - CamLoc).Rotation();
+    const FRotator CameraRotation =
+        (Center - CameraLocation).Rotation();
 
-    Cam->SetStaticView(CamLoc, CamRot);
+    Cam->SetStaticView(CameraLocation, CameraRotation);
     Cam->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] CommanderGroup '%s' Count=%d Center=%s"),
+        TEXT("[SceneActor Camera] CommanderGroup '%s' Count=%d Center=%s Extent=%s Radius=%.2f Distance=%.2f Cam=%s Rot=%s"),
         *CommanderName,
         GroupActors.Num(),
-        *Center.ToString());
+        *Center.ToString(),
+        *Extent.ToString(),
+        Radius,
+        Distance,
+        *CameraLocation.ToString(),
+        *CameraRotation.ToString());
 
     return true;
 }

@@ -52,6 +52,8 @@ public:
 
     bool FocusCameraOnSceneActorGroup(const TArray<FString>& ElementNames, float BlendSeconds) const;
 
+    int32 GetCommanderGroupActorCount(const FString& CommanderName) const;
+
     bool FocusCameraOnCommanderGroup(const FString& CommanderName, float BlendSeconds) const;
 
 protected:
