@@ -110,6 +110,16 @@ public:
         int cmd_ai = 0,
         const int* loadout = nullptr
     );
+
+    Ship(
+        const char* ship_name,
+        const char* reg_num,
+        ShipDesign* design,
+        int IFF,
+        int cmd_ai,
+        const int* loadout,
+        bool bCreateAI);
+
     virtual ~Ship();
 
     int operator==(const Ship& s) const { return id == s.id; }

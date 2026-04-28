@@ -147,8 +147,14 @@ static FORCEINLINE FMatrix ToFMatrix(const Matrix& InM)
 // +----------------------------------------------------------------------+
 
 
-
-Ship::Ship(const char* ship_name, const char* reg_num, ShipDesign* ship_dsn, int IFF, int cmd_ai, const int* load)
+Ship::Ship(
+	const char* ship_name,
+	const char* reg_num,
+	ShipDesign* ship_dsn,
+	int IFF,
+	int cmd_ai,
+	const int* load,
+	bool bCreateAI)
 	: IFF_code(IFF), killer(0), throttle(0), augmenter(false), throttle_request(0),
 	shield(0), shieldRep(0), main_drive(0), quantum_drive(0), farcaster(0),
 	check_fire(false), probe(0), sensor_drone(0), primary(0), secondary(1),
@@ -165,20 +171,19 @@ Ship::Ship(const char* ship_name, const char* reg_num, ShipDesign* ship_dsn, int
 {
 	sim = Sim::GetSim();
 
-	strcpy_s(name, ship_name);
+	strcpy_s(name, sizeof(name), ship_name ? ship_name : "");
 	if (reg_num && *reg_num)
-		strcpy_s(regnum, reg_num);
+		strcpy_s(regnum, sizeof(regnum), reg_num);
 	else
 		regnum[0] = 0;
 
 	design = ship_dsn;
 
-	if (!design) {
-		char msg[256];
-		sprintf_s(msg, "No ship design found for '%s'\n", ship_name);
-
-		UE_LOG(LogStarshatterWars, Error, TEXT("%hs"), msg);
-		Game::Panic(msg);
+	if (!design)
+	{
+		UE_LOG(LogStarshatterWars, Error,
+			TEXT("[Ship] No ShipDesign for '%hs'"), ship_name);
+		return;
 	}
 
 	obj_type = SimObject::SIM_SHIP;
@@ -187,402 +192,47 @@ Ship::Ship(const char* ship_name, const char* reg_num, ShipDesign* ship_dsn, int
 	mass = design->mass;
 	integrity = design->integrity;
 	vlimit = design->vlimit;
-
 	agility = design->agility;
-	wep_mass = 0.0f;
-	wep_resist = 0.0f;
 
-	CL = design->CL;
-	CD = design->CD;
-	stall = design->stall;
+	radio_orders = new Instruction("", FVector::ZeroVector);
 
-	chase_vec = design->chase_vec;
-	bridge_vec = design->bridge_vec;
+	//-------------------------------------------------------------
+// AI / Director Setup
+//-------------------------------------------------------------
+	dir = nullptr;
 
-	acs = design->acs;
-	pcs = design->acs;
+	if (bCreateAI && cmd_ai > 0)
+	{
+		SimDirector* Director = SteerAI::Create(this, cmd_ai);
 
-	auto_repair = design->repair_auto;
+		if (Director)
+		{
+			dir = Director;
+			SetNetworkControl(Director);
 
-	while (!base_contact_id)
-		base_contact_id = rand() % 1000;
-
-	contact_id = base_contact_id++;
-	int sys_id = 0;
-
-	for (int i = 0; i < design->reactors.size(); i++) {
-		PowerSource* reactor = new PowerSource(*design->reactors[i]);
-		reactor->SetShip(this);
-		reactor->SetID(sys_id++);
-		reactors.append(reactor);
-		systems.append(reactor);
-	}
-
-	for (int i = 0; i < design->drives.size(); i++) {
-		Drive* drive = new Drive(*design->drives[i]);
-		drive->SetShip(this);
-		drive->SetID(sys_id++);
-
-		int src_index = drive->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(drive);
-
-		drives.append(drive);
-		systems.append(drive);
-	}
-
-	if (design->quantum_drive) {
-		quantum_drive = new QuantumDrive(*design->quantum_drive);
-		quantum_drive->SetShip(this);
-		quantum_drive->SetID(sys_id++);
-
-		int src_index = quantum_drive->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(quantum_drive);
-
-		quantum_drive->SetShip(this);
-		systems.append(quantum_drive);
-	}
-
-	if (design->farcaster) {
-		farcaster = new Farcaster(*design->farcaster);
-		farcaster->SetShip(this);
-		farcaster->SetID(sys_id++);
-
-		int src_index = farcaster->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(farcaster);
-
-		farcaster->SetShip(this);
-		systems.append(farcaster);
-	}
-
-	if (design->thruster) {
-		thruster = new Thruster(*design->thruster);
-		thruster->SetShip(this);
-		thruster->SetID(sys_id++);
-
-		int src_index = thruster->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(thruster);
-
-		thruster->SetShip(this);
-		systems.append(thruster);
-	}
-
-	if (design->shield) {
-		shield = new Shield(*design->shield);
-		shield->SetShip(this);
-		shield->SetID(sys_id++);
-
-		int src_index = shield->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(shield);
-
-		if (design->shield_model) {
-			shieldRep = new ShieldRep;
-			shieldRep->UseModel(design->shield_model);
-		}
-
-		systems.append(shield);
-	}
-
-	for (int i = 0; i < design->flight_decks.size(); i++) {
-		FlightDeck* deck = new FlightDeck(*design->flight_decks[i]);
-		deck->SetShip(this);
-		deck->SetCarrier(this);
-		deck->SetID(sys_id++);
-		deck->SetIndex(i);
-
-		int src_index = deck->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(deck);
-
-		flight_decks.append(deck);
-		systems.append(deck);
-	}
-
-	if (design->flight_decks.size() > 0) {
-		if (!hangar) {
-			hangar = new Hangar;
-			hangar->SetShip(this);
-		}
-	}
-
-	if (design->squadrons.size() > 0) {
-		if (!hangar) {
-			hangar = new Hangar;
-			hangar->SetShip(this);
-		}
-
-		for (int i = 0; i < design->squadrons.size(); i++) {
-			ShipSquadron* s = design->squadrons[i];
-			hangar->CreateSquadron(s->name, 0, s->design, s->count, GetIFF(), 0, 0, s->avail);
-		}
-	}
-
-	if (design->gear) {
-		gear = new LandingGear(*design->gear);
-		gear->SetShip(this);
-		gear->SetID(sys_id++);
-
-		int src_index = gear->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(gear);
-
-		systems.append(gear);
-	}
-
-	if (design->sensor) {
-		sensor = new Sensor(*design->sensor);
-		sensor->SetShip(this);
-		sensor->SetID(sys_id++);
-
-		int src_index = sensor->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(sensor);
-
-		if (IsStarship() || IsStatic() || !strncmp(design->name, "Camera", 6))
-			sensor->SetMode(Sensor::CST);
-
-		systems.append(sensor);
-	}
-
-	int wep_index = 1;
-
-	for (int i = 0; i < design->weapons.size(); i++) {
-		Weapon* gun = new Weapon(*design->weapons[i]);
-		gun->SetID(sys_id++);
-		gun->SetOwner(this);
-		gun->SetIndex(wep_index++);
-
-		int src_index = gun->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(gun);
-
-		WeaponGroup* group = FindWeaponGroup(gun->Group());
-		group->AddWeapon(gun);
-		group->SetAbbreviation(gun->Abbreviation());
-
-		systems.append(gun);
-
-		if (IsDropship() && gun->GetTurret())
-			gun->SetFiringOrders(WeaponsOrders::POINT_DEFENSE);
-		else
-			gun->SetFiringOrders(WeaponsOrders::MANUAL);
-	}
-
-	int loadout_size = design->hard_points.size();
-
-	if (load && loadout_size > 0) {
-		loadout = new int[loadout_size];
-
-		for (int i = 0; i < loadout_size; i++) {
-			int mounted_weapon = loadout[i] = load[i];
-
-			if (mounted_weapon < 0)
-				continue;
-
-			Weapon* missile = design->hard_points[i]->CreateWeapon(mounted_weapon);
-
-			if (missile) {
-				missile->SetID(sys_id++);
-				missile->SetOwner(this);
-				missile->SetIndex(wep_index++);
-
-				WeaponGroup* group = FindWeaponGroup(missile->Group());
-				group->AddWeapon(missile);
-				group->SetAbbreviation(missile->Abbreviation());
-
-				systems.append(missile);
-			}
-		}
-	}
-
-	if (weapons.size() > 1) {
-		primary = -1;
-		secondary = -1;
-
-		for (int i = 0; i < weapons.size(); i++) {
-			WeaponGroup* group = weapons[i];
-			if (group->IsPrimary() && primary < 0) {
-				primary = i;
-
-				// turrets on fighters are set to point defense by default,
-				// this forces the primary turret back to manual control
-				group->SetFiringOrders(WeaponsOrders::MANUAL);
-			}
-
-			else if (group->IsMissile() && secondary < 0) {
-				secondary = i;
-			}
-		}
-
-		if (primary < 0)   primary = 0;
-		if (secondary < 0)   secondary = 1;
-
-		if (weapons.size() > 4) {
 			UE_LOG(LogStarshatterWars, Warning,
-				TEXT("Ship '%hs' type '%hs' has %d wep groups (max=4)"),
-				Name(), DesignName(), weapons.size());
+				TEXT("[Ship] SimDirector created for '%hs' (cmd_ai=%d)"),
+				ship_name,
+				cmd_ai);
 		}
 	}
-
-	if (design->decoy) {
-		decoy = new Weapon(*design->decoy);
-		decoy->SetOwner(this);
-		decoy->SetID(sys_id++);
-		decoy->SetIndex(wep_index++);
-
-		int src_index = decoy->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(decoy);
-
-		systems.append(decoy);
+	else
+	{
+		UE_LOG(LogStarshatterWars, Warning,
+			TEXT("[Ship] AI/DIRECTOR DISABLED for '%hs'"),
+			ship_name);
 	}
+}
 
-	for (int i = 0; i < design->navlights.size(); i++) {
-		NavLight* navlight = new NavLight(*design->navlights[i]);
-		navlight->SetShip(this);
-		navlight->SetID(sys_id++);
-		navlight->SetOffset(static_cast<uint32>(reinterpret_cast<UPTRINT>(this) << 2));
-		navlights.append(navlight);
-		systems.append(navlight);
-	}
-
-	if (design->navsys) {
-		navsys = new NavSystem(*design->navsys);
-		navsys->SetShip(this);
-		navsys->SetID(sys_id++);
-
-		int src_index = navsys->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(navsys);
-
-		systems.append(navsys);
-	}
-
-	if (design->probe) {
-		probe = new Weapon(*design->probe);
-		probe->SetOwner(this);
-		probe->SetID(sys_id++);
-		probe->SetIndex(wep_index++);
-
-		int src_index = probe->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(probe);
-
-		systems.append(probe);
-	}
-
-	for (int i = 0; i < design->computers.size(); i++) {
-		Computer* comp = 0;
-
-		if (design->computers[i]->Subtype() == Computer::FLIGHT) {
-			flcs = new FlightComputer(*design->computers[i]);
-
-			flcs->SetShip(this);
-			flcs->SetMode(flcs_mode);
-			flcs->SetVelocityLimit(vlimit);
-
-			if (thruster)
-				flcs->SetTransLimit(thruster->TransXLimit(),
-					thruster->TransYLimit(),
-					thruster->TransZLimit());
-			else
-				flcs->SetTransLimit(design->trans_x,
-					design->trans_y,
-					design->trans_z);
-
-			comp = flcs;
-		}
-		else {
-			comp = new Computer(*design->computers[i]);
-		}
-
-		comp->SetShip(this);
-		comp->SetID(sys_id++);
-		int src_index = comp->GetSourceIndex();
-		if (src_index >= 0 && src_index < reactors.size())
-			reactors[src_index]->AddClient(comp);
-
-		computers.append(comp);
-		systems.append(comp);
-	}
-
-	// NOTE: Original code used Point(0,0,0). Conversion to FVector requires Instruction ctor support.
-	// Keeping original callsite signature; update Instruction to accept FVector during the broader migration.
-	radio_orders = new Instruction("", Point(0, 0, 0));
-
-	// Load Detail Set:
-	for (int i = 0; i < DetailSet::MAX_DETAIL; i++) {
-		if (design->models[i].size() > 0) {
-			Solid* solid = new ShipSolid(this);
-			solid->UseModel(design->models[i].at(0));
-			solid->CreateShadows(1);
-
-			Point* offset = 0;
-			Point* spin = 0;
-
-			if (design->offsets[i].size() > 0)
-				offset = new Point(*design->offsets[i].at(0));
-
-			if (design->spin_rates.size() > 0)
-				spin = new Point(*design->spin_rates.at(0));
-
-			detail_level = detail.DefineLevel(design->feature_size[i], solid, offset, spin);
-		}
-
-		if (design->models[i].size() > 1) {
-			for (int n = 1; n < design->models[i].size(); n++) {
-				Solid* solid = new ShipSolid(this); //Solid;
-				solid->UseModel(design->models[i].at(n));
-				solid->CreateShadows(1);
-
-				Point* offset = 0;
-				Point* spin = 0;
-
-				if (design->offsets[i].size() > n)
-					offset = new Point(*design->offsets[i].at(n));
-
-				if (design->spin_rates.size() > n)
-					spin = new Point(*design->spin_rates.at(n));
-
-				detail.AddToLevel(detail_level, solid, offset, spin);
-			}
-		}
-	}
-
-	// start with lowest available detail:
-	detail_level = 0; // this is highest -> detail.NumLevels()-1);
-	rep = detail.GetRep(detail_level);
-
-	if (design->cockpit_model) {
-		cockpit = new Solid;
-		cockpit->UseModel(design->cockpit_model);
-		cockpit->SetForeground(true);
-	}
-
-	if (design->main_drive >= 0 && design->main_drive < drives.size())
-		main_drive = drives[design->main_drive];
-
-	// only use light from drives:
-	light = 0;
-
-	// setup starship helm stuff:
-	if (IsStarship()) {
-		flcs_mode = FLCS_HELM;
-	}
-
-	// initialize the AI:
-	dir = 0;
-	SetControls(0);
-
-	for (int i = 0; i < 4; i++) {
-		missile_id[i] = 0;
-		missile_eta[i] = 0;
-		trigger[i] = false;
-	}
+Ship::Ship(
+	const char* ship_name,
+	const char* reg_num,
+	ShipDesign* ship_dsn,
+	int IFF,
+	int cmd_ai,
+	const int* load)
+	: Ship(ship_name, reg_num, ship_dsn, IFF, cmd_ai, load, true)
+{
 }
 
 Ship::Ship(
@@ -592,7 +242,7 @@ Ship::Ship(
 	int IFF,
 	int cmd_ai,
 	const int* loadout)
-	: Ship(ship_name, reg_num, (ShipDesign*)nullptr, IFF, cmd_ai, loadout)
+	: Ship(ship_name, reg_num, (ShipDesign*)nullptr, IFF, cmd_ai, loadout, false)
 {
 	UnrealDesign = unreal_design;
 }

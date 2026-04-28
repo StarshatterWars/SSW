@@ -581,6 +581,9 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
 
+    //-------------------------------------------------------------
+    // PASS 1: Spawn + Create Runtime Ships
+    //-------------------------------------------------------------
     for (const FS_MissionElement& Elem : MissionData.Element)
     {
         if (Elem.Name.IsEmpty())
@@ -594,10 +597,10 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 
         FString ModelName = DesignName;
 
-        const FShipDesign* Ship = ShipDesignRegistry::Find(DesignName);
-        if (Ship && !Ship->Model.IsEmpty())
+        const FShipDesign* ShipRow = ShipDesignRegistry::Find(DesignName);
+        if (ShipRow && !ShipRow->Model.IsEmpty())
         {
-            ModelName = Ship->Model;
+            ModelName = ShipRow->Model;
         }
 
         if (ModelName.IsEmpty())
@@ -611,7 +614,6 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         //--------------------------------------------------
         // REGION RESOLVE
         //--------------------------------------------------
-
         AActor* RegionActor = nullptr;
         FVector RegionCenter = FVector::ZeroVector;
         bool bHasRegion = false;
@@ -637,9 +639,8 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         }
 
         //--------------------------------------------------
-        // SCALE CONVERSION
+        // LOCATION CONVERSION
         //--------------------------------------------------
-
         const FVector LocalOffset =
             ConvertLegacyRegionOffsetToSceneOffset(Elem.Location);
 
@@ -659,17 +660,9 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
             WorldLoc = ConvertMissionElementLocToWorld(Elem);
         }
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Spawn '%s' Region='%s' Local=%s World=%s"),
-            *ElementName,
-            *RegionName,
-            *LocalOffset.ToString(),
-            *WorldLoc.ToString());
-
         //--------------------------------------------------
-        // SPAWN
+        // SPAWN ACTOR
         //--------------------------------------------------
-
         AActor* Spawned = SpawnSceneElementActor(
             ElementName,
             ModelName,
@@ -689,69 +682,54 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         }
 
         //--------------------------------------------------
-        // SHIP MOVEMENT (FIXED SCALE)
+        // RUNTIME SHIP BINDING (THIS IS THE KEY ADDITION)
         //--------------------------------------------------
-
         if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
         {
-            if (Elem.Navpoint.Num() > 0)
+            Ship* RuntimeShip = CreateRuntimeShipForMissionElement(Elem, WorldLoc);
+
+            if (RuntimeShip)
             {
-                const FS_MissionInstruction& Nav = Elem.Navpoint[0];
+                ShipActor->BindRuntimeShip(RuntimeShip);
 
-                const FVector StartLocal = LocalOffset;
-
-                const FVector TargetLocal =
-                    ConvertLegacyRegionOffsetToSceneOffset(Nav.Location);
-
-                const float Speed =
-                    Nav.Speed > 0
-                    ? (float)Nav.Speed
-                    : ((Ship && Ship->Vlimit > 0.0f)
-                        ? Ship->Vlimit
-                        : 1000.0f);
+                RegisterRuntimeShipForElement(
+                    Elem,
+                    RuntimeShip,
+                    ShipActor);
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] NAV '%s' Start=%s Target=%s Speed=%.2f"),
+                    TEXT("[CampaignSceneActor] Ship bound '%s' ? Actor '%s'"),
                     *ElementName,
-                    *StartLocal.ToString(),
-                    *TargetLocal.ToString(),
-                    Speed);
-
-                ShipActor->SetCutsceneLocalMovement(
-                    StartLocal,
-                    TargetLocal,
-                    Speed);
+                    *ShipActor->GetName());
             }
         }
 
         //--------------------------------------------------
-        // TRACK
+        // TRACKING
         //--------------------------------------------------
-
         FCampaignSceneSpawnedActor Entry;
         Entry.ElementName = ElementName;
         Entry.DesignName = ModelName;
         Entry.RegionName = RegionName;
+        Entry.CommanderName = Elem.Commander;
         Entry.Actor = Spawned;
         Entry.SpawnLocation = Spawned->GetActorLocation();
         Entry.HeadingDegrees = Elem.Heading;
-        Entry.CommanderName = Elem.Commander;
 
         SpawnedSceneActors.Add(Entry);
         OwnedActors.Add(Spawned);
 
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] STORED Entry='%s' Commander='%s' Actor=%s Loc=%s"),
-            *Entry.ElementName,
-            *Entry.CommanderName,
-            *GetNameSafe(Entry.Actor),
-            *Entry.SpawnLocation.ToString());
-
         Count++;
     }
 
+    //-------------------------------------------------------------
+    // PASS 2: COMMANDER LINKING (CRITICAL)
+    //-------------------------------------------------------------
+    LinkRuntimeShipCommanders(MissionData.Element);
 
+    //-------------------------------------------------------------
+    // FINAL LOG
+    //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d"),
         Count);
@@ -1024,12 +1002,15 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     return true;
 }
 
-Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionElement& Elem)
+Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
+    const FS_MissionElement& Elem,
+    const FVector& WorldLoc)
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] CreateRuntimeShipForMissionElement Name='%s' Design='%s'"),
+        TEXT("[CampaignSceneActor] CreateRuntimeShipForMissionElement Name='%s' Design='%s' WorldLoc=%s"),
         *Elem.Name,
-        *Elem.Design);
+        *Elem.Design,
+        *WorldLoc.ToString());
 
     //-------------------------------------------------------------
     // 1. Resolve legacy ShipDesign
@@ -1048,18 +1029,25 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
     }
 
     //-------------------------------------------------------------
-    // 2. Construct Ship
+    // 2. Safe constructor strings
     //-------------------------------------------------------------
-    const FTCHARToUTF8 ShipNameUtf8(*Elem.Name);
-    const FTCHARToUTF8 RegistryUtf8(*Elem.Name);
+    const FString SafeShipName = Elem.Name.Left(63);
+    const FString SafeRegistry = Elem.Name.Left(15);
 
+    const FTCHARToUTF8 ShipNameUtf8(*SafeShipName);
+    const FTCHARToUTF8 RegistryUtf8(*SafeRegistry);
+
+    //-------------------------------------------------------------
+    // 3. Construct Ship (NO AI for cutscene/runtime)
+    //-------------------------------------------------------------
     Ship* NewShip = new Ship(
         ShipNameUtf8.Get(),
         RegistryUtf8.Get(),
         Design,
         Elem.IFFCode,
         Elem.CommandAI,
-        nullptr
+        nullptr,
+        false
     );
 
     if (!NewShip)
@@ -1071,7 +1059,19 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
     }
 
     //-------------------------------------------------------------
-    // 3. Initial state
+    // 4. CRITICAL: Seed runtime transform
+    //-------------------------------------------------------------
+    NewShip->MoveTo(WorldLoc);
+    NewShip->SetHelmHeading((double)Elem.Heading);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d"),
+        *Elem.Name,
+        *WorldLoc.ToString(),
+        Elem.Heading);
+
+    //-------------------------------------------------------------
+    // 5. Initial state
     //-------------------------------------------------------------
     NewShip->SetInvulnerable(Elem.Invulnerable);
 
@@ -1080,7 +1080,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
     );
 
     //-------------------------------------------------------------
-    // 4. Navpoints -> Instructions
+    // 6. Navpoints -> Instructions
     //-------------------------------------------------------------
     for (const FS_MissionInstruction& Nav : Elem.Navpoint)
     {
@@ -1109,12 +1109,12 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
         Inst->SetEMCON(Nav.EMCON);
 
         //---------------------------------------------------------
-        // Formation (SAFE)
+        // Formation
         //---------------------------------------------------------
         Inst->SetFormation(ResolveInstructionFormation(Nav.Formation));
 
         //---------------------------------------------------------
-        // Status (basic mapping)
+        // Status
         //---------------------------------------------------------
         if (!Nav.StatusName.IsEmpty())
         {
@@ -1157,12 +1157,101 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(const FS_MissionEl
     }
 
     //-------------------------------------------------------------
-    // 5. Final log
+    // 7. Final log
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' NavPoints=%d"),
+        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Loc=%s Heading=%d NavPoints=%d"),
         *Elem.Name,
+        *WorldLoc.ToString(),
+        Elem.Heading,
         Elem.Navpoint.Num());
 
     return NewShip;
 }
+
+void ACampaignSceneActor::RegisterRuntimeShipForElement(
+    const FS_MissionElement& Elem,
+    Ship* RuntimeShip,
+    AShipActor* ShipActor)
+{
+    if (!RuntimeShip || Elem.Name.IsEmpty())
+    {
+        return;
+    }
+
+    RuntimeShips.Add(RuntimeShip);
+    RuntimeShipByElementName.Add(Elem.Name, RuntimeShip);
+
+    if (ShipActor)
+    {
+        ShipActorByElementName.Add(Elem.Name, ShipActor);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] Registered RuntimeShip Elem='%s' Ship=%p Actor='%s'"),
+        *Elem.Name,
+        RuntimeShip,
+        ShipActor ? *ShipActor->GetName() : TEXT("NULL"));
+}
+
+void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionElement>& Elements)
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] LinkRuntimeShipCommanders: Elements=%d RuntimeShips=%d"),
+        Elements.Num(),
+        RuntimeShips.Num());
+
+    for (const FS_MissionElement& Elem : Elements)
+    {
+        if (Elem.Name.IsEmpty() || Elem.Commander.IsEmpty())
+        {
+            continue;
+        }
+
+        Ship* ChildShip = RuntimeShipByElementName.FindRef(Elem.Name);
+        Ship* CommanderShip = RuntimeShipByElementName.FindRef(Elem.Commander);
+
+        if (!ChildShip)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] CommanderLink SKIP child missing Elem='%s' Commander='%s'"),
+                *Elem.Name,
+                *Elem.Commander);
+            continue;
+        }
+
+        if (!CommanderShip)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] CommanderLink SKIP commander missing Elem='%s' Commander='%s'"),
+                *Elem.Name,
+                *Elem.Commander);
+            continue;
+        }
+
+        if (ChildShip == CommanderShip)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] CommanderLink SKIP self commander Elem='%s'"),
+                *Elem.Name);
+            continue;
+        }
+
+        /*
+            Temporary clean bridge:
+            Ship.h currently exposes SetWard(Ship*) but not SetLeader(Ship*).
+            Use SetWard for now as the runtime relationship hook.
+
+            Later, if you expose SetLeader or SimElement-based formation logic,
+            swap this single line only.
+        */
+        ChildShip->SetWard(CommanderShip);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] CommanderLink Child='%s' Commander='%s'"),
+            *Elem.Name,
+            *Elem.Commander);
+    }
+}
+
+
