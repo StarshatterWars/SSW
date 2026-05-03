@@ -53,7 +53,7 @@
 
 // Starshatter:
 #include "Campaign.h"
-#include "Starshatter.h"
+#include "SSWRuntimeSubsystem.h"
 #include "CmpnScreen.h"
 
 UCmpLoadDlg::UCmpLoadDlg(const FObjectInitializer& ObjectInitializer)
@@ -427,8 +427,12 @@ void UCmpLoadDlg::RefreshLoadState()
         return;
     }
 
-    Starshatter* Stars = Starshatter::GetInstance();
-    if (!Stars)
+    UGameInstance* GI = GetGameInstance();
+    USSWRuntimeSubsystem* RuntimeSS = GI
+        ? GI->GetSubsystem<USSWRuntimeSubsystem>()
+        : nullptr;
+
+    if (!RuntimeSS)
     {
         if (LblActivity)
         {
@@ -445,14 +449,19 @@ void UCmpLoadDlg::RefreshLoadState()
 
     if (LblActivity)
     {
-        const char* Activity = Stars->GetLoadActivity();
-        const FString ActivityText = Activity ? UTF8_TO_TCHAR(Activity) : TEXT("LOADING...");
+        const char* Activity = RuntimeSS->GetLoadActivity();
+        const FString ActivityText = Activity && Activity[0]
+            ? UTF8_TO_TCHAR(Activity)
+            : TEXT("LOADING...");
+
         LblActivity->SetText(FText::FromString(ActivityText));
     }
 
     if (ProgressBar)
     {
-        const float Progress = FMath::Clamp((float)Stars->GetLoadProgress(), 0.0f, 1.0f);
+        const float Progress =
+            FMath::Clamp((float)RuntimeSS->GetLoadProgress(), 0.0f, 1.0f);
+
         ProgressBar->SetPercent(Progress);
     }
 }
