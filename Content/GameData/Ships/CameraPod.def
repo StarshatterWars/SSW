@@ -6,7 +6,7 @@ class:         Drone
 abrv:		   DRN
 description:   "The CameraPod Drone is a compact autonomous observation unit deployed for perimeter surveillance and battlefield monitoring. Lightly armored and unarmed, it relays real-time visual and sensor telemetry to command elements, extending tactical awareness without risking crewed assets."
 empire:        All
-model:         "Invisible"
+model:         "CameraPod"
 cockpit_model: "Invisible"
 cockpit_scale: 1e-6
 

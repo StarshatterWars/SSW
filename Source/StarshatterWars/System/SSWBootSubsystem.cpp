@@ -387,7 +387,7 @@ void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
     if (!Ctx.SystemDesignSS)
         return;
 
-    Ctx.SystemDesignSS->LoadAll(true);
+    Ctx.SystemDesignSS->LoadAll(bRebuildTables);
 }
 
 void USSWBootSubsystem::BootWeaponDesignLoader(const FBootContext& Ctx)
@@ -395,7 +395,7 @@ void USSWBootSubsystem::BootWeaponDesignLoader(const FBootContext& Ctx)
     if (!Ctx.WeaponDesignSS)
         return;
 
-    Ctx.WeaponDesignSS->LoadAll(false);
+    Ctx.WeaponDesignSS->LoadAll(bRebuildTables);
 }
 
 void USSWBootSubsystem::BootShipDesignLoader(const FBootContext& Ctx)
@@ -403,7 +403,7 @@ void USSWBootSubsystem::BootShipDesignLoader(const FBootContext& Ctx)
     if (!Ctx.ShipDesignSS)
         return;
 
-    Ctx.ShipDesignSS->LoadAll(false);
+    Ctx.ShipDesignSS->LoadAll(bRebuildTables);
 }
 
 void USSWBootSubsystem::BootGalaxyLoader(const FBootContext& Ctx)
@@ -411,7 +411,7 @@ void USSWBootSubsystem::BootGalaxyLoader(const FBootContext& Ctx)
     if (!Ctx.EnvironmentSS)
         return;
 
-    Ctx.EnvironmentSS->LoadAll(false);
+    Ctx.EnvironmentSS->LoadAll(bRebuildTables);
 }
 
 void USSWBootSubsystem::BootCombatGroupLoader(const FBootContext& Ctx)
@@ -419,7 +419,7 @@ void USSWBootSubsystem::BootCombatGroupLoader(const FBootContext& Ctx)
     if (!Ctx.CombatGroupSS)
         return;
 
-    Ctx.CombatGroupSS->LoadAll(false);
+    Ctx.CombatGroupSS->LoadAll(bRebuildTables);
 }
 
 void USSWBootSubsystem::BootGameDataLoader(bool bFull)

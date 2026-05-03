@@ -254,7 +254,6 @@ void AShipActor::Tick(float DeltaTime)
 
     if (RuntimeShip)
     {
-        RuntimeShip->ExecFrame((double)DeltaTime);
         UpdateFromRuntimeShip(DeltaTime);
         return;
     }
@@ -264,8 +263,6 @@ void AShipActor::Tick(float DeltaTime)
         UpdateCutsceneNavMovement(DeltaTime);
         return;
     }
-
-    SetThrustersActive(false);
 }
 
 void AShipActor::ConfigureForCutscene()

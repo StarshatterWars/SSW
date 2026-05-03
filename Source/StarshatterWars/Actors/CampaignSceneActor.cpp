@@ -15,8 +15,10 @@
 
 #include "PlanetActor.h"
 #include "ShipActor.h"
+#include "CameraPodActor.h"
 #include "ShipDesign.h"
 
+#include "Sim.h"
 #include "Ship.h"
 
 #include "GameFramework/PlayerController.h"
@@ -45,7 +47,7 @@ namespace
 
 ACampaignSceneActor::ACampaignSceneActor()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
     RootComponent = SceneRoot;
@@ -54,6 +56,23 @@ ACampaignSceneActor::ACampaignSceneActor()
 void ACampaignSceneActor::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void ACampaignSceneActor::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    if (bEnableRuntimeAITick)
+    {
+        TickRuntimeShips(DeltaSeconds);
+    }
+}
+
+void ACampaignSceneActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    ClearRuntimeShips();
+
+    Super::EndPlay(EndPlayReason);
 }
 
 ASystemSceneBuilder* ACampaignSceneActor::ResolveSystemSceneBuilder() const
@@ -89,8 +108,58 @@ void ACampaignSceneActor::ClearSceneActors()
     OwnedActors.Empty();
     SpawnedSceneActors.Empty();
 
+    ClearRuntimeShips();
+
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] Cleared scene actors"));
+}
+
+void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
+{
+    const double SimSeconds =
+        FMath::Clamp((double)DeltaSeconds * (double)RuntimeAITimeScale, 0.0, (double)MaxRuntimeTickSeconds);
+
+    for (Ship* RuntimeShip : RuntimeShips)
+    {
+        if (!RuntimeShip)
+        {
+            continue;
+        }
+
+        RuntimeShip->ExecFrame(SimSeconds);
+       
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] RuntimeAI Tick Ship='%s' Loc=%s Vel=%s"),
+            ANSI_TO_TCHAR(RuntimeShip->Name()),
+            *RuntimeShip->Location().ToString(),
+            *RuntimeShip->Velocity().ToString());
+    }
+
+    for (const TPair<FString, AShipActor*>& Pair : ShipActorByElementName)
+    {
+        AShipActor* ShipActor = Pair.Value;
+        Ship* RuntimeShip = RuntimeShipByElementName.FindRef(Pair.Key);
+
+        if (!ShipActor || !RuntimeShip)
+        {
+            continue;
+        }
+
+        ShipActor->UpdateFromRuntimeShip(DeltaSeconds);
+    }
+}
+
+void ACampaignSceneActor::ClearRuntimeShips()
+{
+    for (Ship* RuntimeShip : RuntimeShips)
+    {
+        delete RuntimeShip;
+    }
+
+    RuntimeShips.Empty();
+    RuntimeShipByElementName.Empty();
+    ShipActorByElementName.Empty();
+   
 }
 
 FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const
@@ -577,6 +646,12 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 {
     ClearSceneActors();
 
+    CurrentMissionRegionName = MissionData.MissionRegion.TrimStartAndEnd();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] CurrentMissionRegionName SET '%s'"),
+        *CurrentMissionRegionName);
+
     int32 Count = 0;
 
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
@@ -594,6 +669,20 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         const FString ElementName = Elem.Name.TrimStartAndEnd();
         const FString RegionName = Elem.RegionName.TrimStartAndEnd();
         const FString DesignName = Elem.Design.TrimStartAndEnd();
+
+        //--------------------------------------------------
+        // Capture first valid element region as fallback.
+        // Needed when MissionRegion is empty and player
+        // CameraPod/Falcon has no explicit region.
+        //--------------------------------------------------
+        if (CurrentMissionRegionName.IsEmpty() && !RegionName.IsEmpty())
+        {
+            CurrentMissionRegionName = RegionName;
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] CurrentMissionRegionName AUTO-SET '%s'"),
+                *CurrentMissionRegionName);
+        }
 
         FString ModelName = DesignName;
 
@@ -682,7 +771,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
         }
 
         //--------------------------------------------------
-        // RUNTIME SHIP BINDING (THIS IS THE KEY ADDITION)
+        // RUNTIME SHIP BINDING
         //--------------------------------------------------
         if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
         {
@@ -698,7 +787,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
                     ShipActor);
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] Ship bound '%s' ? Actor '%s'"),
+                    TEXT("[CampaignSceneActor] Ship bound '%s' -> Actor '%s'"),
                     *ElementName,
                     *ShipActor->GetName());
             }
@@ -723,7 +812,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     }
 
     //-------------------------------------------------------------
-    // PASS 2: COMMANDER LINKING (CRITICAL)
+    // PASS 2: COMMANDER LINKING
     //-------------------------------------------------------------
     LinkRuntimeShipCommanders(MissionData.Element);
     ApplyRuntimeFormationOffsets(MissionData.Element);
@@ -732,8 +821,9 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     // FINAL LOG
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d"),
-        Count);
+        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d RuntimeShips=%d"),
+        Count,
+        RuntimeShips.Num());
 }
 
 AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) const
@@ -1045,7 +1135,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     const FTCHARToUTF8 RegistryUtf8(*SafeRegistry);
 
     //-------------------------------------------------------------
-    // 3. Construct Ship (NO AI for cutscene/runtime)
+    // 3. Construct Ship
     //-------------------------------------------------------------
     Ship* NewShip = new Ship(
         ShipNameUtf8.Get(),
@@ -1054,7 +1144,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         Elem.IFFCode,
         Elem.CommandAI,
         nullptr,
-        false
+        true
     );
 
     if (!NewShip)
@@ -1062,14 +1152,19 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         UE_LOG(LogTemp, Error,
             TEXT("[CampaignSceneActor] Failed to create Ship '%s'"),
             *Elem.Name);
+
         return nullptr;
     }
 
     //-------------------------------------------------------------
-    // 4. CRITICAL: Seed runtime transform
+    // 4. Seed runtime transform
     //-------------------------------------------------------------
     NewShip->MoveTo(WorldLoc);
-    NewShip->SetHelmHeading((double)Elem.Heading);
+
+    const double HeadingRad = FMath::DegreesToRadians((double)Elem.Heading);
+
+    NewShip->SetHeading(0.0, 0.0, HeadingRad + PI);
+    NewShip->SetHelmHeading(HeadingRad);
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d"),
@@ -1087,7 +1182,82 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     );
 
     //-------------------------------------------------------------
-    // 6. Navpoints -> Instructions
+    // 6. Assign region
+    //-------------------------------------------------------------
+    Sim* SimInst = Sim::GetSim();
+
+    if (SimInst)
+    {
+        SimRegion* Region = nullptr;
+
+        if (!Elem.RegionName.IsEmpty())
+        {
+            Region = SimInst->FindRegion(Elem.RegionName);
+        }
+
+        if (!Region && !CurrentMissionRegionName.IsEmpty())
+        {
+            Region = SimInst->FindRegion(CurrentMissionRegionName);
+        }
+
+        if (!Region)
+        {
+            Region = SimInst->FindNearestSpaceRegionAt(WorldLoc);
+        }
+
+        if (Region)
+        {
+            NewShip->SetRegion(Region);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] Ship '%s' assigned to Region='%hs' Region=%p"),
+                *Elem.Name,
+                Region->GetName(),
+                Region);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[CampaignSceneActor] No region found for ship '%s' ElemRegion='%s' MissionRegion='%s'"),
+                *Elem.Name,
+                *Elem.RegionName,
+                *CurrentMissionRegionName);
+        }
+    }
+
+    //-------------------------------------------------------------
+    // 7. Player ship assignment
+    //-------------------------------------------------------------
+    if (!CurrentPlayerShip && Elem.Player == 1)
+    {
+        CurrentPlayerShip = NewShip;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] CurrentPlayerShip SET '%s' Design='%s'"),
+            *Elem.Name,
+            *Elem.Design);
+
+        SimRegion* PlayerRegion = NewShip->GetRegion();
+
+        if (PlayerRegion)
+        {
+            PlayerRegion->SetPlayerShip(CurrentPlayerShip);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] Region PlayerShip SET '%hs' Region='%hs'"),
+                CurrentPlayerShip->Name(),
+                PlayerRegion->GetName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[CampaignSceneActor] Player ship '%s' has no region - cannot assign PlayerShip"),
+                *Elem.Name);
+        }
+    }
+
+    //-------------------------------------------------------------
+    // 8. Navpoints -> Instructions
     //-------------------------------------------------------------
     for (const FS_MissionInstruction& Nav : Elem.Navpoint)
     {
@@ -1102,42 +1272,25 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             INSTRUCTION_ACTION::VECTOR
         );
 
-        //---------------------------------------------------------
-        // Core movement
-        //---------------------------------------------------------
         Inst->SetSpeed(Nav.Speed);
         Inst->SetHoldTime((double)Nav.Hold);
-
-        //---------------------------------------------------------
-        // Tactical settings
-        //---------------------------------------------------------
         Inst->SetPriority(Nav.Priority);
         Inst->SetFarcast(Nav.Farcast);
         Inst->SetEMCON(Nav.EMCON);
-
-        //---------------------------------------------------------
-        // Formation
-        //---------------------------------------------------------
         Inst->SetFormation(ResolveInstructionFormation(Nav.Formation));
 
-        //---------------------------------------------------------
-        // Status
-        //---------------------------------------------------------
         if (!Nav.StatusName.IsEmpty())
         {
-            if (Nav.StatusName.Equals("ACTIVE", ESearchCase::IgnoreCase))
+            if (Nav.StatusName.Equals(TEXT("ACTIVE"), ESearchCase::IgnoreCase))
             {
                 Inst->SetStatus(INSTRUCTION_STATUS::ACTIVE);
             }
-            else if (Nav.StatusName.Equals("COMPLETE", ESearchCase::IgnoreCase))
+            else if (Nav.StatusName.Equals(TEXT("COMPLETE"), ESearchCase::IgnoreCase))
             {
                 Inst->SetStatus(INSTRUCTION_STATUS::COMPLETE);
             }
         }
 
-        //---------------------------------------------------------
-        // Targeting
-        //---------------------------------------------------------
         if (!Nav.TargetName.IsEmpty())
         {
             Inst->SetTarget(Nav.TargetName);
@@ -1148,9 +1301,6 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             Inst->SetTargetDesc(TCHAR_TO_ANSI(*Nav.TargetDesc));
         }
 
-        //---------------------------------------------------------
-        // Add to ship
-        //---------------------------------------------------------
         NewShip->AddNavPoint(Inst);
 
         UE_LOG(LogTemp, Warning,
@@ -1164,11 +1314,12 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 7. Final log
+    // 9. Final log
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Loc=%s Heading=%d NavPoints=%d"),
+        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d NavPoints=%d"),
         *Elem.Name,
+        *Elem.Design,
         *WorldLoc.ToString(),
         Elem.Heading,
         Elem.Navpoint.Num());

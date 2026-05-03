@@ -218,8 +218,8 @@ Ship::Ship(
 	radio_orders = new Instruction("", FVector::ZeroVector);
 
 	//-------------------------------------------------------------
-// AI / Director Setup
-//-------------------------------------------------------------
+	// AI / Director Setup (FIXED)
+	//-------------------------------------------------------------
 	dir = nullptr;
 
 	if (bCreateAI && cmd_ai > 0)
@@ -228,8 +228,8 @@ Ship::Ship(
 
 		if (Director)
 		{
-			dir = Director;
-			SetNetworkControl(Director);
+			net_control = Director;
+			dir = nullptr;
 
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Ship] SimDirector created for '%hs' (cmd_ai=%d)"),
@@ -2411,40 +2411,72 @@ Ship::ExecEvalFrame(double seconds)
 
 // +--------------------------------------------------------------------+
 
-void
-Ship::ExecPhysics(double seconds)
+void Ship::ExecPhysics(double seconds)
 {
-	if (net_control) {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecPhysics] ENTER Ship='%hs' Design=%p Dir=%p NetControl=%p Static=%d Phase=%d"),
+		Name(),
+		design,
+		dir,
+		net_control,
+		IsStatic() ? 1 : 0,
+		(int)flight_phase);
+	
+	if (!design)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] Missing ShipDesign. Skipping physics. Ship='%hs' UnrealDesign=%p"),
+			Name(),
+			UnrealDesign);
+
+		return;
+	}
+
+	if (net_control)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs' NetControl=%p"),
+			Name(),
+			net_control);
+
 		net_control->ExecFrame(seconds);
-		Thrust(seconds);  // drive flare
+
+		Thrust(seconds);
+		return;
 	}
-	else {
-		thrust = (float)Thrust(seconds);
-		SetupAgility();
 
-		if (seconds > 0) {
-			g_force = 0.0f;
-		}
+	if (dir)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] AI dir ExecFrame Ship='%hs' Dir=%p Type=%d"),
+			Name(),
+			dir,
+			dir->Type());
 
-		if (IsAirborne()) {
-			const FVector v1 = velocity;
-			AeroFrame(seconds);
-			const FVector v2 = velocity;
-			const FVector dv = (v2 - v1) + FVector(0.0f, g_accel * (float)seconds, 0.0f);
-
-			if (seconds > 0) {
-				g_force = (float)(FVector::DotProduct(dv, cam.vup()) / seconds) / 9.8f;
-			}
-		}
-
-		else if (IsDying() || flight_model < 2) { // standard and relaxed modes
-			Physical::ExecFrame(seconds);
-		}
-
-		else { // arcade mode
-			Physical::ArcadeFrame(seconds);
-		}
+		dir->ExecFrame(seconds);
 	}
+
+	thrust = (float)Thrust(seconds);
+	SetupAgility();
+
+	if (seconds > 0.0)
+	{
+		g_force = 0.0f;
+	}
+
+	if (IsAirborne())
+	{
+		Physical::ExecFrame(seconds);
+		return;
+	}
+
+	if (IsDying() || flight_model < 2)
+	{
+		Physical::ExecFrame(seconds);
+		return;
+	}
+
+	Physical::ArcadeFrame(seconds);
 }
 
 // +--------------------------------------------------------------------+

@@ -50,6 +50,8 @@ public:
     ACampaignSceneActor();
 
     virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     //-------------------------------------------------------------
     // Scene Build / Clear
@@ -68,16 +70,7 @@ public:
     bool FocusCameraOnSceneActorByName(
         const FString& ElementName,
         const FVector& CameraOffset,
-        float BlendSeconds = 0.0f) const;
-
-    bool FocusCameraOnSceneActorByName(
-        const FString& ElementName,
-        const FVector& CameraOffset,
         const FRotator& CameraRotator,
-        float BlendSeconds) const;
-
-    bool FocusCameraOnSceneActorGroup(
-        const TArray<FString>& ElementNames,
         float BlendSeconds) const;
 
     bool FocusCameraOnCommanderGroup(
@@ -150,6 +143,16 @@ protected:
     void LinkRuntimeShipCommanders(const TArray<FS_MissionElement>& Elements);
 
 protected:
+    UPROPERTY(EditAnywhere, Category = "Runtime AI")
+    bool bEnableRuntimeAITick = true;
+
+    UPROPERTY(EditAnywhere, Category = "Runtime AI")
+    float RuntimeAITimeScale = 1.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Runtime AI")
+    float MaxRuntimeTickSeconds = 0.05f;
+
+protected:
     //-------------------------------------------------------------
     // Components
     //-------------------------------------------------------------
@@ -214,4 +217,12 @@ private:
         int32 FollowerCount) const;
 
     void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
+
+    void TickRuntimeShips(float DeltaSeconds);
+    void ClearRuntimeShips();
+
+private:
+    Ship* CurrentPlayerShip = nullptr;
+    FString CurrentMissionRegionName;
+
 };
