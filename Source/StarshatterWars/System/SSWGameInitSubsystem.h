@@ -62,7 +62,23 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "GameStructs.h"
+
+// =========================================================================
+// Kismet / Utility
+// =========================================================================
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/DataTableFunctionLibrary.h"
+
+// =========================================================================
+// Audio
+// =========================================================================
+#include "Sound/SoundBase.h"
+
 #include "SSWGameInitSubsystem.generated.h"
+
+class AMusicController;
 
 UCLASS()
 class STARSHATTERWARS_API USSWGameInitSubsystem : public UGameInstanceSubsystem
@@ -74,13 +90,82 @@ public:
     virtual void Deinitialize() override;
 
 public:
-    // Called by USSWBootSubsystem after boot completes.
     void RunGameInitFromBoot();
+
+    EGAMESTATUS GetGameStatus() const { return Status; }
+    void SetGameStatus(EGAMESTATUS InStatus) { Status = InStatus; }
+
+    void SetupMusicController();
+
+    // ---- Getters / Setters ----
+public:
+    bool IsWindowed() const { return bIsWindowed; }
+    void SetWindowed(bool bIn) { bIsWindowed = bIn; }
+
+    bool IsGameActive() const { return bIsGameActive; }
+    void SetGameActive(bool bIn) { bIsGameActive = bIn; }
+
+    bool IsDeviceLost() const { return bIsDeviceLost; }
+    void SetDeviceLost(bool bIn) { bIsDeviceLost = bIn; }
+
+    bool IsMinimized() const { return bIsMinimized; }
+    void SetMinimized(bool bIn) { bIsMinimized = bIn; }
+
+    bool IsMaximized() const { return bIsMaximized; }
+    void SetMaximized(bool bIn) { bIsMaximized = bIn; }
+
+    bool IsIgnoringSizeChange() const { return bIgnoreSizeChange; }
+    void SetIgnoreSizeChange(bool bIn) { bIgnoreSizeChange = bIn; }
+
+    bool IsDeviceInitialized() const { return bIsDeviceInitialized; }
+    void SetDeviceInitialized(bool bIn) { bIsDeviceInitialized = bIn; }
+
+    bool IsDeviceRestored() const { return bIsDeviceRestored; }
+    void SetDeviceRestored(bool bIn) { bIsDeviceRestored = bIn; }
+
 
 private:
     void RunGameInit();
 
+    void InitGameInstanceState();
+    void InitSaveSlots();
+    void InitGameTime();
+    void InitLegacyLoaderState();
+    void InitUniverseSave();
+    void BindRuntimeAutosave();
+    void InitMusicController();
+    void InitFonts();
+
 private:
+    UPROPERTY()
     bool bGameInitStarted = false;
+
+    UPROPERTY()
     bool bGameInitComplete = false;
+
+    UPROPERTY()
+    bool bIsWindowed;
+
+    UPROPERTY()
+    bool bIsGameActive;
+
+    UPROPERTY()
+    bool bIsDeviceLost;
+
+    UPROPERTY()
+    bool bIsMinimized;
+
+    UPROPERTY()
+    bool bIsMaximized;
+
+    UPROPERTY()
+    bool bIgnoreSizeChange;
+
+    UPROPERTY()
+    bool bIsDeviceInitialized;
+
+    UPROPERTY()
+    bool bIsDeviceRestored;
+
+    EGAMESTATUS Status = EGAMESTATUS::OK;
 };

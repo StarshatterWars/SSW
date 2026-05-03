@@ -25,7 +25,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "StarshatterAudioSubsystem.generated.h"
 
-class UGameInstance;
+class AMusicController;
+class USoundBase;
 class UStarshatterAudioSettings;
 class UStarshatterSettingsSaveGame;
 
@@ -35,57 +36,56 @@ class STARSHATTERWARS_API UStarshatterAudioSubsystem : public UGameInstanceSubsy
     GENERATED_BODY()
 
 public:
-    // -----------------------------
-    // UGameInstanceSubsystem
-    // -----------------------------
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    // -----------------------------
-    // Boot entrypoint
-    // -----------------------------
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
+public:
     void Boot();
 
-    // -----------------------------
-    // Stable API used by Boot + UI
-    // -----------------------------
-
-    /** Reload config from ini (CDO) and sanitize. */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void LoadAudioConfig();
-
-    /** Persist config (CDO) to ini. */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void SaveAudioConfig();
-
-    /** Apply current settings to runtime audio (SoundMix/SoundClass, etc.). */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void ApplySettingsToRuntime();
-
-    /** Optional legacy alias if any old code expects this name. */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void ApplySettingsToRuntimeAudio() { ApplySettingsToRuntime(); }
-
-    /** Access underlying settings object (config-backed CDO). */
-    UFUNCTION(BlueprintPure, Category = "Starshatter|Audio")
-    UStarshatterAudioSettings* GetSettings() const;
-
-    // -----------------------------
-    // SaveGame bridging (unified settings file)
-    // -----------------------------
-
-    /** Pull Audio struct from the unified SaveGame into the AudioSettings CDO. */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void LoadFromSaveGame(const UStarshatterSettingsSaveGame* SaveGame);
-
-    /** Push current AudioSettings CDO values into the unified SaveGame’s Audio struct. */
-    UFUNCTION(BlueprintCallable, Category = "Starshatter|Audio")
-    void WriteToSaveGame(UStarshatterSettingsSaveGame* SaveGame) const;
-
-    // -----------------------------
-    // Convenience accessors
-    // -----------------------------
     static UStarshatterAudioSubsystem* Get(const UObject* WorldContextObject);
     static UStarshatterAudioSubsystem* Get(UGameInstance* GameInstance);
+
+public:
+    UStarshatterAudioSettings* GetSettings() const;
+
+    void LoadAudioConfig();
+    void SaveAudioConfig();
+    void ApplySettingsToRuntime();
+
+public:
+    void LoadFromSaveGame(const UStarshatterSettingsSaveGame* SaveGame);
+    void WriteToSaveGame(UStarshatterSettingsSaveGame* SaveGame) const;
+
+public:
+    void SetupMusicController();
+    AMusicController* GetMusicController();
+
+    void PlayMusic(USoundBase* Music);
+    void StopMusic();
+    void PlayMenuMusic();
+
+    void PlayUISound(UObject* Context, USoundBase* UISound);
+    void PlayHoverSound(UObject* Context);
+    void PlayAcceptSound(UObject* Context);
+    void PlaySoundFromFile(const FString& AudioPath);
+
+    bool IsSoundPlaying();
+
+public:
+    void SetMenuMusic(USoundBase* InMusic) { MenuMusic = InMusic; }
+    void SetHoverSound(USoundBase* InSound) { HoverSound = InSound; }
+    void SetAcceptSound(USoundBase* InSound) { AcceptSound = InSound; }
+
+private:
+    UPROPERTY()
+    TObjectPtr<AMusicController> MusicController = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<USoundBase> MenuMusic = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<USoundBase> HoverSound = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<USoundBase> AcceptSound = nullptr;
 };

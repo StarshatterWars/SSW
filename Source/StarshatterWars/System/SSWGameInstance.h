@@ -140,12 +140,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Variables")
 	void StartGameTimers();
 
-	UFUNCTION(BlueprintCallable, Category = "Game Variables")
-	void StartGame();
-
-	UFUNCTION(BlueprintCallable, Category = "Game Variables")
-	void SpawnGalaxy();
-
 	// =====================================================================
 	// Screen / Level Loading
 	// =====================================================================
@@ -161,15 +155,6 @@ public:
 
 	UFUNCTION()
 	void RemoveScreens();
-
-	// =====================================================================
-	// Game Mode / Campaign Selection
-	// =====================================================================
-	UFUNCTION()
-	void SetGameMode(EGameMode gm);
-
-	UFUNCTION()
-	EGameMode GetGameMode();
 
 	UFUNCTION()
 	void SetActiveCampaign(FS_Campaign campaign);
@@ -521,8 +506,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Time")
 	FString GetCampaignAndUniverseTimeLine() const;
 
+	void HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow);
 
-
+	void SetupMusicController();
 
 	// =====================================================================
 	// Campaign Save (in-memory)
@@ -563,31 +549,6 @@ protected:
 
 	UPROPERTY()
 	FString PaletteName;
-
-	// Internal variables for the state of the app
-	UPROPERTY()
-	bool bIsWindowed;
-
-	UPROPERTY()
-	bool bIsGameActive;
-
-	UPROPERTY()
-	bool bIsDeviceLost;
-
-	UPROPERTY()
-	bool bIsMinimized;
-
-	UPROPERTY()
-	bool bIsMaximized;
-
-	UPROPERTY()
-	bool bIgnoreSizeChange;
-
-	UPROPERTY()
-	bool bIsDeviceInitialized;
-
-	UPROPERTY()
-	bool bIsDeviceRestored;
 
 	UPROPERTY()
 	FS_Campaign ActiveCampaign;
@@ -642,13 +603,13 @@ private:
 	TSubclassOf<class UExitDlg> ExitDlgWidgetClass;
 	TSubclassOf<class UFirstTimeDlg> FirstTimeDlgWidgetClass;
 
-	void HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow);
 
 	// Timer Pub/Sub
 	uint64 LastBroadcastSecond = 0;
 	uint64 LastBroadcastMinute = 0;
 	uint64 LastBroadcastTPlus = 0;
 
-	void SetupMusicController();
+
+
 
 };

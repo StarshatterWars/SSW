@@ -82,9 +82,14 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency(USSWRuntimeSubsystem::StaticClass());
     Collection.InitializeDependency(USSWGameInitSubsystem::StaticClass());
 
-    if (USSWGameInstance* SSWGI = Cast<USSWGameInstance>(GetGameInstance()))
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+        return;
+
+    if (USSWRuntimeSubsystem* RuntimeSS =
+        GI->GetSubsystem<USSWRuntimeSubsystem>())
     {
-        SSWGI->SetGameMode(EGameMode::BOOT);
+        RuntimeSS->SetGameMode(EGameMode::BOOT);
     }
 
     FBootContext Ctx;

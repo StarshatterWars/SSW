@@ -60,30 +60,7 @@ void USSWGameInstance::OnStart()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Init: World is NULL, cannot show menu yet"));
 	}
-
-	// ---------------------------------------------------------
-	// Timer Subsystem Hook
-	// ---------------------------------------------------------
-	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
-	{
-		Timer->OnUniverseMinute.AddUObject(
-			this,
-			&USSWGameInstance::HandleUniverseMinuteAutosave
-		);
-	}
-
-	SetupMusicController();
-
-	// ---------------------------------------------------------
-	// Fonts
-	// ---------------------------------------------------------
-	FontManager::RegisterAllFonts(this);
-
-	// =========================================================
-	// REPLACEMENT FOR GameLoader
-	// =========================================================
-	LoadOrCreateUniverse();
-
+	
 }
 
 void USSWGameInstance::StartGameTimers()
@@ -107,43 +84,6 @@ void USSWGameInstance::Print(const FString& A, const FString& B)
 	}
 }
 
-void USSWGameInstance::SpawnGalaxy()
-{
-	/*UWorld* World = GetWorld();
-
-	FVector location = FVector::ZeroVector;
-	FRotator rotate = FRotator::ZeroRotator;
-
-	FActorSpawnParameters SpawnInfo;
-	FName Name("Starshatter Galaxy");
-	SpawnInfo.Name = Name;
-
-	if (GameGalaxy == nullptr) {
-		GameGalaxy = GetWorld()->SpawnActor<AGalaxy>(AGalaxy::StaticClass(), location, rotate, SpawnInfo);
-
-
-		if (GameGalaxy)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Game Galaxy Spawned"));
-		}
-		else {
-			UE_LOG(LogTemp, Log, TEXT("Failed to Spawn Game Galaxy"));
-		}
-	}
-	else {
-		UE_LOG(LogTemp, Log, TEXT("Game Galaxy already exists"));
-	}
-
-	//} else {
-	//	UE_LOG(LogTemp, Log, TEXT("World notxfound"));
-	//}	*/	
-}
-
-void USSWGameInstance::StartGame()
-{
-	//SpawnUniverse();
-	//SpawnGalaxy();
-}
 
 void USSWGameInstance::ShowMainMenuScreen()
 {
@@ -231,54 +171,7 @@ void USSWGameInstance::Init()
 {
 	Super::Init();
 
-	// ---------------------------------------------------------
-	// Core App State
-	// ---------------------------------------------------------
-	bIsWindowed = false;
-	bIsGameActive = false;
-	bIsDeviceLost = false;
-	bIsMinimized = false;
-	bIsMaximized = false;
-	bIgnoreSizeChange = false;
-	bIsDeviceInitialized = false;
-	bIsDeviceRestored = false;
-
-	// ---------------------------------------------------------
-	// Save Slots
-	// ---------------------------------------------------------
-	PlayerSaveName = "PlayerSaveSlot";
-	PlayerSaveSlot = 0;
-
-	UniverseSaveSlotName = "Universe_Main";
-	UniverseSaveUserIndex = 0;
-
-	CampaignSaveSlotName = "Campaign";
-	CampaignSaveIndex = 0;
-
-	// ---------------------------------------------------------
-	// Time Init
-	// ---------------------------------------------------------
-	const FDateTime GameDate(2228, 1, 1);
-	SetGameTime(GameDate.ToUnixTimestamp());
-
-	// ---------------------------------------------------------
-	// Paths + Data Loader
-	// ---------------------------------------------------------
-	CampaignData.SetNum(5);
-
-	loader = DataLoader::GetLoader();
-
-	Status = EGAMESTATUS::OK;
-
-	UE_LOG(LogTemp, Log, TEXT("Initializing Game"));
-
-	// ---------------------------------------------------------
-	// Content Init
-	// ---------------------------------------------------------
-	if (Status == EGAMESTATUS::OK)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Initializing content..."));
-	}
+	UE_LOG(LogTemp, Log, TEXT("[GI] Init"));
 }
 
 void USSWGameInstance::SetActiveWidget(UUserWidget* Widget)
@@ -375,17 +268,6 @@ void USSWGameInstance::OnGameTimerTick()
 	SetGameTime(GetGameTime() + 1);
 	SetCampaignTime(GetCampaignTime() + 1);
 	UE_LOG(LogTemp, Log, TEXT("Campaign Timer: %d"), GetCampaignTime());
-}
-
-
-void USSWGameInstance::SetGameMode(EGameMode gm)
-{
-	GameMode = gm;
-}
-
-EGameMode USSWGameInstance::GetGameMode()
-{
-	return GameMode;
 }
 
 void USSWGameInstance::SetActiveCampaign(FS_Campaign campaign)
