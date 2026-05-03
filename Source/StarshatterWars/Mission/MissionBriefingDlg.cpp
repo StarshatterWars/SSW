@@ -62,6 +62,7 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "StarshatterAudioSubsystem.h"
 
 UMissionBriefingDlg::UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -662,9 +663,10 @@ void UMissionBriefingDlg::OnMenuToggleSelected(UMenuButton* SelectedButton)
         return;
     }
 
-    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
     {
-        GI->PlayAcceptSound(this);
+        AudioSS->PlayAcceptSound(this);
     }
 
     const FString& Option = SelectedButton->MenuOption;
@@ -694,9 +696,10 @@ void UMissionBriefingDlg::OnMenuToggleHovered(UMenuButton* HoveredButton)
         return;
     }
 
-    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
     {
-        GI->PlayHoverSound(this);
+        AudioSS->PlayHoverSound(this);
     }
 }
 

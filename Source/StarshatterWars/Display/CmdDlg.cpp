@@ -45,6 +45,7 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "StarshatterAudioSubsystem.h"
 
 #include "CmdOrdersDlg.h"
 #include "CmdMissionsDlg.h"
@@ -312,8 +313,11 @@ void UCmdDlg::InitializeDlg(UMenuScreen* InManager)
 
 void UCmdDlg::OnMenuButtonSelected(UMenuButton* SelectedButton)
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     for (UMenuButton* Button : AllMenuButtons)
     {
@@ -363,11 +367,16 @@ void UCmdDlg::OnMenuToggleSelected(UMenuButton* SelectedButton)
 
 void UCmdDlg::OnMenuToggleHovered(UMenuButton* HoveredButton)
 {
-    if (!HoveredButton) return;
+    if (!HoveredButton)
+        return;
 
     UE_LOG(LogTemp, Log, TEXT("Hovered over: %s"), *HoveredButton->MenuOption);
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayHoverSound(this);
+
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayHoverSound(this);
+    }
 }
 
 void UCmdDlg::BindFormWidgets()
@@ -512,8 +521,11 @@ void UCmdDlg::OnCancelButtonClicked()
 
 void UCmdDlg::OnCancelButtonHovered()
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayHoverSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayHoverSound(this);
+    }
 }
 
 void UCmdDlg::OnCancelButtonUnHovered()
@@ -594,8 +606,11 @@ void UCmdDlg::OnMissionButtonClicked()
 
 void UCmdDlg::OnMissionButtonHovered()
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayHoverSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayHoverSound(this);
+    }
 }
 
 void UCmdDlg::OnMissionButtonUnHovered()
@@ -635,8 +650,11 @@ void UCmdDlg::LoadForcesInfo()
         return;
     }
 
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     if (OperationalSwitcher)
     {
@@ -656,8 +674,11 @@ void UCmdDlg::LoadForcesInfo()
 
 void UCmdDlg::LoadOrdersInfo()
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     if (OperationalSwitcher)
     {
@@ -677,8 +698,11 @@ void UCmdDlg::LoadOrdersInfo()
 
 void UCmdDlg::LoadMissionsInfo()
 {
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadMissionsInfo: BEGIN"));
     UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadMissionsInfo: CmdMissionsPanel=%s"),
@@ -719,8 +743,11 @@ void UCmdDlg::LoadIntelInfo()
         return;
     }
 
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     if (OperationalSwitcher)
     {
@@ -743,8 +770,11 @@ void UCmdDlg::LoadTheaterInfo()
         return;
     }
 
-    USSWGameInstance* SSWInstance = (USSWGameInstance*)GetGameInstance();
-    SSWInstance->PlayAcceptSound(this);
+    if (UStarshatterAudioSubsystem* AudioSS =
+        GetGameInstance()->GetSubsystem<UStarshatterAudioSubsystem>())
+    {
+        AudioSS->PlayAcceptSound(this);
+    }
 
     if (OperationalSwitcher)
     {

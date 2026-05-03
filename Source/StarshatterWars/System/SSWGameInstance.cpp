@@ -33,6 +33,8 @@
 #include "Engine/TextureRenderTarget2D.h" 
 #include "SystemOverview.h"
 #include "FontManager.h"
+
+#include "CampaignSave.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
@@ -389,90 +391,6 @@ UTexture2D* USSWGameInstance::LoadPNGTextureFromFile(const FString& Path)
 	UE_LOG(LogTemp, Error, TEXT("Failed to decode PNG: %s"), *FilePath);
 	return nullptr;
 }
-
-void USSWGameInstance::PlayMusic(USoundBase* Music)
-{
-	if (!Music)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayMusic: Invalid SoundBase"));
-		return;
-	}
-	
-	if (MusicController)
-	{
-		MusicController->PlayMusic(Music);
-	}
-}
-
-void USSWGameInstance::StopMusic()
-{
-	if (MusicController) {
-		MusicController->StopMusic();
-	}
-}
-
-void USSWGameInstance::PlayMenuMusic()
-{
-	PlayMusic(MenuMusic);
-}
-
-void USSWGameInstance::PlaySoundFromFile(FString& AudioPath)
-{
-	USoundBase* Sound = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), nullptr, *AudioPath));
-
-	if (!Sound)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: Invalid SoundBase"));
-		return;
-	}
-
-	if (AMusicController* Music = GetMusicController())
-	{
-		Music->PlayUISound(Sound);
-	}
-}
-
-bool USSWGameInstance::IsSoundPlaying()
-{
-	if (AMusicController* MC = GetMusicController())
-	{
-		return MC->IsSoundPlaying();
-	}
-	return false;
-}
-
-void USSWGameInstance::InitializeAudioSystem()
-{
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		MusicController = World->SpawnActor<AMusicController>();
-		UE_LOG(LogTemp, Log, TEXT("Music Controller Spawned"));
-	}
-}
-
-void USSWGameInstance::ExitGame(UObject* Context) {
-	UKismetSystemLibrary::QuitGame(Context, 0, EQuitPreference::Quit, true);
-}
-
-void USSWGameInstance::PlayUISound(UObject* Context, USoundBase* UISound)
-{
-	if (UISound)
-	{
-		UGameplayStatics::PlaySound2D(Context, UISound);
-	}
-}
-
-void USSWGameInstance::PlayHoverSound(UObject* Context)
-{
-	PlayUISound(Context, HoverSound);
-}
-
-void USSWGameInstance::PlayAcceptSound(UObject* Context)
-{
-	PlayUISound(Context, AcceptSound);
-}
-
 
 void USSWGameInstance::GetCampaignCombatant(int id, ECOMBATGROUP_TYPE Type) {
 // Filters Table by Active in campaign
@@ -940,7 +858,7 @@ void USSWGameInstance::RequestUniverseAutosave()
 	bUniverseAutosaveRequested = true;
 }
 
-#include "CampaignSave.h"
+
 #include "Kismet/GameplayStatics.h"
 
 bool USSWGameInstance::SaveCampaign()

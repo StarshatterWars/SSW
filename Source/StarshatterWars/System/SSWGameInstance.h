@@ -223,39 +223,6 @@ public:
 	UTexture2D* LoadPNGTextureFromFile(const FString& Path);
 
 	// =====================================================================
-	// Audio
-	// =====================================================================
-	UFUNCTION()
-	void PlayMusic(USoundBase* Music);
-
-	UFUNCTION()
-	void StopMusic();
-
-	UFUNCTION()
-	void PlayMenuMusic();
-
-	UFUNCTION()
-	void PlaySoundFromFile(FString& AudioPath);
-
-	UFUNCTION()
-	bool IsSoundPlaying();
-
-	UFUNCTION()
-	void InitializeAudioSystem();
-
-	UFUNCTION()
-	void ExitGame(UObject* Context);
-
-	UFUNCTION()
-	void PlayUISound(UObject* Context, USoundBase* UISound);
-
-	UFUNCTION()
-	void PlayHoverSound(UObject* Context);
-
-	UFUNCTION()
-	void PlayAcceptSound(UObject* Context);
-
-	// =====================================================================
 	// Campaign / OOB / Data helpers
 	// =====================================================================
 	void GetCampaignCombatant(int id, ECOMBATGROUP_TYPE Type);
