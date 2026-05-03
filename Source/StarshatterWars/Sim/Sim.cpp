@@ -344,12 +344,13 @@ Sim::CommitMission()
 
 // +--------------------------------------------------------------------+
 
-void
-Sim::UnloadMission()
+void Sim::UnloadMission()
 {
 	HUDView* hud = HUDView::GetInstance();
 	if (hud)
+	{
 		hud->HideAll();
+	}
 
 	ShipStats::Initialize();
 
@@ -359,36 +360,41 @@ Sim::UnloadMission()
 	finished.destroy();
 
 	if (active_region)
+	{
 		active_region->Deactivate();
+	}
 
 	if (star_system)
+	{
 		star_system->Deactivate();
+	}
 
-	if (mission) {
+	if (mission)
+	{
 		mission->SetActive(false);
 		mission->SetComplete(true);
 	}
 
 	regions.destroy();
-	scene->Collect();
+
+	if (scene)
+	{
+		scene->Collect();
+	}
 
 	GRAPHIC_DESTROY(dust);
 
-	star_system = 0;
-	active_region = 0;
-	mission = 0;
+	star_system = nullptr;
+	active_region = nullptr;
+	mission = nullptr;
 
-	// reclaim memory used by radio traffic:
 	RadioTraffic::DiscardMessages();
-
-	// release texture memory for 2D screens:
-	Starshatter* stars = Starshatter::GetInstance();
-	if (stars)
-		stars->InvalidateTextureCache();
 
 	cam_dir = CameraManager::GetInstance();
 	if (cam_dir)
-		cam_dir->SetShip(0);
+	{
+		cam_dir->SetShip(nullptr);
+	}
 
 	AudioConfig::SetTraining(false);
 }

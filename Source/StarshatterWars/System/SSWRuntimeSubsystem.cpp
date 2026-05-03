@@ -370,9 +370,11 @@ void USSWRuntimeSubsystem::SetGameMode(EGameMode NewMode)
     if (GameMode == NewMode)
         return;
 
+    const EGameMode OldMode = GameMode;
+
     UE_LOG(LogSSWRuntime, Log,
         TEXT("[RUNTIME] GameMode: %d -> %d"),
-        static_cast<int32>(GameMode),
+        static_cast<int32>(OldMode),
         static_cast<int32>(NewMode));
 
     switch (NewMode)
@@ -399,8 +401,22 @@ void USSWRuntimeSubsystem::SetGameMode(EGameMode NewMode)
         break;
 
     case EGameMode::MENU:
+        SetPaused(true);
+
+        if (OldMode == EGameMode::PLAY)
+        {
+            if (Sim* SimPtr = static_cast<Sim*>(World))
+            {
+                SimPtr->UnloadMission();
+            }
+        }
+        break;
+
     case EGameMode::CMPN:
     case EGameMode::PLAN:
+        SetPaused(true);
+        break;
+
     default:
         SetPaused(true);
         break;
