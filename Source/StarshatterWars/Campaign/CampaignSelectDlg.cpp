@@ -49,6 +49,7 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 #include "TimerSubsystem.h"
 
 #include "Engine/Texture2D.h"
@@ -1164,9 +1165,9 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
 
     Mouse::Show(false);
 
-    if (stars)
+    if (USSWRuntimeSubsystem* RuntimeSS = GIBase->GetSubsystem<USSWRuntimeSubsystem>())
     {
-        stars->SetGameMode(EGameMode::CLOD);
+        RuntimeSS->SetGameMode(EGameMode::CLOD);
     }
 
     UWorld* World = GetWorld();

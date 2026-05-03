@@ -44,6 +44,8 @@
 #include "Game.h"
 #include "FormatUtil.h"
 #include "GameStructs.h"
+#include "SSWRuntimeSubsystem.h"
+
 
 // +--------------------------------------------------------------------+
 
@@ -498,24 +500,24 @@ void UMissionSelectDlg::OnAcceptClicked()
 {
     if (SelectedMissionIndex >= 0 && CampaignPtr)
     {
-        // Legacy:
-        // Mouse::Show(false);
-        // int id = campaign->GetMissionList()[selected_mission]->id;
-        // campaign->SetMissionId(id);
-        // campaign->ReloadMission(id);
-        // stars->SetGameMode(Starshatter::PREP_MODE);
-
-        // With UListView, we already cached MissionId:
         if (MissionId != 0)
         {
             CampaignPtr->SetMissionId(MissionId);
             CampaignPtr->ReloadMission(MissionId);
 
-            if (!Stars)
-                Stars = Starshatter::GetInstance();
-
-            if (Stars)
-                Stars->SetGameMode(EGameMode::PREP);
+            if (UGameInstance* GI = GetGameInstance())
+            {
+                if (USSWRuntimeSubsystem* RuntimeSS =
+                    GI->GetSubsystem<USSWRuntimeSubsystem>())
+                {
+                    RuntimeSS->SetGameMode(EGameMode::PREP);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("MissionSelectDlg: Runtime subsystem not found."));
+                }
+            }
 
             OnAccepted.Broadcast(MissionId);
         }

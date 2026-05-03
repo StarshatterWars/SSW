@@ -37,9 +37,17 @@ void UStarshatterVideoSettings::SetConfig(const FStarshatterVideoConfig& InConfi
 
 void UStarshatterVideoSettings::ApplyToRuntimeVideo()
 {
-    // Migration-safe hook
-    if (Starshatter* Stars = Starshatter::GetInstance())
-    {
-        Stars->LoadVideoConfig("video.cfg");
-    }
+    /*
+        Starshatter::LoadVideoConfig has been removed.
+
+        Runtime video is now handled by:
+            UStarshatterVideoSubsystem
+            UStarshatterSettingsSaveSubsystem
+            UStarshatterSettingsSaveGame
+
+        This hook stays here for migration safety.
+    */
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[VideoSettings] ApplyToRuntimeVideo: handled by VideoSubsystem/save system."));
 }

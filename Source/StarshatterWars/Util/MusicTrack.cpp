@@ -27,6 +27,11 @@
 
 #include "Logging/LogMacros.h"
 
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "SSWRuntimeSubsystem.h"
+
+
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterAudio, Log, All);
 
 // +-------------------------------------------------------------------+
@@ -92,21 +97,35 @@ MusicTrack::~MusicTrack()
 
 // +--------------------------------------------------------------------+
 
-void
-MusicTrack::ExecFrame()
+void MusicTrack::ExecFrame()
 {
     bool music_pause = false;
 
-    Starshatter* stars = Starshatter::GetInstance();
-    if (stars) {
-        music_pause = (stars->GetGameMode() == EGameMode::PLAY) && Game::Paused();
+    // --- NEW: Get GameMode from RuntimeSubsystem ---
+    UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+    if (World)
+    {
+        UGameInstance* GI = World->GetGameInstance();
+        if (GI)
+        {
+            if (USSWRuntimeSubsystem* RuntimeSS =
+                GI->GetSubsystem<USSWRuntimeSubsystem>())
+            {
+                music_pause =
+                    (RuntimeSS->GetGameMode() == EGameMode::PLAY) &&
+                    Game::Paused();
+            }
+        }
     }
 
-    if (sound && !music_pause) {
+    // --- Existing logic unchanged ---
+    if (sound && !music_pause)
+    {
         double fvol = 1.0;
-        long   volume = 0;
+        long volume = 0;
 
-        switch (state) {
+        switch (state)
+        {
         case PLAY:
             if (sound->IsReady())
                 sound->Play();
@@ -117,7 +136,8 @@ MusicTrack::ExecFrame()
             if (sound->IsReady())
                 sound->Play();
 
-            if (fade > 0) {
+            if (fade > 0)
+            {
                 fvol = fade / fade_time;
                 volume = (long)(fvol * SILENCE);
                 SetVolume(volume);
@@ -131,7 +151,8 @@ MusicTrack::ExecFrame()
             if (sound->IsReady())
                 sound->Play();
 
-            if (fade > 0) {
+            if (fade > 0)
+            {
                 fvol = 1.0 - fade / fade_time;
                 volume = (long)(fvol * SILENCE);
                 SetVolume(volume);
@@ -142,7 +163,8 @@ MusicTrack::ExecFrame()
             break;
 
         case STOP:
-            if (sound->IsPlaying()) {
+            if (sound->IsPlaying())
+            {
                 sound->Stop();
                 sound->Release();
                 sound = nullptr;

@@ -43,6 +43,9 @@
 #include "StarshatterWarsLog.h"
 #include "ShipDesignRegistry.h"
 
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
 // Unreal:
 #include "Math/Vector.h"               // FVector
 #include "Math/UnrealMathUtility.h"    // FMath
@@ -66,7 +69,7 @@ CampaignMissionStarship::CampaignMissionStarship(Campaign* c)
     mission_type(0)
 {
     if (!campaign || !campaign->GetPlayerGroup()) {
-        UE_LOG(LogStarshatterWars, Error,
+        UE_LOG(LogTemp, Error,
             TEXT("ERROR - CMS campaign=%p player_group=%p"),
             campaign,
             campaign ? campaign->GetPlayerGroup() : nullptr);
@@ -86,14 +89,14 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
 {
     if (!campaign || !req)
         return;
-    UE_LOG(LogStarshatterWars, Log, TEXT("-----------------------------------------------"));
+    UE_LOG(LogTemp, Log, TEXT("-----------------------------------------------"));
 
     const TCHAR* RoleT = ANSI_TO_TCHAR(Mission::GetRoleName(req->Type()));
 
     if (req->Script().Len() > 0)
     {
         // req->Script() is an FString:
-        UE_LOG(LogStarshatterWars, Log, TEXT("CMS CreateMission() request: %s '%s'"),
+        UE_LOG(LogTemp, Log, TEXT("CMS CreateMission() request: %s '%s'"),
             RoleT,
             *req->Script());
     }
@@ -104,7 +107,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         if (req->GetObjective())
             ObjNameA = req->GetObjective()->GetName().data();
 
-        UE_LOG(LogStarshatterWars, Log, TEXT("CMS CreateMission() request: %s %s"),
+        UE_LOG(LogTemp, Log, TEXT("CMS CreateMission() request: %s %s"),
             RoleT,
             ANSI_TO_TCHAR(ObjNameA));
     }
@@ -119,7 +122,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
     }
 
     if (!player_group) {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("CMS CreateMission(): no player_group (null primary group)."));
+        UE_LOG(LogTemp, Warning, TEXT("CMS CreateMission(): no player_group (null primary group)."));
         return;
     }
 
@@ -151,7 +154,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"));
 
     if (!mission) {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("CMS CreateMission(): GenerateMission failed."));
+        UE_LOG(LogTemp, Warning, TEXT("CMS CreateMission(): GenerateMission failed."));
         return;
     }
 
@@ -171,7 +174,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         campaign->GetMissionList().append(info);
 
         UE_LOG(
-            LogStarshatterWars,
+            LogTemp,
             Log,
             TEXT("CMS Created %03d '%s' %s"),
             info->id,
@@ -194,7 +197,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
         }
     }
     else {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("CMS failed to create mission."));
+        UE_LOG(LogTemp, Warning, TEXT("CMS failed to create mission."));
     }
 }
 
@@ -343,7 +346,7 @@ void CampaignMissionStarship::SelectRegion()
 {
     if (!player_group || !mission)
     {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: CMS - no player group or mission in SelectRegion"));
+        UE_LOG(LogTemp, Warning, TEXT("WARNING: CMS - no player group or mission in SelectRegion"));
         return;
     }
 
@@ -368,7 +371,7 @@ void CampaignMissionStarship::SelectRegion()
     }
     else
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("WARNING: CMS - No zone for '%s'"),
             ANSI_TO_TCHAR(player_group->GetName().data()));
 
@@ -589,12 +592,12 @@ CampaignMissionStarship::CreatePlayer()
         player = elem;
     }
     else if (player_group) {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS GenerateMissionElements() could not find player element '%s'"),
             ANSI_TO_TCHAR(player_group->GetName().data()));
     }
     else {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS GenerateMissionElements() could not find player element (no player group)"));
     }
 }
@@ -694,7 +697,7 @@ MissionElement* CampaignMissionStarship::CreateSingleElement(CombatGroup* g, Com
 
     if (!ShipRow)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS CreateSingleElement: missing ship design row for group '%s', unit '%s', design '%s'"),
             ANSI_TO_TCHAR(g->GetName().data()),
             ANSI_TO_TCHAR(u->GetName().data()),
@@ -845,7 +848,7 @@ void CampaignMissionStarship::CreateSquadron(CombatGroup* g)
 
     if (!ShipRow)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS CreateSquadron: missing ship design row for squadron '%s', unit '%s', design '%s'"),
             ANSI_TO_TCHAR(g->GetName().data()),
             ANSI_TO_TCHAR(fighter->GetName().data()),
@@ -1635,7 +1638,7 @@ MissionElement* CampaignMissionStarship::CreateFighterPackage(CombatGroup* squad
 
     if (!ShipRow)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS CreateFighterPackage: missing ship design row for squadron '%s', unit '%s', design '%s'"),
             ANSI_TO_TCHAR(squadron->GetName().data()),
             ANSI_TO_TCHAR(fighter->GetName().data()),
@@ -1651,7 +1654,7 @@ MissionElement* CampaignMissionStarship::CreateFighterPackage(CombatGroup* squad
 
     if (avail < 1)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMS - Insufficient fighters in squadron '%s' - %d required, %d available"),
             ANSI_TO_TCHAR(squadron->GetName().data()),
             count,
@@ -1725,7 +1728,7 @@ CampaignMissionStarship::FindSquadron(int iff, int type)
         zone = player_group->GetCurrentZone();
 
     if (!zone) {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("CMS Warning: no zone for %s"),
+        UE_LOG(LogTemp, Warning, TEXT("CMS Warning: no zone for %s"),
             ANSI_TO_TCHAR(player_group->GetName().data()));
         return result;
     }
@@ -1879,10 +1882,21 @@ CampaignMissionStarship::DescribeMission()
 
 // +--------------------------------------------------------------------+
 
-void
-CampaignMissionStarship::Exit()
+void CampaignMissionStarship::Exit()
 {
-    Starshatter* stars = Starshatter::GetInstance();
-    if (stars)
-        stars->SetGameMode(EGameMode::MENU);
+    UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+    if (!World)
+        return;
+
+    UGameInstance* GI = World->GetGameInstance();
+    if (!GI)
+        return;
+
+    USSWRuntimeSubsystem* RuntimeSS =
+        GI->GetSubsystem<USSWRuntimeSubsystem>();
+
+    if (RuntimeSS)
+    {
+        RuntimeSS->SetGameMode(EGameMode::MENU);
+    }
 }

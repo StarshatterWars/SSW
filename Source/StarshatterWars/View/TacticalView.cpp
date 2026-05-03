@@ -48,7 +48,10 @@
 #include "Game.h"
 #include "FormatUtil.h"
 #include "GameStructs.h"
+
+#include "SSWRuntimeSubsystem.h"
 #include <string>
+
 
 static bool gInvalidAction = false;
 
@@ -1230,24 +1233,39 @@ void TacticalView::ProcessRadioAction(RadioMessageAction action)
 
 void TacticalView::ProcessViewAction(TacticalViewMenu action)
 {
-    Starshatter* stars = Starshatter::GetInstance();
+    USSWRuntimeSubsystem* RuntimeSS = nullptr;
+
+    if (GEngine)
+    {
+        if (UWorld* World = GEngine->GetCurrentPlayWorld())
+        {
+            if (UGameInstance* GI = World->GetGameInstance())
+            {
+                RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
+            }
+        }
+    }
 
     switch (action)
     {
     case TacticalViewMenu::FORWARD:
-        stars->PlayerCam(CameraManager::MODE_COCKPIT);
+        if (RuntimeSS)
+            RuntimeSS->GetPlayerCam(CameraManager::MODE_COCKPIT);
         break;
 
     case TacticalViewMenu::CHASE:
-        stars->PlayerCam(CameraManager::MODE_CHASE);
+        if (RuntimeSS)
+            RuntimeSS->GetPlayerCam(CameraManager::MODE_CHASE);
         break;
 
     case TacticalViewMenu::PADLOCK:
-        stars->PlayerCam(CameraManager::MODE_TARGET);
+        if (RuntimeSS)
+            RuntimeSS->GetPlayerCam(CameraManager::MODE_TARGET);
         break;
 
     case TacticalViewMenu::ORBIT:
-        stars->PlayerCam(CameraManager::MODE_ORBIT);
+        if (RuntimeSS)
+            RuntimeSS->GetPlayerCam(CameraManager::MODE_ORBIT);
         break;
 
     case TacticalViewMenu::NAV:
@@ -1299,11 +1317,15 @@ void TacticalView::ProcessViewAction(TacticalViewMenu action)
                         else if (msg_ship)
                         {
                             SimElement* elem = msg_ship->GetElement();
-                            RadioMessage* msg = new RadioMessage(elem, ship, RadioMessageAction::QUANTUM_TO);
+                            RadioMessage* msg = new RadioMessage(
+                                elem,
+                                ship,
+                                RadioMessageAction::QUANTUM_TO);
+
                             if (msg)
                             {
                                 Text LegacyName(TCHAR_TO_ANSI(*rgn_name));
-                                msg->SetInfo(LegacyName); 
+                                msg->SetInfo(LegacyName);
                                 RadioTraffic::Transmit(msg);
                             }
                         }
@@ -1324,7 +1346,11 @@ void TacticalView::ProcessViewAction(TacticalViewMenu action)
             if (rgn)
             {
                 SimElement* elem = msg_ship->GetElement();
-                RadioMessage* msg = new RadioMessage(elem, ship, RadioMessageAction::FARCAST_TO);
+                RadioMessage* msg = new RadioMessage(
+                    elem,
+                    ship,
+                    RadioMessageAction::FARCAST_TO);
+
                 if (msg)
                 {
                     msg->SetInfo(Text(TCHAR_TO_ANSI(*rgn_name)));

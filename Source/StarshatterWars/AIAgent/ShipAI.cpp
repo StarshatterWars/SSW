@@ -50,7 +50,7 @@
 // +----------------------------------------------------------------------+
 
 // If your project already defines a central log category, replace this with it.
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsAI, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempAI, Log, All);
 
 // +--------------------------------------------------------------------+
 

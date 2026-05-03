@@ -21,9 +21,6 @@
 #include "StarshatterSettingsSaveGame.h"
 #include "GameStructs.h"
 
-// If you have the ported Starshatter singleton available:
-#include "Starshatter.h"
-
 void UStarshatterVideoSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
@@ -268,26 +265,19 @@ bool UStarshatterVideoSubsystem::ConsumePendingChange(FStarshatterVideoConfig& O
 
 void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
 {
-    // Persist current config to disk first:
     SaveVideoConfig(TEXT("video.cfg"));
 
-    if (Starshatter* Stars = Starshatter::GetInstance())
-    {
-        // Migration-safe behavior:
-        // - If your core has RequestChangeVideo(), call it when you're ready.
-        // - Otherwise just reload the config.
-        //
-        // Keep it conservative: reload cfg (stable) and optionally request a change if you want:
-        Stars->LoadVideoConfig("video.cfg");
+    // Apply Unreal runtime settings here if this method already supports them:
+    // - resolution
+    // - fullscreen/windowed
+    // - VSync
+    // - scalability
+    // - frame limit
 
-        // If you DO have mode-change handling in core, flip this on later:
-        // Stars->RequestChangeVideo();
-    }
-    else
-    {
-        // No core yet: broadcast intent for whoever cares (renderer/UI).
-        OnVideoChangeRequested.Broadcast(CurrentConfig);
-    }
+    OnVideoChangeRequested.Broadcast(CurrentConfig);
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[VideoSubsystem] Applied video settings and broadcast change request."));
 }
 
 // +--------------------------------------------------------------------+

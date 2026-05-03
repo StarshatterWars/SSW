@@ -108,7 +108,7 @@ CampaignMissionFighter::CampaignMissionFighter(Campaign* c)
 {
     if (!campaign || !campaign->GetPlayerGroup())
     {
-        UE_LOG(LogStarshatterWars, Error,
+        UE_LOG(LogTemp, Error,
             TEXT("ERROR - CMF campaign=%p player_group=%p"),
             campaign,
             campaign ? campaign->GetPlayerGroup() : nullptr);
@@ -143,7 +143,7 @@ CampaignMissionFighter::CampaignMissionFighter(Campaign* c)
         break;
 
     default:
-        UE_LOG(LogStarshatterWars, Error,
+        UE_LOG(LogTemp, Error,
             TEXT("ERROR - CMF invalid player group: %s IFF %d"),
             ANSI_TO_TCHAR(player_group->GetDescription()),
             player_group->GetIFF());
@@ -171,11 +171,11 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     if (!campaign || !squadron || !req)
         return;
 
-    UE_LOG(LogStarshatterWars, Log, TEXT("-----------------------------------------------"));
+    UE_LOG(LogTemp, Log, TEXT("-----------------------------------------------"));
 
     if (req->Script().Len())
     {
-        UE_LOG(LogStarshatterWars, Log,
+        UE_LOG(LogTemp, Log,
             TEXT("CMF CreateMission() request: %s '%s'"),
             ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
             *req->Script());
@@ -184,7 +184,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     {
         const char* ObjName = req->GetObjective() ? req->GetObjective()->GetName().data() : "(no target)";
 
-        UE_LOG(LogStarshatterWars, Log,
+        UE_LOG(LogTemp, Log,
             TEXT("CMF CreateMission() request: %s %s"),
             ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
             ANSI_TO_TCHAR(ObjName));
@@ -239,7 +239,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     {
         campaign->GetMissionList().append(info);
 
-        UE_LOG(LogStarshatterWars, Log,
+        UE_LOG(LogTemp, Log,
             TEXT("CMF Created %03d '%s' %s"),
             info->id,
             ANSI_TO_TCHAR(info->name.data()),
@@ -263,7 +263,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     }
     else
     {
-        UE_LOG(LogStarshatterWars, Warning, TEXT("CMF failed to create mission."));
+        UE_LOG(LogTemp, Warning, TEXT("CMF failed to create mission."));
     }
 }
 
@@ -504,7 +504,7 @@ void CampaignMissionFighter::SelectRegion()
     }
     else
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("WARNING: CMF - No zone for '%s'"),
             ANSI_TO_TCHAR(squadron->GetName().data()));
 
@@ -891,7 +891,7 @@ void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 
     if (!player_elem)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMF CreatePlayer: failed to create player package for '%s'"),
             ANSI_TO_TCHAR(g->GetName().data()));
         return;
@@ -2737,7 +2737,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
 
     if (!ShipRow)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMF CreateSingleElement: missing ship design row for group '%s', unit '%s', design '%s'"),
             ANSI_TO_TCHAR(G->GetName().data()),
             ANSI_TO_TCHAR(U->GetName().data()),
@@ -2946,7 +2946,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
 
     if (!ShipRow)
     {
-        UE_LOG(LogStarshatterWars, Warning,
+        UE_LOG(LogTemp, Warning,
             TEXT("CMF CreateFighterPackage: missing ship design row for squadron '%s', unit '%s', design '%s'"),
             ANSI_TO_TCHAR(InSquadron->GetName().data()),
             ANSI_TO_TCHAR(fighter->GetName().data()),

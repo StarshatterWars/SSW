@@ -25,12 +25,12 @@
 #include "CmpLoadDlg.h"
 
 // Starshatter:
-#include "Starshatter.h"
 #include "Game.h"
 #include "DataLoader.h"
 
 // Unreal:
 #include "CoreMinimal.h"
+#include "SSWRuntimeSubsystem.h"
 
 // +--------------------------------------------------------------------+
 
@@ -60,22 +60,6 @@ void ULoadScreen::Setup(Screen* InScreen)
         return;
 
     ScreenPtr = InScreen;
-
-    DataLoader* Loader = DataLoader::GetLoader();
-    if (!Loader)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ULoadScreen::Setup: DataLoader::GetLoader returned null."));
-        return;
-    }
-
-    // Match original Starshatter behavior:
-    Loader->UseFileSystem(true);
-
-    // In the UMG version, LoadDlg / CmpLoadDlg are expected to be created
-    // via widget tree (BindWidgetOptional) or by the screen that owns this widget.
-    // Therefore, we do NOT "new" them here.
-
-    Loader->UseFileSystem(Starshatter::UseFileSystem());
     ShowLoadDlg();
 }
 
@@ -148,35 +132,44 @@ void ULoadScreen::Hide()
 
 void ULoadScreen::ShowLoadDlg()
 {
-    // Hide both first (matches original logic).
-    if (LoadDlg)    LoadDlg->SetVisibility(ESlateVisibility::Hidden);
-    if (CmpLoadDlg) CmpLoadDlg->SetVisibility(ESlateVisibility::Hidden);
-
-    Starshatter* Stars = Starshatter::GetInstance();
-
-    // Show campaign load dialog if available and loading campaign:
-    if (Stars && CmpLoadDlg)
+    if (LoadDlg)
     {
-        if (Stars->GetGameMode() == EGameMode::CLOD ||
-            Stars->GetGameMode() == EGameMode::CMPN)
-        {
-            CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
-
-            // Hide mouse cursor (legacy behavior):
-            // If you use a PlayerController cursor, hide it here.
-            if (UWorld* World = GetWorld())
-            {
-                if (APlayerController* PC = World->GetFirstPlayerController())
-                {
-                    PC->bShowMouseCursor = false;
-                }
-            }
-
-            return;
-        }
+        LoadDlg->SetVisibility(ESlateVisibility::Hidden);
     }
 
-    // Otherwise, show regular load dialog:
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->SetVisibility(ESlateVisibility::Hidden);
+    }
+
+    UGameInstance* GI = GetGameInstance();
+    USSWRuntimeSubsystem* RuntimeSS = GI
+        ? GI->GetSubsystem<USSWRuntimeSubsystem>()
+        : nullptr;
+
+    const EGameMode Mode = RuntimeSS
+        ? RuntimeSS->GetGameMode()
+        : EGameMode::INIT;
+
+    const bool bCampaignLoad =
+        Mode == EGameMode::CLOD ||
+        Mode == EGameMode::CMPN;
+
+    if (bCampaignLoad && CmpLoadDlg)
+    {
+        CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
+
+        if (UWorld* World = GetWorld())
+        {
+            if (APlayerController* PC = World->GetFirstPlayerController())
+            {
+                PC->bShowMouseCursor = false;
+            }
+        }
+
+        return;
+    }
+
     if (LoadDlg)
     {
         LoadDlg->SetVisibility(ESlateVisibility::Visible);

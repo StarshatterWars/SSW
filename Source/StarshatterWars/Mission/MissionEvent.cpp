@@ -22,7 +22,6 @@
 #include "StarSystem.h"
 #include "Galaxy.h"
 #include "Starshatter.h"
-#include "StarServer.h"
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "SimElement.h"
@@ -55,7 +54,7 @@
 // Minimal Unreal logging support:
 #include "Logging/LogMacros.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsMissionEvent, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempMissionEvent, Log, All);
 
 const char* FormatGameTime();
 
@@ -426,13 +425,13 @@ MissionEvent::Execute(bool silent)
 				//NetUtil::SendObjKill(ship, 0, NetObjKill::KILL_MISC);
 				ship->DeathSpiral();
 
-				UE_LOG(LogStarshatterWarsMissionEvent, Log,
+				UE_LOG(LogTempMissionEvent, Log,
 					TEXT("Ship '%hs' killed by scripted event %d (%hs)"),
 					(const char*)ship->Name(), id, FormatGameTime());
 			}
 		}
 		else {
-			UE_LOG(LogStarshatterWarsMissionEvent, Warning,
+			UE_LOG(LogTempMissionEvent, Warning,
 				TEXT("EVENT %d: Could not apply damage to ship '%hs' (not found)."),
 				id, (const char*)event_ship);
 		}
@@ -482,7 +481,7 @@ MissionEvent::Execute(bool silent)
 			 break;
 
 	case END_MISSION:
-		UE_LOG(LogStarshatterWarsMissionEvent, Log,
+		UE_LOG(LogTempMissionEvent, Log,
 			TEXT("END MISSION by scripted event %d (%hs)"),
 			id, FormatGameTime());
 		end_mission = true;
@@ -492,14 +491,14 @@ MissionEvent::Execute(bool silent)
 		// NOTE: CUTSCENE EVENTS DO NOT APPLY IN MULTIPLAYER
 		//
 	case BEGIN_SCENE:
-		UE_LOG(LogStarshatterWarsMissionEvent, Log, TEXT("------------------------------------"));
-		UE_LOG(LogStarshatterWarsMissionEvent, Log, TEXT("Begin Cutscene '%hs'"), event_message.data());
+		UE_LOG(LogTempMissionEvent, Log, TEXT("------------------------------------"));
+		UE_LOG(LogTempMissionEvent, Log, TEXT("Begin Cutscene '%hs'"), event_message.data());
 		stars->BeginCutscene();
 		break;
 
 	case END_SCENE:
-		UE_LOG(LogStarshatterWarsMissionEvent, Log, TEXT("End Cutscene '%hs'"), event_message.data());
-		UE_LOG(LogStarshatterWarsMissionEvent, Log, TEXT("------------------------------------"));
+		UE_LOG(LogTempMissionEvent, Log, TEXT("End Cutscene '%hs'"), event_message.data());
+		UE_LOG(LogTempMissionEvent, Log, TEXT("------------------------------------"));
 		stars->EndCutscene();
 		break;
 
@@ -533,7 +532,7 @@ MissionEvent::Execute(bool silent)
 			}
 
 			if (event_target.length()) {
-				UE_LOG(LogStarshatterWarsMissionEvent, Verbose,
+				UE_LOG(LogTempMissionEvent, Verbose,
 					TEXT("Mission Event %d: setting camera target to %hs"),
 					id, (const char*)event_target);
 
@@ -543,7 +542,7 @@ MissionEvent::Execute(bool silent)
 					s_tgt = sim->FindShip(event_target);
 
 				if (s_tgt) {
-					UE_LOG(LogStarshatterWarsMissionEvent, Verbose,
+					UE_LOG(LogTempMissionEvent, Verbose,
 						TEXT("   found ship %hs"), s_tgt->Name());
 
 					cam_dir->SetViewOrbital(0);
@@ -577,7 +576,7 @@ MissionEvent::Execute(bool silent)
 					Orbital* orb = sim->FindOrbitalBody(body_name);
 
 					if (orb) {
-						UE_LOG(LogStarshatterWarsMissionEvent, Verbose,
+						UE_LOG(LogTempMissionEvent, Verbose,
 							TEXT("   found body %hs"), orb->GetName());
 						cam_dir->SetViewOrbital(orb);
 					}
@@ -742,18 +741,9 @@ MissionEvent::Execute(bool silent)
 	status = INSTRUCTION_STATUS::COMPLETE;
 
 	if (end_mission) {
-		StarServer* server = StarServer::GetInstance();
-
+		
 		if (stars) {
 			stars->EndMission();
-		}
-		else if (server) {
-			// end mission event uses event_target member
-			// to forward server to next mission in the chain:
-			if (event_target.length())
-				server->SetNextMission(event_target);
-
-			server->SetGameMode(EGameMode::MENU);
 		}
 	}
 }

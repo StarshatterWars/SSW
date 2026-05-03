@@ -37,7 +37,7 @@
 #include "OptionsScreen.h"
 
 // Starshatter legacy
-#include "Starshatter.h"
+#include "SSWRuntimeSubsystem.h"
 #include "KeyMap.h"
 #include "Joystick.h"
 #include "Game.h"
@@ -549,17 +549,29 @@ void UJoyDlg::RefreshAxisUIFromCurrentBindings()
 
 void UJoyDlg::CommitToKeyMap()
 {
-    Starshatter* Stars = Starshatter::GetInstance();
-    if (!Stars)
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
         return;
 
-    KeyMap& KM = Stars->GetKeyMap();
+    USSWRuntimeSubsystem* RuntimeSS =
+        GI->GetSubsystem<USSWRuntimeSubsystem>();
 
-    // Axis binds (slot->mapped axis)
-    const int32 YawAxis = (MapAxis[0] >= 0) ? (MapAxis[0] + KEY_JOY_AXIS_X) : 0;
-    const int32 PitchAxis = (MapAxis[1] >= 0) ? (MapAxis[1] + KEY_JOY_AXIS_X) : 0;
-    const int32 RollAxis = (MapAxis[2] >= 0) ? (MapAxis[2] + KEY_JOY_AXIS_X) : 0;
-    const int32 ThrottleAxis = (MapAxis[3] >= 0) ? (MapAxis[3] + KEY_JOY_AXIS_X) : 0;
+    if (!RuntimeSS)
+        return;
+
+    KeyMap& KM = RuntimeSS->GetKeyMap();
+
+    const int32 YawAxis =
+        (MapAxis[0] >= 0) ? (MapAxis[0] + KEY_JOY_AXIS_X) : 0;
+
+    const int32 PitchAxis =
+        (MapAxis[1] >= 0) ? (MapAxis[1] + KEY_JOY_AXIS_X) : 0;
+
+    const int32 RollAxis =
+        (MapAxis[2] >= 0) ? (MapAxis[2] + KEY_JOY_AXIS_X) : 0;
+
+    const int32 ThrottleAxis =
+        (MapAxis[3] >= 0) ? (MapAxis[3] + KEY_JOY_AXIS_X) : 0;
 
     KM.Bind(KEY_AXIS_YAW, YawAxis, 0);
     KM.Bind(KEY_AXIS_PITCH, PitchAxis, 0);
@@ -577,7 +589,9 @@ void UJoyDlg::CommitToKeyMap()
     KM.Bind(KEY_AXIS_THROTTLE_INVERT, bInvThrottle ? 1 : 0, 0);
 
     KM.SaveKeyMap("key.cfg", 256);
-    Stars->MapKeys();
 
-    UE_LOG(LogJoyDlg, Log, TEXT("[JoyDlg] Saved joystick bindings to key.cfg and remapped keys."));
+    RuntimeSS->MapKeys();
+
+    UE_LOG(LogJoyDlg, Log,
+        TEXT("[JoyDlg] Saved joystick bindings to key.cfg and remapped keys."));
 }

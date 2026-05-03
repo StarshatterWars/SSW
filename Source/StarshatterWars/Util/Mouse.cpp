@@ -22,6 +22,11 @@
 #include "Video.h"
 #include "View.h"
 
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+
+
 #include "Logging/LogMacros.h"
 
 #if PLATFORM_WINDOWS
@@ -161,10 +166,34 @@ Mouse::LoadCursor(CURSOR c, const char* name, HOTSPOT hs)
 
 // +--------------------------------------------------------------------+
 
-void
-Mouse::Show(int s)
+
+
+void Mouse::Show(bool bShow)
 {
-	show = s;
+	if (!GEngine)
+		return;
+
+	UWorld* World = GEngine->GetCurrentPlayWorld();
+	if (!World)
+		return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC)
+		return;
+
+	PC->bShowMouseCursor = bShow;
+
+	// Optional: control input mode too
+	if (bShow)
+	{
+		FInputModeGameAndUI Mode;
+		PC->SetInputMode(Mode);
+	}
+	else
+	{
+		FInputModeGameOnly Mode;
+		PC->SetInputMode(Mode);
+	}
 }
 
 // +--------------------------------------------------------------------+

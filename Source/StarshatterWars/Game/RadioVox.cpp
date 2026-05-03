@@ -26,7 +26,7 @@
 // Minimal Unreal logging support:
 #include "Logging/LogMacros.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsRadioVox, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempRadioVox, Log, All);
 
 // +====================================================================+
 //
@@ -69,7 +69,7 @@ RadioVoxController::RadioVoxController()
 	hthread = CreateThread(0, 4096, VoxUpdateProc, (LPVOID)this, 0, &thread_id);
 
 	if (!hthread) {
-		UE_LOG(LogStarshatterWarsRadioVox, Error, TEXT("RadioVoxController: CreateThread failed."));
+		UE_LOG(LogTempRadioVox, Error, TEXT("RadioVoxController: CreateThread failed."));
 	}
 }
 
@@ -141,7 +141,7 @@ RadioVoxController::Add(RadioVox* vox)
 		return true;
 	}
 
-	UE_LOG(LogStarshatterWarsRadioVox, Warning, TEXT("RadioVoxController: queue full (MAX_QUEUE=%d)."), MAX_QUEUE);
+	UE_LOG(LogTempRadioVox, Warning, TEXT("RadioVoxController: queue full (MAX_QUEUE=%d)."), MAX_QUEUE);
 	return false;
 }
 
@@ -214,7 +214,7 @@ RadioVox::AddPhrase(const char* key)
 			return true;
 		}
 
-		UE_LOG(LogStarshatterWarsRadioVox, Verbose, TEXT("RadioVox: missing optional phrase '%hs/%hs'."), datapath, filename);
+		UE_LOG(LogTempRadioVox, Verbose, TEXT("RadioVox: missing optional phrase '%hs/%hs'."), datapath, filename);
 	}
 
 	return false;
@@ -228,7 +228,7 @@ RadioVox::Start()
 	if (controller)
 		return controller->Add(this);
 
-	UE_LOG(LogStarshatterWarsRadioVox, Warning, TEXT("RadioVox::Start called before RadioVox::Initialize()."));
+	UE_LOG(LogTempRadioVox, Warning, TEXT("RadioVox::Start called before RadioVox::Initialize()."));
 	return false;
 }
 

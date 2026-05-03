@@ -323,11 +323,11 @@ MissionTemplate::Load(const char* fname, const char* pname)
 		strcpy_s(path, pname);
 
 	if (!filename[0]) {
-		UE_LOG(LogStarshatterWars, Warning, TEXT("Can't Load Mission Template, script unspecified."));
+		UE_LOG(LogTemp, Warning, TEXT("Can't Load Mission Template, script unspecified."));
 		return ok;
 	}
 
-	UE_LOG(LogStarshatterWars, Log, TEXT("Load Mission Template: '%s'"), ANSI_TO_TCHAR(filename));
+	UE_LOG(LogTemp, Log, TEXT("Load Mission Template: '%s'"), ANSI_TO_TCHAR(filename));
 
 	int max_ships = (int)1e6;
 	(void)max_ships; // kept for parity / future constraints
@@ -347,13 +347,13 @@ MissionTemplate::Load(const char* fname, const char* pname)
 	Term* term = parser.ParseTerm();
 
 	if (!term) {
-		UE_LOG(LogStarshatterWars, Error, TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(filename));
+		UE_LOG(LogTemp, Error, TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(filename));
 		return ok;
 	}
 	else {
 		TermText* file_type = term->isText();
 		if (!file_type || file_type->value() != "MISSION_TEMPLATE") {
-			UE_LOG(LogStarshatterWars, Error, TEXT("ERROR: invalid MISSION TEMPLATE file '%s'"), ANSI_TO_TCHAR(filename));
+			UE_LOG(LogTemp, Error, TEXT("ERROR: invalid MISSION TEMPLATE file '%s'"), ANSI_TO_TCHAR(filename));
 			term->print(10);
 			return ok;
 		}
@@ -426,7 +426,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 
 				else if (defname == "alias") {
 					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: alias struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: alias struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 					}
 					else {
@@ -437,7 +437,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 
 				else if (defname == "callsign") {
 					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: callsign struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: callsign struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 					}
 					else {
@@ -448,7 +448,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 
 				else if (defname == "optional") {
 					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: optional group struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: optional group struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 					}
 					else {
@@ -459,7 +459,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 
 				else if (defname == "element") {
 					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: element struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: element struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 					}
 					else {
@@ -478,7 +478,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 								dsn = TCHAR_TO_ANSI(*DsnString);
 							}
 
-							UE_LOG(LogStarshatterWars, Warning,
+							UE_LOG(LogTemp, Warning,
 								TEXT("WARNING: failed to map element %s '%s' in '%s'"),
 								ANSI_TO_TCHAR(dsn),
 								ANSI_TO_TCHAR(elem->GetName().data()),
@@ -492,7 +492,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 
 				else if (defname == "event") {
 					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: event struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: event struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 					}
 					else {
@@ -518,7 +518,7 @@ MissionTemplate::Load(const char* fname, const char* pname)
 		if (ward_name[0])
 			ward = FindElement(ward_name);
 
-		UE_LOG(LogStarshatterWars, Log, TEXT("Mission Template Loaded."));
+		UE_LOG(LogTemp, Log, TEXT("Mission Template Loaded."));
 	}
 
 	return ok;
@@ -684,7 +684,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 			aliases.append(new MissionAlias(alias_name, elem));
 		}
 		else {
-			UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: Could not resolve mission alias '%s'"),
+			UE_LOG(LogTemp, Warning, TEXT("WARNING: Could not resolve mission alias '%s'"),
 				ANSI_TO_TCHAR(alias_name.data()));
 			ok = false;
 		}
@@ -703,7 +703,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 
 			if (defname == "objective") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					UE_LOG(LogStarshatterWars, Warning,
+					UE_LOG(LogTemp, Warning,
 						TEXT("WARNING: order struct missing for element '%s' in '%s'"),
 						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
@@ -726,7 +726,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 
 			else if (defname == "order" || defname == "navpt") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					UE_LOG(LogStarshatterWars, Warning,
+					UE_LOG(LogTemp, Warning,
 						TEXT("WARNING: order struct missing for element '%s' in '%s'"),
 						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
@@ -741,7 +741,7 @@ MissionTemplate::ParseAlias(TermStruct* val)
 
 			else if (defname == "loadout") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					UE_LOG(LogStarshatterWars, Warning,
+					UE_LOG(LogTemp, Warning,
 						TEXT("WARNING: loadout struct missing for element '%s' in '%s'"),
 						ANSI_TO_TCHAR(elem->GetName().data()),
 						ANSI_TO_TCHAR(filename));
@@ -821,7 +821,7 @@ MissionTemplate::ParseOptional(TermStruct* val)
 
 				if (select) {
 					if (!pdef->term() || !pdef->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: optional group struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: optional group struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 						skip++;
 					}
@@ -850,7 +850,7 @@ MissionTemplate::ParseOptional(TermStruct* val)
 
 				if (select) {
 					if (!pdef->term() || !pdef->term()->isStruct()) {
-						UE_LOG(LogStarshatterWars, Warning, TEXT("WARNING: element struct missing in '%s'"), ANSI_TO_TCHAR(filename));
+						UE_LOG(LogTemp, Warning, TEXT("WARNING: element struct missing in '%s'"), ANSI_TO_TCHAR(filename));
 						ok = false;
 						skip++;
 					}

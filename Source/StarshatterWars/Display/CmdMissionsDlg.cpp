@@ -34,6 +34,8 @@
 #include "FormatUtil.h"
 #include "CombatGroup.h"
 #include "CmpnScreen.h"
+#include "SSWRuntimeSubsystem.h"
+
 
 static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
 {
@@ -619,10 +621,20 @@ void UCmdMissionsDlg::OnSaveClicked()
 
 void UCmdMissionsDlg::OnExitClicked()
 {
-    if (Stars)
+    Mouse::Show(false);
+
+    if (UGameInstance* GI = GetGameInstance())
     {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
+        if (USSWRuntimeSubsystem* RuntimeSS =
+            GI->GetSubsystem<USSWRuntimeSubsystem>())
+        {
+            RuntimeSS->SetGameMode(EGameMode::MENU);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("CmdMissionsDlg: Runtime subsystem not found."));
+        }
     }
 }
 

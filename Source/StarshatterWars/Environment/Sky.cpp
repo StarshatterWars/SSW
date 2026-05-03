@@ -27,9 +27,30 @@
 #include "CoreMinimal.h"
 #include "Math/Vector.h"
 
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+
 #include "Math/UnrealMathUtility.h"
 
 // +====================================================================+
+
+static USSWRuntimeSubsystem* GetSSWRuntime()
+{
+	if (!GEngine)
+		return nullptr;
+
+	UWorld* World = GEngine->GetCurrentPlayWorld();
+	if (!World)
+		return nullptr;
+
+	UGameInstance* GI = World->GetGameInstance();
+	if (!GI)
+		return nullptr;
+
+	return GI->GetSubsystem<USSWRuntimeSubsystem>();
+}
 
 Stars::Stars(int nstars)
 {
@@ -133,45 +154,14 @@ Dust::~Dust()
 
 // +--------------------------------------------------------------------+
 
-void
-Dust::Reset(const FVector& RefLocation)
-{
-	(void)RefLocation;
-
-	for (int32 VertexIndex = 0; VertexIndex < vset->nverts; ++VertexIndex) {
-		vset->loc[VertexIndex] = FVector(
-			FMath::FRandRange(-BOUNDARY, BOUNDARY),
-			FMath::FRandRange(-BOUNDARY, BOUNDARY),
-			FMath::FRandRange(-BOUNDARY, BOUNDARY)
-		);
-
-		uint8 GrayValue = 0;
-
-		if (bright) {
-			GrayValue = static_cast<uint8>(FMath::RandRange(96, 200));
-		}
-		else {
-			GrayValue = static_cast<uint8>(FMath::RandRange(64, 156));
-		}
-
-		// VertexSet stores FColor directly now:
-		vset->diffuse[VertexIndex] = FColor(GrayValue, GrayValue, GrayValue, 255);
-
-		// If specular is also FColor* in your port:
-		vset->specular[VertexIndex] = FColor(0, 0, 0, 255);
-		// If specular is still DWORD* in your port, keep:
-		// vset->specular[VertexIndex] = 0;
-	}
-}
-
-// +--------------------------------------------------------------------+
-
-void
-Dust::ExecFrame(double factor, const FVector& ref)
+void Dust::ExecFrame(double factor, const FVector& ref)
 {
 	(void)factor;
 
-	if (Game::TimeCompression() > 4) {
+	USSWRuntimeSubsystem* RuntimeSS = GetSSWRuntime();
+
+	if (RuntimeSS && RuntimeSS->GetTimeCompression() > 4)
+	{
 		Hide();
 		return;
 	}
@@ -179,17 +169,19 @@ Dust::ExecFrame(double factor, const FVector& ref)
 	Show();
 
 	FVector delta = ref - loc;
-	double  dlen = delta.Length();
+	double dlen = delta.Length();
 
 	if (dlen < 0.0001)
 		return;
 
-	if (dlen > BOUNDARY) {
+	if (dlen > BOUNDARY)
+	{
 		Reset(ref);
 	}
-	else {
-		// wrap around if necessary to keep in view
-		for (int i = 0; i < vset->nverts; i++) {
+	else
+	{
+		for (int i = 0; i < vset->nverts; i++)
+		{
 			FVector v = vset->loc[i];
 
 			v -= delta;
@@ -230,6 +222,25 @@ Dust::Render(Video* video, DWORD flags)
 }
 
 // +--------------------------------------------------------------------+
+
+void Dust::Reset(const FVector& ref)
+{
+	loc = ref;
+
+	if (!vset)
+		return;
+
+	for (int i = 0; i < vset->nverts; i++)
+	{
+		vset->loc[i] = FVector(
+			FMath::FRandRange(-BOUNDARY, BOUNDARY),
+			FMath::FRandRange(-BOUNDARY, BOUNDARY),
+			FMath::FRandRange(-BOUNDARY, BOUNDARY)
+		);
+	}
+
+	MoveTo(ref);
+}
 
 void
 Dust::Hide()

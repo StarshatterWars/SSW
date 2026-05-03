@@ -48,6 +48,7 @@
 #include "Ship.h"
 #include "Keyboard.h"
 #include "GameStructs.h"
+#include "SSWRuntimeSubsystem.h"
 
 #include "Engine/DataTable.h"
 #include "StarshatterGameDataSubsystem.h"
@@ -499,10 +500,22 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
 
         if (!CloseTopmost())
         {
-            Stars->SetGameMode(EGameMode::MENU);
+            if (UGameInstance* GI = GetGameInstance())
+            {
+                if (USSWRuntimeSubsystem* RuntimeSS =
+                    GI->GetSubsystem<USSWRuntimeSubsystem>())
+                {
+                    RuntimeSS->SetGameMode(EGameMode::MENU);
+                }
+            }
         }
     }
-    else if (Stars->GetGameMode() == EGameMode::CMPN)
+    UGameInstance* GI = GetGameInstance();
+    USSWRuntimeSubsystem* RuntimeSS = GI
+        ? GI->GetSubsystem<USSWRuntimeSubsystem>()
+        : nullptr;
+
+    if (RuntimeSS && RuntimeSS->GetGameMode() == EGameMode::CMPN)
     {
         if (TimeTilChange <= 0.0)
         {
@@ -510,28 +523,29 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
             {
                 TimeTilChange = 1.0;
                 bCampaignPaused = !bCampaignPaused;
-                Stars->Pause(bCampaignPaused);
+                RuntimeSS->SetPaused(bCampaignPaused);
             }
             else if (Keyboard::KeyDown(KEY_TIME_COMPRESS))
             {
                 TimeTilChange = 1.0;
 
-                switch (Stars->TimeCompression())
+                switch ((int)RuntimeSS->GetTimeCompression())
                 {
-                case 1:  Stars->SetTimeCompression(2); break;
-                case 2:  Stars->SetTimeCompression(4); break;
-                case 4:  Stars->SetTimeCompression(8); break;
+                case 1:  RuntimeSS->SetTimeCompression(2); break;
+                case 2:  RuntimeSS->SetTimeCompression(4); break;
+                case 4:  RuntimeSS->SetTimeCompression(8); break;
+                default: break;
                 }
             }
             else if (Keyboard::KeyDown(KEY_TIME_EXPAND))
             {
                 TimeTilChange = 1.0;
 
-                switch (Stars->TimeCompression())
+                switch ((int)RuntimeSS->GetTimeCompression())
                 {
-                case 8:  Stars->SetTimeCompression(4); break;
-                case 4:  Stars->SetTimeCompression(2); break;
-                default: Stars->SetTimeCompression(1); break;
+                case 8:  RuntimeSS->SetTimeCompression(4); break;
+                case 4:  RuntimeSS->SetTimeCompression(2); break;
+                default: RuntimeSS->SetTimeCompression(1); break;
                 }
             }
         }
@@ -623,6 +637,17 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
         {
             CompletionStage = 0;
 
+            GI = GetGameInstance();
+            RuntimeSS = GI
+                ? GI->GetSubsystem<USSWRuntimeSubsystem>()
+                : nullptr;
+
+            if (!RuntimeSS)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[Campaign] Runtime subsystem not found."));
+                return;
+            }
+
             if (CampaignPtr->IsTraining())
             {
                 List<Campaign>& CampaignList = Campaign::GetAllCampaigns();
@@ -632,20 +657,22 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
                 {
                     NextCampaign->Load();
                     Campaign::SelectCampaign(NextCampaign->GetName());
-                    Stars->SetGameMode(EGameMode::CLOD);
+
+                    RuntimeSS->SetGameMode(EGameMode::CLOD);
                     return;
                 }
             }
 
             if (CampaignPtr->GetCampaignId() < Campaign::GetLastCampaignId())
             {
-                Stars->StartOrResumeGame();
+                RuntimeSS->StartOrResumeGame();
             }
             else
             {
                 Mouse::Show(false);
                 MusicManager::SetMode(MusicMode::MENU);
-                Stars->SetGameMode(EGameMode::MENU);
+
+                RuntimeSS->SetGameMode(EGameMode::MENU);
                 return;
             }
         }

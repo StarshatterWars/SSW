@@ -206,7 +206,7 @@ bool
 Hangar::FinishPrep(HangarSlot* slot)
 {
 	if (!slot || !slot->deck || !slot->design || !ship) {
-		UE_LOG(LogStarshatterWars, Warning, TEXT("Hangar::FinishPrep - invalid slot/deck/design/ship"));
+		UE_LOG(LogTemp, Warning, TEXT("Hangar::FinishPrep - invalid slot/deck/design/ship"));
 		return false;
 	}
 
@@ -247,7 +247,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 			return true;
 		}
 
-		UE_LOG(LogStarshatterWars, Warning,
+		UE_LOG(LogTemp, Warning,
 			TEXT("Could not spot alert ship - carrier: '%hs' ship '%hs'"),
 			ship->Name(), slot->ship ? slot->ship->Name() : "NULL");
 	}

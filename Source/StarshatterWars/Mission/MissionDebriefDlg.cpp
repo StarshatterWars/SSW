@@ -27,6 +27,8 @@
 #include "SimEvent.h"
 #include "ShipDesign.h"
 #include "GameStructs.h"
+#include "SSWRuntimeSubsystem.h"
+
 
 // Legacy helpers:
 #include "Game.h"
@@ -141,8 +143,13 @@ void UMissionDebriefDlg::Show()
     SetVisibility(ESlateVisibility::Visible);
     bIsShown = true;
 
-    // Legacy behavior:
-    Game::SetTimeCompression(1);
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>())
+        {
+            RuntimeSS->SetTimeCompression(1);
+        }
+    }
 
     MissionPtr = nullptr;
     CampaignPtr = Campaign::GetCampaign();
@@ -460,19 +467,29 @@ void UMissionDebriefDlg::OnCloseClicked()
         return;
     }
 
-    Starshatter* Stars = Starshatter::GetInstance();
-    if (Stars)
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
     {
-        Mouse::Show(false);
+        Game::Panic("MissionDebriefDlg::OnCloseClicked() - GameInstance not found");
+        return;
+    }
 
-        Campaign* Camp = Campaign::GetCampaign();
-        if (Camp && Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS)
-            Stars->SetGameMode(EGameMode::CMPN);
-        else
-            Stars->SetGameMode(EGameMode::MENU);
+    USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
+    if (!RuntimeSS)
+    {
+        Game::Panic("MissionDebriefDlg::OnCloseClicked() - Runtime subsystem not found");
+        return;
+    }
+
+    Mouse::Show(false);
+
+    Campaign* Camp = Campaign::GetCampaign();
+    if (Camp && Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS)
+    {
+        RuntimeSS->SetGameMode(EGameMode::CMPN);
     }
     else
     {
-        Game::Panic("MissionDebriefDlg::OnCloseClicked() - Game instance not found");
+        RuntimeSS->SetGameMode(EGameMode::MENU);
     }
 }

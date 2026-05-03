@@ -30,6 +30,7 @@
 #include "PlayerCharacter.h"
 #include "Campaign.h"
 #include "Starshatter.h"
+#include "SSWRuntimeSubsystem.h"
 
 // If you have a sound wrapper, include it here.
 // #include "Sound.h"
@@ -301,32 +302,36 @@ void UMissionAwardDlg::ShowPlayer()
 
 void UMissionAwardDlg::OnCloseClicked()
 {
-    // Legacy behavior:
-    // Player::ClearShowAward(); then switch Starshatter mode based on campaign id.
-
     if (PlayerCharacter* P = PlayerCharacter::GetCurrentPlayer())
     {
         P->ClearShowAward();
     }
 
-    Starshatter* Stars = Starshatter::GetInstance();
-    if (!Stars)
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AwardDlg: Starshatter instance not found."));
+        UE_LOG(LogTemp, Warning, TEXT("AwardDlg: GameInstance not found."));
         SetVisibility(ESlateVisibility::Hidden);
         return;
     }
 
-    // Legacy hides mouse:
-    // Mouse::Show(false);
-    // (Implement in your input layer if needed.)
+    USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
+    if (!RuntimeSS)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AwardDlg: Runtime subsystem not found."));
+        SetVisibility(ESlateVisibility::Hidden);
+        return;
+    }
 
     Campaign* Cmpn = Campaign::GetCampaign();
     if (Cmpn && Cmpn->GetCampaignId() < Campaign::SINGLE_MISSIONS)
-        Stars->SetGameMode(EGameMode::CMPN);
+    {
+        RuntimeSS->SetGameMode(EGameMode::CMPN);
+    }
     else
-        Stars->SetGameMode(EGameMode::MENU);
+    {
+        RuntimeSS->SetGameMode(EGameMode::MENU);
+    }
 
-    // Close/hide widget:
     SetVisibility(ESlateVisibility::Hidden);
 }

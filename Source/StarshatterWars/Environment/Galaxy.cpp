@@ -30,7 +30,7 @@
 #include "Math/Vector.h"
 #include "Logging/LogMacros.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsGalaxy, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempGalaxy, Log, All);
 
 static Galaxy* galaxy = nullptr;
 
@@ -309,7 +309,7 @@ Galaxy::Galaxy(const char* n)
 
 Galaxy::~Galaxy()
 {
-    UE_LOG(LogStarshatterWarsGalaxy, Log, TEXT("DESTROYING GALAXY %s"), ANSI_TO_TCHAR((const char*)name));
+    UE_LOG(LogTempGalaxy, Log, TEXT("DESTROYING GALAXY %s"), ANSI_TO_TCHAR((const char*)name));
     systems.clear();
     stars.clear();
 }
@@ -327,7 +327,7 @@ void Galaxy::InitializeFromEnvironment(UStarshatterEnvironmentSubsystem* Env)
 
     if (!galaxy)
     {
-        UE_LOG(LogStarshatterWarsGalaxy, Error,
+        UE_LOG(LogTempGalaxy, Error,
             TEXT("[Galaxy] InitializeFromEnvironment: failed to allocate galaxy"));
         return;
     }
@@ -366,7 +366,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
 
     if (!Env)
     {
-        UE_LOG(LogStarshatterWarsGalaxy, Warning,
+        UE_LOG(LogTempGalaxy, Warning,
             TEXT("[Galaxy] LoadFromEnvironmentSubsystem: Env is null"));
         return;
     }
@@ -413,7 +413,7 @@ void Galaxy::LoadFromEnvironmentSubsystem(UStarshatterEnvironmentSubsystem* Env)
             StarSys->GetAllRegions().size());
     }
 
-    UE_LOG(LogStarshatterWarsGalaxy, Log,
+    UE_LOG(LogTempGalaxy, Log,
         TEXT("[Galaxy] loaded from EnvironmentSubsystem: systems=%d stars=%d radius=%.0f"),
         systems.size(),
         stars.size(),

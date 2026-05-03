@@ -48,7 +48,7 @@ class UTexture2D;
 
 // +--------------------------------------------------------------------+
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsExplos, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempExplos, Log, All);
 
 // +--------------------------------------------------------------------+
 
@@ -252,7 +252,7 @@ Explosion::Initialize()
     ZeroMemory(recycles, sizeof(recycles));
 
     const char* filename = "Explosions.def";
-    UE_LOG(LogStarshatterWarsExplos, Log, TEXT("Loading Explosion Defs '%hs'"), filename);
+    UE_LOG(LogTempExplos, Log, TEXT("Loading Explosion Defs '%hs'"), filename);
 
     // Load Design File:
     DataLoader* loader = DataLoader::GetLoader();
@@ -264,13 +264,13 @@ Explosion::Initialize()
     Term* term = parser.ParseTerm();
 
     if (!term) {
-        UE_LOG(LogStarshatterWarsExplos, Error, TEXT("ERROR: could notxparse '%hs'"), filename);
+        UE_LOG(LogTempExplos, Error, TEXT("ERROR: could notxparse '%hs'"), filename);
         return;
     }
     else {
         TermText* file_type = term->isText();
         if (!file_type || file_type->value() != "EXPLOSION") {
-            UE_LOG(LogStarshatterWarsExplos, Error, TEXT("ERROR: invalid explosion def file '%hs'"), filename);
+            UE_LOG(LogTempExplos, Error, TEXT("ERROR: invalid explosion def file '%hs'"), filename);
             delete term;
             loader->ReleaseBuffer(block);
             loader->SetDataPath(0);
@@ -288,7 +288,7 @@ Explosion::Initialize()
                 if (def->name()->value() == "explosion") {
 
                     if (!def->term() || !def->term()->isStruct()) {
-                        UE_LOG(LogStarshatterWarsExplos, Warning,
+                        UE_LOG(LogTempExplos, Warning,
                             TEXT("WARNING: explosion structure missing in '%hs'"), filename);
                     }
                     else {
@@ -358,12 +358,12 @@ Explosion::Initialize()
                                         GetDefNumber(type, pdef, filename);
 
                                         if (type < 0 || type >= MAX_EXPLOSION_TYPES) {
-                                            UE_LOG(LogStarshatterWarsExplos, Warning,
+                                            UE_LOG(LogTempExplos, Warning,
                                                 TEXT("Warning - invalid explosion type %d ignored"), type);
                                         }
                                     }
                                     else {
-                                        UE_LOG(LogStarshatterWarsExplos, Warning,
+                                        UE_LOG(LogTempExplos, Warning,
                                             TEXT("Warning - weird explosion type term encountered"));
                                         pdef->print();
                                     }
@@ -441,13 +441,13 @@ Explosion::Initialize()
                                     GetDefNumber(sound_max_dist, pdef, filename);
 
                                 else {
-                                    UE_LOG(LogStarshatterWarsExplos, Warning,
+                                    UE_LOG(LogTempExplos, Warning,
                                         TEXT("WARNING: parameter '%hs' ignored in '%hs'"),
                                         pdef->name()->value().data(), filename);
                                 }
                             }
                             else {
-                                UE_LOG(LogStarshatterWarsExplos, Warning,
+                                UE_LOG(LogTempExplos, Warning,
                                     TEXT("WARNING: term ignored in '%hs'"), filename);
                                 val->elements()->at(i)->print();
                             }
@@ -501,13 +501,13 @@ Explosion::Initialize()
                     }
                 }
                 else {
-                    UE_LOG(LogStarshatterWarsExplos, Warning,
+                    UE_LOG(LogTempExplos, Warning,
                         TEXT("WARNING: unknown definition '%hs' in '%hs'"),
                         def->name()->value().data(), filename);
                 }
             }
             else {
-                UE_LOG(LogStarshatterWarsExplos, Warning,
+                UE_LOG(LogTempExplos, Warning,
                     TEXT("WARNING: term ignored in '%hs'"), filename);
                 term->print();
             }

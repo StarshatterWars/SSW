@@ -26,7 +26,7 @@
 // Unreal logging:
 #include "Logging/LogMacros.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsAudioConfig, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempAudioConfig, Log, All);
 
 // ---------------------------------------------------------------------
 
@@ -229,7 +229,7 @@ void AudioConfig::Load()
     Term* term = parser.ParseTerm();
 
     if (!term) {
-        UE_LOG(LogStarshatterWarsAudioConfig, Error,
+        UE_LOG(LogTempAudioConfig, Error,
             TEXT("AudioConfig: could not parse '%hs'."), ConfigFilename);
         delete[] block;
         loader->SetDataPath(old_path);
@@ -238,7 +238,7 @@ void AudioConfig::Load()
 
     TermText* file_type = term->isText();
     if (!file_type || file_type->value() != "AUDIO") {
-        UE_LOG(LogStarshatterWarsAudioConfig, Warning,
+        UE_LOG(LogTempAudioConfig, Warning,
             TEXT("AudioConfig: invalid '%hs' file."), ConfigFilename);
         delete[] block;
         loader->SetDataPath(old_path);

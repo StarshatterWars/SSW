@@ -37,7 +37,6 @@ public:
 
 	int operator == (const SystemDesign& rhs) const { return name == rhs.name; }
 
-	static void          Initialize(const char* filename);
 	static void          Close();
 	static SystemDesign* Find(const char* name);
 

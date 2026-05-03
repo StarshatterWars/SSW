@@ -101,17 +101,6 @@ DWORD Game::GameTime()
 	return game_time;
 }
 
-DWORD Game::TimeCompression()
-{
-	return time_comp;
-}
-
-void Game::SetTimeCompression(DWORD comp)
-{
-	if (comp > 0 && comp <= 100)
-		time_comp = comp;
-}
-
 DWORD Game::Frame()
 {
 	return frame_number;

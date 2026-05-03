@@ -5,7 +5,7 @@
     All Rights Reserved.
 
     SUBSYSTEM:    StarshatterWars (Unreal Engine)
-    FILE:         StarshatterBootSubsystem.h
+    FILE:         SSWBootSubsystem.h
     AUTHOR:       Carlos Bott
 
     OVERVIEW
@@ -46,7 +46,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "StarshatterBootSubsystem.generated.h"
+#include "SSWBootSubsystem.generated.h"
 
 class UGameInstance;
 
@@ -64,19 +64,14 @@ class UStarshatterWeaponDesignSubsystem;
 class UStarshatterAssetRegistrySubsystem;
 class UStarshatterEnvironmentSubsystem;
 class UStarshatterUIStyleSubsystem;
+class UStarshatterPlayerSubsystem;
+class UStarshatterFormSubsystem;
 class USSWCombatGroupSubsystem;
 
-
-// NEW: Player save subsystem
-class UStarshatterPlayerSubsystem;
-
-// NEW: Forms subsystem
-class UStarshatterFormSubsystem;
-
-DECLARE_MULTICAST_DELEGATE(FOnStarshatterBootComplete);
+DECLARE_MULTICAST_DELEGATE(FOnSSWBootComplete);
 
 UCLASS()
-class STARSHATTERWARS_API UStarshatterBootSubsystem : public UGameInstanceSubsystem
+class STARSHATTERWARS_API USSWBootSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
@@ -85,20 +80,17 @@ public:
     virtual void Deinitialize() override;
 
     bool IsBootComplete() const { return bBootComplete; }
-    FOnStarshatterBootComplete OnBootComplete;
-
-    // If true, no player save existed when boot tried to load.
     bool NeedsFirstRun() const { return bNeedsFirstRun; }
 
-    // Optional helper: triggers the GameData subsystem loader.
-    // Recommended usage: call this from GameInitSubsystem during EGameMode::INIT.
-    void BootGameDataLoader(bool bFull = false);
-   
+    FOnSSWBootComplete OnBootComplete;
 
-private:
-    // --------------------------------------------------
-    // Boot context (shared startup state)
-    // --------------------------------------------------
+    // Temporary passthrough.
+    // Later this should be split into:
+    // 1. DEF parsing
+    // 2. DataTable filling
+    // 3. Runtime data init
+    void BootGameDataLoader(bool bFull = false);
+
 private:
     struct FBootContext
     {
@@ -112,10 +104,9 @@ private:
         UStarshatterVideoSubsystem* VideoSS = nullptr;
         UStarshatterControlsSubsystem* ControlsSS = nullptr;
         UStarshatterKeyboardSubsystem* KeyboardSS = nullptr;
-
         UStarshatterPlayerSubsystem* PlayerSS = nullptr;
+        UStarshatterFormSubsystem* FormSS = nullptr;
 
-        UStarshatterFormSubsystem* FormSS = nullptr; 
         UStarshatterShipDesignSubsystem* ShipDesignSS = nullptr;
         UStarshatterSystemDesignSubsystem* SystemDesignSS = nullptr;
         UStarshatterWeaponDesignSubsystem* WeaponDesignSS = nullptr;
@@ -124,39 +115,35 @@ private:
         USSWCombatGroupSubsystem* CombatGroupSS = nullptr;
     };
 
+private:
     bool BuildContext(FBootContext& OutCtx);
+
+    bool BootAssets();
+    bool BootUI();
+
+    void BootLegacyDataLoader(const FBootContext& Ctx);
 
     void BootFonts(const FBootContext& Ctx);
     void BootAudio(const FBootContext& Ctx);
     void BootVideo(const FBootContext& Ctx);
     void BootControls(const FBootContext& Ctx);
     void BootKeyboard(const FBootContext& Ctx);
+    void BootForms(const FBootContext& Ctx);
+    void BootPlayerSave(const FBootContext& Ctx);
+    void BootUIStyle(const FBootContext& Ctx);
 
-    //Game Data
     void BootShipDesignLoader(const FBootContext& Ctx);
     void BootGalaxyLoader(const FBootContext& Ctx);
     void BootSystemDesignLoader(const FBootContext& Ctx);
     void BootWeaponDesignLoader(const FBootContext& Ctx);
     void BootCombatGroupLoader(const FBootContext& Ctx);
 
-    // NEW:
-    void BootPlayerSave(const FBootContext& Ctx);
-
-    // NEW:
-    void BootForms(const FBootContext& Ctx);
+    void IngestAllDesignData(bool bForceReimport);
 
     void MarkBootComplete();
-
-    void BootLegacyDataLoader(const FBootContext& Ctx);
-    void IngestAllDesignData(bool bForceReimport);
-    bool BootAssets();
-
-    bool BootUI();
-    void BootUIStyle(const FBootContext& Ctx);
+    void StartGameInitSubsystem();
 
 private:
     bool bBootComplete = false;
-
-    // NEW:
     bool bNeedsFirstRun = false;
 };

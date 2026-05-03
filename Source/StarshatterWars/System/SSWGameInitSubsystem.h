@@ -62,10 +62,10 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "StarshatterGameInitSubsystem.generated.h"
+#include "SSWGameInitSubsystem.generated.h"
 
 UCLASS()
-class STARSHATTERWARS_API UStarshatterGameInitSubsystem : public UGameInstanceSubsystem
+class STARSHATTERWARS_API USSWGameInitSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
@@ -73,15 +73,14 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    bool IsGameInitComplete() const { return bGameInitComplete; }
+public:
+    // Called by USSWBootSubsystem after boot completes.
+    void RunGameInitFromBoot();
 
 private:
-    void BeginAfterBoot();
     void RunGameInit();
 
-    UPROPERTY(Transient)
-    TArray<FName> CampaignRowOrder;
-
 private:
+    bool bGameInitStarted = false;
     bool bGameInitComplete = false;
 };

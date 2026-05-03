@@ -59,6 +59,10 @@
 #include "TimerSubsystem.h"
 #include "FormattingUtils.h"
 #include "SSWGameInstance.h"
+#include "SSWRuntimeSubsystem.h"
+
+#include "Mouse.h"
+
 
 void UCmdDlg::NativeConstruct()
 {
@@ -487,18 +491,7 @@ void UCmdDlg::OnSaveClicked()
     }
 }
 
-void UCmdDlg::OnExitClicked()
-{
-    if (Stars)
-    {
-        Mouse::Show(false);
-        Stars->SetGameMode(EGameMode::MENU);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CmdDlg: Starshatter instance is null (OnExitClicked)."));
-    }
-}
+#include "SSWRuntimeSubsystem.h"
 
 void UCmdDlg::OnCancelButtonClicked()
 {
@@ -918,4 +911,25 @@ void UCmdDlg::RefreshIntelDataBackground()
     }
 
     CmdIntelPanel->RefreshIntelData();
+}
+
+void UCmdDlg::OnExitClicked()
+{
+    Mouse::Show(false);
+
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CmdDlg: GameInstance is null (OnExitClicked)."));
+        return;
+    }
+
+    USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
+    if (!RuntimeSS)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CmdDlg: RuntimeSubsystem is null (OnExitClicked)."));
+        return;
+    }
+
+    RuntimeSS->SetGameMode(EGameMode::MENU);
 }

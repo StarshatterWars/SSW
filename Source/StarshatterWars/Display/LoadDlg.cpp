@@ -25,7 +25,7 @@
 #include "Components/ProgressBar.h"
 
 // Starshatter
-#include "Starshatter.h"
+#include "SSWRuntimeSubsystem.h"
 #include "Game.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogLoadDlg, Log, All);
@@ -72,39 +72,47 @@ void ULoadDlg::RegisterControls()
 
 void ULoadDlg::ExecFrame()
 {
-    Starshatter* stars = Starshatter::GetInstance();
-    if (!stars)
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
         return;
+
+    USSWRuntimeSubsystem* RuntimeSS =
+        GI->GetSubsystem<USSWRuntimeSubsystem>();
+
+    if (!RuntimeSS)
+        return;
+
+    const EGameMode Mode = RuntimeSS->GetGameMode();
 
     // Title:
     if (TitleText)
     {
-        if (stars->GetGameMode() == EGameMode::CLOD ||
-            stars->GetGameMode() == EGameMode::CMPN)
+        if (Mode == EGameMode::CLOD || Mode == EGameMode::CMPN)
         {
-            SetTextBlock(TitleText, Game::GetText("LoadDlg.campaign"));
+            SetTextBlock(TitleText, "Campaign");
         }
-        else if (stars->GetGameMode() == EGameMode::MENU)
+        else if (Mode == EGameMode::MENU)
         {
-            SetTextBlock(TitleText, Game::GetText("LoadDlg.tac-ref"));
+            SetTextBlock(TitleText, "Tactical Reference");
         }
         else
         {
-            SetTextBlock(TitleText, Game::GetText("LoadDlg.mission"));
+            SetTextBlock(TitleText, "Mission");
         }
     }
 
     // Activity:
     if (ActivityText)
     {
-        SetTextBlock(ActivityText, stars->GetLoadActivity());
+        SetTextBlock(ActivityText, RuntimeSS->GetLoadActivity());
     }
 
     // Progress:
     if (ProgressBar)
     {
-        // Legacy slider likely expects 0..1; keep it clamped either way:
-        const float P = FMath::Clamp((float)stars->GetLoadProgress(), 0.0f, 1.0f);
+        const float P =
+            FMath::Clamp((float)RuntimeSS->GetLoadProgress(), 0.0f, 1.0f);
+
         ProgressBar->SetPercent(P);
     }
 }

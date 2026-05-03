@@ -30,7 +30,7 @@
 #include "Containers/StringConv.h"
 #include "GameStructs.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsInstruction, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempInstruction, Log, All);
 
 // +----------------------------------------------------------------------+
 

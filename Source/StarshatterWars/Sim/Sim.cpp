@@ -79,6 +79,10 @@
 #include "ShipDesignRegistry.h"
 #include "GameStructs_System.h"
 
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+
 
 // Minimal Unreal includes (logging + FVector):
 #include "CoreMinimal.h"
@@ -94,6 +98,29 @@
 // --------------------------------------------------------------------
 // FVector helpers
 // --------------------------------------------------------------------
+
+static USSWRuntimeSubsystem* GetSSWRuntimeSubsystem()
+{
+	if (!GEngine)
+	{
+		return nullptr;
+	}
+
+	UWorld* World = GEngine->GetCurrentPlayWorld();
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	UGameInstance* GI = World->GetGameInstance();
+	if (!GI)
+	{
+		return nullptr;
+	}
+
+	return GI->GetSubsystem<USSWRuntimeSubsystem>();
+}
+
 
 static FORCEINLINE double VecLen(const FVector& V)
 {
@@ -1663,28 +1690,34 @@ Sim::ExecFrame(double DeltaSeconds)
 		}
 	}
 
-	// setup music
-	if (!MusicManager::IsNoMusic()) {
-		Starshatter* Stars = Starshatter::GetInstance();
-		if (Stars && Stars->GetGameMode() == EGameMode::PLAY) {
+	if (!MusicManager::IsNoMusic())
+	{
+		USSWRuntimeSubsystem* RuntimeSS = GetSSWRuntimeSubsystem();
+
+		if (RuntimeSS && RuntimeSS->GetGameMode() == EGameMode::PLAY)
+		{
 			Ship* PlayerShip = GetPlayerShip();
-			if (PlayerShip) {
+
+			if (PlayerShip)
+			{
 				const int32 Phase = PlayerShip->GetFlightPhase();
 
-				if (Phase < Ship::ACTIVE) {
+				if (Phase < Ship::ACTIVE)
+				{
 					MusicManager::SetMode(MusicMode::LAUNCH);
 				}
-
-				else if (Phase > Ship::ACTIVE) {
+				else if (Phase > Ship::ACTIVE)
+				{
 					MusicManager::SetMode(MusicMode::RECOVERY);
 				}
-
-				else {
-					if (PlayerShip->IsInCombat()) {
+				else
+				{
+					if (PlayerShip->IsInCombat())
+					{
 						MusicManager::SetMode(MusicMode::COMBAT);
 					}
-
-					else {
+					else
+					{
 						MusicManager::SetMode(MusicMode::FLIGHT);
 					}
 				}

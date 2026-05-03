@@ -95,6 +95,11 @@
 #include "GameStructs.h"
 #include "StarshatterWarsLog.h"
 
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+
 
 // ---------------------------------------------------------------------
 // NOTE ON POINT/VEC3 CONVERSION
@@ -124,6 +129,22 @@ const int HIT_SHIELD = 2;
 const int HIT_BOTH = 3;
 const int HIT_TURRET = 4;
 
+
+static USSWRuntimeSubsystem* GetSSWRuntime()
+{
+	if (!GEngine)
+		return nullptr;
+
+	UWorld* World = GEngine->GetCurrentPlayWorld();
+	if (!World)
+		return nullptr;
+
+	UGameInstance* GI = World->GetGameInstance();
+	if (!GI)
+		return nullptr;
+
+	return GI->GetSubsystem<USSWRuntimeSubsystem>();
+}
 
 static FORCEINLINE FMatrix ToFMatrix(const Matrix& InM)
 {
@@ -181,7 +202,7 @@ Ship::Ship(
 
 	if (!design)
 	{
-		UE_LOG(LogStarshatterWars, Error,
+		UE_LOG(LogTemp, Error,
 			TEXT("[Ship] No ShipDesign for '%hs'"), ship_name);
 		return;
 	}
@@ -210,7 +231,7 @@ Ship::Ship(
 			dir = Director;
 			SetNetworkControl(Director);
 
-			UE_LOG(LogStarshatterWars, Warning,
+			UE_LOG(LogTemp, Warning,
 				TEXT("[Ship] SimDirector created for '%hs' (cmd_ai=%d)"),
 				ship_name,
 				cmd_ai);
@@ -218,7 +239,7 @@ Ship::Ship(
 	}
 	else
 	{
-		UE_LOG(LogStarshatterWars, Warning,
+		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship] AI/DIRECTOR DISABLED for '%hs'"),
 			ship_name);
 	}
@@ -1772,7 +1793,7 @@ void Ship::SetLeader(Ship* Leader)
 	// Ensure this ship references the same element
 	element = LeaderElement;
 
-	UE_LOG(LogStarshatterWars, Warning,
+	UE_LOG(LogTemp, Warning,
 		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' Element='%hs' Index=%d"),
 		Name(),
 		Leader->Name(),
@@ -3369,17 +3390,19 @@ Ship::CanTimeSkip()
 }
 
 
-void
-Ship::TimeSkip()
+void Ship::TimeSkip()
 {
-	if (CanTimeSkip()) {
+	if (CanTimeSkip())
+	{
 		// go back to regular time before performing the skip:
-		Game::SetTimeCompression(1);
+		if (USSWRuntimeSubsystem* RuntimeSS = GetSSWRuntime())
+		{
+			RuntimeSS->SetTimeCompression(1);
+		}
 
 		transition_time = 7.5f;
 		transition_type = TRANSITION_TIME_SKIP;
 		transition_loc = Location() + Heading() * (float)(Velocity().Length() * 4);
-		// 2500; //(8*Radius());
 
 		if (rand() < 16000)
 			transition_loc += BeamLine() * (float)(2.5 * Radius());
@@ -3393,8 +3416,8 @@ Ship::TimeSkip()
 
 		SetControls(0);
 	}
-
-	else if (sim->GetPlayerShip() == this) {
+	else if (sim->GetPlayerShip() == this)
+	{
 		SetAutoNav(true);
 	}
 }

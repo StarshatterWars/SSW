@@ -39,7 +39,7 @@
 // Unreal (for UE_LOG)
 #include "Logging/LogMacros.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsCarrierAI, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempCarrierAI, Log, All);
 
 // +----------------------------------------------------------------------+
 

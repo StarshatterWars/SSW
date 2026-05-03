@@ -26,7 +26,7 @@
 #include "Logging/LogMacros.h"
 #include "Math/Vector.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogStarshatterWarsSimContact, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTempSimContact, Log, All);
 
 // +----------------------------------------------------------------------+
 

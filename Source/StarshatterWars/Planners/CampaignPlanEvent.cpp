@@ -129,14 +129,14 @@ CampaignPlanEvent::ExecScriptedEvents()
                     scripted_event = true;
 
                     if (action->Subtype() == (int) ECombatEventType::CAMPAIGN_END) {
-                        UE_LOG(LogStarshatterWars, Log,
+                        UE_LOG(LogTemp, Log,
                             TEXT(">>>>> CAMPAIGN %d END  (Action %03d) <<<<<"),
                             campaign->GetCampaignId(), action->Identity());
                         campaign->SetCampaignStatus(ECampaignStatus::SUCCESS);
                     }
 
                     else if (action->Subtype() == (int) ECombatEventType::CAMPAIGN_FAIL) {
-                        UE_LOG(LogStarshatterWars, Log,
+                        UE_LOG(LogTemp, Log,
                             TEXT(">>>>> CAMPAIGN %d FAIL (Action %03d) <<<<<"),
                             campaign->GetCampaignId(), action->Identity());
                         campaign->SetCampaignStatus(ECampaignStatus::FAILED);
@@ -189,7 +189,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                         action->FireAction();
                     }
                     else {
-                        UE_LOG(LogStarshatterWars, Warning,
+                        UE_LOG(LogTemp, Warning,
                             TEXT("WARNING: Action %d (intel level) Could not find group (IFF:%d, type:%d, id:%d)"),
                             action->Identity(),
                             action->GetIFF(),
@@ -267,7 +267,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                         }
 
                         if (!found) {
-                            UE_LOG(LogStarshatterWars, Warning,
+                            UE_LOG(LogTemp, Warning,
                                 TEXT("WARNING: Action %d Could not find assigned zone '%s' for '%s'"),
                                 action->Identity(),
                                 ANSI_TO_TCHAR(action->Region() ? action->Region() : "NULL"),
@@ -279,7 +279,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                         action->FireAction();
                     }
                     else {
-                        UE_LOG(LogStarshatterWars, Warning,
+                        UE_LOG(LogTemp, Warning,
                             TEXT("WARNING: Action %d (zone assignment) Could not find group (IFF:%d, type:%d, id:%d)"),
                             action->Identity(),
                             action->GetIFF(),
@@ -356,7 +356,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                         }
 
                         if (!found) {
-                            UE_LOG(LogStarshatterWars, Warning,
+                            UE_LOG(LogTemp, Warning,
                                 TEXT("WARNING: Action %d Could not find assigned system '%s' for '%s'"),
                                 action->Identity(),
                                 ANSI_TO_TCHAR(action->System() ? action->System() : "NULL"),
@@ -368,7 +368,7 @@ CampaignPlanEvent::ExecScriptedEvents()
                         action->FireAction();
                     }
                     else {
-                        UE_LOG(LogStarshatterWars, Warning,
+                        UE_LOG(LogTemp, Warning,
                             TEXT("WARNING: Action %d (system assignment) Could not find group (IFF:%d, type:%d, id:%d)"),
                             action->Identity(),
                             action->GetIFF(),
