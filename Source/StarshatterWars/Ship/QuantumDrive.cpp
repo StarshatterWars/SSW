@@ -125,7 +125,7 @@ QuantumDrive::Engage(bool immediate)
 			Ship* s = s_iter.value();
 
 			if (s != ship) {
-				double dist = Point(s->Location() - ship->Location()).Length();
+				double dist = FVector(s->GetLocation() - ship->GetLocation()).Length();
 
 				if (dist < 25e3)
 					jump_time += 5;
@@ -170,7 +170,7 @@ QuantumDrive::AbortJump()
 	while (++neighbor) {
 		if (neighbor->IsDropship()) {
 			Ship* s = neighbor.value();
-			Point delta = s->Location() - ship->Location();
+			FVector delta = s->GetLocation() - ship->GetLocation();
 
 			if (delta.Length() < 5e3)
 				s->SetWarp(warp_fov);
@@ -234,7 +234,7 @@ QuantumDrive::ExecFrame(double seconds)
 			while (++neighbor) {
 				if (neighbor->IsDropship()) {
 					Ship* s = neighbor.value();
-					Point delta = s->Location() - ship->Location();
+					FVector delta = s->GetLocation() - ship->GetLocation();
 
 					if (delta.Length() < 5e3)
 						s->SetWarp(warp_fov);
@@ -265,19 +265,19 @@ QuantumDrive::Jump()
 		esc_vec += RandomDirectionPoint() * RandomRangeDouble(15e3, 22e3);
 
 		if (subtype == HYPER)
-			sim->CreateExplosion(ship->Location(), Point(0, 0, 0), Explosion::HYPER_FLASH, 1, 1, ship->GetRegion());
+			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, Explosion::HYPER_FLASH, 1, 1, ship->GetRegion());
 		else
-			sim->CreateExplosion(ship->Location(), Point(0, 0, 0), Explosion::QUANTUM_FLASH, 1, 0, ship->GetRegion());
+			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1, 0, ship->GetRegion());
 
 		sim->RequestHyperJump(ship, dst_rgn, esc_vec);
 
-		ShipStats* stats = ShipStats::Find(ship->Name());
+		ShipStats* stats = ShipStats::Find(ship->GetName());
 		if (stats)
 			stats->AddEvent(SimEvent::QUANTUM_JUMP, dst_rgn->GetName());
 	}
 
 	dst_rgn = 0;
-	dst_loc = Point();
+	dst_loc = FVector::ZeroVector;
 
 	active_state = ACTIVE_POSTWARP;
 }

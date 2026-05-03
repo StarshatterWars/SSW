@@ -187,7 +187,7 @@ void Sensor::ExecFrame(double seconds)
     }
 
     if (ship && ship->GetRegion()) {
-        const Camera* cam = &ship->Cam();
+        const Camera* cam = &ship->GetCam();
         double az1 = -45 * DEGREES;
         double az2 = 45 * DEGREES;
 
@@ -213,7 +213,7 @@ void Sensor::ExecFrame(double seconds)
 
                 // update track:
                 if (c) {
-                    c->loc = c_ship->Location();
+                    c->loc = c_ship->GetLocation();
                     c->d_pas = 2.0f;
                     c->d_act = 2.0f;
 
@@ -242,14 +242,14 @@ void Sensor::ExecFrame(double seconds)
             double c_life = -1;
 
             if (c_ship) {
-                c_life = c_ship->Life();
+                c_life = c_ship->GetLife();
 
                 // look for quantum jumps and orbit transitions:
                 if (c_ship->GetRegion() != ship->GetRegion())
                     c_life = 0;
             }
             else if (c_shot) {
-                c_life = c_shot->Life();
+                c_life = c_shot->GetLife();
             }
             else {
                 c_life = 0;
@@ -265,11 +265,11 @@ void Sensor::ExecFrame(double seconds)
                 if (c_ship) {
                     if (!t) {
                         SimContact* track = new SimContact(c_ship, contact->d_pas, contact->d_act);
-                        track->loc = c_ship->Location();
+                        track->loc = c_ship->GetLocation();
                         track_list.append(track);
                     }
                     else {
-                        t->loc = c_ship->Location();
+                        t->loc = c_ship->GetLocation();
                         t->Merge(contact);
                         t->UpdateTrack();
                     }
@@ -277,11 +277,11 @@ void Sensor::ExecFrame(double seconds)
                 else if (c_shot) {
                     if (!t) {
                         SimContact* track = new SimContact(c_shot, contact->d_pas, contact->d_act);
-                        track->loc = c_shot->Location();
+                        track->loc = c_shot->GetLocation();
                         track_list.append(track);
                     }
                     else {
-                        t->loc = c_shot->Location();
+                        t->loc = c_shot->GetLocation();
                         t->Merge(contact);
                         t->UpdateTrack();
                     }
@@ -308,8 +308,8 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     double sensor_range = GetBeamRange();
 
     // translate:
-    const Camera* cam = &ship->Cam();
-    FVector targ_pt = c_ship->Location() - ship->Location();
+    const Camera* cam = &ship->GetCam();
+    FVector targ_pt = c_ship->GetLocation() - ship->GetLocation();
 
     // rotate:
     const double tx = FVector::DotProduct(targ_pt, cam->vrt());
@@ -333,18 +333,18 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         min_range = 1;
     }
     else if (probe) {
-        FVector probe_pt = c_ship->Location() - probe->Location();
+        FVector probe_pt = c_ship->GetLocation() - probe->GetLocation();
         double prng = probe_pt.Size();
 
-        if (prng < probe->Design()->lethal_radius && prng < rng) {
+        if (prng < probe->GetDesign()->GetLethalRadius() && prng < rng) {
             min_range = prng;
             probescan = true;
         }
     }
 
-    bool vis = tz > 1 && (c_ship->Radius() / rng > 0.001);
+    bool vis = tz > 1 && (c_ship->GetRadius() / rng > 0.001);
     bool threat =
-        (c_ship->Life() != 0 &&
+        (c_ship->GetLife() != 0 &&
             c_ship->GetIFF() &&
             c_ship->GetIFF() != ship->GetIFF() &&
             c_ship->GetEMCON() > 2 &&
@@ -396,7 +396,7 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
                     d_pas = 0;
 
                 if (probescan) {
-                    double max_range = probe->Design()->lethal_radius;
+                    double max_range = probe->GetDesign()->GetLethalRadius();
                     d_act = c_ship->ACS() * (1 - min_range / max_range);
                 }
                 else if (mode != PAS && mode != PST) {
@@ -436,7 +436,7 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 
             // update track:
             if (c) {
-                c->loc = c_ship->Location();
+                c->loc = c_ship->GetLocation();
                 c->d_pas = (float)d_pas;
                 c->d_act = (float)d_act;
                 c->probe = probescan;
@@ -457,8 +457,8 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
         return;
 
     // translate:
-    const Camera* cam = &ship->Cam();
-    FVector targ_pt = c_shot->Location() - ship->Location();
+    const Camera* cam = &ship->GetCam();
+    FVector targ_pt = c_shot->GetLocation() - ship->GetLocation();
 
     // rotate:
     const double tx = FVector::DotProduct(targ_pt, cam->vrt());
@@ -474,7 +474,7 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
     if (ty < 0)
         el = -el;
 
-    bool vis = tz > 1 && (c_shot->Radius() / rng > 0.001);
+    bool vis = tz > 1 && (c_shot->GetRadius() / rng > 0.001);
     bool threat = (c_shot->IsTracking(ship));
 
     // clip:
@@ -519,7 +519,7 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
 
             // update track:
             if (c) {
-                c->loc = c_shot->Location();
+                c->loc = c_shot->GetLocation();
                 c->d_pas = (float)d_pas;
                 c->d_act = (float)d_act;
 
@@ -563,7 +563,7 @@ bool Sensor::IsTracking(SimObject* tgt)
 
         SimContact* c = 0;
 
-        if (tgt->Type() == SimObject::SIM_SHIP) {
+        if (tgt->GetType() == SimObject::SIM_SHIP) {
             c = FindContact((Ship*)tgt);
         }
         else {
@@ -705,7 +705,7 @@ SimObject* Sensor::LockTarget(SimObject* candidate)
     if (!candidate)
         return target;
 
-    int candidate_type = candidate->Type();
+    int candidate_type = candidate->GetType();
     SimObject* test = 0;
     ListIter<SimContact> contact(ship->ContactList());
 

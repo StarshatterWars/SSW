@@ -673,7 +673,7 @@ void MapView::SelectShip(Ship* selship)
 		current_ship = selship;
 
 		if (current_ship) {
-			if (current_ship->Life() == 0 || current_ship->IsDying() || current_ship->IsDead()) {
+			if (current_ship->GetLife() == 0 || current_ship->IsDying() || current_ship->IsDead()) {
 				current_ship = 0;
 			}
 			else {
@@ -808,7 +808,7 @@ void MapView::FindShips(bool bFriendly, bool bStation, bool bStarship, bool bDro
 					if (!bFriendly && (s->GetIFF() == 0 || s->GetIFF() == ship->GetIFF()))
 						continue;
 
-					OutResult.append(new Text(s->Name()));
+					OutResult.append(new Text(s->GetName()));
 				}
 			}
 		}
@@ -1131,7 +1131,7 @@ MapView::SetupScroll(Orbital* s)
 		}
 		else if (current_ship) {
 			// NOTE: legacy uses OtherHand() (handedness swap) for ship locations.
-			FVector sloc = ToOtherHand(current_ship->Location());
+			FVector sloc = ToOtherHand(current_ship->GetLocation());
 
 			if (!IsVisible(sloc)) {
 				scroll_x = (offset_x + sloc.X) / 5.0;
@@ -1477,7 +1477,7 @@ MapView::SelectAt(int x, int y)
 					Ship* sh = shipIter.value();
 
 					if (!IsClutter(*sh)) {
-						FVector sloc = ToOtherHand(current_ship->Location());
+						FVector sloc = ToOtherHand(current_ship->GetLocation());
 						double dx = sloc.X - test_x;
 						double dy = sloc.Y - test_y;
 						double d = sqrt(dx * dx + dy * dy);
@@ -1815,7 +1815,7 @@ MapView::DrawSystem()
 		caption += "\n";
 		caption += Game::GetText("MapView.title.Ship");
 		caption += " ";
-		caption += current_ship->Name();
+		caption += current_ship->GetName();
 	}
 	else if (current_elem) {
 		caption += "\n";
@@ -1892,7 +1892,7 @@ MapView::DrawRegion()
 		caption += "\n";
 		caption += Game::GetText("MapView.title.Ship");
 		caption += " ";
-		caption += current_ship->Name();
+		caption += current_ship->GetName();
 	}
 	else if (current_elem) {
 		caption += "\n";
@@ -2288,7 +2288,7 @@ void MapView::DrawShip(Ship& s, bool current, int rep)
 	FVector shiploc(0, 0, 0);
 
 	// Legacy handedness fix:
-	FVector sloc = ToOtherHand(FVector(s.Location()));
+	FVector sloc = ToOtherHand(FVector(s.GetLocation()));
 
 	double cx = rect.w * 0.5;
 	double cy = rect.h * 0.5;
@@ -2343,7 +2343,7 @@ void MapView::DrawShip(Ship& s, bool current, int rep)
 					Print(
 						(int)shiploc.X - sprite_width,
 						(int)shiploc.Y + sprite_width + 2,
-						s.Name()
+						s.GetName()
 					);
 				}
 			}
@@ -2351,7 +2351,7 @@ void MapView::DrawShip(Ship& s, bool current, int rep)
 			// High-detail sprite
 			// ------------------------------------------------
 			else {
-				FVector heading = ToOtherHand(FVector(s.Heading()));
+				FVector heading = ToOtherHand(FVector(s.GetHeading()));
 				heading.Z = 0;
 				heading.Normalize();
 
@@ -2438,7 +2438,7 @@ void MapView::DrawShip(Ship& s, bool current, int rep)
 				Print(
 					(int)shiploc.X - sprite_width,
 					(int)shiploc.Y + sprite_width + 2,
-					s.Name()
+					s.GetName()
 				);
 			}
 		}
@@ -2815,7 +2815,7 @@ void MapView::DrawNavRoute(
 			old_in = (route_ship->GetRegion()->GetOrbitalRegion() == rgn);
 
 			if (old_in) {
-				old_loc = ToOtherHand(FVector(route_ship->Location()));
+				old_loc = ToOtherHand(FVector(route_ship->GetLocation()));
 				old_x = old_loc.X * scale;
 				old_y = old_loc.Y * scale;
 			}
@@ -3194,8 +3194,8 @@ MapView::GetShipLoc(Ship& s, FVector& shiploc)
 
 	if (view_mode == VIEW_SYSTEM ||
 		(view_mode == VIEW_REGION && rgn == s.GetRegion()->GetOrbitalRegion())) {
-		double sx = (s.Location().X + rlx) * scale;
-		double sy = (s.Location().Y + rly) * scale;
+		double sx = (s.GetLocation().X + rlx) * scale;
+		double sy = (s.GetLocation().Y + rly) * scale;
 
 		shiploc.X = (int)(cx + sx + ox);
 		shiploc.Y = (int)(cy + sy + oy);

@@ -198,8 +198,8 @@ NavLight::Orient(const Physical* Rep)
 	if (!Rep)
 		return;
 
-	const Camera& RepCam = Rep->Cam();
-	const FVector ShipLoc = Rep->Location();
+	const Camera& RepCam = Rep->GetCam();
+	const FVector ShipLoc = Rep->GetLocation();
 
 	// Build a UE matrix from the Starshatter camera basis vectors.
 	// Assumes Cam.vrt/vup/vpn are FVector basis vectors in world space.

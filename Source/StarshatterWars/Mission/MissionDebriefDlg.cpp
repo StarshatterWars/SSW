@@ -262,7 +262,7 @@ void UMissionDebriefDlg::Show()
             for (int i = 0; i < ShipStats::NumStats(); i++)
             {
                 ShipStats* Stats = ShipStats::GetStats(i);
-                if (Stats && !strcmp(PlayerShip->Name(), Stats->GetName()))
+                if (Stats && !strcmp(PlayerShip->GetName(), Stats->GetName()))
                 {
                     Stats->Summarize();
 
@@ -358,7 +358,7 @@ void UMissionDebriefDlg::DrawUnits()
 
             UnitList->AddItem(Row);
 
-            if (PlayerShip && !strcmp(PlayerShip->Name(), Stats->GetName()))
+            if (PlayerShip && !strcmp(PlayerShip->GetName(), Stats->GetName()))
             {
                 SelectIndex = UnitList->GetNumItems() - 1;
             }

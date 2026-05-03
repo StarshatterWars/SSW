@@ -194,18 +194,18 @@ Thruster::Orient(const Physical* rep)
     if (!ship || (ship->IsAirborne() && ship->Class() != CLASSIFICATION::LCA))
         hide_all = true;
 
-    if (ship->Rep() && ship->Rep()->Hidden())
+    if (ship->GetRep() && ship->GetRep()->Hidden())
         hide_all = true;
 
     if (thrust <= 0)
         hide_all = true;
 
-    const FVector ship_loc = rep->Location();
+    const FVector ship_loc = rep->GetLocation();
 
     // Camera/ship basis vectors (must be FVectors for this to work correctly):
-    const FVector Vrt = rep->Cam().vrt(); // "right" / lateral axis
-    const FVector Vup = rep->Cam().vup(); // "up" axis
-    const FVector Vpn = rep->Cam().vpn(); // "forward" (note: in some systems vpn points *toward* screen)
+    const FVector Vrt = rep->GetCam().vrt(); // "right" / lateral axis
+    const FVector Vup = rep->GetCam().vup(); // "up" axis
+    const FVector Vpn = rep->GetCam().vpn(); // "forward" (note: in some systems vpn points *toward* screen)
 
     for (int i = 0; i < ports.size(); i++) {
         ThrusterPort* p = ports[i];
@@ -393,13 +393,13 @@ Thruster::ExecTrans(double x, double y, double z)
     bool sound_on = false;
     bool show_flare = true;
 
-    if (ship->Rep() && ship->Rep()->Hidden())
+    if (ship->GetRep() && ship->GetRep()->Hidden())
         show_flare = false;
 
     if (ship->Class() == CLASSIFICATION::LCA &&
         ship->IsAirborne() &&
-        ship->Velocity().Length() < 250 &&
-        ship->AltitudeAGL() > ship->Radius() / 2) {
+        ship->GetVelocity().Length() < 250 &&
+        ship->GetAltitudeAGL() > ship->GetRadius() / 2) {
 
         sound_on = true;
         IncBurn(BOTTOM, TOP);
@@ -506,7 +506,7 @@ Thruster::ExecTrans(double x, double y, double z)
             if (thruster_sound) {
                 if (sound_on) {
                     const FVector cam_loc = cam_dir->GetCamera()->Pos();
-                    const double  dist = (ship->Location() - cam_loc).Size();
+                    const double  dist = (ship->GetLocation() - cam_loc).Size();
 
                     const long max_vol = AudioConfig::EfxVolume();
                     long       volume = -2000;
@@ -515,7 +515,7 @@ Thruster::ExecTrans(double x, double y, double z)
                         volume = max_vol;
 
                     if (dist < thruster_sound->GetMaxDistance()) {
-                        thruster_sound->SetLocation(ship->Location());
+                        thruster_sound->SetLocation(ship->GetLocation());
                         thruster_sound->SetVolume(volume);
                         thruster_sound->Play();
                     }

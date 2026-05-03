@@ -235,7 +235,7 @@ const char*
 ShipAI::GetObserverName() const
 {
 	static char name[64];
-	sprintf_s(name, "ShipAI(%s)", self->Name());
+	sprintf_s(name, "ShipAI(%s)", self->GetName());
 	return name;
 }
 
@@ -283,14 +283,14 @@ ShipAI::ExecFrame(double secs)
 		FindObjective();
 		Navigator();
 
-		if (ship->MissionClock() > 10000)
+		if (ship->GetMissionClock() > 10000)
 			takeoff = false;
 
 		return;
 	}
 
 	// initial assessment:
-	if (ship->MissionClock() < 5000)
+	if (ship->GetMissionClock() < 5000)
 		return;
 
 	element_index = ship->GetElementIndex();
@@ -305,7 +305,7 @@ ShipAI::ExecFrame(double secs)
 		ship->LockTarget(target);
 
 		// if able to lock target, and target is a ship (not a shot)...
-		if (target == ship->GetTarget() && target->Type() == SimObject::SIM_SHIP) {
+		if (target == ship->GetTarget() && target->GetType() == SimObject::SIM_SHIP) {
 
 			// if this isn't the same ship we last called out:
 			if (target->Identity() != engaged_ship_id && Game::GameTime() - last_call_time > 10000) {
@@ -340,24 +340,24 @@ ShipAI::ClosingVelocity()
 	if (ship && target) {
 		if (ship->GetPrimaryDesign()) {
 			WeaponDesign* guns = ship->GetPrimaryDesign();
-			FVector       delta = (FVector)(target->Location() - ship->Location());
+			FVector       delta = (FVector)(target->GetLocation() - ship->GetLocation());
 
 			// fighters need to aim the ship so that the guns will hit the target
 			if (guns->firing_cone < 10 * DEGREES && guns->max_range <= delta.Size()) {
-				FVector aim_vec = ship->Heading();
+				FVector aim_vec = ship->GetHeading();
 				aim_vec.Normalize();
 
-				FVector shot_vel = ship->Velocity() + aim_vec * (float)guns->speed;
-				return shot_vel - target->Velocity();
+				FVector shot_vel = ship->GetVelocity() + aim_vec * (float)guns->speed;
+				return shot_vel - target->GetVelocity();
 			}
 
 			// ships with turreted weapons just need to worry about actual closing speed
 			else {
-				return ship->Velocity() - target->Velocity();
+				return ship->GetVelocity() - target->GetVelocity();
 			}
 		}
 		else {
-			return ship->Velocity();
+			return ship->GetVelocity();
 		}
 	}
 
@@ -416,11 +416,11 @@ ShipAI::FindObjective()
 
 	// threat processing:
 	if (threat && !directed) {
-		double d_threat = ((FVector)(threat->Location() - ship->Location())).Size();
+		double d_threat = ((FVector)(threat->GetLocation() - ship->GetLocation())).Size();
 
 		// seek support:
 		if (support) {
-			double d_support = ((FVector)(support->Location() - ship->Location())).Size();
+			double d_support = ((FVector)(support->GetLocation() - ship->GetLocation())).Size();
 			if (d_support > 35e3) {
 				ship->SetDirectorInfo("Regroup");
 				FindObjectiveTarget(support);
@@ -432,7 +432,7 @@ ShipAI::FindObjective()
 		// run away:
 		else if (threat != target) {
 			ship->SetDirectorInfo("Retreat");
-			obj_w = ship->Location() + (FVector)(ship->Location() - threat->Location()) * 100.0f;
+			obj_w = ship->GetLocation() + (FVector)(ship->GetLocation() - threat->GetLocation()) * 100.0f;
 			objective = Transform(obj_w);
 			return;
 		}
@@ -493,42 +493,42 @@ ShipAI::FindObjectiveTarget(SimObject* tgt)
 
 	if (cvl > 50) {
 		// distance from self to target:
-		distance = ((FVector)(tgt->Location() - self->Location())).Size();
+		distance = ((FVector)(tgt->GetLocation() - self->GetLocation())).Size();
 
 		// time to reach target:
 		time = distance / cvl;
 
 		// where the target will be when we reach it:
 		if (time < 15) {
-			FVector run_vec = tgt->Velocity();
-			obj_w = tgt->Location() + run_vec * (float)time;
+			FVector run_vec = tgt->GetVelocity();
+			obj_w = tgt->GetLocation() + run_vec * (float)time;
 
 			if (time < 10)
-				obj_w += tgt->Acceleration() * (float)(0.33 * time * time);
+				obj_w += tgt->GetAcceleration() * (float)(0.33 * time * time);
 		}
 		else {
-			obj_w = tgt->Location();
+			obj_w = tgt->GetLocation();
 		}
 	}
 	else {
-		obj_w = tgt->Location();
+		obj_w = tgt->GetLocation();
 	}
 
-	distance = ((FVector)(obj_w - self->Location())).Size();
+	distance = ((FVector)(obj_w - self->GetLocation())).Size();
 
 	if (cvl > 50) {
 		time = distance / cvl;
 
 		// where we will be when the target gets there:
 		if (time < 15) {
-			FVector self_dest = self->Location() + cv * (float)time;
+			FVector self_dest = self->GetLocation() + cv * (float)time;
 			FVector err = obj_w - self_dest;
 
 			obj_w += err;
 		}
 	}
 
-	FVector approach = obj_w - self->Location();
+	FVector approach = obj_w - self->GetLocation();
 	distance = approach.Size();
 
 	if (bracket && distance > 25e3) {
@@ -555,7 +555,7 @@ ShipAI::FindObjectivePatrol()
 	obj_w = npt;
 
 	// distance from self to navpt:
-	distance = ((FVector)(obj_w - self->Location())).Size();
+	distance = ((FVector)(obj_w - self->GetLocation())).Size();
 
 	if (distance < 1000) {
 		ship->ClearRadioOrders();
@@ -626,7 +626,7 @@ ShipAI::FindObjectiveNavPoint()
 	}
 
 	// Distance from self to navpt:
-	distance = (obj_w - ship->Location()).Size();
+	distance = (obj_w - ship->GetLocation()).Size();
 
 	if (farcaster && distance < 1000.0)
 		farcaster = nullptr;
@@ -700,7 +700,7 @@ ShipAI::FindObjectiveQuantum()
 	}
 
 	// Distance from self to objective:
-	distance = (obj_w - ship->Location()).Size();
+	distance = (obj_w - ship->GetLocation()).Size();
 
 	if (farcaster) {
 		if (distance < 1000.0) {
@@ -731,14 +731,14 @@ ShipAI::FindObjectiveFarcaster(SimRegion* src_rgn, SimRegion* dst_rgn)
 	if (farcaster) {
 		FVector apt = farcaster->ApproachPoint(0);
 		FVector npt = farcaster->StartPoint();
-		double  r1 = ((FVector)(ship->Location() - npt)).Size();
+		double  r1 = ((FVector)(ship->GetLocation() - npt)).Size();
 
 		if (r1 > 50e3) {
 			obj_w = apt;
 			distance = r1;
 		}
 		else {
-			double r2 = ((FVector)(ship->Location() - apt)).Size();
+			double r2 = ((FVector)(ship->GetLocation() - apt)).Size();
 			double r3 = ((FVector)(npt - apt)).Size();
 
 			if (r1 + r2 < 1.2 * r3) {
@@ -776,18 +776,18 @@ ShipAI::FindObjectiveFormation()
 	if (!LeadShip || LeadShip == ship) {
 		LeadShip = WardShip;
 
-		distance = (LeadShip->Location() - self->Location()).Size();
-		if (distance < 30e3 && LeadShip->Velocity().Size() < 50) {
-			obj_w = self->Location() + LeadShip->Heading() * 1e6f;
+		distance = (LeadShip->GetLocation() - ship->GetLocation()).Size();
+		if (distance < 30e3 && LeadShip->GetVelocity().Size() < 50) {
+			obj_w = ship->GetLocation() + LeadShip->GetHeading() * 1e6f;
 			distance = -1;
 			return;
 		}
 	}
 
-	obj_w = LeadShip->Location() + LeadShip->Velocity() * (float)Prediction;
+	obj_w = LeadShip->GetLocation() + LeadShip->GetVelocity() * (float)Prediction;
 
 	// --- FIX: rotate formation delta using Unreal rotation (yaw about Z) ---
-	const float YawRadians = (float)(LeadShip->CompassHeading() - PI);
+	const float YawRadians = (float)(LeadShip->GetCompassHeading() - PI);
 	const float YawDegrees = FMath::RadiansToDegrees(YawRadians);
 
 	const FRotator YawRot(0.0f, YawDegrees, 0.0f);
@@ -798,22 +798,22 @@ ShipAI::FindObjectiveFormation()
 
 	// try to avoid smacking into the ground...
 	if (ship->IsAirborne()) {
-		if (ship->AltitudeAGL() < 3000 || LeadShip->AltitudeAGL() < 3000) {
+		if (ship->GetAltitudeAGL() < 3000 || LeadShip->GetAltitudeAGL() < 3000) {
 			obj_w.Y += 500.0f;
 		}
 	}
 
-	const FVector PredictedSelf = self->Location() + self->Velocity() * (float)Prediction;
+	const FVector PredictedSelf = ship->GetLocation() + ship->GetVelocity() * (float)Prediction;
 	const FVector DeltaWorld = obj_w - PredictedSelf;
 
 	distance = DeltaWorld.Size();
 
 	// get slot z distance:
-	FVector SlotProbe = DeltaWorld + ship->Location();
+	FVector SlotProbe = DeltaWorld + ship->GetLocation();
 	slot_dist = Transform(SlotProbe).Z;
 
 	SimDirector* LeadDirector = LeadShip->GetDirector();
-	if (LeadDirector && (LeadDirector->Type() == FIGHTER || LeadDirector->Type() == STARSHIP)) {
+	if (LeadDirector && (LeadDirector->GetType() == FIGHTER || LeadDirector->GetType() == STARSHIP)) {
 		ShipAI* LeadAI = (ShipAI*)LeadDirector;
 		farcaster = LeadAI->GetFarcaster();
 	}
@@ -856,7 +856,7 @@ ShipAI::FindObjectiveFormation()
 				farcaster = farcaster->GetDest()->GetFarcaster();
 
 			obj_w = farcaster->EndPoint();
-			distance = (obj_w - ship->Location()).Size();
+			distance = (obj_w - ship->GetLocation()).Size();
 
 			if (distance < 1000)
 				farcaster = 0;
@@ -1003,7 +1003,7 @@ ShipAI::ThrottleControl()
 		if (distance > 5000)
 			speed = 500;
 
-		if (ship->Velocity().Size() > speed)
+		if (ship->GetVelocity().Size() > speed)
 			throttle = 0;
 		else
 			throttle = 50;
@@ -1023,8 +1023,8 @@ ShipAI::ThrottleControl()
 
 		else {                                       // wingman
 			Ship* lead = ship->GetElement()->GetShip(1);
-			double lv = lead->Velocity().Size();
-			double sv = ship->Velocity().Size();
+			double lv = lead->GetVelocity().Size();
+			double sv = ship->GetVelocity().Size();
 			double dv = lv - sv;
 			double dt = 0;
 
@@ -1049,14 +1049,14 @@ ShipAI::NavlightControl()
 	if (leader && leader != ship) {
 		bool navlight_enabled = false;
 
-		if (leader->NavLights().size() > 0)
-			navlight_enabled = leader->NavLights().at(0)->IsEnabled();
+		if (leader->GetNavLights().size() > 0)
+			navlight_enabled = leader->GetNavLights().at(0)->IsEnabled();
 
-		for (int i = 0; i < ship->NavLights().size(); i++) {
+		for (int i = 0; i < ship->GetNavLights().size(); i++) {
 			if (navlight_enabled)
-				ship->NavLights().at(i)->Enable();
+				ship->GetNavLights().at(i)->Enable();
 			else
-				ship->NavLights().at(i)->Disable();
+				ship->GetNavLights().at(i)->Disable();
 		}
 	}
 }
@@ -1080,7 +1080,7 @@ ShipAI::AvoidCollision()
 	if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive())
 		return avoid;
 
-	if (other && (other->Life() == 0 || other->Integrity() < 1)) {
+	if (other && (other->GetLife() == 0 || other->GetIntegrity() < 1)) {
 		other = 0;
 		last_avoid_time = 0; // check for a new obstacle immediately
 	}
@@ -1091,7 +1091,7 @@ ShipAI::AvoidCollision()
 	brake = 0;
 
 	// don't get closer than this:
-	double avoid_dist = 5 * self->Radius();
+	double avoid_dist = 5 * ship->GetRadius();
 
 	if (avoid_dist < 1e3) avoid_dist = 1e3;
 	else if (avoid_dist > 12e3) avoid_dist = 12e3;
@@ -1105,7 +1105,7 @@ ShipAI::AvoidCollision()
 	else if (ship->IsStarship())
 		avoid_time *= 1.5;
 
-	FVector bearing = self->Velocity();
+	FVector bearing = ship->GetVelocity();
 	bearing.Normalize();
 
 	bool              found = false;
@@ -1132,7 +1132,7 @@ ShipAI::AvoidCollision()
 			while (++iter && !found) {
 				Debris* debris = iter.value();
 
-				if (debris->Mass() > ship->Mass())
+				if (debris->GetMass() > ship->GetMass())
 					found = AvoidTestSingleObject(debris, bearing, avoid_dist, avoid_time, avoid);
 			}
 		}
@@ -1154,7 +1154,7 @@ ShipAI::AvoidCollision()
 
 		// if found, steer to avoid:
 		if (other) {
-			avoid = Avoid(obstacle, (float)(ship->Radius() + other->Radius() + avoid_dist * 0.9));
+			avoid = Avoid(obstacle, (float)(ship->GetRadius() + other->GetRadius() + avoid_dist * 0.9));
 			avoid.brake = brake;
 
 			ship->SetDirectorInfo(Game::GetText("ai.avoid-collision"));
@@ -1173,8 +1173,8 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	Steer& avoid)
 {
 	if (too_close == obj->Identity()) {
-		double dist = ((FVector)(ship->Location() - obj->Location())).Size();
-		double closure = FVector::DotProduct((FVector)(ship->Velocity() - obj->Velocity()), bearing);
+		double dist = ((FVector)(ship->GetLocation() - obj->GetLocation())).Size();
+		double closure = FVector::DotProduct((FVector)(ship->GetVelocity() - obj->GetVelocity()), bearing);
 
 		if (closure > 1 && dist < avoid_dist) {
 			avoid = AvoidCloseObject(obj);
@@ -1186,8 +1186,8 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	}
 
 	// will we get close?
-	double time = ClosestApproachTime(ship->Location(), ship->Velocity(),
-		obj->Location(), obj->Velocity());
+	double time = ClosestApproachTime(ship->GetLocation(), ship->GetVelocity(),
+		obj->GetLocation(), obj->GetVelocity());
 
 	// already past the obstacle:
 	if (time <= 0) {
@@ -1196,8 +1196,8 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	}
 
 	// how quickly could we collide?
-	FVector current_relation = ship->Location() - obj->Location();
-	double  current_distance = current_relation.Size() - ship->Radius() - obj->Radius();
+	FVector current_relation = ship->GetLocation() - obj->GetLocation();
+	double  current_distance = current_relation.Size() - ship->GetRadius() - obj->GetRadius();
 
 	// are we really far away?
 	if (current_distance > 25e3) {
@@ -1206,25 +1206,25 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	}
 
 	// is the obstacle a farcaster?
-	if (obj->Type() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == SimObject::SIM_SHIP) {
 		Ship* c_ship = (Ship*)obj;
 
 		if (c_ship->GetFarcaster()) {
 			// are we on a safe vector?
-			FVector dir = ship->Velocity();
+			FVector dir = ship->GetVelocity();
 			dir.Normalize();
 
-			double angle_off = FMath::Abs(FMath::Acos((double)FVector::DotProduct(dir, (FVector)obj->Cam().vpn())));
+			double angle_off = FMath::Abs(FMath::Acos((double)FVector::DotProduct(dir, (FVector)obj->GetCam().vpn())));
 
 			if (angle_off > 90 * DEGREES)
 				angle_off = 180 * DEGREES - angle_off;
 
 			if (angle_off < 35 * DEGREES) {
 				// will we pass through the center?
-				FVector d = ship->Location() + dir * (float)(current_distance + ship->Radius() + obj->Radius());
-				double  err = ((FVector)(obj->Location() - d)).Size();
+				FVector d = ship->GetLocation() + dir * (float)(current_distance + ship->GetRadius() + obj->GetRadius());
+				double  err = ((FVector)(obj->GetLocation() - d)).Size();
 
-				if (err < 0.667 * obj->Radius()) {
+				if (err < 0.667 * obj->GetRadius()) {
 					return false;
 				}
 			}
@@ -1232,31 +1232,31 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	}
 
 	// rate of closure:
-	double closing_velocity = FVector::DotProduct((FVector)(ship->Velocity() - obj->Velocity()), bearing);
+	double closing_velocity = FVector::DotProduct((FVector)(ship->GetVelocity() - obj->GetVelocity()), bearing);
 
 	// are we too close already?
 	if (current_distance < (avoid_dist * 0.35)) {
-		if (closing_velocity > 1 || current_distance < ship->Radius()) {
+		if (closing_velocity > 1 || current_distance < ship->GetRadius()) {
 			avoid = AvoidCloseObject(obj);
 			return true;
 		}
 	}
 
 	// too far away to worry about:
-	double separation = (avoid_dist + obj->Radius());
+	double separation = (avoid_dist + obj->GetRadius());
 	if ((current_distance - separation) / closing_velocity > avoid_time) {
 		if (other == obj) other = 0;
 		return false;
 	}
 
 	// where will we be?
-	FVector selfpt = ship->Location() + ship->Velocity() * (float)time;
-	FVector testpt = obj->Location() + obj->Velocity() * (float)time;
+	FVector selfpt = ship->GetLocation() + ship->GetVelocity() * (float)time;
+	FVector testpt = obj->GetLocation() + obj->GetVelocity() * (float)time;
 
 	// how close will we get?
 	double dist = ((FVector)(selfpt - testpt)).Size()
-		- ship->Radius()
-		- obj->Radius();
+		- ship->GetRadius()
+		- obj->GetRadius();
 
 	// that's too close:
 	if (dist < avoid_dist) {
@@ -1290,7 +1290,7 @@ Steer
 ShipAI::AvoidCloseObject(SimObject* obj)
 {
 	too_close = obj->Identity();
-	obstacle = Transform(obj->Location());
+	obstacle = Transform(obj->GetLocation());
 	other = obj;
 
 	Observe(other);
@@ -1298,7 +1298,7 @@ ShipAI::AvoidCloseObject(SimObject* obj)
 	Steer avoid = Flee(obstacle);
 	avoid.brake = 0.3;
 
-	ship->SetDirectorInfo(Game::GetText("ai.avoid-collision"));
+	ship->SetDirectorInfo("Avoid collision");
 	return avoid;
 }
 
@@ -1385,10 +1385,10 @@ void
 ShipAI::CheckTarget()
 {
 	if (target) {
-		if (target->Life() == 0)
+		if (target->GetLife() == 0)
 			target = 0;
 
-		else if (target->Type() == SimObject::SIM_SHIP) {
+		else if (target->GetType() == SimObject::SIM_SHIP) {
 			Ship* tgt_ship = (Ship*)target;
 
 			if (tgt_ship->GetIFF() == ship->GetIFF() && !tgt_ship->IsRogue())

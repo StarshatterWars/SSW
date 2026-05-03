@@ -165,7 +165,7 @@ bool TacticalAI::CheckObjectives()
 				case INSTRUCTION_ACTION::ASSAULT:
 				{
 					SimObject* tgt = obj->GetTarget();
-					if (tgt && tgt->Type() == SimObject::SIM_SHIP) {
+					if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
 						roe = DIRECTED;
 						SelectTargetDirected(static_cast<Ship*>(tgt));
 					}
@@ -176,7 +176,7 @@ bool TacticalAI::CheckObjectives()
 				case INSTRUCTION_ACTION::ESCORT:
 				{
 					SimObject* tgt = obj->GetTarget();
-					if (tgt && tgt->Type() == SimObject::SIM_SHIP) {
+					if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
 						roe = DEFENSIVE;
 						ward = static_cast<Ship*>(tgt);
 					}
@@ -224,7 +224,7 @@ bool TacticalAI::ProcessOrders()
 			bool       tgt_ok = false;
 			SimObject* tgt = orders->GetTarget();
 
-			if (tgt && tgt->Type() == SimObject::SIM_SHIP) {
+			if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
 				Ship* tgt_ship = (Ship*)tgt;
 
 				if (CanTarget(tgt_ship)) {
@@ -248,7 +248,7 @@ bool TacticalAI::ProcessOrders()
 		case RadioMessageAction::COVER_ME:
 		{
 			SimObject* tgt = orders->GetTarget();
-			if (tgt && tgt->Type() == SimObject::SIM_SHIP) {
+			if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
 				roe = DEFENSIVE;
 				ship_ai->SetWard((Ship*)tgt);
 				ship_ai->SetNavPoint(0);
@@ -306,7 +306,7 @@ bool TacticalAI::ProcessOrders()
 					SimRegion* rtb_rgn = controller->GetRegion();
 
 					if (self_rgn == rtb_rgn) {
-						double range = (controller->Location() - ship->Location()).Length();
+						double range = (controller->GetLocation() - ship->GetLocation()).Length();
 
 						if (range < 50e3) {
 							msg = new RadioMessage(controller, ship, RadioMessageAction::CALL_INBOUND);
@@ -407,7 +407,7 @@ bool TacticalAI::CheckFlightPlan()
 		if (roe == DEFENSIVE) {
 			SimObject* tgt = navpt->GetTarget();
 
-			if (tgt && tgt->Type() == SimObject::SIM_SHIP)
+			if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
 				ward = (Ship*)tgt;
 		}
 
@@ -453,7 +453,7 @@ void TacticalAI::SelectTarget()
 
 	// if we have abandoned our ward, drop and return:
 	if (ward && roe != AGRESSIVE) {
-		double d = (ward->Location() - ship->Location()).Length();
+		double d = (ward->GetLocation() - ship->GetLocation()).Length();
 		double safe_zone = 50e3;
 
 		if (target) {
@@ -474,7 +474,7 @@ void TacticalAI::SelectTarget()
 
 	// already have a target, keep it:
 	if (target) {
-		if (target->Life()) {
+		if (target->GetLife()) {
 			CheckTarget();
 
 			// frigates need to be ready to abandon ship-type targets
@@ -497,9 +497,9 @@ void TacticalAI::SelectTarget()
 		return;
 
 	if (roe == DIRECTED) {
-		if (target && target->Type() == SimObject::SIM_SHIP)
+		if (target && target->GetType() == SimObject::SIM_SHIP)
 			SelectTargetDirected((Ship*)target);
-		else if (navpt && navpt->GetTarget() && navpt->GetTarget()->Type() == SimObject::SIM_SHIP)
+		else if (navpt && navpt->GetTarget() && navpt->GetTarget()->GetType() == SimObject::SIM_SHIP)
 			SelectTargetDirected((Ship*)navpt->GetTarget());
 		else
 			SelectTargetDirected();
@@ -511,8 +511,8 @@ void TacticalAI::SelectTarget()
 		if (ship->Class() == CLASSIFICATION::CORVETTE || ship->Class() == CLASSIFICATION::FRIGATE) {
 			SimObject* potential_target = ship_ai->GetTarget();
 			if (target && potential_target && target != potential_target) {
-				if (target->Type() == SimObject::SIM_SHIP &&
-					potential_target->Type() == SimObject::SIM_SHIP) {
+				if (target->GetType() == SimObject::SIM_SHIP &&
+					potential_target->GetType() == SimObject::SIM_SHIP) {
 					ship_ai->SetTarget(target);
 				}
 			}
@@ -538,7 +538,7 @@ void TacticalAI::SelectTargetDirected(Ship* tgt)
 				SimObject* obj_sim_obj = objective->GetTarget();
 				Ship* obj_tgt = 0;
 
-				if (obj_sim_obj && obj_sim_obj->Type() == SimObject::SIM_SHIP)
+				if (obj_sim_obj && obj_sim_obj->GetType() == SimObject::SIM_SHIP)
 					obj_tgt = (Ship*)obj_sim_obj;
 
 				if (obj_tgt) {
@@ -612,9 +612,9 @@ TacticalAI::SelectTargetOpportunity()
 			if (WardShip->Class() > ship->Class()) {
 				SimObject* WardTarget = WardShip->GetTarget();
 
-				if (WardTarget && WardTarget->Type() == SimObject::SIM_SHIP) {
+				if (WardTarget && WardTarget->GetType() == SimObject::SIM_SHIP) {
 					CurrentShipTarget = (Ship*)WardTarget;
-					TargetDist = (ship->Location() - WardTarget->Location()).Length();
+					TargetDist = (ship->GetLocation() - WardTarget->GetLocation()).Length();
 				}
 			}
 		}
@@ -638,7 +638,7 @@ TacticalAI::SelectTargetOpportunity()
 					if (ContactShip->Class() < CLASSIFICATION::DESTROYER ||
 						(ContactShip->Class() >= CLASSIFICATION::MINE && ContactShip->Class() <= CLASSIFICATION::DEFSAT)) {
 						// found an enemy, check distance:
-						const double Dist = (ship->Location() - ContactShip->Location()).Length();
+						const double Dist = (ship->GetLocation() - ContactShip->GetLocation()).Length();
 
 						if (Dist < 0.75 * TargetDist &&
 							(!CurrentShipTarget || ContactShip->Class() <= CurrentShipTarget->Class())) {
@@ -654,7 +654,7 @@ TacticalAI::SelectTargetOpportunity()
 						continue;
 
 					// found an enemy shot, check distance:
-					const double Dist = (ship->Location() - ContactShot->Location()).Length();
+					const double Dist = (ship->GetLocation() - ContactShot->GetLocation()).Length();
 
 					if (!CurrentShotTarget) {
 						CurrentShotTarget = ContactShot;
@@ -665,7 +665,7 @@ TacticalAI::SelectTargetOpportunity()
 					else {
 						// IMPORTANT: SimShot::IsTracking expects Ship*, not SimObject*
 						Ship* WardShip = nullptr;
-						if (WardObj && WardObj->Type() == SimObject::SIM_SHIP)
+						if (WardObj && WardObj->GetType() == SimObject::SIM_SHIP)
 							WardShip = (Ship*)WardObj;
 
 						if ((ContactShot->IsTracking(WardShip) || ContactShot->IsTracking(ship)) &&
@@ -712,7 +712,7 @@ TacticalAI::SelectTargetOpportunity()
 			if (bRogue || bTargetOk) {
 				if (ContactShip->IsStarship() || ContactShip->IsStatic()) {
 					// found an enemy, check distance:
-					const double Dist = (ship->Location() - ContactShip->Location()).Length();
+					const double Dist = (ship->GetLocation() - ContactShip->GetLocation()).Length();
 
 					if (Dist < 0.75 * TargetDist) {
 						PotentialTarget = ContactShip;
@@ -736,7 +736,7 @@ TacticalAI::SelectTargetOpportunity()
 			while (++ThreatIter) {
 				Ship* ThreatShip = ThreatIter.value();
 
-				const double Dist = (WardObj->Location() - ThreatShip->Location()).Length();
+				const double Dist = (WardObj->GetLocation() - ThreatShip->GetLocation()).Length();
 
 				if (Dist < TargetDist) {
 					PotentialTarget = ThreatShip;
@@ -765,7 +765,7 @@ void TacticalAI::CheckTarget()
 		return;
 	}
 
-	if (tgt->Type() == SimObject::SIM_SHIP) {
+	if (tgt->GetType() == SimObject::SIM_SHIP) {
 		Ship* target = (Ship*)tgt;
 
 		// has the target joined our side?
@@ -791,7 +791,7 @@ void TacticalAI::CheckTarget()
 
 		// can we catch the target?
 		if (target->Design()->vlimit <= ship->Design()->vlimit ||
-			ship->Velocity().Length() <= ship->Design()->vlimit)
+			ship->GetVelocity().Length() <= ship->Design()->vlimit)
 			return;
 
 		WeaponDesign* wep_dsn = ship->GetPrimaryDesign();
@@ -802,19 +802,19 @@ void TacticalAI::CheckTarget()
 		if (drop_range > 0.75 * ship->Design()->commit_range)
 			drop_range = 0.75 * ship->Design()->commit_range;
 
-		double range = (target->Location() - ship->Location()).Length();
+		double range = (target->GetLocation() - ship->GetLocation()).Length();
 		if (range < drop_range)
 			return;
 
-		Point delta = (target->Location() + target->Velocity()) -
-			(ship->Location() + ship->Velocity());
+		FVector delta = (target->GetLocation() + target->GetVelocity()) -
+			(ship->GetLocation() + ship->GetVelocity());
 
 		if (delta.Length() < range)
 			return;
 
 		ship_ai->DropTarget();
 	}
-	else if (tgt->Type() == SimObject::SIM_DRONE) {
+	else if (tgt->GetType() == SimObject::SIM_DRONE) {
 		Drone* drone = (Drone*)tgt;
 
 		// is the target still a threat?
@@ -960,5 +960,5 @@ void TacticalAI::FindFormationSlot(INSTRUCTION_FORMATION formation)
 		delta = FVector(0, 0, -15 * s);
 	}
 
-	ship_ai->SetFormationDelta(delta * ship->Radius() * 2);
+	ship_ai->SetFormationDelta(delta * ship->GetRadius() * 2);
 }

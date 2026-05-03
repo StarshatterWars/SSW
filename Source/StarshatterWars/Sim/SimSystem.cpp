@@ -407,8 +407,8 @@ void
 SimSystem::Orient(const Physical* rep)
 {
 	// Starshatter core types:
-	const Matrix& StarOrient = rep->Cam().Orientation();
-	const FVector Loc = rep->Location();
+	const Matrix& StarOrient = rep->GetCam().Orientation();
+	const FVector Loc = rep->GetLocation();
 
 	// Convert Starshatter Matrix -> Unreal FMatrix
 	FMatrix UEOrient = FMatrix::Identity;

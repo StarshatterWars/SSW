@@ -119,8 +119,8 @@ Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
         //
         // UE fix: project delta onto camera basis vectors with dot products.
         if (source) {
-            const Camera& SrcCam = source->Cam();
-            const FVector Delta = InPos - source->Location();
+            const Camera& SrcCam = source->GetCam();
+            const FVector Delta = InPos - source->GetLocation();
 
             mount_rel.X = FVector::DotProduct(Delta, SrcCam.vrt());
             mount_rel.Y = FVector::DotProduct(Delta, SrcCam.vup());
@@ -209,10 +209,10 @@ Explosion::GetObserverName() const
 {
     static char NameBuffer[128];
 
-    if (source && source->Name()) {
+    if (source && source->GetName()) {
         // UE-safe formatting, no __FILE__/__LINE__, no wide chars
         snprintf(NameBuffer, sizeof(NameBuffer),
-            "Explosion(%s)", source->Name());
+            "Explosion(%s)", source->GetName());
     }
     else {
         snprintf(NameBuffer, sizeof(NameBuffer), "Explosion");
@@ -541,7 +541,7 @@ Explosion::ExecFrame(double DeltaSeconds)
 {
     // Follow the source attachment (UE-friendly vector math: no Matrix * Vector operator assumptions)
     if (source) {
-        const Camera& SrcCam = source->Cam();
+        const Camera& SrcCam = source->GetCam();
 
         // Build a rotation matrix from the camera basis vectors.
         // Assumes Cam.vrt/vup/vpn return normalized world-space basis vectors as FVector.
@@ -555,7 +555,7 @@ Explosion::ExecFrame(double DeltaSeconds)
         // Transform mount_rel from source-local into world using the basis:
         const FVector WorldOffset = Basis.TransformVector(mount_rel);
 
-        MoveTo(WorldOffset + source->Location());
+        MoveTo(WorldOffset + source->GetLocation());
 
         if (rep)       rep->Show();
         if (particles) particles->Show();
@@ -578,7 +578,7 @@ Explosion::ExecFrame(double DeltaSeconds)
     // ------------------------------------------------------------
     // Visual rep updates
     if (rep) {
-        rep->MoveTo(Location());
+        rep->MoveTo(GetLocation());
 
         if (rep->Life() == 0) {
             rep = nullptr; // about to be GC'd / owned elsewhere
@@ -606,12 +606,12 @@ Explosion::ExecFrame(double DeltaSeconds)
     // ------------------------------------------------------------
     // Particle updates
     if (particles) {
-        particles->MoveTo(Location());
+        particles->MoveTo(GetLocation());
         particles->ExecFrame(DeltaSeconds);
     }
 
     // If source died, end this explosion immediately
-    if (source && source->Life() == 0) {
+    if (source && source->GetLife() == 0) {
         life = 0;
     }
 }
@@ -626,7 +626,7 @@ Explosion::Activate(SimScene& scene)
 
     CameraManager* cam_dir = CameraManager::GetInstance();
     if (cam_dir && cam_dir->GetCamera()) {
-        if (FVector(cam_dir->GetCamera()->Pos() - Location()).Length() < 100.0)
+        if (FVector(cam_dir->GetCamera()->Pos() - GetLocation()).Length() < 100.0)
             filter = true;
     }
 
@@ -644,7 +644,7 @@ Explosion::Activate(SimScene& scene)
 
         // fire and forget:
         if (sound) {
-            sound->SetLocation(Location());
+            sound->SetLocation(GetLocation());
             sound->SetVolume(AudioConfig::EfxVolume());
             sound->Play();
         }

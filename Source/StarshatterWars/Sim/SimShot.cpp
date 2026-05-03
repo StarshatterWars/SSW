@@ -182,7 +182,7 @@ SimShot::~SimShot()
 // +--------------------------------------------------------------------+
 
 const char*
-SimShot::DesignName() const
+SimShot::GetDesignName() const
 {
 	return design->name;
 }
@@ -215,7 +215,7 @@ SimShot::SeekTarget(SimObject* target, SimSystem* sub)
 		SeekerAI* seeker = (SeekerAI*)dir;
 		SimObject* old_target = seeker->GetTarget();
 
-		if (old_target && old_target->Type() == SimObject::SIM_SHIP) {
+		if (old_target && old_target->GetType() == SimObject::SIM_SHIP) {
 			Ship* tgt_ship = (Ship*)old_target;
 			tgt_ship->DropThreat(this);
 		}
@@ -232,7 +232,7 @@ SimShot::SeekTarget(SimObject* target, SimSystem* sub)
 
 		dir = seeker;
 
-		if (!primary && target->Type() == SimObject::SIM_SHIP) {
+		if (!primary && target->GetType() == SimObject::SIM_SHIP) {
 			Ship* tgt_ship = (Ship*)target;
 			tgt_ship->AddThreat(this);
 		}
@@ -270,7 +270,7 @@ bool
 SimShot::IsHostileTo(const SimObject* o) const
 {
 	if (o) {
-		if (o->Type() == SIM_SHIP) {
+		if (o->GetType() == SIM_SHIP) {
 			Ship* s = (Ship*)o;
 
 			if (s->IsRogue())
@@ -280,7 +280,7 @@ SimShot::IsHostileTo(const SimObject* o) const
 				return true;
 		}
 
-		else if (o->Type() == SIM_SHOT || o->Type() == SIM_DRONE) {
+		else if (o->GetType() == SIM_SHOT || o->GetType() == SIM_DRONE) {
 			SimShot* s = (SimShot*)o;
 
 			if (s->GetIFF() > 0 && s->GetIFF() != GetIFF())
@@ -325,7 +325,7 @@ SimShot::ExecFrame(double seconds)
 		}
 	}
 	else {
-		origin = Location();
+		origin = GetLocation();
 
 		if (!first_frame)
 			Physical::ExecFrame(seconds);
@@ -345,7 +345,7 @@ SimShot::ExecFrame(double seconds)
 				if (design->trail_dim > 0)
 					trail->SetDim(design->trail_dim);
 
-				trail->AddPoint(Location() + Heading() * -100);
+				trail->AddPoint(GetLocation() + GetHeading() * -100);
 
 				SimScene* scene = 0;
 
@@ -358,7 +358,7 @@ SimShot::ExecFrame(double seconds)
 		}
 
 		if (trail)
-			trail->AddPoint(Location());
+			trail->AddPoint(GetLocation());
 
 		if (!armed) {
 			SeekerAI* seeker = (SeekerAI*)dir;
@@ -374,7 +374,7 @@ SimShot::ExecFrame(double seconds)
 				SimObject* target = seeker->GetTarget();
 
 				if (target) {
-					double range = (FVector(Location() - target->Location())).Size();
+					double range = (FVector(GetLocation() - target->GetLocation())).Size();
 
 					if (range < design->det_range) {
 						life = 0;
@@ -386,11 +386,11 @@ SimShot::ExecFrame(double seconds)
 							double spread = design->det_spread;
 
 							Camera aim_cam;
-							aim_cam.Clone(Cam());
-							aim_cam.LookAt(target->Location());
+							aim_cam.Clone(GetCam());
+							aim_cam.LookAt(target->GetLocation());
 
 							for (int i = 0; i < design->det_count; i++) {
-								SimShot* child = (SimShot*)sim->CreateShot(Location(), aim_cam, child_design,
+								SimShot* child = (SimShot*)sim->CreateShot(GetLocation(), aim_cam, child_design,
 									owner, owner->GetRegion());
 
 								child->SetCharge(child_design->charge);
@@ -399,9 +399,9 @@ SimShot::ExecFrame(double seconds)
 									child->SeekTarget(target, seeker->GetSubTarget());
 
 								if (child_design->beam)
-									child->SetBeamPoints(Location(), target->Location());
+									child->SetBeamPoints(GetLocation(), target->GetLocation());
 
-								if (i) aim_cam.LookAt(target->Location());
+								if (i) aim_cam.LookAt(target->GetLocation());
 								aim_cam.Pitch(SSRandRange(-spread, spread));
 								aim_cam.Yaw(SSRandRange(-spread, spread));
 							}
@@ -423,7 +423,7 @@ SimShot::ExecFrame(double seconds)
 	first_frame = 0;
 
 	if (flare)
-		flare->MoveTo(Location());
+		flare->MoveTo(GetLocation());
 }
 
 // +--------------------------------------------------------------------+
@@ -477,7 +477,7 @@ double
 SimShot::AltitudeMSL() const
 {
 	// Starshatter convention used Y as vertical:
-	return Location().Y;
+	return GetLocation().Y;
 }
 
 double
@@ -485,7 +485,7 @@ SimShot::AltitudeAGL() const
 {
 	if (altitude_agl < -1000) {
 		SimShot* pThis = (SimShot*)this; // cast-away const
-		FVector  loc = Location();
+		FVector  loc = GetLocation();
 
 		Terrain* terrain = region ? region->GetTerrain() : 0;
 
@@ -527,7 +527,7 @@ SimShot::Damage() const
 
 		if (design) {
 			// linear fade with distance:
-			double len = (FVector(origin - Location())).Size();
+			double len = (FVector(origin - GetLocation())).Size();
 
 			if (len > design->min_range)
 				fade = (design->length - len) / (design->length - design->min_range);
@@ -550,7 +550,7 @@ SimShot::Damage() const
 }
 
 double
-SimShot::Length() const
+SimShot::GetLength() const
 {
 	if (design)
 		return design->length;
@@ -591,7 +591,7 @@ SimShot::Activate(SimScene& scene)
 					sound->Play();
 				}
 				else {
-					sound->SetLocation(Location());
+					sound->SetLocation(GetLocation());
 					sound->SetVolume(volume);
 					sound->Play();
 					sound = 0; // fire and forget

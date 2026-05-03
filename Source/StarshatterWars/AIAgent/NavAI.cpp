@@ -78,7 +78,7 @@ NavAI::ExecFrame(double s)
     if (ship->GetFlightPhase() == Ship::TAKEOFF)
         takeoff = true;
 
-    else if (takeoff && ship->MissionClock() > 10000)
+    else if (takeoff && ship->GetMissionClock() > 10000)
         takeoff = false;
 
     FindObjective();
@@ -178,8 +178,8 @@ void NavAI::FindObjective()
 
     // runway takeoff:
     if (takeoff) {
-        obj_w = ship->Location() + ship->Heading() * 10e3;
-        obj_w.Y = ship->Location().Y + 2e3;
+        obj_w = ship->GetLocation() + ship->GetHeading() * 10e3;
+        obj_w.Y = ship->GetLocation().Y + 2e3;
 
         objective = Transform(obj_w);
         ship->SetDirectorInfo(Game::GetText("ai.takeoff"));
@@ -208,7 +208,7 @@ void NavAI::FindObjective()
     // Guard against null regions (UE safety; avoids null deref below)
     if (!self_rgn || !nav_rgn) {
         obj_w = npt;
-        distance = FVector::Dist(obj_w, ship->Location());
+        distance = FVector::Dist(obj_w, ship->GetLocation());
         objective = Transform(obj_w);
 
         if (!ship->IsStarship())
@@ -236,7 +236,7 @@ void NavAI::FindObjective()
         }
 
         // distance from self to navpt:
-        distance = FVector::Dist(obj_w, ship->Location());
+        distance = FVector::Dist(obj_w, ship->GetLocation());
 
         // transform into camera coords:
         objective = Transform(obj_w);
@@ -260,7 +260,7 @@ void NavAI::FindObjective()
             const FVector npt_rel = nav_rgn->GetLocation() - self_rgn->GetLocation();
             obj_w = npt_rel; // UE: no OtherHand()
 
-            distance = FVector::Dist(obj_w, ship->Location());
+            distance = FVector::Dist(obj_w, ship->GetLocation());
             objective = Transform(obj_w);
 
             if (nav_rgn->IsAirSpace()) {
@@ -288,7 +288,7 @@ void NavAI::FindObjective()
                 const FVector apt = farcaster->ApproachPoint(0);
                 const FVector fp0 = farcaster->StartPoint();
 
-                const double r1 = (ship->Location() - fp0).Length();
+                const double r1 = (ship->GetLocation() - fp0).Length();
 
                 if (r1 > 50e3) {
                     obj_w = apt;
@@ -296,7 +296,7 @@ void NavAI::FindObjective()
                     objective = Transform(obj_w);
                 }
                 else {
-                    const double r2 = (ship->Location() - apt).Length();
+                    const double r2 = (ship->GetLocation() - apt).Length();
                     const double r3 = (fp0 - apt).Length();
 
                     if (r1 + r2 < 1.2 * r3) {
@@ -325,7 +325,7 @@ void NavAI::FindObjective()
 
         obj_w = npt_rel;
 
-        distance = FVector::Dist(obj_w, ship->Location());
+        distance = FVector::Dist(obj_w, ship->GetLocation());
         objective = Transform(obj_w);
     }
 }
@@ -411,7 +411,7 @@ NavAI::HelmControl()
 
         // if not turning, roll to orient with world coords:
         if (fabs(accumulator.yaw) < 0.1) {
-            FVector vrt = ((Camera*)&(self->Cam()))->vrt();
+            FVector vrt = ((Camera*)&(self->GetCam()))->vrt();
             double deflection = vrt.Y;
             if (deflection != 0) {
                 double theta = asin(deflection / vrt.Length());
@@ -419,7 +419,7 @@ NavAI::HelmControl()
             }
         }
 
-        if (!ship->IsAirborne() || ship->AltitudeAGL() > 100)
+        if (!ship->IsAirborne() || ship->GetAltitudeAGL() > 100)
             ship->RaiseGear();
     }
 
@@ -441,7 +441,7 @@ void NavAI::ThrottleControl()
     }
 
     // UE: FVector dot product for forward speed along heading:
-    const double ShipSpeed = FVector::DotProduct(ship->Velocity(), ship->Heading());
+    const double ShipSpeed = FVector::DotProduct(ship->GetVelocity(), ship->GetHeading());
 
     bool bAugmenter = false;
 
@@ -541,7 +541,7 @@ NavAI::SeekTarget()
             }
         }
 
-        if (distance < 2 * self->Radius()) {
+        if (distance < 2 * self->GetRadius()) {
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
             return Steer();
         }
@@ -567,7 +567,7 @@ FVector
 NavAI::Transform(const FVector& Point)
 {
     if (ship && ship->IsStarship())
-        return Point - self->Location();
+        return Point - self->GetLocation();
 
     return SteerAI::Transform(Point);
 }
@@ -586,7 +586,7 @@ NavAI::Seek(const FVector& Point)
         Result.yaw = atan2(Point.X, Point.Z) + PI;
 
         double Adjacent = sqrt(Point.X * Point.X + Point.Z * Point.Z);
-        if (fabs(Point.Y) > ship->Radius() && Adjacent > ship->Radius())
+        if (fabs(Point.Y) > ship->GetRadius() && Adjacent > ship->GetRadius())
             Result.pitch = atan(Point.Y / Adjacent);
 
 #if PLATFORM_WINDOWS
@@ -622,7 +622,7 @@ NavAI::Avoid(const FVector& Point, float Radius)
     if (ship && ship->IsStarship()) {
         Steer Result = Seek(Point);
 
-        if ((Point | ship->BeamLine()) > 0)
+        if ((Point | ship->GetBeamLine()) > 0)
             Result.yaw -= PI / 2;
         else
             Result.yaw += PI / 2;
@@ -649,17 +649,17 @@ NavAI::AvoidTerrain()
 
     if (ship->IsAirborne() && ship->GetFlightPhase() == Ship::ACTIVE) {
         // too low?
-        if (ship->AltitudeAGL() < 1000) {
+        if (ship->GetAltitudeAGL() < 1000) {
             terrain_warning = 1;
             ship->SetDirectorInfo("Too Low");
 
             // way too low?
-            if (ship->AltitudeAGL() < 750) {
+            if (ship->GetAltitudeAGL() < 750) {
                 ship->SetDirectorInfo("Way Too Low!");
             }
 
             // where will we be?
-            FVector SelfPt = ship->Location() + ship->Velocity() + FVector(0, 10e3, 0);
+            FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0, 10e3, 0);
 
             // transform into camera coords:
             FVector Obj = Transform(SelfPt);

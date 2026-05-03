@@ -59,9 +59,9 @@ void
 FlightPlanner::CreatePatrolRoute(SimElement* elem, int index)
 {
 	RLoc           rloc;
-	FVector        dummy(0.0, 0.0, 0.0);
-	FVector        loc = ship->Location();
-	double         zone = ship->CompassHeading();
+	FVector        dummy = FVector::ZeroVector;
+	FVector        loc = ship->GetLocation();
+	double         zone = ship->GetCompassHeading();
 	Instruction* instr = nullptr;
 
 	if (ship->IsAirborne())
@@ -133,7 +133,7 @@ FlightPlanner::CreatePatrolRoute(SimElement* elem, int index)
 	rloc.SetBaseLocation(loc);
 	rloc.SetDistance(40e3);
 	rloc.SetDistanceVar(0);
-	rloc.SetAzimuth(180 * DEGREES + ship->CompassHeading());
+	rloc.SetAzimuth(180 * DEGREES + ship->GetCompassHeading());
 	rloc.SetAzimuthVar(0 * DEGREES);
 
 	instr = new Instruction(ship->GetRegion(), dummy, INSTRUCTION_ACTION::RTB);
@@ -152,23 +152,23 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 		return;
 
 	RLoc           rloc;
-	FVector        dummy(0.0, 0.0, 0.0);
-	FVector        loc = ship->Location();
-	double         head = ship->CompassHeading() + 15 * DEGREES;
+	FVector        dummy = FVector::ZeroVector;
+	FVector        loc = ship->GetLocation();
+	double         head = ship->GetCompassHeading() + 15 * DEGREES;
 	double         dist = 30e3;
 	Instruction* instr = nullptr;
 	Ship* tgt_ship = nullptr;
 
 	if (ship->IsAirborne())
-		loc += ship->Cam().vup() * 8e3;
+		loc += ship->GetCam().vup() * 8e3;
 	else
-		loc += ship->Cam().vup() * 1e3;;
+		loc += ship->GetCam().vup() * 1e3;;
 
 	if (target)
 		tgt_ship = target->GetShip(1);
 
 	if (tgt_ship) {
-		const double range = FVector(tgt_ship->Location() - ship->Location()).Size();
+		const double range = FVector(tgt_ship->GetLocation() - ship->GetLocation()).Size();
 
 		if (range < 100e3)
 			dist = 20e3;
@@ -190,14 +190,14 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 	if (tgt_ship) {
 		Ship* tgt_ship2 = target->GetShip(1);
 
-		FVector tgt = tgt_ship2->Location() + tgt_ship2->Velocity() * 10;
-		FVector mid = ship->Location() + (tgt - ship->Location()) * 0.5;
-		double  beam = tgt_ship2->CompassHeading() + 90 * DEGREES;
+		FVector tgt = tgt_ship2->GetLocation() + tgt_ship2->GetVelocity() * 10;
+		FVector mid = ship->GetLocation() + (tgt - ship->GetLocation()) * 0.5;
+		double  beam = tgt_ship2->GetCompassHeading() + 90 * DEGREES;
 
 		if (tgt_ship2->IsAirborne())
-			tgt += tgt_ship2->Cam().vup() * 8e3;
+			tgt += tgt_ship2->GetCam().vup() * 8e3;
 		else
-			tgt += tgt_ship2->Cam().vup() * 1e3;
+			tgt += tgt_ship2->GetCam().vup() * 1e3;
 
 		if (tgt_ship2 && tgt_ship2->IsStarship()) {
 			rloc.SetReferenceLoc(nullptr);
@@ -256,7 +256,7 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 			rloc.SetBaseLocation(tgt);
 			rloc.SetDistance(60e3);
 			rloc.SetDistanceVar(5e3);
-			rloc.SetAzimuth(tgt_ship2->CompassHeading());
+			rloc.SetAzimuth(tgt_ship2->GetCompassHeading());
 			rloc.SetAzimuthVar(20 * DEGREES);
 
 			instr = new Instruction(tgt_ship2->GetRegion(), dummy, INSTRUCTION_ACTION::INTERCEPT);
@@ -273,7 +273,7 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 	rloc.SetBaseLocation(loc);
 	rloc.SetDistance(40e3);
 	rloc.SetDistanceVar(0);
-	rloc.SetAzimuth(180 * DEGREES + ship->CompassHeading());
+	rloc.SetAzimuth(180 * DEGREES + ship->GetCompassHeading());
 	rloc.SetAzimuthVar(0 * DEGREES);
 
 	instr = new Instruction(ship->GetRegion(), dummy, INSTRUCTION_ACTION::RTB);
@@ -292,15 +292,15 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 		return;
 
 	RLoc           rloc;
-	FVector        dummy(0.0, 0.0, 0.0);
-	FVector        loc = ship->Location();
-	double         head = ship->CompassHeading();
+	FVector        dummy = FVector::ZeroVector;
+	FVector        loc = ship->GetLocation();
+	double         head = ship->GetCompassHeading();
 	Instruction* instr = nullptr;
 
 	if (ship->IsAirborne())
-		loc += ship->Cam().vup() * 8e3;
+		loc += ship->GetCam().vup() * 8e3;
 	else
-		loc += ship->Cam().vup() * 1e3;
+		loc += ship->GetCam().vup() * 1e3;
 	
 	//loc = loc.OtherHand();
 
@@ -344,7 +344,7 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 		// if ward has no flight plan, just go to a point nearby:
 		else {
 			rloc.SetReferenceLoc(nullptr);
-			rloc.SetBaseLocation(ward->GetShip(1)->Location());
+			rloc.SetBaseLocation(ward->GetShip(1)->GetLocation());
 			rloc.SetDistance(25e3);
 			rloc.SetDistanceVar(5e3);
 			rloc.SetAzimuth(0);
@@ -364,7 +364,7 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 	rloc.SetBaseLocation(loc);
 	rloc.SetDistance(40e3);
 	rloc.SetDistanceVar(0);
-	rloc.SetAzimuth(180 * DEGREES + ship->CompassHeading());
+	rloc.SetAzimuth(180 * DEGREES + ship->GetCompassHeading());
 	rloc.SetAzimuthVar(0 * DEGREES);
 
 	instr = new Instruction(ship->GetRegion(), dummy, INSTRUCTION_ACTION::RTB);

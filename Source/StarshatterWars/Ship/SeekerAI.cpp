@@ -92,7 +92,7 @@ SeekerAI::Navigator()
 void
 SeekerAI::SetTarget(SimObject* targ, SimSystem* sub)
 {
-    if (!orig_target && targ && targ->Type() == SimObject::SIM_SHIP) {
+    if (!orig_target && targ && targ->GetType() == SimObject::SIM_SHIP) {
         orig_target = (Ship*)targ;
         Observe(orig_target);
     }
@@ -113,7 +113,7 @@ SeekerAI::FindObjective()
     if (!shot || !target)
         return;
 
-    if (target->Life() == 0) {
+    if (target->GetLife() == 0) {
         if (target != orig_target)
             SetTarget(orig_target, 0);
         else
@@ -122,7 +122,7 @@ SeekerAI::FindObjective()
         return;
     }
 
-    FVector TLoc = target->Location();
+    FVector TLoc = target->GetLocation();
     TLoc = Transform(TLoc);
 
     // seeker head limit of 45 degrees:
@@ -133,7 +133,7 @@ SeekerAI::FindObjective()
     }
 
     // distance from self to target:
-    distance = FVector(target->Location() - self->Location()).Length();
+    distance = FVector(target->GetLocation() - self->GetLocation()).Length();
 
     // are we being spoofed?
     CheckDecoys(distance);
@@ -143,7 +143,7 @@ SeekerAI::FindObjective()
     const double CvLen = Cv.Length();
     if (CvLen < 1e-3) {
         // Avoid divide-by-zero; treat as immediate intercept:
-        obj_w = target->Location();
+        obj_w = target->GetLocation();
         objective = Transform(obj_w);
         objective.Normalize();
         shot->SetEta(0);
@@ -162,34 +162,34 @@ SeekerAI::FindObjective()
 
     // pure pursuit:
     if (pursuit == 1 || time < 0.1) {
-        obj_w = target->Location();
+        obj_w = target->GetLocation();
     }
 
     // lead pursuit:
     else {
         // where the target will be when we reach it:
-        FVector RunVec = target->Velocity();
-        obj_w = target->Location() + (RunVec * predict);
+        FVector RunVec = target->GetVelocity();
+        obj_w = target->GetLocation() + (RunVec * predict);
     }
 
     // subsystem offset:
     if (subtarget) {
-        FVector Offset = target->Location() - subtarget->MountLocation();
+        FVector Offset = target->GetLocation() - subtarget->GetMountLocation();
         obj_w -= Offset;
     }
-    else if (target->Type() == SimObject::SIM_SHIP) {
+    else if (target->GetType() == SimObject::SIM_SHIP) {
         Ship* tgt_ship = (Ship*)target;
 
         if (tgt_ship->IsGroundUnit())
             obj_w += FVector(0, 150, 0);
     }
 
-    distance = FVector(obj_w - self->Location()).Length();
+    distance = FVector(obj_w - self->GetLocation()).Length();
     time = distance / CvLen;
 
     // where we will be when the target gets there:
     if (predict > 0.1 && predict < 15) {
-        FVector SelfDest = self->Location() + Cv * predict;
+        FVector SelfDest = self->GetLocation() + Cv * predict;
         FVector Err = obj_w - SelfDest;
 
         obj_w += Err;
@@ -224,7 +224,7 @@ SeekerAI::CheckDecoys(double target_distance)
         ListIter<SimShot> decoy = orig_target->GetActiveDecoys();
 
         while (++decoy) {
-            double decoy_distance = FVector(decoy->Location() - self->Location()).Length();
+            double decoy_distance = FVector(decoy->GetLocation() - self->GetLocation()).Length();
 
             if (decoy_distance < target_distance) {
                 // Legacy behavior: rand() < 1600 (out of RAND_MAX).
@@ -271,7 +271,7 @@ bool
 SeekerAI::Update(SimObject* obj)
 {
     if (obj == target) {
-        if (obj->Type() == SimObject::SIM_SHOT && orig_target != 0)
+        if (obj->GetType() == SimObject::SIM_SHOT && orig_target != 0)
             target = orig_target;
     }
 
@@ -287,7 +287,7 @@ SeekerAI::GetObserverName() const
     static thread_local char NameBuf[64];
 
 #if PLATFORM_WINDOWS
-    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "SeekerAI(%s)", self ? self->Name() : "null");
+    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "SeekerAI(%s)", self ? self->GetName() : "null");
 #else
     snprintf(NameBuf, sizeof(NameBuf), "SeekerAI(%s)", self ? self->Name() : "null");
 #endif

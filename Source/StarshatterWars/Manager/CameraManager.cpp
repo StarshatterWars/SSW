@@ -118,7 +118,7 @@ CameraManager::SetShip(Ship* s)
 	hud = HUDView::GetInstance();
 
 	// can't take control of a dead ship:
-	if (s && (s->Life() == 0 || s->IsDying() || s->IsDead()))
+	if (s && (s->GetLife() == 0 || s->IsDying() || s->IsDead()))
 		return;
 
 	// leaving the old ship, so make sure it is visible:
@@ -137,7 +137,7 @@ CameraManager::SetShip(Ship* s)
 		if (sim && ship->GetRegion() != sim->GetActiveRegion())
 			sim->ActivateRegion(ship->GetRegion());
 
-		range = ship->Radius() * 4;
+		range = ship->GetRadius() * 4;
 
 		if (mode == MODE_COCKPIT)
 			mode = MODE_CHASE;
@@ -163,7 +163,7 @@ CameraManager::SetMode(int m, double t)
 	else if (m != MODE_DROP && mode == MODE_DROP)
 		old_mode = MODE_NONE;
 
-	if (m == MODE_VIRTUAL && ship && !ship->Cockpit())
+	if (m == MODE_VIRTUAL && ship && !ship->GetCockpit())
 		return;
 
 	if (mode == m) {
@@ -314,8 +314,8 @@ CameraManager::CycleViewObject()
 
 	if (external_ship != Current) {
 		if (external_ship) {
-			if (external_ship->Life() == 0 || external_ship->IsDying() || external_ship->IsDead()) {
-				external_point = external_ship->Location(); // FVector in UE port
+			if (external_ship->GetLife() == 0 || external_ship->IsDying() || external_ship->IsDead()) {
+				external_point = external_ship->GetLocation(); // FVector in UE port
 				external_ship = nullptr;
 			}
 			else {
@@ -411,7 +411,7 @@ CameraManager::SetViewObject(Ship* obj, bool quick)
 		if (external_ship) {
 			region = external_ship->GetRegion();
 
-			if (external_ship->Life() == 0 || external_ship->IsDying() || external_ship->IsDead()) {
+			if (external_ship->GetLife() == 0 || external_ship->IsDying() || external_ship->IsDead()) {
 				external_ship = nullptr;
 				range_min = 100;
 			}
@@ -421,7 +421,7 @@ CameraManager::SetViewObject(Ship* obj, bool quick)
 				if (sim)
 					sim->ActivateRegion(external_ship->GetRegion());
 
-				range_min = external_ship->Radius() * 1.5;
+				range_min = external_ship->GetRadius() * 1.5;
 			}
 		}
 
@@ -438,14 +438,14 @@ CameraManager::Update(SimObject* obj)
 	if (!obj)
 		return SimObserver::Update(obj);
 
-	if (obj->Type() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == SimObject::SIM_SHIP) {
 		Ship* s = (Ship*)obj;
 
 		if (ship == s)
 			ship = nullptr;
 
 		if (external_ship == s) {
-			external_point = s->Location(); // FVector
+			external_point = s->GetLocation(); // FVector
 			external_ship = nullptr;
 		}
 
@@ -505,7 +505,7 @@ CameraManager::ExecFrame(double seconds)
 	// if we are in padlock, and have not locked a ship, try to padlock the current target:
 	if (op_mode == MODE_TARGET && !external_ship) {
 		SimObject* tgt = ship->GetTarget();
-		if (tgt && tgt->Type() == SimObject::SIM_SHIP)
+		if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
 			SetViewObject((Ship*)tgt);
 	}
 	// if in an external mode, check the external ship:
@@ -518,13 +518,13 @@ CameraManager::ExecFrame(double seconds)
 		}
 	}
 
-	if (ship->Rep()) {
+	if (ship->GetRep()) {
 		if (op_mode == MODE_COCKPIT) {
 			ship->HideRep();
 			ship->HideCockpit();
 		}
 		else if (op_mode == MODE_VIRTUAL || op_mode == MODE_TARGET) {
-			if (ship->Cockpit()) {
+			if (ship->GetCockpit()) {
 				ship->HideRep();
 				ship->ShowCockpit();
 			}
@@ -533,7 +533,7 @@ CameraManager::ExecFrame(double seconds)
 			}
 		}
 		else {
-			ship->Rep()->SetForeground(op_mode == MODE_DOCKING);
+			ship->GetRep()->SetForeground(op_mode == MODE_DOCKING);
 			ship->ShowRep();
 			ship->HideCockpit();
 		}
@@ -558,10 +558,10 @@ CameraManager::ExecFrame(double seconds)
 	case MODE_DROP:         Drop(seconds);       break;
 	}
 
-	if (ship->Shake() > 0 &&
-		(op_mode < MODE_ORBIT || (op_mode == MODE_VIRTUAL && ship->Cockpit())))
+	if (ship->GetShake() > 0 &&
+		(op_mode < MODE_ORBIT || (op_mode == MODE_VIRTUAL && ship->GetCockpit())))
 	{
-		const FVector Vib = ship->Vibration() * 0.2f;
+		const FVector Vib = ship->GetVibration() * 0.2f;
 		camera.MoveBy(Vib);
 		camera.Aim(0, Vib.Y, Vib.Z);
 	}
@@ -579,9 +579,9 @@ CameraManager::ExecFrame(double seconds)
 void
 CameraManager::Cockpit(double seconds)
 {
-	camera.Clone(ship->Cam());
+	camera.Clone(ship->GetCam());
 
-	const FVector Bridge = ship->BridgeLocation();
+	const FVector Bridge = ship->GetBridgeLocation();
 
 	const FVector Cpos =
 		camera.Pos() +
@@ -597,9 +597,9 @@ CameraManager::Cockpit(double seconds)
 void
 CameraManager::Virtual(double seconds)
 {
-	camera.Clone(ship->Cam());
+	camera.Clone(ship->GetCam());
 
-	const FVector Bridge = ship->BridgeLocation();
+	const FVector Bridge = ship->GetBridgeLocation();
 
 	const FVector Cpos =
 		camera.Pos() +
@@ -638,11 +638,11 @@ CameraManager::Chase(double seconds)
 	else if (requested_mode == MODE_CHASE)
 		step = 1.0 - transition;
 
-	camera.Clone(ship->Cam());
+	camera.Clone(ship->GetCam());
 
 	FVector VelocityDir = camera.vpn();
 
-	const FVector ShipVel = ship->Velocity();
+	const FVector ShipVel = ship->GetVelocity();
 	if (ShipVel.Length() > 10.0f) {
 		VelocityDir = ShipVel.GetSafeNormal();
 		VelocityDir *= 0.25f;
@@ -650,8 +650,8 @@ CameraManager::Chase(double seconds)
 		VelocityDir = VelocityDir.GetSafeNormal();
 	}
 
-	const FVector Chase = ship->ChaseLocation();   // UE: return FVector
-	const FVector Bridge = ship->BridgeLocation();  // UE: return FVector
+	const FVector Chase = ship->GetChaseLocation();   // UE: return FVector
+	const FVector Bridge = ship->GetBridgeLocation();  // UE: return FVector
 
 	const FVector Cpos =
 		camera.Pos() +
@@ -673,13 +673,13 @@ CameraManager::Target(double seconds)
 	FVector TargetLoc(external_point.X, external_point.Y, external_point.Z);
 
 	if (external_ship) {
-		TargetLoc = external_ship->Location();
+		TargetLoc = external_ship->GetLocation();
 	}
 
 	// If we have no meaningful external target (or it's our own ship), fall back:
 	if (!external_ship || external_ship == ship) {
 		if (external_point.IsZero()) {
-			if (ship && ship->Cockpit())
+			if (ship && ship->GetCockpit())
 				Virtual(seconds);
 			else
 				Orbit(seconds);
@@ -696,7 +696,7 @@ CameraManager::Target(double seconds)
 	else if (requested_mode == MODE_TARGET)
 		Step = 1.0 - transition;
 
-	if (ship && ship->Cockpit()) {
+	if (ship && ship->GetCockpit()) {
 		// internal padlock:
 		Cockpit(seconds);
 
@@ -706,12 +706,12 @@ CameraManager::Target(double seconds)
 	}
 	else {
 		// external padlock:
-		const FVector ShipLoc = ship ? ship->Location() : FVector::ZeroVector;
+		const FVector ShipLoc = ship ? ship->GetLocation() : FVector::ZeroVector;
 
 		FVector Delta = TargetLoc - ShipLoc;
 		Delta = Delta.GetSafeNormal(); // UE-safe normalize (handles zero length)
 
-		const double Radius = ship ? ship->Radius() : 0.0;
+		const double Radius = ship ? ship->GetRadius() : 0.0;
 
 		Delta *= (float)(-5.0 * Radius * Step);
 		Delta.Y += (float)(Radius * Step);
@@ -740,7 +740,7 @@ CameraManager::Orbit(double seconds)
 	else if (seconds > 0.2)   seconds = 0.2;
 
 	// Use UE vectors for spatial math in this function:
-	FVector Cpos = ship ? ship->Location() : FVector::ZeroVector;
+	FVector Cpos = ship ? ship->GetLocation() : FVector::ZeroVector;
 	const int32 OpMode = GetCameraMode();
 	(void)OpMode; // retained for parity / potential future use
 
@@ -760,7 +760,7 @@ CameraManager::Orbit(double seconds)
 
 		ListIter<Ship> iter(external_group);
 		while (++iter) {
-			const FVector Loc = iter->Location();
+			const FVector Loc = iter->GetLocation();
 
 			if (Loc.X < Neg.X) Neg.X = Loc.X;
 			if (Loc.X > Pos.X) Pos.X = Loc.X;
@@ -782,12 +782,12 @@ CameraManager::Orbit(double seconds)
 		Cpos = Neg + FVector((float)(dx * 0.5), (float)(dy * 0.5), (float)(dz * 0.5));
 	}
 	else if (external_ship) {
-		range_min = external_ship->Radius() * 1.5;
-		Cpos = external_ship->Location();
+		range_min = external_ship->GetRadius() * 1.5;
+		Cpos = external_ship->GetLocation();
 	}
 	else if (ship) {
-		range_min = ship->Radius() * 1.5;
-		Cpos = ship->Location();
+		range_min = ship->GetRadius() * 1.5;
+		Cpos = ship->GetLocation();
 	}
 
 	if (range < range_min)
@@ -813,7 +813,7 @@ CameraManager::Orbit(double seconds)
 	}
 	// transitions:
 	else if (mode < MODE_ORBIT || (requested_mode > 0 && requested_mode < MODE_ORBIT)) {
-		double az0 = ship ? ship->CompassHeading() : 0.0;
+		double az0 = ship ? ship->GetCompassHeading() : 0.0;
 		if (FMath::Abs(az - az0) > PI) az0 -= 2.0 * PI;
 
 		double r0 = 0.0;
@@ -822,7 +822,7 @@ CameraManager::Orbit(double seconds)
 		if (ship &&
 			(mode == MODE_CHASE || requested_mode == MODE_CHASE ||
 				mode == MODE_TARGET || requested_mode == MODE_TARGET)) {
-			r0 = (double)ship->ChaseLocation().Length();
+			r0 = (double)ship->GetChaseLocation().Length();
 			z0 = 20.0 * DEGREES;
 		}
 
@@ -870,8 +870,8 @@ CameraManager::Orbit(double seconds)
 			Cloc.Y = (float)(ground + 100.0);
 	}
 
-	if (!external_ship && ship && ship->Rep() && er < 0.5 * ship->Radius())
-		ship->Rep()->Hide();
+	if (!external_ship && ship && ship->GetRep() && er < 0.5 * ship->GetRadius())
+		ship->GetRep()->Hide();
 
 	// camera API assumed Starshatter-style; feed UE-space values
 	camera.MoveTo((double)Cloc.X, (double)Cloc.Y, (double)Cloc.Z);
@@ -900,16 +900,15 @@ CameraManager::Docking(double seconds)
 
 	// --- Bridge focus point (look-at) ---
 	// Convert Point math to FVector math locally for UE compatibility.
-	const FVector Bridge = ship ? ship->BridgeLocation() : FVector::ZeroVector;
+	const FVector Bridge = ship ? ship->GetBridgeLocation() : FVector::ZeroVector;
 
 	// NOTE: Cam().vrt/vpn/vup are assumed to return axis vectors (legacy camera basis).
 	// If they return Point/Vec3, ensure implicit conversion or update those accessors to FVector.
-	const FVector ShipLoc = ship ? ship->Location() : FVector::ZeroVector;
+	const FVector ShipLoc = ship ? ship->GetLocation() : FVector::ZeroVector;
 
-	const FVector Vrt = ship ? ship->Cam().vrt() : FVector::RightVector;
-	const FVector Vpn = ship ? ship->Cam().vpn() : FVector::ForwardVector;
-	const FVector Vup = ship ? ship->Cam().vup() : FVector::UpVector;
-
+	const FVector Vrt = ship ? ship->GetCam().vrt() : FVector::RightVector;
+	const FVector Vpn = ship ? ship->GetCam().vpn() : FVector::ForwardVector;
+	const FVector Vup = ship ? ship->GetCam().vup() : FVector::UpVector;
 	const FVector Cloc = ShipLoc
 		+ (Vrt * Bridge.X)
 		+ (Vpn * Bridge.Y)
@@ -946,8 +945,8 @@ void
 CameraManager::Drop(double seconds)
 {
 	// orbital transitions use "drop cam" at transition_loc
-	camera.MoveTo(ship->TransitionLocation());
-	camera.LookAt(ship->Location());
+	camera.MoveTo(ship->GetTransitionLocation());
+	camera.LookAt(ship->GetLocation());
 }
 
 // ---------------------------------------------------------------------
@@ -1129,7 +1128,7 @@ void CameraManager::SetViewObjectGroup(ListIter<Ship> group, bool quick)
 					return;
 			}
 
-			if (s->Life() == 0 || s->IsDying() || s->IsDead())
+			if (s->GetLife() == 0 || s->IsDying() || s->IsDead())
 				return;
 		}
 	}

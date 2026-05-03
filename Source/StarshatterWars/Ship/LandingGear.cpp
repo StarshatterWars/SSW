@@ -193,8 +193,8 @@ void LandingGear::ExecFrame(double seconds)
             transit += seconds;
 
             SimScene* s = nullptr;
-            if (ship && ship->Rep())
-                s = ship->Rep()->GetScene();
+            if (ship && ship->GetRep())
+                s = ship->GetRep()->GetScene();
 
             if (s) {
                 for (int i = 0; i < ngear; i++) {
@@ -243,12 +243,12 @@ LandingGear::Orient(const Physical* rep)
     if (!rep)
         return;
 
-    const FVector ShipLoc = rep->Location();
+    const FVector ShipLoc = rep->GetLocation();
 
     // Build a UE transform from the ship camera basis (same convention as FlightDeck):
-    FVector XAxis = rep->Cam().vrt(); // right
-    FVector YAxis = rep->Cam().vup(); // up
-    FVector ZAxis = rep->Cam().vpn(); // forward
+    FVector XAxis = rep->GetCam().vrt(); // right
+    FVector YAxis = rep->GetCam().vup(); // up
+    FVector ZAxis = rep->GetCam().vpn(); // forward
 
     XAxis = XAxis.GetSafeNormal();
     YAxis = YAxis.GetSafeNormal();
@@ -321,7 +321,7 @@ double LandingGear::GetTouchDown()
     double down = 0;
 
     if (ship) {
-        down = ship->Location().Y;
+        down = ship->GetLocation().Y;
 
         if (state != GEAR_UP) {
             for (int i = 0; i < ngear; i++) {

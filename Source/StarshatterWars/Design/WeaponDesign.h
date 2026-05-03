@@ -58,6 +58,26 @@ public:
 	static int             GetDesignList(List<Text>& designs);
 
 
+	float GetIntegrity() const { return integrity; } 
+	float GetLethalRadius() const { return lethal_radius; }
+
+	int   GetDamageType() const { return damage_type; }
+	float GetDamage() const { return damage; }
+	float GetPenetration() const { return penetration; }
+	float GetSpeed() const { return speed; }
+	float GetLife() const { return life; }
+	float GetMass() const { return mass; }
+	float GetDrag() const { return drag; }
+	float GetThrust() const { return thrust; }
+
+	float GetRollRate() const { return roll_rate; }
+	float GetPitchRate() const { return pitch_rate; }
+	float GetYawRate() const { return yaw_rate; }
+
+	float GetRollDrag() const { return roll_drag; }
+	float GetPitchDrag() const { return pitch_drag; }
+	float GetYawDrag() const { return yaw_drag; }
+
 	// Do NOT define a file-scope `static List<WeaponDesign> catalog;` anywhere.
 	static List<WeaponDesign> catalog;
 	static List<WeaponDesign> mod_catalog;

@@ -117,7 +117,7 @@ GroundAI::GetObserverName() const
     static thread_local char NameBuf[64];
 
 #if PLATFORM_WINDOWS
-    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "GroundAI(%s)", ship ? ship->Name() : "null");
+    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "GroundAI(%s)", ship ? ship->GetName() : "null");
 #else
     snprintf(NameBuf, sizeof(NameBuf), "GroundAI(%s)", ship ? ship->Name() : "null");
 #endif
@@ -153,7 +153,7 @@ GroundAI::SelectTarget()
         if (rogue || (c_iff > 0 && c_iff != ship->GetIFF() && c_iff < 1000)) {
             if (c_ship && !c_ship->InTransition()) {
                 // found an enemy, check distance:
-                const double dist = (ship->Location() - c_ship->Location()).Length();
+                const double dist = (ship->GetLocation() - c_ship->GetLocation()).Length();
 
                 if (!current_ship_target ||
                     (c_ship->Class() <= current_ship_target->Class() && dist < target_dist)) {

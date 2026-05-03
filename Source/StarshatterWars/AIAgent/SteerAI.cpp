@@ -180,7 +180,7 @@ SteerAI::GetObserverName() const
     static thread_local char NameBuf[64];
 
 #if PLATFORM_WINDOWS
-    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "SteerAI(%s)", self ? self->Name() : "null");
+    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "SteerAI(%s)", self ? self->GetName() : "null");
 #else
     snprintf(NameBuf, sizeof(NameBuf), "SteerAI(%s)", self ? self->Name() : "null");
 #endif
@@ -195,9 +195,9 @@ SteerAI::ClosingVelocity()
 {
     if (self) {
         if (target)
-            return self->Velocity() - target->Velocity();
+            return self->GetVelocity() - target->GetVelocity();
         else
-            return self->Velocity();
+            return self->GetVelocity();
     }
 
     return FVector(1, 0, 0);
@@ -215,32 +215,31 @@ SteerAI::FindObjective()
 
     if (Cvl > 5) {
         // distance from self to target:
-        distance = FVector(target->Location() - self->Location()).Length();
+        distance = FVector(target->GetLocation() - self->GetLocation()).Length();
 
         // time to reach target:
         Time = distance / Cvl;
 
         // where the target will be when we reach it:
-        FVector RunVec = target->Velocity();
-        obj_w = target->Location() + (RunVec * Time);
+        FVector RunVec = target->GetVelocity();
+        obj_w = target->GetLocation() + (RunVec * Time);
     }
     else {
-        obj_w = target->Location();
+        obj_w = target->GetLocation();
     }
 
     // subsystem offset:
     if (subtarget) {
-        FVector Offset = target->Location() - subtarget->MountLocation();
+        FVector Offset = target->GetLocation() - subtarget->GetMountLocation();
         obj_w -= Offset;
     }
 
-    distance = FVector(obj_w - self->Location()).Length();
-
+    distance = FVector(obj_w - self->GetLocation()).Length();
     if (Cvl > 5)
         Time = distance / Cvl;
 
     // where we will be when the target gets there:
-    FVector SelfDest = self->Location() + Cv * Time;
+    FVector SelfDest = self->GetLocation() + Cv * Time;
     FVector Err = obj_w - SelfDest;
 
     obj_w += Err;
@@ -249,18 +248,18 @@ SteerAI::FindObjective()
     objective = Transform(obj_w);
     objective.Normalize();
 
-    distance = FVector(obj_w - self->Location()).Length();
+    distance = FVector(obj_w - self->GetLocation()).Length();
 }
 
 FVector
 SteerAI::Transform(const FVector& Pt)
 {
-    FVector ObjT = Pt - self->Location();
+    FVector ObjT = Pt - self->GetLocation();
     FVector Result;
 
-    if (self->FlightPathYawAngle() != 0 || self->FlightPathPitchAngle() != 0) {
-        double Az = self->FlightPathYawAngle();
-        double El = self->FlightPathPitchAngle();
+    if (self->GetFlightPathYawAngle() != 0 || self->GetFlightPathPitchAngle() != 0) {
+        double Az = self->GetFlightPathYawAngle();
+        double El = self->GetFlightPathPitchAngle();
 
         const double MAX_ANGLE = 15 * DEGREES;
         const double MIN_ANGLE = 3 * DEGREES;
@@ -276,7 +275,7 @@ SteerAI::Transform(const FVector& Pt)
         else if (El < -MIN_ANGLE)      El = -MIN_ANGLE + (El + MIN_ANGLE) / 2;
 
         Camera Cam;
-        Cam.Clone(self->Cam());
+        Cam.Clone(self->GetCam());
         Cam.Yaw(Az);
         Cam.Pitch(-El);
 
@@ -286,7 +285,7 @@ SteerAI::Transform(const FVector& Pt)
             (ObjT * Cam.vpn());
     }
     else {
-        Camera& Cam = (Camera&)self->Cam(); // cast away const
+        Camera& Cam = (Camera&)self->GetCam(); // cast away const
 
         Result =
             (ObjT * Cam.vrt()) +
@@ -300,8 +299,8 @@ SteerAI::Transform(const FVector& Pt)
 FVector
 SteerAI::AimTransform(const FVector& Pt)
 {
-    Camera& Cam = (Camera&)self->Cam(); // cast away const
-    FVector ObjT = Pt - self->Location();
+    Camera& Cam = (Camera&)self->GetCam(); // cast away const
+    FVector ObjT = Pt - self->GetLocation();
 
     FVector Result =
         (ObjT * Cam.vrt()) +

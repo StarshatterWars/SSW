@@ -211,7 +211,7 @@ void TacticalView::Refresh()
 
         if (PlayerShip)
         {
-            if (PlayerShip->Life() == 0 || PlayerShip->IsDying() || PlayerShip->IsDead())
+            if (PlayerShip->GetLife() == 0 || PlayerShip->IsDying() || PlayerShip->IsDead())
             {
                 PlayerShip = nullptr;
             }
@@ -249,7 +249,7 @@ void TacticalView::Refresh()
         while (++Sel)
         {
             Ship* Selection = Sel.value();
-            if (Selection && Selection->Rep())
+            if (Selection && Selection->GetRep())
                 DrawSelection(Selection);
         }
 
@@ -302,10 +302,10 @@ void TacticalView::DrawSelection(Ship* SelectedShip)
     if (!SelectedShip || !ProjectorPtr)
         return;
 
-    Graphic* G = SelectedShip->Rep();
+    Graphic* G = SelectedShip->GetRep();
     Rect R = G ? G->ScreenRect() : Rect();
 
-    FVector MarkPt = SelectedShip->Location();
+    FVector MarkPt = SelectedShip->GetLocation();
     ProjectorPtr->Transform(MarkPt);
 
     if (MarkPt.Z > 1.0)
@@ -325,9 +325,9 @@ void TacticalView::DrawSelection(Ship* SelectedShip)
             int32 SX = X - BAR_LENGTH / 2;
             int32 SY = Y - 8;
 
-            double HullStrength = SelectedShip->HullStrength() / 100.0;
+            double HullStrength = SelectedShip->GetHullStrength() / 100.0;
             int32 HW = (int32)(BAR_LENGTH * HullStrength);
-            int32 SW = (int32)(BAR_LENGTH * (SelectedShip->ShieldStrength() / 100.0));
+            int32 SW = (int32)(BAR_LENGTH * (SelectedShip->GetShieldStrength() / 100.0));
 
             if (HW < 0) HW = 0;
             if (SW < 0) SW = 0;
@@ -356,7 +356,7 @@ void TacticalView::DrawSelectionInfo(Ship* SelectedShip)
 
     // Minimal safe output (no std::string):
     // Example: show just the name and range.
-    const FVector Delta = SelectedShip->Location() - PlayerShip->Location();
+    const FVector Delta = SelectedShip->GetLocation() - PlayerShip->GetLocation();
     const double DistKm = (double)Delta.Length() / 1000.0;
 
     char RangeBuf[64];
@@ -368,7 +368,7 @@ void TacticalView::DrawSelectionInfo(Ship* SelectedShip)
     int32 X = WidthPx - 220;
     int32 Y = 10;
 
-    Print(X, Y, "%s", SelectedShip->Name());
+    Print(X, Y, "%s", SelectedShip->GetName());
     Y += 12;
     Print(X, Y, "%s", RangeBuf);
 }
@@ -385,7 +385,7 @@ void TacticalView::DrawSelectionList(ListIter<Ship>& SelectionIter)
         if (!S)
             continue;
 
-        Print(X, Y, "%s", S->Name());
+        Print(X, Y, "%s", S->GetName());
         Y += 12;
 
         Index++;
@@ -425,7 +425,7 @@ void TacticalView::DoMouseFrame()
                 Observe(MsgShip);
             }
             else if (PlayerShip && Seln == PlayerShip &&
-                (!PlayerShip->GetDirector() || PlayerShip->GetDirector()->Type() != ShipManager::DIR_TYPE))
+                (!PlayerShip->GetDirector() || PlayerShip->GetDirector()->GetType() != ShipManager::DIR_TYPE))
             {
                 MsgShip = Seln;
             }
@@ -563,7 +563,7 @@ bool TacticalView::SelectRect(const Rect& R)
         if (!Test || Test == PlayerShip)
             continue;
 
-        FVector TestLoc = Test->Location();
+        FVector TestLoc = Test->GetLocation();
         ProjectorPtr->Transform(TestLoc);
 
         if (TestLoc.Z > 1.0)
@@ -592,7 +592,7 @@ bool TacticalView::SelectRect(const Rect& R)
     // Select self only in orbit cam:
     if (!bShiftDown && CameraManager::GetCameraMode() == CameraManager::MODE_ORBIT)
     {
-        FVector TestLoc = PlayerShip->Location();
+        FVector TestLoc = PlayerShip->GetLocation();
         ProjectorPtr->Transform(TestLoc);
 
         if (TestLoc.Z > 1.0)
@@ -631,7 +631,7 @@ Ship* TacticalView::WillSelectAt(int32 X, int32 Y)
                 continue;
         }
 
-        Graphic* G = Test->Rep();
+        Graphic* G = Test->GetRep();
         if (!G)
             continue;
 
@@ -640,7 +640,7 @@ Ship* TacticalView::WillSelectAt(int32 X, int32 Y)
         // Some reps report offscreen (legacy 2000,2000):
         if (R.x == 2000 && R.y == 2000 && R.w == 0 && R.h == 0 && ProjectorPtr)
         {
-            FVector Loc = Test->Location();
+            FVector Loc = Test->GetLocation();
             ProjectorPtr->Transform(Loc);
             ProjectorPtr->Project(Loc);
 
@@ -660,7 +660,7 @@ Ship* TacticalView::WillSelectAt(int32 X, int32 Y)
 
     if (!Selection && !bShiftDown)
     {
-        Graphic* G = PlayerShip->Rep();
+        Graphic* G = PlayerShip->GetRep();
         if (G)
         {
             Rect R = G->ScreenRect();
@@ -690,7 +690,7 @@ void TacticalView::SetHelm(bool bApproach)
 
         if (Selection && Selection != PlayerShip)
         {
-            Delta = Selection->Location() - PlayerShip->Location();
+            Delta = Selection->GetLocation() - PlayerShip->GetLocation();
             Delta.Normalize();
         }
     }
@@ -1004,7 +1004,7 @@ void TacticalView::DrawMove()
     if (!ProjectorPtr || !bShowMove || !MsgShip)
         return;
 
-    FVector Origin = MsgShip->Location();
+    FVector Origin = MsgShip->GetLocation();
 
     if (GetMouseLoc3D())
     {
@@ -1036,7 +1036,7 @@ void TacticalView::DrawMove()
         {
             Dest = MoveLoc;
             Dest.Y += (float)MoveAlt;
-            Distance = (double)(Dest - MsgShip->Location()).Length();
+            Distance = (double)(Dest - MsgShip->GetLocation()).Length();
 
             ProjectorPtr->Transform(Dest);
             ProjectorPtr->Project(Dest);
@@ -1081,7 +1081,7 @@ void TacticalView::DrawAction()
     if (!ProjectorPtr || ShowAction == RadioMessageAction::NONE || !MsgShip || !PlayerShip)
         return;
 
-    FVector Origin = MsgShip->Location();
+    FVector Origin = MsgShip->GetLocation();
     ProjectorPtr->Transform(Origin);
     ProjectorPtr->Project(Origin);
 
@@ -1187,7 +1187,7 @@ void TacticalView::ProcessRadioAction(RadioMessageAction action)
         move_alt = 0;
 
         if (msg_ship)
-            base_alt = msg_ship->Location().Y; // UE FVector => .Y
+            base_alt = msg_ship->GetLocation().Y; // UE FVector => .Y
         break;
 
     case RadioMessageAction::ATTACK:

@@ -125,10 +125,10 @@ SimContact::GetObserverName() const
 	static char name[128];
 
 	if (ship) {
-		sprintf_s(name, "SimContact Ship='%s'", ship->Name());
+		sprintf_s(name, "SimContact Ship='%s'", ship->GetName());
 	}
 	else if (shot) {
-		sprintf_s(name, "SimContact Shot='%s' %s", shot->Name(), shot->DesignName());
+		sprintf_s(name, "SimContact Shot='%s' %s", shot->GetName(), shot->GetDesignName());
 	}
 	else {
 		sprintf_s(name, "SimContact (unknown)");
@@ -198,10 +198,10 @@ void
 SimContact::GetBearing(const Ship* observer, double& az, double& el, double& rng) const
 {
 	// translate:
-	const FVector TargPt = loc - observer->Location();
+	const FVector TargPt = loc - observer->GetLocation();
 
 	// rotate:
-	const Camera* cam = &observer->Cam();
+	const Camera* cam = &observer->GetCam();
 
 	const double tx = FVector::DotProduct(TargPt, cam->vrt());
 	const double ty = FVector::DotProduct(TargPt, cam->vup());
@@ -224,7 +224,7 @@ SimContact::GetBearing(const Ship* observer, double& az, double& el, double& rng
 double
 SimContact::Range(const Ship* observer, double limit) const
 {
-	double r = FVector(loc - observer->Location()).Length();
+	double r = FVector(loc - observer->GetLocation()).Length();
 
 	// if passive only, return approximate range:
 	if (!ActLock()) {
@@ -250,10 +250,10 @@ SimContact::Range(const Ship* observer, double limit) const
 bool SimContact::InFront(const Ship* observer) const
 {
 	// translate:
-	const FVector targ_pt = loc - observer->Location();
+	const FVector targ_pt = loc - observer->GetLocation();
 
 	// rotate:
-	const Camera* cam = &observer->Cam();
+	const Camera* cam = &observer->GetCam();
 	const double tz = FVector::DotProduct(targ_pt, cam->vpn());
 
 	return tz > 1.0;
@@ -264,8 +264,8 @@ SimContact::Threat(const Ship* observer) const
 {
 	bool threat = false;
 
-	if (observer && observer->Life() != 0) {
-		if (ship && ship->Life() != 0) {
+	if (observer && observer->GetLife() != 0) {
+		if (ship && ship->GetLife() != 0) {
 			threat = (ship->GetIFF() &&
 				ship->GetIFF() != observer->GetIFF() &&
 				ship->GetEMCON() > 2 &&
@@ -279,11 +279,11 @@ SimContact::Threat(const Ship* observer) const
 		else if (shot) {
 			threat = shot->IsTracking((Ship*)observer);
 
-			if (!threat && shot->Design()->probe && shot->GetIFF() != observer->GetIFF()) {
-				const FVector probe_pt = shot->Location() - observer->Location();
+			if (!threat && shot->GetDesign()->probe && shot->GetIFF() != observer->GetIFF()) {
+				const FVector probe_pt = shot->GetLocation() - observer->GetLocation();
 				const double  prng = probe_pt.Length();
 
-				threat = (prng < shot->Design()->lethal_radius);
+				threat = (prng < shot->GetDesign()->lethal_radius);
 			}
 		}
 	}
@@ -295,13 +295,13 @@ bool
 SimContact::Visible(const Ship* observer) const
 {
 	// translate:
-	const FVector targ_pt = loc - observer->Location();
+	const FVector targ_pt = loc - observer->GetLocation();
 	double radius = 0;
 
 	if (ship)
-		radius = ship->Radius();
+		radius = ship->GetRadius();
 	else if (shot)
-		radius = shot->Radius();
+		radius = shot->GetRadius();
 
 	// rotate:
 	const double rng = targ_pt.Length();

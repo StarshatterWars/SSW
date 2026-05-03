@@ -278,12 +278,12 @@ Drive::Orient(const Physical* rep)
 {
     SimSystem::Orient(rep);
 
-    const FVector ShipLoc = rep->Location();
+    const FVector ShipLoc = rep->GetLocation();
 
     // Use explicit basis-vector transform (avoids Matrix layout/handedness bugs):
-    const FVector Vrt = rep->Cam().vrt();
-    const FVector Vup = rep->Cam().vup();
-    const FVector Vpn = rep->Cam().vpn();
+    const FVector Vrt = rep->GetCam().vrt();
+    const FVector Vup = rep->GetCam().vup();
+    const FVector Vpn = rep->GetCam().vpn();
 
     for (int i = 0; i < ports.size(); i++) {
         DrivePort* p = ports[i];
@@ -430,7 +430,7 @@ Drive::Thrust(double seconds)
         output += augmenter * augmenter_throttle * eff;
 
         // augmenter burns extra fuel:
-        PowerSource* reac = ship->Reactors()[source_index];
+        PowerSource* reac = ship->GetReactors()[source_index];
         reac->SetCapacity(reac->GetCapacity() - (0.1 * drive_seconds));
     }
 
@@ -495,7 +495,7 @@ Drive::Thrust(double seconds)
             }
 
             const FVector CamLoc = cam_dir->GetCamera()->Pos();
-            const double Dist = (ship->Location() - CamLoc).Size();
+            const double Dist = (ship->GetLocation() - CamLoc).Size();
 
             if (sound && Dist < sound->GetMaxDistance()) {
                 long max_vol = AudioConfig::EfxVolume();
@@ -503,7 +503,7 @@ Drive::Thrust(double seconds)
                 if (vol > max_vol)
                     vol = max_vol;
 
-                sound->SetLocation(ship->Location());
+                sound->SetLocation(ship->GetLocation());
                 sound->SetVolume(vol);
                 sound->Play();
 
@@ -511,7 +511,7 @@ Drive::Thrust(double seconds)
                     if (vol_aug > max_vol)
                         vol_aug = max_vol;
 
-                    burner_sound->SetLocation(ship->Location());
+                    burner_sound->SetLocation(ship->GetLocation());
                     burner_sound->SetVolume(vol_aug);
                     burner_sound->Play();
                 }

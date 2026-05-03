@@ -88,9 +88,9 @@ public:
 	virtual void      Mount(FVector InLoc, float InRadius, float InHullFactor = 0.5f);
 	virtual void      Mount(const SimSystem& system);
 
-	FVector           MountLocation()  const { return mount_loc; }
-	double            Radius()         const { return radius; }
-	double            HullProtection() const { return hull_factor; }
+	FVector           GetMountLocation()  const { return mount_loc; }
+	double            GetRadius()         const { return radius; }
+	double            GetHullProtection() const { return hull_factor; }
 
 	// POWER UTILIZATION:
 	bool              IsPowerCritical() const { return (power_flags & POWER_CRITICAL) ? true : false; }

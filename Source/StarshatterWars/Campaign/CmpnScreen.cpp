@@ -465,7 +465,7 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
 
     if (bInCutscene && bHasPlayerShip)
     {
-        const float WarpFactor = PlayerShip->WarpFactor();
+        const float WarpFactor = PlayerShip->GetWarpFactor();
 
         if (WarpFactor > 1.0f)
         {

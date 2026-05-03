@@ -62,7 +62,7 @@ StarshipAI::StarshipAI(SimObject * s)
         );
 
         Torque.Normalize();
-        Torque *= float(ship->Mass() / 10.0);
+        Torque *= float(ship->GetMass() / 10.0);
 
         ship->SetFLCSMode(0);
         if (ship->GetFLCS())
@@ -180,7 +180,7 @@ StarshipAI::FindObjective()
         if (support)
         {
             const double d_support =
-                (support->Location() - ship->Location()).Length();
+                (support->GetLocation() - ship->GetLocation()).Length();
 
             if (d_support > 35e3)
             {
@@ -195,8 +195,8 @@ StarshipAI::FindObjective()
         else if (threat && threat != target)
         {
             ship->SetDirectorInfo(Game::GetText("ai.retreat"));
-            obj_w = ship->Location() +
-                (ship->Location() - threat->Location()) * 100.0f;
+            obj_w = ship->GetLocation() +
+                (ship->GetLocation() - threat->GetLocation()) * 100.0f;
             objective = Transform(obj_w);
             return;
         }
@@ -349,7 +349,7 @@ StarshipAI::HelmControl()
                 ship->SetHelmPitch(0);
 
                 if (ship->NumInbound() > 0) {
-                    ship->SetHelmHeading(ship->CompassHeading());
+                    ship->SetHelmHeading(ship->GetCompassHeading());
                 }
             }
 
@@ -398,8 +398,8 @@ StarshipAI::ThrottleControl()
         return;
     }
 
-    const FVector ShipVel = ship->Velocity();
-    const FVector ShipHeading = ship->Heading(); // assume already normalized
+    const FVector ShipVel = ship->GetVelocity();
+    const FVector ShipHeading = ship->GetHeading(); // assume already normalized
     double ship_speed = FVector::DotProduct(ShipVel, ShipHeading);
     double brakes = 0.0;
 
@@ -414,7 +414,7 @@ StarshipAI::ThrottleControl()
 
         if (target && distance < 50e3) {
             double closing_speed = ship_speed;
-            const FVector DeltaDir = (target->Location() - ship->Location()).GetSafeNormal();
+            const FVector DeltaDir = (target->GetLocation() - ship->GetLocation()).GetSafeNormal();
             closing_speed = FVector::DotProduct(ShipVel, DeltaDir);
 
             if (closing_speed > 300) {
@@ -430,7 +430,7 @@ StarshipAI::ThrottleControl()
     }
 
     else if (ward) {  // escort, match speed of ward
-        const double speed = ward->Velocity().Length();
+        const double speed = ward->GetVelocity().Length();
         throttle = old_throttle;
 
         if (speed == 0) {
@@ -440,7 +440,7 @@ StarshipAI::ThrottleControl()
             // brake, or stop near the ward. This keeps behavior intact without
             // relying on legacy Point operators.
             // ------------------------------------------------------------------
-            const double d = (ship->Location() - ward->Location()).Length();
+            const double d = (ship->GetLocation() - ward->GetLocation()).Length();
 
             // NOTE: The original code likely used 'd' to decide small corrections.
             // Since the legacy branch was incomplete, we keep it minimal and safe:
@@ -504,7 +504,7 @@ StarshipAI::ThrottleControl()
 
     else if (element_index > 1) { // wingman
         Ship* lead = ship->GetElement()->GetShip(1);
-        const double lv = lead ? lead->Velocity().Length() : 0.0;
+        const double lv = lead ? lead->GetVelocity().Length() : 0.0;
         const double sv = ship_speed;
         const double dv = lv - sv;
         const double dt = dv * 1e-2 * seconds;
@@ -565,7 +565,7 @@ StarshipAI::SeekTarget()
                     farcaster = farcaster->GetDest()->GetFarcaster();
 
                 obj_w = farcaster->EndPoint();
-                distance = FVector(obj_w - ship->Location()).Length();
+                distance = FVector(obj_w - ship->GetLocation()).Length();
 
                 if (distance < 1000)
                     farcaster = 0;
@@ -591,7 +591,7 @@ StarshipAI::SeekTarget()
 Steer
 StarshipAI::AvoidCollision()
 {
-    if (!ship || ship->Velocity().Length() < 25)
+    if (!ship || ship->GetVelocity().Length() < 25)
         return Steer();
 
     return ShipAI::AvoidCollision();
@@ -604,7 +604,7 @@ StarshipAI::FireControl()
 {
     // identify unknown contacts:
     if (identify) {
-        if (fabs(ship->GetHelmHeading() - ship->CompassHeading()) < 10 * DEGREES) {
+        if (fabs(ship->GetHelmHeading() - ship->GetCompassHeading()) < 10 * DEGREES) {
             SimContact* contact = ship->FindContact(target);
 
             if (contact && !contact->ActLock()) {
@@ -620,7 +620,7 @@ StarshipAI::FireControl()
     // investigate last known location of enemy ship:
     if (rumor && !target && ship->GetProbeLauncher() && !ship->GetProbe()) {
         // is rumor in basket?
-        FVector Rmr = Transform(rumor->Location());
+        FVector Rmr = Transform(rumor->GetLocation());
         Rmr.Normalize();
 
         const double dx = fabs(Rmr.X);
@@ -679,7 +679,7 @@ StarshipAI::FireControl()
                 group->SetTarget(target, 0);
 
                 if (target && target->GetRegion() == ship->GetRegion()) {
-                    const FVector Delta = target->Location() - ship->Location();
+                    const FVector Delta = target->GetLocation() - ship->GetLocation();
                     const double  range = Delta.Length();
 
                     if (range < group->GetDesign()->max_range * 0.9 &&
@@ -716,7 +716,7 @@ StarshipAI::SelectSubtarget()
 
     subtarget = nullptr;
 
-    if (!target || target->Type() != SimObject::SIM_SHIP || GetAILevel() < 1)
+    if (!target || target->GetType() != SimObject::SIM_SHIP || GetAILevel() < 1)
         return (SimSystem*)subtarget;
 
     Ship* tgt_ship = (Ship*)target;
@@ -728,7 +728,7 @@ StarshipAI::SelectSubtarget()
     double  dist = 50e3;
 
     // Vector from target -> ship (same directionality as original)
-    const FVector Svec = ship->Location() - tgt_ship->Location();
+    const FVector Svec = ship->GetLocation() - tgt_ship->GetLocation();
 
     sub_select_time = NowMs;
 
@@ -756,7 +756,7 @@ StarshipAI::SelectSubtarget()
                     FVector Tloc;
                     Tloc = w->GetTurret()->Location();
 
-                    const FVector Delta = Tloc - ship->Location();
+                    const FVector Delta = Tloc - ship->GetLocation();
                     const double  Dlen = (double)Delta.Length();
 
                     if (Dlen < dist) {
@@ -788,8 +788,8 @@ StarshipAI::SelectSubtarget()
 
                     // FIX (C2737): ensure Tloc is initialized even if MountLocation() is not const-correct
                     // or is being treated like an lvalue on your toolchain.
-                    const FVector Tloc = w->MountLocation();
-                    const FVector Delta = Tloc - ship->Location();
+                    const FVector Tloc = w->GetMountLocation();
+                    const FVector Delta = Tloc - ship->GetLocation();
                     const double  Dlen = (double)Delta.Length();
 
                     if (Dlen < dist) {
@@ -816,7 +816,7 @@ StarshipAI::AssessTargetPointDefense()
 
     tgt_point_defense = false;
 
-    if (!target || target->Type() != SimObject::SIM_SHIP || GetAILevel() < 2)
+    if (!target || target->GetType() != SimObject::SIM_SHIP || GetAILevel() < 2)
         return tgt_point_defense;
 
     Ship* tgt_ship = (Ship*)target;
@@ -824,7 +824,7 @@ StarshipAI::AssessTargetPointDefense()
     if (!tgt_ship->IsStarship())
         return tgt_point_defense;
 
-    FVector Svec = ship->Location() - tgt_ship->Location();
+    FVector Svec = ship->GetLocation() - tgt_ship->GetLocation();
 
     point_defense_time = Game::GameTime();
 
@@ -855,7 +855,7 @@ StarshipAI::AssessTargetPointDefense()
 FVector
 StarshipAI::Transform(const FVector& Point)
 {
-    return Point - self->Location();
+    return Point - self->GetLocation();
 }
 
 Steer
@@ -871,7 +871,7 @@ StarshipAI::Seek(const FVector& Point)
     Result.yaw = atan2(Point.X, Point.Z) + PI;
 
     double Adjacent = sqrt(Point.X * Point.X + Point.Z * Point.Z);
-    if (fabs(Point.Y) > ship->Radius() && Adjacent > ship->Radius())
+    if (fabs(Point.Y) > ship->GetRadius() && Adjacent > ship->GetRadius())
         Result.pitch = atan(Point.Y / Adjacent);
 
 #if PLATFORM_WINDOWS
@@ -904,7 +904,7 @@ StarshipAI::Avoid(const FVector& Point, float Radius)
 {
     Steer Result = Seek(Point);
 
-    if ((Point | ship->BeamLine()) > 0)
+    if ((Point | ship->GetBeamLine()) > 0)
         Result.yaw -= PI / 2;
     else
         Result.yaw += PI / 2;

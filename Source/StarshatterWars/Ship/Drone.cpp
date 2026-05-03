@@ -141,9 +141,9 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 	FVector  hull_impact(0.0f, 0.0f, 0.0f);
 	int      hit_type = HIT_NOTHING;
 
-	const FVector shot_loc = shot->Location();
-	const FVector shot_org = shot->Origin();
-	const FVector delta = shot_loc - Location();
+	const FVector shot_loc = shot->GetLocation();
+	const FVector shot_org = shot->GetOrigin();
+	const FVector delta = shot_loc - GetLocation();
 	const double  dlen = (double)delta.Length();
 
 	double dscale = 1.0;
@@ -160,9 +160,9 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 	// MISSILE PROCESSING ------------------------------------------------
 
 	if (shot->IsMissile()) {
-		if (dlen < 10.0 * Radius()) {
+		if (dlen < 10.0 * GetRadius()) {
 			hull_impact = impact = shot_loc;
-			sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region);
+			sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region);
 			sim->CreateExplosion(impact, FVector(0.0f, 0.0f, 0.0f), Explosion::SHOT_BLAST, 2.0f, scale, region);
 			hit_type = HIT_HULL;
 		}
@@ -173,25 +173,25 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 	else {
 		if (shot->IsBeam()) {
 			// check right-angle distance from beam line:
-			const FVector d0 = Location() - shot_org;
+			const FVector d0 = GetLocation() - shot_org;
 			FVector       w = shot_loc - shot_org;
 			w.Normalize();
 
 			const FVector test = shot_org + w * FVector::DotProduct(d0, w);
-			const FVector d1 = test - Location();
+			const FVector d1 = test - GetLocation();
 			const double  dist_from_line = (double)d1.Length();
 
-			if (dist_from_line < 2.0 * Radius()) {
+			if (dist_from_line < 2.0 * GetRadius()) {
 				hull_impact = impact = test;
 
 				shot->SetBeamPoints(shot_org, impact);
-				sim->CreateExplosion(impact, Velocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region);
+				sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region);
 				hit_type = HIT_HULL;
 			}
 		}
-		else if (dlen < 2.0 * Radius()) {
+		else if (dlen < 2.0 * GetRadius()) {
 			hull_impact = impact = shot_loc;
-			sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region);
+			sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region);
 			hit_type = HIT_HULL;
 		}
 	}
@@ -205,7 +205,7 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 			effective_damage *= Game::FrameTime();
 		}
 		else {
-			ApplyTorque(shot->Velocity() * (float)effective_damage * 1e-6f);
+			ApplyTorque(shot->GetVelocity() * (float)effective_damage * 1e-6f);
 		}
 
 		if (effective_damage > 0) {

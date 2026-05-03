@@ -100,9 +100,9 @@ int InboundSlot::operator < (const InboundSlot& that) const
 	// Distance-to-deck sort as secondary key:
 	if (ship && deck && that.ship)
 	{
-		const FVector DeckLoc = deck->MountLocation();
-		dthis = (ship->Location() - DeckLoc).Size();
-		dthat = (that.ship->Location() - DeckLoc).Size();
+		const FVector DeckLoc = deck->GetMountLocation();
+		dthis = (ship->GetLocation() - DeckLoc).Size();
+		dthat = (that.ship->GetLocation() - DeckLoc).Size();
 	}
 
 	// Tie-breaker: stable ordering without 32-bit pointer truncation
@@ -131,8 +131,8 @@ int InboundSlot::operator <= (const InboundSlot& that) const
 		return false;
 
 	if (ship && deck && that.ship) {
-		dthis = (ship->Location() - deck->MountLocation()).Size();
-		dthat = (that.ship->Location() - deck->MountLocation()).Size();
+		dthis = (ship->GetLocation() - deck->GetMountLocation()).Size();
+		dthat = (that.ship->GetLocation() - deck->GetMountLocation()).Size();
 	}
 
 	return dthis <= dthat;
@@ -152,7 +152,7 @@ void InboundSlot::Clear(bool c)
 double InboundSlot::Distance()
 {
 	if (ship && deck) {
-		return (ship->Location() - deck->MountLocation()).Size();
+		return (ship->GetLocation() - deck->GetMountLocation()).Size();
 	}
 
 	return 1e9;
@@ -163,7 +163,7 @@ double InboundSlot::Distance()
 bool
 InboundSlot::Update(SimObject* obj)
 {
-	if (obj->Type() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == SimObject::SIM_SHIP) {
 		Ship* s = (Ship*)obj;
 
 		if (s == ship) {
@@ -344,15 +344,15 @@ FlightDeck::ExecFrame(double Seconds)
 		case READY:
 		{
 			Camera C;
-			C.Clone(carrier->Cam());
+			C.Clone(carrier->GetCam());
 			C.Yaw(azimuth);
 
 			if (SlotShip)
 			{
 				SlotShip->CloneCam(C);
 				SlotShip->MoveTo(Slot->spot_loc);
-				SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
-				SlotShip->SetVelocity(carrier->Velocity());
+				SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
+				SlotShip->SetVelocity(carrier->GetVelocity());
 			}
 
 			Slot->time = 0;
@@ -363,7 +363,7 @@ FlightDeck::ExecFrame(double Seconds)
 			if (Slot->time > 0)
 			{
 				Camera C;
-				C.Clone(carrier->Cam());
+				C.Clone(carrier->GetCam());
 				C.Yaw(azimuth);
 
 				Slot->time -= Seconds;
@@ -372,7 +372,7 @@ FlightDeck::ExecFrame(double Seconds)
 				{
 					SlotShip->CloneCam(C);
 					SlotShip->MoveTo(Slot->spot_loc);
-					SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
+					SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					SlotShip->SetFlightPhase(Ship::ALERT);
 				}
 			}
@@ -419,7 +419,7 @@ FlightDeck::ExecFrame(double Seconds)
 					const double Dyaw = atan2(Dx, Dy) - azimuth;
 
 					Camera C;
-					C.Clone(carrier->Cam());
+					C.Clone(carrier->GetCam());
 					C.Yaw(azimuth);
 
 					// rotate:
@@ -430,7 +430,7 @@ FlightDeck::ExecFrame(double Seconds)
 						C.Yaw(Dyaw * Step);
 						SlotShip->CloneCam(C);
 						SlotShip->MoveTo(Slot->spot_loc);
-						SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
+						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())
 						{
@@ -443,7 +443,7 @@ FlightDeck::ExecFrame(double Seconds)
 								USound* Snd = catapult_sound->Duplicate();
 								if (Snd)
 								{
-									Snd->SetLocation(SlotShip->Location());
+									Snd->SetLocation(SlotShip->GetLocation());
 									Snd->SetVolume(Volume);
 									Snd->Play();
 								}
@@ -463,7 +463,7 @@ FlightDeck::ExecFrame(double Seconds)
 						C.Yaw(Dyaw);
 						SlotShip->CloneCam(C);
 						SlotShip->MoveTo(Loc);
-						SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
+						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())
 						{
@@ -476,7 +476,7 @@ FlightDeck::ExecFrame(double Seconds)
 								USound* Snd = catapult_sound->Duplicate();
 								if (Snd)
 								{
-									Snd->SetLocation(SlotShip->Location());
+									Snd->SetLocation(SlotShip->GetLocation());
 									Snd->SetVolume(Volume);
 									Snd->Play();
 								}
@@ -493,7 +493,7 @@ FlightDeck::ExecFrame(double Seconds)
 						C.Yaw(Dyaw * Step);
 						SlotShip->CloneCam(C);
 						SlotShip->MoveTo(start_point);
-						SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
+						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())
 						{
@@ -506,7 +506,7 @@ FlightDeck::ExecFrame(double Seconds)
 								USound* Snd = catapult_sound->Duplicate();
 								if (Snd)
 								{
-									Snd->SetLocation(SlotShip->Location());
+									Snd->SetLocation(SlotShip->GetLocation());
 									Snd->SetVolume(Volume);
 									Snd->Play();
 								}
@@ -521,7 +521,7 @@ FlightDeck::ExecFrame(double Seconds)
 						SlotShip->SetThrottle(100);
 						SlotShip->CloneCam(C);
 						SlotShip->MoveTo(start_point);
-						SlotShip->TranslateBy(carrier->Cam().vup() * Slot->clearance);
+						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					}
 
 					SlotShip->SetFlightPhase(Ship::LOCKED);
@@ -545,7 +545,7 @@ FlightDeck::ExecFrame(double Seconds)
 				if (SlotShip->GetFlightModel() == Ship::FM_ARCADE)
 					SlotShip->ArcadeStop();
 
-				SlotShip->SetVelocity(carrier->Velocity());
+				SlotShip->SetVelocity(carrier->GetVelocity());
 			}
 
 			if (Slot->time > 0)
@@ -558,8 +558,6 @@ FlightDeck::ExecFrame(double Seconds)
 				{
 					SlotShip->SetFlightPhase(Ship::DOCKED);
 					SlotShip->Stow();
-
-					// NetUtil::SendObjKill(SlotShip, carrier, NetObjKill::KILL_DOCK, SlotIndex);
 				}
 
 				Clear(SlotIndex);
@@ -610,16 +608,16 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			FVector cat;
 
 			if (fabs(azimuth) < 5 * DEGREES) {
-				cat = carrier->Heading() * 300.0f;
+				cat = carrier->GetHeading() * 300.0f;
 			}
 			else {
 				Camera c;
-				c.Clone(carrier->Cam());
+				c.Clone(carrier->GetCam());
 				c.Yaw(azimuth);
 				cat = c.vpn() * 300.0f;
 			}
 
-			slot_ship->SetVelocity(carrier->Velocity() + cat);
+			slot_ship->SetVelocity(carrier->GetVelocity() + cat);
 			slot_ship->SetFlightPhase(Ship::LAUNCH);
 		}
 		else {
@@ -627,15 +625,15 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		}
 
 		SimDirector* dir = slot_ship->GetDirector();
-		if (dir && dir->Type() == ShipManager::DIR_TYPE) {
+		if (dir && dir->GetType() == ShipManager::DIR_TYPE) {
 			ShipManager* ctrl = (ShipManager*)dir;
 			ctrl->Launch();
 		}
 
-		ShipStats* c = ShipStats::Find(carrier->Name());
-		if (c) c->AddEvent(SimEvent::LAUNCH_SHIP, slot_ship->Name());
+		ShipStats* c = ShipStats::Find(carrier->GetName());
+		if (c) c->AddEvent(SimEvent::LAUNCH_SHIP, slot_ship->GetName());
 
-		ShipStats* stats = ShipStats::Find(slot_ship->Name());
+		ShipStats* stats = ShipStats::Find(slot_ship->GetName());
 		if (stats) {
 			stats->SetRegion(carrier->GetRegion()->GetName());
 			stats->SetType(slot_ship->Design()->name);
@@ -649,13 +647,13 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			}
 
 			stats->SetIFF(slot_ship->GetIFF());
-			stats->AddEvent(SimEvent::LAUNCH, carrier->Name());
+			stats->AddEvent(SimEvent::LAUNCH, carrier->GetName());
 
 			if (slot_ship == sim->GetPlayerShip())
 				stats->SetPlayer(true);
 		}
 
-		sim->ProcessEventTrigger(MissionEvent::TRIGGER_LAUNCH, 0, slot_ship->Name());
+		sim->ProcessEventTrigger(MissionEvent::TRIGGER_LAUNCH, 0, slot_ship->GetName());
 
 		if (slot) {
 			slot->ship = 0;
@@ -754,12 +752,12 @@ FlightDeck::Orient(const Physical* rep)
 			vpn = forward (view-plane normal)
 	*/
 
-	const FVector RepLoc = rep->Location();
+	const FVector RepLoc = rep->GetLocation();
 
 	// Extract and normalize camera basis:
-	FVector XAxis = rep->Cam().vrt(); // right
-	FVector YAxis = rep->Cam().vup(); // up
-	FVector ZAxis = rep->Cam().vpn(); // forward
+	FVector XAxis = rep->GetCam().vrt(); // right
+	FVector YAxis = rep->GetCam().vup(); // up
+	FVector ZAxis = rep->GetCam().vpn(); // forward
 
 	XAxis = XAxis.GetSafeNormal();
 	YAxis = YAxis.GetSafeNormal();
@@ -914,14 +912,14 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 	// Recovery deck: bleed off velocity if already landed
 	if (IsRecoveryDeck() && !s->IsAirborne())
 	{
-		s->SetVelocity(s->Velocity() * 0.01);
+		s->SetVelocity(s->GetVelocity() * 0.01);
 	}
 
 	// Non-recovery deck positioning
 	if (!IsRecoveryDeck())
 	{
 		Camera WorkCam;
-		WorkCam.Clone(carrier->Cam());
+		WorkCam.Clone(carrier->GetCam());
 		WorkCam.Yaw(azimuth);
 
 		s->CloneCam(WorkCam);
@@ -932,7 +930,7 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 			Gear->SetState(LandingGear::GEAR_DOWN);
 			Gear->ExecFrame(0);
 
-			const FVector Up = carrier->Cam().vup();
+			const FVector Up = carrier->GetCam().vup();
 			s->TranslateBy(Up * slots[outIndex].clearance);
 		}
 
@@ -1064,8 +1062,8 @@ FlightDeck::Recover(Ship* s)
 		// Legacy behavior: only check docking clearance if slot 0 is empty (approach gate)
 		if (slots[0].ship == nullptr)
 		{
-			const FVector DeckMountLoc = MountLocation();
-			const FVector ShipLoc = s->Location();
+			const FVector DeckMountLoc = GetMountLocation();
+			const FVector ShipLoc = s->GetLocation();
 
 			const double DockDistance = (ShipLoc - DeckMountLoc).Size();
 
@@ -1081,12 +1079,12 @@ FlightDeck::Recover(Ship* s)
 					ShipLoc.Y - DeckMountLoc.Y;
 #endif
 
-				if (DockDistance < Radius() * 3.0 && Altitude < s->Radius())
+				if (DockDistance < GetRadius() * 3.0 && Altitude < s->GetRadius())
 					Dock(s);
 			}
 			else
 			{
-				if (DockDistance < s->Radius())
+				if (DockDistance < s->GetRadius())
 					Dock(s);
 			}
 		}
@@ -1125,12 +1123,12 @@ FlightDeck::Dock(Ship* s)
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("FlightDeck::Dock(%s) Belly landing!"),
-				ANSI_TO_TCHAR(s->Name()));
+				ANSI_TO_TCHAR(s->GetName()));
 			s->InflictDamage(0.5 * base_damage);
 		}
 
 		const double docking_deflection =
-			FMath::Abs(carrier->Cam().vup().Y - s->Cam().vup().Y);
+			FMath::Abs(carrier->GetCam().vup().Y - s->GetCam().vup().Y);
 
 		if (docking_deflection > 0.35)
 		{
@@ -1143,18 +1141,18 @@ FlightDeck::Dock(Ship* s)
 		// did incoming ship exceed safe landing parameters?
 		if (s->IsAirborne())
 		{
-			if (s->Velocity().Y < -20.0)
+			if (s->GetVelocity().Y < -20.0)
 			{
 				UE_LOG(LogTemp, Warning,
 					TEXT("FlightDeck::Dock(%s) Slammed it!"),
-					ANSI_TO_TCHAR(s->Name()));
+					ANSI_TO_TCHAR(s->GetName()));
 				s->InflictDamage(0.1 * base_damage);
 			}
 		}
 		// did incoming ship exceed safe docking speed?
 		else
 		{
-			const FVector DeltaV = s->Velocity() - carrier->Velocity();
+			const FVector DeltaV = s->GetVelocity() - carrier->GetVelocity();
 			const double  Excess = DeltaV.Size() - 100.0;
 
 			if (Excess > 0.0)
@@ -1202,7 +1200,7 @@ FlightDeck::Inbound(InboundSlot*& s)
 		// find the best initial approach point for this ship:
 		double current_distance = 1e9;
 		for (int i = 0; i < num_approach_pts; i++) {
-			const double distance = (inbound->Location() - approach_point[i]).Size();
+			const double distance = (inbound->GetLocation() - approach_point[i]).Size();
 			if (distance < current_distance) {
 				current_distance = distance;
 				s->SetApproach(i);
@@ -1279,14 +1277,14 @@ FlightDeck::PrintQueue()
 			UE_LOG(LogTemp, Log, TEXT("  %2d. ship is null"), i);
 		}
 		else {
-			const double d = (s->GetShip()->Location() - MountLocation()).Size();
+			const double d = (s->GetShip()->GetLocation() - GetMountLocation()).Size();
 			UE_LOG(
 				LogTemp,
 				Log,
 				TEXT("  %2d. %c %-20s %8d km"),
 				i,
 				s->Cleared() ? TEXT('*') : TEXT(' '),
-				ANSI_TO_TCHAR(s->GetShip()->Name()),
+				ANSI_TO_TCHAR(s->GetShip()->GetName()),
 				(int)(d / 1000.0)
 			);
 		}
@@ -1336,7 +1334,7 @@ FlightDeck::Sequence(int slotIndex) const
 bool
 FlightDeck::Update(SimObject* obj)
 {
-	if (obj->Type() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == SimObject::SIM_SHIP) {
 		Ship* s = (Ship*)obj;
 
 		ListIter<InboundSlot> iter = recovery_queue;
@@ -1376,10 +1374,10 @@ bool
 FlightDeck::OverThreshold(Ship* s) const
 {
 	if (carrier->IsAirborne()) {
-		if (s->AltitudeAGL() > s->Radius() * 4)
+		if (s->GetAltitudeAGL() > s->GetRadius() * 4)
 			return false;
 
-		const FVector sloc = s->Location();
+		const FVector sloc = s->GetLocation();
 
 		// is ship between the markers?
 		double distance = 1e9;
@@ -1400,10 +1398,10 @@ FlightDeck::OverThreshold(Ship* s) const
 				distance = w.Size() / dir_len;
 		}
 
-		return distance < Radius();
+		return distance < GetRadius();
 	}
 
-	return (s->Location() - MountLocation()).Size() < (s->Radius() + Radius());
+	return (s->GetLocation() - GetMountLocation()).Size() < (s->GetRadius() + GetRadius());
 }
 
 // +----------------------------------------------------------------------+
@@ -1411,5 +1409,5 @@ FlightDeck::OverThreshold(Ship* s) const
 bool
 FlightDeck::ContainsPoint(const FVector& p) const
 {
-	return (p - MountLocation()).Size() < Radius();
+	return (p - GetMountLocation()).Size() < GetRadius();
 }

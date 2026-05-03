@@ -260,7 +260,7 @@ void RadioView::Refresh()
         history.Clear();
 
         if (ship) {
-            if (ship->Life() == 0 || ship->IsDying() || ship->IsDead()) {
+            if (ship->GetLife() == 0 || ship->IsDying() || ship->IsDead()) {
                 ship = nullptr;
             }
             else {

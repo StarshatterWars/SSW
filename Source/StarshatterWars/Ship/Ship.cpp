@@ -431,7 +431,7 @@ Ship::SetupAgility()
 	float yaw_air_factor = 1.0f;
 
 	if (IsAirborne()) {
-		bool grounded = AltitudeAGL() < Radius() / 2;
+		bool grounded = GetAltitudeAGL() < GetRadius() / 2;
 
 		if (flight_model > 0) {
 			drag *= 2.0f;
@@ -448,7 +448,7 @@ Ship::SetupAgility()
 				yaw_air_factor = 0.3f;
 
 			double rho = GetDensity();
-			double speed = Velocity().Length();
+			double speed = GetVelocity().Length();
 
 			agility = design->air_factor * rho * speed - wep_resist;
 
@@ -505,7 +505,7 @@ Ship::SetRegion(SimRegion* rgn)
 
 	if (IsGroundUnit()) {
 		// glue buildings to the terrain:
-		FVector Loc = Location();
+		FVector Loc = GetLocation();
 		Terrain* TerrainObj = region->GetTerrain();
 
 		if (TerrainObj) {
@@ -766,7 +766,7 @@ Ship::ClearTrack()
 		track = new  FVector[DEFAULT_TRACK_LENGTH];
 	}
 
-	track[0] = Location();
+	track[0] = GetLocation();
 	ntrack = 1;
 	track_time = Game::GameTime();
 }
@@ -781,17 +781,17 @@ Ship::UpdateTrack()
 
 	if (!track) {
 		track = new  FVector[DEFAULT_TRACK_LENGTH];
-		track[0] = Location();
+		track[0] = GetLocation();
 		ntrack = 1;
 		track_time = time;
 	}
 
 	else if (time - track_time > DEFAULT_TRACK_UPDATE) {
-		if (Location() != track[0]) {
+		if (GetLocation() != track[0]) {
 			for (int i = DEFAULT_TRACK_LENGTH - 2; i >= 0; i--)
 				track[i + 1] = track[i];
 
-			track[0] = Location();
+			track[0] = GetLocation();
 			if (ntrack < DEFAULT_TRACK_LENGTH) ntrack++;
 		}
 
@@ -891,7 +891,7 @@ Ship::IsHostileTo(const SimObject* o) const
 		if (IsRogue())
 			return true;
 
-		if (o->Type() == SIM_SHIP) {
+		if (o->GetType() == SIM_SHIP) {
 			Ship* s = (Ship*)o;
 
 			if (s->IsRogue())
@@ -907,7 +907,7 @@ Ship::IsHostileTo(const SimObject* o) const
 			}
 		}
 
-		else if (o->Type() == SIM_SHOT || o->Type() == SIM_DRONE) {
+		else if (o->GetType() == SIM_SHOT || o->GetType() == SIM_DRONE) {
 			SimShot* s = (SimShot*)o;
 
 			if (GetIFF() == 0) {
@@ -997,7 +997,7 @@ Ship::GetController() const
 			while (++iter) {
 				Ship* test = iter.value();
 				if (test->GetIFF() == GetIFF()) {
-					const double d = (Location() - test->Location()).Length();
+					const double d = (GetLocation() - test->GetLocation()).Length();
 					if (d < distance) {
 						controller = test;
 						distance = d;
@@ -1171,17 +1171,17 @@ int
 Ship::CollidesWith(Physical& o)
 {
 	// bounding spheres test:
-	const FVector DeltaLoc = Location() - o.Location();
-	if (DeltaLoc.Length() > radius + o.Radius())
+	const FVector DeltaLoc = GetLocation() - o.GetLocation();
+	if (DeltaLoc.Length() > GetRadius() + o.GetRadius())
 		return 0;
 
-	if (!o.Rep())
+	if (!o.GetRep())
 		return 1;
 
 	for (int i = 0; i < detail.NumModels(detail_level); i++) {
 		Graphic* g = detail.GetRep(detail_level, i);
 
-		if (o.Type() == SimObject::SIM_SHIP) {
+		if (o.GetType() == SimObject::SIM_SHIP) {
 			Ship* o_ship = (Ship*)&o;
 			const int o_det = o_ship->detail_level;
 
@@ -1194,7 +1194,7 @@ Ship::CollidesWith(Physical& o)
 		}
 		else {
 			// representation collision test (will do bounding spheres first):
-			if (g->CollidesWith(*o.Rep()))
+			if (g->CollidesWith(*o.GetRep()))
 				return 1;
 		}
 	}
@@ -1221,8 +1221,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 	if (InTransition())
 		return HIT_NOTHING;
 
-	const FVector ShotLoc = Shot->Location();
-	FVector Delta = ShotLoc - Location();
+	const FVector ShotLoc = Shot->GetLocation();
+	FVector Delta = ShotLoc - GetLocation();
 	const double DistLen = (double)Delta.Size();
 
 	FVector HullImpact(0, 0, 0);
@@ -1233,7 +1233,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 	Weapon* HitWeapon = 0;
 
 	if (!Shot->IsMissile() && !Shot->IsBeam()) {
-		if (DistLen > Radius() * 2.0)
+		if (DistLen > GetRadius() * 2.0)
 			return HIT_NOTHING;
 	}
 
@@ -1260,7 +1260,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 					if ((HitType & HIT_SHIELD) != 0)
 						Flash = Explosion::SHIELD_FLASH;
 
-					sim->CreateExplosion(Impact, Velocity(), Flash, 0.30f * Scale, Scale, region);
+					sim->CreateExplosion(Impact, GetVelocity(), Flash, 0.30f * Scale, Scale, region);
 					sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 2.0f, Scale, region);
 				}
 			}
@@ -1270,24 +1270,24 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 			SeekerAI* Seeker = (SeekerAI*)Shot->GetDirector();
 
 			// if the missile overshot us, take damage proportional to distance
-			const double DamageRadius = Shot->Design()->lethal_radius;
-			if (DistLen < (DamageRadius + Radius())) {
+			const double DamageRadius = Shot->GetDesign()->GetLethalRadius();
+			if (DistLen < (DamageRadius + GetRadius())) {
 				if (Seeker && Seeker->Overshot()) {
-					DamageScale = 1.0 - (DistLen / (DamageRadius + Radius()));
+					DamageScale = 1.0 - (DistLen / (DamageRadius + GetRadius()));
 
 					if (DamageScale > 1.0)
 						DamageScale = 1.0;
 					if (DamageScale < 0.0)
 						DamageScale = 0.0;
 
-					if (ShieldStrength() > 5) {
+					if (GetShieldStrength() > 5) {
 						HullImpact = Impact = ShotLoc;
 
 						if (Shot->Damage() > 0) {
 							if (shieldRep)
 								shieldRep->Hit(Impact, Shot, Shot->Damage() * DamageScale);
 
-							sim->CreateExplosion(Impact, Velocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, GetVelocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
 							sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f * Scale, Scale, region);
 						}
 
@@ -1297,7 +1297,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 						HullImpact = Impact = ShotLoc;
 
 						if (Shot->Damage() > 0) {
-							sim->CreateExplosion(Impact, Velocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
 							sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f * Scale, Scale, region);
 						}
 
@@ -1319,19 +1319,19 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 				if (shieldRep)
 					shieldRep->Hit(Impact, Shot, Shot->Damage());
 
-				sim->CreateExplosion(Impact, Velocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
+				sim->CreateExplosion(Impact, GetVelocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
 			}
 			else {
 				if (Shot->IsBeam())
-					sim->CreateExplosion(Impact, Velocity(), Explosion::BEAM_FLASH, 0.30f * Scale, Scale, region);
+					sim->CreateExplosion(Impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * Scale, Scale, region);
 				else
-					sim->CreateExplosion(Impact, Velocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
+					sim->CreateExplosion(Impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
 
 				if (IsStarship()) {
-					FVector BurstVel = HullImpact - Location();
+					FVector BurstVel = HullImpact - GetLocation();
 					BurstVel.Normalize();
-					BurstVel *= Radius() * 0.5f;
-					BurstVel += Velocity();
+					BurstVel *= GetRadius() * 0.5f;
+					BurstVel += GetVelocity();
 
 					sim->CreateExplosion(HullImpact, BurstVel, Explosion::HULL_BURST, 0.50f * Scale, Scale, region, this);
 				}
@@ -1352,7 +1352,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 				OwnerShip &&
 				OwnerShip->GetIFF() == GetIFF() &&
 				OwnerShip->GetDirector() &&
-				OwnerShip->GetDirector()->Type() < 1000) {
+				OwnerShip->GetDirector()->GetType() < 1000) {
 
 				const bool WasRogue = OwnerShip->IsRogue();
 
@@ -1392,8 +1392,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 		}
 
 		if (EffectiveDamage > 0.0) {
-			if (!Shot->IsBeam() && Shot->Design()->damage_type == WeaponDesign::DMG_NORMAL)
-				ApplyTorque(Shot->Velocity() * (float)EffectiveDamage * 1e-6f);
+			if (!Shot->IsBeam() && Shot->GetDesign()->damage_type == WeaponDesign::DMG_NORMAL)
+				ApplyTorque(Shot->GetVelocity() * (float)EffectiveDamage * 1e-6f);
 
 			InflictDamage(EffectiveDamage, Shot, HitType, HullImpact);
 		}
@@ -1443,8 +1443,8 @@ int
 Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** wep)
 {
 	int      hit_type = HIT_NOTHING;
-	const FVector shot_loc = shot->Location();
-	const FVector shot_org = shot->Origin();
+	const FVector shot_loc = shot->GetLocation();
+	const FVector shot_org = shot->GetOrigin();
 	FVector shot_vpn = shot_loc - shot_org;
 	double   shot_len = shot_vpn.Normalize();
 	double   blow_len = shot_len;
@@ -1465,12 +1465,12 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	double   d1 = 1e9;
 	double   ds = 1e9;
 
-	if (dir && dir->Type() == SteerAI::FIGHTER) {
+	if (dir && dir->GetType() == SteerAI::FIGHTER) {
 		ShipAI* shipAI = (ShipAI*)dir;
 		easy = shipAI->GetAILevel() < 2;
 	}
 
-	if (shieldRep && ShieldStrength() > 5) {
+	if (shieldRep && GetShieldStrength() > 5) {
 		if (shieldRep->CheckRayIntersection(shot_org, shot_vpn, shot_len, shield_impact)) {
 			hit_type = HIT_SHIELD;
 			closest = shield_impact;
@@ -1497,7 +1497,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	}
 
 	if (hit_hull) {
-		if (ShieldStrength() > 5 && !shieldRep)
+		if (GetShieldStrength() > 5 && !shieldRep)
 			hit_type = HIT_SHIELD;
 
 		hit_type = hit_type | HIT_HULL;
@@ -1593,8 +1593,8 @@ Ship::InflictNetSystemDamage(SimSystem* system, double damage, BYTE dmg_type)
 				if (scale <= 0)
 					scale = design->scale;
 
-				sim->CreateExplosion(system->MountLocation(),
-					Velocity() * 0.7f,
+				sim->CreateExplosion(system->GetMountLocation(),
+					GetVelocity() * 0.7f,
 					system->GetExplosionType(),
 					0.2f * scale,
 					scale,
@@ -1661,9 +1661,9 @@ Ship::SetNetSystemStatus(SimSystem* system, SYSTEM_STATUS status, int power, int
 static bool IsWeaponBlockedFriendly(Weapon* w, const SimObject* test)
 {
 	if (w && test && w->GetTarget()) {
-		const FVector tgt = w->GetTarget()->Location();
-		const FVector obj = test->Location();
-		const FVector wep = w->MountLocation();
+		const FVector tgt = w->GetTarget()->GetLocation();
+		const FVector obj = test->GetLocation();
+		const FVector wep = w->GetMountLocation();
 
 		FVector dir = tgt - wep;
 		const double d = dir.Normalize();
@@ -1679,7 +1679,7 @@ static bool IsWeaponBlockedFriendly(Weapon* w, const SimObject* test)
 		const FVector dst = dir * (float)r + wep;
 		const double err = (obj - dst).Length();
 
-		if (err < test->Radius() * 1.5)
+		if (err < test->GetRadius() * 1.5)
 			return true;
 	}
 
@@ -1720,7 +1720,7 @@ Ship::CheckFriendlyFire()
 		SimShot* cshot = c->GetShot();
 
 		if (cship && cship != this && (cship->GetIFF() == 0 || cship->GetIFF() == GetIFF())) {
-			const double range = (cship->Location() - Location()).Length();
+			const double range = (cship->GetLocation() - GetLocation()).Length();
 
 			if (range > 100e3)
 				continue;
@@ -1736,7 +1736,7 @@ Ship::CheckFriendlyFire()
 		}
 
 		else if (cshot && cshot->GetIFF() == GetIFF()) {
-			const double range = (cshot->Location() - Location()).Length();
+			const double range = (cshot->GetLocation() - GetLocation()).Length();
 
 			if (range > 30e3)
 				continue;
@@ -1778,7 +1778,7 @@ void Ship::SetLeader(Ship* Leader)
 	// If leader has no element, create one and assign leader as index 1
 	if (!LeaderElement)
 	{
-		LeaderElement = new SimElement(Leader->Name(), Leader->GetIFF(), (int)Leader->Class());
+		LeaderElement = new SimElement(Leader->GetName(), Leader->GetIFF(), (int)Leader->Class());
 
 		// Leader MUST be index 1
 		LeaderElement->AddShip(Leader, 1);
@@ -1795,8 +1795,8 @@ void Ship::SetLeader(Ship* Leader)
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' Element='%hs' Index=%d"),
-		Name(),
-		Leader->Name(),
+		GetName(),
+		Leader->GetName(),
 		LeaderElement->Name().data(),
 		LeaderElement->FindIndex(this));
 }
@@ -1892,7 +1892,7 @@ Ship::SetAutoNav(bool engage)
 void
 Ship::CommandMode()
 {
-	if (!dir || dir->Type() != ShipManager::DIR_TYPE) {
+	if (!dir || dir->GetType() != ShipManager::DIR_TYPE) {
 		const char* msg = "Captain on the bridge";
 		RadioVox* vox = new  RadioVox(0, "1", msg);
 
@@ -1957,7 +1957,7 @@ Ship::RangeToNavPoint(const Instruction* NavPoint)
 		FVector NavLoc = NavPoint->GetRegion()->GetLocation() + NavPoint->GetLocation();
 		NavLoc -= GetRegion()->GetLocation();
 
-		Distance = (NavLoc - Location()).Size();
+		Distance = (NavLoc - GetLocation()).Size();
 	}
 
 	return Distance;
@@ -1979,7 +1979,7 @@ Ship::SetNavptStatus(Instruction* navpt, INSTRUCTION_STATUS status)
 		navpt->SetStatus(status);
 
 		if (status == INSTRUCTION_STATUS::COMPLETE)
-			sim->ProcessEventTrigger(MissionEvent::TRIGGER_NAVPT, 0, Name(), GetNavIndex(navpt));
+			sim->ProcessEventTrigger(MissionEvent::TRIGGER_NAVPT, 0, GetName(), GetNavIndex(navpt));
 
 		if (element) {
 			const int index = element->GetNavIndex(navpt);
@@ -2029,7 +2029,7 @@ Ship::SetWard(Ship* s)
 void
 Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 {
-	if (targ && targ->Type() == SimObject::SIM_SHIP) {
+	if (targ && targ->GetType() == SimObject::SIM_SHIP) {
 		Ship* targ_ship = (Ship*)targ;
 
 		if (targ_ship && targ_ship->IsNetObserver())
@@ -2042,7 +2042,7 @@ Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 		if (target) Observe(target);
 
 		if (sim && target)
-			sim->ProcessEventTrigger(MissionEvent::TRIGGER_TARGET, 0, target->Name());
+			sim->ProcessEventTrigger(MissionEvent::TRIGGER_TARGET, 0, target->GetName());
 	}
 
 	subtarget = sub;
@@ -2063,7 +2063,7 @@ Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 	//	NetUtil::SendObjTarget(this);
 
 	// track engagement:
-	if (target && target->Type() == SimObject::SIM_SHIP) {
+	if (target && target->GetType() == SimObject::SIM_SHIP) {
 		SimElement* elem = GetElement();
 		SimElement* tgt_elem = ((Ship*)target)->GetElement();
 
@@ -2086,7 +2086,7 @@ Ship::DropTarget()
 void
 Ship::CycleSubTarget(int Dir)
 {
-	if (!target || target->Type() != SimObject::SIM_SHIP)
+	if (!target || target->GetType() != SimObject::SIM_SHIP)
 		return;
 
 	Ship* TargetShip = (Ship*)target;
@@ -2161,7 +2161,7 @@ Ship::ExecFrame(double seconds)
 	}
 
 	if (flight_phase == LAUNCH ||
-		(flight_phase == TAKEOFF && AltitudeAGL() > Radius())) {
+		(flight_phase == TAKEOFF && GetAltitudeAGL() > GetRadius())) {
 		SetFlightPhase(ACTIVE);
 	}
 
@@ -2193,7 +2193,7 @@ Ship::ExecFrame(double seconds)
 	ExecEvalFrame(seconds);
 
 	if (IsAirborne()) {
-		if (Location().Y >= TERRAIN_ALTITUDE_LIMIT)
+		if (GetLocation().Y >= TERRAIN_ALTITUDE_LIMIT)
 			MakeOrbit();
 	}
 
@@ -2205,7 +2205,7 @@ Ship::ExecFrame(double seconds)
 		throttle = 100;
 	}
 
-	if (target && target->Life() == 0) {
+	if (target && target->GetLife() == 0) {
 		DropTarget();
 	}
 
@@ -2226,8 +2226,8 @@ Ship::ExecFrame(double seconds)
 		while (++iter) {
 			Ship* carrier_target = iter.value();
 
-			const double range = (Location() - carrier_target->Location()).Length();
-			if (range > carrier_target->Radius() * 1.5)
+			const double range = (GetLocation() - carrier_target->GetLocation()).Length();
+			if (range > carrier_target->GetRadius() * 1.5)
 				continue;
 
 			if (carrier_target->GetIFF() == GetIFF() || carrier_target->GetIFF() == 0) {
@@ -2255,7 +2255,7 @@ Ship::ExecFrame(double seconds)
 		EnableShadows(!disable_shadows);
 	}
 
-	if (!FMath::IsFinite(Location().X)) {
+	if (!FMath::IsFinite(GetLocation().X)) {
 		DropTarget();
 	}
 
@@ -2343,7 +2343,7 @@ Ship::ExecNavFrame(double Seconds)
 		navsys->ExecFrame(Seconds);
 
 		if (navsys->AutoNavEngaged()) {
-			if (dir && dir->Type() == NavAI::DIR_TYPE) {
+			if (dir && dir->GetType() == NavAI::DIR_TYPE) {
 				NavAI* NavAIComp = (NavAI*)dir;
 
 				if (NavAIComp->Complete()) {
@@ -2373,9 +2373,9 @@ Ship::ExecNavFrame(double Seconds)
 				NavLoc -= SimInst->GetActiveRegion()->GetLocation();
 
 			// distance from self to navpt:
-			const double Distance = (NavLoc - Location()).Size();
+			const double Distance = (NavLoc - GetLocation()).Size();
 
-			if (Distance < 10.0 * Radius())
+			if (Distance < 10.0 * GetRadius())
 				SetNavptStatus(NavPt, INSTRUCTION_STATUS::COMPLETE);
 		}
 	}
@@ -2413,50 +2413,51 @@ Ship::ExecEvalFrame(double seconds)
 
 void Ship::ExecPhysics(double seconds)
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] ENTER Ship='%hs' Design=%p Dir=%p NetControl=%p Static=%d Phase=%d"),
-		Name(),
-		design,
-		dir,
-		net_control,
-		IsStatic() ? 1 : 0,
-		(int)flight_phase);
-	
 	if (!design)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] Missing ShipDesign. Skipping physics. Ship='%hs' UnrealDesign=%p"),
-			Name(),
-			UnrealDesign);
-
+			TEXT("[Ship::ExecPhysics] Missing ShipDesign Ship='%hs'"),
+			GetName());
 		return;
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecPhysics] ENTER Ship='%hs' Dir=%p NetControl=%p Throttle=%.2f Request=%.2f Vel=%s"),
+		GetName(),
+		dir,
+		net_control,
+		throttle,
+		throttle_request,
+		*GetVelocity().ToString());
 
 	if (net_control)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs' NetControl=%p"),
-			Name(),
-			net_control);
+			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs'"),
+			GetName());
 
 		net_control->ExecFrame(seconds);
-
-		Thrust(seconds);
-		return;
 	}
 
 	if (dir)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] AI dir ExecFrame Ship='%hs' Dir=%p Type=%d"),
-			Name(),
-			dir,
-			dir->Type());
+			TEXT("[Ship::ExecPhysics] dir ExecFrame Ship='%hs'"),
+			GetName());
 
 		dir->ExecFrame(seconds);
 	}
 
 	thrust = (float)Thrust(seconds);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecPhysics] AFTER AI Ship='%hs' Throttle=%.2f Request=%.2f Thrust=%.2f Vel=%s"),
+		GetName(),
+		throttle,
+		throttle_request,
+		thrust,
+		*GetVelocity().ToString());
+
 	SetupAgility();
 
 	if (seconds > 0.0)
@@ -2641,17 +2642,17 @@ Ship::AeroFrame(double seconds)
 		SetGravity(0.0f);
 	}
 
-	if (AltitudeAGL() < Radius()) {
+	if (GetAltitudeAGL() < GetRadius()) {
 		SetGravity(0.0f);
 
 		// on the ground/runway?
 		double bottom = 1e9;
-		double tlevel = Location().Y - AltitudeAGL();
+		double tlevel = GetLocation().Y - GetAltitudeAGL();
 
 		// taking off or landing?
 		if (flight_phase < ACTIVE || flight_phase > APPROACH) {
 			if (dock)
-				tlevel = dock->MountLocation().Y;
+				tlevel = dock->GetMountLocation().Y;
 		}
 
 		if (tlevel < 0)
@@ -2660,7 +2661,7 @@ Ship::AeroFrame(double seconds)
 		if (gear)
 			bottom = gear->GetTouchDown() - 1;
 		else
-			bottom = Location().Y - 6;
+			bottom = GetLocation().Y - 6;
 
 		if (bottom < tlevel)
 			TranslateBy(FVector(0.0f, (float)(bottom - tlevel), 0.0f));
@@ -2850,7 +2851,7 @@ Ship::StatFrame(double Seconds)
 
 	if (IsGroundUnit()) {
 		// glue buildings to the terrain:
-		FVector Loc = Location();
+		FVector Loc = GetLocation();
 		Terrain* TerrainObj = region ? region->GetTerrain() : 0;
 
 		if (TerrainObj) {
@@ -2870,7 +2871,7 @@ Ship::StatFrame(double Seconds)
 
 	ExecSensors(Seconds);
 
-	if (target && target->Life() == 0) {
+	if (target && target->GetLife() == 0) {
 		DropTarget();
 	}
 
@@ -2953,7 +2954,7 @@ Ship::StatFrame(double Seconds)
 		}
 	}
 
-	if (!FMath::IsFinite(Location().X)) {
+	if (!FMath::IsFinite(GetLocation().X)) {
 		DropTarget();
 	}
 }
@@ -2961,7 +2962,7 @@ Ship::StatFrame(double Seconds)
 // +--------------------------------------------------------------------+
 
 Graphic*
-Ship::Cockpit() const
+Ship::GetCockpit() const
 {
 	return cockpit;
 }
@@ -3011,7 +3012,7 @@ void
 Ship::SelectDetail(double Seconds)
 {
 	detail.ExecFrame(Seconds);
-	detail.SetLocation(GetRegion(), Location());
+	detail.SetLocation(GetRegion(), GetLocation());
 
 	const int NewLevel = detail.GetDetailLevel();
 
@@ -3244,8 +3245,8 @@ Ship::Update(SimObject* obj)
 		inbound = 0;
 	}
 
-	if (obj->Type() == SimObject::SIM_SHOT ||
-		obj->Type() == SimObject::SIM_DRONE) {
+	if (obj->GetType() == SimObject::SIM_SHOT ||
+		obj->GetType() == SimObject::SIM_DRONE) {
 		SimShot* s = (SimShot*)obj;
 
 		if (sensor_drone == s)
@@ -3323,7 +3324,7 @@ Ship::DropOrbit()
 
 			transition_time = 10.0f;
 			transition_type = TRANSITION_DROP_ORBIT;
-			transition_loc = Location() + Heading() * (float)(-2 * Radius());
+			transition_loc = GetLocation() + GetHeading() * (float)(-2 * GetRadius());
 
 			RadioTraffic::SendQuickMessage(this, RadioMessageAction::BREAK_ORBIT);
 			SetControls(0);
@@ -3337,7 +3338,7 @@ Ship::MakeOrbit()
 	if (IsDropship() && transition_type == TRANSITION_NONE && IsAirborne()) {
 		transition_time = 5.0f;
 		transition_type = TRANSITION_MAKE_ORBIT;
-		transition_loc = Location() + Heading() * (float)(-2 * Radius());
+		transition_loc = GetLocation() + GetHeading() * (float)(-2 * GetRadius());
 
 		RadioTraffic::SendQuickMessage(this, RadioMessageAction::MAKE_ORBIT);
 		SetControls(0);
@@ -3359,7 +3360,7 @@ Ship::IsInCombat()
 		SimContact* c = c_iter.value();
 		Ship* cship = c->GetShip();
 		const int ciff = c->GetIFF(this);
-		const FVector delta = c->Location() - Location();
+		const FVector delta = c->Location() - GetLocation();
 		const double dist = delta.Length();
 
 		if (c->Threat(this) && !cship) {
@@ -3388,7 +3389,7 @@ Ship::CanTimeSkip()
 	Instruction* NavPt = GetNextNavPoint();
 
 	// Preserve original early-out logic
-	if (MissionClock() < 10000 /* || NetGame::IsNetGame() */) {
+	if (GetMissionClock() < 10000 /* || NetGame::IsNetGame() */) {
 		return false;
 	}
 
@@ -3406,7 +3407,7 @@ Ship::CanTimeSkip()
 			const FVector TargetLoc = NavPt->GetLocation();
 
 			// Use UE vector API
-			const double Distance = FVector::Dist(TargetLoc, Location());
+			const double Distance = FVector::Dist(TargetLoc, GetLocation());
 
 			if (Distance < 30000.0)
 				bCanSkip = false;
@@ -3434,17 +3435,17 @@ void Ship::TimeSkip()
 
 		transition_time = 7.5f;
 		transition_type = TRANSITION_TIME_SKIP;
-		transition_loc = Location() + Heading() * (float)(Velocity().Length() * 4);
+		transition_loc = GetLocation() + GetHeading() * (float)(GetVelocity().Length() * 4);
 
 		if (rand() < 16000)
-			transition_loc += BeamLine() * (float)(2.5 * Radius());
+			transition_loc += GetBeamLine() * (float)(2.5 * GetRadius());
 		else
-			transition_loc += BeamLine() * (float)(-2 * Radius());
+			transition_loc += GetBeamLine() * (float)(-2 * GetRadius());
 
 		if (rand() < 8000)
-			transition_loc += LiftLine() * (float)(-1 * Radius());
+			transition_loc += GetLiftLine() * (float)(-1 * GetRadius());
 		else
-			transition_loc += LiftLine() * (float)(1.8 * Radius());
+			transition_loc += GetLiftLine() * (float)(1.8 * GetRadius());
 
 		SetControls(0);
 	}
@@ -3466,9 +3467,9 @@ Ship::DropCam(double time, double range)
 	else
 		transition_time = 10.0f;
 
-	FVector offset = Heading() * (float)(Velocity().Length() * 5);
-	double lateral_offset = 2 * Radius();
-	double vertical_offset = Radius();
+	FVector offset = GetHeading() * (float)(GetVelocity().Length() * 5);
+	double lateral_offset = 2 * GetRadius();
+	double vertical_offset = GetRadius();
 
 	if (vertical_offset > 300)
 		vertical_offset = 300;
@@ -3479,13 +3480,13 @@ Ship::DropCam(double time, double range)
 	if (rand() < 8000)
 		vertical_offset *= -1;
 
-	offset += BeamLine() * (float)lateral_offset;
-	offset += LiftLine() * (float)vertical_offset;
+	offset += GetBeamLine() * (float)lateral_offset;
+	offset += GetLiftLine() * (float)vertical_offset;
 
 	if (range > 0)
 		offset *= (float)range;
 
-	transition_loc = Location() + offset;
+	transition_loc = GetLocation() + offset;
 }
 
 // +--------------------------------------------------------------------+
@@ -3540,14 +3541,14 @@ Ship::CompleteTransition()
 		if (!DstRegion || !sim)
 			return;
 
-		FVector DstLoc = Location() * 0.20f; // removed OtherHand()
+		FVector DstLoc = GetLocation() * 0.20f; // removed OtherHand()
 		DstLoc.X += 6000.0f * (float)GetElementIndex();
 		DstLoc.Z = (float)(TERRAIN_ALTITUDE_LIMIT * 0.95);
 		DstLoc += RandomDirection() * 2000.0f;
 
 		sim->RequestHyperJump(this, DstRegion, DstLoc, TRANSITION_DROP_ORBIT);
 
-		ShipStats* Stats = ShipStats::Find(Name());
+		ShipStats* Stats = ShipStats::Find(GetName());
 		if (Stats)
 			Stats->AddEvent(SimEvent::BREAK_ORBIT, DstRegion->GetName());
 	}
@@ -3574,7 +3575,7 @@ Ship::CompleteTransition()
 
 		sim->RequestHyperJump(this, DstRegion, EscVec, TRANSITION_MAKE_ORBIT);
 
-		ShipStats* Stats = ShipStats::Find(Name());
+		ShipStats* Stats = ShipStats::Find(GetName());
 		if (Stats)
 			Stats->AddEvent(SimEvent::MAKE_ORBIT, DstRegion->GetName());
 	}
@@ -3585,7 +3586,7 @@ Ship::CompleteTransition()
 		Instruction* NavPt = GetNextNavPoint();
 
 		if (NavPt && sim) {
-			const FVector Delta = NavPt->GetLocation() - Location(); // removed OtherHand()
+			const FVector Delta = NavPt->GetLocation() - GetLocation(); // removed OtherHand()
 
 			FVector Unit = Delta;
 			Unit.Normalize();
@@ -3622,9 +3623,9 @@ Ship::IsAirborne() const
 }
 
 double
-Ship::CompassHeading() const
+Ship::GetCompassHeading() const
 {
-	const FVector heading = Heading();
+	const FVector heading = GetHeading();
 	double compass_heading = atan2(FMath::Abs(heading.X), heading.Z);
 
 	if (heading.X < 0)
@@ -3639,24 +3640,24 @@ Ship::CompassHeading() const
 }
 
 double
-Ship::CompassPitch() const
+Ship::GetCompassPitch() const
 {
-	const FVector heading = Heading();
+	const FVector heading = GetHeading();
 	return asin(heading.Y);
 }
 
 double
-Ship::AltitudeMSL() const
+Ship::GetAltitudeMSL() const
 {
-	return Location().Y;
+	return GetLocation().Y;
 }
 
 double
-Ship::AltitudeAGL() const
+Ship::GetAltitudeAGL() const
 {
 	if (altitude_agl < -1000) {
 		Ship* pThis = (Ship*)this; // cast-away const
-		const FVector loc = Location();
+		const FVector loc = GetLocation();
 
 		Terrain* terrain = region->GetTerrain();
 
@@ -3674,7 +3675,7 @@ Ship::AltitudeAGL() const
 }
 
 double
-Ship::GForce() const
+Ship::GetGForce() const
 {
 	return g_force;
 }
@@ -3845,8 +3846,8 @@ Ship::Thrust(double seconds) const
 	double total_thrust = 0.0;
 
 	if (main_drive) {
-		const FVector H = Heading();
-		FVector       V = Velocity();
+		const FVector H = GetHeading();
+		FVector       V = GetVelocity();
 
 		const double vmag = V.Normalize();
 		double eff_throttle = throttle;
@@ -3909,8 +3910,8 @@ Ship::CycleFLCSMode()
 	// back to helm mode from manual mode:
 	if (flcs_mode == FLCS_HELM) {
 		if (IsStarship()) {
-			SetHelmHeading(CompassHeading());
-			SetHelmPitch(CompassPitch());
+			SetHelmHeading(GetCompassHeading());
+			SetHelmPitch(GetCompassPitch());
 		}
 		else {
 			flcs_mode = (BYTE)FLCS_AUTO;
@@ -3926,7 +3927,7 @@ Ship::SetFLCSMode(int mode)
 	if (IsAirborne())
 		flcs_mode = (BYTE)FLCS_MANUAL;
 
-	if (dir && dir->Type() < SteerAI::SEEKER) {
+	if (dir && dir->GetType() < SteerAI::SEEKER) {
 		switch (flcs_mode) {
 		case FLCS_MANUAL: director_info = Game::GetText("flcs.manual"); break;
 		case FLCS_AUTO:   director_info = Game::GetText("flcs.auto");   break;
@@ -3967,7 +3968,7 @@ Ship::SetTransX(double t)
 			trans_x = -limit;
 
 		// reduce thruster efficiency at high fwd speed:
-		const double vfwd = FVector::DotProduct(cam.vrt(), Velocity());
+		const double vfwd = FVector::DotProduct(cam.vrt(), GetVelocity());
 		const double vmag = fabs(vfwd);
 		if (vmag > vlimit) {
 			if ((trans_x > 0 && vfwd > 0) || (trans_x < 0 && vfwd < 0))
@@ -3987,7 +3988,7 @@ Ship::SetTransY(double t)
 	trans_y = (float)t;
 
 	if (trans_y) {
-		const double vmag = Velocity().Length();
+		const double vmag = GetVelocity().Length();
 
 		if (trans_y > limit)
 			trans_y = limit;
@@ -3996,7 +3997,7 @@ Ship::SetTransY(double t)
 
 		// reduce thruster efficiency at high fwd speed:
 		if (vmag > vlimit) {
-			const double vfwd = FVector::DotProduct(cam.vpn(), Velocity());
+			const double vfwd = FVector::DotProduct(cam.vpn(), GetVelocity());
 
 			if ((trans_y > 0 && vfwd > 0) || (trans_y < 0 && vfwd < 0))
 				trans_y *= (float)(pow(vlimit, 4) / pow(vmag, 4));
@@ -4021,7 +4022,7 @@ Ship::SetTransZ(double t)
 			trans_z = -limit;
 
 		// reduce thruster efficiency at high fwd speed:
-		const double vfwd = FVector::DotProduct(cam.vup(), Velocity());
+		const double vfwd = FVector::DotProduct(cam.vup(), GetVelocity());
 		const double vmag = fabs(vfwd);
 		if (vmag > vlimit) {
 			if ((trans_z > 0 && vfwd > 0) || (trans_z < 0 && vfwd < 0))
@@ -4068,7 +4069,7 @@ void
 Ship::ApplyHelmYaw(double y)
 {
 	// rotate compass into helm-relative orientation:
-	double compass = CompassHeading() - helm_heading;
+	double compass = GetCompassHeading() - helm_heading;
 	const double turn = y * PI / 4;
 
 	if (compass > PI)
@@ -4163,11 +4164,6 @@ Ship::FireDecoy()
 	}
 
 	if (sim->GetPlayerShip() == this) {
-		//if (NetGame::IsNetGame()) {
-		//	if (decoy && decoy->Ammo() < 1)
-		//		Button::PlaySound(Button::SND_REJECT);
-		//}
-		//else 
 		if (!drone) {
 			UIButton::PlaySound(UIButton::SND_REJECT);
 		}
@@ -4371,7 +4367,7 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 	if (Game::Paused() || IsNetObserver() || IsInvulnerable())
 		return damage_applied;
 
-	if (Integrity() == 0) // already dead?
+	if (GetIntegrity() == 0) // already dead?
 		return damage_applied;
 
 	const double MAX_SHAKE = 7;
@@ -4381,9 +4377,9 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 	const bool hit_turret = (hit_type & HIT_TURRET) != 0;
 
 	if (impact == FVector::ZeroVector)
-		impact = Location();
+		impact = GetLocation();
 
-	if (hit_shield && ShieldStrength() > 0) {
+	if (hit_shield && GetShieldStrength() > 0) {
 		hull_damage = shield->DeflectDamage(shot, damage);
 
 		if (shot) {
@@ -4419,8 +4415,8 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 
 		int damage_type = WeaponDesign::DMG_NORMAL;
 
-		if (shot && shot->Design())
-			damage_type = shot->Design()->damage_type;
+		if (shot && shot->GetDesign())
+			damage_type = shot->GetDesign()->damage_type;
 
 		if (damage_type == WeaponDesign::DMG_NORMAL) {
 			damage_applied = hull_damage;
@@ -4433,8 +4429,8 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 
 		int damage_type = WeaponDesign::DMG_NORMAL;
 
-		if (shot && shot->Design())
-			damage_type = shot->Design()->damage_type;
+		if (shot && shot->GetDesign())
+			damage_type = shot->GetDesign()->damage_type;
 
 		if (damage_type == WeaponDesign::DMG_NORMAL) {
 			damage_applied = hull_damage;
@@ -4457,21 +4453,21 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 		if (new_integrity < 5 && new_integrity < old_integrity) {
 			// need accurate hull impact for starships,
 			if (rep) {
-				FVector detonation = impact * 2 - Location();
-				FVector direction = Location() - detonation;
+				FVector detonation = impact * 2 - GetLocation();
+				FVector direction = GetLocation() - detonation;
 				const double distance = direction.Normalize() * 3;
 				rep->CheckRayIntersection(detonation, direction, distance, impact);
 
 				// pull fire back into hull a bit:
-				direction = Location() - impact;
+				direction = GetLocation() - impact;
 				impact += direction * 0.2;
 
 				const float scale = (float)design->scale;
 
 				if (IsDropship())
-					sim->CreateExplosion(impact, Velocity(), Explosion::SMOKE_TRAIL, 0.01f * scale, 0.5f * scale, region, this);
+					sim->CreateExplosion(impact, GetVelocity(), Explosion::SMOKE_TRAIL, 0.01f * scale, 0.5f * scale, region, this);
 				else
-					sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FIRE, 0.10f * scale, scale, region, this);
+					sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FIRE, 0.10f * scale, scale, region, this);
 			}
 		}
 	}
@@ -4492,7 +4488,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 	int dmg_type = 0;
 
 	if (shot)
-		dmg_type = shot->Design()->damage_type;
+		dmg_type = shot->GetDesign()->damage_type;
 
 	const bool dmg_normal = dmg_type == WeaponDesign::DMG_NORMAL;
 	const bool dmg_power = dmg_type == WeaponDesign::DMG_POWER;
@@ -4514,13 +4510,13 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 		ListIter<SimSystem> iter = systems;
 		while (++iter) {
 			SimSystem* candidate = iter.value();
-			const double sysrad = candidate->Radius();
+			const double sysrad = candidate->GetRadius();
 
 			if (dmg_power)
 				candidate->DrainPower(to_level);
 
 			if (sysrad > 0 || (dmg_emp && candidate->IsPowerCritical())) {
-				const double test_distance = (impact - candidate->MountLocation()).Length();
+				const double test_distance = (impact - candidate->GetMountLocation()).Length();
 
 				if ((test_distance - blast_radius) < sysrad || (dmg_emp && candidate->IsPowerCritical())) {
 					if (test_distance < distance) {
@@ -4533,7 +4529,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 
 		// if a system was in range of the blast, assess the damage:
 		if (system) {
-			const double hull_damage = damage * system->HullProtection();
+			const double hull_damage = damage * system->GetHullProtection();
 			const double sys_damage = damage - hull_damage;
 			const double avail = system->Availability();
 
@@ -4555,7 +4551,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 					if (scale <= 0)
 						scale = design->scale;
 
-					sim->CreateExplosion(system->MountLocation(), Velocity() * 0.7f, system->GetExplosionType(),
+					sim->CreateExplosion(system->GetMountLocation(), GetVelocity() * 0.7f, system->GetExplosionType(),
 						0.2f * scale, scale, region, this, system);
 				}
 			}
@@ -4574,7 +4570,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 
 			if (rand() > 24000) {
 				const double base_damage = 33.0 + rand() / 1000.0;
-				const double sys_damage = base_damage * (1.0 - sys->HullProtection());
+				const double sys_damage = base_damage * (1.0 - sys->GetHullProtection());
 				sys->ApplyDamage(sys_damage);
 				//NetUtil::SendSysDamage(this, sys, sys_damage);
 				damage -= sys_damage;
@@ -4595,7 +4591,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 // +--------------------------------------------------------------------+
 
 int
-Ship::ShieldStrength() const
+Ship::GetShieldStrength() const
 {
 	if (!shield) return 0;
 
@@ -4603,10 +4599,10 @@ Ship::ShieldStrength() const
 }
 
 int
-Ship::HullStrength() const
+Ship::GetHullStrength() const
 {
 	if (design)
-		return (int)(Integrity() / design->integrity * 100);
+		return (int)(GetIntegrity() / design->integrity * 100);
 
 	return 10;
 }
@@ -4819,7 +4815,7 @@ void
 Ship::SetControls(MotionController* m)
 {
 	if (IsDropping() || IsAttaining()) {
-		if (dir && dir->Type() != DropShipAI::DIR_TYPE) {
+		if (dir && dir->GetType() != DropShipAI::DIR_TYPE) {
 			delete dir;
 			dir = new  DropShipAI(this);
 		}
@@ -4867,7 +4863,7 @@ Ship::SetControls(MotionController* m)
 		NavAI* nav = 0;
 
 		if (dir) {
-			if (dir->Type() != NavAI::DIR_TYPE) {
+			if (dir->GetType() != NavAI::DIR_TYPE) {
 				delete dir;
 				dir = 0;
 			}
@@ -4972,7 +4968,7 @@ Ship::SetIFF(int iff)
 
 	DropTarget();
 
-	if (dir && dir->Type() >= 1000) {
+	if (dir && dir->GetType() >= 1000) {
 		SteerAI* ai = (SteerAI*)dir;
 		ai->DropTarget();
 	}
@@ -4988,10 +4984,10 @@ Ship::SetRogue(bool r)
 	ff_count = r ? 1000 : 0;
 
 	if (!was_rogue && IsRogue()) {
-		UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue"), *FString(Name()));
+		UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue"), *FString(GetName()));
 	}
 	else if (was_rogue && !IsRogue()) {
-		UE_LOG(LogTemp, Log, TEXT("Ship '%s' is no longer rogue"), *FString(Name()));
+		UE_LOG(LogTemp, Log, TEXT("Ship '%s' is no longer rogue"), *FString(GetName()));
 	}
 }
 
@@ -5003,10 +4999,10 @@ Ship::SetFriendlyFire(int f)
 	ff_count = f;
 
 	if (!was_rogue && IsRogue()) {
-		UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue with ff_count = %d"), *FString(Name()), ff_count);
+		UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue with ff_count = %d"), *FString(GetName()), ff_count);
 	}
 	else if (was_rogue && !IsRogue()) {
-		UE_LOG(LogTemp, Log, TEXT("Ship '%s' is no longer rogue"), *FString(Name()));
+		UE_LOG(LogTemp, Log, TEXT("Ship '%s' is no longer rogue"), *FString(GetName()));
 	}
 }
 
@@ -5019,7 +5015,7 @@ Ship::IncFriendlyFire(int f)
 		ff_count += f;
 
 		if (!was_rogue && IsRogue()) {
-			UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue with ff_count = %d"), *FString(Name()), ff_count);
+			UE_LOG(LogTemp, Log, TEXT("Ship '%s' has been made rogue with ff_count = %d"), *FString(GetName()), ff_count);
 		}
 	}
 }
@@ -5043,11 +5039,11 @@ Ship::PCS() const
 	const double e_factor = design->e_factor[emcon - 1];
 
 	if (IsAirborne() && !IsGroundUnit()) {
-		if (AltitudeAGL() < 40)
+		if (GetAltitudeAGL() < 40)
 			return 0;
 
-		if (AltitudeAGL() < 200) {
-			const double clutter = AltitudeAGL() / 200;
+		if (GetAltitudeAGL() < 200) {
+			const double clutter = GetAltitudeAGL() / 200;
 			return clutter * e_factor;
 		}
 	}
@@ -5059,11 +5055,11 @@ double
 Ship::ACS() const
 {
 	if (IsAirborne() && !IsGroundUnit()) {
-		if (AltitudeAGL() < 40)
+		if (GetAltitudeAGL() < 40)
 			return 0;
 
-		if (AltitudeAGL() < 200) {
-			const double clutter = AltitudeAGL() / 200;
+		if (GetAltitudeAGL() < 200) {
+			const double clutter = GetAltitudeAGL() / 200;
 			return clutter * acs;
 		}
 	}
@@ -5072,7 +5068,7 @@ Ship::ACS() const
 }
 
 DWORD
-Ship::MissionClock() const
+Ship::GetMissionClock() const
 {
 	if (launch_time > 0)
 		return Game::GameTime() + 1 - launch_time;
@@ -5270,9 +5266,9 @@ void Ship::ApplyLeaderFormation(double seconds)
 		0.0f);
 
 	const FVector DesiredLoc =
-		Leader->Location() + LeaderRot.RotateVector(formation_offset);
+		Leader->GetLocation() + LeaderRot.RotateVector(formation_offset);
 
-	const FVector CurrentLoc = Location();
+	const FVector CurrentLoc = GetLocation();
 
 	const double FollowRate = 4.0;
 	const double Alpha = FMath::Clamp(seconds * FollowRate, 0.0, 1.0);

@@ -125,7 +125,7 @@ static const char* GetContactDisplayName(SimContact* c)
 	if (!c) return "CONTACT";
 
 	if (Ship* s = c->GetShip())
-		return s->Name();          // or s->DesignName() if you prefer
+		return s->GetName();          // or s->DesignName() if you prefer
 
 	// If you have other accessors in your port, use them here:
 	// if (SimObject* o = c->GetObject()) return o->Name();
@@ -1026,7 +1026,7 @@ HUDView::DrawContactMarkers()
 	if (CameraManager::GetCameraMode() == CameraManager::MODE_ORBIT && ship->TrackLength() > 0) {
 		const int ctl = ship->TrackLength();
 
-		FVector t1 = ship->Location();
+		FVector t1 = ship->GetLocation();
 		FVector t2 = ship->TrackPoint(0);
 
 		if (t1 != t2)
@@ -1042,7 +1042,7 @@ HUDView::DrawContactMarkers()
 	}
 
 	// draw own ship marker:
-	FVector mark_pt = ship->Location();
+	FVector mark_pt = ship->GetLocation();
 	projector->Transform(mark_pt);
 
 	// clip:
@@ -1057,23 +1057,23 @@ HUDView::DrawContactMarkers()
 
 			if (tactical) {
 				Rect self_rect(x + 8, y - 4, 200, 12);
-				DrawHUDText(TXT_SELF, ship->Name(), self_rect, DT_LEFT, HUD_MIXED_CASE);
+				DrawHUDText(TXT_SELF, ship->GetName(), self_rect, DT_LEFT, HUD_MIXED_CASE);
 			}
 		}
 	}
 
 	// draw life bars on targeted ship:
-	if (target && target->Type() == SimObject::SIM_SHIP && target->Rep()) {
+	if (target && target->GetType() == SimObject::SIM_SHIP && target->GetRep()) {
 		Ship* tgt_ship = (Ship*)target;
 		if (!tgt_ship) {
 			UE_LOG(LogTemp, Warning, TEXT("Null pointer in HUDView::DrawContactMarkers() - tgt_ship"));
 			return;
 		}
 
-		Graphic* g = tgt_ship->Rep();
+		Graphic* g = tgt_ship->GetRep();
 		Rect     r = g->ScreenRect();
 
-		FVector mark_pt2 = tgt_ship->Location();
+		FVector mark_pt2 = tgt_ship->GetLocation();
 		projector->Transform(mark_pt2);
 
 		// clip:
@@ -1093,10 +1093,10 @@ HUDView::DrawContactMarkers()
 				const int sx = x - BAR_LENGTH / 2;
 				const int sy = y - 8;
 
-				const double hull_strength = tgt_ship->Integrity() / tgt_ship->Design()->integrity;
+				const double hull_strength = tgt_ship->GetIntegrity() / tgt_ship->Design()->integrity;
 
 				const int hw = (int)(BAR_LENGTH * hull_strength);
-				const int sw = (int)(BAR_LENGTH * (tgt_ship->ShieldStrength() / 100.0));
+				const int sw = (int)(BAR_LENGTH * (tgt_ship->GetShieldStrength() / 100.0));
 
 				SYSTEM_STATUS s = SYSTEM_STATUS::NOMINAL;
 
@@ -1129,12 +1129,12 @@ void HUDView::DrawTarget()
 			target = controller;
 	}
 
-	if (target && target->Rep())
+	if (target && target->GetRep())
 	{
 		Sensor* sensor = ship ? ship->GetSensor() : nullptr;
 		SimContact* contact = nullptr;
 
-		if (sensor && ship && target->Type() == SimObject::SIM_SHIP)
+		if (sensor && ship && target->GetType() == SimObject::SIM_SHIP)
 		{
 			contact = sensor->FindContact((Ship*)target);
 		}
@@ -1147,24 +1147,24 @@ void HUDView::DrawTarget()
 		const int t = cy - bar_height / 2;
 		const int b = cy + bar_height / 2;
 
-		FVector delta = target->Location() - ship->Location();
+		FVector delta = target->GetLocation() - ship->GetLocation();
 		double  distance = delta.Size();
 
-		FVector delta_v = ship->Velocity() - target->Velocity();
+		FVector delta_v = ship->GetVelocity() - target->GetVelocity();
 		double  speed = delta_v.Size();
 
 		char txt[256] = {};
 
 		if (mode == EHUDMode::ILS && ship->GetInbound() && ship->GetInbound()->GetDeck())
 		{
-			delta = ship->GetInbound()->GetDeck()->EndPoint() - ship->Location();
+			delta = ship->GetInbound()->GetDeck()->EndPoint() - ship->GetLocation();
 			distance = delta.Size();
 		}
 
 		// --------------------------------------------------------------------
 		// Determine closing speed sign (UE-correct dot usage)
 		// --------------------------------------------------------------------
-		const FVector ShipVel = ship->Velocity();
+		const FVector ShipVel = ship->GetVelocity();
 		const double  delta_dot_vel = delta.Dot(ShipVel);
 
 		if (delta_dot_vel > 0.0) // target in front
@@ -1234,9 +1234,9 @@ void HUDView::DrawTarget()
 			range_rect.w = 2 * box_width;
 		}
 
-		DrawHUDText(TXT_TARGET_NAME, target->Name(), range_rect, DT_RIGHT);
+		DrawHUDText(TXT_TARGET_NAME, target->GetName(), range_rect, DT_RIGHT);
 
-		if (target->Type() == SimObject::SIM_SHIP)
+		if (target->GetType() == SimObject::SIM_SHIP)
 		{
 			Ship* tgt_ship = (Ship*)target;
 
@@ -1257,7 +1257,7 @@ void HUDView::DrawTarget()
 						txt,
 						"%s %03d",
 						Game::GetText("HUDView.symbol.shield").data(),
-						(int)tgt_ship->ShieldStrength()
+						(int)tgt_ship->GetShieldStrength()
 					);
 					DrawHUDText(TXT_TARGET_SHIELD, txt, range_rect, DT_RIGHT);
 				}
@@ -1267,7 +1267,7 @@ void HUDView::DrawTarget()
 					txt,
 					"%s %03d",
 					Game::GetText("HUDView.symbol.hull").data(),
-					(int)(tgt_ship->Integrity() /
+					(int)(tgt_ship->GetIntegrity() /
 						tgt_ship->Design()->integrity * 100)
 				);
 				DrawHUDText(TXT_TARGET_HULL, txt, range_rect, DT_RIGHT);
@@ -1306,12 +1306,12 @@ void HUDView::DrawTarget()
 				}
 			}
 		}
-		else if (target->Type() == SimObject::SIM_DRONE)
+		else if (target->GetType() == SimObject::SIM_DRONE)
 		{
 			Drone* tgt_drone = (Drone*)target;
 
 			range_rect.y += 10;
-			DrawHUDText(TXT_TARGET_DESIGN, tgt_drone->DesignName(), range_rect, DT_RIGHT);
+			DrawHUDText(TXT_TARGET_DESIGN, tgt_drone->GetDesignName(), range_rect, DT_RIGHT);
 
 			range_rect.y += 10;
 			int eta = tgt_drone->GetEta();
@@ -1367,7 +1367,7 @@ HUDView::DrawNavInfo()
 
 		int    index = ship->GetNavIndex(navpt);
 		double distance = ship->RangeToNavPoint(navpt);
-		double speed = ship->Velocity().Size();
+		double speed = ship->GetVelocity().Size();
 		int    etr = 0;
 		char   txt[256];
 
@@ -1426,8 +1426,8 @@ HUDView::DrawNavInfo()
 void
 HUDView::DrawSight()
 {
-	if (target && target->Rep()) {
-		FVector delta = target->Location() - ship->Location();
+	if (target && target->GetRep()) {
+		FVector delta = target->GetLocation() - ship->GetLocation();
 		double  distance = delta.Size();
 
 		// draw LCOS on target:
@@ -1459,12 +1459,12 @@ HUDView::DrawDesignators()
 		SimSystem* s = ship->GetSubTarget();
 
 		if (t) {
-			FVector tloc = t->Location();
+			FVector tloc = t->GetLocation();
 
 			if (s) {
-				tloc = s->MountLocation();
+				tloc = s->GetMountLocation();
 			}
-			else if (t->Type() == SimObject::SIM_SHIP) {
+			else if (t->GetType() == SimObject::SIM_SHIP) {
 				Ship* tgt_ship = (Ship*)t;
 
 				if (tgt_ship->IsGroundUnit())
@@ -1480,7 +1480,7 @@ HUDView::DrawDesignators()
 				ytarg = tloc.Y;
 
 				if (xtarg > 0 && xtarg < width - 1 && ytarg>0 && ytarg < height - 1) {
-					double range = (t->Location() - ship->Location()).Size();
+					double range = (t->GetLocation() - ship->GetLocation()).Size();
 
 					// use out-of-range crosshair if out of range:
 					if (!ship->GetPrimaryDesign() || ship->GetPrimaryDesign()->max_range < range) {
@@ -1528,10 +1528,10 @@ HUDView::DrawDesignators()
 			}
 
 			if (t) {
-				FVector tloc = t->Location();
+				FVector tloc = t->GetLocation();
 
 				if (s)
-					tloc = s->MountLocation();
+					tloc = s->GetMountLocation();
 
 				projector->Transform(tloc);
 
@@ -1542,7 +1542,7 @@ HUDView::DrawDesignators()
 					ytarg = tloc.Y;
 
 					if (xtarg > 0 && xtarg < width - 1 && ytarg>0 && ytarg < height - 1) {
-						double range = (t->Location() - ship->Location()).Size();
+						double range = (t->GetLocation() - ship->GetLocation()).Size();
 
 						// flip to out-of-range crosshair
 						if (sprite == tgt1_sprite) {
@@ -1583,13 +1583,13 @@ HUDView::GetStatusColor(SYSTEM_STATUS status)
 
 static SYSTEM_STATUS GetReactorStatus(Ship* ship)
 {
-	if (!ship || ship->Reactors().size() < 1)
+	if (!ship || ship->GetReactors().size() < 1)
 		return SYSTEM_STATUS::UNKNOWN;
 
 	SYSTEM_STATUS  status = SYSTEM_STATUS::NOMINAL;
 	bool maint = false;
 
-	ListIter<PowerSource> iter = ship->Reactors();
+	ListIter<PowerSource> iter = ship->GetReactors();
 	while (++iter) {
 		PowerSource* s = iter.value();
 
@@ -1766,13 +1766,13 @@ static SYSTEM_STATUS GetComputerStatus(Ship* ship)
 
 static SYSTEM_STATUS GetFlightDeckStatus(Ship* ship)
 {
-	if (!ship || ship->FlightDecks().size() < 1)
+	if (!ship || ship->GetFlightDecks().size() < 1)
 		return SYSTEM_STATUS::UNKNOWN;
 
 	SYSTEM_STATUS status = SYSTEM_STATUS::NOMINAL;
 	bool maint = false;
 
-	ListIter<FlightDeck> iter = ship->FlightDecks();
+	ListIter<FlightDeck> iter = ship->GetFlightDecks();
 	while (++iter) {
 		FlightDeck* s = iter.value();
 
@@ -2140,7 +2140,7 @@ HUDView::DrawILS()
 					same_sector = true;
 
 				if (same_sector && mode == EHUDMode::ILS && !transition && !docking) {
-					FVector dst = fd->MountLocation();
+					FVector dst = fd->GetMountLocation();
 					projector->Transform(dst);
 
 					if (dst.Z > 1.0) {
@@ -2187,7 +2187,7 @@ HUDView::DrawILS()
 
 					if (fd && fd->IsRecoveryDeck()) {
 						if (mode == EHUDMode::ILS && ours && !transition && !docking) {
-							FVector dst = fd->MountLocation();
+							FVector dst = fd->GetMountLocation();
 							projector->Transform(dst);
 
 							if (dst.Z > 1.0) {
@@ -2230,7 +2230,7 @@ HUDView::DrawILS()
 void
 HUDView::DrawObjective()
 {
-	if (ship && ship->GetDirector() && ship->GetDirector()->Type() >= SteerAI::SEEKER) {
+	if (ship && ship->GetDirector() && ship->GetDirector()->GetType() >= SteerAI::SEEKER) {
 		SteerAI* steer = (SteerAI*)ship->GetDirector();
 
 		FVector obj = steer->GetObjective();
@@ -2251,7 +2251,7 @@ HUDView::DrawObjective()
 		}
 
 		if (steer->GetOther()) {
-			obj = steer->GetOther()->Location();
+			obj = steer->GetOther()->GetLocation();
 			projector->Transform(obj);
 
 			if (obj.Z > 1.0) {
@@ -2393,12 +2393,12 @@ HUDView::SetShip(Ship* s)
 		ship = s;
 
 		if (ship) {
-			if (ship->Life() == 0 || ship->IsDying() || ship->IsDead()) {
+			if (ship->GetLife() == 0 || ship->IsDying() || ship->IsDead()) {
 				ship = 0;
 			}
 			else {
 				Observe(ship);
-				new_scale = 1.1 * ship->Radius() / 64;
+				new_scale = 1.1 * ship->GetRadius() / 64;
 
 				if (ship->Design()->hud_icon.Width()) {
 					TransferBitmap(ship->Design()->hud_icon, icon_ship, icon_ship_shade);
@@ -2438,7 +2438,7 @@ HUDView::SetShip(Ship* s)
 	else if (ship && ship->Design()->hud_icon.Width()) {
 		bool update = false;
 		SYSTEM_STATUS sstat = SYSTEM_STATUS::NOMINAL;
-		int integrity = (int)(ship->Integrity() / ship->Design()->integrity * 100);
+		int integrity = (int)(ship->GetIntegrity() / ship->Design()->integrity * 100);
 
 		if (integrity < 30)        sstat = SYSTEM_STATUS::CRITICAL;
 		else if (integrity < 60)   sstat = SYSTEM_STATUS::DEGRADED;
@@ -2454,8 +2454,8 @@ HUDView::SetShip(Ship* s)
 		}
 	}
 
-	if (ship && ship->Cockpit()) {
-		Solid* cockpit = (Solid*)ship->Cockpit();
+	if (ship && ship->GetCockpit()) {
+		Solid* cockpit = (Solid*)ship->GetCockpit();
 
 		bool change = false;
 
@@ -2498,10 +2498,10 @@ HUDView::SetTarget(SimObject* t)
 		update = true;
 	}
 
-	if (target && target->Type() == SimObject::SIM_SHIP) {
+	if (target && target->GetType() == SimObject::SIM_SHIP) {
 		SYSTEM_STATUS sstat = SYSTEM_STATUS::NOMINAL;
 		Ship* tship = (Ship*)target;
-		int integrity = (int)(tship->Integrity() / tship->Design()->integrity * 100);
+		int integrity = (int)(tship->GetIntegrity() / tship->Design()->integrity * 100);
 
 		if (integrity < 30)        sstat = SYSTEM_STATUS::CRITICAL;
 		else if (integrity < 60)   sstat = SYSTEM_STATUS::DEGRADED;
@@ -2513,7 +2513,7 @@ HUDView::SetTarget(SimObject* t)
 	}
 
 	if (update) {
-		if (target && target->Type() == SimObject::SIM_SHIP) {
+		if (target && target->GetType() == SimObject::SIM_SHIP) {
 			Ship* tship = (Ship*)target;
 			TransferBitmap(tship->Design()->hud_icon, icon_target, icon_target_shade);
 		}
@@ -2772,7 +2772,7 @@ HUDView::Refresh()
 
 			icon_rect.x = width - 248;
 
-			if (target && target->Type() == SimObject::SIM_SHIP) {
+			if (target && target->GetType() == SimObject::SIM_SHIP) {
 				Ship* tship = (Ship*)target;
 				DrawHUDText(TXT_ICON_TARGET_TYPE, tship->DesignName(), icon_rect, DT_CENTER);
 			}
@@ -3014,7 +3014,7 @@ HUDView::ShowHUDWarn()
 	if (!show_warn) {
 		show_warn = true;
 
-		if (ship && ship->HullStrength() <= 40) {
+		if (ship && ship->GetHullStrength() <= 40) {
 			// TOO OBNOXIOUS!!
 			HUDSounds::PlaySound(HUDSounds::SND_RED_ALERT);
 		}
@@ -3583,7 +3583,7 @@ void HUDView::DrawBars()
 
 	// SPEED (left)
 	{
-		const double speed = ship->Velocity().Size();
+		const double speed = ship->GetVelocity().Size();
 		FormatNumber(txt, speed);
 
 		Rect r(20, height / 2 - 6, 120, 12);
@@ -3595,7 +3595,7 @@ void HUDView::DrawBars()
 	{
 		// Derive heading from velocity direction (XY plane).
 		// If nearly stopped, heading is undefined; show 000.
-		const FVector v = ship->Velocity();
+		const FVector v = ship->GetVelocity();
 		const double vx = (double)v.X;
 		const double vy = (double)v.Y;
 
@@ -3666,7 +3666,7 @@ void HUDView::DrawContact(SimContact* c, int index)
 
 		if (Ship* s = c->GetShip())
 		{
-			contact_name = s->Name(); // assumes legacy const char*
+			contact_name = s->GetName(); // assumes legacy const char*
 		}
 		else if (c->GetShot())
 		{
@@ -3765,10 +3765,10 @@ void HUDView::DrawTrackSegment(FVector& t1, FVector& t2, FColor c)
 
 void HUDView::DrawRect(SimObject* targ)
 {
-	if (!targ || !targ->Rep())
+	if (!targ || !targ->GetRep())
 		return;
 
-	Graphic* g = targ->Rep();
+	Graphic* g = targ->GetRep();
 	Rect r = g->ScreenRect();
 
 	// Clamp and outline
@@ -3787,7 +3787,7 @@ void HUDView::DrawLCOS(SimObject* targ, double dist)
 	if (!ship || !targ || !projector)
 		return;
 
-	FVector p = targ->Location();
+	FVector p = targ->GetLocation();
 	projector->Transform(p);
 
 	if (p.Z <= 1.0f)
@@ -3825,7 +3825,7 @@ void HUDView::DrawFPM()
 		return;
 
 	// Best-effort: use velocity vector projected from ship origin.
-	FVector p = ship->Location() + ship->Velocity().GetSafeNormal() * 500.0f;
+	FVector p = ship->GetLocation() + ship->GetVelocity().GetSafeNormal() * 500.0f;
 	projector->Transform(p);
 
 	if (p.Z <= 1.0f)
@@ -3849,7 +3849,7 @@ void HUDView::DrawHPM()
 		return;
 
 	// Use velocity direction as a forward proxy:
-	const FVector v = ship->Velocity();
+	const FVector v = ship->GetVelocity();
 
 	// If we're basically not moving, just center it:
 	if (v.SizeSquared() < 1e-4f)
@@ -3862,7 +3862,7 @@ void HUDView::DrawHPM()
 	const FVector dir = v.GetSafeNormal();
 
 	// Project a point ahead of the ship along motion vector:
-	FVector p = ship->Location() + dir * 500.0f;
+	FVector p = ship->GetLocation() + dir * 500.0f;
 
 	projector->Transform(p);
 
@@ -3894,7 +3894,7 @@ void HUDView::DrawCompass()
 	DrawEllipse(cx - 28, cy - 28, cx + 28, cy + 28, HudColor);
 
 	// Use velocity as heading proxy
-	const FVector v = ship->Velocity();
+	const FVector v = ship->GetVelocity();
 
 	// If nearly stationary, draw centered marker
 	if (v.SizeSquared() < 1e-4f)
@@ -3945,7 +3945,7 @@ void HUDView::DrawPitchLadder()
 		return;
 
 	// Fallback pitch source: velocity direction
-	const FVector v = ship->Velocity();
+	const FVector v = ship->GetVelocity();
 
 	// If basically stationary, just show zero rung centered:
 	if (v.SizeSquared() < 1e-4f)

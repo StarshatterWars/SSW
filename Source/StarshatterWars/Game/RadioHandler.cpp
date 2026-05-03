@@ -217,7 +217,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 				ship->DropTarget();
 
 			SimDirector* dir = ship->GetDirector();
-			if (dir && dir->Type() >= SteerAI::SEEKER && dir->Type() <= SteerAI::GROUND) {
+			if (dir && dir->GetType() >= SteerAI::SEEKER && dir->GetType() <= SteerAI::GROUND) {
 				SteerAI* ai = (SteerAI*)dir;
 				ai->SetTarget(0);
 			}
@@ -291,12 +291,12 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 				instruction->SetTarget(msg_tgt);
 
 				// Point(...) is a Starshatter helper type; convert to FVector directly:
-				instruction->SetLocation(msg_tgt->Location());
+				instruction->SetLocation(msg_tgt->GetLocation());
 			}
 
 			else if (action == RadioMessageAction::COVER_ME) {
 				instruction->SetTarget((Ship*)msg->GetSender());
-				instruction->SetLocation(msg->GetSender()->Location());
+				instruction->SetLocation(msg->GetSender()->GetLocation());
 			}
 
 			else if (action == RadioMessageAction::MOVE_PATROL) {
@@ -312,7 +312,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 
 				if (elem) {
 					SimObject* msg_tgt = msg->TargetList().at(0);
-					if (msg_tgt && msg_tgt->Type() == SimObject::SIM_SHIP) {
+					if (msg_tgt && msg_tgt->GetType() == SimObject::SIM_SHIP) {
 						SimElement* tgt = ((Ship*)msg_tgt)->GetElement();
 						elem->SetAssignment(tgt);
 
@@ -509,7 +509,7 @@ RadioHandler::Picture(RadioMessage* msg, Ship* ship)
 		Ship* s = c->GetShip();
 
 		if (s && s->IsDropship() && s->IsHostileTo(ship)) {
-			const FVector Delta = msg->GetSender()->Location() - s->Location();
+			const FVector Delta = msg->GetSender()->GetLocation() - s->GetLocation();
 			const double s_range = (double)Delta.Size();
 			if (!tgt || s_range < range) {
 				tgt = s;

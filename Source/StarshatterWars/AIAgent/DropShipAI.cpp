@@ -67,7 +67,7 @@ DropShipAI::FindObjective()
 
 	// If making orbit, go up:
 	if (self_rgn->GetType() == Sim::AIR_SPACE) {
-		obj_w = self->Location() + FVector(0.0f, 1.0e3f, 0.0f);
+		obj_w = self->GetLocation() + FVector(0.0f, 1.0e3f, 0.0f);
 	}
 
 	// If breaking orbit, head for terrain region:
@@ -97,7 +97,7 @@ DropShipAI::FindObjective()
 	}
 
 	// Distance from self to navpt:
-	distance = (obj_w - self->Location()).Size();
+	distance = (obj_w - self->GetLocation()).Size();
 
 	// Transform into local/camera coords:
 	objective = Transform(obj_w);
@@ -147,7 +147,7 @@ DropShipAI::Navigator()
 		// Legacy code assumed Camera::vrt() with .y and .length()
 		// UE conversion: use FVector::Size() and explicit component access.
 		// Keep the original call pattern, but make it safe.
-		Camera* Cam = (Camera*)&(self->Cam());
+		Camera* Cam = (Camera*)&(self->GetCam());
 		if (Cam) {
 			const FVector Vrt = Cam->vrt();
 			const double  Deflection = (double)Vrt.Y;

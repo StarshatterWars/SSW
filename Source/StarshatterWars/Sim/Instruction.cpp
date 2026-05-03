@@ -198,7 +198,7 @@ void
 Instruction::SetTarget(SimObject* s)
 {
 	if (s && target != s) {
-		tgt_name = s->Name();
+		tgt_name = s->GetName();
 		target = s;
 		Observe(target);
 	}
@@ -260,7 +260,7 @@ Instruction::Evaluate(Ship* ship)
 			(ship->GetFlightPhase() == Ship::DOCKING ||
 				ship->GetFlightPhase() == Ship::DOCKED))
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
-		else if (ship->Integrity() < 1)
+		else if (ship->GetIntegrity() < 1)
 			SetStatus(INSTRUCTION_STATUS::FAILED);
 		break;
 
@@ -285,7 +285,7 @@ Instruction::Evaluate(Ship* ship)
 				for (int i = 0; i < e->NumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
-					if (s && s->Integrity() < 1)
+					if (s && s->GetIntegrity() < 1)
 						SetStatus(INSTRUCTION_STATUS::FAILED);
 				}
 
@@ -327,7 +327,7 @@ Instruction::Evaluate(Ship* ship)
 				for (int i = 0; i < e->NumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
-					if (s && s->Integrity() >= 1)
+					if (s && s->GetIntegrity() >= 1)
 						alive = true;
 				}
 			}
@@ -356,7 +356,7 @@ Instruction::Evaluate(Ship* ship)
 				for (int i = 0; i < e->NumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
-					if (s && s->Integrity() >= 1)
+					if (s && s->GetIntegrity() >= 1)
 						alive = true;
 				}
 			}

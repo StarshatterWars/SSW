@@ -835,7 +835,7 @@ Sim::CreateElements()
 									else {
 										UE_LOG(LogTemp, Warning,
 											TEXT("WARNING: alert ship '%s' region is null"),
-											ANSI_TO_TCHAR(AlertShip->Name()));
+											ANSI_TO_TCHAR(AlertShip->GetName()));
 									}
 								}
 							}
@@ -934,8 +934,8 @@ Sim::CreateElements()
 						if (NewShip->IsStarship())
 							NewShip->SetHelmHeading(Heading);
 
-						else if (NewShip->IsAirborne() && NewShip->AltitudeAGL() > 25)
-							NewShip->SetVelocity(OtherHand(NewShip->Heading()) * 250);
+						else if (NewShip->IsAirborne() && NewShip->GetAltitudeAGL() > 25)
+							NewShip->SetVelocity(OtherHand(NewShip->GetHeading()) * 250);
 
 						if (Element)
 							Element->AddShip(NewShip);
@@ -971,8 +971,8 @@ Sim::CreateElements()
 
 							if (MissionShipPtr->GetFuel()[0] > -10) {
 								for (int32 ReactorIndex = 0; ReactorIndex < 4; ReactorIndex++) {
-									if (NewShip->Reactors().size() > ReactorIndex) {
-										PowerSource* PowerSourcePtr = NewShip->Reactors()[ReactorIndex];
+									if (NewShip->GetReactors().size() > ReactorIndex) {
+										PowerSource* PowerSourcePtr = NewShip->GetReactors()[ReactorIndex];
 										PowerSourcePtr->SetCapacity(MissionShipPtr->GetFuel()[ReactorIndex]);
 									}
 								}
@@ -1142,14 +1142,14 @@ Sim::CreateShip(const char* name, const char* reg_num, ShipDesign* design, const
 	if (rgn) {
 		UE_LOG(LogTemp, Log,
 			TEXT("Inserting Ship(%s) into Region(%s) (%s)"),
-			ANSI_TO_TCHAR(ship->Name()),
+			ANSI_TO_TCHAR(ship->GetName()),
 			ANSI_TO_TCHAR(rgn->GetName()),
 			ANSI_TO_TCHAR(FormatGameTime()));
 
 		rgn->InsertObject(ship);
 
-		if (ship->IsAirborne() && ship->AltitudeAGL() > 25)
-			ship->SetVelocity(OtherHand(ship->Heading()) * 250);
+		if (ship->IsAirborne() && ship->GetAltitudeAGL() > 25)
+			ship->SetVelocity(OtherHand(ship->GetHeading()) * 250);
 	}
 
 	return ship;
@@ -1307,11 +1307,11 @@ Sim::CreateSplashDamage(Ship* ship)
 	if (ship && ship->GetRegion() && ship->Design()->splash_radius > 1) {
 		SimSplash* splash = new
 			SimSplash(ship->GetRegion(),
-				OtherHand(ship->Location()),
+				OtherHand(ship->GetLocation()),
 				ship->Design()->integrity / 4,
 				ship->Design()->splash_radius);
 
-		splash->owner_name = ship->Name();
+		splash->owner_name = ship->GetName();
 		splashlist.append(splash);
 	}
 }
@@ -1323,22 +1323,22 @@ Sim::CreateSplashDamage(SimShot* shot)
 {
 	if (shot && shot->GetRegion()) {
 		double damage = shot->Damage();
-		if (damage < shot->Design()->damage)
-			damage = shot->Design()->damage;
+		if (damage < shot->GetDesign()->damage)
+			damage = shot->GetDesign()->damage;
 
 		SimSplash* splash = new
 			SimSplash(shot->GetRegion(),
-				OtherHand(shot->Location()),
+				OtherHand(shot->GetLocation()),
 				damage,
-				shot->Design()->lethal_radius);
+				shot->GetDesign()->lethal_radius);
 
 		if (shot->Owner())
-			splash->owner_name = shot->Owner()->Name();
+			splash->owner_name = shot->Owner()->GetName();
 
 		splash->missile = shot->IsMissile();
 
 		splashlist.append(splash);
-		CreateExplosion(OtherHand(shot->Location()), FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f, 1.0f, shot->GetRegion());
+		CreateExplosion(OtherHand(shot->GetLocation()), FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f, 1.0f, shot->GetRegion());
 	}
 }
 
@@ -1530,7 +1530,7 @@ Sim::FindNearestRegion(SimObject* object, int type)
 
 	SimRegion* result = 0;
 	double      distance = 1.0e40;
-	FVector     objloc = OtherHand(object->Location());
+	FVector     objloc = OtherHand(object->GetLocation());
 
 	if (object->GetRegion())
 		objloc += OtherHand(object->GetRegion()->GetLocation());
@@ -1763,7 +1763,7 @@ Sim::ResolveHyperList()
 
 				if (dest) {
 					// bring along fighters on deck:
-					ListIter<FlightDeck> deck = jumpship->FlightDecks();
+					ListIter<FlightDeck> deck = jumpship->GetFlightDecks();
 					while (++deck) {
 						for (int i = 0; i < deck->NumSlots(); i++) {
 							Ship* s = deck->GetShip(i);
@@ -1789,7 +1789,7 @@ Sim::ResolveHyperList()
 								Ship* s = neighbor.value();
 								if (s == jumpship) continue;
 
-								const FVector Delta = s->Location() - jumpship->Location();
+								const FVector Delta = s->GetLocation() - jumpship->GetLocation();
 
 								if (Delta.Size() < 5e3) {
 									riders.append(s);
@@ -1800,22 +1800,22 @@ Sim::ResolveHyperList()
 						// part two: now transfer the list to the destination:
 						for (int i = 0; i < riders.size(); i++) {
 							Ship* s = riders[i];
-							const FVector Delta = s->Location() - jumpship->Location();
+							const FVector Delta = s->GetLocation() - jumpship->GetLocation();
 
 							dest->InsertObject(s);
 							s->MoveTo(OtherHand(jump->loc) + Delta);
 							s->ClearTrack();
 
 							if (jump->fc_dst) {
-								const double r = jump->fc_dst->Roll();
-								const double p = jump->fc_dst->Pitch();
-								const double w = jump->fc_dst->Yaw();
+								const double r = jump->fc_dst->GetRoll();
+								const double p = jump->fc_dst->GetPitch();
+								const double w = jump->fc_dst->GetYaw();
 
 								s->SetAbsoluteOrientation(r, p, w);
-								s->SetVelocity(jump->fc_dst->Heading() * 500.0);
+								s->SetVelocity(jump->fc_dst->GetHeading() * 500.0);
 							}
 
-							ProcessEventTrigger(MissionEvent::TRIGGER_JUMP, 0, s->Name());
+							ProcessEventTrigger(MissionEvent::TRIGGER_JUMP, 0, s->GetName());
 						}
 					}
 
@@ -1824,27 +1824,26 @@ Sim::ResolveHyperList()
 					jumpship->MoveTo(OtherHand(jump->loc));
 					jumpship->ClearTrack();
 
-					ProcessEventTrigger(MissionEvent::TRIGGER_JUMP, 0, jumpship->Name());
-					//NetUtil::SendObjHyper(jumpship, dest->Name(), jump->loc, jump->fc_src, jump->fc_dst, jump->type);
+					ProcessEventTrigger(MissionEvent::TRIGGER_JUMP, 0, jumpship->GetName());
 
 					// if using farcaster:
 					if (jump->fc_src) {
 						UE_LOG(LogTemp, Log, TEXT("Ship '%s' farcast to '%s'"),
-							UTF8_TO_TCHAR(jumpship->Name()),
+							UTF8_TO_TCHAR(jumpship->GetName()),
 							UTF8_TO_TCHAR(dest->GetName())
 						);
-						CreateExplosion(jumpship->Location(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
+						CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
 
 						if (jump->fc_dst) {
-							const double r = jump->fc_dst->Roll();
-							const double p = jump->fc_dst->Pitch();
-							const double w = jump->fc_dst->Yaw();
+							const double r = jump->fc_dst->GetRoll();
+							const double p = jump->fc_dst->GetPitch();
+							const double w = jump->fc_dst->GetYaw();
 
 							jumpship->SetAbsoluteOrientation(r, p, w);
-							jumpship->SetVelocity(jump->fc_dst->Heading() * 500.0);
+							jumpship->SetVelocity(jump->fc_dst->GetHeading() * 500.0);
 						}
 
-						jumpship->SetHelmHeading(jumpship->CompassHeading());
+						jumpship->SetHelmHeading(jumpship->GetCompassHeading());
 						jumpship->SetHelmPitch(0);
 					}
 
@@ -1853,11 +1852,11 @@ Sim::ResolveHyperList()
 						
 						UE_LOG(LogTemp, Log,
 							TEXT("Ship '%s' broke orbit to '%s'"),
-							ANSI_TO_TCHAR(jumpship->Name()),
+							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
 						jumpship->SetAbsoluteOrientation(0, PI / 4, 0);
-						jumpship->SetVelocity(jumpship->Heading() * 1.0e3);
+						jumpship->SetVelocity(jumpship->GetHeading() * 1.0e3);
 					}
 
 					// make orbit:
@@ -1865,28 +1864,28 @@ Sim::ResolveHyperList()
 						
 						UE_LOG(LogTemp, Log,
 							TEXT("Ship '%s' achieved orbit '%s'"),
-							ANSI_TO_TCHAR(jumpship->Name()),
+							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
 						jumpship->LookAt(FVector::ZeroVector);
-						jumpship->SetVelocity(jumpship->Heading() * 500.0);
+						jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
 					}
 
 					// hyper jump:
 					else {
 						UE_LOG(LogTemp, Log,
 							TEXT("Ship '%s' quantum to '%s'"),
-							ANSI_TO_TCHAR(jumpship->Name()),
+							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
 						if (jump->hyperdrive)
-							CreateExplosion(jumpship->Location(), FVector::ZeroVector, Explosion::HYPER_FLASH, 1.0f, 1.0f, dest);
+							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::HYPER_FLASH, 1.0f, 1.0f, dest);
 						else
-							CreateExplosion(jumpship->Location(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
+							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
 
 						jumpship->LookAt(FVector::ZeroVector);
-						jumpship->SetVelocity(jumpship->Heading() * 500.0);
-						jumpship->SetHelmHeading(jumpship->CompassHeading());
+						jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
+						jumpship->SetHelmHeading(jumpship->GetCompassHeading());
 						jumpship->SetHelmPitch(0);
 					}
 				}
@@ -1895,7 +1894,7 @@ Sim::ResolveHyperList()
 					
 					UE_LOG(LogTemp, Warning,
 						TEXT("Warning: Unusual jump request for ship '%s'"),
-						ANSI_TO_TCHAR(jumpship->Name()));
+						ANSI_TO_TCHAR(jumpship->GetName()));
 
 					regions[1]->InsertObject(jumpship);
 				}
@@ -1932,7 +1931,7 @@ Sim::ResolveSplashList()
 			while (++s_iter) {
 				Ship* ship = s_iter.value();
 
-				const double distance = (ship->Location() - splash->loc).Size();
+				const double distance = (ship->GetLocation() - splash->loc).Size();
 
 				if (distance > 1 && distance < splash->range) {
 					const double damage = splash->damage * (1 - distance / splash->range);
@@ -1940,12 +1939,12 @@ Sim::ResolveSplashList()
 						ship->InflictDamage(damage);
 					//}
 
-					const int ship_destroyed = (!ship->InTransition() && ship->Integrity() < 1.0f);
+					const int ship_destroyed = (!ship->InTransition() && ship->GetIntegrity() < 1.0f);
 
 					// then delete the ship:
 					if (ship_destroyed) {
 						const FString KillerName = UTF8_TO_TCHAR(splash->owner_name);
-						const FString ShipName = ship->Name();
+						const FString ShipName = ship->GetName();
 						const FString TimeStr = FormatGameTime();
 
 						UE_LOG(LogTemp, Log,
@@ -1958,9 +1957,9 @@ Sim::ResolveSplashList()
 						ShipStats* killer = ShipStats::Find(splash->owner_name);
 						if (killer) {
 							if (splash->missile)
-								killer->AddEvent(SimEvent::MISSILE_KILL, ship->Name());
+								killer->AddEvent(SimEvent::MISSILE_KILL, ship->GetName());
 							else
-								killer->AddEvent(SimEvent::GUNS_KILL, ship->Name());
+								killer->AddEvent(SimEvent::GUNS_KILL, ship->GetName());
 						}
 
 						Ship* owner = FindShip(splash->owner_name, splash->rgn->GetName());
@@ -1974,7 +1973,7 @@ Sim::ResolveSplashList()
 										Ship* s = elem->GetShip(1);
 
 										if (s) {
-											ShipStats* cmdr_stats = ShipStats::Find(s->Name());
+											ShipStats* cmdr_stats = ShipStats::Find(s->GetName());
 											if (cmdr_stats) {
 												cmdr_stats->AddCommandPoints(ship->Value() / 2);
 											}
@@ -1986,7 +1985,7 @@ Sim::ResolveSplashList()
 										Ship* s = cmdr->GetShip(1);
 
 										if (s) {
-											ShipStats* cmdr_stats = ShipStats::Find(s->Name());
+											ShipStats* cmdr_stats = ShipStats::Find(s->GetName());
 											if (cmdr_stats) {
 												cmdr_stats->AddCommandPoints(ship->Value() / 2);
 											}
@@ -1996,7 +1995,7 @@ Sim::ResolveSplashList()
 							}
 						}
 
-						ShipStats* killee = ShipStats::Find(ship->Name());
+						ShipStats* killee = ShipStats::Find(ship->GetName());
 						if (killee)
 							killee->AddEvent(SimEvent::DESTROYED, splash->owner_name);
 
@@ -2010,18 +2009,18 @@ Sim::ResolveSplashList()
 			while (++drone_iter) {
 				Drone* drone = drone_iter.value();
 
-				const double distance = (drone->Location() - splash->loc).Size();
+				const double distance = (drone->GetLocation() - splash->loc).Size();
 
 				if (distance > 1 && distance < splash->range) {
 					const double damage = splash->damage * (1 - distance / splash->range);
 					drone->InflictDamage(damage);
 
-					const int destroyed = (drone->Integrity() < 1.0f);
+					const int destroyed = (drone->GetIntegrity() < 1.0f);
 
 					// then mark the drone for deletion:
 					if (destroyed) {
 						//NetUtil::SendWepDestroy(drone);
-						sim->CreateExplosion(drone->Location(), drone->Velocity(), 21 /* was LARGE_EXP */, 1.0f, 1.0f, splash->rgn);
+						sim->CreateExplosion(drone->GetLocation(), drone->GetVelocity(), 21 /* was LARGE_EXP */, 1.0f, 1.0f, splash->rgn);
 						drone->SetLife(0);
 					}
 				}
@@ -2208,7 +2207,7 @@ Sim::CreateMissionElement(SimElement* elem)
 	MissionElement* msn_elem = 0;
 
 	if (elem->IsSquadron()) {
-		if (!elem->GetCarrier() || elem->GetCarrier()->Integrity() < 1)
+		if (!elem->GetCarrier() || elem->GetCarrier()->GetIntegrity() < 1)
 			return msn_elem;
 	}
 
@@ -2222,9 +2221,9 @@ Sim::CreateMissionElement(SimElement* elem)
 		if (elem->IsSquadron() && elem->GetCarrier()) {
 			Ship* carrier = elem->GetCarrier();
 
-			msn_elem->SetCarrier(carrier->Name());
+			msn_elem->SetCarrier(carrier->GetName());
 			msn_elem->SetCount(elem->GetCount());
-			msn_elem->SetLocation(OtherHand(carrier->Location()));
+			msn_elem->SetLocation(OtherHand(carrier->GetLocation()));
 
 			if (carrier->GetRegion())
 				msn_elem->SetRegion(carrier->GetRegion()->GetName());
@@ -2269,7 +2268,7 @@ Sim::CreateMissionElement(SimElement* elem)
 			if (ship->GetRegion())
 				msn_elem->SetRegion(ship->GetRegion()->GetName());
 
-			msn_elem->SetLocation(OtherHand(ship->Location()));
+			msn_elem->SetLocation(OtherHand(ship->GetLocation()));
 
 			const ShipDesign* LegacyDesign = ship->Design();
 			const FShipDesign* DesignRow = ResolveRowFromLegacyShipDesign(LegacyDesign);
@@ -2291,13 +2290,13 @@ Sim::CreateMissionElement(SimElement* elem)
 			msn_elem->SetCommandAI(elem->GetCommandAILevel());
 			msn_elem->SetHoldTime((int)elem->GetHoldTime());
 			msn_elem->SetZoneLock(elem->GetZoneLock());
-			msn_elem->SetHeading(ship->CompassHeading());
+			msn_elem->SetHeading(ship->GetCompassHeading());
 
 			msn_elem->SetPlayable(elem->IsPlayable());
 			msn_elem->SetRogue(elem->IsRogue());
 			msn_elem->SetIntelLevel(elem->IntelLevel());
 
-			msn_elem->SetRespawnCount(ship->RespawnCount());
+			msn_elem->SetRespawnCount(ship->GetRespawnCount());
 		}
 
 		MissionLoad* loadout = new MissionLoad;
@@ -2338,15 +2337,15 @@ Sim::CreateMissionElement(SimElement* elem)
 			if (ship) {
 				MissionShip* s = new MissionShip;
 
-				s->SetName(ship->Name());
+				s->SetName(ship->GetName());
 				s->SetRegNum(ship->Registry());
 				s->SetRegion(ship->GetRegion()->GetName());
-				s->SetLocation(OtherHand(ship->Location()));
-				s->SetVelocity(OtherHand(ship->Velocity()));
+				s->SetLocation(OtherHand(ship->GetLocation()));
+				s->SetVelocity(OtherHand(ship->GetVelocity()));
 
-				s->SetRespawns(ship->RespawnCount());
-				s->SetHeading(ship->CompassHeading());
-				s->SetIntegrity(ship->Integrity());
+				s->SetRespawns(ship->GetRespawnCount());
+				s->SetHeading(ship->GetCompassHeading());
+				s->SetIntegrity(ship->GetIntegrity());
 
 				if (ship->GetDecoy())
 					s->SetDecoys(ship->GetDecoy()->Ammo());
@@ -2368,8 +2367,8 @@ Sim::CreateMissionElement(SimElement* elem)
 				}
 
 				for (n = 0; n < 4; n++) {
-					if (ship->Reactors().size() > n)
-						fuel[n] = ship->Reactors()[n]->Charge();
+					if (ship->GetReactors().size() > n)
+						fuel[n] = ship->GetReactors()[n]->Charge();
 					else
 						fuel[n] = -10;
 				}

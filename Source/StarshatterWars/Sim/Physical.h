@@ -75,49 +75,47 @@ public:
 
     // accessors:
     int               Identity()  const { return id; }
-    int               Type()      const { return obj_type; }
-    const char* Name()      const { return name; }
+    int               GetType()   const { return obj_type; }
+    const char*       GetName()   const { return name; }
 
     // NOTE:
     // Camera is a Starshatter/nGenEx core type. This class keeps Camera as-is.
     // Geometry's Point/Vec3 have been ported/aliased in Geometry.h in your project,
     // but this header uses FVector externally per the template.
-    FVector           Location()  const { return cam.Pos(); }
-    FVector           Heading()   const { return cam.vpn(); }
-    FVector           LiftLine()  const { return cam.vup(); }
-    FVector           BeamLine()  const { return cam.vrt(); }
-    FVector           Velocity()  const { return velocity + arcade_velocity; }
-    FVector           Acceleration() const { return accel; }
+    FVector           GetLocation()  const { return cam.Pos(); }
+    FVector           GetHeading()   const { return cam.vpn(); }
+    FVector           GetLiftLine()  const { return cam.vup(); }
+    FVector           GetBeamLine()  const { return cam.vrt(); }
+    FVector           GetVelocity()  const { return velocity + arcade_velocity; }
+    FVector           GetAcceleration() const { return accel; }
 
-    double            Thrust()    const { return thrust; }
-    double            TransX()    const { return trans_x; }
-    double            TransY()    const { return trans_y; }
-    double            TransZ()    const { return trans_z; }
-    double            Drag()      const { return drag; }
+    double            GetThrust()    const { return thrust; }
+    double            GetTransX()    const { return trans_x; }
+    double            GetTransY()    const { return trans_y; }
+    double            GetTransZ()    const { return trans_z; }
+    double            GetDrag()      const { return drag; }
+    double            GetRoll()      const { return roll; }
+    double            GetPitch()     const { return pitch; }
+    double            GetYaw()       const { return yaw; }
+    FVector           GetRotation()  const { return FVector(dp, dr, dy); }
 
-    double            Roll()      const { return roll; }
-    double            Pitch()     const { return pitch; }
-    double            Yaw()       const { return yaw; }
-    FVector           Rotation()  const { return FVector(dp, dr, dy); }
+    double            GetAlpha()     const { return alpha; }
 
-    double            Alpha()     const { return alpha; }
+    double            GetFlightPathYawAngle()   const { return flight_path_yaw; }
+    double            GetFlightPathPitchAngle() const { return flight_path_pitch; }
 
-    double            FlightPathYawAngle()   const { return flight_path_yaw; }
-    double            FlightPathPitchAngle() const { return flight_path_pitch; }
+    double            GetRadius()    const { return radius; }
+    double            GetMass()      const { return mass; }
+    double            GetIntegrity() const { return integrity; }
+    double            GetLife()      const { return life; }
 
-    double            Radius()    const { return radius; }
-    double            Mass()      const { return mass; }
-    double            Integrity() const { return integrity; }
-    double            Life()      const { return life; }
+    double            GetShake()     const { return shake; }
+    const FVector&    GetVibration() const { return vibration; }
 
-    double            Shake()     const { return shake; }
-    const FVector& Vibration() const { return vibration; }
-
-    const Camera& Cam()       const { return cam; }
-    Graphic* Rep()       const { return rep; }
-    SimLight* LightSrc()  const { return light; }
-
-    SimDirector* GetDirector() const { return dir; }
+    const Camera&     GetCam()       const { return cam; }
+    Graphic*          GetRep()       const { return rep; }
+    SimLight*         GetLightSrc()  const { return light; }
+    SimDirector*      GetDirector() const { return dir; }
 
     // mutators:
     virtual void      SetAngularRates(double R, double P, double Y);

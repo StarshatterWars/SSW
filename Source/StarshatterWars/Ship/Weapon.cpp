@@ -356,7 +356,7 @@ void Weapon::ExecFrame(double seconds)
 
             if (orders == WeaponsOrders::AUTO && centered) {
                 if (energy >= design->charge &&
-                    (ammo < 0 || (target && target->Integrity() >= 1)) &&
+                    (ammo < 0 || (target && target->GetIntegrity() >= 1)) &&
                     objective.Length() < design->max_range)
                 {
                     Fire();
@@ -364,7 +364,7 @@ void Weapon::ExecFrame(double seconds)
             }
             else if (orders == WeaponsOrders::POINT_DEFENSE) {
                 if (energy >= design->min_charge &&
-                    (ammo < 0 || (target && target->Integrity() >= 1)) &&
+                    (ammo < 0 || (target && target->GetIntegrity() >= 1)) &&
                     objective.Length() < design->max_range)
                 {
                     Fire();
@@ -455,7 +455,7 @@ void Weapon::SetTarget(SimObject* targ, SimSystem* sub)
 
     // check target class filter:
     if (targ) {
-        switch (targ->Type()) {
+        switch (targ->GetType()) {
         case SimObject::SIM_SHIP: {
             Ship* tgt_ship = (Ship*)targ;
 
@@ -509,14 +509,14 @@ void Weapon::SelectTarget()
 
                 if (c_shot && contact->Threat(ship)) {
                     // distance from self to target:
-                    double distance = FVector(c_shot->Location() - muzzle_pts[0]).Length();
+                    double distance = FVector(c_shot->GetLocation() - muzzle_pts[0]).Length();
 
                     if (distance > design->min_range &&
                         distance < design->max_range &&
                         distance < dist)
                     {
                         // check aim basket:
-                        select_locked = CanLockPoint(c_shot->Location(), az, el);
+                        select_locked = CanLockPoint(c_shot->GetLocation(), az, el);
 
                         if (select_locked) {
                             targ = c_shot;
@@ -540,12 +540,11 @@ void Weapon::SelectTarget()
                 c_ship->GetWeapons().size() > 0)
             {
                 // distance from self to target:
-                double distance = FVector(c_ship->Location() - muzzle_pts[0]).Length();
+                double distance = FVector(c_ship->GetLocation() - muzzle_pts[0]).Length();
 
                 if (distance < design->max_range && distance < dist) {
                     // check aim basket:
-                    select_locked = CanLockPoint(c_ship->Location(), az, el);
-
+                    select_locked = CanLockPoint(c_ship->GetLocation(), az, el);
                     if (select_locked) {
                         targ = c_ship;
                         dist = distance;
@@ -717,7 +716,7 @@ SimShot* Weapon::NetFireSecondary(SimObject* tgt, SimSystem* sub, DWORD objid)
 
 SimShot* Weapon::FireBarrel(int n)
 {
-    const FVector& base_vel = ship->Velocity();
+    const FVector& base_vel = ship->GetVelocity();
     SimShot* shot = 0;
     SimRegion* region = ship->GetRegion();
 
@@ -739,7 +738,7 @@ SimShot* Weapon::FireBarrel(int n)
         shot = CreateShot(shotpos, aim_cam, design, ship);
 
         if (shot) {
-            shot->SetVelocity(shot->Velocity() + base_vel);
+            shot->SetVelocity(shot->GetVelocity() + base_vel);
         }
     }
 
@@ -757,9 +756,9 @@ SimShot* Weapon::FireBarrel(int n)
 
                 // UE FIX: build an orientation from ship camera basis (no legacy Matrix),
                 // then apply local yaw/pitch offsets (aim_azimuth / aim_elevation assumed radians).
-                FVector XAxis = ship->Cam().vrt(); // right
-                FVector YAxis = ship->Cam().vup(); // up
-                FVector ZAxis = ship->Cam().vpn(); // forward
+                FVector XAxis = ship->GetCam().vrt(); // right
+                FVector YAxis = ship->GetCam().vup(); // up
+                FVector ZAxis = ship->GetCam().vpn(); // forward
 
                 XAxis = XAxis.GetSafeNormal();
                 YAxis = YAxis.GetSafeNormal();
@@ -820,8 +819,8 @@ SimShot* Weapon::FireBarrel(int n)
         shot->SetCharge(shot_load * availability);
 
         if (target && design->flak && !design->guided) {
-            double speed = shot->Velocity().Length();
-            double range = (target->Location() - shot->Location()).Length();
+            double speed = shot->GetVelocity().Length();
+            double range = (target->GetLocation() - shot->GetLocation()).Length();
 
             if (range > design->min_range && range < design->max_range) {
                 shot->SetFuse(range / speed);
@@ -839,7 +838,7 @@ SimShot* Weapon::FireBarrel(int n)
         }
 
         if (ship) {
-            ShipStats* stats = ShipStats::Find(ship->Name());
+            ShipStats* stats = ShipStats::Find(ship->GetName());
 
             if (design->primary)
                 stats->AddGunShot();
@@ -868,12 +867,12 @@ void Weapon::Orient(const Physical* rep)
     if (!rep)
         return;
 
-    const FVector ShipLoc = rep->Location();
+    const FVector ShipLoc = rep->GetLocation();
 
     // Build ship orientation from camera basis (vrt/right, vup/up, vpn/forward):
-    FVector XAxis = rep->Cam().vrt(); // right
-    FVector YAxis = rep->Cam().vup(); // up
-    FVector ZAxis = rep->Cam().vpn(); // forward
+    FVector XAxis = rep->GetCam().vrt(); // right
+    FVector YAxis = rep->GetCam().vup(); // up
+    FVector ZAxis = rep->GetCam().vpn(); // forward
 
     XAxis = XAxis.GetSafeNormal();
     YAxis = YAxis.GetSafeNormal();
@@ -1032,7 +1031,7 @@ void Weapon::Aim()
             double az_phase = 0;
             double el_phase = 0;
 
-            if (target->Type() == SimObject::SIM_SHIP) {
+            if (target->GetType() == SimObject::SIM_SHIP) {
                 Ship* s = (Ship*)target;
 
                 if (s->IsStarship()) {
@@ -1046,12 +1045,12 @@ void Weapon::Aim()
             }
 
             if (factor > 0) {
-                factor *= atan2(target->Radius(), (double)objective.Z);
+                factor *= atan2(target->GetRadius(), (double)objective.Z);
 
                 for (int i = 0; i < nbarrels; i++) {
                     if (beams && beams[i]) {
-                        az_phase = sin(beams[i]->Life() * 0.4 * PI);
-                        el_phase = sin(beams[i]->Life() * 1.0 * PI);
+                        az_phase = sin(beams[i]->GetLife() * 0.4 * PI);
+                        el_phase = sin(beams[i]->GetLife() * 1.0 * PI);
                         break;
                     }
                 }
@@ -1089,7 +1088,7 @@ void Weapon::Aim()
         }
 
         if (locked) {
-            FVector tloc = target->Location();
+            FVector tloc = target->GetLocation();
             tloc = Transform(tloc);
 
             if (tloc.Z > 1) {
@@ -1120,12 +1119,12 @@ void Weapon::FindObjective()
         return;
     }
 
-    obj_w = target->Location();
+    obj_w = target->GetLocation();
 
     if (subtarget) {
-        obj_w = subtarget->MountLocation();
+        obj_w = subtarget->GetMountLocation();
     }
-    else if (target->Type() == SimObject::SIM_SHIP) {
+    else if (target->GetType() == SimObject::SIM_SHIP) {
         Ship* tgt_ship = (Ship*)target;
 
         if (tgt_ship->IsGroundUnit())
@@ -1137,15 +1136,15 @@ void Weapon::FindObjective()
         double distance = FVector(obj_w - muzzle_pts[0]).Length();
 
         // TRUE shot speed is relative to ship speed:
-        FVector eff_shot_vel = ship->Velocity() + aim_cam.vpn() * shot_speed - target->Velocity();
+        FVector eff_shot_vel = ship->GetVelocity() + aim_cam.vpn() * shot_speed - target->GetVelocity();
         double  eff_shot_speed = eff_shot_vel.Length();
 
         // time to reach target:
         double time = distance / eff_shot_speed;
 
         // where the target will be when the shot reaches it:
-        obj_w += (target->Velocity() - ship->Velocity()) * time +
-            target->Acceleration() * (0.25 * time * time);
+        obj_w += (target->GetVelocity() - ship->GetVelocity()) * time +
+            target->GetAcceleration() * (0.25 * time * time);
     }
 
     // transform into camera coords:
@@ -1246,7 +1245,7 @@ void Weapon::AimTurret(double az, double el)
 
 void Weapon::ZeroAim()
 {
-    aim_cam.Clone(ship->Cam());
+    aim_cam.Clone(ship->GetCam());
     if (aim_azimuth != 0) aim_cam.Yaw(aim_azimuth);
     if (aim_elevation != 0) aim_cam.Pitch(aim_elevation);
 

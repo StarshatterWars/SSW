@@ -181,13 +181,13 @@ Physical::~Physical()
 void
 Physical::ExecFrame(double s)
 {
-	const FVector OrigVelocity = Velocity();
+	const FVector OrigVelocity = GetVelocity();
 	arcade_velocity = FVector::ZeroVector;
 
 	// if this object is under direction,
 	// but doesn't need subframe accuracy,
 	// update the control parameters:
-	if (dir && !dir->Subframe())
+	if (dir && !dir->GetSubframe())
 		dir->ExecFrame(s);
 
 	// decrement life before destroying the frame time:
@@ -202,7 +202,7 @@ Physical::ExecFrame(double s)
 		SecondsThisSlice = (s > sub_frame) ? sub_frame : s;
 
 		// if the director needs subframe accuracy, run it now:
-		if (dir && dir->Subframe())
+		if (dir && dir->GetSubframe())
 			dir->ExecFrame(SecondsThisSlice);
 
 		if (!straight)
@@ -259,7 +259,7 @@ Physical::ExecFrame(double s)
 		CalcFlightPath();
 
 	// accel over last slice duration:
-	accel = (Velocity() - OrigVelocity) * (float)(1.0 / SecondsThisSlice);
+	accel = (GetVelocity() - OrigVelocity) * (float)(1.0 / SecondsThisSlice);
 	if (!IsFiniteVector(accel))
 		accel = FVector::ZeroVector;
 }
@@ -274,7 +274,7 @@ Physical::AeroFrame(double s)
 	// if this object is under direction,
 	// but doesn't need subframe accuracy,
 	// update the control parameters:
-	if (dir && !dir->Subframe())
+	if (dir && !dir->GetSubframe())
 		dir->ExecFrame(s);
 
 	// decrement life before destroying the frame time:
@@ -289,7 +289,7 @@ Physical::AeroFrame(double s)
 		SecondsThisSlice = (s > sub_frame) ? sub_frame : s;
 
 		// if the director needs subframe accuracy, run it now:
-		if (dir && dir->Subframe())
+		if (dir && dir->GetSubframe())
 			dir->ExecFrame(SecondsThisSlice);
 
 		AngularFrame(SecondsThisSlice);
@@ -424,7 +424,7 @@ Physical::ArcadeFrame(double s)
 	// if this object is under direction,
 	// but doesn't need subframe accuracy,
 	// update the control parameters:
-	if (dir && !dir->Subframe())
+	if (dir && !dir->GetSubframe())
 		dir->ExecFrame(s);
 
 	// decrement life before destroying the frame time:
@@ -439,7 +439,7 @@ Physical::ArcadeFrame(double s)
 		SecondsThisSlice = (s > sub_frame) ? sub_frame : s;
 
 		// if the director needs subframe accuracy, run it now:
-		if (dir && dir->Subframe())
+		if (dir && dir->GetSubframe())
 			dir->ExecFrame(SecondsThisSlice);
 
 		if (!straight)
@@ -702,7 +702,7 @@ void Physical::SetAbsoluteOrientation(double r, double p, double y)
 	pitch = (float)p;
 	yaw = (float)y;
 
-	const FVector L = Location();
+	const FVector L = GetLocation();
 	Camera Work(L.X, L.Y, L.Z);
 	Work.Aim(r, p, y);
 	cam.Clone(Work);
@@ -818,7 +818,7 @@ int Physical::CollidesWith(Physical& o)
 	if (rep && o.rep)
 		return rep->CollidesWith(*o.rep);
 
-	const FVector DeltaLoc = Location() - o.Location();
+	const FVector DeltaLoc = GetLocation() - o.GetLocation();
 
 	// bounding spheres test:
 	if ((double)DeltaLoc.Size() > (double)radius + (double)o.radius)
@@ -861,8 +861,8 @@ void Physical::SemiElasticCollision(Physical& a, Physical& b)
 	const double MassSum = (double)a.mass + (double)b.mass;
 	const double MassDelta = (double)a.mass - (double)b.mass;
 
-	const FVector AVel = a.Velocity();
-	const FVector BVel = b.Velocity();
+	const FVector AVel = a.GetVelocity();
+	const FVector BVel = b.GetVelocity();
 	const FVector DV = AVel - BVel;
 
 	// low delta-v: stick

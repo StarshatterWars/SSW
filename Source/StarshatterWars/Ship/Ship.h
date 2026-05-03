@@ -175,12 +175,12 @@ public:
     void              ArcadeStop() { arcade_velocity *= 0; }
 
     // CAMERA:
-    FVector           BridgeLocation() const { return bridge_vec; }
-    FVector           ChaseLocation() const { return chase_vec; }
-    FVector           TransitionLocation() const { return transition_loc; }
+    FVector           GetBridgeLocation() const { return bridge_vec; }
+    FVector           GetChaseLocation() const { return chase_vec; }
+    FVector           GetTransitionLocation() const { return transition_loc; }
 
     // FLIGHT DECK:
-    Ship* GetController() const;
+    Ship*             GetController() const;
     int               NumInbound() const;
     int               NumFlightDecks() const;
     FlightDeck*       GetFlightDeck(int i = 0) const;
@@ -220,11 +220,11 @@ public:
     void              CompleteTransition();
     void              SetTransition(double trans_time, int trans_type, const FVector& trans_loc);
 
-    double            CompassHeading() const;
-    double            CompassPitch() const;
-    double            AltitudeMSL() const;
-    double            AltitudeAGL() const;
-    double            GForce() const;
+    double            GetCompassHeading() const;
+    double            GetCompassPitch() const;
+    double            GetAltitudeMSL() const;
+    double            GetAltitudeAGL() const;
+    double            GetGForce() const;
 
     virtual void      SetupAgility();
 
@@ -301,8 +301,8 @@ public:
     virtual void      SetIntegrity(float n) { integrity = n; }
 
     virtual void      Destroy();
-    virtual int       ShieldStrength() const;
-    virtual int       HullStrength() const;
+    virtual int       GetShieldStrength() const;
+    virtual int       GetHullStrength() const;
     virtual int       HitBy(SimShot* shot, FVector& impact);
     virtual int       CollidesWith(Physical& o);
 
@@ -352,8 +352,8 @@ public:
     void              SetFriendlyFire(int f);
     void              IncFriendlyFire(int f = 1);
     double            Agility() const { return agility; }
-    DWORD             MissionClock() const;
-    Graphic*          Cockpit() const;
+    DWORD             GetMissionClock() const;
+    Graphic*          GetCockpit() const;
     void              ShowCockpit();
     void              HideCockpit();
     int               Value() const;
@@ -366,12 +366,12 @@ public:
     void                HideRep();
     void                EnableShadows(bool enable);
 
-    int                 RespawnCount() const { return respawns; }
+    int                 GetRespawnCount() const { return respawns; }
     void                SetRespawnCount(int r) { respawns = r; }
-    const FVector&      RespawnLoc() const { return respawn_loc; }
+    const FVector&      GetRespawnLoc() const { return respawn_loc; }
     void                SetRespawnLoc(const FVector& rl) { respawn_loc = rl; }
 
-    double              WarpFactor() const { return warp_fov; }
+    double              GetWarpFactor() const { return warp_fov; }
     void                SetWarp(double w) { warp_fov = (float)w; }
 
     void                MatchOrientation(const Ship& s);
@@ -428,19 +428,19 @@ public:
     List<WeaponGroup>&      GetWeapons() { return weapons; }
     List<Drive>&            GetDrives() { return drives; }
     List<Computer>&         GetComputers() { return computers; }
-    List<FlightDeck>& FlightDecks() { return flight_decks; }
-    List<PowerSource>& Reactors() { return reactors; }
-    List<NavLight>& NavLights() { return navlights; }
-    Shield* GetShield() { return shield; }
-    Solid* GetShieldRep() { return (Solid*)shieldRep; }
-    Sensor* GetSensor() { return sensor; }
-    NavSystem* GetNavSystem() { return navsys; }
-    FlightComputer* GetFLCS() { return flcs; }
-    Thruster* GetThruster() { return thruster; }
-    Hangar* GetHangar() { return hangar; }
-    LandingGear* GetGear() { return gear; }
+    List<FlightDeck>&       GetFlightDecks() { return flight_decks; }
+    List<PowerSource>&      GetReactors() { return reactors; }
+    List<NavLight>&         GetNavLights() { return navlights; }
+    Shield*                 GetShield() { return shield; }
+    Solid*                  GetShieldRep() { return (Solid*)shieldRep; }
+    Sensor*                 GetSensor() { return sensor; }
+    NavSystem*              GetNavSystem() { return navsys; }
+    FlightComputer*         GetFLCS() { return flcs; }
+    Thruster*               GetThruster() { return thruster; }
+    Hangar*                 GetHangar() { return hangar; }
+    LandingGear*            GetGear() { return gear; }
 
-    SimSystem* GetSystem(int sys_id);
+    SimSystem*              GetSystem(int sys_id);
 
     static int              GetControlModel() { return control_model; }
     static void             SetControlModel(int n) { control_model = n; }

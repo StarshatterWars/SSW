@@ -122,10 +122,10 @@ Farcaster::ExecFrame(double seconds)
 		while (++s_iter) {
 			Ship* s = s_iter.value();
 
-			if (s == ship || s->IsStatic() || s->WarpFactor() > 1)
+			if (s == ship || s->IsStatic() || s->GetWarpFactor() > 1)
 				continue;
 
-			FVector delta = s->Location() - ship->Location();
+			FVector delta = s->GetLocation() - ship->GetLocation();
 
 			// activate:
 			if (delta.Length() < 1000.0f) {
@@ -176,7 +176,7 @@ Farcaster::ExecFrame(double seconds)
 				while (++neighbor) {
 					if (neighbor->IsDropship()) {
 						Ship* s = neighbor.value();
-						FVector d = s->Location() - ship->Location();
+						FVector d = s->GetLocation() - ship->GetLocation();
 
 						if (d.Length() < 5e3)
 							s->SetWarp(warp_fov);
@@ -201,14 +201,14 @@ Farcaster::Jump()
 	SimRegion* rgn = ship->GetRegion();
 	SimRegion* dst = dest->GetRegion();
 
-	sim->CreateExplosion(jumpship->Location(), FVector::ZeroVector,
+	sim->CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector,
 		Explosion::QUANTUM_FLASH, 1.0f, 0, rgn);
 
 	// NOTE:
 	// Original code used: dest->Location().OtherHand()
 	// That helper is not available once Point is converted to FVector.
 	// Using dest->Location() as the best safe equivalent here (destination position in the dst region).
-	sim->RequestHyperJump(jumpship, dst, dest->Location(), 0, ship, dest);
+	sim->RequestHyperJump(jumpship, dst, dest->GetLocation(), 0, ship, dest);
 
 	energy = 0.0f;
 
@@ -230,8 +230,8 @@ Farcaster::Arrive(Ship* s)
 	warp_fov = 5000;
 	jumpship = s;
 
-	if (jumpship && jumpship->Velocity().Length() < 500.0f) {
-		jumpship->SetVelocity(jumpship->Heading() * 500.0f);
+	if (jumpship && jumpship->GetVelocity().Length() < 500.0f) {
+		jumpship->SetVelocity(jumpship->GetHeading() * 500.0f);
 	}
 }
 
@@ -271,8 +271,8 @@ Farcaster::Orient(const Physical* rep)
 {
 	SimSystem::Orient(rep);
 
-	const Matrix& legacyOrientation = rep->Cam().Orientation();
-	const FVector  loc = rep->Location();
+	const Matrix& legacyOrientation = rep->GetCam().Orientation();
+	const FVector  loc = rep->GetLocation();
 
 	const FMatrix Orientation(
 		FPlane(legacyOrientation(0, 0), legacyOrientation(0, 1), legacyOrientation(0, 2), 0.0f),
@@ -305,7 +305,7 @@ Farcaster::Update(SimObject* obj)
 		while (++neighbor) {
 			if (neighbor->IsDropship()) {
 				Ship* s = neighbor.value();
-				FVector d = s->Location() - ship->Location();
+				FVector d = s->GetLocation() - ship->GetLocation();
 
 				if (d.Length() < 5e3)
 					s->SetWarp(1);

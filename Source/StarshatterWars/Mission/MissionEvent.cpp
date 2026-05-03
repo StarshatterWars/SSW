@@ -158,7 +158,7 @@ MissionEvent::CheckTrigger()
 	case TRIGGER_DAMAGE: {
 		Ship* ship = sim->FindShip(trigger_ship);
 		if (ship) {
-			double damage = 100.0 * (ship->Design()->integrity - ship->Integrity()) /
+			double damage = 100.0 * (ship->Design()->integrity - ship->GetIntegrity()) /
 				(ship->Design()->integrity);
 
 			if (damage >= trigger_param[0])
@@ -186,7 +186,7 @@ MissionEvent::CheckTrigger()
 		Ship* tgt = sim->FindShip(trigger_target);
 
 		if (ship && tgt) {
-			double range = (ship->Location() - tgt->Location()).Length();
+			double range = (ship->GetLocation() - tgt->GetLocation()).Length();
 			double min_range = 0;
 			double max_range = 1e12;
 
@@ -221,10 +221,10 @@ MissionEvent::CheckTrigger()
 			while (++s_iter) {
 				Ship* ship = s_iter.value();
 
-				if (ship->Type() >= (int)CLASSIFICATION::STATION)
+				if (ship->GetType() >= (int)CLASSIFICATION::STATION)
 					continue;
 
-				if (ship->Life() == 0 && ship->RespawnCount() < 1)
+				if (ship->GetLife() == 0 && ship->GetRespawnCount() < 1)
 					continue;
 
 				if (iff < 0 || ship->GetIFF() == iff)
@@ -421,13 +421,13 @@ MissionEvent::Execute(bool silent)
 		if (ship) {
 			ship->InflictDamage(event_param[0]);
 
-			if (ship->Integrity() < 1) {
+			if (ship->GetIntegrity() < 1) {
 				//NetUtil::SendObjKill(ship, 0, NetObjKill::KILL_MISC);
 				ship->DeathSpiral();
 
 				UE_LOG(LogTempMissionEvent, Log,
 					TEXT("Ship '%hs' killed by scripted event %d (%hs)"),
-					(const char*)ship->Name(), id, FormatGameTime());
+					(const char*)ship->GetName(), id, FormatGameTime());
 			}
 		}
 		else {
@@ -543,7 +543,7 @@ MissionEvent::Execute(bool silent)
 
 				if (s_tgt) {
 					UE_LOG(LogTempMissionEvent, Verbose,
-						TEXT("   found ship %hs"), s_tgt->Name());
+						TEXT("   found ship %hs"), s_tgt->GetName());
 
 					cam_dir->SetViewOrbital(0);
 

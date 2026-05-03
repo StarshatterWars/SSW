@@ -62,15 +62,15 @@ Debris::Debris(SimModel* model, const FVector& pos, const FVector& vel, double m
 	if (!torque.IsNearlyZero())
 		torque.Normalize();
 
-	torque *= (float)(Mass() / 2.0);
+	torque *= (float)(GetMass() / 2.0);
 
-	if (Mass() < 10.0) {
+	if (GetMass() < 10.0) {
 		torque *= (FMath::FRand() / 3.2f);
 	}
-	else if (Mass() > 10e6) {
+	else if (GetMass() > 10e6) {
 		torque *= 0.005f;
 	}
-	else if (Mass() > 10e3) {
+	else if (GetMass() > 10e3) {
 		torque *= 0.25f;
 	}
 
@@ -92,8 +92,8 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 	int     hit_type = HIT_NOTHING;
 	bool    hit_hull = true;
 
-	const FVector shot_loc = shot->Location();
-	const FVector delta = shot_loc - Location();
+	const FVector shot_loc = shot->GetLocation();
+	const FVector delta = shot_loc - GetLocation();
 	const double  dlen = delta.Length();
 	const double  dscale = 1.0;
 	const float   scale = 1.0f;
@@ -103,11 +103,11 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 	// MISSILE PROCESSING ------------------------------------------------
 
 	if (shot->IsMissile()) {
-		if (dlen < Radius()) {
+		if (dlen < GetRadius()) {
 			hull_impact = impact = shot_loc;
 
 			if (sim) {
-				sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region, this);
+				sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region, this);
 				sim->CreateExplosion(impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 2.0f, scale, region);
 			}
 
@@ -120,7 +120,7 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 	else {
 		Solid* solid = (Solid*)rep;
 
-		const FVector shot_vpn_raw = shot_loc - shot->Origin();
+		const FVector shot_vpn_raw = shot_loc - shot->GetOrigin();
 		FVector       shot_vpn = shot_vpn_raw;
 		double        shot_len = shot_vpn.Normalize();
 
@@ -129,24 +129,24 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 
 		// impact:
 		if (solid) {
-			if (solid->CheckRayIntersection(shot->Origin(), shot_vpn, shot_len, impact)) {
+			if (solid->CheckRayIntersection(shot->GetOrigin(), shot_vpn, shot_len, impact)) {
 				// trim beam shots to impact point:
 				if (shot->IsBeam())
-					shot->SetBeamPoints(shot->Origin(), impact);
+					shot->SetBeamPoints(shot->GetOrigin(), impact);
 
 				hull_impact = impact;
 
 				if (sim) {
 					if (shot->IsBeam())
-						sim->CreateExplosion(impact, Velocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
 					else
-						sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
 				}
 
-				FVector burst_vel = hull_impact - Location();
+				FVector burst_vel = hull_impact - GetLocation();
 				burst_vel.Normalize();
-				burst_vel *= (float)(Radius() * 0.5);
-				burst_vel += Velocity();
+				burst_vel *= (float)(GetRadius() * 0.5);
+				burst_vel += GetVelocity();
 
 				if (sim)
 					sim->CreateExplosion(hull_impact, burst_vel, Explosion::HULL_BURST, 0.50f * scale, scale, region, this);
@@ -156,14 +156,14 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 			}
 		}
 		else {
-			if (dlen < Radius()) {
+			if (dlen < GetRadius()) {
 				hull_impact = impact = shot_loc;
 
 				if (sim) {
 					if (shot->IsBeam())
-						sim->CreateExplosion(impact, Velocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
 					else
-						sim->CreateExplosion(impact, Velocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
 				}
 
 				hit_type = HIT_HULL;
@@ -180,7 +180,7 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 			effective_damage *= Game::FrameTime();
 		}
 		else {
-			ApplyTorque(shot->Velocity() * (float)effective_damage * 1e-6f);
+			ApplyTorque(shot->GetVelocity() * (float)effective_damage * 1e-6f);
 		}
 
 		if (effective_damage > 0.0)
@@ -196,14 +196,14 @@ void
 Debris::ExecFrame(double seconds)
 {
 	if (GetRegion()->GetType() == SimRegion::AIR_SPACE) {
-		if (AltitudeAGL() < Radius()) {
+		if (AltitudeAGL() < GetRadius()) {
 			velocity = FVector::ZeroVector;
 			arcade_velocity = FVector::ZeroVector;
 
 			Terrain* terrain = region ? region->GetTerrain() : nullptr;
 
 			if (terrain) {
-				const FVector cur = Location();
+				const FVector cur = GetLocation();
 				MoveTo(FVector(cur.X, terrain->Height(cur.X, cur.Z), cur.Z));
 			}
 		}
@@ -232,7 +232,7 @@ Debris::ExecFrame(double seconds)
 double
 Debris::AltitudeAGL() const
 {
-	const FVector cur = Location();
+	const FVector cur = GetLocation();
 	double        altitude_agl = cur.Y;
 
 	Terrain* terrain = region ? region->GetTerrain() : nullptr;

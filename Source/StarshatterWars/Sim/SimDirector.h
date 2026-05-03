@@ -32,8 +32,8 @@ public:
     virtual ~SimDirector() = default;
 
     // accessors:
-    virtual int Type()     const { return 0; }
-    virtual int Subframe() const { return 0; }
+    virtual int GetType()     const { return 0; }
+    virtual bool GetSubframe() const { return false; }
 
     // operations:
     virtual void ExecFrame(double factor) {}

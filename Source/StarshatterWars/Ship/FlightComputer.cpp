@@ -99,9 +99,9 @@ FlightComputer::ExecThrottle()
 void
 FlightComputer::ExecTrans()
 {
-	double Tx = ship->TransX();
-	double Ty = ship->TransY();
-	double Tz = ship->TransZ();
+	double Tx = ship->GetTransX();
+	double Ty = ship->GetTransY();
+	double Tz = ship->GetTransZ();
 
 	double TransX = Tx;
 	double TransY = Ty;
@@ -117,10 +117,10 @@ FlightComputer::ExecTrans()
 	}
 
 	// Convenience: Starshatter-style "*" was effectively dot-product.
-	const FVector Vel = ship->Velocity();
-	const FVector Beam = ship->BeamLine();
-	const FVector Lift = ship->LiftLine();
-	const FVector Head = ship->Heading();
+	const FVector Vel = ship->GetVelocity();
+	const FVector Beam = ship->GetBeamLine();
+	const FVector Lift = ship->GetLiftLine();
+	const FVector Head = ship->GetHeading();
 
 	// ----------------------------------------------------------
 	// FIGHTER FLCS AUTO MODE
@@ -198,8 +198,8 @@ FlightComputer::ExecTrans()
 	{
 		if (bFlcsOperative)
 		{
-			const double CompassHeading = ship->CompassHeading();
-			const double CompassPitch = ship->CompassPitch();
+			const double CompassHeading = ship->GetCompassHeading();
+			const double CompassPitch = ship->GetCompassPitch();
 
 			// rotate helm into compass orientation:
 			double Helm = ship->GetHelmHeading() - CompassHeading;
@@ -222,7 +222,7 @@ FlightComputer::ExecTrans()
 			{
 				// Ensure ship->Cam().vrt() is already an FVector (preferred).
 				// If it's a legacy Vec3, add a conversion helper and use it here.
-				const FVector Vrt = ship->Cam().vrt();
+				const FVector Vrt = ship->GetCam().vrt();
 
 				// Starshatter used Y as "deflection" here; keep as-is:
 				const double Deflection = Vrt.Y;
@@ -269,15 +269,15 @@ FlightComputer::ExecTrans()
 		// flcs inoperative, set helm heading based on actual compass heading:
 		else
 		{
-			ship->SetHelmHeading(ship->CompassHeading());
-			ship->SetHelmPitch(ship->CompassPitch());
+			ship->SetHelmHeading(ship->GetCompassHeading());
+			ship->SetHelmPitch(ship->GetCompassPitch());
 		}
 
 		// auto thrust to align flight path with helm order:
 		if (FMath::IsNearlyZero(Tx))
 		{
 			if (bFlcsOperative)
-				TransX = FVector::DotProduct(Vel, Beam) * ship->Mass() * -1.0;
+				TransX = FVector::DotProduct(Vel, Beam) * ship->GetMass() * -1.0;
 			else
 				TransX = 0.0;
 		}
@@ -318,7 +318,7 @@ FlightComputer::ExecTrans()
 		if (FMath::IsNearlyZero(Tz))
 		{
 			if (bFlcsOperative)
-				TransZ = FVector::DotProduct(Vel, Lift) * ship->Mass() * -1.0;
+				TransZ = FVector::DotProduct(Vel, Lift) * ship->GetMass() * -1.0;
 			else
 				TransZ = 0.0;
 		}

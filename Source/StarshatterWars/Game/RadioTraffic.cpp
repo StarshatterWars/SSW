@@ -186,7 +186,7 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 		// orders to self?
 		if (dst_elem && dst_elem->NumShips() == 1 && dst_elem->GetShip(1) == sender) {
 			if (msg->GetRadioAction() >= RadioMessageAction::CALL_ENGAGING) {
-				sprintf_s(src_buf, "%s", sender->Name());
+				sprintf_s(src_buf, "%s", sender->GetName());
 
 				if (sender->IsStarship())
 					vox_channel = (sender->Identity() % 3) + 5;
@@ -203,10 +203,10 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 			}
 
 			if (msg->GetRadioAction() >= RadioMessageAction::CALL_ENGAGING) {
-				sprintf_s(src_buf, "%s", sender->Name());
+				sprintf_s(src_buf, "%s", sender->GetName());
 			}
 			else {
-				sprintf_s(src_buf, "This is %s", sender->Name());
+				sprintf_s(src_buf, "This is %s", sender->GetName());
 
 				if (dst_ship) {
 					// internal announcement
@@ -224,7 +224,7 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 					}
 
 					else {
-						strcpy_s(dst_buf, (const char*)dst_ship->Name());
+						strcpy_s(dst_buf, (const char*)dst_ship->GetName());
 						src_buf[0] = tolower(src_buf[0]);
 					}
 				}
@@ -316,14 +316,14 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 		else {
 			sprintf_s(msg_buf, "%s %s.",
 				TranslateVox(act_buf).data(),
-				target->Name());
+				target->GetName());
 		}
 	}
 
 	else if (target) {
 		sprintf_s(msg_buf, "%s %s.",
 			TranslateVox(act_buf).data(),
-			target->Name());
+			target->GetName());
 	}
 
 	else if (msg->GetInfo().length()) {

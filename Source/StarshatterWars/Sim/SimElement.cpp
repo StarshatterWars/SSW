@@ -94,8 +94,8 @@ SimElement::AddShip(Ship* ship, int index)
 
 		ship->SetElement(this);
 
-		if (respawns < ship->RespawnCount())
-			respawns = ship->RespawnCount();
+		if (respawns < ship->GetRespawnCount())
+			respawns = ship->GetRespawnCount();
 	}
 
 	return index;
@@ -109,7 +109,7 @@ SimElement::DelShip(Ship* ship)
 		ship->SetElement(0);
 
 		if (ships.isEmpty())
-			respawns = ship->RespawnCount();
+			respawns = ship->GetRespawnCount();
 	}
 }
 
@@ -150,7 +150,7 @@ SimElement::IsActive() const
 
 	for (int i = 0; i < ships.size() && !active; i++) {
 		Ship* s = ships[i];
-		if (s->Life() && s->MissionClock())
+		if (s->GetLife() && s->GetMissionClock())
 			active = true;
 	}
 
@@ -168,9 +168,9 @@ SimElement::IsFinished() const
 		if (ships.size() > 0) {
 			for (int i = 0; i < ships.size() && finished; i++) {
 				Ship* s = ships[i];
-				if (s->RespawnCount() > 0 ||
-					s->MissionClock() == 0 ||
-					(s->Life() && !s->GetInbound()))
+				if (s->GetRespawnCount() > 0 ||
+					s->GetMissionClock() == 0 ||
+					(s->GetLife() && !s->GetInbound()))
 				{
 					finished = false;
 				}
@@ -355,11 +355,11 @@ bool
 SimElement::Update(SimObject* obj)
 {
 	// false alarm, keep watching:
-	if (obj && obj->Life() != 0) {
+	if (obj && obj->GetLife() != 0) {
 		UE_LOG(LOG_SIM, Warning, TEXT("SimElement (%hs) false update on (%hs) life = %f"),
 			Name().data(),
-			obj->Name(),
-			obj->Life());
+			obj->GetName(),
+			obj->GetLife());
 		return false;
 	}
 
@@ -367,7 +367,7 @@ SimElement::Update(SimObject* obj)
 	ships.remove(s);
 
 	if (ships.isEmpty())
-		respawns = s->RespawnCount();
+		respawns = s->GetRespawnCount();
 
 	return SimObserver::Update(obj);
 }
@@ -609,7 +609,7 @@ SimElement::ResumeAssignment()
 			SimElement* elem = iter.value();
 			SimObject* tgt = objective->GetTarget();
 
-			if (tgt && tgt->Type() == SimObject::SIM_SHIP && elem->Contains((const Ship*)tgt)) {
+			if (tgt && tgt->GetType() == SimObject::SIM_SHIP && elem->Contains((const Ship*)tgt)) {
 				SetAssignment(elem);
 				return;
 			}

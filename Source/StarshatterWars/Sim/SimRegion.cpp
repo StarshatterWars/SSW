@@ -59,7 +59,7 @@ static FORCEINLINE int ClampIFF(int iff)
 static FORCEINLINE bool IsDeadShip(const Ship* s)
 {
     if (!s) return true;
-    if (s->Life() <= 0) return true;
+    if (s->GetLife() <= 0) return true;
     if (s->IsDead())    return true;
     if (s->IsDying())   return true;
     return false;
@@ -68,14 +68,14 @@ static FORCEINLINE bool IsDeadShip(const Ship* s)
 static FORCEINLINE bool IsDeadShot(const SimShot* s)
 {
     if (!s) return true;
-    if (s->Life() <= 0) return true;
+    if (s->GetLife() <= 0) return true;
     return false;
 }
 
 static FORCEINLINE bool IsDeadExplosion(const Explosion* e)
 {
     if (!e) return true;
-    if (e->Life() <= 0) return true;
+    if (e->GetLife() <= 0) return true;
     return false;
 }
 
@@ -299,7 +299,7 @@ Ship* SimRegion::FindShip(const char* n)
         Ship* s = ships[i];
         if (!s) continue;
 
-        if (!_stricmp(s->Name(), n))
+        if (!_stricmp(s->GetName(), n))
             return s;
     }
 

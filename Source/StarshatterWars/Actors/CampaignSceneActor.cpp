@@ -130,9 +130,9 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
        
         UE_LOG(LogTemp, Warning,
             TEXT("[CampaignSceneActor] RuntimeAI Tick Ship='%s' Loc=%s Vel=%s"),
-            ANSI_TO_TCHAR(RuntimeShip->Name()),
-            *RuntimeShip->Location().ToString(),
-            *RuntimeShip->Velocity().ToString());
+            ANSI_TO_TCHAR(RuntimeShip->GetName()),
+            *RuntimeShip->GetLocation().ToString(),
+            *RuntimeShip->GetVelocity().ToString());
     }
 
     for (const TPair<FString, AShipActor*>& Pair : ShipActorByElementName)
@@ -1245,7 +1245,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] Region PlayerShip SET '%hs' Region='%hs'"),
-                CurrentPlayerShip->Name(),
+                CurrentPlayerShip->GetName(),
                 PlayerRegion->GetName());
         }
         else

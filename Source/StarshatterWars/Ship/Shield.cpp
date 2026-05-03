@@ -190,7 +190,7 @@ Shield::DeflectDamage(SimShot* shot, double damage)
 	double leak = 0.0;
 
 	if (shot)
-		penetration = shot->Design()->penetration;
+		penetration = shot->GetDesign()->GetPenetration();
 
 	filter = 1.0 - shield_factor * penetration;
 

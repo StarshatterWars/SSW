@@ -38,7 +38,7 @@ public:
 
 	List<SimSystem>& Clients() { return clients; }
 
-	virtual int    Charge() const;
+	virtual int    GetCharge() const;
 
 	virtual void   SetFuelRange(double hours);
 

@@ -249,7 +249,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("Could not spot alert ship - carrier: '%hs' ship '%hs'"),
-			ship->Name(), slot->ship ? slot->ship->Name() : "NULL");
+			ship->GetName(), slot->ship ? slot->ship->GetName() : "NULL");
 	}
 
 	return false;
@@ -292,7 +292,7 @@ Hangar::GetObserverName() const
 {
 	static char name[64];
 	if (ship)
-		sprintf_s(name, "Hangar(%s)", ship->Name());
+		sprintf_s(name, "Hangar(%s)", ship->GetName());
 	else
 		sprintf_s(name, "Hangar");
 	return name;
@@ -364,7 +364,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 			const double RandX = (double)FMath::RandRange(-1000, 1000);
 			const double RandY = (double)FMath::RandRange(-1000, 1000);
 			const double RandZ = (double)FMath::RandRange(-1000, 1000);
-			Point spawn = ship->Location() + Point(RandX, RandY, RandZ);
+			FVector spawn = ship->GetLocation() + FVector(RandX, RandY, RandZ);
 
 			slot->ship = sim->CreateShip(ship_name, "",
 				(ShipDesign*)slot->design,
@@ -526,8 +526,8 @@ Hangar::Stow(Ship* incoming)
 		s->package = 0;   // XXX MEMORY LEAK?
 
 		// extra maintenance time?
-		if (incoming->Integrity() < incoming->Design()->integrity) {
-			double damage = 100 * ((double)incoming->Design()->integrity - (double)incoming->Integrity()) /
+		if (incoming->GetIntegrity() < incoming->Design()->integrity) {
+			double damage = 100 * ((double)incoming->Design()->integrity - (double)incoming->GetIntegrity()) /
 				(double)incoming->Design()->integrity;
 
 			if (damage < 10)   s->time *= 1.2;
@@ -535,11 +535,6 @@ Hangar::Stow(Ship* incoming)
 			else if (damage < 50)   s->time *= 4;
 			else                    s->time *= 10;
 		}
-
-		// quicker turnaround during network play:
-		Sim* sim = Sim::GetSim();
-		//if (sim && sim->IsNetGame())
-		//	s->time /= 40;
 
 		return true;
 	}

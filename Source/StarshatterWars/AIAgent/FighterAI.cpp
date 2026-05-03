@@ -113,7 +113,7 @@ FighterAI::ExecFrame(double s)
                 const Ship* carrier = deck->GetCarrier();
 
                 Camera landing_cam;
-                landing_cam.Clone(carrier->Cam());
+                landing_cam.Clone(carrier->GetCam());
                 landing_cam.Yaw(deck->Azimuth());
 
                 if (time_to_dock > TIME_TO_DOCK / 2.0) {
@@ -121,7 +121,7 @@ FighterAI::ExecFrame(double s)
                     double sr, sp, sw;
 
                     landing_cam.Orientation().ComputeEulerAngles(lr, lp, lw);
-                    ship->Cam().Orientation().ComputeEulerAngles(sr, sp, sw);
+                    ship->GetCam().Orientation().ComputeEulerAngles(sr, sp, sw);
 
                     const double nr = sr + s * (lr - sr);
                     const double np = sp + s * (lp - sp);
@@ -139,7 +139,7 @@ FighterAI::ExecFrame(double s)
                 // need the conversion, apply it here (or centralize in a helper).
                 ship->MoveTo(Dst + Approach * (time_to_dock / TIME_TO_DOCK));
 
-                ship->SetVelocity(carrier->Velocity() + ship->Heading() * 50.0);
+                ship->SetVelocity(carrier->GetVelocity() + ship->GetHeading() * 50.0);
                 ship->SetThrottle(50);
                 ship->ExecFLCSFrame();
 
@@ -163,21 +163,21 @@ FighterAI::ExecFrame(double s)
 
                 if (ship->IsAirborne()) {
                     const double alt = dst.Y;
-                    dst = ship->Location();
+                    dst = ship->GetLocation();
                     dst.Y = alt;
                 }
 
                 const Ship* carrier = deck->GetCarrier();
 
                 Camera landing_cam;
-                landing_cam.Clone(carrier->Cam());
+                landing_cam.Clone(carrier->GetCam());
                 landing_cam.Yaw(deck->Azimuth());
 
                 ship->CloneCam(landing_cam);
                 ship->MoveTo(dst);
 
                 if (!ship->IsAirborne()) {
-                    ship->SetVelocity(carrier->Velocity());
+                    ship->SetVelocity(carrier->GetVelocity());
                 }
                 else {
                     const FVector taxi(landing_cam.vpn());
@@ -250,8 +250,8 @@ FighterAI::FindObjective()
 
     // runway takeoff:
     else if (takeoff) {
-        obj_w = ship->Location() + ship->Heading() * 10e3;
-        obj_w.Y = ship->Location().Y + 2e3;
+        obj_w = ship->GetLocation() + ship->GetHeading() * 10e3;
+        obj_w.Y = ship->GetLocation().Y + 2e3;
 
         // transform into camera coords:
         objective = Transform(obj_w);
@@ -272,7 +272,7 @@ FighterAI::FindObjective()
         if (inbound->Approach() > 0 || !inbound->Cleared()) {
             obj_w = deck->ApproachPoint(inbound->Approach()) + inbound->Offset();
 
-            distance = (obj_w - ship->Location()).Size();
+            distance = (obj_w - ship->GetLocation()).Size();
 
             // transform into camera coords:
             objective = Transform(obj_w);
@@ -290,12 +290,12 @@ FighterAI::FindObjective()
                 obj_w = deck->EndPoint();
 
                 if (deck->OverThreshold(ship)) {
-                    obj_w = deck->MountLocation();
+                    obj_w = deck->GetMountLocation();
                     over_threshold = true;
                 }
             }
 
-            distance = (obj_w - ship->Location()).Size();
+            distance = (obj_w - ship->GetLocation()).Size();
 
             // transform into camera coords:
             objective = Transform(obj_w);
@@ -366,7 +366,7 @@ FighterAI::ReturnToBase(Ship* controller)
                 obj_w = npt; // NOTE: Original used OtherHand().
 
                 // distance from self to navpt:
-                distance = (obj_w - ship->Location()).Size();
+                distance = (obj_w - ship->GetLocation()).Size();
 
                 // transform into camera coords:
                 objective = Transform(obj_w);
@@ -404,7 +404,7 @@ FighterAI::ReturnToBase(Ship* controller)
                     if (farcaster) {
                         const FVector apt = farcaster->ApproachPoint(0);
                         const FVector npt = farcaster->StartPoint();
-                        const double  r1 = (ship->Location() - npt).Size();
+                        const double  r1 = (ship->GetLocation() - npt).Size();
 
                         if (r1 > 50e3) {
                             obj_w = apt;
@@ -413,7 +413,7 @@ FighterAI::ReturnToBase(Ship* controller)
                         }
 
                         else {
-                            const double r2 = (ship->Location() - apt).Size();
+                            const double r2 = (ship->GetLocation() - apt).Size();
                             const double r3 = (npt - apt).Size();
 
                             if (r1 + r2 < 1.2 * r3) {
@@ -440,7 +440,7 @@ FighterAI::ReturnToBase(Ship* controller)
                 }
                 else if (qdrive) {
                     if (qdrive->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                        qdrive->SetDestination(rtb_rgn, controller->Location());
+                        qdrive->SetDestination(rtb_rgn, controller->GetLocation());
                         qdrive->Engage();
                     }
 
@@ -450,9 +450,9 @@ FighterAI::ReturnToBase(Ship* controller)
         }
 
         else {
-            obj_w = controller->Location();
+            obj_w = controller->GetLocation();
 
-            distance = (obj_w - ship->Location()).Size();
+            distance = (obj_w - ship->GetLocation()).Size();
 
             // transform into camera coords:
             objective = Transform(obj_w);
@@ -484,7 +484,7 @@ FighterAI::FindObjectiveNavPoint()
             obj_w = npt; // NOTE: Original used OtherHand().
 
             // distance from self to navpt:
-            distance = (obj_w - ship->Location()).Size();
+            distance = (obj_w - ship->GetLocation()).Size();
 
             // transform into camera coords:
             objective = Transform(obj_w);
@@ -524,17 +524,17 @@ FighterAI::ClosingVelocity()
         WeaponDesign* wep_design = ship->GetPrimaryDesign();
 
         if (target && wep_design) {
-            FVector aim_vec = ship->Heading().GetSafeNormal();
-            const FVector shot_vel = ship->Velocity() + aim_vec * wep_design->speed;
-            return shot_vel - target->Velocity();
+            FVector aim_vec = ship->GetHeading().GetSafeNormal();
+            const FVector shot_vel = ship->GetVelocity() + aim_vec * wep_design->speed;
+            return shot_vel - target->GetVelocity();
         }
 
         else if (target) {
-            return ship->Velocity() - target->Velocity();
+            return ship->GetVelocity() - target->GetVelocity();
         }
 
         else {
-            return ship->Velocity();
+            return ship->GetVelocity();
         }
     }
 
@@ -611,7 +611,7 @@ FighterAI::Navigator()
                 for (int i = 0; i < elem->NumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
-                    if (s && s->GetDirector() && s->GetDirector()->Type() >= ShipAI::FIGHTER)
+                    if (s && s->GetDirector() && s->GetDirector()->GetType() >= ShipAI::FIGHTER)
                         RadioTraffic::SendQuickMessage(s, RadioMessageAction::CALL_INBOUND);
                 }
 
@@ -623,7 +623,7 @@ FighterAI::Navigator()
                 if (element_index == 1) {
                     UE_LOG(LogTemp, Warning,
                         TEXT("WARNING: FighterAI NAVPT RTB, but no controller or hangar found for ship '%s'"),
-                        ship ? ANSI_TO_TCHAR(ship->Name()) : TEXT("null"));
+                        ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("null"));
                     ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::SKIPPED);
                 }
             }
@@ -649,7 +649,7 @@ FighterAI::Navigator()
                 if (element_index == 1) {
                     UE_LOG(LogTemp, Warning,
                         TEXT("WARNING: FighterAI NAVPT DOCK, but no dock target found for ship '%s'"),
-                        ship ? ANSI_TO_TCHAR(ship->Name()) : TEXT("null"));
+                        ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("null"));
                     ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::SKIPPED);
                 }
             }
@@ -669,7 +669,7 @@ FighterAI::Navigator()
         (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
-    if (ship->MissionClock() < 10000) {
+    if (ship->GetMissionClock() < 10000) {
         if (ship->IsAirborne())
             Accumulate(SeekTarget());
     }
@@ -679,7 +679,7 @@ FighterAI::Navigator()
     }
 
     else {
-        if (!ship->IsAirborne() || ship->AltitudeAGL() > 100)
+        if (!ship->IsAirborne() || ship->GetAltitudeAGL() > 100)
             ship->RaiseGear();
 
         Accumulate(AvoidTerrain());
@@ -712,7 +712,7 @@ FighterAI::Navigator()
 void
 FighterAI::HelmControl()
 {
-    Camera* cam = ((Camera*)&(ship->Cam()));
+    Camera* cam = ((Camera*)&(ship->GetCam()));
     FVector vrt = cam->vrt();
     double  deflection = vrt.Y;
     double  theta = 0;
@@ -755,7 +755,7 @@ FighterAI::HelmControl()
             accumulator.brake = 0.2;
             accumulator.stop = 0;
 
-            const double compass_pitch = ship->CompassPitch();
+            const double compass_pitch = ship->GetCompassPitch();
             const double desired_bank = -PI / 4;
             const double current_bank = asin(deflection);
             const double theta_local = desired_bank - current_bank;
@@ -775,7 +775,7 @@ FighterAI::HelmControl()
         if (FMath::Abs(accumulator.pitch) < 0.1 && FMath::Abs(accumulator.yaw) < 0.25) {
             // zolon spiral behavior:
             if (ship->Design()->auto_roll > 1) {
-                if ((element_index + (ship->MissionClock() >> 10)) & 0x4)
+                if ((element_index + (ship->GetMissionClock() >> 10)) & 0x4)
                     ship->ApplyRoll(0.60);
                 else
                     ship->ApplyRoll(-0.35);
@@ -791,7 +791,7 @@ FighterAI::HelmControl()
 
     // if not otherwise occupied, pitch to orient with world coords:
     if (station_keeping && (!ship->IsAirborne() || ship->Class() < CLASSIFICATION::LCA)) {
-        const FVector heading = ship->Heading();
+        const FVector heading = ship->GetHeading();
         const double  pitch_deflection = heading.Y;
 
         if (FMath::Abs(pitch_deflection) > 0.05) {
@@ -810,7 +810,7 @@ void
 FighterAI::ThrottleControl()
 {
     SimElement* elem = ship ? ship->GetElement() : nullptr;
-    const double ship_speed = ship ? (ship->Velocity() | ship->Heading()) : 0.0; // dot product
+    const double ship_speed = ship ? (ship->GetVelocity() | ship->GetHeading()) : 0.0; // dot product
     double desired = 1000.0;
     bool formation = element_index > 1;
     const bool station_keeping = distance < 0.0;
@@ -824,7 +824,7 @@ FighterAI::ThrottleControl()
         formation = false;
 
     // LAUNCH / TAKEOFF
-    if (ship->MissionClock() < 10000) {
+    if (ship->GetMissionClock() < 10000) {
         formation = false;
         throttle = 100.0;
         brakes = 0.0;
@@ -854,7 +854,7 @@ FighterAI::ThrottleControl()
 
     // INBOUND
     else if (inbound) {
-        const double carrier_speed = inbound->GetDeck()->GetCarrier()->Velocity().Size();
+        const double carrier_speed = inbound->GetDeck()->GetCarrier()->GetVelocity().Size();
         desired = 250.0 + carrier_speed;
 
         if (distance > 25.0e3)
@@ -976,10 +976,10 @@ FighterAI::ThrottleControl()
 
         else { // wingman
             Ship* lead = elem ? elem->GetShip(1) : nullptr;
-            const double zone = ship->Radius() * 3.0;
+            const double zone = ship->GetRadius() * 3.0;
 
             if (lead)
-                desired = (lead->Velocity() | lead->Heading());
+                desired = (lead->GetVelocity() | lead->GetHeading());
 
             // try to prevent porpoising
             if (FMath::Abs(slot_dist) < distance / 4.0) {
@@ -1008,7 +1008,7 @@ FighterAI::ThrottleControl()
             }
 
             else if (lead) {
-                const double lv = lead->Velocity().Size();
+                const double lv = lead->GetVelocity().Size();
                 const double sv = ship_speed;
                 const double dv = lv - sv;
                 double dt = 0.0;
@@ -1055,13 +1055,13 @@ FighterAI::ThrottleControl()
         }
 
         else if (ward) {
-            const double d = (ship->Location() - ward->Location()).Size();
+            const double d = (ship->GetLocation() - ward->GetLocation()).Size();
 
             if (d > 5000.0) {
                 throttle = (ai_level < 1) ? 50.0 : 80.0;
             }
             else {
-                const double speed = ward->Velocity().Size();
+                const double speed = ward->GetVelocity().Size();
 
                 if (speed > 0.0) {
                     if (ship_speed > speed) {
@@ -1156,13 +1156,13 @@ FighterAI::AvoidTerrain()
 
     if (ship->IsAirborne() && ship->GetFlightPhase() == Ship::ACTIVE) {
         // too high?
-        if (ship->AltitudeMSL() > 25e3) {
+        if (ship->GetAltitudeMSL() > 25e3) {
             if (!navpt || (navpt->GetRegion() == ship->GetRegion() && navpt->GetLocation().Z < 27e3)) {
                 terrain_warning = true;
                 ship->SetDirectorInfo("Too High");
 
                 // where will we be?
-                const FVector SelfPt = ship->Location() + ship->Velocity() + FVector(0.0, 0.0, -15e3);
+                const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, 0.0, -15e3);
 
                 // transform into camera coords:
                 const FVector Obj = Transform(SelfPt);
@@ -1173,19 +1173,19 @@ FighterAI::AvoidTerrain()
         }
 
         // too low?
-        else if (ship->AltitudeAGL() < 2500) {
+        else if (ship->GetAltitudeAGL() < 2500) {
             terrain_warning = true;
             ship->SetDirectorInfo("Too Low");
 
             // way too low?
-            if (ship->AltitudeAGL() < 1500) {
+            if (ship->GetAltitudeAGL() < 1500) {
                 ship->SetDirectorInfo(Game::GetText("Way Too Low!"));
                 target = nullptr;
                 drop_time = 5.0;
             }
 
             // where will we be?
-            const FVector SelfPt = ship->Location() + ship->Velocity() + FVector(0.0, 0.0, 10e3);
+            const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, 0.0, 10e3);
 
             // transform into camera coords:
             const FVector Obj = Transform(SelfPt);
@@ -1209,7 +1209,7 @@ FighterAI::SeekTarget()
     Ship* ward = ship->GetWard();
 
     if ((!target && !ward && !navpt && !farcaster && !patrol && !inbound && !rtb_code) ||
-        ship->MissionClock() < 10000) {
+        ship->GetMissionClock() < 10000) {
         if (element_index > 1) {
             // break formation if threatened:
             if (threat_missile)
@@ -1229,7 +1229,7 @@ FighterAI::SeekTarget()
         Steer result = Seek(objective);
         ship->SetDirectorInfo(Game::GetText("ai.seek-patrol-point"));
 
-        if (distance < 10 * self->Radius()) {
+        if (distance < 10 * self->GetRadius()) {
             patrol = 0;
             result.brake = 1;
             result.stop = 1;
@@ -1251,20 +1251,20 @@ FighterAI::SeekTarget()
 
             // approach legs:
             if (inbound->Approach() > 0) {
-                if (distance < 20 * self->Radius())
+                if (distance < 20 * self->GetRadius())
                     inbound->SetApproach(inbound->Approach() - 1);
             }
 
             // marshall point and finals:
             else {
-                if (inbound->Cleared() && distance < 10 * self->Radius()) {
+                if (inbound->Cleared() && distance < 10 * self->GetRadius()) {
                     if (!inbound->Final()) {
                         time_to_dock = TIME_TO_DOCK;
 
                         FlightDeck* deck = inbound->GetDeck();
                         if (deck) {
                             const double TotalDist = (deck->EndPoint() - deck->StartPoint()).Size();
-                            const double CurrentDist = (deck->EndPoint() - ship->Location()).Size();
+                            const double CurrentDist = (deck->EndPoint() - ship->GetLocation()).Size();
 
                             if (TotalDist > 1e-3)
                                 time_to_dock *= (CurrentDist / TotalDist);
@@ -1324,7 +1324,7 @@ FighterAI::SeekTarget()
     }
 
     if (tgt) {
-        const double basis = self->Radius() + tgt->Radius();
+        const double basis = self->GetRadius() + tgt->GetRadius();
         const double gap = distance - basis;
 
         // target behind:
@@ -1346,7 +1346,7 @@ FighterAI::SeekTarget()
 
         // target in front:
         else {
-            if (tgt->Type() == SimObject::SIM_SHIP) {
+            if (tgt->GetType() == SimObject::SIM_SHIP) {
                 Ship* tgt_ship = (Ship*)tgt;
 
                 // capital target strike:
@@ -1365,7 +1365,7 @@ FighterAI::SeekTarget()
             }
 
             // fighter melee:
-            if ((tgt->Velocity() | ship->Velocity()) < 0) {
+            if ((tgt->GetVelocity() | ship->GetVelocity()) < 0) {
                 // head-to-head pass:
                 if (gap < 1250)
                     return Flee(objective);
@@ -1414,7 +1414,7 @@ FighterAI::SeekFormationSlot()
             }
             else if (qdrive) {
                 if (qdrive->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                    qdrive->SetDestination(lead_rgn, lead->Location());
+                    qdrive->SetDestination(lead_rgn, lead->GetLocation());
                     qdrive->Engage();
                 }
             }
@@ -1422,13 +1422,13 @@ FighterAI::SeekFormationSlot()
     }
 
     // do station keeping?
-    if (lead && distance < ship->Radius() * 10 && lead->Velocity().Size() < 50) {
+    if (lead && distance < ship->GetRadius() * 10 && lead->GetVelocity().Size() < 50) {
         distance = -1;
         return s;
     }
 
     // approach
-    if (objective.Z > ship->Radius() * -4) {
+    if (objective.Z > ship->GetRadius() * -4) {
         az[0] = atan2(FMath::Abs(objective.X), objective.Z) * 50.0;
         el[0] = atan2(FMath::Abs(objective.Y), objective.Z) * 50.0;
 
@@ -1528,15 +1528,15 @@ FighterAI::EvadeThreat()
         // beam the missile:
         ship->SetDirectorInfo(Game::GetText("ai.evade-missile"));
 
-        FVector BeamLine = FVector::CrossProduct(threat_missile->Velocity(), FVector(0.0, 1.0, 0.0));
+        FVector BeamLine = FVector::CrossProduct(threat_missile->GetVelocity(), FVector(0.0, 1.0, 0.0));
         BeamLine.Normalize();
         BeamLine *= 1e6;
 
-        FVector EvadeW1 = threat_missile->Location() + BeamLine;
-        FVector EvadeW2 = threat_missile->Location() - BeamLine;
+        FVector EvadeW1 = threat_missile->GetLocation() + BeamLine;
+        FVector EvadeW2 = threat_missile->GetLocation() - BeamLine;
 
-        const double D1 = (EvadeW1 - ship->Location()).Size();
-        const double D2 = (EvadeW2 - ship->Location()).Size();
+        const double D1 = (EvadeW1 - ship->GetLocation()).Size();
+        const double D2 = (EvadeW2 - ship->GetLocation()).Size();
 
         const FVector EvadeP = (D1 > D2) ? Transform(EvadeW1) : Transform(EvadeW2);
         return Seek(EvadeP);
@@ -1547,7 +1547,7 @@ FighterAI::EvadeThreat()
         double threat_range = 20e3;
 
         Ship* threat_ship = (Ship*)threat;
-        const double threat_dist = (threat->Location() - ship->Location()).Size();
+        const double threat_dist = (threat->GetLocation() - ship->GetLocation()).Size();
 
         if (threat_ship->IsStarship()) {
             threat_range = CalcDefensePerimeter(threat_ship);
@@ -1559,11 +1559,11 @@ FighterAI::EvadeThreat()
             if (ship->IsAirborne()) {
                 evading = true;
 
-                FVector BeamLine = FVector::CrossProduct(threat->Velocity(), FVector(0.0, 1.0, 0.0));
+                FVector BeamLine = FVector::CrossProduct(threat->GetVelocity(), FVector(0.0, 1.0, 0.0));
                 BeamLine.Normalize();
                 BeamLine *= threat_range;
 
-                const FVector EvadeW = threat->Location() + BeamLine;
+                const FVector EvadeW = threat->GetLocation() + BeamLine;
                 const FVector EvadeP = Transform(EvadeW);
 
                 return Seek(EvadeP);
@@ -1581,8 +1581,8 @@ FighterAI::EvadeThreat()
                     ship->SetDirectorInfo(Game::GetText("ai.evade-starship"));
 
                     // flee for three seconds:
-                    if ((ship->MissionClock() & 3) != 3) {
-                        return Flee(Transform(threat->Location()));
+                    if ((ship->GetMissionClock() & 3) != 3) {
+                        return Flee(Transform(threat->GetLocation()));
                     }
 
                     // jink for one second:
@@ -1596,7 +1596,7 @@ FighterAI::EvadeThreat()
                             ) * 15e3;
                         }
 
-                        const FVector EvadeW = ship->Location() + jink;
+                        const FVector EvadeW = ship->GetLocation() + jink;
                         const FVector EvadeP = Transform(EvadeW);
 
                         return Seek(EvadeP);
@@ -1607,7 +1607,7 @@ FighterAI::EvadeThreat()
                     ship->SetDirectorInfo(Game::GetText("ai.evade-and-seek"));
 
                     // seek for three seconds:
-                    if ((ship->MissionClock() & 3) < 3) {
+                    if ((ship->GetMissionClock() & 3) < 3) {
                         return Steer(); // no evasion
                     }
 
@@ -1622,7 +1622,7 @@ FighterAI::EvadeThreat()
                             );
                         }
 
-                        const FVector EvadeW = target->Location() + jink;
+                        const FVector EvadeW = target->GetLocation() + jink;
                         const FVector EvadeP = Transform(EvadeW);
 
                         return Seek(EvadeP);
@@ -1635,7 +1635,7 @@ FighterAI::EvadeThreat()
 
                 if (target != nullptr) {
                     if (target == threat) {
-                        if (target->Type() == SimObject::SIM_SHIP) {
+                        if (target->GetType() == SimObject::SIM_SHIP) {
                             Ship* tgt_ship = (Ship*)target;
                             if (tgt_ship->GetTrigger(0)) {
                                 SetTarget(nullptr);
@@ -1655,15 +1655,15 @@ FighterAI::EvadeThreat()
                     ship->SetDirectorInfo(Game::GetText("ai.random-evade"));
 
                 // beam the threat:
-                FVector BeamLine = FVector::CrossProduct(threat->Velocity(), FVector(0.0, 1.0, 0.0));
+                FVector BeamLine = FVector::CrossProduct(threat->GetVelocity(), FVector(0.0, 1.0, 0.0));
                 BeamLine.Normalize();
                 BeamLine *= 1e6;
 
-                FVector EvadeW1 = threat->Location() + BeamLine;
-                FVector EvadeW2 = threat->Location() - BeamLine;
+                FVector EvadeW1 = threat->GetLocation() + BeamLine;
+                FVector EvadeW2 = threat->GetLocation() - BeamLine;
 
-                const double D1 = (EvadeW1 - ship->Location()).Size();
-                const double D2 = (EvadeW2 - ship->Location()).Size();
+                const double D1 = (EvadeW1 - ship->GetLocation()).Size();
+                const double D2 = (EvadeW2 - ship->GetLocation()).Size();
 
                 FVector EvadeP = (D1 > D2) ? Transform(EvadeW1) : Transform(EvadeW2);
 
@@ -1701,7 +1701,7 @@ void
 FighterAI::FireControl()
 {
     // if nothing to shoot at, forget it:
-    if (!target || target->Integrity() < 1)
+    if (!target || target->GetIntegrity() < 1)
         return;
 
     // if the objective is a navpt or landing bay (not a target), then don't shoot!
@@ -1709,11 +1709,11 @@ FighterAI::FireControl()
         return;
 
     // object behind us, or too close:
-    if (objective.Z < 0 || distance < 4 * self->Radius())
+    if (objective.Z < 0 || distance < 4 * self->GetRadius())
         return;
 
     // compute the firing cone:
-    const double cross_section = 2.0 * target->Radius() / distance;
+    const double cross_section = 2.0 * target->GetRadius() / distance;
     double gun_basket = cross_section * 2.0;
 
     Weapon* primary = ship->GetPrimary();
@@ -1723,7 +1723,7 @@ FighterAI::FireControl()
     bool use_primary = true;
     Ship* tgt_ship = nullptr;
 
-    if (target->Type() == SimObject::SIM_SHIP) {
+    if (target->GetType() == SimObject::SIM_SHIP) {
         tgt_ship = (Ship*)target;
 
         if (tgt_ship->InTransition())
@@ -1772,7 +1772,7 @@ FighterAI::FireControl()
         if (missile_time <= 0.0 && secondary->Ammo() && !secondary->IsBlockedFriendly()) {
             if (secondary->Locked() || (dsgn_secondary && !dsgn_secondary->self_aiming)) {
                 // is target in basket?
-                FVector tgt = AimTransform(target->Location());
+                FVector tgt = AimTransform(target->GetLocation());
                 const double tgt_range = tgt.Normalize();
 
                 const int factor = 2 - ai_level;

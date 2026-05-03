@@ -207,7 +207,7 @@ void UEngineeringDlg::UpdateRouteTables()
     if (!ship)
         return;
 
-    const int32 NumSources = ship->Reactors().size();
+    const int32 NumSources = ship->GetReactors().size();
 
     for (int32 i = 0; i < 4; i++) {
         if (SourceButtons[i]) SourceButtons[i]->SetVisibility(i < NumSources ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
@@ -313,8 +313,8 @@ void UEngineeringDlg::OnSource(int SourceIndex)
     if (!ship)
         return;
 
-    if (SourceIndex >= 0 && SourceIndex < ship->Reactors().size()) {
-        selected_source = ship->Reactors()[SourceIndex];
+    if (SourceIndex >= 0 && SourceIndex < ship->GetReactors().size()) {
+        selected_source = ship->GetReactors()[SourceIndex];
     }
 
     // Clear client selections across all lists:
@@ -365,10 +365,10 @@ void UEngineeringDlg::OnRouteComplete(int DestIndex)
     if (!ship || !route_source)
         return;
 
-    if (DestIndex < 0 || DestIndex >= ship->Reactors().size())
+    if (DestIndex < 0 || DestIndex >= ship->GetReactors().size())
         return;
 
-    PowerSource* RouteDest = ship->Reactors()[DestIndex];
+    PowerSource* RouteDest = ship->GetReactors()[DestIndex];
     if (!RouteDest)
         return;
 

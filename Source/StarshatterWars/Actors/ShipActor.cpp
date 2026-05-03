@@ -1493,8 +1493,8 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    const FVector RuntimeLocation = RuntimeShip->Location();
-    const FVector RuntimeVelocity = RuntimeShip->Velocity();
+    const FVector RuntimeLocation = RuntimeShip->GetLocation();
+    const FVector RuntimeVelocity = RuntimeShip->GetVelocity();
 
     FRotator DesiredRotation = GetActorRotation();
 
@@ -1511,8 +1511,8 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     }
     else
     {
-        const float HeadingDegrees = (float)RuntimeShip->CompassHeading();
-        const float PitchDegrees = (float)RuntimeShip->CompassPitch();
+        const float HeadingDegrees = (float)RuntimeShip->GetCompassHeading();
+        const float PitchDegrees = (float)RuntimeShip->GetCompassPitch();
 
         DesiredRotation = FRotator(
             PitchDegrees,

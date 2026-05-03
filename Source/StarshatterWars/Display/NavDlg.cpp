@@ -365,7 +365,7 @@ void UNavDlg::ExecFrame()
 
         // Classic coordinate swap:
         // x = -loc.x, y = loc.z, z = loc.y
-        const FVector Loc = ship->Location();
+        const FVector Loc = ship->GetLocation();
         FormatNumber(x, -Loc.X);
         FormatNumber(y, Loc.Z);
         FormatNumber(z, Loc.Y);
@@ -409,7 +409,7 @@ void UNavDlg::ExecFrame()
             // If you have a handedness helper, apply it here:
             // Npt = OtherHand(Npt);
 
-            const double distance = FVector::Dist(Npt, ship->Location());
+            const double distance = FVector::Dist(Npt, ship->GetLocation());
             FormatNumber(d, distance);
 
             UE_LOG(LogTemp, Verbose, TEXT("NavDlg DST: %s %s %s dist=%s"),

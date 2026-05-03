@@ -51,7 +51,7 @@ StarshipTacticalAI::StarshipTacticalAI(ShipAI* ai)
 {
     if (ai && ai->GetShip()) {
         ai_level = ai->GetAILevel();
-        initial_integrity = ai->GetShip()->Integrity();
+        initial_integrity = ai->GetShip()->GetIntegrity();
     }
 
     switch (ai_level) {
@@ -234,7 +234,7 @@ StarshipTacticalAI::CheckBugOut(Ship* c_ship, double rng)
     if (stars && stars->InCutscene())
         return;
 
-    double sustained_damage = initial_integrity - ship->Integrity();
+    double sustained_damage = initial_integrity - ship->GetIntegrity();
     double allowable_damage = ship->Design()->integrity * 0.25;
 
     if (rng > 50e3 && sustained_damage < allowable_damage)

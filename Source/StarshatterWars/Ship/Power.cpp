@@ -92,7 +92,7 @@ PowerSource::RemoveClient(SimSystem* client)
 // +----------------------------------------------------------------------+
 
 int
-PowerSource::Charge() const
+PowerSource::GetCharge() const
 {
 	return (int)capacity;
 }

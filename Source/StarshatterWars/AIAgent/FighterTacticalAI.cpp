@@ -170,7 +170,7 @@ FighterTacticalAI::SelectTarget()
 
 	SimObject* target = ship_ai->GetTarget();
 
-	if (target && (target->Type() == SimObject::SIM_SHIP) &&
+	if (target && (target->GetType() == SimObject::SIM_SHIP) &&
 		(Game::GameTime() - secondary_selection_time) > THREAT_REACTION_TIME) {
 		SelectSecondaryForTarget((Ship*)target);
 		secondary_selection_time = Game::GameTime();
@@ -197,7 +197,7 @@ FighterTacticalAI::SelectTargetDirected(Ship* tgt)
 				SimObject* obj_sim_obj = objective->GetTarget();
 				Ship* obj_tgt = 0;
 
-				if (obj_sim_obj && obj_sim_obj->Type() == SimObject::SIM_SHIP)
+				if (obj_sim_obj && obj_sim_obj->GetType() == SimObject::SIM_SHIP)
 					obj_tgt = (Ship*)obj_sim_obj;
 
 				if (obj_tgt && ship->FindContact(obj_tgt))
@@ -278,7 +278,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 			}
 
 			// found an enemy, check distance:
-			const double Dist = (ship->Location() - ContactShip->Location()).Length();
+			const double Dist = (ship->GetLocation() - ContactShip->GetLocation()).Length();
 
 			if (Dist < 0.75 * TargetDist) {
 
@@ -286,7 +286,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 				if (roe == FLEXIBLE && navpt) {
 					// UE: FVector has no OtherHand(). Use the navpoint location directly.
 					// If you still need Starshatter axis remapping, do it explicitly here.
-					const double NDist = (navpt->GetLocation() - ContactShip->Location()).Length();
+					const double NDist = (navpt->GetLocation() - ContactShip->GetLocation()).Length();
 					if (NDist > 80e3)
 						continue;
 				}
@@ -302,7 +302,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 				continue;
 
 			// found an enemy shot, check distance:
-			const double Dist = (ship->Location() - ContactShot->Location()).Length();
+			const double Dist = (ship->GetLocation() - ContactShot->GetLocation()).Length();
 
 			if (!CurrentShotTarget) {
 				CurrentShotTarget = ContactShot;
@@ -368,7 +368,7 @@ FighterTacticalAI::SelectSecondaryForTarget(Ship* tgt)
 			winchester[wix] = false;
 
 			// select best weapon for the job:
-			double range = (ship->Location() - tgt->Location()).Length();
+			double range = (ship->GetLocation() - tgt->GetLocation()).Length();
 			double best_range = 0;
 			double best_damage = 0;
 
@@ -475,7 +475,7 @@ FighterTacticalAI::FindFormationSlot(INSTRUCTION_FORMATION formation)
 		delta = FVector(0, s, -20 * s);
 	}
 
-	ship_ai->SetFormationDelta(delta * ship->Radius() * 2);
+	ship_ai->SetFormationDelta(delta * ship->GetRadius() * 2);
 }
 
 // +--------------------------------------------------------------------+
@@ -541,8 +541,8 @@ FighterTacticalAI::IsStrikeComplete(Instruction* instr)
 		return false;
 
 	// if there's nothing to shoot at, we must be done:
-	if (!instr || !instr->GetTarget() || instr->GetTarget()->Life() == 0 ||
-		instr->GetTarget()->Type() != SimObject::SIM_SHIP)
+	if (!instr || !instr->GetTarget() || instr->GetTarget()->GetLife() == 0 ||
+		instr->GetTarget()->GetType() != SimObject::SIM_SHIP)
 		return true;
 
 	// break off strike only when ALL weapons are expended:
@@ -556,7 +556,7 @@ FighterTacticalAI::IsStrikeComplete(Instruction* instr)
 	for (int i = 0; i < element->NumShips(); i++) {
 		Ship* s = element->GetShip(i + 1);
 
-		if (!s || s->Integrity() < 25) // || (s->Location() - target->Location()).length() > 250e3)
+		if (!s || s->GetIntegrity() < 25) // || (s->Location() - target->Location()).length() > 250e3)
 			continue;
 
 		ListIter<WeaponGroup> g_iter = s->GetWeapons();

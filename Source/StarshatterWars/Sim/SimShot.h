@@ -78,12 +78,12 @@ public:
 	virtual int        GetIFF()       const;
 	virtual FColor	   MarkerColor()  const;
 
-	const FVector& Origin()       const { return origin; }
-	float              Charge()       const { return charge; }
-	void               SetCharge(float c);
-	double             Length()       const;
-	Graphic* GetTrail()     const { return (Graphic*)trail; }
-	void               SetFuse(double seconds);
+	const FVector&		GetOrigin()       const { return origin; }
+	float               GetCharge()       const { return charge; }
+	void                SetCharge(float c);
+	double				GetLength()       const;
+	Graphic*			GetTrail()     const { return (Graphic*)trail; }
+	void				SetFuse(double seconds);
 
 	void               SetBeamPoints(const FVector& from, const FVector& to);
 	virtual void       Disarm();
@@ -91,8 +91,8 @@ public:
 
 	void              SetLife(int seconds) { life = seconds; }
 
-	const WeaponDesign* Design()      const { return design; }
-	const char* DesignName()   const;
+	const WeaponDesign* GetDesign()      const { return design; }
+	const char*		   GetDesignName()   const;
 	int                GetEta()       const { return eta; }
 	void               SetEta(int t) { eta = (short)t; }
 

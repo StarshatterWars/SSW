@@ -138,7 +138,7 @@ void QuantumView::Refresh()
         ShipPtr = SimPtr->GetPlayerShip();
 
         if (ShipPtr) {
-            if (ShipPtr->Life() == 0 || ShipPtr->IsDying() || ShipPtr->IsDead()) {
+            if (ShipPtr->GetLife() == 0 || ShipPtr->IsDying() || ShipPtr->IsDead()) {
                 ShipPtr = nullptr;
             }
             else {
