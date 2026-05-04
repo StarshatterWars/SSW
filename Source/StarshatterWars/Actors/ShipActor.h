@@ -100,6 +100,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Points")
     FVector ChasePointOffset;
 
+    FVector InitialRuntimeLocationLegacy = FVector::ZeroVector;
+    FVector InitialActorLocationUE = FVector::ZeroVector;
     /*
      * Fixed system marker points
      */

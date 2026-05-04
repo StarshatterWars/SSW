@@ -203,6 +203,8 @@ public:
     UDataTable* GetRegionsTable() const { return RegionsDataTable; }
     UDataTable* GetTerrainRegionsTable() const { return TerrainRegionsDataTable; }
     UDataTable* GetZonesTable() const { return ZonesDataTable; }
+    
+    static UStarshatterEnvironmentSubsystem* Get();
 
     // -----------------------------------------------------------------
     // Public static data arrays
@@ -337,6 +339,8 @@ private:
     UPROPERTY()
     TMap<FString, FString> RegionParentByName;
     TMap<FString, TArray<FString>> RegionChildrenByParent;
+    
+    static TWeakObjectPtr<UStarshatterEnvironmentSubsystem> ActiveInstance;
 
     EGameMode               game_mode;
 };

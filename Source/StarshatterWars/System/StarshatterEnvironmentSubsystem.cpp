@@ -52,6 +52,9 @@
 
 DEFINE_LOG_CATEGORY(LogStarshatterEnvironment);
 
+TWeakObjectPtr<UStarshatterEnvironmentSubsystem>
+UStarshatterEnvironmentSubsystem::ActiveInstance = nullptr;
+
 // -----------------------------------------------------------------------------
 // UStarshatterEnvironmentSubsystem
 // -----------------------------------------------------------------------------
@@ -149,6 +152,11 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 
 	UE_LOG(LogStarshatterEnvironment, Log, TEXT("[Environment] Initialize"));
 
+	ActiveInstance = this;
+
+	UE_LOG(LogStarshatterEnvironment, Log,
+		TEXT("[Environment] Initialize (ActiveInstance set)"));
+
 	UGameInstance* GI = GetGameInstance();
 	if (!GI)
 	{
@@ -213,6 +221,11 @@ void UStarshatterEnvironmentSubsystem::Deinitialize()
 
 	Unload();
 	Super::Deinitialize();
+}
+
+UStarshatterEnvironmentSubsystem* UStarshatterEnvironmentSubsystem::Get()
+{
+	return ActiveInstance.Get();
 }
 
 void UStarshatterEnvironmentSubsystem::ResolveDataTables()

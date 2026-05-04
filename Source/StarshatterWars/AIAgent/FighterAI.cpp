@@ -775,7 +775,7 @@ FighterAI::HelmControl()
         if (FMath::Abs(accumulator.pitch) < 0.1 && FMath::Abs(accumulator.yaw) < 0.25) {
             // zolon spiral behavior:
             if (ship->Design()->auto_roll > 1) {
-                if ((element_index + (ship->GetMissionClock() >> 10)) & 0x4)
+                if ((element_index + (static_cast<int32>(ship->GetMissionClock() * 1000.0) >> 10)) & 0x4)
                     ship->ApplyRoll(0.60);
                 else
                     ship->ApplyRoll(-0.35);
@@ -1579,9 +1579,11 @@ FighterAI::EvadeThreat()
 
                 if (!target) {
                     ship->SetDirectorInfo(Game::GetText("ai.evade-starship"));
+                   
+                    const int32 ClockTicks = static_cast<int32>(ship->GetMissionClock() * 1000.0);
 
-                    // flee for three seconds:
-                    if ((ship->GetMissionClock() & 3) != 3) {
+                    if ((ClockTicks & 3) != 3)
+                    {
                         return Flee(Transform(threat->GetLocation()));
                     }
 
@@ -1606,8 +1608,10 @@ FighterAI::EvadeThreat()
                 else {
                     ship->SetDirectorInfo(Game::GetText("ai.evade-and-seek"));
 
-                    // seek for three seconds:
-                    if ((ship->GetMissionClock() & 3) < 3) {
+                    const int32 ClockTicks = static_cast<int32>(ship->GetMissionClock() * 1000.0);
+
+                    if ((ClockTicks & 3) < 3)
+                    {
                         return Steer(); // no evasion
                     }
 

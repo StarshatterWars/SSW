@@ -97,6 +97,7 @@
 #include "StarshatterWarsLog.h"
 
 #include "SSWRuntimeSubsystem.h"
+#include "TimerSubsystem.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -2625,36 +2626,51 @@ void Ship::ExecPhysics(double seconds)
 	if (net_control)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs'"),
-			GetName());
+			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs' NetControl=%p"),
+			GetName(),
+			net_control);
 
 		net_control->ExecFrame(seconds);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] NO NET_CONTROL Ship='%hs'"),
+			GetName());
 	}
 
 	if (dir)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] dir ExecFrame Ship='%hs'"),
-			GetName());
+			TEXT("[Ship::ExecPhysics] dir ExecFrame Ship='%hs' Dir=%p"),
+			GetName(),
+			dir);
 
 		dir->ExecFrame(seconds);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] NO DIR Ship='%hs' NetControl=%p"),
+			GetName(),
+			net_control);
+	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] DRIVE CHECK Ship='%hs' MainDrive=%p DriveCount=%d Flcs=%p Throttle=%.2f Request=%.2f VLimit=%.2f"),
+		TEXT("[Ship::ExecPhysics] AFTER CONTROL Ship='%hs' Throttle=%.2f Request=%.2f MainDrive=%p Drives=%d Thruster=%p NavSys=%p VLimit=%.2f"),
 		GetName(),
-		main_drive,
-		drives.size(),
-		flcs,
 		throttle,
 		throttle_request,
+		main_drive,
+		drives.size(),
+		thruster,
+		navsys,
 		vlimit);
 
 	thrust = (float)Thrust(seconds);
-	thrust = (float)Thrust(seconds);
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] AFTER AI Ship='%hs' Throttle=%.2f Request=%.2f Thrust=%.2f Vel=%s"),
+		TEXT("[Ship::ExecPhysics] AFTER THRUST Ship='%hs' Throttle=%.2f Request=%.2f Thrust=%.2f Vel=%s"),
 		GetName(),
 		throttle,
 		throttle_request,
@@ -5063,22 +5079,79 @@ Ship::ExecMaintFrame(double seconds)
 
 // +--------------------------------------------------------------------+
 
-void
-Ship::SetNetworkControl(SimDirector* net)
+void Ship::SetNetworkControl(SimDirector* net)
 {
 	net_control = net;
 
+	// Always clear existing director
 	delete dir;
-	dir = 0;
+	dir = nullptr;
 
-	if (!net_control && GetIFF() < 100) {
-		if (IsStatic())
-			dir = 0;
-		else if (IsStarship())
-			dir = SteerAI::Create(this, SteerAI::STARSHIP);
-		else
-			dir = SteerAI::Create(this, SteerAI::FIGHTER);
+	//-------------------------------------------------------------
+	// 1. If network-controlled, DO NOT create AI
+	//-------------------------------------------------------------
+	if (net_control)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::SetNetworkControl] Net-controlled Ship='%hs' NetControl=%p"),
+			GetName(),
+			net_control);
+		return;
 	}
+
+	//-------------------------------------------------------------
+	// 2. Player ship MUST NOT get AI
+	//-------------------------------------------------------------
+	if (IsPlayer())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::SetNetworkControl] Player ship no AI Ship='%hs' IFF=%d"),
+			GetName(),
+			GetIFF());
+		return;
+	}
+
+	//-------------------------------------------------------------
+	// 3. Non-combatants / invalid IFF
+	//-------------------------------------------------------------
+	if (GetIFF() >= 100)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::SetNetworkControl] Skipping AI (IFF>=100) Ship='%hs' IFF=%d"),
+			GetName(),
+			GetIFF());
+		return;
+	}
+
+	//-------------------------------------------------------------
+	// 4. Static objects do not get AI
+	//-------------------------------------------------------------
+	if (IsStatic())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::SetNetworkControl] Static ship no AI Ship='%hs'"),
+			GetName());
+		return;
+	}
+
+	//-------------------------------------------------------------
+	// 5. Create AI Director
+	//-------------------------------------------------------------
+	if (IsStarship())
+	{
+		dir = SteerAI::Create(this, SteerAI::STARSHIP);
+	}
+	else
+	{
+		dir = SteerAI::Create(this, SteerAI::FIGHTER);
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::SetNetworkControl] AI CREATED Ship='%hs' Dir=%p IFF=%d Starship=%d"),
+		GetName(),
+		dir,
+		GetIFF(),
+		IsStarship() ? 1 : 0);
 }
 
 void
@@ -5337,11 +5410,22 @@ Ship::ACS() const
 	return acs;
 }
 
-DWORD
-Ship::GetMissionClock() const
+double Ship::GetMissionClock() const
 {
-	if (launch_time > 0)
-		return Game::GameTime() + 1 - launch_time;
+	if (const UTimerSubsystem* Timer = UTimerSubsystem::Get())
+	{
+		return Timer->GetMissionTimeSeconds();
+	}
+
+	return 0.0;
+}
+
+int32 Ship::GetMissionClockMS() const
+{
+	if (const UTimerSubsystem* Timer = UTimerSubsystem::Get())
+	{
+		return Timer->GetMissionTimeMS();
+	}
 
 	return 0;
 }

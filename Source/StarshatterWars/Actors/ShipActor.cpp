@@ -31,6 +31,8 @@
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 
+#include "ShipUtils.h"
+
 
 template<typename T>
 static void ClearComponentArray(TArray<TObjectPtr<T>>& Components)
@@ -1493,48 +1495,67 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    const FVector RuntimeLocation = RuntimeShip->GetLocation();
-    const FVector RuntimeVelocity = RuntimeShip->GetVelocity();
+    const FVector RuntimeLocationLegacy = RuntimeShip->GetLocation();
+    const FVector RuntimeVelocityLegacy = RuntimeShip->GetVelocity();
+    const FVector RuntimeHeadingLegacy = RuntimeShip->GetHeading();
+
+    const FVector RuntimeVelocityUE =
+        ShipUtils::LegacySimToUnreal(RuntimeVelocityLegacy);
+
+    const FVector RuntimeHeadingUE =
+        ShipUtils::LegacySimToUnreal(RuntimeHeadingLegacy).GetSafeNormal();
+
+    const bool bHasUsableVelocity =
+        RuntimeVelocityUE.SizeSquared() >
+        FMath::Square(RuntimeVelocityVisibleThreshold);
 
     FRotator DesiredRotation = GetActorRotation();
 
-    const float ModelYawFix = 180.0f;
-
-    const bool bHasUsableVelocity =
-        RuntimeVelocity.SizeSquared() >
-        FMath::Square(RuntimeVelocityVisibleThreshold);
-
-    if (bRuntimeUseVelocityForYaw && bHasUsableVelocity)
+    if (!RuntimeHeadingUE.IsNearlyZero())
     {
-        DesiredRotation = RuntimeVelocity.GetSafeNormal().Rotation();
-        DesiredRotation.Yaw += ModelYawFix;
+        DesiredRotation = RuntimeHeadingUE.Rotation();
     }
-    else
+    else if (bHasUsableVelocity)
     {
-        const float HeadingDegrees = (float)RuntimeShip->GetCompassHeading();
-        const float PitchDegrees = (float)RuntimeShip->GetCompassPitch();
-
-        DesiredRotation = FRotator(
-            PitchDegrees,
-            HeadingDegrees + ModelYawFix,
-            0.0f
-        );
+        DesiredRotation = RuntimeVelocityUE.GetSafeNormal().Rotation();
     }
 
+    const FQuat ModelOffsetQuat = FQuat(FRotator(0.0f, 0.0f, 0.0f));
+    DesiredRotation = (ModelOffsetQuat * DesiredRotation.Quaternion()).Rotator();
+
+    //-------------------------------------------------------------
+    // First frame: preserve correct spawn position.
+    //-------------------------------------------------------------
     if (!bHasRuntimeTransform)
     {
-        SetActorLocation(RuntimeLocation);
+        InitialRuntimeLocationLegacy = RuntimeLocationLegacy;
+        InitialActorLocationUE = GetActorLocation();
+
         SetActorRotation(DesiredRotation);
 
-        LastRuntimeLocation = RuntimeLocation;
-        LastRuntimeVelocity = RuntimeVelocity;
+        LastRuntimeLocation = InitialActorLocationUE;
+        LastRuntimeVelocity = RuntimeVelocityUE;
         bHasRuntimeTransform = true;
+
+        SetThrustersActive(bHasUsableVelocity);
         return;
     }
 
+    //-------------------------------------------------------------
+    // Convert only movement delta, not absolute location.
+    //-------------------------------------------------------------
+    const FVector RuntimeDeltaLegacy =
+        RuntimeLocationLegacy - InitialRuntimeLocationLegacy;
+
+    const FVector RuntimeDeltaUE =
+        ShipUtils::LegacySimToUnreal(RuntimeDeltaLegacy);
+
+    const FVector DesiredLocation =
+        InitialActorLocationUE + RuntimeDeltaUE;
+
     const FVector SmoothedLocation = FMath::VInterpTo(
         GetActorLocation(),
-        RuntimeLocation,
+        DesiredLocation,
         DeltaTime,
         RuntimeLocationInterpSpeed
     );
@@ -1549,8 +1570,22 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     SetActorLocation(SmoothedLocation);
     SetActorRotation(SmoothedRotation);
 
-    LastRuntimeLocation = RuntimeLocation;
-    LastRuntimeVelocity = RuntimeVelocity;
+    LastRuntimeLocation = DesiredLocation;
+    LastRuntimeVelocity = RuntimeVelocityUE;
 
     SetThrustersActive(bHasUsableVelocity);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor::UpdateFromRuntimeShip] Ship='%s' ActorLoc=%s DesiredLoc=%s ActorFwd=%s ActorRot=%s LegacyDelta=%s UEDelta=%s LegacyHeading=%s UEHeading=%s LegacyVel=%s UEVel=%s"),
+        *GetName(),
+        *GetActorLocation().ToString(),
+        *DesiredLocation.ToString(),
+        *GetActorForwardVector().ToString(),
+        *GetActorRotation().ToString(),
+        *RuntimeDeltaLegacy.ToString(),
+        *RuntimeDeltaUE.ToString(),
+        *RuntimeHeadingLegacy.ToString(),
+        *RuntimeHeadingUE.ToString(),
+        *RuntimeVelocityLegacy.ToString(),
+        *RuntimeVelocityUE.ToString());
 }

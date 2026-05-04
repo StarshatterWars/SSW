@@ -56,6 +56,8 @@ public:
 
     void ClearCamera();
 
+    FVector ComputeTightFollowOffset(AActor* Target) const;
+
 public:
     void SetGroupFollowView(
         const TArray<AActor*>& InTargets,

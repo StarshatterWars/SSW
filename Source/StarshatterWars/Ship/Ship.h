@@ -151,7 +151,7 @@ public:
 
     // DIRECTION:
     virtual void      SetControls(MotionController* m);
-    virtual void      SetNetworkControl(SimDirector* net_ctrl = 0);
+    
     void              SetDirectorInfo(const char* msg) { director_info = msg; }
     const char*       GetDirectorInfo() const { return director_info; }
     void              SetAIMode(int n) { ai_mode = (BYTE)n; }
@@ -175,6 +175,12 @@ public:
     virtual void      ApplyPitch(double pitch_acc); // override for G limiter
 
     void              ArcadeStop() { arcade_velocity *= 0; }
+
+    virtual void      SetDirector(SimDirector* d) { dir = d; }
+    SimDirector*      GetDirector() const { return dir; }
+
+    virtual void      SetNetworkControl(SimDirector* net_ctrl = 0);
+    SimDirector*      GetNetworkControl() const { return net_control; }
 
     // CAMERA:
     FVector           GetBridgeLocation() const { return bridge_vec; }
@@ -348,13 +354,15 @@ public:
     bool              IsStarship() const;
     bool              IsDropship() const;
     bool              IsStatic() const;
+    bool              IsPlayer() const { return player_ship; }
     bool              IsRogue() const;
     void              SetRogue(bool r = true);
     int               GetFriendlyFire() const { return ff_count; }
     void              SetFriendlyFire(int f);
     void              IncFriendlyFire(int f = 1);
     double            Agility() const { return agility; }
-    DWORD             GetMissionClock() const;
+    double            GetMissionClock() const;
+    int32             GetMissionClockMS() const;
     Graphic*          GetCockpit() const;
     void              ShowCockpit();
     void              HideCockpit();
@@ -367,6 +375,8 @@ public:
     void                ShowRep();
     void                HideRep();
     void                EnableShadows(bool enable);
+
+    void SetPlayerShip(bool bPlayer) { player_ship = bPlayer; }
 
     int                 GetRespawnCount() const { return respawns; }
     void                SetRespawnCount(int r) { respawns = r; }
@@ -580,6 +590,8 @@ protected:
     static double     friendly_fire_level;
 
     const FShipDesign* UnrealDesign = nullptr;
+    bool               player_ship = false;
+
 
 public:
     void SetFormationOffset(const FVector& Offset);

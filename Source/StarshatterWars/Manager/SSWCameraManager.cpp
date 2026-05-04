@@ -389,3 +389,35 @@ void ASSWCameraManager::UpdateGroupFollow(float DeltaTime)
         *VelocityDir.ToString(),
         *SmoothedCamLoc.ToString());
 }
+
+FVector ASSWCameraManager::ComputeTightFollowOffset(AActor* Target) const
+{
+    if (!Target)
+    {
+        return FVector(-600.f, 150.f, 200.f);
+    }
+
+    FBox Bounds(ForceInit);
+
+    TArray<UPrimitiveComponent*> PrimComps;
+    Target->GetComponents<UPrimitiveComponent>(PrimComps);
+
+    for (UPrimitiveComponent* Comp : PrimComps)
+    {
+        if (Comp && Comp->IsRegistered())
+        {
+            Bounds += Comp->Bounds.GetBox();
+        }
+    }
+
+    const FVector Extent = Bounds.GetExtent();
+    const float Radius = Extent.Size();
+
+    const float Distance = FMath::Clamp(Radius * 1.6f, 250.f, 2500.f);
+
+    return FVector(
+        -Distance,
+        Distance * 0.25f,
+        Distance * 0.35f
+    );
+}

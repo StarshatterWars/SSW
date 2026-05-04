@@ -289,9 +289,26 @@ ShipAI::ExecFrame(double secs)
 		return;
 	}
 
+	const int32 ClockMS = ship->GetMissionClockMS();
+	const double ClockSec = ship->GetMissionClock();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI] CLOCK Ship='%hs' Sec=%.3f MS=%d"),
+		ship->GetName(),
+		ClockSec,
+		ClockMS);
+	
 	// initial assessment:
-	if (ship->GetMissionClock() < 5000)
+	if (ship->GetMissionClockMS() < 500)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI] WAITING Ship='%hs' MissionClockMS=%d"),
+			ship->GetName(),
+			ship->GetMissionClockMS());
+
 		return;
+	}
+	
 
 	element_index = ship->GetElementIndex();
 

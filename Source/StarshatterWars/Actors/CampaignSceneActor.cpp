@@ -21,6 +21,9 @@
 #include "Sim.h"
 #include "Ship.h"
 
+#include "SimDirector.h"
+#include "TimerSubsystem.h"
+
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 
@@ -48,6 +51,7 @@ namespace
 ACampaignSceneActor::ACampaignSceneActor()
 {
     PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bStartWithTickEnabled = true;
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
     RootComponent = SceneRoot;
@@ -62,9 +66,28 @@ void ACampaignSceneActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        {
+            Timer->ManualMissionTick(DeltaSeconds);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] TIMER TICK Delta=%.4f MissionMS=%d State=%d"),
+                DeltaSeconds,
+                Timer->GetMissionTimeMS(),
+                (int32)Timer->GetMissionClockState());
+        }
+    }
+
     if (bEnableRuntimeAITick)
     {
         TickRuntimeShips(DeltaSeconds);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Runtime AI tick DISABLED"));
     }
 }
 
@@ -116,6 +139,14 @@ void ACampaignSceneActor::ClearSceneActors()
 
 void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 {
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        {
+            Timer->ManualMissionTick(DeltaSeconds);
+        }
+    }
+
     const double SimSeconds =
         FMath::Clamp((double)DeltaSeconds * (double)RuntimeAITimeScale, 0.0, (double)MaxRuntimeTickSeconds);
 
@@ -646,6 +677,17 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
 {
     ClearSceneActors();
 
+    //-------------------------------------------------------------
+    // START MISSION CLOCK 
+    //-------------------------------------------------------------
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        {
+            Timer->StartMissionRun(true);
+        }
+    }
+
     CurrentMissionRegionName = MissionData.MissionRegion.TrimStartAndEnd();
 
     UE_LOG(LogTemp, Warning,
@@ -1157,7 +1199,38 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 4. Seed runtime transform
+    // 4. Runtime control setup
+    //-------------------------------------------------------------
+    if (Elem.Player == 1)
+    {
+        // CameraPod / player ship. No AI director.
+        NewShip->SetNetworkControl(nullptr);
+        NewShip->SetPlayerShip(Elem.Player == 1);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Player ship control setup '%s' Dir=%p NetControl=%p"),
+            *Elem.Name,
+            NewShip->GetDirector(),
+            NewShip->GetNetworkControl());
+    }
+    else
+    {
+        // AI ships. Passing nullptr allows Ship::SetNetworkControl()
+        // to create SteerAI internally.
+        NewShip->SetNetworkControl(nullptr);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] AI ship control setup '%s' IFF=%d Dir=%p NetControl=%p Static=%d Starship=%d"),
+            *Elem.Name,
+            NewShip->GetIFF(),
+            NewShip->GetDirector(),
+            NewShip->GetNetworkControl(),
+            NewShip->IsStatic() ? 1 : 0,
+            NewShip->IsStarship() ? 1 : 0);
+    }
+
+    //-------------------------------------------------------------
+    // 5. Seed runtime transform
     //-------------------------------------------------------------
     NewShip->MoveTo(WorldLoc);
 
@@ -1173,7 +1246,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         Elem.Heading);
 
     //-------------------------------------------------------------
-    // 5. Initial state
+    // 6. Initial state
     //-------------------------------------------------------------
     NewShip->SetInvulnerable(Elem.Invulnerable);
 
@@ -1182,7 +1255,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     );
 
     //-------------------------------------------------------------
-    // 5B. Temporary movement bridge
+    // 7. Temporary movement bridge
     //-------------------------------------------------------------
     if (Elem.Navpoint.Num() > 0)
     {
@@ -1195,7 +1268,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 6. Assign region
+    // 8. Assign region
     //-------------------------------------------------------------
     Sim* SimInst = Sim::GetSim();
 
@@ -1239,7 +1312,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 7. Player ship assignment
+    // 9. Player ship assignment
     //-------------------------------------------------------------
     if (!CurrentPlayerShip && Elem.Player == 1)
     {
@@ -1270,7 +1343,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 8. Navpoints -> Instructions
+    // 10. Navpoints -> Instructions
     //-------------------------------------------------------------
     for (const FS_MissionInstruction& Nav : Elem.Navpoint)
     {
@@ -1326,8 +1399,9 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             Nav.Priority);
     }
 
+   
     //-------------------------------------------------------------
-    // 9. Final log
+    // 11. Final log
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d NavPoints=%d"),
@@ -1494,7 +1568,7 @@ FVector ACampaignSceneActor::GetFormationOffsetForElement(
     int32 FollowerIndex,
     int32 FollowerCount) const
 {
-    const float Spacing = 3500.0f;
+    const float Spacing = 1800.0f;
 
     const int32 SafeIndex = FollowerIndex + 1;
 
