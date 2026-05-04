@@ -31,6 +31,7 @@
 #include "Bolt.h"
 #include "Solid.h"
 #include "Game.h"
+#include "GameStructs_System.h"
 
 // Minimal Unreal includes:
 #include "Math/Vector.h"
@@ -74,9 +75,15 @@ DrivePort::~DrivePort()
 
 // +----------------------------------------------------------------------+
 
-Drive::Drive(SUBTYPE InSubtype, float MaxThrust, float MaxAug, bool bShow)
-    : SimSystem(SYSTEM_CATEGORY::DRIVE, InSubtype, "Drive", drive_value[InSubtype],
-        MaxThrust * 2.0f, MaxThrust * 2.0f, MaxThrust * 2.0f),
+Drive::Drive(EDriveType InType, float MaxThrust, float MaxAug, bool bShow)
+    : SimSystem(
+        SYSTEM_CATEGORY::DRIVE,
+        (int)InType,
+        "Drive",
+        drive_value[(int)InType],
+        MaxThrust * 2.0f,
+        MaxThrust * 2.0f,
+        MaxThrust * 2.0f),
     thrust(MaxThrust),
     augmenter(MaxAug),
     scale(0.0f),
@@ -89,18 +96,8 @@ Drive::Drive(SUBTYPE InSubtype, float MaxThrust, float MaxAug, bool bShow)
 {
     power_flags = POWER_WATTS;
 
-    switch (InSubtype) {
-    default:
-    case PLASMA:  name = Game::GetText("sys.drive.plasma");  break;
-    case FUSION:  name = Game::GetText("sys.drive.fusion");  break;
-    case GREEN:   name = Game::GetText("sys.drive.green");   break;
-    case RED:     name = Game::GetText("sys.drive.red");     break;
-    case BLUE:    name = Game::GetText("sys.drive.blue");    break;
-    case YELLOW:  name = Game::GetText("sys.drive.yellow");  break;
-    case STEALTH: name = Game::GetText("sys.drive.stealth"); break;
-    }
-
-    abrv = Game::GetText("sys.drive.abrv");
+    name = "Drive";
+    abrv = "DRV";
 
     emcon_power[0] = 0;
     emcon_power[1] = 50;
@@ -125,7 +122,7 @@ Drive::Drive(const Drive& d)
 
     Mount(d);
 
-    if (subtype != Drive::STEALTH) {
+    if (subtype != (int) EDriveType::STEALTH) {
         for (int i = 0; i < d.ports.size(); i++) {
             DrivePort* p = d.ports[i];
             CreatePort(p->loc, p->scale);
@@ -252,7 +249,7 @@ Drive::CreatePort(const FVector& InLoc, float FlareScale)
     if (augmenter <= 0)
         GlowBmp = drive_glow_bitmap[subtype];
 
-    if (subtype != Drive::STEALTH && FlareScale > 0) {
+    if (subtype != (int) EDriveType::STEALTH && FlareScale > 0) {
         DrivePort* Port = new DrivePort(InLoc, FlareScale);
 
         if (FlareBmp) {
@@ -443,6 +440,17 @@ Drive::Thrust(double seconds)
     int    vol_aug = -10000;
     double fraction = (thrust != 0.0f) ? (output / thrust) : 0.0;
 
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Drive::Thrust] ENTER Ship=%p PowerOn=%d Throttle=%.2f AugThrottle=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Seconds=%.4f"),
+        ship,
+        IsPowerOn() ? 1 : 0,
+        throttle,
+        augmenter_throttle,
+        thrust,
+        augmenter,
+        GetRequest(seconds),
+        seconds);
+
     for (int i = 0; i < ports.size(); i++) {
         DrivePort* p = ports[i];
 
@@ -478,7 +486,7 @@ Drive::Thrust(double seconds)
     CameraManager* cam_dir = CameraManager::GetInstance();
 
     // no sound when paused!
-    if (!Game::Paused() && subtype != STEALTH && cam_dir && cam_dir->GetCamera()) {
+    if (!Game::Paused() && subtype != (int) EDriveType::STEALTH && cam_dir && cam_dir->GetCamera()) {
         if (ship && ship->GetRegion() == Sim::GetSim()->GetActiveRegion()) {
             if (!sound) {
                 int sound_index = 0;

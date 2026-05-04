@@ -144,6 +144,8 @@ public:
     virtual void      SelectDetail(double seconds);
     virtual void      SetRegion(SimRegion* rgn);
 
+    void              InitializeRuntimeSystemsFromDesign();
+    
     // NOTE: Bitmap replaced by UTexture2D*
     virtual int       GetTextureList(List<UTexture2D*>& textures);
 
@@ -505,6 +507,7 @@ protected:
     List<WeaponGroup> weapons;
     List<Drive>       drives;
     List<Computer>    computers;
+    List<Thruster>    thrusters;
     List<FlightDeck>  flight_decks;
     List<NavLight>    navlights;
     List<SimSystem>   repair_queue;

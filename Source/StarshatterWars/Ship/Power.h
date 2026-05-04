@@ -20,6 +20,7 @@
 #include "Types.h"
 #include "SimSystem.h"
 #include "List.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -28,7 +29,7 @@ class PowerSource : public SimSystem
 public:
 	enum SUBTYPE { BATTERY, AUX, FUSION };
 
-	PowerSource(SUBTYPE s, double max_output, double fuel_ratio = 0);
+	PowerSource(EPowerSource s, double max_output, double fuel_ratio = 0);
 	PowerSource(const PowerSource& rhs);
 
 	virtual void ExecFrame(double seconds);

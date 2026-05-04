@@ -18,6 +18,7 @@
 
 #include "Types.h"
 #include "SimSystem.h"
+#include "GameStructs_System.h"
 
 // NOTE:
 // Geometry types (Point/Vec3) are migrated to Unreal's FVector.
@@ -54,10 +55,10 @@ struct DrivePort
 class Drive : public SimSystem
 {
 public:
-	enum SUBTYPE { PLASMA, FUSION, GREEN, RED, BLUE, YELLOW, STEALTH };
+
 	enum Constants { MAX_ENGINES = 16 };
 
-	Drive(SUBTYPE s, float max_thrust, float max_aug, bool show_trail = true);
+	Drive(EDriveType InType, float max_thrust, float max_aug, bool show_trail = true);
 	Drive(const Drive& rhs);
 	virtual ~Drive();
 

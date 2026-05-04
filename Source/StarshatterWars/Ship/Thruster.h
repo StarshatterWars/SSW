@@ -89,6 +89,10 @@ public:
     virtual void   Orient(const Physical* rep);
     virtual double GetRequest(double seconds) const;
 
+    void SetThrust(double InThrust) { thrust = InThrust; }
+    void SetThrusterScale(float InScale) { scale = InScale; }
+    void SetHullFactor(float InHullFactor) { hull_factor = InHullFactor; }
+
 protected:
     void           IncBurn(int inc, int dec);
     void           DecBurn(int a, int b);

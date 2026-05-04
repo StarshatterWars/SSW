@@ -1182,6 +1182,19 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     );
 
     //-------------------------------------------------------------
+    // 5B. Temporary movement bridge
+    //-------------------------------------------------------------
+    if (Elem.Navpoint.Num() > 0)
+    {
+        NewShip->SetThrottle(100.0);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] FORCE throttle '%s' NavPoints=%d"),
+            *Elem.Name,
+            Elem.Navpoint.Num());
+    }
+
+    //-------------------------------------------------------------
     // 6. Assign region
     //-------------------------------------------------------------
     Sim* SimInst = Sim::GetSim();

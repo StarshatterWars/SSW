@@ -60,11 +60,20 @@ drive:      {
 
 thruster: {
    design:           Thruster,
-
+   type:             Yellow,
    loc:              (0, 0, 64),
    size:             24,
-   hull_factor:      0.3
-   }
+   hull_factor:      0.3,
+
+   port_left:   {loc:( -42,   0,   0), fire: 0x0041}
+   port_right:  {loc:(  42,   0,   0), fire: 0x0082}
+
+   port_fore:   {loc:(   0,   0, 430), fire: 0x0044}
+   port_aft:    {loc:(   0,   0,-360), fire: 0x0088}
+
+   port_top:    {loc:(   0,  28,  40), fire: 0x0510}
+   port_bottom: {loc:(   0, -28,  40), fire: 0x0A20}
+}
 
 quantum:     {
    design:           "Quantum Drive",

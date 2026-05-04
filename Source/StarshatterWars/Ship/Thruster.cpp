@@ -46,6 +46,7 @@
 #include "Sprite.h"
 #include "Game.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 // Unreal color replacement:
 #include "Math/Color.h"
@@ -124,7 +125,7 @@ Thruster::Thruster(const Thruster& t)
     for (int i = 0; i < 12; ++i)
         burn[i] = 0.0f;
 
-    if (subtype != Drive::STEALTH) {
+    if (subtype != (int) EDriveType::STEALTH) {
         for (int i = 0; i < t.ports.size(); i++) {
             ThrusterPort* p = t.ports[i];
             CreatePort(p->type, p->loc, p->fire, p->scale);
@@ -553,7 +554,7 @@ Thruster::CreatePort(int ptype, const FVector& loc, DWORD fire, float flare_scal
     Bitmap* flare_bmp = drive_flare_bitmap[subtype];
     Bitmap* trail_bmp = drive_trail_bitmap[subtype];
 
-    if (subtype != Drive::STEALTH) {
+    if (subtype != (int) EDriveType::STEALTH) {
 
         Sprite* flare_rep = new Sprite(flare_bmp);
         flare_rep->Scale(flare_scale * 0.667f);

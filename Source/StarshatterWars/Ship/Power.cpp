@@ -18,6 +18,7 @@
 #include "Power.h"
 #include "Ship.h"
 #include "Game.h"
+#include "GameStructs_System.h"
 
 // +----------------------------------------------------------------------+
  
@@ -31,25 +32,46 @@ static int source_value[] = {
 	1, 2, 4
 };
 
-PowerSource::PowerSource(SUBTYPE s, double max_out, double f_ratio)
-	: SimSystem(SYSTEM_CATEGORY::POWER_SOURCE, (int)s, "Power", source_value[s], 0),
-	max_output((float)max_out), fuel_ratio((float)f_ratio),
-	route_changed(false), requested_power_level(1.0f)
+PowerSource::PowerSource(EPowerSource stype, double max_out, double f_ratio)
+	: SimSystem(
+		SYSTEM_CATEGORY::POWER_SOURCE,
+		(int)stype,
+		"Power",
+		source_value[(int)stype],
+		0),
+	max_output((float)max_out),
+	fuel_ratio((float)f_ratio),
+	route_changed(false),
+	requested_power_level(1.0f)
 {
-	name = Game::GetText(source_type[s]);
-	abrv = Game::GetText(Text(source_type[s]) + ".abrv");
+	const int TypeIndex = (int)stype;
 
-	if (fuel_ratio < 1) {
-		switch (subtype) {    // enough to last for [n] hours at full power
-		case BATTERY:     fuel_ratio = max_output * 5 * 3600 / 100; break;
-		case AUX:         fuel_ratio = max_output * 50 * 3600 / 100; break;
-		case FUSION:      fuel_ratio = max_output * 100 * 3600 / 100; break;
+	if (fuel_ratio < 1)
+	{
+		switch (stype)
+		{
+		case EPowerSource::BATTERY:
+			fuel_ratio = max_output * 5 * 3600 / 100;
+			break;
+
+		case EPowerSource::AUXILIARY:
+			fuel_ratio = max_output * 50 * 3600 / 100;
+			break;
+
+		case EPowerSource::FUSION:
+			fuel_ratio = max_output * 100 * 3600 / 100;
+			break;
+
+		default:
+			fuel_ratio = 0.0f;
+			break;
 		}
 	}
 
 	capacity = 100.0f;
 
-	if (subtype != BATTERY) {
+	if (stype != EPowerSource::BATTERY)
+	{
 		emcon_power[0] = 10;
 		emcon_power[1] = 50;
 		emcon_power[2] = 100;
@@ -58,8 +80,10 @@ PowerSource::PowerSource(SUBTYPE s, double max_out, double f_ratio)
 
 PowerSource::PowerSource(const PowerSource& p)
 	: SimSystem(p),
-	max_output(p.max_output), fuel_ratio(p.fuel_ratio),
-	route_changed(false), requested_power_level(1.0f)
+	max_output(p.max_output),
+	fuel_ratio(p.fuel_ratio),
+	route_changed(false),
+	requested_power_level(1.0f)
 {
 	Mount(p);
 	SetAbbreviation(p.Abbreviation());

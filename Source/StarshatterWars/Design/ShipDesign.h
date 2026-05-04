@@ -258,6 +258,8 @@ public:
 	List<PowerSource>  reactors;
 	List<Weapon>       weapons;
 	List<HardPoint>    hard_points;
+	List<Thruster>     thrusters;
+	List<NavSystem>    navsystems;
 	List<Drive>        drives;
 	List<Computer>     computers;
 	List<FlightDeck>   flight_decks;

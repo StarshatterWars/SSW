@@ -37,6 +37,7 @@
 #include "Computer.h"
 #include "FlightComputer.h"
 #include "Drive.h"
+
 #include "QuantumDrive.h"
 #include "Farcaster.h"
 #include "Thruster.h"
@@ -193,10 +194,15 @@ Ship::Ship(
 	sim = Sim::GetSim();
 
 	strcpy_s(name, sizeof(name), ship_name ? ship_name : "");
+
 	if (reg_num && *reg_num)
+	{
 		strcpy_s(regnum, sizeof(regnum), reg_num);
+	}
 	else
+	{
 		regnum[0] = 0;
+	}
 
 	design = ship_dsn;
 
@@ -215,13 +221,47 @@ Ship::Ship(
 	vlimit = design->vlimit;
 	agility = design->agility;
 
+	wep_mass = 0.0f;
+	wep_resist = 0.0f;
+
+	CL = design->CL;
+	CD = design->CD;
+	stall = design->stall;
+
+	chase_vec = design->chase_vec;
+	bridge_vec = design->bridge_vec;
+
+	acs = design->acs;
+	pcs = design->acs;
+
+	auto_repair = design->repair_auto;
+
+	while (!base_contact_id)
+	{
+		base_contact_id = rand() % 1000;
+	}
+
+	contact_id = base_contact_id++;
+
+	int sys_id = 0;
+
+	InitializeRuntimeSystemsFromDesign();
+
 	radio_orders = new Instruction("", FVector::ZeroVector);
 
 	//-------------------------------------------------------------
-	// AI / Director Setup (FIXED)
+	// Final runtime setup
 	//-------------------------------------------------------------
+	if (IsStarship())
+	{
+		flcs_mode = FLCS_HELM;
+	}
+
 	dir = nullptr;
 
+	//-------------------------------------------------------------
+	// AI / Director Setup
+	//-------------------------------------------------------------
 	if (bCreateAI && cmd_ai > 0)
 	{
 		SimDirector* Director = SteerAI::Create(this, cmd_ai);
@@ -243,6 +283,24 @@ Ship::Ship(
 			TEXT("[Ship] AI/DIRECTOR DISABLED for '%hs'"),
 			ship_name);
 	}
+
+	for (int i = 0; i < 4; i++)
+	{
+		missile_id[i] = 0;
+		missile_eta[i] = 0;
+		trigger[i] = false;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship] Constructed '%hs' Reactors=%d Drives=%d MainDrive=%p Thruster=%p NavSys=%p FLCS=%p Systems=%d"),
+		GetName(),
+		reactors.size(),
+		drives.size(),
+		main_drive,
+		thruster,
+		navsys,
+		flcs,
+		systems.size());
 }
 
 Ship::Ship(
@@ -266,6 +324,140 @@ Ship::Ship(
 	: Ship(ship_name, reg_num, (ShipDesign*)nullptr, IFF, cmd_ai, loadout, false)
 {
 	UnrealDesign = unreal_design;
+}
+
+void Ship::InitializeRuntimeSystemsFromDesign()
+{
+	if (!design)
+	{
+		return;
+	}
+
+	int sys_id = 0;
+
+	//-------------------------------------------------------------
+	// Power sources
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->reactors.size(); i++)
+	{
+		PowerSource* reactor = new PowerSource(*design->reactors[i]);
+
+		reactor->SetShip(this);
+		reactor->SetID(sys_id++);
+
+		reactors.append(reactor);
+		systems.append(reactor);
+	}
+
+	//-------------------------------------------------------------
+	// Drives
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->drives.size(); i++)
+	{
+		Drive* drive = new Drive(*design->drives[i]);
+
+		drive->SetShip(this);
+		drive->SetID(sys_id++);
+
+		const int src_index = drive->GetSourceIndex();
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(drive);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(drive);
+		}
+
+		drives.append(drive);
+		systems.append(drive);
+	}
+
+	//-------------------------------------------------------------
+	// Main drive - one selected runtime drive
+	//-------------------------------------------------------------
+	if (design->main_drive >= 0 && design->main_drive < drives.size())
+	{
+		main_drive = drives[design->main_drive];
+	}
+	else if (drives.size() > 0)
+	{
+		main_drive = drives[0];
+	}
+	else
+	{
+		main_drive = nullptr;
+	}
+
+	//-------------------------------------------------------------
+	// Thruster - one selected runtime thruster
+	//-------------------------------------------------------------
+	thruster = nullptr;
+
+	if (design->thruster)
+	{
+		Thruster* runtime_thruster = new Thruster(*design->thruster);
+
+		runtime_thruster->SetShip(this);
+		runtime_thruster->SetID(sys_id++);
+
+		const int src_index = runtime_thruster->GetSourceIndex();
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(runtime_thruster);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(runtime_thruster);
+		}
+
+		thrusters.append(runtime_thruster);
+		systems.append(runtime_thruster);
+
+		thruster = runtime_thruster;
+	}
+	else if (thrusters.size() > 0)
+	{
+		thruster = thrusters[0];
+	}
+
+	//-------------------------------------------------------------
+	// Nav system - one selected runtime nav system
+	//-------------------------------------------------------------
+	navsys = nullptr;
+
+	if (design->navsys)
+	{
+		NavSystem* runtime_navsys = new NavSystem(*design->navsys);
+
+		runtime_navsys->SetShip(this);
+		runtime_navsys->SetID(sys_id++);
+
+		const int src_index = runtime_navsys->GetSourceIndex();
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(runtime_navsys);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(runtime_navsys);
+		}
+
+		systems.append(runtime_navsys);
+
+		navsys = runtime_navsys;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship] Runtime systems initialized '%hs' Reactors=%d Drives=%d MainDrive=%p Thrusters=%d Thruster=%p NavSys=%p Systems=%d"),
+		GetName(),
+		reactors.size(),
+		drives.size(),
+		main_drive,
+		thrusters.size(),
+		thruster,
+		navsys,
+		systems.size());
 }
 
 // +--------------------------------------------------------------------+
@@ -2448,6 +2640,17 @@ void Ship::ExecPhysics(double seconds)
 		dir->ExecFrame(seconds);
 	}
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecPhysics] DRIVE CHECK Ship='%hs' MainDrive=%p DriveCount=%d Flcs=%p Throttle=%.2f Request=%.2f VLimit=%.2f"),
+		GetName(),
+		main_drive,
+		drives.size(),
+		flcs,
+		throttle,
+		throttle_request,
+		vlimit);
+
+	thrust = (float)Thrust(seconds);
 	thrust = (float)Thrust(seconds);
 
 	UE_LOG(LogTemp, Warning,
@@ -3845,6 +4048,16 @@ Ship::Thrust(double seconds) const
 {
 	double total_thrust = 0.0;
 
+	const char* ShipName = GetName() ? GetName() : "Unknown";
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::Thrust] ENTER Ship='%s' Seconds=%.4f ShipThrottle=%.2f MainDrive=%p FLCS=%p"),
+		ANSI_TO_TCHAR(ShipName),
+		seconds,
+		throttle,
+		main_drive,
+		flcs);
+
 	if (main_drive) {
 		const FVector H = GetHeading();
 		FVector       V = GetVelocity();
@@ -3856,37 +4069,94 @@ Ship::Thrust(double seconds) const
 		double Vfwd = FVector::DotProduct(H, V);
 		const bool bAugOn = main_drive->IsAugmenterOn();
 
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::Thrust] MotionState vmag=%.2f Vfwd=%.2f vlimit=%.2f AugOn=%d"),
+			vmag,
+			Vfwd,
+			vlimit,
+			bAugOn ? 1 : 0);
+
 		if (vmag > vlimit && Vfwd > 0.0) {
 			double Vmax = vlimit;
 			if (bAugOn)
 				Vmax *= 1.5;
 
+			const double VfwdOrig = Vfwd;
 			Vfwd = 0.5 * Vfwd + 0.5;
 
 			thrust_factor =
 				(Vfwd * FMath::Pow(Vmax, 3.0) / FMath::Pow(vmag, 3.0)) +
 				(1.0 - Vfwd);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship::Thrust] VelocityLimit Applied VfwdOrig=%.2f VfwdAdj=%.2f Vmax=%.2f ThrustFactor=%.4f"),
+				VfwdOrig,
+				Vfwd,
+				Vmax,
+				thrust_factor);
 		}
 
-		if (flcs)
-			eff_throttle = flcs->Throttle();
+		// FLCS override
+		if (flcs) {
+			const double flcsThrottle = flcs->Throttle();
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship::Thrust] FLCS Override ShipThrottle=%.2f FLCSThrottle=%.2f"),
+				throttle,
+				flcsThrottle);
+
+			eff_throttle = flcsThrottle;
+		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::Thrust] PreFlightModel EffThrottle=%.2f FlightModel=%d"),
+			eff_throttle,
+			flight_model);
 
 		if (flight_model > 1) {
+			const double before = eff_throttle;
+
 			eff_throttle /= 100.0;
 			eff_throttle *= eff_throttle;
 			eff_throttle *= 100.0;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship::Thrust] FlightModel Transform Before=%.2f After=%.2f"),
+				before,
+				eff_throttle);
 		}
 
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::Thrust] FINAL EffThrottle=%.2f Augmenter=%d -> SetThrottle"),
+			eff_throttle,
+			augmenter ? 1 : 0);
+
 		main_drive->SetThrottle(eff_throttle, augmenter);
-		total_thrust += thrust_factor * main_drive->Thrust(seconds);
+
+		const double drive_thrust = main_drive->Thrust(seconds);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::Thrust] DriveReturned Thrust=%.4f ThrustFactor=%.4f FinalContribution=%.4f"),
+			drive_thrust,
+			thrust_factor,
+			thrust_factor * drive_thrust);
+
+		total_thrust += thrust_factor * drive_thrust;
 
 		if (bAugOn && shake < 1.5f)
 			((Ship*)this)->shake = 1.5f;
 	}
+	else {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::Thrust] WARNING: main_drive is null"));
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::Thrust] EXIT TotalThrust=%.4f"),
+		total_thrust);
 
 	return total_thrust;
 }
-
 
 // +--------------------------------------------------------------------+
 

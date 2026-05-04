@@ -123,6 +123,9 @@ public:
 	void              SetEMCONPower(int emcon, int power_level);
 	int               GetEMCONPower(int emcon);
 
+	void			  SetHullFactor(float InHullFactor) { hull_factor = InHullFactor; }
+	float			  GetHullFactor() const { return hull_factor; }
+
 	int               GetExplosionType() const { return explosion_type; }
 	void              SetExplosionType(int t) { explosion_type = t; }
 

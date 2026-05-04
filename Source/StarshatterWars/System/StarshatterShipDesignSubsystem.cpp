@@ -1147,24 +1147,34 @@ void UStarshatterShipDesignSubsystem::ParsePower(TermStruct* Val, const char* Fn
 			{
 				NewShipPower.Type = PowerTypeFromText(TypeName);
 
-				if (NewShipPower.Type == EPowerSource::NONE)
+				switch (NewShipPower.Type)
 				{
+				case EPowerSource::BATTERY:
+					NewShipPower.PName = TEXT("Battery");
+					NewShipPower.PAbrv = TEXT("BTTY");
+					break;
+
+				case EPowerSource::AUXILIARY:
+					NewShipPower.PName = TEXT("Auxiliary Reactor");
+					NewShipPower.PAbrv = TEXT("AUX");
+					break;
+
+				case EPowerSource::FUSION:
+					NewShipPower.PName = TEXT("Fusion Reactor");
+					NewShipPower.PAbrv = TEXT("FUSION");
+					break;
+
+				default:
+					NewShipPower.PName = TEXT("Unknown");
+					NewShipPower.PAbrv = TEXT("UNK");
+
 					UE_LOG(LogTemp, Warning,
 						TEXT("ParsePower: unknown power type '%s' in '%s'"),
 						*FString(ANSI_TO_TCHAR(TypeName.data())),
 						*FString(ANSI_TO_TCHAR(Fn)));
+					break;
 				}
 			}
-		}
-		else if (Key == "name")
-		{
-			GetDefText(PName, PDef, Fn);
-			NewShipPower.PName = FString(PName);
-		}
-		else if (Key == "abrv")
-		{
-			GetDefText(PAbrv, PDef, Fn);
-			NewShipPower.PAbrv = FString(PAbrv);
 		}
 		else if (Key == "design")
 		{
@@ -1299,12 +1309,52 @@ void UStarshatterShipDesignSubsystem::ParseDrive(TermStruct* Val, const char* Fn
 				const FString TypeStr = FString(ANSI_TO_TCHAR(TypeName.data()));
 				NewDrive.Type = ParseDriveTypeString(TypeStr);
 
-				if (NewDrive.Type == EDriveType::UNKNOWN)
+				switch (NewDrive.Type)
 				{
+				case EDriveType::PLASMA:
+					NewDrive.Name = TEXT("Plasma Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::FUSION:
+					NewDrive.Name = TEXT("Fusion Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::GREEN:
+					NewDrive.Name = TEXT("Green/Alien Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::RED:
+					NewDrive.Name = TEXT("Red Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::BLUE:
+					NewDrive.Name = TEXT("Blue Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::YELLOW:
+					NewDrive.Name = TEXT("Yellow Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				case EDriveType::STEALTH:
+					NewDrive.Name = TEXT("Stealth Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+					break;
+
+				default:
+					NewDrive.Name = TEXT("Unknown Drive");
+					NewDrive.Abbrev = TEXT("DRIVE");
+
 					UE_LOG(LogTemp, Warning,
 						TEXT("ParseDrive: unknown drive type '%s' in '%s'"),
 						*TypeStr,
 						*FString(ANSI_TO_TCHAR(Fn)));
+					break;
 				}
 			}
 		}

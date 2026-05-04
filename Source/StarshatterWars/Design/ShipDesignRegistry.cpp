@@ -17,6 +17,10 @@
 */
 
 #include "ShipDesignRegistry.h"
+#include "Power.h"
+#include "Drive.h"
+#include "Thruster.h"
+#include "NavSystem.h"
 
 TMap<FName, FShipDesign> ShipDesignRegistry::DesignsByName;
 TMap<FName, ShipDesign*> ShipDesignRegistry::LegacyDesignsByName;
@@ -176,6 +180,10 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         return nullptr;
     }
 
+    Legacy->reactors.clear();
+    Legacy->drives.clear();
+    Legacy->thrusters.clear();
+
     const FString NameStr = RowName.ToString();
 
     CopyStringToAnsi(Legacy->name, sizeof(Legacy->name), NameStr);
@@ -242,5 +250,151 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     Legacy->trans_y = Row.Trans.Y;
     Legacy->trans_z = Row.Trans.Z;
 
+    for (const FShipPower& Src : Row.Power)
+    {
+        if (Src.Type == EPowerSource::NONE)
+        {
+            continue;
+        }
+
+        PowerSource* Reactor = new PowerSource(
+            Src.Type,
+            Src.Output,
+            Src.Fuel
+        );
+
+        Reactor->SetName(TCHAR_TO_ANSI(*Src.PName));
+        Reactor->SetAbbreviation(TCHAR_TO_ANSI(*Src.PAbrv));
+
+        Legacy->reactors.append(Reactor);
+    }
+
+    //-------------------------------------------------------------
+    // Drives
+    //-------------------------------------------------------------
+
+    for (const FShipDrive& Src : Row.Drive)
+    {
+        if (Src.Type == EDriveType::UNKNOWN)
+        {
+            continue;
+        }
+
+        Drive* NewDrive = new Drive(
+            Src.Type,
+            Src.Thrust,
+            Src.Augmenter,
+            Src.bShowTrail
+        );
+
+        if (!Src.DesignName.IsEmpty())
+        {
+            NewDrive->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewDrive->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        for (const FDrivePort& Port : Src.Ports)
+        {
+            NewDrive->CreatePort(Port.Location, Port.FlareScale);
+        }
+
+        Legacy->drives.append(NewDrive);
+    }
+
+    Legacy->main_drive = Legacy->drives.size() > 0 ? 0 : -1;
+    //-------------------------------------------------------------
+    // Thrusters
+    //-------------------------------------------------------------
+    for (const FShipThruster& Src : Row.Thruster)
+    {
+        if (Src.Type == EDriveType::UNKNOWN)
+        {
+            continue;
+        }
+
+        Thruster* NewThruster = new Thruster(
+            static_cast<int>(Src.Type),
+            Src.Thrust,
+            Src.ThrusterScale
+        );
+
+        if (!Src.DesignName.IsEmpty())
+        {
+            NewThruster->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+
+        NewThruster->SetSourceIndex(Src.SourceIndex);
+        NewThruster->SetHullFactor(Src.HullFactor);
+
+        for (const FThrusterPort& Port : Src.Ports)
+        {
+            NewThruster->CreatePort(
+                static_cast<int>(Port.Direction),
+                Port.Location,
+                static_cast<DWORD>(Port.Fire),
+                Port.PortScale
+            );
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry] Thruster built Row='%s' Thruster=%p Ports=%d"),
+                *RowName.ToString(),
+                NewThruster,
+                NewThruster->NumThrusters());
+
+            for (int i = 0; i < NewThruster->NumThrusters(); i++)
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[ShipDesignRegistry]   Port[%d] Type=%d Flare=%p Trail=%p"),
+                    i,
+                    i,
+                    NewThruster->Flare(i),
+                    NewThruster->Trail(i));
+            }
+        }
+
+        Legacy->thrusters.append(NewThruster);
+    }
+
+    Legacy->thruster = Legacy->thrusters.size() > 0 ? Legacy->thrusters[0] : nullptr;
+    
+    //-------------------------------------------------------------
+    // Nav system
+    //-------------------------------------------------------------
+    Legacy->navsys = nullptr;
+
+    for (const FShipNavSystem& Src : Row.NavSys)
+    {
+        if (Src.DesignName.IsEmpty())
+        {
+            continue;
+        }
+
+        NavSystem* NewNavSys = new NavSystem();
+
+        NewNavSys->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        NewNavSys->SetSourceIndex(Src.SourceIndex);
+        NewNavSys->SetHullFactor(Src.HullFactor);
+
+        Legacy->navsys = NewNavSys;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] NavSys built Row='%s' NavSys=%p Name='%s' SourceIndex=%d HullFactor=%.2f"),
+            *RowName.ToString(),
+            Legacy->navsys,
+            *Src.DesignName,
+            Src.SourceIndex,
+            Src.HullFactor);
+
+        Legacy->navsystems.append(NewNavSys);
+    }
+
+    Legacy->navsys = Legacy->navsystems.size() > 0 ? Legacy->navsystems[0] : nullptr;
     return Legacy;
 }
+
+
+    

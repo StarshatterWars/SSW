@@ -1739,7 +1739,7 @@ ShipDesign::ParsePower(TermStruct* val)
 		}
 	}
 
-	PowerSource* source = new  PowerSource((PowerSource::SUBTYPE)stype, output);
+	/*PowerSource* source = new  PowerSource((PowerSource::SUBTYPE)stype, output);
 	if (pname.length()) source->SetName(pname);
 	if (pabrv.length()) source->SetName(pabrv);
 	source->SetFuelRange(fuel);
@@ -1761,7 +1761,7 @@ ShipDesign::ParsePower(TermStruct* val)
 	if (emcon_3 >= 0 && emcon_3 <= 100)
 		source->SetEMCONPower(3, emcon_3);
 
-	reactors.append(source);
+	reactors.append(source);*/
 }
 
 // +--------------------------------------------------------------------+
@@ -1799,7 +1799,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 					Text tval = tname->value();
 					tval.setSensitive(false);
 
-					if (tval == "Plasma")            dtype = Drive::PLASMA;
+					/*if (tval == "Plasma")            dtype = Drive::PLASMA;
 					else if (tval == "Fusion")       dtype = Drive::FUSION;
 					else if (tval == "Alien")        dtype = Drive::GREEN;
 					else if (tval == "Green")        dtype = Drive::GREEN;
@@ -1811,7 +1811,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 						UE_LOG(LogShipDesign, Warning, TEXT("WARNING: unknown drive type '%s' in '%s'"),
 							ANSI_TO_TCHAR(tname->value().data()),
 							ANSI_TO_TCHAR(filename));
-					}
+					}*/
 				}
 			}
 
@@ -1892,7 +1892,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 				}
 
 				if (!drive)
-					drive = new Drive((Drive::SUBTYPE)dtype, dthrust, daug, trail);
+					drive = new Drive((EDriveType)dtype, dthrust, daug, trail);
 
 				drive->AddPort(port, flare_scale);
 			}
@@ -1946,7 +1946,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 	}
 
 	if (!drive)
-		drive = new Drive((Drive::SUBTYPE)dtype, dthrust, daug, trail);
+		drive = new Drive((EDriveType)dtype, dthrust, daug, trail);
 
 	drive->SetSourceIndex(reactors.size() - 1);
 	drive->Mount(loc, size, hull);
@@ -2221,7 +2221,7 @@ ShipDesign::ParseThruster(TermStruct* val)
 				Text tval = tname->value();
 				tval.setSensitive(false);
 
-				if (tval == "Plasma")  dtype = Drive::PLASMA;
+				/*if (tval == "Plasma")  dtype = Drive::PLASMA;
 				else if (tval == "Fusion")  dtype = Drive::FUSION;
 				else if (tval == "Alien")   dtype = Drive::GREEN;
 				else if (tval == "Green")   dtype = Drive::GREEN;
@@ -2234,7 +2234,7 @@ ShipDesign::ParseThruster(TermStruct* val)
 						TEXT("WARNING: unknown thruster type '%s' in '%s'"),
 						ANSI_TO_TCHAR(tname->value().data()),
 						ANSI_TO_TCHAR(filename));
-				}
+				}*/
 			}
 		}
 		else if (defname == "thrust") {
