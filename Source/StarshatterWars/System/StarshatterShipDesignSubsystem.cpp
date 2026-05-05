@@ -249,10 +249,10 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	if (bFull)
-	{
+	//if (bFull)
+	//{
 		InitializeShipDesigns();
-	}
+	//}
 
 	LoadShipDesignTable();
 }
@@ -3410,7 +3410,6 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 	Text DAbrv;
 	Text DesignName;
 	Text ModelName;
-	Text TypeName;
 
 	double Factor = 0.0;
 	double Capacity = 0.0;
@@ -3449,61 +3448,44 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 		// We need "contains" behavior -> convert to FString (lowered)
 		const FString Key = ANSI_TO_TCHAR(PDef->name()->value().data());
 
-		if (Key == "type")
-		{
-			if (GetDefText(TypeName, PDef, Fn))
-			{
-				const FString TypeStr = FString(ANSI_TO_TCHAR(TypeName.data()));
-
-				if (TypeStr.Equals(TEXT("deflector"), ESearchCase::IgnoreCase))
-				{
-					NewShield.ShieldType = EShieldType::DEFLECTOR;
-					NewShield.Name = TEXT("Deflector Shield");
-					NewShield.Abbrev = TEXT("SHLD");
-				}
-				else if (TypeStr.Equals(TEXT("grav"), ESearchCase::IgnoreCase) ||
-					TypeStr.Equals(TEXT("gravshield"), ESearchCase::IgnoreCase) ||
-					TypeStr.Equals(TEXT("grav_shield"), ESearchCase::IgnoreCase))
-				{
-					NewShield.ShieldType = EShieldType::GRAV_SHIELD;
-					NewShield.Name = TEXT("Grav Shield");
-					NewShield.Abbrev = TEXT("SHLD");
-				}
-				else if (TypeStr.Equals(TEXT("hyper"), ESearchCase::IgnoreCase) ||
-					TypeStr.Equals(TEXT("hypershield"), ESearchCase::IgnoreCase) ||
-					TypeStr.Equals(TEXT("hyper_shield"), ESearchCase::IgnoreCase))
-				{
-					NewShield.ShieldType = EShieldType::HYPER_SHIELD;
-					NewShield.Name = TEXT("Hyper Shield");
-					NewShield.Abbrev = TEXT("SHLD");
-				}
-				else
-				{
-					NewShield.ShieldType = EShieldType::UNKNOWN;
-					NewShield.Name = TEXT("Unknown Shield");
-					NewShield.Abbrev = TEXT("SHLD");
-
-					UE_LOG(LogTemp, Warning,
-						TEXT("ParseShield: unknown shield type '%s' in '%s'"),
-						*TypeStr,
-						*FString(ANSI_TO_TCHAR(Fn)));
-				}
-			}
-		}
-		else if (Key == "name")
-		{
-			GetDefText(DName, PDef, Fn);
-			NewShield.Name = FString(DName);
-		}
-		else if (Key == "abrv")
-		{
-			GetDefText(DAbrv, PDef, Fn);
-			NewShield.Abbrev = FString(DAbrv);
-		}
-		else if (Key.Equals(TEXT("design"), ESearchCase::IgnoreCase))
+		if (Key.Equals(TEXT("design"), ESearchCase::IgnoreCase))
 		{
 			GetDefText(DesignName, PDef, Fn);
-			NewShield.DesignName = FString(DesignName);
+
+			const FString DesignStr = FString(ANSI_TO_TCHAR(DesignName.data()));
+			NewShield.DesignName = DesignStr;
+
+			if (DesignStr.Equals(TEXT("Deflector Shield"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("Deflector"), ESearchCase::IgnoreCase))
+			{
+				NewShield.ShieldType = EShieldType::DEFLECTOR;
+				NewShield.Name = TEXT("Deflector Shield");
+				NewShield.Abbrev = TEXT("SHLD");
+			}
+			else if (DesignStr.Equals(TEXT("Grav Shield"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("Grav"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("GravShield"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("Grav_Shield"), ESearchCase::IgnoreCase))
+			{
+				NewShield.ShieldType = EShieldType::GRAV_SHIELD;
+				NewShield.Name = TEXT("Grav Shield");
+				NewShield.Abbrev = TEXT("SHLD");
+			}
+			else if (DesignStr.Equals(TEXT("Hyper Shield"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("Hyper"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("HyperShield"), ESearchCase::IgnoreCase) ||
+				DesignStr.Equals(TEXT("Hyper_Shield"), ESearchCase::IgnoreCase))
+			{
+				NewShield.ShieldType = EShieldType::HYPER_SHIELD;
+				NewShield.Name = TEXT("Hyper Shield");
+				NewShield.Abbrev = TEXT("SHLD");
+			}
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ParseShield] Design='%s' -> ShieldType=%d Name='%s'"),
+				*DesignStr,
+				(int32)NewShield.ShieldType,
+				*NewShield.Name);
 		}
 		else if (Key.Equals(TEXT("model"), ESearchCase::IgnoreCase))
 		{

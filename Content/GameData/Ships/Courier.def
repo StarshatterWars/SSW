@@ -84,8 +84,7 @@ quantum:     {
 
 
 shield:     {
-   type:             1,
-   design:           "Grav Shield",
+   design:           "Deflector Shield",
    factor:           0.002,
    pcs:              100,
    loc:              (0, 20, -80),

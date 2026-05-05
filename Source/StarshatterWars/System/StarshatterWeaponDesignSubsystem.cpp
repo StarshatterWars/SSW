@@ -51,16 +51,42 @@ static bool IsWeaponRootDef(const Text& DefName)
 
 static void ClampStores(FWeaponDesign& W)
 {
-    // Legacy fixed MAX_STORES=16; keep counters sane.
 #ifndef SSW_MAX_STORES
 #define SSW_MAX_STORES 16
 #endif
+
     W.NStores = FMath::Clamp(W.NStores, 0, SSW_MAX_STORES);
     W.NBarrels = FMath::Clamp(W.NBarrels, 0, SSW_MAX_STORES);
 
-    // Force fixed arrays for tooling/runtime consistency:
-    W.MuzzlePoints.SetNum(SSW_MAX_STORES);
-    W.Attachments.SetNum(SSW_MAX_STORES);
+    if (W.MuzzlePoints.Num() < SSW_MAX_STORES)
+    {
+        const int32 OldNum = W.MuzzlePoints.Num();
+        W.MuzzlePoints.SetNum(SSW_MAX_STORES);
+
+        for (int32 Index = OldNum; Index < SSW_MAX_STORES; ++Index)
+        {
+            W.MuzzlePoints[Index] = FVector::ZeroVector;
+        }
+    }
+    else if (W.MuzzlePoints.Num() > SSW_MAX_STORES)
+    {
+        W.MuzzlePoints.SetNum(SSW_MAX_STORES);
+    }
+
+    if (W.Attachments.Num() < SSW_MAX_STORES)
+    {
+        const int32 OldNum = W.Attachments.Num();
+        W.Attachments.SetNum(SSW_MAX_STORES);
+
+        for (int32 Index = OldNum; Index < SSW_MAX_STORES; ++Index)
+        {
+            W.Attachments[Index] = FVector::ZeroVector;
+        }
+    }
+    else if (W.Attachments.Num() > SSW_MAX_STORES)
+    {
+        W.Attachments.SetNum(SSW_MAX_STORES);
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -244,10 +270,13 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
             }
 
             // Legacy fixed arrays:
-            W.MuzzlePoints.SetNum(16);
-            W.Attachments.SetNum(16);
             W.NBarrels = 0;
             W.NStores = 0;
+
+            // Critical: initialize all fixed slots.
+            // SetNum() can leave stale/garbage FVector values in unused entries.
+            W.MuzzlePoints.Init(FVector::ZeroVector, 16);
+            W.Attachments.Init(FVector::ZeroVector, 16);
 
             // Defaults mirrored from your C++ ctor:
             W.AimAzMax = 1.5f;

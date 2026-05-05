@@ -122,12 +122,11 @@ quantum: {
 }
 
 shield: {
-   type:             2,
    design:           "Grav Shield",
    pcs:              100,
-   model:            "Destroyer_Shield.mag",
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   model:            "Destroyer_Shield",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    loc:              (0, -20, 0),
    size:             48,

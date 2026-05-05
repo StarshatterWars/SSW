@@ -122,7 +122,6 @@ quantum: {
 }
 
 shield: {
-   type:             2,
    design:           "Grav Shield",
    pcs:              100,
    model:            "Spectre_Shield",

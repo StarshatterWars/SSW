@@ -33,7 +33,6 @@ power:      {
 }
 
 shield:     {
-   type:             2,
    design:           "Grav Shield",
    factor:           0.0125,
    consumption:      7500,

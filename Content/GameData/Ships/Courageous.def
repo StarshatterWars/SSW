@@ -123,13 +123,11 @@ quantum: {
 }
 
 shield: {
-   type:             2,
    design:           "Grav Shield"
-   abrv:             "Shield"
    pcs:              100,
    model:            "CourageousShield",
-   bolt_hit_sound:   "shield_hit4.wav"
-   beam_hit_sound:   "shield_hit5.wav"
+   bolt_hit_sound:   "shield_hit4"
+   beam_hit_sound:   "shield_hit5"
 
    loc:              (0, 0, 40),
    size:             42,

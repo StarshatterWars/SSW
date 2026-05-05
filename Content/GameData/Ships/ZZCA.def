@@ -81,8 +81,7 @@ quantum: {
 }
 
 shield: {
-   type:             3,
-   design:           "Hyper Shield",
+   design:           "Hyper",
    shield_bubble:    true,
    pcs:              100,
    model:            "ZShieldB2"

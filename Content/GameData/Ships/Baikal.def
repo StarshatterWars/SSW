@@ -109,14 +109,12 @@ quantum:     {
 
 
 shield:     {
-   type:             2,
    design:           "Grav Shield",
-   abrv:             Shield
    factor:           0.02,
    consumption:      1500,
-   // model:            "BaikalShield.mag",
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   model:            "BaikalShield",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    pcs:              100
    loc:              (0, 20, -80)
