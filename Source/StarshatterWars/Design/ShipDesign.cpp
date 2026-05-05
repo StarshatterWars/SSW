@@ -35,6 +35,7 @@
 #include "Farcaster.h"
 #include "Thruster.h"
 #include "FlightDeck.h"
+#include "ShipLoad.h"
 #include "LandingGear.h"
 #include "Computer.h"
 #include "SystemDesign.h"
@@ -122,11 +123,6 @@ static List<FVector> offset[4];
 static char errmsg[256];
 
 // +--------------------------------------------------------------------+
-
-ShipLoad::ShipLoad()
-{
-	mass = 0;
-}
 
 ShipSquadron::ShipSquadron()
 {
@@ -460,9 +456,9 @@ ShipDesign::ShipDesign(const char* n, const char* p, const char* fname, bool s)
 	// calc standard loadout weights:
 	ListIter<ShipLoad> LoadIter = loadouts;
 	while (++LoadIter) {
-		for (int HpIndex = 0; HpIndex < hard_points.size(); HpIndex++) {
-			HardPoint* Hp = hard_points[HpIndex];
-			LoadIter->mass += Hp->GetCarryMass(LoadIter->load[HpIndex]);
+		for (int HpIndex = 0; HpIndex < hardpoints.size(); HpIndex++) {
+			HardPoint* Hp = hardpoints[HpIndex];
+			LoadIter->SetMass(LoadIter->GetMass() + Hp->GetCarryMass(LoadIter->GetStation(HpIndex)));
 		}
 	}
 }
@@ -3099,7 +3095,7 @@ ShipDesign::ParseHardPoint(TermStruct* val)
 	if (wabrv.length())  hp->SetAbbreviation(wabrv);
 	if (design.length()) hp->SetDesign(design);
 
-	hard_points.append(hp);
+	hardpoints.append(hp);
 
 	DataLoader::GetLoader()->SetDataPath(path_name);
 }
@@ -3113,17 +3109,17 @@ ShipDesign::ParseLoadout(TermStruct* val)
 	if (!load)
 		return;
 
-	for (int i = 0; i < val->elements()->size(); i++) {
+	/*for (int i = 0; i < val->elements()->size(); i++) {
 		TermDef* pdef = val->elements()->at(i)->isDef();
 		if (pdef) {
 			Text defname = pdef->name()->value();
 			defname.setSensitive(false);
 
 			if (defname == "name")
-				GetDefText(load->name, pdef, filename);
+				GetDefText(load->GetName(), pdef, filename);
 
 			else if (defname == "stations")
-				GetDefArray(load->load, 16, pdef, filename);
+				GetDefArray(load->GetStation(), 16, pdef, filename);
 
 			else {
 				UE_LOG(LogShipDesign, Warning, TEXT("WARNING: unknown loadout parameter '%s' in '%s'"),
@@ -3131,7 +3127,7 @@ ShipDesign::ParseLoadout(TermStruct* val)
 					ANSI_TO_TCHAR(filename));
 			}
 		}
-	}
+	}*/
 
 	loadouts.append(load);
 }

@@ -101,9 +101,9 @@ void UStarshatterWeaponDesignSubsystem::Deinitialize()
 void UStarshatterWeaponDesignSubsystem::LoadAll(bool bFull)
 {
     UE_LOG(LogTemp, Log, TEXT("UStarshatterWeaponDesignSubsystem::LoadAll()"));
-    if (!bFull) {
+    //if (!bFull) {
         LoadWeaponDesigns();
-    }
+   //}
     
     // Runtime path:
     ReadWeaponDesignData();

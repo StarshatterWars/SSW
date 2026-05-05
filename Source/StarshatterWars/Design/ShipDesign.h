@@ -45,23 +45,13 @@ class NavLight;
 class NavSystem;
 class Shield;
 class FlightDeck;
+class ShipLoad;
 class LandingGear;
 class SimSystem;
 class USound;
 
 // +====================================================================+
 
-class ShipLoad
-{
-public:
-	static const char* TYPENAME() { return "ShipLoad"; }
-
-	ShipLoad();
-
-	char     name[64];
-	int      load[16];
-	double   mass;
-};
 
 class ShipSquadron
 {
@@ -257,7 +247,7 @@ public:
 
 	List<PowerSource>  reactors;
 	List<Weapon>       weapons;
-	List<HardPoint>    hard_points;
+	List<HardPoint>    hardpoints;
 	List<Thruster>     thrusters;
 	List<NavSystem>    navsystems;
 	List<Sensor>       sensors;

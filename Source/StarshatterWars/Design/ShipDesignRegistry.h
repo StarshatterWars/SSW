@@ -76,6 +76,7 @@ private:
 
     static ShipDesign* ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row);
     static void CopyStringToAnsi(char* Dest, int32 DestSize, const FString& Source);
+    static void ResetShipComponents(ShipDesign* Legacy);
 
 private:
 

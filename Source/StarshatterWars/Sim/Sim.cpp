@@ -62,6 +62,7 @@
 #include "Sound.h"
 #include "Bolt.h"
 #include "Solid.h"
+#include "ShipLoad.h"
 #include "Sprite.h"
 #include "SimLight.h"
 #include "DataLoader.h"
@@ -614,11 +615,21 @@ Sim::CreateElements()
 
 							ListIter<ShipLoad> ShipLoadIter = LegacyDesign->loadouts;
 
-							while (++ShipLoadIter) {
+							while (++ShipLoadIter)
+							{
 								ShipLoad* ShipLoadPtr = ShipLoadIter.value();
+								if (!ShipLoadPtr)
+									continue;
 
-								if (MissionLoadPtr->GetName() == ShipLoadPtr->name)
-									DefaultLoadout = ShipLoadPtr->load;
+								if (MissionLoadPtr->GetName() == ShipLoadPtr->GetName())
+								{
+									for (int i = 0; i < 16; i++)
+									{
+										DefaultLoadout[i] = ShipLoadPtr->GetStation(i);
+									}
+
+									break;
+								}
 							}
 						}
 
@@ -790,11 +801,24 @@ Sim::CreateElements()
 							ShipDesign* LocalShipDesignPtr =
 								ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
 
-							if (LocalShipDesignPtr) {
+							if (LocalShipDesignPtr)
+							{
 								ListIter<ShipLoad> ShipLoadIter = LocalShipDesignPtr->loadouts;
-								while (++ShipLoadIter) {
-									if (!_stricmp(ShipLoadIter->name, MissionLoadPtr->GetName()))
-										Loadout = ShipLoadIter->load;
+
+								while (++ShipLoadIter)
+								{
+									ShipLoad* ShipLoadPtr = ShipLoadIter.value();
+
+									if (ShipLoadPtr && MissionLoadPtr &&
+										!_stricmp(ShipLoadPtr->GetName(), MissionLoadPtr->GetName()))
+									{
+										for (int i = 0; i < 16; i++)
+										{
+											Loadout[i] = ShipLoadPtr->GetStation(i);
+										}
+
+										break;
+									}
 								}
 							}
 						}
@@ -886,12 +910,24 @@ Sim::CreateElements()
 							if (LoadIter->GetName().length()) {
 								ShipDesign* ShipDesignPtr =
 									ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
-
-								if (ShipDesignPtr) {
+								if (ShipDesignPtr)
+								{
 									ListIter<ShipLoad> ShipLoadIter = ShipDesignPtr->loadouts;
-									while (++ShipLoadIter) {
-										if (!_stricmp(ShipLoadIter->name, LoadIter->GetName()))
-											Loadout = ShipLoadIter->load;
+
+									while (++ShipLoadIter)
+									{
+										ShipLoad* ShipLoadPtr = ShipLoadIter.value();
+
+										if (ShipLoadPtr &&
+											!_stricmp(ShipLoadPtr->GetName(), LoadIter->GetName()))
+										{
+											for (int idx = 0; idx < 16; idx++)
+											{
+												Loadout[idx] = ShipLoadPtr->GetStation(idx);
+											}
+
+											break;
+										}
 									}
 								}
 							}

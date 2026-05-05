@@ -50,6 +50,7 @@ class Farcaster;
 class FlightComputer;
 class FlightDeck;
 class Hangar;
+class HardPoint;
 class InboundSlot;
 class Instruction;
 class LandingGear;
@@ -145,6 +146,7 @@ public:
     virtual void      SetRegion(SimRegion* rgn);
 
     void              InitializeRuntimeSystemsFromDesign();
+    void              InitializeRuntimeWeaponsFromDesign();
     
     // NOTE: Bitmap replaced by UTexture2D*
     virtual int       GetTextureList(List<UTexture2D*>& textures);
@@ -517,6 +519,7 @@ protected:
     List<SimSystem>   systems;
     List<PowerSource> reactors;
     List<WeaponGroup> weapons;
+    List<HardPoint>   hardpoints;
     List<Drive>       drives;
     List<Computer>    computers;
     List<Thruster>    thrusters;

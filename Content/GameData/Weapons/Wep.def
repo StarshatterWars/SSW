@@ -3,7 +3,7 @@ WEAPON
 primary: {
    name:             "Alpha Cannon"
    group:            GUNS
-   beauty:           "Alpha_Beauty.pcx"
+   beauty:           "Alpha_Beauty"
    description:      "The ALPHA CANNON is the high-energy particle weapon in use on most Hegemony fighter craft. Analysts believe that this weapon is nearing end-of-life phase out, but remains in service because it is cheap and reliable.  The Alpha Cannon tends to be low in effective damage and penetration, but makes up for those limitations with a high refire rate."
    target_type:      0x000f00ff
    value:            1
@@ -25,8 +25,8 @@ primary: {
    width:            2.0
    length:           80.0
    light:            100
-   bitmap:           "shot0.pcx"
-   flash:            "flash0.pcx"
+   bitmap:           "shot0"
+   flash:            "flash0"
    flash_scale:      0.5
    sound:            "Shot1.wav"
    sound_min_dist:   100
@@ -69,7 +69,7 @@ primary: {
 primary: {
    name:             "Heavy Cannon"
    group:            GUNS
-   beauty:           "Heavy_Beauty.pcx"
+   beauty:           "Heavy_Beauty"
    description:      "The HEAVY ENERGY CANNON has recently been fitted on the F/A-38D Thunderbolt series of attack fighters.  The Heavy is a slimmed down version of the retired 'Chain Lightning' cannon used on early model LCAs for mine sweeping and antiship warfare.  This is the first time a weapon of this caliber has been fitted on a single seat fighter.  The Heavy is too slow and unweildy to be effective against maneuvering fighters, but the high damage potential makes this weapon a first-rate ship killer."
    target_type:      0x000fffff
    value:            1
@@ -91,8 +91,8 @@ primary: {
    width:            3.0
    length:           70.0
    light:            100
-   bitmap:           "shot4.pcx"
-   flash:            "flash4.pcx"
+   bitmap:           "shot4"
+   flash:            "flash4"
    flash_scale:      0.5
    sound:            "blockade_cannon.wav"
    sound_min_dist:   500
@@ -102,7 +102,7 @@ primary: {
 primary: {
    name:             "Fighter Turret"
    group:            TURRET
-   beauty:           "Turret1_Beauty.pcx"
+   beauty:           "Turret1_Beauty"
    description:      "This automated FIGHTER TURRET provides rear quarter protection for the F/A-38D Thunderbolt series of attack fighters.  The turret is tied into the Alliance sensor network and will automatically engage any threat that comes within its range.  Even though it is not the most accurate platform in the fleet, the Fighter Turret is an effective deterrent to any fighters attempting a tail chase on the 'Bolt."
    target_type:      0x000fffff
    value:            1
@@ -181,7 +181,7 @@ primary: {
 missile: {
    name:             Archer
    group:            SRM
-   beauty:           "Javelin_Beauty.pcx"
+   beauty:           "Javelin_Beauty"
    description:      "The ARCHER SRM is the standard Hegemony anti-fighter munition.  Although not very fast, the Archer is very maneuverable, which makes it deadly accurate in short range engagements.  The Archer's main weakness is its low-quality seeker head.  The Archer can be defeated by releasing a decoy and performing a break turn at low power.  Each Archer hardpoint carries two weapons."
    target_type:      0x000f00ff
    value:            2

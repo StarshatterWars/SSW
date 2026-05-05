@@ -35,6 +35,7 @@
 #include "Galaxy.h"
 #include "Instruction.h"
 #include "Skin.h"
+#include "ShipLoad.h"
 #include "Game.h"
 #include "ParseUtil.h"
 #include "GameStructs.h"
@@ -465,12 +466,12 @@ void UMissionElementDlg::RebuildSkinAndLoadoutFromDesign()
                 for (int i = 0; i < Loadouts.size(); i++)
                 {
                     const ShipLoad* L = Loadouts[i];
-                    if (L && L->name[0])
+                    if (L && L->GetName()[0])
                     {
-                        const FString Opt = ANSI_TO_TCHAR(L->name);
+                        const FString Opt = ANSI_TO_TCHAR(L->GetName());
                         LoadoutCombo->AddOption(Opt);
 
-                        if (MLoad && (MLoad->GetName() == L->name))
+                        if (MLoad && (MLoad->GetName() == L->GetName()))
                             LoadIndex = LoadoutCombo->GetOptionCount() - 1;
                     }
                 }

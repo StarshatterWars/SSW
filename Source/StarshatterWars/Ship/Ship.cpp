@@ -38,10 +38,12 @@
 #include "FlightComputer.h"
 #include "Drive.h"
 
+#include "WeaponDesign.h"
+#include "Power.h"
 #include "QuantumDrive.h"
 #include "Farcaster.h"
 #include "Thruster.h"
-#include "Power.h"
+
 #include "FlightDeck.h"
 #include "LandingGear.h"
 #include "Hangar.h"
@@ -248,6 +250,7 @@ Ship::Ship(
 	int sys_id = 0;
 
 	InitializeRuntimeSystemsFromDesign();
+	InitializeRuntimeWeaponsFromDesign();
 
 	radio_orders = new Instruction("", FVector::ZeroVector);
 
@@ -610,6 +613,88 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		shield,
 		quantum_drive,
 		farcaster);
+}
+
+void Ship::InitializeRuntimeWeaponsFromDesign()
+{
+	if (!design)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[Ship] InitializeRuntimeWeaponsFromDesign FAILED: design is null Ship=%p"),
+			this);
+		return;
+	}
+
+	int SysID = systems.size();
+
+	//-------------------------------------------------------------
+	// Weapon groups from design weapons
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->weapons.size(); i++)
+	{
+		Weapon* RuntimeWeapon = new Weapon(*design->weapons[i]);
+
+		RuntimeWeapon->SetOwner(this);
+		RuntimeWeapon->SetID(SysID++);
+
+		if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(RuntimeWeapon);
+		}
+
+		systems.append(RuntimeWeapon);
+
+		WeaponGroup* Group = nullptr;
+
+		for (int g = 0; g < weapons.size(); g++)
+		{
+			if (!strcmp(weapons[g]->Name(), RuntimeWeapon->Group()))
+			{
+				Group = weapons[g];
+				break;
+			}
+		}
+
+		if (!Group)
+		{
+			Group = new WeaponGroup(RuntimeWeapon->Group());
+			weapons.append(Group);
+		}
+
+		Group->AddWeapon(RuntimeWeapon);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Weapon runtime built Ship='%hs' Weapon=%p Group='%hs' Groups=%d Systems=%d"),
+			GetName(),
+			RuntimeWeapon,
+			RuntimeWeapon->Group(),
+			weapons.size(),
+			systems.size());
+	}
+
+	//-------------------------------------------------------------
+	// Hardpoints
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->hardpoints.size(); i++)
+	{
+		HardPoint* RuntimeHardpoint = new HardPoint(*design->hardpoints[i]);
+
+		hardpoints.append(RuntimeHardpoint);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Hardpoint runtime built Ship='%hs' Hardpoint=%p Name='%hs' Design='%hs'"),
+			GetName(),
+			RuntimeHardpoint,
+			RuntimeHardpoint->GetName(),
+			RuntimeHardpoint->GetDesign());
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship] InitializeRuntimeWeaponsFromDesign COMPLETE Ship='%hs' Weapons=%d Hardpoints=%d Systems=%d"),
+		GetName(),
+		weapons.size(),
+		hardpoints.size(),
+		systems.size());
 }
 
 // +--------------------------------------------------------------------+

@@ -26,6 +26,12 @@
 #include "Sensor.h"
 #include "Shield.h"
 #include "Computer.h"
+#include "FlightComputer.h"
+#include "HardPoint.h"
+#include "Weapon.h"
+#include "WeaponGroup.h"
+
+#include "WeaponDesignRegistry.h"
 
 TMap<FName, FShipDesign> ShipDesignRegistry::DesignsByName;
 TMap<FName, ShipDesign*> ShipDesignRegistry::LegacyDesignsByName;
@@ -176,6 +182,28 @@ void ShipDesignRegistry::CopyStringToAnsi(char* Dest, int32 DestSize, const FStr
     Dest[DestSize - 1] = '\0';
 }
 
+void
+ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
+    Ship->reactors.clear();
+    Ship->drives.clear();
+    Ship->thrusters.clear();
+    Ship->quantum_drives.clear();
+    Ship->farcasters.clear();
+    Ship->navsystems.clear();
+    Ship->sensors.clear();
+    Ship->shields.clear();
+    Ship->computers.clear();        
+    Ship->hardpoints.clear();
+    Ship->weapons.clear();
+
+    Ship->quantum_drive = nullptr;
+    Ship->farcaster = nullptr;
+    Ship->navsys = nullptr;
+    Ship->thruster = nullptr;
+    Ship->sensor = nullptr;
+    Ship->shield = nullptr;
+}
+
 ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
 {
     ShipDesign* Legacy = new ShipDesign();
@@ -185,22 +213,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         return nullptr;
     }
 
-    Legacy->reactors.clear();
-    Legacy->drives.clear();
-    Legacy->thrusters.clear();
-    Legacy->quantum_drives.clear();
-    Legacy->farcasters.clear();
-    Legacy->navsystems.clear();
-    Legacy->sensors.clear();
-    Legacy->shields.clear();
-    Legacy->computers.clear();
-
-    Legacy->quantum_drive = nullptr;
-    Legacy->farcaster = nullptr;
-    Legacy->navsys = nullptr;
-	Legacy->thruster = nullptr;
-    Legacy->sensor = nullptr;
-    Legacy->shield = nullptr;
+	ResetShipComponents(Legacy);
 
     const FString NameStr = RowName.ToString();
 
@@ -553,8 +566,6 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     //-------------------------------------------------------------
     // Quantum drives
     //-------------------------------------------------------------
-    Legacy->quantum_drives.clear();
-    Legacy->quantum_drive = nullptr;
 
     for (const FShipQuantum& Src : Row.Quantum)
     {
@@ -643,6 +654,204 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     Legacy->farcaster =
         Legacy->farcasters.size() > 0 ? Legacy->farcasters[0] : nullptr;
   
+    //-------------------------------------------------------------
+    // Weapons
+    //-------------------------------------------------------------
+    for (const FShipWeapon& Src : Row.Weapon)
+    {
+        if (Src.WeaponType.IsEmpty())
+        {
+            continue;
+        }
+
+        WeaponDesign* WpnDesign =
+            WeaponDesignRegistry::FindLegacy(Src.WeaponType);
+
+        if (!WpnDesign)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[ShipDesignRegistry] WeaponDesign NOT FOUND Row='%s' Name='%s' Type='%s'"),
+                *RowName.ToString(),
+                *Src.Name,
+                *Src.WeaponType);
+            continue;
+        }
+
+        FVector Muzzles[Weapon::MAX_BARRELS];
+
+        int32 MuzzleCount = FMath::Clamp(
+            Src.Muzzles.Num(),
+            0,
+            Weapon::MAX_BARRELS
+        );
+
+        if (MuzzleCount > 0)
+        {
+            for (int32 i = 0; i < MuzzleCount; ++i)
+            {
+                Muzzles[i] = Src.Muzzles[i];
+            }
+        }
+        else
+        {
+            MuzzleCount = 1;
+            Muzzles[0] = Src.Location;
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry] Weapon '%s' has no muzzles; using Location fallback"),
+                *Src.Name);
+        }
+
+        Weapon* NewWeapon = new Weapon(
+            WpnDesign,
+            MuzzleCount,
+            Muzzles,
+            Src.AzimuthRadians,
+            Src.ElevationRadians
+        );
+
+        if (!Src.GroupName.IsEmpty())
+        {
+            NewWeapon->SetGroup(TCHAR_TO_ANSI(*Src.GroupName));
+        }
+
+        if (Src.Aim.bHasAzMax)
+        {
+            NewWeapon->SetAzimuthMax(Src.Aim.AzMax);
+        }
+
+        if (Src.Aim.bHasAzMin)
+        {
+            NewWeapon->SetAzimuthMin(Src.Aim.AzMin);
+        }
+
+        if (Src.Aim.bHasElMax)
+        {
+            NewWeapon->SetElevationMax(Src.Aim.ElMax);
+        }
+
+        if (Src.Aim.bHasElMin)
+        {
+            NewWeapon->SetElevationMin(Src.Aim.ElMin);
+        }
+
+        if (Src.Aim.bHasAzRest)
+        {
+            NewWeapon->SetRestAzimuth(Src.Aim.AzRest);
+        }
+
+        if (Src.Aim.bHasElRest)
+        {
+            NewWeapon->SetRestElevation(Src.Aim.ElRest);
+        }
+
+        Legacy->weapons.append(NewWeapon);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Weapon built Row='%s' Weapon=%p Name='%s' Type='%s' Group='%s' Muzzles=%d SourceIndex=%d"),
+            *RowName.ToString(),
+            NewWeapon,
+            *Src.Name,
+            *Src.WeaponType,
+            *Src.GroupName,
+            MuzzleCount,
+            Src.SourceIndex);
+    }
+
+    //-------------------------------------------------------------
+// Hardpoints
+//-------------------------------------------------------------
+    for (const FShipHardPoint& Src : Row.Hardpoint)
+    {
+        if (Src.Name.IsEmpty() &&
+            Src.DesignName.IsEmpty() &&
+            Src.AllowedWeaponTypes.Num() <= 0)
+        {
+            continue;
+        }
+
+        HardPoint* NewHardpoint = new HardPoint(
+            Src.Muzzle,
+            Src.AzimuthRadians,
+            Src.ElevationRadians
+        );
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewHardpoint->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewHardpoint->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        if (!Src.DesignName.IsEmpty())
+        {
+            NewHardpoint->SetDesign(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+
+        NewHardpoint->Mount(
+            Src.Location,
+            Src.Size,
+            Src.HullFactor
+        );
+
+        for (const FString& WeaponTypeName : Src.AllowedWeaponTypes)
+        {
+            if (WeaponTypeName.IsEmpty())
+            {
+                continue;
+            }
+
+            WeaponDesign* AllowedDesign =
+                WeaponDesignRegistry::FindLegacy(WeaponTypeName);
+
+            if (!AllowedDesign)
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[ShipDesignRegistry] Hardpoint WeaponDesign NOT FOUND Row='%s' Hardpoint='%s' WeaponType='%s'"),
+                    *RowName.ToString(),
+                    *Src.Name,
+                    *WeaponTypeName);
+                continue;
+            }
+
+            NewHardpoint->AddDesign(AllowedDesign);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry]   Hardpoint allowed weapon Row='%s' Hardpoint='%s' WeaponType='%s' Design=%p"),
+                *RowName.ToString(),
+                *Src.Name,
+                *WeaponTypeName,
+                AllowedDesign);
+        }
+
+        Legacy->hardpoints.append(NewHardpoint);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Hardpoint built Row='%s' Hardpoint=%p Name='%s' Design='%s' AllowedTypes=%d"),
+            *RowName.ToString(),
+            NewHardpoint,
+            *Src.Name,
+            *Src.DesignName,
+            Src.AllowedWeaponTypes.Num());
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipDesignRegistry] ConvertToLegacyDesign COMPLETE Row='%s' Reactors=%d Drives=%d Thrusters=%d NavSys=%d Sensors=%d Shields=%d Computers=%d Quantum=%d Farcasters=%d Weapons=%d Hardpoints=%d"),
+        *RowName.ToString(),
+        Legacy->reactors.size(),
+        Legacy->drives.size(),
+        Legacy->thrusters.size(),
+        Legacy->navsystems.size(),
+        Legacy->sensors.size(),
+        Legacy->shields.size(),
+        Legacy->computers.size(),
+        Legacy->quantum_drives.size(),
+        Legacy->farcasters.size(),
+        Legacy->weapons.size(),
+        Legacy->hardpoints.size());
     return Legacy;
 }
 

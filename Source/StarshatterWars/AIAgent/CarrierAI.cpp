@@ -19,6 +19,7 @@
 
 #include "ShipAI.h"
 #include "Ship.h"
+#include "ShipLoad.h"
 #include "ShipDesign.h"
 #include "SimElement.h"
 #include "FlightPlanner.h"
@@ -352,10 +353,18 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 		Name.setSensitive(false);
 
 		ListIter<ShipLoad> ShipLoads = (List<ShipLoad>&)SquadronDesign->loadouts;
-		while (++ShipLoads) {
-			if (Name == ShipLoads->name) {
-				Loadout = ShipLoads->load;
+
+		while (++ShipLoads)
+		{
+			if (Name == ShipLoads->GetName())
+			{
+				for (int i = 0; i < 16; i++)
+				{
+					Loadout[i] = ShipLoads->GetStation(i);
+				}
+
 				Element->SetLoadout(Loadout);
+				break;
 			}
 		}
 	}
