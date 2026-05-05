@@ -23,10 +23,11 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "Thruster.h"
+#include "GameStructs_System.h"
 
 // +----------------------------------------------------------------------+
 
-FlightComputer::FlightComputer(int comp_type, const char* comp_name)
+FlightComputer::FlightComputer(EComputerType comp_type, const char* comp_name)
 	: Computer(comp_type, comp_name)
 	, mode(0)
 	, halt(0)

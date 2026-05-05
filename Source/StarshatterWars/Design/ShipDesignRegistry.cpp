@@ -21,6 +21,11 @@
 #include "Drive.h"
 #include "Thruster.h"
 #include "NavSystem.h"
+#include "Farcaster.h"
+#include "QuantumDrive.h"
+#include "Sensor.h"
+#include "Shield.h"
+#include "Computer.h"
 
 TMap<FName, FShipDesign> ShipDesignRegistry::DesignsByName;
 TMap<FName, ShipDesign*> ShipDesignRegistry::LegacyDesignsByName;
@@ -183,6 +188,19 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     Legacy->reactors.clear();
     Legacy->drives.clear();
     Legacy->thrusters.clear();
+    Legacy->quantum_drives.clear();
+    Legacy->farcasters.clear();
+    Legacy->navsystems.clear();
+    Legacy->sensors.clear();
+    Legacy->shields.clear();
+    Legacy->computers.clear();
+
+    Legacy->quantum_drive = nullptr;
+    Legacy->farcaster = nullptr;
+    Legacy->navsys = nullptr;
+	Legacy->thruster = nullptr;
+    Legacy->sensor = nullptr;
+    Legacy->shield = nullptr;
 
     const FString NameStr = RowName.ToString();
 
@@ -306,6 +324,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     }
 
     Legacy->main_drive = Legacy->drives.size() > 0 ? 0 : -1;
+    
     //-------------------------------------------------------------
     // Thrusters
     //-------------------------------------------------------------
@@ -364,8 +383,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     //-------------------------------------------------------------
     // Nav system
     //-------------------------------------------------------------
-    Legacy->navsys = nullptr;
-
+    
     for (const FShipNavSystem& Src : Row.NavSys)
     {
         if (Src.DesignName.IsEmpty())
@@ -393,6 +411,238 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     }
 
     Legacy->navsys = Legacy->navsystems.size() > 0 ? Legacy->navsystems[0] : nullptr;
+    
+    //-------------------------------------------------------------
+    // Sensors
+    //-------------------------------------------------------------
+
+    for (const FShipSensor& Src : Row.Sensor)
+    {
+        if (Src.DesignName.IsEmpty())
+        {
+            continue;
+        }
+
+        Sensor* NewSensor = new Sensor();
+
+        NewSensor->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        NewSensor->SetSourceIndex(Src.SourceIndex);
+        NewSensor->SetHullFactor(Src.HullFactor);
+        NewSensor->SetRangeSettings(Src.Ranges);
+
+        Legacy->sensors.append(NewSensor);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Sensor built Row='%s' Sensor=%p Name='%s' Ranges=%d SourceIndex=%d"),
+            *RowName.ToString(),
+            NewSensor,
+            *Src.DesignName,
+            Src.Ranges.Num(),
+            Src.SourceIndex);
+    }
+
+    Legacy->sensor =
+        Legacy->sensors.size() > 0 ? Legacy->sensors[0] : nullptr;
+
+    //-------------------------------------------------------------
+    // Shields
+    //-------------------------------------------------------------
+
+    for (const FShipShield& Src : Row.Shield)
+    {
+        if (Src.ShieldType == EShieldType::UNKNOWN)
+        {
+            continue;
+        }
+
+        Shield* NewShield = new Shield(Src.ShieldType);
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewShield->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+        else if (!Src.DesignName.IsEmpty())
+        {
+            NewShield->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewShield->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        NewShield->SetSourceIndex(Src.SourceIndex);
+        NewShield->SetHullFactor(Src.HullFactor);
+
+        NewShield->SetCapacity(Src.Capacity);
+        NewShield->SetConsumption(Src.Consumption);
+        NewShield->SetShieldFactor(Src.Factor);
+        NewShield->SetShieldCutoff(Src.Cutoff);
+        NewShield->SetShieldCurve(Src.Curve);
+        NewShield->SetDeflectionCost(Src.DeflectionCost);
+        NewShield->SetShieldCapacitor(Src.bShieldCapacitor);
+        NewShield->SetShieldBubble(Src.bShieldBubble);
+
+        Legacy->shields.append(NewShield);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Shield built Row='%s' Shield=%p Type=%d Name='%s' Cap=%.0f Cons=%.0f Factor=%.4f SourceIndex=%d"),
+            *RowName.ToString(),
+            NewShield,
+            (int32)Src.ShieldType,
+            *Src.Name,
+            Src.Capacity,
+            Src.Consumption,
+            Src.Factor,
+            Src.SourceIndex);
+    }
+
+    Legacy->shield =
+        Legacy->shields.size() > 0 ? Legacy->shields[0] : nullptr;
+    
+    //-------------------------------------------------------------
+    // Computers
+    //------------------------------------------------------------- 
+
+    for (const FShipComputer& Src : Row.Computer)
+    {
+        if (Src.Type == EComputerType::UNKNOWN)
+        {
+            continue;
+        }
+
+        const FString CompName =
+            !Src.Name.IsEmpty() ? Src.Name :
+            !Src.DesignName.IsEmpty() ? Src.DesignName :
+            TEXT("Computer");
+
+        Computer* NewComputer = new Computer(
+            Src.Type,
+            TCHAR_TO_ANSI(*CompName)
+        );
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewComputer->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+        else if (!Src.DesignName.IsEmpty())
+        {
+            NewComputer->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewComputer->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        NewComputer->SetSourceIndex(Src.SourceIndex);
+        NewComputer->SetHullFactor(Src.HullFactor);
+
+        Legacy->computers.append(NewComputer);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Computer built Row='%s' Computer=%p Type=%d Name='%s' Abbrev='%s' SourceIndex=%d"),
+            *RowName.ToString(),
+            NewComputer,
+            (int32)Src.Type,
+            *Src.Name,
+            *Src.Abbrev,
+            Src.SourceIndex);
+    }
+
+    //-------------------------------------------------------------
+    // Quantum drives
+    //-------------------------------------------------------------
+    Legacy->quantum_drives.clear();
+    Legacy->quantum_drive = nullptr;
+
+    for (const FShipQuantum& Src : Row.Quantum)
+    {
+        if (Src.DesignName.IsEmpty())
+        {
+            continue;
+        }
+
+        const QuantumDrive::SUBTYPE Subtype =
+            (Src.Type == EQuantumDriveType::HYPER)
+            ? QuantumDrive::HYPER
+            : QuantumDrive::QUANTUM;
+
+        QuantumDrive* NewQuantum = new QuantumDrive(
+            Subtype,
+            Src.Capacity,
+            Src.Consumption
+        );
+
+        NewQuantum->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        NewQuantum->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        NewQuantum->SetSourceIndex(Src.SourceIndex);
+        NewQuantum->SetHullFactor(Src.HullFactor);
+        NewQuantum->SetCountdown(Src.Countdown);
+
+        Legacy->quantum_drives.append(NewQuantum);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Quantum built Row='%s' Quantum=%p Name='%s' Type=%d Cap=%.0f Cons=%.0f Countdown=%.2f SourceIndex=%d"),
+            *RowName.ToString(),
+            NewQuantum,
+            *Src.DesignName,
+            (int32)Src.Type,
+            Src.Capacity,
+            Src.Consumption,
+            Src.Countdown,
+            Src.SourceIndex);
+    }
+
+    Legacy->quantum_drive =
+        Legacy->quantum_drives.size() > 0 ? Legacy->quantum_drives[0] : nullptr;
+
+    //-------------------------------------------------------------
+    // Farcasters
+    //-------------------------------------------------------------
+
+    for (const FShipFarcaster& Src : Row.Farcaster)
+    {
+        if (Src.DesignName.IsEmpty())
+        {
+            continue;
+        }
+
+        Farcaster* NewFarcaster = new Farcaster(
+            Src.Capacity,
+            Src.Consumption
+        );
+
+        NewFarcaster->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        NewFarcaster->SetSourceIndex(Src.SourceIndex);
+        NewFarcaster->SetHullFactor(Src.HullFactor);
+
+        NewFarcaster->SetStartPoint(Src.StartPoint);
+        NewFarcaster->SetEndPoint(Src.EndPoint);
+
+        NewFarcaster->SetCycleTime(Src.CycleTime);
+
+        for (int32 i = 0; i < Src.ApproachPoints.Num() && i < Farcaster::NUM_APPROACH_PTS; ++i)
+        {
+            NewFarcaster->SetApproachPoint(i, Src.ApproachPoints[i]);
+        }
+
+        Legacy->farcasters.append(NewFarcaster);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Farcaster built Row='%s' Farcaster=%p Name='%s' Cap=%.0f Cons=%.0f SourceIndex=%d ApproachPts=%d"),
+            *RowName.ToString(),
+            NewFarcaster,
+            *Src.DesignName,
+            Src.Capacity,
+            Src.Consumption,
+            Src.SourceIndex,
+            Src.ApproachPoints.Num());
+    }
+
+    Legacy->farcaster =
+        Legacy->farcasters.size() > 0 ? Legacy->farcasters[0] : nullptr;
+  
     return Legacy;
 }
 

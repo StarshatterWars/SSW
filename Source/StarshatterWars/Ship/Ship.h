@@ -325,8 +325,10 @@ public:
     virtual double    ACS() const;
     int               NumContacts() const;   // actual sensor contacts
     List<SimContact>& ContactList();
-    virtual int       GetSensorMode() const;
-    virtual void      SetSensorMode(int mode);
+
+    virtual ESensorMode GetSensorMode() const;
+    virtual void        SetSensorMode(ESensorMode mode);
+
     virtual void      LaunchProbe();
     virtual Weapon*    GetProbeLauncher() const { return probe; }
     virtual Drone*     GetProbe() const { return sensor_drone; }
@@ -518,8 +520,12 @@ protected:
     List<Drive>       drives;
     List<Computer>    computers;
     List<Thruster>    thrusters;
+    List<Sensor>      sensors;
+    List<Shield>      shields;
     List<FlightDeck>  flight_decks;
     List<NavLight>    navlights;
+    List<QuantumDrive> quantum_drives;
+    List<Farcaster> farcasters;
     List<SimSystem>   repair_queue;
 
     CombatUnit* combat_unit;

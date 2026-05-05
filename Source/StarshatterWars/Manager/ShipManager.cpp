@@ -219,19 +219,18 @@ ShipManager::ExecFrame(double seconds)
 		if (ship->GetSensor()) {
 			Sensor* sensor = ship->GetSensor();
 
-			if (sensor->GetMode() < Sensor::PST) {
+			if (sensor->GetMode() < ESensorMode::PST) {
 				if (KeyDown(KEY_SENSOR_MODE)) {
-					int sensor_mode = sensor->GetMode() + 1;
-					if (sensor_mode > Sensor::GM)
-						sensor_mode = Sensor::PAS;
-
-					sensor->SetMode((Sensor::Mode)sensor_mode);
+					ESensorMode sensor_mode =
+						Sensor::GetNextSensorMode(sensor->GetMode());
+	
+					sensor->SetMode(sensor_mode);
 					time_til_change = 0.5f;
 				}
 
 				else if (KeyDown(KEY_SENSOR_GROUND_MODE)) {
 					if (ship->IsAirborne()) {
-						sensor->SetMode(Sensor::GM);
+						sensor->SetMode(ESensorMode::GM);
 						time_til_change = 0.5f;
 					}
 				}

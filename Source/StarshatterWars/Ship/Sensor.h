@@ -22,6 +22,7 @@
 #include "Geometry.h"
 #include "List.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 // Minimal Unreal includes (required by API surface):
 #include "Math/Vector.h" // FVector
@@ -37,12 +38,6 @@ class Ship;
 class Sensor : public SimSystem, public SimObserver
 {
 public:
-	enum Mode
-	{
-		PAS, STD, ACM, GM,   // fighter modes
-		PST, CST             // starship modes
-	};
-
 	Sensor();
 	Sensor(const Sensor& rhs);
 	virtual ~Sensor();
@@ -57,8 +52,9 @@ public:
 
 	virtual void       ClearAllContacts();
 
-	virtual Mode       GetMode() const { return mode; }
-	virtual void       SetMode(Mode m);
+	virtual ESensorMode  GetMode() const { return mode; }
+	virtual void       SetMode(ESensorMode m);
+	
 	virtual double     GetBeamLimit() const;
 	virtual double     GetBeamRange() const;
 	virtual void       IncreaseRange();
@@ -72,6 +68,13 @@ public:
 	SimObject* AcquirePassiveTargetForMissile();
 	SimObject* AcquireActiveTargetForMissile();
 
+	void SetRangeSettings(const TArray<float>& InRanges);
+
+	static ESensorMode GetNextSensorMode(ESensorMode Mode);
+
+	void SetShip(Ship* s) { ship = s; }
+	Ship* GetShip() const { return ship; }
+
 	// SimObserver:
 	virtual bool        Update(SimObject* obj);
 	virtual const char* GetObserverName() const;
@@ -80,11 +83,12 @@ protected:
 	void              ProcessContact(Ship* contact, double az1, double az2);
 	void              ProcessContact(SimShot* contact, double az1, double az2);
 
-	Mode              mode;
+	ESensorMode       mode;
 	int               nsettings;
 	int               range_index;
 	float             range_settings[8];
 	SimObject* target;
+	Ship* ship = nullptr;
 
 	List<SimContact>     contacts;
 };

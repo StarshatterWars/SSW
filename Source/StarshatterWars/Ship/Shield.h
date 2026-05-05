@@ -18,6 +18,7 @@
 
 #include "Types.h"
 #include "SimSystem.h"
+#include "GameStructs_System.h"
 
 // No FVector/Geometry usage required in this header; keep Unreal includes out.
 
@@ -31,30 +32,37 @@ class USound;
 class Shield : public SimSystem
 {
 public:
-	enum SUBTYPE { DEFLECTOR = 1, GRAV_SHIELD, HYPER_SHIELD };
 
-	Shield(SUBTYPE s);
+	Shield(EShieldType s);
 	Shield(const Shield& rhs);
 	virtual ~Shield();
 
 	virtual void   ExecFrame(double seconds);
 	double         DeflectDamage(SimShot* shot, double shot_damage);
 
-	double         ShieldLevel()              const { return shield_level * 100; }
-	double         ShieldFactor()             const { return shield_factor; }
-	double         ShieldCurve()              const { return shield_curve; }
-	void           SetShieldFactor(double f) { shield_factor = (float)f; }
-	void           SetShieldCurve(double c) { shield_curve = (float)c; }
-	double         ShieldCutoff()             const { return shield_cutoff; }
-	void           SetShieldCutoff(double f) { shield_cutoff = (float)f; }
-	double         Capacity()                 const { return capacity; }
-	double         Consumption()              const { return sink_rate; }
-	void           SetConsumption(double r) { sink_rate = (float)r; }
-	bool           ShieldCapacitor()          const { return shield_capacitor; }
+	double         GetShieldLevel()              const { return shield_level * 100; }
+	double         GetShieldFactor()             const { return shield_factor; }
+
+	double         GetShieldCurve()				const { return shield_curve; }
+	void           SetShieldFactor(double f)	{ shield_factor = (float)f; }
+	
+	void           SetShieldCurve(double c)		{ shield_curve = (float)c; }
+
+	double         GetShieldCutoff()             const { return shield_cutoff; }
+	void           SetShieldCutoff(double f)	 { shield_cutoff = (float)f; }
+
+	double         GetCapacity()              const { return capacity; }
+
+	double         GetConsumption()				const { return sink_rate; }
+	void           SetConsumption(double r)		{ sink_rate = (float)r; }
+
+	bool           GetShieldCapacitor()       const { return shield_capacitor; }
 	void           SetShieldCapacitor(bool c);
-	bool           ShieldBubble()             const { return shield_bubble; }
-	void           SetShieldBubble(bool b) { shield_bubble = b; }
-	double         DeflectionCost()           const { return deflection_cost; }
+
+	bool           GetShieldBubble()			const { return shield_bubble; }
+	void           SetShieldBubble(bool b)		{ shield_bubble = b; }
+
+	double         GetDeflectionCost()			const { return deflection_cost; }
 	void           SetDeflectionCost(double c) { deflection_cost = (float)c; }
 
 	// override from System:

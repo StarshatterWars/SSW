@@ -40,7 +40,7 @@ const double SENSOR_THRESHOLD = 0.25;
 
 Sensor::Sensor()
     : SimSystem(SYSTEM_CATEGORY::SENSOR, 1, "Dual Sensor Pkg", 1, 10, 10, 10),
-    mode(STD),
+    mode(ESensorMode::STD),
     target(0),
     nsettings(0),
     range_index(0)
@@ -58,7 +58,7 @@ Sensor::Sensor()
 
 Sensor::Sensor(const Sensor& s)
     : SimSystem(s),
-    mode(STD),
+    mode(ESensorMode::STD),
     target(0),
     nsettings(s.nsettings),
     range_index(0)
@@ -92,10 +92,10 @@ void Sensor::ClearAllContacts()
 
 double Sensor::GetBeamLimit() const
 {
-    if (mode == ACM)
+    if (mode == ESensorMode::ACM)
         return 15 * DEGREES;
 
-    if (mode <= GM)
+    if (mode <= ESensorMode::GM)
         return 45 * DEGREES;
 
     return 175 * DEGREES;
@@ -130,15 +130,15 @@ void Sensor::AddRange(double r)
     range_index = nsettings - 1;
 }
 
-void Sensor::SetMode(Mode m)
+void Sensor::SetMode(ESensorMode m)
 {
     if (mode != m) {
         // dump the contact list when changing in/out of GM:
-        if (mode == GM || m == GM)
+        if (mode == ESensorMode::GM || m == ESensorMode::GM)
             ClearAllContacts();
 
         // dump the current target on mode changes:
-        if (m <= GM) {
+        if (m <= ESensorMode::GM) {
             if (ship)
                 ship->DropTarget();
 
@@ -191,7 +191,7 @@ void Sensor::ExecFrame(double seconds)
         double az1 = -45 * DEGREES;
         double az2 = 45 * DEGREES;
 
-        if (mode > GM) {
+        if (mode > ESensorMode::GM) {
             az1 = -175 * DEGREES;
             az2 = 175 * DEGREES;
         }
@@ -289,7 +289,7 @@ void Sensor::ExecFrame(double seconds)
             }
         }
 
-        if (mode == ACM) {
+        if (mode == ESensorMode::ACM) {
             if (!ship->GetTarget())
                 ship->LockTarget(SimObject::SIM_SHIP, true, true);
         }
@@ -351,10 +351,10 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
             c_ship->IsTracking(ship));
 
     if (!threat) {
-        if (mode == GM && !c_ship->IsGroundUnit())
+        if (mode == ESensorMode::GM && !c_ship->IsGroundUnit())
             return;
 
-        if (mode != GM && c_ship->IsGroundUnit())
+        if (mode != ESensorMode::GM && c_ship->IsGroundUnit())
             return;
 
         if (min_range > sensor_range || min_range > c_ship->Design()->detet) {
@@ -369,7 +369,7 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     }
 
     // clip:
-    if (threat || vis || mode >= PST || tz > 1) {
+    if (threat || vis || mode >= ESensorMode::PST || tz > 1) {
 
         // correct az/el for back hemisphere:
         if (tz < 0) {
@@ -385,7 +385,7 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 
         // did this contact get scanned this frame?
         if (effectivity > SENSOR_THRESHOLD) {
-            if (az >= az1 && az <= az2 && (mode >= PST || fabs(el) < 45 * DEGREES)) {
+            if (az >= az1 && az <= az2 && (mode >= ESensorMode::PST || fabs(el) < 45 * DEGREES)) {
                 double passive_range_limit = 500e3;
                 if (c_ship->Design()->detet > passive_range_limit)
                     passive_range_limit = c_ship->Design()->detet;
@@ -399,7 +399,7 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
                     double max_range = probe->GetDesign()->GetLethalRadius();
                     d_act = c_ship->ACS() * (1 - min_range / max_range);
                 }
-                else if (mode != PAS && mode != PST) {
+                else if (mode != ESensorMode::PAS && mode != ESensorMode::PST) {
                     double max_range = sensor_range;
                     d_act = c_ship->ACS() * effectivity * (1 - min_range / max_range);
                 }
@@ -478,7 +478,7 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
     bool threat = (c_shot->IsTracking(ship));
 
     // clip:
-    if (threat || vis || ((mode >= PST || tz > 1) && rng <= sensor_range)) {
+    if (threat || vis || ((mode >= ESensorMode::PST || tz > 1) && rng <= sensor_range)) {
 
         // correct az/el for back hemisphere:
         if (tz < 0) {
@@ -494,13 +494,13 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
 
         // did this contact get scanned this frame?
         if (effectivity > SENSOR_THRESHOLD) {
-            if (az >= az1 && az <= az2 && (mode >= PST || fabs(el) < 45 * DEGREES)) {
+            if (az >= az1 && az <= az2 && (mode >= ESensorMode::PST || fabs(el) < 45 * DEGREES)) {
                 if (rng < sensor_range / 2)
                     d_pas = 1.5;
                 else
                     d_pas = 0.5;
 
-                if (mode != PAS && mode != PST)
+                if (mode != ESensorMode::PAS && mode != ESensorMode::PST)
                     d_act = effectivity * (1 - rng / sensor_range);
 
                 if (d_act < 0)
@@ -557,7 +557,7 @@ SimContact* Sensor::FindContact(SimShot* s)
 
 bool Sensor::IsTracking(SimObject* tgt)
 {
-    if (tgt && mode != GM && mode != PAS && mode != PST && IsPowerOn()) {
+    if (tgt && mode != ESensorMode::GM && mode != ESensorMode::PAS && mode != ESensorMode::PST && IsPowerOn()) {
         if (tgt == target)
             return true;
 
@@ -686,8 +686,8 @@ SimObject* Sensor::LockTarget(int obj_type, bool closest, bool hostile)
 
     targets.destroy();
 
-    if (target && mode < STD)
-        mode = STD;
+    if (target && mode < ESensorMode::STD)
+        mode = ESensorMode::STD;
 
     return target;
 }
@@ -729,8 +729,8 @@ SimObject* Sensor::LockTarget(SimObject* candidate)
         }
     }
 
-    if (target && mode < STD)
-        mode = STD;
+    if (target && mode < ESensorMode::STD)
+        mode = ESensorMode::STD;
 
     return target;
 }
@@ -820,20 +820,54 @@ void Sensor::DoEMCON(int index)
             }
 
             if (emcon == 3) {
-                if (GetMode() < PST)
-                    SetMode(STD);
+                if (GetMode() < ESensorMode::PST)
+                    SetMode(ESensorMode::STD);
                 else
-                    SetMode(CST);
+                    SetMode(ESensorMode::CST);
             }
             else {
-                int m = GetMode();
-                if (m < PST && m > PAS)
-                    SetMode(Sensor::PAS);
-                else if (m == CST)
-                    SetMode(PST);
+                ESensorMode m = GetMode();
+                if (m < ESensorMode::PST && m > ESensorMode::PAS)
+                    SetMode(ESensorMode::PAS);
+                else if (m == ESensorMode::CST)
+                    SetMode(ESensorMode::PST);
             }
         }
     }
 
     emcon = index;
 }
+
+void Sensor::SetRangeSettings(const TArray<float>& InRanges)
+{
+    nsettings = 0;
+
+    for (int32 i = 0; i < 8; ++i)
+    {
+        range_settings[i] = 0.0f;
+    }
+
+    const int32 Count = FMath::Min(InRanges.Num(), 8);
+
+    for (int32 i = 0; i < Count; ++i)
+    {
+        range_settings[i] = InRanges[i];
+    }
+
+    nsettings = Count;
+    range_index = Count > 0 ? 0 : -1;
+}
+
+ESensorMode Sensor::GetNextSensorMode(ESensorMode Mode)
+{
+    switch (Mode)
+    {
+    case ESensorMode::PAS: return ESensorMode::STD;
+    case ESensorMode::STD: return ESensorMode::ACM;
+    case ESensorMode::ACM: return ESensorMode::GM;
+    case ESensorMode::GM:  return ESensorMode::PST;
+    case ESensorMode::PST: return ESensorMode::CST;
+    default:               return ESensorMode::PAS;
+    }
+}
+

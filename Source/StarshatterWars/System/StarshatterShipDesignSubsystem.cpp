@@ -3313,21 +3313,7 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 
 		const Text& Key = PDef->name()->value();
 
-		if (Key == "name")
-		{
-			if (GetDefText(CompName, PDef, Fn))
-			{
-				NewComp.Name = FString(CompName);
-			}
-		}
-		else if (Key == "abrv")
-		{
-			if (GetDefText(CompAbrv, PDef, Fn))
-			{
-				NewComp.Abbrev = FString(CompAbrv);
-			}
-		}
-		else if (Key == "design")
+		if (Key == "design")
 		{
 			if (GetDefText(DesignName, PDef, Fn))
 			{
@@ -3336,9 +3322,42 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 		}
 		else if (Key == "type")
 		{
-			GetDefNumber(CompType, PDef, Fn);
-			NewComp.Type = CompType;
+			int32 Value = 0;
+			GetDefNumber(Value, PDef, Fn);
+
+			Value = FMath::Clamp(Value, 1, 3);
+			NewComp.Type = static_cast<EComputerType>(Value);
+
+			switch (NewComp.Type)
+			{
+			case EComputerType::AVIONICS:
+				NewComp.Name = TEXT("Avionics Computer");
+				NewComp.Abbrev = TEXT("COMP");
+				break;
+
+			case EComputerType::FLIGHT:
+				NewComp.Name = TEXT("Flight Computer");
+				NewComp.Abbrev = TEXT("COMP");
+				break;
+
+			case EComputerType::TACTICAL:
+				NewComp.Name = TEXT("Tactical Computer");
+				NewComp.Abbrev = TEXT("COMP");
+				break;
+
+			default:
+				NewComp.Type = EComputerType::UNKNOWN;
+				NewComp.Name = TEXT("Unknown Computer");
+				NewComp.Abbrev = TEXT("COMP");
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseComputer: unknown type=%d in '%s'"),
+					Value,
+					*FString(ANSI_TO_TCHAR(Fn)));
+				break;
+			}
 		}
+
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
@@ -3391,6 +3410,7 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 	Text DAbrv;
 	Text DesignName;
 	Text ModelName;
+	Text TypeName;
 
 	double Factor = 0.0;
 	double Capacity = 0.0;
@@ -3429,17 +3449,53 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 		// We need "contains" behavior -> convert to FString (lowered)
 		const FString Key = ANSI_TO_TCHAR(PDef->name()->value().data());
 
-		if (Key.Equals(TEXT("type"), ESearchCase::IgnoreCase))
+		if (Key == "type")
 		{
-			GetDefNumber(ShieldType, PDef, Fn);
-			NewShield.ShieldType = ShieldType;
+			if (GetDefText(TypeName, PDef, Fn))
+			{
+				const FString TypeStr = FString(ANSI_TO_TCHAR(TypeName.data()));
+
+				if (TypeStr.Equals(TEXT("deflector"), ESearchCase::IgnoreCase))
+				{
+					NewShield.ShieldType = EShieldType::DEFLECTOR;
+					NewShield.Name = TEXT("Deflector Shield");
+					NewShield.Abbrev = TEXT("SHLD");
+				}
+				else if (TypeStr.Equals(TEXT("grav"), ESearchCase::IgnoreCase) ||
+					TypeStr.Equals(TEXT("gravshield"), ESearchCase::IgnoreCase) ||
+					TypeStr.Equals(TEXT("grav_shield"), ESearchCase::IgnoreCase))
+				{
+					NewShield.ShieldType = EShieldType::GRAV_SHIELD;
+					NewShield.Name = TEXT("Grav Shield");
+					NewShield.Abbrev = TEXT("SHLD");
+				}
+				else if (TypeStr.Equals(TEXT("hyper"), ESearchCase::IgnoreCase) ||
+					TypeStr.Equals(TEXT("hypershield"), ESearchCase::IgnoreCase) ||
+					TypeStr.Equals(TEXT("hyper_shield"), ESearchCase::IgnoreCase))
+				{
+					NewShield.ShieldType = EShieldType::HYPER_SHIELD;
+					NewShield.Name = TEXT("Hyper Shield");
+					NewShield.Abbrev = TEXT("SHLD");
+				}
+				else
+				{
+					NewShield.ShieldType = EShieldType::UNKNOWN;
+					NewShield.Name = TEXT("Unknown Shield");
+					NewShield.Abbrev = TEXT("SHLD");
+
+					UE_LOG(LogTemp, Warning,
+						TEXT("ParseShield: unknown shield type '%s' in '%s'"),
+						*TypeStr,
+						*FString(ANSI_TO_TCHAR(Fn)));
+				}
+			}
 		}
-		else if (Key.Equals(TEXT("name"), ESearchCase::IgnoreCase))
+		else if (Key == "name")
 		{
 			GetDefText(DName, PDef, Fn);
 			NewShield.Name = FString(DName);
 		}
-		else if (Key.Equals(TEXT("abrv"), ESearchCase::IgnoreCase))
+		else if (Key == "abrv")
 		{
 			GetDefText(DAbrv, PDef, Fn);
 			NewShield.Abbrev = FString(DAbrv);
@@ -3549,7 +3605,7 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 	NewShield.SourceIndex = (NewShipPowerArray.Num() > 0) ? (NewShipPowerArray.Num() - 1) : INDEX_NONE;
 
 	// Legacy validation: shield_type must be non-zero
-	if (NewShield.ShieldType <= 0)
+	if (NewShield.ShieldType == EShieldType::UNKNOWN)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ParseShield: invalid shield type in '%s'"), *NewShield.SourceFile);
 		return;

@@ -44,6 +44,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "Math/Vector.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 static const double TIME_TO_DOCK = 30.0;
 
@@ -209,7 +210,7 @@ FighterAI::ExecFrame(double s)
         static_cast<INSTRUCTION_ACTION>(static_cast<int32>(order));
 
     if (!target && InstrOrder != INSTRUCTION_ACTION::STRIKE)
-        ship->SetSensorMode(Sensor::STD);
+        ship->SetSensorMode(ESensorMode::STD);
 
     ShipAI::ExecFrame(s); // this must be the last line of this method
 

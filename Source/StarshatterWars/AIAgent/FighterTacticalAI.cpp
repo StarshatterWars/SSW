@@ -121,7 +121,7 @@ FighterTacticalAI::CheckFlightPlan()
 		}
 
 		if (order == INSTRUCTION_ACTION::STRIKE) {
-			ship->SetSensorMode(Sensor::GM);
+			ship->SetSensorMode(ESensorMode::GM);
 
 			if (IsStrikeComplete(navpt)) {
 				ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
@@ -129,8 +129,8 @@ FighterTacticalAI::CheckFlightPlan()
 		}
 
 		else if (order == INSTRUCTION_ACTION::ASSAULT) {
-			if (ship->GetSensorMode() == Sensor::GM)
-				ship->SetSensorMode(Sensor::STD);
+			if (ship->GetSensorMode() == ESensorMode::GM)
+				ship->SetSensorMode(ESensorMode::STD);
 
 			if (IsStrikeComplete(navpt)) {
 				ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
@@ -138,8 +138,8 @@ FighterTacticalAI::CheckFlightPlan()
 		}
 
 		else {
-			if (ship->GetSensorMode() == Sensor::GM)
-				ship->SetSensorMode(Sensor::STD);
+			if (ship->GetSensorMode() == ESensorMode::GM)
+				ship->SetSensorMode(ESensorMode::STD);
 		}
 	}
 
@@ -427,10 +427,10 @@ FighterTacticalAI::SelectSecondaryForTarget(Ship* tgt)
 		}
 
 		if (tgt->IsGroundUnit())
-			ship->SetSensorMode(Sensor::GM);
+			ship->SetSensorMode(ESensorMode::GM);
 
-		else if (ship->GetSensorMode() == Sensor::GM)
-			ship->SetSensorMode(Sensor::STD);
+		else if (ship->GetSensorMode() == ESensorMode::GM)
+			ship->SetSensorMode(ESensorMode::STD);
 	}
 }
 

@@ -94,6 +94,7 @@
 #include "Parser.h"
 #include "Reader.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 #include "StarshatterWarsLog.h"
 
 #include "SSWRuntimeSubsystem.h"
@@ -375,7 +376,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-	// Main drive - one selected runtime drive
+	// Main drive 
 	//-------------------------------------------------------------
 	if (design->main_drive >= 0 && design->main_drive < drives.size())
 	{
@@ -391,7 +392,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-	// Thruster - one selected runtime thruster
+	// Thruster 
 	//-------------------------------------------------------------
 	thruster = nullptr;
 
@@ -423,7 +424,35 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-	// Nav system - one selected runtime nav system
+	// Sensors
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->sensors.size(); i++)
+	{
+		Sensor* NewSensor = new Sensor(*design->sensors[i]);
+
+		NewSensor->SetID(sys_id++);
+		NewSensor->SetShip(this);
+
+		const int src_index = NewSensor->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(NewSensor);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(NewSensor);
+		}
+
+		sensors.append(NewSensor);
+		systems.append(NewSensor);
+	}
+
+	sensor =
+		sensors.size() > 0 ? sensors[0] : nullptr; sensors.size() > 0 ? sensors[0] : nullptr;
+	
+	//-------------------------------------------------------------
+	// Nav system 
 	//-------------------------------------------------------------
 	navsys = nullptr;
 
@@ -449,16 +478,138 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		navsys = runtime_navsys;
 	}
 
+	//-------------------------------------------------------------
+	// Shields
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->shields.size(); i++)
+	{
+		Shield* NewShield = new Shield(*design->shields[i]);
+
+		NewShield->SetShip(this);
+		NewShield->SetID(sys_id++);
+
+		const int src_index = NewShield->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(NewShield);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(NewShield);
+		}
+
+		shields.append(NewShield);
+		systems.append(NewShield);
+	}
+
+	shield =
+		shields.size() > 0 ? shields[0] : nullptr;
+
+	//-------------------------------------------------------------
+	// Computers
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->computers.size(); i++)
+	{
+		Computer* NewComputer = new Computer(*design->computers[i]);
+
+		NewComputer->SetShip(this);
+		NewComputer->SetID(sys_id++);
+
+		const int src_index = NewComputer->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(NewComputer);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(NewComputer);
+		}
+
+		computers.append(NewComputer);
+		systems.append(NewComputer);
+	}
+
+	//-------------------------------------------------------------
+	// Quantum drives
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->quantum_drives.size(); i++)
+	{
+		QuantumDrive* qdrive = new QuantumDrive(*design->quantum_drives[i]);
+
+		qdrive->SetShip(this);
+		qdrive->SetID(sys_id++);
+
+		const int src_index = qdrive->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(qdrive);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(qdrive);
+		}
+
+		quantum_drives.append(qdrive);
+		systems.append(qdrive);
+	}
+
+	quantum_drive =
+		quantum_drives.size() > 0 ? quantum_drives[0] : nullptr;
+
+	//-------------------------------------------------------------
+	// Farcasters
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->farcasters.size(); i++)
+	{
+		Farcaster* fcaster = new Farcaster(*design->farcasters[i]);
+
+		fcaster->SetShip(this);
+		fcaster->SetID(sys_id++);
+
+		const int src_index = fcaster->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(fcaster);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(fcaster);
+		}
+
+		farcasters.append(fcaster);
+		systems.append(fcaster);
+	}
+
+	farcaster =
+		farcasters.size() > 0 ? farcasters[0] : nullptr;
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship] Runtime systems initialized '%hs' Reactors=%d Drives=%d MainDrive=%p Thrusters=%d Thruster=%p NavSys=%p Systems=%d"),
+		TEXT("[Ship] Systems COUNT '%hs' Reactors=%d Drives=%d Thrusters=%d Sensors=%d Shields=%d Computers=%d QuantumDrives=%d Farcasters=%d Systems=%d"),
 		GetName(),
 		reactors.size(),
 		drives.size(),
-		main_drive,
 		thrusters.size(),
+		sensors.size(),
+		shields.size(),
+		computers.size(),
+		quantum_drives.size(),
+		farcasters.size(),
+		systems.size());
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship] Systems PTR '%hs' MainDrive=%p Thruster=%p NavSys=%p Sensor=%p Shield=%p Quantum=%p Farcaster=%p"),
+		GetName(),
+		main_drive,
 		thruster,
 		navsys,
-		systems.size());
+		sensor,
+		shield,
+		quantum_drive,
+		farcaster);
 }
 
 // +--------------------------------------------------------------------+
@@ -2824,7 +2975,7 @@ Ship::ExecSystems(double seconds)
 
 		bool bubble = false;
 		if (shield)
-			bubble = shield->ShieldBubble();
+			bubble = shield->GetShieldBubble();
 
 		if (shieldRep->ActiveHits()) {
 			shieldRep->Energize(seconds, bubble);
@@ -3162,7 +3313,7 @@ Ship::StatFrame(double Seconds)
 
 		bool bBubble = false;
 		if (shield)
-			bBubble = shield->ShieldBubble();
+			bBubble = shield->GetShieldBubble();
 
 		if (shieldRep->ActiveHits()) {
 			shieldRep->Energize(Seconds, bBubble);
@@ -3992,9 +4143,9 @@ Ship::CycleSecondary()
 	if (IsAirborne()) {
 		Weapon* missile = GetSecondary();
 		if (missile && missile->CanTarget((int)CLASSIFICATION::GROUND_UNITS))
-			SetSensorMode(Sensor::GM);
-		else if (sensor && sensor->GetMode() == Sensor::GM)
-			SetSensorMode(Sensor::STD);
+			SetSensorMode(ESensorMode::GM);
+		else if (sensor && sensor->GetMode() == ESensorMode::GM)
+			SetSensorMode(ESensorMode::STD);
 	}
 }
 
@@ -4597,19 +4748,19 @@ Ship::SetTrigger(int i)
 // +--------------------------------------------------------------------+
 
 void
-Ship::SetSensorMode(int mode)
+Ship::SetSensorMode(ESensorMode mode)
 {
 	if (sensor)
-		sensor->SetMode((Sensor::Mode)mode);
+		sensor->SetMode(mode);
 }
 
-int
+ESensorMode
 Ship::GetSensorMode() const
 {
 	if (sensor)
-		return (int)sensor->GetMode();
+		return sensor->GetMode();
 
-	return 0;
+	return ESensorMode::PAS;
 }
 
 // +--------------------------------------------------------------------+
@@ -4881,7 +5032,7 @@ Ship::GetShieldStrength() const
 {
 	if (!shield) return 0;
 
-	return (int)shield->ShieldLevel();
+	return (int)shield->GetShieldLevel();
 }
 
 int

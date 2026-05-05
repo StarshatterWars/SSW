@@ -260,16 +260,22 @@ public:
 	List<HardPoint>    hard_points;
 	List<Thruster>     thrusters;
 	List<NavSystem>    navsystems;
+	List<Sensor>       sensors;
+	List<Shield>       shields;
 	List<Drive>        drives;
 	List<Computer>     computers;
 	List<FlightDeck>   flight_decks;
 	List<NavLight>     navlights;
-	QuantumDrive* quantum_drive;
-	Farcaster* farcaster;
-	Thruster* thruster;
-	Sensor* sensor;
-	NavSystem* navsys;
-	Shield* shield;
+	List<QuantumDrive> quantum_drives;
+	List<Farcaster> farcasters;
+
+	QuantumDrive* quantum_drive = nullptr;
+	Farcaster* farcaster = nullptr;
+	Thruster* thruster = nullptr;
+	Sensor* sensor = nullptr;
+	NavSystem* navsys = nullptr;
+	Shield* shield = nullptr;
+
 	SimModel* shield_model;
 	Weapon* decoy;
 	Weapon* probe;

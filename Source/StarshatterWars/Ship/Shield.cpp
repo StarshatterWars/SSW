@@ -22,15 +22,9 @@
 #include "SimShot.h"
 #include "WeaponDesign.h"
 #include "Game.h"
+#include "GameStructs_System.h"
 
 // +----------------------------------------------------------------------+
-
-static const char* shield_name[] = {
-	"sys.shield.none",
-	"sys.shield.deflector",
-	"sys.shield.grav",
-	"sys.shield.hyper"
-};
 
 static int shield_value[] = {
 	0, 2, 2, 3
@@ -38,8 +32,14 @@ static int shield_value[] = {
 
 // +----------------------------------------------------------------------+
 
-Shield::Shield(SUBTYPE shield_type)
-	: SimSystem(SYSTEM_CATEGORY::SHIELD, shield_type, "shield", shield_value[shield_type], 100, 0)
+Shield::Shield(EShieldType shield_type)
+	: SimSystem(
+		SYSTEM_CATEGORY::SHIELD,
+		static_cast<int>(shield_type),
+		"shield",
+		shield_value[static_cast<int>(shield_type)],
+		100,
+		0)
 	, shield_capacitor(false)
 	, shield_bubble(false)
 	, shield_factor(0.0f)
@@ -49,32 +49,42 @@ Shield::Shield(SUBTYPE shield_type)
 	, requested_power_level(0.0f)
 	, deflection_cost(1.0f)
 {
-	name = Game::GetText(shield_name[shield_type]);
-	abrv = Game::GetText("sys.shield.abrv");
+	const int32 ShieldIndex = static_cast<int32>(shield_type);
+
+	if (name.length() == 0)
+	{
+		name = "Shield";
+	}
+
+	if (abrv.length() == 0)
+	{
+		abrv = "SHLD";
+	}
 
 	power_flags = POWER_WATTS | POWER_CRITICAL;
 	energy = 0.0f;
 	power_level = 0.0f;
 	shield_level = 0.0f;
 
-	switch (shield_type) {
-	default:
-	case DEFLECTOR:
-		capacity = 2.0e3f;
-		sink_rate = 2.0e3f;
-		shield_factor = 0.05f;
-		break;
-
-	case GRAV_SHIELD:
+	switch (shield_type)
+	{
+	case EShieldType::GRAV_SHIELD:
 		capacity = 7.0e3f;
 		sink_rate = 7.0e3f;
-		shield_factor = 0.01f;
+		SetShieldFactor(0.01f);
 		break;
 
-	case HYPER_SHIELD:
+	case EShieldType::HYPER_SHIELD:
 		capacity = 10.0e3f;
 		sink_rate = 10.0e3f;
-		shield_factor = 0.003f;
+		SetShieldFactor(0.003f);
+		break;
+
+	case EShieldType::DEFLECTOR:
+	default:
+		capacity = 2.0e3f;
+		sink_rate = 2.0e3f;
+		SetShieldFactor(0.05f);
 		break;
 	}
 
@@ -82,7 +92,6 @@ Shield::Shield(SUBTYPE shield_type)
 	emcon_power[1] = 0;
 	emcon_power[2] = 100;
 }
-
 // +----------------------------------------------------------------------+
 
 Shield::Shield(const Shield& s)
@@ -192,7 +201,7 @@ Shield::DeflectDamage(SimShot* shot, double damage)
 	if (shot)
 		penetration = shot->GetDesign()->GetPenetration();
 
-	filter = 1.0 - shield_factor * penetration;
+	filter = 1.0 - GetShieldFactor() * penetration;
 
 	if (filter < 0.0)      filter = 0.0;
 	else if (filter > 1.0) filter = 1.0;

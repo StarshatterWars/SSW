@@ -3288,28 +3288,56 @@ ShipDesign::ParseComputer(TermStruct* val)
 	Text    comp_name("Computer");
 	Text    comp_abrv("Comp");
 	Text    design_name;
-	int     comp_type = 1;
+	EComputerType comp_type = EComputerType::AVIONICS;
 	FVector loc(0.0f, 0.0f, 0.0f);
 	float   size = 0.0f;
 	float   hull = 0.5f;
 
-	for (int i = 0; i < val->elements()->size(); i++) {
+	/*for (int i = 0; i < val->elements()->size(); i++) {
 		TermDef* pdef = val->elements()->at(i)->isDef();
 		if (pdef) {
 			Text defname = pdef->name()->value();
 			defname.setSensitive(false);
 
-			if (defname == "name") {
-				GetDefText(comp_name, pdef, filename);
+			if (defname == "design") {
+				GetDefText(design_name, defname, defname);
 			}
-			else if (defname == "abrv") {
-				GetDefText(comp_abrv, pdef, filename);
-			}
-			else if (defname == "design") {
-				GetDefText(design_name, pdef, filename);
-			}
-			else if (defname == "type") {
-				GetDefNumber(comp_type, pdef, filename);
+			if (defname == "type")
+			{
+				if (GetDefText(TypeName, defname, defname))
+				{
+					const FString TypeStr = FString(ANSI_TO_TCHAR(TypeName.data()));
+
+					if (TypeStr.Equals(TEXT("avionics"), ESearchCase::IgnoreCase))
+					{
+						NewComputer.Type = EComputerType::AVIONICS;
+						NewComputer.Name = TEXT("Avionics Computer");
+						NewComputer.Abbrev = TEXT("COMP");
+					}
+					else if (TypeStr.Equals(TEXT("flight"), ESearchCase::IgnoreCase))
+					{
+						NewComputer.Type = EComputerType::FLIGHT;
+						NewComputer.Name = TEXT("Flight Computer");
+						NewComputer.Abbrev = TEXT("COMP");
+					}
+					else if (TypeStr.Equals(TEXT("tactical"), ESearchCase::IgnoreCase))
+					{
+						NewComputer.Type = EComputerType::TACTICAL;
+						NewComputer.Name = TEXT("Tactical Computer");
+						NewComputer.Abbrev = TEXT("COMP");
+					}
+					else
+					{
+						NewComputer.Type = EComputerType::UNKNOWN;
+						NewComputer.Name = TEXT("Unknown Computer");
+						NewComputer.Abbrev = TEXT("COMP");
+
+						UE_LOG(LogTemp, Warning,
+							TEXT("ParseComputer: unknown type '%s' in '%s'"),
+							*TypeStr,
+							*FString(ANSI_TO_TCHAR(Fn)));
+					}
+				}
 			}
 			else if (defname == "loc") {
 				GetDefVec(loc, pdef, filename);
@@ -3323,7 +3351,7 @@ ShipDesign::ParseComputer(TermStruct* val)
 				GetDefNumber(hull, pdef, filename);
 			}
 		}
-	}
+	}*/
 
 	Computer* comp = new  Computer(comp_type, comp_name);
 	comp->Mount(loc, size, hull);
@@ -3448,7 +3476,7 @@ ShipDesign::ParseShield(TermStruct* val)
 
 	if (!shield) {
 		if (shield_type) {
-			shield = new  Shield((Shield::SUBTYPE)shield_type);
+			shield = new  Shield((EShieldType)shield_type);
 			shield->SetSourceIndex(reactors.size() - 1);
 			shield->Mount(loc, size, hull);
 			if (dname.length()) shield->SetName(dname);

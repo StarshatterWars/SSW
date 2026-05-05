@@ -18,15 +18,14 @@
 
 #include "Types.h"
 #include "SimSystem.h"
+#include "GameStructs_System.h"
 
 // No FVector usage in this header; keep Unreal includes out for minimal compile surface.
 
 class Computer : public SimSystem
 {
 public:
-	enum CompType { AVIONICS = 1, FLIGHT, TACTICAL };
-
-	Computer(int comp_type, const char* comp_name);
+	Computer(EComputerType comp_type, const char* comp_name);
 	Computer(const Computer& rhs);
 	virtual ~Computer();
 

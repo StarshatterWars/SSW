@@ -68,6 +68,27 @@ enum class EDriveType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EShieldType : uint8
+{
+	UNKNOWN		 UMETA(DisplayName = "Unknown"),
+	DEFLECTOR    UMETA(DisplayName = "Deflector"),
+	GRAV_SHIELD  UMETA(DisplayName = "Grav Shield"),
+	HYPER_SHIELD UMETA(DisplayName = "Hyper Shield")
+};
+
+UENUM(BlueprintType)
+enum class ESensorMode : uint8
+{
+	PAS UMETA(DisplayName = "Passive"),
+	STD UMETA(DisplayName = "Standard"),
+	ACM UMETA(DisplayName = "ACM"),
+	GM  UMETA(DisplayName = "Ground Map"),
+
+	PST UMETA(DisplayName = "Passive Track"),
+	CST UMETA(DisplayName = "Combat Scan")
+};
+
+UENUM(BlueprintType)
 enum class EQuantumDriveType : uint8
 {
 	QUANTUM UMETA(DisplayName = "Quantum"),
@@ -102,6 +123,15 @@ enum class EWeaponType : uint8
 	Drone   UMETA(DisplayName = "DRONE"),
 	Beam    UMETA(DisplayName = "BEAM"),
 	Unknown UMETA(DisplayName = "UNKNOWN")
+};
+
+UENUM(BlueprintType)
+enum class EComputerType : uint8
+{
+	UNKNOWN = 0		UMETA(DisplayName = "Unknown"),
+	AVIONICS = 1	UMETA(DisplayName = "Avionics"),
+	FLIGHT = 2		UMETA(DisplayName = "Flight Control"),
+	TACTICAL = 3	UMETA(DisplayName = "Tactical")
 };
 
 UENUM(BlueprintType)
@@ -637,6 +667,9 @@ struct FShipFarcaster
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 SourceIndex = INDEX_NONE;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	double CycleTime = 10.0;
+
 	// Blueprint/DataTable friendly:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Emcon1 = -1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Emcon2 = -1;
@@ -1156,9 +1189,8 @@ struct FShipComputer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString DesignName;
 
-	// Legacy: int comp_type = 1
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Type = 1;
+	EComputerType Type = EComputerType::AVIONICS;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Location = FVector::ZeroVector;
@@ -1183,7 +1215,7 @@ struct FShipShield
 	GENERATED_BODY()
 
 	// Legacy identity
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 ShieldType = 0; // must be >0 to be valid
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) EShieldType ShieldType = EShieldType::DEFLECTOR;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Abbrev;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString DesignName;

@@ -20,6 +20,7 @@
 #include "Computer.h"
 
 #include "Math/Vector.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -32,7 +33,7 @@ class FlightComputer : public Computer
 public:
 	enum CompType { AVIONICS = 1, FLIGHT, TACTICAL };
 
-	FlightComputer(int comp_type, const char* comp_name);
+	FlightComputer(EComputerType comp_type, const char* comp_name);
 	FlightComputer(const Computer& rhs);
 	virtual ~FlightComputer();
 
