@@ -212,21 +212,14 @@ sensor: {
 }
 
 computer:   {
-   name:             "Avionics Package",
-   abrv:             "HUD",
-   type:             1,
-   design:           Computer,
-
+   design:           "Avionics",
    loc:              (0, 0, 40),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   name:             "Flight Computer",
-   abrv:             "Flight",
-   type:             2,
-   design:           Computer,
+   design:           "Flight",
    loc:              (0, 0, 90),
    size:             16,
    hull_factor:      0.2

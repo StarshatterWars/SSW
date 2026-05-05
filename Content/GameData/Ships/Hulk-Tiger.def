@@ -82,8 +82,7 @@ quantum:     {
 
 
 shield:     {
-   type:             2,
-   design:           "Grav Shield",
+   design:           "Grav",
    abrv:             Shield
    factor:           0.03,
    consumption:      1500,
@@ -195,25 +194,17 @@ sensor:     {
 }
 
 computer:   {
-   name:             "Avionics Package",
-   abrv:             "HUD",
-   type:             1,
-   design:           Computer,
-
-   loc:              (20, 16, 80),
-   size:             16,
-   hull_factor:      0.5
+	design:           "Avionics",
+	loc:              (20, 16, 80),
+	size:             16,
+	hull_factor:      0.5
 }
 
 computer:   {
-   name:             "Flight Computer",
-   abrv:             "Flight",
-   type:             2,
-   design:           Computer,
-
-   loc:              (-20, -16, 80),
-   size:             16,
-   hull_factor:      0.2
+	design:           "Flight", 
+	loc:              (-20, -16, 80),
+	size:             16,
+	hull_factor:      0.2
 }
 
 nav:        {

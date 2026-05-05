@@ -33,7 +33,7 @@ power:      {
 }
 
 shield:     {
-   design:           "Grav Shield",
+   design:           "Grav",
    factor:           0.02,
    consumption:      6000,
    bolt_hit_sound:   "shield_hit4.wav",

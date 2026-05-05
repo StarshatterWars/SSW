@@ -249,10 +249,10 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	//if (bFull)
-	//{
+	if (bFull)
+	{
 		InitializeShipDesigns();
-	//}
+	}
 
 	LoadShipDesignTable();
 }
@@ -3292,72 +3292,54 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 
 	const float ShipScale = (CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
 
-	// Legacy defaults:
-	Text CompName("Computer");
-	Text CompAbrv("Comp");
-	Text DesignName;
-	int32 CompType = 1;
-
-	float Size = 0.0f;
-	float Hull = 0.5f;
-
 	FShipComputer NewComp;
 	NewComp.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
 	const int32 ElemCount = (int32)Val->elements()->size();
+
 	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
 	{
 		TermDef* PDef = Val->elements()->at(ElemIdx)->isDef();
 		if (!PDef)
+		{
 			continue;
+		}
 
 		const Text& Key = PDef->name()->value();
 
 		if (Key == "design")
 		{
+			Text DesignName;
+
 			if (GetDefText(DesignName, PDef, Fn))
 			{
-				NewComp.DesignName = FString(DesignName);
+				const FString DesignStr = FString(ANSI_TO_TCHAR(DesignName.data()));
+				NewComp.DesignName = DesignStr;
+
+				if (DesignStr.Equals(TEXT("Flight Computer"), ESearchCase::IgnoreCase) ||
+					DesignStr.Equals(TEXT("FlightComputer"), ESearchCase::IgnoreCase) ||
+					DesignStr.Equals(TEXT("Flight"), ESearchCase::IgnoreCase))
+				{
+					NewComp.Type = EComputerType::FLIGHT;
+					NewComp.Name = TEXT("Flight Computer");
+					NewComp.Abbrev = TEXT("Flight");
+				}
+				else if (DesignStr.Equals(TEXT("Tactical Computer"), ESearchCase::IgnoreCase) ||
+					DesignStr.Equals(TEXT("TacticalComputer"), ESearchCase::IgnoreCase) ||
+					DesignStr.Equals(TEXT("Tactical"), ESearchCase::IgnoreCase))
+				{
+					NewComp.Type = EComputerType::TACTICAL;
+					NewComp.Name = TEXT("Tactical Computer");
+					NewComp.Abbrev = TEXT("Tact");
+				}
+				else
+				{
+					NewComp.Type = EComputerType::AVIONICS;
+					NewComp.Name = TEXT("Avionics Package");
+					NewComp.Abbrev = TEXT("HUD");
+				}
 			}
 		}
-		else if (Key == "type")
-		{
-			int32 Value = 0;
-			GetDefNumber(Value, PDef, Fn);
-
-			Value = FMath::Clamp(Value, 1, 3);
-			NewComp.Type = static_cast<EComputerType>(Value);
-
-			switch (NewComp.Type)
-			{
-			case EComputerType::AVIONICS:
-				NewComp.Name = TEXT("Avionics Computer");
-				NewComp.Abbrev = TEXT("COMP");
-				break;
-
-			case EComputerType::FLIGHT:
-				NewComp.Name = TEXT("Flight Computer");
-				NewComp.Abbrev = TEXT("COMP");
-				break;
-
-			case EComputerType::TACTICAL:
-				NewComp.Name = TEXT("Tactical Computer");
-				NewComp.Abbrev = TEXT("COMP");
-				break;
-
-			default:
-				NewComp.Type = EComputerType::UNKNOWN;
-				NewComp.Name = TEXT("Unknown Computer");
-				NewComp.Abbrev = TEXT("COMP");
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("ParseComputer: unknown type=%d in '%s'"),
-					Value,
-					*FString(ANSI_TO_TCHAR(Fn)));
-				break;
-			}
-		}
-
 		else if (Key == "loc")
 		{
 			FVector V = FVector::ZeroVector;
@@ -3367,19 +3349,37 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 		}
 		else if (Key == "size")
 		{
-			// Fix legacy ordering: read then scale
+			float Size = 0.0f;
 			GetDefNumber(Size, PDef, Fn);
 			Size *= ShipScale;
 			NewComp.Size = Size;
 		}
 		else if (Key == "hull_factor")
 		{
+			float Hull = 0.5f;
 			GetDefNumber(Hull, PDef, Fn);
 			NewComp.HullFactor = Hull;
 		}
 	}
 
-	NewComp.SourceIndex = (NewShipPowerArray.Num() > 0) ? (NewShipPowerArray.Num() - 1) : INDEX_NONE;
+	if (NewComp.DesignName.IsEmpty())
+	{
+		NewComp.DesignName = TEXT("Computer");
+		NewComp.Type = EComputerType::AVIONICS;
+		NewComp.Name = TEXT("Avionics Package");
+		NewComp.Abbrev = TEXT("HUD");
+	}
+
+	NewComp.SourceIndex =
+		(NewShipPowerArray.Num() > 0) ? (NewShipPowerArray.Num() - 1) : INDEX_NONE;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ParseComputer] Design='%s' Type=%d Name='%s' Abbrev='%s' SourceIndex=%d"),
+		*NewComp.DesignName,
+		(int32)NewComp.Type,
+		*NewComp.Name,
+		*NewComp.Abbrev,
+		NewComp.SourceIndex);
 
 	NewShipComputerArray.Add(NewComp);
 }

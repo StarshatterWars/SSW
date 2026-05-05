@@ -529,11 +529,17 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             !Src.DesignName.IsEmpty() ? Src.DesignName :
             TEXT("Computer");
 
+        //---------------------------------------------------------
+        // Create legacy Computer (stores type)
+        //---------------------------------------------------------
         Computer* NewComputer = new Computer(
             Src.Type,
             TCHAR_TO_ANSI(*CompName)
         );
 
+        //---------------------------------------------------------
+        // Name (explicit override if provided)
+        //---------------------------------------------------------
         if (!Src.Name.IsEmpty())
         {
             NewComputer->SetName(TCHAR_TO_ANSI(*Src.Name));
@@ -543,26 +549,37 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             NewComputer->SetName(TCHAR_TO_ANSI(*Src.DesignName));
         }
 
+        //---------------------------------------------------------
+        // Abbreviation
+        //---------------------------------------------------------
         if (!Src.Abbrev.IsEmpty())
         {
             NewComputer->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
         }
 
+        //---------------------------------------------------------
+        // Core properties
+        //---------------------------------------------------------
         NewComputer->SetSourceIndex(Src.SourceIndex);
         NewComputer->SetHullFactor(Src.HullFactor);
 
+        //---------------------------------------------------------
+        // Register into legacy design
+        //---------------------------------------------------------
         Legacy->computers.append(NewComputer);
 
+        //---------------------------------------------------------
+        // Debug (use ACTUAL runtime values)
+        //---------------------------------------------------------
         UE_LOG(LogTemp, Warning,
-            TEXT("[ShipDesignRegistry] Computer built Row='%s' Computer=%p Type=%d Name='%s' Abbrev='%s' SourceIndex=%d"),
+            TEXT("[ShipDesignRegistry] Computer built Row='%s' Computer=%p Type=%d Name='%hs' Abbrev='%hs' SourceIndex=%d"),
             *RowName.ToString(),
             NewComputer,
-            (int32)Src.Type,
-            *Src.Name,
-            *Src.Abbrev,
+            (int32)NewComputer->GetComputerType(),
+            NewComputer->Name(),
+            NewComputer->Abbreviation(),
             Src.SourceIndex);
     }
-
     //-------------------------------------------------------------
     // Quantum drives
     //-------------------------------------------------------------

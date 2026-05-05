@@ -512,9 +512,26 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	//-------------------------------------------------------------
 	// Computers
 	//-------------------------------------------------------------
+
 	for (int i = 0; i < design->computers.size(); i++)
 	{
-		Computer* NewComputer = new Computer(*design->computers[i]);
+		Computer* SourceComputer = design->computers[i];
+
+		if (!SourceComputer)
+		{
+			continue;
+		}
+
+		Computer* NewComputer = nullptr;
+
+		if (SourceComputer->GetComputerType() == EComputerType::FLIGHT)
+		{
+			NewComputer = new FlightComputer(*SourceComputer);
+		}
+		else
+		{
+			NewComputer = new Computer(*SourceComputer);
+		}
 
 		NewComputer->SetShip(this);
 		NewComputer->SetID(sys_id++);
@@ -532,6 +549,14 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		computers.append(NewComputer);
 		systems.append(NewComputer);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Computer runtime built Ship='%hs' Computer=%p Type=%d Class='%hs' Systems=%d"),
+			GetName(),
+			NewComputer,
+			(int32)NewComputer->GetComputerType(),
+			NewComputer->TYPENAME(),
+			systems.size());
 	}
 
 	//-------------------------------------------------------------

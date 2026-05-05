@@ -118,7 +118,7 @@ quantum:     {
 
 
 shield:     {
-   design:           "Grav Shield",
+   design:           "Grav",
    factor:           0.05,
    consumption:      2000,
    model:            "Frigate_Shield.mag",
@@ -243,22 +243,14 @@ sensor:     {
 }
 
 computer:   {
-   name:             "Avionics Package",
-   abrv:             "HUD",
-   type:             1,
-   design:           Computer,
-
+   design:           "Avionics",
    loc:              (20, 16, 80),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   name:             "Flight Computer",
-   abrv:             "Flight",
-   type:             2,
-   design:           Computer,
-
+   design:           "Flight",
    loc:              (-20, -16, 80),
    size:             16,
    hull_factor:      0.2

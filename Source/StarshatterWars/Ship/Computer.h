@@ -33,5 +33,9 @@ public:
 	virtual void      ExecFrame(double seconds);
 	virtual void      Distribute(double delivered_energy, double seconds);
 
+	void SetComputerType(EComputerType InType) { Type = InType; }
+	EComputerType GetComputerType() const { return Type; }
+
 protected:
+	EComputerType Type = EComputerType::UNKNOWN;
 };

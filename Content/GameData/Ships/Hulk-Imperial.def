@@ -75,8 +75,7 @@ quantum: {
 }
 
 shield: {
-   type:             2,
-   design:           "Grav Shield",
+   design:           "Grav",
    pcs:              100,
    bolt_hit_sound:   "shield_hit4",
    beam_hit_sound:   "shield_hit5",
@@ -346,22 +345,14 @@ power:      {
 }
 
 computer:   {
-   name:             "Avionics Package",
-   abrv:             "HUD",
-   type:             1,
-   design:           Computer,
-
+   design:           "Avionics",
    loc:              (20, 16, 80),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   name:             "Flight Computer",
-   abrv:             "Flight",
-   type:             2,
-   design:           Computer,
-
+   design:           "Flight",
    loc:              (-20, -16, 80),
    size:             16,
    hull_factor:      0.2
