@@ -538,7 +538,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         );
 
         //---------------------------------------------------------
-        // Name (explicit override if provided)
+        // Name 
         //---------------------------------------------------------
         if (!Src.Name.IsEmpty())
         {
@@ -776,8 +776,8 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     }
 
     //-------------------------------------------------------------
-// Hardpoints
-//-------------------------------------------------------------
+    // Hardpoints
+    //-------------------------------------------------------------
     for (const FShipHardPoint& Src : Row.Hardpoint)
     {
         if (Src.Name.IsEmpty() &&

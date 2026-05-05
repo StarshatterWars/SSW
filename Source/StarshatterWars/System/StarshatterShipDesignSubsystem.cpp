@@ -3316,24 +3316,32 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 				const FString DesignStr = FString(ANSI_TO_TCHAR(DesignName.data()));
 				NewComp.DesignName = DesignStr;
 
-				if (DesignStr.Equals(TEXT("Flight Computer"), ESearchCase::IgnoreCase) ||
-					DesignStr.Equals(TEXT("FlightComputer"), ESearchCase::IgnoreCase) ||
-					DesignStr.Equals(TEXT("Flight"), ESearchCase::IgnoreCase))
+				if (DesignStr.Equals(TEXT("Flight"), ESearchCase::IgnoreCase))
 				{
 					NewComp.Type = EComputerType::FLIGHT;
 					NewComp.Name = TEXT("Flight Computer");
 					NewComp.Abbrev = TEXT("Flight");
 				}
-				else if (DesignStr.Equals(TEXT("Tactical Computer"), ESearchCase::IgnoreCase) ||
-					DesignStr.Equals(TEXT("TacticalComputer"), ESearchCase::IgnoreCase) ||
-					DesignStr.Equals(TEXT("Tactical"), ESearchCase::IgnoreCase))
+				else if (DesignStr.Equals(TEXT("Tactical"), ESearchCase::IgnoreCase))
 				{
 					NewComp.Type = EComputerType::TACTICAL;
 					NewComp.Name = TEXT("Tactical Computer");
 					NewComp.Abbrev = TEXT("Tact");
 				}
+				else if (DesignStr.Equals(TEXT("Avionics"), ESearchCase::IgnoreCase) ||
+					DesignStr.Equals(TEXT("Computer"), ESearchCase::IgnoreCase))
+				{
+					NewComp.Type = EComputerType::AVIONICS;
+					NewComp.Name = TEXT("Avionics Package");
+					NewComp.Abbrev = TEXT("HUD");
+				}
 				else
 				{
+					UE_LOG(LogTemp, Warning,
+						TEXT("[ParseComputer] Unknown design '%s' in '%s'"),
+						*DesignStr,
+						ANSI_TO_TCHAR(Fn));
+
 					NewComp.Type = EComputerType::AVIONICS;
 					NewComp.Name = TEXT("Avionics Package");
 					NewComp.Abbrev = TEXT("HUD");

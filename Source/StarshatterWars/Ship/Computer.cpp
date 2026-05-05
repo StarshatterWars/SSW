@@ -30,12 +30,14 @@ static int computer_value[] = {
 // +----------------------------------------------------------------------+
 
 Computer::Computer(EComputerType comp_type, const char* comp_name)
-	: SimSystem(SYSTEM_CATEGORY::COMPUTER, (int) comp_type, comp_name, 1, 1, 1, 1)
+	: SimSystem(SYSTEM_CATEGORY::COMPUTER, (int)comp_type, comp_name, 1, 1, 1, 1)
+	, Type(comp_type)
 {
 	SetAbbreviation("COMP");
 	power_flags = POWER_WATTS | POWER_CRITICAL;
 
-	if (subtype == (int) EComputerType::FLIGHT) {
+	if (Type == EComputerType::FLIGHT)
+	{
 		crit_level = -1.0f;
 	}
 }
@@ -44,12 +46,14 @@ Computer::Computer(EComputerType comp_type, const char* comp_name)
 
 Computer::Computer(const Computer& c)
 	: SimSystem(c)
+	, Type(c.Type)
 {
 	Mount(c);
 	SetAbbreviation(c.Abbreviation());
 	power_flags = POWER_WATTS | POWER_CRITICAL;
 
-	if (subtype == (int)EComputerType::FLIGHT) {
+	if (Type == EComputerType::FLIGHT)
+	{
 		crit_level = -1.0f;
 	}
 }
