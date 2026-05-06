@@ -2000,11 +2000,11 @@ static ENavLightType NavLightTypeFromLegacyInt(int32 InT)
 
 	switch (T)
 	{
-	case 1: return ENavLightType::TYPE_1;
-	case 2: return ENavLightType::TYPE_2;
-	case 3: return ENavLightType::TYPE_3;
-	case 4: return ENavLightType::TYPE_4;
-	default: return ENavLightType::TYPE_1;
+	case 1: return ENavLightType::GREEN;
+	case 2: return ENavLightType::RED;
+	case 3: return ENavLightType::BLUE;
+	case 4: return ENavLightType::YELLOW;
+	default: return ENavLightType::WHITE;
 	}
 }
 

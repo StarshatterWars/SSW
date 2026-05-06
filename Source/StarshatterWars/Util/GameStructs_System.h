@@ -109,10 +109,11 @@ enum class EThrusterPortDir : uint8
 UENUM(BlueprintType)
 enum class ENavLightType : uint8
 {
-	TYPE_1 UMETA(DisplayName = "Type 1"),
-	TYPE_2 UMETA(DisplayName = "Type 2"),
-	TYPE_3 UMETA(DisplayName = "Type 3"),
-	TYPE_4 UMETA(DisplayName = "Type 4"),
+	GREEN	UMETA(DisplayName = "Green"),
+	RED		UMETA(DisplayName = "Red"),
+	BLUE	UMETA(DisplayName = "Blue"),
+	YELLOW	UMETA(DisplayName = "Yellow	"),
+	WHITE	UMETA(DisplayName = "White	"),
 };
 
 UENUM(BlueprintType)
@@ -524,7 +525,7 @@ struct FNavLightBeacon
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ENavLightType Type = ENavLightType::TYPE_1;
+	ENavLightType Type = ENavLightType::GREEN;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Location = FVector::ZeroVector;
