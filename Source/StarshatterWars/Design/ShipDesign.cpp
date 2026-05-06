@@ -2345,7 +2345,7 @@ ShipDesign::ParseThruster(TermStruct* val)
 void
 ShipDesign::ParseNavlight(TermStruct* val)
 {
-	Text   dname;
+	/*Text   dname;
 	Text   dabrv;
 	Text   design_name;
 	int    nlights = 0;
@@ -2442,10 +2442,10 @@ ShipDesign::ParseNavlight(TermStruct* val)
 			nav->SetDesign(sd);
 	}
 
-	for (int k = 0; k < nlights; k++)
-		nav->AddBeacon(bloc[k], pattern[k], btype[k]);
+	//for (int k = 0; k < nlights; k++)
+	//	nav->AddBeacon(bloc[k], pattern[k], btype[k]);
 
-	navlights.append(nav);
+	navlights.append(nav);*/
 }
 
 // +--------------------------------------------------------------------+

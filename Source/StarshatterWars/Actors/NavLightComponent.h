@@ -32,15 +32,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/PointLightComponent.h"
+#include "GameStructs_System.h"
 #include "NavLightComponent.generated.h"
-
-UENUM(BlueprintType)
-enum class EShipNavLightMode : uint8
-{
-    Steady      UMETA(DisplayName = "Steady"),
-    Blink       UMETA(DisplayName = "Blink"),
-    Sequence    UMETA(DisplayName = "Sequence")
-};
 
 USTRUCT(BlueprintType)
 struct FShipNavLightDef

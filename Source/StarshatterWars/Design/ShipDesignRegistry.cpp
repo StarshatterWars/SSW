@@ -675,9 +675,9 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         Legacy->farcasters.size() > 0 ? Legacy->farcasters[0] : nullptr;
   
     //-------------------------------------------------------------
-    // Nav lights
-    //-------------------------------------------------------------
-    for (const FShipNavLight& Src : Row.Navlight) 
+ // Nav lights
+ //-------------------------------------------------------------
+    for (const FShipNavLight& Src : Row.Navlight)
     {
         if (Src.Beacons.Num() <= 0)
         {
@@ -710,9 +710,15 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         for (const FNavLightBeacon& Beacon : Src.Beacons)
         {
             NewNavLight->AddBeacon(
+                Beacon.Name,
                 Beacon.Location,
-                static_cast<DWORD>(Beacon.Pattern),
-                static_cast<int>(Beacon.Type)
+                Beacon.LocalRotation,
+                Beacon.Color,
+                Beacon.Intensity,
+                Beacon.Radius,
+                Beacon.Mode,
+                Beacon.BlinkInterval,
+                Beacon.PhaseOffset
             );
         }
 

@@ -129,6 +129,51 @@ shield:     {
    hull_factor:      0.5
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.50
+
+   light: {
+      name: "Port"
+      loc: (60.0, -125.0, 0.0)
+      color: "red"
+      intensity: 4000
+      radius: 450
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.00
+   }
+
+   light: {
+      name: "Starboard"
+      loc: (60.0, 125.0, 0.0)
+      color: "green"
+      intensity: 4000
+      radius: 450
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.25
+   }
+
+   light: {
+      name: "Dorsal"
+      loc: (220.0, 0.0, 90.0)
+      color: "white"
+      intensity: 3000
+      radius: 350
+      mode: "steady"
+   }
+
+   light: {
+      name: "Ventral"
+      loc: (-220.0, 0.0, -90.0)
+      color: (0.6, 0.6, 1.0)
+      intensity: 3000
+      radius: 350
+      mode: "steady"
+   }
+}
 
 power:      {
    type:             "Auxilliary Reactor",

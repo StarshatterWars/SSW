@@ -58,6 +58,51 @@ drive:      {
    explosion:        7
    }
 
+   navlight: {
+   design: "Navigation Lights"
+   scale:  1.0
+   period: 0.5
+
+   light: {
+      name: "Port"
+      loc: (0.0, -142.5, 20.0)
+      color: "red"
+      intensity: 1200
+      radius: 200
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.00
+   }
+
+   light: {
+      name: "Starboard"
+      loc: (0.0, 142.5, 20.0)
+      color: "green"
+      intensity: 1200
+      radius: 200
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.25
+   }
+
+   light: {
+      name: "Dorsal"
+      loc: (125.0, 0.0, 115.0)
+      color: "white"
+      intensity: 6000
+      radius: 300
+      mode: "steady"
+   }
+
+   light: {
+      name: "Ventral"
+      loc: (-40.0, 0.0, -39.0)
+      color: (0.6, 0.6, 1.0)
+      intensity: 6000
+      radius: 300
+      mode: "steady"
+   }
+}
 thruster: {
    design:           Thruster,
    type:             Yellow,
@@ -135,6 +180,51 @@ nav:        {
    hull_factor:      0.3
    }
 
+navlight: {
+   design: "Navigation Lights"
+   scale:  1.0
+   period: 0.5
+
+   light: {
+      name: "Port"
+      loc: (0.0, -142.5, 20.0)
+      color: "red"
+      intensity: 1200
+      radius: 200
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.00
+   }
+
+   light: {
+      name: "Starboard"
+      loc: (0.0, 142.5, 20.0)
+      color: "green"
+      intensity: 1200
+      radius: 200
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.25
+   }
+
+   light: {
+      name: "Dorsal"
+      loc: (125.0, 0.0, 115.0)
+      color: "white"
+      intensity: 6000
+      radius: 300
+      mode: "steady"
+   }
+
+   light: {
+      name: "Ventral"
+      loc: (-40.0, 0.0, -39.0)
+      color: (0.6, 0.6, 1.0)
+      intensity: 6000
+      radius: 300
+      mode: "steady"
+   }
+}
 
 death_spiral: {
    time:             5,

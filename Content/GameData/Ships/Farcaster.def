@@ -42,34 +42,186 @@ farcaster:     {
    hull_factor: 0.5
    }
 
-navlight:  {
-   scale:  6,
-   period: 1.5,
+navlight: {
+   design: "Outer Ring Navigation Lights"
+   scale: 1.0
+   period: 1.5
 
-   light:  { loc: (-138,-42,-257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (-138,-42, 257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (-138, 42,-257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (-138, 42, 257), pattern: 0xf0000000, type: 3 },
+   light: {
+      name: "OuterRing_A1"
+      loc: (-138.0, -42.0, -257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 
-   light:  { loc: ( 138,-42,-257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 138,-42, 257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 138, 42,-257), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 138, 42, 257), pattern: 0xf0000000, type: 3 },
-}
+   light: {
+      name: "OuterRing_A2"
+      loc: (-138.0, -42.0, 257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 
-navlight:  {
-   scale:  6,
-   period: 1,
+   light: {
+      name: "OuterRing_A3"
+      loc: (-138.0, 42.0, -257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 
-   light:  { loc: (-138,-42,-257), pattern: 0xf0000000, type: 2 },
-   light:  { loc: ( 138,-42,-257), pattern: 0x00f00000, type: 2 },
-   light:  { loc: (-138, 42,-257), pattern: 0x00f00000, type: 2 },
-   light:  { loc: ( 138, 42,-257), pattern: 0xf0000000, type: 2 },
+   light: {
+      name: "OuterRing_A4"
+      loc: (-138.0, 42.0, 257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 
-   light:  { loc: (-138,-42, 257), pattern: 0x00f00000, type: 2 },
-   light:  { loc: ( 138,-42, 257), pattern: 0xf0000000, type: 2 },
-   light:  { loc: (-138, 42, 257), pattern: 0xf0000000, type: 2 },
-   light:  { loc: ( 138, 42, 257), pattern: 0x00f00000, type: 2 },
+   light: {
+      name: "OuterRing_B1"
+      loc: (138.0, -42.0, -257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "OuterRing_B2"
+      loc: (138.0, -42.0, 257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "OuterRing_B3"
+      loc: (138.0, 42.0, -257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "OuterRing_B4"
+      loc: (138.0, 42.0, 257.0)
+      color: "white"
+      intensity: 14000
+      radius: 450
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "Red_A1"
+      loc: (-138.0, -42.0, -257.0)
+      color: "red"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "Green_A1"
+      loc: (138.0, -42.0, -257.0)
+      color: "green"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "Green_A2"
+      loc: (-138.0, 42.0, -257.0)
+      color: "green"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "Red_A2"
+      loc: (138.0, 42.0, -257.0)
+      color: "red"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "Green_B1"
+      loc: (-138.0, -42.0, 257.0)
+      color: "green"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "Red_B1"
+      loc: (138.0, -42.0, 257.0)
+      color: "red"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "Red_B2"
+      loc: (-138.0, 42.0, 257.0)
+      color: "red"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "Green_B2"
+      loc: (138.0, 42.0, 257.0)
+      color: "green"
+      intensity: 12000
+      radius: 400
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
 }
 
 map: {

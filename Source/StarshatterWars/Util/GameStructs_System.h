@@ -109,11 +109,24 @@ enum class EThrusterPortDir : uint8
 UENUM(BlueprintType)
 enum class ENavLightType : uint8
 {
-	GREEN	UMETA(DisplayName = "Green"),
-	RED		UMETA(DisplayName = "Red"),
-	BLUE	UMETA(DisplayName = "Blue"),
-	YELLOW	UMETA(DisplayName = "Yellow	"),
-	WHITE	UMETA(DisplayName = "White	"),
+	WHITE      UMETA(DisplayName = "White"),
+	RED        UMETA(DisplayName = "Red"),
+	GREEN      UMETA(DisplayName = "Green"),
+	BLUE       UMETA(DisplayName = "Blue"),
+	YELLOW     UMETA(DisplayName = "Yellow"),
+	CYAN       UMETA(DisplayName = "Cyan"),
+	MAGENTA    UMETA(DisplayName = "Magenta"),
+	AMBER      UMETA(DisplayName = "Amber")
+};
+
+UENUM(BlueprintType)
+enum class EShipNavLightMode : uint8
+{
+	Steady     UMETA(DisplayName = "Steady"),
+	Sequence   UMETA(DisplayName = "Sequence"),
+	Blink      UMETA(DisplayName = "Blink"),
+	Pulse      UMETA(DisplayName = "Pulse"),
+	Strobe     UMETA(DisplayName = "Strobe")
 };
 
 UENUM(BlueprintType)
@@ -525,14 +538,34 @@ struct FNavLightBeacon
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ENavLightType Type = ENavLightType::GREEN;
+	FString Name = TEXT("Nav Light");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Location = FVector::ZeroVector;
 
-	// Legacy: DWORD pattern
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Pattern = 0;
+	FRotator LocalRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ENavLightType Type = ENavLightType::WHITE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor Color = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Intensity = 1200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Radius = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EShipNavLightMode Mode = EShipNavLightMode::Blink;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BlinkInterval = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PhaseOffset = 0.0f;
 };
 
 USTRUCT(BlueprintType)

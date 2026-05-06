@@ -640,10 +640,32 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		systems.append(RuntimeNavLight);
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship] NavLight runtime built Ship='%hs' NavLight=%p Systems=%d"),
+			TEXT("[Ship] NavLight runtime built Ship='%hs' NavLight=%p Beacons=%d Enabled=%d Systems=%d"),
 			GetName(),
 			RuntimeNavLight,
+			RuntimeNavLight->NumBeacons(),
+			RuntimeNavLight->IsEnabled() ? 1 : 0,
 			systems.size());
+
+		for (int BeaconIndex = 0; BeaconIndex < RuntimeNavLight->NumBeacons(); BeaconIndex++)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship]   NavLight Beacon[%d] Name='%hs' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f Lit=%d"),
+				BeaconIndex,
+				RuntimeNavLight->GetBeaconName(BeaconIndex),
+				RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex).X,
+				RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex).Y,
+				RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex).Z,
+				RuntimeNavLight->GetBeaconColor(BeaconIndex).R,
+				RuntimeNavLight->GetBeaconColor(BeaconIndex).G,
+				RuntimeNavLight->GetBeaconColor(BeaconIndex).B,
+				RuntimeNavLight->GetBeaconIntensity(BeaconIndex),
+				RuntimeNavLight->GetBeaconRadius(BeaconIndex),
+				(int32)RuntimeNavLight->GetBeaconMode(BeaconIndex),
+				RuntimeNavLight->GetBeaconBlinkInterval(BeaconIndex),
+				RuntimeNavLight->GetBeaconPhaseOffset(BeaconIndex),
+				RuntimeNavLight->IsBeaconLit(BeaconIndex) ? 1 : 0);
+		}
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -1075,18 +1097,8 @@ Ship::Activate(SimScene& Scene)
 		cockpit->Hide();
 	}
 
-	Drive* DriveComp = GetDrive();
-	if (DriveComp) {
-		for (int EngineIndex = 0; EngineIndex < DriveComp->NumEngines(); EngineIndex++) {
-			Graphic* Flare = DriveComp->GetFlare(EngineIndex);
-			if (Flare)
-				Scene.AddGraphic(Flare);
-
-			Graphic* Trail = DriveComp->GetTrail(EngineIndex);
-			if (Trail)
-				Scene.AddGraphic(Trail);
-		}
-	}
+	// Engine flares and trails are rendered by Unreal Engine.
+	// Legacy Drive system only provides runtime thrust state.	
 
 	Thruster* ThrusterComp = GetThruster();
 	if (ThrusterComp) {
@@ -1101,14 +1113,8 @@ Ship::Activate(SimScene& Scene)
 		}
 	}
 
-	for (int LightIndex = 0; LightIndex < navlights.size(); LightIndex++) {
-		NavLight* NavLightComp = navlights[LightIndex];
-		for (int BeaconIndex = 0; BeaconIndex < NavLightComp->NumBeacons(); BeaconIndex++) {
-			Graphic* Beacon = NavLightComp->Beacon(BeaconIndex);
-			if (Beacon)
-				Scene.AddGraphic(Beacon);
-		}
-	}
+	UE_LOG(LogTemp, Verbose,
+		TEXT("[Ship] NavLights handled by UE actor visuals"));
 
 	ListIter<WeaponGroup> GroupIter = weapons;
 	while (++GroupIter) {
@@ -1160,18 +1166,8 @@ Ship::Deactivate(SimScene& Scene)
 	if (cockpit)
 		Scene.DelForeground(cockpit);
 
-	Drive* DriveComp = GetDrive();
-	if (DriveComp) {
-		for (int EngineIndex = 0; EngineIndex < DriveComp->NumEngines(); EngineIndex++) {
-			Graphic* Flare = DriveComp->GetFlare(EngineIndex);
-			if (Flare)
-				Scene.DelGraphic(Flare);
-
-			Graphic* Trail = DriveComp->GetTrail(EngineIndex);
-			if (Trail)
-				Scene.DelGraphic(Trail);
-		}
-	}
+	// Engine flares and trails are rendered by Unreal Engine.
+	// Legacy Drive system only provides runtime thrust state.
 
 	Thruster* ThrusterComp = GetThruster();
 	if (ThrusterComp) {
@@ -1186,14 +1182,8 @@ Ship::Deactivate(SimScene& Scene)
 		}
 	}
 
-	for (int LightIndex = 0; LightIndex < navlights.size(); LightIndex++) {
-		NavLight* NavLightComp = navlights[LightIndex];
-		for (int BeaconIndex = 0; BeaconIndex < NavLightComp->NumBeacons(); BeaconIndex++) {
-			Graphic* Beacon = NavLightComp->Beacon(BeaconIndex);
-			if (Beacon)
-				Scene.DelGraphic(Beacon);
-		}
-	}
+	// Nav lights are rendered by Unreal components.
+	// Legacy NavLight only owns timing/state, so there are no Scene graphics to remove.
 
 	ListIter<WeaponGroup> GroupIter = weapons;
 	while (++GroupIter) {

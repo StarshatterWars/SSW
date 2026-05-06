@@ -1992,20 +1992,53 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 }
 // +--------------------------------------------------------------------+
 
-static ENavLightType NavLightTypeFromLegacyInt(int32 InT)
+static FLinearColor NavLightColorFromText(const FString& InColor)
 {
-	// Legacy: if t < 1 || t > 4 -> t = 1
-	int32 T = InT;
-	if (T < 1 || T > 4) T = 1;
+	const FString Color = InColor.ToLower();
 
-	switch (T)
+	if (Color == TEXT("red"))
 	{
-	case 1: return ENavLightType::GREEN;
-	case 2: return ENavLightType::RED;
-	case 3: return ENavLightType::BLUE;
-	case 4: return ENavLightType::YELLOW;
-	default: return ENavLightType::WHITE;
+		return FLinearColor::Red;
 	}
+
+	if (Color == TEXT("green"))
+	{
+		return FLinearColor::Green;
+	}
+
+	if (Color == TEXT("blue"))
+	{
+		return FLinearColor::Blue;
+	}
+
+	if (Color == TEXT("yellow") || Color == TEXT("amber"))
+	{
+		return FLinearColor::Yellow;
+	}
+
+	if (Color == TEXT("cyan"))
+	{
+		return FLinearColor(0.0f, 1.0f, 1.0f);
+	}
+
+	if (Color == TEXT("purple") || Color == TEXT("magenta"))
+	{
+		return FLinearColor(1.0f, 0.0f, 1.0f);
+	}
+
+	return FLinearColor::White;
+}
+
+static EShipNavLightMode NavLightModeFromText(const FString& InMode)
+{
+	const FString Mode = InMode.ToLower();
+
+	if (Mode == TEXT("steady") || Mode == TEXT("constant") || Mode == TEXT("on"))
+	{
+		return EShipNavLightMode::Steady;
+	}
+
+	return EShipNavLightMode::Blink;
 }
 
 void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char* Fn)
@@ -2018,115 +2051,193 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char*
 		return;
 	}
 
-	const float ShipScale = (CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
-
-	// Legacy defaults:
-	Text  DName = "";
-	Text  DAbrv = "";
-	Text  DesignName = "";
-
-	float DScale = 1.0f;  // navlight scale param
-	float Period = 10.0f;
+	const float ShipScale =
+		(CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
 
 	FShipNavLight NewNav;
-	NewNav.SourceFile = FString(ANSI_TO_TCHAR(Fn));
+	NewNav.Scale = 1.0f;
+	NewNav.Period = 0.5f;
+	NewNav.Name = TEXT("Navigation Lights");
+	NewNav.Abbrev = TEXT("NAV");
+	NewNav.DesignName = TEXT("Navigation Lights");
 
-	// If you want an explicit cap like legacy MAX_LIGHTS:
-	const int32 MaxLights = 16; // TODO: set to NavLight::MAX_LIGHTS value from legacy
+	const int32 MaxLights = 16;
 	NewNav.Beacons.Reserve(MaxLights);
 
 	const int32 ElemCount = (int32)Val->elements()->size();
+
 	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
 	{
 		TermDef* PDef = Val->elements()->at(ElemIdx)->isDef();
 		if (!PDef)
+		{
 			continue;
+		}
 
 		const Text& Key = PDef->name()->value();
 
 		if (Key == "name")
 		{
+			Text DName = "";
 			GetDefText(DName, PDef, Fn);
 			NewNav.Name = FString(DName);
 		}
 		else if (Key == "abrv")
 		{
+			Text DAbrv = "";
 			GetDefText(DAbrv, PDef, Fn);
 			NewNav.Abbrev = FString(DAbrv);
 		}
 		else if (Key == "design")
 		{
+			Text DesignName = "";
 			GetDefText(DesignName, PDef, Fn);
 			NewNav.DesignName = FString(DesignName);
 		}
 		else if (Key == "scale")
 		{
-			GetDefNumber(DScale, PDef, Fn);
-			NewNav.Scale = DScale;
+			GetDefNumber(NewNav.Scale, PDef, Fn);
 		}
 		else if (Key == "period")
 		{
-			GetDefNumber(Period, PDef, Fn);
-			NewNav.Period = Period;
+			GetDefNumber(NewNav.Period, PDef, Fn);
 		}
 		else if (Key == "light")
 		{
 			if (!PDef->term() || !PDef->term()->isStruct())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ParseNavlight: light struct missing in '%s'"), *NewNav.SourceFile);
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseNavlight: light struct missing"));
 				continue;
 			}
 
 			if (NewNav.Beacons.Num() >= MaxLights)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ParseNavlight: too many lights in '%s' (max=%d)"),
-					*NewNav.SourceFile, MaxLights);
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseNavlight: too many lights max=%d"),
+					MaxLights);
 				continue;
 			}
 
 			TermStruct* LightStruct = PDef->term()->isStruct();
 
-			FVector Loc = FVector::ZeroVector;
-			int32   T = 1;      // legacy default before clamp
-			DWORD   Pattern = 0;
+			FNavLightBeacon Beacon;
+			Beacon.Name = TEXT("Nav Light");
+			Beacon.Location = FVector::ZeroVector;
+			Beacon.LocalRotation = FRotator::ZeroRotator;
+			Beacon.Color = FLinearColor::White;
+			Beacon.Intensity = 1200.0f;
+			Beacon.Radius = 200.0f;
+			Beacon.Mode = EShipNavLightMode::Blink;
+			Beacon.BlinkInterval = NewNav.Period;
+			Beacon.PhaseOffset = 0.0f;
 
-			const int32 LightElemCount = (int32)LightStruct->elements()->size();
-			for (int32 j = 0; j < LightElemCount; ++j)
+			const int32 LightElemCount =
+				(int32)LightStruct->elements()->size();
+
+			for (int32 LightIdx = 0; LightIdx < LightElemCount; ++LightIdx)
 			{
-				TermDef* P2 = LightStruct->elements()->at(j)->isDef();
-				if (!P2)
+				TermDef* LightDef =
+					LightStruct->elements()->at(LightIdx)->isDef();
+
+				if (!LightDef)
+				{
 					continue;
-
-				const Text& LKey = P2->name()->value();
-
-				if (LKey == "type")
-				{
-					GetDefNumber(T, P2, Fn);
 				}
-				else if (LKey == "loc")
+
+				const Text& LightKey = LightDef->name()->value();
+
+				if (LightKey == "name")
 				{
-					GetDefVec(Loc, P2, Fn);
+					Text LightName = "";
+					GetDefText(LightName, LightDef, Fn);
+					Beacon.Name = FString(LightName);
 				}
-				else if (LKey == "pattern")
+				else if (LightKey == "loc")
 				{
-					GetDefNumber(Pattern, P2, Fn);
+					FVector Loc = FVector::ZeroVector;
+					GetDefVec(Loc, LightDef, Fn);
+					Beacon.Location = Loc * ShipScale;
+				}
+				else if (LightKey == "rot")
+				{
+					FVector RotVec = FVector::ZeroVector;
+					GetDefVec(RotVec, LightDef, Fn);
+					Beacon.LocalRotation = FRotator(
+						RotVec.Y,
+						RotVec.Z,
+						RotVec.X
+					);
+				}
+				else if (LightKey == "color")
+				{
+					Text ColorText = "";
+					GetDefText(ColorText, LightDef, Fn);
+					Beacon.Color = NavLightColorFromText(
+						FString(ANSI_TO_TCHAR(ColorText.data()))
+					);
+				}
+				else if (LightKey == "intensity")
+				{
+					GetDefNumber(Beacon.Intensity, LightDef, Fn);
+				}
+				else if (LightKey == "radius")
+				{
+					GetDefNumber(Beacon.Radius, LightDef, Fn);
+				}
+				else if (LightKey == "mode")
+				{
+					Text ModeText = "";
+					GetDefText(ModeText, LightDef, Fn);
+					Beacon.Mode = NavLightModeFromText(
+						FString(ANSI_TO_TCHAR(ModeText.data()))
+					);
+				}
+				else if (LightKey == "blink_interval")
+				{
+					GetDefNumber(Beacon.BlinkInterval, LightDef, Fn);
+				}
+				else if (LightKey == "phase")
+				{
+					GetDefNumber(Beacon.PhaseOffset, LightDef, Fn);
 				}
 			}
 
-			FNavLightBeacon Beacon;
-			Beacon.Type = NavLightTypeFromLegacyInt(T);
-
-			// Legacy: bloc[n] = loc * scale (ship scale, not navlight dscale)
-			Beacon.Location = Loc * ShipScale;
-
-			Beacon.Pattern = (int32)Pattern;
+			if (Beacon.BlinkInterval <= 0.0f)
+			{
+				Beacon.BlinkInterval = NewNav.Period;
+			}
 
 			NewNav.Beacons.Add(Beacon);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ParseNavlight] Light Name='%s' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f"),
+				*Beacon.Name,
+				Beacon.Location.X,
+				Beacon.Location.Y,
+				Beacon.Location.Z,
+				Beacon.Color.R,
+				Beacon.Color.G,
+				Beacon.Color.B,
+				Beacon.Intensity,
+				Beacon.Radius,
+				(int32)Beacon.Mode,
+				Beacon.BlinkInterval,
+				Beacon.PhaseOffset);
 		}
 	}
 
-	// Store like your other parse helpers:
-	NewShipNavLightArray.Add(NewNav);
+	if (NewNav.Beacons.Num() > 0)
+	{
+		NewShipNavLightArray.Add(NewNav);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ParseNavlight] Added NavLight Name='%s' Period=%.2f Scale=%.2f Lights=%d"),
+			*NewNav.Name,
+			NewNav.Period,
+			NewNav.Scale,
+			NewNav.Beacons.Num());
+	}
 }
 
 // +--------------------------------------------------------------------+

@@ -30,7 +30,7 @@
 #include "Engine/World.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
-
+#include "GameStructs_System.h"
 #include "ShipUtils.h"
 
 

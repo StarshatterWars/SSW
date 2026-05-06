@@ -212,6 +212,52 @@ sensor:     {
    hull_factor:      0.1
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.50
+
+   light: {
+      name: "Port"
+      loc: (80.0, -95.0, 0.0)
+      color: "red"
+      intensity: 3500
+      radius: 350
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.00
+   }
+
+   light: {
+      name: "Starboard"
+      loc: (80.0, 95.0, 0.0)
+      color: "green"
+      intensity: 3500
+      radius: 350
+      mode: "blink"
+      blink_interval: 0.50
+      phase: 0.25
+   }
+
+   light: {
+      name: "Dorsal"
+      loc: (180.0, 0.0, 70.0)
+      color: "white"
+      intensity: 3000
+      radius: 300
+      mode: "steady"
+   }
+
+   light: {
+      name: "Ventral"
+      loc: (-120.0, 0.0, -70.0)
+      color: (0.6, 0.6, 1.0)
+      intensity: 3000
+      radius: 300
+      mode: "steady"
+   }
+}
+
 computer:   {
    design:           "Avionics",
    loc:              (20, 16, 80),

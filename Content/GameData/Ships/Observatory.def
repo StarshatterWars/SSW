@@ -60,14 +60,64 @@ flightdeck: {
 }
 
 navlight: {
-   scale:  2,
-   period: 2.5,
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 2.5
 
-   light:  { loc: (  13, 300,  342), pattern: 0xc0100000, type: 1 }
-   light:  { loc: (  -8,   0,-1120), pattern: 0xc0100000, type: 1 }
-   light:  { loc: (   0,  64,  770), pattern: 0x0000c010, type: 3 }
-   light:  { loc: ( 400,  64,  360), pattern: 0x0000c010, type: 3 }
-   light:  { loc: (-400,  64,  360), pattern: 0x0000c010, type: 3 }
+   light: {
+      name: "Forward Dorsal"
+      loc: (342.0, 13.0, 300.0)
+      color: "white"
+      intensity: 3000
+      radius: 120
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "Aft Beacon"
+      loc: (-1120.0, -8.0, 0.0)
+      color: "white"
+      intensity: 3000
+      radius: 120
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.50
+   }
+
+   light: {
+      name: "Center Blue Beacon"
+      loc: (770.0, 0.0, 64.0)
+      color: (0.6, 0.8, 1.0)
+      intensity: 2500
+      radius: 100
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.25
+   }
+
+   light: {
+      name: "Starboard Blue Beacon"
+      loc: (360.0, 400.0, 64.0)
+      color: (0.6, 0.8, 1.0)
+      intensity: 2500
+      radius: 100
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.25
+   }
+
+   light: {
+      name: "Port Blue Beacon"
+      loc: (360.0, -400.0, 64.0)
+      color: (0.6, 0.8, 1.0)
+      intensity: 2500
+      radius: 100
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.25
+   }
 }
 
 sensor:     {
