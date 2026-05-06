@@ -264,6 +264,7 @@ public:
 	Thruster* thruster = nullptr;
 	Sensor* sensor = nullptr;
 	NavSystem* navsys = nullptr;
+	NavLight* navlight = nullptr;
 	Shield* shield = nullptr;
 
 	SimModel* shield_model;

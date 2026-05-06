@@ -20,6 +20,7 @@
 #include "Power.h"
 #include "Drive.h"
 #include "Thruster.h"
+#include "NavLight.h"
 #include "NavSystem.h"
 #include "Farcaster.h"
 #include "QuantumDrive.h"
@@ -195,6 +196,7 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
     Ship->computers.clear();        
     Ship->hardpoints.clear();
     Ship->weapons.clear();
+    Ship->navlights.clear();
 
     Ship->quantum_drive = nullptr;
     Ship->farcaster = nullptr;
@@ -202,6 +204,7 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
     Ship->thruster = nullptr;
     Ship->sensor = nullptr;
     Ship->shield = nullptr;
+	Ship->navlight = nullptr;
 }
 
 ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
@@ -671,6 +674,60 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     Legacy->farcaster =
         Legacy->farcasters.size() > 0 ? Legacy->farcasters[0] : nullptr;
   
+    //-------------------------------------------------------------
+    // Nav lights
+    //-------------------------------------------------------------
+    for (const FShipNavLight& Src : Row.Navlight) 
+    {
+        if (Src.Beacons.Num() <= 0)
+        {
+            continue;
+        }
+
+        NavLight* NewNavLight = new NavLight(
+            Src.Period,
+            Src.Scale
+        );
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewNavLight->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+        else if (!Src.DesignName.IsEmpty())
+        {
+            NewNavLight->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+        else
+        {
+            NewNavLight->SetName("NavLight");
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewNavLight->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        for (const FNavLightBeacon& Beacon : Src.Beacons)
+        {
+            NewNavLight->AddBeacon(
+                Beacon.Location,
+                static_cast<DWORD>(Beacon.Pattern),
+                static_cast<int>(Beacon.Type)
+            );
+        }
+
+        Legacy->navlights.append(NewNavLight);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] NavLight built Row='%s' NavLight=%p Name='%hs' Period=%.2f Scale=%.2f Beacons=%d"),
+            *RowName.ToString(),
+            NewNavLight,
+            NewNavLight->Name(),
+            Src.Period,
+            Src.Scale,
+            Src.Beacons.Num());
+    }
+
     //-------------------------------------------------------------
     // Weapons
     //-------------------------------------------------------------

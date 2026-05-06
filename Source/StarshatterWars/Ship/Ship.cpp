@@ -615,8 +615,39 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	farcaster =
 		farcasters.size() > 0 ? farcasters[0] : nullptr;
 
+	//-------------------------------------------------------------
+	// Nav lights
+	//-------------------------------------------------------------
+	for (int i = 0; i < design->navlights.size(); i++)
+	{
+		NavLight* RuntimeNavLight = new NavLight(*design->navlights[i]);
+
+		RuntimeNavLight->SetShip(this);
+		RuntimeNavLight->SetID(sys_id++);
+
+		const int src_index = RuntimeNavLight->GetSourceIndex();
+
+		if (src_index >= 0 && src_index < reactors.size())
+		{
+			reactors[src_index]->AddClient(RuntimeNavLight);
+		}
+		else if (reactors.size() > 0)
+		{
+			reactors[0]->AddClient(RuntimeNavLight);
+		}
+
+		navlights.append(RuntimeNavLight);
+		systems.append(RuntimeNavLight);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] NavLight runtime built Ship='%hs' NavLight=%p Systems=%d"),
+			GetName(),
+			RuntimeNavLight,
+			systems.size());
+	}
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship] Systems COUNT '%hs' Reactors=%d Drives=%d Thrusters=%d Sensors=%d Shields=%d Computers=%d QuantumDrives=%d Farcasters=%d Systems=%d"),
+		TEXT("[Ship] Systems COUNT '%hs' Reactors=%d Drives=%d Thrusters=%d Sensors=%d Shields=%d Computers=%d NavLights=%d Weapons=%d QuantumDrives=%d Farcasters=%d Systems=%d"),
 		GetName(),
 		reactors.size(),
 		drives.size(),
@@ -624,6 +655,8 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		sensors.size(),
 		shields.size(),
 		computers.size(),
+		navlights.size(),
+		weapons.size(),
 		quantum_drives.size(),
 		farcasters.size(),
 		systems.size());
