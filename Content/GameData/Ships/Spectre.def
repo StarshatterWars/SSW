@@ -292,13 +292,53 @@ probe: {
 }
 
 navlight: {
-   scale:  0.35,
-   period: 2.4,
+   design: "Navigation Lights"
+   scale: 0.35
+   period: 2.4
 
-   light:  { loc: ( 245,-12,-180), pattern: 0x12000000, type: 3 },
-   light:  { loc: (-245,-12,-180), pattern: 0x00120000, type: 2 },
-   light:  { loc: (   0, 65, 320), pattern: 0x03000300, type: 1 },
-   light:  { loc: (   0, 55,-320), pattern: 0x00030003, type: 1 }
+   light: {
+      name: "Starboard Aft"
+      loc: (245.0, -12.0, -180.0)
+      color: "green"
+      intensity: 3200
+      radius: 220
+      mode: "blink"
+      blink_interval: 2.4
+      phase: 0.25
+   }
+
+   light: {
+      name: "Port Aft"
+      loc: (-245.0, -12.0, -180.0)
+      color: "red"
+      intensity: 3200
+      radius: 220
+      mode: "blink"
+      blink_interval: 2.4
+      phase: 0.00
+   }
+
+   light: {
+      name: "Forward Dorsal"
+      loc: (0.0, 65.0, 320.0)
+      color: "white"
+      intensity: 2600
+      radius: 200
+      mode: "blink"
+      blink_interval: 2.4
+      phase: 0.50
+   }
+
+   light: {
+      name: "Rear Dorsal"
+      loc: (0.0, 55.0, -320.0)
+      color: "white"
+      intensity: 2600
+      radius: 200
+      mode: "blink"
+      blink_interval: 2.4
+      phase: 0.00
+   }
 }
 
 power: {

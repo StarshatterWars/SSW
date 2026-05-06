@@ -110,18 +110,98 @@ flightdeck: {
    hull_factor: 0.5,
 }
 
-navlight:  {
-   scale:  2.5,
-   period: 2,
+navlight: {
+   design: "Corner Navigation Beacons"
+   scale: 2.5
+   period: 2.0
 
-   light:  { loc: (-90,  64, -160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: (-90,  64,  160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: ( 90,  64, -160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: ( 90,  64,  160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: (-90, -64, -160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: (-90, -64,  160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: ( 90, -64, -160), pattern: 0xf0100000, type: 1 },
-   light:  { loc: ( 90, -64,  160), pattern: 0xf0100000, type: 1 },
+   light: {
+      name: "UpperPortAft"
+      loc: (-90.0, 64.0, -160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "UpperPortForward"
+      loc: (-90.0, 64.0, 160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "UpperStarboardAft"
+      loc: (90.0, 64.0, -160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "UpperStarboardForward"
+      loc: (90.0, 64.0, 160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "LowerPortAft"
+      loc: (-90.0, -64.0, -160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "LowerPortForward"
+      loc: (-90.0, -64.0, 160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "LowerStarboardAft"
+      loc: (90.0, -64.0, -160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "LowerStarboardForward"
+      loc: (90.0, -64.0, 160.0)
+      color: "white"
+      intensity: 9000
+      radius: 450
+      mode: "blink"
+      blink_interval: 2.0
+      phase: 0.00
+   }
 }
 
 sensor:     {

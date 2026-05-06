@@ -86,6 +86,7 @@ public:
 	void InitializeShipDesigns();
 	void LoadAll(bool bFull = false);
 	void LoadShipDesign(const char* InFilename);
+	void ResetCurrentShipArrays();
 	void LoadShipDesignTable();
 
 	const FShipDesign* GetDesignRowByName(const FString& DesignName) const;

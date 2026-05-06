@@ -343,15 +343,65 @@ nav: {
    hull_factor:      0.1
 }
 
-navlight:  {
-   scale:  0.66,
-   period: 2.5,
+navlight: {
+   design: "Navigation Lights"
+   scale: 0.66
+   period: 2.5
 
-   light:  { loc: ( 235,   0,-190), pattern: 0x11000000, type: 3 },
-   light:  { loc: (-235,   0,-190), pattern: 0x00110000, type: 2 },
-   light:  { loc: (   0, 150,-285), pattern: 0x00000120, type: 1 },
-   light:  { loc: (   0, 108, 192), pattern: 0x00000120, type: 1 },
-   light:  { loc: (   0, -60, 192), pattern: 0x00000120, type: 1 },
+   light: {
+      name: "Starboard Aft"
+      loc: (235.0, 0.0, -190.0)
+      color: "green"
+      intensity: 3200
+      radius: 220
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.25
+   }
+
+   light: {
+      name: "Port Aft"
+      loc: (-235.0, 0.0, -190.0)
+      color: "red"
+      intensity: 3200
+      radius: 220
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "Dorsal Rear"
+      loc: (0.0, 150.0, -285.0)
+      color: "white"
+      intensity: 2600
+      radius: 200
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "Upper Forward"
+      loc: (0.0, 108.0, 192.0)
+      color: "white"
+      intensity: 2600
+      radius: 200
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "Lower Forward"
+      loc: (0.0, -60.0, 192.0)
+      color: "white"
+      intensity: 2600
+      radius: 200
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
 }
 
 death_spiral: {

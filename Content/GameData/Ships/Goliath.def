@@ -176,8 +176,6 @@ weapon:     {
    hull_factor:      0.2
 }
 
-
-
 flightdeck: {
    name:       "Deck 1",
    abrv:       "Deck 1",

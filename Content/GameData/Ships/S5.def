@@ -238,17 +238,97 @@ sensor:     {
 }
 
 navlight: {
-   scale:  2,
-   period: 2.5,
+   design: "Perimeter Navigation Beacons"
+   scale: 2.0
+   period: 2.5
 
-   light:  { loc: (  64,  0,  112), pattern: 0xc0100000, type: 1 },
-   light:  { loc: (  64,  0, -112), pattern: 0xc0100000, type: 1 },
-   light:  { loc: ( -64,  0,  112), pattern: 0xc0100000, type: 1 },
-   light:  { loc: ( -64,  0, -112), pattern: 0xc0100000, type: 1 },
-   light:  { loc: ( 112,  0,   64), pattern: 0xc0100000, type: 1 },
-   light:  { loc: ( 112,  0,  -64), pattern: 0xc0100000, type: 1 },
-   light:  { loc: (-112,  0,   64), pattern: 0xc0100000, type: 1 },
-   light:  { loc: (-112,  0,  -64), pattern: 0xc0100000, type: 1 },
+   light: {
+      name: "FrontRight_Upper"
+      loc: (64.0, 0.0, 112.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "FrontRight_Lower"
+      loc: (64.0, 0.0, -112.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "FrontLeft_Upper"
+      loc: (-64.0, 0.0, 112.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "FrontLeft_Lower"
+      loc: (-64.0, 0.0, -112.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "RightFront"
+      loc: (112.0, 0.0, 64.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "RightRear"
+      loc: (112.0, 0.0, -64.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "LeftFront"
+      loc: (-112.0, 0.0, 64.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "LeftRear"
+      loc: (-112.0, 0.0, -64.0)
+      color: "white"
+      intensity: 8000
+      radius: 300
+      mode: "blink"
+      blink_interval: 2.5
+      phase: 0.00
+   }
 }
 
 map: {

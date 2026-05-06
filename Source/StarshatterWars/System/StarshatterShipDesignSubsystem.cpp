@@ -283,7 +283,7 @@ void UStarshatterShipDesignSubsystem::InitializeShipDesigns()
 void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 {
 	BeginDesignParse(InFilename);
-	
+
 	if (!InFilename || !*InFilename)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("LoadShipDesign: null/empty filename"));
@@ -305,6 +305,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		UE_LOG(LogTemp, Error, TEXT("LoadShipDesign: failed to read: %s"), *ShipFilePath);
 		return;
 	}
+
 	Bytes.Add(0);
 
 	const FTCHARToUTF8 Utf8Path(*ShipFilePath);
@@ -319,7 +320,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		return;
 	}
 
-	// Header check:
 	{
 		TermText* FileType = TermPtr->isText();
 		if (!FileType || FileType->value() != "SHIP")
@@ -333,16 +333,11 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	delete TermPtr;
 	TermPtr = nullptr;
 
-	// ------------------------------------------------------------
-	// Locals
-	// ------------------------------------------------------------
 	Text LocalShipName = "";
 	Text LocalDisplayName = "";
 	Text LocalDescription = "";
 	Text LocalAbrv = "";
-
 	Text LocalModelName = "";
-
 	Text LocalShipClass = "";
 	Text LocalShipEmpire = "";
 	Text LocalCockpitName = "";
@@ -356,7 +351,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	float LocalScale = 1.0f;
 	float LocalExplosionScale = 0.0f;
 	float LocalMass = 0.0f;
-
 	int32 LocalShipType = 0;
 
 	float LocalVlimit = 8e3f;
@@ -372,7 +366,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 
 	float LocalCockpitScale = 1.0f;
 	float LocalAutoRoll = 0.0f;
-
 	float LocalCL = 0.0f;
 	float LocalCD = 0.0f;
 	float LocalStall = 0.0f;
@@ -383,13 +376,11 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	float LocalAvoidStrike = 0.0f;
 	float LocalAvoidTarget = 0.0f;
 	float LocalCommitRange = 0.0f;
-
 	float LocalSplashRadius = -1.0f;
 	float LocalScuttle = 5e3f;
 	float LocalRepairSpeed = 1.0f;
 
 	int32 LocalRepairTeams = 2;
-
 	float LocalEFactor[3] = { 0.1f, 0.3f, 1.0f };
 
 	bool bLocalRepairAuto = true;
@@ -397,44 +388,20 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	bool bLocalRepairScreen = true;
 	bool bLocalWepScreen = true;
 	bool bLocalDegrees = false;
+	bool bLocalHidden = false;
 
-	FVector LocalOffLoc = FVector::ZeroVector;
 	FVector LocalSpin = FVector::ZeroVector;
 	FVector LocalBeautyCam = FVector::ZeroVector;
 	FVector LocalChaseVec = FVector(0.f, -100.f, 20.f);
 	FVector LocalBridgeVec = FVector::ZeroVector;
 
-	EShipEmpire LocalEmpire = EShipEmpire::Terellian;
-
-	bool bLocalHidden = false; 
-
 	FShipDesign NewShipDesign;
-	NewShipPowerArray.Empty();
-	NewShipDriveArray.Empty();
-	NewShipQuantumArray.Empty();
-	NewShipFarcasterArray.Empty();
-	NewShipThrusterArray.Empty();
-	NewShipNavLightArray.Empty();
-	NewShipFlightDeckArray.Empty();
-	NewShipLandingGearArray.Empty();
-	NewShipWeaponArray.Empty();
-	NewShipHardPointArray.Empty();
-	NewShipLoadoutArray.Empty();
-	NewShipSensorArray.Empty();
-	NewShipNavSystemArray.Empty();
-	NewShipComputerArray.Empty();
-	NewShipShieldArray.Empty();
-	NewShipSquadronArray.Empty();
-	NewShipDeathSpiralArray.Empty();
-	NewShipMapSpriteArray.Empty();
-	NewShipSkinArray.Empty();
+	ResetCurrentShipArrays();
 
-	// ------------------------------------------------------------
-	// Parse terms
-	// ------------------------------------------------------------
 	while ((TermPtr = ParserObj.ParseTerm()) != nullptr)
 	{
 		TermDef* Def = TermPtr->isDef();
+
 		if (!Def)
 		{
 			delete TermPtr;
@@ -478,7 +445,8 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		else if (Key == "empire")
 		{
 			GetDefText(LocalShipEmpire, Def, fn);
-			NewShipDesign.ShipEmpire = UFormattingUtils::GetShipEmpireFromString(FString(LocalShipEmpire));
+			NewShipDesign.ShipEmpire =
+				UFormattingUtils::GetShipEmpireFromString(FString(LocalShipEmpire));
 		}
 		else if (Key == "description")
 		{
@@ -715,7 +683,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			else
 			{
 				GetDefText(LocalBeautyName, Def, fn);
-				NewShipDesign.BeautyName = FString(LocalBeautyName); // IMPORTANT
+				NewShipDesign.BeautyName = FString(LocalBeautyName);
 			}
 		}
 		else if (Key == "hud_icon")
@@ -752,113 +720,42 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			LocalBridgeVec = V * LocalScale;
 			NewShipDesign.BridgeVec = LocalBridgeVec;
 		}
-		else if (Key == "power")
+
+		else if (Key == "power" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: power source struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParsePower(Def->term()->isStruct(), fn);
-				NewShipDesign.Power = NewShipPowerArray;
-			}
+			ParsePower(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "main_drive" || Key == "drive")
+		else if ((Key == "main_drive" || Key == "drive") && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: drive struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseDrive(Def->term()->isStruct(), fn);
-				NewShipDesign.Drive = NewShipDriveArray;
-			}
+			ParseDrive(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "quantum" || Key == "quantum_drive")
+		else if ((Key == "quantum" || Key == "quantum_drive") && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: quantum struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseQuantumDrive(Def->term()->isStruct(), fn);
-				NewShipDesign.Quantum = NewShipQuantumArray;
-			}
+			ParseQuantumDrive(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "sender" || Key == "farcaster")
+		else if ((Key == "sender" || Key == "farcaster") && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: farcaster struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseFarcaster(Def->term()->isStruct(), fn);
-				NewShipDesign.Farcaster = NewShipFarcasterArray;
-			}
+			ParseFarcaster(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "thruster")
+		else if (Key == "thruster" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: thruster struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseThruster(Def->term()->isStruct(), fn);
-				NewShipDesign.Thruster = NewShipThrusterArray;
-			}
+			ParseThruster(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "navlight")
+		else if (Key == "navlight" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: navlight struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseNavlight(Def->term()->isStruct(), fn);
-				NewShipDesign.Navlight = NewShipNavLightArray;
-			}
+			ParseNavlight(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "flightdeck")
+		else if (Key == "flightdeck" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: flightdeck struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseFlightDeck(Def->term()->isStruct(), fn);
-				NewShipDesign.FlightDeck = NewShipFlightDeckArray;
-			}
+			ParseFlightDeck(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "gear")
+		else if (Key == "gear" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: landing gear struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseLandingGear(Def->term()->isStruct(), fn);
-				NewShipDesign.LandingGear = NewShipLandingGearArray;
-			}
+			ParseLandingGear(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "weapon")
+		else if (Key == "weapon" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: weapon struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseWeapon(Def->term()->isStruct(), fn);
-				NewShipDesign.Weapon = NewShipWeaponArray;
-			}
+			ParseWeapon(Def->term()->isStruct(), fn);
 		}
 		else if (Key == "decoy")
 		{
@@ -876,130 +773,45 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 				CurrentShipProbeWeaponType = FString(Buf);
 			}
 		}
-		else if (Key == "hardpoint")
+		else if (Key == "hardpoint" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: hardpoint struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseHardPoint(Def->term()->isStruct(), fn);
-				NewShipDesign.Hardpoint = NewShipHardPointArray;
-			}
+			ParseHardPoint(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "loadout")
+		else if (Key == "loadout" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: loadout struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseLoadout(Def->term()->isStruct(), fn);
-				NewShipDesign.Loadout = NewShipLoadoutArray;
-			}
+			ParseLoadout(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "sensor")
+		else if (Key == "sensor" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: sensor struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseSensor(Def->term()->isStruct(), fn);
-				NewShipDesign.Sensor = NewShipSensorArray;
-			}
+			ParseSensor(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "nav")
+		else if (Key == "nav" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: nav struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseNavsys(Def->term()->isStruct(), fn);
-				NewShipDesign.NavSys = NewShipNavSystemArray;
-			}
+			ParseNavsys(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "computer")
+		else if (Key == "computer" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: computer struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseComputer(Def->term()->isStruct(), fn);
-				NewShipDesign.Computer = NewShipComputerArray;
-			}
+			ParseComputer(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "shield")
+		else if (Key == "shield" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: shield struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseShield(Def->term()->isStruct(), fn);
-				NewShipDesign.Shield = NewShipShieldArray;
-			}
+			ParseShield(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "squadron")
+		else if (Key == "squadron" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: squadron struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseSquadron(Def->term()->isStruct(), fn);
-				NewShipDesign.Squadron = NewShipSquadronArray;
-			}
+			ParseSquadron(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "death_spiral")
+		else if (Key == "death_spiral" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: death spiral struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseDeathSpiral(Def->term()->isStruct(), fn);
-				NewShipDesign.DeathSpiral = NewShipDeathSpiralArray;
-			}
+			ParseDeathSpiral(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "map")
+		else if (Key == "map" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: map struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseMap(Def->term()->isStruct(), fn);
-				NewShipDesign.Map = NewShipMapSpriteArray;
-			}
+			ParseMap(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "skin")
+		else if (Key == "skin" && Def->term() && Def->term()->isStruct())
 		{
-			if (!Def->term() || !Def->term()->isStruct())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("WARNING: skin struct missing in '%s'"), *ShipFilePath);
-			}
-			else
-			{
-				ParseSkin(Def->term()->isStruct(), fn);
-				NewShipDesign.Skin = NewShipSkinArray;
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Verbose, TEXT("WARNING: unknown ship parameter '%s' in '%s'"),
-				*FString(ANSI_TO_TCHAR(Key.data())), *ShipFilePath);
+			ParseSkin(Def->term()->isStruct(), fn);
 		}
 
 		delete TermPtr;
@@ -1009,7 +821,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	ResolveWeaponsForCurrentShip();
 	ValidateLoadoutsForCurrentShip();
 
-	// push final resolved arrays back into the row
 	NewShipDesign.Power = NewShipPowerArray;
 	NewShipDesign.Drive = NewShipDriveArray;
 	NewShipDesign.Quantum = NewShipQuantumArray;
@@ -1029,10 +840,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	NewShipDesign.DeathSpiral = NewShipDeathSpiralArray;
 	NewShipDesign.Map = NewShipMapSpriteArray;
 	NewShipDesign.Skin = NewShipSkinArray;
-	
-	// ------------------------------------------------------------
-	// Add row ONCE after parse
-	// ------------------------------------------------------------
+
 	if (!ShipDesignDataTable)
 	{
 		UE_LOG(LogTemp, Error, TEXT("LoadShipDesign: ShipDesignDataTable is null"));
@@ -1046,45 +854,62 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	}
 
 	const FString ShipName = NewShipDesign.ShipName.TrimStartAndEnd();
+
 	if (ShipName.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("LoadShipDesign: missing 'name' in '%s'"), *ShipFilePath);
 		return;
 	}
+
 	const FName CleanRowName(*ShipName);
 
-	// ------------------------------------------------------------------
-// DataTable UPSERT (same pattern as systems)
-// ------------------------------------------------------------------
-	if (ShipDesignDataTable)
+	if (FShipDesign* Existing =
+		ShipDesignDataTable->FindRow<FShipDesign>(
+			CleanRowName,
+			TEXT("LoadShipDesign"),
+			false))
 	{
-		if (FShipDesign* Existing =
-			ShipDesignDataTable->FindRow<FShipDesign>(
-				CleanRowName,
-				TEXT("LoadShipDesign"),
-				/*bWarnIfRowMissing=*/false))
-		{
-			*Existing = NewShipDesign;
-		}
-		else
-		{
-			ShipDesignDataTable->AddRow(CleanRowName, NewShipDesign);
-		}
-
-		UE_LOG(LogTemp, Log,
-			TEXT("[SHIPDESIGN] Upsert OK: %s"),
-			*CleanRowName.ToString());
+		*Existing = NewShipDesign;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[SHIPDESIGN] ShipDesignDataTable is null"));
+		ShipDesignDataTable->AddRow(CleanRowName, NewShipDesign);
 	}
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[SHIPDESIGN] Upsert OK: %s"),
+		*CleanRowName.ToString());
 
 	FinalizeDesignParse();
 }
 
 // +--------------------------------------------------------------------+
+
+void UStarshatterShipDesignSubsystem::ResetCurrentShipArrays()
+{
+	NewShipPowerArray.Empty();
+	NewShipDriveArray.Empty();
+	NewShipQuantumArray.Empty();
+	NewShipFarcasterArray.Empty();
+	NewShipThrusterArray.Empty();
+	NewShipNavLightArray.Empty();
+	NewShipFlightDeckArray.Empty();
+	NewShipLandingGearArray.Empty();
+	NewShipWeaponArray.Empty();
+	NewShipHardPointArray.Empty();
+	NewShipLoadoutArray.Empty();
+	NewShipSensorArray.Empty();
+	NewShipNavSystemArray.Empty();
+	NewShipComputerArray.Empty();
+	NewShipShieldArray.Empty();
+	NewShipSquadronArray.Empty();
+	NewShipDeathSpiralArray.Empty();
+	NewShipMapSpriteArray.Empty();
+	NewShipSkinArray.Empty();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipDesignSubsystem] ResetCurrentShipArrays COMPLETE"));
+}
 
 static EPowerSource PowerTypeFromText(const Text& TypeName)
 {
@@ -2041,73 +1866,123 @@ static EShipNavLightMode NavLightModeFromText(const FString& InMode)
 	return EShipNavLightMode::Blink;
 }
 
-void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char* Fn)
+void UStarshatterShipDesignSubsystem::ParseNavlight(
+	TermStruct* Val,
+	const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseNavlight()"));
+	UE_LOG(LogTemp, Log,
+		TEXT("UStarshatterGameDataSubsystem::ParseNavlight()"));
 
 	if (!Val || !Fn || !*Fn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseNavlight called with null args"));
+		UE_LOG(LogTemp, Warning,
+			TEXT("ParseNavlight called with null args"));
 		return;
 	}
 
 	const float ShipScale =
-		(CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
+		(CurrentShipScale > 0.0f)
+		? CurrentShipScale
+		: 1.0f;
 
 	FShipNavLight NewNav;
-	NewNav.Scale = 1.0f;
-	NewNav.Period = 0.5f;
+
 	NewNav.Name = TEXT("Navigation Lights");
 	NewNav.Abbrev = TEXT("NAV");
 	NewNav.DesignName = TEXT("Navigation Lights");
 
+	NewNav.Scale = 1.0f;
+	NewNav.Period = 1.0f;
+
 	const int32 MaxLights = 16;
+
 	NewNav.Beacons.Reserve(MaxLights);
 
-	const int32 ElemCount = (int32)Val->elements()->size();
+	const int32 ElemCount =
+		(int32)Val->elements()->size();
 
 	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
 	{
-		TermDef* PDef = Val->elements()->at(ElemIdx)->isDef();
+		TermDef* PDef =
+			Val->elements()->at(ElemIdx)->isDef();
+
 		if (!PDef)
 		{
 			continue;
 		}
 
-		const Text& Key = PDef->name()->value();
+		const Text& Key =
+			PDef->name()->value();
+
+		//---------------------------------------------------------
+		// Name
+		//---------------------------------------------------------
 
 		if (Key == "name")
 		{
 			Text DName = "";
+
 			GetDefText(DName, PDef, Fn);
+
 			NewNav.Name = FString(DName);
 		}
+
+		//---------------------------------------------------------
+		// Abbreviation
+		//---------------------------------------------------------
+
 		else if (Key == "abrv")
 		{
 			Text DAbrv = "";
+
 			GetDefText(DAbrv, PDef, Fn);
+
 			NewNav.Abbrev = FString(DAbrv);
 		}
+
+		//---------------------------------------------------------
+		// Design
+		//---------------------------------------------------------
+
 		else if (Key == "design")
 		{
 			Text DesignName = "";
+
 			GetDefText(DesignName, PDef, Fn);
+
 			NewNav.DesignName = FString(DesignName);
 		}
+
+		//---------------------------------------------------------
+		// Scale
+		//---------------------------------------------------------
+
 		else if (Key == "scale")
 		{
 			GetDefNumber(NewNav.Scale, PDef, Fn);
 		}
+
+		//---------------------------------------------------------
+		// Period
+		//---------------------------------------------------------
+
 		else if (Key == "period")
 		{
 			GetDefNumber(NewNav.Period, PDef, Fn);
 		}
+
+		//---------------------------------------------------------
+		// Light
+		//---------------------------------------------------------
+
 		else if (Key == "light")
 		{
-			if (!PDef->term() || !PDef->term()->isStruct())
+			if (!PDef->term() ||
+				!PDef->term()->isStruct())
 			{
 				UE_LOG(LogTemp, Warning,
 					TEXT("ParseNavlight: light struct missing"));
+
 				continue;
 			}
 
@@ -2116,26 +1991,37 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char*
 				UE_LOG(LogTemp, Warning,
 					TEXT("ParseNavlight: too many lights max=%d"),
 					MaxLights);
+
 				continue;
 			}
 
-			TermStruct* LightStruct = PDef->term()->isStruct();
+			TermStruct* LightStruct =
+				PDef->term()->isStruct();
 
 			FNavLightBeacon Beacon;
-			Beacon.Name = TEXT("Nav Light");
+
+			Beacon.Name = TEXT("NavLight");
+
 			Beacon.Location = FVector::ZeroVector;
 			Beacon.LocalRotation = FRotator::ZeroRotator;
+
+			Beacon.Type = ENavLightType::WHITE;
 			Beacon.Color = FLinearColor::White;
+
 			Beacon.Intensity = 1200.0f;
 			Beacon.Radius = 200.0f;
+
 			Beacon.Mode = EShipNavLightMode::Blink;
+
 			Beacon.BlinkInterval = NewNav.Period;
 			Beacon.PhaseOffset = 0.0f;
 
 			const int32 LightElemCount =
 				(int32)LightStruct->elements()->size();
 
-			for (int32 LightIdx = 0; LightIdx < LightElemCount; ++LightIdx)
+			for (int32 LightIdx = 0;
+				LightIdx < LightElemCount;
+				++LightIdx)
 			{
 				TermDef* LightDef =
 					LightStruct->elements()->at(LightIdx)->isDef();
@@ -2145,61 +2031,184 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char*
 					continue;
 				}
 
-				const Text& LightKey = LightDef->name()->value();
+				const Text& LightKey =
+					LightDef->name()->value();
+
+				//-------------------------------------------------
+				// Light name
+				//-------------------------------------------------
 
 				if (LightKey == "name")
 				{
 					Text LightName = "";
+
 					GetDefText(LightName, LightDef, Fn);
+
 					Beacon.Name = FString(LightName);
 				}
+
+				//-------------------------------------------------
+				// Location
+				//-------------------------------------------------
+
 				else if (LightKey == "loc")
 				{
 					FVector Loc = FVector::ZeroVector;
+
 					GetDefVec(Loc, LightDef, Fn);
+
 					Beacon.Location = Loc * ShipScale;
 				}
+
+				//-------------------------------------------------
+				// Rotation
+				//-------------------------------------------------
+
 				else if (LightKey == "rot")
 				{
 					FVector RotVec = FVector::ZeroVector;
+
 					GetDefVec(RotVec, LightDef, Fn);
+
 					Beacon.LocalRotation = FRotator(
 						RotVec.Y,
 						RotVec.Z,
 						RotVec.X
 					);
 				}
+
+				//-------------------------------------------------
+				// Color
+				//-------------------------------------------------
+
 				else if (LightKey == "color")
 				{
 					Text ColorText = "";
+
 					GetDefText(ColorText, LightDef, Fn);
-					Beacon.Color = NavLightColorFromText(
-						FString(ANSI_TO_TCHAR(ColorText.data()))
-					);
+
+					const FString ColorStr =
+						FString(ANSI_TO_TCHAR(ColorText.data())).ToLower();
+
+					if (ColorStr == TEXT("red"))
+					{
+						Beacon.Type = ENavLightType::RED;
+						Beacon.Color = FLinearColor::Red;
+					}
+					else if (ColorStr == TEXT("green"))
+					{
+						Beacon.Type = ENavLightType::GREEN;
+						Beacon.Color = FLinearColor::Green;
+					}
+					else if (ColorStr == TEXT("blue"))
+					{
+						Beacon.Type = ENavLightType::BLUE;
+						Beacon.Color = FLinearColor::Blue;
+					}
+					else if (ColorStr == TEXT("yellow"))
+					{
+						Beacon.Type = ENavLightType::YELLOW;
+						Beacon.Color = FLinearColor::Yellow;
+					}
+					else if (ColorStr == TEXT("cyan"))
+					{
+						Beacon.Type = ENavLightType::CYAN;
+						Beacon.Color = FLinearColor(0.0f, 1.0f, 1.0f);
+					}
+					else if (ColorStr == TEXT("magenta"))
+					{
+						Beacon.Type = ENavLightType::MAGENTA;
+						Beacon.Color = FLinearColor(1.0f, 0.0f, 1.0f);
+					}
+					else if (ColorStr == TEXT("amber"))
+					{
+						Beacon.Type = ENavLightType::AMBER;
+						Beacon.Color = FLinearColor(1.0f, 0.6f, 0.0f);
+					}
+					else
+					{
+						Beacon.Type = ENavLightType::WHITE;
+						Beacon.Color = FLinearColor::White;
+					}
 				}
+
+				//-------------------------------------------------
+				// Intensity
+				//-------------------------------------------------
+
 				else if (LightKey == "intensity")
 				{
-					GetDefNumber(Beacon.Intensity, LightDef, Fn);
+					GetDefNumber(
+						Beacon.Intensity,
+						LightDef,
+						Fn);
 				}
+
+				//-------------------------------------------------
+				// Radius
+				//-------------------------------------------------
+
 				else if (LightKey == "radius")
 				{
-					GetDefNumber(Beacon.Radius, LightDef, Fn);
+					GetDefNumber(
+						Beacon.Radius,
+						LightDef,
+						Fn);
 				}
+
+				//-------------------------------------------------
+				// Mode
+				//-------------------------------------------------
+
 				else if (LightKey == "mode")
 				{
 					Text ModeText = "";
+
 					GetDefText(ModeText, LightDef, Fn);
-					Beacon.Mode = NavLightModeFromText(
-						FString(ANSI_TO_TCHAR(ModeText.data()))
-					);
+
+					const FString ModeStr =
+						FString(ANSI_TO_TCHAR(ModeText.data())).ToLower();
+
+					if (ModeStr == TEXT("steady"))
+					{
+						Beacon.Mode = EShipNavLightMode::Steady;
+					}
+					else if (ModeStr == TEXT("pulse"))
+					{
+						Beacon.Mode = EShipNavLightMode::Pulse;
+					}
+					else if (ModeStr == TEXT("strobe"))
+					{
+						Beacon.Mode = EShipNavLightMode::Strobe;
+					}
+					else
+					{
+						Beacon.Mode = EShipNavLightMode::Blink;
+					}
 				}
+
+				//-------------------------------------------------
+				// Blink interval
+				//-------------------------------------------------
+
 				else if (LightKey == "blink_interval")
 				{
-					GetDefNumber(Beacon.BlinkInterval, LightDef, Fn);
+					GetDefNumber(
+						Beacon.BlinkInterval,
+						LightDef,
+						Fn);
 				}
+
+				//-------------------------------------------------
+				// Phase
+				//-------------------------------------------------
+
 				else if (LightKey == "phase")
 				{
-					GetDefNumber(Beacon.PhaseOffset, LightDef, Fn);
+					GetDefNumber(
+						Beacon.PhaseOffset,
+						LightDef,
+						Fn);
 				}
 			}
 
@@ -2211,7 +2220,7 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char*
 			NewNav.Beacons.Add(Beacon);
 
 			UE_LOG(LogTemp, Warning,
-				TEXT("[ParseNavlight] Light Name='%s' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f"),
+				TEXT("[ParseNavlight] Beacon='%s' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f"),
 				*Beacon.Name,
 				Beacon.Location.X,
 				Beacon.Location.Y,
@@ -2227,17 +2236,22 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(TermStruct* Val, const char*
 		}
 	}
 
-	if (NewNav.Beacons.Num() > 0)
+	if (NewNav.Beacons.Num() <= 0)
 	{
-		NewShipNavLightArray.Add(NewNav);
-
 		UE_LOG(LogTemp, Warning,
-			TEXT("[ParseNavlight] Added NavLight Name='%s' Period=%.2f Scale=%.2f Lights=%d"),
-			*NewNav.Name,
-			NewNav.Period,
-			NewNav.Scale,
-			NewNav.Beacons.Num());
+			TEXT("[ParseNavlight] No beacons found"));
+
+		return;
 	}
+
+	NewShipNavLightArray.Add(NewNav);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ParseNavlight] Added NavLight Name='%s' Period=%.2f Scale=%.2f Beacons=%d"),
+		*NewNav.Name,
+		NewNav.Period,
+		NewNav.Scale,
+		NewNav.Beacons.Num());
 }
 
 // +--------------------------------------------------------------------+

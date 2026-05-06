@@ -91,20 +91,99 @@ flightdeck: {
    hull_factor: 0.5,
 }
 
-navlight:  {
-   scale:  1.5,
-   period: 1,
+navlight: {
+   design: "Sequential Port Navigation Strip"
+   scale: 1.5
+   period: 1.0
 
-   light:  { loc: (-98, 6, -448), pattern: 0x00030000, type: 1 },
-   light:  { loc: (-98, 6, -320), pattern: 0x000c0000, type: 1 },
-   light:  { loc: (-98, 6, -192), pattern: 0x00300000, type: 1 },
-   light:  { loc: (-98, 6,  -64), pattern: 0x00c00000, type: 1 },
-   light:  { loc: (-98, 6,   64), pattern: 0x03000000, type: 1 },
-   light:  { loc: (-98, 6,  192), pattern: 0x0c000000, type: 1 },
-   light:  { loc: (-98, 6,  320), pattern: 0x30000000, type: 1 },
-   light:  { loc: (-98, 6,  448), pattern: 0xc0000000, type: 1 }
+   light: {
+      name: "PortStrip_01"
+      loc: (-98.0, 6.0, -448.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "PortStrip_02"
+      loc: (-98.0, 6.0, -320.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.12
+   }
+
+   light: {
+      name: "PortStrip_03"
+      loc: (-98.0, 6.0, -192.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.24
+   }
+
+   light: {
+      name: "PortStrip_04"
+      loc: (-98.0, 6.0, -64.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.36
+   }
+
+   light: {
+      name: "PortStrip_05"
+      loc: (-98.0, 6.0, 64.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.48
+   }
+
+   light: {
+      name: "PortStrip_06"
+      loc: (-98.0, 6.0, 192.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.60
+   }
+
+   light: {
+      name: "PortStrip_07"
+      loc: (-98.0, 6.0, 320.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.72
+   }
+
+   light: {
+      name: "PortStrip_08"
+      loc: (-98.0, 6.0, 448.0)
+      color: "white"
+      intensity: 7000
+      radius: 260
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.84
+   }
 }
-
 
 death_spiral: {
    time:             0.0,

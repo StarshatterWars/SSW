@@ -47,34 +47,192 @@ farcaster:     {
    hull_factor: 0.5
    }
 
-navlight:  {
-   scale:  6,
-   period: 1.5,
+navlight: {
+   design: "Outer Ring White Beacons"
+   scale: 6.0
+   period: 1.5
 
-   light:  { loc: (-162,   0, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 162,   0, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (   0,-162, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (   0, 162, 0), pattern: 0xf0000000, type: 3 },
+   light: {
+      name: "West Beacon"
+      loc: (-162.0, 0.0, 0.0)
+      color: "white"
+      intensity: 18000
+      radius: 700
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 
-   light:  { loc: (-114,-114, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: (-114, 114, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 114,-114, 0), pattern: 0xf0000000, type: 3 },
-   light:  { loc: ( 114, 114, 0), pattern: 0xf0000000, type: 3 },
+   light: {
+      name: "East Beacon"
+      loc: (162.0, 0.0, 0.0)
+      color: "white"
+      intensity: 18000
+      radius: 700
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "South Beacon"
+      loc: (0.0, -162.0, 0.0)
+      color: "white"
+      intensity: 18000
+      radius: 700
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "North Beacon"
+      loc: (0.0, 162.0, 0.0)
+      color: "white"
+      intensity: 18000
+      radius: 700
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "SouthWest Beacon"
+      loc: (-114.0, -114.0, 0.0)
+      color: "white"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "NorthWest Beacon"
+      loc: (-114.0, 114.0, 0.0)
+      color: "white"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "SouthEast Beacon"
+      loc: (114.0, -114.0, 0.0)
+      color: "white"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
+
+   light: {
+      name: "NorthEast Beacon"
+      loc: (114.0, 114.0, 0.0)
+      color: "white"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.5
+      phase: 0.00
+   }
 }
 
-navlight:  {
-   scale:  6,
-   period: 1,
+navlight: {
+   design: "Outer Ring Red Beacons"
+   scale: 6.0
+   period: 1.0
 
-   light:  { loc: (-162,   0, 0), pattern: 0xf0000000, type: 2 },
-   light:  { loc: ( 162,   0, 0), pattern: 0xf0000000, type: 2 },
-   light:  { loc: (   0,-162, 0), pattern: 0xf0000000, type: 2 },
-   light:  { loc: (   0, 162, 0), pattern: 0xf0000000, type: 2 },
+   light: {
+      name: "West Red Beacon"
+      loc: (-162.0, 0.0, 0.0)
+      color: "red"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
 
-   light:  { loc: (-114,-114, 0), pattern: 0x00f00000, type: 2 },
-   light:  { loc: (-114, 114, 0), pattern: 0x00f00000, type: 2 },
-   light:  { loc: ( 114,-114, 0), pattern: 0x00f00000, type: 2 },
-   light:  { loc: ( 114, 114, 0), pattern: 0x00f00000, type: 2 },
+   light: {
+      name: "East Red Beacon"
+      loc: (162.0, 0.0, 0.0)
+      color: "red"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "South Red Beacon"
+      loc: (0.0, -162.0, 0.0)
+      color: "red"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "North Red Beacon"
+      loc: (0.0, 162.0, 0.0)
+      color: "red"
+      intensity: 16000
+      radius: 650
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.00
+   }
+
+   light: {
+      name: "SouthWest Red Beacon"
+      loc: (-114.0, -114.0, 0.0)
+      color: "red"
+      intensity: 14000
+      radius: 600
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "NorthWest Red Beacon"
+      loc: (-114.0, 114.0, 0.0)
+      color: "red"
+      intensity: 14000
+      radius: 600
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "SouthEast Red Beacon"
+      loc: (114.0, -114.0, 0.0)
+      color: "red"
+      intensity: 14000
+      radius: 600
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
+
+   light: {
+      name: "NorthEast Red Beacon"
+      loc: (114.0, 114.0, 0.0)
+      color: "red"
+      intensity: 14000
+      radius: 600
+      mode: "blink"
+      blink_interval: 1.0
+      phase: 0.50
+   }
 }
 
 map: {
