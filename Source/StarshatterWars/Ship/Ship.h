@@ -467,6 +467,8 @@ public:
     static double           GetFriendlyFireLevel() { return friendly_fire_level; }
     static void             SetFriendlyFireLevel(double f) { friendly_fire_level = f; }
 
+    List<NavLight>    navlights;
+
 protected:
     int               CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** wep = 0);
     WeaponGroup* FindWeaponGroup(const char* name);
@@ -526,7 +528,7 @@ protected:
     List<Sensor>      sensors;
     List<Shield>      shields;
     List<FlightDeck>  flight_decks;
-    List<NavLight>    navlights;
+
     List<QuantumDrive> quantum_drives;
     List<Farcaster> farcasters;
     List<SimSystem>   repair_queue;

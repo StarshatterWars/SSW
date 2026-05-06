@@ -177,63 +177,7 @@ void ACourierShipActor::ApplyCourierDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    /*
-     * Nav lights
-     */
-    NavLightDefs.Empty();
-
-    {
-        FShipNavLightDef Port;
-        Port.LocalOffset = FVector(0.0f, -142.5f, 20.0f);
-        Port.LocalRotation = FRotator::ZeroRotator;
-        Port.Color = FLinearColor::Red;
-        Port.Intensity = 1200.0f;
-        Port.Radius = 200.0f;
-        Port.Mode = EShipNavLightMode::Blink;
-        Port.BlinkInterval = 0.50f;
-        Port.PhaseOffset = 0.00f;
-        NavLightDefs.Add(Port);
-    }
-
-    {
-        FShipNavLightDef Starboard;
-        Starboard.LocalOffset = FVector(0.0f, 142.5f, 20.0f);
-        Starboard.LocalRotation = FRotator::ZeroRotator;
-        Starboard.Color = FLinearColor::Green;
-        Starboard.Intensity = 1200.0f;
-        Starboard.Radius = 200.0f;
-        Starboard.Mode = EShipNavLightMode::Blink;
-        Starboard.BlinkInterval = 0.50f;
-        Starboard.PhaseOffset = 0.25f;
-        NavLightDefs.Add(Starboard);
-    }
-
-    {
-        FShipNavLightDef Dorsal;
-        Dorsal.LocalOffset = FVector(125.0f, 0.0f, 115.0f);
-        Dorsal.LocalRotation = FRotator::ZeroRotator;
-        Dorsal.Color = FLinearColor::White;
-        Dorsal.Intensity = 6000.0f;
-        Dorsal.Radius = 300.0f;
-        Dorsal.Mode = EShipNavLightMode::Steady;
-        Dorsal.BlinkInterval = 1.0f;
-        Dorsal.PhaseOffset = 0.0f;
-        NavLightDefs.Add(Dorsal);
-    }
-
-    {
-        FShipNavLightDef Ventral;
-        Ventral.LocalOffset = FVector(-40.0f, 0.0f, -39.0f);
-        Ventral.LocalRotation = FRotator::ZeroRotator;
-        Ventral.Color = FLinearColor(0.6f, 0.6f, 1.0f);
-        Ventral.Intensity = 6000.0f;
-        Ventral.Radius = 300.0f;
-        Ventral.Mode = EShipNavLightMode::Steady;
-        Ventral.BlinkInterval = 1.0f;
-        Ventral.PhaseOffset = 0.0f;
-        NavLightDefs.Add(Ventral);
-    }
-
+    BuildNavLightsFromRuntime();
     SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
 }
 

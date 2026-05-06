@@ -138,3 +138,9 @@ void UNavLightComponent::ApplyRenderedVisibility(bool bInVisible)
     SetVisibility(bInVisible);
     SetHiddenInGame(!bInVisible);
 }
+
+void UNavLightComponent::SetRenderedFromLegacy(bool bInVisible)
+{
+    ApplyVisualSettings();
+    ApplyRenderedVisibility(bInVisible);
+}

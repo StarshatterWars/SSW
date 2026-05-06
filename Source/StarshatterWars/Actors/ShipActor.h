@@ -44,6 +44,7 @@ public:
     void BindRuntimeShip(Ship* InShip);
     void UpdateFromRuntimeShip(float DeltaTime);
 
+    void BuildNavLightsFromRuntime();
     bool HasRuntimeShip() const { return RuntimeShip != nullptr; }
 
 
@@ -455,6 +456,10 @@ protected:
     void ClearSceneComponentArray(TArray<USceneComponent*>& Components);
     void ClearNavLightArray(TArray<UNavLightComponent*>& Components);
     void ClearNavLightVisuals();
+
+protected:
+    void ClearRuntimeNavLights();
+    void AddRuntimeNavLightComponent(const FShipNavLightDef& Def);
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ship|FX")

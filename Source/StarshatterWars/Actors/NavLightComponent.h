@@ -94,6 +94,7 @@ public:
     UFUNCTION(BlueprintPure, Category = "Ship|NavLights")
     bool IsRenderedVisible() const { return bRenderedVisible; }
 
+    void SetRenderedFromLegacy(bool bInVisible);
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     FShipNavLightDef LightDef;
