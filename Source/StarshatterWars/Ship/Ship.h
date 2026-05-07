@@ -29,6 +29,7 @@
 #include "Math/Vector.h" // FVector
 #include "Math/Color.h"
 #include "GameStructs.h"
+#include "ShipExplosion.h"
 #include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
@@ -151,6 +152,7 @@ public:
     void              InitializeRuntimeLandingGearFromDesign();
     void              InitializeRuntimeFlightDecksFromDesign();
     void              InitializeRuntimeHangarFromDesign();
+    void              InitializeRuntimeDeathSpiralFromDesign();
     
     // NOTE: Bitmap replaced by UTexture2D*
     virtual int       GetTextureList(List<UTexture2D*>& textures);
@@ -497,6 +499,9 @@ protected:
     int               cmd_chain_index;
     int               ff_count;
     OP_MODE           flight_phase;
+
+    float death_spiral_time;
+    ShipExplosion explosion[ShipExplosion::MaxExplosions];
 
     SimObject* target;
     SimSystem* subtarget;

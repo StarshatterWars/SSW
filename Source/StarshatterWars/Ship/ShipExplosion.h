@@ -36,14 +36,21 @@ public:
     FVector GetLocation() const;
     bool    IsFinal() const;
 
+    static int GetMaxExplosions();
+
     void SetType(int InType);
     void SetTime(float InTime);
     void SetLocation(const FVector& InLocation);
     void SetFinal(bool bInFinal);
+
+    void CopyFrom(const ShipExplosion& Src);
+    
+    static const int MaxExplosions = 10;
 
 protected:
     int     Type;
     float   Time;
     FVector Location;
     bool    bFinal;
+    
 };

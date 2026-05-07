@@ -1108,6 +1108,37 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             Src.Avail);
     }
 
+    //-------------------------------------------------------------
+    // Death spiral / explosions
+    //-------------------------------------------------------------
+
+    for (const FShipDeathSpiral& Src : Row.DeathSpiral)
+    {
+        Legacy->death_spiral_time = Src.Time;
+
+        const int32 MaxExplosions = FMath::Min(
+            (int32)Src.Explosions.Num(),
+            (int32)ShipExplosion::GetMaxExplosions());
+
+        for (int32 i = 0; i < MaxExplosions; ++i)
+        {
+            const FExplosion& SrcExplosion = Src.Explosions[i];
+
+            Legacy->explosion[i].SetType(SrcExplosion.Type);
+            Legacy->explosion[i].SetTime(SrcExplosion.Time);
+            Legacy->explosion[i].SetLocation(SrcExplosion.Location);
+            Legacy->explosion[i].SetFinal(SrcExplosion.bFinal);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry] Explosion built Row='%s' Index=%d Type=%d Time=%.2f Loc=%s Final=%d"),
+                *RowName.ToString(),
+                i,
+                SrcExplosion.Type,
+                SrcExplosion.Time,
+                *SrcExplosion.Location.ToString(),
+                SrcExplosion.bFinal ? 1 : 0);
+        }
+    }
     UE_LOG(LogTemp, Warning,
         TEXT("[ShipDesignRegistry] ConvertToLegacyDesign COMPLETE Row='%s' Reactors=%d Drives=%d Thrusters=%d NavSys=%d Sensors=%d Shields=%d Computers=%d Quantum=%d Farcasters=%d FlightDecks=%d LandingGear=%d Squadrons=%d Weapons=%d Hardpoints=%d"),
         *RowName.ToString(),

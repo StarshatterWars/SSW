@@ -38,6 +38,7 @@
 #include "FlightComputer.h"
 #include "Drive.h"
 #include "ShipSquadron.h"
+#include "ShipExplosion.h"
 
 #include "WeaponDesign.h"
 #include "Power.h"
@@ -255,6 +256,7 @@ Ship::Ship(
 	InitializeRuntimeLandingGearFromDesign();
 	InitializeRuntimeFlightDecksFromDesign();
 	InitializeRuntimeHangarFromDesign();
+	InitializeRuntimeDeathSpiralFromDesign();
 
 	radio_orders = new Instruction("", FVector::ZeroVector);
 
@@ -952,6 +954,38 @@ void Ship::InitializeRuntimeHangarFromDesign()
 		BuiltSquadrons,
 		hangar->NumSlotsEmpty());
 }
+
+void Ship::InitializeRuntimeDeathSpiralFromDesign()
+{
+	if (!design)
+	{
+		return;
+	}
+
+	death_spiral_time = design->death_spiral_time;
+
+	const int MaxExplosions = ShipExplosion::MaxExplosions;
+
+	for (int i = 0; i < MaxExplosions; ++i)
+	{
+		explosion[i].CopyFrom(design->explosion[i]);
+
+		if (explosion[i].GetType() <= 0)
+		{
+			continue;
+		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Runtime explosion built Ship='%s' Index=%d Type=%d Time=%.2f Loc=%s Final=%d"),
+			*FString(GetName()),
+			i,
+			explosion[i].GetType(),
+			explosion[i].GetTime(),
+			*explosion[i].GetLocation().ToString(),
+			explosion[i].IsFinal() ? 1 : 0);
+	}
+}
+
 // +--------------------------------------------------------------------+
 
 Ship::~Ship()

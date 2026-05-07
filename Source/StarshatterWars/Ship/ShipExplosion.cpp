@@ -72,3 +72,16 @@ void ShipExplosion::SetFinal(bool bInFinal)
 {
     bFinal = bInFinal;
 }
+
+int ShipExplosion::GetMaxExplosions()
+{
+    return MaxExplosions;
+}
+
+void ShipExplosion::CopyFrom(const ShipExplosion& Src)
+{
+    SetType(Src.GetType());
+    SetTime(Src.GetTime());
+    SetLocation(Src.GetLocation());
+    SetFinal(Src.IsFinal());
+}
