@@ -22,7 +22,7 @@
 #include "Geometry.h"
 #include "SimObject.h"
 #include "Text.h"
-
+#include "GameStructs_System.h"
 #include "CoreMinimal.h"
 
 // +--------------------------------------------------------------------+
@@ -114,6 +114,7 @@ public:
 	int               PreflightQueue(FlightDeck* d)          const;
 	DWORD             GetLastPatrolLaunch()                  const;
 	void              SetLastPatrolLaunch(DWORD t);
+	TArray<FShipSquadron> Squadron;
 
 protected:
 	Ship*			  ship;

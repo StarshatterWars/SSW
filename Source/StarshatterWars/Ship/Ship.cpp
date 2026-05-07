@@ -37,6 +37,7 @@
 #include "Computer.h"
 #include "FlightComputer.h"
 #include "Drive.h"
+#include "ShipSquadron.h"
 
 #include "WeaponDesign.h"
 #include "Power.h"
@@ -251,6 +252,9 @@ Ship::Ship(
 
 	InitializeRuntimeSystemsFromDesign();
 	InitializeRuntimeWeaponsFromDesign();
+	InitializeRuntimeLandingGearFromDesign();
+	InitializeRuntimeFlightDecksFromDesign();
+	InitializeRuntimeHangarFromDesign();
 
 	radio_orders = new Instruction("", FVector::ZeroVector);
 
@@ -777,6 +781,177 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 		systems.size());
 }
 
+void Ship::InitializeRuntimeLandingGearFromDesign()
+{
+	if (!design)
+	{
+		return;
+	}
+
+	for (int i = 0; i < design->landing_gear.size(); ++i)
+	{
+		LandingGear* DesignGear = design->landing_gear[i];
+
+		if (!DesignGear)
+		{
+			continue;
+		}
+
+		LandingGear* RuntimeGear = new LandingGear(*DesignGear);
+
+		if (!RuntimeGear)
+		{
+			continue;
+		}
+
+		RuntimeGear->SetShip(this);
+
+		systems.append(RuntimeGear);
+		landing_gear.append(RuntimeGear);
+
+		gear =
+			landing_gear.size() > 0 ? landing_gear[0] : nullptr;
+		
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] LandingGear runtime built Ship='%s' Gear=%p Items=%d State=%d Systems=%d"),
+			*FString(GetName()),
+			RuntimeGear,
+			RuntimeGear->NumGear(),
+			(int32)RuntimeGear->GetState(),
+			systems.size());
+	}
+}
+
+void Ship::InitializeRuntimeFlightDecksFromDesign()
+{
+	if (!design)
+	{
+		return;
+	}
+
+	for (int i = 0; i < design->flight_decks.size(); ++i)
+	{
+		FlightDeck* DesignDeck = design->flight_decks[i];
+
+		if (!DesignDeck)
+		{
+			continue;
+		}
+
+		FlightDeck* RuntimeDeck = new FlightDeck(*DesignDeck);
+
+		if (!RuntimeDeck)
+		{
+			continue;
+		}
+
+		RuntimeDeck->SetCarrier(this);
+		RuntimeDeck->SetIndex(i);
+
+		flight_decks.append(RuntimeDeck);
+		systems.append(RuntimeDeck);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] FlightDeck runtime built Ship='%s' Deck=%p Index=%d Launch=%d Recovery=%d Slots=%d Systems=%d"),
+			*FString(GetName()),
+			RuntimeDeck,
+			i,
+			RuntimeDeck->IsLaunchDeck() ? 1 : 0,
+			RuntimeDeck->IsRecoveryDeck() ? 1 : 0,
+			RuntimeDeck->NumSlots(),
+			systems.size());
+	}
+}
+
+void Ship::InitializeRuntimeHangarFromDesign()
+{
+	if (!design)
+	{
+		return;
+	}
+
+	if (design->squadrons.size() <= 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] InitializeRuntimeHangarFromDesign: no squadrons Ship='%s'"),
+			*FString(GetName()));
+		return;
+	}
+
+	if (!hangar)
+	{
+		hangar = new Hangar();
+	}
+
+	if (!hangar)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[Ship] InitializeRuntimeHangarFromDesign: failed to allocate hangar Ship='%s'"),
+			*FString(GetName()));
+		return;
+	}
+
+	hangar->SetShip(this);
+
+	int32 BuiltSquadrons = 0;
+
+	for (int i = 0; i < design->squadrons.size(); ++i)
+	{
+		ShipSquadron* Sq = design->squadrons[i];
+
+		if (!Sq)
+		{
+			continue;
+		}
+
+		const ShipDesign* SquadronDesign = Sq->GetDesign();
+
+		if (!SquadronDesign)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship] Hangar squadron skipped Ship='%s' Squadron='%hs' Reason=no design"),
+				*FString(GetName()),
+				Sq->GetName());
+			continue;
+		}
+
+		const int SquadronCount = Sq->GetCount();
+
+		if (SquadronCount <= 0)
+		{
+			continue;
+		}
+
+		const bool bCreated = hangar->CreateSquadron(
+			Text(Sq->GetName()),
+			nullptr,
+			SquadronDesign,
+			SquadronCount,
+			GetIFF(),
+			nullptr,
+			0,
+			0);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Hangar squadron build Ship='%s' Squadron='%hs' Design='%hs' Count=%d Created=%d"),
+			*FString(GetName()),
+			Sq->GetName(),
+			SquadronDesign->name,
+			SquadronCount,
+			bCreated ? 1 : 0);
+
+		if (bCreated)
+		{
+			BuiltSquadrons++;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship] Hangar runtime built Ship='%s' Squadrons=%d EmptySlots=%d"),
+		*FString(GetName()),
+		BuiltSquadrons,
+		hangar->NumSlotsEmpty());
+}
 // +--------------------------------------------------------------------+
 
 Ship::~Ship()

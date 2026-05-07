@@ -31,6 +31,10 @@
 #include "HardPoint.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
+#include "LandingGear.h"
+#include "FlightDeck.h"
+#include "Hangar.h"
+#include "ShipSquadron.h"
 
 #include "WeaponDesignRegistry.h"
 
@@ -197,6 +201,8 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
     Ship->hardpoints.clear();
     Ship->weapons.clear();
     Ship->navlights.clear();
+    Ship->landing_gear.clear();
+    Ship->flight_decks.clear();
 
     Ship->quantum_drive = nullptr;
     Ship->farcaster = nullptr;
@@ -205,6 +211,7 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
     Ship->sensor = nullptr;
     Ship->shield = nullptr;
 	Ship->navlight = nullptr;
+	Ship->gear = nullptr;
 }
 
 ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
@@ -582,7 +589,8 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             NewComputer->Name(),
             NewComputer->Abbreviation(),
             Src.SourceIndex);
-    }
+        }
+
     //-------------------------------------------------------------
     // Quantum drives
     //-------------------------------------------------------------
@@ -675,8 +683,8 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         Legacy->farcasters.size() > 0 ? Legacy->farcasters[0] : nullptr;
   
     //-------------------------------------------------------------
- // Nav lights
- //-------------------------------------------------------------
+    // Nav lights
+    //-------------------------------------------------------------
     for (const FShipNavLight& Src : Row.Navlight)
     {
         if (Src.Beacons.Num() <= 0)
@@ -918,8 +926,190 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             Src.AllowedWeaponTypes.Num());
     }
 
+    //-------------------------------------------------------------
+    // Landing gear
+    //-------------------------------------------------------------
+
+    for (const FShipLandingGear& Src : Row.LandingGear)
+    {
+        if (Src.GearItems.Num() <= 0)
+        {
+            continue;
+        }
+
+        LandingGear* NewGear = new LandingGear();
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewGear->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+        else if (!Src.DesignName.IsEmpty())
+        {
+            NewGear->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        }
+        else
+        {
+            NewGear->SetName("Landing Gear");
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewGear->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        for (const FLandingGearItem& Item : Src.GearItems)
+        {
+            NewGear->AddGear(
+                nullptr,
+                Item.Start,
+                Item.End);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry]   LandingGear Item Row='%s' Model='%s' Start=%s End=%s"),
+                *RowName.ToString(),
+                *Item.ModelName,
+                *Item.Start.ToString(),
+                *Item.End.ToString());
+        }
+
+        Legacy->landing_gear.append(NewGear);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] LandingGear built Row='%s' Gear=%p Name='%hs' Items=%d"),
+            *RowName.ToString(),
+            NewGear,
+            NewGear->Name(),
+            Src.GearItems.Num());
+    }
+
+    //-------------------------------------------------------------
+    // Flight decks
+    //-------------------------------------------------------------
+
+    for (const FShipFlightDeck& Src : Row.FlightDeck)
+    {
+        FlightDeck* NewDeck = new FlightDeck();
+
+        if (!NewDeck)
+        {
+            continue;
+        }
+
+        if (!Src.Name.IsEmpty())
+        {
+            NewDeck->SetName(TCHAR_TO_ANSI(*Src.Name));
+        }
+
+        if (!Src.Abbrev.IsEmpty())
+        {
+            NewDeck->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+        }
+
+        if (Src.bLaunchDeck)
+        {
+            NewDeck->SetLaunchDeck();
+        }
+
+        if (Src.bRecoveryDeck)
+        {
+            NewDeck->SetRecoveryDeck();
+        }
+
+        NewDeck->Mount(
+            Src.Location,
+            Src.Size,
+            Src.HullFactor);
+
+        NewDeck->SetCamLoc(Src.Location);
+        NewDeck->SetStartPoint(Src.StartPoint);
+        NewDeck->SetEndPoint(Src.EndPoint);
+
+        NewDeck->SetCycleTime(Src.CycleTime);
+
+        for (int32 i = 0;
+            i < Src.ApproachPoints.Num() &&
+            i < FlightDeck::NUM_APPROACH_PTS;
+            ++i)
+        {
+            NewDeck->SetApproachPoint(
+                i,
+                Src.ApproachPoints[i]);
+        }
+
+        for (const FFlightDeckSlot& Spot : Src.Slots)
+        {
+            NewDeck->AddSlot(
+                Spot.Location,
+                Spot.FilterMask);
+        }
+
+        Legacy->flight_decks.append(NewDeck);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] FlightDeck built Row='%s' Deck=%p Name='%s' Launch=%d Recovery=%d Spots=%d Approaches=%d"),
+            *RowName.ToString(),
+            NewDeck,
+            *Src.Name,
+            Src.bLaunchDeck ? 1 : 0,
+            Src.bRecoveryDeck ? 1 : 0,
+            Src.Slots.Num(),
+            Src.ApproachPoints.Num());
+    }
+
+    //-------------------------------------------------------------
+// Squadrons / Hangar inventory
+//-------------------------------------------------------------
+
+    for (const FShipSquadron& Src : Row.Squadron)
+    {
+        if (Src.DesignName.IsEmpty() || Src.Count <= 0)
+        {
+            continue;
+        }
+
+        ShipDesign* SquadronDesign =
+            ShipDesignRegistry::FindLegacy(FName(*Src.DesignName));
+
+        if (!SquadronDesign)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[ShipDesignRegistry] Squadron design NOT FOUND Row='%s' Squadron='%s' Design='%s'"),
+                *RowName.ToString(),
+                *Src.Name,
+                *Src.DesignName);
+            continue;
+        }
+
+        ShipSquadron* NewSquadron =
+            new ShipSquadron();
+
+        if (!NewSquadron)
+        {
+            continue;
+        }
+
+        NewSquadron->SetName(
+            TCHAR_TO_ANSI(*Src.Name));
+
+        NewSquadron->SetName(TCHAR_TO_ANSI(*Src.Name));
+        NewSquadron->SetDesign(SquadronDesign);
+        NewSquadron->SetCount(Src.Count);
+        NewSquadron->SetAvail(Src.Avail);
+
+        Legacy->squadrons.append(NewSquadron);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Squadron built Row='%s' Squadron=%p Name='%s' Design='%s' Count=%d Avail=%d"),
+            *RowName.ToString(),
+            NewSquadron,
+            ANSI_TO_TCHAR(NewSquadron->GetName()),
+            *Src.DesignName,
+            Src.Count,
+            Src.Avail);
+    }
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[ShipDesignRegistry] ConvertToLegacyDesign COMPLETE Row='%s' Reactors=%d Drives=%d Thrusters=%d NavSys=%d Sensors=%d Shields=%d Computers=%d Quantum=%d Farcasters=%d Weapons=%d Hardpoints=%d"),
+        TEXT("[ShipDesignRegistry] ConvertToLegacyDesign COMPLETE Row='%s' Reactors=%d Drives=%d Thrusters=%d NavSys=%d Sensors=%d Shields=%d Computers=%d Quantum=%d Farcasters=%d FlightDecks=%d LandingGear=%d Squadrons=%d Weapons=%d Hardpoints=%d"),
         *RowName.ToString(),
         Legacy->reactors.size(),
         Legacy->drives.size(),
@@ -930,8 +1120,12 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         Legacy->computers.size(),
         Legacy->quantum_drives.size(),
         Legacy->farcasters.size(),
+        Legacy->flight_decks.size(),
+        Legacy->landing_gear.size(),
+        Legacy->squadrons.size(),
         Legacy->weapons.size(),
         Legacy->hardpoints.size());
+
     return Legacy;
 }
 

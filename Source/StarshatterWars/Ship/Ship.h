@@ -49,6 +49,7 @@ class SimDirector;
 class Farcaster;
 class FlightComputer;
 class FlightDeck;
+class LandingGear;
 class Hangar;
 class HardPoint;
 class InboundSlot;
@@ -147,6 +148,9 @@ public:
 
     void              InitializeRuntimeSystemsFromDesign();
     void              InitializeRuntimeWeaponsFromDesign();
+    void              InitializeRuntimeLandingGearFromDesign();
+    void              InitializeRuntimeFlightDecksFromDesign();
+    void              InitializeRuntimeHangarFromDesign();
     
     // NOTE: Bitmap replaced by UTexture2D*
     virtual int       GetTextureList(List<UTexture2D*>& textures);
@@ -468,6 +472,8 @@ public:
     static void             SetFriendlyFireLevel(double f) { friendly_fire_level = f; }
 
     List<NavLight>    navlights;
+    List<FlightDeck>  flight_decks;
+    List<LandingGear>  landing_gear;
 
 protected:
     int               CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** wep = 0);
@@ -527,7 +533,6 @@ protected:
     List<Thruster>    thrusters;
     List<Sensor>      sensors;
     List<Shield>      shields;
-    List<FlightDeck>  flight_decks;
 
     List<QuantumDrive> quantum_drives;
     List<Farcaster> farcasters;

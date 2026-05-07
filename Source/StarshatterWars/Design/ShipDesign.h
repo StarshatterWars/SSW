@@ -49,22 +49,9 @@ class ShipLoad;
 class LandingGear;
 class SimSystem;
 class USound;
+class ShipSquadron;
 
 // +====================================================================+
-
-
-class ShipSquadron
-{
-public:
-	static const char* TYPENAME() { return "ShipSquadron"; }
-
-	ShipSquadron();
-
-	char        name[64];
-	ShipDesign* design;
-	int         count;
-	int         avail;
-};
 
 class ShipExplosion
 {
@@ -256,6 +243,7 @@ public:
 	List<Computer>     computers;
 	List<FlightDeck>   flight_decks;
 	List<NavLight>     navlights;
+	List<LandingGear>  landing_gear;
 	List<QuantumDrive> quantum_drives;
 	List<Farcaster> farcasters;
 

@@ -27,6 +27,7 @@
 #include "Weapon.h"
 #include "WeaponDesign.h"
 #include "Shield.h"
+#include "ShipSquadron.h"
 #include "Sensor.h"
 #include "NavLight.h"
 #include "NavSystem.h"
@@ -123,14 +124,6 @@ static List<FVector> offset[4];
 static char errmsg[256];
 
 // +--------------------------------------------------------------------+
-
-ShipSquadron::ShipSquadron()
-{
-	name[0] = 0;
-	design = 0;
-	count = 4;
-	avail = 4;
-}
 
 static void PrepareModel(SimModel& model)
 {
@@ -3831,12 +3824,11 @@ ShipDesign::ParseSquadron(TermStruct* val)
 	}
 
 	ShipSquadron* s = new ShipSquadron;
-	strcpy_s(s->name, squad_name);
+	s->SetName(squad_name);
 
-	s->design = Get(design_name);
-	s->count = count;
-	s->avail = avail;
-
+	s->SetDesign(Get(design_name));
+	s->SetCount(count);
+	s->SetAvail(avail);
 	squadrons.append(s);
 }
 
