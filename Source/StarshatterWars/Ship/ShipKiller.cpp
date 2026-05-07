@@ -28,6 +28,8 @@
 
 #include "Solid.h"
 #include "Random.h"
+#include "ShipExplosion.h"
+#include "ShipDebris.h"
 
 // Unreal logging:
 #include "Logging/LogMacros.h"
@@ -120,7 +122,7 @@ void ShipKiller::BeginDeathSpiral()
 
 		for (int i = 0; i < 5; i++) {
 			exp_index = random_index() % ShipDesign::MAX_EXPLOSIONS;
-			if (design->explosion[exp_index].type > 0 && !design->explosion[exp_index].final)
+			if (design->explosion[exp_index].GetType() > 0 && !design->explosion[exp_index].IsFinal())
 				break;
 		}
 
@@ -128,9 +130,9 @@ void ShipKiller::BeginDeathSpiral()
 		if (exp_scale <= 0)
 			exp_scale = (float)design->scale;
 
-		exp_time = (float)design->explosion[exp_index].time;
+		exp_time = (float)design->explosion[exp_index].GetTime();
 
-		if (design->explosion[exp_index].type > 0) {
+		if (design->explosion[exp_index].GetType() > 0) {
 			// UE FIX: FVector * Matrix is not defined. Convert Starshatter Matrix rows to dot products.
 			const Matrix& M = ship->GetCam().Orientation();
 
@@ -138,7 +140,7 @@ void ShipKiller::BeginDeathSpiral()
 			const FVector Row1((float)M(1, 0), (float)M(1, 1), (float)M(1, 2));
 			const FVector Row2((float)M(2, 0), (float)M(2, 1), (float)M(2, 2));
 
-			const FVector Local = design->explosion[exp_index].loc;
+			const FVector Local = design->explosion[exp_index].GetLocation();
 
 			// Starshatter semantics: (Local * Orientation) => components are dot(Local, row)
 			const FVector Rotated(
@@ -152,7 +154,7 @@ void ShipKiller::BeginDeathSpiral()
 			sim->CreateExplosion(
 				exp_loc,
 				ship->GetVelocity(),
-				design->explosion[exp_index].type,
+				design->explosion[exp_index].GetType(),
 				(float)ship->GetRadius(),
 				exp_scale,
 				ship->GetRegion(),
@@ -211,18 +213,17 @@ void ShipKiller::ExecFrame(double seconds)
 
 	if (exp_time < 0) {
 		exp_index++;
-		if (exp_index >= ShipDesign::MAX_EXPLOSIONS || design->explosion[exp_index].final)
+		if (exp_index >= ShipDesign::MAX_EXPLOSIONS || design->explosion[exp_index].IsFinal())
 			exp_index = 0;
 
-		exp_time = design->explosion[exp_index].time;
+		exp_time = design->explosion[exp_index].GetTime();
 
-		if (design->explosion[exp_index].type > 0) {
+		if (design->explosion[exp_index].GetType() > 0) {
 			const FVector exp_loc =
-				ship->GetLocation() + TransformDirByShipCam(design->explosion[exp_index].loc);
-
+				ship->GetLocation() + TransformDirByShipCam(design->explosion[exp_index].GetLocation());
 			sim->CreateExplosion(exp_loc,
 				ship->GetVelocity(),
-				design->explosion[exp_index].type,
+				design->explosion[exp_index].GetType(),
 				(float)ship->GetRadius(),
 				exp_scale,
 				ship->GetRegion(),
@@ -232,13 +233,13 @@ void ShipKiller::ExecFrame(double seconds)
 
 	if (time < DEATH_CAM_LINGER) {
 		for (int i = 0; i < ShipDesign::MAX_EXPLOSIONS; i++) {
-			if (design->explosion[i].final) {
+			if (design->explosion[i].IsFinal()) {
 				const FVector exp_loc =
-					ship->GetLocation() + TransformDirByShipCam(design->explosion[i].loc);
+					ship->GetLocation() + TransformDirByShipCam(design->explosion[i].GetLocation());
 
 				sim->CreateExplosion(exp_loc,
 					ship->GetVelocity(),
-					design->explosion[i].type,
+					design->explosion[i].GetType(),
 					(float)ship->GetRadius(),
 					exp_scale,
 					ship->GetRegion());
@@ -246,15 +247,15 @@ void ShipKiller::ExecFrame(double seconds)
 		}
 
 		for (int i = 0; i < ShipDesign::MAX_DEBRIS; i++) {
-			if (design->debris[i].model) {
+			if (design->debris[i].GetModel()) {
 				const FVector debris_loc =
-					ship->GetLocation() + TransformDirByShipCam(design->debris[i].loc);
+					ship->GetLocation() + TransformDirByShipCam(design->debris[i].GetLocation());
 
 				FVector debris_vel = debris_loc - ship->GetLocation();
 				debris_vel.Normalize();
 
-				if (design->debris[i].speed > 0)
-					debris_vel *= design->debris[i].speed;
+				if (design->debris[i].GetSpeed() > 0)
+					debris_vel *= design->debris[i].GetSpeed();
 				else
 					debris_vel *= 200.0f;
 
@@ -266,32 +267,30 @@ void ShipKiller::ExecFrame(double seconds)
 						debris_vel.Y *= -1.0f;
 				}
 
-				for (int n = 0; n < design->debris[i].count; n++) {
+				for (int n = 0; n < design->debris[i].GetCount(); n++) {
 					Debris* debris = sim->CreateDebris(debris_loc,
 						debris_vel + ship->GetVelocity(),
-						design->debris[i].model,
-						design->debris[i].mass,
+						design->debris[i].GetModel(),
+						design->debris[i].GetMass(),
 						ship->GetRegion());
 
-					debris->SetLife(design->debris[i].life);
-					debris->SetDrag(design->debris[i].drag);
-
+					debris->SetLife(design->debris[i].GetLife());
+					debris->SetDrag(design->debris[i].GetDrag());
 					if (n == 0) {
 						debris->CloneCam(ship->GetCam());
 						debris->MoveTo(debris_loc);
 					}
 
 					for (int fire = 0; fire < 5; fire++) {
-						if (design->debris[i].fire_loc[fire] == FVector::ZeroVector)
+						if (design->debris[i].GetFireLocation(fire) == FVector::ZeroVector)
 							continue;
 
 						const FVector fire_loc =
-							debris->GetLocation() + TransformDirByShipCam(design->debris[i].fire_loc[fire]);
-
-						if (design->debris[i].fire_type > 0) {
+							debris->GetLocation() + TransformDirByShipCam(design->debris[i].GetFireLocation(fire));
+						if (design->debris[i].GetFireType() > 0) {
 							sim->CreateExplosion(fire_loc,
 								ship->GetVelocity(),
-								design->debris[i].fire_type,
+								design->debris[i].GetFireType(),
 								exp_scale,
 								exp_scale,
 								ship->GetRegion(),
@@ -316,11 +315,11 @@ void ShipKiller::ExecFrame(double seconds)
 						}
 					}
 
-					if (n + 1 < design->debris[i].count) {
+					if (n + 1 < design->debris[i].GetCount()) {
 						debris_vel = RandomVector(1);
 
-						if (design->debris[i].speed > 0)
-							debris_vel *= static_cast<float>(design->debris[i].speed) * FMath::FRandRange(0.8f, 1.2f);
+						if (design->debris[i].GetSpeed() > 0)
+							debris_vel *= static_cast<float>(design->debris[i].GetSpeed()) * FMath::FRandRange(0.8f, 1.2f);
 						else
 							debris_vel *= (300.0 + rand() / 50.0);
 					}

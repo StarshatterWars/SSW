@@ -22,6 +22,8 @@
 #include "Text.h"
 #include "term.h"
 #include "Bitmap.h"
+#include "ShipExplosion.h"
+#include "ShipDebris.h"
 
 // Minimal Unreal includes (kept tight):
 #include "Math/Vector.h"   // FVector
@@ -50,39 +52,6 @@ class LandingGear;
 class SimSystem;
 class USound;
 class ShipSquadron;
-
-// +====================================================================+
-
-class ShipExplosion
-{
-public:
-	static const char* TYPENAME() { return "ShipExplosion"; }
-
-	ShipExplosion();
-
-	int               type;
-	float             time;
-	FVector           loc;
-	bool              final;
-};
-
-class ShipDebris
-{
-public:
-	static const char* TYPENAME() { return "ShipDebris"; }
-
-	ShipDebris() = default;
-
-	SimModel*		  model;
-	int               count;
-	int               life;
-	FVector           loc;
-	float             mass;
-	float             speed;
-	float             drag;
-	int               fire_type;
-	FVector           fire_loc[5];
-};
 
 // +====================================================================+
 // Used to share common information about ships of a single type.

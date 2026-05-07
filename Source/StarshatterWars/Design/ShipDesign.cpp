@@ -41,6 +41,7 @@
 #include "Computer.h"
 #include "SystemDesign.h"
 #include "SimComponent.h"
+#include "ShipExplosion.h"
 
 #include "Game.h"
 #include "Solid.h"
@@ -3551,17 +3552,27 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 
 	for (int i = 0; i < val->elements()->size(); i++) {
 		TermDef* def = val->elements()->at(i)->isDef();
+
 		if (def) {
 			Text defname = def->name()->value();
 			defname.setSensitive(false);
+
+			//-------------------------------------------------
+			// death spiral time
+			//-------------------------------------------------
 
 			if (defname == "time") {
 				GetDefNumber(death_spiral_time, def, filename);
 			}
 
+			//-------------------------------------------------
+			// explosion struct
+			//-------------------------------------------------
+
 			else if (defname == "explosion") {
 				if (!def->term() || !def->term()->isStruct()) {
-					UE_LOG(LogShipDesign, Warning, TEXT("WARNING: explosion struct missing in '%s'"),
+					UE_LOG(LogShipDesign, Warning,
+						TEXT("WARNING: explosion struct missing in '%s'"),
 						ANSI_TO_TCHAR(filename));
 				}
 				else {
@@ -3570,91 +3581,193 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 				}
 			}
 
-			// BACKWARD COMPATIBILITY:
+			//-------------------------------------------------
+			// backward compatibility
+			//-------------------------------------------------
+
 			else if (defname == "explosion_type") {
-				GetDefNumber(explosion[++exp_index].type, def, filename);
+				++exp_index;
+
+				int Type = explosion[exp_index].GetType();
+
+				GetDefNumber(Type, def, filename);
+
+				explosion[exp_index].SetType(Type);
 			}
 
 			else if (defname == "explosion_time") {
-				GetDefNumber(explosion[exp_index].time, def, filename);
+				if (exp_index >= 0 &&
+					exp_index < MAX_EXPLOSIONS) {
+
+					float Time = explosion[exp_index].GetTime();
+
+					GetDefNumber(Time, def, filename);
+
+					explosion[exp_index].SetTime(Time);
+				}
 			}
 
 			else if (defname == "explosion_loc") {
-				GetDefVec(explosion[exp_index].loc, def, filename);
-				explosion[exp_index].loc *= (float)scale;
+				if (exp_index >= 0 &&
+					exp_index < MAX_EXPLOSIONS) {
+
+					FVector Location =
+						explosion[exp_index].GetLocation();
+
+					GetDefVector(Location, def, filename);
+
+					Location *= (float)scale;
+
+					explosion[exp_index].SetLocation(Location);
+				}
 			}
 
 			else if (defname == "final_type") {
-				GetDefNumber(explosion[++exp_index].type, def, filename);
-				explosion[exp_index].final = true;
+				++exp_index;
+
+				int Type = explosion[exp_index].GetType();
+
+				GetDefNumber(Type, def, filename);
+
+				explosion[exp_index].SetType(Type);
+				explosion[exp_index].SetFinal(true);
 			}
 
 			else if (defname == "final_loc") {
-				GetDefVec(explosion[exp_index].loc, def, filename);
-				explosion[exp_index].loc *= (float)scale;
+				if (exp_index >= 0 &&
+					exp_index < MAX_EXPLOSIONS) {
+
+					FVector Location =
+						explosion[exp_index].GetLocation();
+
+					GetDefVector(Location, def, filename);
+
+					Location *= (float)scale;
+
+					explosion[exp_index].SetLocation(Location);
+				}
 			}
 
+			//-------------------------------------------------
+			// debris
+			//-------------------------------------------------
+
 			else if (defname == "debris") {
-				if (def->term() && def->term()->isText()) {
+				if (def->term() &&
+					def->term()->isText()) {
+
 					Text model_name;
+
 					GetDefText(model_name, def, filename);
 
 					SimModel* model = new SimModel;
+
 					if (!model->Load(model_name, scale)) {
-						UE_LOG(LogShipDesign, Warning, TEXT("Could notxload debris model '%s'"),
+						UE_LOG(LogShipDesign, Warning,
+							TEXT("Could not load debris model '%s'"),
 							ANSI_TO_TCHAR(model_name.data()));
+
 						delete model;
 						return;
 					}
 
 					PrepareModel(*model);
-					debris[++debris_index].model = model;
+
+					debris[++debris_index].SetModel(model);
+
 					fire_index = -1;
 				}
-				else if (!def->term() || !def->term()->isStruct()) {
-					UE_LOG(LogShipDesign, Warning, TEXT("WARNING: debris struct missing in '%s'"),
+
+				else if (!def->term() ||
+					!def->term()->isStruct()) {
+
+					UE_LOG(LogShipDesign, Warning,
+						TEXT("WARNING: debris struct missing in '%s'"),
 						ANSI_TO_TCHAR(filename));
 				}
+
 				else {
 					TermStruct* v = def->term()->isStruct();
+
 					ParseDebris(v, ++debris_index);
 				}
 			}
 
 			else if (defname == "debris_mass") {
-				GetDefNumber(debris[debris_index].mass, def, filename);
+				float Mass = debris[debris_index].GetMass();
+
+				GetDefNumber(Mass, def, filename);
+
+				debris[debris_index].SetMass(Mass);
 			}
 
 			else if (defname == "debris_speed") {
-				GetDefNumber(debris[debris_index].speed, def, filename);
+				float Speed = debris[debris_index].GetSpeed();
+
+				GetDefNumber(Speed, def, filename);
+
+				debris[debris_index].SetSpeed(Speed);
 			}
 
 			else if (defname == "debris_drag") {
-				GetDefNumber(debris[debris_index].drag, def, filename);
+				float Drag = debris[debris_index].GetDrag();
+
+				GetDefNumber(Drag, def, filename);
+
+				debris[debris_index].SetDrag(Drag);
 			}
 
 			else if (defname == "debris_loc") {
-				GetDefVec(debris[debris_index].loc, def, filename);
-				debris[debris_index].loc *= (float)scale;
+				FVector Location =
+					debris[debris_index].GetLocation();
+
+				GetDefVector(Location, def, filename);
+
+				Location *= (float)scale;
+
+				debris[debris_index].SetLocation(Location);
 			}
 
 			else if (defname == "debris_count") {
-				GetDefNumber(debris[debris_index].count, def, filename);
+				int Count = debris[debris_index].GetCount();
+
+				GetDefNumber(Count, def, filename);
+
+				debris[debris_index].SetCount(Count);
 			}
 
 			else if (defname == "debris_life") {
-				GetDefNumber(debris[debris_index].life, def, filename);
+				int Life = debris[debris_index].GetLife();
+
+				GetDefNumber(Life, def, filename);
+
+				debris[debris_index].SetLife(Life);
 			}
 
 			else if (defname == "debris_fire") {
-				if (++fire_index < 5) {
-					GetDefVec(debris[debris_index].fire_loc[fire_index], def, filename);
-					debris[debris_index].fire_loc[fire_index] *= (float)scale;
+				if (++fire_index <
+					ShipDebris::MAX_FIRE_LOCATIONS) {
+
+					FVector FireLocation =
+						debris[debris_index].GetFireLocation(fire_index);
+
+					GetDefVector(FireLocation, def, filename);
+
+					FireLocation *= (float)scale;
+
+					debris[debris_index].SetFireLocation(
+						fire_index,
+						FireLocation);
 				}
 			}
 
 			else if (defname == "debris_fire_type") {
-				GetDefNumber(debris[debris_index].fire_type, def, filename);
+				int FireType =
+					debris[debris_index].GetFireType();
+
+				GetDefNumber(FireType, def, filename);
+
+				debris[debris_index].SetFireType(FireType);
 			}
 		}
 	}
@@ -3665,6 +3778,11 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 void
 ShipDesign::ParseExplosion(TermStruct* val, int index)
 {
+	if (!val || index < 0 || index >= MAX_EXPLOSIONS)
+	{
+		return;
+	}
+
 	ShipExplosion* exp = &explosion[index];
 
 	for (int i = 0; i < val->elements()->size(); i++) {
@@ -3674,20 +3792,28 @@ ShipDesign::ParseExplosion(TermStruct* val, int index)
 			defname.setSensitive(false);
 
 			if (defname == "time") {
-				GetDefNumber(exp->time, def, filename);
+				float Time = exp->GetTime();
+				GetDefNumber(Time, def, filename);
+				exp->SetTime(Time);
 			}
 
 			else if (defname == "type") {
-				GetDefNumber(exp->type, def, filename);
+				int Type = exp->GetType();
+				GetDefNumber(Type, def, filename);
+				exp->SetType(Type);
 			}
 
 			else if (defname == "loc") {
-				GetDefVec(exp->loc, def, filename);
-				exp->loc *= (float)scale;
+				FVector Location = exp->GetLocation();
+				GetDefVector(Location, def, filename);
+				Location *= (float)scale;
+				exp->SetLocation(Location);
 			}
 
 			else if (defname == "final") {
-				GetDefBool(exp->final, def, filename);
+				bool bFinal = exp->IsFinal();
+				GetDefBool(bFinal, def, filename);
+				exp->SetFinal(bFinal);
 			}
 		}
 	}
@@ -3698,12 +3824,20 @@ ShipDesign::ParseExplosion(TermStruct* val, int index)
 void
 ShipDesign::ParseDebris(TermStruct* val, int index)
 {
-	char        model_name[NAMELEN];
-	int         fire_index = 0;
+	if (!val || index < 0 || index >= MAX_DEBRIS)
+	{
+		return;
+	}
+
+	char model_name[NAMELEN];
+	model_name[0] = 0;
+
+	int fire_index = 0;
 	ShipDebris* deb = &debris[index];
 
 	for (int i = 0; i < val->elements()->size(); i++) {
 		TermDef* def = val->elements()->at(i)->isDef();
+
 		if (def) {
 			Text defname = def->name()->value();
 			defname.setSensitive(false);
@@ -3712,52 +3846,94 @@ ShipDesign::ParseDebris(TermStruct* val, int index)
 				GetDefText(model_name, def, filename);
 
 				SimModel* model = new SimModel;
+
 				if (!model->Load(model_name, scale)) {
-					UE_LOG(LogShipDesign, Warning, TEXT("Could notxload debris model '%s'"),
+					UE_LOG(LogShipDesign, Warning,
+						TEXT("Could not load debris model '%s'"),
 						ANSI_TO_TCHAR(model_name));
+
 					delete model;
 					return;
 				}
 
 				PrepareModel(*model);
-				deb->model = model;
+
+				deb->SetModel(model);
 			}
 
 			else if (defname == "mass") {
-				GetDefNumber(deb->mass, def, filename);
+				float Mass = deb->GetMass();
+
+				GetDefNumber(Mass, def, filename);
+
+				deb->SetMass(Mass);
 			}
 
 			else if (defname == "speed") {
-				GetDefNumber(deb->speed, def, filename);
+				float Speed = deb->GetSpeed();
+
+				GetDefNumber(Speed, def, filename);
+
+				deb->SetSpeed(Speed);
 			}
 
 			else if (defname == "drag") {
-				GetDefNumber(deb->drag, def, filename);
+				float Drag = deb->GetDrag();
+
+				GetDefNumber(Drag, def, filename);
+
+				deb->SetDrag(Drag);
 			}
 
 			else if (defname == "loc") {
-				GetDefVec(deb->loc, def, filename);
-				deb->loc *= (float)scale;
+				FVector Location = deb->GetLocation();
+
+				GetDefVector(Location, def, filename);
+
+				Location *= (float)scale;
+
+				deb->SetLocation(Location);
 			}
 
 			else if (defname == "count") {
-				GetDefNumber(deb->count, def, filename);
+				float Count = (float)deb->GetCount();
+
+				GetDefNumber(Count, def, filename);
+
+				deb->SetCount((int)Count);
 			}
 
 			else if (defname == "life") {
-				GetDefNumber(deb->life, def, filename);
+				float Life = (float)deb->GetLife();
+
+				GetDefNumber(Life, def, filename);
+
+				deb->SetLife((int)Life);
 			}
 
 			else if (defname == "fire") {
-				if (fire_index < 5) {
-					GetDefVec(deb->fire_loc[fire_index], def, filename);
-					deb->fire_loc[fire_index] *= (float)scale;
+				if (fire_index < ShipDebris::MAX_FIRE_LOCATIONS) {
+					FVector FireLocation =
+						deb->GetFireLocation(fire_index);
+
+					GetDefVector(FireLocation, def, filename);
+
+					FireLocation *= (float)scale;
+
+					deb->SetFireLocation(
+						fire_index,
+						FireLocation);
+
 					fire_index++;
 				}
 			}
 
 			else if (defname == "fire_type") {
-				GetDefNumber(deb->fire_type, def, filename);
+				float FireType = (float)deb->GetFireType();
+
+				GetDefNumber(FireType, def, filename);
+
+				deb->SetFireType((int)FireType);
 			}
 		}
 	}
@@ -4010,7 +4186,4 @@ ShipDesign::FindSkin(const char* skin_name) const
 	return 0;
 }
 
-ShipExplosion::ShipExplosion()
-{
 
-}
