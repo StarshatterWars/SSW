@@ -1,10 +1,10 @@
 SHIP
 
-name:       Terrellian Farcaster
+name:       Farcaster
 class:      Farcaster
 display_name:  Farcaster
 abrv:       GATE
-empire:     Terrellian
+empire:     Terellian
 description: "The standard Terellian Alliance quantum portal for long range travel.  The 185 exawatt Type I FARCASTER can translate any starship or fighter-class vessel, even without an onboard FTL quantum drive, instantly to a remote destination.  Farcaster portals are always connected in pairs."
 
 model:      "Farcaster"
@@ -51,7 +51,7 @@ navlight: {
       name: "OuterRing_A1"
       loc: (-138.0, -42.0, -257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -62,7 +62,7 @@ navlight: {
       name: "OuterRing_A2"
       loc: (-138.0, -42.0, 257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -73,7 +73,7 @@ navlight: {
       name: "OuterRing_A3"
       loc: (-138.0, 42.0, -257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -84,7 +84,7 @@ navlight: {
       name: "OuterRing_A4"
       loc: (-138.0, 42.0, 257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -95,7 +95,7 @@ navlight: {
       name: "OuterRing_B1"
       loc: (138.0, -42.0, -257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -106,7 +106,7 @@ navlight: {
       name: "OuterRing_B2"
       loc: (138.0, -42.0, 257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -117,7 +117,7 @@ navlight: {
       name: "OuterRing_B3"
       loc: (138.0, 42.0, -257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -128,7 +128,7 @@ navlight: {
       name: "OuterRing_B4"
       loc: (138.0, 42.0, 257.0)
       color: "white"
-      intensity: 14000
+      intensity: 1400
       radius: 450
       mode: "blink"
       blink_interval: 1.5
@@ -139,7 +139,7 @@ navlight: {
       name: "Red_A1"
       loc: (-138.0, -42.0, -257.0)
       color: "red"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -150,7 +150,7 @@ navlight: {
       name: "Green_A1"
       loc: (138.0, -42.0, -257.0)
       color: "green"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -161,7 +161,7 @@ navlight: {
       name: "Green_A2"
       loc: (-138.0, 42.0, -257.0)
       color: "green"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -172,7 +172,7 @@ navlight: {
       name: "Red_A2"
       loc: (138.0, 42.0, -257.0)
       color: "red"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -183,7 +183,7 @@ navlight: {
       name: "Green_B1"
       loc: (-138.0, -42.0, 257.0)
       color: "green"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -194,7 +194,7 @@ navlight: {
       name: "Red_B1"
       loc: (138.0, -42.0, 257.0)
       color: "red"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -205,7 +205,7 @@ navlight: {
       name: "Red_B2"
       loc: (-138.0, 42.0, 257.0)
       color: "red"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0
@@ -216,7 +216,7 @@ navlight: {
       name: "Green_B2"
       loc: (138.0, 42.0, 257.0)
       color: "green"
-      intensity: 12000
+      intensity: 1200
       radius: 400
       mode: "blink"
       blink_interval: 1.0

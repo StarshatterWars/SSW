@@ -82,60 +82,7 @@ void AObservatoryShipActor::ApplyObservatoryDefaults()
         LandingPointDefs.Add(L);
     }
 
-    NavLightDefs.Empty();
-    {
-        FShipNavLightDef L;
-
-        L.LocalOffset = FVector(342.0f, 13.0f, 300.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::White;
-        L.Intensity = 3000.0f;
-        L.Radius = 120.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 2.5f;
-        L.PhaseOffset = 0.0f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(-1120.0f, -8.0f, 0.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::White;
-        L.Intensity = 3000.0f;
-        L.Radius = 120.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 2.5f;
-        L.PhaseOffset = 0.5f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(770.0f, 0.0f, 64.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor(0.6f, 0.8f, 1.0f);
-        L.Intensity = 2500.0f;
-        L.Radius = 100.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 2.5f;
-        L.PhaseOffset = 0.25f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(360.0f, 400.0f, 64.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor(0.6f, 0.8f, 1.0f);
-        L.Intensity = 2500.0f;
-        L.Radius = 100.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 2.5f;
-        L.PhaseOffset = 0.25f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(360.0f, -400.0f, 64.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor(0.6f, 0.8f, 1.0f);
-        L.Intensity = 2500.0f;
-        L.Radius = 100.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 2.5f;
-        L.PhaseOffset = 0.25f;
-        NavLightDefs.Add(L);
-    }
+    BuildNavLightsFromRuntime();
 }
 
 void AObservatoryShipActor::ApplyObservatoryFixedPoints()

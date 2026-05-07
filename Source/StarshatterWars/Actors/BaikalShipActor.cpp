@@ -202,51 +202,7 @@ void ABaikalShipActor::ApplyBaikalDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    NavLightDefs.Empty();
-    {
-        FShipNavLightDef L;
-
-        L.LocalOffset = FVector(80.0f, -95.0f, 0.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::Red;
-        L.Intensity = 3500.0f;
-        L.Radius = 350.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 0.50f;
-        L.PhaseOffset = 0.00f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(80.0f, 95.0f, 0.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::Green;
-        L.Intensity = 3500.0f;
-        L.Radius = 350.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 0.50f;
-        L.PhaseOffset = 0.25f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(180.0f, 0.0f, 70.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::White;
-        L.Intensity = 3000.0f;
-        L.Radius = 300.0f;
-        L.Mode = EShipNavLightMode::Steady;
-        L.BlinkInterval = 1.00f;
-        L.PhaseOffset = 0.00f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(-120.0f, 0.0f, -70.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor(0.6f, 0.6f, 1.0f);
-        L.Intensity = 3000.0f;
-        L.Radius = 300.0f;
-        L.Mode = EShipNavLightMode::Steady;
-        L.BlinkInterval = 1.00f;
-        L.PhaseOffset = 0.00f;
-        NavLightDefs.Add(L);
-    }
-
+    BuildNavLightsFromRuntime();
     SetActorScale3D(FVector(1.6f));
 }
 

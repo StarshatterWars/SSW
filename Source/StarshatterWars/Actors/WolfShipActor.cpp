@@ -238,51 +238,7 @@ void AWolfShipActor::ApplyWolfDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    NavLightDefs.Empty();
-    {
-        FShipNavLightDef L;
-
-        L.LocalOffset = FVector(60.0f, -125.0f, 0.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::Red;
-        L.Intensity = 4000.0f;
-        L.Radius = 450.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 0.50f;
-        L.PhaseOffset = 0.00f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(60.0f, 125.0f, 0.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::Green;
-        L.Intensity = 4000.0f;
-        L.Radius = 450.0f;
-        L.Mode = EShipNavLightMode::Blink;
-        L.BlinkInterval = 0.50f;
-        L.PhaseOffset = 0.25f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(220.0f, 0.0f, 90.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor::White;
-        L.Intensity = 3000.0f;
-        L.Radius = 350.0f;
-        L.Mode = EShipNavLightMode::Steady;
-        L.BlinkInterval = 1.0f;
-        L.PhaseOffset = 0.0f;
-        NavLightDefs.Add(L);
-
-        L.LocalOffset = FVector(-220.0f, 0.0f, -90.0f);
-        L.LocalRotation = FRotator::ZeroRotator;
-        L.Color = FLinearColor(0.6f, 0.6f, 1.0f);
-        L.Intensity = 3000.0f;
-        L.Radius = 350.0f;
-        L.Mode = EShipNavLightMode::Steady;
-        L.BlinkInterval = 1.0f;
-        L.PhaseOffset = 0.0f;
-        NavLightDefs.Add(L);
-    }
-
+    BuildNavLightsFromRuntime();
     SetActorScale3D(FVector(1.7f));
 }
 
