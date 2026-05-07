@@ -1759,10 +1759,10 @@ ShipDesign::ParsePower(TermStruct* val)
 void
 ShipDesign::ParseDrive(TermStruct* val)
 {
-	Text   dname;
+	/*Text   dname;
 	Text   dabrv;
-	int    dtype = 0;
-	int    etype = 0;
+	int				  dtype = 0;
+	EExplosionType    etype = EExplosionType::NONE;
 	float  dthrust = 1.0f;
 	float  daug = 0.0f;
 	float  dscale = 1.0f;
@@ -1801,7 +1801,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 						UE_LOG(LogShipDesign, Warning, TEXT("WARNING: unknown drive type '%s' in '%s'"),
 							ANSI_TO_TCHAR(tname->value().data()),
 							ANSI_TO_TCHAR(filename));
-					}*/
+					}
 				}
 			}
 
@@ -1960,7 +1960,7 @@ ShipDesign::ParseDrive(TermStruct* val)
 		drive->SetEMCONPower(3, emcon_3);
 
 	main_drive = drives.size();
-	drives.append(drive);
+	drives.append(drive);*/
 }
 
 
@@ -2447,12 +2447,12 @@ ShipDesign::ParseNavlight(TermStruct* val)
 void
 ShipDesign::ParseFlightDeck(TermStruct* val)
 {
-	Text   dname;
+	/*Text   dname;
 	Text   dabrv;
 	Text   design_name;
 	float  dscale = 1.0f;
 	float  az = 0.0f;
-	int    etype = 0;
+	EExplosionType	etype = EExplosionType::NONE;
 
 	bool   launch = false;
 	bool   recovery = false;
@@ -2642,7 +2642,7 @@ ShipDesign::ParseFlightDeck(TermStruct* val)
 	if (cycle_time > 0)
 		deck->SetCycleTime(cycle_time);
 
-	flight_decks.append(deck);
+	flight_decks.append(deck);*/
 }
 
 // +--------------------------------------------------------------------+
@@ -2762,7 +2762,7 @@ ShipDesign::ParseLandingGear(TermStruct* val)
 void
 ShipDesign::ParseWeapon(TermStruct* val)
 {
-	Text    wtype;
+	/*Text    wtype;
 	Text    wname;
 	Text    wabrv;
 	Text    design_name;
@@ -2780,7 +2780,7 @@ ShipDesign::ParseWeapon(TermStruct* val)
 	float   el_min = 1e6f;
 	float   az_rest = 1e6f;
 	float   el_rest = 1e6f;
-	int     etype = 0;
+	EExplosionType     etype = EExplosionType::NONE;
 	int     emcon_1 = -1;
 	int     emcon_2 = -1;
 	int     emcon_3 = -1;
@@ -2971,7 +2971,7 @@ ShipDesign::ParseWeapon(TermStruct* val)
 	}
 
 	DataLoader* loader = DataLoader::GetLoader();
-	loader->SetDataPath(path_name);
+	loader->SetDataPath(path_name);*/
 }
 
 // +--------------------------------------------------------------------+
@@ -3362,7 +3362,7 @@ ShipDesign::ParseComputer(TermStruct* val)
 void
 ShipDesign::ParseShield(TermStruct* val)
 {
-	Text    dname;
+	/*Text    dname;
 	Text    dabrv;
 	Text    design_name;
 	Text    model_name;
@@ -3376,7 +3376,7 @@ ShipDesign::ParseShield(TermStruct* val)
 	FVector loc(0.0f, 0.0f, 0.0f);
 	float   size = 0.0f;
 	float   hull = 0.5f;
-	int     etype = 0;
+	EExplosionType     etype = EExplosionType::NONE;
 	bool    shield_capacitor = false;
 	bool    shield_bubble = false;
 	int     emcon_1 = -1;
@@ -3540,13 +3540,13 @@ ShipDesign::ParseShield(TermStruct* val)
 	else {
 		UE_LOG(LogShipDesign, Warning, TEXT("WARNING: additional shield ignored in '%s'"),
 			ANSI_TO_TCHAR(filename));
-	}
+	}*/
 } 
 
 void
 ShipDesign::ParseDeathSpiral(TermStruct* val)
 {
-	int exp_index = -1;
+	/*int exp_index = -1;
 	int debris_index = -1;
 	int fire_index = -1;
 
@@ -3770,7 +3770,7 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 				debris[debris_index].SetFireType(FireType);
 			}
 		}
-	}
+	}*/
 }
 
 // +--------------------------------------------------------------------+

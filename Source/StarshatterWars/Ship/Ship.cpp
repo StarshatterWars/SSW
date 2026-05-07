@@ -2274,7 +2274,7 @@ Ship::InflictNetSystemDamage(SimSystem* system, double damage, BYTE dmg_type)
 			system->ApplyDamage(sys_damage);
 			master_caution = true;
 
-			if (system->GetExplosionType() && (avail - system->Availability()) >= 50) {
+			if ((int)system->GetExplosionType() && (avail - system->Availability()) >= 50) {
 				float scale = design->explosion_scale;
 				if (scale <= 0)
 					scale = design->scale;
@@ -5325,12 +5325,12 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 						damage -= 100;
 				}
 
-				if (system->GetExplosionType() && (avail - system->Availability()) >= 50) {
+				if ((int)system->GetExplosionType() && (avail - system->Availability()) >= 50) {
 					float scale = design->explosion_scale;
 					if (scale <= 0)
 						scale = design->scale;
 
-					sim->CreateExplosion(system->GetMountLocation(), GetVelocity() * 0.7f, (int)system->GetExplosionType(),
+					sim->CreateExplosion(system->GetMountLocation(), GetVelocity() * 0.7f, system->GetExplosionType(),
 						0.2f * scale, scale, region, this, system);
 				}
 			}

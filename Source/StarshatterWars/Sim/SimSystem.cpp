@@ -57,7 +57,7 @@ SimSystem::SimSystem(SYSTEM_CATEGORY t, int s, const char* n, int maxv,
 	power_flags(0),
 	power_on(true),
 	emcon(3),
-	explosion_type(0),
+	explosion_type(EExplosionType::NONE),
 	design(0),
 	components()
 {

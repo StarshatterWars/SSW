@@ -58,6 +58,7 @@
 #include "Misc/FileHelper.h"
 
 #include "ShipDesignRegistry.h"
+#include"ShipUtils.h"
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
@@ -249,10 +250,10 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	if (bFull)
-	{
+	//if (bFull)
+	//{
 		InitializeShipDesigns();
-	}
+	//}
 
 	LoadShipDesignTable();
 }
@@ -3809,77 +3810,110 @@ static void EnsureDebrisIndex(TArray<FDebris>& Arr, int32 Index)
 	}
 }
 
-void UStarshatterShipDesignSubsystem::ParseDeathSpiral(TermStruct* Val, const char* Fn)
+void UStarshatterShipDesignSubsystem::ParseDeathSpiral(
+	TermStruct* Val,
+	const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseDeathSpiral()"));
+	UE_LOG(LogTemp, Log,
+		TEXT("UStarshatterShipDesignSubsystem::ParseDeathSpiral()"));
 
 	if (!Val || !Fn || !*Fn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseDeathSpiral called with null args"));
+		UE_LOG(LogTemp, Warning,
+			TEXT("ParseDeathSpiral called with null args"));
 		return;
 	}
 
-	// Legacy: one block (usually). Enforce if you want:
+	// ------------------------------------------------------------
+	// Legacy: usually only one death spiral block
+	// ------------------------------------------------------------
+
 	if (NewShipDeathSpiralArray.Num() > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseDeathSpiral: additional block ignored in '%s'"), ANSI_TO_TCHAR(Fn));
+		UE_LOG(LogTemp, Warning,
+			TEXT("ParseDeathSpiral: additional block ignored in '%s'"),
+			ANSI_TO_TCHAR(Fn));
 		return;
 	}
 
-	const float ShipScale = (CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
+	const float ShipScale =
+		(CurrentShipScale > 0.0f)
+		? CurrentShipScale
+		: 1.0f;
 
 	FShipDeathSpiral NewDS;
 	NewDS.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
-	// ----------------------------
-	// Backward compat: explosion
-	// ----------------------------
+	// ------------------------------------------------------------
+	// Backward compatibility: explosion
+	// ------------------------------------------------------------
+
 	bool bHasCompatExplosion = false;
 	FExplosion CompatExp;
 
-	// ----------------------------
-	// Backward compat: debris
-	// ----------------------------
+	// ------------------------------------------------------------
+	// Backward compatibility: debris
+	// ------------------------------------------------------------
+
 	bool bHasCompatDebris = false;
 	FDebris CompatDeb;
 	CompatDeb.FireLocations.Reserve(5);
 
-	const int32 ElemCount = (int32)Val->elements()->size();
-	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
+	const int32 ElemCount =
+		(int32)Val->elements()->size();
+
+	for (int32 ElemIdx = 0;
+		ElemIdx < ElemCount;
+		++ElemIdx)
 	{
-		TermDef* Def = Val->elements()->at(ElemIdx)->isDef();
+		TermDef* Def =
+			Val->elements()->at(ElemIdx)->isDef();
+
 		if (!Def)
+		{
 			continue;
+		}
 
-		const FString Key = ANSI_TO_TCHAR(Def->name()->value().data());
+		const FString Key =
+			ANSI_TO_TCHAR(Def->name()->value().data());
 
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
 		// time
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
+
 		if (Key.Equals(TEXT("time"), ESearchCase::IgnoreCase))
 		{
 			GetDefNumber(NewDS.Time, Def, Fn);
 		}
 
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
 		// explosion (new format)
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("explosion"), ESearchCase::IgnoreCase))
 		{
-			if (Def->term() && Def->term()->isStruct())
+			if (Def->term() &&
+				Def->term()->isStruct())
 			{
-				FExplosion Step = ParseExplosion(Def->term()->isStruct(), Fn);
+				FExplosion Step =
+					ParseExplosion(
+						Def->term()->isStruct(),
+						Fn);
+
 				NewDS.Explosions.Add(Step);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ParseDeathSpiral: explosion struct missing in '%s'"), *NewDS.SourceFile);
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseDeathSpiral: explosion struct missing in '%s'"),
+					*NewDS.SourceFile);
 			}
 		}
 
-		// --------------------------------------------------------------------
-		// explosion (backward compat fields)
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
+		// explosion_type (legacy)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("explosion_type"), ESearchCase::IgnoreCase))
 		{
 			if (bHasCompatExplosion)
@@ -3889,23 +3923,53 @@ void UStarshatterShipDesignSubsystem::ParseDeathSpiral(TermStruct* Val, const ch
 			}
 
 			bHasCompatExplosion = true;
-			GetDefNumber(CompatExp.Type, Def, Fn);
+
+			int32 TypeValue =
+				ShipUtils::ExplosionTypeToInt(
+					CompatExp.Type);
+
+			GetDefNumber(TypeValue, Def, Fn);
+
+			CompatExp.Type =
+				ShipUtils::ExplosionTypeFromInt(
+					TypeValue);
 		}
+
+		// ------------------------------------------------------------
+		// explosion_time (legacy)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("explosion_time"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatExplosion = true;
-			GetDefNumber(CompatExp.Time, Def, Fn);
+
+			GetDefNumber(
+				CompatExp.Time,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// explosion_loc (legacy)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("explosion_loc"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatExplosion = true;
 
 			FVector V = FVector::ZeroVector;
+
 			GetDefVec(V, Def, Fn);
+
 			V *= ShipScale;
 
 			CompatExp.Location = V;
 		}
+
+		// ------------------------------------------------------------
+		// final_type (legacy)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("final_type"), ESearchCase::IgnoreCase))
 		{
 			if (bHasCompatExplosion)
@@ -3915,94 +3979,178 @@ void UStarshatterShipDesignSubsystem::ParseDeathSpiral(TermStruct* Val, const ch
 			}
 
 			bHasCompatExplosion = true;
-			GetDefNumber(CompatExp.Type, Def, Fn);
+
+			int32 TypeValue =
+				ShipUtils::ExplosionTypeToInt(
+					CompatExp.Type);
+
+			GetDefNumber(TypeValue, Def, Fn);
+
+			CompatExp.Type =
+				ShipUtils::ExplosionTypeFromInt(
+					TypeValue);
+
 			CompatExp.bFinal = true;
 		}
+
+		// ------------------------------------------------------------
+		// final_loc (legacy)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("final_loc"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatExplosion = true;
 
 			FVector V = FVector::ZeroVector;
+
 			GetDefVec(V, Def, Fn);
+
 			V *= ShipScale;
 
 			CompatExp.Location = V;
 		}
 
-		// --------------------------------------------------------------------
-		// debris (new format): debris { ... } OR debris "ModelName"
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
+		// debris (new format)
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris"), ESearchCase::IgnoreCase))
 		{
-			// If we were building a compat debris, commit it before starting a new debris record:
 			if (bHasCompatDebris)
 			{
 				NewDS.Debris.Add(CompatDeb);
+
 				CompatDeb = FDebris{};
 				CompatDeb.FireLocations.Reserve(5);
+
 				bHasCompatDebris = false;
 			}
 
-			if (Def->term() && Def->term()->isStruct())
+			if (Def->term() &&
+				Def->term()->isStruct())
 			{
-				FDebris Step = ParseDebris(Def->term()->isStruct(), Fn);
+				FDebris Step =
+					ParseDebris(
+						Def->term()->isStruct(),
+						Fn);
+
 				NewDS.Debris.Add(Step);
 			}
-			else if (Def->term() && Def->term()->isText())
+
+			else if (Def->term() &&
+				Def->term()->isText())
 			{
-				// Text form: debris "ModelName"
 				FDebris Step;
+
 				Text ModelBuf;
+
 				GetDefText(ModelBuf, Def, Fn);
-				Step.ModelName = FString(ModelBuf);
+
+				Step.ModelName =
+					FString(ModelBuf);
+
 				NewDS.Debris.Add(Step);
 			}
+
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ParseDeathSpiral: debris struct missing in '%s'"), *NewDS.SourceFile);
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseDeathSpiral: debris struct missing in '%s'"),
+					*NewDS.SourceFile);
 			}
 		}
 
-		// --------------------------------------------------------------------
-		// debris (backward compat fields)
-		// These apply to the most recently-started debris entry.
-		// We'll build CompatDeb and commit it at end (or when a new debris starts).
-		// --------------------------------------------------------------------
+		// ------------------------------------------------------------
+		// debris_mass
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_mass"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.Mass, Def, Fn);
+
+			GetDefNumber(
+				CompatDeb.Mass,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// debris_speed
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_speed"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.Speed, Def, Fn);
+
+			GetDefNumber(
+				CompatDeb.Speed,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// debris_drag
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_drag"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.Drag, Def, Fn);
+
+			GetDefNumber(
+				CompatDeb.Drag,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// debris_loc
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_loc"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
 
 			FVector V = FVector::ZeroVector;
+
 			GetDefVec(V, Def, Fn);
+
 			V *= ShipScale;
 
 			CompatDeb.Location = V;
 		}
+
+		// ------------------------------------------------------------
+		// debris_count
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_count"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.Count, Def, Fn);
+
+			GetDefNumber(
+				CompatDeb.Count,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// debris_life
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_life"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.Life, Def, Fn);
+
+			GetDefNumber(
+				CompatDeb.Life,
+				Def,
+				Fn);
 		}
+
+		// ------------------------------------------------------------
+		// debris_fire
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_fire"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
@@ -4010,25 +4158,48 @@ void UStarshatterShipDesignSubsystem::ParseDeathSpiral(TermStruct* Val, const ch
 			if (CompatDeb.FireLocations.Num() < 5)
 			{
 				FVector V = FVector::ZeroVector;
+
 				GetDefVec(V, Def, Fn);
+
 				V *= ShipScale;
+
 				CompatDeb.FireLocations.Add(V);
 			}
 		}
+
+		// ------------------------------------------------------------
+		// debris_fire_type
+		// ------------------------------------------------------------
+
 		else if (Key.Equals(TEXT("debris_fire_type"), ESearchCase::IgnoreCase))
 		{
 			bHasCompatDebris = true;
-			GetDefNumber(CompatDeb.FireType, Def, Fn);
+
+			int32 TypeValue =
+				ShipUtils::ExplosionTypeToInt(
+					CompatDeb.FireType);
+
+			GetDefNumber(TypeValue, Def, Fn);
+
+			CompatDeb.FireType =
+				ShipUtils::ExplosionTypeFromInt(
+					TypeValue);
 		}
 	}
 
-	// Commit compat explosion if in progress:
+	// ------------------------------------------------------------
+	// Commit compat explosion
+	// ------------------------------------------------------------
+
 	if (bHasCompatExplosion)
 	{
 		NewDS.Explosions.Add(CompatExp);
 	}
 
-	// Commit compat debris if in progress:
+	// ------------------------------------------------------------
+	// Commit compat debris
+	// ------------------------------------------------------------
+
 	if (bHasCompatDebris)
 	{
 		NewDS.Debris.Add(CompatDeb);
@@ -4066,7 +4237,11 @@ FExplosion UStarshatterShipDesignSubsystem::ParseExplosion(TermStruct* Val, cons
 		}
 		else if (Key == "type")
 		{
-			GetDefNumber(NewExp.Type, Def, Fn);
+			float TypeValue = (float)((int)NewExp.Type);
+
+			GetDefNumber(TypeValue, Def, Fn);
+
+			NewExp.Type = (EExplosionType)((int)TypeValue);
 		}
 		else if (Key == "loc")
 		{
@@ -4159,7 +4334,9 @@ FDebris UStarshatterShipDesignSubsystem::ParseDebris(TermStruct* Val, const char
 		}
 		else if (Key == "fire_type")
 		{
-			GetDefNumber(NewDeb.FireType, Def, Fn);
+			float FireTypeValue = (float)((int)NewDeb.FireType);
+			GetDefNumber(FireTypeValue, Def, Fn);
+			NewDeb.FireType = (EExplosionType)((int)FireTypeValue);
 		}
 	}
 

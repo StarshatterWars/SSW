@@ -1363,8 +1363,7 @@ struct FDebris
 	float Life = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 FireType = 0;
-
+	EExplosionType FireType = EExplosionType::NONE;
 	// Legacy cap: 5
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector> FireLocations;

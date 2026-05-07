@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameStructs_System.h"
 
 class STARSHATTERWARS_API ShipUtils
 {
@@ -19,4 +20,7 @@ public:
 		// reverse mapping
 		return FVector(V.Y, V.Z, V.X);
 	}
+
+	static EExplosionType ExplosionTypeFromInt(int32 Value);
+	static int32 ExplosionTypeToInt(EExplosionType Type);
 };
