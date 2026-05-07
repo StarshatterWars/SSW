@@ -760,18 +760,6 @@ void AShipActor::UpdateNavLights(float DeltaTime)
         return;
     }
 
-    if (!RuntimeShip || RuntimeShip->navlights.size() <= 0)
-    {
-        return;
-    }
-
-    NavLight* RuntimeNavLight = RuntimeShip->navlights[0];
-
-    if (!RuntimeNavLight)
-    {
-        return;
-    }
-
     const float TimeSeconds =
         GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 
@@ -784,23 +772,9 @@ void AShipActor::UpdateNavLights(float DeltaTime)
             continue;
         }
 
-        const FShipNavLightDef& Def =
-            NavLight->GetDefinition();
+        const FShipNavLightDef& Def = NavLight->GetDefinition();
 
-        //-----------------------------------------------------
-        // Legacy runtime state
-        //-----------------------------------------------------
-
-        const bool bLegacyLit =
-            Index < RuntimeNavLight->NumBeacons()
-            ? RuntimeNavLight->IsBeaconLit(Index)
-            : false;
-
-        //-----------------------------------------------------
-        // Unreal visual fallback blinking
-        //-----------------------------------------------------
-
-        bool bVisible = bLegacyLit;
+        bool bVisible = true;
 
         if (Def.Mode == EShipNavLightMode::Blink)
         {
@@ -815,19 +789,34 @@ void AShipActor::UpdateNavLights(float DeltaTime)
 
             bVisible = T < (Period * 0.5f);
         }
-        else if (Def.Mode == EShipNavLightMode::Steady)
+        else if (Def.Mode == EShipNavLightMode::Sequence)
+        {
+            NavLightSequenceTimer += DeltaTime;
+
+            const float SequenceInterval = 0.20f;
+
+            if (NavLightSequenceTimer >= SequenceInterval)
+            {
+                NavLightSequenceTimer = 0.0f;
+
+                NavLightSequenceIndex =
+                    (NavLightSequenceIndex + 1) %
+                    FMath::Max(1, NavLights.Num());
+            }
+
+            bVisible = Index == NavLightSequenceIndex;
+        }
+        else
         {
             bVisible = true;
         }
 
-        //-----------------------------------------------------
-        // Bulb mesh visibility
-        //-----------------------------------------------------
+        NavLight->SetVisibility(bVisible);
+        NavLight->SetHiddenInGame(!bVisible);
 
         if (NavLightBulbMeshes.IsValidIndex(Index))
         {
-            UStaticMeshComponent* BulbMesh =
-                NavLightBulbMeshes[Index];
+            UStaticMeshComponent* BulbMesh = NavLightBulbMeshes[Index];
 
             if (BulbMesh)
             {
@@ -836,14 +825,9 @@ void AShipActor::UpdateNavLights(float DeltaTime)
             }
         }
 
-        //-----------------------------------------------------
-        // Point light visibility/intensity
-        //-----------------------------------------------------
-
         if (NavLightPointLights.IsValidIndex(Index))
         {
-            UPointLightComponent* PointLight =
-                NavLightPointLights[Index];
+            UPointLightComponent* PointLight = NavLightPointLights[Index];
 
             if (PointLight)
             {
@@ -862,14 +846,9 @@ void AShipActor::UpdateNavLights(float DeltaTime)
             }
         }
 
-        //-----------------------------------------------------
-        // Bulb emissive material
-        //-----------------------------------------------------
-
         if (NavLightBulbMIDs.IsValidIndex(Index))
         {
-            UMaterialInstanceDynamic* MID =
-                NavLightBulbMIDs[Index];
+            UMaterialInstanceDynamic* MID = NavLightBulbMIDs[Index];
 
             if (MID)
             {
@@ -878,13 +857,8 @@ void AShipActor::UpdateNavLights(float DeltaTime)
                     ? FMath::Max(1.0f, Def.Intensity * 0.01f)
                     : 0.0f;
 
-                MID->SetVectorParameterValue(
-                    TEXT("GlowColor"),
-                    Def.Color);
-
-                MID->SetScalarParameterValue(
-                    TEXT("GlowIntensity"),
-                    Glow);
+                MID->SetVectorParameterValue(TEXT("GlowColor"), Def.Color);
+                MID->SetScalarParameterValue(TEXT("GlowIntensity"), Glow);
             }
         }
     }
@@ -1682,7 +1656,13 @@ void AShipActor::BuildNavLightsFromRuntime()
         return;
     }
 
-    ClearRuntimeNavLights();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] BuildNavLightsFromRuntime ENTER Actor='%s' RuntimeShip=%p"),
+        *GetName(),
+        RuntimeShip);
+
+    ClearNavLightArray(NavLights);
+    ClearNavLightVisuals();
 
     if (!RuntimeShip)
     {
@@ -1695,9 +1675,8 @@ void AShipActor::BuildNavLightsFromRuntime()
     if (RuntimeShip->navlights.size() <= 0)
     {
         UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] BuildNavLightsFromRuntime: no runtime navlights Actor='%s' Ship='%s'"),
-            *GetName(),
-            *FString(RuntimeShip->GetName()));
+            TEXT("[ShipActor] BuildNavLightsFromRuntime: no runtime navlights Actor='%s'"),
+            *GetName());
         return;
     }
 
@@ -1707,7 +1686,8 @@ void AShipActor::BuildNavLightsFromRuntime()
         LightSystemIndex < RuntimeShip->navlights.size();
         ++LightSystemIndex)
     {
-        NavLight* RuntimeNavLight = RuntimeShip->navlights[LightSystemIndex];
+        NavLight* RuntimeNavLight =
+            RuntimeShip->navlights[LightSystemIndex];
 
         if (!RuntimeNavLight)
         {
