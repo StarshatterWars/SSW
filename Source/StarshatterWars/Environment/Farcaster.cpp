@@ -202,7 +202,7 @@ Farcaster::Jump()
 	SimRegion* dst = dest->GetRegion();
 
 	sim->CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector,
-		Explosion::QUANTUM_FLASH, 1.0f, 0, rgn);
+		EExplosionType::QUANTUM_FLASH, 1.0f, 0, rgn);
 
 	// NOTE:
 	// Original code used: dest->Location().OtherHand()

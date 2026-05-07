@@ -18,11 +18,12 @@
 */
 
 #include "ShipExplosion.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
 ShipExplosion::ShipExplosion()
-    : Type(0),
+    : Type(EExplosionType::NONE),
     Time(0.0f),
     Location(FVector::ZeroVector),
     bFinal(false)
@@ -31,7 +32,7 @@ ShipExplosion::ShipExplosion()
 
 // +--------------------------------------------------------------------+
 
-int ShipExplosion::GetType() const
+EExplosionType ShipExplosion::GetType() const
 {
     return Type;
 }
@@ -53,7 +54,7 @@ bool ShipExplosion::IsFinal() const
 
 // +--------------------------------------------------------------------+
 
-void ShipExplosion::SetType(int InType)
+void ShipExplosion::SetType(EExplosionType InType)
 {
     Type = InType;
 }

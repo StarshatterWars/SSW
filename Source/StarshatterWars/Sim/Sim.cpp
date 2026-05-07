@@ -1286,7 +1286,7 @@ Sim::CreateShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* design
 // +--------------------------------------------------------------------+
 
 Explosion*
-Sim::CreateExplosion(const FVector& pos, const FVector& vel, int type, float exp_scale, float part_scale, SimRegion* rgn, SimObject* source, SimSystem* sys)
+Sim::CreateExplosion(const FVector& pos, const FVector& vel, EExplosionType type, float exp_scale, float part_scale, SimRegion* rgn, SimObject* source, SimSystem* sys)
 {
 	// don't bother creating explosions that can't be seen:
 	if (!rgn || !active_region || rgn != active_region)
@@ -1374,7 +1374,7 @@ Sim::CreateSplashDamage(SimShot* shot)
 		splash->missile = shot->IsMissile();
 
 		splashlist.append(splash);
-		CreateExplosion(OtherHand(shot->GetLocation()), FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f, 1.0f, shot->GetRegion());
+		CreateExplosion(OtherHand(shot->GetLocation()), FVector::ZeroVector, EExplosionType::SHOT_BLAST, 20.0f, 1.0f, shot->GetRegion());
 	}
 }
 
@@ -1868,7 +1868,7 @@ Sim::ResolveHyperList()
 							UTF8_TO_TCHAR(jumpship->GetName()),
 							UTF8_TO_TCHAR(dest->GetName())
 						);
-						CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
+						CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, EExplosionType::QUANTUM_FLASH, 1.0f, 0.0f, dest);
 
 						if (jump->fc_dst) {
 							const double r = jump->fc_dst->GetRoll();
@@ -1915,9 +1915,9 @@ Sim::ResolveHyperList()
 							ANSI_TO_TCHAR(dest->GetName()));
 
 						if (jump->hyperdrive)
-							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::HYPER_FLASH, 1.0f, 1.0f, dest);
+							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, EExplosionType::HYPER_FLASH, 1.0f, 1.0f, dest);
 						else
-							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1.0f, 0.0f, dest);
+							CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector, EExplosionType::QUANTUM_FLASH, 1.0f, 0.0f, dest);
 
 						jumpship->LookAt(FVector::ZeroVector);
 						jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
@@ -2056,7 +2056,7 @@ Sim::ResolveSplashList()
 					// then mark the drone for deletion:
 					if (destroyed) {
 						//NetUtil::SendWepDestroy(drone);
-						sim->CreateExplosion(drone->GetLocation(), drone->GetVelocity(), 21 /* was LARGE_EXP */, 1.0f, 1.0f, splash->rgn);
+						sim->CreateExplosion(drone->GetLocation(), drone->GetVelocity(), EExplosionType::LARGE_EXPLOSION, 1.0f, 1.0f, splash->rgn);
 						drone->SetLife(0);
 					}
 				}

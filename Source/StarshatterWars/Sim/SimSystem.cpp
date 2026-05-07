@@ -24,6 +24,7 @@
 
 // Minimal Unreal math (for FVector):
 #include "Math/Vector.h"
+#include "GameStructs_System.h"
 
 // Define a local log category for this translation unit:
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterSystem, Log, All);

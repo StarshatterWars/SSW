@@ -29,7 +29,7 @@
 #include "Game.h"
 #include "SimScene.h"
 #include "ParseUtil.h"
-
+#include "GameStructs_System.h"
 // Unreal logging (for legacy Print replacement):
 #include "Logging/LogMacros.h"
 
@@ -80,10 +80,10 @@ static bool       recycles[MAX_EXPLOSION_TYPES];
 
 // +--------------------------------------------------------------------+
 
-Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
+Explosion::Explosion(EExplosionType InType, const FVector& InPos, const FVector& InVel,
     float InExplosionScale, float InParticleScale,
     SimRegion* InRegion, SimObject* InSource)
-    : SimObject("Explosion", InType)
+    : SimObject("Explosion", (int)InType)
     , type(InType)
     , particles(nullptr)
     , source(InSource)
@@ -100,7 +100,7 @@ Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
     // Default relative mount offset:
     mount_rel = FVector::ZeroVector;
 
-    if (type == QUANTUM_FLASH) {
+    if (type == EExplosionType::QUANTUM_FLASH) {
         life = 1.1;
 
         QuantumFlash* Flash = new QuantumFlash();
@@ -109,8 +109,8 @@ Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
         light = new SimLight(1e9, 0.66f);
         light->SetColor(FColor(180, 200, 255, 255));
     }
-    else if (type >= 0 && type < MAX_EXPLOSION_TYPES) {
-        life = lifetimes[type];
+    else if (type >= EExplosionType::NONE && type < EExplosionType::MAX) {
+        life = lifetimes[(int)type];
 
         // ------------------------------------------------------------
         // Compute mount_rel in SOURCE-LOCAL space (UE-safe math)
@@ -129,11 +129,11 @@ Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
 
         // ------------------------------------------------------------
         // Optional sprite rep
-        if (lengths[type] > 0) {
-            const bool bRepeat = (lengths[type] == 1);
+        if (lengths[(int)type] > 0) {
+            const bool bRepeat = (lengths[(int)type] == 1);
 
-            Sprite* SpriteRep = new Sprite(bitmaps[type], lengths[type], bRepeat);
-            SpriteRep->Scale(InExplosionScale * scales[type]);
+            Sprite* SpriteRep = new Sprite(bitmaps[(int)type], lengths[(int)type], bRepeat);
+            SpriteRep->Scale(InExplosionScale * scales[(int)type]);
             SpriteRep->SetAngle(PI * (double)rand() / 16384.0);
             SpriteRep->SetLuminous(true);
             rep = SpriteRep;
@@ -141,30 +141,30 @@ Explosion::Explosion(int InType, const FVector& InPos, const FVector& InVel,
 
         // ------------------------------------------------------------
         // Optional light rep
-        if (light_levels[type] > 0) {
-            light = new SimLight(light_levels[type], light_decays[type]);
-            light->SetColor(light_colors[type]); // ensure this is FColor
+        if (light_levels[(int)type] > 0) {
+            light = new SimLight(light_levels[(int)type], light_decays[(int)type]);
+            light->SetColor(light_colors[(int)type]); // ensure this is FColor
         }
 
         // ------------------------------------------------------------
         // Optional particle burst
-        if (num_parts[type] > 0) {
+        if (num_parts[(int)type] > 0) {
             particles = new ParticleManager(
-                particle_bitmaps[type],
-                num_parts[type],
+                particle_bitmaps[(int)type],
+                num_parts[(int)type],
                 InPos,
                 FVector::ZeroVector,
-                part_speeds[type] * InParticleScale,
-                part_drags[type],
-                part_scales[type] * InParticleScale,
-                part_blooms[type] * InParticleScale,
-                part_decays[type],
-                part_rates[type],
-                recycles[type],
-                part_trails[type],
+                part_speeds[(int)type] * InParticleScale,
+                part_drags[(int)type],
+                part_scales[(int)type] * InParticleScale,
+                part_blooms[(int)type] * InParticleScale,
+                part_decays[(int)type],
+                part_rates[(int)type],
+                recycles[(int)type],
+                part_trails[(int)type],
                 (InRegion && InRegion->IsAirSpace()),
-                part_alphas[type],
-                part_frames[type]
+                part_alphas[(int)type],
+                part_frames[(int)type]
             );
         }
     }
@@ -587,7 +587,7 @@ Explosion::ExecFrame(double DeltaSeconds)
             Sprite* SpriteRep = (Sprite*)rep;
             SpriteRep->SetAngle(SpriteRep->Angle() + DeltaSeconds * 0.5);
         }
-        else if (type == QUANTUM_FLASH) {
+        else if (type == EExplosionType::QUANTUM_FLASH) {
             QuantumFlash* FlashRep = (QuantumFlash*)rep;
             FlashRep->SetShade(FlashRep->Shade() - DeltaSeconds);
         }

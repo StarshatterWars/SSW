@@ -21,6 +21,7 @@
 #include "List.h"
 #include "Text.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 // Minimal Unreal include (replaces Point/Vec3):
 #include "Math/Vector.h"
@@ -126,8 +127,8 @@ public:
 	void			  SetHullFactor(float InHullFactor) { hull_factor = InHullFactor; }
 	float			  GetHullFactor() const { return hull_factor; }
 
-	int               GetExplosionType() const { return explosion_type; }
-	void              SetExplosionType(int t) { explosion_type = t; }
+	EExplosionType    GetExplosionType() const { return explosion_type; }
+	void              SetExplosionType(EExplosionType t) { explosion_type = t; }
 
 	Ship*			  GetShip() const { return ship; }
 	void              SetShip(Ship* s) { ship = s; }
@@ -172,7 +173,7 @@ protected:
 	BYTE              emcon_power[3];
 	BYTE              emcon;
 
-	int               explosion_type;
+	EExplosionType    explosion_type;
 
 	// Subcomponents:
 	SystemDesign* design;

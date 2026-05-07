@@ -31,14 +31,14 @@ public:
 
     ShipExplosion();
 
-    int     GetType() const;
+    EExplosionType     GetType() const;
     float   GetTime() const;
     FVector GetLocation() const;
     bool    IsFinal() const;
 
     static int GetMaxExplosions();
 
-    void SetType(int InType);
+    void SetType(EExplosionType InType);
     void SetTime(float InTime);
     void SetLocation(const FVector& InLocation);
     void SetFinal(bool bInFinal);
@@ -48,7 +48,7 @@ public:
     static const int MaxExplosions = 10;
 
 protected:
-    int     Type;
+    EExplosionType Type;
     float   Time;
     FVector Location;
     bool    bFinal;

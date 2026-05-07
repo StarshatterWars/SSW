@@ -31,6 +31,7 @@
 #include "DataLoader.h"
 #include "Sound.h"
 
+#include "GameStructs_System.h"
 #include "Math/Vector.h"
 
 // +--------------------------------------------------------------------+
@@ -162,8 +163,8 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 	if (shot->IsMissile()) {
 		if (dlen < 10.0 * GetRadius()) {
 			hull_impact = impact = shot_loc;
-			sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region);
-			sim->CreateExplosion(impact, FVector(0.0f, 0.0f, 0.0f), Explosion::SHOT_BLAST, 2.0f, scale, region);
+			sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.3f * scale, scale, region);
+			sim->CreateExplosion(impact, FVector(0.0f, 0.0f, 0.0f), EExplosionType::SHOT_BLAST, 2.0f, scale, region);
 			hit_type = HIT_HULL;
 		}
 	}
@@ -185,13 +186,13 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 				hull_impact = impact = test;
 
 				shot->SetBeamPoints(shot_org, impact);
-				sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region);
+				sim->CreateExplosion(impact, GetVelocity(), EExplosionType::BEAM_FLASH, 0.30f * scale, scale, region);
 				hit_type = HIT_HULL;
 			}
 		}
 		else if (dlen < 2.0 * GetRadius()) {
 			hull_impact = impact = shot_loc;
-			sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region);
+			sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.30f * scale, scale, region);
 			hit_type = HIT_HULL;
 		}
 	}

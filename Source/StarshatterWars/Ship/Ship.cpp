@@ -970,7 +970,7 @@ void Ship::InitializeRuntimeDeathSpiralFromDesign()
 	{
 		explosion[i].CopyFrom(design->explosion[i]);
 
-		if (explosion[i].GetType() <= 0)
+		if (explosion[i].GetType() <= EExplosionType::NONE)
 		{
 			continue;
 		}
@@ -1941,13 +1941,13 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 
 			if (HitType) {
 				if (Shot->Damage() > 0) {
-					DWORD Flash = Explosion::HULL_FLASH;
+					EExplosionType Flash = EExplosionType::HULL_FLASH;
 
 					if ((HitType & HIT_SHIELD) != 0)
-						Flash = Explosion::SHIELD_FLASH;
+						Flash = EExplosionType::SHIELD_FLASH;
 
 					sim->CreateExplosion(Impact, GetVelocity(), Flash, 0.30f * Scale, Scale, region);
-					sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 2.0f, Scale, region);
+					sim->CreateExplosion(Impact, FVector::ZeroVector, EExplosionType::SHOT_BLAST, 2.0f, Scale, region);
 				}
 			}
 		}
@@ -1973,8 +1973,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 							if (shieldRep)
 								shieldRep->Hit(Impact, Shot, Shot->Damage() * DamageScale);
 
-							sim->CreateExplosion(Impact, GetVelocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
-							sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, GetVelocity(), EExplosionType::SHIELD_FLASH, 0.20f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, FVector::ZeroVector, EExplosionType::SHOT_BLAST, 20.0f * Scale, Scale, region);
 						}
 
 						HitType = HIT_BOTH;
@@ -1983,8 +1983,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 						HullImpact = Impact = ShotLoc;
 
 						if (Shot->Damage() > 0) {
-							sim->CreateExplosion(Impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
-							sim->CreateExplosion(Impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 20.0f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.30f * Scale, Scale, region);
+							sim->CreateExplosion(Impact, FVector::ZeroVector, EExplosionType::SHOT_BLAST, 20.0f * Scale, Scale, region);
 						}
 
 						HitType = HIT_HULL;
@@ -2005,13 +2005,13 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 				if (shieldRep)
 					shieldRep->Hit(Impact, Shot, Shot->Damage());
 
-				sim->CreateExplosion(Impact, GetVelocity(), Explosion::SHIELD_FLASH, 0.20f * Scale, Scale, region);
+				sim->CreateExplosion(Impact, GetVelocity(), EExplosionType::SHIELD_FLASH, 0.20f * Scale, Scale, region);
 			}
 			else {
 				if (Shot->IsBeam())
-					sim->CreateExplosion(Impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * Scale, Scale, region);
+					sim->CreateExplosion(Impact, GetVelocity(), EExplosionType::BEAM_FLASH, 0.30f * Scale, Scale, region);
 				else
-					sim->CreateExplosion(Impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * Scale, Scale, region);
+					sim->CreateExplosion(Impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.30f * Scale, Scale, region);
 
 				if (IsStarship()) {
 					FVector BurstVel = HullImpact - GetLocation();
@@ -2019,7 +2019,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 					BurstVel *= GetRadius() * 0.5f;
 					BurstVel += GetVelocity();
 
-					sim->CreateExplosion(HullImpact, BurstVel, Explosion::HULL_BURST, 0.50f * Scale, Scale, region, this);
+					sim->CreateExplosion(HullImpact, BurstVel, EExplosionType::HULL_BURST, 0.50f * Scale, Scale, region, this);
 				}
 			}
 		}
@@ -5244,9 +5244,9 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 				const float scale = (float)design->scale;
 
 				if (IsDropship())
-					sim->CreateExplosion(impact, GetVelocity(), Explosion::SMOKE_TRAIL, 0.01f * scale, 0.5f * scale, region, this);
+					sim->CreateExplosion(impact, GetVelocity(), EExplosionType::SMOKE_TRAIL, 0.01f * scale, 0.5f * scale, region, this);
 				else
-					sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FIRE, 0.10f * scale, scale, region, this);
+					sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FIRE, 0.10f * scale, scale, region, this);
 			}
 		}
 	}
@@ -5330,7 +5330,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 					if (scale <= 0)
 						scale = design->scale;
 
-					sim->CreateExplosion(system->GetMountLocation(), GetVelocity() * 0.7f, system->GetExplosionType(),
+					sim->CreateExplosion(system->GetMountLocation(), GetVelocity() * 0.7f, (int)system->GetExplosionType(),
 						0.2f * scale, scale, region, this, system);
 				}
 			}

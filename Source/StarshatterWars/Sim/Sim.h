@@ -31,6 +31,7 @@
 // Minimal Unreal includes required for FVector / FColor:
 #include "Math/Vector.h"
 #include "Math/Color.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -127,7 +128,7 @@ public:
     Explosion* CreateExplosion(
         const FVector& pos,
         const FVector& vel,
-        int type,
+        EExplosionType type,
         float exp_scale,
         float part_scale,
         SimRegion* rgn = nullptr,

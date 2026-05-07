@@ -68,6 +68,30 @@ enum class EDriveType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EExplosionType : uint8
+{
+	NONE              UMETA(DisplayName = "None"),
+
+	SHIELD_FLASH      UMETA(DisplayName = "Shield Flash"),
+	HULL_FLASH        UMETA(DisplayName = "Hull Flash"),
+	BEAM_FLASH        UMETA(DisplayName = "Beam Flash"),
+	SHOT_BLAST        UMETA(DisplayName = "Shot Blast"),
+	HULL_BURST        UMETA(DisplayName = "Hull Burst"),
+	HULL_FIRE         UMETA(DisplayName = "Hull Fire"),
+	PLASMA_LEAK       UMETA(DisplayName = "Plasma Leak"),
+	SMOKE_TRAIL       UMETA(DisplayName = "Smoke Trail"),
+	SMALL_FIRE        UMETA(DisplayName = "Small Fire"),
+	SMALL_EXPLOSION   UMETA(DisplayName = "Small Explosion"),
+	LARGE_EXPLOSION   UMETA(DisplayName = "Large Explosion"),
+	LARGE_BURST       UMETA(DisplayName = "Large Burst"),
+	NUKE_EXPLOSION    UMETA(DisplayName = "Nuke Explosion"),
+	QUANTUM_FLASH     UMETA(DisplayName = "Quantum Flash"),
+	HYPER_FLASH       UMETA(DisplayName = "Hyper Flash"),
+	LARGE_EXP         UMETA(DisplayName = "Large Explosion"),
+	MAX = 32          UMETA(Hidden),
+};
+
+UENUM(BlueprintType)
 enum class EShieldType : uint8
 {
 	UNKNOWN		 UMETA(DisplayName = "Unknown"),
@@ -1357,7 +1381,7 @@ struct FExplosion
 
 	// Legacy: exp->type
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Type = 0;
+	EExplosionType Type = EExplosionType::NONE;
 
 	// Legacy: exp->loc
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

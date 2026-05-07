@@ -122,7 +122,7 @@ void ShipKiller::BeginDeathSpiral()
 
 		for (int i = 0; i < 5; i++) {
 			exp_index = random_index() % ShipDesign::MAX_EXPLOSIONS;
-			if (design->explosion[exp_index].GetType() > 0 && !design->explosion[exp_index].IsFinal())
+			if (design->explosion[exp_index].GetType() > EExplosionType::NONE && !design->explosion[exp_index].IsFinal())
 				break;
 		}
 
@@ -132,7 +132,7 @@ void ShipKiller::BeginDeathSpiral()
 
 		exp_time = (float)design->explosion[exp_index].GetTime();
 
-		if (design->explosion[exp_index].GetType() > 0) {
+		if ((int)design->explosion[exp_index].GetType() > 0) {
 			// UE FIX: FVector * Matrix is not defined. Convert Starshatter Matrix rows to dot products.
 			const Matrix& M = ship->GetCam().Orientation();
 
@@ -218,7 +218,7 @@ void ShipKiller::ExecFrame(double seconds)
 
 		exp_time = design->explosion[exp_index].GetTime();
 
-		if (design->explosion[exp_index].GetType() > 0) {
+		if (design->explosion[exp_index].GetType() > EExplosionType::NONE) {
 			const FVector exp_loc =
 				ship->GetLocation() + TransformDirByShipCam(design->explosion[exp_index].GetLocation());
 			sim->CreateExplosion(exp_loc,
@@ -287,10 +287,10 @@ void ShipKiller::ExecFrame(double seconds)
 
 						const FVector fire_loc =
 							debris->GetLocation() + TransformDirByShipCam(design->debris[i].GetFireLocation(fire));
-						if (design->debris[i].GetFireType() > 0) {
+						if (design->debris[i].GetFireType() > (int) EExplosionType::NONE) {
 							sim->CreateExplosion(fire_loc,
 								ship->GetVelocity(),
-								design->debris[i].GetFireType(),
+								(EExplosionType)design->debris[i].GetFireType(),
 								exp_scale,
 								exp_scale,
 								ship->GetRegion(),
@@ -299,7 +299,7 @@ void ShipKiller::ExecFrame(double seconds)
 						else {
 							sim->CreateExplosion(fire_loc,
 								ship->GetVelocity(),
-								Explosion::SMALL_FIRE,
+								EExplosionType::SMALL_FIRE,
 								exp_scale,
 								exp_scale,
 								ship->GetRegion(),
@@ -307,7 +307,7 @@ void ShipKiller::ExecFrame(double seconds)
 
 							sim->CreateExplosion(fire_loc,
 								ship->GetVelocity(),
-								Explosion::SMOKE_TRAIL,
+								EExplosionType::SMOKE_TRAIL,
 								exp_scale * 0.25f,
 								exp_scale * 0.25f,
 								ship->GetRegion(),

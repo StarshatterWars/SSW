@@ -29,6 +29,7 @@
 #include "Solid.h"
 #include "DataLoader.h"
 #include "Game.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -107,8 +108,8 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 			hull_impact = impact = shot_loc;
 
 			if (sim) {
-				sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.3f * scale, scale, region, this);
-				sim->CreateExplosion(impact, FVector::ZeroVector, Explosion::SHOT_BLAST, 2.0f, scale, region);
+				sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.3f * scale, scale, region, this);
+				sim->CreateExplosion(impact, FVector::ZeroVector, EExplosionType::SHOT_BLAST, 2.0f, scale, region);
 			}
 
 			hit_type = HIT_HULL;
@@ -138,9 +139,9 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 
 				if (sim) {
 					if (shot->IsBeam())
-						sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(),	EExplosionType::BEAM_FLASH, 0.30f * scale, scale, region, this);
 					else
-						sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.30f * scale, scale, region, this);
 				}
 
 				FVector burst_vel = hull_impact - GetLocation();
@@ -149,7 +150,7 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 				burst_vel += GetVelocity();
 
 				if (sim)
-					sim->CreateExplosion(hull_impact, burst_vel, Explosion::HULL_BURST, 0.50f * scale, scale, region, this);
+					sim->CreateExplosion(hull_impact, burst_vel, EExplosionType::HULL_BURST, 0.50f * scale, scale, region, this);
 
 				hit_type = HIT_HULL;
 				hit_hull = true;
@@ -161,9 +162,9 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 
 				if (sim) {
 					if (shot->IsBeam())
-						sim->CreateExplosion(impact, GetVelocity(), Explosion::BEAM_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), EExplosionType::BEAM_FLASH, 0.30f * scale, scale, region, this);
 					else
-						sim->CreateExplosion(impact, GetVelocity(), Explosion::HULL_FLASH, 0.30f * scale, scale, region, this);
+						sim->CreateExplosion(impact, GetVelocity(), EExplosionType::HULL_FLASH, 0.30f * scale, scale, region, this);
 				}
 
 				hit_type = HIT_HULL;

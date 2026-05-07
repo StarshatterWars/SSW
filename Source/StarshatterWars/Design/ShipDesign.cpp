@@ -3588,7 +3588,7 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 			else if (defname == "explosion_type") {
 				++exp_index;
 
-				int Type = explosion[exp_index].GetType();
+				EExplosionType Type = explosion[exp_index].GetType();
 
 				GetDefNumber(Type, def, filename);
 
@@ -3625,7 +3625,7 @@ ShipDesign::ParseDeathSpiral(TermStruct* val)
 			else if (defname == "final_type") {
 				++exp_index;
 
-				int Type = explosion[exp_index].GetType();
+				EExplosionType Type = explosion[exp_index].GetType();
 
 				GetDefNumber(Type, def, filename);
 
@@ -3798,8 +3798,8 @@ ShipDesign::ParseExplosion(TermStruct* val, int index)
 			}
 
 			else if (defname == "type") {
-				int Type = exp->GetType();
-				GetDefNumber(Type, def, filename);
+				EExplosionType Type = exp->GetType();
+				GetDefNumber((int&)Type, def, filename);
 				exp->SetType(Type);
 			}
 

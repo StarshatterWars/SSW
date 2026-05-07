@@ -22,6 +22,7 @@
 
 // Minimal Unreal include for FVector:
 #include "Math/Vector.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -38,26 +39,7 @@ class Explosion : public SimObject,
 public:
     static const char* TYPENAME() { return "Explosion"; }
 
-    enum Type
-    {
-        SHIELD_FLASH = 1,
-        HULL_FLASH = 2,
-        BEAM_FLASH = 3,
-        SHOT_BLAST = 4,
-        HULL_BURST = 5,
-        HULL_FIRE = 6,
-        PLASMA_LEAK = 7,
-        SMOKE_TRAIL = 8,
-        SMALL_FIRE = 9,
-        SMALL_EXPLOSION = 10,
-        LARGE_EXPLOSION = 11,
-        LARGE_BURST = 12,
-        NUKE_EXPLOSION = 13,
-        QUANTUM_FLASH = 14,
-        HYPER_FLASH = 15
-    };
-
-    Explosion(int type,
+    Explosion(EExplosionType type,
         const FVector& pos,
         const FVector& vel,
         float exp_scale,
@@ -82,8 +64,8 @@ public:
     virtual const char* GetObserverName() const;
 
 protected:
-    int               type;
-    ParticleManager*  particles;
+    EExplosionType               type;
+    ParticleManager*             particles;
 
     float             scale;
     float             scale1;

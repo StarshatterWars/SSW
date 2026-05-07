@@ -265,9 +265,9 @@ QuantumDrive::Jump()
 		esc_vec += RandomDirectionPoint() * RandomRangeDouble(15e3, 22e3);
 
 		if (subtype == HYPER)
-			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, Explosion::HYPER_FLASH, 1, 1, ship->GetRegion());
+			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, EExplosionType::HYPER_FLASH, 1, 1, ship->GetRegion());
 		else
-			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, Explosion::QUANTUM_FLASH, 1, 0, ship->GetRegion());
+			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, EExplosionType::QUANTUM_FLASH, 1, 0, ship->GetRegion());
 
 		sim->RequestHyperJump(ship, dst_rgn, esc_vec);
 
