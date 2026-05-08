@@ -401,8 +401,8 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-// Thruster
-//-------------------------------------------------------------
+	// Thruster
+	//-------------------------------------------------------------
 	thruster = nullptr;
 
 	if (design->thruster)
@@ -526,6 +526,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	//-------------------------------------------------------------
 	// Computers
 	//-------------------------------------------------------------
+	flcs = nullptr;
 
 	for (int i = 0; i < design->computers.size(); i++)
 	{
@@ -540,7 +541,10 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		if (SourceComputer->GetComputerType() == EComputerType::FLIGHT)
 		{
-			NewComputer = new FlightComputer(*SourceComputer);
+			FlightComputer* NewFLCS = new FlightComputer(*SourceComputer);
+
+			NewComputer = NewFLCS;
+			//flcs = NewFLCS;
 		}
 		else
 		{
@@ -565,12 +569,28 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		systems.append(NewComputer);
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship] Computer runtime built Ship='%hs' Computer=%p Type=%d Class='%hs' Systems=%d"),
+			TEXT("[Ship] Computer runtime built Ship='%hs' Computer=%p Type=%d Class='%hs' Systems=%d FLCS=%p"),
 			GetName(),
 			NewComputer,
 			(int32)NewComputer->GetComputerType(),
 			NewComputer->TYPENAME(),
-			systems.size());
+			systems.size(),
+			flcs);
+	}
+
+	if (!flcs)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] WARNING: No FLCS assigned Ship='%hs' Computers=%d"),
+			GetName(),
+			computers.size());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] OK: FLCS assigned Ship='%hs' FLCS=%p"),
+			GetName(),
+			flcs);
 	}
 
 	//-------------------------------------------------------------
@@ -1050,24 +1070,24 @@ Ship::Destroy()
 	delete shield;
 	shield = 0;
 	delete sensor;
-	sensor = 0;
+	sensor = nullptr;
 	delete navsys;
-	navsys = 0;
+	navsys = nullptr;
 	delete thruster;
-	thruster = 0;
+	thruster = nullptr;
 	delete farcaster;
-	farcaster = 0;
+	farcaster = nullptr;
 	delete quantum_drive;
-	quantum_drive = 0;
+	quantum_drive = nullptr;
 	delete decoy;
-	decoy = 0;
+	decoy = nullptr;
 	delete probe;
-	probe = 0;
+	probe = nullptr;
 	delete gear;
-	gear = 0;
+	gear = nullptr;
 
-	main_drive = 0;
-	flcs = 0;
+	main_drive = nullptr;
+	flcs = nullptr;
 
 	// repair queue does notxown the systems under repair:
 	repair_queue.clear();
@@ -4588,15 +4608,28 @@ Ship::Thrust(double seconds) const
 		}
 
 		// FLCS override
-		if (flcs) {
+		if (flcs)
+		{
 			const double flcsThrottle = flcs->Throttle();
 
-			UE_LOG(LogTemp, Warning,
-				TEXT("[Ship::Thrust] FLCS Override ShipThrottle=%.2f FLCSThrottle=%.2f"),
-				throttle,
-				flcsThrottle);
+			if (flcsThrottle > 0.0)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[Ship::Thrust] FLCS Override ACCEPTED ShipThrottle=%.2f FLCSThrottle=%.2f"),
+					throttle,
+					flcsThrottle);
 
-			eff_throttle = flcsThrottle;
+				eff_throttle = flcsThrottle;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[Ship::Thrust] FLCS Override IGNORED ShipThrottle=%.2f FLCSThrottle=%.2f"),
+					throttle,
+					flcsThrottle);
+
+				eff_throttle = throttle;
+			}
 		}
 
 		UE_LOG(LogTemp, Warning,
@@ -4697,9 +4730,9 @@ Ship::SetFLCSMode(int mode)
 		}
 
 		if (!flcs || !flcs->IsPowerOn())
-			director_info = Game::GetText("flcs.offline");
+			director_info = "FLCS Offline";
 		else if (IsAirborne())
-			director_info = Game::GetText("flcs.atmospheric");
+			director_info = "FLCS Atmospheric";
 	}
 
 	if (flcs)
@@ -4795,8 +4828,9 @@ Ship::SetTransZ(double t)
 void
 Ship::ExecFLCSFrame()
 {
-	if (flcs)
-		flcs->ExecSubFrame();
+	if (flcs) {
+		flcs->ExecSubFrame(); 
+	}
 }
 
 // +--------------------------------------------------------------------+
