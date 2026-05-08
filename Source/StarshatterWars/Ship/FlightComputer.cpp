@@ -32,7 +32,7 @@ FlightComputer::FlightComputer(
     EComputerType comp_type,
     const char* comp_name)
     : Computer(comp_type, comp_name)
-    , mode(EFLCSMode::MANUAL)
+    , mode(EFLCSMode::AUTO)
     , halt(0)
     , throttle(0.0f)
     , vlimit(0.0f)
@@ -46,7 +46,7 @@ FlightComputer::FlightComputer(
 
 FlightComputer::FlightComputer(const Computer& c)
     : Computer(c)
-    , mode(EFLCSMode::MANUAL)
+    , mode(EFLCSMode::AUTO)
     , halt(0)
     , throttle(0.0f)
     , vlimit(0.0f)

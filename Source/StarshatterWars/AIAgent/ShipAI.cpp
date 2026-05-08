@@ -978,19 +978,20 @@ ShipAI::HelmControl()
 
 	ship->SetHelmHeading(accumulator.yaw);
 
-	if (FMath::Abs(accumulator.pitch) < 5 * DEGREES || FMath::Abs(accumulator.pitch) > 45 * DEGREES) {
+	if (FMath::Abs(accumulator.pitch) < 5 * DEGREES ||
+		FMath::Abs(accumulator.pitch) > 45 * DEGREES)
+	{
 		trans_z = objective.Y;
 		ship->SetHelmPitch(0);
 	}
-	else {
+	else
+	{
 		ship->SetHelmPitch(accumulator.pitch);
 	}
 
 	ship->SetTransX(trans_x);
 	ship->SetTransY(trans_y);
 	ship->SetTransZ(trans_z);
-
-	ship->ExecFLCSFrame();
 }
 
 /*****************************************

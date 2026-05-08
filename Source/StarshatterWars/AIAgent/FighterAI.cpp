@@ -1133,8 +1133,9 @@ FighterAI::ThrottleControl()
     ship->SetThrottle((int)throttle);
     ship->SetAugmenter(augmenter);
 
-    if (accumulator.stop && ship->GetFLCS() != 0)
+    if (accumulator.stop && ship->GetFLCS() != nullptr) {
         ship->GetFLCS()->FullStop();
+    }
 
     else if (ship_speed > 1.0 && brakes > 0.0)
         ship->SetTransY(-brakes * ship->Design()->trans_y);

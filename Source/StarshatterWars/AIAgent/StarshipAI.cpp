@@ -395,7 +395,7 @@ StarshipAI::ThrottleControl()
         ship->SetThrottle(0);
 
         if (ship->GetFLCS())
-            ship->GetFLCS()->FullStop();
+           ship->GetFLCS()->FullStop();
 
         return;
     }
@@ -427,8 +427,9 @@ StarshipAI::ThrottleControl()
 
         throttle *= (1.0 - accumulator.brake);
 
-        if (throttle < 1 && ship->GetFLCS() != 0)
+        if (throttle < 1 && ship->GetFLCS() != nullptr) {
             ship->GetFLCS()->FullStop();
+        }
     }
 
     else if (ward) {  // escort, match speed of ward

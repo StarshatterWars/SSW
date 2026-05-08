@@ -309,8 +309,6 @@ SimSystem::Repair()
 	if (Status != SYSTEM_STATUS::MAINT) {
 		Status = SYSTEM_STATUS::MAINT;
 		safety_overload = 0.0f;
-
-		//NetUtil::SendSysStatus(ship, this);
 	}
 }
 

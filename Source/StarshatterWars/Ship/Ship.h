@@ -248,6 +248,10 @@ public:
     void              CycleFLCSMode();
     void              SetFLCSMode(EFLCSMode mode);
     EFLCSMode         GetFLCSMode() const;
+
+	void              SetFLCS(FlightComputer* c) { flcs = c; }  
+    FlightComputer*   GetFLCS();
+
     void              SetTransX(double t);
     void              SetTransY(double t);
     void              SetTransZ(double t);
@@ -456,7 +460,6 @@ public:
     Solid*                  GetShieldRep() { return (Solid*)shieldRep; }
     Sensor*                 GetSensor() { return sensor; }
     NavSystem*              GetNavSystem() { return navsys; }
-    FlightComputer*         GetFLCS() { return flcs; }
     Thruster*               GetThruster() { return thruster; }
     Hangar*                 GetHangar() { return hangar; }
     LandingGear*            GetGear() { return gear; }

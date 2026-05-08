@@ -426,7 +426,7 @@ NavAI::HelmControl()
     ship->SetTransX(0);
     ship->SetTransY(0);
     ship->SetTransZ(0);
-    ship->ExecFLCSFrame();
+    //ship->ExecFLCSFrame();
 }
 
 // +--------------------------------------------------------------------+

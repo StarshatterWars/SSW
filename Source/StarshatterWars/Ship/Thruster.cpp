@@ -146,11 +146,11 @@ void Thruster::ExecFrame(double seconds)
     double agility_factor = 1.0;
     double stability_factor = 1.0;
 
-    FlightComputer* flcs = ship->GetFLCS();
+    FlightComputer* FlightComp = ship->GetFLCS();
 
-    if (flcs)
+    if (FlightComp)
     {
-        if (!flcs->IsPowerOn() || flcs->GetStatus() < SYSTEM_STATUS::DEGRADED)
+        if (!FlightComp->IsPowerOn() || FlightComp->GetStatus() < SYSTEM_STATUS::DEGRADED)
         {
             agility_factor = 0.3;
             stability_factor = 0.0;
