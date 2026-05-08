@@ -213,7 +213,7 @@ public:
     void              SetAugmenter(bool enable);
     double            Thrust(double seconds) const;
     double            VelocityLimit() const { return vlimit; }
-    Drive*            GetDrive() const { return main_drive; }
+    Drive*            GetMainDrive() const { return main_drive; }
     double            Throttle() const { return throttle; }
     bool              Augmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }

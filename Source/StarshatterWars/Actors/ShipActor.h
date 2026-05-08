@@ -3,6 +3,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NavLightComponent.h"
+
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 #include "ShipActor.generated.h"
 
 class USceneComponent;
@@ -13,6 +16,7 @@ class UPointLightComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class Ship;
+class Drive;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -103,6 +107,7 @@ public:
 
     FVector InitialRuntimeLocationLegacy = FVector::ZeroVector;
     FVector InitialActorLocationUE = FVector::ZeroVector;
+    
     /*
      * Fixed system marker points
      */
@@ -325,6 +330,45 @@ public:
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UMaterialInstanceDynamic>> NavLightBulbMIDs;
+
+
+    /*
+     * Engine Audio
+     */
+
+    UPROPERTY(EditAnywhere, Category = "Ship|Main Engines")
+    float MainEngineIntensityScale = 1.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Ship|Engine Audio")
+    TObjectPtr<USoundCue> EngineSoundCue;
+
+    UPROPERTY(EditAnywhere, Category = "Ship|Engine Audio")
+    TObjectPtr<USoundCue> BurnerSoundCue;
+
+    UPROPERTY(EditAnywhere, Category = "Ship|Engine Audio")
+    TObjectPtr<USoundCue> RumbleSoundCue;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<USceneComponent>> RuntimeMainEnginePoints;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UNiagaraComponent>> RuntimeMainEngineEmitters;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UAudioComponent> EngineAudioComponent;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UAudioComponent> BurnerAudioComponent;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UAudioComponent> RumbleAudioComponent;
+
+    void BuildMainEnginesFromRuntime();
+    void ClearRuntimeMainEngines();
+    void UpdateMainEnginesFromRuntime(float DeltaTime);
+
+    void CreateEngineAudioComponents();
+    void UpdateEngineAudioFromRuntime(float DeltaTime);
 
 public:
 

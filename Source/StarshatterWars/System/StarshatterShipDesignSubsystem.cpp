@@ -250,10 +250,10 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	//if (bFull)
-	//{
+	if (bFull)
+	{
 		InitializeShipDesigns();
-	//}
+	}
 
 	LoadShipDesignTable();
 }
@@ -1140,36 +1140,43 @@ void UStarshatterShipDesignSubsystem::ParseDrive(TermStruct* Val, const char* Fn
 				case EDriveType::PLASMA:
 					NewDrive.Name = TEXT("Plasma Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Plasma Drive");
 					break;
 
 				case EDriveType::FUSION:
 					NewDrive.Name = TEXT("Fusion Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Fusion Drive");
 					break;
 
 				case EDriveType::GREEN:
-					NewDrive.Name = TEXT("Green/Alien Drive");
+					NewDrive.Name = TEXT("Pulse Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Pulse Drive");
 					break;
 
 				case EDriveType::RED:
-					NewDrive.Name = TEXT("Red Drive");
+					NewDrive.Name = TEXT("Stellar Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Stellar Drive");
 					break;
 
 				case EDriveType::BLUE:
-					NewDrive.Name = TEXT("Blue Drive");
+					NewDrive.Name = TEXT("Core Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Core Drive");
 					break;
 
 				case EDriveType::YELLOW:
-					NewDrive.Name = TEXT("Yellow Drive");
+					NewDrive.Name = TEXT("Solar Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Solar Drive");
 					break;
 
 				case EDriveType::STEALTH:
 					NewDrive.Name = TEXT("Stealth Drive");
 					NewDrive.Abbrev = TEXT("DRIVE");
+					NewDrive.DesignName = TEXT("Stealth Drive");
 					break;
 
 				default:
@@ -1183,21 +1190,6 @@ void UStarshatterShipDesignSubsystem::ParseDrive(TermStruct* Val, const char* Fn
 					break;
 				}
 			}
-		}
-		else if (Key == "name")
-		{
-			GetDefText(DName, PDef, Fn);
-			NewDrive.Name = FString(DName);
-		}
-		else if (Key == "abrv")
-		{
-			GetDefText(DAbrv, PDef, Fn);
-			NewDrive.Abbrev = FString(DAbrv);
-		}
-		else if (Key == "design")
-		{
-			GetDefText(DesignName, PDef, Fn);
-			NewDrive.DesignName = FString(DesignName);
 		}
 		else if (Key == "thrust")
 		{
@@ -1216,66 +1208,189 @@ void UStarshatterShipDesignSubsystem::ParseDrive(TermStruct* Val, const char* Fn
 		}
 		else if (Key == "port")
 		{
-			// Matches legacy behavior:
-			// - location is multiplied by global Scale
-			// - flare scale defaults to drive's dscale unless overridden
 			FDrivePort Port;
+
 			Port.Location = FVector::ZeroVector;
-			Port.FlareScale = (NewDrive.DriveScale > 0.0f) ? NewDrive.DriveScale : 1.0f;
+			Port.Rotation = FRotator::ZeroRotator;
+
+			Port.FlareScale =
+				(NewDrive.DriveScale > 0.0f)
+				? NewDrive.DriveScale
+				: 1.0f;
+
+			Port.TrailScale = Port.FlareScale;
+			Port.bShowFlare = true;
+			Port.bShowTrail = NewDrive.bShowTrail;
+			Port.EngineColor = FLinearColor::White;
+			Port.IntensityMultiplier = 1.0f;
+			Port.AudioMultiplier = 1.0f;
 
 			if (PDef->term()->isArray())
 			{
 				FVector PV = FVector::ZeroVector;
+
 				if (GetDefVec(PV, PDef, Fn))
 				{
 					PV *= Scale;
+
 					Port.Location = PV;
-					// flare scale already defaulted
+					Port.PointName = FString::Printf(
+						TEXT("Drive_%d"),
+						NewDrive.Ports.Num());
+
 					NewDrive.Ports.Add(Port);
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("ParseDrive: invalid port array in '%s'"), *NewDrive.SourceFile);
+					UE_LOG(LogTemp, Warning,
+						TEXT("ParseDrive: invalid port array in '%s'"),
+						*NewDrive.SourceFile);
 				}
 			}
 			else if (PDef->term()->isStruct())
 			{
 				TermStruct* PortStruct = PDef->term()->isStruct();
 
-				FVector PV = FVector::ZeroVector;
-				float FlareScale = 0.0f;
+				const int32 PortCount =
+					(int32)PortStruct->elements()->size();
 
-				const int32 PortCount = (int32)PortStruct->elements()->size();
 				for (int32 j = 0; j < PortCount; ++j)
 				{
-					TermDef* P2 = PortStruct->elements()->at(j)->isDef();
+					TermDef* P2 =
+						PortStruct->elements()->at(j)->isDef();
+
 					if (!P2)
+					{
 						continue;
-
-					const Text& PKey = P2->name()->value();
-
-					if (PKey == "loc")
-					{
-						GetDefVec(PV, P2, Fn);
 					}
-					else if (PKey == "scale")
+
+					Text PKey =
+						P2->name()->value();
+
+					PKey.setSensitive(false);
+
+					if (PKey == "name")
 					{
+						Text NameText;
+						GetDefText(NameText, P2, Fn);
+
+						Port.PointName =
+							FString(ANSI_TO_TCHAR(NameText.data()));
+					}
+
+					else if (PKey == "socket")
+					{
+						Text SocketText;
+						GetDefText(SocketText, P2, Fn);
+
+						Port.SocketName =
+							FString(ANSI_TO_TCHAR(SocketText.data()));
+					}
+
+					else if (PKey == "loc")
+					{
+						FVector PV = FVector::ZeroVector;
+
+						if (GetDefVec(PV, P2, Fn))
+						{
+							PV *= Scale;
+							Port.Location = PV;
+						}
+					}
+
+					else if (PKey == "rot")
+					{
+						FVector RV = FVector::ZeroVector;
+
+						if (GetDefVec(RV, P2, Fn))
+						{
+							Port.Rotation =
+								FRotator(RV.Y, RV.Z, RV.X);
+						}
+					}
+
+					else if (PKey == "scale" ||
+						PKey == "flare_scale")
+					{
+						float FlareScale = Port.FlareScale;
+
 						GetDefNumber(FlareScale, P2, Fn);
+
+						if (FlareScale > 0.0f)
+						{
+							Port.FlareScale = FlareScale;
+						}
+					}
+
+					else if (PKey == "trail_scale")
+					{
+						float TrailScale = Port.TrailScale;
+
+						GetDefNumber(TrailScale, P2, Fn);
+
+						if (TrailScale > 0.0f)
+						{
+							Port.TrailScale = TrailScale;
+						}
+					}
+
+					else if (PKey == "trail")
+					{
+						GetDefBool(Port.bShowTrail, P2, Fn);
+					}
+
+					else if (PKey == "flare")
+					{
+						GetDefBool(Port.bShowFlare, P2, Fn);
+					}
+
+					else if (PKey == "color")
+					{
+						FColor C = FColor::White;
+
+						if (GetDefFColor(C, P2, Fn))
+						{
+							Port.EngineColor = FLinearColor(C);
+						}
+					}
+
+					else if (PKey == "intensity")
+					{
+						GetDefNumber(
+							Port.IntensityMultiplier,
+							P2,
+							Fn);
+					}
+
+					else if (PKey == "audio")
+					{
+						GetDefNumber(
+							Port.AudioMultiplier,
+							P2,
+							Fn);
 					}
 				}
 
-				PV *= Scale;
+				if (Port.PointName.IsEmpty())
+				{
+					Port.PointName =
+						FString::Printf(
+							TEXT("Drive_%d"),
+							NewDrive.Ports.Num());
+				}
 
-				if (FlareScale <= 0.0f)
-					FlareScale = (NewDrive.DriveScale > 0.0f) ? NewDrive.DriveScale : 1.0f;
+				if (Port.TrailScale <= 0.0f)
+				{
+					Port.TrailScale = Port.FlareScale;
+				}
 
-				Port.Location = PV;
-				Port.FlareScale = FlareScale;
 				NewDrive.Ports.Add(Port);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ParseDrive: invalid port term type in '%s'"), *NewDrive.SourceFile);
+				UE_LOG(LogTemp, Warning,
+					TEXT("ParseDrive: invalid port term type in '%s'"),
+					*NewDrive.SourceFile);
 			}
 		}
 		else if (Key == "loc")

@@ -856,11 +856,65 @@ struct FDrivePort
 {
 	GENERATED_BODY()
 
+	// ------------------------------------------------------------
+	// Identification
+	// ------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString PointName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString SocketName;
+
+	// ------------------------------------------------------------
+	// Local transform
+	// ------------------------------------------------------------
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Location = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	// ------------------------------------------------------------
+	// Visual scaling
+	// ------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FlareScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TrailScale = 1.0f;
+
+	// ------------------------------------------------------------
+	// Visibility controls
+	// ------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowFlare = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowTrail = true;
+
+	// ------------------------------------------------------------
+	// Unreal Niagara / FX controls
+	// ------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor EngineColor = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float IntensityMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AudioMultiplier = 1.0f;
+
+	// ------------------------------------------------------------
+	// Runtime state
+	// ------------------------------------------------------------
+
+	UPROPERTY(Transient)
+	float CurrentIntensity = 0.0f;
 };
 
 USTRUCT(BlueprintType)

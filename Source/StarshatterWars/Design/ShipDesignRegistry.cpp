@@ -325,8 +325,12 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             Src.Type,
             Src.Thrust,
             Src.Augmenter,
-            Src.bShowTrail
-        );
+            Src.bShowTrail);
+
+        if (!NewDrive)
+        {
+            continue;
+        }
 
         if (!Src.DesignName.IsEmpty())
         {
@@ -340,13 +344,23 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
 
         for (const FDrivePort& Port : Src.Ports)
         {
-            NewDrive->CreatePort(Port.Location, Port.FlareScale);
+            NewDrive->AddPort(Port);
         }
 
         Legacy->drives.append(NewDrive);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Drive built Row='%s' Drive=%p Type=%d Thrust=%.2f Aug=%.2f Ports=%d"),
+            *RowName.ToString(),
+            NewDrive,
+            (int32)Src.Type,
+            Src.Thrust,
+            Src.Augmenter,
+            Src.Ports.Num());
     }
 
-    Legacy->main_drive = Legacy->drives.size() > 0 ? 0 : -1;
+    Legacy->main_drive =
+        Legacy->drives.size() > 0 ? 0 : -1;
     
     //-------------------------------------------------------------
     // Thrusters

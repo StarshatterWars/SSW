@@ -25,7 +25,13 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
 
-#include"Ship.h"
+#include "UObject/ConstructorHelpers.h"
+
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
+#include "Drive.h"
+#include "Ship.h"
+
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "NiagaraComponent.h"
@@ -80,6 +86,31 @@ static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
 AShipActor::AShipActor()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+
+    static ConstructorHelpers::FObjectFinder<USoundCue> EngineCueObj(
+        TEXT("/Game/Audio/Sounds/SC_Engine.SC_Engine"));
+
+    if (EngineCueObj.Succeeded())
+    {
+        EngineSoundCue = EngineCueObj.Object;
+    }
+
+    static ConstructorHelpers::FObjectFinder<USoundCue> BurnerCueObj(
+        TEXT("/Game/Audio/Sounds/SC_Burner.SC_Burner"));
+
+    if (BurnerCueObj.Succeeded())
+    {
+        BurnerSoundCue = BurnerCueObj.Object;
+    }
+
+    static ConstructorHelpers::FObjectFinder<USoundCue> RumbleCueObj(
+        TEXT("/Game/Audio/Sounds/SC_Ramble.SC_Ramble"));
+
+    if (RumbleCueObj.Succeeded())
+    {
+        RumbleSoundCue = RumbleCueObj.Object;
+    }
 
     ShipRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ShipRoot"));
     SetRootComponent(ShipRoot);
@@ -279,6 +310,8 @@ void AShipActor::Tick(float DeltaTime)
 
         UpdateFromRuntimeShip(DeltaTime);
         UpdateNavLights(DeltaTime);
+        UpdateMainEnginesFromRuntime(DeltaTime);
+        UpdateEngineAudioFromRuntime(DeltaTime);
         return;
     }
 
@@ -1530,14 +1563,20 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     RuntimeShip = InShip;
 
+    Drive* MainDrive =
+        RuntimeShip ? RuntimeShip->GetMainDrive() : nullptr;
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor] BindRuntimeShip Actor=%s RuntimeShip=%p Ship='%s' NavLightSystems=%d"),
+        TEXT("[ShipActor] BindRuntimeShip Actor=%s RuntimeShip=%p Ship='%s' NavLightSystems=%d MainDrive=%p DrivePorts=%d"),
         *GetName(),
         RuntimeShip,
         RuntimeShip ? *FString(RuntimeShip->GetName()) : TEXT("NULL"),
-        RuntimeShip ? RuntimeShip->navlights.size() : 0);
+        RuntimeShip ? RuntimeShip->navlights.size() : 0,
+        MainDrive,
+        MainDrive ? MainDrive->NumPorts() : 0);
 
     BuildNavLightsFromRuntime();
+    BuildMainEnginesFromRuntime();
 }
 
 void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
@@ -1738,6 +1777,77 @@ void AShipActor::BuildNavLightsFromRuntime()
         BuiltCount);
 }
 
+void AShipActor::BuildMainEnginesFromRuntime()
+{
+    ClearRuntimeMainEngines();
+
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    Drive* MainDrive = RuntimeShip->GetMainDrive();
+
+    if (!MainDrive)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] BuildMainEnginesFromRuntime: no main drive Actor='%s'"),
+            *GetName());
+        return;
+    }
+
+    const int32 PortCount = MainDrive->NumPorts();
+
+    for (int32 i = 0; i < PortCount; ++i)
+    {
+        USceneComponent* Point =
+            NewObject<USceneComponent>(
+                this,
+                *FString::Printf(TEXT("RuntimeMainEnginePoint_%d"), i));
+
+        if (!Point)
+        {
+            continue;
+        }
+
+        Point->SetupAttachment(RootComponent);
+        Point->RegisterComponent();
+
+        Point->SetRelativeLocation(MainDrive->GetPortLocation(i));
+        Point->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+
+        RuntimeMainEnginePoints.Add(Point);
+
+        UNiagaraComponent* Emitter =
+            NewObject<UNiagaraComponent>(
+                this,
+                *FString::Printf(TEXT("RuntimeMainEngineEmitter_%d"), i));
+
+        if (Emitter)
+        {
+            Emitter->SetupAttachment(Point);
+            Emitter->RegisterComponent();
+
+            Emitter->SetAsset(MainEngineEmitterSystem);
+            Emitter->SetRelativeLocation(FVector::ZeroVector);
+            Emitter->SetRelativeRotation(FRotator::ZeroRotator);
+            Emitter->SetRelativeScale3D(
+                MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));
+
+            Emitter->SetAutoActivate(false);
+            Emitter->Deactivate();
+
+            RuntimeMainEngineEmitters.Add(Emitter);
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor] BuildMainEnginesFromRuntime Actor='%s' Ports=%d Emitters=%d"),
+        *GetName(),
+        PortCount,
+        RuntimeMainEngineEmitters.Num());
+}
+
 void AShipActor::ClearRuntimeNavLights()
 {
     for (UNavLightComponent* Comp : NavLights)
@@ -1768,6 +1878,90 @@ void AShipActor::ClearRuntimeNavLights()
     NavLightBulbMeshes.Empty();
     NavLightPointLights.Empty();
     NavLightBulbMIDs.Empty();
+}
+
+void AShipActor::ClearRuntimeMainEngines()
+{
+    for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
+    {
+        if (Emitter)
+        {
+            Emitter->DestroyComponent();
+        }
+    }
+
+    RuntimeMainEngineEmitters.Empty();
+
+    for (USceneComponent* Point : RuntimeMainEnginePoints)
+    {
+        if (Point)
+        {
+            Point->DestroyComponent();
+        }
+    }
+
+    RuntimeMainEnginePoints.Empty();
+}
+
+void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    Drive* MainDrive = RuntimeShip->GetMainDrive();
+
+    if (!MainDrive)
+    {
+        return;
+    }
+
+    const float EnginePower =
+        FMath::Clamp(MainDrive->GetVisualPower(), 0.0f, 1.5f);
+
+    const float EngineIntensity =
+        FMath::Clamp(MainDrive->GetIntensity(), 0.0f, 1.0f);
+
+    const bool bActive =
+        EnginePower > 0.02f;
+
+    for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
+    {
+        if (!Emitter)
+        {
+            continue;
+        }
+
+        if (bActive)
+        {
+            if (!Emitter->IsActive())
+            {
+                Emitter->Activate(true);
+            }
+
+            Emitter->SetVisibility(true);
+            Emitter->SetHiddenInGame(false);
+        }
+        else
+        {
+            Emitter->Deactivate();
+            Emitter->SetVisibility(false);
+            Emitter->SetHiddenInGame(true);
+        }
+
+        Emitter->SetVariableFloat(
+            TEXT("User.EnginePower"),
+            EnginePower);
+
+        Emitter->SetVariableFloat(
+            TEXT("User.EngineIntensity"),
+            EngineIntensity * MainEngineIntensityScale);
+
+        Emitter->SetVariableFloat(
+            TEXT("User.EngineLength"),
+            FMath::Lerp(0.05f, 1.0f, EngineIntensity));
+    }
 }
 
 void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
@@ -1811,4 +2005,144 @@ void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
 
     NavLightBulbMeshes.Add(nullptr);
     NavLightBulbMIDs.Add(nullptr);
+}
+
+void AShipActor::CreateEngineAudioComponents()
+{
+    if (!EngineAudioComponent && EngineSoundCue)
+    {
+        EngineAudioComponent =
+            NewObject<UAudioComponent>(this, TEXT("EngineAudioComponent"));
+
+        if (EngineAudioComponent)
+        {
+            EngineAudioComponent->SetupAttachment(RootComponent);
+            EngineAudioComponent->RegisterComponent();
+            EngineAudioComponent->SetSound(EngineSoundCue);
+            EngineAudioComponent->bAutoActivate = false;
+            EngineAudioComponent->SetVolumeMultiplier(0.0f);
+        }
+    }
+
+    if (!BurnerAudioComponent && BurnerSoundCue)
+    {
+        BurnerAudioComponent =
+            NewObject<UAudioComponent>(this, TEXT("BurnerAudioComponent"));
+
+        if (BurnerAudioComponent)
+        {
+            BurnerAudioComponent->SetupAttachment(RootComponent);
+            BurnerAudioComponent->RegisterComponent();
+            BurnerAudioComponent->SetSound(BurnerSoundCue);
+            BurnerAudioComponent->bAutoActivate = false;
+            BurnerAudioComponent->SetVolumeMultiplier(0.0f);
+        }
+    }
+
+    if (!RumbleAudioComponent && RumbleSoundCue)
+    {
+        RumbleAudioComponent =
+            NewObject<UAudioComponent>(this, TEXT("RumbleAudioComponent"));
+
+        if (RumbleAudioComponent)
+        {
+            RumbleAudioComponent->SetupAttachment(RootComponent);
+            RumbleAudioComponent->RegisterComponent();
+            RumbleAudioComponent->SetSound(RumbleSoundCue);
+            RumbleAudioComponent->bAutoActivate = false;
+            RumbleAudioComponent->SetVolumeMultiplier(0.0f);
+        }
+    }
+}
+
+void AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    Drive* MainDrive = RuntimeShip->GetMainDrive();
+
+    if (!MainDrive)
+    {
+        return;
+    }
+
+    CreateEngineAudioComponents();
+
+    const float EnginePower =
+        FMath::Clamp(MainDrive->GetVisualPower(), 0.0f, 1.5f);
+
+    const float EngineIntensity =
+        FMath::Clamp(MainDrive->GetIntensity(), 0.0f, 1.0f);
+
+    const float AugPower =
+        FMath::Clamp(MainDrive->GetAugmenterThrottle(), 0.0f, 1.0f);
+
+    const bool bEngineActive =
+        EnginePower > 0.02f;
+
+    const bool bBurnerActive =
+        AugPower > 0.05f && MainDrive->IsAugmenterOn();
+
+    if (EngineAudioComponent)
+    {
+        if (bEngineActive && !EngineAudioComponent->IsPlaying())
+        {
+            EngineAudioComponent->Play();
+        }
+
+        if (!bEngineActive && EngineAudioComponent->IsPlaying())
+        {
+            EngineAudioComponent->Stop();
+        }
+
+        EngineAudioComponent->SetVolumeMultiplier(
+            FMath::Clamp(EngineIntensity, 0.0f, 1.0f));
+
+        EngineAudioComponent->SetPitchMultiplier(
+            FMath::Lerp(0.85f, 1.25f, EngineIntensity));
+    }
+
+    if (BurnerAudioComponent)
+    {
+        if (bBurnerActive && !BurnerAudioComponent->IsPlaying())
+        {
+            BurnerAudioComponent->Play();
+        }
+
+        if (!bBurnerActive && BurnerAudioComponent->IsPlaying())
+        {
+            BurnerAudioComponent->Stop();
+        }
+
+        BurnerAudioComponent->SetVolumeMultiplier(
+            FMath::Clamp(AugPower, 0.0f, 1.0f));
+
+        BurnerAudioComponent->SetPitchMultiplier(
+            FMath::Lerp(1.0f, 1.35f, AugPower));
+    }
+
+    if (RumbleAudioComponent)
+    {
+        const bool bRumbleActive =
+            EnginePower > 0.15f;
+
+        if (bRumbleActive && !RumbleAudioComponent->IsPlaying())
+        {
+            RumbleAudioComponent->Play();
+        }
+
+        if (!bRumbleActive && RumbleAudioComponent->IsPlaying())
+        {
+            RumbleAudioComponent->Stop();
+        }
+
+        RumbleAudioComponent->SetVolumeMultiplier(
+            FMath::Clamp(EnginePower * 0.35f, 0.0f, 0.75f));
+
+        RumbleAudioComponent->SetPitchMultiplier(
+            FMath::Lerp(0.75f, 1.05f, EngineIntensity));
+    }
 }

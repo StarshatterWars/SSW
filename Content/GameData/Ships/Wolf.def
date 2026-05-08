@@ -47,19 +47,54 @@ power:      {
    explosion:        7
 }
 
-drive: {
-   type:             Yellow,
-   name:             "Plasma Drive",
-   design:           "Plasma Drive",
-   thrust:           1250,
-   scale:            5,
-   port:             (-88,  10, -808),
-   port:             (  0,  12, -808),
-   port:             ( 85,  10, -808),
+drive:
+{
+   type:             Yellow
+   thrust:           1250
+   scale:            5
 
-   loc:              (0, 0, -400),
-   size:             50,
-   hull_factor:      0.3,
+   port:
+   {
+      name:          "Drive_Port"
+      loc:           (-810, -88, 12)
+      flare_scale:   5
+      trail_scale:   5
+      color:         (255, 220, 120)
+      intensity:     1.0
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   port:
+   {
+      name:          "Drive_Center"
+      loc:           (-810, 0, 12)
+      flare_scale:   5
+      trail_scale:   5
+      color:         (255, 220, 120)
+      intensity:     1.0
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   port:
+   {
+      name:          "Drive_Starboard"
+      loc:           (-810, 88, 12)
+      flare_scale:   5
+      trail_scale:   5
+      color:         (255, 220, 120)
+      intensity:     1.0
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   loc:              (0, 0, -400)
+   size:             50
+   hull_factor:      0.3
    explosion:        7
 }
 
