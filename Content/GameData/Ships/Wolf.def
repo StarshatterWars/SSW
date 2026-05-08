@@ -101,44 +101,44 @@ drive:
 
 thruster: {
    design:           Thruster
-   type:             Yellow,
+   type:             Yellow
 
    loc:              (0, 0, 64)
-   size:             24,
+   size:             24
    hull_factor:      0.3
    scale:            2
 
-   port_left:   {loc:(-170,   9,-601), fire: 0x0041}
-   port_left:   {loc:(-170,   9,-579), fire: 0x0041}
-   port_left:   {loc:(-100,  18, 786), fire: 0x0081}
-   port_left:   {loc:(-100, -34, 786), fire: 0x0081}
+   port_left:   {loc:(-601.0,-170.0,  12.0), rotation:(0.0,-90.0,0.0), fire:0x0041, name:Thruster_Left_Aft_0}
+   port_left:   {loc:(-579.0,-170.0,  12.0), rotation:(0.0,-90.0,0.0), fire:0x0041, name:Thruster_Left_Aft_1}
+   port_left:   {loc:( 784.0,-100.0,  14.0), rotation:(0.0,-90.0,0.0), fire:0x0081, name:Thruster_Left_Fore_0}
+   port_left:   {loc:( 784.0,-100.0, -32.0), rotation:(0.0,-90.0,0.0), fire:0x0081, name:Thruster_Left_Fore_1}
 
-   port_right:  {loc:( 170,   9,-601), fire: 0x0082}
-   port_right:  {loc:( 170,   9,-579), fire: 0x0082}
-   port_right:  {loc:( 100,  18, 786), fire: 0x0042}
-   port_right:  {loc:( 100, -34, 786), fire: 0x0042}
+   port_right:  {loc:(-601.0, 170.0,  12.0), rotation:(0.0, 90.0,0.0), fire:0x0082, name:Thruster_Right_Aft_0}
+   port_right:  {loc:(-579.0, 170.0,  12.0), rotation:(0.0, 90.0,0.0), fire:0x0082, name:Thruster_Right_Aft_1}
+   port_right:  {loc:( 784.0, 100.0,  14.0), rotation:(0.0, 90.0,0.0), fire:0x0042, name:Thruster_Right_Fore_0}
+   port_right:  {loc:( 784.0, 100.0, -32.0), rotation:(0.0, 90.0,0.0), fire:0x0042, name:Thruster_Right_Fore_1}
 
-   port_fore:   {loc:( -73, -34, 845), fire: 0x0044}
-   port_fore:   {loc:( -30, -63, 845), fire: 0x0044}
-   port_fore:   {loc:(  30, -63, 845), fire: 0x0084}
-   port_fore:   {loc:(  73, -34, 845), fire: 0x0084}
+   port_fore:   {loc:( 845.0, -73.0, -32.0), rotation:(0.0,  0.0,0.0), fire:0x0044, name:Thruster_Fore_0}
+   port_fore:   {loc:( 845.0, -30.0, -61.0), rotation:(0.0,  0.0,0.0), fire:0x0044, name:Thruster_Fore_1}
+   port_fore:   {loc:( 845.0,  30.0, -61.0), rotation:(0.0,  0.0,0.0), fire:0x0084, name:Thruster_Fore_2}
+   port_fore:   {loc:( 845.0,  73.0, -36.0), rotation:(0.0,  0.0,0.0), fire:0x0084, name:Thruster_Fore_3}
 
-   port_aft:    {loc:( -45,  48,-770), fire: 0x0088}
-   port_aft:    {loc:( -45, -27,-770), fire: 0x0088}
-   port_aft:    {loc:(  42,  48,-770), fire: 0x0048}
-   port_aft:    {loc:(  42, -27,-770), fire: 0x0048}
+   port_aft:    {loc:(-770.0, -44.0,  48.0), rotation:(0.0,180.0,0.0), fire:0x0088, name:Thruster_Aft_0}
+   port_aft:    {loc:(-770.0, -44.0, -30.0), rotation:(0.0,180.0,0.0), fire:0x0088, name:Thruster_Aft_1}
+   port_aft:    {loc:(-770.0,  44.0,  48.0), rotation:(0.0,180.0,0.0), fire:0x0048, name:Thruster_Aft_2}
+   port_aft:    {loc:(-770.0,  44.0, -30.0), rotation:(0.0,180.0,0.0), fire:0x0048, name:Thruster_Aft_3}
 
-   port_top:    {loc:( -80,  87,-601), fire: 0x0510}
-   port_top:    {loc:(  77,  87,-601), fire: 0x0910}
+   port_top:    {loc:(-601.0, -77.0,  90.0), rotation:( 90.0,  0.0,0.0), fire:0x0510, name:Thruster_Top_Aft_0}
+   port_top:    {loc:(-601.0,  77.0,  90.0), rotation:( 90.0,  0.0,0.0), fire:0x0910, name:Thruster_Top_Aft_1}
 
-   port_bottom: {loc:( -80, -69,-601), fire: 0x0A20}
-   port_bottom: {loc:(  77, -69,-601), fire: 0x0620}
+   port_bottom: {loc:(-601.0, -77.0, -80.0), rotation:(-90.0,180.0,0.0), fire:0x0A20, name:Thruster_Bottom_Aft_0}
+   port_bottom: {loc:(-601.0,  77.0, -80.0), rotation:(-90.0,180.0,0.0), fire:0x0620, name:Thruster_Bottom_Aft_1}
 
-   port_top:    {loc:( -26,  71, 783), fire: 0x0610}
-   port_top:    {loc:(  25,  71, 783), fire: 0x0A10}
+   port_top:    {loc:( 783.0, -26.0,  91.0), rotation:( 90.0,  0.0,0.0), fire:0x0610, name:Thruster_Top_Fore_0}
+   port_top:    {loc:( 783.0,  26.0,  91.0), rotation:( 90.0,  0.0,0.0), fire:0x0A10, name:Thruster_Top_Fore_1}
 
-   port_bottom: {loc:( -26, -85, 783), fire: 0x0920}
-   port_bottom: {loc:(  25, -85, 783), fire: 0x0520}
+   port_bottom: {loc:( 783.0, -26.0,-105.0), rotation:(-90.0,180.0,0.0), fire:0x0920, name:Thruster_Bottom_Fore_0}
+   port_bottom: {loc:( 783.0,  26.0,-105.0), rotation:(-90.0,180.0,0.0), fire:0x0520, name:Thruster_Bottom_Fore_1}
 }
 
 quantum: {

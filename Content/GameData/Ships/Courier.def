@@ -115,15 +115,91 @@ thruster: {
    loc:              (0, 0, 64),
    size:             24,
    hull_factor:      0.3,
+   scale:            1.0,
 
-   port_left:   {loc:( -42,   0,   0), fire: 0x0041}
-   port_right:  {loc:(  42,   0,   0), fire: 0x0082}
+   port_fore: {
+      name:          Thruster_Fore,
+      loc:           (460.0, 0.0, 10.0),
+      rotation:      (0.0, 0.0, 0.0),
+      fire:          0x0044,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
 
-   port_fore:   {loc:(   0,   0, 430), fire: 0x0044}
-   port_aft:    {loc:(   0,   0,-360), fire: 0x0088}
+   port_aft: {
+      name:          Thruster_Aft,
+      loc:           (-480.0, 0.0, 25.0),
+      rotation:      (0.0, 180.0, 0.0),
+      fire:          0x0088,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
 
-   port_top:    {loc:(   0,  28,  40), fire: 0x0510}
-   port_bottom: {loc:(   0, -28,  40), fire: 0x0A20}
+   port_left: {
+      name:          Thruster_Left,
+      loc:           (0.0, -140.0, 20.0),
+      rotation:      (0.0, -90.0, 0.0),
+      fire:          0x0041,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
+
+   port_right: {
+      name:          Thruster_Right,
+      loc:           (0.0, 140.0, 20.0),
+      rotation:      (0.0, 90.0, 0.0),
+      fire:          0x0082,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
+
+   port_top: {
+      name:          Thruster_Top,
+      loc:           (4.0, 0.0, 115.0),
+      rotation:      (90.0, 0.0, 0.0),
+      fire:          0x0510,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
+
+   port_bottom: {
+      name:          Thruster_Bottom,
+      loc:           (-2.0, 0.0, -55.0),
+      rotation:      (-90.0, 0.0, 0.0),
+      fire:          0x0A20,
+      flare_scale:   1.0,
+      trail_scale:   1.0,
+      intensity:     1.0,
+      audio:         1.0,
+      color:         (1.0, 0.75, 0.25),
+      show_flare:    1,
+      show_trail:    1
+   }
 }
 
 quantum:     {
