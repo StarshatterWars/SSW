@@ -52,7 +52,7 @@ public:
 	int               ActiveState() const { return active_state; }
 	double            WarpFactor()  const { return warp_fov; }
 	double            JumpTime()    const { return jump_time; }
-	virtual void      PowerOff();
+	virtual void      SetPowerOff();
 
 	virtual void      ExecFrame(double seconds);
 

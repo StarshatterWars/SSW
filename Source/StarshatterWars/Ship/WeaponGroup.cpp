@@ -298,18 +298,18 @@ void WeaponGroup::SetSweep(WeaponsSweep s)
 
 // +--------------------------------------------------------------------+
 
-void WeaponGroup::PowerOff()
+void WeaponGroup::SetPowerOff()
 {
 	ListIter<Weapon> w = weapons;
 	while (++w)
-		w->PowerOff();
+		w->SetPowerOff();
 }
 
-void WeaponGroup::PowerOn()
+void WeaponGroup::SetPowerOn()
 {
 	ListIter<Weapon> w = weapons;
 	while (++w)
-		w->PowerOn();
+		w->SetPowerOn();
 }
 
 // +--------------------------------------------------------------------+

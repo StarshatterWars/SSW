@@ -106,8 +106,8 @@ public:
 	virtual int       Charge()         const { return (int)(100 * energy / capacity); }
 
 	bool              IsPowerOn()       const { return power_on; }
-	virtual void      PowerOn() { power_on = true; }
-	virtual void      PowerOff() { power_on = false; }
+	virtual void      SetPowerOn();
+	virtual void      SetPowerOff();
 
 	// percentage, but stored as 0-1
 	virtual double    GetPowerLevel()   const { return power_level * 100; }

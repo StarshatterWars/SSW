@@ -118,9 +118,9 @@ DropShipAI::Navigator()
 		return;
 
 	if (other)
-		ship->SetFLCSMode(Ship::FLCS_AUTO);
+		ship->SetFLCSMode(EFLCSMode::AUTO);
 	else
-		ship->SetFLCSMode(Ship::FLCS_MANUAL);
+		ship->SetFLCSMode(EFLCSMode::MANUAL);
 
 	Accumulate(AvoidCollision());
 	Accumulate(Seek(objective));

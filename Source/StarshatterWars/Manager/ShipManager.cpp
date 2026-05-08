@@ -100,7 +100,7 @@ ShipManager::ExecFrame(double seconds)
 
 	controller->Acquire();
 
-	if (ship->IsStarship() && ship->GetFLCSMode() == Ship::FLCS_HELM) {
+	if (ship->IsStarship() && ship->GetFLCSMode() == EFLCSMode::HELM) {
 		ship->ApplyHelmPitch(controller->Pitch() * seconds);
 		ship->ApplyHelmYaw(controller->Yaw() * seconds);
 	}

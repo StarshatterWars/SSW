@@ -2896,14 +2896,14 @@ HUDView::ExecFrame()
 			if (!arcade)
 				DrawFPM();
 
-			if (ship->IsStarship() && ship->GetFLCSMode() == Ship::FLCS_HELM)
+			if (ship->IsStarship() && ship->GetFLCSMode() == EFLCSMode::HELM)
 				DrawHPM();
 			else if (!arcade)
 				DrawPitchLadder();
 		}
 
 		else {
-			if (ship->IsStarship() && ship->GetFLCSMode() == Ship::FLCS_HELM)
+			if (ship->IsStarship() && ship->GetFLCSMode() == EFLCSMode::HELM)
 				DrawCompass();
 		}
 

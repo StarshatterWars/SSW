@@ -148,9 +148,9 @@ QuantumDrive::Engage(bool immediate)
 }
 
 void
-QuantumDrive::PowerOff()
+QuantumDrive::SetPowerOff()
 {
-	SimSystem::PowerOff();
+	SimSystem::SetPowerOff();
 	AbortJump();
 }
 

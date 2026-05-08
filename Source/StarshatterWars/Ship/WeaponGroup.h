@@ -88,8 +88,8 @@ public:
 	WeaponDesign*	  GetDesign()                const;
 	bool              CanTarget(uint32 tgt_class) const;
 
-	void              PowerOn();
-	void              PowerOff();
+	void              SetPowerOn();
+	void              SetPowerOff();
 
 protected:
 	// Displayable name:

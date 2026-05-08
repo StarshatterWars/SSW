@@ -196,6 +196,14 @@ SimSystem::SetOverride(bool over)
 	}	
 }
 
+void SimSystem::SetPowerOn() {
+	power_on = true; 
+}
+
+void SimSystem::SetPowerOff() {
+	power_on = false; 
+}
+
 void
 SimSystem::SetEMCONPower(int index, int InPowerLevel)
 {
@@ -221,12 +229,11 @@ SimSystem::DoEMCON(int index)
 
 	if (power_level * 100 > e || emcon != index) {
 		if (e == 0) {
-			PowerOff();
+			SetPowerOff();
 		}
 		else {
 			if (emcon != index)
-				PowerOn();
-
+				SetPowerOn();
 			SetPowerLevel(e);
 		}
 	}

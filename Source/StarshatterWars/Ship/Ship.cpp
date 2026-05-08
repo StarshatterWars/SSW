@@ -196,7 +196,7 @@ Ship::Ship(
 	check_fire(false), probe(0), sensor_drone(0), primary(0), secondary(1),
 	cmd_chain_index(0), target(0), subtarget(0), radio_orders(0), launch_point(0),
 	g_force(0.0f), sensor(0), navsys(0), flcs(0), hangar(0), respawns(0), invulnerable(false),
-	thruster(0), decoy(0), ai_mode(2), command_ai_level(cmd_ai), flcs_mode(FLCS_AUTO), loadout(0),
+	thruster(0), decoy(0), ai_mode(2), command_ai_level(cmd_ai), flcs_mode(EFLCSMode::AUTO), loadout(0),
 	emcon(3), old_emcon(3), master_caution(false), cockpit(0), gear(0), skin(0),
 	auto_repair(true), last_repair_time(0), last_eval_time(0), last_beam_time(0), last_bolt_time(0),
 	warp_fov(1), flight_phase(LAUNCH), launch_time(0), carrier(0), dock(0), ff_count(0),
@@ -273,7 +273,7 @@ Ship::Ship(
 	//-------------------------------------------------------------
 	if (IsStarship())
 	{
-		flcs_mode = FLCS_HELM;
+		flcs_mode = EFLCSMode::HELM;
 	}
 
 	dir = nullptr;
@@ -552,7 +552,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 			FlightComputer* NewFLCS = new FlightComputer(*SourceComputer);
 
 			NewComputer = NewFLCS;
-			//flcs = NewFLCS;
+			flcs = NewFLCS;
 
 			if (flcs && design)
 			{
@@ -1300,9 +1300,9 @@ Ship::SetRegion(SimRegion* rgn)
 		SetBaseDensity(0.0f);
 
 		if (IsStarship())
-			flcs_mode = FLCS_HELM;
+			flcs_mode = EFLCSMode::HELM;
 		else
-			flcs_mode = FLCS_AUTO;
+			flcs_mode = EFLCSMode::AUTO;
 	}
 }
 
@@ -4283,7 +4283,7 @@ Ship::DeathSpiral()
 
 	ListIter<SimSystem> iter = systems;
 	while (++iter)
-		iter->PowerOff();
+		iter->SetPowerOff();
 
 	// transfer arcade velocity to newtonian velocity:
 	if (flight_model >= 2) {
@@ -4773,45 +4773,45 @@ void
 Ship::CycleFLCSMode()
 {
 	switch (flcs_mode) {
-	case FLCS_MANUAL: SetFLCSMode(FLCS_HELM);   break;
-	case FLCS_AUTO:   SetFLCSMode(FLCS_MANUAL); break;
-	case FLCS_HELM:   SetFLCSMode(FLCS_AUTO);   break;
+	case EFLCSMode::MANUAL: SetFLCSMode(EFLCSMode::HELM);   break;
+	case EFLCSMode::AUTO:   SetFLCSMode(EFLCSMode::MANUAL); break;
+	case EFLCSMode::HELM:   SetFLCSMode(EFLCSMode::AUTO);   break;
 
 	default:
 		if (IsStarship())
-			flcs_mode = (BYTE)FLCS_HELM;
+			flcs_mode = EFLCSMode::HELM;
 		else
-			flcs_mode = (BYTE)FLCS_AUTO;
+			flcs_mode = EFLCSMode::AUTO;
 		break;
 	}
 
 	// reset helm heading to compass heading when switching
 	// back to helm mode from manual mode:
-	if (flcs_mode == FLCS_HELM) {
+	if (flcs_mode == EFLCSMode::HELM) {
 		if (IsStarship()) {
 			SetHelmHeading(GetCompassHeading());
 			SetHelmPitch(GetCompassPitch());
 		}
 		else {
-			flcs_mode = (BYTE)FLCS_AUTO;
+			flcs_mode = EFLCSMode::AUTO;
 		}
 	}
 }
 
 void
-Ship::SetFLCSMode(int mode)
+Ship::SetFLCSMode(EFLCSMode mode)
 {
-	flcs_mode = (BYTE)mode;
+	flcs_mode = mode;
 
 	if (IsAirborne())
-		flcs_mode = (BYTE)FLCS_MANUAL;
+		flcs_mode =	EFLCSMode::MANUAL;
 
 	if (dir && dir->GetType() < SteerAI::SEEKER) {
 		switch (flcs_mode) {
-		case FLCS_MANUAL: director_info = Game::GetText("flcs.manual"); break;
-		case FLCS_AUTO:   director_info = Game::GetText("flcs.auto");   break;
-		case FLCS_HELM:   director_info = Game::GetText("flcs.helm");   break;
-		default:          director_info = Game::GetText("flcs.fault");  break;
+		case EFLCSMode::MANUAL: director_info = "Manual FLCS"; break;
+		case EFLCSMode::AUTO:   director_info = "Auto FLCS";   break;
+		case EFLCSMode::HELM:   director_info = "Helm FLCS";   break;
+		default:          director_info = "FLCS Fault";  break;
 		}
 
 		if (!flcs || !flcs->IsPowerOn())
@@ -4824,10 +4824,10 @@ Ship::SetFLCSMode(int mode)
 		flcs->SetMode(mode);
 }
 
-int
+EFLCSMode
 Ship::GetFLCSMode() const
 {
-	return (int)flcs_mode;
+	return flcs_mode;
 }
 
 void

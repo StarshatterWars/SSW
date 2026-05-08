@@ -810,10 +810,10 @@ void Sensor::DoEMCON(int index)
 
     if (power_level * 100 > e || emcon != index) {
         if (e == 0) {
-            PowerOff();
+            SetPowerOff();
         }
         else if (emcon != index) {
-            PowerOn();
+            SetPowerOn();
 
             if (power_level * 100 > e) {
                 SetPowerLevel(e);

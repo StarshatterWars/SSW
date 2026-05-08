@@ -54,32 +54,32 @@ public:
     //-------------------------------------------------------------
     // Accessors
     //-------------------------------------------------------------
-    int Mode() const
+    EFLCSMode GetMode() const
     {
         return mode;
     }
 
-    double Throttle() const
+    double GetThrottle() const
     {
         return throttle;
     }
 
-    double VelocityLimit() const
+    double GetVelocityLimit() const
     {
         return vlimit;
     }
 
-    double TransXLimit() const
+    double GetTransXLimit() const
     {
         return trans_x_limit;
     }
 
-    double TransYLimit() const
+    double GetTransYLimit() const
     {
         return trans_y_limit;
     }
 
-    double TransZLimit() const
+    double GetTransZLimit() const
     {
         return trans_z_limit;
     }
@@ -92,7 +92,7 @@ public:
     //-------------------------------------------------------------
     // Mutators
     //-------------------------------------------------------------
-    void SetMode(int m)
+    void SetMode(EFLCSMode m)
     {
         mode = m;
     }
@@ -144,8 +144,8 @@ protected:
     //-------------------------------------------------------------
     // Flight state
     //-------------------------------------------------------------
-    int     mode;
-    int     halt;
+    EFLCSMode     mode;
+    int           halt;
 
     //-------------------------------------------------------------
     // Cached throttle state

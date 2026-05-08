@@ -266,7 +266,7 @@ PowerSource::ExecFrame(double seconds)
 
 	else if (capacity <= 0) {
 		capacity = 0.0f;
-		PowerOff();
+		SetPowerOff();
 	}
 }
 

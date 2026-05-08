@@ -195,6 +195,14 @@ enum class EShipCategory : uint8
 	Hulk        UMETA(DisplayName = "Destroyed"),
 };
 
+UENUM(BlueprintType)
+enum class EFLCSMode : uint8
+{
+	MANUAL     UMETA(DisplayName = "Manual"),
+	AUTO       UMETA(DisplayName = "Auto"),
+	HELM       UMETA(DisplayName = "Helm")
+};
+
 USTRUCT(BlueprintType)
 struct FWeaponDesign : public FTableRowBase
 {

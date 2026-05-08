@@ -374,7 +374,7 @@ NavAI::HelmControl()
     // ----------------------------------------------------------
 
     if (ship->IsStarship()) {
-        ship->SetFLCSMode(Ship::FLCS_HELM);
+        ship->SetFLCSMode(EFLCSMode::HELM);
         ship->SetHelmHeading(accumulator.yaw);
 
         if (accumulator.pitch > 45 * DEGREES)
@@ -392,7 +392,7 @@ NavAI::HelmControl()
     // ----------------------------------------------------------
 
     else {
-        ship->SetFLCSMode(Ship::FLCS_AUTO);
+        ship->SetFLCSMode(EFLCSMode::AUTO);
 
         // are we being asked to flee?
         if (fabs(accumulator.yaw) == 1.0 && accumulator.pitch == 0.0) {

@@ -804,7 +804,7 @@ FighterAI::HelmControl()
     ship->SetTransX(0);
     ship->SetTransY(0);
     ship->SetTransZ(z_shift * ship->Design()->trans_z);
-    ship->SetFLCSMode(go_manual ? Ship::FLCS_MANUAL : Ship::FLCS_AUTO);
+    ship->SetFLCSMode(go_manual ? EFLCSMode::MANUAL : EFLCSMode::AUTO);
 }
 
 void

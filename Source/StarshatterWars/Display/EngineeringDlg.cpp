@@ -387,24 +387,24 @@ void UEngineeringDlg::OnRouteComplete(int DestIndex)
 void UEngineeringDlg::OnPowerOff()
 {
     if (selected_source) {
-        selected_source->PowerOff();
+        selected_source->SetPowerOff();
     }
     else if (selected_clients.size() > 0) {
         ListIter<SimSystem> it = selected_clients;
         while (++it)
-            it->PowerOff();
+            it->SetPowerOff();
     }
 }
 
 void UEngineeringDlg::OnPowerOn()
 {
     if (selected_source) {
-        selected_source->PowerOn();
+        selected_source->SetPowerOn();
     }
     else if (selected_clients.size() > 0) {
         ListIter<SimSystem> it = selected_clients;
         while (++it)
-            it->PowerOn();
+            it->SetPowerOn();
     }
 }
 

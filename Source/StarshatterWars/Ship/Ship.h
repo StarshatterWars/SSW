@@ -88,7 +88,6 @@ public:
     static const char* TYPENAME() { return "Ship"; }
 
     enum OP_MODE { DOCKED, ALERT, LOCKED, LAUNCH, TAKEOFF, ACTIVE, APPROACH, RECOVERY, DOCKING };
-    enum FLCS_MODE { FLCS_MANUAL, FLCS_AUTO, FLCS_HELM };
     enum TRAN_TYPE {
         TRANSITION_NONE,
         TRANSITION_DROP_CAM,
@@ -247,8 +246,8 @@ public:
     // FLIGHT CONTROL SYSTEM (FLCS):
     void              ExecFLCSFrame();
     void              CycleFLCSMode();
-    void              SetFLCSMode(int mode);
-    int               GetFLCSMode() const;
+    void              SetFLCSMode(EFLCSMode mode);
+    EFLCSMode         GetFLCSMode() const;
     void              SetTransX(double t);
     void              SetTransY(double t);
     void              SetTransZ(double t);
@@ -555,7 +554,7 @@ protected:
     const char* director_info;
     BYTE              ai_mode;
     BYTE              command_ai_level;
-    BYTE              flcs_mode;
+    EFLCSMode         flcs_mode;
     bool              net_observer_mode;
 
     float             pcs;  // passive sensor cross section

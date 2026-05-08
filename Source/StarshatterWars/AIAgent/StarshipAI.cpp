@@ -37,6 +37,7 @@
 #include "Random.h"
 #include "Solid.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 #include "CoreMinimal.h" // UE_LOG
 #include "Math/Vector.h" // FVector
@@ -64,9 +65,10 @@ StarshipAI::StarshipAI(SimObject * s)
         Torque.Normalize();
         Torque *= float(ship->GetMass() / 10.0);
 
-        ship->SetFLCSMode(0);
-        if (ship->GetFLCS())
-            ship->GetFLCS()->PowerOff();
+        ship->SetFLCSMode(EFLCSMode::MANUAL);
+        if (ship->GetFLCS()) {
+            ship->GetFLCS()->SetPowerOff();
+        }
 
         ship->ApplyTorque(Torque);
         ship->SetVelocity(FMath::VRand() * FMath::FRandRange(20.0f, 50.0f));
@@ -284,7 +286,7 @@ StarshipAI::Navigator()
         (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
-    ship->SetFLCSMode(Ship::FLCS_HELM);
+    ship->SetFLCSMode(EFLCSMode::HELM);
 
     if (!ship->GetDirectorInfo()) {
         if (target)

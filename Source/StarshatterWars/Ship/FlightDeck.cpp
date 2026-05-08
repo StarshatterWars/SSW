@@ -1170,7 +1170,7 @@ FlightDeck::Dock(Ship* s)
 	}
 
 	if (s->GetMainDrive())
-		s->GetMainDrive()->PowerOff();
+		s->GetMainDrive()->SetPowerOff();
 
 	slots[slotIndex].state = DOCKING;
 	slots[slotIndex].time = s->IsAirborne() ? 7.5 : 5.0;

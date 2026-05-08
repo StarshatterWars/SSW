@@ -946,7 +946,7 @@ ShipAI::Navigator()
 		(navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
 		hold = true;
 
-	ship->SetFLCSMode(Ship::FLCS_HELM);
+	ship->SetFLCSMode(EFLCSMode::HELM);
 
 	if (target)
 		ship->SetDirectorInfo("Seek Target");

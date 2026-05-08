@@ -69,7 +69,7 @@ void ShipKiller::BeginDeathSpiral()
 	// shut down all ship systems:
 	ListIter<SimSystem> iter = ship->GetSystems();
 	while (++iter) {
-		iter->PowerOff();
+		iter->SetPowerOff();
 		iter->SetPowerLevel(0);
 
 		if (iter->GetType() == SYSTEM_CATEGORY::WEAPON) {
