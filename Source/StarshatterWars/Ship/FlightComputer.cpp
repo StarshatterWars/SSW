@@ -100,6 +100,17 @@ FlightComputer::ExecThrottle()
 void
 FlightComputer::ExecTrans()
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[FlightComputer::ExecTrans] Ship='%s' Tx=%.3f Ty=%.3f Tz=%.3f Thruster=%p Mode=%d PowerOn=%d Status=%d"),
+		ANSI_TO_TCHAR(ship ? ship->GetName() : "NONE"),
+		ship ? ship->GetTransX() : 0.0,
+		ship ? ship->GetTransY() : 0.0,
+		ship ? ship->GetTransZ() : 0.0,
+		ship ? ship->GetThruster() : nullptr,
+		mode,
+		IsPowerOn() ? 1 : 0,
+		(int32)GetStatus());
+	
 	double Tx = ship->GetTransX();
 	double Ty = ship->GetTransY();
 	double Tz = ship->GetTransZ();
