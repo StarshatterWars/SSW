@@ -430,7 +430,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship] Runtime thruster initialized Ship='%s' Thruster=%p Ports=%d SourceIndex=%d"),
-			*FString(name.data()),
+			ANSI_TO_TCHAR(name),
 			runtime_thruster,
 			runtime_thruster->NumThrusters(),
 			src_index);
