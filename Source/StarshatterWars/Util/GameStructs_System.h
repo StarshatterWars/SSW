@@ -122,12 +122,21 @@ enum class EQuantumDriveType : uint8
 UENUM(BlueprintType)
 enum class EThrusterPortDir : uint8
 {
-	BOTTOM UMETA(DisplayName = "Bottom"),
-	TOP    UMETA(DisplayName = "Top"),
-	LEFT   UMETA(DisplayName = "Left"),
-	RIGHT  UMETA(DisplayName = "Right"),
-	FORE   UMETA(DisplayName = "Fore"),
-	AFT    UMETA(DisplayName = "Aft"),
+	LEFT     UMETA(DisplayName = "Left"),
+	RIGHT    UMETA(DisplayName = "Right"),
+	FORE     UMETA(DisplayName = "Fore"),
+	AFT      UMETA(DisplayName = "Aft"),
+	TOP      UMETA(DisplayName = "Top"),
+	BOTTOM   UMETA(DisplayName = "Bottom"),
+
+	YAW_L    UMETA(DisplayName = "Yaw Left"),
+	YAW_R    UMETA(DisplayName = "Yaw Right"),
+
+	PITCH_D  UMETA(DisplayName = "Pitch Down"),
+	PITCH_U  UMETA(DisplayName = "Pitch Up"),
+
+	ROLL_L   UMETA(DisplayName = "Roll Left"),
+	ROLL_R   UMETA(DisplayName = "Roll Right")
 };
 
 UENUM(BlueprintType)
@@ -626,19 +635,64 @@ struct FThrusterPort
 {
 	GENERATED_BODY()
 
+	// Legacy directional type
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EThrusterPortDir Direction = EThrusterPortDir::AFT;
 
+	// Human readable identifier:
+	// "port_left"
+	// "retro_left"
+	// "nose_upper"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName PointName = NAME_None;
+
+	// Optional skeletal mesh socket
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SocketName = NAME_None;
+
+	// Local ship-space location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Location = FVector::ZeroVector;
 
-	// Legacy: DWORD fire
+	// Local orientation
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	// Legacy fire flags
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Fire = 0;
 
-	// Legacy: port_scale (defaults to tscale)
+	// Legacy port scale
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PortScale = 1.0f;
+
+	// Niagara scaling
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float FlareScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TrailScale = 1.0f;
+
+	// Niagara/audio multipliers
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float IntensityMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AudioMultiplier = 1.0f;
+
+	// Niagara color
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor ThrusterColor = FLinearColor::White;
+
+	// Visual toggles
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowFlare = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowTrail = true;
+
+	// Runtime-only burn state
+	float Burn = 0.0f;
 };
 
 USTRUCT(BlueprintType)

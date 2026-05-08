@@ -401,8 +401,8 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-	// Thruster 
-	//-------------------------------------------------------------
+// Thruster
+//-------------------------------------------------------------
 	thruster = nullptr;
 
 	if (design->thruster)
@@ -413,6 +413,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		runtime_thruster->SetID(sys_id++);
 
 		const int src_index = runtime_thruster->GetSourceIndex();
+
 		if (src_index >= 0 && src_index < reactors.size())
 		{
 			reactors[src_index]->AddClient(runtime_thruster);
@@ -426,6 +427,13 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		systems.append(runtime_thruster);
 
 		thruster = runtime_thruster;
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship] Runtime thruster initialized Ship='%s' Thruster=%p Ports=%d SourceIndex=%d"),
+			*FString(name.data()),
+			runtime_thruster,
+			runtime_thruster->NumThrusters(),
+			src_index);
 	}
 	else if (thrusters.size() > 0)
 	{
@@ -1110,7 +1118,6 @@ void
 Ship::Initialize()
 {
 	ShipDesign::Initialize();
-	Thruster::Initialize();
 }
 
 // +--------------------------------------------------------------------+
@@ -1119,7 +1126,6 @@ void
 Ship::Close()
 {
 	ShipDesign::Close();
-	Thruster::Close();
 }
 
 void
@@ -1308,19 +1314,7 @@ Ship::Activate(SimScene& Scene)
 
 	// Engine flares and trails are rendered by Unreal Engine.
 	// Legacy Drive system only provides runtime thrust state.	
-
-	Thruster* ThrusterComp = GetThruster();
-	if (ThrusterComp) {
-		for (int ThrusterIndex = 0; ThrusterIndex < ThrusterComp->NumThrusters(); ThrusterIndex++) {
-			Graphic* Flare = ThrusterComp->Flare(ThrusterIndex);
-			if (Flare)
-				Scene.AddGraphic(Flare);
-
-			Graphic* Trail = ThrusterComp->Trail(ThrusterIndex);
-			if (Trail)
-				Scene.AddGraphic(Trail);
-		}
-	}
+	// Thruster system only provides runtime thrust state.
 
 	UE_LOG(LogTemp, Verbose,
 		TEXT("[Ship] NavLights handled by UE actor visuals"));
@@ -1377,19 +1371,7 @@ Ship::Deactivate(SimScene& Scene)
 
 	// Engine flares and trails are rendered by Unreal Engine.
 	// Legacy Drive system only provides runtime thrust state.
-
-	Thruster* ThrusterComp = GetThruster();
-	if (ThrusterComp) {
-		for (int ThrusterIndex = 0; ThrusterIndex < ThrusterComp->NumThrusters(); ThrusterIndex++) {
-			Graphic* Flare = ThrusterComp->Flare(ThrusterIndex);
-			if (Flare)
-				Scene.DelGraphic(Flare);
-
-			Graphic* Trail = ThrusterComp->Trail(ThrusterIndex);
-			if (Trail)
-				Scene.DelGraphic(Trail);
-		}
-	}
+	// Thruster system only provides runtime thrust state.
 
 	// Nav lights are rendered by Unreal components.
 	// Legacy NavLight only owns timing/state, so there are no Scene graphics to remove.

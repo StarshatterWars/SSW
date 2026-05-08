@@ -385,31 +385,48 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
 
         NewThruster->SetSourceIndex(Src.SourceIndex);
         NewThruster->SetHullFactor(Src.HullFactor);
+        NewThruster->SetThrusterScale(Src.ThrusterScale);
+        NewThruster->SetThrust(Src.Thrust);
 
         for (const FThrusterPort& Port : Src.Ports)
         {
-            NewThruster->CreatePort(
-                static_cast<int>(Port.Direction),
+            NewThruster->AddPort(
+                Port.Direction,
                 Port.Location,
                 static_cast<DWORD>(Port.Fire),
                 Port.PortScale
             );
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[ShipDesignRegistry] Thruster built Row='%s' Thruster=%p Ports=%d"),
-                *RowName.ToString(),
-                NewThruster,
-                NewThruster->NumThrusters());
+            const int32 PortIndex = NewThruster->NumThrusters() - 1;
+            NewThruster->SetPortData(PortIndex, Port);
+        }
 
-            for (int i = 0; i < NewThruster->NumThrusters(); i++)
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipDesignRegistry] Thruster built Row='%s' Thruster=%p Ports=%d"),
+            *RowName.ToString(),
+            NewThruster,
+            NewThruster->NumThrusters());
+
+        for (int32 PortIndex = 0; PortIndex < NewThruster->NumThrusters(); ++PortIndex)
+        {
+            const FThrusterPort* Port = NewThruster->GetPort(PortIndex);
+
+            if (!Port)
             {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[ShipDesignRegistry]   Port[%d] Type=%d Flare=%p Trail=%p"),
-                    i,
-                    i,
-                    NewThruster->Flare(i),
-                    NewThruster->Trail(i));
+                continue;
             }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipDesignRegistry]   Port[%d] Name='%s' Dir=%d Loc=%s Rot=%s Fire=0x%04X PortScale=%.2f FlareScale=%.2f TrailScale=%.2f"),
+                PortIndex,
+                *Port->PointName.ToString(),
+                static_cast<int32>(Port->Direction),
+                *Port->Location.ToString(),
+                *Port->Rotation.ToString(),
+                Port->Fire,
+                Port->PortScale,
+                Port->FlareScale,
+                Port->TrailScale);
         }
 
         Legacy->thrusters.append(NewThruster);

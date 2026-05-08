@@ -55,6 +55,7 @@
 #include "List.h"
 #include "Text.h"
 #include "GameStructs.h"
+#include "GameStructs_System.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogShipDesign, Log, All);
 
@@ -2177,7 +2178,7 @@ ShipDesign::ParseFarcaster(TermStruct* val)
 void
 ShipDesign::ParseThruster(TermStruct* val)
 {
-	if (thruster) {
+	/*if (thruster) {
 		UE_LOG(LogShipDesign, Warning,
 			TEXT("WARNING: additional thruster ignored in '%s'"),
 			ANSI_TO_TCHAR(filename));
@@ -2224,7 +2225,7 @@ ShipDesign::ParseThruster(TermStruct* val)
 						TEXT("WARNING: unknown thruster type '%s' in '%s'"),
 						ANSI_TO_TCHAR(tname->value().data()),
 						ANSI_TO_TCHAR(filename));
-				}*/
+				}
 			}
 		}
 		else if (defname == "thrust") {
@@ -2331,7 +2332,7 @@ ShipDesign::ParseThruster(TermStruct* val)
 	if (emcon_3 >= 0 && emcon_3 <= 100)
 		drive->SetEMCONPower(3, emcon_3);
 
-	thruster = drive;
+	thruster = drive;*/
 }
 
 // +--------------------------------------------------------------------+

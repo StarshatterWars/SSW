@@ -1727,25 +1727,54 @@ void UStarshatterShipDesignSubsystem::ParseFarcaster(TermStruct* Val, const char
 
 // +--------------------------------------------------------------------+
 
-static bool TryGetThrusterPortDirFromKey(const Text& Key, EThrusterPortDir& OutDir)
+static bool TryGetThrusterPortDirFromKey(
+	const Text& Key,
+	EThrusterPortDir& OutDir)
 {
-	// Keys in legacy:
-	// port, port_bottom, port_top, port_left, port_right, port_fore, port_aft
-	// NOTE: `Text` comparisons are case-insensitive in legacy by setSensitive(false),
-	// but your pipeline uses exact Text keys. Keep it literal to match your other parsers.
-	if (Key == "port" || Key == "port_bottom") { OutDir = EThrusterPortDir::BOTTOM; return true; }
-	if (Key == "port_top") { OutDir = EThrusterPortDir::TOP; return true; }
-	if (Key == "port_left") { OutDir = EThrusterPortDir::LEFT; return true; }
-	if (Key == "port_right") { OutDir = EThrusterPortDir::RIGHT; return true; }
-	if (Key == "port_fore") { OutDir = EThrusterPortDir::FORE; return true; }
-	if (Key == "port_aft") { OutDir = EThrusterPortDir::AFT; return true; }
+	if (Key == "port" || Key == "port_bottom")
+	{
+		OutDir = EThrusterPortDir::BOTTOM;
+		return true;
+	}
+
+	if (Key == "port_top")
+	{
+		OutDir = EThrusterPortDir::TOP;
+		return true;
+	}
+
+	if (Key == "port_left")
+	{
+		OutDir = EThrusterPortDir::LEFT;
+		return true;
+	}
+
+	if (Key == "port_right")
+	{
+		OutDir = EThrusterPortDir::RIGHT;
+		return true;
+	}
+
+	if (Key == "port_fore")
+	{
+		OutDir = EThrusterPortDir::FORE;
+		return true;
+	}
+
+	if (Key == "port_aft")
+	{
+		OutDir = EThrusterPortDir::AFT;
+		return true;
+	}
+
 	return false;
 }
 
 void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char* Fn)
 {
 	NewThrusterPortArray.Empty();
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseThruster()"));
+
+	UE_LOG(LogTemp, Log, TEXT("UStarshatterShipDesignSubsystem::ParseThruster()"));
 
 	if (!Val || !Fn || !*Fn)
 	{
@@ -1753,7 +1782,6 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 		return;
 	}
 
-	// Legacy: only one thruster allowed
 	if (NewShipThrusterArray.Num() > 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ParseThruster: additional thruster ignored in '%s'"), ANSI_TO_TCHAR(Fn));
@@ -1762,7 +1790,6 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 
 	const float Scale = (CurrentShipScale > 0.0f) ? CurrentShipScale : 1.0f;
 
-	// Legacy defaults:
 	double  Thrust = 100.0;
 	FVector Loc = FVector::ZeroVector;
 	float   Size = 0.0f;
@@ -1780,11 +1807,14 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 	NewThruster.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
 	const int32 ElemCount = (int32)Val->elements()->size();
+
 	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
 	{
 		TermDef* PDef = Val->elements()->at(ElemIdx)->isDef();
 		if (!PDef)
+		{
 			continue;
+		}
 
 		const Text& Key = PDef->name()->value();
 
@@ -1799,8 +1829,10 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 
 				if (DriveType == EDriveType::UNKNOWN)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("ParseThruster: unknown thruster type '%s' in '%s'"),
-						*TypeStr, *NewThruster.SourceFile);
+					UE_LOG(LogTemp, Warning,
+						TEXT("ParseThruster: unknown thruster type '%s' in '%s'"),
+						*TypeStr,
+						*NewThruster.SourceFile);
 				}
 			}
 		}
@@ -1840,27 +1872,68 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 			GetDefNumber(TScale, PDef, Fn);
 			NewThruster.ThrusterScale = TScale;
 		}
+		else if (Key == "emcon_1")
+		{
+			GetDefNumber(Emcon1, PDef, Fn);
+			NewThruster.Emcon1 = ClampEmcon(Emcon1);
+		}
+		else if (Key == "emcon_2")
+		{
+			GetDefNumber(Emcon2, PDef, Fn);
+			NewThruster.Emcon2 = ClampEmcon(Emcon2);
+		}
+		else if (Key == "emcon_3")
+		{
+			GetDefNumber(Emcon3, PDef, Fn);
+			NewThruster.Emcon3 = ClampEmcon(Emcon3);
+		}
 		else
 		{
-			// Port keys are name-driven: port, port_top, etc.
-
 			EThrusterPortDir Dir;
+
 			if (TryGetThrusterPortDirFromKey(Key, Dir) && PDef->term())
 			{
 				FThrusterPort Port;
+
 				Port.Direction = Dir;
+				Port.PointName = FName(ANSI_TO_TCHAR(Key.data()));
+				Port.SocketName = NAME_None;
+
 				Port.Location = FVector::ZeroVector;
+				Port.Rotation = FRotator::ZeroRotator;
+
 				Port.Fire = 0;
-				Port.PortScale = (NewThruster.ThrusterScale > 0.0f) ? NewThruster.ThrusterScale : 1.0f;
+
+				Port.PortScale =
+					(NewThruster.ThrusterScale > 0.0f)
+					? NewThruster.ThrusterScale
+					: 1.0f;
+
+				Port.FlareScale = Port.PortScale;
+				Port.TrailScale = Port.PortScale;
+
+				Port.IntensityMultiplier = 1.0f;
+				Port.AudioMultiplier = 1.0f;
+
+				Port.ThrusterColor = FLinearColor::White;
+
+				Port.bShowFlare = true;
+				Port.bShowTrail = true;
+
+				Port.Burn = 0.0f;
 
 				if (PDef->term()->isArray())
 				{
 					FVector PV = FVector::ZeroVector;
+
 					if (GetDefVec(PV, PDef, Fn))
 					{
 						PV *= Scale;
+
 						Port.Location = PV;
-						// PortScale default already TScale
+						Port.FlareScale = Port.PortScale;
+						Port.TrailScale = Port.PortScale;
+
 						NewThruster.Ports.Add(Port);
 					}
 				}
@@ -1873,10 +1946,14 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 					DWORD Fire = 0;
 
 					const int32 PortCount = (int32)PortStruct->elements()->size();
+
 					for (int32 j = 0; j < PortCount; ++j)
 					{
 						TermDef* P2 = PortStruct->elements()->at(j)->isDef();
-						if (!P2) continue;
+						if (!P2)
+						{
+							continue;
+						}
 
 						const Text& PKey = P2->name()->value();
 
@@ -1892,45 +1969,115 @@ void UStarshatterShipDesignSubsystem::ParseThruster(TermStruct* Val, const char*
 						{
 							GetDefNumber(PortScale, P2, Fn);
 						}
+						else if (PKey == "socket")
+						{
+							Text SocketText = "";
+							GetDefText(SocketText, P2, Fn);
+
+							Port.SocketName = FName(ANSI_TO_TCHAR(SocketText.data()));
+						}
+						else if (PKey == "rotation")
+						{
+							FVector RotVec = FVector::ZeroVector;
+
+							if (GetDefVec(RotVec, P2, Fn))
+							{
+								Port.Rotation = FRotator(
+									RotVec.Y,
+									RotVec.Z,
+									RotVec.X);
+							}
+						}
+						else if (PKey == "flare_scale")
+						{
+							GetDefNumber(Port.FlareScale, P2, Fn);
+						}
+						else if (PKey == "trail_scale")
+						{
+							GetDefNumber(Port.TrailScale, P2, Fn);
+						}
+						else if (PKey == "intensity")
+						{
+							GetDefNumber(Port.IntensityMultiplier, P2, Fn);
+						}
+						else if (PKey == "audio")
+						{
+							GetDefNumber(Port.AudioMultiplier, P2, Fn);
+						}
+						else if (PKey == "show_flare")
+						{
+							int32 bValue = 1;
+							GetDefNumber(bValue, P2, Fn);
+
+							Port.bShowFlare = (bValue != 0);
+						}
+						else if (PKey == "show_trail")
+						{
+							int32 bValue = 1;
+							GetDefNumber(bValue, P2, Fn);
+
+							Port.bShowTrail = (bValue != 0);
+						}
+						else if (PKey == "color")
+						{
+							FVector ColorVec = FVector(1.0f, 1.0f, 1.0f);
+
+							if (GetDefVec(ColorVec, P2, Fn))
+							{
+								Port.ThrusterColor = FLinearColor(
+									ColorVec.X,
+									ColorVec.Y,
+									ColorVec.Z,
+									1.0f);
+							}
+						}
 					}
 
 					PV *= Scale;
 
 					if (PortScale <= 0.0f)
-						PortScale = (NewThruster.ThrusterScale > 0.0f) ? NewThruster.ThrusterScale : 1.0f;
+					{
+						PortScale =
+							(NewThruster.ThrusterScale > 0.0f)
+							? NewThruster.ThrusterScale
+							: 1.0f;
+					}
 
 					Port.Location = PV;
 					Port.Fire = (int32)Fire;
 					Port.PortScale = PortScale;
 
+					if (Port.FlareScale <= 0.0f)
+					{
+						Port.FlareScale = Port.PortScale;
+					}
+
+					if (Port.TrailScale <= 0.0f)
+					{
+						Port.TrailScale = Port.PortScale;
+					}
+
 					NewThruster.Ports.Add(Port);
 				}
 			}
 		}
-
-		if (Key == "emcon_1")
-		{
-			GetDefNumber(Emcon1, PDef, Fn);
-			NewThruster.Emcon1 = ClampEmcon(Emcon1);
-		}
-		else if (Key == "emcon_2")
-		{
-			GetDefNumber(Emcon2, PDef, Fn);
-			NewThruster.Emcon2 = ClampEmcon(Emcon2);
-		}
-		else if (Key == "emcon_3")
-		{
-			GetDefNumber(Emcon3, PDef, Fn);
-			NewThruster.Emcon3 = ClampEmcon(Emcon3);
-		}
 	}
 
-	// Legacy: drive->SetSourceIndex(reactors.size()-1)
-	NewThruster.SourceIndex = (NewShipPowerArray.Num() > 0) ? (NewShipPowerArray.Num() - 1) : INDEX_NONE;
+	NewThruster.SourceIndex =
+		(NewShipPowerArray.Num() > 0)
+		? (NewShipPowerArray.Num() - 1)
+		: INDEX_NONE;
 
-	// Store like your other parse helpers:
 	NewShipThrusterArray.Add(NewThruster);
+
+	UE_LOG(LogTemp, Log,
+		TEXT("ParseThruster: design='%s' type=%d ports=%d source='%s'"),
+		*NewThruster.DesignName,
+		(int32)NewThruster.Type,
+		NewThruster.Ports.Num(),
+		*NewThruster.SourceFile);
 }
+
 // +--------------------------------------------------------------------+
 
 static FLinearColor NavLightColorFromText(const FString& InColor)
