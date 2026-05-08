@@ -95,61 +95,6 @@ void ACourierShipActor::ApplyCourierDefaults()
     NumDockPoints = 0;
     NumLandingPoints = 0;
 
-    /*
-     * Courier.def only gives one thruster system location.
-     * Build a practical first-pass maneuvering set around it.
-     */
-    ThrusterPointDefs.Empty();
-    {
-        // central forward
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(460.0f, 0.0f, 10.0f);
-            T.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-
-        // central aft
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(-480.0f, 0.0f, 25.f);
-            T.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-
-        // port
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(0.0f, -140.0f, 20.0f);
-            T.LocalRotation = FRotator(0.0f, -90.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-
-        // starboard
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(0.0f, 140.0f, 20.0f);
-            T.LocalRotation = FRotator(0.0f, 90.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-
-        // dorsal
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(4.0f, 0.0f, 115.0f);
-            T.LocalRotation = FRotator(90.0f, 0.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-
-        // ventral
-        {
-            FShipPointDef T;
-            T.LocalOffset = FVector(-2.0f, 0.0f, -55.0f);
-            T.LocalRotation = FRotator(-90.0f, 0.0f, 0.0f);
-            ThrusterPointDefs.Add(T);
-        }
-    }
-
     WeaponMountPointDefs.Empty();
     TurretBasePointDefs.Empty();
     DockPointDefs.Empty();

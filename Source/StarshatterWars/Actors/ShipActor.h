@@ -33,6 +33,34 @@ struct FShipPointDef
     FName PointName = NAME_None;
 };
 
+//-------------------------------------------------------------
+// Runtime Thruster FX
+//-------------------------------------------------------------
+
+USTRUCT()
+struct FRuntimeThrusterFX
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FName PointName = NAME_None;
+
+    UPROPERTY()
+    EThrusterPortDir Direction = EThrusterPortDir::AFT;
+
+    UPROPERTY()
+    UNiagaraComponent* Flare = nullptr;
+
+    UPROPERTY()
+    UNiagaraComponent* Trail = nullptr;
+
+    FVector Location = FVector::ZeroVector;
+    FRotator Rotation = FRotator::ZeroRotator;
+
+    float PortScale = 1.0f;
+    float AudioMultiplier = 1.0f;
+};
+
 UCLASS()
 class STARSHATTERWARS_API AShipActor : public AActor
 {
@@ -43,6 +71,7 @@ public:
 
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaTime) override;
 
     void BindRuntimeShip(Ship* InShip);
@@ -369,6 +398,24 @@ public:
 
     void CreateEngineAudioComponents();
     void UpdateEngineAudioFromRuntime(float DeltaTime);
+    
+    //-------------------------------------------------------------
+    // Runtime Thruster Niagara
+    //-------------------------------------------------------------
+
+    UPROPERTY(EditAnywhere, Category = "Thrusters")
+    UNiagaraSystem* ThrusterFlareSystem = nullptr;
+
+    UPROPERTY(EditAnywhere, Category = "Thrusters")
+    UNiagaraSystem* ThrusterTrailSystem = nullptr;
+
+    UPROPERTY()
+    TArray<FRuntimeThrusterFX> RuntimeThrusterFX;
+
+    void BuildThrustersFromRuntime();
+    void UpdateThrustersFromRuntime(float DeltaTime);
+    void ClearRuntimeThrusters();
+
 
 public:
 
