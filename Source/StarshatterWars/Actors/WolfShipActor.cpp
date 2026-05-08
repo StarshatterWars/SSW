@@ -48,26 +48,6 @@ void AWolfShipActor::ApplyWolfDefaults()
     NumDockPoints = 0;
     NumLandingPoints = 0;
 
-    MainEnginePointDefs.Empty();
-    {
-        FShipPointDef P;
-
-        P.LocalOffset = FVector(-810.0f, -88.0f, 12.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Port");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-810.0f, 0.0f, 12.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Center");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-810.0f, 88.0f, 12.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Starboard");
-        MainEnginePointDefs.Add(P);
-    }
-
     ThrusterPointDefs.Empty();
     {
         FShipPointDef T;

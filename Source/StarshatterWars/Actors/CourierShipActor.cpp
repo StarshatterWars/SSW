@@ -96,28 +96,6 @@ void ACourierShipActor::ApplyCourierDefaults()
     NumLandingPoints = 0;
 
     /*
-     * Exact engine points from Courier.def drive ports
-     */
-    MainEnginePointDefs.Empty();
-    {
-        FShipPointDef P0;
-        P0.LocalOffset = FVector(-550.0f, 31.f, -3.0f);
-        MainEnginePointDefs.Add(P0);
-
-        FShipPointDef P1;
-        P1.LocalOffset = FVector(-550.0f, 31.0f, 20.0f);
-        MainEnginePointDefs.Add(P1);
-
-        FShipPointDef P2;
-        P2.LocalOffset = FVector(-550.0f, -31.01f, -3.0f);
-        MainEnginePointDefs.Add(P2);
-
-        FShipPointDef P3;
-        P3.LocalOffset = FVector(-550.0f, -31.0f, 22.0f);
-        MainEnginePointDefs.Add(P3);
-    }
-
-    /*
      * Courier.def only gives one thruster system location.
      * Build a practical first-pass maneuvering set around it.
      */

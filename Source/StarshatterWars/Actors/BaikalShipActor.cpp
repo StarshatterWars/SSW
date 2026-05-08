@@ -48,31 +48,6 @@ void ABaikalShipActor::ApplyBaikalDefaults()
     NumDockPoints = 0;
     NumLandingPoints = 0;
 
-    MainEnginePointDefs.Empty();
-    {
-        FShipPointDef P;
-
-        P.LocalOffset = FVector(-435.0f, 0.0f, 43.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Top");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-435.0f, 42.0f, 0.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Starboard");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-435.0f, -42.0f, 0.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Port");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-435.0f, 0.0f, -43.0f);
-        P.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
-        P.PointName = TEXT("Drive_Bottom");
-        MainEnginePointDefs.Add(P);
-    }
-
     ThrusterPointDefs.Empty();
     {
         FShipPointDef T;
