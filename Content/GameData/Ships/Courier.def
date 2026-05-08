@@ -112,7 +112,7 @@ drive:
 thruster: {
    design:           Thruster,
    type:             Yellow,
-   loc:              (0, 0, 64),
+   loc:              (64, 0, 0),
    size:             24,
    hull_factor:      0.3,
    scale:            1.0,

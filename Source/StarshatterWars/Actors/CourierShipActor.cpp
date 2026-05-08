@@ -45,11 +45,7 @@ void ACourierShipActor::ApplyCourierDefaults()
      * chase:   (0, -1000, 200)
      * bridge:  (0, 216, 34)
      * drive:   loc (0, 10, -370)
-     * ports:   (-25,  0,-448)
-     *          ( 25,  0,-448)
-     *          (-25, 20,-448)
-     *          ( 25, 20,-448)
-     * thruster loc: (0, 0, 64)
+     * thruster loc: (64, 0, 0)
      * quantum loc:  (0, 0, -120)
      * shield loc:   (0, 20, -80)
      * sensor loc:   (0, 0, 180)
@@ -62,34 +58,36 @@ void ACourierShipActor::ApplyCourierDefaults()
     bRebuildOnConstruction = true;
 
     /*
-     * Turn FX on.
-     * Assign the Niagara systems in BP_Courier defaults.
+     * Runtime visual systems
      */
     bEnableMainEngineEmitters = true;
     bEnableThrusterEmitters = true;
 
     /*
-     * These are safe first-pass defaults.
-     * Adjust once you see how the Niagara system is authored.
+     * Main engine Niagara defaults
      */
-    MainEngineEmitterRelativeScale = FVector(1.00f, 0.40f, 0.40f);
-    MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
+    MainEngineEmitterRelativeScale =
+        FVector(1.00f, 0.40f, 0.40f);
 
-    ThrusterEmitterRelativeScale = FVector(0.50f, 0.20f, 0.20f);
-    ThrusterEmitterRelativeRotation = FRotator(0.0f, 0.0f, 0.0f);
+    MainEngineEmitterRelativeRotation =
+        FRotator(0.0f, 180.0f, 0.0f);
 
     /*
      * Camera and framing points
      */
-    FocusPointOffset = FVector(0.0f, 216.0f, 34.0f);
-    BridgePointOffset = FVector(0.0f, 216.0f, 34.0f);
-    ChasePointOffset = FVector(0.0f, -1000.0f, 200.0f);
+    FocusPointOffset =
+        FVector(0.0f, 216.0f, 34.0f);
+
+    BridgePointOffset =
+        FVector(0.0f, 216.0f, 34.0f);
+
+    ChasePointOffset =
+        FVector(0.0f, -1000.0f, 200.0f);
 
     /*
      * Explicit generated point counts
      */
     NumMainEnginePoints = 4;
-    NumThrusterPoints = 0;
     NumWeaponMountPoints = 0;
     NumTurretBasePoints = 0;
     NumDockPoints = 0;
@@ -100,7 +98,6 @@ void ACourierShipActor::ApplyCourierDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    BuildNavLightsFromRuntime();
     SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
 }
 
@@ -108,51 +105,61 @@ void ACourierShipActor::ApplyCourierFixedPoints()
 {
     if (FocusPoint)
     {
-        FocusPoint->SetRelativeLocation(FVector(0.0f, 216.0f, 34.0f));
+        FocusPoint->SetRelativeLocation(
+            FVector(0.0f, 216.0f, 34.0f));
     }
 
     if (BridgePoint)
     {
-        BridgePoint->SetRelativeLocation(FVector(0.0f, 216.0f, 34.0f));
+        BridgePoint->SetRelativeLocation(
+            FVector(0.0f, 216.0f, 34.0f));
     }
 
     if (ChasePoint)
     {
-        ChasePoint->SetRelativeLocation(FVector(0.0f, -1000.0f, 200.0f));
+        ChasePoint->SetRelativeLocation(
+            FVector(0.0f, -1000.0f, 200.0f));
     }
 
     if (DriveCenterPoint)
     {
-        DriveCenterPoint->SetRelativeLocation(FVector(0.0f, 10.0f, -370.0f));
+        DriveCenterPoint->SetRelativeLocation(
+            FVector(0.0f, 10.0f, -370.0f));
     }
 
     if (QuantumPoint)
     {
-        QuantumPoint->SetRelativeLocation(FVector(0.0f, 0.0f, -120.0f));
+        QuantumPoint->SetRelativeLocation(
+            FVector(0.0f, 0.0f, -120.0f));
     }
 
     if (ShieldPoint)
     {
-        ShieldPoint->SetRelativeLocation(FVector(0.0f, 20.0f, -80.0f));
+        ShieldPoint->SetRelativeLocation(
+            FVector(0.0f, 20.0f, -80.0f));
     }
 
     if (SensorPoint)
     {
-        SensorPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
+        SensorPoint->SetRelativeLocation(
+            FVector(0.0f, 0.0f, 180.0f));
     }
 
     if (ComputerPointA)
     {
-        ComputerPointA->SetRelativeLocation(FVector(20.0f, 16.0f, 80.0f));
+        ComputerPointA->SetRelativeLocation(
+            FVector(20.0f, 16.0f, 80.0f));
     }
 
     if (ComputerPointB)
     {
-        ComputerPointB->SetRelativeLocation(FVector(-20.0f, -16.0f, 80.0f));
+        ComputerPointB->SetRelativeLocation(
+            FVector(-20.0f, -16.0f, 80.0f));
     }
 
     if (NavPoint)
     {
-        NavPoint->SetRelativeLocation(FVector(0.0f, 16.0f, 60.0f));
+        NavPoint->SetRelativeLocation(
+            FVector(0.0f, 16.0f, 60.0f));
     }
 }

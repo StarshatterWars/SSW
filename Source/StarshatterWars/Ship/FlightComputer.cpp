@@ -1,17 +1,18 @@
 /*  Project Starshatter Wars
-	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
 
-	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
+    ORIGINAL AUTHOR AND STUDIO
+    ==========================
+    John DiCamillo / Destroyer Studios LLC
 
-	SUBSYSTEM:    Stars.exe
-	FILE:         FlightComputer.cpp
-	AUTHOR:       Carlos Bott
+    SUBSYSTEM:    Stars.exe
+    FILE:         FlightComputer.cpp
+    AUTHOR:       Carlos Bott
 
-
-	OVERVIEW
-	========
-	Flight Computer System class
+    OVERVIEW
+    ========
+    Unreal-native Flight Computer System
 */
 
 #include "FlightComputer.h"
@@ -25,31 +26,33 @@
 #include "Thruster.h"
 #include "GameStructs_System.h"
 
-// +----------------------------------------------------------------------+
+// +--------------------------------------------------------------------+
 
-FlightComputer::FlightComputer(EComputerType comp_type, const char* comp_name)
-	: Computer(comp_type, comp_name)
-	, mode(0)
-	, halt(0)
-	, throttle(0.0f)
-	, vlimit(0.0f)
-	, trans_x_limit(0.0f)
-	, trans_y_limit(0.0f)
-	, trans_z_limit(0.0f)
+FlightComputer::FlightComputer(
+    EComputerType comp_type,
+    const char* comp_name)
+    : Computer(comp_type, comp_name)
+    , mode(0)
+    , halt(0)
+    , throttle(0.0f)
+    , vlimit(0.0f)
+    , trans_x_limit(0.0f)
+    , trans_y_limit(0.0f)
+    , trans_z_limit(0.0f)
 {
 }
 
-// +----------------------------------------------------------------------+
+// +--------------------------------------------------------------------+
 
 FlightComputer::FlightComputer(const Computer& c)
-	: Computer(c)
-	, mode(0)
-	, halt(0)
-	, throttle(0.0f)
-	, vlimit(0.0f)
-	, trans_x_limit(0.0f)
-	, trans_y_limit(0.0f)
-	, trans_z_limit(0.0f)
+    : Computer(c)
+    , mode(0)
+    , halt(0)
+    , throttle(0.0f)
+    , vlimit(0.0f)
+    , trans_x_limit(0.0f)
+    , trans_y_limit(0.0f)
+    , trans_z_limit(0.0f)
 {
 }
 
@@ -62,15 +65,104 @@ FlightComputer::~FlightComputer()
 // +--------------------------------------------------------------------+
 
 void
-FlightComputer::SetTransLimit(double x, double y, double z)
+FlightComputer::SetTransLimit(
+    double x,
+    double y,
+    double z)
 {
-	trans_x_limit = 0.0f;
-	trans_y_limit = 0.0f;
-	trans_z_limit = 0.0f;
+    trans_x_limit = 0.0f;
+    trans_y_limit = 0.0f;
+    trans_z_limit = 0.0f;
 
-	if (x >= 0) trans_x_limit = (float)x;
-	if (y >= 0) trans_y_limit = (float)y;
-	if (z >= 0) trans_z_limit = (float)z;
+    if (x >= 0.0)
+    {
+        trans_x_limit = (float)x;
+    }
+
+    if (y >= 0.0)
+    {
+        trans_y_limit = (float)y;
+    }
+
+    if (z >= 0.0)
+    {
+        trans_z_limit = (float)z;
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+FVector
+FlightComputer::GetForwardVector() const
+{
+    return ship ?
+        ship->GetHeading().GetSafeNormal() :
+        FVector::ForwardVector;
+}
+
+// +--------------------------------------------------------------------+
+
+FVector
+FlightComputer::GetRightVector() const
+{
+    return ship ?
+        ship->GetBeamLine().GetSafeNormal() :
+        FVector::RightVector;
+}
+
+// +--------------------------------------------------------------------+
+
+FVector
+FlightComputer::GetUpVector() const
+{
+    return ship ?
+        ship->GetLiftLine().GetSafeNormal() :
+        FVector::UpVector;
+}
+
+// +--------------------------------------------------------------------+
+
+double
+FlightComputer::GetForwardVelocity() const
+{
+    if (!ship)
+    {
+        return 0.0;
+    }
+
+    return FVector::DotProduct(
+        ship->GetVelocity(),
+        GetForwardVector());
+}
+
+// +--------------------------------------------------------------------+
+
+double
+FlightComputer::GetSideVelocity() const
+{
+    if (!ship)
+    {
+        return 0.0;
+    }
+
+    return FVector::DotProduct(
+        ship->GetVelocity(),
+        GetRightVector());
+}
+
+// +--------------------------------------------------------------------+
+
+double
+FlightComputer::GetVerticalVelocity() const
+{
+    if (!ship)
+    {
+        return 0.0;
+    }
+
+    return FVector::DotProduct(
+        ship->GetVelocity(),
+        GetUpVector());
 }
 
 // +--------------------------------------------------------------------+
@@ -78,10 +170,13 @@ FlightComputer::SetTransLimit(double x, double y, double z)
 void
 FlightComputer::ExecSubFrame()
 {
-	if (ship) {
-		ExecThrottle();
-		ExecTrans();
-	}
+    if (!ship)
+    {
+        return;
+    }
+
+    ExecThrottle();
+    ExecTrans();
 }
 
 // +--------------------------------------------------------------------+
@@ -89,10 +184,12 @@ FlightComputer::ExecSubFrame()
 void
 FlightComputer::ExecThrottle()
 {
-	throttle = (float)ship->Throttle();
+    throttle = (float)ship->GetThrottle();
 
-	if (throttle > 5)
-		halt = false;
+    if (throttle > 5.0f)
+    {
+        halt = false;
+    }
 }
 
 // +--------------------------------------------------------------------+
@@ -100,265 +197,189 @@ FlightComputer::ExecThrottle()
 void
 FlightComputer::ExecTrans()
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[FlightComputer::ExecTrans] Ship='%s' Tx=%.3f Ty=%.3f Tz=%.3f Thruster=%p Mode=%d PowerOn=%d Status=%d"),
-		ANSI_TO_TCHAR(ship ? ship->GetName() : "NONE"),
-		ship ? ship->GetTransX() : 0.0,
-		ship ? ship->GetTransY() : 0.0,
-		ship ? ship->GetTransZ() : 0.0,
-		ship ? ship->GetThruster() : nullptr,
-		mode,
-		IsPowerOn() ? 1 : 0,
-		(int32)GetStatus());
-	
-	double Tx = ship->GetTransX();
-	double Ty = ship->GetTransY();
-	double Tz = ship->GetTransZ();
+    if (!ship)
+    {
+        return;
+    }
 
-	double TransX = Tx;
-	double TransY = Ty;
-	double TransZ = Tz;
+    //-------------------------------------------------------------
+    // FLCS operational state
+    //-------------------------------------------------------------
+    const bool bFlcsOperative =
+        IsPowerOn() &&
+        (GetStatus() == SYSTEM_STATUS::NOMINAL ||
+            GetStatus() == SYSTEM_STATUS::DEGRADED);
 
-	bool bFlcsOperative = false;
+    //-------------------------------------------------------------
+    // Pilot input state
+    //-------------------------------------------------------------
+    double Tx =
+        ship->GetTransX();
 
-	if (IsPowerOn())
-	{
-		bFlcsOperative =
-			GetStatus() == SYSTEM_STATUS::NOMINAL ||
-			GetStatus() == SYSTEM_STATUS::DEGRADED;
-	}
+    double Ty =
+        ship->GetTransY();
 
-	// Convenience: Starshatter-style "*" was effectively dot-product.
-	const FVector Vel = ship->GetVelocity();
-	const FVector Beam = ship->GetBeamLine();
-	const FVector Lift = ship->GetLiftLine();
-	const FVector Head = ship->GetHeading();
+    double Tz =
+        ship->GetTransZ();
 
-	// ----------------------------------------------------------
-	// FIGHTER FLCS AUTO MODE
-	// ----------------------------------------------------------
-	if (mode == Ship::FLCS_AUTO)
-	{
-		// auto thrust to align flight path with orientation:
-		if (FMath::IsNearlyZero(Tx))
-		{
-			if (bFlcsOperative)
-				TransX = FVector::DotProduct(Vel, Beam) * -200.0;
-			else
-				TransX = 0.0;
-		}
+    double TransX = Tx;
+    double TransY = Ty;
+    double TransZ = Tz;
 
-		// manual thrust up to vlimit:
-		else
-		{
-			const double Vfwd = FVector::DotProduct(Beam, Vel);
+    //-------------------------------------------------------------
+    // Ship orientation
+    //-------------------------------------------------------------
+    const FVector Velocity =
+        ship->GetVelocity();
 
-			if (FMath::Abs(Vfwd) >= vlimit)
-			{
-				if (TransX > 0.0 && Vfwd > 0.0)
-					TransX = 0.0;
-				else if (TransX < 0.0 && Vfwd < 0.0)
-					TransX = 0.0;
-			}
-		}
+    const FVector Forward =
+        ship->GetHeading().GetSafeNormal();
 
-		if (halt && bFlcsOperative)
-		{
-			if (FMath::IsNearlyZero(Ty))
-			{
-				const double Vfwd = FVector::DotProduct(Head, Vel);
-				const double Vmag = FMath::Abs(Vfwd);
+    const FVector Right =
+        ship->GetBeamLine().GetSafeNormal();
 
-				if (Vmag > 0.0)
-				{
-					TransY = (Vfwd > 0.0) ? -trans_y_limit : trans_y_limit;
+    const FVector Up =
+        ship->GetLiftLine().GetSafeNormal();
 
-					if (Vfwd < vlimit / 2.0)
-						TransY *= (Vmag / (vlimit / 2.0));
-				}
-			}
-		}
+    //-------------------------------------------------------------
+    // Local-space velocity
+    //-------------------------------------------------------------
+    const double ForwardVel =
+        FVector::DotProduct(
+            Velocity,
+            Forward);
 
-		// auto thrust to align flight path with orientation:
-		if (FMath::IsNearlyZero(Tz))
-		{
-			if (bFlcsOperative)
-				TransZ = FVector::DotProduct(Vel, Lift) * -200.0;
-			else
-				TransZ = 0.0;
-		}
+    const double SideVel =
+        FVector::DotProduct(
+            Velocity,
+            Right);
 
-		// manual thrust up to vlimit:
-		else
-		{
-			const double Vfwd = FVector::DotProduct(Lift, Vel);
+    const double UpVel =
+        FVector::DotProduct(
+            Velocity,
+            Up);
 
-			if (FMath::Abs(Vfwd) >= vlimit)
-			{
-				if (TransZ > 0.0 && Vfwd > 0.0)
-					TransZ = 0.0;
-				else if (TransZ < 0.0 && Vfwd < 0.0)
-					TransZ = 0.0;
-			}
-		}
-	}
+    //-------------------------------------------------------------
+    // Unreal-native FLCS stabilization
+    //-------------------------------------------------------------
+    if (bFlcsOperative)
+    {
+        constexpr double DriftDamping = 0.25;
 
-	// ----------------------------------------------------------
-	// STARSHIP HELM MODE
-	// ----------------------------------------------------------
-	else if (mode == Ship::FLCS_HELM)
-	{
-		if (bFlcsOperative)
-		{
-			const double CompassHeading = ship->GetCompassHeading();
-			const double CompassPitch = ship->GetCompassPitch();
+        /*
+         * Side drift correction
+         */
+        if (FMath::IsNearlyZero(Tx))
+        {
+            TransX =
+                FMath::Clamp(
+                    -SideVel * DriftDamping,
+                    -trans_x_limit,
+                    trans_x_limit);
+        }
 
-			// rotate helm into compass orientation:
-			double Helm = ship->GetHelmHeading() - CompassHeading;
+        /*
+         * Vertical drift correction
+         */
+        if (FMath::IsNearlyZero(Tz))
+        {
+            TransZ =
+                FMath::Clamp(
+                    -UpVel * DriftDamping,
+                    -trans_z_limit,
+                    trans_z_limit);
+        }
 
-			if (Helm > UE_PI)
-				Helm -= 2.0 * UE_PI;
-			else if (Helm < -UE_PI)
-				Helm += 2.0 * UE_PI;
+        /*
+         * Halt mode
+         */
+        if (halt &&
+            FMath::IsNearlyZero(Ty))
+        {
+            constexpr double ForwardDamping = 0.5;
 
-			// turn to align with helm heading:
-			if (!FMath::IsNearlyZero(Helm))
-				ship->ApplyYaw(Helm);
+            TransY =
+                FMath::Clamp(
+                    -ForwardVel * ForwardDamping,
+                    -trans_y_limit,
+                    trans_y_limit);
+        }
+    }
 
-			// pitch to align with helm pitch:
-			if (!FMath::IsNearlyEqual(CompassPitch, ship->GetHelmPitch()))
-				ship->ApplyPitch(CompassPitch - ship->GetHelmPitch());
+    //-------------------------------------------------------------
+    // Helm stabilization
+    //-------------------------------------------------------------
+    if (mode == Ship::FLCS_HELM &&
+        bFlcsOperative)
+    {
+        const double CompassHeading =
+            ship->GetCompassHeading();
 
-			// roll to align with world coordinates:
-			if (ship->Design()->auto_roll > 0)
-			{
-				// Ensure ship->Cam().vrt() is already an FVector (preferred).
-				// If it's a legacy Vec3, add a conversion helper and use it here.
-				const FVector Vrt = ship->GetCam().vrt();
+        const double CompassPitch =
+            ship->GetCompassPitch();
 
-				// Starshatter used Y as "deflection" here; keep as-is:
-				const double Deflection = Vrt.Y;
+        double HelmError =
+            ship->GetHelmHeading() -
+            CompassHeading;
 
-				if (FMath::Abs(Helm) < UE_PI / 16.0 || ship->Design()->turn_bank < 0.01)
-				{
-					if (ship->Design()->auto_roll > 1)
-					{
-						ship->ApplyRoll(0.5);
-					}
-					else if (!FMath::IsNearlyZero(Deflection))
-					{
-						const double Theta = FMath::Asin(Deflection);
-						ship->ApplyRoll(-Theta);
-					}
-				}
+        if (HelmError > UE_PI)
+        {
+            HelmError -= UE_TWO_PI;
+        }
+        else if (HelmError < -UE_PI)
+        {
+            HelmError += UE_TWO_PI;
+        }
 
-				// else roll through turn maneuvers:
-				else
-				{
-					double DesiredBank = ship->Design()->turn_bank;
-					if (Helm >= 0.0)
-						DesiredBank = -DesiredBank;
+        if (!FMath::IsNearlyZero(HelmError))
+        {
+            ship->ApplyYaw(HelmError);
+        }
 
-					const double CurrentBank = FMath::Asin(Deflection);
-					const double Theta = DesiredBank - CurrentBank;
-					ship->ApplyRoll(Theta);
+        const double PitchError =
+            ship->GetHelmPitch() -
+            CompassPitch;
 
-					// coordinate the turn:
-					if ((CurrentBank < 0.0 && DesiredBank < 0.0) ||
-						(CurrentBank > 0.0 && DesiredBank > 0.0))
-					{
-						const double CoordPitch =
-							CompassPitch
-							- ship->GetHelmPitch()
-							- FMath::Abs(Helm) * FMath::Abs(CurrentBank);
+        if (!FMath::IsNearlyZero(PitchError))
+        {
+            ship->ApplyPitch(PitchError);
+        }
+    }
 
-						ship->ApplyPitch(CoordPitch);
-					}
-				}
-			}
-		}
+    //-------------------------------------------------------------
+    // Final translational authority
+    //-------------------------------------------------------------
+    ship->SetTransX(TransX);
+    ship->SetTransY(TransY);
+    ship->SetTransZ(TransZ);
 
-		// flcs inoperative, set helm heading based on actual compass heading:
-		else
-		{
-			ship->SetHelmHeading(ship->GetCompassHeading());
-			ship->SetHelmPitch(ship->GetCompassPitch());
-		}
+    //-------------------------------------------------------------
+    // Thruster FX / burn state
+    //-------------------------------------------------------------
+    if (ship->GetThruster())
+    {
+        ship->GetThruster()->ExecTrans(
+            TransX,
+            TransY,
+            TransZ);
+    }
 
-		// auto thrust to align flight path with helm order:
-		if (FMath::IsNearlyZero(Tx))
-		{
-			if (bFlcsOperative)
-				TransX = FVector::DotProduct(Vel, Beam) * ship->GetMass() * -1.0;
-			else
-				TransX = 0.0;
-		}
-
-		// manual thrust up to vlimit/2:
-		else
-		{
-			const double Vfwd = FVector::DotProduct(Beam, Vel);
-
-			if (FMath::Abs(Vfwd) >= vlimit / 2.0)
-			{
-				if (TransX > 0.0 && Vfwd > 0.0)
-					TransX = 0.0;
-				else if (TransX < 0.0 && Vfwd < 0.0)
-					TransX = 0.0;
-			}
-		}
-
-		if (FMath::IsNearlyZero(TransY) && halt)
-		{
-			const double Vfwd = FVector::DotProduct(Head, Vel);
-			const double Vdesired = 0.0;
-
-			if (Vfwd > Vdesired)
-			{
-				TransY = -trans_y_limit;
-
-				if (!bFlcsOperative)
-					TransY = 0.0;
-
-				const double Vdelta = Vfwd - Vdesired;
-				if (Vdelta < vlimit / 2.0)
-					TransY *= (Vdelta / (vlimit / 2.0));
-			}
-		}
-
-		// auto thrust to align flight path with helm order:
-		if (FMath::IsNearlyZero(Tz))
-		{
-			if (bFlcsOperative)
-				TransZ = FVector::DotProduct(Vel, Lift) * ship->GetMass() * -1.0;
-			else
-				TransZ = 0.0;
-		}
-
-		// manual thrust up to vlimit/2:
-		else
-		{
-			const double Vfwd = FVector::DotProduct(Lift, Vel);
-
-			if (FMath::Abs(Vfwd) > vlimit / 2.0)
-			{
-				if (TransZ > 0.0 && Vfwd > 0.0)
-					TransZ = 0.0;
-				else if (TransZ < 0.0 && Vfwd < 0.0)
-					TransZ = 0.0;
-			}
-		}
-	}
-
-	// Apply translation either through thruster subsystem or directly to ship:
-	if (ship->GetThruster())
-	{
-		ship->GetThruster()->ExecTrans(TransX, TransY, TransZ);
-	}
-	else
-	{
-		ship->SetTransX(TransX);
-		ship->SetTransY(TransY);
-		ship->SetTransZ(TransZ);
-	}
+    UE_LOG(LogTemp, Warning,
+        TEXT("[FlightComputer::ExecTrans FINAL] "
+            "Ship='%s' "
+            "ForwardVel=%.3f "
+            "SideVel=%.3f "
+            "UpVel=%.3f "
+            "Final=(%.3f %.3f %.3f) "
+            "Limits=(%.3f %.3f %.3f)"),
+        ANSI_TO_TCHAR(ship->GetName()),
+        ForwardVel,
+        SideVel,
+        UpVel,
+        TransX,
+        TransY,
+        TransZ,
+        trans_x_limit,
+        trans_y_limit,
+        trans_z_limit);
 }

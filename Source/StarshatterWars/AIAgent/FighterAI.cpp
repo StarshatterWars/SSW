@@ -995,7 +995,7 @@ FighterAI::ThrottleControl()
             }
 
             else if (slot_dist > zone) {
-                throttle = lead ? (lead->Throttle() + 10.0) : old_throttle;
+                throttle = lead ? (lead->GetThrottle() + 10.0) : old_throttle;
             }
 
             else if (slot_dist < -zone * 2.0) {

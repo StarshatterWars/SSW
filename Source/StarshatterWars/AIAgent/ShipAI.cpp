@@ -1009,7 +1009,7 @@ ShipAI::ThrottleControl()
 		double speed = navpt->GetSpeed();
 
 		if (speed > 0)
-			throttle = speed / ship->VelocityLimit() * 100;
+			throttle = speed / ship->GetVelocityLimit() * 100;
 		else
 			throttle = 50;
 	}

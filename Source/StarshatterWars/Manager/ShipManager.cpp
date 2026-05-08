@@ -139,12 +139,12 @@ ShipManager::ExecFrame(double seconds)
 
 	if (time_til_change < 0.001) {
 		if (KeyDown(KEY_THROTTLE_UP)) {
-			ship->SetThrottle(ship->Throttle() + DELTA_THROTTLE);
+			ship->SetThrottle(ship->GetThrottle() + DELTA_THROTTLE);
 			time_til_change = 0.05;
 		}
 
 		else if (KeyDown(KEY_THROTTLE_DOWN)) {
-			ship->SetThrottle(ship->Throttle() - DELTA_THROTTLE);
+			ship->SetThrottle(ship->GetThrottle() - DELTA_THROTTLE);
 			time_til_change = 0.05;
 		}
 

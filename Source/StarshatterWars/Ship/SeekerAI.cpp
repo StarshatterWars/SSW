@@ -212,7 +212,7 @@ SeekerAI::CheckDecoys(double target_distance)
 {
     // if the assigned target has the burner lit,
     // ignore the decoys:
-    if (orig_target && orig_target->Augmenter()) {
+    if (orig_target && orig_target->GetAugmenter()) {
         SetTarget(orig_target);
         return;
     }

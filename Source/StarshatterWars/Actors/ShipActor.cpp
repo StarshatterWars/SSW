@@ -182,8 +182,8 @@ AShipActor::AShipActor()
     ComputerPointBOffset = FVector::ZeroVector;
     ReactorPointOffset = FVector::ZeroVector;
 
-    NumMainEnginePoints = 2;
-    NumThrusterPoints = 2;
+    NumMainEnginePoints = 0;
+    NumThrusterPoints = 0;
     NumWeaponMountPoints = 0;
     NumTurretBasePoints = 0;
     NumDockPoints = 0;
@@ -335,6 +335,8 @@ void AShipActor::Tick(float DeltaTime)
         UpdateCutsceneNavMovement(DeltaTime);
         return;
     }
+
+    
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -1576,6 +1578,12 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     RuntimeShip = InShip;
 
+    // Runtime ships use runtime Niagara thrusters only.
+    // Clear old generated fallback thruster emitters.
+    SetThrustersActive(false);
+    ClearComponentArray(ThrusterEmitters);
+    ClearComponentArray(ThrusterPoints);
+
     Drive* MainDrive =
         RuntimeShip ? RuntimeShip->GetMainDrive() : nullptr;
 
@@ -1932,13 +1940,13 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     }
 
     const float EnginePower =
-        FMath::Clamp(MainDrive->GetVisualPower(), 0.0f, 1.5f);
-
-    const float EngineIntensity =
-        FMath::Clamp(MainDrive->GetIntensity(), 0.0f, 1.0f);
+        FMath::Clamp(
+            RuntimeShip->GetThrottle() / 100.0f,
+            0.0f,
+            1.5f);
 
     const bool bActive =
-        EnginePower > 0.02f;
+        EnginePower >= 0.1f;
 
     for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
     {
@@ -1947,34 +1955,41 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             continue;
         }
 
+        /*
+         * Base engine profile:
+         * X = flame length
+         * Y = flame width
+         * Z = flame height
+         *
+         * Only X changes dynamically.
+         */
+        FVector RuntimeScale =
+            FVector(1.0f, 0.5f, 0.5f);
+
+        RuntimeScale.X *=
+            FMath::Lerp(
+                0.1f,
+                2.0f,
+                EnginePower);
+
+        Emitter->SetRelativeScale3D(RuntimeScale);
+        Emitter->SetVisibility(bActive);
+        Emitter->SetHiddenInGame(!bActive);
+
         if (bActive)
         {
             if (!Emitter->IsActive())
             {
                 Emitter->Activate(true);
             }
-
-            Emitter->SetVisibility(true);
-            Emitter->SetHiddenInGame(false);
         }
         else
         {
-            Emitter->Deactivate();
-            Emitter->SetVisibility(false);
-            Emitter->SetHiddenInGame(true);
+            if (Emitter->IsActive())
+            {
+                Emitter->Deactivate();
+            }
         }
-
-        Emitter->SetVariableFloat(
-            TEXT("User.EnginePower"),
-            EnginePower);
-
-        Emitter->SetVariableFloat(
-            TEXT("User.EngineIntensity"),
-            EngineIntensity * MainEngineIntensityScale);
-
-        Emitter->SetVariableFloat(
-            TEXT("User.EngineLength"),
-            FMath::Lerp(0.05f, 1.0f, EngineIntensity));
     }
 }
 
@@ -2165,8 +2180,24 @@ void AShipActor::BuildThrustersFromRuntime()
 {
     ClearRuntimeThrusters();
 
+    if (!bEnableThrusterEmitters)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] BuildThrustersFromRuntime: disabled Actor='%s'"),
+            *GetName());
+        return;
+    }
+
     if (!RuntimeShip)
     {
+        return;
+    }
+
+    if (!ThrusterFlareSystem && !ThrusterTrailSystem)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] BuildThrustersFromRuntime: no Niagara systems Actor='%s'"),
+            *GetName());
         return;
     }
 
@@ -2186,8 +2217,7 @@ void AShipActor::BuildThrustersFromRuntime()
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
     {
-        const FThrusterPort* Port =
-            RuntimeThruster->GetPort(PortIndex);
+        const FThrusterPort* Port = RuntimeThruster->GetPort(PortIndex);
 
         if (!Port)
         {
@@ -2198,85 +2228,68 @@ void AShipActor::BuildThrustersFromRuntime()
 
         FX.PointName = Port->PointName;
         FX.Direction = Port->Direction;
-
         FX.Location = Port->Location;
         FX.Rotation = Port->Rotation;
-
         FX.PortScale = Port->PortScale;
         FX.AudioMultiplier = Port->AudioMultiplier;
 
-        //-----------------------------------------------------
-        // Flare
-        //-----------------------------------------------------
-
         if (Port->bShowFlare && ThrusterFlareSystem)
         {
-            FX.Flare =
-                NewObject<UNiagaraComponent>(this);
+            FX.Flare = NewObject<UNiagaraComponent>(this);
 
-            FX.Flare->SetAsset(ThrusterFlareSystem);
+            if (FX.Flare)
+            {
+                FX.Flare->SetAsset(ThrusterFlareSystem);
+                FX.Flare->SetupAttachment(GetRootComponent());
+                FX.Flare->SetRelativeLocation(Port->Location);
+                FX.Flare->SetRelativeRotation(Port->Rotation);
+                FX.Flare->SetAutoActivate(false);
+                FX.Flare->RegisterComponent();
 
-            FX.Flare->SetupAttachment(GetRootComponent());
-
-            FX.Flare->SetRelativeLocation(Port->Location);
-            FX.Flare->SetRelativeRotation(Port->Rotation);
-
-            FX.Flare->SetAutoActivate(false);
-
-            FX.Flare->RegisterComponent();
-
-            FX.Flare->SetVariableFloat(
-                TEXT("Scale"),
-                Port->FlareScale);
-
-            FX.Flare->SetVariableLinearColor(
-                TEXT("ThrusterColor"),
-                Port->ThrusterColor);
+                FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
+                FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
+            }
         }
-
-        //-----------------------------------------------------
-        // Trail
-        //-----------------------------------------------------
 
         if (Port->bShowTrail && ThrusterTrailSystem)
         {
-            FX.Trail =
-                NewObject<UNiagaraComponent>(this);
+            FX.Trail = NewObject<UNiagaraComponent>(this);
 
-            FX.Trail->SetAsset(ThrusterTrailSystem);
+            if (FX.Trail)
+            {
+                FX.Trail->SetAsset(ThrusterTrailSystem);
+                FX.Trail->SetupAttachment(GetRootComponent());
+                FX.Trail->SetRelativeLocation(Port->Location);
+                FX.Trail->SetRelativeRotation(Port->Rotation);
+                FX.Trail->SetAutoActivate(false);
+                FX.Trail->RegisterComponent();
 
-            FX.Trail->SetupAttachment(GetRootComponent());
-
-            FX.Trail->SetRelativeLocation(Port->Location);
-            FX.Trail->SetRelativeRotation(Port->Rotation);
-
-            FX.Trail->SetAutoActivate(false);
-
-            FX.Trail->RegisterComponent();
-
-            FX.Trail->SetVariableFloat(
-                TEXT("Scale"),
-                Port->TrailScale);
-
-            FX.Trail->SetVariableLinearColor(
-                TEXT("ThrusterColor"),
-                Port->ThrusterColor);
+                FX.Trail->SetVariableFloat(TEXT("Scale"), Port->TrailScale);
+                FX.Trail->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
+            }
         }
 
         RuntimeThrusterFX.Add(FX);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] ThrusterFX[%d] Name='%s' Dir=%d Loc=%s Rot=%s"),
+            TEXT("[ShipActor] ThrusterFX[%d] Name='%s' Dir=%d Loc=%s Rot=%s Flare=%p Trail=%p"),
             PortIndex,
             *Port->PointName.ToString(),
             static_cast<int32>(Port->Direction),
             *Port->Location.ToString(),
-            *Port->Rotation.ToString());
+            *Port->Rotation.ToString(),
+            FX.Flare,
+            FX.Trail);
     }
 }
 
 void AShipActor::UpdateThrustersFromRuntime(float DeltaTime)
 {
+    if (!bEnableThrusterEmitters)
+    {
+        return;
+    }
+
     if (!RuntimeShip)
     {
         return;
@@ -2290,42 +2303,80 @@ void AShipActor::UpdateThrustersFromRuntime(float DeltaTime)
         return;
     }
 
-    const int32 Count =
-        FMath::Min(
-            RuntimeThrusterFX.Num(),
-            RuntimeThruster->NumThrusters());
+    const int32 Count = FMath::Min(
+        RuntimeThrusterFX.Num(),
+        RuntimeThruster->NumThrusters());
 
     for (int32 i = 0; i < Count; ++i)
     {
-        const float Power = RuntimeThruster->GetVisualPower(i);
-        const FThrusterPort* Port = RuntimeThruster->GetPort(i);
+        const FThrusterPort* Port =
+            RuntimeThruster->GetPort(i);
 
-        if (Port && Power > 0.01f)
+        if (!Port)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[ShipActor] THRUSTER FIRING Actor='%s' Index=%d Name='%s' Dir=%d Power=%.3f Fire=0x%04X Loc=%s"),
-                *GetName(),
-                i,
-                *Port->PointName.ToString(),
-                static_cast<int32>(Port->Direction),
-                Power,
-                Port->Fire,
-                *Port->Location.ToString());
+            continue;
         }
 
-        FRuntimeThrusterFX& FX = RuntimeThrusterFX[i];
+        /*
+         * Runtime thruster power
+         */
+        const float Power =
+            FMath::Clamp(
+                RuntimeThruster->GetVisualPower(i),
+                0.0f,
+                1.0f);
 
-        const bool bActive = Power > 0.01f;
+        const bool bActive =
+            Power >= 0.1f;
 
-        //-----------------------------------------------------
-        // Flare
-        //-----------------------------------------------------
+        /*
+         * Thruster profile:
+         *
+         * X = flame length
+         * Y = flame width
+         * Z = flame height
+         *
+         * Only X changes dynamically.
+         */
+        FVector RuntimeScale =
+            FVector(1.0f, 0.5f, 0.5f);
 
+        RuntimeScale.X *=
+            FMath::Lerp(
+                0.1f,
+                1.0f,
+                Power);
+
+        /*
+         * Apply port authored scale
+         */
+        RuntimeScale *= Port->FlareScale;
+
+        FRuntimeThrusterFX& FX =
+            RuntimeThrusterFX[i];
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] RuntimeThruster[%d] Ship='%s' Name='%s' Dir=%d Power=%.3f Active=%d"),
+            i,
+            *GetName(),
+            *Port->PointName.ToString(),
+            static_cast<int32>(Port->Direction),
+            Power,
+            bActive ? 1 : 0);
+
+        /*
+         * Flare
+         */
         if (FX.Flare)
         {
-            FX.Flare->SetVariableFloat(
-                TEXT("Power"),
-                Power);
+            FX.Flare->SetRelativeScale3D(
+                RuntimeScale);
+
+            FX.Flare->SetVisibility(
+                bActive);
+
+            FX.Flare->SetHiddenInGame(
+                !bActive);
 
             if (bActive)
             {
@@ -2343,15 +2394,19 @@ void AShipActor::UpdateThrustersFromRuntime(float DeltaTime)
             }
         }
 
-        //-----------------------------------------------------
-        // Trail
-        //-----------------------------------------------------
-
+        /*
+         * Trail
+         */
         if (FX.Trail)
         {
-            FX.Trail->SetVariableFloat(
-                TEXT("Power"),
-                Power);
+            FX.Trail->SetRelativeScale3D(
+                RuntimeScale);
+
+            FX.Trail->SetVisibility(
+                bActive);
+
+            FX.Trail->SetHiddenInGame(
+                !bActive);
 
             if (bActive)
             {

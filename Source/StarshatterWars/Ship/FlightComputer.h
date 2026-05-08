@@ -1,17 +1,16 @@
 /*  Project Starshatter Wars
-	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
 
-	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
+    ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
 
-	SUBSYSTEM:    Stars.exe
-	FILE:         FlightComputer.h
-	AUTHOR:       Carlos Bott
+    SUBSYSTEM:    Stars.exe
+    FILE:         FlightComputer.h
+    AUTHOR:       Carlos Bott
 
-
-	OVERVIEW
-	========
-	Flight Computer systems class
+    OVERVIEW
+    ========
+    Flight Computer systems class
 */
 
 #pragma once
@@ -31,34 +30,137 @@ class Ship;
 class FlightComputer : public Computer
 {
 public:
-	enum CompType { AVIONICS = 1, FLIGHT, TACTICAL };
+    enum CompType
+    {
+        AVIONICS = 1,
+        FLIGHT,
+        TACTICAL
+    };
 
-	FlightComputer(EComputerType comp_type, const char* comp_name);
-	FlightComputer(const Computer& rhs);
-	virtual ~FlightComputer();
+    FlightComputer(
+        EComputerType comp_type,
+        const char* comp_name);
 
-	virtual void      ExecSubFrame();
+    FlightComputer(
+        const Computer& rhs);
 
-	int               Mode()                  const { return mode; }
-	double            Throttle()              const { return throttle; }
+    virtual ~FlightComputer();
 
-	void              SetMode(int m) { mode = m; }
-	void              SetVelocityLimit(double v) { vlimit = (float)v; }
-	void              SetTransLimit(double x, double y, double z);
+    //-------------------------------------------------------------
+    // Main update
+    //-------------------------------------------------------------
+    virtual void ExecSubFrame();
 
-	void              FullStop() { halt = true; }
+    //-------------------------------------------------------------
+    // Accessors
+    //-------------------------------------------------------------
+    int Mode() const
+    {
+        return mode;
+    }
+
+    double Throttle() const
+    {
+        return throttle;
+    }
+
+    double VelocityLimit() const
+    {
+        return vlimit;
+    }
+
+    double TransXLimit() const
+    {
+        return trans_x_limit;
+    }
+
+    double TransYLimit() const
+    {
+        return trans_y_limit;
+    }
+
+    double TransZLimit() const
+    {
+        return trans_z_limit;
+    }
+
+    bool IsHalting() const
+    {
+        return halt != 0;
+    }
+
+    //-------------------------------------------------------------
+    // Mutators
+    //-------------------------------------------------------------
+    void SetMode(int m)
+    {
+        mode = m;
+    }
+
+    void SetThrottle(double t)
+    {
+        throttle = (float)t;
+    }
+
+    void SetVelocityLimit(double v)
+    {
+        vlimit = (float)v;
+    }
+
+    void SetTransLimit(
+        double x,
+        double y,
+        double z);
+
+    void FullStop()
+    {
+        halt = true;
+    }
+
+    void ClearHalt()
+    {
+        halt = false;
+    }
 
 protected:
-	virtual void      ExecTrans();
-	virtual void      ExecThrottle();
+    //-------------------------------------------------------------
+    // Internal update stages
+    //-------------------------------------------------------------
+    virtual void ExecTrans();
+    virtual void ExecThrottle();
 
-	int               mode;
-	int               halt;
-	float             throttle;
+    //-------------------------------------------------------------
+    // Local-space helpers
+    //-------------------------------------------------------------
+    FVector GetForwardVector() const;
+    FVector GetRightVector() const;
+    FVector GetUpVector() const;
 
-	float             vlimit;
-	float             trans_x_limit;
-	float             trans_y_limit;
-	float             trans_z_limit;
+    double GetForwardVelocity() const;
+    double GetSideVelocity() const;
+    double GetVerticalVelocity() const;
+
+protected:
+    //-------------------------------------------------------------
+    // Flight state
+    //-------------------------------------------------------------
+    int     mode;
+    int     halt;
+
+    //-------------------------------------------------------------
+    // Cached throttle state
+    //-------------------------------------------------------------
+    float   throttle;
+
+    //-------------------------------------------------------------
+    // Velocity limits
+    //-------------------------------------------------------------
+    float   vlimit;
+
+    //-------------------------------------------------------------
+    // Translational correction limits
+    //-------------------------------------------------------------
+    float   trans_x_limit;
+    float   trans_y_limit;
+    float   trans_z_limit;
 };
-

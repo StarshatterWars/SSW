@@ -107,6 +107,14 @@
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 
+#define SHIP_MOVE_TRACE 1
+
+#if SHIP_MOVE_TRACE
+#define SHIP_MOVE_LOG(Format, ...) \
+    UE_LOG(LogTemp, Warning, TEXT("[ShipMoveTrace] " Format), ##__VA_ARGS__)
+#else
+#define SHIP_MOVE_LOG(Format, ...)
+#endif
 
 // ---------------------------------------------------------------------
 // NOTE ON POINT/VEC3 CONVERSION
@@ -545,6 +553,25 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 			NewComputer = NewFLCS;
 			//flcs = NewFLCS;
+
+			if (flcs && design)
+			{
+				flcs->SetTransLimit(
+					design->trans_x,
+					design->trans_y,
+					design->trans_z);
+
+				flcs->SetVelocityLimit(vlimit);
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[Ship] FLCS initialized Ship='%hs' FLCS=%p TransLimits=(%.2f %.2f %.2f) VLimit=%.2f"),
+					GetName(),
+					flcs,
+					design->trans_x,
+					design->trans_y,
+					design->trans_z,
+					vlimit);
+			}
 		}
 		else
 		{
@@ -558,11 +585,11 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		if (src_index >= 0 && src_index < reactors.size())
 		{
-			reactors[src_index]->AddClient(NewComputer);
+			//reactors[src_index]->AddClient(NewComputer);
 		}
 		else if (reactors.size() > 0)
 		{
-			reactors[0]->AddClient(NewComputer);
+			//reactors[0]->AddClient(NewComputer);
 		}
 
 		computers.append(NewComputer);
@@ -2840,6 +2867,19 @@ Ship::CycleSubTarget(int Dir)
 void
 Ship::ExecFrame(double seconds)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecFrame] ENTER Ship='%s' "
+			"Throttle=%.2f Request=%.2f "
+			"Trans(X=%.2f Y=%.2f Z=%.2f) "
+			"FLCS=%p"),
+		ANSI_TO_TCHAR(GetName()),
+		throttle,
+		throttle_request,
+		trans_x,
+		trans_y,
+		trans_z,
+		flcs);
+
 	FMemory::Memzero(trigger, sizeof(trigger));
 	altitude_agl = -1.0e6f;
 
@@ -2864,11 +2904,6 @@ Ship::ExecFrame(double seconds)
 		if (rep && IsDying() && killer) {
 			killer->ExecFrame(seconds);
 		}
-	}
-
-	if (IsNetObserver()) {
-		for (int i = 0; i < reactors.size(); i++)
-			reactors[i]->SetFuelRange(1e6);
 	}
 
 	if (IsStatic()) {
@@ -3121,23 +3156,29 @@ void Ship::ExecPhysics(double seconds)
 	if (net_control)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] net_control ExecFrame Ship='%hs' NetControl=%p"),
+			TEXT("[Ship::ExecPhysics] NET_CONTROL PATH Ship='%hs' NetControl=%p"),
 			GetName(),
 			net_control);
 
 		net_control->ExecFrame(seconds);
-	}
-	else
-	{
+
+		const double DriveFlareThrust = GetThrust(seconds);
+
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] NO NET_CONTROL Ship='%hs'"),
-			GetName());
+			TEXT("[Ship::ExecPhysics] NET_CONTROL DRIVE FLARE ONLY Ship='%hs' DriveFlareThrust=%.2f Throttle=%.2f Request=%.2f Vel=%s"),
+			GetName(),
+			DriveFlareThrust,
+			throttle,
+			throttle_request,
+			*GetVelocity().ToString());
+
+		return;
 	}
 
 	if (dir)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] dir ExecFrame Ship='%hs' Dir=%p"),
+			TEXT("[Ship::ExecPhysics] DIR PATH Ship='%hs' Dir=%p"),
 			GetName(),
 			dir);
 
@@ -3146,9 +3187,8 @@ void Ship::ExecPhysics(double seconds)
 	else
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] NO DIR Ship='%hs' NetControl=%p"),
-			GetName(),
-			net_control);
+			TEXT("[Ship::ExecPhysics] NO DIR Ship='%hs'"),
+			GetName());
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -3162,12 +3202,12 @@ void Ship::ExecPhysics(double seconds)
 		navsys,
 		vlimit);
 
-	thrust = (float)Thrust(seconds);
+	thrust = (float)GetThrust(seconds);
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Ship::ExecPhysics] AFTER THRUST Ship='%hs' Throttle=%.2f Request=%.2f Thrust=%.2f Vel=%s"),
 		GetName(),
-		throttle,
+		GetThrottle(),
 		throttle_request,
 		thrust,
 		*GetVelocity().ToString());
@@ -3187,13 +3227,27 @@ void Ship::ExecPhysics(double seconds)
 
 	if (IsDying() || flight_model < 2)
 	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] BEFORE Physical::ExecFrame Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
+			GetName(),
+			thrust,
+			*GetVelocity().ToString(),
+			*GetLocation().ToString());
+
 		Physical::ExecFrame(seconds);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] AFTER Physical::ExecFrame Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
+			GetName(),
+			thrust,
+			*GetVelocity().ToString(),
+			*GetLocation().ToString());
+
 		return;
 	}
 
 	Physical::ArcadeFrame(seconds);
 }
-
 // +--------------------------------------------------------------------+
 
 void
@@ -3238,7 +3292,7 @@ Ship::ExecSystems(double seconds)
 			sys->ExecFrame(seconds);
 	}
 
-	// hangars and weapon groups are notxsystems
+	// hangars and weapon groups are not systems
 	// they must be executed separately from above
 	if (hangar)
 		hangar->ExecFrame(seconds);
@@ -3993,15 +4047,31 @@ Ship::GetFuelLevel() const
 void
 Ship::SetThrottle(double percent)
 {
+	const double OldRequest = throttle_request;
+
 	throttle_request = percent;
 
 	if (throttle_request < 0)
+	{
 		throttle_request = 0;
+	}
 	else if (throttle_request > 100)
+	{
 		throttle_request = 100;
+	}
 
 	if (throttle_request < 50)
+	{
 		augmenter = false;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::SetThrottle] Ship='%hs' Percent=%.2f OldRequest=%.2f NewRequest=%.2f CurrentThrottle=%.2f"),
+		GetName(),
+		percent,
+		OldRequest,
+		throttle_request,
+		throttle);
 }
 
 void
@@ -4555,7 +4625,7 @@ Ship::DoEMCON()
 // +--------------------------------------------------------------------+
 
 double
-Ship::Thrust(double seconds) const
+Ship::GetThrust(double seconds) const
 {
 	double total_thrust = 0.0;
 
@@ -4573,11 +4643,26 @@ Ship::Thrust(double seconds) const
 		const FVector H = GetHeading();
 		FVector       V = GetVelocity();
 
-		const double vmag = V.Normalize();
-		double eff_throttle = throttle;
+		const double vmag = V.Size();
+
+		FVector VNorm = FVector::ZeroVector;
+
+		if (vmag > KINDA_SMALL_NUMBER)
+		{
+			VNorm = V / vmag;
+		}
+
+		double eff_throttle =
+			GetThrottle();
+
+		if (eff_throttle <= 0.0 && throttle_request > 0.0)
+		{
+			eff_throttle = throttle_request;
+		}
+
 		double thrust_factor = 1.0;
 
-		double Vfwd = FVector::DotProduct(H, V);
+		double Vfwd = FVector::DotProduct(H, VNorm);
 		const bool bAugOn = main_drive->IsAugmenterOn();
 
 		UE_LOG(LogTemp, Warning,
@@ -4608,7 +4693,7 @@ Ship::Thrust(double seconds) const
 		}
 
 		// FLCS override
-		if (flcs)
+		/*if (flcs)
 		{
 			const double flcsThrottle = flcs->Throttle();
 
@@ -4630,7 +4715,7 @@ Ship::Thrust(double seconds) const
 
 				eff_throttle = throttle;
 			}
-		}
+		}*/
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship::Thrust] PreFlightModel EffThrottle=%.2f FlightModel=%d"),
@@ -4828,9 +4913,32 @@ Ship::SetTransZ(double t)
 void
 Ship::ExecFLCSFrame()
 {
-	if (flcs) {
-		flcs->ExecSubFrame(); 
+	if (!flcs)
+	{
+		return;
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecFLCSFrame] BEFORE FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
+		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
+		throttle,
+		throttle_request,
+		trans_x,
+		trans_y,
+		trans_z,
+		*GetVelocity().ToString());
+
+	flcs->ExecSubFrame();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecFLCSFrame] AFTER FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
+		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
+		throttle,
+		throttle_request,
+		trans_x,
+		trans_y,
+		trans_z,
+		*GetVelocity().ToString());
 }
 
 // +--------------------------------------------------------------------+

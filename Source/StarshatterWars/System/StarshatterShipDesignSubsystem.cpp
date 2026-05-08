@@ -250,10 +250,10 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	if (bFull)
-	{
+	//if (bFull)
+	//{
 		InitializeShipDesigns();
-	}
+	//}
 
 	LoadShipDesignTable();
 }

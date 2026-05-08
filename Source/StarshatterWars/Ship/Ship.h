@@ -211,11 +211,11 @@ public:
     int               GetFuelLevel() const; // (0-100) percent of full tank
     void              SetThrottle(double percent);
     void              SetAugmenter(bool enable);
-    double            Thrust(double seconds) const;
-    double            VelocityLimit() const { return vlimit; }
+    double            GetThrust(double seconds) const;
+    double            GetVelocityLimit() const { return vlimit; }
     Drive*            GetMainDrive() const { return main_drive; }
-    double            Throttle() const { return throttle; }
-    bool              Augmenter() const { return augmenter; }
+    double            GetThrottle() const { return throttle; }
+    bool              GetAugmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
     Farcaster*        GetFarcaster() const { return farcaster; }
     bool              IsAirborne() const;

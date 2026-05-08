@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #include "CoreMinimal.h"
 #include "ShipActor.h"
@@ -13,16 +12,23 @@ class STARSHATTERWARS_API ABaikalShipActor : public AShipActor
 public:
     ABaikalShipActor();
 
-    virtual void OnConstruction(const FTransform& Transform) override;
+    virtual void OnConstruction(
+        const FTransform& Transform) override;
 
 protected:
     void ApplyBaikalDefaults();
     void ApplyBaikalFixedPoints();
-    void BuildBaikalMainEnginePoints();
-    void BuildBaikalThrusterPoints();
+
+    /*
+     * Runtime systems now own:
+     * - main engine ports
+     * - thruster ports
+     * - nav lights
+     *
+     * These remain actor-local structural points only.
+     */
     void BuildBaikalWeaponMountPoints();
     void BuildBaikalTurretBasePoints();
     void BuildBaikalDockPoints();
     void BuildBaikalLandingPoints();
-    void BuildBaikalNavLights();
 };
