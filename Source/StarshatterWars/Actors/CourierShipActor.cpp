@@ -87,7 +87,6 @@ void ACourierShipActor::ApplyCourierDefaults()
     /*
      * Explicit generated point counts
      */
-    NumMainEnginePoints = 4;
     NumWeaponMountPoints = 0;
     NumTurretBasePoints = 0;
     NumDockPoints = 0;

@@ -413,9 +413,11 @@ public:
     TArray<FRuntimeThrusterFX> RuntimeThrusterFX;
 
     void BuildThrustersFromRuntime();
-    void UpdateThrustersFromRuntime(float DeltaTime);
     void ClearRuntimeThrusters();
+    void UpdateThrusterVFXFromRuntime();
 
+    UPROPERTY()
+    TArray<TObjectPtr<UNiagaraComponent>> RuntimeThrusterEmitters;
 
 public:
 
@@ -467,6 +469,8 @@ public:
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildThrusterEmitters();
+
+
 
     /*
      * Accessors

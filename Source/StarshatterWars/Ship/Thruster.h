@@ -63,7 +63,7 @@ public:
         int index,
         const FThrusterPort& InPort);
 
-    int NumThrusters() const;
+    int GetNumThrusters() const;
 
     const FThrusterPort* GetPort(int index) const;
 
@@ -71,7 +71,7 @@ public:
     FRotator GetPortRotation(int index) const;
 
     float GetPortScale(int index) const;
-    float GetIntensity(int index) const;
+    float GetThrusterBurn(int index) const;
     float GetVisualPower(int index) const;
 
     DWORD GetPortFireFlags(int index) const;

@@ -441,7 +441,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 			TEXT("[Ship] Runtime thruster initialized Ship='%s' Thruster=%p Ports=%d SourceIndex=%d TransLimits=(%.2f %.2f %.2f)"),
 			ANSI_TO_TCHAR(name),
 			runtime_thruster,
-			runtime_thruster->NumThrusters(),
+			runtime_thruster->GetNumThrusters(),
 			src_index,
 			runtime_thruster->TransXLimit(),
 			runtime_thruster->TransYLimit(),

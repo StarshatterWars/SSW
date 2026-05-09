@@ -324,7 +324,8 @@ void AShipActor::Tick(float DeltaTime)
         UpdateNavLights(DeltaTime);
         UpdateMainEnginesFromRuntime(DeltaTime);
         UpdateEngineAudioFromRuntime(DeltaTime);
-        UpdateThrustersFromRuntime(DeltaTime);
+        UpdateThrusterVFXFromRuntime();
+
         return;
     }
 
@@ -335,8 +336,6 @@ void AShipActor::Tick(float DeltaTime)
         UpdateCutsceneNavMovement(DeltaTime);
         return;
     }
-
-    
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -1687,20 +1686,31 @@ void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     LastRuntimeVelocity = RuntimeVelocityUE;
 
     SetThrustersActive(bHasUsableVelocity);
+    const FString ActorLocStr = GetActorLocation().ToString();
+    const FString DesiredLocStr = DesiredLocation.ToString();
+    const FString ActorFwdStr = GetActorForwardVector().ToString();
+    const FString ActorRotStr = GetActorRotation().ToString();
+
+    const FString RuntimeDeltaLegacyStr = RuntimeDeltaLegacy.ToString();
+    const FString RuntimeDeltaUEStr = RuntimeDeltaUE.ToString();
+    const FString RuntimeHeadingLegacyStr = RuntimeHeadingLegacy.ToString();
+    const FString RuntimeHeadingUEStr = RuntimeHeadingUE.ToString();
+    const FString RuntimeVelocityLegacyStr = RuntimeVelocityLegacy.ToString();
+    const FString RuntimeVelocityUEStr = RuntimeVelocityUE.ToString();
 
     UE_LOG(LogTemp, Warning,
         TEXT("[ShipActor::UpdateFromRuntimeShip] Ship='%s' ActorLoc=%s DesiredLoc=%s ActorFwd=%s ActorRot=%s LegacyDelta=%s UEDelta=%s LegacyHeading=%s UEHeading=%s LegacyVel=%s UEVel=%s"),
         *GetName(),
-        *GetActorLocation().ToString(),
-        *DesiredLocation.ToString(),
-        *GetActorForwardVector().ToString(),
-        *GetActorRotation().ToString(),
-        *RuntimeDeltaLegacy.ToString(),
-        *RuntimeDeltaUE.ToString(),
-        *RuntimeHeadingLegacy.ToString(),
-        *RuntimeHeadingUE.ToString(),
-        *RuntimeVelocityLegacy.ToString(),
-        *RuntimeVelocityUE.ToString());
+        *ActorLocStr,
+        *DesiredLocStr,
+        *ActorFwdStr,
+        *ActorRotStr,
+        *RuntimeDeltaLegacyStr,
+        *RuntimeDeltaUEStr,
+        *RuntimeHeadingLegacyStr,
+        *RuntimeHeadingUEStr,
+        *RuntimeVelocityLegacyStr,
+        *RuntimeVelocityUEStr);
 }
 
 void AShipActor::BuildNavLightsFromRuntime()
@@ -2208,12 +2218,12 @@ void AShipActor::BuildThrustersFromRuntime()
         return;
     }
 
-    const int32 NumPorts = RuntimeThruster->NumThrusters();
+    const int32 NumPorts = RuntimeThruster->GetNumThrusters();
 
     UE_LOG(LogTemp, Warning,
         TEXT("[ShipActor] BuildThrustersFromRuntime Actor='%s' Ports=%d"),
         *GetName(),
-        NumPorts);
+         NumPorts);
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
     {
@@ -2283,149 +2293,6 @@ void AShipActor::BuildThrustersFromRuntime()
     }
 }
 
-void AShipActor::UpdateThrustersFromRuntime(float DeltaTime)
-{
-    if (!bEnableThrusterEmitters)
-    {
-        return;
-    }
-
-    if (!RuntimeShip)
-    {
-        return;
-    }
-
-    Thruster* RuntimeThruster =
-        RuntimeShip->GetThruster();
-
-    if (!RuntimeThruster)
-    {
-        return;
-    }
-
-    const int32 Count = FMath::Min(
-        RuntimeThrusterFX.Num(),
-        RuntimeThruster->NumThrusters());
-
-    for (int32 i = 0; i < Count; ++i)
-    {
-        const FThrusterPort* Port =
-            RuntimeThruster->GetPort(i);
-
-        if (!Port)
-        {
-            continue;
-        }
-
-        /*
-         * Runtime thruster power
-         */
-        const float Power =
-            FMath::Clamp(
-                RuntimeThruster->GetVisualPower(i),
-                0.0f,
-                1.0f);
-
-        const bool bActive =
-            Power >= 0.1f;
-
-        /*
-         * Thruster profile:
-         *
-         * X = flame length
-         * Y = flame width
-         * Z = flame height
-         *
-         * Only X changes dynamically.
-         */
-        FVector RuntimeScale =
-            FVector(1.0f, 0.5f, 0.5f);
-
-        RuntimeScale.X *=
-            FMath::Lerp(
-                0.1f,
-                1.0f,
-                Power);
-
-        /*
-         * Apply port authored scale
-         */
-        RuntimeScale *= Port->FlareScale;
-
-        FRuntimeThrusterFX& FX =
-            RuntimeThrusterFX[i];
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] RuntimeThruster[%d] Ship='%s' Name='%s' Dir=%d Power=%.3f Active=%d"),
-            i,
-            *GetName(),
-            *Port->PointName.ToString(),
-            static_cast<int32>(Port->Direction),
-            Power,
-            bActive ? 1 : 0);
-
-        /*
-         * Flare
-         */
-        if (FX.Flare)
-        {
-            FX.Flare->SetRelativeScale3D(
-                RuntimeScale);
-
-            FX.Flare->SetVisibility(
-                bActive);
-
-            FX.Flare->SetHiddenInGame(
-                !bActive);
-
-            if (bActive)
-            {
-                if (!FX.Flare->IsActive())
-                {
-                    FX.Flare->Activate(true);
-                }
-            }
-            else
-            {
-                if (FX.Flare->IsActive())
-                {
-                    FX.Flare->Deactivate();
-                }
-            }
-        }
-
-        /*
-         * Trail
-         */
-        if (FX.Trail)
-        {
-            FX.Trail->SetRelativeScale3D(
-                RuntimeScale);
-
-            FX.Trail->SetVisibility(
-                bActive);
-
-            FX.Trail->SetHiddenInGame(
-                !bActive);
-
-            if (bActive)
-            {
-                if (!FX.Trail->IsActive())
-                {
-                    FX.Trail->Activate(true);
-                }
-            }
-            else
-            {
-                if (FX.Trail->IsActive())
-                {
-                    FX.Trail->Deactivate();
-                }
-            }
-        }
-    }
-}
-
 void AShipActor::ClearRuntimeThrusters()
 {
     for (FRuntimeThrusterFX& FX : RuntimeThrusterFX)
@@ -2444,4 +2311,106 @@ void AShipActor::ClearRuntimeThrusters()
     }
 
     RuntimeThrusterFX.Empty();
+}
+
+void AShipActor::UpdateThrusterVFXFromRuntime()
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    Thruster* RuntimeThruster =
+        RuntimeShip->GetThruster();
+
+    if (!RuntimeThruster)
+    {
+        return;
+    }
+
+    const int32 NumPorts =
+        FMath::Min(
+            RuntimeThruster->GetNumThrusters(),
+            RuntimeThrusterFX.Num());
+
+    for (int32 PortIndex = 0;
+        PortIndex < NumPorts;
+        ++PortIndex)
+    {
+        const float Burn =
+            FMath::Clamp(
+                RuntimeThruster->GetThrusterBurn(PortIndex),
+                0.0f,
+                1.0f);
+
+        const bool bActive =
+            Burn >= 0.05f;
+
+        FRuntimeThrusterFX& FX =
+            RuntimeThrusterFX[PortIndex];
+
+        FVector RuntimeScale =
+            FVector(1.0f, 0.5f, 0.5f);
+
+        RuntimeScale.X *=
+            FMath::Lerp(
+                0.1f,
+                1.5f,
+                Burn);
+
+        if (FX.Flare)
+        {
+            FX.Flare->SetRelativeScale3D(
+                RuntimeScale * FX.PortScale);
+
+            FX.Flare->SetVisibility(bActive);
+            FX.Flare->SetHiddenInGame(!bActive);
+
+            if (bActive)
+            {
+                if (!FX.Flare->IsActive())
+                {
+                    FX.Flare->Activate(true);
+                }
+            }
+            else
+            {
+                if (FX.Flare->IsActive())
+                {
+                    FX.Flare->Deactivate();
+                }
+            }
+        }
+
+        if (FX.Trail)
+        {
+            FX.Trail->SetRelativeScale3D(
+                RuntimeScale * FX.PortScale);
+
+            FX.Trail->SetVisibility(bActive);
+            FX.Trail->SetHiddenInGame(!bActive);
+
+            if (bActive)
+            {
+                if (!FX.Trail->IsActive())
+                {
+                    FX.Trail->Activate(true);
+                }
+            }
+            else
+            {
+                if (FX.Trail->IsActive())
+                {
+                    FX.Trail->Deactivate();
+                }
+            }
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor] RuntimeThrusterFX Ship='%s' Port=%d Burn=%.2f Active=%d"),
+            *GetName(),
+            PortIndex,
+            Burn,
+            bActive ? 1 : 0);
+    }
 }

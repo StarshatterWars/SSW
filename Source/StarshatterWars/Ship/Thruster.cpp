@@ -303,256 +303,421 @@ double Thruster::TransZLimit()
 
 void Thruster::ExecTrans(double x, double y, double z)
 {
-    if (!ship)
-    {
-        return;
-    }
+	if (!ship)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Thruster::ExecTrans] NO SHIP"));
+		return;
+	}
 
-    /*
-     * Landing craft VTOL assist
-     */
-    if (ship->Class() == CLASSIFICATION::LCA &&
-        ship->IsAirborne() &&
-        ship->GetVelocity().Length() < 250 &&
-        ship->GetAltitudeAGL() > ship->GetRadius() / 2)
-    {
-        IncBurn(
-            EThrusterPortDir::BOTTOM,
-            EThrusterPortDir::TOP);
-    }
+	/*
+	 * Incoming input is still LEGACY SIM coordinates:
+	 *
+	 * Legacy:
+	 * X = right/left
+	 * Y = up/down
+	 * Z = forward/back
+	 *
+	 * Convert ONLY for Unreal thruster visualization logic:
+	 *
+	 * Unreal:
+	 * X = forward/back
+	 * Y = right/left
+	 * Z = up/down
+	 */
+	const double ue_x = z;
+	const double ue_y = x;
+	const double ue_z = y;
 
-    /*
-     * Main translational and attitude thruster logic
-     * now always active for spaceflight.
-     */
-    else
-    {
-        const double tx_limit =
-            ship->Design()->trans_x;
+	/*
+	 * Legacy design limits mapped to UE axes
+	 */
+	const double tx_limit =
+		FMath::Max(
+			ship->Design()->trans_z,
+			1.0f);
 
-        const double ty_limit =
-            ship->Design()->trans_y;
+	const double ty_limit =
+		FMath::Max(
+			ship->Design()->trans_x,
+			1.0f);
 
-        const double tz_limit =
-            ship->Design()->trans_z;
+	const double tz_limit =
+		FMath::Max(
+			ship->Design()->trans_y,
+			1.0f);
 
-        /*
-         * LEFT / RIGHT
-         */
-        if (x < -0.15 * tx_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::RIGHT,
-                EThrusterPortDir::LEFT);
-        }
-        else if (x > 0.15 * tx_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::LEFT,
-                EThrusterPortDir::RIGHT);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::LEFT,
-                EThrusterPortDir::RIGHT);
-        }
+	/*
+	 * Proportional maneuver strength
+	 */
+	const float fore_aft_amount =
+		(float)FMath::Clamp(
+			FMath::Abs(ue_x) / tx_limit,
+			0.0,
+			1.0);
 
-        /*
-         * FORE / AFT
-         */
-        if (y < -0.15 * ty_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::FORE,
-                EThrusterPortDir::AFT);
-        }
-        else if (y > 0.15 * ty_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::AFT,
-                EThrusterPortDir::FORE);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::FORE,
-                EThrusterPortDir::AFT);
-        }
+	const float left_right_amount =
+		(float)FMath::Clamp(
+			FMath::Abs(ue_y) / ty_limit,
+			0.0,
+			1.0);
 
-        /*
-         * TOP / BOTTOM
-         */
-        if (z < -0.15 * tz_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::TOP,
-                EThrusterPortDir::BOTTOM);
-        }
-        else if (z > 0.15 * tz_limit)
-        {
-            IncBurn(
-                EThrusterPortDir::BOTTOM,
-                EThrusterPortDir::TOP);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::TOP,
-                EThrusterPortDir::BOTTOM);
-        }
+	const float top_bottom_amount =
+		(float)FMath::Clamp(
+			FMath::Abs(ue_z) / tz_limit,
+			0.0,
+			1.0);
 
-        /*
-         * Rotational thrusters
-         */
-        double r = 0.0;
-        double p = 0.0;
-        double yaw = 0.0;
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Thruster::ExecTrans] ENTER Ship='%hs' "
+			"LegacyInput=(%.2f %.2f %.2f) "
+			"UEInput=(%.2f %.2f %.2f) "
+			"Ports=%d Thrust=%.2f"),
+		ship->GetName(),
+		x,
+		y,
+		z,
+		ue_x,
+		ue_y,
+		ue_z,
+		ports.size(),
+		thrust);
 
-        ship->GetAngularThrust(
-            r,
-            p,
-            yaw);
+	/*
+	 * Landing craft VTOL assist
+	 */
+	if (ship->Class() == CLASSIFICATION::LCA &&
+		ship->IsAirborne() &&
+		ship->GetVelocity().Length() < 250 &&
+		ship->GetAltitudeAGL() > ship->GetRadius() / 2)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Thruster::ExecTrans] VTOL ASSIST Ship='%hs'"),
+			ship->GetName());
 
-        /*
-         * ROLL
-         */
-        if (r > 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::ROLL_L,
-                EThrusterPortDir::ROLL_R);
-        }
-        else if (r < 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::ROLL_R,
-                EThrusterPortDir::ROLL_L);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::ROLL_R,
-                EThrusterPortDir::ROLL_L);
-        }
+		IncBurn(
+			EThrusterPortDir::BOTTOM,
+			EThrusterPortDir::TOP);
+	}
+	else
+	{
+		/*
+		 * FORE / AFT
+		 * UE:
+		 * +X = forward
+		 * -X = backward
+		 *
+		 * Forward motion fires AFT thrusters.
+		 */
+		if (ue_x < -0.15 * tx_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] FORE THRUST Ship='%hs' UE_X=%.2f"),
+				ship->GetName(),
+				ue_x);
 
-        /*
-         * YAW
-         */
-        if (yaw < 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::YAW_L,
-                EThrusterPortDir::YAW_R);
-        }
-        else if (yaw > 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::YAW_R,
-                EThrusterPortDir::YAW_L);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::YAW_R,
-                EThrusterPortDir::YAW_L);
-        }
+			IncBurn(
+				EThrusterPortDir::FORE,
+				EThrusterPortDir::AFT);
+		}
+		else if (ue_x > 0.15 * tx_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] AFT THRUST Ship='%hs' UE_X=%.2f"),
+				ship->GetName(),
+				ue_x);
 
-        /*
-         * PITCH
-         */
-        if (p < 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::PITCH_D,
-                EThrusterPortDir::PITCH_U);
-        }
-        else if (p > 0.0)
-        {
-            IncBurn(
-                EThrusterPortDir::PITCH_U,
-                EThrusterPortDir::PITCH_D);
-        }
-        else
-        {
-            DecBurn(
-                EThrusterPortDir::PITCH_U,
-                EThrusterPortDir::PITCH_D);
-        }
-    }
+			IncBurn(
+				EThrusterPortDir::AFT,
+				EThrusterPortDir::FORE);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::FORE,
+				EThrusterPortDir::AFT);
+		}
 
-    /*
-     * Apply burn state to ports
-     */
-    for (int32 PortIndex = 0;
-        PortIndex < ports.size();
-        ++PortIndex)
-    {
-        FThrusterPort* Port =
-            ports[PortIndex];
+		/*
+		 * LEFT / RIGHT
+		 * UE:
+		 * +Y = right
+		 * -Y = left
+		 */
+		if (ue_y < -0.15 * ty_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] RIGHT THRUST Ship='%hs' UE_Y=%.2f"),
+				ship->GetName(),
+				ue_y);
 
-        if (!Port)
-        {
-            continue;
-        }
+			IncBurn(
+				EThrusterPortDir::RIGHT,
+				EThrusterPortDir::LEFT);
+		}
+		else if (ue_y > 0.15 * ty_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] LEFT THRUST Ship='%hs' UE_Y=%.2f"),
+				ship->GetName(),
+				ue_y);
 
-        Port->Burn = 0.0f;
+			IncBurn(
+				EThrusterPortDir::LEFT,
+				EThrusterPortDir::RIGHT);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::LEFT,
+				EThrusterPortDir::RIGHT);
+		}
 
-        if (Port->Fire != 0)
-        {
-            int32 Flag = 1;
+		/*
+		 * TOP / BOTTOM
+		 * UE:
+		 * +Z = up
+		 * -Z = down
+		 */
+		if (ue_z < -0.15 * tz_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] TOP THRUST Ship='%hs' UE_Z=%.2f"),
+				ship->GetName(),
+				ue_z);
 
-            for (int32 DirIndex = 0;
-                DirIndex < NumThrusterDirections;
-                ++DirIndex)
-            {
-                if ((Port->Fire & Flag) != 0)
-                {
-                    Port->Burn =
-                        FMath::Max(
-                            Port->Burn,
-                            burn[DirIndex]);
-                }
+			IncBurn(
+				EThrusterPortDir::TOP,
+				EThrusterPortDir::BOTTOM);
+		}
+		else if (ue_z > 0.15 * tz_limit)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Thruster::ExecTrans] BOTTOM THRUST Ship='%hs' UE_Z=%.2f"),
+				ship->GetName(),
+				ue_z);
 
-                Flag <<= 1;
-            }
-        }
-        else
-        {
-            const int32 DirIndex =
-                ThrusterDirIndex(
-                    Port->Direction);
+			IncBurn(
+				EThrusterPortDir::BOTTOM,
+				EThrusterPortDir::TOP);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::TOP,
+				EThrusterPortDir::BOTTOM);
+		}
 
-            if (DirIndex >= 0 &&
-                DirIndex < NumThrusterDirections)
-            {
-                Port->Burn =
-                    burn[DirIndex];
-            }
-        }
+		/*
+		 * Rotational thrusters
+		 */
+		double r = 0.0;
+		double p = 0.0;
+		double yaw = 0.0;
 
-        Port->Burn *= thrust;
+		ship->GetAngularThrust(
+			r,
+			p,
+			yaw);
 
-        if (Port->IntensityMultiplier > 0.0f)
-        {
-            Port->Burn *=
-                Port->IntensityMultiplier;
-        }
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Thruster::ExecTrans] ANGULAR Ship='%hs' "
+				"Roll=%.2f Pitch=%.2f Yaw=%.2f"),
+			ship->GetName(),
+			r,
+			p,
+			yaw);
 
-        Port->Burn =
-            FMath::Clamp(
-                Port->Burn,
-                0.0f,
-                1.0f);
-    }
+		/*
+		 * ROLL
+		 */
+		if (r > 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::ROLL_L,
+				EThrusterPortDir::ROLL_R);
+		}
+		else if (r < 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::ROLL_R,
+				EThrusterPortDir::ROLL_L);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::ROLL_R,
+				EThrusterPortDir::ROLL_L);
+		}
 
-    ship->SetTransX(x);
-    ship->SetTransY(y);
-    ship->SetTransZ(z);
+		/*
+		 * YAW
+		 */
+		if (yaw < 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::YAW_L,
+				EThrusterPortDir::YAW_R);
+		}
+		else if (yaw > 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::YAW_R,
+				EThrusterPortDir::YAW_L);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::YAW_R,
+				EThrusterPortDir::YAW_L);
+		}
 
-    //ship->SetTransX(x * thrust);
-    //ship->SetTransY(y * thrust);
-    //ship->SetTransZ(z * thrust);
+		/*
+		 * PITCH
+		 */
+		if (p < 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::PITCH_D,
+				EThrusterPortDir::PITCH_U);
+		}
+		else if (p > 0.0)
+		{
+			IncBurn(
+				EThrusterPortDir::PITCH_U,
+				EThrusterPortDir::PITCH_D);
+		}
+		else
+		{
+			DecBurn(
+				EThrusterPortDir::PITCH_U,
+				EThrusterPortDir::PITCH_D);
+		}
+	}
+
+	/*
+	 * Apply burn state to ports
+	 */
+	for (int32 PortIndex = 0;
+		PortIndex < ports.size();
+		++PortIndex)
+	{
+		FThrusterPort* Port =
+			ports[PortIndex];
+
+		if (!Port)
+		{
+			continue;
+		}
+
+		Port->Burn = 0.0f;
+
+		if (Port->Fire != 0)
+		{
+			int32 Flag = 1;
+
+			for (int32 DirIndex = 0;
+				DirIndex < NumThrusterDirections;
+				++DirIndex)
+			{
+				if ((Port->Fire & Flag) != 0)
+				{
+					Port->Burn =
+						FMath::Max(
+							Port->Burn,
+							burn[DirIndex]);
+				}
+
+				Flag <<= 1;
+			}
+		}
+		else
+		{
+			const int32 DirIndex =
+				ThrusterDirIndex(
+					Port->Direction);
+
+			if (DirIndex >= 0 &&
+				DirIndex < NumThrusterDirections)
+			{
+				Port->Burn =
+					burn[DirIndex];
+			}
+		}
+
+		/*
+		 * Base thrust scaling
+		 */
+		Port->Burn *= thrust;
+
+		/*
+		 * Proportional maneuver scaling
+		 */
+		float AxisScale = 1.0f;
+
+		if (Port->Direction == EThrusterPortDir::FORE ||
+			Port->Direction == EThrusterPortDir::AFT)
+		{
+			AxisScale = fore_aft_amount;
+		}
+		else if (Port->Direction == EThrusterPortDir::LEFT ||
+			Port->Direction == EThrusterPortDir::RIGHT)
+		{
+			AxisScale = left_right_amount;
+		}
+		else if (Port->Direction == EThrusterPortDir::TOP ||
+			Port->Direction == EThrusterPortDir::BOTTOM)
+		{
+			AxisScale = top_bottom_amount;
+		}
+
+		Port->Burn *= AxisScale;
+
+		/*
+		 * Visual tuning:
+		 * Keep maneuvering thrusters subtle.
+		 */
+		Port->Burn *= 0.35f;
+
+		/*
+		 * Optional per-port multiplier
+		 */
+		if (Port->IntensityMultiplier > 0.0f)
+		{
+			Port->Burn *=
+				Port->IntensityMultiplier;
+		}
+
+		Port->Burn =
+			FMath::Clamp(
+				Port->Burn,
+				0.0f,
+				1.0f);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Thruster::ExecTrans] PORT[%d] Ship='%hs' "
+				"Dir=%d Burn=%.2f FireMask=%d"),
+			PortIndex,
+			ship->GetName(),
+			(int32)Port->Direction,
+			Port->Burn,
+			Port->Fire);
+	}
+
+	/*
+	 * Keep sim state in LEGACY coordinates.
+	 */
+	ship->SetTransX(x);
+	ship->SetTransY(y);
+	ship->SetTransZ(z);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Thruster::ExecTrans] EXIT Ship='%hs' "
+			"LegacyTrans=(%.2f %.2f %.2f)"),
+		ship->GetName(),
+		ship->GetTransX(),
+		ship->GetTransY(),
+		ship->GetTransZ());
 }
 
 // +----------------------------------------------------------------------+
@@ -603,7 +768,7 @@ void Thruster::SetPortData(int index, const FThrusterPort& InPort)
 
 // +----------------------------------------------------------------------+
 
-int Thruster::NumThrusters() const
+int Thruster::GetNumThrusters() const
 {
     return ports.size();
 }
@@ -664,23 +829,28 @@ float Thruster::GetPortScale(int index) const
 
 // +----------------------------------------------------------------------+
 
-float Thruster::GetIntensity(int index) const
+float Thruster::GetThrusterBurn(int Index) const
 {
-    const FThrusterPort* Port = GetPort(index);
+	if (Index < 0 || Index >= ports.size())
+	{
+		return 0.0f;
+	}
 
-    if (!Port)
-    {
-        return 0.0f;
-    }
+	const FThrusterPort* Port = ports[Index];
 
-    return Port->Burn;
+	if (!Port)
+	{
+		return 0.0f;
+	}
+
+	return Port->Burn;
 }
 
 // +----------------------------------------------------------------------+
 
 float Thruster::GetVisualPower(int index) const
 {
-    return FMath::Clamp(GetIntensity(index), 0.0f, 1.0f);
+    return FMath::Clamp(GetThrusterBurn(index), 0.0f, 1.0f);
 }
 
 // +----------------------------------------------------------------------+

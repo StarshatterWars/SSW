@@ -397,7 +397,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
                 Port.PortScale
             );
 
-            const int32 PortIndex = NewThruster->NumThrusters() - 1;
+            const int32 PortIndex = NewThruster->GetNumThrusters() - 1;
             NewThruster->SetPortData(PortIndex, Port);
         }
 
@@ -405,9 +405,9 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
             TEXT("[ShipDesignRegistry] Thruster built Row='%s' Thruster=%p Ports=%d"),
             *RowName.ToString(),
             NewThruster,
-            NewThruster->NumThrusters());
+            NewThruster->GetNumThrusters());
 
-        for (int32 PortIndex = 0; PortIndex < NewThruster->NumThrusters(); ++PortIndex)
+        for (int32 PortIndex = 0; PortIndex < NewThruster->GetNumThrusters(); ++PortIndex)
         {
             const FThrusterPort* Port = NewThruster->GetPort(PortIndex);
 
