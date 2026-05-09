@@ -333,12 +333,12 @@ StarshipAI::Navigator()
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Navigator] ACCUM Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%.2f Other=%p"),
+        TEXT("[StarshipAI::Navigator] ACCUM Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d Other=%p"),
         ship->GetName(),
-        accumulator.yaw,
-        accumulator.pitch,
-        accumulator.brake,
-        accumulator.stop,
+        (double)accumulator.yaw,
+        (double)accumulator.pitch,
+        (double)accumulator.brake,
+        (int)accumulator.stop,
         other);
 
     HelmControl();
@@ -349,11 +349,11 @@ StarshipAI::Navigator()
     UE_LOG(LogTemp, Warning,
         TEXT("[StarshipAI::Navigator] EXIT Ship='%hs' HelmHeading=%.4f HelmPitch=%.4f Throttle=%.2f Request=%.2f TransY=%.2f"),
         ship->GetName(),
-        ship->GetHelmHeading(),
-        ship->GetHelmPitch(),
-        ship->GetThrottle(),
-        ship->GetThrottleRequest(),
-        ship->GetTransY());
+        (double)ship->GetHelmHeading(),
+        (double)ship->GetHelmPitch(),
+        (double)ship->GetThrottle(),
+        (double)ship->GetThrottleRequest(),
+        (double)ship->GetTransY());
 }
 
 // +--------------------------------------------------------------------+
@@ -698,16 +698,16 @@ StarshipAI::SeekTarget()
         ShipAI::SeekTarget();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::SeekTarget] Ship='%hs' Target='%hs' Navpt=%p Distance=%.2f Objective=%s ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%.2f"),
+        TEXT("[StarshipAI::SeekTarget] Ship='%hs' Target='%hs' Navpt=%p Distance=%.2f Objective=%s ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
         ship ? ship->GetName() : "NULL",
         target ? target->GetName() : "NULL",
         navpt,
-        distance,
+        (double)distance,
         *objective.ToString(),
-        Result.yaw,
-        Result.pitch,
-        Result.brake,
-        Result.stop);
+        (double)Result.yaw,
+        (double)Result.pitch,
+        (double)Result.brake,
+        (int)Result.stop);
 
     return Result;
 }

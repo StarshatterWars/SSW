@@ -872,15 +872,15 @@ FighterAI::HelmControl()
     ship->SetFLCSMode(go_manual ? EFLCSMode::MANUAL : EFLCSMode::AUTO);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[FighterAI::HelmControl] Ship='%hs' Target='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%.2f Manual=%d TransZ=%.2f"),
+        TEXT("[FighterAI::HelmControl] Ship='%hs' Target='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d Manual=%d TransZ=%.2f"),
         ship->GetName(),
         target ? target->GetName() : "NULL",
-        accumulator.yaw,
-        accumulator.pitch,
-        accumulator.brake,
-        accumulator.stop,
+        (double)accumulator.yaw,
+        (double)accumulator.pitch,
+        (double)accumulator.brake,
+        (int)accumulator.stop,
         go_manual ? 1 : 0,
-        ship->GetTransZ());
+        (double)ship->GetTransZ());
 }
 
 void
