@@ -76,6 +76,7 @@
 // Forward declarations
 class DataLoader;
 class StarSystem;
+class Sim;
 
 class OrbitalBody;
 class OrbitalRegion;
@@ -151,11 +152,11 @@ public:
     EGameMode GetGameMode() { return game_mode; }
     void      SetGameMode(EGameMode mode) { game_mode = mode; }
     const     TArray<OrbitalRegion*>& GetRuntimeRegions() const { return RuntimeRegions; }
-
+    void      BuildSimRegionsForSim(Sim* SimInst);
 
     // =====================================================================
     // Project path / utility
-    // =====================================================================
+    // =========================== =========================================
     void SetProjectPath();
     FString GetProjectPath();
 

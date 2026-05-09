@@ -1716,34 +1716,5 @@ void ACampaignSceneActor::BuildSimRegionsFromEnvironment()
         return;
     }
 
-    const TArray<OrbitalRegion*>& RuntimeRegions =
-        Env->GetRuntimeRegions();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] BuildSimRegionsFromEnvironment RuntimeRegions=%d"),
-        RuntimeRegions.Num());
-
-    for (OrbitalRegion* Orbital : RuntimeRegions)
-    {
-        if (!Orbital)
-        {
-            continue;
-        }
-
-        if (SimInst->FindRegion(Orbital->GetName()))
-        {
-            continue;
-        }
-
-        SimRegion* Region =
-            new SimRegion(SimInst, Orbital);
-
-        SimInst->GetRegions().append(Region);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SIM REGION CREATE] Name='%hs' SimRegion=%p Orbital=%p"),
-            Orbital->GetName(),
-            Region,
-            Orbital);
-    }
+    Env->BuildSimRegionsForSim(SimInst);
 }

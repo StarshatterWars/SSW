@@ -37,6 +37,10 @@
 #include "Galaxy.h"
 #include "StarSystem.h"
 
+#include "Sim.h"
+#include "SimRegion.h"
+#include "Orbital.h"
+
 #include "StarSystemRegistry.h"
 
 #include "SSWGameInstance.h"
@@ -2124,4 +2128,43 @@ const FMoon* UStarshatterEnvironmentSubsystem::FindMoonMapByName(const FString& 
 
 	return nullptr;
 }
+
+void UStarshatterEnvironmentSubsystem::BuildSimRegionsForSim(Sim* SimInst)
+{
+	if (!SimInst)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[Environment] BuildSimRegionsForSim failed: SimInst is null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] BuildSimRegionsForSim RuntimeRegions=%d"),
+		RuntimeRegions.Num());
+
+	for (OrbitalRegion* Orbital : RuntimeRegions)
+	{
+		if (!Orbital)
+		{
+			continue;
+		}
+
+		if (SimInst->FindRegion(Orbital->GetName()))
+		{
+			continue;
+		}
+
+		SimRegion* Region =
+			new SimRegion(SimInst, Orbital);
+
+		SimInst->GetRegions().append(Region);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Environment] SIM REGION CREATE Name='%hs' SimRegion=%p Orbital=%p"),
+			Orbital->GetName(),
+			Region,
+			Orbital);
+	}
+}
+
 
