@@ -150,8 +150,7 @@ ShipManager::ExecFrame(double seconds)
 
 		else if (KeyDown(KEY_THROTTLE_ZERO)) {
 			ship->SetThrottle(0);
-			if (ship->GetFLCS())
-				ship->GetFLCS()->FullStop();
+			ship->SetTransY(0);
 			time_til_change = 0.05;
 		}
 

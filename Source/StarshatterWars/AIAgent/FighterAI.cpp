@@ -556,9 +556,11 @@ FighterAI::Navigator()
         z_shift = 0;
 
         Accumulate(SeekTarget());
+
         HelmControl();
         ThrottleControl();
-        ship->ExecFLCSFrame();
+
+        // FLCS runs exclusively in Ship::ExecPhysics()
         return;
     }
 
@@ -570,13 +572,11 @@ FighterAI::Navigator()
         if (lead && lead != ship) {
             if (lead->IsDropping() && !ship->IsDropping()) {
                 ship->DropOrbit();
-                // careful: this object has just been deleted!
                 return;
             }
 
             if (lead->IsAttaining() && !ship->IsAttaining()) {
                 ship->MakeOrbit();
-                // careful: this object has just been deleted!
                 return;
             }
         }
@@ -584,13 +584,11 @@ FighterAI::Navigator()
         else {
             if (drop_state < 0) {
                 ship->DropOrbit();
-                // careful: this object has just been deleted!
                 return;
             }
 
             if (drop_state > 0) {
                 ship->MakeOrbit();
-                // careful: this object has just been deleted!
                 return;
             }
         }
@@ -601,23 +599,34 @@ FighterAI::Navigator()
     if (navpt)
         order = navpt->GetAction();
 
-    if (rtb_code == 1 && navpt && navpt->GetStatus() < INSTRUCTION_STATUS::SKIPPED &&
-        !inbound && distance < 35e3) { // (this should be distance to the ship)
-
+    if (rtb_code == 1 &&
+        navpt &&
+        navpt->GetStatus() < INSTRUCTION_STATUS::SKIPPED &&
+        !inbound &&
+        distance < 35e3)
+    {
         if (order == INSTRUCTION_ACTION::RTB) {
             Ship* controller = ship->GetController();
-            Hangar* hangar = controller ? controller->GetHangar() : 0;
+            Hangar* hangar = controller ? controller->GetHangar() : nullptr;
 
             if (hangar && hangar->CanStow(ship)) {
                 for (int i = 0; i < elem->NumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
-                    if (s && s->GetDirector() && s->GetDirector()->GetType() >= ShipAI::FIGHTER)
-                        RadioTraffic::SendQuickMessage(s, RadioMessageAction::CALL_INBOUND);
+                    if (s &&
+                        s->GetDirector() &&
+                        s->GetDirector()->GetType() >= ShipAI::FIGHTER)
+                    {
+                        RadioTraffic::SendQuickMessage(
+                            s,
+                            RadioMessageAction::CALL_INBOUND);
+                    }
                 }
 
                 if (element_index == 1)
-                    ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+                    ship->SetNavptStatus(
+                        navpt,
+                        INSTRUCTION_STATUS::COMPLETE);
             }
 
             else {
@@ -625,25 +634,37 @@ FighterAI::Navigator()
                     UE_LOG(LogTemp, Warning,
                         TEXT("WARNING: FighterAI NAVPT RTB, but no controller or hangar found for ship '%s'"),
                         ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("null"));
-                    ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::SKIPPED);
+
+                    ship->SetNavptStatus(
+                        navpt,
+                        INSTRUCTION_STATUS::SKIPPED);
                 }
             }
         }
 
         else {
-            Ship* dock_target = (Ship*)navpt->GetTarget();
+            Ship* dock_target =
+                (Ship*)navpt->GetTarget();
+
             if (dock_target) {
                 for (int i = 0; i < elem->NumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
                     if (s) {
-                        RadioMessage* msg = new RadioMessage(dock_target, s, RadioMessageAction::CALL_INBOUND);
+                        RadioMessage* msg =
+                            new RadioMessage(
+                                dock_target,
+                                s,
+                                RadioMessageAction::CALL_INBOUND);
+
                         RadioTraffic::Transmit(msg);
                     }
                 }
 
                 if (element_index == 1)
-                    ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+                    ship->SetNavptStatus(
+                        navpt,
+                        INSTRUCTION_STATUS::COMPLETE);
             }
 
             else {
@@ -651,7 +672,10 @@ FighterAI::Navigator()
                     UE_LOG(LogTemp, Warning,
                         TEXT("WARNING: FighterAI NAVPT DOCK, but no dock target found for ship '%s'"),
                         ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("null"));
-                    ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::SKIPPED);
+
+                    ship->SetNavptStatus(
+                        navpt,
+                        INSTRUCTION_STATUS::SKIPPED);
                 }
             }
         }
@@ -666,35 +690,59 @@ FighterAI::Navigator()
     z_shift = 0;
 
     hold = false;
-    if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
-        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
+
+    if ((ship->GetElement() &&
+        ship->GetElement()->GetHoldTime() > 0) ||
+
+        (navpt &&
+            navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE &&
+            navpt->GetHoldTime() > 0))
+    {
         hold = true;
+    }
 
     if (ship->GetMissionClock() < 10000) {
         if (ship->IsAirborne())
             Accumulate(SeekTarget());
     }
 
-    else if ((farcaster && distance < 20e3) || (inbound && inbound->Final())) {
+    else if ((farcaster && distance < 20e3) ||
+        (inbound && inbound->Final()))
+    {
         Accumulate(SeekTarget());
     }
 
     else {
-        if (!ship->IsAirborne() || ship->GetAltitudeAGL() > 100)
+        if (!ship->IsAirborne() ||
+            ship->GetAltitudeAGL() > 100)
+        {
             ship->RaiseGear();
+        }
 
         Accumulate(AvoidTerrain());
-        Steer avoid = AvoidCollision();
 
-        if (other && inbound && inbound->GetDeck() && inbound->Cleared()) {
-            if (other != (SimObject*)inbound->GetDeck()->GetCarrier())
+        Steer avoid =
+            AvoidCollision();
+
+        if (other &&
+            inbound &&
+            inbound->GetDeck() &&
+            inbound->Cleared())
+        {
+            if (other !=
+                (SimObject*)inbound->GetDeck()->GetCarrier())
+            {
                 Accumulate(avoid);
+            }
         }
         else {
             Accumulate(avoid);
         }
 
-        if (!too_close && !hold && !terrain_warning) {
+        if (!too_close &&
+            !hold &&
+            !terrain_warning)
+        {
             Accumulate(SeekTarget());
             Accumulate(EvadeThreat());
         }
@@ -704,8 +752,6 @@ FighterAI::Navigator()
     ThrottleControl();
     FireControl();
     AdjustDefenses();
-
-    ship->ExecFLCSFrame();
 }
 
 // +--------------------------------------------------------------------+
@@ -713,20 +759,29 @@ FighterAI::Navigator()
 void
 FighterAI::HelmControl()
 {
+    if (!ship)
+    {
+        return;
+    }
+
     Camera* cam = ((Camera*)&(ship->GetCam()));
+
+    if (!cam)
+    {
+        return;
+    }
+
     FVector vrt = cam->vrt();
-    double  deflection = vrt.Y;
-    double  theta = 0;
-    bool    formation = element_index > 1;
-    bool    station_keeping = distance < 0;
-    bool    inverted = cam->vup().Y < -0.5;
+    const double deflection = vrt.Y;
+    bool formation = element_index > 1;
+    bool station_keeping = distance < 0;
+    const bool inverted = cam->vup().Y < -0.5;
     Ship* ward = ship->GetWard();
 
     if (takeoff || inbound || station_keeping)
         formation = false;
 
     if (takeoff || navpt || farcaster || patrol || inbound || rtb_code || target || ward || threat || formation) {
-        // are we being asked to flee?
         if (FMath::Abs(accumulator.yaw) == 1.0 && accumulator.pitch == 0.0) {
             accumulator.pitch = -0.7f;
             accumulator.yaw *= 0.25f;
@@ -734,7 +789,6 @@ FighterAI::HelmControl()
             if (ship->IsAirborne() && ship->GetFlightModel() == 0)
                 accumulator.pitch = -0.45f;
 
-            // low ai -> lower turning rate
             accumulator.pitch += 0.1f * (2 - ai_level);
         }
 
@@ -746,12 +800,10 @@ FighterAI::HelmControl()
 
         ship->ApplyPitch((float)accumulator.pitch);
     }
-
     else {
         ship->SetDirectorInfo(Game::GetText("ai.station-keeping"));
         station_keeping = true;
 
-        // go into a slow orbit if airborne:
         if (ship->IsAirborne() && ship->Class() < CLASSIFICATION::LCA) {
             accumulator.brake = 0.2;
             accumulator.stop = 0;
@@ -760,9 +812,12 @@ FighterAI::HelmControl()
             const double desired_bank = -PI / 4;
             const double current_bank = asin(deflection);
             const double theta_local = desired_bank - current_bank;
+
             ship->ApplyRoll(theta_local);
 
-            const double coord_pitch = compass_pitch - 0.2 * FMath::Abs(current_bank);
+            const double coord_pitch =
+                compass_pitch - 0.2 * FMath::Abs(current_bank);
+
             ship->ApplyPitch(coord_pitch);
         }
         else {
@@ -771,29 +826,32 @@ FighterAI::HelmControl()
         }
     }
 
-    // if not turning, roll to orient with world coords:
-    if (ship->Design()->auto_roll > 0) {
-        if (FMath::Abs(accumulator.pitch) < 0.1 && FMath::Abs(accumulator.yaw) < 0.25) {
-            // zolon spiral behavior:
+    if (ship->Design() && ship->Design()->auto_roll > 0) {
+        if (FMath::Abs(accumulator.pitch) < 0.1 &&
+            FMath::Abs(accumulator.yaw) < 0.25) {
             if (ship->Design()->auto_roll > 1) {
                 if ((element_index + (static_cast<int32>(ship->GetMissionClock() * 1000.0) >> 10)) & 0x4)
                     ship->ApplyRoll(0.60);
                 else
                     ship->ApplyRoll(-0.35);
             }
-
-            // normal behavior - roll to upright:
             else if (FMath::Abs(deflection) > 0.1 || inverted) {
-                const double theta_roll = asin(deflection / vrt.Size()) * 0.5;
-                ship->ApplyRoll(-theta_roll);
+                const double VrtSize = vrt.Size();
+
+                if (VrtSize > KINDA_SMALL_NUMBER) {
+                    const double theta_roll =
+                        asin(deflection / VrtSize) * 0.5;
+
+                    ship->ApplyRoll(-theta_roll);
+                }
             }
         }
     }
 
-    // if not otherwise occupied, pitch to orient with world coords:
-    if (station_keeping && (!ship->IsAirborne() || ship->Class() < CLASSIFICATION::LCA)) {
+    if (station_keeping &&
+        (!ship->IsAirborne() || ship->Class() < CLASSIFICATION::LCA)) {
         const FVector heading = ship->GetHeading();
-        const double  pitch_deflection = heading.Y;
+        const double pitch_deflection = heading.Y;
 
         if (FMath::Abs(pitch_deflection) > 0.05) {
             const double rho = asin(pitch_deflection) * 3;
@@ -803,20 +861,52 @@ FighterAI::HelmControl()
 
     ship->SetTransX(0);
     ship->SetTransY(0);
-    ship->SetTransZ(z_shift * ship->Design()->trans_z);
+
+    if (ship->Design()) {
+        ship->SetTransZ(z_shift * ship->Design()->trans_z);
+    }
+    else {
+        ship->SetTransZ(0);
+    }
+
     ship->SetFLCSMode(go_manual ? EFLCSMode::MANUAL : EFLCSMode::AUTO);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[FighterAI::HelmControl] Ship='%hs' Target='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%.2f Manual=%d TransZ=%.2f"),
+        ship->GetName(),
+        target ? target->GetName() : "NULL",
+        accumulator.yaw,
+        accumulator.pitch,
+        accumulator.brake,
+        accumulator.stop,
+        go_manual ? 1 : 0,
+        ship->GetTransZ());
 }
 
 void
 FighterAI::ThrottleControl()
 {
-    SimElement* elem = ship ? ship->GetElement() : nullptr;
-    const double ship_speed = ship ? (ship->GetVelocity() | ship->GetHeading()) : 0.0; // dot product
+    SimElement* elem =
+        ship ? ship->GetElement() : nullptr;
+
+    const double ship_speed =
+        ship ? FVector::DotProduct(
+            ship->GetVelocity(),
+            ship->GetHeading())
+        : 0.0;
+
     double desired = 1000.0;
-    bool formation = element_index > 1;
-    const bool station_keeping = distance < 0.0;
+
+    bool formation =
+        element_index > 1;
+
+    const bool station_keeping =
+        distance < 0.0;
+
     bool augmenter = false;
-    Ship* ward = ship ? ship->GetWard() : nullptr;
+
+    Ship* ward =
+        ship ? ship->GetWard() : nullptr;
 
     if (!ship)
         return;
@@ -824,28 +914,44 @@ FighterAI::ThrottleControl()
     if (inbound || station_keeping)
         formation = false;
 
+    //-------------------------------------------------------------
     // LAUNCH / TAKEOFF
-    if (ship->GetMissionClock() < 10000) {
+    //-------------------------------------------------------------
+
+    if (ship->GetMissionClock() < 10000)
+    {
         formation = false;
         throttle = 100.0;
         brakes = 0.0;
     }
 
+    //-------------------------------------------------------------
     // STATION KEEPING
-    else if (station_keeping) {
-        // go into a slow orbit if airborne:
-        if (ship->IsAirborne() && ship->Class() < CLASSIFICATION::LCA) {
+    //-------------------------------------------------------------
+
+    else if (station_keeping)
+    {
+        if (ship->IsAirborne() &&
+            ship->Class() < CLASSIFICATION::LCA)
+        {
             throttle = 30.0;
             brakes = 0.0;
         }
-        else {
+        else
+        {
             throttle = 0.0;
             brakes = 1.0;
         }
     }
 
+    //-------------------------------------------------------------
     // TRY TO STAY AIRBORNE
-    else if (ship->IsAirborne() && ship_speed < 250.0 && ship->Class() < CLASSIFICATION::LCA) {
+    //-------------------------------------------------------------
+
+    else if (ship->IsAirborne() &&
+        ship_speed < 250.0 &&
+        ship->Class() < CLASSIFICATION::LCA)
+    {
         throttle = 100.0;
         brakes = 0.0;
 
@@ -853,9 +959,15 @@ FighterAI::ThrottleControl()
             augmenter = true;
     }
 
+    //-------------------------------------------------------------
     // INBOUND
-    else if (inbound) {
-        const double carrier_speed = inbound->GetDeck()->GetCarrier()->GetVelocity().Size();
+    //-------------------------------------------------------------
+
+    else if (inbound)
+    {
+        const double carrier_speed =
+            inbound->GetDeck()->GetCarrier()->GetVelocity().Size();
+
         desired = 250.0 + carrier_speed;
 
         if (distance > 25.0e3)
@@ -869,100 +981,150 @@ FighterAI::ThrottleControl()
 
         throttle = 0.0;
 
-        // holding short?
-        if (inbound->Approach() == 0 && !inbound->Cleared() &&
-            distance < 2000.0 && !ship->IsAirborne()) {
+        if (inbound->Approach() == 0 &&
+            !inbound->Cleared() &&
+            distance < 2000.0 &&
+            !ship->IsAirborne())
+        {
             desired = 0.0;
         }
 
         if (ship_speed > desired + 5.0)
+        {
             brakes = 0.25;
+        }
 
-        else if (ship->IsAirborne() || Ship::GetFlightModel() > 0) {
+        else if (ship->IsAirborne() ||
+            Ship::GetFlightModel() > 0)
+        {
             throttle = old_throttle + 1.0;
         }
 
-        else if (ship_speed < 0.85 * desired) {
+        else if (ship_speed < 0.85 * desired)
+        {
             throttle = 100.0;
 
-            if (ship_speed < 0.0 && ship->GetFuelLevel() > 10.0)
+            if (ship_speed < 0.0 &&
+                ship->GetFuelLevel() > 10.0)
+            {
                 augmenter = true;
+            }
         }
 
-        else if (ship_speed < desired - 5.0) {
+        else if (ship_speed < desired - 5.0)
+        {
             throttle = 30.0;
         }
     }
 
+    //-------------------------------------------------------------
     // RTB / FARCASTER
-    else if (rtb_code || farcaster) {
+    //-------------------------------------------------------------
+
+    else if (rtb_code || farcaster)
+    {
         desired = 750.0;
 
-        if (threat || threat_missile) {
+        if (threat || threat_missile)
+        {
             throttle = 100.0;
 
-            if (!threat_missile && ship->GetFuelLevel() > 15.0)
+            if (!threat_missile &&
+                ship->GetFuelLevel() > 15.0)
+            {
                 augmenter = true;
+            }
         }
 
-        else {
+        else
+        {
             throttle = 0.0;
 
             if (ship_speed > desired + 5.0)
+            {
                 brakes = 0.25;
+            }
 
-            else if (Ship::GetFlightModel() > 0) {
+            else if (Ship::GetFlightModel() > 0)
+            {
                 throttle = old_throttle + 1.0;
             }
 
-            else if (ship_speed < 0.85 * desired) {
+            else if (ship_speed < 0.85 * desired)
+            {
                 throttle = 100.0;
 
-                if (ship_speed < 0.0 && ship->GetFuelLevel() > 10.0)
+                if (ship_speed < 0.0 &&
+                    ship->GetFuelLevel() > 10.0)
+                {
                     augmenter = true;
+                }
             }
 
-            else if (ship_speed < desired - 5.0) {
+            else if (ship_speed < desired - 5.0)
+            {
                 throttle = 30.0;
             }
         }
     }
 
+    //-------------------------------------------------------------
     // RUN AWAY
-    else if (evading) {
+    //-------------------------------------------------------------
+
+    else if (evading)
+    {
         throttle = 100.0;
 
-        if (!threat_missile && ship->GetFuelLevel() > 15.0)
+        if (!threat_missile &&
+            ship->GetFuelLevel() > 15.0)
+        {
             augmenter = true;
+        }
     }
 
-    // PATROL AND FORMATION
-    else if (!navpt && !target && !ward) {
-        if (!elem || !formation) { // element lead
-            if (patrol) {
+    //-------------------------------------------------------------
+    // PATROL / FORMATION
+    //-------------------------------------------------------------
+
+    else if (!navpt &&
+        !target &&
+        !ward)
+    {
+        if (!elem || !formation)
+        {
+            if (patrol)
+            {
                 desired = 250.0;
 
                 if (distance > 10e3)
                     desired = 750.0;
 
-                if (ship_speed > desired + 5.0) {
+                if (ship_speed > desired + 5.0)
+                {
                     brakes = 0.25;
                     throttle = old_throttle - 5.0;
                 }
 
-                else if (ship_speed < 0.85 * desired) {
+                else if (ship_speed < 0.85 * desired)
+                {
                     throttle = 100.0;
 
-                    if (ship_speed < 0.0 && ship->GetFuelLevel() > 10.0)
+                    if (ship_speed < 0.0 &&
+                        ship->GetFuelLevel() > 10.0)
+                    {
                         augmenter = true;
+                    }
                 }
 
-                else if (ship_speed < desired - 5.0) {
+                else if (ship_speed < desired - 5.0)
+                {
                     throttle = old_throttle + 5.0;
                 }
             }
 
-            else {
+            else
+            {
                 throttle = 35.0;
 
                 if (threat)
@@ -975,173 +1137,304 @@ FighterAI::ThrottleControl()
             }
         }
 
-        else { // wingman
-            Ship* lead = elem ? elem->GetShip(1) : nullptr;
-            const double zone = ship->GetRadius() * 3.0;
+        else
+        {
+            Ship* lead =
+                elem ? elem->GetShip(1) : nullptr;
+
+            const double zone =
+                ship->GetRadius() * 3.0;
 
             if (lead)
-                desired = (lead->GetVelocity() | lead->GetHeading());
+            {
+                desired =
+                    FVector::DotProduct(
+                        lead->GetVelocity(),
+                        lead->GetHeading());
+            }
 
-            // try to prevent porpoising
-            if (FMath::Abs(slot_dist) < distance / 4.0) {
+            if (FMath::Abs(slot_dist) < distance / 4.0)
+            {
                 throttle = old_throttle;
             }
 
-            else if (slot_dist > zone * 2.0) {
+            else if (slot_dist > zone * 2.0)
+            {
                 throttle = 100.0;
 
-                if (objective.Z > 10e3 && ship_speed < desired && ship->GetFuelLevel() > 25.0)
+                if (objective.Z > 10e3 &&
+                    ship_speed < desired &&
+                    ship->GetFuelLevel() > 25.0)
+                {
                     augmenter = true;
+                }
             }
 
-            else if (slot_dist > zone) {
-                throttle = lead ? (lead->GetThrottle() + 10.0) : old_throttle;
+            else if (slot_dist > zone)
+            {
+                throttle =
+                    lead ? (lead->GetThrottle() + 10.0)
+                    : old_throttle;
             }
 
-            else if (slot_dist < -zone * 2.0) {
+            else if (slot_dist < -zone * 2.0)
+            {
                 throttle = old_throttle - 10.0;
                 brakes = 1.0;
             }
 
-            else if (slot_dist < -zone) {
+            else if (slot_dist < -zone)
+            {
                 throttle = old_throttle;
                 brakes = 0.5;
             }
 
-            else if (lead) {
-                const double lv = lead->GetVelocity().Size();
-                const double sv = ship_speed;
-                const double dv = lv - sv;
+            else if (lead)
+            {
+                const double lv =
+                    lead->GetVelocity().Size();
+
+                const double sv =
+                    ship_speed;
+
+                const double dv =
+                    lv - sv;
+
                 double dt = 0.0;
 
-                if (dv > 0.0)       dt = dv * 1e-5 * frame_time;
-                else if (dv < 0.0)  dt = dv * 1e-2 * frame_time;
+                if (dv > 0.0)
+                    dt = dv * 1e-5 * frame_time;
+
+                else if (dv < 0.0)
+                    dt = dv * 1e-2 * frame_time;
 
                 throttle = old_throttle + dt;
             }
 
-            else {
+            else
+            {
                 throttle = old_throttle;
             }
         }
     }
 
-    // TARGET/WARD/NAVPOINT SEEKING
-    else {
+    //-------------------------------------------------------------
+    // TARGET / WARD / NAVPT SEEKING
+    //-------------------------------------------------------------
+
+    else
+    {
         throttle = old_throttle;
 
-        if (target) {
+        if (target)
+        {
             desired = 1250.0;
 
-            if (ai_level < 1) {
+            if (ai_level < 1)
+            {
                 throttle = 70.0;
             }
 
-            else if (ship->IsAirborne()) {
+            else if (ship->IsAirborne())
+            {
                 throttle = 100.0;
 
-                if (!threat_missile && FMath::Abs(objective.Z) > 6e3 && ship->GetFuelLevel() > 25.0)
+                if (!threat_missile &&
+                    FMath::Abs(objective.Z) > 6e3 &&
+                    ship->GetFuelLevel() > 25.0)
+                {
                     augmenter = true;
+                }
             }
 
-            else {
+            else
+            {
                 throttle = 100.0;
 
-                if (objective.Z > 20e3 && ship_speed < desired && ship->GetFuelLevel() > 35.0)
+                if (objective.Z > 20e3 &&
+                    ship_speed < desired &&
+                    ship->GetFuelLevel() > 35.0)
+                {
                     augmenter = true;
+                }
 
-                else if (objective.Z > 0.0 && objective.Z < 10e3)
+                else if (objective.Z > 0.0 &&
+                    objective.Z < 10e3)
+                {
                     throttle = 50.0;
+                }
             }
         }
 
-        else if (ward) {
-            const double d = (ship->GetLocation() - ward->GetLocation()).Size();
+        else if (ward)
+        {
+            const double d =
+                (ship->GetLocation() - ward->GetLocation()).Size();
 
-            if (d > 5000.0) {
-                throttle = (ai_level < 1) ? 50.0 : 80.0;
+            if (d > 5000.0)
+            {
+                throttle =
+                    (ai_level < 1) ? 50.0 : 80.0;
             }
-            else {
-                const double speed = ward->GetVelocity().Size();
+            else
+            {
+                const double speed =
+                    ward->GetVelocity().Size();
 
-                if (speed > 0.0) {
-                    if (ship_speed > speed) {
+                if (speed > 0.0)
+                {
+                    if (ship_speed > speed)
+                    {
                         throttle = old_throttle - 5.0;
                         brakes = 0.25;
                     }
-                    else if (ship_speed < speed - 10.0) {
+
+                    else if (ship_speed < speed - 10.0)
+                    {
                         throttle = old_throttle + 1.0;
                     }
                 }
             }
         }
 
-        else if (navpt) {
+        else if (navpt)
+        {
             desired = navpt->GetSpeed();
 
-            if (hold) {
-                // go into a slow orbit if airborne:
-                if (ship->IsAirborne() && ship->Class() < CLASSIFICATION::LCA) {
+            if (hold)
+            {
+                if (ship->IsAirborne() &&
+                    ship->Class() < CLASSIFICATION::LCA)
+                {
                     throttle = 25.0;
                     brakes = 0.0;
                 }
-                else {
+                else
+                {
                     throttle = 0.0;
                     brakes = 1.0;
                 }
             }
 
-            else if (desired > 0.0) {
-                if (ship_speed > desired) {
+            else if (desired > 0.0)
+            {
+                if (ship_speed > desired)
+                {
                     throttle = old_throttle - 5.0;
                     brakes = 0.25;
                 }
 
-                else if (ship_speed < 0.85 * desired) {
+                else if (ship_speed < 0.85 * desired)
+                {
                     throttle = 100.0;
 
-                    if ((ship->IsAirborne() || ship_speed < 0.35 * desired) && ship->GetFuelLevel() > 30.0)
+                    if ((ship->IsAirborne() ||
+                        ship_speed < 0.35 * desired) &&
+                        ship->GetFuelLevel() > 30.0)
+                    {
                         augmenter = true;
+                    }
                 }
 
-                else if (ship_speed < desired - 10.0) {
+                else if (ship_speed < desired - 10.0)
+                {
                     throttle = old_throttle + 1.0;
                 }
 
-                else if (Ship::GetFlightModel() > 0) {
+                else if (Ship::GetFlightModel() > 0)
+                {
                     throttle = old_throttle;
                 }
             }
         }
 
-        else {
+        else
+        {
             throttle = 0.0;
             brakes = 1.0;
         }
     }
 
-    // clamp / floor behavior (preserve original semantics)
-    if (ship->IsAirborne() && throttle < 20.0 && ship->Class() < CLASSIFICATION::LCA)
+    //-------------------------------------------------------------
+    // Clamp
+    //-------------------------------------------------------------
+
+    if (ship->IsAirborne() &&
+        throttle < 20.0 &&
+        ship->Class() < CLASSIFICATION::LCA)
+    {
         throttle = 20.0;
-    else if (ship->Design()->auto_roll > 1 && throttle < 5.0)
+    }
+
+    else if (ship->Design()->auto_roll > 1 &&
+        throttle < 5.0)
+    {
         throttle = 5.0;
+    }
+
     else if (throttle < 0.0)
+    {
         throttle = 0.0;
+    }
+
+    throttle =
+        FMath::Clamp(
+            throttle,
+            0.0,
+            100.0);
+
+    //-------------------------------------------------------------
+    // Final application
+    //-------------------------------------------------------------
 
     old_throttle = throttle;
 
     ship->SetThrottle((int)throttle);
     ship->SetAugmenter(augmenter);
 
-    if (accumulator.stop && ship->GetFLCS() != nullptr) {
-        ship->GetFLCS()->FullStop();
+    if (accumulator.stop)
+    {
+        throttle = 0.0;
+        brakes = 1.0;
     }
 
-    else if (ship_speed > 1.0 && brakes > 0.0)
-        ship->SetTransY(-brakes * ship->Design()->trans_y);
+    if (ship_speed > 1.0 &&
+        brakes > 0.0)
+    {
+        ship->SetTransY(
+            -brakes * ship->Design()->trans_y);
+    }
 
-    else if (throttle > 10.0 && (ship->GetEMCON() < 2 || ship->GetFuelLevel() < 10.0))
-        ship->SetTransY(ship->Design()->trans_y);
+    else if (throttle > 10.0 &&
+        (ship->GetEMCON() < 2 ||
+            ship->GetFuelLevel() < 10.0))
+    {
+        ship->SetTransY(
+            ship->Design()->trans_y);
+    }
+    else
+    {
+        ship->SetTransY(0);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[FighterAI::ThrottleControl] "
+            "Ship='%hs' "
+            "Target='%hs' "
+            "Throttle=%.2f "
+            "Brakes=%.2f "
+            "Aug=%d "
+            "Speed=%.2f "
+            "Distance=%.2f "
+            "TransY=%.2f"),
+        ship ? ship->GetName() : "NULL",
+        target ? target->GetName() : "NULL",
+        throttle,
+        brakes,
+        augmenter ? 1 : 0,
+        ship_speed,
+        distance,
+        ship->GetTransY());
 }
 
 Steer
@@ -1205,84 +1498,146 @@ FighterAI::AvoidTerrain()
 Steer
 FighterAI::SeekTarget()
 {
+    if (!ship)
+    {
+        return Steer();
+    }
+
     if (ship->GetFlightPhase() < Ship::ACTIVE)
+    {
         return Seek(objective);
+    }
 
-    Ship* ward = ship->GetWard();
+    Ship* ward =
+        ship->GetWard();
 
-    if ((!target && !ward && !navpt && !farcaster && !patrol && !inbound && !rtb_code) ||
-        ship->GetMissionClock() < 10000) {
-        if (element_index > 1) {
-            // break formation if threatened:
+    if ((!target &&
+        !ward &&
+        !navpt &&
+        !farcaster &&
+        !patrol &&
+        !inbound &&
+        !rtb_code) ||
+
+        ship->GetMissionClock() < 10000)
+    {
+        if (element_index > 1)
+        {
             if (threat_missile)
                 return Steer();
 
             else if (threat && !form_up)
                 return Steer();
 
-            // otherwise, keep in formation:
             return SeekFormationSlot();
         }
 
         return Steer();
     }
 
-    if (patrol) {
-        Steer result = Seek(objective);
-        ship->SetDirectorInfo(Game::GetText("ai.seek-patrol-point"));
+    //-------------------------------------------------------------
+    // Patrol
+    //-------------------------------------------------------------
 
-        if (distance < 10 * self->GetRadius()) {
+    if (patrol)
+    {
+        Steer result =
+            Seek(objective);
+
+        ship->SetDirectorInfo(
+            Game::GetText("ai.seek-patrol-point"));
+
+        if (distance < 10 * self->GetRadius())
+        {
             patrol = 0;
             result.brake = 1;
             result.stop = 1;
         }
 
+        UE_LOG(LogTemp, Warning,
+            TEXT("[FighterAI::SeekTarget] PATROL Ship='%hs' Distance=%.2f"),
+            ship->GetName(),
+            distance);
+
         return result;
     }
 
-    if (inbound) {
-        Steer result = Seek(objective);
+    //-------------------------------------------------------------
+    // Inbound
+    //-------------------------------------------------------------
 
-        if (over_threshold && objective.Z < 0) {
+    if (inbound)
+    {
+        Steer result =
+            Seek(objective);
+
+        if (over_threshold && objective.Z < 0)
+        {
             result = Steer();
             result.brake = 1;
             result.stop = 1;
         }
-        else {
-            ship->SetDirectorInfo(Game::GetText("ai.seek-inbound"));
+        else
+        {
+            ship->SetDirectorInfo(
+                Game::GetText("ai.seek-inbound"));
 
-            // approach legs:
-            if (inbound->Approach() > 0) {
+            if (inbound->Approach() > 0)
+            {
                 if (distance < 20 * self->GetRadius())
-                    inbound->SetApproach(inbound->Approach() - 1);
+                {
+                    inbound->SetApproach(
+                        inbound->Approach() - 1);
+                }
             }
-
-            // marshall point and finals:
-            else {
-                if (inbound->Cleared() && distance < 10 * self->GetRadius()) {
-                    if (!inbound->Final()) {
+            else
+            {
+                if (inbound->Cleared() &&
+                    distance < 10 * self->GetRadius())
+                {
+                    if (!inbound->Final())
+                    {
                         time_to_dock = TIME_TO_DOCK;
 
-                        FlightDeck* deck = inbound->GetDeck();
-                        if (deck) {
-                            const double TotalDist = (deck->EndPoint() - deck->StartPoint()).Size();
-                            const double CurrentDist = (deck->EndPoint() - ship->GetLocation()).Size();
+                        FlightDeck* deck =
+                            inbound->GetDeck();
+
+                        if (deck)
+                        {
+                            const double TotalDist =
+                                (deck->EndPoint() -
+                                    deck->StartPoint()).Size();
+
+                            const double CurrentDist =
+                                (deck->EndPoint() -
+                                    ship->GetLocation()).Size();
 
                             if (TotalDist > 1e-3)
-                                time_to_dock *= (CurrentDist / TotalDist);
+                            {
+                                time_to_dock *=
+                                    (CurrentDist / TotalDist);
+                            }
                         }
 
-                        RadioTraffic::SendQuickMessage(ship, RadioMessageAction::CALL_FINALS);
+                        RadioTraffic::SendQuickMessage(
+                            ship,
+                            RadioMessageAction::CALL_FINALS);
                     }
 
                     inbound->SetFinal(true);
+
                     ship->LowerGear();
+
                     result.brake = 1;
                     result.stop = 1;
                 }
 
-                else if (!inbound->Cleared() && distance < 2000) {
-                    ship->SetDirectorInfo(Game::GetText("ai.hold-final"));
+                else if (!inbound->Cleared() &&
+                    distance < 2000)
+                {
+                    ship->SetDirectorInfo(
+                        Game::GetText("ai.hold-final"));
+
                     result = Steer();
                     result.brake = 1;
                     result.stop = 1;
@@ -1293,96 +1648,173 @@ FighterAI::SeekTarget()
         return result;
     }
 
-    else if (rtb_code) {
+    //-------------------------------------------------------------
+    // RTB
+    //-------------------------------------------------------------
+
+    else if (rtb_code)
+    {
         return Seek(objective);
     }
 
-    SimObject* tgt = target;
+    //-------------------------------------------------------------
+    // Resolve target
+    //-------------------------------------------------------------
+
+    SimObject* tgt =
+        target;
 
     if (ward && !tgt)
+    {
         tgt = ward;
+    }
 
-    if (tgt && too_close == tgt->Identity()) {
+    //-------------------------------------------------------------
+    // Collision avoidance
+    //-------------------------------------------------------------
+
+    if (tgt &&
+        too_close == tgt->Identity())
+    {
         drop_time = 4.0;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[FighterAI::SeekTarget] TOO CLOSE Ship='%hs'"),
+            ship->GetName());
+
         return Steer();
     }
 
-    else if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH) {
+    //-------------------------------------------------------------
+    // Launch
+    //-------------------------------------------------------------
+
+    else if (navpt &&
+        navpt->GetAction() ==
+        INSTRUCTION_ACTION::LAUNCH)
+    {
         ship->SetDirectorInfo("Launch");
+
         return Seek(objective);
     }
 
-    else if (farcaster) {
-        // wingmen should:
+    //-------------------------------------------------------------
+    // Farcaster
+    //-------------------------------------------------------------
+
+    else if (farcaster)
+    {
         if (element_index > 1)
+        {
             return SeekFormationSlot();
+        }
 
         ship->SetDirectorInfo("Seek Farcaster");
+
         return Seek(objective);
     }
 
-    else if (drop_time > 0.0) {
+    //-------------------------------------------------------------
+    // Drop timeout
+    //-------------------------------------------------------------
+
+    else if (drop_time > 0.0)
+    {
         return Steer();
     }
 
-    if (tgt) {
-        const double basis = self->GetRadius() + tgt->GetRadius();
-        const double gap = distance - basis;
+    //-------------------------------------------------------------
+    // Combat targeting
+    //-------------------------------------------------------------
 
-        // target behind:
-        if (objective.Z < 0) {
-            // leave some room for an attack run:
-            if (gap < 8000) {
+    if (tgt)
+    {
+        const double basis =
+            self->GetRadius() +
+            tgt->GetRadius();
+
+        const double gap =
+            distance - basis;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[FighterAI::SeekTarget] COMBAT Ship='%hs' Target='%hs' Gap=%.2f Obj=%s"),
+            ship->GetName(),
+            tgt->GetName(),
+            gap,
+            *objective.ToString());
+
+        if (objective.Z < 0)
+        {
+            if (gap < 8000)
+            {
                 Steer s;
 
                 s.pitch = -0.1;
-                if (objective.X > 0) s.yaw = 0.1;
-                else                 s.yaw = -0.1;
+
+                if (objective.X > 0)
+                    s.yaw = 0.1;
+                else
+                    s.yaw = -0.1;
 
                 return s;
             }
 
-            // start the attack run:
             return Seek(objective);
         }
+        else
+        {
+            if (tgt->GetType() == SimObject::SIM_SHIP)
+            {
+                Ship* tgt_ship =
+                    (Ship*)tgt;
 
-        // target in front:
-        else {
-            if (tgt->GetType() == SimObject::SIM_SHIP) {
-                Ship* tgt_ship = (Ship*)tgt;
-
-                // capital target strike:
-                if (tgt_ship->IsStatic()) {
+                if (tgt_ship->IsStatic())
+                {
                     if (gap < 2500)
                         return Flee(objective);
                 }
 
-                else if (tgt_ship->IsStarship()) {
+                else if (tgt_ship->IsStarship())
+                {
                     if (gap < 1000)
+                    {
                         return Flee(objective);
+                    }
 
-                    else if (ship->GetFlightModel() == Ship::FM_STANDARD && gap < 20e3)
+                    else if (ship->GetFlightModel() ==
+                        Ship::FM_STANDARD &&
+                        gap < 20e3)
+                    {
                         go_manual = true;
+                    }
                 }
             }
 
-            // fighter melee:
-            if ((tgt->GetVelocity() | ship->GetVelocity()) < 0) {
-                // head-to-head pass:
+            if ((tgt->GetVelocity() |
+                ship->GetVelocity()) < 0)
+            {
                 if (gap < 1250)
+                {
                     return Flee(objective);
+                }
             }
-
-            else if (gap < 250) {
+            else if (gap < 250)
+            {
                 return Steer();
             }
 
             ship->SetDirectorInfo("Seek Target");
+
             return Seek(objective);
         }
     }
 
-    if (navpt) {
+    //-------------------------------------------------------------
+    // Navpoint
+    //-------------------------------------------------------------
+
+    if (navpt)
+    {
         ship->SetDirectorInfo("Seek Navpoint");
     }
 

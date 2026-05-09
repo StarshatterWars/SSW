@@ -355,30 +355,67 @@ SteerAI::Seek(const FVector& Point)
     Steer s;
 
     // advance memory pipeline:
-    az[2] = az[1]; az[1] = az[0];
-    el[2] = el[1]; el[1] = el[0];
+    az[2] = az[1];
+    az[1] = az[0];
+
+    el[2] = el[1];
+    el[1] = el[0];
+
+    if (!FMath::IsFinite(Point.X) ||
+        !FMath::IsFinite(Point.Y) ||
+        !FMath::IsFinite(Point.Z))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SteerAI::Seek] INVALID Point=%s"),
+            *Point.ToString());
+
+        az[0] = 0.0;
+        el[0] = 0.0;
+        seeking = 0;
+
+        return s;
+    }
 
     // approach
     if (Point.Z > 0.0f) {
-        az[0] = atan2(fabs(Point.X), Point.Z) * seek_gain;
-        el[0] = atan2(fabs(Point.Y), Point.Z) * seek_gain;
+        az[0] = atan2(FMath::Abs(Point.X), Point.Z) * seek_gain;
+        el[0] = atan2(FMath::Abs(Point.Y), Point.Z) * seek_gain;
 
-        if (Point.X < 0) az[0] = -az[0];
-        if (Point.Y > 0) el[0] = -el[0];
+        if (Point.X < 0)
+            az[0] = -az[0];
 
-        s.yaw = az[0] - seek_damp * (az[1] + az[2] * 0.5);
-        s.pitch = el[0] - seek_damp * (el[1] + el[2] * 0.5);
+        if (Point.Y > 0)
+            el[0] = -el[0];
+
+        s.yaw =
+            az[0] -
+            seek_damp * (az[1] + az[2] * 0.5);
+
+        s.pitch =
+            el[0] -
+            seek_damp * (el[1] + el[2] * 0.5);
     }
 
-    // reverse
+    // reverse / target behind
     else {
-        if (Point.X > 0) s.yaw = 1.0f;
-        else             s.yaw = -1.0f;
+        if (Point.X > 0)
+            s.yaw = 1.0f;
+        else
+            s.yaw = -1.0f;
 
         s.pitch = -Point.Y * 0.5f;
     }
 
     seeking = 1;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SteerAI::Seek] Point=%s Yaw=%.4f Pitch=%.4f ZForward=%d SeekGain=%.3f SeekDamp=%.3f"),
+        *Point.ToString(),
+        s.yaw,
+        s.pitch,
+        Point.Z > 0.0f ? 1 : 0,
+        seek_gain,
+        seek_damp);
 
     return s;
 }
