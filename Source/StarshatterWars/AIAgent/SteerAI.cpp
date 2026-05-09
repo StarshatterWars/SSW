@@ -103,35 +103,39 @@ SteerAI::Create(SimObject* self, ESteerAIType Type)
 
     switch (Type)
     {
+    case ESteerAIType::SHIP:
+        Result = new ShipAI(self);
+        break;
+
     case ESteerAIType::SEEKER:
         Result = new SeekerAI(self);
         break;
 
+    case ESteerAIType::FIGHTER:
+        Result = new FighterAI(self);
+        break;
+
     case ESteerAIType::STARSHIP:
-        Result = new StarshipAI(self);
+        Result = new FighterAI(self);
         break;
 
     case ESteerAIType::GROUND:
         Result = new GroundAI(self);
         break;
 
-    case ESteerAIType::FIGHTER:
     default:
-        Result = new FighterAI(self);
+        Result = nullptr;
         break;
     }
 
     Ship* S = dynamic_cast<Ship*>(self);
-
-    const int32 ResultType =
-        Result ? static_cast<int32>(Result->GetType()) : -1;
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SteerAI::Create] Ship='%s' RequestedType=%d Result=%p ResultType=%d"),
         S ? ANSI_TO_TCHAR(S->GetName()) : TEXT("NULL"),
         static_cast<int32>(Type),
         Result,
-        ResultType);
+        Result ? static_cast<int32>(Result->GetType()) : -1);
 
     return Result;
 }
