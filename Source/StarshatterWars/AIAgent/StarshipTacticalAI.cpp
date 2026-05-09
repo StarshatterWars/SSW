@@ -109,54 +109,110 @@ StarshipTacticalAI::FindThreat()
     threat_level = 0;
     support_level = ship->AIValue() / CELL_SIZE;
 
+    UE_LOG(LogTemp, Warning,
+        TEXT("[TACTICAL CONTACTS] Ship='%hs' ContactCount=%d"),
+        ship ? ship->GetName() : "NULL",
+        ship ? ship->ContactList().size() : 0);
+
     ListIter<SimContact> iter = ship->ContactList();
 
-    while (++iter) {
+    while (++iter)
+    {
         SimContact* contact = iter.value();
+
+        if (!contact)
+        {
+            continue;
+        }
+
         Ship* c_ship = contact->GetShip();
         SimShot* c_shot = contact->GetShot();
 
+        UE_LOG(LogTemp, Warning,
+            TEXT("[TACTICAL CONTACT] Ship='%hs' ContactShip='%hs' IFF=%d Range=%.2f Threat=%d Shot=%p"),
+            ship ? ship->GetName() : "NULL",
+            c_ship ? c_ship->GetName() : "NULL",
+            c_ship ? c_ship->GetIFF() : -1,
+            (double)contact->Range(ship),
+            contact->Threat(ship) ? 1 : 0,
+            c_shot);
+
         if (!c_ship && !c_shot)
+        {
             continue;
+        }
 
-        if (c_ship && c_ship != ship) {
-            double basis = FMath::Max(contact->Range(ship), CELL_SIZE);
-            double ai_value = c_ship->AIValue() / basis;
+        if (c_ship && c_ship != ship)
+        {
+            double basis =
+                FMath::Max(
+                    contact->Range(ship),
+                    CELL_SIZE);
 
-            if (c_ship->GetIFF() == ship->GetIFF()) {
+            double ai_value =
+                c_ship->AIValue() / basis;
+
+            if (c_ship->GetIFF() == ship->GetIFF())
+            {
                 support_level += ai_value;
             }
-            else if (ship->GetIFF() > 0 && c_ship->GetIFF() > 0) {
+            else if (ship->GetIFF() > 0 && c_ship->GetIFF() > 0)
+            {
                 threat_level += ai_value;
             }
-            else if (c_ship->GetIFF() > 1) { // neutrals should not be afraid of alliance
+            else if (c_ship->GetIFF() > 1)
+            {
+                // neutrals should not be afraid of alliance
                 threat_level += ai_value;
             }
         }
 
         if (contact->Threat(ship) &&
-            (Game::GameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME) {
-
-            if (c_shot) {
+            (Game::GameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME)
+        {
+            if (c_shot)
+            {
                 threat_missile = c_shot;
                 rumor = (Ship*)threat_missile->Owner();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[TACTICAL THREAT MISSILE] Ship='%hs' Missile=%p Rumor='%hs'"),
+                    ship->GetName(),
+                    threat_missile,
+                    rumor ? rumor->GetName() : "NULL");
             }
-            else {
-                double rng = contact->Range(ship);
+            else
+            {
+                double rng =
+                    contact->Range(ship);
 
                 if (c_ship &&
                     c_ship->Class() != CLASSIFICATION::FREIGHTER &&
-                    c_ship->Class() != CLASSIFICATION::FARCASTER) {
-
-                    if (c_ship->GetTarget() == ship) {
-                        if (!threat_ship || c_ship->Class() > threat_ship->Class()) {
+                    c_ship->Class() != CLASSIFICATION::FARCASTER)
+                {
+                    if (c_ship->GetTarget() == ship)
+                    {
+                        if (!threat_ship || c_ship->Class() > threat_ship->Class())
+                        {
                             threat_ship = c_ship;
                             threat_dist = 0;
+
+                            UE_LOG(LogTemp, Warning,
+                                TEXT("[TACTICAL THREAT DIRECT] Ship='%hs' Threat='%hs'"),
+                                ship->GetName(),
+                                threat_ship->GetName());
                         }
                     }
-                    else if (rng < threat_dist) {
+                    else if (rng < threat_dist)
+                    {
                         threat_ship = c_ship;
                         threat_dist = rng;
+
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[TACTICAL THREAT CLOSEST] Ship='%hs' Threat='%hs' Range=%.2f"),
+                            ship->GetName(),
+                            threat_ship->GetName(),
+                            (double)rng);
                     }
 
                     CheckBugOut(c_ship, rng);
@@ -165,13 +221,21 @@ StarshipTacticalAI::FindThreat()
         }
     }
 
-    if (rumor) {
+    if (rumor)
+    {
         iter.reset();
 
-        while (++iter) {
-            if (iter->GetShip() == rumor) {
+        while (++iter)
+        {
+            if (iter->GetShip() == rumor)
+            {
                 rumor = 0;
                 ship_ai->ClearRumor();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[TACTICAL RUMOR CLEARED] Ship='%hs'"),
+                    ship->GetName());
+
                 break;
             }
         }
@@ -180,6 +244,14 @@ StarshipTacticalAI::FindThreat()
     ship_ai->SetRumor(rumor);
     ship_ai->SetThreat(threat_ship);
     ship_ai->SetThreatMissile(threat_missile);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[TACTICAL THREAT RESULT] Ship='%hs' Threat='%hs' Missile=%p ThreatLevel=%.4f SupportLevel=%.4f"),
+        ship ? ship->GetName() : "NULL",
+        threat_ship ? threat_ship->GetName() : "NULL",
+        threat_missile,
+        (double)threat_level,
+        (double)support_level);
 }
 
 // +--------------------------------------------------------------------+

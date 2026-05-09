@@ -38,8 +38,7 @@ public:
     NavAI(Ship* s);
     virtual ~NavAI();
 
-    enum { DIR_TYPE = 2000 };
-    virtual int       Type() const override { return DIR_TYPE; }
+    virtual ESteerAIType GetType() const override { return ESteerAIType::NAV; }
 
     virtual void      ExecFrame(double seconds) override;
     virtual int       Subframe() const override { return true; }

@@ -425,7 +425,7 @@ void TacticalView::DoMouseFrame()
                 Observe(MsgShip);
             }
             else if (PlayerShip && Seln == PlayerShip &&
-                (!PlayerShip->GetDirector() || PlayerShip->GetDirector()->GetType() != ShipManager::DIR_TYPE))
+                (!PlayerShip->GetDirector() || PlayerShip->GetDirector()->GetType() != ESteerAIType::SHIP))
             {
                 MsgShip = Seln;
             }

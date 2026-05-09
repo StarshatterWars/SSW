@@ -625,7 +625,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		}
 
 		SimDirector* dir = slot_ship->GetDirector();
-		if (dir && dir->GetType() == ShipManager::DIR_TYPE) {
+		if (dir && dir->GetType() == ESteerAIType::SHIP) {
 			ShipManager* ctrl = (ShipManager*)dir;
 			ctrl->Launch();
 		}

@@ -33,8 +33,8 @@ public:
     SeekerAI(SimObject* s);
     virtual ~SeekerAI();
 
-    virtual int       GetType() const override { return 1001; }
-    virtual bool      GetSubframe() const override { return true; }
+    virtual ESteerAIType       GetType() const override { return ESteerAIType::SEEKER; }
+    virtual bool               GetSubframe() const override { return true; }
 
     virtual void      ExecFrame(double seconds) override;
     virtual void      FindObjective() override;

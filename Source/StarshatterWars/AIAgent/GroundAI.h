@@ -36,11 +36,11 @@ public:
     GroundAI(SimObject* self);
     virtual ~GroundAI();
 
-    virtual void        ExecFrame(double seconds);
-    virtual void        SetTarget(SimObject* targ, SimSystem* sub = 0);
-    virtual SimObject*  GetTarget() const { return target; }
-    virtual SimSystem*     GetSubTarget() const { return subtarget; }
-    virtual int         Type() const;
+    virtual void                 ExecFrame(double seconds);
+    virtual void                 SetTarget(SimObject* targ, SimSystem* sub = 0);
+    virtual SimObject*           GetTarget() const { return target; }
+    virtual SimSystem*           GetSubTarget() const { return subtarget; }
+    virtual ESteerAIType         GetType() const;
 
     virtual bool        Update(SimObject* obj) override;
     virtual const char* GetObserverName() const override;

@@ -2230,7 +2230,7 @@ HUDView::DrawILS()
 void
 HUDView::DrawObjective()
 {
-	if (ship && ship->GetDirector() && ship->GetDirector()->GetType() >= SteerAI::SEEKER) {
+	if (ship && ship->GetDirector() && ship->GetDirector()->GetType() >= ESteerAIType::SEEKER) {
 		SteerAI* steer = (SteerAI*)ship->GetDirector();
 
 		FVector obj = steer->GetObjective();

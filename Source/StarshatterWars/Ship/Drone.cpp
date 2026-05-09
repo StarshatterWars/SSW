@@ -50,7 +50,7 @@ Drone::Drone(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, cons
 		integrity = dsn->integrity;
 
 		// name is a legacy char buffer on the SimObject side:
-		sprintf_s(name, "Drone %04d", Identity());
+		sprintf_s(name, "Drone %04d", GetIdentity());
 	}
 }
 

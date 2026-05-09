@@ -171,10 +171,10 @@ GroundAI::SelectTarget()
 
 // +--------------------------------------------------------------------+
 
-int
-GroundAI::Type() const
+ESteerAIType
+GroundAI::GetType() const
 {
-    return SteerAI::GROUND;
+    return ESteerAIType::GROUND;
 }
 
 // +--------------------------------------------------------------------+

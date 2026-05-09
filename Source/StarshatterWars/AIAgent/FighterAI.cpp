@@ -66,7 +66,7 @@ FighterAI::FighterAI(SimObject* s)
     time_to_dock(0.0),
     go_manual(false)
 {
-    ai_type = FIGHTER;
+    ai_type = ESteerAIType::FIGHTER;
     seek_gain = 22.0;
     seek_damp = 0.55;
     brakes = 0.0;
@@ -612,7 +612,7 @@ FighterAI::Navigator()
                 for (int i = 0; i < elem->NumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
-                    if (s && s->GetDirector() && s->GetDirector()->GetType() >= ShipAI::FIGHTER)
+                    if (s && s->GetDirector() && s->GetDirector()->GetType() >= ESteerAIType::FIGHTER)
                         RadioTraffic::SendQuickMessage(s, RadioMessageAction::CALL_INBOUND);
                 }
 
@@ -1302,7 +1302,7 @@ FighterAI::SeekTarget()
     if (ward && !tgt)
         tgt = ward;
 
-    if (tgt && too_close == tgt->Identity()) {
+    if (tgt && too_close == tgt->GetIdentity()) {
         drop_time = 4.0;
         return Steer();
     }

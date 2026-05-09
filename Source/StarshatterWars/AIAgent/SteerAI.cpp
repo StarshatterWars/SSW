@@ -21,6 +21,7 @@
 #include "StarshipAI.h"
 #include "GroundAI.h"
 #include "SimSystem.h"
+#include "Ship.h"
 
 #include "Game.h"
 #include "Physical.h"
@@ -96,16 +97,43 @@ Steer::Magnitude() const
 // +--------------------------------------------------------------------+
 
 SimDirector*
-SteerAI::Create(SimObject* self, int type)
+SteerAI::Create(SimObject* self, ESteerAIType Type)
 {
-    switch (type) {
-    case SEEKER:   return new SeekerAI(self);
-    case STARSHIP: return new StarshipAI(self);
-    case GROUND:   return new GroundAI(self);
+    SimDirector* Result = nullptr;
 
+    switch (Type)
+    {
+    case ESteerAIType::SEEKER:
+        Result = new SeekerAI(self);
+        break;
+
+    case ESteerAIType::STARSHIP:
+        Result = new StarshipAI(self);
+        break;
+
+    case ESteerAIType::GROUND:
+        Result = new GroundAI(self);
+        break;
+
+    case ESteerAIType::FIGHTER:
     default:
-    case FIGHTER:  return new FighterAI(self);
+        Result = new FighterAI(self);
+        break;
     }
+
+    Ship* S = dynamic_cast<Ship*>(self);
+
+    const int32 ResultType =
+        Result ? static_cast<int32>(Result->GetType()) : -1;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SteerAI::Create] Ship='%s' RequestedType=%d Result=%p ResultType=%d"),
+        S ? ANSI_TO_TCHAR(S->GetName()) : TEXT("NULL"),
+        static_cast<int32>(Type),
+        Result,
+        ResultType);
+
+    return Result;
 }
 
 // +----------------------------------------------------------------------+
@@ -123,7 +151,7 @@ SteerAI::SteerAI(SimObject* ship)
     seeking(0),
     seek_gain(20),
     seek_damp(0.5),
-    ai_type(0)
+    ai_type(ESteerAIType::NONE)
 {
     for (int i = 0; i < 3; i++)
         az[i] = el[i] = 0;

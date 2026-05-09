@@ -895,7 +895,7 @@ void MapView::SetSelection(int index)
 					ListIter<Ship> sIter = simrgn->GetShips();
 					while (++sIter) {
 						if (sIter->IsStatic()) {
-							if (sIter->Identity() == index) {
+							if (sIter->GetIdentity() == index) {
 								selship = sIter.value();
 								break;
 							}
@@ -950,7 +950,7 @@ void MapView::SetSelection(int index)
 					ListIter<Ship> sIter = simrgn->GetShips();
 					while (++sIter) {
 						if (sIter->IsStarship()) {
-							if (sIter->Identity() == index) {
+							if (sIter->GetIdentity() == index) {
 								selship = sIter.value();
 								break;
 							}
@@ -1005,7 +1005,7 @@ void MapView::SetSelection(int index)
 					ListIter<Ship> sIter = simrgn->GetShips();
 					while (++sIter) {
 						if (sIter->IsDropship()) {
-							if (sIter->Identity() == index) {
+							if (sIter->GetIdentity() == index) {
 								selship = sIter.value();
 								break;
 							}

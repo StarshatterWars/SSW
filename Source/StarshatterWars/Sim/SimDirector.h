@@ -18,6 +18,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Types.h"
+#include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
@@ -32,8 +33,8 @@ public:
     virtual ~SimDirector() = default;
 
     // accessors:
-    virtual int GetType()     const { return 0; }
-    virtual bool GetSubframe() const { return false; }
+    virtual ESteerAIType GetType()     const { return ESteerAIType::NONE; }
+    virtual bool         GetSubframe() const { return false; }
 
     // operations:
     virtual void ExecFrame(double factor) {}

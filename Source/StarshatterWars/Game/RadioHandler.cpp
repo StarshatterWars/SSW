@@ -217,7 +217,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 				ship->DropTarget();
 
 			SimDirector* dir = ship->GetDirector();
-			if (dir && dir->GetType() >= SteerAI::SEEKER && dir->GetType() <= SteerAI::GROUND) {
+			if (dir && dir->GetType() >= ESteerAIType::SEEKER && dir->GetType() <= ESteerAIType::GROUND) {
 				SteerAI* ai = (SteerAI*)dir;
 				ai->SetTarget(0);
 			}

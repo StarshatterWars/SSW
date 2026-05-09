@@ -33,8 +33,6 @@ class KeyMap;
 class ShipManager : public SimDirector
 {
 public:
-	enum TYPE { DIR_TYPE = 1 };
-
 	ShipManager(Ship* s, MotionController* m);
 
 	virtual void      ExecFrame(double seconds);
@@ -44,7 +42,7 @@ public:
 	static  int       KeyDown(int action);
 	static  int       Toggled(int action);
 
-	virtual int       Type()      const { return DIR_TYPE; }
+	virtual ESteerAIType  GetType()      const { return ESteerAIType::SHIP; }
 
 protected:
 	Ship* ship;

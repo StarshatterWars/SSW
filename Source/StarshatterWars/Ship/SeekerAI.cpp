@@ -44,7 +44,7 @@ SeekerAI::SeekerAI(SimObject* s)
     delay(0),
     overshot(false)
 {
-    ai_type = SEEKER;
+    ai_type = ESteerAIType::SEEKER;
 
     seek_gain = 25;
     seek_damp = 0.55;
@@ -56,7 +56,7 @@ SeekerAI::~SeekerAI()
 {
     if (shot) {
         if (shot->Owner())
-            ((Ship*)shot->Owner())->SetMissileEta(shot->Identity(), 0);
+            ((Ship*)shot->Owner())->SetMissileEta(shot->GetIdentity(), 0);
     }
 }
 
@@ -103,7 +103,7 @@ SeekerAI::SetTarget(SimObject* targ, SimSystem* sub)
         shot->SetEta(0);
 
         if (shot->Owner())
-            ((Ship*)shot->Owner())->SetMissileEta(shot->Identity(), 0);
+            ((Ship*)shot->Owner())->SetMissileEta(shot->GetIdentity(), 0);
     }
 }
 
@@ -149,7 +149,7 @@ SeekerAI::FindObjective()
         shot->SetEta(0);
 
         if (shot->Owner())
-            ((Ship*)shot->Owner())->SetMissileEta(shot->Identity(), 0);
+            ((Ship*)shot->Owner())->SetMissileEta(shot->GetIdentity(), 0);
 
         return;
     }
@@ -202,7 +202,7 @@ SeekerAI::FindObjective()
     shot->SetEta((int)time);
 
     if (shot->Owner())
-        ((Ship*)shot->Owner())->SetMissileEta(shot->Identity(), (int)time);
+        ((Ship*)shot->Owner())->SetMissileEta(shot->GetIdentity(), (int)time);
 }
 
 // +--------------------------------------------------------------------+

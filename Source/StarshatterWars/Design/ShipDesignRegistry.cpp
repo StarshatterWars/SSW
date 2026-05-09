@@ -214,7 +214,8 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
 	Ship->gear = nullptr;
 }
 
-ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
+ShipDesign*
+ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
 {
     ShipDesign* Legacy = new ShipDesign();
 
@@ -223,7 +224,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
         return nullptr;
     }
 
-	ResetShipComponents(Legacy);
+    ResetShipComponents(Legacy);
 
     const FString NameStr = RowName.ToString();
 
@@ -237,6 +238,17 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
     Legacy->secret = Row.Secret;
 
     //-------------------------------------------------------------
+    // Classification
+    //-------------------------------------------------------------
+    Legacy->type = static_cast<uint32>(Row.ShipType);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipDesignRegistry] Classification Row='%s' ShipType=0x%08X LegacyType=0x%08X"),
+        *RowName.ToString(),
+        static_cast<uint32>(Row.ShipType),
+        Legacy->type);
+
+    //-------------------------------------------------------------
     // Core flight + physics
     //-------------------------------------------------------------
     Legacy->scale = Row.Scale;
@@ -245,7 +257,7 @@ ShipDesign* ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, cons
 
     Legacy->mass = Row.Mass;
     Legacy->integrity = Row.Integrity;
-    Legacy->radius = Row.Scale; // fallback (adjust later if needed)
+    Legacy->radius = Row.Scale;
 
     //-------------------------------------------------------------
     // Movement + handling

@@ -74,7 +74,7 @@ public:
     virtual void      InflictDamage(double Damage, int Type = 0);
 
     // accessors:
-    int               Identity()  const { return id; }
+    int               GetIdentity()  const { return id; }
     int               GetType()   const { return obj_type; }
     const char*       GetName()   const { return name; }
 

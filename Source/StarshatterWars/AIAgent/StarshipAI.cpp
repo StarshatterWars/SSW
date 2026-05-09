@@ -52,7 +52,7 @@ StarshipAI::StarshipAI(SimObject* s)
     subtarget(0),
     tgt_point_defense(false)
 {
-    ai_type = STARSHIP;
+    ai_type = ESteerAIType::STARSHIP;
     tactical = nullptr;
 
     // signifies this ship is a dead hulk:
@@ -110,9 +110,6 @@ StarshipAI::FindObjective()
         ? ship->GetRadioOrders()->GetRadioAction()
         : RadioMessageAction::NONE;
 
-    // -------------------------------------------------
-    // Quantum / Farcast orders override everything
-    // -------------------------------------------------
     if (order == RadioMessageAction::QUANTUM_TO ||
         order == RadioMessageAction::FARCAST_TO)
     {
@@ -121,18 +118,13 @@ StarshipAI::FindObjective()
         return;
     }
 
-    // -------------------------------------------------
-    // Enum-class safe "no order" test
-    // -------------------------------------------------
     const bool bNoOrder =
         static_cast<int32>(order) == 0;
 
-    // Weapons hold / formation orders
     const bool bHoldOrder =
         order == RadioMessageAction::WEP_HOLD ||
         order == RadioMessageAction::FORM_UP;
 
-    // Formation logic (legacy equivalent of !order)
     const bool bForm =
         bHoldOrder ||
         (bNoOrder && !target) ||
@@ -140,9 +132,6 @@ StarshipAI::FindObjective()
 
     Ship* ward = ship->GetWard();
 
-    // -------------------------------------------------
-    // If not element leader, stay in formation
-    // -------------------------------------------------
     if (bForm && element_index > 1)
     {
         ship->SetDirectorInfo("Formation");
@@ -161,10 +150,7 @@ StarshipAI::FindObjective()
         return;
     }
 
-    // -------------------------------------------------
-    // Tactical context
-    // -------------------------------------------------
-    bool   directed = false;
+    bool directed = false;
     double threat_level = 0.0;
     double support_level = 1.0;
 
@@ -175,12 +161,8 @@ StarshipAI::FindObjective()
         support_level = tactical->SupportLevel();
     }
 
-    // -------------------------------------------------
-    // Threat processing
-    // -------------------------------------------------
     if (bHoldOrder || (!directed && threat_level >= 2.0 * support_level))
     {
-        // Seek support
         if (support)
         {
             const double d_support =
@@ -188,17 +170,15 @@ StarshipAI::FindObjective()
 
             if (d_support > 35e3)
             {
-                ship->SetDirectorInfo(Game::GetText("ai.regroup"));
+                ship->SetDirectorInfo("Regroup");
                 FindObjectiveTarget(support);
                 objective = Transform(obj_w);
                 return;
             }
         }
-
-        // Retreat from threat
         else if (threat && threat != target)
         {
-            ship->SetDirectorInfo(Game::GetText("ai.retreat"));
+            ship->SetDirectorInfo("Retreat");
             obj_w = ship->GetLocation() +
                 (ship->GetLocation() - threat->GetLocation()) * 100.0f;
             objective = Transform(obj_w);
@@ -206,55 +186,48 @@ StarshipAI::FindObjective()
         }
     }
 
-    // -------------------------------------------------
-    // Weapons hold behavior
-    // -------------------------------------------------
     if (bHoldOrder)
     {
         if (navpt)
         {
-            ship->SetDirectorInfo(Game::GetText("ai.seek-navpt"));
+            ship->SetDirectorInfo("Seek Navpoint");
             FindObjectiveNavPoint();
         }
         else if (patrol)
         {
-            ship->SetDirectorInfo(Game::GetText("ai.patrol"));
+            ship->SetDirectorInfo("Patrol");
             FindObjectivePatrol();
         }
         else
         {
-            ship->SetDirectorInfo(Game::GetText("ai.holding"));
+            ship->SetDirectorInfo("Holding");
             obj_w = FVector::ZeroVector;
             objective = FVector::ZeroVector;
         }
     }
-
-    // -------------------------------------------------
-    // Normal objective processing
-    // -------------------------------------------------
     else if (target)
     {
-        ship->SetDirectorInfo(Game::GetText("ai.seek-target"));
+        ship->SetDirectorInfo("Seek Target");
         FindObjectiveTarget(target);
     }
     else if (patrol)
     {
-        ship->SetDirectorInfo(Game::GetText("ai.patrol"));
+        ship->SetDirectorInfo("Patrol");
         FindObjectivePatrol();
     }
     else if (ward)
     {
-        ship->SetDirectorInfo(Game::GetText("ai.seek-ward"));
+        ship->SetDirectorInfo("Seek Ward");
         FindObjectiveFormation();
     }
     else if (navpt)
     {
-        ship->SetDirectorInfo(Game::GetText("ai.seek-navpt"));
+        ship->SetDirectorInfo("Seek Navpoint");
         FindObjectiveNavPoint();
     }
     else if (rumor)
     {
-        ship->SetDirectorInfo(Game::GetText("ai.search"));
+        ship->SetDirectorInfo("Search");
         FindObjectiveTarget(rumor);
     }
     else
@@ -263,10 +236,18 @@ StarshipAI::FindObjective()
         objective = FVector::ZeroVector;
     }
 
-    // -------------------------------------------------
-    // Final transform
-    // -------------------------------------------------
     objective = Transform(obj_w);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::FindObjective] Ship='%hs' Target='%hs' Ward='%hs' Navpt=%p Rumor='%hs' Objective=%s ObjW=%s Distance=%.2f"),
+        ship ? ship->GetName() : "NULL",
+        target ? target->GetName() : "NULL",
+        ward ? ward->GetName() : "NULL",
+        navpt,
+        rumor ? rumor->GetName() : "NULL",
+        *objective.ToString(),
+        *obj_w.ToString(),
+        (double)distance);
 }
 
 // +--------------------------------------------------------------------+

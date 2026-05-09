@@ -64,18 +64,17 @@ struct Steer
 class SteerAI : public SimDirector, public SimObserver
 {
 public:
-    enum Type { SEEKER = 1000, FIGHTER, STARSHIP, GROUND };
 
     SteerAI(SimObject* self);
     virtual ~SteerAI();
 
-    static SimDirector* Create(SimObject*, int type);
+    static SimDirector* Create(SimObject*, ESteerAIType type);
 
     virtual void       SetTarget(SimObject* targ, SimSystem* sub = 0);
     virtual SimObject* GetTarget() const { return target; }
     virtual SimSystem* GetSubTarget() const { return subtarget; }
     virtual void       DropTarget(double drop_time = 1.5);
-    virtual int        Type() const { return ai_type; }
+    virtual ESteerAIType GetType() const { return ai_type; }
 
     virtual bool       Update(SimObject* obj);
     virtual const char* GetObserverName() const;
@@ -125,7 +124,7 @@ protected:
     double            seek_gain = 0;
     double            seek_damp = 0;
 
-    int               ai_type = 0;
+    ESteerAIType      ai_type = ESteerAIType::NONE;
 };
 
 // +--------------------------------------------------------------------+

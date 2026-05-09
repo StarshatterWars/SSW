@@ -267,24 +267,58 @@ ShipAI::ExecFrame(double secs)
 {
 	seconds = secs;
 
-	if (drop_time > 0) drop_time -= seconds;
-	if (!ship) return;
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ExecFrame] Ship='%s' MissionClockSec=%.3f MissionClockMS=%d Tactical=%p DirectorType=%d Target=%p Contacts=%d Region=%s"),
+		ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
+		ship ? ship->GetMissionClock() : -1.0,
+		ship ? ship->GetMissionClockMS() : -1,
+		tactical,
+		GetType(),
+		target,
+		ship ? ship->ContactList().size() : -1,
+		ship && ship->GetRegion() ? ANSI_TO_TCHAR(ship->GetRegion()->GetName()) : TEXT("NULL"));
+
+	if (drop_time > 0)
+		drop_time -= seconds;
+
+	if (!ship)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[ShipAI::ExecFrame] NULL ship"));
+		return;
+	}
 
 	ship->SetDirectorInfo(" ");
 
 	// check to make sure current navpt is still valid:
 	if (navpt)
+	{
 		navpt = ship->GetNextNavPoint();
+	}
 
-	if (ship->GetFlightPhase() == Ship::TAKEOFF || ship->GetFlightPhase() == Ship::LAUNCH)
+	if (ship->GetFlightPhase() == Ship::TAKEOFF ||
+		ship->GetFlightPhase() == Ship::LAUNCH)
+	{
 		takeoff = true;
+	}
 
-	if (takeoff) {
+	if (takeoff)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ExecFrame] TAKEOFF Ship='%s'"),
+			ANSI_TO_TCHAR(ship->GetName()));
+
 		FindObjective();
 		Navigator();
 
-		if (ship->GetMissionClock() > 10000)
+		if (ship->GetMissionClockMS() > 10000)
+		{
 			takeoff = false;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ShipAI::ExecFrame] TAKEOFF COMPLETE Ship='%s'"),
+				ANSI_TO_TCHAR(ship->GetName()));
+		}
 
 		return;
 	}
@@ -292,61 +326,130 @@ ShipAI::ExecFrame(double secs)
 	const int32 ClockMS = ship->GetMissionClockMS();
 	const double ClockSec = ship->GetMissionClock();
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI] CLOCK Ship='%hs' Sec=%.3f MS=%d"),
-		ship->GetName(),
-		ClockSec,
-		ClockMS);
-	
 	// initial assessment:
-	if (ship->GetMissionClockMS() < 500)
+	if (ClockMS < 500)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI] WAITING Ship='%hs' MissionClockMS=%d"),
-			ship->GetName(),
-			ship->GetMissionClockMS());
+			TEXT("[ShipAI::ExecFrame] WAITING Ship='%s' ClockMS=%d"),
+			ANSI_TO_TCHAR(ship->GetName()),
+			ClockMS);
 
 		return;
 	}
-	
 
 	element_index = ship->GetElementIndex();
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ExecFrame] ACTIVE Ship='%s' ElementIndex=%d"),
+		ANSI_TO_TCHAR(ship->GetName()),
+		element_index);
+
 	NavlightControl();
+
 	CheckTarget();
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ExecFrame] AFTER CheckTarget Ship='%s' Target=%p ShipTarget=%p"),
+		ANSI_TO_TCHAR(ship->GetName()),
+		target,
+		ship->GetTarget());
+
 	if (tactical)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ExecFrame] CALL Tactical Ship='%s' Tactical=%p Contacts=%d"),
+			ANSI_TO_TCHAR(ship->GetName()),
+			tactical,
+			ship->ContactList().size());
+
 		tactical->ExecFrame(seconds);
 
-	if (target && target != ship->GetTarget()) {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ExecFrame] RETURN Tactical Ship='%s' Target=%p"),
+			ANSI_TO_TCHAR(ship->GetName()),
+			target);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[ShipAI::ExecFrame] NULL Tactical Ship='%s'"),
+			ANSI_TO_TCHAR(ship->GetName()));
+	}
+
+	if (target && target != ship->GetTarget())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ExecFrame] LOCK TARGET Ship='%s' Target=%p"),
+			ANSI_TO_TCHAR(ship->GetName()),
+			target);
+
 		ship->LockTarget(target);
 
 		// if able to lock target, and target is a ship (not a shot)...
-		if (target == ship->GetTarget() && target->GetType() == SimObject::SIM_SHIP) {
+		if (target == ship->GetTarget() &&
+			target->GetType() == SimObject::SIM_SHIP)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ShipAI::ExecFrame] TARGET LOCKED Ship='%s'"),
+				ANSI_TO_TCHAR(ship->GetName()));
 
 			// if this isn't the same ship we last called out:
-			if (target->Identity() != engaged_ship_id && Game::GameTime() - last_call_time > 10000) {
-				// call engaging:
-				RadioMessage* msg = new RadioMessage(ship->GetElement(), ship, RadioMessageAction::CALL_ENGAGING);
+			if (target->GetIdentity() != engaged_ship_id &&
+				Game::GameTime() - last_call_time > 10000)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::ExecFrame] RADIO ENGAGING Ship='%s'"),
+					ANSI_TO_TCHAR(ship->GetName()));
+
+				RadioMessage* msg =
+					new RadioMessage(
+						ship->GetElement(),
+						ship,
+						RadioMessageAction::CALL_ENGAGING);
+
 				msg->AddTarget(target);
+
 				RadioTraffic::Transmit(msg);
+
 				last_call_time = Game::GameTime();
 
-				engaged_ship_id = target->Identity();
+				engaged_ship_id = target->GetIdentity();
 			}
 		}
 	}
 
-	else if (!target) {
+	else if (!target)
+	{
 		target = ship->GetTarget();
 
-		if (engaged_ship_id && !target) {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ExecFrame] PULL TARGET FROM SHIP Ship='%s' ShipTarget=%p"),
+			ANSI_TO_TCHAR(ship->GetName()),
+			target);
+
+		if (engaged_ship_id && !target)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ShipAI::ExecFrame] CLEAR ENGAGED TARGET Ship='%s'"),
+				ANSI_TO_TCHAR(ship->GetName()));
+
 			engaged_ship_id = 0;
 		}
 	}
 
 	FindObjective();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ExecFrame] AFTER FindObjective Ship='%s'"),
+		ANSI_TO_TCHAR(ship->GetName()));
+
 	Navigator();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ExecFrame] END Ship='%s' Target=%p Contacts=%d"),
+		ANSI_TO_TCHAR(ship->GetName()),
+		target,
+		ship->ContactList().size());
 }
 
 // +--------------------------------------------------------------------+
@@ -830,7 +933,7 @@ ShipAI::FindObjectiveFormation()
 	slot_dist = Transform(SlotProbe).Z;
 
 	SimDirector* LeadDirector = LeadShip->GetDirector();
-	if (LeadDirector && (LeadDirector->GetType() == FIGHTER || LeadDirector->GetType() == STARSHIP)) {
+	if (LeadDirector && (LeadDirector->GetType() == ESteerAIType::FIGHTER || LeadDirector->GetType() == ESteerAIType::STARSHIP)) {
 		ShipAI* LeadAI = (ShipAI*)LeadDirector;
 		farcaster = LeadAI->GetFarcaster();
 	}
@@ -1190,7 +1293,7 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 	double& avoid_time,
 	Steer& avoid)
 {
-	if (too_close == obj->Identity()) {
+	if (too_close == obj->GetIdentity()) {
 		double dist = ((FVector)(ship->GetLocation() - obj->GetLocation())).Size();
 		double closure = FVector::DotProduct((FVector)(ship->GetVelocity() - obj->GetVelocity()), bearing);
 
@@ -1307,7 +1410,7 @@ ShipAI::AvoidTestSingleObject(SimObject* obj,
 Steer
 ShipAI::AvoidCloseObject(SimObject* obj)
 {
-	too_close = obj->Identity();
+	too_close = obj->GetIdentity();
 	obstacle = Transform(obj->GetLocation());
 	other = obj;
 
@@ -1354,7 +1457,7 @@ ShipAI::SeekTarget()
 		return result;
 	}
 
-	if (target && too_close == target->Identity()) {
+	if (target && too_close == target->GetIdentity()) {
 		drop_time = 4;
 		return Avoid(objective, 0.0f);
 	}

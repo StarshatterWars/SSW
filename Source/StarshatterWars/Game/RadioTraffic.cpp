@@ -189,14 +189,14 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 				sprintf_s(src_buf, "%s", sender->GetName());
 
 				if (sender->IsStarship())
-					vox_channel = (sender->Identity() % 3) + 5;
+					vox_channel = (sender->GetIdentity() % 3) + 5;
 			}
 		}
 
 		// orders to other ships:
 		else {
 			if (sender->IsStarship()) {
-				vox_channel = (sender->Identity() % 3) + 5;
+				vox_channel = (sender->GetIdentity() % 3) + 5;
 			}
 			else {
 				vox_channel = sender->GetElementIndex();

@@ -86,20 +86,50 @@ void TacticalAI::ExecFrame(double secs)
 	const int exec_period = 1000;
 
 	if (!ship || !ship_ai)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::ExecFrame] SKIP Ship=%p ShipAI=%p"),
+			ship,
+			ship_ai);
 		return;
+	}
 
 	navpt = ship->GetNextNavPoint();
 	orders = ship->GetRadioOrders();
 
-	if ((int)Game::GameTime() - exec_time > exec_period) {
+	const int32 Now = (int32)Game::GameTime();
+
+	if (Now - exec_time > exec_period)
+	{
 		element_index = ship->GetElementIndex();
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::ExecFrame] RUN Ship='%hs' Time=%d ExecTime=%d ElementIndex=%d Navpt=%p Orders=%p Contacts=%d CurrentTarget='%hs'"),
+			ship->GetName(),
+			Now,
+			exec_time,
+			element_index,
+			navpt,
+			orders,
+			ship->ContactList().size(),
+			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL");
 
 		CheckOrders();
 		SelectTarget();
 		FindThreat();
 		FindSupport();
 
-		if (element_index > 1) {
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::ExecFrame] AFTER Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' ThreatLevel=%.4f SupportLevel=%.4f"),
+			ship->GetName(),
+			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL",
+			ship_ai->GetThreat() ? ship_ai->GetThreat()->GetName() : "NULL",
+			ship_ai->GetSupport() ? ship_ai->GetSupport()->GetName() : "NULL",
+			(double)ThreatLevel(),
+			(double)SupportLevel());
+
+		if (element_index > 1)
+		{
 			INSTRUCTION_FORMATION formation = INSTRUCTION_FORMATION::DIAMOND;
 
 			if (orders && orders->GetFormation() >= INSTRUCTION_FORMATION::DIAMOND)
@@ -561,7 +591,7 @@ void TacticalAI::SelectTargetDirected(Ship* tgt)
 	ship_ai->SetTarget(potential_target);
 
 	if (tgt && tgt == ship_ai->GetTarget())
-		directed_tgtid = tgt->Identity();
+		directed_tgtid = tgt->GetIdentity();
 	else
 		directed_tgtid = 0;
 }
@@ -782,7 +812,7 @@ void TacticalAI::CheckTarget()
 
 		// have we been ordered to pursue the target?
 		if (directed_tgtid) {
-			if (directed_tgtid != target->Identity()) {
+			if (directed_tgtid != target->GetIdentity()) {
 				ship_ai->DropTarget();
 			}
 

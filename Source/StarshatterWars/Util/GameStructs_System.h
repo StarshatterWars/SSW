@@ -203,6 +203,21 @@ enum class EFLCSMode : uint8
 	HELM       UMETA(DisplayName = "Helm")
 };
 
+
+
+UENUM(BlueprintType)
+enum class ESteerAIType : uint8
+{
+	NONE      UMETA(DisplayName = "None"),
+	SHIP      UMETA(DisplayName = "Ship"),
+	SEEKER    UMETA(DisplayName = "Seeker"),
+	FIGHTER   UMETA(DisplayName = "Fighter"),
+	STARSHIP  UMETA(DisplayName = "Starship"),
+	GROUND    UMETA(DisplayName = "Ground"),
+	DROPSHIP  UMETA(DisplayName = "Drop Ship"),
+	NAV       UMETA(DisplayName = "Nav"),
+};
+
 USTRUCT(BlueprintType)
 struct FWeaponDesign : public FTableRowBase
 {

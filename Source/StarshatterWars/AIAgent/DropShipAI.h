@@ -29,8 +29,7 @@ public:
 	explicit DropShipAI(Ship* s);
 	virtual ~DropShipAI();
 
-	enum { DIR_TYPE = 2001 };
-	virtual int Type() const override { return DIR_TYPE; }
+	virtual ESteerAIType GetType() const override { return ESteerAIType::DROPSHIP; }
 
 protected:
 	// Accumulate behaviors:

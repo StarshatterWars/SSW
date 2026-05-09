@@ -278,12 +278,15 @@ Ship::Ship(
 
 	dir = nullptr;
 
-	//-------------------------------------------------------------
+	///-------------------------------------------------------------
 	// AI / Director Setup
 	//-------------------------------------------------------------
 	if (bCreateAI && cmd_ai > 0)
 	{
-		SimDirector* Director = SteerAI::Create(this, cmd_ai);
+		ESteerAIType RequestedAIType =
+			IsStarship() ? ESteerAIType::STARSHIP : ESteerAIType::FIGHTER;
+
+		SimDirector* Director = SteerAI::Create(this, RequestedAIType);
 
 		if (Director)
 		{
@@ -291,10 +294,12 @@ Ship::Ship(
 			net_control = nullptr;
 
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Ship] SimDirector created for '%hs' (cmd_ai=%d) Dir=%p"),
+				TEXT("[Ship] SimDirector created for '%hs' CmdAI=%d RequestedAIType=%d Dir=%p DirType=%d"),
 				ship_name,
 				cmd_ai,
-				dir);
+				static_cast<int32>(RequestedAIType),
+				dir,
+				dir ? static_cast<int32>(dir->GetType()) : -1);
 		}
 	}
 	else
@@ -1602,31 +1607,90 @@ Ship::ClassForName(const char* name)
 CLASSIFICATION
 Ship::Class() const
 {
-	return (CLASSIFICATION)design->type;
+	if (!design)
+	{
+		return CLASSIFICATION::EMPTY;
+	}
+
+	return static_cast<CLASSIFICATION>(
+		static_cast<uint32>(design->type));
 }
 
 bool
 Ship::IsGroundUnit() const
 {
-	return (design->type & (int) CLASSIFICATION::GROUND_UNITS) ? true : false;
+	if (!design)
+	{
+		return false;
+	}
+
+	const uint32 TypeMask =
+		static_cast<uint32>(Class());
+
+	const uint32 GroundMask =
+		static_cast<uint32>(CLASSIFICATION::GROUND_UNITS);
+
+	return (TypeMask & GroundMask) != 0;
 }
 
 bool
 Ship::IsStarship() const
 {
-	return (design->type & (int)CLASSIFICATION::STARSHIPS) ? true : false;
+	if (!design)
+		return false;
+
+	const uint32 Type = (uint32)design->type;
+	const uint32 StarshipMask = (uint32)CLASSIFICATION::STARSHIPS;
+
+	const bool bResult = (Type & StarshipMask) != 0;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::IsStarship] Ship='%s' DesignType=0x%08X StarshipMask=0x%08X Result=%d"),
+		ANSI_TO_TCHAR(GetName()),
+		Type,
+		StarshipMask,
+		bResult ? 1 : 0);
+
+	return bResult;
 }
 
 bool
 Ship::IsDropship() const
 {
-	return (design->type & (int)CLASSIFICATION::DROPSHIPS) ? true : false;
+	if (!design)
+	{
+		return false;
+	}
+
+	const uint32 TypeMask =
+		static_cast<uint32>(Class());
+
+	const uint32 DropshipMask =
+		static_cast<uint32>(CLASSIFICATION::DROPSHIPS);
+
+	return (TypeMask & DropshipMask) != 0;
 }
 
 bool
 Ship::IsStatic() const
 {
-	return design->type >= (int)CLASSIFICATION::STATION;
+	if (!design)
+	{
+		return false;
+	}
+
+	const uint32 TypeMask =
+		static_cast<uint32>(Class());
+
+	return
+		TypeMask == static_cast<uint32>(CLASSIFICATION::STATION) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::FARCASTER) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::BUILDING) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::FACTORY) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::SAM) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::EWR) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::C3I) ||
+		TypeMask == static_cast<uint32>(CLASSIFICATION::STARBASE);
 }
 
 bool
@@ -2105,7 +2169,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 				OwnerShip &&
 				OwnerShip->GetIFF() == GetIFF() &&
 				OwnerShip->GetDirector() &&
-				OwnerShip->GetDirector()->GetType() < 1000) {
+				OwnerShip->GetDirector()->GetType() < ESteerAIType::SEEKER) {
 
 				const bool WasRogue = OwnerShip->IsRogue();
 
@@ -2218,7 +2282,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	double   d1 = 1e9;
 	double   ds = 1e9;
 
-	if (dir && dir->GetType() == SteerAI::FIGHTER) {
+	if (dir && dir->GetType() == ESteerAIType::FIGHTER) {
 		ShipAI* shipAI = (ShipAI*)dir;
 		easy = shipAI->GetAILevel() < 2;
 	}
@@ -2645,7 +2709,7 @@ Ship::SetAutoNav(bool engage)
 void
 Ship::CommandMode()
 {
-	if (!dir || dir->GetType() != ShipManager::DIR_TYPE) {
+	if (!dir || dir->GetType() != ESteerAIType::SHIP) {
 		const char* msg = "Captain on the bridge";
 		RadioVox* vox = new  RadioVox(0, "1", msg);
 
@@ -3130,7 +3194,7 @@ Ship::ExecNavFrame(double Seconds)
 		navsys->ExecFrame(Seconds);
 
 		if (navsys->AutoNavEngaged()) {
-			if (dir && dir->GetType() == NavAI::DIR_TYPE) {
+			if (dir && dir->GetType() == ESteerAIType::NAV) {
 				NavAI* NavAIComp = (NavAI*)dir;
 
 				if (NavAIComp->Complete()) {
@@ -4964,7 +5028,7 @@ Ship::SetFLCSMode(EFLCSMode mode)
 	if (IsAirborne())
 		flcs_mode =	EFLCSMode::MANUAL;
 
-	if (dir && dir->GetType() < SteerAI::SEEKER) {
+	if (dir && dir->GetType() < ESteerAIType::SEEKER) {
 		switch (flcs_mode) {
 		case EFLCSMode::MANUAL: director_info = "Manual FLCS"; break;
 		case EFLCSMode::AUTO:   director_info = "Auto FLCS";   break;
@@ -5914,26 +5978,26 @@ void Ship::SetNetworkControl(SimDirector* net)
 	//-------------------------------------------------------------
 	if (IsStarship())
 	{
-		dir = SteerAI::Create(this, SteerAI::STARSHIP);
+		dir = SteerAI::Create(this, ESteerAIType::STARSHIP);
 	}
 	else
 	{
-		dir = SteerAI::Create(this, SteerAI::FIGHTER);
+		dir = SteerAI::Create(this, ESteerAIType::FIGHTER);
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::SetNetworkControl] AI CREATED Ship='%hs' Dir=%p IFF=%d Starship=%d"),
-		GetName(),
+		TEXT("[Ship::InitRuntimeSystems] AI Director Created Ship='%s' IsStarship=%d Dir=%p DirType=%d"),
+		ANSI_TO_TCHAR(GetName()),
+		IsStarship() ? 1 : 0,
 		dir,
-		GetIFF(),
-		IsStarship() ? 1 : 0);
+		dir ? static_cast<int32>(dir->GetType()) : -1);
 }
 
 void
 Ship::SetControls(MotionController* m)
 {
 	if (IsDropping() || IsAttaining()) {
-		if (dir && dir->GetType() != DropShipAI::DIR_TYPE) {
+		if (dir && dir->GetType() != ESteerAIType::DROPSHIP) {
 			delete dir;
 			dir = new  DropShipAI(this);
 		}
@@ -5981,7 +6045,7 @@ Ship::SetControls(MotionController* m)
 		NavAI* nav = 0;
 
 		if (dir) {
-			if (dir->GetType() != NavAI::DIR_TYPE) {
+			if (dir->GetType() != ESteerAIType::NAV) {
 				delete dir;
 				dir = 0;
 			}
@@ -6014,13 +6078,13 @@ Ship::SetControls(MotionController* m)
 	}
 	else if (GetIFF() < 100) {
 		if (IsStatic())
-			dir = SteerAI::Create(this, SteerAI::GROUND);
+			dir = SteerAI::Create(this, ESteerAIType::GROUND);
 
 		else if (IsStarship() && !IsAirborne())
-			dir = SteerAI::Create(this, SteerAI::STARSHIP);
+			dir = SteerAI::Create(this, ESteerAIType::STARSHIP);
 
 		else
-			dir = SteerAI::Create(this, SteerAI::FIGHTER);
+			dir = SteerAI::Create(this, ESteerAIType::FIGHTER);
 	}
 }
 
@@ -6086,7 +6150,7 @@ Ship::SetIFF(int iff)
 
 	DropTarget();
 
-	if (dir && dir->GetType() >= 1000) {
+	if (dir && dir->GetType() >= ESteerAIType::SEEKER) {
 		SteerAI* ai = (SteerAI*)dir;
 		ai->DropTarget();
 	}
