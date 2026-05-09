@@ -231,6 +231,7 @@ Sim::Sim(MotionController* InCtrl)
 	MFDView::Initialize();
 	Asteroid::Initialize();
 
+	scene = new SimScene();
 	// Singleton hookup:
 	if (!sim)
 	{
@@ -258,6 +259,9 @@ Sim::~Sim()
 	NavLight::Close();
 	Token::close();
 	Asteroid::Close();
+
+	delete scene;
+	scene = nullptr;
 
 	if (sim == this)
 		sim = 0;
@@ -1642,7 +1646,7 @@ Sim::ActivateRegion(SimRegion* rgn)
 		}
 		else {
 			UE_LOG(LogTemp, Warning,
-				TEXT("Sim::ActivateRegion() No star system found for rgn '%s'"),
+				TEXT("[Sim::ActivateRegion] No star system found for rgn '%s'"),
 				ANSI_TO_TCHAR(rgn->GetName()));
 		}
 
@@ -1672,13 +1676,17 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Sim::ExecFrame ENTER] Delta=%.4f Regions=%d ActiveRegion=%p ActiveName='%hs' Elements=%d"),
+		DeltaSeconds,
+		regions.size(),
+		active_region,
+		active_region ? active_region->GetName() : "NULL",
+		elements.size());
+
 	if (first_frame) {
 		first_frame = false;
-		//netgame = NetGame::Create();
 	}
-
-	//if (netgame)
-	//	netgame->ExecFrame();
 
 	if (regions.isEmpty()) {
 		active_region = nullptr;

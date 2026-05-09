@@ -116,7 +116,7 @@ SteerAI::Create(SimObject* self, ESteerAIType Type)
         break;
 
     case ESteerAIType::STARSHIP:
-        Result = new FighterAI(self);
+        Result = new StarshipAI(self);
         break;
 
     case ESteerAIType::GROUND:

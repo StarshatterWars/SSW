@@ -97,20 +97,20 @@ public:
     void  SetPlayerShip(Ship* ship);
 
     // Region data:
-    const char* GetName() const { return name; }
+    const char*     GetName() const { return name; }
     int             GetType() const { return type; }
-    StarSystem* GetSystem() { return star_system; }
-    OrbitalRegion* GetOrbitalRegion() { return orbital_region; }
-    Terrain* GetTerrain() { return terrain; }
+    StarSystem*     GetSystem() { return star_system; }
+    OrbitalRegion*  GetOrbitalRegion() { return orbital_region; }
+    Terrain*        GetTerrain() { return terrain; }
 
     FVector         GetLocation() const { return location; }
 
     int             GetNumShips() { return ships.size(); }
-    List<Ship>& GetShips() { return ships; }
-    List<Ship>& GetCarriers() { return carriers; }
-    List<SimShot>& GetShots() { return shots; }
-    List<Drone>& GetDrones() { return drones; }
-    List<Debris>& GetRocks() { return debris; }
+    List<Ship>&     GetShips() { return ships; }
+    List<Ship>&     GetCarriers() { return carriers; }
+    List<SimShot>&  GetShots() { return shots; }
+    List<Drone>&    GetDrones() { return drones; }
+    List<Debris>&   GetRocks() { return debris; }
     List<Asteroid>& GetRoids() { return asteroids; }
     List<Explosion>& GetExplosions() { return explosions; }
     List<SimRegion>& GetLinks() { return links; }
@@ -123,7 +123,7 @@ public:
     void           AddSelection(Ship* s);
 
     // Tracking:
-    List<SimContact>& TrackList(int iff);
+    List<SimContact>& GetTrackList(int iff);
 
 protected:
     // Internal simulation pipeline:
@@ -135,7 +135,7 @@ protected:
     void UpdateShips(double seconds);
     void UpdateShots(double seconds);
     void UpdateExplosions(double seconds);
-    void UpdateTracks(double seconds);
+    void UpdateTracking(double seconds);
 
 protected:
     Sim* sim = nullptr;

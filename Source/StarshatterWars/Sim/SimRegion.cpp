@@ -58,10 +58,24 @@ static FORCEINLINE int ClampIFF(int iff)
 
 static FORCEINLINE bool IsDeadShip(const Ship* s)
 {
-    if (!s) return true;
-    if (s->GetLife() <= 0) return true;
-    if (s->IsDead())    return true;
-    if (s->IsDying())   return true;
+    if (!s)
+    {
+        return true;
+    }
+
+    // TEMP UE PORT:
+    // Do not use GetLife() here yet. Some runtime ships/static ships
+    // may not have legacy life initialized correctly.
+    if (s->IsDead())
+    {
+        return true;
+    }
+
+    if (s->IsDying())
+    {
+        return true;
+    }
+
     return false;
 }
 
@@ -215,19 +229,35 @@ void SimRegion::Deactivate()
 
 // +--------------------------------------------------------------------+
 
-void SimRegion::ExecFrame(double seconds)
+void
+SimRegion::ExecFrame(double seconds)
 {
-    if (seconds <= 0)
-        return;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SimRegion::ExecFrame ENTER] Region='%hs' Seconds=%.4f Ships=%d Active=%d SimTime=%u"),
+        (const char*)name,
+        seconds,
+        ships.size(),
+        active ? 1 : 0,
+        sim_time);
 
+    if (seconds <= 0)
+    {
+        return;
+    }
+
+    UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
     UpdateExplosions(seconds);
-    UpdateTracks(seconds);
 
     DestroyShips();
 
     sim_time += (DWORD)(seconds * 1000.0);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SimRegion::ExecFrame EXIT] Region='%hs' NewSimTime=%u"),
+        (const char*)name,
+        sim_time);
 }
 
 // +--------------------------------------------------------------------+
@@ -280,7 +310,7 @@ void SimRegion::ResolveTimeSkip(double seconds)
         UpdateShips(Dt);
         UpdateShots(Dt);
         UpdateExplosions(Dt);
-        UpdateTracks(Dt);
+        UpdateTracking(Dt);
         DestroyShips();
 
         sim_time += (DWORD)(Dt * 1000.0);
@@ -464,7 +494,7 @@ void SimRegion::AddSelection(Ship* s)
 // Tracking
 // +--------------------------------------------------------------------+
 
-List<SimContact>& SimRegion::TrackList(int iff)
+List<SimContact>& SimRegion::GetTrackList(int iff)
 {
     return track_database[ClampIFF(iff)];
 }
@@ -599,23 +629,48 @@ void SimRegion::UpdateExplosions(double seconds)
     }
 }
 
-void SimRegion::UpdateTracks(double seconds)
+void
+SimRegion::UpdateTracking(double seconds)
 {
     (void)seconds;
 
-    for (int k = 0; k < 5; ++k)
-        track_database[k].clear();
+    for (int i = 0; i < ships.size(); ++i)
+    {
+        Ship* observer = ships[i];
 
-    for (int i = 0; i < ships.size(); ++i) {
-        Ship* s = ships[i];
-        if (!s || IsDeadShip(s))
+        if (!observer || IsDeadShip(observer))
+        {
             continue;
+        }
 
-        const int iff = ClampIFF(s->GetIFF());
+        Sensor* sensor = observer->GetSensor();
 
-        // If your SimContact API differs, fix here once.
-        SimContact* c = new SimContact(s, 1.0f, 0.0f);
-        track_database[iff].append(c);
+        if (!sensor)
+        {
+            continue;
+        }
+
+        for (int j = 0; j < ships.size(); ++j)
+        {
+            Ship* target = ships[j];
+
+            if (!target || target == observer)
+            {
+                continue;
+            }
+
+            if (IsDeadShip(target))
+            {
+                continue;
+            }
+
+            observer->FindContact(target);
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SimRegion::UpdateTracking] Ship='%hs' Contacts=%d"),
+            observer->GetName(),
+            observer->ContactList().size());
     }
 }
 
@@ -635,24 +690,40 @@ void SimRegion::DestroyShips()
     dead_ships.clear();
 }
 
-void SimRegion::DestroyShip(Ship* ship)
+void
+SimRegion::DestroyShip(Ship* ship)
 {
     if (!ship)
+    {
         return;
+    }
 
     if (ships.contains(ship))
+    {
         ships.remove(ship);
+    }
 
     if (carriers.contains(ship))
+    {
         carriers.remove(ship);
+    }
 
     if (selection.contains(ship))
+    {
         selection.remove(ship);
+    }
 
     if (player_ship == ship)
+    {
         player_ship = nullptr;
+    }
 
-    delete ship;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SimRegion::DestroyShip] Detached ship '%hs' but NOT deleting during UE port stabilization"),
+        ship->GetName());
+
+    // TEMP: Do not delete while actors still hold RuntimeShip pointers.
+    // delete ship;
 }
 
 void SimRegion::CommitMission()

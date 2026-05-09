@@ -402,6 +402,11 @@ Drive::GetIntensity() const
 float
 Drive::GetVisualPower() const
 {
+    if (!this)
+    {
+        return 0.0f;
+    }
+
     if (!IsPowerOn())
     {
         return 0.0f;

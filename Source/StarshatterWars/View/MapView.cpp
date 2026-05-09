@@ -1991,7 +1991,7 @@ MapView::DrawRegion()
 			simrgn = sim->FindRegion(rgn->GetName());
 
 		if (simrgn) {
-			ListIter<SimContact> cIter = simrgn->TrackList(ship->GetIFF());
+			ListIter<SimContact> cIter = simrgn->GetTrackList(ship->GetIFF());
 			while (++cIter) {
 				SimContact* contact = cIter.value();
 				Ship* s = contact->GetShip();

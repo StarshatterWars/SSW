@@ -83,6 +83,7 @@ TacticalAI::~TacticalAI()
 
 void TacticalAI::ExecFrame(double secs)
 {
+	
 	const int exec_period = 1000;
 
 	if (!ship || !ship_ai)
@@ -147,6 +148,12 @@ void TacticalAI::ExecFrame(double secs)
 
 		exec_time += exec_period;
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[TacticalAI::ExecFrame] Ship='%hs' Contacts=%d ShipTarget='%hs'"),
+		ship ? ship->GetName() : "NULL",
+		ship ? ship->ContactList().size() : -1,
+		ship && ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
 }
 
 // +--------------------------------------------------------------------+

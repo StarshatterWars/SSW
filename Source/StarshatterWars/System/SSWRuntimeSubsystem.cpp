@@ -29,6 +29,7 @@
 #include "RadioVox.h"
 #include "QuantumView.h"
 #include "TacticalView.h"
+#include "Tickable.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -53,10 +54,10 @@ void USSWRuntimeSubsystem::Deinitialize()
 
     StopRuntime();
 
-    if (World)
+    if (SimInstance)
     {
-        delete World;
-        World = nullptr;
+        delete SimInstance;
+        SimInstance = nullptr;
     }
 
     if (RuntimeInput)
@@ -96,6 +97,7 @@ bool USSWRuntimeSubsystem::InitGame()
     if (bRuntimeInitialized)
         return true;
 
+    SetPaused(false);
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] InitGame"));
 
     FMath::RandInit(static_cast<int32>(FPlatformTime::Cycles()));
@@ -176,15 +178,13 @@ void USSWRuntimeSubsystem::CreateWorld()
     QuantumView::Initialize();
     TacticalView::Initialize();
 
-    if (!World)
+    if (!SimInstance)
     {
-        Sim* NewSim = new Sim(RuntimeInput);
-        World = NewSim;
+        SimInstance = new Sim(RuntimeInput);
 
         UE_LOG(LogSSWRuntime, Log,
-            TEXT("[RUNTIME] World Created. World=%p Sim=%p Input=%p"),
-            World,
-            NewSim,
+            TEXT("[RUNTIME] World Created. Sim=%p Input=%p"),
+            SimInstance,
             RuntimeInput);
     }
 
@@ -214,6 +214,7 @@ void USSWRuntimeSubsystem::StartRuntime()
     );
 
     bRuntimeRunning = true;
+	SetPaused(false);
 
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] Game loop started."));
 }
@@ -240,11 +241,8 @@ bool USSWRuntimeSubsystem::TickRuntime(float DeltaSeconds)
     return true;
 }
 
-bool USSWRuntimeSubsystem::GameLoop()
+void USSWRuntimeSubsystem::GameLoop()
 {
-    if (!bRuntimeActive)
-        return true;
-
     EventDispatch* ED = EventDispatch::GetInstance();
     if (ED)
     {
@@ -255,14 +253,12 @@ bool USSWRuntimeSubsystem::GameLoop()
     GameState();
     UpdateScreen();
     CollectStats();
-
-    return true;
 }
 
 void USSWRuntimeSubsystem::UpdateWorld()
 {
-    if (bPaused)
-        return;
+    //if (bPaused)
+    //    return;
 
     const double Seconds =
         static_cast<double>(LastDeltaSeconds) *
@@ -279,34 +275,6 @@ void USSWRuntimeSubsystem::UpdateWorld()
     {
         CampaignInstance->ExecFrame();
     }
-
-    if (World)
-    {
-        static double LastLogTime = 0.0;
-        const double Now = FPlatformTime::Seconds();
-
-        if (Now - LastLogTime > 1.0)
-        {
-            LastLogTime = Now;
-
-            UE_LOG(LogSSWRuntime, Log,
-                TEXT("[RUNTIME] UpdateWorld Delta=%.4f Scaled=%.4f World=%p Sim=%p Galaxy=%p Campaign=%p"),
-                LastDeltaSeconds,
-                Seconds,
-                World,
-                Sim::GetSim(),
-                GalaxyInstance,
-                CampaignInstance);
-        }
-
-        World->ExecFrame(Seconds);
-    }
-    else
-    {
-        UE_LOG(LogSSWRuntime, Warning,
-            TEXT("[RUNTIME] UpdateWorld skipped. World is null."));
-    }
-
     if (CamDir)
     {
         CamDir->ExecFrame(Seconds);
@@ -391,7 +359,7 @@ void USSWRuntimeSubsystem::SetGameMode(EGameMode NewMode)
         break;
 
     case EGameMode::PLAY:
-        if (!World)
+        if (!SimInstance)
         {
             CreateWorld();
         }
@@ -405,9 +373,9 @@ void USSWRuntimeSubsystem::SetGameMode(EGameMode NewMode)
 
         if (OldMode == EGameMode::PLAY)
         {
-            if (Sim* SimPtr = static_cast<Sim*>(World))
+            if (SimInstance)
             {
-                SimPtr->UnloadMission();
+                SimInstance->UnloadMission();
             }
         }
         break;

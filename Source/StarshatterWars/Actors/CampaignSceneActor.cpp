@@ -153,28 +153,40 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
     }
 
     const double SimSeconds =
-        FMath::Clamp((double)DeltaSeconds * (double)RuntimeAITimeScale, 0.0, (double)MaxRuntimeTickSeconds);
+        FMath::Clamp(
+            (double)DeltaSeconds * (double)RuntimeAITimeScale,
+            0.0,
+            (double)MaxRuntimeTickSeconds);
 
-    for (Ship* RuntimeShip : RuntimeShips)
+    //-------------------------------------------------------------
+    // CENTRAL SIM TICK
+    //-------------------------------------------------------------
+    if (Sim* RuntimeSim = Sim::GetSim())
     {
-        if (!RuntimeShip)
-        {
-            continue;
-        }
+        RuntimeSim->ExecFrame(SimSeconds);
 
-        RuntimeShip->ExecFrame(SimSeconds);
-       
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] RuntimeAI Tick Ship='%s' Loc=%s Vel=%s"),
-            ANSI_TO_TCHAR(RuntimeShip->GetName()),
-            *RuntimeShip->GetLocation().ToString(),
-            *RuntimeShip->GetVelocity().ToString());
+            TEXT("[CampaignSceneActor] RuntimeSim Tick Delta=%.4f Sim=%p ActiveRegion=%p"),
+            SimSeconds,
+            RuntimeSim,
+            RuntimeSim->GetActiveRegion());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignSceneActor] RuntimeSim is NULL"));
     }
 
+    //-------------------------------------------------------------
+    // VISUAL SYNC ONLY
+    //-------------------------------------------------------------
     for (const TPair<FString, AShipActor*>& Pair : ShipActorByElementName)
     {
-        AShipActor* ShipActor = Pair.Value;
-        Ship* RuntimeShip = RuntimeShipByElementName.FindRef(Pair.Key);
+        AShipActor* ShipActor =
+            Pair.Value;
+
+        Ship* RuntimeShip =
+            RuntimeShipByElementName.FindRef(Pair.Key);
 
         if (!ShipActor || !RuntimeShip)
         {
@@ -182,20 +194,30 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
         }
 
         ShipActor->UpdateFromRuntimeShip(DeltaSeconds);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] Visual Sync Ship='%s' Loc=%s Vel=%s"),
+            ANSI_TO_TCHAR(RuntimeShip->GetName()),
+            *RuntimeShip->GetLocation().ToString(),
+            *RuntimeShip->GetVelocity().ToString());
     }
 }
 
-void ACampaignSceneActor::ClearRuntimeShips()
+void
+ACampaignSceneActor::ClearRuntimeShips()
 {
-    for (Ship* RuntimeShip : RuntimeShips)
-    {
-        delete RuntimeShip;
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ClearRuntimeShips Count=%d"),
+        RuntimeShips.Num());
+
+    //-------------------------------------------------------------
+    // Runtime ships are now owned by Sim/SimRegion.
+    // Do NOT delete them here.
+    //-------------------------------------------------------------
 
     RuntimeShips.Empty();
     RuntimeShipByElementName.Empty();
     ShipActorByElementName.Empty();
-   
 }
 
 FVector ACampaignSceneActor::ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const
@@ -1213,7 +1235,6 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     if (Elem.Player == 1)
     {
-        // CameraPod / player ship. No AI director.
         NewShip->SetNetworkControl(nullptr);
         NewShip->SetPlayerShip(Elem.Player == 1);
 
@@ -1225,8 +1246,6 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
     else
     {
-        // AI ships. Passing nullptr allows Ship::SetNetworkControl()
-        // to create SteerAI internally.
         NewShip->SetNetworkControl(nullptr);
 
         UE_LOG(LogTemp, Warning,
@@ -1244,7 +1263,8 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     NewShip->MoveTo(WorldLoc);
 
-    const double HeadingRad = FMath::DegreesToRadians((double)Elem.Heading);
+    const double HeadingRad =
+        FMath::DegreesToRadians((double)Elem.Heading);
 
     NewShip->SetHeading(0.0, 0.0, HeadingRad + PI);
     NewShip->SetHelmHeading(HeadingRad);
@@ -1303,13 +1323,32 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
 
         if (Region)
         {
+            //-----------------------------------------------------
+            // REGION OWNERSHIP
+            //-----------------------------------------------------
             NewShip->SetRegion(Region);
 
+            Region->InsertObject(NewShip);
+
+            //-----------------------------------------------------
+            // ACTIVATE FIRST VALID REGION
+            //-----------------------------------------------------
+            if (!SimInst->GetActiveRegion())
+            {
+                SimInst->ActivateRegion(Region);
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CampaignSceneActor] Activated Region '%hs' for ship '%s'"),
+                    Region->GetName(),
+                    *Elem.Name);
+            }
+
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor:Region] Ship '%s' assigned to Region='%hs' Region=%p"),
+                TEXT("[CampaignSceneActor:Region] Ship '%s' assigned to Region='%hs' Region=%p Ships=%d"),
                 *Elem.Name,
                 Region->GetName(),
-                Region);
+                Region,
+                Region->GetNumShips());
         }
         else
         {
@@ -1409,7 +1448,6 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             Nav.Priority);
     }
 
-   
     //-------------------------------------------------------------
     // 11. Final log
     //-------------------------------------------------------------

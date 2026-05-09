@@ -208,13 +208,17 @@ public:
 
     // DRIVE SYSTEMS:
     int               GetFuelLevel() const; // (0-100) percent of full tank
-    void              SetThrottle(double percent);
     void              SetAugmenter(bool enable);
     double            GetThrust(double seconds) const;
     double            GetVelocityLimit() const { return vlimit; }
     Drive*            GetMainDrive() const { return main_drive; }
+
     double            GetThrottle() const { return throttle; }
+    void              SetThrottle(double percent);
+
     double            GetThrottleRequest() const { return throttle_request; }
+	void              SetThrottleRequest(double t) { throttle_request = t; }
+
     bool              GetAugmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
     Farcaster*        GetFarcaster() const { return farcaster; }

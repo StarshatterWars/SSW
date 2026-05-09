@@ -30,6 +30,7 @@
 
 class Starshatter;
 class SimUniverse;
+class Sim;
 class CameraManager;
 class MultiController;
 
@@ -48,7 +49,7 @@ public:
 
     void CreateWorld();
 
-    bool GameLoop();
+    void GameLoop();
 
     void UpdateWorld();
     void GameState();
@@ -123,10 +124,8 @@ private:
     FString LoadActivity;
 
     Starshatter* LegacyGame = nullptr;
-
-    SimUniverse* World = nullptr;
     CameraManager* CamDir = nullptr;
-
+	Sim* SimInstance = nullptr;
     MultiController* RuntimeInput = nullptr;
 
     KeyMap KeyCfg;

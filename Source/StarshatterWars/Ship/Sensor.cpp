@@ -232,7 +232,7 @@ void Sensor::ExecFrame(double seconds)
             ProcessContact(drone_iter.value(), az1, az2);
         }
 
-        List<SimContact>& track_list = ship->GetRegion()->TrackList(ship->GetIFF());
+        List<SimContact>& track_list = ship->GetRegion()->GetTrackList(ship->GetIFF());
         ListIter<SimContact> c_iter(contacts);
 
         while (++c_iter) {

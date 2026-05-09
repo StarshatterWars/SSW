@@ -312,14 +312,13 @@ void AShipActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-void AShipActor::Tick(float DeltaTime)
+void
+AShipActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     if (RuntimeShip)
     {
-        RuntimeShip->ExecFrame(DeltaTime);
-
         UpdateFromRuntimeShip(DeltaTime);
         UpdateNavLights(DeltaTime);
         UpdateMainEnginesFromRuntime(DeltaTime);
@@ -329,7 +328,7 @@ void AShipActor::Tick(float DeltaTime)
         return;
     }
 
-    UpdateNavLights(DeltaTime);
+    //UpdateNavLights(DeltaTime);
 
     if (bUseCutsceneNavMovement)
     {
@@ -1600,117 +1599,125 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     BuildThrustersFromRuntime();
 }
 
-void AShipActor::UpdateFromRuntimeShip(float DeltaTime)
+void
+AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
     if (!RuntimeShip)
     {
         return;
     }
 
-    const FVector RuntimeLocationLegacy = RuntimeShip->GetLocation();
-    const FVector RuntimeVelocityLegacy = RuntimeShip->GetVelocity();
-    const FVector RuntimeHeadingLegacy = RuntimeShip->GetHeading();
+    //-------------------------------------------------------------
+    // Legacy runtime state
+    //-------------------------------------------------------------
+    const FVector RuntimeLocation =
+        RuntimeShip->GetLocation();
 
-    const FVector RuntimeVelocityUE =
-        ShipUtils::LegacySimToUnreal(RuntimeVelocityLegacy);
+    const FVector RuntimeVelocity =
+        RuntimeShip->GetVelocity();
 
-    const FVector RuntimeHeadingUE =
-        ShipUtils::LegacySimToUnreal(RuntimeHeadingLegacy).GetSafeNormal();
-
-    const bool bHasUsableVelocity =
-        RuntimeVelocityUE.SizeSquared() >
-        FMath::Square(RuntimeVelocityVisibleThreshold);
-
-    FRotator DesiredRotation = GetActorRotation();
-
-    if (!RuntimeHeadingUE.IsNearlyZero())
-    {
-        DesiredRotation = RuntimeHeadingUE.Rotation();
-    }
-    else if (bHasUsableVelocity)
-    {
-        DesiredRotation = RuntimeVelocityUE.GetSafeNormal().Rotation();
-    }
-
-    const FQuat ModelOffsetQuat = FQuat(FRotator(0.0f, 0.0f, 0.0f));
-    DesiredRotation = (ModelOffsetQuat * DesiredRotation.Quaternion()).Rotator();
+    const FVector RuntimeHeading =
+        RuntimeShip->GetHeading();
 
     //-------------------------------------------------------------
-    // First frame: preserve correct spawn position.
+    // VALIDATION
     //-------------------------------------------------------------
-    if (!bHasRuntimeTransform)
+    const bool bBadLocation =
+        !FMath::IsFinite(RuntimeLocation.X) ||
+        !FMath::IsFinite(RuntimeLocation.Y) ||
+        !FMath::IsFinite(RuntimeLocation.Z);
+
+    const bool bBadVelocity =
+        !FMath::IsFinite(RuntimeVelocity.X) ||
+        !FMath::IsFinite(RuntimeVelocity.Y) ||
+        !FMath::IsFinite(RuntimeVelocity.Z);
+
+    const bool bBadHeading =
+        !FMath::IsFinite(RuntimeHeading.X) ||
+        !FMath::IsFinite(RuntimeHeading.Y) ||
+        !FMath::IsFinite(RuntimeHeading.Z);
+
+    if (bBadLocation || bBadVelocity || bBadHeading)
     {
-        InitialRuntimeLocationLegacy = RuntimeLocationLegacy;
-        InitialActorLocationUE = GetActorLocation();
+        UE_LOG(LogTemp, Error,
+            TEXT("[ShipActor::UpdateFromRuntimeShip] INVALID RUNTIME DATA Ship='%hs' Loc=%s Vel=%s Heading=%s"),
+            RuntimeShip->GetName(),
+            *RuntimeLocation.ToString(),
+            *RuntimeVelocity.ToString(),
+            *RuntimeHeading.ToString());
 
-        SetActorRotation(DesiredRotation);
-
-        LastRuntimeLocation = InitialActorLocationUE;
-        LastRuntimeVelocity = RuntimeVelocityUE;
-        bHasRuntimeTransform = true;
-
-        SetThrustersActive(bHasUsableVelocity);
         return;
     }
 
     //-------------------------------------------------------------
-    // Convert only movement delta, not absolute location.
+    // WORLD LIMITS
     //-------------------------------------------------------------
-    const FVector RuntimeDeltaLegacy =
-        RuntimeLocationLegacy - InitialRuntimeLocationLegacy;
+    constexpr double MaxWorldCoord = 1.0e9;
 
-    const FVector RuntimeDeltaUE =
-        ShipUtils::LegacySimToUnreal(RuntimeDeltaLegacy);
+    if (FMath::Abs(RuntimeLocation.X) > MaxWorldCoord ||
+        FMath::Abs(RuntimeLocation.Y) > MaxWorldCoord ||
+        FMath::Abs(RuntimeLocation.Z) > MaxWorldCoord)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[ShipActor::UpdateFromRuntimeShip] LOCATION TOO LARGE Ship='%hs' Loc=%s"),
+            RuntimeShip->GetName(),
+            *RuntimeLocation.ToString());
 
+        return;
+    }
+
+    //-------------------------------------------------------------
+    // Legacy -> UE conversion
+    //-------------------------------------------------------------
     const FVector DesiredLocation =
-        InitialActorLocationUE + RuntimeDeltaUE;
+        FVector(
+            RuntimeLocation.Z,
+            RuntimeLocation.X,
+            RuntimeLocation.Y);
 
-    const FVector SmoothedLocation = FMath::VInterpTo(
-        GetActorLocation(),
-        DesiredLocation,
-        DeltaTime,
-        RuntimeLocationInterpSpeed
-    );
+    const FVector UEVelocity =
+        FVector(
+            RuntimeVelocity.Z,
+            RuntimeVelocity.X,
+            RuntimeVelocity.Y);
 
-    const FRotator SmoothedRotation = FMath::RInterpTo(
-        GetActorRotation(),
-        DesiredRotation,
-        DeltaTime,
-        RuntimeRotationInterpSpeed
-    );
+    FVector UEHeading =
+        FVector(
+            RuntimeHeading.Z,
+            RuntimeHeading.X,
+            RuntimeHeading.Y);
 
-    SetActorLocation(SmoothedLocation);
-    SetActorRotation(SmoothedRotation);
+    if (!UEHeading.Normalize())
+    {
+        UEHeading = FVector::ForwardVector;
+    }
 
-    LastRuntimeLocation = DesiredLocation;
-    LastRuntimeVelocity = RuntimeVelocityUE;
+    //-------------------------------------------------------------
+    // Transform update
+    //-------------------------------------------------------------
+    SetActorLocation(DesiredLocation);
 
-    SetThrustersActive(bHasUsableVelocity);
-    const FString ActorLocStr = GetActorLocation().ToString();
-    const FString DesiredLocStr = DesiredLocation.ToString();
-    const FString ActorFwdStr = GetActorForwardVector().ToString();
-    const FString ActorRotStr = GetActorRotation().ToString();
+    if (!UEVelocity.IsNearlyZero())
+    {
+        SetActorRotation(
+            UEVelocity.GetSafeNormal().Rotation());
+    }
+    else
+    {
+        SetActorRotation(
+            UEHeading.Rotation());
+    }
 
-    const FString RuntimeDeltaLegacyStr = RuntimeDeltaLegacy.ToString();
-    const FString RuntimeDeltaUEStr = RuntimeDeltaUE.ToString();
-    const FString RuntimeHeadingLegacyStr = RuntimeHeadingLegacy.ToString();
-    const FString RuntimeHeadingUEStr = RuntimeHeadingUE.ToString();
-    const FString RuntimeVelocityLegacyStr = RuntimeVelocityLegacy.ToString();
-    const FString RuntimeVelocityUEStr = RuntimeVelocityUE.ToString();
-
+    //-------------------------------------------------------------
+    // Debug
+    //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor::UpdateFromRuntimeShip] Ship='%s' ActorLoc=%s DesiredLoc=%s ActorFwd=%s ActorRot=%s LegacyDelta=%s UEDelta=%s LegacyHeading=%s UEHeading=%s LegacyVel=%s UEVel=%s"),
+        TEXT("[ShipActor::UpdateFromRuntimeShip] Ship='%s' ActorLoc=%s DesiredLoc=%s RuntimeVel=%s UEVel=%s"),
         *GetName(),
-        *ActorLocStr,
-        *DesiredLocStr,
-        *ActorFwdStr,
-        *ActorRotStr,
-        *RuntimeDeltaLegacyStr,
-        *RuntimeDeltaUEStr,
-        *RuntimeHeadingLegacyStr,
-        *RuntimeHeadingUEStr,
-        *RuntimeVelocityLegacyStr,
-        *RuntimeVelocityUEStr);
+        *GetActorLocation().ToString(),
+        *DesiredLocation.ToString(),
+        *RuntimeVelocity.ToString(),
+        *UEVelocity.ToString());
 }
 
 void AShipActor::BuildNavLightsFromRuntime()
@@ -2094,96 +2101,96 @@ void AShipActor::CreateEngineAudioComponents()
     }
 }
 
-void AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
+void
+AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
 {
+    (void)DeltaTime;
+
     if (!RuntimeShip)
     {
         return;
     }
 
-    Drive* MainDrive = RuntimeShip->GetMainDrive();
+    //-------------------------------------------------------------
+    // Resolve main drive safely
+    //-------------------------------------------------------------
+    Drive* MainDrive =
+        RuntimeShip->GetMainDrive();
 
     if (!MainDrive)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ShipActor::UpdateEngineAudioFromRuntime] No MainDrive Actor='%s' Ship='%hs'"),
+            *GetName(),
+            RuntimeShip->GetName());
+
+        return;
+    }
+
+    //-------------------------------------------------------------
+    // Engine audio component
+    //-------------------------------------------------------------
+    if (!EngineAudioComponent)
     {
         return;
     }
 
-    CreateEngineAudioComponents();
+    //-------------------------------------------------------------
+    // Runtime visual power
+    //-------------------------------------------------------------
+    const float VisualPower =
+        MainDrive->GetVisualPower();
 
-    const float EnginePower =
-        FMath::Clamp(MainDrive->GetVisualPower(), 0.0f, 1.5f);
+    //-------------------------------------------------------------
+    // Audio modulation
+    //-------------------------------------------------------------
+    const float TargetVolume =
+        FMath::Clamp(VisualPower, 0.0f, 1.0f);
 
-    const float EngineIntensity =
-        FMath::Clamp(MainDrive->GetIntensity(), 0.0f, 1.0f);
+    const float TargetPitch =
+        FMath::Clamp(0.5f + (VisualPower * 0.5f), 0.5f, 2.0f);
 
-    const float AugPower =
-        FMath::Clamp(MainDrive->GetAugmenterThrottle(), 0.0f, 1.0f);
+    EngineAudioComponent->SetVolumeMultiplier(TargetVolume);
+    EngineAudioComponent->SetPitchMultiplier(TargetPitch);
 
-    const bool bEngineActive =
-        EnginePower > 0.02f;
-
-    const bool bBurnerActive =
-        AugPower > 0.05f && MainDrive->IsAugmenterOn();
-
-    if (EngineAudioComponent)
+    //-------------------------------------------------------------
+    // Ensure playing
+    //-------------------------------------------------------------
+    if (TargetVolume > KINDA_SMALL_NUMBER)
     {
-        if (bEngineActive && !EngineAudioComponent->IsPlaying())
+        if (!EngineAudioComponent->IsPlaying())
         {
             EngineAudioComponent->Play();
-        }
 
-        if (!bEngineActive && EngineAudioComponent->IsPlaying())
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipActor::UpdateEngineAudioFromRuntime] PLAY Actor='%s' Ship='%hs'"),
+                *GetName(),
+                RuntimeShip->GetName());
+        }
+    }
+    else
+    {
+        if (EngineAudioComponent->IsPlaying())
         {
             EngineAudioComponent->Stop();
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ShipActor::UpdateEngineAudioFromRuntime] STOP Actor='%s' Ship='%hs'"),
+                *GetName(),
+                RuntimeShip->GetName());
         }
-
-        EngineAudioComponent->SetVolumeMultiplier(
-            FMath::Clamp(EngineIntensity, 0.0f, 1.0f));
-
-        EngineAudioComponent->SetPitchMultiplier(
-            FMath::Lerp(0.85f, 1.25f, EngineIntensity));
     }
 
-    if (BurnerAudioComponent)
-    {
-        if (bBurnerActive && !BurnerAudioComponent->IsPlaying())
-        {
-            BurnerAudioComponent->Play();
-        }
-
-        if (!bBurnerActive && BurnerAudioComponent->IsPlaying())
-        {
-            BurnerAudioComponent->Stop();
-        }
-
-        BurnerAudioComponent->SetVolumeMultiplier(
-            FMath::Clamp(AugPower, 0.0f, 1.0f));
-
-        BurnerAudioComponent->SetPitchMultiplier(
-            FMath::Lerp(1.0f, 1.35f, AugPower));
-    }
-
-    if (RumbleAudioComponent)
-    {
-        const bool bRumbleActive =
-            EnginePower > 0.15f;
-
-        if (bRumbleActive && !RumbleAudioComponent->IsPlaying())
-        {
-            RumbleAudioComponent->Play();
-        }
-
-        if (!bRumbleActive && RumbleAudioComponent->IsPlaying())
-        {
-            RumbleAudioComponent->Stop();
-        }
-
-        RumbleAudioComponent->SetVolumeMultiplier(
-            FMath::Clamp(EnginePower * 0.35f, 0.0f, 0.75f));
-
-        RumbleAudioComponent->SetPitchMultiplier(
-            FMath::Lerp(0.75f, 1.05f, EngineIntensity));
-    }
+    //-------------------------------------------------------------
+    // Debug
+    //-------------------------------------------------------------
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor::UpdateEngineAudioFromRuntime] Actor='%s' Ship='%hs' VisualPower=%.3f Volume=%.3f Pitch=%.3f"),
+        *GetName(),
+        RuntimeShip->GetName(),
+        VisualPower,
+        TargetVolume,
+        TargetPitch);
 }
 
 void AShipActor::BuildThrustersFromRuntime()
@@ -2313,9 +2320,15 @@ void AShipActor::ClearRuntimeThrusters()
     RuntimeThrusterFX.Empty();
 }
 
-void AShipActor::UpdateThrusterVFXFromRuntime()
+void
+AShipActor::UpdateThrusterVFXFromRuntime()
 {
     if (!RuntimeShip)
+    {
+        return;
+    }
+
+    if (RuntimeThrusterFX.Num() <= 0)
     {
         return;
     }
@@ -2328,14 +2341,20 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         return;
     }
 
+    const int32 RuntimePortCount =
+        RuntimeThruster->GetNumThrusters();
+
+    if (RuntimePortCount <= 0)
+    {
+        return;
+    }
+
     const int32 NumPorts =
         FMath::Min(
-            RuntimeThruster->GetNumThrusters(),
+            RuntimePortCount,
             RuntimeThrusterFX.Num());
 
-    for (int32 PortIndex = 0;
-        PortIndex < NumPorts;
-        ++PortIndex)
+    for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
     {
         const float Burn =
             FMath::Clamp(
@@ -2360,57 +2379,34 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         if (FX.Flare)
         {
-            FX.Flare->SetRelativeScale3D(
-                RuntimeScale * FX.PortScale);
-
+            FX.Flare->SetRelativeScale3D(RuntimeScale * FX.PortScale);
             FX.Flare->SetVisibility(bActive);
             FX.Flare->SetHiddenInGame(!bActive);
 
-            if (bActive)
+            if (bActive && !FX.Flare->IsActive())
             {
-                if (!FX.Flare->IsActive())
-                {
-                    FX.Flare->Activate(true);
-                }
+                FX.Flare->Activate(true);
             }
-            else
+            else if (!bActive && FX.Flare->IsActive())
             {
-                if (FX.Flare->IsActive())
-                {
-                    FX.Flare->Deactivate();
-                }
+                FX.Flare->Deactivate();
             }
         }
 
         if (FX.Trail)
         {
-            FX.Trail->SetRelativeScale3D(
-                RuntimeScale * FX.PortScale);
-
+            FX.Trail->SetRelativeScale3D(RuntimeScale * FX.PortScale);
             FX.Trail->SetVisibility(bActive);
             FX.Trail->SetHiddenInGame(!bActive);
 
-            if (bActive)
+            if (bActive && !FX.Trail->IsActive())
             {
-                if (!FX.Trail->IsActive())
-                {
-                    FX.Trail->Activate(true);
-                }
+                FX.Trail->Activate(true);
             }
-            else
+            else if (!bActive && FX.Trail->IsActive())
             {
-                if (FX.Trail->IsActive())
-                {
-                    FX.Trail->Deactivate();
-                }
+                FX.Trail->Deactivate();
             }
         }
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] RuntimeThrusterFX Ship='%s' Port=%d Burn=%.2f Active=%d"),
-            *GetName(),
-            PortIndex,
-            Burn,
-            bActive ? 1 : 0);
     }
 }

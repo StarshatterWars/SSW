@@ -1768,7 +1768,7 @@ List<SimContact>&
 Ship::ContactList()
 {
 	if (region)
-		return region->TrackList(GetIFF());
+		return region->GetTrackList(GetIFF());
 
 	static List<SimContact> empty_contact_list;
 	return empty_contact_list;
@@ -3779,20 +3779,20 @@ Ship::DockFrame(double Seconds)
 		const double Spool = 75.0 * Seconds;
 
 		if (flight_phase == DOCKING) {
-			throttle_request = 0;
-			throttle = 0;
+			SetThrottleRequest(0);
+			SetThrottle(0);
 		}
-		else if (throttle < throttle_request) {
-			if ((throttle_request - throttle) < Spool)
-				throttle = throttle_request;
+		else if (throttle < GetThrottleRequest()) {
+			if ((GetThrottleRequest() - throttle) < Spool)
+				SetThrottle(GetThrottleRequest());
 			else
-				throttle += Spool;
+				SetThrottle(throttle + Spool);
 		}
-		else if (throttle > throttle_request) {
-			if ((throttle - throttle_request) < Spool)
-				throttle = throttle_request;
+		else if (throttle > GetThrottleRequest()) {
+			if ((throttle - GetThrottleRequest()) < Spool)
+				SetThrottle(GetThrottleRequest());
 			else
-				throttle -= Spool;
+				SetThrottle(throttle - Spool);
 		}
 
 		// make sure there is power to run the drive:
@@ -4269,20 +4269,20 @@ Ship::GetFuelLevel() const
 void
 Ship::SetThrottle(double percent)
 {
-	const double OldRequest = throttle_request;
+	const double OldRequest = GetThrottleRequest();
 
-	throttle_request = percent;
+	SetThrottleRequest(percent);
 
-	if (throttle_request < 0)
+	if (GetThrottleRequest() < 0)
 	{
-		throttle_request = 0;
+		SetThrottleRequest(0);
 	}
-	else if (throttle_request > 100)
+	else if (GetThrottleRequest() > 100)
 	{
-		throttle_request = 100;
+		SetThrottleRequest(100);
 	}
 
-	if (throttle_request < 50)
+	if (GetThrottleRequest() < 50)
 	{
 		augmenter = false;
 	}
@@ -4292,8 +4292,8 @@ Ship::SetThrottle(double percent)
 		GetName(),
 		percent,
 		OldRequest,
-		throttle_request,
-		throttle);
+		GetThrottleRequest(),
+		GetThrottle());
 }
 
 void
@@ -4877,9 +4877,9 @@ Ship::GetThrust(double seconds) const
 		double eff_throttle =
 			GetThrottle();
 
-		if (eff_throttle <= 0.0 && throttle_request > 0.0)
+		if (eff_throttle <= 0.0 && GetThrottleRequest() > 0.0)
 		{
-			eff_throttle = throttle_request;
+			eff_throttle = GetThrottleRequest();
 		}
 
 		double thrust_factor = 1.0;
@@ -5143,8 +5143,8 @@ Ship::ExecFLCSFrame()
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Ship::ExecFLCSFrame] BEFORE FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
 		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
-		throttle,
-		throttle_request,
+		GetThrottle(),
+		GetThrottleRequest(),
 		trans_x,
 		trans_y,
 		trans_z,
@@ -5155,8 +5155,8 @@ Ship::ExecFLCSFrame()
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Ship::ExecFLCSFrame] AFTER FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
 		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
-		throttle,
-		throttle_request,
+		GetThrottle(),
+		GetThrottleRequest(),
 		trans_x,
 		trans_y,
 		trans_z,

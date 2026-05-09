@@ -100,7 +100,7 @@ StarshipAI::~StarshipAI()
 
 // +--------------------------------------------------------------------+
 
-void
+/*void
 StarshipAI::FindObjective()
 {
     distance = 0;
@@ -248,6 +248,20 @@ StarshipAI::FindObjective()
         *objective.ToString(),
         *obj_w.ToString(),
         (double)distance);
+}*/ 
+
+void
+StarshipAI::FindObjective()
+{
+    ShipAI::FindObjective();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::FindObjective PASS THROUGH] Ship='%hs' ShipLoc=%s ObjW=%s Objective=%s Distance=%.2f"),
+        ship ? ship->GetName() : "NULL",
+        ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
+        *obj_w.ToString(),
+        *objective.ToString(),
+        distance);
 }
 
 // +--------------------------------------------------------------------+
@@ -255,54 +269,34 @@ StarshipAI::FindObjective()
 void
 StarshipAI::Navigator()
 {
-    // signifies this ship is a dead hulk:
-    if (ship && ship->Design()->auto_roll < 0) {
-        ship->SetDirectorInfo("Ship Dead");
-        return;
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::Navigator ENTER] Ship='%s' Target=%p Navpt=%p Throttle=%.2f Request=%.2f FLCSMode=%d"),
+        ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
+        target,
+        navpt,
+        ship ? ship->GetThrottle() : -1.0,
+        ship ? ship->GetThrottleRequest() : -1.0,
+        ship ? static_cast<int32>(ship->GetFLCSMode()) : -1);
 
-    accumulator.Clear();
-    magnitude = 0;
+    ShipAI::Navigator();
 
-    hold = false;
-    if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
-        (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
-        hold = true;
-
-    ship->SetFLCSMode(EFLCSMode::HELM);
-
-    if (!ship->GetDirectorInfo()) {
-        if (target)
-            ship->SetDirectorInfo("Seek Target");
-        else if (ship->GetWard())
-            ship->SetDirectorInfo("Seek Ward");
-        else
-            ship->SetDirectorInfo("Patrol");
-    }
-
-    if (farcaster && distance < 25e3) {
-        accumulator = SeekTarget();
-    }
-    else {
-        accumulator = AvoidCollision();
-
-        if (!other && !hold)
-            accumulator = SeekTarget();
-    }
-
-    HelmControl();
-    ThrottleControl();
-    FireControl();
-    AdjustDefenses();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::Navigator EXIT] Ship='%s' Target=%p Navpt=%p Throttle=%.2f Request=%.2f FLCSMode=%d"),
+        ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
+        target,
+        navpt,
+        ship ? ship->GetThrottle() : -1.0,
+        ship ? ship->GetThrottleRequest() : -1.0,
+        ship ? static_cast<int32>(ship->GetFLCSMode()) : -1);
 }
-
 // +--------------------------------------------------------------------+
 
 void
 StarshipAI::HelmControl()
 {
     // signifies this ship is a dead hulk:
-    if (ship && ship->Design()->auto_roll < 0) {
+    if (ship && ship->Design()->auto_roll < 0)
+    {
         return;
     }
 
@@ -312,45 +306,61 @@ StarshipAI::HelmControl()
 
     bool station_keeping = distance < 0;
 
-    if (station_keeping) {
+    if (station_keeping)
+    {
         accumulator.brake = 1;
         accumulator.stop = 1;
 
         ship->SetHelmPitch(0);
     }
-
-    else {
+    else
+    {
         SimElement* elem = ship->GetElement();
 
         Ship* ward = ship->GetWard();
-        Ship* s_threat = 0;
-        if (threat && threat->Class() >= ship->Class())
-            s_threat = threat;
+        Ship* s_threat = nullptr;
 
-        if (other || target || ward || s_threat || navpt || patrol || farcaster || element_index > 1) {
+        // UE enum-safe replacement.
+        if (threat)
+        {
+            s_threat = threat;
+        }
+
+        if (other ||
+            target ||
+            ward ||
+            s_threat ||
+            navpt ||
+            patrol ||
+            farcaster ||
+            element_index > 1)
+        {
             ship->SetHelmHeading(accumulator.yaw);
 
-            if (elem && elem->Type() == (int)EMISSIONTYPE::FLIGHT_OPS) {
+            if (elem && elem->Type() == static_cast<int32>(EMISSIONTYPE::FLIGHT_OPS))
+            {
                 ship->SetHelmPitch(0);
 
-                if (ship->NumInbound() > 0) {
+                if (ship->NumInbound() > 0)
+                {
                     ship->SetHelmHeading(ship->GetCompassHeading());
                 }
             }
-
-            else if (accumulator.pitch > 60 * DEGREES) {
+            else if (accumulator.pitch > 60 * DEGREES)
+            {
                 ship->SetHelmPitch(60 * DEGREES);
             }
-
-            else if (accumulator.pitch < -60 * DEGREES) {
+            else if (accumulator.pitch < -60 * DEGREES)
+            {
                 ship->SetHelmPitch(-60 * DEGREES);
             }
-
-            else {
+            else
+            {
                 ship->SetHelmPitch(accumulator.pitch);
             }
         }
-        else {
+        else
+        {
             ship->SetHelmPitch(0);
         }
     }
@@ -358,22 +368,41 @@ StarshipAI::HelmControl()
     ship->SetTransX(trans_x);
     ship->SetTransY(trans_y);
     ship->SetTransZ(trans_z);
+
+    Ship* ward = ship ? ship->GetWard() : nullptr;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::HelmControl] Ship='%hs' Target='%hs' Threat='%hs' Navpt=%p Ward='%hs' Other=%p Yaw=%.4f Pitch=%.4f HelmHeading=%.4f HelmPitch=%.4f Distance=%.2f"),
+        ship ? ship->GetName() : "NULL",
+        target ? target->GetName() : "NULL",
+        threat ? threat->GetName() : "NULL",
+        static_cast<void*>(navpt),
+        ward ? ward->GetName() : "NULL",
+        static_cast<void*>(other),
+        accumulator.yaw,
+        accumulator.pitch,
+        ship ? ship->GetHelmHeading() : 0.0,
+        ship ? ship->GetHelmPitch() : 0.0,
+        distance);
 }
 
 void
 StarshipAI::ThrottleControl()
 {
     // signifies this ship is a dead hulk:
-    if (ship && ship->Design()->auto_roll < 0) {
+    if (ship && ship->Design()->auto_roll < 0)
+    {
         return;
     }
 
     // station keeping:
-    if (distance < 0) {
+    if (distance < 0)
+    {
         old_throttle = 0;
         throttle = 0;
 
         ship->SetThrottle(0);
+        ship->SetThrottleRequest(0);
         ship->SetTransY(0);
 
         return;
@@ -381,27 +410,40 @@ StarshipAI::ThrottleControl()
 
     const FVector ShipVel = ship->GetVelocity();
     const FVector ShipHeading = ship->GetHeading();
-    const double ship_speed = FVector::DotProduct(ShipVel, ShipHeading);
+
+    const double ship_speed =
+        FVector::DotProduct(ShipVel, ShipHeading);
 
     double brakes = 0.0;
 
     Ship* ward = ship->GetWard();
-    Ship* s_threat = 0;
+    Ship* s_threat = nullptr;
 
-    if (threat && threat->Class() >= ship->Class())
+    //-------------------------------------------------------------
+    // UE enum-safe threat handling
+    //-------------------------------------------------------------
+    if (threat)
+    {
         s_threat = threat;
+    }
 
-    if (target || s_threat) {
+    //-------------------------------------------------------------
+    // Combat movement
+    //-------------------------------------------------------------
+    if (target || s_threat)
+    {
         throttle = 100;
 
-        if (target && distance < 50e3) {
+        if (target && distance < 50e3)
+        {
             const FVector DeltaDir =
                 (target->GetLocation() - ship->GetLocation()).GetSafeNormal();
 
             const double closing_speed =
                 FVector::DotProduct(ShipVel, DeltaDir);
 
-            if (closing_speed > 300) {
+            if (closing_speed > 300)
+            {
                 throttle = 30;
                 brakes = 0.25;
             }
@@ -409,91 +451,152 @@ StarshipAI::ThrottleControl()
 
         throttle *= (1.0 - accumulator.brake);
 
-        if (throttle < 1) {
+        if (throttle < 1)
+        {
             throttle = 0;
             brakes = 1.0;
         }
     }
 
-    else if (ward) {
+    //-------------------------------------------------------------
+    // Ward / formation keeping
+    //-------------------------------------------------------------
+    else if (ward)
+    {
         const double speed = ward->GetVelocity().Length();
+
         throttle = old_throttle;
 
-        if (speed == 0) {
-            const double d =
-                (ship->GetLocation() - ward->GetLocation()).Length();
-
-            (void)d;
-        }
-
-        if (speed > 0) {
-            if (ship_speed > speed) {
+        if (speed > 0)
+        {
+            if (ship_speed > speed)
+            {
                 throttle = old_throttle - 1;
                 brakes = 0.2;
             }
-            else if (ship_speed < speed - 10) {
+            else if (ship_speed < speed - 10)
+            {
                 throttle = old_throttle + 1;
             }
         }
-        else {
+        else
+        {
             throttle = 0;
             brakes = 0.5;
         }
     }
 
-    else if (patrol || farcaster) {
+    //-------------------------------------------------------------
+    // Patrol / farcaster travel
+    //-------------------------------------------------------------
+    else if (patrol || farcaster)
+    {
         throttle = 100;
 
         const double abs_ship_speed =
             FMath::Abs(ship_speed);
 
-        if (distance < 10.0 * abs_ship_speed) {
+        if (distance < 10.0 * abs_ship_speed)
+        {
             if (ShipVel.Length() > 200)
+            {
                 throttle = 5;
+            }
             else
+            {
                 throttle = 50;
+            }
         }
     }
 
-    else if (navpt) {
+    //-------------------------------------------------------------
+    // Nav point movement
+    //-------------------------------------------------------------
+    else if (navpt)
+    {
         double speed = navpt->GetSpeed();
+
         throttle = old_throttle;
 
-        if (hold) {
+        if (hold)
+        {
             throttle = 0;
             brakes = 1;
         }
-        else {
+        else
+        {
             if (speed <= 0)
+            {
                 speed = 300;
+            }
 
-            if (ship_speed > speed) {
+            if (ship_speed > speed)
+            {
                 if (throttle > 0 && old_throttle > 1)
+                {
                     throttle = old_throttle - 1;
+                }
 
                 brakes = 0.25;
             }
-            else if (ship_speed < speed - 10) {
+            else if (ship_speed < speed - 10)
+            {
                 throttle = old_throttle + 1;
             }
         }
     }
 
-    else if (element_index > 1) {
-        Ship* lead = ship->GetElement() ? ship->GetElement()->GetShip(1) : nullptr;
+    //-------------------------------------------------------------
+    // Formation movement
+    //-------------------------------------------------------------
+    else if (element_index > 1)
+    {
+        Ship* lead =
+            ship->GetElement() ?
+            ship->GetElement()->GetShip(1) :
+            nullptr;
 
-        const double lv = lead ? lead->GetVelocity().Length() : 0.0;
+        const double lv =
+            lead ? lead->GetVelocity().Length() : 0.0;
+
         const double sv = ship_speed;
+
         const double dv = lv - sv;
-        const double dt = dv * 1e-2 * seconds;
+
+        const double dt =
+            dv * 1e-2 * seconds;
 
         throttle = old_throttle + dt;
     }
 
-    else {
+    //-------------------------------------------------------------
+    // Idle
+    //-------------------------------------------------------------
+    else
+    {
         throttle = 0;
     }
 
+#if 1
+    //-------------------------------------------------------------
+    // TEMP DEBUG FALLBACK
+    //-------------------------------------------------------------
+    if (throttle <= 0 &&
+        !target &&
+        !navpt &&
+        !ward)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[StarshipAI::ThrottleControl] DEBUG FALLBACK Ship='%hs' Forcing throttle"),
+            ship ? ship->GetName() : "NULL");
+
+        throttle = 100;
+    }
+#endif
+
+    //-------------------------------------------------------------
+    // Clamp
+    //-------------------------------------------------------------
     throttle =
         FMath::Clamp(
             throttle,
@@ -502,27 +605,42 @@ StarshipAI::ThrottleControl()
 
     old_throttle = throttle;
 
+    //-------------------------------------------------------------
+    // IMPORTANT:
+    // UE runtime movement uses throttle request propagation.
+    //-------------------------------------------------------------
     ship->SetThrottle(throttle);
+    ship->SetThrottleRequest(throttle);
 
-    if (ship_speed > 1 && brakes > 0) {
-        ship->SetTransY(-brakes * ship->Design()->trans_y);
+    //-------------------------------------------------------------
+    // Strafing / braking
+    //-------------------------------------------------------------
+    if (ship_speed > 1 && brakes > 0)
+    {
+        ship->SetTransY(
+            -brakes * ship->Design()->trans_y);
     }
-    else if (throttle > 10 && (ship->GetEMCON() < 2 || ship->GetFuelLevel() < 10)) {
-        ship->SetTransY(ship->Design()->trans_y);
+    else if (throttle > 10 &&
+        (ship->GetEMCON() < 2 ||
+            ship->GetFuelLevel() < 10))
+    {
+        ship->SetTransY(
+            ship->Design()->trans_y);
     }
-    else {
+    else
+    {
         ship->SetTransY(0);
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::ThrottleControl] Ship='%hs' Target='%hs' Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Brakes=%.2f Request=%.2f TransY=%.2f"),
+        TEXT("[StarshipAI::ThrottleControl] Ship='%hs' Target='%hs' Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Request=%.2f Brakes=%.2f TransY=%.2f"),
         ship ? ship->GetName() : "NULL",
         target ? target->GetName() : "NULL",
         distance,
         ship_speed,
         throttle,
-        brakes,
         ship ? ship->GetThrottleRequest() : 0.0,
+        brakes,
         ship ? ship->GetTransY() : 0.0);
 }
 
@@ -535,6 +653,17 @@ StarshipAI::SeekTarget()
     {
         return Steer();
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::SeekTarget ENTER] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s Objective=%s ObjW=%s"),
+        ship->GetName(),
+        *ship->GetLocation().ToString(),
+        target ? target->GetName() : "NULL",
+        target ? *target->GetLocation().ToString() : TEXT("NULL"),
+        navpt,
+        navpt ? *navpt->GetLocation().ToString() : TEXT("NULL"),
+        *objective.ToString(),
+        *obj_w.ToString());
 
     if (navpt)
     {
@@ -598,10 +727,11 @@ StarshipAI::SeekTarget()
                 distance = FVector(obj_w - ship->GetLocation()).Length();
 
                 UE_LOG(LogTemp, Warning,
-                    TEXT("[StarshipAI::SeekTarget] Ship='%hs' using farcaster Distance=%.2f Obj=%s"),
+                    TEXT("[StarshipAI::SeekTarget] Ship='%hs' using farcaster Distance=%.2f ObjW=%s ShipLoc=%s"),
                     ship->GetName(),
                     distance,
-                    *obj_w.ToString());
+                    *obj_w.ToString(),
+                    *ship->GetLocation().ToString());
 
                 if (distance < 1000)
                 {
@@ -625,16 +755,25 @@ StarshipAI::SeekTarget()
         }
     }
 
+    const FVector BeforeObjective = objective;
+    const FVector BeforeObjW = obj_w;
+
     Steer Result =
         ShipAI::SeekTarget();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::SeekTarget] Ship='%hs' Target='%hs' Navpt=%p Distance=%.2f Objective=%s ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
+        TEXT("[StarshipAI::SeekTarget EXIT] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s BeforeObj=%s AfterObj=%s BeforeObjW=%s AfterObjW=%s Distance=%.2f ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
         ship ? ship->GetName() : "NULL",
+        ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
         target ? target->GetName() : "NULL",
+        target ? *target->GetLocation().ToString() : TEXT("NULL"),
         navpt,
-        (double)distance,
+        navpt ? *navpt->GetLocation().ToString() : TEXT("NULL"),
+        *BeforeObjective.ToString(),
         *objective.ToString(),
+        *BeforeObjW.ToString(),
+        *obj_w.ToString(),
+        (double)distance,
         (double)Result.yaw,
         (double)Result.pitch,
         (double)Result.brake,
