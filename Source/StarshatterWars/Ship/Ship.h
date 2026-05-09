@@ -214,6 +214,7 @@ public:
     double            GetVelocityLimit() const { return vlimit; }
     Drive*            GetMainDrive() const { return main_drive; }
     double            GetThrottle() const { return throttle; }
+    double            GetThrottleRequest() const { return throttle_request; }
     bool              GetAugmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
     Farcaster*        GetFarcaster() const { return farcaster; }

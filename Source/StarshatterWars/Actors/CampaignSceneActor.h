@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameStructs.h"
+
 #include "CampaignSceneActor.generated.h"
 
 class ASceneMeshActor;
@@ -216,6 +217,7 @@ private:
         int32 FollowerIndex,
         int32 FollowerCount) const;
 
+    void BuildSimRegionsFromEnvironment();
     void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
 
     void TickRuntimeShips(float DeltaSeconds);

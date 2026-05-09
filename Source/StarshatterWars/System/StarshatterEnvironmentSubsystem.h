@@ -150,6 +150,8 @@ public:
 
     EGameMode GetGameMode() { return game_mode; }
     void      SetGameMode(EGameMode mode) { game_mode = mode; }
+    const     TArray<OrbitalRegion*>& GetRuntimeRegions() const { return RuntimeRegions; }
+
 
     // =====================================================================
     // Project path / utility
@@ -344,4 +346,5 @@ private:
 
     EGameMode               game_mode;
 };
+
 

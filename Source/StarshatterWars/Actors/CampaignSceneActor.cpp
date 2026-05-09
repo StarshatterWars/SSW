@@ -21,6 +21,11 @@
 #include "Sim.h"
 #include "Ship.h"
 
+#include "StarshatterEnvironmentSubsystem.h"
+#include "SimRegion.h"
+#include "Orbital.h"
+#include "OrbitalRegion.h"
+
 #include "SimDirector.h"
 #include "TimerSubsystem.h"
 
@@ -699,6 +704,11 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
 
     //-------------------------------------------------------------
+    // BUILD RUNTIME SIM REGIONS
+    //-------------------------------------------------------------
+    BuildSimRegionsFromEnvironment();
+    
+    //-------------------------------------------------------------
     // PASS 1: Spawn + Create Runtime Ships
     //-------------------------------------------------------------
     for (const FS_MissionElement& Elem : MissionData.Element)
@@ -1296,7 +1306,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             NewShip->SetRegion(Region);
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] Ship '%s' assigned to Region='%hs' Region=%p"),
+                TEXT("[CampaignSceneActor:Region] Ship '%s' assigned to Region='%hs' Region=%p"),
                 *Elem.Name,
                 Region->GetName(),
                 Region);
@@ -1304,7 +1314,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         else
         {
             UE_LOG(LogTemp, Error,
-                TEXT("[CampaignSceneActor] No region found for ship '%s' ElemRegion='%s' MissionRegion='%s'"),
+                TEXT("[CampaignSceneActor:Region] No region found for ship '%s' ElemRegion='%s' MissionRegion='%s'"),
                 *Elem.Name,
                 *Elem.RegionName,
                 *CurrentMissionRegionName);
@@ -1439,13 +1449,17 @@ void ACampaignSceneActor::RegisterRuntimeShipForElement(
         ShipActor ? *ShipActor->GetName() : TEXT("NULL"));
 }
 
-void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionElement>& Elements)
+void ACampaignSceneActor::LinkRuntimeShipCommanders(
+    const TArray<FS_MissionElement>& Elements)
 {
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] LinkRuntimeShipCommanders: Elements=%d RuntimeShips=%d"),
         Elements.Num(),
         RuntimeShips.Num());
 
+    //-------------------------------------------------------------
+    // Commander / leader linking
+    //-------------------------------------------------------------
     for (const FS_MissionElement& Elem : Elements)
     {
         if (Elem.Name.IsEmpty() || Elem.Commander.IsEmpty())
@@ -1453,8 +1467,11 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
             continue;
         }
 
-        Ship* ChildShip = RuntimeShipByElementName.FindRef(Elem.Name);
-        Ship* CommanderShip = RuntimeShipByElementName.FindRef(Elem.Commander);
+        Ship* ChildShip =
+            RuntimeShipByElementName.FindRef(Elem.Name);
+
+        Ship* CommanderShip =
+            RuntimeShipByElementName.FindRef(Elem.Commander);
 
         if (!ChildShip)
         {
@@ -1462,6 +1479,7 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
                 TEXT("[CampaignSceneActor] CommanderLink SKIP child missing Elem='%s' Commander='%s'"),
                 *Elem.Name,
                 *Elem.Commander);
+
             continue;
         }
 
@@ -1471,6 +1489,7 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
                 TEXT("[CampaignSceneActor] CommanderLink SKIP commander missing Elem='%s' Commander='%s'"),
                 *Elem.Name,
                 *Elem.Commander);
+
             continue;
         }
 
@@ -1479,6 +1498,7 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] CommanderLink SKIP self commander Elem='%s'"),
                 *Elem.Name);
+
             continue;
         }
 
@@ -1488,6 +1508,66 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(const TArray<FS_MissionEleme
             TEXT("[CampaignSceneActor] CommanderLink Child='%s' Leader='%s'"),
             *Elem.Name,
             *Elem.Commander);
+    }
+
+    //-------------------------------------------------------------
+    // AI hostility diagnostics
+    //-------------------------------------------------------------
+    for (Ship* TestShip : RuntimeShips)
+    {
+        if (!TestShip)
+        {
+            continue;
+        }
+
+        for (Ship* OtherShip : RuntimeShips)
+        {
+            if (!OtherShip || OtherShip == TestShip)
+            {
+                continue;
+            }
+
+            const bool bHostile =
+                TestShip->IsHostileTo(OtherShip);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[AI TARGET TEST] Ship='%hs' IFF=%d Region=%p Other='%hs' OtherIFF=%d OtherRegion=%p Hostile=%d"),
+                TestShip->GetName(),
+                TestShip->GetIFF(),
+                TestShip->GetRegion(),
+                OtherShip->GetName(),
+                OtherShip->GetIFF(),
+                OtherShip->GetRegion(),
+                bHostile ? 1 : 0);
+        }
+    }
+
+    //-------------------------------------------------------------
+    // Temporary forced target test
+    //-------------------------------------------------------------
+    Ship* Kitts =
+        RuntimeShipByElementName.FindRef(TEXT("Kitts"));
+
+    Ship* Lovo =
+        RuntimeShipByElementName.FindRef(TEXT("Lovo"));
+
+    Ship* Courier =
+        RuntimeShipByElementName.FindRef(TEXT("Blockade Runner"));
+
+    if (Kitts && Courier)
+    {
+        Kitts->SetTarget(Courier);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[AI FORCE TARGET] Kitts -> Blockade Runner"));
+    }
+
+    if (Lovo && Courier)
+    {
+        Lovo->SetTarget(Courier);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[AI FORCE TARGET] Lovo -> Blockade Runner"));
     }
 }
 
@@ -1617,5 +1697,53 @@ FVector ACampaignSceneActor::GetFormationOffsetForElement(
                 }
             }
         }
+    }
+}
+
+void ACampaignSceneActor::BuildSimRegionsFromEnvironment()
+{
+    Sim* SimInst = Sim::GetSim();
+
+    UStarshatterEnvironmentSubsystem* Env =
+        UStarshatterEnvironmentSubsystem::Get();
+
+    if (!SimInst || !Env)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignSceneActor] BuildSimRegionsFromEnvironment failed Sim=%p Env=%p"),
+            SimInst,
+            Env);
+        return;
+    }
+
+    const TArray<OrbitalRegion*>& RuntimeRegions =
+        Env->GetRuntimeRegions();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] BuildSimRegionsFromEnvironment RuntimeRegions=%d"),
+        RuntimeRegions.Num());
+
+    for (OrbitalRegion* Orbital : RuntimeRegions)
+    {
+        if (!Orbital)
+        {
+            continue;
+        }
+
+        if (SimInst->FindRegion(Orbital->GetName()))
+        {
+            continue;
+        }
+
+        SimRegion* Region =
+            new SimRegion(SimInst, Orbital);
+
+        SimInst->GetRegions().append(Region);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SIM REGION CREATE] Name='%hs' SimRegion=%p Orbital=%p"),
+            Orbital->GetName(),
+            Region,
+            Orbital);
     }
 }

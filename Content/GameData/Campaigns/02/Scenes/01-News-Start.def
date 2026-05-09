@@ -163,7 +163,7 @@ element: {
    intel:     "Located"
    count:     1
    command_ai:1
-   iff:       0
+   iff:       1
    playable:  false
    region:    "Trellis"
    loc:       (-120e3, -90e3, 0)
