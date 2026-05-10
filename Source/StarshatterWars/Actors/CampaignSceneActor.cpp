@@ -20,6 +20,7 @@
 #include "ShipDesign.h"
 
 #include "Sim.h"
+#include "SimObject.h"
 #include "Ship.h"
 
 #include "StarshatterEnvironmentSubsystem.h"
@@ -887,18 +888,33 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& 
     }
 
     //-------------------------------------------------------------
-    // PASS 2: COMMANDER LINKING
-    //-------------------------------------------------------------
+ // PASS 2: COMMANDER / FORMATION / INSTRUCTION RESOLUTION
+ //-------------------------------------------------------------
     LinkRuntimeShipCommanders(MissionData.Element);
     ApplyRuntimeFormationOffsets(MissionData.Element);
+    ResolveRuntimeInstructionTargets();
 
     //-------------------------------------------------------------
-    // FINAL LOG
+    // Optional final verification
     //-------------------------------------------------------------
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] BuildSceneActorsFromMission COMPLETE Count=%d RuntimeShips=%d"),
-        Count,
-        RuntimeShips.Num());
+    for (const TPair<FString, Ship*>& Pair : RuntimeShipByElementName)
+    {
+        Ship* RuntimeShip = Pair.Value;
+
+        if (!RuntimeShip)
+        {
+            continue;
+        }
+
+        Instruction* Nav = RuntimeShip->GetNextNavPoint();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MISSION BUILD FINAL TARGET VERIFY] Ship='%hs' NavTargetName='%hs' NavTarget='%hs' ShipTarget='%hs'"),
+            RuntimeShip->GetName(),
+            Nav && Nav->GetTargetName() ? Nav->GetTargetName() : "NULL",
+            Nav && Nav->GetTarget() ? Nav->GetTarget()->GetName() : "NULL",
+            RuntimeShip->GetTarget() ? RuntimeShip->GetTarget()->GetName() : "NULL");
+    }
 }
 
 AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) const
@@ -1511,12 +1527,17 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     // 11. Final log
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d NavPoints=%d"),
+        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d NavPoints=%d RuntimeNextNav=%p RuntimeNextNavTarget='%hs'"),
         *Elem.Name,
         *Elem.Design,
         *WorldLoc.ToString(),
         Elem.Heading,
-        Elem.Navpoint.Num());
+        Elem.Navpoint.Num(),
+        NewShip->GetNextNavPoint(),
+        NewShip->GetNextNavPoint() &&
+        NewShip->GetNextNavPoint()->GetTargetName()
+        ? NewShip->GetNextNavPoint()->GetTargetName()
+        : "NULL");
 
     return NewShip;
 }
@@ -1866,4 +1887,214 @@ void ACampaignSceneActor::BuildSimRegionsFromEnvironment()
     }
 
     Env->BuildSimRegionsForSim(SimInst);
+}
+
+void
+ACampaignSceneActor::ResolveRuntimeInstructionTargets()
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveRuntimeInstructionTargets BEGIN RuntimeShips=%d"),
+        RuntimeShipByElementName.Num());
+
+    for (const TPair<FString, Ship*>& Pair :
+        RuntimeShipByElementName)
+    {
+        Ship* RuntimeShip =
+            Pair.Value;
+
+        if (!RuntimeShip)
+        {
+            continue;
+        }
+
+        Instruction* Nav =
+            RuntimeShip->GetNextNavPoint();
+
+        if (!Nav)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ResolveRuntimeInstructionTargets] Ship='%hs' No NextNavPoint"),
+                RuntimeShip->GetName());
+
+            continue;
+        }
+
+        const char* TargetNameAnsi =
+            Nav->GetTargetName();
+
+        if (!TargetNameAnsi ||
+            !TargetNameAnsi[0])
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ResolveRuntimeInstructionTargets] Ship='%hs' Nav has no TargetName"),
+                RuntimeShip->GetName());
+
+            continue;
+        }
+
+        const FString TargetName =
+            FString(
+                ANSI_TO_TCHAR(
+                    TargetNameAnsi)).TrimStartAndEnd();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ResolveRuntimeInstructionTargets SOURCE] Ship='%hs' RawTargetName='%hs' FStringTarget='%s'"),
+            RuntimeShip->GetName(),
+            TargetNameAnsi,
+            *TargetName);
+
+        //---------------------------------------------------------
+        // Resolve exact runtime target
+        //---------------------------------------------------------
+        SimObject* TargetObj =
+            ResolveRuntimeTargetByName(TargetName);
+
+        if (TargetObj)
+        {
+            //-----------------------------------------------------
+            // Instruction target
+            //-----------------------------------------------------
+            Nav->SetTarget(TargetObj);
+
+            //-----------------------------------------------------
+            // Ship target
+            //-----------------------------------------------------
+            RuntimeShip->SetTarget(TargetObj);
+
+            //-----------------------------------------------------
+            // AI target
+            //-----------------------------------------------------
+            if (RuntimeShip->GetDirector())
+            {
+                ShipAI* RuntimeAI =
+                    dynamic_cast<ShipAI*>(RuntimeShip->GetDirector());
+
+                if (RuntimeAI)
+                {
+                    RuntimeAI->SetTarget(TargetObj);
+                }
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ResolveRuntimeInstructionTargets VERIFY] Ship='%hs' TargetName='%s' Resolved='%hs' Ptr=%p"),
+                RuntimeShip->GetName(),
+                *TargetName,
+                TargetObj->GetName(),
+                TargetObj);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[ResolveRuntimeInstructionTargets FAILED] Ship='%hs' TargetName='%s'"),
+                RuntimeShip->GetName(),
+                *TargetName);
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] ResolveRuntimeInstructionTargets COMPLETE"));
+}
+
+SimObject*
+ACampaignSceneActor::ResolveRuntimeTargetByName(
+    const FString& TargetName) const
+{
+    const FString CleanName =
+        TargetName.TrimStartAndEnd();
+
+    if (CleanName.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ResolveRuntimeTargetByName] LookingFor='%s'"),
+        *CleanName);
+
+    //-------------------------------------------------------------
+    // 1. Exact runtime element map match only
+    //-------------------------------------------------------------
+    for (const TPair<FString, Ship*>& Pair : RuntimeShipByElementName)
+    {
+        Ship* Candidate =
+            Pair.Value;
+
+        if (!Candidate)
+        {
+            continue;
+        }
+
+        const FString KeyName =
+            Pair.Key.TrimStartAndEnd();
+
+        const FString ShipName =
+            FString(ANSI_TO_TCHAR(Candidate->GetName())).TrimStartAndEnd();
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[ResolveRuntimeTargetByName] Candidate Key='%s' Ship='%s' Ptr=%p"),
+            *KeyName,
+            *ShipName,
+            Candidate);
+
+        if (KeyName.Equals(CleanName, ESearchCase::IgnoreCase) ||
+            ShipName.Equals(CleanName, ESearchCase::IgnoreCase))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[ResolveRuntimeTargetByName] EXACT MATCH Target='%s' Resolved='%hs' Ptr=%p"),
+                *CleanName,
+                Candidate->GetName(),
+                Candidate);
+
+            return Candidate;
+        }
+    }
+
+    //-------------------------------------------------------------
+    // 2. Exact active-region ship match only
+    //-------------------------------------------------------------
+    if (Sim* SimInst = Sim::GetSim())
+    {
+        if (SimRegion* Region = SimInst->GetActiveRegion())
+        {
+            ListIter<Ship> ShipIter =
+                Region->GetShips();
+
+            while (++ShipIter)
+            {
+                Ship* Candidate =
+                    ShipIter.value();
+
+                if (!Candidate)
+                {
+                    continue;
+                }
+
+                const FString ShipName =
+                    FString(ANSI_TO_TCHAR(Candidate->GetName())).TrimStartAndEnd();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[ResolveRuntimeTargetByName] RegionCandidate Ship='%s' Region='%hs' Ptr=%p"),
+                    *ShipName,
+                    Candidate->GetRegion() ? Candidate->GetRegion()->GetName() : "NULL",
+                    Candidate);
+
+                if (ShipName.Equals(CleanName, ESearchCase::IgnoreCase))
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[ResolveRuntimeTargetByName] EXACT REGION MATCH Target='%s' Resolved='%hs' Ptr=%p"),
+                        *CleanName,
+                        Candidate->GetName(),
+                        Candidate);
+
+                    return Candidate;
+                }
+            }
+        }
+    }
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[ResolveRuntimeTargetByName] NO EXACT MATCH Target='%s'"),
+        *CleanName);
+
+    return nullptr;
 }

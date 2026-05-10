@@ -168,7 +168,7 @@ element: {
    region:    "Trellis"
    loc:       (-120e3, -90e3, 0)
 
-   navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 1000, rgn: "Trellis" }
+   navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 1000, rgn: "Trellis", tgt: "Trellis-Solus" }
 }
 
 

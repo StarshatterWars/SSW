@@ -2704,8 +2704,50 @@ Ship::SetLaunchPoint(Instruction* pt)
 void
 Ship::AddNavPoint(Instruction* pt, Instruction* after)
 {
+	if (!pt)
+	{
+		return;
+	}
+
+	if (!element)
+	{
+		element =
+			new SimElement(
+				GetName(),
+				GetIFF(),
+				(int)Class());
+
+		element->AddShip(this, 1);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::AddNavPoint] Created solo element Ship='%hs' Element=%p Index=%d Region='%hs'"),
+			GetName(),
+			element,
+			GetElementIndex(),
+			GetRegion() ? GetRegion()->GetName() : "NULL");
+	}
+
 	if (GetElementIndex() == 1)
+	{
 		element->AddNavPoint(pt, after);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::AddNavPoint] Added navpoint Ship='%hs' TargetName='%hs' NextNav=%p NextTarget='%hs'"),
+			GetName(),
+			pt->GetTargetName() ? pt->GetTargetName() : "NULL",
+			GetNextNavPoint(),
+			GetNextNavPoint() && GetNextNavPoint()->GetTargetName()
+			? GetNextNavPoint()->GetTargetName()
+			: "NULL");
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::AddNavPoint] Skipped non-lead Ship='%hs' Index=%d TargetName='%hs'"),
+			GetName(),
+			GetElementIndex(),
+			pt->GetTargetName() ? pt->GetTargetName() : "NULL");
+	}
 }
 
 void

@@ -150,9 +150,11 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 			Elem->AddNavPoint(Nav);
 
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Mission.cpp] Added navpoint Elem='%s' Region='%s' Loc=%s Speed=%d"),
+				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Target='%s' Loc=%s Speed=%d"),
 				*SrcElem.Name,
+				*SrcNav.OrderName,
 				*SrcNav.OrderRegionName,
+				*SrcNav.TargetName,
 				*SrcNav.Location.ToString(),
 				SrcNav.Speed);
 		}

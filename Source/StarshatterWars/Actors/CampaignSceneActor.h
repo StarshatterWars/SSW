@@ -12,6 +12,7 @@ class ASystemSceneBuilder;
 class ASSWCameraManager;
 class Mission;
 class Ship;
+class SimObject;
 
 struct FS_MissionElement;
 
@@ -218,6 +219,8 @@ private:
         int32 FollowerCount) const;
 
     void BuildSimRegionsFromEnvironment();
+    void ResolveRuntimeInstructionTargets();
+    SimObject* ResolveRuntimeTargetByName(const FString& TargetName) const;
     void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
 
     void TickRuntimeShips(float DeltaSeconds);
