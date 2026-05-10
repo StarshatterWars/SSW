@@ -1620,7 +1620,7 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         RuntimeShip->GetHeading();
 
     //-------------------------------------------------------------
-    // VALIDATION
+    // Validation
     //-------------------------------------------------------------
     const bool bBadLocation =
         !FMath::IsFinite(RuntimeLocation.X) ||
@@ -1650,7 +1650,7 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     }
 
     //-------------------------------------------------------------
-    // WORLD LIMITS
+    // World limits
     //-------------------------------------------------------------
     constexpr double MaxWorldCoord = 1.0e9;
 
@@ -1667,25 +1667,30 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     }
 
     //-------------------------------------------------------------
-    // Legacy -> UE conversion
+    // Legacy runtime -> UE world conversion
+    //
+    // Runtime X = horizontal
+    // Runtime Y = vertical
+    // Runtime Z = horizontal
+    //
+    // UE X = Runtime Z
+    // UE Y = Runtime X
+    // UE Z = Runtime Y
     //-------------------------------------------------------------
-    const FVector DesiredLocation =
-        FVector(
-            RuntimeLocation.Z,
-            RuntimeLocation.X,
-            RuntimeLocation.Y);
+    const FVector DesiredLocation(
+        RuntimeLocation.Z,
+        RuntimeLocation.X,
+        RuntimeLocation.Y);
 
-    const FVector UEVelocity =
-        FVector(
-            RuntimeVelocity.Z,
-            RuntimeVelocity.X,
-            RuntimeVelocity.Y);
+    const FVector UEVelocity(
+        RuntimeVelocity.Z,
+        RuntimeVelocity.X,
+        RuntimeVelocity.Y);
 
-    FVector UEHeading =
-        FVector(
-            RuntimeHeading.Z,
-            RuntimeHeading.X,
-            RuntimeHeading.Y);
+    FVector UEHeading(
+        RuntimeHeading.Z,
+        RuntimeHeading.X,
+        RuntimeHeading.Y);
 
     if (!UEHeading.Normalize())
     {
@@ -1697,27 +1702,28 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     //-------------------------------------------------------------
     SetActorLocation(DesiredLocation);
 
+    FVector FacingVector =
+        FVector::ZeroVector;
+
     if (!UEVelocity.IsNearlyZero())
     {
-        SetActorRotation(
-            UEVelocity.GetSafeNormal().Rotation());
+        FacingVector =
+            UEVelocity.GetSafeNormal();
     }
     else
     {
-        SetActorRotation(
-            UEHeading.Rotation());
+        FacingVector =
+            UEHeading.GetSafeNormal();
     }
 
-    //-------------------------------------------------------------
-    // Debug
-    //-------------------------------------------------------------
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor::UpdateFromRuntimeShip] Ship='%s' ActorLoc=%s DesiredLoc=%s RuntimeVel=%s UEVel=%s"),
-        *GetName(),
-        *GetActorLocation().ToString(),
-        *DesiredLocation.ToString(),
-        *RuntimeVelocity.ToString(),
-        *UEVelocity.ToString());
+    if (!FacingVector.Normalize())
+    {
+        FacingVector =
+            FVector::ForwardVector;
+    }
+
+    SetActorRotation(
+        FacingVector.Rotation());
 }
 
 void AShipActor::BuildNavLightsFromRuntime()

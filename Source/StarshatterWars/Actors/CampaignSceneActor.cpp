@@ -1248,7 +1248,8 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 1. Resolve legacy ShipDesign
     //-------------------------------------------------------------
-    ShipDesign* Design = ShipDesignRegistry::FindLegacy(Elem.Design);
+    ShipDesign* Design =
+        ShipDesignRegistry::FindLegacy(Elem.Design);
 
     if (!Design)
     {
@@ -1264,11 +1265,17 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 2. Safe constructor strings
     //-------------------------------------------------------------
-    const FString SafeShipName = Elem.Name.Left(63);
-    const FString SafeRegistry = Elem.Name.Left(15);
+    const FString SafeShipName =
+        Elem.Name.Left(63);
 
-    const FTCHARToUTF8 ShipNameUtf8(*SafeShipName);
-    const FTCHARToUTF8 RegistryUtf8(*SafeRegistry);
+    const FString SafeRegistry =
+        Elem.Name.Left(15);
+
+    const FTCHARToUTF8 ShipNameUtf8(
+        *SafeShipName);
+
+    const FTCHARToUTF8 RegistryUtf8(
+        *SafeRegistry);
 
     //-------------------------------------------------------------
     // 3. Construct Ship
@@ -1280,8 +1287,7 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         Elem.IFFCode,
         Elem.CommandAI,
         nullptr,
-        true
-    );
+        true);
 
     if (!NewShip)
     {
@@ -1326,21 +1332,23 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     NewShip->MoveTo(WorldLoc);
 
     const double HeadingRad =
-        FMath::DegreesToRadians((double)Elem.Heading);
+        FMath::DegreesToRadians(
+            (double)Elem.Heading);
 
     //-------------------------------------------------------------
     // Legacy combat plane is X/Y.
-    // Seed vpn() into that plane using LookAt.
     //-------------------------------------------------------------
     const FVector ForwardPoint =
-        WorldLoc + FVector(
+        WorldLoc +
+        FVector(
             FMath::Cos(HeadingRad),
             FMath::Sin(HeadingRad),
             0.0f) * 10000.0f;
 
     NewShip->LookAt(ForwardPoint);
 
-    NewShip->SetHelmHeading(HeadingRad);
+    NewShip->SetHelmHeading(
+        HeadingRad);
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d ForwardPoint=%s VPN=%s"),
@@ -1353,11 +1361,13 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 6. Initial state
     //-------------------------------------------------------------
-    NewShip->SetInvulnerable(Elem.Invulnerable);
+    NewShip->SetInvulnerable(
+        Elem.Invulnerable);
 
     NewShip->SetFlightPhase(
-        Elem.Alert ? Ship::ALERT : Ship::ACTIVE
-    );
+        Elem.Alert ?
+        Ship::ALERT :
+        Ship::ACTIVE);
 
     //-------------------------------------------------------------
     // 7. Temporary movement bridge
@@ -1383,17 +1393,24 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
 
         if (!Elem.RegionName.IsEmpty())
         {
-            Region = SimInst->FindRegion(Elem.RegionName);
+            Region =
+                SimInst->FindRegion(
+                    Elem.RegionName);
         }
 
-        if (!Region && !CurrentMissionRegionName.IsEmpty())
+        if (!Region &&
+            !CurrentMissionRegionName.IsEmpty())
         {
-            Region = SimInst->FindRegion(CurrentMissionRegionName);
+            Region =
+                SimInst->FindRegion(
+                    CurrentMissionRegionName);
         }
 
         if (!Region)
         {
-            Region = SimInst->FindNearestSpaceRegionAt(WorldLoc);
+            Region =
+                SimInst->FindNearestSpaceRegionAt(
+                    WorldLoc);
         }
 
         if (Region)
@@ -1410,7 +1427,8 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             //-----------------------------------------------------
             if (!SimInst->GetActiveRegion())
             {
-                SimInst->ActivateRegion(Region);
+                SimInst->ActivateRegion(
+                    Region);
 
                 UE_LOG(LogTemp, Warning,
                     TEXT("[CampaignSceneActor] Activated Region '%hs' for ship '%s'"),
@@ -1438,20 +1456,24 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 9. Player ship assignment
     //-------------------------------------------------------------
-    if (!CurrentPlayerShip && Elem.Player == 1)
+    if (!CurrentPlayerShip &&
+        Elem.Player == 1)
     {
-        CurrentPlayerShip = NewShip;
+        CurrentPlayerShip =
+            NewShip;
 
         UE_LOG(LogTemp, Warning,
             TEXT("[CampaignSceneActor] CurrentPlayerShip SET '%s' Design='%s'"),
             *Elem.Name,
             *Elem.Design);
 
-        SimRegion* PlayerRegion = NewShip->GetRegion();
+        SimRegion* PlayerRegion =
+            NewShip->GetRegion();
 
         if (PlayerRegion)
         {
-            PlayerRegion->SetPlayerShip(CurrentPlayerShip);
+            PlayerRegion->SetPlayerShip(
+                CurrentPlayerShip);
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] Region PlayerShip SET '%hs' Region='%hs'"),
@@ -1469,49 +1491,72 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 10. Navpoints -> Instructions
     //-------------------------------------------------------------
-    for (const FS_MissionInstruction& Nav : Elem.Navpoint)
+    for (const FS_MissionInstruction& Nav :
+        Elem.Navpoint)
     {
         const FString RegionName =
             !Nav.OrderRegionName.IsEmpty()
             ? Nav.OrderRegionName
             : Elem.RegionName;
 
-        Instruction* Inst = new Instruction(
-            TCHAR_TO_ANSI(*RegionName),
-            Nav.Location,
-            INSTRUCTION_ACTION::VECTOR
-        );
+        Instruction* Inst =
+            new Instruction(
+                TCHAR_TO_ANSI(*RegionName),
+                Nav.Location,
+                INSTRUCTION_ACTION::VECTOR);
 
-        Inst->SetSpeed(Nav.Speed);
-        Inst->SetHoldTime((double)Nav.Hold);
-        Inst->SetPriority(Nav.Priority);
-        Inst->SetFarcast(Nav.Farcast);
-        Inst->SetEMCON(Nav.EMCON);
-        Inst->SetFormation(ResolveInstructionFormation(Nav.Formation));
+        Inst->SetSpeed(
+            Nav.Speed);
+
+        Inst->SetHoldTime(
+            (double)Nav.Hold);
+
+        Inst->SetPriority(
+            Nav.Priority);
+
+        Inst->SetFarcast(
+            Nav.Farcast);
+
+        Inst->SetEMCON(
+            Nav.EMCON);
+
+        Inst->SetFormation(
+            ResolveInstructionFormation(
+                Nav.Formation));
 
         if (!Nav.StatusName.IsEmpty())
         {
-            if (Nav.StatusName.Equals(TEXT("ACTIVE"), ESearchCase::IgnoreCase))
+            if (Nav.StatusName.Equals(
+                TEXT("ACTIVE"),
+                ESearchCase::IgnoreCase))
             {
-                Inst->SetStatus(INSTRUCTION_STATUS::ACTIVE);
+                Inst->SetStatus(
+                    INSTRUCTION_STATUS::ACTIVE);
             }
-            else if (Nav.StatusName.Equals(TEXT("COMPLETE"), ESearchCase::IgnoreCase))
+            else if (Nav.StatusName.Equals(
+                TEXT("COMPLETE"),
+                ESearchCase::IgnoreCase))
             {
-                Inst->SetStatus(INSTRUCTION_STATUS::COMPLETE);
+                Inst->SetStatus(
+                    INSTRUCTION_STATUS::COMPLETE);
             }
         }
 
         if (!Nav.TargetName.IsEmpty())
         {
-            Inst->SetTarget(Nav.TargetName);
+            Inst->SetTarget(
+                Nav.TargetName);
         }
 
         if (!Nav.TargetDesc.IsEmpty())
         {
-            Inst->SetTargetDesc(TCHAR_TO_ANSI(*Nav.TargetDesc));
+            Inst->SetTargetDesc(
+                TCHAR_TO_ANSI(
+                    *Nav.TargetDesc));
         }
 
-        NewShip->AddNavPoint(Inst);
+        NewShip->AddNavPoint(
+            Inst);
 
         UE_LOG(LogTemp, Warning,
             TEXT("[Nav] Ship='%s' Region='%s' Loc=%s Speed=%d Formation=%d Priority=%d"),
@@ -1524,20 +1569,9 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 11. Final log
+    // 11. Face runtime ship toward first resolved nav target
     //-------------------------------------------------------------
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Runtime Ship CREATED '%s' Design='%s' Loc=%s Heading=%d NavPoints=%d RuntimeNextNav=%p RuntimeNextNavTarget='%hs'"),
-        *Elem.Name,
-        *Elem.Design,
-        *WorldLoc.ToString(),
-        Elem.Heading,
-        Elem.Navpoint.Num(),
-        NewShip->GetNextNavPoint(),
-        NewShip->GetNextNavPoint() &&
-        NewShip->GetNextNavPoint()->GetTargetName()
-        ? NewShip->GetNextNavPoint()->GetTargetName()
-        : "NULL");
+    FaceRuntimeShipAtTarget(NewShip);
 
     return NewShip;
 }
@@ -2097,4 +2131,59 @@ ACampaignSceneActor::ResolveRuntimeTargetByName(
         *CleanName);
 
     return nullptr;
+}
+
+void ACampaignSceneActor::FaceRuntimeShipAtTarget(Ship* RuntimeShip)
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    Instruction* Nav = RuntimeShip->GetNextNavPoint();
+
+    if (!Nav)
+    {
+        return;
+    }
+
+    SimObject* Target = Nav->GetTarget();
+
+    if (!Target)
+    {
+        return;
+    }
+
+    const FVector ShipLoc =
+        RuntimeShip->GetLocation();
+
+    const FVector TargetLoc =
+        Target->GetLocation();
+
+    FVector ToTarget =
+        TargetLoc - ShipLoc;
+
+    ToTarget.Z = 0.0f;
+
+    if (!ToTarget.Normalize())
+    {
+        return;
+    }
+
+    const double Heading =
+        FMath::Atan2(ToTarget.Y, ToTarget.X);
+
+    RuntimeShip->LookAt(
+        RuntimeShip->GetLocation() +
+        ToTarget * 10000.0f);
+
+    RuntimeShip->SetHelmHeading(Heading);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor::FaceRuntimeShipAtTarget] Ship='%s' Target='%s' Heading=%.4f HeadingDeg=%.2f ToTarget=%s"),
+        ANSI_TO_TCHAR(RuntimeShip->GetName()),
+        ANSI_TO_TCHAR(Target->GetName()),
+        Heading,
+        FMath::RadiansToDegrees(Heading),
+        *ToTarget.ToString());
 }

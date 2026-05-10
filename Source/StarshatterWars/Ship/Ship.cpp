@@ -2753,15 +2753,72 @@ Ship::AddNavPoint(Instruction* pt, Instruction* after)
 void
 Ship::DelNavPoint(Instruction* pt)
 {
+	if (!pt)
+	{
+		return;
+	}
+
+	if (!element)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::DelNavPoint] No element Ship='%hs' Nav=%p"),
+			GetName(),
+			pt);
+
+		return;
+	}
+
 	if (GetElementIndex() == 1)
+	{
 		element->DelNavPoint(pt);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::DelNavPoint] Deleted navpoint Ship='%hs' Nav=%p NextNav=%p NextTarget='%hs'"),
+			GetName(),
+			pt,
+			GetNextNavPoint(),
+			GetNextNavPoint() && GetNextNavPoint()->GetTargetName()
+			? GetNextNavPoint()->GetTargetName()
+			: "NULL");
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::DelNavPoint] Skipped non-lead Ship='%hs' Index=%d Nav=%p"),
+			GetName(),
+			GetElementIndex(),
+			pt);
+	}
 }
 
 void
 Ship::ClearFlightPlan()
 {
+	if (!element)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ClearFlightPlan] No element Ship='%hs'"),
+			GetName());
+
+		return;
+	}
+
 	if (GetElementIndex() == 1)
+	{
 		element->ClearFlightPlan();
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ClearFlightPlan] Cleared Ship='%hs' NextNav=%p"),
+			GetName(),
+			GetNextNavPoint());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ClearFlightPlan] Skipped non-lead Ship='%hs' Index=%d"),
+			GetName(),
+			GetElementIndex());
+	}
 }
 
 // +----------------------------------------------------------------------+
@@ -3357,32 +3414,11 @@ Ship::ExecPhysics(double seconds)
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics MODE] Ship='%hs' FlightModel=%d FLCSMode=%d FLCS=%p"),
-		GetName(),
-		flight_model,
-		flcs_mode,
-		flcs);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] ENTER Ship='%hs' Dir=%p NetControl=%p Throttle=%.2f Request=%.2f Vel=%s"),
-		GetName(),
-		dir,
-		net_control,
-		throttle,
-		throttle_request,
-		*GetVelocity().ToString());
-
 	//-------------------------------------------------------------
 	// Network control
 	//-------------------------------------------------------------
 	if (net_control)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] NET_CONTROL PATH Ship='%hs' NetControl=%p"),
-			GetName(),
-			net_control);
-
 		net_control->ExecFrame(seconds);
 	}
 
@@ -3391,11 +3427,6 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	if (dir)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] DIR PATH Ship='%hs' Dir=%p"),
-			GetName(),
-			dir);
-
 		dir->ExecFrame(seconds);
 	}
 	else if (!net_control)
@@ -3412,44 +3443,8 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	if (flcs)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] BEFORE ExecFLCSFrame Ship='%hs' "
-				"Throttle=%.2f Request=%.2f "
-				"Trans=(%.2f %.2f %.2f)"),
-			GetName(),
-			throttle,
-			throttle_request,
-			trans_x,
-			trans_y,
-			trans_z);
-
 		ExecFLCSFrame();
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] AFTER ExecFLCSFrame Ship='%hs' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Thrust=%.2f Vel=%s"),
-			GetName(),
-			throttle,
-			throttle_request,
-			trans_x,
-			trans_y,
-			trans_z,
-			thrust,
-			*GetVelocity().ToString());
 	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] AFTER CONTROL Ship='%hs' "
-			"Throttle=%.2f Request=%.2f "
-			"MainDrive=%p Drives=%d Thruster=%p NavSys=%p VLimit=%.2f"),
-		GetName(),
-		throttle,
-		throttle_request,
-		main_drive,
-		drives.size(),
-		thruster,
-		navsys,
-		vlimit);
-
 
 	//-------------------------------------------------------------
 	// Throttle request -> actual throttle
@@ -3469,29 +3464,11 @@ Ship::ExecPhysics(double seconds)
 		{
 			throttle = FMath::Max(throttle - ThrottleStep, TargetThrottle);
 		}
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] THROTTLE RAMP Ship='%hs' Target=%.2f Step=%.2f Throttle=%.2f Request=%.2f"),
-			GetName(),
-			TargetThrottle,
-			ThrottleStep,
-			throttle,
-			throttle_request);
 	}
 	//-------------------------------------------------------------
 	// Compute thrust
 	//-------------------------------------------------------------
 	thrust = (float)GetThrust(seconds);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] AFTER THRUST Ship='%hs' "
-			"Throttle=%.2f Request=%.2f "
-			"Thrust=%.2f Vel=%s"),
-		GetName(),
-		GetThrottle(),
-		throttle_request,
-		thrust,
-		*GetVelocity().ToString());
 
 	//-------------------------------------------------------------
 	// Agility
@@ -3517,14 +3494,6 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	if (IsAirborne())
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] AIRBORNE Physical::ExecFrame "
-				"Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
-			GetName(),
-			thrust,
-			*GetVelocity().ToString(),
-			*GetLocation().ToString());
-
 		Physical::ExecFrame(seconds);
 
 		return;
@@ -3535,38 +3504,13 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	if (IsDying() || flight_model < 2)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] BEFORE Physical::ExecFrame "
-				"Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
-			GetName(),
-			thrust,
-			*GetVelocity().ToString(),
-			*GetLocation().ToString());
-
 		Physical::ExecFrame(seconds);
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] AFTER Physical::ExecFrame "
-				"Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
-			GetName(),
-			thrust,
-			*GetVelocity().ToString(),
-			*GetLocation().ToString());
-
 		return;
 	}
 
 	//-------------------------------------------------------------
 	// Arcade path
 	//-------------------------------------------------------------
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] BEFORE ArcadeFrame "
-			"Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
-		GetName(),
-		thrust,
-		*GetVelocity().ToString(),
-		*GetLocation().ToString());
-
 	Physical::ArcadeFrame(seconds);
 
 }
@@ -5307,20 +5251,20 @@ Ship::SetHelmPitch(double p)
 void
 Ship::ApplyHelmYaw(double y)
 {
-	// rotate compass into helm-relative orientation:
-	double compass = GetCompassHeading() - helm_heading;
-	const double turn = y * PI / 4;
+	const double turn =
+		y * PI / 4;
 
-	if (compass > PI)
-		compass -= 2 * PI;
-	else if (compass < -PI)
-		compass += 2 * PI;
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ApplyHelmYaw] Ship='%s' InputYaw=%.4f Turn=%.4f CurrentCompass=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
+		ANSI_TO_TCHAR(GetName()),
+		y,
+		turn,
+		GetCompassHeading(),
+		helm_heading,
+		helm_heading + turn);
 
-	// if requested turn is more than 170, reject it:
-	if (fabs(compass + turn) > 170 * DEGREES)
-		return;
-
-	SetHelmHeading(helm_heading + turn);
+	SetHelmHeading(
+		helm_heading + turn);
 }
 
 void

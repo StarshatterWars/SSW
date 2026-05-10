@@ -1166,52 +1166,63 @@ StarshipAI::Seek(const FVector& Point)
     // Z = forward
     //-------------------------------------------------------------
 
+    const double Right =
+        Point.X;
+
+    const double Up =
+        Point.Y;
+
     const double Forward =
         Point.Z;
 
-    if (Forward > 0.0)
+    Result.yaw =
+        atan2(Right, Forward);
+
+    const double FlatDist =
+        sqrt((Right * Right) + (Forward * Forward));
+
+    if (FlatDist > KINDA_SMALL_NUMBER)
     {
-        Result.yaw =
-            atan2(Point.X, Forward);
-
-        const double FlatDist =
-            sqrt(Point.X * Point.X +
-                Point.Z * Point.Z);
-
-        if (FlatDist > KINDA_SMALL_NUMBER)
-        {
-            Result.pitch =
-                -atan2(Point.Y, FlatDist);
-        }
+        Result.pitch =
+            -atan2(Up, FlatDist);
     }
     else
     {
-        Result.yaw =
-            Point.X >= 0.0 ? PI : -PI;
-
-        Result.pitch =
-            Point.Y > 0.0 ? -1.0 : 1.0;
+        Result.pitch = 0.0;
     }
 
 #if PLATFORM_WINDOWS
     if (!_finite(Result.yaw))
-        Result.yaw = 0;
+    {
+        Result.yaw = 0.0;
+    }
 
     if (!_finite(Result.pitch))
-        Result.pitch = 0;
+    {
+        Result.pitch = 0.0;
+    }
 #else
     if (!isfinite(Result.yaw))
-        Result.yaw = 0;
+    {
+        Result.yaw = 0.0;
+    }
 
     if (!isfinite(Result.pitch))
-        Result.pitch = 0;
+    {
+        Result.pitch = 0.0;
+    }
 #endif
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Seek] Point=%s Yaw=%.4f Pitch=%.4f"),
+        TEXT("[StarshipAI::Seek] Point=%s Right=%.3f Up=%.3f Forward=%.3f Yaw=%.4f Pitch=%.4f YawDeg=%.2f PitchDeg=%.2f"),
         *Point.ToString(),
+        Right,
+        Up,
+        Forward,
         Result.yaw,
-        Result.pitch);
+        Result.pitch,
+        FMath::RadiansToDegrees(Result.yaw),
+        FMath::RadiansToDegrees(Result.pitch));
 
     return Result;
 }

@@ -43,6 +43,7 @@
 #include "QuantumDrive.h"
 #include "Debris.h"
 #include "Asteroid.h"
+#include "ShipActor.h"
 
 #include "Game.h"
 #include "Random.h"
@@ -2074,69 +2075,96 @@ ShipAI::CheckTarget()
 		}
 	}
 }
-FVector
-ShipAI::WorldPointToLegacyLocalObjective(const FVector& WorldPoint) const
+
+FVector ShipAI::WorldPointToLegacyLocalObjective(
+	const FVector& WorldPoint) const
 {
 	if (!ship)
 	{
 		return FVector::ZeroVector;
 	}
 
-	const FVector ShipLoc = ship->GetLocation();
+	const FVector ShipWorld = ship->GetLocation();
 
-	FVector WorldDir = WorldPoint - ShipLoc;
+	FVector ToTarget = WorldPoint - ShipWorld;
 
-	if (WorldDir.ContainsNaN() ||
-		!FMath::IsFinite(WorldDir.X) ||
-		!FMath::IsFinite(WorldDir.Y) ||
-		!FMath::IsFinite(WorldDir.Z) ||
-		WorldDir.IsNearlyZero())
+	const double Dist = ToTarget.Size();
+
+	if (Dist < KINDA_SMALL_NUMBER)
 	{
 		return FVector::ZeroVector;
 	}
 
-	/*
-	 * Corrected Starshatter basis:
-	 *
-	 * VPN = Forward
-	 * VUP = Up
-	 * VRT = Right
-	 *
-	 * Legacy SteerAI::Seek expects:
-	 *
-	 * X = right
-	 * Y = up
-	 * Z = forward
-	 */
+	ToTarget /= Dist;
 
-	FVector Forward = ship->GetCam().vpn();
-	FVector Up = ship->GetCam().vup();
-	FVector Right = ship->GetCam().vrt();
+	const FVector Forward =
+		ship->GetHeading().GetSafeNormal();
 
-	Forward.Normalize();
-	Up.Normalize();
-	Right.Normalize();
+	const FVector WorldUp(
+		0.0f,
+		0.0f,
+		1.0f);
 
-	const double LocalRight = FVector::DotProduct(WorldDir, Right);
-	const double LocalUp = FVector::DotProduct(WorldDir, Up);
-	const double LocalForward = FVector::DotProduct(WorldDir, Forward);
+	FVector Right =
+		FVector::CrossProduct(
+			WorldUp,
+			Forward).GetSafeNormal();
 
-	FVector LocalObjective(
+	if (Right.IsNearlyZero())
+	{
+		Right = FVector(
+			0.0f,
+			1.0f,
+			0.0f);
+	}
+
+	const FVector Up =
+		FVector::CrossProduct(
+			Forward,
+			Right).GetSafeNormal();
+
+	const double LocalForward =
+		FVector::DotProduct(
+			ToTarget,
+			Forward);
+
+	const double LocalRight =
+		FVector::DotProduct(
+			ToTarget,
+			Right);
+
+	const double LocalUp =
+		FVector::DotProduct(
+			ToTarget,
+			Up);
+
+	//
+	// IMPORTANT:
+	// StarshipAI::Seek() expects:
+	//
+	// X = right
+	// Y = up
+	// Z = forward
+	//
+	const FVector Result(
 		LocalRight,
 		LocalUp,
 		LocalForward);
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::WorldPointToLegacyLocalObjective] Ship='%hs' ShipLoc=%s WorldPoint=%s WorldDir=%s Forward=%s Right=%s Up=%s LocalObjective(XRightYUpZForward)=%s"),
-		ship ? ship->GetName() : "NULL",
-		*ShipLoc.ToString(),
+		TEXT("[ShipAI::WorldPointToLegacyLocalObjective SEEK_SPACE] Ship='%s' ShipWorld=%s TargetWorld=%s ToTarget=%s Forward=%s Right=%s Up=%s LocalForward=%.3f LocalRight=%.3f LocalUp=%.3f Result=%s Dist=%.2f"),
+		ANSI_TO_TCHAR(ship->GetName()),
+		*ShipWorld.ToString(),
 		*WorldPoint.ToString(),
-		*WorldDir.ToString(),
+		*ToTarget.ToString(),
 		*Forward.ToString(),
 		*Right.ToString(),
 		*Up.ToString(),
-		*LocalObjective.ToString());
+		LocalForward,
+		LocalRight,
+		LocalUp,
+		*Result.ToString(),
+		Dist);
 
-	return LocalObjective;
+	return Result;
 }
-
