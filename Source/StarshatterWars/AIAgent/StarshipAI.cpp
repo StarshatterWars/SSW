@@ -993,7 +993,7 @@ StarshipAI::SelectSubtarget()
             while (++w_iter) {
                 Weapon* w = w_iter.value();
 
-                if (!w || w->Availability() < 35)
+                if (!w || w->GetAvailability() < 35)
                     continue;
 
                 // UE fix: dot product
@@ -1030,7 +1030,7 @@ StarshipAI::SelectSubtarget()
                 while (++w_iter) {
                     Weapon* w = w_iter.value();
 
-                    if (!w || w->Availability() < 35)
+                    if (!w || w->GetAvailability() < 35)
                         continue;
 
                     // UE fix: dot product
@@ -1089,7 +1089,7 @@ StarshipAI::AssessTargetPointDefense()
             while (++w_iter && !tgt_point_defense) {
                 Weapon* w = w_iter.value();
 
-                if (w->Availability() > 35 &&
+                if (w->GetAvailability() > 35 &&
                     FVector::DotProduct(w->GetAimVector(), Svec) > 0.0)
                 {
                     tgt_point_defense = true;

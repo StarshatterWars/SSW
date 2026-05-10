@@ -559,10 +559,10 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 			FlightComputer* NewFLCS =
 				new FlightComputer(
 					SourceComputer->GetComputerType(),
-					SourceComputer->Name());
+					SourceComputer->GetName());
 
-			NewComputer = NewFLCS;
-			SetFLCS(NewFLCS);
+			//NewComputer = NewFLCS;
+			//SetFLCS(NewFLCS);
 
 			if (flcs && design)
 			{
@@ -2440,13 +2440,13 @@ Ship::InflictNetSystemDamage(SimSystem* system, double damage, BYTE dmg_type)
 		const bool dmg_emp = dmg_type == WeaponDesign::DMG_EMP;
 
 		const double sys_damage = damage;
-		const double avail = system->Availability();
+		const double avail = system->GetAvailability();
 
 		if (dmg_normal || (system->IsPowerCritical() && dmg_emp)) {
 			system->ApplyDamage(sys_damage);
 			master_caution = true;
 
-			if ((int)system->GetExplosionType() && (avail - system->Availability()) >= 50) {
+			if ((int)system->GetExplosionType() && (avail - system->GetAvailability()) >= 50) {
 				float scale = design->explosion_scale;
 				if (scale <= 0)
 					scale = design->scale;
@@ -2505,7 +2505,7 @@ Ship::SetNetSystemStatus(SimSystem* system, SYSTEM_STATUS status, int power, int
 			}
 		}
 
-		if (system->Availability() < avail) {
+		if (system->GetAvailability() < avail) {
 			system->SetNetAvail(avail);
 		}
 		else {
@@ -5714,7 +5714,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 		if (system) {
 			const double hull_damage = damage * system->GetHullProtection();
 			const double sys_damage = damage - hull_damage;
-			const double avail = system->Availability();
+			const double avail = system->GetAvailability();
 
 			if (dmg_normal || (system->IsPowerCritical() && dmg_emp)) {
 				system->ApplyDamage(sys_damage);
@@ -5729,7 +5729,7 @@ Ship::InflictSystemDamage(double damage, SimShot* shot, FVector impact)
 						damage -= 100;
 				}
 
-				if ((int)system->GetExplosionType() && (avail - system->Availability()) >= 50) {
+				if ((int)system->GetExplosionType() && (avail - system->GetAvailability()) >= 50) {
 					float scale = design->explosion_scale;
 					if (scale <= 0)
 						scale = design->scale;
@@ -5879,17 +5879,17 @@ Ship::ExecMaintFrame(double seconds)
 				bool started_repairs = false;
 
 				// emergency power routing:
-				if (sys->GetType() == SYSTEM_CATEGORY::POWER_SOURCE && sys->Availability() < 33) {
+				if (sys->GetType() == SYSTEM_CATEGORY::POWER_SOURCE && sys->GetAvailability() < 33) {
 					PowerSource* src = (PowerSource*)sys;
 					PowerSource* dst = 0;
 
 					for (int i = 0; i < reactors.size(); i++) {
 						PowerSource* pwr = reactors[i];
 
-						if (pwr != src && pwr->Availability() > src->Availability()) {
+						if (pwr != src && pwr->GetAvailability() > src->GetAvailability()) {
 							if (!dst ||
-								(pwr->Availability() > dst->Availability() &&
-									pwr->Charge() > dst->Charge()))
+								(pwr->GetAvailability() > dst->GetAvailability() &&
+									pwr->GetCharge() > dst->GetCharge()))
 								dst = pwr;
 						}
 					}
@@ -6471,12 +6471,12 @@ Ship::AIValue() const
 
 	for (int i = 0; i < reactors.size(); i++) {
 		const PowerSource* r = reactors[i];
-		value += r->Value();
+		value += r->GetValue();
 	}
 
 	for (int i = 0; i < drives.size(); i++) {
 		const Drive* d = drives[i];
-		value += d->Value();
+		value += d->GetValue();
 	}
 
 	for (int i = 0; i < weapons.size(); i++) {

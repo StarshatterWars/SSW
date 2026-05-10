@@ -1248,7 +1248,7 @@ FlightDeck::GrantClearance()
 				Ship* dst = recovery_queue[0]->GetShip();
 
 				RadioMessage* clearance = new RadioMessage(dst, carrier, RadioMessageAction::CALL_CLEARANCE);
-				clearance->SetInfo(Text("for final approach to ") + Name());
+				clearance->SetInfo(Text("for final approach to ") + GetName());
 				RadioTraffic::Transmit(clearance);
 			}
 		}
@@ -1260,7 +1260,7 @@ FlightDeck::GrantClearance()
 void
 FlightDeck::PrintQueue()
 {
-	UE_LOG(LogTemp, Log, TEXT("Recovery Queue for %s"), ANSI_TO_TCHAR(Name()));
+	UE_LOG(LogTemp, Log, TEXT("Recovery Queue for %s"), ANSI_TO_TCHAR(GetName()));
 
 	if (recovery_queue.size() < 1) {
 		UE_LOG(LogTemp, Log, TEXT("  (empty)"));
@@ -1365,7 +1365,7 @@ FlightDeck::Update(SimObject* obj)
 const char*
 FlightDeck::GetObserverName() const
 {
-	return Name();
+	return GetName();
 }
 
 // +----------------------------------------------------------------------+

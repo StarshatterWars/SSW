@@ -629,7 +629,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             *RowName.ToString(),
             NewComputer,
             (int32)NewComputer->GetComputerType(),
-            NewComputer->Name(),
+            NewComputer->GetName(),
             NewComputer->Abbreviation(),
             Src.SourceIndex);
         }
@@ -779,7 +779,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             TEXT("[ShipDesignRegistry] NavLight built Row='%s' NavLight=%p Name='%hs' Period=%.2f Scale=%.2f Beacons=%d"),
             *RowName.ToString(),
             NewNavLight,
-            NewNavLight->Name(),
+            NewNavLight->GetName(),
             Src.Period,
             Src.Scale,
             Src.Beacons.Num());
@@ -1021,7 +1021,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             TEXT("[ShipDesignRegistry] LandingGear built Row='%s' Gear=%p Name='%hs' Items=%d"),
             *RowName.ToString(),
             NewGear,
-            NewGear->Name(),
+            NewGear->GetName(),
             Src.GearItems.Num());
     }
 

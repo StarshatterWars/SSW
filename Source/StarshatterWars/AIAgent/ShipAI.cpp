@@ -1666,7 +1666,7 @@ ShipAI::AvoidCollision()
 		{
 			avoid =
 				Avoid(
-					WorldPointToLegacyLocalObjective(obstacle),
+					WorldPointToLegacyLocalObjective(obstacle, false),
 					(float)(
 						ship->GetRadius() +
 						other->GetRadius() +
@@ -1861,7 +1861,7 @@ ShipAI::AvoidTestSingleObject(
 		obstacle = testpt;
 
 		FVector LocalObstacle =
-			WorldPointToLegacyLocalObjective(obstacle);
+			WorldPointToLegacyLocalObjective(obstacle, false);
 
 		/*
 		 * Legacy avoidance assumes:
@@ -1906,7 +1906,7 @@ ShipAI::AvoidCloseObject(SimObject* obj)
 
 	Steer avoid =
 		Flee(
-			WorldPointToLegacyLocalObjective(obstacle));
+			WorldPointToLegacyLocalObjective(obstacle, false));
 
 	avoid.brake = 0.3;
 
@@ -1958,19 +1958,19 @@ ShipAI::SeekTarget()
 		if (element_index > 1)
 		{
 			return Seek(
-				WorldPointToLegacyLocalObjective(objective));
+				WorldPointToLegacyLocalObjective(objective, false));
 		}
 
 		if (farcaster)
 		{
 			return Seek(
-				WorldPointToLegacyLocalObjective(objective));
+				WorldPointToLegacyLocalObjective(objective, false));
 		}
 
 		if (rumor)
 		{
 			return Seek(
-				WorldPointToLegacyLocalObjective(objective));
+				WorldPointToLegacyLocalObjective(objective, false));
 		}
 
 		return NoSteer;
@@ -1983,7 +1983,7 @@ ShipAI::SeekTarget()
 	{
 		Steer result =
 			Seek(
-				WorldPointToLegacyLocalObjective(objective));
+				WorldPointToLegacyLocalObjective(objective, false));
 
 		if (distance < 2000.0)
 		{
@@ -2001,7 +2001,7 @@ ShipAI::SeekTarget()
 		drop_time = 4.0f;
 
 		return Avoid(
-			WorldPointToLegacyLocalObjective(objective),
+			WorldPointToLegacyLocalObjective(objective, false),
 			0.0f);
 	}
 	else if (drop_time > 0.0f)
@@ -2014,7 +2014,7 @@ ShipAI::SeekTarget()
 	//-------------------------------------------------------------
 	Steer Result =
 		Seek(
-			WorldPointToLegacyLocalObjective(objective));
+			WorldPointToLegacyLocalObjective(objective, false));
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[ShipAI::SeekTarget RESULT] Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f"),
@@ -2076,19 +2076,37 @@ ShipAI::CheckTarget()
 	}
 }
 
-FVector ShipAI::WorldPointToLegacyLocalObjective(
-	const FVector& WorldPoint) const
+FVector
+ShipAI::WorldPointToLegacyLocalObjective(
+	const FVector& WorldPoint,
+	bool bPointIsUEWorld) const
 {
 	if (!ship)
 	{
 		return FVector::ZeroVector;
 	}
 
-	const FVector ShipWorld = ship->GetLocation();
+	FVector LegacyWorldPoint =
+		WorldPoint;
 
-	FVector ToTarget = WorldPoint - ShipWorld;
+	if (bPointIsUEWorld)
+	{
+		LegacyWorldPoint = FVector(
+			WorldPoint.Y,
+			WorldPoint.Z,
+			WorldPoint.X);
+	}
 
-	const double Dist = ToTarget.Size();
+	const FVector ShipWorld =
+		ship->GetLocation();
+
+	FVector ToTarget =
+		LegacyWorldPoint - ShipWorld;
+
+	ToTarget.Z = 0.0f;
+
+	const double Dist =
+		ToTarget.Size();
 
 	if (Dist < KINDA_SMALL_NUMBER)
 	{
@@ -2097,31 +2115,30 @@ FVector ShipAI::WorldPointToLegacyLocalObjective(
 
 	ToTarget /= Dist;
 
-	const FVector Forward =
+	FVector Forward =
 		ship->GetHeading().GetSafeNormal();
 
-	const FVector WorldUp(
+	Forward.Z = 0.0f;
+
+	if (!Forward.Normalize())
+	{
+		Forward = FVector(1.0f, 0.0f, 0.0f);
+	}
+
+	const FVector Up(
 		0.0f,
 		0.0f,
 		1.0f);
 
 	FVector Right =
 		FVector::CrossProduct(
-			WorldUp,
+			Up,
 			Forward).GetSafeNormal();
 
 	if (Right.IsNearlyZero())
 	{
-		Right = FVector(
-			0.0f,
-			1.0f,
-			0.0f);
+		Right = FVector(0.0f, 1.0f, 0.0f);
 	}
-
-	const FVector Up =
-		FVector::CrossProduct(
-			Forward,
-			Right).GetSafeNormal();
 
 	const double LocalForward =
 		FVector::DotProduct(
@@ -2134,37 +2151,12 @@ FVector ShipAI::WorldPointToLegacyLocalObjective(
 			Right);
 
 	const double LocalUp =
-		FVector::DotProduct(
-			ToTarget,
-			Up);
+		0.0f;
 
-	//
-	// IMPORTANT:
-	// StarshipAI::Seek() expects:
-	//
-	// X = right
-	// Y = up
-	// Z = forward
-	//
 	const FVector Result(
 		LocalRight,
 		LocalUp,
 		LocalForward);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::WorldPointToLegacyLocalObjective SEEK_SPACE] Ship='%s' ShipWorld=%s TargetWorld=%s ToTarget=%s Forward=%s Right=%s Up=%s LocalForward=%.3f LocalRight=%.3f LocalUp=%.3f Result=%s Dist=%.2f"),
-		ANSI_TO_TCHAR(ship->GetName()),
-		*ShipWorld.ToString(),
-		*WorldPoint.ToString(),
-		*ToTarget.ToString(),
-		*Forward.ToString(),
-		*Right.ToString(),
-		*Up.ToString(),
-		LocalForward,
-		LocalRight,
-		LocalUp,
-		*Result.ToString(),
-		Dist);
 
 	return Result;
 }

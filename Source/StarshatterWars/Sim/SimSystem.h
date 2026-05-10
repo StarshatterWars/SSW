@@ -55,22 +55,23 @@ public:
 
 	int operator==(const SimSystem& s) const { return this == &s; }
 
-	SYSTEM_CATEGORY			GetType()      const { return type; }
-	int						Subtype()      const { return subtype; }
-	const char*				Name()         const { return name; }
-	const char*				Abbreviation() const { return abrv; }
-	SYSTEM_STATUS			GetStatus() const { return Status; }
+	SYSTEM_CATEGORY			GetType()			const { return type; }
+	int						GetSubtype()		const { return subtype; }
+	const char*				GetName()			const { return name; }
+	const char*				Abbreviation()		const { return abrv; }
+	SYSTEM_STATUS			GetStatus()			const { return Status; }
 
 	void              SetName(const char* n) { name = n; }
 	void              SetAbbreviation(const char* a) { abrv = a; }
 	void              SetDesign(SystemDesign* d);
 
-	virtual int       Value()        const { return (int)(max_value * availability * 100); }
-	int               MaxValue()     const { return (int)(max_value * 100); }
+	virtual int       GetValue()        const { return (int)(max_value * availability * 100); }
+	int               GetMaxValue()     const { return (int)(max_value * 100); }
 
-	double            Availability() const { return       availability * 100; }
-	double            Safety()       const { return       safety * 100; }
-	double            Stability()    const { return       stability * 100; }
+	double            GetAvailability() const { return       availability * 100; }
+	double            GetSafety()       const { return       safety * 100; }
+	double            GetStability()    const { return       stability * 100; }
+
 	virtual void      CalcStatus();
 	virtual void      Repair();
 

@@ -1665,7 +1665,7 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 {
 	bool hyperdrive = false;
 
-	if (obj->GetQuantumDrive() && obj->GetQuantumDrive()->Subtype() == QuantumDrive::HYPER)
+	if (obj->GetQuantumDrive() && obj->GetQuantumDrive()->GetSubtype() == QuantumDrive::HYPER)
 		hyperdrive = true;
 
 	jumplist.append(new SimHyper(obj, rgn, loc, type, hyperdrive, fc1, fc2));

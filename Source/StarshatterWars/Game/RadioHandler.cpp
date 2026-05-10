@@ -478,12 +478,12 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 	RadioMessage* approach = new RadioMessage(inbound, ship, RadioMessageAction::CALL_APPROACH);
 
 	if (inbound_slot->Cleared()) {
-		const char* DeckNameAnsi = deck ? deck->Name() : "Unknown Deck";
+		const char* DeckNameAnsi = deck ? deck->GetName() : "Unknown Deck";
 		const FString Info = FString::Printf(TEXT("Cleared to land on %s"), ANSI_TO_TCHAR(DeckNameAnsi));
 		approach->SetInfo(TCHAR_TO_ANSI(*Info));
 	}
 	else if (sequence) {
-		const char* DeckNameAnsi = deck ? deck->Name() : "Unknown Deck";
+		const char* DeckNameAnsi = deck ? deck->GetName() : "Unknown Deck";
 		const FString Info = FString::Printf(TEXT("Sequenced to land %d on %s"), sequence, ANSI_TO_TCHAR(DeckNameAnsi));
 		approach->SetInfo(TCHAR_TO_ANSI(*Info));
 	}

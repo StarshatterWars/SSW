@@ -1279,7 +1279,7 @@ void HUDView::DrawTarget()
 					static DWORD blink = Game::RealTime();
 
 					int blink_delta = Game::RealTime() - blink;
-					sprintf_s(txt, "%s %03d", sys->Abbreviation(), (int)sys->Availability());
+					sprintf_s(txt, "%s %03d", sys->Abbreviation(), (int)sys->GetAvailability());
 
 					switch (sys->GetStatus())
 					{

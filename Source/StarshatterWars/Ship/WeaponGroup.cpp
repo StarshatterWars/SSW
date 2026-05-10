@@ -320,7 +320,7 @@ int WeaponGroup::Value() const
 
 	for (int i = 0; i < weapons.size(); i++) {
 		const Weapon* w = weapons[i];
-		result += w->Value();
+		result += w->GetValue();
 	}
 
 	return result;

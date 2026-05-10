@@ -321,5 +321,5 @@ Farcaster::Update(SimObject* obj)
 const char*
 Farcaster::GetObserverName() const
 {
-	return Name();
+	return GetName();
 }
