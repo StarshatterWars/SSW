@@ -561,8 +561,8 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 					SourceComputer->GetComputerType(),
 					SourceComputer->GetName());
 
-			//NewComputer = NewFLCS;
-			//SetFLCS(NewFLCS);
+			NewComputer = NewFLCS;
+			SetFLCS(NewFLCS);
 
 			if (flcs && design)
 			{
@@ -3441,7 +3441,11 @@ Ship::ExecPhysics(double seconds)
 	// FLCS must run AFTER AI has updated helm/throttle
 	// but BEFORE thrust is calculated.
 	//-------------------------------------------------------------
-	if (flcs)
+	
+	const bool bDebugDisableFLCS =
+    false;
+
+	if (flcs && !bDebugDisableFLCS)
 	{
 		ExecFLCSFrame();
 	}
@@ -4689,16 +4693,16 @@ Ship::IsAirborne() const
 double
 Ship::GetCompassHeading() const
 {
-	const FVector heading = GetHeading();
-	double compass_heading = atan2(FMath::Abs(heading.X), heading.Z);
+	const FVector heading =
+		GetHeading().GetSafeNormal();
 
-	if (heading.X < 0)
-		compass_heading *= -1;
+	double result =
+		atan2(heading.Y, heading.X);
 
-	double result = compass_heading + PI;
-
-	if (result >= 2 * PI)
-		result -= 2 * PI;
+	if (result < 0.0)
+	{
+		result += 2.0 * PI;
+	}
 
 	return result;
 }
@@ -4706,8 +4710,14 @@ Ship::GetCompassHeading() const
 double
 Ship::GetCompassPitch() const
 {
-	const FVector heading = GetHeading();
-	return asin(heading.Y);
+	const FVector heading =
+		GetHeading().GetSafeNormal();
+
+	return asin(
+		FMath::Clamp(
+			heading.Z,
+			-1.0,
+			1.0));
 }
 
 double
@@ -5272,6 +5282,7 @@ Ship::ApplyHelmPitch(double p)
 {
 	SetHelmPitch(helm_pitch - p * PI / 4);
 }
+
 
 void
 Ship::ApplyPitch(double p)

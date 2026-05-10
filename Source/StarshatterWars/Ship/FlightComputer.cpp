@@ -307,16 +307,13 @@ FlightComputer::ExecTrans()
     }
 
     //-------------------------------------------------------------
-    // Helm stabilization
-    //-------------------------------------------------------------
+// Helm stabilization
+//-------------------------------------------------------------
     if (mode == EFLCSMode::HELM &&
         bFlcsOperative)
     {
         const double CompassHeading =
             ship->GetCompassHeading();
-
-        const double CompassPitch =
-            ship->GetCompassPitch();
 
         double HelmError =
             ship->GetHelmHeading() -
@@ -333,8 +330,21 @@ FlightComputer::ExecTrans()
 
         if (!FMath::IsNearlyZero(HelmError))
         {
-            ship->ApplyYaw(HelmError);
+            const double YawCommand =
+                FMath::Clamp(
+                    HelmError,
+                    -1.0,
+                    1.0);
+
+            ship->ApplyHelmYaw(
+                YawCommand);
         }
+
+        //---------------------------------------------------------
+        // Pitch stabilization restored
+        //---------------------------------------------------------
+        const double CompassPitch =
+            ship->GetCompassPitch();
 
         const double PitchError =
             ship->GetHelmPitch() -
@@ -342,7 +352,11 @@ FlightComputer::ExecTrans()
 
         if (!FMath::IsNearlyZero(PitchError))
         {
-            ship->ApplyPitch(PitchError);
+            ship->ApplyPitch(
+                FMath::Clamp(
+                    PitchError,
+                    -1.0,
+                    1.0));
         }
     }
 
@@ -363,23 +377,4 @@ FlightComputer::ExecTrans()
             TransY,
             TransZ);
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[FlightComputer::ExecTrans FINAL] "
-            "Ship='%s' "
-            "ForwardVel=%.3f "
-            "SideVel=%.3f "
-            "UpVel=%.3f "
-            "Final=(%.3f %.3f %.3f) "
-            "Limits=(%.3f %.3f %.3f)"),
-        ANSI_TO_TCHAR(ship->GetName()),
-        ForwardVel,
-        SideVel,
-        UpVel,
-        TransX,
-        TransY,
-        TransZ,
-        trans_x_limit,
-        trans_y_limit,
-        trans_z_limit);
 }
