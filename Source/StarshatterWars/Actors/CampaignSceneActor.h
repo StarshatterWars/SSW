@@ -222,6 +222,7 @@ private:
     void ResolveRuntimeInstructionTargets();
     SimObject* ResolveRuntimeTargetByName(const FString& TargetName) const;
     void FaceRuntimeShipAtTarget(Ship* RuntimeShip);
+
     void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
 
     void TickRuntimeShips(float DeltaSeconds);

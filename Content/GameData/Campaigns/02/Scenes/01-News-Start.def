@@ -175,7 +175,7 @@ element: {
 element: {
    name:      "Kitts"
    design:    "Wolf"
-   mission:   "Misc"
+   mission:   "Patrol"
 
    intel:     "Known"
    count:     1
@@ -184,13 +184,15 @@ element: {
    playable:  false
    region:    "Trellis"
    loc:       (185e3, -280e3, 0)
+
+   navpt:     { cmd: Vector,  speed: 500, rgn: "Trellis", tgt: "Blockade Runner" }
 }
 
 element: {
    name:      "Lovo"
    design:    "Baikal"
    commander: "Kitts"
-   mission:   "Misc"
+   mission:   "Patrol"
 
    intel:     "Known"
    count:     1

@@ -146,5 +146,5 @@ private:
 private:
     bool bBootComplete = false;
     bool bNeedsFirstRun = false;
-    bool bRebuildTables = false;
+    bool bRebuildTables = true;
 };

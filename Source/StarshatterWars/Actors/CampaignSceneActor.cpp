@@ -1690,18 +1690,21 @@ ACampaignSceneActor::LinkRuntimeShipCommanders(
         //-------------------------------------------------------------
         if (CommanderShip->GetElement())
         {
-            ChildShip->SetElement(CommanderShip->GetElement());
+            ChildShip->SetElement(
+                CommanderShip->GetElement());
         }
 
         //-------------------------------------------------------------
         // 2. Leader.
         //-------------------------------------------------------------
-        ChildShip->SetLeader(CommanderShip);
+        ChildShip->SetLeader(
+            CommanderShip);
 
         //-------------------------------------------------------------
         // 3. Ward direct pointer.
         //-------------------------------------------------------------
-        ChildShip->SetWard(CommanderShip);
+        ChildShip->SetWard(
+            CommanderShip);
 
         //-------------------------------------------------------------
         // 4. Ward through AI so formation_delta is also initialized.
@@ -1709,16 +1712,40 @@ ACampaignSceneActor::LinkRuntimeShipCommanders(
         if (ChildShip->GetDirector())
         {
             ShipAI* ChildAI =
-                dynamic_cast<ShipAI*>(ChildShip->GetDirector());
+                dynamic_cast<ShipAI*>(
+                    ChildShip->GetDirector());
 
             if (ChildAI)
             {
-                ChildAI->SetWard(CommanderShip);
+                ChildAI->SetWard(
+                    CommanderShip);
             }
         }
 
+        //-------------------------------------------------------------
+        // 5. Match leader initial motion.
+        // Wingmen should inherit heading and speed.
+        //-------------------------------------------------------------
+        ChildShip->SetHeadingVector(
+            CommanderShip->GetHeading());
+
+        ChildShip->SetHelmHeading(
+            CommanderShip->GetHelmHeading());
+
+        ChildShip->SetVelocity(
+            CommanderShip->GetVelocity());
+
+        ChildShip->SetAngularVelocity(
+            CommanderShip->GetAngularVelocity());
+
+        ChildShip->SetThrottle(
+            CommanderShip->GetThrottle());
+
+        ChildShip->SetThrottleRequest(
+            CommanderShip->GetThrottleRequest());
+
         UE_LOG(LogTemp, Warning,
-            TEXT("[WARD VERIFY LINK] Child='%hs' Leader='%hs' Ward='%hs' Element=%p ElementIndex=%d Director=%p"),
+            TEXT("[WARD VERIFY LINK] Child='%hs' Leader='%hs' Ward='%hs' Element=%p ElementIndex=%d Director=%p ChildHeading=%s LeaderHeading=%s ChildVel=%s LeaderVel=%s"),
             ChildShip ? ChildShip->GetName() : "NULL",
             ChildShip && ChildShip->GetLeader() ?
             ChildShip->GetLeader()->GetName() : "NULL",
@@ -1726,7 +1753,11 @@ ACampaignSceneActor::LinkRuntimeShipCommanders(
             ChildShip->GetWard()->GetName() : "NULL",
             ChildShip ? ChildShip->GetElement() : nullptr,
             ChildShip ? ChildShip->GetElementIndex() : -1,
-            ChildShip ? ChildShip->GetDirector() : nullptr);
+            ChildShip ? ChildShip->GetDirector() : nullptr,
+            ChildShip ? *ChildShip->GetHeading().ToString() : TEXT("NULL"),
+            CommanderShip ? *CommanderShip->GetHeading().ToString() : TEXT("NULL"),
+            ChildShip ? *ChildShip->GetVelocity().ToString() : TEXT("NULL"),
+            CommanderShip ? *CommanderShip->GetVelocity().ToString() : TEXT("NULL"));
     }
 
     UE_LOG(LogTemp, Warning,
@@ -2242,3 +2273,4 @@ void ACampaignSceneActor::FaceRuntimeShipAtTarget(Ship* RuntimeShip)
         FMath::RadiansToDegrees(Heading),
         *ToTarget.ToString());
 }
+
