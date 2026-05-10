@@ -232,14 +232,6 @@ void SimRegion::Deactivate()
 void
 SimRegion::ExecFrame(double seconds)
 {
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SimRegion::ExecFrame ENTER] Region='%hs' Seconds=%.4f Ships=%d Active=%d SimTime=%u"),
-        (const char*)name,
-        seconds,
-        ships.size(),
-        active ? 1 : 0,
-        sim_time);
-
     if (seconds <= 0)
     {
         return;
@@ -253,11 +245,6 @@ SimRegion::ExecFrame(double seconds)
     DestroyShips();
 
     sim_time += (DWORD)(seconds * 1000.0);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SimRegion::ExecFrame EXIT] Region='%hs' NewSimTime=%u"),
-        (const char*)name,
-        sim_time);
 }
 
 // +--------------------------------------------------------------------+
@@ -632,6 +619,12 @@ void SimRegion::UpdateExplosions(double seconds)
 void
 SimRegion::UpdateTracking(double seconds)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SimRegion::UpdateTracking] ENTER Region='%hs' Ships=%d Active=%d"),
+        GetName(),
+        ships.size(),
+        active ? 1 : 0);
+
     (void)seconds;
 
     for (int i = 0; i < ships.size(); ++i)
@@ -664,13 +657,21 @@ SimRegion::UpdateTracking(double seconds)
                 continue;
             }
 
-            observer->FindContact(target);
-        }
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SimRegion::UpdateTracking] PAIR Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
+                GetName(),
+                observer ? observer->GetName() : "NULL",
+                target ? target->GetName() : "NULL",
+                observer ? observer->GetIFF() : -1,
+                target ? target->GetIFF() : -1);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SimRegion::UpdateTracking] Ship='%hs' Contacts=%d"),
-            observer->GetName(),
-            observer->ContactList().size());
+            observer->FindContact(target);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[SimRegion::UpdateTracking] CONTACTS Observer='%hs' Contacts=%d"),
+                observer->GetName(),
+                observer->GetContactList().size());
+        }
     }
 }
 

@@ -112,7 +112,7 @@ void TacticalAI::ExecFrame(double secs)
 			element_index,
 			navpt,
 			orders,
-			ship->ContactList().size(),
+			ship->GetContactList().size(),
 			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL");
 
 		CheckOrders();
@@ -152,7 +152,7 @@ void TacticalAI::ExecFrame(double secs)
 	UE_LOG(LogTemp, Warning,
 		TEXT("[TacticalAI::ExecFrame] Ship='%hs' Contacts=%d ShipTarget='%hs'"),
 		ship ? ship->GetName() : "NULL",
-		ship ? ship->ContactList().size() : -1,
+		ship ? ship->GetContactList().size() : -1,
 		ship && ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
 }
 
@@ -579,7 +579,7 @@ void TacticalAI::SelectTargetDirected(Ship* tgt)
 					obj_tgt = (Ship*)obj_sim_obj;
 
 				if (obj_tgt) {
-					ListIter<SimContact> contact = ship->ContactList();
+					ListIter<SimContact> contact = ship->GetContactList();
 					while (++contact && !potential_target) {
 						Ship* test = contact->GetShip();
 
@@ -656,7 +656,7 @@ TacticalAI::SelectTargetOpportunity()
 			}
 		}
 
-		ListIter<SimContact> ContactIter = ship->ContactList();
+		ListIter<SimContact> ContactIter = ship->GetContactList();
 		while (++ContactIter) {
 			Ship* ContactShip = ContactIter->GetShip();
 			SimShot* ContactShot = ContactIter->GetShot();
@@ -732,7 +732,7 @@ TacticalAI::SelectTargetOpportunity()
 	else {
 		List<Ship> WardThreats;
 
-		ListIter<SimContact> ContactIter = ship->ContactList();
+		ListIter<SimContact> ContactIter = ship->GetContactList();
 		while (++ContactIter) {
 			Ship* ContactShip = ContactIter->GetShip();
 
@@ -872,7 +872,7 @@ void TacticalAI::FindThreat()
 
 	const DWORD THREAT_REACTION_TIME = 1000; // 1 second
 
-	ListIter<SimContact> iter = ship->ContactList();
+	ListIter<SimContact> iter = ship->GetContactList();
 
 	while (++iter) {
 		SimContact* contact = iter.value();
@@ -941,7 +941,7 @@ void TacticalAI::FindSupport()
 	Ship* support = 0;
 	double support_dist = 1e9;
 
-	ListIter<SimContact> contact = ship->ContactList();
+	ListIter<SimContact> contact = ship->GetContactList();
 
 	while (++contact) {
 		if (contact->GetShip() && contact->GetIFF(ship) == ship->GetIFF()) {

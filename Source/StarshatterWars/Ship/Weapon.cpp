@@ -500,7 +500,7 @@ void Weapon::SelectTarget()
     if (ammo && enabled && (availability > crit_level)) {
         ZeroAim();
 
-        ListIter<SimContact> contact = ship->ContactList();
+        ListIter<SimContact> contact = ship->GetContactList();
 
         // lock onto any threatening shots first (if we can):
         if (design->target_type & (int)CLASSIFICATION::DRONE) {

@@ -295,7 +295,7 @@ CameraManager::CycleViewObject()
 	Ship* const Current = external_ship;
 	external_ship = nullptr;
 
-	ListIter<SimContact> iter = ship->ContactList();
+	ListIter<SimContact> iter = ship->GetContactList();
 	while (++iter && !external_ship) {
 		SimContact* c = iter.value();
 		Ship* c_ship = c ? c->GetShip() : nullptr;

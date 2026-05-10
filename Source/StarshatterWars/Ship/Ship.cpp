@@ -1758,14 +1758,14 @@ Ship::RepairTeams() const
 // +--------------------------------------------------------------------+
 
 int
-Ship::NumContacts() const
+Ship::GetNumContacts() const
 {
 	// cast-away const:
-	return ((Ship*)this)->ContactList().size();
+	return ((Ship*)this)->GetContactList().size();
 }
 
 List<SimContact>&
-Ship::ContactList()
+Ship::GetContactList()
 {
 	if (region)
 		return region->GetTrackList(GetIFF());
@@ -1777,18 +1777,59 @@ Ship::ContactList()
 SimContact*
 Ship::FindContact(SimObject* s) const
 {
-	if (!s) return 0;
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::FindContact] ENTER Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d ObserverRegion='%hs' TargetRegion='%hs' Sensor=%p Contacts=%d"),
+		GetName(),
+		s ? s->GetName() : "NULL",
+		GetIFF(),
+		s && s->GetType() == SimObject::SIM_SHIP ? ((Ship*)s)->GetIFF() : -1,
+		GetRegion() ? GetRegion()->GetName() : "NULL",
+		s && s->GetRegion() ? s->GetRegion()->GetName() : "NULL",
+		((Ship*)this)->GetSensor(),
+		((Ship*)this)->GetContactList().size());
 
-	ListIter<SimContact> c_iter = ((Ship*)this)->ContactList();
-	while (++c_iter) {
+	if (!s)
+	{
+		return 0;
+	}
+
+	ListIter<SimContact> c_iter = ((Ship*)this)->GetContactList();
+
+	while (++c_iter)
+	{
 		SimContact* c = c_iter.value();
 
+		if (!c)
+		{
+			continue;
+		}
+
 		if (c->GetShip() == s)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship::FindContact] FOUND SHIP Observer='%hs' Target='%hs'"),
+				GetName(),
+				s->GetName());
+
 			return c;
+		}
 
 		if (c->GetShot() == s)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Ship::FindContact] FOUND SHOT Observer='%hs' Target='%hs'"),
+				GetName(),
+				s->GetName());
+
 			return c;
+		}
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::FindContact] NOT FOUND Observer='%hs' Target='%hs' Contacts=%d"),
+		GetName(),
+		s->GetName(),
+		((Ship*)this)->GetContactList().size());
 
 	return 0;
 }
@@ -2530,7 +2571,7 @@ Ship::CheckFriendlyFire()
 	}
 
 	// for each friendly ship within some kind of weapons range,
-	ListIter<SimContact> c_iter = ContactList();
+	ListIter<SimContact> c_iter = GetContactList();
 	while (++c_iter) {
 		SimContact* c = c_iter.value();
 		Ship* cship = c->GetShip();
@@ -2876,9 +2917,6 @@ Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 		}
 	}
 
-	//if (!from_net && NetGame::GetInstance())
-	//	NetUtil::SendObjTarget(this);
-
 	// track engagement:
 	if (target && target->GetType() == SimObject::SIM_SHIP) {
 		SimElement* elem = GetElement();
@@ -3161,7 +3199,7 @@ Ship::ExecSensors(double seconds)
 	// can we still see our target?
 	if (target) {
 		int target_found = 0;
-		ListIter<SimContact> c_iter = ContactList();
+		ListIter<SimContact> c_iter = GetContactList();
 		while (++c_iter) {
 			SimContact* c = c_iter.value();
 
@@ -4361,7 +4399,7 @@ Ship::IsInCombat()
 
 	bool combat = false;
 
-	ListIter<SimContact> c_iter = ContactList();
+	ListIter<SimContact> c_iter = GetContactList();
 	while (++c_iter) {
 		SimContact* c = c_iter.value();
 		Ship* cship = c->GetShip();

@@ -112,9 +112,9 @@ StarshipTacticalAI::FindThreat()
     UE_LOG(LogTemp, Warning,
         TEXT("[TACTICAL CONTACTS] Ship='%hs' ContactCount=%d"),
         ship ? ship->GetName() : "NULL",
-        ship ? ship->ContactList().size() : 0);
+        ship ? ship->GetContactList().size() : 0);
 
-    ListIter<SimContact> iter = ship->ContactList();
+    ListIter<SimContact> iter = ship->GetContactList();
 
     while (++iter)
     {
@@ -269,7 +269,7 @@ StarshipTacticalAI::FindSupport()
     double support_dist = 1e9;
     (void)support_dist; // preserved from original; not used by legacy logic
 
-    ListIter<SimContact> c_iter = ship->ContactList();
+    ListIter<SimContact> c_iter = ship->GetContactList();
 
     while (++c_iter) {
         SimContact* contact = c_iter.value();

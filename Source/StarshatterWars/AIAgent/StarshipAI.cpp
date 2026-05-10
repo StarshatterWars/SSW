@@ -100,7 +100,7 @@ StarshipAI::~StarshipAI()
 
 // +--------------------------------------------------------------------+
 
-/*void
+void
 StarshipAI::FindObjective()
 {
     distance = 0;
@@ -248,20 +248,6 @@ StarshipAI::FindObjective()
         *objective.ToString(),
         *obj_w.ToString(),
         (double)distance);
-}*/ 
-
-void
-StarshipAI::FindObjective()
-{
-    ShipAI::FindObjective();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::FindObjective PASS THROUGH] Ship='%hs' ShipLoc=%s ObjW=%s Objective=%s Distance=%.2f"),
-        ship ? ship->GetName() : "NULL",
-        ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
-        *obj_w.ToString(),
-        *objective.ToString(),
-        distance);
 }
 
 // +--------------------------------------------------------------------+

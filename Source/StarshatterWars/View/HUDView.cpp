@@ -1006,7 +1006,7 @@ HUDView::DrawContactMarkers()
 		return;
 
 	int                  index = 0;
-	ListIter<SimContact> contact = ship->ContactList();
+	ListIter<SimContact> contact = ship->GetContactList();
 
 	// draw own sensor contacts:
 	while (++contact) {

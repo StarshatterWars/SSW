@@ -137,7 +137,7 @@ GroundAI::SelectTarget()
 
     Ship* current_ship_target = 0;
 
-    ListIter<SimContact> c_iter = ship->ContactList();
+    ListIter<SimContact> c_iter = ship->GetContactList();
     while (++c_iter) {
         SimContact* contact = c_iter.value();
         int      c_iff = contact->GetIFF(ship);

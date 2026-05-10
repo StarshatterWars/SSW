@@ -170,6 +170,14 @@ const char* Sensor::GetObserverName() const
 
 void Sensor::ExecFrame(double seconds)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Sensor::ExecFrame] Ship='%hs' Power=%d Energy=%.2f AIMode=%d Region='%hs'"),
+        ship ? ship->GetName() : "NULL",
+        IsPowerOn() ? 1 : 0,
+        energy,
+        ship ? ship->GetAIMode() : -1,
+        ship && ship->GetRegion() ? ship->GetRegion()->GetName() : "NULL");
+
     if (Game::Paused())
         return;
 
@@ -300,49 +308,130 @@ void Sensor::ExecFrame(double seconds)
 
 // +--------------------------------------------------------------------+
 
-void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
+void
+Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 {
-    if (c_ship->IsNetObserver())
+    if (!ship || !c_ship)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Sensor::ProcessContact] NULL Observer=%p Contact=%p"),
+            ship,
+            c_ship);
+
         return;
+    }
 
-    double sensor_range = GetBeamRange();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Sensor::ProcessContact ENTER] Observer='%hs' Contact='%hs' ObsIFF=%d ContactIFF=%d ObsRegion='%hs' ContactRegion='%hs'"),
+        ship->GetName(),
+        c_ship->GetName(),
+        ship->GetIFF(),
+        c_ship->GetIFF(),
+        ship->GetRegion() ? ship->GetRegion()->GetName() : "NULL",
+        c_ship->GetRegion() ? c_ship->GetRegion()->GetName() : "NULL");
 
-    // translate:
-    const Camera* cam = &ship->GetCam();
-    FVector targ_pt = c_ship->GetLocation() - ship->GetLocation();
+    if (c_ship->IsNetObserver())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Sensor::ProcessContact] REJECT NetObserver Contact='%hs'"),
+            c_ship->GetName());
 
-    // rotate:
-    const double tx = FVector::DotProduct(targ_pt, cam->vrt());
-    const double ty = FVector::DotProduct(targ_pt, cam->vup());
-    const double tz = FVector::DotProduct(targ_pt, cam->vpn());
+        return;
+    }
 
-    // convert to spherical coords:
-    const double rng = targ_pt.Size();
-    double az = asin(fabs(tx) / rng);
-    double el = asin(fabs(ty) / rng);
+    double sensor_range =
+        GetBeamRange();
+
+    //-------------------------------------------------------------
+    // Translate
+    //-------------------------------------------------------------
+    const Camera* cam =
+        &ship->GetCam();
+
+    FVector targ_pt =
+        c_ship->GetLocation() - ship->GetLocation();
+
+    //-------------------------------------------------------------
+    // Rotate
+    //-------------------------------------------------------------
+    const double tx =
+        FVector::DotProduct(targ_pt, cam->vrt());
+
+    const double ty =
+        FVector::DotProduct(targ_pt, cam->vup());
+
+    const double tz =
+        FVector::DotProduct(targ_pt, cam->vpn());
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Sensor::Basis] Observer='%hs' Loc=%s Contact='%hs' ContactLoc=%s Delta=%s VRT=%s VUP=%s VPN=%s TX=%.2f TY=%.2f TZ=%.2f"),
+        ship->GetName(),
+        *ship->GetLocation().ToString(),
+        c_ship->GetName(),
+        *c_ship->GetLocation().ToString(),
+        *targ_pt.ToString(),
+        *cam->vrt().ToString(),
+        *cam->vup().ToString(),
+        *cam->vpn().ToString(),
+        tx,
+        ty,
+        tz);
+
+    //-------------------------------------------------------------
+    // Spherical coords
+    //-------------------------------------------------------------
+    const double rng =
+        targ_pt.Size();
+
+    double az =
+        asin(fabs(tx) / rng);
+
+    double el =
+        asin(fabs(ty) / rng);
+
     if (tx < 0)
+    {
         az = -az;
+    }
+
     if (ty < 0)
+    {
         el = -el;
+    }
 
-    double min_range = rng;
-    Drone* probe = ship->GetProbe();
-    bool probescan = false;
+    double min_range =
+        rng;
 
-    if (ship->GetIFF() == c_ship->GetIFF()) {
+    Drone* probe =
+        ship->GetProbe();
+
+    bool probescan =
+        false;
+
+    if (ship->GetIFF() == c_ship->GetIFF())
+    {
         min_range = 1;
     }
-    else if (probe) {
-        FVector probe_pt = c_ship->GetLocation() - probe->GetLocation();
-        double prng = probe_pt.Size();
+    else if (probe)
+    {
+        FVector probe_pt =
+            c_ship->GetLocation() - probe->GetLocation();
 
-        if (prng < probe->GetDesign()->GetLethalRadius() && prng < rng) {
+        double prng =
+            probe_pt.Size();
+
+        if (prng < probe->GetDesign()->GetLethalRadius() &&
+            prng < rng)
+        {
             min_range = prng;
             probescan = true;
         }
     }
 
-    bool vis = tz > 1 && (c_ship->GetRadius() / rng > 0.001);
+    bool vis =
+        tz > 1 &&
+        (c_ship->GetRadius() / rng > 0.001);
+
     bool threat =
         (c_ship->GetLife() != 0 &&
             c_ship->GetIFF() &&
@@ -350,15 +439,52 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
             c_ship->GetEMCON() > 2 &&
             c_ship->IsTracking(ship));
 
-    if (!threat) {
-        if (mode == ESensorMode::GM && !c_ship->IsGroundUnit())
-            return;
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Sensor::ProcessContact CHECK] Observer='%hs' Contact='%hs' Range=%.2f SensorRange=%.2f MinRange=%.2f TZ=%.2f Vis=%d Threat=%d"),
+        ship->GetName(),
+        c_ship->GetName(),
+        rng,
+        sensor_range,
+        min_range,
+        tz,
+        vis ? 1 : 0,
+        threat ? 1 : 0);
 
-        if (mode != ESensorMode::GM && c_ship->IsGroundUnit())
-            return;
+    if (!threat)
+    {
+        if (mode == ESensorMode::GM &&
+            !c_ship->IsGroundUnit())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Sensor::ProcessContact] REJECT GM NonGround '%hs'"),
+                c_ship->GetName());
 
-        if (min_range > sensor_range || min_range > c_ship->Design()->detet) {
-            if (c_ship == target) {
+            return;
+        }
+
+        if (mode != ESensorMode::GM &&
+            c_ship->IsGroundUnit())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Sensor::ProcessContact] REJECT NonGM Ground '%hs'"),
+                c_ship->GetName());
+
+            return;
+        }
+
+        if (min_range > sensor_range ||
+            min_range > c_ship->Design()->detet)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Sensor::ProcessContact] REJECT Range Observer='%hs' Contact='%hs' MinRange=%.2f SensorRange=%.2f Detect=%.2f"),
+                ship->GetName(),
+                c_ship->GetName(),
+                min_range,
+                sensor_range,
+                c_ship->Design()->detet);
+
+            if (c_ship == target)
+            {
                 ship->DropTarget();
                 Ignore(target);
                 target = 0;
@@ -368,82 +494,143 @@ void Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         }
     }
 
-    // clip:
-    if (threat || vis || mode >= ESensorMode::PST || tz > 1) {
-
-        // correct az/el for back hemisphere:
-        if (tz < 0) {
+    //-------------------------------------------------------------
+    // Clip
+    //-------------------------------------------------------------
+    if (threat || vis || mode >= ESensorMode::PST || tz > 1)
+    {
+        if (tz < 0)
+        {
             if (az < 0)
+            {
                 az = -PI - az;
+            }
             else
+            {
                 az = PI - az;
+            }
         }
 
         double d_pas = 0;
         double d_act = 0;
-        double effectivity = energy / capacity * availability;
 
-        // did this contact get scanned this frame?
-        if (effectivity > SENSOR_THRESHOLD) {
-            if (az >= az1 && az <= az2 && (mode >= ESensorMode::PST || fabs(el) < 45 * DEGREES)) {
-                double passive_range_limit = 500e3;
+        double effectivity =
+            energy / capacity * availability;
+
+        if (effectivity > SENSOR_THRESHOLD)
+        {
+            if (az >= az1 &&
+                az <= az2 &&
+                (mode >= ESensorMode::PST || fabs(el) < 45 * DEGREES))
+            {
+                double passive_range_limit =
+                    500e3;
+
                 if (c_ship->Design()->detet > passive_range_limit)
-                    passive_range_limit = c_ship->Design()->detet;
+                {
+                    passive_range_limit =
+                        c_ship->Design()->detet;
+                }
 
-                d_pas = c_ship->PCS() * effectivity * (1 - min_range / passive_range_limit);
+                d_pas =
+                    c_ship->PCS() *
+                    effectivity *
+                    (1 - min_range / passive_range_limit);
 
                 if (d_pas < 0)
+                {
                     d_pas = 0;
-
-                if (probescan) {
-                    double max_range = probe->GetDesign()->GetLethalRadius();
-                    d_act = c_ship->ACS() * (1 - min_range / max_range);
                 }
-                else if (mode != ESensorMode::PAS && mode != ESensorMode::PST) {
-                    double max_range = sensor_range;
-                    d_act = c_ship->ACS() * effectivity * (1 - min_range / max_range);
+
+                if (probescan)
+                {
+                    double max_range =
+                        probe->GetDesign()->GetLethalRadius();
+
+                    d_act =
+                        c_ship->ACS() *
+                        (1 - min_range / max_range);
+                }
+                else if (mode != ESensorMode::PAS &&
+                    mode != ESensorMode::PST)
+                {
+                    double max_range =
+                        sensor_range;
+
+                    d_act =
+                        c_ship->ACS() *
+                        effectivity *
+                        (1 - min_range / max_range);
                 }
 
                 if (d_act < 0)
+                {
                     d_act = 0;
+                }
             }
         }
 
-        // yes, update or add new contact:
-        if (threat || vis || d_pas > SENSOR_THRESHOLD || d_act > SENSOR_THRESHOLD) {
-            SimElement* elem = c_ship->GetElement();
-            CombatUnit* unit = c_ship->GetCombatUnit();
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Sensor::ProcessContact SIGNAL] Observer='%hs' Contact='%hs' d_pas=%.4f d_act=%.4f Threshold=%.4f"),
+            ship->GetName(),
+            c_ship->GetName(),
+            d_pas,
+            d_act,
+            SENSOR_THRESHOLD);
 
-            if (elem && ship && elem->GetIFF() != ship->GetIFF() && elem->IntelLevel() < Intel::LOCATED) {
-                elem->SetIntelLevel(Intel::LOCATED);
-            }
+        if (threat ||
+            vis ||
+            d_pas > SENSOR_THRESHOLD ||
+            d_act > SENSOR_THRESHOLD)
+        {
+            SimContact* c =
+                FindContact(c_ship);
 
-            if (unit && ship && unit->GetIFF() != ship->GetIFF()) {
-                CombatGroup* group = unit->GetCombatGroup();
-
-                if (group && group->GetIntelLevel() < Intel::LOCATED &&
-                    group->GetIntelLevel() > Intel::RESERVE) {
-                    group->SetIntelLevel(Intel::LOCATED);
-                }
-            }
-
-            SimContact* c = FindContact(c_ship);
-
-            if (!c) {
+            if (!c)
+            {
                 c = new SimContact(c_ship, 0.0f, 0.0f);
+
                 contacts.append(c);
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[Sensor::ProcessContact ADD] Observer='%hs' Contact='%hs' Contacts=%d"),
+                    ship->GetName(),
+                    c_ship->GetName(),
+                    contacts.size());
             }
 
-            // update track:
-            if (c) {
+            if (c)
+            {
                 c->loc = c_ship->GetLocation();
                 c->d_pas = (float)d_pas;
                 c->d_act = (float)d_act;
                 c->probe = probescan;
 
                 c->UpdateTrack();
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[Sensor::ProcessContact TRACK] Observer='%hs' Contact='%hs' d_pas=%.4f d_act=%.4f"),
+                    ship->GetName(),
+                    c_ship->GetName(),
+                    d_pas,
+                    d_act);
             }
         }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[Sensor::ProcessContact] REJECT Threshold Observer='%hs' Contact='%hs'"),
+                ship->GetName(),
+                c_ship->GetName());
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Sensor::ProcessContact] REJECT Clip Observer='%hs' Contact='%hs' TZ=%.2f"),
+            ship->GetName(),
+            c_ship->GetName(),
+            tz);
     }
 }
 
@@ -602,7 +789,7 @@ SimObject* Sensor::LockTarget(int obj_type, bool closest, bool hostile)
     }
 
     SimObject* test = 0;
-    ListIter<SimContact> contact(ship->ContactList());
+    ListIter<SimContact> contact(ship->GetContactList());
 
     List<TargetOffset> targets;
 
@@ -707,7 +894,7 @@ SimObject* Sensor::LockTarget(SimObject* candidate)
 
     int candidate_type = candidate->GetType();
     SimObject* test = 0;
-    ListIter<SimContact> contact(ship->ContactList());
+    ListIter<SimContact> contact(ship->GetContactList());
 
     while (++contact) {
         if (candidate_type == SimObject::SIM_SHIP)
@@ -742,7 +929,7 @@ SimObject* Sensor::AcquirePassiveTargetForMissile()
     SimObject* pick = 0;
     double min_off = 2;
 
-    ListIter<SimContact> contact(ship->ContactList());
+    ListIter<SimContact> contact(ship->GetContactList());
 
     while (++contact) {
         SimObject* test = contact->GetShip();
@@ -776,7 +963,7 @@ SimObject* Sensor::AcquireActiveTargetForMissile()
     SimObject* pick = 0;
     double min_off = 2;
 
-    ListIter<SimContact> contact(ship->ContactList());
+    ListIter<SimContact> contact(ship->GetContactList());
 
     while (++contact) {
         SimObject* test = contact->GetShip();

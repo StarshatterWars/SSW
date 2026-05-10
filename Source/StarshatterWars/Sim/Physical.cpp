@@ -677,8 +677,14 @@ void Physical::SetTransZ(double t)
 
 // +--------------------------------------------------------------------+
 
-void Physical::SetHeading(double r, double p, double y)
+void
+Physical::SetHeading(double r, double p, double y)
 {
+	//-------------------------------------------------------------
+	// Legacy behavior:
+	// SetHeading is an incremental/relative camera aim operation.
+	// Do not use this for initial spawn orientation in UE.
+	//-------------------------------------------------------------
 	roll = (float)r;
 	pitch = (float)p;
 	yaw = (float)y;
@@ -696,16 +702,35 @@ void Physical::CloneCam(const Camera& c)
 	cam.Clone(c);
 }
 
-void Physical::SetAbsoluteOrientation(double r, double p, double y)
+void
+Physical::SetAbsoluteOrientation(double r, double p, double y)
 {
+	//-------------------------------------------------------------
+	// UE port safe:
+	// Rebuild orientation from a clean camera basis at current location.
+	// Use this for spawn/initial placement.
+	//-------------------------------------------------------------
 	roll = (float)r;
 	pitch = (float)p;
 	yaw = (float)y;
 
 	const FVector L = GetLocation();
+
 	Camera Work(L.X, L.Y, L.Z);
 	Work.Aim(r, p, y);
+
 	cam.Clone(Work);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Physical::SetAbsoluteOrientation] Obj='%hs' R=%.4f P=%.4f Y=%.4f Loc=%s VPN=%s VUP=%s VRT=%s"),
+		name,
+		r,
+		p,
+		y,
+		*cam.Pos().ToString(),
+		*cam.vpn().ToString(),
+		*cam.vup().ToString(),
+		*cam.vrt().ToString());
 }
 
 void Physical::ApplyRoll(double r)

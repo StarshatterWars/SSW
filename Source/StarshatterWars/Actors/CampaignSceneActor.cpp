@@ -1266,14 +1266,27 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     const double HeadingRad =
         FMath::DegreesToRadians((double)Elem.Heading);
 
-    NewShip->SetHeading(0.0, 0.0, HeadingRad + PI);
+    //-------------------------------------------------------------
+    // Legacy combat plane is X/Y.
+    // Seed vpn() into that plane using LookAt.
+    //-------------------------------------------------------------
+    const FVector ForwardPoint =
+        WorldLoc + FVector(
+            FMath::Cos(HeadingRad),
+            FMath::Sin(HeadingRad),
+            0.0f) * 10000.0f;
+
+    NewShip->LookAt(ForwardPoint);
+
     NewShip->SetHelmHeading(HeadingRad);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d"),
+        TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d ForwardPoint=%s VPN=%s"),
         *Elem.Name,
         *WorldLoc.ToString(),
-        Elem.Heading);
+        Elem.Heading,
+        *ForwardPoint.ToString(),
+        *NewShip->GetHeading().ToString());
 
     //-------------------------------------------------------------
     // 6. Initial state

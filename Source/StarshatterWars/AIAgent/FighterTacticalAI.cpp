@@ -245,7 +245,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 	if (ship->Class() == CLASSIFICATION::ATTACK)
 		ClassLimit = (int)CLASSIFICATION::DESTROYER;
 
-	ListIter<SimContact> ContactIter = ship->ContactList();
+	ListIter<SimContact> ContactIter = ship->GetContactList();
 	while (++ContactIter) {
 		SimContact* Contact = ContactIter.value();
 		if (!Contact)
@@ -488,7 +488,7 @@ FighterTacticalAI::FindThreat()
 	SimShot* threat_missile = 0;
 	double      threat_dist = 1e9;
 
-	ListIter<SimContact> c_iter = ship->ContactList();
+	ListIter<SimContact> c_iter = ship->GetContactList();
 
 	while (++c_iter) {
 		SimContact* contact = c_iter.value();

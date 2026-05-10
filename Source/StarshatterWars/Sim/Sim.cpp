@@ -1676,14 +1676,6 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Sim::ExecFrame ENTER] Delta=%.4f Regions=%d ActiveRegion=%p ActiveName='%hs' Elements=%d"),
-		DeltaSeconds,
-		regions.size(),
-		active_region,
-		active_region ? active_region->GetName() : "NULL",
-		elements.size());
-
 	if (first_frame) {
 		first_frame = false;
 	}

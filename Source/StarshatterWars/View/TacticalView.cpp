@@ -555,9 +555,9 @@ bool TacticalView::SelectRect(const Rect& R)
     if (R.w > 8 || R.h > 8)
         SimPtr->ClearSelection();
 
-    List<SimContact>& ContactList = PlayerShip->ContactList();
+    List<SimContact>& ContactList = PlayerShip->GetContactList();
 
-    for (int32 i = 0; i < PlayerShip->NumContacts(); i++)
+    for (int32 i = 0; i < PlayerShip->GetNumContacts(); i++)
     {
         Ship* Test = ContactList[i] ? ContactList[i]->GetShip() : nullptr;
         if (!Test || Test == PlayerShip)
@@ -617,9 +617,9 @@ Ship* TacticalView::WillSelectAt(int32 X, int32 Y)
     if (!PlayerShip)
         return nullptr;
 
-    List<SimContact>& ContactList = PlayerShip->ContactList();
+    List<SimContact>& ContactList = PlayerShip->GetContactList();
 
-    for (int32 i = 0; i < PlayerShip->NumContacts(); i++)
+    for (int32 i = 0; i < PlayerShip->GetNumContacts(); i++)
     {
         Ship* Test = ContactList[i] ? ContactList[i]->GetShip() : nullptr;
         if (!Test)

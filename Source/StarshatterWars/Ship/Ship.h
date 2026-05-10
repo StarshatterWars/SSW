@@ -339,8 +339,8 @@ public:
     virtual void      DoEMCON();
     virtual double    PCS() const;
     virtual double    ACS() const;
-    int               NumContacts() const;   // actual sensor contacts
-    List<SimContact>& ContactList();
+    int               GetNumContacts() const;   // actual sensor contacts
+    List<SimContact>& GetContactList();
 
     virtual ESensorMode GetSensorMode() const;
     virtual void        SetSensorMode(ESensorMode mode);

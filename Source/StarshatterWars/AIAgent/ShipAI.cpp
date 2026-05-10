@@ -288,7 +288,7 @@ ShipAI::ExecFrame(double secs)
 		tactical,
 		GetType(),
 		target,
-		ship ? ship->ContactList().size() : -1,
+		ship ? ship->GetContactList().size() : -1,
 		ship && ship->GetRegion() ? ANSI_TO_TCHAR(ship->GetRegion()->GetName()) : TEXT("NULL"));
 
 	if (drop_time > 0)
@@ -373,7 +373,7 @@ ShipAI::ExecFrame(double secs)
 			TEXT("[ShipAI::ExecFrame] CALL Tactical Ship='%s' Tactical=%p Contacts=%d"),
 			ANSI_TO_TCHAR(ship->GetName()),
 			tactical,
-			ship->ContactList().size());
+			ship->GetContactList().size());
 
 		tactical->ExecFrame(seconds);
 
@@ -462,7 +462,7 @@ ShipAI::ExecFrame(double secs)
 		TEXT("[ShipAI::ExecFrame] END Ship='%s' Target=%p Contacts=%d"),
 		ANSI_TO_TCHAR(ship->GetName()),
 		target,
-		ship->ContactList().size());
+		ship->GetContactList().size());
 }
 
 // +--------------------------------------------------------------------+
@@ -1284,30 +1284,79 @@ ShipAI::Navigator()
 	accumulator.Clear();
 	magnitude = 0;
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::Navigator] ENTER Ship='%hs' Target='%hs' Rumor='%hs' Navpt=%p Hold=%d Distance=%.2f Objective=%s"),
+		ship ? ship->GetName() : "NULL",
+		target ? target->GetName() : "NULL",
+		rumor ? rumor->GetName() : "NULL",
+		navpt,
+		hold ? 1 : 0,
+		distance,
+		*objective.ToString());
+
 	hold = false;
+
 	if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
 		(navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
+	{
 		hold = true;
+	}
 
 	ship->SetFLCSMode(EFLCSMode::HELM);
 
 	if (target)
+	{
 		ship->SetDirectorInfo("Seek Target");
+	}
 	else if (rumor)
+	{
 		ship->SetDirectorInfo("Seek Rumor");
+	}
 	else
+	{
 		ship->SetDirectorInfo("Cruise");
+	}
 
 	Accumulate(AvoidCollision());
 	Accumulate(AvoidTerrain());
 
 	if (!hold)
-		Accumulate(SeekTarget());
+	{
+		Steer Seek =
+			SeekTarget();
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::Navigator] SEEK Ship='%hs' Target='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d"),
+			ship ? ship->GetName() : "NULL",
+			target ? target->GetName() : "NULL",
+			Seek.yaw,
+			Seek.pitch,
+			Seek.brake,
+			Seek.stop ? 1 : 0);
+
+		Accumulate(Seek);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::Navigator] HOLD Ship='%hs'"),
+			ship ? ship->GetName() : "NULL");
+	}
 
 	HelmControl();
 	ThrottleControl();
 	FireControl();
 	AdjustDefenses();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::Navigator] EXIT Ship='%hs' Target='%hs' HelmHeading=%.4f HelmPitch=%.4f Throttle=%.2f Request=%.2f FLCSMode=%d"),
+		ship ? ship->GetName() : "NULL",
+		target ? target->GetName() : "NULL",
+		ship ? ship->GetHelmHeading() : 0.0,
+		ship ? ship->GetHelmPitch() : 0.0,
+		ship ? ship->GetThrottle() : 0.0,
+		ship ? ship->GetThrottleRequest() : 0.0,
+		ship ? static_cast<int32>(ship->GetFLCSMode()) : -1);
 }
 
 // +--------------------------------------------------------------------+
@@ -1470,7 +1519,7 @@ ShipAI::AvoidCollision()
 	bearing.Normalize();
 
 	bool              found = false;
-	ListIter<SimContact> contact = ship->ContactList();
+	ListIter<SimContact> contact = ship->GetContactList();
 
 	// check current obstacle first:
 	if (other) {

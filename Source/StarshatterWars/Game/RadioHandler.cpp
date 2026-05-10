@@ -502,7 +502,7 @@ RadioHandler::Picture(RadioMessage* msg, Ship* ship)
 	Ship* tgt = 0;
 	double      range = 1e9;
 
-	ListIter<SimContact> iter = ship->ContactList();
+	ListIter<SimContact> iter = ship->GetContactList();
 	while (++iter) {
 		SimContact* c = iter.value();
 		int      iff = c->GetIFF(ship);
