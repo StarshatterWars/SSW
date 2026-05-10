@@ -181,9 +181,11 @@ Physical::~Physical()
 void
 Physical::ExecFrame(double s)
 {
-	const FVector OrigVelocity = GetVelocity();
+	const FVector OrigVelocity =
+		GetVelocity();
 
-	arcade_velocity = FVector::ZeroVector;
+	arcade_velocity =
+		FVector::ZeroVector;
 
 	//-------------------------------------------------------------
 	// Update director
@@ -204,7 +206,8 @@ Physical::ExecFrame(double s)
 	//-------------------------------------------------------------
 	// Integrate using fixed substeps
 	//-------------------------------------------------------------
-	double SecondsThisSlice = s;
+	double SecondsThisSlice =
+		s;
 
 	while (s > 0.0)
 	{
@@ -218,7 +221,8 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		if (dir && dir->GetSubframe())
 		{
-			dir->ExecFrame(SecondsThisSlice);
+			dir->ExecFrame(
+				SecondsThisSlice);
 		}
 
 		//---------------------------------------------------------
@@ -226,13 +230,15 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		if (!straight)
 		{
-			AngularFrame(SecondsThisSlice);
+			AngularFrame(
+				SecondsThisSlice);
 		}
 
 		//---------------------------------------------------------
 		// Position
 		//---------------------------------------------------------
-		FVector Pos = cam.Pos();
+		FVector Pos =
+			cam.Pos();
 
 		//---------------------------------------------------------
 		// Main thrust
@@ -244,17 +250,21 @@ Physical::ExecFrame(double s)
 			// Legacy Starshatter used much smaller world units.
 			// Unreal centimeter space requires stronger force.
 			//-----------------------------------------------------
-			const double UEThrustScale = 100.0;
+			const double UEThrustScale =
+				100.0;
 
-			FVector ThrustVec = cam.vpn();
+			FVector ThrustVec =
+				cam.vpn();
 
-			ThrustVec *= (float)(
-				(
-					((double)thrust * UEThrustScale) /
-					(double)mass
-					) * SecondsThisSlice);
+			ThrustVec *=
+				(float)(
+					(
+						((double)thrust * UEThrustScale) /
+						(double)mass
+						) * SecondsThisSlice);
 
-			velocity += ThrustVec;
+			velocity +=
+				ThrustVec;
 
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Physical::ExecFrame] THRUST "
@@ -272,12 +282,37 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		// Lateral thrust / gravity / drag
 		//---------------------------------------------------------
-		LinearFrame(SecondsThisSlice);
+		LinearFrame(
+			SecondsThisSlice);
+
+		//---------------------------------------------------------
+		// Clamp velocity to vlimit
+		//---------------------------------------------------------
+		if (vlimit > 0.0f)
+		{
+			const double Speed =
+				velocity.Length();
+
+			if (Speed > vlimit)
+			{
+				velocity =
+					velocity.GetSafeNormal() *
+					(float)vlimit;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[Physical::ExecFrame] CLAMP VLIMIT Obj='%hs' Speed=%.2f Limit=%.2f"),
+					name,
+					Speed,
+					vlimit);
+			}
+		}
 
 		//---------------------------------------------------------
 		// Move object
 		//---------------------------------------------------------
-		Pos += velocity * (float)SecondsThisSlice;
+		Pos +=
+			velocity *
+			(float)SecondsThisSlice;
 
 		cam.MoveTo(Pos);
 
@@ -290,19 +325,23 @@ Physical::ExecFrame(double s)
 			*Pos.ToString(),
 			*velocity.ToString());
 
-		s -= SecondsThisSlice;
+		s -=
+			SecondsThisSlice;
 	}
 
-	alpha = 0.0f;
+	alpha =
+		0.0f;
 
 	//-------------------------------------------------------------
 	// Update graphics
 	//-------------------------------------------------------------
 	if (rep)
 	{
-		rep->MoveTo(cam.Pos());
+		rep->MoveTo(
+			cam.Pos());
 
-		const Matrix& M = cam.Orientation();
+		const Matrix& M =
+			cam.Orientation();
 
 		const FMatrix UEOrientation(
 			FPlane((float)M(0, 0), (float)M(0, 1), (float)M(0, 2), 0.0f),
@@ -311,12 +350,14 @@ Physical::ExecFrame(double s)
 			FPlane(0.f, 0.f, 0.f, 1.f)
 		);
 
-		rep->SetOrientation(UEOrientation);
+		rep->SetOrientation(
+			UEOrientation);
 	}
 
 	if (light)
 	{
-		light->MoveTo(cam.Pos());
+		light->MoveTo(
+			cam.Pos());
 	}
 
 	//-------------------------------------------------------------
@@ -336,7 +377,8 @@ Physical::ExecFrame(double s)
 
 	if (!IsFiniteVector(accel))
 	{
-		accel = FVector::ZeroVector;
+		accel =
+			FVector::ZeroVector;
 	}
 
 	UE_LOG(LogTemp, Warning,

@@ -4739,6 +4739,17 @@ Ship::GetCompassPitch() const
 }
 
 double
+Ship::GetVLimit() const
+{
+	if (design)
+	{
+		return design->vlimit;
+	}
+
+	return 0.0;
+}
+
+double
 Ship::GetAltitudeMSL() const
 {
 	return GetLocation().Y;
