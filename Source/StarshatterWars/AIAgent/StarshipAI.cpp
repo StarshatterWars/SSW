@@ -280,7 +280,7 @@ StarshipAI::FindObjective()
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::FindObjective WORLD] Ship='%hs' Target='%hs' Ward='%hs' Navpt=%p Rumor='%hs' ObjectiveWorld=%s ObjW=%s ShipLoc=%s Distance=%.2f"),
+        TEXT("[StarshipAI::FindObjective] Ship='%hs' Target='%hs' Ward='%hs' Navpt=%p Rumor='%hs' ObjectiveWorld=%s ObjW=%s ShipLoc=%s Distance=%.2f"),
         ship ? ship->GetName() : "NULL",
         target ? target->GetName() : "NULL",
         ward ? ward->GetName() : "NULL",
@@ -297,19 +297,10 @@ StarshipAI::FindObjective()
 void
 StarshipAI::Navigator()
 {
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Navigator ENTER] Ship='%s' Target=%p Navpt=%p Throttle=%.2f Request=%.2f FLCSMode=%d"),
-        ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
-        target,
-        navpt,
-        ship ? ship->GetThrottle() : -1.0,
-        ship ? ship->GetThrottleRequest() : -1.0,
-        ship ? static_cast<int32>(ship->GetFLCSMode()) : -1);
-
     ShipAI::Navigator();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Navigator EXIT] Ship='%s' Target=%p Navpt=%p Throttle=%.2f Request=%.2f FLCSMode=%d"),
+        TEXT("[StarshipAI::Navigator] Ship='%s' Target=%p Navpt=%p Throttle=%.2f Request=%.2f FLCSMode=%d"),
         ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
         target,
         navpt,
@@ -401,23 +392,6 @@ StarshipAI::HelmControl()
     ship->SetTransX(trans_x);
     ship->SetTransY(trans_y);
     ship->SetTransZ(trans_z);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::HelmControl] Ship='%hs' Target='%hs' Threat='%hs' Navpt=%p Ward='%hs' Other=%p Yaw=%.4f Pitch=%.4f HelmHeading=%.4f HelmPitch=%.4f Distance=%.2f Trans=(%.2f %.2f %.2f)"),
-        ship ? ship->GetName() : "NULL",
-        target ? target->GetName() : "NULL",
-        threat ? threat->GetName() : "NULL",
-        static_cast<void*>(navpt),
-        ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
-        static_cast<void*>(other),
-        accumulator.yaw,
-        accumulator.pitch,
-        ship ? ship->GetHelmHeading() : 0.0,
-        ship ? ship->GetHelmPitch() : 0.0,
-        distance,
-        trans_x,
-        trans_y,
-        trans_z);
 }
 
 void
@@ -1185,14 +1159,6 @@ StarshipAI::Transform(const FVector& Point)
         FVector::DotProduct(WorldDir, Up),
         FVector::DotProduct(WorldDir, Forward));
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Transform] Ship='%hs' WorldPoint=%s ShipLoc=%s WorldDir=%s Local(XRightYUpZForward)=%s"),
-        ship ? ship->GetName() : "NULL",
-        *Point.ToString(),
-        ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
-        *WorldDir.ToString(),
-        *Local.ToString());
-
     return Local;
 }
 
@@ -1256,17 +1222,6 @@ StarshipAI::Seek(const FVector& Point)
         Result.pitch = 0.0;
     }
 #endif
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::Seek] Point=%s Right=%.3f Up=%.3f Forward=%.3f Yaw=%.4f Pitch=%.4f YawDeg=%.2f PitchDeg=%.2f"),
-        *Point.ToString(),
-        Right,
-        Up,
-        Forward,
-        Result.yaw,
-        Result.pitch,
-        FMath::RadiansToDegrees(Result.yaw),
-        FMath::RadiansToDegrees(Result.pitch));
 
     return Result;
 }
