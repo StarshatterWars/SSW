@@ -233,50 +233,6 @@ Camera::Clone(const Camera& cam)
 }
 
 void
-Camera::LookAt(
-	const FVector& target,
-	const FVector& eye,
-	const FVector& up)
-{
-	FVector ZAxis = target - eye;
-
-	if (!ZAxis.Normalize())
-	{
-		return;
-	}
-
-	FVector XAxis = FVector::CrossProduct(up, ZAxis);
-
-	if (!XAxis.Normalize())
-	{
-		XAxis = FVector(1.0f, 0.0f, 0.0f);
-	}
-
-	FVector YAxis = FVector::CrossProduct(ZAxis, XAxis);
-
-	if (!YAxis.Normalize())
-	{
-		YAxis = FVector(0.0f, 1.0f, 0.0f);
-	}
-
-	orientation(0, 0) = XAxis.X;
-	orientation(0, 1) = XAxis.Y;
-	orientation(0, 2) = XAxis.Z;
-
-	orientation(1, 0) = YAxis.X;
-	orientation(1, 1) = YAxis.Y;
-	orientation(1, 2) = YAxis.Z;
-
-	orientation(2, 0) = ZAxis.X;
-	orientation(2, 1) = ZAxis.Y;
-	orientation(2, 2) = ZAxis.Z;
-
-	pos = eye;
-
-	Normalize();
-}
-
-void
 Camera::LookAt(const FVector& target)
 {
 	if (target == Pos())
@@ -284,45 +240,153 @@ Camera::LookAt(const FVector& target)
 		return;
 	}
 
-	const FVector Tmp = target - Pos();
+	//---------------------------------------------------------
+	// FORWARD
+	//---------------------------------------------------------
+	FVector Forward =
+		target - Pos();
 
-	FVector Tgt;
-	Tgt.X = FVector::DotProduct(Tmp, vrt());
-	Tgt.Y = FVector::DotProduct(Tmp, vup());
-	Tgt.Z = FVector::DotProduct(Tmp, vpn());
-
-	if (FMath::Abs(Tgt.Z) < KINDA_SMALL_NUMBER)
+	if (!Forward.Normalize())
 	{
-		Pitch(0.5);
-		Yaw(0.5);
-		LookAt(target);
 		return;
 	}
 
-	double Az = FMath::Atan2((double)Tgt.X, (double)Tgt.Z);
-	double El = FMath::Atan2((double)Tgt.Y, (double)Tgt.Z);
+	//---------------------------------------------------------
+	// UE PORT CONVENTION
+	//
+	// X/Y = combat plane
+	// Z   = up
+	//
+	// vpn = forward
+	// vrt = right
+	// vup = up
+	//---------------------------------------------------------
+	const FVector WorldUp(
+		0.0f,
+		0.0f,
+		1.0f);
 
-	Pitch(-El);
-	Yaw(Az);
+	//---------------------------------------------------------
+	// RIGHT VECTOR
+	//---------------------------------------------------------
+	FVector Right =
+		FVector::CrossProduct(
+			Forward,
+			WorldUp);
 
-	double Deflection = (double)vrt().Y;
-
-	while (FMath::Abs(Deflection) > 0.001)
+	if (!Right.Normalize())
 	{
-		const double VLen = (double)vrt().Size();
-
-		if (VLen <= 1.0e-6)
-		{
-			break;
-		}
-
-		const double Theta =
-			FMath::Asin(Deflection / VLen);
-
-		Roll(-Theta);
-
-		Deflection = (double)vrt().Y;
+		Right = FVector(
+			0.0f,
+			1.0f,
+			0.0f);
 	}
+
+	//---------------------------------------------------------
+	// TRUE UP
+	//---------------------------------------------------------
+	FVector Up =
+		FVector::CrossProduct(
+			Right,
+			Forward);
+
+	if (!Up.Normalize())
+	{
+		Up = WorldUp;
+	}
+
+	//---------------------------------------------------------
+	// STORE BASIS
+	//
+	// Row 0 = vrt (right)
+	// Row 1 = vup (up)
+	// Row 2 = vpn (forward)
+	//---------------------------------------------------------
+	orientation(0, 0) = Right.X;
+	orientation(0, 1) = Right.Y;
+	orientation(0, 2) = Right.Z;
+
+	orientation(1, 0) = Up.X;
+	orientation(1, 1) = Up.Y;
+	orientation(1, 2) = Up.Z;
+
+	orientation(2, 0) = Forward.X;
+	orientation(2, 1) = Forward.Y;
+	orientation(2, 2) = Forward.Z;
+
+	Normalize();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Camera::LookAt] "
+			"Pos=%s "
+			"Target=%s "
+			"Forward=%s "
+			"Right=%s "
+			"Up=%s"),
+		*Pos().ToString(),
+		*target.ToString(),
+		*Forward.ToString(),
+		*Right.ToString(),
+		*Up.ToString());
+}
+
+void
+Camera::LookAt(
+	const FVector& target,
+	const FVector& eye,
+	const FVector& up)
+{
+	FVector Forward =
+		target - eye;
+
+	if (!Forward.Normalize())
+	{
+		return;
+	}
+
+	FVector Up = up;
+
+	if (!Up.Normalize())
+	{
+		Up = FVector(0.0f, 0.0f, 1.0f);
+	}
+
+	// If caller passed legacy Y-up, force UE combat Z-up.
+	if (FMath::Abs(FVector::DotProduct(Forward, Up)) > 0.95f ||
+		FMath::Abs(Up.Z) < 0.5f)
+	{
+		Up = FVector(0.0f, 0.0f, 1.0f);
+	}
+
+	FVector Right =
+		FVector::CrossProduct(Up, Forward);
+
+	if (!Right.Normalize())
+	{
+		Right = FVector(0.0f, 1.0f, 0.0f);
+	}
+
+	Up =
+		FVector::CrossProduct(Forward, Right);
+
+	if (!Up.Normalize())
+	{
+		Up = FVector(0.0f, 0.0f, 1.0f);
+	}
+
+	orientation(0, 0) = Right.X;
+	orientation(0, 1) = Right.Y;
+	orientation(0, 2) = Right.Z;
+
+	orientation(1, 0) = Up.X;
+	orientation(1, 1) = Up.Y;
+	orientation(1, 2) = Up.Z;
+
+	orientation(2, 0) = Forward.X;
+	orientation(2, 1) = Forward.Y;
+	orientation(2, 2) = Forward.Z;
+
+	pos = eye;
 
 	Normalize();
 }

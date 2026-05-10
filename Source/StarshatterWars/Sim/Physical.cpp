@@ -182,62 +182,126 @@ void
 Physical::ExecFrame(double s)
 {
 	const FVector OrigVelocity = GetVelocity();
+
 	arcade_velocity = FVector::ZeroVector;
 
-	// if this object is under direction,
-	// but doesn't need subframe accuracy,
-	// update the control parameters:
+	//-------------------------------------------------------------
+	// Update director
+	//-------------------------------------------------------------
 	if (dir && !dir->GetSubframe())
+	{
 		dir->ExecFrame(s);
+	}
 
-	// decrement life before destroying the frame time:
+	//-------------------------------------------------------------
+	// Lifetime
+	//-------------------------------------------------------------
 	if (life > 0)
+	{
 		life -= s;
+	}
 
-	// integrate equations using slices no larger than sub_frame:
+	//-------------------------------------------------------------
+	// Integrate using fixed substeps
+	//-------------------------------------------------------------
 	double SecondsThisSlice = s;
 
 	while (s > 0.0)
 	{
-		SecondsThisSlice = (s > sub_frame) ? sub_frame : s;
+		SecondsThisSlice =
+			(s > sub_frame)
+			? sub_frame
+			: s;
 
-		// if the director needs subframe accuracy, run it now:
+		//---------------------------------------------------------
+		// Subframe director
+		//---------------------------------------------------------
 		if (dir && dir->GetSubframe())
-			dir->ExecFrame(SecondsThisSlice);
-
-		if (!straight)
-			AngularFrame(SecondsThisSlice);
-
-		// LINEAR MOVEMENT ----------------------------
-		FVector Pos = cam.Pos();
-
-		// if the object is thrusting, accelerate along the camera normal:
-		if (thrust != 0.0f)
 		{
-			FVector ThrustVec = cam.vpn();
-			ThrustVec *= (float)(((double)thrust / (double)mass) * SecondsThisSlice);
-			velocity += ThrustVec;
+			dir->ExecFrame(SecondsThisSlice);
 		}
 
+		//---------------------------------------------------------
+		// Angular motion
+		//---------------------------------------------------------
+		if (!straight)
+		{
+			AngularFrame(SecondsThisSlice);
+		}
+
+		//---------------------------------------------------------
+		// Position
+		//---------------------------------------------------------
+		FVector Pos = cam.Pos();
+
+		//---------------------------------------------------------
+		// Main thrust
+		//---------------------------------------------------------
+		if (thrust != 0.0f)
+		{
+			//-----------------------------------------------------
+			// UE port scaling:
+			// Legacy Starshatter used much smaller world units.
+			// Unreal centimeter space requires stronger force.
+			//-----------------------------------------------------
+			const double UEThrustScale = 100.0;
+
+			FVector ThrustVec = cam.vpn();
+
+			ThrustVec *= (float)(
+				(
+					((double)thrust * UEThrustScale) /
+					(double)mass
+					) * SecondsThisSlice);
+
+			velocity += ThrustVec;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Physical::ExecFrame] THRUST "
+					"Obj='%hs' Thrust=%.2f Mass=%.2f "
+					"Scale=%.2f VPN=%s AddVel=%s NewVel=%s"),
+				name,
+				thrust,
+				mass,
+				UEThrustScale,
+				*cam.vpn().ToString(),
+				*ThrustVec.ToString(),
+				*velocity.ToString());
+		}
+
+		//---------------------------------------------------------
+		// Lateral thrust / gravity / drag
+		//---------------------------------------------------------
 		LinearFrame(SecondsThisSlice);
 
-		// move the position by the (time-frame scaled) velocity:
+		//---------------------------------------------------------
+		// Move object
+		//---------------------------------------------------------
 		Pos += velocity * (float)SecondsThisSlice;
+
 		cam.MoveTo(Pos);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Physical::ExecFrame] MOVE "
+				"Obj='%hs' Slice=%.4f "
+				"Pos=%s Vel=%s"),
+			name,
+			SecondsThisSlice,
+			*Pos.ToString(),
+			*velocity.ToString());
 
 		s -= SecondsThisSlice;
 	}
 
 	alpha = 0.0f;
 
-	// --------------------------------------------------
-	// UPDATE GRAPHIC REPRESENTATION (UE-SAFE)
-	// --------------------------------------------------
+	//-------------------------------------------------------------
+	// Update graphics
+	//-------------------------------------------------------------
 	if (rep)
 	{
 		rep->MoveTo(cam.Pos());
 
-		// Convert Starshatter Matrix -> UE FMatrix
 		const Matrix& M = cam.Orientation();
 
 		const FMatrix UEOrientation(
@@ -255,13 +319,33 @@ Physical::ExecFrame(double s)
 		light->MoveTo(cam.Pos());
 	}
 
+	//-------------------------------------------------------------
+	// Flight path
+	//-------------------------------------------------------------
 	if (!straight)
+	{
 		CalcFlightPath();
+	}
 
-	// accel over last slice duration:
-	accel = (GetVelocity() - OrigVelocity) * (float)(1.0 / SecondsThisSlice);
+	//-------------------------------------------------------------
+	// Acceleration
+	//-------------------------------------------------------------
+	accel =
+		(GetVelocity() - OrigVelocity) *
+		(float)(1.0 / SecondsThisSlice);
+
 	if (!IsFiniteVector(accel))
+	{
 		accel = FVector::ZeroVector;
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Physical::ExecFrame] EXIT "
+			"Obj='%hs' FinalPos=%s FinalVel=%s Accel=%s"),
+		name,
+		*GetLocation().ToString(),
+		*GetVelocity().ToString(),
+		*accel.ToString());
 }
 
 // +--------------------------------------------------------------------+
@@ -508,9 +592,11 @@ void Physical::AngularFrame(double SecondsThisSlice)
 {
 	if (!straight)
 	{
-		dr += (float)((double)dr_acc * SecondsThisSlice);
-		dy += (float)((double)dy_acc * SecondsThisSlice);
-		dp += (float)((double)dp_acc * SecondsThisSlice);
+		const double UERotationScale = 10.0;
+
+		dr += (float)((double)dr_acc * UERotationScale * SecondsThisSlice);
+		dy += (float)((double)dy_acc * UERotationScale * SecondsThisSlice);
+		dp += (float)((double)dp_acc * UERotationScale * SecondsThisSlice);
 
 		dr *= (float)std::exp(-(double)dr_drg * SecondsThisSlice);
 		dy *= (float)std::exp(-(double)dy_drg * SecondsThisSlice);
@@ -537,7 +623,6 @@ void Physical::AngularFrame(double SecondsThisSlice)
 		cam.Aim(roll, pitch, yaw);
 	}
 }
-
 // +--------------------------------------------------------------------+
 
 void Physical::LinearFrame(double SecondsThisSlice)

@@ -281,15 +281,20 @@ ShipAI::ExecFrame(double secs)
 	seconds = secs;
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ExecFrame] Ship='%s' MissionClockSec=%.3f MissionClockMS=%d Tactical=%p DirectorType=%d Target=%p Contacts=%d Region=%s"),
-		ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("NULL"),
-		ship ? ship->GetMissionClock() : -1.0,
-		ship ? ship->GetMissionClockMS() : -1,
-		tactical,
-		GetType(),
-		target,
-		ship ? ship->GetContactList().size() : -1,
-		ship && ship->GetRegion() ? ANSI_TO_TCHAR(ship->GetRegion()->GetName()) : TEXT("NULL"));
+		TEXT("[ShipAI::ExecFrame] ENTER Ship='%hs' ShipPtr=%p Seconds=%.4f FlightPhase=%d Life=%.2f Integrity=%.2f Element=%p ElementIndex=%d Ward='%hs' Target='%hs' Throttle=%.2f Vel=%s Loc=%s"),
+		ship ? ship->GetName() : "NULL",
+		ship,
+		secs,
+		ship ? (int)ship->GetFlightPhase() : -1,
+		ship ? (double)ship->GetLife() : -1.0,
+		ship ? (double)ship->GetIntegrity() : -1.0,
+		ship ? ship->GetElement() : nullptr,
+		ship ? ship->GetElementIndex() : -1,
+		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
+		target ? target->GetName() : "NULL",
+		ship ? ship->GetThrottle() : -1.0,
+		ship ? *ship->GetVelocity().ToString() : TEXT("NULL"),
+		ship ? *ship->GetLocation().ToString() : TEXT("NULL"));
 
 	if (drop_time > 0)
 		drop_time -= seconds;
@@ -352,20 +357,9 @@ ShipAI::ExecFrame(double secs)
 
 	element_index = ship->GetElementIndex();
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ExecFrame] ACTIVE Ship='%s' ElementIndex=%d"),
-		ANSI_TO_TCHAR(ship->GetName()),
-		element_index);
-
 	NavlightControl();
 
 	CheckTarget();
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ExecFrame] AFTER CheckTarget Ship='%s' Target=%p ShipTarget=%p"),
-		ANSI_TO_TCHAR(ship->GetName()),
-		target,
-		ship->GetTarget());
 
 	if (tactical)
 	{
@@ -502,7 +496,7 @@ ShipAI::ClosingVelocity()
 void
 ShipAI::FindObjective()
 {
-	distance = 0;
+	distance = 0.0;
 	obj_w = FVector::ZeroVector;
 	objective = FVector::ZeroVector;
 
@@ -510,6 +504,8 @@ ShipAI::FindObjective()
 	{
 		return;
 	}
+
+	const FVector ShipLoc = ship->GetLocation();
 
 	RadioMessageAction order =
 		ship->GetRadioOrders() ?
@@ -531,14 +527,12 @@ ShipAI::FindObjective()
 		order == RadioMessageAction::FARCAST_TO)
 	{
 		FindObjectiveQuantum();
-		objective = obj_w;
 	}
-	else if (form && element_index > 1)
+	else if (form && (element_index > 1 || ward))
 	{
 		ship->SetDirectorInfo(Game::GetText("ai.formation"));
 
-		if (navpt &&
-			navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
+		if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
 		{
 			FindObjectiveNavPoint();
 		}
@@ -547,8 +541,6 @@ ShipAI::FindObjective()
 			navpt = nullptr;
 			FindObjectiveFormation();
 		}
-
-		objective = obj_w;
 	}
 	else
 	{
@@ -567,13 +559,12 @@ ShipAI::FindObjective()
 			if (support)
 			{
 				const double d_support =
-					(support->GetLocation() - ship->GetLocation()).Size();
+					(support->GetLocation() - ShipLoc).Size();
 
 				if (d_support > 35e3)
 				{
 					ship->SetDirectorInfo("Regroup");
 					FindObjectiveTarget(support);
-					objective = obj_w;
 					bObjectiveHandled = true;
 				}
 			}
@@ -581,15 +572,19 @@ ShipAI::FindObjective()
 			{
 				ship->SetDirectorInfo("Retreat");
 
-				obj_w =
-					ship->GetLocation() +
-					(ship->GetLocation() - threat->GetLocation()) * 100.0f;
+				FVector AwayFromThreat =
+					ShipLoc - threat->GetLocation();
 
-				distance =
-					(obj_w - ship->GetLocation()).Size();
+				if (!AwayFromThreat.IsNearlyZero())
+				{
+					AwayFromThreat.Normalize();
 
-				objective = obj_w;
-				bObjectiveHandled = true;
+					obj_w =
+						ShipLoc +
+						AwayFromThreat * 100000.0f;
+
+					bObjectiveHandled = true;
+				}
 			}
 		}
 
@@ -599,40 +594,37 @@ ShipAI::FindObjective()
 			{
 				ship->SetDirectorInfo("Seek Target");
 				FindObjectiveTarget(target);
-				objective = obj_w;
 			}
 			else if (patrol)
 			{
 				ship->SetDirectorInfo("Patrol");
 				FindObjectivePatrol();
-				objective = obj_w;
 			}
 			else if (ward)
 			{
 				ship->SetDirectorInfo("Seek Ward");
 				FindObjectiveFormation();
-				objective = obj_w;
 			}
 			else if (navpt && form)
 			{
 				ship->SetDirectorInfo("Seek Navpoint");
 				FindObjectiveNavPoint();
-				objective = obj_w;
 			}
 			else if (rumor)
 			{
 				ship->SetDirectorInfo("Search");
 				FindObjectiveTarget(rumor);
-				objective = obj_w;
 			}
 			else
 			{
 				obj_w = FVector::ZeroVector;
 				objective = FVector::ZeroVector;
-				distance = 0;
+				distance = 0.0;
 			}
 		}
 	}
+
+	objective = obj_w;
 
 	const bool bInvalidObjW =
 		obj_w.ContainsNaN() ||
@@ -656,11 +648,21 @@ ShipAI::FindObjective()
 
 		obj_w = FVector::ZeroVector;
 		objective = FVector::ZeroVector;
-		distance = 0;
+		distance = 0.0;
+		return;
+	}
+
+	if (!objective.IsNearlyZero())
+	{
+		distance = (objective - ShipLoc).Size();
+	}
+	else
+	{
+		distance = 0.0;
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::FindObjective LEGACY] Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' Ward='%hs' Navpt=%d Patrol=%d Rumor='%hs' ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f"),
+		TEXT("[ShipAI::FindObjective WORLD] Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' Ward='%hs' Navpt=%d Patrol=%d Rumor='%hs' ObjW=%s ObjectiveWorld=%s ShipLoc=%s ObjectiveDelta=%s Distance=%.2f ElementIndex=%d Form=%d"),
 		ship ? ship->GetName() : "NULL",
 		target ? target->GetName() : "NULL",
 		threat ? threat->GetName() : "NULL",
@@ -671,8 +673,11 @@ ShipAI::FindObjective()
 		rumor ? rumor->GetName() : "NULL",
 		*obj_w.ToString(),
 		*objective.ToString(),
-		*ship->GetLocation().ToString(),
-		distance);
+		*ShipLoc.ToString(),
+		*(objective - ShipLoc).ToString(),
+		distance,
+		element_index,
+		form ? 1 : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -1049,179 +1054,120 @@ ShipAI::FindObjectiveFormation()
 {
 	const double Prediction = 5.0;
 
-	SimElement* Element = ship ? ship->GetElement() : nullptr;
-	Ship* LeadShip = Element ? Element->GetShip(1) : nullptr;
-	Ship* WardShip = ship ? ship->GetWard() : nullptr;
-
 	if (!ship)
 	{
 		obj_w = FVector::ZeroVector;
 		objective = FVector::ZeroVector;
-		distance = 0;
+		distance = 0.0;
 		return;
 	}
 
-	if (!LeadShip || LeadShip == ship)
+	SimElement* Element = ship->GetElement();
+	Ship* WardShip = ship->GetWard();
+	Ship* LeadShip = nullptr;
+
+	if (Element)
+	{
+		LeadShip = Element->GetShip(1);
+
+		if (LeadShip == ship && Element->NumShips() > 1)
+		{
+			for (int i = 1; i <= Element->NumShips(); i++)
+			{
+				Ship* Candidate = Element->GetShip(i);
+
+				if (Candidate && Candidate != ship)
+				{
+					LeadShip = Candidate;
+					break;
+				}
+			}
+		}
+	}
+
+	if ((!LeadShip || LeadShip == ship) && WardShip && WardShip != ship)
 	{
 		LeadShip = WardShip;
+	}
 
-		if (!LeadShip)
-		{
-			obj_w = ship->GetLocation();
-			objective = obj_w;
-			distance = 0;
-			return;
-		}
+	UE_LOG(LogTemp, Warning,
+		TEXT("[FORMATION DEBUG] Ship='%hs' Element=%p ElementIndex=%d ElementShips=%d Ward='%hs' Lead='%hs' FormationDelta=%s ShipLoc=%s"),
+		ship ? ship->GetName() : "NULL",
+		Element,
+		element_index,
+		Element ? Element->NumShips() : -1,
+		WardShip ? WardShip->GetName() : "NULL",
+		LeadShip ? LeadShip->GetName() : "NULL",
+		*formation_delta.ToString(),
+		*ship->GetLocation().ToString());
 
-		distance = (LeadShip->GetLocation() - ship->GetLocation()).Size();
+	if (!LeadShip || LeadShip == ship)
+	{
+		obj_w =
+			ship->GetLocation() +
+			ship->GetHeading() * 100000.0f;
 
-		if (distance < 30e3 && LeadShip->GetVelocity().Size() < 50)
-		{
-			obj_w = ship->GetLocation() + LeadShip->GetHeading() * 1e6f;
-			objective = obj_w;
-			distance = -1;
-			return;
-		}
+		objective = obj_w;
+		distance = (objective - ship->GetLocation()).Size();
+
+		UE_LOG(LogTemp, Error,
+			TEXT("[ShipAI::FindObjectiveFormation] NO VALID LEAD Ship='%hs' FallbackObjW=%s Distance=%.2f"),
+			ship ? ship->GetName() : "NULL",
+			*obj_w.ToString(),
+			distance);
+
+		return;
 	}
 
 	obj_w =
 		LeadShip->GetLocation() +
-		LeadShip->GetVelocity() * static_cast<float>(Prediction);
+		LeadShip->GetVelocity() *
+		static_cast<float>(Prediction);
 
-	const float YawRadians =
-		static_cast<float>(LeadShip->GetCompassHeading() - PI);
-
-	const float YawDegrees =
-		FMath::RadiansToDegrees(YawRadians);
-
-	const FRotator YawRot(0.0f, YawDegrees, 0.0f);
+	const FVector LeadForward = LeadShip->GetCam().vpn();
+	const FVector LeadRight = LeadShip->GetCam().vrt();
+	const FVector LeadUp = LeadShip->GetCam().vup();
 
 	const FVector FormationOffsetWorld =
-		YawRot.RotateVector(formation_delta);
+		LeadRight * formation_delta.X +
+		LeadUp * formation_delta.Y +
+		LeadForward * formation_delta.Z;
 
 	obj_w += FormationOffsetWorld;
 
-	if (ship->IsAirborne())
-	{
-		if (ship->GetAltitudeAGL() < 3000 ||
-			LeadShip->GetAltitudeAGL() < 3000)
-		{
-			obj_w.Y += 500.0f;
-		}
-	}
-
 	const FVector PredictedSelf =
 		ship->GetLocation() +
-		ship->GetVelocity() * static_cast<float>(Prediction);
+		ship->GetVelocity() *
+		static_cast<float>(Prediction);
 
 	const FVector DeltaWorld =
 		obj_w - PredictedSelf;
 
 	distance = DeltaWorld.Size();
 
-	const FVector SlotProbe =
-		DeltaWorld + ship->GetLocation();
+	FVector LocalSlot =
+		WorldPointToLegacyLocalObjective(obj_w);
 
-	slot_dist = SlotProbe.Z;
-
-	SimDirector* LeadDirector = LeadShip->GetDirector();
-
-	if (LeadDirector &&
-		(LeadDirector->GetType() == ESteerAIType::FIGHTER ||
-			LeadDirector->GetType() == ESteerAIType::STARSHIP))
-	{
-		ShipAI* LeadAI = static_cast<ShipAI*>(LeadDirector);
-		farcaster = LeadAI->GetFarcaster();
-	}
-	else
-	{
-		Instruction* NavPointLocal =
-			Element ? Element->GetNextNavPoint() : nullptr;
-
-		if (!NavPointLocal)
-		{
-			farcaster = nullptr;
-			objective = obj_w;
-			return;
-		}
-
-		SimRegion* SelfRegion = ship->GetRegion();
-		SimRegion* NavRegion = NavPointLocal->GetRegion();
-		QuantumDrive* QDrive = ship->GetQuantumDrive();
-
-		if (SelfRegion && !NavRegion)
-		{
-			NavRegion = SelfRegion;
-			NavPointLocal->SetRegion(NavRegion);
-		}
-
-		const bool bUseFarcaster =
-			SelfRegion &&
-			NavRegion &&
-			SelfRegion != NavRegion &&
-			(NavPointLocal->GetFarcast() ||
-				!QDrive ||
-				!QDrive->IsPowerOn() ||
-				QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
-
-		if (bUseFarcaster)
-		{
-			ListIter<Ship> ShipIter = SelfRegion->GetShips();
-
-			while (++ShipIter && !farcaster)
-			{
-				if (ShipIter->GetFarcaster())
-				{
-					const Ship* Dest =
-						ShipIter->GetFarcaster()->GetDest();
-
-					if (Dest && Dest->GetRegion() == NavRegion)
-					{
-						farcaster = ShipIter->GetFarcaster();
-					}
-				}
-			}
-		}
-		else if (farcaster)
-		{
-			if (farcaster->GetShip() &&
-				farcaster->GetShip()->GetRegion() != SelfRegion)
-			{
-				if (farcaster->GetDest())
-				{
-					farcaster = farcaster->GetDest()->GetFarcaster();
-				}
-				else
-				{
-					farcaster = nullptr;
-				}
-			}
-
-			if (farcaster)
-			{
-				obj_w = farcaster->EndPoint();
-				distance = (obj_w - ship->GetLocation()).Size();
-
-				if (distance < 1000)
-				{
-					farcaster = nullptr;
-				}
-			}
-		}
-	}
+	slot_dist = LocalSlot.Z;
 
 	objective = obj_w;
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::FindObjectiveFormation LEGACY] Ship='%hs' Lead='%hs' Ward='%hs' ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f SlotDist=%.2f"),
+		TEXT("[ShipAI::FindObjectiveFormation WORLD] Ship='%hs' Lead='%hs' Ward='%hs' LeadLoc=%s ShipLoc=%s ObjW=%s Objective=%s DeltaWorld=%s Distance=%.2f SlotDist=%.2f LocalSlot=%s LeadBasis F=%s R=%s U=%s"),
 		ship ? ship->GetName() : "NULL",
 		LeadShip ? LeadShip->GetName() : "NULL",
 		WardShip ? WardShip->GetName() : "NULL",
+		*LeadShip->GetLocation().ToString(),
+		*ship->GetLocation().ToString(),
 		*obj_w.ToString(),
 		*objective.ToString(),
-		*ship->GetLocation().ToString(),
+		*DeltaWorld.ToString(),
 		distance,
-		slot_dist);
+		slot_dist,
+		*LocalSlot.ToString(),
+		*LeadForward.ToString(),
+		*LeadRight.ToString(),
+		*LeadUp.ToString());
 }
 
 // +--------------------------------------------------------------------+
@@ -1364,17 +1310,30 @@ ShipAI::Navigator()
 void
 ShipAI::HelmControl()
 {
-	double trans_x = 0;
-	double trans_y = 0;
-	double trans_z = 0;
+	if (!ship)
+	{
+		return;
+	}
+
+	double trans_x = 0.0;
+	double trans_y = 0.0;
+	double trans_z = 0.0;
+
+	/*
+	 * Base ShipAI contract:
+	 *
+	 * objective is WORLD SPACE.
+	 * accumulator already contains the steering command produced by Seek().
+	 *
+	 * Do not read objective.X/Y/Z directly as a local-space vector here.
+	 */
 
 	ship->SetHelmHeading(accumulator.yaw);
 
-	if (FMath::Abs(accumulator.pitch) < 5 * DEGREES ||
-		FMath::Abs(accumulator.pitch) > 45 * DEGREES)
+	if (FMath::Abs(accumulator.pitch) < 5.0 * DEGREES ||
+		FMath::Abs(accumulator.pitch) > 45.0 * DEGREES)
 	{
-		trans_z = objective.Y;
-		ship->SetHelmPitch(0);
+		ship->SetHelmPitch(0.0);
 	}
 	else
 	{
@@ -1384,69 +1343,151 @@ ShipAI::HelmControl()
 	ship->SetTransX(trans_x);
 	ship->SetTransY(trans_y);
 	ship->SetTransZ(trans_z);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::HelmControl BASE] Ship='%hs' ObjectiveWorld=%s ShipLoc=%s AccYaw=%.4f AccPitch=%.4f Trans=(%.2f %.2f %.2f)"),
+		ship ? ship->GetName() : "NULL",
+		*objective.ToString(),
+		*ship->GetLocation().ToString(),
+		accumulator.yaw,
+		accumulator.pitch,
+		trans_x,
+		trans_y,
+		trans_z);
 }
 
-/*****************************************
-**
-**  NOTE:
-**  No one is really using this method.
-**  It is overridden by both StarshipAI
-**  and FighterAI.
-**
-*****************************************/
 
 void
 ShipAI::ThrottleControl()
 {
-	if (navpt && !threat && !target) {     // lead only, get speed from navpt
+	if (!ship)
+	{
+		return;
+	}
+
+	if (navpt && !threat && !target)
+	{
 		double speed = navpt->GetSpeed();
 
-		if (speed > 0)
-			throttle = speed / ship->GetVelocityLimit() * 100;
+		if (speed > 0.0 && ship->GetVelocityLimit() > 0.0)
+		{
+			throttle = speed / ship->GetVelocityLimit() * 100.0;
+		}
 		else
-			throttle = 50;
+		{
+			throttle = 50.0;
+		}
 	}
+	else if (patrol && !threat && !target)
+	{
+		double speed = 200.0;
 
-	else if (patrol && !threat && !target) { // lead only, get speed from navpt
-		double speed = 200;
-
-		if (distance > 5000)
-			speed = 500;
+		if (distance > 5000.0)
+		{
+			speed = 500.0;
+		}
 
 		if (ship->GetVelocity().Size() > speed)
-			throttle = 0;
+		{
+			throttle = 0.0;
+		}
 		else
-			throttle = 50;
+		{
+			throttle = 50.0;
+		}
 	}
-
-	else {
-		if (threat || target || element_index < 2) { // element lead
-			throttle = 100;
+	else
+	{
+		if (threat || target || element_index < 2)
+		{
+			throttle = 100.0;
 
 			if (!threat && !target)
-				throttle = 50;
+			{
+				throttle = 50.0;
+			}
 
-			if (accumulator.brake > 0) {
-				throttle *= (1 - accumulator.brake);
+			if (accumulator.brake > 0.0)
+			{
+				throttle *= (1.0 - accumulator.brake);
 			}
 		}
+		else
+		{
+			Ship* lead = nullptr;
 
-		else {                                       // wingman
-			Ship* lead = ship->GetElement()->GetShip(1);
-			double lv = lead->GetVelocity().Size();
-			double sv = ship->GetVelocity().Size();
-			double dv = lv - sv;
-			double dt = 0;
+			if (ship->GetWard())
+			{
+				lead = ship->GetWard();
+			}
+			else if (ship->GetElement())
+			{
+				lead = ship->GetElement()->GetShip(1);
+			}
 
-			if (dv > 0)       dt = dv * 1e-2 * seconds;
-			else if (dv < 0)  dt = dv * 1e-2 * seconds;
+			if (lead && lead != ship)
+			{
+				const double LeadSpeed = lead->GetVelocity().Size();
+				const double ShipSpeed = ship->GetVelocity().Size();
 
-			throttle = old_throttle + dt;
+				if (distance > 10000.0)
+				{
+					throttle = 75.0;
+				}
+				else if (distance > 5000.0)
+				{
+					throttle = 50.0;
+				}
+				else if (distance > 1500.0)
+				{
+					throttle = 25.0;
+				}
+				else if (LeadSpeed > 1.0)
+				{
+					throttle = 15.0;
+				}
+				else
+				{
+					throttle = 0.0;
+				}
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::ThrottleControl WINGMAN] Ship='%hs' Lead='%hs' Distance=%.2f LeadSpeed=%.2f ShipSpeed=%.2f Throttle=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					lead ? lead->GetName() : "NULL",
+					distance,
+					LeadSpeed,
+					ShipSpeed,
+					throttle);
+			}
+			else
+			{
+				throttle = 50.0;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::ThrottleControl WINGMAN NO LEAD] Ship='%hs' Distance=%.2f Throttle=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					distance,
+					throttle);
+			}
 		}
 	}
 
+	throttle = FMath::Clamp(throttle, 0.0, 100.0);
 	old_throttle = throttle;
+
 	ship->SetThrottle((int)throttle);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ThrottleControl] Ship='%hs' Target='%hs' Ward='%hs' ElementIndex=%d Distance=%.2f Throttle=%.2f Brake=%.2f Vel=%s"),
+		ship ? ship->GetName() : "NULL",
+		target ? target->GetName() : "NULL",
+		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
+		element_index,
+		distance,
+		throttle,
+		accumulator.brake,
+		ship ? *ship->GetVelocity().ToString() : TEXT("NULL"));
 }
 
 // +--------------------------------------------------------------------+
@@ -1488,90 +1529,157 @@ ShipAI::AvoidCollision()
 	Steer avoid;
 
 	if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive())
+	{
 		return avoid;
+	}
 
-	if (other && (other->GetLife() == 0 || other->GetIntegrity() < 1)) {
-		other = 0;
-		last_avoid_time = 0; // check for a new obstacle immediately
+	if (other && (other->GetLife() == 0 || other->GetIntegrity() < 1))
+	{
+		other = nullptr;
+		last_avoid_time = 0;
 	}
 
 	if (!other && Game::GameTime() - last_avoid_time < 500)
+	{
 		return avoid;
-
-	brake = 0;
-
-	// don't get closer than this:
-	double avoid_dist = 5 * ship->GetRadius();
-
-	if (avoid_dist < 1e3) avoid_dist = 1e3;
-	else if (avoid_dist > 12e3) avoid_dist = 12e3;
-
-	// find the soonest potential collision,
-	// ignore any that occur after this:
-	double avoid_time = 15;
-
-	if (ship->Design()->avoid_time > 0)
-		avoid_time = ship->Design()->avoid_time;
-	else if (ship->IsStarship())
-		avoid_time *= 1.5;
-
-	FVector bearing = ship->GetVelocity();
-	bearing.Normalize();
-
-	bool              found = false;
-	ListIter<SimContact> contact = ship->GetContactList();
-
-	// check current obstacle first:
-	if (other) {
-		found = AvoidTestSingleObject(other, bearing, avoid_dist, avoid_time, avoid);
 	}
 
-	if (!found) {
-		// avoid ships:
-		while (++contact && !found) {
+	brake = 0.0;
+
+	double avoid_dist = 5.0 * ship->GetRadius();
+
+	if (avoid_dist < 1e3)
+	{
+		avoid_dist = 1e3;
+	}
+	else if (avoid_dist > 12e3)
+	{
+		avoid_dist = 12e3;
+	}
+
+	double avoid_time = 15.0;
+
+	if (ship->Design()->avoid_time > 0)
+	{
+		avoid_time = ship->Design()->avoid_time;
+	}
+	else if (ship->IsStarship())
+	{
+		avoid_time *= 1.5;
+	}
+
+	FVector bearing = ship->GetVelocity();
+
+	if (!bearing.IsNearlyZero())
+	{
+		bearing.Normalize();
+	}
+	else
+	{
+		bearing = ship->GetHeading();
+		bearing.Normalize();
+	}
+
+	bool found = false;
+
+	ListIter<SimContact> contact = ship->GetContactList();
+
+	if (other)
+	{
+		found =
+			AvoidTestSingleObject(
+				other,
+				bearing,
+				avoid_dist,
+				avoid_time,
+				avoid);
+	}
+
+	if (!found)
+	{
+		while (++contact && !found)
+		{
 			Ship* c_ship = contact->GetShip();
 
-			if (c_ship && c_ship != ship && c_ship->IsStarship()) {
-				found = AvoidTestSingleObject(c_ship, bearing, avoid_dist, avoid_time, avoid);
+			if (c_ship && c_ship != ship && c_ship->IsStarship())
+			{
+				found =
+					AvoidTestSingleObject(
+						c_ship,
+						bearing,
+						avoid_dist,
+						avoid_time,
+						avoid);
 			}
 		}
 
-		// also avoid large pieces of debris:
-		if (!found) {
-			ListIter<Debris> iter = ship->GetRegion()->GetRocks();
-			while (++iter && !found) {
+		if (!found)
+		{
+			ListIter<Debris> iter =
+				ship->GetRegion()->GetRocks();
+
+			while (++iter && !found)
+			{
 				Debris* debris = iter.value();
 
 				if (debris->GetMass() > ship->GetMass())
-					found = AvoidTestSingleObject(debris, bearing, avoid_dist, avoid_time, avoid);
+				{
+					found =
+						AvoidTestSingleObject(
+							debris,
+							bearing,
+							avoid_dist,
+							avoid_time,
+							avoid);
+				}
 			}
 		}
 
-		// and asteroids:
-		if (!found) {
-			// give asteroids a wider berth -
-			avoid_dist *= 8;
+		if (!found)
+		{
+			avoid_dist *= 8.0;
 
-			ListIter<Asteroid> iter = ship->GetRegion()->GetRoids();
-			while (++iter && !found) {
+			ListIter<Asteroid> iter =
+				ship->GetRegion()->GetRoids();
+
+			while (++iter && !found)
+			{
 				Asteroid* roid = iter.value();
-				found = AvoidTestSingleObject(roid, bearing, avoid_dist, avoid_time, avoid);
+
+				found =
+					AvoidTestSingleObject(
+						roid,
+						bearing,
+						avoid_dist,
+						avoid_time,
+						avoid);
 			}
 
 			if (!found)
-				avoid_dist /= 8;
+			{
+				avoid_dist /= 8.0;
+			}
 		}
 
-		// if found, steer to avoid:
-		if (other) {
-			avoid = Avoid(obstacle, (float)(ship->GetRadius() + other->GetRadius() + avoid_dist * 0.9));
+		if (other)
+		{
+			avoid =
+				Avoid(
+					WorldPointToLegacyLocalObjective(obstacle),
+					(float)(
+						ship->GetRadius() +
+						other->GetRadius() +
+						avoid_dist * 0.9));
+
 			avoid.brake = brake;
 
-			ship->SetDirectorInfo(Game::GetText("ai.avoid-collision"));
+			ship->SetDirectorInfo(
+				Game::GetText("ai.avoid-collision"));
 		}
 	}
 
 	last_avoid_time = Game::GameTime();
+
 	return avoid;
 }
 
@@ -1751,7 +1859,16 @@ ShipAI::AvoidTestSingleObject(
 
 		obstacle = testpt;
 
-		if (obstacle.Z > 0)
+		FVector LocalObstacle =
+			WorldPointToLegacyLocalObjective(obstacle);
+
+		/*
+		 * Legacy avoidance assumes:
+		 *
+		 * Local Z = forward
+		 */
+
+		if (LocalObstacle.Z > 0)
 		{
 			other = obj;
 			avoid_time = time;
@@ -1786,7 +1903,10 @@ ShipAI::AvoidCloseObject(SimObject* obj)
 
 	Observe(other);
 
-	Steer avoid = Flee(obstacle);
+	Steer avoid =
+		Flee(
+			WorldPointToLegacyLocalObjective(obstacle));
+
 	avoid.brake = 0.3;
 
 	if (ship)
@@ -1802,65 +1922,57 @@ ShipAI::AvoidCloseObject(SimObject* obj)
 Steer
 ShipAI::SeekTarget()
 {
-	Ship* ward = ship ? ship->GetWard() : nullptr;
-	
+	Steer NoSteer;
+
+	if (!ship)
+	{
+		return NoSteer;
+	}
+
+	Ship* ward = ship->GetWard();
+
+	const FVector ShipLoc = ship->GetLocation();
+	const FVector ObjectiveDelta = objective - ShipLoc;
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::SeekTarget] Ship='%hs' ShipLoc=%s Objective=%s Target='%hs' Navpt=%p Ward='%hs' Patrol=%d Farcaster=%p Rumor=%p Distance=%.2f ElementIndex=%d"),
+		TEXT("[ShipAI::SeekTarget WORLD] Ship='%hs' ShipLoc=%s ObjectiveWorld=%s ObjectiveDelta=%s"),
 		ship ? ship->GetName() : "NULL",
-		ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
+		*ShipLoc.ToString(),
 		*objective.ToString(),
-		target ? target->GetName() : "NULL",
-		static_cast<void*>(navpt),
-		ward ? ward->GetName() : "NULL",
-		patrol ? 1 : 0,
-		static_cast<void*>(farcaster),
-		static_cast<void*>(rumor),
-		distance,
-		element_index);
-	
+		*ObjectiveDelta.ToString());
+
+	if (objective.ContainsNaN() ||
+		!FMath::IsFinite(objective.X) ||
+		!FMath::IsFinite(objective.Y) ||
+		!FMath::IsFinite(objective.Z))
+	{
+		return NoSteer;
+	}
+
 	//-------------------------------------------------------------
 	// No direct target/objective sources
 	//-------------------------------------------------------------
 	if (!target && !ward && !navpt && !patrol)
 	{
-		// wingmen keep in formation:
 		if (element_index > 1)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[ShipAI::SeekTarget] FORMATION SEEK Ship='%hs' Objective=%s"),
-				ship ? ship->GetName() : "NULL",
-				*objective.ToString());
-
-			return Seek(objective);
+			return Seek(
+				WorldPointToLegacyLocalObjective(objective));
 		}
 
-		// farcaster navigation:
 		if (farcaster)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[ShipAI::SeekTarget] FARCASTER SEEK Ship='%hs' Objective=%s"),
-				ship ? ship->GetName() : "NULL",
-				*objective.ToString());
-
-			return Seek(objective);
+			return Seek(
+				WorldPointToLegacyLocalObjective(objective));
 		}
 
-		// rumor tracking:
 		if (rumor)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[ShipAI::SeekTarget] RUMOR SEEK Ship='%hs' Objective=%s"),
-				ship ? ship->GetName() : "NULL",
-				*objective.ToString());
-
-			return Seek(objective);
+			return Seek(
+				WorldPointToLegacyLocalObjective(objective));
 		}
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::SeekTarget] NO TARGET Ship='%hs'"),
-			ship ? ship->GetName() : "NULL");
-
-		return Steer();
+		return NoSteer;
 	}
 
 	//-------------------------------------------------------------
@@ -1868,26 +1980,14 @@ ShipAI::SeekTarget()
 	//-------------------------------------------------------------
 	if (patrol)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::SeekTarget] PATROL SEEK Ship='%hs' Objective=%s Distance=%.2f"),
-			ship ? ship->GetName() : "NULL",
-			*objective.ToString(),
-			distance);
+		Steer result =
+			Seek(
+				WorldPointToLegacyLocalObjective(objective));
 
-		Steer result = Seek(objective);
-
-		if (distance < 2000)
+		if (distance < 2000.0)
 		{
-			result.brake = 1;
+			result.brake = 1.0f;
 		}
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::SeekTarget] PATROL RESULT Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d"),
-			ship ? ship->GetName() : "NULL",
-			result.yaw,
-			result.pitch,
-			result.brake,
-			(int)result.stop);
 
 		return result;
 	}
@@ -1897,43 +1997,30 @@ ShipAI::SeekTarget()
 	//-------------------------------------------------------------
 	if (target && too_close == target->GetIdentity())
 	{
-		drop_time = 4;
+		drop_time = 4.0f;
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::SeekTarget] AVOIDING Ship='%hs' Target='%hs' Objective=%s"),
-			ship ? ship->GetName() : "NULL",
-			target ? target->GetName() : "NULL",
-			*objective.ToString());
-
-		return Avoid(objective, 0.0f);
+		return Avoid(
+			WorldPointToLegacyLocalObjective(objective),
+			0.0f);
 	}
-	else if (drop_time > 0)
+	else if (drop_time > 0.0f)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::SeekTarget] DROPTIME HOLD Ship='%hs' DropTime=%.2f"),
-			ship ? ship->GetName() : "NULL",
-			drop_time);
-
-		return Steer();
+		return NoSteer;
 	}
 
 	//-------------------------------------------------------------
 	// Normal seek
 	//-------------------------------------------------------------
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::SeekTarget] NORMAL SEEK Ship='%hs' Objective=%s"),
-		ship ? ship->GetName() : "NULL",
-		*objective.ToString());
-
-	Steer Result = Seek(objective);
+	Steer Result =
+		Seek(
+			WorldPointToLegacyLocalObjective(objective));
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::SeekTarget] RESULT Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d"),
+		TEXT("[ShipAI::SeekTarget RESULT] Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f"),
 		ship ? ship->GetName() : "NULL",
 		Result.yaw,
 		Result.pitch,
-		Result.brake,
-		(int)Result.stop);
+		Result.brake);
 
 	return Result;
 }
@@ -1987,3 +2074,69 @@ ShipAI::CheckTarget()
 		}
 	}
 }
+FVector
+ShipAI::WorldPointToLegacyLocalObjective(const FVector& WorldPoint) const
+{
+	if (!ship)
+	{
+		return FVector::ZeroVector;
+	}
+
+	const FVector ShipLoc = ship->GetLocation();
+
+	FVector WorldDir = WorldPoint - ShipLoc;
+
+	if (WorldDir.ContainsNaN() ||
+		!FMath::IsFinite(WorldDir.X) ||
+		!FMath::IsFinite(WorldDir.Y) ||
+		!FMath::IsFinite(WorldDir.Z) ||
+		WorldDir.IsNearlyZero())
+	{
+		return FVector::ZeroVector;
+	}
+
+	/*
+	 * Corrected Starshatter basis:
+	 *
+	 * VPN = Forward
+	 * VUP = Up
+	 * VRT = Right
+	 *
+	 * Legacy SteerAI::Seek expects:
+	 *
+	 * X = right
+	 * Y = up
+	 * Z = forward
+	 */
+
+	FVector Forward = ship->GetCam().vpn();
+	FVector Up = ship->GetCam().vup();
+	FVector Right = ship->GetCam().vrt();
+
+	Forward.Normalize();
+	Up.Normalize();
+	Right.Normalize();
+
+	const double LocalRight = FVector::DotProduct(WorldDir, Right);
+	const double LocalUp = FVector::DotProduct(WorldDir, Up);
+	const double LocalForward = FVector::DotProduct(WorldDir, Forward);
+
+	FVector LocalObjective(
+		LocalRight,
+		LocalUp,
+		LocalForward);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::WorldPointToLegacyLocalObjective] Ship='%hs' ShipLoc=%s WorldPoint=%s WorldDir=%s Forward=%s Right=%s Up=%s LocalObjective(XRightYUpZForward)=%s"),
+		ship ? ship->GetName() : "NULL",
+		*ShipLoc.ToString(),
+		*WorldPoint.ToString(),
+		*WorldDir.ToString(),
+		*Forward.ToString(),
+		*Right.ToString(),
+		*Up.ToString(),
+		*LocalObjective.ToString());
+
+	return LocalObjective;
+}
+

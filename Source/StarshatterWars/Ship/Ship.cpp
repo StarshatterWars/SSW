@@ -2624,37 +2624,41 @@ Ship::GetLeader() const
 	return (Ship*)this;
 }
 
-void Ship::SetLeader(Ship* Leader)
+void
+Ship::SetLeader(Ship* Leader)
 {
 	if (!Leader || Leader == this)
 	{
 		return;
 	}
 
-	SimElement* LeaderElement = Leader->GetElement();
+	SimElement* LeaderElement =
+		Leader->GetElement();
 
-	// If leader has no element, create one and assign leader as index 1
 	if (!LeaderElement)
 	{
-		LeaderElement = new SimElement(Leader->GetName(), Leader->GetIFF(), (int)Leader->Class());
+		LeaderElement =
+			new SimElement(
+				Leader->GetName(),
+				Leader->GetIFF(),
+				(int)Leader->Class());
 
-		// Leader MUST be index 1
 		LeaderElement->AddShip(Leader, 1);
 	}
 
-	// Add this ship as follower (next slot)
 	if (!LeaderElement->Contains(this))
 	{
 		LeaderElement->AddShip(this);
 	}
 
-	// Ensure this ship references the same element
 	element = LeaderElement;
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' Element='%hs' Index=%d"),
+		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' GetLeader='%hs' Ward='%hs' Element='%hs' Index=%d"),
 		GetName(),
 		Leader->GetName(),
+		GetLeader() ? GetLeader()->GetName() : "NULL",
+		ward ? ward->GetName() : "NULL",
 		LeaderElement->Name().data(),
 		LeaderElement->FindIndex(this));
 }
@@ -3380,15 +3384,15 @@ Ship::ExecPhysics(double seconds)
 		ExecFLCSFrame();
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ExecPhysics] AFTER ExecFLCSFrame Ship='%hs' "
-				"Throttle=%.2f Request=%.2f "
-				"Trans=(%.2f %.2f %.2f)"),
+			TEXT("[Ship::ExecPhysics] AFTER ExecFLCSFrame Ship='%hs' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Thrust=%.2f Vel=%s"),
 			GetName(),
 			throttle,
 			throttle_request,
 			trans_x,
 			trans_y,
-			trans_z);
+			trans_z,
+			thrust,
+			*GetVelocity().ToString());
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -3404,6 +3408,34 @@ Ship::ExecPhysics(double seconds)
 		navsys,
 		vlimit);
 
+
+	//-------------------------------------------------------------
+	// Throttle request -> actual throttle
+	//-------------------------------------------------------------
+	{
+		const double TargetThrottle =
+			FMath::Clamp(throttle_request, 0.0, 100.0);
+
+		const double ThrottleStep =
+			FMath::Max(75.0 * seconds, 1.0);
+
+		if (throttle < TargetThrottle)
+		{
+			throttle = FMath::Min(throttle + ThrottleStep, TargetThrottle);
+		}
+		else if (throttle > TargetThrottle)
+		{
+			throttle = FMath::Max(throttle - ThrottleStep, TargetThrottle);
+		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ExecPhysics] THROTTLE RAMP Ship='%hs' Target=%.2f Step=%.2f Throttle=%.2f Request=%.2f"),
+			GetName(),
+			TargetThrottle,
+			ThrottleStep,
+			throttle,
+			throttle_request);
+	}
 	//-------------------------------------------------------------
 	// Compute thrust
 	//-------------------------------------------------------------
@@ -3428,6 +3460,15 @@ Ship::ExecPhysics(double seconds)
 	{
 		g_force = 0.0f;
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ExecPhysics] Ship='%hs' Loc=%s Vel=%s Thrust=%.2f Throttle=%.2f Request=%.2f"),
+		GetName(),
+		*GetLocation().ToString(),
+		*GetVelocity().ToString(),
+		thrust,
+		throttle,
+		throttle_request);
 
 	//-------------------------------------------------------------
 	// Airborne path
@@ -3486,13 +3527,6 @@ Ship::ExecPhysics(double seconds)
 
 	Physical::ArcadeFrame(seconds);
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] AFTER ArcadeFrame "
-			"Ship='%hs' Thrust=%.2f Vel=%s Loc=%s"),
-		GetName(),
-		thrust,
-		*GetVelocity().ToString(),
-		*GetLocation().ToString());
 }
 
 // +--------------------------------------------------------------------+

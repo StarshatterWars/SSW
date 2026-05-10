@@ -8,6 +8,7 @@
 #include "Mission.h"
 #include "MissionElement.h"
 #include "ShipDesignRegistry.h"
+#include "ShipAI.h"
 
 #include "EngineUtils.h"
 #include "Engine/World.h"
@@ -930,42 +931,70 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     const FRotator& CameraRotator,
     float BlendSeconds) const
 {
-    AActor* TargetActor = FindSceneActorByName(ElementName);
+    AActor* TargetActor =
+        FindSceneActorByName(ElementName);
+
     if (!TargetActor)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[SceneActor Camera] Target not found '%s'"),
             *ElementName);
+
         return false;
     }
 
-    ASSWCameraManager* CameraManager = ResolveSSWCameraManager();
+    ASSWCameraManager* CameraManager =
+        ResolveSSWCameraManager();
+
     if (!CameraManager)
     {
         UE_LOG(LogTemp, Error,
             TEXT("[SceneActor Camera] Existing SSWCameraManager not found"));
+
         return false;
     }
 
-    FBox Bounds = TargetActor->GetComponentsBoundingBox(true);
+    //---------------------------------------------------------
+    // Compute cinematic bounds
+    //---------------------------------------------------------
+    FBox Bounds =
+        TargetActor->GetComponentsBoundingBox(true);
 
     float TargetSize = 500.0f;
+
     if (Bounds.IsValid)
     {
-        TargetSize = FMath::Max(250.0f, Bounds.GetExtent().Size());
+        TargetSize =
+            FMath::Max(
+                250.0f,
+                Bounds.GetExtent().Size());
     }
 
+    //---------------------------------------------------------
+    // Default cinematic follow framing
+    //---------------------------------------------------------
     FVector FinalOffset = CameraOffset;
 
     if (FinalOffset.IsNearlyZero())
     {
-        FinalOffset = FVector(-TargetSize * 4.0f, TargetSize * 1.5f, TargetSize * 0.75f);
+        FinalOffset = FVector(
+            -TargetSize * 6.0f,
+            TargetSize * 2.2f,
+            TargetSize * 1.0f);
     }
     else
     {
-        FinalOffset *= TargetSize;
+        //-----------------------------------------------------
+        // Treat custom offset as scale multipliers
+        //-----------------------------------------------------
+        FinalOffset.X *= TargetSize;
+        FinalOffset.Y *= TargetSize;
+        FinalOffset.Z *= TargetSize;
     }
 
+    //---------------------------------------------------------
+    // Apply follow view
+    //---------------------------------------------------------
     CameraManager->SetActorFollowView(
         TargetActor,
         FinalOffset,
@@ -974,7 +1003,12 @@ bool ACampaignSceneActor::FocusCameraOnSceneActorByName(
     CameraManager->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] ExistingCamera=%s Target='%s' Size=%.2f Offset=%s Rot=%s"),
+        TEXT("[SceneActor Camera] "
+            "ExistingCamera=%s "
+            "Target='%s' "
+            "Size=%.2f "
+            "Offset=%s "
+            "Rot=%s"),
         *GetNameSafe(CameraManager),
         *ElementName,
         TargetSize,
@@ -1136,22 +1170,33 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     const FVector Extent = Box.GetExtent();
 
     FVector VelocityDir = AverageVelocity.GetSafeNormal();
+
     if (VelocityDir.IsNearlyZero())
     {
         VelocityDir = GroupActors[0]->GetActorForwardVector();
     }
 
-    const float Radius = FMath::Max(Extent.Size(), 400.0f);
+    const float Radius =
+        FMath::Max(
+            Extent.Size(),
+            400.0f);
 
-    const float Distance = FMath::Clamp(
-        Radius * 1.05f,
-        450.0f,
-        1800.0f);
+    //---------------------------------------------------------
+    // Pull camera farther back for cinematic fleet framing
+    //---------------------------------------------------------
+    const float Distance =
+        FMath::Clamp(
+            Radius * 2.25f,
+            900.0f,
+            3600.0f);
 
+    //---------------------------------------------------------
+    // Wider side offset + slightly higher elevation
+    //---------------------------------------------------------
     const FVector LocalOffset(
         -Distance,
-        Distance * 0.22f,
-        Distance * 0.12f);
+        Distance * 0.35f,
+        Distance * 0.18f);
 
     Cam->SetGroupFollowView(
         GroupActors,
@@ -1162,7 +1207,8 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     Cam->ActivateCamera(BlendSeconds);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SceneActor Camera] CommanderGroup FOLLOW '%s' Count=%d Center=%s Radius=%.2f Distance=%.2f Offset=%s"),
+        TEXT("[SceneActor Camera] CommanderGroup FOLLOW '%s' "
+            "Count=%d Center=%s Radius=%.2f Distance=%.2f Offset=%s"),
         *CommanderName,
         GroupActors.Num(),
         *Center.ToString(),
@@ -1500,7 +1546,8 @@ void ACampaignSceneActor::RegisterRuntimeShipForElement(
         ShipActor ? *ShipActor->GetName() : TEXT("NULL"));
 }
 
-void ACampaignSceneActor::LinkRuntimeShipCommanders(
+void
+ACampaignSceneActor::LinkRuntimeShipCommanders(
     const TArray<FS_MissionElement>& Elements)
 {
     UE_LOG(LogTemp, Warning,
@@ -1508,9 +1555,6 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(
         Elements.Num(),
         RuntimeShips.Num());
 
-    //-------------------------------------------------------------
-    // Commander / leader linking
-    //-------------------------------------------------------------
     for (const FS_MissionElement& Elem : Elements)
     {
         if (Elem.Name.IsEmpty() || Elem.Commander.IsEmpty())
@@ -1524,105 +1568,64 @@ void ACampaignSceneActor::LinkRuntimeShipCommanders(
         Ship* CommanderShip =
             RuntimeShipByElementName.FindRef(Elem.Commander);
 
-        if (!ChildShip)
+        if (!ChildShip || !CommanderShip || ChildShip == CommanderShip)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] CommanderLink SKIP child missing Elem='%s' Commander='%s'"),
-                *Elem.Name,
-                *Elem.Commander);
-
             continue;
         }
 
-        if (!CommanderShip)
+        //-------------------------------------------------------------
+        // 1. Element first.
+        // SetElement may rebuild/reset formation state, so do this
+        // before assigning ward.
+        //-------------------------------------------------------------
+        if (CommanderShip->GetElement())
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] CommanderLink SKIP commander missing Elem='%s' Commander='%s'"),
-                *Elem.Name,
-                *Elem.Commander);
-
-            continue;
+            ChildShip->SetElement(CommanderShip->GetElement());
         }
 
-        if (ChildShip == CommanderShip)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] CommanderLink SKIP self commander Elem='%s'"),
-                *Elem.Name);
-
-            continue;
-        }
-
+        //-------------------------------------------------------------
+        // 2. Leader.
+        //-------------------------------------------------------------
         ChildShip->SetLeader(CommanderShip);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] CommanderLink Child='%s' Leader='%s'"),
-            *Elem.Name,
-            *Elem.Commander);
-    }
+        //-------------------------------------------------------------
+        // 3. Ward direct pointer.
+        //-------------------------------------------------------------
+        ChildShip->SetWard(CommanderShip);
 
-    //-------------------------------------------------------------
-    // AI hostility diagnostics
-    //-------------------------------------------------------------
-    for (Ship* TestShip : RuntimeShips)
-    {
-        if (!TestShip)
+        //-------------------------------------------------------------
+        // 4. Ward through AI so formation_delta is also initialized.
+        //-------------------------------------------------------------
+        if (ChildShip->GetDirector())
         {
-            continue;
-        }
+            ShipAI* ChildAI =
+                dynamic_cast<ShipAI*>(ChildShip->GetDirector());
 
-        for (Ship* OtherShip : RuntimeShips)
-        {
-            if (!OtherShip || OtherShip == TestShip)
+            if (ChildAI)
             {
-                continue;
+                ChildAI->SetWard(CommanderShip);
             }
-
-            const bool bHostile =
-                TestShip->IsHostileTo(OtherShip);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[AI TARGET TEST] Ship='%hs' IFF=%d Region=%p Other='%hs' OtherIFF=%d OtherRegion=%p Hostile=%d"),
-                TestShip->GetName(),
-                TestShip->GetIFF(),
-                TestShip->GetRegion(),
-                OtherShip->GetName(),
-                OtherShip->GetIFF(),
-                OtherShip->GetRegion(),
-                bHostile ? 1 : 0);
         }
-    }
-
-    //-------------------------------------------------------------
-    // Temporary forced target test
-    //-------------------------------------------------------------
-    Ship* Kitts =
-        RuntimeShipByElementName.FindRef(TEXT("Kitts"));
-
-    Ship* Lovo =
-        RuntimeShipByElementName.FindRef(TEXT("Lovo"));
-
-    Ship* Courier =
-        RuntimeShipByElementName.FindRef(TEXT("Blockade Runner"));
-
-    if (Kitts && Courier)
-    {
-        Kitts->SetTarget(Courier);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[AI FORCE TARGET] Kitts -> Blockade Runner"));
+            TEXT("[WARD VERIFY LINK] Child='%hs' Leader='%hs' Ward='%hs' Element=%p ElementIndex=%d Director=%p"),
+            ChildShip ? ChildShip->GetName() : "NULL",
+            ChildShip && ChildShip->GetLeader() ?
+            ChildShip->GetLeader()->GetName() : "NULL",
+            ChildShip && ChildShip->GetWard() ?
+            ChildShip->GetWard()->GetName() : "NULL",
+            ChildShip ? ChildShip->GetElement() : nullptr,
+            ChildShip ? ChildShip->GetElementIndex() : -1,
+            ChildShip ? ChildShip->GetDirector() : nullptr);
     }
 
-    if (Lovo && Courier)
-    {
-        Lovo->SetTarget(Courier);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[AI FORCE TARGET] Lovo -> Blockade Runner"));
-    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] LinkRuntimeShipCommanders COMPLETE"));
 }
 
-void ACampaignSceneActor::ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements)
+void
+ACampaignSceneActor::ApplyRuntimeFormationOffsets(
+    const TArray<FS_MissionElement>& Elements)
 {
     TMap<FString, TArray<const FS_MissionElement*>> FollowersByCommander;
 
@@ -1630,37 +1633,57 @@ void ACampaignSceneActor::ApplyRuntimeFormationOffsets(const TArray<FS_MissionEl
     {
         if (!Elem.Commander.IsEmpty())
         {
-            FollowersByCommander.FindOrAdd(Elem.Commander).Add(&Elem);
+            FollowersByCommander
+                .FindOrAdd(Elem.Commander)
+                .Add(&Elem);
         }
     }
 
-    for (const TPair<FString, TArray<const FS_MissionElement*>>& Pair : FollowersByCommander)
+    for (const TPair<FString, TArray<const FS_MissionElement*>>& Pair :
+        FollowersByCommander)
     {
-        const FString& CommanderName = Pair.Key;
-        const TArray<const FS_MissionElement*>& Followers = Pair.Value;
+        const FString& CommanderName =
+            Pair.Key;
 
-        Ship* CommanderShip = RuntimeShipByElementName.FindRef(CommanderName);
-        AShipActor* CommanderActor = ShipActorByElementName.FindRef(CommanderName);
+        const TArray<const FS_MissionElement*>& Followers =
+            Pair.Value;
+
+        Ship* CommanderShip =
+            RuntimeShipByElementName.FindRef(CommanderName);
+
+        AShipActor* CommanderActor =
+            ShipActorByElementName.FindRef(CommanderName);
 
         if (!CommanderShip || !CommanderActor)
         {
             continue;
         }
 
-        const FVector CommanderLoc = CommanderActor->GetActorLocation();
-        const FRotator CommanderRot = CommanderActor->GetActorRotation();
+        const FVector CommanderLoc =
+            CommanderActor->GetActorLocation();
 
-        for (int32 Index = 0; Index < Followers.Num(); ++Index)
+        const FRotator CommanderRot =
+            CommanderActor->GetActorRotation();
+
+        for (int32 Index = 0;
+            Index < Followers.Num();
+            ++Index)
         {
-            const FS_MissionElement* FollowerElem = Followers[Index];
+            const FS_MissionElement* FollowerElem =
+                Followers[Index];
 
             if (!FollowerElem)
             {
                 continue;
             }
 
-            Ship* FollowerShip = RuntimeShipByElementName.FindRef(FollowerElem->Name);
-            AShipActor* FollowerActor = ShipActorByElementName.FindRef(FollowerElem->Name);
+            Ship* FollowerShip =
+                RuntimeShipByElementName.FindRef(
+                    FollowerElem->Name);
+
+            AShipActor* FollowerActor =
+                ShipActorByElementName.FindRef(
+                    FollowerElem->Name);
 
             if (!FollowerShip || !FollowerActor)
             {
@@ -1668,7 +1691,10 @@ void ACampaignSceneActor::ApplyRuntimeFormationOffsets(const TArray<FS_MissionEl
             }
 
             const FVector LocalOffset =
-                GetFormationOffsetForElement(*FollowerElem, Index, Followers.Num());
+                GetFormationOffsetForElement(
+                    *FollowerElem,
+                    Index,
+                    Followers.Num());
 
             const FVector WorldOffset =
                 CommanderRot.RotateVector(LocalOffset);
@@ -1676,13 +1702,85 @@ void ACampaignSceneActor::ApplyRuntimeFormationOffsets(const TArray<FS_MissionEl
             const FVector DesiredWorldLoc =
                 CommanderLoc + WorldOffset;
 
+            //-----------------------------------------------------
+            // Formation offset
+            //-----------------------------------------------------
             FollowerShip->SetFormationOffset(LocalOffset);
 
-            FollowerShip->MoveTo(DesiredWorldLoc);
-            FollowerShip->SetHelmHeading(CommanderShip->GetHelmHeading());
+            UE_LOG(LogTemp, Warning,
+                TEXT("[WARD BEFORE MoveTo] Ship='%hs' Leader='%hs' Ward='%hs'"),
+                FollowerShip ?
+                FollowerShip->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetLeader() ?
+                FollowerShip->GetLeader()->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetWard() ?
+                FollowerShip->GetWard()->GetName() : "NULL");
 
-            FollowerActor->SetActorLocation(DesiredWorldLoc);
-            FollowerActor->SetActorRotation(CommanderRot);
+            //-----------------------------------------------------
+            // Runtime move
+            //-----------------------------------------------------
+            FollowerShip->MoveTo(DesiredWorldLoc);
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[WARD AFTER MoveTo] Ship='%hs' Leader='%hs' Ward='%hs'"),
+                FollowerShip ?
+                FollowerShip->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetLeader() ?
+                FollowerShip->GetLeader()->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetWard() ?
+                FollowerShip->GetWard()->GetName() : "NULL");
+
+            //-----------------------------------------------------
+            // Match heading
+            //-----------------------------------------------------
+            FollowerShip->SetHelmHeading(
+                CommanderShip->GetHelmHeading());
+
+            //-----------------------------------------------------
+            // Actor placement
+            //-----------------------------------------------------
+            FollowerActor->SetActorLocation(
+                DesiredWorldLoc);
+
+            FollowerActor->SetActorRotation(
+                CommanderRot);
+
+            //-----------------------------------------------------
+            // Re-assert formation linkage AFTER MoveTo
+            //-----------------------------------------------------
+            FollowerShip->SetLeader(CommanderShip);
+            FollowerShip->SetWard(CommanderShip);
+
+            if (FollowerShip->GetDirector())
+            {
+                ShipAI* AI =
+                    dynamic_cast<ShipAI*>(
+                        FollowerShip->GetDirector());
+
+                if (AI)
+                {
+                    AI->SetWard(CommanderShip);
+                }
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[WARD AFTER FORMATION APPLY] Ship='%hs' Leader='%hs' Ward='%hs' Element=%p ElementIndex=%d"),
+                FollowerShip ?
+                FollowerShip->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetLeader() ?
+                FollowerShip->GetLeader()->GetName() : "NULL",
+                FollowerShip &&
+                FollowerShip->GetWard() ?
+                FollowerShip->GetWard()->GetName() : "NULL",
+                FollowerShip ?
+                FollowerShip->GetElement() : nullptr,
+                FollowerShip ?
+                FollowerShip->GetElementIndex() : -1);
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] FormationOffset Commander='%s' Follower='%s' Offset=%s World=%s"),

@@ -287,6 +287,19 @@ Drive::Thrust(double seconds)
 {
     drive_seconds = seconds;
 
+    if (!IsPowerOn())
+    {
+        energy = 0.0f;
+        intensity = 0.0f;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Drive::Thrust] OFF Ship=%p Seconds=%.4f"),
+            ship,
+            seconds);
+
+        return 0.0f;
+    }
+
     const float Denom =
         (capacity > 0.0f)
         ? capacity
@@ -296,6 +309,16 @@ Drive::Thrust(double seconds)
         (energy / Denom) *
         availability *
         100.0f;
+
+    //-------------------------------------------------------------
+    // UE PORT TEMP:
+    // Legacy power distribution is not fully feeding drive energy yet.
+    // If powered but energy is zero, allow drive output from availability.
+    //-------------------------------------------------------------
+    if (eff <= 0.0f && availability > 0.0f)
+    {
+        eff = availability;
+    }
 
     float output =
         throttle *
@@ -350,9 +373,13 @@ Drive::Thrust(double seconds)
     CLAMP(intensity, 0.0f, 1.0f);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[Drive::Thrust] Ship=%p PowerOn=%d Throttle=%.2f AugThrottle=%.2f Intensity=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Output=%.2f Seconds=%.4f"),
-        ship,
+        TEXT("[Drive::Thrust] Ship='%hs' PowerOn=%d Energy=%.2f Capacity=%.2f Availability=%.2f Eff=%.2f Throttle=%.2f AugThrottle=%.2f Intensity=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Output=%.2f Seconds=%.4f"),
+        ship ? ship->GetName() : "NULL",
         IsPowerOn() ? 1 : 0,
+        energy,
+        capacity,
+        availability,
+        eff,
         throttle,
         augmenter_throttle,
         intensity,

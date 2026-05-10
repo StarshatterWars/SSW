@@ -81,9 +81,9 @@ TacticalAI::~TacticalAI()
 
 // +--------------------------------------------------------------------+
 
-void TacticalAI::ExecFrame(double secs)
+void
+TacticalAI::ExecFrame(double secs)
 {
-	
 	const int exec_period = 1000;
 
 	if (!ship || !ship_ai)
@@ -92,20 +92,27 @@ void TacticalAI::ExecFrame(double secs)
 			TEXT("[TacticalAI::ExecFrame] SKIP Ship=%p ShipAI=%p"),
 			ship,
 			ship_ai);
+
 		return;
 	}
 
 	navpt = ship->GetNextNavPoint();
 	orders = ship->GetRadioOrders();
 
-	const int32 Now = (int32)Game::GameTime();
+	const int32 Now =
+		(int32)Game::GameTime();
 
-	if (Now - exec_time > exec_period)
+	const bool bForceTacticalEveryFrameForMigration = true;
+
+	if (bForceTacticalEveryFrameForMigration ||
+		Now - exec_time > exec_period)
 	{
+		exec_time = Now;
+
 		element_index = ship->GetElementIndex();
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::ExecFrame] RUN Ship='%hs' Time=%d ExecTime=%d ElementIndex=%d Navpt=%p Orders=%p Contacts=%d CurrentTarget='%hs'"),
+			TEXT("[TacticalAI::ExecFrame] RUN Ship='%hs' Time=%d ExecTime=%d ElementIndex=%d Navpt=%p Orders=%p Contacts=%d CurrentTarget='%hs' ROE=%d"),
 			ship->GetName(),
 			Now,
 			exec_time,
@@ -113,30 +120,50 @@ void TacticalAI::ExecFrame(double secs)
 			navpt,
 			orders,
 			ship->GetContactList().size(),
-			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL");
+			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL",
+			(int)roe);
 
 		CheckOrders();
+
+		if (roe == NONE &&
+			ship->GetContactList().size() > 0)
+		{
+			roe = AGRESSIVE;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TacticalAI::ExecFrame] MIGRATION FORCE ROE Ship='%hs' Contacts=%d"),
+				ship->GetName(),
+				ship->GetContactList().size());
+		}
+
 		SelectTarget();
 		FindThreat();
 		FindSupport();
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::ExecFrame] AFTER Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' ThreatLevel=%.4f SupportLevel=%.4f"),
+			TEXT("[TacticalAI::ExecFrame] AFTER Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' ThreatLevel=%.4f SupportLevel=%.4f ShipTarget='%hs'"),
 			ship->GetName(),
 			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL",
 			ship_ai->GetThreat() ? ship_ai->GetThreat()->GetName() : "NULL",
 			ship_ai->GetSupport() ? ship_ai->GetSupport()->GetName() : "NULL",
 			(double)ThreatLevel(),
-			(double)SupportLevel());
+			(double)SupportLevel(),
+			ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
 
 		if (element_index > 1)
 		{
-			INSTRUCTION_FORMATION formation = INSTRUCTION_FORMATION::DIAMOND;
+			INSTRUCTION_FORMATION formation =
+				INSTRUCTION_FORMATION::DIAMOND;
 
-			if (orders && orders->GetFormation() >= INSTRUCTION_FORMATION::DIAMOND)
+			if (orders &&
+				orders->GetFormation() >= INSTRUCTION_FORMATION::DIAMOND)
+			{
 				formation = orders->GetFormation();
+			}
 			else if (navpt)
+			{
 				formation = navpt->GetFormation();
+			}
 
 			FindFormationSlot(formation);
 		}
@@ -144,16 +171,29 @@ void TacticalAI::ExecFrame(double secs)
 		ship_ai->SetNavPoint(navpt);
 
 		if (carrier_ai)
+		{
 			carrier_ai->ExecFrame(secs);
-
-		exec_time += exec_period;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::ExecFrame] SKIP PERIOD Ship='%hs' Time=%d ExecTime=%d Delta=%d Period=%d Contacts=%d ShipTarget='%hs'"),
+			ship->GetName(),
+			Now,
+			exec_time,
+			Now - exec_time,
+			exec_period,
+			ship->GetContactList().size(),
+			ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[TacticalAI::ExecFrame] Ship='%hs' Contacts=%d ShipTarget='%hs'"),
+		TEXT("[TacticalAI::ExecFrame] Ship='%hs' Contacts=%d ShipTarget='%hs' AITarget='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		ship ? ship->GetContactList().size() : -1,
-		ship && ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
+		ship && ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL",
+		ship_ai && ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL");
 }
 
 // +--------------------------------------------------------------------+
@@ -467,94 +507,227 @@ bool TacticalAI::CheckFlightPlan()
 
 // +--------------------------------------------------------------------+
 
-void TacticalAI::SelectTarget()
+void
+TacticalAI::SelectTarget()
 {
-	if (!ship) {
+	if (!ship)
+	{
 		roe = NONE;
 		return;
 	}
 
-	// unarmed vessels should never engage an enemy:
-	if (ship->GetWeapons().size() < 1)
-		roe = NONE;
+	/*
+	 * TEMP UE MIGRATION NOTE:
+	 *
+	 * Weapons are not fully initialized yet.
+	 * Allow sensors and tactical target selection to operate
+	 * even when runtime weapon objects are missing.
+	 *
+	 * Original legacy behavior:
+	 *
+	 * if (ship->GetWeapons().size() < 1)
+	 *     roe = NONE;
+	 */
 
-	SimObject* target = ship_ai->GetTarget();
-	SimObject* ward = ship_ai->GetWard();
+	UE_LOG(LogTemp, Warning,
+		TEXT("[TacticalAI::SelectTarget ENTER] Ship='%hs' IFF=%d Weapons=%d ROE=%d CurrentTarget='%hs'"),
+		ship ? ship->GetName() : "NULL",
+		ship ? ship->GetIFF() : -1,
+		ship ? ship->GetWeapons().size() : -1,
+		(int)roe,
+		ship_ai && ship_ai->GetTarget() ?
+		ship_ai->GetTarget()->GetName() : "NULL");
 
-	// if not allowed to engage, drop and return:
-	if (roe == NONE) {
+	SimObject* target =
+		ship_ai ? ship_ai->GetTarget() : nullptr;
+
+	SimObject* ward =
+		ship_ai ? ship_ai->GetWard() : nullptr;
+
+	//-------------------------------------------------------------
+	// If not allowed to engage, drop and return
+	//-------------------------------------------------------------
+	if (roe == NONE)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::SelectTarget] ROE NONE Ship='%hs' DroppingTarget='%hs'"),
+			ship ? ship->GetName() : "NULL",
+			target ? target->GetName() : "NULL");
+
 		if (target)
+		{
 			ship_ai->DropTarget();
+		}
+
 		return;
 	}
 
-	// if we have abandoned our ward, drop and return:
-	if (ward && roe != AGRESSIVE) {
-		double d = (ward->GetLocation() - ship->GetLocation()).Length();
+	//-------------------------------------------------------------
+	// Formation leash
+	//-------------------------------------------------------------
+	if (ward && roe != AGRESSIVE)
+	{
+		double d =
+			(ward->GetLocation() -
+				ship->GetLocation()).Size();
+
 		double safe_zone = 50e3;
 
-		if (target) {
+		if (target)
+		{
 			if (ship->IsStarship())
+			{
 				safe_zone = 100e3;
+			}
 
-			if (d > safe_zone) {
+			if (d > safe_zone)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[TacticalAI::SelectTarget] DROP abandoned ward Ship='%hs' Ward='%hs' Dist=%.2f Safe=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					ward ? ward->GetName() : "NULL",
+					d,
+					safe_zone);
+
 				ship_ai->DropTarget();
 				return;
 			}
 		}
-		else {
-			if (d > safe_zone) {
+		else
+		{
+			if (d > safe_zone)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[TacticalAI::SelectTarget] HOLD near ward Ship='%hs' Ward='%hs' Dist=%.2f Safe=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					ward ? ward->GetName() : "NULL",
+					d,
+					safe_zone);
+
 				return;
 			}
 		}
 	}
 
-	// already have a target, keep it:
-	if (target) {
-		if (target->GetLife()) {
+	//-------------------------------------------------------------
+	// Existing target validation
+	//-------------------------------------------------------------
+	if (target)
+	{
+		if (target->GetLife())
+		{
 			CheckTarget();
 
-			// frigates need to be ready to abandon ship-type targets
-			// in favor of drone-type targets, others should just go
-			// with what they have:
-			if (ship->Class() != CLASSIFICATION::CORVETTE && ship->Class() != CLASSIFICATION::FRIGATE)
-				return;
+			/*
+			 * Frigates/corvettes can swap targets dynamically.
+			 * Larger ships keep existing targets.
+			 */
 
-			// in case the check decided to drop the target:
+			if (ship->Class() != CLASSIFICATION::CORVETTE &&
+				ship->Class() != CLASSIFICATION::FRIGATE)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[TacticalAI::SelectTarget] KEEP existing target Ship='%hs' Target='%hs'"),
+					ship ? ship->GetName() : "NULL",
+					target ? target->GetName() : "NULL");
+
+				return;
+			}
+
 			target = ship_ai->GetTarget();
 		}
-		else {
+		else
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TacticalAI::SelectTarget] DROP dead target Ship='%hs' Target='%hs'"),
+				ship ? ship->GetName() : "NULL",
+				target ? target->GetName() : "NULL");
+
 			ship_ai->DropTarget();
-			target = 0;
+			target = nullptr;
 		}
 	}
 
-	// if not allowed to acquire, forget it:
+	//-------------------------------------------------------------
+	// Target reacquisition delay
+	//-------------------------------------------------------------
 	if (ship_ai->DropTime() > 0)
-		return;
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::SelectTarget] DropTime active Ship='%hs' DropTime=%.2f"),
+			ship ? ship->GetName() : "NULL",
+			ship_ai->DropTime());
 
-	if (roe == DIRECTED) {
-		if (target && target->GetType() == SimObject::SIM_SHIP)
-			SelectTargetDirected((Ship*)target);
-		else if (navpt && navpt->GetTarget() && navpt->GetTarget()->GetType() == SimObject::SIM_SHIP)
-			SelectTargetDirected((Ship*)navpt->GetTarget());
-		else
-			SelectTargetDirected();
+		return;
 	}
-	else {
+
+	//-------------------------------------------------------------
+	// Directed ROE
+	//-------------------------------------------------------------
+	if (roe == DIRECTED)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::SelectTarget] DIRECTED Ship='%hs'"),
+			ship ? ship->GetName() : "NULL");
+
+		if (target &&
+			target->GetType() == SimObject::SIM_SHIP)
+		{
+			SelectTargetDirected((Ship*)target);
+		}
+		else if (navpt &&
+			navpt->GetTarget() &&
+			navpt->GetTarget()->GetType() == SimObject::SIM_SHIP)
+		{
+			SelectTargetDirected(
+				(Ship*)navpt->GetTarget());
+		}
+		else
+		{
+			SelectTargetDirected();
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Opportunity targeting
+	//-------------------------------------------------------------
+	else
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::SelectTarget] OPPORTUNITY Ship='%hs' Contacts=%d"),
+			ship ? ship->GetName() : "NULL",
+			ship ? ship->GetContactList().size() : -1);
+
 		SelectTargetOpportunity();
 
-		// don't switch one ship target for another...
-		if (ship->Class() == CLASSIFICATION::CORVETTE || ship->Class() == CLASSIFICATION::FRIGATE) {
-			SimObject* potential_target = ship_ai->GetTarget();
-			if (target && potential_target && target != potential_target) {
+		/*
+		 * Don't swap ship-for-ship targets on small ships.
+		 */
+
+		if (ship->Class() == CLASSIFICATION::CORVETTE ||
+			ship->Class() == CLASSIFICATION::FRIGATE)
+		{
+			SimObject* potential_target =
+				ship_ai->GetTarget();
+
+			if (target &&
+				potential_target &&
+				target != potential_target)
+			{
 				if (target->GetType() == SimObject::SIM_SHIP &&
-					potential_target->GetType() == SimObject::SIM_SHIP) {
+					potential_target->GetType() == SimObject::SIM_SHIP)
+				{
 					ship_ai->SetTarget(target);
 				}
 			}
 		}
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[TacticalAI::SelectTarget EXIT] Ship='%hs' FinalTarget='%hs'"),
+		ship ? ship->GetName() : "NULL",
+		ship_ai && ship_ai->GetTarget() ?
+		ship_ai->GetTarget()->GetName() : "NULL");
 }
 
 // +--------------------------------------------------------------------+
@@ -622,169 +795,191 @@ bool TacticalAI::CanTarget(Ship* tgt)
 void
 TacticalAI::SelectTargetOpportunity()
 {
-	// NON-COMBATANTS do not pick targets of opportunity:
-	if (ship->GetIFF() == 0)
+	if (!ship || !ship_ai)
+	{
 		return;
+	}
+
+	//-------------------------------------------------------------
+	// NON-COMBATANTS do not pick targets
+	//-------------------------------------------------------------
+	if (ship->GetIFF() == 0)
+	{
+		return;
+	}
 
 	SimObject* PotentialTarget = nullptr;
 
-	// pick the closest combatant ship with a different IFF code:
-	double TargetDist = ship->Design()->commit_range;
+	//-------------------------------------------------------------
+	// Migration-safe commit range
+	//-------------------------------------------------------------
+	double TargetDist =
+		ship->Design() ?
+		ship->Design()->commit_range :
+		0.0;
 
-	SimObject* WardObj = ship_ai->GetWard();
+	if (TargetDist <= 0.0)
+	{
+		TargetDist = 500000.0;
 
-	// FRIGATES are primarily anti-air platforms, but may
-	// also attack smaller starships:
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TacticalAI::SelectTargetOpportunity] USING FALLBACK COMMIT RANGE Ship='%hs'"),
+			ship ? ship->GetName() : "NULL");
+	}
 
-	if (ship->Class() == CLASSIFICATION::CORVETTE || ship->Class() == CLASSIFICATION::FRIGATE) {
+	SimObject* WardObj =
+		ship_ai->GetWard();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[TacticalAI::SelectTargetOpportunity ENTER] Ship='%hs' Contacts=%d CommitRange=%.2f"),
+		ship ? ship->GetName() : "NULL",
+		ship ? ship->GetContactList().size() : -1,
+		TargetDist);
+
+	//-------------------------------------------------------------
+	// Frigate / Corvette
+	//-------------------------------------------------------------
+	if (ship->Class() == CLASSIFICATION::CORVETTE ||
+		ship->Class() == CLASSIFICATION::FRIGATE)
+	{
 		Ship* CurrentShipTarget = nullptr;
-		SimShot* CurrentShotTarget = nullptr;
 
-		// if we are escorting a larger warship, it is good to attack
-		// the same target as our ward:
+		ListIter<SimContact> ContactIter =
+			ship->GetContactList();
 
-		if (WardObj) {
-			Ship* WardShip = (Ship*)WardObj;
+		while (++ContactIter)
+		{
+			Ship* ContactShip =
+				ContactIter->GetShip();
 
-			if (WardShip->Class() > ship->Class()) {
-				SimObject* WardTarget = WardShip->GetTarget();
-
-				if (WardTarget && WardTarget->GetType() == SimObject::SIM_SHIP) {
-					CurrentShipTarget = (Ship*)WardTarget;
-					TargetDist = (ship->GetLocation() - WardTarget->GetLocation()).Length();
-				}
-			}
-		}
-
-		ListIter<SimContact> ContactIter = ship->GetContactList();
-		while (++ContactIter) {
-			Ship* ContactShip = ContactIter->GetShip();
-			SimShot* ContactShot = ContactIter->GetShot();
-
-			if (!ContactShip && !ContactShot)
+			if (!ContactShip)
+			{
 				continue;
+			}
 
-			const int32 ContactIFF = ContactIter->GetIFF(ship);
-			const bool bRogue = ContactShip && ContactShip->IsRogue();
-			const bool bTargetOk = ContactIFF > 0 &&
+			const int32 ContactIFF =
+				ContactIter->GetIFF(ship);
+
+			const bool bRogue =
+				ContactShip->IsRogue();
+
+			const bool bTargetOk =
+				ContactIFF > 0 &&
 				ContactIFF != ship->GetIFF() &&
 				ContactIFF < 1000;
 
-			if (bRogue || bTargetOk) {
-				if (ContactShip && ContactShip != ship && !ContactShip->InTransition()) {
-					if (ContactShip->Class() < CLASSIFICATION::DESTROYER ||
-						(ContactShip->Class() >= CLASSIFICATION::MINE && ContactShip->Class() <= CLASSIFICATION::DEFSAT)) {
-						// found an enemy, check distance:
-						const double Dist = (ship->GetLocation() - ContactShip->GetLocation()).Length();
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TACTICAL CONTACT] Ship='%hs' Contact='%hs' ContactIFF=%d ShipIFF=%d Rogue=%d TargetOk=%d"),
+				ship ? ship->GetName() : "NULL",
+				ContactShip ? ContactShip->GetName() : "NULL",
+				ContactIFF,
+				ship ? ship->GetIFF() : -1,
+				bRogue ? 1 : 0,
+				bTargetOk ? 1 : 0);
 
-						if (Dist < 0.75 * TargetDist &&
-							(!CurrentShipTarget || ContactShip->Class() <= CurrentShipTarget->Class())) {
-							CurrentShipTarget = ContactShip;
-							TargetDist = Dist;
-						}
-					}
-				}
+			if (!(bRogue || bTargetOk))
+			{
+				continue;
+			}
 
-				else if (ContactShot) {
-					// found an enemy shot, is there enough time to engage?
-					if (ContactShot->GetEta() < 3)
-						continue;
+			if (ContactShip == ship)
+			{
+				continue;
+			}
 
-					// found an enemy shot, check distance:
-					const double Dist = (ship->GetLocation() - ContactShot->GetLocation()).Length();
+			if (ContactShip->InTransition())
+			{
+				continue;
+			}
 
-					if (!CurrentShotTarget) {
-						CurrentShotTarget = ContactShot;
-						TargetDist = Dist;
-					}
+			const double Dist =
+				(ship->GetLocation() -
+					ContactShip->GetLocation()).Size();
 
-					// is this shot a better target than the one we've found?
-					else {
-						// IMPORTANT: SimShot::IsTracking expects Ship*, not SimObject*
-						Ship* WardShip = nullptr;
-						if (WardObj && WardObj->GetType() == SimObject::SIM_SHIP)
-							WardShip = (Ship*)WardObj;
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TACTICAL CONTACT DIST] Ship='%hs' Contact='%hs' Dist=%.2f TargetDist=%.2f"),
+				ship ? ship->GetName() : "NULL",
+				ContactShip ? ContactShip->GetName() : "NULL",
+				Dist,
+				TargetDist);
 
-						if ((ContactShot->IsTracking(WardShip) || ContactShot->IsTracking(ship)) &&
-							(!CurrentShotTarget->IsTracking(WardShip) ||
-								!CurrentShotTarget->IsTracking(ship))) {
-							CurrentShotTarget = ContactShot;
-							TargetDist = Dist;
-						}
-						else if (Dist < TargetDist) {
-							CurrentShotTarget = ContactShot;
-							TargetDist = Dist;
-						}
-					}
-				}
+			if (Dist < TargetDist)
+			{
+				CurrentShipTarget = ContactShip;
+				TargetDist = Dist;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[TACTICAL TARGET CANDIDATE] Ship='%hs' Candidate='%hs' Dist=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					ContactShip ? ContactShip->GetName() : "NULL",
+					Dist);
 			}
 		}
 
-		if (CurrentShotTarget)
-			PotentialTarget = CurrentShotTarget;
-		else
-			PotentialTarget = CurrentShipTarget;
+		PotentialTarget = CurrentShipTarget;
 	}
 
-	// ALL OTHER SHIP CLASSES ignore fighters and only engage
-	// other starships:
+	//-------------------------------------------------------------
+	// Other classes
+	//-------------------------------------------------------------
+	else
+	{
+		ListIter<SimContact> ContactIter =
+			ship->GetContactList();
 
-	else {
-		List<Ship> WardThreats;
-
-		ListIter<SimContact> ContactIter = ship->GetContactList();
-		while (++ContactIter) {
-			Ship* ContactShip = ContactIter->GetShip();
+		while (++ContactIter)
+		{
+			Ship* ContactShip =
+				ContactIter->GetShip();
 
 			if (!ContactShip)
+			{
 				continue;
+			}
 
-			const int32 ContactIFF = ContactIter->GetIFF(ship);
-			const bool bRogue = ContactShip->IsRogue();
-			const bool bTargetOk = ContactShip != ship &&
+			const int32 ContactIFF =
+				ContactIter->GetIFF(ship);
+
+			const bool bRogue =
+				ContactShip->IsRogue();
+
+			const bool bTargetOk =
+				ContactShip != ship &&
 				ContactIFF > 0 &&
 				ContactIFF != ship->GetIFF() &&
 				!ContactShip->InTransition();
 
-			if (bRogue || bTargetOk) {
-				if (ContactShip->IsStarship() || ContactShip->IsStatic()) {
-					// found an enemy, check distance:
-					const double Dist = (ship->GetLocation() - ContactShip->GetLocation()).Length();
-
-					if (Dist < 0.75 * TargetDist) {
-						PotentialTarget = ContactShip;
-						TargetDist = Dist;
-					}
-
-					// WardObj is SimObject*, Ship::IsTracking expects SimObject* in your codebase here:
-					if (WardObj && ContactShip->IsTracking(WardObj)) {
-						WardThreats.append(ContactShip);
-					}
-				}
+			if (!(bRogue || bTargetOk))
+			{
+				continue;
 			}
-		}
 
-		// if this ship is protecting a ward,
-		// prefer targets that are threatening that ward:
-		if (PotentialTarget && WardThreats.size() && !WardThreats.contains((Ship*)PotentialTarget)) {
-			TargetDist *= 2;
+			const double Dist =
+				(ship->GetLocation() -
+					ContactShip->GetLocation()).Size();
 
-			ListIter<Ship> ThreatIter = WardThreats;
-			while (++ThreatIter) {
-				Ship* ThreatShip = ThreatIter.value();
-
-				const double Dist = (WardObj->GetLocation() - ThreatShip->GetLocation()).Length();
-
-				if (Dist < TargetDist) {
-					PotentialTarget = ThreatShip;
-					TargetDist = Dist;
-				}
+			if (Dist < TargetDist)
+			{
+				PotentialTarget = ContactShip;
+				TargetDist = Dist;
 			}
 		}
 	}
 
-	if (ship->Class() != CLASSIFICATION::CARRIER || ship->Class() != CLASSIFICATION::SWACS)
+	//-------------------------------------------------------------
+	// FIXED carrier/swacs logic
+	//-------------------------------------------------------------
+	if (ship->Class() != CLASSIFICATION::CARRIER &&
+		ship->Class() != CLASSIFICATION::SWACS)
+	{
 		ship_ai->SetTarget(PotentialTarget);
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[TacticalAI::SelectTargetOpportunity EXIT] Ship='%hs' PotentialTarget='%hs' FinalTarget='%hs'"),
+		ship ? ship->GetName() : "NULL",
+		PotentialTarget ? PotentialTarget->GetName() : "NULL",
+		ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL");
 }
 
 

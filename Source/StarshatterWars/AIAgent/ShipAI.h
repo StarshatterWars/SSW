@@ -117,6 +117,8 @@ protected:
 
 	virtual void      CheckTarget();
 
+	FVector WorldPointToLegacyLocalObjective(const FVector& WorldPoint) const;
+
 	Ship*			ship;
 	Ship*			support;
 	Ship*			rumor;

@@ -264,26 +264,57 @@ SimContact::Threat(const Ship* observer) const
 {
 	bool threat = false;
 
-	if (observer && observer->GetLife() != 0) {
-		if (ship && ship->GetLife() != 0) {
-			threat = (ship->GetIFF() &&
-				ship->GetIFF() != observer->GetIFF() &&
-				ship->GetEMCON() > 2 &&
-				ship->IsTracking((Ship*)observer) &&
-				ship->GetWeapons().size() > 0);
+	if (observer && observer->GetLife() != 0)
+	{
+		if (ship && ship->GetLife() != 0)
+		{
+			/*
+			 * TEMP UE MIGRATION NOTE:
+			 *
+			 * Runtime weapons are not fully initialized yet.
+			 * Do NOT require weapon objects for hostile contact
+			 * classification during sensor/tactical migration.
+			 */
+
+			threat =
+				(ship->GetIFF() &&
+					ship->GetIFF() != observer->GetIFF() &&
+					ship->GetEMCON() > 2 &&
+					ship->IsTracking((Ship*)observer));
 
 			if (threat && observer->GetIFF() == 0)
+			{
 				threat = ship->GetIFF() > 1;
+			}
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[SimContact::Threat] Observer='%hs' Contact='%hs' Threat=%d ContactIFF=%d ObserverIFF=%d EMCON=%d Tracking=%d Weapons=%d"),
+				observer ? observer->GetName() : "NULL",
+				ship ? ship->GetName() : "NULL",
+				threat ? 1 : 0,
+				ship ? ship->GetIFF() : -1,
+				observer ? observer->GetIFF() : -1,
+				ship ? ship->GetEMCON() : -1,
+				ship ? (ship->IsTracking((Ship*)observer) ? 1 : 0) : 0,
+				ship ? ship->GetWeapons().size() : -1);
 		}
 
-		else if (shot) {
+		else if (shot)
+		{
 			threat = shot->IsTracking((Ship*)observer);
 
-			if (!threat && shot->GetDesign()->probe && shot->GetIFF() != observer->GetIFF()) {
-				const FVector probe_pt = shot->GetLocation() - observer->GetLocation();
-				const double  prng = probe_pt.Length();
+			if (!threat &&
+				shot->GetDesign()->probe &&
+				shot->GetIFF() != observer->GetIFF())
+			{
+				const FVector probe_pt =
+					shot->GetLocation() - observer->GetLocation();
 
-				threat = (prng < shot->GetDesign()->lethal_radius);
+				const double prng =
+					probe_pt.Length();
+
+				threat =
+					(prng < shot->GetDesign()->lethal_radius);
 			}
 		}
 	}
