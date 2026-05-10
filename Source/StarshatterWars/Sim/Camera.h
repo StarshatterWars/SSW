@@ -60,6 +60,11 @@ public:
 			orientation(2, 2));
 	}
 
+	void SetOrientation(
+		const FVector& Right,
+		const FVector& Up,
+		const FVector& Forward);
+
 	const Matrix& Orientation() const
 	{
 		return orientation;
@@ -70,4 +75,6 @@ public:
 protected:
 	FVector pos;
 	Matrix orientation;
+
+	
 };

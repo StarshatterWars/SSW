@@ -658,7 +658,7 @@ SimRegion::UpdateTracking(double seconds)
             }
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[SimRegion::UpdateTracking] PAIR Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
+                TEXT("[SimRegion::UpdateTracking] PAIR] Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
                 GetName(),
                 observer ? observer->GetName() : "NULL",
                 target ? target->GetName() : "NULL",

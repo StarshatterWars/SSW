@@ -280,21 +280,25 @@ void
 ShipAI::ExecFrame(double secs)
 {
 	seconds = secs;
-
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ExecFrame] ENTER Ship='%hs' ShipPtr=%p Seconds=%.4f FlightPhase=%d Life=%.2f Integrity=%.2f Element=%p ElementIndex=%d Ward='%hs' Target='%hs' Throttle=%.2f Vel=%s Loc=%s"),
+		TEXT("[ShipAI::ExecFrame] Ship='%hs' ShipPtr=%p Seconds=%.4f FlightPhase=%d Life=%.2f Integrity=%.2f Region='%hs' RegionPtr=%p Element=%p ElementIndex=%d Ward='%hs' Target='%hs' Throttle=%.2f Vel=%s Heading=%s Compass=%.4f Helm=%.4f Loc=%s"),
 		ship ? ship->GetName() : "NULL",
 		ship,
 		secs,
 		ship ? (int)ship->GetFlightPhase() : -1,
 		ship ? (double)ship->GetLife() : -1.0,
 		ship ? (double)ship->GetIntegrity() : -1.0,
+		ship && ship->GetRegion() ? ship->GetRegion()->GetName() : "NULL",
+		ship ? ship->GetRegion() : nullptr,
 		ship ? ship->GetElement() : nullptr,
 		ship ? ship->GetElementIndex() : -1,
 		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
 		target ? target->GetName() : "NULL",
 		ship ? ship->GetThrottle() : -1.0,
 		ship ? *ship->GetVelocity().ToString() : TEXT("NULL"),
+		ship ? *ship->GetHeading().ToString() : TEXT("NULL"),
+		ship ? ship->GetCompassHeading() : 0.0,
+		ship ? ship->GetHelmHeading() : 0.0,
 		ship ? *ship->GetLocation().ToString() : TEXT("NULL"));
 
 	if (drop_time > 0)
@@ -371,11 +375,6 @@ ShipAI::ExecFrame(double secs)
 			ship->GetContactList().size());
 
 		tactical->ExecFrame(seconds);
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::ExecFrame] RETURN Tactical Ship='%s' Target=%p"),
-			ANSI_TO_TCHAR(ship->GetName()),
-			target);
 	}
 	else
 	{

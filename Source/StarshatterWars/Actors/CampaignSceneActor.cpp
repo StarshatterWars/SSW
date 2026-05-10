@@ -1235,7 +1235,8 @@ bool ACampaignSceneActor::FocusCameraOnCommanderGroup(
     return true;
 }
 
-Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
+Ship*
+ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     const FS_MissionElement& Elem,
     const FVector& WorldLoc)
 {
@@ -1327,8 +1328,8 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     }
 
     //-------------------------------------------------------------
-    // 5. Seed runtime transform
-    //-------------------------------------------------------------
+// 5. Seed runtime transform
+//-------------------------------------------------------------
     NewShip->MoveTo(WorldLoc);
 
     const double HeadingRad =
@@ -1336,26 +1337,80 @@ Ship* ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             (double)Elem.Heading);
 
     //-------------------------------------------------------------
-    // Legacy combat plane is X/Y.
+    // Explicit DEF heading
     //-------------------------------------------------------------
-    const FVector ForwardPoint =
-        WorldLoc +
-        FVector(
+    if (Elem.Heading != 0)
+    {
+        const FVector ForwardVector(
             FMath::Cos(HeadingRad),
             FMath::Sin(HeadingRad),
-            0.0f) * 10000.0f;
+            0.0f);
 
-    NewShip->LookAt(ForwardPoint);
+        NewShip->SetHeadingVector(
+            ForwardVector);
 
-    NewShip->SetHelmHeading(
-        HeadingRad);
+        NewShip->SetHelmHeading(
+            HeadingRad);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] APPLY DEF HEADING Ship='%s' Heading=%d Forward=%s"),
+            *Elem.Name,
+            Elem.Heading,
+            *ForwardVector.ToString());
+    }
+    else
+    {
+        //---------------------------------------------------------
+        // Legacy fallback LookAt
+        //---------------------------------------------------------
+        const FVector ForwardPoint =
+            WorldLoc +
+            FVector(
+                1.0f,
+                0.0f,
+                0.0f) * 10000.0f;
+
+        NewShip->LookAt(
+            ForwardPoint);
+
+        NewShip->SetHelmHeading(
+            0.0);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignSceneActor] APPLY DEFAULT LOOKAT Ship='%s' ForwardPoint=%s"),
+            *Elem.Name,
+            *ForwardPoint.ToString());
+    }
+
+    //-------------------------------------------------------------
+    // Start stationary
+    //-------------------------------------------------------------
+    NewShip->SetVelocity(
+        FVector::ZeroVector);
+
+    NewShip->SetAngularVelocity(
+        FVector::ZeroVector);
+
+    NewShip->SetThrottle(
+        0.0);
+
+    NewShip->SetThrottleRequest(
+        0.0);
+
+    NewShip->SetTransX(
+        0.0);
+
+    NewShip->SetTransY(
+        0.0);
+
+    NewShip->SetTransZ(
+        0.0);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d ForwardPoint=%s VPN=%s"),
+        TEXT("[CampaignSceneActor] Seeded RuntimeShip '%s' Loc=%s Heading=%d VPN=%s"),
         *Elem.Name,
         *WorldLoc.ToString(),
         Elem.Heading,
-        *ForwardPoint.ToString(),
         *NewShip->GetHeading().ToString());
 
     //-------------------------------------------------------------

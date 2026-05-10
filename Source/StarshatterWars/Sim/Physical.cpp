@@ -998,3 +998,86 @@ void Physical::SemiElasticCollision(Physical& a, Physical& b)
 		b.velocity = VeB + ViAB;
 	}
 }
+
+void
+Physical::SetAngularVelocity(
+	const FVector& AngularVelocity)
+{
+	//-------------------------------------------------------------
+	// Legacy mapping:
+	// X = pitch
+	// Y = roll
+	// Z = yaw
+	//-------------------------------------------------------------
+	dp =
+		(float)AngularVelocity.X;
+
+	dr =
+		(float)AngularVelocity.Y;
+
+	dy =
+		(float)AngularVelocity.Z;
+}
+
+FVector
+Physical::GetAngularVelocity() const
+{
+	//-------------------------------------------------------------
+	// Legacy mapping:
+	// X = pitch
+	// Y = roll
+	// Z = yaw
+	//-------------------------------------------------------------
+	return FVector(
+		dp,
+		dr,
+		dy);
+}
+
+void
+Physical::SetHeadingVector(
+	const FVector& Forward)
+{
+	FVector F =
+		Forward.GetSafeNormal();
+
+	if (F.IsNearlyZero())
+	{
+		return;
+	}
+
+	F.Z = 0.0f;
+
+	if (!F.Normalize())
+	{
+		return;
+	}
+
+	const FVector Up(
+		0.0f,
+		0.0f,
+		1.0f);
+
+	FVector Right =
+		FVector::CrossProduct(
+			Up,
+			F).GetSafeNormal();
+
+	if (Right.IsNearlyZero())
+	{
+		Right = FVector(
+			0.0f,
+			1.0f,
+			0.0f);
+	}
+
+	const FVector RealUp =
+		FVector::CrossProduct(
+			F,
+			Right).GetSafeNormal();
+
+	cam.SetOrientation(
+		Right,
+		RealUp,
+		F);
+}

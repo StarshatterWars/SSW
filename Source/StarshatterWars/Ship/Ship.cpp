@@ -1793,11 +1793,35 @@ Ship::FindContact(SimObject* s) const
 		return 0;
 	}
 
-	ListIter<SimContact> c_iter = ((Ship*)this)->GetContactList();
+	List<SimContact>* SearchList =
+		nullptr;
+
+	if (s->GetType() == SimObject::SIM_SHIP)
+	{
+		Ship* TargetShip =
+			(Ship*)s;
+
+		if (region)
+		{
+			SearchList =
+				&region->GetTrackList(
+					TargetShip->GetIFF());
+		}
+	}
+
+	if (!SearchList)
+	{
+		SearchList =
+			&((Ship*)this)->GetContactList();
+	}
+
+	ListIter<SimContact> c_iter =
+		*SearchList;
 
 	while (++c_iter)
 	{
-		SimContact* c = c_iter.value();
+		SimContact* c =
+			c_iter.value();
 
 		if (!c)
 		{
@@ -1807,9 +1831,10 @@ Ship::FindContact(SimObject* s) const
 		if (c->GetShip() == s)
 		{
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Ship::FindContact] FOUND SHIP Observer='%hs' Target='%hs'"),
+				TEXT("[Ship::FindContact] FOUND SHIP Observer='%hs' Target='%hs' SearchContacts=%d"),
 				GetName(),
-				s->GetName());
+				s->GetName(),
+				SearchList->size());
 
 			return c;
 		}
@@ -1817,18 +1842,20 @@ Ship::FindContact(SimObject* s) const
 		if (c->GetShot() == s)
 		{
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Ship::FindContact] FOUND SHOT Observer='%hs' Target='%hs'"),
+				TEXT("[Ship::FindContact] FOUND SHOT Observer='%hs' Target='%hs' SearchContacts=%d"),
 				GetName(),
-				s->GetName());
+				s->GetName(),
+				SearchList->size());
 
 			return c;
 		}
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::FindContact] NOT FOUND Observer='%hs' Target='%hs' Contacts=%d"),
+		TEXT("[Ship::FindContact] NOT FOUND Observer='%hs' Target='%hs' SearchContacts=%d OwnContacts=%d"),
 		GetName(),
 		s->GetName(),
+		SearchList ? SearchList->size() : -1,
 		((Ship*)this)->GetContactList().size());
 
 	return 0;
@@ -3483,15 +3510,6 @@ Ship::ExecPhysics(double seconds)
 	{
 		g_force = 0.0f;
 	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecPhysics] Ship='%hs' Loc=%s Vel=%s Thrust=%.2f Throttle=%.2f Request=%.2f"),
-		GetName(),
-		*GetLocation().ToString(),
-		*GetVelocity().ToString(),
-		thrust,
-		throttle,
-		throttle_request);
 
 	//-------------------------------------------------------------
 	// Airborne path
@@ -5234,6 +5252,25 @@ Ship::ExecFLCSFrame()
 // +--------------------------------------------------------------------+
 
 void
+Ship::ApplyHelmYaw(double y)
+{
+	const double turn =
+		y * PI / 4;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Ship::ApplyHelmYaw] Ship='%s' InputYaw=%.4f Turn=%.4f CurrentCompass=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
+		ANSI_TO_TCHAR(GetName()),
+		y,
+		turn,
+		GetCompassHeading(),
+		helm_heading,
+		helm_heading + turn);
+
+	SetHelmHeading(
+		helm_heading + turn);
+}
+
+void
 Ship::SetHelmHeading(double h)
 {
 	while (h < 0)
@@ -5258,24 +5295,7 @@ Ship::SetHelmPitch(double p)
 	helm_pitch = (float)p;
 }
 
-void
-Ship::ApplyHelmYaw(double y)
-{
-	const double turn =
-		y * PI / 4;
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ApplyHelmYaw] Ship='%s' InputYaw=%.4f Turn=%.4f CurrentCompass=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
-		ANSI_TO_TCHAR(GetName()),
-		y,
-		turn,
-		GetCompassHeading(),
-		helm_heading,
-		helm_heading + turn);
-
-	SetHelmHeading(
-		helm_heading + turn);
-}
 
 void
 Ship::ApplyHelmPitch(double p)

@@ -656,15 +656,17 @@ TacticalAI::SelectTarget()
 
 	//-------------------------------------------------------------
 	// Target reacquisition delay
+	//
+	// TEMP UE MIGRATION:
+	// Disable reacquisition blocking while
+	// runtime tactical tracking stabilizes.
 	//-------------------------------------------------------------
 	if (ship_ai->DropTime() > 0)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTarget] DropTime active Ship='%hs' DropTime=%.2f"),
+			TEXT("[TacticalAI::SelectTarget] IGNORE DropTime Ship='%hs' DropTime=%.2f"),
 			ship ? ship->GetName() : "NULL",
 			ship_ai->DropTime());
-
-		return;
 	}
 
 	//-------------------------------------------------------------
@@ -768,7 +770,8 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 				SimObject* obj_sim_obj =
 					objective->GetTarget();
 
-				Ship* obj_tgt = nullptr;
+				Ship* obj_tgt =
+					nullptr;
 
 				if (obj_sim_obj &&
 					obj_sim_obj->GetType() == SimObject::SIM_SHIP)
@@ -777,22 +780,24 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 						(Ship*)obj_sim_obj;
 				}
 
-				if (obj_tgt)
+				//-------------------------------------------------
+				// Direct validation
+				//-------------------------------------------------
+				if (obj_tgt &&
+					obj_tgt != ship &&
+					obj_tgt->GetIFF() != 0 &&
+					obj_tgt->GetIFF() != ship->GetIFF() &&
+					obj_tgt->GetLife() != 0 &&
+					!obj_tgt->InTransition())
 				{
-					ListIter<SimContact> contact =
-						ship->GetContactList();
+					potential_target =
+						obj_tgt;
 
-					while (++contact && !potential_target)
-					{
-						Ship* test =
-							contact->GetShip();
-
-						if (obj_tgt == test)
-						{
-							potential_target =
-								test;
-						}
-					}
+					UE_LOG(LogTemp, Warning,
+						TEXT("[TacticalAI::SelectTargetDirected] OBJECTIVE TARGET Ship='%hs' Target='%hs'"),
+						ship ? ship->GetName() : "NULL",
+						potential_target ?
+						potential_target->GetName() : "NULL");
 				}
 			}
 		}
@@ -858,73 +863,66 @@ TacticalAI::SelectTargetOpportunity()
 	}
 
 	//-------------------------------------------------------------
-	// Explicit instruction/nav targets always win
+	// Keep current valid target
 	//-------------------------------------------------------------
-	if (navpt && navpt->GetTarget())
-	{
-		ship_ai->SetTarget(navpt->GetTarget());
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] INSTRUCTION TARGET OVERRIDE Ship='%hs' Target='%hs'"),
-			ship ? ship->GetName() : "NULL",
-			navpt->GetTarget()
-			? navpt->GetTarget()->GetName()
-			: "NULL");
-
-		return;
-	}
-
-	//-------------------------------------------------------------
-	// Preserve current assigned target if one already exists
-	//-------------------------------------------------------------
-	SimObject* current_target =
+	SimObject* current =
 		ship_ai->GetTarget();
 
-	if (current_target)
+	if (current &&
+		current->GetLife() != 0 &&
+		current->GetRegion() == ship->GetRegion())
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] KEEP EXISTING TARGET Ship='%hs' Target='%hs'"),
-			ship ? ship->GetName() : "NULL",
-			current_target
-			? current_target->GetName()
-			: "NULL");
+		FVector ToTarget =
+			current->GetLocation() -
+			ship->GetLocation();
+
+		ToTarget.Z = 0.0f;
+
+		if (ToTarget.Normalize())
+		{
+			const double Heading =
+				FMath::Atan2(
+					ToTarget.Y,
+					ToTarget.X);
+
+			ship->LookAt(
+				ship->GetLocation() +
+				ToTarget * 10000.0f);
+
+			ship->SetHelmHeading(
+				Heading);
+
+			//-----------------------------------------------------
+			// Prevent inherited forward drift
+			//-----------------------------------------------------
+			ship->SetVelocity(
+				FVector::ZeroVector);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TacticalAI::SelectTargetOpportunity] FACE CURRENT TARGET Ship='%hs' Target='%hs' HeadingDeg=%.2f"),
+				ship->GetName(),
+				current->GetName(),
+				FMath::RadiansToDegrees(
+					Heading));
+		}
 
 		return;
 	}
 
 	//-------------------------------------------------------------
-	// Scan contacts
+	// Find best hostile contact
 	//-------------------------------------------------------------
-	SimObject* best_target =
+	Ship* best_target =
 		nullptr;
 
 	double best_score =
-		-1.0;
+		0.0;
 
-	const double commit_range =
-		ship->IsStarship()
-		? 500000.0
-		: 100000.0;
-
-	ListIter<SimContact> contact_iter =
+	ListIter<SimContact> contact =
 		ship->GetContactList();
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[TacticalAI::SelectTargetOpportunity ENTER] Ship='%hs' Contacts=%d CommitRange=%.2f"),
-		ship ? ship->GetName() : "NULL",
-		ship ? ship->GetContactList().size() : 0,
-		commit_range);
-
-	while (++contact_iter)
+	while (++contact)
 	{
-		SimContact* contact =
-			contact_iter.value();
-
-		if (!contact)
-		{
-			continue;
-		}
-
 		Ship* candidate =
 			contact->GetShip();
 
@@ -933,63 +931,22 @@ TacticalAI::SelectTargetOpportunity()
 			continue;
 		}
 
-		//---------------------------------------------------------
-		// Ignore self
-		//---------------------------------------------------------
 		if (candidate == ship)
 		{
 			continue;
 		}
 
-		//---------------------------------------------------------
-		// Ignore dead/in-transition objects
-		//---------------------------------------------------------
-		if (!candidate->GetLife() ||
-			candidate->InTransition())
+		if (candidate->GetIFF() == ship->GetIFF())
 		{
 			continue;
 		}
 
-		//---------------------------------------------------------
-		// NEVER opportunistically target IFF 0 objects
-		//
-		// Farcasters
-		// stations
-		// navigation objects
-		// civilian infrastructure
-		//---------------------------------------------------------
 		if (candidate->GetIFF() == 0)
 		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[TacticalAI::SelectTargetOpportunity] SKIP IFF0 Ship='%hs' Candidate='%hs'"),
-				ship ? ship->GetName() : "NULL",
-				candidate ? candidate->GetName() : "NULL");
-
 			continue;
 		}
 
-		//---------------------------------------------------------
-		// Ignore friendlies
-		//---------------------------------------------------------
-		if (candidate->GetIFF() ==
-			ship->GetIFF())
-		{
-			continue;
-		}
-
-		//---------------------------------------------------------
-		// Ignore static scene objects
-		//---------------------------------------------------------
-		if (candidate->IsStatic())
-		{
-			continue;
-		}
-
-		//---------------------------------------------------------
-		// Ignore non-combat targets
-		//---------------------------------------------------------
-		if (!candidate->IsStarship() &&
-			!candidate->IsDropship())
+		if (candidate->InTransition())
 		{
 			continue;
 		}
@@ -998,57 +955,82 @@ TacticalAI::SelectTargetOpportunity()
 			(candidate->GetLocation() -
 				ship->GetLocation()).Size();
 
-		if (range > commit_range)
+		if (range <= 0.0)
 		{
 			continue;
 		}
 
 		//---------------------------------------------------------
-		// Scoring
+		// Threat-weighted score
 		//---------------------------------------------------------
 		double score =
-			1.0 / FMath::Max(range, 1.0);
-
-		if (candidate->IsStarship())
-		{
-			score *= 2.0;
-		}
+			1.0 / range;
 
 		if (contact->Threat(ship))
 		{
-			score *= 4.0;
+			score *= 5.0;
 		}
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] Candidate='%hs' Range=%.2f Score=%.6f Threat=%d"),
-			candidate->GetName(),
-			range,
-			score,
-			contact->Threat(ship) ? 1 : 0);
-
-		if (score > best_score)
+		if (!best_target ||
+			score > best_score)
 		{
-			best_score =
-				score;
-
 			best_target =
 				candidate;
+
+			best_score =
+				score;
 		}
 	}
 
 	//-------------------------------------------------------------
-	// Final assignment
+	// Acquire target
 	//-------------------------------------------------------------
 	if (best_target)
 	{
-		ship_ai->SetTarget(best_target);
+		ship_ai->SetTarget(
+			best_target);
+
+		//---------------------------------------------------------
+		// Immediately face target
+		//---------------------------------------------------------
+		FVector ToTarget =
+			best_target->GetLocation() -
+			ship->GetLocation();
+
+		ToTarget.Z = 0.0f;
+
+		if (ToTarget.Normalize())
+		{
+			const double Heading =
+				FMath::Atan2(
+					ToTarget.Y,
+					ToTarget.X);
+
+			ship->LookAt(
+				ship->GetLocation() +
+				ToTarget * 10000.0f);
+
+			ship->SetHelmHeading(
+				Heading);
+
+			//-----------------------------------------------------
+			// Prevent inherited forward drift
+			//-----------------------------------------------------
+			ship->SetVelocity(
+				FVector::ZeroVector);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[TacticalAI::SelectTargetOpportunity] FACE TARGET Ship='%hs' Target='%hs' HeadingDeg=%.2f"),
+				ship->GetName(),
+				best_target->GetName(),
+				FMath::RadiansToDegrees(
+					Heading));
+		}
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] TARGET ACQUIRED Ship='%hs' Target='%hs' Score=%.6f"),
-			ship ? ship->GetName() : "NULL",
-			best_target
-			? best_target->GetName()
-			: "NULL",
+			TEXT("[TacticalAI::SelectTargetOpportunity] TARGET Ship='%hs' Target='%hs' Score=%.6f"),
+			ship->GetName(),
+			best_target->GetName(),
 			best_score);
 	}
 	else
@@ -1057,15 +1039,8 @@ TacticalAI::SelectTargetOpportunity()
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[TacticalAI::SelectTargetOpportunity] NO TARGET Ship='%hs'"),
-			ship ? ship->GetName() : "NULL");
+			ship->GetName());
 	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[TacticalAI::SelectTargetOpportunity EXIT] Ship='%hs' FinalTarget='%hs'"),
-		ship ? ship->GetName() : "NULL",
-		ship_ai->GetTarget()
-		? ship_ai->GetTarget()->GetName()
-		: "NULL");
 }
 
 // +--------------------------------------------------------------------+

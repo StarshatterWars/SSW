@@ -86,7 +86,7 @@ public:
     FVector           GetHeading()   const { return cam.vpn(); }
     FVector           GetLiftLine()  const { return cam.vup(); }
     FVector           GetBeamLine()  const { return cam.vrt(); }
-    FVector           GetVelocity()  const { return velocity + arcade_velocity; }
+   
     FVector           GetAcceleration() const { return accel; }
 
     double            GetThrust()    const { return thrust; }
@@ -120,10 +120,15 @@ public:
     // mutators:
     virtual void      SetAngularRates(double R, double P, double Y);
     virtual void      GetAngularRates(double& R, double& P, double& Y);
+
     virtual void      SetAngularDrag(double R, double P, double Y);
     virtual void      GetAngularDrag(double& R, double& P, double& Y);
+
     virtual void      GetAngularThrust(double& R, double& P, double& Y);
+
     virtual void      SetVelocity(const FVector& V) { velocity = V; }
+    FVector           GetVelocity()  const { return velocity + arcade_velocity; }
+
     virtual void      SetAbsoluteOrientation(double InRoll, double InPitch, double InYaw);
     virtual void      CloneCam(const Camera& InCam);
     virtual void      SetDrag(double D) { drag = (float)D; }
@@ -134,6 +139,11 @@ public:
 
     virtual double    GetBaseDensity() const { return Do; }
     virtual double    GetDensity() const;
+
+    virtual void      SetAngularVelocity(const FVector& AngularVelocity);
+    virtual FVector   GetAngularVelocity() const;
+
+    virtual void SetHeadingVector(const FVector& Forward);
 
     enum { NAMELEN = 48 };
 

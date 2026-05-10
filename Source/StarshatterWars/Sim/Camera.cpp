@@ -479,3 +479,24 @@ Camera::Padlock(
 
 	return bLocked;
 }
+
+void
+Camera::SetOrientation(
+	const FVector& Right,
+	const FVector& Up,
+	const FVector& Forward)
+{
+	orientation(0, 0) = Right.X;
+	orientation(0, 1) = Right.Y;
+	orientation(0, 2) = Right.Z;
+
+	orientation(1, 0) = Up.X;
+	orientation(1, 1) = Up.Y;
+	orientation(1, 2) = Up.Z;
+
+	orientation(2, 0) = Forward.X;
+	orientation(2, 1) = Forward.Y;
+	orientation(2, 2) = Forward.Z;
+
+	Normalize();
+}

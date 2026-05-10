@@ -709,26 +709,22 @@ StarshipAI::SeekTarget()
         return Steer();
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::SeekTarget ENTER] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s Objective=%s ObjW=%s"),
-        ship->GetName(),
-        *ship->GetLocation().ToString(),
-        target ? target->GetName() : "NULL",
-        target ? *target->GetLocation().ToString() : TEXT("NULL"),
-        navpt,
-        navpt ? *navpt->GetLocation().ToString() : TEXT("NULL"),
-        *objective.ToString(),
-        *obj_w.ToString());
-
     if (navpt)
     {
-        SimRegion* self_rgn = ship->GetRegion();
-        SimRegion* nav_rgn = navpt->GetRegion();
-        QuantumDrive* qdrive = ship->GetQuantumDrive();
+        SimRegion* self_rgn =
+            ship->GetRegion();
+
+        SimRegion* nav_rgn =
+            navpt->GetRegion();
+
+        QuantumDrive* qdrive =
+            ship->GetQuantumDrive();
 
         if (self_rgn && !nav_rgn)
         {
-            nav_rgn = self_rgn;
+            nav_rgn =
+                self_rgn;
+
             navpt->SetRegion(nav_rgn);
         }
 
@@ -745,11 +741,13 @@ StarshipAI::SeekTarget()
         {
             if (!farcaster)
             {
-                ListIter<Ship> s = self_rgn->GetShips();
+                ListIter<Ship> s =
+                    self_rgn->GetShips();
 
                 while (++s && !farcaster)
                 {
-                    Ship* candidate = s.value();
+                    Ship* candidate =
+                        s.value();
 
                     if (!candidate)
                     {
@@ -761,9 +759,11 @@ StarshipAI::SeekTarget()
                         const Ship* dest =
                             candidate->GetFarcaster()->GetDest();
 
-                        if (dest && dest->GetRegion() == nav_rgn)
+                        if (dest &&
+                            dest->GetRegion() == nav_rgn)
                         {
-                            farcaster = candidate->GetFarcaster();
+                            farcaster =
+                                candidate->GetFarcaster();
                         }
                     }
                 }
@@ -775,11 +775,15 @@ StarshipAI::SeekTarget()
                     farcaster->GetShip()->GetRegion() != self_rgn &&
                     farcaster->GetDest())
                 {
-                    farcaster = farcaster->GetDest()->GetFarcaster();
+                    farcaster =
+                        farcaster->GetDest()->GetFarcaster();
                 }
 
-                obj_w = farcaster->EndPoint();
-                distance = FVector(obj_w - ship->GetLocation()).Length();
+                obj_w =
+                    farcaster->EndPoint();
+
+                distance =
+                    FVector(obj_w - ship->GetLocation()).Length();
 
                 UE_LOG(LogTemp, Warning,
                     TEXT("[StarshipAI::SeekTarget] Ship='%hs' using farcaster Distance=%.2f ObjW=%s ShipLoc=%s"),
@@ -790,17 +794,25 @@ StarshipAI::SeekTarget()
 
                 if (distance < 1000)
                 {
-                    farcaster = nullptr;
+                    farcaster =
+                        nullptr;
                 }
             }
         }
-        else if (self_rgn && nav_rgn && self_rgn != nav_rgn)
+        else if (self_rgn &&
+            nav_rgn &&
+            self_rgn != nav_rgn)
         {
-            QuantumDrive* q = ship->GetQuantumDrive();
+            QuantumDrive* q =
+                ship->GetQuantumDrive();
 
-            if (q && q->ActiveState() == QuantumDrive::ACTIVE_READY)
+            if (q &&
+                q->ActiveState() == QuantumDrive::ACTIVE_READY)
             {
-                q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
+                q->SetDestination(
+                    navpt->GetRegion(),
+                    navpt->GetLocation());
+
                 q->Engage();
 
                 UE_LOG(LogTemp, Warning,
@@ -810,14 +822,46 @@ StarshipAI::SeekTarget()
         }
     }
 
-    const FVector BeforeObjective = objective;
-    const FVector BeforeObjW = obj_w;
+    const FVector BeforeObjective =
+        objective;
+
+    const FVector BeforeObjW =
+        obj_w;
 
     Steer Result =
         ShipAI::SeekTarget();
 
+    double ActualDistance =
+        distance;
+
+    if (target)
+    {
+        ActualDistance =
+            (target->GetLocation() -
+                ship->GetLocation()).Size();
+    }
+    else if (navpt &&
+        navpt->GetTarget())
+    {
+        ActualDistance =
+            (navpt->GetTarget()->GetLocation() -
+                ship->GetLocation()).Size();
+    }
+    else if (navpt)
+    {
+        ActualDistance =
+            (navpt->GetLocation() -
+                ship->GetLocation()).Size();
+    }
+    else if (!obj_w.IsNearlyZero())
+    {
+        ActualDistance =
+            (obj_w -
+                ship->GetLocation()).Size();
+    }
+
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::SeekTarget EXIT] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s BeforeObj=%s AfterObj=%s BeforeObjW=%s AfterObjW=%s Distance=%.2f ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
+        TEXT("[StarshipAI::SeekTarget] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s BeforeObj=%s AfterObj=%s BeforeObjW=%s AfterObjW=%s Distance=%.2f ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
         ship ? ship->GetName() : "NULL",
         ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
         target ? target->GetName() : "NULL",
@@ -828,7 +872,7 @@ StarshipAI::SeekTarget()
         *objective.ToString(),
         *BeforeObjW.ToString(),
         *obj_w.ToString(),
-        (double)distance,
+        ActualDistance,
         (double)Result.yaw,
         (double)Result.pitch,
         (double)Result.brake,
