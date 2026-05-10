@@ -447,7 +447,7 @@ ShipAI::ExecFrame(double secs)
 	FindObjective();
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ExecFrame] AFTER FindObjective Ship='%s'"),
+		TEXT("[ShipAI::ExecFrame] FindObjective Ship='%s'"),
 		ANSI_TO_TCHAR(ship->GetName()));
 
 	Navigator();
