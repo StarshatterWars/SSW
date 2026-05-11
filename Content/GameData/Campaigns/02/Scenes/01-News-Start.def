@@ -214,9 +214,9 @@ element: {
    iff:       1
    playable:  false
    region:    "Trellis"
-   loc:       (212e3, -290e3, 0)
+   loc:       (-212e3, -290e3, 0)
 
-   navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 500, rgn: "Trellis" }
+   navpt:     { cmd: Vector, loc: (0, -150000, 0), speed: 500, rgn: "Trellis", tgt: "Trellis Docks" }
 }
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
