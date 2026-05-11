@@ -134,11 +134,11 @@ MouseController::Acquire()
 		roll_enable = 1;
 
 		if (!rbutton_latch)
-			rbutton_latch = (uint32)Game::RealTime();
+			rbutton_latch = Game::GetRealTime();
 	}
 	else {
 		if (rbutton_latch) {
-			rbutton_latch = (uint32)Game::RealTime() - rbutton_latch;
+			rbutton_latch = Game::GetRealTime() - rbutton_latch;
 			if (rbutton_latch < 250)
 				action[1] = 1;
 		}
@@ -148,7 +148,7 @@ MouseController::Acquire()
 
 	if (Mouse::MButton()) {
 		if (!mbutton_latch)
-			mbutton_latch = (uint32)Game::RealTime();
+			mbutton_latch = Game::GetRealTime();
 	}
 	else {
 		if (mbutton_latch) {

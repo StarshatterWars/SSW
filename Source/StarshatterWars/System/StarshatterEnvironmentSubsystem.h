@@ -148,6 +148,11 @@ public:
 
     int64 GetSimulationClockMs() const { return SimulationClockMs; }
     double GetSimulationClockSeconds() const { return (double)SimulationClockMs / 1000.0; }
+    
+    uint32 GetGameTime() const;
+    void ResetGameTime();
+    void SetGameTime(uint32 NewTimeMs);
+    void SkipGameTime(double seconds);
 
     EGameMode GetGameMode() { return game_mode; }
     void      SetGameMode(EGameMode mode) { game_mode = mode; }

@@ -402,7 +402,7 @@ ShipAI::ExecFrame(double secs)
 
 			// if this isn't the same ship we last called out:
 			if (target->GetIdentity() != engaged_ship_id &&
-				Game::GameTime() - last_call_time > 10000)
+				Game::GetGameTime() - last_call_time > 10000)
 			{
 				UE_LOG(LogTemp, Warning,
 					TEXT("[ShipAI::ExecFrame] RADIO ENGAGING Ship='%s'"),
@@ -418,7 +418,7 @@ ShipAI::ExecFrame(double secs)
 
 				RadioTraffic::Transmit(msg);
 
-				last_call_time = Game::GameTime();
+				last_call_time = Game::GetGameTime();
 
 				engaged_ship_id = target->GetIdentity();
 			}
@@ -1365,19 +1365,87 @@ ShipAI::ThrottleControl()
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::ThrottleControl] Ship='%hs' This=%p"),
+		ship ? ship->GetName() : "NULL",
+		this);
+
+	//-------------------------------------------------------------
+	// Navpoint complete stop behavior
+	//-------------------------------------------------------------
+
+	if (navpt &&
+		navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE &&
+		!target &&
+		!threat)
+	{
+		throttle =
+			0.0;
+
+		old_throttle =
+			0.0;
+
+		ship->SetThrottle(0.0);
+		ship->SetThrottleRequest(0.0);
+
+		ship->SetTransX(0.0);
+		ship->SetTransY(0.0);
+		ship->SetTransZ(0.0);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[ShipAI::ThrottleControl] NAV COMPLETE Ship='%hs'"),
+			ship ? ship->GetName() : "NULL");
+
+		return;
+	}
+
+	//-------------------------------------------------------------
+	// Detect aggressive turn-to-target state
+	//-------------------------------------------------------------
+
+	const double AbsYaw =
+		FMath::Abs(accumulator.yaw);
+
+	const double AbsPitch =
+		FMath::Abs(accumulator.pitch);
+
+	const bool bHardTurn =
+		AbsYaw > 0.60;
+
+	const bool bExtremeTurn =
+		AbsYaw > 0.90;
+
+	const bool bTurningToFaceTarget =
+		(target || threat) &&
+		bHardTurn;
+
+	//-------------------------------------------------------------
+	// Navigation / cruise
+	//-------------------------------------------------------------
+
 	if (navpt && !threat && !target)
 	{
-		double speed = navpt->GetSpeed();
+		double speed =
+			navpt->GetSpeed();
 
-		if (speed > 0.0 && ship->GetVelocityLimit() > 0.0)
+		if (speed > 0.0 &&
+			ship->GetVelocityLimit() > 0.0)
 		{
-			throttle = speed / ship->GetVelocityLimit() * 100.0;
+			throttle =
+				speed /
+				ship->GetVelocityLimit() *
+				100.0;
 		}
 		else
 		{
 			throttle = 50.0;
 		}
 	}
+
+	//-------------------------------------------------------------
+	// Patrol
+	//-------------------------------------------------------------
+
 	else if (patrol && !threat && !target)
 	{
 		double speed = 200.0;
@@ -1396,22 +1464,109 @@ ShipAI::ThrottleControl()
 			throttle = 50.0;
 		}
 	}
+
+	//-------------------------------------------------------------
+	// Combat / attack
+	//-------------------------------------------------------------
+
 	else
 	{
 		if (threat || target || element_index < 2)
 		{
-			throttle = 100.0;
+			//-----------------------------------------------------
+			// TURN-IN-PLACE BEHAVIOR
+			//-----------------------------------------------------
 
-			if (!threat && !target)
+			if (bTurningToFaceTarget)
 			{
-				throttle = 50.0;
+				const FVector Vel =
+					ship->GetVelocity();
+
+				const double Speed =
+					Vel.Size();
+
+				//-------------------------------------------------
+				// Hard braking while rotating
+				//-------------------------------------------------
+
+				throttle = 0.0;
+
+				accumulator.brake =
+					FMath::Clamp(
+						AbsYaw,
+						0.25,
+						1.0);
+
+				//-------------------------------------------------
+				// Kill translational drift
+				//-------------------------------------------------
+
+				if (Speed > 10.0)
+				{
+					const double BrakeStrength =
+						ship->Design()
+						? ship->Design()->trans_y
+						: 0.0;
+
+					//-------------------------------------------------
+					// Negative trans_y opposes forward motion
+					//-------------------------------------------------
+
+					ship->SetTransY(
+						-BrakeStrength *
+						accumulator.brake);
+				}
+				else
+				{
+					ship->SetTransY(0.0);
+				}
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::ThrottleControl TURN-IN-PLACE] Ship='%hs' Target='%hs' AbsYaw=%.3f Brake=%.3f Speed=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					target ? target->GetName() : "NULL",
+					AbsYaw,
+					accumulator.brake,
+					Speed);
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[TURN CHECK] Ship='%hs' AbsYaw=%.3f TransY=%.3f Throttle=%.2f Speed=%.2f"),
+					ship ? ship->GetName() : "NULL",
+					AbsYaw,
+					ship->GetTransY(),
+					throttle,
+					Speed);
 			}
 
-			if (accumulator.brake > 0.0)
+			//-----------------------------------------------------
+			// Forward attack run
+			//-----------------------------------------------------
+
+			else
 			{
-				throttle *= (1.0 - accumulator.brake);
+				throttle = 100.0;
+
+				accumulator.brake = 0.0;
+
+				ship->SetTransY(0.0);
+
+				if (!threat && !target)
+				{
+					throttle = 50.0;
+				}
+
+				if (accumulator.brake > 0.0)
+				{
+					throttle *=
+						(1.0 - accumulator.brake);
+				}
 			}
 		}
+
+		//---------------------------------------------------------
+		// Formation logic
+		//---------------------------------------------------------
+
 		else
 		{
 			Ship* lead = nullptr;
@@ -1422,13 +1577,17 @@ ShipAI::ThrottleControl()
 			}
 			else if (ship->GetElement())
 			{
-				lead = ship->GetElement()->GetShip(1);
+				lead =
+					ship->GetElement()->GetShip(1);
 			}
 
 			if (lead && lead != ship)
 			{
-				const double LeadSpeed = lead->GetVelocity().Size();
-				const double ShipSpeed = ship->GetVelocity().Size();
+				const double LeadSpeed =
+					lead->GetVelocity().Size();
+
+				const double ShipSpeed =
+					ship->GetVelocity().Size();
 
 				if (distance > 10000.0)
 				{
@@ -1473,19 +1632,34 @@ ShipAI::ThrottleControl()
 		}
 	}
 
-	throttle = FMath::Clamp(throttle, 0.0, 100.0);
-	old_throttle = throttle;
+	//-------------------------------------------------------------
+	// Clamp
+	//-------------------------------------------------------------
 
-	ship->SetThrottle((int)throttle);
+	throttle =
+		FMath::Clamp(
+			throttle,
+			0.0,
+			100.0);
+
+	old_throttle =
+		throttle;
+
+	//-------------------------------------------------------------
+	// Runtime propagation
+	//-------------------------------------------------------------
+
+	ship->SetThrottle(throttle);
+	ship->SetThrottleRequest(throttle);
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ThrottleControl] Ship='%hs' Target='%hs' Ward='%hs' ElementIndex=%d Distance=%.2f Throttle=%.2f Brake=%.2f Vel=%s"),
+		TEXT("[ShipAI::ThrottleControl] Ship='%hs' Target='%hs' AbsYaw=%.3f AbsPitch=%.3f Throttle=%.2f Request=%.2f Brake=%.2f Vel=%s"),
 		ship ? ship->GetName() : "NULL",
 		target ? target->GetName() : "NULL",
-		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
-		element_index,
-		distance,
+		AbsYaw,
+		AbsPitch,
 		throttle,
+		ship ? ship->GetThrottleRequest() : 0.0,
 		accumulator.brake,
 		ship ? *ship->GetVelocity().ToString() : TEXT("NULL"));
 }
@@ -1539,7 +1713,7 @@ ShipAI::AvoidCollision()
 		last_avoid_time = 0;
 	}
 
-	if (!other && Game::GameTime() - last_avoid_time < 500)
+	if (!other && Game::GetGameTime() - last_avoid_time < 500)
 	{
 		return avoid;
 	}
@@ -1678,7 +1852,7 @@ ShipAI::AvoidCollision()
 		}
 	}
 
-	last_avoid_time = Game::GameTime();
+	last_avoid_time = Game::GetGameTime();
 
 	return avoid;
 }

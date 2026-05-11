@@ -285,6 +285,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
     bool bEnableMainEngineEmitters = true;
+    
+    UPROPERTY(Transient)
+    float MainEngineVisualPower = 0.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|FX")
     TObjectPtr<UNiagaraSystem> MainEngineEmitterSystem = nullptr;
@@ -297,6 +300,9 @@ public:
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|FX")
     TArray<TObjectPtr<UNiagaraComponent>> MainEngineEmitters;
+    
+
+
 
     /*
      * Thruster emitters

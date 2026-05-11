@@ -1215,7 +1215,7 @@ bool Weapon::CanLockPoint(const FVector& test, double& az, double& el, FVector* 
 
 void Weapon::AimTurret(double az, double el)
 {
-    double seconds = (Game::GameTime() - aim_time) / 1000.0;
+    double seconds = (Game::GetGameTime() - aim_time) / 1000.0;
 
     // don't let the weapon turn faster than turret slew rate:
     double max_turn = design->slew_rate * seconds;
@@ -1240,7 +1240,7 @@ void Weapon::AimTurret(double az, double el)
     old_azimuth = (float)az;
     old_elevation = (float)el;
 
-    aim_time = Game::GameTime();
+    aim_time = Game::GetGameTime();
 }
 
 void Weapon::ZeroAim()

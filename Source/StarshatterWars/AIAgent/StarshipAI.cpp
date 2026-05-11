@@ -88,7 +88,7 @@ StarshipAI::StarshipAI(SimObject* s)
         tactical = new StarshipTacticalAI(this);
     }
 
-    sub_select_time = Game::GameTime() + FMath::RandRange(0, 2000);
+    sub_select_time = Game::GetGameTime() + FMath::RandRange(0, 2000);
     point_defense_time = sub_select_time;
 }
 
@@ -402,6 +402,11 @@ StarshipAI::ThrottleControl()
     {
         return;
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[StarshipAI::ThrottleControl]  Ship='%hs' This=%p"),
+        ship ? ship->GetName() : "NULL",
+        this);
 
     if (ship->Design() &&
         ship->Design()->auto_roll < 0)
@@ -766,8 +771,73 @@ StarshipAI::SeekTarget()
                     *obj_w.ToString(),
                     *ship->GetLocation().ToString());
 
-                if (distance < 1000)
+                //-------------------------------------------------
+                // Objective arrival
+                //-------------------------------------------------
+
+                if (distance < 1000.0)
                 {
+                    bool bInCombat =
+                        false;
+
+                    Ship* TargetShip =
+                        dynamic_cast<Ship*>(target);
+
+                    if (TargetShip &&
+                        TargetShip->GetIFF() != ship->GetIFF() &&
+                        TargetShip->GetIFF() != 0)
+                    {
+                        bInCombat =
+                            true;
+                    }
+
+                    if (threat &&
+                        threat->GetIFF() != ship->GetIFF() &&
+                        threat->GetIFF() != 0)
+                    {
+                        bInCombat =
+                            true;
+                    }
+
+                    ship->SetNavptStatus(
+                        navpt,
+                        INSTRUCTION_STATUS::COMPLETE);
+
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[StarshipAI::SeekTarget] OBJECTIVE COMPLETE Ship='%hs' InCombat=%d Distance=%.2f"),
+                        ship ? ship->GetName() : "NULL",
+                        bInCombat ? 1 : 0,
+                        distance);
+
+                    if (!bInCombat)
+                    {
+                        farcaster =
+                            nullptr;
+
+                        throttle =
+                            0.0;
+
+                        old_throttle =
+                            0.0;
+
+                        ship->SetThrottle(0.0);
+                        ship->SetThrottleRequest(0.0);
+
+                        ship->SetTransX(0.0);
+                        ship->SetTransY(0.0);
+                        ship->SetTransZ(0.0);
+
+                        Steer Stop;
+
+                        Stop.brake =
+                            1.0;
+
+                        Stop.stop =
+                            1;
+
+                        return Stop;
+                    }
+
                     farcaster =
                         nullptr;
                 }
@@ -978,7 +1048,7 @@ StarshipAI::SelectSubtarget()
     // This function currently returns a Weapon* subtarget, so we cast at the return boundary
     // to keep existing call sites intact while you finish the broader type migration.
 
-    const uint32 NowMs = Game::GameTime();
+    const uint32 NowMs = Game::GetGameTime();
 
     if ((NowMs - sub_select_time) < 2345u)
         return (SimSystem*)subtarget;
@@ -1080,7 +1150,7 @@ StarshipAI::SelectSubtarget()
 bool
 StarshipAI::AssessTargetPointDefense()
 {
-    if (Game::GameTime() - point_defense_time < 3500)
+    if (Game::GetGameTime() - point_defense_time < 3500)
         return tgt_point_defense;
 
     tgt_point_defense = false;
@@ -1095,7 +1165,7 @@ StarshipAI::AssessTargetPointDefense()
 
     FVector Svec = ship->GetLocation() - tgt_ship->GetLocation();
 
-    point_defense_time = Game::GameTime();
+    point_defense_time = Game::GetGameTime();
 
     // first pass: turrets
     ListIter<WeaponGroup> g_iter = tgt_ship->GetWeapons();

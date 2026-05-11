@@ -168,7 +168,7 @@ StarshipTacticalAI::FindThreat()
         }
 
         if (contact->Threat(ship) &&
-            (Game::GameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME)
+            (Game::GetGameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME)
         {
             if (c_shot)
             {

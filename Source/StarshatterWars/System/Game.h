@@ -68,6 +68,7 @@ public:
 
 	virtual void      Activate(bool f);
 	virtual void      Pause(bool f);
+
 	int               Status() const { return status; }
 
 
@@ -77,8 +78,8 @@ public:
 
 	static void       Panic(const char* msg = 0);
 	
-	static DWORD      RealTime();
-	static DWORD      GameTime();
+	static uint32     GetGameTime();
+	static uint32     GetRealTime();
 	
 	static DWORD      Frame();
 	static FString    GetMonth(int month);
@@ -213,7 +214,6 @@ protected:
 	static bool       show_mouse;
 	static DWORD      base_game_time;
 	static DWORD      real_time;
-	static DWORD      game_time;
 	static DWORD      time_comp;
 	static DWORD      frame_number;
 

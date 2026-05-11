@@ -100,7 +100,7 @@ void NavLight::Close()
 
 void NavLight::ExecFrame(double Seconds)
 {
-    const double GameSeconds = Game::GameTime() / 1000.0;
+    const double GameSeconds = Game::GetGameTime() / 1000.0;
 
     if (bEnabled && power_on)
     {

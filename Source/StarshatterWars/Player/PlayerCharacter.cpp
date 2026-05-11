@@ -919,7 +919,7 @@ int32 PlayerCharacter::GetMissionPoints(ShipStats* Stats, uint32 StartTimeMs)
     {
         MissionPoints = Stats->GetPoints();
 
-        const int32 FlightTimeSecondsLocal = (Game::GameTime() - StartTimeMs) / 1000;
+        const int32 FlightTimeSecondsLocal = (Game::GetGameTime() - StartTimeMs) / 1000;
 
         // If player survived the mission, award experience based on time in action
         if (!Stats->GetDeaths() && !Stats->GetColls())
@@ -960,7 +960,7 @@ void PlayerCharacter::ProcessStats(ShipStats* Stats, uint32 StartTimeMs)
     AddLosses(Stats->GetDeaths());
     AddLosses(Stats->GetColls());
     AddMissions(1);
-    AddFlightTime((Game::GameTime() - StartTimeMs) / 1000);
+    AddFlightTime((Game::GetGameTime() - StartTimeMs) / 1000);
 
     Rank = GetRank();
 

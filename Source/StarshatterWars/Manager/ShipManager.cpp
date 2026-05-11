@@ -66,8 +66,8 @@ ShipManager::Toggled(int action)
 	static double last_toggle_time = 0;
 
 	if (KeyDown(action)) {
-		if ((Game::RealTime() - last_toggle_time) > 250) {
-			last_toggle_time = Game::RealTime();
+		if ((Game::GetRealTime() - last_toggle_time) > 250) {
+			last_toggle_time = Game::GetRealTime();
 			return 1;
 		}
 	}

@@ -171,9 +171,9 @@ FighterTacticalAI::SelectTarget()
 	SimObject* target = ship_ai->GetTarget();
 
 	if (target && (target->GetType() == SimObject::SIM_SHIP) &&
-		(Game::GameTime() - secondary_selection_time) > THREAT_REACTION_TIME) {
+		(Game::GetGameTime() - secondary_selection_time) > THREAT_REACTION_TIME) {
 		SelectSecondaryForTarget((Ship*)target);
-		secondary_selection_time = Game::GameTime();
+		secondary_selection_time = Game::GetGameTime();
 	}
 }
 
@@ -494,7 +494,7 @@ FighterTacticalAI::FindThreat()
 		SimContact* contact = c_iter.value();
 
 		if (contact->Threat(ship) &&
-			(Game::GameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME) {
+			(Game::GetGameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME) {
 
 			double rng = contact->Range(ship);
 

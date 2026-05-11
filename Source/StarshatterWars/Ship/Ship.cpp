@@ -1526,35 +1526,72 @@ Ship::ClearTrack()
 
 	track[0] = GetLocation();
 	ntrack = 1;
-	track_time = Game::GameTime();
+	track_time = Game::GetGameTime();
 }
 
 void
 Ship::UpdateTrack()
 {
-	const int DEFAULT_TRACK_UPDATE = 500; // milliseconds
-	const int DEFAULT_TRACK_LENGTH = 20;  // 10 seconds
+	const uint32 DEFAULT_TRACK_UPDATE = 500;
+	const int    DEFAULT_TRACK_LENGTH = 20;
 
-	DWORD time = Game::GameTime();
+	const double MIN_TRACK_MOVE_DIST = 1.0;
 
-	if (!track) {
-		track = new  FVector[DEFAULT_TRACK_LENGTH];
-		track[0] = GetLocation();
-		ntrack = 1;
-		track_time = time;
-	}
+	const uint32 Time =
+		Game::GetGameTime();
 
-	else if (time - track_time > DEFAULT_TRACK_UPDATE) {
-		if (GetLocation() != track[0]) {
-			for (int i = DEFAULT_TRACK_LENGTH - 2; i >= 0; i--)
-				track[i + 1] = track[i];
+	const FVector CurrentLocation =
+		GetLocation();
 
-			track[0] = GetLocation();
-			if (ntrack < DEFAULT_TRACK_LENGTH) ntrack++;
+	if (!track)
+	{
+		track =
+			new FVector[DEFAULT_TRACK_LENGTH];
+
+		for (int i = 0; i < DEFAULT_TRACK_LENGTH; i++)
+		{
+			track[i] =
+				CurrentLocation;
 		}
 
-		track_time = time;
+		ntrack =
+			1;
+
+		track_time =
+			Time;
+
+		return;
 	}
+
+	if (Time - track_time <= DEFAULT_TRACK_UPDATE)
+	{
+		return;
+	}
+
+	const double MoveDist =
+		FVector::Dist(
+			CurrentLocation,
+			track[0]);
+
+	if (MoveDist > MIN_TRACK_MOVE_DIST)
+	{
+		for (int i = DEFAULT_TRACK_LENGTH - 2; i >= 0; i--)
+		{
+			track[i + 1] =
+				track[i];
+		}
+
+		track[0] =
+			CurrentLocation;
+
+		if (ntrack < DEFAULT_TRACK_LENGTH)
+		{
+			ntrack++;
+		}
+	}
+
+	track_time =
+		Time;
 }
 
 FVector
@@ -1933,7 +1970,7 @@ void
 Ship::SetFlightPhase(OP_MODE phase)
 {
 	if (phase == ACTIVE && !launch_time) {
-		launch_time = Game::GameTime() + 1;
+		launch_time = Game::GetGameTime() + 1;
 		dock = 0;
 
 		if (element)
@@ -2261,8 +2298,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 						RadioMessage* Warn = new RadioMessage(OwnerShip, this, RadioMessageAction::DECLARE_ROGUE);
 						RadioTraffic::Transmit(Warn);
 					}
-					else if (!OwnerShip->IsRogue() && (Game::GameTime() - ff_warn_time) > 5000) {
-						ff_warn_time = Game::GameTime();
+					else if (!OwnerShip->IsRogue() && (Game::GetGameTime() - ff_warn_time) > 5000) {
+						ff_warn_time = Game::GetGameTime();
 
 						RadioMessage* Warn = 0;
 						if (OwnerShip->GetTarget() == this)
@@ -2579,7 +2616,7 @@ Ship::CheckFriendlyFire()
 		return;
 
 	// only check once each second
-	if (Game::GameTime() - friendly_fire_time < 1000)
+	if (Game::GetGameTime() - friendly_fire_time < 1000)
 		return;
 
 	List<Weapon> w_list;
@@ -2637,7 +2674,7 @@ Ship::CheckFriendlyFire()
 		}
 	}
 
-	friendly_fire_time = Game::GameTime() + static_cast<uint32>(FMath::RandRange(0, 500));
+	friendly_fire_time = Game::GetGameTime() + static_cast<uint32>(FMath::RandRange(0, 500));
 }
 
 // +----------------------------------------------------------------------+
@@ -3412,10 +3449,10 @@ Ship::ExecEvalFrame(double seconds)
 	static DWORD last_eval_frame = 0;    // one ship per game frame
 
 	if (element && element->NumObjectives() > 0 &&
-		Game::GameTime() - last_eval_time > EVAL_FREQUENCY &&
+		Game::GetGameTime() - last_eval_time > EVAL_FREQUENCY &&
 		last_eval_frame != Game::Frame()) {
 
-		last_eval_time = Game::GameTime();
+		last_eval_time = Game::GetGameTime();
 		last_eval_frame = Game::Frame();
 
 		for (int i = 0; i < element->NumObjectives(); i++) {
@@ -3913,7 +3950,7 @@ Ship::StatFrame(double Seconds)
 {
 	if (flight_phase != ACTIVE) {
 		flight_phase = ACTIVE;
-		launch_time = Game::GameTime() + 1;
+		launch_time = Game::GetGameTime() + 1;
 
 		if (element)
 			element->SetLaunchTime(launch_time);
@@ -5610,25 +5647,25 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 		if (shot) {
 			if (shot->IsBeam()) {
 				if (design->beam_hit_sound_resource) {
-					if (Game::RealTime() - last_beam_time > 400) {
+					if (Game::GetRealTime() - last_beam_time > 400) {
 						USound* s = design->beam_hit_sound_resource->Duplicate();
 						s->SetLocation(impact);
 						s->SetVolume(AudioConfig::EfxVolume());
 						s->Play();
 
-						last_beam_time = Game::RealTime();
+						last_beam_time = Game::GetRealTime();
 					}
 				}
 			}
 			else {
 				if (design->bolt_hit_sound_resource) {
-					if (Game::RealTime() - last_bolt_time > 400) {
+					if (Game::GetRealTime() - last_bolt_time > 400) {
 						USound* s = design->bolt_hit_sound_resource->Duplicate();
 						s->SetLocation(impact);
 						s->SetVolume(AudioConfig::EfxVolume());
 						s->Play();
 
-						last_bolt_time = Game::RealTime();
+						last_bolt_time = Game::GetRealTime();
 					}
 				}
 			}
@@ -5907,10 +5944,10 @@ Ship::ExecMaintFrame(double seconds)
 	static DWORD last_repair_frame = 0;   // one ship per game frame
 
 	if (auto_repair &&
-		Game::GameTime() - last_repair_time > REPAIR_FREQUENCY &&
+		Game::GetGameTime() - last_repair_time > REPAIR_FREQUENCY &&
 		last_repair_frame != Game::Frame()) {
 
-		last_repair_time = Game::GameTime();
+		last_repair_time = Game::GetGameTime();
 		last_repair_frame = Game::Frame();
 
 		ListIter<SimSystem> iter = systems;

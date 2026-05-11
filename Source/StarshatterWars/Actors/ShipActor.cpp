@@ -1952,24 +1952,95 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
 {
     if (!RuntimeShip)
     {
+        for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
+        {
+            if (Emitter)
+            {
+                Emitter->Deactivate();
+                Emitter->SetVisibility(false);
+                Emitter->SetHiddenInGame(true);
+            }
+        }
+
         return;
     }
 
-    Drive* MainDrive = RuntimeShip->GetMainDrive();
+    Drive* MainDrive =
+        RuntimeShip->GetMainDrive();
 
     if (!MainDrive)
     {
         return;
     }
 
-    const float EnginePower =
+    const float ThrottleRequest =
+        (float)RuntimeShip->GetThrottleRequest();
+
+    const float Throttle =
+        (float)RuntimeShip->GetThrottle();
+
+    const bool bRequested =
+        ThrottleRequest > 0.5f;
+
+    const float ThrottlePower =
         FMath::Clamp(
-            RuntimeShip->GetThrottle() / 100.0f,
+            Throttle / 100.0f,
             0.0f,
             1.5f);
 
+    const float TargetPower =
+        bRequested
+        ? FMath::Max(ThrottlePower, 0.35f)
+        : 0.0f;
+
+    //---------------------------------------------------------
+    // Babylon 5 / Starshatter style:
+    // aggressive ignition and shutdown
+    //---------------------------------------------------------
+
+    if (bRequested)
+    {
+        //-----------------------------------------------------
+        // Immediate plasma ignition
+        //-----------------------------------------------------
+
+        MainEngineVisualPower =
+            FMath::Max(
+                MainEngineVisualPower,
+                0.85f);
+
+        //-----------------------------------------------------
+        // Rapid ramp to target brightness
+        //-----------------------------------------------------
+
+        MainEngineVisualPower =
+            FMath::FInterpTo(
+                MainEngineVisualPower,
+                TargetPower,
+                DeltaTime,
+                45.0f);
+    }
+    else
+    {
+        //-----------------------------------------------------
+        // Rapid collapse when throttle request removed
+        //-----------------------------------------------------
+
+        MainEngineVisualPower =
+            FMath::FInterpTo(
+                MainEngineVisualPower,
+                0.0f,
+                DeltaTime,
+                40.0f);
+
+        if (MainEngineVisualPower < 0.03f)
+        {
+            MainEngineVisualPower = 0.0f;
+        }
+    }
+
     const bool bActive =
-        EnginePower >= 0.1f;
+        MainEngineVisualPower > 0.03f;
 
     for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
     {
@@ -1986,6 +2057,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
          *
          * Only X changes dynamically.
          */
+
         FVector RuntimeScale =
             FVector(1.0f, 0.5f, 0.5f);
 
@@ -1993,11 +2065,24 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             FMath::Lerp(
                 0.1f,
                 2.0f,
-                EnginePower);
+                MainEngineVisualPower);
 
         Emitter->SetRelativeScale3D(RuntimeScale);
+
         Emitter->SetVisibility(bActive);
         Emitter->SetHiddenInGame(!bActive);
+
+        Emitter->SetFloatParameter(
+            TEXT("EnginePower"),
+            MainEngineVisualPower);
+
+        Emitter->SetFloatParameter(
+            TEXT("ThrottleRequest"),
+            ThrottleRequest);
+
+        Emitter->SetFloatParameter(
+            TEXT("Throttle"),
+            Throttle);
 
         if (bActive)
         {
@@ -2014,6 +2099,15 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             }
         }
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[ShipActor::UpdateMainEnginesFromRuntime] Actor='%s' Ship='%hs' Request=%.2f Throttle=%.2f VisualPower=%.2f Active=%d"),
+        *GetName(),
+        RuntimeShip->GetName() ? RuntimeShip->GetName() : "Unknown",
+        ThrottleRequest,
+        Throttle,
+        MainEngineVisualPower,
+        bActive ? 1 : 0);
 }
 
 void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)

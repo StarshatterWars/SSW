@@ -507,7 +507,7 @@ Sim::ExecMission()
 	CopyEvents();
 
 	first_frame = true;
-	start_time = Game::GameTime();
+	start_time = Game::GetGameTime();
 
 	AudioConfig::SetTraining(mission->GetType() == (int)EMISSIONTYPE::TRAINING);
 }
@@ -1676,6 +1676,12 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
+		DeltaSeconds,
+		Game::GetGameTime(),
+		regions.size());
+
 	if (first_frame) {
 		first_frame = false;
 	}
@@ -2112,7 +2118,7 @@ Sim::ProcessEventTrigger(int type, int event_id, const char* ship, int param)
 double
 Sim::MissionClock() const
 {
-	return (Game::GameTime() - start_time) / 1000.0;
+	return (Game::GetGameTime() - start_time) / 1000.0;
 }
 
 // +--------------------------------------------------------------------+
@@ -2450,7 +2456,7 @@ const char* FormatGameTime()
 {
 	static char TextBuffer[64];
 
-	const int32 TimeMs = Game::GameTime();
+	const int32 TimeMs = Game::GetGameTime();
 
 	const int32 Hours = (TimeMs / 3600000);
 	const int32 Minutes = ((TimeMs - Hours * 3600000) / 60000);

@@ -514,8 +514,8 @@ SteerAI::Evade(const FVector& Point, const FVector& Vel)
 
     Steer Evade;
 
-    if (Game::GameTime() - evade_time > 1250) {
-        evade_time = Game::GameTime();
+    if (Game::GetGameTime() - evade_time > 1250) {
+        evade_time = Game::GetGameTime();
 
         const int32 Direction = FMath::RandRange(0, 7);
 

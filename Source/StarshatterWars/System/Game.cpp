@@ -12,7 +12,9 @@
 #include "Screen.h"
 #include "Video.h"
 #include "Keyboard.h"
+#include "HAL/PlatformTime.h"
 #include "StarshatterGameDataSubsystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
 
 Game* game = 0;
 
@@ -22,7 +24,6 @@ bool     Game::server = false;
 bool     Game::show_mouse = false;
 DWORD    Game::base_game_time = 0;
 DWORD    Game::real_time = 0;
-DWORD    Game::game_time = 0;
 DWORD    Game::time_comp = 1;
 DWORD    Game::frame_number = 0;
 
@@ -86,19 +87,25 @@ void Game::Pause(bool f)
 {
 }
 
-DWORD GetRealTime()
+uint32
+Game::GetRealTime()
 {
-	return Game::RealTime();
+	return (uint32)(
+		FPlatformTime::Seconds() * 1000.0);
 }
 
-DWORD Game::RealTime()
+uint32
+Game::GetGameTime()
 {
-	return real_time;
-}
+	const UStarshatterEnvironmentSubsystem* Env =
+		UStarshatterEnvironmentSubsystem::Get();
 
-DWORD Game::GameTime()
-{
-	return game_time;
+	if (!Env)
+	{
+		return 0;
+	}
+
+	return Env->GetGameTime();
 }
 
 DWORD Game::Frame()
@@ -153,13 +160,28 @@ FString Game::GetMonth(int month)
 
 void Game::ResetGameTime()
 {
-	game_time = 0;
+	UStarshatterEnvironmentSubsystem* Env =
+		UStarshatterEnvironmentSubsystem::Get();
+
+	if (!Env)
+	{
+		return;
+	}
+
+	Env->ResetGameTime();
 }
 
 void Game::SkipGameTime(double seconds)
 {
-	if (seconds > 0)
-		game_time += (DWORD)(seconds * 1000);
+	UStarshatterEnvironmentSubsystem* Env =
+		UStarshatterEnvironmentSubsystem::Get();
+
+	if (!Env)
+	{
+		return;
+	}
+
+	Env->SkipGameTime(seconds);
 }
 
 double Game::FrameRate()

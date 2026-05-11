@@ -152,7 +152,7 @@ bool USSWRuntimeSubsystem::InitGame()
 
     CreateWorld();
 
-    TimeMark = Game::GameTime();
+    TimeMark = Game::GetGameTime();
     Minutes = 0;
 
     bRuntimeInitialized = true;

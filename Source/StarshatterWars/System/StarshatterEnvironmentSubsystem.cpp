@@ -406,6 +406,67 @@ void UStarshatterEnvironmentSubsystem::InitSimulationBaseTime()
 		Count);
 }
 
+uint32 UStarshatterEnvironmentSubsystem::GetGameTime() const
+{
+	if (SimulationClockMs < 0)
+	{
+		return 0;
+	}
+
+	return (uint32)SimulationClockMs;
+}
+
+void UStarshatterEnvironmentSubsystem::ResetGameTime()
+{
+	SimulationClockMs = 0;
+
+	StarSystem::SetSimulationTime(
+		GetSimulationClockSeconds());
+
+	StarSystem::CalcStardate();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] GameTime reset to 0"));
+}
+
+void UStarshatterEnvironmentSubsystem::SetGameTime(uint32 NewTimeMs)
+{
+	SimulationClockMs =
+		(int64)NewTimeMs;
+
+	StarSystem::SetSimulationTime(
+		GetSimulationClockSeconds());
+
+	StarSystem::CalcStardate();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] GameTime set to %u ms"),
+		NewTimeMs);
+}
+
+void UStarshatterEnvironmentSubsystem::SkipGameTime(double Seconds)
+{
+	if (Seconds <= 0.0)
+	{
+		return;
+	}
+
+	const uint32 DeltaMs =
+		(uint32)(Seconds * 1000.0);
+
+	SimulationClockMs += DeltaMs;
+
+	StarSystem::SetSimulationTime(
+		GetSimulationClockSeconds());
+
+	StarSystem::CalcStardate();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] SkipGameTime Seconds=%.3f DeltaMs=%u NewTime=%lld"),
+		Seconds,
+		DeltaMs,
+		SimulationClockMs);
+}
 void UStarshatterEnvironmentSubsystem::RegisterStarSystem(StarSystem* System)
 {
 	if (!System)
@@ -1862,15 +1923,18 @@ void UStarshatterEnvironmentSubsystem::SetSimulationClockMs(int64 InMs)
 
 void UStarshatterEnvironmentSubsystem::AdvanceSimulationClock(double DeltaSeconds)
 {
-	const int64 DeltaMs = (int64)FMath::RoundToInt64(DeltaSeconds * 1000.0);
+	if (DeltaSeconds <= 0.0)
+	{
+		return;
+	}
+
+	const int64 DeltaMs =
+		(int64)FMath::RoundToInt64(DeltaSeconds * 1000.0);
+
 	SimulationClockMs += DeltaMs;
 
 	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
 	StarSystem::CalcStardate();
-
-	UE_LOG(LogTemp, Verbose,
-		TEXT("[Environment] Simulation clock advanced by %lld ms -> %lld ms"),
-		DeltaMs, SimulationClockMs);
 }
 
 void UStarshatterEnvironmentSubsystem::TickEnvironmentTime(double DeltaSeconds)
@@ -1894,17 +1958,11 @@ void UStarshatterEnvironmentSubsystem::Tick(float DeltaTime)
 	}
 
 	AdvanceSimulationClock(DeltaTime);
-
-	// Push authoritative runtime time into legacy StarSystem static clock:
-	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
-	StarSystem::CalcStardate();
 }
 
 bool UStarshatterEnvironmentSubsystem::IsTickable() const
 {
-	// Keep it simple and safe:
-	return !IsTemplate() && bLoaded && bBaseTimeInitialized;
-	//return true;
+	return !IsTemplate();
 }
 
 TStatId UStarshatterEnvironmentSubsystem::GetStatId() const

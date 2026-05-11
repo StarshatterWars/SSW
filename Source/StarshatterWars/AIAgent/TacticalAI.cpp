@@ -100,7 +100,7 @@ TacticalAI::ExecFrame(double secs)
 	orders = ship->GetRadioOrders();
 
 	const int32 Now =
-		(int32)Game::GameTime();
+		(int32)Game::GetGameTime();
 
 	const bool bForceTacticalEveryFrameForMigration = true;
 
@@ -1133,7 +1133,7 @@ void TacticalAI::FindThreat()
 		SimContact* contact = iter.value();
 
 		if (contact->Threat(ship) &&
-			(Game::GameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME) {
+			(Game::GetGameTime() - contact->AcquisitionTime()) > THREAT_REACTION_TIME) {
 
 			if (contact->GetShot()) {
 				threat_missile = contact->GetShot();

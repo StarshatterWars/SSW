@@ -196,7 +196,7 @@ Trail::AddPoint(const FVector& V)
 	if (ntrail >= maxtrail - 1)
 		return;
 
-	const double RealTime = Game::RealTime() / 1000.0;
+	const double RealTime = Game::GetRealTime() / 1000.0;
 
 	if (ntrail == 0) {
 		radius = 1000.0f;

@@ -154,13 +154,13 @@ void MenuView::DoMouseFrame()
     if (Mouse::RButton()) {
         MouseController* mouse_con = MouseController::GetInstance();
         if (!right_down && (!mouse_con || !mouse_con->Active())) {
-            rbutton_latch = (uint32)Game::RealTime();
+            rbutton_latch = (uint32)Game::GetRealTime();
             right_down = 1;
             show_menu = 0;
         }
     }
     else {
-        if (right_down && (Game::RealTime() - rbutton_latch < 250)) {
+        if (right_down && (Game::GetRealTime() - rbutton_latch < 250)) {
             right_start.X = (float)(Mouse::X() - (int)offset.X);
             right_start.Y = (float)(Mouse::Y() - (int)offset.Y);
             right_start.Z = 0.0f;

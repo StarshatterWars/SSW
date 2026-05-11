@@ -980,7 +980,7 @@ HUDView::MarkerColor(SimContact* contact)
 		c = ColorMul(Ship::IFFColor(c_iff), (float)contact->Age());
 
 		if (contact->GetShot() && ship_local && contact->Threat(ship_local)) {
-			if ((Game::RealTime() / 500) & 1)
+			if ((Game::GetRealTime() / 500) & 1)
 				c = ColorMul(c, 2.0f);
 			else
 				c = ColorMul(c, 0.5f);
@@ -1276,9 +1276,9 @@ void HUDView::DrawTarget()
 				if (sys)
 				{
 					FColor       stat = HudColor;
-					static DWORD blink = Game::RealTime();
+					static DWORD blink = Game::GetRealTime();
 
-					int blink_delta = Game::RealTime() - blink;
+					int blink_delta = Game::GetRealTime() - blink;
 					sprintf_s(txt, "%s %03d", sys->Abbreviation(), (int)sys->GetAvailability());
 
 					switch (sys->GetStatus())
@@ -1299,7 +1299,7 @@ void HUDView::DrawTarget()
 					}
 
 					if (blink_delta > 500)
-						blink = Game::RealTime();
+						blink = Game::GetRealTime();
 
 					range_rect.y += 10;
 					DrawHUDText(TXT_TARGET_SUB, txt, range_rect, DT_RIGHT);
@@ -1814,7 +1814,7 @@ HUDView::DrawWarningPanel()
 		int y = cockpit_hud_texture ? 410 : height - 97;
 		int c = cockpit_hud_texture ? 3 : 4;
 
-		static uint32 blink = (uint32)Game::RealTime();
+		static uint32 blink = (uint32)Game::GetRealTime();
 
 		for (int index = 0; index < 12; index++) {
 			
@@ -1865,7 +1865,7 @@ HUDView::DrawWarningPanel()
 				FColor tc = StatusColor;
 
 				if (stat != SYSTEM_STATUS::NOMINAL) {
-					if (Game::RealTime() - blink < 250) {
+					if (Game::GetRealTime() - blink < 250) {
 						tc = cockpit_hud_texture ? TextColor : FColor(8, 8, 8);
 					}
 				}
@@ -1907,8 +1907,8 @@ HUDView::DrawWarningPanel()
 			}
 		}
 
-		if (Game::RealTime() - blink > 500)
-			blink = (uint32)Game::RealTime();
+		if (Game::GetRealTime() - blink > 500)
+			blink = (uint32)Game::GetRealTime();
 
 		// reset for next time
 		SetStatusColor(SYSTEM_STATUS::NOMINAL);

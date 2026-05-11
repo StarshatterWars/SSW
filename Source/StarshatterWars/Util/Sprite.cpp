@@ -215,7 +215,7 @@ Sprite::SetAnimation(Bitmap* animation, int length, int repeat, int share)
 			life = nframes;
 		}
 
-		last_time = Game::RealTime() - frame_time;
+		last_time = Game::GetRealTime() - frame_time;
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("Sprite::SetAnimation called with null animation"));
@@ -437,7 +437,7 @@ void
 Sprite::Update()
 {
 	if (life > 0 || loop) {
-		DWORD time = Game::RealTime();
+		DWORD time = Game::GetRealTime();
 		while (time - last_time > frame_time) {
 			life--;
 			frame_index++;

@@ -42,10 +42,6 @@
 #include "Color.h"      // Starshatter core (if still needed elsewhere)
 
 // +--------------------------------------------------------------------+
-
-DWORD GetRealTime();
-
-// +--------------------------------------------------------------------+
 // Local helpers (match original structure)
 // +--------------------------------------------------------------------+
 
@@ -88,7 +84,6 @@ Bitmap::Bitmap(int w, int h, ColorIndex* p, int t)
     , texture(false)
     , pix(p)
     , hipix(nullptr)
-    , last_modified(GetRealTime())
 {
     FMemory::Memzero(filename, sizeof(filename));
     FCStringAnsi::Snprintf(filename, sizeof(filename), "Bitmap(%d,%d,index,type=%d)", w, h, (int)t);
@@ -104,7 +99,6 @@ Bitmap::Bitmap(int w, int h, FColor* p, int t)
     , texture(false)
     , pix(nullptr)
     , hipix(p)
-    , last_modified(GetRealTime())
 {
     FMemory::Memzero(filename, sizeof(filename));
     FCStringAnsi::Snprintf(filename, sizeof(filename), "Bitmap(%d,%d,hicolor,type=%d)", w, h, (int)t);
@@ -232,7 +226,6 @@ void Bitmap::ClearToTransparent()
     Canvas->DrawItem(ClearTile);
 
     DrawEnd(Canvas);
-    last_modified = GetRealTime();
 }
 
 void Bitmap::UploadBGRA(const void* SrcBGRA8, int SrcW, int SrcH, bool bHasAlpha, bool bSRGB)
@@ -304,7 +297,6 @@ void Bitmap::UploadBGRA(const void* SrcBGRA8, int SrcW, int SrcH, bool bHasAlpha
     ownpix = false;
 
     alpha_loaded = bHasAlpha;
-    last_modified = GetRealTime();
 }
 
 // +--------------------------------------------------------------------+
@@ -329,8 +321,6 @@ void Bitmap::ClearImage()
 
     Texture = nullptr;
     RenderTarget = nullptr;
-
-    last_modified = GetRealTime();
 }
 
 void Bitmap::CopyBitmap(const Bitmap& rhs)
@@ -356,8 +346,6 @@ void Bitmap::CopyBitmap(const Bitmap& rhs)
         delete[] hipix; hipix = nullptr;
     }
     ownpix = false;
-
-    last_modified = GetRealTime();
 }
 
 void Bitmap::CopyImage(int w, int h, BYTE* p, int t)
@@ -422,7 +410,6 @@ void Bitmap::CopyAlphaImage(int w, int h, BYTE* a)
         }
 
         UploadBGRA(hipix, w, h, true, true);
-        last_modified = GetRealTime();
         return;
     }
 
@@ -445,7 +432,6 @@ void Bitmap::CopyAlphaRedChannel(int w, int h, DWORD* p)
         }
 
         UploadBGRA(hipix, w, h, true, true);
-        last_modified = GetRealTime();
         return;
     }
 
@@ -473,7 +459,6 @@ void Bitmap::AutoMask(DWORD mask)
     }
 
     UploadBGRA(hipix, width, height, true, true);
-    last_modified = GetRealTime();
 }
 
 void Bitmap::FillColor(FColor c)
@@ -495,7 +480,6 @@ void Bitmap::FillColor(FColor c)
     DrawEnd(Canvas);
 
     alpha_loaded = (c.A < 255) || (type == BMP_TRANSLUCENT);
-    last_modified = GetRealTime();
 }
 
 void Bitmap::ScaleTo(int NewW, int NewH)
@@ -508,7 +492,6 @@ void Bitmap::ScaleTo(int NewW, int NewH)
         height = NewH;
         mapsize = width * height;
         EnsureRenderTarget();
-        last_modified = GetRealTime();
         return;
     }
 
@@ -558,8 +541,6 @@ void Bitmap::ScaleTo(int NewW, int NewH)
     }
 
     DrawEnd(Canvas);
-
-    last_modified = GetRealTime();
 }
 
 void Bitmap::MakeIndexed()
@@ -610,7 +591,6 @@ void Bitmap::MakeTexture()
     }
 
     texture = true;
-    last_modified = GetRealTime();
 }
 
 // +--------------------------------------------------------------------+
@@ -649,7 +629,6 @@ void Bitmap::SetIndex(int x, int y, uint8 value)
     // Legacy CPU bitmap path (optional)
     if (pix) {
         pix[y * width + x] = value;
-        last_modified = GetRealTime();
         return;
     }
 
@@ -664,7 +643,6 @@ void Bitmap::SetColor(int x, int y, FColor c)
 
     if (hipix) {
         *(hipix + y * width + x) = c;
-        last_modified = GetRealTime();
         return;
     }
 
@@ -682,7 +660,7 @@ void Bitmap::SetColor(int x, int y, FColor c)
     DrawEnd(Canvas);
 
     alpha_loaded = alpha_loaded || (c.A < 255);
-    last_modified = GetRealTime();
+    //last_modified = GetRealTime();
 }
 
 // Linear-index helpers (fix “SetColor does not take 2 arguments” call sites)
@@ -771,7 +749,7 @@ void Bitmap::BitBlt(int x, int y, const Bitmap& srcBmp, int sx, int sy, int w, i
     DrawEnd(Canvas);
 
     alpha_loaded = alpha_loaded || bDoAlpha;
-    last_modified = GetRealTime();
+    //last_modified = GetRealTime();
 }
 
 // +--------------------------------------------------------------------+
@@ -897,7 +875,7 @@ void Bitmap::DrawLine(int x1, int y1, int x2, int y2, FColor color)
     DrawEnd(Canvas);
 
     alpha_loaded = alpha_loaded || (color.A < 255);
-    last_modified = GetRealTime();
+    //last_modified = GetRealTime();
 }
 
 void Bitmap::DrawRect(int x1, int y1, int x2, int y2, FColor color)
@@ -968,7 +946,7 @@ void Bitmap::DrawRect(int x1, int y1, int x2, int y2, FColor color)
     DrawEnd(Canvas);
 
     alpha_loaded = alpha_loaded || (color.A < 255);
-    last_modified = GetRealTime();
+    //last_modified = GetRealTime();
 }
 
 void Bitmap::DrawRect(const FIntRect& r, FColor color)
@@ -1005,7 +983,7 @@ void Bitmap::FillRect(int x1, int y1, int x2, int y2, FColor color)
     DrawEnd(Canvas);
 
     alpha_loaded = alpha_loaded || (color.A < 255);
-    last_modified = GetRealTime();
+    //last_modified = GetRealTime();
 }
 
 void Bitmap::FillRect(const FIntRect& r, FColor color)
@@ -1078,7 +1056,6 @@ void Bitmap::DrawEllipse(int x1, int y1, int x2, int y2, FColor color, BYTE quad
     }
 
     alpha_loaded = alpha_loaded || (color.A < 255);
-    last_modified = GetRealTime();
 }
 
 void Bitmap::DrawEllipsePoints(int x0, int y0, int x, int y, FColor c, BYTE quad)

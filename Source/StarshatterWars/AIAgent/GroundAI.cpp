@@ -185,8 +185,8 @@ GroundAI::ExecFrame(double secs)
     const double exec_period_ms = 1000.0;
 
     // Game::GameTime() is assumed to be milliseconds (legacy Starshatter behavior).
-    if ((double)Game::GameTime() - exec_time > exec_period_ms) {
-        exec_time = (double)Game::GameTime();
+    if ((double)Game::GetGameTime() - exec_time > exec_period_ms) {
+        exec_time = (double)Game::GetGameTime();
         SelectTarget();
     }
 

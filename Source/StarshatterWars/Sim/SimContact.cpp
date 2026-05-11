@@ -43,7 +43,7 @@ SimContact::SimContact()
 	d_act(0.0f),
 	probe(false)
 {
-	acquire_time = Game::GameTime();
+	acquire_time = Game::GetGameTime();
 }
 
 SimContact::SimContact(Ship* s, float p, float a)
@@ -59,7 +59,7 @@ SimContact::SimContact(Ship* s, float p, float a)
 	d_act(a),
 	probe(false)
 {
-	acquire_time = Game::GameTime();
+	acquire_time = Game::GetGameTime();
 	Observe(ship);
 }
 
@@ -76,7 +76,7 @@ SimContact::SimContact(SimShot* s, float p, float a)
 	d_act(a),
 	probe(false)
 {
-	acquire_time = Game::GameTime();
+	acquire_time = Game::GetGameTime();
 	Observe(shot);
 }
 
@@ -147,7 +147,7 @@ SimContact::Age() const
 	if (!ship && !shot)
 		return age;
 
-	const double seconds = (Game::GameTime() - time) / 1000.0;
+	const double seconds = (Game::GetGameTime() - time) / 1000.0;
 	age = 1.0 - seconds / Game::DefaultTrackAge;
 
 	if (age < 0)
@@ -381,7 +381,7 @@ SimContact::ClearTrack()
 void
 SimContact::UpdateTrack()
 {
-	time = Game::GameTime();
+	time = Game::GetGameTime();
 
 	if (shot || (ship && ship->IsGroundUnit()))
 		return;

@@ -140,7 +140,7 @@ ParticleManager::ParticleManager(Bitmap* bitmap,
 		// Initialize the first "nverts" particles:
 		float speed = base_speed;
 
-		const float now_sec = (float)(Game::GameTime() / 1000.0);
+		const float now_sec = (float)(Game::GetGameTime() / 1000.0);
 
 		for (int i = 0; i < nverts; i++) {
 			intensity[i] = 1.0f;
@@ -370,7 +370,7 @@ void ParticleManager::ExecFrame(double seconds)
 		if (nverts > nparts)
 			nverts = nparts;
 
-		const float now_sec = (float)(Game::GameTime() / 1000.0f);
+		const float now_sec = (float)(Game::GetGameTime() / 1000.0f);
 
 		for (int i = old_nverts; i < nverts; i++) {
 			intensity[i] = 1.0f;
@@ -390,7 +390,7 @@ void ParticleManager::ExecFrame(double seconds)
 	// Recycle dead particles if continuous:
 	if (continuous) {
 		float speed = base_speed;
-		const float now_sec = (float)(Game::GameTime() / 1000.0f);
+		const float now_sec = (float)(Game::GetGameTime() / 1000.0f);
 
 		for (int i = 0; i < nverts; i++) {
 			if (intensity[i] <= 0.0f) {

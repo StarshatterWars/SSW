@@ -2195,7 +2195,7 @@ Campaign::StartMission()
 
         if (!IsScripted()) {
 
-            double gtime = (double)Game::GameTime() / 1000.0;
+            double gtime = (double)Game::GetGameTime() / 1000.0;
             double base = GetStartTime() + m->GetStart() - 15 - gtime;
 
             StarSystem::SetBaseTime(base);
@@ -2222,7 +2222,7 @@ Campaign::RollbackMission()
     if (m) {
         if (!IsScripted()) {
 
-            double gtime = (double)Game::GameTime() / 1000.0;
+            double gtime = (double)Game::GetGameTime() / 1000.0;
             double base = GetStartTime() + m->GetStart() - 60 - gtime;
 
             StarSystem::SetBaseTime(base);

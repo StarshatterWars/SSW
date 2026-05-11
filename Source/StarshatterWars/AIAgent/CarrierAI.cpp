@@ -58,7 +58,7 @@ CarrierAI::CarrierAI(Ship* s, int level)
 		if (ship)
 			flight_planner = new FlightPlanner(ship);
 
-		hold_time = (int)Game::GameTime();
+		hold_time = (int)Game::GetGameTime();
 	}
 }
 
@@ -78,13 +78,13 @@ CarrierAI::ExecFrame(double secs)
 	if (!sim || !ship || !hangar)
 		return;
 
-	if (((int)Game::GameTime() - hold_time >= INIT_HOLD) &&
-		((int)Game::GameTime() - exec_time > EXEC_PERIOD)) {
+	if (((int)Game::GetGameTime() - hold_time >= INIT_HOLD) &&
+		((int)Game::GetGameTime() - exec_time > EXEC_PERIOD)) {
 
 		CheckHostileElements();
 		CheckPatrolCoverage();
 
-		exec_time = (int)Game::GameTime();
+		exec_time = (int)Game::GetGameTime();
 	}
 }
 
@@ -140,7 +140,7 @@ CarrierAI::CheckPatrolCoverage()
 			}
 		}
 
-		else if (Game::GameTime() - hangar->GetLastPatrolLaunch() > PATROL_PERIOD ||
+		else if (Game::GetGameTime() - hangar->GetLastPatrolLaunch() > PATROL_PERIOD ||
 			hangar->GetLastPatrolLaunch() == 0) {
 			SimElement* patrol = CreatePackage(0, 2, (int)EMISSIONTYPE::PATROL, 0, "ACM Medium Range");
 			if (patrol) {
@@ -149,7 +149,7 @@ CarrierAI::CheckPatrolCoverage()
 				if (flight_planner)
 					flight_planner->CreatePatrolRoute(patrol, i);
 
-				hangar->SetLastPatrolLaunch(Game::GameTime());
+				hangar->SetLastPatrolLaunch(Game::GetGameTime());
 				return true;
 			}
 		}
@@ -202,7 +202,7 @@ CarrierAI::CheckHostileElements()
 
 			// nobody is assigned yet, create an attack package
 			if (!found && CreateStrike(elem)) {
-				hold_time = (int)Game::GameTime() + 30000;
+				hold_time = (int)Game::GetGameTime() + 30000;
 				return true;
 			}
 		}

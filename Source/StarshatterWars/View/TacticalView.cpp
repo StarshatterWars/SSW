@@ -407,13 +407,13 @@ void TacticalView::DoMouseFrame()
     {
         if (!bRightDown)
         {
-            RButtonLatch = Game::RealTime();
+            RButtonLatch = Game::GetRealTime();
             bRightDown = true;
         }
     }
     else
     {
-        if (SimPtr && bRightDown && (Game::RealTime() - RButtonLatch < 250))
+        if (SimPtr && bRightDown && (Game::GetRealTime() - RButtonLatch < 250))
         {
             Ship* Seln = WillSelectAt(Mouse::X(), Mouse::Y());
 
@@ -513,10 +513,10 @@ void TacticalView::DoMouseFrame()
                     {
                         const bool bHit = SelectAt(MX, MY);
 
-                        if (PlayerShip && PlayerShip->IsStarship() && Game::RealTime() - ClickTime < 350)
+                        if (PlayerShip && PlayerShip->IsStarship() && Game::GetRealTime() - ClickTime < 350)
                             SetHelm(bHit);
 
-                        ClickTime = Game::RealTime();
+                        ClickTime = Game::GetRealTime();
                     }
                 }
             }
@@ -1132,7 +1132,7 @@ void TacticalView::DrawAction()
 
     if (Tgt && R)
     {
-        if ((Game::RealTime() / 200) & 1)
+        if ((Game::GetRealTime() / 200) & 1)
             R = 20;
         else
             R = 15;

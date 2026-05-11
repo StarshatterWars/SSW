@@ -35,7 +35,7 @@ SimEvent::SimEvent(int e, const char* t, const char* i)
 		time = (int)sim->MissionClock();
 	}
 	else {
-		time = (int)(Game::GameTime() / 1000);
+		time = (int)(Game::GetGameTime() / 1000);
 	}
 
 	SetTarget(t);

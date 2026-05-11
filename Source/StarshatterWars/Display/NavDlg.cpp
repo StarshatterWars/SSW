@@ -562,7 +562,7 @@ UNavDlg::OnMapClick()
     CoordinateSelection();
 
     // double-click:
-    if (Game::RealTime() - click_time < 350) {
+    if (Game::GetRealTime() - click_time < 350) {
         MissionElement* elem = star_map->GetSelectedElem();
 
         // manager->GetMsnElemDlg() in classic. Here, manager is UObject*.
@@ -572,7 +572,7 @@ UNavDlg::OnMapClick()
         }
     }
 
-    click_time = Game::RealTime();
+    click_time = Game::GetRealTime();
 }
 
 void

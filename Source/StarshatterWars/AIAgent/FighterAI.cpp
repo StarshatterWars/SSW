@@ -1591,8 +1591,8 @@ FighterAI::EvadeThreat()
 
                     // jink for one second:
                     else {
-                        if (Game::GameTime() - jink_time > 1500) {
-                            jink_time = Game::GameTime();
+                        if (Game::GetGameTime() - jink_time > 1500) {
+                            jink_time = Game::GetGameTime();
                             jink = FVector(
                                 FMath::RandRange(-16384, 16384),
                                 FMath::RandRange(-16384, 16384),
@@ -1619,8 +1619,8 @@ FighterAI::EvadeThreat()
 
                     // jink for one second:
                     else {
-                        if (Game::GameTime() - jink_time > 1000) {
-                            jink_time = Game::GameTime();
+                        if (Game::GetGameTime() - jink_time > 1000) {
+                            jink_time = Game::GetGameTime();
                             jink = FVector(
                                 FMath::RandRange(-16384, 16384),
                                 FMath::RandRange(-16384, 16384),
@@ -1676,8 +1676,8 @@ FighterAI::EvadeThreat()
                 if (!target) {
                     const uint32 JinkRate = (uint32)(400 + 200 * (3 - ai_level));
 
-                    if ((uint32)(Game::GameTime() - jink_time) > JinkRate) {
-                        jink_time = Game::GameTime();
+                    if ((uint32)(Game::GetGameTime() - jink_time) > JinkRate) {
+                        jink_time = Game::GetGameTime();
                         jink = FVector(
                             FMath::RandRange(-16384, 16384),
                             FMath::RandRange(-16384, 16384),
@@ -1812,7 +1812,7 @@ FighterAI::FireControl()
                         if (ship->FireSecondary()) {
                             missile_time = secondary->Design()->salvo_delay + extra_time;
 
-                            if (Game::GameTime() - last_call_time > 6000) {
+                            if (Game::GetGameTime() - last_call_time > 6000) {
                                 // call fox:
                                 RadioMessageAction call = RadioMessageAction::FOX_3;                 // A2A
 
@@ -1823,7 +1823,7 @@ FighterAI::FireControl()
                                     call = RadioMessageAction::FOX_2;
 
                                 RadioTraffic::SendQuickMessage(ship, call);
-                                last_call_time = Game::GameTime();
+                                last_call_time = Game::GetGameTime();
                             }
                         }
                     }
