@@ -9,7 +9,7 @@ model:      "Station1"
 
 mass:       5e6
 integrity:  5e6
-scale:      5
+scale:      10
 acs:        5e6
 
 chase:      (0, -1200, 250)

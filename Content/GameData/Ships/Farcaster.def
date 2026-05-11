@@ -11,7 +11,7 @@ model:      "Farcaster"
 
 mass:       5e6
 integrity:  3e6
-scale:      15.0
+scale:      4.0
 acs:        320e3
 
 drag:       100
