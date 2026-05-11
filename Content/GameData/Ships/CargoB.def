@@ -7,7 +7,7 @@ abrv:		FREIGHT
 hud_icon:   "CBHud"
 description: "The IM4300 Hauler is a mid-capacity transport optimized for regional supply distribution and frontier logistics. More maneuverable than larger freight platforms, it balances cargo volume with operational flexibility across unstable trade corridors."
 empire:     Neutral
-model:     "CargoB_2"
+model:     "IM4300"
 
 mass:       37.1e3
 agility:    1

@@ -8,7 +8,7 @@ hud_icon:   "CCHud"
 description: "The IM2800 Cargo Hauler is a compact commercial transport built for short-range freight delivery and orbital resupply operations. Designed for efficiency and low operating cost, it is a common sight along established trade lanes and developing colony routes."
 empire:     Neutral
 
-model:     "CargoC_2"
+model:     "IM2800"
 
 mass:       8.2e3
 agility:    1

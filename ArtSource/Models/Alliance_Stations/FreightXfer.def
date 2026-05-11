@@ -5,7 +5,7 @@ display_name:  "Freight Xfer"
 class:         STATION
 hud_icon:      "s1hud.pcx"
 
-model:      "S1opt.mag"
+model:      "Station1"
 
 mass:       5e6
 integrity:  5e6

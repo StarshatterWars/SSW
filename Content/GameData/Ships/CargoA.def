@@ -7,7 +7,7 @@ abrv:		FREIGHT
 hud_icon:   "CAHud"
 description: "The IM3500 Freighter is a heavy cargo hauler designed for sustained interstellar trade routes and bulk resource transport. Slow but resilient, it prioritizes capacity and range over combat capability, often operating under escort in volatile sectors."
 empire:     Neutral
-model:     "CargoA_0opt"
+model:     "IM3500"
 
 mass:       18.2e3
 agility:    1
