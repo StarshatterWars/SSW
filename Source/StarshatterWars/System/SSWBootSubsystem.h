@@ -82,6 +82,22 @@ public:
     bool IsBootComplete() const { return bBootComplete; }
     bool NeedsFirstRun() const { return bNeedsFirstRun; }
 
+    UFUNCTION(BlueprintCallable, Category = "SSW|Boot")
+    bool ShouldRebuildTables() const
+    {
+        return bRebuildTables;
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "SSW|Boot")
+    void SetRebuildTables(bool bInRebuildTables)
+    {
+        bRebuildTables = bInRebuildTables;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SSWBootSubsystem] RebuildTables=%d"),
+            bRebuildTables ? 1 : 0);
+    }
+
     FOnSSWBootComplete OnBootComplete;
 
     // Temporary passthrough.
@@ -146,5 +162,5 @@ private:
 private:
     bool bBootComplete = false;
     bool bNeedsFirstRun = false;
-    bool bRebuildTables = true;
+    bool bRebuildTables = false;
 };

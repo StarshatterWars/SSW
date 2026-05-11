@@ -317,7 +317,7 @@ Drive::Thrust(double seconds)
     //-------------------------------------------------------------
     if (eff <= 0.0f && availability > 0.0f)
     {
-        eff = availability;
+        eff = availability * 100.0f;
     }
 
     float output =
@@ -348,6 +348,37 @@ Drive::Thrust(double seconds)
         }
     }
 
+    //-------------------------------------------------------------
+    // STARTUP FALLBACK
+    // Prevent zero-thrust startup stalls while legacy
+    // power routing is still being restored.
+    //-------------------------------------------------------------
+    if (throttle > 0.0f &&
+        output <= 0.0f &&
+        IsPowerOn())
+    {
+        output =
+            throttle *
+            thrust *
+            100.0f;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Drive::Thrust] STARTUP FALLBACK Ship='%hs' Throttle=%.2f Thrust=%.2f Output=%.2f"),
+            ship ? ship->GetName() : "NULL",
+            throttle,
+            thrust,
+            output);
+    }
+
+    //-------------------------------------------------------------
+    // TEMP MOVEMENT SCALE
+    // Presentation/combat readability tuning only.
+    //-------------------------------------------------------------
+
+    static const float MovementScale = 10.0f;
+
+    output *= MovementScale;
+
     energy = 0.0f;
 
     if (output < 0.0f ||
@@ -363,17 +394,17 @@ Drive::Thrust(double seconds)
 
     if (fraction > 0.0)
     {
-        intensity += (float)seconds;
+        intensity += (float)seconds * 4.0f;
     }
     else
     {
-        intensity -= (float)seconds;
+        intensity -= (float)seconds * 6.0f;
     }
 
     CLAMP(intensity, 0.0f, 1.0f);
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[Drive::Thrust] Ship='%hs' PowerOn=%d Energy=%.2f Capacity=%.2f Availability=%.2f Eff=%.2f Throttle=%.2f AugThrottle=%.2f Intensity=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Output=%.2f Seconds=%.4f"),
+        TEXT("[Drive::Thrust] Ship='%hs' PowerOn=%d Energy=%.2f Capacity=%.2f Availability=%.2f Eff=%.2f Throttle=%.2f AugThrottle=%.2f Intensity=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Output=%.2f Scale=%.2f Seconds=%.4f"),
         ship ? ship->GetName() : "NULL",
         IsPowerOn() ? 1 : 0,
         energy,
@@ -387,6 +418,7 @@ Drive::Thrust(double seconds)
         augmenter,
         GetRequest(seconds),
         output,
+        MovementScale,
         seconds);
 
     return output;
