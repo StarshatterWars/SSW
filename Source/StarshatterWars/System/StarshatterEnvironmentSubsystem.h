@@ -158,6 +158,18 @@ public:
     void      SetGameMode(EGameMode mode) { game_mode = mode; }
     const     TArray<OrbitalRegion*>& GetRuntimeRegions() const { return RuntimeRegions; }
     void      BuildSimRegionsForSim(Sim* SimInst);
+    
+    // -------------------------------------------------------------------------
+    // Simulation Time Scale
+    // -------------------------------------------------------------------------
+
+    FORCEINLINE double GetSimTimeScale() const
+    {
+        return SimTimeScale;
+    }
+
+    void SetSimTimeScale(double NewScale);
+
 
     // =====================================================================
     // Project path / utility
@@ -200,6 +212,8 @@ public:
 
     UPROPERTY()
     TMap<FString, FMoon> MoonMapByName;
+
+
 
     // -----------------------------------------------------------------
     // DataTable accessors
@@ -351,6 +365,8 @@ private:
     static TWeakObjectPtr<UStarshatterEnvironmentSubsystem> ActiveInstance;
 
     EGameMode               game_mode;
+  
+    double SimTimeScale = 1.0;
 };
 
 

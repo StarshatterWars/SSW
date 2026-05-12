@@ -155,5 +155,7 @@ public:
     static FString GetMissionElementIndicator(MissionElement* Elem);
 
     static float RadiansToDegrees360(double Radians);
+
+    static FString GetMonth(int month);
 };
 

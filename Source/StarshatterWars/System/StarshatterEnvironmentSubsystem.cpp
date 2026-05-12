@@ -1928,13 +1928,37 @@ void UStarshatterEnvironmentSubsystem::AdvanceSimulationClock(double DeltaSecond
 		return;
 	}
 
+	// -------------------------------------------------------------------------
+	// Authoritative simulation timestep
+	// -------------------------------------------------------------------------
+
+	const double SimSeconds =
+		DeltaSeconds * SimTimeScale;
+
 	const int64 DeltaMs =
-		(int64)FMath::RoundToInt64(DeltaSeconds * 1000.0);
+		(int64)FMath::RoundToInt64(SimSeconds * 1000.0);
 
 	SimulationClockMs += DeltaMs;
 
 	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
 	StarSystem::CalcStardate();
+
+	UE_LOG(LogTemp, VeryVerbose,
+		TEXT("[Environment] AdvanceSimulationClock UE=%.6f Sim=%.6f Scale=%.3f ClockMs=%lld"),
+		DeltaSeconds,
+		SimSeconds,
+		SimTimeScale,
+		SimulationClockMs);
+}
+
+void UStarshatterEnvironmentSubsystem::SetSimTimeScale(double NewScale)
+{
+	// Prevent invalid or negative scales:
+	SimTimeScale = FMath::Max(0.0001, NewScale);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Environment] SimTimeScale set to %.3f"),
+		SimTimeScale);
 }
 
 void UStarshatterEnvironmentSubsystem::TickEnvironmentTime(double DeltaSeconds)
@@ -2224,5 +2248,4 @@ void UStarshatterEnvironmentSubsystem::BuildSimRegionsForSim(Sim* SimInst)
 			Orbital);
 	}
 }
-
 

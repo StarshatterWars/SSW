@@ -452,7 +452,11 @@ void UMissionDebriefDlg::OnCloseClicked()
 {
     Sim* LocalSim = Sim::GetSim();
     if (!LocalSim)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("UMissionDebriefDlg::OnCloseClicked - Sim::GetSim returned nullptr"));
         return;
+    }
 
     LocalSim->CommitMission();
     LocalSim->UnloadMission();
@@ -464,32 +468,49 @@ void UMissionDebriefDlg::OnCloseClicked()
         {
             Manager->ShowAwardDlg();
         }
+        else
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("UMissionDebriefDlg::OnCloseClicked - Manager is nullptr while attempting to show award dialog"));
+        }
+
         return;
     }
 
     UGameInstance* GI = GetGameInstance();
     if (!GI)
     {
-        Game::Panic("MissionDebriefDlg::OnCloseClicked() - GameInstance not found");
+        UE_LOG(LogTemp, Error,
+            TEXT("UMissionDebriefDlg::OnCloseClicked - GameInstance not found"));
         return;
     }
 
-    USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
+    USSWRuntimeSubsystem* RuntimeSS =
+        GI->GetSubsystem<USSWRuntimeSubsystem>();
+
     if (!RuntimeSS)
     {
-        Game::Panic("MissionDebriefDlg::OnCloseClicked() - Runtime subsystem not found");
+        UE_LOG(LogTemp, Error,
+            TEXT("UMissionDebriefDlg::OnCloseClicked - Runtime subsystem not found"));
         return;
     }
 
     Mouse::Show(false);
 
     Campaign* Camp = Campaign::GetCampaign();
+
     if (Camp && Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS)
     {
+        UE_LOG(LogTemp, Log,
+            TEXT("UMissionDebriefDlg::OnCloseClicked - Returning to Campaign Mode"));
+
         RuntimeSS->SetGameMode(EGameMode::CMPN);
     }
     else
     {
+        UE_LOG(LogTemp, Log,
+            TEXT("UMissionDebriefDlg::OnCloseClicked - Returning to Main Menu"));
+
         RuntimeSS->SetGameMode(EGameMode::MENU);
     }
 }

@@ -69,20 +69,14 @@ public:
 	virtual void      Activate(bool f);
 	virtual void      Pause(bool f);
 
-	int               Status() const { return status; }
-
-
 	//
 	// GENERAL GAME CLASS UTILITY METHODS:
 	//
-
-	static void       Panic(const char* msg = 0);
 	
 	static uint32     GetGameTime();
 	static uint32     GetRealTime();
 	
 	static DWORD      Frame();
-	static FString    GetMonth(int month);
 	static void       ResetGameTime();
 	static void       SkipGameTime(double seconds);
 
@@ -128,20 +122,9 @@ public:
 	static void       SetGammaLevel(int g);
 
 	static const char* GetPanicMessage() { return panicbuf; }
-
-	virtual bool      GameLoop();
-	virtual void      UpdateWorld();
-	virtual void      GameState();
-	virtual void      UpdateScreen();
-	virtual void      CollectStats();
-
-	virtual bool      InitContent();
-	virtual bool      InitGame();
 	
 	virtual bool      ToggleFullscreen();
 	virtual bool      AdjustWindowForChange();
-
-	virtual void      ShowStats();
 
 	static double     max_frame_length;
 	static double     min_frame_length;
