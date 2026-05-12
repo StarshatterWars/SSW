@@ -313,7 +313,8 @@ StarshipAI::HelmControl()
         return;
     }
 
-    if (ship->Design() && ship->Design()->auto_roll < 0)
+    if (ship->Design() &&
+        ship->Design()->auto_roll < 0)
     {
         return;
     }
@@ -324,6 +325,110 @@ StarshipAI::HelmControl()
 
     const bool station_keeping =
         distance < 0.0;
+
+    //-------------------------------------------------------------
+    // Final dock/farcaster alignment
+    //-------------------------------------------------------------
+
+    if (!station_keeping &&
+        navpt &&
+        target &&
+        bObjectiveArrivalLatched &&
+        (navpt->GetAction() == INSTRUCTION_ACTION::DOCK ||
+            navpt->GetFarcast()))
+    {
+        const FVector DesiredForward =
+            (target->GetLocation() -
+                ship->GetLocation()).GetSafeNormal();
+
+        const double DesiredHeading =
+            FMath::Atan2(
+                DesiredForward.Y,
+                DesiredForward.X);
+
+        const double DesiredPitch =
+            FMath::Asin(
+                FMath::Clamp(
+                    (double)DesiredForward.Z,
+                    -1.0,
+                    1.0));
+
+        //---------------------------------------------------------
+        // Current ship orientation
+        //---------------------------------------------------------
+
+        const double CurrentHeading =
+            ship->GetCompassHeading();
+
+        const double CurrentPitch =
+            ship->GetCompassPitch();
+
+        //---------------------------------------------------------
+        // Error terms
+        //---------------------------------------------------------
+
+        const double HeadingError =
+            FMath::FindDeltaAngleRadians(
+                CurrentHeading,
+                DesiredHeading);
+
+        const double PitchError =
+            DesiredPitch -
+            CurrentPitch;
+
+        //---------------------------------------------------------
+        // Feed helm/yaw through normal steering path
+        //---------------------------------------------------------
+
+        ship->ApplyHelmYaw(
+            HeadingError * 0.15);
+
+        //---------------------------------------------------------
+        // Feed actual pitch control through physics
+        //---------------------------------------------------------
+
+        const double PitchCommand =
+            FMath::Clamp(
+                PitchError * 0.25,
+                -0.05,
+                0.05);
+
+        /*
+         * ApplyPitch():
+         *
+         * negative = pitch up
+         * positive = pitch down
+         */
+
+        ship->ApplyPitch(
+            -PitchCommand);
+
+        //---------------------------------------------------------
+        // Disable translation during final settle
+        //---------------------------------------------------------
+
+        ship->SetTransX(0.0);
+        ship->SetTransY(0.0);
+        ship->SetTransZ(0.0);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[StarshipAI::HelmControl DOCK ALIGN] Ship='%hs' Target='%hs' DesiredHeading=%.4f DesiredPitch=%.4f CurrentHeading=%.4f CurrentPitch=%.4f HeadingErr=%.4f PitchErr=%.4f PitchCmd=%.4f"),
+            ship ? ship->GetName() : "NULL",
+            target ? target->GetName() : "NULL",
+            DesiredHeading,
+            DesiredPitch,
+            CurrentHeading,
+            CurrentPitch,
+            HeadingError,
+            PitchError,
+            PitchCommand);
+
+        return;
+    }
+
+    //-------------------------------------------------------------
+    // Station keeping
+    //-------------------------------------------------------------
 
     if (station_keeping)
     {
@@ -352,10 +457,13 @@ StarshipAI::HelmControl()
             farcaster ||
             element_index > 1)
         {
-            ship->SetHelmHeading(accumulator.yaw);
+            ship->SetHelmHeading(
+                accumulator.yaw);
 
             if (elem &&
-                elem->Type() == static_cast<int32>(EMISSIONTYPE::FLIGHT_OPS))
+                elem->Type() ==
+                static_cast<int32>(
+                    EMISSIONTYPE::FLIGHT_OPS))
             {
                 ship->SetHelmPitch(0.0);
 
@@ -365,17 +473,22 @@ StarshipAI::HelmControl()
                         ship->GetCompassHeading());
                 }
             }
-            else if (accumulator.pitch > 60.0 * DEGREES)
+            else if (accumulator.pitch >
+                60.0 * DEGREES)
             {
-                ship->SetHelmPitch(60.0 * DEGREES);
+                ship->SetHelmPitch(
+                    60.0 * DEGREES);
             }
-            else if (accumulator.pitch < -60.0 * DEGREES)
+            else if (accumulator.pitch <
+                -60.0 * DEGREES)
             {
-                ship->SetHelmPitch(-60.0 * DEGREES);
+                ship->SetHelmPitch(
+                    -60.0 * DEGREES);
             }
             else
             {
-                ship->SetHelmPitch(accumulator.pitch);
+                ship->SetHelmPitch(
+                    accumulator.pitch);
             }
         }
         else
@@ -384,11 +497,14 @@ StarshipAI::HelmControl()
         }
     }
 
+    //-------------------------------------------------------------
+    // Translation
+    //-------------------------------------------------------------
+
     ship->SetTransX(trans_x);
     ship->SetTransY(trans_y);
     ship->SetTransZ(trans_z);
 }
-
 void
 StarshipAI::ThrottleControl()
 {
@@ -479,7 +595,8 @@ StarshipAI::ThrottleControl()
             }
         }
 
-        throttle *= (1.0 - accumulator.brake);
+        throttle *=
+            (1.0 - accumulator.brake);
 
         if (throttle < 1.0)
         {
@@ -496,18 +613,23 @@ StarshipAI::ThrottleControl()
         const double lead_speed =
             ward->GetVelocity().Size();
 
-        throttle = old_throttle;
+        throttle =
+            old_throttle;
 
         if (lead_speed > 0.0)
         {
             if (ship_speed > lead_speed)
             {
-                throttle = old_throttle - 1.0;
-                brakes = 0.2;
+                throttle =
+                    old_throttle - 1.0;
+
+                brakes =
+                    0.2;
             }
             else if (ship_speed < lead_speed - 10.0)
             {
-                throttle = old_throttle + 1.0;
+                throttle =
+                    old_throttle + 1.0;
             }
         }
         else
@@ -548,7 +670,8 @@ StarshipAI::ThrottleControl()
         double speed =
             navpt->GetSpeed();
 
-        throttle = old_throttle;
+        throttle =
+            old_throttle;
 
         if (hold)
         {
@@ -571,7 +694,8 @@ StarshipAI::ThrottleControl()
                         old_throttle - 1.0;
                 }
 
-                brakes = 0.25;
+                brakes =
+                    0.25;
             }
             else if (ship_speed < speed - 10.0)
             {
@@ -615,13 +739,23 @@ StarshipAI::ThrottleControl()
     }
 
     //-------------------------------------------------------------
+    // Docking / objective settle override
+    //-------------------------------------------------------------
+    if (accumulator.stop)
+    {
+        throttle = 0.0;
+        brakes = 1.0;
+    }
+
+    //-------------------------------------------------------------
     // Debug fallback
     //-------------------------------------------------------------
 #if 1
     if (throttle <= 0.0 &&
         !target &&
         !navpt &&
-        !ward)
+        !ward &&
+        !accumulator.stop)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[StarshipAI::ThrottleControl] DEBUG FALLBACK Ship='%hs'"),
@@ -650,6 +784,38 @@ StarshipAI::ThrottleControl()
     ship->SetThrottleRequest(throttle);
 
     //-------------------------------------------------------------
+    // Explicit braking for UE runtime migration
+    //-------------------------------------------------------------
+    if (brakes > 0.0)
+    {
+        FVector Vel =
+            ship->GetVelocity();
+
+        const double Speed =
+            Vel.Size();
+
+        if (Speed > KINDA_SMALL_NUMBER)
+        {
+            const double BrakeStrength =
+                FMath::Clamp(
+                    brakes * seconds * 2.0,
+                    0.0,
+                    1.0);
+
+            Vel *=
+                (1.0 - BrakeStrength);
+
+            if (Vel.Size() < 10.0)
+            {
+                Vel =
+                    FVector::ZeroVector;
+            }
+
+            ship->SetVelocity(Vel);
+        }
+    }
+
+    //-------------------------------------------------------------
     // IMPORTANT:
     // Disable legacy lateral translation until
     // UE local steering migration is complete.
@@ -662,7 +828,7 @@ StarshipAI::ThrottleControl()
     // Logging
     //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::ThrottleControl] Ship='%hs' Target='%hs' Ward='%hs' Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Request=%.2f Brakes=%.2f"),
+        TEXT("[StarshipAI::ThrottleControl] Ship='%hs' Target='%hs' Ward='%hs' Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Request=%.2f Brakes=%.2f Stop=%d"),
         ship ? ship->GetName() : "NULL",
         target ? target->GetName() : "NULL",
         ward ? ward->GetName() : "NULL",
@@ -670,7 +836,8 @@ StarshipAI::ThrottleControl()
         ship_speed,
         throttle,
         ship ? ship->GetThrottleRequest() : 0.0,
-        brakes);
+        brakes,
+        accumulator.stop ? 1 : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -1373,3 +1540,4 @@ StarshipAI::Avoid(const FVector& Point, float Radius)
 
     return Result;
 }
+

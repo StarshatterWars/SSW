@@ -1669,9 +1669,9 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     //-------------------------------------------------------------
     // Legacy runtime -> UE world conversion
     //
-    // Runtime X = horizontal
-    // Runtime Y = vertical
-    // Runtime Z = horizontal
+    // Runtime X = horizontal/right
+    // Runtime Y = vertical/up
+    // Runtime Z = horizontal/forward
     //
     // UE X = Runtime Z
     // UE Y = Runtime X
@@ -1694,27 +1694,25 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
     if (!UEHeading.Normalize())
     {
-        UEHeading = FVector::ForwardVector;
+        UEHeading =
+            FVector::ForwardVector;
     }
 
     //-------------------------------------------------------------
     // Transform update
     //-------------------------------------------------------------
-    SetActorLocation(DesiredLocation);
+    SetActorLocation(
+        DesiredLocation);
+
+    /*
+     * Important:
+     *
+     * Use runtime heading for visual orientation.
+     * Do not use velocity for actor facing.
+     */
 
     FVector FacingVector =
-        FVector::ZeroVector;
-
-    if (!UEVelocity.IsNearlyZero())
-    {
-        FacingVector =
-            UEVelocity.GetSafeNormal();
-    }
-    else
-    {
-        FacingVector =
-            UEHeading.GetSafeNormal();
-    }
+        UEHeading.GetSafeNormal();
 
     if (!FacingVector.Normalize())
     {
@@ -1724,6 +1722,16 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
     SetActorRotation(
         FacingVector.Rotation());
+
+    UE_LOG(LogTemp, VeryVerbose,
+        TEXT("[ShipActor::UpdateFromRuntimeShip ROT] Actor='%s' Ship='%hs' Loc=%s Vel=%s Heading=%s UEHeading=%s ActorRot=%s"),
+        *GetName(),
+        RuntimeShip->GetName(),
+        *RuntimeLocation.ToString(),
+        *RuntimeVelocity.ToString(),
+        *RuntimeHeading.ToString(),
+        *UEHeading.ToString(),
+        *GetActorRotation().ToString());
 }
 
 void AShipActor::BuildNavLightsFromRuntime()

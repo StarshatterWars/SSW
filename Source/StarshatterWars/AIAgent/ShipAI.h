@@ -154,5 +154,8 @@ protected:
 	int              patrol;
 	FVector          patrol_loc;
 	int              ai_level;
+
+	bool bObjectiveArrivalLatched = false;
+	bool bObjectiveCompleteLockout = false;
 };
 

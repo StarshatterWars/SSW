@@ -5292,27 +5292,7 @@ Ship::ExecFLCSFrame()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecFLCSFrame] BEFORE FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
-		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
-		GetThrottle(),
-		GetThrottleRequest(),
-		trans_x,
-		trans_y,
-		trans_z,
-		*GetVelocity().ToString());
-
 	flcs->ExecSubFrame();
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ExecFLCSFrame] AFTER FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f) Vel=%s"),
-		ANSI_TO_TCHAR(GetName() ? GetName() : "Unknown"),
-		GetThrottle(),
-		GetThrottleRequest(),
-		trans_x,
-		trans_y,
-		trans_z,
-		*GetVelocity().ToString());
 }
 
 // +--------------------------------------------------------------------+

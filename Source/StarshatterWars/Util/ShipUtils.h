@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "GameStructs_System.h"
 
+class SimObject;
+
 class STARSHATTERWARS_API ShipUtils
 {
 public:
@@ -23,4 +25,6 @@ public:
 
 	static EExplosionType ExplosionTypeFromInt(int32 Value);
 	static int32 ExplosionTypeToInt(EExplosionType Type);
+	static double GetObjectPitchRadians(const SimObject* Obj);
+
 };

@@ -1,4 +1,5 @@
 #include "ShipUtils.h"
+#include "SimObject.h"
 
 EExplosionType ShipUtils::ExplosionTypeFromInt(int32 Value)
 {
@@ -26,4 +27,21 @@ EExplosionType ShipUtils::ExplosionTypeFromInt(int32 Value)
 int32 ShipUtils::ExplosionTypeToInt(EExplosionType Type)
 {
     return static_cast<int32>(Type);
+}
+
+double ShipUtils::GetObjectPitchRadians(const SimObject* Obj)
+{
+    if (!Obj)
+    {
+        return 0.0;
+    }
+
+    const FVector Forward =
+        Obj->GetCam().vpn().GetSafeNormal();
+
+    return FMath::Asin(
+        FMath::Clamp(
+            (double)Forward.Z,
+            -1.0,
+            1.0));
 }
