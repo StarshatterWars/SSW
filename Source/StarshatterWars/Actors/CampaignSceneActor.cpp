@@ -3,7 +3,8 @@
 
 #include "SceneMeshActor.h"
 #include "SystemSceneBuilder.h"
-
+#include "Game.h"
+#include "Drive.h"
 #include "Instruction.h"
 #include "Mission.h"
 #include "MissionElement.h"
@@ -24,6 +25,7 @@
 #include "Ship.h"
 
 #include "StarshatterEnvironmentSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 #include "SimRegion.h"
 #include "Orbital.h"
 #include "OrbitalRegion.h"
@@ -73,28 +75,9 @@ void ACampaignSceneActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    if (UGameInstance* GI = GetGameInstance())
-    {
-        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
-        {
-            Timer->ManualMissionTick(DeltaSeconds);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] TIMER TICK Delta=%.4f MissionMS=%d State=%d"),
-                DeltaSeconds,
-                Timer->GetMissionTimeMS(),
-                (int32)Timer->GetMissionClockState());
-        }
-    }
-
     if (bEnableRuntimeAITick)
     {
         TickRuntimeShips(DeltaSeconds);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Runtime AI tick DISABLED"));
     }
 }
 
@@ -146,41 +129,73 @@ void ACampaignSceneActor::ClearSceneActors()
 
 void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 {
+    bool bRuntimeSubsystemOwnsTick = false;
+
     if (UGameInstance* GI = GetGameInstance())
     {
-        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        if (USSWRuntimeSubsystem* RuntimeSS =
+            GI->GetSubsystem<USSWRuntimeSubsystem>())
         {
-            Timer->ManualMissionTick(DeltaSeconds);
+            bRuntimeSubsystemOwnsTick =
+                RuntimeSS->IsRuntimeRunning();
         }
     }
 
-    const double SimSeconds =
-        FMath::Clamp(
-            (double)DeltaSeconds * (double)RuntimeAITimeScale,
-            0.0,
-            (double)MaxRuntimeTickSeconds);
-
     //-------------------------------------------------------------
-    // CENTRAL SIM TICK
+    // FALLBACK SIM TICK
     //-------------------------------------------------------------
-    if (Sim* RuntimeSim = Sim::GetSim())
+    if (!bRuntimeSubsystemOwnsTick)
     {
-        RuntimeSim->ExecFrame(SimSeconds);
+        const double SimSeconds =
+            FMath::Clamp(
+                (double)DeltaSeconds * (double)RuntimeAITimeScale,
+                0.0,
+                (double)MaxRuntimeTickSeconds);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] RuntimeSim Tick Delta=%.4f Sim=%p ActiveRegion=%p"),
-            SimSeconds,
-            RuntimeSim,
-            RuntimeSim->GetActiveRegion());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[CampaignSceneActor] RuntimeSim is NULL"));
+        if (Sim* RuntimeSim = Sim::GetSim())
+        {
+            RuntimeSim->ExecFrame(SimSeconds);
+
+            int32 TotalShips = 0;
+
+            ListIter<SimRegion> RegionIter =
+                RuntimeSim->GetRegions();
+
+            while (++RegionIter)
+            {
+                SimRegion* Region =
+                    RegionIter.value();
+
+                if (!Region)
+                {
+                    continue;
+                }
+
+                const int32 RegionShips =
+                    Region->GetNumShips();
+
+                TotalShips += RegionShips;
+
+                if (RegionShips > 0)
+                {
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[CampaignSceneActor] RegionShips Region='%hs' Ships=%d"),
+                        Region->GetName(),
+                        RegionShips);
+                }
+            }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignSceneActor] FALLBACK Sim Tick Seconds=%.4f Regions=%d Ships=%d ActiveRegion=%p"),
+                SimSeconds,
+                RuntimeSim->GetRegions().size(),
+                TotalShips,
+                RuntimeSim->GetActiveRegion());
+        }
     }
 
     //-------------------------------------------------------------
-    // VISUAL SYNC ONLY
+    // VISUAL SYNC
     //-------------------------------------------------------------
     for (const TPair<FString, AShipActor*>& Pair : ShipActorByElementName)
     {
@@ -197,14 +212,33 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 
         ShipActor->UpdateFromRuntimeShip(DeltaSeconds);
 
+        Instruction* Nav =
+            RuntimeShip->GetNextNavPoint();
+
         UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Visual Sync Ship='%s' Loc=%s Vel=%s"),
-            ANSI_TO_TCHAR(RuntimeShip->GetName()),
-            *RuntimeShip->GetLocation().ToString(),
+            TEXT("[CampaignSceneActor] Runtime Ship State Ship='%hs' Region='%hs' Director=%p Nav=%p NavTarget='%hs' ShipTarget='%hs' Throttle=%.2f Request=%.2f MainDrive=%p Power=%d Vel=%s"),
+            RuntimeShip->GetName(),
+            RuntimeShip->GetRegion()
+            ? RuntimeShip->GetRegion()->GetName()
+            : "NULL",
+            RuntimeShip->GetDirector(),
+            Nav,
+            Nav && Nav->GetTargetName()
+            ? Nav->GetTargetName()
+            : "NULL",
+            RuntimeShip->GetTarget()
+            ? RuntimeShip->GetTarget()->GetName()
+            : "NULL",
+            RuntimeShip->GetThrottle(),
+            RuntimeShip->GetThrottleRequest(),
+            RuntimeShip->GetMainDrive(),
+            RuntimeShip->GetMainDrive() &&
+            RuntimeShip->GetMainDrive()->IsPowerOn()
+            ? 1
+            : 0,
             *RuntimeShip->GetVelocity().ToString());
     }
 }
-
 void
 ACampaignSceneActor::ClearRuntimeShips()
 {

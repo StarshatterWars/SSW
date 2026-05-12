@@ -257,9 +257,6 @@ void USSWRuntimeSubsystem::GameLoop()
 
 void USSWRuntimeSubsystem::UpdateWorld()
 {
-    //if (bPaused)
-    //    return;
-
     const double Seconds =
         static_cast<double>(LastDeltaSeconds) *
         static_cast<double>(TimeCompression);
@@ -275,6 +272,24 @@ void USSWRuntimeSubsystem::UpdateWorld()
     {
         CampaignInstance->ExecFrame();
     }
+
+    if (SimInstance)
+    {
+        const uint32 BeforeTime =
+            Game::GetGameTime();
+
+        SimInstance->ExecFrame(Seconds);
+
+        const uint32 AfterTime =
+            Game::GetGameTime();
+
+        UE_LOG(LogSSWRuntime, Warning,
+            TEXT("[RuntimeSubsystem::UpdateWorld] Sim::ExecFrame DeltaMS=%d GameTime=%u Regions=%d"),
+            (int32)(AfterTime - BeforeTime),
+            AfterTime,
+            SimInstance->GetRegions().size());
+    }
+
     if (CamDir)
     {
         CamDir->ExecFrame(Seconds);
