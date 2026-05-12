@@ -245,10 +245,7 @@ public:
     double            GetAltitudeMSL() const;
     double            GetAltitudeAGL() const;
     double            GetGForce() const;
-    double            GetVLimit() const override;
-
-
-
+    double            GetVLimit() const;
 
     virtual void      SetupAgility();
 

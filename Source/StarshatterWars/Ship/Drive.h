@@ -56,7 +56,7 @@ public:
     static void Initialize();
     static void StartFrame();
 
-    float Thrust(double seconds);
+    float GetThrust(double seconds);
 
     float MaxThrust() const
     {
@@ -81,9 +81,7 @@ public:
     virtual void Orient(
         const Physical* rep);
 
-    void SetThrottle(
-        double InThrottle,
-        bool aug = false);
+    void SetThrottle(double t, bool aug, double seconds);
 
     virtual double GetRequest(
         double seconds) const;

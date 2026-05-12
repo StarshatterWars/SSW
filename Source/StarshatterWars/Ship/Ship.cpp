@@ -3470,11 +3470,17 @@ Ship::ExecEvalFrame(double seconds)
 void
 Ship::ExecPhysics(double seconds)
 {
+	if (seconds <= 0.0)
+	{
+		return;
+	}
+
 	if (!design)
 	{
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship::ExecPhysics] Missing ShipDesign Ship='%hs'"),
 			GetName());
+
 		return;
 	}
 
@@ -3487,13 +3493,10 @@ Ship::ExecPhysics(double seconds)
 	}
 
 	//-------------------------------------------------------------
-	// AI director
+	// Director update belongs to Physical::ExecFrame.
+	// Do not run dir here or AI/steering executes twice.
 	//-------------------------------------------------------------
-	if (dir)
-	{
-		dir->ExecFrame(seconds);
-	}
-	else if (!net_control)
+	if (!dir && !net_control)
 	{
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship::ExecPhysics] NO DIR Ship='%hs'"),
@@ -3501,13 +3504,11 @@ Ship::ExecPhysics(double seconds)
 	}
 
 	//-------------------------------------------------------------
-	// IMPORTANT:
-	// FLCS must run AFTER AI has updated helm/throttle
-	// but BEFORE thrust is calculated.
+	// FLCS must run after AI/control has updated helm/throttle
+	// but before thrust is calculated.
 	//-------------------------------------------------------------
-	
 	const bool bDebugDisableFLCS =
-    false;
+		false;
 
 	if (flcs && !bDebugDisableFLCS)
 	{
@@ -3517,61 +3518,69 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	// Throttle request -> actual throttle
 	//-------------------------------------------------------------
+	const double TargetThrottle =
+		FMath::Clamp(
+			throttle_request,
+			0.0,
+			100.0);
+
+	const double ThrottleStep =
+		FMath::Max(
+			75.0 * seconds,
+			1.0);
+
+	if (throttle < TargetThrottle)
 	{
-		const double TargetThrottle =
-			FMath::Clamp(throttle_request, 0.0, 100.0);
-
-		const double ThrottleStep =
-			FMath::Max(75.0 * seconds, 1.0);
-
-		if (throttle < TargetThrottle)
-		{
-			throttle = FMath::Min(throttle + ThrottleStep, TargetThrottle);
-		}
-		else if (throttle > TargetThrottle)
-		{
-			throttle = FMath::Max(throttle - ThrottleStep, TargetThrottle);
-		}
+		throttle =
+			FMath::Min(
+				throttle + ThrottleStep,
+				TargetThrottle);
 	}
+	else if (throttle > TargetThrottle)
+	{
+		throttle =
+			FMath::Max(
+				throttle - ThrottleStep,
+				TargetThrottle);
+	}
+
 	//-------------------------------------------------------------
-	// Compute thrust
+	// Compute cached physical thrust.
+	// Physical::ExecFrame integrates this value.
 	//-------------------------------------------------------------
-	thrust = (float)GetThrust(seconds);
+	thrust =
+		(float)GetThrust(seconds);
+
+	if (!FMath::IsFinite(thrust))
+	{
+		thrust =
+			0.0f;
+	}
 
 	//-------------------------------------------------------------
 	// Agility
 	//-------------------------------------------------------------
 	SetupAgility();
 
-	if (seconds > 0.0)
-	{
-		g_force = 0.0f;
-	}
+	g_force =
+		0.0f;
 
 	//-------------------------------------------------------------
-	// Airborne path
+	// Legacy physics dispatch
 	//-------------------------------------------------------------
 	if (IsAirborne())
 	{
 		Physical::ExecFrame(seconds);
-
 		return;
 	}
 
-	//-------------------------------------------------------------
-	// Standard physical path
-	//-------------------------------------------------------------
 	if (IsDying() || flight_model < 2)
 	{
 		Physical::ExecFrame(seconds);
 		return;
 	}
 
-	//-------------------------------------------------------------
-	// Arcade path
-	//-------------------------------------------------------------
 	Physical::ArcadeFrame(seconds);
-
 }
 
 // +--------------------------------------------------------------------+
@@ -3921,12 +3930,18 @@ Ship::DockFrame(double Seconds)
 			weapons[WeaponIndex]->ExecFrame(Seconds);
 
 		// show drive flare while on catapult:
-		if (main_drive) {
-			main_drive->SetThrottle(throttle);
+if (main_drive)
+{
+	main_drive->SetThrottle(
+		throttle,
+		augmenter,
+		Seconds);
 
-			if (throttle > 0)
-				main_drive->Thrust(Seconds);  // show drive flare
-		}
+	if (throttle > 0.0)
+	{
+		main_drive->GetThrust(Seconds); // show drive flare
+	}
+}
 	}
 
 	if (cockpit && !cockpit->Hidden() && rep) {
@@ -5096,9 +5111,12 @@ Ship::GetThrust(double seconds) const
 			eff_throttle,
 			augmenter ? 1 : 0);
 
-		main_drive->SetThrottle(eff_throttle, augmenter);
+		main_drive->SetThrottle(
+			eff_throttle,
+			augmenter,
+			seconds);
 
-		const double drive_thrust = main_drive->Thrust(seconds);
+		const double drive_thrust = main_drive->GetThrust(seconds);
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship::Thrust] DriveReturned Thrust=%.4f ThrustFactor=%.4f FinalContribution=%.4f"),

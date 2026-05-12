@@ -177,15 +177,29 @@ Drive::Orient(const Physical* rep)
 
 // +--------------------------------------------------------------------+
 
-static double drive_seconds = 0.0;
-
-// +--------------------------------------------------------------------+
-
 void
-Drive::SetThrottle(double t, bool aug)
+Drive::SetThrottle(double t, bool aug, double seconds)
 {
+    if (t < 0.0)
+    {
+        t =
+            0.0;
+    }
+
+    if (t > 100.0)
+    {
+        t =
+            100.0;
+    }
+
+    if (seconds < 0.0)
+    {
+        seconds =
+            0.0;
+    }
+
     const double Spool =
-        1.2 * drive_seconds;
+        1.2 * seconds;
 
     const double ThrottleRequest =
         t / 100.0;
@@ -194,48 +208,68 @@ Drive::SetThrottle(double t, bool aug)
     {
         if (ThrottleRequest - throttle < Spool)
         {
-            throttle = (float)ThrottleRequest;
+            throttle =
+                (float)ThrottleRequest;
         }
         else
         {
-            throttle += (float)Spool;
+            throttle +=
+                (float)Spool;
         }
     }
     else if (throttle > ThrottleRequest)
     {
         if (throttle - ThrottleRequest < Spool)
         {
-            throttle = (float)ThrottleRequest;
+            throttle =
+                (float)ThrottleRequest;
         }
         else
         {
-            throttle -= (float)Spool;
+            throttle -=
+                (float)Spool;
         }
     }
 
     if (throttle < 0.5f)
     {
-        aug = false;
+        aug =
+            false;
     }
 
     if (aug && augmenter_throttle < 1.0f)
     {
-        augmenter_throttle += (float)Spool;
+        augmenter_throttle +=
+            (float)Spool;
 
         if (augmenter_throttle > 1.0f)
         {
-            augmenter_throttle = 1.0f;
+            augmenter_throttle =
+                1.0f;
         }
     }
     else if (!aug && augmenter_throttle > 0.0f)
     {
-        augmenter_throttle -= (float)Spool;
+        augmenter_throttle -=
+            (float)Spool;
 
         if (augmenter_throttle < 0.0f)
         {
-            augmenter_throttle = 0.0f;
+            augmenter_throttle =
+                0.0f;
         }
     }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Drive::SetThrottle] Ship='%hs' Input=%.2f Seconds=%.4f Spool=%.4f Request=%.4f StoredThrottle=%.4f Aug=%d StoredAugThrottle=%.4f"),
+        ship ? ship->GetName() : "NULL",
+        t,
+        seconds,
+        Spool,
+        ThrottleRequest,
+        throttle,
+        aug ? 1 : 0,
+        augmenter_throttle);
 }
 
 // +--------------------------------------------------------------------+
@@ -283,21 +317,23 @@ Drive::NumEngines() const
 // +--------------------------------------------------------------------+
 
 float
-Drive::Thrust(double seconds)
+Drive::GetThrust(double seconds)
 {
-    drive_seconds = seconds;
-
     if (!IsPowerOn())
     {
-        energy = 0.0f;
-        intensity = 0.0f;
+        energy =
+            0.0f;
+
+        intensity =
+            0.0f;
 
         UE_LOG(LogTemp, Warning,
             TEXT("[Drive::Thrust] OFF Ship=%p Seconds=%.4f"),
             ship,
             seconds);
 
-        return 0.0f;
+        return
+            0.0f;
     }
 
     const float Denom =
@@ -310,14 +346,11 @@ Drive::Thrust(double seconds)
         availability *
         100.0f;
 
-    //-------------------------------------------------------------
-    // UE PORT TEMP:
-    // Legacy power distribution is not fully feeding drive energy yet.
-    // If powered but energy is zero, allow drive output from availability.
-    //-------------------------------------------------------------
     if (eff <= 0.0f && availability > 0.0f)
     {
-        eff = availability * 100.0f;
+        eff =
+            availability *
+            100.0f;
     }
 
     float output =
@@ -344,15 +377,10 @@ Drive::Thrust(double seconds)
         {
             reac->SetCapacity(
                 reac->GetCapacity() -
-                (0.1 * drive_seconds));
+                (0.1 * seconds));
         }
     }
 
-    //-------------------------------------------------------------
-    // STARTUP FALLBACK
-    // Prevent zero-thrust startup stalls while legacy
-    // power routing is still being restored.
-    //-------------------------------------------------------------
     if (throttle > 0.0f &&
         output <= 0.0f &&
         IsPowerOn())
@@ -370,21 +398,20 @@ Drive::Thrust(double seconds)
             output);
     }
 
-    //-------------------------------------------------------------
-    // TEMP MOVEMENT SCALE
-    // Presentation/combat readability tuning only.
-    //-------------------------------------------------------------
+    static const float MovementScale =
+        2.0;
 
-    static const float MovementScale = 10.0f;
+    output *=
+        MovementScale;
 
-    output *= MovementScale;
-
-    energy = 0.0f;
+    energy =
+        0.0f;
 
     if (output < 0.0f ||
         GetPowerLevel() < 0.01f)
     {
-        output = 0.0f;
+        output =
+            0.0f;
     }
 
     const double fraction =
@@ -394,14 +421,21 @@ Drive::Thrust(double seconds)
 
     if (fraction > 0.0)
     {
-        intensity += (float)seconds * 4.0f;
+        intensity +=
+            (float)seconds *
+            4.0f;
     }
     else
     {
-        intensity -= (float)seconds * 6.0f;
+        intensity -=
+            (float)seconds *
+            6.0f;
     }
 
-    CLAMP(intensity, 0.0f, 1.0f);
+    CLAMP(
+        intensity,
+        0.0f,
+        1.0f);
 
     UE_LOG(LogTemp, Warning,
         TEXT("[Drive::Thrust] Ship='%hs' PowerOn=%d Energy=%.2f Capacity=%.2f Availability=%.2f Eff=%.2f Throttle=%.2f AugThrottle=%.2f Intensity=%.2f MaxThrust=%.2f MaxAug=%.2f Request=%.2f Output=%.2f Scale=%.2f Seconds=%.4f"),
@@ -421,7 +455,8 @@ Drive::Thrust(double seconds)
         MovementScale,
         seconds);
 
-    return output;
+    return
+        output;
 }
 
 // +--------------------------------------------------------------------+

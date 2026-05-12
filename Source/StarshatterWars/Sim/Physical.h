@@ -62,7 +62,6 @@ public:
     virtual void      SetTransY(double T);
     virtual void      SetTransZ(double T);
     virtual void      SetHeading(double R, double P, double Y);
-    virtual void	  SetVLimit(double v) { vlimit = v; }
     virtual void      LookAt(const FVector& Dst);
     virtual void      ApplyRoll(double RollAcc);
     virtual void      ApplyPitch(double PitchAcc);
@@ -109,8 +108,6 @@ public:
     double            GetMass()      const { return mass; }
     double            GetIntegrity() const { return integrity; }
     double            GetLife()      const { return life; }
-	virtual double 	  GetVLimit()    const { return vlimit; }
-
 
     double            GetShake()     const { return shake; }
     const FVector&    GetVibration() const { return vibration; }
@@ -204,7 +201,6 @@ protected:
     float             radius;
     float             mass;
     float             integrity;
-    double            vlimit;
 
     // graphic representation:
     Graphic* rep;

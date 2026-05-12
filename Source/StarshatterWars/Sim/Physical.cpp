@@ -181,6 +181,9 @@ Physical::~Physical()
 void
 Physical::ExecFrame(double s)
 {
+	const double OriginalSeconds =
+		s;
+
 	const FVector OrigVelocity =
 		GetVelocity();
 
@@ -245,11 +248,6 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		if (thrust != 0.0f)
 		{
-			//-----------------------------------------------------
-			// UE port scaling:
-			// Legacy Starshatter used much smaller world units.
-			// Unreal centimeter space requires stronger force.
-			//-----------------------------------------------------
 			const double UEThrustScale =
 				100.0;
 
@@ -282,34 +280,26 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		// Lateral thrust / gravity / drag
 		//---------------------------------------------------------
+		const FVector VelBeforeLinear =
+			velocity;
+
 		LinearFrame(
 			SecondsThisSlice);
 
-		//---------------------------------------------------------
-		// Clamp velocity to vlimit
-		//---------------------------------------------------------
-		if (vlimit > 0.0f)
-		{
-			const double Speed =
-				velocity.Length();
-
-			if (Speed > vlimit)
-			{
-				velocity =
-					velocity.GetSafeNormal() *
-					(float)vlimit;
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[Physical::ExecFrame] CLAMP VLIMIT Obj='%hs' Speed=%.2f Limit=%.2f"),
-					name,
-					Speed,
-					vlimit);
-			}
-		}
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Physical::ExecFrame] AFTER LINEAR "
+				"Obj='%hs' VelBefore=%s VelAfter=%s Delta=%s"),
+			name,
+			*VelBeforeLinear.ToString(),
+			*velocity.ToString(),
+			*(velocity - VelBeforeLinear).ToString());
 
 		//---------------------------------------------------------
 		// Move object
 		//---------------------------------------------------------
+		const FVector PosBeforeMove =
+			Pos;
+
 		Pos +=
 			velocity *
 			(float)SecondsThisSlice;
@@ -318,12 +308,13 @@ Physical::ExecFrame(double s)
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Physical::ExecFrame] MOVE "
-				"Obj='%hs' Slice=%.4f "
-				"Pos=%s Vel=%s"),
+				"Obj='%hs' PosBefore=%s PosAfter=%s "
+				"Vel=%s Delta=%s"),
 			name,
-			SecondsThisSlice,
+			*PosBeforeMove.ToString(),
 			*Pos.ToString(),
-			*velocity.ToString());
+			*velocity.ToString(),
+			*(Pos - PosBeforeMove).ToString());
 
 		s -=
 			SecondsThisSlice;
@@ -371,9 +362,17 @@ Physical::ExecFrame(double s)
 	//-------------------------------------------------------------
 	// Acceleration
 	//-------------------------------------------------------------
-	accel =
-		(GetVelocity() - OrigVelocity) *
-		(float)(1.0 / SecondsThisSlice);
+	if (OriginalSeconds > 0.0)
+	{
+		accel =
+			(GetVelocity() - OrigVelocity) *
+			(float)(1.0 / OriginalSeconds);
+	}
+	else
+	{
+		accel =
+			FVector::ZeroVector;
+	}
 
 	if (!IsFiniteVector(accel))
 	{
