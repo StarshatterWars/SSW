@@ -6229,7 +6229,7 @@ Ship::SetControls(MotionController* m)
 		Keyboard::FlushKeys();
 		m->Acquire();
 		dir = new ShipManager(this, m);
-		director_info = Game::GetText("flcs.auto");
+		director_info = "Auto FLCS";
 	}
 	else if (GetIFF() < 100) {
 		if (IsStatic())

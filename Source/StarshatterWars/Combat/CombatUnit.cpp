@@ -247,7 +247,7 @@ const char* CombatUnit::GetDescription() const
     static char desc[256];
 
     if (!design) {
-        strcpy_s(desc, Game::GetText("[unknown]").data());
+        strcpy_s(desc, "[unknown]");
     }
     else if (count > 1) {
         sprintf_s(desc, "%dx %s %s", LiveCount(), design->abrv, design->DisplayName());
@@ -260,7 +260,7 @@ const char* CombatUnit::GetDescription() const
 
         if (dead_count > 0) {
             strcat_s(desc, " ");
-            strcat_s(desc, Game::GetText("killed.in.action"));
+            strcat_s(desc, "[killed in action]");
         }
     }
 

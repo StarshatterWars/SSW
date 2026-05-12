@@ -162,27 +162,27 @@ Weather::Description() const
 	switch (state) {
 	default:
 	case CLEAR:
-		description = Game::GetText("weather.clear");
+		description = "Clear";
 		break;
 
 	case HIGH_CLOUDS:
-		description = Game::GetText("weather.high-clouds");
+		description = "High Clouds";
 		break;
 
 	case MODERATE_CLOUDS:
-		description = Game::GetText("weather.partly-cloudy");
+		description = "Moderate Clouds";
 		break;
 
 	case OVERCAST:
-		description = Game::GetText("weather.overcast");
+		description =	"Overcast";
 		break;
 
 	case FOG:
-		description = Game::GetText("weather.fog");
+		description = "Fog";
 		break;
 
 	case STORM:
-		description = Game::GetText("weather.storm");
+		description = "Storm";
 		break;
 	}
 

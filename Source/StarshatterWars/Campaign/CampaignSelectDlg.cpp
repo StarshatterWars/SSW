@@ -82,7 +82,7 @@ void UCampaignSelectDlg::NativeOnInitialized()
     Super::NativeOnInitialized();
 
     stars = Starshatter::GetInstance();
-    select_msg = Game::GetText("CmpSelectDlg.select_msg");
+    select_msg = "CmpSelectDlg Select Msg";
 }
 
 void UCampaignSelectDlg::NativeConstruct()

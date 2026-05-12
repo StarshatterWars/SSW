@@ -680,7 +680,7 @@ Hangar::SquadronName(int n) const
 	if (n >= 0 && n < nsquadrons)
 		return names[n];
 
-	return Game::GetText("Unknown");
+	return "Unknown";
 }
 
 int
@@ -783,22 +783,22 @@ Hangar::StatusName(const HangarSlot* s) const
 {
 	switch (s->state) {
 	default:
-	case UNAVAIL:     return Game::GetText("hangar.UNAVAIL");
-	case MAINT:       return Game::GetText("hangar.MAINT");
-	case STORAGE:     return Game::GetText("hangar.STORAGE");
-	case PREP:        return Game::GetText("hangar.PREP");
-	case ALERT:       return Game::GetText("hangar.ALERT");
+	case UNAVAIL:     return "Unavailable";
+	case MAINT:       return "Maintenance";
+	case STORAGE:     return "Storage";
+	case PREP:        return "Preparation";
+	case ALERT:       return "Alert";
 	case QUEUED: {
-		Text state = Game::GetText("hangar.QUEUED");
+		Text state = "Queued";
 		char seq[8];
 		sprintf_s(seq, " %d", s->deck->Sequence(s->slot));
 		return state + seq;
 	}
-	case LOCKED:      return Game::GetText("hangar.LOCKED");
-	case LAUNCH:      return Game::GetText("hangar.LAUNCH");
-	case ACTIVE:      return Game::GetText("hangar.ACTIVE");
-	case APPROACH:    return Game::GetText("hangar.APPROACH");
-	case RECOVERY:    return Game::GetText("hangar.RECOVERY");
+	case LOCKED:      return "Locked";
+	case LAUNCH:      return "Launch";
+	case ACTIVE:      return "Active";
+	case APPROACH:    return "Approach";
+	case RECOVERY:    return "Recovery";
 	}
 }
 

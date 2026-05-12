@@ -1635,9 +1635,6 @@ ShipDesign::ParseShip(TermDef* def)
 			ANSI_TO_TCHAR(defname.data()),
 			ANSI_TO_TCHAR(filename));
 	}
-
-	if (description.length())
-		description = Game::GetText(description);
 }
 
 void

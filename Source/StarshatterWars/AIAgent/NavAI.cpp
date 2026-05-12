@@ -182,7 +182,7 @@ void NavAI::FindObjective()
         obj_w.Y = ship->GetLocation().Y + 2e3;
 
         objective = Transform(obj_w);
-        ship->SetDirectorInfo(Game::GetText("ai.takeoff"));
+        ship->SetDirectorInfo("AI Takeoff");
         return;
     }
 

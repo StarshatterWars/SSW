@@ -264,7 +264,7 @@ void UEngineeringDlg::UpdateSelection()
     else if (selected_clients.size() > 0) {
         SimSystem* Sink = selected_clients[0];
         if (selected_name)
-            selected_name->SetText(FText::FromString(UTF8_TO_TCHAR(Game::GetText(Sink->GetName()))));
+            selected_name->SetText(FText::FromString(UTF8_TO_TCHAR(Sink->GetName())));
 
         if (power_off) power_off->SetIsEnabled(true);
         if (power_on)  power_on->SetIsEnabled(true);

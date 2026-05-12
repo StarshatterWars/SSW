@@ -1804,7 +1804,7 @@ CampaignMissionStarship::DescribeMission()
     else if (ward) {
         sprintf_s(name, sizeof(name), "MSN-%03d %s %s",
             mission->GetIdentity(),
-            Game::GetText(mission->GetTypeName()).data(),
+            mission->GetTypeName(),
             ward->GetName().data());
     }
     else if (prime_target) {
@@ -1816,14 +1816,14 @@ CampaignMissionStarship::DescribeMission()
 
         sprintf_s(name, sizeof(name), "MSN-%03d %s %s %s",
             mission->GetIdentity(),
-            Game::GetText(mission->GetTypeName()).data(),
+            mission->GetTypeName(),
             ClassName,
             prime_target->GetName().data());
     }
     else {
         sprintf_s(name, sizeof(name), "MSN-%03d %s",
             mission->GetIdentity(),
-            Game::GetText(mission->GetTypeName()).data());
+            mission->GetTypeName());
     }
 
     char player_info[256] = { 0 };

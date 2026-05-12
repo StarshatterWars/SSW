@@ -457,7 +457,7 @@ FighterAI::ReturnToBase(Ship* controller)
 
             // transform into camera coords:
             objective = Transform(obj_w);
-            ship->SetDirectorInfo(Game::GetText("ai.return-to-base"));
+            ship->SetDirectorInfo("AI Return-to-Base");
 
             rtb_code = 1;
         }
@@ -748,7 +748,7 @@ FighterAI::HelmControl()
     }
 
     else {
-        ship->SetDirectorInfo(Game::GetText("ai.station-keeping"));
+        ship->SetDirectorInfo("AI Station-Keeping");
         station_keeping = true;
 
         // go into a slow orbit if airborne:
@@ -1181,7 +1181,7 @@ FighterAI::AvoidTerrain()
 
             // way too low?
             if (ship->GetAltitudeAGL() < 1500) {
-                ship->SetDirectorInfo(Game::GetText("Way Too Low!"));
+                ship->SetDirectorInfo("Way Too Low!");
                 target = nullptr;
                 drop_time = 5.0;
             }
@@ -1229,7 +1229,7 @@ FighterAI::SeekTarget()
 
     if (patrol) {
         Steer result = Seek(objective);
-        ship->SetDirectorInfo(Game::GetText("ai.seek-patrol-point"));
+        ship->SetDirectorInfo("AI Seek Patrol Point");
 
         if (distance < 10 * self->GetRadius()) {
             patrol = 0;
@@ -1249,7 +1249,7 @@ FighterAI::SeekTarget()
             result.stop = 1;
         }
         else {
-            ship->SetDirectorInfo(Game::GetText("ai.seek-inbound"));
+            ship->SetDirectorInfo("AI Seek Inbound");
 
             // approach legs:
             if (inbound->Approach() > 0) {
@@ -1282,7 +1282,7 @@ FighterAI::SeekTarget()
                 }
 
                 else if (!inbound->Cleared() && distance < 2000) {
-                    ship->SetDirectorInfo(Game::GetText("ai.hold-final"));
+                    ship->SetDirectorInfo("AI Hold Final");
                     result = Steer();
                     result.brake = 1;
                     result.stop = 1;
@@ -1448,7 +1448,7 @@ FighterAI::SeekFormationSlot()
     }
 
     seeking = 1;
-    ship->SetDirectorInfo(Game::GetText("ai.seek-formation"));
+    ship->SetDirectorInfo("AI Seek Formation");
 
     return s;
 }
@@ -1528,7 +1528,7 @@ FighterAI::EvadeThreat()
         }
 
         // beam the missile:
-        ship->SetDirectorInfo(Game::GetText("ai.evade-missile"));
+        ship->SetDirectorInfo("AI Evade Missile");
 
         FVector BeamLine = FVector::CrossProduct(threat_missile->GetVelocity(), FVector(0.0, 1.0, 0.0));
         BeamLine.Normalize();
@@ -1556,7 +1556,7 @@ FighterAI::EvadeThreat()
         }
 
         if (threat_dist <= threat_range) {
-            ship->SetDirectorInfo(Game::GetText("ai.evade-threat"));
+            ship->SetDirectorInfo("AI Evade Threat");
 
             if (ship->IsAirborne()) {
                 evading = true;
@@ -1580,7 +1580,7 @@ FighterAI::EvadeThreat()
                 }
 
                 if (!target) {
-                    ship->SetDirectorInfo(Game::GetText("ai.evade-starship"));
+                    ship->SetDirectorInfo("AI Evade Starship");
                    
                     const int32 ClockTicks = static_cast<int32>(ship->GetMissionClock() * 1000.0);
 
@@ -1608,7 +1608,7 @@ FighterAI::EvadeThreat()
                 }
 
                 else {
-                    ship->SetDirectorInfo(Game::GetText("ai.evade-and-seek"));
+                    ship->SetDirectorInfo("AI Evade and Seek");
 
                     const int32 ClockTicks = static_cast<int32>(ship->GetMissionClock() * 1000.0);
 
@@ -1656,9 +1656,9 @@ FighterAI::EvadeThreat()
                 }
 
                 if (target)
-                    ship->SetDirectorInfo(Game::GetText("ai.evade-and-seek"));
+                    ship->SetDirectorInfo("AI Evade and Seek");
                 else
-                    ship->SetDirectorInfo(Game::GetText("ai.random-evade"));
+                    ship->SetDirectorInfo("AI Random Evade");
 
                 // beam the threat:
                 FVector BeamLine = FVector::CrossProduct(threat->GetVelocity(), FVector(0.0, 1.0, 0.0));

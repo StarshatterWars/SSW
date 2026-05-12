@@ -171,7 +171,7 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
         }
     }
     else {
-        name = Game::GetText("Unknown");
+        name = "Unknown";
         location = FVector::ZeroVector;
     }
 }

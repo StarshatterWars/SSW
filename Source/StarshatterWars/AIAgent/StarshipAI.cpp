@@ -142,8 +142,6 @@ StarshipAI::FindObjective()
 
     if (bForm && (element_index > 1 || ward))
     {
-        ship->SetDirectorInfo("Formation");
-
         if (navpt &&
             navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
         {
@@ -186,7 +184,6 @@ StarshipAI::FindObjective()
 
             if (d_support > 35e3)
             {
-                ship->SetDirectorInfo("Regroup");
                 FindObjectiveTarget(support);
                 objective = obj_w;
                 return;
@@ -194,8 +191,6 @@ StarshipAI::FindObjective()
         }
         else if (threat && threat != target)
         {
-            ship->SetDirectorInfo("Retreat");
-
             const FVector AwayFromThreat =
                 ship->GetLocation() -
                 threat->GetLocation();

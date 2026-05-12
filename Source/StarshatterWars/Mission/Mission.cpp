@@ -738,14 +738,14 @@ Mission::Save()
 	Validate();
 
 	if (!filename[0] || !path[0]) {
-		AddError(Game::GetText("Mission.error.no-file"));
+		AddError("Mission error: no file");
 		return ok;
 	}
 
 	Text content = Serialize();
 
 	if (content.length() < 8) {
-		AddError(Game::GetText("Mission.error.no-serial"));
+		AddError("Mission error: no serial");
 		return ok;
 	}
 
@@ -800,7 +800,7 @@ Mission::Validate()
 			MissionElement* elem = elements.at(i);
 
 			if (elem->GetName().length() < 1) {
-				sprintf_s(err, Game::GetText("Mission.error.unnamed-elem").data(), filename);
+				sprintf_s(err, "Mission error: unnamed element in '%s'", filename);
 				AddError(err);
 			}
 
@@ -809,23 +809,21 @@ Mission::Validate()
 					found_player = true;
 
 					if (elem->GetRegion() != GetRegion()) {
-						sprintf_s(err, Game::GetText("Mission.error.wrong-sector").data(),
+						sprintf_s(err, "Mission error: wrong sector for element '%s' in '%s'", elem->GetName().data(), filename);
 							elem->GetName().data(),
-							GetRegion());
+							GetRegion();
 						AddError(err);
 					}
 				}
 				else {
-					sprintf_s(err, Game::GetText("Mission.error.extra-player").data(),
-						elem->GetName().data(),
-						filename);
+					sprintf_s(err, "Mission error: extra player in '%s'", filename);
 					AddError(err);
 				}
 			}
 		}
 
 		if (!found_player) {
-			sprintf_s(err, Game::GetText("Mission.error.no-player").data(), filename);
+			sprintf_s(err, "Mission error: no player in '%s'", filename);
 			AddError(err);
 		}
 	}
@@ -1013,14 +1011,14 @@ Mission::ParseElement(TermStruct* val)
 				element->SetShipDesign(DesignRow);
 
 				if (!DesignRow) {
-					sprintf_s(err, Game::GetText("Mission.error.unknown-ship").data(), design.data(), filename);
+					sprintf_s(err, "Mission error: unknown ship '%s' in '%s'", design.data(), filename);
 					AddError(err);
 				}
 			}
 
 			else if (defname == "skin") {
 				if (!element->ship_design) {
-					sprintf_s(err, Game::GetText("Mission.error.out-of-order").data(), filename);
+					sprintf_s(err, "Mission error: out-of-order skin definition in '%s'", filename);
 					AddError(err);
 				}
 
@@ -1033,7 +1031,7 @@ Mission::ParseElement(TermStruct* val)
 				}
 
 				else if (pdef->term()->isStruct()) {
-					sprintf_s(err, Game::GetText("Mission.error.bad-skin").data(), filename);
+					sprintf_s(err, "Mission error: bad skin definition in '%s'", filename);
 					AddError(err);
 				}
 			}
@@ -1149,7 +1147,7 @@ Mission::ParseElement(TermStruct* val)
 
 			else if (defname == "ship") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					sprintf_s(err, Game::GetText("Mission.error.no-ship").data(), element->name.data(), filename);
+					sprintf_s(err, "Mission error: no ship for element '%s' in '%s'", element->name.data(), filename);
 					AddError(err);
 				}
 				else {
@@ -1164,7 +1162,7 @@ Mission::ParseElement(TermStruct* val)
 
 			else if (defname == "order" || defname == "navpt") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					sprintf_s(err, Game::GetText("Mission.error.no-navpt").data(), element->name.data(), filename);
+					sprintf_s(err, "Mission error: no navpt for element '%s' in '%s'", element->name.data(), filename);
 					AddError(err);
 				}
 				else {
@@ -1176,7 +1174,7 @@ Mission::ParseElement(TermStruct* val)
 
 			else if (defname == "loadout") {
 				if (!pdef->term() || !pdef->term()->isStruct()) {
-					sprintf_s(err, Game::GetText("Mission.error.no-loadout").data(), element->name.data(), filename);
+					sprintf_s(err, "Mission error: no loadout for element '%s' in '%s'", element->name.data(), filename);
 					AddError(err);
 				}
 				else {
@@ -1188,12 +1186,12 @@ Mission::ParseElement(TermStruct* val)
 	}
 
 	if (element->name.length() < 1) {
-		sprintf_s(err, Game::GetText("Mission.error.unnamed-elem").data(), filename);
+		sprintf_s(err, "Mission error: unnamed element in '%s'", filename);
 		AddError(err);
 	}
 
 	else if (element->GetShipDesign() == nullptr) {
-		sprintf_s(err, Game::GetText("Mission.error.unknown-ship").data(), element->name.data(), filename);
+		sprintf_s(err, "Mission error: unknown ship for element '%s' in '%s'", element->name.data(), filename);
 		AddError(err);
 	}
 
@@ -1355,7 +1353,7 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 
 			else if (DefName == "skin") {
 				if (!Element || !Element->GetShipDesign()) {
-					sprintf_s(ErrorText, Game::GetText("Mission.error.out-of-order").data(), filename);
+					sprintf_s(ErrorText, "Mission error: out-of-order skin definition in '%s'", filename);
 					AddError(ErrorText);
 				}
 

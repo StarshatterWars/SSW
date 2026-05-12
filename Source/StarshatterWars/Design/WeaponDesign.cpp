@@ -478,7 +478,7 @@ WeaponDesign::LoadDesign(const char* path, const char* filename, bool mod)
 						}
 
 						if (design->description.length()) {
-							design->description = Game::GetText(design->description);
+							design->description = design->description;
 						}
 
 						// Texture loading:

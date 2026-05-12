@@ -228,7 +228,7 @@ void UMissionSelectDlg::Show()
     // Default description:
     if (URichTextBlock* Desc = GetText(200))
     {
-        Desc->SetText(FText::FromString(FString(Game::GetText("MsnSelectDlg.choose").data())));
+        Desc->SetText(FText::FromString(FString("Mission error: no mission selected")));
     }
 
     PopulateMissions();
@@ -395,7 +395,7 @@ void UMissionSelectDlg::UpdateDescriptionAndButtons()
 
     if (!SelectedItem)
     {
-        Desc->SetText(FText::FromString(FString(Game::GetText("MsnSelectDlg.choose").data())));
+        Desc->SetText(FText::FromString(FString("Mission error: no mission selected")));
         if (Accept) Accept->SetIsEnabled(false);
         if (EditBtn) EditBtn->SetIsEnabled(false);
         if (DelBtn) DelBtn->SetIsEnabled(false);
@@ -418,28 +418,27 @@ void UMissionSelectDlg::UpdateDescriptionAndButtons()
     D += SelectedItem->GetDisplayName();
 
     D += TEXT("<font Verdana>\n\n<color ffff80>");
-    D += FString(Game::GetText("MsnSelectDlg.mission-type").data());
+    D += FString("Mission type");
     D += TEXT("<color ffffff>\n\t");
     D += FString(Mission::GetRoleName(SelectedItem->GetMissionType()));
 
     D += TEXT("\n\n<color ffff80>");
-    D += FString(Game::GetText("MsnSelectDlg.scenario").data());
+    D += FString("Scenario");
     D += TEXT("<color ffffff>\n\t");
     D += SelectedItem->GetDescription();
 
     D += TEXT("\n\n<color ffff80>");
-    D += FString(Game::GetText("MsnSelectDlg.location").data());
+    D += FString("Location");
     D += TEXT("<color ffffff>\n\t");
     D += SelectedItem->GetRegion();
     D += TEXT(" ");
-    D += FString(Game::GetText("MsnSelectDlg.sector").data());
+    D += FString("Sector");
     D += TEXT(" / ");
     D += SelectedItem->GetSystem();
     D += TEXT(" ");
-    D += FString(Game::GetText("MsnSelectDlg.system").data());
-
+    D += FString("System");
     D += TEXT("\n\n<color ffff80>");
-    D += FString(Game::GetText("MsnSelectDlg.start-time").data());
+    D += FString("Start Time");
     D += TEXT("<color ffffff>\n\t");
     D += FString(TimeBuf);
 
@@ -468,7 +467,7 @@ void UMissionSelectDlg::OnCampaignComboChanged(FString SelectedItem, ESelectInfo
         // Reset accept + description
         if (UButton* Accept = GetButton(1)) Accept->SetIsEnabled(false);
         if (URichTextBlock* Desc = GetText(200))
-            Desc->SetText(FText::FromString(FString(Game::GetText("MsnSelectDlg.choose").data())));
+            Desc->SetText(FText::FromString(FString("Mission error: no mission selected")));
 
         // Update editability:
         const int32 Id = C->GetCampaignId();

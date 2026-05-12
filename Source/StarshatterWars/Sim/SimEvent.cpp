@@ -78,26 +78,26 @@ Text
 SimEvent::GetEventDesc() const
 {
 	switch (event) {
-	case LAUNCH:         return Game::GetText("sim.event.Launch");
-	case DOCK:           return Game::GetText("sim.event.Dock");
-	case LAND:           return Game::GetText("sim.event.Land");
-	case EJECT:          return Game::GetText("sim.event.Eject");
-	case CRASH:          return Game::GetText("sim.event.Crash");
-	case COLLIDE:        return Game::GetText("sim.event.Collision With");
-	case DESTROYED:      return Game::GetText("sim.event.Destroyed By");
-	case MAKE_ORBIT:     return Game::GetText("sim.event.Make Orbit");
-	case BREAK_ORBIT:    return Game::GetText("sim.event.Break Orbit");
-	case QUANTUM_JUMP:   return Game::GetText("sim.event.Quantum Jump");
-	case LAUNCH_SHIP:    return Game::GetText("sim.event.Launch Ship");
-	case RECOVER_SHIP:   return Game::GetText("sim.event.Recover Ship");
-	case FIRE_GUNS:      return Game::GetText("sim.event.Fire Guns");
-	case FIRE_MISSILE:   return Game::GetText("sim.event.Fire Missile");
-	case DROP_DECOY:     return Game::GetText("sim.event.Drop Decoy");
-	case GUNS_KILL:      return Game::GetText("sim.event.Guns Kill");
-	case MISSILE_KILL:   return Game::GetText("sim.event.Missile Kill");
-	case LAUNCH_PROBE:   return Game::GetText("sim.event.Launch Probe");
-	case SCAN_TARGET:    return Game::GetText("sim.event.Scan Target");
-	default:             return Game::GetText("sim.event.no event");
+	case LAUNCH:         return "Launch";
+	case DOCK:           return "Dock";
+	case LAND:           return "Land";
+	case EJECT:          return "Eject";
+	case CRASH:          return "Crash";
+	case COLLIDE:        return "Collision With";
+	case DESTROYED:      return "Destroyed By";
+	case MAKE_ORBIT:     return "Make Orbit";
+	case BREAK_ORBIT:    return "Break Orbit";
+	case QUANTUM_JUMP:   return "Quantum Jump";
+	case LAUNCH_SHIP:    return "Launch Ship";
+	case RECOVER_SHIP:   return "Recover Ship";
+	case FIRE_GUNS:      return "Fire Guns";
+	case FIRE_MISSILE:   return "Fire Missile";
+	case DROP_DECOY:     return "Drop Decoy";
+	case GUNS_KILL:      return "Guns Kill";
+	case MISSILE_KILL:   return "Missile Kill";
+	case LAUNCH_PROBE:   return "Launch Probe";
+	case SCAN_TARGET:    return "Scan Target";
+	default:             return "No Event";
 	}
 }
 
@@ -109,7 +109,7 @@ ShipStats::ShipStats(const char* n, int i)
 	combat_group(0), combat_unit(0), player(false), ship_class(0), elem_index(-1)
 {
 	if (!n || !n[0])
-		name = Game::GetText("[unknown]");
+		name = "Unknown";
 }
 
 ShipStats::~ShipStats()

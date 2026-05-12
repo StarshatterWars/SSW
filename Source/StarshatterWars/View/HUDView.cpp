@@ -1195,7 +1195,7 @@ void HUDView::DrawTarget()
 
 			if (!contact->ActLock() && !contact->PasLock())
 			{
-				strcpy_s(txt, Game::GetText("HUDView.No-Range").data());
+				strcpy_s(txt, "No Range");
 				speed = 0;
 			}
 			else
@@ -1256,7 +1256,7 @@ void HUDView::DrawTarget()
 					sprintf_s(
 						txt,
 						"%s %03d",
-						Game::GetText("HUDView.symbol.shield").data(),
+						"Shield",
 						(int)tgt_ship->GetShieldStrength()
 					);
 					DrawHUDText(TXT_TARGET_SHIELD, txt, range_rect, DT_RIGHT);
@@ -1266,7 +1266,7 @@ void HUDView::DrawTarget()
 				sprintf_s(
 					txt,
 					"%s %03d",
-					Game::GetText("HUDView.symbol.hull").data(),
+					"Hull",
 					(int)(tgt_ship->GetIntegrity() /
 						tgt_ship->Design()->integrity * 100)
 				);
@@ -1347,7 +1347,7 @@ HUDView::DrawNavInfo()
 			if (BigFont)
 				hud_text[TXT_NAV_INDEX].font = BigFont;
 
-			DrawHUDText(TXT_NAV_INDEX, Game::GetText("HUDView.Auto-Nav"), info_rect, DT_CENTER);
+			DrawHUDText(TXT_NAV_INDEX, "Auto Nav", info_rect, DT_CENTER);
 		}
 
 		return;
@@ -1819,15 +1819,15 @@ HUDView::DrawWarningPanel()
 		for (int index = 0; index < 12; index++) {
 			
 			SYSTEM_STATUS  stat = SYSTEM_STATUS::UNKNOWN;
-			Text abrv = Game::GetText("HUDView.UNKNOWN");
+			Text abrv = "Unknown";
 
 			switch (index) {
-			case 0:  stat = GetReactorStatus(ship);    abrv = Game::GetText("HUDView.REACTOR");  break;
-			case 1:  stat = GetDriveStatus(ship);      abrv = Game::GetText("HUDView.DRIVE");    break;
-			case 2:  stat = GetQuantumStatus(ship);    abrv = Game::GetText("HUDView.QUANTUM");  break;
-			case 3:  stat = GetShieldStatus(ship);     abrv = Game::GetText("HUDView.SHIELD");
+			case 0:  stat = GetReactorStatus(ship);    abrv = "Reactor";  break;
+			case 1:  stat = GetDriveStatus(ship);      abrv = "Drive";    break;
+			case 2:  stat = GetQuantumStatus(ship);    abrv = "Quantum";  break;
+			case 3:  stat = GetShieldStatus(ship);     abrv = "Shield";
 				if (ship->GetShield() == 0 && ship->GetDecoy())
-					abrv = Game::GetText("HUDView.DECOY");
+					abrv = "Decoy";
 				break;
 
 			case 4:
@@ -1978,7 +1978,7 @@ HUDView::DrawInstructions()
 
 	else {
 		hud_text[TXT_CAUTION_TXT].color = standard_txt_colors[color];
-		DrawHUDText(TXT_CAUTION_TXT, Game::GetText("HUDView.No-Instructions"), r, DT_LEFT, HUD_MIXED_CASE);
+		DrawHUDText(TXT_CAUTION_TXT, "No Instructions", r, DT_LEFT, HUD_MIXED_CASE);
 	}
 }
 
@@ -2677,9 +2677,9 @@ HUDView::Refresh()
 				Rect dock_rect(width / 2 - 100, height / 6, 200, 20);
 
 				if (ship->IsAirborne())
-					DrawHUDText(TXT_AUTO, Game::GetText("HUDView.SUCCESSFUL-LANDING"), dock_rect, DT_CENTER);
+					DrawHUDText(TXT_AUTO, "Successful Landing", dock_rect, DT_CENTER);
 				else
-					DrawHUDText(TXT_AUTO, Game::GetText("HUDView.DOCKING-COMPLETE"), dock_rect, DT_CENTER);
+					DrawHUDText(TXT_AUTO, "Docking Complete", dock_rect, DT_CENTER);
 			}
 			return;
 		}
@@ -2736,7 +2736,7 @@ HUDView::Refresh()
 			int  fov_degrees = 180 - 2 * (int)(projector->XAngle() * 180 / PI);
 
 			if (fov_degrees > 90)
-				DrawHUDText(TXT_CAM_ANGLE, Game::GetText("HUDView.Wide-Angle"), fov_rect, DT_CENTER);
+				DrawHUDText(TXT_CAM_ANGLE, "Wide-Angle", fov_rect, DT_CENTER);
 
 			fov_rect.y = 20;
 			DrawHUDText(TXT_CAM_MODE, CameraManager::GetModeName(), fov_rect, DT_CENTER);
@@ -3624,7 +3624,7 @@ void HUDView::DrawBars()
 	if (Game::Paused())
 	{
 		Rect r(0, height / 6, width, 20);
-		DrawHUDText(TXT_PAUSED, Game::GetText("HUDView.PAUSED"), r, DT_CENTER);
+		DrawHUDText(TXT_PAUSED, "Paused", r, DT_CENTER);
 	}
 }
 

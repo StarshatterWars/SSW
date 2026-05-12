@@ -63,8 +63,8 @@ QuantumDrive::QuantumDrive(SUBTYPE s, double cap, double rate)
 	jump_time(0),
 	countdown(5)
 {
-	name = Game::GetText("sys.quantum");
-	abrv = Game::GetText("sys.quantum.abrv");
+	name = "Quantum Drive";
+	abrv = "QD";
 
 	emcon_power[0] = 0;
 	emcon_power[1] = 0;

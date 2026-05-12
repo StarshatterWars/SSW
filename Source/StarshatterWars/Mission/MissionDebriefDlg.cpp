@@ -172,7 +172,7 @@ void UMissionDebriefDlg::Show()
         if (MissionPtr)
             MissionName->SetText(FText::FromString(ANSI_TO_TCHAR(MissionPtr->GetName())));
         else
-            MissionName->SetText(FText::FromString(ANSI_TO_TCHAR(Game::GetText("DebriefDlg.mission-name").data())));
+            MissionName->SetText(FText::FromString(ANSI_TO_TCHAR("DebriefDlg: Mission Name")));
     }
 
     // System:
@@ -249,13 +249,13 @@ void UMissionDebriefDlg::Show()
         if (MissionPtr)
             Situation->SetText(FText::FromString(ANSI_TO_TCHAR(MissionPtr->GetSituation())));
         else
-            Situation->SetText(FText::FromString(ANSI_TO_TCHAR(Game::GetText("DebriefDlg.unknown").data())));
+            Situation->SetText(FText::FromString(ANSI_TO_TCHAR("DebriefDlg: Unknown")));
     }
 
     // Score:
     if (UTextBlock* MissionScore = GetLabel(211))
     {
-        MissionScore->SetText(FText::FromString(ANSI_TO_TCHAR(Game::GetText("DebriefDlg.no-stats").data())));
+        MissionScore->SetText(FText::FromString(ANSI_TO_TCHAR("DebriefDlg: No Stats")));
 
         if (PlayerShip)
         {
@@ -273,7 +273,7 @@ void UMissionDebriefDlg::Show()
                         Points = PlayerObj->GetMissionPoints(Stats, SimPtr->StartTime()) + Stats->GetCommandPoints();
 
                     char ScoreTxt[64] = { 0 };
-                    sprintf_s(ScoreTxt, "%d %s", Points, Game::GetText("DebriefDlg.points").data());
+                    sprintf_s(ScoreTxt, "%d %s", Points, "DebriefDlg: Points");
                     MissionScore->SetText(FText::FromString(ANSI_TO_TCHAR(ScoreTxt)));
                     break;
                 }
@@ -452,11 +452,7 @@ void UMissionDebriefDlg::OnCloseClicked()
 {
     Sim* LocalSim = Sim::GetSim();
     if (!LocalSim)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("UMissionDebriefDlg::OnCloseClicked - Sim::GetSim returned nullptr"));
         return;
-    }
 
     LocalSim->CommitMission();
     LocalSim->UnloadMission();
@@ -468,12 +464,6 @@ void UMissionDebriefDlg::OnCloseClicked()
         {
             Manager->ShowAwardDlg();
         }
-        else
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("UMissionDebriefDlg::OnCloseClicked - Manager is nullptr while attempting to show award dialog"));
-        }
-
         return;
     }
 
@@ -481,7 +471,8 @@ void UMissionDebriefDlg::OnCloseClicked()
     if (!GI)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("UMissionDebriefDlg::OnCloseClicked - GameInstance not found"));
+            TEXT("MissionDebriefDlg::OnCloseClicked() - GameInstance not found"));
+
         return;
     }
 
@@ -491,26 +482,20 @@ void UMissionDebriefDlg::OnCloseClicked()
     if (!RuntimeSS)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("UMissionDebriefDlg::OnCloseClicked - Runtime subsystem not found"));
+            TEXT("MissionDebriefDlg::OnCloseClicked() - Runtime subsystem not found"));
+
         return;
     }
 
     Mouse::Show(false);
 
     Campaign* Camp = Campaign::GetCampaign();
-
     if (Camp && Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS)
     {
-        UE_LOG(LogTemp, Log,
-            TEXT("UMissionDebriefDlg::OnCloseClicked - Returning to Campaign Mode"));
-
         RuntimeSS->SetGameMode(EGameMode::CMPN);
     }
     else
     {
-        UE_LOG(LogTemp, Log,
-            TEXT("UMissionDebriefDlg::OnCloseClicked - Returning to Main Menu"));
-
         RuntimeSS->SetGameMode(EGameMode::MENU);
     }
 }

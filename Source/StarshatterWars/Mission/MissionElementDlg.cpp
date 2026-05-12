@@ -491,7 +491,7 @@ void UMissionElementDlg::RebuildSkinAndLoadoutFromDesign()
 
         if (Design)
         {
-            const FString DefaultSkin = ANSI_TO_TCHAR(Game::GetText("MsnDlg.default").data());
+            const FString DefaultSkin = TEXT("Default Skin");
             SkinCombo->AddOption(DefaultSkin);
             SkinCombo->SetSelectedIndex(0);
 

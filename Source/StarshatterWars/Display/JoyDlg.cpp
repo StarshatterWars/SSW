@@ -170,7 +170,7 @@ void UJoyDlg::ExecFrame(double /*DeltaTime*/)
         MapAxis[SelectedAxis] = BestAxis;
 
         // Update label to detected axis name:
-        const Text T = Game::GetText(JoyAxisNames[BestAxis]);
+        const Text T = JoyAxisNames[BestAxis];
         SetAxisLabel(SelectedAxis, UTF8_TO_TCHAR(T.data()));
 
         // Stop capture after success:
@@ -526,7 +526,7 @@ void UJoyDlg::RefreshAxisUIFromCurrentBindings()
         // Axis label:
         if (MapAxis[i] >= 0 && MapAxis[i] < 8)
         {
-            const Text T = Game::GetText(JoyAxisNames[MapAxis[i]]);
+            const Text T = JoyAxisNames[MapAxis[i]];
             SetAxisLabel(i, UTF8_TO_TCHAR(T.data()));
         }
         else

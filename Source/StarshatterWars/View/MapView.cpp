@@ -1684,7 +1684,7 @@ MapView::DrawTitle()
 void
 MapView::DrawGalaxy()
 {
-	title = Game::GetText("MapView.title.Galaxy");
+	title = "Galaxy";
 	DrawGrid();
 
 	double cx = rect.w / 2;
@@ -1807,19 +1807,19 @@ MapView::DrawGalaxy()
 void
 MapView::DrawSystem()
 {
-	Text caption = Game::GetText("MapView.title.Starsystem");
+	Text caption = "Starsystem";
 	caption += " ";
 	caption += system->GetName();
 
 	if (current_ship) {
 		caption += "\n";
-		caption += Game::GetText("MapView.title.Ship");
+		caption += "Ship";
 		caption += " ";
 		caption += current_ship->GetName();
 	}
 	else if (current_elem) {
 		caption += "\n";
-		caption += Game::GetText("MapView.title.Ship");
+		caption += "Ship";
 		caption += " ";
 		caption += current_elem->GetName();
 	}
@@ -1864,7 +1864,7 @@ MapView::DrawSystem()
 	FormatNumber(r_txt, system->GetRadius() * zoom);
 
 	char resolution[64];
-	sprintf_s(resolution, "%s: %s", Game::GetText("MapView.info.Resolution").data(), r_txt);
+	sprintf_s(resolution, "%s: %s", "Resolution", r_txt);
 
 	active_window->SetFont(font);
 	Rect text_rect(4, 4, rect.w - 8, 24);
@@ -1884,19 +1884,19 @@ MapView::DrawRegion()
 {
 	OrbitalRegion* rgn = (OrbitalRegion*)regions[current_region];
 
-	Text caption = Game::GetText("MapView.title.Sector");
+	Text caption = "Sector";
 	caption += " ";
 	caption += rgn->GetName();
 
 	if (current_ship) {
 		caption += "\n";
-		caption += Game::GetText("MapView.title.Ship");
+		caption += "Ship";
 		caption += " ";
 		caption += current_ship->GetName();
 	}
 	else if (current_elem) {
 		caption += "\n";
-		caption += Game::GetText("MapView.title.Ship");
+		caption += "Ship";
 		caption += " ";
 		caption += current_elem->GetName();
 	}
@@ -2039,7 +2039,7 @@ MapView::DrawRegion()
 	FormatNumber(r_txt, r * 2);
 
 	char resolution[64];
-	sprintf_s(resolution, "%s: %s", Game::GetText("MapView.info.Resolution").data(), r_txt);
+	sprintf_s(resolution, "%s: %s", "Resolution", r_txt);
 
 	active_window->SetFont(font);
 	Rect text_rect(4, 4, rect.w - 8, 24);

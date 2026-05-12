@@ -199,8 +199,8 @@ FlightDeck::FlightDeck()
 	carrier(0), index(0), num_slots(0), slots(0), cycle_time(5), num_hoops(0), hoops(0),
 	azimuth(0), light(0), num_catsounds(0), num_approach_pts(0)
 {
-	name = Game::GetText("sys.flight-deck");
-	abrv = Game::GetText("sys.flight-deck.abrv");
+	name = "Flight Deck";
+	abrv = "FD";
 }
 
 // +----------------------------------------------------------------------+

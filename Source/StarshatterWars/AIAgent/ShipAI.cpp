@@ -530,7 +530,7 @@ ShipAI::FindObjective()
 	}
 	else if (form && (element_index > 1 || ward))
 	{
-		ship->SetDirectorInfo(Game::GetText("ai.formation"));
+		ship->SetDirectorInfo("AI Formation");
 
 		if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
 		{
@@ -1848,7 +1848,7 @@ ShipAI::AvoidCollision()
 			avoid.brake = brake;
 
 			ship->SetDirectorInfo(
-				Game::GetText("ai.avoid-collision"));
+				"AI Avoid Collision");
 		}
 	}
 
