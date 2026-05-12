@@ -202,6 +202,7 @@ void UStarshatterEnvironmentSubsystem::Initialize(FSubsystemCollectionBase& Coll
 	bBaseTimeInitialized = false;
 	EnvironmentBaseTime = 0.0;
 	SimulationClockMs = 0;
+	SetSimTimeScale(1.0);
 
 	// Runtime object caches
 	RuntimeStarSystems.Reset();

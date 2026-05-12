@@ -1310,18 +1310,71 @@ StarshipAI::Flee(const FVector& Point)
 Steer
 StarshipAI::Avoid(const FVector& Point, float Radius)
 {
-    Steer Result = Seek(Point);
+    Steer Result;
 
-    if (Point.X > 0.0)
+    if (Radius <= 0.0f)
     {
-        Result.yaw -= PI / 2.0;
+        return Result;
+    }
+
+    if (Point.Z <= 0.0f)
+    {
+        return Result;
+    }
+
+    const double AbsX = fabs(Point.X);
+    const double AbsY = fabs(Point.Y);
+
+    const double ClearanceX =
+        Radius - AbsX;
+
+    const double ClearanceY =
+        Radius - AbsY;
+
+    if (ClearanceX <= 0.0 &&
+        ClearanceY <= 0.0)
+    {
+        return Result;
+    }
+
+    if (ClearanceX < ClearanceY)
+    {
+        Result.yaw =
+            atan2(FMath::Max(0.0, ClearanceX), Point.Z) *
+            seek_gain;
+
+        if (Point.X > 0.0)
+        {
+            Result.yaw =
+                -Result.yaw;
+        }
     }
     else
     {
-        Result.yaw += PI / 2.0;
+        Result.pitch =
+            atan2(FMath::Max(0.0, ClearanceY), Point.Z) *
+            seek_gain;
+
+        if (Point.Y < 0.0)
+        {
+            Result.pitch =
+                -Result.pitch;
+        }
     }
 
-    (void)Radius;
+    Result.brake =
+        FMath::Clamp(
+            (float)(1.0 - (Point.Z / FMath::Max(1.0f, Radius * 4.0f))),
+            0.0f,
+            1.0f);
+
+    UE_LOG(LogTemp, VeryVerbose,
+        TEXT("[StarshipAI::Avoid] Point=%s Radius=%.2f Yaw=%.4f Pitch=%.4f Brake=%.3f"),
+        *Point.ToString(),
+        Radius,
+        Result.yaw,
+        Result.pitch,
+        Result.brake);
 
     return Result;
 }

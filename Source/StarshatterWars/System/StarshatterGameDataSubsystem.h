@@ -206,6 +206,7 @@ public:
 
     // Mission parsing
     void ParseMission(const char* filename);
+    bool ParseMissionInstructionCommon(TermStruct* Val, const char* Fn, FS_MissionInstruction& OutInstr);
     void ParseNavpoint(TermStruct* val, const char* fn);
     void ParseObjective(TermStruct* val, const char* fn);
     void ParseInstruction(TermStruct* val, const char* fn);

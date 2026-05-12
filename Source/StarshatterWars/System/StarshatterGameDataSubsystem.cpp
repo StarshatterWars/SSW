@@ -191,6 +191,42 @@ static FString NormalizeWeaponGroupLabel(const FShipWeapon& W)
 	return TEXT("UNKNOWN");
 }
 
+static EInstructionAction
+ParseInstructionAction(const FString& InValue)
+{
+	const FString Value =
+		InValue.TrimStartAndEnd().ToLower();
+
+	if (Value == TEXT("target"))
+		return EInstructionAction::Target;
+
+	if (Value == TEXT("approach"))
+		return EInstructionAction::Approach;
+
+	if (Value == TEXT("stopat"))
+		return EInstructionAction::StopAt;
+
+	if (Value == TEXT("dock"))
+		return EInstructionAction::Dock;
+
+	if (Value == TEXT("farcast"))
+		return EInstructionAction::Farcast;
+
+	if (Value == TEXT("hold"))
+		return EInstructionAction::Hold;
+
+	if (Value == TEXT("escort"))
+		return EInstructionAction::Escort;
+
+	if (Value == TEXT("patrol"))
+		return EInstructionAction::Patrol;
+
+	if (Value == TEXT("defend"))
+		return EInstructionAction::Defend;
+
+	return EInstructionAction::None;
+}
+
 void UStarshatterGameDataSubsystem::Tick(float DeltaTime)
 {
 	Galaxy* GalaxyPtr = Galaxy::GetInstance();
@@ -3091,409 +3127,253 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 	MissionArray.Add(NewMission);
 }
 
+bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
+	TermStruct* Val,
+	const char* Fn,
+	FS_MissionInstruction& OutInstr)
+{
+	if (!Val || !Fn || !*Fn)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("ParseMissionInstructionCommon called with null args"));
+
+		return false;
+	}
+
+	int32 Formation = 0;
+	int32 Speed = 0;
+	int32 Priority = 1;
+	int32 EMCON = 0;
+
+	Text OrderName = "";
+	Text StatusName = "";
+	Text RegionName = "";
+	Text ObjectiveName = "";
+	Text ObjectiveDesc = "";
+	Text ObjectiveActionName = "";
+
+	OutInstr =
+		FS_MissionInstruction();
+
+	MissionRLocArray.Empty();
+
+	const int32 ElemCount =
+		(int32)Val->elements()->size();
+
+	for (int32 i = 0; i < ElemCount; ++i)
+	{
+		TermDef* PDef =
+			Val->elements()->at(i)->isDef();
+
+		if (!PDef)
+		{
+			continue;
+		}
+
+		const Text& Key =
+			PDef->name()->value();
+
+		if (Key == "cmd")
+		{
+			GetDefText(OrderName, PDef, Fn);
+
+			OutInstr.OrderName =
+				FString(OrderName);
+		}
+		else if (Key == "status")
+		{
+			GetDefText(StatusName, PDef, Fn);
+
+			OutInstr.StatusName =
+				FString(StatusName);
+		}
+		else if (Key == "objective")
+		{
+			GetDefText(ObjectiveActionName, PDef, Fn);
+
+			OutInstr.Action =
+				ParseInstructionAction(
+					FString(ObjectiveActionName));
+		}
+		else if (Key == "loc")
+		{
+			FVector V =
+				FVector::ZeroVector;
+
+			GetDefVector(V, PDef, Fn);
+
+			OutInstr.ObjectiveLocation =
+				V;
+		}
+		else if (Key == "rloc")
+		{
+			if (PDef->term() &&
+				PDef->term()->isStruct())
+			{
+				ParseRLoc(
+					PDef->term()->isStruct(),
+					Fn);
+			}
+		}
+		else if (Key == "rgn")
+		{
+			GetDefText(RegionName, PDef, Fn);
+
+			OutInstr.OrderRegionName =
+				FString(RegionName);
+		}
+		else if (Key == "speed")
+		{
+			GetDefNumber(Speed, PDef, Fn);
+
+			OutInstr.Speed =
+				Speed;
+		}
+		else if (Key == "formation")
+		{
+			GetDefNumber(Formation, PDef, Fn);
+
+			OutInstr.Formation =
+				Formation;
+		}
+		else if (Key == "emcon")
+		{
+			GetDefNumber(EMCON, PDef, Fn);
+
+			OutInstr.EMCON =
+				EMCON;
+		}
+		else if (Key == "priority")
+		{
+			GetDefNumber(Priority, PDef, Fn);
+
+			OutInstr.Priority =
+				Priority;
+		}
+		else if (Key == "farcast")
+		{
+			int32 Farcast = 0;
+
+			if (PDef->term() &&
+				PDef->term()->isBool())
+			{
+				bool b = false;
+
+				GetDefBool(b, PDef, Fn);
+
+				Farcast =
+					b ? 1 : 0;
+			}
+			else
+			{
+				GetDefNumber(Farcast, PDef, Fn);
+			}
+
+			if (Farcast != 0)
+			{
+				OutInstr.Action =
+					EInstructionAction::Farcast;
+			}
+		}
+		else if (Key == "tgt")
+		{
+			GetDefText(ObjectiveName, PDef, Fn);
+
+			OutInstr.ObjectiveName =
+				FString(ObjectiveName);
+		}
+		else if (Key == "tgt_desc")
+		{
+			GetDefText(ObjectiveDesc, PDef, Fn);
+
+			OutInstr.ObjectiveDesc =
+				FString(ObjectiveDesc);
+		}
+		else
+		{
+			const char* KeyC = Key;
+
+			if (KeyC &&
+				!strncmp(KeyC, "hold", 4))
+			{
+				int32 Hold = 0;
+
+				GetDefNumber(Hold, PDef, Fn);
+
+				if (Hold != 0)
+				{
+					OutInstr.Action =
+						EInstructionAction::Hold;
+				}
+			}
+		}
+	}
+
+	/*
+	 * Legacy compatibility fallback:
+	 *
+	 * tgt without explicit objective
+	 * implies target action.
+	 */
+
+	if (OutInstr.Action ==
+		EInstructionAction::None &&
+		!OutInstr.ObjectiveName.IsEmpty())
+	{
+		OutInstr.Action =
+			EInstructionAction::Target;
+	}
+
+	/*
+	 * Location-only navpoint/objective
+	 * implies approach.
+	 */
+
+	if (OutInstr.Action ==
+		EInstructionAction::None &&
+		!OutInstr.ObjectiveLocation.IsNearlyZero())
+	{
+		OutInstr.Action =
+			EInstructionAction::Approach;
+	}
+
+	OutInstr.RLoc =
+		MissionRLocArray;
+
+	return true;
+}
 
 // +--------------------------------------------------------------------+
 
 void UStarshatterGameDataSubsystem::ParseNavpoint(TermStruct* Val, const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseNavpoint()"));
+	FS_MissionInstruction Instr;
 
-	if (!Val || !Fn || !*Fn)
+	if (ParseMissionInstructionCommon(Val, Fn, Instr))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseNavpoint called with null args"));
-		return;
+		MissionNavpointArray.Add(Instr);
 	}
-
-	// ---- legacy defaults ----
-	int32 Formation = 0;
-	int32 Speed = 0;
-	int32 Priority = 1;
-	int32 Farcast = 0;
-	int32 Hold = 0;
-	int32 EMCON = 0;
-
-	FVector Location = FVector::ZeroVector;
-
-	Text OrderName = "";
-	Text StatusName = "";
-	Text RegionName = "";
-	Text TargetName = "";
-	Text TargetDesc = "";
-
-	FS_MissionInstruction NewInstr;
-
-	// Legacy behavior: rlocs are per-navpoint
-	MissionRLocArray.Empty();
-
-	const int32 ElemCount = (int32)Val->elements()->size();
-	for (int32 i = 0; i < ElemCount; ++i)
-	{
-		TermDef* PDef = Val->elements()->at(i)->isDef();
-		if (!PDef)
-			continue;
-
-		const Text& Key = PDef->name()->value();
-
-		if (Key == "cmd")
-		{
-			GetDefText(OrderName, PDef, Fn);
-			NewInstr.OrderName = FString(OrderName);
-		}
-		else if (Key == "status")
-		{
-			GetDefText(StatusName, PDef, Fn);
-			NewInstr.StatusName = FString(StatusName);
-		}
-		else if (Key == "loc")
-		{
-			// Use FVector only
-			FVector V;
-			GetDefVector(V, PDef, Fn);
-			NewInstr.Location = V;
-		}
-		else if (Key == "rloc")
-		{
-			if (PDef->term() && PDef->term()->isStruct())
-			{
-				ParseRLoc(PDef->term()->isStruct(), Fn);
-			}
-		}
-		else if (Key == "rgn")
-		{
-			GetDefText(RegionName, PDef, Fn);
-			NewInstr.OrderRegionName = FString(RegionName);
-		}
-		else if (Key == "speed")
-		{
-			GetDefNumber(Speed, PDef, Fn);
-			NewInstr.Speed = Speed;
-		}
-		else if (Key == "formation")
-		{
-			GetDefNumber(Formation, PDef, Fn);
-			NewInstr.Formation = Formation;
-		}
-		else if (Key == "emcon")
-		{
-			GetDefNumber(EMCON, PDef, Fn);
-			NewInstr.EMCON = EMCON;
-		}
-		else if (Key == "priority")
-		{
-			GetDefNumber(Priority, PDef, Fn);
-			NewInstr.Priority = Priority;
-		}
-		else if (Key == "farcast")
-		{
-			// Legacy allows farcast as bool or number
-			if (PDef->term() && PDef->term()->isBool())
-			{
-				bool b = false;
-				GetDefBool(b, PDef, Fn);
-				Farcast = b ? 1 : 0;
-			}
-			else
-			{
-				GetDefNumber(Farcast, PDef, Fn);
-			}
-
-			NewInstr.Farcast = Farcast;
-		}
-		else if (Key == "tgt")
-		{
-			GetDefText(TargetName, PDef, Fn);
-			NewInstr.TargetName = FString(TargetName);
-		}
-		else if (Key == "tgt_desc")
-		{
-			GetDefText(TargetDesc, PDef, Fn);
-			NewInstr.TargetDesc = FString(TargetDesc);
-		}
-		else
-		{
-			// legacy: hold, hold1, hold2, etc.
-			const char* KeyC = Key; // Text ? const char* (Starshatter-style)
-			if (KeyC && !strncmp(KeyC, "hold", 4))
-			{
-				GetDefNumber(Hold, PDef, Fn);
-				NewInstr.Hold = Hold;
-			}
-		}
-	}
-
-	// Assign accumulated rlocs once
-	NewInstr.RLoc = MissionRLocArray;
-
-	MissionNavpointArray.Add(NewInstr);
 }
-
-
-// +--------------------------------------------------------------------+
 
 void UStarshatterGameDataSubsystem::ParseObjective(TermStruct* Val, const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseObjective()"));
+	FS_MissionInstruction Instr;
 
-	if (!Val || !Fn || !*Fn)
+	if (ParseMissionInstructionCommon(Val, Fn, Instr))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseObjective called with null args"));
-		return;
+		MissionObjectiveArray.Add(Instr);
 	}
-
-	// ---- legacy defaults ----
-	int32 Formation = 0;
-	int32 Speed = 0;
-	int32 Priority = 1;
-	int32 Farcast = 0;
-	int32 Hold = 0;
-	int32 EMCON = 0;
-
-	Text OrderName = "";
-	Text StatusName = "";
-	Text RegionName = "";
-	Text TargetName = "";
-	Text TargetDesc = "";
-
-	FS_MissionInstruction NewObj;
-
-	// Legacy behavior: rlocs are per-objective; clear before parsing this objective.
-	// NOTE: Assumes ParseRLoc appends into MissionRLocArray (member scratch).
-	MissionRLocArray.Empty();
-
-	const int32 ElemCount = (int32)Val->elements()->size();
-	for (int32 i = 0; i < ElemCount; ++i)
-	{
-		TermDef* PDef = Val->elements()->at(i)->isDef();
-		if (!PDef)
-			continue;
-
-		const Text& Key = PDef->name()->value();
-
-		if (Key == "cmd")
-		{
-			GetDefText(OrderName, PDef, Fn);
-			NewObj.OrderName = FString(OrderName);
-		}
-		else if (Key == "status")
-		{
-			GetDefText(StatusName, PDef, Fn);
-			NewObj.StatusName = FString(StatusName);
-		}
-		else if (Key == "loc")
-		{
-			FVector V = FVector::ZeroVector;
-			GetDefVector(V, PDef, Fn);
-			NewObj.Location = V;
-		}
-		else if (Key == "rloc")
-		{
-			if (PDef->term() && PDef->term()->isStruct())
-			{
-				ParseRLoc(PDef->term()->isStruct(), Fn);
-			}
-		}
-		else if (Key == "rgn")
-		{
-			GetDefText(RegionName, PDef, Fn);
-			NewObj.OrderRegionName = FString(RegionName);
-		}
-		else if (Key == "speed")
-		{
-			GetDefNumber(Speed, PDef, Fn);
-			NewObj.Speed = Speed;
-		}
-		else if (Key == "formation")
-		{
-			GetDefNumber(Formation, PDef, Fn);
-			NewObj.Formation = Formation;
-		}
-		else if (Key == "emcon")
-		{
-			GetDefNumber(EMCON, PDef, Fn);
-			NewObj.EMCON = EMCON;
-		}
-		else if (Key == "priority")
-		{
-			GetDefNumber(Priority, PDef, Fn);
-			NewObj.Priority = Priority;
-		}
-		else if (Key == "farcast")
-		{
-			// Legacy allows farcast as bool or number
-			if (PDef->term() && PDef->term()->isBool())
-			{
-				bool b = false;
-				GetDefBool(b, PDef, Fn);
-				Farcast = b ? 1 : 0;
-			}
-			else
-			{
-				GetDefNumber(Farcast, PDef, Fn);
-			}
-
-			NewObj.Farcast = Farcast;
-		}
-		else if (Key == "tgt")
-		{
-			GetDefText(TargetName, PDef, Fn);
-			NewObj.TargetName = FString(TargetName);
-		}
-		else if (Key == "tgt_desc")
-		{
-			GetDefText(TargetDesc, PDef, Fn);
-			NewObj.TargetDesc = FString(TargetDesc);
-		}
-		else
-		{
-			// legacy: hold, hold1, hold2, etc.
-			const char* KeyC = Key; // Text -> const char* (Starshatter style)
-			if (KeyC && !strncmp(KeyC, "hold", 4))
-			{
-				GetDefNumber(Hold, PDef, Fn);
-				NewObj.Hold = Hold;
-			}
-		}
-	}
-
-	// Assign accumulated rlocs once
-	NewObj.RLoc = MissionRLocArray;
-
-	MissionObjectiveArray.Add(NewObj);
 }
-
-// +--------------------------------------------------------------------+
 
 void UStarshatterGameDataSubsystem::ParseInstruction(TermStruct* Val, const char* Fn)
 {
-	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseInstruction()"));
+	FS_MissionInstruction Instr;
 
-	if (!Val || !Fn || !*Fn)
+	if (ParseMissionInstructionCommon(Val, Fn, Instr))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ParseInstruction called with null args"));
-		return;
+		MissionInstructionArray.Add(Instr);
 	}
-
-	// ---- legacy defaults ----
-	int32 Formation = 0;
-	int32 Speed = 0;
-	int32 Priority = 1;
-	int32 Farcast = 0;
-	int32 Hold = 0;
-	int32 EMCON = 0;
-
-	Text OrderName = "";
-	Text StatusName = "";
-	Text RegionName = "";
-	Text TargetName = "";
-	Text TargetDesc = "";
-
-	FS_MissionInstruction NewInstr;
-
-	// Legacy behavior: rlocs are per-instruction; clear before parsing this instruction.
-	// NOTE: Assumes ParseRLoc appends into MissionRLocArray (member scratch).
-	MissionRLocArray.Empty();
-
-	const int32 ElemCount = (int32)Val->elements()->size();
-	for (int32 i = 0; i < ElemCount; ++i)
-	{
-		TermDef* PDef = Val->elements()->at(i)->isDef();
-		if (!PDef)
-			continue;
-
-		const Text& Key = PDef->name()->value();
-
-		if (Key == "cmd")
-		{
-			GetDefText(OrderName, PDef, Fn);
-			NewInstr.OrderName = FString(OrderName);
-		}
-		else if (Key == "status")
-		{
-			GetDefText(StatusName, PDef, Fn);
-			NewInstr.StatusName = FString(StatusName);
-		}
-		else if (Key == "loc")
-		{
-			FVector V = FVector::ZeroVector;
-			GetDefVector(V, PDef, Fn);
-			NewInstr.Location = V;
-		}
-		else if (Key == "rloc")
-		{
-			if (PDef->term() && PDef->term()->isStruct())
-			{
-				ParseRLoc(PDef->term()->isStruct(), Fn);
-			}
-		}
-		else if (Key == "rgn")
-		{
-			GetDefText(RegionName, PDef, Fn);
-			NewInstr.OrderRegionName = FString(RegionName);
-		}
-		else if (Key == "speed")
-		{
-			GetDefNumber(Speed, PDef, Fn);
-			NewInstr.Speed = Speed;
-		}
-		else if (Key == "formation")
-		{
-			GetDefNumber(Formation, PDef, Fn);
-			NewInstr.Formation = Formation;
-		}
-		else if (Key == "emcon")
-		{
-			GetDefNumber(EMCON, PDef, Fn);
-			NewInstr.EMCON = EMCON;
-		}
-		else if (Key == "priority")
-		{
-			GetDefNumber(Priority, PDef, Fn);
-			NewInstr.Priority = Priority;
-		}
-		else if (Key == "farcast")
-		{
-			// Legacy allows farcast as bool or number
-			if (PDef->term() && PDef->term()->isBool())
-			{
-				bool b = false;
-				GetDefBool(b, PDef, Fn);
-				Farcast = b ? 1 : 0;
-			}
-			else
-			{
-				GetDefNumber(Farcast, PDef, Fn);
-			}
-
-			NewInstr.Farcast = Farcast;
-		}
-		else if (Key == "tgt")
-		{
-			GetDefText(TargetName, PDef, Fn);
-			NewInstr.TargetName = FString(TargetName);
-		}
-		else if (Key == "tgt_desc")
-		{
-			GetDefText(TargetDesc, PDef, Fn);
-			NewInstr.TargetDesc = FString(TargetDesc);
-		}
-		else
-		{
-			// legacy: hold, hold1, hold2, etc.
-			const char* KeyC = Key; // Text -> const char* (Starshatter style)
-			if (KeyC && !strncmp(KeyC, "hold", 4))
-			{
-				GetDefNumber(Hold, PDef, Fn);
-				NewInstr.Hold = Hold;
-			}
-		}
-	}
-
-	// Assign accumulated rlocs once
-	NewInstr.RLoc = MissionRLocArray;
-
-	MissionInstructionArray.Add(NewInstr);
 }
-
 
 // +--------------------------------------------------------------------+
 

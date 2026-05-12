@@ -1947,7 +1947,8 @@ ShipAI::AvoidTestSingleObject(
 
 				if (angle_off > 90 * DEGREES)
 				{
-					angle_off = 180 * DEGREES - angle_off;
+					angle_off =
+						180 * DEGREES - angle_off;
 				}
 
 				if (angle_off < 35 * DEGREES)
@@ -2034,7 +2035,9 @@ ShipAI::AvoidTestSingleObject(
 		obstacle = testpt;
 
 		FVector LocalObstacle =
-			WorldPointToLegacyLocalObjective(obstacle, false);
+			WorldPointToLegacyLocalObjective(
+				obstacle,
+				false);
 
 		/*
 		 * Legacy avoidance assumes:
@@ -2045,13 +2048,45 @@ ShipAI::AvoidTestSingleObject(
 		if (LocalObstacle.Z > 0)
 		{
 			other = obj;
-			avoid_time = time;
-			brake = 0.5;
+
+			avoid_time =
+				time;
+
+			avoid =
+				Avoid(
+					LocalObstacle,
+					static_cast<float>(
+						avoid_dist +
+						obj->GetRadius()));
+
+			avoid.brake =
+				0.5;
+
+			brake =
+				0.5;
 
 			Observe(other);
+
+			if (ship)
+			{
+				ship->SetDirectorInfo(
+					"Avoid collision");
+			}
+
+			UE_LOG(LogTemp, VeryVerbose,
+				TEXT("[ShipAI::AvoidTestSingleObject] Ship='%hs' Obstacle='%hs' Time=%.3f Dist=%.3f Local=%s Brake=%.2f"),
+				ship ? ship->GetName() : "NULL",
+				obj ? obj->GetName() : "NULL",
+				time,
+				dist,
+				*LocalObstacle.ToString(),
+				avoid.brake);
+
+			return true;
 		}
 	}
-	else if (other == obj && dist > avoid_dist * 1.25)
+	else if (other == obj &&
+		dist > avoid_dist * 1.25)
 	{
 		other = nullptr;
 	}
@@ -2064,29 +2099,47 @@ ShipAI::AvoidTestSingleObject(
 Steer
 ShipAI::AvoidCloseObject(SimObject* obj)
 {
-	if (!obj)
+	if (!ship || !obj)
 	{
 		return Steer();
 	}
 
-	too_close = obj->GetIdentity();
+	too_close =
+		obj->GetIdentity();
 
-	obstacle = obj->GetLocation();
+	obstacle =
+		obj->GetLocation();
 
-	other = obj;
+	other =
+		obj;
 
 	Observe(other);
 
+	const FVector LocalObstacle =
+		WorldPointToLegacyLocalObjective(
+			obstacle,
+			false);
+
 	Steer avoid =
-		Flee(
-			WorldPointToLegacyLocalObjective(obstacle, false));
+		Flee(LocalObstacle);
 
-	avoid.brake = 0.3;
+	avoid.brake =
+		0.5;
 
-	if (ship)
-	{
-		ship->SetDirectorInfo("Avoid collision");
-	}
+	brake =
+		0.5;
+
+	ship->SetDirectorInfo(
+		"Avoid collision");
+
+	UE_LOG(LogTemp, VeryVerbose,
+		TEXT("[ShipAI::AvoidCloseObject] Ship='%hs' Object='%hs' LocalObstacle=%s Brake=%.2f Yaw=%.4f Pitch=%.4f"),
+		ship ? ship->GetName() : "NULL",
+		obj ? obj->GetName() : "NULL",
+		*LocalObstacle.ToString(),
+		avoid.brake,
+		avoid.yaw,
+		avoid.pitch);
 
 	return avoid;
 }

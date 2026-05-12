@@ -1580,31 +1580,69 @@ ACampaignSceneActor::CreateRuntimeShipForMissionElement(
     //-------------------------------------------------------------
     // 10. Navpoints -> Instructions
     //-------------------------------------------------------------
-    for (const FS_MissionInstruction& Nav :
-        Elem.Navpoint)
+    for (const FS_MissionInstruction& Nav : Elem.Navpoint)
     {
         const FString RegionName =
             !Nav.OrderRegionName.IsEmpty()
             ? Nav.OrderRegionName
             : Elem.RegionName;
 
+        INSTRUCTION_ACTION LegacyAction =
+            INSTRUCTION_ACTION::VECTOR;
+
+        switch (Nav.Action)
+        {
+        case EInstructionAction::Dock:
+            LegacyAction =
+                INSTRUCTION_ACTION::DOCK;
+            break;
+
+        case EInstructionAction::Escort:
+            LegacyAction =
+                INSTRUCTION_ACTION::ESCORT;
+            break;
+
+        case EInstructionAction::Patrol:
+            LegacyAction =
+                INSTRUCTION_ACTION::PATROL;
+            break;
+
+        case EInstructionAction::Defend:
+            LegacyAction =
+                INSTRUCTION_ACTION::DEFEND;
+            break;
+
+        case EInstructionAction::Target:
+            LegacyAction =
+                INSTRUCTION_ACTION::ASSAULT;
+            break;
+
+        case EInstructionAction::Farcast:
+        case EInstructionAction::Approach:
+        case EInstructionAction::StopAt:
+        case EInstructionAction::Hold:
+        default:
+            LegacyAction =
+                INSTRUCTION_ACTION::VECTOR;
+            break;
+        }
+
         Instruction* Inst =
             new Instruction(
                 TCHAR_TO_ANSI(*RegionName),
-                Nav.Location,
-                INSTRUCTION_ACTION::VECTOR);
+                Nav.ObjectiveLocation,
+                LegacyAction);
+
+        if (!Inst)
+        {
+            continue;
+        }
 
         Inst->SetSpeed(
             Nav.Speed);
 
-        Inst->SetHoldTime(
-            (double)Nav.Hold);
-
         Inst->SetPriority(
             Nav.Priority);
-
-        Inst->SetFarcast(
-            Nav.Farcast);
 
         Inst->SetEMCON(
             Nav.EMCON);
@@ -1612,6 +1650,17 @@ ACampaignSceneActor::CreateRuntimeShipForMissionElement(
         Inst->SetFormation(
             ResolveInstructionFormation(
                 Nav.Formation));
+
+        if (Nav.Action == EInstructionAction::Hold)
+        {
+            Inst->SetHoldTime(
+                Nav.ArrivalRadius);
+        }
+
+        if (Nav.Action == EInstructionAction::Farcast)
+        {
+            Inst->SetFarcast(1);
+        }
 
         if (!Nav.StatusName.IsEmpty())
         {
@@ -1631,32 +1680,33 @@ ACampaignSceneActor::CreateRuntimeShipForMissionElement(
             }
         }
 
-        if (!Nav.TargetName.IsEmpty())
+        if (!Nav.ObjectiveName.IsEmpty())
         {
             Inst->SetTarget(
-                Nav.TargetName);
+                Nav.ObjectiveName);
         }
 
-        if (!Nav.TargetDesc.IsEmpty())
+        if (!Nav.ObjectiveDesc.IsEmpty())
         {
             Inst->SetTargetDesc(
                 TCHAR_TO_ANSI(
-                    *Nav.TargetDesc));
+                    *Nav.ObjectiveDesc));
         }
 
         NewShip->AddNavPoint(
             Inst);
 
         UE_LOG(LogTemp, Warning,
-            TEXT("[Nav] Ship='%s' Region='%s' Loc=%s Speed=%d Formation=%d Priority=%d"),
+            TEXT("[Nav] Ship='%s' Region='%s' Objective='%s' Action=%d Loc=%s Speed=%d Formation=%d Priority=%d"),
             *Elem.Name,
             *RegionName,
-            *Nav.Location.ToString(),
+            *Nav.ObjectiveName,
+            (int32)Nav.Action,
+            *Nav.ObjectiveLocation.ToString(),
             Nav.Speed,
             Nav.Formation,
             Nav.Priority);
     }
-
     //-------------------------------------------------------------
     // 11. Face runtime ship toward first resolved nav target
     //-------------------------------------------------------------

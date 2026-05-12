@@ -562,6 +562,24 @@ enum EControlType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EInstructionAction : uint8
+{
+	None            UMETA(DisplayName = "None"),
+
+	Target          UMETA(DisplayName = "Target"),
+	Approach        UMETA(DisplayName = "Approach"),
+	StopAt          UMETA(DisplayName = "Stop At"),
+
+	Dock            UMETA(DisplayName = "Dock"),
+	Farcast         UMETA(DisplayName = "Farcast"),
+	Hold            UMETA(DisplayName = "Hold"),
+
+	Escort          UMETA(DisplayName = "Escort"),
+	Patrol          UMETA(DisplayName = "Patrol"),
+	Defend          UMETA(DisplayName = "Defend")
+};
+
+UENUM(BlueprintType)
 enum class EMISSIONTYPE : uint8
 {
 	PATROL			UMETA(DisplayName = "Patrol"),
@@ -2072,52 +2090,83 @@ struct FS_RLoc : public FTableRowBase {
 		BaseLocation = FVector::ZeroVector;
 	}
 };
-
 USTRUCT(BlueprintType)
-struct FS_MissionInstruction : public FTableRowBase {
-
+struct FS_MissionInstruction : public FTableRowBase
+{
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Formation;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Speed;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Priority;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Farcast;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	int Hold;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int EMCON;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString OrderName;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString StatusName;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString OrderRegionName;
+
+	/*
+	 * Unified objective system
+	 */
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString TargetName;
+	FString ObjectiveName;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FString TargetDesc;
+	FString ObjectiveDesc;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FVector Location;
+	EInstructionAction Action;
+
+	/*
+	 * Resolved runtime world-space objective
+	 */
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FVector ObjectiveLocation;
+
+	/*
+	 * Arrival / braking radius
+	 */
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	float ArrivalRadius;
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_RLoc> RLoc;
 
-	FS_MissionInstruction() {
+	FS_MissionInstruction()
+	{
 		Formation = 0;
 		Speed = 0;
 		Priority = 1;
-		Farcast = 0;
-		Hold = 0;
 		EMCON = 0;
-		Location = FVector::ZeroVector;
-		OrderName ="";
+
+		ArrivalRadius = 5000.0f;
+
+		ObjectiveLocation =
+			FVector::ZeroVector;
+
+		OrderName = "";
 		StatusName = "";
 		OrderRegionName = "";
-		TargetName = "";
-		TargetDesc = "";
+
+		ObjectiveName = "";
+		ObjectiveDesc = "";
+
+		Action =
+			EInstructionAction::None;
 	}
 };
 

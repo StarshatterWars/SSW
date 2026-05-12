@@ -52,22 +52,34 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 	if (bFullReset)
 	{
 		ok = false;
+
 		elements.destroy();
 		events.destroy();
+
 		errmsg = "";
 		subtitles = "";
+
 		target = nullptr;
 		ward = nullptr;
 	}
 
 	if (!InData.MissionName.IsEmpty())
-		name = TCHAR_TO_ANSI(*InData.MissionName);
+	{
+		name =
+			TCHAR_TO_ANSI(*InData.MissionName);
+	}
 
 	if (!InData.MissionSystem.IsEmpty())
-		system = TCHAR_TO_ANSI(*InData.MissionSystem);
+	{
+		system =
+			TCHAR_TO_ANSI(*InData.MissionSystem);
+	}
 
 	if (!InData.MissionRegion.IsEmpty())
-		region = TCHAR_TO_ANSI(*InData.MissionRegion);
+	{
+		region =
+			TCHAR_TO_ANSI(*InData.MissionRegion);
+	}
 
 	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
 	{
@@ -76,11 +88,17 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		script = TCHAR_TO_ANSI(*InData.Scene);
 		objective = TCHAR_TO_ANSI(*InData.Objective);
 		sitrep = TCHAR_TO_ANSI(*InData.Sitrep);
+
 		type = static_cast<int32>(InData.MissionType);
+
 		team = InData.Team;
 		degrees = InData.Degrees;
 		stardate = InData.Stardate;
-		start = UFormattingUtils::ParseStarshatterTime(InData.StartTime);
+
+		start =
+			UFormattingUtils::ParseStarshatterTime(
+				InData.StartTime);
+
 		end = 0;
 	}
 
@@ -90,72 +108,158 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 
 	for (const FS_MissionElement& SrcElem : InData.Element)
 	{
-		MissionElement* Elem = new MissionElement();
+		MissionElement* Elem =
+			new MissionElement();
+
 		if (!Elem)
+		{
 			continue;
+		}
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
 			*SrcElem.Name,
 			*SrcElem.RegionName);
 
-		Elem->SetName(TCHAR_TO_ANSI(*SrcElem.Name));
-		Elem->SetCarrier(TCHAR_TO_ANSI(*SrcElem.Carrier));
-		Elem->SetCommander(TCHAR_TO_ANSI(*SrcElem.Commander));
-		Elem->SetSquadron(TCHAR_TO_ANSI(*SrcElem.Squadron));
+		Elem->SetName(
+			TCHAR_TO_ANSI(*SrcElem.Name));
 
-		Elem->SetRegion(TCHAR_TO_ANSI(*SrcElem.RegionName));
-		Elem->SetIFF(SrcElem.IFFCode);
-		Elem->SetCount(SrcElem.Count);
-		Elem->SetPlayer(SrcElem.Player ? 1 : 0);
-		Elem->SetAlert(SrcElem.Alert);
-		Elem->SetPlayable(SrcElem.Playable);
-		Elem->SetInvulnerable(SrcElem.Invulnerable);
-		Elem->SetRogue(SrcElem.Rogue);
-		Elem->SetCommandAI(SrcElem.CommandAI);
-		Elem->SetRespawnCount(SrcElem.Respawns);
-		Elem->SetHoldTime(SrcElem.HoldTime);
-		Elem->SetZoneLock(SrcElem.ZoneLock);
-		Elem->SetHeading(SrcElem.Heading);
+		Elem->SetCarrier(
+			TCHAR_TO_ANSI(*SrcElem.Carrier));
 
-		// LOCATION
-		Elem->SetLocation(SrcElem.Location);
+		Elem->SetCommander(
+			TCHAR_TO_ANSI(*SrcElem.Commander));
 
-		Elem->mission_role = static_cast<int32>(SrcElem.RoleName);
-		Elem->intel = static_cast<int32>(SrcElem.Intel);
+		Elem->SetSquadron(
+			TCHAR_TO_ANSI(*SrcElem.Squadron));
+
+		Elem->SetRegion(
+			TCHAR_TO_ANSI(*SrcElem.RegionName));
+
+		Elem->SetIFF(
+			SrcElem.IFFCode);
+
+		Elem->SetCount(
+			SrcElem.Count);
+
+		Elem->SetPlayer(
+			SrcElem.Player ? 1 : 0);
+
+		Elem->SetAlert(
+			SrcElem.Alert);
+
+		Elem->SetPlayable(
+			SrcElem.Playable);
+
+		Elem->SetInvulnerable(
+			SrcElem.Invulnerable);
+
+		Elem->SetRogue(
+			SrcElem.Rogue);
+
+		Elem->SetCommandAI(
+			SrcElem.CommandAI);
+
+		Elem->SetRespawnCount(
+			SrcElem.Respawns);
+
+		Elem->SetHoldTime(
+			SrcElem.HoldTime);
+
+		Elem->SetZoneLock(
+			SrcElem.ZoneLock);
+
+		Elem->SetHeading(
+			SrcElem.Heading);
+
+		Elem->SetLocation(
+			SrcElem.Location);
+
+		Elem->mission_role =
+			static_cast<int32>(SrcElem.RoleName);
+
+		Elem->intel =
+			static_cast<int32>(SrcElem.Intel);
 
 		//--------------------------------------------------
-		// NAVPOINT ->INSTRUCTION BRIDGE
+		// NAVPOINT -> INSTRUCTION BRIDGE
 		//--------------------------------------------------
 
 		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
 		{
-			Instruction* Nav = new Instruction(
-				TCHAR_TO_ANSI(*SrcNav.OrderRegionName),
-				SrcNav.Location,
-				INSTRUCTION_ACTION::VECTOR);
+			INSTRUCTION_ACTION LegacyAction =
+				INSTRUCTION_ACTION::VECTOR;
+
+			switch (SrcNav.Action)
+			{
+			case EInstructionAction::Dock:
+				LegacyAction = INSTRUCTION_ACTION::DOCK;
+				break;
+
+			case EInstructionAction::Escort:
+				LegacyAction = INSTRUCTION_ACTION::ESCORT;
+				break;
+
+			case EInstructionAction::Patrol:
+				LegacyAction = INSTRUCTION_ACTION::PATROL;
+				break;
+
+			case EInstructionAction::Defend:
+				LegacyAction = INSTRUCTION_ACTION::DEFEND;
+				break;
+
+			case EInstructionAction::Target:
+				LegacyAction = INSTRUCTION_ACTION::ASSAULT;
+				break;
+
+			case EInstructionAction::Farcast:
+			case EInstructionAction::Approach:
+			case EInstructionAction::StopAt:
+			case EInstructionAction::Hold:
+			default:
+				LegacyAction = INSTRUCTION_ACTION::VECTOR;
+				break;
+			}
+
+			Instruction* Nav =
+				new Instruction(
+					TCHAR_TO_ANSI(*SrcNav.OrderRegionName),
+					SrcNav.ObjectiveLocation,
+					LegacyAction);
 
 			if (!Nav)
-				continue;
-
-			Nav->SetSpeed(SrcNav.Speed);
-			Nav->SetPriority(SrcNav.Priority);
-			Nav->SetFarcast(SrcNav.Farcast);
-
-			if (!SrcNav.TargetName.IsEmpty())
 			{
-				Nav->SetTarget(SrcNav.TargetName);
+				continue;
+			}
+
+			Nav->SetSpeed(
+				SrcNav.Speed);
+
+			Nav->SetPriority(
+				SrcNav.Priority);
+
+			if (SrcNav.Action ==
+				EInstructionAction::Farcast)
+			{
+				Nav->SetFarcast(1);
+			}
+
+			if (!SrcNav.ObjectiveName.IsEmpty())
+			{
+				Nav->SetTarget(
+					SrcNav.ObjectiveName);
 			}
 
 			Elem->AddNavPoint(Nav);
 
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Target='%s' Loc=%s Speed=%d"),
+				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Objective='%s' Action=%d Loc=%s Speed=%d"),
 				*SrcElem.Name,
 				*SrcNav.OrderName,
 				*SrcNav.OrderRegionName,
-				*SrcNav.TargetName,
-				*SrcNav.Location.ToString(),
+				*SrcNav.ObjectiveName,
+				(int32)SrcNav.Action,
+				*SrcNav.ObjectiveLocation.ToString(),
 				SrcNav.Speed);
 		}
 
@@ -170,20 +274,45 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 
 	for (const FS_MissionEvent& SrcEvent : InData.Event)
 	{
-		MissionEvent* Ev = new MissionEvent();
-		if (!Ev)
-			continue;
+		MissionEvent* Ev =
+			new MissionEvent();
 
-		Ev->id = SrcEvent.EventId;
-		Ev->time = SrcEvent.EventTime;
-		Ev->delay = SrcEvent.EventDelay;
-		Ev->event = static_cast<int32>(SrcEvent.EventType);
-		Ev->trigger = static_cast<int32>(SrcEvent.EventTrigger);
-		Ev->event_ship = TCHAR_TO_ANSI(*SrcEvent.EventShip);
-		Ev->event_source = TCHAR_TO_ANSI(*SrcEvent.EventSource);
-		Ev->event_target = TCHAR_TO_ANSI(*SrcEvent.EventTarget);
-		Ev->event_message = TCHAR_TO_ANSI(*SrcEvent.EventMessage);
-		Ev->event_sound = TCHAR_TO_ANSI(*SrcEvent.EventSound);
+		if (!Ev)
+		{
+			continue;
+		}
+
+		Ev->id =
+			SrcEvent.EventId;
+
+		Ev->time =
+			SrcEvent.EventTime;
+
+		Ev->delay =
+			SrcEvent.EventDelay;
+
+		Ev->event =
+			static_cast<int32>(
+				SrcEvent.EventType);
+
+		Ev->trigger =
+			static_cast<int32>(
+				SrcEvent.EventTrigger);
+
+		Ev->event_ship =
+			TCHAR_TO_ANSI(*SrcEvent.EventShip);
+
+		Ev->event_source =
+			TCHAR_TO_ANSI(*SrcEvent.EventSource);
+
+		Ev->event_target =
+			TCHAR_TO_ANSI(*SrcEvent.EventTarget);
+
+		Ev->event_message =
+			TCHAR_TO_ANSI(*SrcEvent.EventMessage);
+
+		Ev->event_sound =
+			TCHAR_TO_ANSI(*SrcEvent.EventSound);
 
 		AddEvent(Ev);
 	}
@@ -195,13 +324,22 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
 	{
 		if (!InData.TargetName.IsEmpty())
-			target = FindElement(TCHAR_TO_ANSI(*InData.TargetName));
+		{
+			target =
+				FindElement(
+					TCHAR_TO_ANSI(*InData.TargetName));
+		}
 
 		if (!InData.WardName.IsEmpty())
-			ward = FindElement(TCHAR_TO_ANSI(*InData.WardName));
+		{
+			ward =
+				FindElement(
+					TCHAR_TO_ANSI(*InData.WardName));
+		}
 	}
 
 	ok = true;
+
 	Validate();
 
 	UE_LOG(LogTemp, Warning,
