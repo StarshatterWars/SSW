@@ -5433,20 +5433,38 @@ Ship::ExecFLCSFrame()
 void
 Ship::ApplyHelmYaw(double y)
 {
-	const double turn =
-		y * PI / 4;
+	// rotate compass into helm-relative orientation:
+	double compass = GetCompassHeading() - helm_heading;
+	double turn = y * PI / 4;
+
+	if (compass > PI)
+		compass -= 2 * PI;
+	else if (compass < -PI)
+		compass += 2 * PI;
+
+	// if requested turn is more than 170, reject it:
+	if (fabs(compass + turn) > 170 * DEGREES)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Ship::ApplyHelmYaw] REJECT Ship='%s' InputYaw=%.4f CompassDelta=%.4f Turn=%.4f"),
+			ANSI_TO_TCHAR(GetName()),
+			y,
+			compass,
+			turn);
+
+		return;
+	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ApplyHelmYaw] Ship='%s' InputYaw=%.4f Turn=%.4f CurrentCompass=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
+		TEXT("[Ship::ApplyHelmYaw] APPLY Ship='%s' InputYaw=%.4f CompassDelta=%.4f Turn=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
 		ANSI_TO_TCHAR(GetName()),
 		y,
+		compass,
 		turn,
-		GetCompassHeading(),
 		helm_heading,
 		helm_heading + turn);
 
-	SetHelmHeading(
-		helm_heading + turn);
+	SetHelmHeading(helm_heading + turn);
 }
 
 void

@@ -249,4 +249,6 @@ protected:
     bool        grid_shown = false;
     Mission* mission = nullptr;
     uint32      start_time = 0;
+    bool bResolvingTimeSkip = true;
+
 };

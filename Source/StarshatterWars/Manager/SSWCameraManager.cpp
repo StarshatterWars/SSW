@@ -1,172 +1,257 @@
 #include "SSWCameraManager.h"
+
 #include "Camera/CameraComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
 
 ASSWCameraManager::ASSWCameraManager()
 {
-    PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
-    Root = CreateDefaultSubobject<USceneComponent>("Root");
-    SetRootComponent(Root);
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(Root);
 
-    Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
-    Camera->SetupAttachment(Root);
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(Root);
 }
 
-void ASSWCameraManager::BeginPlay()
+void
+ASSWCameraManager::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 }
 
-void ASSWCameraManager::ActivateCamera(float BlendTime)
+void
+ASSWCameraManager::ActivateCamera(float BlendTime)
 {
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SSWCameraManager] ActivateCamera failed: World is null"));
-        return;
-    }
+	UWorld* World = GetWorld();
 
-    APlayerController* PC = World->GetFirstPlayerController();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SSWCameraManager] ActivateCamera failed: PlayerController is null"));
-        return;
-    }
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[SSWCameraManager] ActivateCamera failed: World is null"));
 
-    PC->bAutoManageActiveCameraTarget = false;
+		return;
+	}
 
-    PC->SetViewTargetWithBlend(
-        this,
-        FMath::Max(0.0f, BlendTime));
+	APlayerController* PC =
+		World->GetFirstPlayerController();
 
-    PC->SetControlRotation(GetActorRotation());
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[SSWCameraManager] ActivateCamera failed: PlayerController is null"));
 
-    AActor* ViewTarget = PC->GetViewTarget();
+		return;
+	}
 
-    UE_LOG(LogTemp, Error,
-        TEXT("[SSWCameraManager] ActivateCamera Camera=%s Loc=%s Rot=%s Blend=%.2f ViewTarget=%s"),
-        *GetName(),
-        *GetActorLocation().ToString(),
-        *GetActorRotation().ToString(),
-        BlendTime,
-        *GetNameSafe(ViewTarget));
+	PC->bAutoManageActiveCameraTarget = false;
+
+	PC->SetViewTargetWithBlend(
+		this,
+		FMath::Max(0.0f, BlendTime));
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[SSWCameraManager] ActivateCamera Camera=%s Loc=%s Rot=%s Blend=%.2f"),
+		*GetName(),
+		*GetActorLocation().ToString(),
+		*GetActorRotation().ToString(),
+		BlendTime);
 }
+
 // ----------------------------------------------------
 // CAMERA MODES
 // ----------------------------------------------------
 
-void ASSWCameraManager::SetBodyOrbitView(AActor* Target, const FVector& OrbitPoint)
+void
+ASSWCameraManager::SetBodyOrbitView(
+	AActor* Target,
+	const FVector& OrbitPoint)
 {
-    if (!Target) return;
+	if (!Target)
+	{
+		return;
+	}
 
-    TargetActor = Target;
+	TargetActor = Target;
 
-    Azimuth = OrbitPoint.X;
-    Elevation = OrbitPoint.Y;
-    Range = FMath::Clamp((double)OrbitPoint.Z, (double)MinRange, (double)MaxRange);
+	Azimuth = OrbitPoint.X;
+	Elevation = OrbitPoint.Y;
 
-    Mode = ESSWCameraMode::BodyOrbit;
+	Range = FMath::Clamp(
+		(double)OrbitPoint.Z,
+		(double)MinRange,
+		(double)MaxRange);
 
-    UpdateOrbit(0.0f);
+	Mode = ESSWCameraMode::BodyOrbit;
+
+	UpdateOrbit(0.0f);
 }
 
-void ASSWCameraManager::SetOrbitRates(const FVector& Rates)
+void
+ASSWCameraManager::SetOrbitRates(
+	const FVector& Rates)
 {
-    AzRate = Rates.X;
-    ElRate = Rates.Y;
-    RangeRate = Rates.Z;
+	AzRate = Rates.X;
+	ElRate = Rates.Y;
+	RangeRate = Rates.Z;
 }
 
-void ASSWCameraManager::SetActorFollowView(
-    AActor* Target,
-    const FVector& Offset,
-    const FRotator& Rotator)
+void
+ASSWCameraManager::SetActorFollowView(
+	AActor* Target,
+	const FVector& Offset,
+	const FRotator& Rotator)
 {
-    TargetActor = Target;
-    FollowOffset = Offset;
-    FollowRotator = Rotator;
+	if (!Target)
+	{
+		ClearCamera();
+		return;
+	}
 
-    Mode = ESSWCameraMode::ActorFollow;
+	TargetActor = Target;
+	FollowOffset = Offset;
+	FollowRotator = Rotator;
 
-    UpdateActorFollow(0.0f);
+	Mode = ESSWCameraMode::ActorFollow;
+
+	UpdateActorFollow(0.0f);
 }
 
-void ASSWCameraManager::SetStaticView(const FVector& Location, const FRotator& Rotation)
+void
+ASSWCameraManager::SetStaticView(
+	const FVector& Location,
+	const FRotator& Rotation)
 {
-    Mode = ESSWCameraMode::Static;
-    SetActorLocation(Location);
-    SetActorRotation(Rotation);
+	Mode = ESSWCameraMode::Static;
+
+	SetActorLocation(Location);
+	SetActorRotation(Rotation);
 }
 
-void ASSWCameraManager::ClearCamera()
+void
+ASSWCameraManager::ClearCamera()
 {
-    Mode = ESSWCameraMode::None;
-    TargetActor = nullptr;
+	Mode = ESSWCameraMode::None;
+	TargetActor = nullptr;
 }
 
 // ----------------------------------------------------
 // TICK
 // ----------------------------------------------------
 
-void ASSWCameraManager::Tick(float DeltaTime)
+void
+ASSWCameraManager::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 
-    switch (Mode)
-    {
-    case ESSWCameraMode::BodyOrbit:
-        UpdateOrbit(DeltaTime);
-        break;
+	const float SafeDelta =
+		FMath::Clamp(
+			DeltaTime,
+			0.0f,
+			0.033f);
 
-    case ESSWCameraMode::ActorFollow:
-        UpdateActorFollow(DeltaTime);
-        break;
+	switch (Mode)
+	{
+	case ESSWCameraMode::BodyOrbit:
+		UpdateOrbit(SafeDelta);
+		break;
 
-    case ESSWCameraMode::GroupFollow:
-        UpdateGroupFollow(DeltaTime);
-        break;
+	case ESSWCameraMode::ActorFollow:
+		UpdateActorFollow(SafeDelta);
+		break;
 
-    default:
-        break;
-    }
+	case ESSWCameraMode::GroupFollow:
+		UpdateGroupFollow(SafeDelta);
+		break;
+
+	default:
+		break;
+	}
 }
 
 // ----------------------------------------------------
-// ORBIT (THIS IS THE LEGACY MAGIC)
+// ORBIT
 // ----------------------------------------------------
 
-void ASSWCameraManager::UpdateOrbit(float DeltaTime)
+void
+ASSWCameraManager::UpdateOrbit(float DeltaTime)
 {
-    if (!TargetActor)
-    {
-        return;
-    }
+	if (!TargetActor)
+	{
+		return;
+	}
 
-    const double Seconds = FMath::Clamp((double)DeltaTime, 0.0, 0.2);
+	const double Seconds =
+		FMath::Clamp(
+			(double)DeltaTime,
+			0.0,
+			0.033);
 
-    Azimuth += AzRate * Seconds;
-    Elevation += ElRate * Seconds;
-    Range *= (1.0 + RangeRate * Seconds);
+	Azimuth += AzRate * Seconds;
+	Elevation += ElRate * Seconds;
+	Range *= (1.0 + RangeRate * Seconds);
 
-    Range = FMath::Clamp(Range, (double)MinRange, (double)MaxRange);
+	Range =
+		FMath::Clamp(
+			Range,
+			(double)MinRange,
+			(double)MaxRange);
 
-    const FVector Target = TargetActor->GetActorLocation();
+	const FVector Target =
+		TargetActor->GetActorLocation();
 
-    const double Dx = Range * FMath::Sin(Azimuth) * FMath::Cos(Elevation);
-    const double Dy = Range * FMath::Cos(Azimuth) * FMath::Cos(Elevation);
-    const double Dz = Range * FMath::Sin(Elevation);
+	const double Dx =
+		Range * FMath::Sin(Azimuth) * FMath::Cos(Elevation);
 
-    // Unreal axis mapping:
-    // X = horizontal
-    // Y = depth
-    // Z = vertical
-    const FVector CamLoc = Target + FVector((float)Dx, (float)Dy, (float)Dz);
+	const double Dy =
+		Range * FMath::Cos(Azimuth) * FMath::Cos(Elevation);
 
-    SetActorLocation(CamLoc);
-    LookAt(Target);
+	const double Dz =
+		Range * FMath::Sin(Elevation);
+
+	const FVector DesiredCamLoc =
+		Target + FVector(
+			(float)Dx,
+			(float)Dy,
+			(float)Dz);
+
+	const FVector CurrentCamLoc =
+		GetActorLocation();
+
+	const double JumpDistance =
+		FVector::Dist(
+			CurrentCamLoc,
+			DesiredCamLoc);
+
+	if (DeltaTime <= 0.0f ||
+		JumpDistance > 10000.0)
+	{
+		SetActorLocation(DesiredCamLoc);
+		LookAt(Target);
+		return;
+	}
+
+	const FVector SmoothedCamLoc =
+		FMath::VInterpTo(
+			CurrentCamLoc,
+			DesiredCamLoc,
+			DeltaTime,
+			12.0f);
+
+	SetActorLocation(SmoothedCamLoc);
+
+	const FRotator DesiredRot =
+		(Target - SmoothedCamLoc).Rotation();
+
+	const FRotator SmoothedRot =
+		FMath::RInterpTo(
+			GetActorRotation(),
+			DesiredRot,
+			DeltaTime,
+			10.0f);
+
+	SetActorRotation(SmoothedRot);
 }
 
 // ----------------------------------------------------
@@ -176,309 +261,334 @@ void ASSWCameraManager::UpdateOrbit(float DeltaTime)
 void
 ASSWCameraManager::UpdateActorFollow(float DeltaTime)
 {
-    if (!TargetActor)
-    {
-        return;
-    }
+	if (!TargetActor)
+	{
+		return;
+	}
 
-    //-------------------------------------------------------------
-    // Target location
-    //-------------------------------------------------------------
+	const FVector TargetLoc =
+		TargetActor->GetActorLocation();
 
-    const FVector TargetLoc =
-        TargetActor->GetActorLocation();
+	const FVector ForwardDir =
+		TargetActor->GetActorForwardVector().GetSafeNormal();
 
-    //-------------------------------------------------------------
-    // Legacy forward basis
-    //
-    // Ships are currently staying in legacy runtime space.
-    // Use actor rotation directly.
-    //-------------------------------------------------------------
+	const FVector RightDir =
+		TargetActor->GetActorRightVector().GetSafeNormal();
 
-    FVector ForwardDir =
-        TargetActor->GetActorRotation().Vector();
+	const FVector UpDir =
+		TargetActor->GetActorUpVector().GetSafeNormal();
 
-    if (!ForwardDir.Normalize())
-    {
-        ForwardDir =
-            FVector(0.0f, 0.0f, 1.0f);
-    }
+	FVector LocalOffset =
+		FollowOffset;
 
-    //-------------------------------------------------------------
-    // Build orthonormal basis
-    //
-    // Legacy world:
-    //   X = right
-    //   Y = up
-    //   Z = forward
-    //-------------------------------------------------------------
+	if (LocalOffset.IsNearlyZero())
+	{
+		LocalOffset = FVector(
+			-2500.0f,
+			900.0f,
+			650.0f);
+	}
 
-    FVector UpDir =
-        FVector(0.0f, 1.0f, 0.0f);
+	const FVector DesiredCamLoc =
+		TargetLoc +
+		ForwardDir * LocalOffset.X +
+		RightDir * LocalOffset.Y +
+		UpDir * LocalOffset.Z;
 
-    FVector RightDir =
-        FVector::CrossProduct(
-            ForwardDir,
-            UpDir).GetSafeNormal();
+	const FVector CurrentCamLoc =
+		GetActorLocation();
 
-    if (RightDir.IsNearlyZero())
-    {
-        RightDir =
-            FVector(1.0f, 0.0f, 0.0f);
-    }
+	const double JumpDistance =
+		FVector::Dist(
+			CurrentCamLoc,
+			DesiredCamLoc);
 
-    UpDir =
-        FVector::CrossProduct(
-            RightDir,
-            ForwardDir).GetSafeNormal();
+	if (DeltaTime <= 0.0f ||
+		JumpDistance > 10000.0)
+	{
+		SetActorLocation(DesiredCamLoc);
 
-    //-------------------------------------------------------------
-    // Camera local offset
-    //
-    // Legacy local space:
-    //   X = right
-    //   Y = up
-    //   Z = forward
-    //-------------------------------------------------------------
+		SetActorRotation(
+			(TargetLoc - DesiredCamLoc).Rotation());
 
-    FVector LocalOffset =
-        FollowOffset;
+		return;
+	}
 
-    if (LocalOffset.IsNearlyZero())
-    {
-        LocalOffset =
-            FVector(
-                900.0f,     // right
-                650.0f,     // up
-                -2500.0f);  // behind
-    }
+	const float SafeDelta =
+		FMath::Clamp(
+			DeltaTime,
+			0.0f,
+			0.033f);
 
-    //-------------------------------------------------------------
-    // Desired camera world position
-    //-------------------------------------------------------------
+	const FVector SmoothedCamLoc =
+		FMath::VInterpTo(
+			CurrentCamLoc,
+			DesiredCamLoc,
+			SafeDelta,
+			12.0f);
 
-    const FVector DesiredCamLoc =
-        TargetLoc +
-        (RightDir * LocalOffset.X) +
-        (UpDir * LocalOffset.Y) +
-        (ForwardDir * LocalOffset.Z);
+	SetActorLocation(SmoothedCamLoc);
 
-    //-------------------------------------------------------------
-    // Smooth movement
-    //-------------------------------------------------------------
+	const FRotator DesiredRot =
+		(TargetLoc - SmoothedCamLoc).Rotation();
 
-    const float SafeDelta =
-        FMath::Clamp(
-            DeltaTime,
-            0.0f,
-            0.1f);
+	const FRotator SmoothedRot =
+		FMath::RInterpTo(
+			GetActorRotation(),
+			DesiredRot,
+			SafeDelta,
+			10.0f);
 
-    const float LagSpeed =
-        5.0f;
-
-    const FVector SmoothedCamLoc =
-        FMath::VInterpTo(
-            GetActorLocation(),
-            DesiredCamLoc,
-            SafeDelta,
-            LagSpeed);
-
-    SetActorLocation(
-        SmoothedCamLoc);
-
-    //-------------------------------------------------------------
-    // Look-at rotation
-    //-------------------------------------------------------------
-
-    const FVector LookTarget =
-        TargetLoc;
-
-    const FRotator DesiredRot =
-        (LookTarget - SmoothedCamLoc).Rotation();
-
-    const FRotator SmoothedRot =
-        FMath::RInterpTo(
-            GetActorRotation(),
-            DesiredRot,
-            SafeDelta,
-            LagSpeed);
-
-    SetActorRotation(
-        SmoothedRot);
-
-    //-------------------------------------------------------------
-    // Debug
-    //-------------------------------------------------------------
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SSWCameraManager] ActorFollow LEGACY Target=%s TargetLoc=%s Cam=%s Fwd=%s Right=%s Up=%s"),
-        *GetNameSafe(TargetActor),
-        *TargetLoc.ToString(),
-        *SmoothedCamLoc.ToString(),
-        *ForwardDir.ToString(),
-        *RightDir.ToString(),
-        *UpDir.ToString());
+	SetActorRotation(SmoothedRot);
 }
 
 // ----------------------------------------------------
 // LOOK AT
 // ----------------------------------------------------
 
-void ASSWCameraManager::LookAt(const FVector& Target)
+void
+ASSWCameraManager::LookAt(const FVector& Target)
 {
-    FVector Dir = Target - GetActorLocation();
-    SetActorRotation(Dir.Rotation());
+	const FVector Dir =
+		Target - GetActorLocation();
+
+	if (Dir.IsNearlyZero())
+	{
+		return;
+	}
+
+	SetActorRotation(
+		Dir.Rotation());
 }
 
-void ASSWCameraManager::SetGroupFollowView(
-    const TArray<AActor*>& InTargets,
-    const FVector& Offset,
-    const FVector& InVelocityDir,
-    float InLookAhead)
+// ----------------------------------------------------
+// GROUP FOLLOW
+// ----------------------------------------------------
+
+void
+ASSWCameraManager::SetGroupFollowView(
+	const TArray<AActor*>& InTargets,
+	const FVector& Offset,
+	const FVector& InVelocityDir,
+	float InLookAhead)
 {
-    GroupTargets.Empty();
+	GroupTargets.Empty();
 
-    for (AActor* Actor : InTargets)
-    {
-        if (Actor)
-        {
-            GroupTargets.Add(Actor);
-        }
-    }
+	for (AActor* Actor : InTargets)
+	{
+		if (Actor)
+		{
+			GroupTargets.Add(Actor);
+		}
+	}
 
-    GroupFollowOffset = Offset.IsNearlyZero()
-        ? FVector(-3000.0f, 1200.0f, 800.0f)
-        : Offset;
+	if (GroupTargets.Num() <= 0)
+	{
+		ClearCamera();
+		return;
+	}
 
-    GroupVelocityDir = InVelocityDir.GetSafeNormal();
+	GroupFollowOffset =
+		Offset.IsNearlyZero()
+		? FVector(-3000.0f, 1200.0f, 800.0f)
+		: Offset;
 
-    if (GroupVelocityDir.IsNearlyZero())
-    {
-        GroupVelocityDir = FVector::ForwardVector;
-    }
+	GroupVelocityDir =
+		InVelocityDir.GetSafeNormal();
 
-    GroupLookAhead = InLookAhead;
-    Mode = ESSWCameraMode::GroupFollow;
+	if (GroupVelocityDir.IsNearlyZero())
+	{
+		GroupVelocityDir =
+			FVector::ForwardVector;
+	}
 
-    UpdateGroupFollow(0.0f);
+	GroupLookAhead =
+		InLookAhead;
+
+	Mode =
+		ESSWCameraMode::GroupFollow;
+
+	UpdateGroupFollow(0.0f);
 }
 
-void ASSWCameraManager::UpdateGroupFollow(float DeltaTime)
+void
+ASSWCameraManager::UpdateGroupFollow(float DeltaTime)
 {
-    TArray<AActor*> ValidTargets;
+	TArray<AActor*> ValidTargets;
 
-    for (AActor* Actor : GroupTargets)
-    {
-        if (Actor)
-        {
-            ValidTargets.Add(Actor);
-        }
-    }
+	for (AActor* Actor : GroupTargets)
+	{
+		if (Actor)
+		{
+			ValidTargets.Add(Actor);
+		}
+	}
 
-    if (ValidTargets.Num() <= 0)
-    {
-        return;
-    }
+	if (ValidTargets.Num() <= 0)
+	{
+		return;
+	}
 
-    FBox GroupBox(ForceInit);
-    FVector AverageVelocity = FVector::ZeroVector;
+	FBox GroupBox(ForceInit);
+	FVector AverageVelocity = FVector::ZeroVector;
 
-    for (AActor* Actor : ValidTargets)
-    {
-        GroupBox += Actor->GetActorLocation();
-        AverageVelocity += Actor->GetVelocity();
-    }
+	for (AActor* Actor : ValidTargets)
+	{
+		GroupBox += Actor->GetActorLocation();
+		AverageVelocity += Actor->GetVelocity();
+	}
 
-    const FVector Center = GroupBox.GetCenter();
-    const FVector Extent = GroupBox.GetExtent();
+	const FVector Center =
+		GroupBox.GetCenter();
 
-    FVector VelocityDir = AverageVelocity.GetSafeNormal();
+	const FVector Extent =
+		GroupBox.GetExtent();
 
-    if (VelocityDir.IsNearlyZero())
-    {
-        VelocityDir = GroupVelocityDir;
-    }
+	FVector VelocityDir =
+		AverageVelocity.GetSafeNormal();
 
-    if (VelocityDir.IsNearlyZero())
-    {
-        VelocityDir = ValidTargets[0]->GetActorForwardVector();
-    }
+	if (VelocityDir.IsNearlyZero())
+	{
+		VelocityDir = GroupVelocityDir;
+	}
 
-    if (VelocityDir.IsNearlyZero())
-    {
-        VelocityDir = FVector::ForwardVector;
-    }
+	if (VelocityDir.IsNearlyZero())
+	{
+		VelocityDir =
+			ValidTargets[0]->GetActorForwardVector();
+	}
 
-    const float Radius = FMath::Max(Extent.Size(), 800.0f);
-    const float DistanceScale = FMath::Clamp(Radius / 800.0f, 1.0f, 3.0f);
+	if (VelocityDir.IsNearlyZero())
+	{
+		VelocityDir =
+			FVector::ForwardVector;
+	}
 
-    const FVector LocalOffset = GroupFollowOffset * DistanceScale;
-    const FRotator MovementRot = VelocityDir.Rotation();
+	const float Radius =
+		FMath::Max(
+			Extent.Size(),
+			800.0f);
 
-    const FVector DesiredCamLoc =
-        Center + MovementRot.RotateVector(LocalOffset);
+	const float DistanceScale =
+		FMath::Clamp(
+			Radius / 800.0f,
+			1.0f,
+			3.0f);
 
-    const float SafeDelta = FMath::Clamp(DeltaTime, 0.0f, 0.1f);
+	const FVector LocalOffset =
+		GroupFollowOffset * DistanceScale;
 
-    const FVector SmoothedCamLoc = FMath::VInterpTo(
-        GetActorLocation(),
-        DesiredCamLoc,
-        SafeDelta,
-        GroupLagSpeed);
+	const FRotator MovementRot =
+		VelocityDir.Rotation();
 
-    SetActorLocation(SmoothedCamLoc);
+	const FVector DesiredCamLoc =
+		Center +
+		MovementRot.RotateVector(LocalOffset);
 
-    const FVector LookTarget =
-        Center + (VelocityDir * GroupLookAhead);
+	const FVector CurrentCamLoc =
+		GetActorLocation();
 
-    const FRotator DesiredRot =
-        (LookTarget - SmoothedCamLoc).Rotation();
+	const double JumpDistance =
+		FVector::Dist(
+			CurrentCamLoc,
+			DesiredCamLoc);
 
-    const FRotator SmoothedRot = FMath::RInterpTo(
-        GetActorRotation(),
-        DesiredRot,
-        SafeDelta,
-        GroupLagSpeed);
+	const FVector LookTarget =
+		Center +
+		(VelocityDir * GroupLookAhead);
 
-    SetActorRotation(SmoothedRot);
+	if (DeltaTime <= 0.0f ||
+		JumpDistance > 15000.0)
+	{
+		SetActorLocation(DesiredCamLoc);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SSWCameraManager] GroupFollow Count=%d Center=%s Radius=%.2f VelDir=%s Cam=%s"),
-        ValidTargets.Num(),
-        *Center.ToString(),
-        Radius,
-        *VelocityDir.ToString(),
-        *SmoothedCamLoc.ToString());
+		SetActorRotation(
+			(LookTarget - DesiredCamLoc).Rotation());
+
+		return;
+	}
+
+	const float SafeDelta =
+		FMath::Clamp(
+			DeltaTime,
+			0.0f,
+			0.033f);
+
+	const FVector SmoothedCamLoc =
+		FMath::VInterpTo(
+			CurrentCamLoc,
+			DesiredCamLoc,
+			SafeDelta,
+			GroupLagSpeed);
+
+	SetActorLocation(SmoothedCamLoc);
+
+	const FRotator DesiredRot =
+		(LookTarget - SmoothedCamLoc).Rotation();
+
+	const FRotator SmoothedRot =
+		FMath::RInterpTo(
+			GetActorRotation(),
+			DesiredRot,
+			SafeDelta,
+			GroupLagSpeed);
+
+	SetActorRotation(SmoothedRot);
 }
 
-FVector ASSWCameraManager::ComputeTightFollowOffset(AActor* Target) const
+// ----------------------------------------------------
+// TIGHT FOLLOW OFFSET
+// ----------------------------------------------------
+
+FVector
+ASSWCameraManager::ComputeTightFollowOffset(
+	AActor* Target) const
 {
-    if (!Target)
-    {
-        return FVector(-600.f, 150.f, 200.f);
-    }
+	if (!Target)
+	{
+		return FVector(
+			-600.0f,
+			150.0f,
+			200.0f);
+	}
 
-    FBox Bounds(ForceInit);
+	FBox Bounds(ForceInit);
 
-    TArray<UPrimitiveComponent*> PrimComps;
-    Target->GetComponents<UPrimitiveComponent>(PrimComps);
+	TArray<UPrimitiveComponent*> PrimComps;
 
-    for (UPrimitiveComponent* Comp : PrimComps)
-    {
-        if (Comp && Comp->IsRegistered())
-        {
-            Bounds += Comp->Bounds.GetBox();
-        }
-    }
+	Target->GetComponents<UPrimitiveComponent>(
+		PrimComps);
 
-    const FVector Extent = Bounds.GetExtent();
-    const float Radius = Extent.Size();
+	for (UPrimitiveComponent* Comp : PrimComps)
+	{
+		if (Comp && Comp->IsRegistered())
+		{
+			Bounds += Comp->Bounds.GetBox();
+		}
+	}
 
-    const float Distance = FMath::Clamp(Radius * 1.6f, 250.f, 2500.f);
+	if (!Bounds.IsValid)
+	{
+		return FVector(
+			-600.0f,
+			150.0f,
+			200.0f);
+	}
 
-    return FVector(
-        -Distance,
-        Distance * 0.25f,
-        Distance * 0.35f
-    );
+	const FVector Extent =
+		Bounds.GetExtent();
+
+	const float Radius =
+		Extent.Size();
+
+	const float Distance =
+		FMath::Clamp(
+			Radius * 1.6f,
+			250.0f,
+			2500.0f);
+
+	return FVector(
+		-Distance,
+		Distance * 0.25f,
+		Distance * 0.35f);
 }

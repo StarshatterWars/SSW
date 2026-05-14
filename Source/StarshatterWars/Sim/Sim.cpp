@@ -2448,29 +2448,34 @@ Sim::ResolveTimeSkip(double seconds)
 		elem->ExecFrame(seconds);
 	}
 
+	// prevent camera interpolation/follow updates during skip:
+	bResolvingTimeSkip = true;
+
 	// step through the skip, ten seconds at a time:
 	if (active_region) {
 		double total_skip = seconds;
 		double frame_skip = 10.0;
 
 		while (total_skip > frame_skip) {
-			if (active_region->CanTimeSkip()) {
-				active_region->ResolveTimeSkip(frame_skip);
-				total_skip -= frame_skip;
-				skipped += frame_skip;
-			}
-			else {
-				// break out early if player runs into bad guys...
+			// break out early if player runs into bad guys...
+			if (!active_region->CanTimeSkip()) {
 				total_skip = 0.0;
+				break;
 			}
+
+			active_region->ResolveTimeSkip(frame_skip);
+
+			total_skip -= frame_skip;
+			skipped += frame_skip;
 		}
 
 		if (total_skip > 0.0) {
 			active_region->ResolveTimeSkip(total_skip);
+			skipped += total_skip;
 		}
-
-		skipped += total_skip;
 	}
+
+	bResolvingTimeSkip = false;
 
 	// give player control after time skip:
 	Ship* player_ship = GetPlayerShip();
@@ -2492,8 +2497,33 @@ Sim::ResolveTimeSkip(double seconds)
 
 	Game::SkipGameTime(skipped);
 
-	CameraManager::SetCameraMode(CameraManager::MODE_COCKPIT);
+	//-------------------------------------------------------------
+	// DO NOT hard snap camera after time skip.
+	// Let the current camera continue naturally.
+	//-------------------------------------------------------------
+
+	/*
+	CameraManager::SetCameraMode(
+		CameraManager::MODE_COCKPIT);
+	*/
+
+	//-------------------------------------------------------------
+	// Optional smooth restore instead:
+	//-------------------------------------------------------------
+	/*
+	if (CameraManager* Cam = CameraManager::GetInstance()) {
+		Cam->SetCameraModeSmooth(
+			CameraManager::MODE_COCKPIT,
+			1.0f);
+	}
+	*/
+
+	UE_LOG(LogTemp, Log,
+		TEXT("[Sim::ResolveTimeSkip] Complete Seconds=%.2f Skipped=%.2f"),
+		seconds,
+		skipped);
 }
+
 // +--------------------------------------------------------------------+
 
 void

@@ -57,6 +57,11 @@ protected:
     SimSystem*          SelectSubtarget();
     bool                AssessTargetPointDefense();
 
+    FVector WorldPointToLegacyLocalObjective(
+        const FVector& WorldPoint,
+        bool bPointIsUEWorld = false) const;
+
+
     DWORD               sub_select_time = 0;
     DWORD               point_defense_time = 0;
     SimSystem*          subtarget = nullptr;

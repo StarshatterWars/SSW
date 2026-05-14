@@ -2934,8 +2934,7 @@ ShipAI::WorldPointToLegacyLocalObjective(
 		return FVector::ZeroVector;
 	}
 
-	FVector LegacyWorldPoint =
-		WorldPoint;
+	FVector LegacyWorldPoint = WorldPoint;
 
 	if (bPointIsUEWorld)
 	{
@@ -2945,66 +2944,23 @@ ShipAI::WorldPointToLegacyLocalObjective(
 			WorldPoint.X);
 	}
 
-	const FVector ShipWorld =
-		ship->GetLocation();
+	const FVector ObjT =
+		LegacyWorldPoint - ship->GetLocation();
 
-	FVector ToTarget =
-		LegacyWorldPoint - ShipWorld;
+	const FVector VRT =
+		ship->GetCam().vrt();
 
-	ToTarget.Z = 0.0f;
+	const FVector VUP =
+		ship->GetCam().vup();
 
-	const double Dist =
-		ToTarget.Size();
-
-	if (Dist < KINDA_SMALL_NUMBER)
-	{
-		return FVector::ZeroVector;
-	}
-
-	ToTarget /= Dist;
-
-	FVector Forward =
-		ship->GetHeading().GetSafeNormal();
-
-	Forward.Z = 0.0f;
-
-	if (!Forward.Normalize())
-	{
-		Forward = FVector(1.0f, 0.0f, 0.0f);
-	}
-
-	const FVector Up(
-		0.0f,
-		0.0f,
-		1.0f);
-
-	FVector Right =
-		FVector::CrossProduct(
-			Up,
-			Forward).GetSafeNormal();
-
-	if (Right.IsNearlyZero())
-	{
-		Right = FVector(0.0f, 1.0f, 0.0f);
-	}
-
-	const double LocalForward =
-		FVector::DotProduct(
-			ToTarget,
-			Forward);
-
-	const double LocalRight =
-		FVector::DotProduct(
-			ToTarget,
-			Right);
-
-	const double LocalUp =
-		0.0f;
+	const FVector VPN =
+		ship->GetCam().vpn();
 
 	const FVector Result(
-		LocalRight,
-		LocalUp,
-		LocalForward);
+		FVector::DotProduct(ObjT, VRT), // local right
+		FVector::DotProduct(ObjT, VUP), // local up
+		FVector::DotProduct(ObjT, VPN)  // local forward
+	);
 
 	return Result;
 }

@@ -327,106 +327,6 @@ StarshipAI::HelmControl()
         distance < 0.0;
 
     //-------------------------------------------------------------
-    // Final dock/farcaster alignment
-    //-------------------------------------------------------------
-
-    if (!station_keeping &&
-        navpt &&
-        target &&
-        bObjectiveArrivalLatched &&
-        (navpt->GetAction() == INSTRUCTION_ACTION::DOCK ||
-            navpt->GetFarcast()))
-    {
-        const FVector DesiredForward =
-            (target->GetLocation() -
-                ship->GetLocation()).GetSafeNormal();
-
-        const double DesiredHeading =
-            FMath::Atan2(
-                DesiredForward.Y,
-                DesiredForward.X);
-
-        const double DesiredPitch =
-            FMath::Asin(
-                FMath::Clamp(
-                    (double)DesiredForward.Z,
-                    -1.0,
-                    1.0));
-
-        //---------------------------------------------------------
-        // Current ship orientation
-        //---------------------------------------------------------
-
-        const double CurrentHeading =
-            ship->GetCompassHeading();
-
-        const double CurrentPitch =
-            ship->GetCompassPitch();
-
-        //---------------------------------------------------------
-        // Error terms
-        //---------------------------------------------------------
-
-        const double HeadingError =
-            FMath::FindDeltaAngleRadians(
-                CurrentHeading,
-                DesiredHeading);
-
-        const double PitchError =
-            DesiredPitch -
-            CurrentPitch;
-
-        //---------------------------------------------------------
-        // Feed helm/yaw through normal steering path
-        //---------------------------------------------------------
-
-        ship->ApplyHelmYaw(
-            HeadingError * 0.15);
-
-        //---------------------------------------------------------
-        // Feed actual pitch control through physics
-        //---------------------------------------------------------
-
-        const double PitchCommand =
-            FMath::Clamp(
-                PitchError * 0.25,
-                -0.05,
-                0.05);
-
-        /*
-         * ApplyPitch():
-         *
-         * negative = pitch up
-         * positive = pitch down
-         */
-
-        ship->ApplyPitch(
-            -PitchCommand);
-
-        //---------------------------------------------------------
-        // Disable translation during final settle
-        //---------------------------------------------------------
-
-        ship->SetTransX(0.0);
-        ship->SetTransY(0.0);
-        ship->SetTransZ(0.0);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[StarshipAI::HelmControl DOCK ALIGN] Ship='%hs' Target='%hs' DesiredHeading=%.4f DesiredPitch=%.4f CurrentHeading=%.4f CurrentPitch=%.4f HeadingErr=%.4f PitchErr=%.4f PitchCmd=%.4f"),
-            ship ? ship->GetName() : "NULL",
-            target ? target->GetName() : "NULL",
-            DesiredHeading,
-            DesiredPitch,
-            CurrentHeading,
-            CurrentPitch,
-            HeadingError,
-            PitchError,
-            PitchCommand);
-
-        return;
-    }
-
-    //-------------------------------------------------------------
     // Station keeping
     //-------------------------------------------------------------
 
@@ -457,6 +357,10 @@ StarshipAI::HelmControl()
             farcaster ||
             element_index > 1)
         {
+            //-----------------------------------------------------
+            // LEGACY steering path
+            //-----------------------------------------------------
+
             ship->SetHelmHeading(
                 accumulator.yaw);
 
@@ -505,6 +409,7 @@ StarshipAI::HelmControl()
     ship->SetTransY(trans_y);
     ship->SetTransZ(trans_z);
 }
+
 void
 StarshipAI::ThrottleControl()
 {
@@ -850,6 +755,10 @@ StarshipAI::SeekTarget()
         return Steer();
     }
 
+    //-------------------------------------------------------------
+    // Farcaster / quantum routing
+    //-------------------------------------------------------------
+
     if (navpt)
     {
         SimRegion* self_rgn =
@@ -863,9 +772,7 @@ StarshipAI::SeekTarget()
 
         if (self_rgn && !nav_rgn)
         {
-            nav_rgn =
-                self_rgn;
-
+            nav_rgn = self_rgn;
             navpt->SetRegion(nav_rgn);
         }
 
@@ -891,9 +798,7 @@ StarshipAI::SeekTarget()
                         s.value();
 
                     if (!candidate)
-                    {
                         continue;
-                    }
 
                     if (candidate->GetFarcaster())
                     {
@@ -924,84 +829,15 @@ StarshipAI::SeekTarget()
                     farcaster->EndPoint();
 
                 distance =
-                    FVector(obj_w - ship->GetLocation()).Length();
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[StarshipAI::SeekTarget] Ship='%hs' using farcaster Distance=%.2f ObjW=%s ShipLoc=%s"),
-                    ship->GetName(),
-                    distance,
-                    *obj_w.ToString(),
-                    *ship->GetLocation().ToString());
-
-                //-------------------------------------------------
-                // Objective arrival
-                //-------------------------------------------------
+                    (obj_w - ship->GetLocation()).Size();
 
                 if (distance < 1000.0)
                 {
-                    bool bInCombat =
-                        false;
-
-                    Ship* TargetShip =
-                        dynamic_cast<Ship*>(target);
-
-                    if (TargetShip &&
-                        TargetShip->GetIFF() != ship->GetIFF() &&
-                        TargetShip->GetIFF() != 0)
-                    {
-                        bInCombat =
-                            true;
-                    }
-
-                    if (threat &&
-                        threat->GetIFF() != ship->GetIFF() &&
-                        threat->GetIFF() != 0)
-                    {
-                        bInCombat =
-                            true;
-                    }
-
                     ship->SetNavptStatus(
                         navpt,
                         INSTRUCTION_STATUS::COMPLETE);
 
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[StarshipAI::SeekTarget] OBJECTIVE COMPLETE Ship='%hs' InCombat=%d Distance=%.2f"),
-                        ship ? ship->GetName() : "NULL",
-                        bInCombat ? 1 : 0,
-                        distance);
-
-                    if (!bInCombat)
-                    {
-                        farcaster =
-                            nullptr;
-
-                        throttle =
-                            0.0;
-
-                        old_throttle =
-                            0.0;
-
-                        ship->SetThrottle(0.0);
-                        ship->SetThrottleRequest(0.0);
-
-                        ship->SetTransX(0.0);
-                        ship->SetTransY(0.0);
-                        ship->SetTransZ(0.0);
-
-                        Steer Stop;
-
-                        Stop.brake =
-                            1.0;
-
-                        Stop.stop =
-                            1;
-
-                        return Stop;
-                    }
-
-                    farcaster =
-                        nullptr;
+                    farcaster = nullptr;
                 }
             }
         }
@@ -1020,69 +856,93 @@ StarshipAI::SeekTarget()
                     navpt->GetLocation());
 
                 q->Engage();
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[StarshipAI::SeekTarget] Ship='%hs' engaging quantum drive"),
-                    ship->GetName());
             }
         }
     }
 
-    const FVector BeforeObjective =
-        objective;
-
-    const FVector BeforeObjW =
-        obj_w;
+    //-------------------------------------------------------------
+    // Base steering
+    //-------------------------------------------------------------
 
     Steer Result =
         ShipAI::SeekTarget();
 
-    double ActualDistance =
-        distance;
+    //-------------------------------------------------------------
+    // Final dock/farcaster alignment
+    //
+    // IMPORTANT:
+    // Work entirely in LOCAL steering space.
+    // Do NOT inject world yaw/pitch directly.
+    //-------------------------------------------------------------
 
-    if (target)
+    if (target &&
+        bObjectiveArrivalLatched &&
+        navpt &&
+        (navpt->GetAction() == INSTRUCTION_ACTION::DOCK ||
+            navpt->GetFarcast()))
     {
-        ActualDistance =
-            (target->GetLocation() -
-                ship->GetLocation()).Size();
-    }
-    else if (navpt &&
-        navpt->GetTarget())
-    {
-        ActualDistance =
-            (navpt->GetTarget()->GetLocation() -
-                ship->GetLocation()).Size();
-    }
-    else if (navpt)
-    {
-        ActualDistance =
-            (navpt->GetLocation() -
-                ship->GetLocation()).Size();
-    }
-    else if (!obj_w.IsNearlyZero())
-    {
-        ActualDistance =
-            (obj_w -
-                ship->GetLocation()).Size();
-    }
+        //---------------------------------------------------------
+        // Use target forward vector
+        //---------------------------------------------------------
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::SeekTarget] Ship='%hs' ShipLoc=%s Target='%hs' TargetLoc=%s Navpt=%p NavLoc=%s BeforeObj=%s AfterObj=%s BeforeObjW=%s AfterObjW=%s Distance=%.2f ResultYaw=%.4f ResultPitch=%.4f Brake=%.2f Stop=%d"),
-        ship ? ship->GetName() : "NULL",
-        ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
-        target ? target->GetName() : "NULL",
-        target ? *target->GetLocation().ToString() : TEXT("NULL"),
-        navpt,
-        navpt ? *navpt->GetLocation().ToString() : TEXT("NULL"),
-        *BeforeObjective.ToString(),
-        *objective.ToString(),
-        *BeforeObjW.ToString(),
-        *obj_w.ToString(),
-        ActualDistance,
-        (double)Result.yaw,
-        (double)Result.pitch,
-        (double)Result.brake,
-        (int)Result.stop);
+        const FVector DockForwardWorld =
+            target->GetCam().vpn();
+
+        //---------------------------------------------------------
+        // Create a world-space point in front of target
+        //---------------------------------------------------------
+
+        const FVector AlignPoint =
+            target->GetLocation() +
+            DockForwardWorld * 5000.0f;
+
+        //---------------------------------------------------------
+        // Convert into LOCAL steering space
+        //---------------------------------------------------------
+
+        const FVector LocalAlign =
+            WorldPointToLegacyLocalObjective(
+                AlignPoint,
+                false);
+
+        //---------------------------------------------------------
+        // Generate proper LOCAL steer command
+        //---------------------------------------------------------
+
+        const Steer AlignSteer =
+            Seek(LocalAlign);
+
+        const double SmoothAlpha =
+            FMath::Clamp(
+                seconds * 2.0,
+                0.0,
+                1.0);
+
+        Result.yaw =
+            FMath::Lerp(
+                Result.yaw,
+                AlignSteer.yaw,
+                SmoothAlpha);
+
+        Result.pitch =
+            FMath::Lerp(
+                Result.pitch,
+                AlignSteer.pitch,
+                SmoothAlpha);
+
+        Result.brake =
+            FMath::Max(
+                Result.brake,
+                0.5);
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[StarshipAI::SeekTarget ALIGN] Ship='%hs' Target='%hs' LocalAlign=%s AlignYaw=%.4f AlignPitch=%.4f"),
+            ship ? ship->GetName() : "NULL",
+            target ? target->GetName() : "NULL",
+            *LocalAlign.ToString(),
+            AlignSteer.yaw,
+            AlignSteer.pitch);
+    }
 
     return Result;
 }
@@ -1540,4 +1400,70 @@ StarshipAI::Avoid(const FVector& Point, float Radius)
 
     return Result;
 }
+FVector
+StarshipAI::WorldPointToLegacyLocalObjective(
+    const FVector& WorldPoint,
+    bool bPointIsUEWorld) const
+{
+    if (!ship)
+    {
+        return FVector::ZeroVector;
+    }
+
+    //-------------------------------------------------------------
+    // Optional UE -> legacy sim-space conversion
+    //-------------------------------------------------------------
+
+    FVector LegacyWorldPoint =
+        WorldPoint;
+
+    if (bPointIsUEWorld)
+    {
+        LegacyWorldPoint = FVector(
+            WorldPoint.Y,
+            WorldPoint.Z,
+            WorldPoint.X);
+    }
+
+    //-------------------------------------------------------------
+    // World delta in SIM space
+    //-------------------------------------------------------------
+
+    const FVector ObjT =
+        LegacyWorldPoint -
+        ship->GetLocation();
+
+    //-------------------------------------------------------------
+    // VERIFIED SENSOR BASIS
+    //
+    // VRT = right
+    // VUP = up
+    // VPN = forward
+    //-------------------------------------------------------------
+
+    const FVector VRT =
+        ship->GetCam().vrt().GetSafeNormal();
+
+    const FVector VUP =
+        ship->GetCam().vup().GetSafeNormal();
+
+    const FVector VPN =
+        ship->GetCam().vpn().GetSafeNormal();
+
+    //-------------------------------------------------------------
+    // Convert world vector into LOCAL steering space
+    //
+    // X = right
+    // Y = up
+    // Z = forward
+    //-------------------------------------------------------------
+
+    const FVector Result(
+        FVector::DotProduct(ObjT, VRT),
+        FVector::DotProduct(ObjT, VUP),
+        FVector::DotProduct(ObjT, VPN));
+
+    return Result;
+}
+
 
