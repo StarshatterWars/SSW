@@ -262,12 +262,26 @@ void
 ASSWCameraManager::UpdateActorFollow(float DeltaTime)
 {
 	if (!TargetActor)
-	{
 		return;
-	}
+
+	FVector BoundsOrigin = FVector::ZeroVector;
+	FVector BoundsExtent = FVector::ZeroVector;
+
+	TargetActor->GetActorBounds(
+		true,
+		BoundsOrigin,
+		BoundsExtent,
+		false);
 
 	const FVector TargetLoc =
-		TargetActor->GetActorLocation();
+		BoundsExtent.IsNearlyZero()
+		? TargetActor->GetActorLocation()
+		: BoundsOrigin;
+
+	const float Radius =
+		FMath::Max(
+			BoundsExtent.Size(),
+			100.0f);
 
 	const FVector ForwardDir =
 		TargetActor->GetActorForwardVector().GetSafeNormal();
@@ -278,47 +292,54 @@ ASSWCameraManager::UpdateActorFollow(float DeltaTime)
 	const FVector UpDir =
 		TargetActor->GetActorUpVector().GetSafeNormal();
 
-	FVector LocalOffset =
-		FollowOffset;
+	FVector LocalOffset = FollowOffset;
 
 	if (LocalOffset.IsNearlyZero())
 	{
-		LocalOffset = FVector(
-			-2500.0f,
-			900.0f,
-			650.0f);
+		LocalOffset = ComputeTightFollowOffset(TargetActor);
 	}
 
-	const FVector DesiredCamLoc =
-		TargetLoc +
+	FVector DesiredOffset =
 		ForwardDir * LocalOffset.X +
 		RightDir * LocalOffset.Y +
 		UpDir * LocalOffset.Z;
+
+	if (DesiredOffset.IsNearlyZero())
+	{
+		DesiredOffset =
+			-ForwardDir * Radius;
+	}
+
+	const float OffsetSize =
+		DesiredOffset.Size();
+
+	const float MinSafeDistance =
+		Radius * 2.5f;
+
+	if (OffsetSize < MinSafeDistance)
+	{
+		DesiredOffset =
+			DesiredOffset.GetSafeNormal() * MinSafeDistance;
+	}
+
+	const FVector DesiredCamLoc =
+		TargetLoc + DesiredOffset;
 
 	const FVector CurrentCamLoc =
 		GetActorLocation();
 
 	const double JumpDistance =
-		FVector::Dist(
-			CurrentCamLoc,
-			DesiredCamLoc);
+		FVector::Dist(CurrentCamLoc, DesiredCamLoc);
 
-	if (DeltaTime <= 0.0f ||
-		JumpDistance > 10000.0)
+	if (DeltaTime <= 0.0f || JumpDistance > Radius * 4.0f)
 	{
 		SetActorLocation(DesiredCamLoc);
-
-		SetActorRotation(
-			(TargetLoc - DesiredCamLoc).Rotation());
-
+		SetActorRotation((TargetLoc - DesiredCamLoc).Rotation());
 		return;
 	}
 
 	const float SafeDelta =
-		FMath::Clamp(
-			DeltaTime,
-			0.0f,
-			0.033f);
+		FMath::Clamp(DeltaTime, 0.0f, 0.033f);
 
 	const FVector SmoothedCamLoc =
 		FMath::VInterpTo(
@@ -541,54 +562,41 @@ ASSWCameraManager::UpdateGroupFollow(float DeltaTime)
 // ----------------------------------------------------
 
 FVector
-ASSWCameraManager::ComputeTightFollowOffset(
-	AActor* Target) const
+ASSWCameraManager::ComputeTightFollowOffset(AActor* Target) const
 {
 	if (!Target)
 	{
-		return FVector(
-			-600.0f,
-			150.0f,
-			200.0f);
+		return FVector(-3000.0f, 0.0f, 1000.0f);
 	}
 
-	FBox Bounds(ForceInit);
+	FVector Origin = FVector::ZeroVector;
+	FVector Extent = FVector::ZeroVector;
 
-	TArray<UPrimitiveComponent*> PrimComps;
-
-	Target->GetComponents<UPrimitiveComponent>(
-		PrimComps);
-
-	for (UPrimitiveComponent* Comp : PrimComps)
-	{
-		if (Comp && Comp->IsRegistered())
-		{
-			Bounds += Comp->Bounds.GetBox();
-		}
-	}
-
-	if (!Bounds.IsValid)
-	{
-		return FVector(
-			-600.0f,
-			150.0f,
-			200.0f);
-	}
-
-	const FVector Extent =
-		Bounds.GetExtent();
+	Target->GetActorBounds(
+		true,
+		Origin,
+		Extent,
+		false);
 
 	const float Radius =
-		Extent.Size();
+		FMath::Max3(
+			Extent.X,
+			Extent.Y,
+			Extent.Z);
+
+	if (Radius <= KINDA_SMALL_NUMBER)
+	{
+		return FVector(-3000.0f, 0.0f, 1000.0f);
+	}
 
 	const float Distance =
-		FMath::Clamp(
-			Radius * 1.6f,
-			250.0f,
-			2500.0f);
+		Radius * 4.0f;
+
+	const float Height =
+		Radius * 1.25f;
 
 	return FVector(
 		-Distance,
-		Distance * 0.25f,
-		Distance * 0.35f);
+		0.0f,
+		Height);
 }

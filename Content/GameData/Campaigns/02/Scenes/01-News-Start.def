@@ -303,7 +303,7 @@ event: { type: Messasge, time: 52.55,
 event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
        
-event: { type: Camera, time: 60.50, param: (6, 20),  target: "Trellis-Solus" }
+event: { type: Camera, time: 60.50, param: 3,  vec: (0,0,8e5),  target: "Trellis-Solus" }
 
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
@@ -317,7 +317,7 @@ event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
 
-event: { type: Camera, time: 72.55,  param: (6, 20),  target: "Tal Vesta Stellar Observatory" }
+event: { type: Camera, time: 72.55,  param: 3,  vec: (0,0,8e5), target: "Tal Vesta Stellar Observatory" }
 
 event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }

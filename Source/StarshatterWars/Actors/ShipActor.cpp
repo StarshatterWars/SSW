@@ -1599,13 +1599,12 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     BuildThrustersFromRuntime();
 }
 
-/*void
+
+void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
     if (!RuntimeShip)
-    {
         return;
-    }
 
     const FVector RuntimeLocation =
         RuntimeShip->GetLocation();
@@ -1615,36 +1614,25 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
     if (RuntimeLocation.ContainsNaN() ||
         RuntimeHeading.ContainsNaN())
-    {
         return;
-    }
 
     //-------------------------------------------------------------
-    // Mission / region location conversion
-    //
-    // Legacy mission:
-    // X = right
-    // Y = forward
-    // Z = up
-    //
-    // UE:
-    // X = forward
-    // Y = right
-    // Z = up
+    // Runtime sim owns location.
+    // Actor is only visual presentation.
     //-------------------------------------------------------------
 
-    const FVector DesiredLocation(
-        RuntimeLocation.Y,
-        RuntimeLocation.X,
-        RuntimeLocation.Z);
+    SetActorLocation(RuntimeLocation);
 
     //-------------------------------------------------------------
-    // Heading conversion
-    //
-    // Legacy runtime heading:
+    // Legacy runtime basis:
     // X = right
     // Y = up
     // Z = forward
+    //
+    // UE actor basis:
+    // X = forward
+    // Y = right
+    // Z = up
     //-------------------------------------------------------------
 
     FVector FacingVector(
@@ -1654,71 +1642,11 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
     if (!FacingVector.Normalize())
     {
-        FacingVector =
-            FVector::ForwardVector;
+        FacingVector = FVector::ForwardVector;
     }
 
-    SetActorLocation(
-        DesiredLocation);
-
-    SetActorRotation(
-        FacingVector.Rotation());
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SHIP MOTION AXIS] Ship='%hs' RuntimeLoc=%s DesiredLoc=%s Vel=%s Heading=%s Facing=%s"),
-        RuntimeShip->GetName(),
-        *RuntimeLocation.ToString(),
-        *DesiredLocation.ToString(),
-        *RuntimeShip->GetVelocity().ToString(),
-        *RuntimeHeading.ToString(),
-        *FacingVector.ToString());
-}*/
-
-void
-AShipActor::UpdateFromRuntimeShip(float DeltaTime)
-{
-    if (!RuntimeShip)
-    {
-        return;
-    }
-
-    const FVector RuntimeLocation =
-        RuntimeShip->GetLocation();
-
-    const FVector RuntimeHeading =
-        RuntimeShip->GetHeading();
-
-    if (RuntimeLocation.ContainsNaN() ||
-        RuntimeHeading.ContainsNaN())
-    {
-        return;
-    }
-
-    SetActorLocation(
-        RuntimeLocation);
-
-    FVector FacingVector =
-        RuntimeHeading.GetSafeNormal();
-
-    if (FacingVector.IsNearlyZero())
-    {
-        FacingVector =
-            FVector::ForwardVector;
-    }
-
-    SetActorRotation(
-        FacingVector.Rotation());
-
-    UE_LOG(LogTemp, VeryVerbose,
-        TEXT("[ShipActor LEGACY SYNC] Ship='%hs' Loc=%s Vel=%s Heading=%s ActorLoc=%s Rot=%s"),
-        RuntimeShip->GetName(),
-        *RuntimeShip->GetLocation().ToString(),
-        *RuntimeShip->GetVelocity().ToString(),
-        *RuntimeShip->GetHeading().ToString(),
-        *GetActorLocation().ToString(),
-        *GetActorRotation().ToString());
+    SetActorRotation(FacingVector.Rotation());
 }
-
 void AShipActor::BuildNavLightsFromRuntime()
 {
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
@@ -1807,12 +1735,6 @@ void AShipActor::BuildNavLightsFromRuntime()
         }
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor] BuildNavLightsFromRuntime Actor='%s' Ship='%s' RuntimeSystems=%d BuiltLights=%d"),
-        *GetName(),
-        *FString(RuntimeShip->GetName()),
-        RuntimeShip->navlights.size(),
-        BuiltCount);
 }
 
 void AShipActor::BuildMainEnginesFromRuntime()
@@ -1878,12 +1800,6 @@ void AShipActor::BuildMainEnginesFromRuntime()
             RuntimeMainEngineEmitters.Add(Emitter);
         }
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor] BuildMainEnginesFromRuntime Actor='%s' Ports=%d Emitters=%d"),
-        *GetName(),
-        PortCount,
-        RuntimeMainEngineEmitters.Num());
 }
 
 void AShipActor::ClearRuntimeNavLights()
@@ -2092,15 +2008,6 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             }
         }
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor::UpdateMainEnginesFromRuntime] Actor='%s' Ship='%hs' Request=%.2f Throttle=%.2f VisualPower=%.2f Active=%d"),
-        *GetName(),
-        RuntimeShip->GetName() ? RuntimeShip->GetName() : "Unknown",
-        ThrottleRequest,
-        Throttle,
-        MainEngineVisualPower,
-        bActive ? 1 : 0);
 }
 
 void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
@@ -2273,17 +2180,6 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
                 RuntimeShip->GetName());
         }
     }
-
-    //-------------------------------------------------------------
-    // Debug
-    //-------------------------------------------------------------
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor::UpdateEngineAudioFromRuntime] Actor='%s' Ship='%hs' VisualPower=%.3f Volume=%.3f Pitch=%.3f"),
-        *GetName(),
-        RuntimeShip->GetName(),
-        VisualPower,
-        TargetVolume,
-        TargetPitch);
 }
 
 void AShipActor::BuildThrustersFromRuntime()
@@ -2319,11 +2215,6 @@ void AShipActor::BuildThrustersFromRuntime()
     }
 
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[ShipActor] BuildThrustersFromRuntime Actor='%s' Ports=%d"),
-        *GetName(),
-         NumPorts);
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
     {
@@ -2380,16 +2271,6 @@ void AShipActor::BuildThrustersFromRuntime()
         }
 
         RuntimeThrusterFX.Add(FX);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] ThrusterFX[%d] Name='%s' Dir=%d Loc=%s Rot=%s Flare=%p Trail=%p"),
-            PortIndex,
-            *Port->PointName.ToString(),
-            static_cast<int32>(Port->Direction),
-            *Port->Location.ToString(),
-            *Port->Rotation.ToString(),
-            FX.Flare,
-            FX.Trail);
     }
 }
 

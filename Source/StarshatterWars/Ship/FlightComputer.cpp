@@ -213,13 +213,13 @@ FlightComputer::ExecTrans()
     //-------------------------------------------------------------
     // Pilot input state
     //-------------------------------------------------------------
-    double Tx =
+    const double Tx =
         ship->GetTransX();
 
-    double Ty =
+    const double Ty =
         ship->GetTransY();
 
-    double Tz =
+    const double Tz =
         ship->GetTransZ();
 
     double TransX = Tx;
@@ -260,115 +260,323 @@ FlightComputer::ExecTrans()
             Up);
 
     //-------------------------------------------------------------
-    // Unreal-native FLCS stabilization
+    // AUTO MODE
     //-------------------------------------------------------------
-    if (bFlcsOperative)
+    if (mode == EFLCSMode::AUTO)
     {
-        constexpr double DriftDamping = 0.25;
-
-        /*
-         * Side drift correction
-         */
+        //---------------------------------------------------------
+        // Side stabilization
+        //---------------------------------------------------------
         if (FMath::IsNearlyZero(Tx))
         {
-            TransX =
-                FMath::Clamp(
-                    -SideVel * DriftDamping,
-                    -trans_x_limit,
-                    trans_x_limit);
+            if (bFlcsOperative)
+            {
+                TransX =
+                    SideVel * -200.0;
+            }
+            else
+            {
+                TransX = 0.0;
+            }
+        }
+        else
+        {
+            if (FMath::Abs(SideVel) >= vlimit)
+            {
+                if (TransX > 0.0 && SideVel > 0.0)
+                {
+                    TransX = 0.0;
+                }
+                else if (TransX < 0.0 && SideVel < 0.0)
+                {
+                    TransX = 0.0;
+                }
+            }
         }
 
-        /*
-         * Vertical drift correction
-         */
+        //---------------------------------------------------------
+        // Halt mode
+        //---------------------------------------------------------
+        if (halt && bFlcsOperative)
+        {
+            if (FMath::IsNearlyZero(Ty))
+            {
+                const double VMag =
+                    FMath::Abs(ForwardVel);
+
+                if (VMag > 0.0)
+                {
+                    if (ForwardVel > 0.0)
+                    {
+                        TransY = -trans_y_limit;
+                    }
+                    else
+                    {
+                        TransY = trans_y_limit;
+                    }
+
+                    if (ForwardVel < vlimit / 2.0)
+                    {
+                        TransY *=
+                            (VMag / (vlimit / 2.0));
+                    }
+                }
+            }
+        }
+
+        //---------------------------------------------------------
+        // Vertical stabilization
+        //---------------------------------------------------------
         if (FMath::IsNearlyZero(Tz))
         {
-            TransZ =
-                FMath::Clamp(
-                    -UpVel * DriftDamping,
-                    -trans_z_limit,
-                    trans_z_limit);
+            if (bFlcsOperative)
+            {
+                TransZ =
+                    UpVel * -200.0;
+            }
+            else
+            {
+                TransZ = 0.0;
+            }
         }
-
-        /*
-         * Halt mode
-         */
-        if (halt &&
-            FMath::IsNearlyZero(Ty))
+        else
         {
-            constexpr double ForwardDamping = 0.5;
-
-            TransY =
-                FMath::Clamp(
-                    -ForwardVel * ForwardDamping,
-                    -trans_y_limit,
-                    trans_y_limit);
+            if (FMath::Abs(UpVel) >= vlimit)
+            {
+                if (TransZ > 0.0 && UpVel > 0.0)
+                {
+                    TransZ = 0.0;
+                }
+                else if (TransZ < 0.0 && UpVel < 0.0)
+                {
+                    TransZ = 0.0;
+                }
+            }
         }
     }
 
     //-------------------------------------------------------------
-    // Helm stabilization
+    // STARSHIP HELM MODE
     //-------------------------------------------------------------
-    if (mode == EFLCSMode::HELM &&
-        bFlcsOperative)
+    else if (mode == EFLCSMode::HELM)
     {
-        const double CompassHeading =
-            ship->GetCompassHeading();
-
-        double HelmError =
-            ship->GetHelmHeading() -
-            CompassHeading;
-
-        if (HelmError > UE_PI)
+        //---------------------------------------------------------
+        // Helm stabilization
+        //---------------------------------------------------------
+        if (bFlcsOperative)
         {
-            HelmError -= UE_TWO_PI;
+            const double CompassHeading =
+                ship->GetCompassHeading();
+
+            const double CompassPitch =
+                ship->GetCompassPitch();
+
+            //-----------------------------------------------------
+            // Rotate helm into compass orientation
+            //-----------------------------------------------------
+            double HelmError =
+                ship->GetHelmHeading() -
+                CompassHeading;
+
+            if (HelmError > UE_PI)
+            {
+                HelmError -= UE_TWO_PI;
+            }
+            else if (HelmError < -UE_PI)
+            {
+                HelmError += UE_TWO_PI;
+            }
+
+            //-----------------------------------------------------
+            // LEGACY:
+            // rotate actual ship toward helm heading
+            //-----------------------------------------------------
+            if (!FMath::IsNearlyZero(HelmError))
+            {
+                ship->ApplyYaw(HelmError);
+            }
+
+            //-----------------------------------------------------
+            // LEGACY:
+            // rotate actual ship pitch toward helm pitch
+            //-----------------------------------------------------
+            if (CompassPitch != ship->GetHelmPitch())
+            {
+                ship->ApplyPitch(
+                    CompassPitch -
+                    ship->GetHelmPitch());
+            }
+
+            //-----------------------------------------------------
+            // LEGACY AUTO ROLL
+            //-----------------------------------------------------
+            if (ship->Design() &&
+                ship->Design()->auto_roll > 0)
+            {
+                const FVector VRT =
+                    ship->GetCam().vrt();
+
+                const double Deflection =
+                    VRT.Y;
+
+                if (FMath::Abs(HelmError) < UE_PI / 16.0 ||
+                    ship->Design()->turn_bank < 0.01)
+                {
+                    if (ship->Design()->auto_roll > 1)
+                    {
+                        ship->ApplyRoll(0.5);
+                    }
+                    else if (!FMath::IsNearlyZero(Deflection))
+                    {
+                        const double Theta =
+                            FMath::Asin(Deflection);
+
+                        ship->ApplyRoll(-Theta);
+                    }
+                }
+                else
+                {
+                    double DesiredBank =
+                        ship->Design()->turn_bank;
+
+                    if (HelmError >= 0.0)
+                    {
+                        DesiredBank =
+                            -DesiredBank;
+                    }
+
+                    const double CurrentBank =
+                        FMath::Asin(Deflection);
+
+                    const double Theta =
+                        DesiredBank -
+                        CurrentBank;
+
+                    ship->ApplyRoll(Theta);
+
+                    //-------------------------------------------------
+                    // Coordinated turn
+                    //-------------------------------------------------
+                    if ((CurrentBank < 0.0 && DesiredBank < 0.0) ||
+                        (CurrentBank > 0.0 && DesiredBank > 0.0))
+                    {
+                        const double CoordPitch =
+                            CompassPitch -
+                            ship->GetHelmPitch() -
+                            FMath::Abs(HelmError) *
+                            FMath::Abs(CurrentBank);
+
+                        ship->ApplyPitch(CoordPitch);
+                    }
+                }
+            }
         }
-        else if (HelmError < -UE_PI)
+        else
         {
-            HelmError += UE_TWO_PI;
-        }
+            //-----------------------------------------------------
+            // FLCS inoperative
+            //-----------------------------------------------------
+            ship->SetHelmHeading(
+                ship->GetCompassHeading());
 
-        if (!FMath::IsNearlyZero(HelmError))
-        {
-            const double YawCommand =
-                FMath::Clamp(
-                    HelmError,
-                    -1.0,
-                    1.0);
-
-            ship->ApplyHelmYaw(
-                YawCommand);
+            ship->SetHelmPitch(
+                ship->GetCompassPitch());
         }
 
         //---------------------------------------------------------
-        // Pitch stabilization restored
+        // Side stabilization
         //---------------------------------------------------------
-        const double CompassPitch =
-            ship->GetCompassPitch();
-
-        const double PitchError =
-            ship->GetHelmPitch() -
-            CompassPitch;
-
-        if (!FMath::IsNearlyZero(PitchError))
+        if (FMath::IsNearlyZero(Tx))
         {
-            ship->ApplyPitch(
-                FMath::Clamp(
-                    PitchError,
-                    -1.0,
-                    1.0));
+            if (bFlcsOperative)
+            {
+                TransX =
+                    SideVel *
+                    ship->GetMass() *
+                    -1.0;
+            }
+            else
+            {
+                TransX = 0.0;
+            }
+        }
+        else
+        {
+            if (FMath::Abs(SideVel) >= vlimit / 2.0)
+            {
+                if (TransX > 0.0 && SideVel > 0.0)
+                {
+                    TransX = 0.0;
+                }
+                else if (TransX < 0.0 && SideVel < 0.0)
+                {
+                    TransX = 0.0;
+                }
+            }
+        }
+
+        //---------------------------------------------------------
+        // Forward halt mode
+        //---------------------------------------------------------
+        if (FMath::IsNearlyZero(TransY) && halt)
+        {
+            const double DesiredVel = 0.0;
+
+            if (ForwardVel > DesiredVel)
+            {
+                TransY = -trans_y_limit;
+
+                if (!bFlcsOperative)
+                {
+                    TransY = 0.0;
+                }
+
+                const double Delta =
+                    ForwardVel - DesiredVel;
+
+                if (Delta < vlimit / 2.0)
+                {
+                    TransY *=
+                        (Delta / (vlimit / 2.0));
+                }
+            }
+        }
+
+        //---------------------------------------------------------
+        // Vertical stabilization
+        //---------------------------------------------------------
+        if (FMath::IsNearlyZero(Tz))
+        {
+            if (bFlcsOperative)
+            {
+                TransZ =
+                    UpVel *
+                    ship->GetMass() *
+                    -1.0;
+            }
+            else
+            {
+                TransZ = 0.0;
+            }
+        }
+        else
+        {
+            if (FMath::Abs(UpVel) > vlimit / 2.0)
+            {
+                if (TransZ > 0.0 && UpVel > 0.0)
+                {
+                    TransZ = 0.0;
+                }
+                else if (TransZ < 0.0 && UpVel < 0.0)
+                {
+                    TransZ = 0.0;
+                }
+            }
         }
     }
 
     //-------------------------------------------------------------
     // Final translational authority
-    //-------------------------------------------------------------
-    ship->SetTransX(TransX);
-    ship->SetTransY(TransY);
-    ship->SetTransZ(TransZ);
-
-    //-------------------------------------------------------------
-    // Thruster FX / burn state
     //-------------------------------------------------------------
     if (ship->GetThruster())
     {
@@ -376,5 +584,11 @@ FlightComputer::ExecTrans()
             TransX,
             TransY,
             TransZ);
+    }
+    else
+    {
+        ship->SetTransX(TransX);
+        ship->SetTransY(TransY);
+        ship->SetTransZ(TransZ);
     }
 }
