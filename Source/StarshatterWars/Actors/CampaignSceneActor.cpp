@@ -19,6 +19,7 @@
 #include "ShipActor.h"
 #include "CameraPodActor.h"
 #include "ShipDesign.h"
+#include "GameStructs.h"
 
 #include "Sim.h"
 #include "SimObject.h"
@@ -736,228 +737,118 @@ void ACampaignSceneActor::DumpSceneActors() const
     }
 }
 
-void ACampaignSceneActor::BuildSceneActorsFromMission(const FS_CampaignMission& MissionData)
+void ACampaignSceneActor::BuildSceneActorsFromMission(
+    const FS_CampaignMission& MissionData)
 {
     ClearSceneActors();
 
     //-------------------------------------------------------------
-    // START MISSION CLOCK 
+    // START MISSION CLOCK
     //-------------------------------------------------------------
     if (UGameInstance* GI = GetGameInstance())
     {
-        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        if (UTimerSubsystem* Timer =
+            GI->GetSubsystem<UTimerSubsystem>())
         {
             Timer->StartMissionRun(true);
         }
     }
 
-    CurrentMissionRegionName = MissionData.MissionRegion.TrimStartAndEnd();
+    CurrentMissionRegionName =
+        MissionData.MissionRegion.TrimStartAndEnd();
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] CurrentMissionRegionName SET '%s'"),
         *CurrentMissionRegionName);
 
-    int32 Count = 0;
-
-    ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
-
     //-------------------------------------------------------------
     // BUILD RUNTIME SIM REGIONS
     //-------------------------------------------------------------
     BuildSimRegionsFromEnvironment();
-    
+
     //-------------------------------------------------------------
-    // PASS 1: Spawn + Create Runtime Ships
+    // EXECUTE LEGACY MISSION
     //-------------------------------------------------------------
-    for (const FS_MissionElement& Elem : MissionData.Element)
+    if (Sim* SimInst = Sim::GetSim())
     {
-        if (Elem.Name.IsEmpty())
-        {
-            continue;
-        }
+        Mission* LegacyMission =
+            new Mission();
 
-        const FString ElementName = Elem.Name.TrimStartAndEnd();
-        const FString RegionName = Elem.RegionName.TrimStartAndEnd();
-        const FString DesignName = Elem.Design.TrimStartAndEnd();
-
-        //--------------------------------------------------
-        // Capture first valid element region as fallback.
-        // Needed when MissionRegion is empty and player
-        // CameraPod/Falcon has no explicit region.
-        //--------------------------------------------------
-        if (CurrentMissionRegionName.IsEmpty() && !RegionName.IsEmpty())
+        if (LegacyMission)
         {
-            CurrentMissionRegionName = RegionName;
+            //-----------------------------------------------------
+            // Build legacy mission from data
+            //-----------------------------------------------------
+            LegacyMission->LoadMissionCommon(
+                MissionData,
+                true);
+
+            //-----------------------------------------------------
+            // Load into sim
+            //-----------------------------------------------------
+            SimInst->LoadMission(
+                LegacyMission,
+                false);
+
+            //-----------------------------------------------------
+            // Legacy runtime creation happens here:
+            //
+            // Sim::ExecMission()
+            //   -> CreateElements()
+            //   -> CreateShip()
+            //   -> RuntimeSubsystem spawns visuals
+            //-----------------------------------------------------
+            SimInst->ExecMission();
 
             UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] CurrentMissionRegionName AUTO-SET '%s'"),
-                *CurrentMissionRegionName);
-        }
-
-        FString ModelName = DesignName;
-
-        const FShipDesign* ShipRow = ShipDesignRegistry::Find(DesignName);
-        if (ShipRow && !ShipRow->Model.IsEmpty())
-        {
-            ModelName = ShipRow->Model;
-        }
-
-        if (ModelName.IsEmpty())
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] '%s' missing model/design"),
-                *ElementName);
-            continue;
-        }
-
-        //--------------------------------------------------
-        // REGION RESOLVE
-        //--------------------------------------------------
-        AActor* RegionActor = nullptr;
-        FVector RegionCenter = FVector::ZeroVector;
-        bool bHasRegion = false;
-
-        if (Builder && !RegionName.IsEmpty())
-        {
-            FSpawnedSystemRegion Region;
-
-            if (Builder->GetRegionByName(RegionName + TEXT("_REGION"), Region) ||
-                Builder->GetRegionByName(RegionName, Region))
-            {
-                RegionActor = Region.Actor;
-                RegionCenter = Region.Actor
-                    ? Region.Actor->GetActorLocation()
-                    : Region.SpawnLocation;
-
-                bHasRegion = true;
-            }
-            else if (Builder->GetBodyWorldLocationByName(RegionName, RegionCenter))
-            {
-                bHasRegion = true;
-            }
-        }
-
-        //--------------------------------------------------
-        // LOCATION CONVERSION
-        //--------------------------------------------------
-        const FVector LocalOffset =
-            ConvertLegacyRegionOffsetToSceneOffset(Elem.Location);
-
-        FVector WorldLoc = FVector::ZeroVector;
-
-        if (RegionActor)
-        {
-            WorldLoc =
-                RegionActor->GetActorTransform().TransformPosition(LocalOffset);
-        }
-        else if (bHasRegion)
-        {
-            WorldLoc = RegionCenter + LocalOffset;
+                TEXT("[CampaignSceneActor] Legacy Sim mission executed"));
         }
         else
         {
-            WorldLoc = ConvertMissionElementLocToWorld(Elem);
+            UE_LOG(LogTemp, Error,
+                TEXT("[CampaignSceneActor] Failed creating legacy mission"));
         }
-
-        //--------------------------------------------------
-        // SPAWN ACTOR
-        //--------------------------------------------------
-        AActor* Spawned = SpawnSceneElementActor(
-            ElementName,
-            ModelName,
-            WorldLoc,
-            Elem.Heading);
-
-        if (!Spawned)
-        {
-            continue;
-        }
-
-        if (RegionActor)
-        {
-            Spawned->AttachToActor(
-                RegionActor,
-                FAttachmentTransformRules::KeepWorldTransform);
-        }
-
-        //--------------------------------------------------
-        // RUNTIME SHIP BINDING
-        //--------------------------------------------------
-        if (AShipActor* ShipActor = Cast<AShipActor>(Spawned))
-        {
-            Ship* RuntimeShip = CreateRuntimeShipForMissionElement(Elem, WorldLoc);
-
-            if (RuntimeShip)
-            {
-                ShipActor->BindRuntimeShip(RuntimeShip);
-
-                RegisterRuntimeShipForElement(
-                    Elem,
-                    RuntimeShip,
-                    ShipActor);
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[CampaignSceneActor] Ship bound '%s' -> Actor '%s'"),
-                    *ElementName,
-                    *ShipActor->GetName());
-            }
-        }
-
-        //--------------------------------------------------
-        // TRACKING
-        //--------------------------------------------------
-        FCampaignSceneSpawnedActor Entry;
-        Entry.ElementName = ElementName;
-        Entry.DesignName = ModelName;
-        Entry.RegionName = RegionName;
-        Entry.CommanderName = Elem.Commander;
-        Entry.Actor = Spawned;
-        Entry.SpawnLocation = Spawned->GetActorLocation();
-        Entry.HeadingDegrees = Elem.Heading;
-
-        SpawnedSceneActors.Add(Entry);
-        OwnedActors.Add(Spawned);
-
-        Count++;
     }
-
-    //-------------------------------------------------------------
- // PASS 2: COMMANDER / FORMATION / INSTRUCTION RESOLUTION
- //-------------------------------------------------------------
-    LinkRuntimeShipCommanders(MissionData.Element);
-    ApplyRuntimeFormationOffsets(MissionData.Element);
-    ResolveRuntimeInstructionTargets();
-
-    //-------------------------------------------------------------
-    // Optional final verification
-    //-------------------------------------------------------------
-    for (const TPair<FString, Ship*>& Pair : RuntimeShipByElementName)
+    else
     {
-        Ship* RuntimeShip = Pair.Value;
-
-        if (!RuntimeShip)
-        {
-            continue;
-        }
-
-        Instruction* Nav = RuntimeShip->GetNextNavPoint();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MISSION BUILD FINAL TARGET VERIFY] Ship='%hs' NavTargetName='%hs' NavTarget='%hs' ShipTarget='%hs'"),
-            RuntimeShip->GetName(),
-            Nav && Nav->GetTargetName() ? Nav->GetTargetName() : "NULL",
-            Nav && Nav->GetTarget() ? Nav->GetTarget()->GetName() : "NULL",
-            RuntimeShip->GetTarget() ? RuntimeShip->GetTarget()->GetName() : "NULL");
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignSceneActor] No Sim instance"));
     }
+
+    //-------------------------------------------------------------
+    // OLD CAMPAIGN RUNTIME SHIP CREATION DISABLED
+    //-------------------------------------------------------------
+    //
+    // Removed:
+    //
+    // CreateRuntimeShipForMissionElement()
+    // RegisterRuntimeShipForElement()
+    // ShipActor->BindRuntimeShip()
+    //
+    // Runtime ships are now created by:
+    //
+    // Sim::ExecMission()
+    //   -> Sim::CreateShip()
+    //   -> RuntimeSubsystem::SpawnVisualForRuntimeShip()
+    //
+    //-------------------------------------------------------------
 }
 
-AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) const
+AActor*
+ACampaignSceneActor::FindSceneActorByName(
+    const FString& ElementName) const
 {
-    const FString SearchName = ElementName.TrimStartAndEnd();
+    const FString SearchName =
+        ElementName.TrimStartAndEnd();
+
     if (SearchName.IsEmpty())
     {
         return nullptr;
     }
+
+    //-------------------------------------------------------------
+    // 1. Old CampaignSceneActor-tracked actors
+    //-------------------------------------------------------------
 
     for (const FCampaignSceneSpawnedActor& Entry : SpawnedSceneActors)
     {
@@ -966,11 +857,57 @@ AActor* ACampaignSceneActor::FindSceneActorByName(const FString& ElementName) co
             continue;
         }
 
-        if (Entry.ElementName.Equals(SearchName, ESearchCase::IgnoreCase))
+        if (Entry.ElementName.Equals(
+            SearchName,
+            ESearchCase::IgnoreCase))
         {
             return Entry.Actor;
         }
     }
+
+    //-------------------------------------------------------------
+    // 2. Runtime-spawned visual actors
+    //-------------------------------------------------------------
+
+    UWorld* World =
+        GetWorld();
+
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        AActor* Actor =
+            *It;
+
+        if (!IsValid(Actor))
+        {
+            continue;
+        }
+
+        const FString RuntimeActorName =
+            Actor->GetName();
+
+#if WITH_EDITOR
+        const FString RuntimeActorLabel =
+            Actor->GetActorLabel();
+#else
+        const FString RuntimeActorLabel =
+            RuntimeActorName;
+#endif
+
+        if (RuntimeActorName.Equals(SearchName, ESearchCase::IgnoreCase) ||
+            RuntimeActorLabel.Equals(SearchName, ESearchCase::IgnoreCase))
+        {
+            return Actor;
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignSceneActor] FindSceneActorByName failed '%s'"),
+        *SearchName);
 
     return nullptr;
 }
@@ -1455,8 +1392,8 @@ ACampaignSceneActor::CreateRuntimeShipForMissionElement(
 
     NewShip->SetFlightPhase(
         Elem.Alert ?
-        Ship::ALERT :
-        Ship::ACTIVE);
+        EOPSMode::ALERT :
+        EOPSMode::ACTIVE);
 
     //-------------------------------------------------------------
     // 7. Temporary movement bridge

@@ -87,6 +87,21 @@ enum class EGameMode : uint8
 	EXIT    UMETA(DisplayName = "Shutting Down"),
 };
 
+UENUM(BlueprintType)
+enum class EOPSMode : uint8
+{
+	NONE		UMETA(DisplayName = "None"),
+	DOCKED		UMETA(DisplayName = "Docked"),
+	ALERT		UMETA(DisplayName = "Alert"),
+	LOCKED		UMETA(DisplayName = "Locked"),
+	LAUNCH		UMETA(DisplayName = "Launch"),
+	TAKEOFF		UMETA(DisplayName = "Takeoff"),
+	ACTIVE		UMETA(DisplayName = "Active"),
+	APPROACH	UMETA(DisplayName = "Approach"),
+	RECOVERY	UMETA(DisplayName = "Recovery"),
+	DOCKING		UMETA(DisplayName = "Docking")
+};
+
 UENUM()
 enum class EMenuZOrder : int32
 {
@@ -559,6 +574,35 @@ enum EControlType : uint8
 	WINDEF_SLIDER,
 	WINDEF_LIST,
 	WINDEF_RICH,
+};
+
+UENUM(BlueprintType)
+enum class ESimEvent : uint8
+{
+	LAUNCH			UMETA(DisplayName = "Launch"),
+	DOCK			UMETA(DisplayName = "Dock"),
+	LAND			UMETA(DisplayName = "Land"),
+	EJECT			UMETA(DisplayName = "Eject"),
+	CRASH			UMETA(DisplayName = "Crash"),
+	COLLIDE		UMETA(DisplayName = "Collide"),
+	DESTROYED		UMETA(DisplayName = "Destroyed"),
+
+	MAKE_ORBIT		UMETA(DisplayName = "Make Orbit"),
+	BREAK_ORBIT	UMETA(DisplayName = "Break Orbit"),
+	QUANTUM_JUMP	UMETA(DisplayName = "Quantum Jump"),
+
+	LAUNCH_SHIP	UMETA(DisplayName = "Launch Ship"),
+	RECOVER_SHIP	UMETA(DisplayName = "Recover Ship"),
+
+	FIRE_GUNS		UMETA(DisplayName = "Fire Guns"),
+	FIRE_MISSILE	UMETA(DisplayName = "Fire Missile"),
+	DROP_DECOY		UMETA(DisplayName = "Drop Decoy"),
+
+	GUNS_KILL		UMETA(DisplayName = "Guns Kill"),
+	MISSILE_KILL	UMETA(DisplayName = "Missile Kill"),
+
+	LAUNCH_PROBE	UMETA(DisplayName = "Launch Probe"),
+	SCAN_TARGET	UMETA(DisplayName = "Scan Target")
 };
 
 UENUM(BlueprintType)

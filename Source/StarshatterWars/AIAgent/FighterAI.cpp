@@ -155,7 +155,7 @@ FighterAI::ExecFrame(double s)
             }
         }
 
-        else if (ship->GetFlightPhase() == Ship::DOCKING) {
+        else if (ship->GetFlightPhase() == EOPSMode::DOCKING) {
             // deal with (pathological) moving carrier deck:
 
             FlightDeck* deck = inbound->GetDeck();
@@ -1156,7 +1156,7 @@ FighterAI::AvoidTerrain()
         return avoid;
     }
 
-    if (ship->IsAirborne() && ship->GetFlightPhase() == Ship::ACTIVE) {
+    if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE) {
         // too high?
         if (ship->GetAltitudeMSL() > 25e3) {
             if (!navpt || (navpt->GetRegion() == ship->GetRegion() && navpt->GetLocation().Z < 27e3)) {
@@ -1205,7 +1205,7 @@ FighterAI::AvoidTerrain()
 Steer
 FighterAI::SeekTarget()
 {
-    if (ship->GetFlightPhase() < Ship::ACTIVE)
+    if (ship->GetFlightPhase() < EOPSMode::ACTIVE)
         return Seek(objective);
 
     Ship* ward = ship->GetWard();

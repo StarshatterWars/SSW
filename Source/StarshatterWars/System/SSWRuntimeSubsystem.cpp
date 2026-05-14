@@ -4,6 +4,7 @@
 
 #include "Game.h"
 #include "Sim.h"
+#include "SimRegion.h"
 #include "SimUniverse.h"
 #include "Galaxy.h"
 #include "Campaign.h"
@@ -32,6 +33,15 @@
 #include "Tickable.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+
+#include "ShipActor.h"
+#include "Ship.h"
+#include "ShipDesign.h"
+#include "ShipDesignRegistry.h"
+#include "Engine/World.h"
+#include "Engine/StaticMesh.h"
+#include "EngineUtils.h"
+
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
@@ -591,3 +601,250 @@ void USSWRuntimeSubsystem::GetPlayerCam(int32 Mode)
         TEXT("[RUNTIME] PlayerCam Mode=%d"),
         Mode);
 }
+
+AShipActor*
+USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
+{
+    if (!RuntimeShip)
+    {
+        return nullptr;
+    }
+
+    UWorld* World =
+        GetWorld();
+
+    if (!World)
+    {
+        UE_LOG(LogSSWRuntime, Error,
+            TEXT("[RuntimeVisual] No World for Ship='%hs'"),
+            RuntimeShip->GetName());
+
+        return nullptr;
+    }
+
+    const ShipDesign* Design =
+        RuntimeShip->Design();
+
+    if (!Design)
+    {
+        UE_LOG(LogSSWRuntime, Error,
+            TEXT("[RuntimeVisual] No Design for Ship='%hs'"),
+            RuntimeShip->GetName());
+
+        return nullptr;
+    }
+
+    const FString DesignName =
+        ANSI_TO_TCHAR(Design->name);
+
+    const FShipDesign* Row =
+        ShipDesignRegistry::Find(DesignName);
+
+    if (!Row)
+    {
+        UE_LOG(LogSSWRuntime, Error,
+            TEXT("[RuntimeVisual] No FShipDesign row for Ship='%hs' Design='%s'"),
+            RuntimeShip->GetName(),
+            *DesignName);
+
+        return nullptr;
+    }
+
+    const FString ModelName =
+        !Row->Model.IsEmpty()
+        ? Row->Model
+        : DesignName;
+
+    const FString BPClassPath =
+        FString::Printf(
+            TEXT("/Game/Models/%s/BP_%s.BP_%s_C"),
+            *ModelName,
+            *ModelName,
+            *ModelName);
+
+    UClass* BPClass =
+        LoadClass<AShipActor>(
+            nullptr,
+            *BPClassPath);
+
+    if (!BPClass)
+    {
+        UE_LOG(LogSSWRuntime, Error,
+            TEXT("[RuntimeVisual] Missing BP class '%s'"),
+            *BPClassPath);
+
+        return nullptr;
+    }
+
+    const FVector SpawnLoc =
+        GetVisualSpawnLocationForRuntimeShip(
+            RuntimeShip);
+
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AShipActor* ShipActor =
+        World->SpawnActor<AShipActor>(
+            BPClass,
+            SpawnLoc,
+            FRotator::ZeroRotator,
+            Params);
+
+    if (!ShipActor)
+    {
+        UE_LOG(LogSSWRuntime, Error,
+            TEXT("[RuntimeVisual] Spawn failed Ship='%hs'"),
+            RuntimeShip->GetName());
+
+        return nullptr;
+    }
+
+#if WITH_EDITOR
+    ShipActor->SetActorLabel(
+        FString(
+            ANSI_TO_TCHAR(
+                RuntimeShip->GetName())));
+#endif
+
+    ShipActor->BindRuntimeShip(
+        RuntimeShip);
+
+    if (AActor* RegionActor =
+        FindRegionActorForRuntimeShip(RuntimeShip))
+    {
+        ShipActor->AttachToActor(
+            RegionActor,
+            FAttachmentTransformRules::KeepWorldTransform);
+    }
+    ShipActor->UpdateFromRuntimeShip(
+        0.0f);
+
+    UE_LOG(LogSSWRuntime, Warning,
+        TEXT("[RuntimeVisual] Spawned Ship='%hs' Actor='%s' Model='%s' Loc=%s"),
+        RuntimeShip->GetName(),
+        *ShipActor->GetName(),
+        *ModelName,
+        *SpawnLoc.ToString());
+
+    return ShipActor;
+}
+
+FVector
+USSWRuntimeSubsystem::ConvertLegacyShipLocationToUE(
+    const FVector& LegacyLoc) const
+{
+    return FVector(
+        LegacyLoc.Z,
+        LegacyLoc.X,
+        LegacyLoc.Y);
+}
+
+AActor*
+USSWRuntimeSubsystem::FindRegionActorForRuntimeShip(
+    Ship* RuntimeShip) const
+{
+    if (!RuntimeShip ||
+        !RuntimeShip->GetRegion())
+    {
+        return nullptr;
+    }
+
+    UWorld* World =
+        GetWorld();
+
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    const FString RegionName =
+        FString(
+            ANSI_TO_TCHAR(
+                RuntimeShip->GetRegion()->GetName()))
+        .TrimStartAndEnd();
+
+    if (RegionName.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    const FString RegionActorNameA =
+        RegionName + TEXT("_REGION");
+
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        AActor* Candidate =
+            *It;
+
+        if (!IsValid(Candidate))
+        {
+            continue;
+        }
+
+        const FString ActorName =
+            Candidate->GetName();
+
+        const FString ActorLabel =
+#if WITH_EDITOR
+            Candidate->GetActorLabel();
+#else
+            ActorName;
+#endif
+
+        if (ActorName.Equals(RegionActorNameA, ESearchCase::IgnoreCase) ||
+            ActorLabel.Equals(RegionActorNameA, ESearchCase::IgnoreCase) ||
+            ActorName.Contains(RegionName, ESearchCase::IgnoreCase) &&
+            ActorName.Contains(TEXT("REGION"), ESearchCase::IgnoreCase) ||
+            ActorLabel.Contains(RegionName, ESearchCase::IgnoreCase) &&
+            ActorLabel.Contains(TEXT("REGION"), ESearchCase::IgnoreCase))
+        {
+            UE_LOG(LogSSWRuntime, Warning,
+                TEXT("[RuntimeVisual] RegionActor Ship='%hs' Region='%s' Actor='%s' Label='%s'"),
+                RuntimeShip->GetName(),
+                *RegionName,
+                *ActorName,
+                *ActorLabel);
+
+            return Candidate;
+        }
+    }
+
+    UE_LOG(LogSSWRuntime, Warning,
+        TEXT("[RuntimeVisual] No RegionActor found Ship='%hs' Region='%s'"),
+        RuntimeShip->GetName(),
+        *RegionName);
+
+    return nullptr;
+}
+
+FVector
+USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
+    Ship* RuntimeShip) const
+{
+    if (!RuntimeShip)
+    {
+        return FVector::ZeroVector;
+    }
+
+    const FVector LegacyLoc =
+        RuntimeShip->GetLocation();
+
+    const FVector LocalUEOffset =
+        ConvertLegacyShipLocationToUE(
+            LegacyLoc);
+
+    AActor* RegionActor =
+        FindRegionActorForRuntimeShip(
+            RuntimeShip);
+
+    if (RegionActor)
+    {
+        return RegionActor->GetActorTransform().TransformPosition(
+            LocalUEOffset);
+    }
+
+    return LocalUEOffset;
+}
+
+

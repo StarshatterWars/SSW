@@ -173,90 +173,151 @@ void ASSWCameraManager::UpdateOrbit(float DeltaTime)
 // ACTOR FOLLOW
 // ----------------------------------------------------
 
-void ASSWCameraManager::UpdateActorFollow(float DeltaTime)
+void
+ASSWCameraManager::UpdateActorFollow(float DeltaTime)
 {
     if (!TargetActor)
     {
         return;
     }
 
-    //--------------------------------------------------
-    // TARGET + VELOCITY
-    //--------------------------------------------------
+    //-------------------------------------------------------------
+    // Target location
+    //-------------------------------------------------------------
 
-    const FVector TargetLoc = TargetActor->GetActorLocation();
+    const FVector TargetLoc =
+        TargetActor->GetActorLocation();
 
-    FVector VelocityDir = TargetActor->GetVelocity().GetSafeNormal();
+    //-------------------------------------------------------------
+    // Legacy forward basis
+    //
+    // Ships are currently staying in legacy runtime space.
+    // Use actor rotation directly.
+    //-------------------------------------------------------------
 
-    if (VelocityDir.IsNearlyZero())
+    FVector ForwardDir =
+        TargetActor->GetActorRotation().Vector();
+
+    if (!ForwardDir.Normalize())
     {
-        VelocityDir = TargetActor->GetActorForwardVector();
+        ForwardDir =
+            FVector(0.0f, 0.0f, 1.0f);
     }
 
-    //--------------------------------------------------
-    // OFFSET (CAMERA POSITION RELATIVE TO SHIP)
-    //--------------------------------------------------
+    //-------------------------------------------------------------
+    // Build orthonormal basis
+    //
+    // Legacy world:
+    //   X = right
+    //   Y = up
+    //   Z = forward
+    //-------------------------------------------------------------
 
-    FVector LocalOffset = FollowOffset;
+    FVector UpDir =
+        FVector(0.0f, 1.0f, 0.0f);
+
+    FVector RightDir =
+        FVector::CrossProduct(
+            ForwardDir,
+            UpDir).GetSafeNormal();
+
+    if (RightDir.IsNearlyZero())
+    {
+        RightDir =
+            FVector(1.0f, 0.0f, 0.0f);
+    }
+
+    UpDir =
+        FVector::CrossProduct(
+            RightDir,
+            ForwardDir).GetSafeNormal();
+
+    //-------------------------------------------------------------
+    // Camera local offset
+    //
+    // Legacy local space:
+    //   X = right
+    //   Y = up
+    //   Z = forward
+    //-------------------------------------------------------------
+
+    FVector LocalOffset =
+        FollowOffset;
 
     if (LocalOffset.IsNearlyZero())
     {
-        LocalOffset = FVector(-2500.0f, 900.0f, 650.0f);
+        LocalOffset =
+            FVector(
+                900.0f,     // right
+                650.0f,     // up
+                -2500.0f);  // behind
     }
 
-    const FRotator MovementRot = VelocityDir.Rotation();
+    //-------------------------------------------------------------
+    // Desired camera world position
+    //-------------------------------------------------------------
 
     const FVector DesiredCamLoc =
-        TargetLoc + MovementRot.RotateVector(LocalOffset);
+        TargetLoc +
+        (RightDir * LocalOffset.X) +
+        (UpDir * LocalOffset.Y) +
+        (ForwardDir * LocalOffset.Z);
 
-    //--------------------------------------------------
-    // POSITION DAMPING
-    //--------------------------------------------------
+    //-------------------------------------------------------------
+    // Smooth movement
+    //-------------------------------------------------------------
 
-    const float LagSpeed = 5.0f;
+    const float SafeDelta =
+        FMath::Clamp(
+            DeltaTime,
+            0.0f,
+            0.1f);
 
-    const FVector SmoothedCamLoc = FMath::VInterpTo(
-        GetActorLocation(),
-        DesiredCamLoc,
-        DeltaTime,
-        LagSpeed);
+    const float LagSpeed =
+        5.0f;
 
-    SetActorLocation(SmoothedCamLoc);
+    const FVector SmoothedCamLoc =
+        FMath::VInterpTo(
+            GetActorLocation(),
+            DesiredCamLoc,
+            SafeDelta,
+            LagSpeed);
 
-    //--------------------------------------------------
-    // LOOK TARGET (CENTERED ON SHIP)
-    //--------------------------------------------------
+    SetActorLocation(
+        SmoothedCamLoc);
 
-    const float LookAheadAmount = 0.0f; // keep ship centered
+    //-------------------------------------------------------------
+    // Look-at rotation
+    //-------------------------------------------------------------
 
     const FVector LookTarget =
-        TargetLoc + (VelocityDir * LookAheadAmount);
+        TargetLoc;
 
     const FRotator DesiredRot =
         (LookTarget - SmoothedCamLoc).Rotation();
 
-    //--------------------------------------------------
-    // ROTATION DAMPING
-    //--------------------------------------------------
+    const FRotator SmoothedRot =
+        FMath::RInterpTo(
+            GetActorRotation(),
+            DesiredRot,
+            SafeDelta,
+            LagSpeed);
 
-    const FRotator SmoothedRot = FMath::RInterpTo(
-        GetActorRotation(),
-        DesiredRot,
-        DeltaTime,
-        LagSpeed);
+    SetActorRotation(
+        SmoothedRot);
 
-    SetActorRotation(SmoothedRot);
-
-    //--------------------------------------------------
-    // DEBUG
-    //--------------------------------------------------
+    //-------------------------------------------------------------
+    // Debug
+    //-------------------------------------------------------------
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SSWCameraManager] ActorFollow CENTERED Target=%s TargetLoc=%s Cam=%s VelDir=%s"),
+        TEXT("[SSWCameraManager] ActorFollow LEGACY Target=%s TargetLoc=%s Cam=%s Fwd=%s Right=%s Up=%s"),
         *GetNameSafe(TargetActor),
         *TargetLoc.ToString(),
         *SmoothedCamLoc.ToString(),
-        *VelocityDir.ToString());
+        *ForwardDir.ToString(),
+        *RightDir.ToString(),
+        *UpDir.ToString());
 }
 
 // ----------------------------------------------------

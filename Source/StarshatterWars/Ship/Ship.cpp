@@ -116,16 +116,6 @@
 #define SHIP_MOVE_LOG(Format, ...)
 #endif
 
-// ---------------------------------------------------------------------
-// NOTE ON POINT/VEC3 CONVERSION
-// ---------------------------------------------------------------------
-// Per your instruction, Point/Vec3 usages are being migrated toward FVector.
-// This file was pasted with extensive Point/Matrix math (length(), cross(),
-// OtherHand(), etc.) that does notxmap 1:1 to FVector without additional
-// helper shims. This conversion is applied where the pasted content allows
-// mechanical replacement without inventing missing engine glue.
-// ---------------------------------------------------------------------
-
 
 // +----------------------------------------------------------------------+
 
@@ -199,7 +189,7 @@ Ship::Ship(
 	thruster(0), decoy(0), ai_mode(2), command_ai_level(cmd_ai), flcs_mode(EFLCSMode::AUTO), loadout(0),
 	emcon(3), old_emcon(3), master_caution(false), cockpit(0), gear(0), skin(0),
 	auto_repair(true), last_repair_time(0), last_eval_time(0), last_beam_time(0), last_bolt_time(0),
-	warp_fov(1), flight_phase(LAUNCH), launch_time(0), carrier(0), dock(0), ff_count(0),
+	warp_fov(1), flight_phase(EOPSMode::LAUNCH), launch_time(0), carrier(0), dock(0), ff_count(0),
 	inbound(0), element(0), director_info("Init"), combat_unit(0), net_control(0),
 	track(0), ntrack(0), track_time(0), helm_heading(0.0f), helm_pitch(0.0f),
 	altitude_agl(-1.0e6f), transition_time(0.0f), transition_type(TRANSITION_NONE),
@@ -1967,9 +1957,9 @@ Ship::GetFlightDeck(int i) const
 // +--------------------------------------------------------------------+
 
 void
-Ship::SetFlightPhase(OP_MODE phase)
+Ship::SetFlightPhase(EOPSMode phase)
 {
-	if (phase == ACTIVE && !launch_time) {
+	if (phase == EOPSMode::ACTIVE && !launch_time) {
 		launch_time = Game::GetGameTime() + 1;
 		dock = 0;
 
@@ -1979,7 +1969,7 @@ Ship::SetFlightPhase(OP_MODE phase)
 
 	flight_phase = phase;
 
-	if (flight_phase == ACTIVE)
+	if (flight_phase == EOPSMode::ACTIVE)
 		dock = 0;
 }
 
@@ -1998,8 +1988,8 @@ Ship::SetInbound(InboundSlot* s)
 {
 	inbound = s;
 
-	if (inbound && flight_phase == ACTIVE) {
-		flight_phase = APPROACH;
+	if (inbound && flight_phase == EOPSMode::ACTIVE) {
+		flight_phase = EOPSMode::APPROACH;
 
 		SetCarrier((Ship*)inbound->GetDeck()->GetCarrier(), inbound->GetDeck());
 
@@ -2974,15 +2964,32 @@ Ship::GetNavIndex(const Instruction* n)
 }
 
 double
-Ship::RangeToNavPoint(const Instruction* NavPoint)
+Ship::RangeToNavPoint(
+	const Instruction* NavPoint)
 {
-	double Distance = 0.0;
+	double Distance =
+		0.0;
 
-	if (NavPoint && NavPoint->GetRegion() && GetRegion()) {
-		FVector NavLoc = NavPoint->GetRegion()->GetLocation() + NavPoint->GetLocation();
-		NavLoc -= GetRegion()->GetLocation();
+	if (NavPoint &&
+		NavPoint->GetRegion() &&
+		GetRegion())
+	{
+		FVector NavLoc =
+			NavPoint->GetRegion()->GetLocation() +
+			NavPoint->GetLocation();
 
-		Distance = (NavLoc - GetLocation()).Size();
+		NavLoc -=
+			GetRegion()->GetLocation();
+
+		//---------------------------------------------------------
+		// Legacy map -> sim coordinate conversion
+		//---------------------------------------------------------
+
+		NavLoc =
+			OtherHand(NavLoc);
+
+		Distance =
+			(NavLoc - GetLocation()).Size();
 	}
 
 	return Distance;
@@ -3190,14 +3197,14 @@ Ship::ExecFrame(double seconds)
 	FMemory::Memzero(trigger, sizeof(trigger));
 	altitude_agl = -1.0e6f;
 
-	if (flight_phase < LAUNCH) {
+	if (flight_phase < EOPSMode::LAUNCH) {
 		DockFrame(seconds);
 		return;
 	}
 
-	if (flight_phase == LAUNCH ||
-		(flight_phase == TAKEOFF && GetAltitudeAGL() > GetRadius())) {
-		SetFlightPhase(ACTIVE);
+	if (flight_phase == EOPSMode::LAUNCH ||
+		(flight_phase == EOPSMode::TAKEOFF && GetAltitudeAGL() > GetRadius())) {
+		SetFlightPhase(EOPSMode::ACTIVE);
 	}
 
 	if (transition_time > 0) {
@@ -3388,51 +3395,100 @@ Ship::ExecSensors(double seconds)
 // +--------------------------------------------------------------------+
 
 void
-Ship::ExecNavFrame(double Seconds)
+Ship::ExecNavFrame(
+	double Seconds)
 {
-	bool AutoPilot = false;
+	bool AutoPilot =
+		false;
 
-	// update director info string:
-	SetFLCSMode(flcs_mode);
+	//-------------------------------------------------------------
+	// Update director info string
+	//-------------------------------------------------------------
 
-	if (navsys) {
-		navsys->ExecFrame(Seconds);
+	SetFLCSMode(
+		flcs_mode);
 
-		if (navsys->AutoNavEngaged()) {
-			if (dir && dir->GetType() == ESteerAIType::NAV) {
-				NavAI* NavAIComp = (NavAI*)dir;
+	if (navsys)
+	{
+		navsys->ExecFrame(
+			Seconds);
 
-				if (NavAIComp->Complete()) {
+		if (navsys->AutoNavEngaged())
+		{
+			if (dir &&
+				dir->GetType() == ESteerAIType::NAV)
+			{
+				NavAI* NavAIComp =
+					(NavAI*)dir;
+
+				if (NavAIComp->Complete())
+				{
 					navsys->DisengageAutoNav();
-					SetControls(sim->GetControls());
+
+					SetControls(
+						sim->GetControls());
 				}
-				else {
-					AutoPilot = true;
+				else
+				{
+					AutoPilot =
+						true;
 				}
 			}
 		}
 	}
 
-	// even if we are not on auto pilot,
+	//-------------------------------------------------------------
+	// Even if we are not on auto pilot,
 	// have we completed the next navpoint?
+	//-------------------------------------------------------------
 
-	Instruction* NavPt = GetNextNavPoint();
-	if (NavPt && !AutoPilot) {
-		if (NavPt->GetRegion() == GetRegion()) {
-			FVector NavLoc = NavPt->GetLocation();
+	Instruction* NavPt =
+		GetNextNavPoint();
+
+	if (NavPt &&
+		!AutoPilot)
+	{
+		if (NavPt->GetRegion() == GetRegion())
+		{
+			FVector NavLoc =
+				NavPt->GetLocation();
 
 			if (NavPt->GetRegion())
-				NavLoc += NavPt->GetRegion()->GetLocation();
+			{
+				NavLoc +=
+					NavPt->GetRegion()->GetLocation();
+			}
 
-			Sim* SimInst = Sim::GetSim();
-			if (SimInst && SimInst->GetActiveRegion())
-				NavLoc -= SimInst->GetActiveRegion()->GetLocation();
+			Sim* SimInst =
+				Sim::GetSim();
 
-			// distance from self to navpt:
-			const double Distance = (NavLoc - GetLocation()).Size();
+			if (SimInst &&
+				SimInst->GetActiveRegion())
+			{
+				NavLoc -=
+					SimInst->GetActiveRegion()->GetLocation();
+			}
+
+			//-----------------------------------------------------
+			// Legacy map -> sim coordinate conversion
+			//-----------------------------------------------------
+
+			NavLoc =
+				OtherHand(NavLoc);
+
+			//-----------------------------------------------------
+			// Distance from self to navpoint
+			//-----------------------------------------------------
+
+			const double Distance =
+				(NavLoc - GetLocation()).Size();
 
 			if (Distance < 10.0 * GetRadius())
-				SetNavptStatus(NavPt, INSTRUCTION_STATUS::COMPLETE);
+			{
+				SetNavptStatus(
+					NavPt,
+					INSTRUCTION_STATUS::COMPLETE);
+			}
 		}
 	}
 }
@@ -3766,7 +3822,7 @@ Ship::AeroFrame(double seconds)
 		double tlevel = GetLocation().Y - GetAltitudeAGL();
 
 		// taking off or landing?
-		if (flight_phase < ACTIVE || flight_phase > APPROACH) {
+		if (flight_phase < EOPSMode::ACTIVE || flight_phase > EOPSMode::APPROACH) {
 			if (dock)
 				tlevel = dock->GetMountLocation().Y;
 		}
@@ -3904,7 +3960,7 @@ Ship::DockFrame(double Seconds)
 
 		const double Spool = 75.0 * Seconds;
 
-		if (flight_phase == DOCKING) {
+		if (flight_phase == EOPSMode::DOCKING) {
 			SetThrottleRequest(0);
 			SetThrottle(0);
 		}
@@ -3963,8 +4019,8 @@ if (main_drive)
 void
 Ship::StatFrame(double Seconds)
 {
-	if (flight_phase != ACTIVE) {
-		flight_phase = ACTIVE;
+	if (flight_phase != EOPSMode::ACTIVE) {
+		flight_phase = EOPSMode::ACTIVE;
 		launch_time = Game::GetGameTime() + 1;
 
 		if (element)
@@ -4524,42 +4580,52 @@ Ship::IsInCombat()
 bool
 Ship::CanTimeSkip()
 {
-	Instruction* NavPt = GetNextNavPoint();
+	Instruction* NavPt =
+		GetNextNavPoint();
 
-	// Preserve original early-out logic
-	if (GetMissionClock() < 10000 /* || NetGame::IsNetGame() */) {
+	if (GetMissionClock() < 10000 /* || NetGame::IsNetGame() */)
+	{
 		return false;
 	}
 
-	bool bCanSkip = false;
+	bool bCanSkip =
+		false;
 
-	if (NavPt) {
-		bCanSkip = true;
+	if (NavPt)
+	{
+		bCanSkip =
+			true;
 
-		// Must be in the same region
-		if (NavPt->GetRegion() != GetRegion()) {
-			bCanSkip = false;
+		if (NavPt->GetRegion() != GetRegion())
+		{
+			bCanSkip =
+				false;
 		}
-		else {
-			// Removed OtherHand(); unified coordinate system
-			const FVector TargetLoc = NavPt->GetLocation();
+		else
+		{
+			const FVector TargetLoc =
+				OtherHand(
+					NavPt->GetLocation());
 
-			// Use UE vector API
-			const double Distance = FVector::Dist(TargetLoc, GetLocation());
+			const double Distance =
+				(TargetLoc - GetLocation()).Size();
 
 			if (Distance < 30000.0)
-				bCanSkip = false;
+			{
+				bCanSkip =
+					false;
+			}
 		}
 	}
 
-	// Cannot time skip during combat
-	if (bCanSkip) {
-		bCanSkip = !IsInCombat();
+	if (bCanSkip)
+	{
+		bCanSkip =
+			!IsInCombat();
 	}
 
 	return bCanSkip;
 }
-
 
 void Ship::TimeSkip()
 {
@@ -4661,11 +4727,17 @@ Ship::DeathSpiral()
 void
 Ship::CompleteTransition()
 {
-	const int OldType = transition_type;
-	transition_time = 0.0f;
-	transition_type = TRANSITION_NONE;
+	const int OldType =
+		transition_type;
 
-	switch (OldType) {
+	transition_time =
+		0.0f;
+
+	transition_type =
+		TRANSITION_NONE;
+
+	switch (OldType)
+	{
 	case TRANSITION_NONE:
 	case TRANSITION_DROP_CAM:
 	default:
@@ -4675,20 +4747,41 @@ Ship::CompleteTransition()
 	{
 		SetControls(0);
 
-		SimRegion* DstRegion = sim ? sim->FindNearestTerrainRegion(this) : 0;
+		SimRegion* DstRegion =
+			sim ? sim->FindNearestTerrainRegion(this) : nullptr;
+
 		if (!DstRegion || !sim)
+		{
 			return;
+		}
 
-		FVector DstLoc = GetLocation() * 0.20f; // removed OtherHand()
-		DstLoc.X += 6000.0f * (float)GetElementIndex();
-		DstLoc.Z = (float)(TERRAIN_ALTITUDE_LIMIT * 0.95);
-		DstLoc += RandomDirection() * 2000.0f;
+		FVector DstLoc =
+			OtherHand(GetLocation()) * 0.20f;
 
-		sim->RequestHyperJump(this, DstRegion, DstLoc, TRANSITION_DROP_ORBIT);
+		DstLoc.X +=
+			6000.0f * (float)GetElementIndex();
 
-		ShipStats* Stats = ShipStats::Find(GetName());
+		DstLoc.Z =
+			(float)(TERRAIN_ALTITUDE_LIMIT * 0.95);
+
+		DstLoc +=
+			RandomDirection() * 2000.0f;
+
+		sim->RequestHyperJump(
+			this,
+			DstRegion,
+			DstLoc,
+			TRANSITION_DROP_ORBIT);
+
+		ShipStats* Stats =
+			ShipStats::Find(GetName());
+
 		if (Stats)
-			Stats->AddEvent(SimEvent::BREAK_ORBIT, DstRegion->GetName());
+		{
+			Stats->AddEvent(
+				SimEvent::BREAK_ORBIT,
+				DstRegion->GetName());
+		}
 	}
 	break;
 
@@ -4696,56 +4789,96 @@ Ship::CompleteTransition()
 	{
 		SetControls(0);
 
-		SimRegion* DstRegion = sim ? sim->FindNearestSpaceRegion(this) : 0;
-		if (!DstRegion || !sim)
-			return;
+		SimRegion* DstRegion =
+			sim ? sim->FindNearestSpaceRegion(this) : nullptr;
 
-		const double Dist = 200.0e3 + 10.0e3 * GetElementIndex();
+		if (!DstRegion || !sim)
+		{
+			return;
+		}
+
+		const double Dist =
+			200.0e3 + 10.0e3 * GetElementIndex();
 
 		FVector EscVec =
 			DstRegion->GetOrbitalRegion()->Location() -
 			DstRegion->GetOrbitalRegion()->Primary()->Location();
 
-		EscVec.Z = -100.0f * (float)GetElementIndex();
+		EscVec.Z =
+			-100.0f * (float)GetElementIndex();
+
 		EscVec.Normalize();
-		EscVec *= (float)(-Dist);
-		EscVec += RandomDirection() * 2000.0f;
 
-		sim->RequestHyperJump(this, DstRegion, EscVec, TRANSITION_MAKE_ORBIT);
+		EscVec *=
+			(float)(-Dist);
 
-		ShipStats* Stats = ShipStats::Find(GetName());
+		EscVec +=
+			RandomDirection() * 2000.0f;
+
+		sim->RequestHyperJump(
+			this,
+			DstRegion,
+			EscVec,
+			TRANSITION_MAKE_ORBIT);
+
+		ShipStats* Stats =
+			ShipStats::Find(GetName());
+
 		if (Stats)
-			Stats->AddEvent(SimEvent::MAKE_ORBIT, DstRegion->GetName());
+		{
+			Stats->AddEvent(
+				SimEvent::MAKE_ORBIT,
+				DstRegion->GetName());
+		}
 	}
 	break;
 
 	case TRANSITION_TIME_SKIP:
 	{
-		Instruction* NavPt = GetNextNavPoint();
+		Instruction* NavPt =
+			GetNextNavPoint();
 
-		if (NavPt && sim) {
-			const FVector Delta = NavPt->GetLocation() - GetLocation(); // removed OtherHand()
+		if (NavPt && sim)
+		{
+			const FVector Delta =
+				OtherHand(NavPt->GetLocation()) -
+				GetLocation();
 
-			FVector Unit = Delta;
+			FVector Unit =
+				Delta;
+
 			Unit.Normalize();
 
-			const FVector Trans = Delta + Unit * -20000.0f;
-			const double Dist = Trans.Size();
+			const FVector Trans =
+				Delta + Unit * -20000.0f;
 
-			double Speed = NavPt->GetSpeed();
+			const double Dist =
+				Trans.Size();
+
+			double Speed =
+				NavPt->GetSpeed();
+
 			if (Speed < 50.0)
-				Speed = 500.0;
+			{
+				Speed =
+					500.0;
+			}
 
-			const double ETR = Dist / Speed;
+			const double ETR =
+				Dist / Speed;
 
-			sim->ResolveTimeSkip(ETR);
+			sim->ResolveTimeSkip(
+				ETR);
 		}
 	}
 	break;
 
 	case TRANSITION_DEATH_SPIRAL:
 		SetControls(0);
-		transition_type = TRANSITION_DEAD;
+
+		transition_type =
+			TRANSITION_DEAD;
+
 		break;
 	}
 }

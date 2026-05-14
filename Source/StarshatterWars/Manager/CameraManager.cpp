@@ -466,21 +466,21 @@ CameraManager::ExecFrame(double seconds)
 
 	hud = HUDView::GetInstance();
 
-	const int flight_phase = ship->GetFlightPhase();
+	const EOPSMode flight_phase = ship->GetFlightPhase();
 
-	if (flight_phase < Ship::LOCKED)
+	if (flight_phase < EOPSMode::LOCKED)
 		SetMode(MODE_DOCKING);
 
 	if (ship->IsAirborne()) {
-		if (flight_phase >= Ship::DOCKING)
+		if (flight_phase >= EOPSMode::DOCKING)
 			SetMode(MODE_DOCKING);
 	}
 	else {
-		if (flight_phase >= Ship::RECOVERY)
+		if (flight_phase >= EOPSMode::RECOVERY)
 			SetMode(MODE_DOCKING);
 	}
 
-	if (flight_phase >= Ship::LOCKED && flight_phase < Ship::ACTIVE) {
+	if (flight_phase >= EOPSMode::LOCKED && flight_phase < EOPSMode::ACTIVE) {
 		const int m = GetMode();
 		if (m != MODE_COCKPIT && m != MODE_VIRTUAL)
 			SetMode(MODE_COCKPIT);
@@ -896,7 +896,7 @@ CameraManager::Docking(double seconds)
 		sim->GetScene()->SetAmbient(FColor(120, 130, 140));
 	}
 
-	const int32 flight_phase = ship ? ship->GetFlightPhase() : 0;
+	const EOPSMode flight_phase = ship ? ship->GetFlightPhase() : EOPSMode::NONE;
 
 	// --- Bridge focus point (look-at) ---
 	// Convert Point math to FVector math locally for UE compatibility.
@@ -918,10 +918,10 @@ CameraManager::Docking(double seconds)
 	FVector Cpos = dock->CamLoc();
 
 	// preflight:
-	if (flight_phase < Ship::LOCKED) {
+	if (flight_phase < EOPSMode::LOCKED) {
 		base_loc = Cpos;
 	}
-	else if (flight_phase == Ship::LOCKED) {
+	else if (flight_phase == EOPSMode::LOCKED) {
 		if (hud)
 			hud->SetHUDMode(EHUDMode::Tactical);
 
@@ -930,7 +930,7 @@ CameraManager::Docking(double seconds)
 		Cpos = (base_loc * (float)transition) + (Cloc * (float)(1.0 - transition));
 	}
 	// recovery:
-	else if (flight_phase > Ship::APPROACH) {
+	else if (flight_phase > EOPSMode::APPROACH) {
 		if (hud)
 			hud->SetTacticalMode(1);
 	}

@@ -40,6 +40,24 @@ public:
     double GetMass() const { return mass; }
     void   SetMass(double m) { mass = m; }
 
+    int GetLoad(int Index) const
+    {
+        if (Index < 0 || Index >= 16)
+            return 0;
+
+        return load[Index];
+    }
+    int* GetLoad()
+    {
+        return load;
+    }
+
+    const int* GetLoad() const
+    {
+        return load;
+    }
+
+
 private:
     char   name[64];
     int    load[16];

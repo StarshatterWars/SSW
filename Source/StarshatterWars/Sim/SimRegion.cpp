@@ -29,6 +29,7 @@
 // Sim objects:
 #include "SimObject.h"
 #include "SimElement.h"
+#include "SimEvent.h"
 #include "Ship.h"
 #include "Sensor.h"
 #include "SimShot.h"
@@ -37,13 +38,20 @@
 #include "Debris.h"
 #include "Asteroid.h"
 #include "SimContact.h"
+#include "FlightDeck.h"
+#include "Hangar.h"
+#include "Instruction.h"
 #include "GameStructs.h"
+#include "Random.h"
 
 // Systems:
 #include "Game.h"
 
 // Unreal:
 #include "Math/UnrealMathUtility.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
 
 // +--------------------------------------------------------------------+
 // Local helpers (single edit point if your API differs)
@@ -283,26 +291,168 @@ bool SimRegion::CanTimeSkip() const
     return true;
 }
 
-void SimRegion::ResolveTimeSkip(double seconds)
+void
+SimRegion::ResolveTimeSkip(double seconds)
 {
     if (seconds <= 0)
         return;
 
-    const double Step = 1.0;
-    double Remaining = seconds;
+    for (int32 i = 0; i < ships.size(); i++) {
+        Ship* ship = ships[i];
 
-    while (Remaining > 0.0) {
-        const double Dt = (Remaining > Step) ? Step : Remaining;
+        if (!ship)
+            continue;
 
-        UpdateShips(Dt);
-        UpdateShots(Dt);
-        UpdateExplosions(Dt);
-        UpdateTracking(Dt);
-        DestroyShips();
+        Ship* ward = ship->GetWard();
 
-        sim_time += (DWORD)(Dt * 1000.0);
-        Remaining -= Dt;
+        ship->ExecSystems(seconds);
+        ship->ExecMaintFrame(seconds);
+
+        ship->ClearTrack();
+
+        ListIter<SimContact> contact = ship->GetContactList();
+        while (++contact) {
+            contact->ClearTrack();
+        }
+
+        if (ship->IsStatic())
+            continue;
+
+        InboundSlot* inbound = ship->GetInbound();
+
+        if (inbound) {
+            if (inbound->Cleared()) {
+                FlightDeck* deck = inbound->GetDeck();
+
+                if (deck) {
+                    ship->SetCarrier((Ship*)deck->GetCarrier(), deck);
+                    ship->SetFlightPhase(EOPSMode::DOCKED);
+                    ship->Stow();
+                    deck->Clear(inbound->Index());
+                }
+            }
+
+            continue;
+        }
+
+        if (ship->GetHangar()) {
+            ship->GetHangar()->ExecFrame(seconds);
+
+            List<FlightDeck>& flight_decks = ship->GetFlightDecks();
+
+            for (int32 n = 0; n < flight_decks.size(); n++) {
+                if (flight_decks[n])
+                    flight_decks[n]->ExecFrame(seconds);
+            }
+        }
+
+        Instruction* navpt = ship->GetNextNavPoint();
+
+        FVector dest = ship->GetLocation();
+        double  speed = 500.0;
+        double  space = 2.0e3 * (ship->GetElementIndex() - 1);
+
+        if (ship->IsStarship())
+            space *= 5.0;
+
+        if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH) {
+            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+            navpt = ship->GetNextNavPoint();
+        }
+
+        if (navpt) {
+            dest = OtherHand(navpt->GetLocation());
+            speed = navpt->GetSpeed();
+        }
+        else if (ward) {
+            FVector delta = ship->GetLocation() - ward->GetLocation();
+            delta.Z = 0.0f;
+
+            if (delta.Size() > 25e3) {
+                delta.Normalize();
+                dest = ward->GetLocation() + delta * 25e3;
+            }
+        }
+
+        FVector delta = dest - ship->GetLocation();
+        FVector unit = delta;
+
+        double dist = unit.Size();
+
+        if (dist > SMALL_NUMBER)
+            unit /= dist;
+        else
+            unit = FVector::ZeroVector;
+
+        dist -= space;
+
+        if (dist > 1e3) {
+            if (speed < 50.0)
+                speed = 500.0;
+
+            double etr = dist / speed;
+
+            if (etr > seconds)
+                etr = seconds;
+
+            FVector trans = unit * (speed * etr);
+
+            if (ship->GetFuelLevel() > 1) {
+                ship->MoveTo(ship->GetLocation() + trans);
+                ship->SetVelocity(unit * speed);
+            }
+
+            ship->LookAt(dest);
+
+            if (ship->IsStarship()) {
+                ship->SetFLCSMode(EFLCSMode::HELM);
+                ship->SetHelmHeading(ship->GetCompassHeading());
+                ship->SetHelmPitch(ship->GetCompassPitch());
+            }
+        }
+        else if (navpt && navpt->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) {
+            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+        }
+
+        if (ward) {
+            FVector ward_heading = ward->GetHeading();
+            ward_heading.Z = 0.0f;
+
+            if (!ward_heading.IsNearlyZero())
+                ward_heading.Normalize();
+
+            if (ship->GetFuelLevel() > 1) {
+                ship->SetVelocity(ward->GetVelocity());
+            }
+
+            ship->LookAt(ship->GetLocation() + ward_heading * 1e6);
+
+            if (ship->IsStarship()) {
+                ship->SetFLCSMode(EFLCSMode::HELM);
+                ship->SetHelmHeading(ship->GetCompassHeading());
+                ship->SetHelmPitch(ship->GetCompassPitch());
+            }
+        }
+
+        if (dist > 1.0 || ward) {
+            for (int32 j = 0; j < ships.size(); j++) {
+                Ship* test = ships[j];
+
+                if (!test)
+                    continue;
+
+                if (ship != test && test->GetMass() >= ship->GetMass()) {
+                    FVector sep = ship->GetLocation() - test->GetLocation();
+
+                    if (sep.Size() < ship->GetRadius() * 2 + test->GetRadius() * 2) {
+                        ship->MoveTo(test->GetLocation() + OtherHand(RandomPoint()));
+                    }
+                }
+            }
+        }
     }
+
+    DockShips();
 }
 
 // +--------------------------------------------------------------------+
@@ -805,4 +955,112 @@ void SimRegion::CommitMission()
 
     // 5) Region is no longer considered active after commit:
     active = false;
+}
+
+void
+SimRegion::DockShips()
+{
+    if (ships.size() == 0)
+        return;
+
+    ListIter<Ship> ship_iter = ships;
+
+    while (++ship_iter) {
+        Ship* ship = ship_iter.value();
+
+        if (!ship)
+            continue;
+
+        const bool bDocked =
+            (ship->GetFlightPhase() == EOPSMode::DOCKED);
+
+        if (bDocked) {
+            sim->ProcessEventTrigger(
+                (int)MISSIONEVENT_TRIGGER::TRIGGER_DOCK,
+                0,
+                ship->GetName());
+
+            // who did this ship dock with?
+            Ship* carrier = ship->GetCarrier();
+
+            if (carrier) {
+                ShipStats* ShipStatsPtr =
+                    ShipStats::Find(ship->GetName());
+
+                if (ShipStatsPtr) {
+                    if (ship->IsAirborne()) {
+                        ShipStatsPtr->AddEvent(
+                            SimEvent::LAND,
+                            carrier->GetName());
+                    }
+                    else {
+                        ShipStatsPtr->AddEvent(
+                            SimEvent::DOCK,
+                            carrier->GetName());
+                    }
+                }
+
+                ShipStats* CarrierStats =
+                    ShipStats::Find(carrier->GetName());
+
+                if (CarrierStats) {
+                    CarrierStats->AddEvent(
+                        SimEvent::RECOVER_SHIP,
+                        ship->GetName());
+                }
+            }
+
+            // then delete the ship:
+            const bool bPlayerDocked =
+                (player_ship == ship);
+
+            char ship_name[33];
+            strcpy_s(ship_name, ship->GetName());
+
+            selection.remove(ship);
+            dead_ships.insert(ship_iter.removeItem());
+
+            UE_LOG(LogTemp, Log,
+                TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
+                ANSI_TO_TCHAR(ship->GetName()));
+
+            ship->Destroy();
+
+            if (bPlayerDocked) {
+                
+                UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+                if (!World)
+                    return;
+
+                UGameInstance* GI = World->GetGameInstance();
+                if (!GI)
+                    return;
+
+                USSWRuntimeSubsystem* RuntimeSS =
+                    GI->GetSubsystem<USSWRuntimeSubsystem>();
+
+                if (RuntimeSS)
+                {
+                    RuntimeSS->SetGameMode(EGameMode::PLAN);
+                
+
+                    UE_LOG(LogTemp, Log,
+                        TEXT("[SimRegion::DockShips] Player docked ship='%s' Returning to PLAN_MODE"),
+                        ANSI_TO_TCHAR(ship_name));
+                }
+            }
+
+            if (carrier) {
+                UE_LOG(LogTemp, Log,
+                    TEXT("[SimRegion::DockShips] Ship='%s' DockedWith='%s'"),
+                    ANSI_TO_TCHAR(ship_name),
+                    ANSI_TO_TCHAR(carrier->GetName()));
+            }
+            else {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[SimRegion::DockShips] Ship='%s' Docked with NULL carrier"),
+                    ANSI_TO_TCHAR(ship_name));
+            }
+        }
+    }
 }

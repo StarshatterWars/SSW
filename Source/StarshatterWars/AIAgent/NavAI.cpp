@@ -75,7 +75,7 @@ NavAI::ExecFrame(double s)
 
     ship->SetDirectorInfo(" ");
 
-    if (ship->GetFlightPhase() == Ship::TAKEOFF)
+    if (ship->GetFlightPhase() == EOPSMode::TAKEOFF)
         takeoff = true;
 
     else if (takeoff && ship->GetMissionClock() > 10000)
@@ -647,7 +647,7 @@ NavAI::AvoidTerrain()
         takeoff || (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH))
         return Avoid;
 
-    if (ship->IsAirborne() && ship->GetFlightPhase() == Ship::ACTIVE) {
+    if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE) {
         // too low?
         if (ship->GetAltitudeAGL() < 1000) {
             terrain_warning = 1;

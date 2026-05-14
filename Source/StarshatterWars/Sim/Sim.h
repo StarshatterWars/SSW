@@ -206,6 +206,8 @@ public:
 
     Hangar* FindSquadron(const char* name, int& index);
 
+    void ResolveInstructionTargets();
+
     void SkipCutscene();
     void ResolveTimeSkip(double seconds);
 

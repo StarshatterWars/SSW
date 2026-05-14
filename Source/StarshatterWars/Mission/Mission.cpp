@@ -47,7 +47,9 @@ DEFINE_LOG_CATEGORY_STATIC(LogStarshatterMission, Log, All);
 
 // +--------------------------------------------------------------------+
 template <typename TMissionData>
-bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
+bool Mission::LoadMissionCommon(
+	const TMissionData& InData,
+	bool bFullReset)
 {
 	if (bFullReset)
 	{
@@ -62,6 +64,10 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		target = nullptr;
 		ward = nullptr;
 	}
+
+	//-------------------------------------------------------------
+	// Mission metadata
+	//-------------------------------------------------------------
 
 	if (!InData.MissionName.IsEmpty())
 	{
@@ -83,28 +89,45 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 
 	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
 	{
-		id = InData.MissionId;
-		desc = TCHAR_TO_ANSI(*InData.Desc);
-		script = TCHAR_TO_ANSI(*InData.Scene);
-		objective = TCHAR_TO_ANSI(*InData.Objective);
-		sitrep = TCHAR_TO_ANSI(*InData.Sitrep);
+		id =
+			InData.MissionId;
 
-		type = static_cast<int32>(InData.MissionType);
+		desc =
+			TCHAR_TO_ANSI(*InData.Desc);
 
-		team = InData.Team;
-		degrees = InData.Degrees;
-		stardate = InData.Stardate;
+		script =
+			TCHAR_TO_ANSI(*InData.Scene);
+
+		objective =
+			TCHAR_TO_ANSI(*InData.Objective);
+
+		sitrep =
+			TCHAR_TO_ANSI(*InData.Sitrep);
+
+		type =
+			static_cast<int32>(
+				InData.MissionType);
+
+		team =
+			InData.Team;
+
+		degrees =
+			InData.Degrees;
+
+		stardate =
+			InData.Stardate;
 
 		start =
 			UFormattingUtils::ParseStarshatterTime(
 				InData.StartTime);
 
-		end = 0;
+		end =
+			0;
 	}
 
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 	// ELEMENTS
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 
 	for (const FS_MissionElement& SrcElem : InData.Element)
 	{
@@ -120,6 +143,10 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
 			*SrcElem.Name,
 			*SrcElem.RegionName);
+
+		//---------------------------------------------------------
+		// Basic properties
+		//---------------------------------------------------------
 
 		Elem->SetName(
 			TCHAR_TO_ANSI(*SrcElem.Name));
@@ -175,15 +202,48 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		Elem->SetLocation(
 			SrcElem.Location);
 
+		//---------------------------------------------------------
+		// SHIP DESIGN
+		//---------------------------------------------------------
+
+		const FShipDesign* DesignRow =
+			ShipDesignRegistry::Find(
+				SrcElem.Design);
+
+		if (!DesignRow)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[Mission::LoadMissionCommon] Missing FShipDesign Element='%s' Design='%s'"),
+				*SrcElem.Name,
+				*SrcElem.Design);
+		}
+		else
+		{
+			Elem->SetShipDesign(
+				DesignRow);
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Mission::LoadMissionCommon] SetShipDesign Element='%s' Design='%s' Model='%s'"),
+				*SrcElem.Name,
+				*SrcElem.Design,
+				*DesignRow->Model);
+		}
+
+		//---------------------------------------------------------
+		// Mission role/intel
+		//---------------------------------------------------------
+
 		Elem->mission_role =
-			static_cast<int32>(SrcElem.RoleName);
+			static_cast<int32>(
+				SrcElem.RoleName);
 
 		Elem->intel =
-			static_cast<int32>(SrcElem.Intel);
+			static_cast<int32>(
+				SrcElem.Intel);
 
-		//--------------------------------------------------
+		//---------------------------------------------------------
 		// NAVPOINT -> INSTRUCTION BRIDGE
-		//--------------------------------------------------
+		//---------------------------------------------------------
 
 		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
 		{
@@ -193,23 +253,28 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 			switch (SrcNav.Action)
 			{
 			case EInstructionAction::Dock:
-				LegacyAction = INSTRUCTION_ACTION::DOCK;
+				LegacyAction =
+					INSTRUCTION_ACTION::DOCK;
 				break;
 
 			case EInstructionAction::Escort:
-				LegacyAction = INSTRUCTION_ACTION::ESCORT;
+				LegacyAction =
+					INSTRUCTION_ACTION::ESCORT;
 				break;
 
 			case EInstructionAction::Patrol:
-				LegacyAction = INSTRUCTION_ACTION::PATROL;
+				LegacyAction =
+					INSTRUCTION_ACTION::PATROL;
 				break;
 
 			case EInstructionAction::Defend:
-				LegacyAction = INSTRUCTION_ACTION::DEFEND;
+				LegacyAction =
+					INSTRUCTION_ACTION::DEFEND;
 				break;
 
 			case EInstructionAction::Target:
-				LegacyAction = INSTRUCTION_ACTION::ASSAULT;
+				LegacyAction =
+					INSTRUCTION_ACTION::ASSAULT;
 				break;
 
 			case EInstructionAction::Farcast:
@@ -217,7 +282,8 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 			case EInstructionAction::StopAt:
 			case EInstructionAction::Hold:
 			default:
-				LegacyAction = INSTRUCTION_ACTION::VECTOR;
+				LegacyAction =
+					INSTRUCTION_ACTION::VECTOR;
 				break;
 			}
 
@@ -250,7 +316,8 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 					SrcNav.ObjectiveName);
 			}
 
-			Elem->AddNavPoint(Nav);
+			Elem->AddNavPoint(
+				Nav);
 
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Objective='%s' Action=%d Loc=%s Speed=%d"),
@@ -263,14 +330,17 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 				SrcNav.Speed);
 		}
 
-		//--------------------------------------------------
+		//---------------------------------------------------------
+		// Register element
+		//---------------------------------------------------------
 
-		AddElement(Elem);
+		AddElement(
+			Elem);
 	}
 
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 	// EVENTS
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 
 	for (const FS_MissionEvent& SrcEvent : InData.Event)
 	{
@@ -314,12 +384,13 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		Ev->event_sound =
 			TCHAR_TO_ANSI(*SrcEvent.EventSound);
 
-		AddEvent(Ev);
+		AddEvent(
+			Ev);
 	}
 
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 	// TARGET / WARD
-	//--------------------------------------------------
+	//-------------------------------------------------------------
 
 	if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
 	{
@@ -338,12 +409,13 @@ bool Mission::LoadMissionCommon(const TMissionData& InData, bool bFullReset)
 		}
 	}
 
-	ok = true;
+	ok =
+		true;
 
 	Validate();
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Mission.cpp] LoadMissionCommon COMPLETE Elements=%d"),
+		TEXT("[Mission::LoadMissionCommon] COMPLETE Elements=%d"),
 		elements.size());
 
 	return ok;

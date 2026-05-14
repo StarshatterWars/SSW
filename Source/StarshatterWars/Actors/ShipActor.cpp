@@ -1599,6 +1599,81 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     BuildThrustersFromRuntime();
 }
 
+/*void
+AShipActor::UpdateFromRuntimeShip(float DeltaTime)
+{
+    if (!RuntimeShip)
+    {
+        return;
+    }
+
+    const FVector RuntimeLocation =
+        RuntimeShip->GetLocation();
+
+    const FVector RuntimeHeading =
+        RuntimeShip->GetHeading();
+
+    if (RuntimeLocation.ContainsNaN() ||
+        RuntimeHeading.ContainsNaN())
+    {
+        return;
+    }
+
+    //-------------------------------------------------------------
+    // Mission / region location conversion
+    //
+    // Legacy mission:
+    // X = right
+    // Y = forward
+    // Z = up
+    //
+    // UE:
+    // X = forward
+    // Y = right
+    // Z = up
+    //-------------------------------------------------------------
+
+    const FVector DesiredLocation(
+        RuntimeLocation.Y,
+        RuntimeLocation.X,
+        RuntimeLocation.Z);
+
+    //-------------------------------------------------------------
+    // Heading conversion
+    //
+    // Legacy runtime heading:
+    // X = right
+    // Y = up
+    // Z = forward
+    //-------------------------------------------------------------
+
+    FVector FacingVector(
+        RuntimeHeading.Z,
+        RuntimeHeading.X,
+        RuntimeHeading.Y);
+
+    if (!FacingVector.Normalize())
+    {
+        FacingVector =
+            FVector::ForwardVector;
+    }
+
+    SetActorLocation(
+        DesiredLocation);
+
+    SetActorRotation(
+        FacingVector.Rotation());
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SHIP MOTION AXIS] Ship='%hs' RuntimeLoc=%s DesiredLoc=%s Vel=%s Heading=%s Facing=%s"),
+        RuntimeShip->GetName(),
+        *RuntimeLocation.ToString(),
+        *DesiredLocation.ToString(),
+        *RuntimeShip->GetVelocity().ToString(),
+        *RuntimeHeading.ToString(),
+        *FacingVector.ToString());
+}*/
+
 void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
@@ -1607,114 +1682,25 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    //-------------------------------------------------------------
-    // Legacy runtime state
-    //-------------------------------------------------------------
     const FVector RuntimeLocation =
         RuntimeShip->GetLocation();
-
-    const FVector RuntimeVelocity =
-        RuntimeShip->GetVelocity();
 
     const FVector RuntimeHeading =
         RuntimeShip->GetHeading();
 
-    //-------------------------------------------------------------
-    // Validation
-    //-------------------------------------------------------------
-    const bool bBadLocation =
-        !FMath::IsFinite(RuntimeLocation.X) ||
-        !FMath::IsFinite(RuntimeLocation.Y) ||
-        !FMath::IsFinite(RuntimeLocation.Z);
-
-    const bool bBadVelocity =
-        !FMath::IsFinite(RuntimeVelocity.X) ||
-        !FMath::IsFinite(RuntimeVelocity.Y) ||
-        !FMath::IsFinite(RuntimeVelocity.Z);
-
-    const bool bBadHeading =
-        !FMath::IsFinite(RuntimeHeading.X) ||
-        !FMath::IsFinite(RuntimeHeading.Y) ||
-        !FMath::IsFinite(RuntimeHeading.Z);
-
-    if (bBadLocation || bBadVelocity || bBadHeading)
+    if (RuntimeLocation.ContainsNaN() ||
+        RuntimeHeading.ContainsNaN())
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[ShipActor::UpdateFromRuntimeShip] INVALID RUNTIME DATA Ship='%hs' Loc=%s Vel=%s Heading=%s"),
-            RuntimeShip->GetName(),
-            *RuntimeLocation.ToString(),
-            *RuntimeVelocity.ToString(),
-            *RuntimeHeading.ToString());
-
         return;
     }
 
-    //-------------------------------------------------------------
-    // World limits
-    //-------------------------------------------------------------
-    constexpr double MaxWorldCoord = 1.0e9;
-
-    if (FMath::Abs(RuntimeLocation.X) > MaxWorldCoord ||
-        FMath::Abs(RuntimeLocation.Y) > MaxWorldCoord ||
-        FMath::Abs(RuntimeLocation.Z) > MaxWorldCoord)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[ShipActor::UpdateFromRuntimeShip] LOCATION TOO LARGE Ship='%hs' Loc=%s"),
-            RuntimeShip->GetName(),
-            *RuntimeLocation.ToString());
-
-        return;
-    }
-
-    //-------------------------------------------------------------
-    // Legacy runtime -> UE world conversion
-    //
-    // Runtime X = horizontal/right
-    // Runtime Y = vertical/up
-    // Runtime Z = horizontal/forward
-    //
-    // UE X = Runtime Z
-    // UE Y = Runtime X
-    // UE Z = Runtime Y
-    //-------------------------------------------------------------
-    const FVector DesiredLocation(
-        RuntimeLocation.Z,
-        RuntimeLocation.X,
-        RuntimeLocation.Y);
-
-    const FVector UEVelocity(
-        RuntimeVelocity.Z,
-        RuntimeVelocity.X,
-        RuntimeVelocity.Y);
-
-    FVector UEHeading(
-        RuntimeHeading.Z,
-        RuntimeHeading.X,
-        RuntimeHeading.Y);
-
-    if (!UEHeading.Normalize())
-    {
-        UEHeading =
-            FVector::ForwardVector;
-    }
-
-    //-------------------------------------------------------------
-    // Transform update
-    //-------------------------------------------------------------
     SetActorLocation(
-        DesiredLocation);
-
-    /*
-     * Important:
-     *
-     * Use runtime heading for visual orientation.
-     * Do not use velocity for actor facing.
-     */
+        RuntimeLocation);
 
     FVector FacingVector =
-        UEHeading.GetSafeNormal();
+        RuntimeHeading.GetSafeNormal();
 
-    if (!FacingVector.Normalize())
+    if (FacingVector.IsNearlyZero())
     {
         FacingVector =
             FVector::ForwardVector;
@@ -1724,13 +1710,12 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         FacingVector.Rotation());
 
     UE_LOG(LogTemp, VeryVerbose,
-        TEXT("[ShipActor::UpdateFromRuntimeShip ROT] Actor='%s' Ship='%hs' Loc=%s Vel=%s Heading=%s UEHeading=%s ActorRot=%s"),
-        *GetName(),
+        TEXT("[ShipActor LEGACY SYNC] Ship='%hs' Loc=%s Vel=%s Heading=%s ActorLoc=%s Rot=%s"),
         RuntimeShip->GetName(),
-        *RuntimeLocation.ToString(),
-        *RuntimeVelocity.ToString(),
-        *RuntimeHeading.ToString(),
-        *UEHeading.ToString(),
+        *RuntimeShip->GetLocation().ToString(),
+        *RuntimeShip->GetVelocity().ToString(),
+        *RuntimeShip->GetHeading().ToString(),
+        *GetActorLocation().ToString(),
         *GetActorRotation().ToString());
 }
 

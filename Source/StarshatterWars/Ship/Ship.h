@@ -87,7 +87,6 @@ class Ship : public SimObject, public SimObserver
 public:
     static const char* TYPENAME() { return "Ship"; }
 
-    enum OP_MODE { DOCKED, ALERT, LOCKED, LAUNCH, TAKEOFF, ACTIVE, APPROACH, RECOVERY, DOCKING };
     enum TRAN_TYPE {
         TRANSITION_NONE,
         TRANSITION_DROP_CAM,
@@ -165,8 +164,8 @@ public:
     int               GetAIMode() const { return (int)ai_mode; }
     void              SetCommandAILevel(int n) { command_ai_level = (BYTE)n; }
     int               GetCommandAILevel() const { return command_ai_level; }
-    virtual int       GetFlightPhase() const { return flight_phase; }
-    virtual void      SetFlightPhase(OP_MODE phase);
+    virtual EOPSMode  GetFlightPhase() const { return flight_phase; }
+    virtual void      SetFlightPhase(EOPSMode phase);
     bool              IsNetObserver() const { return net_observer_mode; }
     void              SetNetObserver(bool n) { net_observer_mode = n; }
 
@@ -506,7 +505,7 @@ protected:
     int               IFF_code;
     int               cmd_chain_index;
     int               ff_count;
-    OP_MODE           flight_phase;
+    EOPSMode          flight_phase;
 
     float death_spiral_time;
     ShipExplosion explosion[ShipExplosion::MaxExplosions];

@@ -301,8 +301,8 @@ ShipAI::ExecFrame(double secs)
 		navpt = ship->GetNextNavPoint();
 	}
 
-	if (ship->GetFlightPhase() == Ship::TAKEOFF ||
-		ship->GetFlightPhase() == Ship::LAUNCH)
+	if (ship->GetFlightPhase() == EOPSMode::TAKEOFF ||
+		ship->GetFlightPhase() == EOPSMode::LAUNCH)
 	{
 		takeoff = true;
 	}
@@ -822,17 +822,36 @@ ShipAI::FindObjectivePatrol()
 void
 ShipAI::FindObjectiveNavPoint()
 {
-	SimRegion* SelfRgn = ship ? ship->GetRegion() : nullptr;
-	SimRegion* NavRgn = navpt ? navpt->GetRegion() : nullptr;
-	QuantumDrive* QDrive = ship ? ship->GetQuantumDrive() : nullptr;
+	SimRegion* SelfRgn =
+		ship ? ship->GetRegion() : nullptr;
 
-	if (!SelfRgn || !navpt)
+	SimRegion* NavRgn =
+		navpt ? navpt->GetRegion() : nullptr;
+
+	QuantumDrive* QDrive =
+		ship ? ship->GetQuantumDrive() : nullptr;
+
+	if (!ship || !SelfRgn || !navpt)
+	{
 		return;
-
-	if (!NavRgn) {
-		NavRgn = SelfRgn;
-		navpt->SetRegion(NavRgn);
 	}
+
+	//-------------------------------------------------------------
+	// Ensure navpoint region exists
+	//-------------------------------------------------------------
+
+	if (!NavRgn)
+	{
+		NavRgn =
+			SelfRgn;
+
+		navpt->SetRegion(
+			NavRgn);
+	}
+
+	//-------------------------------------------------------------
+	// Determine whether farcaster routing is required
+	//-------------------------------------------------------------
 
 	const bool bUseFarcaster =
 		(SelfRgn != NavRgn) &&
@@ -841,55 +860,119 @@ ShipAI::FindObjectiveNavPoint()
 			!QDrive->IsPowerOn() ||
 			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
 
-	if (bUseFarcaster) {
-		FindObjectiveFarcaster(SelfRgn, NavRgn);
+	if (bUseFarcaster)
+	{
+		FindObjectiveFarcaster(
+			SelfRgn,
+			NavRgn);
+
 		return;
 	}
 
-	// ------------------------------------------------------------
-	// Non-farcaster routing:
-	// ------------------------------------------------------------
-	if (farcaster) {
-		// If our current farcaster isn't in the same region, re-acquire via destination.
-		if (farcaster->GetShip() && farcaster->GetShip()->GetRegion() != SelfRgn) {
+	//-------------------------------------------------------------
+	// Legacy non-farcaster routing
+	//-------------------------------------------------------------
+
+	if (farcaster)
+	{
+		if (farcaster->GetShip() &&
+			farcaster->GetShip()->GetRegion() != SelfRgn)
+		{
 			if (farcaster->GetDest())
-				farcaster = farcaster->GetDest()->GetFarcaster();
+			{
+				farcaster =
+					farcaster->GetDest()->GetFarcaster();
+			}
 		}
 
-		if (farcaster) {
-			obj_w = farcaster->EndPoint(); // expected FVector in UE port
+		if (farcaster)
+		{
+			obj_w =
+				farcaster->EndPoint();
 		}
 	}
 
-	if (!farcaster) {
-		// Transform from StarSystem space to current active region space.
-		// UE port assumption:
-		// - Region::Location() returns FVector (world/region origin)
-		// - NavPoint::Location() returns FVector (local within region)
-		FVector Npt = navpt->GetRegion()->GetLocation() + navpt->GetLocation();
+	//-------------------------------------------------------------
+	// Standard navpoint objective
+	//-------------------------------------------------------------
 
-		SimRegion* ActiveRegion = ship->GetRegion();
+	if (!farcaster)
+	{
+		//---------------------------------------------------------
+		// Legacy transform chain:
+		//
+		// Region world location
+		// + local navpoint offset
+		// - active region origin
+		// - handedness conversion
+		//---------------------------------------------------------
+
+		FVector Npt =
+			navpt->GetRegion()->GetLocation() +
+			navpt->GetLocation();
+
+		SimRegion* ActiveRegion =
+			ship->GetRegion();
+
 		if (ActiveRegion)
-			Npt -= ActiveRegion->GetLocation();
+		{
+			Npt -=
+				ActiveRegion->GetLocation();
+		}
 
-		// If your UE port removed handedness conversions, delete this line.
-		// Keep it ONLY if you still maintain a legacy "OtherHand()" helper on FVector/Point.
-		// Npt = Npt.OtherHand();
+		//---------------------------------------------------------
+		// IMPORTANT:
+		// Preserve legacy handedness conversion.
+		//---------------------------------------------------------
 
-		obj_w = Npt;
+		Npt =
+			OtherHand(Npt);
+
+		obj_w =
+			Npt;
 	}
 
-	// Distance from self to navpt:
-	distance = (obj_w - ship->GetLocation()).Size();
+	//-------------------------------------------------------------
+	// Distance
+	//-------------------------------------------------------------
 
-	if (farcaster && distance < 1000.0)
-		farcaster = nullptr;
+	distance =
+		(obj_w - ship->GetLocation()).Size();
+
+	//-------------------------------------------------------------
+	// Farcaster cleanup
+	//-------------------------------------------------------------
+
+	if (farcaster &&
+		distance < 1000.0)
+	{
+		farcaster =
+			nullptr;
+	}
+
+	//-------------------------------------------------------------
+	// Navpoint completion
+	//-------------------------------------------------------------
 
 	if (distance < 1000.0 ||
-		(navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH && distance > 25000.0))
+		(navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH &&
+			distance > 25000.0))
 	{
-		ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+		ship->SetNavptStatus(
+			navpt,
+			INSTRUCTION_STATUS::COMPLETE);
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::FindObjectiveNavPoint] Ship='%hs' SelfRgn='%hs' NavRgn='%hs' NavLoc=%s ObjW=%s ShipLoc=%s Dist=%.2f Farcast=%d"),
+		ship ? ship->GetName() : "NULL",
+		SelfRgn ? SelfRgn->GetName() : "NULL",
+		NavRgn ? NavRgn->GetName() : "NULL",
+		*navpt->GetLocation().ToString(),
+		*obj_w.ToString(),
+		*ship->GetLocation().ToString(),
+		distance,
+		farcaster ? 1 : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -897,13 +980,22 @@ ShipAI::FindObjectiveNavPoint()
 void
 ShipAI::FindObjectiveQuantum()
 {
-	Instruction* Orders = ship ? ship->GetRadioOrders() : nullptr;
-	SimRegion* SelfRgn = ship ? ship->GetRegion() : nullptr;
-	SimRegion* NavRgn = Orders ? Orders->GetRegion() : nullptr;
-	QuantumDrive* QDrive = ship ? ship->GetQuantumDrive() : nullptr;
+	Instruction* Orders =
+		ship ? ship->GetRadioOrders() : nullptr;
 
-	if (!Orders || !SelfRgn || !NavRgn)
+	SimRegion* SelfRgn =
+		ship ? ship->GetRegion() : nullptr;
+
+	SimRegion* NavRgn =
+		Orders ? Orders->GetRegion() : nullptr;
+
+	QuantumDrive* QDrive =
+		ship ? ship->GetQuantumDrive() : nullptr;
+
+	if (!ship || !Orders || !SelfRgn || !NavRgn)
+	{
 		return;
+	}
 
 	const bool bUseFarcaster =
 		(SelfRgn != NavRgn) &&
@@ -912,137 +1004,238 @@ ShipAI::FindObjectiveQuantum()
 			!QDrive->IsPowerOn() ||
 			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
 
-	if (bUseFarcaster) {
-		FindObjectiveFarcaster(SelfRgn, NavRgn);
+	if (bUseFarcaster)
+	{
+		FindObjectiveFarcaster(
+			SelfRgn,
+			NavRgn);
+
 		return;
 	}
 
-	// ------------------------------------------------------------
-	// Non-farcaster routing:
-	// ------------------------------------------------------------
-	if (farcaster) {
-		// If farcaster ship is not in our current region, reacquire through destination.
-		if (farcaster->GetShip() && farcaster->GetShip()->GetRegion() != SelfRgn) {
+	//-------------------------------------------------------------
+	// Legacy non-farcaster routing
+	//-------------------------------------------------------------
+
+	if (farcaster)
+	{
+		if (farcaster->GetShip() &&
+			farcaster->GetShip()->GetRegion() != SelfRgn)
+		{
 			if (farcaster->GetDest())
-				farcaster = farcaster->GetDest()->GetFarcaster();
+			{
+				farcaster =
+					farcaster->GetDest()->GetFarcaster();
+			}
 		}
 
-		if (farcaster) {
-			obj_w = farcaster->EndPoint(); // expected FVector in UE port
+		if (farcaster)
+		{
+			obj_w =
+				farcaster->EndPoint();
 		}
 	}
 
-	if (!farcaster) {
-		// Transform from StarSystem space to active region space:
-		FVector Npt = Orders->GetRegion()->GetLocation() + Orders->GetLocation();
+	//-------------------------------------------------------------
+	// Standard quantum objective
+	//-------------------------------------------------------------
 
-		SimRegion* ActiveRegion = ship->GetRegion();
+	if (!farcaster)
+	{
+		FVector Npt =
+			Orders->GetRegion()->GetLocation() +
+			Orders->GetLocation();
+
+		SimRegion* ActiveRegion =
+			ship->GetRegion();
+
 		if (ActiveRegion)
-			Npt -= ActiveRegion->GetLocation();
+		{
+			Npt -=
+				ActiveRegion->GetLocation();
+		}
 
-		// If you kept a legacy handedness helper, apply it here; otherwise omit.
-		// Npt = Npt.OtherHand();
+		//---------------------------------------------------------
+		// Preserve legacy handedness conversion.
+		//---------------------------------------------------------
 
-		obj_w = Npt;
+		Npt =
+			OtherHand(Npt);
 
-		// If the QDrive is ready, set destination and engage immediately:
-		if (QDrive && QDrive->ActiveState() == QuantumDrive::ACTIVE_READY) {
-			QDrive->SetDestination(NavRgn, Orders->GetLocation());
+		obj_w =
+			Npt;
+
+		if (QDrive &&
+			QDrive->ActiveState() ==
+			QuantumDrive::ACTIVE_READY)
+		{
+			QDrive->SetDestination(
+				NavRgn,
+				Orders->GetLocation());
+
 			QDrive->Engage();
+
 			return;
 		}
 	}
 
-	// Distance from self to objective:
-	distance = (obj_w - ship->GetLocation()).Size();
+	distance =
+		(obj_w - ship->GetLocation()).Size();
 
-	if (farcaster) {
-		if (distance < 1000.0) {
-			farcaster = nullptr;
+	if (farcaster)
+	{
+		if (distance < 1000.0)
+		{
+			farcaster =
+				nullptr;
+
 			ship->ClearRadioOrders();
 		}
 	}
-	else if (SelfRgn == NavRgn) {
+	else if (SelfRgn == NavRgn)
+	{
 		ship->ClearRadioOrders();
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::FindObjectiveQuantum] Ship='%hs' SelfRgn='%hs' NavRgn='%hs' ObjW=%s ShipLoc=%s Dist=%.2f Farcast=%d"),
+		ship ? ship->GetName() : "NULL",
+		SelfRgn ? SelfRgn->GetName() : "NULL",
+		NavRgn ? NavRgn->GetName() : "NULL",
+		*obj_w.ToString(),
+		*ship->GetLocation().ToString(),
+		distance,
+		farcaster ? 1 : 0);
 }
 
 void
-ShipAI::FindObjectiveFarcaster(SimRegion* src_rgn, SimRegion* dst_rgn)
+ShipAI::FindObjectiveFarcaster(
+	SimRegion* src_rgn,
+	SimRegion* dst_rgn)
 {
-	if (!ship || !src_rgn || !dst_rgn)
+	if (!ship ||
+		!src_rgn ||
+		!dst_rgn)
 	{
-		obj_w = FVector::ZeroVector;
-		objective = FVector::ZeroVector;
-		distance = 0;
+		obj_w =
+			FVector::ZeroVector;
+
+		objective =
+			FVector::ZeroVector;
+
+		distance =
+			0.0;
+
 		return;
 	}
 
+	//-------------------------------------------------------------
+	// Acquire farcaster in source region whose destination is dst_rgn
+	//-------------------------------------------------------------
+
 	if (!farcaster)
 	{
-		ListIter<Ship> s = src_rgn->GetShips();
+		ListIter<Ship> s =
+			src_rgn->GetShips();
 
 		while (++s && !farcaster)
 		{
-			if (s->GetFarcaster())
-			{
-				const Ship* dest = s->GetFarcaster()->GetDest();
+			Ship* Candidate =
+				s.value();
 
-				if (dest && dest->GetRegion() == dst_rgn)
+			if (!Candidate)
+			{
+				continue;
+			}
+
+			if (Candidate->GetFarcaster())
+			{
+				const Ship* Dest =
+					Candidate->GetFarcaster()->GetDest();
+
+				if (Dest &&
+					Dest->GetRegion() == dst_rgn)
 				{
-					farcaster = s->GetFarcaster();
+					farcaster =
+						Candidate->GetFarcaster();
 				}
 			}
 		}
 	}
 
+	//-------------------------------------------------------------
+	// Legacy approach/start point routing
+	//-------------------------------------------------------------
+
 	if (farcaster)
 	{
-		const FVector apt = farcaster->ApproachPoint(0);
-		const FVector npt = farcaster->StartPoint();
+		const FVector ApproachPoint =
+			farcaster->ApproachPoint(0);
 
-		const double r1 =
-			(ship->GetLocation() - npt).Size();
+		const FVector StartPoint =
+			farcaster->StartPoint();
 
-		if (r1 > 50e3)
+		const double DistanceToStart =
+			(ship->GetLocation() - StartPoint).Size();
+
+		if (DistanceToStart > 50e3)
 		{
-			obj_w = apt;
-			distance = r1;
+			obj_w =
+				ApproachPoint;
+
+			distance =
+				DistanceToStart;
 		}
 		else
 		{
-			const double r2 =
-				(ship->GetLocation() - apt).Size();
+			const double DistanceToApproach =
+				(ship->GetLocation() - ApproachPoint).Size();
 
-			const double r3 =
-				(npt - apt).Size();
+			const double StartToApproach =
+				(StartPoint - ApproachPoint).Size();
 
-			if (r1 + r2 < 1.2 * r3)
+			if (DistanceToStart + DistanceToApproach <
+				1.2 * StartToApproach)
 			{
-				obj_w = npt;
-				distance = r1;
+				obj_w =
+					StartPoint;
+
+				distance =
+					DistanceToStart;
 			}
 			else
 			{
-				obj_w = apt;
-				distance = r2;
+				obj_w =
+					ApproachPoint;
+
+				distance =
+					DistanceToApproach;
 			}
 		}
 
-		// LEGACY SIM SPACE ONLY.
-		objective = obj_w;
+		//---------------------------------------------------------
+		// Legacy flow:
+		// original code does objective = Transform(obj_w).
+		//
+		// Since your current port is keeping ShipAI objectives in
+		// legacy/runtime space, keep objective equal to obj_w.
+		//---------------------------------------------------------
+
+		objective =
+			obj_w;
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::FindObjectiveFarcaster LEGACY] Ship='%hs' Farcaster=%p ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f"),
+		TEXT("[ShipAI::FindObjectiveFarcaster LEGACY] Ship='%hs' SrcRgn='%hs' DstRgn='%hs' Farcaster=%p ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f"),
 		ship ? ship->GetName() : "NULL",
+		src_rgn ? src_rgn->GetName() : "NULL",
+		dst_rgn ? dst_rgn->GetName() : "NULL",
 		farcaster,
 		*obj_w.ToString(),
 		*objective.ToString(),
-		ship ? *ship->GetLocation().ToString() : TEXT("NULL"),
+		*ship->GetLocation().ToString(),
 		distance);
 }
-
 // +--------------------------------------------------------------------+
 
 void

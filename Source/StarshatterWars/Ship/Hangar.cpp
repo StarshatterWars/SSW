@@ -121,7 +121,7 @@ Hangar::ExecFrame(double seconds)
 					break;
 
 				case ACTIVE:
-					if (slot->ship && slot->ship->GetFlightPhase() == Ship::APPROACH)
+					if (slot->ship && slot->ship->GetFlightPhase() == EOPSMode::APPROACH)
 						slot->state = APPROACH;
 					break;
 
@@ -185,7 +185,7 @@ Hangar::ExecFrame(double seconds)
 					if (slot->deck) {
 						slot->time = slot->deck->TimeRemaining(slot->slot);
 
-						if (slot->ship && slot->ship->GetFlightPhase() > Ship::LAUNCH) {
+						if (slot->ship && slot->ship->GetFlightPhase() > EOPSMode::LAUNCH) {
 							slot->state = ACTIVE;
 							slot->time = 0;
 						}

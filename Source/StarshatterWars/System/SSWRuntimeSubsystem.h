@@ -25,6 +25,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Containers/Ticker.h"
 #include "GameStructs.h"
+
 #include "KeyMap.h"
 #include "SSWRuntimeSubsystem.generated.h"
 
@@ -33,6 +34,12 @@ class SimUniverse;
 class Sim;
 class CameraManager;
 class MultiController;
+
+class Ship;
+class AActor;
+
+class AShipActor;
+
 
 UCLASS()
 class STARSHATTERWARS_API USSWRuntimeSubsystem : public UGameInstanceSubsystem
@@ -85,6 +92,8 @@ public:
     bool IsRuntimeInitialized() const { return bRuntimeInitialized; }
     bool IsRuntimeRunning() const { return bRuntimeRunning; }
 
+    AShipActor* SpawnVisualForRuntimeShip(Ship* RuntimeShip);
+
 private:
     bool TickRuntime(float DeltaSeconds);
 
@@ -103,6 +112,11 @@ private:
     void HandleCampaignState();
     void HandlePlayState();
     void HandleExitState();
+
+private:
+    AActor* FindRegionActorForRuntimeShip(Ship* RuntimeShip) const;
+    FVector GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const;
+    FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
 
 private:
     bool bRuntimeInitialized = false;

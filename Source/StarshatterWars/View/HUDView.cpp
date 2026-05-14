@@ -2673,7 +2673,7 @@ HUDView::Refresh()
 			docking = true;
 			HideAll();
 
-			if (ship->GetFlightPhase() == Ship::DOCKING) {
+			if (ship->GetFlightPhase() == EOPSMode::DOCKING) {
 				Rect dock_rect(width / 2 - 100, height / 6, 200, 20);
 
 				if (ship->IsAirborne())

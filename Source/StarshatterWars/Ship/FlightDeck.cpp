@@ -45,6 +45,7 @@
 #include "SimLight.h"
 #include "Sound.h"
 #include "DataLoader.h"
+#include "GameStructs.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFlightDeck, Log, All);
 
@@ -373,7 +374,7 @@ FlightDeck::ExecFrame(double Seconds)
 					SlotShip->CloneCam(C);
 					SlotShip->MoveTo(Slot->spot_loc);
 					SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
-					SlotShip->SetFlightPhase(Ship::ALERT);
+					SlotShip->SetFlightPhase(EOPSMode::ALERT);
 				}
 			}
 
@@ -396,7 +397,7 @@ FlightDeck::ExecFrame(double Seconds)
 					Slot->time = cycle_time;
 
 					if (SlotShip)
-						SlotShip->SetFlightPhase(Ship::LOCKED);
+						SlotShip->SetFlightPhase(EOPSMode::LOCKED);
 
 					num_catsounds = 0;
 					bAdvanceQueue = true;
@@ -524,7 +525,7 @@ FlightDeck::ExecFrame(double Seconds)
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					}
 
-					SlotShip->SetFlightPhase(Ship::LOCKED);
+					SlotShip->SetFlightPhase(EOPSMode::LOCKED);
 				}
 			}
 			else
@@ -556,7 +557,7 @@ FlightDeck::ExecFrame(double Seconds)
 			{
 				if (SlotShip)
 				{
-					SlotShip->SetFlightPhase(Ship::DOCKED);
+					SlotShip->SetFlightPhase(EOPSMode::DOCKED);
 					SlotShip->Stow();
 				}
 
@@ -618,10 +619,10 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			}
 
 			slot_ship->SetVelocity(carrier->GetVelocity() + cat);
-			slot_ship->SetFlightPhase(Ship::LAUNCH);
+			slot_ship->SetFlightPhase(EOPSMode::LAUNCH);
 		}
 		else {
-			slot_ship->SetFlightPhase(Ship::TAKEOFF);
+			slot_ship->SetFlightPhase(EOPSMode::TAKEOFF);
 		}
 
 		SimDirector* dir = slot_ship->GetDirector();
@@ -934,7 +935,7 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 			s->TranslateBy(Up * slots[outIndex].clearance);
 		}
 
-		s->SetFlightPhase(Ship::ALERT);
+		s->SetFlightPhase(EOPSMode::ALERT);
 	}
 
 	// Finalize carrier ownership and observation
@@ -1042,21 +1043,21 @@ FlightDeck::Recover(Ship* s)
 	if (!OverThreshold(s))
 	{
 		// If the ship fell back under the approach threshold, revert RECOVERY -> ACTIVE:
-		if (s->GetFlightPhase() == Ship::RECOVERY)
-			s->SetFlightPhase(Ship::ACTIVE);
+		if (s->GetFlightPhase() == EOPSMode::RECOVERY)
+			s->SetFlightPhase(EOPSMode::ACTIVE);
 
 		return false;
 	}
 
 	// Ensure ship is in RECOVERY phase and bound to this carrier/deck for dock camera logic:
-	if (s->GetFlightPhase() < Ship::RECOVERY)
+	if (s->GetFlightPhase() < EOPSMode::RECOVERY)
 	{
-		s->SetFlightPhase(Ship::RECOVERY);
+		s->SetFlightPhase(EOPSMode::RECOVERY);
 		s->SetCarrier(carrier, this);
 	}
 
 	// "Are we there yet?" Docking gate:
-	if (s->GetFlightPhase() >= Ship::ACTIVE && s->GetFlightPhase() < Ship::DOCKING)
+	if (s->GetFlightPhase() < EOPSMode::DOCKING)
 	{
 		// UE FIX: nullptr instead of 0
 		// Legacy behavior: only check docking clearance if slot 0 is empty (approach gate)
@@ -1110,7 +1111,7 @@ FlightDeck::Dock(Ship* s)
 	if (!Spot(s, slotIndex))
 		return false;
 
-	s->SetFlightPhase(Ship::DOCKING);
+	s->SetFlightPhase(EOPSMode::DOCKING);
 	s->SetCarrier(carrier, this);
 
 	// hard landings?

@@ -74,6 +74,8 @@ public:
 
     void CommitMission();
 
+    void DockShips();
+
     bool  IsActive()   const { return active; }
     bool  IsAirSpace() const { return type == AIR_SPACE; }
     bool  IsOrbital()  const { return type == REAL_SPACE; }

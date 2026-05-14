@@ -250,15 +250,15 @@ Instruction::Evaluate(Ship* ship)
 		break;
 
 	case INSTRUCTION_ACTION::LAUNCH:
-		if (ship->GetFlightPhase() == Ship::ACTIVE)
+		if (ship->GetFlightPhase() == EOPSMode::ACTIVE)
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
 		break;
 
 	case INSTRUCTION_ACTION::DOCK:
 	case INSTRUCTION_ACTION::RTB:
 		if (sim->GetPlayerShip() == ship &&
-			(ship->GetFlightPhase() == Ship::DOCKING ||
-				ship->GetFlightPhase() == Ship::DOCKED))
+			(ship->GetFlightPhase() == EOPSMode::DOCKING ||
+				ship->GetFlightPhase() == EOPSMode::DOCKED))
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
 		else if (ship->GetIntegrity() < 1)
 			SetStatus(INSTRUCTION_STATUS::FAILED);
@@ -304,8 +304,8 @@ Instruction::Evaluate(Ship* ship)
 
 		if (status == INSTRUCTION_STATUS::PENDING && safe &&
 			sim->GetPlayerShip() == ship &&
-			(ship->GetFlightPhase() == Ship::DOCKING ||
-				ship->GetFlightPhase() == Ship::DOCKED)) {
+			(ship->GetFlightPhase() == EOPSMode::DOCKING ||
+				ship->GetFlightPhase() == EOPSMode::DOCKED)) {
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
 		}
 	}
