@@ -990,12 +990,12 @@ SimRegion::DockShips()
                 if (ShipStatsPtr) {
                     if (ship->IsAirborne()) {
                         ShipStatsPtr->AddEvent(
-                            SimEvent::LAND,
+                            ESimEvent::LAND,
                             carrier->GetName());
                     }
                     else {
                         ShipStatsPtr->AddEvent(
-                            SimEvent::DOCK,
+                            ESimEvent::DOCK,
                             carrier->GetName());
                     }
                 }
@@ -1005,7 +1005,7 @@ SimRegion::DockShips()
 
                 if (CarrierStats) {
                     CarrierStats->AddEvent(
-                        SimEvent::RECOVER_SHIP,
+                        ESimEvent::RECOVER_SHIP,
                         ship->GetName());
                 }
             }

@@ -4779,7 +4779,7 @@ Ship::CompleteTransition()
 		if (Stats)
 		{
 			Stats->AddEvent(
-				SimEvent::BREAK_ORBIT,
+				ESimEvent::BREAK_ORBIT,
 				DstRegion->GetName());
 		}
 	}
@@ -4827,7 +4827,7 @@ Ship::CompleteTransition()
 		if (Stats)
 		{
 			Stats->AddEvent(
-				SimEvent::MAKE_ORBIT,
+				ESimEvent::MAKE_ORBIT,
 				DstRegion->GetName());
 		}
 	}

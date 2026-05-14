@@ -632,7 +632,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		}
 
 		ShipStats* c = ShipStats::Find(carrier->GetName());
-		if (c) c->AddEvent(SimEvent::LAUNCH_SHIP, slot_ship->GetName());
+		if (c) c->AddEvent(ESimEvent::LAUNCH_SHIP, slot_ship->GetName());
 
 		ShipStats* stats = ShipStats::Find(slot_ship->GetName());
 		if (stats) {
@@ -648,7 +648,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			}
 
 			stats->SetIFF(slot_ship->GetIFF());
-			stats->AddEvent(SimEvent::LAUNCH, carrier->GetName());
+			stats->AddEvent(ESimEvent::LAUNCH, carrier->GetName());
 
 			if (slot_ship == sim->GetPlayerShip())
 				stats->SetPlayer(true);

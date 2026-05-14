@@ -930,7 +930,7 @@ int32 PlayerCharacter::GetMissionPoints(ShipStats* Stats, uint32 StartTimeMs)
 
             MissionPoints += MinutesInAction;
 
-            if (Stats->HasEvent(SimEvent::DOCK))
+            if (Stats->HasEvent(ESimEvent::DOCK))
                 MissionPoints += 100;
         }
         else

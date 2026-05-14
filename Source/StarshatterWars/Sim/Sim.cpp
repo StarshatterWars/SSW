@@ -2362,9 +2362,9 @@ Sim::ResolveSplashList()
 						ShipStats* killer = ShipStats::Find(splash->owner_name);
 						if (killer) {
 							if (splash->missile)
-								killer->AddEvent(SimEvent::MISSILE_KILL, ship->GetName());
+								killer->AddEvent(ESimEvent::MISSILE_KILL, ship->GetName());
 							else
-								killer->AddEvent(SimEvent::GUNS_KILL, ship->GetName());
+								killer->AddEvent(ESimEvent::GUNS_KILL, ship->GetName());
 						}
 
 						Ship* owner = FindShip(splash->owner_name, splash->rgn->GetName());
@@ -2402,7 +2402,7 @@ Sim::ResolveSplashList()
 
 						ShipStats* killee = ShipStats::Find(ship->GetName());
 						if (killee)
-							killee->AddEvent(SimEvent::DESTROYED, splash->owner_name);
+							killee->AddEvent(ESimEvent::DESTROYED, splash->owner_name);
 
 						ship->DeathSpiral();
 					}

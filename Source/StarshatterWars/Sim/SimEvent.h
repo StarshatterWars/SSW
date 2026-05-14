@@ -36,19 +36,10 @@ class SimEvent
 public:
 	static const char* TYPENAME() { return "SimEvent"; }
 
-	enum EVENT {
-		LAUNCH = 1, DOCK, LAND, EJECT, CRASH, COLLIDE, DESTROYED,
-		MAKE_ORBIT, BREAK_ORBIT, QUANTUM_JUMP,
-		LAUNCH_SHIP, RECOVER_SHIP,
-		FIRE_GUNS, FIRE_MISSILE, DROP_DECOY,
-		GUNS_KILL, MISSILE_KILL,
-		LAUNCH_PROBE, SCAN_TARGET
-	};
-
-	SimEvent(int event, const char* tgt = 0, const char* info = 0);
+	SimEvent(ESimEvent event, const char* tgt = 0, const char* info = 0);
 	~SimEvent();
 
-	int            GetEvent()        const { return event; }
+	ESimEvent	   GetEvent()        const { return event; }
 	int            GetTime()         const { return time; }
 	Text           GetEventDesc()    const;
 	const char* GetTarget()       const { return target; }
@@ -61,7 +52,7 @@ public:
 	void           SetTime(int time);
 
 private:
-	int            event;
+	ESimEvent	   event;
 	int            time;
 	Text           target;
 	Text           info;
@@ -111,8 +102,8 @@ public:
 
 	List<SimEvent>& GetEvents() { return events; }
 	SimEvent* AddEvent(SimEvent* e);
-	SimEvent* AddEvent(int event, const char* tgt = 0, const char* info = 0);
-	bool            HasEvent(int event);
+	SimEvent* AddEvent(ESimEvent event, const char* tgt = 0, const char* info = 0);
+	bool            HasEvent(ESimEvent event);
 
 	void           SetShipClass(int c) { ship_class = c; }
 	void           SetIFF(int i) { iff = i; }

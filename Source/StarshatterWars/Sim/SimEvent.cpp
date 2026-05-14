@@ -27,7 +27,7 @@ List<ShipStats>   records;
 
 // +====================================================================+
 
-SimEvent::SimEvent(int e, const char* t, const char* i)
+SimEvent::SimEvent(ESimEvent e, const char* t, const char* i)
 	: event(e), count(0)
 {
 	Sim* sim = Sim::GetSim();
@@ -78,25 +78,25 @@ Text
 SimEvent::GetEventDesc() const
 {
 	switch (event) {
-	case LAUNCH:         return "Launch";
-	case DOCK:           return "Dock";
-	case LAND:           return "Land";
-	case EJECT:          return "Eject";
-	case CRASH:          return "Crash";
-	case COLLIDE:        return "Collision With";
-	case DESTROYED:      return "Destroyed By";
-	case MAKE_ORBIT:     return "Make Orbit";
-	case BREAK_ORBIT:    return "Break Orbit";
-	case QUANTUM_JUMP:   return "Quantum Jump";
-	case LAUNCH_SHIP:    return "Launch Ship";
-	case RECOVER_SHIP:   return "Recover Ship";
-	case FIRE_GUNS:      return "Fire Guns";
-	case FIRE_MISSILE:   return "Fire Missile";
-	case DROP_DECOY:     return "Drop Decoy";
-	case GUNS_KILL:      return "Guns Kill";
-	case MISSILE_KILL:   return "Missile Kill";
-	case LAUNCH_PROBE:   return "Launch Probe";
-	case SCAN_TARGET:    return "Scan Target";
+	case ESimEvent::LAUNCH:         return "Launch";
+	case ESimEvent::DOCK:           return "Dock";
+	case ESimEvent::LAND:           return "Land";
+	case ESimEvent::EJECT:          return "Eject";
+	case ESimEvent::CRASH:          return "Crash";
+	case ESimEvent::COLLIDE:        return "Collision With";
+	case ESimEvent::DESTROYED:      return "Destroyed By";
+	case ESimEvent::MAKE_ORBIT:     return "Make Orbit";
+	case ESimEvent::BREAK_ORBIT:    return "Break Orbit";
+	case ESimEvent::QUANTUM_JUMP:   return "Quantum Jump";
+	case ESimEvent::LAUNCH_SHIP:    return "Launch Ship";
+	case ESimEvent::RECOVER_SHIP:   return "Recover Ship";
+	case ESimEvent::FIRE_GUNS:      return "Fire Guns";
+	case ESimEvent::FIRE_MISSILE:   return "Fire Missile";
+	case ESimEvent::DROP_DECOY:     return "Drop Decoy";
+	case ESimEvent::GUNS_KILL:      return "Guns Kill";
+	case ESimEvent::MISSILE_KILL:   return "Missile Kill";
+	case ESimEvent::LAUNCH_PROBE:   return "Launch Probe";
+	case ESimEvent::SCAN_TARGET:    return "Scan Target";
 	default:             return "No Event";
 	}
 }
@@ -177,21 +177,21 @@ ShipStats::Summarize()
 	ListIter<SimEvent> iter = events;
 	while (++iter) {
 		SimEvent* event = iter.value();
-		int       code = event->GetEvent();
+		ESimEvent code = event->GetEvent();
 
-		if (code == SimEvent::GUNS_KILL)
+		if (code == ESimEvent::GUNS_KILL)
 			kill1++;
 
-		else if (code == SimEvent::MISSILE_KILL)
+		else if (code == ESimEvent::MISSILE_KILL)
 			kill2++;
 
-		else if (code == SimEvent::DESTROYED)
+		else if (code == ESimEvent::DESTROYED)
 			lost++;
 
-		else if (code == SimEvent::CRASH)
+		else if (code == ESimEvent::CRASH)
 			coll++;
 
-		else if (code == SimEvent::COLLIDE)
+		else if (code == ESimEvent::COLLIDE)
 			coll++;
 	}
 }
@@ -206,7 +206,7 @@ ShipStats::AddEvent(SimEvent* e)
 }
 
 SimEvent*
-ShipStats::AddEvent(int event, const char* tgt, const char* info)
+ShipStats::AddEvent(ESimEvent event, const char* tgt, const char* info)
 {
 	SimEvent* e = new SimEvent(event, tgt, info);
 	events.append(e);
@@ -214,7 +214,7 @@ ShipStats::AddEvent(int event, const char* tgt, const char* info)
 }
 
 bool
-ShipStats::HasEvent(int event)
+ShipStats::HasEvent(ESimEvent event)
 {
 	for (int i = 0; i < events.size(); i++)
 		if (events[i]->GetEvent() == event)

@@ -273,7 +273,7 @@ QuantumDrive::Jump()
 
 		ShipStats* stats = ShipStats::Find(ship->GetName());
 		if (stats)
-			stats->AddEvent(SimEvent::QUANTUM_JUMP, dst_rgn->GetName());
+			stats->AddEvent(ESimEvent::QUANTUM_JUMP, dst_rgn->GetName());
 	}
 
 	dst_rgn = 0;
