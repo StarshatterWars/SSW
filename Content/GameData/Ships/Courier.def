@@ -14,6 +14,8 @@ mass:       15.3e3
 agility:    1
 vlimit:     280
 roll_rate:  5
+yaw_rate:   90 //24
+pitch_rate:  45 // 16
 integrity:  20e3
 scale:      1.2
 acs:        1

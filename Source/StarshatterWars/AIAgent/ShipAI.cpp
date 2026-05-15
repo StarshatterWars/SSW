@@ -1343,7 +1343,7 @@ ShipAI::FindObjectiveFarcaster(
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::FindObjectiveFarcaster LEGACY] Ship='%hs' SrcRgn='%hs' DstRgn='%hs' Farcaster=%p ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f"),
+		TEXT("[ShipAI::FindObjectiveFarcaster] Ship='%hs' SrcRgn='%hs' DstRgn='%hs' Farcaster=%p ObjW=%s Objective=%s ShipLoc=%s Distance=%.2f"),
 		ship ? ship->GetName() : "NULL",
 		src_rgn ? src_rgn->GetName() : "NULL",
 		dst_rgn ? dst_rgn->GetName() : "NULL",

@@ -3610,6 +3610,36 @@ Ship::ExecPhysics(double seconds)
 				thrust,
 				*GetVelocity().ToString());
 		}
+
+		if (GetName() && !_stricmp(GetName(), "Blockade Runner"))
+		{
+			const FVector FarcasterLoc(-200000.0f, -120000.0f, 0.0f);
+			const FVector DeltaToGate =
+				FarcasterLoc - GetLocation();
+
+			const double DistanceToGate =
+				DeltaToGate.Length();
+
+			const double ClosingSpeed =
+				FVector::DotProduct(
+					GetVelocity(),
+					DeltaToGate.GetSafeNormal());
+
+			UE_LOG(LogTemp, Error,
+				TEXT("[BR FARCASTER RANGE] ")
+				TEXT("Loc=%s ")
+				TEXT("Gate=%s ")
+				TEXT("Delta=%s ")
+				TEXT("Distance=%.2f ")
+				TEXT("Velocity=%s ")
+				TEXT("ClosingSpeed=%.2f"),
+				*GetLocation().ToString(),
+				*FarcasterLoc.ToString(),
+				*DeltaToGate.ToString(),
+				DistanceToGate,
+				*GetVelocity().ToString(),
+				ClosingSpeed);
+		}
 	}
 
 	//-------------------------------------------------------------

@@ -547,20 +547,23 @@ Physical::AngularFrame(double SecondsThisSlice)
 			shake = 0.0f;
 		}
 
-		UE_LOG(LogTemp, Error,
-			TEXT("[ANGULAR BR] dr_acc=%.6f dy_acc=%.6f dp_acc=%.6f dr=%.6f dy=%.6f dp=%.6f roll=%.6f yaw=%.6f pitch=%.6f yaw_rate=%.6f dy_drg=%.6f dt=%.6f"),
-			dr_acc,
-			dy_acc,
-			dp_acc,
-			dr,
-			dy,
-			dp,
-			roll,
-			yaw,
-			pitch,
-			yaw_rate,
-			dy_drg,
-			SecondsThisSlice);
+		if (!_stricmp(GetName(), "Blockade Runner"))
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[ANGULAR BR] ")
+				TEXT("dy_acc=%.6f ")
+				TEXT("dy=%.6f ")
+				TEXT("yaw=%.6f ")
+				TEXT("yaw_rate=%.6f ")
+				TEXT("dy_drg=%.6f ")
+				TEXT("dt=%.6f"),
+				dy_acc,
+				dy,
+				yaw,
+				yaw_rate,
+				dy_drg,
+				SecondsThisSlice);
+		}
 		cam.Aim(roll, pitch, yaw);
 	}
 }
@@ -726,37 +729,6 @@ void Physical::LookAt(const FVector& Dst)
 void Physical::CloneCam(const Camera& c)
 {
 	cam.Clone(c);
-}
-
-void
-Physical::SetAbsoluteOrientation(double r, double p, double y)
-{
-	//-------------------------------------------------------------
-	// UE port safe:
-	// Rebuild orientation from a clean camera basis at current location.
-	// Use this for spawn/initial placement.
-	//-------------------------------------------------------------
-	roll = (float)r;
-	pitch = (float)p;
-	yaw = (float)y;
-
-	const FVector L = GetLocation();
-
-	Camera Work(L.X, L.Y, L.Z);
-	Work.Aim(r, p, y);
-
-	cam.Clone(Work);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Physical::SetAbsoluteOrientation] Obj='%hs' R=%.4f P=%.4f Y=%.4f Loc=%s VPN=%s VUP=%s VRT=%s"),
-		name,
-		r,
-		p,
-		y,
-		*cam.Pos().ToString(),
-		*cam.vpn().ToString(),
-		*cam.vup().ToString(),
-		*cam.vrt().ToString());
 }
 
 void Physical::ApplyRoll(double r)
@@ -979,50 +951,3 @@ Physical::GetAngularVelocity() const
 		dy);
 }
 
-void
-Physical::SetHeadingVector(
-	const FVector& Forward)
-{
-	FVector F =
-		Forward.GetSafeNormal();
-
-	if (F.IsNearlyZero())
-	{
-		return;
-	}
-
-	F.Z = 0.0f;
-
-	if (!F.Normalize())
-	{
-		return;
-	}
-
-	const FVector Up(
-		0.0f,
-		0.0f,
-		1.0f);
-
-	FVector Right =
-		FVector::CrossProduct(
-			Up,
-			F).GetSafeNormal();
-
-	if (Right.IsNearlyZero())
-	{
-		Right = FVector(
-			0.0f,
-			1.0f,
-			0.0f);
-	}
-
-	const FVector RealUp =
-		FVector::CrossProduct(
-			F,
-			Right).GetSafeNormal();
-
-	cam.SetOrientation(
-		Right,
-		RealUp,
-		F);
-}

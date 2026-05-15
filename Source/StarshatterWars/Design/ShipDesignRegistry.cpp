@@ -265,13 +265,15 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     Legacy->roll_rate = Row.RollRate;
     Legacy->pitch_rate = Row.PitchRate;
     Legacy->yaw_rate = Row.YawRate;
+
+    Legacy->roll_drag = Row.RollDrag;
+    Legacy->pitch_drag = Row.PitchDrag;
+    Legacy->yaw_drag = Row.YawDrag;
+
     Legacy->turn_bank = Row.TurnBank;
 
     Legacy->drag = Row.Drag;
     Legacy->arcade_drag = Row.ArcadeDrag;
-    Legacy->roll_drag = Row.RollDrag;
-    Legacy->pitch_drag = Row.PitchDrag;
-    Legacy->yaw_drag = Row.YawDrag;
 
     //-------------------------------------------------------------
     // Sensors

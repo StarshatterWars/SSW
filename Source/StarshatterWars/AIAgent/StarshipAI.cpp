@@ -612,7 +612,7 @@ StarshipAI::HelmControl()
     // If your port globally moved FLCS to Ship::ExecPhysics(),
     // keep only one call site. Do not execute twice.
     //-------------------------------------------------------------
-    ship->ExecFLCSFrame();
+    //ship->ExecFLCSFrame();
 }
 
 // +----------------------------------------------------------------------+

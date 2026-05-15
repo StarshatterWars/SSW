@@ -386,23 +386,23 @@ SteerAI::Transform(const FVector& Pt)
 FVector
 SteerAI::AimTransform(const FVector& Pt)
 {
-    if (!self)
-    {
-        return FVector::ZeroVector;
-    }
+	if (!self)
+	{
+		return FVector::ZeroVector;
+	}
 
-    Camera& Cam =
-        (Camera&)self->GetCam();
+	Camera& Cam =
+		(Camera&)self->GetCam();
 
-    const FVector ObjT =
-        Pt - self->GetLocation();
+	const FVector ObjT =
+		Pt - self->GetLocation();
 
-    const FVector Result(
-        FVector::DotProduct(ObjT, Cam.vrt()),
-        FVector::DotProduct(ObjT, Cam.vup()),
-        FVector::DotProduct(ObjT, Cam.vpn()));
+	const FVector Result(
+		FVector::DotProduct(ObjT, Cam.vrt()),
+		FVector::DotProduct(ObjT, Cam.vup()),
+		FVector::DotProduct(ObjT, Cam.vpn()));
 
-    return Result;
+	return Result;
 }
 
 // +--------------------------------------------------------------------+
@@ -462,22 +462,28 @@ SteerAI::Seek(const FVector& InPoint)
         az[0] = 0.0;
         el[0] = 0.0;
         seeking = 0;
-
         return s;
     }
 
-    FVector Point =
-        InPoint;
+    FVector Point = InPoint;
 
     if (!Point.Normalize())
     {
         az[0] = 0.0;
         el[0] = 0.0;
         seeking = 0;
-
         return s;
     }
 
+    //-------------------------------------------------------------
+    // LEGACY STEERING SPACE:
+    //
+    // X = right/left
+    // Y = up/down
+    // Z = forward
+    //
+    // Do NOT reinterpret this as UE X-forward space.
+    //-------------------------------------------------------------
     if (Point.Z > 0.0f)
     {
         az[0] =
@@ -488,12 +494,12 @@ SteerAI::Seek(const FVector& InPoint)
             atan2(FMath::Abs(Point.Y), Point.Z) *
             seek_gain;
 
-        if (Point.X < 0)
+        if (Point.X < 0.0f)
         {
             az[0] = -az[0];
         }
 
-        if (Point.Y > 0)
+        if (Point.Y > 0.0f)
         {
             el[0] = -el[0];
         }
@@ -510,7 +516,7 @@ SteerAI::Seek(const FVector& InPoint)
     }
     else
     {
-        if (Point.X > 0)
+        if (Point.X > 0.0f)
         {
             s.yaw = 1.0f;
         }
@@ -525,13 +531,19 @@ SteerAI::Seek(const FVector& InPoint)
 
     seeking = 1;
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SteerAI::Seek] RawPoint=%s NormPoint=%s Yaw=%.4f Pitch=%.4f ZForward=%d"),
-        *InPoint.ToString(),
-        *Point.ToString(),
-        s.yaw,
-        s.pitch,
-        Point.Z > 0.0f ? 1 : 0);
+    if (self && !_stricmp(self->GetName(), "Blockade Runner"))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SteerAI::Seek BR LEGACY] ")
+            TEXT("RawPoint=%s NormPoint=%s ")
+            TEXT("Yaw=%.4f Pitch=%.4f ")
+            TEXT("ForwardZ=%.4f"),
+            *InPoint.ToString(),
+            *Point.ToString(),
+            s.yaw,
+            s.pitch,
+            Point.Z);
+    }
 
     return s;
 }

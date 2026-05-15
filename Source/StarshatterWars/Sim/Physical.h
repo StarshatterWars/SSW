@@ -130,7 +130,6 @@ public:
     virtual void      SetVelocity(const FVector& V) { velocity = V; }
     FVector           GetVelocity()  const { return velocity + arcade_velocity; }
 
-    virtual void      SetAbsoluteOrientation(double InRoll, double InPitch, double InYaw);
     virtual void      CloneCam(const Camera& InCam);
     virtual void      SetDrag(double D) { drag = (float)D; }
 
@@ -143,8 +142,6 @@ public:
 
     virtual void      SetAngularVelocity(const FVector& AngularVelocity);
     virtual FVector   GetAngularVelocity() const;
-
-    virtual void SetHeadingVector(const FVector& Forward);
 
     enum { NAMELEN = 48 };
 

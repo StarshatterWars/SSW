@@ -360,6 +360,9 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	float LocalRollRate = 0.0f;
 	float LocalPitchRate = 0.0f;
 	float LocalYawRate = 0.0f;
+	float LocalRollDrag = 0.0f;
+	float LocalPitchDrag = 0.0f;
+	float LocalYawDrag = 0.0f;
 	float LocalTransX = 0.0f;
 	float LocalTransY = 0.0f;
 	float LocalTransZ = 0.0f;
@@ -534,6 +537,21 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			GetDefNumber(LocalYawRate, Def, fn);
 			NewShipDesign.YawRate = LocalYawRate;
 		}
+		else if (Key == "yaw_drag")
+		{
+			GetDefNumber(LocalYawDrag, Def, fn);
+			NewShipDesign.YawDrag = LocalYawDrag;
+		}
+		else if (Key == "pitch_drag")
+		{
+			GetDefNumber(LocalPitchDrag, Def, fn);
+			NewShipDesign.PitchDrag = LocalPitchDrag;
+		}
+		else if (Key == "roll_drag")
+		{
+			GetDefNumber(LocalRollDrag, Def, fn);
+			NewShipDesign.RollDrag = LocalRollDrag;
+			}
 		else if (Key == "trans_x")
 		{
 			GetDefNumber(LocalTransX, Def, fn);

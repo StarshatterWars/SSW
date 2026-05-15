@@ -2180,8 +2180,6 @@ Sim::ResolveHyperList()
 								const double p = jump->fc_dst->GetPitch();
 								const double w = jump->fc_dst->GetYaw();
 
-								s->SetAbsoluteOrientation(r, p, w);
-
 								// LEGACY:
 								// Heading is already sim-space. Do not OtherHand() this.
 								s->SetVelocity(jump->fc_dst->GetHeading() * 500.0);
@@ -2223,8 +2221,6 @@ Sim::ResolveHyperList()
 							const double p = jump->fc_dst->GetPitch();
 							const double w = jump->fc_dst->GetYaw();
 
-							jumpship->SetAbsoluteOrientation(r, p, w);
-
 							// LEGACY:
 							// Heading is already sim-space.
 							jumpship->SetVelocity(jump->fc_dst->GetHeading() * 500.0);
@@ -2241,7 +2237,6 @@ Sim::ResolveHyperList()
 							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
-						jumpship->SetAbsoluteOrientation(0, PI / 4, 0);
 
 						// LEGACY:
 						// Heading is already sim-space.

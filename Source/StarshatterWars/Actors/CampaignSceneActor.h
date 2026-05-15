@@ -117,18 +117,6 @@ protected:
     FVector ConvertLegacySceneLocToWorld(const FVector& LegacyLoc) const;
     FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
 
-    //-------------------------------------------------------------
-    // Runtime Ship Integration
-    //-------------------------------------------------------------
-    Ship* CreateRuntimeShipForMissionElement(
-        const FS_MissionElement& Elem,
-        const FVector& InitialWorldLocation);
-
-    void RegisterRuntimeShipForElement(
-        const FS_MissionElement& Elem,
-        Ship* RuntimeShip,
-        AShipActor* ShipActor);
-
     void LinkRuntimeShipCommanders(const TArray<FS_MissionElement>& Elements);
 
 protected:
@@ -206,10 +194,7 @@ private:
         int32 FollowerCount) const;
 
     void BuildSimRegionsFromEnvironment();
-    void ResolveRuntimeInstructionTargets();
-    SimObject* ResolveRuntimeTargetByName(const FString& TargetName) const;
-    void FaceRuntimeShipAtTarget(Ship* RuntimeShip);
-
+    
     void ApplyRuntimeFormationOffsets(const TArray<FS_MissionElement>& Elements);
 
     void TickRuntimeShips(float DeltaSeconds);
