@@ -306,7 +306,7 @@ public:
     virtual SimSystem* GetSubTarget() const { return subtarget; }
     virtual void      CycleSubTarget(int dir = 1);
     virtual void      DropTarget();
-    virtual void      LockTarget(int type = SimObject::SIM_SHIP, bool closest = false, bool hostile = false);
+    virtual void      LockTarget(ESimObject type = ESimObject::SHIP, bool closest = false, bool hostile = false);
     virtual void      LockTarget(SimObject* candidate);
     virtual bool      IsTracking(SimObject* tgt);
     virtual bool      GetTrigger(int i) const;
@@ -367,7 +367,7 @@ public:
 
     // Add this:
     static const char* GetShipClassName(CLASSIFICATION classification) { return GetShipClassName(static_cast<int>(classification)); }
-    CLASSIFICATION    Class() const;
+    CLASSIFICATION    GetClassification() const;
     bool              IsGroundUnit() const;
     bool              IsStarship() const;
     bool              IsDropship() const;

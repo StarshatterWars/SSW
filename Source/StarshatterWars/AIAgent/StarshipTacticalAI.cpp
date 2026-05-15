@@ -187,12 +187,12 @@ StarshipTacticalAI::FindThreat()
                     contact->Range(ship);
 
                 if (c_ship &&
-                    c_ship->Class() != CLASSIFICATION::FREIGHTER &&
-                    c_ship->Class() != CLASSIFICATION::FARCASTER)
+                    c_ship->GetClassification() != CLASSIFICATION::FREIGHTER &&
+                    c_ship->GetClassification() != CLASSIFICATION::FARCASTER)
                 {
                     if (c_ship->GetTarget() == ship)
                     {
-                        if (!threat_ship || c_ship->Class() > threat_ship->Class())
+                        if (!threat_ship || c_ship->GetClassification() > threat_ship->GetClassification())
                         {
                             threat_ship = c_ship;
                             threat_dist = 0;
@@ -276,8 +276,8 @@ StarshipTacticalAI::FindSupport()
         if (contact->GetShip() && contact->GetIFF(ship) == ship->GetIFF()) {
             Ship* c_ship = contact->GetShip();
 
-            if (c_ship != ship && c_ship->Class() >= ship->Class()) {
-                if (!support || c_ship->Class() > support->Class())
+            if (c_ship != ship && c_ship->GetClassification() >= ship->GetClassification()) {
+                if (!support || c_ship->GetClassification() > support->GetClassification())
                     support = c_ship;
             }
         }
@@ -290,7 +290,7 @@ void
 StarshipTacticalAI::CheckBugOut(Ship* c_ship, double rng)
 {
     // see if carrier should bug out...
-    if (!ship || !c_ship || ship->Class() != CLASSIFICATION::CARRIER || ship->Class() != CLASSIFICATION::SWACS)
+    if (!ship || !c_ship || ship->GetClassification() != CLASSIFICATION::CARRIER || ship->GetClassification() != CLASSIFICATION::SWACS)
         return;
 
     if (bugout)
@@ -299,7 +299,7 @@ StarshipTacticalAI::CheckBugOut(Ship* c_ship, double rng)
     if (ship->GetElement() && ship->GetElement()->GetZoneLock())
         return;
 
-    if (c_ship->Class() < CLASSIFICATION::DESTROYER || c_ship->Class() > CLASSIFICATION::STATION)
+    if (c_ship->GetClassification() < CLASSIFICATION::DESTROYER || c_ship->GetClassification() > CLASSIFICATION::STATION)
         return;
 
     Starshatter* stars = Starshatter::GetInstance();

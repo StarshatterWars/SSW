@@ -2,7 +2,7 @@
     Fractal Dev Studios
     Copyright (C) 2025-2026.
     All Rights Reserved.
-
+	FF
     FILE:         GameStructs_System.h
     AUTHOR:       Carlos Bott
 
@@ -1823,6 +1823,7 @@ struct FShipDesign : public FTableRowBase {
 		Scuttle = 5e3f;
 		RepairSpeed = 1.0f;
 
+		EFactor.SetNum(3);
 		EFactor.SetNum(3);
 		Offset.SetNum(4);
 

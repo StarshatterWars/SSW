@@ -1996,7 +1996,7 @@ MapView::DrawRegion()
 				SimContact* contact = cIter.value();
 				Ship* s = contact->GetShip();
 
-				if (s && ((int)s->Class() & ship_filter) && !IsClutter(*s) && s != ship)
+				if (s && ((int)s->GetClassification() & ship_filter) && !IsClutter(*s) && s != ship)
 					DrawShip(*s, (s == current_ship), rep);
 			}
 

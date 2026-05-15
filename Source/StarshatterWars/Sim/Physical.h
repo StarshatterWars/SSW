@@ -17,6 +17,7 @@
 #include "Types.h"
 #include "Geometry.h"
 #include "Camera.h"
+#include "GameStructs.h"
 
 #include "Math/Vector.h"   // FVector
 
@@ -34,7 +35,7 @@ public:
     static const char* TYPENAME() { return "Physical"; }
 
     Physical();
-    Physical(const char* n, int t = 0);
+    Physical(const char* n, ESimObject t = ESimObject::NONE);
     virtual ~Physical();
 
     int operator==(const Physical& p) const { return id == p.id; }
@@ -75,7 +76,7 @@ public:
 
     // accessors:
     int               GetIdentity()  const { return id; }
-    int               GetType()   const { return obj_type; }
+    ESimObject        GetType()   const { return obj_type; }
     const char*       GetName()   const { return name; }
 
     // NOTE:
@@ -152,7 +153,7 @@ protected:
 
     // identification:
     int               id;
-    int               obj_type;
+    ESimObject        obj_type;
     char              name[NAMELEN];
 
     // position, velocity, and acceleration:

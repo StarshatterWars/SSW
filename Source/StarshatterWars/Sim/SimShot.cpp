@@ -69,7 +69,7 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 	altitude_agl(-1.0e6f),
 	hit_target(false)
 {
-	obj_type = SimObject::SIM_SHOT;
+	obj_type = ESimObject::SHOT;
 	type = design->type;
 	primary = design->primary;
 	beam = design->beam;
@@ -215,7 +215,7 @@ SimShot::SeekTarget(SimObject* target, SimSystem* sub)
 		SeekerAI* seeker = (SeekerAI*)dir;
 		SimObject* old_target = seeker->GetTarget();
 
-		if (old_target && old_target->GetType() == SimObject::SIM_SHIP) {
+		if (old_target && old_target->GetType() == ESimObject::SHIP) {
 			Ship* tgt_ship = (Ship*)old_target;
 			tgt_ship->DropThreat(this);
 		}
@@ -232,7 +232,7 @@ SimShot::SeekTarget(SimObject* target, SimSystem* sub)
 
 		dir = seeker;
 
-		if (!primary && target->GetType() == SimObject::SIM_SHIP) {
+		if (!primary && target->GetType() == ESimObject::SHIP) {
 			Ship* tgt_ship = (Ship*)target;
 			tgt_ship->AddThreat(this);
 		}
@@ -270,7 +270,7 @@ bool
 SimShot::IsHostileTo(const SimObject* o) const
 {
 	if (o) {
-		if (o->GetType() == SIM_SHIP) {
+		if (o->GetType() == ESimObject::SHIP) {
 			Ship* s = (Ship*)o;
 
 			if (s->IsRogue())
@@ -280,7 +280,7 @@ SimShot::IsHostileTo(const SimObject* o) const
 				return true;
 		}
 
-		else if (o->GetType() == SIM_SHOT || o->GetType() == SIM_DRONE) {
+		else if (o->GetType() == ESimObject::SHOT || o->GetType() == ESimObject::DRONE) {
 			SimShot* s = (SimShot*)o;
 
 			if (s->GetIFF() > 0 && s->GetIFF() != GetIFF())

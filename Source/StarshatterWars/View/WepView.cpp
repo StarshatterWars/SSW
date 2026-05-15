@@ -411,7 +411,7 @@ bool WepView::CheckButton(int32 ButtonIndex, int32 X, int32 Y) const
 void
 WepView::CycleSubTarget(int direction)
 {
-    if (ship->GetTarget() == 0 || ship->GetTarget()->GetType() != SimObject::SIM_SHIP)
+    if (ship->GetTarget() == 0 || ship->GetTarget()->GetType() != ESimObject::SHIP)
         return;
 
     ship->CycleSubTarget(direction);

@@ -92,7 +92,7 @@ SeekerAI::Navigator()
 void
 SeekerAI::SetTarget(SimObject* targ, SimSystem* sub)
 {
-    if (!orig_target && targ && targ->GetType() == SimObject::SIM_SHIP) {
+    if (!orig_target && targ && targ->GetType() == ESimObject::SHIP) {
         orig_target = (Ship*)targ;
         Observe(orig_target);
     }
@@ -177,7 +177,7 @@ SeekerAI::FindObjective()
         FVector Offset = target->GetLocation() - subtarget->GetMountLocation();
         obj_w -= Offset;
     }
-    else if (target->GetType() == SimObject::SIM_SHIP) {
+    else if (target->GetType() == ESimObject::SHIP) {
         Ship* tgt_ship = (Ship*)target;
 
         if (tgt_ship->IsGroundUnit())
@@ -271,7 +271,7 @@ bool
 SeekerAI::Update(SimObject* obj)
 {
     if (obj == target) {
-        if (obj->GetType() == SimObject::SIM_SHOT && orig_target != 0)
+        if (obj->GetType() == ESimObject::SHOT && orig_target != 0)
             target = orig_target;
     }
 

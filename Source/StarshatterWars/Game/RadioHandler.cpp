@@ -66,7 +66,7 @@ RadioHandler::ProcessMessage(RadioMessage* msg, Ship* s)
 	if (!s || !msg || !msg->GetSender())
 		return false;
 
-	if (s->Class() >= CLASSIFICATION::FARCASTER && s->Class() <= CLASSIFICATION::C3I)
+	if (s->GetClassification() >= CLASSIFICATION::FARCASTER && s->GetClassification() <= CLASSIFICATION::C3I)
 		return false;
 
 	if (msg->GetSender()->IsRogue()) {
@@ -312,7 +312,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 
 				if (elem) {
 					SimObject* msg_tgt = msg->TargetList().at(0);
-					if (msg_tgt && msg_tgt->GetType() == SimObject::SIM_SHIP) {
+					if (msg_tgt && msg_tgt->GetType() == ESimObject::SHIP) {
 						SimElement* tgt = ((Ship*)msg_tgt)->GetElement();
 						elem->SetAssignment(tgt);
 

@@ -456,17 +456,17 @@ void Weapon::SetTarget(SimObject* targ, SimSystem* sub)
     // check target class filter:
     if (targ) {
         switch (targ->GetType()) {
-        case SimObject::SIM_SHIP: {
+        case ESimObject::SHIP: {
             Ship* tgt_ship = (Ship*)targ;
 
-            if (((int)tgt_ship->Class() & design->target_type) == 0)
+            if (((int)tgt_ship->GetClassification() & design->target_type) == 0)
                 return;
         } break;
 
-        case SimObject::SIM_SHOT:
+        case ESimObject::SHOT:
             return;
 
-        case SimObject::SIM_DRONE: {
+        case ESimObject::DRONE: {
             if ((design->target_type & (int)CLASSIFICATION::DRONE) == 0)
                 return;
         } break;
@@ -536,7 +536,7 @@ void Weapon::SelectTarget()
 
             // can we lock onto this target?
             if ((c_ship->IsRogue() || (c_ship->GetIFF() > 0 && c_ship->GetIFF() != ship->GetIFF())) &&
-                ((int)c_ship->Class() & design->target_type) &&
+                ((int)c_ship->GetClassification() & design->target_type) &&
                 c_ship->GetWeapons().size() > 0)
             {
                 // distance from self to target:
@@ -1031,7 +1031,7 @@ void Weapon::Aim()
             double az_phase = 0;
             double el_phase = 0;
 
-            if (target->GetType() == SimObject::SIM_SHIP) {
+            if (target->GetType() == ESimObject::SHIP) {
                 Ship* s = (Ship*)target;
 
                 if (s->IsStarship()) {
@@ -1124,7 +1124,7 @@ void Weapon::FindObjective()
     if (subtarget) {
         obj_w = subtarget->GetMountLocation();
     }
-    else if (target->GetType() == SimObject::SIM_SHIP) {
+    else if (target->GetType() == ESimObject::SHIP) {
         Ship* tgt_ship = (Ship*)target;
 
         if (tgt_ship->IsGroundUnit())

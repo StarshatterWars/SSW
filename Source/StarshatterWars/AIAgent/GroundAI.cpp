@@ -156,7 +156,7 @@ GroundAI::SelectTarget()
                 const double dist = (ship->GetLocation() - c_ship->GetLocation()).Length();
 
                 if (!current_ship_target ||
-                    (c_ship->Class() <= current_ship_target->Class() && dist < target_dist)) {
+                    (c_ship->GetClassification() <= current_ship_target->GetClassification() && dist < target_dist)) {
                     current_ship_target = c_ship;
                     target_dist = dist;
                 }

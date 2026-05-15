@@ -126,7 +126,7 @@ int
 SimElement::GetShipClass()
 {
 	if (ships.size())
-		return (int) ships[0]->Class();
+		return (int) ships[0]->GetClassification();
 
 	return 0;
 }
@@ -609,7 +609,7 @@ SimElement::ResumeAssignment()
 			SimElement* elem = iter.value();
 			SimObject* tgt = objective->GetTarget();
 
-			if (tgt && tgt->GetType() == SimObject::SIM_SHIP && elem->Contains((const Ship*)tgt)) {
+			if (tgt && tgt->GetType() == ESimObject::SHIP && elem->Contains((const Ship*)tgt)) {
 				SetAssignment(elem);
 				return;
 			}

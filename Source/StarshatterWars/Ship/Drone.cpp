@@ -42,7 +42,7 @@ Drone::Drone(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, cons
 	decoy_type(0),
 	probe(0)
 {
-	obj_type = SimObject::SIM_DRONE;
+	obj_type = ESimObject::DRONE;
 
 	if (dsn) {
 		decoy_type = dsn->decoy_type;

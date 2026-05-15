@@ -383,7 +383,7 @@ ShipAI::ExecFrame(double secs)
 			ship->LockTarget(target);
 
 			if (target == ship->GetTarget() &&
-				target->GetType() == SimObject::SIM_SHIP)
+				target->GetType() == ESimObject::SHIP)
 			{
 				if (target->GetIdentity() != engaged_ship_id &&
 					Game::GetGameTime() - last_call_time > 10000)
@@ -1587,49 +1587,10 @@ ShipAI::Navigator()
 		Steer Seek =
 			SeekTarget();
 
-		if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-		{
-			UE_LOG(LogTemp, Error,
-				TEXT("[BR NAV SEEK BEFORE ACCUM] SeekYaw=%.4f SeekPitch=%.4f MagBefore=%.4f AccYawBefore=%.4f AccPitchBefore=%.4f"),
-				Seek.yaw,
-				Seek.pitch,
-				magnitude,
-				accumulator.yaw,
-				accumulator.pitch);
-		}
-
 		Accumulate(Seek);
-
-		if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-		{
-			UE_LOG(LogTemp, Error,
-				TEXT("[BR NAV SEEK AFTER ACCUM] AccYaw=%.4f AccPitch=%.4f MagAfter=%.4f"),
-				accumulator.yaw,
-				accumulator.pitch,
-				magnitude);
-		}
-	}
-
-	if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[BR NAV BEFORE HELM] AccYaw=%.4f AccPitch=%.4f OldHelm=%.4f OldPitch=%.4f"),
-			accumulator.yaw,
-			accumulator.pitch,
-			ship->GetHelmHeading(),
-			ship->GetHelmPitch());
 	}
 
 	HelmControl();
-
-	if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[BR NAV AFTER HELM] NewHelm=%.4f NewPitch=%.4f"),
-			ship->GetHelmHeading(),
-			ship->GetHelmPitch());
-	}
-
 	ThrottleControl();
 	FireControl();
 	AdjustDefenses();
@@ -1659,6 +1620,16 @@ ShipAI::HelmControl()
 	{
 		ship->SetHelmPitch(accumulator.pitch);
 	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[HELM] Ship='%hs' ")
+		TEXT("ShipLoc=%s ")
+		TEXT("Objective=%s ")
+		TEXT("Delta=%s "),
+		ship->GetName(),
+		*ship->GetLocation().ToString(),
+		*objective.ToString(),
+		*(objective - ship->GetLocation()).ToString());
 
 	ship->SetTransX(trans_x);
 	ship->SetTransY(trans_y);
@@ -2234,7 +2205,7 @@ ShipAI::AvoidTestSingleObject(
 		return false;
 	}
 
-	if (obj->GetType() == SimObject::SIM_SHIP)
+	if (obj->GetType() == ESimObject::SHIP)
 	{
 		Ship* c_ship = static_cast<Ship*>(obj);
 
@@ -2438,60 +2409,30 @@ ShipAI::SeekTarget()
 	Steer NoSteer;
 
 	if (!ship)
-	{
 		return NoSteer;
-	}
-
-	if (bObjectiveCompleteLockout)
-	{
-		ship->SetThrottle(0.0);
-		ship->SetThrottleRequest(0.0);
-		ship->SetVelocity(FVector::ZeroVector);
-		ship->SetTransX(0.0);
-		ship->SetTransY(0.0);
-		ship->SetTransZ(0.0);
-
-		target = nullptr;
-		threat = nullptr;
-		rumor = nullptr;
-
-		ship->DropTarget();
-
-		Steer Stop;
-		Stop.brake = 1.0f;
-		Stop.stop = 1;
-
-		return Stop;
-	}
 
 	Ship* ward = ship->GetWard();
 
-	if (objective.ContainsNaN() ||
-		!FMath::IsFinite(objective.X) ||
-		!FMath::IsFinite(objective.Y) ||
-		!FMath::IsFinite(objective.Z))
-	{
-		return NoSteer;
-	}
-
 	if (!target && !ward && !navpt && !patrol)
 	{
-		if (element_index > 1 || farcaster || rumor)
-		{
-			return Seek(Transform(objective));
-		}
+		if (element_index > 1)
+			return Seek(objective);
+
+		if (farcaster)
+			return Seek(objective);
+
+		if (rumor)
+			return Seek(objective);
 
 		return NoSteer;
 	}
 
 	if (patrol)
 	{
-		Steer Result = Seek(Transform(objective));
+		Steer Result = Seek(objective);
 
 		if (distance < 2000.0)
-		{
 			Result.brake = 1.0f;
-		}
 
 		return Result;
 	}
@@ -2499,178 +2440,14 @@ ShipAI::SeekTarget()
 	if (target && too_close == target->GetIdentity())
 	{
 		drop_time = 4.0f;
-
-		return Avoid(
-			Transform(objective),
-			0.0f);
+		return Avoid(objective, 0.0f);
 	}
 	else if (drop_time > 0.0f)
 	{
 		return NoSteer;
 	}
 
-	
-	const FVector LocalObjective =
-		Transform(objective);
-
-	if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[BR SEEK INPUT] Objective=%s ShipLoc=%s LocalObjective=%s CamVPN=%s CamVRT=%s CamVUP=%s"),
-			*objective.ToString(),
-			*ship->GetLocation().ToString(),
-			*LocalObjective.ToString(),
-			*ship->GetCam().vpn().ToString(),
-			*ship->GetCam().vrt().ToString(),
-			*ship->GetCam().vup().ToString());
-	}
-
-	Steer Result =
-		Seek(LocalObjective);
-
-	if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[BR SEEK OUTPUT] Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d"),
-			Result.yaw,
-			Result.pitch,
-			Result.brake,
-			Result.stop ? 1 : 0);
-	}
-
-	if (navpt && distance > 0.0)
-	{
-		const INSTRUCTION_ACTION Action = navpt->GetAction();
-
-		const bool bIsFarcastInstruction = navpt->GetFarcast() != 0;
-		const bool bIsDockInstruction = Action == INSTRUCTION_ACTION::DOCK;
-
-		const bool bShouldStop =
-			Action == INSTRUCTION_ACTION::VECTOR ||
-			bIsDockInstruction ||
-			bIsFarcastInstruction;
-
-		if (bShouldStop)
-		{
-			const double ArrivalRadius =
-				bIsFarcastInstruction ? 250.0 :
-				bIsDockInstruction ? 500.0 :
-				700.0;
-
-			const double BrakeRadius =
-				bIsFarcastInstruction ? 3000.0 :
-				bIsDockInstruction ? 18000.0 :
-				ArrivalRadius * 6.0;
-
-			const double Speed = ship->GetVelocity().Size();
-
-			if (distance <= BrakeRadius)
-			{
-				const double Alpha =
-					FMath::Clamp(
-						1.0 - (distance / BrakeRadius),
-						0.0,
-						1.0);
-
-				Result.brake =
-					FMath::Max(
-						Result.brake,
-						(float)Alpha);
-			}
-
-			if (distance <= ArrivalRadius)
-			{
-				bObjectiveArrivalLatched = true;
-			}
-
-			if (bObjectiveArrivalLatched && bIsFarcastInstruction)
-			{
-				ship->SetVelocity(FVector::ZeroVector);
-				ship->SetThrottle(0.0);
-				ship->SetThrottleRequest(0.0);
-				ship->SetTransX(0.0);
-				ship->SetTransY(0.0);
-				ship->SetTransZ(0.0);
-
-				Result.brake = 1.0f;
-				Result.stop = 1;
-
-				navpt->SetStatus(INSTRUCTION_STATUS::COMPLETE);
-				ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-
-				bObjectiveCompleteLockout = true;
-				bObjectiveArrivalLatched = false;
-
-				target = nullptr;
-				threat = nullptr;
-				rumor = nullptr;
-
-				ship->DropTarget();
-				ship->SetDirectorInfo("Farcast instruction complete");
-
-				return Result;
-			}
-
-			if (bObjectiveArrivalLatched && bIsDockInstruction)
-			{
-				Result.brake = 1.0f;
-				Result.stop = 1;
-
-				ship->SetDirectorInfo("Docking settle");
-
-				if (Speed < 25.0)
-				{
-					ship->SetVelocity(FVector::ZeroVector);
-					ship->SetThrottle(0.0);
-					ship->SetThrottleRequest(0.0);
-					ship->SetTransX(0.0);
-					ship->SetTransY(0.0);
-					ship->SetTransZ(0.0);
-
-					navpt->SetStatus(INSTRUCTION_STATUS::COMPLETE);
-					ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-
-					ship->SetDirectorInfo("Docking complete");
-				}
-
-				return Result;
-			}
-
-			if (bObjectiveArrivalLatched)
-			{
-				Result.brake = 1.0f;
-				Result.stop = 1;
-
-				ship->SetDirectorInfo("Objective settling");
-
-				if (Speed < 25.0)
-				{
-					navpt->SetStatus(INSTRUCTION_STATUS::COMPLETE);
-					ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-
-					ship->SetDirectorInfo("Objective complete");
-				}
-
-				return Result;
-			}
-		}
-	}
-	else
-	{
-		bObjectiveArrivalLatched = false;
-	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::SeekTarget RESULT] Ship='%hs' Yaw=%.4f Pitch=%.4f Brake=%.2f Stop=%d Distance=%.2f Navpt=%p"),
-		ship ? ship->GetName() : "NULL",
-		Result.yaw,
-		Result.pitch,
-		Result.brake,
-		Result.stop ? 1 : 0,
-		distance,
-		navpt);
-
-	return Result;
+	return Seek(objective);
 }
 
 // +--------------------------------------------------------------------+
@@ -2714,7 +2491,7 @@ ShipAI::CheckTarget()
 		if (target->GetLife() == 0)
 			target = 0;
 
-		else if (target->GetType() == SimObject::SIM_SHIP) {
+		else if (target->GetType() == ESimObject::SHIP) {
 			Ship* tgt_ship = (Ship*)target;
 
 			if (tgt_ship->GetIFF() == ship->GetIFF() && !tgt_ship->IsRogue())

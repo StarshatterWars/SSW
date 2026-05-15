@@ -1291,7 +1291,7 @@ Sim::CreateElements()
 						if (ShieldPtr)
 							ShieldPtr->SetPowerLevel(50);
 
-						if (NewShip->Class() > CLASSIFICATION::FRIGATE) {
+						if (NewShip->GetClassification() > CLASSIFICATION::FRIGATE) {
 							ListIter<WeaponGroup> WeaponGroupIter = NewShip->GetWeapons();
 
 							while (++WeaponGroupIter) {
@@ -1309,8 +1309,8 @@ Sim::CreateElements()
 							}
 						}
 
-						if (NewShip->Class() > CLASSIFICATION::DRONE &&
-							NewShip->Class() < CLASSIFICATION::STATION) {
+						if (NewShip->GetClassification() > CLASSIFICATION::DRONE &&
+							NewShip->GetClassification() < CLASSIFICATION::STATION) {
 							ShipStats* Stats = ShipStats::Find(ShipName);
 
 							if (Stats) {
@@ -1322,7 +1322,7 @@ Sim::CreateElements()
 									NewShip->Design()->display_name);
 
 								Stats->SetType(DesignName);
-								Stats->SetShipClass((int)NewShip->Class());
+								Stats->SetShipClass((int)NewShip->GetClassification());
 								Stats->SetRole(Mission::GetRoleName(MissionElem->MissionRole()));
 								Stats->SetIFF(NewShip->GetIFF());
 								Stats->SetRegion(MissionElem->GetRegion());

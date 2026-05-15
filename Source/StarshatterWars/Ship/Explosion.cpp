@@ -83,7 +83,7 @@ static bool       recycles[MAX_EXPLOSION_TYPES];
 Explosion::Explosion(EExplosionType InType, const FVector& InPos, const FVector& InVel,
     float InExplosionScale, float InParticleScale,
     SimRegion* InRegion, SimObject* InSource)
-    : SimObject("Explosion", (int)InType)
+    : SimObject("Explosion", ESimObject::EXPLOSION)
     , type(InType)
     , particles(nullptr)
     , source(InSource)
@@ -639,8 +639,8 @@ Explosion::Activate(SimScene& scene)
     if (particles && !filter)
         scene.AddGraphic(particles);
 
-    if (sounds[obj_type]) {
-        USound* sound = sounds[obj_type]->Duplicate();
+    if (sounds[(int)obj_type]) {
+        USound* sound = sounds[(int)obj_type]->Duplicate();
 
         // fire and forget:
         if (sound) {

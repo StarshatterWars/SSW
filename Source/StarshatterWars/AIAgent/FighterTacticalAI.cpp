@@ -170,7 +170,7 @@ FighterTacticalAI::SelectTarget()
 
 	SimObject* target = ship_ai->GetTarget();
 
-	if (target && (target->GetType() == SimObject::SIM_SHIP) &&
+	if (target && (target->GetType() == ESimObject::SHIP) &&
 		(Game::GetGameTime() - secondary_selection_time) > THREAT_REACTION_TIME) {
 		SelectSecondaryForTarget((Ship*)target);
 		secondary_selection_time = Game::GetGameTime();
@@ -197,7 +197,7 @@ FighterTacticalAI::SelectTargetDirected(Ship* tgt)
 				SimObject* obj_sim_obj = objective->GetTarget();
 				Ship* obj_tgt = 0;
 
-				if (obj_sim_obj && obj_sim_obj->GetType() == SimObject::SIM_SHIP)
+				if (obj_sim_obj && obj_sim_obj->GetType() == ESimObject::SHIP)
 					obj_tgt = (Ship*)obj_sim_obj;
 
 				if (obj_tgt && ship->FindContact(obj_tgt))
@@ -242,7 +242,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 		TargetDist = 0.5 * ship->Design()->commit_range;
 
 	int ClassLimit = (int)CLASSIFICATION::LCA;
-	if (ship->Class() == CLASSIFICATION::ATTACK)
+	if (ship->GetClassification() == CLASSIFICATION::ATTACK)
 		ClassLimit = (int)CLASSIFICATION::DESTROYER;
 
 	ListIter<SimContact> ContactIter = ship->GetContactList();
@@ -263,7 +263,7 @@ void FighterTacticalAI::SelectTargetOpportunity()
 			continue;
 
 		// reasonable target?
-		if (ContactShip && (int) ContactShip->Class() <= ClassLimit && !ContactShip->InTransition()) {
+		if (ContactShip && (int) ContactShip->GetClassification() <= ClassLimit && !ContactShip->InTransition()) {
 
 			if (!bRogue) {
 				SimObject* TheirTarget = ContactShip->GetTarget();
@@ -343,7 +343,7 @@ FighterTacticalAI::ListSecondariesForTarget(Ship* tgt, List<WeaponGroup>& weps)
 		while (++iter) {
 			WeaponGroup* w = iter.value();
 
-			if (w->Ammo() && w->CanTarget((uint32) tgt->Class()))
+			if (w->Ammo() && w->CanTarget((uint32) tgt->GetClassification()))
 				weps.append(w);
 		}
 	}
@@ -420,7 +420,7 @@ FighterTacticalAI::SelectSecondaryForTarget(Ship* tgt)
 			// just drop it:
 
 			Weapon* primary = ship->GetPrimary();
-			if (!primary || !primary->CanTarget((uint32)tgt->Class())) {
+			if (!primary || !primary->CanTarget((uint32)tgt->GetClassification())) {
 				ship_ai->DropTarget(3);
 				ship->DropTarget();
 			}
@@ -542,7 +542,7 @@ FighterTacticalAI::IsStrikeComplete(Instruction* instr)
 
 	// if there's nothing to shoot at, we must be done:
 	if (!instr || !instr->GetTarget() || instr->GetTarget()->GetLife() == 0 ||
-		instr->GetTarget()->GetType() != SimObject::SIM_SHIP)
+		instr->GetTarget()->GetType() != ESimObject::SHIP)
 		return true;
 
 	// break off strike only when ALL weapons are expended:
@@ -563,7 +563,7 @@ FighterTacticalAI::IsStrikeComplete(Instruction* instr)
 		while (++g_iter) {
 			WeaponGroup* w = g_iter.value();
 
-			if (w->Ammo() && w->CanTarget((uint32)target->Class())) {
+			if (w->Ammo() && w->CanTarget((uint32)target->GetClassification())) {
 				ListIter<Weapon> w_iter = w->GetWeapons();
 
 				while (++w_iter) {

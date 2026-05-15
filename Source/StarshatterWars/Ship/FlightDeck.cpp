@@ -164,7 +164,7 @@ double InboundSlot::Distance()
 bool
 InboundSlot::Update(SimObject* obj)
 {
-	if (obj->GetType() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == ESimObject::SHIP) {
 		Ship* s = (Ship*)obj;
 
 		if (s == ship) {
@@ -874,7 +874,7 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 
 	// Build ship compatibility mask from classification
 	// (Starshatter-style: one bit per ship class)
-	const uint32 ShipMask = 1u << static_cast<uint32>(s->Class());
+	const uint32 ShipMask = 1u << static_cast<uint32>(s->GetClassification());
 
 	// If caller did not specify a slot, find first compatible free slot
 	if (outIndex < 0)
@@ -1335,7 +1335,7 @@ FlightDeck::Sequence(int slotIndex) const
 bool
 FlightDeck::Update(SimObject* obj)
 {
-	if (obj->GetType() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == ESimObject::SHIP) {
 		Ship* s = (Ship*)obj;
 
 		ListIter<InboundSlot> iter = recovery_queue;

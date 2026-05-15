@@ -60,7 +60,7 @@ static inline double RandomSigned()
 
 Physical::Physical()
 	: id(id_key++)
-	, obj_type(0)
+	, obj_type(ESimObject::NONE)
 	, rep(0)
 	, light(0)
 	, velocity(FVector::ZeroVector)
@@ -111,7 +111,7 @@ Physical::Physical()
 
 // +--------------------------------------------------------------------+
 
-Physical::Physical(const char* n, int t)
+Physical::Physical(const char* n, ESimObject t)
 	: id(id_key++)
 	, obj_type(t)
 	, rep(0)

@@ -247,7 +247,7 @@ bool TacticalAI::CheckObjectives()
 				{
 					SimObject* tgt = obj->GetTarget();
 
-					if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+					if (tgt && tgt->GetType() == ESimObject::SHIP)
 					{
 						roe = DIRECTED;
 						SelectTargetDirected(static_cast<Ship*>(tgt));
@@ -260,7 +260,7 @@ bool TacticalAI::CheckObjectives()
 				{
 					SimObject* tgt = obj->GetTarget();
 
-					if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+					if (tgt && tgt->GetType() == ESimObject::SHIP)
 					{
 						roe = DEFENSIVE;
 						ward = static_cast<Ship*>(tgt);
@@ -343,7 +343,7 @@ bool TacticalAI::ProcessOrders()
 			bool       tgt_ok = false;
 			SimObject* tgt = orders->GetTarget();
 
-			if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
+			if (tgt && tgt->GetType() == ESimObject::SHIP) {
 				Ship* tgt_ship = (Ship*)tgt;
 
 				if (CanTarget(tgt_ship)) {
@@ -367,7 +367,7 @@ bool TacticalAI::ProcessOrders()
 		case RadioMessageAction::COVER_ME:
 		{
 			SimObject* tgt = orders->GetTarget();
-			if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
+			if (tgt && tgt->GetType() == ESimObject::SHIP) {
 				roe = DEFENSIVE;
 				ship_ai->SetWard((Ship*)tgt);
 				ship_ai->SetNavPoint(0);
@@ -526,7 +526,7 @@ bool TacticalAI::CheckFlightPlan()
 		if (roe == DEFENSIVE) {
 			SimObject* tgt = navpt->GetTarget();
 
-			if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+			if (tgt && tgt->GetType() == ESimObject::SHIP)
 				ward = (Ship*)tgt;
 		}
 
@@ -671,8 +671,8 @@ TacticalAI::SelectTarget()
 		{
 			CheckTarget();
 
-			if (ship->Class() != CLASSIFICATION::CORVETTE &&
-				ship->Class() != CLASSIFICATION::FRIGATE)
+			if (ship->GetClassification() != CLASSIFICATION::CORVETTE &&
+				ship->GetClassification() != CLASSIFICATION::FRIGATE)
 			{
 				UE_LOG(LogTemp, Warning,
 					TEXT("[TacticalAI::SelectTarget] KEEP existing target Ship='%hs' Target='%hs'"),
@@ -721,7 +721,7 @@ TacticalAI::SelectTarget()
 			ship ? ship->GetName() : "NULL");
 
 		if (target &&
-			target->GetType() == SimObject::SIM_SHIP)
+			target->GetType() == ESimObject::SHIP)
 		{
 			SelectTargetDirected((Ship*)target);
 		}
@@ -743,8 +743,8 @@ TacticalAI::SelectTarget()
 
 		SelectTargetOpportunity();
 
-		if (ship->Class() == CLASSIFICATION::CORVETTE ||
-			ship->Class() == CLASSIFICATION::FRIGATE)
+		if (ship->GetClassification() == CLASSIFICATION::CORVETTE ||
+			ship->GetClassification() == CLASSIFICATION::FRIGATE)
 		{
 			SimObject* potential_target =
 				ship_ai->GetTarget();
@@ -753,8 +753,8 @@ TacticalAI::SelectTarget()
 				potential_target &&
 				target != potential_target)
 			{
-				if (target->GetType() == SimObject::SIM_SHIP &&
-					potential_target->GetType() == SimObject::SIM_SHIP)
+				if (target->GetType() == ESimObject::SHIP &&
+					potential_target->GetType() == ESimObject::SHIP)
 				{
 					ship_ai->SetTarget(target);
 				}
@@ -783,7 +783,7 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 	if (!potential_target &&
 		navpt &&
 		navpt->GetTarget() &&
-		navpt->GetTarget()->GetType() == SimObject::SIM_SHIP)
+		navpt->GetTarget()->GetType() == ESimObject::SHIP)
 	{
 		potential_target =
 			(Ship*)navpt->GetTarget();
@@ -816,7 +816,7 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 					nullptr;
 
 				if (obj_sim_obj &&
-					obj_sim_obj->GetType() == SimObject::SIM_SHIP)
+					obj_sim_obj->GetType() == ESimObject::SHIP)
 				{
 					obj_tgt =
 						(Ship*)obj_sim_obj;
@@ -904,184 +904,75 @@ TacticalAI::SelectTargetOpportunity()
 		return;
 	}
 
-	//-------------------------------------------------------------
-	// Keep current valid target
-	//-------------------------------------------------------------
-	SimObject* current =
-		ship_ai->GetTarget();
-
-	if (current &&
-		current->GetLife() != 0 &&
-		current->GetRegion() == ship->GetRegion())
+	// NON-COMBATANTS do not pick targets of opportunity:
+	if (ship->GetIFF() == 0)
 	{
-		FVector ToTarget =
-			current->GetLocation() -
-			ship->GetLocation();
-
-		ToTarget.Z = 0.0f;
-
-		if (ToTarget.Normalize())
-		{
-			const double Heading =
-				FMath::Atan2(
-					ToTarget.Y,
-					ToTarget.X);
-
-			ship->LookAt(
-				ship->GetLocation() +
-				ToTarget * 10000.0f);
-
-			ship->SetHelmHeading(
-				Heading);
-
-			//-----------------------------------------------------
-			// Prevent inherited forward drift
-			//-----------------------------------------------------
-			ship->SetVelocity(
-				FVector::ZeroVector);
-
-			UE_LOG(LogTemp, Warning,
-				TEXT("[TacticalAI::SelectTargetOpportunity] FACE CURRENT TARGET Ship='%hs' Target='%hs' HeadingDeg=%.2f"),
-				ship->GetName(),
-				current->GetName(),
-				FMath::RadiansToDegrees(
-					Heading));
-		}
-
 		return;
 	}
 
-	//-------------------------------------------------------------
-	// Find best hostile contact
-	//-------------------------------------------------------------
-	Ship* best_target =
-		nullptr;
-
-	double best_score =
-		0.0;
+	SimObject* potential_target = nullptr;
 
 	ListIter<SimContact> contact =
 		ship->GetContactList();
 
 	while (++contact)
 	{
-		Ship* candidate =
+		Ship* contact_ship =
 			contact->GetShip();
 
-		if (!candidate)
+		if (!contact_ship)
 		{
 			continue;
 		}
 
-		if (candidate == ship)
+		if (contact_ship == ship)
 		{
 			continue;
 		}
 
-		if (candidate->GetIFF() == ship->GetIFF())
+		if (contact_ship->GetIFF() == ship->GetIFF())
 		{
 			continue;
 		}
 
-		if (candidate->GetIFF() == 0)
+		if (contact_ship->GetIFF() == 0)
 		{
 			continue;
 		}
 
-		if (candidate->InTransition())
+		if (contact_ship->InTransition())
 		{
 			continue;
 		}
 
-		const double range =
-			(candidate->GetLocation() -
-				ship->GetLocation()).Size();
-
-		if (range <= 0.0)
+		if (contact_ship->GetRegion() != ship->GetRegion())
 		{
 			continue;
 		}
-
-		//---------------------------------------------------------
-		// Threat-weighted score
-		//---------------------------------------------------------
-		double score =
-			1.0 / range;
 
 		if (contact->Threat(ship))
 		{
-			score *= 5.0;
+			potential_target =
+				contact_ship;
+
+			break;
 		}
 
-		if (!best_target ||
-			score > best_score)
+		if (!potential_target)
 		{
-			best_target =
-				candidate;
-
-			best_score =
-				score;
+			potential_target =
+				contact_ship;
 		}
 	}
 
-	//-------------------------------------------------------------
-	// Acquire target
-	//-------------------------------------------------------------
-	if (best_target)
+	if (potential_target)
 	{
-		ship_ai->SetTarget(
-			best_target);
-
-		//---------------------------------------------------------
-		// Immediately face target
-		//---------------------------------------------------------
-		FVector ToTarget =
-			best_target->GetLocation() -
-			ship->GetLocation();
-
-		ToTarget.Z = 0.0f;
-
-		if (ToTarget.Normalize())
+		if (ship->GetClassification() != CLASSIFICATION::CARRIER &&
+			ship->GetClassification() != CLASSIFICATION::SWACS)
 		{
-			const double Heading =
-				FMath::Atan2(
-					ToTarget.Y,
-					ToTarget.X);
-
-			ship->LookAt(
-				ship->GetLocation() +
-				ToTarget * 10000.0f);
-
-			ship->SetHelmHeading(
-				Heading);
-
-			//-----------------------------------------------------
-			// Prevent inherited forward drift
-			//-----------------------------------------------------
-			ship->SetVelocity(
-				FVector::ZeroVector);
-
-			UE_LOG(LogTemp, Warning,
-				TEXT("[TacticalAI::SelectTargetOpportunity] FACE TARGET Ship='%hs' Target='%hs' HeadingDeg=%.2f"),
-				ship->GetName(),
-				best_target->GetName(),
-				FMath::RadiansToDegrees(
-					Heading));
+			ship_ai->SetTarget(
+				potential_target);
 		}
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] TARGET Ship='%hs' Target='%hs' Score=%.6f"),
-			ship->GetName(),
-			best_target->GetName(),
-			best_score);
-	}
-	else
-	{
-		ship_ai->DropTarget();
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[TacticalAI::SelectTargetOpportunity] NO TARGET Ship='%hs'"),
-			ship->GetName());
 	}
 }
 
@@ -1099,7 +990,7 @@ void TacticalAI::CheckTarget()
 		return;
 	}
 
-	if (tgt->GetType() == SimObject::SIM_SHIP) {
+	if (tgt->GetType() == ESimObject::SHIP) {
 		Ship* target = (Ship*)tgt;
 
 		// has the target joined our side?
@@ -1148,7 +1039,7 @@ void TacticalAI::CheckTarget()
 
 		ship_ai->DropTarget();
 	}
-	else if (tgt->GetType() == SimObject::SIM_DRONE) {
+	else if (tgt->GetType() == ESimObject::DRONE) {
 		Drone* drone = (Drone*)tgt;
 
 		// is the target still a threat?
@@ -1186,11 +1077,11 @@ void TacticalAI::FindThreat()
 
 				Ship* c_ship = contact->GetShip();
 				if (c_ship && !c_ship->InTransition() &&
-					c_ship->Class() != CLASSIFICATION::FREIGHTER &&
-					c_ship->Class() != CLASSIFICATION::FARCASTER) {
+					c_ship->GetClassification() != CLASSIFICATION::FREIGHTER &&
+					c_ship->GetClassification() != CLASSIFICATION::FARCASTER) {
 
 					if (c_ship->GetTarget() == ship) {
-						if (!threat || c_ship->Class() > threat->Class()) {
+						if (!threat || c_ship->GetClassification() > threat->GetClassification()) {
 							threat = c_ship;
 							threat_dist = 0;
 						}
@@ -1244,8 +1135,8 @@ void TacticalAI::FindSupport()
 		if (contact->GetShip() && contact->GetIFF(ship) == ship->GetIFF()) {
 			Ship* c_ship = contact->GetShip();
 
-			if (c_ship != ship && c_ship->Class() >= ship->Class() && !c_ship->InTransition()) {
-				if (!support || c_ship->Class() > support->Class())
+			if (c_ship != ship && c_ship->GetClassification() >= ship->GetClassification() && !c_ship->InTransition()) {
+				if (!support || c_ship->GetClassification() > support->GetClassification())
 					support = c_ship;
 			}
 		}

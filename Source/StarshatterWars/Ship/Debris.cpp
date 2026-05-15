@@ -34,7 +34,7 @@
 // +--------------------------------------------------------------------+
 
 Debris::Debris(SimModel* model, const FVector& pos, const FVector& vel, double m)
-	: SimObject("Debris", SimObject::SIM_DEBRIS)
+	: SimObject("Debris", ESimObject::DEBRIS)
 {
 	MoveTo(pos);
 

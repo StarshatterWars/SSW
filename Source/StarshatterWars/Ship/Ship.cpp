@@ -217,7 +217,7 @@ Ship::Ship(
 		return;
 	}
 
-	obj_type = SimObject::SIM_SHIP;
+	obj_type = ESimObject::SHIP;
 
 	radius = design->radius;
 	mass = design->mass;
@@ -1248,7 +1248,7 @@ Ship::SetupAgility()
 		}
 
 		else {
-			if (Class() != CLASSIFICATION::LCA)
+			if (GetClassification() != CLASSIFICATION::LCA)
 				yaw_air_factor = 0.3f;
 
 			double rho = GetDensity();
@@ -1632,7 +1632,7 @@ Ship::ClassForName(const char* name)
 }
 
 CLASSIFICATION
-Ship::Class() const
+Ship::GetClassification() const
 {
 	if (!design)
 	{
@@ -1652,7 +1652,7 @@ Ship::IsGroundUnit() const
 	}
 
 	const uint32 TypeMask =
-		static_cast<uint32>(Class());
+		static_cast<uint32>(GetClassification());
 
 	const uint32 GroundMask =
 		static_cast<uint32>(CLASSIFICATION::GROUND_UNITS);
@@ -1690,7 +1690,7 @@ Ship::IsDropship() const
 	}
 
 	const uint32 TypeMask =
-		static_cast<uint32>(Class());
+		static_cast<uint32>(GetClassification());
 
 	const uint32 DropshipMask =
 		static_cast<uint32>(CLASSIFICATION::DROPSHIPS);
@@ -1707,7 +1707,7 @@ Ship::IsStatic() const
 	}
 
 	const uint32 TypeMask =
-		static_cast<uint32>(Class());
+		static_cast<uint32>(GetClassification());
 
 	return
 		TypeMask == static_cast<uint32>(CLASSIFICATION::STATION) ||
@@ -1735,7 +1735,7 @@ Ship::IsHostileTo(const SimObject* o) const
 		if (IsRogue())
 			return true;
 
-		if (o->GetType() == SIM_SHIP) {
+		if (o->GetType() == ESimObject::SHIP) {
 			Ship* s = (Ship*)o;
 
 			if (s->IsRogue())
@@ -1751,7 +1751,7 @@ Ship::IsHostileTo(const SimObject* o) const
 			}
 		}
 
-		else if (o->GetType() == SIM_SHOT || o->GetType() == SIM_DRONE) {
+		else if (o->GetType() == ESimObject::SHOT || o->GetType() == ESimObject::DRONE) {
 			SimShot* s = (SimShot*)o;
 
 			if (GetIFF() == 0) {
@@ -1809,7 +1809,7 @@ Ship::FindContact(SimObject* s) const
 		GetName(),
 		s ? s->GetName() : "NULL",
 		GetIFF(),
-		s && s->GetType() == SimObject::SIM_SHIP ? ((Ship*)s)->GetIFF() : -1,
+		s && s->GetType() == ESimObject::SHIP ? ((Ship*)s)->GetIFF() : -1,
 		GetRegion() ? GetRegion()->GetName() : "NULL",
 		s && s->GetRegion() ? s->GetRegion()->GetName() : "NULL",
 		((Ship*)this)->GetSensor(),
@@ -1823,7 +1823,7 @@ Ship::FindContact(SimObject* s) const
 	List<SimContact>* SearchList =
 		nullptr;
 
-	if (s->GetType() == SimObject::SIM_SHIP)
+	if (s->GetType() == ESimObject::SHIP)
 	{
 		Ship* TargetShip =
 			(Ship*)s;
@@ -2093,7 +2093,7 @@ Ship::CollidesWith(Physical& o)
 	for (int i = 0; i < detail.NumModels(detail_level); i++) {
 		Graphic* g = detail.GetRep(detail_level, i);
 
-		if (o.GetType() == SimObject::SIM_SHIP) {
+		if (o.GetType() == ESimObject::SHIP) {
 			Ship* o_ship = (Ship*)&o;
 			const int o_det = o_ship->detail_level;
 
@@ -2283,7 +2283,7 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 
 				EffectiveDamage *= GetFriendlyFireLevel();
 
-				if (Class() > CLASSIFICATION::DRONE && OwnerShip->Class() > CLASSIFICATION::DRONE) {
+				if (GetClassification() > CLASSIFICATION::DRONE && OwnerShip->GetClassification() > CLASSIFICATION::DRONE) {
 					if (OwnerShip->IsRogue() && !WasRogue) {
 						RadioMessage* Warn = new RadioMessage(OwnerShip, this, RadioMessageAction::DECLARE_ROGUE);
 						RadioTraffic::Transmit(Warn);
@@ -2695,7 +2695,7 @@ Ship::SetLeader(Ship* Leader)
 			new SimElement(
 				Leader->GetName(),
 				Leader->GetIFF(),
-				(int)Leader->Class());
+				(int)Leader->GetClassification());
 
 		LeaderElement->AddShip(Leader, 1);
 	}
@@ -2769,7 +2769,7 @@ Ship::AddNavPoint(Instruction* pt, Instruction* after)
 			new SimElement(
 				GetName(),
 				GetIFF(),
-				(int)Class());
+				(int)GetClassification());
 
 		element->AddShip(this, 1);
 
@@ -3061,7 +3061,7 @@ Ship::SetWard(Ship* s)
 void
 Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 {
-	if (targ && targ->GetType() == SimObject::SIM_SHIP) {
+	if (targ && targ->GetType() == ESimObject::SHIP) {
 		Ship* targ_ship = (Ship*)targ;
 
 		if (targ_ship && targ_ship->IsNetObserver())
@@ -3092,7 +3092,7 @@ Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 	}
 
 	// track engagement:
-	if (target && target->GetType() == SimObject::SIM_SHIP) {
+	if (target && target->GetType() == ESimObject::SHIP) {
 		SimElement* elem = GetElement();
 		SimElement* tgt_elem = ((Ship*)target)->GetElement();
 
@@ -3115,7 +3115,7 @@ Ship::DropTarget()
 void
 Ship::CycleSubTarget(int Dir)
 {
-	if (!target || target->GetType() != SimObject::SIM_SHIP)
+	if (!target || target->GetType() != ESimObject::SHIP)
 		return;
 
 	Ship* TargetShip = (Ship*)target;
@@ -3571,23 +3571,47 @@ Ship::ExecPhysics(double seconds)
 		ExecFLCSFrame();
 	}
 
+	//-------------------------------------------------------------
+	// BR turn/target tracking
+	//-------------------------------------------------------------
 	if (!_stricmp(GetName(), "Blockade Runner"))
 	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[BR TURN PROGRESS] ")
-			TEXT("Loc=%s ")
-			TEXT("Vel=%s ")
-			TEXT("VPN=%s ")
-			TEXT("Heading=%s ")
-			TEXT("HelmHeading=%.4f ")
-			TEXT("TargetDelta=%s"),
-			*GetLocation().ToString(),
-			*GetVelocity().ToString(),
-			*GetCam().vpn().ToString(),
-			*GetHeading().ToString(),
-			GetHelmHeading(),
-			*(FVector(200000.0f, 0.0f, -120000.0f) - GetLocation()).ToString());
+		const FVector TargetLocation(
+			200000.0f,
+			0.0f,
+			-120000.0f);
+
+		const FVector TargetDelta =
+			TargetLocation -
+			GetLocation();
+
+		if (!_stricmp(GetName(), "Blockade Runner"))
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[BR PHYSICS INPUT] ")
+				TEXT("Ship='%hs' ")
+				TEXT("Throttle=%.2f ")
+				TEXT("Request=%.2f ")
+				TEXT("MainDrive=%p ")
+				TEXT("Power=%d ")
+				TEXT("FLCS=%p ")
+				TEXT("NetControl=%p ")
+				TEXT("FlightModel=%d ")
+				TEXT("Thrust=%.4f ")
+				TEXT("Vel=%s"),
+				GetName(),
+				GetThrottle(),
+				GetThrottleRequest(),
+				main_drive,
+				main_drive && main_drive->IsPowerOn() ? 1 : 0,
+				flcs,
+				net_control,
+				(int)flight_model,
+				thrust,
+				*GetVelocity().ToString());
+		}
 	}
+
 	//-------------------------------------------------------------
 	// Throttle request -> actual throttle
 	//-------------------------------------------------------------
@@ -3638,18 +3662,31 @@ Ship::ExecPhysics(double seconds)
 	g_force =
 		0.0f;
 
-	UE_LOG(LogTemp, Error,
-		TEXT("[BR PHYSICS INPUT] Ship='%hs' Throttle=%.2f Request=%.2f MainDrive=%p Power=%d FLCS=%p NetControl=%p FlightModel=%d Thrust=%.4f Vel=%s"),
-		GetName(),
-		GetThrottle(),
-		GetThrottleRequest(),
-		main_drive,
-		main_drive && main_drive->IsPowerOn() ? 1 : 0,
-		flcs,
-		net_control,
-		(int)flight_model,
-		thrust,
-		*GetVelocity().ToString());
+	if (!_stricmp(GetName(), "Blockade Runner"))
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[BR PHYSICS INPUT] ")
+			TEXT("Ship='%hs' ")
+			TEXT("Throttle=%.2f ")
+			TEXT("Request=%.2f ")
+			TEXT("MainDrive=%p ")
+			TEXT("Power=%d ")
+			TEXT("FLCS=%p ")
+			TEXT("NetControl=%p ")
+			TEXT("FlightModel=%d ")
+			TEXT("Thrust=%.4f ")
+			TEXT("Vel=%s"),
+			GetName(),
+			GetThrottle(),
+			GetThrottleRequest(),
+			main_drive,
+			main_drive && main_drive->IsPowerOn() ? 1 : 0,
+			flcs,
+			net_control,
+			(int)flight_model,
+			thrust,
+			*GetVelocity().ToString());
+	}
 
 	//-------------------------------------------------------------
 	// Legacy physics dispatch
@@ -3839,7 +3876,7 @@ Ship::AeroFrame(double seconds)
 {
 	const float g_save = g_accel;
 
-	if (Class() == CLASSIFICATION::LCA) {
+	if (GetClassification() == CLASSIFICATION::LCA) {
 		lat_thrust = true;
 		SetGravity(0.0f);
 	}
@@ -3938,7 +3975,7 @@ Ship::LinearFrame(double seconds)
 {
 	Physical::LinearFrame(seconds);
 
-	if (!IsAirborne() || Class() != CLASSIFICATION::LCA)
+	if (!IsAirborne() || GetClassification() != CLASSIFICATION::LCA)
 		return;
 
 	// damp lateral movement in atmosphere:
@@ -4460,8 +4497,8 @@ Ship::Update(SimObject* obj)
 		inbound = 0;
 	}
 
-	if (obj->GetType() == SimObject::SIM_SHOT ||
-		obj->GetType() == SimObject::SIM_DRONE) {
+	if (obj->GetType() == ESimObject::SHOT ||
+		obj->GetType() == ESimObject::DRONE) {
 		SimShot* s = (SimShot*)obj;
 
 		if (sensor_drone == s)
@@ -5537,6 +5574,7 @@ Ship::ApplyHelmPitch(double p)
 		p * PI / 4.0);
 }
 
+
 void
 Ship::ApplyPitch(double p)
 {
@@ -5787,7 +5825,7 @@ Ship::IsTracking(SimObject* tgt)
 // +--------------------------------------------------------------------+
 
 void
-Ship::LockTarget(int type, bool closest, bool hostile)
+Ship::LockTarget(ESimObject type, bool closest, bool hostile)
 {
 	if (sensor)
 		SetTarget(sensor->LockTarget(type, closest, hostile));

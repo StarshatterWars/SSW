@@ -386,7 +386,7 @@ void Thruster::ExecTrans(double x, double y, double z)
 	/*
 	 * Landing craft VTOL assist
 	 */
-	if (ship->Class() == CLASSIFICATION::LCA &&
+	if (ship->GetClassification() == CLASSIFICATION::LCA &&
 		ship->IsAirborne() &&
 		ship->GetVelocity().Length() < 250 &&
 		ship->GetAltitudeAGL() > ship->GetRadius() / 2)

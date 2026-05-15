@@ -267,6 +267,30 @@ enum class EMissionDisplayType : uint8
 	Hidden
 };
 
+UENUM(BlueprintType)
+enum class ESimObject : uint8
+{
+	NONE			UMETA(DisplayName = "None"),
+
+	SHIP = 100		UMETA(DisplayName = "Ship"),
+	SHOT			UMETA(DisplayName = "Shot"),
+	DRONE			UMETA(DisplayName = "Drone"),
+	EXPLOSION		UMETA(DisplayName = "Explosion"),
+	DEBRIS		    UMETA(DisplayName = "Debris"),
+	ASTEROID		UMETA(DisplayName = "Asteroid"),
+	SIM_TERRAIN    UMETA(DisplayName = "Terrain"),
+	SIM_PLANET     UMETA(DisplayName = "Planet"),
+	SIM_STAR       UMETA(DisplayName = "Star"),
+	SIM_STATION    UMETA(DisplayName = "Station"),
+	SIM_SATELLITE  UMETA(DisplayName = "Satellite"),
+	SIM_NAVPOINT   UMETA(DisplayName = "NavPoint"),
+	SIM_PROBE      UMETA(DisplayName = "Probe"),
+	SIM_SENSOR     UMETA(DisplayName = "Sensor"),
+	SIM_STRUCTURE  UMETA(DisplayName = "Structure"),
+	SIM_EFFECT     UMETA(DisplayName = "Effect"),
+	SIM_WRECK      UMETA(DisplayName = "Wreck")
+};
+
 UENUM()
 enum class EIntel : uint8 {
 	UNKNOWN		UMETA(DisplayName = "Unknown"), // This status should notxexist in game

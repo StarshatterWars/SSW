@@ -299,7 +299,7 @@ void Sensor::ExecFrame(double seconds)
 
         if (mode == ESensorMode::ACM) {
             if (!ship->GetTarget())
-                ship->LockTarget(SimObject::SIM_SHIP, true, true);
+                ship->LockTarget(ESimObject::SHIP, true, true);
         }
     }
 
@@ -750,7 +750,7 @@ bool Sensor::IsTracking(SimObject* tgt)
 
         SimContact* c = 0;
 
-        if (tgt->GetType() == SimObject::SIM_SHIP) {
+        if (tgt->GetType() == ESimObject::SHIP) {
             c = FindContact((Ship*)tgt);
         }
         else {
@@ -780,7 +780,7 @@ struct TargetOffset {
     int operator==(const TargetOffset& o) const { return offset == o.offset; }
 };
 
-SimObject* Sensor::LockTarget(int obj_type, bool closest, bool hostile)
+SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
 {
     if (!ship || ship->GetEMCON() < 3) {
         Ignore(target);
@@ -794,7 +794,7 @@ SimObject* Sensor::LockTarget(int obj_type, bool closest, bool hostile)
     List<TargetOffset> targets;
 
     while (++contact) {
-        if (obj_type == SimObject::SIM_SHIP)
+        if (obj_type == ESimObject::SHIP)
             test = contact->GetShip();
         else
             test = contact->GetShot();
@@ -892,12 +892,12 @@ SimObject* Sensor::LockTarget(SimObject* candidate)
     if (!candidate)
         return target;
 
-    int candidate_type = candidate->GetType();
+    ESimObject candidate_type = candidate->GetType();
     SimObject* test = 0;
     ListIter<SimContact> contact(ship->GetContactList());
 
     while (++contact) {
-        if (candidate_type == SimObject::SIM_SHIP)
+        if (candidate_type == ESimObject::SHIP)
             test = contact->GetShip();
         else
             test = contact->GetShot();

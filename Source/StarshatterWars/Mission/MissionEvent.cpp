@@ -221,7 +221,7 @@ MissionEvent::CheckTrigger()
 			while (++s_iter) {
 				Ship* ship = s_iter.value();
 
-				if (ship->GetType() >= (int)CLASSIFICATION::STATION)
+				if (ship->GetClassification() >= CLASSIFICATION::STATION)
 					continue;
 
 				if (ship->GetLife() == 0 && ship->GetRespawnCount() < 1)

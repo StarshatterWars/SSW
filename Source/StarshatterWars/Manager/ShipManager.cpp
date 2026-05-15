@@ -281,7 +281,7 @@ ShipManager::ExecFrame(double seconds)
 
 	if (controller->ActionMap(KEY_ACTION_3)) {
 		if (!target_latch)
-			ship->LockTarget(SimObject::SIM_SHIP);
+			ship->LockTarget(ESimObject::SHIP);
 
 		target_latch = true;
 	}
@@ -304,22 +304,22 @@ ShipManager::ExecFrame(double seconds)
 		ship->ToggleNavlights();
 
 	if (Toggled(KEY_LOCK_TARGET))
-		ship->LockTarget(SimObject::SIM_SHIP, false, true);
+		ship->LockTarget(ESimObject::SHIP, false, true);
 
 	else if (Toggled(KEY_LOCK_THREAT))
-		ship->LockTarget(SimObject::SIM_DRONE);
+		ship->LockTarget(ESimObject::DRONE);
 
 	else if (Toggled(KEY_LOCK_CLOSEST_SHIP))
-		ship->LockTarget(SimObject::SIM_SHIP, true, false);
+		ship->LockTarget(ESimObject::SHIP, true, false);
 
 	else if (Toggled(KEY_LOCK_CLOSEST_THREAT))
-		ship->LockTarget(SimObject::SIM_DRONE, true, false);
+		ship->LockTarget(ESimObject::DRONE, true, false);
 
 	else if (Toggled(KEY_LOCK_HOSTILE_SHIP))
-		ship->LockTarget(SimObject::SIM_SHIP, true, true);
+		ship->LockTarget(ESimObject::SHIP, true, true);
 
 	else if (Toggled(KEY_LOCK_HOSTILE_THREAT))
-		ship->LockTarget(SimObject::SIM_DRONE, true, true);
+		ship->LockTarget(ESimObject::DRONE, true, true);
 
 	else if (Toggled(KEY_CYCLE_SUBTARGET))
 		ship->CycleSubTarget(1);

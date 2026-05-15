@@ -43,7 +43,7 @@ public:
 	virtual ~Sensor();
 
 	virtual void       ExecFrame(double seconds);
-	virtual SimObject* LockTarget(int obj_type = SimObject::SIM_SHIP,
+	virtual SimObject* LockTarget(ESimObject obj_type = ESimObject::SHIP,
 		bool closest = false,
 		bool hostile = false);
 	virtual SimObject* LockTarget(SimObject* candidate);

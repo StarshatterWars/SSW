@@ -438,7 +438,7 @@ CameraManager::Update(SimObject* obj)
 	if (!obj)
 		return SimObserver::Update(obj);
 
-	if (obj->GetType() == SimObject::SIM_SHIP) {
+	if (obj->GetType() == ESimObject::SHIP) {
 		Ship* s = (Ship*)obj;
 
 		if (ship == s)
@@ -505,7 +505,7 @@ CameraManager::ExecFrame(double seconds)
 	// if we are in padlock, and have not locked a ship, try to padlock the current target:
 	if (op_mode == MODE_TARGET && !external_ship) {
 		SimObject* tgt = ship->GetTarget();
-		if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+		if (tgt && tgt->GetType() == ESimObject::SHIP)
 			SetViewObject((Ship*)tgt);
 	}
 	// if in an external mode, check the external ship:

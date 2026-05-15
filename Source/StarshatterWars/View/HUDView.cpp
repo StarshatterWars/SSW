@@ -1063,7 +1063,7 @@ HUDView::DrawContactMarkers()
 	}
 
 	// draw life bars on targeted ship:
-	if (target && target->GetType() == SimObject::SIM_SHIP && target->GetRep()) {
+	if (target && target->GetType() == ESimObject::SHIP && target->GetRep()) {
 		Ship* tgt_ship = (Ship*)target;
 		if (!tgt_ship) {
 			UE_LOG(LogTemp, Warning, TEXT("Null pointer in HUDView::DrawContactMarkers() - tgt_ship"));
@@ -1134,7 +1134,7 @@ void HUDView::DrawTarget()
 		Sensor* sensor = ship ? ship->GetSensor() : nullptr;
 		SimContact* contact = nullptr;
 
-		if (sensor && ship && target->GetType() == SimObject::SIM_SHIP)
+		if (sensor && ship && target->GetType() == ESimObject::SHIP)
 		{
 			contact = sensor->FindContact((Ship*)target);
 		}
@@ -1236,7 +1236,7 @@ void HUDView::DrawTarget()
 
 		DrawHUDText(TXT_TARGET_NAME, target->GetName(), range_rect, DT_RIGHT);
 
-		if (target->GetType() == SimObject::SIM_SHIP)
+		if (target->GetType() == ESimObject::SHIP)
 		{
 			Ship* tgt_ship = (Ship*)target;
 
@@ -1306,7 +1306,7 @@ void HUDView::DrawTarget()
 				}
 			}
 		}
-		else if (target->GetType() == SimObject::SIM_DRONE)
+		else if (target->GetType() == ESimObject::DRONE)
 		{
 			Drone* tgt_drone = (Drone*)target;
 
@@ -1464,7 +1464,7 @@ HUDView::DrawDesignators()
 			if (s) {
 				tloc = s->GetMountLocation();
 			}
-			else if (t->GetType() == SimObject::SIM_SHIP) {
+			else if (t->GetType() == ESimObject::SHIP) {
 				Ship* tgt_ship = (Ship*)t;
 
 				if (tgt_ship->IsGroundUnit())
@@ -2498,7 +2498,7 @@ HUDView::SetTarget(SimObject* t)
 		update = true;
 	}
 
-	if (target && target->GetType() == SimObject::SIM_SHIP) {
+	if (target && target->GetType() == ESimObject::SHIP) {
 		SYSTEM_STATUS sstat = SYSTEM_STATUS::NOMINAL;
 		Ship* tship = (Ship*)target;
 		int integrity = (int)(tship->GetIntegrity() / tship->Design()->integrity * 100);
@@ -2513,7 +2513,7 @@ HUDView::SetTarget(SimObject* t)
 	}
 
 	if (update) {
-		if (target && target->GetType() == SimObject::SIM_SHIP) {
+		if (target && target->GetType() == ESimObject::SHIP) {
 			Ship* tship = (Ship*)target;
 			TransferBitmap(tship->Design()->hud_icon, icon_target, icon_target_shade);
 		}
@@ -2772,7 +2772,7 @@ HUDView::Refresh()
 
 			icon_rect.x = width - 248;
 
-			if (target && target->GetType() == SimObject::SIM_SHIP) {
+			if (target && target->GetType() == ESimObject::SHIP) {
 				Ship* tship = (Ship*)target;
 				DrawHUDText(TXT_ICON_TARGET_TYPE, tship->DesignName(), icon_rect, DT_CENTER);
 			}
