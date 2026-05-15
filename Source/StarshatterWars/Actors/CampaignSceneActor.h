@@ -118,19 +118,6 @@ protected:
     FVector ConvertMissionElementLocToWorld(const FS_MissionElement& Elem) const;
 
     //-------------------------------------------------------------
-    // Asset / Spawn Helpers
-    //-------------------------------------------------------------
-    FString ResolveModelNameForDesign(const FString& DesignName) const;
-    FString ResolveMeshPathForDesign(const FString& DesignName) const;
-    UStaticMesh* ResolveStaticMeshFromPath(const FString& MeshPath) const;
-
-    AActor* SpawnSceneElementActor(
-        const FString& ElementName,
-        const FString& DesignName,
-        const FVector& WorldLocation,
-        int32 HeadingDegrees);
-
-    //-------------------------------------------------------------
     // Runtime Ship Integration
     //-------------------------------------------------------------
     Ship* CreateRuntimeShipForMissionElement(
