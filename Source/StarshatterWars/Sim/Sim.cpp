@@ -905,7 +905,7 @@ Sim::CreateElements()
 			Element->SetZoneLock(MissionElem->GetZoneLock() ? true : false);
 			Element->SetRogue(MissionElem->IsRogue());
 			Element->SetPlayable(MissionElem->IsPlayable());
-			Element->SetIntelLevel(MissionElem->IntelLevel());
+			Element->SetIntelLevel(MissionElem->GetIntelLevel());
 
 			if (MissionElem->IsPlayer()) {
 				SimRegion* Region = FindRegion(MissionElem->GetRegion());
@@ -2742,7 +2742,7 @@ Sim::CreateMissionElement(SimElement* elem)
 
 			msn_elem->SetPlayable(elem->IsPlayable());
 			msn_elem->SetRogue(elem->IsRogue());
-			msn_elem->SetIntelLevel(elem->IntelLevel());
+			msn_elem->SetIntelLevel(elem->GetIntelLevel());
 
 			msn_elem->SetRespawnCount(ship->GetRespawnCount());
 		}

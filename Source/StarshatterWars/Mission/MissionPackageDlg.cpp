@@ -307,7 +307,7 @@ void UMissionPackageDlg::DrawThreats()
 
         if (Elem->GetIFF() == 0 ||
             Elem->GetIFF() == Player->GetIFF() ||
-            Elem->IntelLevel() <= Intel::SECRET)
+            Elem->GetIntelLevel() <= EIntel::SECRET)
         {
             continue;
         }

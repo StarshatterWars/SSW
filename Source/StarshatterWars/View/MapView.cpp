@@ -2478,7 +2478,7 @@ MapView::DrawElem(MissionElement& s, bool current, int rep)
 		editor ||
 		s.GetIFF() == 0 ||
 		s.GetIFF() == mission->GetTeam() ||
-		s.IntelLevel() > Intel::KNOWN;
+		s.GetIntelLevel() > EIntel::KNOWN;
 
 	if (!visible) return;
 
@@ -2980,7 +2980,7 @@ MapView::DrawCombatGroup(CombatGroup* group, int rep)
 	// has group been discovered yet?
 	CombatGroup* player_group = campaign->GetPlayerGroup();
 	if (group->GetIFF() && player_group && player_group->GetIFF() != group->GetIFF())
-		if (group->GetIntelLevel() <= Intel::KNOWN)
+		if (group->GetIntelLevel() <= EIntel::KNOWN)
 			return;
 
 	// has group been destroyed already?

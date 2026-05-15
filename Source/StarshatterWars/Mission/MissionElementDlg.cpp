@@ -317,18 +317,27 @@ void UMissionElementDlg::RebuildFromModel()
     if (IntelCombo)
     {
         IntelCombo->ClearOptions();
-
-        for (int i = Intel::RESERVE; i < Intel::TRACKED; i++)
+        for (int32 i = static_cast<int32>(EIntel::RESERVE);
+            i <= static_cast<int32>(EIntel::TRACKED);
+            ++i)
         {
-            IntelCombo->AddOption(ANSI_TO_TCHAR(Intel::NameFromIntel(i)));
+            const EIntel IntelLevel =
+                static_cast<EIntel>(i);
 
-            if (i == 0)
+            const char* IntelName =
+                Intel::GetNameFromIntel(IntelLevel);
+
+            IntelCombo->AddOption(
+                ANSI_TO_TCHAR(IntelName));
+
+            if (i == static_cast<int32>(EIntel::RESERVE))
             {
                 IntelCombo->SetSelectedIndex(0);
             }
-            else if (ElemPtr->IntelLevel() == i)
+            else if (static_cast<int32>(ElemPtr->GetIntelLevel()) == i)
             {
-                IntelCombo->SetSelectedOption(ANSI_TO_TCHAR(Intel::NameFromIntel(i)));
+                IntelCombo->SetSelectedOption(
+                    ANSI_TO_TCHAR(IntelName));
             }
         }
     }
@@ -876,7 +885,7 @@ void UMissionElementDlg::OnAcceptClicked()
     if (IntelCombo)
     {
         const FString S = IntelCombo->GetSelectedOption();
-        ElemPtr->SetIntelLevel(Intel::IntelFromName(TCHAR_TO_ANSI(*S)));
+        ElemPtr->SetIntelLevel(Intel::GetIntelFromName(TCHAR_TO_ANSI(*S)));
     }
 
     // Loadout:

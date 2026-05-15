@@ -54,8 +54,8 @@ public:
 	void              SetPlayer(int p) { player = p; }
 	DWORD             GetLaunchTime()   const { return launch_time; }
 	void              SetLaunchTime(DWORD t);
-	int               IntelLevel()      const { return intel; }
-	void              SetIntelLevel(int i) { intel = i; }
+	EIntel            GetIntelLevel()		  const { return intel; }
+	void              SetIntelLevel(EIntel i) { intel = i; }
 
 	// ELEMENT COMPONENTS:
 	int               NumShips()        const { return ships.size(); }
@@ -143,7 +143,7 @@ protected:
 	int               player;
 	int               command_ai;
 	int               respawns;
-	int               intel;
+	EIntel            intel;
 	Text              name;
 
 	// squadron elements only:

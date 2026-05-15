@@ -1633,7 +1633,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 										ActionSubtype = (int) CombatEvent::GetTypeFromName(txt);
 									}
 									if (ActionType == ECombatActionType::INTEL_EVENT) {
-										ActionSubtype = Intel::IntelFromName(txt);
+										ActionSubtype = (int) Intel::GetIntelFromName(txt);
 									}
 									NewCampaignAction.Subtype = ActionSubtype;
 								}
@@ -1806,7 +1806,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 								Action = 0;
 
 								ActionStatus = ECombatActionStatus::COMPLETE;
-								EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
+								EIntel LocalIntelType = EIntel::KNOWN;
 
 								NotAction = false;
 
@@ -1876,8 +1876,8 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 											Text Intel = "";
 											GetDefText(Intel, pdef2, filename);
 
-											if (!FStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
-												LocalIntelType = EINTEL_TYPE::KNOWN;
+											if (!FStringToEnum<EIntel>(FString(Intel).ToUpper(), LocalIntelType, false))
+												LocalIntelType = EIntel::KNOWN;
 
 											NewCampaignReq.Intel = LocalIntelType;
 										}
@@ -3901,7 +3901,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	bool bRogue = false;
 	bool bInvulnerable = false;
 
-	EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
+	EIntel LocalIntelType = EIntel::KNOWN;
 	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
 
 	// Scratch arrays used by nested parsers:
@@ -3972,8 +3972,8 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 			Text Intel = "";
 			GetDefText(Intel, PDef, Fn);
 
-			if (!FStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
-				LocalIntelType = EINTEL_TYPE::KNOWN;
+			if (!FStringToEnum<EIntel>(FString(Intel).ToUpper(), LocalIntelType, false))
+				LocalIntelType = EIntel::KNOWN;
 
 			NewMissionElement.Intel = LocalIntelType;
 		}
@@ -5758,7 +5758,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceTree(const FS_OOBFor
 		ForceRow.Id,
 		TCHAR_TO_ANSI(*ForceRow.Name),
 		ForceRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		ForceRow.Empire,
 		nullptr);
 
@@ -5809,7 +5809,7 @@ void UStarshatterGameDataSubsystem::AddFleetToForce(CombatGroup* ForceGroup, con
 		FleetRow.Id,
 		TCHAR_TO_ANSI(*FleetRow.Name),
 		FleetRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		FleetRow.Empire,
 		ForceGroup);
 
@@ -5854,7 +5854,7 @@ void UStarshatterGameDataSubsystem::AddCarrierGroupToFleet(CombatGroup* FleetGro
 		CarrierRow.Id,
 		TCHAR_TO_ANSI(*CarrierRow.Name),
 		CarrierRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		CarrierRow.Empire,
 		FleetGroup);
 
@@ -5907,7 +5907,7 @@ void UStarshatterGameDataSubsystem::AddDestroyerSquadronToFleet(
 		DestroyerRow.Id,
 		TCHAR_TO_ANSI(*DestroyerRow.Name),
 		DestroyerRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		DestroyerRow.Empire,
 		FleetGroup);
 
@@ -5934,7 +5934,7 @@ void UStarshatterGameDataSubsystem::AddBattleGroupToFleet(
 		BattleRow.Id,
 		TCHAR_TO_ANSI(*BattleRow.Name),
 		BattleRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		BattleRow.Empire,
 		FleetGroup);
 
@@ -5961,7 +5961,7 @@ void UStarshatterGameDataSubsystem::AddBattalionToForce(
 		BattalionRow.Id,
 		TCHAR_TO_ANSI(*BattalionRow.Name),
 		BattalionRow.Iff,
-		Intel::KNOWN,
+		EIntel::KNOWN,
 		BattalionRow.Empire,
 		ForceGroup);
 
@@ -6002,7 +6002,7 @@ void UStarshatterGameDataSubsystem::AddCivilianToForce(
 		CivilianRow.Id,
 		TCHAR_TO_ANSI(*CivilianRow.Name),
 		CivilianRow.Iff,
-		(int) CivilianRow.Intel,
+		CivilianRow.Intel,
 		CivilianRow.Empire,
 		ForceGroup);
 
@@ -6026,7 +6026,7 @@ void UStarshatterGameDataSubsystem::AddTransportToForce(CombatGroup* ForceGroup,
 		TransportRow.Id,
 		TCHAR_TO_ANSI(*TransportRow.Name),
 		TransportRow.Iff,
-		(int) TransportRow.Intel,
+		TransportRow.Intel,
 		TransportRow.Empire,
 		ForceGroup);
 
@@ -6060,7 +6060,7 @@ void UStarshatterGameDataSubsystem::AddInfrastructureToForce(CombatGroup* ForceG
 		InfrastructureRow.Id,
 		TCHAR_TO_ANSI(*InfrastructureRow.Name),
 		InfrastructureRow.Iff,
-		(int) InfrastructureRow.Intel,
+		InfrastructureRow.Intel,
 		InfrastructureRow.Empire,
 		ForceGroup);
 
@@ -6086,7 +6086,7 @@ void UStarshatterGameDataSubsystem::AddWingToCarrier(
 		WingRow.Id,
 		TCHAR_TO_ANSI(*WingRow.Name),
 		WingRow.Iff,
-		(int) WingRow.Intel,
+		WingRow.Intel,
 		WingRow.Empire,
 		CarrierGroup);
 
@@ -6133,7 +6133,7 @@ void UStarshatterGameDataSubsystem::AddInterceptSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6161,7 +6161,7 @@ void UStarshatterGameDataSubsystem::AddAttackSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6189,7 +6189,7 @@ void UStarshatterGameDataSubsystem::AddFighterSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6217,7 +6217,7 @@ void UStarshatterGameDataSubsystem::AddLandingSquadronToWing(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		WingGroup);
 
@@ -6245,7 +6245,7 @@ void UStarshatterGameDataSubsystem::AddBatteryToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6273,7 +6273,7 @@ void UStarshatterGameDataSubsystem::AddStationToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int)Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6301,7 +6301,7 @@ void UStarshatterGameDataSubsystem::AddStarbaseToBattalion(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		BattalionGroup);
 
@@ -6329,7 +6329,7 @@ void UStarshatterGameDataSubsystem::AddStationToTransport(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int)Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		TransportGroup);
 
@@ -6357,7 +6357,7 @@ void UStarshatterGameDataSubsystem::AddStarbaseToTransport(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int)Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		TransportGroup);
 
@@ -6385,7 +6385,7 @@ void UStarshatterGameDataSubsystem::AddMinefieldToFleet(
 		Row.Id,
 		TCHAR_TO_ANSI(*Row.Name),
 		Row.Iff,
-		(int) Row.Intel,
+		Row.Intel,
 		Row.Empire,
 		FleetGroup);
 
@@ -6676,7 +6676,7 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 			Row.Id,
 			TCHAR_TO_ANSI(*Row.Name),
 			Row.Iff,
-			static_cast<int>(Row.Intel),
+			Row.Intel,
 			Row.EmpireId,
 			nullptr);
 
@@ -6892,7 +6892,7 @@ TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTa
 			Row->Id,
 			TCHAR_TO_ANSI(*Row->Name),
 			Row->Iff,
-			static_cast<int>(Row->Intel),
+			Row->Intel,
 			Row->EmpireId,
 			nullptr);
 

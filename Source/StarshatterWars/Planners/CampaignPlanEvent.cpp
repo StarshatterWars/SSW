@@ -184,8 +184,12 @@ CampaignPlanEvent::ExecScriptedEvents()
                         action->AssetType(),
                         action->AssetId());
 
-                    if (g) {
-                        g->SetIntelLevel(action->Subtype());
+                    if (g)
+                    {
+                        g->SetIntelLevel(
+                            static_cast<EIntel>(
+                                action->Subtype()));
+
                         action->FireAction();
                     }
                     else {

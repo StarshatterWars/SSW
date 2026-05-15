@@ -82,7 +82,7 @@ public:
     // Team / role / flags
     // ------------------------------------------------------------
     int  GetIFF()         const { return IFF_code; }
-    int  IntelLevel()     const { return intel; }
+    EIntel  GetIntelLevel()     const { return intel; }
     int  MissionRole()    const { return mission_role; }
 
     // bool-style naming:
@@ -150,7 +150,7 @@ public:
     void SetMaintCount(int n) { maint_count = n; }
     void SetDeadCount(int n) { dead_count = n; }
     void SetIFF(int iff) { IFF_code = iff; }
-    void SetIntelLevel(int i) { intel = i; }
+    void SetIntelLevel(EIntel i) { intel = i; }
     void SetMissionRole(int r) { mission_role = r; }
     void SetPlayer(int p) { player = p; }         // int for legacy data
     void SetPlayable(bool p) { playable = p; }
@@ -206,7 +206,7 @@ protected:
 
     int               IFF_code = 0;
     int               mission_role = 0;
-    int               intel = 0;
+    EIntel            intel = EIntel::UNKNOWN;
 
     int               respawns = 0;
     int               hold_time = 0;

@@ -170,7 +170,7 @@ CampaignPlanStrategic::ScoreTargets(Combatant* c, Combatant* t)
 void
 CampaignPlanStrategic::ScoreTarget(Combatant* c, CombatGroup* g)
 {
-	if (!c || !g || !campaign || g->GetIntelLevel() <= Intel::SECRET)
+	if (!c || !g || !campaign || g->GetIntelLevel() <= EIntel::SECRET)
 		return;
 
 	if (g->IsTargetable()) {

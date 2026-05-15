@@ -381,7 +381,7 @@ void USSWCombatGroupSubsystem::LoadCombatRoster(const char* InFilename, int32 Te
         Text LocalSystem = "";
         Text LocalParentType = "";
 
-        EINTEL_TYPE LocalIntelType = EINTEL_TYPE::KNOWN;
+        EIntel LocalIntelType = EIntel::KNOWN;
         ECOMBATGROUP_TYPE LocalGroupType = ECOMBATGROUP_TYPE::NONE;
         ECOMBATGROUP_TYPE LocalParentGroupType = ECOMBATGROUP_TYPE::NONE;
 
@@ -413,9 +413,9 @@ void USSWCombatGroupSubsystem::LoadCombatRoster(const char* InFilename, int32 Te
                 Text Intel = "";
                 GetDefText(Intel, PDef, fn);
 
-                if (!SSWStringToEnum<EINTEL_TYPE>(FString(Intel).ToUpper(), LocalIntelType, false))
+                if (!SSWStringToEnum<EIntel>(FString(Intel).ToUpper(), LocalIntelType, false))
                 {
-                    LocalIntelType = EINTEL_TYPE::KNOWN;
+                    LocalIntelType = EIntel::KNOWN;
                 }
 
                 NewCombatGroup.Intel = LocalIntelType;

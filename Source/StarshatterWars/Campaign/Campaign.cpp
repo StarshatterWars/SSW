@@ -738,7 +738,7 @@ Campaign::ParseAction(TermStruct* val, const char* SourceFilename)
                     else if (type == ECombatActionType::COMBAT_EVENT)
                         subtype = (int) CombatEvent::GetTypeFromName(txt);
                     else if (type == ECombatActionType::INTEL_EVENT)
-                        subtype = Intel::IntelFromName(txt);
+                        subtype = (int) Intel::GetIntelFromName(txt);
                 }
             }
             else if (pdef->name()->value() == "opp_type") {
@@ -931,7 +931,7 @@ Campaign::ParseAction(TermStruct* val, const char* SourceFilename)
                                 else if (pdef2->term()->isText()) {
                                     char txt[64];
                                     GetDefText(txt, pdef2, SourceFilename);
-                                    intel = Intel::IntelFromName(txt);
+                                    intel = (int) Intel::GetIntelFromName(txt);
                                 }
                             }
                             else if (pdef2->name()->value() == "group_type") {
@@ -2305,7 +2305,7 @@ Campaign::FindGroup(int iff, int type, int id)
 
 static void FindGroups(CombatGroup* g, int type, CombatGroup* near_group, List<CombatGroup>& groups)
 {
-    if ((int) g->GetType() == type && g->GetIntelLevel() > Intel::RESERVE) {
+    if ((int) g->GetType() == type && g->GetIntelLevel() > EIntel::RESERVE) {
         if (!near_group || g->GetAssignedZone() == near_group->GetAssignedZone())
             groups.append(g);
     }
@@ -2343,7 +2343,7 @@ static void FindStrikeTargets(CombatGroup* g, CombatGroup* strike_group, List<Co
 {
     if (!strike_group || !strike_group->GetAssignedZone()) return;
 
-    if (g->IsStrikeTarget() && g->GetIntelLevel() > Intel::RESERVE) {
+    if (g->IsStrikeTarget() && g->GetIntelLevel() > EIntel::RESERVE) {
         if (strike_group->GetAssignedZone() == g->GetAssignedZone() ||
             strike_group->GetAssignedZone()->HasRegion(g->GetRegion()))
             groups.append(g);

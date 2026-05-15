@@ -2595,7 +2595,7 @@ bool UMissionNavDlg::ShouldShowMissionElementInBriefing(const MissionElement* El
         return true;
     }
 
-    if (Elem->IntelLevel() >= Intel::KNOWN)
+    if (Elem->GetIntelLevel() >= EIntel::KNOWN)
     {
         return true;
     }

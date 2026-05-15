@@ -38,7 +38,7 @@
 #include <cmath>
 
 // +----------------------------------------------------------------------+
-CombatGroup::CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int iff_code, int e, EEMPIRE_NAME InEmpire, CombatGroup* p)
+CombatGroup::CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int iff_code, EIntel e, EEMPIRE_NAME InEmpire, CombatGroup* p)
 	: type(t)
 	, id(n)
 	, name(s)
@@ -212,7 +212,7 @@ CombatGroup::IsStarshipGroup() const
 bool
 CombatGroup::IsReserve() const
 {
-	if (enemy_intel <= Intel::RESERVE)
+	if (enemy_intel <= EIntel::RESERVE)
 		return true;
 
 	if (parent)
@@ -702,9 +702,9 @@ CombatGroup::SetZoneLock(bool lock)
 // +--------------------------------------------------------------------+
 
 void
-CombatGroup::SetIntelLevel(int n)
+CombatGroup::SetIntelLevel(EIntel n)
 {
-	if (n < Intel::RESERVE || n > Intel::TRACKED) return;
+	if (n < EIntel::RESERVE || n > EIntel::TRACKED) return;
 
 	enemy_intel = n;
 
@@ -712,11 +712,11 @@ CombatGroup::SetIntelLevel(int n)
 	// branch of the OOB tree must be exposed.  Otherwise,
 	// no missions would ever be planned against this
 	// combat group.
-	if (n > Intel::SECRET) {
+	if (n > EIntel::SECRET) {
 		CombatGroup* p = parent;
 		while (p) {
-			if (p->enemy_intel < Intel::KNOWN)
-				p->enemy_intel = Intel::KNOWN;
+			if (p->enemy_intel < EIntel::KNOWN)
+				p->enemy_intel = EIntel::KNOWN;
 			p = p->parent;
 		}
 	}
@@ -1186,7 +1186,7 @@ else GET_DEF_NUM(id);
 
 							empire = EEMPIRE_NAME::Terellian;
 							CombatGroup* g = new
-								CombatGroup(TypeFromName(type), id, name, iff, Intel::IntelFromName(intel), empire, parent_group);
+								CombatGroup(TypeFromName(type), id, name, iff, Intel::GetIntelFromName(intel), empire, parent_group);
 
 							g->region = region;
 							g->combatant = combatant;
@@ -1457,7 +1457,7 @@ else GET_DEF_NUM(id);
 							g->region = region;
 							g->combatant = combatant;
 							g->location = FVector(loc.X, loc.Y, loc.Z);
-							g->enemy_intel = Intel::IntelFromName(intel);
+							g->enemy_intel = Intel::GetIntelFromName(intel);
 							g->unit_index = unit_index;
 
 							if (*zone) {
@@ -1581,7 +1581,7 @@ SaveCombatGroup(FILE* f, CombatGroup* g)
 	fprintf(f, " type: %s,", CombatGroup::NameFromType(g->GetType()));
 	fprintf(f, " id: %d,", g->GetID());
 	fprintf(f, " name: \"%s\",", g->GetName().data());
-	fprintf(f, " intel: %s,", Intel::NameFromIntel(g->GetIntelLevel()));
+	fprintf(f, " intel: %s,", Intel::GetNameFromIntel(g->GetIntelLevel()));
 	fprintf(f, " iff: %d,", g->GetIFF());
 	fprintf(f, " unit_index: %d,", g->GetUnitIndex());
 

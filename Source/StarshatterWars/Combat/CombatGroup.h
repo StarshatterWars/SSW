@@ -40,7 +40,7 @@ class CombatGroup
 public:
 	static const char* TYPENAME() { return "CombatGroup"; }
 
-	CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int i, int e, EEMPIRE_NAME InEmpire, CombatGroup* p = 0);
+	CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int i, EIntel e, EEMPIRE_NAME InEmpire, CombatGroup* p = 0);
 	
 	~CombatGroup();
 
@@ -81,7 +81,7 @@ public:
 	ECOMBATGROUP_TYPE   GetType()			 const { return type; }
 
 	int                 CountUnits()         const;
-	int                 GetIntelLevel()      const { return enemy_intel; }
+	EIntel              GetIntelLevel()      const { return enemy_intel; }
 	int                 GetID()              const { return id; }
 	int                 GetIFF()             const { return iff; }
 	FVector             GetLocation()        const { return location; }
@@ -149,7 +149,7 @@ public:
 	void                SetStrategicDirection(Text dir) 
 						{ strategic_direction = dir; }
 
-	void                SetIntelLevel(int n);
+	void                SetIntelLevel(EIntel n);
 
 	List<CombatAssignment>& GetAssignments() { return assignments; }
 	void                    ClearAssignments();
@@ -168,7 +168,7 @@ private:
 	int                 id;
 	Text                name;
 	int                 iff;
-	int                 enemy_intel;
+	EIntel              enemy_intel;
 
 	double              plan_value; // scratch pad for plan modules
 

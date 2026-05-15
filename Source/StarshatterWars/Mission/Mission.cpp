@@ -237,9 +237,7 @@ bool Mission::LoadMissionCommon(
 			static_cast<int32>(
 				SrcElem.RoleName);
 
-		Elem->intel =
-			static_cast<int32>(
-				SrcElem.Intel);
+		Elem->intel = SrcElem.Intel;
 
 		//---------------------------------------------------------
 		// NAVPOINT -> INSTRUCTION BRIDGE
@@ -1115,7 +1113,7 @@ Mission::ParseElement(TermStruct* val)
 
 			else if (defname == "intel") {
 				GetDefText(role_name, pdef, filename);
-				element->intel = Intel::IntelFromName(role_name);
+				element->intel = Intel::GetIntelFromName(role_name);
 			}
 
 			else if (defname == "loc") {
@@ -1980,9 +1978,10 @@ Mission::Serialize(const char* player_elem, int player_index)
 		s += elem->GetRoleName();
 		s += "\"\n\n";
 
-		if (elem->IntelLevel()) {
+		if (elem->GetIntelLevel() != EIntel::UNKNOWN)
+		{
 			s += "   intel:     \"";
-			s += Intel::NameFromIntel(elem->IntelLevel());
+			s += Intel::GetNameFromIntel(elem->GetIntelLevel());
 			s += "\"\n";
 		}
 
@@ -2404,7 +2403,7 @@ MissionElement::MissionElement()
 	zone_lock(0),
 	heading(0),
 	mission_role((int)EMISSIONTYPE::OTHER),
-	intel(Intel::SECRET),
+	intel(EIntel::SECRET),
 	combat_group(0),
 	combat_unit(0)
 {

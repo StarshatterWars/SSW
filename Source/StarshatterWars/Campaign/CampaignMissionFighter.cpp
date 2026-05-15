@@ -56,7 +56,7 @@ static CombatGroup* FindCombatGroup(CombatGroup* G, ECOMBATGROUP_TYPE Type)
         return nullptr;
     }
 
-    if (G->GetIntelLevel() <= Intel::RESERVE)
+    if (G->GetIntelLevel() <= EIntel::RESERVE)
     {
         return nullptr;
     }
@@ -1010,7 +1010,7 @@ void CampaignMissionFighter::CreatePatrols()
             MissionElement* Elem = CreateFighterPackage(Squadron, 2, PatrolType);
             if (Elem)
             {
-                Elem->SetIntelLevel(Intel::KNOWN);
+                Elem->SetIntelLevel(EIntel::KNOWN);
                 Elem->SetRegion(mission->GetRegion());
                 Elem->SetLocation(BaseLoc);
                 Patrols.append(Elem);
@@ -1074,7 +1074,7 @@ void CampaignMissionFighter::CreateWardFreight()
     }
 
     elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
-    elem->SetIntelLevel(Intel::KNOWN);
+    elem->SetIntelLevel(EIntel::KNOWN);
     elem->SetRegion(mission->GetRegion());
 
     if (carrier)
@@ -1161,7 +1161,7 @@ void CampaignMissionFighter::CreateWardShuttle()
         return;
     }
 
-    Elem->SetIntelLevel(Intel::KNOWN);
+    Elem->SetIntelLevel(EIntel::KNOWN);
     Elem->SetRegion(mission->GetRegion());
     Elem->GetLoadouts().destroy();
 
@@ -1254,7 +1254,7 @@ void CampaignMissionFighter::CreateWardStrike()
         return;
     }
 
-    elem->SetIntelLevel(Intel::KNOWN);
+    elem->SetIntelLevel(EIntel::KNOWN);
     elem->SetRegion(mission->GetRegion());
 
     if (strike_target)
@@ -1753,7 +1753,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
         MissionElement* elem = CreateFighterPackage(s, 4, (int)EMISSIONTYPE::ASSAULT);
         if (elem)
         {
-            elem->SetIntelLevel(Intel::KNOWN);
+            elem->SetIntelLevel(EIntel::KNOWN);
             elem->GetLoadouts().destroy();
             elem->GetLoadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
             elem->SetRegion(mission->GetRegion());
@@ -1829,7 +1829,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
             if (e2)
             {
-                e2->SetIntelLevel(Intel::KNOWN);
+                e2->SetIntelLevel(EIntel::KNOWN);
                 e2->SetRegion(mission->GetRegion());
 
                 FVector randPt(
@@ -1938,7 +1938,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
     if (elem)
     {
-        elem->SetIntelLevel(Intel::KNOWN);
+        elem->SetIntelLevel(EIntel::KNOWN);
         elem->SetRegion(mission->GetRegion());
 
         const FVector RandPt = GetRandomPoint();
@@ -1959,7 +1959,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
         if (e2)
         {
-            e2->SetIntelLevel(Intel::KNOWN);
+            e2->SetIntelLevel(EIntel::KNOWN);
             e2->SetRegion(mission->GetRegion());
 
             const FVector EscortOffset = GetRandomPoint();
@@ -2384,7 +2384,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::SWEEP);
             if (elem)
             {
-                elem->SetIntelLevel(Intel::KNOWN);
+                elem->SetIntelLevel(EIntel::KNOWN);
                 elem->SetRegion(rgn);
 
                 const FVector RandPt = GetRandomPoint();
@@ -2406,7 +2406,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 MissionElement* elem = CreateFighterPackage(s, 1, (int)EMISSIONTYPE::CARGO);
                 if (elem)
                 {
-                    elem->SetIntelLevel(Intel::KNOWN);
+                    elem->SetIntelLevel(EIntel::KNOWN);
                     elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
@@ -2422,7 +2422,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
                         if (e2)
                         {
-                            e2->SetIntelLevel(Intel::KNOWN);
+                            e2->SetIntelLevel(EIntel::KNOWN);
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
@@ -2453,7 +2453,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
                 if (elem)
                 {
-                    elem->SetIntelLevel(Intel::KNOWN);
+                    elem->SetIntelLevel(EIntel::KNOWN);
                     elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
@@ -2485,7 +2485,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 MissionElement* elem = CreateFighterPackage(s, 1, (int)EMISSIONTYPE::CARGO);
                 if (elem)
                 {
-                    elem->SetIntelLevel(Intel::KNOWN);
+                    elem->SetIntelLevel(EIntel::KNOWN);
                     elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
@@ -2501,7 +2501,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
                         if (e2)
                         {
-                            e2->SetIntelLevel(Intel::KNOWN);
+                            e2->SetIntelLevel(EIntel::KNOWN);
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
@@ -2532,7 +2532,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                 MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
                 if (elem)
                 {
-                    elem->SetIntelLevel(Intel::KNOWN);
+                    elem->SetIntelLevel(EIntel::KNOWN);
                     elem->SetRegion(rgn);
 
                     const FVector RandPt = GetRandomPoint();
@@ -2548,7 +2548,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                         MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
                         if (e2)
                         {
-                            e2->SetIntelLevel(Intel::KNOWN);
+                            e2->SetIntelLevel(EIntel::KNOWN);
                             e2->SetRegion(rgn);
 
                             const FVector EscortOffset = GetRandomPoint();
@@ -2580,7 +2580,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
             MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::CARGO);
             if (elem)
             {
-                elem->SetIntelLevel(Intel::KNOWN);
+                elem->SetIntelLevel(EIntel::KNOWN);
                 elem->SetRegion(rgn);
 
                 const FVector RandPt = GetRandomPoint();

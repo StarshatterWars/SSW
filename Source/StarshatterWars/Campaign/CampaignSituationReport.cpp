@@ -391,7 +391,7 @@ CampaignSituationReport::GetThreatInfo()
 			if (!e)
 				continue;
 
-			if (e->GetIFF() <= 0 || e->GetIFF() == iff || e->IntelLevel() <= Intel::SECRET)
+			if (e->GetIFF() <= 0 || e->GetIFF() == iff || e->GetIntelLevel() <= EIntel::SECRET)
 				continue;
 
 			const FShipDesign* Design = e->GetShipDesign();

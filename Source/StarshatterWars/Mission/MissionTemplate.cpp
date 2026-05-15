@@ -221,7 +221,7 @@ SelectCombatGroups(CombatGroup* g, const FShipDesign* d, List<CombatGroup>& list
 	if (!g || !d)
 		return;
 
-	if (g->GetIntelLevel() <= Intel::RESERVE)
+	if (g->GetIntelLevel() <= EIntel::RESERVE)
 		return;
 
 	if (g->GetUnits().size() > 0) {

@@ -539,7 +539,7 @@ bool UCmdForceDlg::IsVisibleCombatant(Combatant* C) const
     }
 
     if (Force->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
-        Force->GetIntelLevel() >= Intel::KNOWN &&
+        Force->GetIntelLevel() >= EIntel::KNOWN &&
         (Force->CountUnits() > 0 || Force->GetLiveComponents().size() > 0))
     {
         return true;
@@ -551,7 +551,7 @@ bool UCmdForceDlg::IsVisibleCombatant(Combatant* C) const
         CombatGroup* G = Groups[i];
         if (G &&
             G->GetType() < ECOMBATGROUP_TYPE::CIVILIAN &&
-            G->GetIntelLevel() >= Intel::KNOWN &&
+            G->GetIntelLevel() >= EIntel::KNOWN &&
             (G->CountUnits() > 0 || G->GetLiveComponents().size() > 0))
         {
             return true;
@@ -696,7 +696,7 @@ void UCmdForceDlg::ClearDescList()
 
 void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild, int32 Depth)
 {
-    if (!Group || Group->GetIntelLevel() < Intel::KNOWN || !CombatantList)
+    if (!Group || Group->GetIntelLevel() < EIntel::KNOWN || !CombatantList)
     {
         return;
     }
@@ -746,7 +746,7 @@ void UCmdForceDlg::AddCombatGroupRecursive(CombatGroup* Group, bool bLastChild, 
                 continue;
             }
 
-            if (Child->GetIntelLevel() < Intel::KNOWN)
+            if (Child->GetIntelLevel() < EIntel::KNOWN)
             {
                 continue;
             }

@@ -1395,7 +1395,7 @@ bool USectorMapPanel::ShouldShowMissionElementInBriefing(const MissionElement* E
         return true;
     }
 
-    if (Element->IntelLevel() >= Intel::KNOWN)
+    if (Element->GetIntelLevel() >= EIntel::KNOWN)
     {
         return true;
     }
