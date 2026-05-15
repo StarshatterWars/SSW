@@ -132,26 +132,26 @@ CampaignSituationReport::MissionSituation()
 
 		sector += " sector.";
 
-		switch (mission->GetType()) {
-		case (int)EMISSIONTYPE::PATROL:
-		case (int)EMISSIONTYPE::AIR_PATROL:
+		switch (mission->GetMissionType()) {
+		case (int)EMissionType::PATROL:
+		case (int)EMissionType::AIR_PATROL:
 			sitrep += "\n\nThis mission is a routine patrol of the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::SWEEP:
-		case (int)EMISSIONTYPE::AIR_SWEEP:
+		case (int)EMissionType::SWEEP:
+		case (int)EMissionType::AIR_SWEEP:
 			sitrep += "\n\nFor this mission, you will be performing a fighter sweep of the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::INTERCEPT:
-		case (int)EMISSIONTYPE::AIR_INTERCEPT:
+		case (int)EMissionType::INTERCEPT:
+		case (int)EMissionType::AIR_INTERCEPT:
 			sitrep += "\n\nWe have detected hostile elements inbound.  ";
 			sitrep += "Your mission is to intercept them before they are able to engage their targets.";
 			break;
 
-		case (int)EMISSIONTYPE::STRIKE:
+		case (int)EMissionType::STRIKE:
 			sitrep += "\n\nThe goal of this mission is to perform a strike on preplanned targets in the ";
 			sitrep += sector;
 
@@ -167,7 +167,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::ASSAULT:
+		case (int)EMissionType::ASSAULT:
 			sitrep += "\n\nThis mission is to assault preplanned targets in the ";
 			sitrep += sector;
 
@@ -183,7 +183,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::DEFEND:
+		case (int)EMissionType::DEFEND:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to defend ";
 				sitrep += ward->GetName();
@@ -196,7 +196,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::ESCORT:
+		case (int)EMissionType::ESCORT:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the ";
 				sitrep += ward->GetName();
@@ -209,7 +209,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+		case (int)EMissionType::ESCORT_FREIGHT:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the freighter ";
 				sitrep += ward->GetName();
@@ -221,7 +221,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
+		case (int)EMissionType::ESCORT_SHUTTLE:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to escort the shuttle ";
 				sitrep += ward->GetName();
@@ -233,7 +233,7 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::ESCORT_STRIKE:
+		case (int)EMissionType::ESCORT_STRIKE:
 			if (ward) {
 				sitrep += "\n\nFor this mission, you will need to protect the ";
 				sitrep += ward->GetName();
@@ -244,29 +244,29 @@ CampaignSituationReport::MissionSituation()
 			}
 			break;
 
-		case (int)EMISSIONTYPE::INTEL:
-		case (int)EMISSIONTYPE::SCOUT:
-		case (int)EMISSIONTYPE::RECON:
+		case (int)EMissionType::INTEL:
+		case (int)EMissionType::SCOUT:
+		case (int)EMissionType::RECON:
 			sitrep += "\n\nThis is an intelligence gathering mission in the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::BLOCKADE:
+		case (int)EMissionType::BLOCKADE:
 			sitrep += "\n\nThis mission is part of the blockade operation in the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::FLEET:
+		case (int)EMissionType::FLEET:
 			sitrep += "\n\nThis mission is a routine fleet patrol of the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::BOMBARDMENT:
+		case (int)EMissionType::BOMBARDMENT:
 			sitrep += "\n\nOur goal for this mission is to engage and destroy preplanned targets in the ";
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::FLIGHT_OPS:
+		case (int)EMissionType::FLIGHT_OPS:
 			sitrep += "\n\nFor this mission, the ";
 			if (player)
 				sitrep += player->GetName();
@@ -277,13 +277,13 @@ CampaignSituationReport::MissionSituation()
 			sitrep += sector;
 			break;
 
-		case (int)EMISSIONTYPE::TRAINING:
+		case (int)EMissionType::TRAINING:
 			sitrep += "\n\nThis will be a training mission.";
 			break;
 
-		case (int)EMISSIONTYPE::TRANSPORT:
-		case (int)EMISSIONTYPE::CARGO:
-		case (int)EMISSIONTYPE::OTHER:
+		case (int)EMissionType::TRANSPORT:
+		case (int)EMissionType::CARGO:
+		case (int)EMissionType::OTHER:
 		default:
 			break;
 		}
@@ -406,10 +406,10 @@ CampaignSituationReport::GetThreatInfo()
 
 			int mission_role = e->MissionRole();
 
-			if (mission_role == (int)EMISSIONTYPE::STRIKE ||
-				mission_role == (int)EMISSIONTYPE::INTEL ||
-				mission_role == (int)EMISSIONTYPE::CARGO ||
-				mission_role == (int)EMISSIONTYPE::TRANSPORT)
+			if (mission_role == (int)EMissionType::STRIKE ||
+				mission_role == (int)EMissionType::INTEL ||
+				mission_role == (int)EMissionType::CARGO ||
+				mission_role == (int)EMissionType::TRANSPORT)
 				continue;
 
 			if (Design &&
@@ -443,8 +443,8 @@ CampaignSituationReport::GetThreatInfo()
 		threat_info = "We have reports of several enemy fighters in your operating area.";
 	}
 	else if (enemy_sites > 0) {
-		if (mission->GetType() >= (int)EMISSIONTYPE::AIR_PATROL &&
-			mission->GetType() <= (int)EMISSIONTYPE::STRIKE)
+		if (mission->GetMissionType() >= (int)EMissionType::AIR_PATROL &&
+			mission->GetMissionType() <= (int)EMissionType::STRIKE)
 			threat_info = "Remember to check air-to-ground sensors for SAM and AAA sites.";
 		else
 			threat_info = "Be on the lookout for mines and defense satellites.";

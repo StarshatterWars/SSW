@@ -2713,7 +2713,7 @@ Ship::SetLeader(Ship* Leader)
 		Leader->GetName(),
 		GetLeader() ? GetLeader()->GetName() : "NULL",
 		ward ? ward->GetName() : "NULL",
-		LeaderElement->Name().data(),
+		LeaderElement->GetName().data(),
 		LeaderElement->FindIndex(this));
 }
 

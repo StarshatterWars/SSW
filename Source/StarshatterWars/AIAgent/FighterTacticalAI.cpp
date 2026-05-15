@@ -553,7 +553,7 @@ FighterTacticalAI::IsStrikeComplete(Instruction* instr)
 	if (!element)
 		return true;
 
-	for (int i = 0; i < element->NumShips(); i++) {
+	for (int i = 0; i < element->GetNumShips(); i++) {
 		Ship* s = element->GetShip(i + 1);
 
 		if (!s || s->GetIntegrity() < 25) // || (s->Location() - target->Location()).length() > 250e3)

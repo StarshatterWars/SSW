@@ -92,7 +92,7 @@ public:
     const char*       GetSubtitles()    const;
     int               GetStart()        const { return start; }
     double            GetStardate()     const { return stardate; }
-    int               GetType()         const { return type; }
+    int               GetMissionType()  const { return type; }
     const char*       GetTypeName()     const { return GetRoleName(type); }
     int               GetTeam()         const { return team; }
     bool              IsOK()            const { return ok; }
@@ -123,7 +123,7 @@ public:
     void              SetSystem(const char* sys) { system = sys; }
     void              SetStart(int s) { start = s; }
     void              SetEnd(int e) { end = e; }
-    void              SetType(int t) { type = t; }
+    void              SetMissionType(int t) { type = t; }
     void              SetTeam(int iff) { team = iff; }
     void              SetDisplayTime(EMissionDisplayType dt) { DisplayType = dt; }
     void              SetStarSystem(StarSystem* s);
@@ -150,7 +150,7 @@ public:
     bool IsTemplate() const { return Source == EMissionSource::Template; }
 
     static const char* GetRoleName(int role);
-    static EMISSIONTYPE EnumFromName(const char* n);
+    static EMissionType EnumFromName(const char* n);
     static int         TypeFromName(const char* n);
 
     Text              ErrorMessage() const { return errmsg; }

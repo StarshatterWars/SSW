@@ -102,10 +102,10 @@ CarrierAI::CheckPatrolCoverage()
 		SimElement* elem = iter.value();
 
 		if (elem->GetCarrier() == ship &&
-			(elem->Type() == (int)EMISSIONTYPE::PATROL ||
-				elem->Type() == (int)EMISSIONTYPE::SWEEP ||
-				elem->Type() == (int)EMISSIONTYPE::AIR_PATROL ||
-				elem->Type() == (int)EMISSIONTYPE::AIR_SWEEP) &&
+			(elem->GetMissionType() == (int)EMissionType::PATROL ||
+				elem->GetMissionType() == (int)EMissionType::SWEEP ||
+				elem->GetMissionType() == (int)EMissionType::AIR_PATROL ||
+				elem->GetMissionType() == (int)EMissionType::AIR_SWEEP) &&
 			!elem->IsSquadron() &&
 			!elem->IsFinished()) {
 
@@ -142,7 +142,7 @@ CarrierAI::CheckPatrolCoverage()
 
 		else if (Game::GetGameTime() - hangar->GetLastPatrolLaunch() > PATROL_PERIOD ||
 			hangar->GetLastPatrolLaunch() == 0) {
-			SimElement* patrol = CreatePackage(0, 2, (int)EMISSIONTYPE::PATROL, 0, "ACM Medium Range");
+			SimElement* patrol = CreatePackage(0, 2, (int)EMissionType::PATROL, 0, "ACM Medium Range");
 			if (patrol) {
 				patrol_elem[i] = patrol;
 
@@ -229,10 +229,10 @@ CarrierAI::CreateStrike(SimElement* elem)
 
 				int count = 2;
 
-				if (count < elem->NumShips())
-					count = elem->NumShips();
+				if (count < elem->GetNumShips())
+					count = elem->GetNumShips();
 
-				strike = CreatePackage(squadron, count, (int)EMISSIONTYPE::INTERCEPT, elem->Name(), "ACM Medium Range");
+				strike = CreatePackage(squadron, count, (int)EMissionType::INTERCEPT, elem->GetName(), "ACM Medium Range");
 
 				if (strike) {
 					strike->SetAssignment(elem);
@@ -254,11 +254,11 @@ CarrierAI::CreateStrike(SimElement* elem)
 
 				if (target->Class() > CLASSIFICATION::FRIGATE) {
 					count = 4;
-					strike = CreatePackage(squadron, count, (int)EMISSIONTYPE::ASSAULT, elem->Name(), "Hvy Ship Strike");
+					strike = CreatePackage(squadron, count, (int)EMissionType::ASSAULT, elem->GetName(), "Hvy Ship Strike");
 				}
 				else {
 					count = 2;
-					strike = CreatePackage(squadron, count, (int)EMISSIONTYPE::ASSAULT, elem->Name(), "Ship Strike");
+					strike = CreatePackage(squadron, count, (int)EMissionType::ASSAULT, elem->GetName(), "Ship Strike");
 				}
 
 				if (strike) {
@@ -270,7 +270,7 @@ CarrierAI::CreateStrike(SimElement* elem)
 					// strike escort if target has fighter protection:
 					if (target->GetHangar()) {
 						if (squadron > 1) squadron--;
-						SimElement* escort = CreatePackage(squadron, 2, (int)EMISSIONTYPE::ESCORT_STRIKE, strike->Name(), "ACM Short Range");
+						SimElement* escort = CreatePackage(squadron, 2, (int)EMissionType::ESCORT_STRIKE, strike->GetName(), "ACM Short Range");
 
 						if (escort && flight_planner)
 							flight_planner->CreateEscortRoute(escort, strike);
@@ -290,7 +290,7 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 {
 	if (SquadronIndex < 0 ||
 		PackageSize < 1 ||
-		MissionCode < (int)EMISSIONTYPE::PATROL ||
+		MissionCode < (int)EMissionType::PATROL ||
 		hangar->NumShipsReady(SquadronIndex) < PackageSize)
 	{
 		return nullptr;
@@ -315,26 +315,26 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 		INSTRUCTION_ACTION InstructionCode = INSTRUCTION_ACTION::VECTOR;
 
 		switch (MissionCode) {
-		case (int)EMISSIONTYPE::ASSAULT:
+		case (int)EMissionType::ASSAULT:
 			InstructionCode = INSTRUCTION_ACTION::ASSAULT;  
 			break;
 
-		case (int)EMISSIONTYPE::STRIKE:
+		case (int)EMissionType::STRIKE:
 			InstructionCode = INSTRUCTION_ACTION::STRIKE;   
 			break;
 
-		case (int)EMISSIONTYPE::AIR_INTERCEPT:
-		case (int)EMISSIONTYPE::INTERCEPT:
+		case (int)EMissionType::AIR_INTERCEPT:
+		case (int)EMissionType::INTERCEPT:
 			InstructionCode = INSTRUCTION_ACTION::INTERCEPT; 
 			break;
 
-		case (int)EMISSIONTYPE::ESCORT:
-		case (int)EMISSIONTYPE::ESCORT_STRIKE:
-		case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+		case (int)EMissionType::ESCORT:
+		case (int)EMissionType::ESCORT_STRIKE:
+		case (int)EMissionType::ESCORT_FREIGHT:
 			InstructionCode = INSTRUCTION_ACTION::ESCORT; 
 			break;
 
-		case (int)EMISSIONTYPE::DEFEND:
+		case (int)EMissionType::DEFEND:
 			InstructionCode = INSTRUCTION_ACTION::DEFEND;
 			break;
 
@@ -397,7 +397,7 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 				Slots[NumInPackage] = SlotIndex;
 			}
 
-			hangar->GotoAlert(SquadronIndex, SlotIndex, SelectedDeck, Element, Loadout, MissionCode > (int)EMISSIONTYPE::SWEEP);
+			hangar->GotoAlert(SquadronIndex, SlotIndex, SelectedDeck, Element, Loadout, MissionCode > (int)EMissionType::SWEEP);
 			NumInPackage++;
 
 			if (NumInPackage >= PackageSize) {

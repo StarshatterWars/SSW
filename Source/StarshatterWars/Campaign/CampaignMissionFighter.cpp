@@ -40,6 +40,8 @@
 #include "PlayerCharacter.h"
 #include "ShipDesignRegistry.h"
 
+#include "PlayerCharacter.h"
+
 #include "StarshatterWarsLog.h"
 #include "GameStructs.h"
 #include "GameStructs_System.h"
@@ -243,7 +245,7 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
             TEXT("CMF Created %03d '%s' %s"),
             info->id,
             ANSI_TO_TCHAR(info->name.data()),
-            ANSI_TO_TCHAR(Mission::GetRoleName(mission ? mission->GetType() : 0)));
+            ANSI_TO_TCHAR(Mission::GetRoleName(mission ? mission->GetMissionType() : 0)));
 
         if (dump_missions && mission)
         {
@@ -307,7 +309,7 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
 
             if (mission)
             {
-                mission->SetType(mission_type);
+                mission->SetMissionType(mission_type);
 
                 if (!mission->LoadFromCampaignMissionData(*mission_data))
                 {
@@ -323,7 +325,7 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
             mission = new Mission(id);
             if (mission)
             {
-                mission->SetType(mission_type);
+                mission->SetMissionType(mission_type);
             }
         }
     }
@@ -370,7 +372,7 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
                 return nullptr;
             }
 
-            mission->SetType(mission_type);
+            mission->SetMissionType(mission_type);
             mission->SetName(name);
             mission->SetTeam(squadron->GetIFF());
             mission->SetStart(request->StartTime());
@@ -414,27 +416,27 @@ bool CampaignMissionFighter::IsGroundObjective(CombatGroup* obj)
 
 void CampaignMissionFighter::SelectType()
 {
-    int type = (int)EMISSIONTYPE::PATROL;
+    int type = (int)EMissionType::PATROL;
 
     if (request)
     {
         type = request->Type();
 
-        if (type == (int)EMISSIONTYPE::STRIKE)
+        if (type == (int)EMissionType::STRIKE)
         {
             strike_group = request->GetPrimaryGroup();
 
             if (!IsGroundObjective(request->GetObjective()))
             {
-                type = (int)EMISSIONTYPE::ASSAULT;
+                type = (int)EMissionType::ASSAULT;
             }
         }
-        else if (type == (int)EMISSIONTYPE::ESCORT_STRIKE)
+        else if (type == (int)EMissionType::ESCORT_STRIKE)
         {
             strike_group = request->GetSecondaryGroup();
             if (!strike_group || strike_group->CalcValue() < 1)
             {
-                type = (int)EMISSIONTYPE::SWEEP;
+                type = (int)EMissionType::SWEEP;
                 strike_group = nullptr;
             }
         }
@@ -479,13 +481,13 @@ void CampaignMissionFighter::SelectRegion()
             {
                 airborne = true;
             }
-            else if (mission->GetType() >= (int)EMISSIONTYPE::AIR_PATROL &&
-                mission->GetType() <= (int)EMISSIONTYPE::AIR_INTERCEPT)
+            else if (mission->GetMissionType() >= (int)EMissionType::AIR_PATROL &&
+                mission->GetMissionType() <= (int)EMissionType::AIR_INTERCEPT)
             {
                 airborne = true;
             }
-            else if (mission->GetType() == (int)EMISSIONTYPE::STRIKE ||
-                mission->GetType() == (int)EMISSIONTYPE::ESCORT_STRIKE)
+            else if (mission->GetMissionType() == (int)EMissionType::STRIKE ||
+                mission->GetMissionType() == (int)EMissionType::ESCORT_STRIKE)
             {
                 if (strike_group)
                 {
@@ -515,16 +517,16 @@ void CampaignMissionFighter::SelectRegion()
 
     if (!airborne)
     {
-        switch (mission->GetType())
+        switch (mission->GetMissionType())
         {
-        case (int)EMISSIONTYPE::AIR_PATROL:
-            mission->SetType((int)EMISSIONTYPE::PATROL);
+        case (int)EMissionType::AIR_PATROL:
+            mission->SetMissionType((int)EMissionType::PATROL);
             break;
-        case (int)EMISSIONTYPE::AIR_SWEEP:
-            mission->SetType((int)EMISSIONTYPE::SWEEP);
+        case (int)EMissionType::AIR_SWEEP:
+            mission->SetMissionType((int)EMissionType::SWEEP);
             break;
-        case (int)EMISSIONTYPE::AIR_INTERCEPT:
-            mission->SetType((int)EMISSIONTYPE::INTERCEPT);
+        case (int)EMissionType::AIR_INTERCEPT:
+            mission->SetMissionType((int)EMissionType::INTERCEPT);
             break;
         default:
             break;
@@ -757,199 +759,142 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
     }
 }
 
-void CampaignMissionFighter::CreateSquadron(CombatGroup* g)
+void
+CampaignMissionFighter::CreateSquadron(CombatGroup* g)
 {
-    if (!g || !mission)
-    {
+    if (!g || g->IsReserve()) return;
+
+    CombatUnit* fighter = g->GetUnits().at(0);
+    CombatUnit* carrier = FindCarrier(g);
+
+    if (!fighter || !carrier) return;
+
+    int live_count = fighter->LiveCount();
+    int maint_count = (live_count > 4) ? live_count / 2 : 0;
+
+    MissionElement* elem = new MissionElement;
+
+    if (!elem) {
+        Exit();
         return;
     }
 
-    const int GroupType = (int)g->GetType();
+    elem->SetName(g->GetName());
+    elem->SetElementID(pkg_id++);
 
-    if (GroupType != (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON &&
-        GroupType != (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON &&
-        GroupType != (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON &&
-        GroupType != (int)ECOMBATGROUP_TYPE::LCA_SQUADRON)
+    const FString DesignName =
+        ANSI_TO_TCHAR(
+            fighter->GetDesign()->name);
+
+    const FShipDesign* DesignRow =
+        ShipDesignRegistry::Find(
+            DesignName);
+
+    if (DesignRow)
     {
-        return;
-    }
-
-    if (g == squadron)
-    {
-        return;
-    }
-
-    int role = (int)EMISSIONFIGHTER::FIGHTER;
-
-    switch ((ECOMBATGROUP_TYPE)g->GetType())
-    {
-    case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-        role = (int)EMISSIONFIGHTER::INTERCEPT;
-        break;
-
-    case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-        role = (int)EMISSIONFIGHTER::ATTACK;
-        break;
-
-    case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        role = (int)EMISSIONFIGHTER::LANDING;
-        break;
-
-    case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
-    default:
-        role = (int)EMISSIONFIGHTER::FIGHTER;
-        break;
-    }
-
-    int count = 4;
-
-    if (g->GetUnits().size() > 0)
-    {
-        count = g->GetUnits().size();
-    }
-
-    MissionElement* elem = CreateFighterPackage(g, count, role);
-    if (!elem)
-    {
-        return;
-    }
-
-    elem->SetIFF(g->GetIFF());
-
-    if (airborne && air_region.length() > 0)
-    {
-        elem->SetRegion(air_region);
-        PlanetaryInsertion(elem);
+        elem->SetShipDesign(DesignRow);
     }
     else
     {
-        elem->SetRegion(orb_region);
-        OrbitalInsertion(elem);
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignMissionFighter] Missing FShipDesign Fighter='%s' Design='%s'"),
+            ANSI_TO_TCHAR(fighter->GetName()),
+            fighter->GetDesign()
+            ? ANSI_TO_TCHAR(fighter->GetDesign()->name)
+            : TEXT("NULL"));
     }
+
+    elem->SetCount(fighter->GetCount());
+    elem->SetDeadCount(fighter->DeadCount());
+    elem->SetMaintCount(maint_count);
+    elem->SetIFF(fighter->GetIFF());
+    elem->SetIntelLevel(g->GetIntelLevel());
+    elem->SetRegion(fighter->GetRegion());
+
+    elem->SetCarrier(carrier->GetName());
+    elem->SetCommander(carrier->GetName());
+    elem->SetLocation(carrier->GetLocation() + RandomPoint());
+
+    elem->SetCombatGroup(g);
+    elem->SetCombatUnit(fighter);
 
     mission->AddElement(elem);
 }
 
-void CampaignMissionFighter::CreatePlayer(CombatGroup* g)
+void
+CampaignMissionFighter::CreatePlayer(CombatGroup* g)
 {
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CMF] CreatePlayer: BEGIN mission=%s group=%s"),
-        mission ? TEXT("VALID") : TEXT("NULL"),
-        g ? TEXT("VALID") : TEXT("NULL"));
+    int pkg_size = 2;
 
-    if (!g || !mission)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CMF] CreatePlayer: early return (g or mission null)"));
-        return;
-    }
+    if (mission->GetMissionType() == (int) EMissionType::STRIKE || mission->GetMissionType() == (int) EMissionType::ASSAULT) {
+        if (request && request->GetObjective()) {
+            ECOMBATGROUP_TYPE tgt_type = request->GetObjective()->GetType();
 
-    if (mission->GetPlayer())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CMF] CreatePlayer: already has player, skipping"));
-        return;
-    }
+            if (tgt_type >= ECOMBATGROUP_TYPE::FLEET && tgt_type <= ECOMBATGROUP_TYPE::CARRIER_GROUP)
+                pkg_size = 4;
 
-    int role = (int)EMISSIONFIGHTER::FIGHTER;
-
-    switch ((ECOMBATGROUP_TYPE)g->GetType())
-    {
-    case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
-        role = (int)EMISSIONFIGHTER::INTERCEPT;
-        break;
-
-    case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
-        role = (int)EMISSIONFIGHTER::ATTACK;
-        break;
-
-    case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        role = (int)EMISSIONFIGHTER::LANDING;
-        break;
-
-    case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
-    default:
-        role = (int)EMISSIONFIGHTER::FIGHTER;
-        break;
-    }
-
-    int count = 4;
-
-    if (g->GetUnits().size() > 0)
-    {
-        count = g->GetUnits().size();
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CMF] CreatePlayer: role=%d unit_count=%d"),
-        role,
-        g->GetUnits().size());
-
-    player_elem = CreateFighterPackage(g, count, role);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CMF] CreatePlayer: CreateFighterPackage returned %s"),
-        player_elem ? TEXT("VALID") : TEXT("NULL"));
-
-    if (!player_elem)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("CMF CreatePlayer: failed to create player package for '%s'"),
-            ANSI_TO_TCHAR(g->GetName().data()));
-        return;
-    }
-
-    player_elem->SetIFF(g->GetIFF());
-
-    if (airborne && air_region.length() > 0)
-    {
-        player_elem->SetRegion(air_region);
-        PlanetaryInsertion(player_elem);
-    }
-    else
-    {
-        player_elem->SetRegion(orb_region);
-        OrbitalInsertion(player_elem);
-    }
-
-    mission->AddElement(player_elem);
-    mission->SetPlayer(player_elem);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CMF] CreatePlayer: after AddElement+SetPlayer mission->GetPlayer()=%s"),
-        mission->GetPlayer() ? TEXT("VALID") : TEXT("NULL"));
-
-    CombatUnit* carrier = FindCarrier(g);
-    if (carrier)
-    {
-        carrier_elem = CreateSingleElement(g->FindCarrier(), carrier);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CMF] CreatePlayer: carrier=%s carrier_elem=%s"),
-            TEXT("VALID"),
-            carrier_elem ? TEXT("VALID") : TEXT("NULL"));
-
-        if (carrier_elem)
-        {
-            carrier_elem->SetIFF(g->GetIFF());
-
-            if (airbase && air_region.length() > 0)
-            {
-                carrier_elem->SetRegion(air_region);
-                PlanetaryInsertion(carrier_elem);
-            }
-            else
-            {
-                carrier_elem->SetRegion(orb_region);
-                OrbitalInsertion(carrier_elem);
-            }
-
-            mission->AddElement(carrier_elem);
+            if (tgt_type == ECOMBATGROUP_TYPE::STATION || tgt_type == ECOMBATGROUP_TYPE::STARBASE)
+                pkg_size = 4;
         }
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CMF] CreatePlayer: END mission->GetPlayer()=%s IsOK=%s"),
-        mission->GetPlayer() ? TEXT("VALID") : TEXT("NULL"),
-        mission->IsOK() ? TEXT("true") : TEXT("false"));
+    MissionElement* elem = CreateFighterPackage(g, pkg_size, mission->GetMissionType());
+
+    if (elem) {
+        PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
+        elem->SetAlert(p ? !p->FlyingStart() : true);
+        elem->SetPlayer(1);
+
+        if (ward) {
+            FVector approach = elem->GetLocation() - ward->GetLocation();
+            approach.Normalize();
+
+            FVector pickup = ward->GetLocation() + approach * 50e3;
+            double delta = (pickup - elem->GetLocation()).Size();
+
+            if (delta > 30e3) {
+                Instruction* n = new Instruction(elem->GetRegion(), pickup, INSTRUCTION_ACTION::ESCORT);
+                n->SetTarget(ward->GetName());
+                n->SetSpeed(750);
+                elem->AddNavPoint(n);
+            }
+
+            Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, ward->GetName());
+
+            switch (mission->GetMissionType()) {
+            case (int) EMissionType::ESCORT_FREIGHT:
+                obj->SetTargetDesc(Text("the star freighter ") + ward->GetName());
+                break;
+
+            case (int)EMissionType::ESCORT_SHUTTLE:
+                obj->SetTargetDesc(Text("the shuttle ") + ward->GetName());
+                break;
+
+            case (int)EMissionType::ESCORT_STRIKE:
+                obj->SetTargetDesc(Text("the ") + ward->GetName() + Text(" strike package"));
+                break;
+
+            case (int)EMissionType::DEFEND:
+                obj->SetTargetDesc(Text("the ") + ward->GetName());
+                break;
+
+            default:
+                if (ward->GetCombatGroup()) {
+                    obj->SetTargetDesc(Text("the ") + ward->GetCombatGroup()->GetDescription());
+                }
+                else {
+                    obj->SetTargetDesc(Text("the ") + ward->GetName());
+                }
+                break;
+            }
+
+            elem->AddObjective(obj);
+        }
+
+        mission->AddElement(elem);
+
+        player_elem = elem;
+    }
 }
 
 void CampaignMissionFighter::CreatePatrols()
@@ -985,12 +930,12 @@ void CampaignMissionFighter::CreatePatrols()
                 continue;
             }
 
-            int PatrolType = (int)EMISSIONTYPE::PATROL;
+            int PatrolType = (int)EMissionType::PATROL;
             FVector BaseLoc;
 
             if (Region->GetType() == Orbital::TERRAIN)
             {
-                PatrolType = (int)EMISSIONTYPE::AIR_PATROL;
+                PatrolType = (int)EMissionType::AIR_PATROL;
 
                 if (FMath::RandRange(1, 3) <= 2)
                 {
@@ -1027,11 +972,11 @@ void CampaignMissionFighter::CreatePatrols()
 
 void CampaignMissionFighter::CreateWards()
 {
-    switch (mission ? mission->GetType() : mission_type)
+    switch (mission ? mission->GetMissionType() : mission_type)
     {
-    case (int)EMISSIONTYPE::ESCORT_FREIGHT: CreateWardFreight(); break;
-    case (int)EMISSIONTYPE::ESCORT_SHUTTLE: CreateWardShuttle(); break;
-    case (int)EMISSIONTYPE::ESCORT_STRIKE:  CreateWardStrike();  break;
+    case (int)EMissionType::ESCORT_FREIGHT: CreateWardFreight(); break;
+    case (int)EMissionType::ESCORT_SHUTTLE: CreateWardShuttle(); break;
+    case (int)EMissionType::ESCORT_STRIKE:  CreateWardStrike();  break;
     default: break;
     }
 }
@@ -1073,7 +1018,7 @@ void CampaignMissionFighter::CreateWardFreight()
         return;
     }
 
-    elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
+    elem->SetMissionRole((int)EMissionType::CARGO);
     elem->SetIntelLevel(EIntel::KNOWN);
     elem->SetRegion(mission->GetRegion());
 
@@ -1155,7 +1100,7 @@ void CampaignMissionFighter::CreateWardShuttle()
         return;
     }
 
-    MissionElement* Elem = CreateFighterPackage(Shuttle, 1, (int)EMISSIONTYPE::CARGO);
+    MissionElement* Elem = CreateFighterPackage(Shuttle, 1, (int)EMissionType::CARGO);
     if (!Elem)
     {
         return;
@@ -1242,10 +1187,10 @@ void CampaignMissionFighter::CreateWardStrike()
         return;
     }
 
-    int type = (int)EMISSIONTYPE::ASSAULT;
+    int type = (int)EMissionType::ASSAULT;
     if (airborne)
     {
-        type = (int)EMISSIONTYPE::STRIKE;
+        type = (int)EMissionType::STRIKE;
     }
 
     MissionElement* elem = CreateFighterPackage(strike, 2, type);
@@ -1366,7 +1311,7 @@ void CampaignMissionFighter::CreateEscorts()
 {
     bool escort_needed = false;
 
-    if (mission->GetType() == (int)EMISSIONTYPE::STRIKE || mission->GetType() == (int)EMISSIONTYPE::ASSAULT)
+    if (mission->GetMissionType() == (int)EMissionType::STRIKE || mission->GetMissionType() == (int)EMissionType::ASSAULT)
     {
         if (request && request->GetObjective())
         {
@@ -1387,7 +1332,7 @@ void CampaignMissionFighter::CreateEscorts()
 
         if (s && s->IsAssignable())
         {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ESCORT_STRIKE);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ESCORT_STRIKE);
 
             if (elem)
             {
@@ -1425,40 +1370,40 @@ void CampaignMissionFighter::CreateEscorts()
 
 void CampaignMissionFighter::CreateTargets()
 {
-    switch (mission ? mission->GetType() : mission_type)
+    switch (mission ? mission->GetMissionType() : mission_type)
     {
-    case (int)EMISSIONTYPE::PATROL:
-    case (int)EMISSIONTYPE::AIR_PATROL:
+    case (int)EMissionType::PATROL:
+    case (int)EMissionType::AIR_PATROL:
         CreateTargetsPatrol();
         break;
 
-    case (int)EMISSIONTYPE::SWEEP:
-    case (int)EMISSIONTYPE::AIR_SWEEP:
+    case (int)EMissionType::SWEEP:
+    case (int)EMissionType::AIR_SWEEP:
         CreateTargetsSweep();
         break;
 
-    case (int)EMISSIONTYPE::INTERCEPT:
-    case (int)EMISSIONTYPE::AIR_INTERCEPT:
+    case (int)EMissionType::INTERCEPT:
+    case (int)EMissionType::AIR_INTERCEPT:
         CreateTargetsIntercept();
         break;
 
-    case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+    case (int)EMissionType::ESCORT_FREIGHT:
         CreateTargetsFreightEscort();
         break;
 
-    case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
+    case (int)EMissionType::ESCORT_SHUTTLE:
         CreateTargetsShuttleEscort();
         break;
 
-    case (int)EMISSIONTYPE::ESCORT_STRIKE:
+    case (int)EMissionType::ESCORT_STRIKE:
         CreateTargetsStrikeEscort();
         break;
 
-    case (int)EMISSIONTYPE::STRIKE:
+    case (int)EMissionType::STRIKE:
         CreateTargetsStrike();
         break;
 
-    case (int)EMISSIONTYPE::ASSAULT:
+    case (int)EMissionType::ASSAULT:
         CreateTargetsAssault();
         break;
 
@@ -1750,7 +1695,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
 
     while (ninbound--)
     {
-        MissionElement* elem = CreateFighterPackage(s, 4, (int)EMISSIONTYPE::ASSAULT);
+        MissionElement* elem = CreateFighterPackage(s, 4, (int)EMissionType::ASSAULT);
         if (elem)
         {
             elem->SetIntelLevel(EIntel::KNOWN);
@@ -1826,7 +1771,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 }
             }
 
-            MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+            MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
             if (e2)
             {
                 e2->SetIntelLevel(EIntel::KNOWN);
@@ -1867,7 +1812,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
 
         if (friendlySquadron)
         {
-            MissionElement* elem = CreateFighterPackage(friendlySquadron, 2, (int)EMISSIONTYPE::INTERCEPT);
+            MissionElement* elem = CreateFighterPackage(friendlySquadron, 2, (int)EMissionType::INTERCEPT);
             if (elem)
             {
                 PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
@@ -1935,7 +1880,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         return;
     }
 
-    MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
+    MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
     if (elem)
     {
         elem->SetIntelLevel(EIntel::KNOWN);
@@ -1956,7 +1901,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
 
         mission->AddElement(elem);
 
-        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
         if (e2)
         {
             e2->SetIntelLevel(EIntel::KNOWN);
@@ -2191,7 +2136,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
     {
         if (Assigned->GetType() > ECOMBATGROUP_TYPE::WING && Assigned->GetType() < ECOMBATGROUP_TYPE::FLEET)
         {
-            MissionElement* TargetElem = CreateFighterPackage(Assigned, 2, (int)EMISSIONTYPE::CARGO);
+            MissionElement* TargetElem = CreateFighterPackage(Assigned, 2, (int)EMissionType::CARGO);
             if (TargetElem)
             {
                 TargetElem->SetRegion(mission->GetRegion());
@@ -2364,7 +2309,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
     int32 ntargets = 0;
     int32 ttype = GetRandomIndex();
-    bool oca = (mission->GetType() == (int)EMISSIONTYPE::SWEEP);
+    bool oca = (mission->GetMissionType() == (int)EMissionType::SWEEP);
 
     if (ttype < 8)
     {
@@ -2381,7 +2326,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
         if (s)
         {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::SWEEP);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::SWEEP);
             if (elem)
             {
                 elem->SetIntelLevel(EIntel::KNOWN);
@@ -2403,7 +2348,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
             if (s)
             {
-                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMISSIONTYPE::CARGO);
+                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMissionType::CARGO);
                 if (elem)
                 {
                     elem->SetIntelLevel(EIntel::KNOWN);
@@ -2419,7 +2364,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                     if (s2)
                     {
-                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
                         if (e2)
                         {
                             e2->SetIntelLevel(EIntel::KNOWN);
@@ -2450,7 +2395,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
             if (s)
             {
-                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
+                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
                 if (elem)
                 {
                     elem->SetIntelLevel(EIntel::KNOWN);
@@ -2482,7 +2427,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
             if (s)
             {
-                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMISSIONTYPE::CARGO);
+                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMissionType::CARGO);
                 if (elem)
                 {
                     elem->SetIntelLevel(EIntel::KNOWN);
@@ -2498,7 +2443,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                     if (s2)
                     {
-                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
                         if (e2)
                         {
                             e2->SetIntelLevel(EIntel::KNOWN);
@@ -2529,7 +2474,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
             if (s)
             {
-                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
+                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
                 if (elem)
                 {
                     elem->SetIntelLevel(EIntel::KNOWN);
@@ -2545,7 +2490,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
                     if (s2)
                     {
-                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
                         if (e2)
                         {
                             e2->SetIntelLevel(EIntel::KNOWN);
@@ -2577,7 +2522,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
 
         if (s)
         {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::CARGO);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::CARGO);
             if (elem)
             {
                 elem->SetIntelLevel(EIntel::KNOWN);
@@ -2809,7 +2754,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     {
         if (ShipRow->ShipType == (int32)CLASSIFICATION::CARRIER)
         {
-            Elem->SetMissionRole((int)EMISSIONTYPE::FLIGHT_OPS);
+            Elem->SetMissionRole((int)EMissionType::FLIGHT_OPS);
 
             if (squadron && Elem->GetCombatGroup() == squadron->FindCarrier())
             {
@@ -2822,13 +2767,13 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         }
         else
         {
-            Elem->SetMissionRole((int)EMISSIONTYPE::ESCORT);
+            Elem->SetMissionRole((int)EMissionType::ESCORT);
         }
     }
     else if (ShipRow->ShipType == (int32)CLASSIFICATION::STATION ||
         ShipRow->ShipType == (int32)CLASSIFICATION::STARBASE)
     {
-        Elem->SetMissionRole((int)EMISSIONTYPE::FLIGHT_OPS);
+        Elem->SetMissionRole((int)EMissionType::FLIGHT_OPS);
 
         if (squadron && Elem->GetCombatGroup() == squadron->FindCarrier())
         {
@@ -2842,7 +2787,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     }
     else if (ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER)
     {
-        Elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
+        Elem->SetMissionRole((int)EMissionType::OTHER);
 
         const FString Name = FString(ANSI_TO_TCHAR(U->GetName().data()));
         int32 Dash = INDEX_NONE;
@@ -2871,7 +2816,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     }
     else if ((ShipRow->ShipType & (int32)CLASSIFICATION::STARSHIPS) != 0)
     {
-        Elem->SetMissionRole((int)EMISSIONTYPE::FLEET);
+        Elem->SetMissionRole((int)EMissionType::FLEET);
     }
 
     Elem->SetCombatGroup(G);
@@ -2983,9 +2928,9 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
     elem->SetSquadron(InSquadron->GetName());
     elem->SetMissionRole(role);
 
-    switch ((EMISSIONTYPE)role)
+    switch ((EMissionType)role)
     {
-    case EMISSIONTYPE::ASSAULT:
+    case EMissionType::ASSAULT:
         if (request && request->GetObjective() &&
             request->GetObjective()->GetType() == ECOMBATGROUP_TYPE::MINEFIELD)
         {
@@ -2997,7 +2942,7 @@ MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSqua
         }
         break;
 
-    case EMISSIONTYPE::STRIKE:
+    case EMissionType::STRIKE:
         elem->GetLoadouts().append(new MissionLoad(-1, "Ground Strike"));
         break;
 
@@ -3181,7 +3126,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
     Info->id = mission->GetIdentity();
     Info->mission = mission;
     Info->name = TCHAR_TO_ANSI(*Name);
-    Info->type = mission->GetType();
+    Info->type = mission->GetMissionType();
     Info->player_info = TCHAR_TO_ANSI(*PlayerInfo);
     Info->description = mission->GetObjective();
     Info->situation = mission->GetSituation();

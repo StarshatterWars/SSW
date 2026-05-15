@@ -174,23 +174,26 @@ Instruction::GetTarget()
 	return target;
 }
 
-void Instruction::SetTarget(const FString& InTarget)
+void
+Instruction::SetTarget(const FString& InTarget)
 {
-	if (!InTarget.IsEmpty())
+	SetTarget(TCHAR_TO_ANSI(*InTarget));
+}
+
+void
+Instruction::SetTarget(const char* InTarget)
+{
+	const char* SafeTarget =
+		InTarget ? InTarget : "";
+
+	if (tgt_name != SafeTarget)
 	{
-		// Convert UE string -> ANSI (or UTF-8 if your Text supports it)
-		const FTCHARToUTF8 Conv(*InTarget);
-		const char* Ansi = Conv.Get();
+		tgt_name = SafeTarget;
+		tgt_desc = SafeTarget;
 
-		// Only update if changed:
-		if (tgt_name != Ansi)
-		{
-			tgt_name = Ansi;
-			tgt_desc = Ansi;
-
-			// Clear resolved target pointer (forces re-resolve)
-			target = nullptr;
-		}
+		// Clear resolved pointer so Sim::ResolveInstructionTargets()
+		// can re-resolve it later.
+		target = nullptr;
 	}
 }
 
@@ -277,12 +280,12 @@ Instruction::Evaluate(Ship* ship)
 			if (e->IsFinished() || e->IsSquadron())
 				continue;
 
-			if (e->Name() == tgt_name ||
-				(e->GetCommander() && e->GetCommander()->Name() == tgt_name)) {
+			if (e->GetName() == tgt_name ||
+				(e->GetCommander() && e->GetCommander()->GetName() == tgt_name)) {
 
 				found = true;
 
-				for (int i = 0; i < e->NumShips(); i++) {
+				for (int i = 0; i < e->GetNumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
 					if (s && s->GetIntegrity() < 1)
@@ -324,7 +327,7 @@ Instruction::Evaluate(Ship* ship)
 				continue;
 
 			if (e->GetIFF() && e->GetIFF() != ship->GetIFF()) {
-				for (int i = 0; i < e->NumShips(); i++) {
+				for (int i = 0; i < e->GetNumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
 					if (s && s->GetIntegrity() >= 1)
@@ -352,8 +355,8 @@ Instruction::Evaluate(Ship* ship)
 			if (e->IsFinished() || e->IsSquadron())
 				continue;
 
-			if (e->Name() == tgt_name) {
-				for (int i = 0; i < e->NumShips(); i++) {
+			if (e->GetName() == tgt_name) {
+				for (int i = 0; i < e->GetNumShips(); i++) {
 					Ship* s = e->GetShip(i + 1);
 
 					if (s && s->GetIntegrity() >= 1)

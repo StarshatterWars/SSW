@@ -668,12 +668,12 @@ void UCmdMissionsDlg::AddMissionInfoToList(MissionInfo* Info)
     {
         bool bTrained = false;
 
-        if (LegacyPlayer && M->GetType() == (int)EMISSIONTYPE::TRAINING)
+        if (LegacyPlayer && M->GetMissionType() == (int)EMissionType::TRAINING)
         {
             bTrained = LegacyPlayer->HasTrained(M->GetIdentity());
         }
 
-        Item->MissionType = (M->GetType() == (int)EMISSIONTYPE::TRAINING && bTrained)
+        Item->MissionType = (M->GetMissionType() == (int)EMissionType::TRAINING && bTrained)
             ? TEXT("Training")
             : UTF8_TO_TCHAR(M->GetTypeName());
 
@@ -683,19 +683,19 @@ void UCmdMissionsDlg::AddMissionInfoToList(MissionInfo* Info)
     {
         switch (Info->type)
         {
-        case (int)EMISSIONTYPE::PATROL:
+        case (int)EMissionType::PATROL:
             Item->MissionType = TEXT("Patrol");
             break;
-        case (int)EMISSIONTYPE::STRIKE:
+        case (int)EMissionType::STRIKE:
             Item->MissionType = TEXT("Strike");
             break;
-        case (int)EMISSIONTYPE::ESCORT:
+        case (int)EMissionType::ESCORT:
             Item->MissionType = TEXT("Escort");
             break;
-        case (int)EMISSIONTYPE::DEFEND:
+        case (int)EMissionType::DEFEND:
             Item->MissionType = TEXT("Defend");
             break;
-        case (int)EMISSIONTYPE::TRAINING:
+        case (int)EMissionType::TRAINING:
             Item->MissionType = TEXT("Training");
             break;
         default:

@@ -641,7 +641,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 
 			if (slot_ship->GetElement()) {
 				SimElement* elem = slot_ship->GetElement();
-				stats->SetRole(Mission::GetRoleName(elem->Type()));
+				stats->SetRole(Mission::GetRoleName(elem->GetMissionType()));
 				stats->SetCombatGroup(elem->GetCombatGroup());
 				stats->SetCombatUnit(elem->GetCombatUnit());
 				stats->SetElementIndex(slot_ship->GetElementIndex());

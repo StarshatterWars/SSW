@@ -236,7 +236,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 
 			char name[64];
 			sprintf_s(name, "%s %d",
-				(const char*)slot->package->Name(),
+				(const char*)slot->package->GetName(),
 				slot->ship->GetElementIndex());
 			slot->ship->SetName(name);
 		}
@@ -387,7 +387,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 
 				char name[64];
 				sprintf_s(name, "%s %d",
-					(const char*)elem->Name(),
+					(const char*)elem->GetName(),
 					slot->ship->GetElementIndex());
 
 				slot->ship->SetName(name);

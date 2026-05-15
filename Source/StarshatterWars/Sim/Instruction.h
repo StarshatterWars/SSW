@@ -102,6 +102,7 @@ public:
 	void         SetHoldTime(double t) { hold_time = t; }
 
 	void		 SetTarget(const FString& InTarget); 
+	void	     SetTarget(const char* InTarget);
 	void         SetTarget(SimObject* s);
 	void         SetTargetDesc(const char* d);
 	void         ClearTarget();

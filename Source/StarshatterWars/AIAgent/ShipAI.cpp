@@ -1265,9 +1265,9 @@ ShipAI::FindObjectiveFormation()
 	{
 		LeadShip = Element->GetShip(1);
 
-		if (LeadShip == ship && Element->NumShips() > 1)
+		if (LeadShip == ship && Element->GetNumShips() > 1)
 		{
-			for (int i = 1; i <= Element->NumShips(); i++)
+			for (int i = 1; i <= Element->GetNumShips(); i++)
 			{
 				Ship* Candidate = Element->GetShip(i);
 
@@ -1290,7 +1290,7 @@ ShipAI::FindObjectiveFormation()
 		ship ? ship->GetName() : "NULL",
 		Element,
 		element_index,
-		Element ? Element->NumShips() : -1,
+		Element ? Element->GetNumShips() : -1,
 		WardShip ? WardShip->GetName() : "NULL",
 		LeadShip ? LeadShip->GetName() : "NULL",
 		*formation_delta.ToString(),

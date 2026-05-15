@@ -250,7 +250,7 @@ void UMissionElementDlg::RebuildFromModel()
     {
         RoleCombo->ClearOptions();
 
-        for (int i = (int)EMISSIONTYPE::PATROL; i <= (int)EMISSIONTYPE::OTHER; i++)
+        for (int i = (int)EMissionType::PATROL; i <= (int)EMissionType::OTHER; i++)
         {
             RoleCombo->AddOption(ANSI_TO_TCHAR(Mission::GetRoleName(i)));
 

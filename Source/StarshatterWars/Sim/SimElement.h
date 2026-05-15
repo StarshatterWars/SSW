@@ -45,9 +45,9 @@ public:
 	int operator == (const SimElement& e) const { return id == e.id; }
 
 	// GENERAL ACCESSORS:
-	int               Identity()        const { return id; }
-	int               Type()            const { return type; }
-	const Text& Name()            const { return name; }
+	int               GetIdentity()        const { return id; }
+	int               GetMissionType()  const { return type; }
+	const Text&		  GetName()         const { return name; }
 	void              SetName(const char* s) { name = s; }
 	virtual int       GetIFF()          const { return iff; }
 	int               GetPlayer()       const { return player; }
@@ -58,7 +58,7 @@ public:
 	void              SetIntelLevel(EIntel i) { intel = i; }
 
 	// ELEMENT COMPONENTS:
-	int               NumShips()        const { return ships.size(); }
+	int               GetNumShips()        const { return ships.size(); }
 	int               AddShip(Ship*, int index = -1);
 	void              DelShip(Ship*);
 	Ship* GetShip(int index);

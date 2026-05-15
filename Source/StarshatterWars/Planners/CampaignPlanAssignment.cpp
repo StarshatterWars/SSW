@@ -134,7 +134,7 @@ CampaignPlanAssignment::ProcessZone(Combatant* c, CombatZone* zone)
 		ListIter<CombatGroup> g = assets;
 		while (++g) {
 			CombatAssignment* a =
-				new CombatAssignment((int)EMISSIONTYPE::DEFEND,
+				new CombatAssignment((int)EMissionType::DEFEND,
 					def.value(),
 					g.value());
 
@@ -159,16 +159,16 @@ CampaignPlanAssignment::ProcessZone(Combatant* c, CombatZone* zone)
 			if (!asset)
 				continue;
 
-			int mtype = (int)EMISSIONTYPE::ASSAULT;
+			int mtype = (int)EMissionType::ASSAULT;
 
 			if (target->IsStrikeTarget())
-				mtype = (int)EMISSIONTYPE::STRIKE;
+				mtype = (int)EMissionType::STRIKE;
 
 			else if (target->IsFighterGroup())
-				mtype = (int)EMISSIONTYPE::SWEEP;
+				mtype = (int)EMissionType::SWEEP;
 
 			else if (target->GetType() == ECOMBATGROUP_TYPE::LCA_SQUADRON)
-				mtype = (int)EMISSIONTYPE::INTERCEPT;
+				mtype = (int)EMissionType::INTERCEPT;
 
 			CombatAssignment* a =
 				new CombatAssignment(mtype, target, asset);

@@ -233,22 +233,22 @@ CampaignPlanMission::PlanStrategicMission()
 
 static int mission_type_index = -1;
 static int mission_types[16] = {
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::ESCORT_FREIGHT,
-    (int)EMISSIONTYPE::PATROL
+    (int)EMissionType::PATROL,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::ESCORT_FREIGHT,
+    (int)EMissionType::PATROL
 };
 
 // +--------------------------------------------------------------------+
@@ -256,7 +256,7 @@ static int mission_types[16] = {
 CampaignMissionRequest*
 CampaignPlanMission::PlanRandomStarshipMission()
 {
-    int type = (int)EMISSIONTYPE::PATROL;
+    int type = (int)EMissionType::PATROL;
     static constexpr int RANDOM_INDEX_MAX = 15;
     int r = FMath::RandRange(0, RANDOM_INDEX_MAX);
 
@@ -270,10 +270,10 @@ CampaignPlanMission::PlanRandomStarshipMission()
 
     type = mission_types[mission_type_index++];
 
-    if (type == (int)EMISSIONTYPE::ESCORT_FREIGHT) {
+    if (type == (int)EMissionType::ESCORT_FREIGHT) {
         CombatGroup* freight = campaign->FindGroup(ownside, (int) ECOMBATGROUP_TYPE::FREIGHT);
         if (!freight || freight->CountUnits() < 1)
-            type = (int)EMISSIONTYPE::PATROL;
+            type = (int)EMissionType::PATROL;
     }
 
     CampaignMissionRequest* request = 0;
@@ -286,22 +286,22 @@ CampaignPlanMission::PlanRandomStarshipMission()
 
 static int fighter_mission_index = 0;
 static int fighter_mission_types[16] = {
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::SWEEP,
-    (int)EMISSIONTYPE::ESCORT_SHUTTLE,
-    (int)EMISSIONTYPE::AIR_PATROL,
-    (int)EMISSIONTYPE::SWEEP,
-    (int)EMISSIONTYPE::ESCORT_SHUTTLE,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::AIR_SWEEP,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::AIR_PATROL,
-    (int)EMISSIONTYPE::ESCORT_SHUTTLE,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::SWEEP,
-    (int)EMISSIONTYPE::PATROL,
-    (int)EMISSIONTYPE::AIR_SWEEP
+    (int)EMissionType::PATROL,
+    (int)EMissionType::SWEEP,
+    (int)EMissionType::ESCORT_SHUTTLE,
+    (int)EMissionType::AIR_PATROL,
+    (int)EMissionType::SWEEP,
+    (int)EMissionType::ESCORT_SHUTTLE,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::AIR_SWEEP,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::AIR_PATROL,
+    (int)EMissionType::ESCORT_SHUTTLE,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::SWEEP,
+    (int)EMissionType::PATROL,
+    (int)EMissionType::AIR_SWEEP
 };
 
 CampaignMissionRequest*
@@ -316,18 +316,18 @@ CampaignPlanMission::PlanRandomFighterMission()
     if (fighter_mission_index > 15)
         fighter_mission_index = 0;
 
-    if (type == (int)EMISSIONTYPE::ESCORT_FREIGHT) {
+    if (type == (int)EMissionType::ESCORT_FREIGHT) {
         CombatGroup* freight = campaign->FindGroup(ownside, (int) ECOMBATGROUP_TYPE::FREIGHT);
         if (!freight || freight->CalcValue() < 1)
-            type = (int)EMISSIONTYPE::PATROL;
+            type = (int)EMissionType::PATROL;
         else
             obj = freight;
     }
 
-    else if (type == (int)EMISSIONTYPE::ESCORT_SHUTTLE) {
+    else if (type == (int)EMissionType::ESCORT_SHUTTLE) {
         CombatGroup* shuttle = campaign->FindGroup(ownside, (int) ECOMBATGROUP_TYPE::LCA_SQUADRON);
         if (!shuttle || shuttle->CalcValue() < 1)
-            type = (int)EMISSIONTYPE::PATROL;
+            type = (int)EMissionType::PATROL;
         else
             obj = shuttle;
     }
@@ -339,7 +339,7 @@ CampaignPlanMission::PlanRandomFighterMission()
             primary = primary->FindGroup(ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
     }
 
-    if (type >= (int)EMISSIONTYPE::AIR_PATROL && type <= (int)EMISSIONTYPE::AIR_INTERCEPT) {
+    if (type >= (int)EMissionType::AIR_PATROL && type <= (int)EMissionType::AIR_INTERCEPT) {
         CombatZone* zone = 0;
         bool        airborne = false;
 
@@ -359,14 +359,14 @@ CampaignPlanMission::PlanRandomFighterMission()
         }
 
         if (!airborne) {
-            if (type == (int)EMISSIONTYPE::AIR_INTERCEPT)
-                type = (int)EMISSIONTYPE::INTERCEPT;
+            if (type == (int)EMissionType::AIR_INTERCEPT)
+                type = (int)EMissionType::INTERCEPT;
 
-            else if (type == (int)EMISSIONTYPE::AIR_SWEEP)
-                type = (int)EMISSIONTYPE::SWEEP;
+            else if (type == (int)EMissionType::AIR_SWEEP)
+                type = (int)EMissionType::SWEEP;
 
             else
-                type = (int)EMISSIONTYPE::PATROL;
+                type = (int)EMissionType::PATROL;
         }
     }
 

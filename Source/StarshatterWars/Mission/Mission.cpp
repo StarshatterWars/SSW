@@ -910,61 +910,61 @@ Mission::AddError(Text err)
 
 // +--------------------------------------------------------------------+
 
-EMISSIONTYPE Mission::EnumFromName(const char* n)
+EMissionType Mission::EnumFromName(const char* n)
 {
 	if (!n || !*n)
 	{
-		return EMISSIONTYPE::OTHER;
+		return EMissionType::OTHER;
 	}
 
 	const FString Name = ANSI_TO_TCHAR(n);
 
-	static const TMap<FString, EMISSIONTYPE> MissionTypeMap =
+	static const TMap<FString, EMissionType> MissionTypeMap =
 	{
-		{TEXT("PATROL"), EMISSIONTYPE::PATROL},
-		{TEXT("SWEEP"), EMISSIONTYPE::SWEEP},
-		{TEXT("INTERCEPT"), EMISSIONTYPE::INTERCEPT},
-		{TEXT("AIR_PATROL"), EMISSIONTYPE::AIR_PATROL},
-		{TEXT("AIR_SWEEP"), EMISSIONTYPE::AIR_SWEEP},
-		{TEXT("AIR_INTERCEPT"), EMISSIONTYPE::AIR_INTERCEPT},
-		{TEXT("STRIKE"), EMISSIONTYPE::STRIKE},
-		{TEXT("ASSAULT"), EMISSIONTYPE::ASSAULT},
-		{TEXT("DEFEND"), EMISSIONTYPE::DEFEND},
-		{TEXT("ESCORT"), EMISSIONTYPE::ESCORT},
-		{TEXT("ESCORT_FREIGHT"), EMISSIONTYPE::ESCORT_FREIGHT},
-		{TEXT("ESCORT_SHUTTLE"), EMISSIONTYPE::ESCORT_SHUTTLE},
-		{TEXT("ESCORT_STRIKE"), EMISSIONTYPE::ESCORT_STRIKE},
-		{TEXT("INTEL"), EMISSIONTYPE::INTEL},
-		{TEXT("SCOUT"), EMISSIONTYPE::SCOUT},
-		{TEXT("RECON"), EMISSIONTYPE::RECON},
-		{TEXT("BLOCKADE"), EMISSIONTYPE::BLOCKADE},
-		{TEXT("FLEET"), EMISSIONTYPE::FLEET},
-		{TEXT("BOMBARDMENT"), EMISSIONTYPE::BOMBARDMENT},
-		{TEXT("FLIGHT_OPS"), EMISSIONTYPE::FLIGHT_OPS},
-		{TEXT("TRANSPORT"), EMISSIONTYPE::TRANSPORT},
-		{TEXT("CARGO"), EMISSIONTYPE::CARGO},
-		{TEXT("TRAINING"), EMISSIONTYPE::TRAINING},
-		{TEXT("OTHER"), EMISSIONTYPE::OTHER}
+		{TEXT("PATROL"), EMissionType::PATROL},
+		{TEXT("SWEEP"), EMissionType::SWEEP},
+		{TEXT("INTERCEPT"), EMissionType::INTERCEPT},
+		{TEXT("AIR_PATROL"), EMissionType::AIR_PATROL},
+		{TEXT("AIR_SWEEP"), EMissionType::AIR_SWEEP},
+		{TEXT("AIR_INTERCEPT"), EMissionType::AIR_INTERCEPT},
+		{TEXT("STRIKE"), EMissionType::STRIKE},
+		{TEXT("ASSAULT"), EMissionType::ASSAULT},
+		{TEXT("DEFEND"), EMissionType::DEFEND},
+		{TEXT("ESCORT"), EMissionType::ESCORT},
+		{TEXT("ESCORT_FREIGHT"), EMissionType::ESCORT_FREIGHT},
+		{TEXT("ESCORT_SHUTTLE"), EMissionType::ESCORT_SHUTTLE},
+		{TEXT("ESCORT_STRIKE"), EMissionType::ESCORT_STRIKE},
+		{TEXT("INTEL"), EMissionType::INTEL},
+		{TEXT("SCOUT"), EMissionType::SCOUT},
+		{TEXT("RECON"), EMissionType::RECON},
+		{TEXT("BLOCKADE"), EMissionType::BLOCKADE},
+		{TEXT("FLEET"), EMissionType::FLEET},
+		{TEXT("BOMBARDMENT"), EMissionType::BOMBARDMENT},
+		{TEXT("FLIGHT_OPS"), EMissionType::FLIGHT_OPS},
+		{TEXT("TRANSPORT"), EMissionType::TRANSPORT},
+		{TEXT("CARGO"), EMissionType::CARGO},
+		{TEXT("TRAINING"), EMissionType::TRAINING},
+		{TEXT("OTHER"), EMissionType::OTHER}
 	};
 
 	const FString UpperName = Name.ToUpper();
 
-	if (const EMISSIONTYPE* FoundType = MissionTypeMap.Find(UpperName))
+	if (const EMissionType* FoundType = MissionTypeMap.Find(UpperName))
 	{
 		return *FoundType;
 	}
 
-	for (int32 i = static_cast<int32>(EMISSIONTYPE::PATROL);
-		i <= static_cast<int32>(EMISSIONTYPE::OTHER);
+	for (int32 i = static_cast<int32>(EMissionType::PATROL);
+		i <= static_cast<int32>(EMissionType::OTHER);
 		++i)
 	{
 		if (!FCStringAnsi::Stricmp(n, GetRoleName(i)))
 		{
-			return static_cast<EMISSIONTYPE>(i);
+			return static_cast<EMissionType>(i);
 		}
 	}
 
-	return EMISSIONTYPE::OTHER;
+	return EMissionType::OTHER;
 }
 
 int32 Mission::TypeFromName(const char* n)
@@ -976,43 +976,43 @@ int32 Mission::TypeFromName(const char* n)
 
 	const FString Name = ANSI_TO_TCHAR(n);
 
-	static const TMap<FString, EMISSIONTYPE> MissionTypeMap =
+	static const TMap<FString, EMissionType> MissionTypeMap =
 	{
-		{TEXT("PATROL"), EMISSIONTYPE::PATROL},
-		{TEXT("SWEEP"), EMISSIONTYPE::SWEEP},
-		{TEXT("INTERCEPT"), EMISSIONTYPE::INTERCEPT},
-		{TEXT("AIR_PATROL"), EMISSIONTYPE::AIR_PATROL},
-		{TEXT("AIR_SWEEP"), EMISSIONTYPE::AIR_SWEEP},
-		{TEXT("AIR_INTERCEPT"), EMISSIONTYPE::AIR_INTERCEPT},
-		{TEXT("STRIKE"), EMISSIONTYPE::STRIKE},
-		{TEXT("ASSAULT"), EMISSIONTYPE::ASSAULT},
-		{TEXT("DEFEND"), EMISSIONTYPE::DEFEND},
-		{TEXT("ESCORT"), EMISSIONTYPE::ESCORT},
-		{TEXT("ESCORT_FREIGHT"), EMISSIONTYPE::ESCORT_FREIGHT},
-		{TEXT("ESCORT_SHUTTLE"), EMISSIONTYPE::ESCORT_SHUTTLE},
-		{TEXT("ESCORT_STRIKE"), EMISSIONTYPE::ESCORT_STRIKE},
-		{TEXT("INTEL"), EMISSIONTYPE::INTEL},
-		{TEXT("SCOUT"), EMISSIONTYPE::SCOUT},
-		{TEXT("RECON"), EMISSIONTYPE::RECON},
-		{TEXT("BLOCKADE"), EMISSIONTYPE::BLOCKADE},
-		{TEXT("FLEET"), EMISSIONTYPE::FLEET},
-		{TEXT("BOMBARDMENT"), EMISSIONTYPE::BOMBARDMENT},
-		{TEXT("FLIGHT_OPS"), EMISSIONTYPE::FLIGHT_OPS},
-		{TEXT("TRANSPORT"), EMISSIONTYPE::TRANSPORT},
-		{TEXT("CARGO"), EMISSIONTYPE::CARGO},
-		{TEXT("TRAINING"), EMISSIONTYPE::TRAINING},
-		{TEXT("OTHER"), EMISSIONTYPE::OTHER}
+		{TEXT("PATROL"), EMissionType::PATROL},
+		{TEXT("SWEEP"), EMissionType::SWEEP},
+		{TEXT("INTERCEPT"), EMissionType::INTERCEPT},
+		{TEXT("AIR_PATROL"), EMissionType::AIR_PATROL},
+		{TEXT("AIR_SWEEP"), EMissionType::AIR_SWEEP},
+		{TEXT("AIR_INTERCEPT"), EMissionType::AIR_INTERCEPT},
+		{TEXT("STRIKE"), EMissionType::STRIKE},
+		{TEXT("ASSAULT"), EMissionType::ASSAULT},
+		{TEXT("DEFEND"), EMissionType::DEFEND},
+		{TEXT("ESCORT"), EMissionType::ESCORT},
+		{TEXT("ESCORT_FREIGHT"), EMissionType::ESCORT_FREIGHT},
+		{TEXT("ESCORT_SHUTTLE"), EMissionType::ESCORT_SHUTTLE},
+		{TEXT("ESCORT_STRIKE"), EMissionType::ESCORT_STRIKE},
+		{TEXT("INTEL"), EMissionType::INTEL},
+		{TEXT("SCOUT"), EMissionType::SCOUT},
+		{TEXT("RECON"), EMissionType::RECON},
+		{TEXT("BLOCKADE"), EMissionType::BLOCKADE},
+		{TEXT("FLEET"), EMissionType::FLEET},
+		{TEXT("BOMBARDMENT"), EMissionType::BOMBARDMENT},
+		{TEXT("FLIGHT_OPS"), EMissionType::FLIGHT_OPS},
+		{TEXT("TRANSPORT"), EMissionType::TRANSPORT},
+		{TEXT("CARGO"), EMissionType::CARGO},
+		{TEXT("TRAINING"), EMissionType::TRAINING},
+		{TEXT("OTHER"), EMissionType::OTHER}
 	};
 
 	const FString UpperName = Name.ToUpper();
 
-	if (const EMISSIONTYPE* FoundType = MissionTypeMap.Find(UpperName))
+	if (const EMissionType* FoundType = MissionTypeMap.Find(UpperName))
 	{
 		return static_cast<int32>(*FoundType);
 	}
 
-	for (int32 i = static_cast<int32>(EMISSIONTYPE::PATROL);
-		i <= static_cast<int32>(EMISSIONTYPE::OTHER);
+	for (int32 i = static_cast<int32>(EMissionType::PATROL);
+		i <= static_cast<int32>(EMissionType::OTHER);
 		i++)
 	{
 		if (!FCStringAnsi::Stricmp(n, GetRoleName(i)))
@@ -1811,33 +1811,33 @@ Mission::ParseRLoc(TermStruct* val)
 
 const char* Mission::GetRoleName(int32 role)
 {
-	switch (static_cast<EMISSIONTYPE>(role))
+	switch (static_cast<EMissionType>(role))
 	{
-	case EMISSIONTYPE::PATROL:         return "Patrol";
-	case EMISSIONTYPE::SWEEP:          return "Sweep";
-	case EMISSIONTYPE::INTERCEPT:      return "Intercept";
-	case EMISSIONTYPE::AIR_PATROL:     return "Airborne Patrol";
-	case EMISSIONTYPE::AIR_SWEEP:      return "Airborne Sweep";
-	case EMISSIONTYPE::AIR_INTERCEPT:  return "Airborne Intercept";
-	case EMISSIONTYPE::STRIKE:         return "Strike";
-	case EMISSIONTYPE::ASSAULT:        return "Assault";
-	case EMISSIONTYPE::DEFEND:         return "Defend";
-	case EMISSIONTYPE::ESCORT:         return "Escort";
-	case EMISSIONTYPE::ESCORT_FREIGHT: return "Freight Escort";
-	case EMISSIONTYPE::ESCORT_SHUTTLE: return "Shuttle Escort";
-	case EMISSIONTYPE::ESCORT_STRIKE:  return "Strike Escort";
-	case EMISSIONTYPE::INTEL:          return "Intel";
-	case EMISSIONTYPE::SCOUT:          return "Scout";
-	case EMISSIONTYPE::RECON:          return "Recon";
-	case EMISSIONTYPE::BLOCKADE:       return "Blockade";
-	case EMISSIONTYPE::FLEET:          return "Fleet";
-	case EMISSIONTYPE::BOMBARDMENT:    return "Attack";
-	case EMISSIONTYPE::FLIGHT_OPS:     return "Flight Ops";
-	case EMISSIONTYPE::TRANSPORT:      return "Transport";
-	case EMISSIONTYPE::CARGO:          return "Cargo";
-	case EMISSIONTYPE::TRAINING:       return "Training";
+	case EMissionType::PATROL:         return "Patrol";
+	case EMissionType::SWEEP:          return "Sweep";
+	case EMissionType::INTERCEPT:      return "Intercept";
+	case EMissionType::AIR_PATROL:     return "Airborne Patrol";
+	case EMissionType::AIR_SWEEP:      return "Airborne Sweep";
+	case EMissionType::AIR_INTERCEPT:  return "Airborne Intercept";
+	case EMissionType::STRIKE:         return "Strike";
+	case EMissionType::ASSAULT:        return "Assault";
+	case EMissionType::DEFEND:         return "Defend";
+	case EMissionType::ESCORT:         return "Escort";
+	case EMissionType::ESCORT_FREIGHT: return "Freight Escort";
+	case EMissionType::ESCORT_SHUTTLE: return "Shuttle Escort";
+	case EMissionType::ESCORT_STRIKE:  return "Strike Escort";
+	case EMissionType::INTEL:          return "Intel";
+	case EMissionType::SCOUT:          return "Scout";
+	case EMissionType::RECON:          return "Recon";
+	case EMissionType::BLOCKADE:       return "Blockade";
+	case EMissionType::FLEET:          return "Fleet";
+	case EMissionType::BOMBARDMENT:    return "Attack";
+	case EMissionType::FLIGHT_OPS:     return "Flight Ops";
+	case EMissionType::TRANSPORT:      return "Transport";
+	case EMissionType::CARGO:          return "Cargo";
+	case EMissionType::TRAINING:       return "Training";
 
-	case EMISSIONTYPE::OTHER:
+	case EMissionType::OTHER:
 	default:
 		return "Misc";
 	}
@@ -2402,7 +2402,7 @@ MissionElement::MissionElement()
 	hold_time(0),
 	zone_lock(0),
 	heading(0),
-	mission_role((int)EMISSIONTYPE::OTHER),
+	mission_role((int)EMissionType::OTHER),
 	intel(EIntel::SECRET),
 	combat_group(0),
 	combat_unit(0)
@@ -2614,7 +2614,7 @@ void Mission::InitializeFromInfo(const MissionInfo& Info)
 	SetSituation(Info.situation.data());
 	SetScriptName(Info.script.data());
 	SetStart(Info.start);
-	SetType(Info.type);
+	SetMissionType(Info.type);
 	SetSource(Info.Source);
 
 	UE_LOG(LogTemp, Warning,

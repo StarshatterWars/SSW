@@ -210,7 +210,7 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 			instr = new Instruction(tgt_ship2->GetRegion(), dummy, INSTRUCTION_ACTION::ASSAULT);
 			instr->SetSpeed(750);
 			instr->GetRLoc() = rloc;
-			instr->SetTarget(FString(target->Name().data()));
+			instr->SetTarget(FString(target->GetName().data()));
 			instr->SetFormation(INSTRUCTION_FORMATION::TRAIL);
 
 			elem->AddNavPoint(instr);
@@ -245,7 +245,7 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 			instr = new Instruction(tgt_ship2->GetRegion(), dummy, action);
 			instr->SetSpeed(750);
 			instr->GetRLoc() = rloc;
-			instr->SetTarget(FString(target->Name().data()));
+			instr->SetTarget(FString(target->GetName().data()));
 			instr->SetFormation(INSTRUCTION_FORMATION::TRAIL);
 
 			elem->AddNavPoint(instr);
@@ -262,7 +262,7 @@ FlightPlanner::CreateStrikeRoute(SimElement* elem, SimElement* target)
 			instr = new Instruction(tgt_ship2->GetRegion(), dummy, INSTRUCTION_ACTION::INTERCEPT);
 			instr->SetSpeed(750);
 			instr->GetRLoc() = rloc;
-			instr->SetTarget(FString(target->Name().data()));
+			instr->SetTarget(FString(target->GetName().data()));
 			instr->SetFormation(INSTRUCTION_FORMATION::SPREAD);
 
 			elem->AddNavPoint(instr);
@@ -335,7 +335,7 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 					instr = new Instruction(ship->GetRegion(), dummy, INSTRUCTION_ACTION::ESCORT);
 					instr->SetSpeed(350);
 					instr->GetRLoc() = rloc;
-					instr->SetTarget(FString(ward->Name().data()));
+					instr->SetTarget(FString(ward->GetName().data()));
 					elem->AddNavPoint(instr);
 				}
 			}
@@ -353,7 +353,7 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 			instr = new Instruction(ship->GetRegion(), dummy, INSTRUCTION_ACTION::DEFEND);
 			instr->SetSpeed(500);
 			instr->GetRLoc() = rloc;
-			instr->SetTarget(FString(ward->Name().data()));
+			instr->SetTarget(FString(ward->GetName().data()));
 			instr->SetHoldTime(15 * 60); // fifteen minutes
 
 			elem->AddNavPoint(instr);

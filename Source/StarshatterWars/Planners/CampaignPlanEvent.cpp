@@ -534,25 +534,25 @@ CampaignPlanEvent::CreateEvent(CombatAssignment* a)
         }
 
         switch (a->Type()) {
-        case (int)EMISSIONTYPE::DEFEND:
+        case (int)EMissionType::DEFEND:
             event = CreateEventDefend(a);
             break;
 
-        case (int)EMISSIONTYPE::ASSAULT:
+        case (int)EMissionType::ASSAULT:
             if (group->IsStarshipGroup())
                 event = CreateEventStarship(a);
             else
                 event = CreateEventFighterAssault(a);
             break;
 
-        case (int)EMISSIONTYPE::STRIKE:
+        case (int)EMissionType::STRIKE:
             if (group->IsStarshipGroup())
                 event = CreateEventStarship(a);
             else
                 event = CreateEventFighterStrike(a);
             break;
 
-        case (int)EMISSIONTYPE::SWEEP:
+        case (int)EMissionType::SWEEP:
             event = CreateEventFighterSweep(a);
             break;
         }

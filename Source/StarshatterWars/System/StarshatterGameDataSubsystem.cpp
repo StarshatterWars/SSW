@@ -2493,7 +2493,7 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 					EMissionSource Source = EMissionSource::Scripted;
 
 					ECOMBATGROUP_TYPE LocalGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
-					EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+					EMissionType LocalMissionType = EMissionType::PATROL;
 
 					for (int i = 0; i < val->elements()->size(); i++)
 					{
@@ -2668,7 +2668,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 					int   start_before = Game::TIME_NEVER;
 					int   start_after = 0;
 
-					EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
+					EMissionType MissionType = EMissionType::PATROL;
 					ECOMBATGROUP_TYPE TemplateGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
 
 					for (int i = 0; i < val->elements()->size(); i++)
@@ -2704,9 +2704,9 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 							const FString NormalizedType =
 								NormalizeCombatGroupType(FString(typestr));
 
-							if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, MissionType, false))
+							if (!FStringToEnum<EMissionType>(NormalizedType, MissionType, false))
 							{
-								MissionType = EMISSIONTYPE::OTHER;
+								MissionType = EMissionType::OTHER;
 
 								UE_LOG(LogTemp, Warning,
 									TEXT("[ParseMission] unknown type '%s' normalized to '%s' in '%s'"),
@@ -2944,7 +2944,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 	Text	LocalType = "";
 	Text    MissionType = "";
 
-	EMISSIONTYPE Type = EMISSIONTYPE::PATROL;
+	EMissionType Type = EMissionType::PATROL;
 	int     Team = 0;
 	int     Id = 0;
 	Text    Start = ""; 
@@ -2955,7 +2955,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 	bool    Once = false;
 
 	ECOMBATGROUP_TYPE LocalGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
-	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+	EMissionType LocalMissionType = EMissionType::PATROL;
 
 	do
 	{
@@ -2996,9 +2996,9 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			const FString NormalizedType =
 				NormalizeCombatGroupType(FString(typestr));
 
-			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
+			if (!FStringToEnum<EMissionType>(NormalizedType, LocalMissionType, false))
 			{
-				LocalMissionType = EMISSIONTYPE::OTHER;
+				LocalMissionType = EMissionType::OTHER;
 
 				UE_LOG(LogTemp, Warning,
 					TEXT("[ParseMission] unknown type '%s' normalized to '%s' in '%s'"),
@@ -3902,7 +3902,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	bool bInvulnerable = false;
 
 	EIntel LocalIntelType = EIntel::KNOWN;
-	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+	EMissionType LocalMissionType = EMissionType::PATROL;
 
 	// Scratch arrays used by nested parsers:
 	MissionLoadoutArray.Empty();
@@ -3962,8 +3962,8 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 			Text RoleName = "";
 			GetDefText(RoleName, PDef, Fn);
 
-			if (!FStringToEnum<EMISSIONTYPE>(FString(RoleName).ToUpper(), LocalMissionType, false))
-				LocalMissionType = EMISSIONTYPE::PATROL;
+			if (!FStringToEnum<EMissionType>(FString(RoleName).ToUpper(), LocalMissionType, false))
+				LocalMissionType = EMissionType::PATROL;
 
 			NewMissionElement.RoleName = LocalMissionType;
 		}
@@ -4202,7 +4202,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 
 	EMissionSource TemplateSource = EMissionSource::Scripted;
 
-	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+	EMissionType LocalMissionType = EMissionType::PATROL;
 	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;
 
 	FS_TemplateMission NewTemplateMission;
@@ -4234,9 +4234,9 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 			const FString NormalizedType =
 				NormalizeCombatGroupType(FString(typestr));
 
-			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
+			if (!FStringToEnum<EMissionType>(NormalizedType, LocalMissionType, false))
 			{
-				LocalMissionType = EMISSIONTYPE::OTHER;
+				LocalMissionType = EMissionType::OTHER;
 
 				UE_LOG(LogTemp, Warning,
 					TEXT("[ParseMission] unknown type '%s' normalized to '%s' in '%s'"),
@@ -4442,7 +4442,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	bool TemplateOnce = false;
 
 	ECOMBATGROUP_TYPE TemplateGroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
-	EMISSIONTYPE LocalMissionType = EMISSIONTYPE::PATROL;
+	EMissionType LocalMissionType = EMissionType::PATROL;
 
 	EMissionSource TemplateSource = EMissionSource::Template;
 	FS_TemplateMission NewTemplateMission;
@@ -4474,9 +4474,9 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 			const FString NormalizedType =
 				NormalizeCombatGroupType(FString(typestr));
 
-			if (!FStringToEnum<EMISSIONTYPE>(NormalizedType, LocalMissionType, false))
+			if (!FStringToEnum<EMissionType>(NormalizedType, LocalMissionType, false))
 			{
-				LocalMissionType = EMISSIONTYPE::OTHER;
+				LocalMissionType = EMissionType::OTHER;
 
 				UE_LOG(LogTemp, Warning,
 					TEXT("[ParseMission] unknown type '%s' normalized to '%s' in '%s'"),

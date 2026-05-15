@@ -609,7 +609,7 @@ FighterAI::Navigator()
             Hangar* hangar = controller ? controller->GetHangar() : 0;
 
             if (hangar && hangar->CanStow(ship)) {
-                for (int i = 0; i < elem->NumShips(); i++) {
+                for (int i = 0; i < elem->GetNumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
                     if (s && s->GetDirector() && s->GetDirector()->GetType() >= ESteerAIType::FIGHTER)
@@ -633,7 +633,7 @@ FighterAI::Navigator()
         else {
             Ship* dock_target = (Ship*)navpt->GetTarget();
             if (dock_target) {
-                for (int i = 0; i < elem->NumShips(); i++) {
+                for (int i = 0; i < elem->GetNumShips(); i++) {
                     Ship* s = elem->GetShip(i + 1);
 
                     if (s) {

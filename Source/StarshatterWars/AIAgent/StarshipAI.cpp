@@ -365,9 +365,9 @@ StarshipAI::HelmControl()
                 accumulator.yaw);
 
             if (elem &&
-                elem->Type() ==
+                elem->GetMissionType() ==
                 static_cast<int32>(
-                    EMISSIONTYPE::FLIGHT_OPS))
+                    EMissionType::FLIGHT_OPS))
             {
                 ship->SetHelmPitch(0.0);
 

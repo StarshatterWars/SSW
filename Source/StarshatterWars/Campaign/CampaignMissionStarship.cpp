@@ -179,7 +179,7 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
             TEXT("CMS Created %03d '%s' %s"),
             info->id,
             ANSI_TO_TCHAR(info->name),
-            ANSI_TO_TCHAR(Mission::GetRoleName(mission->GetType()))
+            ANSI_TO_TCHAR(Mission::GetRoleName(mission->GetMissionType()))
         );
 
         if (dump_missions) {
@@ -248,7 +248,7 @@ CampaignMissionStarship::GenerateMission(int id)
 
             if (mission)
             {
-                mission->SetType(mission_type);
+                mission->SetMissionType(mission_type);
 
                 if (!mission->LoadFromCampaignMissionData(*mission_data))
                 {
@@ -264,7 +264,7 @@ CampaignMissionStarship::GenerateMission(int id)
             mission = new Mission(id);
             if (mission)
             {
-                mission->SetType(mission_type);
+                mission->SetMissionType(mission_type);
             }
         }
     }
@@ -313,7 +313,7 @@ CampaignMissionStarship::GenerateMission(int id)
                 return nullptr;
             }
 
-            mission->SetType(mission_type);
+            mission->SetMissionType(mission_type);
             mission->SetName(name);
             mission->SetTeam(player_group->GetIFF());
             mission->SetStart(request->StartTime());
@@ -336,10 +336,10 @@ CampaignMissionStarship::SelectType()
     if (request)
         mission_type = request->Type();
     else
-        mission_type = (int)EMISSIONTYPE::PATROL;
+        mission_type = (int)EMissionType::PATROL;
 
     if (player_unit && player_unit->GetShipClass() == (int)CLASSIFICATION::CARRIER)
-        mission_type = (int)EMISSIONTYPE::FLIGHT_OPS;
+        mission_type = (int)EMissionType::FLIGHT_OPS;
 }
 
 void CampaignMissionStarship::SelectRegion()
@@ -537,16 +537,16 @@ CampaignMissionStarship::GenerateMissionElements()
         Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, ward->GetName());
 
         if (obj) {
-            switch (mission->GetType()) {
-            case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+            switch (mission->GetMissionType()) {
+            case (int)EMissionType::ESCORT_FREIGHT:
                 obj->SetTargetDesc(Text("the star freighter ") + ward->GetName());
                 break;
 
-            case (int)EMISSIONTYPE::ESCORT_SHUTTLE:
+            case (int)EMissionType::ESCORT_SHUTTLE:
                 obj->SetTargetDesc(Text("the shuttle ") + ward->GetName());
                 break;
 
-            case (int)EMISSIONTYPE::ESCORT_STRIKE:
+            case (int)EMissionType::ESCORT_STRIKE:
                 obj->SetTargetDesc(Text("the ") + ward->GetName() + Text(" strike package"));
                 break;
 
@@ -644,7 +644,7 @@ void CampaignMissionStarship::CreateElements(CombatGroup* g)
             elem->SetCommander(cmdr->GetName());
 
             if (g->GetType() == ECOMBATGROUP_TYPE::CARRIER_GROUP &&
-                elem->MissionRole() == (int)EMISSIONTYPE::ESCORT)
+                elem->MissionRole() == (int)EMissionType::ESCORT)
             {
                 Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, cmdr->GetName());
                 if (obj)
@@ -767,17 +767,17 @@ MissionElement* CampaignMissionStarship::CreateSingleElement(CombatGroup* g, Com
     {
         if (ShipRow->ShipType == (int32)CLASSIFICATION::CARRIER)
         {
-            elem->SetMissionRole((int)EMISSIONTYPE::FLIGHT_OPS);
+            elem->SetMissionRole((int)EMissionType::FLIGHT_OPS);
         }
         else
         {
-            elem->SetMissionRole((int)EMISSIONTYPE::ESCORT);
+            elem->SetMissionRole((int)EMissionType::ESCORT);
         }
     }
     else if (ShipRow->ShipType == (int32)CLASSIFICATION::STATION ||
         ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER)
     {
-        elem->SetMissionRole((int)EMISSIONTYPE::OTHER);
+        elem->SetMissionRole((int)EMissionType::OTHER);
 
         if (ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER)
         {
@@ -800,7 +800,7 @@ MissionElement* CampaignMissionStarship::CreateSingleElement(CombatGroup* g, Com
     }
     else if ((ShipRow->ShipType & (int32)CLASSIFICATION::STARSHIPS) != 0)
     {
-        elem->SetMissionRole((int)EMISSIONTYPE::FLEET);
+        elem->SetMissionRole((int)EMissionType::FLEET);
     }
 
     elem->SetCombatGroup(g);
@@ -896,8 +896,8 @@ void CampaignMissionStarship::CreateSquadron(CombatGroup* g)
 void
 CampaignMissionStarship::CreateWards()
 {
-    switch (mission->GetType()) {
-    case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+    switch (mission->GetMissionType()) {
+    case (int)EMissionType::ESCORT_FREIGHT:
         CreateWardFreight();
             break;
     default:              
@@ -930,7 +930,7 @@ CampaignMissionStarship::CreateWardFreight()
     if (!elem)
         return;
 
-    elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
+    elem->SetMissionRole((int)EMissionType::CARGO);
     elem->SetIntelLevel(EIntel::KNOWN);
     Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
 
@@ -991,16 +991,16 @@ CampaignMissionStarship::CreateTargets()
         CreateTargetsCarrier();
     }
     else {
-        switch (mission->GetType()) {
+        switch (mission->GetMissionType()) {
         default:
-        case (int)EMISSIONTYPE::PATROL:
+        case (int)EMissionType::PATROL:
             CreateTargetsPatrol();   
             break;
-        case (int)EMISSIONTYPE::ASSAULT:
-        case (int)EMISSIONTYPE::STRIKE:
+        case (int)EMissionType::ASSAULT:
+        case (int)EMissionType::STRIKE:
             CreateTargetsAssault();
             break;
-        case (int)EMISSIONTYPE::ESCORT_FREIGHT:
+        case (int)EMissionType::ESCORT_FREIGHT:
             CreateTargetsFreightEscort(); 
             break;
         }
@@ -1291,7 +1291,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
             return FMath::VRand() * r;
         };
 
-    MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
+    MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
     if (elem) {
         elem->SetIntelLevel(EIntel::KNOWN);
 
@@ -1303,7 +1303,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
         mission->AddElement(elem);
 
-        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
         if (e2) {
             e2->SetIntelLevel(EIntel::KNOWN);
 
@@ -1419,7 +1419,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                     //}
          
                     elem->SetLocation(base_loc + ScatterInSphere(1.5f));
-                    elem->SetMissionRole((int)EMISSIONTYPE::FLEET);
+                    elem->SetMissionRole((int)EMissionType::FLEET);
                     mission->AddElement(elem);
                     ntargets++;
                 }
@@ -1431,7 +1431,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
         CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::LCA_SQUADRON);
 
         if (s) {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::CARGO);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::CARGO);
             if (elem) {
                 elem->SetIntelLevel(EIntel::KNOWN);
                 Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
@@ -1448,7 +1448,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 CombatGroup* s2 = FindSquadron(enemy, (int) ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
 
                 if (s2) {
-                    MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+                    MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
                     if (e2) {
                         e2->SetIntelLevel(EIntel::KNOWN);
                         Existing = FString(ANSI_TO_TCHAR(e2->GetRegion())).TrimStartAndEnd();
@@ -1475,7 +1475,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
         CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
 
         if (s) {
-            MissionElement* elem = CreateFighterPackage(s, 4, (int)EMISSIONTYPE::PATROL);
+            MissionElement* elem = CreateFighterPackage(s, 4, (int)EMissionType::PATROL);
             if (elem) {
                 elem->SetIntelLevel(EIntel::SECRET);
                 Existing = FString(ANSI_TO_TCHAR(elem->GetRegion())).TrimStartAndEnd();
@@ -1496,7 +1496,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
         CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
 
         if (s) {
-            MissionElement* elem = CreateFighterPackage(s, 3, (int)EMISSIONTYPE::ASSAULT);
+            MissionElement* elem = CreateFighterPackage(s, 3, (int)EMissionType::ASSAULT);
             if (elem) {
                 elem->SetIntelLevel(EIntel::KNOWN);
                 elem->GetLoadouts().destroy();
@@ -1529,7 +1529,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
         CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
 
         if (s) {
-            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMISSIONTYPE::ASSAULT);
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
             if (elem) {
                 elem->SetIntelLevel(EIntel::KNOWN);
                 elem->GetLoadouts().destroy();
@@ -1575,14 +1575,14 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 //}
  
                 elem->SetLocation(base_loc + ScatterInSphere(2.0f));
-                elem->SetMissionRole((int)EMISSIONTYPE::CARGO);
+                elem->SetMissionRole((int)EMissionType::CARGO);
                 mission->AddElement(elem);
                 ntargets++;
 
                 CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
 
                 if (s2) {
-                    MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMISSIONTYPE::ESCORT);
+                    MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
                     if (e2) {
                         e2->SetIntelLevel(EIntel::KNOWN);
                         elem->SetIntelLevel(EIntel::SECRET);
@@ -1864,7 +1864,7 @@ CampaignMissionStarship::DescribeMission()
     info->mission = mission;
 
     info->name = name;
-    info->type = mission->GetType();
+    info->type = mission->GetMissionType();
     info->player_info = player_info;
 
     info->description = mission->GetObjective();

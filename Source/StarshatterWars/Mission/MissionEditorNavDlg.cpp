@@ -158,7 +158,7 @@ void UMissionEditorNavDlg::Show()
     // Type:
     if (UComboBoxString* TypeCmb = GetCombo(202))
     {
-        const int32 TypeIndex = mission->GetType();
+        const int32 TypeIndex = mission->GetMissionType();
         if (TypeIndex >= 0 && TypeIndex < TypeCmb->GetOptionCount())
         {
             TypeCmb->SetSelectedIndex(TypeIndex);
@@ -327,7 +327,7 @@ void UMissionEditorNavDlg::ScrapeForm()
         const int32 TypeIndex = TypeCmb->GetSelectedIndex();
         if (TypeIndex >= 0)
         {
-            mission->SetType(TypeIndex);
+            mission->SetMissionType(TypeIndex);
             if (mission_info)
                 mission_info->type = TypeIndex;
         }

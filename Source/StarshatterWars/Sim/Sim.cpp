@@ -407,7 +407,7 @@ Sim::CommitMission()
 				PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
 				p->ProcessStats(s, start_time);
 
-				if (mission && mission->GetType() == (int)EMISSIONTYPE::TRAINING &&
+				if (mission && mission->GetMissionType() == (int)EMissionType::TRAINING &&
 					s->GetDeaths() == 0 && s->GetColls() == 0)
 					p->SetTrained(mission->GetIdentity());
 
@@ -716,8 +716,8 @@ Sim::ExecMission()
 		Game::GetGameTime();
 
 	AudioConfig::SetTraining(
-		mission->GetType() ==
-		(int)EMISSIONTYPE::TRAINING);
+		mission->GetMissionType() ==
+		(int)EMissionType::TRAINING);
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Sim::ExecMission] COMPLETE Mission='%hs' Regions=%d Elements=%d"),
@@ -1395,7 +1395,7 @@ Sim::FindElement(const char* name)
 
 	while (++iter) {
 		SimElement* elem = iter.value();
-		Text     ename = elem->Name();
+		Text     ename = elem->GetName();
 
 		if (ename == name)
 			return elem;
@@ -2626,7 +2626,7 @@ Sim::GetMissionElements()
 
 		int num_live_ships = 0;
 
-		for (int i = 0; i < elem->NumShips(); i++) {
+		for (int i = 0; i < elem->GetNumShips(); i++) {
 			Ship* s = elem->GetShip(i + 1);
 
 			if (s && !s->IsDying() && !s->IsDead())
@@ -2660,9 +2660,9 @@ Sim::CreateMissionElement(SimElement* elem)
 	if (!elem->IsNetObserver()) {
 		msn_elem = new MissionElement;
 
-		msn_elem->SetName(elem->Name());
+		msn_elem->SetName(elem->GetName());
 		msn_elem->SetIFF(elem->GetIFF());
-		msn_elem->SetMissionRole(elem->Type());
+		msn_elem->SetMissionRole(elem->GetMissionType());
 
 		if (elem->IsSquadron() && elem->GetCarrier()) {
 			Ship* carrier = elem->GetCarrier();
@@ -2677,7 +2677,7 @@ Sim::CreateMissionElement(SimElement* elem)
 				msn_elem->SetRegion(carrier->GetRegion()->GetName());
 
 			int squadron_index = 0;
-			Hangar* hangar = FindSquadron(elem->Name(), squadron_index);
+			Hangar* hangar = FindSquadron(elem->GetName(), squadron_index);
 
 			if (hangar) {
 				msn_elem->SetDeadCount(hangar->NumShipsDead(squadron_index));
@@ -2701,11 +2701,11 @@ Sim::CreateMissionElement(SimElement* elem)
 		}
 		else {
 			msn_elem->SetSquadron(elem->GetSquadron());
-			msn_elem->SetCount(elem->NumShips());
+			msn_elem->SetCount(elem->GetNumShips());
 		}
 
 		if (elem->GetCommander())
-			msn_elem->SetCommander(elem->GetCommander()->Name());
+			msn_elem->SetCommander(elem->GetCommander()->GetName());
 
 		msn_elem->SetCombatGroup(elem->GetCombatGroup());
 		msn_elem->SetCombatUnit(elem->GetCombatUnit());
@@ -2802,7 +2802,7 @@ Sim::CreateMissionElement(SimElement* elem)
 			msn_elem->AddNavPoint(npt);
 		}
 
-		for (int i = 0; i < elem->NumShips(); i++) {
+		for (int i = 0; i < elem->GetNumShips(); i++) {
 			ship = elem->GetShip(i + 1);
 
 			if (ship) {
@@ -2923,7 +2923,7 @@ Sim::ResolveInstructionTargets()
 		}
 
 		for (int32 ShipIndex = 1;
-			ShipIndex <= Element->NumShips();
+			ShipIndex <= Element->GetNumShips();
 			++ShipIndex)
 		{
 			Ship* RuntimeShip =

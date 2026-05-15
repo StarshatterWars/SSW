@@ -261,8 +261,8 @@ SimElement::IsObjectiveTargetOf(const Ship* s) const
 	if (!s || launch_time == 0 || IsFinished())
 		return false;
 
-	const char* e_name = Name().data();
-	int         e_len = Name().length();
+	const char* e_name = GetName().data();
+	int         e_len = GetName().length();
 
 	Instruction* orders = s->GetRadioOrders();
 	if (orders && orders->GetAction() > INSTRUCTION_ACTION::SWEEP) {
@@ -357,7 +357,7 @@ SimElement::Update(SimObject* obj)
 	// false alarm, keep watching:
 	if (obj && obj->GetLife() != 0) {
 		UE_LOG(LOG_SIM, Warning, TEXT("SimElement (%hs) false update on (%hs) life = %f"),
-			Name().data(),
+			GetName().data(),
 			obj->GetName(),
 			obj->GetLife());
 		return false;
@@ -377,7 +377,7 @@ SimElement::GetObserverName() const
 {
 	// Preserve original API (const char*) without pointer truncation:
 	static char Buf[128];
-	std::snprintf(Buf, sizeof(Buf), "SimElement %s", Name().data());
+	std::snprintf(Buf, sizeof(Buf), "SimElement %s", GetName().data());
 	return Buf;
 }
 

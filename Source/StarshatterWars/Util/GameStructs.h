@@ -624,7 +624,7 @@ enum class EInstructionAction : uint8
 };
 
 UENUM(BlueprintType)
-enum class EMISSIONTYPE : uint8
+enum class EMissionType : uint8
 {
 	PATROL			UMETA(DisplayName = "Patrol"),
 	SWEEP			UMETA(DisplayName = "Sweep"),
@@ -2058,7 +2058,7 @@ struct FS_CampaignTemplateList : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
+	EMissionType MissionType = EMissionType::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE GroupType = ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2372,7 +2372,7 @@ struct FS_MissionElement : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString SkinName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EMISSIONTYPE RoleName = EMISSIONTYPE::PATROL;
+	EMissionType RoleName = EMissionType::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString RegionName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -2625,7 +2625,7 @@ struct FS_CampaignMission : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE Group = ECOMBATGROUP_TYPE::NONE;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EMISSIONTYPE MissionType = EMISSIONTYPE::PATROL;
+	EMissionType MissionType = EMissionType::PATROL;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	EMissionSource Source = EMissionSource::Scripted;
 
@@ -2701,7 +2701,7 @@ struct FS_TemplateMission : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	ECOMBATGROUP_TYPE TemplateGroup = ECOMBATGROUP_TYPE::NONE;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EMISSIONTYPE TemplateType = EMISSIONTYPE::PATROL;
+	EMissionType TemplateType = EMissionType::PATROL;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMissionDisplayType DisplayType = EMissionDisplayType::PlayerMission;

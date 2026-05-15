@@ -634,7 +634,7 @@ Menu* RadioView::GetRadioMenu(Ship* s)
                     if (ship->GetIFF() == elem->GetIFF() && ship->GetElement() != elem.value()) {
                         if (n >= page_offset && n < page_offset + PAGE_SIZE) {
                             char text[64];
-                            sprintf_s(text, sizeof(text), "%d. %s", n + 1 - page_offset, (const char*)elem->Name());
+                            sprintf_s(text, sizeof(text), "%d. %s", n + 1 - page_offset, (const char*)elem->GetName());
 
                             if (elem->IsActive()) {
                                 // store pointer safely in uintptr_t payload:

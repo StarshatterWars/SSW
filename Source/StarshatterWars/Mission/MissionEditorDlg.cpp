@@ -251,7 +251,7 @@ void UMissionEditorDlg::Show()
 
         if (CmbType)
         {
-            CmbType->SetSelectedIndex(mission->GetType());
+            CmbType->SetSelectedIndex(mission->GetMissionType());
         }
 
         StarSystem* sys = mission->GetStarSystem();
@@ -328,7 +328,7 @@ void UMissionEditorDlg::ScrapeForm()
     if (CmbType)
     {
         const int32 NewType = CmbType->GetSelectedIndex();
-        mission->SetType(NewType);
+        mission->SetMissionType(NewType);
 
         if (mission_info)
         {

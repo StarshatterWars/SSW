@@ -184,7 +184,7 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 		const Ship* sender = msg->GetSender();
 
 		// orders to self?
-		if (dst_elem && dst_elem->NumShips() == 1 && dst_elem->GetShip(1) == sender) {
+		if (dst_elem && dst_elem->GetNumShips() == 1 && dst_elem->GetShip(1) == sender) {
 			if (msg->GetRadioAction() >= RadioMessageAction::CALL_ENGAGING) {
 				sprintf_s(src_buf, "%s", sender->GetName());
 
@@ -215,11 +215,11 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 						int index = sender->GetElementIndex();
 
 						if (index > 1 && dst_elem) {
-							sprintf_s(dst_buf, "%s Leader", (const char*)dst_elem->Name());
-							sprintf_s(src_buf, "this is %s %d", (const char*)dst_elem->Name(), index);
+							sprintf_s(dst_buf, "%s Leader", (const char*)dst_elem->GetName());
+							sprintf_s(src_buf, "this is %s %d", (const char*)dst_elem->GetName(), index);
 						}
 						else {
-							sprintf_s(src_buf, "this is %s leader", (const char*)dst_elem->Name());
+							sprintf_s(src_buf, "this is %s leader", (const char*)dst_elem->GetName());
 						}
 					}
 
@@ -231,26 +231,26 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 
 				else if (dst_elem) {
 					// flight
-					if (dst_elem->NumShips() > 1) {
-						sprintf_s(dst_buf, "%s Flight", (const char*)dst_elem->Name());
+					if (dst_elem->GetNumShips() > 1) {
+						sprintf_s(dst_buf, "%s Flight", (const char*)dst_elem->GetName());
 
 						// internal announcement
 						if (sender->GetElement() == dst_elem) {
 							int index = sender->GetElementIndex();
 
 							if (index > 1) {
-								sprintf_s(dst_buf, "%s Leader", (const char*)dst_elem->Name());
-								sprintf_s(src_buf, "this is %s %d", (const char*)dst_elem->Name(), index);
+								sprintf_s(dst_buf, "%s Leader", (const char*)dst_elem->GetName());
+								sprintf_s(src_buf, "this is %s %d", (const char*)dst_elem->GetName(), index);
 							}
 							else {
-								sprintf_s(src_buf, "this is %s leader", (const char*)dst_elem->Name());
+								sprintf_s(src_buf, "this is %s leader", (const char*)dst_elem->GetName());
 							}
 						}
 					}
 
 					// solo
 					else {
-						strcpy_s(dst_buf, (const char*)dst_elem->Name());
+						strcpy_s(dst_buf, (const char*)dst_elem->GetName());
 						src_buf[0] = tolower(src_buf[0]);
 					}
 				}

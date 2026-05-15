@@ -317,7 +317,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 						elem->SetAssignment(tgt);
 
 						if (msg->TargetList().size() > 1)
-							instruction->SetTarget(tgt->Name().data());
+							instruction->SetTarget(tgt->GetName().data());
 						else
 							instruction->SetTarget(msg_tgt);
 					}
@@ -525,7 +525,7 @@ RadioHandler::Picture(RadioMessage* msg, Ship* ship)
 		RadioMessage* response = new RadioMessage(sender, ship, RadioMessageAction::ATTACK);
 
 		if (tgt_elem) {
-			for (int i = 1; i <= tgt_elem->NumShips(); i++)
+			for (int i = 1; i <= tgt_elem->GetNumShips(); i++)
 				response->AddTarget(tgt_elem->GetShip(i));
 		}
 		else {
@@ -561,7 +561,7 @@ RadioHandler::Support(RadioMessage* msg, Ship* ship)
 		SimElement* e = s->GetElement();
 
 		if (e && s->IsDropship() &&
-			e->Type() == (int)EMISSIONTYPE::PATROL &&
+			e->GetMissionType() == (int)EMissionType::PATROL &&
 			e != baby &&
 			cmdr->CanCommand(e) &&
 			s->GetRadioOrders()->GetRadioAction() == RadioMessageAction::NONE) {
