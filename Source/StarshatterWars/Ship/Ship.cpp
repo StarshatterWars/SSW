@@ -3571,6 +3571,23 @@ Ship::ExecPhysics(double seconds)
 		ExecFLCSFrame();
 	}
 
+	if (!_stricmp(GetName(), "Blockade Runner"))
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[BR TURN PROGRESS] ")
+			TEXT("Loc=%s ")
+			TEXT("Vel=%s ")
+			TEXT("VPN=%s ")
+			TEXT("Heading=%s ")
+			TEXT("HelmHeading=%.4f ")
+			TEXT("TargetDelta=%s"),
+			*GetLocation().ToString(),
+			*GetVelocity().ToString(),
+			*GetCam().vpn().ToString(),
+			*GetHeading().ToString(),
+			GetHelmHeading(),
+			*(FVector(200000.0f, 0.0f, -120000.0f) - GetLocation()).ToString());
+	}
 	//-------------------------------------------------------------
 	// Throttle request -> actual throttle
 	//-------------------------------------------------------------
@@ -3620,6 +3637,19 @@ Ship::ExecPhysics(double seconds)
 
 	g_force =
 		0.0f;
+
+	UE_LOG(LogTemp, Error,
+		TEXT("[BR PHYSICS INPUT] Ship='%hs' Throttle=%.2f Request=%.2f MainDrive=%p Power=%d FLCS=%p NetControl=%p FlightModel=%d Thrust=%.4f Vel=%s"),
+		GetName(),
+		GetThrottle(),
+		GetThrottleRequest(),
+		main_drive,
+		main_drive && main_drive->IsPowerOn() ? 1 : 0,
+		flcs,
+		net_control,
+		(int)flight_model,
+		thrust,
+		*GetVelocity().ToString());
 
 	//-------------------------------------------------------------
 	// Legacy physics dispatch
@@ -3851,6 +3881,13 @@ Ship::AeroFrame(double seconds)
 
 	// MODEL 0: STANDARD
 	else {
+		if (IsStarship())
+		{
+			Physical::ExecFrame(seconds);
+			SetGravity(g_save);
+			return;
+		}
+
 		// apply drag-torque (i.e. turn ship into
 		// velocity vector to minimize drag):
 
@@ -4896,29 +4933,29 @@ Ship::IsAirborne() const
 double
 Ship::GetCompassHeading() const
 {
-	const FVector heading =
+	const FVector Heading =
 		GetHeading().GetSafeNormal();
 
-	double result =
-		atan2(heading.Y, heading.X);
+	double Result =
+		atan2(Heading.X, -Heading.Z);
 
-	if (result < 0.0)
+	if (Result < 0.0)
 	{
-		result += 2.0 * PI;
+		Result += 2.0 * PI;
 	}
 
-	return result;
+	return Result;
 }
 
 double
 Ship::GetCompassPitch() const
 {
-	const FVector heading =
+	const FVector Heading =
 		GetHeading().GetSafeNormal();
 
 	return asin(
 		FMath::Clamp(
-			heading.Z,
+			Heading.Y,
 			-1.0,
 			1.0));
 }
@@ -5433,48 +5470,43 @@ Ship::ExecFLCSFrame()
 void
 Ship::ApplyHelmYaw(double y)
 {
-	// rotate compass into helm-relative orientation:
-	double compass = GetCompassHeading() - helm_heading;
-	double turn = y * PI / 4;
+	double compass =
+		GetCompassHeading() -
+		helm_heading;
+
+	double turn =
+		y * PI / 4.0;
 
 	if (compass > PI)
-		compass -= 2 * PI;
-	else if (compass < -PI)
-		compass += 2 * PI;
-
-	// if requested turn is more than 170, reject it:
-	if (fabs(compass + turn) > 170 * DEGREES)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship::ApplyHelmYaw] REJECT Ship='%s' InputYaw=%.4f CompassDelta=%.4f Turn=%.4f"),
-			ANSI_TO_TCHAR(GetName()),
-			y,
-			compass,
-			turn);
+		compass -= 2.0 * PI;
+	}
+	else if (compass < -PI)
+	{
+		compass += 2.0 * PI;
+	}
 
+	if (fabs(compass + turn) > 170.0 * DEGREES)
+	{
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::ApplyHelmYaw] APPLY Ship='%s' InputYaw=%.4f CompassDelta=%.4f Turn=%.4f CurrentHelm=%.4f NewHelm=%.4f"),
-		ANSI_TO_TCHAR(GetName()),
-		y,
-		compass,
-		turn,
-		helm_heading,
+	SetHelmHeading(
 		helm_heading + turn);
-
-	SetHelmHeading(helm_heading + turn);
 }
 
 void
 Ship::SetHelmHeading(double h)
 {
-	while (h < 0)
-		h += 2 * PI;
+	while (h < 0.0)
+	{
+		h += 2.0 * PI;
+	}
 
-	while (h >= 2 * PI)
-		h -= 2 * PI;
+	while (h >= 2.0 * PI)
+	{
+		h -= 2.0 * PI;
+	}
 
 	helm_heading = (float)h;
 }
@@ -5482,24 +5514,28 @@ Ship::SetHelmHeading(double h)
 void
 Ship::SetHelmPitch(double p)
 {
-	const double PITCH_LIMIT = 80 * DEGREES;
+	const double PITCH_LIMIT =
+		80.0 * DEGREES;
 
 	if (p < -PITCH_LIMIT)
+	{
 		p = -PITCH_LIMIT;
+	}
 	else if (p > PITCH_LIMIT)
+	{
 		p = PITCH_LIMIT;
+	}
 
 	helm_pitch = (float)p;
 }
 
-
-
 void
 Ship::ApplyHelmPitch(double p)
 {
-	SetHelmPitch(helm_pitch - p * PI / 4);
+	SetHelmPitch(
+		helm_pitch -
+		p * PI / 4.0);
 }
-
 
 void
 Ship::ApplyPitch(double p)

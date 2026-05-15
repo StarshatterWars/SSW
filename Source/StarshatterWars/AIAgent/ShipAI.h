@@ -117,10 +117,6 @@ protected:
 
 	virtual void      CheckTarget();
 
-	FVector WorldPointToLegacyLocalObjective(
-		const FVector& WorldPoint,
-		bool bPointIsUEWorld = false) const;
-
 	Ship*			ship;
 	Ship*			support;
 	Ship*			rumor;

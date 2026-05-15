@@ -386,7 +386,6 @@ FlightComputer::ExecTrans()
             {
                 HelmError += UE_TWO_PI;
             }
-
             //-----------------------------------------------------
             // LEGACY:
             // rotate actual ship toward helm heading

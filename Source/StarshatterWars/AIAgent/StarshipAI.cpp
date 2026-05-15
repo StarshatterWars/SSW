@@ -359,9 +359,42 @@ StarshipAI::HelmControl()
         {
             //-----------------------------------------------------
             // LEGACY steering path
+            //
+            // accumulator.yaw is a signed steering command.
+            // helm_heading is an absolute compass heading.
+            //
+            // Therefore use ApplyHelmYaw(), not SetHelmHeading().
             //-----------------------------------------------------
 
-            ship->SetHelmHeading(
+            if (ship && !_stricmp(ship->GetName(), "Blockade Runner"))
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[StarshipAI::HelmControl BR] AccYaw=%.4f AccPitch=%.4f Compass=%.4f OldHelm=%.4f VPN=%s Objective=%s ShipLoc=%s Delta=%s"),
+                    accumulator.yaw,
+                    accumulator.pitch,
+                    ship->GetCompassHeading(),
+                    ship->GetHelmHeading(),
+                    *ship->GetCam().vpn().ToString(),
+                    *objective.ToString(),
+                    *ship->GetLocation().ToString(),
+                    *(objective - ship->GetLocation()).ToString());
+            }
+
+            const FVector DeltaDir =
+                (objective - ship->GetLocation()).GetSafeNormal();
+
+            const double Dot =
+                FVector::DotProduct(
+                    ship->GetHeading().GetSafeNormal(),
+                    DeltaDir);
+
+            UE_LOG(LogTemp, Error,
+                TEXT("[StarshipAI::HelmControl BR] Dot=%.4f Heading=%s DeltaDir=%s"),
+                Dot,
+                *ship->GetHeading().ToString(),
+                *DeltaDir.ToString());
+
+            ship->ApplyHelmYaw(
                 accumulator.yaw);
 
             if (elem &&
@@ -413,16 +446,10 @@ StarshipAI::HelmControl()
 void
 StarshipAI::ThrottleControl()
 {
-    // signifies this ship is a dead hulk:
     if (!ship)
     {
         return;
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[StarshipAI::ThrottleControl]  Ship='%hs' This=%p"),
-        ship ? ship->GetName() : "NULL",
-        this);
 
     if (ship->Design() &&
         ship->Design()->auto_roll < 0)
@@ -430,9 +457,6 @@ StarshipAI::ThrottleControl()
         return;
     }
 
-    //-------------------------------------------------------------
-    // Station keeping
-    //-------------------------------------------------------------
     if (distance < 0.0)
     {
         old_throttle = 0.0;
@@ -467,9 +491,6 @@ StarshipAI::ThrottleControl()
     Ship* s_threat =
         threat;
 
-    //-------------------------------------------------------------
-    // Combat movement
-    //-------------------------------------------------------------
     if (target || s_threat)
     {
         throttle = 100.0;
@@ -509,10 +530,6 @@ StarshipAI::ThrottleControl()
             brakes = 1.0;
         }
     }
-
-    //-------------------------------------------------------------
-    // Formation movement
-    //-------------------------------------------------------------
     else if (ward)
     {
         const double lead_speed =
@@ -521,7 +538,22 @@ StarshipAI::ThrottleControl()
         throttle =
             old_throttle;
 
-        if (lead_speed > 0.0)
+        if (distance > 10000.0)
+        {
+            throttle = 75.0;
+            brakes = 0.0;
+        }
+        else if (distance > 5000.0)
+        {
+            throttle = 50.0;
+            brakes = 0.0;
+        }
+        else if (distance > 1500.0)
+        {
+            throttle = 25.0;
+            brakes = 0.0;
+        }
+        else if (lead_speed > 0.0)
         {
             if (ship_speed > lead_speed)
             {
@@ -542,11 +574,17 @@ StarshipAI::ThrottleControl()
             throttle = 0.0;
             brakes = 0.5;
         }
-    }
 
-    //-------------------------------------------------------------
-    // Patrol / travel
-    //-------------------------------------------------------------
+        UE_LOG(LogTemp, Warning,
+            TEXT("[StarshipAI::ThrottleControl WARD] Ship='%hs' Ward='%hs' Distance=%.2f LeadSpeed=%.2f ShipSpeed=%.2f Throttle=%.2f Brakes=%.2f"),
+            ship ? ship->GetName() : "NULL",
+            ward ? ward->GetName() : "NULL",
+            distance,
+            lead_speed,
+            ship_speed,
+            throttle,
+            brakes);
+    }
     else if (patrol || farcaster)
     {
         throttle = 100.0;
@@ -566,10 +604,6 @@ StarshipAI::ThrottleControl()
             }
         }
     }
-
-    //-------------------------------------------------------------
-    // Navpoint movement
-    //-------------------------------------------------------------
     else if (navpt)
     {
         double speed =
@@ -609,10 +643,6 @@ StarshipAI::ThrottleControl()
             }
         }
     }
-
-    //-------------------------------------------------------------
-    // Element following
-    //-------------------------------------------------------------
     else if (element_index > 1)
     {
         Ship* lead =
@@ -634,45 +664,17 @@ StarshipAI::ThrottleControl()
         throttle =
             old_throttle + delta_throttle;
     }
-
-    //-------------------------------------------------------------
-    // Idle
-    //-------------------------------------------------------------
     else
     {
         throttle = 0.0;
     }
 
-    //-------------------------------------------------------------
-    // Docking / objective settle override
-    //-------------------------------------------------------------
     if (accumulator.stop)
     {
         throttle = 0.0;
         brakes = 1.0;
     }
 
-    //-------------------------------------------------------------
-    // Debug fallback
-    //-------------------------------------------------------------
-#if 1
-    if (throttle <= 0.0 &&
-        !target &&
-        !navpt &&
-        !ward &&
-        !accumulator.stop)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[StarshipAI::ThrottleControl] DEBUG FALLBACK Ship='%hs'"),
-            ship ? ship->GetName() : "NULL");
-
-        throttle = 100.0;
-    }
-#endif
-
-    //-------------------------------------------------------------
-    // Clamp
-    //-------------------------------------------------------------
     throttle =
         FMath::Clamp(
             throttle,
@@ -682,56 +684,9 @@ StarshipAI::ThrottleControl()
     old_throttle =
         throttle;
 
-    //-------------------------------------------------------------
-    // Runtime throttle propagation
-    //-------------------------------------------------------------
     ship->SetThrottle(throttle);
     ship->SetThrottleRequest(throttle);
 
-    //-------------------------------------------------------------
-    // Explicit braking for UE runtime migration
-    //-------------------------------------------------------------
-    if (brakes > 0.0)
-    {
-        FVector Vel =
-            ship->GetVelocity();
-
-        const double Speed =
-            Vel.Size();
-
-        if (Speed > KINDA_SMALL_NUMBER)
-        {
-            const double BrakeStrength =
-                FMath::Clamp(
-                    brakes * seconds * 2.0,
-                    0.0,
-                    1.0);
-
-            Vel *=
-                (1.0 - BrakeStrength);
-
-            if (Vel.Size() < 10.0)
-            {
-                Vel =
-                    FVector::ZeroVector;
-            }
-
-            ship->SetVelocity(Vel);
-        }
-    }
-
-    //-------------------------------------------------------------
-    // IMPORTANT:
-    // Disable legacy lateral translation until
-    // UE local steering migration is complete.
-    //-------------------------------------------------------------
-    ship->SetTransX(0.0);
-    ship->SetTransY(0.0);
-    ship->SetTransZ(0.0);
-
-    //-------------------------------------------------------------
-    // Logging
-    //-------------------------------------------------------------
     UE_LOG(LogTemp, Warning,
         TEXT("[StarshipAI::ThrottleControl] Ship='%hs' Target='%hs' Ward='%hs' Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Request=%.2f Brakes=%.2f Stop=%d"),
         ship ? ship->GetName() : "NULL",
@@ -754,10 +709,6 @@ StarshipAI::SeekTarget()
     {
         return Steer();
     }
-
-    //-------------------------------------------------------------
-    // Farcaster / quantum routing
-    //-------------------------------------------------------------
 
     if (navpt)
     {
@@ -798,7 +749,9 @@ StarshipAI::SeekTarget()
                         s.value();
 
                     if (!candidate)
+                    {
                         continue;
+                    }
 
                     if (candidate->GetFarcaster())
                     {
@@ -860,91 +813,7 @@ StarshipAI::SeekTarget()
         }
     }
 
-    //-------------------------------------------------------------
-    // Base steering
-    //-------------------------------------------------------------
-
-    Steer Result =
-        ShipAI::SeekTarget();
-
-    //-------------------------------------------------------------
-    // Final dock/farcaster alignment
-    //
-    // IMPORTANT:
-    // Work entirely in LOCAL steering space.
-    // Do NOT inject world yaw/pitch directly.
-    //-------------------------------------------------------------
-
-    if (target &&
-        bObjectiveArrivalLatched &&
-        navpt &&
-        (navpt->GetAction() == INSTRUCTION_ACTION::DOCK ||
-            navpt->GetFarcast()))
-    {
-        //---------------------------------------------------------
-        // Use target forward vector
-        //---------------------------------------------------------
-
-        const FVector DockForwardWorld =
-            target->GetCam().vpn();
-
-        //---------------------------------------------------------
-        // Create a world-space point in front of target
-        //---------------------------------------------------------
-
-        const FVector AlignPoint =
-            target->GetLocation() +
-            DockForwardWorld * 5000.0f;
-
-        //---------------------------------------------------------
-        // Convert into LOCAL steering space
-        //---------------------------------------------------------
-
-        const FVector LocalAlign =
-            WorldPointToLegacyLocalObjective(
-                AlignPoint,
-                false);
-
-        //---------------------------------------------------------
-        // Generate proper LOCAL steer command
-        //---------------------------------------------------------
-
-        const Steer AlignSteer =
-            Seek(LocalAlign);
-
-        const double SmoothAlpha =
-            FMath::Clamp(
-                seconds * 2.0,
-                0.0,
-                1.0);
-
-        Result.yaw =
-            FMath::Lerp(
-                Result.yaw,
-                AlignSteer.yaw,
-                SmoothAlpha);
-
-        Result.pitch =
-            FMath::Lerp(
-                Result.pitch,
-                AlignSteer.pitch,
-                SmoothAlpha);
-
-        Result.brake =
-            FMath::Max(
-                Result.brake,
-                0.5);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[StarshipAI::SeekTarget ALIGN] Ship='%hs' Target='%hs' LocalAlign=%s AlignYaw=%.4f AlignPitch=%.4f"),
-            ship ? ship->GetName() : "NULL",
-            target ? target->GetName() : "NULL",
-            *LocalAlign.ToString(),
-            AlignSteer.yaw,
-            AlignSteer.pitch);
-    }
-
-    return Result;
+    return ShipAI::SeekTarget();
 }
 
 // +--------------------------------------------------------------------+
@@ -1216,42 +1085,12 @@ StarshipAI::AssessTargetPointDefense()
 FVector
 StarshipAI::Transform(const FVector& Point)
 {
-    if (!ship)
+    if (!self)
     {
         return FVector::ZeroVector;
     }
 
-    //-------------------------------------------------------------
-    // Convert WORLD target point into LOCAL steering space:
-    //
-    // X = right
-    // Y = up
-    // Z = forward
-    //
-    // VERIFIED SENSOR BASIS:
-    // VPN = Forward
-    // VUP = Up
-    // VRT = Right
-    //-------------------------------------------------------------
-
-    const FVector WorldDir =
-        Point - ship->GetLocation();
-
-    const FVector Forward =
-        ship->GetCam().vpn().GetSafeNormal();
-
-    const FVector Up =
-        ship->GetCam().vup().GetSafeNormal();
-
-    const FVector Right =
-        ship->GetCam().vrt().GetSafeNormal();
-
-    const FVector Local(
-        FVector::DotProduct(WorldDir, Right),
-        FVector::DotProduct(WorldDir, Up),
-        FVector::DotProduct(WorldDir, Forward));
-
-    return Local;
+    return Point - self->GetLocation();
 }
 
 
@@ -1260,60 +1099,31 @@ StarshipAI::Seek(const FVector& Point)
 {
     Steer Result;
 
-    //-------------------------------------------------------------
-    // LOCAL steering space:
-    //
-    // X = right
-    // Y = up
-    // Z = forward
-    //-------------------------------------------------------------
-
-    const double Right =
-        Point.X;
-
-    const double Up =
-        Point.Y;
-
-    const double Forward =
-        Point.Z;
-
     Result.yaw =
-        atan2(Right, Forward);
+        FMath::Atan2(Point.X, Point.Z) + PI;
 
-    const double FlatDist =
-        sqrt((Right * Right) + (Forward * Forward));
+    const double Adjacent =
+        FMath::Sqrt(
+            Point.X * Point.X +
+            Point.Z * Point.Z);
 
-    if (FlatDist > KINDA_SMALL_NUMBER)
+    if (ship &&
+        FMath::Abs(Point.Y) > ship->GetRadius() &&
+        Adjacent > ship->GetRadius())
     {
         Result.pitch =
-            -atan2(Up, FlatDist);
-    }
-    else
-    {
-        Result.pitch = 0.0;
+            FMath::Atan2(Point.Y, Adjacent);
     }
 
-#if PLATFORM_WINDOWS
-    if (!_finite(Result.yaw))
+    if (!FMath::IsFinite(Result.yaw))
     {
         Result.yaw = 0.0;
     }
 
-    if (!_finite(Result.pitch))
+    if (!FMath::IsFinite(Result.pitch))
     {
         Result.pitch = 0.0;
     }
-#else
-    if (!isfinite(Result.yaw))
-    {
-        Result.yaw = 0.0;
-    }
-
-    if (!isfinite(Result.pitch))
-    {
-        Result.pitch = 0.0;
-    }
-#endif
 
     return Result;
 }
@@ -1400,70 +1210,3 @@ StarshipAI::Avoid(const FVector& Point, float Radius)
 
     return Result;
 }
-FVector
-StarshipAI::WorldPointToLegacyLocalObjective(
-    const FVector& WorldPoint,
-    bool bPointIsUEWorld) const
-{
-    if (!ship)
-    {
-        return FVector::ZeroVector;
-    }
-
-    //-------------------------------------------------------------
-    // Optional UE -> legacy sim-space conversion
-    //-------------------------------------------------------------
-
-    FVector LegacyWorldPoint =
-        WorldPoint;
-
-    if (bPointIsUEWorld)
-    {
-        LegacyWorldPoint = FVector(
-            WorldPoint.Y,
-            WorldPoint.Z,
-            WorldPoint.X);
-    }
-
-    //-------------------------------------------------------------
-    // World delta in SIM space
-    //-------------------------------------------------------------
-
-    const FVector ObjT =
-        LegacyWorldPoint -
-        ship->GetLocation();
-
-    //-------------------------------------------------------------
-    // VERIFIED SENSOR BASIS
-    //
-    // VRT = right
-    // VUP = up
-    // VPN = forward
-    //-------------------------------------------------------------
-
-    const FVector VRT =
-        ship->GetCam().vrt().GetSafeNormal();
-
-    const FVector VUP =
-        ship->GetCam().vup().GetSafeNormal();
-
-    const FVector VPN =
-        ship->GetCam().vpn().GetSafeNormal();
-
-    //-------------------------------------------------------------
-    // Convert world vector into LOCAL steering space
-    //
-    // X = right
-    // Y = up
-    // Z = forward
-    //-------------------------------------------------------------
-
-    const FVector Result(
-        FVector::DotProduct(ObjT, VRT),
-        FVector::DotProduct(ObjT, VUP),
-        FVector::DotProduct(ObjT, VPN));
-
-    return Result;
-}
-
-

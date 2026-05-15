@@ -142,115 +142,31 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
         }
     }
 
-    //-------------------------------------------------------------
-    // FALLBACK SIM TICK
-    //-------------------------------------------------------------
-    if (!bRuntimeSubsystemOwnsTick)
+    if (bRuntimeSubsystemOwnsTick)
     {
-        const double SimSeconds =
-            FMath::Clamp(
-                (double)DeltaSeconds * (double)RuntimeAITimeScale,
-                0.0,
-                (double)MaxRuntimeTickSeconds);
-
-        if (Sim* RuntimeSim = Sim::GetSim())
-        {
-            RuntimeSim->ExecFrame(SimSeconds);
-
-            int32 TotalShips = 0;
-
-            ListIter<SimRegion> RegionIter =
-                RuntimeSim->GetRegions();
-
-            while (++RegionIter)
-            {
-                SimRegion* Region =
-                    RegionIter.value();
-
-                if (!Region)
-                {
-                    continue;
-                }
-
-                const int32 RegionShips =
-                    Region->GetNumShips();
-
-                TotalShips += RegionShips;
-
-                if (RegionShips > 0)
-                {
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[CampaignSceneActor] RegionShips Region='%hs' Ships=%d"),
-                        Region->GetName(),
-                        RegionShips);
-                }
-            }
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CampaignSceneActor] FALLBACK Sim Tick Seconds=%.4f Regions=%d Ships=%d ActiveRegion=%p"),
-                SimSeconds,
-                RuntimeSim->GetRegions().size(),
-                TotalShips,
-                RuntimeSim->GetActiveRegion());
-        }
+        return;
     }
 
-    //-------------------------------------------------------------
-    // VISUAL SYNC
-    //-------------------------------------------------------------
-    for (const TPair<FString, AShipActor*>& Pair : ShipActorByElementName)
+    const double SimSeconds =
+        FMath::Clamp(
+            (double)DeltaSeconds * (double)RuntimeAITimeScale,
+            0.0,
+            (double)MaxRuntimeTickSeconds);
+
+    if (Sim* RuntimeSim = Sim::GetSim())
     {
-        AShipActor* ShipActor =
-            Pair.Value;
+        RuntimeSim->ExecFrame(SimSeconds);
 
-        Ship* RuntimeShip =
-            RuntimeShipByElementName.FindRef(Pair.Key);
-
-        if (!ShipActor || !RuntimeShip)
-        {
-            continue;
-        }
-
-        ShipActor->UpdateFromRuntimeShip(DeltaSeconds);
-
-        Instruction* Nav =
-            RuntimeShip->GetNextNavPoint();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignSceneActor] Runtime Ship State Ship='%hs' Region='%hs' Director=%p Nav=%p NavTarget='%hs' ShipTarget='%hs' Throttle=%.2f Request=%.2f MainDrive=%p Power=%d Vel=%s"),
-            RuntimeShip->GetName(),
-            RuntimeShip->GetRegion()
-            ? RuntimeShip->GetRegion()->GetName()
-            : "NULL",
-            RuntimeShip->GetDirector(),
-            Nav,
-            Nav && Nav->GetTargetName()
-            ? Nav->GetTargetName()
-            : "NULL",
-            RuntimeShip->GetTarget()
-            ? RuntimeShip->GetTarget()->GetName()
-            : "NULL",
-            RuntimeShip->GetThrottle(),
-            RuntimeShip->GetThrottleRequest(),
-            RuntimeShip->GetMainDrive(),
-            RuntimeShip->GetMainDrive() &&
-            RuntimeShip->GetMainDrive()->IsPowerOn()
-            ? 1
-            : 0,
-            *RuntimeShip->GetVelocity().ToString());
+        UE_LOG(LogTemp, Verbose,
+            TEXT("[CampaignSceneActor] Fallback Sim Tick Seconds=%.4f"),
+            SimSeconds);
     }
 }
-void
-ACampaignSceneActor::ClearRuntimeShips()
+
+void ACampaignSceneActor::ClearRuntimeShips()
 {
     UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignSceneActor] ClearRuntimeShips Count=%d"),
-        RuntimeShips.Num());
-
-    //-------------------------------------------------------------
-    // Runtime ships are now owned by Sim/SimRegion.
-    // Do NOT delete them here.
-    //-------------------------------------------------------------
+        TEXT("[CampaignSceneActor] ClearRuntimeShips skipped. Runtime ships are owned by Sim/SimRegion."));
 
     RuntimeShips.Empty();
     RuntimeShipByElementName.Empty();

@@ -167,10 +167,6 @@ Physical::Physical(const char* n, int t)
 
 Physical::~Physical()
 {
-	// inform graphic rep and light that we are leaving:
-	GRAPHIC_DESTROY(rep);
-	SIMLIGHT_DESTROY(light);
-
 	// we own the director
 	delete dir;
 	dir = 0;
@@ -248,33 +244,16 @@ Physical::ExecFrame(double s)
 		//---------------------------------------------------------
 		if (thrust != 0.0f)
 		{
-			const double UEThrustScale =
-				100.0;
-
 			FVector ThrustVec =
 				cam.vpn();
 
 			ThrustVec *=
 				(float)(
-					(
-						((double)thrust * UEThrustScale) /
-						(double)mass
-						) * SecondsThisSlice);
+					((double)thrust / (double)mass) *
+					SecondsThisSlice);
 
 			velocity +=
 				ThrustVec;
-
-			UE_LOG(LogTemp, Warning,
-				TEXT("[Physical::ExecFrame] THRUST "
-					"Obj='%hs' Thrust=%.2f Mass=%.2f "
-					"Scale=%.2f VPN=%s AddVel=%s NewVel=%s"),
-				name,
-				thrust,
-				mass,
-				UEThrustScale,
-				*cam.vpn().ToString(),
-				*ThrustVec.ToString(),
-				*velocity.ToString());
 		}
 
 		//---------------------------------------------------------
@@ -285,14 +264,6 @@ Physical::ExecFrame(double s)
 
 		LinearFrame(
 			SecondsThisSlice);
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Physical::ExecFrame] AFTER LINEAR "
-				"Obj='%hs' VelBefore=%s VelAfter=%s Delta=%s"),
-			name,
-			*VelBeforeLinear.ToString(),
-			*velocity.ToString(),
-			*(velocity - VelBeforeLinear).ToString());
 
 		//---------------------------------------------------------
 		// Move object
@@ -306,50 +277,12 @@ Physical::ExecFrame(double s)
 
 		cam.MoveTo(Pos);
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Physical::ExecFrame] MOVE "
-				"Obj='%hs' PosBefore=%s PosAfter=%s "
-				"Vel=%s Delta=%s"),
-			name,
-			*PosBeforeMove.ToString(),
-			*Pos.ToString(),
-			*velocity.ToString(),
-			*(Pos - PosBeforeMove).ToString());
-
 		s -=
 			SecondsThisSlice;
 	}
 
 	alpha =
 		0.0f;
-
-	//-------------------------------------------------------------
-	// Update graphics
-	//-------------------------------------------------------------
-	if (rep)
-	{
-		rep->MoveTo(
-			cam.Pos());
-
-		const Matrix& M =
-			cam.Orientation();
-
-		const FMatrix UEOrientation(
-			FPlane((float)M(0, 0), (float)M(0, 1), (float)M(0, 2), 0.0f),
-			FPlane((float)M(1, 0), (float)M(1, 1), (float)M(1, 2), 0.0f),
-			FPlane((float)M(2, 0), (float)M(2, 1), (float)M(2, 2), 0.0f),
-			FPlane(0.f, 0.f, 0.f, 1.f)
-		);
-
-		rep->SetOrientation(
-			UEOrientation);
-	}
-
-	if (light)
-	{
-		light->MoveTo(
-			cam.Pos());
-	}
 
 	//-------------------------------------------------------------
 	// Flight path
@@ -379,14 +312,6 @@ Physical::ExecFrame(double s)
 		accel =
 			FVector::ZeroVector;
 	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Physical::ExecFrame] EXIT "
-			"Obj='%hs' FinalPos=%s FinalVel=%s Accel=%s"),
-		name,
-		*GetLocation().ToString(),
-		*GetVelocity().ToString(),
-		*accel.ToString());
 }
 
 // +--------------------------------------------------------------------+
@@ -509,28 +434,6 @@ Physical::AeroFrame(double s)
 		s -= SecondsThisSlice;
 	}
 
-	// now update the graphic rep and light sources:
-	if (rep)
-	{
-		rep->MoveTo(cam.Pos());
-
-		// Starshatter Matrix -> UE FMatrix (Graphic/Solid now expects FMatrix)
-		const Matrix& M = cam.Orientation();
-
-		const FMatrix UEOrientation(
-			FPlane((float)M(0, 0), (float)M(0, 1), (float)M(0, 2), 0.0f),
-			FPlane((float)M(1, 0), (float)M(1, 1), (float)M(1, 2), 0.0f),
-			FPlane((float)M(2, 0), (float)M(2, 1), (float)M(2, 2), 0.0f),
-			FPlane(0.f, 0.f, 0.f, 1.f)
-		);
-
-		rep->SetOrientation(UEOrientation);
-	}
-
-	if (light)
-	{
-		light->MoveTo(cam.Pos());
-	}
 }
 
 
@@ -602,42 +505,18 @@ Physical::ArcadeFrame(double s)
 	}
 
 	alpha = 0.0f;
-
-	// now update the graphic rep and light sources:
-	if (rep)
-	{
-		rep->MoveTo(cam.Pos());
-
-		// Starshatter Matrix -> UE FMatrix (Graphic/Solid now expects FMatrix)
-		const Matrix& M = cam.Orientation();
-
-		const FMatrix UEOrientation(
-			FPlane((float)M(0, 0), (float)M(0, 1), (float)M(0, 2), 0.0f),
-			FPlane((float)M(1, 0), (float)M(1, 1), (float)M(1, 2), 0.0f),
-			FPlane((float)M(2, 0), (float)M(2, 1), (float)M(2, 2), 0.0f),
-			FPlane(0.f, 0.f, 0.f, 1.f)
-		);
-
-		rep->SetOrientation(UEOrientation);
-	}
-
-	if (light)
-	{
-		light->MoveTo(cam.Pos());
-	}
 }
 
 // +--------------------------------------------------------------------+
 
-void Physical::AngularFrame(double SecondsThisSlice)
+void
+Physical::AngularFrame(double SecondsThisSlice)
 {
 	if (!straight)
 	{
-		const double UERotationScale = 10.0;
-
-		dr += (float)((double)dr_acc * UERotationScale * SecondsThisSlice);
-		dy += (float)((double)dy_acc * UERotationScale * SecondsThisSlice);
-		dp += (float)((double)dp_acc * UERotationScale * SecondsThisSlice);
+		dr += (float)((double)dr_acc * SecondsThisSlice);
+		dy += (float)((double)dy_acc * SecondsThisSlice);
+		dp += (float)((double)dp_acc * SecondsThisSlice);
 
 		dr *= (float)std::exp(-(double)dr_drg * SecondsThisSlice);
 		dy *= (float)std::exp(-(double)dy_drg * SecondsThisSlice);
@@ -649,11 +528,18 @@ void Physical::AngularFrame(double SecondsThisSlice)
 
 		if (shake > 0.01f)
 		{
-			vibration = FVector((float)RandomSigned(), (float)RandomSigned(), (float)RandomSigned());
-			NormalizeAndReturnLength(vibration);
-			vibration *= (float)((double)shake * SecondsThisSlice);
+			vibration = FVector(
+				(float)RandomSigned(),
+				(float)RandomSigned(),
+				(float)RandomSigned());
 
-			shake *= (float)std::exp(-1.5 * SecondsThisSlice);
+			NormalizeAndReturnLength(vibration);
+
+			vibration *=
+				(float)((double)shake * SecondsThisSlice);
+
+			shake *=
+				(float)std::exp(-1.5 * SecondsThisSlice);
 		}
 		else
 		{
@@ -661,6 +547,20 @@ void Physical::AngularFrame(double SecondsThisSlice)
 			shake = 0.0f;
 		}
 
+		UE_LOG(LogTemp, Error,
+			TEXT("[ANGULAR BR] dr_acc=%.6f dy_acc=%.6f dp_acc=%.6f dr=%.6f dy=%.6f dp=%.6f roll=%.6f yaw=%.6f pitch=%.6f yaw_rate=%.6f dy_drg=%.6f dt=%.6f"),
+			dr_acc,
+			dy_acc,
+			dp_acc,
+			dr,
+			dy,
+			dp,
+			roll,
+			yaw,
+			pitch,
+			yaw_rate,
+			dy_drg,
+			SecondsThisSlice);
 		cam.Aim(roll, pitch, yaw);
 	}
 }
@@ -875,10 +775,14 @@ void Physical::ApplyPitch(double p)
 	dp_acc = (float)p * pitch_rate;
 }
 
-void Physical::ApplyYaw(double y)
+void
+Physical::ApplyYaw(double y)
 {
-	if (y > 1)       y = 1;
-	else if (y < -1) y = -1;
+	if (y > 1)
+		y = 1;
+
+	else if (y < -1)
+		y = -1;
 
 	dy_acc = (float)y * yaw_rate;
 }

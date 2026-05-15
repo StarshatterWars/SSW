@@ -286,43 +286,98 @@ SteerAI::FindObjective()
 FVector
 SteerAI::Transform(const FVector& Pt)
 {
-    FVector ObjT = Pt - self->GetLocation();
-    FVector Result;
+    if (!self)
+    {
+        return FVector::ZeroVector;
+    }
 
-    if (self->GetFlightPathYawAngle() != 0 || self->GetFlightPathPitchAngle() != 0) {
-        double Az = self->GetFlightPathYawAngle();
-        double El = self->GetFlightPathPitchAngle();
+    const FVector ObjT =
+        Pt - self->GetLocation();
 
-        const double MAX_ANGLE = 15 * DEGREES;
-        const double MIN_ANGLE = 3 * DEGREES;
+    Camera Cam;
 
-        if (Az > MAX_ANGLE)            Az = MAX_ANGLE;
-        else if (Az < -MAX_ANGLE)      Az = -MAX_ANGLE;
-        else if (Az > MIN_ANGLE)       Az = MIN_ANGLE + (Az - MIN_ANGLE) / 2;
-        else if (Az < -MIN_ANGLE)      Az = -MIN_ANGLE + (Az + MIN_ANGLE) / 2;
+    if (self->GetFlightPathYawAngle() != 0 ||
+        self->GetFlightPathPitchAngle() != 0)
+    {
+        double Az =
+            self->GetFlightPathYawAngle();
 
-        if (El > MAX_ANGLE)            El = MAX_ANGLE;
-        else if (El < -MAX_ANGLE)      El = -MAX_ANGLE;
-        else if (El > MIN_ANGLE)       El = MIN_ANGLE + (El - MIN_ANGLE) / 2;
-        else if (El < -MIN_ANGLE)      El = -MIN_ANGLE + (El + MIN_ANGLE) / 2;
+        double El =
+            self->GetFlightPathPitchAngle();
 
-        Camera Cam;
+        const double MAX_ANGLE =
+            15 * DEGREES;
+
+        const double MIN_ANGLE =
+            3 * DEGREES;
+
+        if (Az > MAX_ANGLE)
+        {
+            Az = MAX_ANGLE;
+        }
+        else if (Az < -MAX_ANGLE)
+        {
+            Az = -MAX_ANGLE;
+        }
+        else if (Az > MIN_ANGLE)
+        {
+            Az =
+                MIN_ANGLE +
+                (Az - MIN_ANGLE) / 2;
+        }
+        else if (Az < -MIN_ANGLE)
+        {
+            Az =
+                -MIN_ANGLE +
+                (Az + MIN_ANGLE) / 2;
+        }
+
+        if (El > MAX_ANGLE)
+        {
+            El = MAX_ANGLE;
+        }
+        else if (El < -MAX_ANGLE)
+        {
+            El = -MAX_ANGLE;
+        }
+        else if (El > MIN_ANGLE)
+        {
+            El =
+                MIN_ANGLE +
+                (El - MIN_ANGLE) / 2;
+        }
+        else if (El < -MIN_ANGLE)
+        {
+            El =
+                -MIN_ANGLE +
+                (El + MIN_ANGLE) / 2;
+        }
+
         Cam.Clone(self->GetCam());
         Cam.Yaw(Az);
         Cam.Pitch(-El);
-
-        Result =
-            (ObjT * Cam.vrt()) +
-            (ObjT * Cam.vup()) +
-            (ObjT * Cam.vpn());
     }
-    else {
-        Camera& Cam = (Camera&)self->GetCam(); // cast away const
+    else
+    {
+        Cam.Clone(self->GetCam());
+    }
 
-        Result =
-            (ObjT * Cam.vrt()) +
-            (ObjT * Cam.vup()) +
-            (ObjT * Cam.vpn());
+    const FVector Result(
+        FVector::DotProduct(ObjT, Cam.vrt()),
+        FVector::DotProduct(ObjT, Cam.vup()),
+        FVector::DotProduct(ObjT, Cam.vpn()));
+
+    if (!_stricmp(self->GetName(), "Blockade Runner"))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SteerAI::Transform BR] Pt=%s SelfLoc=%s ObjT=%s VRT=%s VUP=%s VPN=%s Result=%s"),
+            *Pt.ToString(),
+            *self->GetLocation().ToString(),
+            *ObjT.ToString(),
+            *Cam.vrt().ToString(),
+            *Cam.vup().ToString(),
+            *Cam.vpn().ToString(),
+            *Result.ToString());
     }
 
     return Result;
@@ -331,13 +386,21 @@ SteerAI::Transform(const FVector& Pt)
 FVector
 SteerAI::AimTransform(const FVector& Pt)
 {
-    Camera& Cam = (Camera&)self->GetCam(); // cast away const
-    FVector ObjT = Pt - self->GetLocation();
+    if (!self)
+    {
+        return FVector::ZeroVector;
+    }
 
-    FVector Result =
-        (ObjT * Cam.vrt()) +
-        (ObjT * Cam.vup()) +
-        (ObjT * Cam.vpn());
+    Camera& Cam =
+        (Camera&)self->GetCam();
+
+    const FVector ObjT =
+        Pt - self->GetLocation();
+
+    const FVector Result(
+        FVector::DotProduct(ObjT, Cam.vrt()),
+        FVector::DotProduct(ObjT, Cam.vup()),
+        FVector::DotProduct(ObjT, Cam.vpn()));
 
     return Result;
 }
@@ -382,25 +445,20 @@ SteerAI::Accumulate(const Steer& steer)
 // +--------------------------------------------------------------------+
 
 Steer
-SteerAI::Seek(const FVector& Point)
+SteerAI::Seek(const FVector& InPoint)
 {
     Steer s;
 
-    // advance memory pipeline:
     az[2] = az[1];
     az[1] = az[0];
 
     el[2] = el[1];
     el[1] = el[0];
 
-    if (!FMath::IsFinite(Point.X) ||
-        !FMath::IsFinite(Point.Y) ||
-        !FMath::IsFinite(Point.Z))
+    if (!FMath::IsFinite(InPoint.X) ||
+        !FMath::IsFinite(InPoint.Y) ||
+        !FMath::IsFinite(InPoint.Z))
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SteerAI::Seek] INVALID Point=%s"),
-            *Point.ToString());
-
         az[0] = 0.0;
         el[0] = 0.0;
         seeking = 0;
@@ -408,46 +466,72 @@ SteerAI::Seek(const FVector& Point)
         return s;
     }
 
-    // approach
-    if (Point.Z > 0.0f) {
-        az[0] = atan2(FMath::Abs(Point.X), Point.Z) * seek_gain;
-        el[0] = atan2(FMath::Abs(Point.Y), Point.Z) * seek_gain;
+    FVector Point =
+        InPoint;
+
+    if (!Point.Normalize())
+    {
+        az[0] = 0.0;
+        el[0] = 0.0;
+        seeking = 0;
+
+        return s;
+    }
+
+    if (Point.Z > 0.0f)
+    {
+        az[0] =
+            atan2(FMath::Abs(Point.X), Point.Z) *
+            seek_gain;
+
+        el[0] =
+            atan2(FMath::Abs(Point.Y), Point.Z) *
+            seek_gain;
 
         if (Point.X < 0)
+        {
             az[0] = -az[0];
+        }
 
         if (Point.Y > 0)
+        {
             el[0] = -el[0];
+        }
 
         s.yaw =
             az[0] -
-            seek_damp * (az[1] + az[2] * 0.5);
+            seek_damp *
+            (az[1] + az[2] * 0.5);
 
         s.pitch =
             el[0] -
-            seek_damp * (el[1] + el[2] * 0.5);
+            seek_damp *
+            (el[1] + el[2] * 0.5);
     }
-
-    // reverse / target behind
-    else {
+    else
+    {
         if (Point.X > 0)
+        {
             s.yaw = 1.0f;
+        }
         else
+        {
             s.yaw = -1.0f;
+        }
 
-        s.pitch = -Point.Y * 0.5f;
+        s.pitch =
+            -Point.Y * 0.5f;
     }
 
     seeking = 1;
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SteerAI::Seek] Point=%s Yaw=%.4f Pitch=%.4f ZForward=%d SeekGain=%.3f SeekDamp=%.3f"),
+        TEXT("[SteerAI::Seek] RawPoint=%s NormPoint=%s Yaw=%.4f Pitch=%.4f ZForward=%d"),
+        *InPoint.ToString(),
         *Point.ToString(),
         s.yaw,
         s.pitch,
-        Point.Z > 0.0f ? 1 : 0,
-        seek_gain,
-        seek_damp);
+        Point.Z > 0.0f ? 1 : 0);
 
     return s;
 }

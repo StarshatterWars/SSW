@@ -223,26 +223,32 @@ bool TacticalAI::CheckShipOrders()
 
 bool TacticalAI::CheckObjectives()
 {
-	bool        processed = false;
+	bool processed = false;
 	Ship* ward = nullptr;
 	SimElement* elem = ship ? ship->GetElement() : nullptr;
 
-	if (elem) {
+	if (elem)
+	{
 		Instruction* obj = elem->GetTargetObjective();
 
-		if (obj) {
+		if (obj)
+		{
 			ship_ai->ClearPatrol();
 
 			const INSTRUCTION_ACTION Action = obj->GetAction();
 
-			if (Action != INSTRUCTION_ACTION::NONE) {
-				switch (Action) {
+			if (Action != INSTRUCTION_ACTION::NONE)
+			{
+				switch (Action)
+				{
 				case INSTRUCTION_ACTION::INTERCEPT:
 				case INSTRUCTION_ACTION::STRIKE:
 				case INSTRUCTION_ACTION::ASSAULT:
 				{
 					SimObject* tgt = obj->GetTarget();
-					if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
+
+					if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+					{
 						roe = DIRECTED;
 						SelectTargetDirected(static_cast<Ship*>(tgt));
 					}
@@ -253,7 +259,9 @@ bool TacticalAI::CheckObjectives()
 				case INSTRUCTION_ACTION::ESCORT:
 				{
 					SimObject* tgt = obj->GetTarget();
-					if (tgt && tgt->GetType() == SimObject::SIM_SHIP) {
+
+					if (tgt && tgt->GetType() == SimObject::SIM_SHIP)
+					{
 						roe = DEFENSIVE;
 						ward = static_cast<Ship*>(tgt);
 					}
@@ -268,9 +276,43 @@ bool TacticalAI::CheckObjectives()
 			orders = obj;
 			processed = true;
 		}
+
+		//---------------------------------------------------------
+		// COMMANDER FALLBACK
+		//
+		// Legacy mission commander means this element is subordinate
+		// to another SimElement. If no explicit escort/defend ward
+		// was assigned above, use commander ship 1 as the ward.
+		//---------------------------------------------------------
+
+		if (!ward && elem->GetCommander())
+		{
+			SimElement* CommanderElement =
+				elem->GetCommander();
+
+			Ship* CommanderShip =
+				CommanderElement
+				? CommanderElement->GetShip(1)
+				: nullptr;
+
+			if (CommanderShip && CommanderShip != ship)
+			{
+				ward = CommanderShip;
+
+				roe = DEFENSIVE;
+
+				UE_LOG(LogTemp, Error,
+					TEXT("[TacticalAI::CheckObjectives COMMANDER WARD] Ship='%hs' Element='%hs' CommanderElement='%hs' Ward='%hs'"),
+					ship ? ship->GetName() : "NULL",
+					elem ? elem->GetName().data() : "NULL",
+					CommanderElement ? CommanderElement->GetName().data() : "NULL",
+					ward ? ward->GetName() : "NULL");
+			}
+		}
 	}
 
 	ship_ai->SetWard(ward);
+
 	return processed;
 }
 
