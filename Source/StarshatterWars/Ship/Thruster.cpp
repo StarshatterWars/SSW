@@ -333,24 +333,7 @@ void Thruster::ExecTrans(double x, double y, double z)
             ship->Design()->trans_z,
             1.0f);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[Thruster::ExecTrans ENTER] Ship='%hs' "
-            "InputLegacy=(X=%.3f Y=%.3f Z=%.3f) "
-            "Limits=(X=%.3f Y=%.3f Z=%.3f) "
-            "Avail=(X=%.3f Y=%.3f Z=%.3f) "
-            "Thrust=%.3f Ports=%d"),
-        ship->GetName(),
-        x,
-        y,
-        z,
-        TxLimit,
-        TyLimit,
-        TzLimit,
-        avail_x,
-        avail_y,
-        avail_z,
-        thrust,
-        ports.size());
+  
 
     /*
      * IMPORTANT:
@@ -374,14 +357,6 @@ void Thruster::ExecTrans(double x, double y, double z)
         ship->GetVelocity().Length() < 250.0 &&
         ship->GetAltitudeAGL() > ship->GetRadius() / 2.0)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Thruster::ExecTrans VTOL] Ship='%hs' "
-                "Velocity=%.3f AltAGL=%.3f Radius=%.3f"),
-            ship->GetName(),
-            ship->GetVelocity().Length(),
-            ship->GetAltitudeAGL(),
-            ship->GetRadius());
-
         IncBurn(
             EThrusterPortDir::BOTTOM,
             EThrusterPortDir::TOP);
@@ -395,28 +370,12 @@ void Thruster::ExecTrans(double x, double y, double z)
          */
         if (x < -0.15 * TxLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS X] Ship='%hs' "
-                    "Request=LEFT x=%.3f Threshold=%.3f "
-                    "Inc=RIGHT Dec=LEFT"),
-                ship->GetName(),
-                x,
-                -0.15 * TxLimit);
-
             IncBurn(
                 EThrusterPortDir::RIGHT,
                 EThrusterPortDir::LEFT);
         }
         else if (x > 0.15 * TxLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS X] Ship='%hs' "
-                    "Request=RIGHT x=%.3f Threshold=%.3f "
-                    "Inc=LEFT Dec=RIGHT"),
-                ship->GetName(),
-                x,
-                0.15 * TxLimit);
-
             IncBurn(
                 EThrusterPortDir::LEFT,
                 EThrusterPortDir::RIGHT);
@@ -435,28 +394,12 @@ void Thruster::ExecTrans(double x, double y, double z)
          */
         if (y < -0.15 * TyLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS Y] Ship='%hs' "
-                    "Request=REVERSE y=%.3f Threshold=%.3f "
-                    "Inc=FORE Dec=AFT"),
-                ship->GetName(),
-                y,
-                -0.15 * TyLimit);
-
             IncBurn(
                 EThrusterPortDir::FORE,
                 EThrusterPortDir::AFT);
         }
         else if (y > 0.15 * TyLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS Y] Ship='%hs' "
-                    "Request=FORWARD y=%.3f Threshold=%.3f "
-                    "Inc=AFT Dec=FORE"),
-                ship->GetName(),
-                y,
-                0.15 * TyLimit);
-
             IncBurn(
                 EThrusterPortDir::AFT,
                 EThrusterPortDir::FORE);
@@ -475,28 +418,12 @@ void Thruster::ExecTrans(double x, double y, double z)
          */
         if (z < -0.15 * TzLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS Z] Ship='%hs' "
-                    "Request=DOWN z=%.3f Threshold=%.3f "
-                    "Inc=TOP Dec=BOTTOM"),
-                ship->GetName(),
-                z,
-                -0.15 * TzLimit);
-
             IncBurn(
                 EThrusterPortDir::TOP,
                 EThrusterPortDir::BOTTOM);
         }
         else if (z > 0.15 * TzLimit)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[Thruster::ExecTrans AXIS Z] Ship='%hs' "
-                    "Request=UP z=%.3f Threshold=%.3f "
-                    "Inc=BOTTOM Dec=TOP"),
-                ship->GetName(),
-                z,
-                0.15 * TzLimit);
-
             IncBurn(
                 EThrusterPortDir::BOTTOM,
                 EThrusterPortDir::TOP);
@@ -513,14 +440,6 @@ void Thruster::ExecTrans(double x, double y, double z)
         double Yaw = 0.0;
 
         ship->GetAngularThrust(
-            Roll,
-            Pitch,
-            Yaw);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Thruster::ExecTrans ANGULAR] Ship='%hs' "
-                "Roll=%.3f Pitch=%.3f Yaw=%.3f"),
-            ship->GetName(),
             Roll,
             Pitch,
             Yaw);
@@ -602,27 +521,6 @@ void Thruster::ExecTrans(double x, double y, double z)
         }
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[Thruster::ExecTrans BURN ARRAY] Ship='%hs' "
-            "FORE=%.3f AFT=%.3f LEFT=%.3f RIGHT=%.3f "
-            "TOP=%.3f BOTTOM=%.3f "
-            "ROLL_L=%.3f ROLL_R=%.3f "
-            "PITCH_U=%.3f PITCH_D=%.3f "
-            "YAW_L=%.3f YAW_R=%.3f"),
-        ship->GetName(),
-        burn[(int32)EThrusterPortDir::FORE],
-        burn[(int32)EThrusterPortDir::AFT],
-        burn[(int32)EThrusterPortDir::LEFT],
-        burn[(int32)EThrusterPortDir::RIGHT],
-        burn[(int32)EThrusterPortDir::TOP],
-        burn[(int32)EThrusterPortDir::BOTTOM],
-        burn[(int32)EThrusterPortDir::ROLL_L],
-        burn[(int32)EThrusterPortDir::ROLL_R],
-        burn[(int32)EThrusterPortDir::PITCH_U],
-        burn[(int32)EThrusterPortDir::PITCH_D],
-        burn[(int32)EThrusterPortDir::YAW_L],
-        burn[(int32)EThrusterPortDir::YAW_R]);
-
     /*
      * Apply burn array to per-port cached Burn.
      */
@@ -657,18 +555,6 @@ void Thruster::ExecTrans(double x, double y, double z)
                     const float DirBurn =
                         burn[DirIndex];
 
-                    UE_LOG(LogTemp, Warning,
-                        TEXT("[Thruster::ExecTrans MASK HIT] Ship='%hs' "
-                            "Port=%d PortDir=%d FireMask=0x%08X "
-                            "DirIndex=%d Flag=0x%08X DirBurn=%.3f"),
-                        ship->GetName(),
-                        PortIndex,
-                        (int32)Port->Direction,
-                        Port->Fire,
-                        DirIndex,
-                        Flag,
-                        DirBurn);
-
                     Port->Burn =
                         FMath::Max(
                             Port->Burn,
@@ -689,24 +575,6 @@ void Thruster::ExecTrans(double x, double y, double z)
             {
                 Port->Burn =
                     burn[DirIndex];
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[Thruster::ExecTrans DIR DIRECT] Ship='%hs' "
-                        "Port=%d PortDir=%d DirIndex=%d DirBurn=%.3f"),
-                    ship->GetName(),
-                    PortIndex,
-                    (int32)Port->Direction,
-                    DirIndex,
-                    Port->Burn);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[Thruster::ExecTrans DIR INVALID] Ship='%hs' "
-                        "Port=%d PortDir=%d"),
-                    ship->GetName(),
-                    PortIndex,
-                    (int32)Port->Direction);
             }
         }
 
@@ -715,19 +583,6 @@ void Thruster::ExecTrans(double x, double y, double z)
                 Port->Burn,
                 0.0f,
                 1.0f);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Thruster::ExecTrans PORT FINAL] Ship='%hs' "
-                "Port=%d Dir=%d FireMask=0x%08X Burn=%.3f "
-                "Loc=%s Rot=%s PortScale=%.3f"),
-            ship->GetName(),
-            PortIndex,
-            (int32)Port->Direction,
-            Port->Fire,
-            Port->Burn,
-            *Port->Location.ToString(),
-            *Port->Rotation.ToString(),
-            Port->PortScale);
     }
 
     /*
@@ -746,22 +601,6 @@ void Thruster::ExecTrans(double x, double y, double z)
     ship->SetTransX(FinalX);
     ship->SetTransY(FinalY);
     ship->SetTransZ(FinalZ);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[Thruster::ExecTrans EXIT] Ship='%hs' "
-            "Input=(%.3f %.3f %.3f) "
-            "FinalRequest=(%.3f %.3f %.3f) "
-            "ShipTrans=(%.3f %.3f %.3f)"),
-        ship->GetName(),
-        x,
-        y,
-        z,
-        FinalX,
-        FinalY,
-        FinalZ,
-        ship->GetTransX(),
-        ship->GetTransY(),
-        ship->GetTransZ());
 }
 // +----------------------------------------------------------------------+
 
