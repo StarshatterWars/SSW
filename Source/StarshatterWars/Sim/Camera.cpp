@@ -228,10 +228,6 @@ Camera::LookAt(const FVector& target)
 	const FVector Tmp =
 		target - Pos();
 
-	//---------------------------------------------------------
-	// Rotate into current view orientation.
-	//---------------------------------------------------------
-
 	Tgt.X =
 		FVector::DotProduct(Tmp, vrt());
 
@@ -241,7 +237,7 @@ Camera::LookAt(const FVector& target)
 	Tgt.Z =
 		FVector::DotProduct(Tmp, vpn());
 
-	if (FMath::IsNearlyZero(Tgt.Z))
+	if (Tgt.Z == 0.0f)
 	{
 		Pitch(0.5);
 		Yaw(0.5);
@@ -250,36 +246,20 @@ Camera::LookAt(const FVector& target)
 	}
 
 	double Az =
-		FMath::Atan2((double)Tgt.X, (double)Tgt.Z);
+		FMath::Atan(
+			(double)(Tgt.X / Tgt.Z));
 
 	double El =
-		FMath::Atan2((double)Tgt.Y, (double)Tgt.Z);
-
-	//---------------------------------------------------------
-	// Legacy: if target is behind, offset azimuth by 180 deg.
-	//---------------------------------------------------------
+		FMath::Atan(
+			(double)(Tgt.Y / Tgt.Z));
 
 	if (Tgt.Z < 0.0f)
 	{
 		Az -= PI;
 	}
 
-	while (Az > PI)
-	{
-		Az -= 2.0 * PI;
-	}
-
-	while (Az < -PI)
-	{
-		Az += 2.0 * PI;
-	}
-
 	Pitch(-El);
 	Yaw(Az);
-
-	//---------------------------------------------------------
-	// Legacy: roll upright.
-	//---------------------------------------------------------
 
 	double Deflection =
 		vrt().Y;
@@ -309,8 +289,6 @@ Camera::LookAt(const FVector& target)
 		Deflection =
 			vrt().Y;
 	}
-
-	Normalize();
 }
 
 void
@@ -376,29 +354,19 @@ Camera::Padlock(
 	const FVector Tmp =
 		target - Pos();
 
-	Tgt.X =
-		FVector::DotProduct(Tmp, vrt());
+	Tgt.X = FVector::DotProduct(Tmp, vrt());
+	Tgt.Y = FVector::DotProduct(Tmp, vup());
+	Tgt.Z = FVector::DotProduct(Tmp, vpn());
 
-	Tgt.Y =
-		FVector::DotProduct(Tmp, vup());
-
-	Tgt.Z =
-		FVector::DotProduct(Tmp, vpn());
-
-	if (FMath::IsNearlyZero(Tgt.Z))
+	if (Tgt.Z == 0.0f)
 	{
 		Yaw(0.1);
 
-		Tgt.X =
-			FVector::DotProduct(Tmp, vrt());
+		Tgt.X = FVector::DotProduct(Tmp, vrt());
+		Tgt.Y = FVector::DotProduct(Tmp, vup());
+		Tgt.Z = FVector::DotProduct(Tmp, vpn());
 
-		Tgt.Y =
-			FVector::DotProduct(Tmp, vup());
-
-		Tgt.Z =
-			FVector::DotProduct(Tmp, vpn());
-
-		if (FMath::IsNearlyZero(Tgt.Z))
+		if (Tgt.Z == 0.0f)
 		{
 			return false;
 		}
@@ -407,21 +375,12 @@ Camera::Padlock(
 	bool bLocked = true;
 
 	double Az =
-		FMath::Atan2((double)Tgt.X, (double)Tgt.Z);
+		FMath::Atan(
+			(double)(Tgt.X / Tgt.Z));
 
 	if (Tgt.Z < 0.0f)
 	{
 		Az -= PI;
-	}
-
-	while (Az > PI)
-	{
-		Az -= 2.0 * PI;
-	}
-
-	while (Az < -PI)
-	{
-		Az += 2.0 * PI;
 	}
 
 	if (alimit > 0.0)
@@ -440,17 +399,18 @@ Camera::Padlock(
 
 	Yaw(Az);
 
-	Tgt.X =
-		FVector::DotProduct(Tmp, vrt());
+	Tgt.X = FVector::DotProduct(Tmp, vrt());
+	Tgt.Y = FVector::DotProduct(Tmp, vup());
+	Tgt.Z = FVector::DotProduct(Tmp, vpn());
 
-	Tgt.Y =
-		FVector::DotProduct(Tmp, vup());
-
-	Tgt.Z =
-		FVector::DotProduct(Tmp, vpn());
+	if (Tgt.Z == 0.0f)
+	{
+		return false;
+	}
 
 	double El =
-		FMath::Atan2((double)Tgt.Y, (double)Tgt.Z);
+		FMath::Atan(
+			(double)(Tgt.Y / Tgt.Z));
 
 	if (e_lo > 0.0 && El < -e_lo)
 	{
@@ -464,8 +424,6 @@ Camera::Padlock(
 	}
 
 	Pitch(-El);
-
-	Normalize();
 
 	return bLocked;
 }

@@ -488,14 +488,9 @@ StarshipAI::HelmControl()
         return;
     }
 
-    double trans_x =
-        0.0;
-
-    double trans_y =
-        0.0;
-
-    double trans_z =
-        0.0;
+    double trans_x = 0.0;
+    double trans_y = 0.0;
+    double trans_z = 0.0;
 
     const bool station_keeping =
         distance < 0.0;
@@ -505,14 +500,10 @@ StarshipAI::HelmControl()
     //-------------------------------------------------------------
     if (station_keeping)
     {
-        accumulator.brake =
-            1.0;
+        accumulator.brake = 1.0;
+        accumulator.stop = 1;
 
-        accumulator.stop =
-            1;
-
-        ship->SetHelmPitch(
-            0.0);
+        ship->SetHelmPitch(0.0);
     }
     else
     {
@@ -528,8 +519,7 @@ StarshipAI::HelmControl()
         if (threat &&
             threat->GetClassification() >= ship->GetClassification())
         {
-            StrongThreat =
-                threat;
+            StrongThreat = threat;
         }
 
         if (other ||
@@ -543,34 +533,18 @@ StarshipAI::HelmControl()
         {
             //-----------------------------------------------------
             // Legacy:
-            // accumulator.yaw is ABSOLUTE helm heading.
+            // accumulator.yaw is ABSOLUTE desired helm heading.
+            // Do not call LookAt() here.
+            // Do not directly rewrite cam/vpn here.
             //-----------------------------------------------------
             ship->SetHelmHeading(
                 accumulator.yaw);
-
-            if (ship &&
-                !_stricmp(ship->GetName(), "Blockade Runner"))
-            {
-                UE_LOG(LogTemp, Error,
-                    TEXT("[StarshipAI::HelmControl BR] ")
-                    TEXT("AccYaw=%.4f AccPitch=%.4f ")
-                    TEXT("Compass=%.4f OldHelm=%.4f ")
-                    TEXT("VPN=%s ObjectiveRelative=%s ShipLoc=%s"),
-                    accumulator.yaw,
-                    accumulator.pitch,
-                    ship->GetCompassHeading(),
-                    ship->GetHelmHeading(),
-                    *ship->GetCam().vpn().ToString(),
-                    *objective.ToString(),
-                    *ship->GetLocation().ToString());
-            }
 
             if (Elem &&
                 Elem->GetMissionType() ==
                 static_cast<int32>(EMissionType::FLIGHT_OPS))
             {
-                ship->SetHelmPitch(
-                    0.0);
+                ship->SetHelmPitch(0.0);
 
                 if (ship->NumInbound() > 0)
                 {
@@ -595,11 +569,23 @@ StarshipAI::HelmControl()
                 ship->SetHelmPitch(
                     accumulator.pitch);
             }
+
+            if (ship &&
+                !_stricmp(ship->GetName(), "Blockade Runner"))
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[StarshipAI::HelmControl BR] ")
+                    TEXT("AccumYaw=%.6f AccumPitch=%.6f Compass=%.6f VPN=%s ThrottleReq=%.2f"),
+                    accumulator.yaw,
+                    accumulator.pitch,
+                    ship->GetCompassHeading(),
+                    *ship->GetCam().vpn().ToString(),
+                    ship->GetThrottleRequest());
+            }
         }
         else
         {
-            ship->SetHelmPitch(
-                0.0);
+            ship->SetHelmPitch(0.0);
         }
     }
 
@@ -608,11 +594,9 @@ StarshipAI::HelmControl()
     ship->SetTransZ(trans_z);
 
     //-------------------------------------------------------------
-    // Legacy StarshipAI runs FLCS here.
-    // If your port globally moved FLCS to Ship::ExecPhysics(),
-    // keep only one call site. Do not execute twice.
+    // Keep FLCS single-call only.
     //-------------------------------------------------------------
-    //ship->ExecFLCSFrame();
+    // ship->ExecFLCSFrame();
 }
 
 // +----------------------------------------------------------------------+
@@ -1525,8 +1509,9 @@ StarshipAI::Transform(const FVector& Point)
         return FVector::ZeroVector;
     }
 
-    return Point -
-        self->GetLocation();
+    // LEGACY STARSHIPAI:
+    // target relative to ship
+    return Point - self->GetLocation();
 }
 
 // +----------------------------------------------------------------------+
@@ -1538,16 +1523,16 @@ StarshipAI::Seek(const FVector& Point)
     // Legacy:
     // Point is relative world coordinates.
     //
-    // X = lateral
-    // Y = altitude
-    // Z = forward/back in legacy heading space
+    // X = lateral/right-left
+    // Y = altitude/up-down
+    // Z = forward/back
     //-------------------------------------------------------------
     Steer Result;
 
     Result.yaw =
         FMath::Atan2(
             Point.X,
-            Point.Z) + PI;
+            Point.Z);
 
     const double Adjacent =
         FMath::Sqrt(
@@ -1559,20 +1544,19 @@ StarshipAI::Seek(const FVector& Point)
         Adjacent > ship->GetRadius())
     {
         Result.pitch =
-            FMath::Atan(
-                Point.Y / Adjacent);
+            FMath::Atan2(
+                Point.Y,
+                Adjacent);
     }
 
     if (!FMath::IsFinite(Result.yaw))
     {
-        Result.yaw =
-            0.0;
+        Result.yaw = 0.0;
     }
 
     if (!FMath::IsFinite(Result.pitch))
     {
-        Result.pitch =
-            0.0;
+        Result.pitch = 0.0;
     }
 
     if (ship &&

@@ -5000,31 +5000,22 @@ Ship::IsAirborne() const
 double
 Ship::GetCompassHeading() const
 {
-	const FVector Heading =
+	const FVector H =
 		GetHeading().GetSafeNormal();
 
-	double Result =
-		atan2(Heading.X, -Heading.Z);
-
-	if (Result < 0.0)
-	{
-		Result += 2.0 * PI;
-	}
-
-	return Result;
+	return atan2(H.X, H.Z);
 }
 
 double
 Ship::GetCompassPitch() const
 {
-	const FVector Heading =
+	const FVector H =
 		GetHeading().GetSafeNormal();
 
-	return asin(
-		FMath::Clamp(
-			Heading.Y,
-			-1.0,
-			1.0));
+	const double Horizontal =
+		sqrt(H.X * H.X + H.Z * H.Z);
+
+	return atan2(H.Y, Horizontal);
 }
 
 double

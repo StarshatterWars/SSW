@@ -102,6 +102,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
     UStaticMeshComponent* HullMesh;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship")
+    TObjectPtr<USceneComponent> VFXRoot;
+
     /*
      * Optional spawned Blueprint visual actor
      */

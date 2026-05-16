@@ -86,6 +86,28 @@ static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
     Lights.Empty();
 }
 
+static FRotator ConvertLegacyPortRotation(
+    const FRotator& LegacyRot)
+{
+    //---------------------------------------------------------
+    // Legacy local basis:
+    // X = right
+    // Y = up
+    // Z = forward
+    //
+    // UE local basis:
+    // X = forward
+    // Y = right
+    // Z = up
+    //
+    // Legacy rotations were authored for the old basis.
+    //---------------------------------------------------------
+
+    return FRotator(
+        LegacyRot.Roll,     // UE Pitch
+        LegacyRot.Yaw,      // UE Yaw
+        LegacyRot.Pitch);   // UE Roll
+}
 
 AShipActor::AShipActor()
 {
@@ -133,6 +155,10 @@ AShipActor::AShipActor()
     HullMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     HullMesh->SetGenerateOverlapEvents(false);
     HullMesh->SetMobility(EComponentMobility::Movable);
+
+    VFXRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VFXRoot"));
+    VFXRoot->SetupAttachment(ShipRoot);
+    VFXRoot->SetRelativeRotation(FRotator(0.0f, -90.0f, 180.0f));
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
     FocusPoint->SetupAttachment(PointRoot);
@@ -488,8 +514,8 @@ void AShipActor::RebuildMainEngineEmitters()
 
         Emitter->SetAsset(MainEngineEmitterSystem);
         Emitter->SetRelativeLocation(FVector::ZeroVector);
-        Emitter->SetRelativeRotation(MainEngineEmitterRelativeRotation);
         Emitter->SetRelativeScale3D(MainEngineEmitterRelativeScale);
+        Emitter->SetRelativeRotation(MainEngineEmitterRelativeRotation);
 
         // ----------------------------------------------------
         // Engine ON/OFF control
@@ -1604,49 +1630,53 @@ void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
     if (!RuntimeShip)
+    {
         return;
+    }
 
     const FVector RuntimeLocation =
         RuntimeShip->GetLocation();
 
-    const FVector RuntimeHeading =
-        RuntimeShip->GetHeading();
-
-    if (RuntimeLocation.ContainsNaN() ||
-        RuntimeHeading.ContainsNaN())
+    if (RuntimeLocation.ContainsNaN())
+    {
         return;
-
-    //-------------------------------------------------------------
-    // Runtime sim owns location.
-    // Actor is only visual presentation.
-    //-------------------------------------------------------------
+    }
 
     SetActorLocation(RuntimeLocation);
 
-    //-------------------------------------------------------------
-    // Legacy runtime basis:
-    // X = right
-    // Y = up
-    // Z = forward
-    //
-    // UE actor basis:
-    // X = forward
-    // Y = right
-    // Z = up
-    //-------------------------------------------------------------
+    const FVector LegacyForward =
+        RuntimeShip->GetCam().vpn();
 
-    FVector FacingVector(
-        RuntimeHeading.Z,
-        RuntimeHeading.X,
-        RuntimeHeading.Y);
+    const FVector LegacyRight =
+        RuntimeShip->GetCam().vrt();
 
-    if (!FacingVector.Normalize())
+    const FVector LegacyUp =
+        RuntimeShip->GetCam().vup();
+
+    FVector UEForward(
+        LegacyForward.Z,
+        LegacyForward.X,
+        LegacyForward.Y);
+
+    FVector UEUp(
+        LegacyUp.Z,
+        LegacyUp.X,
+        LegacyUp.Y);
+
+    if (!UEForward.Normalize() ||
+        !UEUp.Normalize())
     {
-        FacingVector = FVector::ForwardVector;
+        return;
     }
 
-    SetActorRotation(FacingVector.Rotation());
+    const FRotator ActorRot =
+        FRotationMatrix::MakeFromXZ(
+            UEForward,
+            UEUp).Rotator();
+
+    SetActorRotation(ActorRot);
 }
+
 void AShipActor::BuildNavLightsFromRuntime()
 {
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
@@ -1770,11 +1800,13 @@ void AShipActor::BuildMainEnginesFromRuntime()
             continue;
         }
 
-        Point->SetupAttachment(RootComponent);
+        Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
         Point->SetRelativeLocation(MainDrive->GetPortLocation(i));
-        Point->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+        Point->SetRelativeRotation(
+            ConvertLegacyPortRotation(
+                FRotator(0.0f, 180.0f, 0.0f)));
 
         RuntimeMainEnginePoints.Add(Point);
 
@@ -1790,7 +1822,6 @@ void AShipActor::BuildMainEnginesFromRuntime()
 
             Emitter->SetAsset(MainEngineEmitterSystem);
             Emitter->SetRelativeLocation(FVector::ZeroVector);
-            Emitter->SetRelativeRotation(FRotator::ZeroRotator);
             Emitter->SetRelativeScale3D(
                 MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));
 
@@ -2022,7 +2053,7 @@ void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
 
     NavComp->RegisterComponent();
     NavComp->AttachToComponent(
-        GetRootComponent(),
+        VFXRoot,
         FAttachmentTransformRules::KeepRelativeTransform);
 
     NavComp->ApplyDefinition(Def);
@@ -2038,7 +2069,7 @@ void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
     {
         PointLight->RegisterComponent();
         PointLight->AttachToComponent(
-            GetRootComponent(),
+            VFXRoot,
             FAttachmentTransformRules::KeepRelativeTransform);
 
         PointLight->SetRelativeLocation(Def.LocalOffset);
@@ -2241,11 +2272,12 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Flare)
             {
                 FX.Flare->SetAsset(ThrusterFlareSystem);
-                FX.Flare->SetupAttachment(GetRootComponent());
+                FX.Flare->SetupAttachment(VFXRoot);
                 FX.Flare->SetRelativeLocation(Port->Location);
-                FX.Flare->SetRelativeRotation(Port->Rotation);
                 FX.Flare->SetAutoActivate(false);
                 FX.Flare->RegisterComponent();
+                FX.Flare->SetRelativeRotation(
+                    ConvertLegacyPortRotation(Port->Rotation));
 
                 FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
                 FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
@@ -2259,9 +2291,10 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Trail)
             {
                 FX.Trail->SetAsset(ThrusterTrailSystem);
-                FX.Trail->SetupAttachment(GetRootComponent());
+                FX.Trail->SetupAttachment(VFXRoot);
                 FX.Trail->SetRelativeLocation(Port->Location);
-                FX.Trail->SetRelativeRotation(Port->Rotation);
+                FX.Trail->SetRelativeRotation(
+                    ConvertLegacyPortRotation(Port->Rotation));
                 FX.Trail->SetAutoActivate(false);
                 FX.Trail->RegisterComponent();
 
