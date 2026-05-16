@@ -428,6 +428,9 @@ public:
     void ClearRuntimeThrusters();
     void UpdateThrusterVFXFromRuntime();
 
+    UFUNCTION(BlueprintCallable)
+    void DebugFireAllThrusters(float BurnValue = 1.0f);
+
     UPROPERTY()
     TArray<TObjectPtr<UNiagaraComponent>> RuntimeThrusterEmitters;
 

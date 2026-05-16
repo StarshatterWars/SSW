@@ -92,6 +92,17 @@ static FRotator ConvertLegacyPortRotation(
     return LegacyRot;
 }
 
+
+static FVector ConvertLegacyPortLocation(const FVector& LegacyLoc)
+{
+    // Legacy local: X=right, Y=up, Z=forward
+    // UE local:     X=forward, Y=right, Z=up
+    return FVector(
+        LegacyLoc.Z,
+        LegacyLoc.X,
+        LegacyLoc.Y);
+}
+
 AShipActor::AShipActor()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -334,14 +345,7 @@ AShipActor::Tick(float DeltaTime)
         UpdateEngineAudioFromRuntime(DeltaTime);
         UpdateThrusterVFXFromRuntime();
 
-        return;
-    }
-
-    //UpdateNavLights(DeltaTime);
-
-    if (bUseCutsceneNavMovement)
-    {
-        UpdateCutsceneNavMovement(DeltaTime);
+        DebugFireAllThrusters(1.0f);
         return;
     }
 }
@@ -2228,6 +2232,8 @@ void AShipActor::BuildThrustersFromRuntime()
         return;
     }
 
+   
+
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
@@ -2241,6 +2247,8 @@ void AShipActor::BuildThrustersFromRuntime()
 
         FRuntimeThrusterFX FX;
 
+        const FVector PortLocation =
+            ConvertLegacyPortLocation(Port->Location);
         FX.PointName = Port->PointName;
         FX.Direction = Port->Direction;
         FX.Location = Port->Location;
@@ -2508,4 +2516,142 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             }
         }
     }
+}
+
+void AShipActor::DebugFireAllThrusters(float BurnValue)
+{
+    if (!RuntimeShip)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[DebugFireAllThrusters] No RuntimeShip"));
+        return;
+    }
+
+    Thruster* RuntimeThruster =
+        RuntimeShip->GetThruster();
+
+    if (!RuntimeThruster)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[DebugFireAllThrusters] No RuntimeThruster"));
+        return;
+    }
+
+    const int32 NumPorts =
+        RuntimeThruster->GetNumThrusters();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("==================================================="));
+    UE_LOG(LogTemp, Warning,
+        TEXT("[DebugFireAllThrusters] Ship='%s' Ports=%d Burn=%.2f"),
+        *GetName(),
+        NumPorts,
+        BurnValue);
+
+    for (int32 PortIndex = 0;
+        PortIndex < NumPorts;
+        ++PortIndex)
+    {
+        FRuntimeThrusterFX* FX = nullptr;
+
+        for (FRuntimeThrusterFX& Candidate : RuntimeThrusterFX)
+        {
+            if (Candidate.RuntimePortIndex == PortIndex)
+            {
+                FX = &Candidate;
+                break;
+            }
+        }
+
+        if (!FX)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[DebugFireAllThrusters] Missing FX Port=%d"),
+                PortIndex);
+
+            continue;
+        }
+
+        const FThrusterPort* Port =
+            RuntimeThruster->GetPort(PortIndex);
+
+        if (!Port)
+        {
+            continue;
+        }
+
+        //---------------------------------------------------------
+        // Visual scale
+        //---------------------------------------------------------
+        const bool bMainEngine =
+            Port->Direction == EThrusterPortDir::AFT;
+
+        const float Length =
+            bMainEngine
+            ? FMath::Lerp(0.25f, 2.00f, BurnValue)
+            : FMath::Lerp(0.08f, 0.45f, BurnValue);
+
+        const float Width =
+            bMainEngine
+            ? FMath::Lerp(0.40f, 0.80f, BurnValue)
+            : FMath::Lerp(0.02f, 0.08f, BurnValue);
+
+        const float FinalScale =
+            FX->PortScale > 0.0f
+            ? FX->PortScale
+            : 1.0f;
+
+        const FVector RuntimeScale =
+            FVector(Length, Width, Width) * FinalScale;
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[DebugFireAllThrusters] ")
+            TEXT("Port=%d ")
+            TEXT("Name='%s' ")
+            TEXT("Dir=%d ")
+            TEXT("Loc=%s ")
+            TEXT("Rot=%s ")
+            TEXT("Fire=0x%08X ")
+            TEXT("Scale=%s"),
+            PortIndex,
+            *Port->PointName.ToString(),
+            static_cast<int32>(Port->Direction),
+            *Port->Location.ToString(),
+            *Port->Rotation.ToString(),
+            static_cast<uint32>(Port->Fire),
+            *RuntimeScale.ToString());
+
+        //---------------------------------------------------------
+        // Flare
+        //---------------------------------------------------------
+        if (FX->Flare)
+        {
+            FX->Flare->SetRelativeScale3D(RuntimeScale);
+            FX->Flare->SetVisibility(true, true);
+            FX->Flare->SetHiddenInGame(false, true);
+
+            if (!FX->Flare->IsActive())
+            {
+                FX->Flare->Activate(true);
+            }
+        }
+
+        //---------------------------------------------------------
+        // Trail
+        //---------------------------------------------------------
+        if (FX->Trail)
+        {
+            FX->Trail->SetRelativeScale3D(RuntimeScale);
+            FX->Trail->SetVisibility(true, true);
+            FX->Trail->SetHiddenInGame(false, true);
+
+            if (!FX->Trail->IsActive())
+            {
+                FX->Trail->Activate(true);
+            }
+        }
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("==================================================="));
 }
