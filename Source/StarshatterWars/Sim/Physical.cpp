@@ -793,20 +793,106 @@ void Physical::GetAngularThrust(double& r, double& p, double& y)
 	p = 0;
 	y = 0;
 
-	if (dr_acc > 0.05f * roll_rate) r = 1;
-	else if (dr_acc < -0.05f * roll_rate) r = -1;
-	else if (dr > 0.01f * roll_rate) r = -1;
-	else if (dr < -0.01f * roll_rate) r = 1;
+	const double RollAccThreshold =
+		0.05f * roll_rate;
 
-	if (dy_acc > 0.05f * yaw_rate)  y = 1;
-	else if (dy_acc < -0.05f * yaw_rate)  y = -1;
-	else if (dy > 0.01f * yaw_rate)  y = -1;
-	else if (dy < -0.01f * yaw_rate)  y = 1;
+	const double RollVelThreshold =
+		0.01f * roll_rate;
 
-	if (dp_acc > 0.05f * pitch_rate) p = 1;
-	else if (dp_acc < -0.05f * pitch_rate) p = -1;
-	else if (dp > 0.01f * pitch_rate) p = -1;
-	else if (dp < -0.01f * pitch_rate) p = 1;
+	const double YawAccThreshold =
+		0.05f * yaw_rate;
+
+	const double YawVelThreshold =
+		0.01f * yaw_rate;
+
+	const double PitchAccThreshold =
+		0.05f * pitch_rate;
+
+	const double PitchVelThreshold =
+		0.01f * pitch_rate;
+
+	if (dr_acc > RollAccThreshold)
+	{
+		r = 1;
+	}
+	else if (dr_acc < -RollAccThreshold)
+	{
+		r = -1;
+	}
+	else if (dr > RollVelThreshold)
+	{
+		r = -1;
+	}
+	else if (dr < -RollVelThreshold)
+	{
+		r = 1;
+	}
+
+	if (dy_acc > YawAccThreshold)
+	{
+		y = 1;
+	}
+	else if (dy_acc < -YawAccThreshold)
+	{
+		y = -1;
+	}
+	else if (dy > YawVelThreshold)
+	{
+		y = -1;
+	}
+	else if (dy < -YawVelThreshold)
+	{
+		y = 1;
+	}
+
+	if (dp_acc > PitchAccThreshold)
+	{
+		p = 1;
+	}
+	else if (dp_acc < -PitchAccThreshold)
+	{
+		p = -1;
+	}
+	else if (dp > PitchVelThreshold)
+	{
+		p = -1;
+	}
+	else if (dp < -PitchVelThreshold)
+	{
+		p = 1;
+	}
+
+	if (r != 0 || p != 0 || y != 0)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Physical::GetAngularThrust] "
+				"Obj='%hs' "
+				"dr=%.6f dr_acc=%.6f roll_rate=%.6f r=%.1f "
+				"dp=%.6f dp_acc=%.6f pitch_rate=%.6f p=%.1f "
+				"dy=%.6f dy_acc=%.6f yaw_rate=%.6f y=%.1f "
+				"ThreshRoll=(Acc=%.6f Vel=%.6f) "
+				"ThreshPitch=(Acc=%.6f Vel=%.6f) "
+				"ThreshYaw=(Acc=%.6f Vel=%.6f)"),
+			GetName(),
+			dr,
+			dr_acc,
+			roll_rate,
+			r,
+			dp,
+			dp_acc,
+			pitch_rate,
+			p,
+			dy,
+			dy_acc,
+			yaw_rate,
+			y,
+			RollAccThreshold,
+			RollVelThreshold,
+			PitchAccThreshold,
+			PitchVelThreshold,
+			YawAccThreshold,
+			YawVelThreshold);
+	}
 }
 
 void Physical::SetPrimary(const FVector& l, double m)

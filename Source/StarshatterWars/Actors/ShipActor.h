@@ -54,6 +54,9 @@ struct FRuntimeThrusterFX
     UPROPERTY()
     UNiagaraComponent* Trail = nullptr;
 
+    UPROPERTY()
+    int32 RuntimePortIndex = INDEX_NONE;
+
     FVector Location = FVector::ZeroVector;
     FRotator Rotation = FRotator::ZeroRotator;
 

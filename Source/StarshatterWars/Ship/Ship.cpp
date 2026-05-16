@@ -5016,7 +5016,7 @@ Ship::GetCompassPitch() const
 		sqrt(H.X * H.X + H.Z * H.Z);
 
 	return atan2(H.Y, Horizontal);
-}
+}							
 
 double
 Ship::GetVLimit() const

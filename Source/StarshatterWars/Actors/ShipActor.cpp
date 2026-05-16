@@ -89,24 +89,7 @@ static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
 static FRotator ConvertLegacyPortRotation(
     const FRotator& LegacyRot)
 {
-    //---------------------------------------------------------
-    // Legacy local basis:
-    // X = right
-    // Y = up
-    // Z = forward
-    //
-    // UE local basis:
-    // X = forward
-    // Y = right
-    // Z = up
-    //
-    // Legacy rotations were authored for the old basis.
-    //---------------------------------------------------------
-
-    return FRotator(
-        LegacyRot.Roll,     // UE Pitch
-        LegacyRot.Yaw,      // UE Yaw
-        LegacyRot.Pitch);   // UE Roll
+    return LegacyRot;
 }
 
 AShipActor::AShipActor()
@@ -2264,6 +2247,7 @@ void AShipActor::BuildThrustersFromRuntime()
         FX.Rotation = Port->Rotation;
         FX.PortScale = Port->PortScale;
         FX.AudioMultiplier = Port->AudioMultiplier;
+        FX.RuntimePortIndex = PortIndex;
 
         if (Port->bShowFlare && ThrusterFlareSystem)
         {
@@ -2327,15 +2311,9 @@ void AShipActor::ClearRuntimeThrusters()
     RuntimeThrusterFX.Empty();
 }
 
-void
-AShipActor::UpdateThrusterVFXFromRuntime()
+void AShipActor::UpdateThrusterVFXFromRuntime()
 {
     if (!RuntimeShip)
-    {
-        return;
-    }
-
-    if (RuntimeThrusterFX.Num() <= 0)
     {
         return;
     }
@@ -2348,71 +2326,185 @@ AShipActor::UpdateThrusterVFXFromRuntime()
         return;
     }
 
-    const int32 RuntimePortCount =
-        RuntimeThruster->GetNumThrusters();
-
-    if (RuntimePortCount <= 0)
+    if (RuntimeThrusterFX.Num() <= 0)
     {
         return;
     }
 
-    const int32 NumPorts =
-        FMath::Min(
-            RuntimePortCount,
-            RuntimeThrusterFX.Num());
+    const int32 RuntimePortCount =
+        RuntimeThruster->GetNumThrusters();
 
-    for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
+    for (int32 RuntimePortIndex = 0;
+        RuntimePortIndex < RuntimePortCount;
+        ++RuntimePortIndex)
     {
-        const float Burn =
-            FMath::Clamp(
-                RuntimeThruster->GetThrusterBurn(PortIndex),
-                0.0f,
-                1.0f);
+        const FThrusterPort* RuntimePort =
+            RuntimeThruster->GetPort(RuntimePortIndex);
 
-        const bool bActive =
-            Burn >= 0.05f;
-
-        FRuntimeThrusterFX& FX =
-            RuntimeThrusterFX[PortIndex];
-
-        FVector RuntimeScale =
-            FVector(1.0f, 0.5f, 0.5f);
-
-        RuntimeScale.X *=
-            FMath::Lerp(
-                0.1f,
-                1.5f,
-                Burn);
-
-        if (FX.Flare)
+        if (!RuntimePort)
         {
-            FX.Flare->SetRelativeScale3D(RuntimeScale * FX.PortScale);
-            FX.Flare->SetVisibility(bActive);
-            FX.Flare->SetHiddenInGame(!bActive);
+            continue;
+        }
 
-            if (bActive && !FX.Flare->IsActive())
+        FRuntimeThrusterFX* FX = nullptr;
+
+        for (FRuntimeThrusterFX& Candidate : RuntimeThrusterFX)
+        {
+            if (Candidate.RuntimePortIndex == RuntimePortIndex)
             {
-                FX.Flare->Activate(true);
-            }
-            else if (!bActive && FX.Flare->IsActive())
-            {
-                FX.Flare->Deactivate();
+                FX = &Candidate;
+                break;
             }
         }
 
-        if (FX.Trail)
+        if (!FX)
         {
-            FX.Trail->SetRelativeScale3D(RuntimeScale * FX.PortScale);
-            FX.Trail->SetVisibility(bActive);
-            FX.Trail->SetHiddenInGame(!bActive);
+            continue;
+        }
 
-            if (bActive && !FX.Trail->IsActive())
+        const float Burn =
+            FMath::Clamp(
+                RuntimeThruster->GetThrusterBurn(RuntimePortIndex),
+                0.0f,
+                1.0f);
+
+        const bool bMainEngine =
+            RuntimePort->Direction == EThrusterPortDir::AFT;
+
+        const uint32 DirectionBit =
+            1u << static_cast<uint32>(RuntimePort->Direction);
+
+        const bool bDirectDirectionalBurn =
+            (static_cast<uint32>(RuntimePort->Fire) & DirectionBit) != 0;
+
+        const float VisualBurn =
+            bDirectDirectionalBurn
+            ? Burn
+            : Burn * 0.25f;
+
+        const float DeadZone =
+            bMainEngine ? 0.05f : 0.30f;
+
+        const float VisualBurnFiltered =
+            VisualBurn <= DeadZone
+            ? 0.0f
+            : FMath::Pow(
+                FMath::GetMappedRangeValueClamped(
+                    FVector2D(DeadZone, 1.0f),
+                    FVector2D(0.0f, 1.0f),
+                    VisualBurn),
+                2.5f);
+
+        const bool bActive =
+            VisualBurnFiltered > 0.0f;
+
+        const float FinalPortScale =
+            FX->PortScale > 0.0f
+            ? FX->PortScale
+            : 1.0f;
+
+        FVector RuntimeScale = FVector::ZeroVector;
+
+        if (bActive)
+        {
+            float Length = 0.0f;
+            float Width = 0.0f;
+
+            if (bMainEngine)
             {
-                FX.Trail->Activate(true);
+                Length =
+                    FMath::Lerp(
+                        0.10f,
+                        2.00f,
+                        VisualBurnFiltered);
+
+                Width =
+                    FMath::Lerp(
+                        0.35f,
+                        0.65f,
+                        VisualBurnFiltered);
             }
-            else if (!bActive && FX.Trail->IsActive())
+            else
             {
-                FX.Trail->Deactivate();
+                Length =
+                    FMath::Lerp(
+                        0.05f,
+                        0.35f,
+                        VisualBurnFiltered);
+
+                Width =
+                    FMath::Lerp(
+                        0.010f,
+                        0.030f,
+                        VisualBurnFiltered);
+            }
+
+            RuntimeScale =
+                FVector(
+                    Length,
+                    Width,
+                    Width) * FinalPortScale;
+        }
+
+        if (FX->Flare)
+        {
+            FX->Flare->SetRelativeScale3D(RuntimeScale);
+            FX->Flare->SetVisibility(bActive, true);
+            FX->Flare->SetHiddenInGame(!bActive, true);
+
+            FX->Flare->SetFloatParameter(
+                TEXT("Burn"),
+                VisualBurnFiltered);
+
+            FX->Flare->SetFloatParameter(
+                TEXT("Length"),
+                RuntimeScale.X);
+
+            FX->Flare->SetFloatParameter(
+                TEXT("Width"),
+                RuntimeScale.Y);
+
+            if (bActive)
+            {
+                if (!FX->Flare->IsActive())
+                {
+                    FX->Flare->Activate(true);
+                }
+            }
+            else
+            {
+                FX->Flare->DeactivateImmediate();
+            }
+        }
+
+        if (FX->Trail)
+        {
+            FX->Trail->SetRelativeScale3D(RuntimeScale);
+            FX->Trail->SetVisibility(bActive, true);
+            FX->Trail->SetHiddenInGame(!bActive, true);
+
+            FX->Trail->SetFloatParameter(
+                TEXT("Burn"),
+                VisualBurnFiltered);
+
+            FX->Trail->SetFloatParameter(
+                TEXT("Length"),
+                RuntimeScale.X);
+
+            FX->Trail->SetFloatParameter(
+                TEXT("Width"),
+                RuntimeScale.Y);
+
+            if (bActive)
+            {
+                if (!FX->Trail->IsActive())
+                {
+                    FX->Trail->Activate(true);
+                }
+            }
+            else
+            {
+                FX->Trail->DeactivateImmediate();
             }
         }
     }

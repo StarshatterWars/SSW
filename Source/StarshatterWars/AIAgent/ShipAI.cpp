@@ -1597,8 +1597,7 @@ ShipAI::Navigator()
 }
 // +--------------------------------------------------------------------+
 
-void
-ShipAI::HelmControl()
+void ShipAI::HelmControl()
 {
 	if (!ship)
 	{
@@ -1609,11 +1608,19 @@ ShipAI::HelmControl()
 	double trans_y = 0.0;
 	double trans_z = 0.0;
 
-	ship->ApplyHelmYaw(accumulator.yaw);
+	//-------------------------------------------------------------
+	// Legacy behavior:
+	// accumulator.yaw is an ABSOLUTE desired helm heading.
+	//
+	// Do NOT call ApplyHelmYaw(accumulator.yaw) here.
+	// ApplyHelmYaw expects relative yaw input, not absolute heading.
+	//-------------------------------------------------------------
+	ship->SetHelmHeading(accumulator.yaw);
 
 	if (FMath::Abs(accumulator.pitch) < 5.0 * DEGREES ||
 		FMath::Abs(accumulator.pitch) > 45.0 * DEGREES)
 	{
+		trans_z = objective.Y;
 		ship->SetHelmPitch(0.0);
 	}
 	else
@@ -1622,14 +1629,20 @@ ShipAI::HelmControl()
 	}
 
 	UE_LOG(LogTemp, Warning,
-		TEXT("[HELM] Ship='%hs' ")
-		TEXT("ShipLoc=%s ")
-		TEXT("Objective=%s ")
-		TEXT("Delta=%s "),
+		TEXT("[ShipAI::HelmControl] Ship='%hs' ")
+		TEXT("HelmHeading=%.6f Compass=%.6f AccumYaw=%.6f AccumPitch=%.6f ")
+		TEXT("ShipLoc=%s Objective=%s Delta=%s Trans=(%.3f %.3f %.3f)"),
 		ship->GetName(),
+		ship->GetHelmHeading(),
+		ship->GetCompassHeading(),
+		accumulator.yaw,
+		accumulator.pitch,
 		*ship->GetLocation().ToString(),
 		*objective.ToString(),
-		*(objective - ship->GetLocation()).ToString());
+		*(objective - ship->GetLocation()).ToString(),
+		trans_x,
+		trans_y,
+		trans_z);
 
 	ship->SetTransX(trans_x);
 	ship->SetTransY(trans_y);
