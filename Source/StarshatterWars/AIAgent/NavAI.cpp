@@ -35,6 +35,7 @@
 #include "GameStructs.h"
 
 #include "Game.h"
+#include "ObjectiveArrivalUtils.h"
 
 #include "CoreMinimal.h"              // UE_LOG
 #include "Math/UnrealMathUtility.h"   // FMath
@@ -82,6 +83,14 @@ NavAI::ExecFrame(double s)
         takeoff = false;
 
     FindObjective();
+
+    //-------------------------------------------------------------
+    // Shared objective arrival evaluation before Navigator applies
+    // helm/throttle behavior.
+    //-------------------------------------------------------------
+
+    UpdateObjectiveArrival();
+
     Navigator();
 
     // watch for disconnect:
@@ -519,38 +528,27 @@ void NavAI::ThrottleControl()
 Steer
 NavAI::SeekTarget()
 {
-    if (!ship)
+    //-------------------------------------------------------------
+    // Objective arrival complete
+    //-------------------------------------------------------------
+
+    if (bObjectiveArrived)
+    {
+        if (navpt)
+        {
+            ship->SetNavptStatus(
+                navpt,
+                INSTRUCTION_STATUS::COMPLETE);
+        }
+
         return Steer();
-
-    if (takeoff)
-        return Seek(objective);
-
-    if (navpt) {
-        if (quantum_state == 1) {
-            QuantumDrive* q = ship->GetQuantumDrive();
-
-            if (q) {
-                if (q->ActiveState() == QuantumDrive::ACTIVE_READY) {
-                    q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
-                    q->Engage();
-                }
-
-                else if (q->ActiveState() == QuantumDrive::ACTIVE_POSTWARP) {
-                    quantum_state = 0;
-                }
-            }
-        }
-
-        if (distance < 2 * self->GetRadius()) {
-            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-            return Steer();
-        }
-        else {
-            return Seek(objective);
-        }
     }
 
-    return Steer();
+    //-------------------------------------------------------------
+    // Legacy seek behavior
+    //-------------------------------------------------------------
+
+    return ShipAI::SeekTarget();
 }
 
 // +--------------------------------------------------------------------+

@@ -35,6 +35,7 @@
 #include "Random.h"
 
 #include "CoreMinimal.h"
+#include "ObjectiveArrivalUtils.h"
 
 // +----------------------------------------------------------------------+
 
@@ -612,6 +613,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Dead hulk
     //-------------------------------------------------------------
+
     if (ship->Design() &&
         ship->Design()->auto_roll < 0)
     {
@@ -621,6 +623,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Station keeping
     //-------------------------------------------------------------
+
     if (distance < 0.0)
     {
         old_throttle =
@@ -646,6 +649,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Normal throttle processing
     //-------------------------------------------------------------
+
     const FVector ShipVelocity =
         ship->GetVelocity();
 
@@ -676,6 +680,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Target pursuit or retreat
     //-------------------------------------------------------------
+
     if (target ||
         StrongThreat)
     {
@@ -725,6 +730,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Escort: match speed of ward
     //-------------------------------------------------------------
+
     else if (Ward)
     {
         double speed =
@@ -775,6 +781,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Patrol / farcaster
     //-------------------------------------------------------------
+
     else if (patrol ||
         farcaster)
     {
@@ -799,6 +806,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Lead ship navpoint speed
     //-------------------------------------------------------------
+
     else if (navpt)
     {
         double speed =
@@ -846,6 +854,7 @@ StarshipAI::ThrottleControl()
     //-------------------------------------------------------------
     // Wingman
     //-------------------------------------------------------------
+
     else if (element_index > 1)
     {
         Ship* Lead =
@@ -892,6 +901,81 @@ StarshipAI::ThrottleControl()
         throttle =
             0.0;
     }
+
+    //-------------------------------------------------------------
+    // Objective arrival braking / station keeping
+    //-------------------------------------------------------------
+
+    if (navpt ||
+        farcaster ||
+        patrol)
+    {
+        const EObjectiveArrivalType ArrivalType =
+            DetermineArrivalType();
+
+        const FObjectiveArrivalSettings ArrivalSettings =
+            FObjectiveArrivalUtils::MakeSettings(
+                ArrivalType,
+                ship);
+
+        const FObjectiveArrivalState ArrivalState =
+            FObjectiveArrivalUtils::EvaluateArrival(
+                ship->GetLocation(),
+                ship->GetVelocity(),
+                obj_w,
+                ArrivalSettings);
+
+        if (ArrivalState.bInsideBrakeRadius)
+        {
+            throttle *=
+                ArrivalState.DesiredThrottleScale;
+
+            if (ArrivalState.bInsideArrivalRadius)
+            {
+                throttle =
+                    0.0;
+
+                brakes =
+                    1.0;
+            }
+        }
+
+        if (ArrivalState.bComplete)
+        {
+            throttle =
+                0.0;
+
+            brakes =
+                1.0;
+
+            if (ship->GetFLCS())
+            {
+                ship->GetFLCS()->FullStop();
+            }
+
+            if (!bObjectiveArrived)
+            {
+                bObjectiveArrived =
+                    true;
+
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
+                    ship->GetName(),
+                    static_cast<int32>(ArrivalType),
+                    ArrivalState.Distance,
+                    ArrivalState.Speed);
+            }
+        }
+        else
+        {
+            bObjectiveArrived =
+                false;
+        }
+    }
+
+    //-------------------------------------------------------------
+    // Final throttle clamp and apply
+    //-------------------------------------------------------------
 
     throttle =
         FMath::Clamp(
@@ -949,8 +1033,25 @@ StarshipAI::SeekTarget()
     }
 
     //-------------------------------------------------------------
+    // Objective arrival complete
+    //-------------------------------------------------------------
+
+    if (bObjectiveArrived)
+    {
+        if (navpt)
+        {
+            ship->SetNavptStatus(
+                navpt,
+                INSTRUCTION_STATUS::COMPLETE);
+        }
+
+        return Steer();
+    }
+
+    //-------------------------------------------------------------
     // FARCSTER / QUANTUM navpoint processing
     //-------------------------------------------------------------
+
     if (navpt)
     {
         SimRegion* self_rgn =
@@ -1036,12 +1137,6 @@ StarshipAI::SeekTarget()
 
                 objective =
                     Transform(obj_w);
-
-                if (distance < 1000.0)
-                {
-                    farcaster =
-                        nullptr;
-                }
             }
         }
         else if (self_rgn != nav_rgn)

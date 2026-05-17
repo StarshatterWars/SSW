@@ -1679,19 +1679,11 @@ ShipAI::ThrottleControl()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ThrottleControl] Ship='%hs' This=%p"),
-		ship ? ship->GetName() : "NULL",
-		this);
-
 	//-------------------------------------------------------------
-	// Navpoint complete stop behavior
+	// Legacy station keeping
 	//-------------------------------------------------------------
 
-	if (navpt &&
-		navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE &&
-		!target &&
-		!threat)
+	if (distance < 0.0)
 	{
 		throttle =
 			0.0;
@@ -1699,255 +1691,111 @@ ShipAI::ThrottleControl()
 		old_throttle =
 			0.0;
 
-		ship->SetThrottle(0.0);
-		ship->SetThrottleRequest(0.0);
+		ship->SetThrottle(
+			0.0);
 
-		ship->SetTransX(0.0);
-		ship->SetTransY(0.0);
-		ship->SetTransZ(0.0);
+		ship->SetThrottleRequest(
+			0.0);
 
-		UE_LOG(LogTemp, Warning,
-			TEXT("[ShipAI::ThrottleControl] NAV COMPLETE Ship='%hs'"),
-			ship ? ship->GetName() : "NULL");
+		if (ship->GetFLCS())
+		{
+			ship->GetFLCS()->FullStop();
+		}
 
 		return;
 	}
 
 	//-------------------------------------------------------------
-	// Detect aggressive turn-to-target state
+	// Default throttle
 	//-------------------------------------------------------------
 
-	const double AbsYaw =
-		FMath::Abs(accumulator.yaw);
-
-	const double AbsPitch =
-		FMath::Abs(accumulator.pitch);
-
-	const bool bHardTurn =
-		AbsYaw > 0.60;
-
-	const bool bExtremeTurn =
-		AbsYaw > 0.90;
-
-	const bool bTurningToFaceTarget =
-		(target || threat) &&
-		bHardTurn;
+	throttle =
+		100.0;
 
 	//-------------------------------------------------------------
-	// Navigation / cruise
+	// Objective arrival braking
 	//-------------------------------------------------------------
 
-	if (navpt && !threat && !target)
+	if (navpt ||
+		patrol ||
+		farcaster)
 	{
-		double speed =
-			navpt->GetSpeed();
+		const EObjectiveArrivalType ArrivalType =
+			DetermineArrivalType();
 
-		if (speed > 0.0 &&
-			ship->GetVelocityLimit() > 0.0)
+		const FObjectiveArrivalSettings ArrivalSettings =
+			FObjectiveArrivalUtils::MakeSettings(
+				ArrivalType,
+				ship);
+
+		const FObjectiveArrivalState ArrivalState =
+			FObjectiveArrivalUtils::EvaluateArrival(
+				ship->GetLocation(),
+				ship->GetVelocity(),
+				obj_w,
+				ArrivalSettings);
+
+		//---------------------------------------------------------
+		// Brake zone
+		//---------------------------------------------------------
+
+		if (ArrivalState.bInsideBrakeRadius)
+		{
+			throttle *=
+				ArrivalState.DesiredThrottleScale;
+		}
+
+		//---------------------------------------------------------
+		// Arrival zone
+		//---------------------------------------------------------
+
+		if (ArrivalState.bInsideArrivalRadius)
 		{
 			throttle =
-				speed /
-				ship->GetVelocityLimit() *
-				100.0;
-		}
-		else
-		{
-			throttle = 50.0;
-		}
-	}
+				0.0;
 
-	//-------------------------------------------------------------
-	// Patrol
-	//-------------------------------------------------------------
-
-	else if (patrol && !threat && !target)
-	{
-		double speed = 200.0;
-
-		if (distance > 5000.0)
-		{
-			speed = 500.0;
-		}
-
-		if (ship->GetVelocity().Size() > speed)
-		{
-			throttle = 0.0;
-		}
-		else
-		{
-			throttle = 50.0;
-		}
-	}
-
-	//-------------------------------------------------------------
-	// Combat / attack
-	//-------------------------------------------------------------
-
-	else
-	{
-		if (threat || target || element_index < 2)
-		{
-			//-----------------------------------------------------
-			// TURN-IN-PLACE BEHAVIOR
-			//-----------------------------------------------------
-
-			if (bTurningToFaceTarget)
+			if (ship->GetFLCS())
 			{
-				const FVector Vel =
-					ship->GetVelocity();
-
-				const double Speed =
-					Vel.Size();
-
-				//-------------------------------------------------
-				// Hard braking while rotating
-				//-------------------------------------------------
-
-				throttle = 0.0;
-
-				accumulator.brake =
-					FMath::Clamp(
-						AbsYaw,
-						0.25,
-						1.0);
-
-				//-------------------------------------------------
-				// Kill translational drift
-				//-------------------------------------------------
-
-				if (Speed > 10.0)
-				{
-					const double BrakeStrength =
-						ship->Design()
-						? ship->Design()->trans_y
-						: 0.0;
-
-					//-------------------------------------------------
-					// Negative trans_y opposes forward motion
-					//-------------------------------------------------
-
-					ship->SetTransY(
-						-BrakeStrength *
-						accumulator.brake);
-				}
-				else
-				{
-					ship->SetTransY(0.0);
-				}
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[ShipAI::ThrottleControl TURN-IN-PLACE] Ship='%hs' Target='%hs' AbsYaw=%.3f Brake=%.3f Speed=%.2f"),
-					ship ? ship->GetName() : "NULL",
-					target ? target->GetName() : "NULL",
-					AbsYaw,
-					accumulator.brake,
-					Speed);
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[TURN CHECK] Ship='%hs' AbsYaw=%.3f TransY=%.3f Throttle=%.2f Speed=%.2f"),
-					ship ? ship->GetName() : "NULL",
-					AbsYaw,
-					ship->GetTransY(),
-					throttle,
-					Speed);
-			}
-
-			//-----------------------------------------------------
-			// Forward attack run
-			//-----------------------------------------------------
-
-			else
-			{
-				throttle = 100.0;
-
-				accumulator.brake = 0.0;
-
-				ship->SetTransY(0.0);
-
-				if (!threat && !target)
-				{
-					throttle = 50.0;
-				}
-
-				if (accumulator.brake > 0.0)
-				{
-					throttle *=
-						(1.0 - accumulator.brake);
-				}
+				ship->GetFLCS()->FullStop();
 			}
 		}
 
 		//---------------------------------------------------------
-		// Formation logic
+		// Completion
 		//---------------------------------------------------------
 
+		if (ArrivalState.bComplete)
+		{
+			throttle =
+				0.0;
+
+			if (ship->GetFLCS())
+			{
+				ship->GetFLCS()->FullStop();
+			}
+
+			if (!bObjectiveArrived)
+			{
+				bObjectiveArrived =
+					true;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
+					ship->GetName(),
+					static_cast<int32>(ArrivalType),
+					ArrivalState.Distance,
+					ArrivalState.Speed);
+			}
+		}
 		else
 		{
-			Ship* lead = nullptr;
-
-			if (ship->GetWard())
-			{
-				lead = ship->GetWard();
-			}
-			else if (ship->GetElement())
-			{
-				lead =
-					ship->GetElement()->GetShip(1);
-			}
-
-			if (lead && lead != ship)
-			{
-				const double LeadSpeed =
-					lead->GetVelocity().Size();
-
-				const double ShipSpeed =
-					ship->GetVelocity().Size();
-
-				if (distance > 10000.0)
-				{
-					throttle = 75.0;
-				}
-				else if (distance > 5000.0)
-				{
-					throttle = 50.0;
-				}
-				else if (distance > 1500.0)
-				{
-					throttle = 25.0;
-				}
-				else if (LeadSpeed > 1.0)
-				{
-					throttle = 15.0;
-				}
-				else
-				{
-					throttle = 0.0;
-				}
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[ShipAI::ThrottleControl WINGMAN] Ship='%hs' Lead='%hs' Distance=%.2f LeadSpeed=%.2f ShipSpeed=%.2f Throttle=%.2f"),
-					ship ? ship->GetName() : "NULL",
-					lead ? lead->GetName() : "NULL",
-					distance,
-					LeadSpeed,
-					ShipSpeed,
-					throttle);
-			}
-			else
-			{
-				throttle = 50.0;
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[ShipAI::ThrottleControl WINGMAN NO LEAD] Ship='%hs' Distance=%.2f Throttle=%.2f"),
-					ship ? ship->GetName() : "NULL",
-					distance,
-					throttle);
-			}
+			bObjectiveArrived =
+				false;
 		}
 	}
 
 	//-------------------------------------------------------------
-	// Clamp
+	// Final clamp/apply
 	//-------------------------------------------------------------
 
 	throttle =
@@ -1959,23 +1807,11 @@ ShipAI::ThrottleControl()
 	old_throttle =
 		throttle;
 
-	//-------------------------------------------------------------
-	// Runtime propagation
-	//-------------------------------------------------------------
+	ship->SetThrottle(
+		throttle);
 
-	ship->SetThrottle(throttle);
-	ship->SetThrottleRequest(throttle);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::ThrottleControl] Ship='%hs' Target='%hs' AbsYaw=%.3f AbsPitch=%.3f Throttle=%.2f Request=%.2f Brake=%.2f Vel=%s"),
-		ship ? ship->GetName() : "NULL",
-		target ? target->GetName() : "NULL",
-		AbsYaw,
-		AbsPitch,
-		throttle,
-		ship ? ship->GetThrottleRequest() : 0.0,
-		accumulator.brake,
-		ship ? *ship->GetVelocity().ToString() : TEXT("NULL"));
+	ship->SetThrottleRequest(
+		throttle);
 }
 
 // +--------------------------------------------------------------------+
