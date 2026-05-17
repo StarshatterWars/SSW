@@ -70,13 +70,13 @@ FObjectiveArrivalUtils::MakeSettings(
         break;
 
     case EObjectiveArrivalType::Farcaster:
-        Settings.ArrivalRadius = 6000.0f * SizeScale;
-        Settings.BrakeRadius = 35000.0f * SizeScale;
+        Settings.ArrivalRadius = 600.0f;
+        Settings.BrakeRadius = 8000.0f;
         Settings.StationKeepingRadius = 2500.0f * SizeScale;
         Settings.CompletionRadius = 4000.0f * SizeScale;
         Settings.MaxArrivalSpeed = 75.0f;
         break;
-
+     
     case EObjectiveArrivalType::Patrol:
         Settings.ArrivalRadius = 8000.0f * SizeScale;
         Settings.BrakeRadius = 20000.0f * SizeScale;

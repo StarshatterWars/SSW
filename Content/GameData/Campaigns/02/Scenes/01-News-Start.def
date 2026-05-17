@@ -166,7 +166,7 @@ element: {
    iff:       1
    playable:  false
    region:    "Trellis"
-   loc:       (-180000, -120000, 0)
+   loc:       (-190000, -120000, 0)
 
    navpt:     { cmd: Vector, objective: farcast, speed: 1000, rgn: "Trellis", tgt: "Trellis-Solus" }
 }

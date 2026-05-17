@@ -312,30 +312,30 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 	Element->SetCarrier(ship);
 
 	if (Target) {
-		EInstruction InstructionCode = EInstruction::VECTOR;
+		EInstruction InstructionCode = EInstruction::Vector;
 
 		switch (MissionCode) {
 		case (int)EMissionType::ASSAULT:
-			InstructionCode = EInstruction::ASSAULT;  
+			InstructionCode = EInstruction::Assault;  
 			break;
 
 		case (int)EMissionType::STRIKE:
-			InstructionCode = EInstruction::STRIKE;   
+			InstructionCode = EInstruction::Strike;   
 			break;
 
 		case (int)EMissionType::AIR_INTERCEPT:
 		case (int)EMissionType::INTERCEPT:
-			InstructionCode = EInstruction::INTERCEPT; 
+			InstructionCode = EInstruction::Intercept; 
 			break;
 
 		case (int)EMissionType::ESCORT:
 		case (int)EMissionType::ESCORT_STRIKE:
 		case (int)EMissionType::ESCORT_FREIGHT:
-			InstructionCode = EInstruction::ESCORT; 
+			InstructionCode = EInstruction::Escort; 
 			break;
 
 		case (int)EMissionType::DEFEND:
-			InstructionCode = EInstruction::DEFEND;
+			InstructionCode = EInstruction::Defend;
 			break;
 
 		default:

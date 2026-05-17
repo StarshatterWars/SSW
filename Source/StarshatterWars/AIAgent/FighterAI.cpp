@@ -209,7 +209,7 @@ FighterAI::ExecFrame(double s)
     const EInstruction InstrOrder =
         static_cast<EInstruction>(static_cast<int32>(order));
 
-    if (!target && InstrOrder != EInstruction::STRIKE)
+    if (!target && InstrOrder != EInstruction::Strike)
         ship->SetSensorMode(ESensorMode::STD);
 
     ShipAI::ExecFrame(s); // this must be the last line of this method
@@ -231,11 +231,11 @@ FighterAI::FindObjective()
     // ALWAYS complete initial launch navpt:
     if (!navpt) {
         navpt = ship->GetNextNavPoint();
-        if (navpt && (navpt->GetAction() != EInstruction::LAUNCH || navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE))
+        if (navpt && (navpt->GetAction() != EInstruction::Launch || navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE))
             navpt = 0;
     }
 
-    if (navpt && navpt->GetAction() == EInstruction::LAUNCH) {
+    if (navpt && navpt->GetAction() == EInstruction::Launch) {
         if (navpt->GetStatus() != INSTRUCTION_STATUS::COMPLETE) {
             FindObjectiveNavPoint();
 
@@ -596,7 +596,7 @@ FighterAI::Navigator()
         }
     }
 
-    EInstruction order = EInstruction::VECTOR;
+    EInstruction order = EInstruction::Vector;
 
     if (navpt)
         order = navpt->GetAction();
@@ -1152,7 +1152,7 @@ FighterAI::AvoidTerrain()
     terrain_warning = false;
 
     if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive() ||
-        (navpt && navpt->GetAction() == EInstruction::LAUNCH)) {
+        (navpt && navpt->GetAction() == EInstruction::Launch)) {
         return avoid;
     }
 
@@ -1307,7 +1307,7 @@ FighterAI::SeekTarget()
         return Steer();
     }
 
-    else if (navpt && navpt->GetAction() == EInstruction::LAUNCH) {
+    else if (navpt && navpt->GetAction() == EInstruction::Launch) {
         ship->SetDirectorInfo("Launch");
         return Seek(objective);
     }
@@ -1711,7 +1711,7 @@ FighterAI::FireControl()
         return;
 
     // if the objective is a navpt or landing bay (not a target), then don't shoot!
-    if (inbound || farcaster || (navpt && navpt->GetAction() < EInstruction::DEFEND))
+    if (inbound || farcaster || (navpt && navpt->GetAction() < EInstruction::Defend))
         return;
 
     // object behind us, or too close:

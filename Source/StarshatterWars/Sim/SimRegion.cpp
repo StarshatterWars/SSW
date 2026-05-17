@@ -355,7 +355,7 @@ SimRegion::ResolveTimeSkip(double seconds)
         if (ship->IsStarship())
             space *= 5.0;
 
-        if (navpt && navpt->GetAction() == EInstruction::LAUNCH) {
+        if (navpt && navpt->GetAction() == EInstruction::Launch) {
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
             navpt = ship->GetNextNavPoint();
         }

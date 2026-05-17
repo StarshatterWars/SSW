@@ -57,6 +57,24 @@ protected:
     SimSystem*          SelectSubtarget();
     bool                AssessTargetPointDefense();
 
+protected:
+    void ApplyObjectiveArrivalBraking(
+        const FObjectiveArrivalSettings& ArrivalSettings,
+        const FObjectiveArrivalState& ArrivalState,
+        double& InOutThrottle,
+        double& InOutBrakes);
+
+protected:
+    void DebugThrottleControl(
+        const char* Phase,
+        double ShipSpeed,
+        double InThrottle,
+        double InBrakes,
+        double ObjectiveDistance,
+        double TargetDistance,
+        double BrakeAlpha,
+        double EasedBrakeAlpha) const;
+
     DWORD               sub_select_time = 0;
     DWORD               point_defense_time = 0;
     SimSystem*          subtarget = nullptr;

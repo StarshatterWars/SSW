@@ -237,13 +237,13 @@ bool TacticalAI::CheckObjectives()
 
 			const EInstruction Action = obj->GetAction();
 
-			if (Action != EInstruction::NONE)
+			if (Action != EInstruction::None)
 			{
 				switch (Action)
 				{
-				case EInstruction::INTERCEPT:
-				case EInstruction::STRIKE:
-				case EInstruction::ASSAULT:
+				case EInstruction::Intercept:
+				case EInstruction::Strike:
+				case EInstruction::Assault:
 				{
 					SimObject* tgt = obj->GetTarget();
 
@@ -255,8 +255,8 @@ bool TacticalAI::CheckObjectives()
 				}
 				break;
 
-				case EInstruction::DEFEND:
-				case EInstruction::ESCORT:
+				case EInstruction::Defend:
+				case EInstruction::Escort:
 				{
 					SimObject* tgt = obj->GetTarget();
 
@@ -489,33 +489,33 @@ bool TacticalAI::CheckFlightPlan()
 
 	if (navpt) {
 		switch (navpt->GetAction()) {
-		case EInstruction::LAUNCH:
-		case EInstruction::DOCK:
+		case EInstruction::Launch:
+		case EInstruction::Dock:
 		case EInstruction::RTB:
 			roe = NONE;
 			break;
 
-		case EInstruction::VECTOR:
+		case EInstruction::Vector:
 			roe = SELF_DEFENSIVE;
 			break;
 
-		case EInstruction::DEFEND:
-		case EInstruction::ESCORT:
+		case EInstruction::Defend:
+		case EInstruction::Escort:
 			roe = DEFENSIVE;
 			break;
 
-		case EInstruction::INTERCEPT:
+		case EInstruction::Intercept:
 			roe = DIRECTED;
 			break;
 
-		case EInstruction::RECON:
-		case EInstruction::STRIKE:
-		case EInstruction::ASSAULT:
+		case EInstruction::Recon:
+		case EInstruction::Strike:
+		case EInstruction::Assault:
 			roe = DIRECTED;
 			break;
 
-		case EInstruction::PATROL:
-		case EInstruction::SWEEP:
+		case EInstruction::Patrol:
+		case EInstruction::Sweep:
 			roe = FLEXIBLE;
 			break;
 

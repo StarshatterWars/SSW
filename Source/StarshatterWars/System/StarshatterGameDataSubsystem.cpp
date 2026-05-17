@@ -191,40 +191,40 @@ static FString NormalizeWeaponGroupLabel(const FShipWeapon& W)
 	return TEXT("UNKNOWN");
 }
 
-static EInstructionAction
+static EInstruction
 ParseInstructionAction(const FString& InValue)
 {
 	const FString Value =
 		InValue.TrimStartAndEnd().ToLower();
 
 	if (Value == TEXT("target"))
-		return EInstructionAction::Target;
+		return EInstruction	::Target;
 
 	if (Value == TEXT("approach"))
-		return EInstructionAction::Approach;
+		return EInstruction::Approach;
 
 	if (Value == TEXT("stopat"))
-		return EInstructionAction::StopAt;
+		return EInstruction::StopAt;
 
 	if (Value == TEXT("dock"))
-		return EInstructionAction::Dock;
+		return EInstruction::Dock;
 
 	if (Value == TEXT("farcast"))
-		return EInstructionAction::Farcast;
+		return EInstruction::Farcast;
 
 	if (Value == TEXT("hold"))
-		return EInstructionAction::Hold;
+		return EInstruction::Hold;
 
 	if (Value == TEXT("escort"))
-		return EInstructionAction::Escort;
+		return EInstruction::Escort;
 
 	if (Value == TEXT("patrol"))
-		return EInstructionAction::Patrol;
+		return EInstruction::Patrol;
 
 	if (Value == TEXT("defend"))
-		return EInstructionAction::Defend;
+		return EInstruction::Defend;
 
-	return EInstructionAction::None;
+	return EInstruction::None;
 }
 
 void UStarshatterGameDataSubsystem::Tick(float DeltaTime)
@@ -3272,7 +3272,7 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 			if (Farcast != 0)
 			{
 				OutInstr.Action =
-					EInstructionAction::Farcast;
+					EInstruction::Farcast;
 			}
 		}
 		else if (Key == "tgt")
@@ -3303,7 +3303,7 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 				if (Hold != 0)
 				{
 					OutInstr.Action =
-						EInstructionAction::Hold;
+						EInstruction::Hold;
 				}
 			}
 		}
@@ -3317,11 +3317,11 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 	 */
 
 	if (OutInstr.Action ==
-		EInstructionAction::None &&
+		EInstruction::None &&
 		!OutInstr.ObjectiveName.IsEmpty())
 	{
 		OutInstr.Action =
-			EInstructionAction::Target;
+			EInstruction::Target;
 	}
 
 	/*
@@ -3330,11 +3330,11 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 	 */
 
 	if (OutInstr.Action ==
-		EInstructionAction::None &&
+		EInstruction::None &&
 		!OutInstr.ObjectiveLocation.IsNearlyZero())
 	{
 		OutInstr.Action =
-			EInstructionAction::Approach;
+			EInstruction::Approach;
 	}
 
 	OutInstr.RLoc =

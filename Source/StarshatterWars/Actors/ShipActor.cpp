@@ -344,8 +344,6 @@ AShipActor::Tick(float DeltaTime)
         UpdateMainEnginesFromRuntime(DeltaTime);
         UpdateEngineAudioFromRuntime(DeltaTime);
         UpdateThrusterVFXFromRuntime();
-
-        DebugFireAllThrusters(1.0f);
         return;
     }
 }
@@ -2319,7 +2317,8 @@ void AShipActor::ClearRuntimeThrusters()
     RuntimeThrusterFX.Empty();
 }
 
-void AShipActor::UpdateThrusterVFXFromRuntime()
+void
+AShipActor::UpdateThrusterVFXFromRuntime()
 {
     if (!RuntimeShip)
     {
@@ -2372,18 +2371,45 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         const float Burn =
             FMath::Clamp(
-                RuntimeThruster->GetThrusterBurn(RuntimePortIndex),
+                RuntimeThruster->GetThrusterBurn(
+                    RuntimePortIndex),
                 0.0f,
                 1.0f);
 
         const bool bMainEngine =
-            RuntimePort->Direction == EThrusterPortDir::AFT;
+            RuntimePort->Direction ==
+            EThrusterPortDir::AFT;
+
+        //-------------------------------------------------------------
+        // Arrival retro braking
+        //-------------------------------------------------------------
+
+        const bool bArrivalRetroBurn =
+            RuntimeShip &&
+            RuntimeShip->GetThrottleRequest() <= 0.0 &&
+            RuntimeShip->GetVelocity().Size() > 25.0;
 
         const uint32 DirectionBit =
-            1u << static_cast<uint32>(RuntimePort->Direction);
+            1u <<
+            static_cast<uint32>(
+                RuntimePort->Direction);
 
-        const bool bDirectDirectionalBurn =
-            (static_cast<uint32>(RuntimePort->Fire) & DirectionBit) != 0;
+        bool bDirectDirectionalBurn =
+            (static_cast<uint32>(
+                RuntimePort->Fire) &
+                DirectionBit) != 0;
+
+        //-------------------------------------------------------------
+        // Arrival braking:
+        // force retros only while coasting to stop.
+        //-------------------------------------------------------------
+
+        if (bArrivalRetroBurn)
+        {
+            bDirectDirectionalBurn =
+                RuntimePort->Direction ==
+                EThrusterPortDir::FORE;
+        }
 
         const float VisualBurn =
             bDirectDirectionalBurn
@@ -2391,15 +2417,21 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             : Burn * 0.25f;
 
         const float DeadZone =
-            bMainEngine ? 0.05f : 0.30f;
+            bMainEngine
+            ? 0.05f
+            : 0.30f;
 
         const float VisualBurnFiltered =
             VisualBurn <= DeadZone
             ? 0.0f
             : FMath::Pow(
                 FMath::GetMappedRangeValueClamped(
-                    FVector2D(DeadZone, 1.0f),
-                    FVector2D(0.0f, 1.0f),
+                    FVector2D(
+                        DeadZone,
+                        1.0f),
+                    FVector2D(
+                        0.0f,
+                        1.0f),
                     VisualBurn),
                 2.5f);
 
@@ -2411,12 +2443,16 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             ? FX->PortScale
             : 1.0f;
 
-        FVector RuntimeScale = FVector::ZeroVector;
+        FVector RuntimeScale =
+            FVector::ZeroVector;
 
         if (bActive)
         {
-            float Length = 0.0f;
-            float Width = 0.0f;
+            float Length =
+                0.0f;
+
+            float Width =
+                0.0f;
 
             if (bMainEngine)
             {
@@ -2451,14 +2487,22 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
                 FVector(
                     Length,
                     Width,
-                    Width) * FinalPortScale;
+                    Width) *
+                FinalPortScale;
         }
 
         if (FX->Flare)
         {
-            FX->Flare->SetRelativeScale3D(RuntimeScale);
-            FX->Flare->SetVisibility(bActive, true);
-            FX->Flare->SetHiddenInGame(!bActive, true);
+            FX->Flare->SetRelativeScale3D(
+                RuntimeScale);
+
+            FX->Flare->SetVisibility(
+                bActive,
+                true);
+
+            FX->Flare->SetHiddenInGame(
+                !bActive,
+                true);
 
             FX->Flare->SetFloatParameter(
                 TEXT("Burn"),
@@ -2476,7 +2520,8 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             {
                 if (!FX->Flare->IsActive())
                 {
-                    FX->Flare->Activate(true);
+                    FX->Flare->Activate(
+                        true);
                 }
             }
             else
@@ -2487,9 +2532,16 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         if (FX->Trail)
         {
-            FX->Trail->SetRelativeScale3D(RuntimeScale);
-            FX->Trail->SetVisibility(bActive, true);
-            FX->Trail->SetHiddenInGame(!bActive, true);
+            FX->Trail->SetRelativeScale3D(
+                RuntimeScale);
+
+            FX->Trail->SetVisibility(
+                bActive,
+                true);
+
+            FX->Trail->SetHiddenInGame(
+                !bActive,
+                true);
 
             FX->Trail->SetFloatParameter(
                 TEXT("Burn"),
@@ -2507,7 +2559,8 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             {
                 if (!FX->Trail->IsActive())
                 {
-                    FX->Trail->Activate(true);
+                    FX->Trail->Activate(
+                        true);
                 }
             }
             else

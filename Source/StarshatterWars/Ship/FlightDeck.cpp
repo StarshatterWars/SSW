@@ -599,7 +599,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			FVector departure = end_point;
 
 			Instruction* launch_point =
-				new Instruction(carrier->GetRegion(), departure, EInstruction::LAUNCH);
+				new Instruction(carrier->GetRegion(), departure, EInstruction::Launch);
 			launch_point->SetSpeed(350);
 
 			slot_ship->SetLaunchPoint(launch_point);

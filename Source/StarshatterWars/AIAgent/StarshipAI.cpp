@@ -181,7 +181,7 @@ StarshipAI::FindObjective()
 
         if (navpt &&
             navpt->GetAction() ==
-            EInstruction::LAUNCH)
+            EInstruction::Launch)
         {
             FindObjectiveNavPoint();
         }
@@ -601,7 +601,6 @@ StarshipAI::HelmControl()
 }
 
 // +----------------------------------------------------------------------+
-
 void
 StarshipAI::ThrottleControl()
 {
@@ -610,19 +609,11 @@ StarshipAI::ThrottleControl()
         return;
     }
 
-    //-------------------------------------------------------------
-    // Dead hulk
-    //-------------------------------------------------------------
-
     if (ship->Design() &&
         ship->Design()->auto_roll < 0)
     {
         return;
     }
-
-    //-------------------------------------------------------------
-    // Station keeping
-    //-------------------------------------------------------------
 
     if (distance < 0.0)
     {
@@ -638,17 +629,8 @@ StarshipAI::ThrottleControl()
         ship->SetThrottleRequest(
             0.0);
 
-        if (ship->GetFLCS())
-        {
-            ship->GetFLCS()->FullStop();
-        }
-
         return;
     }
-
-    //-------------------------------------------------------------
-    // Normal throttle processing
-    //-------------------------------------------------------------
 
     const FVector ShipVelocity =
         ship->GetVelocity();
@@ -671,14 +653,15 @@ StarshipAI::ThrottleControl()
         nullptr;
 
     if (threat &&
-        threat->GetClassification() >= ship->GetClassification())
+        threat->GetClassification() >=
+        ship->GetClassification())
     {
         StrongThreat =
             threat;
     }
 
     //-------------------------------------------------------------
-    // Target pursuit or retreat
+    // Combat / target pursuit
     //-------------------------------------------------------------
 
     if (target ||
@@ -719,16 +702,10 @@ StarshipAI::ThrottleControl()
 
         throttle *=
             (1.0 - accumulator.brake);
-
-        if (throttle < 1.0 &&
-            ship->GetFLCS())
-        {
-            ship->GetFLCS()->FullStop();
-        }
     }
 
     //-------------------------------------------------------------
-    // Escort: match speed of ward
+    // Formation / ward following
     //-------------------------------------------------------------
 
     else if (Ward)
@@ -779,7 +756,7 @@ StarshipAI::ThrottleControl()
     }
 
     //-------------------------------------------------------------
-    // Patrol / farcaster
+    // Patrol / farcaster transit
     //-------------------------------------------------------------
 
     else if (patrol ||
@@ -787,24 +764,10 @@ StarshipAI::ThrottleControl()
     {
         throttle =
             100.0;
-
-        if (distance < 10.0 * ship_speed)
-        {
-            if (ship->GetVelocity().Size() > 200.0)
-            {
-                throttle =
-                    5.0;
-            }
-            else
-            {
-                throttle =
-                    50.0;
-            }
-        }
     }
 
     //-------------------------------------------------------------
-    // Lead ship navpoint speed
+    // Navpoint speed control
     //-------------------------------------------------------------
 
     else if (navpt)
@@ -852,7 +815,7 @@ StarshipAI::ThrottleControl()
     }
 
     //-------------------------------------------------------------
-    // Wingman
+    // Formation element following
     //-------------------------------------------------------------
 
     else if (element_index > 1)
@@ -873,22 +836,9 @@ StarshipAI::ThrottleControl()
             const double dv =
                 lv - sv;
 
-            double dt =
-                0.0;
-
-            if (dv > 0.0)
-            {
-                dt =
-                    dv * 1e-2 * seconds;
-            }
-            else if (dv < 0.0)
-            {
-                dt =
-                    dv * 1e-2 * seconds;
-            }
-
             throttle =
-                old_throttle + dt;
+                old_throttle +
+                dv * 1e-2 * seconds;
         }
         else
         {
@@ -896,6 +846,11 @@ StarshipAI::ThrottleControl()
                 0.0;
         }
     }
+
+    //-------------------------------------------------------------
+    // Idle
+    //-------------------------------------------------------------
+
     else
     {
         throttle =
@@ -903,7 +858,7 @@ StarshipAI::ThrottleControl()
     }
 
     //-------------------------------------------------------------
-    // Objective arrival braking / station keeping
+    // Objective arrival braking
     //-------------------------------------------------------------
 
     if (navpt ||
@@ -925,20 +880,16 @@ StarshipAI::ThrottleControl()
                 obj_w,
                 ArrivalSettings);
 
-        if (ArrivalState.bInsideBrakeRadius)
-        {
-            throttle *=
-                ArrivalState.DesiredThrottleScale;
+        ApplyObjectiveArrivalBraking(
+            ArrivalSettings,
+            ArrivalState,
+            throttle,
+            brakes);
 
-            if (ArrivalState.bInsideArrivalRadius)
-            {
-                throttle =
-                    0.0;
-
-                brakes =
-                    1.0;
-            }
-        }
+        //---------------------------------------------------------
+        // React only.
+        // ShipAI owns bObjectiveArrived.
+        //---------------------------------------------------------
 
         if (ArrivalState.bComplete)
         {
@@ -947,34 +898,11 @@ StarshipAI::ThrottleControl()
 
             brakes =
                 1.0;
-
-            if (ship->GetFLCS())
-            {
-                ship->GetFLCS()->FullStop();
-            }
-
-            if (!bObjectiveArrived)
-            {
-                bObjectiveArrived =
-                    true;
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
-                    ship->GetName(),
-                    static_cast<int32>(ArrivalType),
-                    ArrivalState.Distance,
-                    ArrivalState.Speed);
-            }
-        }
-        else
-        {
-            bObjectiveArrived =
-                false;
         }
     }
 
     //-------------------------------------------------------------
-    // Final throttle clamp and apply
+    // Final clamp
     //-------------------------------------------------------------
 
     throttle =
@@ -992,6 +920,10 @@ StarshipAI::ThrottleControl()
     ship->SetThrottleRequest(
         throttle);
 
+    //-------------------------------------------------------------
+    // FLCS braking
+    //-------------------------------------------------------------
+
     if (ship_speed > 1.0 &&
         brakes > 0.0 &&
         ship->Design())
@@ -1000,28 +932,124 @@ StarshipAI::ThrottleControl()
             -brakes *
             ship->Design()->trans_y);
     }
-    else if (throttle > 10.0 &&
-        ship->Design() &&
-        (ship->GetEMCON() < 2 ||
-            ship->GetFuelLevel() < 10.0))
+    else
     {
         ship->SetTransY(
-            ship->Design()->trans_y);
+            0.0);
     }
 
-    if (ship &&
-        !_stricmp(ship->GetName(), "Blockade Runner"))
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[StarshipAI::ThrottleControl BR] ")
-            TEXT("Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Brakes=%.2f"),
-            distance,
-            ship_speed,
-            throttle,
-            brakes);
-    }
+    //-------------------------------------------------------------
+    // Debug
+    //-------------------------------------------------------------
+
+    const double TargetDistance =
+        target
+        ? (target->GetLocation() -
+            ship->GetLocation()).Size()
+        : -1.0;
+
+    DebugThrottleControl(
+        "FINAL",
+        ship_speed,
+        throttle,
+        brakes,
+        distance,
+        TargetDistance,
+        -1.0,
+        -1.0);
 }
 
+void
+StarshipAI::ApplyObjectiveArrivalBraking(
+    const FObjectiveArrivalSettings& ArrivalSettings,
+    const FObjectiveArrivalState& ArrivalState,
+    double& InOutThrottle,
+    double& InOutBrakes)
+{
+    if (!ship)
+    {
+        return;
+    }
+
+    const double Distance =
+        ArrivalState.Distance;
+
+    const double BrakeRadius =
+        ArrivalSettings.BrakeRadius;
+
+    if (BrakeRadius <= 0.0)
+    {
+        return;
+    }
+
+    if (Distance < BrakeRadius)
+    {
+        const double BrakeAlpha =
+            FMath::Clamp(
+                1.0 - (Distance / ArrivalSettings.BrakeRadius),
+                0.0,
+                1.0);
+
+        const double EasedBrakeAlpha =
+            1.0 -
+            FMath::Pow(
+                1.0 - BrakeAlpha,
+                5.0);
+
+        const double ArrivalBrake =
+            FMath::Lerp(
+                0.55,
+                1.0,
+                EasedBrakeAlpha);
+
+        InOutBrakes =
+            FMath::Max(
+                InOutBrakes,
+                ArrivalBrake);
+
+        if (EasedBrakeAlpha > 0.85)
+        {
+            InOutThrottle =
+                0.0;
+        }
+        else
+        {
+            const double ThrottleScale =
+                FMath::Lerp(
+                    1.0,
+                    0.15,
+                    EasedBrakeAlpha);
+
+            InOutThrottle *=
+                ThrottleScale;
+        }
+
+        const double TargetDistance =
+            target
+            ? (target->GetLocation() -
+                ship->GetLocation()).Size()
+            : -1.0;
+
+        DebugThrottleControl(
+            "ARRIVAL_BRAKE",
+            ship->GetVelocity().Size(),
+            InOutThrottle,
+            InOutBrakes,
+            Distance,
+            TargetDistance,
+            BrakeAlpha,
+            EasedBrakeAlpha);
+    }
+
+    if (Distance <= ArrivalSettings.ArrivalRadius)
+    {
+        InOutThrottle =
+            0.0;
+
+        InOutBrakes =
+            1.0;
+    }
+}
 // +----------------------------------------------------------------------+
 
 Steer
@@ -1049,7 +1077,7 @@ StarshipAI::SeekTarget()
     }
 
     //-------------------------------------------------------------
-    // FARCSTER / QUANTUM navpoint processing
+    // FARCASTER / QUANTUM navpoint processing
     //-------------------------------------------------------------
 
     if (navpt)
@@ -1073,13 +1101,16 @@ StarshipAI::SeekTarget()
                 nav_rgn);
         }
 
+        const bool bFarcasterNav =
+            navpt->GetFarcast() != 0;
+
         const bool use_farcaster =
-            self_rgn != nav_rgn &&
-            (navpt->GetFarcast() ||
-                !qdrive ||
-                !qdrive->IsPowerOn() ||
-                qdrive->GetStatus() <
-                SYSTEM_STATUS::DEGRADED);
+            bFarcasterNav ||
+            (self_rgn != nav_rgn &&
+                (!qdrive ||
+                    !qdrive->IsPowerOn() ||
+                    qdrive->GetStatus() <
+                    SYSTEM_STATUS::DEGRADED));
 
         if (use_farcaster)
         {
@@ -1103,24 +1134,32 @@ StarshipAI::SeekTarget()
                     Farcaster* FC =
                         Candidate->GetFarcaster();
 
-                    if (FC)
+                    if (!FC)
                     {
-                        const Ship* Dest =
-                            FC->GetDest();
+                        continue;
+                    }
 
-                        if (Dest &&
-                            Dest->GetRegion() == nav_rgn)
-                        {
-                            farcaster =
-                                FC;
-                        }
+                    const Ship* Dest =
+                        FC->GetDest();
+
+                    if (bFarcasterNav)
+                    {
+                        farcaster =
+                            FC;
+                    }
+                    else if (Dest &&
+                        Dest->GetRegion() == nav_rgn)
+                    {
+                        farcaster =
+                            FC;
                     }
                 }
             }
 
             if (farcaster)
             {
-                if (farcaster->GetShip() &&
+                if (!bFarcasterNav &&
+                    farcaster->GetShip() &&
                     farcaster->GetShip()->GetRegion() != self_rgn &&
                     farcaster->GetDest())
                 {
@@ -1144,17 +1183,15 @@ StarshipAI::SeekTarget()
             QuantumDrive* Q =
                 ship->GetQuantumDrive();
 
-            if (Q)
+            if (Q &&
+                Q->ActiveState() ==
+                QuantumDrive::ACTIVE_READY)
             {
-                if (Q->ActiveState() ==
-                    QuantumDrive::ACTIVE_READY)
-                {
-                    Q->SetDestination(
-                        navpt->GetRegion(),
-                        navpt->GetLocation());
+                Q->SetDestination(
+                    navpt->GetRegion(),
+                    navpt->GetLocation());
 
-                    Q->Engage();
-                }
+                Q->Engage();
             }
         }
     }
@@ -1711,4 +1748,47 @@ StarshipAI::Avoid(
     }
 
     return Result;
+}
+
+void
+StarshipAI::DebugThrottleControl(
+    const char* Phase,
+    double ShipSpeed,
+    double InThrottle,
+    double InBrakes,
+    double ObjectiveDistance,
+    double TargetDistance,
+    double BrakeAlpha,
+    double EasedBrakeAlpha) const
+{
+    if (!ship)
+    {
+        return;
+    }
+
+    if (_stricmp(ship->GetName(), "Blockade Runner"))
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[StarshipAI::ThrottleControl BR] ")
+        TEXT("Phase='%hs' ")
+        TEXT("ObjDist=%.2f ")
+        TEXT("TargetDist=%.2f ")
+        TEXT("Target='%hs' ")
+        TEXT("ShipSpeed=%.2f ")
+        TEXT("Throttle=%.2f ")
+        TEXT("Brakes=%.2f ")
+        TEXT("BrakeAlpha=%.3f ")
+        TEXT("EasedBrakeAlpha=%.3f"),
+        Phase ? Phase : "NULL",
+        ObjectiveDistance,
+        TargetDistance,
+        target ? target->GetName() : "NULL",
+        ShipSpeed,
+        InThrottle,
+        InBrakes,
+        BrakeAlpha,
+        EasedBrakeAlpha);
 }

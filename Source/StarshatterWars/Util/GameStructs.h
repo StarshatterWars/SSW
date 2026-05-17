@@ -305,13 +305,35 @@ enum class EIntel : uint8 {
 UENUM(BlueprintType)
 enum class EObjectiveArrivalType : uint8
 {
-	Dock       UMETA(DisplayName = "Dock"),
-	Farcaster  UMETA(DisplayName = "Farcaster"),
-	Patrol     UMETA(DisplayName = "Patrol"),
-	Formation  UMETA(DisplayName = "Formation"),
-	Generic    UMETA(DisplayName = "Generic")
-};
+	None        UMETA(DisplayName = "None"),
 
+	//-------------------------------------------------------------
+	// Combat pursuit/intercept
+	//-------------------------------------------------------------
+
+	Target      UMETA(DisplayName = "Target"),
+
+	//-------------------------------------------------------------
+	// Standard waypoint/vector arrival
+	//-------------------------------------------------------------
+
+	Navpoint    UMETA(DisplayName = "Navpoint"),
+
+	//-------------------------------------------------------------
+	// Specialized navigation behaviors
+	//-------------------------------------------------------------
+
+	Dock        UMETA(DisplayName = "Dock"),
+	Farcaster   UMETA(DisplayName = "Farcaster"),
+	Patrol      UMETA(DisplayName = "Patrol"),
+	Formation   UMETA(DisplayName = "Formation"),
+
+	//-------------------------------------------------------------
+	// Fallback generic movement
+	//-------------------------------------------------------------
+
+	Generic     UMETA(DisplayName = "Generic")
+};
 /*
 ========================================================================
 OBJECTIVE ARRIVAL SETTINGS
@@ -774,28 +796,53 @@ enum class LIGHTTYPE : uint32
 	LIGHT_FORCE_DWORD = 0x7fffffff
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EInstruction : uint8
 {
-	NONE		UMETA(DisplayName = "None"), 
-	VECTOR		UMETA(DisplayName = "Vector"),
-	LAUNCH		UMETA(DisplayName = "Launch"),
-	DOCK		UMETA(DisplayName = "Dock"),
-	RTB			UMETA(DisplayName = "Return to Base"),
+	None        UMETA(DisplayName = "None"),
 
-	DEFEND		UMETA(DisplayName = "Defend"),
-	ESCORT		UMETA(DisplayName = "Escort"),
-	PATROL		UMETA(DisplayName = "Patrol"),
-	SWEEP		UMETA(DisplayName = "Sweep"),
-	INTERCEPT	UMETA(DisplayName = "Intercept"),
-	STRIKE		UMETA(DisplayName = "Strike"),     // ground attack
-	ASSAULT		UMETA(DisplayName = "Assault"),    // starship attack
-	RECON		UMETA(DisplayName = "Recon"),
+	//-------------------------------------------------------------
+	// Navigation / movement
+	//-------------------------------------------------------------
 
-	RECALL		UMETA(DisplayName = "Recall"),
-	DEPLOY		UMETA(DisplayName = "Deploy"),
+	Vector      UMETA(DisplayName = "Vector"),
+	Approach    UMETA(DisplayName = "Approach"),
+	StopAt      UMETA(DisplayName = "Stop At"),
+	Hold        UMETA(DisplayName = "Hold"),
 
-	NUM_ACTIONS
+	Launch      UMETA(DisplayName = "Launch"),
+	Dock        UMETA(DisplayName = "Dock"),
+	RTB         UMETA(DisplayName = "Return To Base"),
+
+	//-------------------------------------------------------------
+	// Strategic movement
+	//-------------------------------------------------------------
+
+	Farcast     UMETA(DisplayName = "Farcast"),
+	Quantum     UMETA(DisplayName = "Quantum"),
+	Patrol      UMETA(DisplayName = "Patrol"),
+	Escort      UMETA(DisplayName = "Escort"),
+	Defend      UMETA(DisplayName = "Defend"),
+
+	//-------------------------------------------------------------
+	// Combat
+	//-------------------------------------------------------------
+
+	Target      UMETA(DisplayName = "Target"),
+	Sweep       UMETA(DisplayName = "Sweep"),
+	Intercept   UMETA(DisplayName = "Intercept"),
+	Strike      UMETA(DisplayName = "Strike"),
+	Assault     UMETA(DisplayName = "Assault"),
+	Recon       UMETA(DisplayName = "Recon"),
+
+	//-------------------------------------------------------------
+	// Logistics
+	//-------------------------------------------------------------
+
+	Recall      UMETA(DisplayName = "Recall"),
+	Deploy      UMETA(DisplayName = "Deploy"),
+
+	NumActions
 };
 
 UENUM()
@@ -858,13 +905,13 @@ enum class WeaponsSweep : uint8
 };
 
 UENUM()
-enum class RadioMessageAction : uint8 
+enum class RadioMessageAction : uint8
 {
 	NONE = 0,
 
-	DOCK_WITH = EInstruction::DOCK,
-	RTB = EInstruction::RTB,
-	QUANTUM_TO = EInstruction::NUM_ACTIONS,
+	DOCK_WITH,
+	RTB,
+	QUANTUM_TO,
 	FARCAST_TO,
 
 	// protocol:
@@ -881,7 +928,7 @@ enum class RadioMessageAction : uint8
 	COVER_ME,
 	WEP_FREE,
 	WEP_HOLD,
-	FORM_UP,       // alias for wep_hold
+	FORM_UP,
 	SAY_POSITION,
 
 	// sensor mgt:
@@ -910,9 +957,9 @@ enum class RadioMessageAction : uint8
 	SPLASH_2,
 	SPLASH_3,
 	SPLASH_4,
-	SPLASH_5,   // target destroyed
-	SPLASH_6,   // enemy destroyed
-	SPLASH_7,   // confirmed kill
+	SPLASH_5,
+	SPLASH_6,
+	SPLASH_7,
 	DISTRESS,
 	BREAK_ORBIT,
 	MAKE_ORBIT,
@@ -936,22 +983,6 @@ enum class RadioMessageAction : uint8
 	CALL_WAVE_OFF,
 
 	NUM_ACTIONS
-};
-
-UENUM()
-enum class TacticalViewMenu : uint32 {
-	FORWARD = 1000,
-	CHASE,
-	PADLOCK,
-	ORBIT,
-	NAV,
-	WEP,
-	ENG,
-	FLT,
-	INS,
-	CMD, 
-	QUANTUM = 2000,
-	FARCAST = 2001
 };
 
 UENUM()
@@ -2273,7 +2304,7 @@ struct FS_MissionInstruction : public FTableRowBase
 	FString ObjectiveDesc;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EInstructionAction Action;
+	EInstruction Action;
 
 	/*
 	 * Resolved runtime world-space objective
@@ -2312,7 +2343,7 @@ struct FS_MissionInstruction : public FTableRowBase
 		ObjectiveDesc = "";
 
 		Action =
-			EInstructionAction::None;
+			EInstruction::None;
 	}
 };
 

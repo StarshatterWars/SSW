@@ -330,7 +330,7 @@ void MapView::BuildMenu()
 
 		const UEnum* ActionEnum = StaticEnum<EInstruction>();
 
-		for (int i = 0; i < (int)EInstruction::NUM_ACTIONS; i++)
+		for (int i = 0; i < (int)EInstruction::NumActions; i++)
 		{
 			const EInstruction Act = (EInstruction)i;
 
@@ -487,7 +487,7 @@ void MapView::ProcessMenuItem(int action)
 
 	const int raw = action - MAP_ACTION;
 
-	if (raw >= 0 && raw < (int)EInstruction::NUM_ACTIONS) {
+	if (raw >= 0 && raw < (int)EInstruction::NumActions) {
 		current_navpt->SetAction(
 			static_cast<EInstruction>(raw)
 		);
@@ -721,36 +721,36 @@ void MapView::SelectNavpt(Instruction* navpt)
 		objective_menu->ClearItems();
 
 		switch (current_navpt->GetAction()) {
-		case EInstruction::VECTOR:
-		case EInstruction::LAUNCH:
-		case EInstruction::PATROL:
-		case EInstruction::SWEEP:
-		case EInstruction::RECON:
+		case EInstruction::Vector:
+		case EInstruction::Launch:
+		case EInstruction::Patrol:
+		case EInstruction::Sweep:
+		case EInstruction::Recon:
 			objective_menu->AddItem("NOT AVAILABLE", 0);
 			objective_menu->GetItem(0)->SetEnabled(false);
 			break;
 
-		case EInstruction::DOCK:
+		case EInstruction::Dock:
 			FindShips(true, true, true, false, ships);
 			break;
 
-		case EInstruction::DEFEND:
+		case EInstruction::Defend:
 			FindShips(true, true, true, false, ships);
 			break;
 
-		case EInstruction::ESCORT:
+		case EInstruction::Escort:
 			FindShips(true, false, true, true, ships);
 			break;
 
-		case EInstruction::INTERCEPT:
+		case EInstruction::Intercept:
 			FindShips(false, false, false, true, ships);
 			break;
 
-		case EInstruction::ASSAULT:
+		case EInstruction::Assault:
 			FindShips(false, false, true, false, ships);
 			break;
 
-		case EInstruction::STRIKE:
+		case EInstruction::Strike:
 			FindShips(false, true, false, false, ships);
 			break;
 		}
