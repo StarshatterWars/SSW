@@ -44,9 +44,9 @@ public:
 		BONUS
 	};
 
-	Instruction(INSTRUCTION_ACTION action, const char* tgt);
-	Instruction(const char* rgn, FVector loc, INSTRUCTION_ACTION act = INSTRUCTION_ACTION::VECTOR);
-	Instruction(SimRegion* rgn, FVector loc, INSTRUCTION_ACTION act = INSTRUCTION_ACTION::VECTOR);
+	Instruction(EInstruction action, const char* tgt);
+	Instruction(const char* rgn, FVector loc, EInstruction act = EInstruction::VECTOR);
+	Instruction(SimRegion* rgn, FVector loc, EInstruction act = EInstruction::VECTOR);
 	Instruction(const Instruction& instr);
 	virtual ~Instruction();
 
@@ -54,7 +54,7 @@ public:
 	static const char* ActionName(int ActionIndex);
 
 	// accessors:
-	static const char* ActionName(INSTRUCTION_ACTION a);
+	static const char* ActionName(EInstruction a);
 
 	static const char* StatusName(INSTRUCTION_STATUS s);
 	static const char* FormationName(INSTRUCTION_FORMATION f);
@@ -65,7 +65,7 @@ public:
 	FVector			GetLocation()    const;
 	RLoc&			GetRLoc() { return rloc; }
 
-	INSTRUCTION_ACTION          GetAction()      const { return action; }
+	EInstruction          GetAction()      const { return action; }
 	INSTRUCTION_STATUS			GetStatus()      const { return status; }
 	INSTRUCTION_FORMATION       GetFormation()   const { return formation; }
 
@@ -89,7 +89,7 @@ public:
 	// mutators:
 	void         SetRegion(SimRegion* r) { region = r; }
 	void         SetLocation(const FVector& l);
-	void         SetAction(INSTRUCTION_ACTION s) { action = s; }
+	void         SetAction(EInstruction s) { action = s; }
 	void         SetStatus(INSTRUCTION_STATUS s);
 	void         SetFormation(INSTRUCTION_FORMATION s) { formation = s; }
 
@@ -114,7 +114,7 @@ protected:
 	Text       rgn_name;
 	SimRegion* region;
 	RLoc       rloc;
-	INSTRUCTION_ACTION		action;
+	EInstruction		action;
 	INSTRUCTION_FORMATION	formation;
 	INSTRUCTION_STATUS      status;
 

@@ -245,34 +245,34 @@ bool Mission::LoadMissionCommon(
 
 		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
 		{
-			INSTRUCTION_ACTION LegacyAction =
-				INSTRUCTION_ACTION::VECTOR;
+			EInstruction LegacyAction =
+				EInstruction::VECTOR;
 
 			switch (SrcNav.Action)
 			{
 			case EInstructionAction::Dock:
 				LegacyAction =
-					INSTRUCTION_ACTION::DOCK;
+					EInstruction::DOCK;
 				break;
 
 			case EInstructionAction::Escort:
 				LegacyAction =
-					INSTRUCTION_ACTION::ESCORT;
+					EInstruction::ESCORT;
 				break;
 
 			case EInstructionAction::Patrol:
 				LegacyAction =
-					INSTRUCTION_ACTION::PATROL;
+					EInstruction::PATROL;
 				break;
 
 			case EInstructionAction::Defend:
 				LegacyAction =
-					INSTRUCTION_ACTION::DEFEND;
+					EInstruction::DEFEND;
 				break;
 
 			case EInstructionAction::Target:
 				LegacyAction =
-					INSTRUCTION_ACTION::ASSAULT;
+					EInstruction::ASSAULT;
 				break;
 
 			case EInstructionAction::Farcast:
@@ -281,7 +281,7 @@ bool Mission::LoadMissionCommon(
 			case EInstructionAction::Hold:
 			default:
 				LegacyAction =
-					INSTRUCTION_ACTION::VECTOR;
+					EInstruction::VECTOR;
 				break;
 			}
 
@@ -1527,7 +1527,7 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 Instruction*
 Mission::ParseInstruction(TermStruct* val, MissionElement* element)
 {
-	INSTRUCTION_ACTION order = INSTRUCTION_ACTION::VECTOR;
+	EInstruction order = EInstruction::VECTOR;
 	INSTRUCTION_STATUS status = INSTRUCTION_STATUS::PENDING;
 	INSTRUCTION_FORMATION formation = INSTRUCTION_FORMATION::NONE;
 	
@@ -1555,9 +1555,9 @@ Mission::ParseInstruction(TermStruct* val, MissionElement* element)
 			if (defname == "cmd") {
 				GetDefText(order_name, pdef, filename);
 
-				for (int cmd = 0; cmd < (int) INSTRUCTION_ACTION::NUM_ACTIONS; cmd++) {
-					const INSTRUCTION_ACTION Action =
-						static_cast<INSTRUCTION_ACTION>(cmd);
+				for (int cmd = 0; cmd < (int) EInstruction::NUM_ACTIONS; cmd++) {
+					const EInstruction Action =
+						static_cast<EInstruction>(cmd);
 
 					if (!_stricmp(order_name, Instruction::ActionName(Action))) {
 						order = Action;

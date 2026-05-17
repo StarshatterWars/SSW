@@ -354,7 +354,7 @@ void UMissionElementDlg::RebuildFromModel()
         if (ElemPtr->GetObjectives().size() > 0)
             Instr = ElemPtr->GetObjectives().at(0);
 
-        const UEnum* Enum = StaticEnum<INSTRUCTION_ACTION>();
+        const UEnum* Enum = StaticEnum<EInstruction>();
         if (!Enum || !ObjectiveCombo)
         {
             return;
@@ -547,7 +547,7 @@ void UMissionElementDlg::BuildObjectiveTargets()
 
     if (!ObjSel.IsEmpty())
     {
-        const UEnum* Enum = StaticEnum<INSTRUCTION_ACTION>();
+        const UEnum* Enum = StaticEnum<EInstruction>();
         if (Enum)
         {
             // Convert DisplayName back to enum value
@@ -571,7 +571,7 @@ void UMissionElementDlg::BuildObjectiveTargets()
 
             bool bAdd = false;
 
-            if (ObjId < (int) INSTRUCTION_ACTION::PATROL)
+            if (ObjId < (int) EInstruction::PATROL)
                 bAdd = (E->GetIFF() == 0) || (E->GetIFF() == ElemPtr->GetIFF());
             else
                 bAdd = (E->GetIFF() != ElemPtr->GetIFF());
@@ -910,22 +910,22 @@ void UMissionElementDlg::OnAcceptClicked()
         const FString ObjSel = ObjectiveCombo->GetSelectedOption();
         const FString TgtSel = TargetCombo->GetSelectedOption();
 
-        INSTRUCTION_ACTION Action = INSTRUCTION_ACTION::NONE;
+        EInstruction Action = EInstruction::NONE;
 
         if (!ObjSel.IsEmpty())
         {
-            const UEnum* Enum = StaticEnum<INSTRUCTION_ACTION>();
+            const UEnum* Enum = StaticEnum<EInstruction>();
             if (Enum)
             {
                 const int64 Value = Enum->GetValueByNameString(ObjSel);
                 if (Value != INDEX_NONE)
                 {
-                    Action = static_cast<INSTRUCTION_ACTION>(Value);
+                    Action = static_cast<EInstruction>(Value);
                 }
             }
         }
 
-        if (Action >= INSTRUCTION_ACTION::VECTOR)
+        if (Action >= EInstruction::VECTOR)
         {
             Instruction* Obj = new Instruction(Action, TCHAR_TO_ANSI(*TgtSel));
             Objectives.append(Obj);

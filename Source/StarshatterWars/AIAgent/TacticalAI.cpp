@@ -235,15 +235,15 @@ bool TacticalAI::CheckObjectives()
 		{
 			ship_ai->ClearPatrol();
 
-			const INSTRUCTION_ACTION Action = obj->GetAction();
+			const EInstruction Action = obj->GetAction();
 
-			if (Action != INSTRUCTION_ACTION::NONE)
+			if (Action != EInstruction::NONE)
 			{
 				switch (Action)
 				{
-				case INSTRUCTION_ACTION::INTERCEPT:
-				case INSTRUCTION_ACTION::STRIKE:
-				case INSTRUCTION_ACTION::ASSAULT:
+				case EInstruction::INTERCEPT:
+				case EInstruction::STRIKE:
+				case EInstruction::ASSAULT:
 				{
 					SimObject* tgt = obj->GetTarget();
 
@@ -255,8 +255,8 @@ bool TacticalAI::CheckObjectives()
 				}
 				break;
 
-				case INSTRUCTION_ACTION::DEFEND:
-				case INSTRUCTION_ACTION::ESCORT:
+				case EInstruction::DEFEND:
+				case EInstruction::ESCORT:
 				{
 					SimObject* tgt = obj->GetTarget();
 
@@ -489,33 +489,33 @@ bool TacticalAI::CheckFlightPlan()
 
 	if (navpt) {
 		switch (navpt->GetAction()) {
-		case INSTRUCTION_ACTION::LAUNCH:
-		case INSTRUCTION_ACTION::DOCK:
-		case INSTRUCTION_ACTION::RTB:
+		case EInstruction::LAUNCH:
+		case EInstruction::DOCK:
+		case EInstruction::RTB:
 			roe = NONE;
 			break;
 
-		case INSTRUCTION_ACTION::VECTOR:
+		case EInstruction::VECTOR:
 			roe = SELF_DEFENSIVE;
 			break;
 
-		case INSTRUCTION_ACTION::DEFEND:
-		case INSTRUCTION_ACTION::ESCORT:
+		case EInstruction::DEFEND:
+		case EInstruction::ESCORT:
 			roe = DEFENSIVE;
 			break;
 
-		case INSTRUCTION_ACTION::INTERCEPT:
+		case EInstruction::INTERCEPT:
 			roe = DIRECTED;
 			break;
 
-		case INSTRUCTION_ACTION::RECON:
-		case INSTRUCTION_ACTION::STRIKE:
-		case INSTRUCTION_ACTION::ASSAULT:
+		case EInstruction::RECON:
+		case EInstruction::STRIKE:
+		case EInstruction::ASSAULT:
 			roe = DIRECTED;
 			break;
 
-		case INSTRUCTION_ACTION::PATROL:
-		case INSTRUCTION_ACTION::SWEEP:
+		case EInstruction::PATROL:
+		case EInstruction::SWEEP:
 			roe = FLEXIBLE;
 			break;
 

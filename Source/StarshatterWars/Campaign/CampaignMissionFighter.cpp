@@ -853,13 +853,13 @@ CampaignMissionFighter::CreatePlayer(CombatGroup* g)
             double delta = (pickup - elem->GetLocation()).Size();
 
             if (delta > 30e3) {
-                Instruction* n = new Instruction(elem->GetRegion(), pickup, INSTRUCTION_ACTION::ESCORT);
+                Instruction* n = new Instruction(elem->GetRegion(), pickup, EInstruction::ESCORT);
                 n->SetTarget(ward->GetName());
                 n->SetSpeed(750);
                 elem->AddNavPoint(n);
             }
 
-            Instruction* obj = new Instruction(INSTRUCTION_ACTION::ESCORT, ward->GetName());
+            Instruction* obj = new Instruction(EInstruction::ESCORT, ward->GetName());
 
             switch (mission->GetMissionType()) {
             case (int) EMissionType::ESCORT_FREIGHT:
@@ -1055,7 +1055,7 @@ void CampaignMissionFighter::CreateWardFreight()
     delta *= 200000.0f;
     npt_loc += delta;
 
-    n = new Instruction(elem->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
+    n = new Instruction(elem->GetRegion(), npt_loc, EInstruction::VECTOR);
     if (n)
     {
         n->SetSpeed(500);
@@ -1076,7 +1076,7 @@ void CampaignMissionFighter::CreateWardFreight()
             rgn2 = *zones[zones.size() - 1]->GetRegions()[0];
         }
 
-        n = new Instruction(rgn2, FVector(0.0f, 0.0f, 0.0f), INSTRUCTION_ACTION::VECTOR);
+        n = new Instruction(rgn2, FVector(0.0f, 0.0f, 0.0f), EInstruction::VECTOR);
         if (n)
         {
             n->SetSpeed(750);
@@ -1138,14 +1138,14 @@ void CampaignMissionFighter::CreateWardShuttle()
         Delta = Delta.GetSafeNormal() * -200000.0f;
         NptLoc += Delta;
 
-        N = new Instruction(Elem->GetRegion(), NptLoc, INSTRUCTION_ACTION::VECTOR);
+        N = new Instruction(Elem->GetRegion(), NptLoc, EInstruction::VECTOR);
         if (N)
         {
             N->SetSpeed(500);
             Elem->AddNavPoint(N);
         }
 
-        N = new Instruction(air_region, FVector(0.0f, 0.0f, 10000.0f), INSTRUCTION_ACTION::VECTOR);
+        N = new Instruction(air_region, FVector(0.0f, 0.0f, 10000.0f), EInstruction::VECTOR);
         if (N)
         {
             N->SetSpeed(500);
@@ -1162,7 +1162,7 @@ void CampaignMissionFighter::CreateWardShuttle()
 
         Elem->SetLocation(Src);
 
-        N = new Instruction(Elem->GetRegion(), Dst, INSTRUCTION_ACTION::DOCK);
+        N = new Instruction(Elem->GetRegion(), Dst, EInstruction::DOCK);
         if (N)
         {
             N->SetTarget(FString(ANSI_TO_TCHAR(Carrier->GetName().data())));
@@ -1207,7 +1207,7 @@ void CampaignMissionFighter::CreateWardStrike()
         const FString Target = FString(ANSI_TO_TCHAR(strike_target->GetName().data()));
 
         Instruction* obj = new Instruction(
-            INSTRUCTION_ACTION::ASSAULT,
+            EInstruction::ASSAULT,
             TCHAR_TO_ANSI(*Target)
         );
 
@@ -1215,7 +1215,7 @@ void CampaignMissionFighter::CreateWardStrike()
         {
             if (airborne)
             {
-                obj->SetAction(INSTRUCTION_ACTION::STRIKE);
+                obj->SetAction(EInstruction::STRIKE);
             }
 
             elem->AddObjective(obj);
@@ -1252,7 +1252,7 @@ void CampaignMissionFighter::CreateWardStrike()
         delta *= -30000.0f;
         npt_loc += delta;
 
-        n = new Instruction(elem->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
+        n = new Instruction(elem->GetRegion(), npt_loc, EInstruction::VECTOR);
         if (n)
         {
             n->SetSpeed(500);
@@ -1261,7 +1261,7 @@ void CampaignMissionFighter::CreateWardStrike()
 
         npt_loc = FVector(0.0f, 0.0f, 10000.0f);
 
-        n = new Instruction(air_region, npt_loc, INSTRUCTION_ACTION::VECTOR);
+        n = new Instruction(air_region, npt_loc, EInstruction::VECTOR);
         if (n)
         {
             n->SetSpeed(500);
@@ -1286,7 +1286,7 @@ void CampaignMissionFighter::CreateWardStrike()
             strike_target->GetLocation().Z
         ) + delta + FVector(0.0f, 0.0f, 8000.0f);
 
-        n = new Instruction(strike_target->GetRegion(), npt_loc, INSTRUCTION_ACTION::VECTOR);
+        n = new Instruction(strike_target->GetRegion(), npt_loc, EInstruction::VECTOR);
         if (n)
         {
             n->SetSpeed(500);
@@ -1352,7 +1352,7 @@ void CampaignMissionFighter::CreateEscorts()
                     Instruction* n = new Instruction(
                         npt->GetRegionName(),
                         loc,
-                        INSTRUCTION_ACTION::ESCORT
+                        EInstruction::ESCORT
                     );
 
                     if (n)
@@ -1470,7 +1470,7 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     Instruction* n = new Instruction(
         region,
         patrol_loc,
-        INSTRUCTION_ACTION::PATROL
+        EInstruction::PATROL
     );
 
     if (n)
@@ -1505,7 +1505,7 @@ void CampaignMissionFighter::CreateTargetsPatrol()
     if (carrier_elem && !airborne)
     {
         Instruction* obj = new Instruction(
-            INSTRUCTION_ACTION::DEFEND,
+            EInstruction::DEFEND,
             carrier_elem->GetName().data()
         );
 
@@ -1570,7 +1570,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
     n = new Instruction(
         region,
         sweep_loc,
-        INSTRUCTION_ACTION::VECTOR
+        EInstruction::VECTOR
     );
 
     if (n)
@@ -1597,7 +1597,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
         n = new Instruction(
             region,
             sweep_loc,
-            INSTRUCTION_ACTION::SWEEP
+            EInstruction::SWEEP
         );
 
         if (n)
@@ -1632,7 +1632,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
     n = new Instruction(
         region,
         sweep_loc,
-        INSTRUCTION_ACTION::VECTOR
+        EInstruction::VECTOR
     );
 
     if (n)
@@ -1644,7 +1644,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
     Instruction* obj = new Instruction(
         region,
         sweep_loc,
-        INSTRUCTION_ACTION::SWEEP
+        EInstruction::SWEEP
     );
 
     if (obj)
@@ -1656,7 +1656,7 @@ void CampaignMissionFighter::CreateTargetsSweep()
     if (carrier_elem && !airborne)
     {
         obj = new Instruction(
-            INSTRUCTION_ACTION::DEFEND,
+            EInstruction::DEFEND,
             carrier_elem->GetName().data()
         );
 
@@ -1706,7 +1706,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
             if (carrier)
             {
                 Instruction* obj = new Instruction(
-                    INSTRUCTION_ACTION::ASSAULT,
+                    EInstruction::ASSAULT,
                     carrier->GetName().data()
                 );
 
@@ -1755,7 +1755,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 prime_target = elem;
 
                 Instruction* obj = new Instruction(
-                    INSTRUCTION_ACTION::INTERCEPT,
+                    EInstruction::INTERCEPT,
                     attacker.data()
                 );
 
@@ -1792,7 +1792,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 e2->SetLocation(elemLoc + randPt * 0.25f);
 
                 Instruction* obj = new Instruction(
-                    INSTRUCTION_ACTION::ESCORT,
+                    EInstruction::ESCORT,
                     elem->GetName().data()
                 );
 
@@ -1819,7 +1819,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
                 elem->SetAlert(p ? !p->FlyingStart() : true);
 
                 Instruction* obj = new Instruction(
-                    INSTRUCTION_ACTION::INTERCEPT,
+                    EInstruction::INTERCEPT,
                     attacker.data()
                 );
 
@@ -1836,7 +1836,7 @@ void CampaignMissionFighter::CreateTargetsIntercept()
     if (carrier && !airborne)
     {
         Instruction* obj = new Instruction(
-            INSTRUCTION_ACTION::DEFEND,
+            EInstruction::DEFEND,
             carrier->GetName().data()
         );
 
@@ -1890,7 +1890,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
         elem->SetLocation(ward->GetLocation() + RandPt * 5.0f);
 
         Instruction* obj = new Instruction(
-            INSTRUCTION_ACTION::ASSAULT,
+            EInstruction::ASSAULT,
             ward->GetName().data()
         );
 
@@ -1911,7 +1911,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
             Instruction* obj2 = new Instruction(
-                INSTRUCTION_ACTION::ESCORT,
+                EInstruction::ESCORT,
                 elem->GetName().data()
             );
 
@@ -1927,7 +1927,7 @@ void CampaignMissionFighter::CreateTargetsFreightEscort()
     Instruction* obj3 = new Instruction(
         mission->GetRegion(),
         FVector(0.0f, 0.0f, 0.0f),
-        INSTRUCTION_ACTION::PATROL
+        EInstruction::PATROL
     );
 
     if (obj3)
@@ -1961,7 +1961,7 @@ void CampaignMissionFighter::CreateTargetsStrikeEscort()
             Instruction* N = new Instruction(
                 Npt->GetRegionName(),
                 Npt->GetLocation() + Offset,
-                INSTRUCTION_ACTION::ESCORT
+                EInstruction::ESCORT
             );
 
             if (N)
@@ -1999,7 +1999,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 prime_target = Elem;
 
                 Instruction* Obj = new Instruction(
-                    INSTRUCTION_ACTION::STRIKE,
+                    EInstruction::STRIKE,
                     Elem->GetName().data()
                 );
 
@@ -2037,7 +2037,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     N = new Instruction(
                         prime_target->GetRegion(),
                         FVector::ZeroVector,
-                        INSTRUCTION_ACTION::VECTOR
+                        EInstruction::VECTOR
                     );
 
                     if (N)
@@ -2060,7 +2060,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 N = new Instruction(
                     prime_target->GetRegion(),
                     Loc,
-                    INSTRUCTION_ACTION::STRIKE
+                    EInstruction::STRIKE
                 );
 
                 if (N)
@@ -2079,7 +2079,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                 N = new Instruction(
                     prime_target->GetRegion(),
                     FVector::ZeroVector,
-                    INSTRUCTION_ACTION::VECTOR
+                    EInstruction::VECTOR
                 );
 
                 if (N)
@@ -2101,7 +2101,7 @@ void CampaignMissionFighter::CreateTargetsStrike()
                     N = new Instruction(
                         carrier_elem->GetRegion(),
                         FVector::ZeroVector,
-                        INSTRUCTION_ACTION::RTB
+                        EInstruction::RTB
                     );
 
                     if (N)
@@ -2167,7 +2167,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             MissionElement* Elem = prime_target;
 
             Instruction* Obj = new Instruction(
-                INSTRUCTION_ACTION::ASSAULT,
+                EInstruction::ASSAULT,
                 Elem->GetName().data()
             );
 
@@ -2235,7 +2235,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             Instr = new Instruction(
                 Elem->GetRegion(),
                 Dummy,
-                INSTRUCTION_ACTION::VECTOR
+                EInstruction::VECTOR
             );
 
             if (Instr)
@@ -2261,7 +2261,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
             Instr = new Instruction(
                 Elem->GetRegion(),
                 Dummy,
-                INSTRUCTION_ACTION::ASSAULT
+                EInstruction::ASSAULT
             );
 
             if (Instr)
@@ -2285,7 +2285,7 @@ void CampaignMissionFighter::CreateTargetsAssault()
                 Instr = new Instruction(
                     carrier_elem->GetRegion(),
                     Dummy,
-                    INSTRUCTION_ACTION::RTB
+                    EInstruction::RTB
                 );
 
                 if (Instr)
@@ -2374,7 +2374,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
-                                INSTRUCTION_ACTION::ESCORT,
+                                EInstruction::ESCORT,
                                 elem->GetName().data()
                             );
                             if (obj)
@@ -2453,7 +2453,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
-                                INSTRUCTION_ACTION::ESCORT,
+                                EInstruction::ESCORT,
                                 elem->GetName().data()
                             );
                             if (obj)
@@ -2500,7 +2500,7 @@ int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_l
                             e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
 
                             Instruction* obj = new Instruction(
-                                INSTRUCTION_ACTION::ESCORT,
+                                EInstruction::ESCORT,
                                 elem->GetName().data()
                             );
                             if (obj)
@@ -2597,7 +2597,7 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
         n = new Instruction(
             elem->GetRegion(),
             npt_loc,
-            INSTRUCTION_ACTION::VECTOR
+            EInstruction::VECTOR
         );
 
         if (n)
@@ -2610,7 +2610,7 @@ void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
     n = new Instruction(
         air_region,
         FVector(0.0f, 0.0f, 15000.0f),
-        INSTRUCTION_ACTION::VECTOR
+        EInstruction::VECTOR
     );
 
     if (n)
@@ -2625,7 +2625,7 @@ void CampaignMissionFighter::OrbitalInsertion(MissionElement* elem)
     Instruction* n = new Instruction(
         air_region,
         FVector(0.0f, 0.0f, 30000.0f),
-        INSTRUCTION_ACTION::VECTOR
+        EInstruction::VECTOR
     );
 
     if (n)
@@ -2805,7 +2805,7 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
         const FString Link = Dst + TEXT("-") + Src;
 
         Instruction* Obj = new Instruction(
-            INSTRUCTION_ACTION::VECTOR,
+            EInstruction::VECTOR,
             TCHAR_TO_ANSI(*Link)
         );
 

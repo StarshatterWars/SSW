@@ -75,52 +75,52 @@ FighterTacticalAI::CheckFlightPlan()
 {
 	navpt = ship->GetNextNavPoint();
 
-	INSTRUCTION_ACTION order = INSTRUCTION_ACTION::PATROL;
+	EInstruction order = EInstruction::PATROL;
 	roe = FLEXIBLE;
 
 	if (navpt) {
 		order = navpt->GetAction();
 
 		switch (order) {
-		case INSTRUCTION_ACTION::LAUNCH:
-		case INSTRUCTION_ACTION::DOCK:
-		case INSTRUCTION_ACTION::RTB:     
+		case EInstruction::LAUNCH:
+		case EInstruction::DOCK:
+		case EInstruction::RTB:     
 			roe = NONE;
 			break;
 
-		case INSTRUCTION_ACTION::VECTOR:
+		case EInstruction::VECTOR:
 			roe = SELF_DEFENSIVE;
 			if (element_index > 1)
 				roe = DEFENSIVE;
 			break;
 
-		case INSTRUCTION_ACTION::DEFEND:
-		case INSTRUCTION_ACTION::ESCORT: 
+		case EInstruction::DEFEND:
+		case EInstruction::ESCORT: 
 			roe = DEFENSIVE;
 			break;
 
-		case INSTRUCTION_ACTION::INTERCEPT:
+		case EInstruction::INTERCEPT:
 			if (element_index > 1)
 				roe = DEFENSIVE;
 			else
 				roe = DIRECTED;
 			break;
 
-		case INSTRUCTION_ACTION::RECON:
-		case INSTRUCTION_ACTION::STRIKE:
-		case INSTRUCTION_ACTION::ASSAULT: 
+		case EInstruction::RECON:
+		case EInstruction::STRIKE:
+		case EInstruction::ASSAULT: 
 			roe = DIRECTED;
 			break;
 
-		case INSTRUCTION_ACTION::PATROL:
-		case INSTRUCTION_ACTION::SWEEP:   
+		case EInstruction::PATROL:
+		case EInstruction::SWEEP:   
 			roe = FLEXIBLE;
 			break;
 
 		default: break;
 		}
 
-		if (order == INSTRUCTION_ACTION::STRIKE) {
+		if (order == EInstruction::STRIKE) {
 			ship->SetSensorMode(ESensorMode::GM);
 
 			if (IsStrikeComplete(navpt)) {
@@ -128,7 +128,7 @@ FighterTacticalAI::CheckFlightPlan()
 			}
 		}
 
-		else if (order == INSTRUCTION_ACTION::ASSAULT) {
+		else if (order == EInstruction::ASSAULT) {
 			if (ship->GetSensorMode() == ESensorMode::GM)
 				ship->SetSensorMode(ESensorMode::STD);
 

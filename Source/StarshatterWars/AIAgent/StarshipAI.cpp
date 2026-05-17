@@ -180,7 +180,7 @@ StarshipAI::FindObjective()
 
         if (navpt &&
             navpt->GetAction() ==
-            INSTRUCTION_ACTION::LAUNCH)
+            EInstruction::LAUNCH)
         {
             FindObjectiveNavPoint();
         }

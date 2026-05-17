@@ -34,7 +34,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempInstruction, Log, All);
 
 // +----------------------------------------------------------------------+
 
-Instruction::Instruction(INSTRUCTION_ACTION act, const char* tgt)
+Instruction::Instruction(EInstruction act, const char* tgt)
 	: region(0),
 	action(act),
 	formation(INSTRUCTION_FORMATION::DIAMOND),
@@ -50,7 +50,7 @@ Instruction::Instruction(INSTRUCTION_ACTION act, const char* tgt)
 {
 }
 
-Instruction::Instruction(const char* rgn, FVector loc, INSTRUCTION_ACTION act)
+Instruction::Instruction(const char* rgn, FVector loc, EInstruction act)
 	: region(0),
 	action(act),
 	formation(INSTRUCTION_FORMATION::DIAMOND),
@@ -68,7 +68,7 @@ Instruction::Instruction(const char* rgn, FVector loc, INSTRUCTION_ACTION act)
 	rloc.SetDistance(0);
 }
 
-Instruction::Instruction(SimRegion* rgn, FVector loc, INSTRUCTION_ACTION act)
+Instruction::Instruction(SimRegion* rgn, FVector loc, EInstruction act)
 	: region(rgn),
 	action(act),
 	formation(INSTRUCTION_FORMATION::DIAMOND),
@@ -249,16 +249,16 @@ Instruction::Evaluate(Ship* ship)
 	Sim* sim = Sim::GetSim();
 
 	switch (action) {
-	case INSTRUCTION_ACTION::VECTOR:
+	case EInstruction::VECTOR:
 		break;
 
-	case INSTRUCTION_ACTION::LAUNCH:
+	case EInstruction::LAUNCH:
 		if (ship->GetFlightPhase() == EOPSMode::ACTIVE)
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
 		break;
 
-	case INSTRUCTION_ACTION::DOCK:
-	case INSTRUCTION_ACTION::RTB:
+	case EInstruction::DOCK:
+	case EInstruction::RTB:
 		if (sim->GetPlayerShip() == ship &&
 			(ship->GetFlightPhase() == EOPSMode::DOCKING ||
 				ship->GetFlightPhase() == EOPSMode::DOCKED))
@@ -267,8 +267,8 @@ Instruction::Evaluate(Ship* ship)
 			SetStatus(INSTRUCTION_STATUS::FAILED);
 		break;
 
-	case INSTRUCTION_ACTION::DEFEND:
-	case INSTRUCTION_ACTION::ESCORT:
+	case EInstruction::DEFEND:
+	case EInstruction::ESCORT:
 	{
 		bool found = false;
 		bool safe = true;
@@ -314,8 +314,8 @@ Instruction::Evaluate(Ship* ship)
 	}
 	break;
 
-	case INSTRUCTION_ACTION::PATROL:
-	case INSTRUCTION_ACTION::SWEEP:
+	case EInstruction::PATROL:
+	case EInstruction::SWEEP:
 	{
 		bool alive = false;
 
@@ -342,9 +342,9 @@ Instruction::Evaluate(Ship* ship)
 	}
 	break;
 
-	case INSTRUCTION_ACTION::INTERCEPT:
-	case INSTRUCTION_ACTION::STRIKE:
-	case INSTRUCTION_ACTION::ASSAULT:
+	case EInstruction::INTERCEPT:
+	case EInstruction::STRIKE:
+	case EInstruction::ASSAULT:
 	{
 		bool alive = false;
 
@@ -371,7 +371,7 @@ Instruction::Evaluate(Ship* ship)
 	}
 	break;
 
-	case INSTRUCTION_ACTION::RECON:
+	case EInstruction::RECON:
 		break;
 
 	default:
@@ -393,26 +393,26 @@ Instruction::GetShortDescription() const
 	static char desc[256];
 
 	switch (action) {
-	case INSTRUCTION_ACTION::VECTOR:
+	case EInstruction::VECTOR:
 		if (farcast)
 			sprintf_s(desc, "Farcast to %s sector", rgn_name.data());
 		else
 			sprintf_s(desc, "Go to %s sector", rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::LAUNCH:
+	case EInstruction::LAUNCH:
 		sprintf_s(desc, "Launch from the %s", tgt_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::DOCK:
+	case EInstruction::DOCK:
 		sprintf_s(desc, "Dock with the %s", tgt_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::RTB:
+	case EInstruction::RTB:
 		sprintf_s(desc, "Return safely to base");
 		break;
 
-	case INSTRUCTION_ACTION::DEFEND:
+	case EInstruction::DEFEND:
 		if (priority == PRIMARY) {
 			sprintf_s(desc, "Defend %s", tgt_desc.data());
 		}
@@ -421,7 +421,7 @@ Instruction::GetShortDescription() const
 		}
 		break;
 
-	case INSTRUCTION_ACTION::ESCORT:
+	case EInstruction::ESCORT:
 		if (priority == PRIMARY) {
 			sprintf_s(desc, "Escort %s", tgt_desc.data());
 		}
@@ -429,31 +429,31 @@ Instruction::GetShortDescription() const
 			sprintf_s(desc, "Protect %s in the area", tgt_desc.data());
 		}
 		break;
-	case INSTRUCTION_ACTION::PATROL:
+	case EInstruction::PATROL:
 		sprintf_s(desc, "Patrol for %s in %s",
 			tgt_desc.data(),
 			rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::SWEEP:
+	case EInstruction::SWEEP:
 		sprintf_s(desc, "Sweep for %s in %s",
 			tgt_desc.data(),
 			rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::INTERCEPT:
+	case EInstruction::INTERCEPT:
 		sprintf_s(desc, "Intercept and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::STRIKE:
+	case EInstruction::STRIKE:
 		sprintf_s(desc, "Engage and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::ASSAULT:
+	case EInstruction::ASSAULT:
 		sprintf_s(desc, "Engage and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::RECON:
+	case EInstruction::RECON:
 		sprintf_s(desc,"Recon scan %s", tgt_desc.data());
 		break;
 
@@ -479,26 +479,26 @@ Instruction::GetDescription() const
 	static char desc[1024];
 
 	switch (action) {
-	case INSTRUCTION_ACTION::VECTOR:
+	case EInstruction::VECTOR:
 		if (farcast)
 			sprintf_s(desc, "Farcast to the %s sector", rgn_name.data());
 		else
 			sprintf_s(desc, "Go to the %s sector", rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::LAUNCH:
+	case EInstruction::LAUNCH:
 		sprintf_s(desc, "Launch from the %s", tgt_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::DOCK:
+	case EInstruction::DOCK:
 		sprintf_s(desc, "Dock with the %s", tgt_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::RTB:
+	case EInstruction::RTB:
 		sprintf_s(desc, "Return safely to base");
 		break;
 
-	case INSTRUCTION_ACTION::DEFEND:
+	case EInstruction::DEFEND:
 		if (priority == PRIMARY) {
 			sprintf_s(desc, "Defend %s", tgt_desc.data());
 		}
@@ -507,7 +507,7 @@ Instruction::GetDescription() const
 		}
 		break;
 
-	case INSTRUCTION_ACTION::ESCORT:
+	case EInstruction::ESCORT:
 		if (priority == PRIMARY) {
 			sprintf_s(desc, "Escort %s", tgt_desc.data());
 		}
@@ -516,31 +516,31 @@ Instruction::GetDescription() const
 		}
 		break;
 
-	case INSTRUCTION_ACTION::PATROL:
+	case EInstruction::PATROL:
 		sprintf_s(desc, "Disable or destroy %s in the %s sector",
 			tgt_desc.data(),
 			rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::SWEEP:
+	case EInstruction::SWEEP:
 		sprintf_s(desc, "Disable or destroy %s in the %s sector",
 			tgt_desc.data(),
 			rgn_name.data());
 		break;
 
-	case INSTRUCTION_ACTION::INTERCEPT:
+	case EInstruction::INTERCEPT:
 		sprintf_s(desc, "Intercept and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::STRIKE:
+	case EInstruction::STRIKE:
 		sprintf_s(desc, "Engage and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::ASSAULT:
+	case EInstruction::ASSAULT:
 		sprintf_s(desc, "Engage and destroy %s", tgt_desc.data());
 		break;
 
-	case INSTRUCTION_ACTION::RECON:
+	case EInstruction::RECON:
 		sprintf_s(desc, "Recon scan %s", tgt_desc.data());
 		break;
 
@@ -560,32 +560,32 @@ Instruction::GetDescription() const
 // +----------------------------------------------------------------------+
 
 const char*
-Instruction::ActionName(INSTRUCTION_ACTION a)
+Instruction::ActionName(EInstruction a)
 {
 	switch (a) {
-	case INSTRUCTION_ACTION::VECTOR: 
+	case EInstruction::VECTOR: 
 		return "Vector";
-	case INSTRUCTION_ACTION::LAUNCH:
+	case EInstruction::LAUNCH:
 		return "Launch";
-	case INSTRUCTION_ACTION::DOCK:  
+	case EInstruction::DOCK:  
 		return "Dock";
-	case INSTRUCTION_ACTION::RTB:  
+	case EInstruction::RTB:  
 		return "RTB";
-	case INSTRUCTION_ACTION::DEFEND: 
+	case EInstruction::DEFEND: 
 		return "Defend";
-	case INSTRUCTION_ACTION::ESCORT:  
+	case EInstruction::ESCORT:  
 		return "Escort";
-	case INSTRUCTION_ACTION::PATROL:
+	case EInstruction::PATROL:
 		return "Patrol";
-	case INSTRUCTION_ACTION::SWEEP: 
+	case EInstruction::SWEEP: 
 		return "Sweep";
-	case INSTRUCTION_ACTION::INTERCEPT: 
+	case EInstruction::INTERCEPT: 
 		return "Intercept";
-	case INSTRUCTION_ACTION::STRIKE:  
+	case EInstruction::STRIKE:  
 		return "Strike";
-	case INSTRUCTION_ACTION::ASSAULT: 
+	case EInstruction::ASSAULT: 
 		return "Assault";
-	case INSTRUCTION_ACTION::RECON: 
+	case EInstruction::RECON: 
 		return "Recon";
 
 	default:      
@@ -596,7 +596,7 @@ Instruction::ActionName(INSTRUCTION_ACTION a)
 const char* Instruction::ActionName(int ActionIndex)
 {
 	return ActionName(
-		static_cast<INSTRUCTION_ACTION>(ActionIndex)
+		static_cast<EInstruction>(ActionIndex)
 	);
 }
 

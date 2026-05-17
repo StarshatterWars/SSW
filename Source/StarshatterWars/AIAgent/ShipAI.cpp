@@ -45,9 +45,11 @@
 #include "Asteroid.h"
 #include "ShipActor.h"
 #include "ShipUtils.h"
+#include "GameStructs.h"
 
 #include "Game.h"
 #include "Random.h"
+#include "ObjectiveArrivalUtils.h"
 
 // +----------------------------------------------------------------------+
 
@@ -316,7 +318,8 @@ ShipAI::ExecFrame(double secs)
 	// That prevented ships from ever acquiring their FIRST navpoint.
 	//-------------------------------------------------------------
 
-	navpt = ship->GetNextNavPoint();
+	navpt =
+		ship->GetNextNavPoint();
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[ShipAI::ExecFrame NAV] Ship='%hs' Navpt=%p NavAction=%d NavStatus=%d NavTarget='%hs' NavRegion='%hs'"),
@@ -340,6 +343,11 @@ ShipAI::ExecFrame(double secs)
 	if (takeoff)
 	{
 		FindObjective();
+
+		//---------------------------------------------------------
+		// Navigator owns helm/throttle behavior.
+		//---------------------------------------------------------
+
 		Navigator();
 
 		if (ship->GetMissionClockMS() > 10000)
@@ -426,10 +434,24 @@ ShipAI::ExecFrame(double secs)
 		patrol = 0;
 		farcaster = nullptr;
 
+		//---------------------------------------------------------
+		// Reset arrival state when objective flow is locked out.
+		//---------------------------------------------------------
+
+		bObjectiveArrived = false;
+
 		ship->DropTarget();
 	}
 
 	FindObjective();
+
+	//-------------------------------------------------------------
+	// Navigator owns helm/throttle behavior.
+	//
+	// Objective arrival braking is handled inside the derived
+	// Navigator / ThrottleControl path so normal throttle logic
+	// cannot overwrite it afterward.
+	//-------------------------------------------------------------
 
 	Navigator();
 }
@@ -567,7 +589,7 @@ ShipAI::FindObjective()
 		ship->SetDirectorInfo("AI Element Formation");
 
 		if (navpt &&
-			navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)
+			navpt->GetAction() == EInstruction::LAUNCH)
 		{
 			FindObjectiveNavPoint();
 		}
@@ -1072,7 +1094,7 @@ ShipAI::FindObjectiveNavPoint()
 	//-------------------------------------------------------------
 
 	if (distance < 1000.0 ||
-		(navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH &&
+		(navpt->GetAction() == EInstruction::LAUNCH &&
 			distance > 25000.0))
 	{
 		ship->SetNavptStatus(
@@ -2513,3 +2535,117 @@ ShipAI::CheckTarget()
 	}
 }
 
+/*
+========================================================================
+DETERMINE ARRIVAL TYPE
+========================================================================
+*/
+
+EObjectiveArrivalType
+ShipAI::DetermineArrivalType() const
+{
+	if (!ship)
+	{
+		return EObjectiveArrivalType::Generic;
+	}
+
+	Instruction* NavPoint =
+		ship->GetNextNavPoint();
+
+	if (!NavPoint)
+	{
+		return EObjectiveArrivalType::Generic;
+	}
+
+	//-------------------------------------------------------------
+	// Explicit instruction action driven behavior
+	//-------------------------------------------------------------
+
+	switch (NavPoint->GetAction())
+	{
+	case EInstruction::DOCK:
+	case EInstruction::RTB:
+		return EObjectiveArrivalType::Dock;
+
+	case EInstruction::PATROL:
+	case EInstruction::SWEEP:
+	case EInstruction::RECON:
+		return EObjectiveArrivalType::Patrol;
+
+	case EInstruction::ESCORT:
+	case EInstruction::DEFEND:
+		return EObjectiveArrivalType::Formation;
+
+	case EInstruction::VECTOR:
+	default:
+		break;
+	}
+
+	//-------------------------------------------------------------
+	// Farcaster objective
+	//-------------------------------------------------------------
+
+	if (NavPoint->GetFarcast() != 0)
+	{
+		return EObjectiveArrivalType::Farcaster;
+	}
+
+	return EObjectiveArrivalType::Generic;
+}
+
+/*
+========================================================================
+UPDATE OBJECTIVE ARRIVAL
+========================================================================
+*/
+
+void
+ShipAI::UpdateObjectiveArrival()
+{
+	if (!ship)
+	{
+		return;
+	}
+
+	if (objective.IsNearlyZero())
+	{
+		return;
+	}
+
+	const EObjectiveArrivalType ArrivalType =
+		DetermineArrivalType();
+
+	const FObjectiveArrivalSettings ArrivalSettings =
+		FObjectiveArrivalUtils::MakeSettings(
+			ArrivalType,
+			ship);
+
+	const FVector ShipLocation =
+		ship->GetLocation();
+
+	const FVector ShipVelocity =
+		ship->GetVelocity();
+
+	const FVector ObjectiveLocation =
+		objective;
+
+	const FObjectiveArrivalState ArrivalState =
+		FObjectiveArrivalUtils::EvaluateArrival(
+			ShipLocation,
+			ShipVelocity,
+			ObjectiveLocation,
+			ArrivalSettings);
+
+	bObjectiveArrived =
+		ArrivalState.bComplete;
+
+	if (ArrivalState.bComplete)
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
+			ship->GetName(),
+			static_cast<int32>(ArrivalType),
+			ArrivalState.Distance,
+			ArrivalState.Speed);
+	}
+}

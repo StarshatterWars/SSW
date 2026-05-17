@@ -644,7 +644,7 @@ NavAI::AvoidTerrain()
     terrain_warning = 0;
 
     if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive() ||
-        takeoff || (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH))
+        takeoff || (navpt && navpt->GetAction() == EInstruction::LAUNCH))
         return Avoid;
 
     if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE) {

@@ -206,10 +206,10 @@ FighterAI::ExecFrame(double s)
         }
     }
 
-    const INSTRUCTION_ACTION InstrOrder =
-        static_cast<INSTRUCTION_ACTION>(static_cast<int32>(order));
+    const EInstruction InstrOrder =
+        static_cast<EInstruction>(static_cast<int32>(order));
 
-    if (!target && InstrOrder != INSTRUCTION_ACTION::STRIKE)
+    if (!target && InstrOrder != EInstruction::STRIKE)
         ship->SetSensorMode(ESensorMode::STD);
 
     ShipAI::ExecFrame(s); // this must be the last line of this method
@@ -231,11 +231,11 @@ FighterAI::FindObjective()
     // ALWAYS complete initial launch navpt:
     if (!navpt) {
         navpt = ship->GetNextNavPoint();
-        if (navpt && (navpt->GetAction() != INSTRUCTION_ACTION::LAUNCH || navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE))
+        if (navpt && (navpt->GetAction() != EInstruction::LAUNCH || navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE))
             navpt = 0;
     }
 
-    if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH) {
+    if (navpt && navpt->GetAction() == EInstruction::LAUNCH) {
         if (navpt->GetStatus() != INSTRUCTION_STATUS::COMPLETE) {
             FindObjectiveNavPoint();
 
@@ -596,7 +596,7 @@ FighterAI::Navigator()
         }
     }
 
-    INSTRUCTION_ACTION order = INSTRUCTION_ACTION::VECTOR;
+    EInstruction order = EInstruction::VECTOR;
 
     if (navpt)
         order = navpt->GetAction();
@@ -604,7 +604,7 @@ FighterAI::Navigator()
     if (rtb_code == 1 && navpt && navpt->GetStatus() < INSTRUCTION_STATUS::SKIPPED &&
         !inbound && distance < 35e3) { // (this should be distance to the ship)
 
-        if (order == INSTRUCTION_ACTION::RTB) {
+        if (order == EInstruction::RTB) {
             Ship* controller = ship->GetController();
             Hangar* hangar = controller ? controller->GetHangar() : 0;
 
@@ -1152,7 +1152,7 @@ FighterAI::AvoidTerrain()
     terrain_warning = false;
 
     if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive() ||
-        (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH)) {
+        (navpt && navpt->GetAction() == EInstruction::LAUNCH)) {
         return avoid;
     }
 
@@ -1307,7 +1307,7 @@ FighterAI::SeekTarget()
         return Steer();
     }
 
-    else if (navpt && navpt->GetAction() == INSTRUCTION_ACTION::LAUNCH) {
+    else if (navpt && navpt->GetAction() == EInstruction::LAUNCH) {
         ship->SetDirectorInfo("Launch");
         return Seek(objective);
     }
@@ -1711,7 +1711,7 @@ FighterAI::FireControl()
         return;
 
     // if the objective is a navpt or landing bay (not a target), then don't shoot!
-    if (inbound || farcaster || (navpt && navpt->GetAction() < INSTRUCTION_ACTION::DEFEND))
+    if (inbound || farcaster || (navpt && navpt->GetAction() < EInstruction::DEFEND))
         return;
 
     // object behind us, or too close:

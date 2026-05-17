@@ -373,7 +373,7 @@ MissionEvent::Execute(bool silent)
 
 		// Create new objective instruction
 		Instruction* obj = new Instruction(
-			static_cast<INSTRUCTION_ACTION>(event_param[0]),
+			static_cast<EInstruction>(event_param[0]),
 			nullptr
 		);
 

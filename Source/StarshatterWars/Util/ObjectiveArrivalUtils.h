@@ -37,4 +37,4 @@ private:
 
     static float GetShipSizeScale(
         const Ship* RuntimeShip);
-}; #pragma once
+}; 

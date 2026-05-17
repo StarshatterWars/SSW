@@ -753,7 +753,7 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
         MissionTime += ETR;
         Loc = NavLoc;
 
-        if (Action >= static_cast<int32>(INSTRUCTION_ACTION::ESCORT))
+        if (Action >= static_cast<int32>(EInstruction::ESCORT))
         {
             return MissionTime;
         }

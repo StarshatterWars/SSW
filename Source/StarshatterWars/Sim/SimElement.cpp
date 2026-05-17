@@ -265,7 +265,7 @@ SimElement::IsObjectiveTargetOf(const Ship* s) const
 	int         e_len = GetName().length();
 
 	Instruction* orders = s->GetRadioOrders();
-	if (orders && orders->GetAction() > INSTRUCTION_ACTION::SWEEP) {
+	if (orders && orders->GetAction() > EInstruction::SWEEP) {
 		const char* o_name = orders->GetTargetName();
 		int         o_len = 0;
 
@@ -527,14 +527,14 @@ SimElement::GetTargetObjective()
 
 		if (obj->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) {
 			switch (obj->GetAction()) {
-			case INSTRUCTION_ACTION::INTERCEPT:
-			case INSTRUCTION_ACTION::STRIKE:
-			case INSTRUCTION_ACTION::ASSAULT:
-			case INSTRUCTION_ACTION::SWEEP:
-			case INSTRUCTION_ACTION::PATROL:
-			case INSTRUCTION_ACTION::RECON:
-			case INSTRUCTION_ACTION::ESCORT:
-			case INSTRUCTION_ACTION::DEFEND:
+			case EInstruction::INTERCEPT:
+			case EInstruction::STRIKE:
+			case EInstruction::ASSAULT:
+			case EInstruction::SWEEP:
+			case EInstruction::PATROL:
+			case EInstruction::RECON:
+			case EInstruction::ESCORT:
+			case EInstruction::DEFEND:
 				return obj;
 
 			default:
@@ -592,9 +592,9 @@ SimElement::ResumeAssignment()
 
 		if (instr->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) {
 			switch (instr->GetAction()) {
-			case INSTRUCTION_ACTION::INTERCEPT:
-			case INSTRUCTION_ACTION::STRIKE:
-			case INSTRUCTION_ACTION::ASSAULT:
+			case EInstruction::INTERCEPT:
+			case EInstruction::STRIKE:
+			case EInstruction::ASSAULT:
 				objective = instr;
 				break;
 			}

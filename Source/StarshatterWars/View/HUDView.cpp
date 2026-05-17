@@ -1387,8 +1387,8 @@ HUDView::DrawNavInfo()
 		DrawHUDText(TXT_NAV_INDEX, txt, info_rect, DT_RIGHT);
 
 		info_rect.y += 10;
-		const INSTRUCTION_ACTION Action = navpt->GetAction();
-		if (Action != INSTRUCTION_ACTION::NONE)
+		const EInstruction Action = navpt->GetAction();
+		if (Action != EInstruction::NONE)
 			DrawHUDText(TXT_NAV_ACTION, Instruction::ActionName(Action), info_rect, DT_RIGHT);;
 
 		info_rect.y += 10;
@@ -2110,7 +2110,7 @@ HUDView::DrawNav()
 		Instruction* next = ship->GetNextNavPoint();
 
 		if (mode == EHUDMode::Navigation) {
-			if (next && next->GetAction() == INSTRUCTION_ACTION::LAUNCH)
+			if (next && next->GetAction() == EInstruction::LAUNCH)
 				DrawNavPoint(*next, 0, true);
 
 			ListIter<Instruction> navpt = ship->GetFlightPlan();

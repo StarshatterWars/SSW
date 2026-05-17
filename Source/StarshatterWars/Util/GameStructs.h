@@ -302,6 +302,21 @@ enum class EIntel : uint8 {
 	ACTIVE		UMETA(DisplayName = "Active"),   // enemy is Intel Tracking is Active
 };
 
+UENUM(BlueprintType)
+enum class EObjectiveArrivalType : uint8
+{
+	Dock       UMETA(DisplayName = "Dock"),
+	Farcaster  UMETA(DisplayName = "Farcaster"),
+	Patrol     UMETA(DisplayName = "Patrol"),
+	Formation  UMETA(DisplayName = "Formation"),
+	Generic    UMETA(DisplayName = "Generic")
+};
+
+/*
+========================================================================
+OBJECTIVE ARRIVAL SETTINGS
+========================================================================
+*/
 UENUM()
 enum class ECombatEventType : uint8
 {
@@ -760,7 +775,7 @@ enum class LIGHTTYPE : uint32
 };
 
 UENUM()
-enum class INSTRUCTION_ACTION : uint8
+enum class EInstruction : uint8
 {
 	NONE		UMETA(DisplayName = "None"), 
 	VECTOR		UMETA(DisplayName = "Vector"),
@@ -847,9 +862,9 @@ enum class RadioMessageAction : uint8
 {
 	NONE = 0,
 
-	DOCK_WITH = INSTRUCTION_ACTION::DOCK,
-	RTB = INSTRUCTION_ACTION::RTB,
-	QUANTUM_TO = INSTRUCTION_ACTION::NUM_ACTIONS,
+	DOCK_WITH = EInstruction::DOCK,
+	RTB = EInstruction::RTB,
+	QUANTUM_TO = EInstruction::NUM_ACTIONS,
 	FARCAST_TO,
 
 	// protocol:
@@ -1041,6 +1056,69 @@ enum class MuisicTransition : uint8
  * STRUCTS
  */
 
+ /*
+ ========================================================================
+ OBJECTIVE ARRIVAL SETTINGS
+ ========================================================================
+ */
+
+USTRUCT(BlueprintType)
+struct FObjectiveArrivalSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EObjectiveArrivalType ArrivalType =
+		EObjectiveArrivalType::Generic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ArrivalRadius = 2500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BrakeRadius = 12000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StationKeepingRadius = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CompletionRadius = 1500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxArrivalSpeed = 50.0f;
+};
+
+/*
+========================================================================
+OBJECTIVE ARRIVAL STATE
+========================================================================
+*/
+
+USTRUCT(BlueprintType)
+struct FObjectiveArrivalState
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	float Distance = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	float Speed = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bInsideBrakeRadius = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bInsideArrivalRadius = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bInsideStationKeepingRadius = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bComplete = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	float DesiredThrottleScale = 1.0f;
+};
 USTRUCT(BlueprintType)
 struct FS_CampaignUIBundle
 {

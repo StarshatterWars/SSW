@@ -3000,10 +3000,10 @@ Ship::SetNavptStatus(Instruction* navpt, INSTRUCTION_STATUS status)
 {
 	if (navpt && navpt->GetStatus() != status) {
 		if (status == INSTRUCTION_STATUS::COMPLETE) {
-			if (navpt->GetAction() == INSTRUCTION_ACTION::ASSAULT) {
+			if (navpt->GetAction() == EInstruction::ASSAULT) {
 				UE_LOG(LogTemp, Log, TEXT("Completed Assault"));
 			}
-			else if (navpt->GetAction() == INSTRUCTION_ACTION::STRIKE) {
+			else if (navpt->GetAction() == EInstruction::STRIKE) {
 				UE_LOG(LogTemp, Log, TEXT("Completed Strike"));
 			}
 		}
@@ -6662,7 +6662,7 @@ void
 Ship::ClearRadioOrders()
 {
 	if (radio_orders) {
-		radio_orders->SetAction(INSTRUCTION_ACTION::NONE);
+		radio_orders->SetAction(EInstruction::NONE);
 		radio_orders->ClearTarget();
 		radio_orders->SetLocation(FVector::ZeroVector);
 	}

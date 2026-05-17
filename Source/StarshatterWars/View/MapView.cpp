@@ -328,11 +328,11 @@ void MapView::BuildMenu()
 		action_menu = new Menu("ACTION");
 
 
-		const UEnum* ActionEnum = StaticEnum<INSTRUCTION_ACTION>();
+		const UEnum* ActionEnum = StaticEnum<EInstruction>();
 
-		for (int i = 0; i < (int)INSTRUCTION_ACTION::NUM_ACTIONS; i++)
+		for (int i = 0; i < (int)EInstruction::NUM_ACTIONS; i++)
 		{
-			const INSTRUCTION_ACTION Act = (INSTRUCTION_ACTION)i;
+			const EInstruction Act = (EInstruction)i;
 
 			FString Name = ActionEnum
 				? ActionEnum->GetNameStringByValue((int64)Act)
@@ -487,9 +487,9 @@ void MapView::ProcessMenuItem(int action)
 
 	const int raw = action - MAP_ACTION;
 
-	if (raw >= 0 && raw < (int)INSTRUCTION_ACTION::NUM_ACTIONS) {
+	if (raw >= 0 && raw < (int)EInstruction::NUM_ACTIONS) {
 		current_navpt->SetAction(
-			static_cast<INSTRUCTION_ACTION>(raw)
+			static_cast<EInstruction>(raw)
 		);
 		SelectNavpt(current_navpt);
 		send_nav_data = true;
@@ -721,36 +721,36 @@ void MapView::SelectNavpt(Instruction* navpt)
 		objective_menu->ClearItems();
 
 		switch (current_navpt->GetAction()) {
-		case INSTRUCTION_ACTION::VECTOR:
-		case INSTRUCTION_ACTION::LAUNCH:
-		case INSTRUCTION_ACTION::PATROL:
-		case INSTRUCTION_ACTION::SWEEP:
-		case INSTRUCTION_ACTION::RECON:
+		case EInstruction::VECTOR:
+		case EInstruction::LAUNCH:
+		case EInstruction::PATROL:
+		case EInstruction::SWEEP:
+		case EInstruction::RECON:
 			objective_menu->AddItem("NOT AVAILABLE", 0);
 			objective_menu->GetItem(0)->SetEnabled(false);
 			break;
 
-		case INSTRUCTION_ACTION::DOCK:
+		case EInstruction::DOCK:
 			FindShips(true, true, true, false, ships);
 			break;
 
-		case INSTRUCTION_ACTION::DEFEND:
+		case EInstruction::DEFEND:
 			FindShips(true, true, true, false, ships);
 			break;
 
-		case INSTRUCTION_ACTION::ESCORT:
+		case EInstruction::ESCORT:
 			FindShips(true, false, true, true, ships);
 			break;
 
-		case INSTRUCTION_ACTION::INTERCEPT:
+		case EInstruction::INTERCEPT:
 			FindShips(false, false, false, true, ships);
 			break;
 
-		case INSTRUCTION_ACTION::ASSAULT:
+		case EInstruction::ASSAULT:
 			FindShips(false, false, true, false, ships);
 			break;
 
-		case INSTRUCTION_ACTION::STRIKE:
+		case EInstruction::STRIKE:
 			FindShips(false, true, false, false, ships);
 			break;
 		}
