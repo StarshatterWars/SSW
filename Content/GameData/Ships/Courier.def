@@ -52,7 +52,7 @@ drive:
    port:
    {
       name:          "Drive_Port_Lower"
-      loc:           (-500, 31, -20)
+      loc:           (-500, 31, -10)
       rot:           (0, 180, 0)
       flare_scale:   1.5
       trail_scale:   1.5
@@ -66,7 +66,7 @@ drive:
    port:
    {
       name:          "Drive_Port_Upper"
-      loc:           (-500, 31, 20)
+      loc:           (-500, 31, 10)
       rot:           (0, 180, 0)
       flare_scale:   1.5
       trail_scale:   1.5
@@ -80,7 +80,7 @@ drive:
    port:
    {
       name:          "Drive_Starboard_Lower"
-      loc:           (-500, -31, -20)
+      loc:           (-500, -31, -10)
       rot:           (0, 180, 0)
       flare_scale:   1.5
       trail_scale:   1.5
@@ -94,7 +94,7 @@ drive:
    port:
    {
       name:          "Drive_Starboard_Upper"
-      loc:           (-500, -31, 20)
+      loc:           (-500, -31, 10)
       rot:           (0, 180, 0)
       flare_scale:   1.5
       trail_scale:   1.5

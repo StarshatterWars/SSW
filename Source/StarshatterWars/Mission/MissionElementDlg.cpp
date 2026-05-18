@@ -571,7 +571,7 @@ void UMissionElementDlg::BuildObjectiveTargets()
 
             bool bAdd = false;
 
-            if (ObjId < (int) EInstruction::PATROL)
+            if (ObjId < (int) EInstruction::Patrol)
                 bAdd = (E->GetIFF() == 0) || (E->GetIFF() == ElemPtr->GetIFF());
             else
                 bAdd = (E->GetIFF() != ElemPtr->GetIFF());
@@ -910,7 +910,7 @@ void UMissionElementDlg::OnAcceptClicked()
         const FString ObjSel = ObjectiveCombo->GetSelectedOption();
         const FString TgtSel = TargetCombo->GetSelectedOption();
 
-        EInstruction Action = EInstruction::NONE;
+        EInstruction Action = EInstruction::None;
 
         if (!ObjSel.IsEmpty())
         {
@@ -925,7 +925,7 @@ void UMissionElementDlg::OnAcceptClicked()
             }
         }
 
-        if (Action >= EInstruction::VECTOR)
+        if (Action >= EInstruction::Vector)
         {
             Instruction* Obj = new Instruction(Action, TCHAR_TO_ANSI(*TgtSel));
             Objectives.append(Obj);

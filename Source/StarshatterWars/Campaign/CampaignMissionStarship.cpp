@@ -534,7 +534,7 @@ CampaignMissionStarship::GenerateMissionElements()
     CreateTargets();
 
     if (ward && player) {
-        Instruction* obj = new Instruction(EInstruction::ESCORT, ward->GetName());
+        Instruction* obj = new Instruction(EInstruction::Escort, ward->GetName());
 
         if (obj) {
             switch (mission->GetMissionType()) {
@@ -646,7 +646,7 @@ void CampaignMissionStarship::CreateElements(CombatGroup* g)
             if (g->GetType() == ECOMBATGROUP_TYPE::CARRIER_GROUP &&
                 elem->MissionRole() == (int)EMissionType::ESCORT)
             {
-                Instruction* obj = new Instruction(EInstruction::ESCORT, cmdr->GetName());
+                Instruction* obj = new Instruction(EInstruction::Escort, cmdr->GetName());
                 if (obj)
                 {
                     obj->SetTargetDesc(Text("the ") + g->GetDescription());
@@ -793,7 +793,7 @@ MissionElement* CampaignMissionStarship::CreateSingleElement(CombatGroup* g, Com
             Text src = name.substring(0, dash);
             Text dst = name.substring(dash + 1, name.length() - (dash + 1));
 
-            Instruction* obj = new Instruction(EInstruction::VECTOR, dst + "-" + src);
+            Instruction* obj = new Instruction(EInstruction::Vector, dst + "-" + src);
             if (obj)
                 elem->AddObjective(obj);
         }
@@ -955,7 +955,7 @@ CampaignMissionStarship::CreateWardFreight()
 
     navpt_loc += delta;
 
-    Instruction* n = new Instruction(elem->GetRegion(), navpt_loc, EInstruction::VECTOR);
+    Instruction* n = new Instruction(elem->GetRegion(), navpt_loc, EInstruction::Vector);
     if (n) {
         n->SetSpeed(500);
         elem->AddNavPoint(n);
@@ -968,7 +968,7 @@ CampaignMissionStarship::CreateWardFreight()
     else
         rgn2 = *zones[zones.size() - 1]->GetRegions()[0];
 
-    n = new Instruction(rgn2, FVector(0.0f, 0.0f, 0.0f), EInstruction::VECTOR);
+    n = new Instruction(rgn2, FVector(0.0f, 0.0f, 0.0f), EInstruction::Vector);
     if (n) {
         n->SetSpeed(750);
         elem->AddNavPoint(n);
@@ -1036,7 +1036,7 @@ CampaignMissionStarship::CreateTargetsAssault()
                     if (!player_lead)
                         return;
 
-                    Instruction* obj = new Instruction(EInstruction::ASSAULT, prime_target->GetName());
+                    Instruction* obj = new Instruction(EInstruction::Assault, prime_target->GetName());
                     if (obj) {
                         obj->SetTargetDesc(Text("preplanned target '") + prime_target->GetName() + "'");
                         player_lead->AddObjective(obj);
@@ -1059,7 +1059,7 @@ CampaignMissionStarship::CreateTargetsAssault()
                     rloc.SetAzimuth(90 * DEGREES);
                     rloc.SetAzimuthVar(45 * DEGREES);
 
-                    instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::VECTOR);
+                    instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::Vector);
                     if (!instr)
                         return;
 
@@ -1077,7 +1077,7 @@ CampaignMissionStarship::CreateTargetsAssault()
                         rloc2.SetDistance(50e3);
                         rloc2.SetDistanceVar(5e3);
 
-                        instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::VECTOR);
+                        instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::Vector);
                         if (!instr)
                             return;
 
@@ -1134,7 +1134,7 @@ CampaignMissionStarship::CreateTargetsAssault()
                     rloc.SetAzimuth(90 * DEGREES);
                     rloc.SetAzimuthVar(45 * DEGREES);
 
-                    instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::ASSAULT);
+                    instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::Assault);
                     if (!instr)
                         return;
 
@@ -1154,7 +1154,7 @@ CampaignMissionStarship::CreateTargetsAssault()
                         rloc2.SetDistance(50e3);
                         rloc2.SetDistanceVar(5e3);
 
-                        instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::ASSAULT);
+                        instr = new Instruction(prime_target->GetRegion(), dummy, EInstruction::Assault);
                         if (!instr)
                             return;
 
@@ -1217,7 +1217,7 @@ CampaignMissionStarship::CreateTargetsPatrol()
 
     const FVector PatrolLoc = base_loc + (FMath::VRand() * FMath::FRandRange(170000.0f, 250000.0f));
 
-    Instruction* n0 = new Instruction(region, PatrolLoc, EInstruction::PATROL);
+    Instruction* n0 = new Instruction(region, PatrolLoc, EInstruction::Patrol);
     if (n0)
         player->AddNavPoint(n0);
 
@@ -1226,14 +1226,14 @@ CampaignMissionStarship::CreateTargetsPatrol()
 
         Instruction* n1 = new Instruction(region,
             PatrolLoc + ScatterInSphere(FMath::FRandRange(20000.0f, 40000.0f)),
-            EInstruction::PATROL);
+            EInstruction::Patrol);
         if (n1 && elem)
             elem->AddNavPoint(n1);
     }
 
     const FVector Loc2 = PatrolLoc + (FMath::VRand() * FMath::FRandRange(150000.0f, 200000.0f));
 
-    Instruction* n2 = new Instruction(region, Loc2, EInstruction::PATROL);
+    Instruction* n2 = new Instruction(region, Loc2, EInstruction::Patrol);
     if (n2)
         player->AddNavPoint(n2);
 
@@ -1242,7 +1242,7 @@ CampaignMissionStarship::CreateTargetsPatrol()
 
         Instruction* n3 = new Instruction(region,
             Loc2 + ScatterInSphere(FMath::FRandRange(20000.0f, 40000.0f)),
-            EInstruction::PATROL);
+            EInstruction::Patrol);
         if (n3 && elem)
             elem->AddNavPoint(n3);
     }
@@ -1297,7 +1297,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
         elem->SetLocation(ward->GetLocation() + ScatterInSphere(5.0f));
 
-        Instruction* obj = new Instruction(EInstruction::ASSAULT, ward->GetName());
+        Instruction* obj = new Instruction(EInstruction::Assault, ward->GetName());
         if (obj)
             elem->AddObjective(obj);
 
@@ -1309,7 +1309,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
             e2->SetLocation(elem->GetLocation() + ScatterInSphere(0.25f));
 
-            Instruction* obj2 = new Instruction(EInstruction::ESCORT, elem->GetName());
+            Instruction* obj2 = new Instruction(EInstruction::Escort, elem->GetName());
             if (obj2)
                 e2->AddObjective(obj2);
 
@@ -1319,7 +1319,7 @@ CampaignMissionStarship::CreateTargetsFreightEscort()
 
     Instruction* obj3 = new Instruction(mission->GetRegion(),
         FVector(0.0f, 0.0f, 0.0f),
-        EInstruction::PATROL);
+        EInstruction::Patrol);
     if (player && obj3) {
         obj3->SetTargetDesc("enemy patrols");
         player->AddObjective(obj3);
@@ -1460,7 +1460,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
          
                         e2->SetLocation(elem->GetLocation() + ScatterInSphere(0.5f));
 
-                        Instruction* obj = new Instruction(EInstruction::ESCORT, elem->GetName());
+                        Instruction* obj = new Instruction(EInstruction::Escort, elem->GetName());
                         if (obj)
                             e2->AddObjective(obj);
 
@@ -1515,7 +1515,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 if (player) {
                     Instruction* n = new Instruction(player->GetRegion(),
                         player->GetLocation() + ScatterInSphere(1.0f),
-                        EInstruction::ASSAULT);
+                        EInstruction::Assault);
                     n->SetTarget(FString(player->GetName().data()));
                     elem->AddNavPoint(n);
                 }
@@ -1548,7 +1548,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 if (player) {
                     Instruction* n = new Instruction(player->GetRegion(),
                         player->GetLocation() + ScatterInSphere(1.0f),
-                        EInstruction::ASSAULT);
+                        EInstruction::Assault);
                     n->SetTarget(FString(player->GetName().data()));
                     elem->AddNavPoint(n);
                 }
@@ -1595,7 +1595,7 @@ CampaignMissionStarship::CreateRandomTarget(const char* rgn, FVector base_loc)
                 
                         e2->SetLocation(elem->GetLocation() + ScatterInSphere(0.5f));
 
-                        Instruction* obj = new Instruction(EInstruction::ESCORT, elem->GetName());
+                        Instruction* obj = new Instruction(EInstruction::Escort, elem->GetName());
                         if (obj)
                             e2->AddObjective(obj);
 

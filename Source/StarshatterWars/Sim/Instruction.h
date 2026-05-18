@@ -45,8 +45,8 @@ public:
 	};
 
 	Instruction(EInstruction action, const char* tgt);
-	Instruction(const char* rgn, FVector loc, EInstruction act = EInstruction::VECTOR);
-	Instruction(SimRegion* rgn, FVector loc, EInstruction act = EInstruction::VECTOR);
+	Instruction(const char* rgn, FVector loc, EInstruction act = EInstruction::Vector);
+	Instruction(SimRegion* rgn, FVector loc, EInstruction act = EInstruction::Vector);
 	Instruction(const Instruction& instr);
 	virtual ~Instruction();
 

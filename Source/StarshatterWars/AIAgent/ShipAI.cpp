@@ -589,7 +589,7 @@ ShipAI::FindObjective()
 		ship->SetDirectorInfo("AI Element Formation");
 
 		if (navpt &&
-			navpt->GetAction() == EInstruction::LAUNCH)
+			navpt->GetAction() == EInstruction::Launch)
 		{
 			FindObjectiveNavPoint();
 		}
@@ -1094,7 +1094,7 @@ ShipAI::FindObjectiveNavPoint()
 	//-------------------------------------------------------------
 
 	if (distance < 1000.0 ||
-		(navpt->GetAction() == EInstruction::LAUNCH &&
+		(navpt->GetAction() == EInstruction::Launch &&
 			distance > 25000.0))
 	{
 		ship->SetNavptStatus(
@@ -2399,20 +2399,20 @@ ShipAI::DetermineArrivalType() const
 
 	switch (NavPoint->GetAction())
 	{
-	case EInstruction::DOCK:
+	case EInstruction::Dock:
 	case EInstruction::RTB:
 		return EObjectiveArrivalType::Dock;
 
-	case EInstruction::PATROL:
-	case EInstruction::SWEEP:
-	case EInstruction::RECON:
+	case EInstruction::Patrol:
+	case EInstruction::Sweep		:
+	case EInstruction::Recon:
 		return EObjectiveArrivalType::Patrol;
 
-	case EInstruction::ESCORT:
-	case EInstruction::DEFEND:
+	case EInstruction::Escort:
+	case EInstruction::Defend:
 		return EObjectiveArrivalType::Formation;
 
-	case EInstruction::VECTOR:
+	case EInstruction::Vector:
 	default:
 		break;
 	}

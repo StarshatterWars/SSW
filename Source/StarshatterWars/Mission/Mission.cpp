@@ -246,33 +246,33 @@ bool Mission::LoadMissionCommon(
 		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
 		{
 			EInstruction LegacyAction =
-				EInstruction::VECTOR;
+				EInstruction::Vector;
 
 			switch (SrcNav.Action)
 			{
 			case EInstructionAction::Dock:
 				LegacyAction =
-					EInstruction::DOCK;
+					EInstruction::Dock;
 				break;
 
 			case EInstructionAction::Escort:
 				LegacyAction =
-					EInstruction::ESCORT;
+					EInstruction::Escort;
 				break;
 
 			case EInstructionAction::Patrol:
 				LegacyAction =
-					EInstruction::PATROL;
+					EInstruction::Patrol;
 				break;
 
 			case EInstructionAction::Defend:
 				LegacyAction =
-					EInstruction::DEFEND;
+					EInstruction::Defend;
 				break;
 
 			case EInstructionAction::Target:
 				LegacyAction =
-					EInstruction::ASSAULT;
+					EInstruction::Assault;
 				break;
 
 			case EInstructionAction::Farcast:
@@ -281,7 +281,7 @@ bool Mission::LoadMissionCommon(
 			case EInstructionAction::Hold:
 			default:
 				LegacyAction =
-					EInstruction::VECTOR;
+					EInstruction::Vector;
 				break;
 			}
 
@@ -1527,7 +1527,7 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 Instruction*
 Mission::ParseInstruction(TermStruct* val, MissionElement* element)
 {
-	EInstruction order = EInstruction::VECTOR;
+	EInstruction order = EInstruction::Vector;
 	INSTRUCTION_STATUS status = INSTRUCTION_STATUS::PENDING;
 	INSTRUCTION_FORMATION formation = INSTRUCTION_FORMATION::NONE;
 	
@@ -1555,7 +1555,7 @@ Mission::ParseInstruction(TermStruct* val, MissionElement* element)
 			if (defname == "cmd") {
 				GetDefText(order_name, pdef, filename);
 
-				for (int cmd = 0; cmd < (int) EInstruction::NUM_ACTIONS; cmd++) {
+				for (int cmd = 0; cmd < (int) EInstruction::NumActions; cmd++) {
 					const EInstruction Action =
 						static_cast<EInstruction>(cmd);
 

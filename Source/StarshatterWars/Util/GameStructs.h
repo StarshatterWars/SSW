@@ -774,28 +774,62 @@ enum class LIGHTTYPE : uint32
 	LIGHT_FORCE_DWORD = 0x7fffffff
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EInstruction : uint8
 {
-	NONE		UMETA(DisplayName = "None"), 
-	VECTOR		UMETA(DisplayName = "Vector"),
-	LAUNCH		UMETA(DisplayName = "Launch"),
-	DOCK		UMETA(DisplayName = "Dock"),
-	RTB			UMETA(DisplayName = "Return to Base"),
+	//-------------------------------------------------------------
+	// None
+	//-------------------------------------------------------------
 
-	DEFEND		UMETA(DisplayName = "Defend"),
-	ESCORT		UMETA(DisplayName = "Escort"),
-	PATROL		UMETA(DisplayName = "Patrol"),
-	SWEEP		UMETA(DisplayName = "Sweep"),
-	INTERCEPT	UMETA(DisplayName = "Intercept"),
-	STRIKE		UMETA(DisplayName = "Strike"),     // ground attack
-	ASSAULT		UMETA(DisplayName = "Assault"),    // starship attack
-	RECON		UMETA(DisplayName = "Recon"),
+	None            UMETA(DisplayName = "None"),
 
-	RECALL		UMETA(DisplayName = "Recall"),
-	DEPLOY		UMETA(DisplayName = "Deploy"),
+	//-------------------------------------------------------------
+	// Navigation / movement
+	//-------------------------------------------------------------
 
-	NUM_ACTIONS
+	Vector          UMETA(DisplayName = "Vector"),
+	Approach        UMETA(DisplayName = "Approach"),
+	StopAt          UMETA(DisplayName = "Stop At"),
+	Hold            UMETA(DisplayName = "Hold"),
+
+	Launch          UMETA(DisplayName = "Launch"),
+	Dock            UMETA(DisplayName = "Dock"),
+	RTB             UMETA(DisplayName = "Return To Base"),
+
+	Farcast         UMETA(DisplayName = "Farcast"),
+	Quantum         UMETA(DisplayName = "Quantum"),
+
+	//-------------------------------------------------------------
+	// Formation / tactical movement
+	//-------------------------------------------------------------
+
+	Defend          UMETA(DisplayName = "Defend"),
+	Escort          UMETA(DisplayName = "Escort"),
+	Patrol          UMETA(DisplayName = "Patrol"),
+
+	//-------------------------------------------------------------
+	// Combat
+	//-------------------------------------------------------------
+
+	Target          UMETA(DisplayName = "Target"),
+	Sweep           UMETA(DisplayName = "Sweep"),
+	Intercept       UMETA(DisplayName = "Intercept"),
+	Strike          UMETA(DisplayName = "Strike"),
+	Assault         UMETA(DisplayName = "Assault"),
+	Recon           UMETA(DisplayName = "Recon"),
+
+	//-------------------------------------------------------------
+	// Logistics
+	//-------------------------------------------------------------
+
+	Recall          UMETA(DisplayName = "Recall"),
+	Deploy          UMETA(DisplayName = "Deploy"),
+
+	//-------------------------------------------------------------
+	// Count
+	//-------------------------------------------------------------
+
+	NumActions      UMETA(DisplayName = "Num Actions")
 };
 
 UENUM()
@@ -857,85 +891,128 @@ enum class WeaponsSweep : uint8
 	SWEEP_WIDE			UMETA(DisplayName = "Sweep Wide"),
 };
 
-UENUM()
-enum class RadioMessageAction : uint8 
+UENUM(BlueprintType)
+enum class RadioMessageAction : uint8
 {
-	NONE = 0,
+	NONE            UMETA(DisplayName = "None"),
 
-	DOCK_WITH = EInstruction::DOCK,
-	RTB = EInstruction::RTB,
-	QUANTUM_TO = EInstruction::NUM_ACTIONS,
-	FARCAST_TO,
+	//-------------------------------------------------------------
+	// Mission / navigation
+	//-------------------------------------------------------------
 
-	// protocol:
-	ACK,
-	NACK,
+	DOCK_WITH       UMETA(DisplayName = "Dock With"),
+	RTB             UMETA(DisplayName = "Return To Base"),
+	QUANTUM_TO      UMETA(DisplayName = "Quantum To"),
+	FARCAST_TO      UMETA(DisplayName = "Farcast To"),
 
-	// target mgt:
-	ATTACK,
-	ESCORT,
-	BRACKET,
-	IDENTIFY,
+	//-------------------------------------------------------------
+	// Protocol
+	//-------------------------------------------------------------
 
-	// combat mgt:
-	COVER_ME,
-	WEP_FREE,
-	WEP_HOLD,
-	FORM_UP,       // alias for wep_hold
-	SAY_POSITION,
+	ACK             UMETA(DisplayName = "Acknowledge"),
+	NACK            UMETA(DisplayName = "Negative Acknowledge"),
 
-	// sensor mgt:
-	LAUNCH_PROBE,
-	GO_EMCON1,
-	GO_EMCON2,
-	GO_EMCON3,
+	//-------------------------------------------------------------
+	// Target management
+	//-------------------------------------------------------------
 
-	// formation mgt:
-	GO_DIAMOND,
-	GO_SPREAD,
-	GO_BOX,
-	GO_TRAIL,
+	ATTACK          UMETA(DisplayName = "Attack"),
+	ESCORT          UMETA(DisplayName = "Escort"),
+	BRACKET         UMETA(DisplayName = "Bracket"),
+	IDENTIFY        UMETA(DisplayName = "Identify"),
 
-	// mission mgt:
-	MOVE_PATROL,
-	SKIP_NAVPOINT,
-	RESUME_MISSION,
+	//-------------------------------------------------------------
+	// Combat management
+	//-------------------------------------------------------------
 
-	// misc announcements:
-	CALL_ENGAGING,
-	FOX_1,
-	FOX_2,
-	FOX_3,
-	SPLASH_1,
-	SPLASH_2,
-	SPLASH_3,
-	SPLASH_4,
-	SPLASH_5,   // target destroyed
-	SPLASH_6,   // enemy destroyed
-	SPLASH_7,   // confirmed kill
-	DISTRESS,
-	BREAK_ORBIT,
-	MAKE_ORBIT,
-	QUANTUM_JUMP,
+	COVER_ME        UMETA(DisplayName = "Cover Me"),
+	WEP_FREE        UMETA(DisplayName = "Weapons Free"),
+	WEP_HOLD        UMETA(DisplayName = "Weapons Hold"),
+	FORM_UP         UMETA(DisplayName = "Form Up"),
+	SAY_POSITION    UMETA(DisplayName = "Say Position"),
 
-	// friendly fire:
-	WARN_ACCIDENT,
-	WARN_TARGETED,
-	DECLARE_ROGUE,
+	//-------------------------------------------------------------
+	// Sensor management
+	//-------------------------------------------------------------
 
-	// support:
-	PICTURE,
-	REQUEST_PICTURE,
-	REQUEST_SUPPORT,
+	LAUNCH_PROBE    UMETA(DisplayName = "Launch Probe"),
+	GO_EMCON1       UMETA(DisplayName = "EMCON 1"),
+	GO_EMCON2       UMETA(DisplayName = "EMCON 2"),
+	GO_EMCON3       UMETA(DisplayName = "EMCON 3"),
 
-	// traffic control:
-	CALL_INBOUND,
-	CALL_APPROACH,
-	CALL_CLEARANCE,
-	CALL_FINALS,
-	CALL_WAVE_OFF,
+	//-------------------------------------------------------------
+	// Formation management
+	//-------------------------------------------------------------
 
-	NUM_ACTIONS
+	GO_DIAMOND      UMETA(DisplayName = "Go Diamond"),
+	GO_SPREAD       UMETA(DisplayName = "Go Spread"),
+	GO_BOX          UMETA(DisplayName = "Go Box"),
+	GO_TRAIL        UMETA(DisplayName = "Go Trail"),
+
+	//-------------------------------------------------------------
+	// Mission management
+	//-------------------------------------------------------------
+
+	MOVE_PATROL     UMETA(DisplayName = "Move Patrol"),
+	SKIP_NAVPOINT   UMETA(DisplayName = "Skip Navpoint"),
+	RESUME_MISSION  UMETA(DisplayName = "Resume Mission"),
+
+	//-------------------------------------------------------------
+	// Combat announcements
+	//-------------------------------------------------------------
+
+	CALL_ENGAGING   UMETA(DisplayName = "Call Engaging"),
+
+	FOX_1           UMETA(DisplayName = "Fox 1"),
+	FOX_2           UMETA(DisplayName = "Fox 2"),
+	FOX_3           UMETA(DisplayName = "Fox 3"),
+
+	SPLASH_1        UMETA(DisplayName = "Splash 1"),
+	SPLASH_2        UMETA(DisplayName = "Splash 2"),
+	SPLASH_3        UMETA(DisplayName = "Splash 3"),
+	SPLASH_4        UMETA(DisplayName = "Splash 4"),
+	SPLASH_5        UMETA(DisplayName = "Target Destroyed"),
+	SPLASH_6        UMETA(DisplayName = "Enemy Destroyed"),
+	SPLASH_7        UMETA(DisplayName = "Confirmed Kill"),
+
+	DISTRESS        UMETA(DisplayName = "Distress"),
+
+	BREAK_ORBIT     UMETA(DisplayName = "Break Orbit"),
+	MAKE_ORBIT      UMETA(DisplayName = "Make Orbit"),
+
+	QUANTUM_JUMP    UMETA(DisplayName = "Quantum Jump"),
+
+	//-------------------------------------------------------------
+	// Friendly fire
+	//-------------------------------------------------------------
+
+	WARN_ACCIDENT   UMETA(DisplayName = "Warn Accident"),
+	WARN_TARGETED   UMETA(DisplayName = "Warn Targeted"),
+	DECLARE_ROGUE   UMETA(DisplayName = "Declare Rogue"),
+
+	//-------------------------------------------------------------
+	// Support
+	//-------------------------------------------------------------
+
+	PICTURE         UMETA(DisplayName = "Picture"),
+	REQUEST_PICTURE UMETA(DisplayName = "Request Picture"),
+	REQUEST_SUPPORT UMETA(DisplayName = "Request Support"),
+
+	//-------------------------------------------------------------
+	// Traffic control
+	//-------------------------------------------------------------
+
+	CALL_INBOUND    UMETA(DisplayName = "Call Inbound"),
+	CALL_APPROACH   UMETA(DisplayName = "Call Approach"),
+	CALL_CLEARANCE  UMETA(DisplayName = "Call Clearance"),
+	CALL_FINALS     UMETA(DisplayName = "Call Finals"),
+	CALL_WAVE_OFF   UMETA(DisplayName = "Call Wave Off"),
+
+	//-------------------------------------------------------------
+	// Count
+	//-------------------------------------------------------------
+
+	NUM_ACTIONS     UMETA(DisplayName = "Num Actions")
 };
 
 UENUM()
