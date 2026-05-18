@@ -1906,53 +1906,31 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float Throttle =
         (float)RuntimeShip->GetThrottle();
 
-    const bool bRequested =
-        ThrottleRequest > 0.5f;
-
-    const float ThrottlePower =
+    const float RequestAlpha =
         FMath::Clamp(
-            Throttle / 100.0f,
+            ThrottleRequest / 100.0f,
             0.0f,
-            1.5f);
+            1.0f);
+
+    const bool bRequested =
+        RequestAlpha > 0.01f;
 
     const float TargetPower =
         bRequested
-        ? FMath::Max(ThrottlePower, 0.35f)
+        ? FMath::Max(RequestAlpha, 0.20f)
         : 0.0f;
-
-    //---------------------------------------------------------
-    // Babylon 5 / Starshatter style:
-    // aggressive ignition and shutdown
-    //---------------------------------------------------------
 
     if (bRequested)
     {
-        //-----------------------------------------------------
-        // Immediate plasma ignition
-        //-----------------------------------------------------
-
-        MainEngineVisualPower =
-            FMath::Max(
-                MainEngineVisualPower,
-                0.85f);
-
-        //-----------------------------------------------------
-        // Rapid ramp to target brightness
-        //-----------------------------------------------------
-
         MainEngineVisualPower =
             FMath::FInterpTo(
                 MainEngineVisualPower,
                 TargetPower,
                 DeltaTime,
-                45.0f);
+                25.0f);
     }
     else
     {
-        //-----------------------------------------------------
-        // Rapid collapse when throttle request removed
-        //-----------------------------------------------------
-
         MainEngineVisualPower =
             FMath::FInterpTo(
                 MainEngineVisualPower,
@@ -1962,7 +1940,8 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
 
         if (MainEngineVisualPower < 0.03f)
         {
-            MainEngineVisualPower = 0.0f;
+            MainEngineVisualPower =
+                0.0f;
         }
     }
 
@@ -1976,28 +1955,23 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             continue;
         }
 
-        /*
-         * Base engine profile:
-         * X = flame length
-         * Y = flame width
-         * Z = flame height
-         *
-         * Only X changes dynamically.
-         */
-
         FVector RuntimeScale =
             FVector(1.0f, 0.5f, 0.5f);
 
         RuntimeScale.X *=
             FMath::Lerp(
-                0.1f,
-                2.0f,
+                0.10f,
+                2.00f,
                 MainEngineVisualPower);
 
-        Emitter->SetRelativeScale3D(RuntimeScale);
+        Emitter->SetRelativeScale3D(
+            RuntimeScale);
 
-        Emitter->SetVisibility(bActive);
-        Emitter->SetHiddenInGame(!bActive);
+        Emitter->SetVisibility(
+            bActive);
+
+        Emitter->SetHiddenInGame(
+            !bActive);
 
         Emitter->SetFloatParameter(
             TEXT("EnginePower"),

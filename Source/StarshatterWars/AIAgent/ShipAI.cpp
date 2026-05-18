@@ -516,11 +516,23 @@ ShipAI::FindObjective()
 		(order == RadioMessageAction::MOVE_PATROL) ||
 		(order == RadioMessageAction::RTB) ||
 		(order == RadioMessageAction::DOCK_WITH) ||
-		((order == RadioMessageAction::NONE) && !target) ||
-		(farcaster != nullptr);
-
+		((order == RadioMessageAction::NONE) && !target);
+	
 	Ship* ward =
 		ship->GetWard();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[FindObjective ENTRY] Ship='%hs' Order=%d Form=%d ElementIndex=%d Target='%hs' Navpt=%p NavAction=%d NavTarget='%hs' FarcasterPtr=%p Ward='%hs'"),
+		ship ? ship->GetName() : "NULL",
+		(int32)order,
+		form ? 1 : 0,
+		element_index,
+		target ? target->GetName() : "NULL",
+		navpt,
+		navpt ? (int32)navpt->GetAction() : -1,
+		(navpt && navpt->GetTargetName()) ? navpt->GetTargetName() : "NULL",
+		farcaster,
+		ward ? ward->GetName() : "NULL");
 
 	if (ship && !_stricmp(ship->GetName(), "Lovo"))
 	{
@@ -557,10 +569,6 @@ ShipAI::FindObjective()
 
 	//-------------------------------------------------------------
 	// EXPLICIT WARD FORMATION
-	//
-	// IMPORTANT:
-	// Commanded ships (like Lovo under Kitts)
-	// should prioritize ward following.
 	//-------------------------------------------------------------
 
 	else if (ward && ward != ship)
@@ -568,7 +576,7 @@ ShipAI::FindObjective()
 		ship->SetDirectorInfo("AI Ward Formation");
 
 		UE_LOG(LogTemp, Warning,
-			TEXT("`` FORMATION] ")
+			TEXT("[FORMATION] ")
 			TEXT("Ship='%hs' Ward='%hs' ")
 			TEXT("ElementIndex=%d Navpt=%p Target='%hs'"),
 			ship ? ship->GetName() : "NULL",
@@ -662,7 +670,53 @@ ShipAI::FindObjective()
 
 		if (!bObjectiveHandled)
 		{
-			if (target)
+			if (navpt)
+			{
+				const EInstruction NavAction =
+					navpt->GetAction();
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[FindObjective ROUTE] ")
+					TEXT("Ship='%hs' Action=%d ")
+					TEXT("Target='%hs' Farcast=%d"),
+					ship ? ship->GetName() : "NULL",
+					(int32)NavAction,
+					navpt->GetTargetName()
+					? navpt->GetTargetName()
+					: "NULL",
+					navpt->GetFarcast());
+
+				//-------------------------------------------------
+				// ONLY explicit target orders use target pursuit
+				//-------------------------------------------------
+
+				if (NavAction == EInstruction::Target)
+				{
+					ship->SetDirectorInfo("Seek Target");
+
+					if (target)
+					{
+						FindObjectiveTarget(target);
+					}
+					else
+					{
+						FindObjectiveNavPoint();
+					}
+				}
+
+				//-------------------------------------------------
+				// ALL navigation-style commands:
+				// Vector, Dock, Farcast, StopAt, etc
+				//-------------------------------------------------
+
+				else
+				{
+					ship->SetDirectorInfo("Seek Navpoint");
+
+					FindObjectiveNavPoint();
+				}
+			}
+			else if (target)
 			{
 				ship->SetDirectorInfo("Seek Target");
 
@@ -673,12 +727,6 @@ ShipAI::FindObjective()
 				ship->SetDirectorInfo("Patrol");
 
 				FindObjectivePatrol();
-			}
-			else if (navpt)
-			{
-				ship->SetDirectorInfo("Seek Navpoint");
-
-				FindObjectiveNavPoint();
 			}
 			else if (rumor)
 			{
@@ -958,6 +1006,7 @@ ShipAI::FindObjectivePatrol()
 
 // +--------------------------------------------------------------------+
 
+
 void
 ShipAI::FindObjectiveNavPoint()
 {
@@ -1038,38 +1087,96 @@ ShipAI::FindObjectiveNavPoint()
 	if (!farcaster)
 	{
 		//---------------------------------------------------------
-		// Legacy transform chain:
-		//
-		// Region world location
-		// + local navpoint offset
-		// - active region origin
-		// - handedness conversion
+		// Runtime object target
 		//---------------------------------------------------------
 
-		FVector Npt =
-			navpt->GetRegion()->GetLocation() +
-			navpt->GetLocation();
+		bool bResolvedRuntimeTarget =
+			false;
 
-		SimRegion* ActiveRegion =
-			ship->GetRegion();
-
-		if (ActiveRegion)
+		if (navpt->GetTargetName() &&
+			strlen(navpt->GetTargetName()) > 0)
 		{
-			Npt -=
-				ActiveRegion->GetLocation();
+			SimObject* TargetObj =
+				SelfRgn->FindObject(
+					navpt->GetTargetName());
+
+			if (TargetObj)
+			{
+				//-------------------------------------------------
+				// IMPORTANT:
+				// Runtime sim owns world-space.
+				// NO handedness conversion here.
+				//-------------------------------------------------
+
+				obj_w =
+					TargetObj->GetLocation();
+
+				bResolvedRuntimeTarget =
+					true;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::FindObjectiveNavPoint] RuntimeTarget='%hs' ObjW=%s"),
+					navpt->GetTargetName(),
+					*obj_w.ToString());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::FindObjectiveNavPoint] FAILED RuntimeTarget='%hs'"),
+					navpt->GetTargetName());
+			}
 		}
 
 		//---------------------------------------------------------
-		// IMPORTANT:
-		// Preserve legacy handedness conversion.
+		// Static navpoint fallback
 		//---------------------------------------------------------
 
-		Npt =
-			OtherHand(Npt);
+		if (!bResolvedRuntimeTarget)
+		{
+			//-----------------------------------------------------
+			// Legacy transform chain:
+			//
+			// Region world location
+			// + local navpoint offset
+			// - active region origin
+			//-----------------------------------------------------
 
-		obj_w =
-			Npt;
+			FVector Npt =
+				navpt->GetRegion()->GetLocation() +
+				navpt->GetLocation();
+
+			SimRegion* ActiveRegion =
+				ship->GetRegion();
+
+			if (ActiveRegion)
+			{
+				Npt -=
+					ActiveRegion->GetLocation();
+			}
+
+			//-----------------------------------------------------
+			// IMPORTANT:
+			// Only static authored navpoints use OtherHand().
+			//-----------------------------------------------------
+
+			Npt =
+				OtherHand(Npt);
+
+			obj_w =
+				Npt;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ShipAI::FindObjectiveNavPoint] StaticNav ObjW=%s"),
+				*obj_w.ToString());
+		}
 	}
+
+	//-------------------------------------------------------------
+	// Objective
+	//-------------------------------------------------------------
+
+	objective =
+		obj_w;
 
 	//-------------------------------------------------------------
 	// Distance
@@ -1093,13 +1200,29 @@ ShipAI::FindObjectiveNavPoint()
 	// Navpoint completion
 	//-------------------------------------------------------------
 
-	if (distance < 1000.0 ||
+	const double CompletionRadius =
+		navpt->GetFarcast()
+		? 5000.0
+		: 1000.0;
+
+	if (distance <= CompletionRadius ||
 		(navpt->GetAction() == EInstruction::Launch &&
 			distance > 25000.0))
 	{
 		ship->SetNavptStatus(
 			navpt,
 			INSTRUCTION_STATUS::COMPLETE);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Objective Arrival COMPLETE] Ship='%hs' Target='%hs' Distance=%.2f Radius=%.2f Action=%d Farcast=%d"),
+			ship ? ship->GetName() : "NULL",
+			navpt->GetTargetName()
+			? navpt->GetTargetName()
+			: "NULL",
+			distance,
+			CompletionRadius,
+			(int32)navpt->GetAction(),
+			navpt->GetFarcast());
 	}
 
 	UE_LOG(LogTemp, Warning,

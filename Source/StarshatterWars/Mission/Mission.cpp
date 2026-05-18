@@ -242,47 +242,15 @@ bool Mission::LoadMissionCommon(
 		//---------------------------------------------------------
 		// NAVPOINT -> INSTRUCTION BRIDGE
 		//---------------------------------------------------------
-
 		for (const FS_MissionInstruction& SrcNav : SrcElem.Navpoint)
 		{
 			EInstruction LegacyAction =
-				EInstruction::Vector;
+				SrcNav.Action;
 
-			switch (SrcNav.Action)
+			if (LegacyAction == EInstruction::None)
 			{
-			case EInstructionAction::Dock:
-				LegacyAction =
-					EInstruction::Dock;
-				break;
-
-			case EInstructionAction::Escort:
-				LegacyAction =
-					EInstruction::Escort;
-				break;
-
-			case EInstructionAction::Patrol:
-				LegacyAction =
-					EInstruction::Patrol;
-				break;
-
-			case EInstructionAction::Defend:
-				LegacyAction =
-					EInstruction::Defend;
-				break;
-
-			case EInstructionAction::Target:
-				LegacyAction =
-					EInstruction::Assault;
-				break;
-
-			case EInstructionAction::Farcast:
-			case EInstructionAction::Approach:
-			case EInstructionAction::StopAt:
-			case EInstructionAction::Hold:
-			default:
 				LegacyAction =
 					EInstruction::Vector;
-				break;
 			}
 
 			Instruction* Nav =
@@ -302,8 +270,13 @@ bool Mission::LoadMissionCommon(
 			Nav->SetPriority(
 				SrcNav.Priority);
 
-			if (SrcNav.Action ==
-				EInstructionAction::Farcast)
+			const bool bIsFarcastObjective =
+				SrcNav.ObjectiveType.Equals(
+					TEXT("farcast"),
+					ESearchCase::IgnoreCase);
+
+			if (bIsFarcastObjective ||
+				SrcNav.Action == EInstruction::Farcast)
 			{
 				Nav->SetFarcast(1);
 			}
@@ -318,11 +291,13 @@ bool Mission::LoadMissionCommon(
 				Nav);
 
 			UE_LOG(LogTemp, Warning,
-				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Objective='%s' Action=%d Loc=%s Speed=%d"),
+				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Objective='%s' Target='%s' Farcast=%d Action=%d Loc=%s Speed=%d"),
 				*SrcElem.Name,
 				*SrcNav.OrderName,
 				*SrcNav.OrderRegionName,
+				*SrcNav.ObjectiveType,
 				*SrcNav.ObjectiveName,
+				bIsFarcastObjective ? 1 : 0,
 				(int32)SrcNav.Action,
 				*SrcNav.ObjectiveLocation.ToString(),
 				SrcNav.Speed);

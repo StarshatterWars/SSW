@@ -1064,3 +1064,54 @@ SimRegion::DockShips()
         }
     }
 }
+
+SimObject*
+SimRegion::FindObject(const char* obj_name)
+{
+    if (!obj_name || !*obj_name)
+    {
+        return nullptr;
+    }
+
+    //-------------------------------------------------------------
+    // Ships, stations, farcasters, carriers loaded as Ship
+    //-------------------------------------------------------------
+
+    ListIter<Ship> ship_iter =
+        ships;
+
+    while (++ship_iter)
+    {
+        Ship* s =
+            ship_iter.value();
+
+        if (s &&
+            s->GetName() &&
+            !_stricmp(s->GetName(), obj_name))
+        {
+            return s;
+        }
+    }
+
+    //-------------------------------------------------------------
+    // Carriers may also be tracked separately
+    //-------------------------------------------------------------
+
+    ListIter<Ship> carrier_iter =
+        carriers;
+
+    while (++carrier_iter)
+    {
+        Ship* s =
+            carrier_iter.value();
+
+        if (s &&
+            s->GetName() &&
+            !_stricmp(s->GetName(), obj_name))
+        {
+            return s;
+        }
+    }
+
+    return nullptr;
+}

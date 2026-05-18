@@ -322,6 +322,31 @@ StarshipAI::FindObjective()
     //-------------------------------------------------------------
     // Normal processing
     //-------------------------------------------------------------
+    else if (navpt)
+    {
+        const EInstruction NavAction =
+            navpt->GetAction();
+
+        if (NavAction == EInstruction::Target)
+        {
+            ship->SetDirectorInfo("Seek Target");
+
+            if (target)
+            {
+                FindObjectiveTarget(target);
+            }
+            else
+            {
+                FindObjectiveNavPoint();
+            }
+        }
+        else
+        {
+            ship->SetDirectorInfo("Seek Navpoint");
+
+            FindObjectiveNavPoint();
+        }
+    }
     else if (target)
     {
         ship->SetDirectorInfo("Seek Target");
@@ -339,12 +364,6 @@ StarshipAI::FindObjective()
         ship->SetDirectorInfo("Seek Ward");
 
         FindObjectiveFormation();
-    }
-    else if (navpt)
-    {
-        ship->SetDirectorInfo("Seek Navpoint");
-
-        FindObjectiveNavPoint();
     }
     else if (rumor)
     {
@@ -927,8 +946,36 @@ StarshipAI::ThrottleControl()
 
         if (ArrivalState.bInsideBrakeRadius)
         {
+            //---------------------------------------------------------
+            // Progressive throttle reduction
+            //---------------------------------------------------------
+
             throttle *=
                 ArrivalState.DesiredThrottleScale;
+
+            //---------------------------------------------------------
+            // Aggressive late braking
+            //---------------------------------------------------------
+
+            const double BrakeAlpha =
+                FMath::Clamp(
+                    1.0 -
+                    ArrivalState.DesiredThrottleScale,
+                    0.0,
+                    1.0);
+
+            brakes =
+                FMath::Max(
+                    brakes,
+                    FMath::InterpEaseIn(
+                        0.0,
+                        1.0,
+                        BrakeAlpha,
+                        3.0));
+
+            //---------------------------------------------------------
+            // Final arrival stop
+            //---------------------------------------------------------
 
             if (ArrivalState.bInsideArrivalRadius)
             {
@@ -937,7 +984,21 @@ StarshipAI::ThrottleControl()
 
                 brakes =
                     1.0;
+
+                if (ship->GetFLCS())
+                {
+                    ship->GetFLCS()->FullStop();
+                }
             }
+
+            UE_LOG(LogTemp, Warning,
+                TEXT("[BRAKE TRANS] Ship='%hs' Dist=%.2f ")
+                TEXT("ThrottleScale=%.2f BrakeAlpha=%.2f Brakes=%.2f"),
+                ship->GetName(),
+                ArrivalState.Distance,
+                ArrivalState.DesiredThrottleScale,
+                BrakeAlpha,
+                brakes);
         }
 
         if (ArrivalState.bComplete)

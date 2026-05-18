@@ -91,6 +91,7 @@ public:
     virtual void InsertObject(Asteroid* asteroid);
 
     Ship* FindShip(const char* name);
+    SimObject* FindObject(const char* name);
     Ship* FindShipByObjID(uint32 objid);
     SimShot* FindShotByObjID(uint32 objid);
 

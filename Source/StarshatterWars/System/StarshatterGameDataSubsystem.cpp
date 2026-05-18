@@ -227,6 +227,81 @@ ParseInstructionAction(const FString& InValue)
 	return EInstructionAction::None;
 }
 
+static EInstruction ParseInstructionType(const FString& InValue)
+{
+	const FString Value =
+		InValue.TrimStartAndEnd().ToLower();
+
+	if (Value == TEXT("none"))
+		return EInstruction::None;
+
+	if (Value == TEXT("vector"))
+		return EInstruction::Vector;
+
+	if (Value == TEXT("approach"))
+		return EInstruction::Approach;
+
+	if (Value == TEXT("stopat") ||
+		Value == TEXT("stop_at") ||
+		Value == TEXT("stop at"))
+		return EInstruction::StopAt;
+
+	if (Value == TEXT("hold"))
+		return EInstruction::Hold;
+
+	if (Value == TEXT("launch"))
+		return EInstruction::Launch;
+
+	if (Value == TEXT("dock"))
+		return EInstruction::Dock;
+
+	if (Value == TEXT("rtb") ||
+		Value == TEXT("returntobase") ||
+		Value == TEXT("return_to_base") ||
+		Value == TEXT("return to base"))
+		return EInstruction::RTB;
+
+	if (Value == TEXT("farcast"))
+		return EInstruction::Farcast;
+
+	if (Value == TEXT("quantum"))
+		return EInstruction::Quantum;
+
+	if (Value == TEXT("defend"))
+		return EInstruction::Defend;
+
+	if (Value == TEXT("escort"))
+		return EInstruction::Escort;
+
+	if (Value == TEXT("patrol"))
+		return EInstruction::Patrol;
+
+	if (Value == TEXT("target"))
+		return EInstruction::Target;
+
+	if (Value == TEXT("sweep"))
+		return EInstruction::Sweep;
+
+	if (Value == TEXT("intercept"))
+		return EInstruction::Intercept;
+
+	if (Value == TEXT("strike"))
+		return EInstruction::Strike;
+
+	if (Value == TEXT("assault"))
+		return EInstruction::Assault;
+
+	if (Value == TEXT("recon"))
+		return EInstruction::Recon;
+
+	if (Value == TEXT("recall"))
+		return EInstruction::Recall;
+
+	if (Value == TEXT("deploy"))
+		return EInstruction::Deploy;
+
+	return EInstruction::None;
+}
 void UStarshatterGameDataSubsystem::Tick(float DeltaTime)
 {
 	Galaxy* GalaxyPtr = Galaxy::GetInstance();
@@ -3152,8 +3227,7 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 	Text ObjectiveDesc = "";
 	Text ObjectiveActionName = "";
 
-	OutInstr =
-		FS_MissionInstruction();
+	OutInstr = FS_MissionInstruction();
 
 	MissionRLocArray.Empty();
 
@@ -3179,6 +3253,12 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 
 			OutInstr.OrderName =
 				FString(OrderName);
+
+			// IMPORTANT:
+			// cmd owns Action.
+			OutInstr.Action =
+				ParseInstructionType(
+					FString(OrderName));
 		}
 		else if (Key == "status")
 		{
@@ -3191,9 +3271,10 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 		{
 			GetDefText(ObjectiveActionName, PDef, Fn);
 
-			OutInstr.Action =
-				ParseInstructionAction(
-					FString(ObjectiveActionName));
+			// objective is metadata only.
+			// Do NOT modify Action here.
+			OutInstr.ObjectiveType =
+				FString(ObjectiveActionName).TrimStartAndEnd();
 		}
 		else if (Key == "loc")
 		{
@@ -3204,6 +3285,15 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 
 			OutInstr.ObjectiveLocation =
 				V;
+		}
+		else if (Key == "tgt")
+		{
+			GetDefText(ObjectiveName, PDef, Fn);
+
+			// actual runtime target object
+			OutInstr.ObjectiveName =
+				FString(ObjectiveName)
+				.TrimStartAndEnd();
 		}
 		else if (Key == "rloc")
 		{
@@ -3271,27 +3361,21 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 
 			if (Farcast != 0)
 			{
-				OutInstr.Action =
-					EInstructionAction::Farcast;
+				OutInstr.ObjectiveType =
+					TEXT("farcast");
 			}
-		}
-		else if (Key == "tgt")
-		{
-			GetDefText(ObjectiveName, PDef, Fn);
-
-			OutInstr.ObjectiveName =
-				FString(ObjectiveName);
 		}
 		else if (Key == "tgt_desc")
 		{
 			GetDefText(ObjectiveDesc, PDef, Fn);
 
-			OutInstr.ObjectiveDesc =
+			OutInstr.ObjectiveInfo =
 				FString(ObjectiveDesc);
 		}
 		else
 		{
-			const char* KeyC = Key;
+			const char* KeyC =
+				Key;
 
 			if (KeyC &&
 				!strncmp(KeyC, "hold", 4))
@@ -3300,10 +3384,11 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 
 				GetDefNumber(Hold, PDef, Fn);
 
-				if (Hold != 0)
+				if (Hold != 0 &&
+					OutInstr.Action == EInstruction::None)
 				{
 					OutInstr.Action =
-						EInstructionAction::Hold;
+						EInstruction::Hold;
 				}
 			}
 		}
@@ -3312,33 +3397,40 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 	/*
 	 * Legacy compatibility fallback:
 	 *
-	 * tgt without explicit objective
-	 * implies target action.
+	 * tgt without explicit cmd/objective action implies target.
+	 *
+	 * But do NOT convert tgt to Target if cmd already supplied Action.
 	 */
 
-	if (OutInstr.Action ==
-		EInstructionAction::None &&
+	if (OutInstr.Action == EInstruction::None &&
 		!OutInstr.ObjectiveName.IsEmpty())
 	{
 		OutInstr.Action =
-			EInstructionAction::Target;
+			EInstruction::Target;
 	}
 
 	/*
-	 * Location-only navpoint/objective
-	 * implies approach.
+	 * Location-only navpoint/objective implies approach.
 	 */
 
-	if (OutInstr.Action ==
-		EInstructionAction::None &&
+	if (OutInstr.Action == EInstruction::None &&
 		!OutInstr.ObjectiveLocation.IsNearlyZero())
 	{
 		OutInstr.Action =
-			EInstructionAction::Approach;
+			EInstruction::Approach;
 	}
 
 	OutInstr.RLoc =
 		MissionRLocArray;
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ParseMissionInstructionCommon] cmd='%s' action=%d tgt='%s' rgn='%s' speed=%d loc=%s"),
+		*OutInstr.OrderName,
+		(int32)OutInstr.Action,
+		*OutInstr.ObjectiveName,
+		* OutInstr.OrderRegionName,
+		OutInstr.Speed,
+		* OutInstr.ObjectiveLocation.ToString());
 
 	return true;
 }

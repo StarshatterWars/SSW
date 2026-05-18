@@ -2350,7 +2350,13 @@ struct FS_MissionInstruction : public FTableRowBase
 	FString ObjectiveDesc;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	EInstructionAction Action;
+	FString ObjectiveInfo;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	FString ObjectiveType;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	EInstruction Action = EInstruction::None;
 
 	/*
 	 * Resolved runtime world-space objective
@@ -2387,9 +2393,6 @@ struct FS_MissionInstruction : public FTableRowBase
 
 		ObjectiveName = "";
 		ObjectiveDesc = "";
-
-		Action =
-			EInstructionAction::None;
 	}
 };
 
