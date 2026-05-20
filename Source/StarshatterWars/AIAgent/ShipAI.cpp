@@ -988,20 +988,246 @@ ShipAI::FindObjectiveTarget(SimObject* tgt)
 // +--------------------------------------------------------------------+
 
 void
-ShipAI::FindObjectivePatrol()
+ShipAI::FindObjectiveNavPoint()
 {
-	navpt = 0;
+	SimRegion* SelfRgn =
+		ship ? ship->GetRegion() : nullptr;
 
-	FVector npt = patrol_loc;
-	obj_w = npt;
+	SimRegion* NavRgn =
+		navpt ? navpt->GetRegion() : nullptr;
 
-	// distance from self to navpt:
-	distance = ((FVector)(obj_w - self->GetLocation())).Size();
+	QuantumDrive* QDrive =
+		ship ? ship->GetQuantumDrive() : nullptr;
 
-	if (distance < 1000) {
-		ship->ClearRadioOrders();
-		ClearPatrol();
+	if (!ship || !SelfRgn || !navpt)
+	{
+		return;
 	}
+
+	//-------------------------------------------------------------
+	// Ensure navpoint region exists
+	//-------------------------------------------------------------
+
+	if (!NavRgn)
+	{
+		NavRgn =
+			SelfRgn;
+
+		navpt->SetRegion(
+			NavRgn);
+	}
+
+	//-------------------------------------------------------------
+	// Determine whether farcaster routing is required
+	//-------------------------------------------------------------
+
+	const bool bUseFarcaster =
+		(SelfRgn != NavRgn) &&
+		(navpt->GetFarcast() ||
+			!QDrive ||
+			!QDrive->IsPowerOn() ||
+			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
+
+	if (bUseFarcaster)
+	{
+		FindObjectiveFarcaster(
+			SelfRgn,
+			NavRgn);
+
+		return;
+	}
+
+	//-------------------------------------------------------------
+	// Legacy non-farcaster routing
+	//-------------------------------------------------------------
+
+	if (farcaster)
+	{
+		if (farcaster->GetShip() &&
+			farcaster->GetShip()->GetRegion() != SelfRgn)
+		{
+			if (farcaster->GetDest())
+			{
+				farcaster =
+					farcaster->GetDest()->GetFarcaster();
+			}
+		}
+
+		if (farcaster)
+		{
+			obj_w =
+				farcaster->EndPoint();
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Standard navpoint objective
+	//-------------------------------------------------------------
+
+	if (!farcaster)
+	{
+		//---------------------------------------------------------
+		// Runtime object target
+		//---------------------------------------------------------
+
+		bool bResolvedRuntimeTarget =
+			false;
+
+		if (navpt->GetTargetName() &&
+			strlen(navpt->GetTargetName()) > 0)
+		{
+			SimObject* TargetObj =
+				SelfRgn->FindObject(
+					navpt->GetTargetName());
+
+			if (TargetObj)
+			{
+				//-------------------------------------------------
+				// Runtime sim owns world-space.
+				//-------------------------------------------------
+
+				obj_w =
+					TargetObj->GetLocation();
+
+				bResolvedRuntimeTarget =
+					true;
+
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::FindObjectiveNavPoint] RuntimeTarget='%hs' ObjW=%s"),
+					navpt->GetTargetName(),
+					*obj_w.ToString());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[ShipAI::FindObjectiveNavPoint] FAILED RuntimeTarget='%hs'"),
+					navpt->GetTargetName());
+			}
+		}
+
+		//---------------------------------------------------------
+		// Static navpoint fallback
+		//---------------------------------------------------------
+
+		if (!bResolvedRuntimeTarget)
+		{
+			FVector Npt =
+				navpt->GetRegion()->GetLocation() +
+				navpt->GetLocation();
+
+			SimRegion* ActiveRegion =
+				ship->GetRegion();
+
+			if (ActiveRegion)
+			{
+				Npt -=
+					ActiveRegion->GetLocation();
+			}
+
+			Npt =
+				OtherHand(Npt);
+
+			obj_w =
+				Npt;
+
+			UE_LOG(LogTemp, Warning,
+				TEXT("[ShipAI::FindObjectiveNavPoint] StaticNav ObjW=%s"),
+				*obj_w.ToString());
+		}
+	}
+
+	//-------------------------------------------------------------
+	// Objective
+	//-------------------------------------------------------------
+
+	objective =
+		obj_w;
+
+	//-------------------------------------------------------------
+	// Distance
+	//-------------------------------------------------------------
+
+	distance =
+		(obj_w - ship->GetLocation()).Size();
+
+	//-------------------------------------------------------------
+	// Simple farcaster navigation log
+	//-------------------------------------------------------------
+
+	if (navpt->GetFarcast())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("[FARCAST NAV] Ship='%hs' Target='%hs' Dist=%.2f ObjW=%s"),
+			ship ? ship->GetName() : "NULL",
+			navpt->GetTargetName()
+			? navpt->GetTargetName()
+			: "NULL",
+			distance,
+			*obj_w.ToString());
+	}
+
+	//-------------------------------------------------------------
+	// Farcaster cleanup
+	//-------------------------------------------------------------
+
+	if (farcaster &&
+		distance < 1000.0)
+	{
+		farcaster =
+			nullptr;
+	}
+
+	//-------------------------------------------------------------
+	// Navpoint completion
+	//-------------------------------------------------------------
+
+	const double CompletionRadius =
+		navpt->GetFarcast()
+		? 5000.0
+		: 1000.0;
+
+	if (distance <= CompletionRadius ||
+		(navpt->GetAction() == EInstruction::Launch &&
+			distance > 25000.0))
+	{
+		ship->SetNavptStatus(
+			navpt,
+			INSTRUCTION_STATUS::COMPLETE);
+
+		if (navpt->GetFarcast())
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[FARCAST ARRIVAL] Ship='%hs' Target='%hs' Dist=%.2f"),
+				ship ? ship->GetName() : "NULL",
+				navpt->GetTargetName()
+				? navpt->GetTargetName()
+				: "NULL",
+				distance);
+		}
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Objective Arrival COMPLETE] Ship='%hs' Target='%hs' Distance=%.2f Radius=%.2f Action=%d Farcast=%d"),
+			ship ? ship->GetName() : "NULL",
+			navpt->GetTargetName()
+			? navpt->GetTargetName()
+			: "NULL",
+			distance,
+			CompletionRadius,
+			(int32)navpt->GetAction(),
+			navpt->GetFarcast());
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[ShipAI::FindObjectiveNavPoint] Ship='%hs' SelfRgn='%hs' NavRgn='%hs' NavLoc=%s ObjW=%s ShipLoc=%s Dist=%.2f FarcasterPtr=%d NavFarcast=%d"),
+		ship ? ship->GetName() : "NULL",
+		SelfRgn ? SelfRgn->GetName() : "NULL",
+		NavRgn ? NavRgn->GetName() : "NULL",
+		*navpt->GetLocation().ToString(),
+		*obj_w.ToString(),
+		*ship->GetLocation().ToString(),
+		distance,
+		farcaster ? 1 : 0,
+		navpt ? navpt->GetFarcast() : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -1202,8 +1428,8 @@ ShipAI::FindObjectiveNavPoint()
 
 	const double CompletionRadius =
 		navpt->GetFarcast()
-		? 5000.0
-		: 1000.0;
+			? 5000.0
+			: 1000.0;
 
 	if (distance <= CompletionRadius ||
 		(navpt->GetAction() == EInstruction::Launch &&
@@ -1217,8 +1443,8 @@ ShipAI::FindObjectiveNavPoint()
 			TEXT("[Objective Arrival COMPLETE] Ship='%hs' Target='%hs' Distance=%.2f Radius=%.2f Action=%d Farcast=%d"),
 			ship ? ship->GetName() : "NULL",
 			navpt->GetTargetName()
-			? navpt->GetTargetName()
-			: "NULL",
+				? navpt->GetTargetName()
+				: "NULL",
 			distance,
 			CompletionRadius,
 			(int32)navpt->GetAction(),

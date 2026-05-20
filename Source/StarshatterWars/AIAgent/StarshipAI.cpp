@@ -1069,18 +1069,6 @@ StarshipAI::ThrottleControl()
         ship->SetTransY(
             ship->Design()->trans_y);
     }
-
-    if (ship &&
-        !_stricmp(ship->GetName(), "Blockade Runner"))
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[StarshipAI::ThrottleControl BR] ")
-            TEXT("Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Brakes=%.2f"),
-            distance,
-            ship_speed,
-            throttle,
-            brakes);
-    }
 }
 
 // +----------------------------------------------------------------------+
