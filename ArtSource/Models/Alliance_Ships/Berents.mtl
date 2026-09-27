@@ -1,0 +1,12 @@
+#
+# Berents Material Library exported by Magic 2.0
+#
+
+newmtl Hull
+Ka 0.75294 0.75294 0.75294
+Kd 1.00000 1.00000 1.00000
+Ks 0.50000 0.50000 0.50000
+Ns 20.00000
+illum 2
+map_Kd Frigate_D.jpg
+

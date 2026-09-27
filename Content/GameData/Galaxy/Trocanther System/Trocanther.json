@@ -1,0 +1,188 @@
+{
+  "name": "Trocanther",
+  "sky": {
+    "nebula": "Nebula-Trocanther.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Trocanther/Hell/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    30,
+    15,
+    0
+  ],
+  "star": {
+    "name": "Trocanther",
+    "map": "Suns/StarK_map.pcx",
+    "image": "Suns/K1.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,	
+    "color": [
+      255,
+      240,
+      220
+    ],
+    "back": [
+      90,
+      50,
+      30
+    ],
+    "planet": [
+      {
+        "name": "Volante",
+        "map": "Trocanther/volante_map.pcx",
+        "image": "Trocanther/volante_lo.pcx",
+        "high_res": "Trocanther/volante_hi.jpg",
+        "radius": 6000000,
+        "mass": 5.1e+24,
+        "orbit": 140000000000,
+        "rotation": 21.7,
+        "region": {
+          "name": "Volante",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 18000000,
+          "inclination": 0.4,
+          "link": []
+        },
+        "moon": [],
+        "terrain": {
+          "name": "Hell's Kitchen",
+          "radius": 480000,
+          "grid": 20000,
+          "patch": "Trocanther/Hell/terrain.pcx",
+          "patch_texture": "Trocanther/Hell/terrain_big.pcx",
+          "apron": "Trocanther/Hell/terrain_apron.pcx",
+          "apron_texture": "Trocanther/Hell/terrain_apron_tex.pcx",
+          "sky_color": "Trocanther/Hell/terrain_sky.pcx",
+          "layer": [
+            {
+              "tile": "Trocanther/Hell/Layer0.pcx",
+              "height": 0,
+              "detail": "Radix/Canyon/noise0.pcx"
+            },
+            {
+              "tile": "Trocanther/Hell/Layer1.pcx",
+              "height": 3000,
+              "detail": "Radix/Canyon/noise1.pcx"
+            },
+            {
+              "tile": "Trocanther/Hell/Layer2.pcx",
+              "height": 9000,
+              "detail": "Radix/Canyon/noise1.pcx"
+            }
+          ],
+          "clouds_high": "Trocanther/Hell/terrain_cloud0.pcx",
+          "clouds_low": "Trocanther/Hell/terrain_cloud1.pcx",
+          "shades_low": "Trocanther/Hell/terrain_cloud1a.pcx",
+          "clouds_alt_high": 16300,
+          "clouds_alt_low": 13100,
+          "scale": 1750,
+          "mtnscale": 60,
+          "haze_fade": 0.5,
+          "fog_density": 0.5,
+          "fog_scale": 5,
+          "weather_period": 59876,
+          "weather_high_clouds": 0,
+          "weather_moderate_clouds": 0,
+          "weather_overcast": 0,
+          "weather_fog": 0,
+          "weather_storm": 100
+        }
+      },
+      {
+        "name": "Narcissus",
+        "map": "Giants/GasGiant1_map.pcx",
+        "image": "Giants/GasGiant1.jpg",
+		"high_res": "Giants/GasGiant1.jpg",
+        "radius": 13700000,
+        "mass": 3.6e+26,
+        "orbit": 251000000000,
+        "rotation": 43.7,
+        "region": {
+          "name": "Narcissus",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 55000000,
+          "inclination": 0.3
+        },
+        "moon": [
+          {
+            "name": "Liriope",
+            "map": "Moons/ice_map.pcx",
+            "image": "Moons/ice_lo.pcx",
+            "high_res": "Moons/ice_hi.pcx",
+            "radius": 2300000,
+            "rotation": 26.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 5.98e+24,
+            "orbit": 311000000,
+            "region": {
+              "name": "Liriope",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 18000000,
+              "inclination": 0.22,
+              "link": []
+            }
+          },
+          {
+            "name": "Echo",
+            "map": "Jarnell/lanos_map.pcx",
+            "image": "Jarnell/lanos_lo.pcx",
+            "high_res": "Jarnell/lanos_hi.pcx",
+            "radius": 4100000,
+            "rotation": 38.4,
+            "atmosphere": [
+              180,
+              180,
+              255
+            ],
+            "mass": 3.28e+24,
+            "orbit": 524000000,
+            "region": {
+              "name": "Echo",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 18000000,
+              "inclination": 0.11,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Path",
+        "map": "Trocanther/path_map.pcx",
+        "image": "Trocanther/path_lo.pcx",
+        "high_res": "Trocanther/path_hi.pcx",
+        "radius": 4100000,
+        "mass": 3.5e+24,
+        "orbit": 440000000000,
+        "rotation": 51.7,
+        "region": {
+          "name": "Path",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 15000000,
+          "inclination": 0.2,
+          "link": [
+            "Xanthe",
+            "Relay"
+          ]
+        },
+        "moon": []
+      }
+    ]
+  }
+}

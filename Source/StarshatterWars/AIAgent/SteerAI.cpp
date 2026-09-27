@@ -1,0 +1,632 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (C) 2025-2026. All Rights Reserved.
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         SteerAI.cpp
+    AUTHOR:       Carlos Bott
+
+    ORIGINAL AUTHOR AND STUDIO:
+    John DiCamillo / Destroyer Studios LLC
+    Copyright © 1997-2004. All Rights Reserved.
+
+    OVERVIEW
+    ========
+    Steering (low-level) Artificial Intelligence class
+*/
+
+#include "SteerAI.h"
+#include "SeekerAI.h"
+#include "FighterAI.h"
+#include "StarshipAI.h"
+#include "GroundAI.h"
+#include "SimSystem.h"
+#include "Ship.h"
+
+#include "Game.h"
+#include "Physical.h"
+
+#include "CoreMinimal.h"              // UE_LOG, basic UE types
+#include "Math/UnrealMathUtility.h"   // FMath
+#include "Math/Vector.h"              // FVector
+
+// +----------------------------------------------------------------------+
+
+Steer
+Steer::operator+(const Steer& s) const
+{
+    return Steer(yaw + s.yaw, pitch + s.pitch, roll + s.roll, (brake > s.brake) ? brake : s.brake);
+}
+
+Steer
+Steer::operator-(const Steer& s) const
+{
+    return Steer(yaw - s.yaw, pitch - s.pitch, roll - s.roll, (brake < s.brake) ? brake : s.brake);
+}
+
+Steer
+Steer::operator*(double f) const
+{
+    return Steer(yaw * f, pitch * f, roll * f, brake);
+}
+
+Steer
+Steer::operator/(double f) const
+{
+    return Steer(yaw / f, pitch / f, roll / f, brake);
+}
+
+Steer&
+Steer::operator+=(const Steer& s)
+{
+    yaw += s.yaw;
+    pitch += s.pitch;
+    roll += s.roll;
+
+    if (s.brake > brake)
+        brake = s.brake;
+
+    if (s.stop)
+        stop = 1;
+
+    return *this;
+}
+
+Steer&
+Steer::operator-=(const Steer& s)
+{
+    yaw -= s.yaw;
+    pitch -= s.pitch;
+    roll -= s.roll;
+
+    if (s.brake < brake)
+        brake = s.brake;
+
+    if (s.stop)
+        stop = 1;
+
+    return *this;
+}
+
+double
+Steer::Magnitude() const
+{
+    return sqrt(yaw * yaw + pitch * pitch);
+}
+
+// +--------------------------------------------------------------------+
+
+SimDirector*
+SteerAI::Create(SimObject* self, ESteerAIType Type)
+{
+    SimDirector* Result = nullptr;
+
+    switch (Type)
+    {
+    case ESteerAIType::SHIP:
+        Result = new ShipAI(self);
+        break;
+
+    case ESteerAIType::SEEKER:
+        Result = new SeekerAI(self);
+        break;
+
+    case ESteerAIType::FIGHTER:
+        Result = new FighterAI(self);
+        break;
+
+    case ESteerAIType::STARSHIP:
+        Result = new StarshipAI(self);
+        break;
+
+    case ESteerAIType::GROUND:
+        Result = new GroundAI(self);
+        break;
+
+    default:
+        Result = nullptr;
+        break;
+    }
+
+    Ship* S = dynamic_cast<Ship*>(self);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SteerAI::Create] Ship='%s' RequestedType=%d Result=%p ResultType=%d"),
+        S ? ANSI_TO_TCHAR(S->GetName()) : TEXT("NULL"),
+        static_cast<int32>(Type),
+        Result,
+        Result ? static_cast<int32>(Result->GetType()) : -1);
+
+    return Result;
+}
+
+// +----------------------------------------------------------------------+
+
+SteerAI::SteerAI(SimObject* ship)
+    : self(ship),
+    target(0),
+    subtarget(0),
+    other(0),
+    obj_w(FVector::ZeroVector),
+    objective(FVector::ZeroVector),
+    distance(0.0),
+    magnitude(0),
+    evade_time(0),
+    seeking(0),
+    seek_gain(20),
+    seek_damp(0.5),
+    ai_type(ESteerAIType::NONE)
+{
+    for (int i = 0; i < 3; i++)
+        az[i] = el[i] = 0;
+}
+
+// +--------------------------------------------------------------------+
+
+SteerAI::~SteerAI()
+{
+}
+
+// +--------------------------------------------------------------------+
+
+void
+SteerAI::SetTarget(SimObject* targ, SimSystem* sub)
+{
+    if (target != targ) {
+        target = targ;
+
+        if (target)
+            Observe(target);
+    }
+
+    subtarget = sub;
+}
+
+void
+SteerAI::DropTarget(double dtime)
+{
+    SetTarget(0);
+}
+
+// +--------------------------------------------------------------------+
+
+bool
+SteerAI::Update(SimObject* obj)
+{
+    if (obj == target) {
+        target = 0;
+        subtarget = 0;
+    }
+
+    if (obj == other) {
+        other = 0;
+    }
+
+    return SimObserver::Update(obj);
+}
+
+const char*
+SteerAI::GetObserverName() const
+{
+    // UE-safe, thread-local static buffer (avoids sprintf_s dependency):
+    static thread_local char NameBuf[64];
+
+#if PLATFORM_WINDOWS
+    _snprintf_s(NameBuf, sizeof(NameBuf), _TRUNCATE, "SteerAI(%s)", self ? self->GetName() : "null");
+#else
+    snprintf(NameBuf, sizeof(NameBuf), "SteerAI(%s)", self ? self->Name() : "null");
+#endif
+
+    return NameBuf;
+}
+
+// +--------------------------------------------------------------------+
+
+FVector
+SteerAI::ClosingVelocity()
+{
+    if (self) {
+        if (target)
+            return self->GetVelocity() - target->GetVelocity();
+        else
+            return self->GetVelocity();
+    }
+
+    return FVector(1, 0, 0);
+}
+
+void
+SteerAI::FindObjective()
+{
+    if (!self || !target)
+        return;
+
+    FVector Cv = ClosingVelocity();
+    double  Cvl = Cv.Length();
+    double  Time = 0;
+
+    if (Cvl > 5) {
+        // distance from self to target:
+        distance = FVector(target->GetLocation() - self->GetLocation()).Length();
+
+        // time to reach target:
+        Time = distance / Cvl;
+
+        // where the target will be when we reach it:
+        FVector RunVec = target->GetVelocity();
+        obj_w = target->GetLocation() + (RunVec * Time);
+    }
+    else {
+        obj_w = target->GetLocation();
+    }
+
+    // subsystem offset:
+    if (subtarget) {
+        FVector Offset = target->GetLocation() - subtarget->GetMountLocation();
+        obj_w -= Offset;
+    }
+
+    distance = FVector(obj_w - self->GetLocation()).Length();
+    if (Cvl > 5)
+        Time = distance / Cvl;
+
+    // where we will be when the target gets there:
+    FVector SelfDest = self->GetLocation() + Cv * Time;
+    FVector Err = obj_w - SelfDest;
+
+    obj_w += Err;
+
+    // transform into camera coords:
+    objective = Transform(obj_w);
+    objective.Normalize();
+
+    distance = FVector(obj_w - self->GetLocation()).Length();
+}
+
+FVector
+SteerAI::Transform(const FVector& Pt)
+{
+    if (!self)
+    {
+        return FVector::ZeroVector;
+    }
+
+    const FVector ObjT =
+        Pt - self->GetLocation();
+
+    Camera Cam;
+
+    if (self->GetFlightPathYawAngle() != 0 ||
+        self->GetFlightPathPitchAngle() != 0)
+    {
+        double Az =
+            self->GetFlightPathYawAngle();
+
+        double El =
+            self->GetFlightPathPitchAngle();
+
+        const double MAX_ANGLE =
+            15 * DEGREES;
+
+        const double MIN_ANGLE =
+            3 * DEGREES;
+
+        if (Az > MAX_ANGLE)
+        {
+            Az = MAX_ANGLE;
+        }
+        else if (Az < -MAX_ANGLE)
+        {
+            Az = -MAX_ANGLE;
+        }
+        else if (Az > MIN_ANGLE)
+        {
+            Az =
+                MIN_ANGLE +
+                (Az - MIN_ANGLE) / 2;
+        }
+        else if (Az < -MIN_ANGLE)
+        {
+            Az =
+                -MIN_ANGLE +
+                (Az + MIN_ANGLE) / 2;
+        }
+
+        if (El > MAX_ANGLE)
+        {
+            El = MAX_ANGLE;
+        }
+        else if (El < -MAX_ANGLE)
+        {
+            El = -MAX_ANGLE;
+        }
+        else if (El > MIN_ANGLE)
+        {
+            El =
+                MIN_ANGLE +
+                (El - MIN_ANGLE) / 2;
+        }
+        else if (El < -MIN_ANGLE)
+        {
+            El =
+                -MIN_ANGLE +
+                (El + MIN_ANGLE) / 2;
+        }
+
+        Cam.Clone(self->GetCam());
+        Cam.Yaw(Az);
+        Cam.Pitch(-El);
+    }
+    else
+    {
+        Cam.Clone(self->GetCam());
+    }
+
+    const FVector Result(
+        FVector::DotProduct(ObjT, Cam.vrt()),
+        FVector::DotProduct(ObjT, Cam.vup()),
+        FVector::DotProduct(ObjT, Cam.vpn()));
+
+    if (!_stricmp(self->GetName(), "Blockade Runner"))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SteerAI::Transform BR] Pt=%s SelfLoc=%s ObjT=%s VRT=%s VUP=%s VPN=%s Result=%s"),
+            *Pt.ToString(),
+            *self->GetLocation().ToString(),
+            *ObjT.ToString(),
+            *Cam.vrt().ToString(),
+            *Cam.vup().ToString(),
+            *Cam.vpn().ToString(),
+            *Result.ToString());
+    }
+
+    return Result;
+}
+
+FVector
+SteerAI::AimTransform(const FVector& Pt)
+{
+	if (!self)
+	{
+		return FVector::ZeroVector;
+	}
+
+	Camera& Cam =
+		(Camera&)self->GetCam();
+
+	const FVector ObjT =
+		Pt - self->GetLocation();
+
+	const FVector Result(
+		FVector::DotProduct(ObjT, Cam.vrt()),
+		FVector::DotProduct(ObjT, Cam.vup()),
+		FVector::DotProduct(ObjT, Cam.vpn()));
+
+	return Result;
+}
+
+// +--------------------------------------------------------------------+
+
+void
+SteerAI::Navigator()
+{
+    accumulator.Clear();
+    magnitude = 0;
+}
+
+int
+SteerAI::Accumulate(const Steer& steer)
+{
+    int overflow = 0;
+
+    double mag = steer.Magnitude();
+
+    if (magnitude + mag > 1) {
+        overflow = 1;
+        double scale = (1 - magnitude) / mag;
+
+        accumulator += steer * scale;
+        magnitude = 1;
+
+        if (seeking) {
+            az[0] *= scale;
+            el[0] *= scale;
+            seeking = 0;
+        }
+    }
+    else {
+        accumulator += steer;
+        magnitude += mag;
+    }
+
+    return overflow;
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+SteerAI::Seek(const FVector& InPoint)
+{
+    Steer s;
+
+    az[2] = az[1];
+    az[1] = az[0];
+
+    el[2] = el[1];
+    el[1] = el[0];
+
+    if (!FMath::IsFinite(InPoint.X) ||
+        !FMath::IsFinite(InPoint.Y) ||
+        !FMath::IsFinite(InPoint.Z))
+    {
+        az[0] = 0.0;
+        el[0] = 0.0;
+        seeking = 0;
+        return s;
+    }
+
+    FVector Point = InPoint;
+
+    if (!Point.Normalize())
+    {
+        az[0] = 0.0;
+        el[0] = 0.0;
+        seeking = 0;
+        return s;
+    }
+
+    //-------------------------------------------------------------
+    // LEGACY STEERING SPACE:
+    //
+    // X = right/left
+    // Y = up/down
+    // Z = forward
+    //
+    // Do NOT reinterpret this as UE X-forward space.
+    //-------------------------------------------------------------
+    if (Point.Z > 0.0f)
+    {
+        az[0] =
+            atan2(FMath::Abs(Point.X), Point.Z) *
+            seek_gain;
+
+        el[0] =
+            atan2(FMath::Abs(Point.Y), Point.Z) *
+            seek_gain;
+
+        if (Point.X < 0.0f)
+        {
+            az[0] = -az[0];
+        }
+
+        if (Point.Y > 0.0f)
+        {
+            el[0] = -el[0];
+        }
+
+        s.yaw =
+            az[0] -
+            seek_damp *
+            (az[1] + az[2] * 0.5);
+
+        s.pitch =
+            el[0] -
+            seek_damp *
+            (el[1] + el[2] * 0.5);
+    }
+    else
+    {
+        if (Point.X > 0.0f)
+        {
+            s.yaw = 1.0f;
+        }
+        else
+        {
+            s.yaw = -1.0f;
+        }
+
+        s.pitch =
+            -Point.Y * 0.5f;
+    }
+
+    seeking = 1;
+
+    if (self && !_stricmp(self->GetName(), "Blockade Runner"))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SteerAI::Seek BR LEGACY] ")
+            TEXT("RawPoint=%s NormPoint=%s ")
+            TEXT("Yaw=%.4f Pitch=%.4f ")
+            TEXT("ForwardZ=%.4f"),
+            *InPoint.ToString(),
+            *Point.ToString(),
+            s.yaw,
+            s.pitch,
+            Point.Z);
+    }
+
+    return s;
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+SteerAI::Flee(const FVector& Pt)
+{
+    Steer s;
+
+    FVector Point = Pt;
+    Point.Normalize();
+
+    // approach
+    if (Point.Z > 0.0f) {
+        if (Point.X > 0) s.yaw = -1.0f;
+        else             s.yaw = 1.0f;
+    }
+
+    // flee
+    else {
+        s.yaw = -Point.X;
+        s.pitch = Point.Y;
+    }
+
+    return s;
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+SteerAI::Avoid(const FVector& Point, float Radius)
+{
+    Steer s;
+
+    if (Point.Z > 0) {
+        double ax = Radius - fabs(Point.X);
+        double ay = Radius - fabs(Point.Y);
+
+        // go around?
+        if (ax < ay) {
+            s.yaw = atan2(ax, Point.Z) * seek_gain;
+            if (Point.X > 0) s.yaw = -s.yaw;
+        }
+
+        // go over/under:
+        else {
+            s.pitch = atan2(ay, Point.Z) * seek_gain;
+            if (Point.Y < 0) s.pitch = -s.pitch;
+        }
+    }
+
+    return s;
+}
+
+// +--------------------------------------------------------------------+
+
+Steer
+SteerAI::Evade(const FVector& Point, const FVector& Vel)
+{
+    (void)Point;
+    (void)Vel;
+
+    Steer Evade;
+
+    if (Game::GetGameTime() - evade_time > 1250) {
+        evade_time = Game::GetGameTime();
+
+        const int32 Direction = FMath::RandRange(0, 7);
+
+        switch (Direction) {
+        default:
+        case 0:  Evade.yaw = 0;  Evade.pitch = -0.5; break;
+        case 1:  Evade.yaw = 0;  Evade.pitch = -1.0; break;
+        case 2:  Evade.yaw = 1;  Evade.pitch = -0.3; break;
+        case 3:  Evade.yaw = 1;  Evade.pitch = -0.6; break;
+        case 4:  Evade.yaw = 1;  Evade.pitch = -1.0; break;
+        case 5:  Evade.yaw = -1; Evade.pitch = -0.3; break;
+        case 6:  Evade.yaw = -1; Evade.pitch = -0.6; break;
+        case 7:  Evade.yaw = -1; Evade.pitch = -1.0; break;
+        }
+    }
+
+    return Evade;
+}

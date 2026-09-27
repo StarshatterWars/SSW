@@ -1,0 +1,35 @@
+SHIP
+
+name:         Bldg05
+class:        Building
+display_name: Building
+abrv:		  BLDG
+description:  "The Bldg05 Facility is a multipurpose colonial structure supporting logistics, storage, and essential services within developing settlements. Though architecturally modest, it plays a quiet but critical role in sustaining long-term planetary operations."
+empire:       All
+hud_icon:     "hud_bldg05"
+
+model:     "Bldg05-0"
+
+mass:       5e3
+integrity:  8e3
+scale:      3
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       6,
+   final_loc:        (0, 14, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

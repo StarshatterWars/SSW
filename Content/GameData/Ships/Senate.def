@@ -1,0 +1,20 @@
+SHIP
+
+name:       Senate
+class:      Building
+abrv:       BLDG
+display_name: "Senate"
+empire:      All
+description: "The Senate Complex is the political heart of the region, housing legislative chambers and administrative offices. Though architecturally imposing and symbolically powerful, it relies on surrounding defenses for protection during times of conflict."
+
+model: "senate2"
+
+mass:       550e4
+integrity:  500e4
+scale:      3
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

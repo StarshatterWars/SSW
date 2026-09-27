@@ -1,0 +1,37 @@
+SHIP
+
+name:         Bldg00
+class:        Building
+abrv:		  BLDG
+display_name: "Office Complex"
+description:   "The Office Complex serves as the administrative nerve center of a planetary settlement, coordinating logistics, communications, and civil governance. While lightly fortified, its data networks and command infrastructure make it a vital asset in maintaining operational control across the sector."
+empire:       All
+hud_icon:     "hud_bldg00"
+
+model:     "Bldg00-0"
+
+mass:       5e3
+integrity:  8e3
+scale:      3
+acs:        50e3
+
+explosion_scale: 1.2
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       6,   // LARGE_BURST
+   final_loc:        (0,  0, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

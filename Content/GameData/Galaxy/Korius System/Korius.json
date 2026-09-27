@@ -1,0 +1,222 @@
+{
+  "name": "Korius",
+  "sky": {
+    "nebula": "Nebula-Korius.mag",
+    "poly_stars": "stars.mag",
+    "haze": "Korius/Tanis/TerrainHaze.mag"
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    24,
+    20,
+    16
+  ],
+  "star": {
+    "name": "Koriset",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 160000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      240
+    ],
+    "back": [
+      128,
+      90,
+      57
+    ],
+    "region": {
+      "name": "Solnas",
+      "radius": 480000,
+      "grid": 20000,
+      "orbit": 418000000000,
+      "inclination": 0.23,
+      "asteroids": 60,
+      "link": [
+        "Nergal",
+        "Lornas",
+        "Casalle",
+        "Volova",
+        "Relay"
+      ]
+    },
+    "planet": [
+      {
+        "name": "Moneta",
+        "map": "Paragon/bryn_map.pcx",
+        "image": "Paragon/bryn_lo.pcx",
+		"high_res": "Paragon/bryn_hi.jpg",
+        "radius": 3600000,
+        "mass": 3.96e+26,
+        "orbit": 97000000000,
+        "rotation": 15.13,
+        "region": {
+          "name": "Moneta",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 12000000,
+          "inclination": 0.6
+        },
+        "moon": [
+          {
+            "name": "Covana",
+            "map": "Thralis/benares_map.pcx",
+            "image": "Thralis/benares_lo.pcx",
+            "high_res": "Thralis/benares_hi.pcx",
+            "radius": 1100000,
+            "rotation": 19,
+            "inclination": 0,
+            "mass": 1.6e+24,
+            "orbit": 34300000,
+            "region": {
+              "name": "Covana",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.02,
+              "link": []
+            }
+          }
+        ]
+      },
+      {
+        "name": "Rhomin",
+        "map": "Giants/GasGiant11_map.pcx",
+        "image": "Giants/GasGiant11.jpg",
+		"high_res": "Giants/GasGiant11.jpg",
+        "radius": 38200000,
+        "mass": 4e+26,
+        "tilt": 0.1,
+        "tscale": 2,
+        "orbit": 161000000000,
+        "rotation": 31.3,
+        "region": {
+          "name": "Romin",
+          "radius": 480000000000,
+          "grid": 20000,
+          "orbit": 79530000,
+          "inclination": 0.2,
+          "link": []
+        },
+        "moon": [
+          {
+            "name": "Korius",
+            "map": "Korius/korius_map.pcx",
+            "image": "Korius/korius_lo.pcx",
+            "high_res": "Korius/korius_hi.jpg",
+            "gloss": "Korius/korius_gloss.jpg",
+            "glow_high_res": "Korius/korius_lights.jpg",
+            "radius": 4000000,
+            "mass": 4.2e+24,
+            "atmosphere": [
+              130,
+              130,
+              130
+            ],
+            "orbit": 232000000,
+            "rotation": 24.3,
+            "region": {
+              "name": "Korius",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 15000000,
+              "inclination": 0.4
+            }
+          },
+          {
+            "name": "Adantar",
+            "map": "Korius/adantar_map.pcx",
+            "image": "Korius/adantar_lo.pcx",
+            "high_res": "Korius/adantar_hi.jpg",
+            "radius": 3700000,
+            "mass": 3.4e+24,
+            "atmosphere": [
+              120,
+              100,
+              90
+            ],
+            "orbit": 356000000,
+            "rotation": 17.8,
+            "region": {
+              "name": "Adantar",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": 0.02,
+              "link": []
+            },
+            "terrain": {
+              "name": "Tanis",
+              "radius": 480000,
+              "grid": 20000,
+              "patch": "Korius/Tanis/terrain.pcx",
+              "patch_texture": "Korius/Tanis/terrain_big.pcx",
+              "apron": "Korius/Tanis/terrain_apron.pcx",
+              "apron_texture": "Korius/Tanis/terrain_apron_tex.pcx",
+              "sky_color": "Korius/Tanis/terrain_sky.pcx",
+              "layer": [
+                {
+                  "tile": "Korius/Tanis/Layer0.pcx",
+                  "height": 0,
+                  "detail": "Korius/Tanis/noise0.pcx"
+                },
+                {
+                  "tile": "Korius/Tanis/Layer1.pcx",
+                  "height": 3000,
+                  "detail": "Radix/Canyon/noise1.pcx"
+                },
+                {
+                  "tile": "Korius/Tanis/Layer2.pcx",
+                  "height": 9000,
+                  "detail": "Radix/Canyon/noise1.pcx"
+                }
+              ],
+              "clouds_high": "Korius/Tanis/terrain_cloud0.pcx",
+              "clouds_low": "Korius/Tanis/terrain_cloud1.pcx",
+              "shades_low": "Korius/Tanis/terrain_cloud1a.pcx",
+              "clouds_alt_high": 16300,
+              "clouds_alt_low": 13100,
+              "scale": 1750,
+              "mtnscale": 55,
+              "haze_fade": 0.35,
+              "fog_density": 0.65,
+              "fog_scale": 5,
+              "weather_period": 49876,
+              "weather_high_clouds": 50,
+              "weather_moderate_clouds": 35,
+              "weather_overcast": 0,
+              "weather_fog": 0,
+              "weather_storm": 2
+            }
+          },
+          {
+            "name": "Alita",
+            "map": "Haiche/kala_map.pcx",
+            "image": "Haiche/kala_lo.pcx",
+            "high_res": "Haiche/kala_hi.pcx",
+            "radius": 2110000,
+            "mass": 1.9e+22,
+            "orbit": 421000000,
+            "rotation": 10,
+            "region": {
+              "name": "Alita",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 15000000,
+              "inclination": 0.4,
+              "link": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

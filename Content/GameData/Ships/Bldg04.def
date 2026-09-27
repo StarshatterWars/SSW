@@ -1,0 +1,35 @@
+SHIP
+
+name:         Bldg04
+class:        Building
+display_name: "Office Tower"
+abrv:		  BLDG
+description: "The Office Tower stands as a prominent administrative and commercial structure within the colony’s urban district. Beyond its civilian façade, its communications relays and data centers make it a strategically valuable objective during regional conflicts."
+empire:      All
+hud_icon:     "hud_bldg04"
+
+model:     "Bldg04-0"
+
+mass:       5e3
+integrity:  8e3
+scale:      3
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       6,
+   final_loc:        (0, 11, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

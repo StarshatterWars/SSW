@@ -1,0 +1,21 @@
+SHIP
+
+name:       City02
+class:      Building
+abrv:		BLDG
+display_name: "City Block"
+description:  "The City Block is a compact urban sector integrating housing, utilities, and municipal services within a fortified colony perimeter. Though outwardly civilian, its infrastructure corridors and transit routes can become critical objectives during ground operations."
+empire:       All
+hud_icon:     "hud_bldg01"
+
+model:     "City02"
+
+mass:       50e3
+integrity:  500e3
+scale:      3
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

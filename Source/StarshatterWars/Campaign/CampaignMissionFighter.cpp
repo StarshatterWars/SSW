@@ -1,0 +1,3176 @@
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright (c) 2025-2026. All Rights Reserved.
+
+    ORIGINAL AUTHOR AND STUDIO
+    ==========================
+    John DiCamillo / Destroyer Studios LLC
+
+    SUBSYSTEM:    Stars.exe
+    FILE:         CampaignMissionFighter.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    CampaignMissionFighter generates missions and mission
+    info for the player's FIGHTER SQUADRON as part of a
+    dynamic campaign.
+*/
+
+#include "CampaignMissionFighter.h"
+
+#include "CampaignMissionRequest.h"
+#include "Campaign.h"
+#include "CombatGroup.h"
+#include "CombatUnit.h"
+#include "Combatant.h"
+#include "Mission.h"
+#include "Instruction.h"
+#include "MissionInfo.h"
+#include "MissionElement.h"
+#include "MissionTemplate.h"
+#include "OrbitalRegion.h"
+#include "Starsystem.h"
+#include "CombatZone.h"
+#include "Galaxy.h"
+#include "Ship.h"
+#include "ShipDesign.h"
+#include "Callsign.h"
+#include "MissionLoad.h"
+#include "PlayerCharacter.h"
+#include "ShipDesignRegistry.h"
+
+#include "PlayerCharacter.h"
+
+#include "StarshatterWarsLog.h"
+#include "GameStructs.h"
+#include "GameStructs_System.h"
+#include "Random.h"
+
+#include "Logging/LogMacros.h"
+
+// +--------------------------------------------------------------------+
+
+static CombatGroup* FindCombatGroup(CombatGroup* G, ECOMBATGROUP_TYPE Type)
+{
+    if (!G)
+    {
+        return nullptr;
+    }
+
+    if (G->GetIntelLevel() <= EIntel::RESERVE)
+    {
+        return nullptr;
+    }
+
+    if (G->GetUnits().size() > 0)
+    {
+        for (int32 i = 0; i < G->GetUnits().size(); i++)
+        {
+            CombatUnit* U = G->GetUnits().at(i);
+
+            if (U && U->LiveCount() > 0 && G->GetType() == Type)
+            {
+                return G;
+            }
+        }
+    }
+
+    CombatGroup* Result = nullptr;
+
+    ListIter<CombatGroup> Subgroup = G->GetComponents();
+    while (++Subgroup && !Result)
+    {
+        Result = FindCombatGroup(Subgroup.value(), Type);
+    }
+
+    return Result;
+}
+
+CampaignMissionFighter::CampaignMissionFighter(Campaign* c)
+    : campaign(c)
+    , request(nullptr)
+    , mission_info(nullptr)
+    , squadron(nullptr)
+    , strike_group(nullptr)
+    , strike_target(nullptr)
+    , mission(nullptr)
+    , player_elem(nullptr)
+    , carrier_elem(nullptr)
+    , ward(nullptr)
+    , prime_target(nullptr)
+    , escort(nullptr)
+    , air_region()
+    , orb_region()
+    , airborne(false)
+    , airbase(false)
+    , ownside(0)
+    , enemy(-1)
+    , mission_type(0)
+{
+    if (!campaign || !campaign->GetPlayerGroup())
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("ERROR - CMF campaign=%p player_group=%p"),
+            campaign,
+            campaign ? campaign->GetPlayerGroup() : nullptr);
+        return;
+    }
+
+    CombatGroup* player_group = campaign->GetPlayerGroup();
+
+    switch ((int)player_group->GetType())
+    {
+    case (int)ECOMBATGROUP_TYPE::WING:
+    {
+        CombatGroup* wing = player_group;
+        ListIter<CombatGroup> iter = wing->GetComponents();
+
+        while (++iter)
+        {
+            CombatGroup* g = iter.value();
+            if (g && g->GetType() == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON)
+            {
+                squadron = g;
+            }
+        }
+    }
+    break;
+
+    case (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+    case (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+    case (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+    case (int)ECOMBATGROUP_TYPE::LCA_SQUADRON:
+        squadron = player_group;
+        break;
+
+    default:
+        UE_LOG(LogTemp, Error,
+            TEXT("ERROR - CMF invalid player group: %s IFF %d"),
+            ANSI_TO_TCHAR(player_group->GetDescription()),
+            player_group->GetIFF());
+        break;
+    }
+
+    if (squadron)
+    {
+        CombatGroup* carrier = squadron->FindCarrier();
+        if (carrier && carrier->GetType() == ECOMBATGROUP_TYPE::STARBASE)
+        {
+            airbase = true;
+        }
+    }
+}
+
+CampaignMissionFighter::~CampaignMissionFighter()
+{
+}
+
+// +--------------------------------------------------------------------+
+
+void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
+{
+    if (!campaign || !squadron || !req)
+        return;
+
+    UE_LOG(LogTemp, Log, TEXT("-----------------------------------------------"));
+
+    if (req->Script().Len())
+    {
+        UE_LOG(LogTemp, Log,
+            TEXT("CMF CreateMission() request: %s '%s'"),
+            ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
+            *req->Script());
+    }
+    else
+    {
+        const char* ObjName = req->GetObjective() ? req->GetObjective()->GetName().data() : "(no target)";
+
+        UE_LOG(LogTemp, Log,
+            TEXT("CMF CreateMission() request: %s %s"),
+            ANSI_TO_TCHAR(Mission::GetRoleName(req->Type())),
+            ANSI_TO_TCHAR(ObjName));
+    }
+
+    request = req;
+    mission_info = nullptr;
+
+    if (request->GetPrimaryGroup())
+    {
+        switch ((int)request->GetPrimaryGroup()->GetType())
+        {
+        case (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+        case (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+        case (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+        case (int)ECOMBATGROUP_TYPE::LCA_SQUADRON:
+            squadron = request->GetPrimaryGroup();
+            break;
+        }
+    }
+
+    ownside = squadron->GetIFF();
+    enemy = -1;
+
+    for (int i = 0; i < campaign->GetCombatants().size(); i++)
+    {
+        Combatant* c = campaign->GetCombatants().at(i);
+        if (!c)
+            continue;
+
+        const int iff = c->GetIFF();
+        if (iff > 0 && iff != ownside)
+        {
+            enemy = iff;
+            break;
+        }
+    }
+
+    static int id_key = 1;
+    GenerateMission(id_key++);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After GenerateMission: mission=%s IsOK=%s"),
+        mission ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
+    DefineMissionObjectives();
+
+    MissionInfo* info = DescribeMission();
+
+    if (info)
+    {
+        campaign->GetMissionList().append(info);
+
+        UE_LOG(LogTemp, Log,
+            TEXT("CMF Created %03d '%s' %s"),
+            info->id,
+            ANSI_TO_TCHAR(info->name.data()),
+            ANSI_TO_TCHAR(Mission::GetRoleName(mission ? mission->GetMissionType() : 0)));
+
+        if (dump_missions && mission)
+        {
+            Text script = mission->Serialize();
+            char fname[32] = { 0 };
+
+            sprintf_s(fname, sizeof(fname), "msn%03d.def", info->id);
+
+            FILE* f = nullptr;
+            fopen_s(&f, fname, "w");
+            if (f)
+            {
+                fprintf(f, "%s\n", script.data());
+                fclose(f);
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CMF failed to create mission."));
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+Mission* CampaignMissionFighter::GenerateMission(int id)
+{
+    bool found = false;
+
+    SelectType();
+
+    if (request && request->Script().Len())
+    {
+        const FString Script = request->Script();
+        const FString Path = campaign->Path();
+
+        MissionTemplate* mt = new MissionTemplate(
+            id,
+            TCHAR_TO_ANSI(*Script),
+            TCHAR_TO_ANSI(*Path)
+        );
+
+        if (mt)
+        {
+            mt->SetPlayerSquadron(squadron);
+        }
+
+        mission = mt;
+        found = (mission != nullptr);
+    }
+    else
+    {
+        const FS_CampaignMission* mission_data =
+            campaign->FindCampaignMissionData(mission_type, squadron);
+
+        found = (mission_data != nullptr);
+
+        if (found)
+        {
+            mission = new Mission(id);
+
+            if (mission)
+            {
+                mission->SetMissionType(mission_type);
+
+                if (!mission->LoadFromCampaignMissionData(*mission_data))
+                {
+                    delete mission;
+                    mission = nullptr;
+                    found = false;
+                }
+            }
+        }
+
+        if (!found)
+        {
+            mission = new Mission(id);
+            if (mission)
+            {
+                mission->SetMissionType(mission_type);
+            }
+        }
+    }
+
+    if (!mission)
+    {
+        Exit();
+        return nullptr;
+    }
+
+    char name[64] = { 0 };
+    sprintf_s(name, sizeof(name), "Fighter Mission %d", id);
+
+    mission->SetName(name);
+    mission->SetTeam(squadron->GetIFF());
+    mission->SetStart(request->StartTime());
+
+    SelectRegion();
+    GenerateStandardElements();
+    CreatePatrols();
+
+    if (!found)
+    {
+        GenerateMissionElements();
+        mission->SetOK(true);
+        mission->Validate();
+    }
+    else
+    {
+        if (mission->IsOK())
+        {
+            player_elem = mission->GetPlayer();
+            prime_target = mission->GetTarget();
+            ward = mission->GetWard();
+        }
+        else
+        {
+            delete mission;
+            mission = new Mission(id);
+
+            if (!mission)
+            {
+                Exit();
+                return nullptr;
+            }
+
+            mission->SetMissionType(mission_type);
+            mission->SetName(name);
+            mission->SetTeam(squadron->GetIFF());
+            mission->SetStart(request->StartTime());
+
+            SelectRegion();
+            GenerateStandardElements();
+            GenerateMissionElements();
+
+            mission->SetOK(true);
+            mission->Validate();
+        }
+    }
+
+    return mission;
+}
+
+// +--------------------------------------------------------------------+
+
+bool CampaignMissionFighter::IsGroundObjective(CombatGroup* obj)
+{
+    if (!obj || !campaign)
+        return false;
+
+    CombatGroup* pgroup = campaign->GetPlayerGroup();
+    if (!pgroup)
+        return false;
+
+    CombatZone* zone = pgroup->GetAssignedZone();
+    if (!zone)
+        return false;
+
+    StarSystem* system = campaign->GetSystem(zone->GetSystem());
+    if (!system)
+        return false;
+
+    OrbitalRegion* region = system->FindRegion(obj->GetRegion());
+    return region && region->GetType() == Orbital::TERRAIN;
+}
+
+// +--------------------------------------------------------------------+
+
+void CampaignMissionFighter::SelectType()
+{
+    int type = (int)EMissionType::PATROL;
+
+    if (request)
+    {
+        type = request->Type();
+
+        if (type == (int)EMissionType::STRIKE)
+        {
+            strike_group = request->GetPrimaryGroup();
+
+            if (!IsGroundObjective(request->GetObjective()))
+            {
+                type = (int)EMissionType::ASSAULT;
+            }
+        }
+        else if (type == (int)EMissionType::ESCORT_STRIKE)
+        {
+            strike_group = request->GetSecondaryGroup();
+            if (!strike_group || strike_group->CalcValue() < 1)
+            {
+                type = (int)EMissionType::SWEEP;
+                strike_group = nullptr;
+            }
+        }
+    }
+
+    mission_type = type;
+}
+
+void CampaignMissionFighter::SelectRegion()
+{
+    if (!squadron || !mission || !campaign)
+        return;
+
+    CombatZone* zone = squadron->GetAssignedZone();
+    if (!zone)
+        zone = squadron->GetCurrentZone();
+
+    if (zone)
+    {
+        mission->SetStarSystem(campaign->GetSystem(zone->GetSystem()));
+        mission->SetRegion(*zone->GetRegions().at(0));
+
+        orb_region = mission->GetRegion();
+
+        if (zone->GetRegions().size() > 1)
+        {
+            air_region = *zone->GetRegions().at(1);
+
+            StarSystem* system = mission->GetStarSystem();
+            OrbitalRegion* rgn = nullptr;
+
+            if (system)
+                rgn = system->FindRegion(air_region);
+
+            if (!rgn || rgn->GetType() != Orbital::TERRAIN)
+                air_region = "";
+        }
+
+        if (air_region.length() > 0)
+        {
+            if (request && IsGroundObjective(request->GetObjective()))
+            {
+                airborne = true;
+            }
+            else if (mission->GetMissionType() >= (int)EMissionType::AIR_PATROL &&
+                mission->GetMissionType() <= (int)EMissionType::AIR_INTERCEPT)
+            {
+                airborne = true;
+            }
+            else if (mission->GetMissionType() == (int)EMissionType::STRIKE ||
+                mission->GetMissionType() == (int)EMissionType::ESCORT_STRIKE)
+            {
+                if (strike_group)
+                {
+                    strike_target = campaign->FindStrikeTarget(ownside, strike_group);
+
+                    if (strike_target && strike_target->GetRegion() == air_region)
+                        airborne = true;
+                }
+            }
+
+            if (airbase)
+            {
+                mission->SetRegion(air_region);
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("WARNING: CMF - No zone for '%s'"),
+            ANSI_TO_TCHAR(squadron->GetName().data()));
+
+        StarSystem* s = campaign->GetSystemList()[0];
+        mission->SetStarSystem(s);
+        mission->SetRegion(s->GetRegions()[0]->GetName());
+    }
+
+    if (!airborne)
+    {
+        switch (mission->GetMissionType())
+        {
+        case (int)EMissionType::AIR_PATROL:
+            mission->SetMissionType((int)EMissionType::PATROL);
+            break;
+        case (int)EMissionType::AIR_SWEEP:
+            mission->SetMissionType((int)EMissionType::SWEEP);
+            break;
+        case (int)EMissionType::AIR_INTERCEPT:
+            mission->SetMissionType((int)EMissionType::INTERCEPT);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+void CampaignMissionFighter::GenerateStandardElements()
+{
+    if (!campaign || !mission)
+    {
+        return;
+    }
+
+    ProcessedGroups.Empty();
+    ProcessedGroupKeys.Empty();
+
+    const FString MissionRegion = FString(ANSI_TO_TCHAR(mission->GetRegion())).TrimStartAndEnd();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] GenerateStandardElements BEGIN: MissionRegion='%s'"),
+        *MissionRegion);
+
+    ListIter<CombatZone> z_iter = campaign->GetZones();
+    while (++z_iter)
+    {
+        CombatZone* z = z_iter.value();
+        if (!z)
+        {
+            continue;
+        }
+
+        ListIter<ZoneForce> iter = z->GetForces();
+        while (++iter)
+        {
+            ZoneForce* force = iter.value();
+            if (!force)
+            {
+                continue;
+            }
+
+            ListIter<CombatGroup> group = force->GetGroups();
+            while (++group)
+            {
+                CombatGroup* g = group.value();
+                if (!g)
+                {
+                    continue;
+                }
+
+                ProcessGroupRecursive(g, MissionRegion);
+            }
+        }
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[CMF] GenerateStandardElements END"));
+}
+
+void CampaignMissionFighter::ProcessGroupRecursive(CombatGroup* g, const FString& MissionRegion)
+{
+    if (!g)
+    {
+        return;
+    }
+
+    // ---- POINTER DEDUPE ----
+    if (ProcessedGroups.Contains(g))
+    {
+        return;
+    }
+    ProcessedGroups.Add(g);
+
+    // ---- ALWAYS RECURSE FIRST ----
+    ListIter<CombatGroup> sub = g->GetComponents();
+    while (++sub)
+    {
+        ProcessGroupRecursive(sub.value(), MissionRegion);
+    }
+
+    const FString GroupRegion = FString(ANSI_TO_TCHAR(g->GetRegion())).TrimStartAndEnd();
+
+    if (!MissionRegion.Equals(GroupRegion, ESearchCase::IgnoreCase))
+    {
+        return;
+    }
+
+    // ---- LOGICAL DEDUPE ----
+    const FString GroupKey = FString::Printf(
+        TEXT("%s|%d|%s|%d"),
+        ANSI_TO_TCHAR(g->GetName().data()),
+        (int32)g->GetType(),
+        *GroupRegion,
+        g->GetUnits().size());
+
+    if (ProcessedGroupKeys.Contains(GroupKey))
+    {
+        return;
+    }
+    ProcessedGroupKeys.Add(GroupKey);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CMF] PROCESS Group: '%s' Type=%d Units=%d"),
+        ANSI_TO_TCHAR(g->GetName().data()),
+        (int32)g->GetType(),
+        g->GetUnits().size());
+
+    if (g->GetType() == ECOMBATGROUP_TYPE::NETWORK)
+    {
+        return;
+    }
+
+    switch (g->GetType())
+    {
+    case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
+    case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
+    case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
+    case ECOMBATGROUP_TYPE::LCA_SQUADRON:
+        if (g->GetUnits().size() > 0 && g != squadron)
+        {
+            CreateSquadron(g);
+        }
+        break;
+
+    case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
+    case ECOMBATGROUP_TYPE::BATTLE_GROUP:
+    case ECOMBATGROUP_TYPE::CARRIER_GROUP:
+    case ECOMBATGROUP_TYPE::MINEFIELD:
+    case ECOMBATGROUP_TYPE::BATTERY:
+    case ECOMBATGROUP_TYPE::MISSILE:
+    case ECOMBATGROUP_TYPE::STATION:
+    case ECOMBATGROUP_TYPE::STARBASE:
+    case ECOMBATGROUP_TYPE::SUPPORT:
+    case ECOMBATGROUP_TYPE::COURIER:
+    case ECOMBATGROUP_TYPE::MEDICAL:
+    case ECOMBATGROUP_TYPE::SUPPLY:
+    case ECOMBATGROUP_TYPE::REPAIR:
+    case ECOMBATGROUP_TYPE::CIVILIAN:
+    case ECOMBATGROUP_TYPE::WAR_PRODUCTION:
+    case ECOMBATGROUP_TYPE::FACTORY:
+    case ECOMBATGROUP_TYPE::REFINERY:
+    case ECOMBATGROUP_TYPE::RESOURCE:
+    case ECOMBATGROUP_TYPE::INFRASTRUCTURE:
+    case ECOMBATGROUP_TYPE::TRANSPORT:
+    case ECOMBATGROUP_TYPE::HABITAT:
+    case ECOMBATGROUP_TYPE::STORAGE:
+    case ECOMBATGROUP_TYPE::NON_COM:
+        if (g->GetUnits().size() > 0)
+        {
+            CreateElements(g);
+        }
+        break;
+
+    default:
+        break;
+    }
+}
+
+void CampaignMissionFighter::GenerateMissionElements()
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] GenerateMissionElements: mission=%s squadron=%s"),
+        mission ? TEXT("VALID") : TEXT("NULL"),
+        squadron ? TEXT("VALID") : TEXT("NULL"));
+
+    CreateWards();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateWards: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
+    CreatePlayer(squadron);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreatePlayer: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
+    CreateTargets();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateTargets: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+
+    CreateEscorts();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionGen:Fighter] After CreateEscorts: Player=%s IsOK=%s"),
+        (mission && mission->GetPlayer()) ? TEXT("VALID") : TEXT("NULL"),
+        (mission && mission->IsOK()) ? TEXT("true") : TEXT("false"));
+}
+
+void CampaignMissionFighter::CreateElements(CombatGroup* g)
+{
+    if (!g || !mission)
+    {
+        return;
+    }
+
+    ListIter<CombatUnit> iter = g->GetUnits();
+    while (++iter)
+    {
+        CombatUnit* unit = iter.value();
+        if (!unit)
+        {
+            continue;
+        }
+
+        MissionElement* elem = CreateSingleElement(g, unit);
+        if (!elem)
+        {
+            continue;
+        }
+
+        elem->SetIFF(g->GetIFF());
+
+        if (airborne && air_region.length() > 0)
+        {
+            elem->SetRegion(air_region);
+        }
+        else
+        {
+            elem->SetRegion(orb_region);
+        }
+
+        mission->AddElement(elem);
+    }
+}
+
+void
+CampaignMissionFighter::CreateSquadron(CombatGroup* g)
+{
+    if (!g || g->IsReserve()) return;
+
+    CombatUnit* fighter = g->GetUnits().at(0);
+    CombatUnit* carrier = FindCarrier(g);
+
+    if (!fighter || !carrier) return;
+
+    int live_count = fighter->LiveCount();
+    int maint_count = (live_count > 4) ? live_count / 2 : 0;
+
+    MissionElement* elem = new MissionElement;
+
+    if (!elem) {
+        Exit();
+        return;
+    }
+
+    elem->SetName(g->GetName());
+    elem->SetElementID(pkg_id++);
+
+    const FString DesignName =
+        ANSI_TO_TCHAR(
+            fighter->GetDesign()->name);
+
+    const FShipDesign* DesignRow =
+        ShipDesignRegistry::Find(
+            DesignName);
+
+    if (DesignRow)
+    {
+        elem->SetShipDesign(DesignRow);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignMissionFighter] Missing FShipDesign Fighter='%s' Design='%s'"),
+            ANSI_TO_TCHAR(fighter->GetName()),
+            fighter->GetDesign()
+            ? ANSI_TO_TCHAR(fighter->GetDesign()->name)
+            : TEXT("NULL"));
+    }
+
+    elem->SetCount(fighter->GetCount());
+    elem->SetDeadCount(fighter->DeadCount());
+    elem->SetMaintCount(maint_count);
+    elem->SetIFF(fighter->GetIFF());
+    elem->SetIntelLevel(g->GetIntelLevel());
+    elem->SetRegion(fighter->GetRegion());
+
+    elem->SetCarrier(carrier->GetName());
+    elem->SetCommander(carrier->GetName());
+    elem->SetLocation(carrier->GetLocation() + RandomPoint());
+
+    elem->SetCombatGroup(g);
+    elem->SetCombatUnit(fighter);
+
+    mission->AddElement(elem);
+}
+
+void
+CampaignMissionFighter::CreatePlayer(CombatGroup* g)
+{
+    int pkg_size = 2;
+
+    if (mission->GetMissionType() == (int) EMissionType::STRIKE || mission->GetMissionType() == (int) EMissionType::ASSAULT) {
+        if (request && request->GetObjective()) {
+            ECOMBATGROUP_TYPE tgt_type = request->GetObjective()->GetType();
+
+            if (tgt_type >= ECOMBATGROUP_TYPE::FLEET && tgt_type <= ECOMBATGROUP_TYPE::CARRIER_GROUP)
+                pkg_size = 4;
+
+            if (tgt_type == ECOMBATGROUP_TYPE::STATION || tgt_type == ECOMBATGROUP_TYPE::STARBASE)
+                pkg_size = 4;
+        }
+    }
+
+    MissionElement* elem = CreateFighterPackage(g, pkg_size, mission->GetMissionType());
+
+    if (elem) {
+        PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
+        elem->SetAlert(p ? !p->FlyingStart() : true);
+        elem->SetPlayer(1);
+
+        if (ward) {
+            FVector approach = elem->GetLocation() - ward->GetLocation();
+            approach.Normalize();
+
+            FVector pickup = ward->GetLocation() + approach * 50e3;
+            double delta = (pickup - elem->GetLocation()).Size();
+
+            if (delta > 30e3) {
+                Instruction* n = new Instruction(elem->GetRegion(), pickup, EInstruction::Escort);
+                n->SetTarget(ward->GetName());
+                n->SetSpeed(750);
+                elem->AddNavPoint(n);
+            }
+
+            Instruction* obj = new Instruction(EInstruction::Escort, ward->GetName());
+
+            switch (mission->GetMissionType()) {
+            case (int) EMissionType::ESCORT_FREIGHT:
+                obj->SetTargetDesc(Text("the star freighter ") + ward->GetName());
+                break;
+
+            case (int)EMissionType::ESCORT_SHUTTLE:
+                obj->SetTargetDesc(Text("the shuttle ") + ward->GetName());
+                break;
+
+            case (int)EMissionType::ESCORT_STRIKE:
+                obj->SetTargetDesc(Text("the ") + ward->GetName() + Text(" strike package"));
+                break;
+
+            case (int)EMissionType::DEFEND:
+                obj->SetTargetDesc(Text("the ") + ward->GetName());
+                break;
+
+            default:
+                if (ward->GetCombatGroup()) {
+                    obj->SetTargetDesc(Text("the ") + ward->GetCombatGroup()->GetDescription());
+                }
+                else {
+                    obj->SetTargetDesc(Text("the ") + ward->GetName());
+                }
+                break;
+            }
+
+            elem->AddObjective(obj);
+        }
+
+        mission->AddElement(elem);
+
+        player_elem = elem;
+    }
+}
+
+void CampaignMissionFighter::CreatePatrols()
+{
+    List<MissionElement> Patrols;
+
+    ListIter<MissionElement> Iter = mission->GetElements();
+    while (++Iter)
+    {
+        MissionElement* SquadElem = Iter.value();
+        CombatGroup* Squadron = SquadElem ? SquadElem->GetCombatGroup() : nullptr;
+        CombatUnit* Unit = SquadElem ? SquadElem->GetCombatUnit() : nullptr;
+
+        if (!SquadElem || !SquadElem->IsSquadron() || !Squadron || !Unit || Unit->LiveCount() < 4)
+        {
+            continue;
+        }
+
+        if (Squadron->GetType() == ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON ||
+            Squadron->GetType() == ECOMBATGROUP_TYPE::FIGHTER_SQUADRON)
+        {
+            StarSystem* System = mission->GetStarSystem();
+            CombatGroup* Base = Squadron->FindCarrier();
+
+            if (!Base || !System)
+            {
+                continue;
+            }
+
+            OrbitalRegion* Region = System->FindRegion(Base->GetRegion());
+            if (!Region)
+            {
+                continue;
+            }
+
+            int PatrolType = (int)EMissionType::PATROL;
+            FVector BaseLoc;
+
+            if (Region->GetType() == Orbital::TERRAIN)
+            {
+                PatrolType = (int)EMissionType::AIR_PATROL;
+
+                if (FMath::RandRange(1, 3) <= 2)
+                {
+                    continue;
+                }
+            }
+
+            BaseLoc =
+                FVector(Base->GetLocation().X, Base->GetLocation().Y, Base->GetLocation().Z) +
+                FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 1.5f;
+
+            if (Region->GetType() == Orbital::TERRAIN)
+            {
+                BaseLoc += FVector(0.0f, 0.0f, 14000.0f);
+            }
+
+            MissionElement* Elem = CreateFighterPackage(Squadron, 2, PatrolType);
+            if (Elem)
+            {
+                Elem->SetIntelLevel(EIntel::KNOWN);
+                Elem->SetRegion(mission->GetRegion());
+                Elem->SetLocation(BaseLoc);
+                Patrols.append(Elem);
+            }
+        }
+    }
+
+    Iter.attach(Patrols);
+    while (++Iter)
+    {
+        mission->AddElement(Iter.value());
+    }
+}
+
+void CampaignMissionFighter::CreateWards()
+{
+    switch (mission ? mission->GetMissionType() : mission_type)
+    {
+    case (int)EMissionType::ESCORT_FREIGHT: CreateWardFreight(); break;
+    case (int)EMissionType::ESCORT_SHUTTLE: CreateWardShuttle(); break;
+    case (int)EMissionType::ESCORT_STRIKE:  CreateWardStrike();  break;
+    default: break;
+    }
+}
+
+void CampaignMissionFighter::CreateWardFreight()
+{
+    if (!mission || !mission->GetStarSystem())
+    {
+        return;
+    }
+
+    CombatUnit* carrier = FindCarrier(squadron);
+    CombatGroup* freight = nullptr;
+
+    if (request)
+    {
+        freight = request->GetObjective();
+    }
+
+    if (!freight)
+    {
+        freight = campaign->FindGroup(ownside, (int)ECOMBATGROUP_TYPE::FREIGHT);
+    }
+
+    if (!freight || freight->CalcValue() < 1)
+    {
+        return;
+    }
+
+    CombatUnit* unit = freight->GetNextUnit();
+    if (!unit)
+    {
+        return;
+    }
+
+    MissionElement* elem = CreateSingleElement(freight, unit);
+    if (!elem)
+    {
+        return;
+    }
+
+    elem->SetMissionRole((int)EMissionType::CARGO);
+    elem->SetIntelLevel(EIntel::KNOWN);
+    elem->SetRegion(mission->GetRegion());
+
+    if (carrier)
+    {
+        elem->SetLocation(
+            FVector(carrier->GetLocation().X, carrier->GetLocation().Y, carrier->GetLocation().Z) +
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 2.0f);
+    }
+
+    ward = elem;
+    mission->AddElement(elem);
+
+    StarSystem* system = mission->GetStarSystem();
+    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->GetRegion()) : nullptr;
+    if (!rgn1 || !rgn1->Primary())
+    {
+        return;
+    }
+
+    FVector delta(
+        rgn1->Location().X - rgn1->Primary()->Location().X,
+        rgn1->Location().Y - rgn1->Primary()->Location().Y,
+        rgn1->Location().Z - rgn1->Primary()->Location().Z);
+
+    FVector npt_loc(
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z);
+
+    Instruction* n = nullptr;
+
+    delta.Normalize();
+    delta *= 200000.0f;
+    npt_loc += delta;
+
+    n = new Instruction(elem->GetRegion(), npt_loc, EInstruction::Vector);
+    if (n)
+    {
+        n->SetSpeed(500);
+        elem->AddNavPoint(n);
+    }
+
+    Text rgn2 = elem->GetRegion();
+    List<CombatZone>& zones = campaign->GetZones();
+
+    if (zones.size() > 0)
+    {
+        if (zones[zones.size() - 1]->HasRegion(rgn2))
+        {
+            rgn2 = *zones[0]->GetRegions()[0];
+        }
+        else
+        {
+            rgn2 = *zones[zones.size() - 1]->GetRegions()[0];
+        }
+
+        n = new Instruction(rgn2, FVector(0.0f, 0.0f, 0.0f), EInstruction::Vector);
+        if (n)
+        {
+            n->SetSpeed(750);
+            elem->AddNavPoint(n);
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateWardShuttle()
+{
+    if (!mission || !mission->GetStarSystem())
+    {
+        return;
+    }
+
+    CombatUnit* Carrier = FindCarrier(squadron);
+    CombatGroup* Shuttle = campaign->FindGroup(ownside, (int)ECOMBATGROUP_TYPE::LCA_SQUADRON);
+
+    if (!Shuttle || Shuttle->CalcValue() < 1)
+    {
+        return;
+    }
+
+    MissionElement* Elem = CreateFighterPackage(Shuttle, 1, (int)EMissionType::CARGO);
+    if (!Elem)
+    {
+        return;
+    }
+
+    Elem->SetIntelLevel(EIntel::KNOWN);
+    Elem->SetRegion(mission->GetRegion());
+    Elem->GetLoadouts().destroy();
+
+    if (Carrier)
+    {
+        const FVector CarrierLoc = Carrier->GetLocation();
+        const FVector Offset = GetRandomPoint() * 2.0f;
+
+        Elem->SetLocation(CarrierLoc + Offset);
+    }
+
+    ward = Elem;
+    mission->AddElement(Elem);
+
+    if (air_region.length() > 0)
+    {
+        StarSystem* System = mission->GetStarSystem();
+        OrbitalRegion* Rgn1 = System ? System->FindRegion(Elem->GetRegion()) : nullptr;
+        if (!Rgn1 || !Rgn1->Primary())
+        {
+            return;
+        }
+
+        FVector Delta = Rgn1->Location() - Rgn1->Primary()->Location();
+
+        FVector NptLoc = Elem->GetLocation();
+        Instruction* N = nullptr;
+
+        Delta = Delta.GetSafeNormal() * -200000.0f;
+        NptLoc += Delta;
+
+        N = new Instruction(Elem->GetRegion(), NptLoc, EInstruction::Vector);
+        if (N)
+        {
+            N->SetSpeed(500);
+            Elem->AddNavPoint(N);
+        }
+
+        N = new Instruction(air_region, FVector(0.0f, 0.0f, 10000.0f), EInstruction::Vector);
+        if (N)
+        {
+            N->SetSpeed(500);
+            Elem->AddNavPoint(N);
+        }
+    }
+    else if (Carrier)
+    {
+        const FVector CarrierLoc = Carrier->GetLocation();
+        const FVector Src = CarrierLoc + GetRandomDirection() * 150000.0f;
+        const FVector Dst = CarrierLoc + GetRandomDirection() * 25000.0f;
+
+        Instruction* N = nullptr;
+
+        Elem->SetLocation(Src);
+
+        N = new Instruction(Elem->GetRegion(), Dst, EInstruction::Dock);
+        if (N)
+        {
+            N->SetTarget(FString(ANSI_TO_TCHAR(Carrier->GetName().data())));
+            N->SetSpeed(500);
+            Elem->AddNavPoint(N);
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateWardStrike()
+{
+    if (!mission || !mission->GetStarSystem())
+    {
+        return;
+    }
+
+    CombatUnit* carrier = FindCarrier(squadron);
+    CombatGroup* strike = strike_group;
+
+    if (!strike || strike->CalcValue() < 1)
+    {
+        return;
+    }
+
+    int type = (int)EMissionType::ASSAULT;
+    if (airborne)
+    {
+        type = (int)EMissionType::STRIKE;
+    }
+
+    MissionElement* elem = CreateFighterPackage(strike, 2, type);
+    if (!elem)
+    {
+        return;
+    }
+
+    elem->SetIntelLevel(EIntel::KNOWN);
+    elem->SetRegion(mission->GetRegion());
+
+    if (strike_target)
+    {
+        const FString Target = FString(ANSI_TO_TCHAR(strike_target->GetName().data()));
+
+        Instruction* obj = new Instruction(
+            EInstruction::Assault,
+            TCHAR_TO_ANSI(*Target)
+        );
+
+        if (obj)
+        {
+            if (airborne)
+            {
+                obj->SetAction(EInstruction::Strike);
+            }
+
+            elem->AddObjective(obj);
+        }
+    }
+
+    ward = elem;
+    mission->AddElement(elem);
+
+    StarSystem* system = mission->GetStarSystem();
+    OrbitalRegion* rgn1 = system ? system->FindRegion(elem->GetRegion()) : nullptr;
+    if (!rgn1 || !rgn1->Primary())
+    {
+        return;
+    }
+
+    FVector delta(
+        rgn1->Location().X - rgn1->Primary()->Location().X,
+        rgn1->Location().Y - rgn1->Primary()->Location().Y,
+        rgn1->Location().Z - rgn1->Primary()->Location().Z
+    );
+
+    FVector npt_loc(
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z
+    );
+
+    Instruction* n = nullptr;
+
+    if (airborne)
+    {
+        delta.Normalize();
+        delta *= -30000.0f;
+        npt_loc += delta;
+
+        n = new Instruction(elem->GetRegion(), npt_loc, EInstruction::Vector);
+        if (n)
+        {
+            n->SetSpeed(500);
+            elem->AddNavPoint(n);
+        }
+
+        npt_loc = FVector(0.0f, 0.0f, 10000.0f);
+
+        n = new Instruction(air_region, npt_loc, EInstruction::Vector);
+        if (n)
+        {
+            n->SetSpeed(500);
+            elem->AddNavPoint(n);
+        }
+    }
+
+    if (strike_target)
+    {
+        delta = FVector(
+            strike_target->GetLocation().X - npt_loc.X,
+            strike_target->GetLocation().Y - npt_loc.Y,
+            strike_target->GetLocation().Z - npt_loc.Z
+        );
+
+        delta.Normalize();
+        delta *= 15000.0f;
+
+        npt_loc = FVector(
+            strike_target->GetLocation().X,
+            strike_target->GetLocation().Y,
+            strike_target->GetLocation().Z
+        ) + delta + FVector(0.0f, 0.0f, 8000.0f);
+
+        n = new Instruction(strike_target->GetRegion(), npt_loc, EInstruction::Vector);
+        if (n)
+        {
+            n->SetSpeed(500);
+            elem->AddNavPoint(n);
+        }
+    }
+
+    if (carrier)
+    {
+        FVector src(
+            carrier->GetLocation().X,
+            carrier->GetLocation().Y,
+            carrier->GetLocation().Z
+        );
+
+        src += GetRandomDirection() * 100000.0f;
+        elem->SetLocation(src);
+    }
+}
+
+void CampaignMissionFighter::CreateEscorts()
+{
+    bool escort_needed = false;
+
+    if (mission->GetMissionType() == (int)EMissionType::STRIKE || mission->GetMissionType() == (int)EMissionType::ASSAULT)
+    {
+        if (request && request->GetObjective())
+        {
+            int tgt_type = (int)request->GetObjective()->GetType();
+
+            if (tgt_type == (int)ECOMBATGROUP_TYPE::CARRIER_GROUP ||
+                tgt_type == (int)ECOMBATGROUP_TYPE::STATION ||
+                tgt_type == (int)ECOMBATGROUP_TYPE::STARBASE)
+            {
+                escort_needed = true;
+            }
+        }
+    }
+
+    if (player_elem && escort_needed)
+    {
+        CombatGroup* s = FindSquadron(ownside, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
+
+        if (s && s->IsAssignable())
+        {
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ESCORT_STRIKE);
+
+            if (elem)
+            {
+                FVector offset(2000.0f, 2000.0f, 1000.0f);
+
+                ListIter<Instruction> npt_iter = player_elem->NavList();
+                while (++npt_iter)
+                {
+                    Instruction* npt = npt_iter.value();
+
+                    FVector loc(
+                        npt->GetLocation().X + offset.X,
+                        npt->GetLocation().Y + offset.Y,
+                        npt->GetLocation().Z + offset.Z
+                    );
+
+                    Instruction* n = new Instruction(
+                        npt->GetRegionName(),
+                        loc,
+                        EInstruction::Escort
+                    );
+
+                    if (n)
+                    {
+                        n->SetSpeed(npt->GetSpeed());
+                        elem->AddNavPoint(n);
+                    }
+                }
+
+                mission->AddElement(elem);
+            }
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargets()
+{
+    switch (mission ? mission->GetMissionType() : mission_type)
+    {
+    case (int)EMissionType::PATROL:
+    case (int)EMissionType::AIR_PATROL:
+        CreateTargetsPatrol();
+        break;
+
+    case (int)EMissionType::SWEEP:
+    case (int)EMissionType::AIR_SWEEP:
+        CreateTargetsSweep();
+        break;
+
+    case (int)EMissionType::INTERCEPT:
+    case (int)EMissionType::AIR_INTERCEPT:
+        CreateTargetsIntercept();
+        break;
+
+    case (int)EMissionType::ESCORT_FREIGHT:
+        CreateTargetsFreightEscort();
+        break;
+
+    case (int)EMissionType::ESCORT_SHUTTLE:
+        CreateTargetsShuttleEscort();
+        break;
+
+    case (int)EMissionType::ESCORT_STRIKE:
+        CreateTargetsStrikeEscort();
+        break;
+
+    case (int)EMissionType::STRIKE:
+        CreateTargetsStrike();
+        break;
+
+    case (int)EMissionType::ASSAULT:
+        CreateTargetsAssault();
+        break;
+
+    default:
+        CreateTargetsPatrol();
+        break;
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsPatrol()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    Text region = squadron->GetRegion();
+
+    FVector base_loc(
+        player_elem->GetLocation().X,
+        player_elem->GetLocation().Y,
+        player_elem->GetLocation().Z
+    );
+
+    FVector patrol_loc(0.0f, 0.0f, 0.0f);
+
+    if (airborne)
+    {
+        base_loc =
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) * 2.0f +
+            FVector(0.0f, 0.0f, 12000.0f);
+    }
+    else if (carrier_elem)
+    {
+        base_loc = FVector(
+            carrier_elem->GetLocation().X,
+            carrier_elem->GetLocation().Y,
+            carrier_elem->GetLocation().Z
+        );
+    }
+
+    if (airborne)
+    {
+        if (!airbase)
+        {
+            PlanetaryInsertion(player_elem);
+        }
+
+        region = air_region;
+
+        const FVector Dir = GetRandomDirection();
+        const float Dist = FMath::FRandRange(60000.0f, 100000.0f);
+
+        patrol_loc = base_loc + Dir * Dist;
+    }
+    else
+    {
+        const FVector Dir = GetRandomDirection();
+        const float Dist = FMath::FRandRange(110000.0f, 160000.0f);
+
+        patrol_loc = base_loc + Dir * Dist;
+    }
+
+    Instruction* n = new Instruction(
+        region,
+        patrol_loc,
+        EInstruction::Patrol
+    );
+
+    if (n)
+    {
+        player_elem->AddNavPoint(n);
+    }
+
+    int32 ntargets = FMath::RandRange(2, 5);
+    while (ntargets > 0)
+    {
+        int t = CreateRandomTarget(region, patrol_loc);
+        ntargets -= t;
+
+        if (t < 1)
+        {
+            break;
+        }
+    }
+
+    if (airborne && !airbase)
+    {
+        OrbitalInsertion(player_elem);
+    }
+
+    if (n)
+    {
+        Instruction* obj = new Instruction(*n);
+        obj->SetTargetDesc(TCHAR_TO_ANSI(TEXT("inbound enemy units")));
+        player_elem->AddObjective(obj);
+    }
+
+    if (carrier_elem && !airborne)
+    {
+        Instruction* obj = new Instruction(
+            EInstruction::Defend,
+            carrier_elem->GetName().data()
+        );
+
+        if (obj)
+        {
+            const FString Desc =
+                FString(TEXT("the ")) +
+                FString(ANSI_TO_TCHAR(carrier_elem->GetName().data())) +
+                FString(TEXT(" battle group"));
+
+            obj->SetTargetDesc(TCHAR_TO_ANSI(*Desc));
+            player_elem->AddObjective(obj);
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsSweep()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    double traverse = PI;
+    double a = FMath::FRandRange(-PI / 2.0, PI / 2.0);
+
+    FVector base_loc(
+        player_elem->GetLocation().X,
+        player_elem->GetLocation().Y,
+        player_elem->GetLocation().Z
+    );
+
+    FVector sweep_loc = base_loc;
+    Text region = player_elem->GetRegion();
+    Instruction* n = nullptr;
+
+    if (carrier_elem)
+    {
+        base_loc = FVector(
+            carrier_elem->GetLocation().X,
+            carrier_elem->GetLocation().Y,
+            carrier_elem->GetLocation().Z
+        );
+    }
+
+    if (airborne)
+    {
+        PlanetaryInsertion(player_elem);
+        region = air_region;
+
+        sweep_loc =
+            FVector(GetRandomPoint().X, GetRandomPoint().Y, GetRandomPoint().Z) +
+            FVector(0.0f, 0.0f, 10000.0f);
+    }
+
+    sweep_loc += FVector(
+        FMath::Sin(a),
+        -FMath::Cos(a),
+        0.0f
+    ) * 100000.0f;
+
+    n = new Instruction(
+        region,
+        sweep_loc,
+        EInstruction::Vector
+    );
+
+    if (n)
+    {
+        n->SetSpeed(750);
+        player_elem->AddNavPoint(n);
+    }
+
+    int index = 0;
+    int ntargets = 6;
+
+    while (traverse > 0)
+    {
+        double a1 = FMath::FRandRange(PI / 4.0, PI / 2.0);
+        traverse -= a1;
+        a += a1;
+
+        sweep_loc += FVector(
+            FMath::Sin(a),
+            -FMath::Cos(a),
+            0.0f
+        ) * 80000.0f;
+
+        n = new Instruction(
+            region,
+            sweep_loc,
+            EInstruction::Sweep
+        );
+
+        if (n)
+        {
+            n->SetSpeed(750);
+            n->SetFormation(INSTRUCTION_FORMATION::SPREAD);
+            player_elem->AddNavPoint(n);
+        }
+
+        if (ntargets && FMath::FRand() < 0.5f)
+        {
+            ntargets -= CreateRandomTarget(region, sweep_loc);
+        }
+
+        index++;
+    }
+
+    if (ntargets > 0)
+    {
+        CreateRandomTarget(region, sweep_loc);
+    }
+
+    if (airborne && !airbase)
+    {
+        OrbitalInsertion(player_elem);
+        region = player_elem->GetRegion();
+    }
+
+    sweep_loc = base_loc;
+    sweep_loc.Y += 30000.0f;
+
+    n = new Instruction(
+        region,
+        sweep_loc,
+        EInstruction::Vector
+    );
+
+    if (n)
+    {
+        n->SetSpeed(750);
+        player_elem->AddNavPoint(n);
+    }
+
+    Instruction* obj = new Instruction(
+        region,
+        sweep_loc,
+        EInstruction::Sweep
+    );
+
+    if (obj)
+    {
+        obj->SetTargetDesc(TCHAR_TO_ANSI(TEXT("enemy patrols")));
+        player_elem->AddObjective(obj);
+    }
+
+    if (carrier_elem && !airborne)
+    {
+        obj = new Instruction(
+            EInstruction::Defend,
+            carrier_elem->GetName().data()
+        );
+
+        if (obj)
+        {
+            const FString TargetDesc =
+                FString(TEXT("the ")) +
+                FString(ANSI_TO_TCHAR(carrier_elem->GetName().data())) +
+                FString(TEXT(" battle group"));
+
+            obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
+            player_elem->AddObjective(obj);
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsIntercept()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    CombatUnit* carrier = FindCarrier(squadron);
+    CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+    CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+
+    if (!s || !s2)
+    {
+        return;
+    }
+
+    int ninbound = 2 + (int)(GetRandomIndex() < 5);
+    bool second = ninbound > 2;
+    Text attacker;
+
+    while (ninbound--)
+    {
+        MissionElement* elem = CreateFighterPackage(s, 4, (int)EMissionType::ASSAULT);
+        if (elem)
+        {
+            elem->SetIntelLevel(EIntel::KNOWN);
+            elem->GetLoadouts().destroy();
+            elem->GetLoadouts().append(new MissionLoad(-1, "Hvy Ship Strike"));
+            elem->SetRegion(mission->GetRegion());
+
+            if (carrier)
+            {
+                Instruction* obj = new Instruction(
+                    EInstruction::Assault,
+                    carrier->GetName().data()
+                );
+
+                if (obj)
+                {
+                    elem->AddObjective(obj);
+
+                    FVector randPt(
+                        GetRandomPoint().X,
+                        GetRandomPoint().Y,
+                        GetRandomPoint().Z
+                    );
+
+                    FVector carrierLoc(
+                        carrier->GetLocation().X,
+                        carrier->GetLocation().Y,
+                        carrier->GetLocation().Z
+                    );
+
+                    elem->SetLocation(carrierLoc + randPt * 6.0f);
+                }
+            }
+            else
+            {
+                FVector randPt(
+                    GetRandomPoint().X,
+                    GetRandomPoint().Y,
+                    GetRandomPoint().Z
+                );
+
+                FVector squadLoc(
+                    squadron->GetLocation().X,
+                    squadron->GetLocation().Y,
+                    squadron->GetLocation().Z
+                );
+
+                elem->SetLocation(squadLoc + randPt * 5.0f);
+            }
+
+            mission->AddElement(elem);
+
+            attacker = elem->GetName();
+
+            if (!prime_target)
+            {
+                prime_target = elem;
+
+                Instruction* obj = new Instruction(
+                    EInstruction::Intercept,
+                    attacker.data()
+                );
+
+                if (obj)
+                {
+                    const FString TargetDesc =
+                        FString(TEXT("inbound strike package '")) +
+                        FString(ANSI_TO_TCHAR(elem->GetName().data())) +
+                        FString(TEXT("'"));
+
+                    obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
+                    player_elem->AddObjective(obj);
+                }
+            }
+
+            MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
+            if (e2)
+            {
+                e2->SetIntelLevel(EIntel::KNOWN);
+                e2->SetRegion(mission->GetRegion());
+
+                FVector randPt(
+                    GetRandomPoint().X,
+                    GetRandomPoint().Y,
+                    GetRandomPoint().Z
+                );
+
+                FVector elemLoc(
+                    elem->GetLocation().X,
+                    elem->GetLocation().Y,
+                    elem->GetLocation().Z
+                );
+
+                e2->SetLocation(elemLoc + randPt * 0.25f);
+
+                Instruction* obj = new Instruction(
+                    EInstruction::Escort,
+                    elem->GetName().data()
+                );
+
+                if (obj)
+                {
+                    e2->AddObjective(obj);
+                }
+
+                mission->AddElement(e2);
+            }
+        }
+    }
+
+    if (second)
+    {
+        CombatGroup* friendlySquadron = FindSquadron(ownside, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+
+        if (friendlySquadron)
+        {
+            MissionElement* elem = CreateFighterPackage(friendlySquadron, 2, (int)EMissionType::INTERCEPT);
+            if (elem)
+            {
+                PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
+                elem->SetAlert(p ? !p->FlyingStart() : true);
+
+                Instruction* obj = new Instruction(
+                    EInstruction::Intercept,
+                    attacker.data()
+                );
+
+                if (obj)
+                {
+                    elem->AddObjective(obj);
+                }
+
+                mission->AddElement(elem);
+            }
+        }
+    }
+
+    if (carrier && !airborne)
+    {
+        Instruction* obj = new Instruction(
+            EInstruction::Defend,
+            carrier->GetName().data()
+        );
+
+        if (obj)
+        {
+            const FString TargetDesc =
+                FString(TEXT("the ")) +
+                FString(ANSI_TO_TCHAR(carrier->GetName().data())) +
+                FString(TEXT(" battle group"));
+
+            obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
+            player_elem->AddObjective(obj);
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsFreightEscort()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    if (!ward)
+    {
+        CreateTargetsPatrol();
+        return;
+    }
+
+    CombatUnit* carrier = FindCarrier(squadron);
+    CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+    CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+
+    if (!s)
+    {
+        s = s2;
+    }
+
+    if (!s || !s2)
+    {
+        return;
+    }
+
+    MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
+    if (elem)
+    {
+        elem->SetIntelLevel(EIntel::KNOWN);
+        elem->SetRegion(mission->GetRegion());
+
+        const FVector RandPt = GetRandomPoint();
+        elem->SetLocation(ward->GetLocation() + RandPt * 5.0f);
+
+        Instruction* obj = new Instruction(
+            EInstruction::Assault,
+            ward->GetName().data()
+        );
+
+        if (obj)
+        {
+            elem->AddObjective(obj);
+        }
+
+        mission->AddElement(elem);
+
+        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
+        if (e2)
+        {
+            e2->SetIntelLevel(EIntel::KNOWN);
+            e2->SetRegion(mission->GetRegion());
+
+            const FVector EscortOffset = GetRandomPoint();
+            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
+
+            Instruction* obj2 = new Instruction(
+                EInstruction::Escort,
+                elem->GetName().data()
+            );
+
+            if (obj2)
+            {
+                e2->AddObjective(obj2);
+            }
+
+            mission->AddElement(e2);
+        }
+    }
+
+    Instruction* obj3 = new Instruction(
+        mission->GetRegion(),
+        FVector(0.0f, 0.0f, 0.0f),
+        EInstruction::Patrol
+    );
+
+    if (obj3)
+    {
+        obj3->SetTargetDesc("enemy patrols");
+        player_elem->AddObjective(obj3);
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsShuttleEscort()
+{
+    CreateTargetsFreightEscort();
+}
+
+void CampaignMissionFighter::CreateTargetsStrikeEscort()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    if (ward)
+    {
+        FVector Offset(2000.0f, 2000.0f, 1000.0f);
+
+        ListIter<Instruction> NptIter = ward->NavList();
+        while (++NptIter)
+        {
+            Instruction* Npt = NptIter.value();
+
+            Instruction* N = new Instruction(
+                Npt->GetRegionName(),
+                Npt->GetLocation() + Offset,
+                EInstruction::Escort
+            );
+
+            if (N)
+            {
+                N->SetSpeed(Npt->GetSpeed());
+                player_elem->AddNavPoint(N);
+            }
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsStrike()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    if (request && request->GetObjective())
+    {
+        strike_target = request->GetObjective();
+    }
+
+    if (strike_target && strike_group)
+    {
+        CreateElements(strike_target);
+
+        ListIter<MissionElement> EIter = mission->GetElements();
+        while (++EIter)
+        {
+            MissionElement* Elem = EIter.value();
+
+            if (Elem->GetCombatGroup() == strike_target)
+            {
+                prime_target = Elem;
+
+                Instruction* Obj = new Instruction(
+                    EInstruction::Strike,
+                    Elem->GetName().data()
+                );
+
+                if (Obj)
+                {
+                    const FString TargetDesc =
+                        FString(TEXT("preplanned target '")) +
+                        FString(ANSI_TO_TCHAR(Elem->GetName().data())) +
+                        FString(TEXT("'"));
+
+                    Obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
+                    player_elem->AddObjective(Obj);
+                }
+
+                RLoc Rloc;
+                FVector Loc(0.0f, 0.0f, 15000.0f);
+                Instruction* N = nullptr;
+
+                PlanetaryInsertion(player_elem);
+
+                FVector Delta = prime_target->GetLocation() - Loc;
+
+                if (Delta.Size() >= 100000.0f)
+                {
+                    FVector Mid = Loc + Delta * 0.5f;
+                    Mid.Z = 10000.0f;
+
+                    Rloc.SetReferenceLoc(0);
+                    Rloc.SetBaseLocation(Mid);
+                    Rloc.SetDistance(20000.0f);
+                    Rloc.SetDistanceVar(5000.0f);
+                    Rloc.SetAzimuth(90 * DEGREES);
+                    Rloc.SetAzimuthVar(25 * DEGREES);
+
+                    N = new Instruction(
+                        prime_target->GetRegion(),
+                        FVector::ZeroVector,
+                        EInstruction::Vector
+                    );
+
+                    if (N)
+                    {
+                        N->SetSpeed(750);
+                        N->GetRLoc() = Rloc;
+                        player_elem->AddNavPoint(N);
+                    }
+
+                    Loc = Mid;
+                }
+
+                Delta = Loc - prime_target->GetLocation();
+                Delta.Normalize();
+                Delta *= 25000.0f;
+
+                Loc = prime_target->GetLocation() + Delta;
+                Loc.Z = 8000.0f;
+
+                N = new Instruction(
+                    prime_target->GetRegion(),
+                    Loc,
+                    EInstruction::Strike
+                );
+
+                if (N)
+                {
+                    N->SetSpeed(500);
+                    player_elem->AddNavPoint(N);
+                }
+
+                Rloc.SetReferenceLoc(0);
+                Rloc.SetBaseLocation(FVector(0.0f, 0.0f, 30000.0f));
+                Rloc.SetDistance(50000.0f);
+                Rloc.SetDistanceVar(5000.0f);
+                Rloc.SetAzimuth(-90 * DEGREES);
+                Rloc.SetAzimuthVar(25 * DEGREES);
+
+                N = new Instruction(
+                    prime_target->GetRegion(),
+                    FVector::ZeroVector,
+                    EInstruction::Vector
+                );
+
+                if (N)
+                {
+                    N->SetSpeed(750);
+                    N->GetRLoc() = Rloc;
+                    player_elem->AddNavPoint(N);
+                }
+
+                if (carrier_elem)
+                {
+                    Rloc.SetReferenceLoc(0);
+                    Rloc.SetBaseLocation(carrier_elem->GetLocation());
+                    Rloc.SetDistance(60000.0f);
+                    Rloc.SetDistanceVar(10000.0f);
+                    Rloc.SetAzimuth(180 * DEGREES);
+                    Rloc.SetAzimuthVar(30 * DEGREES);
+
+                    N = new Instruction(
+                        carrier_elem->GetRegion(),
+                        FVector::ZeroVector,
+                        EInstruction::RTB
+                    );
+
+                    if (N)
+                    {
+                        N->SetSpeed(750);
+                        N->GetRLoc() = Rloc;
+                        player_elem->AddNavPoint(N);
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+void CampaignMissionFighter::CreateTargetsAssault()
+{
+    if (!squadron || !player_elem)
+    {
+        return;
+    }
+
+    CombatGroup* Assigned = nullptr;
+
+    if (request)
+    {
+        Assigned = request->GetObjective();
+    }
+
+    if (Assigned)
+    {
+        if (Assigned->GetType() > ECOMBATGROUP_TYPE::WING && Assigned->GetType() < ECOMBATGROUP_TYPE::FLEET)
+        {
+            MissionElement* TargetElem = CreateFighterPackage(Assigned, 2, (int)EMissionType::CARGO);
+            if (TargetElem)
+            {
+                TargetElem->SetRegion(mission->GetRegion());
+                mission->AddElement(TargetElem);
+            }
+        }
+        else
+        {
+            CreateElements(Assigned);
+        }
+
+        ListIter<MissionElement> EIter = mission->GetElements();
+        while (++EIter)
+        {
+            MissionElement* Elem = EIter.value();
+
+            if (Elem->GetCombatGroup() == Assigned)
+            {
+                if (!prime_target || Assigned->GetType() <= ECOMBATGROUP_TYPE::CARRIER_GROUP)
+                {
+                    prime_target = Elem;
+                }
+            }
+        }
+
+        if (prime_target)
+        {
+            MissionElement* Elem = prime_target;
+
+            Instruction* Obj = new Instruction(
+                EInstruction::Assault,
+                Elem->GetName().data()
+            );
+
+            if (Obj)
+            {
+                const FString TargetDesc =
+                    FString(TEXT("preplanned target '")) +
+                    FString(ANSI_TO_TCHAR(Elem->GetName().data())) +
+                    FString(TEXT("'"));
+
+                Obj->SetTargetDesc(TCHAR_TO_ANSI(*TargetDesc));
+                player_elem->AddObjective(Obj);
+            }
+
+            RLoc Rloc;
+            FVector Dummy(0.0f, 0.0f, 0.0f);
+            Instruction* Instr = nullptr;
+
+            FVector Loc(
+                player_elem->GetLocation().X,
+                player_elem->GetLocation().Y,
+                player_elem->GetLocation().Z
+            );
+
+            FVector Tgt(
+                Elem->GetLocation().X,
+                Elem->GetLocation().Y,
+                Elem->GetLocation().Z
+            );
+
+            FVector Mid(0.0f, 0.0f, 0.0f);
+
+            CombatGroup* TgtGroup = Elem->GetCombatGroup();
+            if (TgtGroup && TgtGroup->GetFirstUnit() && TgtGroup->IsMovable())
+            {
+                Tgt = FVector(
+                    TgtGroup->GetFirstUnit()->GetLocation().X,
+                    TgtGroup->GetFirstUnit()->GetLocation().Y,
+                    TgtGroup->GetFirstUnit()->GetLocation().Z
+                );
+            }
+
+            if (carrier_elem)
+            {
+                Loc = FVector(
+                    carrier_elem->GetLocation().X,
+                    carrier_elem->GetLocation().Y,
+                    carrier_elem->GetLocation().Z
+                );
+            }
+
+            Mid = Loc + (FVector(
+                Elem->GetLocation().X,
+                Elem->GetLocation().Y,
+                Elem->GetLocation().Z
+            ) - Loc) * 0.5f;
+
+            Rloc.SetReferenceLoc(0);
+            Rloc.SetBaseLocation(Mid);
+            Rloc.SetDistance(40000.0f);
+            Rloc.SetDistanceVar(5000.0f);
+            Rloc.SetAzimuth(90 * DEGREES);
+            Rloc.SetAzimuthVar(45 * DEGREES);
+
+            Instr = new Instruction(
+                Elem->GetRegion(),
+                Dummy,
+                EInstruction::Vector
+            );
+
+            if (Instr)
+            {
+                Instr->SetSpeed(750);
+                Instr->GetRLoc() = Rloc;
+
+                player_elem->AddNavPoint(Instr);
+
+                if (FMath::FRand() < 0.5f)
+                {
+                    CreateRandomTarget(Elem->GetRegion(), Rloc.Location());
+                }
+            }
+
+            Rloc.SetReferenceLoc(0);
+            Rloc.SetBaseLocation(Tgt);
+            Rloc.SetDistance(60000.0f);
+            Rloc.SetDistanceVar(5000.0f);
+            Rloc.SetAzimuth(120 * DEGREES);
+            Rloc.SetAzimuthVar(15 * DEGREES);
+
+            Instr = new Instruction(
+                Elem->GetRegion(),
+                Dummy,
+                EInstruction::Assault
+            );
+
+            if (Instr)
+            {
+                Instr->SetSpeed(750);
+                Instr->GetRLoc() = Rloc;
+                Instr->SetTarget(FString(ANSI_TO_TCHAR(Elem->GetName().data())));
+
+                player_elem->AddNavPoint(Instr);
+            }
+
+            if (carrier_elem)
+            {
+                Rloc.SetReferenceLoc(0);
+                Rloc.SetBaseLocation(Loc);
+                Rloc.SetDistance(30000.0f);
+                Rloc.SetDistanceVar(0.0f);
+                Rloc.SetAzimuth(180 * DEGREES);
+                Rloc.SetAzimuthVar(60 * DEGREES);
+
+                Instr = new Instruction(
+                    carrier_elem->GetRegion(),
+                    Dummy,
+                    EInstruction::RTB
+                );
+
+                if (Instr)
+                {
+                    Instr->SetSpeed(500);
+                    Instr->GetRLoc() = Rloc;
+
+                    player_elem->AddNavPoint(Instr);
+                }
+            }
+        }
+    }
+}
+
+int32 CampaignMissionFighter::CreateRandomTarget(const char* rgn, FVector base_loc)
+{
+    if (!mission)
+    {
+        return 0;
+    }
+
+    int32 ntargets = 0;
+    int32 ttype = GetRandomIndex();
+    bool oca = (mission->GetMissionType() == (int)EMissionType::SWEEP);
+
+    if (ttype < 8)
+    {
+        CombatGroup* s = nullptr;
+
+        if (ttype < 4)
+        {
+            s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
+        }
+        else
+        {
+            s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+        }
+
+        if (s)
+        {
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::SWEEP);
+            if (elem)
+            {
+                elem->SetIntelLevel(EIntel::KNOWN);
+                elem->SetRegion(rgn);
+
+                const FVector RandPt = GetRandomPoint();
+                elem->SetLocation(base_loc + RandPt * 1.5f);
+
+                mission->AddElement(elem);
+                ntargets++;
+            }
+        }
+    }
+    else if (ttype < 12)
+    {
+        if (oca)
+        {
+            CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::LCA_SQUADRON);
+
+            if (s)
+            {
+                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMissionType::CARGO);
+                if (elem)
+                {
+                    elem->SetIntelLevel(EIntel::KNOWN);
+                    elem->SetRegion(rgn);
+
+                    const FVector RandPt = GetRandomPoint();
+                    elem->SetLocation(base_loc + RandPt * 2.0f);
+
+                    mission->AddElement(elem);
+                    ntargets++;
+
+                    CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+
+                    if (s2)
+                    {
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
+                        if (e2)
+                        {
+                            e2->SetIntelLevel(EIntel::KNOWN);
+                            e2->SetRegion(rgn);
+
+                            const FVector EscortOffset = GetRandomPoint();
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
+
+                            Instruction* obj = new Instruction(
+                                EInstruction::Escort,
+                                elem->GetName().data()
+                            );
+                            if (obj)
+                            {
+                                e2->AddObjective(obj);
+                            }
+
+                            mission->AddElement(e2);
+                            ntargets++;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+
+            if (s)
+            {
+                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
+                if (elem)
+                {
+                    elem->SetIntelLevel(EIntel::KNOWN);
+                    elem->SetRegion(rgn);
+
+                    const FVector RandPt = GetRandomPoint();
+                    elem->SetLocation(base_loc + RandPt * 1.3f);
+
+                    mission->AddElement(elem);
+                    ntargets++;
+                }
+            }
+        }
+    }
+    else if (ttype < 15)
+    {
+        if (oca)
+        {
+            CombatGroup* s = nullptr;
+
+            if (airborne)
+            {
+                s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::LCA_SQUADRON);
+            }
+            else
+            {
+                s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FREIGHT);
+            }
+
+            if (s)
+            {
+                MissionElement* elem = CreateFighterPackage(s, 1, (int)EMissionType::CARGO);
+                if (elem)
+                {
+                    elem->SetIntelLevel(EIntel::KNOWN);
+                    elem->SetRegion(rgn);
+
+                    const FVector RandPt = GetRandomPoint();
+                    elem->SetLocation(base_loc + RandPt * 2.0f);
+
+                    mission->AddElement(elem);
+                    ntargets++;
+
+                    CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON);
+
+                    if (s2)
+                    {
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
+                        if (e2)
+                        {
+                            e2->SetIntelLevel(EIntel::KNOWN);
+                            e2->SetRegion(rgn);
+
+                            const FVector EscortOffset = GetRandomPoint();
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
+
+                            Instruction* obj = new Instruction(
+                                EInstruction::Escort,
+                                elem->GetName().data()
+                            );
+                            if (obj)
+                            {
+                                e2->AddObjective(obj);
+                            }
+
+                            mission->AddElement(e2);
+                            ntargets++;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::ATTACK_SQUADRON);
+
+            if (s)
+            {
+                MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::ASSAULT);
+                if (elem)
+                {
+                    elem->SetIntelLevel(EIntel::KNOWN);
+                    elem->SetRegion(rgn);
+
+                    const FVector RandPt = GetRandomPoint();
+                    elem->SetLocation(base_loc + RandPt * 1.1f);
+
+                    mission->AddElement(elem);
+                    ntargets++;
+
+                    CombatGroup* s2 = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::FIGHTER_SQUADRON);
+
+                    if (s2)
+                    {
+                        MissionElement* e2 = CreateFighterPackage(s2, 2, (int)EMissionType::ESCORT);
+                        if (e2)
+                        {
+                            e2->SetIntelLevel(EIntel::KNOWN);
+                            e2->SetRegion(rgn);
+
+                            const FVector EscortOffset = GetRandomPoint();
+                            e2->SetLocation(elem->GetLocation() + EscortOffset * 0.5f);
+
+                            Instruction* obj = new Instruction(
+                                EInstruction::Escort,
+                                elem->GetName().data()
+                            );
+                            if (obj)
+                            {
+                                e2->AddObjective(obj);
+                            }
+
+                            mission->AddElement(e2);
+                            ntargets++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        CombatGroup* s = FindSquadron(enemy, (int)ECOMBATGROUP_TYPE::LCA_SQUADRON);
+
+        if (s)
+        {
+            MissionElement* elem = CreateFighterPackage(s, 2, (int)EMissionType::CARGO);
+            if (elem)
+            {
+                elem->SetIntelLevel(EIntel::KNOWN);
+                elem->SetRegion(rgn);
+
+                const FVector RandPt = GetRandomPoint();
+                elem->SetLocation(base_loc + RandPt * 2.0f);
+
+                mission->AddElement(elem);
+                ntargets++;
+            }
+        }
+    }
+
+    return ntargets;
+}
+
+void CampaignMissionFighter::PlanetaryInsertion(MissionElement* elem)
+{
+    if (!mission || !elem)
+    {
+        return;
+    }
+
+    if (!mission->GetStarSystem())
+    {
+        return;
+    }
+
+    MissionElement* carrier = mission->FindElement(elem->GetCommander());
+    StarSystem* system = mission->GetStarSystem();
+    OrbitalRegion* rgn1 = system->FindRegion(elem->GetRegion());
+    OrbitalRegion* rgn2 = system->FindRegion(air_region);
+
+    FVector npt_loc(
+        elem->GetLocation().X,
+        elem->GetLocation().Y,
+        elem->GetLocation().Z
+    );
+
+    Instruction* n = nullptr;
+    PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
+
+    int32 flying_start = p ? p->FlyingStart() : 0;
+
+    if (carrier && !flying_start)
+    {
+        FVector carrierLoc(
+            carrier->GetLocation().X,
+            carrier->GetLocation().Y,
+            carrier->GetLocation().Z
+        );
+
+        npt_loc = carrierLoc + FVector(1000.0f, -5000.0f, 0.0f);
+    }
+
+    if (rgn1 && rgn2)
+    {
+        const double delta_t = mission->GetStart() - campaign->GetTime();
+
+        const FVector r1 = rgn1->PredictLocation(delta_t);
+        const FVector r2 = rgn2->PredictLocation(delta_t);
+
+        FVector Delta = r2 - r1;
+
+        Delta.Y *= -1.0f;
+        Delta.Normalize();
+        Delta *= 10000.0f;
+
+        npt_loc += Delta;
+
+        n = new Instruction(
+            elem->GetRegion(),
+            npt_loc,
+            EInstruction::Vector
+        );
+
+        if (n)
+        {
+            n->SetSpeed(750);
+            elem->AddNavPoint(n);
+        }
+    }
+
+    n = new Instruction(
+        air_region,
+        FVector(0.0f, 0.0f, 15000.0f),
+        EInstruction::Vector
+    );
+
+    if (n)
+    {
+        n->SetSpeed(750);
+        elem->AddNavPoint(n);
+    }
+}
+
+void CampaignMissionFighter::OrbitalInsertion(MissionElement* elem)
+{
+    Instruction* n = new Instruction(
+        air_region,
+        FVector(0.0f, 0.0f, 30000.0f),
+        EInstruction::Vector
+    );
+
+    if (n)
+    {
+        n->SetSpeed(750);
+        elem->AddNavPoint(n);
+    }
+}
+
+MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, CombatUnit* U)
+{
+    if (!G || G->IsReserve())
+    {
+        return nullptr;
+    }
+
+    if (!U || U->LiveCount() < 1)
+    {
+        return nullptr;
+    }
+
+    Galaxy* GalaxyInst = Galaxy::GetInstance();
+    if (GalaxyInst)
+    {
+        if (GalaxyInst->FindSystemByRegion(U->GetRegion()) !=
+            GalaxyInst->FindSystemByRegion(squadron->GetRegion()))
+        {
+            return nullptr;
+        }
+    }
+
+    ListIter<MissionElement> EIter = mission->GetElements();
+    while (++EIter)
+    {
+        MissionElement* Elem = EIter.value();
+
+        if (Elem && Elem->GetCombatUnit() == U)
+        {
+            return nullptr;
+        }
+    }
+
+    const FShipDesign* ShipRow = nullptr;
+
+    if (U->GetDesignName().length() > 0)
+    {
+        ShipRow = ShipDesignRegistry::Find(U->GetDesignName().data());
+    }
+
+    if (!ShipRow && U->GetDesign())
+    {
+        ShipRow = ShipDesignRegistry::Find(U->GetDesign()->name);
+    }
+
+    if (!ShipRow)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("CMF CreateSingleElement: missing ship design row for group '%s', unit '%s', design '%s'"),
+            ANSI_TO_TCHAR(G->GetName().data()),
+            ANSI_TO_TCHAR(U->GetName().data()),
+            ANSI_TO_TCHAR(U->GetDesignName().data()));
+
+        return nullptr;
+    }
+
+    MissionElement* Elem = new MissionElement;
+    if (!Elem)
+    {
+        Exit();
+        return nullptr;
+    }
+
+    if (U->GetName().length() > 0)
+    {
+        Elem->SetName(U->GetName());
+    }
+    else
+    {
+        Elem->SetName(U->GetDesignName());
+    }
+
+    Elem->SetElementID(pkg_id++);
+    Elem->SetShipDesign(ShipRow);
+    Elem->SetCount(U->LiveCount());
+    Elem->SetIFF(U->GetIFF());
+    Elem->SetIntelLevel(G->GetIntelLevel());
+    Elem->SetRegion(mission->GetRegion());
+    Elem->SetHeading(U->GetHeading());
+
+    const int32 UnitIndex = G->GetUnits().index(U);
+    FVector BaseLoc = U->GetLocation();
+    bool bExact = U->IsStatic();
+
+    if (BaseLoc.Size() < 1.0f)
+    {
+        BaseLoc = G->GetLocation();
+        bExact = false;
+    }
+
+    if (UnitIndex < 0 || (UnitIndex > 0 && !bExact))
+    {
+        FVector Loc = GetRandomDirection();
+
+        if (!U->IsStatic())
+        {
+            while (FMath::Abs(Loc.Y) > FMath::Abs(Loc.X))
+            {
+                Loc = GetRandomDirection();
+            }
+
+            Loc *= 10000.0f + 9000.0f * UnitIndex;
+        }
+        else
+        {
+            Loc *= 2000.0f + 2000.0f * UnitIndex;
+        }
+
+        Elem->SetLocation(BaseLoc + Loc);
+    }
+    else
+    {
+        Elem->SetLocation(BaseLoc);
+    }
+
+    if (G->GetType() == ECOMBATGROUP_TYPE::CARRIER_GROUP)
+    {
+        if (ShipRow->ShipType == (int32)CLASSIFICATION::CARRIER)
+        {
+            Elem->SetMissionRole((int)EMissionType::FLIGHT_OPS);
+
+            if (squadron && Elem->GetCombatGroup() == squadron->FindCarrier())
+            {
+                carrier_elem = Elem;
+            }
+            else if (!carrier_elem && U->GetIFF() == squadron->GetIFF())
+            {
+                carrier_elem = Elem;
+            }
+        }
+        else
+        {
+            Elem->SetMissionRole((int)EMissionType::ESCORT);
+        }
+    }
+    else if (ShipRow->ShipType == (int32)CLASSIFICATION::STATION ||
+        ShipRow->ShipType == (int32)CLASSIFICATION::STARBASE)
+    {
+        Elem->SetMissionRole((int)EMissionType::FLIGHT_OPS);
+
+        if (squadron && Elem->GetCombatGroup() == squadron->FindCarrier())
+        {
+            carrier_elem = Elem;
+
+            if (ShipRow->ShipType == (int32)CLASSIFICATION::STARBASE)
+            {
+                airbase = true;
+            }
+        }
+    }
+    else if (ShipRow->ShipType == (int32)CLASSIFICATION::FARCASTER)
+    {
+        Elem->SetMissionRole((int)EMissionType::OTHER);
+
+        const FString Name = FString(ANSI_TO_TCHAR(U->GetName().data()));
+        int32 Dash = INDEX_NONE;
+
+        for (int32 i = 0; i < Name.Len(); i++)
+        {
+            if (Name[i] == TCHAR('-'))
+            {
+                Dash = i;
+            }
+        }
+
+        const FString Src = (Dash != INDEX_NONE) ? Name.Left(Dash) : Name;
+        const FString Dst = (Dash != INDEX_NONE) ? Name.Mid(Dash + 1) : FString();
+        const FString Link = Dst + TEXT("-") + Src;
+
+        Instruction* Obj = new Instruction(
+            EInstruction::Vector,
+            TCHAR_TO_ANSI(*Link)
+        );
+
+        if (Obj)
+        {
+            Elem->AddObjective(Obj);
+        }
+    }
+    else if ((ShipRow->ShipType & (int32)CLASSIFICATION::STARSHIPS) != 0)
+    {
+        Elem->SetMissionRole((int)EMissionType::FLEET);
+    }
+
+    Elem->SetCombatGroup(G);
+    Elem->SetCombatUnit(U);
+
+    return Elem;
+}
+
+CombatUnit* CampaignMissionFighter::FindCarrier(CombatGroup* G)
+{
+    CombatGroup* Carrier = G ? G->FindCarrier() : nullptr;
+
+    if (Carrier && Carrier->GetUnits().size())
+    {
+        MissionElement* CarrierElem = mission->FindElement(Carrier->GetName());
+
+        if (CarrierElem)
+        {
+            return Carrier->GetUnits().at(0);
+        }
+    }
+
+    return nullptr;
+}
+
+MissionElement* CampaignMissionFighter::CreateFighterPackage(CombatGroup* InSquadron, int32 count, int32 role)
+{
+    if (!InSquadron || InSquadron->GetUnits().size() < 1)
+    {
+        return nullptr;
+    }
+
+    CombatUnit* fighter = InSquadron->GetUnits().at(0);
+    CombatUnit* carrier = FindCarrier(InSquadron);
+
+    if (!fighter)
+    {
+        return nullptr;
+    }
+
+    int32 avail = fighter->LiveCount();
+    int32 actual = count;
+
+    if (avail < actual)
+    {
+        actual = avail;
+    }
+
+    if (avail < 1)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("CMF - Insufficient fighters in squadron '%s' - %d required, %d available"),
+            *FString(ANSI_TO_TCHAR(InSquadron->GetName().data())),
+            count,
+            avail
+        );
+
+        return nullptr;
+    }
+
+    const FShipDesign* ShipRow = nullptr;
+
+    if (fighter->GetDesignName().length() > 0)
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesignName().data());
+    }
+
+    if (!ShipRow && fighter->GetDesign())
+    {
+        ShipRow = ShipDesignRegistry::Find(fighter->GetDesign()->name);
+    }
+
+    if (!ShipRow)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("CMF CreateFighterPackage: missing ship design row for squadron '%s', unit '%s', design '%s'"),
+            ANSI_TO_TCHAR(InSquadron->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetName().data()),
+            ANSI_TO_TCHAR(fighter->GetDesignName().data()));
+
+        return nullptr;
+    }
+
+    MissionElement* elem = new MissionElement;
+    if (!elem)
+    {
+        Exit();
+        return nullptr;
+    }
+
+    elem->SetName(Callsign::GetCallsign(fighter->GetIFF()));
+    elem->SetElementID(pkg_id++);
+
+    if (carrier)
+    {
+        elem->SetCommander(carrier->GetName());
+        elem->SetHeading(carrier->GetHeading());
+    }
+    else
+    {
+        elem->SetHeading(fighter->GetHeading());
+    }
+
+    elem->SetShipDesign(ShipRow);
+    elem->SetCount(actual);
+    elem->SetIFF(fighter->GetIFF());
+    elem->SetIntelLevel(InSquadron->GetIntelLevel());
+    elem->SetRegion(mission->GetRegion());
+    elem->SetSquadron(InSquadron->GetName());
+    elem->SetMissionRole(role);
+
+    switch ((EMissionType)role)
+    {
+    case EMissionType::ASSAULT:
+        if (request && request->GetObjective() &&
+            request->GetObjective()->GetType() == ECOMBATGROUP_TYPE::MINEFIELD)
+        {
+            elem->GetLoadouts().append(new MissionLoad(-1, "Rockets"));
+        }
+        else
+        {
+            elem->GetLoadouts().append(new MissionLoad(-1, "Ship Strike"));
+        }
+        break;
+
+    case EMissionType::STRIKE:
+        elem->GetLoadouts().append(new MissionLoad(-1, "Ground Strike"));
+        break;
+
+    default:
+        elem->GetLoadouts().append(new MissionLoad(-1, "ACM Medium Range"));
+        break;
+    }
+
+    if (carrier)
+    {
+        FVector Offset = GetRandomPoint() * 0.3f;
+        Offset.Y = FMath::Abs(Offset.Y);
+        Offset.Z += 2000.0f;
+
+        elem->SetLocation(carrier->GetLocation() + Offset);
+    }
+    else
+    {
+        const FVector RandPt = GetRandomPoint();
+        elem->SetLocation(fighter->GetLocation() + RandPt);
+    }
+
+    elem->SetCombatGroup(InSquadron);
+    elem->SetCombatUnit(fighter);
+
+    return elem;
+}
+
+CombatGroup* CampaignMissionFighter::FindSquadron(int32 Iff, int32 Type)
+{
+    if (!squadron)
+    {
+        return nullptr;
+    }
+
+    CombatGroup* Result = nullptr;
+    Campaign* CampaignPtr = Campaign::GetCampaign();
+
+    if (CampaignPtr)
+    {
+        ListIter<Combatant> CombatantIter = CampaignPtr->GetCombatants();
+        while (++CombatantIter && !Result)
+        {
+            if (CombatantIter->GetIFF() == Iff)
+            {
+                Result = ::FindCombatGroup(
+                    CombatantIter->GetForce(),
+                    static_cast<ECOMBATGROUP_TYPE>(Type)
+                );
+
+                if (Result && Result->CountUnits() < 1)
+                {
+                    Result = nullptr;
+                }
+            }
+        }
+    }
+
+    return Result;
+}
+
+void CampaignMissionFighter::DefineMissionObjectives()
+{
+    if (!mission || !player_elem)
+    {
+        return;
+    }
+
+    if (prime_target)
+    {
+        mission->SetTarget(prime_target);
+    }
+
+    if (ward)
+    {
+        mission->SetWard(ward);
+    }
+
+    FString Objectives;
+
+    for (int32 i = 0; i < player_elem->GetObjectives().size(); i++)
+    {
+        Instruction* Obj = player_elem->GetObjectives().at(i);
+        if (!Obj)
+        {
+            continue;
+        }
+
+        Objectives += TEXT("* ");
+        Objectives += FString(ANSI_TO_TCHAR(Obj->GetDescription()));
+        Objectives += TEXT(".\n");
+    }
+
+    mission->SetObjective(TCHAR_TO_ANSI(*Objectives));
+}
+
+MissionInfo* CampaignMissionFighter::DescribeMission()
+{
+    if (!mission || !player_elem)
+    {
+        return nullptr;
+    }
+
+    FString Name;
+    FString PlayerInfo;
+
+    const char* RawTypeName = mission->GetTypeName();
+    const FString TypeName = RawTypeName ? FString(ANSI_TO_TCHAR(RawTypeName)) : TEXT("Unknown");
+
+    if (mission_info && mission_info->name.length() && mission_info->name.data())
+    {
+        Name = FString::Printf(
+            TEXT("MSN-%03d %s"),
+            mission->GetIdentity(),
+            *FString(ANSI_TO_TCHAR(mission_info->name.data()))
+        );
+    }
+    else if (ward)
+    {
+        const char* RawWardName = ward->GetName().data();
+
+        Name = FString::Printf(
+            TEXT("MSN-%03d %s %s"),
+            mission->GetIdentity(),
+            *TypeName,
+            *(RawWardName ? FString(ANSI_TO_TCHAR(RawWardName)) : FString(TEXT("Unknown")))
+        );
+    }
+    else if (prime_target)
+    {
+        const FShipDesign* PrimeDesign = prime_target->GetShipDesign();
+        FString ClassName;
+        const char* RawPrimeName = prime_target->GetName().data();
+
+        if (PrimeDesign)
+        {
+            ClassName = ANSI_TO_TCHAR(Ship::GetShipClassName(PrimeDesign->ShipType));
+        }
+
+        Name = FString::Printf(
+            TEXT("MSN-%03d %s %s %s"),
+            mission->GetIdentity(),
+            *TypeName,
+            *ClassName,
+            *(RawPrimeName ? FString(ANSI_TO_TCHAR(RawPrimeName)) : FString(TEXT("")))
+        );
+    }
+    else
+    {
+        Name = FString::Printf(
+            TEXT("MSN-%03d %s"),
+            mission->GetIdentity(),
+            *TypeName
+        );
+    }
+
+    if (const FShipDesign* PlayerDesign = player_elem->GetShipDesign())
+    {
+        const FString Abbrev = !PlayerDesign->Abrv.IsEmpty() ? PlayerDesign->Abrv : TEXT("UNK");
+        const FString DesignName =
+            !PlayerDesign->DisplayName.IsEmpty() ? PlayerDesign->DisplayName :
+            (!PlayerDesign->ShipName.IsEmpty() ? PlayerDesign->ShipName : TEXT("UnknownDesign"));
+
+        const char* RawElemName = player_elem->GetName().data();
+
+        PlayerInfo = FString::Printf(
+            TEXT("%d x %s %s '%s'"),
+            player_elem->Count(),
+            *Abbrev,
+            *DesignName,
+            *(RawElemName ? FString(ANSI_TO_TCHAR(RawElemName)) : FString(TEXT("UnknownElement")))
+        );
+    }
+
+    MissionInfo* Info = new MissionInfo;
+    if (!Info)
+    {
+        return nullptr;
+    }
+
+    Info->id = mission->GetIdentity();
+    Info->mission = mission;
+    Info->name = TCHAR_TO_ANSI(*Name);
+    Info->type = mission->GetMissionType();
+    Info->player_info = TCHAR_TO_ANSI(*PlayerInfo);
+    Info->description = mission->GetObjective();
+    Info->situation = mission->GetSituation();
+    Info->start = mission->GetStart();
+
+    if (mission->GetStarSystem())
+    {
+        Info->system = mission->GetStarSystem()->GetName();
+    }
+
+    Info->region = mission->GetRegion();
+
+    mission->SetName(TCHAR_TO_ANSI(*Name));
+
+    return Info;
+}
+
+// +--------------------------------------------------------------------+
+
+void CampaignMissionFighter::Exit()
+{
+    request = nullptr;
+    mission_info = nullptr;
+
+    squadron = nullptr;
+    strike_group = nullptr;
+    strike_target = nullptr;
+    mission = nullptr;
+
+    player_elem = nullptr;
+    carrier_elem = nullptr;
+    ward = nullptr;
+    prime_target = nullptr;
+    escort = nullptr;
+
+    air_region = "";
+    orb_region = "";
+
+    airborne = false;
+    airbase = false;
+
+    ownside = 0;
+    enemy = -1;
+    mission_type = 0;
+
+    ProcessedGroups.Empty();
+}

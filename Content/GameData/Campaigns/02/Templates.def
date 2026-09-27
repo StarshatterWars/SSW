@@ -1,0 +1,120 @@
+TEMPLATELIST
+
+// specialized templates first
+mission: {
+	type: Patrol,
+	group: INTERCEPT_SQUADRON,
+	script: "IS_Patrol_HS",
+	region: Solus,
+	name: "Harmony Patrol",
+	after: "05/12:00:00",
+	exec_once: true 
+}
+
+mission: {
+	type: Patrol,
+	group: FIGHTER_SQUADRON,
+	script: "FS_Patrol_HS",
+	region: Solus,
+	name: "Harmony Patrol",
+	after: "05/12:00:00",
+	exec_once: true
+}
+
+// then general templates
+mission: {
+	type:		Patrol,
+	group:		INTERCEPT_SQUADRON,
+	script:		"IS_Patrol_01",
+	exec_once:  false,
+	id:         259
+}
+
+mission: {
+	type:		Patrol,
+	group:		FIGHTER_SQUADRON, 
+	script:		"FS_Patrol_01",
+	exec_once:  true
+	id:         253
+}
+
+mission: {
+	type:		Patrol,
+	group:		INTERCEPT_SQUADRON,
+	script:		"IS_Patrol_02",
+	exec_once:  false,
+	id:         260
+}
+
+mission: {
+	type:		Patrol,
+	group:		FIGHTER_SQUADRON,
+	script:		"FS_Patrol_02",
+	exec_once:   false
+	id:         254
+}
+
+mission: {
+	type:		Patrol,
+	group:		INTERCEPT_SQUADRON,
+	script:		"IS_Patrol_03",
+	exec_once:  false,
+	id:         261
+}
+
+mission: {
+	type:		Patrol,
+	group:		FIGHTER_SQUADRON,
+	script:		"FS_Patrol_03",
+	exec_once:  false,
+	id:         255
+}
+
+mission: {
+	type:		ESCORT_FREIGHT,
+	group:		INTERCEPT_SQUADRON,
+	script:		"IS_Escort_01",
+	region:		Trellis,
+	name:		"Humanitarian Aid",
+	exec_once:  false
+	id:         257
+}
+
+mission: {
+	type:		ESCORT_FREIGHT,
+	group:		FIGHTER_SQUADRON,
+	script:		"FS_Escort_01",
+	region:		Trellis,
+	name:		"Humanitarian Aid",
+	exec_once:  false
+	id:         251
+}
+
+mission: {
+	type:		ESCORT_FREIGHT,
+	group:		INTERCEPT_SQUADRON,
+	script:		"IS_Escort_02",
+	region:		Trellis, 
+	name:		"Harmony Run",
+	exec_once:  false
+	id:         258
+}
+
+mission: {
+	type:		ESCORT_FREIGHT,
+	group:		FIGHTER_SQUADRON,
+	script:		"FS_Escort_02",
+	region:		Trellis, 
+	name:		"Harmony Run",
+	exec_once:  false
+	id:         252
+}
+
+mission: {
+	type:		ESCORT_FREIGHT,
+	group:		DESTROYER_SQUADRON,
+	script:		"DS_Escort_03",
+	region:		Trellis,
+	name:		"Freight Escort",
+	id:         250
+}

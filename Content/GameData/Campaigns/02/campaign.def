@@ -1,0 +1,1506 @@
+CAMPAIGN
+
+name: "Operation Highland"
+
+desc:
+   "The Independent System of Solus is in danger of being destroyed "
+   "by civil war.  Dantari Separatists seeking to join the Hegemony "
+   "Prefecture of Renser have gained control of much of the Solus "
+   "Star Fleet.  The Loyalist faction has requested military aid from "
+   "the Terellian Alliance.  A Force:Space task force has been dispatched "
+   "to break the blockade, evacuate Alliance citizens from Solus, and "
+   "stabilize the military situation."
+
+situation:
+   "The Independent System of Solus has requested military "
+   "assistance from Terellian Alliance Force:Command.  "
+   "Dantari Separatists seeking to join the Hegemony "
+   "Prefecture of Renser have gained control of much of the Solus "
+   "Star Fleet and have established a blockade around the Trellis "
+   "Gate.  The Loyalist forces and many Alliance civilians have been "
+   "trapped on the inner planets of the system."
+   "Force:Intel believes that the Separatists are being backed "
+   "with military support from the Prefecture of Renser, a Hegemony "
+   "border system.  All Force:Space units are instructed to be on "
+   "the lookout for any Hegemony involvement in this conflict."
+
+orders: "* Protect civilian and allied assets in the Independent System of Solus."
+orders: "* Break the Separatist blockade of the inner planets."
+orders: "* Apprehend or destroy military units of the Dantari Separatists."
+orders: "* Determine the extent of Hegemony involvement in this conflict."
+
+system: Solus
+region: Meridian
+
+combatant_groups: 4
+action_groups: 83
+index: 1
+available: true
+image: main
+date:  "01/00:00:00"
+
+combatant: {
+	name:    "Terellian",
+	size:	4,
+	group:	{
+		type: carrier_group,
+		id:    6 
+	},
+	group:	{
+		type: destroyer_squadron,
+		id:   43 
+	},
+	group:	{
+		type: destroyer_squadron,
+		id:   60 
+	},
+	group:	{
+		type: freight,
+		id: 3000
+	},
+}
+
+combatant: {
+	name:    "Dantari",
+	size:	5,
+	group:   { 
+		type: fleet,
+		id: 1    
+	},
+	group:	{
+		type: battalion,
+		id: 1 
+	},
+	group:	{
+		type: battalion,
+		id: 2
+	},
+	group:	{
+		type: war_production,
+		id: 1
+	},
+	group:	{
+		type: freight,
+		id: 3000 
+	},
+	group: {
+		type: minefield,
+		id: 1,
+	},
+	group: {
+		type: minefield,
+		id: 2,
+	},
+	group: {
+		type: minefield,
+		id: 3,
+	},
+	group: {
+		type: minefield,
+		id: 4,
+	},
+	group: {
+		type: minefield,
+		id: 5,
+	},
+
+}
+
+combatant: {
+	name:    "Marakan",
+	size:	1,
+	group:	{
+		type: fleet,
+		id: 4
+	},
+}
+
+combatant: {
+	name:    "Solus",
+	size:	5,
+	group:	{
+		type: infrastructure,
+		id: 2000
+	},
+	group:	{
+		type: transport,
+		id: 2100
+	},
+	group:	{
+		type: civilian,
+		id: 2200
+	},
+	group:	{
+		type: freight,
+		id: 3000
+	},
+	group:	{
+		type: civilian,
+		id: 5000
+	},
+}
+
+action: {
+   id:      0,
+   type:    event,
+   subtype: campaign_start,
+   team:    1,
+   rgn:     Solus,
+   text:    "Solus Directorate Requests Aid",
+   source:  News,
+   date:    "01/00:00:00",
+   file:    "SOLUS - The Provisional Security Directorate of the Independent System of Solus formally requested military assistance from Terellian Alliance Force:Command this morning.  Special couriers ran the Trellis blockade to deliver the message to the Force outpost in the nearby Janek system.  'The official government of this system has been cut off by the illegal blockade of the Trellis Farcaster,' said Adminstrator Lars of the Directorate.  'We have suffered a great deal of damage in the fighting, and we need help to reestablish basic services here.\n\n"
+			"Solus has been ripped nearly in two by the bloody civil war that erupted between the Loyalist and Separatist factions of the system government.  Dantari Separatists under the leadership of Senator Masil Gannet, after months of pressing for an official alliance with the Hegemony Prefecture of Renser, have seized much of the Solus star fleet and taken control of the outer worlds of Trellis and Jalah.  The Loyalist faction, although still technically in control of the official goverment, has been trapped on the inner planets Solus and Meridian.\n\n"
+			"The Separatist blockade of the Trellis Farcaster has also taken a toll on the many Alliance citizens in the Solus system.  Several Terellian companies maintain major offices on the capitol world itself, and Tal Vesta University runs a stellar observatory near the planet Meridian.  An estimated 375,000 Terellians are trapped by the blockade.  So far they have been unable to convince the Dantari Separatists to grant them safe passage back to the main Alliance systems.\n"
+   image:   "01-campaign-start",
+   scene:   "01-News-Start",
+   audio:	"News_01_Campaign_Start",
+}
+
+action: {
+   id:         1,
+   type:       zone,
+   team:       1,
+   asset_type: carrier_group,
+   asset_id:   6,
+   region:     Trellis,
+   image:      "AA-archon-trellis"
+}
+
+action: {
+   id:         2,
+   type:       zone,
+   team:       1,
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   region:     Trellis,
+   image:      "AA-gerrond-trellis"
+}
+
+action: {
+   id:         50,
+   type:       zone,
+   team:       2,
+   asset_type: carrier_group,
+   asset_id:   5,
+   region:     Jalah,
+}
+
+action: {
+   id:         51,
+   type:       zone,
+   team:       2,
+   asset_type: destroyer_squadron,
+   asset_id:   5,
+   region:     Jalah,
+}
+
+action: {
+   id:         52,
+   type:       zone,
+   team:       2,
+   asset_type: destroyer_squadron,
+   asset_id:   6,
+   region:     Trellis,
+}
+
+action: {
+   id:         53,
+   type:       zone,
+   team:       2,
+   asset_type: destroyer_squadron,
+   asset_id:   7,
+   region:     Meridian,
+}
+
+action: {
+   id:         60
+   type:       event
+   subtype:    story
+   team:       1
+   rgn:        Loris
+   after:      "01/15:00:00",
+   date:       "01/15:00:00",
+   text:       "Catching Up With You..."
+   source:     Mail
+   file:       "TO: $RANK $NAME\n"
+   "CO: $GROUP\n"
+   "FM: Capt. Jonas Devlin - Magellan IV\n"
+   "RE: CATCHING UP\n"
+   "-----\n"
+   "PATH: Magellan IV Shipboard | Loris Station | Northeast Transceiver 4 | Silessian Outer Relay | Silessian Inner Relay | Janek Station Courier Drop | 3RD FLEET HQ | Trellis Relay | $GROUP\n"
+   "-----\n\n"
+   "Hey Mate!\n\n"
+   "I just heard about your promotion and wanted to say congratulations!  Sorry I didn't get to give you a proper send-off before you shipped out.\n\n"
+   "So, the Force brass is starting to recognize your 'unique talents,' eh?  You should have followed in my footsteps and joined the Independent Trade fleet.  Too bad you had to get all respectable, you could have been a rich man by now.  I'm not a rich man, but I'm sure you would have been.  Next time I see you I'll have to remember to salute.\n\n"
+   "Can't tell you too much from this end.  The 'Maggie' just put in for a forty-hour stopover in Loris on the way through to 'parts unknown'.  Don't ask me no questions, and I'll tell you no lies.  But just between you and me, watch your tail out there, all right?\n\n"
+   "Hey, are you going to the Academy Reunion this year?  We should be back in the core systems by then, and I've been meaning to ask the skipper of this here tub for some time off.  If you complete your tour by then, I'll catch you at the bar.  You can buy me a drink in exchange for that salute.\n\n"
+   "--Jonas\n\n"
+   "PS Have you heard from Sara lately?  I haven't been able to track her down from way out here.  If you talk to her, tell her 'I am the Doorway' for me. -J"
+   image:      "m0-mail-icon",
+   audio:	   "Mail_01_Catching_up_with_you",
+   scene:      "M1-Catching-Up"
+}
+
+action: {
+   id:         110,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Trellis,
+   asset_type: minefield,
+   asset_id:   4,
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 1, comp: LT, score: 10 },
+}
+
+action: {
+   id:         120,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Trellis,
+   asset_type: minefield,
+   asset_id:   5,
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 2, comp: LT, score: 10 },
+}
+
+
+action: {
+   id:         130,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   after:      "02/05:00:00",
+   date:       "02/05:00:00",
+   text:       "Coup Attempt Fails",
+   source:     News,
+   file:       "TELMERA CITY, SOLUS - An attempted palace coup by Dantari agents was thwarted by alert members of the Provisional Security Directorate early this morning. " 
+				"Separatist agents, working from a secret base near the capitol offices, succeeded in destroying the executive suite of the presidential palace.  \n\n"
+				"Security service members discovered the bomb only moments before it was detonated and were able to escort President Marish and his party to an undisclosed safe " 
+				"location.  Senators Hamil and Covanon who were to attend a working breakfast with the President were killed in the blast, as were two security service agents who "
+				"died trying to protect them.  Memorial services for all four men are planned for later in the week.\n\n"
+
+				"Speaking on behalf of President Marish, executive spokesperson Cyn Talban affirmed that the central government had not been struck down by the terrorist-style attack. "  
+				"We are still very much open for business.  President Marish is meeting with security advisors at this hour, and he will be holding a press conference from the safehouse "
+				"later this morning to address your questions and concerns.",
+   image:      "02-coup-failure",
+   scene:      "02-Coup-Failure",
+   audio:	   "News_02_Coup_Failure"
+}
+
+action: {
+   id:         140,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Trellis,
+   text:       "Minefield A Cleared",
+   file:       "MISSION: Strike, Trellis Sector\n\n"
+			   "Terellian Alliance 112th Attack Squadron 'Warbirds' successfully cleared the Dantari Separatists Minefield A near the Trellis-Solus Farcaster.  No allied losses were reported.\n",
+   source:     TACNET,
+   image:	   "Empty",
+   after:      "02/09:00:00",
+   before:     "03/09:00:00",
+   date:       "02/09:00:00",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 1, comp: GT, score: 10 },
+
+   target_type: minefield,
+   target_id:   1,
+   target_iff:  2,
+   target_kill: "Minefield A",
+   target_kill: "Minefield A",
+   target_kill: "Minefield A",
+   target_kill: "Minefield A",
+   target_kill: "Minefield A",
+   target_kill: "Minefield A",
+}
+
+action: {
+   id:         150,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Trellis,
+   text:       "Minefield B Cleared",
+   file:       "MISSION: Strike, Trellis Sector\n\n"
+			   "Terellian Alliance 112th Attack Squadron 'Warbirds' successfully cleared the Dantari Separatists Minefield B near the Trellis-Solus Farcaster.  No allied losses were reported.",
+   source:     TACNET,
+   image:	   "Empty",
+   after:      "02/13:30:00",
+   before:     "03/13:30:00",
+   date:       "02/13:30:00",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 2, comp: GT, score: 10 },
+
+   target_type: minefield,
+   target_id:   2,
+   target_iff:  2,
+   target_kill: "Minefield B",
+   target_kill: "Minefield B",
+   target_kill: "Minefield B",
+   target_kill: "Minefield B",
+   target_kill: "Minefield B",
+   target_kill: "Minefield B",
+}
+
+action: {
+   id:         160,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Trellis,
+   text:       "Minefield C Cleared",
+   file:       "MISSION: Strike, Trellis Sector\n\n"
+			   "Terellian Alliance 112th Attack Squadron 'Warbirds' successfully cleared the Dantari Separatists Minefield C near the Trellis-Solus Farcaster.  No allied losses were reported.",
+   source:     TACNET,
+   image:	   "Empty",
+   after:      "02/19:20:00",
+   before:     "03/19:20:00",
+   date:       "02/19:20:00",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 3, comp: GT, score: 10 },
+
+   target_type: minefield,
+   target_id:   3,
+   target_iff:  2,
+   target_kill: "Minefield C",
+   target_kill: "Minefield C",
+   target_kill: "Minefield C",
+   target_kill: "Minefield C",
+   target_kill: "Minefield C",
+   target_kill: "Minefield C",
+}
+
+action: {
+   id:         170,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Trellis,
+   text:       "Minefield D Cleared",
+   file:       "MISSION: Strike, Trellis Sector\n\n"
+			   "Terellian Alliance 112th Attack Squadron 'Warbirds' successfully cleared the Dantari Separatists Minefield D near the Trellis-Solus Farcaster.  No allied losses were reported.",
+   source:     TACNET,
+   image:	   "Empty",
+   after:      "03/00:45:00",
+   before:     "04/00:45:00",
+   date:       "04/00:45:00",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 4, comp: GT, score: 10 },
+
+   target_type: minefield,
+   target_id:   4,
+   target_iff:  2,
+   target_kill: "Minefield D",
+   target_kill: "Minefield D",
+   target_kill: "Minefield D",
+   target_kill: "Minefield D",
+   target_kill: "Minefield D",
+   target_kill: "Minefield D",
+}
+
+action: {
+   id:         180,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Trellis,
+   text:       "Minefield E Cleared",
+   file:       "MISSION: Strike, Trellis Sector\n\n"
+			   "Terellian Alliance 112th Attack Squadron 'Warbirds' successfully cleared the Dantari Separatists Minefield E near the Trellis-Solus Farcaster.  No allied losses were reported.",
+   source:     TACNET,
+   image:	   "Empty",
+   after:      "03/08:30:00",
+   before:     "04/08:30:00",
+   date:       "04/08:30:00",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 5, comp: GT, score: 10 },
+
+   target_type: minefield,
+   target_id:   5,
+   target_iff:  2,
+   target_kill: "Minefield E",
+   target_kill: "Minefield E",
+   target_kill: "Minefield E",
+   target_kill: "Minefield E",
+   target_kill: "Minefield E",
+   target_kill: "Minefield E",
+}
+
+action: {
+   id:         190
+   type:       event
+   subtype:    story
+   team:       1,
+   rgn:        Jarnell
+   after:      "03/18:00:00",
+   date:       "04/18:00:00",
+   text:       "New Digs"
+   source:     Mail
+   file:       "TO: $RANK $NAME\n\n"
+			   "CO: $GROUP\n"
+			   "FM: Sara Hunter - Ele'aan Consulate Jarnell\n"
+			   "RE: NEW DIGS\n"
+			   "-----\n"
+			   "PATH: Ele'aan Consular Net Center | Jarnell Main Traffic Relay | Athenar Terminus | Janek Station Courier Drop | 3RD FLEET HQ | Trellis Relay | $GROUP\n"
+			   "-----\n\n"
+			   "Hello,\n\n"
+			   "Well, we're finally just about moved in to the new Ele'aan Consular Center.  My new position as the Junior Consular Liason to the Ele'aan Fusion rates a new office with a lovely view of the Endless Falls.  At twilight, when the mist shroud catches the light of the setting sun, it's just breathtaking.  Ever so much better than that sub-basement hovel I was lurking in on Borova.  Yay me!\n\n"
+			   "Thanks for relaying that message from Jonas.  <I am the Doorway>  Honestly, he's such a character. [giggle]  I don't even know where he could have heard that expression - it's part of an old Ele'aan greeting and farewell ritual.  The Ele'aans are an advanced race, but they can be pretty inscrutable at times, even for me.\n\n"
+			   "In fact, right now they are all agitated about the Zolon Empire for some reason.  They won't tell anybody what's going on, but I get little bits of messages here and there, and they are definitely worried about something, if you can believe that.\n\n"
+			   "Say, if you talk to Jonas again, see if he knows anything about Zolon activity.  I know his trade route takes him through the northern Hegemony systems.  I don't know if he's ever been out as far as Nephrys in all his wanderings.  That's right on the border of Zolon space.  Maybe he's seen or heard something out there...\n\n"
+			   "Congratulations on your promotion!  I knew you'd hit the big time eventually. [grin]\n\n"
+			   "Love from\n"
+			   "Sara"
+   image:      "m0-mail-icon",
+   audio:      "Mail_02_New_Digs",
+   scene:      "M2-New-Digs"
+}
+
+action: {
+   id:         200,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   text:       "Blockade Broken",
+   source:     News,
+   file:       "TRELLIS - The Alliance Third Fleet has broken the blockade of the Trellis-Solus Farcaster network, a Force:Command spokesperson has"
+			   "announced.  The minefields surrounding the Farcaster terminus have been cleared, and several Separatist squadrons have been eliminated or greatly reduced in strength. \n\n"
+
+			   "Theater commander Admiral Evars has given official authorization for the commencement of humanitarian aid traffic to the inner planets. " 
+			   "Certified non-governmental agencies delivering food, clothing, medicines, and emergency equipment will receive protective escorts "
+			   "by warships from the Third Fleet.\n\n",
+   image:      "03-blockade-broken",
+   scene:      "03-Blockade-Broken",
+   audio:	   "News_03_Blockade_Broken",
+
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 1, comp: LT, score: 10 },
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 2, comp: LT, score: 10 },
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 3, comp: LT, score: 10 },
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 4, comp: LT, score: 10 },
+   req: { c1: "Dantari Separatists", group_type: minefield, group_id: 5, comp: LT, score: 10 },
+}
+
+action: {
+   id:         210,
+   type:       sitrep,
+   team:       1,
+   image:	   "Empty",
+   text:       "Phase 1 Complete",
+   file:	   "The Separatist blockade of the Trellis farcaster has been broken, and Phase One of Operation Highland has been successfully concluded.\n"
+               "The minefields in Trellis Sector have been cleared, and mobile Separatist forces patrolling the region are beginning to withdraw.\n\n"
+			   "We are now in Phase Two of the Operation - delivering humanitarian aid and securing the inner worlds.  Force:Command has authorized emergency freight runs, and we will be escorting those civilian ships for the next few days.\n",
+
+   req: { action: 200, status: COMPLETE }
+}
+
+
+action: {
+   id:         230,
+   type:       intel,
+   subtype:    known,
+   team:       1,
+   rgn:        Trellis,
+   asset_type: freight,
+   asset_id:   3000,
+
+   req: { action: 200, status: COMPLETE }
+}
+
+action: {
+   id:         240,
+   type:       orders,
+   team:       1,
+   image:	   "Empty",
+   text:       "Protect Civilians and Allied Assets",
+   file:	   "\t* Protect civilian and allied assets in the Independent System of Solus.\n"
+			   "\t* Support the delivery of humanitarian aid to the inner planets.\n"
+			   "\t* Apprehend or destroy military units of the Dantari Separatists.\n"
+			   "\t* Determine the extent of Hegemony involvement in this conflict.\n",
+
+   req: { action: 200, status: COMPLETE }
+}
+
+action: {
+   id:         250,
+   type:       mission,
+   subtype:    escort_freight,
+   team:       1,
+   rgn:        Trellis,
+   asset_type: fighter_squadron,
+   asset_id:   36,
+   count:      4,
+
+   req: { action: 200, status: COMPLETE }
+}
+
+action: {
+   id:         255,
+   type:       mission,
+   subtype:    escort_freight,
+   team:       1,
+   rgn:        Trellis,
+   asset_type: destroyer_squadron,
+   asset_id:   43,
+   count:      2,
+
+   req: { action: 200, status: COMPLETE }
+}
+
+action: {
+   id:         260,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   after:      "03/09:15:00",
+   date:       "03/09:15:00",
+   text:       "Harmony Station at Risk",
+   source:     SECURE,
+   file:       "****************************************\n"
+			   "*** FLASH CODED \n"
+			   "*** HARMONY STATION \n"
+			   "*** KALON SECTOR \n"
+			   "*** CLASSIFIED: SECRET R3 NTK\n"
+			   "****************************************\n\n"
+			   "Force:Intel assessment of risk to Harmony Station: Threat Level Gamma (Severe)\n\n"
+			   "Field agents have intercepted communications believed to be for Dantari Separatist strike teams in the Solus or Kalon sectors.  COMINT has completed first (partial) decoding of intercepted transmissions, and believes there is a credible threat to High Value Assets (HVAs) in Solus and Kalon sectors.  Specific times, targets, and methods remain unknown.\n\n"
+			   "Force:Intel recommends additional Force:Space patrols be assigned to the Kalon sector pending further analysis of intercepted transmissions.  Harmony Station in Kalon orbit would make an extremely choice target for a separatist strike.\n\n"
+			   "---\n"
+			   "Kash Anlon, Force:Intel Second Directorate\n\n"
+			   "*************************************\n",
+   image:      "04-harmony-risk",
+   scene:      "04-Harmony-Risk",
+   audio:	   "Briefing_04_sam"
+}
+
+action: {
+   id:         270,
+   type:       zone,
+   team:       1,
+   after:      "03/19:00:00",
+   date:       "03/19:00:00",
+   asset_type: carrier_group,
+   asset_id:   6,
+   region:     Solus,
+   image:      "AA-archon-solus"
+}
+
+action: {
+   id:         280,
+   type:       zone,
+   team:       1,
+   after:      "03/19:30:00",
+   date:       "03/19:30:00",
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   region:     Solus,
+   image:      "AA-gerrond-solus"
+}
+
+action: {
+   id:         300,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   after:      "04/04:00:00",
+   date:       "04/04:00:00",
+   text:       "Renser Fleet Buildup",
+   source:     FORCOM,
+   file:       "STRATPLAN BRIEFING\n"
+			   "Timestamp: $TIME\n"
+			   "Subject: Renser Fleet Mobilization\n"
+			   "Classified: CONFIDENTIAL DND/CRYPTO\n\n"
+			   "Force:Space long range sensor patrols report probable fleet buildup in the Hegemony system of Renser.  Ship movement in the system has increased by 137% in the past twenty hours.\n\n"
+			   "Mass density analysis indicates several ships have left berths in the Lornas asteroid belt.  Lornas Sector contains the major outer reserve naval yards for the Renser system.  Common displacement includes Broadsword Class Destroyer Squadrons and Dragon Class Carrier Groups. Force:Intel COMINT reports increased signal activity in the Khaital Sector staging area.  The Renser central capitol has been placed on heightened security awareness.\n\n"
+			   "Tactical Planning Analysis suggests 50% probability of Renser mobilization to Solus system within the next twenty hours.  Probability of mobilization within the next fifty hours is estimated to be greater than 80%.\n\n"
+			   "Vice Admiral Caldott,\n"
+			   "FORCOM STRATPLAN\n",
+   image:      "06-renser-buildup",
+   scene:      "06-Renser-Buildup"
+   audio:	   "Briefing_06"
+}
+
+action: {
+   id:         305,
+   type:       sitrep,
+   team:       1,
+   text:       "Strike against the Separatist Forces",
+   after:      "04/04:00:00",
+   date:       "04/04:00:00",
+   file:	   "In response to recent setbacks to Separatist forces, the Prefecture of Renser is mobilizing their Fourth Fleet.  They are expected to reach the Solus system within 40 hours.  They claim that the fleet will be used for peace keeping operations, but with the high tensions in the area, Force:Intel believes that they will use our presence as an excuse to attack.\n\n"
+			   "Force:Command needs us to redouble our efforts to protect the civilian population and make a decisive strike against the Separatist forces before the Hegemony fleet arrives.\n\n"
+			   "Clearly, we have a lot of work to do in the next 20 to 40 hours.\n",
+}
+
+// if player stumbles upon the base before expected:
+action: {
+   id:         310,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Telmera,
+   before:     "04/08:20:00",
+   text:       "Separatist Base Discovered",
+   source:     SECURE,
+   file:       "*************************************\n"
+			   "*** FLASH CODED +$TIME\n"
+               "*** FOOTHILL RIDGE\n"
+               "*** TELMERA SECTOR\n"
+               "*** CLASSIFIED: SECRET R5 NTK\n"
+               "*************************************\n\n"
+               "Dantari Separatist base discovered on Solus\n\n"
+			   "Force:Intel field agents have uncovered a Separatist military base in the city of Foothill Ridge near Telmera on Solus.  The encampment consists of an operational airbase, reactor complex, weapons bunkers, and an unknown complement of starfighters and personnel.  The Foothill Ridge Base is protected by a series of AAA and SAM batteries in the hills surrounding the city.\n\n"
+			   "Force:Intel recommends Force:Space deploy a package of air strikes to reduce the fixed weapon emplacements and the airbase.  The reactor complex does not appear to be needed for civilian power in the Foothill Ridge area.  However, the reactor poses an unknown danger to the area of radiation and toxic chemical contamination if it is destroyed using air-to-ground weapons, so you will need to be careful when you prosecute your ground strikes.\n\n"
+			   "---\n"
+			   "Kash Anlon, Force:Intel Second Directorate\n\n"
+			   "*************************************\n",
+   image:      "05-foothill-ridge",
+   scene:      "05-Foothill-Ridge",
+   audio:	   "Briefing_05_sam",
+
+   req: { c1: "Dantari Separatists", group_type: battalion, group_id: 2, comp: GT, intel: SECRET },
+}
+
+action: {
+   id:         315,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Telmera,
+   after:      "04/08:20:00",
+   date:       "04/08:20:00",
+   asset_type: intercept_squadron,
+   asset_id:   3,
+}
+
+action: {
+   id:         320,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Telmera,
+   after:      "04/08:30:00",
+   date:       "04/08:30:00",
+   asset_type: attack_squadron,
+   asset_id:   4,
+}
+
+action: {
+   id:         325,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Telmera,
+   after:      "04/08:30:00",
+    date:      "04/08:30:00",
+   asset_type: battery,
+   asset_id:   1,
+}
+
+action: {
+   id:         330,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Telmera,
+   after:      "04/08:30:00",
+   date:       "04/08:30:00",
+   text:       "Separatist Base Discovered",
+   source:     SECURE,
+   file:       "*************************************\n"
+			   "*** FLASH CODED +$TIME\n"
+               "*** FOOTHILL RIDGE\n"
+               "*** TELMERA SECTOR\n"
+               "*** CLASSIFIED: SECRET R5 NTK\n"
+               "*************************************\n\n"
+               "Dantari Separatist base discovered on Solus\n\n"
+			   "Force:Intel field agents have uncovered a Separatist military base in the city of Foothill Ridge near Telmera on Solus.  The encampment consists of an operational airbase, reactor complex, weapons bunkers, and an unknown complement of starfighters and personnel.  The Foothill Ridge Base is protected by a series of AAA and SAM batteries in the hills surrounding the city.\n\n"
+			   "Force:Intel recommends Force:Space deploy a package of air strikes to reduce the fixed weapon emplacements and the airbase.  The reactor complex does not appear to be needed for civilian power in the Foothill Ridge area.  However, the reactor poses an unknown danger to the area of radiation and toxic chemical contamination if it is destroyed using air-to-ground weapons, so you will need to be careful when you prosecute your ground strikes.\n\n"
+			   "---\n"
+			   "Kash Anlon, Force:Intel Second Directorate\n\n"
+			   "*************************************\n",
+   image:      "05-foothill-ridge",
+   scene:      "05-Foothill-Ridge",
+   audio:	   "Briefing_05_sam",
+
+   req: { action: 310, status: COMPLETE, not: true }
+}
+
+action: {
+   id:         350,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Meridian,
+   after:      "04/15:00:00",
+   date:       "04/15:00:00",
+   text:       "Research Lab Isolated",
+   source:     News,
+   file:       "MERIDIAN - The Tal Vesta University Stellar Observatory in Meridian orbit has been cut off by Separatist patrols and is facing severe shortages of food and consumable supplies.  University staff indicate that the fusion plant on the observatory is still operational, and that basic life support functions - water, air, and power - are not an immediate concern.  Mainly, the students are just hungry.  And frustrated, said Research Coordinator Alen Tolap.\n\n"
+			   "Student researchers living at the observatory are protesting the ongoing civil war.  Native Solusans, ethnic Dantari, and even many Terellian Alliance students have issued a joint statement condemning the conflict and demanding the resumption of peaceful negotiations.  Thus far, neither party in the conflict has commented on the student protests.\n\n"
+			   "Alliance Theater Command has promised to make humanitarian aid to the Meridian sector a top priority.  We'll find a way to feed these kids, Fleet Admiral Evars was quoted as saying. There's nothing more ornery than a bunch of hungry college students.",
+   image:      "07-research-lab",
+   scene:      "07-Research-Lab",
+   audio:	   "News_08_Renser_Accusation"
+}
+
+action: {
+   id:         370,
+   type:       zone,
+   team:       1,
+   after:      "04/16:30:00",
+   date:       "04/16:30:00",
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   region:     Meridian,
+   image:      "AA-gerrond-meridian"
+}
+
+action: {
+   id:         375,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   after:      "04/20:00:00",
+   date:       "04/20:00:00",
+   text:       "Renser Accuses Alliance",
+   source:     News,
+   file:       "CITY OF ULNAR, RENSER - The Renser Secretary of Intersystem Affairs issued a statement this evening accusing the Terellian Alliance of committing illegal acts of agression in the Solus Conflict.\n\n"
+			   "External involvement in this civil conflict is a clear violation of the Korian Treaty.  Alliance actions are a threat to Solusan sovereignty, and constitute a clear and present danger to the security of the Prefecture of Renser.  Strong measures may be taken to restore normal discourse in Solus.\n\n"
+			   "Policy analysts believe that this statement amounts to diplomatic code words for the commencement of Renser military action in the Solusan conflict.  The statement does not set a timeline for events, but the general feeling is that something is going to happen sooner rather than later.\n",
+   image:      "08-renser-accusation",
+   scene:      "08-Renser-Accusation",
+   audio:	   "News_09_Senate_Resolution"
+}
+
+action: {
+   id:         410,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   after:      "05/12:00:00",
+   date:       "05/12:00:00",
+   text:       "Senate Resolution Passes",
+   source:     News,
+   file:	   "ALLIANCE CAPITOL, JARNELL - Alliance government officials wasted no time in responding to the accusations of illegality made yesterday by the Renser Secretary of Intersystem Affairs.  The Combined Senate passed resolution SR498/37 censuring the Prefecture of Renser and warning of possible reprisals should Hegemony forces become involved in the Solusan Conflict.\n\n"
+			   "The Alliance has undertaken Operation Highland for the specific purposes of safeguarding our citizens in the Solus system and providing humanitarian aid to those civilians who have been hardest hit by the blockade of the inner worlds.  These actions have been carried out in strict accord with Korian Treaty provisions, and we resent the implication that the Alliance has Imperial designs on our neighbors.\n\n"
+			   "Several anonymous sources have hinted that there may be more to this conflict than is immediately apparent.  Rumors of an Hegemony fleet buildup in Renser have leaked from Force:Command Headquarters.  Others have expressed suspicions regarding the breakdown of peaceful negotiations between the Loyalist and Separatist factions that directly led to the current hostilities.\n\n"
+			   "Military analysts are predicting that although widening of the Solusan Conflict to include Renser was unexpected and is undesirable, it may soon become unavoidable.  Alliance forces appear to have gained the upper hand in some of the fiercest fighting of the war to date.  A Force:Space garrison, once established in the Solus system, would be within easy striking distance of Renser.  That is a situation that no Hegemony border world would be willing to tolerate."
+   image:      "09-senate-resolution",
+   scene:      "09-Senate-Resolution",
+   audio:	   "News_09_Senate_Resolution"
+}
+
+// RENSER TASK FORCE ARRIVES IN SOLUS (JALAH SECTOR)
+
+action: {
+   id:         420,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/21:15:00",
+   date:       "06/21:15:00",
+   asset_type: destroyer_squadron,
+   asset_id:   25,
+}
+
+action: {
+   id:         421,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/22:45:00",
+   date:       "06/22:45:00",
+   asset_type: destroyer_squadron,
+   asset_id:   26,
+}
+
+action: {
+   id:         422,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/23:30:00",
+   date:       "06/23:30:00",
+   asset_type: carrier_group,
+   asset_id:   4,
+}
+
+// KEEP RENSER TASK FORCE IN JALAH SECTOR
+
+action: {
+   id:         425,
+   type:       zone,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/21:15:00",
+   date:       "06/21:15:00",
+   asset_type: destroyer_squadron,
+   asset_id:   25,
+}
+
+action: {
+   id:         426,
+   type:       zone,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/22:45:00",
+   date:       "06/22:45:00",
+   asset_type: destroyer_squadron,
+   asset_id:   26,
+}
+
+action: {
+   id:         427,
+   type:       zone,
+   team:       2,
+   rgn:        Jalah,
+   after:      "06/23:30:00",
+   date:       "06/23:30:00",
+   asset_type: carrier_group,
+   asset_id:   4,
+}
+
+action: {
+   id:         440,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Jalah,
+   after:      "06/23:45:00",
+   date:       "06/23:45:00",
+   text:       "Hegemony Task Force TF4.3",
+   source:     FORCOM,
+   file:       "STRATPLAN BRIEFING\n"
+			   "Timestamp: $TIME\n"
+			   "Subject: Hegemony Task Force TF4.3\n"
+			   "Classified: CONFIDENTIAL DND/CRYPTO\n\n"
+			   "*************************************\n\n"
+			   "A task force (TF4.3) from the Hegemony Fourth Fleet 'Manticore' has successfully translated in system and is currently staging through Jalah Sector.  The task force appears to have bypassed the Trellis Sector entirely, somehow translating directly into Jalah orbit.  This may have been achieved by first staging beyond the outer Oort cloud before attempting the final jump.\n\n"
+			   "Hegemony TF4.3 is composed of one Dragon class CVBG led by CV-7A4 Manticore, and Broadsword class DESRONs 25 and 26 led by DD-3C40 Claymore and DD-3C42 Ironhelm, respectively.  The Dragon class carrier groups generally field a full complement of intercept, fighter, and attack squadrons, and we believe that TF4.3 is no exception.  On paper, this makes TF4.3 heavier than the Alliance forces assigned to the Solus system.  We have requested a Spectre class DESRON from Fleet to help shore us up, but we are unsure as to how long they will take to arrive.\n\n"
+			   "On the plus side, we have the advantage of maneuverability for the moment.  Now that they are here, TF4.3 will need some time to get organized and integrated with the Dantari fleet framework.  If they did in fact take two jumps to translate to Jalah, they will need to UNREP before they are ready to fight.  Either way, they will likely be tied up near Fort Talas in Jalah Sector for at least fifteen to twenty more hours.\n\n"
+			   "*************************************\n\n"
+			   "Vice Admiral Caldott,\n"
+			   "FORCOM STRATPLAN\n",
+   image:      "10-renser-arrival",
+   audio:	   "Briefing_10-OK"
+}
+
+action: {
+   id:         450,
+   type:       sitrep,
+   team:       1,
+   after:      "06/23:45:00",
+   date:       "06/23:45:00",
+   image:	   "Empty",
+   text:       "Hegemony TF4.3 in Jalah Orbit",
+   file:	   "Force:Command reports that task force TF4.3 from the Hegemony Fourth Fleet 'Manticore' has successfuly translated in system.  The task force is currently in Jalah orbit, and we expect them to remain in that sector at least until tomorrow.\n\n"
+			   "There is still plenty of civilian traffic in the system, and several Dantari groups are still ready and willing to fight.  We need all Force:Space units to give their best effort in protecting these people and until we can restore the peace.\n"
+}
+
+action: {
+   id:         455,
+   type:       orders,
+   team:       1,
+   after:      "06/23:45:00",
+   date:       "06/23:45:00",
+   image:	   "Empty",
+   text:       "Independent System of Solus",
+   file:	   "* Protect civilian and allied assets in the Independent System of Solus.\n"
+			   "* Apprehend or destroy military units of the Dantari Separatists.\n"
+			   "* Prevent Hegemony units from striking Solusan or allied assets.\n"
+}
+
+// DANTARI FORCES FALL BACK TO JALAH TO REGROUP WITH RENSER TASK FORCE
+
+action: {
+   id:         500,
+   type:       zone,
+   team:       2,
+   after:      "07/18:00:00",
+   date:       "07/18:00:00",
+   asset_type: carrier_group,
+   asset_id:   5,
+   region:     Jalah,
+}
+
+action: {
+   id:         501,
+   type:       zone,
+   team:       2,
+   after:      "07/20:00:00",
+   date:       "07/20:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   5,
+   region:     Jalah,
+}
+
+action: {
+   id:         502,
+   type:       zone,
+   team:       2,
+   after:      "07/21:00:00",
+   date:       "07/21:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   6,
+   region:     Jalah,
+}
+
+action: {
+   id:         503,
+   type:       zone,
+   team:       2,
+   after:      "07/22:00:00",
+   date:       "07/22:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   7,
+   region:     Jalah,
+}
+
+action: {
+   id:         510,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Jalah,
+   after:      "07/22:15:00",
+   date:       "07/22:15:00",
+   text:       "Separatist Withdrawal to Jalah",
+   source:     FORCOM,
+   file:       "STRATPLAN BRIEFING\n"
+		       "Timestamp: $TIME\n"
+		       "Subject: Separatist Withdrawal to Jalah\n"
+		       "Classified: CONFIDENTIAL DND/CRYPTO\n"
+			   "*************************************\n\n"
+			   "All mobile Separatist forces have withdrawn from the inner planets to Jalah Sector.  We believe they plan to regroup and integrate with Hegemony TF4.3 before resuming the offensive in the Solus and Omane Sectors.  Alliance forces have been doing an excellent job of reducing Separatist fleet strength, and Loyalist security forces believe that they can handle the job of cleaning up the remaining ground based Separatist units.\n\n"
+			   "However, the combined weight of Hegemony and Separatist forces will very likely overmatch our capabilities.  We have received word that Spectre-class DESRON 43 'Shadow' has been assigned to the Solusan conflict, but they will not arrive for at least another fifteen hours.\n\n"
+			   "In the meantime, our plan is to strike the Separatist forces at Jalah before they can regroup.  If we can keep them off balance in a defensive posture there, we believe they will be prevented from mounting an effective attack on Solus.\n\n"
+			   "Simulations suggest that the combined force will try to regroup near Fort Talas Station, using its air cover and defensive fire to protect the fleet.  Remember that our primary objective is to cripple the Separatist fleet, not the Hegemony Task Force, and definitely not the station.  Fort Talas belongs to the Solusan government, and is their primary defensive outpost in the outer worlds.  The station will be vital to their defensive plans after this conflict is over, so we must not cause any more damage to it than absolutely necessary.\n"
+			   "*************************************\n\n"
+			   "Vice Admiral Caldott,\n"
+			   "FORCOM STRATPLAN\n",
+   image:      "11-dantari-pullback",
+   scene:      "11-Dantari-Pullback",
+   audio:	   "Briefing_11-OK"
+}
+
+action: {
+   id:         515,
+   type:       sitrep,
+   team:       1,
+   after:      "07/22:15:00",
+   date:       "07/22:15:00",
+   image:	   "Empty",
+   text:       "Separatist Withdrawal to Jalah",
+   file:	   "All mobile Separatist forces have withdrawn from the inner planets to Jalah Sector.  We believe they plan to regroup and integrate with Hegemony TF4.3 before resuming the offensive in the Solus and Kalon Sectors.\n\n"
+			   "Our plan is to strike the Separatist forces at Jalah before they can regroup.  If we can keep them off balance in a defensive posture there, we believe they will be prevented from mounting an effective attack on Solus.\n"
+}
+
+// ALLIANCE FORCES PURSUE THEM INTO JALAH
+
+action: {
+   id:         520,
+   type:       zone,
+   team:       1,
+   after:      "08/00:00:00",
+   date:       "08/00:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   region:     Jalah,
+   image:      "AA-gerrond-jalah"
+}
+
+action: {
+   id:         521,
+   type:       zone,
+   team:       1,
+   after:      "08/01:00:00",
+   date:       "08/01:00:00",
+   asset_type: carrier_group,
+   asset_id:   6,
+   region:     Jalah,
+   image:      "AA-archon-jalah"
+}
+
+action: {
+   id:         530,
+   type:       intel,
+   subtype:    known,
+   team:       1,
+   after:      "08/22:00:00",
+   date:       "08/22:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   43,
+   region:     Jalah,
+}
+
+action: {
+   id:         535,
+   type:       zone,
+   team:       1,
+   after:      "08/22:00:00",
+   date:       "08/22:00:00",
+   asset_type: destroyer_squadron,
+   asset_id:   43,
+   region:     Jalah,
+   image:      "AA-shadow-jalah",
+
+   req: { action: 735, status: COMPLETE, not: true }
+}
+
+// DON'T PROLONG THE SUFFERING INDEFINITELY
+
+action: {
+   id:         550,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Jalah,
+   image:	   "Empty",
+   text:       "Wolf DESRON Eliminated",
+   file:       "MISSION: Assault, Jalah Sector\n\n"
+			   "Terellian Alliance 43rd DESRON 'Shadow' successfully eliminated Dantari Separatists 5th DESRON 'Wolf' in Jalah Sector.  No allied losses were reported.\n",
+   source:     TACNET,
+   after:      "10/13:30:00",
+   before:     "11/13:30:00",
+   date:       "10/13:30:00",
+
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 5, comp: GT, score: 100 },
+   req: { action: 600, status: COMPLETE, not: true },
+
+   target_type: destroyer_squadron,
+   target_id:   5,
+   target_iff:  2,
+   target_kill: "Wolf",
+   target_kill: "Halas",
+   target_kill: "Baikal",
+   target_kill: "Kyren",
+}
+
+action: {
+   id:         555,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Jalah,
+   image:	   "Empty",
+   text:       "Kitts DESRON Eliminated",
+   file:       "MISSION: Assault, Jalah Sector\n\n"
+			   "Terellian Alliance 43rd DESRON 'Shadow' successfully eliminated Dantari Separatists 6th DESRON 'Kitts' in Jalah Sector.  No allied losses were reported.\n"
+   source:     TACNET,
+   after:      "10/20:30:00",
+   before:     "11/20:30:00",
+   date:       "10/20:30:00",
+
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 6, comp: GT, score: 200 },
+   req: { action: 600, status: COMPLETE, not: true },
+
+   target_type: destroyer_squadron,
+   target_id:   6,
+   target_iff:  2,
+   target_kill: "Kitts",
+   target_kill: "Tomal",
+   target_kill: "Loval",
+   target_kill: "Udel",
+}
+
+action: {
+   id:         560,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Jalah,
+   image:	   "Empty",
+   text:       "Kendra DESRON Eliminated",
+   file:       "MISSION: Assault, Jalah Sector\n\n"
+			   "Terellian Alliance 43rd DESRON 'Shadow' successfully eliminated Dantari Separatists 7th DESRON 'Kendra' in Jalah Sector.  No allied losses were reported.\n",
+   source:     TACNET,
+   after:      "11/10:30:00",
+   before:     "12/10:30:00",
+   date:       "11/10:30:00",
+
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 7, comp: GT, score: 300 },
+   req: { action: 600, status: COMPLETE, not: true },
+
+   target_type: destroyer_squadron,
+   target_id:   7,
+   target_iff:  2,
+   target_kill: "Kendra",
+   target_kill: "Sayal",
+   target_kill: "Baionne",
+   target_kill: "Pelorat",
+}
+
+action: {
+   id:         565,
+   type:       event,
+   subtype:    attack,
+   team:       1,
+   rgn:        Jalah,
+   image:	   "Empty",
+   text:       "Goliath CVBG Eliminated",
+   file:       "MISSION: Assault, Jalah Sector\n\n"
+			   "Terellian Alliance 43rd DESRON 'Shadow' successfully eliminated Dantari Separatists 5th Carrier Group 'Goliath' in Jalah Sector.  No allied losses were reported.\n",
+   source:     TACNET,
+   after:      "12/10:20:00",
+   before:     "13/10:20:00",
+   date:       "12/10:20:00",
+
+   req: { c1: "Dantari Separatists", group_type: carrier_group, group_id: 5, comp: GT, score: 500 },
+   req: { action: 600, status: COMPLETE, not: true },
+
+   target_type: carrier_group,
+   target_id:   5,
+   target_iff:  2,
+   target_kill: "Goliath",
+   target_kill: "Lanner",
+   target_kill: "Connel",
+   target_kill: "Ganat",
+}
+
+// AFTER JALAH FALLS, TASK FORCE RETREATS TO RENSER
+
+action: {
+   id:         600,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   text:       "Solus Victory",
+   source:     News,
+   file:	   "TELMERA CITY, SOLUS - Guns are falling silent throughout the Solus System in accordance with a cease-fire agreement between the Solusan government and the Separatist faction that have been locked in a violent civil war for control of the region.  ISS President Marish and newly-appointed leader of the Separatist movement Ayn Toran signed the agreement in the recently repaired presidential palace as Terellian Alliance Fleet Admiral A. Evars looked on.  Notably absent from the signing ceremony was former Separatist leader Masil Gannet, who is believed to have fled the system to return to his native Adantar in the Korius System.\n\n"
+			   "The cease-fire agreement has sparked hopes for a lasting peace in this war-torn region that has suffered unprecedented levels of bloodshed in a very short period of time.  The pact is the first step to renewed peace talks to address the fair settlement of ethnic Dantari throughout the system.\n\n"
+			   "The deal calls for an open-ended cease-fire between both parties, with independent observers from the nearby system of Silessia to monitor the situation until more permanent agreements can be implemented.  The details of the cease-fire agreement have not yet been made public.\n\n"
+			   "Pursuant to the cease-fire arrangement, Hegemony Fleet Task Force TF4.3 is standing down and will abandon the system within hours.  The Terellian Alliance Task Force that has been assisting the official Solusan Government is also making plans to leave the region.\n"	
+   image:      "12-cease-fire",
+   audio:	   "News_12_Cease_Fire",
+
+   req: { c1: "Dantari Separatists", group_type: carrier_group,      group_id: 5, comp: LT, score: 500 },
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 5, comp: LT, score: 100 },
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 6, comp: LT, score: 200 },
+   req: { c1: "Dantari Separatists", group_type: destroyer_squadron, group_id: 7, comp: LT, score: 300 },
+}
+
+action: {
+   id:         620,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Khaital,
+   asset_type: destroyer_squadron,
+   asset_id:   25,
+
+   req: { action: 600, status: COMPLETE }
+}
+
+action: {
+   id:         621,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Khaital,
+   asset_type: destroyer_squadron,
+   asset_id:   26,
+
+   req: { action: 600, status: COMPLETE }
+}
+
+action: {
+   id:         622,
+   type:       intel,
+   subtype:    known,
+   team:       2,
+   rgn:        Lornas,
+   asset_type: carrier_group,
+   asset_id:   4,
+
+   req: { action: 600, status: COMPLETE }
+}
+
+// KEEP RENSER TASK FORCE IN KHAITAL SECTOR
+
+action: {
+   id:         630,
+   type:       zone,
+   team:       2,
+   rgn:        Khaital,
+   asset_type: destroyer_squadron,
+   asset_id:   25,
+
+   req: { action: 620, status: COMPLETE }
+}
+
+action: {
+   id:         640,
+   type:       zone,
+   team:       2,
+   rgn:        Khaital,
+   asset_type: destroyer_squadron,
+   asset_id:   26,
+
+   req: { action: 621, status: COMPLETE }
+}
+
+action: {
+   id:         650,
+   type:       zone,
+   team:       2,
+   rgn:        Lornas,
+   asset_type: carrier_group,
+   asset_id:   4,
+
+   req: { action: 622, status: COMPLETE }
+}
+
+// ALLIANCE FORCES ARRIVE IN KHAITAL
+
+action: {
+   id:         700,
+   type:       event,
+   subtype:    story,
+   team:       1,
+   rgn:        Solus,
+   text:       "Renser Invasion",
+   source:     News,
+   sitrep:	   "The PRESIDENT of the TERELLIAN ALLIANCE :\n\n"
+			   "My fellow citizens, at this hour, Force:Space units are in the early stages of military operations to disarm the Hegemony Prefecture of Renser and eliminate a grave threat to the peace and stability of the Terellian Alliance and the Independent Systems of the blue drift.\n\n"
+			   "On my orders, under the authority granted to this office by Combined Senate Resolution SR498/37, Alliance forces have begun striking specific military targets in the Renser System to undermine that government's ability to wage agressive war on her neighbors.  The victory of the Solusan people in Operation Highland can not be complete until the hard won peace has been made secure.\n\n"
+			   "Now, that peace is gravely threatened by the armed might of the Hegemony.  In fact, we have evidence that the entire Solusan affair was instigated by agents of Renser Prefecture, including former Separatist Leader Masil Gannet.\n\n"
+			   "To all the men and women of the various branches of Force now serving in the Renser Theater of Operations, the peace of a troubled region, and the hope for prosperity of all its free people now depend on you, on your determination, and on your abilities.  We trust in your abilities and your resolve, and we know that our trust is well placed.\n\n"
+			   "Now that this stage of the conflict has come, the only way to limit its duration is to apply decisive force.  And I assure you, this will not be a campaign of half measures.  We will accept no outcome save victory.\n\n"
+			   "Thank you, and good evening."
+   image:      "13-renser-invasion",
+   scene:      "13-Renser-Invasion",
+   audio:	   "News_13_Renser_Invasion",
+   delay:      19800, // five and a half hours after 600
+
+   req: { action: 600, status: COMPLETE }
+}
+
+action: {
+   id:         701,
+   type:       event,
+   subtype:    story
+   team:       1
+   rgn:        Jarnell
+   text:       "Why Renser?"
+   source:     Mail
+   file:       "TO: $RANK $NAME\n"
+			   "CO: $GROUP\n"
+			   "FM: Sara Hunter - Ele'aan Consulate Jarnell\n"
+			   "RE: WHY RENSER?\n"
+			   "-----\n"
+			   "PATH: Ele'aan Consular Net Center | Jarnell Main Traffic Relay | Athenar Terminus | Janek Station Courier Drop | 3RD FLEET HQ | Trellis Relay | Renser Temporary Transceiver | $GROUP\n"
+			   "-----\n\n"
+			   "$NAME,\n\n"
+			   "Why are we attacking Renser now? The Separatists started this fight, not the Hegemony. How is this going to help stabilize the crisis in Solus, or improve the safety of the Alliance?\n\n"
+			   "The Ele'aan Ambassador, Councilor Auris was most. . . well, I don't think 'upset' is the right word. But he seemed very disconcerted about the potential consequences of this invasion during the Council meeting this morning. I think the Ele'aan delegation tried to talk President Valmar out of this action - I think they wanted him to leave well enough alone and stay out of Hegemony internal affairs.\n\n"
+			   "I hope you're all right out there. . . I’m worried that we are throwing away lives on a foolish errand, and risking far more in the long run… Just tell me you'll stay safe, OK?\n\n"
+			   "Love from\n"
+			   "Sara\n"
+   image:      "m0-mail-icon"
+   scene:      "M3-Why-Renser"
+   audio:	   "Mail_03_Why_Renser",
+   delay:      21600 // six hours after 700
+
+   req: { action: 700, status: COMPLETE }
+}
+
+action: {
+   id:         710,
+   type:       sitrep,
+   team:       1,
+   image:	   "Empty",
+   text:       "Phase 2 Complete"
+   file:	   "Loyalist and Separatist leaders have signed a cease-fire agreement and hostile action in this system is winding down.  Phase Two of Operation Highland has been successfully completed, and President Valmar has ordered us to commence Phase Three - the disarming of Renser Prefecture.\n\n"
+			   "Hegemony Task Force TF4.3 has withdrawn from Solus to the Khaital Sector of the Renser System.  We have been ordered to pursue them into Renser space and eliminate their ability to project force to any of the neighboring Independent systems.\n",
+
+   req: { action: 700, status: COMPLETE }
+}
+
+action: {
+   id:         711,
+   type:       orders,
+   team:       1,
+   image:	   "Empty",
+   text:       "Pursue and Eliminate TF4.3"
+   file:	   "* Pursue Hegemony Task Force TF4.3 into Renser space.\n"
+			   "* Eliminate Renser's ability to project force to neighboring systems.\n"
+			   "* Destroy all military units of the Task Force TF4.3.\n"
+			   "* Withdraw safely back to the Alliance base in Janus System.\n",
+
+   req: { action: 700, status: COMPLETE }
+}
+
+action: {
+   id:         720,
+   type:       zone,
+   team:       1,
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   region:     Khaital,
+   image:      "AA-gerrond-khaital",
+
+   req: { action: 700, status: COMPLETE }
+}
+
+action: {
+   id:         725,
+   type:       zone,
+   team:       1,
+   asset_type: carrier_group,
+   asset_id:   6,
+   region:     Khaital,
+   image:      "AA-archon-khaital",
+
+   req: { action: 700, status: COMPLETE }
+}
+
+action: {
+   id:         735,
+   type:       zone,
+   team:       1,
+   asset_type: destroyer_squadron,
+   asset_id:   43,
+   region:     Khaital,
+   image:      "AA-shadow-khaital",
+
+   req: { action: 530, status: COMPLETE },
+   req: { action: 700, status: COMPLETE }
+}
+
+// ALLIANCE FORCES PURSUE FLEET INTO LORNAS
+
+action: {
+   id:         660,
+   type:       zone,
+   team:       2,
+   asset_type: destroyer_squadron,
+   asset_id:   25,
+   delay:      90e3,
+
+   req: { action: 620, status: COMPLETE }
+}
+
+action: {
+   id:         670,
+   type:       zone,
+   team:       2,
+   asset_type: destroyer_squadron,
+   asset_id:   26,
+   delay:      90e3,
+
+   req: { action: 621, status: COMPLETE }
+}
+
+action: {
+   id:         680,
+   type:       zone,
+   team:       2,
+   asset_type: carrier_group,
+   asset_id:   4,
+   delay:      90e3,
+
+   req: { action: 622, status: COMPLETE }
+}
+
+action: {
+   id:         721,
+   type:       zone,
+   team:       1,
+   asset_type: destroyer_squadron,
+   asset_id:   43,
+   delay:      36000,
+
+   req: { action: 660, status: COMPLETE },
+   req: { action: 720, status: COMPLETE }
+}
+
+action: {
+   id:         726,
+   type:       zone,
+   team:       1,
+   asset_type: carrier_group,
+   asset_id:   6,
+   delay:      36000,
+
+   req: { action: 670, status: COMPLETE },
+   req: { action: 725, status: COMPLETE }
+}
+
+action: {
+   id:         736,
+   type:       zone,
+   team:       1,
+   asset_type: destroyer_squadron,
+   asset_id:   60,
+   delay:      36000,
+
+   req: { action: 680, status: COMPLETE },
+   req: { action: 735, status: COMPLETE }
+}
+
+// THE BITTER END
+
+action: {
+   id:      997
+   type:    event
+   subtype: campaign_fail
+   team:    1
+   rgn:     Solus
+   text:    "Operation Highland Defeat"
+   file:    "Operation Highland has failed to secure the peace.  Alliance losses have been severe.  The Presdient, with the approval of the Combined Senate, has ordered an immediate withdrawal of all Force units from the Solus-Renser Theater. Civilian casualties are estimated at more than 10,000 dead and 52,000 injured or missing.\n\n"
+		    "At least one additional fleet is being mobilized from the Hegemony system of Korius.  Force:Command expects that they will translate in system within forty hours.  At that time, the Independent System of Solus will be brought under the direct control of the Marakan Hegemony."
+   image:   "def1-640",
+   audio:	"End_02_Defeat",
+   scene:   "Defeat1"
+
+   req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 6, comp: LT, score: 3000 },
+   req: { action: 600, status: COMPLETE, not: true },
+}
+
+action: {
+   id:      998
+   type:    event
+   subtype: campaign_fail
+   team:    1
+   rgn:     Solus
+   text:    "Operation Highland Defeat"
+   file:    "Operation Highland has failed in its mission to secure the peace. Alliance losses in the Renser system have been severe, including the loss of the Fleet Carrier Battle Group Archon. The President, with the approval of the Combined Senate, has ordered the immediate withdrawal of all remaining Force:Space units from the Prefecture of Renser.\n\n"
+   "At least one additional Hegemony fleet is being mobilized from the Korius System. We can only hope that this failure does not result in the unilateral escalation on the part of Hegemony forces...\n"
+   image:   "def2-640",
+   audio:	"End_03_Defeat",
+   scene:   "Defeat2"
+
+   req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 6, comp: LT, score: 3000 }
+   req: { action: 600, status: COMPLETE }
+}
+
+action: {
+   id:      999
+   type:    event
+   subtype: campaign_end // successful ending
+   team:    1
+   rgn:     Solus
+   text:    "Operation Highland Victory"
+   file:    "Alliance forces have completed operations in the Solus-Renser Theater.  Hegemony resistance has been broken and the Prefect of Renser is meeting with the Alliance Provisional Consulate at this hour to establish terms for a cease-fire and eventual non-agression pact.\n\n"
+			"Force:Space units in Third Fleet will be withdrawing from Renser space to predetermined guard points in the surrounding systems.  Force:Command expects to be able to rotate your unit back to home space within a few weeks for replenishment and shore leave.\n\n"
+			"Well done, Commander!\n"
+   image:   "victory-640",
+   audio:	"End_01_Victory",
+   scene:   "Victory"
+
+   req: { c1: "Marakan Hegemony", group_type: fleet, group_id: 4, comp: LT, score: 4000 }
+}

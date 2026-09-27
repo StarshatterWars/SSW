@@ -1,0 +1,77 @@
++====================================================================+
+| Magic 2.0                                                          |
++====================================================================+
+|                                                                    |
+| Windows XP 6.2 (Build 9200)                                        |
+|                                                                    |
+| CPUs Detected: 32    CPU Level: 6.183.1    CPU Speed: 1997         |
+| Intel64 Family 6 Model 183 Stepping 1                              |
+| GenuineIntel                                                       |
+|                                                                    |
+| 2048 MB RAM    4095 MB Max Swap    4095 MB Avail Swap              |
+|                                                                    |
+| DirectX 9 installed.                                               |
+|   DDRAW   10.0.22621.1991 (WinBuild.160101.0800)                   |
+|   D3DIM   10.0.26100.1 (WinBuild.160101.0800)                      |
+|   DINPUT  10.0.22621.1991 (WinBuild.160101.0800)                   |
+|   DSOUND  10.0.22621.1991 (WinBuild.160101.0800)                   |
+|   DMUSIC  10.0.22621.1991 (WinBuild.160101.0800)                   |
+|                                                                    |
+|                                                                    |
++====================================================================+
+
+
+********************************
+*   Direct 3D version 9        *
+********************************
+
+Video DX9 Enumerate Adapters and Devices
+----------------------------------------
+
+Adapter 0. NVIDIA GeForce RTX 4090
+   GUID: d7b71e3e-65c4-11cf-3e6e-0c710ec2ed35
+   Device 0 - D3DDEVTYPE_HAL
+      Max Texture Width:    16384
+      Max Texture Height:   16384
+   Device 2 - D3DDEVTYPE_REF
+      Max Texture Width:    8192
+      Max Texture Height:   8192
+
+Adapter 1. NVIDIA GeForce RTX 4090
+   GUID: d7b71e3e-65c4-11cf-3e6e-0c710ec2ed35
+   Device 0 - D3DDEVTYPE_HAL
+      Max Texture Width:    16384
+      Max Texture Height:   16384
+   Device 2 - D3DDEVTYPE_REF
+      Max Texture Width:    8192
+      Max Texture Height:   8192
+
+
+D3DPRESENT_PARAMETERS:
+   BackBufferWidth:       1132
+   BackBufferHeight:      524
+   BackBufferCount:       2
+   BackBufferFormat:      X8R8G8B8
+   Multisample Type:      0
+   Multisample Qual:      0
+   Swap Effect:           1
+   Device Window:         002D1F5E
+   Windowed:              true
+   Enable Depth/Stencil:  true
+   Depth/Stencil Format:  D24S8
+   Flags:                 00000006
+   Fullscreen Refresh:    0 Hz
+   Present Interval:      IMMEDIATE
+
+   Creating Video Device for HWND = 002d1f5e
+   Available Texture Memory: 4087 MB
+
+  Created screen object (1132 x 524).
+  Established requested video parameters.
+  ---------------------------------------
+
+ResizeVideo() 1132 x 475
+TexCacheDX9: final used count = 3
+   VideoDX9: shutdown
++====================================================================+
+ END OF LINE.

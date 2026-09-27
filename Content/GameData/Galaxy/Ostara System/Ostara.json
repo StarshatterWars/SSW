@@ -1,0 +1,85 @@
+{
+  "name": "Ostara",
+  "sky": {
+    "nebula": "Nebula-Ostara.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    32,
+    8,
+    8
+  ],
+  "star": {
+    "name": "Ostara",
+    "image": "Suns/M1.pcx",
+	"map": "Suns/StarM_map.pcx",
+    "tscale": 6,
+    "radius": 1200000000,
+    "mass": 1e+30,
+    "light": 50000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      170,
+      160
+    ],
+    "back": [
+      130,
+      90,
+      50
+    ],
+    "planet": [
+      {
+        "name": "Aram",
+        "image": "Ostara/aram_lo.pcx",
+		"map": "Ostara/ostara_map.pcx",
+        "high_res": "Ostara/aram_hi.pcx",
+        "radius": 6400000,
+        "mass": 5.98e+24,
+        "atmosphere": [
+          180,
+          90,
+          60
+        ],
+        "orbit": 103400000000,
+        "rotation": 15,
+        "region": {
+          "name": "Aram",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 19000000,
+          "inclination": 0.45,
+          "link": [
+            "Volova",
+            "Kala",
+            "Theramin"
+          ]
+        },
+        "moon": [
+          {
+            "name": "Ur",
+            "image": "Moons/lunar_lo.pcx",
+			"map": "Moons/lunar_map.pcx",
+            "high_res": "Moons/lunar_hi.pcx",
+            "radius": 1000000,
+            "mass": 8e+22,
+            "orbit": 85000000,
+            "region": {
+              "name": "Ur",
+              "radius": 480000,
+              "grid": 20000,
+              "orbit": 11000000,
+              "inclination": -0.05,
+              "link": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

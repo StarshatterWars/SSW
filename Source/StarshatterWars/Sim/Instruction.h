@@ -1,0 +1,138 @@
+/*  Project Starshatter Wars
+	Fractal Dev Studios
+	Copyright (C) 2025-2026. All Rights Reserved.
+
+	SUBSYSTEM:    Stars.exe
+	FILE:         Instruction.h
+	AUTHOR:       Carlos Bott
+
+	ORIGINAL AUTHOR AND STUDIO:
+	John DiCamillo / Destroyer Studios LLC
+
+	OVERVIEW
+	========
+	Instruction (NavPoint / Order / Objective) class declaration
+*/
+
+#pragma once
+#include "CoreMinimal.h"
+#include "Types.h"
+#include "SimObject.h"
+#include "Text.h"
+#include "RLoc.h"
+
+// Minimal Unreal include (required for by-value FVector in the public API):
+#include "Math/Vector.h"
+#include "Math/Color.h"
+#include "GameStructs.h"
+
+// +--------------------------------------------------------------------+
+
+class Ship;
+
+// +--------------------------------------------------------------------+
+
+class Instruction : public SimObserver
+{
+public:
+	static const char* TYPENAME() { return "Instruction"; }
+
+	enum PRIORITY
+	{
+		PRIMARY = 1,
+		SECONDARY,
+		BONUS
+	};
+
+	Instruction(EInstruction action, const char* tgt);
+	Instruction(const char* rgn, FVector loc, EInstruction act = EInstruction::Vector);
+	Instruction(SimRegion* rgn, FVector loc, EInstruction act = EInstruction::Vector);
+	Instruction(const Instruction& instr);
+	virtual ~Instruction();
+
+	Instruction& operator = (const Instruction& n);
+	static const char* ActionName(int ActionIndex);
+
+	// accessors:
+	static const char* ActionName(EInstruction a);
+
+	static const char* StatusName(INSTRUCTION_STATUS s);
+	static const char* FormationName(INSTRUCTION_FORMATION f);
+	static const char* PriorityName(int p);
+
+	const char*		GetRegionName()  const { return rgn_name; }
+	SimRegion*		GetRegion()      const { return region; }
+	FVector			GetLocation()    const;
+	RLoc&			GetRLoc() { return rloc; }
+
+	EInstruction          GetAction()      const { return action; }
+	INSTRUCTION_STATUS			GetStatus()      const { return status; }
+	INSTRUCTION_FORMATION       GetFormation()   const { return formation; }
+
+	RadioMessageAction          GetRadioAction()  const { return RadioAction; }
+
+	int          GetSpeed()       const { return speed; }
+	int          GetEMCON()       const { return emcon; }
+	int          GetWeaponsFree() const { return wep_free; }
+	int          GetPriority()    const { return priority; }
+	int          GetFarcast()     const { return farcast; }
+	double       GetHoldTime()    const { return hold_time; }
+
+	const char* GetTargetName() const { return tgt_name; }
+	const char* GetTargetDesc() const { return tgt_desc; }
+	SimObject*	GetTarget();
+
+	void         Evaluate(Ship* s);
+	const char* GetShortDescription() const;
+	const char* GetDescription() const;
+
+	// mutators:
+	void         SetRegion(SimRegion* r) { region = r; }
+	void         SetLocation(const FVector& l);
+	void         SetAction(EInstruction s) { action = s; }
+	void         SetStatus(INSTRUCTION_STATUS s);
+	void         SetFormation(INSTRUCTION_FORMATION s) { formation = s; }
+
+	void         SetRadioAction(RadioMessageAction ra) { RadioAction = ra; }
+	void         SetSpeed(int s) { speed = s; }
+	void         SetEMCON(int e) { emcon = e; }
+	void         SetWeaponsFree(int f) { wep_free = f; }
+	void         SetPriority(int p) { priority = p; }
+	void         SetFarcast(int f) { farcast = f; }
+	void         SetHoldTime(double t) { hold_time = t; }
+
+	void		 SetTarget(const FString& InTarget); 
+	void	     SetTarget(const char* InTarget);
+	void         SetTarget(SimObject* s);
+	void         SetTargetDesc(const char* d);
+	void         ClearTarget();
+
+	virtual bool        Update(SimObject* s);
+	virtual const char* GetObserverName() const;
+
+protected:
+	Text       rgn_name;
+	SimRegion* region;
+	RLoc       rloc;
+	EInstruction		action;
+	INSTRUCTION_FORMATION	formation;
+	INSTRUCTION_STATUS      status;
+
+	RadioMessageAction		RadioAction;
+	
+	int        speed;
+
+	Text       tgt_name;
+	Text       tgt_desc;
+	SimObject* target;
+	int        emcon;
+	int        wep_free;
+	int        priority;
+	int        farcast;
+
+	double     hold_time;
+};
+
+// +--------------------------------------------------------------------+
+
+

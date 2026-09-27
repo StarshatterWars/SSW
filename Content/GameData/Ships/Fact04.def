@@ -1,0 +1,35 @@
+SHIP
+
+name:         Fact04
+class:        Building
+abrv:         BLDG
+display_name: "Heavy Manufacturing Plant"
+hud_icon:     "hud_fact04"
+
+description: "The Factory is a large-scale industrial installation dedicated to the fabrication of armored hull sections, propulsion assemblies, and heavy equipment. Its reinforced infrastructure and continuous-output production lines make it a strategic cornerstone for sustaining fleet and ground operations."
+empire:      All
+model:       "Fact04"
+
+mass:       5e3
+integrity:  10e3
+scale:      2
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       12,   // LARGE_BURST
+   final_loc:        (0, 64, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

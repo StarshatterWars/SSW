@@ -1,0 +1,21 @@
+SHIP
+
+name:       City01
+class:      Building
+abrv:		BLDG
+display_name: "City Block"
+hud_icon:     "hud_bldg01"
+description:  "The City Block is a clustered urban district supporting residential habitation and local commerce within the colony grid. Though non-military in purpose, control of such sectors is often decisive in maintaining planetary stability and civil authority."
+empire:       All
+
+model:      "City01"
+
+mass:       50e3
+integrity:  500e3
+scale:      3
+acs:        0
+pcs:        0
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+

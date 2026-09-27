@@ -1,0 +1,35 @@
+SHIP
+
+name:         Bldg01
+class:        Building
+display_name: "Office Tower"
+abrv:		  BLDG
+hud_icon:     "hud_bldg01"
+description: "The Office Tower rises above the surrounding settlement as a centralized hub for commercial and administrative operations. Though not a military structure, its communications arrays and data archives make it strategically significant during periods of unrest or occupation."
+empire:     All
+
+model:   "Bldg01-0.mag"
+
+mass:       5e3
+integrity:  8e3
+scale:      3
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       6,   // LARGE_BURST
+   final_loc:        (0, 64, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+

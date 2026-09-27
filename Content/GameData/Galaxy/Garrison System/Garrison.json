@@ -1,0 +1,126 @@
+{
+  "name": "Garrison",
+  "sky": {
+    "nebula": "Nebula-Garrison.mag",
+    "poly_stars": "stars.mag",
+	"haze": ""
+  },
+  "stars": 500,
+  "dust": 300,
+  "ambient": [
+    30,
+    15,
+    8
+  ],
+  "star": {
+    "name": "Khaniset",
+    "map": "Suns/StarG_map.pcx",
+    "image": "Suns/G3.pcx",
+    "tscale": 6,
+    "radius": 1600000000,
+    "mass": 2e+30,
+    "light": 260000000000,
+	"rotation": 0,
+	"retro": false,
+	"orbit": 0,
+    "color": [
+      255,
+      250,
+      238
+    ],
+    "back": [
+      60,
+      30,
+      10
+    ],
+    "planet": [
+      {
+        "name": "Rhofar",
+        "map": "Tarsus/oman_map.pcx",
+        "image": "Tarsus/oman_lo.pcx",
+        "high_res": "Tarsus/oman_hi.jpg",
+        "radius": 3100000,
+        "tilt": 0.03,
+        "mass": 3.1e+24,
+        "orbit": 94000000000,
+        "rotation": 32.7,
+        "region": {
+          "name": "Rhofar",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 16000000,
+          "inclination": 0.4,
+          "link": []
+        }
+      },
+      {
+        "name": "Garrison",
+        "map": "Garrison/garrison_map.pcx",
+        "image": "Garrison/garrison_lo.pcx",
+        "high_res": "Garrison/garrison_hi.jpg",
+        "glow_high_res": "Garrison/garrison_fire.jpg",
+        "gloss": "Garrison/garrison_gloss.jpg",
+        "radius": 6000000,
+        "tilt": 0.15,
+        "ring": "Garrison/ring.pcx",
+        "minrad": 1.5,
+        "maxrad": 1.75,
+        "mass": 5.1e+24,
+        "orbit": 140000000000,
+        "rotation": 21.7,
+        "region": {
+          "name": "Garrison",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 20000000,
+          "inclination": 0.4,
+          "link": []
+        }
+      },
+      {
+        "name": "Korul",
+        "map": "Giants/GasGiant10_map.pcx",
+        "image": "Giants/GasGiant10.jpg",
+		"high_res": "Giants/GasGiant10.jpg",
+        "radius": 23000000,
+        "tilt": 0.19,
+        "ring": "Giants/Ring2.pcx",
+        "minrad": 1.6,
+        "maxrad": 1.666,
+        "mass": 5.1e+24,
+        "orbit": 240000000000,
+        "rotation": 21.7,
+        "region": {
+          "name": "Korul",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 100000000,
+          "inclination": 0.3,
+          "link": []
+        }
+      },
+      {
+        "name": "Nerasil",
+        "map": "Haiche/kala_map.pcx",
+        "image": "Haiche/kala_lo.pcx",
+        "high_res": "Haiche/kala_hi.pcx",
+        "radius": 4000000,
+        "tilt": 0.15,
+        "mass": 3.7e+24,
+        "orbit": 420000000000,
+        "rotation": 17.2,
+        "region": {
+          "name": "Nerasil",
+          "radius": 480000,
+          "grid": 20000,
+          "orbit": 15000000,
+          "inclination": 0.2,
+          "link": [
+            "Relay",
+            "Cavenda"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+TEMPLATELIST
+
+mission: { type: PATROL,         group: INTERCEPT_SQUADRON, script: "IS_Patrol_01" }
+mission: { type: PATROL,         group: FIGHTER_SQUADRON,   script: "FS_Patrol_01" }
+mission: { type: PATROL,         group: INTERCEPT_SQUADRON, script: "IS_Patrol_02" }
+mission: { type: PATROL,         group: FIGHTER_SQUADRON,   script: "TFS_Patrol_02" }
+mission: { type: PATROL,         group: INTERCEPT_SQUADRON, script: "IS_Patrol_03" }
+mission: { type: PATROL,         group: FIGHTER_SQUADRON,   script: "FS_Patrol_03" }
+

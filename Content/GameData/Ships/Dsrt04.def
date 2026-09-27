@@ -1,0 +1,34 @@
+SHIP
+
+name:         Dsrt04
+class:        Building
+display_name: Deserted Outpost
+abrv:		  BLDG
+hud_icon:     "hud_dsrt04"
+description:  "A Deserted Outpost is a remote installation abandoned after resource depletion or strategic withdrawal. Weathered by time and exposure, it stands as a silent relic of past expansion—occasionally repurposed by scavengers, pirates, or covert operatives."
+empire:        All
+model:        "Dsrt04"
+
+mass:       512e3
+integrity:  320e3
+scale:      3
+acs:        50e3
+
+chase:      (0, -1200, 250)
+bridge:     (0,     0,  32)
+
+death_spiral: {
+   time:             0.0,
+
+   final_type:       10,   // SMALL_EXPLOSION
+   final_loc:        (0, 32, 0),
+
+   final_type:       12,   // LARGE_BURST
+   final_loc:        (0, 64, 0),
+
+   final_type:       8,    // smoke trail
+   final_loc:        (0,  0, 0),
+   }
+
+
+
