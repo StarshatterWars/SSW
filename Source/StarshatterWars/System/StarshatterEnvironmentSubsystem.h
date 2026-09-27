@@ -23,8 +23,9 @@
         - Terrain regions (FS_TerrainRegion)
         - Campaign zones (FS_CampaignZone)
 
-    The subsystem has no world presence and does not tick.
-    It exists purely as a service and static data registry.
+    The subsystem has no Actor/world presence.  It is a GameInstance subsystem
+    that also advances the runtime environment simulation clock used by legacy
+    StarSystem orbital/stardate calculations.
 
     RESPONSIBILITIES
     ================
@@ -39,12 +40,14 @@
     NON-GOALS
     =========
     - No Actor spawning
-    - No Tick()
-    - No runtime orbital simulation
     - No UI logic
-    - No player/session state
+    - No player/session ownership
 
-    This subsystem is STATIC ENVIRONMENT DATA ONLY.
+    TIME OWNERSHIP
+    ==============
+    - The global universe calendar epoch is fixed at 2228-01-01.
+    - TimerSubsystem / universe save owns persistent elapsed universe time.
+    - This subsystem consumes that elapsed time for StarSystem simulation.
 =============================================================================*/
 
 #pragma once
@@ -130,6 +133,12 @@ public:
     // Runtime Simulation Time System 
     // ===================================================================== 
     void InitSimulationBaseTime();
+
+    // Babylon 5 / Starshatter Wars canonical universe start.
+    static FDateTime GetUniverseEpoch()
+    {
+        return FDateTime(2228, 1, 1, 0, 0, 0);
+    }
 
     void RegisterStarSystem(StarSystem* System);
 

@@ -44,6 +44,7 @@
 #include "StarSystemRegistry.h"
 
 #include "SSWGameInstance.h"
+#include "TimerSubsystem.h"
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
@@ -343,9 +344,30 @@ void UStarshatterEnvironmentSubsystem::LoadAll(bool bFull /*= false*/)
 
 	Galaxy::InitializeFromEnvironment(this);
 
-	// Initialize global runtime base time ONCE and propagate to live systems
+	// Initialize the Babylon 5 universe epoch and propagate it to live systems.
 	InitSimulationBaseTime();
-	ResetSimulationClock();
+
+	// Synchronize the environment simulation clock with the authoritative
+	// universe elapsed time when available.  New universes begin at T+0.
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+		{
+			SetSimulationClockMs(
+				static_cast<int64>(Timer->GetUniverseTimeSeconds()) * 1000LL);
+		}
+		else
+		{
+			ResetSimulationClock();
+		}
+	}
+	else
+	{
+		ResetSimulationClock();
+	}
+
+	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
+	StarSystem::CalcStardate();
 
 	bLoaded = true;
 
@@ -367,43 +389,75 @@ void UStarshatterEnvironmentSubsystem::InitSimulationBaseTime()
 	if (bBaseTimeInitialized)
 	{
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Environment] BaseTime already initialized: %f"),
+			TEXT("[Environment] BaseTime already initialized: %.0f"),
 			EnvironmentBaseTime);
 		return;
 	}
 
-	const FDateTime UtcNow = FDateTime::UtcNow();
-	const FDateTime UnixEpoch(1970, 1, 1);
-	const FTimespan SinceEpoch = UtcNow - UnixEpoch;
+	// ---------------------------------------------------------------------
+	// Babylon 5 canonical universe epoch
+	// ---------------------------------------------------------------------
+	// Starshatter Wars is not based on the host computer's real UTC clock.
+	// The game universe begins at 2228-01-01 00:00:00.
+	//
+	// EnvironmentBaseTime is stored in Unix-seconds form only because the
+	// legacy StarSystem stardate/orbital code expects an absolute base value.
+	// The date itself is the fictional game epoch, not "now".
+	// ---------------------------------------------------------------------
+	const FDateTime Babylon5Epoch =
+		GetUniverseEpoch();
 
-	EnvironmentBaseTime = SinceEpoch.GetTotalSeconds();
+	const int64 Babylon5BaseUnixSeconds =
+		Babylon5Epoch.ToUnixTimestamp();
+
+	EnvironmentBaseTime =
+		static_cast<double>(Babylon5BaseUnixSeconds);
+
 	bBaseTimeInitialized = true;
 
-	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
-	StarSystem::CalcStardate();
+	// If the authoritative universe clock has already been loaded, use its
+	// elapsed simulation time.  The calendar base remains fixed at 2228.
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UTimerSubsystem* Timer =
+			GI->GetSubsystem<UTimerSubsystem>())
+		{
+			SimulationClockMs =
+				static_cast<int64>(
+					Timer->GetUniverseTimeSeconds()) *
+				1000LL;
+		}
+	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Environment] BaseTime initialized from UE clock: %f"),
-		EnvironmentBaseTime);
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Environment] RuntimeStarSystems.Num() = %d"),
-		RuntimeStarSystems.Num());
+	StarSystem::SetSimulationTime(
+		GetSimulationClockSeconds());
 
 	int32 Count = 0;
 
 	for (StarSystem* System : RuntimeStarSystems)
 	{
 		if (!System)
+		{
 			continue;
+		}
 
-		System->SetBaseTime(EnvironmentBaseTime, true);
-		StarSystem::CalcStardate();
+		System->SetBaseTime(
+			EnvironmentBaseTime,
+			true);
+
 		++Count;
 	}
 
+	StarSystem::CalcStardate();
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Environment] BaseTime propagated to %d systems"),
+		TEXT(
+			"[Environment] Babylon 5 epoch initialized: "
+			"2228-01-01 00:00:00  UnixBase=%lld  "
+			"Elapsed=%.3f sec  Systems=%d"),
+		static_cast<long long>(
+			Babylon5BaseUnixSeconds),
+		GetSimulationClockSeconds(),
 		Count);
 }
 
@@ -479,10 +533,17 @@ void UStarshatterEnvironmentSubsystem::RegisterStarSystem(StarSystem* System)
 		TEXT("[Environment] Registered StarSystem. Count=%d"),
 		RuntimeStarSystems.Num());
 
-	// If base time already initialized, apply immediately
+	// If the Babylon 5 universe base is already initialized,
+	// apply it immediately to systems registered after initial load.
 	if (bBaseTimeInitialized)
 	{
-		System->SetBaseTime(EnvironmentBaseTime, true);
+		System->SetBaseTime(
+			EnvironmentBaseTime,
+			true);
+
+		StarSystem::SetSimulationTime(
+			GetSimulationClockSeconds());
+
 		StarSystem::CalcStardate();
 	}
 }

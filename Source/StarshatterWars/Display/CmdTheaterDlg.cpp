@@ -28,10 +28,14 @@
 // Runtime environment:
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"
+#include "OrbitalRegion.h"
+#include "CombatGroupRegistry.h"
+#include "GameStructs.h"
 
 // UMG:
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/SizeBox.h"
@@ -67,13 +71,9 @@ void UCmdTheaterDlg::NativeConstruct()
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
-    if (!RuntimeHost)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CmdTheaterDlg] RuntimeHost is not present yet. ")
-            TEXT("This is expected during Widget Blueprint migration."));
-        return;
-    }
+    ensureMsgf(
+        RuntimeHost,
+        TEXT("CmdTheaterDlg: RuntimeHost is not bound"));
 
     BuildRuntimeLayout();
     BuildMapPanels();
@@ -100,6 +100,22 @@ void UCmdTheaterDlg::NativeConstruct()
         SectorButton->OnClicked.AddDynamic(
             this,
             &UCmdTheaterDlg::OnViewSectorClicked);
+    }
+
+    if (SystemComboBox)
+    {
+        SystemComboBox->OnSelectionChanged.RemoveAll(this);
+        SystemComboBox->OnSelectionChanged.AddDynamic(
+            this,
+            &UCmdTheaterDlg::OnSystemSelectionChanged);
+    }
+
+    if (RegionComboBox)
+    {
+        RegionComboBox->OnSelectionChanged.RemoveAll(this);
+        RegionComboBox->OnSelectionChanged.AddDynamic(
+            this,
+            &UCmdTheaterDlg::OnRegionSelectionChanged);
     }
 
     if (ZoomInButton)
@@ -323,6 +339,10 @@ void UCmdTheaterDlg::BuildRuntimeLayout()
                 ESlateSizeRule::Automatic));
     }
 
+    // Return buttons. Visibility is view-dependent:
+    // - Galaxy view: neither return button is shown.
+    // - System view: GALAXY is shown.
+    // - Sector view: GALAXY and SYSTEM are shown.
     GalaxyButton =
         CreateRuntimeButton(
             TEXT("GALAXY"),
@@ -335,11 +355,201 @@ void UCmdTheaterDlg::BuildRuntimeLayout()
             ViewButtonBox,
             132.0f);
 
-    SectorButton =
-        CreateRuntimeButton(
-            TEXT("SECTOR"),
-            ViewButtonBox,
-            132.0f);
+    // There is deliberately no ordinary SECTOR button.
+    // On System view, sector/region navigation is provided by RegionComboBox.
+    SectorButton = nullptr;
+
+    // ------------------------------------------------------------
+    // System selector (Galaxy view only)
+    // ------------------------------------------------------------
+
+    SystemSelectorBox =
+        WidgetTree->ConstructWidget<UHorizontalBox>(
+            UHorizontalBox::StaticClass(),
+            TEXT("CmdTheaterSystemSelectorBox"));
+
+    if (SystemSelectorBox)
+    {
+        if (UHorizontalBoxSlot* SystemBoxSlot =
+            TopButtonRow->AddChildToHorizontalBox(
+                SystemSelectorBox))
+        {
+            SystemBoxSlot->SetPadding(
+                FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+
+            SystemBoxSlot->SetSize(
+                FSlateChildSize(
+                    ESlateSizeRule::Automatic));
+
+            SystemBoxSlot->SetVerticalAlignment(
+                VAlign_Center);
+        }
+
+        SystemSelectorLabel =
+            WidgetTree->ConstructWidget<UTextBlock>(
+                UTextBlock::StaticClass(),
+                TEXT("CmdTheaterSystemLabel"));
+
+        if (SystemSelectorLabel)
+        {
+            SystemSelectorLabel->SetText(
+                FText::FromString(TEXT("SYSTEM")));
+
+            SystemSelectorLabel->SetColorAndOpacity(
+                MissionUIStyle::HeaderText);
+
+            SystemSelectorLabel->SetFont(
+                MissionUIStyle::GetHeaderFont(12));
+
+            if (UHorizontalBoxSlot* LabelSlot =
+                SystemSelectorBox->AddChildToHorizontalBox(
+                    SystemSelectorLabel))
+            {
+                LabelSlot->SetPadding(
+                    FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+
+                LabelSlot->SetVerticalAlignment(
+                    VAlign_Center);
+
+                LabelSlot->SetSize(
+                    FSlateChildSize(
+                        ESlateSizeRule::Automatic));
+            }
+        }
+
+        SystemComboHost =
+            WidgetTree->ConstructWidget<USizeBox>(
+                USizeBox::StaticClass(),
+                TEXT("CmdTheaterSystemComboHost"));
+
+        if (SystemComboHost)
+        {
+            SystemComboHost->SetWidthOverride(260.0f);
+            SystemComboHost->SetHeightOverride(34.0f);
+
+            if (UHorizontalBoxSlot* ComboHostSlot =
+                SystemSelectorBox->AddChildToHorizontalBox(
+                    SystemComboHost))
+            {
+                ComboHostSlot->SetVerticalAlignment(
+                    VAlign_Center);
+
+                ComboHostSlot->SetSize(
+                    FSlateChildSize(
+                        ESlateSizeRule::Automatic));
+            }
+
+            SystemComboBox =
+                WidgetTree->ConstructWidget<UComboBoxString>(
+                    UComboBoxString::StaticClass(),
+                    TEXT("CmdTheaterSystemComboBox"));
+
+            if (SystemComboBox)
+            {
+                SystemComboHost->SetContent(
+                    SystemComboBox);
+            }
+        }
+
+        SystemSelectorBox->SetVisibility(
+            ESlateVisibility::Collapsed);
+    }
+
+    // ------------------------------------------------------------
+    // Sector selector (System view only; sectors are OrbitalRegions)
+    // ------------------------------------------------------------
+
+    RegionSelectorBox =
+        WidgetTree->ConstructWidget<UHorizontalBox>(
+            UHorizontalBox::StaticClass(),
+            TEXT("CmdTheaterRegionSelectorBox"));
+
+    if (RegionSelectorBox)
+    {
+        if (UHorizontalBoxSlot* RegionBoxSlot =
+            TopButtonRow->AddChildToHorizontalBox(
+                RegionSelectorBox))
+        {
+            RegionBoxSlot->SetPadding(
+                FMargin(12.0f, 0.0f, 8.0f, 0.0f));
+
+            RegionBoxSlot->SetSize(
+                FSlateChildSize(
+                    ESlateSizeRule::Automatic));
+
+            RegionBoxSlot->SetVerticalAlignment(
+                VAlign_Center);
+        }
+
+        RegionSelectorLabel =
+            WidgetTree->ConstructWidget<UTextBlock>(
+                UTextBlock::StaticClass(),
+                TEXT("CmdTheaterRegionLabel"));
+
+        if (RegionSelectorLabel)
+        {
+            RegionSelectorLabel->SetText(
+                FText::FromString(TEXT("SECTOR")));
+
+            RegionSelectorLabel->SetColorAndOpacity(
+                MissionUIStyle::HeaderText);
+
+            RegionSelectorLabel->SetFont(
+                MissionUIStyle::GetHeaderFont(12));
+
+            if (UHorizontalBoxSlot* LabelSlot =
+                RegionSelectorBox->AddChildToHorizontalBox(
+                    RegionSelectorLabel))
+            {
+                LabelSlot->SetPadding(
+                    FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+
+                LabelSlot->SetVerticalAlignment(
+                    VAlign_Center);
+
+                LabelSlot->SetSize(
+                    FSlateChildSize(
+                        ESlateSizeRule::Automatic));
+            }
+        }
+
+        RegionComboHost =
+            WidgetTree->ConstructWidget<USizeBox>(
+                USizeBox::StaticClass(),
+                TEXT("CmdTheaterRegionComboHost"));
+
+        if (RegionComboHost)
+        {
+            RegionComboHost->SetWidthOverride(260.0f);
+            RegionComboHost->SetHeightOverride(34.0f);
+
+            if (UHorizontalBoxSlot* ComboHostSlot =
+                RegionSelectorBox->AddChildToHorizontalBox(
+                    RegionComboHost))
+            {
+                ComboHostSlot->SetVerticalAlignment(
+                    VAlign_Center);
+
+                ComboHostSlot->SetSize(
+                    FSlateChildSize(
+                        ESlateSizeRule::Automatic));
+            }
+
+            RegionComboBox =
+                WidgetTree->ConstructWidget<UComboBoxString>(
+                    UComboBoxString::StaticClass(),
+                    TEXT("CmdTheaterRegionComboBox"));
+
+            if (RegionComboBox)
+            {
+                RegionComboHost->SetContent(
+                    RegionComboBox);
+            }
+        }
+
+        RegionSelectorBox->SetVisibility(
+            ESlateVisibility::Collapsed);
+    }
 
     USpacer* ControlSpacer =
         WidgetTree->ConstructWidget<USpacer>(
@@ -573,6 +783,11 @@ void UCmdTheaterDlg::BuildMapPanels()
     if (SystemMapPanel)
     {
         SystemMapPanel->SetNavigationOwner(this);
+
+        SystemMapPanel->OnPrimaryStarActivated.BindUObject(
+            this,
+            &UCmdTheaterDlg::HandleSystemPrimaryStarActivated);
+
         SystemPanelHost->SetContent(
             SystemMapPanel);
     }
@@ -602,11 +817,11 @@ void UCmdTheaterDlg::BuildMapPanels()
     {
         SectorMapPanel->SetOperationsView(true);
 
-        SectorMapPanel->OnElementSelected.BindUObject(
+        SectorMapPanel->OnOperationsGroupSelected.BindUObject(
             this,
-            &UCmdTheaterDlg::HandleSectorElementSelected);
+            &UCmdTheaterDlg::HandleOperationsGroupSelected);
 
-        // Major-structure campaign/runtime data will be connected separately.
+        // Operations is static/persistent-data driven; no Mission* is required.
         SectorMapPanel->SetMission(nullptr);
 
         SectorPanelHost->SetContent(
@@ -765,6 +980,7 @@ void UCmdTheaterDlg::EnsureDefaultSystemSelection()
     SelectedSystemName.Empty();
     SelectedSectorName.Empty();
     SelectedStructureElement = nullptr;
+    SelectedOperationsGroup = nullptr;
 
     UStarshatterEnvironmentSubsystem* Env =
         GetEnvironmentSubsystem();
@@ -812,18 +1028,317 @@ void UCmdTheaterDlg::SyncMapContext()
 
     if (SectorMapPanel)
     {
+        const bool bHadExplicitSector =
+            !SelectedSectorName.IsEmpty();
+
         SectorMapPanel->SetViewedSystemName(
             SelectedSystemName);
 
-        if (!SelectedSectorName.IsEmpty())
+        if (bHadExplicitSector)
         {
             SectorMapPanel->SetViewedSectorName(
                 SelectedSectorName);
+
+            SelectedSectorName =
+                SectorMapPanel->GetViewedSectorName();
+        }
+    }
+
+    RefreshSystemSelector();
+    RefreshRegionSelector();
+}
+
+void UCmdTheaterDlg::RefreshSystemSelector()
+{
+    if (!SystemComboBox)
+    {
+        return;
+    }
+
+    TGuardValue<bool> UpdatingGuard(
+        bUpdatingSystemSelector,
+        true);
+
+    SystemComboBox->ClearOptions();
+
+    UStarshatterEnvironmentSubsystem* Env =
+        GetEnvironmentSubsystem();
+
+    if (!Env)
+    {
+        SystemComboBox->ClearSelection();
+        return;
+    }
+
+    TArray<FString> SystemNames;
+
+    for (StarSystem* System :
+        Env->GetRuntimeStarSystems())
+    {
+        if (!System)
+        {
+            continue;
         }
 
-        SelectedSectorName =
-            SectorMapPanel->GetViewedSectorName();
+        const FString SystemName =
+            FString(ANSI_TO_TCHAR(System->GetName()))
+            .TrimStartAndEnd();
+
+        if (!SystemName.IsEmpty())
+        {
+            SystemNames.AddUnique(SystemName);
+        }
     }
+
+    for (const FString& SystemName :
+        SystemNames)
+    {
+        SystemComboBox->AddOption(SystemName);
+    }
+
+    if (SystemNames.IsEmpty())
+    {
+        SelectedSystemName.Empty();
+        SystemComboBox->ClearSelection();
+        return;
+    }
+
+    FString SystemToSelect;
+
+    for (const FString& SystemName :
+        SystemNames)
+    {
+        if (SystemName.Equals(
+                SelectedSystemName,
+                ESearchCase::IgnoreCase))
+        {
+            SystemToSelect = SystemName;
+            break;
+        }
+    }
+
+    if (SystemToSelect.IsEmpty())
+    {
+        SystemToSelect = SystemNames[0];
+
+        const bool bSystemChanged =
+            !SelectedSystemName.Equals(
+                SystemToSelect,
+                ESearchCase::IgnoreCase);
+
+        SelectedSystemName = SystemToSelect;
+
+        if (bSystemChanged)
+        {
+            SelectedSectorName.Empty();
+            SelectedStructureElement = nullptr;
+            SelectedOperationsGroup = nullptr;
+        }
+    }
+
+    SystemComboBox->SetSelectedOption(
+        SystemToSelect);
+}
+
+void UCmdTheaterDlg::RefreshRegionSelector()
+{
+    if (!RegionComboBox)
+    {
+        return;
+    }
+
+    TGuardValue<bool> UpdatingGuard(
+        bUpdatingRegionSelector,
+        true);
+
+    RegionComboBox->ClearOptions();
+
+    StarSystem* System =
+        FindRuntimeSystemByName(
+            SelectedSystemName);
+
+    if (!System)
+    {
+        SelectedSectorName.Empty();
+        RegionComboBox->ClearSelection();
+        return;
+    }
+
+    TArray<FString> RegionNames;
+
+    ListIter<OrbitalRegion> RegionIter =
+        System->GetAllRegions();
+
+    while (++RegionIter)
+    {
+        OrbitalRegion* Region =
+            RegionIter.value();
+
+        if (!Region)
+        {
+            continue;
+        }
+
+        const FString RegionName =
+            FString(
+                ANSI_TO_TCHAR(
+                    Region->GetName()))
+            .TrimStartAndEnd();
+
+        if (!RegionName.IsEmpty())
+        {
+            RegionNames.AddUnique(
+                RegionName);
+        }
+    }
+
+    for (const FString& RegionName :
+        RegionNames)
+    {
+        RegionComboBox->AddOption(
+            RegionName);
+    }
+
+    if (RegionNames.IsEmpty())
+    {
+        SelectedSectorName.Empty();
+        RegionComboBox->ClearSelection();
+        return;
+    }
+
+    auto FindMatchingRegion =
+        [&RegionNames](const FString& Candidate) -> FString
+        {
+            const FString CleanCandidate =
+                Candidate.TrimStartAndEnd();
+
+            if (CleanCandidate.IsEmpty())
+            {
+                return FString();
+            }
+
+            for (const FString& RegionName :
+                RegionNames)
+            {
+                if (RegionName.Equals(
+                        CleanCandidate,
+                        ESearchCase::IgnoreCase))
+                {
+                    return RegionName;
+                }
+            }
+
+            return FString();
+        };
+
+    FString RegionToSelect =
+        FindMatchingRegion(
+            SelectedSectorName);
+
+    // If there is no existing selection, prefer a region containing
+    // an Operations major structure. This avoids opening Sector view
+    // on an arbitrary empty region when static data is available.
+    if (RegionToSelect.IsEmpty())
+    {
+        for (const FString& RegionName :
+            RegionNames)
+        {
+            const TArray<const FS_CombatGroup*> Groups =
+                CombatGroupRegistry::FindByRegion(
+                    RegionName);
+
+            bool bHasMajorStructure = false;
+
+            for (const FS_CombatGroup* Group :
+                Groups)
+            {
+                if (!Group)
+                {
+                    continue;
+                }
+
+                if (Group->Type !=
+                        ECOMBATGROUP_TYPE::STATION &&
+                    Group->Type !=
+                        ECOMBATGROUP_TYPE::STARBASE)
+                {
+                    continue;
+                }
+
+                const FString GroupSystem =
+                    Group->System.TrimStartAndEnd();
+
+                if (!GroupSystem.IsEmpty() &&
+                    !SelectedSystemName.IsEmpty() &&
+                    !GroupSystem.Equals(
+                        SelectedSystemName,
+                        ESearchCase::IgnoreCase))
+                {
+                    continue;
+                }
+
+                bHasMajorStructure = true;
+                break;
+            }
+
+            if (bHasMajorStructure)
+            {
+                RegionToSelect =
+                    RegionName;
+                break;
+            }
+        }
+    }
+
+    if (RegionToSelect.IsEmpty() &&
+        SectorMapPanel)
+    {
+        RegionToSelect =
+            FindMatchingRegion(
+                SectorMapPanel->
+                    GetViewedSectorName());
+    }
+
+    if (RegionToSelect.IsEmpty())
+    {
+        OrbitalRegion* ActiveRegion =
+            System->ActiveRegion();
+
+        if (ActiveRegion)
+        {
+            RegionToSelect =
+                FindMatchingRegion(
+                    ANSI_TO_TCHAR(
+                        ActiveRegion->GetName()));
+        }
+    }
+
+    if (RegionToSelect.IsEmpty())
+    {
+        RegionToSelect =
+            RegionNames[0];
+    }
+
+    SelectedSectorName =
+        RegionToSelect;
+
+    RegionComboBox->SetSelectedOption(
+        SelectedSectorName);
+
+    if (SectorMapPanel)
+    {
+        SectorMapPanel->SetViewedSystemName(
+            SelectedSystemName);
+
+        SectorMapPanel->SetViewedSectorName(
+            SelectedSectorName);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdTheaterDlg] Region selector: System=%s Regions=%d Selected=%s"),
+        *SelectedSystemName,
+        RegionNames.Num(),
+        *SelectedSectorName);
 }
 
 void UCmdTheaterDlg::SetViewMode(
@@ -884,22 +1399,62 @@ void UCmdTheaterDlg::SetViewMode(
 
 void UCmdTheaterDlg::RefreshViewButtons()
 {
+    // Hierarchical Operations navigation:
+    //
+    // GALAXY:
+    //   SYSTEM [dropdown]
+    //
+    // SYSTEM:
+    //   SECTOR [dropdown]
+    //   double-click primary star -> GALAXY
+    //
+    // SECTOR:
+    //   GALAXY [return]   SYSTEM [return]   SECTOR [dropdown]
+
     if (GalaxyButton)
     {
-        GalaxyButton->SetIsEnabled(
-            CurrentViewMode != VIEW_GALAXY);
+        // No Galaxy button on Galaxy or System views.
+        // System -> Galaxy is performed by double-clicking the central star.
+        GalaxyButton->SetVisibility(
+            CurrentViewMode == VIEW_REGION
+                ? ESlateVisibility::Visible
+                : ESlateVisibility::Collapsed);
+
+        GalaxyButton->SetIsEnabled(true);
     }
 
     if (SystemButton)
     {
-        SystemButton->SetIsEnabled(
-            CurrentViewMode != VIEW_SYSTEM);
+        SystemButton->SetVisibility(
+            CurrentViewMode == VIEW_REGION
+                ? ESlateVisibility::Visible
+                : ESlateVisibility::Collapsed);
+
+        SystemButton->SetIsEnabled(true);
     }
 
+    // Ordinary Sector button is not used.
     if (SectorButton)
     {
-        SectorButton->SetIsEnabled(
-            CurrentViewMode != VIEW_REGION);
+        SectorButton->SetVisibility(
+            ESlateVisibility::Collapsed);
+    }
+
+    if (SystemSelectorBox)
+    {
+        SystemSelectorBox->SetVisibility(
+            CurrentViewMode == VIEW_GALAXY
+                ? ESlateVisibility::Visible
+                : ESlateVisibility::Collapsed);
+    }
+
+    if (RegionSelectorBox)
+    {
+        RegionSelectorBox->SetVisibility(
+            (CurrentViewMode == VIEW_SYSTEM ||
+             CurrentViewMode == VIEW_REGION)
+                ? ESlateVisibility::Visible
+                : ESlateVisibility::Collapsed);
     }
 }
 
@@ -926,6 +1481,7 @@ void UCmdTheaterDlg::HandleGalaxySystemSelected(
     {
         SelectedSectorName.Empty();
         SelectedStructureElement = nullptr;
+        SelectedOperationsGroup = nullptr;
     }
 
     SyncMapContext();
@@ -961,6 +1517,28 @@ void UCmdTheaterDlg::HandleGalaxySystemActivated(
         VIEW_SYSTEM);
 }
 
+void UCmdTheaterDlg::HandleSystemPrimaryStarActivated(
+    const FString& InSystemName)
+{
+    const FString CleanName =
+        InSystemName.TrimStartAndEnd();
+
+    if (!CleanName.IsEmpty())
+    {
+        SelectedSystemName = CleanName;
+    }
+
+    // Keep the corresponding system highlighted when the Galaxy map returns.
+    SyncMapContext();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdTheaterDlg] Primary star double-click -> Galaxy: %s"),
+        *SelectedSystemName);
+
+    SetViewMode(
+        VIEW_GALAXY);
+}
+
 void UCmdTheaterDlg::HandleSectorElementSelected(
     MissionElement* InElement)
 {
@@ -973,9 +1551,148 @@ void UCmdTheaterDlg::HandleSectorElementSelected(
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[CmdTheaterDlg] Operations structure selected: %s"),
+        TEXT("[CmdTheaterDlg] Legacy mission element selected in Theater: %s"),
         ANSI_TO_TCHAR(
             InElement->GetName()));
+}
+
+void UCmdTheaterDlg::HandleOperationsGroupSelected(
+    const FS_CombatGroup* InGroup)
+{
+    SelectedOperationsGroup = InGroup;
+    SelectedStructureElement = nullptr;
+
+    if (!InGroup)
+    {
+        return;
+    }
+
+    SelectedSectorName =
+        InGroup->Region.TrimStartAndEnd();
+
+    FString GroupName =
+        InGroup->DisplayName.TrimStartAndEnd();
+
+    if (GroupName.IsEmpty())
+    {
+        GroupName =
+            InGroup->Name.TrimStartAndEnd();
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdTheaterDlg] Operations group selected: %s Region=%s Type=%d"),
+        *GroupName,
+        *SelectedSectorName,
+        static_cast<int32>(InGroup->Type));
+}
+
+void UCmdTheaterDlg::OnSystemSelectionChanged(
+    FString SelectedItem,
+    ESelectInfo::Type SelectionType)
+{
+    if (bUpdatingSystemSelector)
+    {
+        return;
+    }
+
+    const FString CleanSystem =
+        SelectedItem.TrimStartAndEnd();
+
+    if (CleanSystem.IsEmpty())
+    {
+        return;
+    }
+
+    const bool bChanged =
+        !SelectedSystemName.Equals(
+            CleanSystem,
+            ESearchCase::IgnoreCase);
+
+    SelectedSystemName = CleanSystem;
+
+    if (bChanged)
+    {
+        SelectedSectorName.Empty();
+        SelectedStructureElement = nullptr;
+        SelectedOperationsGroup = nullptr;
+
+        if (SectorMapPanel)
+        {
+            SectorMapPanel->SetSelectedOperationsGroup(nullptr);
+        }
+    }
+
+    if (SystemMapPanel)
+    {
+        SystemMapPanel->SetViewedSystemName(
+            SelectedSystemName);
+
+        SystemMapPanel->SetSelectedBodyName(
+            TEXT(""));
+
+        SystemMapPanel->ShowSystemOverview();
+    }
+
+    SyncMapContext();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdTheaterDlg] Operations system selected: %s"),
+        *SelectedSystemName);
+
+    // Choosing a system from the Galaxy screen drills into System view.
+    SetViewMode(VIEW_SYSTEM);
+}
+
+void UCmdTheaterDlg::OnRegionSelectionChanged(
+    FString SelectedItem,
+    ESelectInfo::Type SelectionType)
+{
+    if (bUpdatingRegionSelector)
+    {
+        return;
+    }
+
+    const FString CleanRegion =
+        SelectedItem.TrimStartAndEnd();
+
+    if (CleanRegion.IsEmpty())
+    {
+        return;
+    }
+
+    SelectedSectorName = CleanRegion;
+    SelectedStructureElement = nullptr;
+    SelectedOperationsGroup = nullptr;
+
+    if (SectorMapPanel)
+    {
+        SectorMapPanel->SetSelectedOperationsGroup(nullptr);
+
+        if (!SelectedSystemName.IsEmpty())
+        {
+            SectorMapPanel->SetViewedSystemName(
+                SelectedSystemName);
+        }
+
+        SectorMapPanel->SetViewedSectorName(
+            SelectedSectorName);
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmdTheaterDlg] Operations sector selected: System=%s Region=%s"),
+        *SelectedSystemName,
+        *SelectedSectorName);
+
+    // Choosing a sector/region from the System screen drills into Sector view.
+    // If already in Sector view, stay there and simply switch the displayed region.
+    if (CurrentViewMode != VIEW_REGION)
+    {
+        SetViewMode(VIEW_REGION);
+    }
+    else
+    {
+        RefreshViewButtons();
+    }
 }
 
 void UCmdTheaterDlg::OnViewGalaxyClicked()

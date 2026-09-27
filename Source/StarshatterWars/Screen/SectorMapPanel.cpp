@@ -32,6 +32,7 @@
 
 #include "CombatUnit.h"
 #include "CombatGroup.h"
+#include "CombatGroupRegistry.h"
 #include "ShipDesignRegistry.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -182,10 +183,20 @@ int32 USectorMapPanel::NativePaint(
 
     const int32 Rep = ComputeRepLevel(R);
 
-    // Mission Navigation shows route lines and nav points.
-    // Operations intentionally suppresses tactical routes.
-    if (!bOperationsView)
+    if (bOperationsView)
     {
+        // Operations/Theater uses the persistent/static combat-group registry.
+        DrawOperationsGroups(
+            OutDrawElements,
+            AllottedGeometry,
+            LayerId + 200,
+            Center,
+            Scale,
+            Rep);
+    }
+    else
+    {
+        // Mission Navigation remains mission-instance driven.
         DrawMissionNavRoutes(
             OutDrawElements,
             AllottedGeometry,
@@ -193,15 +204,15 @@ int32 USectorMapPanel::NativePaint(
             Center,
             Scale,
             Rep);
-    }
 
-    DrawMissionElements(
-        OutDrawElements,
-        AllottedGeometry,
-        LayerId + 200,
-        Center,
-        Scale,
-        Rep);
+        DrawMissionElements(
+            OutDrawElements,
+            AllottedGeometry,
+            LayerId + 200,
+            Center,
+            Scale,
+            Rep);
+    }
 
     const FString InfoString = FString::Printf(
         TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
@@ -254,22 +265,42 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
         const FVector2D LocalPoint =
             InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 
-        MissionElement* HitElement =
-            HitTestMissionElementAtLocalPoint(LocalPoint, Center, Scale);
-
-        if (HitElement)
+        if (bOperationsView)
         {
-            SelectedElement = HitElement;
-            Invalidate(EInvalidateWidget::Paint);
+            const FS_CombatGroup* HitGroup =
+                HitTestOperationsGroupAtLocalPoint(LocalPoint, Center, Scale);
 
-            if (OnElementSelected.IsBound())
+            if (HitGroup)
             {
-                OnElementSelected.Execute(HitElement);
+                SelectedOperationsGroup = HitGroup;
+                SelectedElement = nullptr;
+                Invalidate(EInvalidateWidget::Paint);
+
+                if (OnOperationsGroupSelected.IsBound())
+                {
+                    OnOperationsGroupSelected.Execute(HitGroup);
+                }
             }
-            else if (OwnerNavDlg)
+        }
+        else
+        {
+            MissionElement* HitElement =
+                HitTestMissionElementAtLocalPoint(LocalPoint, Center, Scale);
+
+            if (HitElement)
             {
-                // Backward compatibility with existing Mission Navigation.
-                OwnerNavDlg->HandleSectorMissionElementSelected(HitElement);
+                SelectedElement = HitElement;
+                SelectedOperationsGroup = nullptr;
+                Invalidate(EInvalidateWidget::Paint);
+
+                if (OnElementSelected.IsBound())
+                {
+                    OnElementSelected.Execute(HitElement);
+                }
+                else if (OwnerNavDlg)
+                {
+                    OwnerNavDlg->HandleSectorMissionElementSelected(HitElement);
+                }
             }
         }
 
@@ -344,13 +375,13 @@ void USectorMapPanel::SetOperationsView(bool bInOperationsView)
 {
     bOperationsView = bInOperationsView;
 
-    // Do not retain a tactical selection when switching into
-    // the Operations-only major-structure view.
-    if (bOperationsView &&
-        SelectedElement &&
-        !ShouldRenderElement(SelectedElement))
+    if (bOperationsView)
     {
         SelectedElement = nullptr;
+    }
+    else
+    {
+        SelectedOperationsGroup = nullptr;
     }
 
     Invalidate(EInvalidateWidget::Paint);
@@ -377,6 +408,22 @@ void USectorMapPanel::SetMission(Mission* InMission)
 void USectorMapPanel::SetSelectedElement(MissionElement* InElement)
 {
     SelectedElement = InElement;
+    if (InElement)
+    {
+        SelectedOperationsGroup = nullptr;
+    }
+
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::SetSelectedOperationsGroup(const FS_CombatGroup* InGroup)
+{
+    SelectedOperationsGroup = InGroup;
+    if (InGroup)
+    {
+        SelectedElement = nullptr;
+    }
+
     Invalidate(EInvalidateWidget::Paint);
 }
 
@@ -387,7 +434,7 @@ bool USectorMapPanel::CenterOnElement(MissionElement* InElement)
         return false;
     }
 
-    if (bOperationsView && !ShouldRenderElement(InElement))
+    if (bOperationsView)
     {
         return false;
     }
@@ -409,6 +456,41 @@ bool USectorMapPanel::CenterOnElement(MissionElement* InElement)
 
     PanOffset = -Offset;
     PanOffset = ClampPanOffset(PanOffset, PanelSize);
+
+    Invalidate(EInvalidateWidget::Paint);
+    return true;
+}
+
+bool USectorMapPanel::CenterOnOperationsGroup(const FS_CombatGroup* InGroup)
+{
+    if (!bOperationsView || !InGroup || !CachedRegion)
+    {
+        return false;
+    }
+
+    if (!OperationsGroupMatchesView(*InGroup))
+    {
+        return false;
+    }
+
+    const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
+    if (PanelSize.X <= 1.0f || PanelSize.Y <= 1.0f)
+    {
+        return false;
+    }
+
+    const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
+    const double R = CachedRegion->Radius() / ZoomScale;
+    const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
+
+    const FVector2D Offset(
+        InGroup->Location.X * Scale,
+        InGroup->Location.Y * Scale);
+
+    SelectedOperationsGroup = InGroup;
+    SelectedElement = nullptr;
+
+    PanOffset = ClampPanOffset(-Offset, PanelSize);
 
     Invalidate(EInvalidateWidget::Paint);
     return true;
@@ -908,6 +990,458 @@ void USectorMapPanel::DrawMissionElement(
     }
 }  
 
+bool USectorMapPanel::OperationsGroupMatchesView(const FS_CombatGroup& Group) const
+{
+    if (!bOperationsView || !CachedRegion)
+    {
+        return false;
+    }
+
+    if (Group.Type != ECOMBATGROUP_TYPE::STATION &&
+        Group.Type != ECOMBATGROUP_TYPE::STARBASE)
+    {
+        return false;
+    }
+
+    const FString ActiveRegionName =
+        FString(ANSI_TO_TCHAR(CachedRegion->GetName())).TrimStartAndEnd();
+
+    if (!Group.Region.TrimStartAndEnd().Equals(
+            ActiveRegionName,
+            ESearchCase::IgnoreCase))
+    {
+        return false;
+    }
+
+    // Existing roster rows may not populate System. Only enforce it when
+    // the static row actually provides one.
+    const FString GroupSystem = Group.System.TrimStartAndEnd();
+    if (!GroupSystem.IsEmpty() &&
+        !ViewedSystemName.IsEmpty() &&
+        !GroupSystem.Equals(ViewedSystemName, ESearchCase::IgnoreCase))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void USectorMapPanel::DrawOperationsGroups(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep) const
+{
+    if (!bOperationsView || !CachedRegion)
+    {
+        return;
+    }
+
+    const FString ActiveRegionName =
+        FString(ANSI_TO_TCHAR(CachedRegion->GetName())).TrimStartAndEnd();
+
+    const TArray<const FS_CombatGroup*> Groups =
+        CombatGroupRegistry::FindByRegion(ActiveRegionName);
+
+    for (const FS_CombatGroup* Group : Groups)
+    {
+        if (!Group || !OperationsGroupMatchesView(*Group))
+        {
+            continue;
+        }
+
+        DrawOperationsGroup(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId,
+            Center,
+            Scale,
+            Rep,
+            Group);
+    }
+}
+
+void USectorMapPanel::DrawOperationsGroup(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 BaseLayerId,
+    const FVector2D& Center,
+    float Scale,
+    int32 Rep,
+    const FS_CombatGroup* Group) const
+{
+    if (!Group || !OperationsGroupMatchesView(*Group))
+    {
+        return;
+    }
+
+    const FVector2D ScreenPos(
+        Center.X + (Group->Location.X * Scale),
+        Center.Y + (Group->Location.Y * Scale));
+
+    const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
+    if (ScreenPos.X < 0.0f || ScreenPos.X >= PanelSize.X ||
+        ScreenPos.Y < 0.0f || ScreenPos.Y >= PanelSize.Y)
+    {
+        return;
+    }
+
+    const bool bSelected = (Group == SelectedOperationsGroup);
+    const FLinearColor MarkerColor = GetOperationsIFFColor(Group);
+
+    float HalfSize = 5.0f;
+
+    if (Rep <= 1)
+    {
+        HalfSize = 3.0f;
+    }
+    else if (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
+    {
+        HalfSize = 8.0f;
+    }
+    else
+    {
+        HalfSize = 6.0f;
+    }
+
+    const FVector2D TopLeft(
+        ScreenPos.X - HalfSize,
+        ScreenPos.Y - HalfSize);
+
+    const FVector2D DrawSize(
+        HalfSize * 2.0f,
+        HalfSize * 2.0f);
+
+    FSlateDrawElement::MakeBox(
+        OutDrawElements,
+        BaseLayerId + 1,
+        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+        FCoreStyle::Get().GetBrush("WhiteBrush"),
+        ESlateDrawEffect::None,
+        MarkerColor);
+
+    // Distinguish a planet-side starbase from an orbital station.
+    if (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
+    {
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 2,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(ScreenPos.X - HalfSize - 3.0f, ScreenPos.Y),
+                FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 2,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(ScreenPos.X, ScreenPos.Y - HalfSize - 3.0f),
+                FVector2D(ScreenPos.X, ScreenPos.Y + HalfSize + 3.0f)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+    }
+
+    if (bSelected)
+    {
+        const FVector2D SelTopLeft(
+            ScreenPos.X - HalfSize - 3.0f,
+            ScreenPos.Y - HalfSize - 3.0f);
+
+        const FVector2D SelSize(
+            (HalfSize + 3.0f) * 2.0f,
+            (HalfSize + 3.0f) * 2.0f);
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements,
+            BaseLayerId + 3,
+            AllottedGeometry.ToPaintGeometry(),
+            {
+                FVector2D(SelTopLeft.X, SelTopLeft.Y),
+                FVector2D(SelTopLeft.X + SelSize.X, SelTopLeft.Y),
+                FVector2D(SelTopLeft.X + SelSize.X, SelTopLeft.Y + SelSize.Y),
+                FVector2D(SelTopLeft.X, SelTopLeft.Y + SelSize.Y),
+                FVector2D(SelTopLeft.X, SelTopLeft.Y)
+            },
+            ESlateDrawEffect::None,
+            FLinearColor::White,
+            true,
+            1.0f);
+
+        DrawSelectionCrosshair(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId + 4,
+            ScreenPos,
+            HalfSize + 8.0f);
+
+        DrawSelectedOperationsGroupTag(
+            OutDrawElements,
+            AllottedGeometry,
+            BaseLayerId + 6,
+            ScreenPos,
+            Group);
+    }
+
+    const bool bCrowded = IsOperationsGroupCrowded(Group, Scale);
+    const bool bDrawLabel = bSelected || ((Rep >= 2) && !bCrowded);
+
+    if (bDrawLabel)
+    {
+        FString Label = Group->DisplayName.TrimStartAndEnd();
+
+        if (Label.IsEmpty())
+        {
+            Label = Group->Name.TrimStartAndEnd();
+        }
+
+        if (Label.IsEmpty())
+        {
+            Label = (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
+                ? TEXT("STARBASE")
+                : TEXT("STATION");
+        }
+
+        FSlateDrawElement::MakeText(
+            OutDrawElements,
+            BaseLayerId + 5,
+            AllottedGeometry.ToPaintGeometry(
+                FVector2D(ScreenPos.X + HalfSize + 4.0f, ScreenPos.Y - 6.0f),
+                FVector2D(240.0f, 16.0f)),
+            Label,
+            FCoreStyle::GetDefaultFontStyle("Regular", 10),
+            ESlateDrawEffect::None,
+            FLinearColor::White);
+    }
+}
+
+const FS_CombatGroup* USectorMapPanel::HitTestOperationsGroupAtLocalPoint(
+    const FVector2D& LocalPoint,
+    const FVector2D& Center,
+    float Scale) const
+{
+    if (!bOperationsView || !CachedRegion)
+    {
+        return nullptr;
+    }
+
+    const FString ActiveRegionName =
+        FString(ANSI_TO_TCHAR(CachedRegion->GetName())).TrimStartAndEnd();
+
+    const TArray<const FS_CombatGroup*> Groups =
+        CombatGroupRegistry::FindByRegion(ActiveRegionName);
+
+    const FS_CombatGroup* BestGroup = nullptr;
+    double BestDistSq = TNumericLimits<double>::Max();
+
+    for (const FS_CombatGroup* Group : Groups)
+    {
+        if (!Group || !OperationsGroupMatchesView(*Group))
+        {
+            continue;
+        }
+
+        const FVector2D ScreenPos(
+            Center.X + (Group->Location.X * Scale),
+            Center.Y + (Group->Location.Y * Scale));
+
+        const double DX = LocalPoint.X - ScreenPos.X;
+        const double DY = LocalPoint.Y - ScreenPos.Y;
+        const double DistSq = (DX * DX) + (DY * DY);
+        const double PickRadiusSq = 196.0; // 14 px
+
+        if (DistSq <= PickRadiusSq && DistSq < BestDistSq)
+        {
+            BestDistSq = DistSq;
+            BestGroup = Group;
+        }
+    }
+
+    return BestGroup;
+}
+
+bool USectorMapPanel::FindOperationsGroupScreenPosition(
+    const FS_CombatGroup* Group,
+    const FVector2D& Center,
+    float Scale,
+    FVector2D& OutScreenPos) const
+{
+    OutScreenPos = FVector2D::ZeroVector;
+
+    if (!Group || !OperationsGroupMatchesView(*Group))
+    {
+        return false;
+    }
+
+    OutScreenPos = FVector2D(
+        Center.X + (Group->Location.X * Scale),
+        Center.Y + (Group->Location.Y * Scale));
+
+    return true;
+}
+
+bool USectorMapPanel::IsOperationsGroupCrowded(
+    const FS_CombatGroup* TestGroup,
+    float Scale) const
+{
+    if (!TestGroup || !CachedRegion)
+    {
+        return false;
+    }
+
+    const FString ActiveRegionName =
+        FString(ANSI_TO_TCHAR(CachedRegion->GetName())).TrimStartAndEnd();
+
+    const TArray<const FS_CombatGroup*> Groups =
+        CombatGroupRegistry::FindByRegion(ActiveRegionName);
+
+    for (const FS_CombatGroup* RefGroup : Groups)
+    {
+        if (!RefGroup ||
+            RefGroup == TestGroup ||
+            !OperationsGroupMatchesView(*RefGroup))
+        {
+            continue;
+        }
+
+        const double DX =
+            (TestGroup->Location.X - RefGroup->Location.X) * Scale;
+
+        const double DY =
+            (TestGroup->Location.Y - RefGroup->Location.Y) * Scale;
+
+        const double DistSq = (DX * DX) + (DY * DY);
+
+        if (DistSq <= 100.0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void USectorMapPanel::DrawSelectedOperationsGroupTag(
+    FSlateWindowElementList& OutDrawElements,
+    const FGeometry& AllottedGeometry,
+    int32 LayerId,
+    const FVector2D& ScreenPos,
+    const FS_CombatGroup* Group) const
+{
+    if (!Group)
+    {
+        return;
+    }
+
+    const FLinearColor IFFColor = GetOperationsIFFColor(Group);
+
+    FString NameLine = Group->DisplayName.TrimStartAndEnd();
+    if (NameLine.IsEmpty())
+    {
+        NameLine = Group->Name.TrimStartAndEnd();
+    }
+
+    if (NameLine.IsEmpty())
+    {
+        NameLine = (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
+            ? TEXT("STARBASE")
+            : TEXT("STATION");
+    }
+
+    const FString TypeLine =
+        (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
+        ? TEXT("STARBASE")
+        : TEXT("STATION");
+
+    const FString LocLine = FString::Printf(
+        TEXT("%s  LOC %.0f, %.0f, %.0f"),
+        *TypeLine,
+        Group->Location.X,
+        Group->Location.Y,
+        Group->Location.Z);
+
+    const FVector2D TagPos(ScreenPos.X + 18.0f, ScreenPos.Y - 28.0f);
+    const FVector2D TagSize(260.0f, 34.0f);
+
+    FSlateDrawElement::MakeBox(
+        OutDrawElements,
+        LayerId,
+        AllottedGeometry.ToPaintGeometry(TagPos, TagSize),
+        FCoreStyle::Get().GetBrush("WhiteBrush"),
+        ESlateDrawEffect::None,
+        FLinearColor(
+            IFFColor.R * 0.10f,
+            IFFColor.G * 0.10f,
+            IFFColor.B * 0.10f,
+            0.82f));
+
+    FSlateDrawElement::MakeLines(
+        OutDrawElements,
+        LayerId + 1,
+        AllottedGeometry.ToPaintGeometry(),
+        {
+            FVector2D(TagPos.X, TagPos.Y),
+            FVector2D(TagPos.X + TagSize.X, TagPos.Y)
+        },
+        ESlateDrawEffect::None,
+        IFFColor,
+        true,
+        1.5f);
+
+    FSlateDrawElement::MakeText(
+        OutDrawElements,
+        LayerId + 2,
+        AllottedGeometry.ToPaintGeometry(
+            FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f),
+            FVector2D(250.0f, 14.0f)),
+        NameLine,
+        FCoreStyle::GetDefaultFontStyle("Regular", 10),
+        ESlateDrawEffect::None,
+        IFFColor);
+
+    FSlateDrawElement::MakeText(
+        OutDrawElements,
+        LayerId + 2,
+        AllottedGeometry.ToPaintGeometry(
+            FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f),
+            FVector2D(250.0f, 14.0f)),
+        LocLine,
+        FCoreStyle::GetDefaultFontStyle("Regular", 9),
+        ESlateDrawEffect::None,
+        FLinearColor(0.85f, 0.90f, 1.0f, 1.0f));
+}
+
+FLinearColor USectorMapPanel::GetOperationsIFFColor(
+    const FS_CombatGroup* Group) const
+{
+    if (!Group)
+    {
+        return FLinearColor::White;
+    }
+
+    if (Group->Iff == 1)
+    {
+        return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f);
+    }
+
+    if (Group->Iff == 0)
+    {
+        return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f);
+    }
+
+    return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+}
+
 void USectorMapPanel::DrawMissionNavRoutes(
     FSlateWindowElementList& OutDrawElements,
     const FGeometry& AllottedGeometry,
@@ -1170,14 +1704,6 @@ bool USectorMapPanel::IsElementCrowded(MissionElement* TestElement, float Scale)
             continue;
         }
 
-        // Preserve Mission Navigation crowding behavior exactly.
-        // In Operations, hidden tactical units must not suppress
-        // labels for visible major structures.
-        if (bOperationsView && !ShouldRenderElement(RefElement))
-        {
-            continue;
-        }
-
         if (_stricmp(RefElement->GetRegion(), CachedRegion->GetName()) != 0)
         {
             continue;
@@ -1225,13 +1751,6 @@ MissionElement* USectorMapPanel::HitTestMissionElementAtLocalPoint(
             continue;
         }
 
-        // Mission Navigation keeps its existing hit-test behavior.
-        // Operations can only pick elements that are actually rendered.
-        if (bOperationsView && !ShouldRenderElement(Element))
-        {
-            continue;
-        }
-
         if (_stricmp(Element->GetRegion(), CachedRegion->GetName()) != 0)
         {
             continue;
@@ -1266,11 +1785,6 @@ bool USectorMapPanel::FindMissionElementScreenPosition(
     OutScreenPos = FVector2D::ZeroVector;
 
     if (!Element || !CachedRegion)
-    {
-        return false;
-    }
-
-    if (bOperationsView && !ShouldRenderElement(Element))
     {
         return false;
     }
@@ -1479,20 +1993,9 @@ bool USectorMapPanel::ShouldRenderElement(MissionElement* Element) const
         return false;
     }
 
-    // Preserve the existing Mission Navigation visibility / intel policy.
-    if (!ShouldShowMissionElementInBriefing(Element))
-    {
-        return false;
-    }
-
-    if (!bOperationsView)
-    {
-        return true;
-    }
-
-    // Operations is strategic/operational rather than tactical:
-    // major stations and starbases only.
-    return IsMajorStructureElement(Element);
+    // Mission Navigation uses MissionElement visibility/intel rules.
+    // Operations uses the separate FS_CombatGroup path.
+    return ShouldShowMissionElementInBriefing(Element);
 }
 
 bool USectorMapPanel::ShouldShowMissionElementInBriefing(const MissionElement* Element) const

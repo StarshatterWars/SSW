@@ -16,6 +16,7 @@
 */
 
 #include "CmdDlg.h"
+#include "Misc/DateTime.h"
 
 // UMG:
 #include "Components/TextBlock.h"
@@ -450,12 +451,65 @@ void UCmdDlg::ExecFrame(double DeltaTime)
 
     if (CampaignTPlusText)
     {
-        const double T = CampaignPtr->GetTime();
+        // Campaign T+ must come from the persistent campaign/universe clock,
+        // not CampaignPtr->GetTime().  The legacy value can be negative or
+        // overflow during startup, which produced values such as
+        // -2147483648 in the UI.
+        USSWGameInstance* SSWInstance =
+            Cast<USSWGameInstance>(GetGameInstance());
 
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, T);
+        UTimerSubsystem* Timer =
+            GetGameInstance()
+                ? GetGameInstance()->GetSubsystem<UTimerSubsystem>()
+                : nullptr;
 
-        CampaignTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+        if (SSWInstance &&
+            Timer &&
+            SSWInstance->CampaignSave)
+        {
+            const uint64 Now =
+                Timer->GetUniverseTimeSeconds();
+
+            const uint64 Start =
+                SSWInstance->CampaignSave->CampaignStartUniverseSeconds;
+
+            // Prevent unsigned underflow if an older save contains
+            // an anchor later than the current universe clock.
+            const uint64 TPlusSeconds =
+                (Now >= Start)
+                    ? (Now - Start)
+                    : 0ULL;
+
+            const uint64 Days =
+                TPlusSeconds / 86400ULL;
+
+            const uint64 RemainderAfterDays =
+                TPlusSeconds % 86400ULL;
+
+            const uint64 Hours =
+                RemainderAfterDays / 3600ULL;
+
+            const uint64 Minutes =
+                (RemainderAfterDays % 3600ULL) / 60ULL;
+
+            const uint64 Seconds =
+                RemainderAfterDays % 60ULL;
+
+            CampaignTPlusText->SetText(
+                FText::FromString(
+                    FString::Printf(
+                        TEXT("Day %02llu %02llu:%02llu:%02llu"),
+                        (unsigned long long)(Days + 1ULL),
+                        (unsigned long long)Hours,
+                        (unsigned long long)Minutes,
+                        (unsigned long long)Seconds)));
+        }
+        else
+        {
+            CampaignTPlusText->SetText(
+                FText::FromString(
+                    TEXT("Day 01 00:00:00")));
+        }
     }
 
     const int32 Unread = CampaignPtr->CountNewEvents();
@@ -821,6 +875,15 @@ void UCmdDlg::HandleGameTimers()
 
     if (!SSWInstance) return;
 
+    // CmdDlg can be constructed before the universe save has been injected
+    // into TimerSubsystem.  Guarantee the canonical Babylon 5 clock exists
+    // before GameTimeText reads it.
+    if (Timer && Timer->UniverseBaseUnixSeconds <= 0)
+    {
+        SSWInstance->LoadOrCreateUniverse();
+        Timer = GI->GetSubsystem<UTimerSubsystem>();
+    }
+
     if (Timer)
     {
         Timer->OnUniverseSecond.AddUObject(this, &UCmdDlg::HandleUniverseSecondTick);
@@ -847,9 +910,40 @@ void UCmdDlg::HandleUniverseSecondTick(uint64 UniverseSecondsNow)
 
     if (GameTimeText)
     {
+        // The game universe begins on 2228-01-01.  Normally this base is
+        // supplied by UniverseSave/SSWGameInstance.  Keep a defensive
+        // fallback here so the UI can never regress to Unix epoch 1970.
+        int64 BaseUnixSeconds =
+            Timer->UniverseBaseUnixSeconds;
+
+        if (BaseUnixSeconds <= 0)
+        {
+            BaseUnixSeconds =
+                FDateTime(
+                    2228,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0)
+                .ToUnixTimestamp();
+
+            Timer->UniverseBaseUnixSeconds =
+                BaseUnixSeconds;
+        }
+
+        const int64 CurrentUnixSeconds =
+            BaseUnixSeconds +
+            static_cast<int64>(UniverseSecondsNow);
+
+        const FDateTime UniverseDateTime =
+            FDateTime::FromUnixTimestamp(
+                CurrentUnixSeconds);
+
         GameTimeText->SetText(
-            FText::FromString(Timer->GetUniverseDateTimeString())
-        );
+            FText::FromString(
+                UniverseDateTime.ToString(
+                    TEXT("%Y-%m-%d %H:%M:%S"))));
     }
 
     // Keep intel data fresh every 10 seconds even when hidden.
@@ -871,9 +965,40 @@ void UCmdDlg::HandleUniverseMinuteTick(uint64 UniverseSecondsNow)
     if (!GI) return;
 }
 
-void UCmdDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
+void UCmdDlg::HandleCampaignTPlusChanged(
+    uint64 UniverseSecondsNow,
+    uint64 TPlusSeconds)
 {
-    if (!CampaignTPlusText) return;
+    if (!CampaignTPlusText)
+    {
+        return;
+    }
+
+    // TPlusSeconds is expected to be elapsed campaign time.  Clamp/format
+    // entirely in uint64 so no 32-bit signed overflow can reach the UI.
+    const uint64 Days =
+        TPlusSeconds / 86400ULL;
+
+    const uint64 RemainderAfterDays =
+        TPlusSeconds % 86400ULL;
+
+    const uint64 Hours =
+        RemainderAfterDays / 3600ULL;
+
+    const uint64 Minutes =
+        (RemainderAfterDays % 3600ULL) / 60ULL;
+
+    const uint64 Seconds =
+        RemainderAfterDays % 60ULL;
+
+    CampaignTPlusText->SetText(
+        FText::FromString(
+            FString::Printf(
+                TEXT("Day %02llu %02llu:%02llu:%02llu"),
+                (unsigned long long)(Days + 1ULL),
+                (unsigned long long)Hours,
+                (unsigned long long)Minutes,
+                (unsigned long long)Seconds)));
 }
 
 bool UCmdDlg::ShouldDisableCommandPanels() const

@@ -38,6 +38,14 @@ class OrbitalBody;
 
 // ------------------------------------------------------------
 
+// Generic activation callback. Operations uses this to treat a double-click
+// on the primary/central star as "return to Galaxy".
+DECLARE_DELEGATE_OneParam(
+    FSystemPrimaryStarActivatedDelegate,
+    const FString&);
+
+// ------------------------------------------------------------
+
 UCLASS()
 class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
 {
@@ -60,6 +68,10 @@ public:
         const FGeometry& InGeometry,
         const FPointerEvent& InMouseEvent) override;
 
+    virtual FReply NativeOnMouseButtonDoubleClick(
+        const FGeometry& InGeometry,
+        const FPointerEvent& InMouseEvent) override;
+
     virtual FReply NativeOnMouseButtonUp(
         const FGeometry& InGeometry,
         const FPointerEvent& InMouseEvent) override;
@@ -73,6 +85,10 @@ public:
         const FPointerEvent& InMouseEvent) override;
 
 public:
+    // Fired only when the user double-clicks the primary/central star.
+    // Hosts that do not bind this delegate keep their existing behavior.
+    FSystemPrimaryStarActivatedDelegate OnPrimaryStarActivated;
+
     void SetViewedSystemName(const FString& InSystemName);
     const FString& GetViewedSystemName() const { return ViewedSystemName; }
     // Generic owner hook so this panel can be hosted by Mission Navigation,

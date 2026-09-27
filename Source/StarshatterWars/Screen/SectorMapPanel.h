@@ -33,6 +33,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Input/Reply.h"
+#include "GameStructs.h"
 #include "SectorMapPanel.generated.h"
 
 class UCanvasPanel;
@@ -47,6 +48,10 @@ class MissionElement;
 DECLARE_DELEGATE_OneParam(
     FSectorElementSelectedDelegate,
     MissionElement*);
+
+DECLARE_DELEGATE_OneParam(
+    FSectorOperationsGroupSelectedDelegate,
+    const FS_CombatGroup*);
 
 struct FShipDesign;
 
@@ -88,6 +93,9 @@ public:
     // Existing Mission Navigation ownership remains supported as a fallback.
     FSectorElementSelectedDelegate OnElementSelected;
 
+    // Operations uses persistent/static combat-group data.
+    FSectorOperationsGroupSelectedDelegate OnOperationsGroupSelected;
+
     void SetOwnerNavDlg(UMissionNavDlg* InOwnerNavDlg);
 
     void SetOperationsView(bool bInOperationsView);
@@ -97,8 +105,12 @@ public:
     void SetViewedSectorName(const FString& InSectorName);
     void SetMission(Mission* InMission);
     void SetSelectedElement(MissionElement* InElement);
+    void SetSelectedOperationsGroup(const FS_CombatGroup* InGroup);
 
     bool CenterOnElement(MissionElement* InElement);
+    bool CenterOnOperationsGroup(const FS_CombatGroup* InGroup);
+
+    const FS_CombatGroup* GetSelectedOperationsGroup() const { return SelectedOperationsGroup; }
 
     void ZoomIn();
     void ZoomOut();
@@ -145,6 +157,51 @@ protected:
         float Scale,
         int32 Rep,
         MissionElement* Element) const;
+
+
+    // ------------------------------------------------------------
+    // Operations/static-data path
+    // ------------------------------------------------------------
+
+    void DrawOperationsGroups(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep) const;
+
+    void DrawOperationsGroup(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 BaseLayerId,
+        const FVector2D& Center,
+        float Scale,
+        int32 Rep,
+        const FS_CombatGroup* Group) const;
+
+    const FS_CombatGroup* HitTestOperationsGroupAtLocalPoint(
+        const FVector2D& LocalPoint,
+        const FVector2D& Center,
+        float Scale) const;
+
+    bool FindOperationsGroupScreenPosition(
+        const FS_CombatGroup* Group,
+        const FVector2D& Center,
+        float Scale,
+        FVector2D& OutScreenPos) const;
+
+    bool OperationsGroupMatchesView(const FS_CombatGroup& Group) const;
+    bool IsOperationsGroupCrowded(const FS_CombatGroup* TestGroup, float Scale) const;
+
+    void DrawSelectedOperationsGroupTag(
+        FSlateWindowElementList& OutDrawElements,
+        const FGeometry& AllottedGeometry,
+        int32 LayerId,
+        const FVector2D& ScreenPos,
+        const FS_CombatGroup* Group) const;
+
+    FLinearColor GetOperationsIFFColor(const FS_CombatGroup* Group) const;
 
    
 
@@ -222,6 +279,9 @@ protected:
     OrbitalRegion* CachedRegion = nullptr;
     Mission* CachedMission = nullptr;
     MissionElement* SelectedElement = nullptr;
+
+    // Points into CombatGroupRegistry, which owns the static roster rows.
+    const FS_CombatGroup* SelectedOperationsGroup = nullptr;
 
     bool bOperationsView = false;
     bool bValidView = false;

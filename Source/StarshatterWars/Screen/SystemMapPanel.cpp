@@ -26,6 +26,7 @@
         * right mouse drag = pan
         * mouse wheel = zoom
     - Clicking the map does not recenter
+    - Double-clicking the primary star can activate a host navigation callback
     - System overview is shown on entry
     - Right-panel selection can recenter on a named body
 */
@@ -1096,6 +1097,77 @@ FReply USystemMapPanel::NativeOnMouseButtonDown(
     }
 
     return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply USystemMapPanel::NativeOnMouseButtonDoubleClick(
+    const FGeometry& InGeometry,
+    const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+    {
+        return Super::NativeOnMouseButtonDoubleClick(
+            InGeometry,
+            InMouseEvent);
+    }
+
+    if (!bValidSystem || !CachedRuntimeSystem || !CachedPrimaryStarBody)
+    {
+        return Super::NativeOnMouseButtonDoubleClick(
+            InGeometry,
+            InMouseEvent);
+    }
+
+    const FVector2D PanelSize =
+        InGeometry.GetLocalSize();
+
+    const float TopPadding = 40.0f;
+    const float BottomPadding = 120.0f;
+
+    const FVector2D ExtendedPanelSize(
+        PanelSize.X,
+        PanelSize.Y + TopPadding + BottomPadding);
+
+    // Must match the primary-star center used by NativePaint().
+    const FVector2D SystemCenter(
+        (PanelSize.X * 0.5f) + PanOffset.X,
+        (((ExtendedPanelSize.Y * 0.5f) - TopPadding) - 10.0f) + PanOffset.Y);
+
+    const float StarSize =
+        GetZoomedValue(
+            ComputeStarDrawSize(
+                CachedPrimaryStarBody));
+
+    // Slightly generous hit radius so the visible star and its immediate
+    // ring area are easy to double-click.
+    const float HitRadius =
+        FMath::Max(
+            StarSize * 0.60f,
+            20.0f);
+
+    const FVector2D LocalPoint =
+        InGeometry.AbsoluteToLocal(
+            InMouseEvent.GetScreenSpacePosition());
+
+    if (FVector2D::Distance(
+            LocalPoint,
+            SystemCenter) <= HitRadius)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SystemMapPanel] Primary star activated: %s"),
+            *ViewedSystemName);
+
+        if (OnPrimaryStarActivated.IsBound())
+        {
+            OnPrimaryStarActivated.Execute(
+                ViewedSystemName);
+
+            return FReply::Handled();
+        }
+    }
+
+    return Super::NativeOnMouseButtonDoubleClick(
+        InGeometry,
+        InMouseEvent);
 }
 
 FReply USystemMapPanel::NativeOnMouseButtonUp(

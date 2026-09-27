@@ -25,9 +25,11 @@
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "Types/SlateEnums.h"
 #include "CmdTheaterDlg.generated.h"
 
 class UButton;
+class UComboBoxString;
 class UHorizontalBox;
 class USizeBox;
 class USpacer;
@@ -48,6 +50,7 @@ class Starshatter;
 class Campaign;
 class StarSystem;
 class MissionElement;
+struct FS_CombatGroup;
 
 UCLASS()
 class STARSHATTERWARS_API UCmdTheaterDlg : public UBaseScreen
@@ -112,6 +115,8 @@ protected:
 
     void EnsureDefaultSystemSelection();
     void SyncMapContext();
+    void RefreshSystemSelector();
+    void RefreshRegionSelector();
 
     void HandleGalaxySystemSelected(
         const FString& InSystemName);
@@ -119,8 +124,14 @@ protected:
     void HandleGalaxySystemActivated(
         const FString& InSystemName);
 
+    void HandleSystemPrimaryStarActivated(
+        const FString& InSystemName);
+
     void HandleSectorElementSelected(
         MissionElement* InElement);
+
+    void HandleOperationsGroupSelected(
+        const FS_CombatGroup* InGroup);
 
 protected:
     UFUNCTION()
@@ -138,12 +149,22 @@ protected:
     UFUNCTION()
     void OnZoomOutClicked();
 
+    UFUNCTION()
+    void OnSystemSelectionChanged(
+        FString SelectedItem,
+        ESelectInfo::Type SelectionType);
+
+    UFUNCTION()
+    void OnRegionSelectionChanged(
+        FString SelectedItem,
+        ESelectInfo::Type SelectionType);
+
 protected:
     // -----------------------------------------------------------------
     // The ONLY required map-layout widget in CmdTheaterPanel Blueprint.
     // -----------------------------------------------------------------
 
-    UPROPERTY(meta = (BindWidgetOptional))
+    UPROPERTY(meta = (BindWidget))
     USizeBox* RuntimeHost = nullptr;
 
 protected:
@@ -184,7 +205,31 @@ protected:
     UButton* SystemButton = nullptr;
 
     UPROPERTY()
-    UButton* SectorButton = nullptr;
+    UButton* SectorButton = nullptr; // Intentionally unused: Sector navigation is a dropdown on System view.
+
+    UPROPERTY()
+    UHorizontalBox* SystemSelectorBox = nullptr;
+
+    UPROPERTY()
+    UTextBlock* SystemSelectorLabel = nullptr;
+
+    UPROPERTY()
+    USizeBox* SystemComboHost = nullptr;
+
+    UPROPERTY()
+    UComboBoxString* SystemComboBox = nullptr;
+
+    UPROPERTY()
+    UHorizontalBox* RegionSelectorBox = nullptr;
+
+    UPROPERTY()
+    UTextBlock* RegionSelectorLabel = nullptr;
+
+    UPROPERTY()
+    USizeBox* RegionComboHost = nullptr;
+
+    UPROPERTY()
+    UComboBoxString* RegionComboBox = nullptr;
 
     UPROPERTY()
     UButton* ZoomOutButton = nullptr;
@@ -237,9 +282,13 @@ protected:
     UPROPERTY()
     FString SelectedSectorName;
 
-    // Legacy Starshatter class; not a UObject.
+    // MissionElement is retained only for the legacy/fallback callback.
+    // Operations selections come from the static CombatGroupRegistry.
     MissionElement* SelectedStructureElement = nullptr;
+    const FS_CombatGroup* SelectedOperationsGroup = nullptr;
 
+    bool bUpdatingSystemSelector = false;
+    bool bUpdatingRegionSelector = false;
     bool bRuntimeLayoutBuilt = false;
     bool bMapsBuilt = false;
 };
