@@ -153,6 +153,108 @@ void USSWGameInstance::ShowMainMenuScreen()
 	}
 }
 
+
+void USSWGameInstance::ShowOperationsAfterLevelLoad()
+{
+	RemoveScreens();
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GI] ShowOperationsAfterLevelLoad: World is NULL"));
+		return;
+	}
+
+	APlayerController* PC =
+		UGameplayStatics::GetPlayerController(World, 0);
+
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GI] ShowOperationsAfterLevelLoad: PlayerController is NULL"));
+		return;
+	}
+
+	if (!MenuScreenWidgetClass)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GI] ShowOperationsAfterLevelLoad: MenuScreenWidgetClass is NULL"));
+		return;
+	}
+
+	MenuScreen =
+		CreateWidget<UMenuScreen>(
+			PC,
+			MenuScreenWidgetClass);
+
+	if (!MenuScreen)
+	{
+		UE_LOG(LogTemp, Error,
+			TEXT("[GI] ShowOperationsAfterLevelLoad: failed to create MenuScreen"));
+		return;
+	}
+
+	UMenuScreen* Screen = MenuScreen.Get();
+
+	Screen->AddToViewport(100);
+	Screen->SetVisibility(ESlateVisibility::Visible);
+	Screen->Setup();
+
+	// Reuse the existing MenuScreen -> Campaign/Operations entry path.
+	Screen->ShowOperationsDlg();
+
+	PC->bShowMouseCursor = true;
+	PC->bEnableClickEvents = true;
+	PC->bEnableMouseOverEvents = true;
+
+	if (UBaseScreen* Top = Screen->GetCurrentDialog())
+	{
+		FInputModeGameAndUI InputMode;
+		InputMode.SetWidgetToFocus(Top->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(
+			EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+
+		PC->SetInputMode(InputMode);
+	}
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GI] Starfield loaded -> Operations shown"));
+}
+
+
+void USSWGameInstance::HandlePostLoadMap(
+	UWorld* LoadedWorld)
+{
+	if (!LoadedWorld || !bShowOperationsAfterLevelLoad)
+	{
+		return;
+	}
+
+	// The flag is set immediately before opening the Operations Starfield.
+	// Do not compare the raw package name here: PIE prefixes world/package
+	// names (for example UEDPIE_0_Starfield), which breaks exact matches.
+	const FString MapName =
+		UGameplayStatics::GetCurrentLevelName(
+			LoadedWorld,
+			true);
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("[GI] PostLoadMap: World=%s Map=%s -> scheduling Operations UI"),
+		*GetNameSafe(LoadedWorld),
+		*MapName);
+
+	// Consume before creating UI so this transition cannot run twice.
+	bShowOperationsAfterLevelLoad = false;
+
+	// Give the new world's PlayerController and viewport one frame to settle.
+	LoadedWorld->GetTimerManager().SetTimerForNextTick(
+		this,
+		&USSWGameInstance::ShowOperationsAfterLevelLoad);
+}
+
+
 void USSWGameInstance::LoadTransitionScreen()
 {
 	UWorld* World = GetWorld();
@@ -173,6 +275,11 @@ void USSWGameInstance::Init()
 {
 	Super::Init();
 
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(
+		this,
+		&USSWGameInstance::HandlePostLoadMap);
+
 	UE_LOG(LogTemp, Log, TEXT("[GI] Init"));
 }
 
@@ -187,6 +294,8 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 
 void USSWGameInstance::Shutdown()
 {
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+
 	Super::Shutdown();
 
 	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDeviceRaw())
@@ -235,7 +344,7 @@ void USSWGameInstance::InitializeScreens()
 		// This is almost always because Project Settings is bound to WB_QuitDlg (WidgetBlueprint)
 		// instead of WB_QuitDlg_C (GeneratedClass).
 		UE_LOG(LogTemp, Error,
-			TEXT("[UI] UI.ExitDlgClass invalid. Bind the GENERATED CLASS (…_C) in Project Settings. "
+			TEXT("[UI] UI.ExitDlgClass invalid. Bind the GENERATED CLASS (_C) in Project Settings. "
 				"Example: /Game/Screens/WB_QuitDlg.WB_QuitDlg_C"));
 
 		return;
@@ -1170,7 +1279,7 @@ AMusicController* USSWGameInstance::GetMusicController()
 	}
 
 	// Optional: spawn if you have a class to spawn
-	// If you don’t have one, leave it null and just guard calls.
+	// If you dont have one, leave it null and just guard calls.
 	return nullptr;
 }
 

@@ -267,6 +267,7 @@ void UCampaignSceneDlg::ResetSceneState()
     SceneStartRealSeconds = 0.0f;
     SceneDurationSeconds = 0.0f;
     bSceneRunning = false;
+    bCutsceneTransitionStarted = false;
 
     if (HeaderText)
     {
@@ -1248,15 +1249,46 @@ void UCampaignSceneDlg::SkipCutscene()
 
 void UCampaignSceneDlg::FinishCutscene()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Cutscene finished"));
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SceneDlg] COMPLETE -> Returning to CmdDlg"));
+    if (bCutsceneTransitionStarted)
+    {
+        return;
+    }
+
+    bCutsceneTransitionStarted = true;
     bSceneRunning = false;
+    bPanelActive = false;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] Cutscene finished -> returning to persistent Operations world"));
+
+    ClearPanelTexture();
     Hide();
+
+    // Restore normal player view before removing the streamed cutscene scene.
+    if (UWorld* World = GetWorld())
+    {
+        if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
+        {
+            if (APawn* Pawn = PC->GetPawn())
+            {
+                PC->SetViewTarget(Pawn);
+            }
+        }
+    }
+
+    // Only destroy the camera if this widget spawned it.
+    // A camera contained in the streamed scene is removed with that scene.
+    if (bOwnsSceneCamera && IsValid(SceneCamera))
+    {
+        SceneCamera->Destroy();
+    }
+
+    SceneCamera = nullptr;
+    bOwnsSceneCamera = false;
 
     if (Manager)
     {
-        Manager->HideCmpSceneDlg();
+        Manager->CleanupActiveScene();
         Manager->ShowCmdDlg();
     }
 }
@@ -1369,6 +1401,7 @@ ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
     for (TActorIterator<ASSWCameraManager> It(World); It; ++It)
     {
         SceneCamera = *It;
+        bOwnsSceneCamera = false;
         break;
     }
 
@@ -1384,6 +1417,8 @@ ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
                 FVector::ZeroVector,
                 FRotator::ZeroRotator,
                 Params);
+
+        bOwnsSceneCamera = (SceneCamera != nullptr);
     }
 
     if (SceneCamera)

@@ -153,6 +153,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Variables")
 	void ShowMainMenuScreen();
 
+	/** Rebuilds the MenuScreen shell in the newly loaded world and enters Operations. */
+	void ShowOperationsAfterLevelLoad();
+
 	UFUNCTION()
 	void RemoveScreens();
 
@@ -206,6 +209,9 @@ public:
 
 	UFUNCTION()
 	int64 GetCampaignTime();
+
+	UPROPERTY(Transient)
+	bool bShowOperationsAfterLevelLoad = false;
 
 	// =====================================================================
 	// SaveGame (Player)
@@ -505,6 +511,9 @@ protected:
 	virtual void Shutdown() override;
 
 	virtual bool InitGame();
+
+	/** Called after OpenLevel completes; consumes bShowOperationsAfterLevelLoad. */
+	void HandlePostLoadMap(UWorld* LoadedWorld);
 
 
 

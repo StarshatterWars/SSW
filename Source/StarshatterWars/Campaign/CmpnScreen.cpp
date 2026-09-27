@@ -387,6 +387,37 @@ void UCmpnScreen::HideAll()
     bHidingAll = false;
 }
 
+void UCmpnScreen::CleanupActiveScene()
+{
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] CleanupActiveScene: begin"));
+
+    HideCmpSceneDlg();
+
+    if (ActiveSceneStreamingLevel)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CmpnScreen] CleanupActiveScene: unloading '%s'"),
+            *GetNameSafe(ActiveSceneStreamingLevel.Get()));
+
+        ActiveSceneStreamingLevel->SetShouldBeVisible(false);
+        ActiveSceneStreamingLevel->SetShouldBeLoaded(false);
+        ActiveSceneStreamingLevel->SetIsRequestingUnloadAndRemoval(true);
+
+        if (UWorld* World = GetWorld())
+        {
+            World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+        }
+
+        ActiveSceneStreamingLevel = nullptr;
+    }
+
+    ClearPendingSceneTransition();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CmpnScreen] CleanupActiveScene: complete"));
+}
+
 bool UCmpnScreen::CloseTopmost()
 {
     if (IsCmdMsgShown())
@@ -1140,8 +1171,6 @@ void UCmpnScreen::ClearPendingSceneTransition()
     SceneLoadScreenStartTime = 0.0f;
     SceneWarmupReadyTime = 0.0f;
     SceneReadyFrameCount = 0;
-
-    ActiveSceneStreamingLevel = nullptr;
 }
 
 void UCmpnScreen::AdvanceCampaignScene()

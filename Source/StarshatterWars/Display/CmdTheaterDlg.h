@@ -28,6 +28,7 @@
 #include "Types/SlateEnums.h"
 #include "CmdTheaterDlg.generated.h"
 
+class UBorder;
 class UButton;
 class UComboBoxString;
 class UHorizontalBox;
@@ -106,6 +107,7 @@ protected:
 
     void SetViewMode(EViewMode NewMode);
     void RefreshViewButtons();
+    void SetPanelBackgroundVisible(bool bVisible);
 
     UStarshatterEnvironmentSubsystem*
         GetEnvironmentSubsystem() const;
@@ -161,8 +163,13 @@ protected:
 
 protected:
     // -----------------------------------------------------------------
-    // The ONLY required map-layout widget in CmdTheaterPanel Blueprint.
+    // Required shell widgets in CmdTheaterPanel Blueprint.
+    // Border_0 owns /Game/UI/Panel.Panel and is transparent in System view.
+    // RuntimeHost contains the runtime-built Theater controls/maps.
     // -----------------------------------------------------------------
+
+    UPROPERTY(meta = (BindWidget))
+    UBorder* Border_0 = nullptr;
 
     UPROPERTY(meta = (BindWidget))
     USizeBox* RuntimeHost = nullptr;

@@ -62,6 +62,9 @@ public:
     virtual void Hide() override;
     void HideAll();
 
+    /** Unload the active cutscene/system stream without replacing the persistent world. */
+    void CleanupActiveScene();
+
     bool CloseTopmost();
 
     virtual void SetMenuManager(UMenuScreen* InManager);

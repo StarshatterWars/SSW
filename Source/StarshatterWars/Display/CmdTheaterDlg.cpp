@@ -34,6 +34,7 @@
 
 // UMG:
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
@@ -70,6 +71,10 @@ void UCmdTheaterDlg::NativeConstruct()
 
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
+
+    ensureMsgf(
+        Border_0,
+        TEXT("CmdTheaterDlg: Border_0 is not bound"));
 
     ensureMsgf(
         RuntimeHost,
@@ -1346,6 +1351,12 @@ void UCmdTheaterDlg::SetViewMode(
 {
     CurrentViewMode = NewMode;
 
+    // Galaxy and Sector retain the gray panel background.
+    // System view removes only the Border_0 background so the
+    // direct 3D Unreal system display can show through the shell.
+    SetPanelBackgroundVisible(
+        CurrentViewMode != VIEW_SYSTEM);
+
     switch (CurrentViewMode)
     {
     case VIEW_GALAXY:
@@ -1396,6 +1407,26 @@ void UCmdTheaterDlg::SetViewMode(
 
     RefreshViewButtons();
 }
+
+
+void UCmdTheaterDlg::SetPanelBackgroundVisible(
+    bool bVisible)
+{
+    if (!Border_0)
+    {
+        return;
+    }
+
+    FLinearColor BrushColor =
+        Border_0->GetBrushColor();
+
+    BrushColor.A =
+        bVisible ? 1.0f : 0.0f;
+
+    Border_0->SetBrushColor(
+        BrushColor);
+}
+
 
 void UCmdTheaterDlg::RefreshViewButtons()
 {

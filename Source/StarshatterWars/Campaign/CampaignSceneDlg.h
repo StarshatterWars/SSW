@@ -167,5 +167,7 @@ protected:
 
     bool bSceneRunning = false;
 
-    int32 CurrentCampaignNumber = 0;
+    bool bCutsceneTransitionStarted = false;
+    bool bOwnsSceneCamera = false;
+int32 CurrentCampaignNumber = 0;
 };
