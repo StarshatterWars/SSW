@@ -111,7 +111,12 @@ public:
 
     void GetPlanetMapBodies(TArray<OrbitalBody*>& OutBodies) const
     {
-        OutBodies = CachedPlanetBodies;
+        OutBodies.Reset();
+        if (FocusedMoon) { OutBodies.Add(FocusedMoon); return; }
+        for (OrbitalBody* Body : CachedPlanetBodies)
+        {
+            if (!FocusedPlanet || Body == FocusedPlanet) OutBodies.Add(Body);
+        }
     }
 
     bool GetPlanetMapPlacement(const FString& Name, FVector2D& Center, float& Diameter) const
@@ -124,6 +129,8 @@ public:
         PlanetsRenderedIn3D = Names;
         Invalidate(EInvalidateWidget::Paint);
     }
+
+    bool IsPlanetView() const { return FocusedPlanet != nullptr; }
 
     void ShowSystemOverview();
     bool CenterOnBodyByName(const FString& InBodyName);
@@ -302,6 +309,11 @@ protected:
         float GetFocusZoomForBody(const OrbitalBody* Body) const;
 
 protected:
+    void ReturnToPlanetView();
+    OrbitalBody* FocusedMoon = nullptr;
+    float SavedPlanetZoom = 1.0f;
+    FVector2D SavedPlanetPan = FVector2D::ZeroVector;
+    OrbitalBody* FocusedPlanet = nullptr;
     bool bCameraAnimating = false;
     FVector2D TargetPan = FVector2D::ZeroVector;
     float TargetZoom = 1.0f;

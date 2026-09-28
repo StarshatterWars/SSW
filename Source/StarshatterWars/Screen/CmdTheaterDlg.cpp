@@ -1095,7 +1095,7 @@ void UCmdTheaterDlg::UpdateSystemSunCamera()
         PreviousSunViewTarget = PC->GetViewTarget();
         PC->SetViewTarget(SystemSunCamera.Get());
     }
-    CentralSun->ShowSun();
+    CentralSun->SetSunVisible(!SystemMapPanel || !SystemMapPanel->IsPlanetView());
 }
 
 void UCmdTheaterDlg::ClearSystemPlanets()
@@ -1166,6 +1166,24 @@ void UCmdTheaterDlg::UpdateSystemPlanets()
 
     TArray<OrbitalBody*> Bodies;
     SystemMapPanel->GetPlanetMapBodies(Bodies);
+
+    // Include each planet's moons. The shared placement lookup already returns
+    // the exact moon center and draw diameter used by Slate, including zoom.
+    const int32 PlanetCount = Bodies.Num();
+    for (int32 PlanetIndex = 0; PlanetIndex < PlanetCount; ++PlanetIndex)
+    {
+        OrbitalBody* ParentPlanet = Bodies[PlanetIndex];
+        if (!ParentPlanet) continue;
+
+        ListIter<OrbitalBody> MoonIter = ParentPlanet->Satellites();
+        while (++MoonIter)
+        {
+            if (OrbitalBody* Moon = MoonIter.value())
+            {
+                Bodies.Add(Moon);
+            }
+        }
+    }
     TSet<FString> Rendered;
     TSet<FString> CurrentBodies;
     for (OrbitalBody* Body : Bodies)
