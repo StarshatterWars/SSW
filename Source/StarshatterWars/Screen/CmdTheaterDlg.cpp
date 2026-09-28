@@ -46,7 +46,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "Components/Border.h"
-#include "Components/Button.h"
+#include "MenuButton.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -74,6 +75,12 @@ UCmdTheaterDlg::UCmdTheaterDlg(
     const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
+    static ConstructorHelpers::FClassFinder<UMenuButton> ButtonClass(
+        TEXT("/Game/Screens/Operations/WB_MenuButton"));
+    if (ButtonClass.Succeeded())
+    {
+        TheaterMenuButtonClass = ButtonClass.Class;
+    }
 }
 
 void UCmdTheaterDlg::NativeConstruct()
@@ -90,29 +97,8 @@ void UCmdTheaterDlg::NativeConstruct()
     BuildRuntimeLayout();
     BuildMapPanels();
 
-    if (GalaxyButton)
-    {
-        GalaxyButton->OnClicked.RemoveAll(this);
-        GalaxyButton->OnClicked.AddDynamic(
-            this,
-            &UCmdTheaterDlg::OnViewGalaxyClicked);
-    }
 
-    if (SystemButton)
-    {
-        SystemButton->OnClicked.RemoveAll(this);
-        SystemButton->OnClicked.AddDynamic(
-            this,
-            &UCmdTheaterDlg::OnViewSystemClicked);
-    }
 
-    if (SectorButton)
-    {
-        SectorButton->OnClicked.RemoveAll(this);
-        SectorButton->OnClicked.AddDynamic(
-            this,
-            &UCmdTheaterDlg::OnViewSectorClicked);
-    }
 
     if (SystemComboBox)
     {
@@ -130,21 +116,7 @@ void UCmdTheaterDlg::NativeConstruct()
             &UCmdTheaterDlg::OnRegionSelectionChanged);
     }
 
-    if (ZoomInButton)
-    {
-        ZoomInButton->OnClicked.RemoveAll(this);
-        ZoomInButton->OnClicked.AddDynamic(
-            this,
-            &UCmdTheaterDlg::OnZoomInClicked);
-    }
 
-    if (ZoomOutButton)
-    {
-        ZoomOutButton->OnClicked.RemoveAll(this);
-        ZoomOutButton->OnClicked.AddDynamic(
-            this,
-            &UCmdTheaterDlg::OnZoomOutClicked);
-    }
 
     EnsureDefaultSystemSelection();
     SyncMapContext();
@@ -200,91 +172,45 @@ void UCmdTheaterDlg::SetParentCmdDlg(
     ParentCmdDlg = InParentCmdDlg;
 }
 
-UButton* UCmdTheaterDlg::CreateRuntimeButton(
-    const FString& Label,
-    UHorizontalBox* ParentBox,
-    float Width)
+UMenuButton* UCmdTheaterDlg::CreateRuntimeButton(
+    const FString& Label, UHorizontalBox* ParentBox, float Width)
 {
-    if (!WidgetTree || !ParentBox)
+    if (!ParentBox || !TheaterMenuButtonClass)
     {
         return nullptr;
     }
 
-    const FString SafeName =
-        Label.Replace(TEXT(" "), TEXT("_"));
+    UMenuButton* Button = CreateWidget<UMenuButton>(this, TheaterMenuButtonClass);
+    if (!Button) return nullptr;
 
-    UButton* Button =
-        WidgetTree->ConstructWidget<UButton>(
-            UButton::StaticClass(),
-            *FString::Printf(
-                TEXT("CmdTheater_%s_Button"),
-                *SafeName));
-
-    if (!Button)
+    Button->MenuOption = Label;
+    Button->WidthOverride = Width;
+    Button->HeightOverride = 34.0f;
+    Button->LabelFontSize = 14;
+    if (UTextBlock* Text = Cast<UTextBlock>(Button->GetWidgetFromName(TEXT("Label"))))
     {
-        return nullptr;
+        Text->SetText(FText::FromString(Label));
     }
 
-    USizeBox* ButtonSize =
-        WidgetTree->ConstructWidget<USizeBox>(
-            USizeBox::StaticClass(),
-            *FString::Printf(
-                TEXT("CmdTheater_%s_Size"),
-                *SafeName));
-
-    if (!ButtonSize)
+    Button->OnSelected.AddDynamic(this, &UCmdTheaterDlg::HandleTheaterButtonSelected);
+    if (UHorizontalBoxSlot* CSlot = ParentBox->AddChildToHorizontalBox(Button))
     {
-        return nullptr;
+        CSlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+        CSlot->SetHorizontalAlignment(HAlign_Left);
+        CSlot->SetVerticalAlignment(VAlign_Center);
+        CSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     }
-
-    ButtonSize->SetWidthOverride(Width);
-    ButtonSize->SetHeightOverride(34.0f);
-
-    UTextBlock* ButtonText =
-        WidgetTree->ConstructWidget<UTextBlock>(
-            UTextBlock::StaticClass(),
-            *FString::Printf(
-                TEXT("CmdTheater_%s_Text"),
-                *SafeName));
-
-    if (!ButtonText)
-    {
-        return nullptr;
-    }
-
-    ButtonText->SetText(
-        FText::FromString(Label));
-
-    ButtonText->SetJustification(
-        ETextJustify::Center);
-
-    ButtonText->SetColorAndOpacity(
-        MissionUIStyle::HeaderText);
-
-    ButtonText->SetFont(
-        MissionUIStyle::GetHeaderFont(14));
-
-    Button->AddChild(ButtonText);
-    ButtonSize->SetContent(Button);
-
-    if (UHorizontalBoxSlot* CSlot =
-        ParentBox->AddChildToHorizontalBox(ButtonSize))
-    {
-        CSlot->SetPadding(
-            FMargin(0.0f, 0.0f, 8.0f, 0.0f));
-
-        CSlot->SetHorizontalAlignment(
-            HAlign_Left);
-
-        CSlot->SetVerticalAlignment(
-            VAlign_Center);
-
-        CSlot->SetSize(
-            FSlateChildSize(
-                ESlateSizeRule::Automatic));
-    }
-
     return Button;
+}
+
+void UCmdTheaterDlg::HandleTheaterButtonSelected(UMenuButton* SelectedButton)
+{
+    if (!SelectedButton) return;
+    if (SelectedButton == GalaxyButton) OnViewGalaxyClicked();
+    else if (SelectedButton == SystemButton) OnViewSystemClicked();
+    else if (SelectedButton == SectorButton) OnViewSectorClicked();
+    else if (SelectedButton == ZoomInButton) OnZoomInClicked();
+    else if (SelectedButton == ZoomOutButton) OnZoomOutClicked();
 }
 
 void UCmdTheaterDlg::BuildRuntimeLayout()
@@ -329,7 +255,7 @@ void UCmdTheaterDlg::BuildRuntimeLayout()
             TopButtonRow))
     {
         TopSlot->SetPadding(
-            FMargin(0.0f, 0.0f, 0.0f, 8.0f));
+            FMargin(32.0f, 0.0f, 0.0f, 8.0f));
 
         TopSlot->SetSize(
             FSlateChildSize(
@@ -1217,9 +1143,17 @@ void UCmdTheaterDlg::UpdateSystemPlanets()
                 LoadSurface(Body->GetGlossTexture()),
                 LoadSurface(Body->GetGlowTexture()));
             Planet->SetActorEnableCollision(false);
-            Planet->SetActorTickEnabled(false);
-            Planet->SetAxialRotationEnabled(false);
-            Planet->SetActorRotation(FRotator(0.0f, 0.0f, Body->GetTilt()));
+            // Runtime tilt is stored in radians. Tilt the actor once; the
+            // planet mesh then spins about its own local axis inside it.
+            const float TiltDegrees = FMath::RadiansToDegrees(
+                static_cast<float>(Body->GetTilt()));
+            Planet->SetActorRotation(FRotator(TiltDegrees, 0.0f, 0.0f));
+            // Slow presentation spin: one revolution every three minutes.
+            // Respect retrograde direction without using real-time day lengths.
+            Planet->SetAxialRotationDegreesPerSecond(
+                Body->IsRetrograde() ? -2.0f : 2.0f);
+            Planet->SetAxialRotationEnabled(true);
+            Planet->SetActorTickEnabled(true);
             Planet->SetLightDirection((-Forward + Up * 0.3 - Right * 0.4).GetSafeNormal());
             SystemPlanetActors.Add(Name, Planet);
         }

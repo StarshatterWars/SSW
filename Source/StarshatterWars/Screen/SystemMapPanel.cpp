@@ -35,6 +35,7 @@
 
 #include "MissionUIStyle.h"
 #include "FormattingUtils.h"
+#include "CombatGroupRegistry.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"
 #include "Orbital.h"
@@ -1411,6 +1412,132 @@ int32 USystemMapPanel::NativePaint(
             }
         }
     }
+    auto DrawBodyInfo = [&](int32 PaintLayer) -> int32
+    {
+        const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
+        TArray<FString> BodyNames;
+        const FString BoxTitle = FocusedMoon ? FString(ANSI_TO_TCHAR(FocusedMoon->GetName())) : FocusedPlanet
+            ? FString(ANSI_TO_TCHAR(FocusedPlanet->GetName())) : ViewedSystemName;
+        const FString ListTitle = FocusedPlanet ? TEXT("MOONS") : TEXT("PLANETS");
+        if (FocusedPlanet && !FocusedMoon)
+        {
+            ListIter<OrbitalBody> MoonIter = FocusedPlanet->Satellites();
+            while (++MoonIter)
+            {
+                if (OrbitalBody* Moon = MoonIter.value())
+                    BodyNames.Add(ANSI_TO_TCHAR(Moon->GetName()));
+            }
+        }
+        else if (!FocusedMoon)
+        {
+            for (OrbitalBody* Planet : CachedPlanetBodies)
+            {
+                if (Planet) BodyNames.Add(ANSI_TO_TCHAR(Planet->GetName()));
+            }
+        }
+        TArray<FString> RegionNames;
+        const Orbital* DisplayBody = FocusedMoon ? FocusedMoon : FocusedPlanet;
+        ListIter<OrbitalRegion> RegionIter = CachedRuntimeSystem->GetAllRegions();
+        while (++RegionIter)
+        {
+            OrbitalRegion* Region = RegionIter.value();
+            if (!Region) continue;
+            const Orbital* Parent = Region->Primary();
+            // System view lists star-owned/unparented regions; body views
+            // list only regions whose actual parent is that planet or moon.
+            const bool bMatches = DisplayBody
+                ? Parent == DisplayBody
+                : (!Parent || Parent->GetType() == Orbital::STAR);
+            if (bMatches)
+                RegionNames.AddUnique(ANSI_TO_TCHAR(Region->GetName()));
+        }
+        TArray<FString> RegionLines;
+        TSet<int32> RegionHeadingRows;
+        for (const FString& RegionName : RegionNames)
+        {
+            RegionHeadingRows.Add(RegionLines.Num());
+            RegionLines.Add(RegionName);
+            int32 ObjectCount = 0;
+            for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(RegionName))
+            {
+                if (!Group || (Group->Type != ECOMBATGROUP_TYPE::STATION &&
+                    Group->Type != ECOMBATGROUP_TYPE::STARBASE &&
+                    Group->Type != ECOMBATGROUP_TYPE::FLEET &&
+                    Group->Type != ECOMBATGROUP_TYPE::CARRIER_GROUP &&
+                    Group->Type != ECOMBATGROUP_TYPE::DESTROYER_SQUADRON &&
+                    Group->Type != ECOMBATGROUP_TYPE::BATTLE_GROUP)) continue;
+                const FString GroupSystem = Group->System.TrimStartAndEnd();
+                if (!GroupSystem.IsEmpty() &&
+                    !GroupSystem.Equals(ViewedSystemName, ESearchCase::IgnoreCase)) continue;
+                const FString DisplayName = Group->DisplayName.TrimStartAndEnd();
+                RegionLines.Add(TEXT("- ") + (DisplayName.IsEmpty() ? Group->Name : DisplayName));
+                ++ObjectCount;
+            }
+            if (ObjectCount == 0) RegionLines.Add(TEXT("No major objects"));
+        }
+        const float Width = FMath::Max(1.0f, FMath::Min(260.0f,
+            static_cast<float>(PanelSize.X) * 0.5f - 24.0f));
+        const float BodyHeight = FocusedMoon ? 80.0f
+            : 104.0f + FMath::Max(1, BodyNames.Num()) * 20.0f;
+        const float RegionHeight = RegionNames.IsEmpty() ? 0.0f
+            : 54.0f + RegionLines.Num() * 24.0f;
+        const float Height = FMath::Max(BodyHeight, RegionHeight);
+        const FVector2D BoxOrigin(
+            FMath::Max(12.0, PanelSize.X - Width - 16.0),
+            FMath::Max(12.0, PanelSize.Y - Height - 16.0));
+        FSlateDrawElement::MakeBox(
+            OutDrawElements, ++PaintLayer,
+            AllottedGeometry.ToPaintGeometry(BoxOrigin, FVector2D(Width, Height)),
+            FCoreStyle::Get().GetBrush("WhiteBrush"),
+            ESlateDrawEffect::None, FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
+
+        auto DrawInfoLine = [&](const FString& Text, float Y, int32 FontSize,
+            const FLinearColor& Color)
+        {
+            FSlateDrawElement::MakeText(
+                OutDrawElements, ++PaintLayer,
+                AllottedGeometry.ToPaintGeometry(
+                    BoxOrigin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
+                ESlateDrawEffect::None, Color);
+        };
+        DrawInfoLine(BoxTitle, 12.0f, 16,
+            EmpireColor);
+        DrawInfoLine(EmpireName, 38.0f, 11, EmpireColor);
+        if (!FocusedMoon)
+        {
+        DrawInfoLine(ListTitle, 70.0f, 11, FLinearColor(0.65f, 0.78f, 0.92f));
+        if (BodyNames.IsEmpty())
+            DrawInfoLine(TEXT("None"), 94.0f, 11, FLinearColor::White);
+        for (int32 Index = 0; Index < BodyNames.Num(); ++Index)
+            DrawInfoLine(TEXT("- ") + BodyNames[Index], 94.0f + Index * 20.0f, 11,
+                FLinearColor::White);
+    }
+        if (!RegionNames.IsEmpty())
+        {
+            const FVector2D RegionOrigin(48.0f, BoxOrigin.Y);
+            FSlateDrawElement::MakeBox(
+                OutDrawElements, ++PaintLayer,
+                AllottedGeometry.ToPaintGeometry(RegionOrigin, FVector2D(Width, Height)),
+                FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None,
+                FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
+            auto DrawRegionLine = [&](const FString& Text, float Y, int32 FontSize,
+                const FLinearColor& Color)
+            {
+                FSlateDrawElement::MakeText(
+                    OutDrawElements, ++PaintLayer,
+                    AllottedGeometry.ToPaintGeometry(
+                        RegionOrigin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                    Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
+                    ESlateDrawEffect::None, Color);
+            };
+            DrawRegionLine(TEXT("Region"), 12.0f, 16, EmpireColor);
+            for (int32 Index = 0; Index < RegionLines.Num(); ++Index)
+                DrawRegionLine(RegionLines[Index], 38.0f + Index * 24.0f, 11,
+                    RegionHeadingRows.Contains(Index) ? EmpireColor : FLinearColor::White);
+        }
+        return PaintLayer;
+    };
     if (FocusedMoon)
     {
         const FVector2D Center = AllottedGeometry.GetLocalSize() * 0.5f + PanOffset;
@@ -1437,7 +1564,7 @@ int32 USystemMapPanel::NativePaint(
                 FVector2D(240.0f, 24.0f)),
             Name, FCoreStyle::GetDefaultFontStyle("Regular", 12),
             ESlateDrawEffect::None, EmpireColor);
-        return LayerId;
+        return DrawBodyInfo(LayerId);
     }
     const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
 
@@ -1556,7 +1683,7 @@ int32 USystemMapPanel::NativePaint(
         const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
         const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetBody, PlanetIndex);
         const float PlanetDrawSize = FocusedPlanet
-            ? FMath::Max(64.0f, GetZoomedValue(ComputePlanetDrawSize(PlanetBody)))
+            ? FMath::Max(64.0f, GetZoomedValue(FMath::Max(64.0f, ComputePlanetDrawSize(PlanetBody))))
             : GetZoomedValue(ComputePlanetDrawSize(PlanetBody));
 
         const FVector2D PlanetCenter = FocusedPlanet ? PanelSize * 0.5f + PanOffset : ComputeOrbitPosition(
@@ -1841,59 +1968,7 @@ int32 USystemMapPanel::NativePaint(
         ESlateDrawEffect::None,
         EmpireColor);
 
-    {
-        TArray<FString> BodyNames;
-        const FString BoxTitle = FocusedPlanet
-            ? FString(ANSI_TO_TCHAR(FocusedPlanet->GetName())) : ViewedSystemName;
-        const FString ListTitle = FocusedPlanet ? TEXT("MOONS") : TEXT("PLANETS");
-        if (FocusedPlanet)
-        {
-            ListIter<OrbitalBody> MoonIter = FocusedPlanet->Satellites();
-            while (++MoonIter)
-            {
-                if (OrbitalBody* Moon = MoonIter.value())
-                    BodyNames.Add(ANSI_TO_TCHAR(Moon->GetName()));
-            }
-        }
-        else
-        {
-            for (OrbitalBody* Planet : CachedPlanetBodies)
-            {
-                if (Planet) BodyNames.Add(ANSI_TO_TCHAR(Planet->GetName()));
-            }
-        }
-        const float Width = FMath::Min(260.0f, static_cast<float>(PanelSize.X) - 24.0f);
-        const float Height = 104.0f + FMath::Max(1, BodyNames.Num()) * 20.0f;
-        const FVector2D BoxOrigin(
-            FMath::Max(12.0, PanelSize.X - Width - 16.0),
-            FMath::Max(12.0, PanelSize.Y - Height - 16.0));
-        FSlateDrawElement::MakeBox(
-            OutDrawElements, ++PaintLayer,
-            AllottedGeometry.ToPaintGeometry(BoxOrigin, FVector2D(Width, Height)),
-            FCoreStyle::Get().GetBrush("WhiteBrush"),
-            ESlateDrawEffect::None, FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
-
-        auto DrawInfoLine = [&](const FString& Text, float Y, int32 FontSize,
-            const FLinearColor& Color)
-        {
-            FSlateDrawElement::MakeText(
-                OutDrawElements, ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    BoxOrigin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
-                Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
-                ESlateDrawEffect::None, Color);
-        };
-        DrawInfoLine(BoxTitle, 12.0f, 16,
-            EmpireColor);
-        DrawInfoLine(EmpireName, 38.0f, 11, EmpireColor);
-        DrawInfoLine(ListTitle, 70.0f, 11, FLinearColor(0.65f, 0.78f, 0.92f));
-        if (BodyNames.IsEmpty())
-            DrawInfoLine(TEXT("None"), 94.0f, 11, FLinearColor::White);
-        for (int32 Index = 0; Index < BodyNames.Num(); ++Index)
-            DrawInfoLine(TEXT("- ") + BodyNames[Index], 94.0f + Index * 20.0f, 11,
-                FLinearColor::White);
-    }
-    return PaintLayer;
+    return DrawBodyInfo(PaintLayer);
 }
 
 void USystemMapPanel::SetSelectedBodyName(const FString& InName)
@@ -1974,7 +2049,7 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
         const float OrbitVerticalScale = ComputeOrbitVerticalScale(PlanetBody);
         const float PlanetAngleRadians = ComputePlanetAngleRadians(PlanetBody, PlanetIndex);
         const float PlanetDrawSize = FocusedPlanet
-            ? FMath::Max(64.0f, GetZoomedValue(ComputePlanetDrawSize(PlanetBody)))
+            ? FMath::Max(64.0f, GetZoomedValue(FMath::Max(64.0f, ComputePlanetDrawSize(PlanetBody))))
             : GetZoomedValue(ComputePlanetDrawSize(PlanetBody));
 
         const FVector2D PlanetCenter = FocusedPlanet ? PanelSize * 0.5f + PanOffset : ComputeOrbitPosition(

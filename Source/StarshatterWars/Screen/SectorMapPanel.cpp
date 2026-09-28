@@ -28,6 +28,7 @@
 #include "MissionElement.h"
 #include "Instruction.h"
 #include "GameStructs.h"
+#include "FormattingUtils.h"
 #include "GameStructs_System.h"
 
 #include "CombatUnit.h"
@@ -159,13 +160,82 @@ int32 USectorMapPanel::NativePaint(
 
     const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
     const FVector2D Center = (PanelSize * 0.5f) + PanOffset;
+    auto DrawRegionInfo = [&](int32 BaseLayer) -> int32
+    {
+        if (!bOperationsView) return BaseLayer;
+
+        const FString RegionName = ANSI_TO_TCHAR(CachedRegion->GetName());
+        const Orbital* Parent = CachedRegion->Primary();
+        const FString ParentName = Parent
+            ? FString(ANSI_TO_TCHAR(Parent->GetName())) : TEXT("Unknown parent");
+
+        TArray<FString> ObjectNames;
+        for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(RegionName))
+        {
+            if (!Group || !OperationsGroupMatchesView(*Group)) continue;
+            const FString DisplayName = Group->DisplayName.TrimStartAndEnd();
+            ObjectNames.Add(DisplayName.IsEmpty() ? Group->Name : DisplayName);
+        }
+
+        FLinearColor EmpireColor = FLinearColor::Gray;
+        if (UGameInstance* GI = GetGameInstance())
+        {
+            if (UStarshatterEnvironmentSubsystem* Env =
+                GI->GetSubsystem<UStarshatterEnvironmentSubsystem>())
+            {
+                if (const FS_Galaxy* Data = Env->FindGalaxyByName(ViewedSystemName))
+                {
+                    switch (Data->Empire)
+                    {
+                    case EEMPIRE_NAME::Terellian: EmpireColor = FLinearColor::Green; break;
+                    case EEMPIRE_NAME::Marakan: EmpireColor = FLinearColor::Red; break;
+                    default: break;
+                    }
+                }
+            }
+        }
+
+        const float Width = FMath::Max(1.0f,
+            FMath::Min(280.0f, static_cast<float>(PanelSize.X) - 32.0f));
+        const float Height = 104.0f + FMath::Max(1, ObjectNames.Num()) * 20.0f;
+        const FVector2D Origin(
+            FMath::Max(0.0, PanelSize.X - Width - 16.0),
+            FMath::Max(0.0, PanelSize.Y - Height - 16.0));
+
+        FSlateDrawElement::MakeBox(
+            OutDrawElements, ++BaseLayer,
+            AllottedGeometry.ToPaintGeometry(Origin, FVector2D(Width, Height)),
+            FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None,
+            FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
+
+        auto DrawLine = [&](const FString& Text, float Y, int32 FontSize,
+            const FLinearColor& Color)
+        {
+            FSlateDrawElement::MakeText(
+                OutDrawElements, ++BaseLayer,
+                AllottedGeometry.ToPaintGeometry(
+                    Origin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
+                ESlateDrawEffect::None, Color);
+        };
+        DrawLine(RegionName, 12.0f, 16, EmpireColor);
+        DrawLine(ParentName, 38.0f, 11, EmpireColor);
+        DrawLine(TEXT("MAJOR OBJECTS"), 70.0f, 11,
+            FLinearColor(0.65f, 0.78f, 0.92f));
+        if (ObjectNames.IsEmpty())
+            DrawLine(TEXT("None"), 94.0f, 11, FLinearColor::White);
+        for (int32 Index = 0; Index < ObjectNames.Num(); ++Index)
+            DrawLine(TEXT("- ") + ObjectNames[Index], 94.0f + Index * 20.0f,
+                11, FLinearColor::White);
+        return BaseLayer;
+    };
 
     const int32 RegionRadius = static_cast<int32>(CachedRegion->Radius());
     const int32 GridStep = static_cast<int32>(CachedRegion->GetGridSpace());
 
     if (RegionRadius <= 0 || GridStep <= 0)
     {
-        return LayerId;
+        return DrawRegionInfo(LayerId);
     }
 
     const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
@@ -232,7 +302,7 @@ int32 USectorMapPanel::NativePaint(
         ESlateDrawEffect::None,
         FLinearColor(0.85f, 0.90f, 1.0f, 0.95f));
 
-    return LayerId + 500;
+    return DrawRegionInfo(LayerId + 500);
 }
 
 FReply USectorMapPanel::NativeOnMouseButtonDown(
@@ -998,7 +1068,11 @@ bool USectorMapPanel::OperationsGroupMatchesView(const FS_CombatGroup& Group) co
     }
 
     if (Group.Type != ECOMBATGROUP_TYPE::STATION &&
-        Group.Type != ECOMBATGROUP_TYPE::STARBASE)
+        Group.Type != ECOMBATGROUP_TYPE::STARBASE &&
+        Group.Type != ECOMBATGROUP_TYPE::FLEET &&
+        Group.Type != ECOMBATGROUP_TYPE::CARRIER_GROUP &&
+        Group.Type != ECOMBATGROUP_TYPE::DESTROYER_SQUADRON &&
+        Group.Type != ECOMBATGROUP_TYPE::BATTLE_GROUP)
     {
         return false;
     }
@@ -1207,9 +1281,7 @@ void USectorMapPanel::DrawOperationsGroup(
 
         if (Label.IsEmpty())
         {
-            Label = (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
-                ? TEXT("STARBASE")
-                : TEXT("STATION");
+            Label = UFormattingUtils::GetGroupTypeDisplayName(Group->Type);
         }
 
         FSlateDrawElement::MakeText(
@@ -1353,15 +1425,11 @@ void USectorMapPanel::DrawSelectedOperationsGroupTag(
 
     if (NameLine.IsEmpty())
     {
-        NameLine = (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
-            ? TEXT("STARBASE")
-            : TEXT("STATION");
+        NameLine = UFormattingUtils::GetGroupTypeDisplayName(Group->Type);
     }
 
     const FString TypeLine =
-        (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
-        ? TEXT("STARBASE")
-        : TEXT("STATION");
+        UFormattingUtils::GetGroupTypeDisplayName(Group->Type);
 
     const FString LocLine = FString::Printf(
         TEXT("%s  LOC %.0f, %.0f, %.0f"),
@@ -1976,6 +2044,10 @@ bool USectorMapPanel::IsMajorStructureElement(MissionElement* Element) const
         {
         case ECOMBATGROUP_TYPE::STATION:
         case ECOMBATGROUP_TYPE::STARBASE:
+        case ECOMBATGROUP_TYPE::FLEET:
+        case ECOMBATGROUP_TYPE::CARRIER_GROUP:
+        case ECOMBATGROUP_TYPE::DESTROYER_SQUADRON:
+        case ECOMBATGROUP_TYPE::BATTLE_GROUP:
             return true;
 
         default:

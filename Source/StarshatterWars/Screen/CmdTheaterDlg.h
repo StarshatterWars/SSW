@@ -29,7 +29,7 @@
 #include "CmdTheaterDlg.generated.h"
 
 class UBorder;
-class UButton;
+class UMenuButton;
 class UComboBoxString;
 class UHorizontalBox;
 class USizeBox;
@@ -102,10 +102,16 @@ protected:
     };
 
 protected:
+    UPROPERTY(EditAnywhere, Category = "Theater|Buttons")
+    TSubclassOf<UMenuButton> TheaterMenuButtonClass;
+
+    UFUNCTION()
+    void HandleTheaterButtonSelected(UMenuButton* SelectedButton);
+
     void BuildRuntimeLayout();
     void BuildMapPanels();
 
-    UButton* CreateRuntimeButton(
+    UMenuButton* CreateRuntimeButton(
         const FString& Label,
         UHorizontalBox* ParentBox,
         float Width);
@@ -216,13 +222,13 @@ protected:
     UHorizontalBox* ZoomButtonBox = nullptr;
 
     UPROPERTY()
-    UButton* GalaxyButton = nullptr;
+    UMenuButton* GalaxyButton = nullptr;
 
     UPROPERTY()
-    UButton* SystemButton = nullptr;
+    UMenuButton* SystemButton = nullptr;
 
     UPROPERTY()
-    UButton* SectorButton = nullptr; // Intentionally unused: Sector navigation is a dropdown on System view.
+    UMenuButton* SectorButton = nullptr; // Intentionally unused: Sector navigation is a dropdown on System view.
 
     UPROPERTY()
     UHorizontalBox* SystemSelectorBox = nullptr;
@@ -249,10 +255,10 @@ protected:
     UComboBoxString* RegionComboBox = nullptr;
 
     UPROPERTY()
-    UButton* ZoomOutButton = nullptr;
+    UMenuButton* ZoomOutButton = nullptr;
 
     UPROPERTY()
-    UButton* ZoomInButton = nullptr;
+    UMenuButton* ZoomInButton = nullptr;
 
     UPROPERTY()
     USizeBox* MainViewHost = nullptr;
