@@ -127,7 +127,7 @@ void USectorMapPanel::NativeConstruct()
     }
 
     PanOffset = FVector2D::ZeroVector;
-    ZoomScale = 12.0f;
+    ZoomScale = bOperationsView ? 1.0f : 12.0f;
     bDraggingMap = false;
     DragStartScreenPosition = FVector2D::ZeroVector;
     DragStartPanOffset = FVector2D::ZeroVector;
@@ -239,7 +239,7 @@ int32 USectorMapPanel::NativePaint(
     }
 
     const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
-    const double R = CachedRegion->Radius() / ZoomScale;
+    const double R = GetDisplayRadius() / ZoomScale;
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
     DrawRegionGrid(
@@ -329,7 +329,7 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
         const FVector2D Center = (PanelSize * 0.5f) + PanOffset;
 
         const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
-        const double R = CachedRegion->Radius() / ZoomScale;
+        const double R = GetDisplayRadius() / ZoomScale;
         const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
         const FVector2D LocalPoint =
@@ -443,6 +443,11 @@ void USectorMapPanel::SetOwnerNavDlg(UMissionNavDlg* InOwnerNavDlg)
 
 void USectorMapPanel::SetOperationsView(bool bInOperationsView)
 {
+    if (bOperationsView != bInOperationsView)
+    {
+        ZoomScale = bInOperationsView ? 1.0f : 12.0f;
+        PanOffset = FVector2D::ZeroVector;
+    }
     bOperationsView = bInOperationsView;
 
     if (bOperationsView)
@@ -459,12 +464,22 @@ void USectorMapPanel::SetOperationsView(bool bInOperationsView)
 
 void USectorMapPanel::SetViewedSystemName(const FString& InSystemName)
 {
+    if (bOperationsView && ViewedSystemName != InSystemName.TrimStartAndEnd())
+    {
+        ZoomScale = 1.0f;
+        PanOffset = FVector2D::ZeroVector;
+    }
     ViewedSystemName = InSystemName.TrimStartAndEnd();
     RefreshView();
 }
 
 void USectorMapPanel::SetViewedSectorName(const FString& InSectorName)
 {
+    if (bOperationsView && ViewedSectorName != InSectorName.TrimStartAndEnd())
+    {
+        ZoomScale = 1.0f;
+        PanOffset = FVector2D::ZeroVector;
+    }
     ViewedSectorName = InSectorName.TrimStartAndEnd();
     RefreshView();
 }
@@ -516,7 +531,7 @@ bool USectorMapPanel::CenterOnElement(MissionElement* InElement)
     }
 
     const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
-    const double R = CachedRegion->Radius() / ZoomScale;
+    const double R = GetDisplayRadius() / ZoomScale;
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
     const FVector ElementLocation = InElement->GetLocation();
@@ -550,7 +565,7 @@ bool USectorMapPanel::CenterOnOperationsGroup(const FS_CombatGroup* InGroup)
     }
 
     const double C = FMath::Min(PanelSize.X * 0.5, PanelSize.Y * 0.5);
-    const double R = CachedRegion->Radius() / ZoomScale;
+    const double R = GetDisplayRadius() / ZoomScale;
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
     const FVector2D Offset(
@@ -582,6 +597,34 @@ void USectorMapPanel::BuildRuntimeLayout()
 
         WidgetTree->RootWidget = RootCanvas;
     }
+}
+
+double USectorMapPanel::GetDisplayRadius() const
+{
+    if (!CachedRegion) return 1.0;
+    const double RegionRadius = FMath::Max(1.0, CachedRegion->Radius());
+    if (!bOperationsView) return RegionRadius;
+
+    double ExtentX = RegionRadius;
+    double ExtentY = RegionRadius;
+    for (const FS_CombatGroup* Group :
+        CombatGroupRegistry::FindByRegion(ANSI_TO_TCHAR(CachedRegion->GetName())))
+    {
+        if (!Group || !OperationsGroupMatchesView(*Group)) continue;
+        ExtentX = FMath::Max(ExtentX, FMath::Abs(static_cast<double>(Group->Location.X)));
+        ExtentY = FMath::Max(ExtentY, FMath::Abs(static_cast<double>(Group->Location.Y)));
+    }
+
+    const FVector2D Size = GetCachedGeometry().GetLocalSize();
+    if (Size.X <= 0.0 || Size.Y <= 0.0)
+        return FMath::Max(ExtentX, ExtentY) * 1.15;
+
+    const double HalfMin = FMath::Min(Size.X, Size.Y) * 0.5;
+    // Leave the right-hand info panel clear, plus room for marker labels.
+    const double AvailableX = FMath::Max(32.0, Size.X * 0.5 - 320.0);
+    const double AvailableY = FMath::Max(32.0, Size.Y * 0.5 - 48.0);
+    return FMath::Max(ExtentX * HalfMin / AvailableX,
+        ExtentY * HalfMin / AvailableY) * 1.10;
 }
 
 void USectorMapPanel::RefreshView()

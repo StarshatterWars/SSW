@@ -283,6 +283,7 @@ protected:
     // Points into CombatGroupRegistry, which owns the static roster rows.
     const FS_CombatGroup* SelectedOperationsGroup = nullptr;
 
+    double GetDisplayRadius() const;
     bool bOperationsView = false;
     bool bValidView = false;
 
