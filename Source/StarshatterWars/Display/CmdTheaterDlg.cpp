@@ -14,11 +14,18 @@
     ========
     UCmdTheaterDlg implementation.
 
-    CmdTheaterPanel supplies only RuntimeHost.
+    CmdTheaterPanel supplies RuntimeHost and Border_0.
     Theater controls and shared maps are built in C++.
 */
 
 #include "CmdTheaterDlg.h"
+#include "CentralSun.h"
+#include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Engine/World.h"
 
 // Shared maps:
 #include "GalaxyMapPanel.h"
@@ -34,6 +41,7 @@
 
 // UMG:
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ComboBoxString.h"
@@ -71,10 +79,6 @@ void UCmdTheaterDlg::NativeConstruct()
 
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
-
-    ensureMsgf(
-        Border_0,
-        TEXT("CmdTheaterDlg: Border_0 is not bound"));
 
     ensureMsgf(
         RuntimeHost,
@@ -141,6 +145,9 @@ void UCmdTheaterDlg::NativeConstruct()
 
     EnsureDefaultSystemSelection();
     SyncMapContext();
+
+    EnsureCentralSun();
+
     SetViewMode(VIEW_GALAXY);
 }
 
@@ -150,6 +157,7 @@ void UCmdTheaterDlg::NativeTick(
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
     ExecFrame();
+    UpdateSystemSunCamera();
 }
 
 FReply UCmdTheaterDlg::NativeOnMouseWheel(
@@ -789,6 +797,11 @@ void UCmdTheaterDlg::BuildMapPanels()
     {
         SystemMapPanel->SetNavigationOwner(this);
 
+        // Operations System view uses the real 3D ACentralSun.
+        // Keep orbit layout and star hit-testing, but do not paint
+        // the old 2D primary-star texture.
+        SystemMapPanel->SetDrawPrimaryStar2D(false);
+
         SystemMapPanel->OnPrimaryStarActivated.BindUObject(
             this,
             &UCmdTheaterDlg::HandleSystemPrimaryStarActivated);
@@ -921,6 +934,227 @@ void UCmdTheaterDlg::ExecFrame()
     {
         CampaignPtr = Campaign::GetCampaign();
     }
+}
+
+
+void UCmdTheaterDlg::NativeDestruct()
+{
+    RestoreSystemSunCamera();
+
+    if (IsValid(SystemSunCamera))
+    {
+        SystemSunCamera->Destroy();
+        SystemSunCamera = nullptr;
+    }
+
+    if (IsValid(CentralSun))
+    {
+        CentralSun->Destroy();
+        CentralSun = nullptr;
+    }
+
+    Super::NativeDestruct();
+}
+
+void UCmdTheaterDlg::RestoreSystemSunCamera()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (PC && IsValid(SystemSunCamera) &&
+        PC->GetViewTarget() == SystemSunCamera.Get())
+    {
+        AActor* RestoreTarget = PreviousSunViewTarget.Get();
+        PC->SetViewTarget(RestoreTarget ? RestoreTarget : PC);
+    }
+
+    PreviousSunViewTarget.Reset();
+}
+
+void UCmdTheaterDlg::UpdateSystemSunCamera()
+{
+    if (CurrentViewMode != VIEW_SYSTEM || !IsVisible())
+    {
+        RestoreSystemSunCamera();
+        if (IsValid(CentralSun))
+        {
+            CentralSun->HideSun();
+        }
+        return;
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC || !PC->PlayerCameraManager || !IsValid(CentralSun))
+    {
+        return;
+    }
+
+    AActor* SunActor = CentralSun->GetSunActor();
+    if (!IsValid(SunActor))
+    {
+        return;
+    }
+
+    // BP_Star creates additional flare meshes. Their size and bounds center
+    // must not determine the camera target: use its named photosphere.
+    TArray<UStaticMeshComponent*> Meshes;
+    SunActor->GetComponents<UStaticMeshComponent>(Meshes);
+    UStaticMeshComponent* StarMesh = nullptr;
+    for (UStaticMeshComponent* Mesh : Meshes)
+    {
+        if (IsValid(Mesh) && Mesh->GetFName() == FName(TEXT("SM_Star")))
+        {
+            StarMesh = Mesh;
+            break;
+        }
+    }
+
+    if (!StarMesh || !StarMesh->GetStaticMesh())
+    {
+        // Do not silently aim at an unrelated effect if the Blueprint changes.
+        return;
+    }
+
+    const FBoxSphereBounds StarBounds =
+        StarMesh->CalcBounds(StarMesh->GetComponentTransform());
+    const FVector StarCenter = StarBounds.Origin;
+    const double Radius = StarBounds.BoxExtent.GetMax();
+
+    int32 Width = 0;
+    int32 Height = 0;
+    PC->GetViewportSize(Width, Height);
+    if (Radius <= KINDA_SMALL_NUMBER || Width <= 0 || Height <= 0)
+    {
+        return;
+    }
+
+    if (!IsValid(SystemSunCamera))
+    {
+        SystemSunCamera = GetWorld()->SpawnActor<ACameraActor>();
+        if (!SystemSunCamera)
+        {
+            return;
+        }
+        SystemSunCamera->SetActorRotation(
+            PC->PlayerCameraManager->GetCameraRotation());
+        SystemSunCamera->GetCameraComponent()->SetFieldOfView(60.0f);
+        SystemSunCamera->GetCameraComponent()->bConstrainAspectRatio = false;
+    }
+
+    UCameraComponent* Camera = SystemSunCamera->GetCameraComponent();
+    // Keep horizontal FOV fixed so viewport width gives a stable pixel scale.
+    Camera->bOverrideAspectRatioAxisConstraint = true;
+    Camera->AspectRatioAxisConstraint = AspectRatio_MaintainXFOV;
+
+    const double HalfFOV = FMath::DegreesToRadians(Camera->FieldOfView * 0.5);
+    const double FocalPixels = Width / (2.0 * FMath::Tan(HalfFOV));
+    const double PixelRadius = FMath::Max(1.0, SunDiameterPixels * 0.5);
+    // Exact perspective silhouette distance for a sphere centered in the view.
+    const double Ratio = FocalPixels / PixelRadius;
+    const double Distance = Radius * FMath::Sqrt(1.0 + Ratio * Ratio);
+
+    FVector CameraLocation =
+        StarCenter - SystemSunCamera->GetActorForwardVector() * Distance;
+
+    // Match the actual Slate orbit center, including layout, DPI and pan.
+    if (SystemMapPanel)
+    {
+        const FGeometry& Geometry = SystemMapPanel->GetCachedGeometry();
+        if (Geometry.GetLocalSize().X > 0.0f && Geometry.GetLocalSize().Y > 0.0f)
+        {
+            FVector2D PixelPosition;
+            FVector2D ViewportPosition;
+            USlateBlueprintLibrary::LocalToViewport(
+                this, Geometry, SystemMapPanel->GetSystemCenterLocal(),
+                PixelPosition, ViewportPosition);
+
+            const double OffsetRight =
+                (PixelPosition.X - Width * 0.5) * Distance / FocalPixels;
+            const double OffsetUp =
+                (Height * 0.5 - PixelPosition.Y) * Distance / FocalPixels;
+
+            CameraLocation -=
+                SystemSunCamera->GetActorRightVector() * OffsetRight +
+                SystemSunCamera->GetActorUpVector() * OffsetUp;
+        }
+    }
+
+    SystemSunCamera->SetActorLocation(CameraLocation);
+
+    if (PC->GetViewTarget() != SystemSunCamera.Get())
+    {
+        PreviousSunViewTarget = PC->GetViewTarget();
+        PC->SetViewTarget(SystemSunCamera.Get());
+    }
+    CentralSun->ShowSun();
+}
+
+void UCmdTheaterDlg::EnsureCentralSun()
+{
+    if (IsValid(CentralSun))
+    {
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(
+            LogTemp,
+            Error,
+            TEXT("[CmdTheaterDlg] EnsureCentralSun: World is null"));
+
+        return;
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    CentralSun =
+        World->SpawnActor<ACentralSun>(
+            ACentralSun::StaticClass(),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            SpawnParams);
+
+    if (!CentralSun)
+    {
+        UE_LOG(
+            LogTemp,
+            Error,
+            TEXT("[CmdTheaterDlg] Failed to spawn CentralSun"));
+
+        return;
+    }
+
+    CentralSun->HideSun();
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("[CmdTheaterDlg] CentralSun spawned: %s"),
+        *GetNameSafe(CentralSun));
+}
+
+void UCmdTheaterDlg::UpdateCentralSunVisibility()
+{
+    EnsureCentralSun();
+
+    if (!CentralSun)
+    {
+        return;
+    }
+
+    const bool bShowSun =
+        CurrentViewMode == VIEW_SYSTEM;
+
+    CentralSun->SetSunVisible(
+        bShowSun);
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("[CmdTheaterDlg] CentralSun visible=%d"),
+        bShowSun ? 1 : 0);
 }
 
 UStarshatterEnvironmentSubsystem*
@@ -1346,16 +1580,28 @@ void UCmdTheaterDlg::RefreshRegionSelector()
         *SelectedSectorName);
 }
 
+void UCmdTheaterDlg::SetPanelBackgroundVisible(bool bVisible)
+{
+    if (!Border_0)
+    {
+        return;
+    }
+
+    FLinearColor BrushColor =
+        Border_0->GetBrushColor();
+
+    BrushColor.A =
+        bVisible ? 1.0f : 0.0f;
+
+    Border_0->SetBrushColor(
+        BrushColor);
+}
+
 void UCmdTheaterDlg::SetViewMode(
     EViewMode NewMode)
 {
     CurrentViewMode = NewMode;
-
-    // Galaxy and Sector retain the gray panel background.
-    // System view removes only the Border_0 background so the
-    // direct 3D Unreal system display can show through the shell.
-    SetPanelBackgroundVisible(
-        CurrentViewMode != VIEW_SYSTEM);
+    SetPanelBackgroundVisible(CurrentViewMode != VIEW_SYSTEM);
 
     switch (CurrentViewMode)
     {
@@ -1405,28 +1651,11 @@ void UCmdTheaterDlg::SetViewMode(
         SectorMapPanel->SetFocus();
     }
 
+    UpdateCentralSunVisibility();
+    UpdateSystemSunCamera();
+
     RefreshViewButtons();
 }
-
-
-void UCmdTheaterDlg::SetPanelBackgroundVisible(
-    bool bVisible)
-{
-    if (!Border_0)
-    {
-        return;
-    }
-
-    FLinearColor BrushColor =
-        Border_0->GetBrushColor();
-
-    BrushColor.A =
-        bVisible ? 1.0f : 0.0f;
-
-    Border_0->SetBrushColor(
-        BrushColor);
-}
-
 
 void UCmdTheaterDlg::RefreshViewButtons()
 {

@@ -47,6 +47,9 @@ class USectorMapPanel;
 
 class UStarshatterEnvironmentSubsystem;
 
+class ACentralSun;
+class ACameraActor;
+
 class Starshatter;
 class Campaign;
 class StarSystem;
@@ -62,6 +65,7 @@ public:
     UCmdTheaterDlg(const FObjectInitializer& ObjectInitializer);
 
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
     virtual void NativeTick(
         const FGeometry& MyGeometry,
         float InDeltaTime) override;
@@ -106,8 +110,13 @@ protected:
         float Width);
 
     void SetViewMode(EViewMode NewMode);
-    void RefreshViewButtons();
     void SetPanelBackgroundVisible(bool bVisible);
+    void RefreshViewButtons();
+
+    void UpdateSystemSunCamera();
+    void RestoreSystemSunCamera();
+    void EnsureCentralSun();
+    void UpdateCentralSunVisibility();
 
     UStarshatterEnvironmentSubsystem*
         GetEnvironmentSubsystem() const;
@@ -163,16 +172,14 @@ protected:
 
 protected:
     // -----------------------------------------------------------------
-    // Required shell widgets in CmdTheaterPanel Blueprint.
-    // Border_0 owns /Game/UI/Panel.Panel and is transparent in System view.
-    // RuntimeHost contains the runtime-built Theater controls/maps.
+    // Required widgets in CmdTheaterPanel Blueprint.
     // -----------------------------------------------------------------
 
     UPROPERTY(meta = (BindWidget))
-    UBorder* Border_0 = nullptr;
+    USizeBox* RuntimeHost = nullptr;
 
     UPROPERTY(meta = (BindWidget))
-    USizeBox* RuntimeHost = nullptr;
+    UBorder* Border_0 = nullptr;
 
 protected:
     // -----------------------------------------------------------------
@@ -274,6 +281,18 @@ protected:
 
     UPROPERTY(Transient)
     UCmdDlg* ParentCmdDlg = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<ACentralSun> CentralSun = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<ACameraActor> SystemSunCamera = nullptr;
+
+    UPROPERTY(Transient)
+    TWeakObjectPtr<AActor> PreviousSunViewTarget;
+
+    UPROPERTY(EditAnywhere, Category = "Theater|Sun", meta = (ClampMin = "1.0"))
+    float SunDiameterPixels = 64.0f;
 
     Starshatter* Stars = nullptr;
     Campaign* CampaignPtr = nullptr;

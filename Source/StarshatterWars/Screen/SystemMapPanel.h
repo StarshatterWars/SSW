@@ -100,6 +100,13 @@ public:
     void SetOwnerNavDlg(UObject* InOwner) { SetNavigationOwner(InOwner); }
 
 public:
+    // Shared with the 3D sun camera so rendering and hit testing stay aligned.
+    FVector2D GetSystemCenterLocal() const
+    {
+        const FVector2D Size = GetCachedGeometry().GetLocalSize();
+        return FVector2D(Size.X * 0.5f, Size.Y * 0.5f + 30.0f) + PanOffset;
+    }
+
     void ShowSystemOverview();
     bool CenterOnBodyByName(const FString& InBodyName);
 
@@ -107,6 +114,14 @@ public:
     void ZoomOut();
 
     void SetSelectedBodyName(const FString& InName);
+
+    /** Enable/disable only the 2D primary-star image. Orbit layout,
+        star hit testing, labels, and navigation remain active. */
+    void SetDrawPrimaryStar2D(bool bInDraw)
+    {
+        bDrawPrimaryStar2D = bInDraw;
+        Invalidate(EInvalidateWidget::Paint);
+    }
 
 protected:
 
@@ -229,6 +244,10 @@ protected:
 
     UPROPERTY()
     UTexture2D* IFFRingTexture = nullptr;
+
+    // Operations uses a real 3D ACentralSun instead of the Slate star image.
+    UPROPERTY()
+    bool bDrawPrimaryStar2D = true;
 
     // ------------------------------------------------------------
     // Camera / Input

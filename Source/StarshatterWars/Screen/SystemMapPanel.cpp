@@ -1330,7 +1330,7 @@ int32 USystemMapPanel::NativePaint(
             IFFRingTint);
     }
 
-    if (StarTexture)
+    if (bDrawPrimaryStar2D && StarTexture)
     {
         FSlateBrush StarBrush;
         StarBrush.DrawAs = ESlateBrushDrawType::Image;
