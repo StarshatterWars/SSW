@@ -330,14 +330,21 @@ void USystemMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
             InDeltaTime,
             CameraInterpSpeed);
 
-        ZoomScale = FMath::FInterpTo(
-            ZoomScale,
-            TargetZoom,
-            InDeltaTime,
-            CameraInterpSpeed);
+        if (bSmoothZoomStep)
+        {
+            ZoomStepElapsed += InDeltaTime;
+            const float T = FMath::Clamp(ZoomStepElapsed / ZoomStepDuration, 0.0f, 1.0f);
+            const float SmoothT = T * T * (3.0f - 2.0f * T);
+            ZoomScale = FMath::Lerp(ZoomStepStart, TargetZoom, SmoothT);
+        }
+        else
+        {
+            ZoomScale = FMath::FInterpTo(
+                ZoomScale, TargetZoom, InDeltaTime, CameraInterpSpeed);
+        }
 
         const bool bPanDone = PanOffset.Equals(TargetPan, 0.5f);
-        const bool bZoomDone = FMath::IsNearlyEqual(ZoomScale, TargetZoom, 0.01f);
+        const bool bZoomDone = bSmoothZoomStep ? ZoomStepElapsed >= ZoomStepDuration : FMath::IsNearlyEqual(ZoomScale, TargetZoom, 0.01f);
 
         if (bPanDone && bZoomDone)
         {
@@ -431,6 +438,7 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
 
     TargetZoom = DesiredZoom;
     TargetPan = ClampPanOffset(DesiredPan, PanelSize);
+    bSmoothZoomStep = false;
     bCameraAnimating = true;
 
     return true;
@@ -1033,30 +1041,34 @@ bool USystemMapPanel::HandleClickSelection(
     return false;
 }
 
+void USystemMapPanel::StartZoomStep(float Delta)
+{
+    const float BaseZoom = bCameraAnimating ? TargetZoom : ZoomScale;
+    TargetZoom = FMath::Clamp(BaseZoom + Delta, MinZoomScale, MaxZoomScale);
+    ZoomStepStart = ZoomScale;
+    ZoomStepElapsed = 0.0f;
+    TargetPan = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
+    bSmoothZoomStep = true;
+    bCameraAnimating = true;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
 void USystemMapPanel::ZoomIn()
 {
-    bCameraAnimating = false;
-
-    ZoomScale = FMath::Clamp(ZoomScale + 0.1f, MinZoomScale, MaxZoomScale);
-
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    Invalidate(EInvalidateWidget::Paint);
+    StartZoomStep(0.1f);
 }
 
 void USystemMapPanel::ZoomOut()
 {
-    bCameraAnimating = false;
-
-    ZoomScale = FMath::Clamp(ZoomScale - 0.1f, MinZoomScale, MaxZoomScale);
-
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    Invalidate(EInvalidateWidget::Paint);
+    StartZoomStep(-0.1f);
 }
 
 void USystemMapPanel::ResetSystemView()
 {
+    bCameraAnimating = false;
+    bSmoothZoomStep = false;
+    TargetZoom = 1.0f;
+    TargetPan = FVector2D::ZeroVector;
     ZoomScale = 1.0f;
     PanOffset = FVector2D::ZeroVector;
     bDraggingMap = false;
@@ -1394,7 +1406,7 @@ int32 USystemMapPanel::NativePaint(
         }
 
         UTexture2D* PlanetTexture = GetPlanetTexture(PlanetBody);
-        if (PlanetTexture)
+        if (PlanetTexture && !PlanetsRenderedIn3D.Contains(ANSI_TO_TCHAR(PlanetBody->GetName())))
         {
             FSlateBrush PlanetBrush;
             PlanetBrush.DrawAs = ESlateBrushDrawType::Image;

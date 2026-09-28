@@ -47,6 +47,7 @@ class USectorMapPanel;
 
 class UStarshatterEnvironmentSubsystem;
 
+class APlanetActor;
 class ACentralSun;
 class ACameraActor;
 
@@ -113,6 +114,8 @@ protected:
     void SetPanelBackgroundVisible(bool bVisible);
     void RefreshViewButtons();
 
+    void UpdateSystemPlanets();
+    void ClearSystemPlanets();
     void UpdateSystemSunCamera();
     void RestoreSystemSunCamera();
     void EnsureCentralSun();
@@ -293,6 +296,12 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Theater|Sun", meta = (ClampMin = "1.0"))
     float SunDiameterPixels = 64.0f;
+
+    UPROPERTY(Transient)
+    TMap<FString, TObjectPtr<AActor>> SystemPlanetActors;
+
+    TMap<FString, float> SystemPlanetRadii;
+    FString PlanetActorSystemName;
 
     Starshatter* Stars = nullptr;
     Campaign* CampaignPtr = nullptr;

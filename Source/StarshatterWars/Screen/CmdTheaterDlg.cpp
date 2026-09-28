@@ -20,6 +20,9 @@
 
 #include "CmdTheaterDlg.h"
 #include "CentralSun.h"
+#include "PlanetActor.h"
+#include "OrbitalBody.h"
+#include "Engine/Texture2D.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -158,6 +161,7 @@ void UCmdTheaterDlg::NativeTick(
     Super::NativeTick(MyGeometry, InDeltaTime);
     ExecFrame();
     UpdateSystemSunCamera();
+    UpdateSystemPlanets();
 }
 
 FReply UCmdTheaterDlg::NativeOnMouseWheel(
@@ -939,6 +943,7 @@ void UCmdTheaterDlg::ExecFrame()
 
 void UCmdTheaterDlg::NativeDestruct()
 {
+    ClearSystemPlanets();
     RestoreSystemSunCamera();
 
     if (IsValid(SystemSunCamera))
@@ -1046,7 +1051,13 @@ void UCmdTheaterDlg::UpdateSystemSunCamera()
 
     const double HalfFOV = FMath::DegreesToRadians(Camera->FieldOfView * 0.5);
     const double FocalPixels = Width / (2.0 * FMath::Tan(HalfFOV));
-    const double PixelRadius = FMath::Max(1.0, SunDiameterPixels * 0.5);
+    // SunDiameterPixels is the base diameter at 1x map zoom.
+    // Use the current interpolated zoom so focus animations also resize the star.
+    const double MapZoom = SystemMapPanel ? SystemMapPanel->GetMapZoomScale() : 1.0;
+    // Keep the star at least 64 physical pixels across when zooming out.
+    // This also caps camera distance at the stable minimum-size view.
+    const double DiameterPixels = FMath::Max(64.0, SunDiameterPixels * MapZoom);
+    const double PixelRadius = DiameterPixels * 0.5;
     // Exact perspective silhouette distance for a sphere centered in the view.
     const double Ratio = FocalPixels / PixelRadius;
     const double Distance = Radius * FMath::Sqrt(1.0 + Ratio * Ratio);
@@ -1085,6 +1096,154 @@ void UCmdTheaterDlg::UpdateSystemSunCamera()
         PC->SetViewTarget(SystemSunCamera.Get());
     }
     CentralSun->ShowSun();
+}
+
+void UCmdTheaterDlg::ClearSystemPlanets()
+{
+    for (auto& Entry : SystemPlanetActors)
+    {
+        if (IsValid(Entry.Value))
+        {
+            Entry.Value->Destroy();
+        }
+    }
+    SystemPlanetActors.Empty();
+    SystemPlanetRadii.Empty();
+    PlanetActorSystemName.Empty();
+    if (SystemMapPanel)
+    {
+        SystemMapPanel->SetPlanetsRenderedIn3D(TSet<FString>());
+    }
+}
+
+void UCmdTheaterDlg::UpdateSystemPlanets()
+{
+    if (!SystemMapPanel || !IsValid(SystemSunCamera) ||
+        CurrentViewMode != VIEW_SYSTEM || !IsVisible())
+    {
+        ClearSystemPlanets();
+        return;
+    }
+
+    if (PlanetActorSystemName != SystemMapPanel->GetViewedSystemName())
+    {
+        ClearSystemPlanets();
+        PlanetActorSystemName = SystemMapPanel->GetViewedSystemName();
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC || PC->GetViewTarget() != SystemSunCamera.Get())
+    {
+        ClearSystemPlanets();
+        return;
+    }
+    int32 Width = 0, Height = 0;
+    PC->GetViewportSize(Width, Height);
+    const FGeometry& Geometry = SystemMapPanel->GetCachedGeometry();
+    if (Width <= 0 || Height <= 0 || Geometry.GetLocalSize().IsNearlyZero())
+    {
+        return;
+    }
+
+    const double Focal = Width / (2.0 * FMath::Tan(FMath::DegreesToRadians(
+        SystemSunCamera->GetCameraComponent()->FieldOfView * 0.5)));
+    // A common camera-space plane makes icon positions independent of world orbits.
+    const double Depth = 10000.0;
+    const FVector Forward = SystemSunCamera->GetActorForwardVector();
+    const FVector Right = SystemSunCamera->GetActorRightVector();
+    const FVector Up = SystemSunCamera->GetActorUpVector();
+    const FVector CameraLocation = SystemSunCamera->GetActorLocation();
+
+    auto LoadSurface = [](const char* Name) -> UTexture2D*
+    {
+        const FString TextureName = UTF8_TO_TCHAR(Name ? Name : "");
+        if (TextureName.IsEmpty()) return nullptr;
+        const FString Path = FString::Printf(
+            TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"),
+            *TextureName, *TextureName);
+        return LoadObject<UTexture2D>(nullptr, *Path);
+    };
+
+    TArray<OrbitalBody*> Bodies;
+    SystemMapPanel->GetPlanetMapBodies(Bodies);
+    TSet<FString> Rendered;
+    TSet<FString> CurrentBodies;
+    for (OrbitalBody* Body : Bodies)
+    {
+        if (!Body) continue;
+        const FString Name = ANSI_TO_TCHAR(Body->GetName());
+        CurrentBodies.Add(Name);
+        FVector2D Center;
+        float Diameter = 0.0f;
+        if (!SystemMapPanel->GetPlanetMapPlacement(Name, Center, Diameter))
+        {
+            if (AActor* Existing = SystemPlanetActors.FindRef(Name).Get())
+                Existing->SetActorHiddenInGame(true);
+            continue;
+        }
+
+        APlanetActor* Planet = Cast<APlanetActor>(SystemPlanetActors.FindRef(Name).Get());
+        if (!IsValid(Planet))
+        {
+            UTexture2D* Surface = LoadSurface(Body->GetTexture());
+            if (!Surface) continue;
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride =
+                ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            Planet = GetWorld()->SpawnActor<APlanetActor>(
+                APlanetActor::StaticClass(), FVector::ZeroVector,
+                FRotator::ZeroRotator, SpawnParams);
+            if (!Planet) continue;
+            Planet->SetActorHiddenInGame(true);
+            Planet->SetPlanetTextures(Surface,
+                LoadSurface(Body->GetGlossTexture()),
+                LoadSurface(Body->GetGlowTexture()));
+            Planet->SetActorEnableCollision(false);
+            Planet->SetActorTickEnabled(false);
+            Planet->SetAxialRotationEnabled(false);
+            Planet->SetActorRotation(FRotator(0.0f, 0.0f, Body->GetTilt()));
+            Planet->SetLightDirection((-Forward + Up * 0.3 - Right * 0.4).GetSafeNormal());
+            SystemPlanetActors.Add(Name, Planet);
+        }
+
+        FVector2D Pixel, Unused, EdgePixel;
+        USlateBlueprintLibrary::LocalToViewport(this, Geometry, Center, Pixel, Unused);
+        USlateBlueprintLibrary::LocalToViewport(
+            this, Geometry, Center + FVector2D(Diameter * 0.5f, 0.0f),
+            EdgePixel, Unused);
+        const double PixelRadius = FVector2D::Distance(Pixel, EdgePixel);
+        const FVector Location = CameraLocation + Forward * Depth +
+            Right * ((Pixel.X - Width * 0.5) * Depth / Focal) +
+            Up * ((Height * 0.5 - Pixel.Y) * Depth / Focal);
+        Planet->SetActorLocation(Location);
+        const float Radius = static_cast<float>(Depth * PixelRadius /
+            FMath::Sqrt(Focal * Focal + PixelRadius * PixelRadius));
+        const float* PreviousRadius = SystemPlanetRadii.Find(Name);
+        if (!PreviousRadius || !FMath::IsNearlyEqual(*PreviousRadius, Radius, 0.01f))
+        {
+            Planet->SetPlanetRadius(Radius);
+            SystemPlanetRadii.Add(Name, Radius);
+        }
+
+        const FVector2D Size = Geometry.GetLocalSize();
+        const bool bInside = Center.X >= Diameter * 0.5f &&
+            Center.Y >= Diameter * 0.5f && Center.X <= Size.X - Diameter * 0.5f &&
+            Center.Y <= Size.Y - Diameter * 0.5f;
+        Planet->SetActorHiddenInGame(!bInside);
+        // At the panel edge, Slate provides proper clipping for the fallback icon.
+        if (bInside) Rendered.Add(Name);
+    }
+
+    for (auto It = SystemPlanetActors.CreateIterator(); It; ++It)
+    {
+        if (!CurrentBodies.Contains(It.Key()))
+        {
+            if (IsValid(It.Value())) It.Value()->Destroy();
+            SystemPlanetRadii.Remove(It.Key());
+            It.RemoveCurrent();
+        }
+    }
+    SystemMapPanel->SetPlanetsRenderedIn3D(Rendered);
 }
 
 void UCmdTheaterDlg::EnsureCentralSun()
@@ -1653,6 +1812,7 @@ void UCmdTheaterDlg::SetViewMode(
 
     UpdateCentralSunVisibility();
     UpdateSystemSunCamera();
+    UpdateSystemPlanets();
 
     RefreshViewButtons();
 }

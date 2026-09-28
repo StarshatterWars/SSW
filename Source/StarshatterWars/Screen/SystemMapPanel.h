@@ -101,10 +101,28 @@ public:
 
 public:
     // Shared with the 3D sun camera so rendering and hit testing stay aligned.
+    float GetMapZoomScale() const { return ZoomScale; }
+
     FVector2D GetSystemCenterLocal() const
     {
         const FVector2D Size = GetCachedGeometry().GetLocalSize();
         return FVector2D(Size.X * 0.5f, Size.Y * 0.5f + 30.0f) + PanOffset;
+    }
+
+    void GetPlanetMapBodies(TArray<OrbitalBody*>& OutBodies) const
+    {
+        OutBodies = CachedPlanetBodies;
+    }
+
+    bool GetPlanetMapPlacement(const FString& Name, FVector2D& Center, float& Diameter) const
+    {
+        return FindBodyScreenPositionByName(Name, GetCachedGeometry(), Center, Diameter);
+    }
+
+    void SetPlanetsRenderedIn3D(const TSet<FString>& Names)
+    {
+        PlanetsRenderedIn3D = Names;
+        Invalidate(EInvalidateWidget::Paint);
     }
 
     void ShowSystemOverview();
@@ -249,6 +267,8 @@ protected:
     UPROPERTY()
     bool bDrawPrimaryStar2D = true;
 
+    TSet<FString> PlanetsRenderedIn3D;
+
     // ------------------------------------------------------------
     // Camera / Input
     // ------------------------------------------------------------
@@ -285,6 +305,12 @@ protected:
     bool bCameraAnimating = false;
     FVector2D TargetPan = FVector2D::ZeroVector;
     float TargetZoom = 1.0f;
+
+    void StartZoomStep(float Delta);
+    bool bSmoothZoomStep = false;
+    float ZoomStepStart = 1.0f;
+    float ZoomStepElapsed = 0.0f;
+    float ZoomStepDuration = 0.20f;
 
     float CameraInterpSpeed = 8.0f;
     float FocusMinPlanetZoom = 1.75f;
