@@ -71,6 +71,28 @@
 // UI style:
 #include "MissionUIStyle.h"
 
+namespace
+{
+    void ApplyTheaterDropdownListStyle(UComboBoxString* Combo)
+    {
+        if (!Combo) return;
+        FTableRowStyle Rows = Combo->GetItemStyle();
+        FSlateBrush Gray;
+        Gray.DrawAs = ESlateBrushDrawType::Box;
+        Gray.TintColor = FSlateColor(FLinearColor(0.60f, 0.60f, 0.60f, 1.0f));
+        Rows.EvenRowBackgroundBrush = Gray;
+        Rows.OddRowBackgroundBrush = Gray;
+        Rows.EvenRowBackgroundHoveredBrush = Gray;
+        Rows.OddRowBackgroundHoveredBrush = Gray;
+        Rows.TextColor = FSlateColor(FLinearColor::Black);
+        // Preserve selected text and active/inactive selection brushes.
+        Combo->SetItemStyle(Rows);
+
+        FComboBoxStyle Style = Combo->GetWidgetStyle();
+        Style.ComboButtonStyle.MenuBorderBrush = Gray;
+        Combo->SetWidgetStyle(Style);
+    }
+}
 UCmdTheaterDlg::UCmdTheaterDlg(
     const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -389,6 +411,7 @@ void UCmdTheaterDlg::BuildRuntimeLayout()
 
             if (SystemComboBox)
             {
+                ApplyTheaterDropdownListStyle(SystemComboBox);
                 SystemComboHost->SetContent(
                     SystemComboBox);
             }
@@ -485,6 +508,7 @@ void UCmdTheaterDlg::BuildRuntimeLayout()
 
             if (RegionComboBox)
             {
+                ApplyTheaterDropdownListStyle(RegionComboBox);
                 RegionComboHost->SetContent(
                     RegionComboBox);
             }
