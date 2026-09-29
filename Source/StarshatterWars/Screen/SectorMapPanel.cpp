@@ -102,7 +102,7 @@ namespace
             return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
         }
 
-        if (IFF == 0)
+        if (IFF <= 0)
         {
             return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
         }
@@ -170,11 +170,13 @@ int32 USectorMapPanel::NativePaint(
             ? FString(ANSI_TO_TCHAR(Parent->GetName())) : TEXT("Unknown parent");
 
         TArray<FString> ObjectNames;
+        TArray<FLinearColor> ObjectColors;
         for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(RegionName))
         {
             if (!Group || !OperationsGroupMatchesView(*Group)) continue;
             const FString DisplayName = Group->DisplayName.TrimStartAndEnd();
             ObjectNames.Add(DisplayName.IsEmpty() ? Group->Name : DisplayName);
+            ObjectColors.Add(GetOperationsIFFColor(Group));
         }
 
         FLinearColor EmpireColor = FLinearColor::Gray;
@@ -226,7 +228,7 @@ int32 USectorMapPanel::NativePaint(
             DrawLine(TEXT("None"), 94.0f, 11, FLinearColor::White);
         for (int32 Index = 0; Index < ObjectNames.Num(); ++Index)
             DrawLine(TEXT("- ") + ObjectNames[Index], 94.0f + Index * 20.0f,
-                11, FLinearColor::White);
+                11, ObjectColors[Index]);
         return BaseLayer;
     };
 
@@ -251,6 +253,29 @@ int32 USectorMapPanel::NativePaint(
         RegionRadius,
         GridStep);
 
+    if (bOperationsView)
+    {
+        // The inner boundary is a schematic parent-body exclusion area.
+        const float InnerRadius = static_cast<float>(
+            FMath::Max(1.0, CachedRegion->Radius() * 0.15)) * Scale;
+        TArray<FVector2D> Boundary;
+        for (int32 Index = 0; Index <= 96; ++Index)
+        {
+            const float Angle = 2.0f * PI * Index / 96.0f;
+            Boundary.Add(Center + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle)) * InnerRadius);
+        }
+        FSlateDrawElement::MakeLines(OutDrawElements, LayerId + 90,
+            AllottedGeometry.ToPaintGeometry(), Boundary, ESlateDrawEffect::None,
+            FLinearColor(0.45f, 0.55f, 0.7f, 0.8f), true, 1.0f);
+        if (const Orbital* Parent = CachedRegion->Primary())
+        {
+            FSlateDrawElement::MakeText(OutDrawElements, LayerId + 91,
+                AllottedGeometry.ToPaintGeometry(Center + FVector2D(8.0f, 8.0f),
+                    FVector2D(200.0f, 20.0f)),
+                ANSI_TO_TCHAR(Parent->GetName()), FCoreStyle::GetDefaultFontStyle("Regular", 11),
+                ESlateDrawEffect::None, FLinearColor::White);
+        }
+    }
     const int32 Rep = ComputeRepLevel(R);
 
     if (bOperationsView)
@@ -569,8 +594,8 @@ bool USectorMapPanel::CenterOnOperationsGroup(const FS_CombatGroup* InGroup)
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
     const FVector2D Offset(
-        InGroup->Location.X * Scale,
-        InGroup->Location.Y * Scale);
+        GetOperationsDisplayOffset(InGroup).X * Scale,
+        GetOperationsDisplayOffset(InGroup).Y * Scale);
 
     SelectedOperationsGroup = InGroup;
     SelectedElement = nullptr;
@@ -599,6 +624,35 @@ void USectorMapPanel::BuildRuntimeLayout()
     }
 }
 
+FVector2D USectorMapPanel::GetOperationsDisplayOffset(const FS_CombatGroup* Group) const
+{
+    if (!Group || !CachedRegion) return FVector2D::ZeroVector;
+    const double InnerRadius = FMath::Max(1.0, CachedRegion->Radius() * 0.15);
+    const FVector2D Raw(Group->Location.X, Group->Location.Y);
+    if (!Raw.IsNearlyZero())
+        return Raw.GetSafeNormal() * (InnerRadius + Raw.Size());
+
+    TArray<const FS_CombatGroup*> CentralGroups;
+    for (const FS_CombatGroup* Other :
+        CombatGroupRegistry::FindByRegion(ANSI_TO_TCHAR(CachedRegion->GetName())))
+    {
+        if (Other && OperationsGroupMatchesView(*Other) &&
+            FVector2D(Other->Location.X, Other->Location.Y).IsNearlyZero())
+            CentralGroups.Add(Other);
+    }
+    CentralGroups.Sort([](const FS_CombatGroup& A, const FS_CombatGroup& B)
+    {
+        if (A.Type != B.Type) return static_cast<int32>(A.Type) < static_cast<int32>(B.Type);
+        if (A.Id != B.Id) return A.Id < B.Id;
+        return A.Name < B.Name;
+    });
+    const int32 Index = FMath::Max(0, CentralGroups.IndexOfByKey(Group));
+    const double Angle = 2.0 * PI * Index / FMath::Max(1, CentralGroups.Num());
+    // Schematic spacing only; never write this position to the roster.
+    const double Radius = InnerRadius * 1.6;
+    return FVector2D(FMath::Cos(Angle), FMath::Sin(Angle)) * Radius;
+}
+
 double USectorMapPanel::GetDisplayRadius() const
 {
     if (!CachedRegion) return 1.0;
@@ -611,8 +665,8 @@ double USectorMapPanel::GetDisplayRadius() const
         CombatGroupRegistry::FindByRegion(ANSI_TO_TCHAR(CachedRegion->GetName())))
     {
         if (!Group || !OperationsGroupMatchesView(*Group)) continue;
-        ExtentX = FMath::Max(ExtentX, FMath::Abs(static_cast<double>(Group->Location.X)));
-        ExtentY = FMath::Max(ExtentY, FMath::Abs(static_cast<double>(Group->Location.Y)));
+        ExtentX = FMath::Max(ExtentX, FMath::Abs(GetOperationsDisplayOffset(Group).X));
+        ExtentY = FMath::Max(ExtentY, FMath::Abs(GetOperationsDisplayOffset(Group).Y));
     }
 
     const FVector2D Size = GetCachedGeometry().GetLocalSize();
@@ -1195,8 +1249,8 @@ void USectorMapPanel::DrawOperationsGroup(
     }
 
     const FVector2D ScreenPos(
-        Center.X + (Group->Location.X * Scale),
-        Center.Y + (Group->Location.Y * Scale));
+        Center.X + (GetOperationsDisplayOffset(Group).X * Scale),
+        Center.Y + (GetOperationsDisplayOffset(Group).Y * Scale));
 
     const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
     if (ScreenPos.X < 0.0f || ScreenPos.X >= PanelSize.X ||
@@ -1231,14 +1285,46 @@ void USectorMapPanel::DrawOperationsGroup(
         HalfSize * 2.0f,
         HalfSize * 2.0f);
 
-    FSlateDrawElement::MakeBox(
-        OutDrawElements,
-        BaseLayerId + 1,
-        AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
-        FCoreStyle::Get().GetBrush("WhiteBrush"),
-        ESlateDrawEffect::None,
-        MarkerColor);
-
+    // Resolve a representative member design, including subordinate groups.
+    const FShipDesign* Design = nullptr;
+    TArray<const FS_CombatGroup*> Pending;
+    TSet<const FS_CombatGroup*> Visited;
+    Pending.Add(Group);
+    for (int32 Index = 0; Index < Pending.Num() && !Design; ++Index)
+    {
+        const FS_CombatGroup* Candidate = Pending[Index];
+        if (!Candidate || Visited.Contains(Candidate)) continue;
+        Visited.Add(Candidate);
+        for (const FS_CombatGroupUnit& Unit : Candidate->Unit)
+        {
+            const FShipDesign* Found = ShipDesignRegistry::Find(Unit.UnitDesign);
+            if (Found && Found->Map.Num() > 0)
+            {
+                Design = Found;
+                break;
+            }
+        }
+        if (!Design)
+            Pending.Append(CombatGroupRegistry::FindByParent(Candidate->Type, Candidate->Id));
+    }
+    UTexture2D* Texture = Design ? const_cast<USectorMapPanel*>(this)->GetShipMapSprite(
+        Design->ShipName, Design->Map[0].SpriteName) : nullptr;
+    if (Texture)
+    {
+        HalfSize = 16.0f;
+        FSlateBrush Brush;
+        Brush.SetResourceObject(Texture);
+        Brush.ImageSize = FVector2D(32.0f, 32.0f);
+        FSlateDrawElement::MakeBox(OutDrawElements, BaseLayerId + 1,
+            AllottedGeometry.ToPaintGeometry(ScreenPos - Brush.ImageSize * 0.5f, Brush.ImageSize),
+            &Brush, ESlateDrawEffect::None, MarkerColor);
+    }
+    else
+    {
+        FSlateDrawElement::MakeBox(OutDrawElements, BaseLayerId + 1,
+            AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+            FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, MarkerColor);
+    }
     // Distinguish a planet-side starbase from an orbital station.
     if (Group->Type == ECOMBATGROUP_TYPE::STARBASE)
     {
@@ -1367,13 +1453,13 @@ const FS_CombatGroup* USectorMapPanel::HitTestOperationsGroupAtLocalPoint(
         }
 
         const FVector2D ScreenPos(
-            Center.X + (Group->Location.X * Scale),
-            Center.Y + (Group->Location.Y * Scale));
+            Center.X + (GetOperationsDisplayOffset(Group).X * Scale),
+            Center.Y + (GetOperationsDisplayOffset(Group).Y * Scale));
 
         const double DX = LocalPoint.X - ScreenPos.X;
         const double DY = LocalPoint.Y - ScreenPos.Y;
         const double DistSq = (DX * DX) + (DY * DY);
-        const double PickRadiusSq = 196.0; // 14 px
+        const double PickRadiusSq = 324.0; // 18 px, covers the 32 px sprite
 
         if (DistSq <= PickRadiusSq && DistSq < BestDistSq)
         {
@@ -1399,8 +1485,8 @@ bool USectorMapPanel::FindOperationsGroupScreenPosition(
     }
 
     OutScreenPos = FVector2D(
-        Center.X + (Group->Location.X * Scale),
-        Center.Y + (Group->Location.Y * Scale));
+        Center.X + (GetOperationsDisplayOffset(Group).X * Scale),
+        Center.Y + (GetOperationsDisplayOffset(Group).Y * Scale));
 
     return true;
 }
@@ -1430,10 +1516,10 @@ bool USectorMapPanel::IsOperationsGroupCrowded(
         }
 
         const double DX =
-            (TestGroup->Location.X - RefGroup->Location.X) * Scale;
+            (GetOperationsDisplayOffset(TestGroup).X - GetOperationsDisplayOffset(RefGroup).X) * Scale;
 
         const double DY =
-            (TestGroup->Location.Y - RefGroup->Location.Y) * Scale;
+            (GetOperationsDisplayOffset(TestGroup).Y - GetOperationsDisplayOffset(RefGroup).Y) * Scale;
 
         const double DistSq = (DX * DX) + (DY * DY);
 
@@ -1545,7 +1631,7 @@ FLinearColor USectorMapPanel::GetOperationsIFFColor(
         return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f);
     }
 
-    if (Group->Iff == 0)
+    if (Group->Iff <= 0)
     {
         return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f);
     }
@@ -2225,7 +2311,7 @@ FLinearColor USectorMapPanel::GetMapIFFColor(const MissionElement* Element) cons
         return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
     }
 
-    if (IFF == 0)
+    if (IFF <= 0)
     {
         return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
     }

@@ -894,7 +894,7 @@ FLinearColor USystemMapPanel::ComputeSystemIFFRingTint(StarSystem* InSystem) con
 
     switch (InSystem->GetAffiliation())
     {
-    case 1:  return FLinearColor(0.20f, 1.00f, 0.20f, 0.90f);
+    case 1:  return FLinearColor(0.25f, 0.65f, 1.00f, 0.90f);
     case 2:  return FLinearColor(1.00f, 0.25f, 0.25f, 0.90f);
     case 3:  return FLinearColor(1.00f, 0.85f, 0.25f, 0.90f);
     default: return FLinearColor(0.60f, 0.75f, 1.00f, 0.80f);
@@ -1453,6 +1453,7 @@ int32 USystemMapPanel::NativePaint(
         }
         TArray<FString> RegionLines;
         TSet<int32> RegionHeadingRows;
+        TMap<int32, FLinearColor> RegionObjectColors;
         for (const FString& RegionName : RegionNames)
         {
             RegionHeadingRows.Add(RegionLines.Num());
@@ -1470,6 +1471,12 @@ int32 USystemMapPanel::NativePaint(
                 if (!GroupSystem.IsEmpty() &&
                     !GroupSystem.Equals(ViewedSystemName, ESearchCase::IgnoreCase)) continue;
                 const FString DisplayName = Group->DisplayName.TrimStartAndEnd();
+                const FLinearColor GroupColor = Group->Iff == 1
+                    ? FLinearColor(0.25f, 0.65f, 1.0f, 1.0f)
+                    : Group->Iff <= 0
+                        ? FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)
+                        : FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+                RegionObjectColors.Add(RegionLines.Num(), GroupColor);
                 RegionLines.Add(TEXT("- ") + (DisplayName.IsEmpty() ? Group->Name : DisplayName));
                 ++ObjectCount;
             }
@@ -1534,7 +1541,8 @@ int32 USystemMapPanel::NativePaint(
             DrawRegionLine(TEXT("Region"), 12.0f, 16, EmpireColor);
             for (int32 Index = 0; Index < RegionLines.Num(); ++Index)
                 DrawRegionLine(RegionLines[Index], 38.0f + Index * 24.0f, 11,
-                    RegionHeadingRows.Contains(Index) ? EmpireColor : FLinearColor::White);
+                    RegionHeadingRows.Contains(Index) ? EmpireColor :
+                        (RegionObjectColors.Contains(Index) ? RegionObjectColors[Index] : FLinearColor::White));
         }
         return PaintLayer;
     };
