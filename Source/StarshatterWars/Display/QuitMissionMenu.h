@@ -9,7 +9,7 @@ class UTextBlock;
 UENUM(BlueprintType)
 enum class EMissionQuitAction : uint8
 {
-    Accept = 1, Abort = 2, Resume = 3, Controls = 4
+    None = 0, Accept = 1, Abort = 2, Resume = 3, Controls = 4
 };
 
 DECLARE_DELEGATE_OneParam(FMissionQuitActionRequested, EMissionQuitAction);
