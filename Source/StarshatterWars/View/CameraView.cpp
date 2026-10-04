@@ -600,9 +600,9 @@ void CameraView::RenderSceneObjects(bool distant)
 
     video->SetAmbient(scene->Ambient());
     video->SetRenderState(Video::FILL_MODE, Video::FILL_SOLID);
-    video->SetRenderState(Video::Z_ENABLE, TRUE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, TRUE);
-    video->SetRenderState(Video::LIGHTING_ENABLE, TRUE);
+    video->SetRenderState(Video::Z_ENABLE, true);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, true);
+    video->SetRenderState(Video::LIGHTING_ENABLE, true);
 
     if (distant)
         video->SetProjection((float)GetFieldOfView(), 5.0e6f, 1.0e12f, projection_type);
@@ -648,7 +648,7 @@ void CameraView::RenderSceneObjects(bool distant)
 
         video->SetAmbient(FColor::Black);
         video->SetRenderState(Video::LIGHTING_PASS, 2);
-        video->SetRenderState(Video::STENCIL_ENABLE, TRUE);
+        video->SetRenderState(Video::STENCIL_ENABLE, true);
 
         iter.reset();
         while (++iter)
@@ -675,9 +675,9 @@ void CameraView::RenderSceneObjects(bool distant)
 
     video->SetAmbient(scene->Ambient());
     video->SetRenderState(Video::LIGHTING_PASS, 0);
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::Z_ENABLE, TRUE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, FALSE);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::Z_ENABLE, true);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, false);
 
     iter.reset();
     while (++iter)

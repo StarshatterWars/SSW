@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -780,7 +780,7 @@ void CampaignMissionFighter::CreateElements(CombatGroup* g)
 void
 CampaignMissionFighter::CreateSquadron(CombatGroup* g)
 {
-    if (!g || g->IsReserve()) return;
+    if (!g || g->IsReserve() || g->GetUnits().size() == 0) return;
 
     CombatUnit* fighter = g->GetUnits().at(0);
     CombatUnit* carrier = FindCarrier(g);
@@ -789,6 +789,24 @@ CampaignMissionFighter::CreateSquadron(CombatGroup* g)
 
     int live_count = fighter->LiveCount();
     int maint_count = (live_count > 4) ? live_count / 2 : 0;
+
+    // Runtime roster units may exist only in the Unreal design registry.
+    // Resolve before allocating an element; never dereference a missing legacy design.
+    const FString DesignName = ANSI_TO_TCHAR(fighter->GetDesignName().data());
+    const FShipDesign* DesignRow = ShipDesignRegistry::Find(DesignName);
+    if (!DesignRow)
+    {
+        const ShipDesign* LegacyDesign = fighter->GetDesign();
+        if (LegacyDesign)
+            DesignRow = ShipDesignRegistry::Find(LegacyDesign->name);
+    }
+    if (!DesignRow)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CampaignMissionFighter] Cannot create squadron '%s': missing fighter design '%s'"),
+            ANSI_TO_TCHAR(g->GetName().data()), *DesignName);
+        return;
+    }
 
     MissionElement* elem = new MissionElement;
 
@@ -800,27 +818,7 @@ CampaignMissionFighter::CreateSquadron(CombatGroup* g)
     elem->SetName(g->GetName());
     elem->SetElementID(pkg_id++);
 
-    const FString DesignName =
-        ANSI_TO_TCHAR(
-            fighter->GetDesign()->name);
-
-    const FShipDesign* DesignRow =
-        ShipDesignRegistry::Find(
-            DesignName);
-
-    if (DesignRow)
-    {
-        elem->SetShipDesign(DesignRow);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[CampaignMissionFighter] Missing FShipDesign Fighter='%s' Design='%s'"),
-            ANSI_TO_TCHAR(fighter->GetName()),
-            fighter->GetDesign()
-            ? ANSI_TO_TCHAR(fighter->GetDesign()->name)
-            : TEXT("NULL"));
-    }
+    elem->SetShipDesign(DesignRow);
 
     elem->SetCount(fighter->GetCount());
     elem->SetDeadCount(fighter->DeadCount());

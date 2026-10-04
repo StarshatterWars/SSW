@@ -6871,7 +6871,9 @@ CombatGroup* UStarshatterGameDataSubsystem::BuildCombatForceFromRows(
 			const int32 ResolvedUnitClass =
 				ShipDesign::ClassForName(TCHAR_TO_ANSI(*UnitRow.UnitClass));
 
-			if (!ShipDesign::CheckName(TCHAR_TO_ANSI(*UnitRow.UnitDesign)))
+			// Unreal-loaded designs need not have an entry in the legacy catalog.
+            if (!ResolveDesign(UnitRow.UnitDesign) &&
+                !ShipDesign::CheckName(TCHAR_TO_ANSI(*UnitRow.UnitDesign)))
 			{
 				UE_LOG(LogTemp, Warning,
 					TEXT("[CombatRoster] Invalid design '%s' for unit '%s' in group '%s'"),
@@ -7196,6 +7198,12 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 		CombatGroup* Group = GroupByRowName.FindRef(RowName);
 		if (!Group) continue;
 
+        if (Row->Type == ECOMBATGROUP_TYPE::INFRASTRUCTURE)
+        {
+            UE_LOG(LogTemp, Log, TEXT("[CombatRoster] Infrastructure '%s': source units=%d"),
+                *Row->Name, Row->Unit.Num());
+        }
+
 		bool bFirstUnit = true;
 
 		for (const FS_CombatGroupUnit& UnitRow : Row->Unit)
@@ -7203,8 +7211,16 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 			int32 LocalUnitClass =
 				ShipDesign::ClassForName(TCHAR_TO_ANSI(*UnitRow.UnitClass));
 
-			if (!ShipDesign::CheckName(TCHAR_TO_ANSI(*UnitRow.UnitDesign)))
-				continue;
+			// Unreal-loaded designs need not have an entry in the legacy catalog.
+            if (!ResolveDesign(UnitRow.UnitDesign) &&
+                !ShipDesign::CheckName(TCHAR_TO_ANSI(*UnitRow.UnitDesign)))
+
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CombatRoster] Rejected unit '%s' design '%s' in group '%s': no Unreal design or legacy catalog entry"),
+                    *UnitRow.UnitName, *UnitRow.UnitDesign, *Row->Name);
+                continue;
+            }
 
 			CombatUnit* NewUnit = new CombatUnit(
 				TCHAR_TO_ANSI(*UnitRow.UnitName),
@@ -7243,6 +7259,13 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 			}
 
 			Group->GetUnits().append(NewUnit);
+            if (Row->Type == ECOMBATGROUP_TYPE::INFRASTRUCTURE)
+            {
+                UE_LOG(LogTemp, Log,
+                    TEXT("[CombatRoster] Infrastructure unit added: '%s' design='%s' live=%d"),
+                    *UnitRow.UnitName, *UnitRow.UnitDesign, NewUnit->LiveCount());
+            }
+
 		}
 	}
 }
