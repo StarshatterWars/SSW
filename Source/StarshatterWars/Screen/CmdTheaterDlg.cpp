@@ -950,6 +950,24 @@ void UCmdTheaterDlg::UpdateSystemSunCamera()
 
     // BP_Star creates additional flare meshes. Their size and bounds center
     // must not determine the camera target: use its named photosphere.
+    if (!bSunPresentationReady)
+    {
+        CentralSun->HideSun();
+        if (!SystemMapPanel) return;
+        const FGeometry& Layout = SystemMapPanel->GetCachedGeometry();
+        const FVector2D Size = Layout.GetLocalSize();
+        const FVector2D Origin = Layout.LocalToAbsolute(FVector2D::ZeroVector);
+        if (Size.X <= 1.0f || Size.Y <= 1.0f)
+        {
+            SunLayoutStableFrames = 0;
+            return;
+        }
+        const bool bStable = Size.Equals(LastSunPanelSize, 0.1f) &&
+            Origin.Equals(LastSunPanelOrigin, 0.1f);
+        SunLayoutStableFrames = bStable ? SunLayoutStableFrames + 1 : 0;
+        LastSunPanelSize = Size;
+        LastSunPanelOrigin = Origin;
+    }
     TArray<UStaticMeshComponent*> Meshes;
     SunActor->GetComponents<UStaticMeshComponent>(Meshes);
     UStaticMeshComponent* StarMesh = nullptr;
@@ -1045,7 +1063,15 @@ void UCmdTheaterDlg::UpdateSystemSunCamera()
         PreviousSunViewTarget = PC->GetViewTarget();
         PC->SetViewTarget(SystemSunCamera.Get());
     }
-    CentralSun->SetSunVisible(!SystemMapPanel || !SystemMapPanel->IsPlanetView());
+    if (!bSunPresentationReady)
+    {
+        // Wait until the camera manager has consumed the positioned camera,
+        // and Slate has completed two stable layout passes.
+        bSunPresentationReady = SunLayoutStableFrames >= 2 &&
+            PC->PlayerCameraManager->GetCameraLocation().Equals(CameraLocation, 1.0f);
+    }
+    CentralSun->SetSunVisible(bSunPresentationReady &&
+        SystemMapPanel && !SystemMapPanel->IsPlanetView());
 }
 
 void UCmdTheaterDlg::ClearSystemPlanets()
@@ -1279,17 +1305,11 @@ void UCmdTheaterDlg::UpdateCentralSunVisibility()
         return;
     }
 
-    const bool bShowSun =
-        CurrentViewMode == VIEW_SYSTEM;
-
-    CentralSun->SetSunVisible(
-        bShowSun);
-
-    UE_LOG(
-        LogTemp,
-        Log,
-        TEXT("[CmdTheaterDlg] CentralSun visible=%d"),
-        bShowSun ? 1 : 0);
+    // Only the camera-placement path may reveal the sun.
+    if (CurrentViewMode != VIEW_SYSTEM || !bSunPresentationReady)
+    {
+        CentralSun->HideSun();
+    }
 }
 
 UStarshatterEnvironmentSubsystem*
@@ -1735,6 +1755,12 @@ void UCmdTheaterDlg::SetPanelBackgroundVisible(bool bVisible)
 void UCmdTheaterDlg::SetViewMode(
     EViewMode NewMode)
 {
+    if (CurrentViewMode != NewMode)
+    {
+        bSunPresentationReady = false;
+        SunLayoutStableFrames = 0;
+        if (IsValid(CentralSun)) CentralSun->HideSun();
+    }
     CurrentViewMode = NewMode;
     SetPanelBackgroundVisible(CurrentViewMode != VIEW_SYSTEM);
 

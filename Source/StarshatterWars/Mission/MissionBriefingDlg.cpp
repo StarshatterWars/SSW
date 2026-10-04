@@ -24,6 +24,19 @@
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
+#include "MenuScreen.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/World.h"
+#include "Engine/LevelStreamingDynamic.h"
+#include "Misc/PackageName.h"
+#include "EngineUtils.h"
+#include "PlanetActor.h"
+#include "GasGiantActor.h"
+#include "CentralSun.h"
+#include "ShipActor.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Styling/CoreStyle.h"
 
 #include "MissionObjectiveDlg.h"
 #include "MissionPackageDlg.h"
@@ -216,6 +229,7 @@ void UMissionBriefingDlg::NativeConstruct()
 
 void UMissionBriefingDlg::NativeDestruct()
 {
+    CloseEmptySectorPreview();
     if (MissionButton)
     {
         MissionButton->OnClicked.RemoveAll(this);
@@ -375,6 +389,7 @@ void UMissionBriefingDlg::InitializeSubPanels()
 
 void UMissionBriefingDlg::ShowMsnDlg()
 {
+    CloseEmptySectorPreview();
     // Always reacquire the current campaign.
     // The dialog can be reused across campaign switches.
     CampaignPtr = Campaign::GetCampaign();
@@ -762,14 +777,144 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
     return 0;
 }
 
-void UMissionBriefingDlg::OnCommit()
+void UMissionBriefingDlg::CloseEmptySectorPreview()
 {
-    if (Manager)
+    if (MissionSystemLevel)
     {
-        Manager->Hide();
+        MissionSystemLevel->OnLevelShown.RemoveDynamic(
+            this, &UMissionBriefingDlg::HandleMissionSystemLevelShown);
+        MissionSystemLevel->SetShouldBeVisible(false);
+        MissionSystemLevel->SetShouldBeLoaded(false);
+        MissionSystemLevel->SetIsRequestingUnloadAndRemoval(true);
+        MissionSystemLevel = nullptr;
     }
+    MissionSystemPackage.Empty();
+    if (EmptySectorOverlay.IsValid())
+    {
+        if (UWorld* World = GetWorld())
+        {
+            if (UGameViewportClient* Viewport = World->GetGameViewport())
+                Viewport->RemoveViewportWidgetContent(EmptySectorOverlay.ToSharedRef());
+        }
+        EmptySectorOverlay.Reset();
+    }
+    for (const TWeakObjectPtr<AActor>& Actor : PreviewHiddenActors)
+    {
+        if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
+    }
+    PreviewHiddenActors.Empty();
 }
 
+void UMissionBriefingDlg::HandleMissionSystemLevelShown()
+{
+    UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] System level instance visible: %s"),
+        *MissionSystemPackage);
+}
+
+void UMissionBriefingDlg::OnCommit()
+{
+    // Ignore a repeated launch while this preview is loading or visible.
+    if (MissionSystemLevel) return;
+    UWorld* World = GetWorld();
+    UGameViewportClient* Viewport = World ? World->GetGameViewport() : nullptr;
+    if (!MissionPtr || !Viewport)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefing] No mission/viewport for sector preview"));
+        return;
+    }
+
+    FString SystemName = ToTextFromUtf8(MissionPtr->GetSystem()).ToString();
+    if (SystemName.IsEmpty())
+    {
+        if (StarSystem* System = MissionPtr->GetStarSystem())
+            SystemName = ToTextFromUtf8(System->GetName()).ToString();
+    }
+    SystemName.TrimStartAndEndInline();
+    const FString PackagePath = FString::Printf(TEXT("/Game/Maps/%s"), *SystemName);
+    FString PackageFilename;
+    if (SystemName.IsEmpty() || !FPackageName::IsValidLongPackageName(PackagePath) ||
+        !FPackageName::DoesPackageExist(PackagePath, &PackageFilename))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] System map not found: %s"), *PackagePath);
+        return; // Leave the briefing available when the map cannot be resolved.
+    }
+    const FString RegionName = ToTextFromUtf8(MissionPtr->GetRegion()).ToString();
+    const FText SectorTitle = FText::FromString(FString::Printf(
+        TEXT("%s - %s"),
+        SystemName.IsEmpty() ? TEXT("Unknown system") : *SystemName,
+        RegionName.IsEmpty() ? TEXT("Unknown region") : *RegionName));
+
+    CloseEmptySectorPreview();
+    bool bLoadStarted = false;
+    MissionSystemLevel = ULevelStreamingDynamic::LoadLevelInstance(
+        World, PackagePath, FVector::ZeroVector, FRotator::ZeroRotator, bLoadStarted);
+    if (!bLoadStarted || !MissionSystemLevel)
+    {
+        CloseEmptySectorPreview();
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Could not start system level load: %s"),
+            *PackagePath);
+        return;
+    }
+    MissionSystemPackage = PackagePath;
+    MissionSystemLevel->OnLevelShown.AddDynamic(
+        this, &UMissionBriefingDlg::HandleMissionSystemLevelShown);
+    MissionSystemLevel->SetShouldBeLoaded(true);
+    MissionSystemLevel->SetShouldBeVisible(true);
+
+    // Hide all menu-owned dialogs, including the briefing's outer host.
+    if (manager) manager->Hide();
+    if (Manager) Manager->Hide();
+    Hide();
+
+    // Stream the authored system map; do not explicitly start the mission simulation.
+    // Retain starfield actors and restore visible scene objects on return.
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        AActor* Actor = *It;
+        if (MissionSystemLevel && Actor->GetLevel() == MissionSystemLevel->GetLoadedLevel()) continue;
+        if (Actor->IsA<APlanetActor>() || Actor->IsA<AGasGiantActor>() ||
+            Actor->IsA<ACentralSun>() || Actor->IsA<AShipActor>())
+        {
+            TArray<AActor*> VisualActors;
+            VisualActors.Add(Actor);
+            TArray<AActor*> Children;
+            Actor->GetAllChildActors(Children, true);
+            VisualActors.Append(Children);
+            for (AActor* Visual : VisualActors)
+            {
+                if (IsValid(Visual) && !Visual->IsHidden())
+                {
+                    PreviewHiddenActors.AddUnique(Visual);
+                    Visual->SetActorHiddenInGame(true);
+                }
+            }
+        }
+    }
+
+    EmptySectorOverlay = SNew(SOverlay)
+        .Visibility(EVisibility::HitTestInvisible)
+        + SOverlay::Slot()
+        .HAlign(HAlign_Center)
+        .VAlign(VAlign_Top)
+        .Padding(FMargin(32.0f, 24.0f))
+        [
+            SNew(STextBlock)
+            .Text(SectorTitle)
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 22))
+            .ColorAndOpacity(FLinearColor::White)
+            .ShadowOffset(FVector2D(1.0f, 1.0f))
+            .ShadowColorAndOpacity(FLinearColor::Black)
+        ];
+    Viewport->AddViewportWidgetContent(EmptySectorOverlay.ToSharedRef(), 1000);
+
+    if (APlayerController* PC = GetOwningPlayer())
+    {
+        FInputModeGameAndUI Input;
+        Input.SetHideCursorDuringCapture(false);
+        PC->SetInputMode(Input);
+        PC->bShowMouseCursor = true;
+    }
+}
 void UMissionBriefingDlg::OnCancel()
 {
     if (manager) {

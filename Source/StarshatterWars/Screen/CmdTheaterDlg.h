@@ -303,6 +303,11 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Theater|Sun", meta = (ClampMin = "1.0"))
     float SunDiameterPixels = 64.0f;
 
+    bool bSunPresentationReady = false;
+    int32 SunLayoutStableFrames = 0;
+    FVector2D LastSunPanelSize = FVector2D::ZeroVector;
+    FVector2D LastSunPanelOrigin = FVector2D::ZeroVector;
+
     UPROPERTY(Transient)
     TMap<FString, TObjectPtr<AActor>> SystemPlanetActors;
 

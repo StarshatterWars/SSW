@@ -5,6 +5,9 @@
 #include "GameStructs.h"
 #include "MissionBriefingDlg.generated.h"
 
+class ULevelStreamingDynamic;
+class SWidget;
+class AActor;
 class UMissionPlanner;
 class UMenuButton;
 class UMenuScreen;
@@ -67,6 +70,15 @@ protected:
 
     void SetMode(EMissionBriefingMode NewMode);
     void RefreshHeader();
+    void CloseEmptySectorPreview();
+    UFUNCTION()
+    void HandleMissionSystemLevelShown();
+
+    UPROPERTY(Transient)
+    TObjectPtr<ULevelStreamingDynamic> MissionSystemLevel = nullptr;
+    FString MissionSystemPackage;
+    TSharedPtr<SWidget> EmptySectorOverlay;
+    TArray<TWeakObjectPtr<AActor>> PreviewHiddenActors;
     void BuildMenuButtons();
     void RefreshMenuSelection();
     void InitializeSubPanels();
