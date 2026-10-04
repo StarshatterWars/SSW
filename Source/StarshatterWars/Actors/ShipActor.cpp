@@ -1,3 +1,5 @@
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -1621,8 +1623,10 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    const FVector RuntimeLocation =
-        RuntimeShip->GetLocation();
+    FVector RuntimeLocation = RuntimeShip->GetLocation();
+    if (UGameInstance* GI = GetGameInstance())
+        if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+            RuntimeLocation = Runtime->GetVisualSpawnLocationForRuntimeShip(RuntimeShip);
 
     if (RuntimeLocation.ContainsNaN())
     {

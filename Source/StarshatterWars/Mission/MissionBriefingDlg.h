@@ -75,7 +75,9 @@ protected:
 
     void SetMode(EMissionBriefingMode NewMode);
     void RefreshHeader();
-    void CloseEmptySectorPreview();
+    void CloseEmptySectorPreview(bool bPreserveSimulation = false);
+    bool StartLiveMission();
+    bool bLiveMissionStarted = false;
     bool EnableMissionMenuInput();
     void DisableMissionMenuInput();
     void ToggleMissionMenu();
@@ -104,6 +106,7 @@ protected:
     TObjectPtr<ACameraActor> MissionPreviewCamera = nullptr;
     TWeakObjectPtr<AActor> PreviousMissionViewTarget;
     FString MissionSystemPackage;
+    double MissionTitleRevealTime = -1.0;
     TSharedPtr<SWidget> EmptySectorOverlay;
     TSharedPtr<SWidget> MissionSceneCover;
     TArray<TWeakObjectPtr<AActor>> PreviewHiddenActors;

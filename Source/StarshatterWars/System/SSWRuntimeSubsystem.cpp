@@ -1,4 +1,8 @@
+#include "SystemSceneBuilder.h"
+#include "PlanetActor.h"
+#include "Components/StaticMeshComponent.h"
 #include "SSWRuntimeSubsystem.h"
+#include "OrbitalRegion.h"
 
 #include "Starshatter.h"
 
@@ -283,7 +287,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
         CampaignInstance->ExecFrame();
     }
 
-    if (SimInstance)
+    if (SimInstance && SimInstance->GetMission() && !bPaused)
     {
         const uint32 BeforeTime =
             Game::GetGameTime();
@@ -684,6 +688,11 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     Params.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+    {
+        Params.Owner = Builder;
+        Params.OverrideLevel = Builder->GetLevel();
+    }
     AShipActor* ShipActor =
         World->SpawnActor<AShipActor>(
             BPClass,
@@ -707,6 +716,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
                 RuntimeShip->GetName())));
 #endif
 
+    if (MissionPresentationBuilder.IsValid()) MissionPresentationShips.Add(ShipActor);
     ShipActor->BindRuntimeShip(
         RuntimeShip);
 
@@ -827,8 +837,40 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
         return FVector::ZeroVector;
     }
 
-    const FVector LegacyLoc =
-        RuntimeShip->GetLocation();
+    const FVector LegacyLoc = RuntimeShip->GetLocation();
+    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+    {
+        SimRegion* SimRgn = RuntimeShip->GetRegion();
+        const FString RegionName = SimRgn ? ANSI_TO_TCHAR(SimRgn->GetName()) : TEXT("");
+        for (const FSpawnedSystemRegion& Region : Builder->GetSpawnedRegions())
+        {
+            if (!Region.RegionName.Equals(RegionName, ESearchCase::IgnoreCase) &&
+                !Region.RegionName.Equals(RegionName + TEXT("_REGION"), ESearchCase::IgnoreCase)) continue;
+            FVector Center = Region.ParentActor ? Region.ParentActor->GetActorLocation() : Region.SpawnLocation;
+            double BodyRadius = FMath::Max(1.0f, Region.InnerRadiusUnits);
+            if (APlanetActor* Planet = Cast<APlanetActor>(Region.ParentActor.Get()))
+            {
+                if (UStaticMeshComponent* Mesh = Planet->GetPlanetMeshComponent())
+                {
+                    const FBoxSphereBounds Bounds = Mesh->CalcBounds(Mesh->GetComponentTransform());
+                    Center = Bounds.Origin;
+                    BodyRadius = FMath::Max(BodyRadius, Bounds.BoxExtent.GetMax());
+                }
+            }
+            const double BandWidth = FMath::Max(1.0f, Region.OuterRadiusUnits - Region.InnerRadiusUnits);
+            OrbitalRegion* Orbital = SimRgn ? SimRgn->GetOrbitalRegion() : nullptr;
+            const double LegacyRadius = Orbital ? FMath::Max(1.0, double(Orbital->Radius())) : 200000.0;
+            const FVector Offset = ConvertLegacyShipLocationToUE(LegacyLoc) * (BandWidth / LegacyRadius);
+            // Region-map shell: authored offsets start outside the physical surface.
+            // Reserve clearance for the ship as well as the central body's radius.
+            const double Inner = BodyRadius + FMath::Max(100.0, RuntimeShip->GetRadius() * 2.0);
+            if (!Offset.IsNearlyZero()) return Center + Offset.GetSafeNormal() * (Inner + Offset.Size());
+            // Stable placement for authored 0,0,0 entries; no random jitter each tick.
+            const uint32 Hash = GetTypeHash(FString(ANSI_TO_TCHAR(RuntimeShip->GetName())));
+            const double Angle = (Hash % 65536) * (2.0 * PI / 65536.0);
+            return Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0) * (Inner + BandWidth * 0.15);
+        }
+    }
 
     const FVector LocalUEOffset =
         ConvertLegacyShipLocationToUE(
@@ -848,3 +890,21 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
 }
 
 
+
+void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder)
+{
+    EndMissionPresentation();
+    MissionPresentationBuilder = Builder;
+}
+void USSWRuntimeSubsystem::EndMissionPresentation()
+{
+    for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
+    {
+        if (!Actor.IsValid()) continue;
+        Actor->SetActorTickEnabled(false);
+        Actor->BindRuntimeShip(nullptr);
+        Actor->Destroy();
+    }
+    MissionPresentationShips.Empty();
+    MissionPresentationBuilder.Reset();
+}

@@ -39,6 +39,7 @@ class Ship;
 class AActor;
 
 class AShipActor;
+class ASystemSceneBuilder;
 
 
 UCLASS()
@@ -115,7 +116,13 @@ private:
 
 private:
     AActor* FindRegionActorForRuntimeShip(Ship* RuntimeShip) const;
+public:
     FVector GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const;
+    void BeginMissionPresentation(ASystemSceneBuilder* Builder);
+    void EndMissionPresentation();
+private:
+    TWeakObjectPtr<ASystemSceneBuilder> MissionPresentationBuilder;
+    TArray<TWeakObjectPtr<AShipActor>> MissionPresentationShips;
     FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
 
 private:

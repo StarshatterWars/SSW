@@ -37,6 +37,7 @@
 #include "Engine/LocalPlayer.h"
 #include "SSWRuntimeSubsystem.h"
 #include "Sim.h"
+#include "TimerSubsystem.h"
 #include "SimEvent.h"
 #include "OptionsScreen.h"
 #include "Kismet/GameplayStatics.h"
@@ -58,6 +59,7 @@
 #include "CentralSun.h"
 #include "ShipActor.h"
 #include "Widgets/SOverlay.h"
+#include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
@@ -804,9 +806,26 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
     return 0;
 }
 
-void UMissionBriefingDlg::CloseEmptySectorPreview()
+void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
 {
+    if (bLiveMissionStarted)
+    {
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+        {
+            Runtime->SetPaused(true);
+            Runtime->EndMissionPresentation();
+        }
+        if (!bPreserveSimulation)
+            if (Sim* Simulation = Sim::GetSim())
+                if (Simulation->GetMission() == MissionPtr) Simulation->UnloadMission();
+        if (auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>()) Timer->StopMissionRun();
+        bLiveMissionStarted = false;
+        if (!bPreserveSimulation)
+            if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+                Runtime->SetGameMode(EGameMode::CMPN);
+    }
     DisableMissionMenuInput();
+    MissionTitleRevealTime = -1.0;
     if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
@@ -966,6 +985,13 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
         }
         break;
     }
+    if (!StartLiveMission())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Live mission startup failed; returning to briefing"));
+        CloseEmptySectorPreview();
+        if (manager) manager->ShowMissionDlg();
+        return;
+    }
     const double Radius = Bounds.BoxExtent.GetMax();
     int32 Width = 0, Height = 0;
     PC->GetViewportSize(Width, Height);
@@ -1033,9 +1059,15 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
     const double Now = World->GetRealTimeSeconds();
     if (MissionCameraStableSince < 0.0) MissionCameraStableSince = Now;
     if (MissionCameraReadyChecks < 2 || Now - MissionCameraStableSince < 1.5) return;
+    if (bLiveMissionStarted)
+    {
+        if (auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>()) Timer->StartMissionRun(true);
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetPaused(false);
+    }
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
     MissionSunHiddenActors.Empty();
+    MissionTitleRevealTime = World->GetTimeSeconds();
     if (MissionSceneCover.IsValid())
     {
         if (UGameViewportClient* Viewport = World->GetGameViewport())
@@ -1159,7 +1191,7 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
         if (Runtime) Runtime->SetTimeCompression(1);
         if (Action == QuitView::Accept && Self->Manager && Self->Manager->GetDebriefDlg())
         {
-            Self->CloseEmptySectorPreview();
+            Self->CloseEmptySectorPreview(true);
             if (Runtime) Runtime->SetGameMode(EGameMode::PLAN);
             Self->Manager->ShowDebriefDlg();
             auto* Debrief = Self->Manager->GetDebriefDlg();
@@ -1178,15 +1210,78 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
         {
             if (Simulation) Simulation->CommitMission();
         }
-        if (Simulation) Simulation->UnloadMission();
+        // Visuals must release Ship* bindings before Sim tears down elements/regions.
+        if (Runtime)
+        {
+            Runtime->SetPaused(true);
+            Runtime->EndMissionPresentation();
+        }
+        TArray<AShipActor*> OldVisuals;
+        for (TActorIterator<AShipActor> It(Self->GetWorld()); It; ++It)
+            if (It->HasRuntimeShip()) OldVisuals.Add(*It);
+        for (AShipActor* Actor : OldVisuals)
+        {
+            Actor->SetActorTickEnabled(false);
+            Actor->BindRuntimeShip(nullptr);
+            Actor->Destroy();
+        }
+        if (Simulation && Simulation->GetMission()) Simulation->UnloadMission();
         else ShipStats::Initialize();
+        Self->CloseEmptySectorPreview();
+        Self->MissionPtr = nullptr;
+        Self->InfoPtr = nullptr;
         if (Action == QuitView::Abort)
             if (Campaign* Camp = Campaign::GetCampaign())
                 if (Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS) Camp->RollbackMission();
-        Self->CloseEmptySectorPreview();
         if (Runtime) Runtime->SetGameMode(EGameMode::CMPN);
         if (Self->manager) Self->manager->ShowOperationsMissionsDlg();
     });
+}
+
+bool UMissionBriefingDlg::StartLiveMission()
+{
+    if (bLiveMissionStarted) return true;
+    if (!MissionPtr || !MissionSystemLevel || !GetGameInstance()) return false;
+    auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
+    auto* Environment = GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+    if (!Runtime || !Environment) return false;
+    ASystemSceneBuilder* Builder = nullptr;
+    for (TActorIterator<ASystemSceneBuilder> It(GetWorld()); It; ++It)
+        if (It->GetLevel() == MissionSystemLevel->GetLoadedLevel()) { Builder = *It; break; }
+    if (!Builder || Builder->GetSpawnedRegions().IsEmpty()) return false;
+    if (!Sim::GetSim()) Runtime->CreateWorld();
+    Sim* Simulation = Sim::GetSim();
+    if (!Simulation) return false;
+    Runtime->SetPaused(true);
+    // Campaign previews can leave a Sim mission loaded. An explicit launch
+    // replaces that session; detach visual proxies before Sim deletes its ships.
+    if (Simulation->GetMission())
+    {
+        UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Clearing previous simulation before selected mission launch"));
+        Runtime->EndMissionPresentation();
+        TArray<AShipActor*> PreviousVisuals;
+        for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+            if (It->HasRuntimeShip()) PreviousVisuals.Add(*It);
+        for (AShipActor* Actor : PreviousVisuals)
+        {
+            Actor->SetActorTickEnabled(false);
+            Actor->BindRuntimeShip(nullptr);
+            Actor->Destroy();
+        }
+        Simulation->UnloadMission();
+    }
+    Environment->BuildSimRegionsForSim(Simulation);
+    Runtime->BeginMissionPresentation(Builder);
+    // Use the selected/generated campaign Mission with its current loadout and orders.
+    MissionPtr->SetComplete(false);
+    Simulation->LoadMission(MissionPtr, false);
+    bLiveMissionStarted = true;
+    Simulation->ExecMission();
+    if (!Simulation->GetActiveRegion()) return false;
+    Runtime->SetGameMode(EGameMode::PLAY);
+    Runtime->SetPaused(true); // Remain behind the scene cover until camera warmup completes.
+    UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Live mission started: %hs"), MissionPtr->GetName());
+    return true;
 }
 
 void UMissionBriefingDlg::OnCommit()
@@ -1282,6 +1377,16 @@ void UMissionBriefingDlg::OnCommit()
         }
     }
 
+    const auto MissionTitleOpacity = [WeakThis = TWeakObjectPtr<UMissionBriefingDlg>(this)]()
+    {
+        if (!WeakThis.IsValid()) return 0.0f;
+        UWorld* TitleWorld = WeakThis->GetWorld();
+        const double Start = WeakThis->MissionTitleRevealTime;
+        if (!TitleWorld || Start < 0.0) return 1.0f;
+        const double Elapsed = TitleWorld->GetTimeSeconds() - Start;
+        return static_cast<float>(1.0 - FMath::Clamp(Elapsed - 10.0, 0.0, 1.0));
+    };
+
     EmptySectorOverlay = SNew(SOverlay)
         .Visibility(EVisibility::HitTestInvisible)
         + SOverlay::Slot()
@@ -1289,12 +1394,32 @@ void UMissionBriefingDlg::OnCommit()
         .VAlign(VAlign_Top)
         .Padding(FMargin(32.0f, 24.0f))
         [
-            SNew(STextBlock)
-            .Text(SectorTitle)
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 22))
-            .ColorAndOpacity(FLinearColor::White)
-            .ShadowOffset(FVector2D(1.0f, 1.0f))
-            .ShadowColorAndOpacity(FLinearColor::Black)
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
+            [
+                SNew(STextBlock)
+                .Text(SectorTitle)
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 22))
+                .ColorAndOpacity(FLinearColor::White)
+                .ShadowOffset(FVector2D(1.0f, 1.0f))
+                .ShadowColorAndOpacity(FLinearColor::Black)
+            ]
+            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 6.0f)
+            [
+                SNew(STextBlock)
+                .Text(ToTextFromUtf8(MissionPtr->GetName()))
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 18))
+                .ColorAndOpacity_Lambda([MissionTitleOpacity]()
+                {
+                    return FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, MissionTitleOpacity()));
+                })
+                .ShadowOffset(FVector2D(1.0f, 1.0f))
+                .ShadowColorAndOpacity_Lambda([MissionTitleOpacity]()
+                {
+                    return FLinearColor(0.0f, 0.0f, 0.0f, MissionTitleOpacity());
+                })
+
+            ]
         ];
     Viewport->AddViewportWidgetContent(EmptySectorOverlay.ToSharedRef(), 1000);
 
