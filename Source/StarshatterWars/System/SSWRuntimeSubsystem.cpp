@@ -953,6 +953,18 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
 {
     EndMissionPresentation();
     MissionPresentationBuilder = Builder;
+    if (Builder)
+    {
+        // Presentation only. Apply before spawning ships so surface clearance
+        // uses the enlarged mesh bounds; authored radii remain unchanged.
+        constexpr float MissionPlanetScaleMultiplier = 2.0f;
+        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
+        {
+            if (Body.bIsOrbit || Body.bIsMoon || !IsValid(Body.Actor.Get())) continue;
+            if (Cast<APlanetActor>(Body.Actor.Get()))
+                Builder->SetTemporaryCutsceneBodyScale(Body.BodyName, MissionPlanetScaleMultiplier);
+        }
+    }
 }
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
@@ -966,5 +978,7 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
     MissionPresentationShips.Empty();
     MissionPresentationOffsets.Empty();
     MissionPresentationRadii.Empty();
+    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+        Builder->ResetTemporaryCutsceneBodyScales();
     MissionPresentationBuilder.Reset();
 }
