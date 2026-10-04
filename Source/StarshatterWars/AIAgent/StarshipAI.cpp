@@ -153,9 +153,6 @@ StarshipAI::FindObjective()
         objective =
             Transform(obj_w);
 
-        distance =
-            objective.Size();
-
         return;
     }
 
@@ -195,9 +192,6 @@ StarshipAI::FindObjective()
 
         objective =
             Transform(obj_w);
-
-        distance =
-            objective.Size();
 
         return;
     }
@@ -255,9 +249,6 @@ StarshipAI::FindObjective()
                 objective =
                     Transform(obj_w);
 
-                distance =
-                    objective.Size();
-
                 return;
             }
         }
@@ -277,9 +268,6 @@ StarshipAI::FindObjective()
 
             objective =
                 Transform(obj_w);
-
-            distance =
-                objective.Size();
 
             return;
         }
@@ -322,31 +310,6 @@ StarshipAI::FindObjective()
     //-------------------------------------------------------------
     // Normal processing
     //-------------------------------------------------------------
-    else if (navpt)
-    {
-        const EInstruction NavAction =
-            navpt->GetAction();
-
-        if (NavAction == EInstruction::Target)
-        {
-            ship->SetDirectorInfo("Seek Target");
-
-            if (target)
-            {
-                FindObjectiveTarget(target);
-            }
-            else
-            {
-                FindObjectiveNavPoint();
-            }
-        }
-        else
-        {
-            ship->SetDirectorInfo("Seek Navpoint");
-
-            FindObjectiveNavPoint();
-        }
-    }
     else if (target)
     {
         ship->SetDirectorInfo("Seek Target");
@@ -364,6 +327,11 @@ StarshipAI::FindObjective()
         ship->SetDirectorInfo("Seek Ward");
 
         FindObjectiveFormation();
+    }
+    else if (navpt)
+    {
+        ship->SetDirectorInfo("Seek Navpoint");
+        FindObjectiveNavPoint();
     }
     else if (rumor)
     {
@@ -392,9 +360,6 @@ StarshipAI::FindObjective()
     //-------------------------------------------------------------
     objective =
         Transform(obj_w);
-
-    distance =
-        objective.Size();
 
     if (!_stricmp(ship->GetName(), "Blockade Runner"))
     {
@@ -1688,7 +1653,7 @@ StarshipAI::Seek(const FVector& Point)
     Result.yaw =
         FMath::Atan2(
             Point.X,
-            Point.Z);
+            Point.Z) + PI;
 
     const double Adjacent =
         FMath::Sqrt(

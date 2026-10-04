@@ -201,6 +201,8 @@ private:
     void ClearRuntimeShips();
 
 private:
+    // Identity only; Sim owns the lifetime. Never dereference this pointer.
+    Mission* CutsceneMission = nullptr;
     Ship* CurrentPlayerShip = nullptr;
     FString CurrentMissionRegionName;
 

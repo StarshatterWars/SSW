@@ -1,7 +1,8 @@
+#include "SSWRuntimeSubsystem.h"
 #include "SystemSceneBuilder.h"
 #include "PlanetActor.h"
 #include "Components/StaticMeshComponent.h"
-#include "SSWRuntimeSubsystem.h"
+
 #include "OrbitalRegion.h"
 
 #include "Starshatter.h"
@@ -619,7 +620,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 
     if (!World)
     {
-        UE_LOG(LogSSWRuntime, Error,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeVisual] No World for Ship='%hs'"),
             RuntimeShip->GetName());
 
@@ -631,7 +632,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 
     if (!Design)
     {
-        UE_LOG(LogSSWRuntime, Error,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeVisual] No Design for Ship='%hs'"),
             RuntimeShip->GetName());
 
@@ -646,7 +647,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 
     if (!Row)
     {
-        UE_LOG(LogSSWRuntime, Error,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeVisual] No FShipDesign row for Ship='%hs' Design='%s'"),
             RuntimeShip->GetName(),
             *DesignName);
@@ -673,7 +674,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 
     if (!BPClass)
     {
-        UE_LOG(LogSSWRuntime, Error,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeVisual] Missing BP class '%s'"),
             *BPClassPath);
 
@@ -702,7 +703,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 
     if (!ShipActor)
     {
-        UE_LOG(LogSSWRuntime, Error,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeVisual] Spawn failed Ship='%hs'"),
             RuntimeShip->GetName());
 
@@ -730,7 +731,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     ShipActor->UpdateFromRuntimeShip(
         0.0f);
 
-    UE_LOG(LogSSWRuntime, Warning,
+    UE_LOG(LogSSWRuntime, VeryVerbose,
         TEXT("[RuntimeVisual] Spawned Ship='%hs' Actor='%s' Model='%s' Loc=%s"),
         RuntimeShip->GetName(),
         *ShipActor->GetName(),
@@ -809,7 +810,7 @@ USSWRuntimeSubsystem::FindRegionActorForRuntimeShip(
             ActorLabel.Contains(RegionName, ESearchCase::IgnoreCase) &&
             ActorLabel.Contains(TEXT("REGION"), ESearchCase::IgnoreCase))
         {
-            UE_LOG(LogSSWRuntime, Warning,
+            UE_LOG(LogSSWRuntime, VeryVerbose,
                 TEXT("[RuntimeVisual] RegionActor Ship='%hs' Region='%s' Actor='%s' Label='%s'"),
                 RuntimeShip->GetName(),
                 *RegionName,
@@ -820,7 +821,7 @@ USSWRuntimeSubsystem::FindRegionActorForRuntimeShip(
         }
     }
 
-    UE_LOG(LogSSWRuntime, Warning,
+    UE_LOG(LogSSWRuntime, VeryVerbose,
         TEXT("[RuntimeVisual] No RegionActor found Ship='%hs' Region='%s'"),
         RuntimeShip->GetName(),
         *RegionName);

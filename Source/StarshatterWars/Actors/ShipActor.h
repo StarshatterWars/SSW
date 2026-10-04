@@ -82,6 +82,7 @@ public:
 
     void BuildNavLightsFromRuntime();
     bool HasRuntimeShip() const { return RuntimeShip != nullptr; }
+    Ship* GetRuntimeShip() const { return RuntimeShip; }
 
 
 public:
@@ -634,4 +635,9 @@ private:
     FVector LastRuntimeLocation = FVector::ZeroVector;
     FVector LastRuntimeVelocity = FVector::ZeroVector;
     bool bHasRuntimeTransform = false;
+private:
+    double SteeringProbeTime = -1.0;
+    FVector SteeringProbePosition = FVector::ZeroVector;
+    FVector SteeringProbeForward = FVector::ZeroVector;
+    int32 SteeringProbeSamples = 0;
 };

@@ -426,10 +426,10 @@ void CameraView::RenderBackground()
     if (scene->Background().isEmpty()) return;
 
     video->SetRenderState(Video::FILL_MODE, Video::FILL_SOLID);
-    video->SetRenderState(Video::Z_ENABLE, FALSE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, FALSE);
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::LIGHTING_ENABLE, TRUE);
+    video->SetRenderState(Video::Z_ENABLE, false);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, false);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::LIGHTING_ENABLE, false);
 
     ListIter<Graphic> iter = scene->Background();
     while (++iter)
@@ -472,10 +472,10 @@ void CameraView::RenderForeground()
         return;
 
     video->SetRenderState(Video::FILL_MODE, Video::FILL_SOLID);
-    video->SetRenderState(Video::Z_ENABLE, TRUE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, TRUE);
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::LIGHTING_ENABLE, TRUE);
+    video->SetRenderState(Video::Z_ENABLE, true);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, true);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::LIGHTING_ENABLE, true);
     video->SetProjection((float)GetFieldOfView(), 1.0f, 1.0e6f, projection_type);
 
     if (video->IsShadowEnabled() || video->IsBumpMapEnabled())
@@ -532,10 +532,10 @@ void CameraView::RenderSprites()
     if (scene->Sprites().isEmpty()) return;
 
     video->SetRenderState(Video::FILL_MODE, Video::FILL_SOLID);
-    video->SetRenderState(Video::Z_ENABLE, TRUE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, FALSE);
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::LIGHTING_ENABLE, TRUE);
+    video->SetRenderState(Video::Z_ENABLE, true);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, false);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::LIGHTING_ENABLE, true);
 
     ListIter<Graphic> iter = scene->Sprites();
     while (++iter)

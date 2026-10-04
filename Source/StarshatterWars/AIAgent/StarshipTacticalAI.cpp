@@ -8,7 +8,7 @@
 
     ORIGINAL AUTHOR AND STUDIO:
     John DiCamillo / Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+    Copyright Â© 1997-2004. All Rights Reserved.
 
     OVERVIEW
     ========
@@ -109,7 +109,7 @@ StarshipTacticalAI::FindThreat()
     threat_level = 0;
     support_level = ship->AIValue() / CELL_SIZE;
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[TACTICAL CONTACTS] Ship='%hs' ContactCount=%d"),
         ship ? ship->GetName() : "NULL",
         ship ? ship->GetContactList().size() : 0);
@@ -128,7 +128,7 @@ StarshipTacticalAI::FindThreat()
         Ship* c_ship = contact->GetShip();
         SimShot* c_shot = contact->GetShot();
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[TACTICAL CONTACT] Ship='%hs' ContactShip='%hs' IFF=%d Range=%.2f Threat=%d Shot=%p"),
             ship ? ship->GetName() : "NULL",
             c_ship ? c_ship->GetName() : "NULL",

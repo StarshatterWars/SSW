@@ -1,6 +1,6 @@
 /*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios
@@ -88,7 +88,7 @@ TacticalAI::ExecFrame(double secs)
 
 	if (!ship || !ship_ai)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::ExecFrame] SKIP Ship=%p ShipAI=%p"),
 			ship,
 			ship_ai);
@@ -111,7 +111,7 @@ TacticalAI::ExecFrame(double secs)
 
 		element_index = ship->GetElementIndex();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::ExecFrame] RUN Ship='%hs' Time=%d ExecTime=%d ElementIndex=%d Navpt=%p Orders=%p Contacts=%d CurrentTarget='%hs' ROE=%d"),
 			ship->GetName(),
 			Now,
@@ -130,7 +130,7 @@ TacticalAI::ExecFrame(double secs)
 		{
 			roe = AGRESSIVE;
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[TacticalAI::ExecFrame] MIGRATION FORCE ROE Ship='%hs' Contacts=%d"),
 				ship->GetName(),
 				ship->GetContactList().size());
@@ -140,7 +140,7 @@ TacticalAI::ExecFrame(double secs)
 		FindThreat();
 		FindSupport();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::ExecFrame] AFTER Ship='%hs' Target='%hs' Threat='%hs' Support='%hs' ThreatLevel=%.4f SupportLevel=%.4f ShipTarget='%hs'"),
 			ship->GetName(),
 			ship_ai->GetTarget() ? ship_ai->GetTarget()->GetName() : "NULL",
@@ -177,7 +177,7 @@ TacticalAI::ExecFrame(double secs)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::ExecFrame] SKIP PERIOD Ship='%hs' Time=%d ExecTime=%d Delta=%d Period=%d Contacts=%d ShipTarget='%hs'"),
 			ship->GetName(),
 			Now,
@@ -188,7 +188,7 @@ TacticalAI::ExecFrame(double secs)
 			ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL");
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TacticalAI::ExecFrame] Ship='%hs' Contacts=%d ShipTarget='%hs' AITarget='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		ship ? ship->GetContactList().size() : -1,
@@ -566,7 +566,7 @@ TacticalAI::SelectTarget()
 	 * even when runtime weapon objects are missing.
 	 */
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TacticalAI::SelectTarget ENTER] Ship='%hs' IFF=%d Weapons=%d ROE=%d CurrentTarget='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		ship ? ship->GetIFF() : -1,
@@ -588,7 +588,7 @@ TacticalAI::SelectTarget()
 	{
 		ship_ai->SetTarget(navpt->GetTarget());
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTarget] INSTRUCTION TARGET OVERRIDE Ship='%hs' Target='%hs'"),
 			ship ? ship->GetName() : "NULL",
 			navpt->GetTarget() ?
@@ -602,7 +602,7 @@ TacticalAI::SelectTarget()
 	//-------------------------------------------------------------
 	if (roe == NONE)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTarget] ROE NONE Ship='%hs' DroppingTarget='%hs'"),
 			ship ? ship->GetName() : "NULL",
 			target ? target->GetName() : "NULL");
@@ -635,7 +635,7 @@ TacticalAI::SelectTarget()
 
 			if (d > safe_zone)
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[TacticalAI::SelectTarget] DROP abandoned ward Ship='%hs' Ward='%hs' Dist=%.2f Safe=%.2f"),
 					ship ? ship->GetName() : "NULL",
 					ward ? ward->GetName() : "NULL",
@@ -650,7 +650,7 @@ TacticalAI::SelectTarget()
 		{
 			if (d > safe_zone)
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[TacticalAI::SelectTarget] HOLD near ward Ship='%hs' Ward='%hs' Dist=%.2f Safe=%.2f"),
 					ship ? ship->GetName() : "NULL",
 					ward ? ward->GetName() : "NULL",
@@ -674,7 +674,7 @@ TacticalAI::SelectTarget()
 			if (ship->GetClassification() != CLASSIFICATION::CORVETTE &&
 				ship->GetClassification() != CLASSIFICATION::FRIGATE)
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[TacticalAI::SelectTarget] KEEP existing target Ship='%hs' Target='%hs'"),
 					ship ? ship->GetName() : "NULL",
 					target ? target->GetName() : "NULL");
@@ -686,7 +686,7 @@ TacticalAI::SelectTarget()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[TacticalAI::SelectTarget] DROP dead target Ship='%hs' Target='%hs'"),
 				ship ? ship->GetName() : "NULL",
 				target ? target->GetName() : "NULL");
@@ -705,7 +705,7 @@ TacticalAI::SelectTarget()
 	//-------------------------------------------------------------
 	if (ship_ai->DropTime() > 0)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTarget] IGNORE DropTime Ship='%hs' DropTime=%.2f"),
 			ship ? ship->GetName() : "NULL",
 			ship_ai->DropTime());
@@ -716,7 +716,7 @@ TacticalAI::SelectTarget()
 	//-------------------------------------------------------------
 	if (roe == DIRECTED)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTarget] DIRECTED Ship='%hs'"),
 			ship ? ship->GetName() : "NULL");
 
@@ -736,7 +736,7 @@ TacticalAI::SelectTarget()
 	//-------------------------------------------------------------
 	else
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTarget] OPPORTUNITY Ship='%hs' Contacts=%d"),
 			ship ? ship->GetName() : "NULL",
 			ship ? ship->GetContactList().size() : -1);
@@ -762,7 +762,7 @@ TacticalAI::SelectTarget()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TacticalAI::SelectTarget EXIT] Ship='%hs' FinalTarget='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		ship_ai && ship_ai->GetTarget() ?
@@ -788,7 +788,7 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 		potential_target =
 			(Ship*)navpt->GetTarget();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[TacticalAI::SelectTargetDirected] NAV TARGET Ship='%hs' Target='%hs'"),
 			ship ? ship->GetName() : "NULL",
 			potential_target ? potential_target->GetName() : "NULL");
@@ -835,7 +835,7 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 					potential_target =
 						obj_tgt;
 
-					UE_LOG(LogTemp, Warning,
+					UE_LOG(LogTemp, VeryVerbose,
 						TEXT("[TacticalAI::SelectTargetDirected] OBJECTIVE TARGET Ship='%hs' Target='%hs'"),
 						ship ? ship->GetName() : "NULL",
 						potential_target ?
@@ -871,7 +871,7 @@ TacticalAI::SelectTargetDirected(Ship* tgt)
 			0;
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TacticalAI::SelectTargetDirected EXIT] Ship='%hs' Input='%hs' Final='%hs' DirectedId=%d"),
 		ship ? ship->GetName() : "NULL",
 		tgt ? tgt->GetName() : "NULL",

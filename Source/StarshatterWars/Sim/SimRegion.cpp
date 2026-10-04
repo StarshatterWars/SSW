@@ -1,10 +1,10 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025–2026. All Rights Reserved.
+    Copyright Â© 2025â€“2026. All Rights Reserved.
 
     ORIGINAL WORK:
     Starshatter 4.5
-    Copyright © 1997–2004 Destroyer Studios LLC
+    Copyright Â© 1997â€“2004 Destroyer Studios LLC
     Original Author: John DiCamillo
 
     SUBSYSTEM:    StarshatterWars
@@ -769,7 +769,7 @@ void SimRegion::UpdateExplosions(double seconds)
 void
 SimRegion::UpdateTracking(double seconds)
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[SimRegion::UpdateTracking] ENTER Region='%hs' Ships=%d Active=%d"),
         GetName(),
         ships.size(),
@@ -807,7 +807,7 @@ SimRegion::UpdateTracking(double seconds)
                 continue;
             }
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[SimRegion::UpdateTracking] PAIR] Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
                 GetName(),
                 observer ? observer->GetName() : "NULL",
@@ -817,7 +817,7 @@ SimRegion::UpdateTracking(double seconds)
 
             observer->FindContact(target);
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[SimRegion::UpdateTracking] CONTACTS Observer='%hs' Contacts=%d"),
                 observer->GetName(),
                 observer->GetContactList().size());
@@ -887,7 +887,7 @@ void SimRegion::CommitMission()
 
     if (player_ship)
     {
-        // Ensure the ship doesn’t keep region-local transient state:
+        // Ensure the ship doesnâ€™t keep region-local transient state:
         Sensor* S = player_ship->GetSensor();
         if (S)
             S->ClearAllContacts();
@@ -903,10 +903,10 @@ void SimRegion::CommitMission()
         Ship* S = s_iter.value();
         if (!S) continue;
 
-        // Stop “tracking” / region-local cached lists:
+        // Stop â€œtrackingâ€ / region-local cached lists:
         S->ClearTrack();
 
-        // Clear sensor contacts so they don’t persist into post-mission menus:
+        // Clear sensor contacts so they donâ€™t persist into post-mission menus:
         Sensor* SensorPtr = S->GetSensor();
         if (SensorPtr)
             SensorPtr->ClearAllContacts();
@@ -939,7 +939,7 @@ void SimRegion::CommitMission()
     if (terrain)
     {
         // If your Terrain class has an end-mission/cleanup call, invoke it.
-        // Otherwise, at minimum ensure it is not “active”.
+        // Otherwise, at minimum ensure it is not â€œactiveâ€.
         if (terrain && sim && sim->GetScene())
         {
             terrain->Deactivate(*sim->GetScene());

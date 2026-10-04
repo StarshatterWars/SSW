@@ -170,7 +170,7 @@ const char* Sensor::GetObserverName() const
 
 void Sensor::ExecFrame(double seconds)
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Sensor::ExecFrame] Ship='%hs' Power=%d Energy=%.2f AIMode=%d Region='%hs'"),
         ship ? ship->GetName() : "NULL",
         IsPowerOn() ? 1 : 0,

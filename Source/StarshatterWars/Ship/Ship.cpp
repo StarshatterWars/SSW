@@ -1804,7 +1804,7 @@ Ship::GetContactList()
 SimContact*
 Ship::FindContact(SimObject* s) const
 {
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::FindContact] ENTER Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d ObserverRegion='%hs' TargetRegion='%hs' Sensor=%p Contacts=%d"),
 		GetName(),
 		s ? s->GetName() : "NULL",
@@ -1857,7 +1857,7 @@ Ship::FindContact(SimObject* s) const
 
 		if (c->GetShip() == s)
 		{
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[Ship::FindContact] FOUND SHIP Observer='%hs' Target='%hs' SearchContacts=%d"),
 				GetName(),
 				s->GetName(),
@@ -1868,7 +1868,7 @@ Ship::FindContact(SimObject* s) const
 
 		if (c->GetShot() == s)
 		{
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[Ship::FindContact] FOUND SHOT Observer='%hs' Target='%hs' SearchContacts=%d"),
 				GetName(),
 				s->GetName(),
@@ -1878,7 +1878,7 @@ Ship::FindContact(SimObject* s) const
 		}
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::FindContact] NOT FOUND Observer='%hs' Target='%hs' SearchContacts=%d OwnContacts=%d"),
 		GetName(),
 		s->GetName(),
@@ -3181,7 +3181,7 @@ Ship::CycleSubTarget(int Dir)
 void
 Ship::ExecFrame(double seconds)
 {
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::ExecFrame] ENTER Ship='%s' "
 			"Throttle=%.2f Request=%.2f "
 			"Trans(X=%.2f Y=%.2f Z=%.2f) "
@@ -3234,7 +3234,7 @@ Ship::ExecFrame(double seconds)
 	// Do not let it run only through ExecSystems after physics.
 	//-------------------------------------------------------------
 	if (flcs) {
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::ExecFrame] BEFORE FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f)"),
 			ANSI_TO_TCHAR(GetName()),
 			throttle,
@@ -3245,7 +3245,7 @@ Ship::ExecFrame(double seconds)
 
 		flcs->ExecFrame(seconds);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::ExecFrame] AFTER FLCS Ship='%s' Throttle=%.2f Request=%.2f Trans=(%.2f %.2f %.2f)"),
 			ANSI_TO_TCHAR(GetName()),
 			throttle,
@@ -3277,7 +3277,8 @@ Ship::ExecFrame(double seconds)
 	//-------------------------------------------------------------
 	// Formation correction
 	//-------------------------------------------------------------
-	ApplyLeaderFormation(seconds);
+	// Legacy followers steer toward their predicted slot through AI/FLCS.
+	// Do not overwrite the integrated position with formation interpolation.
 
 	if (!InTransition()) {
 		UpdateTrack();
@@ -4579,7 +4580,7 @@ Ship::SetThrottle(double percent)
 		augmenter = false;
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::SetThrottle] Ship='%hs' Percent=%.2f OldRequest=%.2f NewRequest=%.2f CurrentThrottle=%.2f"),
 		GetName(),
 		percent,
@@ -5000,10 +5001,12 @@ Ship::IsAirborne() const
 double
 Ship::GetCompassHeading() const
 {
-	const FVector H =
-		GetHeading().GetSafeNormal();
-
-	return atan2(H.X, H.Z);
+    const FVector heading = GetHeading();
+    double compass_heading = FMath::Atan2(FMath::Abs(heading.X), heading.Z);
+    if (heading.X < 0) compass_heading *= -1;
+    double result = compass_heading + PI;
+    if (result >= 2 * PI) result -= 2 * PI;
+    return result;
 }
 
 double
@@ -5230,7 +5233,7 @@ Ship::GetThrust(double seconds) const
 
 	const char* ShipName = GetName() ? GetName() : "Unknown";
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::Thrust] ENTER Ship='%s' Seconds=%.4f ShipThrottle=%.2f MainDrive=%p FLCS=%p"),
 		ANSI_TO_TCHAR(ShipName),
 		seconds,
@@ -5264,7 +5267,7 @@ Ship::GetThrust(double seconds) const
 		double Vfwd = FVector::DotProduct(H, VNorm);
 		const bool bAugOn = main_drive->IsAugmenterOn();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::Thrust] MotionState vmag=%.2f Vfwd=%.2f vlimit=%.2f AugOn=%d"),
 			vmag,
 			Vfwd,
@@ -5283,7 +5286,7 @@ Ship::GetThrust(double seconds) const
 				(Vfwd * FMath::Pow(Vmax, 3.0) / FMath::Pow(vmag, 3.0)) +
 				(1.0 - Vfwd);
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[Ship::Thrust] VelocityLimit Applied VfwdOrig=%.2f VfwdAdj=%.2f Vmax=%.2f ThrustFactor=%.4f"),
 				VfwdOrig,
 				Vfwd,
@@ -5298,7 +5301,7 @@ Ship::GetThrust(double seconds) const
 
 			if (flcsThrottle > 0.0)
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[Ship::Thrust] FLCS Override ACCEPTED ShipThrottle=%.2f FLCSThrottle=%.2f"),
 					throttle,
 					flcsThrottle);
@@ -5307,7 +5310,7 @@ Ship::GetThrust(double seconds) const
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[Ship::Thrust] FLCS Override IGNORED ShipThrottle=%.2f FLCSThrottle=%.2f"),
 					throttle,
 					flcsThrottle);
@@ -5316,7 +5319,7 @@ Ship::GetThrust(double seconds) const
 			}
 		}*/
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::Thrust] PreFlightModel EffThrottle=%.2f FlightModel=%d"),
 			eff_throttle,
 			flight_model);
@@ -5328,13 +5331,13 @@ Ship::GetThrust(double seconds) const
 			eff_throttle *= eff_throttle;
 			eff_throttle *= 100.0;
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[Ship::Thrust] FlightModel Transform Before=%.2f After=%.2f"),
 				before,
 				eff_throttle);
 		}
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::Thrust] FINAL EffThrottle=%.2f Augmenter=%d -> SetThrottle"),
 			eff_throttle,
 			augmenter ? 1 : 0);
@@ -5346,7 +5349,7 @@ Ship::GetThrust(double seconds) const
 
 		const double drive_thrust = main_drive->GetThrust(seconds);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::Thrust] DriveReturned Thrust=%.4f ThrustFactor=%.4f FinalContribution=%.4f"),
 			drive_thrust,
 			thrust_factor,
@@ -5358,11 +5361,11 @@ Ship::GetThrust(double seconds) const
 			((Ship*)this)->shake = 1.5f;
 	}
 	else {
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::Thrust] WARNING: main_drive is null"));
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::Thrust] EXIT TotalThrust=%.4f"),
 		total_thrust);
 

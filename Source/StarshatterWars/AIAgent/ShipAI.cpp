@@ -1,6 +1,6 @@
 /*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios
@@ -16,6 +16,7 @@
 */
 
 #include "ShipAI.h"
+#include "Geometry.h"
 
 // Unreal (minimal, for FVector and UE_LOG)
 #include "Math/Vector.h"
@@ -138,7 +139,7 @@ ShipAI::SetWard(Ship* s)
 		return;
 	}
 
-	UE_LOG(LogTemp, Error,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::SetWard] Ship='%hs' OldWard='%hs' NewWard='%hs' Element=%p ElementIndex=%d"),
 		ship ? ship->GetName() : "NULL",
 		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
@@ -176,7 +177,7 @@ ShipAI::SetWard(Ship* s)
 
 	SetFormationDelta(form);
 
-	UE_LOG(LogTemp, Error,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::SetWard] Ship='%hs' Ward='%hs' FormationDelta=%s"),
 		ship ? ship->GetName() : "NULL",
 		ship && ship->GetWard() ? ship->GetWard()->GetName() : "NULL",
@@ -321,7 +322,7 @@ ShipAI::ExecFrame(double secs)
 	navpt =
 		ship->GetNextNavPoint();
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::ExecFrame NAV] Ship='%hs' Navpt=%p NavAction=%d NavStatus=%d NavTarget='%hs' NavRegion='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		navpt,
@@ -521,7 +522,7 @@ ShipAI::FindObjective()
 	Ship* ward =
 		ship->GetWard();
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[FindObjective ENTRY] Ship='%hs' Order=%d Form=%d ElementIndex=%d Target='%hs' Navpt=%p NavAction=%d NavTarget='%hs' FarcasterPtr=%p Ward='%hs'"),
 		ship ? ship->GetName() : "NULL",
 		(int32)order,
@@ -1509,99 +1510,86 @@ ShipAI::SetFormationDelta(const FVector& point)
 void
 ShipAI::FindObjectiveFormation()
 {
-	const double Prediction = 5.0;
+    // Port of legacy ShipAI::FindObjectiveFormation; retain null guards.
+    const double prediction = 5.0;
+    if (!ship) { obj_w = FVector::ZeroVector; distance = 0.0; return; }
+    SimElement* elem = ship->GetElement();
+    Ship* lead = elem ? elem->GetShip(1) : nullptr;
+    Ship* ward = ship->GetWard();
+    if (!lead || lead == ship)
+    {
+        lead = ward;
+        if (!lead || lead == ship) { obj_w = ship->GetLocation(); distance = 0.0; return; }
+        distance = (lead->GetLocation() - self->GetLocation()).Size();
+        if (distance < 30e3 && lead->GetVelocity().Size() < 50.0)
+        {
+            obj_w = self->GetLocation() + lead->GetHeading() * 1e6;
+            distance = -1.0;
+            return;
+        }
+    }
+    obj_w = lead->GetLocation() + lead->GetVelocity() * prediction;
+    Matrix m;
+    m.Rotate(0, 0, lead->GetCompassHeading() - PI);
+    // Legacy Point * Matrix is a row-vector product. Matrix * FVector
+    // in the port has different semantics, so spell out the original product.
+    const FVector& f = formation_delta;
+    obj_w += FVector(m(0,0)*f.X + m(1,0)*f.Y + m(2,0)*f.Z,
+                     m(0,1)*f.X + m(1,1)*f.Y + m(2,1)*f.Z,
+                     m(0,2)*f.X + m(1,2)*f.Y + m(2,2)*f.Z);
+    if (ship->IsAirborne() &&
+        (ship->GetAltitudeAGL() < 3000 || lead->GetAltitudeAGL() < 3000))
+        obj_w.Y += 500;
+    const FVector dst_w = self->GetLocation() + self->GetVelocity() * prediction;
+    FVector dlt_w = obj_w - dst_w;
+    distance = dlt_w.Size();
+    dlt_w += ship->GetLocation();
+    slot_dist = Transform(dlt_w).Z;
 
-	if (!ship)
-	{
-		obj_w = FVector::ZeroVector;
-		objective = FVector::ZeroVector;
-		distance = 0.0;
-		return;
-	}
-
-	SimElement* Element = ship->GetElement();
-	Ship* WardShip = ship->GetWard();
-	Ship* LeadShip = nullptr;
-
-	if (Element)
-	{
-		LeadShip = Element->GetShip(1);
-
-		if (LeadShip == ship && Element->GetNumShips() > 1)
-		{
-			for (int i = 1; i <= Element->GetNumShips(); i++)
-			{
-				Ship* Candidate = Element->GetShip(i);
-
-				if (Candidate && Candidate != ship)
-				{
-					LeadShip = Candidate;
-					break;
-				}
-			}
-		}
-	}
-
-	if ((!LeadShip || LeadShip == ship) && WardShip && WardShip != ship)
-	{
-		LeadShip = WardShip;
-	}
-
-	if (!LeadShip || LeadShip == ship)
-	{
-		obj_w =
-			ship->GetLocation() +
-			ship->GetHeading() * 100000.0f;
-
-		objective = obj_w;
-		distance = (objective - ship->GetLocation()).Size();
-		return;
-	}
-
-	obj_w =
-		LeadShip->GetLocation() +
-		LeadShip->GetVelocity() * static_cast<float>(Prediction);
-
-	const FVector LeadForward = LeadShip->GetCam().vpn();
-	const FVector LeadRight = LeadShip->GetCam().vrt();
-	const FVector LeadUp = LeadShip->GetCam().vup();
-
-	const FVector FormationOffsetWorld =
-		LeadRight * formation_delta.X +
-		LeadUp * formation_delta.Y +
-		LeadForward * formation_delta.Z;
-
-	obj_w += FormationOffsetWorld;
-
-	const FVector PredictedSelf =
-		ship->GetLocation() +
-		ship->GetVelocity() * static_cast<float>(Prediction);
-
-	const FVector DeltaWorld =
-		obj_w - PredictedSelf;
-
-	distance = DeltaWorld.Size();
-
-	const FVector LocalSlot =
-		Transform(obj_w);
-
-	slot_dist = LocalSlot.Z;
-
-	objective = obj_w;
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[ShipAI::FindObjectiveFormation WORLD] Ship='%hs' Lead='%hs' Ward='%hs' LeadLoc=%s ShipLoc=%s ObjW=%s Objective=%s DeltaWorld=%s Distance=%.2f SlotDist=%.2f LocalSlot=%s"),
-		ship ? ship->GetName() : "NULL",
-		LeadShip ? LeadShip->GetName() : "NULL",
-		WardShip ? WardShip->GetName() : "NULL",
-		*LeadShip->GetLocation().ToString(),
-		*ship->GetLocation().ToString(),
-		*obj_w.ToString(),
-		*objective.ToString(),
-		*DeltaWorld.ToString(),
-		distance,
-		slot_dist,
-		*LocalSlot.ToString());
+    SimDirector* lead_dir = lead->GetDirector();
+    if (lead_dir && (lead_dir->GetType() == ESteerAIType::FIGHTER ||
+                     lead_dir->GetType() == ESteerAIType::STARSHIP))
+    {
+        ShipAI* lead_ai = static_cast<ShipAI*>(lead_dir);
+        farcaster = lead_ai->GetFarcaster();
+    }
+    else
+    {
+        Instruction* next = elem ? elem->GetNextNavPoint() : nullptr;
+        if (!next) { farcaster = nullptr; return; }
+        SimRegion* self_rgn = ship->GetRegion();
+        SimRegion* nav_rgn = next->GetRegion();
+        QuantumDrive* qdrive = ship->GetQuantumDrive();
+        if (!self_rgn) return;
+        if (!nav_rgn) { nav_rgn = self_rgn; next->SetRegion(nav_rgn); }
+        const bool use_farcaster = self_rgn != nav_rgn &&
+            (next->GetFarcast() || !qdrive || !qdrive->IsPowerOn() ||
+             qdrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
+        if (use_farcaster)
+        {
+            ListIter<Ship> ships = self_rgn->GetShips();
+            while (++ships && !farcaster)
+            {
+                if (ships->GetFarcaster())
+                {
+                    const Ship* dest = ships->GetFarcaster()->GetDest();
+                    if (dest && dest->GetRegion() == nav_rgn) farcaster = ships->GetFarcaster();
+                }
+            }
+        }
+        else if (farcaster)
+        {
+            if (farcaster->GetShip()->GetRegion() != self_rgn)
+            {
+                const Ship* dest = farcaster->GetDest();
+                farcaster = dest ? dest->GetFarcaster() : nullptr;
+                if (!farcaster) return;
+            }
+            obj_w = farcaster->EndPoint();
+            distance = (obj_w - ship->GetLocation()).Size();
+            if (distance < 1000) farcaster = nullptr;
+        }
+    }
 }
 
 // +--------------------------------------------------------------------+

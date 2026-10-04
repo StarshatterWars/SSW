@@ -58,6 +58,9 @@
 #include "GasGiantActor.h"
 #include "CentralSun.h"
 #include "ShipActor.h"
+#include "Ship.h"
+#include "SimRegion.h"
+#include "MissionTargetOverlay.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
@@ -824,6 +827,16 @@ void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
             if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
                 Runtime->SetGameMode(EGameMode::CMPN);
     }
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
+        if (MissionTargetOverlay.IsValid() && World->GetGameViewport())
+            World->GetGameViewport()->RemoveViewportWidgetContent(MissionTargetOverlay.ToSharedRef());
+    }
+    MissionTargetOverlay.Reset();
+    SelectedMissionTarget.Reset();
+    SelectedMissionTargetName = FText::GetEmpty();
+    SelectedMissionTargetLocalBounds = FBox(ForceInit);
     DisableMissionMenuInput();
     MissionTitleRevealTime = -1.0;
     if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
@@ -1089,6 +1102,19 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
+    // EnhancedInput deliberately disables legacy BindKey; create mission-only actions.
+    MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
+    PreviousMissionTargetAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    NextMissionTargetAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    PreviousMissionTargetAction->ValueType = EInputActionValueType::Boolean;
+    NextMissionTargetAction->ValueType = EInputActionValueType::Boolean;
+    MissionTargetContext->MapKey(PreviousMissionTargetAction.Get(), EKeys::R);
+    MissionTargetContext->MapKey(NextMissionTargetAction.Get(), EKeys::T);
+    MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Started,
+        this, &UMissionBriefingDlg::PreviousMissionTarget);
+    MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Started,
+        this, &UMissionBriefingDlg::NextMissionTarget);
+    Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
     if (bAddedMissionMenuContext) Input->AddMappingContext(MissionMenuContext.Get(), 1000);
@@ -1130,14 +1156,110 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
         if (MissionMenuInput) PC->PopInputComponent(MissionMenuInput.Get());
         if (ULocalPlayer* LP = PC->GetLocalPlayer())
             if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+            {
+                if (MissionTargetContext) Input->RemoveMappingContext(MissionTargetContext.Get());
                 if (bAddedMissionMenuContext && MissionMenuContext)
                     Input->RemoveMappingContext(MissionMenuContext.Get());
+            }
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
     MissionMenuInput = nullptr;
     MissionMenuContext = nullptr;
+    MissionTargetContext = nullptr;
+    PreviousMissionTargetAction = nullptr;
+    NextMissionTargetAction = nullptr;
     bAddedMissionMenuContext = false;
 }
+void UMissionBriefingDlg::PreviousMissionTarget() { CycleMissionTarget(-1); }
+void UMissionBriefingDlg::NextMissionTarget() { CycleMissionTarget(1); }
+void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
+{
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+        (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Region) return;
+    TArray<AShipActor*> Candidates;
+    for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+    {
+        Ship* ShipData = It->GetRuntimeShip();
+        if (IsValid(*It) && !It->IsActorBeingDestroyed() && !It->IsHidden() && ShipData &&
+            Region->GetShips().contains(ShipData) && !ShipData->IsDead()) Candidates.Add(*It);
+    }
+    Candidates.Sort([](const AShipActor& A, const AShipActor& B)
+    {
+        const FString AName = ANSI_TO_TCHAR(A.GetRuntimeShip()->GetName());
+        const FString BName = ANSI_TO_TCHAR(B.GetRuntimeShip()->GetName());
+        return AName == BName ? A.GetUniqueID() < B.GetUniqueID() : AName < BName;
+    });
+    if (Candidates.IsEmpty())
+    {
+        SelectedMissionTarget.Reset();
+        return;
+    }
+    const int32 Current = Candidates.IndexOfByPredicate([this](AShipActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
+    const int32 Index = Current == INDEX_NONE ? (Direction > 0 ? 0 : Candidates.Num()-1)
+        : (Current + (Direction > 0 ? 1 : -1) + Candidates.Num()) % Candidates.Num();
+    AShipActor* Selected = Candidates[Index];
+    SelectedMissionTarget = Selected;
+    SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
+    SelectedMissionTargetName = ToTextFromUtf8(Selected->GetRuntimeShip()->GetName());
+    if (!MissionTargetOverlay.IsValid())
+    {
+        TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
+        MissionTargetOverlay = SNew(SMissionTargetOverlay).Controller(GetOwningPlayer())
+            .Target_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
+            .LocalBounds_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetLocalBounds : FBox(ForceInit); })
+            .TargetName_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetName : FText::GetEmpty(); });
+        GetWorld()->GetGameViewport()->AddViewportWidgetContent(MissionTargetOverlay.ToSharedRef(), 900);
+    }
+    MissionTargetLastUpdate = GetWorld()->GetTimeSeconds();
+    FTimerManagerTimerParameters TimerParameters;
+    TimerParameters.bLoop = true;
+    TimerParameters.bMaxOncePerFrame = true;
+    GetWorld()->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
+        &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, TimerParameters);
+}
+void UMissionBriefingDlg::UpdateMissionTargetCamera()
+{
+    AActor* Target = SelectedMissionTarget.Get();
+    if (!IsValid(Target) || Target->IsActorBeingDestroyed() || !IsValid(MissionPreviewCamera))
+    {
+        SelectedMissionTarget.Reset();
+        GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
+        return;
+    }
+    AShipActor* TargetShip = Cast<AShipActor>(Target);
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    Ship* Data = TargetShip ? TargetShip->GetRuntimeShip() : nullptr;
+    if (!Data || !Region || !Region->GetShips().contains(Data) || Data->IsDead())
+    {
+        SelectedMissionTarget.Reset();
+        GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
+        return;
+    }
+    const double Now = GetWorld()->GetTimeSeconds();
+    const double Delta = FMath::Clamp(Now - MissionTargetLastUpdate, 0.0, 0.1);
+    MissionTargetLastUpdate = Now;
+    if ((MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || bMissionControlsOpen) return;
+    int32 Width=0, Height=0;
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    PC->GetViewportSize(Width, Height);
+    if (Width <= 0 || Height <= 0) return;
+    const FBox Bounds = SelectedMissionTargetLocalBounds.TransformBy(Target->GetActorTransform());
+    const double Radius = FMath::Max(10.0, Bounds.GetExtent().Size());
+    const double Focal = Width / (2.0 * FMath::Tan(FMath::DegreesToRadians(
+        MissionPreviewCamera->GetCameraComponent()->FieldOfView * 0.5)));
+    const double PixelRadius = FMath::Min(Width,Height) * 0.20;
+    const double Ratio = Focal / PixelRadius;
+    const FVector Desired = Bounds.GetCenter() - MissionPreviewCamera->GetActorForwardVector() *
+        (Radius * FMath::Sqrt(1.0 + Ratio * Ratio));
+    const double Alpha = 1.0 - FMath::Exp(-6.0 * Delta);
+    MissionPreviewCamera->SetActorLocation(FMath::Lerp(MissionPreviewCamera->GetActorLocation(), Desired, Alpha));
+}
+
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
     if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;

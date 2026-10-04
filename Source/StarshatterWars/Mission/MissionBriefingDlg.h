@@ -7,6 +7,7 @@
 
 class UEnhancedInputComponent;
 class UInputMappingContext;
+class UInputAction;
 class QuitView;
 class UQuitMissionMenu;
 class ACameraActor;
@@ -81,9 +82,22 @@ protected:
     bool EnableMissionMenuInput();
     void DisableMissionMenuInput();
     void ToggleMissionMenu();
+    void PreviousMissionTarget();
+    void NextMissionTarget();
+    void CycleMissionTarget(int32 Direction);
+    void UpdateMissionTargetCamera();
+    TWeakObjectPtr<AActor> SelectedMissionTarget;
+    FText SelectedMissionTargetName;
+    FBox SelectedMissionTargetLocalBounds = FBox(ForceInit);
+    TSharedPtr<SWidget> MissionTargetOverlay;
+    FTimerHandle MissionTargetCameraTimer;
+    double MissionTargetLastUpdate = 0.0;
     void HandleMissionMenuAction(uintptr_t Action);
     UPROPERTY(Transient) TObjectPtr<UEnhancedInputComponent> MissionMenuInput;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> MissionMenuContext;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> MissionTargetContext;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> PreviousMissionTargetAction;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> NextMissionTargetAction;
     bool bAddedMissionMenuContext = false;
     UPROPERTY(EditDefaultsOnly, Category="Mission|Pause Menu")
     TSubclassOf<UQuitMissionMenu> QuitMissionMenuClass;

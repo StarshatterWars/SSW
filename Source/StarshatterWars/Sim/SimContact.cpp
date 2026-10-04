@@ -287,7 +287,7 @@ SimContact::Threat(const Ship* observer) const
 				threat = ship->GetIFF() > 1;
 			}
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[SimContact::Threat] Observer='%hs' Contact='%hs' Threat=%d ContactIFF=%d ObserverIFF=%d EMCON=%d Tracking=%d Weapons=%d"),
 				observer ? observer->GetName() : "NULL",
 				ship ? ship->GetName() : "NULL",

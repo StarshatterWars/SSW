@@ -1,5 +1,4 @@
-#include "SSWRuntimeSubsystem.h"
-#include "Engine/GameInstance.h"
+
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -43,6 +42,9 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "GameStructs_System.h"
+
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "NavLight.h"
 #include "ShipUtils.h"
@@ -347,9 +349,15 @@ AShipActor::Tick(float DeltaTime)
         UpdateEngineAudioFromRuntime(DeltaTime);
         UpdateThrusterVFXFromRuntime();
 
-        DebugFireAllThrusters(1.0f);
+        // Normal runtime thruster updates above control the effects.
         return;
     }
+
+    // Scripted cinematic actors have no runtime Ship; keep their navigation
+    // and navigation lights ticking as well.
+    if (bUseCutsceneNavMovement)
+        UpdateCutsceneNavMovement(DeltaTime);
+    UpdateNavLights(DeltaTime);
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -1666,6 +1674,42 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
             UEUp).Rotator();
 
     SetActorRotation(ActorRot);
+
+    // Bounded diagnostic for the three opening-scene ships only.
+    const FString ProbeName = ANSI_TO_TCHAR(RuntimeShip->GetName());
+    if (SteeringProbeSamples < 8 && GetWorld() &&
+        (ProbeName == TEXT("Blockade Runner") || ProbeName == TEXT("Kitts") || ProbeName == TEXT("Lovo")))
+    {
+        const double Now = GetWorld()->GetTimeSeconds();
+        if (SteeringProbeTime < 0.0)
+        {
+            SteeringProbeTime = Now;
+            SteeringProbePosition = GetActorLocation();
+            SteeringProbeForward = GetActorForwardVector();
+        }
+        else if (Now - SteeringProbeTime >= 1.0)
+        {
+            const FVector Travel = GetActorLocation() - SteeringProbePosition;
+            const FVector Velocity = RuntimeShip->GetVelocity();
+            const FVector Facing = GetActorForwardVector();
+            UE_LOG(LogTemp, Display,
+                TEXT("[CutsceneSteering] Ship='%s' Dt=%.2f SimVelocity=%s SimHeading=%s SimForwardDot=%.3f WorldTravel=%s ActorForward=%s VisualForwardDot=%.3f TurnDegrees=%.2f Helm=%.3f Compass=%.3f Throttle=%.2f Request=%.2f"),
+                *ProbeName, Now - SteeringProbeTime,
+                *Velocity.ToString(), *LegacyForward.ToString(),
+                FVector::DotProduct(Velocity.GetSafeNormal(), LegacyForward.GetSafeNormal()),
+                *Travel.ToString(), *Facing.ToString(),
+                FVector::DotProduct(Travel.GetSafeNormal(), Facing),
+                FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(
+                    FVector::DotProduct(SteeringProbeForward, Facing), -1.0, 1.0))),
+                RuntimeShip->GetHelmHeading(), RuntimeShip->GetCompassHeading(),
+                RuntimeShip->GetThrottle(), RuntimeShip->GetThrottleRequest());
+            SteeringProbeTime = Now;
+            SteeringProbePosition = GetActorLocation();
+            SteeringProbeForward = Facing;
+            ++SteeringProbeSamples;
+        }
+    }
+
 }
 
 void AShipActor::BuildNavLightsFromRuntime()
@@ -2115,7 +2159,7 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
 
     if (!MainDrive)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[ShipActor::UpdateEngineAudioFromRuntime] No MainDrive Actor='%s' Ship='%hs'"),
             *GetName(),
             RuntimeShip->GetName());
@@ -2158,7 +2202,7 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
         {
             EngineAudioComponent->Play();
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[ShipActor::UpdateEngineAudioFromRuntime] PLAY Actor='%s' Ship='%hs'"),
                 *GetName(),
                 RuntimeShip->GetName());
@@ -2170,7 +2214,7 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
         {
             EngineAudioComponent->Stop();
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[ShipActor::UpdateEngineAudioFromRuntime] STOP Actor='%s' Ship='%hs'"),
                 *GetName(),
                 RuntimeShip->GetName());
@@ -2317,69 +2361,31 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         return;
     }
 
-    const int32 RuntimePortCount =
-        RuntimeThruster->GetNumThrusters();
+    // Drive throttle is already normalized to 0..1. Do not substitute velocity:
+    // a coasting ship need not be firing its engines.
+    Drive* MainDrive = RuntimeShip->GetMainDrive();
+    const float DriveBurn = MainDrive && MainDrive->IsPowerOn()
+        && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
+        ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
 
-    for (int32 RuntimePortIndex = 0;
-        RuntimePortIndex < RuntimePortCount;
-        ++RuntimePortIndex)
+    // Visit each cached emitter once, rather than searching the array per port.
+    for (FRuntimeThrusterFX& Entry : RuntimeThrusterFX)
     {
-        const FThrusterPort* RuntimePort =
-            RuntimeThruster->GetPort(RuntimePortIndex);
+        const int32 RuntimePortIndex = Entry.RuntimePortIndex;
+        if (RuntimePortIndex < 0 || RuntimePortIndex >= RuntimeThruster->GetNumThrusters()) continue;
+        const FThrusterPort* RuntimePort = RuntimeThruster->GetPort(RuntimePortIndex);
+        if (!RuntimePort) continue;
+        FRuntimeThrusterFX* FX = &Entry;
+        const bool bMainEngine = RuntimePort->Direction == EThrusterPortDir::AFT;
+        const float Burn = FMath::Clamp(RuntimeThruster->GetThrusterBurn(RuntimePortIndex), 0.0f, 1.0f);
 
-        if (!RuntimePort)
-        {
-            continue;
-        }
-
-        FRuntimeThrusterFX* FX = nullptr;
-
-        for (FRuntimeThrusterFX& Candidate : RuntimeThrusterFX)
-        {
-            if (Candidate.RuntimePortIndex == RuntimePortIndex)
-            {
-                FX = &Candidate;
-                break;
-            }
-        }
-
-        if (!FX)
-        {
-            continue;
-        }
-
-        const float Burn =
-            FMath::Clamp(
-                RuntimeThruster->GetThrusterBurn(RuntimePortIndex),
-                0.0f,
-                1.0f);
-
-        const bool bMainEngine =
-            RuntimePort->Direction == EThrusterPortDir::AFT;
-
-        const uint32 DirectionBit =
-            1u << static_cast<uint32>(RuntimePort->Direction);
-
-        const bool bDirectDirectionalBurn =
-            (static_cast<uint32>(RuntimePort->Fire) & DirectionBit) != 0;
-
-        const float VisualBurn =
-            bDirectDirectionalBurn
-            ? Burn
-            : Burn * 0.25f;
-
-        const float DeadZone =
-            bMainEngine ? 0.05f : 0.30f;
-
-        const float VisualBurnFiltered =
-            VisualBurn <= DeadZone
-            ? 0.0f
-            : FMath::Pow(
-                FMath::GetMappedRangeValueClamped(
-                    FVector2D(DeadZone, 1.0f),
-                    FVector2D(0.0f, 1.0f),
-                    VisualBurn),
-                2.5f);
+        // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
+        // Applying another directional test here suppressed rotational jets.
+        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
+        const float DeadZone = 0.01f;
+        const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
+            : FMath::Sqrt(FMath::GetMappedRangeValueClamped(
+                FVector2D(DeadZone, 1.0f), FVector2D(0.0f, 1.0f), VisualBurn));
 
         const bool bActive =
             VisualBurnFiltered > 0.0f;
@@ -2457,7 +2463,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
                     FX->Flare->Activate(true);
                 }
             }
-            else
+            else if (FX->Flare->IsActive())
             {
                 FX->Flare->DeactivateImmediate();
             }
@@ -2488,7 +2494,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
                     FX->Trail->Activate(true);
                 }
             }
-            else
+            else if (FX->Trail->IsActive())
             {
                 FX->Trail->DeactivateImmediate();
             }

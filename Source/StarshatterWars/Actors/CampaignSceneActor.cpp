@@ -130,21 +130,25 @@ void ACampaignSceneActor::ClearSceneActors()
 
 void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 {
-    bool bRuntimeSubsystemOwnsTick = false;
+    Sim* RuntimeSim = Sim::GetSim();
+    // Only advance the mission this scene loaded. A live mission replacing it
+    // must never be advanced by the menu's cinematic actor.
+    if (!RuntimeSim || !CutsceneMission || RuntimeSim->GetMission() != CutsceneMission)
+        return;
 
     if (UGameInstance* GI = GetGameInstance())
     {
-        if (USSWRuntimeSubsystem* RuntimeSS =
-            GI->GetSubsystem<USSWRuntimeSubsystem>())
+        if (USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>())
         {
-            bRuntimeSubsystemOwnsTick =
-                RuntimeSS->IsRuntimeRunning();
+            const EGameMode Mode = RuntimeSS->GetGameMode();
+            if (Mode != EGameMode::MENU && Mode != EGameMode::CLOD &&
+                Mode != EGameMode::CMPN && Mode != EGameMode::PLAN)
+                return;
+            // A running ticker is not necessarily advancing the simulation.
+            // Menu/campaign loading modes pause the subsystem; the cinematic owns this tick.
+            if (RuntimeSS->IsRuntimeRunning() && !RuntimeSS->IsPaused())
+                return;
         }
-    }
-
-    if (bRuntimeSubsystemOwnsTick)
-    {
-        return;
     }
 
     const double SimSeconds =
@@ -153,9 +157,9 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
             0.0,
             (double)MaxRuntimeTickSeconds);
 
-    if (Sim* RuntimeSim = Sim::GetSim())
+    if (Sim* RTSim = Sim::GetSim())
     {
-        RuntimeSim->ExecFrame(SimSeconds);
+        RTSim->ExecFrame(SimSeconds);
 
         UE_LOG(LogTemp, Verbose,
             TEXT("[CampaignSceneActor] Fallback Sim Tick Seconds=%.4f"),
@@ -165,6 +169,7 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 
 void ACampaignSceneActor::ClearRuntimeShips()
 {
+    CutsceneMission = nullptr;
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] ClearRuntimeShips skipped. Runtime ships are owned by Sim/SimRegion."));
 
@@ -305,6 +310,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(
             //   -> RuntimeSubsystem spawns visuals
             //-----------------------------------------------------
             SimInst->ExecMission();
+            CutsceneMission = SimInst->GetMission() == LegacyMission ? LegacyMission : nullptr;
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] Legacy Sim mission executed"));
