@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios
 
@@ -123,6 +123,10 @@ public:
 private:
     TWeakObjectPtr<ASystemSceneBuilder> MissionPresentationBuilder;
     TArray<TWeakObjectPtr<AShipActor>> MissionPresentationShips;
+    // Presentation only: fixed spawn offsets preserve legacy movement and navigation.
+    TMap<Ship*, FVector> MissionPresentationOffsets;
+    TMap<Ship*, double> MissionPresentationRadii;
+
     FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
 
 private:

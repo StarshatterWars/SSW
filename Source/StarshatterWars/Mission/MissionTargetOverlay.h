@@ -23,10 +23,11 @@ inline FBox MissionTargetLocalBounds(AActor* Actor)
 class SMissionTargetOverlay : public SLeafWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SMissionTargetOverlay) {}
+    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)) {}
         SLATE_ARGUMENT(TWeakObjectPtr<APlayerController>, Controller)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, Target)
         SLATE_ATTRIBUTE(FText, TargetName)
+        SLATE_ATTRIBUTE(FLinearColor, TargetColor)
         SLATE_ATTRIBUTE(FBox, LocalBounds)
     SLATE_END_ARGS()
     void Construct(const FArguments& Args)
@@ -34,6 +35,7 @@ public:
         Controller = Args._Controller;
         Target = Args._Target;
         TargetName = Args._TargetName;
+        TargetColor = Args._TargetColor;
         LocalBounds = Args._LocalBounds;
         SetVisibility(EVisibility::HitTestInvisible);
     }
@@ -72,7 +74,7 @@ public:
         Max.X = FMath::Clamp(Max.X, Min.X, FMath::Max(Min.X, Size.X - 2));
         Max.Y = FMath::Clamp(Max.Y, Min.Y, FMath::Max(Min.Y, Size.Y - 2));
         TArray<FVector2D> Points = { Min, FVector2D(Max.X,Min.Y), Max, FVector2D(Min.X,Max.Y), Min };
-        const FLinearColor Color(0.2f, 1.0f, 0.3f, 1.0f);
+        const FLinearColor Color = TargetColor.Get();
         FSlateDrawElement::MakeLines(Elements, Layer + 1, Geometry.ToPaintGeometry(), Points,
             ESlateDrawEffect::None, Color, true, 2.0f);
         FSlateDrawElement::MakeText(Elements, Layer + 2,
@@ -84,5 +86,6 @@ private:
     TWeakObjectPtr<APlayerController> Controller;
     TAttribute<TWeakObjectPtr<AActor>> Target;
     TAttribute<FText> TargetName;
+    TAttribute<FLinearColor> TargetColor;
     TAttribute<FBox> LocalBounds;
 };

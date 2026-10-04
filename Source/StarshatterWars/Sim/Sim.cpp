@@ -429,6 +429,8 @@ Sim::CommitMission()
 
 void Sim::UnloadMission()
 {
+	// Non-owning scheduler entries must not survive their regions.
+	rgn_queue.clear();
 	HUDView* hud = HUDView::GetInstance();
 	if (hud)
 	{
@@ -1987,7 +1989,7 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
 		DeltaSeconds,
 		Game::GetGameTime(),
@@ -2015,18 +2017,17 @@ Sim::ExecFrame(double DeltaSeconds)
 		if (RegionIter.value() != active_region && RegionIter->GetNumShips() && !rgn_queue.contains(RegionIter.value()))
 			rgn_queue.append(RegionIter.value());
 
-	// execframe for one inactive sim region:
-	if (rgn_queue.size()) {
+	// Execute one current inactive region. Validate ownership before dereferencing
+	// queued raw pointers; entries can become obsolete across mission teardown.
+	while (rgn_queue.size())
+	{
 		SimRegion* ExecRegion = rgn_queue.removeIndex(0);
-
-		while (ExecRegion && (ExecRegion->GetNumShips() == 0 || ExecRegion == active_region))
-			if (rgn_queue.size())
-				ExecRegion = rgn_queue.removeIndex(0);
-			else
-				ExecRegion = nullptr;
-
-		if (ExecRegion)
-			ExecRegion->ExecFrame(DeltaSeconds);
+		if (!ExecRegion || !regions.contains(ExecRegion))
+			continue;
+		if (ExecRegion == active_region || ExecRegion->GetNumShips() == 0)
+			continue;
+		ExecRegion->ExecFrame(DeltaSeconds);
+		break;
 	}
 
 	if (active_region)

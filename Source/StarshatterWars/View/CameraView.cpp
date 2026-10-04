@@ -500,9 +500,9 @@ void CameraView::RenderForeground()
 
     video->SetAmbient(scene->Ambient());
     video->SetRenderState(Video::LIGHTING_PASS, 0);
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::Z_ENABLE, TRUE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, FALSE);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::Z_ENABLE, true);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, false);
 
     iter.reset();
     while (++iter)
@@ -732,9 +732,9 @@ void CameraView::RenderLensFlare()
     if (!halo_bitmap || !video || !scene || !camera || !Projector)
         return;
 
-    video->SetRenderState(Video::STENCIL_ENABLE, FALSE);
-    video->SetRenderState(Video::Z_ENABLE, FALSE);
-    video->SetRenderState(Video::Z_WRITE_ENABLE, FALSE);
+    video->SetRenderState(Video::STENCIL_ENABLE, false);
+    video->SetRenderState(Video::Z_ENABLE, false);
+    video->SetRenderState(Video::Z_WRITE_ENABLE, false);
 
     const FVector center((float)width / 2.0f, (float)height / 2.0f, 1.0f);
 

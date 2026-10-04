@@ -1,4 +1,4 @@
-#include "SSWRuntimeSubsystem.h"
+﻿#include "SSWRuntimeSubsystem.h"
 #include "SystemSceneBuilder.h"
 #include "PlanetActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -717,7 +717,61 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
                 RuntimeShip->GetName())));
 #endif
 
-    if (MissionPresentationBuilder.IsValid()) MissionPresentationShips.Add(ShipActor);
+    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+    {
+        // Bound static geometry about the actor pivot, excluding particle effects.
+        double Radius = FMath::Max(100.0, RuntimeShip->GetRadius() * 2.0);
+        TArray<UStaticMeshComponent*> Meshes;
+        ShipActor->GetComponents<UStaticMeshComponent>(Meshes);
+        for (UStaticMeshComponent* Mesh : Meshes)
+        {
+            if (!Mesh || !Mesh->GetStaticMesh()) continue;
+            const FBoxSphereBounds Bounds = Mesh->CalcBounds(Mesh->GetComponentTransform());
+            Radius = FMath::Max(Radius,
+                FVector::Distance(Bounds.Origin, ShipActor->GetActorLocation()) + Bounds.BoxExtent.Size());
+        }
+        MissionPresentationOffsets.Remove(RuntimeShip);
+        MissionPresentationRadii.Add(RuntimeShip, Radius);
+        FVector Position = GetVisualSpawnLocationForRuntimeShip(RuntimeShip);
+        FVector Direction = FVector::UpVector;
+        const FString RegionName = RuntimeShip->GetRegion()
+            ? ANSI_TO_TCHAR(RuntimeShip->GetRegion()->GetName()) : TEXT("");
+        for (const FSpawnedSystemRegion& Region : Builder->GetSpawnedRegions())
+        {
+            if (!Region.RegionName.Equals(RegionName, ESearchCase::IgnoreCase) &&
+                !Region.RegionName.Equals(RegionName + TEXT("_REGION"), ESearchCase::IgnoreCase)) continue;
+            FVector Center = Region.ParentActor ? Region.ParentActor->GetActorLocation() : Region.SpawnLocation;
+            if (APlanetActor* Planet = Cast<APlanetActor>(Region.ParentActor.Get()))
+                if (UStaticMeshComponent* Mesh = Planet->GetPlanetMeshComponent())
+                    Center = Mesh->CalcBounds(Mesh->GetComponentTransform()).Origin;
+            Direction = (Position - Center).GetSafeNormal();
+            if (Direction.IsNearlyZero()) Direction = FVector::UpVector;
+            break;
+        }
+        const FVector BasePosition = Position;
+        // Move only outward. Each conflict advances beyond that ship's entire
+        // clearance sphere; at most one advance per existing actor is necessary.
+        for (int32 Pass = 0; Pass <= MissionPresentationShips.Num(); ++Pass)
+        {
+            bool bMoved = false;
+            for (const TWeakObjectPtr<AShipActor>& Existing : MissionPresentationShips)
+            {
+                AShipActor* Other = Existing.Get();
+                if (!Other || Other->IsActorBeingDestroyed()) continue;
+                Ship* Peer = Other->GetRuntimeShip();
+                if (!Peer || Peer->GetRegion() != RuntimeShip->GetRegion()) continue;
+                const double* PeerRadius = MissionPresentationRadii.Find(Peer);
+                const double Clearance = 1.25 * (Radius + (PeerRadius ? *PeerRadius : Radius)) + 100.0;
+                const FVector Delta = GetVisualSpawnLocationForRuntimeShip(Peer) - Position;
+                if (Delta.SizeSquared() >= Clearance * Clearance) continue;
+                Position += Direction * (FVector::DotProduct(Delta, Direction) + Clearance + 1.0);
+                bMoved = true;
+            }
+            if (!bMoved) break;
+        }
+        MissionPresentationOffsets.Add(RuntimeShip, Position - BasePosition);
+        MissionPresentationShips.Add(ShipActor);
+    }
     ShipActor->BindRuntimeShip(
         RuntimeShip);
 
@@ -864,12 +918,15 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
             const FVector Offset = ConvertLegacyShipLocationToUE(LegacyLoc) * (BandWidth / LegacyRadius);
             // Region-map shell: authored offsets start outside the physical surface.
             // Reserve clearance for the ship as well as the central body's radius.
-            const double Inner = BodyRadius + FMath::Max(100.0, RuntimeShip->GetRadius() * 2.0);
-            if (!Offset.IsNearlyZero()) return Center + Offset.GetSafeNormal() * (Inner + Offset.Size());
+            const double* VisualRadius = MissionPresentationRadii.Find(RuntimeShip);
+            const double Inner = BodyRadius + FMath::Max(100.0,
+                VisualRadius ? *VisualRadius * 1.25 : RuntimeShip->GetRadius() * 2.0);
+            const FVector Separation = MissionPresentationOffsets.FindRef(RuntimeShip);
+            if (!Offset.IsNearlyZero()) return Center + Offset.GetSafeNormal() * (Inner + Offset.Size()) + Separation;
             // Stable placement for authored 0,0,0 entries; no random jitter each tick.
             const uint32 Hash = GetTypeHash(FString(ANSI_TO_TCHAR(RuntimeShip->GetName())));
             const double Angle = (Hash % 65536) * (2.0 * PI / 65536.0);
-            return Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0) * (Inner + BandWidth * 0.15);
+            return Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0) * (Inner + BandWidth * 0.15) + Separation;
         }
     }
 
@@ -884,10 +941,10 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
     if (RegionActor)
     {
         return RegionActor->GetActorTransform().TransformPosition(
-            LocalUEOffset);
+            LocalUEOffset) + MissionPresentationOffsets.FindRef(RuntimeShip);
     }
 
-    return LocalUEOffset;
+    return LocalUEOffset + MissionPresentationOffsets.FindRef(RuntimeShip);
 }
 
 
@@ -907,5 +964,7 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
         Actor->Destroy();
     }
     MissionPresentationShips.Empty();
+    MissionPresentationOffsets.Empty();
+    MissionPresentationRadii.Empty();
     MissionPresentationBuilder.Reset();
 }

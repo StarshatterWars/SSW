@@ -1182,9 +1182,20 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     TArray<AShipActor*> Candidates;
     for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
     {
-        Ship* ShipData = It->GetRuntimeShip();
-        if (IsValid(*It) && !It->IsActorBeingDestroyed() && !It->IsHidden() && ShipData &&
-            Region->GetShips().contains(ShipData) && !ShipData->IsDead()) Candidates.Add(*It);
+        AShipActor* Actor = *It;
+        if (!IsValid(Actor)) continue;
+        Ship* ShipData = Actor->GetRuntimeShip();
+        const bool bInRegion = ShipData && Region->GetShips().contains(ShipData);
+        // Never dereference an unowned runtime pointer for diagnostics.
+        const bool bDead = bInRegion && ShipData->IsDead();
+        const bool bDestroying = Actor->IsActorBeingDestroyed();
+        const bool bHidden = Actor->IsHidden();
+        const bool bEligible = bInRegion && !bDead && !bDestroying && !bHidden;
+        UE_LOG(LogTemp, Display,
+            TEXT("[MissionTargetCycle] Actor='%s' Ship='%s' ActiveRegion='%hs' Bound=%d InRegion=%d Hidden=%d Destroying=%d Dead=%d Eligible=%d"),
+            *Actor->GetName(), bInRegion ? ANSI_TO_TCHAR(ShipData->GetName()) : TEXT("<unbound or outside active region>"),
+            Region->GetName(), ShipData != nullptr, bInRegion, bHidden, bDestroying, bDead, bEligible);
+        if (bEligible) Candidates.Add(Actor);
     }
     Candidates.Sort([](const AShipActor& A, const AShipActor& B)
     {
@@ -1201,6 +1212,8 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     const int32 Index = Current == INDEX_NONE ? (Direction > 0 ? 0 : Candidates.Num()-1)
         : (Current + (Direction > 0 ? 1 : -1) + Candidates.Num()) % Candidates.Num();
     AShipActor* Selected = Candidates[Index];
+    UE_LOG(LogTemp, Display, TEXT("[MissionTargetCycle] Selected='%hs' Index=%d Count=%d"),
+        Selected->GetRuntimeShip()->GetName(), Index, Candidates.Num());
     SelectedMissionTarget = Selected;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
     SelectedMissionTargetName = ToTextFromUtf8(Selected->GetRuntimeShip()->GetName());
@@ -1210,6 +1223,23 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
         MissionTargetOverlay = SNew(SMissionTargetOverlay).Controller(GetOwningPlayer())
             .Target_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
             .LocalBounds_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetLocalBounds : FBox(ForceInit); })
+            .TargetColor_Lambda([WeakThis]()
+            {
+                const FLinearColor Neutral(0.65f, 0.65f, 0.65f, 1.0f);
+                if (!WeakThis.IsValid()) return Neutral;
+                AShipActor* Actor = Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
+                Sim* CurrentSim = Sim::GetSim();
+                SimRegion* CurrentRegion = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;
+                Ship* Data = IsValid(Actor) ? Actor->GetRuntimeShip() : nullptr;
+                if (!Data || !CurrentRegion || !CurrentRegion->GetShips().contains(Data)) return Neutral;
+                const int32 IFF = Data->GetIFF();
+                if (IFF <= 0) return Neutral;
+                Mission* CurrentMission = CurrentSim->GetMission();
+                if (!CurrentMission) return Neutral;
+                return IFF == CurrentMission->GetTeam()
+                    ? FLinearColor(0.25f, 0.65f, 1.0f, 1.0f)
+                    : FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+            })
             .TargetName_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetName : FText::GetEmpty(); });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(MissionTargetOverlay.ToSharedRef(), 900);
     }

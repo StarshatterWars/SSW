@@ -1,4 +1,4 @@
-/*
+ï»¿/*
     Project Starshatter Wars
     Fractal Dev Games
     Copyright (C) 2024-2026.
@@ -1431,7 +1431,7 @@ void UStarshatterGameDataSubsystem::ExportDataToCSV(UDataTable* DataTable, const
 		return;
 	}
 
-	// You can use none or pretty names — make sure the flag is in scope
+	// You can use none or pretty names â€” make sure the flag is in scope
 	const FString CSVData = DataTable->GetTableAsCSV(EDataTableExportFlags::None);
 
 	const FString SavePath = FPaths::ProjectDir() + FileName;
@@ -5609,7 +5609,7 @@ bool UStarshatterGameDataSubsystem::FillMedalInfoFromTable(const UDataTable* Med
 		if (!Row)
 			continue;
 
-		if (Row->MedalId == MedalId) // <- change to AwardId if that’s what your struct uses
+		if (Row->MedalId == MedalId) // <- change to AwardId if thatâ€™s what your struct uses
 		{
 			OutMedal = *Row;
 			return true;
@@ -6171,6 +6171,22 @@ void UStarshatterGameDataSubsystem::AddInfrastructureToForce(CombatGroup* ForceG
 	}
 
 	InfrastructureGroup->SetRegion(TCHAR_TO_ANSI(*InfrastructureRow.Region));
+    InfrastructureGroup->SetLocation(InfrastructureRow.Location);
+    for (const FS_OOBInfrastructureUnit& Row : InfrastructureRow.Unit)
+    {
+        CombatUnit* Unit = new CombatUnit(
+            TCHAR_TO_ANSI(*Row.Name), "",
+            ShipDesign::ClassForName(TCHAR_TO_ANSI(*Row.Design)),
+            TCHAR_TO_ANSI(*Row.Design), FMath::Max(Row.Count, 1),
+            InfrastructureGroup->GetIFF());
+        ApplyDesignToUnit(Unit, Row.Design);
+        Unit->SetCombatGroup(InfrastructureGroup);
+        Unit->SetRegion(TCHAR_TO_ANSI(*Row.Region));
+        Unit->MoveTo(Row.Location);
+        Unit->SetLeader(InfrastructureGroup->GetUnits().size() == 0);
+        InfrastructureGroup->GetUnits().append(Unit);
+    }
+
 }
 
 void UStarshatterGameDataSubsystem::AddWingToCarrier(

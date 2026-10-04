@@ -427,6 +427,28 @@ void CampaignMissionStarship::GenerateStandardElements()
         }
     }
 
+    // Infrastructure may belong to a network with no region of its own,
+    // and consequently be absent from the zone-force lists above.
+    // Traverse the campaign hierarchy, passing matching infrastructure through
+    // the existing region checks and duplicate guards.
+    TArray<CombatGroup*> Pending;
+    TSet<CombatGroup*> Visited;
+    ListIter<Combatant> Combatants = campaign->GetCombatants();
+    while (++Combatants)
+        if (Combatants->GetForce()) Pending.Add(Combatants->GetForce());
+    while (!Pending.IsEmpty())
+    {
+        CombatGroup* Group = Pending.Last();
+        Pending.RemoveAt(Pending.Num() - 1);
+        if (!Group || Visited.Contains(Group)) continue;
+        Visited.Add(Group);
+        ListIter<CombatGroup> Children = Group->GetComponents();
+        while (++Children) Pending.Add(Children.value());
+        if (Group->GetType() == ECOMBATGROUP_TYPE::INFRASTRUCTURE ||
+            Group->GetType() == ECOMBATGROUP_TYPE::NETWORK)
+            ProcessGroupRecursive(Group, MissionRegion);
+    }
+
     UE_LOG(LogTemp, Warning, TEXT("[CMS] GenerateStandardElements END"));
 }
 
@@ -474,12 +496,7 @@ void CampaignMissionStarship::ProcessGroupRecursive(CombatGroup* g, const FStrin
         (int32)g->GetType(),
         g->GetUnits().size());
 
-    if (g->GetType() == ECOMBATGROUP_TYPE::NETWORK)
-    {
-        return;
-    }
-
-    switch (g->GetType())
+switch (g->GetType())
     {
     case ECOMBATGROUP_TYPE::INTERCEPT_SQUADRON:
     case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
@@ -510,6 +527,7 @@ void CampaignMissionStarship::ProcessGroupRecursive(CombatGroup* g, const FStrin
     case ECOMBATGROUP_TYPE::REFINERY:
     case ECOMBATGROUP_TYPE::RESOURCE:
     case ECOMBATGROUP_TYPE::INFRASTRUCTURE:
+    case ECOMBATGROUP_TYPE::NETWORK:
     case ECOMBATGROUP_TYPE::TRANSPORT:
     case ECOMBATGROUP_TYPE::HABITAT:
     case ECOMBATGROUP_TYPE::STORAGE:
