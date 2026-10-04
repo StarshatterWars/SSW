@@ -250,6 +250,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.CampaignLoadClass"),
         TEXT("UI.MissionSelectScreenClass"),
         TEXT("UI.ExitDlgClass"),
+        TEXT("UI.QuitMenuClass"),
         TEXT("UI.FirstRunDlgClass"),
         TEXT("UI.OptionsScreenClass"),
         TEXT("UI.PlayerLogbookScreenClass"),

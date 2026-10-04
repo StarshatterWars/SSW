@@ -608,6 +608,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.QuitMenuClass")))
+    {
+        if (!Settings->QuitMenuClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->QuitMenuClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.QuitMenuClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.QuitMenuClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] QuitMenuClass is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------
