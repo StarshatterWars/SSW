@@ -5,6 +5,10 @@
 #include "GameStructs.h"
 #include "MissionBriefingDlg.generated.h"
 
+class UEnhancedInputComponent;
+class UInputMappingContext;
+class QuitView;
+class UQuitMissionMenu;
 class ACameraActor;
 class ULevelStreamingDynamic;
 class SWidget;
@@ -72,6 +76,20 @@ protected:
     void SetMode(EMissionBriefingMode NewMode);
     void RefreshHeader();
     void CloseEmptySectorPreview();
+    bool EnableMissionMenuInput();
+    void DisableMissionMenuInput();
+    void ToggleMissionMenu();
+    void HandleMissionMenuAction(uintptr_t Action);
+    UPROPERTY(Transient) TObjectPtr<UEnhancedInputComponent> MissionMenuInput;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> MissionMenuContext;
+    bool bAddedMissionMenuContext = false;
+    UPROPERTY(EditDefaultsOnly, Category="Mission|Pause Menu")
+    TSubclassOf<UQuitMissionMenu> QuitMissionMenuClass;
+    QuitView* MissionQuitMenu = nullptr;
+    bool bMissionControlsOpen = false;
+    bool bControlsPreviousWorldPaused = false;
+    bool bControlsPreviousRuntimePaused = false;
+
     UFUNCTION()
     void HandleMissionSystemLevelShown();
     void RevealMissionSunWhenCameraReady();

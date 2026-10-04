@@ -296,6 +296,7 @@ void UMenuScreen::TearDown()
 
 void UMenuScreen::ExecFrame(double DeltaTime)
 {
+    if (!bIsShown) return;
     if (TimeTilChange > 0.0)
     {
         TimeTilChange -= DeltaTime;
@@ -516,6 +517,32 @@ void UMenuScreen::ShowCampaignSelectDlg()
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCampaignSelectDlg: SHOWN InViewport=%d Vis=%d"),
         CmpSelectDlg->IsInViewport() ? 1 : 0,
         (int32)CmpSelectDlg->GetVisibility());
+}
+
+void UMenuScreen::ShowOperationsMissionsDlg()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC || !CmpnScreenClass) return;
+    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
+    if (!CmpnScreen) return;
+    HideAll();
+    CmpnScreen->SetMenuManager(this);
+    CmpnScreen->InitializeDlg(this);
+    if (!CmpnScreen->IsInViewport()) CmpnScreen->AddToViewport(300);
+    CmpnScreen->SetVisibility(ESlateVisibility::Visible);
+    CmpnScreen->SetIsEnabled(true);
+    CmpnScreen->SetDialogInputEnabled(true);
+    CurrentDialog = CmpnScreen;
+    bIsShown = true;
+    // Consume the Escape press that ended the mission.
+    TimeTilChange = 0.5;
+    bExitLatch = true;
+    bShowMissionsRequested = false;
+    CmpnScreen->ShowOperationsMissions();
+    if (UCmdDlg* Operations = CmpnScreen->GetCmdDlg())
+    {
+        ApplyUIFocus(PC, Operations);
+    }
 }
 
 void UMenuScreen::ShowOperationsDlg()
@@ -1061,6 +1088,14 @@ void UMenuScreen::HideOptionsScreen()
 
 void UMenuScreen::ReturnFromOptions()
 {
+    if (MissionOptionsReturn)
+    {
+        HideOptionsScreen();
+        CurrentDialog = nullptr;
+        auto Return = MoveTemp(MissionOptionsReturn);
+        Return();
+        return;
+    }
     ShowMenuDlg();
 }
 

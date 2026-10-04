@@ -77,6 +77,8 @@ public:
 
     // Legacy alias route:
     void ShowOperationsDlg();
+    void ShowOperationsMissionsDlg();
+    TFunction<void()> MissionOptionsReturn;
 
     // New campaign hub:
     void ShowCmpnScreen();

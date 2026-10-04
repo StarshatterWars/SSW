@@ -24,6 +24,23 @@
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
+#include "MissionDebriefDlg.h"
+#include "GameScreen.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "QuitView.h"
+#include "QuitMissionMenu.h"
+#include "UObject/ConstructorHelpers.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
+#include "Engine/LocalPlayer.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Sim.h"
+#include "SimEvent.h"
+#include "OptionsScreen.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "MenuScreen.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
@@ -87,6 +104,9 @@
 UMissionBriefingDlg::UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
+    static ConstructorHelpers::FClassFinder<UQuitMissionMenu> MenuBlueprint(
+        TEXT("/Game/Screens/Mission/WBP_QuitMissionMenu"));
+    if (MenuBlueprint.Succeeded()) QuitMissionMenuClass = MenuBlueprint.Class;
 }
 
 void UMissionBriefingDlg::SetMenuManager(UMenuScreen* InManager)
@@ -786,6 +806,7 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
 
 void UMissionBriefingDlg::CloseEmptySectorPreview()
 {
+    DisableMissionMenuInput();
     if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
@@ -1024,6 +1045,150 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
     World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
 }
 
+bool UMissionBriefingDlg::EnableMissionMenuInput()
+{
+    APlayerController* PC = GetOwningPlayer();
+    ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr;
+    auto* Input = LP ? LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
+    if (!Input || !manager) return false;
+    MissionMenuContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Game.IMC_Game"));
+    UInputAction* Action = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Quit.IA_Quit"));
+    if (!MissionMenuContext || !Action) return false;
+    MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
+    MissionMenuInput->RegisterComponent();
+    MissionMenuInput->Priority = 1000;
+    MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
+    bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
+    if (bAddedMissionMenuContext) Input->AddMappingContext(MissionMenuContext.Get(), 1000);
+    PC->PushInputComponent(MissionMenuInput.Get());
+    // Existing briefing Blueprint defaults may still have None or the native
+    // class saved. Resolve the designed menu rather than displaying plain Slate.
+    if (!QuitMissionMenuClass || QuitMissionMenuClass == UQuitMissionMenu::StaticClass())
+    {
+        QuitMissionMenuClass = LoadClass<UQuitMissionMenu>(nullptr,
+            TEXT("/Game/Screens/Mission/WBP_QuitMissionMenu.WBP_QuitMissionMenu_C"));
+        if (!QuitMissionMenuClass)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] WBP_QuitMissionMenu could not load. Compile/save it and verify its parent is QuitMissionMenu."));
+        }
+    }
+    UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Quit menu widget class: %s"), *GetNameSafe(QuitMissionMenuClass.Get()));
+    MissionQuitMenu = new QuitView(nullptr);
+    TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
+    MissionQuitMenu->Configure(PC, [WeakThis](uintptr_t Choice)
+    {
+        if (WeakThis.IsValid()) WeakThis->HandleMissionMenuAction(Choice);
+    }, QuitMissionMenuClass);
+    return true;
+}
+void UMissionBriefingDlg::DisableMissionMenuInput()
+{
+    if (manager) manager->MissionOptionsReturn = nullptr;
+    if (bMissionControlsOpen)
+    {
+        if (manager) manager->HideOptionsScreen();
+        UGameplayStatics::SetGamePaused(GetWorld(), bControlsPreviousWorldPaused);
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+            Runtime->SetPaused(bControlsPreviousRuntimePaused);
+        bMissionControlsOpen = false;
+    }
+    if (MissionQuitMenu) { delete MissionQuitMenu; MissionQuitMenu = nullptr; }
+    if (APlayerController* PC = GetOwningPlayer())
+    {
+        if (MissionMenuInput) PC->PopInputComponent(MissionMenuInput.Get());
+        if (ULocalPlayer* LP = PC->GetLocalPlayer())
+            if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+                if (bAddedMissionMenuContext && MissionMenuContext)
+                    Input->RemoveMappingContext(MissionMenuContext.Get());
+    }
+    if (MissionMenuInput) MissionMenuInput->DestroyComponent();
+    MissionMenuInput = nullptr;
+    MissionMenuContext = nullptr;
+    bAddedMissionMenuContext = false;
+}
+void UMissionBriefingDlg::ToggleMissionMenu()
+{
+    if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;
+    if (MissionQuitMenu->IsMenuShown()) MissionQuitMenu->CloseMenu();
+    else
+    {
+        TArray<UUserWidget*> Screens;
+        UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), Screens, UGameScreen::StaticClass(), false);
+        for (UUserWidget* Widget : Screens)
+            if (auto* Screen = Cast<UGameScreen>(Widget))
+                if (Screen->IsShown() && Screen->CloseTopmost()) return;
+        MissionQuitMenu->ShowMenu();
+    }
+}
+void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
+{
+    if (Action == QuitView::Resume) return;
+    if (Action == QuitView::Controls)
+    {
+        if (!manager) return;
+        bMissionControlsOpen = true;
+        bControlsPreviousWorldPaused = UGameplayStatics::IsGamePaused(GetWorld());
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+            bControlsPreviousRuntimePaused = Runtime->IsPaused();
+        // Keep gameplay paused while the existing options UI is active.
+        UGameplayStatics::SetGamePaused(GetWorld(), true);
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetPaused(true);
+        TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
+        manager->MissionOptionsReturn = [WeakThis]()
+        {
+            if (!WeakThis.IsValid()) return;
+            auto* Self = WeakThis.Get();
+            UGameplayStatics::SetGamePaused(Self->GetWorld(), Self->bControlsPreviousWorldPaused);
+            if (auto* Runtime = Self->GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetPaused(Self->bControlsPreviousRuntimePaused);
+            Self->bMissionControlsOpen = false;
+            if (Self->MissionQuitMenu) Self->MissionQuitMenu->ShowMenu();
+        };
+        manager->ShowOptionsScreen();
+        if (auto* Options = manager->GetOptionsScreen()) Options->ShowCtlDlg();
+        else { auto Return = MoveTemp(manager->MissionOptionsReturn); if (Return) Return(); }
+        return;
+    }
+    // Defer cleanup so we never delete QuitView during its button callback.
+    TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
+    GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis, Action]()
+    {
+        if (!WeakThis.IsValid()) return;
+        auto* Self = WeakThis.Get();
+        Sim* Simulation = Sim::GetSim();
+        auto* Runtime = Self->GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
+        if (Runtime) Runtime->SetTimeCompression(1);
+        if (Action == QuitView::Accept && Self->Manager && Self->Manager->GetDebriefDlg())
+        {
+            Self->CloseEmptySectorPreview();
+            if (Runtime) Runtime->SetGameMode(EGameMode::PLAN);
+            Self->Manager->ShowDebriefDlg();
+            auto* Debrief = Self->Manager->GetDebriefDlg();
+            Debrief->Show();
+            if (APlayerController* PC = Self->GetOwningPlayer())
+            {
+                PC->bShowMouseCursor = true;
+                FInputModeGameAndUI Mode;
+                Mode.SetWidgetToFocus(Debrief->TakeWidget());
+                Mode.SetHideCursorDuringCapture(false);
+                PC->SetInputMode(Mode);
+            }
+            return;
+        }
+        if (Action == QuitView::Accept)
+        {
+            if (Simulation) Simulation->CommitMission();
+        }
+        if (Simulation) Simulation->UnloadMission();
+        else ShipStats::Initialize();
+        if (Action == QuitView::Abort)
+            if (Campaign* Camp = Campaign::GetCampaign())
+                if (Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS) Camp->RollbackMission();
+        Self->CloseEmptySectorPreview();
+        if (Runtime) Runtime->SetGameMode(EGameMode::CMPN);
+        if (Self->manager) Self->manager->ShowOperationsMissionsDlg();
+    });
+}
+
 void UMissionBriefingDlg::OnCommit()
 {
     // Ignore a repeated launch while this preview is loading or visible.
@@ -1073,6 +1238,12 @@ void UMissionBriefingDlg::OnCommit()
         CloseEmptySectorPreview();
         UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Could not start system level load: %s"),
             *PackagePath);
+        return;
+    }
+    if (!EnableMissionMenuInput())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Missing IMC_Game or IA_Quit"));
+        CloseEmptySectorPreview();
         return;
     }
     MissionSystemPackage = PackagePath;
@@ -1129,8 +1300,7 @@ void UMissionBriefingDlg::OnCommit()
 
     if (APlayerController* PC = GetOwningPlayer())
     {
-        FInputModeGameAndUI Input;
-        Input.SetHideCursorDuringCapture(false);
+        FInputModeGameOnly Input;
         PC->SetInputMode(Input);
         PC->bShowMouseCursor = true;
     }

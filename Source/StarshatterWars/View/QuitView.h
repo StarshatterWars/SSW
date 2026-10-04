@@ -1,59 +1,39 @@
 #pragma once
-
 #include "View.h"
+class APlayerController;
+class SWidget;
+class UQuitMissionMenu;
 
-class Menu;
-class MenuItem;
-class Sim;
-
+// Legacy Simulation Menu with an Unreal Slate presentation and host actions.
 class QuitView : public View
 {
 public:
-    // NEW: no Window* — Window is “part of views” now
-    QuitView(View* InParent);
+    enum EAction : uintptr_t { Accept = 1, Abort = 2, Resume = 3, Controls = 4 };
+    explicit QuitView(View* Parent);
     virtual ~QuitView();
-
-    // Operations:
-    virtual void Refresh() override;
-    virtual void OnWindowMove() override;
-    virtual void ExecFrame() override;
-
-    virtual bool CanAccept();
-    virtual bool IsMenuShown() const;
-    virtual void ShowMenu();
-    virtual void CloseMenu();
-
     static void Initialize(View* Parent);
     static void Close();
     static QuitView* GetInstance() { return quit_view; }
-
-    // Input (MATCHES View.h signatures):
-    virtual bool OnMouseButtonDown(int32 Button, const FVector2D& ScreenPos) override;
-    virtual bool OnMouseButtonUp(int32 Button, const FVector2D& ScreenPos) override;
-    virtual bool OnMouseMove(const FVector2D& ScreenPos) override;
+    void Configure(APlayerController* PC, TFunction<void(uintptr_t)> Handler, TSubclassOf<UQuitMissionMenu> WidgetClass = nullptr);
+    virtual void Refresh() override {}
+    virtual void OnWindowMove() override {}
+    virtual void ExecFrame() override {}
+    virtual bool CanAccept();
+    virtual bool IsMenuShown() const { return bMenuShown; }
+    virtual void ShowMenu();
+    virtual void CloseMenu();
     virtual bool OnKeyDown(int32 Key, bool bRepeat) override;
-
-protected:
-    void DrawMenu();
-    int  HitTestItem(const Rect& menuRect, int x, int y) const;
-
-    // Action handler you can wire to your real pause/quit flow:
     void ExecuteAction(uintptr_t Action);
-
-protected:
-    int   width = 0;
-    int   height = 0;
-    int   xcenter = 0;
-    int   ycenter = 0;
-
-    bool  mouse_latch = false;
-    bool  bMenuShown = false;
-
-    int   MouseIndex = -1;
-
-    Sim* sim = nullptr;
-
-    Menu* QuitMenu = nullptr;
-
+private:
     static QuitView* quit_view;
+    TWeakObjectPtr<APlayerController> Controller;
+    TSharedPtr<SWidget> Overlay;
+    TSubclassOf<UQuitMissionMenu> MenuWidgetClass;
+    TWeakObjectPtr<UQuitMissionMenu> MenuWidget;
+    TFunction<void(uintptr_t)> ActionHandler;
+    FString Rejection;
+    bool bMenuShown = false;
+    bool bPreviousWorldPaused = false;
+    bool bPreviousRuntimePaused = false;
+    bool bPreviousCursor = false;
 };

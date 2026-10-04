@@ -71,6 +71,7 @@ public:
     virtual void InitializeDlg(UMenuScreen* InManager);
 
     void ShowCmdDlg();
+    void ShowOperationsMissions();
     void HideCmdDlg();
     bool IsCmdShown() const;
     UCmdDlg* GetCmdDlg() const { return CmdDlg; }
@@ -184,6 +185,7 @@ protected:
     bool bIsShown = false;
     bool bShowMissionsRequested = false;
     bool bExitLatch = false;
+    bool bWaitForMissionQuitRelease = false;
     bool bHidingAll = false;
     bool bCampaignPaused = false;
 

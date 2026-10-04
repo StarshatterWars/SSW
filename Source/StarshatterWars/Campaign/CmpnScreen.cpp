@@ -475,7 +475,9 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
         PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
     }
 
-    const bool bExitPressed = PC && PC->IsInputKeyDown(EKeys::Escape);
+    const bool bEscapeDown = PC && PC->IsInputKeyDown(EKeys::Escape);
+    if (!bEscapeDown) bWaitForMissionQuitRelease = false;
+    const bool bExitPressed = bEscapeDown && !bWaitForMissionQuitRelease;
 
 #if WITH_EDITOR
     const bool bDebugSkipPressed = PC && PC->IsInputKeyDown(EKeys::SpaceBar);
@@ -711,6 +713,27 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
         MusicManager::SetMode(MusicMode::MENU);
         Mouse::Show(!IsCmpSceneShown());
     }
+}
+
+void UCmpnScreen::ShowOperationsMissions()
+{
+    Setup();
+    RefreshRuntimePointers();
+    ApplyManagerToChildren();
+    ClearPendingSceneTransition();
+    bShowMissionsRequested = false;
+    bIsShown = true;
+    SetVisibility(ESlateVisibility::Visible);
+    SetIsEnabled(true);
+    SetDialogInputEnabled(true);
+    CompletionStage = 0;
+    DesiredFieldOfView = GetFieldOfView();
+    bCampaignPaused = false;
+    TimeTilChange = 0.5;
+    bExitLatch = true;
+    bWaitForMissionQuitRelease = true;
+    ShowCmdDlg();
+    if (CmdDlg) CmdDlg->ShowMissionsPanel();
 }
 
 void UCmpnScreen::ShowCmdDlg()

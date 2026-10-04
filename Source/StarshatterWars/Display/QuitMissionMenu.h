@@ -30,6 +30,7 @@ public:
     UPROPERTY(BlueprintReadOnly, Category="Mission Menu") FText StatusMessage;
     UFUNCTION(BlueprintImplementableEvent, Category="Mission Menu") void OnStatusMessageChanged(const FText& Message);
 protected:
+    void BuildGeneratedContent();
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
     virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
