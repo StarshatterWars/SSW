@@ -28,13 +28,20 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "Engine/LevelStreamingDynamic.h"
+#include "Camera/CameraActor.h"
+#include "TimerManager.h"
+#include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Components/StaticMeshComponent.h"
 #include "Misc/PackageName.h"
 #include "EngineUtils.h"
 #include "PlanetActor.h"
+#include "SystemSceneBuilder.h"
 #include "GasGiantActor.h"
 #include "CentralSun.h"
 #include "ShipActor.h"
 #include "Widgets/SOverlay.h"
+#include "Widgets/Layout/SBorder.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
 
@@ -779,6 +786,27 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
 
 void UMissionBriefingDlg::CloseEmptySectorPreview()
 {
+    if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
+    for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
+        if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
+    MissionSunHiddenActors.Empty();
+    MissionCameraReadyChecks = 0;
+    MissionCameraStableSince = -1.0;
+    if (IsValid(MissionPreviewCamera))
+    {
+        if (APlayerController* PC = GetOwningPlayer())
+        {
+            if (PC->GetViewTarget() == MissionPreviewCamera.Get())
+            {
+                AActor* RestoreTarget = PreviousMissionViewTarget.Get();
+                if (!RestoreTarget) RestoreTarget = PC;
+                PC->SetViewTarget(RestoreTarget);
+            }
+        }
+        MissionPreviewCamera->Destroy();
+        MissionPreviewCamera = nullptr;
+    }
+    PreviousMissionViewTarget.Reset();
     if (MissionSystemLevel)
     {
         MissionSystemLevel->OnLevelShown.RemoveDynamic(
@@ -789,6 +817,13 @@ void UMissionBriefingDlg::CloseEmptySectorPreview()
         MissionSystemLevel = nullptr;
     }
     MissionSystemPackage.Empty();
+    if (MissionSceneCover.IsValid())
+    {
+        if (UWorld* World = GetWorld())
+            if (UGameViewportClient* Viewport = World->GetGameViewport())
+                Viewport->RemoveViewportWidgetContent(MissionSceneCover.ToSharedRef());
+        MissionSceneCover.Reset();
+    }
     if (EmptySectorOverlay.IsValid())
     {
         if (UWorld* World = GetWorld())
@@ -807,8 +842,186 @@ void UMissionBriefingDlg::CloseEmptySectorPreview()
 
 void UMissionBriefingDlg::HandleMissionSystemLevelShown()
 {
-    UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] System level instance visible: %s"),
-        *MissionSystemPackage);
+    UWorld* World = GetWorld();
+    APlayerController* PC = GetOwningPlayer();
+    if (!World || !PC || !MissionSystemLevel) return;
+
+    // Builders can spawn into the persistent level: also check the owner chain.
+    UStaticMeshComponent* StarMesh = nullptr;
+    for (TActorIterator<AActor> It(World); It && !StarMesh; ++It)
+    {
+        bool bBelongsToMission = false;
+        for (AActor* Owner = *It; Owner; Owner = Owner->GetOwner())
+        {
+            if (Owner->GetLevel() == MissionSystemLevel->GetLoadedLevel())
+            {
+                bBelongsToMission = true;
+                break;
+            }
+        }
+        if (!bBelongsToMission) continue;
+        TArray<UStaticMeshComponent*> Meshes;
+        It->GetComponents<UStaticMeshComponent>(Meshes, true);
+        for (UStaticMeshComponent* Mesh : Meshes)
+        {
+            if (IsValid(Mesh) && Mesh->GetFName() == FName(TEXT("SM_Star")) &&
+                Mesh->GetStaticMesh())
+            {
+                StarMesh = Mesh;
+                break;
+            }
+        }
+    }
+    if (!StarMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefing] No mission SM_Star mesh to frame"));
+        return;
+    }
+
+    // OnLevelShown runs before this level's first rendered frame. Hide the
+    // complete star actor tree, including its corona and particle effects.
+    AActor* SunRoot = StarMesh->GetOwner();
+    while (SunRoot && SunRoot->GetParentActor()) SunRoot = SunRoot->GetParentActor();
+    TArray<AActor*> SunActors;
+    if (SunRoot)
+    {
+        SunActors.Add(SunRoot);
+        SunRoot->GetAllChildActors(SunActors, true);
+        SunActors.AddUnique(SunRoot);
+    }
+    for (AActor* Actor : SunActors)
+    {
+        if (IsValid(Actor) && !Actor->IsHidden())
+        {
+            MissionSunHiddenActors.AddUnique(Actor);
+            Actor->SetActorHiddenInGame(true);
+        }
+    }
+
+    FBoxSphereBounds Bounds = StarMesh->CalcBounds(StarMesh->GetComponentTransform());
+    FString FocusName = TEXT("primary star");
+    bool bFocusPlanet = false;
+    const FString RegionName = MissionPtr
+        ? ToTextFromUtf8(MissionPtr->GetRegion()).ToString().TrimStartAndEnd() : FString();
+    for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+    {
+        if (It->GetLevel() != MissionSystemLevel->GetLoadedLevel()) continue;
+        FSpawnedSystemRegion Region;
+        if (!It->GetRegionByName(RegionName, Region) &&
+            !It->GetRegionByName(RegionName + TEXT("_REGION"), Region)) continue;
+        for (const FSpawnedSystemBody& Body : It->GetSpawnedBodies())
+        {
+            if (Body.bIsOrbit || !IsValid(Body.Actor)) continue;
+            if (!Body.BodyName.Equals(Region.AnchorBodyName, ESearchCase::IgnoreCase) &&
+                Body.Actor != Region.ParentActor) continue;
+            FocusName = Body.BodyName;
+            bFocusPlanet = Body.ParentActor != nullptr || Body.bIsMoon;
+            if (bFocusPlanet)
+            {
+                // Use the physical surface, excluding orbit rings and effects.
+                UStaticMeshComponent* Surface = nullptr;
+                if (APlanetActor* Planet = Cast<APlanetActor>(Body.Actor.Get()))
+                    Surface = Planet->GetPlanetMeshComponent();
+                if (Surface && Surface->GetStaticMesh())
+                    Bounds = Surface->CalcBounds(Surface->GetComponentTransform());
+                else
+                {
+                    const double R = FMath::Max(1.0f, Body.VisualRadiusUnits);
+                    Bounds = FBoxSphereBounds(Body.Actor->GetActorLocation(), FVector(R), R);
+                }
+                TArray<AActor*> FocusActors;
+                Body.Actor->GetAllChildActors(FocusActors, true);
+                FocusActors.AddUnique(Body.Actor.Get());
+                for (AActor* Actor : FocusActors)
+                {
+                    if (IsValid(Actor) && !Actor->IsHidden())
+                    {
+                        MissionSunHiddenActors.AddUnique(Actor);
+                        Actor->SetActorHiddenInGame(true);
+                    }
+                }
+            }
+            break;
+        }
+        break;
+    }
+    const double Radius = Bounds.BoxExtent.GetMax();
+    int32 Width = 0, Height = 0;
+    PC->GetViewportSize(Width, Height);
+    if (Radius <= KINDA_SMALL_NUMBER || Width <= 0 || Height <= 0) return;
+
+    if (!IsValid(MissionPreviewCamera))
+    {
+        MissionPreviewCamera = World->SpawnActor<ACameraActor>();
+        if (!MissionPreviewCamera) return;
+        PreviousMissionViewTarget = PC->GetViewTarget();
+    }
+    UCameraComponent* Camera = MissionPreviewCamera->GetCameraComponent();
+    Camera->SetFieldOfView(60.0f);
+    Camera->bConstrainAspectRatio = false;
+    Camera->bOverrideAspectRatioAxisConstraint = true;
+    Camera->AspectRatioAxisConstraint = AspectRatio_MaintainXFOV;
+    const double FocalPixels = Width / (2.0 * FMath::Tan(FMath::DegreesToRadians(30.0)));
+    const double DiameterPixels = bFocusPlanet ? 128.0 : 64.0;
+    const double Ratio = FocalPixels / (DiameterPixels * 0.5);
+    const double Distance = Radius * FMath::Sqrt(1.0 + Ratio * Ratio);
+    const FRotator Rotation = PC->PlayerCameraManager
+        ? PC->PlayerCameraManager->GetCameraRotation() : FRotator::ZeroRotator;
+    MissionPreviewCamera->SetActorLocationAndRotation(
+        Bounds.Origin - Rotation.Vector() * Distance, Rotation);
+    PC->SetViewTarget(MissionPreviewCamera.Get());
+    // Warm up all visuals behind the cover, including the star's effects.
+    for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
+        if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
+    MissionSunHiddenActors.Empty();
+    MissionCameraReadyChecks = 0;
+    MissionCameraStableSince = -1.0;
+    World->GetTimerManager().SetTimer(MissionSunRevealTimer, this,
+        &UMissionBriefingDlg::RevealMissionSunWhenCameraReady, 0.05f, true);
+    if (PC->PlayerCameraManager) PC->PlayerCameraManager->SetGameCameraCutThisFrame();
+    UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Framed region object %s at distance %.2f"),
+        *FocusName, Distance);
+}
+
+void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
+{
+    UWorld* World = GetWorld();
+    APlayerController* PC = GetOwningPlayer();
+    if (!World) return;
+    if (!MissionSystemLevel || !IsValid(MissionPreviewCamera))
+    {
+        World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
+        return;
+    }
+    const bool bReady = PC && PC->PlayerCameraManager &&
+        PC->GetViewTarget() == MissionPreviewCamera.Get() &&
+        PC->PlayerCameraManager->GetCameraLocation().Equals(
+            MissionPreviewCamera->GetActorLocation(), 1.0f) &&
+        PC->PlayerCameraManager->GetCameraRotation().Equals(
+            MissionPreviewCamera->GetActorRotation(), 0.1f) &&
+        FMath::IsNearlyEqual(PC->PlayerCameraManager->GetFOVAngle(),
+            MissionPreviewCamera->GetCameraComponent()->FieldOfView, 0.1f);
+    MissionCameraReadyChecks = bReady ? MissionCameraReadyChecks + 1 : 0;
+    // Allow 1.5 seconds of stable camera time for the fully rendered scene to settle.
+    // Measure elapsed time, since timer callbacks can catch up within one frame.
+    if (!bReady)
+    {
+        MissionCameraStableSince = -1.0;
+        return;
+    }
+    const double Now = World->GetRealTimeSeconds();
+    if (MissionCameraStableSince < 0.0) MissionCameraStableSince = Now;
+    if (MissionCameraReadyChecks < 2 || Now - MissionCameraStableSince < 1.5) return;
+    for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
+        if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
+    MissionSunHiddenActors.Empty();
+    if (MissionSceneCover.IsValid())
+    {
+        if (UGameViewportClient* Viewport = World->GetGameViewport())
+            Viewport->RemoveViewportWidgetContent(MissionSceneCover.ToSharedRef());
+        MissionSceneCover.Reset();
+    }
+    World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
 }
 
 void UMissionBriefingDlg::OnCommit()
@@ -845,6 +1058,13 @@ void UMissionBriefingDlg::OnCommit()
         RegionName.IsEmpty() ? TEXT("Unknown region") : *RegionName));
 
     CloseEmptySectorPreview();
+    // Keep the world rendering behind an opaque Slate cover so materials,
+    // exposure and the nebula can settle without showing their startup frames.
+    MissionSceneCover = SNew(SBorder)
+        .Visibility(EVisibility::HitTestInvisible)
+        .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+        .BorderBackgroundColor(FLinearColor::Black);
+    Viewport->AddViewportWidgetContent(MissionSceneCover.ToSharedRef(), 999);
     bool bLoadStarted = false;
     MissionSystemLevel = ULevelStreamingDynamic::LoadLevelInstance(
         World, PackagePath, FVector::ZeroVector, FRotator::ZeroRotator, bLoadStarted);

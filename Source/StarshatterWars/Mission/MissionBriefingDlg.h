@@ -5,6 +5,7 @@
 #include "GameStructs.h"
 #include "MissionBriefingDlg.generated.h"
 
+class ACameraActor;
 class ULevelStreamingDynamic;
 class SWidget;
 class AActor;
@@ -73,11 +74,20 @@ protected:
     void CloseEmptySectorPreview();
     UFUNCTION()
     void HandleMissionSystemLevelShown();
+    void RevealMissionSunWhenCameraReady();
+    FTimerHandle MissionSunRevealTimer;
+    TArray<TWeakObjectPtr<AActor>> MissionSunHiddenActors;
+    int32 MissionCameraReadyChecks = 0;
+    double MissionCameraStableSince = -1.0;
 
     UPROPERTY(Transient)
     TObjectPtr<ULevelStreamingDynamic> MissionSystemLevel = nullptr;
+    UPROPERTY(Transient)
+    TObjectPtr<ACameraActor> MissionPreviewCamera = nullptr;
+    TWeakObjectPtr<AActor> PreviousMissionViewTarget;
     FString MissionSystemPackage;
     TSharedPtr<SWidget> EmptySectorOverlay;
+    TSharedPtr<SWidget> MissionSceneCover;
     TArray<TWeakObjectPtr<AActor>> PreviewHiddenActors;
     void BuildMenuButtons();
     void RefreshMenuSelection();
