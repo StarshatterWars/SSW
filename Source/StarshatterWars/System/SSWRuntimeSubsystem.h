@@ -126,6 +126,7 @@ private:
     // Presentation only: fixed spawn offsets preserve legacy movement and navigation.
     TMap<Ship*, FVector> MissionPresentationOffsets;
     TMap<Ship*, double> MissionPresentationRadii;
+    uint32 MissionPresentationSeed = 0;
 
     FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
 

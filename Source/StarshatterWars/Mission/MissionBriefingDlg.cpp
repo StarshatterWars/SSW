@@ -82,6 +82,8 @@
 #include "Instruction.h"
 #include "MissionElement.h"
 #include "CombatGroup.h"
+#include "CombatUnit.h"
+#include "FormattingUtils.h"
 #include "CampaignSituationReport.h"
 
 // UI:
@@ -1232,7 +1234,26 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     SelectedMissionTarget = Selected;
     MissionTargetZoomDistance = 1.0;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
-    SelectedMissionTargetName = ToTextFromUtf8(Selected->GetRuntimeShip()->GetName());
+    Ship* SelectedShip = Selected->GetRuntimeShip();
+    FString FullName = ANSI_TO_TCHAR(SelectedShip->GetName());
+    if (CombatUnit* Unit = SelectedShip->GetCombatUnit())
+    {
+        const FString Abbreviation = UFormattingUtils::GetUnitDesignIndicator(Unit);
+        FString Registry = FString(ANSI_TO_TCHAR(Unit->GetRegistryNumber().data())).TrimStartAndEnd();
+        // Normalize CV6, CV-6, and a numeric registry to the same CV-6 prefix.
+        if (Registry.StartsWith(Abbreviation, ESearchCase::IgnoreCase))
+            Registry.RightChopInline(Abbreviation.Len());
+        Registry.TrimStartAndEndInline();
+        while (Registry.StartsWith(TEXT("-")))
+        {
+            Registry.RightChopInline(1);
+            Registry.TrimStartInline();
+        }
+        const FString Prefix = Registry.IsEmpty() ? Abbreviation : Abbreviation + TEXT("-") + Registry;
+        if (!FullName.StartsWith(Prefix + TEXT(" "), ESearchCase::IgnoreCase))
+            FullName = Prefix + TEXT(" ") + FullName;
+    }
+    SelectedMissionTargetName = FText::FromString(FullName);
     if (!MissionTargetOverlay.IsValid())
     {
         TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
@@ -1241,20 +1262,20 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
             .LocalBounds_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetLocalBounds : FBox(ForceInit); })
             .TargetColor_Lambda([WeakThis]()
             {
-                const FLinearColor Neutral(0.65f, 0.65f, 0.65f, 1.0f);
+                const FLinearColor Neutral = FLinearColor::Yellow;
                 if (!WeakThis.IsValid()) return Neutral;
                 AShipActor* Actor = Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
                 Sim* CurrentSim = Sim::GetSim();
-                SimRegion* CurrentRegion = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;
+                SimRegion* Region = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;
                 Ship* Data = IsValid(Actor) ? Actor->GetRuntimeShip() : nullptr;
-                if (!Data || !CurrentRegion || !CurrentRegion->GetShips().contains(Data)) return Neutral;
+                if (!Data || !Region || !Region->GetShips().contains(Data)) return Neutral;
                 const int32 IFF = Data->GetIFF();
                 if (IFF <= 0) return Neutral;
                 Mission* CurrentMission = CurrentSim->GetMission();
                 if (!CurrentMission) return Neutral;
                 return IFF == CurrentMission->GetTeam()
                     ? FLinearColor(0.25f, 0.65f, 1.0f, 1.0f)
-                    : FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+                    : FLinearColor::Red;
             })
             .TargetName_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetName : FText::GetEmpty(); });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(MissionTargetOverlay.ToSharedRef(), 900);

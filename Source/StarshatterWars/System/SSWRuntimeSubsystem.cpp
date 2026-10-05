@@ -1,4 +1,10 @@
 ﻿#include "SSWRuntimeSubsystem.h"
+
+#include "Math/RandomStream.h"
+#include "SimElement.h"
+#include "CombatGroup.h"
+#include "CombatUnit.h"
+
 #include "SystemSceneBuilder.h"
 #include "PlanetActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -915,7 +921,26 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
             const double BandWidth = FMath::Max(1.0f, Region.OuterRadiusUnits - Region.InnerRadiusUnits);
             OrbitalRegion* Orbital = SimRgn ? SimRgn->GetOrbitalRegion() : nullptr;
             const double LegacyRadius = Orbital ? FMath::Max(1.0, double(Orbital->Radius())) : 200000.0;
-            const FVector Offset = ConvertLegacyShipLocationToUE(LegacyLoc) * (BandWidth / LegacyRadius);
+            FVector PresentationLoc = LegacyLoc;
+            if (SimRgn && !SimRgn->IsAirSpace() && !RuntimeShip->IsStatic())
+            {
+                // One repeatable depth offset per group for this mission launch.
+                // Never write it back to the simulation or its authored navigation.
+                CombatUnit* Unit = RuntimeShip->GetCombatUnit();
+                CombatGroup* Group = Unit ? Unit->GetCombatGroup() : nullptr;
+                FString Key = RegionName;
+                if (Group)
+                    Key += FString::Printf(TEXT("|%d|%d|%hs"),
+                        int32(Group->GetEmpire()), Group->GetID(), Group->GetName().data());
+                else if (SimElement* Element = RuntimeShip->GetElement())
+                    Key += TEXT("|") + FString(ANSI_TO_TCHAR(Element->GetName().data()));
+                else
+                    Key += TEXT("|") + FString(ANSI_TO_TCHAR(RuntimeShip->GetName()));
+                FRandomStream DepthRandom{ static_cast<int32>(HashCombine(MissionPresentationSeed, GetTypeHash(Key))) };
+                const double DepthRange = FMath::Clamp(LegacyRadius * 0.20, 15000.0, 60000.0);
+                PresentationLoc.Z += DepthRandom.FRandRange(-1.0f, 1.0f) * DepthRange;
+            }
+            const FVector Offset = ConvertLegacyShipLocationToUE(PresentationLoc) * (BandWidth / LegacyRadius);
             // Region-map shell: authored offsets start outside the physical surface.
             // Reserve clearance for the ship as well as the central body's radius.
             const double* VisualRadius = MissionPresentationRadii.Find(RuntimeShip);
@@ -925,8 +950,9 @@ USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
             if (!Offset.IsNearlyZero()) return Center + Offset.GetSafeNormal() * (Inner + Offset.Size()) + Separation;
             // Stable placement for authored 0,0,0 entries; no random jitter each tick.
             const uint32 Hash = GetTypeHash(FString(ANSI_TO_TCHAR(RuntimeShip->GetName())));
-            const double Angle = (Hash % 65536) * (2.0 * PI / 65536.0);
-            return Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0) * (Inner + BandWidth * 0.15) + Separation;
+            FRandomStream OriginRandom{ static_cast<int32>(Hash) };
+            const FVector Direction = OriginRandom.VRand();
+            return Center + Direction * (Inner + BandWidth * 0.15) + Separation;
         }
     }
 
@@ -953,6 +979,7 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
 {
     EndMissionPresentation();
     MissionPresentationBuilder = Builder;
+    MissionPresentationSeed = uint32(FMath::Rand());
     if (Builder)
     {
         // Presentation only. Apply before spawning ships so surface clearance

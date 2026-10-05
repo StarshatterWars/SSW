@@ -1,9 +1,13 @@
-#pragma once
+﻿#pragma once
 #include "Widgets/SLeafWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/MeshComponent.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
+#include "Engine/Texture2D.h"
+#include "UObject/StrongObjectPtr.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Fonts/FontMeasure.h"
 
 // Bounds shared by framing and the target box; omit particles and invisible meshes.
 inline FBox MissionTargetLocalBounds(AActor* Actor)
@@ -23,7 +27,7 @@ inline FBox MissionTargetLocalBounds(AActor* Actor)
 class SMissionTargetOverlay : public SLeafWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)) {}
+    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor::Yellow) {}
         SLATE_ARGUMENT(TWeakObjectPtr<APlayerController>, Controller)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, Target)
         SLATE_ATTRIBUTE(FText, TargetName)
@@ -37,6 +41,10 @@ public:
         TargetName = Args._TargetName;
         TargetColor = Args._TargetColor;
         LocalBounds = Args._LocalBounds;
+        ReticleTexture.Reset(LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/lead.lead")));
+        ReticleBrush.SetResourceObject(ReticleTexture.Get());
+        ReticleBrush.DrawAs = ESlateBrushDrawType::Image;
+        ReticleBrush.ImageSize = FVector2D(64.0, 64.0);
         SetVisibility(EVisibility::HitTestInvisible);
     }
     virtual FVector2D ComputeDesiredSize(float) const override { return FVector2D::ZeroVector; }
@@ -53,36 +61,32 @@ public:
         const FBox CachedBounds = LocalBounds.Get();
         if (!CachedBounds.IsValid) return Layer;
         const FBox Bounds = CachedBounds.TransformBy(Actor->GetActorTransform());
-        FVector2D Min(FLT_MAX, FLT_MAX), Max(-FLT_MAX, -FLT_MAX);
-        for (int32 Corner = 0; Corner < 8; ++Corner)
-        {
-            FVector Point((Corner & 1) ? Bounds.Max.X : Bounds.Min.X,
-                (Corner & 2) ? Bounds.Max.Y : Bounds.Min.Y,
-                (Corner & 4) ? Bounds.Max.Z : Bounds.Min.Z);
-            FVector2D Pixel;
-            if (!PC->ProjectWorldLocationToScreen(Point, Pixel, false)) return Layer;
-            Pixel.X *= Geometry.GetLocalSize().X / Width;
-            Pixel.Y *= Geometry.GetLocalSize().Y / Height;
-            Min.X = FMath::Min(Min.X, Pixel.X); Min.Y = FMath::Min(Min.Y, Pixel.Y);
-            Max.X = FMath::Max(Max.X, Pixel.X); Max.Y = FMath::Max(Max.Y, Pixel.Y);
-        }
-        Min -= FVector2D(8,8); Max += FVector2D(8,8);
+        FVector2D Pixel;
+        if (!PC->ProjectWorldLocationToScreen(Bounds.GetCenter(), Pixel, false)) return Layer;
         const FVector2D Size = Geometry.GetLocalSize();
-        if (Max.X < 0 || Max.Y < 0 || Min.X > Size.X || Min.Y > Size.Y) return Layer;
-        Min.X = FMath::Clamp(Min.X, 2.0, FMath::Max(2.0, Size.X - 2));
-        Min.Y = FMath::Clamp(Min.Y, 2.0, FMath::Max(2.0, Size.Y - 2));
-        Max.X = FMath::Clamp(Max.X, Min.X, FMath::Max(Min.X, Size.X - 2));
-        Max.Y = FMath::Clamp(Max.Y, Min.Y, FMath::Max(Min.Y, Size.Y - 2));
-        TArray<FVector2D> Points = { Min, FVector2D(Max.X,Min.Y), Max, FVector2D(Min.X,Max.Y), Min };
+        const FVector2D Center(Pixel.X * Size.X / Width, Pixel.Y * Size.Y / Height);
+        if (Center.X < 0 || Center.Y < 0 || Center.X > Size.X || Center.Y > Size.Y) return Layer;
+        // Scale viewport pixels into this widget's local coordinates (including DPI).
+        const FVector2D ReticleSize(64.0 * Size.X / Width, 64.0 * Size.Y / Height);
+        const FVector2D TopLeft = Center - ReticleSize * 0.5;
         const FLinearColor Color = TargetColor.Get();
-        FSlateDrawElement::MakeLines(Elements, Layer + 1, Geometry.ToPaintGeometry(), Points,
-            ESlateDrawEffect::None, Color, true, 2.0f);
+        if (ReticleTexture.IsValid())
+            FSlateDrawElement::MakeBox(Elements, Layer + 1,
+                Geometry.ToPaintGeometry(FVector2f(ReticleSize), FSlateLayoutTransform(FVector2f(TopLeft))),
+                &ReticleBrush, ESlateDrawEffect::None, Color);
+        const FText Label = TargetName.Get();
+        const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", 14);
+        const FVector2D TextSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
+        const FVector2D TextPosition(Center.X - TextSize.X * 0.5,
+            FMath::Max(0.0, TopLeft.Y - TextSize.Y - 6.0));
         FSlateDrawElement::MakeText(Elements, Layer + 2,
-            Geometry.ToPaintGeometry(FVector2f(300,24), FSlateLayoutTransform(FVector2f(Min.X, FMath::Max(0.0,Min.Y-24)))),
-            TargetName.Get(), FCoreStyle::GetDefaultFontStyle("Bold",14), ESlateDrawEffect::None, Color);
+            Geometry.ToPaintGeometry(FVector2f(TextSize), FSlateLayoutTransform(FVector2f(TextPosition))),
+            Label, Font, ESlateDrawEffect::None, Color);
         return Layer + 2;
     }
 private:
+    TStrongObjectPtr<UTexture2D> ReticleTexture;
+    FSlateBrush ReticleBrush;
     TWeakObjectPtr<APlayerController> Controller;
     TAttribute<TWeakObjectPtr<AActor>> Target;
     TAttribute<FText> TargetName;
