@@ -1117,19 +1117,17 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         this, &UMissionBriefingDlg::PreviousMissionTarget);
     MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Started,
         this, &UMissionBriefingDlg::NextMissionTarget);
-    Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
-    MissionTargetZoomAction = LoadObject<UInputAction>(nullptr,
-        TEXT("/Game/Input/IA_TargetZoom.IA_TargetZoom"));
-    if (MissionTargetZoomAction && MissionTargetZoomAction->ValueType == EInputActionValueType::Axis1D)
-    {
-        MissionMenuInput->BindAction(MissionTargetZoomAction.Get(), ETriggerEvent::Triggered,
-            this, &UMissionBriefingDlg::OnTargetZoom);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefing] Target zoom requires /Game/Input/IA_TargetZoom with Axis1D value type, mapped in IMC_Game."));
-    }
+    // Use the same transient context as R/T so asset paths, Hold triggers,
+    // or boolean action settings cannot suppress the one-frame wheel pulse.
+    MissionTargetZoomAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    MissionTargetZoomAction->ValueType = EInputActionValueType::Axis1D;
+    MissionTargetZoomAction->bConsumeInput = true;
+    MissionTargetContext->MapKey(MissionTargetZoomAction.Get(), EKeys::MouseWheelAxis);
+    MissionMenuInput->BindAction(MissionTargetZoomAction.Get(), ETriggerEvent::Triggered,
+        this, &UMissionBriefingDlg::OnTargetZoom);
+    Input->AddMappingContext(MissionTargetContext.Get(), 1001);
+    UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
     if (bAddedMissionMenuContext) Input->AddMappingContext(MissionMenuContext.Get(), 1000);
@@ -1289,6 +1287,10 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 }
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
+    UE_LOG(LogTemp, Log, TEXT("[MissionZoom] Wheel=%.3f Live=%d Target=%s Cover=%d Controls=%d Menu=%d"),
+        Value.Get<float>(), bLiveMissionStarted, *GetNameSafe(SelectedMissionTarget.Get()),
+        MissionSceneCover.IsValid(), bMissionControlsOpen,
+        MissionQuitMenu && MissionQuitMenu->IsMenuShown());
     if (!bLiveMissionStarted || !SelectedMissionTarget.IsValid() ||
         !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
@@ -1298,6 +1300,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
     MissionTargetZoomDistance = FMath::Clamp(
         MissionTargetZoomDistance * FMath::Pow(0.85, double(FMath::Clamp(Wheel, -10.0f, 10.0f))),
         0.5, 3.0);
+    UE_LOG(LogTemp, Log, TEXT("[MissionZoom] Distance multiplier=%.3f"), MissionTargetZoomDistance);
 }
 
 void UMissionBriefingDlg::UpdateMissionTargetCamera()
