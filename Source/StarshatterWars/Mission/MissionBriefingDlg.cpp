@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -31,6 +31,7 @@
 #include "QuitMissionMenu.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EnhancedInputComponent.h"
+#include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
@@ -1116,6 +1117,18 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         this, &UMissionBriefingDlg::NextMissionTarget);
     Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
+    MissionTargetZoomAction = LoadObject<UInputAction>(nullptr,
+        TEXT("/Game/Input/IA_TargetZoom.IA_TargetZoom"));
+    if (MissionTargetZoomAction && MissionTargetZoomAction->ValueType == EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionTargetZoomAction.Get(), ETriggerEvent::Triggered,
+            this, &UMissionBriefingDlg::OnTargetZoom);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefing] Target zoom requires /Game/Input/IA_TargetZoom with Axis1D value type, mapped in IMC_Game."));
+    }
+
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
     if (bAddedMissionMenuContext) Input->AddMappingContext(MissionMenuContext.Get(), 1000);
     PC->PushInputComponent(MissionMenuInput.Get());
@@ -1168,6 +1181,8 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     MissionTargetContext = nullptr;
     PreviousMissionTargetAction = nullptr;
     NextMissionTargetAction = nullptr;
+    MissionTargetZoomAction = nullptr;
+    MissionTargetZoomDistance = 1.0;
     bAddedMissionMenuContext = false;
 }
 void UMissionBriefingDlg::PreviousMissionTarget() { CycleMissionTarget(-1); }
@@ -1215,6 +1230,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     UE_LOG(LogTemp, Display, TEXT("[MissionTargetCycle] Selected='%hs' Index=%d Count=%d"),
         Selected->GetRuntimeShip()->GetName(), Index, Candidates.Num());
     SelectedMissionTarget = Selected;
+    MissionTargetZoomDistance = 1.0;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
     SelectedMissionTargetName = ToTextFromUtf8(Selected->GetRuntimeShip()->GetName());
     if (!MissionTargetOverlay.IsValid())
@@ -1250,6 +1266,19 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     GetWorld()->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
         &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, TimerParameters);
 }
+void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
+{
+    if (!bLiveMissionStarted || !SelectedMissionTarget.IsValid() ||
+        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+        (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
+    const float Wheel = Value.Get<float>();
+    if (!FMath::IsFinite(Wheel) || FMath::IsNearlyZero(Wheel)) return;
+    // Positive wheel input moves closer; the existing camera timer smooths motion.
+    MissionTargetZoomDistance = FMath::Clamp(
+        MissionTargetZoomDistance * FMath::Pow(0.85, double(FMath::Clamp(Wheel, -10.0f, 10.0f))),
+        0.5, 3.0);
+}
+
 void UMissionBriefingDlg::UpdateMissionTargetCamera()
 {
     AActor* Target = SelectedMissionTarget.Get();
@@ -1284,8 +1313,10 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
         MissionPreviewCamera->GetCameraComponent()->FieldOfView * 0.5)));
     const double PixelRadius = FMath::Min(Width,Height) * 0.20;
     const double Ratio = Focal / PixelRadius;
-    const FVector Desired = Bounds.GetCenter() - MissionPreviewCamera->GetActorForwardVector() *
-        (Radius * FMath::Sqrt(1.0 + Ratio * Ratio));
+    const double BaseDistance = Radius * FMath::Sqrt(1.0 + Ratio * Ratio);
+    // Keep the camera outside the target bounds even at maximum zoom.
+    const double Distance = FMath::Max(Radius + 100.0, BaseDistance * MissionTargetZoomDistance);
+    const FVector Desired = Bounds.GetCenter() - MissionPreviewCamera->GetActorForwardVector() * Distance;
     const double Alpha = 1.0 - FMath::Exp(-6.0 * Delta);
     MissionPreviewCamera->SetActorLocation(FMath::Lerp(MissionPreviewCamera->GetActorLocation(), Desired, Alpha));
 }

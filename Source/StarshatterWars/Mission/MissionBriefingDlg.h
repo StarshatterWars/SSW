@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
@@ -8,6 +8,7 @@
 class UEnhancedInputComponent;
 class UInputMappingContext;
 class UInputAction;
+struct FInputActionValue;
 class QuitView;
 class UQuitMissionMenu;
 class ACameraActor;
@@ -86,6 +87,9 @@ protected:
     void NextMissionTarget();
     void CycleMissionTarget(int32 Direction);
     void UpdateMissionTargetCamera();
+    void OnTargetZoom(const FInputActionValue& Value);
+    double MissionTargetZoomDistance = 1.0;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionTargetZoomAction;
     TWeakObjectPtr<AActor> SelectedMissionTarget;
     FText SelectedMissionTargetName;
     FBox SelectedMissionTargetLocalBounds = FBox(ForceInit);
