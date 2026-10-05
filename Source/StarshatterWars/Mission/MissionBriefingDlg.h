@@ -88,6 +88,10 @@ protected:
     void CycleMissionTarget(int32 Direction);
     void UpdateMissionTargetCamera();
     void OnTargetZoom(const FInputActionValue& Value);
+    void ToggleFighterHUD();
+    bool bFighterHUDVisible = true;
+    TSharedPtr<SWidget> FighterHUDPanels;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> FighterHUDToggleAction;
     double MissionTargetZoomDistance = 1.0;
     UPROPERTY(Transient) TObjectPtr<UInputAction> MissionTargetZoomAction;
     TWeakObjectPtr<AActor> SelectedMissionTarget;

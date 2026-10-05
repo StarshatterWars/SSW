@@ -62,6 +62,7 @@
 #include "Ship.h"
 #include "SimRegion.h"
 #include "MissionTargetOverlay.h"
+#include "FighterHUDPanels.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
@@ -1126,6 +1127,24 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionTargetContext->MapKey(MissionTargetZoomAction.Get(), EKeys::MouseWheelAxis);
     MissionMenuInput->BindAction(MissionTargetZoomAction.Get(), ETriggerEvent::Triggered,
         this, &UMissionBriefingDlg::OnTargetZoom);
+    FighterHUDToggleAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    FighterHUDToggleAction->ValueType = EInputActionValueType::Boolean;
+    MissionTargetContext->MapKey(FighterHUDToggleAction.Get(), EKeys::H);
+    MissionMenuInput->BindAction(FighterHUDToggleAction.Get(), ETriggerEvent::Started,
+        this, &UMissionBriefingDlg::ToggleFighterHUD);
+    bFighterHUDVisible = true;
+    if (!FighterHUDPanels.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
+    {
+        TWeakObjectPtr<UMissionBriefingDlg> HUDOwner(this);
+        FighterHUDPanels = SNew(SFighterHUDPanels).ShowPanels_Lambda([HUDOwner]()
+        {
+            return HUDOwner.IsValid() && HUDOwner->bLiveMissionStarted &&
+                HUDOwner->bFighterHUDVisible && !HUDOwner->MissionSceneCover.IsValid() &&
+                !HUDOwner->bMissionControlsOpen &&
+                !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
+        });
+        GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
+    }
     Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
@@ -1154,6 +1173,11 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    if (FighterHUDPanels.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDPanels.ToSharedRef());
+    FighterHUDPanels.Reset();
+    FighterHUDToggleAction = nullptr;
+    bFighterHUDVisible = true;
     if (manager) manager->MissionOptionsReturn = nullptr;
     if (bMissionControlsOpen)
     {
@@ -1285,6 +1309,15 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     GetWorld()->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
         &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, TimerParameters);
 }
+void UMissionBriefingDlg::ToggleFighterHUD()
+{
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+        (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
+    APlayerController* PC = GetOwningPlayer();
+    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
+    bFighterHUDVisible = !bFighterHUDVisible;
+}
+
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] Wheel=%.3f Live=%d Target=%s Cover=%d Controls=%d Menu=%d"),
