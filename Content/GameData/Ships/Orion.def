@@ -46,18 +46,83 @@ power:      {
    }
 
 drive:      {
-   type:             Plasma,
+   type:             Yellow,
    name:             "Plasma Drive",
    design:           "Plasma Drive",
    thrust:           40e3,
    scale:            10,
-
-   port:             ( 75,  31, -1160)
-   port:             ( 75, -10, -1160)
-   port:             (  0,  31, -1160)
-   port:             (  0, -10, -1160)
-   port:             (-75,  31, -1160)
-   port:             (-75, -10, -1160)
+   port: {
+      name: "Drive_1"
+      loc: (-1160, 75, 31)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
+   port: {
+      name: "Drive_2"
+      loc: (-1160, 75, -10)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
+   port: {
+      name: "Drive_3"
+      loc: (-1160, 0, 31)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
+   port: {
+      name: "Drive_4"
+      loc: (-1160, 0, -10)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
+   port: {
+      name: "Drive_5"
+      loc: (-1160, -75, 31)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
+   port: {
+      name: "Drive_6"
+      loc: (-1160, -75, -10)
+      rot: (0,180,0)
+      flare_scale: 1.15
+      trail_scale: 1.15
+      color: (255,220,120)
+      intensity: 1.0
+      audio: 1.0
+      trail: true
+      flare: true
+   }
 
    loc:              (0, 48, -1240),
    size:             120
@@ -66,45 +131,38 @@ drive:      {
    }
 
 thruster: {
+   type: Yellow
    design:           Thruster,
 
    loc:              (0, 0, 128),
    size:             24,
    hull_factor:      0.3
    scale:            4
-
-   port_left:   {loc:(-176,   0,-819), fire: 0x0041}
-   port_left:   {loc:(-405,  -5,-362), fire: 0x0041}
-   port_left:   {loc:(-239,  -5, 717), fire: 0x0081}
-
-   port_right:  {loc:( 175,   0,-819), fire: 0x0082}
-   port_right:  {loc:( 405,  -5,-362), fire: 0x0082}
-   port_right:  {loc:( 238,  -5, 717), fire: 0x0042}
-
-   port_fore:   {loc:(-368,  35,-308), fire: 0x0044}
-   port_fore:   {loc:(-368, -43,-308), fire: 0x0044}
-   port_fore:   {loc:( 367,  35,-308), fire: 0x0084}
-   port_fore:   {loc:( 367, -43,-308), fire: 0x0084}
-
-   port_aft:    {loc:(-76, -66,-1047), fire: 0x0008}
-   port_aft:    {loc:(  0, -66,-1047), fire: 0x0008}
-   port_aft:    {loc:( 76, -66,-1047), fire: 0x0008}
-
-   port_top:    {loc:(-368,  73,-358), fire: 0x0410}
-   port_top:    {loc:(-368,  73,-617), fire: 0x0410}
-   port_top:    {loc:( 367,  73,-358), fire: 0x0810}
-   port_top:    {loc:( 367,  73,-617), fire: 0x0810}
-
-   port_bottom: {loc:(-368, -79,-358), fire: 0x0820}
-   port_bottom: {loc:(-368, -79,-617), fire: 0x0820}
-   port_bottom: {loc:( 367, -79,-358), fire: 0x0420}
-   port_bottom: {loc:( 367, -79,-617), fire: 0x0420}
-
-   port_top:    {loc:(-191,  83, 716), fire: 0x0210}
-   port_top:    {loc:( 191,  83, 716), fire: 0x0210}
-
-   port_bottom: {loc:(-191, -93, 716), fire: 0x0120}
-   port_bottom: {loc:( 191, -93, 716), fire: 0x0120}
+   port_left: {loc:(-819, -176, 0), rotation:(0,0,-90), fire:0x0041, name:Thruster_left_0, flare_scale:.18, trail_scale:.18}
+   port_left: {loc:(-362, -405, -5), rotation:(0,0,-90), fire:0x0041, name:Thruster_left_1, flare_scale:.18, trail_scale:.18}
+   port_left: {loc:(717, -239, -5), rotation:(0,0,-90), fire:0x0081, name:Thruster_left_2, flare_scale:.18, trail_scale:.18}
+   port_right: {loc:(-819, 175, 0), rotation:(0,0,90), fire:0x0082, name:Thruster_right_3, flare_scale:.18, trail_scale:.18}
+   port_right: {loc:(-362, 405, -5), rotation:(0,0,90), fire:0x0082, name:Thruster_right_4, flare_scale:.18, trail_scale:.18}
+   port_right: {loc:(717, 238, -5), rotation:(0,0,90), fire:0x0042, name:Thruster_right_5, flare_scale:.18, trail_scale:.18}
+   port_fore: {loc:(-308, -368, 35), rotation:(0,0,0), fire:0x0044, name:Thruster_fore_6, flare_scale:.18, trail_scale:.18}
+   port_fore: {loc:(-308, -368, -43), rotation:(0,0,0), fire:0x0044, name:Thruster_fore_7, flare_scale:.18, trail_scale:.18}
+   port_fore: {loc:(-308, 367, 35), rotation:(0,0,0), fire:0x0084, name:Thruster_fore_8, flare_scale:.18, trail_scale:.18}
+   port_fore: {loc:(-308, 367, -43), rotation:(0,0,0), fire:0x0084, name:Thruster_fore_9, flare_scale:.18, trail_scale:.18}
+   port_aft: {loc:(-1047, -76, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_10, flare_scale:.18, trail_scale:.18}
+   port_aft: {loc:(-1047, 0, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_11, flare_scale:.18, trail_scale:.18}
+   port_aft: {loc:(-1047, 76, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_12, flare_scale:.18, trail_scale:.18}
+   port_top: {loc:(-358, -368, 73), rotation:(0,90,0), fire:0x0410, name:Thruster_top_13, flare_scale:.10, trail_scale:.10}
+   port_top: {loc:(-617, -368, 73), rotation:(0,90,0), fire:0x0410, name:Thruster_top_14, flare_scale:.10, trail_scale:.10}
+   port_top: {loc:(-358, 367, 73), rotation:(0,90,0), fire:0x0810, name:Thruster_top_15, flare_scale:.10, trail_scale:.10}
+   port_top: {loc:(-617, 367, 73), rotation:(0,90,0), fire:0x0810, name:Thruster_top_16, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(-358, -368, -79), rotation:(0,-90,0), fire:0x0820, name:Thruster_bottom_17, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(-617, -368, -79), rotation:(0,-90,0), fire:0x0820, name:Thruster_bottom_18, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(-358, 367, -79), rotation:(0,-90,0), fire:0x0420, name:Thruster_bottom_19, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(-617, 367, -79), rotation:(0,-90,0), fire:0x0420, name:Thruster_bottom_20, flare_scale:.10, trail_scale:.10}
+   port_top: {loc:(716, -191, 83), rotation:(0,90,0), fire:0x0210, name:Thruster_top_21, flare_scale:.10, trail_scale:.10}
+   port_top: {loc:(716, 191, 83), rotation:(0,90,0), fire:0x0210, name:Thruster_top_22, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(716, -191, -93), rotation:(0,-90,0), fire:0x0120, name:Thruster_bottom_23, flare_scale:.10, trail_scale:.10}
+   port_bottom: {loc:(716, 191, -93), rotation:(0,-90,0), fire:0x0120, name:Thruster_bottom_24, flare_scale:.10, trail_scale:.10}
 }
 
 quantum:     {
@@ -501,3 +559,60 @@ map: {
 
 
 
+
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: {
+      name: "Port"
+      loc: (-480, -410, 0)
+      color: "red"
+      intensity: 3000
+      radius: 350
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-480, 410, 0)
+      color: "green"
+      intensity: 3000
+      radius: 350
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.25
+   }
+   light: {
+      name: "Dorsal"
+      loc: (716, 0, 100)
+      color: "white"
+      intensity: 3000
+      radius: 350
+      mode: "steady"
+      blink_interval: 0.5
+      phase: 0.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (716, 0, -105)
+      color: "white"
+      intensity: 3000
+      radius: 350
+      mode: "steady"
+      blink_interval: 0.5
+      phase: 0.0
+   }
+   light: {
+      name: "Aft"
+      loc: (-1047, 0, 70)
+      color: "white"
+      intensity: 3000
+      radius: 350
+      mode: "steady"
+      blink_interval: 0.5
+      phase: 0.0
+   }
+}
