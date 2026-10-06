@@ -277,6 +277,24 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
                 &PanelBrushes[Index],ESlateDrawEffect::None,HUDBlue);
     };
+    // Coordinates share the 512x256 HUD artwork's center and scale.
+    // Measure each string so the readouts align to the panel edges, not their first glyph.
+    auto ReticleText = [&](double X, double Y, double Width, const FString& Label, bool bCentered = false)
+    {
+        int32 FontSize = FMath::Max(8, int32(11*Scale));
+        const auto Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold",FontSize);
+        FVector2D Extent = Measure->Measure(Label,Font);
+        while (Extent.X > Width*Scale && FontSize > 1)
+        {
+            Font = FCoreStyle::GetDefaultFontStyle("Bold",--FontSize);
+            Extent = Measure->Measure(Label,Font);
+        }
+        const double Offset = (Width*Scale-Extent.X)*(bCentered ? 0.5 : 1.0);
+        const FVector2D P(Size.X*0.5+X*Scale+Offset,Size.Y*0.5+Y*Scale);
+        FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(Extent),FSlateLayoutTransform(FVector2f(P))),
+            Label,Font,ESlateDrawEffect::None,HUDBlue);
+    };
     // Centered boxed status annunciators from the legacy fighter HUD.
     auto Popup = [&](double Y, const FString& Label, FLinearColor Color = HUDBlue)
     {
@@ -293,22 +311,21 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     if (bHasPlayer)
     {
-        const FVector2D Center=Size*0.5;
-        Text(Center+FVector2D(-250,0)*Scale,FString::Printf(TEXT("SPD %.0f"),FlightSpeed));
-        Text(Center+FVector2D(-28,-100)*Scale,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360));
-        Text(Center+FVector2D(-250,108)*Scale,TEXT("TAC"));
+        ReticleText(-240,-8,108,FString::Printf(TEXT("%.0f"),FlightSpeed));
+        ReticleText(-40,-100,80,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),true);
+        ReticleText(-240,88,108,TEXT("TAC"));
         if (bShowWeapons)
         {
-            Text(Center+FVector2D(-250,64)*Scale,DefenseReadout);
+            ReticleText(-240,44,108,DefenseReadout);
             for (int32 I=0; I<MissileReadouts.Num(); ++I)
-                Text(Center+FVector2D(-250,80+I*14)*Scale,MissileReadouts[I]);
+                ReticleText(-240,58+I*14,108,MissileReadouts[I]);
         }
         for (int32 I=0; I<NavReadouts.Num(); ++I)
-            Text(Center+FVector2D(140,24+I*16)*Scale,NavReadouts[I]);
+            ReticleText(132,30+I*14,108,NavReadouts[I]);
         if (bHasTarget)
         {
-            Text(Center+FVector2D(140,-20)*Scale,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
-            if (bClosingValid) Text(Center+FVector2D(140,-4)*Scale,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
+            ReticleText(132,-18,108,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
+            if (bClosingValid) ReticleText(132,-4,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
         if (bAutoAvailable) Popup(-158,TEXT("AUTO"));
         if (JumpSeconds>0) Popup(-132,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
@@ -405,9 +422,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P+FVector2D(0,152)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),DamageColor(PlayerShield));
         if (bShowWeapons)
         {
-        const FVector2D W(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale);
-        Text(W,Primary.ToUpper());
-        Text(W+FVector2D(0,20)*Scale,Secondary.ToUpper());
+        ReticleText(-240,16,108,Primary.ToUpper());
+        ReticleText(-240,30,108,Secondary.ToUpper());
         }
         const int32 Rows=FMath::Min(12,DamageRows.Num());
         for(int32 I=0;bShowCaution && I<Rows;++I)

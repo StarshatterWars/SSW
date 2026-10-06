@@ -84,6 +84,10 @@ protected:
     bool EnableMissionMenuInput();
     void DisableMissionMenuInput();
     void ToggleMissionMenu();
+    bool bPreviousTargetHeld = false;
+    bool bNextTargetHeld = false;
+    void ReleasePreviousMissionTarget();
+    void ReleaseNextMissionTarget();
     void PreviousMissionTarget();
     void NextMissionTarget();
     void CycleMissionTarget(int32 Direction);

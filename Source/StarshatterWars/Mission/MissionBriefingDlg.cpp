@@ -1107,20 +1107,28 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
-    // EnhancedInput deliberately disables legacy BindKey; create mission-only actions.
+    // Transient context remains for the wheel and existing HUD shortcuts only.
     MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
-    PreviousMissionTargetAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
-    NextMissionTargetAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
-    PreviousMissionTargetAction->ValueType = EInputActionValueType::Boolean;
-    NextMissionTargetAction->ValueType = EInputActionValueType::Boolean;
-    MissionTargetContext->MapKey(PreviousMissionTargetAction.Get(), EKeys::R);
-    MissionTargetContext->MapKey(NextMissionTargetAction.Get(), EKeys::T);
-    MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Started,
-        this, &UMissionBriefingDlg::PreviousMissionTarget);
-    MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Started,
-        this, &UMissionBriefingDlg::NextMissionTarget);
+    // Use the editor-authored actions and IMC mappings, including chord triggers.
+    PreviousMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_PreviousTarget.IA_PreviousTarget"));
+    NextMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NextTarget.IA_NextTarget"));
+    bPreviousTargetHeld = bNextTargetHeld = false;
+    if (PreviousMissionTargetAction && PreviousMissionTargetAction->ValueType == EInputActionValueType::Boolean)
+    {
+        MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::PreviousMissionTarget);
+        MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleasePreviousMissionTarget);
+        MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleasePreviousMissionTarget);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[MissionInput] Missing Boolean IA_PreviousTarget."));
+    if (NextMissionTargetAction && NextMissionTargetAction->ValueType == EInputActionValueType::Boolean)
+    {
+        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::NextMissionTarget);
+        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseNextMissionTarget);
+        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseNextMissionTarget);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[MissionInput] Missing Boolean IA_NextTarget."));
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
-    // Use the same transient context as R/T so asset paths, Hold triggers,
+    // Use the transient wheel context so asset paths, Hold triggers,
     // or boolean action settings cannot suppress the one-frame wheel pulse.
     MissionTargetZoomAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
     MissionTargetZoomAction->ValueType = EInputActionValueType::Axis1D;
@@ -1259,8 +1267,23 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     FighterInputContext = nullptr;
     bAddedFighterInputContext = false;
 }
-void UMissionBriefingDlg::PreviousMissionTarget() { CycleMissionTarget(-1); }
-void UMissionBriefingDlg::NextMissionTarget() { CycleMissionTarget(1); }
+void UMissionBriefingDlg::PreviousMissionTarget()
+{
+    if (bPreviousTargetHeld) return;
+    bPreviousTargetHeld = true;
+    CycleMissionTarget(-1);
+}
+void UMissionBriefingDlg::ReleasePreviousMissionTarget() { bPreviousTargetHeld = false; }
+void UMissionBriefingDlg::NextMissionTarget()
+{
+    if (bNextTargetHeld) return;
+    bNextTargetHeld = true;
+    // Do not also advance when the user invokes Shift+T for reverse targeting.
+    APlayerController* PC = GetOwningPlayer();
+    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
+    CycleMissionTarget(1);
+}
+void UMissionBriefingDlg::ReleaseNextMissionTarget() { bNextTargetHeld = false; }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
