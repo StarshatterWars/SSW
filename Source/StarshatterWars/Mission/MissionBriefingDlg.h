@@ -8,6 +8,7 @@
 class UEnhancedInputComponent;
 class UInputMappingContext;
 class UInputAction;
+class SFighterHUDDetails;
 struct FInputActionValue;
 class QuitView;
 class UQuitMissionMenu;
@@ -89,6 +90,18 @@ protected:
     void UpdateMissionTargetCamera();
     void OnTargetZoom(const FInputActionValue& Value);
     void ToggleFighterHUD();
+    void ToggleFighterCautionPanel();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> HUDWarningsAction;
+    void ToggleFighterWeaponsPanel();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> WeaponsPanelAction;
+    void CycleFighterMFDLeft();
+    void CycleFighterMFDRight();
+    void CycleFighterWeapon();
+    bool CanUseFighterHUD() const;
+    TSharedPtr<SFighterHUDDetails> FighterHUDDetails;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> FighterMFDLeftAction;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> FighterMFDRightAction;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> FighterWeaponCycleAction;
     bool bFighterHUDVisible = true;
     TSharedPtr<SWidget> FighterHUDPanels;
     UPROPERTY(Transient) TObjectPtr<UInputAction> FighterHUDToggleAction;
@@ -107,6 +120,8 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> PreviousMissionTargetAction;
     UPROPERTY(Transient) TObjectPtr<UInputAction> NextMissionTargetAction;
     bool bAddedMissionMenuContext = false;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> FighterInputContext;
+    bool bAddedFighterInputContext = false;
     UPROPERTY(EditDefaultsOnly, Category="Mission|Pause Menu")
     TSubclassOf<UQuitMissionMenu> QuitMissionMenuClass;
     QuitView* MissionQuitMenu = nullptr;

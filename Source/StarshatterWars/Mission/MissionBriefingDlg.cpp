@@ -63,6 +63,7 @@
 #include "SimRegion.h"
 #include "MissionTargetOverlay.h"
 #include "FighterHUDPanels.h"
+#include "FighterHUDDetails.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
@@ -1145,6 +1146,43 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
     }
+    FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Fighter.IMC_Fighter"));
+    // Compatibility with the existing asset's current name.
+    if (!FighterInputContext)
+        FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
+    bAddedFighterInputContext = FighterInputContext && !Input->HasMappingContext(FighterInputContext.Get());
+    if (bAddedFighterInputContext) Input->AddMappingContext(FighterInputContext.Get(), 1000);
+    if (!FighterInputContext)
+        UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing IMC_Fighter (or IMC_FighterHUD) in /Game/Input."));
+    WeaponsPanelAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_WeaponsPanel.IA_WeaponsPanel"));
+    if (WeaponsPanelAction && WeaponsPanelAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(WeaponsPanelAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterWeaponsPanel);
+    else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing Boolean IA_WeaponsPanel in /Game/Input."));
+    HUDWarningsAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_HUDWarnings.IA_HUDWarnings"));
+    if (HUDWarningsAction && HUDWarningsAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(HUDWarningsAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterCautionPanel);
+    else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing Boolean IA_HUDWarnings in /Game/Input."));
+    FighterMFDLeftAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDLeftCycle.IA_MFDLeftCycle"));
+    FighterMFDRightAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDRightCycle.IA_MFDRightCycle"));
+    if (FighterMFDLeftAction && FighterMFDLeftAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(FighterMFDLeftAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::CycleFighterMFDLeft);
+    else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] IA_MFDLeftCycle is missing or is not Boolean."));
+    if (FighterMFDRightAction && FighterMFDRightAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(FighterMFDRightAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::CycleFighterMFDRight);
+    else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] IA_MFDRightCycle is missing or is not Boolean."));
+    FighterWeaponCycleAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    FighterWeaponCycleAction->ValueType = EInputActionValueType::Boolean;
+    MissionTargetContext->MapKey(FighterWeaponCycleAction.Get(), EKeys::BackSpace);
+    MissionMenuInput->BindAction(FighterWeaponCycleAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::CycleFighterWeapon);
+    if (!FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
+    {
+        TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
+        FighterHUDDetails = SNew(SFighterHUDDetails)
+            .ShowHUD_Lambda([Owner]() { return Owner.IsValid() && Owner->bFighterHUDVisible && Owner->CanUseFighterHUD(); })
+            .SelectedTarget_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
+            .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });
+        GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDDetails.ToSharedRef(), 810);
+    }
     Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
@@ -1173,6 +1211,14 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    if (FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDDetails.ToSharedRef());
+    FighterHUDDetails.Reset();
+    WeaponsPanelAction = nullptr;
+    HUDWarningsAction = nullptr;
+    FighterMFDLeftAction = nullptr;
+    FighterMFDRightAction = nullptr;
+    FighterWeaponCycleAction = nullptr;
     if (FighterHUDPanels.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDPanels.ToSharedRef());
     FighterHUDPanels.Reset();
@@ -1195,6 +1241,8 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
             if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
             {
                 if (MissionTargetContext) Input->RemoveMappingContext(MissionTargetContext.Get());
+                if (bAddedFighterInputContext && FighterInputContext)
+                    Input->RemoveMappingContext(FighterInputContext.Get());
                 if (bAddedMissionMenuContext && MissionMenuContext)
                     Input->RemoveMappingContext(MissionMenuContext.Get());
             }
@@ -1208,6 +1256,8 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     MissionTargetZoomAction = nullptr;
     MissionTargetZoomDistance = 1.0;
     bAddedMissionMenuContext = false;
+    FighterInputContext = nullptr;
+    bAddedFighterInputContext = false;
 }
 void UMissionBriefingDlg::PreviousMissionTarget() { CycleMissionTarget(-1); }
 void UMissionBriefingDlg::NextMissionTarget() { CycleMissionTarget(1); }
@@ -1309,6 +1359,37 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     GetWorld()->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
         &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, TimerParameters);
 }
+bool UMissionBriefingDlg::CanUseFighterHUD() const
+{
+    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen &&
+        !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
+}
+void UMissionBriefingDlg::CycleFighterMFDLeft()
+{
+    if (CanUseFighterHUD() && FighterHUDDetails.IsValid()) FighterHUDDetails->CycleMFD(0);
+}
+void UMissionBriefingDlg::CycleFighterMFDRight()
+{
+    if (CanUseFighterHUD() && FighterHUDDetails.IsValid()) FighterHUDDetails->CycleMFD(1);
+}
+void UMissionBriefingDlg::CycleFighterWeapon()
+{
+    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid()) return;
+    APlayerController* PC = GetOwningPlayer();
+    const bool Primary = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    FighterHUDDetails->CycleWeapon(Primary);
+}
+
+void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
+{
+    if (CanUseFighterHUD() && FighterHUDDetails.IsValid()) FighterHUDDetails->ToggleWeaponsPanel();
+}
+
+void UMissionBriefingDlg::ToggleFighterCautionPanel()
+{
+    if (CanUseFighterHUD() && FighterHUDDetails.IsValid()) FighterHUDDetails->ToggleCautionPanel();
+}
+
 void UMissionBriefingDlg::ToggleFighterHUD()
 {
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
