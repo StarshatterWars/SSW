@@ -42,6 +42,12 @@ private:
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;
+    TArray<FString> NavReadouts, MissileReadouts;
+    FString DefenseReadout;
+    double FlightSpeed = 0, HeadingDegrees = 0, ClosingSpeed = 0, JumpSeconds = 0;
+    int32 ThreatLevel = 0;
+    bool bAutoAvailable = false, bGearDown = false, bShoot = false;
+    bool bClosingValid = false, bWarningFlash = false;
     FString PlayerIconPath, TargetIconPath;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
     FSlateBrush PlayerBrush, TargetBrush;

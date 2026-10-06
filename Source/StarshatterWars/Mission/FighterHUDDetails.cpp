@@ -7,6 +7,7 @@
 #include "SimRegion.h"
 #include "SimContact.h"
 #include "Sensor.h"
+#include "Instruction.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
 #include "QuantumDrive.h"
@@ -80,6 +81,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
 void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
 {
     SLeafWidget::Tick(G, Now, Delta);
+    bWarningFlash = FMath::Fmod(Now, 1.0) >= 0.5;
     if (Now < NextSample) return;
     NextSample = Now + 0.1;
     Refresh();
@@ -99,10 +101,47 @@ void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, T
 void SFighterHUDDetails::Refresh()
 {
     StatusRows.Reset(); DamageRows.Reset(); Contacts.Reset();
+    NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
+    bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
+    FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
+    ThreatLevel = 0;
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
     PlayerHull = Hull(P); Primary = Secondary = TEXT("NONE");
     if (P)
     {
+        FlightSpeed = P->GetVelocity().Size();
+        HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
+        bAutoAvailable = P->CanTimeSkip();
+        bGearDown = P->IsGearDown();
+        JumpSeconds = P->GetQuantumDrive() ? P->GetQuantumDrive()->JumpTime() : 0;
+        WeaponGroup* Missile = P->GetSecondaryGroup();
+        bShoot = Missile && Missile->Ammo() > 0 && Missile->GetSelected() && Missile->GetSelected()->Locked();
+        if (P->GetShield()) DefenseReadout = FString::Printf(TEXT("SHIELD %.0f"), double(P->GetShieldStrength()));
+        else if (P->GetDecoy()) DefenseReadout = FString::Printf(TEXT("DECOY %d"), P->GetDecoy()->Ammo());
+        for (int32 I = 0; I < 2; ++I)
+        {
+            const int32 Eta = P->GetMissileEta(I);
+            if (Eta > 0) MissileReadouts.Add(FString::Printf(TEXT("T %d:%02d"), Eta/60, Eta%60));
+        }
+        if (Instruction* Nav = P->GetNextNavPoint())
+        {
+            NavReadouts.Add(FString::Printf(TEXT("%s %d"), P->IsAutoNavEngaged() ? TEXT("AUTO NAV") : TEXT("NAV"), P->GetNavIndex(Nav)));
+            const char* Action = Instruction::ActionName(Nav->GetAction());
+            if (Action && *Action) NavReadouts.Add(FString(ANSI_TO_TCHAR(Action)).ToUpper());
+            NavReadouts.Add(FString::Printf(TEXT("SPD %d"), Nav->GetSpeed()));
+            const double Distance = FMath::Max(0.0, P->RangeToNavPoint(Nav));
+            NavReadouts.Add(FString::Printf(TEXT("%.1f KM"), Distance/1000.0));
+            if (FlightSpeed > 10)
+            {
+                const int32 Eta = int32(FMath::Min(Distance/FlightSpeed, 3601.0));
+                NavReadouts.Add(Eta > 3600 ? TEXT("ETR XX:XX") : FString::Printf(TEXT("ETR %d:%02d"), Eta/60, Eta%60));
+            }
+            if (Nav->GetHoldTime() > 0)
+            {
+                const int32 Hold = int32(Nav->GetHoldTime());
+                NavReadouts.Add(FString::Printf(TEXT("HOLD %d:%02d"), Hold/60, Hold%60));
+            }
+        }
         PlayerName = ANSI_TO_TCHAR(P->GetName());
         PlayerClass = ANSI_TO_TCHAR(P->GetShipClassName());
         PlayerShield = P->GetShield() ? P->GetShieldStrength() : -1;
@@ -135,6 +174,12 @@ void SFighterHUDDetails::Refresh()
             while (++It)
             {
                 if (!It.value() || It->GetShip() == P || !(It->ActLock() || It->PasLock() || It->Visible(P))) continue;
+                // Legacy warnings derive from detected threatening contacts.
+                if (It->Threat(P) && !P->IsStarship())
+                {
+                    if (It->GetShot()) ThreatLevel = 2;
+                    else if (It->GetShip() && !It->GetShip()->IsStarship()) ThreatLevel = FMath::Max(ThreatLevel, 1);
+                }
                 double Az = 0, El = 0, Range = 0;
                 It->GetBearing(P, Az, El, Range);
                 if (!FMath::IsFinite(Range) || !FMath::IsFinite(Az) || !FMath::IsFinite(El) || Range <= 0 || Range > SensorRange) continue;
@@ -158,6 +203,12 @@ void SFighterHUDDetails::Refresh()
     if (bHasTarget && T->IsDead()) bHasTarget = false;
     if (bHasTarget)
     {
+        if (P)
+        {
+            const FVector Separation = T->GetLocation()-P->GetLocation();
+            bClosingValid = !Separation.IsNearlyZero();
+            ClosingSpeed = FVector::DotProduct(P->GetVelocity()-T->GetVelocity(), Separation.GetSafeNormal());
+        }
         TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
@@ -226,6 +277,46 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
                 &PanelBrushes[Index],ESlateDrawEffect::None,HUDBlue);
     };
+    // Centered boxed status annunciators from the legacy fighter HUD.
+    auto Popup = [&](double Y, const FString& Label, FLinearColor Color = HUDBlue)
+    {
+        const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
+        const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label,Font);
+        const FVector2D P(Size.X*0.5-Extent.X*0.5-5*Scale, Size.Y*0.5+Y*Scale);
+        const FVector2D D(Extent.X+10*Scale,Extent.Y+4*Scale);
+        Box(P,D,FLinearColor(0,0.015f,0.03f,0.75f));
+        Box(P,FVector2D(D.X,Scale),Color);
+        Box(P+FVector2D(0,D.Y-Scale),FVector2D(D.X,Scale),Color);
+        Box(P,FVector2D(Scale,D.Y),Color);
+        Box(P+FVector2D(D.X-Scale,0),FVector2D(Scale,D.Y),Color);
+        Text(P+FVector2D(5,2)*Scale,Label,Color);
+    };
+    if (bHasPlayer)
+    {
+        const FVector2D Center=Size*0.5;
+        Text(Center+FVector2D(-250,0)*Scale,FString::Printf(TEXT("SPD %.0f"),FlightSpeed));
+        Text(Center+FVector2D(-28,-100)*Scale,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360));
+        Text(Center+FVector2D(-250,108)*Scale,TEXT("TAC"));
+        if (bShowWeapons)
+        {
+            Text(Center+FVector2D(-250,64)*Scale,DefenseReadout);
+            for (int32 I=0; I<MissileReadouts.Num(); ++I)
+                Text(Center+FVector2D(-250,80+I*14)*Scale,MissileReadouts[I]);
+        }
+        for (int32 I=0; I<NavReadouts.Num(); ++I)
+            Text(Center+FVector2D(140,24+I*16)*Scale,NavReadouts[I]);
+        if (bHasTarget)
+        {
+            Text(Center+FVector2D(140,-20)*Scale,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
+            if (bClosingValid) Text(Center+FVector2D(140,-4)*Scale,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
+        }
+        if (bAutoAvailable) Popup(-158,TEXT("AUTO"));
+        if (JumpSeconds>0) Popup(-132,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
+        else if (ThreatLevel==2 && bWarningFlash) Popup(-132,TEXT("MISSILE WARNING"),FLinearColor::Red);
+        else if (ThreatLevel==1) Popup(-132,TEXT("LOCK WARNING"),FLinearColor::Yellow);
+        if (bShoot && bShowWeapons) Popup(118,TEXT("SHOOT"));
+        if (bGearDown) Popup(144,TEXT("GEAR DOWN"));
+    }
     // The fighter uses weapon readouts beside the central HUD, not the capital-ship TAC frame.
     for (int32 I=5; bShowCaution && I<7; ++I)
     {
