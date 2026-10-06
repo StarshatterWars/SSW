@@ -13,6 +13,8 @@
 #include "Power.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Fonts/FontMeasure.h"
 
 namespace
 {
@@ -102,6 +104,8 @@ void SFighterHUDDetails::Refresh()
     if (P)
     {
         PlayerName = ANSI_TO_TCHAR(P->GetName());
+        PlayerClass = ANSI_TO_TCHAR(P->GetShipClassName());
+        PlayerShield = P->GetShield() ? P->GetShieldStrength() : -1;
         LoadShipHUDIcon(IconPath(P), PlayerIconPath, PlayerTexture, PlayerBrush);
         if (P->GetMainDrive()) StatusRows.Add({TEXT("THRUST"), P->GetThrottle()});
         if (P->GetReactors().size() > 0 && P->GetReactors()[0])
@@ -114,7 +118,14 @@ void SFighterHUDDetails::Refresh()
         // Most damaged systems first for the compact damage annunciator.
         ListIter<SimSystem> Sys = P->GetSystems();
         while (++Sys)
-            if (Sys.value()) DamageRows.Add({ANSI_TO_TCHAR(Sys->GetName()), Sys->GetAvailability()});
+            if (Sys.value())
+            {
+                const char* Abbreviation = Sys->Abbreviation();
+                FString Label = Abbreviation && *Abbreviation
+                    ? FString(ANSI_TO_TCHAR(Abbreviation))
+                    : FString(ANSI_TO_TCHAR(Sys->GetName()));
+                DamageRows.Add({Label.ToUpper().Left(8), Sys->GetAvailability()});
+            }
         DamageRows.Sort([](const FRow& A, const FRow& B) { return A.Percent < B.Percent; });
         Sensor* SensorData = P->GetSensor();
         SensorRange = SensorData ? FMath::Max(1.0, SensorData->GetBeamRange()) : 1.0;
@@ -186,7 +197,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             PanelTextures[6].IsValid() ? PanelTextures[6]->GetSizeY() : 0);
         bLoggedPanelPaint = true;
     }
-    const float Scale = FMath::Min(1.0, FMath::Min(Size.X / 1280.0, Size.Y / 720.0));
+    const float Scale = FMath::Min(Size.X / 1280.0, Size.Y / 720.0);
     auto Text = [&](FVector2D P, const FString& S, FLinearColor C = HUDBlue, int32 FontSize = 11)
     {
         FSlateDrawElement::MakeText(E, L+2, G.ToPaintGeometry(FVector2f(310*Scale,20*Scale),
@@ -215,24 +226,19 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
                 &PanelBrushes[Index],ESlateDrawEffect::None,HUDBlue);
     };
-    // Legacy WepView anchors the two TAC halves at the top center.
-    for (int32 I=0; bShowWeapons && I<2; ++I)
-    {
-        const FVector2D Native(256,256);
-        const FVector2D D = Native * Scale;
-        Artwork(I,FVector2D(Size.X*0.5 + (I==0 ? -D.X : 0.0),0),D);
-    }
+    // The fighter uses weapon readouts beside the central HUD, not the capital-ship TAC frame.
     for (int32 I=5; bShowCaution && I<7; ++I)
     {
         const FVector2D Native(256,256);
         const FVector2D D = Native * Scale;
         Artwork(I,FVector2D(Size.X*0.5 + (I==5 ? -D.X : 0.0),Size.Y-D.Y),D);
     }
-    if (bShowWeapons && !bHasPlayer) Text(FVector2D(Size.X*0.5-100*Scale,30*Scale),TEXT("WEAPONS: NO PLAYER SHIP"));
+    if (bShowWeapons && !bHasPlayer) Text(FVector2D(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale),TEXT("WEAPONS: NO PLAYER SHIP"));
     for (int32 Index=0; Index<2; ++Index)
     {
         const EMode M=Modes[Index]; if (M==EMode::Off) continue;
-        const FVector2D P(Index==0 ? 20*Scale : Size.X-240*Scale, Size.Y-375*Scale);
+        // Anchor the full MFD bounds to the viewport's lower corners.
+        const FVector2D P(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
         Box(P,FVector2D(220,215)*Scale,FLinearColor(0,0.025f,0.05f,0.65f));
         const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS  ["):M==EMode::FOV?TEXT("SENSOR FOV"):M==EMode::HSD?TEXT("SENSOR HSD"):TEXT("SENSOR 3D");
         Text(P+FVector2D(8,8)*Scale,Title);
@@ -255,9 +261,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             {
                 TArray<FVector2D> Points;
                 for(int32 J=0;J<=48;++J) { double A=2*PI*J/48; Points.Add(Center+FVector2D(FMath::Cos(A),FMath::Sin(A))*Radius*Ring/3); }
-                FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,FLinearColor(0.1f,0.3f,0.5f,0.8f),true,1);
+                FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,FLinearColor(0.1f,0.3f,0.5f,0.8f),true,Scale);
             }
-            Box(Center-FVector2D(2,2),FVector2D(4,4),HUDBlue);
+            Box(Center-FVector2D(2,2)*Scale,FVector2D(4,4)*Scale,HUDBlue);
             for(const FBlip& B:Contacts)
             {
                 FVector2D Offset;
@@ -275,41 +281,64 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
                         const FVector2D Base=Center+FVector2D(Offset.X,Offset.Y*0.55);
                         Offset.Y=Offset.Y*0.55-FMath::Sin(B.El)*R*0.45;
                         TArray<FVector2D> Stem={Base,Center+Offset};
-                        FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Stem,ESlateDrawEffect::None,B.Color,true,1);
+                        FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Stem,ESlateDrawEffect::None,B.Color,true,Scale);
                     }
                 }
-                Box(Center+Offset-FVector2D(2,2),FVector2D(4,4),B.Color);
+                Box(Center+Offset-FVector2D(2,2)*Scale,FVector2D(4,4)*Scale,B.Color);
             }
             Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%.0f KM   %d CONTACTS"),SensorRange/1000,Contacts.Num()));
         }
     }
+    // Compact inward-facing ship columns leave the center clear for CAUTION.
+    // Fit long names to the column instead of overlapping the adjacent panels.
+    auto ShipText = [&](FVector2D P, FString Label, FLinearColor Color = HUDBlue)
+    {
+        const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
+        const auto Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        if (Measure->Measure(Label,Font).X > 176*Scale)
+        {
+            while (!Label.IsEmpty() && Measure->Measure(Label+TEXT("..."),Font).X > 176*Scale)
+                Label.LeftChopInline(1);
+            Label += TEXT("...");
+        }
+        Text(P,Label,Color);
+    };
     if(bHasPlayer)
     {
-        const FVector2D P(20*Scale,Size.Y-145*Scale);
-        Text(P,PlayerName); Icon(P+FVector2D(0,25)*Scale,PlayerBrush,PlayerTexture.IsValid(),PlayerHull);
-        Gauge(P+FVector2D(88,35)*Scale,TEXT("HULL"),PlayerHull);
+        // Three data rows below the icon; final row ends at the bottom edge.
+        const FVector2D P(232*Scale,Size.Y-172*Scale);
+        ShipText(P,PlayerName);
+        Icon(P+FVector2D(48,24)*Scale,PlayerBrush,PlayerTexture.IsValid(),PlayerHull);
+        ShipText(P+FVector2D(0,112)*Scale,PlayerClass);
+        ShipText(P+FVector2D(0,132)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),DamageColor(PlayerHull));
+        ShipText(P+FVector2D(0,152)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),DamageColor(PlayerShield));
         if (bShowWeapons)
         {
-        const FVector2D W(Size.X*0.5-180*Scale,20*Scale);
-        Text(W,TEXT("WEAPONS")); Text(W+FVector2D(0,22)*Scale,TEXT("PRIMARY: ")+Primary);
-        Text(W+FVector2D(0,42)*Scale,TEXT("SECONDARY: ")+Secondary);
-        Text(W+FVector2D(0,64)*Scale,TEXT("SHIFT+BACKSPACE / BACKSPACE"),HUDBlue,9);
+        const FVector2D W(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale);
+        Text(W,Primary.ToUpper());
+        Text(W+FVector2D(0,20)*Scale,Secondary.ToUpper());
         }
         const int32 Rows=FMath::Min(12,DamageRows.Num());
         for(int32 I=0;bShowCaution && I<Rows;++I)
         {
             const FVector2D D=FVector2D(Size.X*0.5-150*Scale,Size.Y-97*Scale)+FVector2D((I%4)*75,(I/4)*28)*Scale;
-            Text(D,FString::Printf(TEXT("%s %.0f%%"),*DamageRows[I].Label.Left(10),DamageRows[I].Percent),DamageColor(DamageRows[I].Percent),8);
+            // Legacy caution cells show a centered abbreviation; color conveys health.
+            const FString& Label = DamageRows[I].Label;
+            const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
+            const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
+            Text(D+FVector2D((75*Scale-Extent.X)*0.5,0),Label,DamageColor(DamageRows[I].Percent),11);
         }
     }
     if(bHasTarget)
     {
-        const FVector2D P(Size.X-330*Scale,Size.Y-145*Scale);
-        Text(P,TargetName); Icon(P+FVector2D(0,25)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
-        Text(P+FVector2D(88,22)*Scale,TargetClass);
-        Gauge(P+FVector2D(88,44)*Scale,TEXT("HULL"),TargetHull);
-        Gauge(P+FVector2D(88,66)*Scale,TEXT("SHIELD"),TargetShield);
-        Text(P+FVector2D(88,90)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
+        // Target has one additional range row. Keep its final row bottom-aligned too.
+        const FVector2D P(Size.X-408*Scale,Size.Y-192*Scale);
+        ShipText(P,TargetName);
+        Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
+        ShipText(P+FVector2D(0,112)*Scale,TargetClass);
+        ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),DamageColor(TargetHull));
+        ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),DamageColor(TargetShield));
+        ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
     }
     return L+2;
 }

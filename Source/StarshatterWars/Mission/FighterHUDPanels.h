@@ -31,7 +31,7 @@ public:
     {
         if (!ShowPanels.Get()) return Layer;
         const FVector2D ViewSize = Geometry.GetLocalSize();
-        const float Scale = FMath::Min(1.0, FMath::Min(ViewSize.X / 512.0, ViewSize.Y / 256.0));
+        const float Scale = FMath::Min(ViewSize.X / 1280.0, ViewSize.Y / 720.0);
         const FVector2f PanelSize(256.0f * Scale, 256.0f * Scale);
         const FVector2f Center(ViewSize.X * 0.5, ViewSize.Y * 0.5);
         const FLinearColor Blue(0.15f, 0.55f, 1.0f, 1.0f);

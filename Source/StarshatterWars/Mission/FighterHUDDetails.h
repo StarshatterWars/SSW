@@ -39,8 +39,8 @@ private:
     EMode Modes[2] = { EMode::Ship, EMode::FOV };
     TArray<FRow> StatusRows, DamageRows;
     TArray<FBlip> Contacts;
-    FString PlayerName, TargetName, TargetClass, Primary, Secondary;
-    double PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
+    FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
+    double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;
     FString PlayerIconPath, TargetIconPath;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
