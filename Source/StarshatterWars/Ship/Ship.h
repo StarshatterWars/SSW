@@ -157,6 +157,7 @@ public:
 
     // DIRECTION:
     virtual void      SetControls(MotionController* m);
+
     
     void              SetDirectorInfo(const char* msg) { director_info = msg; }
     const char*       GetDirectorInfo() const { return director_info; }
