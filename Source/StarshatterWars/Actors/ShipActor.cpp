@@ -330,6 +330,8 @@ void AShipActor::BeginPlay()
 
 void AShipActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    // Attached actors are independent world actors and are not owned for destruction.
+    DestroyVisualActor();
     ClearRuntimeThrusters();
     ClearRuntimeMainEngines();
 

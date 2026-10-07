@@ -2678,8 +2678,28 @@ MissionElement* CampaignMissionFighter::CreateSingleElement(CombatGroup* G, Comb
     {
         MissionElement* Elem = EIter.value();
 
-        if (Elem && Elem->GetCombatUnit() == U)
+        if (!Elem) continue;
+        CombatUnit* ExistingMissionUnit = Elem->GetCombatUnit();
+        if (ExistingMissionUnit == U) return nullptr;
+        if (!ExistingMissionUnit || Elem->IsSquadron()) continue;
+
+        // Campaign/zone roster copies have different addresses. Compare authored
+        // unit identity before generating another element from a copied unit.
+        const bool SameContext = ExistingMissionUnit->GetIFF() == U->GetIFF() &&
+            (ExistingMissionUnit->GetRegion() == U->GetRegion()) != 0 &&
+            (ExistingMissionUnit->GetDesignName() == U->GetDesignName()) != 0;
+        const bool HasDesign = U->GetDesignName().length() > 0;
+        const bool HasRegistry = U->GetRegistryNumber().length() > 0;
+        const bool SameIdentity = HasRegistry
+            ? (ExistingMissionUnit->GetRegistryNumber() == U->GetRegistryNumber()) != 0
+            : U->GetName().length() > 0 && (ExistingMissionUnit->GetName() == U->GetName()) != 0 &&
+              ExistingMissionUnit->GetRegistryNumber().length() == 0;
+        if (HasDesign && SameContext && SameIdentity)
         {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CampaignUnitDuplicate] Skip copied unit '%hs' Registry='%hs' Design='%hs' Region='%hs' IFF=%d ExistingMissionUnit=%p Copy=%p Group='%hs'"),
+                U->GetName().data(), U->GetRegistryNumber().data(), U->GetDesignName().data(),
+                U->GetRegion().data(), U->GetIFF(), ExistingMissionUnit, U, G->GetName().data());
             return nullptr;
         }
     }

@@ -261,7 +261,7 @@ Drive::SetThrottle(double t, bool aug, double seconds)
         }
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Drive::SetThrottle] Ship='%hs' Input=%.2f Seconds=%.4f Spool=%.4f Request=%.4f StoredThrottle=%.4f Aug=%d StoredAugThrottle=%.4f"),
         ship ? ship->GetName() : "NULL",
         t,

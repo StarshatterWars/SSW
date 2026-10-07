@@ -576,7 +576,7 @@ ShipAI::FindObjective()
 	{
 		ship->SetDirectorInfo("AI Ward Formation");
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[FORMATION] ")
 			TEXT("Ship='%hs' Ward='%hs' ")
 			TEXT("ElementIndex=%d Navpt=%p Target='%hs'"),
@@ -676,7 +676,7 @@ ShipAI::FindObjective()
 				const EInstruction NavAction =
 					navpt->GetAction();
 
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[FindObjective ROUTE] ")
 					TEXT("Ship='%hs' Action=%d ")
 					TEXT("Target='%hs' Farcast=%d"),
@@ -788,7 +788,7 @@ ShipAI::FindObjective()
 		distance = 0.0;
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::FindObjective WORLD] ")
 		TEXT("Ship='%hs' ")
 		TEXT("Target='%hs' Threat='%hs' Support='%hs' ")
@@ -1115,14 +1115,14 @@ ShipAI::FindObjectiveNavPoint()
 				bResolvedRuntimeTarget =
 					true;
 
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[ShipAI::FindObjectiveNavPoint] RuntimeTarget='%hs' ObjW=%s"),
 					navpt->GetTargetName(),
 					*obj_w.ToString());
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[ShipAI::FindObjectiveNavPoint] FAILED RuntimeTarget='%hs'"),
 					navpt->GetTargetName());
 			}
@@ -1166,7 +1166,7 @@ ShipAI::FindObjectiveNavPoint()
 			obj_w =
 				Npt;
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[ShipAI::FindObjectiveNavPoint] StaticNav ObjW=%s"),
 				*obj_w.ToString());
 		}
@@ -1226,7 +1226,7 @@ ShipAI::FindObjectiveNavPoint()
 			navpt->GetFarcast());
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::FindObjectiveNavPoint] Ship='%hs' SelfRgn='%hs' NavRgn='%hs' NavLoc=%s ObjW=%s ShipLoc=%s Dist=%.2f Farcast=%d"),
 		ship ? ship->GetName() : "NULL",
 		SelfRgn ? SelfRgn->GetName() : "NULL",

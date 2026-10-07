@@ -448,8 +448,10 @@ Mission::GetSubtitles() const
 void
 Mission::AddElement(MissionElement* elem)
 {
-	if (elem)
-		elements.append(elem);
+    // Lists own their entries: appending the same pointer twice also risks
+    // deleting the same mission element twice during mission cleanup.
+    if (elem && !elements.contains(elem))
+        elements.append(elem);
 }
 
 // +--------------------------------------------------------------------+

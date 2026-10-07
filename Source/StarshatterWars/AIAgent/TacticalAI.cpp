@@ -301,7 +301,7 @@ bool TacticalAI::CheckObjectives()
 
 				roe = DEFENSIVE;
 
-				UE_LOG(LogTemp, Error,
+				UE_LOG(LogTemp, VeryVerbose,
 					TEXT("[TacticalAI::CheckObjectives COMMANDER WARD] Ship='%hs' Element='%hs' CommanderElement='%hs' Ward='%hs'"),
 					ship ? ship->GetName() : "NULL",
 					elem ? elem->GetName().data() : "NULL",

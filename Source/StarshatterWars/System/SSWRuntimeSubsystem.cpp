@@ -621,6 +621,24 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
         return nullptr;
     }
 
+    // One managed visual per simulation object. Do not deduplicate by ship name:
+    // distinct mission elements/regions can legitimately reuse a callsign.
+    for (int32 Index = MissionPresentationShips.Num()-1; Index >= 0; --Index)
+    {
+        AShipActor* Existing = MissionPresentationShips[Index].Get();
+        if (!Existing || Existing->IsActorBeingDestroyed())
+        {
+            MissionPresentationShips.RemoveAtSwap(Index);
+            continue;
+        }
+        if (Existing->GetRuntimeShip() == RuntimeShip)
+        {
+            UE_LOG(LogSSWRuntime, Verbose, TEXT("[RuntimeVisual] Reusing actor '%s' for Ship=%p"),
+                *Existing->GetName(), RuntimeShip);
+            return Existing;
+        }
+    }
+
     UWorld* World =
         GetWorld();
 
@@ -776,8 +794,10 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
             if (!bMoved) break;
         }
         MissionPresentationOffsets.Add(RuntimeShip, Position - BasePosition);
-        MissionPresentationShips.Add(ShipActor);
     }
+    // Register even when no presentation builder exists, so the next
+    // Begin/EndMissionPresentation can remove pre-mission visual proxies.
+    MissionPresentationShips.AddUnique(ShipActor);
     ShipActor->BindRuntimeShip(
         RuntimeShip);
 

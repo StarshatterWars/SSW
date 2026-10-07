@@ -809,6 +809,9 @@ Sim::BuildLinks()
 void
 Sim::CreateElements()
 {
+    TSet<MissionElement*> SeenEntries;
+    TArray<MissionElement*> SeenSingleUnits;
+
 	ListIter<MissionElement> ElementIter = mission->GetElements();
 
 	while (++ElementIter) {
@@ -816,6 +819,39 @@ Sim::CreateElements()
 
 		if (!MissionElem)
 			continue;
+
+        if (SeenEntries.Contains(MissionElem))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[MissionDuplicate] Skipped repeated mission entry '%hs' Ptr=%p"),
+                MissionElem->GetName().data(), MissionElem);
+            continue;
+        }
+        SeenEntries.Add(MissionElem);
+        // Only single-ship entries for the same actual campaign unit qualify.
+        // Squadron inventory and fighter packages can legitimately share a unit.
+        if (!MissionElem->IsSquadron() && MissionElem->Count()==1 && MissionElem->GetCombatUnit())
+        {
+            bool Duplicate=false;
+            for (MissionElement* Previous : SeenSingleUnits)
+            {
+                if (Previous->GetCombatUnit()==MissionElem->GetCombatUnit() &&
+                    Previous->GetName()==MissionElem->GetName() &&
+                    Previous->GetRegion()==MissionElem->GetRegion() &&
+                    Previous->GetIFF()==MissionElem->GetIFF() &&
+                    Previous->IsPlayer()==MissionElem->IsPlayer())
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("[MissionDuplicate] Skipped repeated campaign unit '%hs' Unit=%p Entries=%p/%p"),
+                        MissionElem->GetName().data(), MissionElem->GetCombatUnit(), Previous, MissionElem);
+                    Duplicate=true;
+                    break;
+                }
+            }
+            if (Duplicate) continue;
+            SeenSingleUnits.Add(MissionElem);
+        }
+        UE_LOG(LogTemp, Log, TEXT("[MissionSpawnEntry] Name='%hs' Entry=%p Unit=%p Count=%d Squadron=%d"),
+            MissionElem->GetName().data(), MissionElem, MissionElem->GetCombatUnit(),
+            MissionElem->Count(), MissionElem->IsSquadron());
 
 		// add element to a carrier?
 		if (MissionElem->IsSquadron()) {
