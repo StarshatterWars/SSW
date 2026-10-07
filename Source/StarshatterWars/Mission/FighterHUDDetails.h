@@ -19,11 +19,18 @@ public:
     virtual void Tick(const FGeometry&, double Now, float Delta) override;
     virtual int32 OnPaint(const FPaintArgs&, const FGeometry&, const FSlateRect&,
         FSlateWindowElementList&, int32, const FWidgetStyle&, bool) const override;
+    void ToggleRadio();
+    void RadioSelect(int32 Number);
+    bool IsRadioOpen() const { return RadioPage >= 0; }
+    void CloseRadio() { RadioPage = -1; RadioRecipient = 0; }
     void CycleMFD(int32 Index);
     void ToggleWeaponsPanel() { bShowWeapons = !bShowWeapons; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void ToggleCautionPanel() { bShowCaution = !bShowCaution; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void CycleWeapon(bool bPrimary);
 private:
+    void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
+    int32 RadioPage = -1; // 0 root, 1 categories, 2 target, 3 combat, 4 formation, 5 mission, 6 sensors, 7 control
+    int32 RadioRecipient = 0; // 1 wingman, 2 element, 3 control
     struct FRow { FString Label; double Percent; };
     struct FBlip { double Az, El, Range; FLinearColor Color; };
     enum class EMode { Off, Ship, FOV, HSD, ThreeD };

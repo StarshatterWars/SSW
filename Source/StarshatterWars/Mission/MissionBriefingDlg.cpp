@@ -1107,6 +1107,53 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
+    RadioMenuAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_RadioMenu.IA_RadioMenu"));
+    if (RadioMenuAction) MissionMenuInput->BindAction(RadioMenuAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterRadio);
+    RadioChoiceContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
+    RadioChoiceActions.Reset();
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Zero);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio0);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::One);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio1);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Two);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio2);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Three);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio3);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Four);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio4);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Five);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio5);
+    }
+
     // Transient context remains for the wheel and existing HUD shortcuts only.
     MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
     // Use the editor-authored actions and IMC mappings, including chord triggers.
@@ -1248,6 +1295,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
         if (ULocalPlayer* LP = PC->GetLocalPlayer())
             if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
             {
+                if (RadioChoiceContext) Input->RemoveMappingContext(RadioChoiceContext.Get());
                 if (MissionTargetContext) Input->RemoveMappingContext(MissionTargetContext.Get());
                 if (bAddedFighterInputContext && FighterInputContext)
                     Input->RemoveMappingContext(FighterInputContext.Get());
@@ -1256,6 +1304,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
             }
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
+    RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
     MissionMenuInput = nullptr;
     MissionMenuContext = nullptr;
     MissionTargetContext = nullptr;
@@ -1420,6 +1469,11 @@ void UMissionBriefingDlg::ToggleFighterHUD()
     APlayerController* PC = GetOwningPlayer();
     if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
     bFighterHUDVisible = !bFighterHUDVisible;
+    if (!bFighterHUDVisible && FighterHUDDetails.IsValid())
+    {
+        FighterHUDDetails->CloseRadio();
+        UpdateFighterRadioInput();
+    }
 }
 
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
@@ -1484,6 +1538,8 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
     if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;
     if (MissionQuitMenu->IsMenuShown()) MissionQuitMenu->CloseMenu();
     else
@@ -1850,3 +1906,33 @@ void UMissionBriefingDlg::HandleCampaignTPlusChanged(uint64 UniverseSecondsNow, 
 {
     if (!MissionTPlusText) return;
 }
+void UMissionBriefingDlg::UpdateFighterRadioInput()
+{
+    APlayerController* PC=GetOwningPlayer();
+    ULocalPlayer* LP=PC?PC->GetLocalPlayer():nullptr;
+    auto* Input=LP?LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>():nullptr;
+    if (!Input || !RadioChoiceContext) return;
+    if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsRadioOpen())
+    {
+        if (!Input->HasMappingContext(RadioChoiceContext.Get())) Input->AddMappingContext(RadioChoiceContext.Get(),1100);
+    }
+    else Input->RemoveMappingContext(RadioChoiceContext.Get());
+}
+void UMissionBriefingDlg::ToggleFighterRadio()
+{
+    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid()) return;
+    bFighterHUDVisible=true;
+    FighterHUDDetails->ToggleRadio();
+    UpdateFighterRadioInput();
+}
+void UMissionBriefingDlg::SelectFighterRadio(int32 Number)
+{
+    if (CanUseFighterHUD() && bFighterHUDVisible && FighterHUDDetails.IsValid()) FighterHUDDetails->RadioSelect(Number);
+    UpdateFighterRadioInput();
+}
+void UMissionBriefingDlg::SelectFighterRadio0() { SelectFighterRadio(0); }
+void UMissionBriefingDlg::SelectFighterRadio1() { SelectFighterRadio(1); }
+void UMissionBriefingDlg::SelectFighterRadio2() { SelectFighterRadio(2); }
+void UMissionBriefingDlg::SelectFighterRadio3() { SelectFighterRadio(3); }
+void UMissionBriefingDlg::SelectFighterRadio4() { SelectFighterRadio(4); }
+void UMissionBriefingDlg::SelectFighterRadio5() { SelectFighterRadio(5); }

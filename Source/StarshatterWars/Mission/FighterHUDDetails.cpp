@@ -7,6 +7,9 @@
 #include "SimRegion.h"
 #include "SimContact.h"
 #include "Sensor.h"
+#include "SimElement.h"
+#include "RadioMessage.h"
+#include "RadioTraffic.h"
 #include "Instruction.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
@@ -327,7 +330,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             ReticleText(132,-18,108,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
             if (bClosingValid) ReticleText(132,-4,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
-        if (bAutoAvailable) Popup(-158,TEXT("AUTO"));
+        Popup(-158,TEXT("AUTO"),bAutoAvailable ? HUDBlue : FLinearColor(0.06f,0.16f,0.24f,1));
         if (JumpSeconds>0) Popup(-132,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
         else if (ThreatLevel==2 && bWarningFlash) Popup(-132,TEXT("MISSILE WARNING"),FLinearColor::Red);
         else if (ThreatLevel==1) Popup(-132,TEXT("LOCK WARNING"),FLinearColor::Yellow);
@@ -447,5 +450,125 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),DamageColor(TargetShield));
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
     }
+    if (IsRadioOpen())
+    {
+        TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
+        BuildRadioRows(Labels,Commands,Enabled,Title);
+        const FVector2D P(Size.X-260*Scale,24*Scale);
+        Box(P,FVector2D(244,64+Labels.Num()*24)*Scale,FLinearColor(0,0.025f,0.05f,0.9f));
+        Text(P+FVector2D(12,10)*Scale,Title);
+        for (int32 I=0; I<Labels.Num(); ++I)
+            Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?HUDBlue:FLinearColor(0.12f,0.2f,0.25f,1));
+        Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
+    }
     return L+2;
+}
+
+void SFighterHUDDetails::ToggleRadio()
+{
+    if (IsRadioOpen()) { CloseRadio(); return; }
+    Ship* P = PlayerShip();
+    if (P && P->IsDropship()) { RadioPage = 0; RadioRecipient = 0; }
+}
+void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const
+{
+    Ship* P = PlayerShip();
+    Title = TEXT("RADIO");
+    if (!P) return;
+    const bool CanTransmit = P->GetEMCON() >= 2;
+    auto Add = [&](const TCHAR* Label, RadioMessageAction Action, bool Allowed = true)
+    {
+        Labels.Add(Label); Commands.Add(int32(Action)); Enabled.Add(CanTransmit && Allowed);
+    };
+    auto Page = [&](const TCHAR* Label, int32 Value, bool Allowed = true)
+    {
+        Labels.Add(Label); Commands.Add(-Value); Enabled.Add(CanTransmit && Allowed);
+    };
+    SimElement* Element = P->GetElement();
+    const int32 Index = P->GetElementIndex();
+    const int32 WingIndex = Index==1 ? 2 : Index==2 ? 1 : Index==3 ? 4 : Index==4 ? 3 : 0;
+    Ship* Wing = Element && WingIndex ? Element->GetShip(WingIndex) : nullptr;
+    if (RadioPage == 0)
+    {
+        Page(TEXT("Wingman"),1,Wing && !Wing->IsDead());
+        Page(TEXT("Element"),2,Element != nullptr);
+        Page(TEXT("Control"),3,P->GetController()!=nullptr);
+    }
+    else if (RadioPage == 1)
+    {
+        Title = RadioRecipient==1 ? TEXT("WINGMAN") : TEXT("ELEMENT");
+        Page(TEXT("Target"),2,P->GetTarget()!=nullptr); Page(TEXT("Combat"),3);
+        Page(TEXT("Formation"),4); Page(TEXT("Mission"),5); Page(TEXT("Sensors"),6);
+    }
+    else if (RadioPage == 2)
+    {
+        Title=TEXT("TARGET");
+        Add(TEXT("Attack target"),RadioMessageAction::ATTACK,P->GetTarget()!=nullptr);
+        Add(TEXT("Bracket target"),RadioMessageAction::BRACKET,P->GetTarget()!=nullptr);
+        Add(TEXT("Escort target"),RadioMessageAction::ESCORT,P->GetTarget()!=nullptr);
+    }
+    else if (RadioPage == 3)
+    {
+        Title=TEXT("COMBAT"); Add(TEXT("Cover me"),RadioMessageAction::COVER_ME);
+        Add(TEXT("Break and attack"),RadioMessageAction::WEP_FREE); Add(TEXT("Form up"),RadioMessageAction::FORM_UP);
+    }
+    else if (RadioPage == 4)
+    {
+        Title=TEXT("FORMATION"); Add(TEXT("Diamond"),RadioMessageAction::GO_DIAMOND);
+        Add(TEXT("Spread"),RadioMessageAction::GO_SPREAD); Add(TEXT("Box"),RadioMessageAction::GO_BOX); Add(TEXT("Trail"),RadioMessageAction::GO_TRAIL);
+    }
+    else if (RadioPage == 5)
+    {
+        Title=TEXT("MISSION"); Add(TEXT("Skip navpoint"),RadioMessageAction::SKIP_NAVPOINT);
+        Add(TEXT("Cancel orders"),RadioMessageAction::RESUME_MISSION); Add(TEXT("Return to base"),RadioMessageAction::RTB);
+    }
+    else if (RadioPage == 6)
+    {
+        Title=TEXT("SENSORS"); Add(TEXT("EMCON 1"),RadioMessageAction::GO_EMCON1);
+        Add(TEXT("EMCON 2"),RadioMessageAction::GO_EMCON2); Add(TEXT("EMCON 3"),RadioMessageAction::GO_EMCON3); Add(TEXT("Launch probe"),RadioMessageAction::LAUNCH_PROBE);
+    }
+    else if (RadioPage == 7)
+    {
+        Title=TEXT("CONTROL"); Add(TEXT("Request picture"),RadioMessageAction::REQUEST_PICTURE);
+        Add(TEXT("Request backup"),RadioMessageAction::REQUEST_SUPPORT); Add(TEXT("Call inbound"),RadioMessageAction::CALL_INBOUND); Add(TEXT("Call finals"),RadioMessageAction::CALL_FINALS);
+    }
+}
+void SFighterHUDDetails::RadioSelect(int32 Number)
+{
+    if (!IsRadioOpen()) return;
+    Ship* P=PlayerShip();
+    if (!P) { CloseRadio(); return; }
+    if (Number==0)
+    {
+        if (RadioPage==0) CloseRadio();
+        else if (RadioPage==1 || RadioPage==7) RadioPage=0;
+        else RadioPage=1;
+        return;
+    }
+    TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
+    BuildRadioRows(Labels,Commands,Enabled,Title);
+    const int32 I=Number-1;
+    if (!Commands.IsValidIndex(I) || !Enabled[I]) return;
+    if (RadioPage==0) { RadioRecipient=Number; RadioPage=Number==3 ? 7 : 1; return; }
+    if (RadioPage==1) { RadioPage=-Commands[I]; return; }
+    const RadioMessageAction Action=static_cast<RadioMessageAction>(Commands[I]);
+    SimElement* Element=P->GetElement();
+    RadioMessage* Message=nullptr;
+    if (RadioRecipient==2 && Element) Message=new RadioMessage(Element,P,Action);
+    else
+    {
+        Ship* Destination=nullptr;
+        if (RadioRecipient==3) Destination=P->GetController();
+        else if (Element)
+        {
+            const int32 Index=P->GetElementIndex();
+            const int32 Wing=Index==1?2:Index==2?1:Index==3?4:Index==4?3:0;
+            if (Wing) Destination=Element->GetShip(Wing);
+        }
+        if (Destination && !Destination->IsDead()) Message=new RadioMessage(Destination,P,Action);
+    }
+    if (!Message) return;
+    if (RadioPage==2) Message->AddTarget(P->GetTarget());
+    RadioTraffic::Transmit(Message);
+    CloseRadio();
 }

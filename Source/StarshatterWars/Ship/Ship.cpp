@@ -894,6 +894,13 @@ void Ship::InitializeRuntimeLandingGearFromDesign()
 			continue;
 		}
 
+        // Fighter/small-craft runtime gear starts deployed. Set before attaching
+        // the owner so initialization does not invoke player audio or Sim access.
+        if (IsDropship())
+        {
+            RuntimeGear->SetState(LandingGear::GEAR_DOWN);
+        }
+
 		RuntimeGear->SetShip(this);
 
 		systems.append(RuntimeGear);

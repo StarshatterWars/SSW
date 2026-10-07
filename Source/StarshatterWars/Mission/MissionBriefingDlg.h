@@ -88,6 +88,18 @@ protected:
     bool bNextTargetHeld = false;
     void ReleasePreviousMissionTarget();
     void ReleaseNextMissionTarget();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> RadioMenuAction;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
+    UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;
+    void ToggleFighterRadio();
+    void UpdateFighterRadioInput();
+    void SelectFighterRadio(int32 Number);
+    void SelectFighterRadio0();
+    void SelectFighterRadio1();
+    void SelectFighterRadio2();
+    void SelectFighterRadio3();
+    void SelectFighterRadio4();
+    void SelectFighterRadio5();
     void PreviousMissionTarget();
     void NextMissionTarget();
     void CycleMissionTarget(int32 Direction);
