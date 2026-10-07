@@ -1107,20 +1107,6 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
-    ThrottleStepAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_Throttle.IA_Throttle"));
-    if (ThrottleStepAction && ThrottleStepAction->ValueType==EInputActionValueType::Axis1D)
-        MissionMenuInput->BindAction(ThrottleStepAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::IncreaseThrottleOnce);
-    else UE_LOG(LogTemp,Warning,TEXT("[ThrottleStep] Missing Axis1D IA_Throttle."));
-    bGearToggleHeld = false;
-    GearToggleAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_GearToggle.IA_GearToggle"));
-    if (GearToggleAction && GearToggleAction->ValueType == EInputActionValueType::Boolean)
-    {
-        MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::ToggleMissionGear);
-        MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Completed,this,&UMissionBriefingDlg::ReleaseMissionGear);
-        MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionGear);
-    }
-    else UE_LOG(LogTemp,Warning,TEXT("[MissionInput] Missing Boolean /Game/Input/IA_GearToggle."));
-
     RadioMenuAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_RadioMenu.IA_RadioMenu"));
     if (RadioMenuAction) MissionMenuInput->BindAction(RadioMenuAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterRadio);
     RadioChoiceContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
@@ -1280,8 +1266,6 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
-    ThrottleStepAction = nullptr;
-
     if (FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDDetails.ToSharedRef());
     FighterHUDDetails.Reset();
@@ -1321,7 +1305,6 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
-    GearToggleAction = nullptr; bGearToggleHeld = false;
     MissionMenuInput = nullptr;
     MissionMenuContext = nullptr;
     MissionTargetContext = nullptr;
@@ -1953,38 +1936,3 @@ void UMissionBriefingDlg::SelectFighterRadio2() { SelectFighterRadio(2); }
 void UMissionBriefingDlg::SelectFighterRadio3() { SelectFighterRadio(3); }
 void UMissionBriefingDlg::SelectFighterRadio4() { SelectFighterRadio(4); }
 void UMissionBriefingDlg::SelectFighterRadio5() { SelectFighterRadio(5); }
-
-void UMissionBriefingDlg::ToggleMissionGear()
-{
-    if (bGearToggleHeld) return;
-    bGearToggleHeld = true;
-    if (!CanUseFighterHUD()) return;
-    Sim* Simulation = Sim::GetSim();
-    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
-    if (!Player || !Region || !Region->GetShips().contains(Player)) return;
-    if (Player->IsDead() || Player->IsDying() || !Player->GetGear()) return;
-    // Match legacy ShipCtrl/SSW ShipManager: change the simulation gear,
-    // not the HUD flag. IsGearDown drives the annunciator on the next sample.
-    Player->ToggleGear();
-}
-void UMissionBriefingDlg::ReleaseMissionGear()
-{
-    bGearToggleHeld = false;
-}
-
-void UMissionBriefingDlg::IncreaseThrottleOnce(const FInputActionValue& Value)
-{
-    if (Value.Get<float>() <= 0 || !CanUseFighterHUD()) return;
-    if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsRadioOpen()) return;
-    if (!GetWorld() || GetWorld()->IsPaused()) return;
-    Sim* S=Sim::GetSim();
-    Ship* P=S?S->GetPlayerShip():nullptr;
-    SimRegion* R=S?S->GetActiveRegion():nullptr;
-    if (!P || !R || !R->GetShips().contains(P)) return;
-    if (P->IsDead() || P->IsDying()) return;
-    const double Before=P->GetThrottleRequest();
-    const double After=FMath::Clamp(Before+5.0,0.0,100.0);
-    P->SetThrottle(After);
-    UE_LOG(LogTemp,Display,TEXT("[ThrottleStep] Requested %.0f -> %.0f (one press)"),Before,After);
-}

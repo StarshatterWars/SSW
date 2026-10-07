@@ -6862,4 +6862,3 @@ void Ship::ApplyLeaderFormation(double seconds)
 	MoveTo(NewLoc);
 	SetHelmHeading(Leader->GetHelmHeading());
 }
-
