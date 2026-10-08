@@ -100,6 +100,8 @@ protected:
     void SelectFighterRadio3();
     void SelectFighterRadio4();
     void SelectFighterRadio5();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> GearToggleAction;
+    void ToggleMissionGear();
     void PreviousMissionTarget();
     void NextMissionTarget();
     void CycleMissionTarget(int32 Direction);

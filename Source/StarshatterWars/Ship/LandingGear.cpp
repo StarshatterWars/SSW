@@ -159,8 +159,12 @@ void LandingGear::SetState(GEAR_STATE s)
         return;
 
     state = s;
+    // Terminal states and transit must agree even before the first sim tick.
+    if (state == GEAR_UP) transit = 0;
+    else if (state == GEAR_DOWN) transit = 1;
 
-    if (ship && ship == Sim::GetSim()->GetPlayerShip()) {
+    Sim* CurrentSim = Sim::GetSim();
+    if (ship && CurrentSim && ship == CurrentSim->GetPlayerShip()) {
         if (state == GEAR_LOWER || state == GEAR_RAISE) {
             if (gear_transit_sound) {
                 USound* sound = gear_transit_sound->Duplicate();

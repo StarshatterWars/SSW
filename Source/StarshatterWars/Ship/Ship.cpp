@@ -3771,8 +3771,13 @@ Ship::ExecThrottle(double seconds)
 void
 Ship::ExecSystems(double seconds)
 {
-	if (!rep)
-		return;
+    if (!rep) {
+        // Unreal-only visuals have no legacy rep. Gear state still needs its
+        // simulation update; the normal systems loop below handles rep ships.
+        for (int32 Index=0; Index<landing_gear.size(); ++Index)
+            if (landing_gear[Index]) landing_gear[Index]->ExecFrame(seconds);
+        return;
+    }
 
 	int i = 0;
 

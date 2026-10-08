@@ -60,6 +60,7 @@
 #include "CentralSun.h"
 #include "ShipActor.h"
 #include "Ship.h"
+#include "LandingGear.h"
 #include "SimRegion.h"
 #include "MissionTargetOverlay.h"
 #include "FighterHUDPanels.h"
@@ -1107,6 +1108,11 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
+    GearToggleAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_GearToggle.IA_GearToggle"));
+    if (GearToggleAction && GearToggleAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleMissionGear);
+    else UE_LOG(LogTemp,Warning,TEXT("[GearInput] Missing Boolean IA_GearToggle."));
+
     RadioMenuAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_RadioMenu.IA_RadioMenu"));
     if (RadioMenuAction) MissionMenuInput->BindAction(RadioMenuAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterRadio);
     RadioChoiceContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
@@ -1305,6 +1311,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
+    GearToggleAction = nullptr;
     MissionMenuInput = nullptr;
     MissionMenuContext = nullptr;
     MissionTargetContext = nullptr;
@@ -1936,3 +1943,18 @@ void UMissionBriefingDlg::SelectFighterRadio2() { SelectFighterRadio(2); }
 void UMissionBriefingDlg::SelectFighterRadio3() { SelectFighterRadio(3); }
 void UMissionBriefingDlg::SelectFighterRadio4() { SelectFighterRadio(4); }
 void UMissionBriefingDlg::SelectFighterRadio5() { SelectFighterRadio(5); }
+
+void UMissionBriefingDlg::ToggleMissionGear()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* S=Sim::GetSim();
+    Ship* P=S?S->GetPlayerShip():nullptr;
+    SimRegion* R=S?S->GetActiveRegion():nullptr;
+    if (!P || !R || !R->GetShips().contains(P) || P->IsDead() || P->IsDying()) return;
+    LandingGear* Gear=P->GetGear();
+    if (!Gear) { UE_LOG(LogTemp,Warning,TEXT("[GearInput] Player has no authored landing gear.")); return; }
+    const int32 Before=int32(Gear->GetState());
+    P->ToggleGear();
+    UE_LOG(LogTemp,Display,TEXT("[GearInput] Ship='%hs' State=%d -> %d (0 UP, 1 LOWERING, 2 DOWN, 3 RAISING)"),
+        P->GetName(),Before,int32(Gear->GetState()));
+}

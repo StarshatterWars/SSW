@@ -23,6 +23,18 @@
 namespace
 {
     const FLinearColor HUDBlue(0.15f, 0.55f, 1.0f, 1.0f);
+    // Ship summary health: green -> yellow -> red as integrity falls.
+    FLinearColor ShipHealthColor(double Percent)
+    {
+        if (!FMath::IsFinite(Percent) || Percent < 0) return FLinearColor::Gray;
+        const float Health = float(FMath::Clamp(Percent / 100.0, 0.0, 1.0));
+        const FLinearColor Red(1.0f, 0.05f, 0.02f, 1.0f);
+        const FLinearColor Yellow(1.0f, 0.85f, 0.0f, 1.0f);
+        const FLinearColor Green(0.05f, 1.0f, 0.1f, 1.0f);
+        return Health <= 0.5f ? FMath::Lerp(Red, Yellow, Health * 2.0f)
+            : FMath::Lerp(Yellow, Green, (Health - 0.5f) * 2.0f);
+    }
+
     FLinearColor DamageColor(double P)
     {
         return P < 0 ? FLinearColor::Gray : P < 30 ? FLinearColor::Red :
@@ -272,7 +284,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     auto Icon = [&](FVector2D P, const FSlateBrush& B, bool Valid, double H)
     {
-        if (Valid) FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(80*Scale,80*Scale),FSlateLayoutTransform(FVector2f(P))),&B,ESlateDrawEffect::None,DamageColor(H));
+        if (Valid) FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(80*Scale,80*Scale),FSlateLayoutTransform(FVector2f(P))),&B,ESlateDrawEffect::None,ShipHealthColor(H));
     };
     auto Artwork = [&](int32 Index, FVector2D P, FVector2D D)
     {
@@ -330,12 +342,12 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             ReticleText(132,-18,108,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
             if (bClosingValid) ReticleText(132,-4,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
-        Popup(-158,TEXT("AUTO"),bAutoAvailable ? HUDBlue : FLinearColor(0.06f,0.16f,0.24f,1));
-        if (JumpSeconds>0) Popup(-132,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
-        else if (ThreatLevel==2 && bWarningFlash) Popup(-132,TEXT("MISSILE WARNING"),FLinearColor::Red);
-        else if (ThreatLevel==1) Popup(-132,TEXT("LOCK WARNING"),FLinearColor::Yellow);
-        if (bShoot && bShowWeapons) Popup(118,TEXT("SHOOT"));
-        if (bGearDown) Popup(144,TEXT("GEAR DOWN"));
+        Popup(-142,TEXT("AUTO"),bAutoAvailable ? HUDBlue : FLinearColor(0.06f,0.16f,0.24f,1));
+        if (JumpSeconds>0) Popup(-168,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
+        else if (ThreatLevel==2 && bWarningFlash) Popup(-168,TEXT("MISSILE WARNING"),FLinearColor::Red);
+        else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
+        if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
+        if (bGearDown) Popup(126,TEXT("GEAR DOWN"));
     }
     // The fighter uses weapon readouts beside the central HUD, not the capital-ship TAC frame.
     for (int32 I=5; bShowCaution && I<7; ++I)
@@ -421,8 +433,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P,PlayerName);
         Icon(P+FVector2D(48,24)*Scale,PlayerBrush,PlayerTexture.IsValid(),PlayerHull);
         ShipText(P+FVector2D(0,112)*Scale,PlayerClass);
-        ShipText(P+FVector2D(0,132)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),DamageColor(PlayerHull));
-        ShipText(P+FVector2D(0,152)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),DamageColor(PlayerShield));
+        ShipText(P+FVector2D(0,132)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),ShipHealthColor(PlayerHull));
+        ShipText(P+FVector2D(0,152)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),ShipHealthColor(PlayerShield));
         if (bShowWeapons)
         {
         ReticleText(-240,16,108,Primary.ToUpper());
@@ -446,8 +458,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P,TargetName);
         Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,TargetClass);
-        ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),DamageColor(TargetHull));
-        ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),DamageColor(TargetShield));
+        ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),ShipHealthColor(TargetHull));
+        ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),ShipHealthColor(TargetShield));
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
     }
     if (IsRadioOpen())

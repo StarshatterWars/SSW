@@ -1599,6 +1599,7 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
 
 void AShipActor::BindRuntimeShip(Ship* InShip)
 {
+    if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
     RuntimeShip = InShip;
 
     // Runtime ships use runtime Niagara thrusters only.
@@ -1643,7 +1644,7 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         return;
     }
 
-    SetActorLocation(RuntimeLocation);
+    // Apply location and rotation together after computing the target orientation.
 
     const FVector LegacyForward =
         RuntimeShip->GetCam().vpn();
@@ -1675,7 +1676,23 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
             UEForward,
             UEUp).Rotator();
 
-    SetActorRotation(ActorRot);
+    const FQuat TargetRotation = ActorRot.Quaternion();
+    const FVector CurrentLocation = GetActorLocation();
+    // Presentation only: never feed smoothed transforms back into simulation.
+    // Spawn/explicit zero-delta placement and teleports must not interpolate.
+    constexpr double BlendSeconds = 0.08;
+    constexpr double TeleportDistance = 100000.0;
+    const bool bSnap = !bRuntimeVisualInitialized || DeltaTime <= 0.0f ||
+        FVector::DistSquared(CurrentLocation, RuntimeLocation) > FMath::Square(TeleportDistance);
+    const double Alpha = bSnap ? 1.0 : 1.0-FMath::Exp(-double(DeltaTime)/BlendSeconds);
+    const FVector DisplayLocation = FMath::Lerp(CurrentLocation,RuntimeLocation,Alpha);
+    const FQuat DisplayRotation = FQuat::Slerp(GetActorQuat(),TargetRotation,Alpha).GetNormalized();
+    if (bSnap || !CurrentLocation.Equals(DisplayLocation,0.001) ||
+        !GetActorQuat().Equals(DisplayRotation,0.000001))
+    {
+        SetActorLocationAndRotation(DisplayLocation,DisplayRotation,false,nullptr,ETeleportType::TeleportPhysics);
+    }
+    bRuntimeVisualInitialized = true;
 
     // Bounded diagnostic for the three opening-scene ships only.
     const FString ProbeName = ANSI_TO_TCHAR(RuntimeShip->GetName());

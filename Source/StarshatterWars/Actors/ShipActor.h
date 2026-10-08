@@ -616,6 +616,7 @@ private:
         bool bUseRuntimeShipTransform = true;
 
 private:
+    bool bRuntimeVisualInitialized = false;
     Ship* RuntimeShip = nullptr;
 
     protected:
