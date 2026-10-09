@@ -2,6 +2,8 @@
 
 AGoliathShipActor::AGoliathShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(3.3f));
     ApplyGoliathDefaults();
 }
 
@@ -31,7 +33,7 @@ void AGoliathShipActor::ApplyGoliathDefaults()
     ThrusterEmitterRelativeScale = FVector(0.75f, 0.30f, 0.30f);
     ThrusterEmitterRelativeRotation = FRotator::ZeroRotator;
 
-    SetActorScale3D(FVector(3.3f));
+
 
     FocusPointOffset = FVector(60.0f, 0.0f, 0.0f);
     BridgePointOffset = FVector(60.0f, 0.0f, 320.0f);

@@ -24,6 +24,8 @@
 
 AIM2800ShipActor::AIM2800ShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM2800Defaults();
 }
 
@@ -89,7 +91,7 @@ void AIM2800ShipActor::ApplyIM2800Defaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
+
 }
 
 void AIM2800ShipActor::ApplyIM2800FixedPoints()

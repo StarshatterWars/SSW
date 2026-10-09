@@ -2,6 +2,8 @@
 
 AFarcasterShipActor::AFarcasterShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(15.0f));
     ApplyFarcasterDefaults();
 }
 
@@ -22,7 +24,7 @@ void AFarcasterShipActor::ApplyFarcasterDefaults()
     bEnableMainEngineEmitters = false;
     bEnableThrusterEmitters = false;
 
-    SetActorScale3D(FVector(15.0f));
+
 
     FocusPointOffset = FVector(0.0f, 0.0f, 24.0f);
     BridgePointOffset = FVector(0.0f, 0.0f, 24.0f);

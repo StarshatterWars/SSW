@@ -4,6 +4,8 @@
 
 AThunderboltShipActor::AThunderboltShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(0.270000f));
     ApplyThunderboltDefaults();
 }
 void AThunderboltShipActor::OnConstruction(const FTransform& Transform)
@@ -34,7 +36,7 @@ void AThunderboltShipActor::ApplyThunderboltDefaults()
     ReactorPointOffset = FVector(0.000000f, 0.000000f, 0.000000f);
     ComputerPointAOffset = FVector(40.000000f, 0.000000f, 0.000000f);
     ComputerPointBOffset = FVector(90.000000f, 0.000000f, 0.000000f);
-    SetActorScale3D(FVector(0.270000f));
+
     WeaponMountPointDefs.Empty();
     NumWeaponMountPoints = 8;
     {

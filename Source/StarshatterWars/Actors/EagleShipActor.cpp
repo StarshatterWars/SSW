@@ -4,6 +4,8 @@
 
 AEagleShipActor::AEagleShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(0.250000f));
     ApplyEagleDefaults();
 }
 void AEagleShipActor::OnConstruction(const FTransform& Transform)
@@ -34,7 +36,7 @@ void AEagleShipActor::ApplyEagleDefaults()
     ReactorPointOffset = FVector(-40.000000f, 0.000000f, 0.000000f);
     ComputerPointAOffset = FVector(80.000000f, 20.000000f, 0.000000f);
     ComputerPointBOffset = FVector(80.000000f, -20.000000f, 0.000000f);
-    SetActorScale3D(FVector(0.250000f));
+
     WeaponMountPointDefs.Empty();
     NumWeaponMountPoints = 9;
     {

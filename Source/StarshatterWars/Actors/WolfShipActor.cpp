@@ -2,6 +2,8 @@
 
 AWolfShipActor::AWolfShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(1.7f));
     ApplyWolfDefaults();
 }
 
@@ -177,7 +179,7 @@ void AWolfShipActor::ApplyWolfDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    SetActorScale3D(FVector(1.7f));
+
 }
 
 void AWolfShipActor::ApplyWolfFixedPoints()

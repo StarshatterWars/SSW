@@ -2,6 +2,8 @@
 
 AObservatoryShipActor::AObservatoryShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(5.0f));
     ApplyObservatoryDefaults();
 }
 
@@ -25,7 +27,7 @@ void AObservatoryShipActor::ApplyObservatoryDefaults()
     bMainEnginesActive = false;
     bThrustersActive = false;
 
-    SetActorScale3D(FVector(5.0f));
+
 
     FocusPointOffset = FVector(0.0f, 0.0f, 0.0f);
     BridgePointOffset = FVector(0.0f, 0.0f, 0.0f);

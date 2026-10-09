@@ -24,6 +24,8 @@
 
 ACourierShipActor::ACourierShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
     ApplyCourierDefaults();
 }
 
@@ -97,7 +99,7 @@ void ACourierShipActor::ApplyCourierDefaults()
     DockPointDefs.Empty();
     LandingPointDefs.Empty();
 
-    SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
+
 }
 
 void ACourierShipActor::ApplyCourierFixedPoints()

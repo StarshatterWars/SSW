@@ -4,6 +4,8 @@
 
 ABerentsShipActor::ABerentsShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(2.5f));
     ApplyBerentsDefaults();
 }
 
@@ -43,7 +45,7 @@ void ABerentsShipActor::ApplyBerentsDefaults()
     ReactorPointOffset = FVector(-60.0f, 0.0f, 0.0f);
     ComputerPointAOffset = FVector(80.0f, 20.0f, 16.0f);
     ComputerPointBOffset = FVector(80.0f, -20.0f, -16.0f);
-    SetActorScale3D(FVector(2.5f));
+
 
     WeaponMountPointDefs.Empty();
     NumWeaponMountPoints = 6;

@@ -36,6 +36,7 @@
 #include "Thruster.h"
 
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "Engine/World.h"
 
 #include "NiagaraComponent.h"
@@ -141,6 +142,7 @@ AShipActor::AShipActor()
 
     VisualRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VisualRoot"));
     VisualRoot->SetupAttachment(ShipRoot);
+    VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
     PointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PointRoot"));
     PointRoot->SetupAttachment(ShipRoot);
@@ -156,7 +158,8 @@ AShipActor::AShipActor()
 
     VFXRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VFXRoot"));
     VFXRoot->SetupAttachment(ShipRoot);
-    VFXRoot->SetRelativeRotation(FRotator(0.0f, -90.0f, 180.0f));
+    // Effects use the actor frame; the imported hull correction belongs to VisualRoot only.
+    VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
     FocusPoint->SetupAttachment(PointRoot);
@@ -296,6 +299,12 @@ void AShipActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
 
+    // Imported hull nose is -Y; +90 yaw aligns it with the actor's +X flight axis.
+    // Assign, never accumulate: existing Blueprint +90 values remain +90.
+    if (VisualRoot) VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+    // Override obsolete rotations saved in existing Blueprint component templates.
+    if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
+
     UpdateDerivedPointsFromHull();
 
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
@@ -325,6 +334,10 @@ void AShipActor::OnConstruction(const FTransform& Transform)
 
 void AShipActor::BeginPlay()
 {
+    // Apply after Blueprint construction scripts as well as native construction.
+    if (VisualRoot) VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+    // Override obsolete rotations saved in existing Blueprint component templates.
+    if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
     Super::BeginPlay();
 }
 
@@ -1601,6 +1614,30 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
     RuntimeShip = InShip;
+
+    // Once per bind, not per frame. Flight-axis dimensions are independent of
+    // world heading and include the actual BP actor/component scale hierarchy.
+    if (InShip && HullMesh && HullMesh->GetStaticMesh())
+    {
+        const FTransform FlightFrame(GetActorQuat(), GetActorLocation(), FVector::OneVector);
+        const FTransform HullInFlightFrame = HullMesh->GetComponentTransform().GetRelativeTransform(FlightFrame);
+        const FVector Size = HullMesh->CalcBounds(HullInFlightFrame).GetBox().GetSize();
+        UE_LOG(LogTemp, Display,
+            TEXT("[ShipVisualSizing] BP=%s Ship='%hs' Mesh=%s ActorScale=%s VisualScale=%s HullScale=%s VisualRotation=%s LengthX=%.2f BeamY=%.2f HeightZ=%.2f UEcm"),
+            *GetClass()->GetPathName(), InShip->GetName(), *HullMesh->GetStaticMesh()->GetPathName(),
+            *GetActorScale3D().ToString(),
+            VisualRoot ? *VisualRoot->GetRelativeScale3D().ToString() : TEXT("none"),
+            *HullMesh->GetRelativeScale3D().ToString(),
+            VisualRoot ? *VisualRoot->GetRelativeRotation().ToString() : TEXT("none"),
+            Size.X, Size.Y, Size.Z);
+        for (int32 SlotIndex = 0; SlotIndex < HullMesh->GetNumMaterials(); ++SlotIndex)
+        {
+            UMaterialInterface* Material = HullMesh->GetMaterial(SlotIndex);
+            UE_LOG(LogTemp, Display, TEXT("[ShipVisualSizing] BP=%s MaterialSlot=%d Material=%s"),
+                *GetClass()->GetName(), SlotIndex, Material ? *Material->GetPathName() : TEXT("NONE"));
+        }
+    }
+
 
     // Runtime ships use runtime Niagara thrusters only.
     // Clear old generated fallback thruster emitters.

@@ -24,6 +24,8 @@
 
 AIM4300ShipActor::AIM4300ShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM4300Defaults();
 }
 
@@ -102,7 +104,7 @@ void AIM4300ShipActor::ApplyIM4300Defaults()
     /*
      * IM4300 / CargoB.def scale.
      */
-    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
+
 }
 
 void AIM4300ShipActor::ApplyIM4300FixedPoints()

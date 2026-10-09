@@ -4,6 +4,8 @@
 
 AOrionShipActor::AOrionShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(4.0f));
     ApplyOrionDefaults();
 }
 
@@ -43,7 +45,7 @@ void AOrionShipActor::ApplyOrionDefaults()
     ReactorPointOffset = FVector(-180.0f, 0.0f, -48.0f);
     ComputerPointAOffset = FVector(80.0f, 20.0f, 16.0f);
     ComputerPointBOffset = FVector(80.0f, -20.0f, -16.0f);
-    SetActorScale3D(FVector(4.0f));
+
 
     WeaponMountPointDefs.Empty();
     NumWeaponMountPoints = 10;

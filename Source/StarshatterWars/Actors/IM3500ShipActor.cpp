@@ -24,6 +24,8 @@
 
 AIM3500ShipActor::AIM3500ShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM3500Defaults();
 }
 
@@ -102,7 +104,7 @@ void AIM3500ShipActor::ApplyIM3500Defaults()
     /*
      * IM3500 / CargoA.def scale.
      */
-    SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
+
 }
 
 void AIM3500ShipActor::ApplyIM3500FixedPoints()

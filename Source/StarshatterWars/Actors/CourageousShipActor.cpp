@@ -4,6 +4,8 @@
 
 ACourageousShipActor::ACourageousShipActor()
 {
+    // Native default only: preserve BP and placed-instance scale during construction.
+    SetActorScale3D(FVector(2.2f));
     ApplyCourageousDefaults();
 }
 
@@ -43,7 +45,7 @@ void ACourageousShipActor::ApplyCourageousDefaults()
     ReactorPointOffset = FVector(-92.0f, 0.0f, 0.0f);
     ComputerPointAOffset = FVector(80.0f, 20.0f, -32.0f);
     ComputerPointBOffset = FVector(80.0f, -20.0f, -32.0f);
-    SetActorScale3D(FVector(2.2f));
+
 
     WeaponMountPointDefs.Empty();
     NumWeaponMountPoints = 13;
