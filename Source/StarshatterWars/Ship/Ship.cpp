@@ -2896,6 +2896,7 @@ Ship::IsAutoNavEngaged()
 void
 Ship::SetAutoNav(bool engage)
 {
+    if (engage) bManualThrottle = false;
 	if (navsys) {
 		if (navsys->AutoNavEngaged()) {
 			if (!engage)
@@ -4574,6 +4575,7 @@ Ship::GetFuelLevel() const
 void
 Ship::SetThrottle(double percent)
 {
+    if (HasManualThrottle()) return;
 	const double OldRequest = GetThrottleRequest();
 
 	SetThrottleRequest(percent);
@@ -6866,4 +6868,21 @@ void Ship::ApplyLeaderFormation(double seconds)
 
 	MoveTo(NewLoc);
 	SetHelmHeading(Leader->GetHelmHeading());
+}
+
+
+bool Ship::HasManualThrottle() const
+{
+    return bManualThrottle && sim && sim->GetPlayerShip() == this &&
+        !InTransition() && !IsDead() && !IsDying();
+}
+
+void Ship::SetManualThrottle(double percent)
+{
+    if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
+    // Throttle-only ownership: do not replace the steering director here.
+    if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
+    bManualThrottle = true;
+    throttle_request = FMath::Clamp(percent, 0.0, 100.0);
+    if (throttle_request < 50.0) augmenter = false;
 }

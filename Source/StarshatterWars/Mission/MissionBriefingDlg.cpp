@@ -1108,6 +1108,21 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
+    MissionThrottleAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Throttle.IA_Throttle"));
+    if (MissionThrottleAction && MissionThrottleAction->ValueType == EInputActionValueType::Axis1D)
+        MissionMenuInput->BindAction(MissionThrottleAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionThrottleStep);
+    else UE_LOG(LogTemp, Warning, TEXT("[ThrottleInput] Missing or wrong value type: IA_Throttle (Axis1D)."));
+
+    MissionThrottleZeroAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ThrottleZero.IA_ThrottleZero"));
+    if (MissionThrottleZeroAction && MissionThrottleZeroAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionThrottleZeroAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionThrottleZero);
+    else UE_LOG(LogTemp, Warning, TEXT("[ThrottleInput] Missing or wrong value type: IA_ThrottleZero (Boolean)."));
+
+    MissionThrottleFullAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ThrottleFull.IA_ThrottleFull"));
+    if (MissionThrottleFullAction && MissionThrottleFullAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionThrottleFullAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionThrottleFull);
+    else UE_LOG(LogTemp, Warning, TEXT("[ThrottleInput] Missing or wrong value type: IA_ThrottleFull (Boolean)."));
+
     GearToggleAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_GearToggle.IA_GearToggle"));
     if (GearToggleAction && GearToggleAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleMissionGear);
@@ -1312,6 +1327,9 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
     GearToggleAction = nullptr;
+    MissionThrottleAction = nullptr;
+    MissionThrottleZeroAction = nullptr;
+    MissionThrottleFullAction = nullptr;
     MissionMenuInput = nullptr;
     MissionMenuContext = nullptr;
     MissionTargetContext = nullptr;
@@ -1957,4 +1975,39 @@ void UMissionBriefingDlg::ToggleMissionGear()
     P->ToggleGear();
     UE_LOG(LogTemp,Display,TEXT("[GearInput] Ship='%hs' State=%d -> %d (0 UP, 1 LOWERING, 2 DOWN, 3 RAISING)"),
         P->GetName(),Before,int32(Gear->GetState()));
+}
+
+
+void UMissionBriefingDlg::OnMissionThrottleStep(const FInputActionValue& Value)
+{
+    const float Axis = Value.Get<float>();
+    if (!FMath::IsFinite(Axis) || FMath::Abs(Axis) < 0.1f) return;
+    ApplyMissionThrottle(Axis > 0.0f ? 5.0 : -5.0, true);
+}
+
+void UMissionBriefingDlg::OnMissionThrottleZero()
+{
+    ApplyMissionThrottle(0.0, false);
+}
+
+void UMissionBriefingDlg::OnMissionThrottleFull()
+{
+    ApplyMissionThrottle(100.0, false);
+}
+
+void UMissionBriefingDlg::ApplyMissionThrottle(double Amount, bool bRelative)
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation = Sim::GetSim();
+    Ship* PlayerShip = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!PlayerShip || !Region || !Region->GetShips().contains(PlayerShip) ||
+        PlayerShip->IsDead() || PlayerShip->IsDying()) return;
+
+    // Accumulate against the request so rapid presses survive engine spool-up.
+    const double Requested = FMath::Clamp(
+        bRelative ? PlayerShip->GetThrottleRequest() + Amount : Amount, 0.0, 100.0);
+    PlayerShip->SetManualThrottle(Requested);
+    UE_LOG(LogTemp, Display, TEXT("[ThrottleInput] Requested=%.0f%% Actual=%.1f%%"),
+        Requested, PlayerShip->GetThrottle());
 }

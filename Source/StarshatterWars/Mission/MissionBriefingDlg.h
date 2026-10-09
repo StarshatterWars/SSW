@@ -102,6 +102,14 @@ protected:
     void SelectFighterRadio5();
     UPROPERTY(Transient) TObjectPtr<UInputAction> GearToggleAction;
     void ToggleMissionGear();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionThrottleAction;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionThrottleZeroAction;
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionThrottleFullAction;
+    void OnMissionThrottleStep(const FInputActionValue& Value);
+    void OnMissionThrottleZero();
+    void OnMissionThrottleFull();
+    void ApplyMissionThrottle(double Amount, bool bRelative);
+
     void PreviousMissionTarget();
     void NextMissionTarget();
     void CycleMissionTarget(int32 Direction);

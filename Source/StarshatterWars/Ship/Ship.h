@@ -216,7 +216,9 @@ public:
     void              SetThrottle(double percent);
 
     double            GetThrottleRequest() const { return throttle_request; }
-	void              SetThrottleRequest(double t) { throttle_request = t; }
+	void              SetThrottleRequest(double t) { if (!HasManualThrottle()) throttle_request = t; }
+    void SetManualThrottle(double percent);
+    bool HasManualThrottle() const;
 
     bool              GetAugmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
@@ -498,6 +500,7 @@ protected:
     double            agility;
     double            throttle;
     double            throttle_request;
+    bool bManualThrottle = false;
     bool              augmenter;
     float             wep_mass;
     float             wep_resist;
