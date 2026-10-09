@@ -23,6 +23,10 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "MissionCameraRig.h"
+#include "InputTriggers.h"
+#include "InputModifiers.h"
+#include "SimContact.h"
 #include "MissionPlanner.h"
 #include "MissionDebriefDlg.h"
 #include "GameScreen.h"
@@ -820,6 +824,10 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
 
 void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
 {
+    if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
+    MissionPlayerCameraActor.Reset();
+    MissionPlayerCameraDistance = 0;
+    bMissionTargetInspection = false;
     if (bLiveMissionStarted)
     {
         if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
@@ -1039,6 +1047,19 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
     MissionPreviewCamera->SetActorLocationAndRotation(
         Bounds.Origin - Rotation.Vector() * Distance, Rotation);
     PC->SetViewTarget(MissionPreviewCamera.Get());
+    // Position the flight camera before the cover's existing warmup/reveal checks.
+    bMissionTargetInspection = false;
+    MissionPlayerCameraActor.Reset();
+    MissionPlayerCameraSearchTime = 0;
+    MissionPlayerCameraDistance = 0;
+    MissionTargetZoomDistance = 1.0;
+    MissionTargetLastUpdate = World->GetTimeSeconds();
+    UpdateMissionTargetCamera();
+    FTimerManagerTimerParameters FlightCameraTimerParameters;
+    FlightCameraTimerParameters.bLoop = true;
+    FlightCameraTimerParameters.bMaxOncePerFrame = true;
+    World->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
+        &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, FlightCameraTimerParameters);
     // Warm up all visuals behind the cover, including the star's effects.
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
@@ -1347,6 +1368,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
     if (bAddedMissionMenuContext) Input->AddMappingContext(MissionMenuContext.Get(), 1000);
+    BindMissionCameraInput();
     PC->PushInputComponent(MissionMenuInput.Get());
     // Existing briefing Blueprint defaults may still have None or the native
     // class saved. Resolve the designed menu rather than displaying plain Slate.
@@ -1370,6 +1392,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
     ClearMissionRotationInput();
     if (FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDDetails.ToSharedRef());
@@ -1400,6 +1423,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
         if (ULocalPlayer* LP = PC->GetLocalPlayer())
             if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
             {
+                if (MissionCameraContext) Input->RemoveMappingContext(MissionCameraContext.Get());
                 if (RadioChoiceContext) Input->RemoveMappingContext(RadioChoiceContext.Get());
                 if (MissionTargetContext) Input->RemoveMappingContext(MissionTargetContext.Get());
                 if (bAddedFighterInputContext && FighterInputContext)
@@ -1412,6 +1436,10 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
     GearToggleAction = nullptr;
     MissionThrottleAction = nullptr;
+    MissionCameraViewAction = nullptr;
+    MissionCameraContext = nullptr;
+    MissionCameraActions.Reset();
+    MissionCameraRig.Reset();
     MissionStrafeAction = nullptr;
     MissionForwardThrustAction = nullptr;
     MissionVerticalThrustAction = nullptr;
@@ -1460,6 +1488,8 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     if (!Region) return;
+    Ship* Player = Simulation->GetPlayerShip();
+    if (!Player || !Region->GetShips().contains(Player)) return;
     TArray<AShipActor*> Candidates;
     for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
     {
@@ -1471,7 +1501,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
         const bool bDead = bInRegion && ShipData->IsDead();
         const bool bDestroying = Actor->IsActorBeingDestroyed();
         const bool bHidden = Actor->IsHidden();
-        const bool bEligible = bInRegion && !bDead && !bDestroying && !bHidden;
+        const bool bEligible = bInRegion && ShipData != Player && !bDead && !bDestroying && !bHidden;
         UE_LOG(LogTemp, Display,
             TEXT("[MissionTargetCycle] Actor='%s' Ship='%s' ActiveRegion='%hs' Bound=%d InRegion=%d Hidden=%d Destroying=%d Dead=%d Eligible=%d"),
             *Actor->GetName(), bInRegion ? ANSI_TO_TCHAR(ShipData->GetName()) : TEXT("<unbound or outside active region>"),
@@ -1487,6 +1517,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     if (Candidates.IsEmpty())
     {
         SelectedMissionTarget.Reset();
+        Player->DropTarget();
         return;
     }
     const int32 Current = Candidates.IndexOfByPredicate([this](AShipActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
@@ -1496,9 +1527,11 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     UE_LOG(LogTemp, Display, TEXT("[MissionTargetCycle] Selected='%hs' Index=%d Count=%d"),
         Selected->GetRuntimeShip()->GetName(), Index, Candidates.Num());
     SelectedMissionTarget = Selected;
-    MissionTargetZoomDistance = 1.0;
+    if (bMissionTargetInspection) MissionTargetZoomDistance = 1.0;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
     Ship* SelectedShip = Selected->GetRuntimeShip();
+    // Use SSW sensor/EMCON gating and propagate the lock to weapons and mission events.
+    Player->LockTarget(SelectedShip);
     FString FullName = ANSI_TO_TCHAR(SelectedShip->GetName());
     if (CombatUnit* Unit = SelectedShip->GetCombatUnit())
     {
@@ -1541,7 +1574,18 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
                     ? FLinearColor(0.25f, 0.65f, 1.0f, 1.0f)
                     : FLinearColor::Red;
             })
-            .TargetName_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetName : FText::GetEmpty(); });
+            .TargetName_Lambda([WeakThis]()
+            {
+                if (!WeakThis.IsValid()) return FText::GetEmpty();
+                Sim* Current=Sim::GetSim();
+                SimRegion* Active=Current?Current->GetActiveRegion():nullptr;
+                Ship* Pilot=Current?Current->GetPlayerShip():nullptr;
+                AShipActor* SelectedActor=Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
+                Ship* TargetData=IsValid(SelectedActor)?SelectedActor->GetRuntimeShip():nullptr;
+                const bool Locked=Pilot && Active && Active->GetShips().contains(Pilot) && TargetData &&
+                    Active->GetShips().contains(TargetData) && Pilot->GetTarget()==TargetData;
+                return FText::FromString(WeakThis->SelectedMissionTargetName.ToString() + (Locked?TEXT(""):TEXT(" [NO LOCK]")));
+            });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(MissionTargetOverlay.ToSharedRef(), 900);
     }
     MissionTargetLastUpdate = GetWorld()->GetTimeSeconds();
@@ -1598,11 +1642,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
 
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
-    UE_LOG(LogTemp, Log, TEXT("[MissionZoom] Wheel=%.3f Live=%d Target=%s Cover=%d Controls=%d Menu=%d"),
-        Value.Get<float>(), bLiveMissionStarted, *GetNameSafe(SelectedMissionTarget.Get()),
-        MissionSceneCover.IsValid(), bMissionControlsOpen,
-        MissionQuitMenu && MissionQuitMenu->IsMenuShown());
-    if (!bLiveMissionStarted || !SelectedMissionTarget.IsValid() ||
+    if (!bLiveMissionStarted ||
         !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     const float Wheel = Value.Get<float>();
@@ -1611,54 +1651,12 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
     MissionTargetZoomDistance = FMath::Clamp(
         MissionTargetZoomDistance * FMath::Pow(0.85, double(FMath::Clamp(Wheel, -10.0f, 10.0f))),
         0.5, 3.0);
-    UE_LOG(LogTemp, Log, TEXT("[MissionZoom] Distance multiplier=%.3f"), MissionTargetZoomDistance);
-}
-
-void UMissionBriefingDlg::UpdateMissionTargetCamera()
-{
-    AActor* Target = SelectedMissionTarget.Get();
-    if (!IsValid(Target) || Target->IsActorBeingDestroyed() || !IsValid(MissionPreviewCamera))
-    {
-        SelectedMissionTarget.Reset();
-        GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
-        return;
-    }
-    AShipActor* TargetShip = Cast<AShipActor>(Target);
-    Sim* Simulation = Sim::GetSim();
-    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
-    Ship* Data = TargetShip ? TargetShip->GetRuntimeShip() : nullptr;
-    if (!Data || !Region || !Region->GetShips().contains(Data) || Data->IsDead())
-    {
-        SelectedMissionTarget.Reset();
-        GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
-        return;
-    }
-    const double Now = GetWorld()->GetTimeSeconds();
-    const double Delta = FMath::Clamp(Now - MissionTargetLastUpdate, 0.0, 0.1);
-    MissionTargetLastUpdate = Now;
-    if ((MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || bMissionControlsOpen) return;
-    int32 Width=0, Height=0;
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC) return;
-    PC->GetViewportSize(Width, Height);
-    if (Width <= 0 || Height <= 0) return;
-    const FBox Bounds = SelectedMissionTargetLocalBounds.TransformBy(Target->GetActorTransform());
-    const double Radius = FMath::Max(10.0, Bounds.GetExtent().Size());
-    const double Focal = Width / (2.0 * FMath::Tan(FMath::DegreesToRadians(
-        MissionPreviewCamera->GetCameraComponent()->FieldOfView * 0.5)));
-    const double PixelRadius = FMath::Min(Width,Height) * 0.20;
-    const double Ratio = Focal / PixelRadius;
-    const double BaseDistance = Radius * FMath::Sqrt(1.0 + Ratio * Ratio);
-    // Keep the camera outside the target bounds even at maximum zoom.
-    const double Distance = FMath::Max(Radius + 100.0, BaseDistance * MissionTargetZoomDistance);
-    const FVector Desired = Bounds.GetCenter() - MissionPreviewCamera->GetActorForwardVector() * Distance;
-    const double Alpha = 1.0 - FMath::Exp(-6.0 * Delta);
-    MissionPreviewCamera->SetActorLocation(FMath::Lerp(MissionPreviewCamera->GetActorLocation(), Desired, Alpha));
 }
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
     ClearMissionRotationInput();
+    if (MissionCameraRig) MissionCameraRig->LookX = MissionCameraRig->LookY = MissionCameraRig->RangeInput = 0.0;
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;
@@ -2118,6 +2116,12 @@ void UMissionBriefingDlg::ApplyMissionRotation(int32 Axis, float Value)
     if (!Player || !Region || !Region->GetShips().contains(Player)) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
     { Player->ClearManualRotationInput(); return; }
+    APlayerController* PC = GetOwningPlayer();
+    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+    {
+        Player->SetManualRotationAxis(Axis, 0.0f);
+        return;
+    }
     Player->SetManualRotationAxis(Axis, Value);
 }
 
@@ -2207,5 +2211,223 @@ void UMissionBriefingDlg::ReleaseMissionForwardThrust() { ApplyMissionTranslatio
 void UMissionBriefingDlg::OnMissionVerticalThrust(const FInputActionValue& Value) { ApplyMissionTranslation(2,Value.Get<float>()); }
 void UMissionBriefingDlg::ReleaseMissionVerticalThrust() { ApplyMissionTranslation(2,0); }
 
-void UMissionBriefingDlg::OnMissionAugmenter() { ApplyMissionAugmenter(true); }
+void UMissionBriefingDlg::OnMissionAugmenter()
+{
+    APlayerController* PC = GetOwningPlayer();
+    const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    ApplyMissionAugmenter(!Shift);
+}
 void UMissionBriefingDlg::ReleaseMissionAugmenter() { ApplyMissionAugmenter(false); }
+
+
+void UMissionBriefingDlg::ToggleMissionCameraView()
+{
+    OnMissionCameraCommand(FInputActionValue(true), 7);
+}
+
+void UMissionBriefingDlg::UpdateMissionTargetCamera()
+{
+    UWorld* World = GetWorld();
+    APlayerController* PC = GetOwningPlayer();
+    if (!World || !PC || !bLiveMissionStarted || !IsValid(MissionPreviewCamera)) return;
+    if (bMissionControlsOpen || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player) || Player->IsDead())
+    {
+        if (MissionCameraRig) MissionCameraRig->RestoreVisibility(PC);
+        return;
+    }
+    AShipActor* Visual = Cast<AShipActor>(MissionPlayerCameraActor.Get());
+    const double Now = World->GetTimeSeconds();
+    if (!IsValid(Visual) || Visual->IsActorBeingDestroyed() || Visual->GetRuntimeShip()!=Player)
+    {
+        MissionPlayerCameraActor.Reset();
+        if (Now < MissionPlayerCameraSearchTime) return;
+        MissionPlayerCameraSearchTime = Now + 0.5;
+        Visual = nullptr;
+        for (TActorIterator<AShipActor> It(World); It; ++It)
+        {
+            if (!It->IsActorBeingDestroyed() && It->GetRuntimeShip()==Player)
+            {
+                Visual=*It;
+                MissionPlayerCameraActor=Visual;
+                // Hull/visual bounds helper excludes exhaust particle bounds.
+                MissionPlayerLocalBounds=MissionTargetLocalBounds(Visual);
+                MissionPlayerCameraDistance=0;
+                break;
+            }
+        }
+        if (!Visual) return;
+    }
+    const double Delta=FMath::Clamp(Now-MissionTargetLastUpdate,0.0,0.1);
+    MissionTargetLastUpdate=Now;
+    if (!MissionCameraRig) MissionCameraRig = MakeShared<FMissionCameraRig>();
+    MissionCameraRig->Tick(PC, MissionPreviewCamera.Get(), Visual, Player, Region,
+        Cast<AShipActor>(SelectedMissionTarget.Get()), Delta, MissionTargetZoomDistance);
+}
+
+void UMissionBriefingDlg::BindMissionCameraInput()
+{
+    APlayerController* PC = GetOwningPlayer();
+    ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr;
+    auto* Input = LP ? LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
+    if (!Input || !MissionMenuInput) return;
+    MissionCameraRig = MakeShared<FMissionCameraRig>();
+    MissionCameraContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
+    MissionCameraActions.Reset();
+    UInputAction* Shift = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    Shift->ValueType = EInputActionValueType::Boolean;
+    Shift->bConsumeInput = false;
+    MissionCameraActions.Add(Shift);
+    MissionCameraContext->MapKey(Shift, EKeys::LeftShift);
+    MissionCameraContext->MapKey(Shift, EKeys::RightShift);
+    const TCHAR* Names[] = {
+        TEXT("IA_CameraCockpit"), TEXT("IA_CameraVirtual"), TEXT("IA_CameraChase"),
+        TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraTarget"),
+        TEXT("IA_CameraThreat"), TEXT("IA_ViewTarget"), TEXT("IA_CameraNextObject"),
+        TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
+    };
+    const FKey Keys[] = {EKeys::F1, EKeys::F1, EKeys::F2, EKeys::F2, EKeys::F3,
+        EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Tab, EKeys::K,
+        EKeys::Right, EKeys::Up, EKeys::Add};
+    auto IsMapped = [this](UInputAction* Action)
+    {
+        const UInputMappingContext* Contexts[] = {MissionMenuContext.Get(), FighterInputContext.Get()};
+        for (const UInputMappingContext* Context : Contexts)
+            if (Context)
+                for (const auto& Mapping : Context->GetMappings())
+                    if (Mapping.Action == Action) return true;
+        return false;
+    };
+    for (int32 Command = 0; Command < UE_ARRAY_COUNT(Names); ++Command)
+    {
+        const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), Names[Command], Names[Command]);
+        UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
+        const EInputActionValueType Type = Command >= 10 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
+        if (Action && Action->ValueType != Type)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[MissionCamera] %s has the wrong value type; using the default binding."), Names[Command]);
+            Action = nullptr;
+        }
+        if (!Action)
+        {
+            Action = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+            Action->ValueType = Type;
+        }
+        MissionCameraActions.Add(Action);
+        if (!IsMapped(Action) && Keys[Command].IsValid())
+        {
+            auto Map = [this, Action, Shift, Command](FKey Key, bool bNegative)
+            {
+                auto& Mapping = MissionCameraContext->MapKey(Action, Key);
+                if (Command == 1 || Command == 3 || Command == 8 || Command == 10 || Command == 11)
+                {
+                    auto* Chord = NewObject<UInputTriggerChordAction>(MissionCameraContext.Get());
+                    Chord->ChordAction = Shift;
+                    Mapping.Triggers.Add(Chord);
+                }
+                if (bNegative) Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(MissionCameraContext.Get()));
+            };
+            Map(Keys[Command], false);
+            if (Command == 10) Map(EKeys::Left, true);
+            if (Command == 11) Map(EKeys::Down, true);
+            if (Command == 12) Map(EKeys::Subtract, true);
+        }
+        MissionMenuInput->BindAction(Action, Command >= 10 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
+            this, &UMissionBriefingDlg::OnMissionCameraCommand, Command);
+        if (Command >= 10)
+        {
+            MissionMenuInput->BindAction(Action, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
+            MissionMenuInput->BindAction(Action, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
+        }
+    }
+    Input->AddMappingContext(MissionCameraContext.Get(), 1002);
+}
+
+void UMissionBriefingDlg::ReleaseMissionCameraCommand(const FInputActionValue&, int32 Command)
+{
+    if (!MissionCameraRig) return;
+    if (Command == 10) MissionCameraRig->LookX = 0.0;
+    if (Command == 11) MissionCameraRig->LookY = 0.0;
+    if (Command == 12) MissionCameraRig->RangeInput = 0.0;
+}
+
+void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value, int32 Command)
+{
+    if (!CanUseFighterHUD() || !MissionCameraRig || !GetWorld() || GetWorld()->IsPaused()) return;
+    APlayerController* PC = GetOwningPlayer();
+    const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
+    if ((Command == 0 || Command == 2) && Shift) return;
+    if (Command >= 10)
+    {
+        const float Axis = Value.Get<float>();
+        if (!FMath::IsFinite(Axis)) return;
+        const double Amount = FMath::Clamp(double(Axis), -1.0, 1.0);
+        if (Command == 10) MissionCameraRig->LookX = Amount;
+        if (Command == 11) MissionCameraRig->LookY = Amount;
+        if (Command == 12) MissionCameraRig->RangeInput = Amount;
+        return;
+    }
+    switch (Command)
+    {
+    case 0: MissionCameraRig->SetMode(FMissionCameraRig::Cockpit); break;
+    case 1: MissionCameraRig->SetMode(FMissionCameraRig::Virtual); break;
+    case 2: MissionCameraRig->SetMode(FMissionCameraRig::Chase); break;
+    case 3: MissionCameraRig->SetMode(FMissionCameraRig::Drop); break;
+    case 4:
+        MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
+        MissionCameraRig->ViewObject.Reset();
+        break;
+    case 5: MissionCameraRig->SetMode(FMissionCameraRig::Target); break;
+    case 6: MissionCameraRig->SetMode(FMissionCameraRig::Threat); break;
+    case 7:
+        if (MissionCameraRig->Mode == FMissionCameraRig::Orbit &&
+            MissionCameraRig->ViewObject.Get() == SelectedMissionTarget.Get())
+            MissionCameraRig->SetMode(FMissionCameraRig::Chase);
+        else if (AShipActor* Selected = Cast<AShipActor>(SelectedMissionTarget.Get()))
+        {
+            Sim* Simulation = Sim::GetSim();
+            SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+            Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+            Ship* Data = Selected->GetRuntimeShip();
+            if (!Region || !Pilot || !Region->GetShips().contains(Pilot) || !Data || !Region->GetShips().contains(Data)) return;
+            SimContact* Contact = Pilot->FindContact(Data);
+            if (Data->GetIFF() != Pilot->GetIFF() && (!Contact || !Contact->ActLock())) return;
+            MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
+            MissionCameraRig->ViewObject = Selected;
+        }
+        break;
+    case 8: CycleMissionViewObject(); break;
+    case 9: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
+    default: return;
+    }
+    bMissionTargetInspection = false; // View-object and weapon-target selection are independent.
+    MissionTargetZoomDistance = 1.0;
+    UpdateMissionTargetCamera();
+}
+
+void UMissionBriefingDlg::CycleMissionViewObject()
+{
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!MissionCameraRig || !Region || !Pilot || !Region->GetShips().contains(Pilot)) return;
+    TArray<AShipActor*> Candidates;
+    for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+    {
+        Ship* Data = It->GetRuntimeShip();
+        if (!Data || !Region->GetShips().contains(Data) || It->IsActorBeingDestroyed() || Data->IsDead() || Data->IsDying()) continue;
+        SimContact* Contact = Pilot->FindContact(Data);
+        if (Data == Pilot || (Contact && Contact->ActLock())) Candidates.Add(*It);
+    }
+    Candidates.Sort([](const AShipActor& A, const AShipActor& B) { return A.GetName() < B.GetName(); });
+    if (Candidates.IsEmpty()) return;
+    AShipActor* Current = MissionCameraRig->ViewObject.IsValid() ? MissionCameraRig->ViewObject.Get()
+        : Cast<AShipActor>(MissionPlayerCameraActor.Get());
+    const int32 Index = Candidates.IndexOfByKey(Current);
+    MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
+    MissionCameraRig->ViewObject = Candidates[(Index + 1) % Candidates.Num()];
+}
