@@ -10,6 +10,7 @@ class UInputMappingContext;
 class UInputAction;
 class SFighterHUDDetails;
 class SEngineeringPopup;
+class SWeaponsPopup;
 struct FMissionCameraRig;
 struct FInputActionValue;
 class QuitView;
@@ -95,6 +96,9 @@ protected:
     bool bEngineeringPreviousCursor = false;
     void ToggleEngineering();
     void CloseEngineering();
+    TSharedPtr<SWeaponsPopup> WeaponsPopup;
+    bool bWeaponsPreviousCursor = false;
+    void CloseWeaponsPopup();
     UPROPERTY(Transient) TObjectPtr<UInputAction> RadioMenuAction;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;
