@@ -219,6 +219,14 @@ public:
 	void              SetThrottleRequest(double t) { if (!HasManualThrottle()) throttle_request = t; }
     void SetManualThrottle(double percent);
     bool HasManualThrottle() const;
+    void SetManualRotationAxis(int32 Axis, double Value);
+    void ClearManualRotationInput();
+    void ExecManualRotation(double Seconds);
+    void EnableManualFlight();
+    void SetManualTranslationAxis(int32 Axis, double Value);
+    void SetManualAugmenter(bool Enabled);
+    void StopManualFlight();
+
 
     bool              GetAugmenter() const { return augmenter; }
     QuantumDrive*     GetQuantumDrive() const { return quantum_drive; }
@@ -501,6 +509,11 @@ protected:
     double            throttle;
     double            throttle_request;
     bool bManualThrottle = false;
+    bool bManualRotation = false;
+    FVector ManualRotationInput = FVector::ZeroVector;
+    FVector ManualTranslationInput = FVector::ZeroVector;
+    double ManualFlightLogElapsed = 0;
+
     bool              augmenter;
     float             wep_mass;
     float             wep_resist;

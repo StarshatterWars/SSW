@@ -97,6 +97,17 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
 {
     SLeafWidget::Tick(G, Now, Delta);
     bWarningFlash = FMath::Fmod(Now, 1.0) >= 0.5;
+    if (Ship* Player = PlayerShip())
+    {
+        PitchDegrees = FMath::RadiansToDegrees(Player->GetCompassPitch());
+        HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(Player->GetCompassHeading()) + 360.0, 360.0);
+        const FVector Right = Player->GetCam().vrt();
+        const FVector Up = Player->GetCam().vup();
+        // Simulation uses Y as world up. Bank is undefined exactly at vertical.
+        if (FMath::Square(Right.Y) + FMath::Square(Up.Y) > 1.e-8)
+            BankRadians = FMath::Atan2(Right.Y, Up.Y);
+    }
+    else { PitchDegrees = BankRadians = 0; }
     if (Now < NextSample) return;
     NextSample = Now + 0.1;
     Refresh();
@@ -326,6 +337,46 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     if (bHasPlayer)
     {
+
+        // Attitude instrument in the central ring: 5 degree pitch marks, banked with the ship.
+        const FVector2D Center(Size.X*0.5, Size.Y*0.5);
+        const double C = FMath::Cos(BankRadians), S = FMath::Sin(BankRadians);
+        auto AttitudePoint = [&](double X, double Y)
+        { return Center + FVector2D(C*X-S*Y,S*X+C*Y)*Scale; };
+        auto Segment = [&](FVector2D A, FVector2D B)
+        {
+            TArray<FVector2D> Points; Points.Add(A); Points.Add(B);
+            FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,HUDBlue,true,Scale);
+        };
+        for (int32 Angle=-90; Angle<=90; Angle+=5)
+        {
+            const double Y=(PitchDegrees-Angle)*3.0;
+            if (FMath::Abs(Y)>65.0) continue;
+            if (Angle<0)
+            {
+                for (int32 X=18; X<50; X+=12)
+                {
+                    Segment(AttitudePoint(X,Y),AttitudePoint(X+7,Y));
+                    Segment(AttitudePoint(-X,Y),AttitudePoint(-X-7,Y));
+                }
+            }
+            else
+            {
+                const double Edge=Angle==0?60.0:50.0;
+                Segment(AttitudePoint(-Edge,Y),AttitudePoint(-18,Y));
+                Segment(AttitudePoint(18,Y),AttitudePoint(Edge,Y));
+            }
+            if (Angle%10==0) Text(AttitudePoint(55,Y-5),FString::FromInt(Angle),HUDBlue);
+        }
+        // Heading tape wraps through north without jumping.
+        for (int32 Offset=-30; Offset<=30; Offset+=5)
+        {
+            const int32 Mark=FMath::FloorToInt(HeadingDegrees/5.0)*5+Offset;
+            const double X=(Mark-HeadingDegrees)*2.0;
+            if (FMath::Abs(X)>55.0) continue;
+            Segment(Center+FVector2D(X,-82)*Scale,Center+FVector2D(X,-82+(Mark%10==0?6:3))*Scale);
+        }
+        ReticleText(-30,74,60,FString::Printf(TEXT("BANK %+.0f"),FMath::RadiansToDegrees(BankRadians)),true);
         ReticleText(-240,-8,108,FString::Printf(TEXT("%.0f"),FlightSpeed));
         ReticleText(-40,-100,80,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),true);
         ReticleText(-240,88,108,TEXT("TAC"));
@@ -363,7 +414,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         // Anchor the full MFD bounds to the viewport's lower corners.
         const FVector2D P(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
         Box(P,FVector2D(220,215)*Scale,FLinearColor(0,0.025f,0.05f,0.65f));
-        const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS  ["):M==EMode::FOV?TEXT("SENSOR FOV"):M==EMode::HSD?TEXT("SENSOR HSD"):TEXT("SENSOR 3D");
+        const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SENSOR FOV"):M==EMode::HSD?TEXT("SENSOR HSD"):TEXT("SENSOR 3D");
         Text(P+FVector2D(8,8)*Scale,Title);
         if (M != EMode::Ship)
         {

@@ -17,6 +17,8 @@
 #include "Ship.h"
 #include "CoreMinimal.h"        // UE_LOG, FVector, basic UE types
 #include "Math/Vector.h"        // FVector (explicit)
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 #include <cstring>
 #include <cstdio>
 
@@ -1678,7 +1680,7 @@ Ship::IsStarship() const
 
 	const bool bResult = (Type & StarshipMask) != 0;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::IsStarship] Ship='%s' DesignType=0x%08X StarshipMask=0x%08X Result=%d"),
 		ANSI_TO_TCHAR(GetName()),
 		Type,
@@ -3189,6 +3191,7 @@ Ship::CycleSubTarget(int Dir)
 void
 Ship::ExecFrame(double seconds)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ShipFrame);
 	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Ship::ExecFrame] ENTER Ship='%s' "
 			"Throttle=%.2f Request=%.2f "
@@ -3535,6 +3538,26 @@ Ship::ExecEvalFrame(double seconds)
 void
 Ship::ExecPhysics(double seconds)
 {
+    if (bManualRotation && sim && sim->GetPlayerShip()==this && !InTransition() && !IsDead() && !IsDying())
+    {
+        if (!design || seconds<=0 || !FMath::IsFinite(seconds) || mass<=0) return;
+        ExecManualRotation(seconds);
+        thrust = (float)GetThrust(seconds);
+        if (!FMath::IsFinite(thrust)) thrust=0;
+        SetupAgility();
+        g_force=0;
+        if (IsAirborne()) AeroFrame(seconds);
+        else if (flight_model<2) Physical::ExecFrame(seconds);
+        else Physical::ArcadeFrame(seconds);
+        ManualFlightLogElapsed += seconds;
+        if (ManualFlightLogElapsed>=1.0)
+        {
+            ManualFlightLogElapsed=0;
+            UE_LOG(LogTemp,Display,TEXT("[PlayerFlight] Request=%.1f Throttle=%.1f Force=%.3f Mass=%.3f Speed=%.3f Drive=%d Power=%.1f"),
+                throttle_request,throttle,thrust,mass,GetVelocity().Size(),main_drive?1:0,main_drive?main_drive->GetPowerLevel():0.0);
+        }
+        return;
+    }
 	if (seconds <= 0.0)
 	{
 		return;
@@ -3596,7 +3619,7 @@ Ship::ExecPhysics(double seconds)
 
 		if (!_stricmp(GetName(), "Blockade Runner"))
 		{
-			UE_LOG(LogTemp, Error,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[BR PHYSICS INPUT] ")
 				TEXT("Ship='%hs' ")
 				TEXT("Throttle=%.2f ")
@@ -3634,7 +3657,7 @@ Ship::ExecPhysics(double seconds)
 					GetVelocity(),
 					DeltaToGate.GetSafeNormal());
 
-			UE_LOG(LogTemp, Error,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[BR FARCASTER RANGE] ")
 				TEXT("Loc=%s ")
 				TEXT("Gate=%s ")
@@ -3703,7 +3726,7 @@ Ship::ExecPhysics(double seconds)
 
 	if (!_stricmp(GetName(), "Blockade Runner"))
 	{
-		UE_LOG(LogTemp, Error,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[BR PHYSICS INPUT] ")
 			TEXT("Ship='%hs' ")
 			TEXT("Throttle=%.2f ")
@@ -3773,10 +3796,15 @@ void
 Ship::ExecSystems(double seconds)
 {
     if (!rep) {
-        // Unreal-only visuals have no legacy rep. Gear state still needs its
-        // simulation update; the normal systems loop below handles rep ships.
-        for (int32 Index=0; Index<landing_gear.size(); ++Index)
-            if (landing_gear[Index]) landing_gear[Index]->ExecFrame(seconds);
+        // Simulation systems must tick even when their visual is an Unreal actor.
+        // Sensors/nav/FLCS already execute earlier in Ship::ExecFrame.
+        ListIter<SimSystem> RuntimeSystems = systems;
+        while (++RuntimeSystems) {
+            SimSystem* System = RuntimeSystems.value();
+            if (!System || System==sensor || System==navsys || System==flcs) continue;
+            System->Orient(this);
+            System->ExecFrame(seconds);
+        }
         return;
     }
 
@@ -3907,12 +3935,7 @@ Ship::ExecSystems(double seconds)
 
 FlightComputer* Ship::GetFLCS()
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship::GetFLCS] Ship='%hs' FLCS=%p"),
-		GetName(),
-		flcs);
-
-	return nullptr;
+    return flcs;
 }
 
 void
@@ -5308,6 +5331,8 @@ Ship::GetThrust(double seconds) const
 				thrust_factor);
 		}
 
+		if (bManualRotation && flcs) eff_throttle = flcs->GetThrottle();
+
 		// FLCS override
 		/*if (flcs)
 		{
@@ -6394,6 +6419,8 @@ void Ship::SetNetworkControl(SimDirector* net)
 void
 Ship::SetControls(MotionController* m)
 {
+    ClearManualRotationInput();
+    bManualRotation = false;
 	if (IsDropping() || IsAttaining()) {
 		if (dir && dir->GetType() != ESteerAIType::DROPSHIP) {
 			delete dir;
@@ -6880,9 +6907,94 @@ bool Ship::HasManualThrottle() const
 void Ship::SetManualThrottle(double percent)
 {
     if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
-    // Throttle-only ownership: do not replace the steering director here.
+    EnableManualFlight();
     if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
     bManualThrottle = true;
     throttle_request = FMath::Clamp(percent, 0.0, 100.0);
     if (throttle_request < 50.0) augmenter = false;
+}
+
+
+namespace
+{
+    // Uses the same Apply* physics path as legacy ShipCtrl, without polling old keys.
+    class FEnhancedRotationDirector final : public ShipManager
+    {
+    public:
+        explicit FEnhancedRotationDirector(Ship* InShip) : ShipManager(InShip, nullptr) {}
+        bool GetSubframe() const override { return true; }
+        void ExecFrame(double Seconds) override { if (ship) ship->ExecManualRotation(Seconds); }
+    };
+}
+
+void Ship::SetManualRotationAxis(int32 Axis, double Value)
+{
+    if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !sim ||
+        sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
+    Value = FMath::Clamp(Value, -1.0, 1.0);
+    if (!bManualRotation && FMath::Abs(Value) < 0.001) return;
+    EnableManualFlight();
+    ManualRotationInput[Axis] = Value;
+}
+
+void Ship::ClearManualRotationInput()
+{
+    ManualRotationInput = FVector::ZeroVector;
+    ManualTranslationInput = FVector::ZeroVector;
+    if (bManualRotation) { SetTransX(0); SetTransY(0); SetTransZ(0); SetAugmenter(false); }
+    if (bManualRotation) { ApplyPitch(0); ApplyYaw(0); ApplyRoll(0); }
+}
+
+void Ship::ExecManualRotation(double Seconds)
+{
+    if (!bManualRotation || !sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying())
+    {
+        ClearManualRotationInput();
+        return;
+    }
+    ApplyPitch(ManualRotationInput.X);
+    ApplyYaw(ManualRotationInput.Y);
+    ApplyRoll(ManualRotationInput.Z);
+    if (design)
+    {
+        SetTransX(ManualTranslationInput.X * design->trans_x);
+        SetTransY(ManualTranslationInput.Y * design->trans_y);
+        SetTransZ(ManualTranslationInput.Z * design->trans_z);
+    }
+    // Recreate raw pilot demand before FLCS; do not feed last frame's scaled forces back in.
+    ExecFLCSFrame();
+}
+
+
+void Ship::EnableManualFlight()
+{
+    if (bManualRotation || !sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
+    if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
+    delete dir;
+    dir = new FEnhancedRotationDirector(this);
+    bManualRotation = true;
+    bManualThrottle = true;
+    ClearManualRotationInput();
+}
+
+void Ship::SetManualTranslationAxis(int32 Axis, double Value)
+{
+    if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !sim || sim->GetPlayerShip()!=this ||
+        InTransition() || IsDead() || IsDying()) return;
+    if (!bManualRotation && FMath::Abs(Value)<0.001) return;
+    EnableManualFlight();
+    ManualTranslationInput[Axis]=FMath::Clamp(Value,-1.0,1.0);
+}
+
+void Ship::SetManualAugmenter(bool Enabled)
+{
+    if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
+    if (Enabled) EnableManualFlight();
+    SetAugmenter(Enabled);
+}
+
+void Ship::StopManualFlight()
+{
+    SetManualThrottle(0);
+    if (HasManualThrottle() && flcs) flcs->FullStop();
 }

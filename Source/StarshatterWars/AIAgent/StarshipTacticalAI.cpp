@@ -175,7 +175,7 @@ StarshipTacticalAI::FindThreat()
                 threat_missile = c_shot;
                 rumor = (Ship*)threat_missile->Owner();
 
-                UE_LOG(LogTemp, Warning,
+                UE_LOG(LogTemp, VeryVerbose,
                     TEXT("[TACTICAL THREAT MISSILE] Ship='%hs' Missile=%p Rumor='%hs'"),
                     ship->GetName(),
                     threat_missile,
@@ -197,7 +197,7 @@ StarshipTacticalAI::FindThreat()
                             threat_ship = c_ship;
                             threat_dist = 0;
 
-                            UE_LOG(LogTemp, Warning,
+                            UE_LOG(LogTemp, VeryVerbose,
                                 TEXT("[TACTICAL THREAT DIRECT] Ship='%hs' Threat='%hs'"),
                                 ship->GetName(),
                                 threat_ship->GetName());
@@ -208,7 +208,7 @@ StarshipTacticalAI::FindThreat()
                         threat_ship = c_ship;
                         threat_dist = rng;
 
-                        UE_LOG(LogTemp, Warning,
+                        UE_LOG(LogTemp, VeryVerbose,
                             TEXT("[TACTICAL THREAT CLOSEST] Ship='%hs' Threat='%hs' Range=%.2f"),
                             ship->GetName(),
                             threat_ship->GetName(),
@@ -232,7 +232,7 @@ StarshipTacticalAI::FindThreat()
                 rumor = 0;
                 ship_ai->ClearRumor();
 
-                UE_LOG(LogTemp, Warning,
+                UE_LOG(LogTemp, VeryVerbose,
                     TEXT("[TACTICAL RUMOR CLEARED] Ship='%hs'"),
                     ship->GetName());
 
@@ -245,7 +245,7 @@ StarshipTacticalAI::FindThreat()
     ship_ai->SetThreat(threat_ship);
     ship_ai->SetThreatMissile(threat_missile);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[TACTICAL THREAT RESULT] Ship='%hs' Threat='%hs' Missile=%p ThreatLevel=%.4f SupportLevel=%.4f"),
         ship ? ship->GetName() : "NULL",
         threat_ship ? threat_ship->GetName() : "NULL",

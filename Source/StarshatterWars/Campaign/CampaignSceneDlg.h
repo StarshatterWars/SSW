@@ -21,12 +21,17 @@
 #include "GameStructs.h"
 #include "CampaignSceneDlg.generated.h"
 
+class UInputAction;
+class UInputMappingContext;
+class UEnhancedInputComponent;
+class APlayerController;
 class UBorder;
 class UOverlay;
 class UTextBlock;
 class UFont;
 class UCmpnScreen;
 class USoundBase;
+class UAudioComponent;
 class UImage;
 class UTexture2D;
 class ASystemSceneBuilder;
@@ -72,6 +77,17 @@ public:
     bool IsSceneRunning() const { return bSceneRunning; }
 
     void SkipCutscene();
+    void StopCutsceneAudio();
+    TArray<TWeakObjectPtr<UAudioComponent>> CutsceneAudioComponents;
+    virtual void NativeDestruct() override;
+    void EnableCutsceneExitInput();
+    void DisableCutsceneExitInput();
+    void OnCutsceneExit();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> CutsceneExitAction;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> CutsceneExitContext;
+    UPROPERTY(Transient) TObjectPtr<UEnhancedInputComponent> CutsceneExitInput;
+    TWeakObjectPtr<APlayerController> CutsceneInputOwner;
+
     void FinishCutscene();
 
 protected:

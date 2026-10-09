@@ -107,6 +107,43 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> MissionThrottleFullAction;
     void OnMissionThrottleStep(const FInputActionValue& Value);
     void OnMissionThrottleZero();
+    void ApplyMissionRotation(int32 Axis, float Value);
+    void ApplyMissionTranslation(int32 Axis, float Value);
+    void ApplyMissionAugmenter(bool Enabled);
+    void ClearMissionRotationInput();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionStrafeAction;
+    void OnMissionStrafe(const FInputActionValue& Value);
+    void ReleaseMissionStrafe();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionForwardThrustAction;
+    void OnMissionForwardThrust(const FInputActionValue& Value);
+    void ReleaseMissionForwardThrust();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionVerticalThrustAction;
+    void OnMissionVerticalThrust(const FInputActionValue& Value);
+    void ReleaseMissionVerticalThrust();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionAugmenterAction;
+    void OnMissionAugmenter();
+    void ReleaseMissionAugmenter();
+
+    void ApplyMissionShields(int32 Command);
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionShieldsUpAction;
+    void OnMissionShieldsUp();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionShieldsDownAction;
+    void OnMissionShieldsDown();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionShieldsFullAction;
+    void OnMissionShieldsFull();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionShieldsZeroAction;
+    void OnMissionShieldsZero();
+
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionPitchAction;
+    void OnMissionPitch(const FInputActionValue& Value);
+    void ReleaseMissionPitch();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionYawAction;
+    void OnMissionYaw(const FInputActionValue& Value);
+    void ReleaseMissionYaw();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> MissionRollAction;
+    void OnMissionRoll(const FInputActionValue& Value);
+    void ReleaseMissionRoll();
+
     void OnMissionThrottleFull();
     void ApplyMissionThrottle(double Amount, bool bRelative);
 

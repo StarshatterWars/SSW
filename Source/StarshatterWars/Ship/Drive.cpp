@@ -343,13 +343,6 @@ Drive::GetThrust(double seconds)
         availability *
         100.0f;
 
-    if (eff <= 0.0f && availability > 0.0f)
-    {
-        eff =
-            availability *
-            100.0f;
-    }
-
     float output =
         throttle *
         thrust *
@@ -366,7 +359,7 @@ Drive::GetThrust(double seconds)
             eff;
 
         PowerSource* reac =
-            ship
+            ship && source_index >= 0 && source_index < ship->GetReactors().size()
             ? ship->GetReactors()[source_index]
             : nullptr;
 
@@ -376,23 +369,6 @@ Drive::GetThrust(double seconds)
                 reac->GetCapacity() -
                 (0.1 * seconds));
         }
-    }
-
-    if (throttle > 0.0f &&
-        output <= 0.0f &&
-        IsPowerOn())
-    {
-        output =
-            throttle *
-            thrust *
-            100.0f;
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Drive::Thrust] STARTUP FALLBACK Ship='%hs' Throttle=%.2f Thrust=%.2f Output=%.2f"),
-            ship ? ship->GetName() : "NULL",
-            throttle,
-            thrust,
-            output);
     }
 
     energy =

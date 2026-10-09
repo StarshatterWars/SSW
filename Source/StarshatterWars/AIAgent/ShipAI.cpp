@@ -971,7 +971,7 @@ ShipAI::FindObjectiveTarget(SimObject* tgt)
 		}
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[ShipAI::FindObjectiveTarget] Ship='%hs' Target='%hs' Static=%d Navpt=%p SelfLoc=%s TargetLoc=%s TargetVel=%s ClosingSpeed=%.2f ObjW=%s Distance=%.2f Bracket=%d"),
 		ship ? ship->GetName() : "NULL",
 		tgt ? tgt->GetName() : "NULL",

@@ -61,6 +61,8 @@
 #include "ShipActor.h"
 #include "Ship.h"
 #include "LandingGear.h"
+#include "Shield.h"
+#include "HUDSounds.h"
 #include "SimRegion.h"
 #include "MissionTargetOverlay.h"
 #include "FighterHUDPanels.h"
@@ -326,6 +328,7 @@ void UMissionBriefingDlg::ExecFrame()
 void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) ClearMissionRotationInput();
 
     if (APlayerController* PC = GetOwningPlayer())
     {
@@ -1108,6 +1111,86 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
+
+    MissionStrafeAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_Strafe.IA_Strafe"));
+    if (MissionStrafeAction && MissionStrafeAction->ValueType==EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionStrafeAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionStrafe);
+        MissionMenuInput->BindAction(MissionStrafeAction.Get(),ETriggerEvent::Completed,this,&UMissionBriefingDlg::ReleaseMissionStrafe);
+        MissionMenuInput->BindAction(MissionStrafeAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionStrafe);
+    }
+
+    MissionForwardThrustAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_ForwardThrust.IA_ForwardThrust"));
+    if (MissionForwardThrustAction && MissionForwardThrustAction->ValueType==EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionForwardThrustAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionForwardThrust);
+        MissionMenuInput->BindAction(MissionForwardThrustAction.Get(),ETriggerEvent::Completed,this,&UMissionBriefingDlg::ReleaseMissionForwardThrust);
+        MissionMenuInput->BindAction(MissionForwardThrustAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionForwardThrust);
+    }
+
+    MissionVerticalThrustAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_VerticalThrust.IA_VerticalThrust"));
+    if (MissionVerticalThrustAction && MissionVerticalThrustAction->ValueType==EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionVerticalThrustAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionVerticalThrust);
+        MissionMenuInput->BindAction(MissionVerticalThrustAction.Get(),ETriggerEvent::Completed,this,&UMissionBriefingDlg::ReleaseMissionVerticalThrust);
+        MissionMenuInput->BindAction(MissionVerticalThrustAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionVerticalThrust);
+    }
+
+    MissionAugmenterAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_Augmenter.IA_Augmenter"));
+    if (MissionAugmenterAction && MissionAugmenterAction->ValueType==EInputActionValueType::Boolean)
+    {
+        MissionMenuInput->BindAction(MissionAugmenterAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionAugmenter);
+        MissionMenuInput->BindAction(MissionAugmenterAction.Get(),ETriggerEvent::Completed,this,&UMissionBriefingDlg::ReleaseMissionAugmenter);
+        MissionMenuInput->BindAction(MissionAugmenterAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionAugmenter);
+    }
+
+    MissionShieldsUpAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ShieldsUp.IA_ShieldsUp"));
+    if (MissionShieldsUpAction && MissionShieldsUpAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionShieldsUpAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionShieldsUp);
+    else UE_LOG(LogTemp, Warning, TEXT("[ShieldInput] IA_ShieldsUp must be Boolean."));
+
+    MissionShieldsDownAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ShieldsDown.IA_ShieldsDown"));
+    if (MissionShieldsDownAction && MissionShieldsDownAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionShieldsDownAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionShieldsDown);
+    else UE_LOG(LogTemp, Warning, TEXT("[ShieldInput] IA_ShieldsDown must be Boolean."));
+
+    MissionShieldsFullAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ShieldsFull.IA_ShieldsFull"));
+    if (MissionShieldsFullAction && MissionShieldsFullAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionShieldsFullAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionShieldsFull);
+    else UE_LOG(LogTemp, Warning, TEXT("[ShieldInput] IA_ShieldsFull must be Boolean."));
+
+    MissionShieldsZeroAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_ShieldsZero.IA_ShieldsZero"));
+    if (MissionShieldsZeroAction && MissionShieldsZeroAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(MissionShieldsZeroAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionShieldsZero);
+    else UE_LOG(LogTemp, Warning, TEXT("[ShieldInput] IA_ShieldsZero must be Boolean."));
+
+    MissionPitchAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Pitch.IA_Pitch"));
+    if (MissionPitchAction && MissionPitchAction->ValueType == EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionPitchAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::OnMissionPitch);
+        MissionMenuInput->BindAction(MissionPitchAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionPitch);
+        MissionMenuInput->BindAction(MissionPitchAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionPitch);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[FlightInput] IA_Pitch must be Axis1D in /Game/Input."));
+
+    MissionYawAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Yaw.IA_Yaw"));
+    if (MissionYawAction && MissionYawAction->ValueType == EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionYawAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::OnMissionYaw);
+        MissionMenuInput->BindAction(MissionYawAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionYaw);
+        MissionMenuInput->BindAction(MissionYawAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionYaw);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[FlightInput] IA_Yaw must be Axis1D in /Game/Input."));
+
+    MissionRollAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Roll.IA_Roll"));
+    if (MissionRollAction && MissionRollAction->ValueType == EInputActionValueType::Axis1D)
+    {
+        MissionMenuInput->BindAction(MissionRollAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::OnMissionRoll);
+        MissionMenuInput->BindAction(MissionRollAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionRoll);
+        MissionMenuInput->BindAction(MissionRollAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionRoll);
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[FlightInput] IA_Roll must be Axis1D in /Game/Input."));
+
     MissionThrottleAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Throttle.IA_Throttle"));
     if (MissionThrottleAction && MissionThrottleAction->ValueType == EInputActionValueType::Axis1D)
         MissionMenuInput->BindAction(MissionThrottleAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::OnMissionThrottleStep);
@@ -1287,6 +1370,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    ClearMissionRotationInput();
     if (FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FighterHUDDetails.ToSharedRef());
     FighterHUDDetails.Reset();
@@ -1328,6 +1412,17 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
     GearToggleAction = nullptr;
     MissionThrottleAction = nullptr;
+    MissionStrafeAction = nullptr;
+    MissionForwardThrustAction = nullptr;
+    MissionVerticalThrustAction = nullptr;
+    MissionAugmenterAction = nullptr;
+    MissionShieldsUpAction = nullptr;
+    MissionShieldsDownAction = nullptr;
+    MissionShieldsFullAction = nullptr;
+    MissionShieldsZeroAction = nullptr;
+    MissionPitchAction = nullptr;
+    MissionYawAction = nullptr;
+    MissionRollAction = nullptr;
     MissionThrottleZeroAction = nullptr;
     MissionThrottleFullAction = nullptr;
     MissionMenuInput = nullptr;
@@ -1563,6 +1658,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    ClearMissionRotationInput();
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;
@@ -2008,6 +2104,108 @@ void UMissionBriefingDlg::ApplyMissionThrottle(double Amount, bool bRelative)
     const double Requested = FMath::Clamp(
         bRelative ? PlayerShip->GetThrottleRequest() + Amount : Amount, 0.0, 100.0);
     PlayerShip->SetManualThrottle(Requested);
+    if (!bRelative && Amount==0.0) PlayerShip->StopManualFlight();
     UE_LOG(LogTemp, Display, TEXT("[ThrottleInput] Requested=%.0f%% Actual=%.1f%%"),
         Requested, PlayerShip->GetThrottle());
 }
+
+
+void UMissionBriefingDlg::ApplyMissionRotation(int32 Axis, float Value)
+{
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player)) return;
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
+    { Player->ClearManualRotationInput(); return; }
+    Player->SetManualRotationAxis(Axis, Value);
+}
+
+void UMissionBriefingDlg::ClearMissionRotationInput()
+{
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (Player && Region && Region->GetShips().contains(Player)) Player->ClearManualRotationInput();
+}
+
+void UMissionBriefingDlg::OnMissionPitch(const FInputActionValue& Value) { ApplyMissionRotation(0, Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionPitch() { ApplyMissionRotation(0, 0.0f); }
+
+void UMissionBriefingDlg::OnMissionYaw(const FInputActionValue& Value) { ApplyMissionRotation(1, Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionYaw() { ApplyMissionRotation(1, 0.0f); }
+
+void UMissionBriefingDlg::OnMissionRoll(const FInputActionValue& Value) { ApplyMissionRotation(2, Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionRoll() { ApplyMissionRotation(2, 0.0f); }
+
+
+void UMissionBriefingDlg::OnMissionShieldsUp() { ApplyMissionShields(1); }
+void UMissionBriefingDlg::OnMissionShieldsDown() { ApplyMissionShields(-1); }
+void UMissionBriefingDlg::OnMissionShieldsFull() { ApplyMissionShields(2); }
+void UMissionBriefingDlg::OnMissionShieldsZero() { ApplyMissionShields(-2); }
+
+void UMissionBriefingDlg::ApplyMissionShields(int32 Command)
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    // Plain S/X can also fire while the Shift chord is active; give full/zero priority.
+    if (APlayerController* PC = GetOwningPlayer())
+    {
+        if (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))
+        {
+            if (Command == 1) Command = 2;
+            if (Command == -1) Command = -2;
+        }
+    }
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player) || Player->IsDead() || Player->IsDying()) return;
+    Shield* Shields = Player->GetShield();
+    if (!Shields) return;
+    // Match legacy ShipCtrl: step from the current power level, not shield health.
+    const double Level = Shields->GetPowerLevel();
+    double Requested = 0.0;
+    if (Command == 2) Requested = 100.0;
+    else if (Command == -2) Requested = 0.0;
+    else if (Command > 0)
+        Requested = Level < 25.0 ? 25.0 : Level < 50.0 ? 50.0 : Level < 75.0 ? 75.0 : 100.0;
+    else
+        Requested = Level > 75.0 ? 75.0 : Level > 50.0 ? 50.0 : Level > 25.0 ? 25.0 : 0.0;
+    Shields->SetPowerLevel(Requested);
+    HUDSounds::PlaySound(HUDSounds::SND_SHIELD_LEVEL);
+    UE_LOG(LogTemp, Display, TEXT("[ShieldInput] Requested=%.0f%% Current=%.1f%%"), Requested, Level);
+}
+
+void UMissionBriefingDlg::ApplyMissionTranslation(int32 Axis, float Value)
+{
+    Sim* Simulation=Sim::GetSim();
+    Ship* Player=Simulation?Simulation->GetPlayerShip():nullptr;
+    SimRegion* Region=Simulation?Simulation->GetActiveRegion():nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player)) return;
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
+    { Player->ClearManualRotationInput(); return; }
+    Player->SetManualTranslationAxis(Axis, Value);
+}
+
+void UMissionBriefingDlg::ApplyMissionAugmenter(bool Enabled)
+{
+    Sim* Simulation=Sim::GetSim();
+    Ship* Player=Simulation?Simulation->GetPlayerShip():nullptr;
+    SimRegion* Region=Simulation?Simulation->GetActiveRegion():nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player)) return;
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
+    { Player->ClearManualRotationInput(); return; }
+    Player->SetManualAugmenter(Enabled);
+}
+
+void UMissionBriefingDlg::OnMissionStrafe(const FInputActionValue& Value) { ApplyMissionTranslation(0,Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionStrafe() { ApplyMissionTranslation(0,0); }
+
+void UMissionBriefingDlg::OnMissionForwardThrust(const FInputActionValue& Value) { ApplyMissionTranslation(1,Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionForwardThrust() { ApplyMissionTranslation(1,0); }
+
+void UMissionBriefingDlg::OnMissionVerticalThrust(const FInputActionValue& Value) { ApplyMissionTranslation(2,Value.Get<float>()); }
+void UMissionBriefingDlg::ReleaseMissionVerticalThrust() { ApplyMissionTranslation(2,0); }
+
+void UMissionBriefingDlg::OnMissionAugmenter() { ApplyMissionAugmenter(true); }
+void UMissionBriefingDlg::ReleaseMissionAugmenter() { ApplyMissionAugmenter(false); }

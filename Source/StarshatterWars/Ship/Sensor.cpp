@@ -15,6 +15,8 @@
 */
 
 #include "Sensor.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 #include "CoreMinimal.h"          // UE_LOG, FMemory, FVector
 #include "Math/Vector.h"          // FVector
 
@@ -170,6 +172,7 @@ const char* Sensor::GetObserverName() const
 
 void Sensor::ExecFrame(double seconds)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_SensorScan);
     UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Sensor::ExecFrame] Ship='%hs' Power=%d Energy=%.2f AIMode=%d Region='%hs'"),
         ship ? ship->GetName() : "NULL",
@@ -321,7 +324,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         return;
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Sensor::ProcessContact ENTER] Observer='%hs' Contact='%hs' ObsIFF=%d ContactIFF=%d ObsRegion='%hs' ContactRegion='%hs'"),
         ship->GetName(),
         c_ship->GetName(),
@@ -332,7 +335,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 
     if (c_ship->IsNetObserver())
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[Sensor::ProcessContact] REJECT NetObserver Contact='%hs'"),
             c_ship->GetName());
 
@@ -363,7 +366,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     const double tz =
         FVector::DotProduct(targ_pt, cam->vpn());
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Sensor::Basis] Observer='%hs' Loc=%s Contact='%hs' ContactLoc=%s Delta=%s VRT=%s VUP=%s VPN=%s TX=%.2f TY=%.2f TZ=%.2f"),
         ship->GetName(),
         *ship->GetLocation().ToString(),
@@ -382,22 +385,6 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     //-------------------------------------------------------------
     const double rng =
         targ_pt.Size();
-
-    double az =
-        asin(fabs(tx) / rng);
-
-    double el =
-        asin(fabs(ty) / rng);
-
-    if (tx < 0)
-    {
-        az = -az;
-    }
-
-    if (ty < 0)
-    {
-        el = -el;
-    }
 
     double min_range =
         rng;
@@ -439,7 +426,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
             c_ship->GetEMCON() > 2 &&
             c_ship->IsTracking(ship));
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[Sensor::ProcessContact CHECK] Observer='%hs' Contact='%hs' Range=%.2f SensorRange=%.2f MinRange=%.2f TZ=%.2f Vis=%d Threat=%d"),
         ship->GetName(),
         c_ship->GetName(),
@@ -455,7 +442,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         if (mode == ESensorMode::GM &&
             !c_ship->IsGroundUnit())
         {
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[Sensor::ProcessContact] REJECT GM NonGround '%hs'"),
                 c_ship->GetName());
 
@@ -465,7 +452,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         if (mode != ESensorMode::GM &&
             c_ship->IsGroundUnit())
         {
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[Sensor::ProcessContact] REJECT NonGM Ground '%hs'"),
                 c_ship->GetName());
 
@@ -475,7 +462,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         if (min_range > sensor_range ||
             min_range > c_ship->Design()->detet)
         {
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[Sensor::ProcessContact] REJECT Range Observer='%hs' Contact='%hs' MinRange=%.2f SensorRange=%.2f Detect=%.2f"),
                 ship->GetName(),
                 c_ship->GetName(),
@@ -499,6 +486,23 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     //-------------------------------------------------------------
     if (threat || vis || mode >= ESensorMode::PST || tz > 1)
     {
+        // Only calculate angles for contacts that survive range/type clipping.
+        double az =
+            asin(fabs(tx) / rng);
+    
+        double el =
+            asin(fabs(ty) / rng);
+    
+        if (tx < 0)
+        {
+            az = -az;
+        }
+    
+        if (ty < 0)
+        {
+            el = -el;
+        }
+
         if (tz < 0)
         {
             if (az < 0)
@@ -570,7 +574,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
             }
         }
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[Sensor::ProcessContact SIGNAL] Observer='%hs' Contact='%hs' d_pas=%.4f d_act=%.4f Threshold=%.4f"),
             ship->GetName(),
             c_ship->GetName(),
@@ -592,7 +596,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 
                 contacts.append(c);
 
-                UE_LOG(LogTemp, Warning,
+                UE_LOG(LogTemp, VeryVerbose,
                     TEXT("[Sensor::ProcessContact ADD] Observer='%hs' Contact='%hs' Contacts=%d"),
                     ship->GetName(),
                     c_ship->GetName(),
@@ -608,7 +612,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
 
                 c->UpdateTrack();
 
-                UE_LOG(LogTemp, Warning,
+                UE_LOG(LogTemp, VeryVerbose,
                     TEXT("[Sensor::ProcessContact TRACK] Observer='%hs' Contact='%hs' d_pas=%.4f d_act=%.4f"),
                     ship->GetName(),
                     c_ship->GetName(),
@@ -618,7 +622,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         }
         else
         {
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[Sensor::ProcessContact] REJECT Threshold Observer='%hs' Contact='%hs'"),
                 ship->GetName(),
                 c_ship->GetName());
@@ -626,7 +630,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
     }
     else
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[Sensor::ProcessContact] REJECT Clip Observer='%hs' Contact='%hs' TZ=%.2f"),
             ship->GetName(),
             c_ship->GetName(),

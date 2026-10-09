@@ -549,7 +549,7 @@ Physical::AngularFrame(double SecondsThisSlice)
 
 		if (!_stricmp(GetName(), "Blockade Runner"))
 		{
-			UE_LOG(LogTemp, Error,
+			UE_LOG(LogTemp, VeryVerbose,
 				TEXT("[ANGULAR BR] ")
 				TEXT("dy_acc=%.6f ")
 				TEXT("dy=%.6f ")
@@ -864,7 +864,7 @@ void Physical::GetAngularThrust(double& r, double& p, double& y)
 
 	if (r != 0 || p != 0 || y != 0)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Physical::GetAngularThrust] "
 				"Obj='%hs' "
 				"dr=%.6f dr_acc=%.6f roll_rate=%.6f r=%.1f "

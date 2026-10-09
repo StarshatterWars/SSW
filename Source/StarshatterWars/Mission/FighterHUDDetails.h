@@ -52,6 +52,7 @@ private:
     TArray<FString> NavReadouts, MissileReadouts;
     FString DefenseReadout;
     double FlightSpeed = 0, HeadingDegrees = 0, ClosingSpeed = 0, JumpSeconds = 0;
+    double PitchDegrees = 0, BankRadians = 0;
     int32 ThreatLevel = 0;
     bool bAutoAvailable = false, bGearDown = false, bShoot = false;
     bool bClosingValid = false, bWarningFlash = false;

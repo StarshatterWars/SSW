@@ -1,4 +1,5 @@
-﻿#include "SSWRuntimeSubsystem.h"
+﻿
+#include "SSWRuntimeSubsystem.h"
 
 #include "Math/RandomStream.h"
 #include "SimElement.h"
@@ -8,6 +9,7 @@
 #include "SystemSceneBuilder.h"
 #include "PlanetActor.h"
 #include "Components/StaticMeshComponent.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 #include "OrbitalRegion.h"
 
@@ -278,6 +280,7 @@ void USSWRuntimeSubsystem::GameLoop()
 
 void USSWRuntimeSubsystem::UpdateWorld()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_UpdateWorld);
     const double Seconds =
         static_cast<double>(LastDeltaSeconds) *
         static_cast<double>(TimeCompression);
@@ -304,7 +307,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
         const uint32 AfterTime =
             Game::GetGameTime();
 
-        UE_LOG(LogSSWRuntime, Warning,
+        UE_LOG(LogSSWRuntime, VeryVerbose,
             TEXT("[RuntimeSubsystem::UpdateWorld] Sim::ExecFrame DeltaMS=%d GameTime=%u Regions=%d"),
             (int32)(AfterTime - BeforeTime),
             AfterTime,

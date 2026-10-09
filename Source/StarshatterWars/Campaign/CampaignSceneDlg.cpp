@@ -1,6 +1,14 @@
 #include "CampaignSceneDlg.h"
+#include "Components/AudioComponent.h"
 
 #include "CmpnScreen.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 #include "MissionUIStyle.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -255,6 +263,7 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
 
 void UCampaignSceneDlg::ResetSceneState()
 {
+    StopCutsceneAudio();
     ActiveMissionData = FS_CampaignMission();
     SortedEvents.Empty();
 
@@ -292,6 +301,8 @@ void UCampaignSceneDlg::ResetSceneState()
 
 void UCampaignSceneDlg::Show()
 {
+    EnableCutsceneExitInput();
+    SetKeyboardFocus();
     SetVisibility(ESlateVisibility::Visible);
     SetIsEnabled(true);
 
@@ -300,6 +311,8 @@ void UCampaignSceneDlg::Show()
 
 void UCampaignSceneDlg::Hide()
 {
+    StopCutsceneAudio();
+    DisableCutsceneExitInput();
     SetVisibility(ESlateVisibility::Collapsed);
     SetIsEnabled(false);
 
@@ -701,7 +714,14 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
         USoundBase* Sound = ResolveSceneSound(Event.EventSound);
         if (Sound)
         {
-            UGameplayStatics::PlaySound2D(this, Sound);
+            CutsceneAudioComponents.RemoveAll([](const TWeakObjectPtr<UAudioComponent>& Entry)
+            { return !Entry.IsValid(); });
+            // Auto-destroy after natural completion; retain a weak handle for scene cleanup.
+            if (UAudioComponent* Audio = UGameplayStatics::SpawnSound2D(
+                this, Sound, 1.0f, 1.0f, 0.0f, nullptr, false, true))
+            {
+                CutsceneAudioComponents.Add(Audio);
+            }
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[SceneDlg] PLAYED SOUND '%s'"),
@@ -1231,6 +1251,12 @@ FReply UCampaignSceneDlg::NativeOnKeyDown(
     const FGeometry& InGeometry,
     const FKeyEvent& InKeyEvent)
 {
+    // UI-only input mode may consume keys before Enhanced Input sees them.
+    if (InKeyEvent.GetKey() == EKeys::Delete && bSceneRunning && !bCutsceneTransitionStarted)
+    {
+        OnCutsceneExit();
+        return FReply::Handled();
+    }
     if (InKeyEvent.GetKey() == EKeys::SpaceBar)
     {
         UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] SPACE pressed ? SkipCutscene"));
@@ -1427,4 +1453,76 @@ ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
     }
 
     return SceneCamera;
+}
+
+void UCampaignSceneDlg::NativeDestruct()
+{
+    StopCutsceneAudio();
+    DisableCutsceneExitInput();
+    Super::NativeDestruct();
+}
+
+void UCampaignSceneDlg::OnCutsceneExit()
+{
+    if (bSceneRunning && !bCutsceneTransitionStarted) SkipCutscene();
+}
+
+void UCampaignSceneDlg::EnableCutsceneExitInput()
+{
+    if (CutsceneExitInput) return;
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr;
+    auto* Input = LP ? LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
+    if (!Input) return;
+    CutsceneExitAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_Exit.IA_Exit"));
+    if (!CutsceneExitAction)
+    {
+        CutsceneExitAction = NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        CutsceneExitAction->ValueType = EInputActionValueType::Boolean;
+    }
+    if (CutsceneExitAction->ValueType != EInputActionValueType::Boolean)
+    {
+        UE_LOG(LogTemp,Warning,TEXT("[SceneDlg] IA_Exit must be Boolean."));
+        CutsceneExitAction = nullptr;
+        return;
+    }
+    CutsceneInputOwner = PC;
+    CutsceneExitContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
+    CutsceneExitContext->MapKey(CutsceneExitAction.Get(),EKeys::Delete);
+    CutsceneExitInput = NewObject<UEnhancedInputComponent>(PC);
+    CutsceneExitInput->RegisterComponent();
+    CutsceneExitInput->Priority = 2000;
+    CutsceneExitInput->bBlockInput = true;
+    CutsceneExitInput->BindAction(CutsceneExitAction.Get(),ETriggerEvent::Started,this,&UCampaignSceneDlg::OnCutsceneExit);
+    Input->AddMappingContext(CutsceneExitContext.Get(),2000);
+    PC->PushInputComponent(CutsceneExitInput.Get());
+}
+
+void UCampaignSceneDlg::DisableCutsceneExitInput()
+{
+    if (APlayerController* PC = CutsceneInputOwner.Get())
+    {
+        if (ULocalPlayer* LP = PC->GetLocalPlayer())
+            if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+                if (CutsceneExitContext) Input->RemoveMappingContext(CutsceneExitContext.Get());
+        if (CutsceneExitInput) PC->PopInputComponent(CutsceneExitInput.Get());
+    }
+    if (CutsceneExitInput) CutsceneExitInput->DestroyComponent();
+    CutsceneExitInput = nullptr;
+    CutsceneExitContext = nullptr;
+    CutsceneExitAction = nullptr;
+    CutsceneInputOwner.Reset();
+}
+
+
+void UCampaignSceneDlg::StopCutsceneAudio()
+{
+    // Clear ownership first: Stop may synchronously invoke audio-finished callbacks.
+    const TArray<TWeakObjectPtr<UAudioComponent>> AudioToStop = MoveTemp(CutsceneAudioComponents);
+    CutsceneAudioComponents.Reset();
+    for (const TWeakObjectPtr<UAudioComponent>& Entry : AudioToStop)
+    {
+        if (UAudioComponent* Audio = Entry.Get()) Audio->Stop();
+    }
 }

@@ -363,7 +363,7 @@ StarshipAI::FindObjective()
 
     if (!_stricmp(ship->GetName(), "Blockade Runner"))
     {
-        UE_LOG(LogTemp, Error,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[StarshipAI::FindObjective BR] ")
             TEXT("ObjW=%s ObjectiveRelative=%s ShipLoc=%s Distance=%.2f"),
             *obj_w.ToString(),
@@ -558,7 +558,7 @@ StarshipAI::HelmControl()
             if (ship &&
                 !_stricmp(ship->GetName(), "Blockade Runner"))
             {
-                UE_LOG(LogTemp, Warning,
+                UE_LOG(LogTemp, VeryVerbose,
                     TEXT("[StarshipAI::HelmControl BR] ")
                     TEXT("AccumYaw=%.6f AccumPitch=%.6f Compass=%.6f VPN=%s ThrottleReq=%.2f"),
                     accumulator.yaw,
@@ -956,7 +956,7 @@ StarshipAI::ThrottleControl()
                 }
             }
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, VeryVerbose,
                 TEXT("[BRAKE TRANS] Ship='%hs' Dist=%.2f ")
                 TEXT("ThrottleScale=%.2f BrakeAlpha=%.2f Brakes=%.2f"),
                 ship->GetName(),
@@ -1038,7 +1038,7 @@ StarshipAI::ThrottleControl()
     if (ship &&
         !_stricmp(ship->GetName(), "Blockade Runner"))
     {
-        UE_LOG(LogTemp, Error,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[StarshipAI::ThrottleControl BR] ")
             TEXT("Distance=%.2f ShipSpeed=%.2f Throttle=%.2f Brakes=%.2f"),
             distance,
@@ -1683,7 +1683,7 @@ StarshipAI::Seek(const FVector& Point)
     if (ship &&
         !_stricmp(ship->GetName(), "Blockade Runner"))
     {
-        UE_LOG(LogTemp, Error,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[StarshipAI::Seek BR] ")
             TEXT("Point=%s Yaw=%.4f Pitch=%.4f"),
             *Point.ToString(),
