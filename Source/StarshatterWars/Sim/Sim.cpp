@@ -812,10 +812,18 @@ Sim::CreateElements()
     TSet<MissionElement*> SeenEntries;
     TArray<MissionElement*> SeenSingleUnits;
 
-	ListIter<MissionElement> ElementIter = mission->GetElements();
-
-	while (++ElementIter) {
-		MissionElement* MissionElem = ElementIter.value();
+    TArray<MissionElement*> OrderedElements;
+    for (int SpawnPass=0; SpawnPass<3; ++SpawnPass) {
+        ListIter<MissionElement> SourceIter=mission->GetElements();
+        while (++SourceIter) {
+            MissionElement* Entry=SourceIter.value();
+            if (!Entry) continue;
+            const int EntryPass=Entry->IsSquadron() ? 1 :
+                ((Entry->GetSquadron().length() || Entry->GetCarrier().length()) ? 2 : 0);
+            if (EntryPass==SpawnPass) OrderedElements.Add(Entry);
+        }
+    }
+    for (MissionElement* MissionElem : OrderedElements) {
 
 		if (!MissionElem)
 			continue;
@@ -935,7 +943,7 @@ Sim::CreateElements()
 				MissionElem->GetIFF(),
 				MissionElem->MissionRole());
 
-			Element->SetPlayer(MissionElem->IsPlayer());
+			Element->SetPlayer(MissionElem->GetPlayerIndex());
 			Element->SetCombatGroup(MissionElem->GetCombatGroup());
 			Element->SetCombatUnit(MissionElem->GetCombatUnit());
 			Element->SetCommandAILevel(MissionElem->GetCommandAI());
@@ -1061,8 +1069,19 @@ Sim::CreateElements()
 					}
 				}
 
-				if (Deck) {
-					bAlertPrep = true;
+                // Reserve before mutation: a shortage must not duplicate a partly prepared group.
+                TArray<FIntPoint> LaunchInventory;
+                if (Deck && ShipDesignPtr) {
+                    for (int Sq=0; Sq<HangarPtr->NumSquadrons(); ++Sq) {
+                        if (SquadronIndex>=0 && Sq!=SquadronIndex) continue;
+                        if (HangarPtr->SquadronDesign(Sq)!=ShipDesignPtr) continue;
+                        for (int Slot=0; Slot<HangarPtr->SquadronSize(Sq); ++Slot)
+                            if (HangarPtr->GetState(HangarPtr->GetSlot(Sq, Slot))==Hangar::STORAGE)
+                                LaunchInventory.Add(FIntPoint(Sq, Slot));
+                    }
+                }
+                if (Deck && LaunchInventory.Num()>=MissionElem->Count()) {
+                    bAlertPrep=true;
 
 					if (MissionElem->GetLoadouts().size()) {
 						MissionLoad* MissionLoadPtr = MissionElem->GetLoadouts().at(0);
@@ -1101,7 +1120,9 @@ Sim::CreateElements()
 						ShipDesign* LegacyDesign =
 							ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
 
-						if (LegacyDesign && HangarPtr->FindAvailSlot(LegacyDesign, SquadronLocal, SlotLocal)) {
+						if (LegacyDesign) {
+                            SquadronLocal=LaunchInventory[i].X;
+                            SlotLocal=LaunchInventory[i].Y;
 							bAlertPrep = bAlertPrep &&
 								HangarPtr->GotoAlert(
 									SquadronLocal,
@@ -1120,7 +1141,7 @@ Sim::CreateElements()
 							if (AlertShip) {
 								AlertShip->SetRespawnCount(Respawns);
 
-								if (MissionElem->IsPlayer()) {
+								if (MissionElem->GetPlayerIndex() == i+1) {
 									if (AlertShip->GetRegion()) {
 										AlertShip->GetRegion()->SetPlayerShip(AlertShip);
 									}
@@ -1136,6 +1157,11 @@ Sim::CreateElements()
 				}
 			}
 
+            if (MissionElem->IsAlert()) {
+                UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Group='%hs' Carrier='%hs' Prepared=%d Count=%d"),
+                    MissionElem->GetName().data(), Carrier ? Carrier->GetName() : "MISSING",
+                    bAlertPrep ? 1 : 0, MissionElem->Count());
+            }
 			if (!bAlertPrep) {
 				for (int32 i = 0; i < MissionElem->Count(); i++) {
 					MissionShip* MissionShipPtr = nullptr;
@@ -1267,7 +1293,7 @@ Sim::CreateElements()
 						if (HangarPtr)
 							HangarPtr->FindSlot(NewShip, SquadronIndex, SlotIndex, Hangar::ACTIVE);
 
-						if (NewShip->GetRegion() && MissionElem->IsPlayer())
+						if (NewShip->GetRegion() && MissionElem->GetPlayerIndex() == i+1)
 							NewShip->GetRegion()->SetPlayerShip(NewShip);
 
 						if (NewShip->NumFlightDecks()) {

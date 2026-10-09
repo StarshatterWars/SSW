@@ -1,6 +1,6 @@
 /*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios

@@ -1,10 +1,10 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025–2026. All Rights Reserved.
+    Copyright Â© 2025â€“2026. All Rights Reserved.
 
     ORIGINAL WORK:
     Starshatter 4.5
-    Copyright © 1997–2004 Destroyer Studios LLC
+    Copyright Â© 1997â€“2004 Destroyer Studios LLC
     Original Author: John DiCamillo
 
     SUBSYSTEM:    StarshatterWars

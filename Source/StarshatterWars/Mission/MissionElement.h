@@ -87,12 +87,13 @@ public:
 
     // bool-style naming:
     bool IsPlayer()       const { return player != 0; }
+    int GetPlayerIndex() const { return player; } // One-based legacy player slot.
     bool IsAlert()        const { return alert; }
     bool IsPlayable()     const { return playable; }
     bool IsRogue()        const { return rogue; }
     bool IsInvulnerable() const { return invulnerable; }
 
-    // legacy ìwhat kind of element is itî queries:
+    // legacy ‚Äúwhat kind of element is it‚Äù queries:
     Text GetRoleName()    const;
     FColor GetMarkerColor()  const;
     bool  IsStarship()    const;

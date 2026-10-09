@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
@@ -9,6 +9,7 @@ class UEnhancedInputComponent;
 class UInputMappingContext;
 class UInputAction;
 class SFighterHUDDetails;
+class SEngineeringPopup;
 struct FMissionCameraRig;
 struct FInputActionValue;
 class QuitView;
@@ -89,6 +90,11 @@ protected:
     bool bNextTargetHeld = false;
     void ReleasePreviousMissionTarget();
     void ReleaseNextMissionTarget();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> EngineeringAction;
+    TSharedPtr<SEngineeringPopup> EngineeringPopup;
+    bool bEngineeringPreviousCursor = false;
+    void ToggleEngineering();
+    void CloseEngineering();
     UPROPERTY(Transient) TObjectPtr<UInputAction> RadioMenuAction;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;

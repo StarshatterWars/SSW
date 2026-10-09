@@ -34,6 +34,8 @@
 #include "Drive.h"
 #include "Ship.h"
 #include "Thruster.h"
+#include "NiagaraEmitter.h"
+#include "NiagaraEmitterHandle.h"
 
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
@@ -89,6 +91,42 @@ static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
         }
     }
     Lights.Empty();
+}
+
+// Compact exhaust must follow the completed ship pose, not Niagara's early tick.
+static void ConfigureAttachedShipFX(UNiagaraComponent* FX, AActor* Owner)
+{
+    if (!FX || !Owner) return;
+    FX->SetAbsolute(false, false, false);
+    FX->SetTickBehavior(ENiagaraTickBehavior::ForceTickLast);
+    FX->AddTickPrerequisiteActor(Owner);
+}
+
+static void AuditShipFXSpace(UNiagaraSystem* System)
+{
+    if (!System) return;
+    static TSet<TWeakObjectPtr<UNiagaraSystem>> Audited;
+    const TWeakObjectPtr<UNiagaraSystem> Key(System);
+    if (Audited.Contains(Key)) return;
+    Audited.Add(Key);
+    for (const FNiagaraEmitterHandle& Handle : System->GetEmitterHandles()) {
+        const FVersionedNiagaraEmitterData* Data=Handle.GetEmitterData();
+        if (Handle.GetIsEnabled() && Data && !Data->bLocalSpace)
+            UE_LOG(LogTemp, Warning, TEXT("[ShipFXSpace] %s emitter '%s' uses WORLD space. For a rigid engine plume/flare, enable Local Space in this emitter asset; existing particles otherwise trail during turns."),
+                *System->GetPathName(), *Handle.GetName().ToString());
+    }
+}
+
+static FRotator LegacyJetRotation(EThrusterPortDir Direction)
+{
+    switch (Direction) {
+    case EThrusterPortDir::AFT: return FRotator(0,180,0);
+    case EThrusterPortDir::LEFT: return FRotator(0,-90,0);
+    case EThrusterPortDir::RIGHT: return FRotator(0,90,0);
+    case EThrusterPortDir::TOP: return FRotator(90,0,0);
+    case EThrusterPortDir::BOTTOM: return FRotator(-90,0,0);
+    default: return FRotator::ZeroRotator; // FORE: +X exhaust
+    }
 }
 
 static FRotator ConvertLegacyPortRotation(
@@ -1886,6 +1924,7 @@ void AShipActor::BuildMainEnginesFromRuntime()
         return;
     }
 
+    AuditShipFXSpace(MainEngineEmitterSystem);
     const int32 PortCount = MainDrive->NumPorts();
 
     for (int32 i = 0; i < PortCount; ++i)
@@ -1903,7 +1942,7 @@ void AShipActor::BuildMainEnginesFromRuntime()
         Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
-        Point->SetRelativeLocation(MainDrive->GetPortLocation(i));
+        Point->SetRelativeLocation(ConvertLegacyPortLocation(MainDrive->GetPortLocation(i)));
         Point->SetRelativeRotation(
             ConvertLegacyPortRotation(
                 FRotator(0.0f, 180.0f, 0.0f)));
@@ -1918,6 +1957,8 @@ void AShipActor::BuildMainEnginesFromRuntime()
         if (Emitter)
         {
             Emitter->SetupAttachment(Point);
+            Emitter->SetAutoActivate(false);
+            ConfigureAttachedShipFX(Emitter, this);
             Emitter->RegisterComponent();
 
             Emitter->SetAsset(MainEngineEmitterSystem);
@@ -1929,6 +1970,7 @@ void AShipActor::BuildMainEnginesFromRuntime()
             Emitter->Deactivate();
 
             RuntimeMainEngineEmitters.Add(Emitter);
+            RuntimeMainEngineBaseScales.Add(MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));
         }
     }
     UE_LOG(LogTemp, Log,
@@ -1981,6 +2023,7 @@ void AShipActor::ClearRuntimeMainEngines()
     }
 
     RuntimeMainEngineEmitters.Empty();
+    RuntimeMainEngineBaseScales.Empty();
 
     for (USceneComponent* Point : RuntimeMainEnginePoints)
     {
@@ -2001,7 +2044,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
         {
             if (Emitter)
             {
-                Emitter->Deactivate();
+                Emitter->DeactivateImmediate();
                 Emitter->SetVisibility(false);
                 Emitter->SetHiddenInGame(true);
             }
@@ -2024,50 +2067,17 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float Throttle =
         (float)RuntimeShip->GetThrottle();
 
-    const float RequestAlpha =
-        FMath::Clamp(
-            ThrottleRequest / 100.0f,
-            0.0f,
-            1.0f);
-
-    const bool bRequested =
-        RequestAlpha > 0.01f;
-
-    const float TargetPower =
-        bRequested
-        ? FMath::Max(RequestAlpha, 0.20f)
-        : 0.0f;
-
-    if (bRequested)
-    {
-        MainEngineVisualPower =
-            FMath::FInterpTo(
-                MainEngineVisualPower,
-                TargetPower,
-                DeltaTime,
-                25.0f);
-    }
-    else
-    {
-        MainEngineVisualPower =
-            FMath::FInterpTo(
-                MainEngineVisualPower,
-                0.0f,
-                DeltaTime,
-                40.0f);
-
-        if (MainEngineVisualPower < 0.03f)
-        {
-            MainEngineVisualPower =
-                0.0f;
-        }
-    }
+    // Drive already owns spool/power availability. A second visual interpolation
+    // delays ignition and shutdown and can display a powered-off drive as firing.
+    MainEngineVisualPower = MainDrive->IsPowerOn() && MainDrive->GetStatus()>SYSTEM_STATUS::CRITICAL
+        ? FMath::Clamp(MainDrive->GetThrottle(),0.0f,1.0f) : 0.0f;
 
     const bool bActive =
         MainEngineVisualPower > 0.03f;
 
-    for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
+    for (int32 EngineIndex=0; EngineIndex<RuntimeMainEngineEmitters.Num(); ++EngineIndex)
     {
+        UNiagaraComponent* Emitter=RuntimeMainEngineEmitters[EngineIndex];
         if (!Emitter)
         {
             continue;
@@ -2083,7 +2093,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
                 MainEngineVisualPower);
 
         Emitter->SetRelativeScale3D(
-            RuntimeScale);
+            RuntimeScale * (RuntimeMainEngineBaseScales.IsValidIndex(EngineIndex) ? RuntimeMainEngineBaseScales[EngineIndex] : FVector::OneVector));
 
         Emitter->SetVisibility(
             bActive);
@@ -2114,7 +2124,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
         {
             if (Emitter->IsActive())
             {
-                Emitter->Deactivate();
+                Emitter->DeactivateImmediate();
             }
         }
     }
@@ -2326,6 +2336,8 @@ void AShipActor::BuildThrustersFromRuntime()
 
    
 
+    AuditShipFXSpace(ThrusterFlareSystem);
+    AuditShipFXSpace(ThrusterTrailSystem);
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
@@ -2341,6 +2353,8 @@ void AShipActor::BuildThrustersFromRuntime()
 
         const FVector PortLocation =
             ConvertLegacyPortLocation(Port->Location);
+        const bool bSocket = HullMesh && !Port->SocketName.IsNone() && HullMesh->DoesSocketExist(Port->SocketName);
+        const FRotator JetRotation = Port->Rotation.IsNearlyZero() ? LegacyJetRotation(Port->Direction) : Port->Rotation;
         FX.PointName = Port->PointName;
         FX.Direction = Port->Direction;
         FX.Location = Port->Location;
@@ -2356,12 +2370,13 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Flare)
             {
                 FX.Flare->SetAsset(ThrusterFlareSystem);
-                FX.Flare->SetupAttachment(VFXRoot);
-                FX.Flare->SetRelativeLocation(Port->Location);
+                FX.Flare->SetupAttachment(bSocket ? static_cast<USceneComponent*>(HullMesh) : VFXRoot.Get(), bSocket ? Port->SocketName : NAME_None);
+                FX.Flare->SetRelativeLocation(bSocket ? FVector::ZeroVector : PortLocation);
                 FX.Flare->SetAutoActivate(false);
+                ConfigureAttachedShipFX(FX.Flare, this);
                 FX.Flare->RegisterComponent();
                 FX.Flare->SetRelativeRotation(
-                    ConvertLegacyPortRotation(Port->Rotation));
+                    bSocket ? Port->Rotation : JetRotation);
 
                 FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
                 FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
@@ -2375,11 +2390,12 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Trail)
             {
                 FX.Trail->SetAsset(ThrusterTrailSystem);
-                FX.Trail->SetupAttachment(VFXRoot);
-                FX.Trail->SetRelativeLocation(Port->Location);
+                FX.Trail->SetupAttachment(bSocket ? static_cast<USceneComponent*>(HullMesh) : VFXRoot.Get(), bSocket ? Port->SocketName : NAME_None);
+                FX.Trail->SetRelativeLocation(bSocket ? FVector::ZeroVector : PortLocation);
                 FX.Trail->SetRelativeRotation(
-                    ConvertLegacyPortRotation(Port->Rotation));
+                    bSocket ? Port->Rotation : JetRotation);
                 FX.Trail->SetAutoActivate(false);
+                ConfigureAttachedShipFX(FX.Trail, this);
                 FX.Trail->RegisterComponent();
 
                 FX.Trail->SetVariableFloat(TEXT("Scale"), Port->TrailScale);
@@ -2431,13 +2447,6 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         return;
     }
 
-    // Drive throttle is already normalized to 0..1. Do not substitute velocity:
-    // a coasting ship need not be firing its engines.
-    Drive* MainDrive = RuntimeShip->GetMainDrive();
-    const float DriveBurn = MainDrive && MainDrive->IsPowerOn()
-        && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
-        ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
-
     // Visit each cached emitter once, rather than searching the array per port.
     for (FRuntimeThrusterFX& Entry : RuntimeThrusterFX)
     {
@@ -2451,7 +2460,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
+        const float VisualBurn = Burn;
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(

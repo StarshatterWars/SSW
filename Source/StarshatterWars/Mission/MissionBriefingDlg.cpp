@@ -23,6 +23,7 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "EngineeringPopup.h"
 #include "MissionCameraRig.h"
 #include "InputTriggers.h"
 #include "InputModifiers.h"
@@ -1248,6 +1249,11 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         MissionMenuInput->BindAction(GearToggleAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleMissionGear);
     else UE_LOG(LogTemp,Warning,TEXT("[GearInput] Missing Boolean IA_GearToggle."));
 
+    EngineeringAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_EngineeringPanel.IA_EngineeringPanel"));
+    if (EngineeringAction && EngineeringAction->ValueType == EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(EngineeringAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleEngineering);
+    else UE_LOG(LogTemp,Warning,TEXT("[Engineering] IA_EngineeringPanel must be Boolean and mapped in IMC_FighterHUD."));
+
     RadioMenuAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_RadioMenu.IA_RadioMenu"));
     if (RadioMenuAction) MissionMenuInput->BindAction(RadioMenuAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterRadio);
     RadioChoiceContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
@@ -1342,10 +1348,10 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
     }
-    FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Fighter.IMC_Fighter"));
+    FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
     // Compatibility with the existing asset's current name.
     if (!FighterInputContext)
-        FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
+        FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Fighter.IMC_Fighter"));
     bAddedFighterInputContext = FighterInputContext && !Input->HasMappingContext(FighterInputContext.Get());
     if (bAddedFighterInputContext) Input->AddMappingContext(FighterInputContext.Get(), 1000);
     if (!FighterInputContext)
@@ -1408,6 +1414,8 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    CloseEngineering();
+    EngineeringAction = nullptr;
     if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
     ClearMissionRotationInput();
     if (FighterHUDDetails.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
@@ -1499,7 +1507,7 @@ void UMissionBriefingDlg::NextMissionTarget()
 void UMissionBriefingDlg::ReleaseNextMissionTarget() { bNextTargetHeld = false; }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
@@ -1613,7 +1621,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 }
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
-    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen &&
+    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 void UMissionBriefingDlg::CycleFighterMFDLeft()
@@ -1644,7 +1652,7 @@ void UMissionBriefingDlg::ToggleFighterCautionPanel()
 
 void UMissionBriefingDlg::ToggleFighterHUD()
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
     if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
@@ -1659,7 +1667,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
     if (!bLiveMissionStarted ||
-        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     const float Wheel = Value.Get<float>();
     if (!FMath::IsFinite(Wheel) || FMath::IsNearlyZero(Wheel)) return;
@@ -1671,6 +1679,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX = MissionCameraRig->LookY = MissionCameraRig->RangeInput = 0.0;
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
@@ -2246,7 +2255,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || !IsValid(MissionPreviewCamera)) return;
-    if (bMissionControlsOpen || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (bMissionControlsOpen || EngineeringPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -2446,4 +2455,45 @@ void UMissionBriefingDlg::CycleMissionViewObject()
     const int32 Index = Candidates.IndexOfByKey(Current);
     MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
     MissionCameraRig->ViewObject = Candidates[(Index + 1) % Candidates.Num()];
+}
+
+void UMissionBriefingDlg::ToggleEngineering()
+{
+    if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
+    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    APlayerController* PC=GetOwningPlayer();
+    if (!PC) return;
+    ClearMissionRotationInput();
+    if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
+    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
+    bEngineeringPreviousCursor=PC->bShowMouseCursor;
+    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
+    SAssignNew(EngineeringPopup,SEngineeringPopup)
+        .ResolveShip([Owner]() -> Ship* {
+            if (!Owner.IsValid() || !Owner->bLiveMissionStarted) return nullptr;
+            Sim* Simulation=Sim::GetSim();
+            Ship* Player=Simulation ? Simulation->GetPlayerShip() : nullptr;
+            return Player && !Player->IsDead() ? Player : nullptr;
+        })
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseEngineering();}));
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(EngineeringPopup.ToSharedRef(),1100);
+    FInputModeGameAndUI Mode;
+    Mode.SetWidgetToFocus(EngineeringPopup);
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+    PC->bShowMouseCursor=true;
+}
+
+void UMissionBriefingDlg::CloseEngineering()
+{
+    if (!EngineeringPopup.IsValid()) return;
+    if (GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(EngineeringPopup.ToSharedRef());
+    EngineeringPopup.Reset();
+    if (APlayerController* PC=GetOwningPlayer()) {
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor=bEngineeringPreviousCursor;
+    }
 }

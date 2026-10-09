@@ -25,6 +25,7 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "Sim.h"
+#include "SimRegion.h"
 #include "Instruction.h"
 #include "SimElement.h"
 #include "Mission.h"
@@ -113,6 +114,15 @@ Hangar::ExecFrame(double seconds)
 		if (squadrons[n] && nslots[n] > 0) {
 			for (int i = 0; i < nslots[n]; i++) {
 				HangarSlot* slot = &squadrons[n][i];
+                // Deck may release and clear the slot before this hangar observes LAUNCH.
+                // Do not return a flying fighter's inventory slot to STORAGE.
+                if (slot->ship && slot->state >= ALERT && slot->state <= LAUNCH &&
+                    slot->ship->GetFlightPhase() >= EOPSMode::LAUNCH &&
+                    slot->ship->GetFlightPhase() <= EOPSMode::APPROACH) {
+                    slot->state = ACTIVE;
+                    slot->time = 0;
+                }
+
 
 				switch (slot->state) {
 				case UNAVAIL:
@@ -211,6 +221,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 	}
 
 	if (slot->deck->SpaceLeft(slot->design->type)) {
+        if (!slot->ship) {
 		Sim* sim = Sim::GetSim();
 
 		Text ship_name = slot->squadron;
@@ -223,6 +234,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 			ship->GetCommandAILevel(),
 			slot->loadout);
 
+		if (!slot->ship) return false;
 		Observe(slot->ship);
 
 		if (slot->package) {
@@ -241,10 +253,15 @@ Hangar::FinishPrep(HangarSlot* slot)
 			slot->ship->SetName(name);
 		}
 
+        }
+
 		slot->slot = -1;  // take first available slot
 		if (slot->deck->Spot(slot->ship, slot->slot)) {
-			slot->state = ALERT;
-			return true;
+            slot->state = ALERT;
+            // Includes ships whose prep waits for a free deck spot.
+            if (slot->package && slot->package->GetPlayer()==slot->ship->GetElementIndex() && slot->ship->GetRegion())
+                slot->ship->GetRegion()->SetPlayerShip(slot->ship);
+            return true;
 		}
 
 		UE_LOG(LogTemp, Warning,

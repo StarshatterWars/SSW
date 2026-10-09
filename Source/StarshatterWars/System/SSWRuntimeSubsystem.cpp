@@ -1,4 +1,4 @@
-﻿
+
 #include "SSWRuntimeSubsystem.h"
 
 #include "Math/RandomStream.h"
@@ -778,7 +778,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
         const FVector BasePosition = Position;
         // Move only outward. Each conflict advances beyond that ship's entire
         // clearance sphere; at most one advance per existing actor is necessary.
-        for (int32 Pass = 0; Pass <= MissionPresentationShips.Num(); ++Pass)
+        for (int32 Pass = 0; !RuntimeShip->GetDock() && Pass <= MissionPresentationShips.Num(); ++Pass)
         {
             bool bMoved = false;
             for (const TWeakObjectPtr<AShipActor>& Existing : MissionPresentationShips)
@@ -913,7 +913,7 @@ USSWRuntimeSubsystem::FindRegionActorForRuntimeShip(
 }
 
 FVector
-USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(
+USSWRuntimeSubsystem::GetRegionVisualLocationForRuntimeShip(
     Ship* RuntimeShip) const
 {
     if (!RuntimeShip)
@@ -1031,4 +1031,42 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
     if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
         Builder->ResetTemporaryCutsceneBodyScales();
     MissionPresentationBuilder.Reset();
+}
+
+// Deck positions must share the carrier's visual frame: region-shell offsets,
+// per-group depth and overlap spacing are not valid inside a hangar.
+bool USSWRuntimeSubsystem::GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const
+{
+    if (!Carrier) return false;
+    for (const TWeakObjectPtr<AShipActor>& Entry : MissionPresentationShips) {
+        AShipActor* Actor=Entry.Get();
+        if (!Actor || Actor->IsActorBeingDestroyed() || Actor->GetRuntimeShip()!=Carrier) continue;
+        const FVector Delta=SimPoint-Carrier->GetLocation();
+        const auto& Basis=Carrier->GetCam();
+        const FVector Local(FVector::DotProduct(Delta, Basis.vpn()),
+            FVector::DotProduct(Delta, Basis.vrt()), FVector::DotProduct(Delta, Basis.vup()));
+        OutPoint=Actor->GetActorTransform().TransformPosition(Local);
+        return true;
+    }
+    return false;
+}
+
+FVector USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const
+{
+    const FVector RegionPosition=GetRegionVisualLocationForRuntimeShip(RuntimeShip);
+    if (!RuntimeShip) return RegionPosition;
+    Ship* Carrier=RuntimeShip->GetCarrier();
+    if (!Carrier || Carrier==RuntimeShip || !RuntimeShip->GetDock() ||
+        Carrier->GetRegion()!=RuntimeShip->GetRegion()) return RegionPosition;
+    FVector DeckPosition;
+    if (!GetCarrierVisualPoint(Carrier, RuntimeShip->GetLocation(), DeckPosition)) return RegionPosition;
+    const EOPSMode Phase=RuntimeShip->GetFlightPhase();
+    if (Phase<EOPSMode::LAUNCH || Phase>=EOPSMode::DOCKING) return DeckPosition;
+    // Release into the existing region layout continuously, and reverse on approach.
+    // Keep the entire bay and initial departure in a single rigid frame.
+    const double Radius=FMath::Max(100.0, double(Carrier->GetRadius()));
+    const double Distance=(RuntimeShip->GetLocation()-Carrier->GetLocation()).Size();
+    double Blend=FMath::Clamp((Distance-4.0*Radius)/(8.0*Radius), 0.0, 1.0);
+    Blend=Blend*Blend*(3.0-2.0*Blend);
+    return FMath::Lerp(DeckPosition, RegionPosition, Blend);
 }

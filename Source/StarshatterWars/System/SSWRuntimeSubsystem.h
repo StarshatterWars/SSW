@@ -1,4 +1,4 @@
-﻿/*
+/*
     Project Starshatter Wars
     Fractal Dev Studios
 
@@ -118,6 +118,7 @@ private:
     AActor* FindRegionActorForRuntimeShip(Ship* RuntimeShip) const;
 public:
     FVector GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const;
+    bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
 private:
@@ -129,6 +130,7 @@ private:
     uint32 MissionPresentationSeed = 0;
 
     FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
+    FVector GetRegionVisualLocationForRuntimeShip(Ship* RuntimeShip) const;
 
 private:
     bool bRuntimeInitialized = false;

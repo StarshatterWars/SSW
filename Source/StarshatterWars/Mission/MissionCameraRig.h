@@ -8,6 +8,8 @@
 #include "Ship.h"
 #include "FlightDeck.h"
 #include "SimRegion.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "MissionTargetOverlay.h"
 
 // Presentation adapter for Stars45/CameraDirector modes. Simulation positions
@@ -144,6 +146,10 @@ struct FMissionCameraRig
             const auto& Basis = Player->GetCam();
             Eye = Pose.TransformPosition(FVector(FVector::DotProduct(Offset, Basis.vpn()),
                 FVector::DotProduct(Offset, Basis.vrt()), FVector::DotProduct(Offset, Basis.vup())));
+            if (UGameInstance* GI=PC->GetGameInstance()) {
+                if (USSWRuntimeSubsystem* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>())
+                    Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Deck->CamLoc(), Eye);
+            }
             Rotation = Aim(Bridge - Eye, Up, Rotation);
         }
         else if (Mode == Drop || bTransition)

@@ -1,6 +1,6 @@
 /*  Project Starshatter 4.5
     Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+    Copyright Â© 1997-2004. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         Ship.h

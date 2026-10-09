@@ -1065,7 +1065,11 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             Src.Size,
             Src.HullFactor);
 
-        NewDeck->SetCamLoc(Src.Location);
+        NewDeck->SetCamLoc(Src.CamLocation);
+        NewDeck->SetAzimuth(Src.AzimuthRadians);
+        NewDeck->SetBoundingBox(Src.BoundingBox);
+        for (int32 RunwayIndex=0; RunwayIndex<Src.RunwayPoints.Num() && RunwayIndex<2; ++RunwayIndex)
+            NewDeck->SetRunwayPoint(RunwayIndex, Src.RunwayPoints[RunwayIndex]);
         NewDeck->SetStartPoint(Src.StartPoint);
         NewDeck->SetEndPoint(Src.EndPoint);
 

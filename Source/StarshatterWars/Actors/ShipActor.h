@@ -396,6 +396,8 @@ public:
     UPROPERTY(Transient)
     TArray<TObjectPtr<UNiagaraComponent>> RuntimeMainEngineEmitters;
 
+    TArray<FVector> RuntimeMainEngineBaseScales;
+
     UPROPERTY(Transient)
     TObjectPtr<UAudioComponent> EngineAudioComponent;
 

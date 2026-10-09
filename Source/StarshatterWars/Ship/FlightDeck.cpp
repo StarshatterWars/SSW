@@ -1,6 +1,6 @@
 /*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios LLC
@@ -202,6 +202,10 @@ FlightDeck::FlightDeck()
 {
 	name = "Flight Deck";
 	abrv = "FD";
+	box = start_rel = end_rel = cam_rel = FVector::ZeroVector;
+	start_point = end_point = cam_loc = FVector::ZeroVector;
+	for (int i=0; i<NUM_APPROACH_PTS; ++i) approach_rel[i] = approach_point[i] = FVector::ZeroVector;
+	for (int i=0; i<2; ++i) runway_rel[i] = runway_point[i] = FVector::ZeroVector;
 }
 
 // +----------------------------------------------------------------------+
@@ -216,6 +220,7 @@ FlightDeck::FlightDeck(const FlightDeck& s)
 	num_catsounds(0), num_approach_pts(s.num_approach_pts)
 {
 	Mount(s);
+	box = s.box;
 
 	// NOTE: MemDebug allocation removed for Unreal builds
 	slots = new FlightDeckSlot[num_slots];
@@ -764,9 +769,7 @@ FlightDeck::Orient(const Physical* rep)
 	YAxis = YAxis.GetSafeNormal();
 	ZAxis = ZAxis.GetSafeNormal();
 
-	// Defensive orthonormalization:
-	ZAxis = (ZAxis - (ZAxis | XAxis) * XAxis).GetSafeNormal();
-	YAxis = (XAxis ^ ZAxis).GetSafeNormal();
+	// Preserve camera UP: right cross forward would invert it.
 
 	// Build world transform from camera frame:
 	const FMatrix CamM(
@@ -777,17 +780,20 @@ FlightDeck::Orient(const Physical* rep)
 	);
 
 	const FTransform RepXform(CamM);
+	const auto ToWorld = [&](const FVector& Local) {
+		return RepLoc + XAxis*Local.X + YAxis*Local.Y + ZAxis*Local.Z;
+	};
 
 	// Transform deck-relative points into world space:
-	start_point = RepXform.TransformPosition(start_rel);
-	end_point = RepXform.TransformPosition(end_rel);
-	cam_loc = RepXform.TransformPosition(cam_rel);
+	start_point = ToWorld(start_rel);
+	end_point = ToWorld(end_rel);
+	cam_loc = ToWorld(cam_rel);
 
 	for (int i = 0; i < num_approach_pts; i++)
-		approach_point[i] = RepXform.TransformPosition(approach_rel[i]);
+		approach_point[i] = ToWorld(approach_rel[i]);
 
 	for (int i = 0; i < num_slots; i++)
-		slots[i].spot_loc = RepXform.TransformPosition(slots[i].spot_rel);
+		slots[i].spot_loc = ToWorld(slots[i].spot_rel);
 
 	// ------------------------------------------------------------------
 	// Recovery deck logic:
@@ -797,8 +803,8 @@ FlightDeck::Orient(const Physical* rep)
 	{
 		if (carrier && carrier->IsAirborne())
 		{
-			runway_point[0] = RepXform.TransformPosition(runway_rel[0]);
-			runway_point[1] = RepXform.TransformPosition(runway_rel[1]);
+			runway_point[0] = ToWorld(runway_rel[0]);
+			runway_point[1] = ToWorld(runway_rel[1]);
 		}
 
 		if (num_hoops < 1)
@@ -841,7 +847,7 @@ FlightDeck::Orient(const Physical* rep)
 	// Mount + light:
 	// ------------------------------------------------------------------
 
-	mount_loc = RepXform.TransformPosition(mount_rel);
+	mount_loc = ToWorld(mount_rel);
 
 	if (light)
 		light->MoveTo(mount_loc);
@@ -874,7 +880,7 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 
 	// Build ship compatibility mask from classification
 	// (Starshatter-style: one bit per ship class)
-	const uint32 ShipMask = 1u << static_cast<uint32>(s->GetClassification());
+	const uint32 ShipMask = static_cast<uint32>(s->GetClassification());
 
 	// If caller did not specify a slot, find first compatible free slot
 	if (outIndex < 0)
@@ -901,6 +907,9 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 	// Slot must be empty
 	if (slots[outIndex].ship != nullptr)
 		return false;
+
+	if (!carrier || (static_cast<uint32>(slots[outIndex].filter) & ShipMask) == 0) return false;
+	Orient(carrier); // Initialize spots before the first simulation tick.
 
 	// Assign ship to slot
 	slots[outIndex].state = READY;
@@ -1070,15 +1079,8 @@ FlightDeck::Recover(Ship* s)
 
 			if (s->IsAirborne())
 			{
-				// UE FIX: FVector uses Z as "up" in Unreal. Starshatter often used Y as up.
-				// If your port standardizes to Unreal coordinates, use Z; if not, keep Y.
-				// Pick ONE and keep it consistent engine-wide.
-				const double Altitude =
-#if 1   // set to 0 if your world-up is Y
-					ShipLoc.Z - DeckMountLoc.Z;
-#else
-					ShipLoc.Y - DeckMountLoc.Y;
-#endif
+                // Simulation remains legacy Y-up; only visual actors convert to UE Z-up.
+                const double Altitude = ShipLoc.Y - DeckMountLoc.Y;
 
 				if (DockDistance < GetRadius() * 3.0 && Altitude < s->GetRadius())
 					Dock(s);

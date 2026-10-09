@@ -3805,6 +3805,8 @@ Ship::ExecSystems(double seconds)
             System->Orient(this);
             System->ExecFrame(seconds);
         }
+        // Hangar is not a system; Unreal visuals still need its launch/recovery queue.
+        if (hangar) hangar->ExecFrame(seconds);
         return;
     }
 
@@ -4095,6 +4097,10 @@ Ship::DockFrame(double Seconds)
 		if (light)
 			light->MoveTo(cam.Pos());
 
+	}
+
+	// Power and engine spool must run for Unreal actors without a legacy rep.
+	{
 		ListIter<SimSystem> Iter = systems;
 		while (++Iter)
 			Iter->Orient(this);
@@ -4253,6 +4259,16 @@ Ship::StatFrame(double Seconds)
 			EnableShadows(!bDisableShadows);
 		}
 	}
+
+    if (!rep) {
+        if (hangar) hangar->ExecFrame(Seconds);
+        for (int DeckIndex=0; DeckIndex<flight_decks.size(); ++DeckIndex) {
+            FlightDeck* Deck=flight_decks[DeckIndex];
+            if (!Deck) continue;
+            Deck->Orient(this);
+            Deck->ExecFrame(Seconds);
+        }
+    }
 
 	if (shieldRep && rep) {
 		Solid* SolidRep = (Solid*)rep;
@@ -6906,6 +6922,7 @@ bool Ship::HasManualThrottle() const
 
 void Ship::SetManualThrottle(double percent)
 {
+    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     EnableManualFlight();
     if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
@@ -6929,6 +6946,7 @@ namespace
 
 void Ship::SetManualRotationAxis(int32 Axis, double Value)
 {
+    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !sim ||
         sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     Value = FMath::Clamp(Value, -1.0, 1.0);
@@ -6968,6 +6986,7 @@ void Ship::ExecManualRotation(double Seconds)
 
 void Ship::EnableManualFlight()
 {
+    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (bManualRotation || !sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
     if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
     delete dir;
@@ -6979,6 +6998,7 @@ void Ship::EnableManualFlight()
 
 void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 {
+    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !sim || sim->GetPlayerShip()!=this ||
         InTransition() || IsDead() || IsDying()) return;
     if (!bManualRotation && FMath::Abs(Value)<0.001) return;
@@ -6988,6 +7008,7 @@ void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 
 void Ship::SetManualAugmenter(bool Enabled)
 {
+    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
     if (Enabled) EnableManualFlight();
     SetAugmenter(Enabled);
