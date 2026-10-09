@@ -492,6 +492,9 @@ void AShipActor::RebuildMainEngineEmitters()
     // Early out
     // ----------------------------------------------------
 
+    // A bound simulation drive owns engine exhaust; never add the fallback set.
+    if (RuntimeShip) return;
+
     if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
     {
         UE_LOG(LogTemp, Warning,
@@ -1867,6 +1870,12 @@ void AShipActor::BuildMainEnginesFromRuntime()
         return;
     }
 
+    // Match legacy's one exhaust location per drive port. Retire any generated
+    // fallback exhaust/lights left from Blueprint construction before binding.
+    ClearComponentArray(MainEngineEmitters);
+    ClearPointLights(MainEngineLights);
+    if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem) return;
+
     Drive* MainDrive = RuntimeShip->GetMainDrive();
 
     if (!MainDrive)
@@ -1922,6 +1931,11 @@ void AShipActor::BuildMainEnginesFromRuntime()
             RuntimeMainEngineEmitters.Add(Emitter);
         }
     }
+    UE_LOG(LogTemp, Log,
+        TEXT("[EnginePortCount] BP=%s Ship='%hs' DrivePorts=%d RuntimeEngineEmitters=%d FallbackEmitters=%d"),
+        *GetClass()->GetName(), RuntimeShip->GetName(), PortCount,
+        RuntimeMainEngineEmitters.Num(), MainEngineEmitters.Num());
+
 }
 
 void AShipActor::ClearRuntimeNavLights()
