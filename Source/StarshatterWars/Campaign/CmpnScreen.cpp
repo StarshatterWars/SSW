@@ -711,7 +711,14 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
     if (CompletionStage < 1)
     {
         MusicManager::SetMode(MusicMode::MENU);
-        Mouse::Show(!IsCmpSceneShown());
+        // Cursor visibility is safe to maintain here. Mouse::Show also calls
+        // SetInputMode, which releases Slate mouse capture; doing that each
+        // frame cancels UButton's press/release click in separate game windows.
+        // Dialog open/close paths own input mode and widget focus instead.
+        if (APlayerController* CursorController = GetOwningPlayer())
+        {
+            CursorController->bShowMouseCursor = !IsCmpSceneShown();
+        }
     }
 }
 
@@ -761,7 +768,9 @@ void UCmpnScreen::ShowCmdDlg()
             PC->SetInputMode(Mode);
         }
 
-        Mouse::Show(true);
+        // The focused GameAndUI mode above is authoritative. Do not follow it
+        // with Mouse::Show(), which replaces it with an unfocused default mode.
+        UE_LOG(LogTemp, Log, TEXT("[OperationsInput] Command dialog focused; per-frame capture reset disabled."));
     }
 }
 

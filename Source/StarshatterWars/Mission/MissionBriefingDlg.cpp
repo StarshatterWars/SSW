@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -108,6 +108,7 @@
 // Input:
 #include "InputCoreTypes.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerInput.h"
 
 // Optional sound:
 #include "SSWGameInstance.h"
@@ -1129,6 +1130,21 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Game.IMC_Game"));
     UInputAction* Action = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Quit.IA_Quit"));
     if (!MissionMenuContext || !Action) return false;
+
+    // BaseInput.ini binds F1-F5 to viewmode commands outside Enhanced Input.
+    // Remove only those display-mode commands from this player's live bindings.
+    // This is idempotent and also covers shifted variants of the same keys.
+    if (UPlayerInput* PlayerInput = PC->PlayerInput)
+    {
+        const int32 Removed = PlayerInput->DebugExecBindings.RemoveAll([](const FKeyBind& Binding)
+        {
+            const bool bCameraKey = Binding.Key == EKeys::F1 || Binding.Key == EKeys::F2 ||
+                Binding.Key == EKeys::F3 || Binding.Key == EKeys::F4 || Binding.Key == EKeys::F5;
+            return bCameraKey && Binding.Command.TrimStart().StartsWith(TEXT("viewmode "), ESearchCase::IgnoreCase);
+        });
+        UE_LOG(LogTemp, Log, TEXT("[MissionCamera] Removed %d UE F1-F5 viewmode debug bindings."), Removed);
+    }
+
     MissionMenuInput = NewObject<UEnhancedInputComponent>(PC);
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;

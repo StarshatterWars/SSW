@@ -1,4 +1,4 @@
-﻿/*=============================================================================
+/*=============================================================================
     Project:        Starshatter Wars
     Studio:         Fractal Dev Games
     Copyright:      (C) 2024-2026. All Rights Reserved.
@@ -463,11 +463,16 @@ protected:
     // =====================================================================
     // DataTables (kept intact)
     // =====================================================================
-    UDataTable* CampaignDataTable;
-    UDataTable* CampaignActionDataTable;
-    UDataTable* CombatGroupDataTable;
-    UDataTable* OrderOfBattleDataTable;
-    UDataTable* CampaignOOBDataTable;
+    UPROPERTY(Transient)
+    UDataTable* CampaignDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* CampaignActionDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* CombatGroupDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* OrderOfBattleDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* CampaignOOBDataTable = nullptr;
 
     // =====================================================================
     // DT row scratch + arrays (kept intact)
@@ -521,15 +526,22 @@ protected:
     FS_CampaignAction NewCampaignAction;
 
     // DataTables (additional)
-    UDataTable* ZonesDataTable;
-    UDataTable* ShipDesignDataTable;
-    UDataTable* SystemDesignDataTable;
+    UPROPERTY(Transient)
+    UDataTable* ZonesDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* ShipDesignDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* SystemDesignDataTable = nullptr;
     
-    UDataTable* AwardsDataTable;
-    UDataTable* RanksDataTable;
-    UDataTable* MedalsDataTable;
+    UPROPERTY(Transient)
+    UDataTable* AwardsDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* RanksDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* MedalsDataTable = nullptr;
 
-    UDataTable* CutsceneDataTable;
+    UPROPERTY(Transient)
+    UDataTable* CutsceneDataTable = nullptr;
 
 	FS_Campaign ActiveCampaign;
 

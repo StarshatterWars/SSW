@@ -1,4 +1,4 @@
-﻿/*
+/*
     Project Starshatter Wars
     Fractal Dev Games
     Copyright (C) 2024-2026.
@@ -7141,6 +7141,27 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: BEGIN"));
 
+    // Retained by reflected references; validate before allocating runtime groups.
+    if (!IsValid(CampaignDataTable) || !IsValid(CombatGroupDataTable))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Required campaign or combat-group table is unavailable."));
+        return;
+    }
+    if (CampaignDataTable->GetRowStruct() != FS_Campaign::StaticStruct() ||
+        CombatGroupDataTable->GetRowStruct() != FS_CombatGroup::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Asset registry table bindings have incorrect row types."));
+        return;
+    }
+    if (SelectedCampaignRowName.IsNone() ||
+        !CampaignDataTable->FindRow<FS_Campaign>(SelectedCampaignRowName, TEXT("BuildCombatRoster")))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Selected campaign row '%s' is unavailable."),
+            *SelectedCampaignRowName.ToString());
+        return;
+    }
+
+
 	if (CombatRosterData.Num() == 0)
 	{
 		ReadCombatRosterData();
@@ -7332,11 +7353,17 @@ void UStarshatterGameDataSubsystem::ReadCombatants()
 {
 	CombatantData.Empty();
 
-	if (!CampaignDataTable)
+	if (!IsValid(CampaignDataTable))
 	{
-		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable is NULL"));
+		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable is unavailable"));
 		return;
 	}
+
+    if (CampaignDataTable->GetRowStruct() != FS_Campaign::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatants: CampaignDataTable has an incorrect row type."));
+        return;
+    }
 
 	if (SelectedCampaignRowName.IsNone())
 	{
