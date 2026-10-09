@@ -1,5 +1,6 @@
-﻿#pragma once
+#pragma once
 #include "Widgets/SLeafWidget.h"
+#include "DamagePanelData.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 
@@ -44,7 +45,8 @@ private:
     bool bShowWeapons = true;
     bool bShowCaution = true;
     EMode Modes[2] = { EMode::Ship, EMode::FOV };
-    TArray<FRow> StatusRows, DamageRows;
+    TArray<FRow> StatusRows;
+    TArray<SSWDamagePanel::FCell> DamageRows;
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;

@@ -25,6 +25,7 @@
 #include "MissionBriefingDlg.h"
 #include "EngineeringPopup.h"
 #include "WeaponsPopup.h"
+#include "ObjectivesPopup.h"
 #include "MissionCameraRig.h"
 #include "InputTriggers.h"
 #include "InputModifiers.h"
@@ -1357,6 +1358,10 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (bAddedFighterInputContext) Input->AddMappingContext(FighterInputContext.Get(), 1000);
     if (!FighterInputContext)
         UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing IMC_Fighter (or IMC_FighterHUD) in /Game/Input."));
+    ObjectivesPanelAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_ObjectivesPanel.IA_ObjectivesPanel"));
+    if(ObjectivesPanelAction && ObjectivesPanelAction->ValueType==EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(ObjectivesPanelAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleObjectivesPopup);
+    else UE_LOG(LogTemp,Warning,TEXT("[MissionHUD] Create Boolean IA_ObjectivesPanel and map it in IMC_FighterHUD."));
     WeaponsPanelAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_WeaponsPanel.IA_WeaponsPanel"));
     if (WeaponsPanelAction && WeaponsPanelAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(WeaponsPanelAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterWeaponsPanel);
@@ -1415,6 +1420,8 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    CloseObjectivesPopup();
+    ObjectivesPanelAction=nullptr;
     CloseWeaponsPopup();
     CloseEngineering();
     EngineeringAction = nullptr;
@@ -1509,7 +1516,7 @@ void UMissionBriefingDlg::NextMissionTarget()
 void UMissionBriefingDlg::ReleaseNextMissionTarget() { bNextTargetHeld = false; }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
@@ -1623,7 +1630,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 }
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
-    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() &&
+    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 void UMissionBriefingDlg::CycleFighterMFDLeft()
@@ -1644,6 +1651,7 @@ void UMissionBriefingDlg::CycleFighterWeapon()
 
 void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
 {
+    CloseObjectivesPopup();
     CloseEngineering();
     if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
     if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
@@ -1695,7 +1703,7 @@ void UMissionBriefingDlg::ToggleFighterCautionPanel()
 
 void UMissionBriefingDlg::ToggleFighterHUD()
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
     if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
@@ -1710,7 +1718,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
     if (!bLiveMissionStarted ||
-        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() ||
+        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     const float Wheel = Value.Get<float>();
     if (!FMath::IsFinite(Wheel) || FMath::IsNearlyZero(Wheel)) return;
@@ -1722,6 +1730,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    if(ObjectivesPopup.IsValid()){CloseObjectivesPopup();return;}
     if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
     if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
     ClearMissionRotationInput();
@@ -2299,7 +2308,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || !IsValid(MissionPreviewCamera)) return;
-    if (bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -2503,6 +2512,7 @@ void UMissionBriefingDlg::CycleMissionViewObject()
 
 void UMissionBriefingDlg::ToggleEngineering()
 {
+    CloseObjectivesPopup();
     CloseWeaponsPopup();
     if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
     if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
@@ -2542,3 +2552,43 @@ void UMissionBriefingDlg::CloseEngineering()
         PC->bShowMouseCursor=bEngineeringPreviousCursor;
     }
 }
+
+void UMissionBriefingDlg::ToggleObjectivesPopup()
+{
+    CloseEngineering();
+    CloseWeaponsPopup();
+    if (ObjectivesPopup.IsValid()) { CloseObjectivesPopup(); return; }
+    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    APlayerController* PC=GetOwningPlayer();
+    if (!PC) return;
+    ClearMissionRotationInput();
+    if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
+    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
+    bObjectivesPreviousCursor=PC->bShowMouseCursor;
+    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
+    SAssignNew(ObjectivesPopup,SObjectivesPopup)
+        .IsMissionActive([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted;})
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseObjectivesPopup();}));
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(ObjectivesPopup.ToSharedRef(),1100);
+    FInputModeGameAndUI Mode;
+    Mode.SetWidgetToFocus(ObjectivesPopup);
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+    PC->bShowMouseCursor=true;
+}
+
+void UMissionBriefingDlg::CloseObjectivesPopup()
+{
+    if (!ObjectivesPopup.IsValid()) return;
+    if (GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(ObjectivesPopup.ToSharedRef());
+    ObjectivesPopup.Reset();
+    if (APlayerController* PC=GetOwningPlayer()) {
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor=bObjectivesPreviousCursor;
+    }
+}
+
+

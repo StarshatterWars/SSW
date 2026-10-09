@@ -17,6 +17,9 @@
 #include "Ship.h"
 #include "WeaponGroup.h"
 #include "Weapon.h"
+#include "SimContact.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Notifications/SProgressBar.h"
 
 // Legacy WepView interaction, hosted independently of the panel registry.
 // The host supplies current simulation ownership, availability, and close behavior.
@@ -47,20 +50,9 @@ public:
             }
         }
         ChildSlot
-        [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-         .BorderBackgroundColor(FLinearColor(0,0,0,0.25f)).Padding(20)
-         .HAlign(HAlign_Center).VAlign(VAlign_Top)
-         [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
-          [SNew(SBox).WidthOverride(1024).HeightOverride(350)
-           [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.005f,0.02f,0.035f,0.95f)).Padding(8)
-            [SNew(SOverlay)
-             +SOverlay::Slot().VAlign(VAlign_Top)
-              [SNew(SBox).HeightOverride(180)
-               [SNew(SHorizontalBox)
-                +SHorizontalBox::Slot()[SNew(SImage).Image(&Brushes[0]).ColorAndOpacity(Blue())]
-                +SHorizontalBox::Slot()[SNew(SImage).Image(&Brushes[1]).ColorAndOpacity(Blue())]]]
-             +SOverlay::Slot()[SAssignNew(Root,SVerticalBox)]]]]]];
+        [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+         [SNew(SBox).WidthOverride(1100).HeightOverride(740)
+          [SAssignNew(Root,SVerticalBox)]]];
         Rebuild();
     }
 
@@ -79,6 +71,7 @@ public:
     virtual void Tick(const FGeometry& Geometry,double Time,float Delta) override
     {
         SCompoundWidget::Tick(Geometry,Time,Delta);
+        if(Time>=NextContactRefresh){NextContactRefresh=Time+0.5;RefreshContacts();}
         Ship* P=Player();
         FString NewSignature=FString::Printf(TEXT("%p"),static_cast<void*>(P));
         if (P) for (int32 I=0; I<P->GetWeapons().size(); ++I)
@@ -142,51 +135,114 @@ private:
         const FString Amount=Unlimited ? TEXT("UNLIMITED") : FString::FromInt(Ammo);
         return FString::Printf(TEXT("AMMO  %s\nCHARGE  %.0f%%\nPOWER  %d / %d"),*Amount,Count?Charge/Count:0.0,Powered,Count);
     }
+    Ship* ContactShip(Ship* Identity) const {
+        auto* P=Player(); if (!P) return nullptr;
+        auto& Contacts=P->GetContactList();
+        for (int32 I=0; I<Contacts.size(); ++I) {
+            auto* C=Contacts[I];
+            if (C && C->GetShip()==Identity && C->Visible(P))
+                return Identity && !Identity->IsDead() ? Identity : nullptr;
+        }
+        return nullptr;
+    }
+    TSharedRef<SWidget> Frame(TSharedRef<SWidget> Content) {
+        return SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(FLinearColor(0.01f,0.025f,0.04f,0.94f)).Padding(8)[Content];
+    }
+    void RefreshContacts() {
+        if (!ContactsBox.IsValid()) return;
+        auto* P=Player();
+        FString State=FString::Printf(TEXT("%p"),static_cast<void*>(P));
+        if(P){
+            State+=FString::Printf(TEXT(":%p:%p"),static_cast<void*>(P->GetTarget()),static_cast<void*>(P->GetSubTarget()));
+            auto& List=P->GetContactList();
+            for(int32 J=0;J<List.size();++J)if(auto* C=List[J])
+                if(C->Visible(P) && C->GetShip())State+=FString::Printf(TEXT(";%p"),static_cast<void*>(C->GetShip()));
+            if(auto* T=dynamic_cast<Ship*>(P->GetTarget()))for(int32 J=0;J<T->GetSystems().size();++J)
+                if(auto* Sys=T->GetSystems()[J])State+=FString::Printf(TEXT(";%p:%.0f"),static_cast<void*>(Sys),Sys->GetAvailability());
+        }
+        if(State==ContactState)return;
+        ContactState=State;
+        ContactsBox->ClearChildren(); SystemsBox->ClearChildren();
+        if (!P) return;
+        auto& Contacts=P->GetContactList();
+        for (int32 I=0; I<Contacts.size(); ++I) {
+            auto* C=Contacts[I]; auto* T=C?C->GetShip():nullptr;
+            if (!T || T==P || !C->Visible(P) || T->IsDead()) continue;
+            ContactsBox->AddSlot().AutoHeight().Padding(0,2)
+            [SNew(SButton).IsFocusable(false)
+             .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->SetTarget(Current);RefreshContacts();return FReply::Handled();})
+             [Label(FString::Printf(TEXT("%s%hs"),P->GetTarget()==T?TEXT("> "):TEXT(""),T->GetName()),14)]];
+        }
+        auto* Target=dynamic_cast<Ship*>(P->GetTarget());
+        if (!Target) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Select a ship contact."),14)];return;}
+        for (int32 I=0; I<Target->GetSystems().size(); ++I) {
+            auto* System=Target->GetSystems()[I]; if (!System) continue;
+            SystemsBox->AddSlot().AutoHeight().Padding(0,2)
+            [SNew(SButton).IsFocusable(false)
+             .OnClicked_Lambda([this,Target,System](){
+                auto* Current=ContactShip(Target);
+                if (Operable() && Current && Player()->GetTarget()==Current) {
+                    for (int32 J=0;J<Current->GetSystems().size();++J)
+                        if (Current->GetSystems()[J]==System) {Player()->SetTarget(Current,System);break;}
+                }
+                RefreshContacts();return FReply::Handled();})
+             [Label(FString::Printf(TEXT("%s%hs  %.0f%%"),P->GetSubTarget()==System?TEXT("> "):TEXT(""),System->GetName(),System->GetAvailability()),14)]];
+        }
+    }
     void Rebuild() {
         Root->ClearChildren();
-        Root->AddSlot().AutoHeight().HAlign(HAlign_Center).Padding(0,4,0,18)[Label(TEXT("TACTICAL WEAPONS"),20)];
-        TSharedPtr<SHorizontalBox> Columns;
-        Root->AddSlot().FillHeight(1)[SAssignNew(Columns,SHorizontalBox)];
-        Ship* P=Player(); const int32 Count=P?P->GetWeapons().size():0;
-        if (!Count) Columns->AddSlot().HAlign(HAlign_Center)[Label(TEXT("No weapon groups available."))];
-        for (int32 Slot=0; Slot<4 && Page*4+Slot<Count; ++Slot) {
-            const int32 I=Page*4+Slot;
-            auto* G=Group(I); if (!G) continue;
-            Columns->AddSlot().FillWidth(1).Padding(8)
-            [SNew(SVerticalBox)
-             +SVerticalBox::Slot().AutoHeight()
-              [SNew(SButton).IsFocusable(false).ToolTipText(Text(TEXT("Hold to fire this weapon group (legacy TAC control).")))
-               .IsEnabled_Lambda([this,I](){auto* Current=Group(I); return Operable() && Current && Current->NumWeapons()>0 && Current->GetFiringOrders()==WeaponsOrders::MANUAL;})
-               .OnPressed_Lambda([this,I](){if (Operable()) HeldGroup=I;})
+        Root->AddSlot().AutoHeight()[Frame(Label(TEXT("TACTICAL WEAPONS"),20))];
+        // WepDlg.frm camera area: keep the live mission scene visible, without
+        // spawning a duplicate world or allocating another scene capture.
+        Root->AddSlot().FillHeight(1)[SNew(SBox)];
+        TSharedPtr<SVerticalBox> Rows;
+        ContactState.Empty();
+        ContactsBox=SNew(SVerticalBox); SystemsBox=SNew(SVerticalBox);
+        auto ContactScroll=SNew(SScrollBox)+SScrollBox::Slot()[ContactsBox.ToSharedRef()];
+        auto SystemScroll=SNew(SScrollBox)+SScrollBox::Slot()[SystemsBox.ToSharedRef()];
+        auto ContactsPane=SNew(SVerticalBox)
+            +SVerticalBox::Slot().AutoHeight()[Label(TEXT("CONTACT LIST"))]
+            +SVerticalBox::Slot().FillHeight(1)[ContactScroll];
+        auto SystemsPane=SNew(SVerticalBox)
+            +SVerticalBox::Slot().AutoHeight()[Label(TEXT("TARGET SYSTEMS"))]
+            +SVerticalBox::Slot().FillHeight(1)[SystemScroll];
+        auto Bottom=SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().FillWidth(1.7f).Padding(4)[SAssignNew(Rows,SVerticalBox)]
+            +SHorizontalBox::Slot().FillWidth(1).Padding(4)[ContactsPane]
+            +SHorizontalBox::Slot().FillWidth(1).Padding(4)[SystemsPane];
+        Root->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(240)[Frame(Bottom)]];
+        auto* P=Player(); const int32 Count=P?P->GetWeapons().size():0;
+        if (!Count) Rows->AddSlot().AutoHeight()[Label(TEXT("No weapon groups."))];
+        for (int32 Slot=0;Slot<4 && Page*4+Slot<Count;++Slot) {
+            const int32 I=Page*4+Slot;auto* G=Group(I);if(!G)continue;
+            Rows->AddSlot().FillHeight(1).Padding(0,3)
+            [SNew(SHorizontalBox)
+             +SHorizontalBox::Slot().FillWidth(1.5f)
+              [SNew(SButton).IsFocusable(false).ToolTipText(Text(TEXT("Hold to request group fire")))
+               .IsEnabled_Lambda([this,I](){auto* W=Group(I);return Operable() && W && W->NumWeapons()>0 && W->GetFiringOrders()==WeaponsOrders::MANUAL;})
+               .OnPressed_Lambda([this,I](){if(Operable())HeldGroup=I;})
                .OnReleased_Lambda([this](){StopFire();})
-               [SNew(SBox).HeightOverride(36)
-                [SNew(SOverlay)
-                 +SOverlay::Slot()[SNew(SImage).Image(&Brushes[2]).ColorAndOpacity(Blue())]
-                 +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)[Label(ANSI_TO_TCHAR(G->Name()))]]]]
-             +SVerticalBox::Slot().AutoHeight().Padding(0,6)
-              [SNew(SHorizontalBox)
-               +SHorizontalBox::Slot()[OrderButton(I,WeaponsOrders::MANUAL,3,TEXT("MAN"))]
-               +SHorizontalBox::Slot()[OrderButton(I,WeaponsOrders::AUTO,4,TEXT("AUTO"))]
-               +SHorizontalBox::Slot()[OrderButton(I,WeaponsOrders::POINT_DEFENSE,5,TEXT("DEF"))]]
-             +SVerticalBox::Slot().AutoHeight().Padding(4,14)
-              [SNew(STextBlock).ColorAndOpacity(Blue()).Font(FCoreStyle::GetDefaultFontStyle("Regular",16))
-               .Text_Lambda([this,I](){return Text(Readout(I));})]];
+               [Label(ANSI_TO_TCHAR(G->Name()),14)]]
+             +SHorizontalBox::Slot().AutoWidth().Padding(3)[SNew(SBox).WidthOverride(12)
+              [SNew(SProgressBar).BarFillType(EProgressBarFillType::BottomToTop)
+               .Percent_Lambda([this,I](){auto* W=Group(I);double Sum=0;int32 N=0;if(W)for(int32 J=0;J<W->NumWeapons();++J)if(auto* Gun=W->GetWeapon(J)){if(Gun->GetCapacity()>0){Sum+=Gun->Charge();++N;}}
+                   return TOptional<float>(N?FMath::Clamp(float(Sum/N/100),0.0f,1.0f):0.0f);})]]
+             +SHorizontalBox::Slot().FillWidth(0.65f)[OrderButton(I,WeaponsOrders::MANUAL,3,TEXT("MAN"))]
+             +SHorizontalBox::Slot().FillWidth(0.65f)[OrderButton(I,WeaponsOrders::AUTO,4,TEXT("AUTO"))]
+             +SHorizontalBox::Slot().FillWidth(0.65f)[OrderButton(I,WeaponsOrders::POINT_DEFENSE,5,TEXT("DEF"))]
+             +SHorizontalBox::Slot().FillWidth(1).Padding(5,0)
+              [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",10)).ColorAndOpacity(Blue()).Text_Lambda([this,I](){return Text(Readout(I));})]];
         }
-        Root->AddSlot().AutoHeight().Padding(8)
-        [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Bold",16))
-         .Text_Lambda([this](){auto* Current=Player(); if (!Current || !Current->GetTarget())return Text(TEXT("NO TARGET"));
-             auto* Sub=Current->GetSubTarget();return Text(FString(ANSI_TO_TCHAR(Sub?Sub->Abbreviation():Current->GetTarget()->GetName())).ToUpper());})
-         .ColorAndOpacity_Lambda([this](){auto* Current=Player();auto* Sub=Current?Current->GetSubTarget():nullptr;
-             if (!Sub) return Blue();
-             if (Sub->GetStatus()==SYSTEM_STATUS::DESTROYED || Sub->GetStatus()==SYSTEM_STATUS::CRITICAL)return FLinearColor::Red;
-             if (Sub->GetStatus()==SYSTEM_STATUS::DEGRADED)return FLinearColor::Yellow;
-             if (Sub->GetStatus()==SYSTEM_STATUS::MAINT && FMath::Fmod(FPlatformTime::Seconds(),0.5)<0.25)return FLinearColor(0.03f,0.03f,0.03f);
-             return Blue();})];
-        Root->AddSlot().AutoHeight()
-        [SNew(SHorizontalBox)
-         +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).IsEnabled(Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[Label(TEXT("Previous"))]]
-         +SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center)[Label(FString::Printf(TEXT("%d / %d"),Page+1,FMath::Max(1,(Count+3)/4))) ]
-         +SHorizontalBox::Slot().AutoWidth().Padding(0,0,12,0)[SNew(SButton).IsEnabled((Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[Label(TEXT("Next"))]]
-         +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]]];
+        auto Footer=SNew(SHorizontalBox)
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).IsEnabled(Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[Label(TEXT("Previous"))]]
+          +SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center)[Label(FString::Printf(TEXT("%d / %d"),Page+1,FMath::Max(1,(Count+3)/4)))]
+          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).IsEnabled((Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[Label(TEXT("Next"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]];
+        Root->AddSlot().AutoHeight()[Frame(Footer)];
+        RefreshContacts();
     }
+    TSharedPtr<SVerticalBox> ContactsBox, SystemsBox;
+    double NextContactRefresh=0;
+    FString ContactState;
 };

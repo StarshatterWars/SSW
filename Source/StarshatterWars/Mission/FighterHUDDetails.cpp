@@ -1,4 +1,4 @@
-﻿#include "FighterHUDDetails.h"
+#include "FighterHUDDetails.h"
 #include "Ship.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
@@ -180,18 +180,8 @@ void SFighterHUDDetails::Refresh()
         if (P->GetShield()) StatusRows.Add({TEXT("SHIELD"), double(P->GetShieldStrength())});
         if (P->GetPrimary()) StatusRows.Add({TEXT("GUNS"), Charge(P->GetPrimary())});
         Primary = WeaponLabel(P->GetPrimaryGroup()); Secondary = WeaponLabel(P->GetSecondaryGroup());
-        // Most damaged systems first for the compact damage annunciator.
-        ListIter<SimSystem> Sys = P->GetSystems();
-        while (++Sys)
-            if (Sys.value())
-            {
-                const char* Abbreviation = Sys->Abbreviation();
-                FString Label = Abbreviation && *Abbreviation
-                    ? FString(ANSI_TO_TCHAR(Abbreviation))
-                    : FString(ANSI_TO_TCHAR(Sys->GetName()));
-                DamageRows.Add({Label.ToUpper().Left(8), Sys->GetAvailability()});
-            }
-        DamageRows.Sort([](const FRow& A, const FRow& B) { return A.Percent < B.Percent; });
+        // Legacy warning cells remain in fixed positions as damage changes.
+        SSWDamagePanel::Build(P, DamageRows);
         Sensor* SensorData = P->GetSensor();
         SensorRange = SensorData ? FMath::Max(1.0, SensorData->GetBeamRange()) : 1.0;
         if (SensorData)
@@ -496,10 +486,22 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         {
             const FVector2D D=FVector2D(Size.X*0.5-150*Scale,Size.Y-97*Scale)+FVector2D((I%4)*75,(I/4)*28)*Scale;
             // Legacy caution cells show a centered abbreviation; color conveys health.
+            if (DamageRows[I].Status < 0) continue;
             const FString& Label = DamageRows[I].Label;
-            const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
-            const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
-            Text(D+FVector2D((75*Scale-Extent.X)*0.5,0),Label,DamageColor(DamageRows[I].Percent),11);
+            int32 FontSize=FMath::Max(6,int32(11*Scale));
+            FSlateFontInfo Font=FCoreStyle::GetDefaultFontStyle("Bold",FontSize);
+            const auto Measure=FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+            FVector2D Extent=Measure->Measure(Label,Font);
+            // Keep actual group names intact while fitting each fixed-width cell.
+            while(Extent.X>71*Scale && FontSize>5){
+                Font.Size=--FontSize; Extent=Measure->Measure(Label,Font);
+            }
+            FSlateDrawElement::MakeText(E,L+2,
+                G.ToPaintGeometry(FVector2f(75*Scale,20*Scale),
+                    FSlateLayoutTransform(FVector2f(D+FVector2D((75*Scale-Extent.X)*0.5,0)))),
+                Label,Font,ESlateDrawEffect::None,
+                SSWDamagePanel::Color(DamageRows[I].Status,FPlatformTime::Seconds(),HUDBlue));
+
         }
     }
     if(bHasTarget)
