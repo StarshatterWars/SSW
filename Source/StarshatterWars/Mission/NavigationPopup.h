@@ -18,7 +18,8 @@
 class SNavigationPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SNavigationPopup) {}
+    SLATE_BEGIN_ARGS(SNavigationPopup) : _Embedded(false) {}
+        SLATE_ARGUMENT(bool, Embedded)
         SLATE_ARGUMENT(TSharedPtr<SWidget>, MapWidget)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
@@ -27,7 +28,7 @@ public:
     void Construct(const FArguments& Args) {
         ResolveShip=Args._ResolveShip; CanOperate=Args._CanOperate; Close=Args._OnClose;
         auto Content=SNew(SVerticalBox)
-         +SVerticalBox::Slot().AutoHeight().Padding(8)[Label(TEXT("NAVIGATION"))]
+         +SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SBox).Visibility(Args._Embedded?EVisibility::Collapsed:EVisibility::Visible)[Label(TEXT("NAVIGATION"))]]
          +SVerticalBox::Slot().FillHeight(1)[Args._MapWidget.ToSharedRef()]
          +SVerticalBox::Slot().AutoHeight().Padding(8)
           [SNew(STextBlock).Text_Lambda([this](){return FText::FromString(Readout());})
@@ -47,7 +48,7 @@ public:
         ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
             [SNew(SBox).WidthOverride(1200).HeightOverride(760)
              [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-              .BorderBackgroundColor(FLinearColor(0.005f,0.015f,0.03f,1)).Padding(10)[Content]]]];
+              .BorderBackgroundColor(Args._Embedded?FLinearColor::Transparent:FLinearColor(0.005f,0.015f,0.03f,1)).Padding(Args._Embedded?0:10)[Content]]]];
     }
     virtual bool SupportsKeyboardFocus() const override {return true;}
     virtual FReply OnKeyDown(const FGeometry&,const FKeyEvent& E) override {

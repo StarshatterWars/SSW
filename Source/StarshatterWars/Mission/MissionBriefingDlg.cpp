@@ -24,9 +24,12 @@
 
 #include "MissionBriefingDlg.h"
 #include "EngineeringPopup.h"
+#include "EngineeringDlg.h"
+#include "WeaponsDlg.h"
 #include "WeaponsPopup.h"
 #include "ObjectivesPopup.h"
 #include "NavigationPopup.h"
+#include "NavigationDlg.h"
 #include "MissionCameraRig.h"
 #include "InputTriggers.h"
 #include "InputModifiers.h"
@@ -1363,10 +1366,19 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if(ObjectivesPanelAction && ObjectivesPanelAction->ValueType==EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(ObjectivesPanelAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleObjectivesPopup);
     else UE_LOG(LogTemp,Warning,TEXT("[MissionHUD] Create Boolean IA_ObjectivesPanel and map it in IMC_FighterHUD."));
-    NavMapAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_NavMap.IA_NavMap"));
-    if(NavMapAction && NavMapAction->ValueType==EInputActionValueType::Boolean)
+    NavMapAction=nullptr;
+    if(FighterInputContext)for(const auto& Mapping:FighterInputContext->GetMappings()) {
+        const UInputAction* UAction=Mapping.Action.Get();
+        if(!UAction)continue;
+        const FString Name=UAction->GetName();
+        if(Name==TEXT("IA_NavMap") || Name==TEXT("IA_NavigationPanel"))
+            if(!NavMapAction || Name==TEXT("IA_NavMap"))NavMapAction=const_cast<UInputAction*>(Action);
+    }
+    if(NavMapAction && NavMapAction->ValueType==EInputActionValueType::Boolean) {
         MissionMenuInput->BindAction(NavMapAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleNavigationPopup);
-    else UE_LOG(LogTemp,Warning,TEXT("[MissionHUD] Missing Boolean IA_NavMap in /Game/Input."));
+        UE_LOG(LogTemp,Display,TEXT("[NavigationInput] Bound %s"),*GetNameSafe(NavMapAction.Get()));
+    }
+    else UE_LOG(LogTemp,Warning,TEXT("[NavigationInput] Map Boolean IA_NavMap or IA_NavigationPanel in IMC_FighterHUD."));
     WeaponsPanelAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_WeaponsPanel.IA_WeaponsPanel"));
     if (WeaponsPanelAction && WeaponsPanelAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(WeaponsPanelAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterWeaponsPanel);
@@ -1670,18 +1682,12 @@ void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     bWeaponsPreviousCursor=PC->bShowMouseCursor;
-    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
-    SAssignNew(WeaponsPopup,SWeaponsPopup)
-        .ResolveShip([Owner]() -> Ship* {
-            if (!Owner.IsValid() || !Owner->bLiveMissionStarted) return nullptr;
-            Sim* Simulation=Sim::GetSim();
-            Ship* Player=Simulation ? Simulation->GetPlayerShip() : nullptr;
-            return Player && !Player->IsDead() ? Player : nullptr;
-        })
-        .CanOperate([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted &&
-            Owner->GetWorld() && !Owner->GetWorld()->IsPaused() &&
-            !Owner->MissionSceneCover.IsValid() && !Owner->bMissionControlsOpen;})
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();}));
+    UClass* PanelClass=LoadClass<UWeaponsDlg>(nullptr,TEXT("/Game/Screens/inGame/WBP_Weapons.WBP_Weapons_C"));
+    WeaponsPanelWidget=CreateWidget<UWeaponsDlg>(PC,PanelClass?PanelClass:UWeaponsDlg::StaticClass());
+    if(!WeaponsPanelWidget)return;
+    WeaponsPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
+    WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    WeaponsPopup=WeaponsPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(WeaponsPopup);
@@ -1697,6 +1703,8 @@ void UMissionBriefingDlg::CloseWeaponsPopup()
     if (GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(WeaponsPopup.ToSharedRef());
     WeaponsPopup.Reset();
+    if(WeaponsPanelWidget)WeaponsPanelWidget->RemoveFromParent();
+    WeaponsPanelWidget=nullptr;
     if (APlayerController* PC=GetOwningPlayer()) {
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor=bWeaponsPreviousCursor;
@@ -2533,15 +2541,12 @@ void UMissionBriefingDlg::ToggleEngineering()
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     bEngineeringPreviousCursor=PC->bShowMouseCursor;
-    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
-    SAssignNew(EngineeringPopup,SEngineeringPopup)
-        .ResolveShip([Owner]() -> Ship* {
-            if (!Owner.IsValid() || !Owner->bLiveMissionStarted) return nullptr;
-            Sim* Simulation=Sim::GetSim();
-            Ship* Player=Simulation ? Simulation->GetPlayerShip() : nullptr;
-            return Player && !Player->IsDead() ? Player : nullptr;
-        })
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseEngineering();}));
+    UClass* PanelClass=LoadClass<UEngineeringDlg>(nullptr,TEXT("/Game/Screens/inGame/WBP_Engineering.WBP_Engineering_C"));
+    EngineeringPanelWidget=CreateWidget<UEngineeringDlg>(PC,PanelClass?PanelClass:UEngineeringDlg::StaticClass());
+    if(!EngineeringPanelWidget)return;
+    EngineeringPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseEngineering();});
+    EngineeringPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    EngineeringPopup=EngineeringPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(EngineeringPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(EngineeringPopup);
@@ -2557,6 +2562,8 @@ void UMissionBriefingDlg::CloseEngineering()
     if (GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(EngineeringPopup.ToSharedRef());
     EngineeringPopup.Reset();
+    if(EngineeringPanelWidget)EngineeringPanelWidget->RemoveFromParent();
+    EngineeringPanelWidget=nullptr;
     if (APlayerController* PC=GetOwningPlayer()) {
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor=bEngineeringPreviousCursor;
@@ -2618,22 +2625,13 @@ void UMissionBriefingDlg::ToggleNavigationPopup()
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     bNavigationPreviousCursor=PC->bShowMouseCursor;
-    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
-    LiveNavigationMap=CreateWidget<UMissionNavDlg>(PC,UMissionNavDlg::StaticClass());
-    if(!LiveNavigationMap)return;
-    LiveNavigationMap->SetParentDlg(this);
-    LiveNavigationMap->SetInMissionNavigation(true);
-    const TSharedRef<SWidget> MapBody=LiveNavigationMap->TakeWidget();
-    LiveNavigationMap->RefreshFromMission();
-    SAssignNew(NavigationPopup,SNavigationPopup)
-        .MapWidget(MapBody)
-        .ResolveShip([Owner]()->Ship*{
-            if(!Owner.IsValid() || !Owner->bLiveMissionStarted)return nullptr;
-            auto* S=Sim::GetSim();auto* P=S?S->GetPlayerShip():nullptr;
-            return P && !P->IsDead()?P:nullptr;
-        })
-        .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();})
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseNavigationPopup();}));
+    UClass* PanelClass=LoadClass<UNavigationDlg>(nullptr,
+        TEXT("/Game/Screens/inGame/WBP_Navigation.WBP_Navigation_C"));
+    NavigationPanelWidget=CreateWidget<UNavigationDlg>(PC,PanelClass?PanelClass:UNavigationDlg::StaticClass());
+    if(!NavigationPanelWidget)return;
+    NavigationPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseNavigationPopup();});
+    NavigationPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    NavigationPopup=NavigationPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(NavigationPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(NavigationPopup);
@@ -2649,8 +2647,8 @@ void UMissionBriefingDlg::CloseNavigationPopup()
     if (GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(NavigationPopup.ToSharedRef());
     NavigationPopup.Reset();
-    if(LiveNavigationMap)LiveNavigationMap->RemoveFromParent();
-    LiveNavigationMap=nullptr;
+    if(NavigationPanelWidget)NavigationPanelWidget->RemoveFromParent();
+    NavigationPanelWidget=nullptr;
     if (APlayerController* PC=GetOwningPlayer()) {
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor=bNavigationPreviousCursor;

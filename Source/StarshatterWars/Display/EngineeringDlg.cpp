@@ -21,6 +21,7 @@
 */
 
 #include "EngineeringDlg.h"
+#include "EngineeringPopup.h"
 
 #include "CoreMinimal.h"
 #include "Components/Button.h"
@@ -496,7 +497,18 @@ void UEngineeringDlg::OnPriorityDecrease()
 
 void UEngineeringDlg::OnClose()
 {
+    if(OnPanelClosed.IsBound()){RequestPanelClose();return;}
     if (manager) {
         manager->CloseTopmost();
     }
 }
+
+
+TSharedRef<SWidget> UEngineeringDlg::CreatePanelContent()
+{
+    const TWeakObjectPtr<UEngineeringDlg> Owner(this);
+    return SNew(SEngineeringPopup).Embedded(true)
+        .ResolveShip([Owner]()->Ship*{return Owner.IsValid()?Owner->ResolvePanelShip():nullptr;})
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){RequestPanelClose();}));
+}
+FText UEngineeringDlg::GetPanelCaption() const{return FText::FromString(TEXT("Engineering"));}

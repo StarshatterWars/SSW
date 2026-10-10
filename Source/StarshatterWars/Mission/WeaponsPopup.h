@@ -27,7 +27,8 @@
 class SWeaponsPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SWeaponsPopup) {}
+    SLATE_BEGIN_ARGS(SWeaponsPopup) : _Embedded(false) {}
+        SLATE_ARGUMENT(bool, Embedded)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
         SLATE_EVENT(FSimpleDelegate, OnClose)
@@ -35,6 +36,7 @@ public:
 
     void Construct(const FArguments& Args)
     {
+        Embedded=Args._Embedded;
         ResolveShip=Args._ResolveShip;
         CanOperate=Args._CanOperate;
         Close=Args._OnClose;
@@ -85,6 +87,7 @@ public:
     }
 
 private:
+    bool Embedded=false;
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;
@@ -147,7 +150,7 @@ private:
     }
     TSharedRef<SWidget> Frame(TSharedRef<SWidget> Content) {
         return SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.01f,0.025f,0.04f,0.94f)).Padding(8)[Content];
+            .BorderBackgroundColor((Embedded?FLinearColor::Transparent:FLinearColor(0.01f,0.025f,0.04f,0.94f))).Padding(8)[Content];
     }
     void RefreshContacts() {
         if (!ContactsBox.IsValid()) return;
@@ -192,7 +195,7 @@ private:
     }
     void Rebuild() {
         Root->ClearChildren();
-        Root->AddSlot().AutoHeight()[Frame(Label(TEXT("TACTICAL WEAPONS"),20))];
+        if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(TEXT("TACTICAL WEAPONS"),20))];
         // WepDlg.frm camera area: keep the live mission scene visible, without
         // spawning a duplicate world or allocating another scene capture.
         Root->AddSlot().FillHeight(1)[SNew(SBox)];

@@ -19,7 +19,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseScreen.h"
+#include "InMissionPanelBase.h"
 #include "GameScreen.h"
 
 #include "List.h"
@@ -45,7 +45,7 @@ class SimComponent;
 template<typename T> class List;
 
 UCLASS()
-class STARSHATTERWARS_API UEngineeringDlg : public UBaseScreen
+class STARSHATTERWARS_API UEngineeringDlg : public UInMissionPanelBase
 {
     GENERATED_BODY()
 
@@ -95,6 +95,8 @@ protected:
     // ----------------------------------------------------------------
     // UBaseScreen overrides
     // ----------------------------------------------------------------
+    virtual TSharedRef<SWidget> CreatePanelContent() override;
+    virtual FText GetPanelCaption() const override;
     virtual void BindFormWidgets() override;
     virtual FString GetLegacyFormText() const override;
 

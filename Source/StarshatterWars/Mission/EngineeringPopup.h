@@ -24,23 +24,25 @@
 class SEngineeringPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SEngineeringPopup) {}
+    SLATE_BEGIN_ARGS(SEngineeringPopup) : _Embedded(false) {}
+        SLATE_ARGUMENT(bool, Embedded)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_EVENT(FSimpleDelegate, OnClose)
     SLATE_END_ARGS()
 
     void Construct(const FArguments& Args)
     {
+        Embedded=Args._Embedded;
         ResolveShip = Args._ResolveShip;
         Close = Args._OnClose;
         ChildSlot
         [ SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-          .BorderBackgroundColor(FLinearColor(0,0,0,0.75f)).Padding(24)
+          .BorderBackgroundColor(Embedded?FLinearColor::Transparent:FLinearColor(0,0,0,0.75f)).Padding(Embedded?0:24)
           .HAlign(HAlign_Center).VAlign(VAlign_Center)
           [ SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
             [ SNew(SBox).WidthOverride(1100).HeightOverride(680)
               [ SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                .BorderBackgroundColor(FLinearColor(0.015f,0.035f,0.06f,1)).Padding(18)
+                .BorderBackgroundColor(Embedded?FLinearColor::Transparent:FLinearColor(0.015f,0.035f,0.06f,1)).Padding(Embedded?0:18)
                 [ SAssignNew(Root, SVerticalBox) ] ] ] ] ];
         Rebuild();
     }
@@ -68,6 +70,7 @@ public:
         if (Dirty) Rebuild();
     }
 private:
+    bool Embedded=false;
     TFunction<Ship*()> ResolveShip;
     FSimpleDelegate Close;
     TSharedPtr<SVerticalBox> Root;
@@ -113,7 +116,7 @@ private:
     {
         Dirty=false; Root->ClearChildren();
         Ship* P=GetShip(); LastShip=P;
-        Root->AddSlot().AutoHeight().Padding(0,0,0,14)
+        if(!Embedded) Root->AddSlot().AutoHeight().Padding(0,0,0,14)
         [Label(P ? FString::Printf(TEXT("ENGINEERING — %hs"),P->GetName()) : TEXT("ENGINEERING"),22)];
         if (!P) {
             Root->AddSlot()[Label(TEXT("No active player ship."))];
