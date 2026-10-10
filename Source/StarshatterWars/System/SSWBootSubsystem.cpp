@@ -259,6 +259,9 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.OperationsScreenClass"),
         TEXT("UI.MissionScreenClass"),
         TEXT("UI.CampaignSceneClass"),
+        TEXT("UI.WeaponsScreenClass"),
+        TEXT("UI.EngineeringScreenClass"),
+        TEXT("UI.NavigationScreenClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

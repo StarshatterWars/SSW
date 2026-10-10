@@ -16,6 +16,7 @@
 */
 
 #include "MissionNavDlg.h"
+#include "Sim.h"
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
@@ -158,6 +159,7 @@ void UMissionNavDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 
 Mission* UMissionNavDlg::ResolveMission() const
 {
+    if(bInMissionNavigation){auto* S=Sim::GetSim();return S?S->GetMission():nullptr;}
     return ParentDlg ? ParentDlg->GetMissionPtr() : nullptr;
 }
 
@@ -2601,4 +2603,14 @@ bool UMissionNavDlg::ShouldShowMissionElementInBriefing(const MissionElement* El
     }
 
     return false;
+}
+
+TSharedRef<SWidget> UMissionNavDlg::RebuildWidget()
+{
+    // Native fallback for the in-flight host; Blueprint layouts remain intact.
+    if(bInMissionNavigation && WidgetTree && !WidgetTree->RootWidget) {
+        RuntimeHost=WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),TEXT("RuntimeHost"));
+        WidgetTree->RootWidget=RuntimeHost;
+    }
+    return Super::RebuildWidget();
 }

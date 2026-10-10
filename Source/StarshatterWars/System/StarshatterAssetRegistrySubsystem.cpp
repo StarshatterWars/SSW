@@ -626,6 +626,60 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.EngineeringScreenClass
+    if (!Cache.Contains(TEXT("UI.EngineeringScreenClass")))
+    {
+        if (!Settings->EngineeringScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->EngineeringScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.EngineeringScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.EngineeringScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] EngineeringScreenClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.WeaponsScreenClass
+    if (!Cache.Contains(TEXT("UI.WeaponsScreenClass")))
+    {
+        if (!Settings->WeaponsScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->WeaponsScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.WeaponsScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.WeaponsScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] EngineeringScreenClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.NavigationScreenClass
+    if (!Cache.Contains(TEXT("UI.NavigationScreenClass")))
+    {
+        if (!Settings->NavigationScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->NavigationScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.NavigationScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.NavigationScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] NavigationScreenClass is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

@@ -86,6 +86,7 @@ public:
     void SetParentDlg(UMissionBriefingDlg* InParentDlg);
 
     void RefreshFromMission();
+    void SetInMissionNavigation(bool Enabled) { bInMissionNavigation=Enabled; }
 
     UFUNCTION()
     void HandleGalaxySystemSelected(const FString& InSystemName);
@@ -97,6 +98,8 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    bool bInMissionNavigation=false;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
     virtual FReply NativeOnMouseWheel(
