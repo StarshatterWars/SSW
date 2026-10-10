@@ -73,8 +73,8 @@ void UNavigationDlg::NativeConstruct()
         Layout.Anchors.Minimum.X = bRight ? 0.68f : 0.0f;
         Layout.Anchors.Maximum.X = bRight ? 1.0f : 0.32f;
         Layout.Alignment.X = 0.0f;
-        Layout.Offsets.Left = 4.0f;
-        Layout.Offsets.Right = 4.0f;
+        Layout.Offsets.Left = 8.0f;
+        Layout.Offsets.Right = 8.0f;
         if (Layout.Anchors.Minimum.Y == Layout.Anchors.Maximum.Y && Layout.Offsets.Bottom <= 0.0f)
             Layout.Offsets.Bottom = PanelTitle->GetFont().Size + 12.0f;
         LocationSlot->SetLayout(Layout);
@@ -97,10 +97,10 @@ void UNavigationDlg::UpdateLocationTitles()
         : (LiveMission ? LiveMission->GetSystem() : nullptr);
     const char* SectorName = Region ? Region->GetName()
         : (LiveMission ? LiveMission->GetRegion() : nullptr);
-    const FString SystemText = SystemName && *SystemName ? UTF8_TO_TCHAR(SystemName) : TEXT("Unknown system");
-    const FString SectorText = SectorName && *SectorName ? UTF8_TO_TCHAR(SectorName) : TEXT("Unknown sector");
-    const FText SystemCaption = FText::FromString(SystemText);
-    const FText SectorCaption = FText::FromString(SectorText);
+    const FString SystemText = SystemName && *SystemName ? UTF8_TO_TCHAR(SystemName) : TEXT("Unknown");
+    const FString SectorText = SectorName && *SectorName ? UTF8_TO_TCHAR(SectorName) : TEXT("Unknown");
+    const FText SystemCaption = FText::FromString(SystemText + TEXT(" System"));
+    const FText SectorCaption = FText::FromString(SectorText + TEXT(" Sector"));
     if (SystemTitleText && !SystemTitleText->GetText().EqualTo(SystemCaption)) SystemTitleText->SetText(SystemCaption);
     if (SectorTitleText && !SectorTitleText->GetText().EqualTo(SectorCaption)) SectorTitleText->SetText(SectorCaption);
 }
