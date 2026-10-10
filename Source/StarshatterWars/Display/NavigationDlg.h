@@ -22,4 +22,5 @@ protected:
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
     virtual void NativeDestruct() override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 };

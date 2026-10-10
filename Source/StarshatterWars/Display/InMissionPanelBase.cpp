@@ -56,7 +56,7 @@ void UInMissionPanelBase::NativeConstruct()
     // Use the same menu textures and states as the rest of the game's menus.
     UButton* StyleButton = WidgetTree->ConstructWidget<UButton>();
     UTextBlock* StyleText = WidgetTree->ConstructWidget<UTextBlock>();
-    StyleText->SetText(FText::FromString(TEXT("Close")));
+    StyleText->SetText(FText::FromString(TEXT("CLOSE")));
     StyleButton->SetContent(StyleText);
     MissionUIStyle::ApplyMenuButtonStyle(StyleButton, GetGameInstance());
     FooterButtonStyle = StyleButton->GetStyle();
@@ -80,7 +80,7 @@ void UInMissionPanelBase::NativeConstruct()
                     .HAlign(HAlign_Center).VAlign(VAlign_Center)
                     .OnClicked_Lambda([this](){RequestPanelClose();return FReply::Handled();})
                     [SNew(STextBlock).Text(StyleText->GetText())
-                        .Font(StyleText->GetFont()).ColorAndOpacity(StyleText->GetColorAndOpacity())]]]);
+                        .Font(StyleText->GetFont()).ColorAndOpacity(FLinearColor::Black)]]]);
     }
     else
     {

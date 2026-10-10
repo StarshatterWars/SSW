@@ -2,6 +2,12 @@
 #include "MissionNavDlg.h"
 #include "NavigationPopup.h"
 #include "Engine/World.h"
+#include "Sim.h"
+#include "Ship.h"
+#include "Mission.h"
+#include "SimRegion.h"
+#include "StarSystem.h"
+#include "Components/TextBlock.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Input/SButton.h"
@@ -38,7 +44,18 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
 
 FText UNavigationDlg::GetPanelCaption() const
 {
-    return FText::FromString(TEXT("Navigation"));
+    // Resolve through the live simulation each time; never retain simulation pointers.
+    auto* LiveSim = Sim::GetSim();
+    auto* LiveMission = LiveSim ? LiveSim->GetMission() : nullptr;
+    Ship* Player = ResolvePanelShip();
+    SimRegion* Region = Player ? Player->GetRegion() : nullptr;
+    const char* SystemName = Region && Region->GetSystem() ? Region->GetSystem()->GetName()
+        : (LiveMission ? LiveMission->GetSystem() : nullptr);
+    const char* SectorName = Region ? Region->GetName()
+        : (LiveMission ? LiveMission->GetRegion() : nullptr);
+    const FString SystemText = SystemName && *SystemName ? UTF8_TO_TCHAR(SystemName) : TEXT("Unknown system");
+    const FString SectorText = SectorName && *SectorName ? UTF8_TO_TCHAR(SectorName) : TEXT("Unknown sector");
+    return FText::FromString(FString::Printf(TEXT("NAVIGATION — %s — %s"), *SystemText, *SectorText));
 }
 
 void UNavigationDlg::NativeDestruct()
@@ -47,4 +64,14 @@ void UNavigationDlg::NativeDestruct()
     Super::NativeDestruct();
     if(NavigationMap)NavigationMap->RemoveFromParent();
     NavigationMap=nullptr;
+}
+
+void UNavigationDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+    if (PanelTitle)
+    {
+        const FText Caption = GetPanelCaption();
+        if (!PanelTitle->GetText().EqualTo(Caption)) PanelTitle->SetText(Caption);
+    }
 }

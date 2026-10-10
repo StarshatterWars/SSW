@@ -195,6 +195,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> EngineeringScreenClass;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> ObjectivesScreenClass;
+
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)
 // ------------------------------------------------------------------

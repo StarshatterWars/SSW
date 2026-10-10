@@ -680,6 +680,23 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.ObjectivesScreenClass
+    if (!Cache.Contains(TEXT("UI.ObjectivesScreenClass")))
+    {
+        if (!Settings->ObjectivesScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ObjectivesScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ObjectivesScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ObjectivesScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] ObjectivesScreenClass is not set in Project Settings"));
+        }
+    }
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

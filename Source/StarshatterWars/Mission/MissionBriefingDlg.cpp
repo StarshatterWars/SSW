@@ -27,7 +27,7 @@
 #include "EngineeringDlg.h"
 #include "WeaponsDlg.h"
 #include "WeaponsPopup.h"
-#include "ObjectivesPopup.h"
+#include "ObjectivesDlg.h"
 #include "NavigationPopup.h"
 #include "NavigationDlg.h"
 #include "MissionCameraRig.h"
@@ -1366,19 +1366,40 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if(ObjectivesPanelAction && ObjectivesPanelAction->ValueType==EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(ObjectivesPanelAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleObjectivesPopup);
     else UE_LOG(LogTemp,Warning,TEXT("[MissionHUD] Create Boolean IA_ObjectivesPanel and map it in IMC_FighterHUD."));
-    NavMapAction=nullptr;
-    if(FighterInputContext)for(const auto& Mapping:FighterInputContext->GetMappings()) {
-        const UInputAction* UAction=Mapping.Action.Get();
-        if(!UAction)continue;
-        const FString Name=UAction->GetName();
-        if(Name==TEXT("IA_NavMap") || Name==TEXT("IA_NavigationPanel"))
-            if(!NavMapAction || Name==TEXT("IA_NavMap"))NavMapAction=const_cast<UInputAction*>(UAction);
+    NavMapAction = nullptr;
+    // Search both authored mission contexts before installing a fallback.
+    const UInputMappingContext* NavigationContexts[] = {FighterInputContext.Get(), MissionMenuContext.Get()};
+    for (const UInputMappingContext* NavContext : NavigationContexts)
+    {
+        if (!NavContext) continue;
+        for (const auto& NavMapping : NavContext->GetMappings())
+        {
+            const UInputAction* MappedNavigationAction = NavMapping.Action.Get();
+            if (!MappedNavigationAction) continue;
+            const FString NavigationActionName = MappedNavigationAction->GetName();
+            if (NavigationActionName == TEXT("IA_NavMap") || NavigationActionName == TEXT("IA_NavigationPanel"))
+            {
+                NavMapAction = const_cast<UInputAction*>(MappedNavigationAction);
+                break;
+            }
+        }
+        if (NavMapAction) break;
     }
-    if(NavMapAction && NavMapAction->ValueType==EInputActionValueType::Boolean) {
-        MissionMenuInput->BindAction(NavMapAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleNavigationPopup);
-        UE_LOG(LogTemp,Display,TEXT("[NavigationInput] Bound %s"),*GetNameSafe(NavMapAction.Get()));
+    if (!NavMapAction)
+    {
+        NavMapAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NavMap.IA_NavMap"));
+        if (!NavMapAction)
+            NavMapAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NavigationPanel.IA_NavigationPanel"));
+        if (!NavMapAction)
+        {
+            NavMapAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+            NavMapAction->ValueType = EInputActionValueType::Boolean;
+        }
+        MissionTargetContext->MapKey(NavMapAction.Get(), EKeys::N);
+        UE_LOG(LogTemp, Display, TEXT("[NavigationInput] No authored navigation mapping; using N for %s"), *GetNameSafe(NavMapAction.Get()));
     }
-    else UE_LOG(LogTemp,Warning,TEXT("[NavigationInput] Map Boolean IA_NavMap or IA_NavigationPanel in IMC_FighterHUD."));
+    MissionMenuInput->BindAction(NavMapAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleNavigationPopup);
+    UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Bound %s"), *GetNameSafe(NavMapAction.Get()));
     WeaponsPanelAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_WeaponsPanel.IA_WeaponsPanel"));
     if (WeaponsPanelAction && WeaponsPanelAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(WeaponsPanelAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterWeaponsPanel);
@@ -1925,11 +1946,7 @@ void UMissionBriefingDlg::OnCommit()
         UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] System map not found: %s"), *PackagePath);
         return; // Leave the briefing available when the map cannot be resolved.
     }
-    const FString RegionName = ToTextFromUtf8(MissionPtr->GetRegion()).ToString();
-    const FText SectorTitle = FText::FromString(FString::Printf(
-        TEXT("%s - %s"),
-        SystemName.IsEmpty() ? TEXT("Unknown system") : *SystemName,
-        RegionName.IsEmpty() ? TEXT("Unknown region") : *RegionName));
+
 
     CloseEmptySectorPreview();
     // Keep the world rendering behind an opaque Slate cover so materials,
@@ -2009,15 +2026,6 @@ void UMissionBriefingDlg::OnCommit()
         .Padding(FMargin(32.0f, 24.0f))
         [
             SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
-            [
-                SNew(STextBlock)
-                .Text(SectorTitle)
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 22))
-                .ColorAndOpacity(FLinearColor::White)
-                .ShadowOffset(FVector2D(1.0f, 1.0f))
-                .ShadowColorAndOpacity(FLinearColor::Black)
-            ]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 6.0f)
             [
                 SNew(STextBlock)
@@ -2584,10 +2592,13 @@ void UMissionBriefingDlg::ToggleObjectivesPopup()
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     bObjectivesPreviousCursor=PC->bShowMouseCursor;
-    const TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
-    SAssignNew(ObjectivesPopup,SObjectivesPopup)
-        .IsMissionActive([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted;})
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseObjectivesPopup();}));
+    UClass* PanelClass = LoadClass<UObjectivesDlg>(nullptr,
+        TEXT("/Game/Screens/inGame/WBP_Objectives.WBP_Objectives_C"));
+    ObjectivesPanelWidget = CreateWidget<UObjectivesDlg>(PC, PanelClass ? PanelClass : UObjectivesDlg::StaticClass());
+    if (!ObjectivesPanelWidget) return;
+    ObjectivesPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseObjectivesPopup(); });
+    ObjectivesPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    ObjectivesPopup = ObjectivesPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(ObjectivesPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(ObjectivesPopup);
@@ -2603,6 +2614,8 @@ void UMissionBriefingDlg::CloseObjectivesPopup()
     if (GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(ObjectivesPopup.ToSharedRef());
     ObjectivesPopup.Reset();
+    if (ObjectivesPanelWidget) ObjectivesPanelWidget->RemoveFromParent();
+    ObjectivesPanelWidget = nullptr;
     if (APlayerController* PC=GetOwningPlayer()) {
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor=bObjectivesPreviousCursor;
@@ -2613,11 +2626,16 @@ void UMissionBriefingDlg::CloseObjectivesPopup()
 
 void UMissionBriefingDlg::ToggleNavigationPopup()
 {
+    UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Open/close requested"));
     CloseObjectivesPopup();
     CloseEngineering();
     CloseWeaponsPopup();
     if (NavigationPopup.IsValid()) { CloseNavigationPopup(); return; }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[NavigationInput] Blocked: mission=%d cover=%d controls=%d"), bLiveMissionStarted, MissionSceneCover.IsValid(), bMissionControlsOpen);
+        return;
+    }
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
@@ -2628,7 +2646,8 @@ void UMissionBriefingDlg::ToggleNavigationPopup()
     UClass* PanelClass=LoadClass<UNavigationDlg>(nullptr,
         TEXT("/Game/Screens/inGame/WBP_Navigation.WBP_Navigation_C"));
     NavigationPanelWidget=CreateWidget<UNavigationDlg>(PC,PanelClass?PanelClass:UNavigationDlg::StaticClass());
-    if(!NavigationPanelWidget)return;
+    if(!NavigationPanelWidget) { UE_LOG(LogTemp, Error, TEXT("[NavigationInput] Failed to create Navigation widget")); return; }
+    UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Created %s"), *NavigationPanelWidget->GetClass()->GetName());
     NavigationPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseNavigationPopup();});
     NavigationPanelWidget->SetVisibility(ESlateVisibility::Visible);
     NavigationPopup=NavigationPanelWidget->TakeWidget();

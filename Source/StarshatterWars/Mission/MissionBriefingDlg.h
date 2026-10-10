@@ -13,7 +13,7 @@ class SEngineeringPopup;
 class UEngineeringDlg;
 class UWeaponsDlg;
 class SWeaponsPopup;
-class SObjectivesPopup;
+class UObjectivesDlg;
 class SNavigationPopup;
 class UNavigationDlg;
 struct FMissionCameraRig;
@@ -107,7 +107,8 @@ protected:
     bool bWeaponsPreviousCursor = false;
     void CloseWeaponsPopup();
     UPROPERTY(Transient) TObjectPtr<UInputAction> ObjectivesPanelAction;
-    TSharedPtr<SObjectivesPopup> ObjectivesPopup;
+    TSharedPtr<SWidget> ObjectivesPopup;
+    UPROPERTY(Transient) TObjectPtr<UObjectivesDlg> ObjectivesPanelWidget;
     bool bObjectivesPreviousCursor = false;
     void ToggleObjectivesPopup();
     void CloseObjectivesPopup();

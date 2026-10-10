@@ -19,7 +19,8 @@
 class SObjectivesPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SObjectivesPopup) {}
+    SLATE_BEGIN_ARGS(SObjectivesPopup) : _Embedded(false) {}
+        SLATE_ARGUMENT(bool, Embedded)
         SLATE_ARGUMENT(TFunction<bool()>, IsMissionActive)
         SLATE_EVENT(FSimpleDelegate, OnClose)
     SLATE_END_ARGS()
@@ -32,14 +33,21 @@ public:
           +SVerticalBox::Slot().FillHeight(1)
            [SNew(SScrollBox)+SScrollBox::Slot()
             [SNew(STextBlock).Text_Lambda([this](){return FText::FromString(Body);})
-             .WrapTextAt(860).ColorAndOpacity(Blue()).Font(FCoreStyle::GetDefaultFontStyle("Regular",17))]]
+             .AutoWrapText(true).ColorAndOpacity(Blue()).Font(FCoreStyle::GetDefaultFontStyle("Regular",17))]]
           +SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0,12,0,0)
-           [SNew(SButton).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})
+           [SNew(SButton).Visibility(Args._Embedded ? EVisibility::Collapsed : EVisibility::Visible).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})
             [SNew(STextBlock).Text(FText::FromString(TEXT("Close")))]];
-        auto Panel=SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.01f,0.025f,0.04f,0.97f)).Padding(24)[Content];
-        ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
-            [SNew(SBox).WidthOverride(920).HeightOverride(640)[Panel]]];
+        if (Args._Embedded)
+        {
+            ChildSlot[Content];
+        }
+        else
+        {
+            auto Panel=SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                .BorderBackgroundColor(FLinearColor(0.01f,0.025f,0.04f,0.97f)).Padding(24)[Content];
+            ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+                [SNew(SBox).WidthOverride(920).HeightOverride(640)[Panel]]];
+        }
         Refresh();
     }
     virtual bool SupportsKeyboardFocus() const override {return true;}
