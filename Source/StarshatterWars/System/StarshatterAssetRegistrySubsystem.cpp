@@ -697,6 +697,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
                 TEXT("[ASSETS] ObjectivesScreenClass is not set in Project Settings"));
         }
     }
+
+    // UI.FlightOpsScreenClass
+    if (!Cache.Contains(TEXT("UI.FlightOpsScreenClass")))
+    {
+        if (!Settings->FlightOpsScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->FlightOpsScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.FlightOpsScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.FlightOpsScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] FlightOpsScreenClass is not set in Project Settings"));
+        }
+    }
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

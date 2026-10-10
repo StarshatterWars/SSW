@@ -34,6 +34,7 @@
 #include "Drive.h"
 #include "Ship.h"
 #include "Thruster.h"
+#include "ShipDesign.h"
 #include "NiagaraEmitter.h"
 #include "NiagaraEmitterHandle.h"
 
@@ -128,13 +129,6 @@ static FRotator LegacyJetRotation(EThrusterPortDir Direction)
     default: return FRotator::ZeroRotator; // FORE: +X exhaust
     }
 }
-
-static FRotator ConvertLegacyPortRotation(
-    const FRotator& LegacyRot)
-{
-    return LegacyRot;
-}
-
 
 static FVector ConvertLegacyPortLocation(const FVector& LegacyLoc)
 {
@@ -1899,6 +1893,32 @@ void AShipActor::BuildNavLightsFromRuntime()
 
 }
 
+// Legacy and the data-table importer already multiply port coordinates by
+// ShipDesign::scale. The imported hull uses raw model coordinates and the BP
+// actor supplies visual scale, so undo the data scale before attachment.
+FVector AShipActor::RuntimePortLocationInVFXSpace(const FVector& ScaledLegacyLocation) const
+{
+    const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : nullptr;
+    const double DataScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER ? Design->scale : 1.0;
+    const FVector FlightLocal = ConvertLegacyPortLocation(ScaledLegacyLocation) / DataScale;
+    if (!HullMesh || !VFXRoot) return FlightLocal;
+
+    // Inverse of the standard +90 yaw import correction. Applying the actual
+    // hull transform then includes BP mesh offsets/scales without rotating FX twice.
+    const FQuat ImportCorrection = FRotator(0,90,0).Quaternion();
+    const FVector MeshLocal = ImportCorrection.UnrotateVector(FlightLocal);
+    const FVector WorldPort = HullMesh->GetComponentTransform().TransformPosition(MeshLocal);
+    return VFXRoot->GetComponentTransform().InverseTransformPosition(WorldPort);
+}
+
+FRotator AShipActor::RuntimePortRotationInVFXSpace(const FRotator& FlightRotation) const
+{
+    if (!HullMesh || !VFXRoot) return FlightRotation;
+    const FQuat ImportCorrection = FRotator(0,90,0).Quaternion();
+    const FQuat WorldRotation = HullMesh->GetComponentQuat() * ImportCorrection.Inverse() * FlightRotation.Quaternion();
+    return (VFXRoot->GetComponentQuat().Inverse() * WorldRotation).Rotator();
+}
+
 void AShipActor::BuildMainEnginesFromRuntime()
 {
     ClearRuntimeMainEngines();
@@ -1942,9 +1962,9 @@ void AShipActor::BuildMainEnginesFromRuntime()
         Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
-        Point->SetRelativeLocation(ConvertLegacyPortLocation(MainDrive->GetPortLocation(i)));
+        Point->SetRelativeLocation(RuntimePortLocationInVFXSpace(MainDrive->GetPortLocation(i)));
         Point->SetRelativeRotation(
-            ConvertLegacyPortRotation(
+            RuntimePortRotationInVFXSpace(
                 FRotator(0.0f, 180.0f, 0.0f)));
 
         RuntimeMainEnginePoints.Add(Point);
@@ -2352,7 +2372,7 @@ void AShipActor::BuildThrustersFromRuntime()
         FRuntimeThrusterFX FX;
 
         const FVector PortLocation =
-            ConvertLegacyPortLocation(Port->Location);
+            RuntimePortLocationInVFXSpace(Port->Location);
         const bool bSocket = HullMesh && !Port->SocketName.IsNone() && HullMesh->DoesSocketExist(Port->SocketName);
         const FRotator JetRotation = Port->Rotation.IsNearlyZero() ? LegacyJetRotation(Port->Direction) : Port->Rotation;
         FX.PointName = Port->PointName;
@@ -2376,7 +2396,7 @@ void AShipActor::BuildThrustersFromRuntime()
                 ConfigureAttachedShipFX(FX.Flare, this);
                 FX.Flare->RegisterComponent();
                 FX.Flare->SetRelativeRotation(
-                    bSocket ? Port->Rotation : JetRotation);
+                    bSocket ? Port->Rotation : RuntimePortRotationInVFXSpace(JetRotation));
 
                 FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
                 FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
@@ -2393,7 +2413,7 @@ void AShipActor::BuildThrustersFromRuntime()
                 FX.Trail->SetupAttachment(bSocket ? static_cast<USceneComponent*>(HullMesh) : VFXRoot.Get(), bSocket ? Port->SocketName : NAME_None);
                 FX.Trail->SetRelativeLocation(bSocket ? FVector::ZeroVector : PortLocation);
                 FX.Trail->SetRelativeRotation(
-                    bSocket ? Port->Rotation : JetRotation);
+                    bSocket ? Port->Rotation : RuntimePortRotationInVFXSpace(JetRotation));
                 FX.Trail->SetAutoActivate(false);
                 ConfigureAttachedShipFX(FX.Trail, this);
                 FX.Trail->RegisterComponent();

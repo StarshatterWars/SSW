@@ -407,6 +407,8 @@ public:
     UPROPERTY(Transient)
     TObjectPtr<UAudioComponent> RumbleAudioComponent;
 
+    FVector RuntimePortLocationInVFXSpace(const FVector& ScaledLegacyLocation) const;
+    FRotator RuntimePortRotationInVFXSpace(const FRotator& FlightRotation) const;
     void BuildMainEnginesFromRuntime();
     void ClearRuntimeMainEngines();
     void UpdateMainEnginesFromRuntime(float DeltaTime);
