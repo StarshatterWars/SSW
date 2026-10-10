@@ -18,8 +18,10 @@
 class SNavigationPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SNavigationPopup) : _Embedded(false) {}
+    SLATE_BEGIN_ARGS(SNavigationPopup) : _Embedded(false), _FooterStyle(nullptr) {}
         SLATE_ARGUMENT(bool, Embedded)
+        SLATE_ARGUMENT(TSharedPtr<SBox>, FooterHost)
+        SLATE_ARGUMENT(const FButtonStyle*, FooterStyle)
         SLATE_ARGUMENT(TSharedPtr<SWidget>, MapWidget)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
@@ -33,10 +35,10 @@ public:
          +SVerticalBox::Slot().AutoHeight().Padding(8)
           [SNew(STextBlock).Text_Lambda([this](){return FText::FromString(Readout());})
            .ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Font(FCoreStyle::GetDefaultFontStyle("Regular",16))]
-         +SVerticalBox::Slot().AutoHeight().Padding(8)
-          [SNew(SHorizontalBox)
+;
+        auto Footer = SNew(SHorizontalBox)
            +SHorizontalBox::Slot().FillWidth(1)
-            [SNew(SButton).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
+            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
              .OnClicked_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;
                  if(N && (!CanOperate || CanOperate())){
                      if(N->AutoNavEngaged())N->DisengageAutoNav();
@@ -44,7 +46,9 @@ public:
                  }return FReply::Handled();})
              [SNew(STextBlock).Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return FText::FromString(N && N->AutoNavEngaged()?TEXT("Cancel Autonav"):TEXT("Commit Autonav"));})]]
            +SHorizontalBox::Slot().AutoWidth().Padding(16,0)
-            [SNew(SButton).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]]];
+            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]];
+        if (Args._FooterHost.IsValid()) Args._FooterHost->SetContent(Footer);
+        else Content->AddSlot().AutoHeight().Padding(8)[Footer];
         ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
             [SNew(SBox).WidthOverride(1200).HeightOverride(760)
              [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))

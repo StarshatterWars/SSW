@@ -3,9 +3,17 @@
 #include "NavigationPopup.h"
 #include "Engine/World.h"
 #include "Widgets/Text/STextBlock.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/SNullWidget.h"
 
 TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
 {
+    if (bFrameOnly)
+    {
+        UE_LOG(LogTemp, Display, TEXT("NavigationDlg: showing frame-only panel %s"), *GetName());
+        return SNullWidget::NullWidget;
+    }
     if(!NavigationMapClass) {
         NavigationMapClass=LoadClass<UMissionNavDlg>(nullptr,
             TEXT("/Game/Screens/Mission/MissionNavPanel.MissionNavPanel_C"));
@@ -22,6 +30,7 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
     NavigationMap->RefreshFromMission();
     const TWeakObjectPtr<UNavigationDlg> Owner(this);
     return SNew(SNavigationPopup).Embedded(true).MapWidget(MapBody)
+        .FooterHost(FooterContent).FooterStyle(&FooterButtonStyle)
         .ResolveShip([Owner]()->Ship*{return Owner.IsValid()?Owner->ResolvePanelShip():nullptr;})
         .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();})
         .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){RequestPanelClose();}));

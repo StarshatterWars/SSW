@@ -12,9 +12,18 @@
 
 #include "MissionUIStyle.h"
 #include "UObject/UObjectGlobals.h"
+#include "Engine/GameInstance.h"
+#include "StarshatterUIStyleSubsystem.h"
 
 namespace MissionUIStyle
 {
+    void ApplyMenuButtonStyle(UButton* Button, UGameInstance* GameInstance)
+    {
+        if (Button && GameInstance)
+            if (auto* Style = GameInstance->GetSubsystem<UStarshatterUIStyleSubsystem>())
+                Style->ApplyMenuButtonStyle(Button);
+    }
+
     const FLinearColor HeaderBG = FLinearColor(0.08f, 0.08f, 0.08f, 1.0f);
     const FLinearColor HeaderTopLine = FLinearColor(0.35f, 0.40f, 0.50f, 1.0f);
     const FLinearColor HeaderBottomLine = FLinearColor(0.05f, 0.05f, 0.05f, 1.0f);

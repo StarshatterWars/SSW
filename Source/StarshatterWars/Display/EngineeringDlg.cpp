@@ -58,6 +58,9 @@ void UEngineeringDlg::NativeOnInitialized()
 
 void UEngineeringDlg::NativeConstruct()
 {
+    // Keep runtime controls inside the square Blueprint frame's bevels.
+    ContentInsets.Top = FMath::Max(ContentInsets.Top, 96.0f);
+    ContentInsets.Bottom = FMath::Max(ContentInsets.Bottom, 112.0f);
     Super::NativeConstruct();
 }
 

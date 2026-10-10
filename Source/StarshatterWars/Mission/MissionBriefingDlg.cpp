@@ -1372,7 +1372,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         if(!UAction)continue;
         const FString Name=UAction->GetName();
         if(Name==TEXT("IA_NavMap") || Name==TEXT("IA_NavigationPanel"))
-            if(!NavMapAction || Name==TEXT("IA_NavMap"))NavMapAction=const_cast<UInputAction*>(Action);
+            if(!NavMapAction || Name==TEXT("IA_NavMap"))NavMapAction=const_cast<UInputAction*>(UAction);
     }
     if(NavMapAction && NavMapAction->ValueType==EInputActionValueType::Boolean) {
         MissionMenuInput->BindAction(NavMapAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleNavigationPopup);

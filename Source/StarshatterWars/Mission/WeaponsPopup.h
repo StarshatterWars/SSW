@@ -27,8 +27,10 @@
 class SWeaponsPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SWeaponsPopup) : _Embedded(false) {}
+    SLATE_BEGIN_ARGS(SWeaponsPopup) : _Embedded(false), _FooterStyle(nullptr) {}
         SLATE_ARGUMENT(bool, Embedded)
+        SLATE_ARGUMENT(TSharedPtr<SBox>, FooterHost)
+        SLATE_ARGUMENT(const FButtonStyle*, FooterStyle)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
         SLATE_EVENT(FSimpleDelegate, OnClose)
@@ -37,6 +39,8 @@ public:
     void Construct(const FArguments& Args)
     {
         Embedded=Args._Embedded;
+        FooterHost=Args._FooterHost;
+        FooterStyle=Args._FooterStyle;
         ResolveShip=Args._ResolveShip;
         CanOperate=Args._CanOperate;
         Close=Args._OnClose;
@@ -88,6 +92,8 @@ public:
 
 private:
     bool Embedded=false;
+    TSharedPtr<SBox> FooterHost;
+    const FButtonStyle* FooterStyle=nullptr;
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;
@@ -238,11 +244,12 @@ private:
               [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",10)).ColorAndOpacity(Blue()).Text_Lambda([this,I](){return Text(Readout(I));})]];
         }
         auto Footer=SNew(SHorizontalBox)
-          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).IsEnabled(Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[Label(TEXT("Previous"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[Label(TEXT("Previous"))]]
           +SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center)[Label(FString::Printf(TEXT("%d / %d"),Page+1,FMath::Max(1,(Count+3)/4)))]
-          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).IsEnabled((Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[Label(TEXT("Next"))]]
-          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]];
-        Root->AddSlot().AutoHeight()[Frame(Footer)];
+          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled((Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[Label(TEXT("Next"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]];
+        if (FooterHost.IsValid()) FooterHost->SetContent(Footer);
+        else Root->AddSlot().AutoHeight()[Frame(Footer)];
         RefreshContacts();
     }
     TSharedPtr<SVerticalBox> ContactsBox, SystemsBox;

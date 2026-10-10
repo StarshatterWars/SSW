@@ -35,15 +35,29 @@ public:
         Embedded=Args._Embedded;
         ResolveShip = Args._ResolveShip;
         Close = Args._OnClose;
-        ChildSlot
-        [ SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-          .BorderBackgroundColor(Embedded?FLinearColor::Transparent:FLinearColor(0,0,0,0.75f)).Padding(Embedded?0:24)
-          .HAlign(HAlign_Center).VAlign(VAlign_Center)
-          [ SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
-            [ SNew(SBox).WidthOverride(1100).HeightOverride(680)
-              [ SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                .BorderBackgroundColor(Embedded?FLinearColor::Transparent:FLinearColor(0.015f,0.035f,0.06f,1)).Padding(Embedded?0:18)
-                [ SAssignNew(Root, SVerticalBox) ] ] ] ] ];
+        if (Embedded)
+        {
+            // The Blueprint owns the 1024x1024 frame. Fill its RuntimeHost;
+            // do not letterbox a second, landscape-sized panel inside it.
+            ChildSlot
+            [SNew(SBorder)
+                .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                .BorderBackgroundColor(FLinearColor::Transparent).Padding(0)
+                .HAlign(HAlign_Fill).VAlign(VAlign_Fill)
+                [SAssignNew(Root, SVerticalBox)]];
+        }
+        else
+        {
+            ChildSlot
+            [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                .BorderBackgroundColor(FLinearColor(0,0,0,0.75f)).Padding(24)
+                .HAlign(HAlign_Center).VAlign(VAlign_Center)
+                [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+                    [SNew(SBox).WidthOverride(1024).HeightOverride(1024)
+                        [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                            .BorderBackgroundColor(FLinearColor(0.015f,0.035f,0.06f,1)).Padding(24)
+                            [SAssignNew(Root, SVerticalBox)]]]]];
+        }
         Rebuild();
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
@@ -96,10 +110,10 @@ private:
     static FText Text(const FString& S) { return FText::FromString(S); }
     TSharedRef<SWidget> Label(const FString& S, int32 Size=14) {
         return SNew(STextBlock).Text(Text(S)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1))
-            .Font(FCoreStyle::GetDefaultFontStyle("Regular",Size));
+            .Font(FCoreStyle::GetDefaultFontStyle("Regular",Size)).AutoWrapText(true);
     }
     TSharedRef<SWidget> Button(const FString& S, TFunction<void()> Action, TFunction<bool()> Enabled=[](){return true;}) {
-        return SNew(SButton).IsEnabled_Lambda([Enabled](){return Enabled();})
+        return SNew(SButton).ContentPadding(FMargin(8,6)).IsEnabled_Lambda([Enabled](){return Enabled();})
             .OnClicked_Lambda([Action](){Action();return FReply::Handled();})[Label(S)];
     }
     static FString RepairETR(Ship* P, SimSystem* S)
@@ -120,41 +134,57 @@ private:
         [Label(P ? FString::Printf(TEXT("ENGINEERING — %hs"),P->GetName()) : TEXT("ENGINEERING"),22)];
         if (!P) {
             Root->AddSlot()[Label(TEXT("No active player ship."))];
-            Root->AddSlot().AutoHeight().HAlign(HAlign_Right)[Button(TEXT("Close"),[this](){Close.ExecuteIfBound();})];
+            if (!Embedded) Root->AddSlot().AutoHeight().HAlign(HAlign_Right)[Button(TEXT("Close"),[this](){Close.ExecuteIfBound();})];
             return;
         }
-        TSharedPtr<SHorizontalBox> SourceColumns;
+        TSharedPtr<SVerticalBox> SourceColumns;
         TSharedPtr<SVerticalBox> Details, Components, Repairs;
-        Root->AddSlot().FillHeight(1).Padding(0,0,0,12)[SAssignNew(SourceColumns,SHorizontalBox)];
-        Root->AddSlot().FillHeight(2)
+        Root->AddSlot().FillHeight(1)
         [SNew(SHorizontalBox)
-         +SHorizontalBox::Slot().FillWidth(1).Padding(6)[SNew(SScrollBox)+SScrollBox::Slot()[SAssignNew(Details,SVerticalBox)]]
-         +SHorizontalBox::Slot().FillWidth(1.2f).Padding(6)[SNew(SScrollBox)+SScrollBox::Slot()[SAssignNew(Components,SVerticalBox)]]
-         +SHorizontalBox::Slot().FillWidth(1).Padding(6)[SNew(SScrollBox)+SScrollBox::Slot()[SAssignNew(Repairs,SVerticalBox)]]];
-        Root->AddSlot().AutoHeight().Padding(0,12,0,0).HAlign(HAlign_Right)
-        [Button(TEXT("Close"),[this](){Close.ExecuteIfBound();})];
+            // Full-height systems column: long client lists remain scrollable.
+            +SHorizontalBox::Slot().FillWidth(0.34f).Padding(0,0,16,0)
+            [SNew(SScrollBox)
+                +SScrollBox::Slot()[SAssignNew(SourceColumns,SVerticalBox)]]
+            +SHorizontalBox::Slot().FillWidth(0.66f)
+            [SNew(SVerticalBox)
+                +SVerticalBox::Slot().FillHeight(0.62f).Padding(0,0,0,16)
+                [SNew(SHorizontalBox)
+                    +SHorizontalBox::Slot().FillWidth(0.48f).Padding(0,0,16,0)
+                    [SNew(SScrollBox)
+                        +SScrollBox::Slot()[SAssignNew(Details,SVerticalBox)]]
+                    +SHorizontalBox::Slot().FillWidth(0.52f)
+                    [SNew(SScrollBox)
+                        +SScrollBox::Slot()[SAssignNew(Components,SVerticalBox)]]]
+                +SVerticalBox::Slot().FillHeight(0.38f)
+                [SNew(SScrollBox)
+                    +SScrollBox::Slot()[SAssignNew(Repairs,SVerticalBox)]]]];
+        if (!Embedded) Root->AddSlot().AutoHeight().Padding(0,16,0,0).HAlign(HAlign_Right)
+        [SNew(SBox).MinDesiredWidth(112).MinDesiredHeight(36)
+            [Button(TEXT("Close"),[this](){Close.ExecuteIfBound();})]];
+        SourceColumns->AddSlot().AutoHeight().Padding(0,0,0,12)
+            [Label(TEXT("POWER SOURCES / SYSTEMS"),16)];
         for (int i=0;i<FMath::Min(4,P->GetReactors().size());++i) {
             PowerSource* Source=P->GetReactors()[i]; if (!Source) continue;
             const int SourceIndex=SystemIndex(Source);
             TSharedPtr<SVerticalBox> Sources;
-            SourceColumns->AddSlot().FillWidth(1).Padding(6)
-            [SNew(SScrollBox)+SScrollBox::Slot()[SAssignNew(Sources,SVerticalBox)]];
+            SourceColumns->AddSlot().AutoHeight().Padding(0,0,0,20)
+                [SAssignNew(Sources,SVerticalBox)];
             Sources->AddSlot().AutoHeight()[SNew(SProgressBar)
                 .Percent_Lambda([this,SourceIndex](){auto* S=SystemAt(SourceIndex);
                     return TOptional<float>(S ? float(FMath::Clamp(S->GetPowerLevel()/100.0,0.0,1.0)) : 0.0f);})];
             Sources->AddSlot().AutoHeight().Padding(0,10,0,3)[Button(Name(Source),[this,SourceIndex](){Select(SourceIndex);})];
-            Sources->AddSlot().AutoHeight()[SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,SourceIndex](){
+            Sources->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,SourceIndex](){
                 SimSystem* S=SystemAt(SourceIndex); return Text(S ? FString::Printf(TEXT("Output %.0f%%   Charge %d%%"),S->GetPowerLevel(),S->GetCapacity()>0 ? S->Charge():0):TEXT("Unavailable"));})];
             Sources->AddSlot().AutoHeight().Padding(0,6)[Label(TEXT("SYSTEM / POWER"))];
             for (int c=0;c<Source->Clients().size();++c) {
                 const int Index=SystemIndex(Source->Clients()[c]); if (Index<0) continue;
                 Sources->AddSlot().AutoHeight().Padding(12,2)
                 [SNew(SButton).OnClicked_Lambda([this,Index](){Select(Index);return FReply::Handled();})
-                 [SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,Index](){SimSystem* S=SystemAt(Index);return Text(S ? FString::Printf(TEXT("%hs   %.0f%%   %s"),S->GetName(),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));})]];
+                 [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,Index](){SimSystem* S=SystemAt(Index);return Text(S ? FString::Printf(TEXT("%hs   %.0f%%   %s"),S->GetName(),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));})]];
             }
         }
         Details->AddSlot().AutoHeight().Padding(0,0,0,8)[Label(Name(CurrentSystem()),16)];
-        Details->AddSlot().AutoHeight()[SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){SimSystem* S=CurrentSystem();return Text(S ? FString::Printf(TEXT("Availability %.0f%%\nSafety %.0f%%   Stability %.0f%%\nPower %.0f%%"),S->GetAvailability(),S->GetSafety(),S->GetStability(),S->GetPowerLevel()):TEXT(""));})];
+        Details->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){SimSystem* S=CurrentSystem();return Text(S ? FString::Printf(TEXT("Availability %.0f%%\nSafety %.0f%%   Stability %.0f%%\nPower %.0f%%"),S->GetAvailability(),S->GetSafety(),S->GetStability(),S->GetPowerLevel()):TEXT(""));})];
         Details->AddSlot().AutoHeight().Padding(0,8)
         [SNew(SHorizontalBox)
          +SHorizontalBox::Slot()[Button(TEXT("Off"),[this](){if(auto* S=CurrentSystem())S->SetPowerOff();},[this](){return CurrentSystem()!=nullptr;})]
@@ -180,26 +210,26 @@ private:
                 for(int n=0;n<Now->GetReactors().size();++n)if(Now->GetReactors()[n]==S)return false;
                 return S->GetCapacity()>0 || S->GetSinkRate()>0;})];
         }
-        Components->AddSlot().AutoHeight().Padding(0,12)[Label(TEXT("COMPONENT / STATUS / SPARES"),16)];
+        Components->AddSlot().AutoHeight().Padding(0,0,0,12)[Label(TEXT("COMPONENTS / SPARES"),16)];
         if(SimSystem* S=CurrentSystem())for(int i=0;i<S->GetComponents().size();++i) {
             SimComponent* C=S->GetComponents()[i];if(!C)continue;
             Components->AddSlot().AutoHeight()[SNew(SButton).OnClicked_Lambda([this,i](){Component=i;return FReply::Handled();})
-             [SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,i](){auto* Sys=CurrentSystem();auto* Cmp=Sys && i<Sys->GetComponents().size()?Sys->GetComponents()[i]:nullptr;
+             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,i](){auto* Sys=CurrentSystem();auto* Cmp=Sys && i<Sys->GetComponents().size()?Sys->GetComponents()[i]:nullptr;
                 return Text(Cmp?FString::Printf(TEXT("%s%hs   %.0f%%   Spares %d"),Component==i?TEXT("> "):TEXT(""),Cmp->Name(),Cmp->Availability(),Cmp->SpareCount()):TEXT(""));})]];
         }
-        Components->AddSlot().AutoHeight().Padding(0,8)[SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){auto* C=CurrentComponent();auto* Now=GetShip();if(!C || !Now)return Text(TEXT("Select a component to repair."));
+        Components->AddSlot().AutoHeight().Padding(0,8)[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){auto* C=CurrentComponent();auto* Now=GetShip();if(!C || !Now)return Text(TEXT("Select a component to repair."));
             double Speed=FMath::Max(0.001,Now->RepairSpeed());return Text(FString::Printf(TEXT("Repair %.0fs / Replace %.0fs\nRemaining %.0fs"),C->RepairTime()/Speed,C->ReplaceTime()/Speed,double(C->TimeRemaining())));})];
         Components->AddSlot().AutoHeight()[SNew(SHorizontalBox)
          +SHorizontalBox::Slot()[Button(TEXT("Repair"),[this](){if(auto* C=CurrentComponent()){C->Repair();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->Availability()<100 && C->TimeRemaining()<=0;})]
          +SHorizontalBox::Slot()[Button(TEXT("Replace"),[this](){if(auto* C=CurrentComponent()){C->Replace();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->SpareCount()>0 && C->TimeRemaining()<=0;})]];
         Repairs->AddSlot().AutoHeight()[Label(TEXT("REPAIR QUEUE"),16)];
         Details->AddSlot().AutoHeight().Padding(0,8)[SNew(SButton).OnClicked_Lambda([this](){if(auto* Now=GetShip())Now->EnableRepair(!Now->AutoRepair());return FReply::Handled();})
-         [SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){return Text(GetShip() && GetShip()->AutoRepair()?TEXT("Automatic repair: ON"):TEXT("Automatic repair: OFF"));})]];
-        Repairs->AddSlot().AutoHeight()[SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){return Text(GetShip()?FString::Printf(TEXT("Repair teams: %d"),GetShip()->RepairTeams()):TEXT(""));})];
+         [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){return Text(GetShip() && GetShip()->AutoRepair()?TEXT("Automatic repair: ON"):TEXT("Automatic repair: OFF"));})]];
+        Repairs->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){return Text(GetShip()?FString::Printf(TEXT("Repair teams: %d"),GetShip()->RepairTeams()):TEXT(""));})];
         Repairs->AddSlot().AutoHeight().Padding(0,6)[Label(TEXT("SYSTEM / ETR"))];
         for(int i=0;i<P->RepairQueue().size();++i) {
             Repairs->AddSlot().AutoHeight().Padding(0,4)[SNew(SButton).OnClicked_Lambda([this,i](){auto* Now=GetShip();if(Now && i<Now->RepairQueue().size()){Queue=i;Select(SystemIndex(Now->RepairQueue()[i]));}return FReply::Handled();})
-             [SNew(STextBlock).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,i](){auto* Now=GetShip();return Text(Now && i<Now->RepairQueue().size()?FString::Printf(TEXT("%s%d. %s   %s"),Queue==i?TEXT("> "):TEXT(""),i+1,*Name(Now->RepairQueue()[i]),*RepairETR(Now,Now->RepairQueue()[i])):TEXT(""));})]];
+             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,i](){auto* Now=GetShip();return Text(Now && i<Now->RepairQueue().size()?FString::Printf(TEXT("%s%d. %s   %s"),Queue==i?TEXT("> "):TEXT(""),i+1,*Name(Now->RepairQueue()[i]),*RepairETR(Now,Now->RepairQueue()[i])):TEXT(""));})]];
         }
         Repairs->AddSlot().AutoHeight().Padding(0,8)[SNew(SHorizontalBox)
          +SHorizontalBox::Slot()[Button(TEXT("Move up"),[this](){GetShip()->IncreaseRepairPriority(Queue);--Queue;Dirty=true;},[this](){return GetShip() && Queue>0 && Queue<GetShip()->RepairQueue().size();})]

@@ -11,6 +11,11 @@
 #include "InputCoreTypes.h"
 #include "Sim.h"
 #include "Ship.h"
+#include "MissionUIStyle.h"
+#include "Components/Button.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Text/STextBlock.h"
 
 TSharedRef<SWidget> UInMissionPanelBase::RebuildWidget()
 {
@@ -39,12 +44,47 @@ void UInMissionPanelBase::NativeConstruct()
     if(!PanelTitle)PanelTitle=Cast<UTextBlock>(GetWidgetFromName(TEXT("PanelTitle")));
     if(PanelTitle)PanelTitle->SetText(GetPanelCaption());
     if(!RuntimeHost || !WidgetTree){UE_LOG(LogTemp,Error,TEXT("%s requires SizeBox RuntimeHost"),*GetName());return;}
+    // Reserve the bevel/footer area independently of content size or texture resolution.
+    ContentInsets.Bottom = FMath::Max(ContentInsets.Bottom, 112.0f);
     if (UCanvasPanelSlot* HostCanvasSlot = Cast<UCanvasPanelSlot>(RuntimeHost->Slot))
     {
         HostCanvasSlot->SetAnchors(FAnchors(0, 0, 1, 1));
         HostCanvasSlot->SetAlignment(FVector2D::ZeroVector);
         HostCanvasSlot->SetOffsets(ContentInsets);
         HostCanvasSlot->SetAutoSize(false);
+    }
+    // Use the same menu textures and states as the rest of the game's menus.
+    UButton* StyleButton = WidgetTree->ConstructWidget<UButton>();
+    UTextBlock* StyleText = WidgetTree->ConstructWidget<UTextBlock>();
+    StyleText->SetText(FText::FromString(TEXT("Close")));
+    StyleButton->SetContent(StyleText);
+    MissionUIStyle::ApplyMenuButtonStyle(StyleButton, GetGameInstance());
+    FooterButtonStyle = StyleButton->GetStyle();
+
+    if (UCanvasPanel* FooterCanvas = Cast<UCanvasPanel>(RuntimeHost->GetParent()))
+    {
+        if (!FooterWidgetHost)
+            FooterWidgetHost = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        UCanvasPanelSlot* FooterSlot = Cast<UCanvasPanelSlot>(FooterWidgetHost->Slot);
+        if (!FooterSlot) FooterSlot = FooterCanvas->AddChildToCanvas(FooterWidgetHost);
+        FooterSlot->SetAnchors(FAnchors(0,1,1,1));
+        FooterSlot->SetAlignment(FVector2D::ZeroVector);
+        FooterSlot->SetOffsets(FMargin(24,-90,24,56));
+        FooterSlot->SetAutoSize(false);
+        FooterSlot->SetZOrder(10);
+        FooterWidgetHost->SetContent(SAssignNew(FooterContent,SBox).VAlign(VAlign_Center));
+        FooterContent->SetContent(
+            SNew(SBox).HAlign(HAlign_Right)
+            [SNew(SBox).WidthOverride(160).HeightOverride(48)
+                [SNew(SButton).ButtonStyle(&FooterButtonStyle)
+                    .HAlign(HAlign_Center).VAlign(VAlign_Center)
+                    .OnClicked_Lambda([this](){RequestPanelClose();return FReply::Handled();})
+                    [SNew(STextBlock).Text(StyleText->GetText())
+                        .Font(StyleText->GetFont()).ColorAndOpacity(StyleText->GetColorAndOpacity())]]]);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("%s: RuntimeHost must be a direct child of a CanvasPanel to position the footer."), *GetName());
     }
     RuntimeHost->SetVisibility(ESlateVisibility::Visible);
     RuntimeHost->SetClipping(EWidgetClipping::ClipToBounds);
@@ -54,6 +94,8 @@ void UInMissionPanelBase::NativeConstruct()
 }
 void UInMissionPanelBase::NativeDestruct()
 {
+    if(FooterWidgetHost)FooterWidgetHost->SetContent(SNullWidget::NullWidget);
+    FooterContent.Reset();
     if(GeneratedContent)GeneratedContent->SetContent(SNullWidget::NullWidget);
     OnPanelClosed.Unbind();
     Super::NativeDestruct();

@@ -12,6 +12,10 @@ class STARSHATTERWARS_API UNavigationDlg : public UInMissionPanelBase
 {
     GENERATED_BODY()
 protected:
+    // First integration step: show the Blueprint shell without loading the map.
+    UPROPERTY(EditDefaultsOnly, Category="Navigation")
+    bool bFrameOnly = true;
+
     UPROPERTY(EditDefaultsOnly, Category="Navigation")
     TSubclassOf<UMissionNavDlg> NavigationMapClass;
     UPROPERTY(Transient) TObjectPtr<UMissionNavDlg> NavigationMap;

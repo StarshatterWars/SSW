@@ -15,9 +15,15 @@
 #include "CoreMinimal.h"
 #include "Styling/SlateTypes.h"
 
+class UButton;
+class UGameInstance;
+
 namespace MissionUIStyle
 {
     // -----------------------------------------------------------------
+    // Reuse the configured menu textures, states, sounds and typography.
+    void ApplyMenuButtonStyle(UButton* Button, UGameInstance* GameInstance);
+
     // Colors
     // -----------------------------------------------------------------
 

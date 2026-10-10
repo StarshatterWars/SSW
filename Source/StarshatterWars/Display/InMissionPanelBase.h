@@ -1,11 +1,13 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "Styling/SlateTypes.h"
 #include "InMissionPanelBase.generated.h"
 class USizeBox;
 class UTextBlock;
 class UNativeWidgetHost;
 class Ship;
+class SBox;
 
 UCLASS(Abstract, Blueprintable)
 class STARSHATTERWARS_API UInMissionPanelBase : public UBaseScreen
@@ -19,6 +21,9 @@ protected:
     UPROPERTY(meta=(BindWidgetOptional)) UTextBlock* PanelTitle=nullptr;
     UPROPERTY(Transient) UNativeWidgetHost* GeneratedContent=nullptr;
     UPROPERTY(EditDefaultsOnly, Category="Mission Panel") FMargin ContentInsets=FMargin(24,96,24,24);
+    UPROPERTY(Transient) UNativeWidgetHost* FooterWidgetHost=nullptr;
+    UPROPERTY(Transient) FButtonStyle FooterButtonStyle;
+    TSharedPtr<SBox> FooterContent;
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
