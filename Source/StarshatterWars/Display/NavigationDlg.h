@@ -19,6 +19,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Navigation")
     TSubclassOf<UMissionNavDlg> NavigationMapClass;
     UPROPERTY(Transient) TObjectPtr<UMissionNavDlg> NavigationMap;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SystemTitleText;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SectorTitleText;
+    virtual void NativeConstruct() override;
+    void UpdateLocationTitles();
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
     virtual void NativeDestruct() override;

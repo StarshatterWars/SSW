@@ -69,13 +69,13 @@ private:
     static FLinearColor Blue(){return FLinearColor(0.25f,0.7f,1);}
     static FString String(const char* Value){return Value?FString(UTF8_TO_TCHAR(Value)):FString();}
     void Refresh() {
-        Title=TEXT("MISSION OBJECTIVES"); Body=TEXT("No active mission.");
+        Title.Empty(); Body=TEXT("No active mission.");
         if(!Active || !Active())return;
         auto* Simulation=Sim::GetSim();
         auto* M=Simulation?Simulation->GetMission():nullptr;
         auto* P=Simulation?Simulation->GetPlayerShip():nullptr;
         if(!M)return;
-        Title+=TEXT(" — ")+String(M->GetName());
+        Title=String(M->GetName());
         Body=TEXT("OBJECTIVES\n")+String(M->GetObjective())+TEXT("\n\nSITUATION\n")+String(M->GetSituation());
         auto* Element=P?P->GetElement():nullptr;
         if(!Element)return;

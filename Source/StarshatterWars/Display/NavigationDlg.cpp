@@ -8,6 +8,9 @@
 #include "SimRegion.h"
 #include "StarSystem.h"
 #include "Components/TextBlock.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Blueprint/WidgetTree.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Input/SButton.h"
@@ -44,6 +47,47 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
 
 FText UNavigationDlg::GetPanelCaption() const
 {
+    return FText::FromString(TEXT("NAVIGATION"));
+}
+
+void UNavigationDlg::NativeConstruct()
+{
+    Super::NativeConstruct();
+    UCanvasPanel* TitleCanvas = PanelTitle ? Cast<UCanvasPanel>(PanelTitle->GetParent()) : nullptr;
+    UCanvasPanelSlot* TitleSlot = PanelTitle ? Cast<UCanvasPanelSlot>(PanelTitle->Slot) : nullptr;
+    if (!WidgetTree || !TitleCanvas || !TitleSlot) return;
+
+    auto AddLocationTitle = [this, TitleCanvas, TitleSlot](TObjectPtr<UTextBlock>& Label, bool bRight)
+    {
+        if (!Label) Label = WidgetTree->ConstructWidget<UTextBlock>();
+        Label->SetFont(PanelTitle->GetFont());
+        Label->SetColorAndOpacity(PanelTitle->GetColorAndOpacity());
+        Label->SetJustification(bRight ? ETextJustify::Right : ETextJustify::Left);
+        Label->SetAutoWrapText(false);
+        Label->SetClipping(EWidgetClipping::ClipToBounds);
+        Label->SetVisibility(ESlateVisibility::HitTestInvisible);
+        UCanvasPanelSlot* LocationSlot = Cast<UCanvasPanelSlot>(Label->Slot);
+        if (!LocationSlot) LocationSlot = TitleCanvas->AddChildToCanvas(Label.Get());
+        FAnchorData Layout = TitleSlot->GetLayout();
+        // Share the Blueprint title's vertical position, but anchor to the bar edges.
+        Layout.Anchors.Minimum.X = bRight ? 0.68f : 0.0f;
+        Layout.Anchors.Maximum.X = bRight ? 1.0f : 0.32f;
+        Layout.Alignment.X = 0.0f;
+        Layout.Offsets.Left = 4.0f;
+        Layout.Offsets.Right = 4.0f;
+        if (Layout.Anchors.Minimum.Y == Layout.Anchors.Maximum.Y && Layout.Offsets.Bottom <= 0.0f)
+            Layout.Offsets.Bottom = PanelTitle->GetFont().Size + 12.0f;
+        LocationSlot->SetLayout(Layout);
+        LocationSlot->SetAutoSize(false);
+        LocationSlot->SetZOrder(TitleSlot->GetZOrder() + 1);
+    };
+    AddLocationTitle(SystemTitleText, false);
+    AddLocationTitle(SectorTitleText, true);
+    UpdateLocationTitles();
+}
+
+void UNavigationDlg::UpdateLocationTitles()
+{
     // Resolve through the live simulation each time; never retain simulation pointers.
     auto* LiveSim = Sim::GetSim();
     auto* LiveMission = LiveSim ? LiveSim->GetMission() : nullptr;
@@ -55,7 +99,10 @@ FText UNavigationDlg::GetPanelCaption() const
         : (LiveMission ? LiveMission->GetRegion() : nullptr);
     const FString SystemText = SystemName && *SystemName ? UTF8_TO_TCHAR(SystemName) : TEXT("Unknown system");
     const FString SectorText = SectorName && *SectorName ? UTF8_TO_TCHAR(SectorName) : TEXT("Unknown sector");
-    return FText::FromString(FString::Printf(TEXT("NAVIGATION — %s — %s"), *SystemText, *SectorText));
+    const FText SystemCaption = FText::FromString(SystemText);
+    const FText SectorCaption = FText::FromString(SectorText);
+    if (SystemTitleText && !SystemTitleText->GetText().EqualTo(SystemCaption)) SystemTitleText->SetText(SystemCaption);
+    if (SectorTitleText && !SectorTitleText->GetText().EqualTo(SectorCaption)) SectorTitleText->SetText(SectorCaption);
 }
 
 void UNavigationDlg::NativeDestruct()
@@ -69,9 +116,5 @@ void UNavigationDlg::NativeDestruct()
 void UNavigationDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    if (PanelTitle)
-    {
-        const FText Caption = GetPanelCaption();
-        if (!PanelTitle->GetText().EqualTo(Caption)) PanelTitle->SetText(Caption);
-    }
+    UpdateLocationTitles();
 }
