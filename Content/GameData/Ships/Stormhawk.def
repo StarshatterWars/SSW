@@ -59,7 +59,7 @@ drive:      {
    thrust:  20,
    augmenter: 60,
    scale:   0.35,
-   port:    (0, 0, -178),
+   port:    (0, 0, -17.8),
 
    loc:     (0, 0, -100),
    size:    16,
@@ -233,35 +233,35 @@ thruster: {
    size:             32,
    hull_factor:      0.8
 
-   port_fore:   {loc:(-104,  -5, -40), fire: 0x0044},
-   port_fore:   {loc:( -95,  -4, -31), fire: 0x0044},
-   port_fore:   {loc:(  95,  -4, -31), fire: 0x0084},
-   port_fore:   {loc:( 104,  -5, -40), fire: 0x0084},
+   port_fore:   {loc:(-10.4, -0.5, -4), fire: 0x0044},
+   port_fore:   {loc:(-9.5, -0.4, -3.1), fire: 0x0044},
+   port_fore:   {loc:(9.5, -0.4, -3.1), fire: 0x0084},
+   port_fore:   {loc:(10.4, -0.5, -4), fire: 0x0084},
 
-   port_aft:    {loc:(-104,  -5,-119), fire: 0x0088},
-   port_aft:    {loc:( -95,  -4,-121), fire: 0x0088},
-   port_aft:    {loc:(  95,  -4,-121), fire: 0x0048},
-   port_aft:    {loc:( 104,  -5,-119), fire: 0x0048},
+   port_aft:    {loc:(-10.4, -0.5, -11.9), fire: 0x0088},
+   port_aft:    {loc:(-9.5, -0.4, -12.1), fire: 0x0088},
+   port_aft:    {loc:(9.5, -0.4, -12.1), fire: 0x0048},
+   port_aft:    {loc:(10.4, -0.5, -11.9), fire: 0x0048},
 
-   port_top:    {loc:(  -6,  13, 120), fire: 0x0210},
-   port_top:    {loc:(  -6,  13, 113), fire: 0x0210},
-   port_top:    {loc:(   6,  13, 113), fire: 0x0210},
-   port_top:    {loc:(   6,  13, 120), fire: 0x0210},
+   port_top:    {loc:(-0.6, 1.3, 12), fire: 0x0210},
+   port_top:    {loc:(-0.6, 1.3, 11.3), fire: 0x0210},
+   port_top:    {loc:(0.6, 1.3, 11.3), fire: 0x0210},
+   port_top:    {loc:(0.6, 1.3, 12), fire: 0x0210},
 
-   port_bottom: {loc:(  -6, -15, 120), fire: 0x0120},
-   port_bottom: {loc:(  -6, -15, 113), fire: 0x0120},
-   port_bottom: {loc:(   6, -15, 113), fire: 0x0120},
-   port_bottom: {loc:(   6, -15, 120), fire: 0x0120},
+   port_bottom: {loc:(-0.6, -1.5, 12), fire: 0x0120},
+   port_bottom: {loc:(-0.6, -1.5, 11.3), fire: 0x0120},
+   port_bottom: {loc:(0.6, -1.5, 11.3), fire: 0x0120},
+   port_bottom: {loc:(0.6, -1.5, 12), fire: 0x0120},
 
-   port_top:    {loc:( -83,   0,-100), fire: 0x0510},
-   port_top:    {loc:( -83,   0,-107), fire: 0x0510},
-   port_top:    {loc:(  83,   0,-100), fire: 0x0910},
-   port_top:    {loc:(  83,   0,-107), fire: 0x0910},
+   port_top:    {loc:(-8.3, 0, -10), fire: 0x0510},
+   port_top:    {loc:(-8.3, 0, -10.7), fire: 0x0510},
+   port_top:    {loc:(8.3, 0, -10), fire: 0x0910},
+   port_top:    {loc:(8.3, 0, -10.7), fire: 0x0910},
 
-   port_bottom: {loc:( -96,  -9, -96), fire: 0x0A20},
-   port_bottom: {loc:( -96,  -9,-115), fire: 0x0A20},
-   port_bottom: {loc:(  96,  -9, -96), fire: 0x0620},
-   port_bottom: {loc:(  96,  -9,-115), fire: 0x0620},
+   port_bottom: {loc:(-9.6, -0.9, -9.6), fire: 0x0A20},
+   port_bottom: {loc:(-9.6, -0.9, -11.5), fire: 0x0A20},
+   port_bottom: {loc:(9.6, -0.9, -9.6), fire: 0x0620},
+   port_bottom: {loc:(9.6, -0.9, -11.5), fire: 0x0620},
 }
 
 

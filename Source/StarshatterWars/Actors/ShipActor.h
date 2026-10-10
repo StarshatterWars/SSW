@@ -396,6 +396,7 @@ public:
     UPROPERTY(Transient)
     TArray<TObjectPtr<UNiagaraComponent>> RuntimeMainEngineEmitters;
 
+    // Parallel to successful emitter creations; retained across throttle updates.
     TArray<FVector> RuntimeMainEngineBaseScales;
 
     UPROPERTY(Transient)
@@ -407,8 +408,7 @@ public:
     UPROPERTY(Transient)
     TObjectPtr<UAudioComponent> RumbleAudioComponent;
 
-    FVector RuntimePortLocationInVFXSpace(const FVector& ScaledLegacyLocation) const;
-    FRotator RuntimePortRotationInVFXSpace(const FRotator& FlightRotation) const;
+    FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const;
     void BuildMainEnginesFromRuntime();
     void ClearRuntimeMainEngines();
     void UpdateMainEnginesFromRuntime(float DeltaTime);

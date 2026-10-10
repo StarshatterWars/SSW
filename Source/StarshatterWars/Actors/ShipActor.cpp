@@ -33,10 +33,8 @@
 
 #include "Drive.h"
 #include "Ship.h"
-#include "Thruster.h"
 #include "ShipDesign.h"
-#include "NiagaraEmitter.h"
-#include "NiagaraEmitterHandle.h"
+#include "Thruster.h"
 
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
@@ -94,41 +92,12 @@ static void ClearPointLights(TArray<TObjectPtr<UPointLightComponent>>& Lights)
     Lights.Empty();
 }
 
-// Compact exhaust must follow the completed ship pose, not Niagara's early tick.
-static void ConfigureAttachedShipFX(UNiagaraComponent* FX, AActor* Owner)
+static FRotator ConvertLegacyPortRotation(
+    const FRotator& LegacyRot)
 {
-    if (!FX || !Owner) return;
-    FX->SetAbsolute(false, false, false);
-    FX->SetTickBehavior(ENiagaraTickBehavior::ForceTickLast);
-    FX->AddTickPrerequisiteActor(Owner);
+    return LegacyRot;
 }
 
-static void AuditShipFXSpace(UNiagaraSystem* System)
-{
-    if (!System) return;
-    static TSet<TWeakObjectPtr<UNiagaraSystem>> Audited;
-    const TWeakObjectPtr<UNiagaraSystem> Key(System);
-    if (Audited.Contains(Key)) return;
-    Audited.Add(Key);
-    for (const FNiagaraEmitterHandle& Handle : System->GetEmitterHandles()) {
-        const FVersionedNiagaraEmitterData* Data=Handle.GetEmitterData();
-        if (Handle.GetIsEnabled() && Data && !Data->bLocalSpace)
-            UE_LOG(LogTemp, Warning, TEXT("[ShipFXSpace] %s emitter '%s' uses WORLD space. For a rigid engine plume/flare, enable Local Space in this emitter asset; existing particles otherwise trail during turns."),
-                *System->GetPathName(), *Handle.GetName().ToString());
-    }
-}
-
-static FRotator LegacyJetRotation(EThrusterPortDir Direction)
-{
-    switch (Direction) {
-    case EThrusterPortDir::AFT: return FRotator(0,180,0);
-    case EThrusterPortDir::LEFT: return FRotator(0,-90,0);
-    case EThrusterPortDir::RIGHT: return FRotator(0,90,0);
-    case EThrusterPortDir::TOP: return FRotator(90,0,0);
-    case EThrusterPortDir::BOTTOM: return FRotator(-90,0,0);
-    default: return FRotator::ZeroRotator; // FORE: +X exhaust
-    }
-}
 
 static FVector ConvertLegacyPortLocation(const FVector& LegacyLoc)
 {
@@ -190,7 +159,6 @@ AShipActor::AShipActor()
 
     VFXRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VFXRoot"));
     VFXRoot->SetupAttachment(ShipRoot);
-    // Effects use the actor frame; the imported hull correction belongs to VisualRoot only.
     VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
@@ -334,7 +302,8 @@ void AShipActor::OnConstruction(const FTransform& Transform)
     // Imported hull nose is -Y; +90 yaw aligns it with the actor's +X flight axis.
     // Assign, never accumulate: existing Blueprint +90 values remain +90.
     if (VisualRoot) VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-    // Override obsolete rotations saved in existing Blueprint component templates.
+    // Port positions and jet rotations already use actor flight axes.
+    // Reset inherited Blueprint defaults as well as native defaults.
     if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
     UpdateDerivedPointsFromHull();
@@ -368,7 +337,8 @@ void AShipActor::BeginPlay()
 {
     // Apply after Blueprint construction scripts as well as native construction.
     if (VisualRoot) VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-    // Override obsolete rotations saved in existing Blueprint component templates.
+    // Port positions and jet rotations already use actor flight axes.
+    // Reset inherited Blueprint defaults as well as native defaults.
     if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
     Super::BeginPlay();
 }
@@ -523,9 +493,6 @@ void AShipActor::RebuildMainEngineEmitters()
     // ----------------------------------------------------
     // Early out
     // ----------------------------------------------------
-
-    // A bound simulation drive owns engine exhaust; never add the fallback set.
-    if (RuntimeShip) return;
 
     if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
     {
@@ -1893,30 +1860,27 @@ void AShipActor::BuildNavLightsFromRuntime()
 
 }
 
-// Legacy and the data-table importer already multiply port coordinates by
-// ShipDesign::scale. The imported hull uses raw model coordinates and the BP
-// actor supplies visual scale, so undo the data scale before attachment.
-FVector AShipActor::RuntimePortLocationInVFXSpace(const FVector& ScaledLegacyLocation) const
+FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const
 {
+    // Import already multiplies every drive/thruster port by design.scale.
+    // Remove that factor before the component hierarchy applies actor/BP scale.
     const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : nullptr;
-    const double DataScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER ? Design->scale : 1.0;
-    const FVector FlightLocal = ConvertLegacyPortLocation(ScaledLegacyLocation) / DataScale;
-    if (!HullMesh || !VFXRoot) return FlightLocal;
+    const double DesignScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER
+        ? static_cast<double>(Design->scale) : 1.0;
+    const FVector AuthoredPosition = ImportedPosition / DesignScale;
+    if (!HullMesh || !VFXRoot)
+    {
+        return AuthoredPosition;
+    }
 
-    // Inverse of the standard +90 yaw import correction. Applying the actual
-    // hull transform then includes BP mesh offsets/scales without rotating FX twice.
-    const FQuat ImportCorrection = FRotator(0,90,0).Quaternion();
-    const FVector MeshLocal = ImportCorrection.UnrotateVector(FlightLocal);
-    const FVector WorldPort = HullMesh->GetComponentTransform().TransformPosition(MeshLocal);
-    return VFXRoot->GetComponentTransform().InverseTransformPosition(WorldPort);
-}
-
-FRotator AShipActor::RuntimePortRotationInVFXSpace(const FRotator& FlightRotation) const
-{
-    if (!HullMesh || !VFXRoot) return FlightRotation;
-    const FQuat ImportCorrection = FRotator(0,90,0).Quaternion();
-    const FQuat WorldRotation = HullMesh->GetComponentQuat() * ImportCorrection.Inverse() * FlightRotation.Quaternion();
-    return (VFXRoot->GetComponentQuat().Inverse() * WorldRotation).Rotator();
+    // Preserve the existing VFX axis convention and all emitter rotations.
+    // Express the offset in the hull's unscaled axes, then let the actual hull
+    // transform supply BP mesh/VisualRoot/actor scale and mesh pivot offset.
+    const FTransform HullTransform = HullMesh->GetComponentTransform();
+    const FTransform FXTransform = VFXRoot->GetComponentTransform();
+    const FVector WorldDirection = FXTransform.GetRotation().RotateVector(AuthoredPosition);
+    const FVector HullLocal = HullTransform.GetRotation().UnrotateVector(WorldDirection);
+    return FXTransform.InverseTransformPosition(HullTransform.TransformPosition(HullLocal));
 }
 
 void AShipActor::BuildMainEnginesFromRuntime()
@@ -1928,12 +1892,6 @@ void AShipActor::BuildMainEnginesFromRuntime()
         return;
     }
 
-    // Match legacy's one exhaust location per drive port. Retire any generated
-    // fallback exhaust/lights left from Blueprint construction before binding.
-    ClearComponentArray(MainEngineEmitters);
-    ClearPointLights(MainEngineLights);
-    if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem) return;
-
     Drive* MainDrive = RuntimeShip->GetMainDrive();
 
     if (!MainDrive)
@@ -1944,7 +1902,6 @@ void AShipActor::BuildMainEnginesFromRuntime()
         return;
     }
 
-    AuditShipFXSpace(MainEngineEmitterSystem);
     const int32 PortCount = MainDrive->NumPorts();
 
     for (int32 i = 0; i < PortCount; ++i)
@@ -1962,9 +1919,9 @@ void AShipActor::BuildMainEnginesFromRuntime()
         Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
-        Point->SetRelativeLocation(RuntimePortLocationInVFXSpace(MainDrive->GetPortLocation(i)));
+        Point->SetRelativeLocation(RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(i)));
         Point->SetRelativeRotation(
-            RuntimePortRotationInVFXSpace(
+            ConvertLegacyPortRotation(
                 FRotator(0.0f, 180.0f, 0.0f)));
 
         RuntimeMainEnginePoints.Add(Point);
@@ -1977,8 +1934,6 @@ void AShipActor::BuildMainEnginesFromRuntime()
         if (Emitter)
         {
             Emitter->SetupAttachment(Point);
-            Emitter->SetAutoActivate(false);
-            ConfigureAttachedShipFX(Emitter, this);
             Emitter->RegisterComponent();
 
             Emitter->SetAsset(MainEngineEmitterSystem);
@@ -1990,14 +1945,9 @@ void AShipActor::BuildMainEnginesFromRuntime()
             Emitter->Deactivate();
 
             RuntimeMainEngineEmitters.Add(Emitter);
-            RuntimeMainEngineBaseScales.Add(MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));
+            RuntimeMainEngineBaseScales.Add(Emitter->GetRelativeScale3D());
         }
     }
-    UE_LOG(LogTemp, Log,
-        TEXT("[EnginePortCount] BP=%s Ship='%hs' DrivePorts=%d RuntimeEngineEmitters=%d FallbackEmitters=%d"),
-        *GetClass()->GetName(), RuntimeShip->GetName(), PortCount,
-        RuntimeMainEngineEmitters.Num(), MainEngineEmitters.Num());
-
 }
 
 void AShipActor::ClearRuntimeNavLights()
@@ -2064,7 +2014,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
         {
             if (Emitter)
             {
-                Emitter->DeactivateImmediate();
+                Emitter->Deactivate();
                 Emitter->SetVisibility(false);
                 Emitter->SetHiddenInGame(true);
             }
@@ -2087,17 +2037,51 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float Throttle =
         (float)RuntimeShip->GetThrottle();
 
-    // Drive already owns spool/power availability. A second visual interpolation
-    // delays ignition and shutdown and can display a powered-off drive as firing.
-    MainEngineVisualPower = MainDrive->IsPowerOn() && MainDrive->GetStatus()>SYSTEM_STATUS::CRITICAL
-        ? FMath::Clamp(MainDrive->GetThrottle(),0.0f,1.0f) : 0.0f;
+    const float RequestAlpha =
+        FMath::Clamp(
+            ThrottleRequest / 100.0f,
+            0.0f,
+            1.0f);
+
+    const bool bRequested =
+        RequestAlpha > 0.01f;
+
+    const float TargetPower =
+        bRequested
+        ? FMath::Max(RequestAlpha, 0.20f)
+        : 0.0f;
+
+    if (bRequested)
+    {
+        MainEngineVisualPower =
+            FMath::FInterpTo(
+                MainEngineVisualPower,
+                TargetPower,
+                DeltaTime,
+                25.0f);
+    }
+    else
+    {
+        MainEngineVisualPower =
+            FMath::FInterpTo(
+                MainEngineVisualPower,
+                0.0f,
+                DeltaTime,
+                40.0f);
+
+        if (MainEngineVisualPower < 0.03f)
+        {
+            MainEngineVisualPower =
+                0.0f;
+        }
+    }
 
     const bool bActive =
         MainEngineVisualPower > 0.03f;
 
-    for (int32 EngineIndex=0; EngineIndex<RuntimeMainEngineEmitters.Num(); ++EngineIndex)
+    for (int32 EmitterIndex = 0; EmitterIndex < RuntimeMainEngineEmitters.Num(); ++EmitterIndex)
     {
-        UNiagaraComponent* Emitter=RuntimeMainEngineEmitters[EngineIndex];
+        UNiagaraComponent* Emitter = RuntimeMainEngineEmitters[EmitterIndex];
         if (!Emitter)
         {
             continue;
@@ -2112,8 +2096,9 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
                 2.00f,
                 MainEngineVisualPower);
 
-        Emitter->SetRelativeScale3D(
-            RuntimeScale * (RuntimeMainEngineBaseScales.IsValidIndex(EngineIndex) ? RuntimeMainEngineBaseScales[EngineIndex] : FVector::OneVector));
+        const FVector BaseScale = RuntimeMainEngineBaseScales.IsValidIndex(EmitterIndex)
+            ? RuntimeMainEngineBaseScales[EmitterIndex] : FVector::OneVector;
+        Emitter->SetRelativeScale3D(RuntimeScale * BaseScale);
 
         Emitter->SetVisibility(
             bActive);
@@ -2144,7 +2129,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
         {
             if (Emitter->IsActive())
             {
-                Emitter->DeactivateImmediate();
+                Emitter->Deactivate();
             }
         }
     }
@@ -2356,8 +2341,6 @@ void AShipActor::BuildThrustersFromRuntime()
 
    
 
-    AuditShipFXSpace(ThrusterFlareSystem);
-    AuditShipFXSpace(ThrusterTrailSystem);
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
@@ -2372,9 +2355,7 @@ void AShipActor::BuildThrustersFromRuntime()
         FRuntimeThrusterFX FX;
 
         const FVector PortLocation =
-            RuntimePortLocationInVFXSpace(Port->Location);
-        const bool bSocket = HullMesh && !Port->SocketName.IsNone() && HullMesh->DoesSocketExist(Port->SocketName);
-        const FRotator JetRotation = Port->Rotation.IsNearlyZero() ? LegacyJetRotation(Port->Direction) : Port->Rotation;
+            RuntimeEmitterLocalPosition(Port->Location);
         FX.PointName = Port->PointName;
         FX.Direction = Port->Direction;
         FX.Location = Port->Location;
@@ -2390,13 +2371,12 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Flare)
             {
                 FX.Flare->SetAsset(ThrusterFlareSystem);
-                FX.Flare->SetupAttachment(bSocket ? static_cast<USceneComponent*>(HullMesh) : VFXRoot.Get(), bSocket ? Port->SocketName : NAME_None);
-                FX.Flare->SetRelativeLocation(bSocket ? FVector::ZeroVector : PortLocation);
+                FX.Flare->SetupAttachment(VFXRoot);
+                FX.Flare->SetRelativeLocation(PortLocation);
                 FX.Flare->SetAutoActivate(false);
-                ConfigureAttachedShipFX(FX.Flare, this);
                 FX.Flare->RegisterComponent();
                 FX.Flare->SetRelativeRotation(
-                    bSocket ? Port->Rotation : RuntimePortRotationInVFXSpace(JetRotation));
+                    ConvertLegacyPortRotation(Port->Rotation));
 
                 FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
                 FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
@@ -2410,12 +2390,11 @@ void AShipActor::BuildThrustersFromRuntime()
             if (FX.Trail)
             {
                 FX.Trail->SetAsset(ThrusterTrailSystem);
-                FX.Trail->SetupAttachment(bSocket ? static_cast<USceneComponent*>(HullMesh) : VFXRoot.Get(), bSocket ? Port->SocketName : NAME_None);
-                FX.Trail->SetRelativeLocation(bSocket ? FVector::ZeroVector : PortLocation);
+                FX.Trail->SetupAttachment(VFXRoot);
+                FX.Trail->SetRelativeLocation(PortLocation);
                 FX.Trail->SetRelativeRotation(
-                    bSocket ? Port->Rotation : RuntimePortRotationInVFXSpace(JetRotation));
+                    ConvertLegacyPortRotation(Port->Rotation));
                 FX.Trail->SetAutoActivate(false);
-                ConfigureAttachedShipFX(FX.Trail, this);
                 FX.Trail->RegisterComponent();
 
                 FX.Trail->SetVariableFloat(TEXT("Scale"), Port->TrailScale);
@@ -2467,6 +2446,13 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         return;
     }
 
+    // Drive throttle is already normalized to 0..1. Do not substitute velocity:
+    // a coasting ship need not be firing its engines.
+    Drive* MainDrive = RuntimeShip->GetMainDrive();
+    const float DriveBurn = MainDrive && MainDrive->IsPowerOn()
+        && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
+        ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
+
     // Visit each cached emitter once, rather than searching the array per port.
     for (FRuntimeThrusterFX& Entry : RuntimeThrusterFX)
     {
@@ -2480,7 +2466,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = Burn;
+        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(
