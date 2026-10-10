@@ -16,6 +16,9 @@
 */
 
 #include "FlightOpsDlg.h"
+#include "FlightOpsPopup.h"
+#include "SimElement.h"
+#include "Engine/World.h"
 
 #include "GameStructs.h"
 
@@ -105,7 +108,7 @@ void UFlightOpsDlg::NativeDestruct()
 void UFlightOpsDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    ExecFrame();
+    if (HangarList) ExecFrame();
 }
 
 // +--------------------------------------------------------------------+
@@ -279,7 +282,7 @@ void UFlightOpsDlg::OnRecallClicked()
 
 void UFlightOpsDlg::OnCloseClicked()
 {
-    RemoveFromParent();
+    RequestPanelClose();
 }
 
 // +--------------------------------------------------------------------+
@@ -292,3 +295,21 @@ void UFlightOpsDlg::OnMissionAssaultClicked() { SetMissionType(2); }
 void UFlightOpsDlg::OnMissionStrikeClicked() { SetMissionType(3); }
 void UFlightOpsDlg::OnMissionEscortClicked() { SetMissionType(4); }
 void UFlightOpsDlg::OnMissionScoutClicked() { SetMissionType(5); }
+
+Ship* UFlightOpsDlg::ResolveCarrier() const
+{
+    Ship* Player=ResolvePanelShip();
+    if(!Player)return nullptr;
+    if(Player->GetHangar())return Player;
+    SimElement* Element=Player->GetElement();
+    Ship* Carrier=Element?Element->GetCarrier():nullptr;
+    return Carrier && !Carrier->IsDead()?Carrier:nullptr;
+}
+TSharedRef<SWidget> UFlightOpsDlg::CreatePanelContent()
+{
+    const TWeakObjectPtr<UFlightOpsDlg> Owner(this);
+    return SNew(SFlightOpsPopup)
+        .ResolveCarrier([Owner](){return Owner.IsValid()?Owner->ResolveCarrier():nullptr;})
+        .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();});
+}
+FText UFlightOpsDlg::GetPanelCaption() const{return FText::FromString(TEXT("FLIGHT OPERATIONS"));}

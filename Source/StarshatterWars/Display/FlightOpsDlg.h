@@ -27,7 +27,7 @@
 #include "Math/Vector.h"             // FVector
 #include "Math/Color.h"              // FColor
 #include "Math/UnrealMathUtility.h"  // FMath
-#include "BaseScreen.h"
+#include "InMissionPanelBase.h"
 
 #include "Blueprint/UserWidget.h"
 #include "FlightOpsDlg.generated.h"
@@ -53,8 +53,8 @@ class Instruction;
 
 // +--------------------------------------------------------------------+
 
-UCLASS()
-class STARSHATTERWARS_API UFlightOpsDlg : public UBaseScreen
+UCLASS(Blueprintable)
+class STARSHATTERWARS_API UFlightOpsDlg : public UInMissionPanelBase
 {
     GENERATED_BODY()
 
@@ -71,6 +71,9 @@ public:
     void ExecFrame();
 
 protected:
+    virtual TSharedRef<SWidget> CreatePanelContent() override;
+    virtual FText GetPanelCaption() const override;
+    Ship* ResolveCarrier() const;
     // -----------------------------------------------------------------
     // UI Wiring (BindWidget):
 
