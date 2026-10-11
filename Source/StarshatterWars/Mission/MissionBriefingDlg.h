@@ -59,6 +59,9 @@ class STARSHATTERWARS_API UMissionBriefingDlg : public UBaseScreen
 
 public:
     UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer);
+    TArray<AActor*> GetSelectableMissionContacts() const;
+    void SelectMissionContact(AActor* Selected);
+    AActor* GetSelectedMissionContact() const { return SelectedMissionTarget.Get(); }
 
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
 

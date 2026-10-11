@@ -215,7 +215,7 @@ private:
         TArray<SimContact*> Sorted;
         for (int32 I=0;I<Contacts.size();++I) {
             auto* C=Contacts[I]; auto* T=C?C->GetShip():nullptr;
-            if (T && T!=P && C->Visible(P) && !T->IsDead() && T->GetRegion()==P->GetRegion()) Sorted.Add(C);
+            if (T && T!=P && C->Visible(P) && !T->IsDead() && T->GetRegion()==P->GetRegion() && (ContactsOnly || (T->GetIFF()>0 && T->GetIFF()!=P->GetIFF()))) Sorted.Add(C);
         }
         const FVector Observer=P->GetLocation();
         Sorted.StableSort([this,Observer,P](const SimContact& A,const SimContact& B){
@@ -238,7 +238,9 @@ private:
             ContactsBox->AddSlot().AutoHeight().Padding(0,2)
             [SNew(SButton).IsFocusable(false)
              .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->LockTarget(Current);ContactState.Empty();RefreshContacts();return FReply::Handled();})
-             [ButtonLabel(ContactLabel(C,P),14)]];
+              .ButtonColorAndOpacity(P->GetTarget()==T ? FLinearColor(0.2f,0.45f,0.65f,1) : FLinearColor(0.035f,0.035f,0.035f,1))
+             [SNew(STextBlock).Text(Text(ContactLabel(C,P))).Font(FCoreStyle::GetDefaultFontStyle("Regular",14))
+                .ColorAndOpacity(T->GetIFF()<=0 ? FLinearColor::Yellow : (T->GetIFF()==P->GetIFF() ? FLinearColor(0.25f,0.65f,1,1) : FLinearColor::Red))]];
         }
         auto* Target=dynamic_cast<Ship*>(P->GetTarget());
         if (!Target) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Select a ship contact."),14)];return;}

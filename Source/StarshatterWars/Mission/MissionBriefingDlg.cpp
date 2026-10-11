@@ -32,6 +32,8 @@
 #include "EngineeringDlg.h"
 #include "WeaponsDlg.h"
 #include "ContactsDlg.h"
+#include "Widgets/Layout/SScaleBox.h"
+#include "Widgets/SOverlay.h"
 #include "WeaponsPopup.h"
 #include "ObjectivesDlg.h"
 #include "FlightOpsDlg.h"
@@ -1500,7 +1502,19 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     BindWeaponAction(TEXT("IA_WeaponPattern"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionPattern);
     BindWeaponAction(TEXT("IA_WeaponSweep"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSweep);
     BindWeaponAction(TEXT("IA_DropWeaponTarget"), ETriggerEvent::Started, &UMissionBriefingDlg::DropMissionWeaponTarget);
-    BindWeaponAction(TEXT("IA_ContactsPanel"), ETriggerEvent::Started, &UMissionBriefingDlg::ToggleContactsPanel);
+    // Bind the authored asset from the active HUD context, including subfolders.
+    UInputAction* ContactsAction = nullptr;
+    if (FighterInputContext) for (const auto& Mapping : FighterInputContext->GetMappings())
+        if (Mapping.Action && Mapping.Action->GetName() == TEXT("IA_ContactsPanel"))
+            { ContactsAction = const_cast<UInputAction*>(Mapping.Action.Get()); break; }
+    if (!ContactsAction) ContactsAction = LoadObject<UInputAction>(nullptr,
+        TEXT("/Game/Input/Targeting/IA_ContactsPanel.IA_ContactsPanel"));
+    if (!ContactsAction) ContactsAction = LoadObject<UInputAction>(nullptr,
+        TEXT("/Game/Input/IA_ContactsPanel.IA_ContactsPanel"));
+    if (ContactsAction) {
+        MissionWeaponActions.Add(ContactsAction);
+        MissionMenuInput->BindAction(ContactsAction, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleContactsPanel);
+    } else UE_LOG(LogTemp, Error, TEXT("[Contacts] IA_ContactsPanel not found"));
     BindWeaponAction(TEXT("IA_SensorMode"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSensor);
     BindWeaponAction(TEXT("IA_SensorGroundMode"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorGround);
     BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorRangeUp);
@@ -1661,10 +1675,29 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
     Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Player) return;
+    TArray<AActor*> Candidates = GetSelectableMissionContacts();
+    if (Candidates.IsEmpty())
+    {
+        SelectedMissionTarget.Reset();
+        Player->DropTarget();
+        return;
+    }
+    const int32 Current = Candidates.IndexOfByPredicate([this](AActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
+    const int32 Index = Current == INDEX_NONE ? (Direction > 0 ? 0 : Candidates.Num()-1)
+        : (Current + (Direction > 0 ? 1 : -1) + Candidates.Num()) % Candidates.Num();
+    AActor* Selected = Candidates[Index];
+    SelectMissionContact(Selected);
+}
+
+TArray<AActor*> UMissionBriefingDlg::GetSelectableMissionContacts() const
+{
+    Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
-    if (!Region) return;
+    if (!Region) return {};
     Ship* Player = Simulation->GetPlayerShip();
-    if (!Player || !Region->GetShips().contains(Player)) return;
+    if (!Player || !Region->GetShips().contains(Player)) return {};
     TArray<AActor*> Candidates;
     for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
     {
@@ -1677,10 +1710,6 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
         const bool bDestroying = Actor->IsActorBeingDestroyed();
         const bool bHidden = Actor->IsHidden();
         const bool bEligible = bInRegion && ShipData != Player && !bDead && !bDestroying && !bHidden;
-        UE_LOG(LogTemp, Display,
-            TEXT("[MissionTargetCycle] Actor='%s' Ship='%s' ActiveRegion='%hs' Bound=%d InRegion=%d Hidden=%d Destroying=%d Dead=%d Eligible=%d"),
-            *Actor->GetName(), bInRegion ? ANSI_TO_TCHAR(ShipData->GetName()) : TEXT("<unbound or outside active region>"),
-            Region->GetName(), ShipData != nullptr, bInRegion, bHidden, bDestroying, bDead, bEligible);
         if (bEligible) Candidates.Add(Actor);
     }
     for (TActorIterator<AActor> It(GetWorld()); It; ++It)
@@ -1691,16 +1720,17 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
         if (ReadMissionObject(Object, Player, Region, Data)) Candidates.AddUnique(Object);
     }
     Candidates.Sort([](const AActor& A, const AActor& B) { return A.GetUniqueID() < B.GetUniqueID(); });
-    if (Candidates.IsEmpty())
-    {
-        SelectedMissionTarget.Reset();
-        Player->DropTarget();
-        return;
-    }
-    const int32 Current = Candidates.IndexOfByPredicate([this](AActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
-    const int32 Index = Current == INDEX_NONE ? (Direction > 0 ? 0 : Candidates.Num()-1)
-        : (Current + (Direction > 0 ? 1 : -1) + Candidates.Num()) % Candidates.Num();
-    AActor* Selected = Candidates[Index];
+    return Candidates;
+}
+
+void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
+{
+    if (!IsValid(Selected) || !GetWorld() || !GetWorld()->GetGameViewport() ||
+        !GetSelectableMissionContacts().Contains(Selected)) return;
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Player || !Region) return;
     SelectedMissionTarget = Selected;
     if (bMissionTargetInspection) MissionTargetZoomDistance = 1.0;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
@@ -2954,12 +2984,20 @@ void UMissionBriefingDlg::ToggleContactsPanel()
     if (!WeaponsPanelWidget) return;
     bWeaponsPreviousCursor = PC->bShowMouseCursor;
     bContactsOnlyPanel = true;
+    CastChecked<UContactsDlg>(WeaponsPanelWidget)->SetMissionHost(this);
     WeaponsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
     WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    WeaponsPopup = WeaponsPanelWidget->TakeWidget();
+    const TSharedRef<SWidget> Panel = WeaponsPanelWidget->TakeWidget();
+    WeaponsPopup = SNew(SOverlay)
+        + SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Center).Padding(12)
+        [SNew(SBox)
+            .WidthOverride_Lambda([PC](){ int32 X=0,Y=0;PC->GetViewportSize(X,Y);return FOptionalSize(FMath::Min(640.0f,X*0.38f)); })
+            .HeightOverride_Lambda([PC](){ int32 X=0,Y=0;PC->GetViewportSize(X,Y);return FOptionalSize(Y*0.9f); })
+            [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+                [SNew(SBox).WidthOverride(640).HeightOverride(900)[Panel]]]];
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(WeaponsPopup);
+    Mode.SetWidgetToFocus(Panel);
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
     Mode.SetHideCursorDuringCapture(false);
     PC->SetInputMode(Mode);
