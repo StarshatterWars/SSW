@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -8,7 +8,7 @@
 
     ORIGINAL AUTHOR AND STUDIO:
     John DiCamillo / Destroyer Studios LLC
-    Copyright � 1997-2007. All Rights Reserved.
+    Copyright © 1997-2007. All Rights Reserved.
 
     OVERVIEW
     ========
@@ -89,24 +89,13 @@ NavAI::ExecFrame(double s)
     // helm/throttle behavior.
     //-------------------------------------------------------------
 
-    UpdateObjectiveArrival();
+    // Player autonav uses the legacy radius/hold rule in SeekTarget.
 
     Navigator();
 
-    // watch for disconnect:
-    if (ShipManager::Toggled(KEY_AUTO_NAV)) {
-        NavSystem* navsys = ship->GetNavSystem();
-        if (navsys) {
-            HUDView::GetInstance()->SetHUDMode(EHUDMode::Tactical);
-            navsys->DisengageAutoNav();
-
-            Sim* sim = Sim::GetSim();
-            if (sim) {
-                ship->SetControls(sim->GetControls());
-                return;
-            }
-        }
-    }
+    // IA_AutoNav and the navigation panel own autonav changes in SSW.
+    // Do not poll KEY_AUTO_NAV here: the runtime also has a MultiController,
+    // and polling a held key can cancel the Enhanced Input Started event.
 
     static double time_til_change = 0.0;
 
@@ -216,7 +205,7 @@ void NavAI::FindObjective()
 
     // Guard against null regions (UE safety; avoids null deref below)
     if (!self_rgn || !nav_rgn) {
-        obj_w = npt;
+        obj_w = OtherHand(npt);
         distance = FVector::Dist(obj_w, ship->GetLocation());
         objective = Transform(obj_w);
 
@@ -236,12 +225,11 @@ void NavAI::FindObjective()
             if (farcaster)
                 obj_w = farcaster->EndPoint();
             else
-                obj_w = npt;
+                obj_w = OtherHand(npt);
         }
         else {
-            // UE: FVector has no OtherHand(). Use the location directly.
-            // If you still need axis remapping, do it explicitly here.
-            obj_w = npt;
+            // Route positions are authored coordinates; physics uses OtherHand.
+            obj_w = OtherHand(npt);
         }
 
         // distance from self to navpt:
@@ -267,7 +255,7 @@ void NavAI::FindObjective()
         if (SelfOrb && NavOrb && NavOrb->Primary() == SelfOrb->Primary()) {
 
             const FVector npt_rel = nav_rgn->GetLocation() - self_rgn->GetLocation();
-            obj_w = npt_rel; // UE: no OtherHand()
+            obj_w = OtherHand(npt_rel); // authored region delta to simulation coordinates
 
             distance = FVector::Dist(obj_w, ship->GetLocation());
             objective = Transform(obj_w);
@@ -327,12 +315,11 @@ void NavAI::FindObjective()
     else if (ship->IsStarship()) {
         quantum_state = 1;
 
-        // UE: FVector supports + and -=. navpt->Location() is already a world-space point in most ports.
-        // Original code mixed region offsets; keep the intent but remove OtherHand().
+        // Combine authored region and route coordinates, then convert once to simulation space.
         FVector npt_rel = nav_rgn->GetLocation() + navpt->GetLocation();
         npt_rel -= self_rgn->GetLocation();
 
-        obj_w = npt_rel;
+        obj_w = OtherHand(npt_rel);
 
         distance = FVector::Dist(obj_w, ship->GetLocation());
         objective = Transform(obj_w);
@@ -435,7 +422,9 @@ NavAI::HelmControl()
     ship->SetTransX(0);
     ship->SetTransY(0);
     ship->SetTransZ(0);
-    //ship->ExecFLCSFrame();
+    // Apply lateral drift compensation after clearing helm translation,
+    // in this physics substep (the legacy HelmControl ordering).
+    ship->ExecFLCSFrame();
 }
 
 // +--------------------------------------------------------------------+
@@ -528,27 +517,27 @@ void NavAI::ThrottleControl()
 Steer
 NavAI::SeekTarget()
 {
-    //-------------------------------------------------------------
-    // Objective arrival complete
-    //-------------------------------------------------------------
-
-    if (bObjectiveArrived)
-    {
-        if (navpt)
-        {
-            ship->SetNavptStatus(
-                navpt,
-                INSTRUCTION_STATUS::COMPLETE);
+    if (!ship) return Steer();
+    if (takeoff) return Seek(objective);
+    if (navpt) {
+        if (quantum_state == 1) {
+            QuantumDrive* Q = ship->GetQuantumDrive();
+            if (Q) {
+                if (Q->ActiveState() == QuantumDrive::ACTIVE_READY) {
+                    Q->SetDestination(navpt->GetRegion(), navpt->GetLocation());
+                    Q->Engage();
+                } else if (Q->ActiveState() == QuantumDrive::ACTIVE_POSTWARP) quantum_state = 0;
+            }
         }
-
-        return Steer();
+        // Stars45 NavAI: complete at twice the simulation hull radius, not
+        // a multi-kilometre generic arrival zone or a speed-gated stop.
+        if (distance < 2.0 * ship->GetRadius()) {
+            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+            return Steer();
+        }
+        return Seek(objective);
     }
-
-    //-------------------------------------------------------------
-    // Legacy seek behavior
-    //-------------------------------------------------------------
-
-    return ShipAI::SeekTarget();
+    return Steer();
 }
 
 // +--------------------------------------------------------------------+

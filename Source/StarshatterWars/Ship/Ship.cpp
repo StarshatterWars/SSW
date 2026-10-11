@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -2906,20 +2906,29 @@ Ship::IsAutoNavEngaged()
 void
 Ship::SetAutoNav(bool engage)
 {
-    if (engage) bManualThrottle = false;
-	if (navsys) {
-		if (navsys->AutoNavEngaged()) {
-			if (!engage)
-				navsys->DisengageAutoNav();
-		}
-		else {
-			if (engage)
-				navsys->EngageAutoNav();
-		}
-
-		if (sim)
-			SetControls(sim->GetControls());
-	}
+    if (!navsys) {
+        UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: ship has no navigation system."));
+        return;
+    }
+    if (engage) {
+        if (!navsys->IsPowerOn() || !GetNextNavPoint()) {
+            UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: power=%d nextWaypoint=%d"),
+                navsys->IsPowerOn() ? 1 : 0, GetNextNavPoint() ? 1 : 0);
+            return;
+        }
+        navsys->EngageAutoNav();
+        if (!navsys->AutoNavEngaged()) return;
+        bManualThrottle = false;
+    }
+    else {
+        // Clear the requested state even during a navigation power loss.
+        navsys->DisengageAutoNav();
+    }
+    if (sim) SetControls(sim->GetControls());
+    if (!engage && sim && sim->GetPlayerShip() == this) EnableManualFlight();
+    UE_LOG(LogTemp, Display, TEXT("[AutoNav] %s director=%d"),
+        navsys->AutoNavEngaged() ? TEXT("engaged") : TEXT("disengaged"),
+        dir ? static_cast<int32>(dir->GetType()) : -1);
 }
 
 void
@@ -3433,6 +3442,11 @@ Ship::ExecNavFrame(
 		navsys->ExecFrame(
 			Seconds);
 
+        // NavSystem may clear its flag when the route ends or power is lost.
+        // Do not leave the UE player running a stale navigation director.
+        if (!navsys->AutoNavEngaged() && dir && dir->GetType() == ESteerAIType::NAV &&
+            sim && sim->GetPlayerShip() == this) SetAutoNav(false);
+
 		if (navsys->AutoNavEngaged())
 		{
 			if (dir &&
@@ -3443,10 +3457,7 @@ Ship::ExecNavFrame(
 
 				if (NavAIComp->Complete())
 				{
-					navsys->DisengageAutoNav();
-
-					SetControls(
-						sim->GetControls());
+					SetAutoNav(false);
 				}
 				else
 				{
@@ -3606,7 +3617,8 @@ Ship::ExecPhysics(double seconds)
 	const bool bDebugDisableFLCS =
 		false;
 
-	if (flcs && !bDebugDisableFLCS)
+	// NavAI runs its FLCS after helm commands in each physics substep.
+	if (flcs && !bDebugDisableFLCS && (!dir || dir->GetType() != ESteerAIType::NAV))
 	{
 		ExecFLCSFrame();
 	}
@@ -6900,13 +6912,12 @@ void Ship::ApplyLeaderFormation(double seconds)
 		return;
 	}
 
-	const FRotator LeaderRot(
-		0.0f,
-		(float)Leader->GetHelmHeading(),
-		0.0f);
-
-	const FVector DesiredLoc =
-		Leader->GetLocation() + LeaderRot.RotateVector(formation_offset);
+    // Legacy local basis: X right, Y up, Z forward. No UE Euler angles.
+    const Camera& LeaderCam = Leader->GetCam();
+    const FVector DesiredLoc = Leader->GetLocation()
+        + LeaderCam.vrt() * formation_offset.X
+        + LeaderCam.vup() * formation_offset.Y
+        + LeaderCam.vpn() * formation_offset.Z;
 
 	const FVector CurrentLoc = GetLocation();
 

@@ -1,6 +1,6 @@
-/*  Project STARSHATTER WARS
+﻿/*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright � 2025-2026. All Rights Reserved.
+	Copyright © 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios
@@ -327,11 +327,7 @@ ShipManager::ExecFrame(double seconds)
 	else if (Toggled(KEY_PREV_SUBTARGET))
 		ship->CycleSubTarget(-1);
 
-	if (Toggled(KEY_AUTO_NAV)) {
-		ship->SetAutoNav(true);
-		// careful: this object has just been deleted!
-		return;
-	}
+    // Autonav is toggled once by IA_AutoNav / NavigationPopup.
 
 	if (Toggled(KEY_DROP_ORBIT)) {
 		ship->DropOrbit();

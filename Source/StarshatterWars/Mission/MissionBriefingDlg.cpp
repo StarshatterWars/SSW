@@ -1493,6 +1493,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             MissionMenuInput->BindAction(Action, Event, this, Handler);
         } else UE_LOG(LogTemp, Warning, TEXT("[WeaponsInput] Missing Boolean action %s"), ActionName);
     };
+    BindWeaponAction(TEXT("IA_AutoNav"), ETriggerEvent::Started, &UMissionBriefingDlg::ToggleMissionAutoNav);
     BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
     BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
     BindWeaponAction(TEXT("IA_Decoy"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionDecoy);
@@ -1764,6 +1765,20 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
     {
         TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
         MissionTargetOverlay = SNew(SMissionTargetOverlay).Controller(GetOwningPlayer())
+            .RangeKm_Lambda([WeakThis]() {
+                if (!WeakThis.IsValid()) return -1.0;
+                Sim* S = Sim::GetSim();
+                Ship* P = S ? S->GetPlayerShip() : nullptr;
+                SimRegion* R = S ? S->GetActiveRegion() : nullptr;
+                AActor* A = WeakThis->SelectedMissionTarget.Get();
+                if (!P || !R || !R->GetShips().contains(P) || !IsValid(A)) return -1.0;
+                if (auto* Visual = Cast<AShipActor>(A)) {
+                    Ship* T = Visual->GetRuntimeShip();
+                    if (T && R->GetShips().contains(T)) return FVector::Distance(P->GetLocation(),T->GetLocation())/1000.0;
+                }
+                FMissionObjectData Data;
+                return ReadMissionObject(A,P,R,Data) ? Data.RangeKm : -1.0;
+            })
             .Target_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
             .LocalBounds_Lambda([WeakThis]() { return WeakThis.IsValid() ? WeakThis->SelectedMissionTargetLocalBounds : FBox(ForceInit); })
             .TargetColor_Lambda([WeakThis]()
@@ -3102,4 +3117,14 @@ void UMissionBriefingDlg::LockMissionHostileThreat()
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* S=Sim::GetSim();Ship* P=S?S->GetPlayerShip():nullptr;
     if(P && !P->IsDead()){P->LockTarget(ESimObject::SHOT,false,true);}
+}
+
+void UMissionBriefingDlg::ToggleMissionAutoNav()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Player || !Region || !Region->GetShips().contains(Player) || Player->IsDead()) return;
+    Player->SetAutoNav(!Player->IsAutoNavEngaged());
 }

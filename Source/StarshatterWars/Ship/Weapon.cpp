@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -754,45 +754,15 @@ SimShot* Weapon::FireBarrel(int n)
             shot = CreateShot(shotpos, rail_cam, design, ship);
             if (shot) {
 
-                // UE FIX: build an orientation from ship camera basis (no legacy Matrix),
-                // then apply local yaw/pitch offsets (aim_azimuth / aim_elevation assumed radians).
-                FVector XAxis = ship->GetCam().vrt(); // right
-                FVector YAxis = ship->GetCam().vup(); // up
-                FVector ZAxis = ship->GetCam().vpn(); // forward
-
-                XAxis = XAxis.GetSafeNormal();
-                YAxis = YAxis.GetSafeNormal();
-                ZAxis = ZAxis.GetSafeNormal();
-
-                // Defensive orthonormalization:
-                ZAxis = (ZAxis - FVector::DotProduct(ZAxis, XAxis) * XAxis).GetSafeNormal();
-                YAxis = FVector::CrossProduct(XAxis, ZAxis).GetSafeNormal();
-
-                const FMatrix BaseM(
-                    FPlane(XAxis.X, XAxis.Y, XAxis.Z, 0.0f),
-                    FPlane(YAxis.X, YAxis.Y, YAxis.Z, 0.0f),
-                    FPlane(ZAxis.X, ZAxis.Y, ZAxis.Z, 0.0f),
-                    FPlane(0.0f, 0.0f, 0.0f, 1.0f)
-                );
-
-                const FQuat BaseQ(BaseM);
-
-                // Apply slewing in the ship's local frame:
-                FQuat AdjustQ = FQuat::Identity;
-
-                if (aim_azimuth != 0.0)
-                    AdjustQ = AdjustQ * FQuat(YAxis, (float)aim_azimuth);
-
-                if (aim_elevation != 0.0)
-                    AdjustQ = AdjustQ * FQuat(XAxis, (float)aim_elevation);
-
-                const FQuat FinalQ = BaseQ * AdjustQ;
-
-                // UE FIX: FRotationMatrix does NOT construct from FQuat in your build settings.
-                // Build the rotation matrix from the quat explicitly:
-                FMatrix OrientM = FQuatRotationMatrix(FinalQ);
-
-                const FVector eject = OrientM.TransformVector(design->eject);
+                // Stars45 Weapon::Fire: local eject vector times legacy orientation.
+                Matrix Orient = ship->GetCam().Orientation();
+                if (aim_azimuth != 0.0) Orient.Yaw(aim_azimuth);
+                if (aim_elevation != 0.0) Orient.Pitch(aim_elevation);
+                const FVector& EjectLocal = design->eject;
+                const FVector eject(
+                    Orient(0,0)*EjectLocal.X + Orient(1,0)*EjectLocal.Y + Orient(2,0)*EjectLocal.Z,
+                    Orient(0,1)*EjectLocal.X + Orient(1,1)*EjectLocal.Y + Orient(2,1)*EjectLocal.Z,
+                    Orient(0,2)*EjectLocal.X + Orient(1,2)*EjectLocal.Y + Orient(2,2)*EjectLocal.Z);
                 shot->SetVelocity(base_vel + eject);
             }
         }

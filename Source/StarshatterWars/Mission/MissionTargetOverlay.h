@@ -42,10 +42,11 @@ inline FBox MissionTargetLocalBounds(AActor* Actor)
 class SMissionTargetOverlay : public SLeafWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor::Yellow) {}
+    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor::Yellow), _RangeKm(-1.0) {}
         SLATE_ARGUMENT(TWeakObjectPtr<APlayerController>, Controller)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, Target)
         SLATE_ATTRIBUTE(FText, TargetName)
+        SLATE_ATTRIBUTE(double, RangeKm)
         SLATE_ATTRIBUTE(FLinearColor, TargetColor)
         SLATE_ATTRIBUTE(FBox, LocalBounds)
     SLATE_END_ARGS()
@@ -54,6 +55,7 @@ public:
         Controller = Args._Controller;
         Target = Args._Target;
         TargetName = Args._TargetName;
+        RangeKm = Args._RangeKm;
         TargetColor = Args._TargetColor;
         LocalBounds = Args._LocalBounds;
         ReticleTexture.Reset(LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/lead.lead")));
@@ -96,6 +98,18 @@ public:
         const FVector4 Clip = ProjectionData.ComputeViewProjectionMatrix().TransformFVector4(FVector4(TargetPosition, 1.0));
         const FIntRect Rect = ProjectionData.GetConstrainedViewRect();
         const FVector2D Size=Geometry.GetLocalSize();
+        auto DrawRange = [&](const FVector2D& MarkerCenter, double Below, int32 DrawLayer) {
+            const double Km = RangeKm.Get();
+            if (Km < 0 || !FMath::IsFinite(Km)) return;
+            const FText RangeText = FText::FromString(Km < 1.0 ? FString::Printf(TEXT("%.0f M"),Km*1000.0)
+                : FString::Printf(TEXT("%.1f KM"),Km));
+            const FSlateFontInfo RangeFont = FCoreStyle::GetDefaultFontStyle("Bold",14);
+            const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(RangeText,RangeFont);
+            const FVector2D Position(FMath::Clamp(MarkerCenter.X-Extent.X*0.5,0.0,FMath::Max(0.0,Size.X-Extent.X)),
+                FMath::Clamp(MarkerCenter.Y+Below,0.0,FMath::Max(0.0,Size.Y-Extent.Y)));
+            FSlateDrawElement::MakeText(Elements,DrawLayer,Geometry.ToPaintGeometry(FVector2f(Extent),
+                FSlateLayoutTransform(FVector2f(Position))),RangeText,RangeFont,ESlateDrawEffect::None,TargetColor.Get());
+        };
         const FVector2D ViewCenter((Rect.Min.X+Rect.Width()*0.5)*Size.X/Width,
                                    (Rect.Min.Y+Rect.Height()*0.5)*Size.Y/Height);
         const double HudScale=FMath::Min(Size.X/1280.0,Size.Y/720.0);
@@ -130,10 +144,11 @@ public:
             const FText Label=TargetName.Get();
             const FVector2D Extent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label,Font);
             const FVector2D Position(FMath::Clamp(Center.X-Extent.X*0.5,0.0,FMath::Max(0.0,Size.X-Extent.X)),
-                FMath::Clamp(Center.Y+(Index==3?-Extent.Y-22*HudScale:22*HudScale),0.0,FMath::Max(0.0,Size.Y-Extent.Y)));
+                FMath::Clamp(Center.Y-Extent.Y-22*HudScale,0.0,FMath::Max(0.0,Size.Y-Extent.Y)));
             FSlateDrawElement::MakeText(Elements,Layer+2,Geometry.ToPaintGeometry(FVector2f(Extent),
                 FSlateLayoutTransform(FVector2f(Position))),Label,Font,ESlateDrawEffect::None,Color);
-            return Layer+2;
+            DrawRange(Center, D.Y*0.5+4.0, Layer+3);
+            return Layer+3;
         }
         // Scale viewport pixels into this widget's local coordinates (including DPI).
         const FVector2D ReticleSize(64.0 * Size.X / Width, 64.0 * Size.Y / Height);
@@ -151,7 +166,8 @@ public:
         FSlateDrawElement::MakeText(Elements, Layer + 2,
             Geometry.ToPaintGeometry(FVector2f(TextSize), FSlateLayoutTransform(FVector2f(TextPosition))),
             Label, Font, ESlateDrawEffect::None, Color);
-        return Layer + 2;
+        DrawRange(Center,ReticleSize.Y*0.5+6.0,Layer+3);
+        return Layer + 3;
     }
 private:
     mutable TWeakObjectPtr<AActor> LastTarget;
@@ -163,6 +179,7 @@ private:
     TWeakObjectPtr<APlayerController> Controller;
     TAttribute<TWeakObjectPtr<AActor>> Target;
     TAttribute<FText> TargetName;
+    TAttribute<double> RangeKm;
     TAttribute<FLinearColor> TargetColor;
     TAttribute<FBox> LocalBounds;
 };

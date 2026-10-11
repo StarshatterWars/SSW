@@ -1,4 +1,4 @@
-#include "CampaignSceneActor.h"
+﻿#include "CampaignSceneActor.h"
 #include "SSWCameraManager.h"
 
 #include "SceneMeshActor.h"
@@ -840,10 +840,9 @@ ACampaignSceneActor::ApplyRuntimeFormationOffsets(
         }
 
         const FVector CommanderLoc =
-            CommanderActor->GetActorLocation();
+            CommanderShip->GetLocation();
 
-        const FRotator CommanderRot =
-            CommanderActor->GetActorRotation();
+        const Camera& CommanderCam = CommanderShip->GetCam();
 
         for (int32 Index = 0;
             Index < Followers.Num();
@@ -877,7 +876,7 @@ ACampaignSceneActor::ApplyRuntimeFormationOffsets(
                     Followers.Num());
 
             const FVector WorldOffset =
-                CommanderRot.RotateVector(LocalOffset);
+                CommanderCam.vrt() * LocalOffset.X + CommanderCam.vup() * LocalOffset.Y + CommanderCam.vpn() * LocalOffset.Z;
 
             const FVector DesiredWorldLoc =
                 CommanderLoc + WorldOffset;
@@ -923,11 +922,8 @@ ACampaignSceneActor::ApplyRuntimeFormationOffsets(
             //-----------------------------------------------------
             // Actor placement
             //-----------------------------------------------------
-            FollowerActor->SetActorLocation(
-                DesiredWorldLoc);
-
-            FollowerActor->SetActorRotation(
-                CommanderRot);
+            // Convert only when synchronizing the displayed actor.
+            FollowerActor->UpdateFromRuntimeShip(0.0f);
 
             //-----------------------------------------------------
             // Re-assert formation linkage AFTER MoveTo
@@ -978,6 +974,10 @@ FVector ACampaignSceneActor::GetFormationOffsetForElement(
     int32 FollowerCount) const
 {
     const float Spacing = 1800.0f;
+    // Author formations in legacy camera-local coordinates.
+    const auto LegacyOffset = [](float Forward, float Right, float Up) {
+        return FVector(Right, Up, Forward);
+    };
 
     const int32 SafeIndex = FollowerIndex + 1;
 
@@ -991,20 +991,20 @@ FVector ACampaignSceneActor::GetFormationOffsetForElement(
     switch (Formation)
     {
         case INSTRUCTION_FORMATION::TRAIL:
-            return FVector(-Spacing * SafeIndex, 0.0f, 0.0f);
+            return LegacyOffset(-Spacing * SafeIndex, 0.0f, 0.0f);
 
         case INSTRUCTION_FORMATION::SPREAD:
         {
             const float Side = (FollowerIndex % 2 == 0) ? -1.0f : 1.0f;
             const float Rank = FMath::FloorToFloat((float)FollowerIndex / 2.0f) + 1.0f;
-            return FVector(-Spacing * Rank, Side * Spacing * Rank, 0.0f);
+            return LegacyOffset(-Spacing * Rank, Side * Spacing * Rank, 0.0f);
         }
 
         case INSTRUCTION_FORMATION::BOX:
         {
             const int32 Col = FollowerIndex % 2;
             const int32 Row = FollowerIndex / 2;
-            return FVector(
+            return LegacyOffset(
                 -Spacing * (Row + 1),
                 (Col == 0 ? -Spacing : Spacing),
                 0.0f);
@@ -1015,14 +1015,14 @@ FVector ACampaignSceneActor::GetFormationOffsetForElement(
         {
             switch (FollowerIndex)
             {
-                case 0: return FVector(-Spacing, -Spacing, 0.0f);
-                case 1: return FVector(-Spacing, Spacing, 0.0f);
-                case 2: return FVector(-Spacing * 2.0f, 0.0f, 0.0f);
+                case 0: return LegacyOffset(-Spacing, -Spacing, 0.0f);
+                case 1: return LegacyOffset(-Spacing, Spacing, 0.0f);
+                case 2: return LegacyOffset(-Spacing * 2.0f, 0.0f, 0.0f);
                 default:
                 {
                     const float Side = (FollowerIndex % 2 == 0) ? -1.0f : 1.0f;
                     const float Rank = FMath::FloorToFloat((float)FollowerIndex / 2.0f) + 1.0f;
-                    return FVector(-Spacing * (Rank + 1.0f), Side * Spacing, 0.0f);
+                    return LegacyOffset(-Spacing * (Rank + 1.0f), Side * Spacing, 0.0f);
                 }
             }
         }

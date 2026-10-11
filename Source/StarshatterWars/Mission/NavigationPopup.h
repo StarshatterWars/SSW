@@ -41,9 +41,7 @@ public:
             [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
              .OnClicked_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;
                  if(N && (!CanOperate || CanOperate())){
-                     if(N->AutoNavEngaged()) N->DisengageAutoNav();
-                     else N->EngageAutoNav();
-                     if (auto* S=Sim::GetSim()) P->SetControls(S->GetControls());
+                     P->SetAutoNav(!N->AutoNavEngaged());
                      if(N->AutoNavEngaged()) Close.ExecuteIfBound();
                  }return FReply::Handled();})
              [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return FText::FromString(N && N->AutoNavEngaged()?TEXT("CANCEL AUTONAV"):TEXT("ENGAGE AUTONAV"));})]]

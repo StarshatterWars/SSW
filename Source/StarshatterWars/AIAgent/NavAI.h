@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -8,7 +8,7 @@
 
     ORIGINAL AUTHOR AND STUDIO:
     John DiCamillo / Destroyer Studios LLC
-    Copyright � 1997-2004. All Rights Reserved.
+    Copyright © 1997-2004. All Rights Reserved.
 
     OVERVIEW
     ========
@@ -42,6 +42,7 @@ public:
 
     virtual void      ExecFrame(double seconds) override;
     virtual int       Subframe() const override { return true; }
+    virtual bool      GetSubframe() const override { return true; }
     void              Disengage();
     bool              Complete() const { return complete; }
 

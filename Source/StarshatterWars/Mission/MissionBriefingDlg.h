@@ -242,6 +242,7 @@ protected:
     void CycleMissionSweep();
     void DropMissionWeaponTarget();
     void ToggleContactsPanel();
+    void ToggleMissionAutoNav();
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> MissionWeaponActions;
     bool bContactsOnlyPanel = false;
     bool CanUseFighterHUD() const;

@@ -1,4 +1,4 @@
-#include "Camera.h"
+﻿#include "Camera.h"
 
 #include "Math/UnrealMathUtility.h"
 
@@ -36,7 +36,7 @@ Camera::Normalize()
 
 	if (!Z.Normalize())
 	{
-		Z = FVector(0.0f, 0.0f, -1.0f);
+		Z = FVector(0.0f, 0.0f, 1.0f);
 	}
 
 	Y = Y - Z * FVector::DotProduct(Y, Z);
@@ -46,14 +46,15 @@ Camera::Normalize()
 		Y = FVector(0.0f, 1.0f, 0.0f);
 	}
 
-	X = FVector::CrossProduct(Z, Y);
+	// Legacy basis: right = up cross forward (identity has determinant +1).
+	X = FVector::CrossProduct(Y, Z);
 
 	if (!X.Normalize())
 	{
 		X = FVector(1.0f, 0.0f, 0.0f);
 	}
 
-	Y = FVector::CrossProduct(X, Z);
+	Y = FVector::CrossProduct(Z, X);
 
 	if (!Y.Normalize())
 	{
@@ -73,111 +74,34 @@ Camera::Normalize()
 	orientation(2, 2) = Z.Z;
 }
 
-void
-Camera::Aim(double roll, double pitch, double yaw)
+// Keep simulation orientation in the original nGenEx matrix basis.
+// No Unreal Euler-angle or axis conversion belongs in this class.
+void Camera::Aim(double roll, double pitch, double yaw)
 {
-	if (!FMath::IsFinite(roll) ||
-		!FMath::IsFinite(pitch) ||
-		!FMath::IsFinite(yaw))
-	{
-		return;
-	}
-
-	if (yaw != 0.0)
-	{
-		Yaw(yaw);
-	}
-
-	if (pitch != 0.0)
-	{
-		Pitch(pitch);
-	}
-
-	if (roll != 0.0)
-	{
-		Roll(roll);
-	}
-
-	Normalize();
+    if (!FMath::IsFinite(roll) || !FMath::IsFinite(pitch) || !FMath::IsFinite(yaw)) return;
+    orientation.Rotate(roll, pitch, yaw);
+    Normalize();
 }
 
-void
-Camera::Yaw(double yaw)
+void Camera::Yaw(double yaw)
 {
-	if (!FMath::IsFinite(yaw))
-		return;
-
-	const double c = cos(yaw);
-	const double s = sin(yaw);
-
-	const FVector x = vrt();
-	const FVector z = vpn();
-
-	const FVector x1 = x * c + z * s;
-	const FVector z1 = z * c - x * s;
-
-	orientation(0, 0) = x1.X;
-	orientation(0, 1) = x1.Y;
-	orientation(0, 2) = x1.Z;
-
-	orientation(2, 0) = z1.X;
-	orientation(2, 1) = z1.Y;
-	orientation(2, 2) = z1.Z;
-
-	Normalize();
+    if (!FMath::IsFinite(yaw)) return;
+    orientation.Yaw(yaw);
+    Normalize();
 }
 
-
-void
-Camera::Pitch(double pitch)
+void Camera::Pitch(double pitch)
 {
-	if (!FMath::IsFinite(pitch))
-		return;
-
-	const double c = cos(pitch);
-	const double s = sin(pitch);
-
-	const FVector y = vup();
-	const FVector z = vpn();
-
-	const FVector y1 = y * c + z * s;
-	const FVector z1 = z * c - y * s;
-
-	orientation(1, 0) = y1.X;
-	orientation(1, 1) = y1.Y;
-	orientation(1, 2) = y1.Z;
-
-	orientation(2, 0) = z1.X;
-	orientation(2, 1) = z1.Y;
-	orientation(2, 2) = z1.Z;
-
-	Normalize();
+    if (!FMath::IsFinite(pitch)) return;
+    orientation.Pitch(pitch);
+    Normalize();
 }
 
-void
-Camera::Roll(double roll)
+void Camera::Roll(double roll)
 {
-	if (!FMath::IsFinite(roll))
-		return;
-
-	const double c = cos(roll);
-	const double s = sin(roll);
-
-	const FVector x = vrt();
-	const FVector y = vup();
-
-	const FVector x1 = x * c + y * s;
-	const FVector y1 = y * c - x * s;
-
-	orientation(0, 0) = x1.X;
-	orientation(0, 1) = x1.Y;
-	orientation(0, 2) = x1.Z;
-
-	orientation(1, 0) = y1.X;
-	orientation(1, 1) = y1.Y;
-	orientation(1, 2) = y1.Z;
-
-	Normalize();
+    if (!FMath::IsFinite(roll)) return;
+    orientation.Roll(roll);
+    Normalize();
 }
 
 void
@@ -213,7 +137,6 @@ Camera::Clone(const Camera& cam)
 {
 	pos = cam.pos;
 	orientation = cam.orientation;
-	Normalize();
 }
 
 void
