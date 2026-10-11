@@ -31,6 +31,7 @@
 #include "EngineeringPopup.h"
 #include "EngineeringDlg.h"
 #include "WeaponsDlg.h"
+#include "ContactsDlg.h"
 #include "WeaponsPopup.h"
 #include "ObjectivesDlg.h"
 #include "FlightOpsDlg.h"
@@ -1801,7 +1802,11 @@ void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
     CloseEngineering();
-    if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
+    if (WeaponsPopup.IsValid()) {
+        const bool WasContacts = bContactsOnlyPanel;
+        CloseWeaponsPopup();
+        if (!WasContacts) return;
+    }
     if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
@@ -2927,20 +2932,38 @@ void UMissionBriefingDlg::DropMissionWeaponTarget()
 
 void UMissionBriefingDlg::ToggleContactsPanel()
 {
-    if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
+    CloseNavigationPopup();
+    CloseFlightOpsPopup();
+    CloseObjectivesPopup();
+    CloseEngineering();
+    if (WeaponsPopup.IsValid()) {
+        const bool WasContacts = bContactsOnlyPanel;
+        CloseWeaponsPopup();
+        if (WasContacts) return;
+    }
     if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
-    APlayerController* PC=GetOwningPlayer(); if (!PC) return;
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
     ClearMissionRotationInput();
-    bWeaponsPreviousCursor=PC->bShowMouseCursor;
-    bContactsOnlyPanel=true;
-    WeaponsPopup=SNew(SWeaponsPopup).ContactsOnly(true)
-        .ResolveShip([](){Sim* S=Sim::GetSim();return S?S->GetPlayerShip():nullptr;})
-        .CanOperate([this](){return bLiveMissionStarted && GetWorld() && !GetWorld()->IsPaused();})
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();}));
+    if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
+    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
+    UClass* PanelClass = LoadClass<UContactsDlg>(nullptr,
+        TEXT("/Game/Screens/inGame/BP_ContactsList.BP_ContactsList_C"));
+    WeaponsPanelWidget = CreateWidget<UContactsDlg>(PC, PanelClass ? PanelClass : UContactsDlg::StaticClass());
+    if (!WeaponsPanelWidget) return;
+    bWeaponsPreviousCursor = PC->bShowMouseCursor;
+    bContactsOnlyPanel = true;
+    WeaponsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
+    WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    WeaponsPopup = WeaponsPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode; Mode.SetWidgetToFocus(WeaponsPopup);
+    FInputModeGameAndUI Mode;
+    Mode.SetWidgetToFocus(WeaponsPopup);
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    PC->SetInputMode(Mode); PC->bShowMouseCursor=true;
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+    PC->bShowMouseCursor = true;
 }
 
 void UMissionBriefingDlg::CycleMissionSensor()

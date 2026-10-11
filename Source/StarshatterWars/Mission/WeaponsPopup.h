@@ -1,4 +1,4 @@
-#include "Sensor.h"
+﻿#include "Sensor.h"
 #pragma once
 
 #include "Widgets/SCompoundWidget.h"
@@ -98,6 +98,29 @@ public:
 private:
     bool Embedded=false;
     bool ContactsOnly=false;
+    enum class EContactSort { Distance, Name };
+    EContactSort ContactSort = EContactSort::Distance;
+    bool SortAscending = true;
+    FReply ChangeContactSort(EContactSort Column) {
+        if (ContactSort == Column) SortAscending = !SortAscending;
+        else { ContactSort = Column; SortAscending = true; }
+        ContactState.Empty(); RefreshContacts();
+        return FReply::Handled();
+    }
+    FString ContactSortCaption(EContactSort Column) const {
+        FString Caption = Column == EContactSort::Name ? TEXT("NAME") : TEXT("DISTANCE");
+        if (ContactSort == Column)
+            Caption += Column == EContactSort::Name ? (SortAscending ? TEXT(" A-Z") : TEXT(" Z-A"))
+                : (SortAscending ? TEXT(" NEAREST") : TEXT(" FARTHEST"));
+        return Caption;
+    }
+    FString ContactDisplayName(const SimContact& C, Ship* P) const {
+        Ship* Target = C.GetShip();
+        if (!Target || !P) return TEXT("CONTACT");
+        const bool Known = Target->GetIFF()==P->GetIFF() || C.GetIFF(P)<=Target->GetIFF();
+        return Known ? FString(ANSI_TO_TCHAR(Target->GetName()))
+            : FString::Printf(TEXT("CONTACT %04d"),Target->GetContactID());
+    }
     TSharedPtr<SBox> FooterHost;
     const FButtonStyle* FooterStyle=nullptr;
     TFunction<Ship*()> ResolveShip;
@@ -195,8 +218,19 @@ private:
             if (T && T!=P && C->Visible(P) && !T->IsDead() && T->GetRegion()==P->GetRegion()) Sorted.Add(C);
         }
         const FVector Observer=P->GetLocation();
-        Sorted.StableSort([Observer](const SimContact& A,const SimContact& B){
-            return (A.Location()-Observer).SizeSquared()<(B.Location()-Observer).SizeSquared();
+        Sorted.StableSort([this,Observer,P](const SimContact& A,const SimContact& B){
+            const FString NameA=ContactDisplayName(A,P), NameB=ContactDisplayName(B,P);
+            int32 Order=0;
+            if (ContactSort==EContactSort::Name) Order=NameA.Compare(NameB,ESearchCase::IgnoreCase);
+            else {
+                const double RangeA=(A.Location()-Observer).SizeSquared();
+                const double RangeB=(B.Location()-Observer).SizeSquared();
+                Order=RangeA<RangeB?-1:(RangeA>RangeB?1:0);
+            }
+            if (Order!=0) return SortAscending?Order<0:Order>0;
+            const int32 NameOrder=NameA.Compare(NameB,ESearchCase::IgnoreCase);
+            if (NameOrder!=0) return NameOrder<0;
+            return A.GetShip()->GetContactID()<B.GetShip()->GetContactID();
         });
         for (SimContact* C : Sorted) {
             auto* T=C->GetShip();
@@ -228,7 +262,7 @@ private:
     }
     void Rebuild() {
         Root->ClearChildren();
-        if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(ContactsOnly?TEXT("CONTACTS - NEAREST FIRST"):TEXT("TACTICAL WEAPONS"),20))];
+        if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(ContactsOnly?TEXT("CONTACTS"):TEXT("TACTICAL WEAPONS"),20))];
         Root->AddSlot().AutoHeight().Padding(8)[SNew(STextBlock).ColorAndOpacity(Blue()).Text_Lambda([this](){
             auto* P=Player();auto* S=P?P->GetSensor():nullptr;
             return Text(S?FString::Printf(TEXT("SENSOR %d   RANGE %.0f KM   EMCON %d"),int(S->GetMode()),S->GetBeamRange()/1000.0,P->GetEMCON()):TEXT("NO SENSOR"));})];
@@ -239,6 +273,19 @@ private:
         auto SystemScroll=SNew(SScrollBox)+SScrollBox::Slot()[SystemsBox.ToSharedRef()];
         auto ContactsPane=SNew(SVerticalBox)
             +SVerticalBox::Slot().AutoHeight()[Label(TEXT("CONTACT LIST"))]
+            +SVerticalBox::Slot().AutoHeight().Padding(0,4)
+            [SNew(SHorizontalBox)
+             +SHorizontalBox::Slot().FillWidth(1).Padding(0,0,4,0)
+             [SNew(SButton).IsFocusable(false)
+              .OnClicked_Lambda([this](){return ChangeContactSort(EContactSort::Name);})
+              [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black)
+               .Text_Lambda([this](){return Text(ContactSortCaption(EContactSort::Name));})]]
+             +SHorizontalBox::Slot().FillWidth(1)
+             [SNew(SButton).IsFocusable(false)
+              .OnClicked_Lambda([this](){return ChangeContactSort(EContactSort::Distance);})
+              [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black)
+               .Text_Lambda([this](){return Text(ContactSortCaption(EContactSort::Distance));})]]]
+
             +SVerticalBox::Slot().FillHeight(1)[ContactScroll];
         auto SystemsPane=SNew(SVerticalBox)
             +SVerticalBox::Slot().AutoHeight()[Label(TEXT("TARGET SYSTEMS"))]

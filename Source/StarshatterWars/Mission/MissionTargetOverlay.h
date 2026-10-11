@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include "Widgets/SLeafWidget.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/GameViewportClient.h"
+#include "SceneView.h"
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/MeshComponent.h"
@@ -83,26 +86,38 @@ public:
         const FBox CachedBounds = LocalBounds.Get();
         if (!CachedBounds.IsValid) return Layer;
         const FBox Bounds = CachedBounds.TransformBy(Actor->GetActorTransform());
-        FVector2D Pixel;
-        const bool Projected=PC->ProjectWorldLocationToScreen(Bounds.GetCenter(),Pixel,false);
+        // Navigation markers represent the actor origin, not animated BP mesh bounds.
+        const FVector TargetPosition = Actor->ActorHasTag(TEXT("MissionNavigationTarget"))
+            ? Actor->GetActorLocation() : Bounds.GetCenter();
+        ULocalPlayer* LocalPlayer = PC->GetLocalPlayer();
+        FSceneViewProjectionData ProjectionData;
+        if (!LocalPlayer || !LocalPlayer->ViewportClient || !LocalPlayer->ViewportClient->Viewport ||
+            !LocalPlayer->GetProjectionData(LocalPlayer->ViewportClient->Viewport, ProjectionData)) return Layer;
+        const FVector4 Clip = ProjectionData.ComputeViewProjectionMatrix().TransformFVector4(FVector4(TargetPosition, 1.0));
+        const FIntRect Rect = ProjectionData.GetConstrainedViewRect();
         const FVector2D Size=Geometry.GetLocalSize();
-        FVector2D Center=Projected?FVector2D(Pixel.X*Size.X/Width,Pixel.Y*Size.Y/Height):Size*0.5;
-        if (!Projected || Center.X<0 || Center.Y<0 || Center.X>Size.X || Center.Y>Size.Y)
+        const FVector2D ViewCenter((Rect.Min.X+Rect.Width()*0.5)*Size.X/Width,
+                                   (Rect.Min.Y+Rect.Height()*0.5)*Size.Y/Height);
+        const double HudScale=FMath::Min(Size.X/1280.0,Size.Y/720.0);
+        const FVector2D Half(Rect.Width()*0.5*Size.X/Width-42*HudScale,
+                             Rect.Height()*0.5*Size.Y/Height-42*HudScale);
+        if (Half.X<=0 || Half.Y<=0) return Layer;
+        const double Divisor=FMath::Max(FMath::Abs(Clip.W),1.e-6);
+        FVector2D Direction(Clip.X/Divisor*Rect.Width()*0.5*Size.X/Width,
+                           -Clip.Y/Divisor*Rect.Height()*0.5*Size.Y/Height);
+        FVector2D Center=ViewCenter+Direction;
+        if (LastTarget.Get()!=Actor) { LastTarget=Actor; LastOffscreenDirection=FVector2D(0,1); }
+        if (Clip.W<=0 || FMath::Abs(Direction.X)>Half.X || FMath::Abs(Direction.Y)>Half.Y)
         {
-            if (!PC->PlayerCameraManager) return Layer;
-            const FVector Delta=Bounds.GetCenter()-PC->PlayerCameraManager->GetCameraLocation();
-            const FRotationMatrix Basis(PC->PlayerCameraManager->GetCameraRotation());
-            FVector2D Direction(FVector::DotProduct(Delta,Basis.GetUnitAxis(EAxis::Y)),
-                               -FVector::DotProduct(Delta,Basis.GetUnitAxis(EAxis::Z)));
-            // A directly aft target has no left/right bearing: use the bottom cue.
-            if (Direction.IsNearlyZero()) Direction=FVector2D(0,1);
-            const double HudScale=FMath::Min(Size.X/1280.0,Size.Y/720.0);
-            const FVector2D Half=Size*0.5-FVector2D(42,42)*HudScale;
-            if (Half.X<=0 || Half.Y<=0) return Layer;
+            // Both marker modes use the SAME projection and inset boundary.
+            // At directly aft, the bearing is undefined: retain the last cue
+            // instead of flipping sides in response to floating-point noise.
+            if (Direction.SizeSquared()<FMath::Square(4.0*HudScale)) Direction=LastOffscreenDirection;
+            else LastOffscreenDirection=Direction.GetSafeNormal();
             const double EdgeScale=FMath::Min(Half.X/FMath::Max(FMath::Abs(Direction.X),1.e-6),
                                              Half.Y/FMath::Max(FMath::Abs(Direction.Y),1.e-6));
             const FVector2D Edge=Direction*EdgeScale;
-            Center=Size*0.5+Edge;
+            Center=ViewCenter+Edge;
             const bool Side=FMath::Abs(Edge.X)/Half.X>=FMath::Abs(Edge.Y)/Half.Y;
             const int32 Index=Side?(Direction.X<0?0:1):(Direction.Y<0?2:3);
             const FLinearColor Color=TargetColor.Get();
@@ -139,6 +154,8 @@ public:
         return Layer + 2;
     }
 private:
+    mutable TWeakObjectPtr<AActor> LastTarget;
+    mutable FVector2D LastOffscreenDirection = FVector2D(0,1);
     TStrongObjectPtr<UTexture2D> ReticleTexture;
     FSlateBrush ReticleBrush;
     TStrongObjectPtr<UTexture2D> ChaseTextures[4];

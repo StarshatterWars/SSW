@@ -11,7 +11,7 @@ class UInputAction;
 class SFighterHUDDetails;
 class SEngineeringPopup;
 class UEngineeringDlg;
-class UWeaponsDlg;
+class UWeaponsDlg; class UInMissionPanelBase;
 class SWeaponsPopup;
 class UObjectivesDlg;
 class UFlightOpsDlg;
@@ -106,7 +106,7 @@ protected:
     void ToggleEngineering();
     void CloseEngineering();
     TSharedPtr<SWidget> WeaponsPopup;
-    UPROPERTY(Transient) TObjectPtr<UWeaponsDlg> WeaponsPanelWidget;
+    UPROPERTY(Transient) TObjectPtr<UInMissionPanelBase> WeaponsPanelWidget;
     bool bWeaponsPreviousCursor = false;
     void CloseWeaponsPopup();
     UPROPERTY(Transient) TObjectPtr<UInputAction> ObjectivesPanelAction;
