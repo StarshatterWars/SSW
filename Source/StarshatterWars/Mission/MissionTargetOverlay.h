@@ -76,7 +76,7 @@ public:
     {
         APlayerController* PC = Controller.Get();
         AActor* Actor = Target.Get().Get();
-        if (!PC || !IsValid(Actor) || Actor->IsHidden()) return Layer;
+        if (!PC || !IsValid(Actor) || (Actor->IsHidden() && !Actor->ActorHasTag(TEXT("MissionNavigationTarget")))) return Layer;
         int32 Width = 0, Height = 0;
         PC->GetViewportSize(Width, Height);
         if (Width <= 0 || Height <= 0) return Layer;

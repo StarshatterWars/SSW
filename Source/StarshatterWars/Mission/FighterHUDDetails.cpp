@@ -1,4 +1,5 @@
 ﻿#include "FighterHUDDetails.h"
+#include "MissionObjectTarget.h"
 #include "Ship.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
@@ -138,7 +139,7 @@ void SFighterHUDDetails::Refresh()
     {
         FlightSpeed = P->GetVelocity().Size();
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
-        bAutoAvailable = P->CanTimeSkip();
+        bAutoAvailable = P->IsAutoNavEngaged();
         bGearDown = P->IsGearDown();
         JumpSeconds = P->GetQuantumDrive() ? P->GetQuantumDrive()->JumpTime() : 0;
         WeaponGroup* Missile = P->GetSecondaryGroup();
@@ -210,7 +211,7 @@ void SFighterHUDDetails::Refresh()
     Sim* S = Sim::GetSim(); SimRegion* R = S ? S->GetActiveRegion() : nullptr;
     AShipActor* A = Cast<AShipActor>(SelectedTarget.Get().Get());
     Ship* T = IsValid(A) ? A->GetRuntimeShip() : nullptr;
-    if (!T && P && R)
+    if (!SelectedTarget.Get().IsValid() && !T && P && R)
     {
         // Only compare the target pointer until membership is established.
         ListIter<Ship> It = R->GetShips();
@@ -231,6 +232,22 @@ void SFighterHUDDetails::Refresh()
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
         TargetRange = P ? FVector::Distance(P->GetLocation(), T->GetLocation()) / 1000.0 : -1;
         LoadShipHUDIcon(IconPath(T), TargetIconPath, TargetTexture, TargetBrush);
+    }
+    else
+    {
+        FMissionObjectData ObjectData;
+        if (ReadMissionObject(SelectedTarget.Get().Get(), P, R, ObjectData))
+        {
+            bHasTarget = true;
+            TargetName = ObjectData.Name; TargetClass = ObjectData.Type;
+            TargetRange = ObjectData.RangeKm; TargetHull = -1; TargetShield = -1;
+            if (TargetIconPath != ObjectData.ImagePath)
+            {
+                TargetIconPath = ObjectData.ImagePath;
+                TargetTexture.Reset(ObjectData.ImagePath.IsEmpty() ? nullptr : LoadObject<UTexture2D>(nullptr, *ObjectData.ImagePath));
+                TargetBrush.SetResourceObject(TargetTexture.Get());
+            }
+        }
     }
 }
 void SFighterHUDDetails::CycleMFD(int32 Index)
@@ -286,7 +303,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     auto Icon = [&](FVector2D P, const FSlateBrush& B, bool Valid, double H)
     {
-        if (Valid) FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(80*Scale,80*Scale),FSlateLayoutTransform(FVector2f(P))),&B,ESlateDrawEffect::None,ShipHealthColor(H));
+        if (Valid) FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(80*Scale,80*Scale),FSlateLayoutTransform(FVector2f(P))),&B,ESlateDrawEffect::None,H < 0 ? FLinearColor::White : ShipHealthColor(H));
     };
     auto Artwork = [&](int32 Index, FVector2D P, FVector2D D)
     {
@@ -384,7 +401,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             ReticleText(132,-18,108,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
             if (bClosingValid) ReticleText(132,-4,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
-        Popup(-142,TEXT("AUTO"),bAutoAvailable ? HUDBlue : FLinearColor(0.06f,0.16f,0.24f,1));
+        if (bAutoAvailable) Popup(-142,TEXT("AUTO"),HUDBlue);
         if (JumpSeconds>0) Popup(-168,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
         else if (ThreatLevel==2 && bWarningFlash) Popup(-168,TEXT("MISSILE WARNING"),FLinearColor::Red);
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
@@ -512,8 +529,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P,TargetName);
         Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,TargetClass);
-        ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),ShipHealthColor(TargetHull));
-        ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),ShipHealthColor(TargetShield));
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),ShipHealthColor(TargetHull));
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),ShipHealthColor(TargetShield));
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
     }
     TArray<FRadioHUDLine> RadioLines;

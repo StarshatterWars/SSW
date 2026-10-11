@@ -715,6 +715,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
                 TEXT("[ASSETS] FlightOpsScreenClass is not set in Project Settings"));
         }
     }
+
+    // UI.ContactListClass
+    if (!Cache.Contains(TEXT("UI.ContactListClass")))
+    {
+        if (!Settings->ContactListClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ContactListClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ContactListClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ContactListClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] ContactListClass is not set in Project Settings"));
+        }
+    }
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

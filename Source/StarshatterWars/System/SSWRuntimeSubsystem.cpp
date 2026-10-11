@@ -317,6 +317,13 @@ void USSWRuntimeSubsystem::UpdateWorld()
             Game::GetGameTime();
 
         SimInstance->ExecFrame(Seconds);
+        if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+            if (SimRegion* ActiveRegion = SimInstance->GetActiveRegion())
+            {
+                Ship* PlayerShip = SimInstance->GetPlayerShip();
+                Builder->UpdateMissionSpace(ActiveRegion->GetLocation(),
+                    PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector);
+            }
         UpdateProjectileVisuals();
         WaypointRefreshSeconds += Seconds;
         if (WaypointRefreshSeconds >= 0.25) { WaypointRefreshSeconds = 0; UpdateMissionWaypoints(); }
@@ -888,18 +895,11 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
 {
     EndMissionPresentation();
     MissionPresentationBuilder = Builder;
-    MissionPresentationSeed = uint32(FMath::Rand());
-    if (Builder)
+    if (Builder && Sim::GetSim() && Sim::GetSim()->GetActiveRegion())
     {
-        // Presentation only. Apply before spawning ships so surface clearance
-        // uses the enlarged mesh bounds; authored radii remain unchanged.
-        constexpr float MissionPlanetScaleMultiplier = 2.0f;
-        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
-        {
-            if (Body.bIsOrbit || Body.bIsMoon || !IsValid(Body.Actor.Get())) continue;
-            if (Cast<APlanetActor>(Body.Actor.Get()))
-                Builder->SetTemporaryCutsceneBodyScale(Body.BodyName, MissionPlanetScaleMultiplier);
-        }
+        Ship* PlayerShip = Sim::GetSim()->GetPlayerShip();
+        Builder->UpdateMissionSpace(Sim::GetSim()->GetActiveRegion()->GetLocation(),
+            PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector);
     }
 }
 void USSWRuntimeSubsystem::HandleMissionUnloading()
@@ -926,7 +926,7 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
     MissionPresentationOffsets.Empty();
     MissionPresentationRadii.Empty();
     if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-        Builder->ResetTemporaryCutsceneBodyScales();
+        { Builder->EndMissionSpace(); Builder->ResetTemporaryCutsceneBodyScales(); }
     MissionPresentationBuilder.Reset();
 }
 
@@ -1017,29 +1017,12 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
 FVector USSWRuntimeSubsystem::GetVisualLocationForRegion(SimRegion* Region, const FVector& SimPoint) const
 {
     const FVector Local = ConvertLegacyShipLocationToUE(SimPoint);
-    if (!Region) return Local;
-    OrbitalRegion* Orbital = Region->GetOrbitalRegion();
-    const auto* Primary = Orbital ? Orbital->Primary() : nullptr;
-    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-    {
-        // Planet art uses a compressed radius. Preserve the legacy orbital altitude
-        // above its surface, then translate the ENTIRE sector by that one anchor.
-        // Differences between any two ships/waypoints remain exactly the sim delta.
-        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
-        {
-            if (Body.bIsOrbit || !Primary || !Body.BodyName.Equals(ANSI_TO_TCHAR(Primary->GetName()), ESearchCase::IgnoreCase)) continue;
-            const FVector Center = IsValid(Body.Actor) ? Body.Actor->GetActorLocation() : Body.SpawnLocation;
-            const FVector OrbitDelta = ConvertLegacyShipLocationToUE(OtherHand(Orbital->Location() - Primary->Location()));
-            const double OrbitDistance = OrbitDelta.Size();
-            const double Altitude = OrbitDistance - Primary->Radius();
-            const double VisualOrbit = FMath::Max(0.0, double(Body.VisualRadiusUnits) + Altitude);
-            return Center + OrbitDelta.GetSafeNormal() * VisualOrbit + Local;
-        }
-        // Unparented sectors retain their orbital offset from the system anchor.
-        if (Orbital)
-            return Builder->GetActorLocation() + ConvertLegacyShipLocationToUE(OtherHand(Orbital->Location())) + Local;
-    }
-    return ConvertLegacyShipLocationToUE(OtherHand(Region->GetLocation())) + Local;
+    ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get();
+    Sim* LiveSim = Sim::GetSim();
+    SimRegion* Active = LiveSim ? LiveSim->GetActiveRegion() : nullptr;
+    if (Builder && Active && Region)
+        return Builder->GetActorLocation() + ConvertLegacyShipLocationToUE(OtherHand(Region->GetLocation() - Active->GetLocation())) + Local;
+    return Local;
 }
 
 void USSWRuntimeSubsystem::ClearMissionWaypoints()
@@ -1060,7 +1043,8 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
     if (!bWaypointClassResolved)
     {
         bWaypointClassResolved = true;
-        WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Actors/BP_Waypoint.BP_Waypoint_C"));
+        WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Models/Waypoint/BP_Waypoint.BP_Waypoint_C"));
+        if (!WaypointClass) WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Actors/BP_Waypoint.BP_Waypoint_C"));
         if (!WaypointClass) UE_LOG(LogSSWRuntime, Warning, TEXT("Create /Game/Actors/BP_Waypoint with the supplied editor script. Using hidden native waypoint actors until then."));
     }
     TSet<FString> ActiveKeys;

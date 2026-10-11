@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -236,6 +236,7 @@ void ASystemSceneBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASystemSceneBuilder::ClearSpawnedBodies()
 {
+    EndMissionSpace();
     if (bEnableDebugLogs)
     {
         UE_LOG(LogTemp, Warning,
@@ -902,6 +903,7 @@ void ASystemSceneBuilder::TrackRuntimeBody(
 
 void ASystemSceneBuilder::RefreshRuntimeBodyTransforms()
 {
+    if (bMissionSpace) return;
     if (RuntimeBodyMap.Num() == 0 || BodyActorMap.Num() == 0)
     {
         return;
@@ -2696,4 +2698,117 @@ void ASystemSceneBuilder::ResetTemporaryCutsceneBodyScales()
     }
 
     OriginalCutsceneBodyScales.Empty();
+}
+// Authored X/Y orbital plane -> simulation OtherHand -> Unreal ship frame.
+static FVector MissionOrbitalToUE(const FVector& P) { return FVector(P.Y, -P.X, P.Z); }
+
+void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer)
+{
+    if (!bMissionSpace)
+    {
+        ResetTemporaryCutsceneBodyScales();
+        bMissionSpace = true;
+        for (const FSpawnedSystemBody& Entry : SpawnedBodies)
+        {
+            AActor* BodyActor = Entry.Actor.Get();
+            if (!IsValid(BodyActor)) continue;
+            if (Entry.bIsOrbit)
+            {
+                MissionHiddenActors.Add(BodyActor, BodyActor->IsHidden());
+                BodyActor->SetActorHiddenInGame(true);
+                continue;
+            }
+            BodyActor->Tags.AddUnique(TEXT("MissionNavigationTarget"));
+            MissionBodyTransforms.Add(BodyActor, BodyActor->GetActorTransform());
+            MissionBodyParents.Add(BodyActor, BodyActor->GetAttachParentActor());
+            // Detach before changing any body scales: planets/moons must not
+            // inherit their parent's new astronomical scale.
+        }
+        for (const auto& Pair : MissionBodyTransforms)
+            if (AActor* BodyActor = Pair.Key.Get()) BodyActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        for (const auto& Pair : MissionBodyTransforms)
+        {
+            AActor* BodyActor = Pair.Key.Get();
+            if (!BodyActor) continue;
+            double SurfaceRadius = 0;
+            TArray<UStaticMeshComponent*> Meshes;
+            BodyActor->GetComponents<UStaticMeshComponent>(Meshes);
+            for (UStaticMeshComponent* Mesh : Meshes)
+            {
+                if (!Mesh || !Mesh->GetStaticMesh() || !Mesh->IsVisible() || Mesh->bHiddenInGame) continue;
+                // Minimum extent excludes thin ring planes. Measure actual BP
+                // geometry rather than treating an actor scale as a radius.
+                const FVector Extent = Mesh->GetStaticMesh()->GetBounds().BoxExtent * Mesh->GetComponentScale().GetAbs();
+                SurfaceRadius = FMath::Max(SurfaceRadius, Extent.GetMin());
+            }
+            if (SurfaceRadius > UE_SMALL_NUMBER) MissionBodyRadii.Add(BodyActor, SurfaceRadius);
+            else UE_LOG(LogTemp, Warning, TEXT("[MissionSpace] No visible sphere mesh to calibrate '%s'"), *BodyActor->GetName());
+        }
+        for (const FSpawnedSystemRegion& Entry : SpawnedRegions)
+            if (AActor* RegionActor = Entry.Actor.Get())
+            {
+                MissionHiddenActors.Add(RegionActor, RegionActor->IsHidden());
+                RegionActor->SetActorHiddenInGame(true);
+            }
+    }
+    // Keep local ships at simulation scale (1 UE unit per simulation metre).
+    // Very distant bodies use camera-relative proxies: distance AND radius
+    // receive the same factor, preserving apparent size without huge vertices.
+    constexpr double BackgroundDistance = 1.0e8;
+    const FVector Eye = GetActorLocation() + Observer;
+    for (const auto& Pair : RuntimeBodyMap)
+    {
+        OrbitalBody* Body = Pair.Value;
+        const auto* Found = BodyActorMap.Find(Pair.Key);
+        AActor* BodyActor = Found ? Found->Get() : nullptr;
+        if (!Body || !IsValid(BodyActor)) continue;
+        const FVector Delta = MissionOrbitalToUE(Body->Location() - SectorOrigin) - Observer;
+        const double Distance = Delta.Size();
+        const double Projection = Distance > BackgroundDistance ? BackgroundDistance / Distance : 1.0;
+        BodyActor->SetActorLocation(Eye + Delta * Projection);
+        const double* MeasuredRadius = MissionBodyRadii.Find(BodyActor);
+        const FTransform* Original = MissionBodyTransforms.Find(BodyActor);
+        if (MeasuredRadius && Original)
+            BodyActor->SetActorScale3D(Original->GetScale3D() * (Body->Radius() * Projection / *MeasuredRadius));
+    }
+}
+
+void ASystemSceneBuilder::EndMissionSpace()
+{
+    if (!bMissionSpace) return;
+    bMissionSpace = false;
+    for (const auto& Pair : MissionBodyTransforms)
+        if (AActor* BodyActor = Pair.Key.Get()) BodyActor->SetActorTransform(Pair.Value);
+    for (const auto& Pair : MissionBodyParents)
+        if (AActor* BodyActor = Pair.Key.Get())
+            if (AActor* ParentActor = Pair.Value.Get()) BodyActor->AttachToActor(ParentActor, FAttachmentTransformRules::KeepWorldTransform);
+    for (const auto& Pair : MissionHiddenActors)
+        if (AActor* HiddenActor = Pair.Key.Get()) HiddenActor->SetActorHiddenInGame(Pair.Value);
+    MissionBodyTransforms.Empty(); MissionBodyParents.Empty();
+    MissionBodyRadii.Empty(); MissionHiddenActors.Empty();
+}
+
+bool ASystemSceneBuilder::GetMissionBodyInfo(AActor* Actor, FString& Name, FString& Type, FVector& AuthoredLocation, FString& ImagePath) const
+{
+    if (!bMissionSpace || !IsValid(Actor)) return false;
+    for (const auto& Pair : BodyActorMap)
+    {
+        if (Pair.Value.Get() != Actor) continue;
+        OrbitalBody* const* Body = RuntimeBodyMap.Find(Pair.Key);
+        if (!Body || !*Body) return false;
+        Name = Pair.Key;
+        Type = (*Body)->GetType() == Orbital::MOON ? TEXT("Moon") :
+            ((*Body)->GetType() == Orbital::STAR ? TEXT("Star") : TEXT("Planet"));
+        AuthoredLocation = (*Body)->Location();
+        FString TextureName = ANSI_TO_TCHAR((*Body)->GetMapName());
+        if (TextureName.IsEmpty()) TextureName = ANSI_TO_TCHAR((*Body)->GetTextureName());
+        TextureName.ReplaceInline(TEXT("\\"), TEXT("/"));
+        int32 Slash = INDEX_NONE;
+        if (TextureName.FindLastChar(TCHAR('/'), Slash)) TextureName = TextureName.Mid(Slash+1);
+        int32 Dot = INDEX_NONE;
+        if (TextureName.FindLastChar(TCHAR('.'), Dot)) TextureName = TextureName.Left(Dot);
+        ImagePath = TextureName.IsEmpty() ? FString() : FString::Printf(TEXT("/Game/UI/PlanetMap/%s.%s"), *TextureName, *TextureName);
+        return true;
+    }
+    return false;
 }

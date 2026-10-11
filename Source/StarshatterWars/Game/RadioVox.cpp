@@ -19,9 +19,24 @@ namespace
     }
     const TMap<FString,FString>& PhrasePaths()
     {
-        static const TMap<FString,FString> Paths = {
+        // Literal pointers are constant-initialized data, not thousands of
+        // FString constructors expanded into this function by the compiler.
+        struct FPhrasePathEntry
+        {
+            const TCHAR* Key;
+            const TCHAR* Path;
+        };
+        static const FPhrasePathEntry Entries[] = {
 #include "RadioAudioAssets.inl"
         };
+        static const TMap<FString, FString> Paths = []()
+        {
+            TMap<FString, FString> Result;
+            Result.Reserve(UE_ARRAY_COUNT(Entries));
+            for (const FPhrasePathEntry& Entry : Entries)
+                Result.Add(FString(Entry.Key), FString(Entry.Path));
+            return Result;
+        }();
         return Paths;
     }
 }

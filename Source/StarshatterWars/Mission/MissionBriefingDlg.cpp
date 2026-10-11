@@ -23,6 +23,7 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "MissionObjectTarget.h"
 
 #include "Sensor.h"
 #include "WeaponGroup.h"
@@ -1663,7 +1664,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
     if (!Region) return;
     Ship* Player = Simulation->GetPlayerShip();
     if (!Player || !Region->GetShips().contains(Player)) return;
-    TArray<AShipActor*> Candidates;
+    TArray<AActor*> Candidates;
     for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
     {
         AShipActor* Actor = *It;
@@ -1681,32 +1682,36 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
             Region->GetName(), ShipData != nullptr, bInRegion, bHidden, bDestroying, bDead, bEligible);
         if (bEligible) Candidates.Add(Actor);
     }
-    Candidates.Sort([](const AShipActor& A, const AShipActor& B)
+    for (TActorIterator<AActor> It(GetWorld()); It; ++It)
     {
-        const FString AName = ANSI_TO_TCHAR(A.GetRuntimeShip()->GetName());
-        const FString BName = ANSI_TO_TCHAR(B.GetRuntimeShip()->GetName());
-        return AName == BName ? A.GetUniqueID() < B.GetUniqueID() : AName < BName;
-    });
+        AActor* Object = *It;
+        if (!IsValid(Object) || !Object->ActorHasTag(TEXT("MissionNavigationTarget"))) continue;
+        FMissionObjectData Data;
+        if (ReadMissionObject(Object, Player, Region, Data)) Candidates.AddUnique(Object);
+    }
+    Candidates.Sort([](const AActor& A, const AActor& B) { return A.GetUniqueID() < B.GetUniqueID(); });
     if (Candidates.IsEmpty())
     {
         SelectedMissionTarget.Reset();
         Player->DropTarget();
         return;
     }
-    const int32 Current = Candidates.IndexOfByPredicate([this](AShipActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
+    const int32 Current = Candidates.IndexOfByPredicate([this](AActor* Actor) { return Actor == SelectedMissionTarget.Get(); });
     const int32 Index = Current == INDEX_NONE ? (Direction > 0 ? 0 : Candidates.Num()-1)
         : (Current + (Direction > 0 ? 1 : -1) + Candidates.Num()) % Candidates.Num();
-    AShipActor* Selected = Candidates[Index];
-    UE_LOG(LogTemp, Display, TEXT("[MissionTargetCycle] Selected='%hs' Index=%d Count=%d"),
-        Selected->GetRuntimeShip()->GetName(), Index, Candidates.Num());
+    AActor* Selected = Candidates[Index];
     SelectedMissionTarget = Selected;
     if (bMissionTargetInspection) MissionTargetZoomDistance = 1.0;
     SelectedMissionTargetLocalBounds = MissionTargetLocalBounds(Selected);
-    Ship* SelectedShip = Selected->GetRuntimeShip();
+    AShipActor* ShipVisual = Cast<AShipActor>(Selected);
+    Ship* SelectedShip = ShipVisual ? ShipVisual->GetRuntimeShip() : nullptr;
     // Use SSW sensor/EMCON gating and propagate the lock to weapons and mission events.
-    Player->LockTarget(SelectedShip);
-    FString FullName = ANSI_TO_TCHAR(SelectedShip->GetName());
-    if (CombatUnit* Unit = SelectedShip->GetCombatUnit())
+    if (SelectedShip) Player->LockTarget(SelectedShip);
+    else Player->DropTarget(); // Navigation selection is not a weapons lock.
+    FMissionObjectData ObjectData;
+    ReadMissionObject(Selected, Player, Region, ObjectData);
+    FString FullName = SelectedShip ? FString(ANSI_TO_TCHAR(SelectedShip->GetName())) : ObjectData.Name;
+    if (CombatUnit* Unit = SelectedShip ? SelectedShip->GetCombatUnit() : nullptr)
     {
         const FString Abbreviation = UFormattingUtils::GetUnitDesignIndicator(Unit);
         FString Registry = FString(ANSI_TO_TCHAR(Unit->GetRegistryNumber().data())).TrimStartAndEnd();
@@ -1754,6 +1759,7 @@ void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
                 SimRegion* Active=Current?Current->GetActiveRegion():nullptr;
                 Ship* Pilot=Current?Current->GetPlayerShip():nullptr;
                 AShipActor* SelectedActor=Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
+                if (!SelectedActor) return WeakThis->SelectedMissionTargetName;
                 Ship* TargetData=IsValid(SelectedActor)?SelectedActor->GetRuntimeShip():nullptr;
                 const bool Locked=Pilot && Active && Active->GetShips().contains(Pilot) && TargetData &&
                     Active->GetShips().contains(TargetData) && Pilot->GetTarget()==TargetData;

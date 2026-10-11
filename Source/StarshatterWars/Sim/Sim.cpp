@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -899,7 +899,9 @@ Sim::CreateElements()
 
 		// add element to a carrier?
 		if (MissionElem->IsSquadron()) {
-			Ship* Carrier = FindShip(MissionElem->GetCarrier());
+            Ship* Carrier = FindShip(MissionElem->GetCarrier());
+            if (!Carrier)
+                if (SimElement* CarrierElement = FindElement(MissionElem->GetCarrier())) Carrier = CarrierElement->GetShip(1);
 
 			if (Carrier) {
 				Hangar* HangarPtr = Carrier->GetHangar();
@@ -1033,6 +1035,27 @@ Sim::CreateElements()
 				}
 			}
 
+            if (!Carrier)
+            {
+                Text CarrierName = MissionElem->GetCarrier();
+                if (!CarrierName.length()) CarrierName = MissionElem->GetCommander();
+                if (CarrierName.length())
+                {
+                    Ship* Candidate = FindShip(CarrierName);
+                    if (!Candidate)
+                        if (SimElement* CarrierElement = FindElement(CarrierName)) Candidate = CarrierElement->GetShip(1);
+                    if (Candidate && Candidate->GetHangar() && Candidate->NumFlightDecks() > 0)
+                    {
+                        Carrier = Candidate;
+                        HangarPtr = Carrier->GetHangar();
+                        Element->SetCarrier(Carrier);
+                        Element->SetCommander(Carrier->GetElement());
+                        for (int32 Sq = 0; Sq < HangarPtr->NumSquadrons(); ++Sq)
+                            if (HangarPtr->SquadronName(Sq) == MissionElem->GetSquadron()) { SquadronIndex = Sq; break; }
+                    }
+                }
+            }
+
 			ListIter<Instruction> ObjectiveIter = MissionElem->GetObjectives();
 
 			while (++ObjectiveIter) {
@@ -1083,7 +1106,11 @@ Sim::CreateElements()
 			int32* Loadout = nullptr;
 			int32 Respawns = MissionElem->RespawnCount();
 
-			if (HangarPtr && Element && MissionElem->Count() > 0 && MissionElem->IsAlert()) {
+            PlayerCharacter* LaunchPlayer = PlayerCharacter::GetCurrentPlayer();
+            const bool PlayerCarrierStart = MissionElem->GetPlayerIndex() > 0 && Carrier &&
+                (!LaunchPlayer || !LaunchPlayer->FlyingStart());
+            const bool WantsDeckStart = MissionElem->IsAlert() || PlayerCarrierStart;
+            if (HangarPtr && Element && MissionElem->Count() > 0 && WantsDeckStart) {
 				FlightDeck* Deck = nullptr;
 				int32 Queue = 1000;
 
@@ -1193,7 +1220,7 @@ Sim::CreateElements()
 				}
 			}
 
-            if (MissionElem->IsAlert()) {
+            if (WantsDeckStart) {
                 UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Group='%hs' Carrier='%hs' Prepared=%d Count=%d"),
                     MissionElem->GetName().data(), Carrier ? Carrier->GetName() : "MISSING",
                     bAlertPrep ? 1 : 0, MissionElem->Count());

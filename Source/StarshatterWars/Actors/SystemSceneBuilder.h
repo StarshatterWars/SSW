@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -462,6 +462,17 @@ protected:
     UPROPERTY()
     TObjectPtr<ACameraActor> SceneCameraActor = nullptr;
 
+public:
+    void UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer);
+    void EndMissionSpace();
+    bool GetMissionBodyInfo(AActor* Actor, FString& Name, FString& Type, FVector& AuthoredLocation, FString& ImagePath) const;
+private:
+    bool bMissionSpace = false;
+    TMap<TWeakObjectPtr<AActor>, FTransform> MissionBodyTransforms;
+    TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<AActor>> MissionBodyParents;
+    TMap<TWeakObjectPtr<AActor>, double> MissionBodyRadii;
+    TMap<TWeakObjectPtr<AActor>, bool> MissionHiddenActors;
+protected:
     TMap<FString, OrbitalBody*> RuntimeBodyMap;
     TMap<FString, TObjectPtr<AActor>> BodyActorMap;
 

@@ -10,6 +10,8 @@ class STARSHATTERWARS_API AWaypointActor : public AActor
     GENERATED_BODY()
 public:
     AWaypointActor();
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation|Appearance")
+    TObjectPtr<class UStaticMeshComponent> WaypointMesh;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") int32 ElementIdentity = 0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") int32 WaypointIndex = 0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FString SectorName;
