@@ -120,6 +120,19 @@ public:
         FVector2D Direction(Clip.X/Divisor*Rect.Width()*0.5*Size.X/Width,
                            -Clip.Y/Divisor*Rect.Height()*0.5*Size.Y/Height);
         FVector2D Center=ViewCenter+Direction;
+        if (Actor->ActorHasTag(TEXT("MissionNavigationTarget"))) {
+            const FVector Eye = ProjectionData.ViewOrigin;
+            if (MarkerProbeTarget.Get() != Actor) { MarkerProbeTarget = Actor; MarkerProbeSamples = 0; MarkerProbeValid = false; }
+            if (MarkerProbeValid && MarkerProbeSamples < 6 && Clip.W > 0 && MarkerProbeFront &&
+                (Center - MarkerProbeScreen).SizeSquared() > FMath::Square(40.0 * HudScale)) {
+                ++MarkerProbeSamples;
+                UE_LOG(LogTemp, Display, TEXT("[WaypointMarker] %s screenDelta=%s targetDelta=%s eyeDelta=%s"),
+                    *Actor->GetName(), *(Center-MarkerProbeScreen).ToString(),
+                    *(TargetPosition-MarkerProbePosition).ToString(), *(Eye-MarkerProbeEye).ToString());
+            }
+            MarkerProbeScreen = Center; MarkerProbePosition = TargetPosition; MarkerProbeEye = Eye;
+            MarkerProbeFront = Clip.W > 0; MarkerProbeValid = true;
+        }
         if (LastTarget.Get()!=Actor) { LastTarget=Actor; LastOffscreenDirection=FVector2D(0,1); }
         if (Clip.W<=0 || FMath::Abs(Direction.X)>Half.X || FMath::Abs(Direction.Y)>Half.Y)
         {
@@ -182,4 +195,10 @@ private:
     TAttribute<double> RangeKm;
     TAttribute<FLinearColor> TargetColor;
     TAttribute<FBox> LocalBounds;
+    mutable TWeakObjectPtr<AActor> MarkerProbeTarget;
+    mutable FVector2D MarkerProbeScreen = FVector2D::ZeroVector;
+    mutable FVector MarkerProbePosition = FVector::ZeroVector, MarkerProbeEye = FVector::ZeroVector;
+    mutable int32 MarkerProbeSamples = 0;
+    mutable bool MarkerProbeValid = false, MarkerProbeFront = false;
+
 };

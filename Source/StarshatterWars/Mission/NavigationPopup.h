@@ -12,6 +12,7 @@
 #include "SimRegion.h"
 #include "NavSystem.h"
 #include "Instruction.h"
+#include "Game.h"
 #include "InputCoreTypes.h"
 
 // Hosts SSW's existing navigation map. No duplicate actors or scene capture.
@@ -74,7 +75,7 @@ private:
         auto* R=P->GetRegion();auto* N=P->GetNextNavPoint();const FVector Location=P->GetLocation();
         FString Text=FString::Printf(TEXT("LOCATION  %hs    X %.1f  Y %.1f  Z %.1f km"),R?R->GetName():"--",Location.X/1000,Location.Y/1000,Location.Z/1000);
         if(N){Text+=FString::Printf(TEXT("\nDESTINATION  %hs — %hs"),N->GetRegionName(),N->GetDescription());
-            if(N->GetRegion()==R)Text+=FString::Printf(TEXT("    RANGE %.1f km"),FVector::Distance(Location,N->GetLocation())/1000);}
+            if(N->GetRegion()==R)Text+=FString::Printf(TEXT("    RANGE %.1f km"),FVector::Distance(Location,OtherHand(N->GetLocation()))/1000);}
         else Text+=TEXT("\nDESTINATION  No remaining waypoint");
         return Text;
     }

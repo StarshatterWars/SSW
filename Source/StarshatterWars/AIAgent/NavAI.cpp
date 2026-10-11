@@ -16,6 +16,7 @@
 */
 
 #include "NavAI.h"
+#include "WaypointArrival.h"
 
 #include "TacticalAI.h"
 #include "Instruction.h"
@@ -188,6 +189,12 @@ void NavAI::FindObjective()
     if (ship->GetNavSystem())
         navpt = ship->GetNextNavPoint();
 
+    if (navpt != PreviousRoutePoint) {
+        PreviousRoutePoint = navpt;
+        bHasPreviousRoutePosition = false;
+        // The previous leg's angular error must not steer the new leg.
+        for (int i = 0; i < 3; ++i) { az[i] = 0; el[i] = 0; }
+    }
     complete = (navpt == nullptr);
     if (complete)
         return;
@@ -402,8 +409,8 @@ NavAI::HelmControl()
         if (fabs(accumulator.yaw) > 0.5 && fabs(accumulator.pitch) < 0.1)
             accumulator.pitch -= 0.1f;
 
-        if (accumulator.pitch != 0)
-            self->ApplyPitch((float)accumulator.pitch);
+        // Clear the last leg's pitch demand even when the new command is zero.
+        self->ApplyPitch((float)accumulator.pitch);
 
         // if not turning, roll to orient with world coords:
         if (fabs(accumulator.yaw) < 0.1) {
@@ -529,10 +536,28 @@ NavAI::SeekTarget()
                 } else if (Q->ActiveState() == QuantumDrive::ACTIVE_POSTWARP) quantum_state = 0;
             }
         }
-        // Stars45 NavAI: complete at twice the simulation hull radius, not
-        // a multi-kilometre generic arrival zone or a speed-gated stop.
-        if (distance < 2.0 * ship->GetRadius()) {
+        const FVector Current = ship->GetLocation();
+        const double ArrivalRadius = LegacyWaypointArrival::Radius(ship->GetRadius());
+        // Only sweep continuous travel on this leg, never an orbital/quantum jump.
+        const double MaxContinuousStep = FMath::Max(ArrivalRadius*4.0,
+            ship->GetVelocity().Size()*FMath::Max(seconds,0.0)*4.0 + 1.0);
+        const bool Sweep = bHasPreviousRoutePosition && !ship->InTransition() &&
+            (Current-PreviousRoutePosition).SizeSquared() <= MaxContinuousStep*MaxContinuousStep;
+        const bool Arrived = navpt->GetRegion() == ship->GetRegion() &&
+            LegacyWaypointArrival::Reached(Current, PreviousRoutePosition, obj_w, ArrivalRadius, Sweep);
+        PreviousRoutePosition = Current;
+        bHasPreviousRoutePosition = true;
+        if (Arrived) {
+            const int CompletedIndex = ship->GetNavIndex(navpt);
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+            Instruction* Next = ship->GetNextNavPoint();
+            UE_LOG(LogTemp, Display, TEXT("[AutoNavRoute] Reached=%d Radius=%.2fm Next=%d Hold=%.2fs"),
+                CompletedIndex, ArrivalRadius, Next ? ship->GetNavIndex(Next) : 0,
+                Next ? Next->GetHoldTime() : 0.0);
+            if (Next != navpt) {
+                FindObjective();
+                if (navpt) return Seek(objective);
+            }
             return Steer();
         }
         return Seek(objective);

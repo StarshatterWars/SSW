@@ -774,13 +774,8 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     ShipActor->BindRuntimeShip(
         RuntimeShip);
 
-    if (AActor* RegionActor =
-        FindRegionActorForRuntimeShip(RuntimeShip))
-    {
-        ShipActor->AttachToActor(
-            RegionActor,
-            FAttachmentTransformRules::KeepWorldTransform);
-    }
+    // Runtime positions already include the region transform. Parenting to a
+    // presentation region would apply its transform a second time between updates.
     ShipActor->UpdateFromRuntimeShip(
         0.0f);
 
@@ -1074,6 +1069,9 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
                 if (!Actor) continue;
                 MissionWaypoints.Add(Key, Actor);
             }
+            Ship* RadiusShip = LiveSim->GetPlayerShip();
+            if (!RadiusShip || RadiusShip->GetElement() != Element) RadiusShip = Element->GetShip(1);
+            Actor->SetArrivalHullRadius(RadiusShip ? RadiusShip->GetRadius() : 0.0);
             Actor->ElementIdentity = Element->GetIdentity();
             Actor->WaypointIndex = Index;
             Actor->SectorName = ANSI_TO_TCHAR(Point->GetRegionName());

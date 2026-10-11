@@ -1,4 +1,4 @@
-
+﻿
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -1681,6 +1681,10 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     {
         return;
     }
+
+    // Simulation owns this actor's world pose. Keep the BP visual/VFX children
+    // attached to us, but remove an old presentation-region parent if present.
+    if (GetAttachParentActor()) DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
     FVector RuntimeLocation = RuntimeShip->GetLocation();
     if (UGameInstance* GI = GetGameInstance())

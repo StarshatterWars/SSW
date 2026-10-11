@@ -106,6 +106,8 @@
 #include "StarSystem.h"
 #include "FormatUtil.h"
 #include "Instruction.h"
+#include "WaypointActor.h"
+#include "SimElement.h"
 #include "MissionElement.h"
 #include "CombatGroup.h"
 #include "CombatUnit.h"
@@ -1095,7 +1097,7 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
     FlightCameraTimerParameters.bLoop = true;
     FlightCameraTimerParameters.bMaxOncePerFrame = true;
     World->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
-        &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, FlightCameraTimerParameters);
+        &UMissionBriefingDlg::UpdateMissionTargetCamera, 0.000001f, FlightCameraTimerParameters);
     // Warm up all visuals behind the cover, including the star's effects.
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
@@ -1493,7 +1495,33 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             MissionMenuInput->BindAction(Action, Event, this, Handler);
         } else UE_LOG(LogTemp, Warning, TEXT("[WeaponsInput] Missing Boolean action %s"), ActionName);
     };
-    BindWeaponAction(TEXT("IA_AutoNav"), ETriggerEvent::Started, &UMissionBriefingDlg::ToggleMissionAutoNav);
+    // Resolve the actual mapped action, including assets moved to subfolders.
+    // Give its existing mappings priority over overlapping flight/FLCS actions.
+    // No physical key is hard-coded: changing M to B in the IMC is respected.
+    if (AutoNavInputContext) Input->RemoveMappingContext(AutoNavInputContext.Get());
+    AutoNavInputContext = NewObject<UInputMappingContext>(this);
+    TSet<const UInputAction*> BoundAutoActions;
+    const UInputMappingContext* AutoContexts[] = { FighterInputContext.Get(), MissionMenuContext.Get() };
+    for (const UInputMappingContext* Context : AutoContexts) {
+        if (!Context) continue;
+        for (const FEnhancedActionKeyMapping& Mapping : Context->GetMappings()) {
+            if (!Mapping.Action || !Mapping.Action->GetName().Equals(TEXT("IA_AutoNav"), ESearchCase::IgnoreCase)) continue;
+            UInputAction* AutoAction = const_cast<UInputAction*>(Mapping.Action.Get());
+            if (AutoAction->ValueType != EInputActionValueType::Boolean) {
+                UE_LOG(LogTemp, Error, TEXT("[AutoNavInput] %s must be Boolean"), *AutoAction->GetPathName());
+                continue;
+            }
+            AutoNavInputContext->MapKey(AutoAction, Mapping.Key) = Mapping;
+            if (!BoundAutoActions.Contains(AutoAction)) {
+                BoundAutoActions.Add(AutoAction);
+                MissionWeaponActions.Add(AutoAction);
+                MissionMenuInput->BindAction(AutoAction, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionAutoNav);
+            }
+            UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] %s -> %s"), *Mapping.Key.ToString(), *AutoAction->GetPathName());
+        }
+    }
+    if (BoundAutoActions.Num()) Input->AddMappingContext(AutoNavInputContext.Get(), 1105);
+    else UE_LOG(LogTemp, Error, TEXT("[AutoNavInput] No IA_AutoNav mapping found in the active fighter/menu contexts."));
     BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
     BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
     BindWeaponAction(TEXT("IA_Decoy"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionDecoy);
@@ -1609,6 +1637,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
         if (ULocalPlayer* LP = PC->GetLocalPlayer())
             if (auto* Input = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
             {
+                if (AutoNavInputContext) Input->RemoveMappingContext(AutoNavInputContext.Get());
                 if (MissionCameraContext) Input->RemoveMappingContext(MissionCameraContext.Get());
                 if (RadioChoiceContext) Input->RemoveMappingContext(RadioChoiceContext.Get());
                 if (MissionTargetContext) Input->RemoveMappingContext(MissionTargetContext.Get());
@@ -1620,6 +1649,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
     MissionWeaponActions.Reset();
+    AutoNavInputContext = nullptr;
     bPreviousTargetHeld = false;
     bNextTargetHeld = false;
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
@@ -1818,7 +1848,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
     TimerParameters.bLoop = true;
     TimerParameters.bMaxOncePerFrame = true;
     GetWorld()->GetTimerManager().SetTimer(MissionTargetCameraTimer, this,
-        &UMissionBriefingDlg::UpdateMissionTargetCamera, 1.0f/60.0f, TimerParameters);
+        &UMissionBriefingDlg::UpdateMissionTargetCamera, 0.000001f, TimerParameters);
 }
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
@@ -2517,6 +2547,31 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
         if (MissionCameraRig) MissionCameraRig->RestoreVisibility(PC);
         return;
     }
+    // Autonav selects its actual destination when engaged or when the route
+    // advances. Manual target selection alone still never changes steering.
+    if (!Player->IsAutoNavEngaged()) {
+        bAutoNavSelectionActive = false;
+        AutoNavSelectedRoutePoint = nullptr;
+    } else if (Instruction* RoutePoint = Player->GetNextNavPoint()) {
+        if (!bAutoNavSelectionActive || AutoNavSelectedRoutePoint != RoutePoint) {
+            AActor* DestinationActor = nullptr;
+            if (SimObject* Object = RoutePoint->GetTarget()) {
+                for (TActorIterator<AShipActor> It(World); It; ++It)
+                    if (It->GetRuntimeShip() == Object) { DestinationActor = *It; break; }
+            }
+            if (!DestinationActor && Player->GetElement()) {
+                const int32 RouteIndex = Player->GetNavIndex(RoutePoint);
+                for (TActorIterator<AWaypointActor> It(World); It; ++It)
+                    if (It->ElementIdentity == Player->GetElement()->GetIdentity() &&
+                        It->WaypointIndex == RouteIndex) { DestinationActor = *It; break; }
+            }
+            if (DestinationActor && GetSelectableMissionContacts().Contains(DestinationActor)) {
+                AutoNavSelectedRoutePoint = RoutePoint;
+                bAutoNavSelectionActive = true;
+                SelectMissionContact(DestinationActor);
+            }
+        }
+    }
     AShipActor* Visual = Cast<AShipActor>(MissionPlayerCameraActor.Get());
     const double Now = World->GetTimeSeconds();
     if (!IsValid(Visual) || Visual->IsActorBeingDestroyed() || Visual->GetRuntimeShip()!=Player)
@@ -3121,6 +3176,8 @@ void UMissionBriefingDlg::LockMissionHostileThreat()
 
 void UMissionBriefingDlg::ToggleMissionAutoNav()
 {
+    UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] Started; controls=%d paused=%d"),
+        CanUseFighterHUD() ? 1 : 0, GetWorld() && GetWorld()->IsPaused() ? 1 : 0);
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;

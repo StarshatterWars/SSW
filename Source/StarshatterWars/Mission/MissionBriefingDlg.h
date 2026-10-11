@@ -243,6 +243,8 @@ protected:
     void DropMissionWeaponTarget();
     void ToggleContactsPanel();
     void ToggleMissionAutoNav();
+    class Instruction* AutoNavSelectedRoutePoint = nullptr; // comparison only
+    bool bAutoNavSelectionActive = false;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> MissionWeaponActions;
     bool bContactsOnlyPanel = false;
     bool CanUseFighterHUD() const;
@@ -270,6 +272,7 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> NextMissionTargetAction;
     bool bAddedMissionMenuContext = false;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> FighterInputContext;
+    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> AutoNavInputContext;
     bool bAddedFighterInputContext = false;
     UPROPERTY(EditDefaultsOnly, Category="Mission|Pause Menu")
     TSubclassOf<UQuitMissionMenu> QuitMissionMenuClass;

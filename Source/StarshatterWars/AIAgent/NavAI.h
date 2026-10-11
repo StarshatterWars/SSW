@@ -64,6 +64,9 @@ protected:
     virtual void      HelmControl() override;
     virtual void      ThrottleControl() override;
 
+    Instruction*      PreviousRoutePoint = nullptr; // identity only, never dereferenced
+    FVector           PreviousRoutePosition = FVector::ZeroVector;
+    bool              bHasPreviousRoutePosition = false;
     bool              complete = false;
     int               drop_state = 0;
     int               quantum_state = 0;
