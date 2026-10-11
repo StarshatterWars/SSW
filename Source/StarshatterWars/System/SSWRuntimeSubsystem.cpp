@@ -1,6 +1,12 @@
 
 #include "SSWRuntimeSubsystem.h"
 
+#include "SimShot.h"
+#include "WeaponDesign.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
+
 #include "Math/RandomStream.h"
 #include "SimElement.h"
 #include "CombatGroup.h"
@@ -73,6 +79,7 @@ void USSWRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void USSWRuntimeSubsystem::Deinitialize()
 {
+    ClearProjectileVisuals();
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] Deinitialize"));
 
     StopRuntime();
@@ -303,6 +310,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
             Game::GetGameTime();
 
         SimInstance->ExecFrame(Seconds);
+        UpdateProjectileVisuals();
 
         const uint32 AfterTime =
             Game::GetGameTime();
@@ -1018,6 +1026,7 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
 }
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
+    ClearProjectileVisuals();
     for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
     {
         if (!Actor.IsValid()) continue;
@@ -1069,4 +1078,72 @@ FVector USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(Ship* Runtime
     double Blend=FMath::Clamp((Distance-4.0*Radius)/(8.0*Radius), 0.0, 1.0);
     Blend=Blend*Blend*(3.0-2.0*Blend);
     return FMath::Lerp(DeckPosition, RegionPosition, Blend);
+}
+
+void USSWRuntimeSubsystem::ClearProjectileVisuals()
+{
+    for(auto& Pair:ProjectileVisuals)if(Pair.Value.IsValid())Pair.Value->Destroy();
+    ProjectileVisuals.Empty(); ProjectileMeshes.Empty(); ProjectileFallbackMesh=nullptr;
+}
+void USSWRuntimeSubsystem::UpdateProjectileVisuals()
+{
+    UWorld* World=GetWorld();
+    SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
+    if(!World || !Region || !MissionPresentationBuilder.IsValid()){ClearProjectileVisuals();return;}
+    TSet<SimShot*> Alive;
+    auto& Shots=Region->GetShots();
+    for(int I=0;I<Shots.size();++I){
+        SimShot* Shot=Shots[I]; if(!Shot || Shot->GetLife()<=0)continue;
+        Ship* Owner=const_cast<Ship*>(Shot->Owner());
+        if(!Owner || !Region->GetShips().contains(Owner))continue;
+        // Match the owner's presentation offset. These spheres never collide in UE:
+        // simulation shots remain authoritative for movement and damage.
+        const FVector Offset=GetVisualSpawnLocationForRuntimeShip(Owner)-ConvertLegacyShipLocationToUE(Owner->GetLocation());
+        Ship* TargetShip=dynamic_cast<Ship*>(Shot->GetTarget());
+        if(TargetShip && !Region->GetShips().contains(TargetShip))TargetShip=nullptr;
+        auto VisualPoint=[this,Owner,TargetShip,Offset](const FVector& Point){
+            FVector Result=ConvertLegacyShipLocationToUE(Point)+Offset;
+            if(TargetShip){
+                const FVector Leg=TargetShip->GetLocation()-Owner->GetLocation();
+                const double Along=Leg.SizeSquared()>SMALL_NUMBER?FMath::Clamp(
+                    FVector::DotProduct(Point-Owner->GetLocation(),Leg)/Leg.SizeSquared(),0.0,1.0):0.0;
+                const FVector TargetOffset=GetVisualSpawnLocationForRuntimeShip(TargetShip)-ConvertLegacyShipLocationToUE(TargetShip->GetLocation());
+                Result+=(TargetOffset-Offset)*Along;
+            }
+            return Result;
+        };
+        const FVector Position=VisualPoint(Shot->GetLocation());
+        if(Shot->IsPrimary()){
+            DrawDebugLine(World,VisualPoint(Shot->GetOrigin()),Position,
+                Shot->IsBeam()?FColor::Cyan:FColor::Yellow,false,0.0f,0,2.0f);
+            continue;
+        }
+        Alive.Add(Shot);
+        AStaticMeshActor* Visual=Cast<AStaticMeshActor>(ProjectileVisuals.FindRef(Shot).Get());
+        if(!Visual && ProjectileVisuals.Num()<512){
+            if(!ProjectileFallbackMesh)ProjectileFallbackMesh=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+            UStaticMesh* Mesh=ProjectileFallbackMesh;
+            const WeaponDesign* Design=Shot->GetDesign();
+            const FString Model=Design?FString(ANSI_TO_TCHAR(Design->model.data())):FString();
+            // A UE object path in the existing model field can supply the later asset.
+            if(Model.StartsWith(TEXT("/Game/"))){
+                if(!ProjectileMeshes.Contains(Model))ProjectileMeshes.Add(Model,LoadObject<UStaticMesh>(nullptr,*Model));
+                if(ProjectileMeshes[Model])Mesh=ProjectileMeshes[Model];
+            }
+            if(!Mesh)continue;
+            FActorSpawnParameters Params;Params.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            Params.ObjectFlags|=RF_Transient;
+            Visual=World->SpawnActor<AStaticMeshActor>(Position,FRotator::ZeroRotator,Params);
+            if(!Visual)continue;
+            auto* Component=Visual->GetStaticMeshComponent();Component->SetMobility(EComponentMobility::Movable);
+            Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);Component->SetCastShadow(false);
+            Component->SetStaticMesh(Mesh);
+            if(Mesh==ProjectileFallbackMesh)Visual->SetActorScale3D(FVector(0.1f));
+            ProjectileVisuals.Add(Shot,Visual);
+        }
+        if(Visual)Visual->SetActorLocationAndRotation(Position,ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation());
+    }
+    for(auto It=ProjectileVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
+        if(It.Value().IsValid())It.Value()->Destroy();It.RemoveCurrent();
+    }
 }

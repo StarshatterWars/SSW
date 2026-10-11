@@ -59,8 +59,8 @@ drive:      {
    thrust:  20,
    augmenter: 50,
    scale:   0.32,
-   port:    (3.3, 1.2, -17.5),
-   port:    (-3.3, 1.2, -17.5),
+   port:    (-47, 9, 3),
+   port:    (-47, -9, 3),
 
    loc:     (0, 0, -130),
    size:    16,
@@ -217,34 +217,34 @@ thruster: {
    hull_factor:      0.8
    scale:            0.12,
 
-   port_fore:   {loc:(-3.1, 0.8, 0.5), fire: 0x0044},
-   port_fore:   {loc:(-2.7, 1.4, 0.5), fire: 0x0044},
-   port_fore:   {loc:(2.7, 1.4, 0.5), fire: 0x0084},
-   port_fore:   {loc:(3.1, 0.8, 0.5), fire: 0x0084},
+   port_fore: {loc:(0, -8, 3), fire: 0x0044, rotation:(0, 0, 0)},
+   port_fore: {loc:(0, -6, 5), fire: 0x0044, rotation:(0, 0, 0)},
+   port_fore: {loc:(0, 6, 5), fire: 0x0084, rotation:(0, 0, 0)},
+   port_fore: {loc:(0, 8, 3), fire: 0x0084, rotation:(0, 0, 0)},
 
-   port_aft:    {loc:(-0.8, 0.2, -17.2), fire: 0x0088},
-   port_aft:    {loc:(0.8, 0.2, -17.2), fire: 0x0048},
+   port_aft: {loc:(-44, -3, 0), fire: 0x0088, rotation:(0, 0, 180)},
+   port_aft: {loc:(-44, 3, 0), fire: 0x0048, rotation:(0, 0, 180)},
 
-   port_top:    {loc:(-0.2, 1.2, -16.2), fire: 0x0110},
-   port_top:    {loc:(0.2, 1.2, -16.2), fire: 0x0110},
+   port_top: {loc:(-40, -3, 6), fire: 0x0110, rotation:(0, 90, 0)},
+   port_top: {loc:(-40, 3, 6), fire: 0x0110, rotation:(0, 90, 0)},
 
-   port_bottom: {loc:(-0.2, -1.2, -16.2), fire: 0x0220},
-   port_bottom: {loc:(0.2, -1.2, -16.2), fire: 0x0220},
+   port_bottom: {loc:(-40, -3, -3), fire: 0x0220, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-40, 3, -3), fire: 0x0220, rotation:(0, -90, 0)},
 
-   port_top:    {loc:(-12.4, -0.4, -9.6), fire: 0x0410},
-   port_top:    {loc:(-12.4, -0.4, -11.5), fire: 0x0410},
+   port_top: {loc:(-24, -30, 5), fire: 0x0410, rotation:(0, 90, 0)},
+   port_top: {loc:(-29, -30, 5), fire: 0x0410, rotation:(0, 90, 0)},
 
-   port_top:    {loc:(12.4, -0.4, -9.6), fire: 0x0810},
-   port_top:    {loc:(12.4, -0.4, -11.5), fire: 0x0810},
+   port_top: {loc:(-24, 30, 5), fire: 0x0810, rotation:(0, 90, 0)},
+   port_top: {loc:(-29, 30, 5), fire: 0x0810, rotation:(0, 90, 0)},
 
-   port_bottom: {loc:(-12.3, -0.5, -9.6), fire: 0x0820},
-   port_bottom: {loc:(-12.3, -0.5, -11.5), fire: 0x0820},
+   port_bottom: {loc:(-24, -30, -3), fire: 0x0820, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-29, -30, -3), fire: 0x0820, rotation:(0, -90, 0)},
 
-   port_bottom: {loc:(12.3, -0.5, -9.6), fire: 0x0420},
-   port_bottom: {loc:(12.3, -0.5, -11.5), fire: 0x0420},
+   port_bottom: {loc:(-24, 30, -3), fire: 0x0420, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-29, 30, -3), fire: 0x0420, rotation:(0, -90, 0)},
 
-   port_bottom: {loc:(-0.2, -0.6, 14.1), fire: 0x0120},
-   port_bottom: {loc:(0.2, -0.6, 14.1), fire: 0x0120},
+   port_bottom: {loc:(32, -3, -2), fire: 0x0120, rotation:(0, -90, 0)},
+   port_bottom: {loc:(32, 3, -2), fire: 0x0120, rotation:(0, -90, 0)},
 
 }
 
@@ -298,3 +298,56 @@ map: {
    sprite: "f_map7"
 }
 
+
+// Estimated Falcon attachments: X forward, Y right, Z up.
+// Light loc compensates importer ship-scale multiplication (0.27).
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-100, -129.63, 7.40741)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-100, 129.63, 7.40741)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-85.1852, 0, 22.2222)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-85.1852, 0, -14.8148)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Tail"
+      loc: (-162.963, 0, 18.5185)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+}

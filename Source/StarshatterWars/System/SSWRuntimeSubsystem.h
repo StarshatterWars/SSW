@@ -35,6 +35,8 @@ class Sim;
 class CameraManager;
 class MultiController;
 
+class SimShot;
+class UStaticMesh;
 class Ship;
 class AActor;
 
@@ -122,6 +124,11 @@ public:
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
 private:
+    void UpdateProjectileVisuals();
+    void ClearProjectileVisuals();
+    TMap<SimShot*, TWeakObjectPtr<AActor>> ProjectileVisuals;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> ProjectileFallbackMesh;
+    UPROPERTY(Transient) TMap<FString,TObjectPtr<UStaticMesh>> ProjectileMeshes;
     TWeakObjectPtr<ASystemSceneBuilder> MissionPresentationBuilder;
     TArray<TWeakObjectPtr<AShipActor>> MissionPresentationShips;
     // Presentation only: fixed spawn offsets preserve legacy movement and navigation.

@@ -115,6 +115,8 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 						break;
 
 	case Graphic::SOLID: {
+        // UE sphere presentation handles missiles without a legacy model.
+        if (!design->shot_model) break;
 		Solid* s = new Solid;
 		s->UseModel(design->shot_model);
 		rep = s;

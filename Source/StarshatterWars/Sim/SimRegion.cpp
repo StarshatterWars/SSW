@@ -248,6 +248,34 @@ SimRegion::ExecFrame(double seconds)
     UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
+    // Restore legacy shot/ship damage dispatch after projectile movement.
+    // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
+    for (int ShotIndex=0;ShotIndex<shots.size();++ShotIndex) {
+        SimShot* Shot=shots[ShotIndex];
+        if (!Shot || IsDeadShot(Shot)) continue;
+        for (int ShipIndex=0;ShipIndex<ships.size();++ShipIndex) {
+            Ship* Victim=ships[ShipIndex];
+            if (!Victim || Victim==Shot->Owner() || Victim->IsDead() || Victim->IsDying()) continue;
+            FVector Impact=FVector::ZeroVector;
+            if (!Victim->HitBy(Shot,Impact)) continue;
+            if (!Shot->HitTarget() && Shot->Owner()) {
+                ShipStats* Stats=ShipStats::Find(Shot->Owner()->GetName());
+                if (Stats) {if(Shot->IsPrimary())Stats->AddGunHit();else if(Shot->Damage()>0)Stats->AddMissileHit();}
+            }
+            Shot->SetHitTarget(true);
+            if (Victim->GetIntegrity()<1 && !Victim->InTransition()) {
+                const char* KillerName=Shot->Owner()?Shot->Owner()->GetName():"[KIA]";
+                if(auto* VictimStats=ShipStats::Find(Victim->GetName()))VictimStats->AddEvent(ESimEvent::DESTROYED,KillerName);
+                if(Shot->Owner())if(auto* KillerStats=ShipStats::Find(KillerName)){
+                    KillerStats->AddEvent(Shot->IsMissile()?ESimEvent::MISSILE_KILL:ESimEvent::GUNS_KILL,Victim->GetName());
+                    if(Shot->Owner()->GetIFF()!=Victim->GetIFF() && (Victim->GetIFF()>0 || Shot->Owner()->GetIFF()>1))KillerStats->AddPoints(Victim->Value());
+                }
+                Victim->DeathSpiral();
+            }
+            if (!Shot->IsBeam()) {Shot->SetLife(0);break;}
+        }
+    }
+
     UpdateExplosions(seconds);
 
     DestroyShips();

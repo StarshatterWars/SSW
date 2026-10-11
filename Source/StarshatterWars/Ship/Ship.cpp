@@ -2367,7 +2367,8 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	const FVector shot_loc = shot->GetLocation();
 	const FVector shot_org = shot->GetOrigin();
 	FVector shot_vpn = shot_loc - shot_org;
-	double   shot_len = shot_vpn.Normalize();
+	double   shot_len = shot_vpn.Size();
+    shot_vpn = shot_vpn.GetSafeNormal();
 	double   blow_len = shot_len;
 	bool     hit_hull = false;
 	bool     easy = false;
@@ -2417,6 +2418,13 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 		}
 	}
 
+    if (!hit_hull && detail.NumModels(detail_level)==0) {
+        const FVector Relative=GetLocation()-shot_org;
+        const double Along=FMath::Clamp(FVector::DotProduct(Relative,shot_vpn),0.0,shot_len);
+        const FVector Nearest=shot_org+shot_vpn*Along;
+        hit_hull=(Nearest-GetLocation()).SizeSquared()<=FMath::Square(double(GetRadius()));
+        if(hit_hull)hull_impact=Nearest;
+    }
 	if (hit_hull) {
 		if (GetShieldStrength() > 5 && !shieldRep)
 			hit_type = HIT_SHIELD;
@@ -3844,6 +3852,7 @@ Ship::ExecSystems(double seconds)
 		if (w_group->GetTrigger() && w_group->GetFiringOrders() == WeaponsOrders::MANUAL) {
 
 			Weapon* gun = w_group->GetSelected();
+            if (!gun) { w_group->SetTrigger(false); continue; }
 			SimObject* gun_tgt = gun->GetTarget();
 
 			// if no target has been designated for this
@@ -5162,7 +5171,7 @@ Ship::CyclePrimary()
 	if (weapons.isEmpty())
 		return;
 
-	if (IsDropship() && primary < weapons.size()) {
+	if (IsDropship() && primary >= 0 && primary < weapons.size()) {
 		WeaponGroup* p = weapons[primary];
 		Weapon* w = p->GetSelected();
 
@@ -5171,18 +5180,16 @@ Ship::CyclePrimary()
 		}
 	}
 
-	int n = primary + 1;
-	while (n != primary) {
-		if (n >= weapons.size())
-			n = 0;
-
-		if (weapons[n]->IsPrimary()) {
-			weapons[n]->SetFiringOrders(WeaponsOrders::MANUAL);
-			break;
-		}
-
-		n++;
-	}
+	int n = primary;
+    bool Found=false;
+    const int Count=weapons.size();
+    const int Start=(primary>=0 && primary<Count)?primary:Count-1;
+    for(int Step=1;Step<=Count;++Step) {
+        const int Candidate=(Start+Step)%Count;
+        if(weapons[Candidate] && weapons[Candidate]->IsPrimary()) {n=Candidate;Found=true;break;}
+    }
+    if(!Found)return;
+    weapons[n]->SetFiringOrders(WeaponsOrders::MANUAL);
 
 	primary = n;
 }
@@ -5195,16 +5202,15 @@ Ship::CycleSecondary()
 	if (weapons.isEmpty())
 		return;
 
-	int n = secondary + 1;
-	while (n != secondary) {
-		if (n >= weapons.size())
-			n = 0;
-
-		if (weapons[n]->IsMissile())
-			break;
-
-		n++;
-	}
+	int n = secondary;
+    bool Found=false;
+    const int Count=weapons.size();
+    const int Start=(secondary>=0 && secondary<Count)?secondary:Count-1;
+    for(int Step=1;Step<=Count;++Step) {
+        const int Candidate=(Start+Step)%Count;
+        if(weapons[Candidate] && weapons[Candidate]->IsMissile()) {n=Candidate;Found=true;break;}
+    }
+    if(!Found)return;
 
 	secondary = n;
 

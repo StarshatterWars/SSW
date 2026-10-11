@@ -23,6 +23,10 @@
 */
 
 #include "MissionBriefingDlg.h"
+
+#include "Sensor.h"
+#include "WeaponGroup.h"
+
 #include "EngineeringPopup.h"
 #include "EngineeringDlg.h"
 #include "WeaponsDlg.h"
@@ -1420,6 +1424,37 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (FighterMFDRightAction && FighterMFDRightAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(FighterMFDRightAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::CycleFighterMFDRight);
     else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] IA_MFDRightCycle is missing or is not Boolean."));
+    MissionWeaponActions.Reset();
+    auto BindWeaponAction = [this](const TCHAR* ActionName, ETriggerEvent Event, void (UMissionBriefingDlg::*Handler)()) {
+        const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), ActionName, ActionName);
+        UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
+        if (Action && Action->ValueType == EInputActionValueType::Boolean) {
+            MissionWeaponActions.Add(Action);
+            MissionMenuInput->BindAction(Action, Event, this, Handler);
+        } else UE_LOG(LogTemp, Warning, TEXT("[WeaponsInput] Missing Boolean action %s"), ActionName);
+    };
+    BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
+    BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
+    BindWeaponAction(TEXT("IA_Decoy"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionDecoy);
+    BindWeaponAction(TEXT("IA_LaunchProbe"), ETriggerEvent::Started, &UMissionBriefingDlg::LaunchMissionProbe);
+    BindWeaponAction(TEXT("IA_PrimaryWeaponCycle"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionPrimary);
+    BindWeaponAction(TEXT("IA_SecondaryWeaponCycle"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSecondary);
+    BindWeaponAction(TEXT("IA_WeaponPattern"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionPattern);
+    BindWeaponAction(TEXT("IA_WeaponSweep"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSweep);
+    BindWeaponAction(TEXT("IA_DropWeaponTarget"), ETriggerEvent::Started, &UMissionBriefingDlg::DropMissionWeaponTarget);
+    BindWeaponAction(TEXT("IA_ContactsPanel"), ETriggerEvent::Started, &UMissionBriefingDlg::ToggleContactsPanel);
+    BindWeaponAction(TEXT("IA_SensorMode"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSensor);
+    BindWeaponAction(TEXT("IA_SensorGroundMode"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorGround);
+    BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorRangeUp);
+    BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorRangeDown);
+    BindWeaponAction(TEXT("IA_EMCONUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONUp);
+    BindWeaponAction(TEXT("IA_EMCONDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONDown);
+    BindWeaponAction(TEXT("IA_TargetNearest"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionClosest);
+    BindWeaponAction(TEXT("IA_TargetHostile"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionHostile);
+    BindWeaponAction(TEXT("IA_TargetNearestThreat"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionThreat);
+    BindWeaponAction(TEXT("IA_TargetSubsystemNext"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystem);
+    BindWeaponAction(TEXT("IA_TargetSubsystemPrevious"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystemPrevious);
+    BindWeaponAction(TEXT("IA_TargetHostileThreat"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionHostileThreat);
     FighterWeaponCycleAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
     FighterWeaponCycleAction->ValueType = EInputActionValueType::Boolean;
     MissionTargetContext->MapKey(FighterWeaponCycleAction.Get(), EKeys::BackSpace);
@@ -1730,6 +1765,7 @@ void UMissionBriefingDlg::CloseWeaponsPopup()
     if (GetWorld() && GetWorld()->GetGameViewport())
         GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(WeaponsPopup.ToSharedRef());
     WeaponsPopup.Reset();
+    bContactsOnlyPanel=false;
     if(WeaponsPanelWidget)WeaponsPanelWidget->RemoveFromParent();
     WeaponsPanelWidget=nullptr;
     if (APlayerController* PC=GetOwningPlayer()) {
@@ -2731,3 +2767,196 @@ void UMissionBriefingDlg::CloseNavigationPopup()
 }
 
 
+
+void UMissionBriefingDlg::FireMissionPrimary()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->FirePrimary();
+}
+
+void UMissionBriefingDlg::FireMissionSecondary()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->FireSecondary();
+}
+
+void UMissionBriefingDlg::FireMissionDecoy()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->FireDecoy();
+}
+
+void UMissionBriefingDlg::LaunchMissionProbe()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->LaunchProbe();
+}
+
+void UMissionBriefingDlg::CycleMissionPrimary()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->CyclePrimary();
+}
+
+void UMissionBriefingDlg::CycleMissionSecondary()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->CycleSecondary();
+}
+
+void UMissionBriefingDlg::CycleMissionPattern()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    if (auto* G=P->GetSecondaryGroup()) G->SetControlMode(static_cast<WeaponsControl>((static_cast<int32>(G->GetControlMode())+1)%3));
+}
+
+void UMissionBriefingDlg::CycleMissionSweep()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    if (auto* G=P->GetPrimaryGroup()) G->SetSweep(static_cast<WeaponsSweep>((static_cast<int32>(G->GetSweep())+1)%3));
+}
+
+void UMissionBriefingDlg::DropMissionWeaponTarget()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim();
+    Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead() || P->IsDying()) return;
+    P->DropTarget();
+}
+
+void UMissionBriefingDlg::ToggleContactsPanel()
+{
+    if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
+    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    APlayerController* PC=GetOwningPlayer(); if (!PC) return;
+    ClearMissionRotationInput();
+    bWeaponsPreviousCursor=PC->bShowMouseCursor;
+    bContactsOnlyPanel=true;
+    WeaponsPopup=SNew(SWeaponsPopup).ContactsOnly(true)
+        .ResolveShip([](){Sim* S=Sim::GetSim();return S?S->GetPlayerShip():nullptr;})
+        .CanOperate([this](){return bLiveMissionStarted && GetWorld() && !GetWorld()->IsPaused();})
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();}));
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
+    FInputModeGameAndUI Mode; Mode.SetWidgetToFocus(WeaponsPopup);
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    PC->SetInputMode(Mode); PC->bShowMouseCursor=true;
+}
+
+void UMissionBriefingDlg::CycleMissionSensor()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    if (auto* S=P->GetSensor()) { if (S->GetMode()>=ESensorMode::PST) P->DropTarget(); else P->SetSensorMode(S->GetMode()==ESensorMode::GM?ESensorMode::PAS:static_cast<ESensorMode>(static_cast<int32>(S->GetMode())+1)); }
+}
+
+void UMissionBriefingDlg::MissionSensorGround()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    if(P->IsAirborne() && P->GetSensor() && P->GetSensorMode()<ESensorMode::PST) P->SetSensorMode(ESensorMode::GM);
+}
+
+void UMissionBriefingDlg::MissionSensorRangeUp()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    if(auto* S=P->GetSensor())S->IncreaseRange();
+}
+
+void UMissionBriefingDlg::MissionSensorRangeDown()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    if(auto* S=P->GetSensor())S->DecreaseRange();
+}
+
+void UMissionBriefingDlg::MissionEMCONUp()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->SetEMCON(P->GetEMCON()+1);
+}
+
+void UMissionBriefingDlg::MissionEMCONDown()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->SetEMCON(P->GetEMCON()-1);
+}
+
+void UMissionBriefingDlg::LockMissionClosest()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->LockTarget(ESimObject::SHIP,true,false);
+}
+
+void UMissionBriefingDlg::LockMissionHostile()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->LockTarget(ESimObject::SHIP,true,true);
+}
+
+void UMissionBriefingDlg::LockMissionThreat()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->LockTarget(ESimObject::SHOT,true,true);
+}
+
+void UMissionBriefingDlg::CycleMissionSubsystem()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!P || P->IsDead()) return;
+    P->CycleSubTarget(1);
+}
+
+void UMissionBriefingDlg::CycleMissionSubsystemPrevious()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* S=Sim::GetSim();Ship* P=S?S->GetPlayerShip():nullptr;
+    if(P && !P->IsDead()){P->CycleSubTarget(-1);}
+}
+
+void UMissionBriefingDlg::LockMissionHostileThreat()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* S=Sim::GetSim();Ship* P=S?S->GetPlayerShip():nullptr;
+    if(P && !P->IsDead()){P->LockTarget(ESimObject::SHOT,false,true);}
+}

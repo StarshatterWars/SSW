@@ -60,8 +60,8 @@ drive: {
    thrust:      19
    augmenter:	30
    scale:       0.35
-   port:        (8.3, -0.8, -9.4)
-   port:        (-8.3, -0.8, -9.4)
+   port:        (-50, -4, 0)
+   port:        (-50, 4, 0)
 
    loc:         (  0,  0, -90)
    size:        24
@@ -259,40 +259,40 @@ thruster: {
    size:             32
    hull_factor:      0.5
 
-   port_fore:   {loc:(-4.8, -0.2, 6.1), fire: 0x0044}
-   port_fore:   {loc:(-3.6, -0.1, 6.1), fire: 0x0044}
-   port_fore:   {loc:(3.6, -0.1, 6.1), fire: 0x0084}
-   port_fore:   {loc:(4.8, -0.2, 6.1), fire: 0x0084}
+   port_fore: {loc:(17, -23, 0), fire: 0x0044, rotation:(0, 0, 0)}
+   port_fore: {loc:(17, -19, 0), fire: 0x0044, rotation:(0, 0, 0)}
+   port_fore: {loc:(17, 19, 0), fire: 0x0084, rotation:(0, 0, 0)}
+   port_fore: {loc:(17, 23, 0), fire: 0x0084, rotation:(0, 0, 0)}
 
-   port_aft:    {loc:(-4.8, -0.2, -8.4), fire: 0x0088}
-   port_aft:    {loc:(-3.6, -0.1, -9), fire: 0x0088}
-   port_aft:    {loc:(3.6, -0.1, -9), fire: 0x0048}
-   port_aft:    {loc:(4.8, -0.2, -8.4), fire: 0x0048}
+   port_aft: {loc:(-25, -23, 0), fire: 0x0088, rotation:(0, 0, 180)}
+   port_aft: {loc:(-25, -19, 0), fire: 0x0088, rotation:(0, 0, 180)}
+   port_aft: {loc:(-25, 19, 0), fire: 0x0048, rotation:(0, 0, 180)}
+   port_aft: {loc:(-25, 23, 0), fire: 0x0048, rotation:(0, 0, 180)}
 
-   port_left:   {loc:(-2.6, 0, 12.7), fire: 0x0080}
-   port_left:   {loc:(-3.8, 0, -14.4), fire: 0x0040}
-   port_right:  {loc:(2.6, 0, 12.7), fire: 0x0040}
-   port_right:  {loc:(3.8, 0, -14.4), fire: 0x0080}
+   port_left: {loc:(32, -6, 0), fire: 0x0080, rotation:(0, 0, -90)}
+   port_left: {loc:(-42, -12, 0), fire: 0x0040, rotation:(0, 0, -90)}
+   port_right: {loc:(32, 6, 0), fire: 0x0040, rotation:(0, 0, 90)}
+   port_right: {loc:(-42, 12, 0), fire: 0x0080, rotation:(0, 0, 90)}
 
-   port_top:    {loc:(-8.6, 1, 2.9), fire: 0x0610}
-   port_top:    {loc:(8.6, 1, 2.9), fire: 0x0A10}
-   port_top:    {loc:(-8.6, 1, -6), fire: 0x0410}
-   port_top:    {loc:(8.6, 1, -6), fire: 0x0810}
+   port_top: {loc:(12, -23, 4), fire: 0x0610, rotation:(0, 90, 0)}
+   port_top: {loc:(12, 23, 4), fire: 0x0A10, rotation:(0, 90, 0)}
+   port_top: {loc:(-20, -23, 4), fire: 0x0410, rotation:(0, 90, 0)}
+   port_top: {loc:(-20, 23, 4), fire: 0x0810, rotation:(0, 90, 0)}
 
-   port_top:    {loc:(-0.9, 2.2, -12.5), fire: 0x0110}
-   port_top:    {loc:(-0.9, 2.2, -16.4), fire: 0x0110}
-   port_top:    {loc:(0.9, 2.2, -12.5), fire: 0x0110}
-   port_top:    {loc:(0.9, 2.2, -16.4), fire: 0x0110}
+   port_top: {loc:(-38, -4, 7), fire: 0x0110, rotation:(0, 90, 0)}
+   port_top: {loc:(-47, -4, 7), fire: 0x0110, rotation:(0, 90, 0)}
+   port_top: {loc:(-38, 4, 7), fire: 0x0110, rotation:(0, 90, 0)}
+   port_top: {loc:(-47, 4, 7), fire: 0x0110, rotation:(0, 90, 0)}
 
-   port_bottom: {loc:(-8.6, -2.4, 2.9), fire: 0x0920}
-   port_bottom: {loc:(8.6, -2.4, 2.9), fire: 0x0520}
-   port_bottom: {loc:(-8.6, -2.4, -6), fire: 0x0820}
-   port_bottom: {loc:(8.6, -2.4, -6), fire: 0x0420}
+   port_bottom: {loc:(12, -23, -6), fire: 0x0920, rotation:(0, -90, 0)}
+   port_bottom: {loc:(12, 23, -6), fire: 0x0520, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-20, -23, -6), fire: 0x0820, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-20, 23, -6), fire: 0x0420, rotation:(0, -90, 0)}
 
-   port_bottom: {loc:(-0.9, -2, -12.5), fire: 0x0220}
-   port_bottom: {loc:(-0.9, -2, -16.4), fire: 0x0220}
-   port_bottom: {loc:(0.9, -2, -12.5), fire: 0x0220}
-   port_bottom: {loc:(0.9, -2, -16.4), fire: 0x0220}
+   port_bottom: {loc:(-38, -4, -6), fire: 0x0220, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-47, -4, -6), fire: 0x0220, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-38, 4, -6), fire: 0x0220, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-47, 4, -6), fire: 0x0220, rotation:(0, -90, 0)}
 }
 
 death_spiral: {
@@ -343,4 +343,57 @@ map: {
    sprite: "b_map5"
    sprite: "b_map6"
    sprite: "b_map7"
+}
+
+// Estimated from orthographic views: UE X forward, Y right, Z up.
+// Beacon coordinates compensate importer ship-scale multiplication.
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-37.037, -162.963, 0)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-37.037, 162.963, 0)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-44.444, 0, 18.519)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-44.444, 0, -25.926)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Tail"
+      loc: (-188.889, 0, 7.407)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
 }

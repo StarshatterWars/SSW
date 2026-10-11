@@ -1,3 +1,4 @@
+#include "Sensor.h"
 #pragma once
 
 #include "Widgets/SCompoundWidget.h"
@@ -27,8 +28,9 @@
 class SWeaponsPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SWeaponsPopup) : _Embedded(false), _FooterStyle(nullptr) {}
+    SLATE_BEGIN_ARGS(SWeaponsPopup) : _Embedded(false), _ContactsOnly(false), _FooterStyle(nullptr) {}
         SLATE_ARGUMENT(bool, Embedded)
+        SLATE_ARGUMENT(bool, ContactsOnly)
         SLATE_ARGUMENT(TSharedPtr<SBox>, FooterHost)
         SLATE_ARGUMENT(const FButtonStyle*, FooterStyle)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
@@ -39,6 +41,7 @@ public:
     void Construct(const FArguments& Args)
     {
         Embedded=Args._Embedded;
+        ContactsOnly=Args._ContactsOnly;
         FooterHost=Args._FooterHost;
         FooterStyle=Args._FooterStyle;
         ResolveShip=Args._ResolveShip;
@@ -94,6 +97,7 @@ public:
 
 private:
     bool Embedded=false;
+    bool ContactsOnly=false;
     TSharedPtr<SBox> FooterHost;
     const FButtonStyle* FooterStyle=nullptr;
     TFunction<Ship*()> ResolveShip;
@@ -159,6 +163,15 @@ private:
         return SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
             .BorderBackgroundColor((Embedded?FLinearColor::Transparent:FLinearColor(0.01f,0.025f,0.04f,0.94f))).Padding(8)[Content];
     }
+    FString ContactLabel(SimContact* C, Ship* P) const {
+        Ship* T=C?C->GetShip():nullptr; if (!T || !P) return TEXT("CONTACT");
+        const bool Known=T->GetIFF()==P->GetIFF() || C->GetIFF(P)<=T->GetIFF();
+        const FString Name=Known?FString(ANSI_TO_TCHAR(T->GetName())):
+            FString::Printf(TEXT("CONTACT %04d"),T->GetContactID());
+        const double Km=(C->Location()-P->GetLocation()).Size()/1000.0;
+        return FString::Printf(TEXT("%s%s  |  %s  |  %.1f KM"),P->GetTarget()==T?TEXT("> "):TEXT(""),
+            *Name,Known?ANSI_TO_TCHAR(T->GetShipClassName()):TEXT("UNKNOWN"),Km);
+    }
     void RefreshContacts() {
         if (!ContactsBox.IsValid()) return;
         auto* P=Player();
@@ -167,7 +180,7 @@ private:
             State+=FString::Printf(TEXT(":%p:%p"),static_cast<void*>(P->GetTarget()),static_cast<void*>(P->GetSubTarget()));
             auto& List=P->GetContactList();
             for(int32 J=0;J<List.size();++J)if(auto* C=List[J])
-                if(C->Visible(P) && C->GetShip())State+=FString::Printf(TEXT(";%p"),static_cast<void*>(C->GetShip()));
+                if(C->Visible(P) && C->GetShip())State+=FString::Printf(TEXT(";%p:%s"),static_cast<void*>(C->GetShip()),*ContactLabel(C,P));
             if(auto* T=dynamic_cast<Ship*>(P->GetTarget()))for(int32 J=0;J<T->GetSystems().size();++J)
                 if(auto* Sys=T->GetSystems()[J])State+=FString::Printf(TEXT(";%p:%.0f"),static_cast<void*>(Sys),Sys->GetAvailability());
         }
@@ -176,16 +189,29 @@ private:
         ContactsBox->ClearChildren(); SystemsBox->ClearChildren();
         if (!P) return;
         auto& Contacts=P->GetContactList();
-        for (int32 I=0; I<Contacts.size(); ++I) {
+        TArray<SimContact*> Sorted;
+        for (int32 I=0;I<Contacts.size();++I) {
             auto* C=Contacts[I]; auto* T=C?C->GetShip():nullptr;
+            if (T && T!=P && C->Visible(P) && !T->IsDead() && T->GetRegion()==P->GetRegion()) Sorted.Add(C);
+        }
+        const FVector Observer=P->GetLocation();
+        Sorted.StableSort([Observer](const SimContact& A,const SimContact& B){
+            return (A.Location()-Observer).SizeSquared()<(B.Location()-Observer).SizeSquared();
+        });
+        for (SimContact* C : Sorted) {
+            auto* T=C->GetShip();
             if (!T || T==P || !C->Visible(P) || T->IsDead()) continue;
             ContactsBox->AddSlot().AutoHeight().Padding(0,2)
             [SNew(SButton).IsFocusable(false)
-             .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->SetTarget(Current);RefreshContacts();return FReply::Handled();})
-             [ButtonLabel(FString::Printf(TEXT("%s%hs"),P->GetTarget()==T?TEXT("> "):TEXT(""),T->GetName()),14)]];
+             .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->LockTarget(Current);ContactState.Empty();RefreshContacts();return FReply::Handled();})
+             [ButtonLabel(ContactLabel(C,P),14)]];
         }
         auto* Target=dynamic_cast<Ship*>(P->GetTarget());
         if (!Target) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Select a ship contact."),14)];return;}
+        bool Identified=Target->GetIFF()==P->GetIFF();
+        for (int32 I=0;I<Contacts.size();++I) if (auto* C=Contacts[I])
+            if (C->GetShip()==Target && C->Visible(P) && C->GetIFF(P)<=Target->GetIFF()) Identified=true;
+        if (!Identified) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Contact not identified."),14)];return;}
         for (int32 I=0; I<Target->GetSystems().size(); ++I) {
             auto* System=Target->GetSystems()[I]; if (!System) continue;
             SystemsBox->AddSlot().AutoHeight().Padding(0,2)
@@ -194,7 +220,7 @@ private:
                 auto* Current=ContactShip(Target);
                 if (Operable() && Current && Player()->GetTarget()==Current) {
                     for (int32 J=0;J<Current->GetSystems().size();++J)
-                        if (Current->GetSystems()[J]==System) {Player()->SetTarget(Current,System);break;}
+                        if (Current->GetSystems()[J]==System) {Player()->LockTarget(Current);if(Player()->GetTarget()==Current)Player()->SetTarget(Current,System);break;}
                 }
                 RefreshContacts();return FReply::Handled();})
              [ButtonLabel(FString::Printf(TEXT("%s%hs  %.0f%%"),P->GetSubTarget()==System?TEXT("> "):TEXT(""),System->GetName(),System->GetAvailability()),14)]];
@@ -202,7 +228,10 @@ private:
     }
     void Rebuild() {
         Root->ClearChildren();
-        if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(TEXT("TACTICAL WEAPONS"),20))];
+        if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(ContactsOnly?TEXT("CONTACTS - NEAREST FIRST"):TEXT("TACTICAL WEAPONS"),20))];
+        Root->AddSlot().AutoHeight().Padding(8)[SNew(STextBlock).ColorAndOpacity(Blue()).Text_Lambda([this](){
+            auto* P=Player();auto* S=P?P->GetSensor():nullptr;
+            return Text(S?FString::Printf(TEXT("SENSOR %d   RANGE %.0f KM   EMCON %d"),int(S->GetMode()),S->GetBeamRange()/1000.0,P->GetEMCON()):TEXT("NO SENSOR"));})];
         TSharedPtr<SVerticalBox> Rows;
         ContactState.Empty();
         ContactsBox=SNew(SVerticalBox); SystemsBox=SNew(SVerticalBox);
@@ -214,16 +243,18 @@ private:
         auto SystemsPane=SNew(SVerticalBox)
             +SVerticalBox::Slot().AutoHeight()[Label(TEXT("TARGET SYSTEMS"))]
             +SVerticalBox::Slot().FillHeight(1)[SystemScroll];
+        if (!ContactsOnly) {
         Root->AddSlot().AutoHeight().Padding(8,0,8,8)[Label(TEXT("SHIP WEAPONS"),18)];
         Root->AddSlot().FillHeight(0.46f).Padding(0,0,0,16)
             [Frame(SAssignNew(Rows,SVerticalBox))];
+        } else Rows=SNew(SVerticalBox);
         auto ContactLists=SNew(SHorizontalBox)
             +SHorizontalBox::Slot().FillWidth(1).Padding(4)[ContactsPane]
             +SHorizontalBox::Slot().FillWidth(1).Padding(4)[SystemsPane];
         Root->AddSlot().FillHeight(0.54f)[Frame(ContactLists)];
         auto* P=Player(); const int32 Count=P?P->GetWeapons().size():0;
         if (!Count) Rows->AddSlot().AutoHeight()[Label(TEXT("No weapon groups."))];
-        for (int32 Slot=0;Slot<4 && Page*4+Slot<Count;++Slot) {
+        for (int32 Slot=0;!ContactsOnly && Slot<4 && Page*4+Slot<Count;++Slot) {
             const int32 I=Page*4+Slot;auto* G=Group(I);if(!G)continue;
             Rows->AddSlot().FillHeight(1).Padding(0,3)
             [SNew(SHorizontalBox)
@@ -243,10 +274,24 @@ private:
              +SHorizontalBox::Slot().FillWidth(1).Padding(5,0)
               [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(Blue()).Text_Lambda([this,I](){return Text(Readout(I));})]];
         }
+        if (!ContactsOnly) for (int32 Slot=0;Slot<4 && Page*4+Slot<Count;++Slot) {
+            const int32 I=Page*4+Slot;
+            Rows->AddSlot().AutoHeight().Padding(0,2)[SNew(SHorizontalBox)
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                    .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I)){
+                        bool On=false;for(int J=0;J<G->NumWeapons();++J)if(auto* W=G->GetWeapon(J))if(W->IsPowerOn())On=true;
+                        if(On)G->SetPowerOff();else G->SetPowerOn();}return FReply::Handled();})[ButtonLabel(TEXT("POWER"),12)]]
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                    .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I))G->SetControlMode(static_cast<WeaponsControl>((int(G->GetControlMode())+1)%3));return FReply::Handled();})
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("PATTERN"):G->GetControlMode()==WeaponsControl::SINGLE_FIRE?TEXT("SINGLE"):G->GetControlMode()==WeaponsControl::RIPPLE_FIRE?TEXT("RIPPLE"):TEXT("SALVO"));})]]
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                    .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I))G->SetSweep(static_cast<WeaponsSweep>((int(G->GetSweep())+1)%3));return FReply::Handled();})
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("SWEEP"):G->GetSweep()==WeaponsSweep::SWEEP_NONE?TEXT("NONE"):G->GetSweep()==WeaponsSweep::SWEEP_TIGHT?TEXT("TIGHT"):TEXT("WIDE"));})]]];
+        }
         auto Footer=SNew(SHorizontalBox)
-          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Previous"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Previous"))]]
           +SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center)[Label(FString::Printf(TEXT("%d / %d"),Page+1,FMath::Max(1,(Count+3)/4)))]
-          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled((Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Next"))]]
+          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && (Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Next"))]]
           +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[ButtonLabel(TEXT("Close"))]];
         if (FooterHost.IsValid()) FooterHost->SetContent(Footer);
         else Root->AddSlot().AutoHeight()[Frame(Footer)];

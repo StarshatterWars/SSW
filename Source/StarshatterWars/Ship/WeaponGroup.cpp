@@ -151,7 +151,7 @@ Weapon* WeaponGroup::GetWeapon(int n) const
 
 Weapon* WeaponGroup::GetSelected() const
 {
-	return weapons[selected];
+	return selected>=0 && selected<weapons.size() ? weapons[selected] : nullptr;
 }
 
 bool WeaponGroup::CanTarget(uint32 tgt_class) const
