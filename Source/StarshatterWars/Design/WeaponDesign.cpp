@@ -147,7 +147,7 @@ WeaponDesign::~WeaponDesign()
 	delete turret_model;
 	delete turret_base_model;
 	delete shot_model;
-	delete sound_resource;
+	if (sound_resource) sound_resource->Release();
 }
 
 // +--------------------------------------------------------------------+

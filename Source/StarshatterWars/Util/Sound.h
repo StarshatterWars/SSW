@@ -50,6 +50,7 @@ public:
 
 public:
     USound();
+    virtual void BeginDestroy() override;
 
     // once per frame:
     virtual void Update();

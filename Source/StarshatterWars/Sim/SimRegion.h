@@ -1,10 +1,10 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025–2026. All Rights Reserved.
+    Copyright Â© 2025â€“2026. All Rights Reserved.
 
     ORIGINAL WORK:
     Starshatter 4.5
-    Copyright © 1997–2004 Destroyer Studios LLC
+    Copyright Â© 1997â€“2004 Destroyer Studios LLC
     Original Author: John DiCamillo
 
     SUBSYSTEM:    StarshatterWars
@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Types.h"
+#include "Containers/Set.h"
 #include "List.h"
 #include "Text.h"
 
@@ -59,6 +60,7 @@ public:
     SimRegion(Sim* sim, const char* name, int type);
     SimRegion(Sim* sim, OrbitalRegion* rgn);
     virtual ~SimRegion();
+    void ReleaseMissionObjects(TSet<Ship*>& OwnedShips);
 
     int operator==(const SimRegion& r) const { return (sim == r.sim) && (name == r.name); }
     int operator<(const SimRegion& r) const;
@@ -162,6 +164,9 @@ protected:
     List<Ship>      carriers;
     List<Ship>      selection;
     List<Ship>      dead_ships;
+    // Own detached ships until mission teardown; UI/presentation can cache
+    // raw ship identities during the current frame.
+    List<Ship>      retired_ships;
 
     List<SimShot>   shots;
     List<Drone>     drones;

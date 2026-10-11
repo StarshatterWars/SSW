@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
@@ -41,14 +41,17 @@ public:
             [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
              .OnClicked_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;
                  if(N && (!CanOperate || CanOperate())){
-                     if(N->AutoNavEngaged())N->DisengageAutoNav();
-                     else {N->EngageAutoNav();if(N->AutoNavEngaged())Close.ExecuteIfBound();}
+                     if(N->AutoNavEngaged()) N->DisengageAutoNav();
+                     else N->EngageAutoNav();
+                     if (auto* S=Sim::GetSim()) P->SetControls(S->GetControls());
+                     if(N->AutoNavEngaged()) Close.ExecuteIfBound();
                  }return FReply::Handled();})
-             [SNew(STextBlock).Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return FText::FromString(N && N->AutoNavEngaged()?TEXT("Cancel Autonav"):TEXT("Commit Autonav"));})]]
+             [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return FText::FromString(N && N->AutoNavEngaged()?TEXT("CANCEL AUTONAV"):TEXT("ENGAGE AUTONAV"));})]]
            +SHorizontalBox::Slot().AutoWidth().Padding(16,0)
-            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("Close"))]];
+            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("CLOSE"))]];
         if (Args._FooterHost.IsValid()) Args._FooterHost->SetContent(Footer);
         else Content->AddSlot().AutoHeight().Padding(8)[Footer];
+        if (Args._Embedded) { ChildSlot[Content]; return; }
         ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
             [SNew(SBox).WidthOverride(1200).HeightOverride(760)
              [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
@@ -65,7 +68,7 @@ private:
     FSimpleDelegate Close;
     Ship* Player() const {return ResolveShip?ResolveShip():nullptr;}
     TSharedRef<SWidget> Label(const FString& S) {
-        return SNew(STextBlock).Text(FText::FromString(S)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1))
+        return SNew(STextBlock).Text(FText::FromString(S)).ColorAndOpacity(FLinearColor::Black)
             .Font(FCoreStyle::GetDefaultFontStyle("Bold",18));
     }
     FString Readout() const {

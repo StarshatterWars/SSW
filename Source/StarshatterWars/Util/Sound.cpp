@@ -23,6 +23,12 @@ USound::USound()
     FCStringAnsi::Strcpy(filename_ansi, "Sound()");
 }
 
+void USound::BeginDestroy()
+{
+    Release();
+    Super::BeginDestroy();
+}
+
 void USound::SetWorldContext(UObject* InWorldContext)
 {
     WorldContext = InWorldContext;
@@ -260,9 +266,13 @@ void USound::Update()
 void USound::Release()
 {
     flags &= ~LOCKED;
-    if (!(flags & LOCKED))  {
-        Stop();
-    }
+    Stop();
+    if (IsValid(AudioComp)) AudioComp->DestroyComponent();
+    AudioComp = nullptr;
+    AttenuationAsset = nullptr;
+    SoundAsset = nullptr;
+    status = DONE;
+    bIsPlaying = false;
 }
 
 HRESULT USound::Play()

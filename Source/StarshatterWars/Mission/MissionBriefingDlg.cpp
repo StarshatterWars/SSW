@@ -65,6 +65,7 @@
 #include "Engine/LevelStreamingDynamic.h"
 #include "Camera/CameraActor.h"
 #include "TimerManager.h"
+#include "Templates/UnrealTemplate.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/StaticMeshComponent.h"
@@ -286,6 +287,14 @@ void UMissionBriefingDlg::NativeConstruct()
 
 void UMissionBriefingDlg::NativeDestruct()
 {
+    if (Sim* Simulation = Sim::GetSim()) Simulation->OnMissionUnloading.RemoveAll(this);
+    if (UGameInstance* GI = GetGameInstance()) {
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>()) {
+            Timer->OnUniverseSecond.RemoveAll(this);
+            Timer->OnUniverseMinute.RemoveAll(this);
+            Timer->OnCampaignTPlusChanged.RemoveAll(this);
+        }
+    }
     CloseEmptySectorPreview();
     if (MissionButton)
     {
@@ -835,13 +844,23 @@ int32 UMissionBriefingDlg::CalcTimeOnTarget() const
     return 0;
 }
 
+void UMissionBriefingDlg::HandleSimulationUnloading()
+{
+    // This path is also used by debrief, replacement missions and shutdown.
+    CloseEmptySectorPreview(true);
+}
+
 void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
 {
+    if (bClosingMissionPreview) return;
+    TGuardValue<bool> ClosingGuard(bClosingMissionPreview, true);
+    // Close callbacks/input before their Ship* and MissionEvent* sources die.
+    DisableMissionMenuInput();
     if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
     MissionPlayerCameraActor.Reset();
     MissionPlayerCameraDistance = 0;
     bMissionTargetInspection = false;
-    if (bLiveMissionStarted)
+    if (bLiveMissionStarted && GetGameInstance())
     {
         if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
         {
@@ -863,11 +882,11 @@ void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
         if (MissionTargetOverlay.IsValid() && World->GetGameViewport())
             World->GetGameViewport()->RemoveViewportWidgetContent(MissionTargetOverlay.ToSharedRef());
     }
+    bLiveMissionStarted = false;
     MissionTargetOverlay.Reset();
     SelectedMissionTarget.Reset();
     SelectedMissionTargetName = FText::GetEmpty();
     SelectedMissionTargetLocalBounds = FBox(ForceInit);
-    DisableMissionMenuInput();
     MissionTitleRevealTime = -1.0;
     if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
@@ -1135,6 +1154,10 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
 
 bool UMissionBriefingDlg::EnableMissionMenuInput()
 {
+    if (Sim* Simulation = Sim::GetSim()) {
+        Simulation->OnMissionUnloading.RemoveAll(this);
+        Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
+    }
     APlayerController* PC = GetOwningPlayer();
     ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr;
     auto* Input = LP ? LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
@@ -1546,7 +1569,11 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
             }
     }
     if (MissionMenuInput) MissionMenuInput->DestroyComponent();
+    MissionWeaponActions.Reset();
+    bPreviousTargetHeld = false;
+    bNextTargetHeld = false;
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
+    FlightOpsPanelAction = nullptr;
     GearToggleAction = nullptr;
     MissionThrottleAction = nullptr;
     MissionCameraViewAction = nullptr;
@@ -1946,12 +1973,15 @@ bool UMissionBriefingDlg::StartLiveMission()
             Actor->BindRuntimeShip(nullptr);
             Actor->Destroy();
         }
+        Simulation->OnMissionUnloading.RemoveAll(this);
         Simulation->UnloadMission();
     }
     Environment->BuildSimRegionsForSim(Simulation);
     Runtime->BeginMissionPresentation(Builder);
     // Use the selected/generated campaign Mission with its current loadout and orders.
     MissionPtr->SetComplete(false);
+    Simulation->OnMissionUnloading.RemoveAll(this);
+    Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
     Simulation->LoadMission(MissionPtr, false);
     bLiveMissionStarted = true;
     Simulation->ExecMission();
@@ -2131,8 +2161,11 @@ void UMissionBriefingDlg::HandleGameTimers()
 
     if (Timer)
     {
+        Timer->OnUniverseSecond.RemoveAll(this);
         Timer->OnUniverseSecond.AddUObject(this, &UMissionBriefingDlg::HandleUniverseSecondTick);
+        Timer->OnUniverseMinute.RemoveAll(this);
         Timer->OnUniverseMinute.AddUObject(this, &UMissionBriefingDlg::HandleUniverseMinuteTick);
+        Timer->OnCampaignTPlusChanged.RemoveAll(this);
         Timer->OnCampaignTPlusChanged.AddUObject(this, &UMissionBriefingDlg::HandleCampaignTPlusChanged);
 
         const uint64 Now = Timer->GetUniverseTimeSeconds();

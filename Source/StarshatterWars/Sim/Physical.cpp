@@ -1,6 +1,6 @@
 /*  Project nGenEx
 	Destroyer Studios LLC
-	Copyright © 1997-2004. All Rights Reserved.
+	Copyright Â© 1997-2004. All Rights Reserved.
 
 	SUBSYSTEM:    nGenEx.lib
 	FILE:         Physical.cpp
@@ -167,6 +167,9 @@ Physical::Physical(const char* n, ESimObject t)
 
 Physical::~Physical()
 {
+    // Restore legacy ownership: Destroy also unregisters from the scene.
+    GRAPHIC_DESTROY(rep);
+    SIMLIGHT_DESTROY(light);
 	// we own the director
 	delete dir;
 	dir = 0;

@@ -99,6 +99,7 @@ public:
 
 private:
     bool TickRuntime(float DeltaSeconds);
+    void HandleMissionUnloading();
 
 private:
     void InitMouse();

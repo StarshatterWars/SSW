@@ -228,6 +228,12 @@ float ASystemSceneBuilder::ConvertOrbitKmToSceneUnits(float OrbitKm, bool bIsMoo
     return Units;
 }
 
+void ASystemSceneBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    ClearSpawnedBodies();
+    Super::EndPlay(EndPlayReason);
+}
+
 void ASystemSceneBuilder::ClearSpawnedBodies()
 {
     if (bEnableDebugLogs)

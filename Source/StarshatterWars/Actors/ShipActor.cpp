@@ -345,6 +345,15 @@ void AShipActor::BeginPlay()
 
 void AShipActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    SetActorTickEnabled(false);
+    RuntimeShip = nullptr;
+    for (UAudioComponent* Audio : {EngineAudioComponent.Get(), BurnerAudioComponent.Get(), RumbleAudioComponent.Get()}) {
+        if (IsValid(Audio)) { Audio->Stop(); Audio->DestroyComponent(); }
+    }
+    EngineAudioComponent = nullptr;
+    BurnerAudioComponent = nullptr;
+    RumbleAudioComponent = nullptr;
+    ClearRuntimeNavLights();
     // Attached actors are independent world actors and are not owned for destruction.
     DestroyVisualActor();
     ClearRuntimeThrusters();

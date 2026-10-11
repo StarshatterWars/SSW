@@ -1317,6 +1317,7 @@ void UCampaignSceneDlg::FinishCutscene()
         Manager->CleanupActiveScene();
         Manager->ShowCmdDlg();
     }
+    ResetSceneState();
 }
 
 bool UCampaignSceneDlg::ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const
@@ -1459,6 +1460,15 @@ void UCampaignSceneDlg::NativeDestruct()
 {
     StopCutsceneAudio();
     DisableCutsceneExitInput();
+    ClearPanelTexture();
+    if (bOwnsSceneCamera && IsValid(SceneCamera)) {
+        if (APlayerController* PC = GetOwningPlayer())
+            if (PC->GetViewTarget() == SceneCamera) PC->SetViewTarget(PC);
+        SceneCamera->Destroy();
+    }
+    SceneCamera = nullptr;
+    bOwnsSceneCamera = false;
+    ResetSceneState();
     Super::NativeDestruct();
 }
 
@@ -1523,6 +1533,6 @@ void UCampaignSceneDlg::StopCutsceneAudio()
     CutsceneAudioComponents.Reset();
     for (const TWeakObjectPtr<UAudioComponent>& Entry : AudioToStop)
     {
-        if (UAudioComponent* Audio = Entry.Get()) Audio->Stop();
+        if (UAudioComponent* Audio = Entry.Get()) { Audio->Stop(); Audio->DestroyComponent(); }
     }
 }

@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios LLC
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -17,6 +17,11 @@
 
 #include "MissionNavDlg.h"
 #include "Sim.h"
+#include "Ship.h"
+#include "SimRegion.h"
+#include "SimElement.h"
+#include "Instruction.h"
+#include "Templates/UnrealTemplate.h"
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
@@ -239,6 +244,18 @@ void UMissionNavDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    if (bInMissionNavigation)
+    {
+        CurrentNavMode = EMissionNavMode::SECTOR;
+        CurrentFilterMode = EMissionNavFilterMode::STARSHIP;
+        if (!MenuButtonClass) MenuButtonClass = LoadClass<UMenuButton>(nullptr,
+            TEXT("/Game/Screens/Operations/WB_MenuButton.WB_MenuButton_C"));
+        if (auto* S = Sim::GetSim())
+        {
+            S->OnMissionUnloading.Remove(MissionUnloadHandle);
+            MissionUnloadHandle = S->OnMissionUnloading.AddUObject(this, &UMissionNavDlg::ClearLiveNavigation);
+        }
+    }
     ensureMsgf(RuntimeHost, TEXT("MissionNavDlg: RuntimeHost is not bound"));
 
     if (!ObjectListEntryWidgetClass)
@@ -259,6 +276,11 @@ void UMissionNavDlg::NativeConstruct()
 
     BuildRuntimeLayout();
     BuildNavModeButtons();
+    if (bInMissionNavigation && SectorMapPanel)
+    {
+        SectorMapPanel->SetLiveNavigation(true);
+        SectorMapPanel->OnLiveContactSelected.BindUObject(this, &UMissionNavDlg::HandleLiveContactSelected);
+    }
 
     if (ZoomInButton)
     {
@@ -338,17 +360,17 @@ FReply UMissionNavDlg::NativeOnMouseButtonDown(
 {
     if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
     {
-        return SectorMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+        return SectorMapPanel->NativeOnMouseButtonDown(SectorMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
-        return SystemMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+        return SystemMapPanel->NativeOnMouseButtonDown(SystemMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
     {
-        return GalaxyMapPanel->NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+        return GalaxyMapPanel->NativeOnMouseButtonDown(GalaxyMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
@@ -360,17 +382,17 @@ FReply UMissionNavDlg::NativeOnMouseButtonUp(
 {
     if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
     {
-        return SectorMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+        return SectorMapPanel->NativeOnMouseButtonUp(SectorMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
-        return SystemMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+        return SystemMapPanel->NativeOnMouseButtonUp(SystemMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
     {
-        return GalaxyMapPanel->NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+        return GalaxyMapPanel->NativeOnMouseButtonUp(GalaxyMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
@@ -382,17 +404,17 @@ FReply UMissionNavDlg::NativeOnMouseMove(
 {
     if (CurrentNavMode == EMissionNavMode::SECTOR && SectorMapPanel)
     {
-        return SectorMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+        return SectorMapPanel->NativeOnMouseMove(SectorMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::SYSTEM && SystemMapPanel)
     {
-        return SystemMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+        return SystemMapPanel->NativeOnMouseMove(SystemMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     if (CurrentNavMode == EMissionNavMode::GALAXY && GalaxyMapPanel)
     {
-        return GalaxyMapPanel->NativeOnMouseMove(InGeometry, InMouseEvent);
+        return GalaxyMapPanel->NativeOnMouseMove(GalaxyMapPanel->GetCachedGeometry(), InMouseEvent);
     }
 
     return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
@@ -401,6 +423,7 @@ FReply UMissionNavDlg::NativeOnMouseMove(
 void UMissionNavDlg::RefreshFromMission()
 {
     MissionPtr = ResolveMission();
+    if (bInMissionNavigation) { RefreshLiveNavigation(); SyncSubPanels(); RefreshObjectListPanel(); RefreshDetailPanel(); return; }
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
 
@@ -432,7 +455,7 @@ void UMissionNavDlg::RefreshFromMission()
 
     if (SectorMapPanel)
     {
-        SectorMapPanel->SetMission(MissionPtr);
+        SectorMapPanel->SetMission(bInMissionNavigation ? nullptr : MissionPtr);
     }
 
     RefreshObjectListPanel();
@@ -486,9 +509,11 @@ void UMissionNavDlg::SyncSubPanels()
             MissionRegionName = MissionRegionName.TrimStartAndEnd();
         }
 
-        // Lock sector view to the selected mission region only.
+        if (bInMissionNavigation) MissionRegionName = LiveViewedSector;
+        // Briefing remains locked to the authored region; live navigation can browse.
         SectorMapPanel->SetViewedSectorName(MissionRegionName);
-        SectorMapPanel->SetMission(MissionPtr);
+        if (bInMissionNavigation) LiveViewedSector = SectorMapPanel->GetViewedSectorName();
+        SectorMapPanel->SetMission(bInMissionNavigation ? nullptr : MissionPtr);
     }
 }
 
@@ -830,6 +855,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
             TEXT("/Game/Screens/Mission/WBP_GalaxyMapPanel.WBP_GalaxyMapPanel_C"));
     }
 
+    if (!GalaxyMapPanelClass && bInMissionNavigation) GalaxyMapPanelClass = UGalaxyMapPanel::StaticClass();
     if (!GalaxyMapPanelClass)
     {
         UE_LOG(LogTemp, Error, TEXT("MissionNavDlg: Failed to load WBP_GalaxyMapPanel"));
@@ -987,7 +1013,7 @@ UMenuButton* UMissionNavDlg::CreateNavModeButton(const FString& Label, UHorizont
     }
 
     NewButton->MenuOption = Label;
-    NewButton->WidthOverride = 132.f;
+    NewButton->WidthOverride = bInMissionNavigation ? 100.f : 132.f;
     NewButton->HeightOverride = 34.f;
     NewButton->LabelFontSize = 14;
 
@@ -1463,7 +1489,7 @@ void UMissionNavDlg::SetNavMode(EMissionNavMode NewMode)
         break;
 
     case EMissionNavMode::SECTOR:
-        CurrentFilterMode = EMissionNavFilterMode::SECTOR;
+        CurrentFilterMode = bInMissionNavigation ? EMissionNavFilterMode::STARSHIP : EMissionNavFilterMode::SECTOR;
         if (Manager) Manager->NavModeSector();
 
         // Sector mode is mission-region locked.
@@ -1593,6 +1619,11 @@ void UMissionNavDlg::AddObjectItem(
 
 void UMissionNavDlg::RebuildObjectList()
 {
+    if (bInMissionNavigation && GetCurrentObjectType() >= EMissionNavObjectType::Station)
+    {
+        BuildLiveObjects(GetCurrentObjectType());
+        return;
+    }
     UMissionNavObjectListObject* PreviousSelection = SelectedObjectItem;
 
     ObjectItems.Empty();
@@ -1656,8 +1687,8 @@ void UMissionNavDlg::RebuildObjectList()
             GetCurrentObjectType(),
             0,
             TEXT("NO DATA"),
-            TEXT("DEBUG"),
-            TEXT("MISSION NAV PANEL RECEIVED NO REAL DATA FOR THIS FILTER."));
+            TEXT(""),
+            TEXT("No objects available for this filter."));
     }
 
     SelectedObjectItem = nullptr;
@@ -1694,13 +1725,28 @@ void UMissionNavDlg::RebuildObjectList()
 
 void UMissionNavDlg::BuildSystemObjects()
 {
+    if (bInMissionNavigation)
+    {
+        if (auto* Env = GetEnvironmentSubsystem())
+        {
+            int32 Index = 0;
+            for (auto* System : Env->GetRuntimeStarSystems())
+            {
+                if (!System) continue;
+                const FString SystemName = ANSI_TO_TCHAR(System->GetName());
+                AddObjectItem(EMissionNavObjectType::System, Index++, SystemName,
+                    TEXT("SYSTEM"), BuildGalaxySystemDetailText(SystemName));
+            }
+        }
+        return;
+    }
     if (!MissionPtr)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSystemObjects: MissionPtr is null"));
         return;
     }
 
-    StarSystem* System = MissionPtr->GetStarSystem();
+    StarSystem* System = bInMissionNavigation ? FindRuntimeSystemByName(SelectedSystemName) : MissionPtr->GetStarSystem();
     if (!System)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSystemObjects: Mission star system is null"));
@@ -1731,7 +1777,7 @@ void UMissionNavDlg::BuildPlanetObjects()
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects called"));
 
-    StarSystem* System = MissionPtr->GetStarSystem();
+    StarSystem* System = bInMissionNavigation ? FindRuntimeSystemByName(SelectedSystemName) : MissionPtr->GetStarSystem();
     if (!System)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects: Mission star system is null"));
@@ -1817,7 +1863,7 @@ void UMissionNavDlg::BuildSectorObjects()
         return;
     }
 
-    StarSystem* System = MissionPtr->GetStarSystem();
+    StarSystem* System = bInMissionNavigation ? FindRuntimeSystemByName(SelectedSystemName) : MissionPtr->GetStarSystem();
     if (!System)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildSectorObjects: Mission star system is null"));
@@ -1844,7 +1890,7 @@ void UMissionNavDlg::BuildSectorObjects()
 
         const FString RegionName = FString(Region->GetName()).TrimStartAndEnd();
 
-        if (!RegionName.Equals(MissionRegionName, ESearchCase::IgnoreCase))
+        if (!bInMissionNavigation && !RegionName.Equals(MissionRegionName, ESearchCase::IgnoreCase))
         {
             continue;
         }
@@ -1864,7 +1910,7 @@ void UMissionNavDlg::BuildSectorObjects()
             Secondary,
             Detail);
 
-        return;
+        if (!bInMissionNavigation) return;
     }
 
     UE_LOG(LogTemp, Warning,
@@ -2226,6 +2272,7 @@ void UMissionNavDlg::OnFilterButtonHovered(UMenuButton* HoveredButton)
 
 void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
 {
+    if (bUpdatingLiveList) return;
     SelectedObjectItem = Cast<UMissionNavObjectListObject>(SelectedItem);
 
     if (!SelectedObjectItem)
@@ -2235,6 +2282,20 @@ void UMissionNavDlg::OnObjectSelectionChanged(UObject* SelectedItem)
     }
 
     const EMissionNavObjectType ObjectType = SelectedObjectItem->GetObjectType();
+    if (bInMissionNavigation && SelectedObjectItem->LiveShipId != 0)
+    {
+        SelectedSystemName = SelectedObjectItem->LiveSystem;
+        LiveViewedSector = SelectedObjectItem->LiveSector;
+        CurrentNavMode = EMissionNavMode::SECTOR;
+        if (NavSwitcher) NavSwitcher->SetActiveWidgetIndex(static_cast<int32>(CurrentNavMode));
+        SyncSubPanels();
+        RefreshNavModeSelection();
+        if (SectorMapPanel) SectorMapPanel->SelectLiveContact(SelectedObjectItem->LiveShipId, true);
+        RefreshDetailPanel();
+        return;
+    }
+    if (bInMissionNavigation && ObjectType == EMissionNavObjectType::Sector)
+        LiveViewedSector = SelectedObjectItem->GetPrimaryText().TrimStartAndEnd();
 
     // -------------------------------------------------
     // SYSTEM
@@ -2613,4 +2674,176 @@ TSharedRef<SWidget> UMissionNavDlg::RebuildWidget()
         WidgetTree->RootWidget=RuntimeHost;
     }
     return Super::RebuildWidget();
+}
+
+void UMissionNavDlg::ClearLiveNavigation()
+{
+    LiveContacts.Reset();
+    MissionPtr = nullptr;
+    SourceElement = nullptr;
+    SelectedObjectItem = nullptr;
+    ObjectItems.Reset();
+    if (ObjectListView) ObjectListView->ClearListItems();
+    if (SectorMapPanel) SectorMapPanel->SetLiveNavigation(true);
+    if (DetailBodyText) DetailBodyText->SetText(FText::GetEmpty());
+    LastPlayerSector.Empty();
+}
+
+void UMissionNavDlg::NativeDestruct()
+{
+    if (auto* S = Sim::GetSim()) S->OnMissionUnloading.Remove(MissionUnloadHandle);
+    MissionUnloadHandle.Reset();
+    if (bInMissionNavigation)
+    {
+        ClearLiveNavigation();
+        if (SectorMapPanel) SectorMapPanel->OnLiveContactSelected.Unbind();
+    }
+    Super::NativeDestruct();
+}
+
+void UMissionNavDlg::NativeTick(const FGeometry& Geometry, float DeltaSeconds)
+{
+    Super::NativeTick(Geometry, DeltaSeconds);
+    if (!bInMissionNavigation) return;
+    LiveRefreshElapsed += DeltaSeconds;
+    if (LiveRefreshElapsed >= 0.25f)
+    {
+        LiveRefreshElapsed = 0;
+        RefreshLiveNavigation();
+    }
+}
+
+void UMissionNavDlg::RefreshLiveNavigation()
+{
+    auto* S = Sim::GetSim();
+    Ship* Player = S && S->GetMission() ? S->GetPlayerShip() : nullptr;
+    if (!Player || Player->IsDead() || !Player->GetRegion()) { ClearLiveNavigation(); return; }
+    MissionPtr = S->GetMission();
+    SimRegion* PlayerRegion = Player->GetRegion();
+    const FString PlayerSector = ANSI_TO_TCHAR(PlayerRegion->GetName());
+    const FString PlayerSystem = PlayerRegion->GetSystem() ? ANSI_TO_TCHAR(PlayerRegion->GetSystem()->GetName()) : TEXT("");
+    const FString PlayerKey = PlayerSystem + TEXT("/") + PlayerSector;
+    if (LastPlayerSector != PlayerKey)
+    {
+        LastPlayerSector = PlayerKey;
+        SelectedSystemName = PlayerSystem;
+        CurrentMissionSystemName = PlayerSystem;
+        LiveViewedSector = PlayerSector;
+        SyncGalaxyMissionAndSelectionState();
+        SyncSubPanels();
+    }
+    LiveContacts.Reset();
+    ListIter<SimRegion> Regions = S->GetRegions();
+    while (++Regions)
+    {
+        SimRegion* Region = Regions.value();
+        if (!Region || !Region->GetSystem()) continue;
+        ListIter<Ship> Ships = Region->GetShips();
+        while (++Ships)
+        {
+            Ship* Vessel = Ships.value();
+            if (!Vessel || Vessel->IsDead()) continue;
+            // NavDlg::UpdateLists: neutral, own side, or more than KNOWN intel.
+            const bool Visible = Vessel == Player || Vessel->GetIFF() == 0 || Vessel->GetIFF() == Player->GetIFF()
+                || (Vessel->GetElement() && Vessel->GetElement()->GetIntelLevel() > EIntel::KNOWN);
+            if (!Visible) continue;
+            auto& Contact = LiveContacts.AddDefaulted_GetRef();
+            Contact.Id = static_cast<uint32>(Vessel->GetIdentity());
+            Contact.Name = ANSI_TO_TCHAR(Vessel->GetName());
+            Contact.ClassName = ANSI_TO_TCHAR(Vessel->GetShipClassName());
+            Contact.System = ANSI_TO_TCHAR(Region->GetSystem()->GetName());
+            Contact.Sector = ANSI_TO_TCHAR(Region->GetName());
+            Contact.Location = Vessel->GetLocation();
+            Contact.bLocal = Region == PlayerRegion;
+            Contact.bPlayer = Vessel == Player;
+            Contact.Distance = Contact.bLocal ? FVector::Distance(Player->GetLocation(), Contact.Location) : 0;
+            Contact.Type = Vessel->IsStatic() ? EMissionNavObjectType::Station
+                : Vessel->IsStarship() ? EMissionNavObjectType::Starship
+                : Vessel->IsDropship() ? EMissionNavObjectType::Fighter : EMissionNavObjectType::None;
+            Contact.Color = Vessel->GetIFF() == 0 ? FLinearColor::Yellow
+                : Vessel->GetIFF() == Player->GetIFF() ? FLinearColor(0.2f,0.65f,1) : FLinearColor::Red;
+        }
+    }
+    // Stable order keeps rows and scroll position steady while ships move.
+    LiveContacts.Sort([](const FLiveNavigationContact& A, const FLiveNavigationContact& B) { return A.Id < B.Id; });
+    TArray<FLiveNavigationWaypoint> Waypoints;
+    ListIter<Instruction> Plan = Player->GetFlightPlan();
+    int32 Number = 0;
+    while (++Plan)
+    {
+        Instruction* Point = Plan.value();
+        if (!Point) continue;
+        ++Number;
+        if (SelectedSystemName != PlayerSystem) continue;
+        auto& Waypoint = Waypoints.AddDefaulted_GetRef();
+        Waypoint.Location = Point->GetLocation();
+        Waypoint.Sector = ANSI_TO_TCHAR(Point->GetRegionName());
+        Waypoint.Label = FString::Printf(TEXT("NAV %d %hs"), Number, Point->GetDescription());
+        Waypoint.bNext = Point == Player->GetNextNavPoint();
+    }
+    if (SectorMapPanel) SectorMapPanel->SetLiveNavigationData(LiveContacts, Waypoints);
+    if (GetCurrentObjectType() >= EMissionNavObjectType::Station) BuildLiveObjects(GetCurrentObjectType());
+}
+
+void UMissionNavDlg::BuildLiveObjects(EMissionNavObjectType Type)
+{
+    if (!ObjectListView) return;
+    TGuardValue<bool> Guard(bUpdatingLiveList, true);
+    const uint32 SelectedId = SelectedObjectItem ? SelectedObjectItem->LiveShipId : 0;
+    TArray<UMissionNavObjectListObject*> Rows;
+    for (const auto& Contact : LiveContacts)
+    {
+        if (Contact.Type != Type) continue;
+        UMissionNavObjectListObject* Row = nullptr;
+        for (auto& ExistingRow : ObjectItems)
+            if (ExistingRow && ExistingRow->LiveShipId == Contact.Id) { Row = ExistingRow; break; }
+        if (!Row) Row = NewObject<UMissionNavObjectListObject>(this);
+        const FString Range = Contact.bLocal ? FString::Printf(TEXT("%.1f KM"), Contact.Distance / 1000) : Contact.Sector;
+        Row->InitObjectRow(Type, Rows.Num(), Contact.Name, Range,
+            FString::Printf(TEXT("%s%s\n%s\n%s System / %s Sector\n\nX %.1f  Y %.1f  Z %.1f km\n%s"),
+                *Contact.Name, Contact.bPlayer ? TEXT(" (YOU)") : TEXT(""), *Contact.ClassName,
+                *Contact.System, *Contact.Sector, Contact.Location.X/1000, Contact.Location.Y/1000,
+                Contact.Location.Z/1000, *Range));
+        Row->LiveShipId = Contact.Id;
+        Row->LiveSystem = Contact.System;
+        Row->LiveSector = Contact.Sector;
+        Rows.Add(Row);
+        if (auto* Entry = ObjectListView->GetEntryWidgetFromItem<UMissionNavObjectLVElement>(Row))
+            Entry->RefreshLiveText();
+    }
+    bool Changed = Rows.Num() != ObjectItems.Num();
+    if (!Changed) for (int32 Index = 0; Index < Rows.Num(); ++Index)
+        if (ObjectItems[Index] != Rows[Index]) { Changed = true; break; }
+    if (Changed)
+    {
+        ObjectListView->ClearListItems();
+        ObjectItems.Reset();
+        for (auto* Row : Rows) { ObjectItems.Add(Row); ObjectListView->AddItem(Row); }
+    }
+    SelectedObjectItem = nullptr;
+    for (auto* Row : Rows) if (Row->LiveShipId == SelectedId) SelectedObjectItem = Row;
+    if (Changed && SelectedObjectItem) ObjectListView->SetSelectedItem(SelectedObjectItem);
+    RefreshDetailPanel();
+}
+
+void UMissionNavDlg::HandleLiveContactSelected(uint32 Id)
+{
+    for (const auto& Contact : LiveContacts)
+    {
+        if (Contact.Id != Id) continue;
+        CurrentFilterMode = Contact.Type == EMissionNavObjectType::Station ? EMissionNavFilterMode::STATION
+            : Contact.Type == EMissionNavObjectType::Starship ? EMissionNavFilterMode::STARSHIP : EMissionNavFilterMode::FIGHTER;
+        RefreshFilterSelection();
+        BuildLiveObjects(Contact.Type);
+        for (auto& Row : ObjectItems) if (Row && Row->LiveShipId == Id)
+        {
+            // A map click selects without unexpectedly recentering the map.
+            TGuardValue<bool> Guard(bUpdatingLiveList, true);
+            SelectedObjectItem = Row;
+            ObjectListView->SetSelectedItem(Row);
+            RefreshDetailPanel();
+            break;
+        }
+        break;
+    }
 }

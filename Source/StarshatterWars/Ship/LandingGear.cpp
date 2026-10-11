@@ -132,7 +132,7 @@ void LandingGear::Initialize()
 
 void LandingGear::Close()
 {
-    delete gear_transit_sound;
+    if (gear_transit_sound) gear_transit_sound->Release();
     gear_transit_sound = nullptr;
 }
 

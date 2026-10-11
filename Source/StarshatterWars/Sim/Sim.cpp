@@ -13,6 +13,10 @@
 */
 
 #include "Sim.h"
+#include "Templates/UnrealTemplate.h"
+#include "RadioVox.h"
+#include "RadioView.h"
+#include "HUDSounds.h"
 #include "SimEvent.h"
 #include "SimObject.h"
 #include "SimRegion.h"
@@ -429,12 +433,31 @@ Sim::CommitMission()
 
 void Sim::UnloadMission()
 {
+    if (bUnloadingMission) return;
+    TGuardValue<bool> UnloadGuard(bUnloadingMission, true);
+    const int RegionCount = regions.size();
+    const int JumpCount = jumplist.size();
+    const int SplashCount = splashlist.size();
+    OnMissionUnloading.Broadcast();
+
+    // Jobs and audio must not retain pointers to the regions being destroyed.
+    jumplist.destroy();
+    splashlist.destroy();
+    RadioVox::DiscardMessages();
+    RadioTraffic::DiscardMessages();
+    RadioView::ClearMessages();
+    if (RadioView* Radio = RadioView::GetInstance()) Radio->CloseMenu();
+    HUDSounds::StopSound(HUDSounds::SND_RED_ALERT);
+    cam_dir = CameraManager::GetInstance();
+    if (cam_dir) cam_dir->SetShip(nullptr);
 	// Non-owning scheduler entries must not survive their regions.
 	rgn_queue.clear();
 	HUDView* hud = HUDView::GetInstance();
 	if (hud)
 	{
 		hud->HideAll();
+        hud->SetTarget(nullptr);
+        hud->SetShip(nullptr);
 	}
 
 	ShipStats::Initialize();
@@ -460,7 +483,16 @@ void Sim::UnloadMission()
 		mission->SetComplete(true);
 	}
 
-	regions.destroy();
+    // All regions release transients and visual bindings before any ship
+    // storage disappears. Cross-region observers and carrier links stay valid.
+    TSet<Ship*> OwnedShips;
+    for (int i = 0; i < regions.size(); ++i)
+        if (regions[i]) regions[i]->ReleaseMissionObjects(OwnedShips);
+    for (Ship* OwnedShip : OwnedShips) OwnedShip->Destroy();
+    for (Ship* OwnedShip : OwnedShips) delete OwnedShip;
+    regions.destroy();
+    UE_LOG(LogTemp, Log, TEXT("[MissionCleanup] Released Regions=%d Ships=%d PendingJumps=%d PendingSplashes=%d"),
+        RegionCount, OwnedShips.Num(), JumpCount, SplashCount);
 
 	if (scene)
 	{
@@ -481,7 +513,11 @@ void Sim::UnloadMission()
 		cam_dir->SetShip(nullptr);
 	}
 
-	AudioConfig::SetTraining(false);
+    start_time = 0;
+    first_frame = true;
+    bResolvingTimeSkip = false;
+    grid_shown = false;
+    AudioConfig::SetTraining(false);
 }
 
 bool

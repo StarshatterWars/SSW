@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
@@ -61,6 +61,10 @@ public:
 
     EMissionNavObjectType GetObjectType() const { return ObjectType; }
     int32 GetIndex() const { return Index; }
+
+    // Stable live identity, never a Ship pointer.
+    uint32 LiveShipId = 0;
+    FString LiveSystem, LiveSector;
 
     void SetSourceMissionElement(MissionElement* InElement) { SourceMissionElement = InElement; }
     MissionElement* GetSourceMissionElement() const { return SourceMissionElement; }

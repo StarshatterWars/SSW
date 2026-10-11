@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios LLC
     Copyright (c) 2025-2026. All Rights Reserved.
@@ -289,6 +289,10 @@ int32 USectorMapPanel::NativePaint(
             Scale,
             Rep);
     }
+    else if (bLiveNavigation)
+    {
+        DrawLiveNavigation(OutDrawElements, AllottedGeometry, LayerId + 100, Center, Scale);
+    }
     else
     {
         // Mission Navigation remains mission-instance driven.
@@ -309,7 +313,9 @@ int32 USectorMapPanel::NativePaint(
             Rep);
     }
 
-    const FString InfoString = FString::Printf(
+    const FString InfoString = bLiveNavigation
+        ? FString::Printf(TEXT("%s  |  WIDTH %.1f KM"), *ViewedSectorName, R * 2.0 / 1000.0)
+        : FString::Printf(
         TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
         ViewedSectorName.IsEmpty() ? TEXT("NONE") : *ViewedSectorName,
         Rep,
@@ -360,7 +366,25 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
         const FVector2D LocalPoint =
             InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 
-        if (bOperationsView)
+        if (bLiveNavigation)
+        {
+            const FLiveNavigationContact* Hit = nullptr;
+            double Best = 14.0 * 14.0;
+            for (const auto& Contact : LiveContacts)
+            {
+                if (Contact.System != ViewedSystemName || Contact.Sector != ViewedSectorName) continue;
+                const FVector2D Position = Center + FVector2D(Contact.Location.X, Contact.Location.Y) * Scale;
+                const double Distance = (Position - LocalPoint).SizeSquared();
+                if (Distance < Best) { Best = Distance; Hit = &Contact; }
+            }
+            if (Hit)
+            {
+                const uint32 Id = Hit->Id;
+                SelectLiveContact(Id, false);
+                OnLiveContactSelected.ExecuteIfBound(Id);
+            }
+        }
+        else if (bOperationsView)
         {
             const FS_CombatGroup* HitGroup =
                 HitTestOperationsGroupAtLocalPoint(LocalPoint, Center, Scale);
@@ -489,7 +513,7 @@ void USectorMapPanel::SetOperationsView(bool bInOperationsView)
 
 void USectorMapPanel::SetViewedSystemName(const FString& InSystemName)
 {
-    if (bOperationsView && ViewedSystemName != InSystemName.TrimStartAndEnd())
+    if ((bOperationsView || bLiveNavigation) && ViewedSystemName != InSystemName.TrimStartAndEnd())
     {
         ZoomScale = 1.0f;
         PanOffset = FVector2D::ZeroVector;
@@ -500,7 +524,7 @@ void USectorMapPanel::SetViewedSystemName(const FString& InSystemName)
 
 void USectorMapPanel::SetViewedSectorName(const FString& InSectorName)
 {
-    if (bOperationsView && ViewedSectorName != InSectorName.TrimStartAndEnd())
+    if ((bOperationsView || bLiveNavigation) && ViewedSectorName != InSectorName.TrimStartAndEnd())
     {
         ZoomScale = 1.0f;
         PanOffset = FVector2D::ZeroVector;
@@ -2317,4 +2341,92 @@ FLinearColor USectorMapPanel::GetMapIFFColor(const MissionElement* Element) cons
     }
 
     return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f); // enemy red
+}
+void USectorMapPanel::SetLiveNavigation(bool Enabled)
+{
+    bLiveNavigation = Enabled;
+    if (Enabled) bOperationsView = false;
+    CachedMission = nullptr;
+    SelectedElement = nullptr;
+    SelectedOperationsGroup = nullptr;
+    LiveContacts.Reset();
+    LiveWaypoints.Reset();
+    SelectedLiveContact = 0;
+    ZoomScale = 1.0f;
+    PanOffset = FVector2D::ZeroVector;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::SetLiveNavigationData(const TArray<FLiveNavigationContact>& Contacts,
+    const TArray<FLiveNavigationWaypoint>& Waypoints)
+{
+    LiveContacts = Contacts;
+    LiveWaypoints = Waypoints;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::SelectLiveContact(uint32 Id, bool CenterOnContact)
+{
+    SelectedLiveContact = Id;
+    if (CenterOnContact && CachedRegion)
+    {
+        const FVector2D Size = GetCachedGeometry().GetLocalSize();
+        const double Radius = GetDisplayRadius() / ZoomScale;
+        if (Size.X > 1 && Size.Y > 1 && Radius > 0)
+        {
+            const double Scale = FMath::Min(Size.X, Size.Y) * 0.5 / Radius;
+            for (const auto& Contact : LiveContacts)
+                if (Contact.Id == Id)
+                    PanOffset = -FVector2D(Contact.Location.X, Contact.Location.Y) * Scale;
+        }
+    }
+    Invalidate(EInvalidateWidget::Paint);
+}
+
+void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
+    const FGeometry& Geometry, int32 Layer, const FVector2D& Center, float Scale) const
+{
+    auto Project = [&](const FVector& Position) { return Center + FVector2D(Position.X, Position.Y) * Scale; };
+    auto Line = [&](const TArray<FVector2D>& Points, const FLinearColor& Color)
+    {
+        FSlateDrawElement::MakeLines(Elements, Layer, Geometry.ToPaintGeometry(),
+            Points, ESlateDrawEffect::None, Color, true, 1.5f);
+    };
+    auto Label = [&](const FVector2D& Position, const FString& Text, const FLinearColor& Color)
+    {
+        FSlateDrawElement::MakeText(Elements, Layer + 2,
+            Geometry.ToPaintGeometry(Position, FVector2D(240, 20)), Text,
+            FCoreStyle::GetDefaultFontStyle("Regular", 11), ESlateDrawEffect::None, Color);
+    };
+    FVector2D Previous;
+    bool HasPrevious = false;
+    for (const auto& Waypoint : LiveWaypoints)
+    {
+        if (Waypoint.Sector != ViewedSectorName) { HasPrevious = false; continue; }
+        const FVector2D Position = Project(Waypoint.Location);
+        const FLinearColor Color = Waypoint.bNext ? FLinearColor::White : FLinearColor(0.25f, 0.65f, 1);
+        if (HasPrevious) Line({Previous, Position}, Color);
+        Line({Position + FVector2D(-5, -5), Position + FVector2D(5, -5),
+              Position + FVector2D(5, 5), Position + FVector2D(-5, 5), Position + FVector2D(-5, -5)}, Color);
+        Label(Position + FVector2D(8, 8), Waypoint.Label, Color);
+        Previous = Position;
+        HasPrevious = true;
+    }
+    const FVector2D Size = Geometry.GetLocalSize();
+    for (const auto& Contact : LiveContacts)
+    {
+        if (Contact.System != ViewedSystemName || Contact.Sector != ViewedSectorName) continue;
+        const FVector2D Position = Project(Contact.Location);
+        if (Position.X < 0 || Position.Y < 0 || Position.X > Size.X || Position.Y > Size.Y) continue;
+        const float Radius = Contact.bPlayer ? 7.f : 4.f;
+        Line({Position + FVector2D(0, -Radius), Position + FVector2D(Radius, 0),
+              Position + FVector2D(0, Radius), Position + FVector2D(-Radius, 0),
+              Position + FVector2D(0, -Radius)}, Contact.Color);
+        if (Contact.bPlayer || Contact.Id == SelectedLiveContact)
+        {
+            Label(Position + FVector2D(10, -18), Contact.bPlayer ? Contact.Name + TEXT(" (YOU)") : Contact.Name, Contact.Color);
+            if (Contact.Id == SelectedLiveContact)
+                DrawSelectionCrosshair(Elements, Geometry, Layer + 3, Position, 12.f);
+        }
+    }
 }

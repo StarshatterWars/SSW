@@ -294,8 +294,8 @@ FlightDeck::Initialize()
 void
 FlightDeck::Close()
 {
-	delete tire_sound;
-	delete catapult_sound;
+	if (tire_sound) tire_sound->Release();
+	if (catapult_sound) catapult_sound->Release();
 
 	tire_sound = 0;
 	catapult_sound = 0;

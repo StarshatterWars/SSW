@@ -21,7 +21,7 @@
 #include "DataLoader.h"
 #include "Game.h"
 #include "Sound.h"
-#include "ThreadSync.h"
+#include "Containers/Ticker.h"
 
 // Minimal Unreal logging support:
 #include "Logging/LogMacros.h"
@@ -32,93 +32,34 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempRadioVox, Log, All);
 //
 // RADIO VOX CONTROLLER:
 //
-// NOTE: Original implementation used Win32 threads (CreateThread/Sleep/etc).
-// This file retains that structure for now, but removes MemDebug.h.
-// If/when you migrate to UE threading (FRunnable/AsyncTask/FTSTicker),
-// replace these Windows APIs accordingly.
-//
-
-DWORD WINAPI VoxUpdateProc(LPVOID link);
-
+// UObjects and audio components must be accessed on the game thread.
 class RadioVoxController
 {
 public:
-	enum { MAX_QUEUE = 5 };
-
-	RadioVoxController();
-	~RadioVoxController();
-
-	bool  Add(RadioVox* vox);
-	void  Update();
-	DWORD UpdateThread();
-
-	bool           shutdown;
-	HANDLE         hthread;
-	List<RadioVox> queue;
-	ThreadSync     sync;
+    enum { MAX_QUEUE = 5 };
+    RadioVoxController();
+    ~RadioVoxController();
+    bool Add(RadioVox* vox);
+    void Update();
+    List<RadioVox> queue;
+    FTSTicker::FDelegateHandle TickHandle;
 };
-
-static RadioVoxController* controller = 0;
-
-// +--------------------------------------------------------------------+
+static RadioVoxController* controller = nullptr;
 
 RadioVoxController::RadioVoxController()
-	: hthread(0), shutdown(false)
 {
-	DWORD thread_id = 0;
-	hthread = CreateThread(0, 4096, VoxUpdateProc, (LPVOID)this, 0, &thread_id);
-
-	if (!hthread) {
-		UE_LOG(LogTempRadioVox, Error, TEXT("RadioVoxController: CreateThread failed."));
-	}
+    TickHandle = FTSTicker::GetCoreTicker().AddTicker(
+        FTickerDelegate::CreateLambda([this](float) { Update(); return true; }), 0.05f);
 }
-
-// +--------------------------------------------------------------------+
-
 RadioVoxController::~RadioVoxController()
 {
-	shutdown = true;
-
-	if (hthread) {
-		WaitForSingleObject(hthread, 500);
-		CloseHandle(hthread);
-		hthread = 0;
-	}
-
-	queue.destroy();
+    FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
+    queue.destroy();
 }
-
-// +--------------------------------------------------------------------+
-
-DWORD WINAPI VoxUpdateProc(LPVOID link)
-{
-	RadioVoxController* controller_local = (RadioVoxController*)link;
-
-	if (controller_local)
-		return controller_local->UpdateThread();
-
-	return (DWORD)E_POINTER;
-}
-
-// +--------------------------------------------------------------------+
-
-DWORD
-RadioVoxController::UpdateThread()
-{
-	while (!shutdown) {
-		Update();
-		Sleep(50);
-	}
-
-	return 0;
-}
-
-// +--------------------------------------------------------------------+
 
 void
 RadioVoxController::Update()
 {
-	AutoThreadSync a(sync);
 
 	if (queue.size()) {
 		RadioVox* vox = queue.first();
@@ -134,7 +75,6 @@ RadioVoxController::Add(RadioVox* vox)
 	if (!vox || vox->sounds.isEmpty())
 		return false;
 
-	AutoThreadSync a(sync);
 
 	if (queue.size() < MAX_QUEUE) {
 		queue.append(vox);
@@ -174,7 +114,15 @@ RadioVox::RadioVox(int n, const char* p, const char* m)
 
 RadioVox::~RadioVox()
 {
-	sounds.destroy();
+    for (int i = 0; i < sounds.size(); ++i)
+        if (USound* Sound = sounds[i]) Sound->Release();
+    sounds.clear(); // USound is a UObject: never delete it through List::destroy.
+    SoundReferences.Empty();
+}
+
+void RadioVox::DiscardMessages()
+{
+    if (controller) controller->queue.destroy();
 }
 
 // +--------------------------------------------------------------------+
@@ -210,6 +158,7 @@ RadioVox::AddPhrase(const char* key)
 			sound->SetFlags(USound::LOCALIZED | USound::LOCKED);
 			sound->SetFilename(filename);
 			sounds.append(sound);
+            SoundReferences.Emplace(sound);
 
 			return true;
 		}

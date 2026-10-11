@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
@@ -276,4 +276,10 @@ TSharedRef<SWidget> UMissionNavObjectLVElement::RebuildWidget()
     }
 
     return SNullWidget::NullWidget;
+}
+void UMissionNavObjectLVElement::RefreshLiveText()
+{
+    if (!ObjectItem || ObjectItem->LiveShipId == 0) return;
+    if (PrimaryText) PrimaryText->SetText(FText::FromString(ObjectItem->GetPrimaryText()));
+    if (SecondaryText) SecondaryText->SetText(FText::FromString(ObjectItem->GetSecondaryText()));
 }

@@ -1,4 +1,4 @@
-#include "NavigationDlg.h"
+﻿#include "NavigationDlg.h"
 #include "MissionNavDlg.h"
 #include "NavigationPopup.h"
 #include "Engine/World.h"
@@ -18,11 +18,9 @@
 
 TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
 {
-    if (bFrameOnly)
-    {
-        UE_LOG(LogTemp, Display, TEXT("NavigationDlg: showing frame-only panel %s"), *GetName());
-        return SNullWidget::NullWidget;
-    }
+    // Earlier WBP defaults serialized bFrameOnly=true. Live navigation now
+    // always supplies content, including those existing Blueprint instances.
+    bFrameOnly = false;
     if(!NavigationMapClass) {
         NavigationMapClass=LoadClass<UMissionNavDlg>(nullptr,
             TEXT("/Game/Screens/Mission/MissionNavPanel.MissionNavPanel_C"));

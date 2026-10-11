@@ -88,6 +88,8 @@ protected:
     void SetMode(EMissionBriefingMode NewMode);
     void RefreshHeader();
     void CloseEmptySectorPreview(bool bPreserveSimulation = false);
+    void HandleSimulationUnloading();
+    bool bClosingMissionPreview = false;
     bool StartLiveMission();
     bool bLiveMissionStarted = false;
     bool EnableMissionMenuInput();

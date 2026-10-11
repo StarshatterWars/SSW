@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /*
     Project Starshatter Wars
@@ -34,6 +34,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Input/Reply.h"
 #include "GameStructs.h"
+#include "LiveNavigationData.h"
 #include "SectorMapPanel.generated.h"
 
 class UCanvasPanel;
@@ -95,6 +96,13 @@ public:
 
     // Operations uses persistent/static combat-group data.
     FSectorOperationsGroupSelectedDelegate OnOperationsGroupSelected;
+
+    DECLARE_DELEGATE_OneParam(FOnLiveContactSelected, uint32);
+    FOnLiveContactSelected OnLiveContactSelected;
+    void SetLiveNavigation(bool Enabled);
+    void SetLiveNavigationData(const TArray<FLiveNavigationContact>& Contacts,
+        const TArray<FLiveNavigationWaypoint>& Waypoints);
+    void SelectLiveContact(uint32 Id, bool CenterOnContact);
 
     void SetOwnerNavDlg(UMissionNavDlg* InOwnerNavDlg);
 
@@ -285,6 +293,12 @@ protected:
 
     FVector2D GetOperationsDisplayOffset(const FS_CombatGroup* Group) const;
     double GetDisplayRadius() const;
+    bool bLiveNavigation = false;
+    uint32 SelectedLiveContact = 0;
+    TArray<FLiveNavigationContact> LiveContacts;
+    TArray<FLiveNavigationWaypoint> LiveWaypoints;
+    void DrawLiveNavigation(FSlateWindowElementList& Elements, const FGeometry& Geometry,
+        int32 Layer, const FVector2D& Center, float Scale) const;
     bool bOperationsView = false;
     bool bValidView = false;
 

@@ -87,16 +87,16 @@ HUDSounds::Initialize()
 void
 HUDSounds::Close()
 {
-	delete mfd_mode;      mfd_mode = 0;
-	delete nav_mode;      nav_mode = 0;
-	delete wep_mode;      wep_mode = 0;
-	delete wep_disp;      wep_disp = 0;
-	delete hud_mode;      hud_mode = 0;
-	delete hud_widget;    hud_widget = 0;
-	delete shield_level;  shield_level = 0;
-	delete red_alert;     red_alert = 0;
-	delete tac_accept;    tac_accept = 0;
-	delete tac_reject;    tac_reject = 0;
+	if (mfd_mode) mfd_mode->Release();      mfd_mode = 0;
+	if (nav_mode) nav_mode->Release();      nav_mode = 0;
+	if (wep_mode) wep_mode->Release();      wep_mode = 0;
+	if (wep_disp) wep_disp->Release();      wep_disp = 0;
+	if (hud_mode) hud_mode->Release();      hud_mode = 0;
+	if (hud_widget) hud_widget->Release();    hud_widget = 0;
+	if (shield_level) shield_level->Release();  shield_level = 0;
+	if (red_alert) red_alert->Release();     red_alert = 0;
+	if (tac_accept) tac_accept->Release();    tac_accept = 0;
+	if (tac_reject) tac_reject->Release();    tac_reject = 0;
 }
 
 void

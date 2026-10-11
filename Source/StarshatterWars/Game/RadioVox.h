@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "UObject/StrongObjectPtr.h"
 #include "Types.h"
 #include "List.h"
 #include "Text.h"
@@ -45,6 +46,7 @@ public:
 
 	static void       Initialize();
 	static void       Close();
+    static void       DiscardMessages();
 
 protected:
 	virtual bool      Update();
@@ -52,6 +54,7 @@ protected:
 	Text              path;
 	Text              message;
 	List<USound>      sounds;
+    TArray<TStrongObjectPtr<USound>> SoundReferences;
 	int               index;
 	int               channel;
 };

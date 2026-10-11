@@ -52,6 +52,27 @@
 #include "SSWRuntimeSubsystem.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
+#include "ShipActor.h"
+#include "UObject/UObjectIterator.h"
+
+// The simulation owns Ship, while UE owns AShipActor. Break that link before
+// releasing simulation storage. Snapshot first because Destroy mutates objects.
+static void DetachRegionShipActors(const TSet<Ship*>& OwnedShips)
+{
+    TArray<TWeakObjectPtr<AShipActor>> Actors;
+    for (TObjectIterator<AShipActor> It; It; ++It) {
+        AShipActor* Actor = *It;
+        if (IsValid(Actor) && !Actor->HasAnyFlags(RF_ClassDefaultObject) &&
+            OwnedShips.Contains(Actor->GetRuntimeShip()))
+            Actors.Add(Actor);
+    }
+    for (const TWeakObjectPtr<AShipActor>& WeakActor : Actors) {
+        if (AShipActor* Actor = WeakActor.Get()) {
+            Actor->BindRuntimeShip(nullptr);
+            Actor->Destroy();
+        }
+    }
+}
 
 // +--------------------------------------------------------------------+
 // Local helpers (single edit point if your API differs)
@@ -186,28 +207,41 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
 
 SimRegion::~SimRegion()
 {
-    player_ship = nullptr;
-
+    // Also support destruction of a standalone region. Sim::UnloadMission
+    // calls this phase across every region first, leaving this set empty.
+    TSet<Ship*> OwnedShips;
+    ReleaseMissionObjects(OwnedShips);
+    for (Ship* OwnedShip : OwnedShips) OwnedShip->Destroy();
+    for (Ship* OwnedShip : OwnedShips) delete OwnedShip;
     delete terrain;
     terrain = nullptr;
-
     delete grid;
     grid = nullptr;
+    links.clear();
+}
 
+void SimRegion::ReleaseMissionObjects(TSet<Ship*>& OwnedShips)
+{
+    player_ship = nullptr;
+    TSet<Ship*> RegionShips;
+    for (int i = 0; i < ships.size(); ++i) if (ships[i]) RegionShips.Add(ships[i]);
+    for (int i = 0; i < dead_ships.size(); ++i) if (dead_ships[i]) RegionShips.Add(dead_ships[i]);
+    for (int i = 0; i < retired_ships.size(); ++i) if (retired_ships[i]) RegionShips.Add(retired_ships[i]);
+    DetachRegionShipActors(RegionShips);
+    for (Ship* RegionShip : RegionShips) OwnedShips.Add(RegionShip);
     ships.clear();
+    dead_ships.clear();
+    retired_ships.clear();
     carriers.clear();
     selection.clear();
-    dead_ships.clear();
-    shots.clear();
-    drones.clear();
-    explosions.clear();
-    debris.clear();
-    asteroids.clear();
 
-    for (int i = 0; i < 5; ++i)
-        track_database[i].clear();
-
-    links.clear();
+    // Sensor creates these contacts with new; this database owns them.
+    for (int i = 0; i < 5; ++i) track_database[i].destroy();
+    shots.destroy();
+    drones.destroy(); // Separate owning list in SSW, unlike legacy.
+    explosions.destroy();
+    debris.destroy();
+    asteroids.destroy();
 }
 
 // +--------------------------------------------------------------------+
@@ -232,7 +266,7 @@ void SimRegion::Deactivate()
     active = false;
 
     for (int i = 0; i < 5; ++i)
-        track_database[i].clear();
+        track_database[i].destroy();
 }
 
 // +--------------------------------------------------------------------+
@@ -277,6 +311,17 @@ SimRegion::ExecFrame(double seconds)
     }
 
     UpdateExplosions(seconds);
+
+    // Legacy advances and expires debris alongside explosions.
+    for (int i = 0; i < debris.size(); ) {
+        Debris* Piece = debris[i];
+        if (Piece && Piece->GetLife() > 0) Piece->ExecFrame(seconds);
+        if (!Piece || Piece->GetLife() <= 0) {
+            debris.removeIndex(i);
+            delete Piece;
+        }
+        else ++i;
+    }
 
     DestroyShips();
 
@@ -732,6 +777,7 @@ void SimRegion::UpdateShots(double seconds)
 
         if (!s || IsDeadShot(s)) {
             shots.removeIndex(i);
+            delete s;
             continue;
         }
 
@@ -742,6 +788,7 @@ void SimRegion::UpdateShots(double seconds)
 
         if (IsDeadShot(s)) {
             shots.removeIndex(i);
+            delete s;
             continue;
         }
 
@@ -753,6 +800,7 @@ void SimRegion::UpdateShots(double seconds)
 
         if (!d || IsDeadShot((SimShot*)d)) {
             drones.removeIndex(i);
+            delete d;
             continue;
         }
 
@@ -763,6 +811,7 @@ void SimRegion::UpdateShots(double seconds)
 
         if (IsDeadShot((SimShot*)d)) {
             drones.removeIndex(i);
+            delete d;
             continue;
         }
 
@@ -777,6 +826,7 @@ void SimRegion::UpdateExplosions(double seconds)
 
         if (!e || IsDeadExplosion(e)) {
             explosions.removeIndex(i);
+            delete e;
             continue;
         }
 
@@ -787,6 +837,7 @@ void SimRegion::UpdateExplosions(double seconds)
 
         if (IsDeadExplosion(e)) {
             explosions.removeIndex(i);
+            delete e;
             continue;
         }
 
@@ -804,6 +855,22 @@ SimRegion::UpdateTracking(double seconds)
         active ? 1 : 0);
 
     (void)seconds;
+
+    // Legacy UpdateTracks: expire owned shared sensor records, then reset
+    // their per-frame detection state before sensors contribute new readings.
+    for (int IFF = 0; IFF < 5; ++IFF) {
+        ListIter<SimContact> Tracks = track_database[IFF];
+        while (++Tracks) {
+            SimContact* Contact = Tracks.value();
+            Ship* ContactShip = Contact->GetShip();
+            SimShot* ContactShot = Contact->GetShot();
+            const bool bLost = ContactShip
+                ? (ContactShip->GetRegion() != this || IsDeadShip(ContactShip))
+                : (!ContactShot || ContactShot->GetLife() <= 0);
+            if (Contact->Age() < 0 || bLost) delete Tracks.removeItem();
+            else Contact->Reset();
+        }
+    }
 
     for (int i = 0; i < ships.size(); ++i)
     {
@@ -897,12 +964,14 @@ SimRegion::DestroyShip(Ship* ship)
         player_ship = nullptr;
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SimRegion::DestroyShip] Detached ship '%hs' but NOT deleting during UE port stabilization"),
-        ship->GetName());
-
-    // TEMP: Do not delete while actors still hold RuntimeShip pointers.
-    // delete ship;
+    // Retain ownership rather than orphaning the allocation. Final deletion
+    // occurs at region teardown after actors are unbound.
+    if (!retired_ships.contains(ship)) {
+        retired_ships.append(ship);
+        TSet<Ship*> DetachedShip;
+        DetachedShip.Add(ship);
+        DetachRegionShipActors(DetachedShip);
+    }
 }
 
 void SimRegion::CommitMission()

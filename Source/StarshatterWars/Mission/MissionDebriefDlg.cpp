@@ -54,7 +54,7 @@ void UMissionDebriefDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    // Bind ID -> widget mapping into UBaseScreen’s FormMap:
+    // Bind ID -> widget mapping into UBaseScreenâ€™s FormMap:
     BindFormWidgets();
 
     // Button click:
@@ -455,6 +455,12 @@ void UMissionDebriefDlg::OnCloseClicked()
         return;
 
     LocalSim->CommitMission();
+    bIsShown = false;
+    PlayerShip = nullptr;
+    MissionPtr = nullptr;
+    SimPtr = nullptr;
+    for (int ID : {320, 330, 340})
+        if (UListView* List = GetList(ID)) List->ClearListItems();
     LocalSim->UnloadMission();
 
     PlayerCharacter* PlayerObj = PlayerCharacter::GetCurrentPlayer();

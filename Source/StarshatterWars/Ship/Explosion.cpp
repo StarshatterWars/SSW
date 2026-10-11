@@ -529,7 +529,7 @@ Explosion::Close()
         bitmaps[t] = 0;
         particle_bitmaps[t] = 0;
 
-        delete sounds[t];
+        if (sounds[t]) sounds[t]->Release();
         sounds[t] = 0;
     }
 }

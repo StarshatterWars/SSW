@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
@@ -34,6 +34,7 @@ class STARSHATTERWARS_API UMissionNavObjectLVElement : public UUserWidget, publi
     GENERATED_BODY()
 
 public:
+    void RefreshLiveText();
     virtual void NativeConstruct() override;
     virtual TSharedRef<SWidget> RebuildWidget() override;
 

@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios LLC
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -22,6 +22,7 @@
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
 #include "MissionNavObjectListObject.h"
+#include "LiveNavigationData.h"
 #include "MissionNavDlg.generated.h"
 
 class UBorder;
@@ -100,6 +101,17 @@ protected:
     virtual void NativeConstruct() override;
     virtual TSharedRef<SWidget> RebuildWidget() override;
     bool bInMissionNavigation=false;
+    virtual void NativeTick(const FGeometry& Geometry, float DeltaSeconds) override;
+    virtual void NativeDestruct() override;
+    void RefreshLiveNavigation();
+    void BuildLiveObjects(EMissionNavObjectType Type);
+    void HandleLiveContactSelected(uint32 Id);
+    void ClearLiveNavigation();
+    float LiveRefreshElapsed = 0;
+    bool bUpdatingLiveList = false;
+    FString LiveViewedSector, LastPlayerSector;
+    TArray<FLiveNavigationContact> LiveContacts;
+    FDelegateHandle MissionUnloadHandle;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
     virtual FReply NativeOnMouseWheel(
@@ -194,7 +206,7 @@ private:
     MissionInfo* MissionInfoPtr = nullptr;
     MapView* MapViewPtr = nullptr;
     
-    MissionElement* SourceElement;
+    MissionElement* SourceElement = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* RuntimeHost = nullptr;

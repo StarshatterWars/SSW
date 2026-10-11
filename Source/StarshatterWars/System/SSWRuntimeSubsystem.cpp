@@ -23,6 +23,8 @@
 
 #include "Game.h"
 #include "Sim.h"
+#include "TimerSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "SimRegion.h"
 #include "SimUniverse.h"
 #include "Galaxy.h"
@@ -79,7 +81,7 @@ void USSWRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void USSWRuntimeSubsystem::Deinitialize()
 {
-    ClearProjectileVisuals();
+    EndMissionPresentation();
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] Deinitialize"));
 
     StopRuntime();
@@ -211,6 +213,7 @@ void USSWRuntimeSubsystem::CreateWorld()
     if (!SimInstance)
     {
         SimInstance = new Sim(RuntimeInput);
+        SimInstance->OnMissionUnloading.AddUObject(this, &USSWRuntimeSubsystem::HandleMissionUnloading);
 
         UE_LOG(LogSSWRuntime, Log,
             TEXT("[RUNTIME] World Created. Sim=%p Input=%p"),
@@ -1024,6 +1027,15 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
         }
     }
 }
+void USSWRuntimeSubsystem::HandleMissionUnloading()
+{
+    SetPaused(true);
+    SetTimeCompression(1);
+    if (UGameInstance* GI = GetGameInstance())
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>()) Timer->StopMissionRun();
+    EndMissionPresentation();
+}
+
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
     ClearProjectileVisuals();

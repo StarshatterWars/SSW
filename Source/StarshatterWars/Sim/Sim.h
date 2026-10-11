@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Types.h"
+#include "Delegates/Delegate.h"
 #include "SimUniverse.h"
 #include "SimScene.h"
 #include "Physical.h"
@@ -150,6 +151,8 @@ public:
     virtual Ship* FindShipByObjID(uint32 objid);
     virtual SimShot* FindShotByObjID(uint32 objid);
 
+    // Native subscribers release UI, input, actors and timers before deletion.
+    FSimpleMulticastDelegate OnMissionUnloading;
     Mission* GetMission() { return mission; }
     List<MissionEvent>& GetEvents() { return events; }
     List<SimRegion>& GetRegions() { return regions; }
@@ -245,6 +248,7 @@ protected:
 
     MotionController* ctrl = nullptr;
 
+    bool bUnloadingMission = false;
     bool        test_mode = false;
     bool        grid_shown = false;
     Mission* mission = nullptr;

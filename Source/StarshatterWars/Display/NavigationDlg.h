@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "CoreMinimal.h"
 #include "InMissionPanelBase.h"
 #include "NavigationDlg.generated.h"
@@ -12,9 +12,9 @@ class STARSHATTERWARS_API UNavigationDlg : public UInMissionPanelBase
 {
     GENERATED_BODY()
 protected:
-    // First integration step: show the Blueprint shell without loading the map.
+    // Retained for old Blueprint serialization; live content is always enabled.
     UPROPERTY(EditDefaultsOnly, Category="Navigation")
-    bool bFrameOnly = true;
+    bool bFrameOnly = false;
 
     UPROPERTY(EditDefaultsOnly, Category="Navigation")
     TSubclassOf<UMissionNavDlg> NavigationMapClass;
