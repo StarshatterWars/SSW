@@ -245,6 +245,7 @@ protected:
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> MissionWeaponActions;
     bool bContactsOnlyPanel = false;
     bool CanUseFighterHUD() const;
+    bool CanShowFighterHUD() const;
     TSharedPtr<SFighterHUDDetails> FighterHUDDetails;
     UPROPERTY(Transient) TObjectPtr<UInputAction> FighterMFDLeftAction;
     UPROPERTY(Transient) TObjectPtr<UInputAction> FighterMFDRightAction;

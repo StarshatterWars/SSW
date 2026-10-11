@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -97,6 +97,7 @@ void UFlightOpsDlg::NativeConstruct()
 
 void UFlightOpsDlg::NativeDestruct()
 {
+    RuntimePanel.Reset();
     delete FlightPlannerPtr;
     FlightPlannerPtr = nullptr;
 
@@ -108,7 +109,7 @@ void UFlightOpsDlg::NativeDestruct()
 void UFlightOpsDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
-    if (HangarList) ExecFrame();
+    if (HangarList && !RuntimePanel.IsValid()) ExecFrame();
 }
 
 // +--------------------------------------------------------------------+
@@ -217,6 +218,7 @@ void UFlightOpsDlg::RefreshHangarListForFilterIndex(int32 FilterIndex)
 
 void UFlightOpsDlg::SetMissionType(int32 InMissionType)
 {
+    if (RuntimePanel.IsValid()) { RuntimePanel->ChooseMission(InMissionType); return; }
     MissionType = InMissionType;
 
     for (int32 i = 0; i < 6; ++i)
@@ -240,42 +242,43 @@ void UFlightOpsDlg::OnFilterChanged(FString SelectedItem, ESelectInfo::Type)
         return;
 
     const int32 Index = FilterList->GetSelectedIndex();
-    RefreshHangarListForFilterIndex(Index);
+    if (RuntimePanel.IsValid()) RuntimePanel->ChooseFilter(Index);
+    else RefreshHangarListForFilterIndex(Index);
 }
 
 // +--------------------------------------------------------------------+
 
 void UFlightOpsDlg::OnPackageClicked()
 {
-    UE_LOG(LogFlightOpsDlg, Log, TEXT("Package clicked"));
+    if (RuntimePanel.IsValid()) RuntimePanel->PreparePackage();
 }
 
 // +--------------------------------------------------------------------+
 
 void UFlightOpsDlg::OnAlertClicked()
 {
-    UE_LOG(LogFlightOpsDlg, Log, TEXT("Alert clicked"));
+    if (RuntimePanel.IsValid()) RuntimePanel->PrepareAlert();
 }
 
 // +--------------------------------------------------------------------+
 
 void UFlightOpsDlg::OnLaunchClicked()
 {
-    UE_LOG(LogFlightOpsDlg, Log, TEXT("Launch clicked"));
+    if (RuntimePanel.IsValid()) RuntimePanel->LaunchSelected();
 }
 
 // +--------------------------------------------------------------------+
 
 void UFlightOpsDlg::OnStandDownClicked()
 {
-    UE_LOG(LogFlightOpsDlg, Log, TEXT("Stand Down clicked"));
+    if (RuntimePanel.IsValid()) RuntimePanel->StandDownSelected();
 }
 
 // +--------------------------------------------------------------------+
 
 void UFlightOpsDlg::OnRecallClicked()
 {
-    UE_LOG(LogFlightOpsDlg, Log, TEXT("Recall clicked"));
+    if (RuntimePanel.IsValid()) RuntimePanel->RecallSelected();
 }
 
 // +--------------------------------------------------------------------+
@@ -308,7 +311,7 @@ Ship* UFlightOpsDlg::ResolveCarrier() const
 TSharedRef<SWidget> UFlightOpsDlg::CreatePanelContent()
 {
     const TWeakObjectPtr<UFlightOpsDlg> Owner(this);
-    return SNew(SFlightOpsPopup)
+    return SAssignNew(RuntimePanel,SFlightOpsPopup)
         .ResolveCarrier([Owner](){return Owner.IsValid()?Owner->ResolveCarrier():nullptr;})
         .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();});
 }

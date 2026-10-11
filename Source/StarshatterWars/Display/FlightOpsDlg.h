@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -130,6 +130,7 @@ protected:
     // -----------------------------------------------------------------
     // State:
 
+    TSharedPtr<class SFlightOpsPopup> RuntimePanel;
     Ship* ShipPtr = nullptr;
     FlightPlanner* FlightPlannerPtr = nullptr;
 

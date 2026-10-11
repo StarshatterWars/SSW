@@ -1,6 +1,6 @@
-/*  Project STARSHATTER WARS
+﻿/*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright � 2025-2026. All Rights Reserved.
+	Copyright © 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios
@@ -305,6 +305,7 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 	FlightDeck* SelectedDeck = nullptr;
 	int QueueScore = 1000;
 
+	int LoadoutStorage[16] = {};
 	int* Loadout = nullptr;
 	const ShipDesign* SquadronDesign = hangar->SquadronDesign(SquadronIndex);
 
@@ -358,6 +359,7 @@ CarrierAI::CreatePackage(int SquadronIndex, int PackageSize, int MissionCode, co
 		{
 			if (Name == ShipLoads->GetName())
 			{
+                Loadout = LoadoutStorage;
 				for (int i = 0; i < 16; i++)
 				{
 					Loadout[i] = ShipLoads->GetStation(i);

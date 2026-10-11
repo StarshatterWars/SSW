@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Camera/CameraActor.h"
@@ -190,17 +190,10 @@ struct FMissionCameraRig
         }
         else
         {
-            // Standard third person. Start behind Stormhawk along its local -X.
-            // Retain legacy's small velocity contribution without lagging the ship position.
-            FVector Direction = Forward;
-            const FVector Velocity = Player->GetVelocity();
-            if (Velocity.SizeSquared() > 100.0)
-            {
-                const auto& Basis = Player->GetCam();
-                const FVector LocalVelocity(FVector::DotProduct(Velocity, Basis.vpn()),
-                    FVector::DotProduct(Velocity, Basis.vrt()), FVector::DotProduct(Velocity, Basis.vup()));
-                Direction = (Forward * 2.0 + Pose.TransformVectorNoScale(LocalVelocity.GetSafeNormal()) * 0.25).GetSafeNormal();
-            }
+            // Stable third-person frame: use the displayed hull basis for both eye and aim.
+            // Mixing raw simulation velocity with the interpolated actor pose made the
+            // ship slide sideways then recenter as velocity caught up after a turn.
+            const FVector Direction = Forward;
             const FVector AuthoredChase = Visual->ChasePoint
                 ? Pose.InverseTransformPosition(Visual->ChasePoint->GetComponentLocation())
                 : FVector(Player->GetChaseLocation().Y, Player->GetChaseLocation().X, Player->GetChaseLocation().Z);
@@ -212,6 +205,16 @@ struct FMissionCameraRig
             Rotation = Aim(Bridge + Forward * Radius - Eye, Up, Rotation);
         }
         if (Eye.ContainsNaN() || Rotation.ContainsNaN()) return;
+        // The actor updates every rendered frame; the old 60 Hz timer left the camera
+        // behind on intervening frames (a large offset at fighter speeds).
+        // Attach chase view to the displayed hull so both move together between callbacks.
+        const bool FollowHull = Mode == Chase && !bDock && !bTransition;
+        if (FollowHull) {
+            if (CameraActor->GetAttachParentActor() != Visual)
+                CameraActor->AttachToActor(Visual, FAttachmentTransformRules::KeepWorldTransform);
+        } else if (CameraActor->GetAttachParentActor()) {
+            CameraActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        }
         CameraActor->SetActorLocationAndRotation(Eye, Rotation, false, nullptr, ETeleportType::TeleportPhysics);
         const double Fov = (bWide ? 90.0 : 60.0) * (bInternal ? Zoom : 1.0);
         CameraActor->GetCameraComponent()->SetFieldOfView(float(FMath::Clamp(Fov, 25.0, 110.0)));
