@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -26,7 +26,9 @@
 class Element;
 class Ship;
 class RadioMessage;
-class USound;
+class USoundBase;
+class UAudioComponent;
+class UObject;
 
 // +--------------------------------------------------------------------+
 
@@ -44,7 +46,7 @@ public:
 	virtual bool      AddPhrase(const char* key);
 	virtual bool      Start();
 
-	static void       Initialize();
+	static void       Initialize(UObject* WorldContext = nullptr);
 	static void       Close();
     static void       DiscardMessages();
 
@@ -53,8 +55,8 @@ protected:
 
 	Text              path;
 	Text              message;
-	List<USound>      sounds;
-    TArray<TStrongObjectPtr<USound>> SoundReferences;
+    TArray<TStrongObjectPtr<USoundBase>> PhraseAssets;
+    TStrongObjectPtr<UAudioComponent> PlayingAudio;
 	int               index;
 	int               channel;
 };

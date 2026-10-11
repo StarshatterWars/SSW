@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -121,6 +121,8 @@ RadioHandler::IsOrder(RadioMessageAction action)
 		break;
 
 	case RadioMessageAction::WEP_FREE:
+        result = true;
+        break;
 	case RadioMessageAction::SAY_POSITION:
 	case RadioMessageAction::LAUNCH_PROBE:  
 		result = false; 
@@ -184,10 +186,14 @@ RadioHandler::IsOrder(RadioMessageAction action)
 bool
 RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 {
+	if (!ship) return false;
 	Instruction* instruction = ship->GetRadioOrders();
+    if (!instruction) return false;
 	RadioMessageAction action = RadioMessageAction::NONE;
 
 	if (msg && msg->GetRadioAction() == RadioMessageAction::RESUME_MISSION) {
+		if (ship->GetElement()) ship->GetElement()->ResumeAssignment();
+        instruction->SetEMCON(0);
 		instruction->SetRadioAction(RadioMessageAction::NONE);
 		instruction->SetFormation(INSTRUCTION_FORMATION::NONE);
 		instruction->SetWeaponsFree(true);
@@ -199,7 +205,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 	}
 
 	if (msg && IsOrder(msg->GetRadioAction())) {
-		int posture_only = false;
+		bool posture_only = false;
 
 		action = msg->GetRadioAction();
 
@@ -316,7 +322,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 						SimElement* tgt = ((Ship*)msg_tgt)->GetElement();
 						elem->SetAssignment(tgt);
 
-						if (msg->TargetList().size() > 1)
+						if (msg->TargetList().size() > 1 && tgt)
 							instruction->SetTarget(tgt->GetName().data());
 						else
 							instruction->SetTarget(msg_tgt);
@@ -339,7 +345,7 @@ RadioHandler::ProcessMessageOrders(RadioMessage* msg, Ship* ship)
 			}
 		}
 
-		instruction->SetWeaponsFree(action <= RadioMessageAction::WEP_FREE);
+		if (!posture_only) instruction->SetWeaponsFree(action <= RadioMessageAction::WEP_FREE);
 		return true;
 	}
 
@@ -409,6 +415,7 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 	int         slot = -1;
 	bool        same_rgn = false;
 
+	if (!inbound) return false;
 	if (inbound && inbound->GetRegion() == ship->GetRegion())
 		same_rgn = true;
 
@@ -556,6 +563,7 @@ RadioHandler::Support(RadioMessage* msg, Ship* ship)
 	SimElement* baby = msg->GetSender()->GetElement();
 	SimRegion* rgn = msg->GetSender()->GetRegion();
 
+	if (!rgn || !cmdr) return false;
 	for (int i = 0; i < rgn->GetShips().size(); i++) {
 		Ship* s = rgn->GetShips().at(i);
 		SimElement* e = s->GetElement();

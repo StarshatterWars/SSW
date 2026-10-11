@@ -1,4 +1,4 @@
-/*  Project STARSHATTER WARS
+﻿/*  Project STARSHATTER WARS
 	Fractal Dev Studios
 	Copyright © 2025-2026. All Rights Reserved.
 
@@ -102,7 +102,7 @@ TacticalAI::ExecFrame(double secs)
 	const int32 Now =
 		(int32)Game::GetGameTime();
 
-	const bool bForceTacticalEveryFrameForMigration = true;
+	const bool bForceTacticalEveryFrameForMigration = false;
 
 	if (bForceTacticalEveryFrameForMigration ||
 		Now - exec_time > exec_period)
@@ -125,16 +125,6 @@ TacticalAI::ExecFrame(double secs)
 
 		CheckOrders();
 
-		if (roe == NONE &&
-			ship->GetContactList().size() > 0)
-		{
-			roe = AGRESSIVE;
-
-			UE_LOG(LogTemp, VeryVerbose,
-				TEXT("[TacticalAI::ExecFrame] MIGRATION FORCE ROE Ship='%hs' Contacts=%d"),
-				ship->GetName(),
-				ship->GetContactList().size());
-		}
 
 		SelectTarget();
 		FindThreat();
@@ -155,10 +145,11 @@ TacticalAI::ExecFrame(double secs)
 			INSTRUCTION_FORMATION formation =
 				INSTRUCTION_FORMATION::DIAMOND;
 
-			if (orders &&
-				orders->GetFormation() >= INSTRUCTION_FORMATION::DIAMOND)
+			Instruction* FormationOrders = ship->GetRadioOrders();
+			if (FormationOrders &&
+				FormationOrders->GetFormation() >= INSTRUCTION_FORMATION::DIAMOND)
 			{
-				formation = orders->GetFormation();
+				formation = FormationOrders->GetFormation();
 			}
 			else if (navpt)
 			{
@@ -530,7 +521,7 @@ bool TacticalAI::CheckFlightPlan()
 				ward = (Ship*)tgt;
 		}
 
-		if (navpt->GetEMCON() > 0) {
+		if (navpt->GetEMCON() > 0 && (!ship->GetRadioOrders() || ship->GetRadioOrders()->GetEMCON() <= 0)) {
 			int desired_emcon = navpt->GetEMCON();
 
 			if (ship_ai && (ship_ai->GetThreat() || ship_ai->GetThreatMissile()))

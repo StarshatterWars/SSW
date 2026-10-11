@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
@@ -139,6 +139,10 @@ protected:
     void SelectFighterRadio3();
     void SelectFighterRadio4();
     void SelectFighterRadio5();
+    void SelectFighterRadio6();
+    void SelectFighterRadio7();
+    void SelectFighterRadio8();
+    void SelectFighterRadio9();
     UPROPERTY(Transient) TObjectPtr<UInputAction> GearToggleAction;
     void ToggleMissionGear();
     UPROPERTY(Transient) TObjectPtr<UInputAction> MissionThrottleAction;

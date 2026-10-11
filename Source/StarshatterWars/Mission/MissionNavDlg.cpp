@@ -16,6 +16,7 @@
 */
 
 #include "MissionNavDlg.h"
+#include "Game.h"
 #include "Sim.h"
 #include "Ship.h"
 #include "SimRegion.h"
@@ -2753,10 +2754,10 @@ void UMissionNavDlg::RefreshLiveNavigation()
             Contact.ClassName = ANSI_TO_TCHAR(Vessel->GetShipClassName());
             Contact.System = ANSI_TO_TCHAR(Region->GetSystem()->GetName());
             Contact.Sector = ANSI_TO_TCHAR(Region->GetName());
-            Contact.Location = Vessel->GetLocation();
+            Contact.Location = OtherHand(Vessel->GetLocation());
             Contact.bLocal = Region == PlayerRegion;
             Contact.bPlayer = Vessel == Player;
-            Contact.Distance = Contact.bLocal ? FVector::Distance(Player->GetLocation(), Contact.Location) : 0;
+            Contact.Distance = Contact.bLocal ? FVector::Distance(Player->GetLocation(), Vessel->GetLocation()) : 0;
             Contact.Type = Vessel->IsStatic() ? EMissionNavObjectType::Station
                 : Vessel->IsStarship() ? EMissionNavObjectType::Starship
                 : Vessel->IsDropship() ? EMissionNavObjectType::Fighter : EMissionNavObjectType::None;

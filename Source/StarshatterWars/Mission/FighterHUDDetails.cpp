@@ -1,4 +1,4 @@
-#include "FighterHUDDetails.h"
+﻿#include "FighterHUDDetails.h"
 #include "Ship.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
@@ -10,6 +10,7 @@
 #include "SimElement.h"
 #include "RadioMessage.h"
 #include "RadioTraffic.h"
+#include "RadioView.h"
 #include "Instruction.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
@@ -515,6 +516,14 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),ShipHealthColor(TargetShield));
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
     }
+    TArray<FRadioHUDLine> RadioLines;
+    RadioView::GetHUDMessages(RadioLines);
+    for (int32 LineIndex = 0; LineIndex < RadioLines.Num(); ++LineIndex)
+    {
+        FLinearColor Color = HUDBlue;
+        Color.A *= RadioLines[LineIndex].Opacity;
+        Text(FVector2D(24*Scale, (94+20*LineIndex)*Scale), RadioLines[LineIndex].Caption, Color);
+    }
     if (IsRadioOpen())
     {
         TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
@@ -529,11 +538,29 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     return L+2;
 }
 
+namespace
+{
+    TArray<SimElement*> RadioElements(Ship* Player)
+    {
+        TArray<SimElement*> Result;
+        Sim* LiveSim = Sim::GetSim();
+        if (!Player || !LiveSim) return Result;
+        ListIter<SimElement> Elements = LiveSim->GetElements();
+        while (++Elements)
+        {
+            SimElement* Element = Elements.value();
+            if (Element && !Element->IsFinished() && !Element->IsSquadron() && !Element->IsStatic()
+                && Element != Player->GetElement() && Element->GetIFF() == Player->GetIFF()) Result.Add(Element);
+        }
+        return Result;
+    }
+}
+
 void SFighterHUDDetails::ToggleRadio()
 {
     if (IsRadioOpen()) { CloseRadio(); return; }
     Ship* P = PlayerShip();
-    if (P && P->IsDropship()) { RadioPage = 0; RadioRecipient = 0; }
+    if (P && (P->IsDropship() || P->IsStarship())) { CloseRadio(); RadioPage = 0; }
 }
 void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const
 {
@@ -553,7 +580,28 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
     const int32 Index = P->GetElementIndex();
     const int32 WingIndex = Index==1 ? 2 : Index==2 ? 1 : Index==3 ? 4 : Index==4 ? 3 : 0;
     Ship* Wing = Element && WingIndex ? Element->GetShip(WingIndex) : nullptr;
-    if (RadioPage == 0)
+    if (RadioPage == 0 && P->IsStarship())
+    {
+        const auto Elements = RadioElements(P);
+        const int32 Pages = FMath::Max(1, (Elements.Num() + 7) / 8);
+        const int32 PageIndex = FMath::Clamp(RadioRecipientPage, 0, Pages-1);
+        Title = FString::Printf(TEXT("RADIO %d/%d"), PageIndex+1, Pages);
+        for (int32 Slot = 0; Slot < 8; ++Slot)
+        {
+            const int32 Offset = PageIndex*8 + Slot;
+            if (!Elements.IsValidIndex(Offset)) break;
+            SimElement* Recipient = Elements[Offset];
+            const bool Active = Recipient->IsActive();
+            Labels.Add(FString(ANSI_TO_TCHAR(Recipient->GetName().data())) + (Active ? TEXT("") : TEXT(" (UNAVAILABLE)")));
+            Commands.Add(Recipient->GetIdentity()); Enabled.Add(CanTransmit && Active);
+        }
+        if (Pages > 1)
+        {
+            while (Labels.Num() < 8) { Labels.Add(TEXT("--")); Commands.Add(0); Enabled.Add(false); }
+            Labels.Add(TEXT("NEXT PAGE")); Commands.Add(-99); Enabled.Add(true);
+        }
+    }
+    else if (RadioPage == 0)
     {
         Page(TEXT("Wingman"),1,Wing && !Wing->IsDead());
         Page(TEXT("Element"),2,Element != nullptr);
@@ -605,21 +653,37 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
     if (!P) { CloseRadio(); return; }
     if (Number==0)
     {
-        if (RadioPage==0) CloseRadio();
-        else if (RadioPage==1 || RadioPage==7) RadioPage=0;
-        else RadioPage=1;
+        if (RadioHistory.IsEmpty()) CloseRadio();
+        else RadioPage = RadioHistory.Pop();
         return;
     }
     TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
     BuildRadioRows(Labels,Commands,Enabled,Title);
     const int32 I=Number-1;
     if (!Commands.IsValidIndex(I) || !Enabled[I]) return;
-    if (RadioPage==0) { RadioRecipient=Number; RadioPage=Number==3 ? 7 : 1; return; }
-    if (RadioPage==1) { RadioPage=-Commands[I]; return; }
+    if (RadioPage==0 && P->IsStarship())
+    {
+        if (Commands[I] == -99)
+        {
+            const int32 Pages = FMath::Max(1, (RadioElements(P).Num()+7)/8);
+            RadioRecipientPage = (RadioRecipientPage+1)%Pages;
+            return;
+        }
+        RadioElementId = Commands[I]; RadioRecipient = 4;
+        RadioHistory.Add(RadioPage); RadioPage = 1; return;
+    }
+    if (RadioPage==0) { RadioHistory.Add(RadioPage); RadioRecipient=Number; RadioPage=Number==3 ? 7 : 1; return; }
+    if (RadioPage==1) { RadioHistory.Add(RadioPage); RadioPage=-Commands[I]; return; }
     const RadioMessageAction Action=static_cast<RadioMessageAction>(Commands[I]);
     SimElement* Element=P->GetElement();
     RadioMessage* Message=nullptr;
-    if (RadioRecipient==2 && Element) Message=new RadioMessage(Element,P,Action);
+    if (RadioRecipient==4)
+    {
+        for (SimElement* Recipient : RadioElements(P))
+            if (Recipient->GetIdentity()==RadioElementId && Recipient->IsActive())
+            { Message = new RadioMessage(Recipient,P,Action); break; }
+    }
+    else if (RadioRecipient==2 && Element) Message=new RadioMessage(Element,P,Action);
     else
     {
         Ship* Destination=nullptr;

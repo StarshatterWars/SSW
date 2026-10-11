@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -40,6 +40,13 @@ class Sim;
 // legacy helper (you already have it in Starshatter):
 class MenuHistory;
 
+struct FRadioHUDLine
+{
+    FString Caption;
+    float Opacity = 1;
+    double ExpiresAt = 0;
+};
+
 class RadioView : public View, public SimObserver
 {
 public:
@@ -59,6 +66,7 @@ public:
 
     static void       Message(const char* msg);
     static void       ClearMessages();
+    static void GetHUDMessages(TArray<FRadioHUDLine>& OutLines);
 
     virtual bool         Update(SimObject* obj) override;
     virtual const char* GetObserverName() const override;

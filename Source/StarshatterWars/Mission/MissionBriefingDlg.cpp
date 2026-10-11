@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -1334,6 +1334,39 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         RadioChoiceContext->MapKey(Choice,EKeys::Five);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio5);
     }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        Choice->bConsumeInput=true;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Six);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio6);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        Choice->bConsumeInput=true;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Seven);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio7);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        Choice->bConsumeInput=true;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Eight);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio8);
+    }
+    {
+        UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
+        Choice->ValueType=EInputActionValueType::Boolean;
+        Choice->bConsumeInput=true;
+        RadioChoiceActions.Add(Choice);
+        RadioChoiceContext->MapKey(Choice,EKeys::Nine);
+        MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio9);
+    }
+
 
     // Transient context remains for the wheel and existing HUD shortcuts only.
     MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
@@ -2234,6 +2267,10 @@ void UMissionBriefingDlg::SelectFighterRadio2() { SelectFighterRadio(2); }
 void UMissionBriefingDlg::SelectFighterRadio3() { SelectFighterRadio(3); }
 void UMissionBriefingDlg::SelectFighterRadio4() { SelectFighterRadio(4); }
 void UMissionBriefingDlg::SelectFighterRadio5() { SelectFighterRadio(5); }
+void UMissionBriefingDlg::SelectFighterRadio6() { SelectFighterRadio(6); }
+void UMissionBriefingDlg::SelectFighterRadio7() { SelectFighterRadio(7); }
+void UMissionBriefingDlg::SelectFighterRadio8() { SelectFighterRadio(8); }
+void UMissionBriefingDlg::SelectFighterRadio9() { SelectFighterRadio(9); }
 
 void UMissionBriefingDlg::ToggleMissionGear()
 {

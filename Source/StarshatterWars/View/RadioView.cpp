@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -39,6 +39,7 @@
 
 #include "Misc/ScopeLock.h"
 #include "Misc/Char.h"
+#include "HAL/PlatformTime.h"
 #include "GameStructs.h"
 
 // ---------------------------------------------------------------------
@@ -68,6 +69,7 @@ static int   num_pages = 0;
 static const int PAGE_SIZE = 9;
 
 static MenuHistory history;
+static TArray<FRadioHUDLine> RadioHUDLines;
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -680,7 +682,13 @@ Menu* RadioView::GetRadioMenu(Ship* s)
 
 void RadioView::Message(const char* msg)
 {
+    if (!msg || !*msg) return;
     FScopeLock Lock(&sync);
+    if (RadioHUDLines.Num() >= MAX_MSG) RadioHUDLines.RemoveAt(0);
+    FRadioHUDLine Line;
+    Line.Caption = ANSI_TO_TCHAR(msg);
+    Line.ExpiresAt = FPlatformTime::Seconds() + 10.0;
+    RadioHUDLines.Add(MoveTemp(Line));
 
     if (radio_view) {
         int index = -1;
@@ -708,6 +716,7 @@ void RadioView::Message(const char* msg)
 void RadioView::ClearMessages()
 {
     FScopeLock Lock(&sync);
+    RadioHUDLines.Reset();
 
     if (radio_view) {
         for (int i = 0; i < MAX_MSG; i++) {
@@ -715,4 +724,13 @@ void RadioView::ClearMessages()
             radio_view->msg_time[i] = 0;
         }
     }
+}
+
+void RadioView::GetHUDMessages(TArray<FRadioHUDLine>& OutLines)
+{
+    FScopeLock Lock(&sync);
+    const double Now = FPlatformTime::Seconds();
+    RadioHUDLines.RemoveAll([Now](const FRadioHUDLine& Line) { return Line.ExpiresAt <= Now; });
+    OutLines = RadioHUDLines;
+    for (auto& Line : OutLines) Line.Opacity = static_cast<float>(FMath::Clamp(Line.ExpiresAt - Now, 0.0, 1.0));
 }

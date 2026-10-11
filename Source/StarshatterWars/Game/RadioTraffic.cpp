@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -35,6 +35,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogRadioTraffic, Log, All);
 // +----------------------------------------------------------------------+
 
 RadioTraffic* RadioTraffic::radio_traffic = nullptr;
+static int32 RadioDispatchDepth = 0;
 
 // +----------------------------------------------------------------------+
 
@@ -105,6 +106,7 @@ RadioTraffic::Transmit(RadioMessage* msg)
 	if (msg && radio_traffic) {
 		radio_traffic->SendRadioMessage(msg);
 	}
+    else delete msg;
 }
 
 // +----------------------------------------------------------------------+
@@ -113,6 +115,7 @@ void
 RadioTraffic::SendRadioMessage(RadioMessage* msg)
 {
 	if (!msg) return;
+    ++RadioDispatchDepth;
 
 	Sim* sim = Sim::GetSim();
 	Ship* player = sim ? sim->GetPlayerShip() : nullptr;
@@ -145,6 +148,8 @@ RadioTraffic::SendRadioMessage(RadioMessage* msg)
 
 		delete msg;
 	}
+    if (--RadioDispatchDepth == 0)
+        while (traffic.size() > 256) delete traffic.removeIndex(0);
 }
 
 // +----------------------------------------------------------------------+
@@ -370,6 +375,7 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 	UE_LOG(LogRadioTraffic, Verbose, TEXT("RADIO: %hs"), txt_buf);
 
 	// vox:
+    vox_channel = FMath::Clamp(vox_channel, 0, 7);
 	const char* path[8] = { "1", "1", "2", "3", "4", "5", "6", "7" };
 
 	RadioVox* vox = new RadioVox(vox_channel, path[vox_channel], txt_buf);

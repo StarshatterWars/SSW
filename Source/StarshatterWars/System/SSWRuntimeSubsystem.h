@@ -1,4 +1,4 @@
-/*
+﻿/*
     Project Starshatter Wars
     Fractal Dev Studios
 
@@ -35,7 +35,7 @@ class Sim;
 class CameraManager;
 class MultiController;
 
-class SimShot;
+class SimShot; class SimRegion; class AWaypointActor;
 class UStaticMesh;
 class Ship;
 class AActor;
@@ -121,10 +121,17 @@ private:
     AActor* FindRegionActorForRuntimeShip(Ship* RuntimeShip) const;
 public:
     FVector GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const;
+    FVector GetVisualLocationForRegion(SimRegion* Region, const FVector& SimPoint) const;
     bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
 private:
+    void UpdateMissionWaypoints();
+    void ClearMissionWaypoints();
+    double WaypointRefreshSeconds = 0;
+    bool bWaypointClassResolved = false;
+    UPROPERTY(Transient) TSubclassOf<AWaypointActor> WaypointClass;
+    TMap<FString, TWeakObjectPtr<AWaypointActor>> MissionWaypoints;
     void UpdateProjectileVisuals();
     void ClearProjectileVisuals();
     TMap<SimShot*, TWeakObjectPtr<AActor>> ProjectileVisuals;

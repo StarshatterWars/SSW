@@ -1,216 +1,105 @@
-/*  Project Starshatter Wars
-	Fractal Dev Studios
-	Copyright (c) 2025-2026. All Rights Reserved.
-
-	SUBSYSTEM:    Stars.exe
-	FILE:         RadioVox.cpp
-	AUTHOR:       Carlos Bott
-
-	ORIGINAL AUTHOR: John DiCamillo
-	ORIGINAL STUDIO: Destroyer Studios LLC
-
-	OVERVIEW
-	========
-	View class for Radio Communications HUD Overlay
-*/
-
-#include "RadioVox.h"
+﻿#include "RadioVox.h"
 #include "RadioView.h"
 #include "AudioConfig.h"
-
-#include "DataLoader.h"
-#include "Game.h"
-#include "Sound.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 #include "Containers/Ticker.h"
+#include "UObject/WeakObjectPtr.h"
 
-// Minimal Unreal logging support:
-#include "Logging/LogMacros.h"
+namespace
+{
+    TWeakObjectPtr<UObject> RadioWorldContext;
+    FString PhraseKey(const FString& Phrase)
+    {
+        FString Key;
+        for (TCHAR C : Phrase.ToLower()) Key.AppendChar(FChar::IsAlnum(C) ? C : TCHAR('_'));
+        return Key;
+    }
+    const TMap<FString,FString>& PhrasePaths()
+    {
+        static const TMap<FString,FString> Paths = {
+#include "RadioAudioAssets.inl"
+        };
+        return Paths;
+    }
+}
 
-DEFINE_LOG_CATEGORY_STATIC(LogTempRadioVox, Log, All);
-
-// +====================================================================+
-//
-// RADIO VOX CONTROLLER:
-//
-// UObjects and audio components must be accessed on the game thread.
 class RadioVoxController
 {
 public:
-    enum { MAX_QUEUE = 5 };
-    RadioVoxController();
-    ~RadioVoxController();
-    bool Add(RadioVox* vox);
-    void Update();
-    List<RadioVox> queue;
+    List<RadioVox> Queue;
     FTSTicker::FDelegateHandle TickHandle;
+    RadioVoxController()
+    {
+        TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([this](float)
+        {
+            UWorld* World = RadioWorldContext.IsValid() ? RadioWorldContext->GetWorld() : nullptr;
+            if (!World || World->IsPaused()) return true;
+            if (Queue.size() && !Queue.first()->Update()) delete Queue.removeIndex(0);
+            return true;
+        }), 0.02f);
+    }
+    ~RadioVoxController() { FTSTicker::GetCoreTicker().RemoveTicker(TickHandle); Queue.destroy(); }
+    bool Add(RadioVox* Vox)
+    {
+        if (!Vox || Vox->PhraseAssets.IsEmpty() || Queue.size() >= 16) return false;
+        Queue.append(Vox); return true;
+    }
 };
-static RadioVoxController* controller = nullptr;
+static RadioVoxController* RadioAudioController = nullptr;
 
-RadioVoxController::RadioVoxController()
+void RadioVox::Initialize(UObject* WorldContext)
 {
-    TickHandle = FTSTicker::GetCoreTicker().AddTicker(
-        FTickerDelegate::CreateLambda([this](float) { Update(); return true; }), 0.05f);
+    if (WorldContext) RadioWorldContext = WorldContext;
+    if (!RadioAudioController) RadioAudioController = new RadioVoxController;
 }
-RadioVoxController::~RadioVoxController()
+void RadioVox::Close()
 {
-    FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
-    queue.destroy();
+    delete RadioAudioController; RadioAudioController = nullptr; RadioWorldContext.Reset();
 }
-
-void
-RadioVoxController::Update()
-{
-
-	if (queue.size()) {
-		RadioVox* vox = queue.first();
-
-		if (!vox->Update())
-			delete queue.removeIndex(0);
-	}
-}
-
-bool
-RadioVoxController::Add(RadioVox* vox)
-{
-	if (!vox || vox->sounds.isEmpty())
-		return false;
-
-
-	if (queue.size() < MAX_QUEUE) {
-		queue.append(vox);
-		return true;
-	}
-
-	UE_LOG(LogTempRadioVox, Warning, TEXT("RadioVoxController: queue full (MAX_QUEUE=%d)."), MAX_QUEUE);
-	return false;
-}
-
-// +====================================================================+
-//
-// RADIO VOX MESSAGE:
-//
-
-void
-RadioVox::Initialize()
-{
-	if (!controller) {
-		controller = new RadioVoxController;
-	}
-}
-
-void
-RadioVox::Close()
-{
-	delete controller;
-	controller = 0;
-}
-
-// +--------------------------------------------------------------------+
-
-RadioVox::RadioVox(int n, const char* p, const char* m)
-	: path(p), message(m), index(0), channel(n)
-{
-}
-
+void RadioVox::DiscardMessages() { if (RadioAudioController) RadioAudioController->Queue.destroy(); }
+RadioVox::RadioVox(int n, const char* p, const char* m) : path(p), message(m), index(0), channel(n) {}
 RadioVox::~RadioVox()
 {
-    for (int i = 0; i < sounds.size(); ++i)
-        if (USound* Sound = sounds[i]) Sound->Release();
-    sounds.clear(); // USound is a UObject: never delete it through List::destroy.
-    SoundReferences.Empty();
+    if (PlayingAudio.IsValid()) { PlayingAudio->Stop(); PlayingAudio->DestroyComponent(); }
+    PlayingAudio.Reset(); PhraseAssets.Empty();
 }
-
-void RadioVox::DiscardMessages()
+bool RadioVox::AddPhrase(const char* Key)
 {
-    if (controller) controller->queue.destroy();
+    if (!Key || !*Key || AudioConfig::VoxVolume() <= AudioConfig::Silence()) return false;
+    FString Name = PhraseKey(ANSI_TO_TCHAR(Key));
+    // Legacy command text and the imported recording occasionally differ.
+    if (Name == TEXT("bracket")) Name = TEXT("bracket_target");
+    const FString Lookup = FString(ANSI_TO_TCHAR(path.data())) + TEXT("|") + Name;
+    const FString* AssetPath = PhrasePaths().Find(Lookup);
+    if (!AssetPath) return false; // Never substitute an unrelated acknowledgement.
+    USoundBase* Sound = LoadObject<USoundBase>(nullptr, **AssetPath);
+    if (!Sound) return false;
+    PhraseAssets.Emplace(Sound);
+    return true;
 }
-
-// +--------------------------------------------------------------------+
-
-bool
-RadioVox::AddPhrase(const char* key)
+bool RadioVox::Start() { return RadioAudioController && RadioWorldContext.IsValid() && RadioAudioController->Add(this); }
+bool RadioVox::Update()
 {
-	if (AudioConfig::VoxVolume() <= AudioConfig::Silence())
-		return false;
-
-	DataLoader* loader = DataLoader::GetLoader();
-	if (!loader)
-		return false;
-
-	if (key && *key) {
-		char datapath[256];
-		char filename[256];
-
-		sprintf_s(datapath, "Vox/%s/", path.data());
-		sprintf_s(filename, "%s.wav", key);
-
-		bool   use_fs = loader->IsFileSystemEnabled();
-		USound* sound = 0;
-
-		loader->UseFileSystem(true);
-		loader->SetDataPath(datapath);
-		loader->LoadSound(filename, sound, USound::LOCALIZED, true); // optional sound
-		loader->SetDataPath("");
-		loader->UseFileSystem(use_fs);
-
-		if (sound) {
-			sound->SetVolume(AudioConfig::VoxVolume());
-			sound->SetFlags(USound::LOCALIZED | USound::LOCKED);
-			sound->SetFilename(filename);
-			sounds.append(sound);
-            SoundReferences.Emplace(sound);
-
-			return true;
-		}
-
-		UE_LOG(LogTempRadioVox, Verbose, TEXT("RadioVox: missing optional phrase '%hs/%hs'."), datapath, filename);
-	}
-
-	return false;
-}
-
-// +--------------------------------------------------------------------+
-
-bool
-RadioVox::Start()
-{
-	if (controller)
-		return controller->Add(this);
-
-	UE_LOG(LogTempRadioVox, Warning, TEXT("RadioVox::Start called before RadioVox::Initialize()."));
-	return false;
-}
-
-bool
-RadioVox::Update()
-{
-	if (message.length()) {
-		RadioView::Message(message);
-		message = "";
-	}
-
-	bool active = false;
-
-	while (!active && index < sounds.size()) {
-		USound* s = sounds[index];
-
-		if (s->IsReady()) {
-			if (channel & 1)
-				s->SetPan(channel * -3000);
-			else
-				s->SetPan(channel * 3000);
-
-			s->Play();
-			active = true;
-		}
-		else if (s->IsPlaying()) {
-			s->Update();
-			active = true;
-		}
-		else {
-			index++;
-		}
-	}
-
-	return active;
+    if (message.length()) { RadioView::Message(message.data()); message = ""; }
+    if (PlayingAudio.IsValid())
+    {
+        if (PlayingAudio->IsPlaying()) return true;
+        PlayingAudio->DestroyComponent(); PlayingAudio.Reset();
+    }
+    while (index < PhraseAssets.Num())
+    {
+        USoundBase* Sound = PhraseAssets[index++].Get();
+        if (!Sound || !RadioWorldContext.IsValid()) continue;
+        const float Volume = FMath::Pow(10.0f, float(AudioConfig::VoxVolume()) / 2000.0f);
+        UAudioComponent* Audio = UGameplayStatics::SpawnSound2D(RadioWorldContext.Get(), Sound,
+            Volume, 1.0f, 0.0f, nullptr, false, false);
+        if (!Audio) continue;
+        Audio->bIsUISound = false;
+        PlayingAudio.Reset(Audio);
+        return true;
+    }
+    return false;
 }

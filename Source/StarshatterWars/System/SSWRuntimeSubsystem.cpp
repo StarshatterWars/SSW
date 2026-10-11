@@ -1,4 +1,4 @@
-
+﻿
 #include "SSWRuntimeSubsystem.h"
 
 #include "SimShot.h"
@@ -22,6 +22,9 @@
 #include "Starshatter.h"
 
 #include "Game.h"
+#include "WaypointActor.h"
+#include "Instruction.h"
+#include "Engine/World.h"
 #include "Sim.h"
 #include "TimerSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -104,6 +107,7 @@ void USSWRuntimeSubsystem::Deinitialize()
         LegacyGame = nullptr;
     }
 
+    RadioVox::Close();
     Super::Deinitialize();
 }
 
@@ -206,7 +210,7 @@ void USSWRuntimeSubsystem::CreateWorld()
 
     RadioTraffic::Initialize();
     RadioView::Initialize();
-    RadioVox::Initialize();
+    RadioVox::Initialize(this);
     QuantumView::Initialize();
     TacticalView::Initialize();
 
@@ -314,6 +318,8 @@ void USSWRuntimeSubsystem::UpdateWorld()
 
         SimInstance->ExecFrame(Seconds);
         UpdateProjectileVisuals();
+        WaypointRefreshSeconds += Seconds;
+        if (WaypointRefreshSeconds >= 0.25) { WaypointRefreshSeconds = 0; UpdateMissionWaypoints(); }
 
         const uint32 AfterTime =
             Game::GetGameTime();
@@ -755,60 +761,6 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
                 RuntimeShip->GetName())));
 #endif
 
-    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-    {
-        // Bound static geometry about the actor pivot, excluding particle effects.
-        double Radius = FMath::Max(100.0, RuntimeShip->GetRadius() * 2.0);
-        TArray<UStaticMeshComponent*> Meshes;
-        ShipActor->GetComponents<UStaticMeshComponent>(Meshes);
-        for (UStaticMeshComponent* Mesh : Meshes)
-        {
-            if (!Mesh || !Mesh->GetStaticMesh()) continue;
-            const FBoxSphereBounds Bounds = Mesh->CalcBounds(Mesh->GetComponentTransform());
-            Radius = FMath::Max(Radius,
-                FVector::Distance(Bounds.Origin, ShipActor->GetActorLocation()) + Bounds.BoxExtent.Size());
-        }
-        MissionPresentationOffsets.Remove(RuntimeShip);
-        MissionPresentationRadii.Add(RuntimeShip, Radius);
-        FVector Position = GetVisualSpawnLocationForRuntimeShip(RuntimeShip);
-        FVector Direction = FVector::UpVector;
-        const FString RegionName = RuntimeShip->GetRegion()
-            ? ANSI_TO_TCHAR(RuntimeShip->GetRegion()->GetName()) : TEXT("");
-        for (const FSpawnedSystemRegion& Region : Builder->GetSpawnedRegions())
-        {
-            if (!Region.RegionName.Equals(RegionName, ESearchCase::IgnoreCase) &&
-                !Region.RegionName.Equals(RegionName + TEXT("_REGION"), ESearchCase::IgnoreCase)) continue;
-            FVector Center = Region.ParentActor ? Region.ParentActor->GetActorLocation() : Region.SpawnLocation;
-            if (APlanetActor* Planet = Cast<APlanetActor>(Region.ParentActor.Get()))
-                if (UStaticMeshComponent* Mesh = Planet->GetPlanetMeshComponent())
-                    Center = Mesh->CalcBounds(Mesh->GetComponentTransform()).Origin;
-            Direction = (Position - Center).GetSafeNormal();
-            if (Direction.IsNearlyZero()) Direction = FVector::UpVector;
-            break;
-        }
-        const FVector BasePosition = Position;
-        // Move only outward. Each conflict advances beyond that ship's entire
-        // clearance sphere; at most one advance per existing actor is necessary.
-        for (int32 Pass = 0; !RuntimeShip->GetDock() && Pass <= MissionPresentationShips.Num(); ++Pass)
-        {
-            bool bMoved = false;
-            for (const TWeakObjectPtr<AShipActor>& Existing : MissionPresentationShips)
-            {
-                AShipActor* Other = Existing.Get();
-                if (!Other || Other->IsActorBeingDestroyed()) continue;
-                Ship* Peer = Other->GetRuntimeShip();
-                if (!Peer || Peer->GetRegion() != RuntimeShip->GetRegion()) continue;
-                const double* PeerRadius = MissionPresentationRadii.Find(Peer);
-                const double Clearance = 1.25 * (Radius + (PeerRadius ? *PeerRadius : Radius)) + 100.0;
-                const FVector Delta = GetVisualSpawnLocationForRuntimeShip(Peer) - Position;
-                if (Delta.SizeSquared() >= Clearance * Clearance) continue;
-                Position += Direction * (FVector::DotProduct(Delta, Direction) + Clearance + 1.0);
-                bMoved = true;
-            }
-            if (!bMoved) break;
-        }
-        MissionPresentationOffsets.Add(RuntimeShip, Position - BasePosition);
-    }
     // Register even when no presentation builder exists, so the next
     // Begin/EndMissionPresentation can remove pre-mission visual proxies.
     MissionPresentationShips.AddUnique(ShipActor);
@@ -927,84 +879,7 @@ FVector
 USSWRuntimeSubsystem::GetRegionVisualLocationForRuntimeShip(
     Ship* RuntimeShip) const
 {
-    if (!RuntimeShip)
-    {
-        return FVector::ZeroVector;
-    }
-
-    const FVector LegacyLoc = RuntimeShip->GetLocation();
-    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-    {
-        SimRegion* SimRgn = RuntimeShip->GetRegion();
-        const FString RegionName = SimRgn ? ANSI_TO_TCHAR(SimRgn->GetName()) : TEXT("");
-        for (const FSpawnedSystemRegion& Region : Builder->GetSpawnedRegions())
-        {
-            if (!Region.RegionName.Equals(RegionName, ESearchCase::IgnoreCase) &&
-                !Region.RegionName.Equals(RegionName + TEXT("_REGION"), ESearchCase::IgnoreCase)) continue;
-            FVector Center = Region.ParentActor ? Region.ParentActor->GetActorLocation() : Region.SpawnLocation;
-            double BodyRadius = FMath::Max(1.0f, Region.InnerRadiusUnits);
-            if (APlanetActor* Planet = Cast<APlanetActor>(Region.ParentActor.Get()))
-            {
-                if (UStaticMeshComponent* Mesh = Planet->GetPlanetMeshComponent())
-                {
-                    const FBoxSphereBounds Bounds = Mesh->CalcBounds(Mesh->GetComponentTransform());
-                    Center = Bounds.Origin;
-                    BodyRadius = FMath::Max(BodyRadius, Bounds.BoxExtent.GetMax());
-                }
-            }
-            const double BandWidth = FMath::Max(1.0f, Region.OuterRadiusUnits - Region.InnerRadiusUnits);
-            OrbitalRegion* Orbital = SimRgn ? SimRgn->GetOrbitalRegion() : nullptr;
-            const double LegacyRadius = Orbital ? FMath::Max(1.0, double(Orbital->Radius())) : 200000.0;
-            FVector PresentationLoc = LegacyLoc;
-            if (SimRgn && !SimRgn->IsAirSpace() && !RuntimeShip->IsStatic())
-            {
-                // One repeatable depth offset per group for this mission launch.
-                // Never write it back to the simulation or its authored navigation.
-                CombatUnit* Unit = RuntimeShip->GetCombatUnit();
-                CombatGroup* Group = Unit ? Unit->GetCombatGroup() : nullptr;
-                FString Key = RegionName;
-                if (Group)
-                    Key += FString::Printf(TEXT("|%d|%d|%hs"),
-                        int32(Group->GetEmpire()), Group->GetID(), Group->GetName().data());
-                else if (SimElement* Element = RuntimeShip->GetElement())
-                    Key += TEXT("|") + FString(ANSI_TO_TCHAR(Element->GetName().data()));
-                else
-                    Key += TEXT("|") + FString(ANSI_TO_TCHAR(RuntimeShip->GetName()));
-                FRandomStream DepthRandom{ static_cast<int32>(HashCombine(MissionPresentationSeed, GetTypeHash(Key))) };
-                const double DepthRange = FMath::Clamp(LegacyRadius * 0.20, 15000.0, 60000.0);
-                PresentationLoc.Z += DepthRandom.FRandRange(-1.0f, 1.0f) * DepthRange;
-            }
-            const FVector Offset = ConvertLegacyShipLocationToUE(PresentationLoc) * (BandWidth / LegacyRadius);
-            // Region-map shell: authored offsets start outside the physical surface.
-            // Reserve clearance for the ship as well as the central body's radius.
-            const double* VisualRadius = MissionPresentationRadii.Find(RuntimeShip);
-            const double Inner = BodyRadius + FMath::Max(100.0,
-                VisualRadius ? *VisualRadius * 1.25 : RuntimeShip->GetRadius() * 2.0);
-            const FVector Separation = MissionPresentationOffsets.FindRef(RuntimeShip);
-            if (!Offset.IsNearlyZero()) return Center + Offset.GetSafeNormal() * (Inner + Offset.Size()) + Separation;
-            // Stable placement for authored 0,0,0 entries; no random jitter each tick.
-            const uint32 Hash = GetTypeHash(FString(ANSI_TO_TCHAR(RuntimeShip->GetName())));
-            FRandomStream OriginRandom{ static_cast<int32>(Hash) };
-            const FVector Direction = OriginRandom.VRand();
-            return Center + Direction * (Inner + BandWidth * 0.15) + Separation;
-        }
-    }
-
-    const FVector LocalUEOffset =
-        ConvertLegacyShipLocationToUE(
-            LegacyLoc);
-
-    AActor* RegionActor =
-        FindRegionActorForRuntimeShip(
-            RuntimeShip);
-
-    if (RegionActor)
-    {
-        return RegionActor->GetActorTransform().TransformPosition(
-            LocalUEOffset) + MissionPresentationOffsets.FindRef(RuntimeShip);
-    }
-
-    return LocalUEOffset + MissionPresentationOffsets.FindRef(RuntimeShip);
+    return RuntimeShip ? GetVisualLocationForRegion(RuntimeShip->GetRegion(), RuntimeShip->GetLocation()) : FVector::ZeroVector;
 }
 
 
@@ -1038,6 +913,7 @@ void USSWRuntimeSubsystem::HandleMissionUnloading()
 
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
+    ClearMissionWaypoints();
     ClearProjectileVisuals();
     for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
     {
@@ -1058,38 +934,16 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
 // per-group depth and overlap spacing are not valid inside a hangar.
 bool USSWRuntimeSubsystem::GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const
 {
-    if (!Carrier) return false;
-    for (const TWeakObjectPtr<AShipActor>& Entry : MissionPresentationShips) {
-        AShipActor* Actor=Entry.Get();
-        if (!Actor || Actor->IsActorBeingDestroyed() || Actor->GetRuntimeShip()!=Carrier) continue;
-        const FVector Delta=SimPoint-Carrier->GetLocation();
-        const auto& Basis=Carrier->GetCam();
-        const FVector Local(FVector::DotProduct(Delta, Basis.vpn()),
-            FVector::DotProduct(Delta, Basis.vrt()), FVector::DotProduct(Delta, Basis.vup()));
-        OutPoint=Actor->GetActorTransform().TransformPosition(Local);
-        return true;
-    }
-    return false;
+    if (!Carrier || !Carrier->GetRegion()) return false;
+    OutPoint = GetVisualLocationForRegion(Carrier->GetRegion(), SimPoint);
+    return true;
 }
 
 FVector USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const
 {
-    const FVector RegionPosition=GetRegionVisualLocationForRuntimeShip(RuntimeShip);
-    if (!RuntimeShip) return RegionPosition;
-    Ship* Carrier=RuntimeShip->GetCarrier();
-    if (!Carrier || Carrier==RuntimeShip || !RuntimeShip->GetDock() ||
-        Carrier->GetRegion()!=RuntimeShip->GetRegion()) return RegionPosition;
-    FVector DeckPosition;
-    if (!GetCarrierVisualPoint(Carrier, RuntimeShip->GetLocation(), DeckPosition)) return RegionPosition;
-    const EOPSMode Phase=RuntimeShip->GetFlightPhase();
-    if (Phase<EOPSMode::LAUNCH || Phase>=EOPSMode::DOCKING) return DeckPosition;
-    // Release into the existing region layout continuously, and reverse on approach.
-    // Keep the entire bay and initial departure in a single rigid frame.
-    const double Radius=FMath::Max(100.0, double(Carrier->GetRadius()));
-    const double Distance=(RuntimeShip->GetLocation()-Carrier->GetLocation()).Size();
-    double Blend=FMath::Clamp((Distance-4.0*Radius)/(8.0*Radius), 0.0, 1.0);
-    Blend=Blend*Blend*(3.0-2.0*Blend);
-    return FMath::Lerp(DeckPosition, RegionPosition, Blend);
+    // Ship positions already use simulation handedness. No extra deck interpolation,
+    // radius-dependent displacement, random depth or collision-based visual offsets.
+    return GetRegionVisualLocationForRuntimeShip(RuntimeShip);
 }
 
 void USSWRuntimeSubsystem::ClearProjectileVisuals()
@@ -1158,4 +1012,98 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
     for(auto It=ProjectileVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
         if(It.Value().IsValid())It.Value()->Destroy();It.RemoveCurrent();
     }
+}
+
+FVector USSWRuntimeSubsystem::GetVisualLocationForRegion(SimRegion* Region, const FVector& SimPoint) const
+{
+    const FVector Local = ConvertLegacyShipLocationToUE(SimPoint);
+    if (!Region) return Local;
+    OrbitalRegion* Orbital = Region->GetOrbitalRegion();
+    const auto* Primary = Orbital ? Orbital->Primary() : nullptr;
+    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+    {
+        // Planet art uses a compressed radius. Preserve the legacy orbital altitude
+        // above its surface, then translate the ENTIRE sector by that one anchor.
+        // Differences between any two ships/waypoints remain exactly the sim delta.
+        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
+        {
+            if (Body.bIsOrbit || !Primary || !Body.BodyName.Equals(ANSI_TO_TCHAR(Primary->GetName()), ESearchCase::IgnoreCase)) continue;
+            const FVector Center = IsValid(Body.Actor) ? Body.Actor->GetActorLocation() : Body.SpawnLocation;
+            const FVector OrbitDelta = ConvertLegacyShipLocationToUE(OtherHand(Orbital->Location() - Primary->Location()));
+            const double OrbitDistance = OrbitDelta.Size();
+            const double Altitude = OrbitDistance - Primary->Radius();
+            const double VisualOrbit = FMath::Max(0.0, double(Body.VisualRadiusUnits) + Altitude);
+            return Center + OrbitDelta.GetSafeNormal() * VisualOrbit + Local;
+        }
+        // Unparented sectors retain their orbital offset from the system anchor.
+        if (Orbital)
+            return Builder->GetActorLocation() + ConvertLegacyShipLocationToUE(OtherHand(Orbital->Location())) + Local;
+    }
+    return ConvertLegacyShipLocationToUE(OtherHand(Region->GetLocation())) + Local;
+}
+
+void USSWRuntimeSubsystem::ClearMissionWaypoints()
+{
+    for (auto& Pair : MissionWaypoints) if (Pair.Value.IsValid()) Pair.Value->Destroy();
+    MissionWaypoints.Empty();
+    WaypointRefreshSeconds = 0;
+    WaypointClass = nullptr;
+    bWaypointClassResolved = false;
+}
+
+void USSWRuntimeSubsystem::UpdateMissionWaypoints()
+{
+    Sim* LiveSim = Sim::GetSim();
+    UWorld* World = GetWorld();
+    ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get();
+    if (!LiveSim || !LiveSim->GetMission() || !World || !Builder) return;
+    if (!bWaypointClassResolved)
+    {
+        bWaypointClassResolved = true;
+        WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Actors/BP_Waypoint.BP_Waypoint_C"));
+        if (!WaypointClass) UE_LOG(LogSSWRuntime, Warning, TEXT("Create /Game/Actors/BP_Waypoint with the supplied editor script. Using hidden native waypoint actors until then."));
+    }
+    TSet<FString> ActiveKeys;
+    ListIter<SimElement> Elements = LiveSim->GetElements();
+    while (++Elements)
+    {
+        SimElement* Element = Elements.value();
+        if (!Element || Element->IsFinished() || Element->IsSquadron()) continue;
+        ListIter<Instruction> Plan = Element->GetFlightPlan();
+        int32 Index = 0;
+        while (++Plan)
+        {
+            Instruction* Point = Plan.value();
+            ++Index;
+            if (!Point || !Point->GetRegion()) continue;
+            const FString Key = FString::Printf(TEXT("%d:%d"), Element->GetIdentity(), Index);
+            ActiveKeys.Add(Key);
+            AWaypointActor* Actor = MissionWaypoints.FindRef(Key).Get();
+            if (!IsValid(Actor))
+            {
+                FActorSpawnParameters Params;
+                Params.Owner = Builder;
+                Params.OverrideLevel = Builder->GetLevel();
+                Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                UClass* Class = WaypointClass ? WaypointClass.Get() : AWaypointActor::StaticClass();
+                Actor = World->SpawnActor<AWaypointActor>(Class, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+                if (!Actor) continue;
+                MissionWaypoints.Add(Key, Actor);
+            }
+            Actor->ElementIdentity = Element->GetIdentity();
+            Actor->WaypointIndex = Index;
+            Actor->SectorName = ANSI_TO_TCHAR(Point->GetRegionName());
+            Actor->Description = ANSI_TO_TCHAR(Point->GetDescription());
+            Actor->LegacyLocation = Point->GetLocation();
+            Actor->bNextWaypoint = Point == Element->GetNextNavPoint();
+            Actor->SetActorLocation(GetVisualLocationForRegion(Point->GetRegion(), OtherHand(Point->GetLocation())));
+            Actor->SetActorHiddenInGame(true);
+            Actor->SetActorEnableCollision(false);
+#if WITH_EDITOR
+            Actor->SetActorLabel(FString::Printf(TEXT("NAV %hs %d"), Element->GetName().data(), Index));
+#endif
+        }
+    }
+    for (auto It = MissionWaypoints.CreateIterator(); It; ++It)
+        if (!ActiveKeys.Contains(It.Key())) { if (It.Value().IsValid()) It.Value()->Destroy(); It.RemoveCurrent(); }
 }
