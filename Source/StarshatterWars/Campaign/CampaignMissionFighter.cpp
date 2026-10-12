@@ -543,6 +543,13 @@ void CampaignMissionFighter::GenerateStandardElements()
         return;
     }
 
+    PendingSquadrons.Empty();
+    // A fighter's authored home base is a mission dependency even if the zone
+    // traversal omits it. Existing unit-identity guards prevent duplicate ships.
+    if (squadron)
+        if (CombatGroup* HomeGroup = squadron->FindCarrier())
+            CreateElements(HomeGroup);
+
     ProcessedGroups.Empty();
     ProcessedGroupKeys.Empty();
 
@@ -606,6 +613,13 @@ void CampaignMissionFighter::GenerateStandardElements()
             ProcessGroupRecursive(Group, MissionRegion);
     }
 
+    // Populate inventory only after carrier mission elements exist. Include the
+    // player's own squadron: this entry is hangar inventory, not an extra flight.
+    if (squadron) PendingSquadrons.AddUnique(squadron);
+    for (CombatGroup* PendingSquadron : PendingSquadrons)
+        CreateSquadron(PendingSquadron);
+    PendingSquadrons.Empty();
+
     UE_LOG(LogTemp, Warning, TEXT("[CMF] GenerateStandardElements END"));
 }
 
@@ -663,9 +677,9 @@ switch (g->GetType())
     case ECOMBATGROUP_TYPE::FIGHTER_SQUADRON:
     case ECOMBATGROUP_TYPE::ATTACK_SQUADRON:
     case ECOMBATGROUP_TYPE::LCA_SQUADRON:
-        if (g->GetUnits().size() > 0 && g != squadron)
+        if (g->GetUnits().size() > 0)
         {
-            CreateSquadron(g);
+            PendingSquadrons.AddUnique(g);
         }
         break;
 
@@ -786,6 +800,9 @@ CampaignMissionFighter::CreateSquadron(CombatGroup* g)
     CombatUnit* carrier = FindCarrier(g);
 
     if (!fighter || !carrier) return;
+    // Repeated zone references must not add duplicate hangar inventory.
+    if (MissionElement* ExistingSquadron = mission->FindElement(g->GetName()))
+        if (ExistingSquadron->IsSquadron()) return;
 
     int live_count = fighter->LiveCount();
     int maint_count = (live_count > 4) ? live_count / 2 : 0;
@@ -2865,13 +2882,17 @@ CombatUnit* CampaignMissionFighter::FindCarrier(CombatGroup* G)
 {
     CombatGroup* Carrier = G ? G->FindCarrier() : nullptr;
 
-    if (Carrier && Carrier->GetUnits().size())
+    if (Carrier && mission)
     {
-        MissionElement* CarrierElem = mission->FindElement(Carrier->GetName());
-
-        if (CarrierElem)
+        // Mission ship elements are named for units, not necessarily their group.
+        ListIter<CombatUnit> Units = Carrier->GetUnits();
+        while (++Units)
         {
-            return Carrier->GetUnits().at(0);
+            CombatUnit* Unit = Units.value();
+            if (!Unit || Unit->LiveCount() < 1) continue;
+            MissionElement* CarrierElem = mission->FindElement(Unit->GetName());
+            if (CarrierElem && !CarrierElem->IsSquadron() && CarrierElem->GetIFF() == G->GetIFF())
+                return Unit;
         }
     }
 

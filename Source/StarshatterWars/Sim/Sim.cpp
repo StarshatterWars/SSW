@@ -1110,6 +1110,11 @@ Sim::CreateElements()
             const bool PlayerCarrierStart = MissionElem->GetPlayerIndex() > 0 && Carrier &&
                 (!LaunchPlayer || !LaunchPlayer->FlyingStart());
             const bool WantsDeckStart = MissionElem->IsAlert() || PlayerCarrierStart;
+            if (MissionElem->GetPlayerIndex() > 0)
+                UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] PlayerFlight='%hs' Squadron='%hs' Carrier='%hs' FlyingStart=%d DeckStart=%d Hangar=%d Decks=%d"),
+                    MissionElem->GetName().data(), MissionElem->GetSquadron().data(), Carrier ? Carrier->GetName() : "MISSING",
+                    LaunchPlayer ? LaunchPlayer->FlyingStart() : 0, WantsDeckStart ? 1 : 0,
+                    HangarPtr ? 1 : 0, Carrier ? Carrier->NumFlightDecks() : 0);
             if (HangarPtr && Element && MissionElem->Count() > 0 && WantsDeckStart) {
 				FlightDeck* Deck = nullptr;
 				int32 Queue = 1000;
@@ -1143,6 +1148,9 @@ Sim::CreateElements()
                                 LaunchInventory.Add(FIntPoint(Sq, Slot));
                     }
                 }
+                UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Flight='%hs' Deck='%hs' Inventory=%d Required=%d"),
+                    MissionElem->GetName().data(), Deck ? Deck->GetName() : "MISSING",
+                    LaunchInventory.Num(), MissionElem->Count());
                 if (Deck && LaunchInventory.Num()>=MissionElem->Count()) {
                     bAlertPrep=true;
 

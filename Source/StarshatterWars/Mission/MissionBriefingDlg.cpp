@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -1580,8 +1580,14 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     } else UE_LOG(LogTemp, Error, TEXT("[Contacts] IA_ContactsPanel not found"));
     BindWeaponAction(TEXT("IA_SensorMode"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSensor);
     BindWeaponAction(TEXT("IA_SensorGroundMode"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorGround);
-    BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorRangeUp);
-    BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionSensorRangeDown);
+    bSensorRangeUpHeld = bSensorRangeDownHeld = false;
+    // Started can precede chord satisfaction. Act only once the full chord triggers.
+    BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Triggered, &UMissionBriefingDlg::MissionSensorRangeUp);
+    BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Completed, &UMissionBriefingDlg::ReleaseSensorRangeUp);
+    BindWeaponAction(TEXT("IA_SensorRangeUp"), ETriggerEvent::Canceled, &UMissionBriefingDlg::ReleaseSensorRangeUp);
+    BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Triggered, &UMissionBriefingDlg::MissionSensorRangeDown);
+    BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Completed, &UMissionBriefingDlg::ReleaseSensorRangeDown);
+    BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Canceled, &UMissionBriefingDlg::ReleaseSensorRangeDown);
     BindWeaponAction(TEXT("IA_EMCONUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONUp);
     BindWeaponAction(TEXT("IA_EMCONDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONDown);
     BindWeaponAction(TEXT("IA_TargetNearest"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionClosest);
@@ -3092,6 +3098,8 @@ void UMissionBriefingDlg::ToggleContactsPanel()
 
 void UMissionBriefingDlg::CycleMissionSensor()
 {
+    APlayerController* SensorPC = GetOwningPlayer();
+    if (SensorPC && (SensorPC->IsInputKeyDown(EKeys::LeftShift) || SensorPC->IsInputKeyDown(EKeys::RightShift) || SensorPC->IsInputKeyDown(EKeys::LeftControl) || SensorPC->IsInputKeyDown(EKeys::RightControl))) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
     if (!P || P->IsDead()) return;
@@ -3106,20 +3114,35 @@ void UMissionBriefingDlg::MissionSensorGround()
     if(P->IsAirborne() && P->GetSensor() && P->GetSensorMode()<ESensorMode::PST) P->SetSensorMode(ESensorMode::GM);
 }
 
+void UMissionBriefingDlg::ReleaseSensorRangeUp() { bSensorRangeUpHeld = false; }
+void UMissionBriefingDlg::ReleaseSensorRangeDown() { bSensorRangeDownHeld = false; }
+
 void UMissionBriefingDlg::MissionSensorRangeUp()
 {
+    if (bSensorRangeUpHeld) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
     if (!P || P->IsDead()) return;
-    if(auto* S=P->GetSensor())S->IncreaseRange();
+    if (auto* S=P->GetSensor()) {
+        bSensorRangeUpHeld = true;
+        const double Before = S->GetBeamRange();
+        S->IncreaseRange();
+        UE_LOG(LogTemp, Display, TEXT("[SensorRange] Up %.0f -> %.0f metres"), Before, S->GetBeamRange());
+    }
 }
 
 void UMissionBriefingDlg::MissionSensorRangeDown()
 {
+    if (bSensorRangeDownHeld) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
     if (!P || P->IsDead()) return;
-    if(auto* S=P->GetSensor())S->DecreaseRange();
+    if (auto* S=P->GetSensor()) {
+        bSensorRangeDownHeld = true;
+        const double Before = S->GetBeamRange();
+        S->DecreaseRange();
+        UE_LOG(LogTemp, Display, TEXT("[SensorRange] Down %.0f -> %.0f metres"), Before, S->GetBeamRange());
+    }
 }
 
 void UMissionBriefingDlg::MissionEMCONUp()

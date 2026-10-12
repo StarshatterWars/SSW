@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -120,6 +120,7 @@ protected:
 
     FString                 Existing;
 
+    TArray<CombatGroup*>    PendingSquadrons;
     TSet<CombatGroup*>      ProcessedGroups;
     TSet<FString> ProcessedGroupKeys;
 };

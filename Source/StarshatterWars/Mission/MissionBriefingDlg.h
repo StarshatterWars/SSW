@@ -222,6 +222,10 @@ protected:
     void CycleFighterWeapon();
     void CycleMissionSensor();
     void MissionSensorGround();
+    bool bSensorRangeUpHeld = false;
+    bool bSensorRangeDownHeld = false;
+    void ReleaseSensorRangeUp();
+    void ReleaseSensorRangeDown();
     void MissionSensorRangeUp();
     void MissionSensorRangeDown();
     void MissionEMCONUp();

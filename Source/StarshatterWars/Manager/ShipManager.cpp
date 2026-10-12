@@ -216,42 +216,9 @@ ShipManager::ExecFrame(double seconds)
 			}
 		}
 
-		if (ship->GetSensor()) {
-			Sensor* sensor = ship->GetSensor();
-
-			if (sensor->GetMode() < ESensorMode::PST) {
-				if (KeyDown(KEY_SENSOR_MODE)) {
-					ESensorMode sensor_mode =
-						Sensor::GetNextSensorMode(sensor->GetMode());
-	
-					sensor->SetMode(sensor_mode);
-					time_til_change = 0.5f;
-				}
-
-				else if (KeyDown(KEY_SENSOR_GROUND_MODE)) {
-					if (ship->IsAirborne()) {
-						sensor->SetMode(ESensorMode::GM);
-						time_til_change = 0.5f;
-					}
-				}
-			}
-			else {
-				// manual "return to search" command for starships:
-				if (KeyDown(KEY_SENSOR_MODE)) {
-					ship->DropTarget();
-				}
-			}
-
-			if (KeyDown(KEY_SENSOR_RANGE_PLUS)) {
-				sensor->IncreaseRange();
-				time_til_change = 0.5f;
-			}
-
-			else if (KeyDown(KEY_SENSOR_RANGE_MINUS)) {
-				sensor->DecreaseRange();
-				time_til_change = 0.5f;
-			}
-		}
+        // Player sensor mode/range input is owned by MissionBriefingDlg's
+        // Enhanced Input callbacks. Do not poll legacy sensor keys here: both
+        // paths can otherwise modify the same sensor during one input frame.
 
 		if (KeyDown(KEY_EMCON_PLUS)) {
 			ship->SetEMCON(ship->GetEMCON() + 1);

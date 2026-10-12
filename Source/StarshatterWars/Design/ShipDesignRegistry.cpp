@@ -496,7 +496,11 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewSensor->SetName(TCHAR_TO_ANSI(*Src.DesignName));
         NewSensor->SetSourceIndex(Src.SourceIndex);
         NewSensor->SetHullFactor(Src.HullFactor);
-        NewSensor->SetRangeSettings(Src.Ranges);
+        // Legacy path: AddRange in DataTable order (same as original .def ParseSensor)
+        for (float R : Src.Ranges)
+        {
+            NewSensor->AddRange(static_cast<double>(R));
+        }
 
         Legacy->sensors.append(NewSensor);
 

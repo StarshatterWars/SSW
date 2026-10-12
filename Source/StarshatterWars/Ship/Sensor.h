@@ -68,8 +68,6 @@ public:
 	SimObject* AcquirePassiveTargetForMissile();
 	SimObject* AcquireActiveTargetForMissile();
 
-	void SetRangeSettings(const TArray<float>& InRanges);
-
 	static ESensorMode GetNextSensorMode(ESensorMode Mode);
 
 	void SetShip(Ship* s) { ship = s; }

@@ -1029,25 +1029,6 @@ void Sensor::DoEMCON(int index)
     emcon = index;
 }
 
-void Sensor::SetRangeSettings(const TArray<float>& InRanges)
-{
-    nsettings = 0;
-
-    for (int32 i = 0; i < 8; ++i)
-    {
-        range_settings[i] = 0.0f;
-    }
-
-    const int32 Count = FMath::Min(InRanges.Num(), 8);
-
-    for (int32 i = 0; i < Count; ++i)
-    {
-        range_settings[i] = InRanges[i];
-    }
-
-    nsettings = Count;
-    range_index = Count > 0 ? 0 : -1;
-}
 
 ESensorMode Sensor::GetNextSensorMode(ESensorMode Mode)
 {
