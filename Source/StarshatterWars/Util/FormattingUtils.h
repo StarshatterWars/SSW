@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026.
     All Rights Reserved.
@@ -61,6 +61,11 @@ class STARSHATTERWARS_API UFormattingUtils : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
+    // Input is legacy simulation metres. Numeric field is at most six characters.
+    // Uses M/KM/MM/GM/TM, then compact scientific notation in metres.
+    // Invalid or negative distances return "--".
+    static FString FormatDistance(double Metres);
+
     // -------------------------------------------------------------------------
     // Enum display name wrappers (Blueprint-friendly)
     // -------------------------------------------------------------------------

@@ -34,7 +34,7 @@ public:
         const float Scale = FMath::Min(ViewSize.X / 1280.0, ViewSize.Y / 720.0);
         const FVector2f PanelSize(256.0f * Scale, 256.0f * Scale);
         const FVector2f Center(ViewSize.X * 0.5, ViewSize.Y * 0.5);
-        const FLinearColor Blue(0.15f, 0.55f, 1.0f, 1.0f);
+        const FLinearColor Blue(0.15f, 0.55f, 1.0f, 0.9f);
         if (LeftTexture.IsValid())
             FSlateDrawElement::MakeBox(Elements, Layer + 1,
                 Geometry.ToPaintGeometry(PanelSize, FSlateLayoutTransform(Center - FVector2f(PanelSize.X, PanelSize.Y * 0.5f))),

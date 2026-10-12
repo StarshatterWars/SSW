@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright 2025-2026. All Rights Reserved.
 
@@ -58,8 +58,10 @@ NavSystem::~NavSystem()
 
 void NavSystem::ExecFrame(double seconds)
 {
-	if (autonav && ship && !ship->GetNextNavPoint())
-		autonav = false;
+	if (autonav && ship && !ship->GetNextNavPoint()) {
+        UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] No next route instruction Ship='%hs'"), ship->GetName());
+        autonav = false;
+    }
 
 	energy = 0.0f;
 	SimSystem::ExecFrame(seconds);
@@ -117,12 +119,14 @@ void NavSystem::Distribute(double delivered_energy, double seconds)
 
 	// brown out:
 	if (energy < capacity * 0.75f) {
-		power_on = false;
+        if (autonav) UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Navigation power lost energy=%.3f capacity=%.3f"), energy, capacity);
+        power_on = false;
 	}
 
 	// spike:
 	else if (energy > capacity * 1.5f) {
-		power_on = false;
+        if (autonav) UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Navigation power lost energy=%.3f capacity=%.3f"), energy, capacity);
+        power_on = false;
 		ApplyDamage(50);
 	}
 }

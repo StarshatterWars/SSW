@@ -1071,7 +1071,7 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
             }
             Ship* RadiusShip = LiveSim->GetPlayerShip();
             if (!RadiusShip || RadiusShip->GetElement() != Element) RadiusShip = Element->GetShip(1);
-            Actor->SetArrivalHullRadius(RadiusShip ? RadiusShip->GetRadius() : 0.0);
+            Actor->SetArrivalHullRadius(RadiusShip ? RadiusShip->GetNavigationHullRadius() : 0.0);
             Actor->ElementIdentity = Element->GetIdentity();
             Actor->WaypointIndex = Index;
             Actor->SectorName = ANSI_TO_TCHAR(Point->GetRegionName());

@@ -67,6 +67,8 @@ protected:
     Instruction*      PreviousRoutePoint = nullptr; // identity only, never dereferenced
     FVector           PreviousRoutePosition = FVector::ZeroVector;
     bool              bHasPreviousRoutePosition = false;
+    double            RouteTraceCountdown = 0.0;
+    int               RouteTraceCount = 0;
     bool              complete = false;
     int               drop_state = 0;
     int               quantum_state = 0;

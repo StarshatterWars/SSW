@@ -80,7 +80,7 @@ NavAI::ExecFrame(double s)
     if (ship->GetFlightPhase() == EOPSMode::TAKEOFF)
         takeoff = true;
 
-    else if (takeoff && ship->GetMissionClock() > 10000)
+    else if (takeoff && ship->GetMissionClockMS() > 10000)
         takeoff = false;
 
     FindObjective();
@@ -191,6 +191,8 @@ void NavAI::FindObjective()
 
     if (navpt != PreviousRoutePoint) {
         PreviousRoutePoint = navpt;
+        RouteTraceCountdown = 0.0;
+        RouteTraceCount = 0;
         bHasPreviousRoutePosition = false;
         // The previous leg's angular error must not steer the new leg.
         for (int i = 0; i < 3; ++i) { az[i] = 0; el[i] = 0; }
@@ -537,7 +539,7 @@ NavAI::SeekTarget()
             }
         }
         const FVector Current = ship->GetLocation();
-        const double ArrivalRadius = LegacyWaypointArrival::Radius(ship->GetRadius());
+        const double ArrivalRadius = LegacyWaypointArrival::Radius(ship->GetNavigationHullRadius());
         // Only sweep continuous travel on this leg, never an orbital/quantum jump.
         const double MaxContinuousStep = FMath::Max(ArrivalRadius*4.0,
             ship->GetVelocity().Size()*FMath::Max(seconds,0.0)*4.0 + 1.0);
@@ -545,6 +547,16 @@ NavAI::SeekTarget()
             (Current-PreviousRoutePosition).SizeSquared() <= MaxContinuousStep*MaxContinuousStep;
         const bool Arrived = navpt->GetRegion() == ship->GetRegion() &&
             LegacyWaypointArrival::Reached(Current, PreviousRoutePosition, obj_w, ArrivalRadius, Sweep);
+        // Bounded diagnostics distinguish a near miss from a stuck route/region.
+        RouteTraceCountdown -= seconds;
+        if (Sim::GetSim() && ship == Sim::GetSim()->GetPlayerShip() && RouteTraceCountdown <= 0.0) {
+            UE_LOG(LogTemp, Display, TEXT("[AutoNavApproach] Nav=%d Range=%.3fm Radius=%.3fm SameRegion=%d Status=%d Hold=%.2fs"),
+                ship->GetNavIndex(navpt), (Current-obj_w).Size(), ArrivalRadius,
+                navpt->GetRegion() == ship->GetRegion() ? 1 : 0,
+                int(navpt->GetStatus()), navpt->GetHoldTime());
+            RouteTraceCountdown = 10.0;
+            ++RouteTraceCount;
+        }
         PreviousRoutePosition = Current;
         bHasPreviousRoutePosition = true;
         if (Arrived) {

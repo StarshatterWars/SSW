@@ -2,11 +2,12 @@
 #include "Math/Vector.h"
 #include "Math/UnrealMathUtility.h"
 
-// Stars45/NavAI.cpp: distance < 2 * self->Radius(). Simulation metres.
+// Legacy hull multiplier with the requested 100-metre minimum. Simulation metres.
 namespace LegacyWaypointArrival
 {
     constexpr double HullRadiusMultiplier = 2.0;
-    inline double Radius(double HullRadius) { return HullRadiusMultiplier * FMath::Max(0.0, HullRadius); }
+    constexpr double MinimumArrivalRadius = 100.0;
+    inline double Radius(double HullRadius) { return FMath::Max(MinimumArrivalRadius, HullRadiusMultiplier * FMath::Max(0.0, HullRadius)); }
     inline bool Reached(const FVector& Current, const FVector& Previous,
                         const FVector& Destination, double ArrivalRadius, bool HasPrevious)
     {

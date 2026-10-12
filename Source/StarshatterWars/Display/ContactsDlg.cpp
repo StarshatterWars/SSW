@@ -1,4 +1,5 @@
-#include "ContactsDlg.h"
+﻿#include "ContactsDlg.h"
+#include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
 #include "MissionObjectTarget.h"
 #include "ShipActor.h"
@@ -52,8 +53,8 @@ public:
                                     ?FLinearColor(0.2f,0.45f,0.65f,1):FLinearColor(0.035f,0.035f,0.035f,1);})
                                 .OnClicked_Lambda([this,Row](){if(Host.IsValid() && Row->Actor.IsValid())Host->SelectMissionContact(Row->Actor.Get());return FReply::Handled();})
                                 [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
-                                    .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %.1f KM"),
-                                        Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,Row->Range));})]];
+                                    .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %s"),
+                                        Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,*UFormattingUtils::FormatDistance(Row->Range * 1000.0)));})]];
                     })]
                 +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text_Lambda([this](){return FText::FromString(FString::Printf(TEXT("%d CONTACTS"),Rows.Num()));})]]];
         Refresh();

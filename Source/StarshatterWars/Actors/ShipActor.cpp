@@ -22,6 +22,7 @@
 */
 
 #include "ShipActor.h"
+#include "WaypointArrival.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
@@ -1632,7 +1633,17 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     {
         const FTransform FlightFrame(GetActorQuat(), GetActorLocation(), FVector::OneVector);
         const FTransform HullInFlightFrame = HullMesh->GetComponentTransform().GetRelativeTransform(FlightFrame);
-        const FVector Size = HullMesh->CalcBounds(HullInFlightFrame).GetBox().GetSize();
+        const FBoxSphereBounds NavigationBounds = HullMesh->CalcBounds(HullInFlightFrame);
+        const FVector Size = NavigationBounds.GetBox().GetSize();
+        // SSW's presentation conversion is an axis permutation with unit scale:
+        // one rendered coordinate unit equals one simulation metre. Do not /100.
+        // Include BP/component/actor scale exactly once, and measure from the
+        // actor origin used by simulation, excluding Niagara and light bounds.
+        const double NavigationRadius = NavigationBounds.Origin.Size() + NavigationBounds.SphereRadius;
+        InShip->SetNavigationHullRadius(NavigationRadius);
+        UE_LOG(LogTemp, Display, TEXT("[AutoNavHull] Ship='%hs' DesignRadius=%.3f HullRadius=%.3f ArrivalRadius=%.3f"),
+            InShip->GetName(), InShip->GetRadius(), InShip->GetNavigationHullRadius(),
+            LegacyWaypointArrival::Radius(InShip->GetNavigationHullRadius()));
         UE_LOG(LogTemp, Display,
             TEXT("[ShipVisualSizing] BP=%s Ship='%hs' Mesh=%s ActorScale=%s VisualScale=%s HullScale=%s VisualRotation=%s LengthX=%.2f BeamY=%.2f HeightZ=%.2f UEcm"),
             *GetClass()->GetPathName(), InShip->GetName(), *HullMesh->GetStaticMesh()->GetPathName(),

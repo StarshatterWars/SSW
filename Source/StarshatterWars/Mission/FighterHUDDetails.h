@@ -54,6 +54,9 @@ private:
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;
+    bool bAugmenterActive = false;
+    FLinearColor TargetDisplayColor = FLinearColor::Yellow;
+    FString HomeCarrierReadout;
     TArray<FString> NavReadouts, MissileReadouts;
     FString DefenseReadout;
     double FlightSpeed = 0, HeadingDegrees = 0, ClosingSpeed = 0, JumpSeconds = 0;

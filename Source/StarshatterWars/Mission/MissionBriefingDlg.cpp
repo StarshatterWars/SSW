@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -360,6 +360,23 @@ void UMissionBriefingDlg::ExecFrame()
 void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+    SyncMissionNavigationTarget();
+    // Fallback for a plain mapped Boolean key when another action consumes
+    // IA_AutoNav before its callback. The callback and this path are deduplicated.
+    // Complex/chorded mappings remain owned by Enhanced Input.
+    if (CanUseFighterHUD() && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused()) {
+        if (APlayerController* AutoPC = GetOwningPlayer()) {
+            for (const FEnhancedActionKeyMapping& AutoMapping : AutoNavInputContext->GetMappings()) {
+                if (AutoMapping.Action && AutoMapping.Action->GetName().Equals(TEXT("IA_AutoNav"), ESearchCase::IgnoreCase) &&
+                    AutoMapping.Triggers.Num() == 0 && AutoMapping.Modifiers.Num() == 0 &&
+                    AutoMapping.Key.IsValid() && AutoPC->WasInputKeyJustPressed(AutoMapping.Key)) {
+                    ToggleMissionAutoNav();
+                    break;
+                }
+            }
+        }
+    }
+
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) ClearMissionRotationInput();
 
     if (APlayerController* PC = GetOwningPlayer())
@@ -1520,7 +1537,24 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] %s -> %s"), *Mapping.Key.ToString(), *AutoAction->GetPathName());
         }
     }
-    if (BoundAutoActions.Num()) Input->AddMappingContext(AutoNavInputContext.Get(), 1105);
+    // Raise the configured boost mapping above camera defaults.
+    for (const UInputMappingContext* Context : AutoContexts) {
+        if (!Context) continue;
+        for (const FEnhancedActionKeyMapping& Mapping : Context->GetMappings()) {
+            if (!Mapping.Action || !Mapping.Action->GetName().Equals(TEXT("IA_Augmenter"), ESearchCase::IgnoreCase)) continue;
+            UInputAction* BoostAction = const_cast<UInputAction*>(Mapping.Action.Get());
+            if (BoostAction->ValueType != EInputActionValueType::Boolean) continue;
+            AutoNavInputContext->MapKey(BoostAction, Mapping.Key) = Mapping;
+            if (BoostAction != MissionAugmenterAction.Get() && !MissionWeaponActions.Contains(BoostAction)) {
+                MissionWeaponActions.Add(BoostAction);
+                MissionMenuInput->BindAction(BoostAction, ETriggerEvent::Triggered, this, &UMissionBriefingDlg::OnMissionAugmenter);
+                MissionMenuInput->BindAction(BoostAction, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionAugmenter);
+                MissionMenuInput->BindAction(BoostAction, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionAugmenter);
+            }
+            UE_LOG(LogTemp, Display, TEXT("[AugmenterInput] %s -> %s"), *Mapping.Key.ToString(), *BoostAction->GetPathName());
+        }
+    }
+    if (AutoNavInputContext->GetMappings().Num()) Input->AddMappingContext(AutoNavInputContext.Get(), 1105);
     else UE_LOG(LogTemp, Error, TEXT("[AutoNavInput] No IA_AutoNav mapping found in the active fighter/menu contexts."));
     BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
     BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
@@ -2547,31 +2581,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
         if (MissionCameraRig) MissionCameraRig->RestoreVisibility(PC);
         return;
     }
-    // Autonav selects its actual destination when engaged or when the route
-    // advances. Manual target selection alone still never changes steering.
-    if (!Player->IsAutoNavEngaged()) {
-        bAutoNavSelectionActive = false;
-        AutoNavSelectedRoutePoint = nullptr;
-    } else if (Instruction* RoutePoint = Player->GetNextNavPoint()) {
-        if (!bAutoNavSelectionActive || AutoNavSelectedRoutePoint != RoutePoint) {
-            AActor* DestinationActor = nullptr;
-            if (SimObject* Object = RoutePoint->GetTarget()) {
-                for (TActorIterator<AShipActor> It(World); It; ++It)
-                    if (It->GetRuntimeShip() == Object) { DestinationActor = *It; break; }
-            }
-            if (!DestinationActor && Player->GetElement()) {
-                const int32 RouteIndex = Player->GetNavIndex(RoutePoint);
-                for (TActorIterator<AWaypointActor> It(World); It; ++It)
-                    if (It->ElementIdentity == Player->GetElement()->GetIdentity() &&
-                        It->WaypointIndex == RouteIndex) { DestinationActor = *It; break; }
-            }
-            if (DestinationActor && GetSelectableMissionContacts().Contains(DestinationActor)) {
-                AutoNavSelectedRoutePoint = RoutePoint;
-                bAutoNavSelectionActive = true;
-                SelectMissionContact(DestinationActor);
-            }
-        }
-    }
+    SyncMissionNavigationTarget();
     AShipActor* Visual = Cast<AShipActor>(MissionPlayerCameraActor.Get());
     const double Now = World->GetTimeSeconds();
     if (!IsValid(Visual) || Visual->IsActorBeingDestroyed() || Visual->GetRuntimeShip()!=Player)
@@ -2623,7 +2633,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
         TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
     };
     const FKey Keys[] = {EKeys::F1, EKeys::F1, EKeys::F2, EKeys::F2, EKeys::F3,
-        EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Tab, EKeys::K,
+        EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
         EKeys::Right, EKeys::Up, EKeys::Add};
     auto IsMapped = [this](UInputAction* Action)
     {
@@ -3183,5 +3193,86 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     if (!Player || !Region || !Region->GetShips().contains(Player) || Player->IsDead()) return;
+    if (LastAutoNavInputFrame == GFrameCounter) return;
+    LastAutoNavInputFrame = GFrameCounter;
+    // Explicit autonav input commits a selected route waypoint. Selection alone
+    // never changes the flight plan. B on the current destination remains a toggle.
+    if (AWaypointActor* Chosen = Cast<AWaypointActor>(SelectedMissionTarget.Get())) {
+        SimElement* Flight = Player->GetElement();
+        if (Flight && Chosen->ElementIdentity == Flight->GetIdentity()) {
+            List<Instruction>& Plan = Player->GetFlightPlan();
+            const int RouteOffset = Chosen->WaypointIndex - 1;
+            if (RouteOffset >= 0 && RouteOffset < Plan.size()) {
+                Instruction* Destination = Plan.at(RouteOffset);
+                if (Destination && Destination->GetStatus() <= INSTRUCTION_STATUS::ACTIVE && Destination != Player->GetNextNavPoint()) {
+                    // Skipping is not completion: do not emit arrival mission events.
+                    for (int RoutePrior = 0; RoutePrior < RouteOffset; ++RoutePrior) {
+                        Instruction* Prior = Plan.at(RoutePrior);
+                        if (Prior && (Prior->GetStatus() <= INSTRUCTION_STATUS::ACTIVE ||
+                            (Prior->GetStatus() == INSTRUCTION_STATUS::COMPLETE && Prior->GetHoldTime() > 0)))
+                            Prior->SetStatus(INSTRUCTION_STATUS::SKIPPED);
+                    }
+                    Flight->SetHoldTime(0);
+                    Destination->SetStatus(INSTRUCTION_STATUS::PENDING);
+                    bAutoNavSelectionActive = false;
+                    Player->SetAutoNav(true);
+                    UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] Selected waypoint=%d Engaged=%d"),
+                        Chosen->WaypointIndex, Player->IsAutoNavEngaged() ? 1 : 0);
+                    return;
+                }
+            }
+        }
+    }
     Player->SetAutoNav(!Player->IsAutoNavEngaged());
 }
+
+
+void UMissionBriefingDlg::SyncMissionNavigationTarget()
+{
+    if (!bLiveMissionStarted || !GetWorld()) return;
+    Sim* LiveSim = Sim::GetSim();
+    Ship* Pilot = LiveSim ? LiveSim->GetPlayerShip() : nullptr;
+    SimRegion* ActiveRegion = LiveSim ? LiveSim->GetActiveRegion() : nullptr;
+    if (!Pilot || !ActiveRegion || !ActiveRegion->GetShips().contains(Pilot) || !Pilot->GetElement()) return;
+    Instruction* RoutePoint = Pilot->GetNextNavPoint();
+    const bool Engaged = Pilot->IsAutoNavEngaged();
+    const bool AutoChanged = Engaged && (!bAutoNavSelectionActive || AutoNavSelectedRoutePoint != RoutePoint);
+    if (!Engaged) { bAutoNavSelectionActive = false; AutoNavSelectedRoutePoint = nullptr; }
+    if (!RoutePoint) return;
+    const int32 RouteIndex = Pilot->GetNavIndex(RoutePoint);
+    AWaypointActor* SelectedWaypoint = Cast<AWaypointActor>(SelectedMissionTarget.Get());
+    const bool OwnWaypoint = SelectedWaypoint && SelectedWaypoint->ElementIdentity == Pilot->GetElement()->GetIdentity();
+    bool CompletedSelection = false;
+    if (OwnWaypoint && SelectedWaypoint->WaypointIndex != RouteIndex) {
+        List<Instruction>& Plan = Pilot->GetFlightPlan();
+        const int32 PreviousIndex = SelectedWaypoint->WaypointIndex - 1;
+        if (PreviousIndex >= 0 && PreviousIndex < Plan.size()) {
+            Instruction* Previous = Plan.at(PreviousIndex);
+            CompletedSelection = Previous && Previous->GetStatus() > INSTRUCTION_STATUS::ACTIVE;
+        }
+    }
+    // A completed selected waypoint follows the route even in manual flight.
+    // Updating target display never engages autonav or modifies the route.
+    if (!AutoChanged && !CompletedSelection) return;
+    const TArray<AActor*> Candidates = GetSelectableMissionContacts();
+    AActor* Destination = nullptr;
+    if (!OwnWaypoint) {
+        if (SimObject* Object = RoutePoint->GetTarget()) {
+            for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+                if (It->GetRuntimeShip() == Object && Candidates.Contains(*It)) { Destination = *It; break; }
+        }
+    }
+    if (!Destination) {
+        for (TActorIterator<AWaypointActor> It(GetWorld()); It; ++It)
+            if (It->ElementIdentity == Pilot->GetElement()->GetIdentity() &&
+                It->WaypointIndex == RouteIndex && Candidates.Contains(*It)) { Destination = *It; break; }
+    }
+    if (!Destination) return;
+    SelectMissionContact(Destination);
+    if (SelectedMissionTarget.Get() == Destination) {
+        AutoNavSelectedRoutePoint = RoutePoint;
+        bAutoNavSelectionActive = Engaged;
+        UE_LOG(LogTemp, Display, TEXT("[NavTargetSync] Waypoint=%d Actor=%s Auto=%d"), RouteIndex, *Destination->GetName(), Engaged ? 1 : 0);
+    }
+}
+

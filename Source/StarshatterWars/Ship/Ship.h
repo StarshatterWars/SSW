@@ -1,4 +1,4 @@
-/*  Project Starshatter 4.5
+﻿/*  Project Starshatter 4.5
     Destroyer Studios LLC
     Copyright © 1997-2004. All Rights Reserved.
 
@@ -441,6 +441,13 @@ public:
     Instruction*            GetRadioOrders() const;
     void                    ClearRadioOrders();
     void                    HandleRadioMessage(RadioMessage* msg);
+    // Navigation uses actual BP hull geometry when the data-table design has
+    // only an import scale in its radius field. Simulation coordinates remain legacy.
+    double GetNavigationHullRadius() const { return navigation_hull_radius > 0.0 ? navigation_hull_radius : GetRadius(); }
+    void SetNavigationHullRadius(double value) { if (FMath::IsFinite(value) && value > 0.0) navigation_hull_radius = value; }
+private:
+    double navigation_hull_radius = 0.0;
+public:
     bool                    IsAutoNavEngaged();
     void                    SetAutoNav(bool engage = true);
     void                    CommandMode();

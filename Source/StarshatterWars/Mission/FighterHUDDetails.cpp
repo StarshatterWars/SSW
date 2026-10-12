@@ -1,10 +1,13 @@
 ﻿#include "FighterHUDDetails.h"
+#include "FormattingUtils.h"
 #include "MissionObjectTarget.h"
 #include "Ship.h"
+#include "Drive.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
 #include "ShipDesignRegistry.h"
 #include "Sim.h"
+#include "Mission.h"
 #include "SimRegion.h"
 #include "SimContact.h"
 #include "Sensor.h"
@@ -129,6 +132,9 @@ void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, T
 void SFighterHUDDetails::Refresh()
 {
     StatusRows.Reset(); DamageRows.Reset(); Contacts.Reset();
+    bAugmenterActive = false;
+    TargetDisplayColor = FLinearColor::Yellow;
+    HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
     bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
@@ -141,6 +147,7 @@ void SFighterHUDDetails::Refresh()
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
         bAutoAvailable = P->IsAutoNavEngaged();
         bGearDown = P->IsGearDown();
+        bAugmenterActive = P->GetMainDrive() && P->GetMainDrive()->IsAugmenterOn();
         JumpSeconds = P->GetQuantumDrive() ? P->GetQuantumDrive()->JumpTime() : 0;
         WeaponGroup* Missile = P->GetSecondaryGroup();
         bShoot = Missile && Missile->Ammo() > 0 && Missile->GetSelected() && Missile->GetSelected()->Locked();
@@ -158,7 +165,7 @@ void SFighterHUDDetails::Refresh()
             if (Action && *Action) NavReadouts.Add(FString(ANSI_TO_TCHAR(Action)).ToUpper());
             NavReadouts.Add(FString::Printf(TEXT("SPD %d"), Nav->GetSpeed()));
             const double Distance = FMath::Max(0.0, P->RangeToNavPoint(Nav));
-            NavReadouts.Add(FString::Printf(TEXT("%.1f KM"), Distance/1000.0));
+            NavReadouts.Add(UFormattingUtils::FormatDistance(Distance));
             if (FlightSpeed > 10)
             {
                 const int32 Eta = int32(FMath::Min(Distance/FlightSpeed, 3601.0));
@@ -169,6 +176,12 @@ void SFighterHUDDetails::Refresh()
                 const int32 Hold = int32(Nav->GetHoldTime());
                 NavReadouts.Add(FString::Printf(TEXT("HOLD %d:%02d"), Hold/60, Hold%60));
             }
+        }
+        if (!P->IsStarship()) {
+            Ship* HomeCarrier = P->GetElement() ? P->GetElement()->GetCarrier() : nullptr;
+            if (!HomeCarrier) HomeCarrier = P->GetCarrier();
+            HomeCarrierReadout = HomeCarrier && !HomeCarrier->IsDead()
+                ? FString::Printf(TEXT("HOME %hs"), HomeCarrier->GetName()) : TEXT("HOME NONE");
         }
         PlayerName = ANSI_TO_TCHAR(P->GetName());
         PlayerClass = ANSI_TO_TCHAR(P->GetShipClassName());
@@ -229,6 +242,11 @@ void SFighterHUDDetails::Refresh()
         }
         TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
+        Sim* TargetSim = Sim::GetSim();
+        Mission* TargetMission = TargetSim ? TargetSim->GetMission() : nullptr;
+        if (TargetMission && T->GetIFF() > 0)
+            TargetDisplayColor = T->GetIFF() == TargetMission->GetTeam()
+                ? FLinearColor(0.25f,0.65f,1.0f,1.0f) : FLinearColor::Red;
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
         TargetRange = P ? FVector::Distance(P->GetLocation(), T->GetLocation()) / 1000.0 : -1;
         LoadShipHUDIcon(IconPath(T), TargetIconPath, TargetTexture, TargetBrush);
@@ -265,6 +283,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     FSlateWindowElementList& E, int32 L, const FWidgetStyle&, bool) const
 {
     if (!ShowHUD.Get()) return L;
+    const double LowerReadoutBaseline = 30.0;
+    const double LowerReadoutRowHeight = 14.0;
     const FVector2D Size = G.GetLocalSize();
     if (Size.X <= 0 || Size.Y <= 0) return L;
     if (!bLoggedPanelPaint)
@@ -309,7 +329,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     {
         if (PanelTextures[Index].IsValid())
             FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
-                &PanelBrushes[Index],ESlateDrawEffect::None,HUDBlue);
+                &PanelBrushes[Index],ESlateDrawEffect::None,FLinearColor(HUDBlue.R,HUDBlue.G,HUDBlue.B,0.9f));
     };
     // Coordinates share the 512x256 HUD artwork's center and scale.
     // Measure each string so the readouts align to the panel edges, not their first glyph.
@@ -385,21 +405,23 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             Segment(Center+FVector2D(X,-82)*Scale,Center+FVector2D(X,-82+(Mark%10==0?6:3))*Scale);
         }
         ReticleText(-30,74,60,FString::Printf(TEXT("BANK %+.0f"),FMath::RadiansToDegrees(BankRadians)),true);
-        ReticleText(-240,-8,108,FString::Printf(TEXT("%.0f"),FlightSpeed));
+        // Shared baseline keeps speed and range level across HUD scales.
+        const double SpeedRangeBaseline = -8.0;
+        ReticleText(-256,SpeedRangeBaseline,108,FString::Printf(TEXT("%.0f"),FlightSpeed));
         ReticleText(-40,-100,80,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),true);
-        ReticleText(-240,88,108,TEXT("TAC"));
+        ReticleText(-248,FMath::Max(88.0,LowerReadoutBaseline+(3+MissileReadouts.Num())*LowerReadoutRowHeight),108,TEXT("TAC"));
         if (bShowWeapons)
         {
-            ReticleText(-240,44,108,DefenseReadout);
+            ReticleText(-248,LowerReadoutBaseline+2*LowerReadoutRowHeight,108,DefenseReadout);
             for (int32 I=0; I<MissileReadouts.Num(); ++I)
-                ReticleText(-240,58+I*14,108,MissileReadouts[I]);
+                ReticleText(-248,LowerReadoutBaseline+(3+I)*LowerReadoutRowHeight,108,MissileReadouts[I]);
         }
         for (int32 I=0; I<NavReadouts.Num(); ++I)
-            ReticleText(132,30+I*14,108,NavReadouts[I]);
+            ReticleText(128,LowerReadoutBaseline+I*LowerReadoutRowHeight,108,NavReadouts[I]);
         if (bHasTarget)
         {
-            ReticleText(132,-18,108,FString::Printf(TEXT("RNG %.1f KM"),TargetRange));
-            if (bClosingValid) ReticleText(132,-4,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
+            ReticleText(128,SpeedRangeBaseline,108,FString(TEXT("RNG ")) + UFormattingUtils::FormatDistance(TargetRange * 1000.0));
+            if (bClosingValid) ReticleText(128,SpeedRangeBaseline+14,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
         if (bAutoAvailable) Popup(-142,TEXT("AUTO"),HUDBlue);
         if (JumpSeconds>0) Popup(-168,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
@@ -433,6 +455,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         if (M==EMode::Ship)
         {
             for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,36+I*25)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
+            // Reserve the footer below the six possible status gauges. Follow
+            // actual engine spool/power state, not merely the held input key.
+            if (bAugmenterActive)
+                Text(P+FVector2D(8,192)*Scale, TEXT("AUGMENTER ACTIVE"), FLinearColor(0.1f,1.0f,0.3f,1.0f));
         }
         else
         {
@@ -445,7 +471,16 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
                 for(int32 J=0;J<=48;++J) { double A=2*PI*J/48; Points.Add(Center+FVector2D(FMath::Cos(A),FMath::Sin(A))*Radius*Ring/3); }
                 FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,FLinearColor(0.1f,0.3f,0.5f,0.8f),true,Scale);
             }
-            Box(Center-FVector2D(2,2)*Scale,FVector2D(4,4)*Scale,HUDBlue);
+            // Sensor symbols must render above the textured scan background.
+            // Do not batch these into the same layer as the panel artwork.
+            auto SensorBlip = [&](const FVector2D& Position, const FLinearColor& Color)
+            {
+                FSlateDrawElement::MakeBox(E,L+3,
+                    G.ToPaintGeometry(FVector2f(4*Scale,4*Scale),
+                        FSlateLayoutTransform(FVector2f(Position-FVector2D(2,2)*Scale))),
+                    FCoreStyle::Get().GetBrush("WhiteBrush"),ESlateDrawEffect::None,Color);
+            };
+            SensorBlip(Center,HUDBlue);
             for(const FBlip& B:Contacts)
             {
                 FVector2D Offset;
@@ -463,10 +498,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
                         const FVector2D Base=Center+FVector2D(Offset.X,Offset.Y*0.55);
                         Offset.Y=Offset.Y*0.55-FMath::Sin(B.El)*R*0.45;
                         TArray<FVector2D> Stem={Base,Center+Offset};
-                        FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Stem,ESlateDrawEffect::None,B.Color,true,Scale);
+                        FSlateDrawElement::MakeLines(E,L+2,G.ToPaintGeometry(),Stem,ESlateDrawEffect::None,B.Color,true,Scale);
                     }
                 }
-                Box(Center+Offset-FVector2D(2,2)*Scale,FVector2D(4,4)*Scale,B.Color);
+                SensorBlip(Center+Offset,B.Color);
             }
             Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%.0f KM   %d CONTACTS"),SensorRange/1000,Contacts.Num()));
         }
@@ -487,37 +522,42 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     if(bHasPlayer)
     {
-        // Three data rows below the icon; final row ends at the bottom edge.
-        const FVector2D P(232*Scale,Size.Y-172*Scale);
+        // Reserve an extra HOME row for fighters while keeping the final row at the bottom edge.
+        const double HomeRowHeight = HomeCarrierReadout.IsEmpty() ? 0.0 : 20.0;
+        const FVector2D P(232*Scale,Size.Y-(172+HomeRowHeight)*Scale);
         ShipText(P,PlayerName);
         Icon(P+FVector2D(48,24)*Scale,PlayerBrush,PlayerTexture.IsValid(),PlayerHull);
         ShipText(P+FVector2D(0,112)*Scale,PlayerClass);
-        ShipText(P+FVector2D(0,132)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),ShipHealthColor(PlayerHull));
-        ShipText(P+FVector2D(0,152)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),ShipHealthColor(PlayerShield));
+        if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
+        ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),ShipHealthColor(PlayerHull));
+        ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),ShipHealthColor(PlayerShield));
         if (bShowWeapons)
         {
-        ReticleText(-240,16,108,Primary.ToUpper());
-        ReticleText(-240,30,108,Secondary.ToUpper());
+        ReticleText(-248,LowerReadoutBaseline,108,Primary.ToUpper());
+        ReticleText(-248,LowerReadoutBaseline+LowerReadoutRowHeight,108,Secondary.ToUpper());
         }
         const int32 Rows=FMath::Min(12,DamageRows.Num());
+        // Fit all visible caution labels to one shared size: the smallest required.
+        const auto CautionMeasure=FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        int32 CautionFontSize=FMath::Max(6,int32(11*Scale));
+        FSlateFontInfo CautionFont=FCoreStyle::GetDefaultFontStyle("Bold",CautionFontSize);
+        for(int32 I=0;bShowCaution && I<Rows;++I)
+        {
+            if(DamageRows[I].Status<0) continue;
+            while(CautionMeasure->Measure(DamageRows[I].Label,CautionFont).X>71*Scale && CautionFontSize>5)
+                CautionFont.Size=--CautionFontSize;
+        }
         for(int32 I=0;bShowCaution && I<Rows;++I)
         {
             const FVector2D D=FVector2D(Size.X*0.5-150*Scale,Size.Y-97*Scale)+FVector2D((I%4)*75,(I/4)*28)*Scale;
             // Legacy caution cells show a centered abbreviation; color conveys health.
             if (DamageRows[I].Status < 0) continue;
             const FString& Label = DamageRows[I].Label;
-            int32 FontSize=FMath::Max(6,int32(11*Scale));
-            FSlateFontInfo Font=FCoreStyle::GetDefaultFontStyle("Bold",FontSize);
-            const auto Measure=FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
-            FVector2D Extent=Measure->Measure(Label,Font);
-            // Keep actual group names intact while fitting each fixed-width cell.
-            while(Extent.X>71*Scale && FontSize>5){
-                Font.Size=--FontSize; Extent=Measure->Measure(Label,Font);
-            }
+            const FVector2D Extent=CautionMeasure->Measure(Label,CautionFont);
             FSlateDrawElement::MakeText(E,L+2,
                 G.ToPaintGeometry(FVector2f(75*Scale,20*Scale),
                     FSlateLayoutTransform(FVector2f(D+FVector2D((75*Scale-Extent.X)*0.5,0)))),
-                Label,Font,ESlateDrawEffect::None,
+                Label,CautionFont,ESlateDrawEffect::None,
                 SSWDamagePanel::Color(DamageRows[I].Status,FPlatformTime::Seconds(),HUDBlue));
 
         }
@@ -526,12 +566,22 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     {
         // Target has one additional range row. Keep its final row bottom-aligned too.
         const FVector2D P(Size.X-408*Scale,Size.Y-192*Scale);
-        ShipText(P,TargetName);
+        FString WaypointFirst, WaypointSecond;
+        const FSlateFontInfo NameFont = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
+        const auto NameMeasure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        const bool WrapWaypoint = TargetClass.StartsWith(TEXT("Waypoint")) &&
+            NameMeasure->Measure(TargetName,NameFont).X > 176*Scale &&
+            TargetName.Split(TEXT(" - "), &WaypointFirst, &WaypointSecond);
+        if (WrapWaypoint) {
+            ShipText(P-FVector2D(0,16)*Scale,WaypointFirst.TrimStartAndEnd(),TargetDisplayColor);
+            ShipText(P,WaypointSecond.TrimStartAndEnd(),TargetDisplayColor);
+        }
+        else ShipText(P,TargetName,TargetDisplayColor);
         Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
-        ShipText(P+FVector2D(0,112)*Scale,TargetClass);
-        if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),ShipHealthColor(TargetHull));
-        if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),ShipHealthColor(TargetShield));
-        ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?FString::Printf(TEXT("%.1f KM"),TargetRange):TEXT("RANGE --"));
+        ShipText(P+FVector2D(0,112)*Scale,TargetClass,TargetDisplayColor);
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),TargetDisplayColor);
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),TargetDisplayColor);
+        ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     TArray<FRadioHUDLine> RadioLines;
     RadioView::GetHUDMessages(RadioLines);
@@ -552,7 +602,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?HUDBlue:FLinearColor(0.12f,0.2f,0.25f,1));
         Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
     }
-    return L+2;
+    return L+3;
 }
 
 namespace

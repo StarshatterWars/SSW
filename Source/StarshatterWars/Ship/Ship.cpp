@@ -6942,7 +6942,10 @@ void Ship::SetManualThrottle(double percent)
     if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     EnableManualFlight();
-    if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
+    if (navsys && navsys->AutoNavEngaged()) {
+        UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
+        navsys->DisengageAutoNav();
+    }
     bManualThrottle = true;
     throttle_request = FMath::Clamp(percent, 0.0, 100.0);
     if (throttle_request < 50.0) augmenter = false;
@@ -7005,7 +7008,10 @@ void Ship::EnableManualFlight()
 {
     if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (bManualRotation || !sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
-    if (navsys && navsys->AutoNavEngaged()) navsys->DisengageAutoNav();
+    if (navsys && navsys->AutoNavEngaged()) {
+        UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
+        navsys->DisengageAutoNav();
+    }
     delete dir;
     dir = new FEnhancedRotationDirector(this);
     bManualRotation = true;
