@@ -110,18 +110,50 @@ double Sensor::GetBeamRange() const
 
 void Sensor::IncreaseRange()
 {
-    if (range_index < nsettings - 1)
-        range_index++;
-    else
-        range_index = nsettings - 1;
+    if (nsettings <= 1)
+        return;
+
+    const float Current = range_settings[range_index];
+    int Best = -1;
+    float BestVal = Current;
+
+    // Next higher range value, regardless of array order
+    for (int i = 0; i < nsettings; ++i)
+    {
+        const float V = range_settings[i];
+        if (V > Current && (Best < 0 || V < BestVal))
+        {
+            Best = i;
+            BestVal = V;
+        }
+    }
+
+    if (Best >= 0)
+        range_index = Best;
 }
 
 void Sensor::DecreaseRange()
 {
-    if (range_index > 0)
-        range_index--;
-    else
-        range_index = 0;
+    if (nsettings <= 1)
+        return;
+
+    const float Current = range_settings[range_index];
+    int Best = -1;
+    float BestVal = Current;
+
+    // Next lower range value, regardless of array order
+    for (int i = 0; i < nsettings; ++i)
+    {
+        const float V = range_settings[i];
+        if (V < Current && (Best < 0 || V > BestVal))
+        {
+            Best = i;
+            BestVal = V;
+        }
+    }
+
+    if (Best >= 0)
+        range_index = Best;
 }
 
 void Sensor::AddRange(double r)

@@ -1588,6 +1588,24 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Triggered, &UMissionBriefingDlg::MissionSensorRangeDown);
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Completed, &UMissionBriefingDlg::ReleaseSensorRangeDown);
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Canceled, &UMissionBriefingDlg::ReleaseSensorRangeDown);
+
+    // Hard-coded fallback so Up always exists even if the IMC has no mapping for IA_SensorRangeUp
+    {
+        UInputAction* FallbackRangeUp = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+        FallbackRangeUp->ValueType = EInputActionValueType::Boolean;
+        MissionTargetContext->MapKey(FallbackRangeUp, EKeys::PageUp);
+        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Started, this, &UMissionBriefingDlg::MissionSensorRangeUp);
+        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseSensorRangeUp);
+        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseSensorRangeUp);
+
+        UInputAction* FallbackRangeDown = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+        FallbackRangeDown->ValueType = EInputActionValueType::Boolean;
+        MissionTargetContext->MapKey(FallbackRangeDown, EKeys::PageDown);
+        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Started, this, &UMissionBriefingDlg::MissionSensorRangeDown);
+        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseSensorRangeDown);
+        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseSensorRangeDown);
+    }
+
     BindWeaponAction(TEXT("IA_EMCONUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONUp);
     BindWeaponAction(TEXT("IA_EMCONDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONDown);
     BindWeaponAction(TEXT("IA_TargetNearest"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionClosest);
