@@ -1470,6 +1470,40 @@ Sim::CreateElements()
 					}
 				}
 			}
+
+			// Ensure full wing is present and queued for staggered deck launch
+			if (WantsDeckStart && Element && Carrier && HangarPtr && Element->NumShips() < MissionElem->Count())
+			{
+				FlightDeck* LaunchDeck = nullptr;
+				for (int32 di = 0; di < Carrier->NumFlightDecks(); ++di)
+				{
+					FlightDeck* D = Carrier->GetFlightDeck(di);
+					if (D && D->IsLaunchDeck()) { LaunchDeck = D; break; }
+				}
+				if (LaunchDeck)
+				{
+					ShipDesign* WingDesign = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+					const int32 Needed = MissionElem->Count() - Element->NumShips();
+					for (int32 w = 0; w < Needed && WingDesign; ++w)
+					{
+						char WingName[64];
+						sprintf_s(WingName, "%s %d", MissionElem->GetName().data(), Element->NumShips() + 1);
+						const char* WingRegion = Carrier->GetRegion()
+							? Carrier->GetRegion()->GetName()
+							: MissionElem->GetRegion().data();
+						Ship* WingShip = CreateShip(WingName, "", WingDesign,
+							WingRegion,
+							FVector::ZeroVector, MissionElem->GetIFF(), MissionElem->GetCommandAI(), Loadout);
+						if (!WingShip) continue;
+						Element->AddShip(WingShip);
+						int SlotIdx = -1;
+						if (LaunchDeck->Spot(WingShip, SlotIdx))
+							LaunchDeck->Launch(SlotIdx);
+					}
+					UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Wing filled Flight='%hs' Ships=%d/%d"),
+						MissionElem->GetName().data(), Element->NumShips(), MissionElem->Count());
+				}
+			}
 		}
 	}
 }

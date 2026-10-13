@@ -44,7 +44,21 @@ static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
         return false;
     }
 
-    return Info->DisplayType == EMissionDisplayType::PlayerMission;
+    // Always show normal player missions.
+    if (Info->DisplayType == EMissionDisplayType::PlayerMission)
+        return true;
+
+    // Training campaign missions (type Training) must appear in operations
+    // even if the DataTable tagged them StoryOnly/CutsceneOnly.
+    if (Info->type == (int)EMissionType::TRAINING)
+        return true;
+
+    // Training campaign: show everything that is not explicitly hidden.
+    Campaign* C = Campaign::GetCampaign();
+    if (C && C->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden)
+        return true;
+
+    return false;
 }
 
 UCmdMissionsDlg::UCmdMissionsDlg(const FObjectInitializer& ObjectInitializer)
