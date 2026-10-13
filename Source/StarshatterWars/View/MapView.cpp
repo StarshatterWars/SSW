@@ -2003,9 +2003,11 @@ MapView::DrawRegion()
 			ListIter<Ship> s_iter = simrgn->GetShips();
 			while (++s_iter) {
 				Ship* s = s_iter.value();
+				if (!s || IsClutter(*s) || s == ship) continue;
 
-				if (s && (s->IsStatic()) && !IsClutter(*s) &&
-					(s->GetIFF() == ship->GetIFF() || s->GetIFF() == 0))
+				const bool bFriendly = (s->GetIFF() == 0 || s->GetIFF() == ship->GetIFF());
+				// Static friendlies/neutrals always; hostiles always (nav map visibility).
+				if (bFriendly ? s->IsStatic() : true)
 					DrawShip(*s, (s == current_ship), rep);
 			}
 

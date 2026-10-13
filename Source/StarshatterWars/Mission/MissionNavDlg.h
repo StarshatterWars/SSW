@@ -373,4 +373,29 @@ private:
 
     UPROPERTY()
     FString CurrentMissionSystemName;
+
+public:
+
+	// Live nav editing (legacy MapView ship menu)
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void AddLiveNavPoint(FVector Location);
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void DeleteSelectedLiveNavPoint();
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void ClearLiveFlightPlan();
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void SetLiveNavAction(int32 WaypointIndex, EInstruction Action);
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void SetLiveNavSpeed(int32 WaypointIndex, int32 Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void SetLiveNavHold(int32 WaypointIndex, float HoldSeconds);
+
+	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
+	void SetLiveNavFormation(int32 WaypointIndex, int32 Formation);
+
 };

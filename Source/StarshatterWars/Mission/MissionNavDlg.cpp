@@ -2848,3 +2848,94 @@ void UMissionNavDlg::HandleLiveContactSelected(uint32 Id)
         break;
     }
 }
+
+
+// +--------------------------------------------------------------------+
+// Live nav editing (legacy MapView ship menu)
+
+static Instruction* LiveNavAt(Ship* Player, int32 Index)
+{
+    if (!Player || Index < 0) return nullptr;
+    List<Instruction>& Plan = Player->GetFlightPlan();
+    if (Index >= Plan.size()) return nullptr;
+    return Plan.at(Index);
+}
+
+void UMissionNavDlg::AddLiveNavPoint(FVector Location)
+{
+    if (!bInMissionNavigation) return;
+    Sim* S = Sim::GetSim();
+    Ship* Player = S ? S->GetPlayerShip() : nullptr;
+    if (!Player || Player->IsDead() || !Player->GetRegion()) return;
+
+    Instruction* Prior = Player->GetNextNavPoint();
+    Instruction* Nav = new Instruction(Player->GetRegion(), Location);
+    Nav->SetSpeed(500);
+    if (Prior)
+    {
+        Nav->SetAction(Prior->GetAction());
+        Nav->SetFormation(Prior->GetFormation());
+        Nav->SetSpeed(Prior->GetSpeed());
+        Nav->SetTarget(Prior->GetTarget());
+    }
+    Player->AddNavPoint(Nav, Prior);
+    RefreshLiveNavigation();
+}
+
+void UMissionNavDlg::DeleteSelectedLiveNavPoint()
+{
+    if (!bInMissionNavigation) return;
+    Sim* S = Sim::GetSim();
+    Ship* Player = S ? S->GetPlayerShip() : nullptr;
+    if (!Player) return;
+    Instruction* Nav = Player->GetNextNavPoint();
+    if (!Nav) return;
+    Player->DelNavPoint(Nav);
+    RefreshLiveNavigation();
+}
+
+void UMissionNavDlg::ClearLiveFlightPlan()
+{
+    if (!bInMissionNavigation) return;
+    Sim* S = Sim::GetSim();
+    Ship* Player = S ? S->GetPlayerShip() : nullptr;
+    if (!Player) return;
+    Player->ClearFlightPlan();
+    RefreshLiveNavigation();
+}
+
+void UMissionNavDlg::SetLiveNavAction(int32 WaypointIndex, EInstruction Action)
+{
+    if (Instruction* Nav = LiveNavAt(Sim::GetSim() ? Sim::GetSim()->GetPlayerShip() : nullptr, WaypointIndex))
+    {
+        Nav->SetAction(Action);
+        RefreshLiveNavigation();
+    }
+}
+
+void UMissionNavDlg::SetLiveNavSpeed(int32 WaypointIndex, int32 Speed)
+{
+    if (Instruction* Nav = LiveNavAt(Sim::GetSim() ? Sim::GetSim()->GetPlayerShip() : nullptr, WaypointIndex))
+    {
+        Nav->SetSpeed(Speed);
+        RefreshLiveNavigation();
+    }
+}
+
+void UMissionNavDlg::SetLiveNavHold(int32 WaypointIndex, float HoldSeconds)
+{
+    if (Instruction* Nav = LiveNavAt(Sim::GetSim() ? Sim::GetSim()->GetPlayerShip() : nullptr, WaypointIndex))
+    {
+        Nav->SetHoldTime(HoldSeconds);
+        RefreshLiveNavigation();
+    }
+}
+
+void UMissionNavDlg::SetLiveNavFormation(int32 WaypointIndex, int32 Formation)
+{
+    if (Instruction* Nav = LiveNavAt(Sim::GetSim() ? Sim::GetSim()->GetPlayerShip() : nullptr, WaypointIndex))
+    {
+        Nav->SetFormation((INSTRUCTION_FORMATION)Formation);
+        RefreshLiveNavigation();
+    }
+}
