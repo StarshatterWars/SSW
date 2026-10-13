@@ -119,14 +119,32 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
 }
 void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush)
 {
-    if (Path == Cached) return;
-    Cached = Path;
-    Texture.Reset(LoadObject<UTexture2D>(nullptr, *Path));
-    if (!Texture.IsValid())
+    if (Path.IsEmpty() || Path == Cached) return;
+
+    // Serve from cache so the texture is never reloaded or cleared.
+    if (TStrongObjectPtr<UTexture2D>* Found = IconCache.Find(Path))
+    {
+        if (Found->IsValid())
+        {
+            Cached = Path;
+            Texture = *Found;
+            Brush.SetResourceObject(Texture.Get());
+            return;
+        }
+    }
+
+    UTexture2D* Loaded = LoadObject<UTexture2D>(nullptr, *Path);
+    if (!Loaded)
     {
         UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing ship silhouette %s; using generic icon."), *Path);
-        Texture.Reset(LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/hud_icon.hud_icon")));
+        Loaded = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/hud_icon.hud_icon"));
     }
+    if (!Loaded) return; // keep previous valid texture; do not flash to empty
+
+    TStrongObjectPtr<UTexture2D> Held(Loaded);
+    IconCache.Add(Path, Held);
+    Cached = Path;
+    Texture = Held;
     Brush.SetResourceObject(Texture.Get());
 }
 void SFighterHUDDetails::Refresh()
@@ -299,12 +317,8 @@ void SFighterHUDDetails::Refresh()
             bHasTarget = true;
             TargetName = ObjectData.Name; TargetClass = ObjectData.Type;
             TargetRange = ObjectData.RangeKm; TargetHull = -1; TargetShield = -1;
-            if (TargetIconPath != ObjectData.ImagePath)
-            {
-                TargetIconPath = ObjectData.ImagePath;
-                TargetTexture.Reset(ObjectData.ImagePath.IsEmpty() ? nullptr : LoadObject<UTexture2D>(nullptr, *ObjectData.ImagePath));
-                TargetBrush.SetResourceObject(TargetTexture.Get());
-            }
+            if (!ObjectData.ImagePath.IsEmpty())
+                LoadShipHUDIcon(ObjectData.ImagePath, TargetIconPath, TargetTexture, TargetBrush);
         }
     }
 }

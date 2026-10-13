@@ -35,6 +35,7 @@ class Sprite;
 class USound;
 class SimScene;
 class Graphic;
+class ABeamWeaponActor;
 
 // +--------------------------------------------------------------------+
 
@@ -86,6 +87,8 @@ public:
 	void				SetFuse(double seconds);
 
 	void               SetBeamPoints(const FVector& from, const FVector& to);
+	void               BindBeamActor(class ABeamWeaponActor* Actor);
+	class ABeamWeaponActor* GetBeamActor() const { return BeamActor; }
 	virtual void       Disarm();
 	virtual void       Destroy();
 
@@ -118,6 +121,7 @@ protected:
 	bool               first_frame;
 	bool               primary;
 	bool               beam;
+	class ABeamWeaponActor* BeamActor = nullptr;
 	bool               armed;
 	bool               hit_target;
 

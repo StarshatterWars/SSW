@@ -34,6 +34,8 @@
 #include "Terrain.h"
 #include "Game.h"
 #include "Bolt.h"
+#include "BeamWeaponActor.h"
+#include "BoltWeaponActor.h"
 #include "Sprite.h"
 #include "Solid.h"
 #include "SimLight.h"
@@ -128,6 +130,24 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 
 	if (rep)
 		rep->MoveTo(pos);
+
+	// Non-beam energy bolts become photon torpedoes
+	if (!beam && design->graphic_type == Graphic::BOLT)
+	{
+		static TSubclassOf<ABoltWeaponActor> BoltClass = nullptr;
+		if (!BoltClass)
+		{
+			BoltClass = LoadClass<ABoltWeaponActor>(nullptr, TEXT("/Game/Weapons/BP_Bolt.BP_Bolt_C"));
+			if (!BoltClass)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[SimShot] BP_Bolt not found, using ABoltWeaponActor"));
+				BoltClass = ABoltWeaponActor::StaticClass();
+			}
+		}
+		const float Speed = design->speed > 0 ? design->speed : 15000.0f;
+		const float Life  = design->life  > 0 ? design->life  : 2.0f;
+		ABoltWeaponActor::SpawnBolt(nullptr, BoltClass, pos, shot_cam.vpn(), Speed, Life, nullptr);
+	}
 
 	light = 0;
 
@@ -443,10 +463,17 @@ SimShot::Disarm()
 void
 SimShot::Destroy()
 {
+	if (BeamActor && IsValid(BeamActor)) { BeamActor->Destroy(); BeamActor = nullptr; }
 	life = 0;
 }
 
 // +--------------------------------------------------------------------+
+
+void
+SimShot::BindBeamActor(ABeamWeaponActor* Actor)
+{
+	BeamActor = Actor;
+}
 
 void
 SimShot::SetBeamPoints(const FVector& from, const FVector& to)
@@ -465,6 +492,27 @@ SimShot::SetBeamPoints(const FVector& from, const FVector& to)
 
 			double len = (FVector(to - from)).Size() / 500;
 			s->SetTextureOffset(offset, offset + len);
+		}
+
+		// Drive the Blueprint beam actor (replaces sprite bolt visual)
+		if (BeamActor && IsValid(BeamActor))
+		{
+			BeamActor->SetBeamPoints(from, to);
+		}
+		else if (!BeamActor)
+		{
+			// Drop-in Blueprint laser: /Game/Weapons/BP_Laser
+			static TSubclassOf<ABeamWeaponActor> LaserClass = nullptr;
+			if (!LaserClass)
+			{
+				LaserClass = LoadClass<ABeamWeaponActor>(nullptr, TEXT("/Game/Weapons/BP_Laser.BP_Laser_C"));
+				if (!LaserClass)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[SimShot] BP_Laser not found, falling back to ABeamWeaponActor"));
+					LaserClass = ABeamWeaponActor::StaticClass();
+				}
+			}
+			BeamActor = ABeamWeaponActor::SpawnBeam(nullptr, LaserClass, from, to, nullptr);
 		}
 	}
 

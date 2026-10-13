@@ -68,6 +68,7 @@ private:
     FString PlayerIconPath, TargetIconPath;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
     FSlateBrush PlayerBrush, TargetBrush;
+    TMap<FString, TStrongObjectPtr<UTexture2D>> IconCache;
     // TAC left/right, followed by sensor FOV/HSD/3D.
     TStrongObjectPtr<UTexture2D> PanelTextures[7];
     FSlateBrush PanelBrushes[7];
