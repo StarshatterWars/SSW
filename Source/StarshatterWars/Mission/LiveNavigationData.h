@@ -6,7 +6,7 @@
 struct FLiveNavigationContact
 {
     uint32 Id = 0;
-    FString Name, ClassName, System, Sector;
+    FString Name, ClassName, DesignName, System, Sector;
     FVector Location = FVector::ZeroVector;
     FLinearColor Color = FLinearColor::White;
     EMissionNavObjectType Type = EMissionNavObjectType::None;

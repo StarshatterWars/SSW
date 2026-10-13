@@ -2652,7 +2652,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
     MissionCameraContext->MapKey(Shift, EKeys::RightShift);
     const TCHAR* Names[] = {
         TEXT("IA_CameraCockpit"), TEXT("IA_CameraVirtual"), TEXT("IA_CameraChase"),
-        TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraTarget"),
+        TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraOverview"), TEXT("IA_CameraTarget"),
         TEXT("IA_CameraThreat"), TEXT("IA_ViewTarget"), TEXT("IA_CameraNextObject"),
         TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
     };
@@ -2748,9 +2748,13 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
         MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
         MissionCameraRig->ViewObject.Reset();
         break;
-    case 5: MissionCameraRig->SetMode(FMissionCameraRig::Target); break;
-    case 6: MissionCameraRig->SetMode(FMissionCameraRig::Threat); break;
-    case 7:
+    case 5:
+        MissionCameraRig->SetMode(FMissionCameraRig::Overview);
+        MissionCameraRig->ViewObject.Reset();
+        break;
+    case 6: MissionCameraRig->SetMode(FMissionCameraRig::Target); break;
+    case 7: MissionCameraRig->SetMode(FMissionCameraRig::Threat); break;
+    case 8:
         if (MissionCameraRig->Mode == FMissionCameraRig::Orbit &&
             MissionCameraRig->ViewObject.Get() == SelectedMissionTarget.Get())
             MissionCameraRig->SetMode(FMissionCameraRig::Chase);
@@ -2767,8 +2771,8 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
             MissionCameraRig->ViewObject = Selected;
         }
         break;
-    case 8: CycleMissionViewObject(); break;
-    case 9: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
+    case 9: CycleMissionViewObject(); break;
+    case 10: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
     default: return;
     }
     bMissionTargetInspection = false; // View-object and weapon-target selection are independent.

@@ -2413,15 +2413,47 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
         HasPrevious = true;
     }
     const FVector2D Size = Geometry.GetLocalSize();
+    const double ZoomedRadius = GetDisplayRadius() / ZoomScale;
+    const bool bUseSprites = ZoomedRadius <= 70000.0; // rep >= 3
+
     for (const auto& Contact : LiveContacts)
     {
         if (Contact.System != ViewedSystemName || Contact.Sector != ViewedSectorName) continue;
         const FVector2D Position = Project(Contact.Location);
         if (Position.X < 0 || Position.Y < 0 || Position.X > Size.X || Position.Y > Size.Y) continue;
-        const float Radius = Contact.bPlayer ? 7.f : 4.f;
-        Line({Position + FVector2D(0, -Radius), Position + FVector2D(Radius, 0),
-              Position + FVector2D(0, Radius), Position + FVector2D(-Radius, 0),
-              Position + FVector2D(0, -Radius)}, Contact.Color);
+
+        bool bDrewSprite = false;
+        const FString& DesignKey = !Contact.DesignName.IsEmpty() ? Contact.DesignName : Contact.ClassName;
+        if (bUseSprites && !DesignKey.IsEmpty())
+        {
+            if (const FShipDesign* Design = ShipDesignRegistry::Find(DesignKey))
+            {
+                if (Design->Map.Num() > 0)
+                {
+                    const FString SpriteName = Design->Map[0].SpriteName;
+                    UTexture2D* Tex = const_cast<USectorMapPanel*>(this)->GetShipMapSprite(
+                        Design->ShipName, SpriteName);
+                    if (Tex)
+                    {
+                        const float SpriteSize = 32.f;
+                        FSlateBrush Brush;
+                        Brush.SetResourceObject(Tex);
+                        Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
+                        FSlateDrawElement::MakeBox(Elements, Layer + 1,
+                            Geometry.ToPaintGeometry(Position - Brush.ImageSize * 0.5f, Brush.ImageSize),
+                            &Brush, ESlateDrawEffect::None, Contact.Color);
+                        bDrewSprite = true;
+                    }
+                }
+            }
+        }
+        if (!bDrewSprite)
+        {
+            const float Radius = Contact.bPlayer ? 7.f : 4.f;
+            Line({Position + FVector2D(0, -Radius), Position + FVector2D(Radius, 0),
+                  Position + FVector2D(0, Radius), Position + FVector2D(-Radius, 0),
+                  Position + FVector2D(0, -Radius)}, Contact.Color);
+        }
         if (Contact.bPlayer || Contact.Id == SelectedLiveContact)
         {
             Label(Position + FVector2D(10, -18), Contact.bPlayer ? Contact.Name + TEXT(" (YOU)") : Contact.Name, Contact.Color);

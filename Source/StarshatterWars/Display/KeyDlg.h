@@ -74,6 +74,7 @@ private:
     // Layout/build
     void BuildKeyRows();
     void BuildKeyList();
+    void AppendFighterHUDBindings();
 
     // Model/UI
     void RefreshDisplayFromSettings();

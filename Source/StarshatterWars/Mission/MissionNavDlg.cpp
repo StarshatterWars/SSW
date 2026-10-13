@@ -2752,6 +2752,7 @@ void UMissionNavDlg::RefreshLiveNavigation()
             Contact.Id = static_cast<uint32>(Vessel->GetIdentity());
             Contact.Name = ANSI_TO_TCHAR(Vessel->GetName());
             Contact.ClassName = ANSI_TO_TCHAR(Vessel->GetShipClassName());
+            Contact.DesignName = Vessel->Design() ? ANSI_TO_TCHAR(Vessel->Design()->name) : Contact.ClassName;
             Contact.System = ANSI_TO_TCHAR(Region->GetSystem()->GetName());
             Contact.Sector = ANSI_TO_TCHAR(Region->GetName());
             Contact.Location = OtherHand(Vessel->GetLocation());

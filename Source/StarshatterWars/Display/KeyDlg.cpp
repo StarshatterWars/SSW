@@ -1,3 +1,5 @@
+#include "InputMappingContext.h"
+#include "EnhancedActionKeyMapping.h"
 /*=============================================================================
     Project:        Starshatter Wars
     Studio:         Fractal Dev Studios
@@ -489,6 +491,7 @@ void UKeyDlg::BuildKeyList()
             break;
         }
     }
+    AppendFighterHUDBindings();
 }
 
 // ------------------------------------------------------------
@@ -729,4 +732,49 @@ bool UKeyDlg::IsModifierKey(const FKey& Key)
         Key == EKeys::LeftControl || Key == EKeys::RightControl ||
         Key == EKeys::LeftAlt || Key == EKeys::RightAlt ||
         Key == EKeys::LeftCommand || Key == EKeys::RightCommand;
+}
+void UKeyDlg::AppendFighterHUDBindings()
+{
+    if (!KeyListVBox || !WidgetTree) return;
+    UInputMappingContext* IMC = LoadObject<UInputMappingContext>(nullptr,
+        TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
+    if (!IMC)
+    {
+        UE_LOG(LogKeyDlg, Warning, TEXT("[KeyDlg] IMC_FighterHUD not found"));
+        return;
+    }
+    // Section header
+    if (UTextBlock* Header = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass()))
+    {
+        Header->SetText(FText::FromString(TEXT("FIGHTER HUD")));
+        Header->SetColorAndOpacity(UITextColor);
+        if (UVerticalBoxSlot* HS = KeyListVBox->AddChildToVerticalBox(Header))
+            HS->SetPadding(FMargin(0.f, 12.f, 0.f, 4.f));
+    }
+    for (const FEnhancedActionKeyMapping& M : IMC->GetMappings())
+    {
+        if (!M.Action) continue;
+        UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+        if (!Row) continue;
+        UTextBlock* ActionText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+        UTextBlock* KeyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+        if (!ActionText || !KeyText) continue;
+        ActionText->SetText(FText::FromString(M.Action->GetName().ToUpper()));
+        ActionText->SetColorAndOpacity(UITextColor);
+        KeyText->SetText(FText::FromString(M.Key.GetDisplayName().ToString().ToUpper()));
+        ApplyStandardValueTextStyle(KeyText);
+        if (UHorizontalBoxSlot* L = Row->AddChildToHorizontalBox(ActionText))
+        {
+            L->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            L->SetPadding(FMargin(0.f, 4.f, 8.f, 4.f));
+        }
+        if (UHorizontalBoxSlot* R = Row->AddChildToHorizontalBox(KeyText))
+        {
+            R->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            R->SetHorizontalAlignment(HAlign_Right);
+            R->SetPadding(FMargin(8.f, 4.f, 0.f, 4.f));
+        }
+        if (UVerticalBoxSlot* VS = KeyListVBox->AddChildToVerticalBox(Row))
+            VS->SetPadding(FMargin(0.f, 2.f));
+    }
 }

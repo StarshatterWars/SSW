@@ -17,7 +17,7 @@
 // All close camera offsets use the displayed actor's frame (+X forward, +Z up).
 struct FMissionCameraRig
 {
-    enum EMode { Cockpit, Virtual, Chase, Drop, Orbit, Target, Threat };
+    enum EMode { Cockpit, Virtual, Chase, Drop, Orbit, Overview, Target, Threat };
     EMode Mode = Chase;
     TWeakObjectPtr<AShipActor> ViewObject;
     TWeakObjectPtr<AShipActor> BoundsActor;
@@ -173,11 +173,12 @@ struct FMissionCameraRig
             }
             Rotation = ShipRotation * FRotator(HeadPitch, HeadYaw, 0.0).Quaternion();
         }
-        else if (Mode == Orbit)
+        else if (Mode == Orbit || Mode == Overview)
         {
             const double Desired = FMath::Max(Radius * 1.25, Radius * 4.0 * Zoom);
             Distance = Distance <= 0.0 ? Desired : FMath::Lerp(Distance, Desired, 1.0 - FMath::Exp(-8.0 * Dt));
-            Eye = Center + FRotator(Elevation, Azimuth, 0.0).Vector() * Distance;
+            const double El = (Mode == Overview) ? 80.0 : Elevation;
+            Eye = Center + FRotator(El, Azimuth, 0.0).Vector() * Distance;
             Rotation = Aim(Center - Eye, FVector::UpVector, Rotation);
         }
         else if (bPadlock)

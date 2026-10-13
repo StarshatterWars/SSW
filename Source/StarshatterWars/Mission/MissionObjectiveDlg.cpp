@@ -2,6 +2,7 @@
 
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
+#include "Engine/Texture2D.h"
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
@@ -204,15 +205,26 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
     }
 
     PreviewImage->SetVisibility(ESlateVisibility::Visible);
+    PreviewImage->SetBrushFromTexture(nullptr);
 
-    if (MissionPtr && MissionPtr->IsOK() && MissionPtr->GetPlayer())
+    MissionElement* PlayerElem = (MissionPtr && MissionPtr->IsOK()) ? MissionPtr->GetPlayer() : nullptr;
+    const FShipDesign* Design = PlayerElem ? PlayerElem->GetShipDesign() : nullptr;
+    if (!Design || Design->Map.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Preview: player available"));
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] Preview: no player design/sprite"));
+        return;
+    }
+
+    const FString ShipName = Design->ShipName;
+    const FString SpriteName = Design->Map[0].SpriteName;
+    const FString Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipName, *SpriteName, *SpriteName);
+    if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path))
+    {
+        PreviewImage->SetBrushFromTexture(Tex, true);
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] Preview: set %s"), *Path);
     }
     else
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionObjectiveDlg] Preview: no valid player"));
+        UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] Preview: missing texture %s"), *Path);
     }
 }
