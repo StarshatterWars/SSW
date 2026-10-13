@@ -1,3 +1,6 @@
+#include "Campaign.h"
+#include "CampaignSaveGame.h"
+#include "PlayerData.h"
 #include "Starshatter.h"
 
 #include "DataLoader.h"
@@ -147,6 +150,42 @@ void Starshatter::EndMission()
 void Starshatter::StartOrResumeGame()
 {
     UE_LOG(LogStarshatter, Log, TEXT("[Starshatter] StartOrResumeGame"));
+
+    PlayerData* Player = PlayerData::GetCurrentPlayer();
+    if (!Player)
+    {
+        UE_LOG(LogStarshatter, Warning, TEXT("[Starshatter] No current player"));
+        return;
+    }
+
+    List<Campaign>& Campaigns = Campaign::GetAllCampaigns();
+    Campaign* Chosen = nullptr;
+
+    Text Resume = CampaignSaveGame::GetResumeFile();
+    if (Resume.length())
+    {
+        CampaignSaveGame Save;
+        Save.Load(Resume.data());
+        Chosen = Save.GetCampaign();
+        UE_LOG(LogStarshatter, Log, TEXT("[Starshatter] Resuming save"));
+    }
+    else if (Player->Trained() < 255 && Campaigns.size() > 0)
+    {
+        Chosen = Campaigns[0];
+        if (Chosen) Chosen->Load();
+        UE_LOG(LogStarshatter, Log, TEXT("[Starshatter] Starting training campaign"));
+    }
+    else if (Campaigns.size() > 1)
+    {
+        Chosen = Campaigns[1];
+        if (Chosen) Chosen->Load();
+        UE_LOG(LogStarshatter, Log, TEXT("[Starshatter] Starting dynamic campaign"));
+    }
+
+    if (Chosen)
+        Campaign::SelectCampaign(Chosen->Name());
+
+    SetGameMode(CLOD_MODE);
 }
 
 // +--------------------------------------------------------------------+
