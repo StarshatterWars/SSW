@@ -2,14 +2,17 @@ SHIP
 
 name:           Avenger
 display_name:   Avenger
-class:          Attack
+class:          attack
 abrv:           "F6F"
-empire:         Marakan
-description:    "The F6F AVENGER attack fighter is a highly competent assault platform, capable of meeting most any opponent on even ground and providing an edge over the majority of enemy starfighters in service.  The Avenger is the only Hegemony craft in current service that is optimized for the ground attack role in addition to supporting antiship mission profiles.  The Avenger features a four-barrel Alpha cannon and eight (8) missile hardpoints.  However, unlike the Alliance Thunderbolt, the Avenger does not have a gun turret for rear-quarter protection."
+description:   "The F6F AVENGER is a heavy Alliance attack fighter designed for strike operations against hardened targets. Armed with a four-barrel Alpha Cannon and eight underwing hardpoints, it can carry a full range of air-to-air and air-to-ground ordnance. The Avenger trades pure agility for payload and endurance, making it the workhorse of fleet strike packages."
+empire:        Terellian
+hud_icon:      "AvengerHud"
 
-hud_icon:       "AvengerHud"
-  
 model:         "Avenger"
+
+cockpit_model: "AvengerPit"
+cockpit_scale: 0.02
+
 
 mass:        	27.4
 integrity:   	3500
@@ -19,7 +22,7 @@ air_factor:  	0.25
 roll_rate:   	600
 scale:       	0.27
 acs:         	1.0
-detet:	 	    50e3
+detet:	 	50e3
 
 trans_x:     	2200
 trans_y:     	2200
@@ -45,7 +48,8 @@ power: {
    type:        Fusion,
    name:        "Fusion Reactor",
    design:      "Fusion Reactor",
-   max_output:  75,
+   max_output:  75
+   fuel_range:  0.5,
 
    loc:         (0, 0, 0),
    size:        10,
@@ -53,7 +57,7 @@ power: {
 }
 
 drive: {
-   type:        Yellow
+   type:        Plasma
    design:      "Plasma Drive",
    thrust:      17,
    augmenter:	50,
@@ -214,14 +218,21 @@ sensor: {
 }
 
 computer:   {
-   design:           "Avionics",
+   name:             "Avionics Package",
+   abrv:             "HUD",
+   type:             1,
+   design:           Computer,
+
    loc:              (0, 0, 40),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   design:           "Flight",
+   name:             "Flight Computer",
+   abrv:             "Flight",
+   type:             2,
+   design:           Computer,
    loc:              (0, 0, 90),
    size:             16,
    hull_factor:      0.2
@@ -242,19 +253,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -25, 144),
       end:   (0, -45, 155)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-20, -25, -64),
       end:   (-42, -50, -64),
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 20, -25, -64),
       end:   ( 42, -50, -64),
    },
@@ -262,7 +273,7 @@ gear: {
 
 thruster: {
    design:           Thruster,
-   type:             Yellow
+   type:             Plasma
    loc:              (0, -52,0),
    size:             32,
    hull_factor:      0.8
@@ -314,7 +325,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -32),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -324,7 +335,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     195
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -338,14 +349,54 @@ death_spiral: {
 
 
 map: {
-   sprite: "AvengerMap0",
-   sprite: "AvengerMap1",
-   sprite: "AvengerMap2",
-   sprite: "AvengerMap3",
-   sprite: "AvengerMap4",
-   sprite: "AvengerMap5",
-   sprite: "AvengerMap6",
-   sprite: "AvengerMap7",
+   sprite: "AvengerMap0.pcx",
+   sprite: "AvengerMap1.pcx",
+   sprite: "AvengerMap2.pcx",
+   sprite: "AvengerMap3.pcx",
+   sprite: "AvengerMap4.pcx",
+   sprite: "AvengerMap5.pcx",
+   sprite: "AvengerMap6.pcx",
+   sprite: "AvengerMap7.pcx",
 }
 
-
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-90, -140, 8)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-90, 140, 8)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-70, 0, 25)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-70, 0, -15)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

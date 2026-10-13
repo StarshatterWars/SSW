@@ -4,12 +4,15 @@ name:           Raptor
 display_name:   Raptor
 class:          fighter
 abrv:           "F5A"
-empire:         Marakan
-description:   "The F5A RAPTOR is a swept-delta configuration multi-role fighter spacecraft commonly used by the Marakan Hegemony.  It is fast and sturdy and has proven itself in spaceborne and airborne combat as well as in surface attack missions. The Raptor is armed with twin Alpha particle cannon, along with eight underwing hard points capable of mounting several types of anti-fighter ordnance.  The Razor's heavy delta wing design also gives it the capacity to mount a variety of air-to-ground and antiship weapons."
+description:   "The F5A RAPTOR is a multirole Alliance fighter with twin Alpha Cannon and eight hardpoints. It balances agility and payload, supporting air combat, ground strike, and ship strike loadouts. The Raptor is a standard fleet fighter for mixed mission packages."
+empire:        Terellian
+hud_icon:      "RaptorHud"
 
-hud_icon:       "RaptorHud"
+model:         "Raptor"
 
-model:           "Raptor"
+cockpit_model: "RaptorPit"
+cockpit_scale: 0.02
+
  
 mass:        	25
 integrity:   	2500
@@ -45,7 +48,8 @@ power: {
    type:        Fusion,
    name:        "Fusion Reactor",
    design:      "Fusion Reactor",
-   max_output:  75,
+   max_output:  75
+   fuel_range:  0.5,
 
    loc:         (0, 0, 0),
    size:        10,
@@ -53,7 +57,7 @@ power: {
 }
 
 drive: {
-   type:        Yellow
+   type:        Plasma
    design:      "Plasma Drive",
    thrust:      17,
    augmenter:	50,
@@ -212,14 +216,21 @@ sensor: {
 }
 
 computer:   {
-   design:           "Avionics",
+   name:             "Avionics Package",
+   abrv:             "HUD",
+   type:             1,
+   design:           Computer,
+
    loc:              (0, 0, 40),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   design:           "Flight",
+   name:             "Flight Computer",
+   abrv:             "Flight",
+   type:             2,
+   design:           Computer,
    loc:              (0, 0, 90),
    size:             16,
    hull_factor:      0.2
@@ -240,19 +251,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -25, 134),
       end:   (0, -50, 148)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-20, -30, -64),
       end:   (-45, -60, -64),
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 20, -30, -64),
       end:   ( 45, -60, -64),
    },
@@ -260,7 +271,7 @@ gear: {
 
 thruster: {
    design:           Thruster,
-   type:             Yellow
+   type:             Plasma
    loc:              (0, -52,0),
    size:             32,
    hull_factor:      0.8
@@ -314,7 +325,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -32),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -324,7 +335,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -337,15 +348,54 @@ death_spiral: {
 
 
 map: {
-   sprite: "RaptorMap0",
-   sprite: "RaptorMap1",
-   sprite: "RaptorMap2",
-   sprite: "RaptorMap3",
-   sprite: "RaptorMap4",
-   sprite: "RaptorMap5",
-   sprite: "RaptorMap6",
-   sprite: "RaptorMap7",
+   sprite: "RaptorMap0.pcx",
+   sprite: "RaptorMap1.pcx",
+   sprite: "RaptorMap2.pcx",
+   sprite: "RaptorMap3.pcx",
+   sprite: "RaptorMap4.pcx",
+   sprite: "RaptorMap5.pcx",
+   sprite: "RaptorMap6.pcx",
+   sprite: "RaptorMap7.pcx",
 }
 
-
-
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-85, -135, 7)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-85, 135, 7)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-65, 0, 22)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-65, 0, -14)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

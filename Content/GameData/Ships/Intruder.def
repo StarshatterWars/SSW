@@ -4,12 +4,15 @@ name:           Intruder
 display_name:   Intruder
 class:          fighter
 abrv:           "F4F"
-empire:         Marakan
-description:   "The F4F INTRUDER is the latest edition single-seat intercept fighter craft used by the Marakan Hegemony.  More expensive than the older Viper models, the Intruder remains a lightweight and highly maneuverable tactical fighter.  It is armed with twin Alpha particle cannon, and four underwing hard points capable of mounting a variety of antiship and anti-fighter ordnance.  The Intruder is usually tasked with patrol, intercept, and escort mission profiles, but may also serve as a strike fighter in a pinch."
+description:   "The F4F INTRUDER is a compact Alliance fighter built for interception and light strike. Twin Alpha Cannon and four hardpoints keep the loadout simple and the turn rate high. It is routinely used for patrol, escort, and quick-reaction intercepts."
+empire:        Terellian
+hud_icon:      "IntruderHud"
 
-hud_icon:       "IntruderHud"
+model:         "Intruder"
 
-model:          "Intruder"
+cockpit_model: "IntruderPit"
+cockpit_scale: 0.02
+
  
 mass:        	25
 integrity:   	2500
@@ -19,7 +22,7 @@ air_factor:  	0.25
 roll_rate:   	600
 scale:       	0.25
 acs:         	1.0
-detet:	 	    50e3
+detet:	 	50e3
 
 trans_x:     	2200
 trans_y:     	2200
@@ -45,7 +48,8 @@ power: {
    type:        Fusion,
    name:        "Fusion Reactor",
    design:      "Fusion Reactor",
-   max_output:  75,
+   max_output:  75
+   fuel_range:  0.5,
 
    loc:         (0, 0, 0),
    size:        10,
@@ -53,7 +57,7 @@ power: {
 }
 
 drive: {
-   type:        Yellow
+   type:        Plasma
    design:      "Plasma Drive",
    thrust:      17,
    augmenter:	50,
@@ -160,14 +164,21 @@ sensor: {
 }
 
 computer:   {
-   design:           "Avionics",
+   name:             "Avionics Package",
+   abrv:             "HUD",
+   type:             1,
+   design:           Computer,
+
    loc:              (0, 0, 40),
    size:             16,
    hull_factor:      0.5
 }
 
 computer:   {
-   design:           "Flight",
+   name:             "Flight Computer",
+   abrv:             "Flight",
+   type:             2,
+   design:           Computer,
    loc:              (0, 0, 90),
    size:             16,
    hull_factor:      0.2
@@ -188,19 +199,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -25, 134),
       end:   (0, -50, 148)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-20, -30, -64),
       end:   (-45, -60, -64),
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 20, -30, -64),
       end:   ( 45, -60, -64),
    },
@@ -208,7 +219,7 @@ gear: {
 
 thruster: {
    design:           Thruster,
-   type:             Yellow
+   type:             Plasma
    loc:              (0, -52,0),
    size:             32,
    hull_factor:      0.8
@@ -263,7 +274,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -32),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -273,7 +284,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -286,15 +297,54 @@ death_spiral: {
 
 
 map: {
-   sprite: "IntruderMap0",
-   sprite: "IntruderMap1",
-   sprite: "IntruderMap2",
-   sprite: "IntruderMap3",
-   sprite: "IntruderMap4",
-   sprite: "IntruderMap5",
-   sprite: "IntruderMap6",
-   sprite: "IntruderMap7",
+   sprite: "IntruderMap0.pcx",
+   sprite: "IntruderMap1.pcx",
+   sprite: "IntruderMap2.pcx",
+   sprite: "IntruderMap3.pcx",
+   sprite: "IntruderMap4.pcx",
+   sprite: "IntruderMap5.pcx",
+   sprite: "IntruderMap6.pcx",
+   sprite: "IntruderMap7.pcx",
 }
 
-
-
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-80, -120, 6)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-80, 120, 6)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-60, 0, 20)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-60, 0, -12)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

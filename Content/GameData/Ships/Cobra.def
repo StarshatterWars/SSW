@@ -4,11 +4,16 @@ name:          Cobra
 display_name:  Cobra
 class:         Attack
 abrv:          "F-MK3"
-empire:        Marakan
-description:   "The MARK-3 COBRA is a mid-wing configuration multi-role fighter spacecraft that was once commonly used by the Marakan Hegemony but now is mainly used by its client states. The Cobra is a tough and effective single-engine spacecraft that is frequently employed against all types of hardened ground targets, and may also fulfill a secondary role killing spaceborne platforms and starships. The Cobra is armed with twin nose-mounted Alpha particle cannon, along with eight underwing hard points capable of mounting several types of anti-fighter, antiship, and ground-attack weapon systems."
+description:   "The F-MK3 COBRA is a medium Alliance attack fighter optimized for flexible strike and escort work. Twin Alpha Cannon and eight hardpoints give it a broad loadout range, while its lighter airframe keeps it competitive against interceptors. The Cobra is commonly tasked with ground strike, ship strike, and medium-range air combat."
+empire:        Terellian
+
 hud_icon:      "CobraHud"
 
-model:     "Cobra"
+model:         "Cobra"
+
+cockpit_model: "CobraPit"
+cockpit_scale: 0.02
+
 
 mass:       19.3
 integrity:  2800
@@ -40,7 +45,8 @@ bridge:     (0,   145,   8)
 
 power:      {
    type:    Fusion,
-   max_output: 50,
+   max_output: 50
+   fuel_range:  0.5,
    
    loc:     (0, 0, 0),
    size:    32,
@@ -48,7 +54,7 @@ power:      {
    }
 
 drive:      {
-   type:    Yellow
+   type:    Plasma
    thrust:  15,
    augmenter: 25,
    scale:   0.33,
@@ -186,14 +192,20 @@ sensor:     {
    }
 
 computer:   {
-   design:    "Avionics",
+   name:    "Avionics Package",
+   abrv:    HUD,
+   type:    1,
+
    loc:     (20, 0, 80),
    size:    16,
    hull_factor: 0.5
    }
 
 computer:   {
-   design:    "Flight",
+   name:    "Flight Computer",
+   abrv:    Flight,
+   type:    2,
+
    loc:     (-20, 0, 80),
    size:    16,
    hull_factor: 0.2
@@ -213,26 +225,26 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -15, 104),
       end:   (0, -42, 118)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-28, -22, -48),
       end:   (-42, -42, -48)
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 28, -22, -48),
       end:   ( 42, -42, -48)
    },
 }
 thruster: {
    design:           Thruster,
-   type:             Yellow
+   type:             Plasma
    loc:              (0, -52,0),
    size:             32,
    hull_factor:      0.8
@@ -287,7 +299,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -12),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (2,0,-3)
    debris_mass:      20
    debris_count:     3
@@ -297,7 +309,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,6)
    debris_mass:      20
    debris_count:     4
@@ -320,3 +332,44 @@ map: {
    sprite: "CobraMap7.pcx",
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-85, -130, 6)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-85, 130, 6)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-65, 0, 22)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-65, 0, -12)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

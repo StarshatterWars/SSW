@@ -4,12 +4,15 @@ name:          Viper
 display_name:  Viper
 class:         Fighter
 abrv:          "F-MK1"
-empire:        Marakan
-description:   "The MARK-1 VIPER is an older model single-seat intercept fighter craft used by the Marakan Hegemony and many of its client states.  Designed to be inexpensive, lightweight, and highly maneuverable, the Viper has become ubiquitous as a versatile tactical fighter.  It is armed with twin Alpha particle cannon, and six underwing hard points capable of mounting a variety of anti-fighter ordnance.  The Viper is often asked to perform patrol, intercept, and escort mission profiles."
-
+description:   "The F-MK1 VIPER is a light Alliance fighter designed for rapid interception. Twin Alpha Cannon and six hardpoints keep it fast and simple. The Viper is used for patrol, escort, and light strike where speed and response time matter more than payload."
+empire:        Terellian
 hud_icon:      "ViperHud"
 
 model:         "Viper"
+
+cockpit_model: "ViperPit"
+cockpit_scale: 0.02
+
 
 mass:       14
 integrity:  2050
@@ -41,7 +44,8 @@ bridge:     (0,   145,   8)
 
 power:      {
    type:    Fusion,
-   max_output: 50,
+   max_output: 50
+   fuel_range:  0.5,
    
    loc:     (0, 0, 0),
    size:    32,
@@ -49,7 +53,7 @@ power:      {
    }
 
 drive:      {
-   type:    Yellow,
+   type:    Plasma,
    thrust:  16,
    augmenter: 30,
    scale:   0.32,
@@ -168,14 +172,20 @@ sensor:     {
    }
 
 computer:   {
-   design:  "Avionics",
+   name:    "Avionics Package",
+   abrv:    HUD,
+   type:    1,
+
    loc:     (20, 0, 80),
    size:    16,
    hull_factor: 0.5
    }
 
 computer:   {
-   design:  "Flight",
+   name:    "Flight Computer",
+   abrv:    Flight,
+   type:    2,
+
    loc:     (-20, 0, 80),
    size:    16,
    hull_factor: 0.2
@@ -195,22 +205,46 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -14, 73),
       end:   (0, -40, 87)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-30, -12, -40),
       end:   (-50, -40, -40)
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 30, -12, -40),
       end:   ( 50, -40, -40)
    },
+}
+
+thruster: {
+   design:           Thruster,
+   type:             Plasma,
+   loc:              (0, -40, 0),
+   size:             32,
+   hull_factor:      0.8,
+   scale:            0.12,
+
+   port_fore:   {loc:(-110, -20, 5), fire: 0x0044}
+   port_fore:   {loc:( 110, -20, 5), fire: 0x0084}
+
+   port_aft:    {loc:(-110, -20, -45), fire: 0x0088}
+   port_aft:    {loc:( 110, -20, -45), fire: 0x0048}
+
+   port_top:    {loc:(-20, 5, 40), fire: 0x0210}
+   port_top:    {loc:( 20, 5, 40), fire: 0x0210}
+
+   port_bottom: {loc:(-20, -10, 40), fire: 0x0120}
+   port_bottom: {loc:( 20, -10, 40), fire: 0x0120}
+
+   port_left:   {loc:(-15, 0, 100), fire: 0x0081}
+   port_right:  {loc:( 15, 0, 100), fire: 0x0042}
 }
 
 death_spiral: {
@@ -230,7 +264,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -12),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -240,7 +274,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     196
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -253,13 +287,54 @@ death_spiral: {
 
 
 map: {
-   sprite: "ViperMap0",
-   sprite: "ViperMap1",
-   sprite: "ViperMap2",
-   sprite: "ViperMap3",
-   sprite: "ViperMap4",
-   sprite: "ViperMap5",
-   sprite: "ViperMap6",
-   sprite: "ViperMap7",
+   sprite: "ViperMap0.pcx",
+   sprite: "ViperMap1.pcx",
+   sprite: "ViperMap2.pcx",
+   sprite: "ViperMap3.pcx",
+   sprite: "ViperMap4.pcx",
+   sprite: "ViperMap5.pcx",
+   sprite: "ViperMap6.pcx",
+   sprite: "ViperMap7.pcx",
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-70, -115, 5)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-70, 115, 5)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-50, 0, 18)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-50, 0, -10)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

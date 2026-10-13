@@ -4,12 +4,16 @@ name:          Jackal
 display_name:  Jackal
 class:         LCA
 abrv:          LCA
-empire:        Marakan
-description:   "The JACKAL armored landing craft (LCA) is the mainstay of Hegemony heavy-lift capacity, and the only Marakan craft capable of atmospheric VTOL.  The Jackal is commonly used to ferry personnel and equipment between groundside bases and spaceborne platforms, and also serves a secondary role in heavy assault profiles.  The Jackal is armed with twin heavy Vulcan cannon, but is limited to standard decoy launchers for self-defense."
+description:   "The JACKAL is a light combat airframe (LCA) used for close support and training. Twin forward cannon and a rugged airframe make it suitable for low-intensity strike and carrier qualification. It is slower and less agile than front-line fighters, but tough and easy to maintain."
+empire:        Terellian
+hud_icon:      "JackalHud"
 
-hud_icon:   "JackalHud"
+model:         "Jackal"
 
-model:       "Jackal"
+cockpit_model: "JackalPit"
+cockpit_scale: 0.02
+
+
 
 mass:       92
 integrity:  5250
@@ -40,7 +44,8 @@ bridge:     (0,   145,   8)
 
 power:      {
    type:    Fusion,
-   max_output: 50,
+   max_output: 50
+   fuel_range:  0.5,
    
    loc:     (0, 0, 0),
    size:    32,
@@ -48,7 +53,7 @@ power:      {
    }
 
 drive:      {
-   type:    Yellow
+   type:    Plasma
    thrust:  75,
    scale:   0.55,
    port:    (-147, 32, -160),
@@ -62,17 +67,28 @@ drive:      {
    }
 
 thruster: {
-   design:           Thruster
-   scale:   0.35
-   port:    (-34, -32,  -10)
-   port:    ( 34, -32,  -10)
-   port:    (-34, -32, -128)
-   port:    ( 34, -32, -128)
+   design:           Thruster,
+   type:             Plasma,
+   loc:              (0, -40, 0),
+   size:             32,
+   hull_factor:      0.8,
+   scale:            0.12,
 
-   loc:         (0, -32, -128)
-   size:        24
-   hull_factor: 0.3
-   }
+   port_fore:   {loc:(-140, -20, -10), fire: 0x0044}
+   port_fore:   {loc:( 140, -20, -10), fire: 0x0084}
+
+   port_aft:    {loc:(-140, -20, -120), fire: 0x0088}
+   port_aft:    {loc:( 140, -20, -120), fire: 0x0048}
+
+   port_top:    {loc:(-20, 5, 40), fire: 0x0210}
+   port_top:    {loc:( 20, 5, 40), fire: 0x0210}
+
+   port_bottom: {loc:(-20, -10, 40), fire: 0x0120}
+   port_bottom: {loc:( 20, -10, 40), fire: 0x0120}
+
+   port_left:   {loc:(-15, 0, 100), fire: 0x0081}
+   port_right:  {loc:( 15, 0, 100), fire: 0x0042}
+}
 
 gear: {
    name:    "Undercarriage",
@@ -82,25 +98,25 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "zgear_r",
+      model: "zgear_r.mag",
       start: ( 34, -30,  -10)
       end:   ( 74, -60,  -10)
       },
 
    gear: {
-      model: "zgear_l",
+      model: "zgear_l.mag",
       start: (-34, -30,  -10)
       end:   (-74, -60,  -10)
       },
 
    gear: {
-      model: "zgear_r",
+      model: "zgear_r.mag",
       start: ( 34, -30, -140),
       end:   ( 74, -60, -140)
       },
 
    gear: {
-      model: "zgear_l",
+      model: "zgear_l.mag",
       start: (-34, -30, -140),
       end:   (-74, -60, -140)
       },
@@ -151,14 +167,20 @@ sensor:     {
    }
 
 computer:   {
-   design:    "Avionics",
+   name:    "Avionics Package",
+   abrv:    HUD,
+   type:    1,
+
    loc:     (20, 0, 80),
    size:    16,
    hull_factor: 0.5
    }
 
 computer:   {
-   design:    "Flight",
+   name:    "Flight Computer",
+   abrv:    Flight,
+   type:    2,
+
    loc:     (-20, 0, 80),
    size:    16,
    hull_factor: 0.2
@@ -189,13 +211,54 @@ death_spiral: {
    }
 
 map: {
-   sprite: "JackalMap0",
-   sprite: "JackalMap1",
-   sprite: "JackalMap2",
-   sprite: "JackalMap3",
-   sprite: "JackalMap4",
-   sprite: "JackalMap5",
-   sprite: "JackalMap6",
-   sprite: "JackalMap7                                                                    ",
+   sprite: "JackalMap0.pcx",
+   sprite: "JackalMap1.pcx",
+   sprite: "JackalMap2.pcx",
+   sprite: "JackalMap3.pcx",
+   sprite: "JackalMap4.pcx",
+   sprite: "JackalMap5.pcx",
+   sprite: "JackalMap6.pcx",
+   sprite: "JackalMap7.pcx",
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-100, -150, 10)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-100, 150, 10)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-80, 0, 28)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-80, 0, -16)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}

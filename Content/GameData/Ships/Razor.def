@@ -4,12 +4,15 @@ name:          Razor
 display_name:  Razor
 class:         Fighter
 abrv:          "F-MK2"
-empire:        Marakan
-description:   "The MARK-2 RAZOR is a forward-delta configuration multi-role fighter spacecraft commonly used by the Marakan Hegemony and its client states. It is fast and sturdy and has proven itself in spaceborne and airborne combat as well as in surface attack missions. Like the Mark 1 Viper, the Razor is armed with twin Alpha particle cannon, along with eight underwing hard points capable of mounting several types of anti-fighter ordnance.  The Razor's heavy delta wing design also gives it the capacity to mount a variety of air-to-ground and antiship weapons."
-
+description:   "The F-MK2 RAZOR is a high-agility Alliance fighter built for air superiority. Twin Alpha Cannon and eight hardpoints give it a full ordnance range, while its light airframe and high roll rate make it a strong dogfighter. It is commonly used for intercept, escort, and short-range air combat."
+empire:        Terellian
 hud_icon:      "RazorHud"
 
-model:          "Razor"
+model:         "Razor"
+
+cockpit_model: "RazorPit"
+cockpit_scale: 0.02
+empire:        Terellian
 
 mass:       15
 integrity:  2550
@@ -41,7 +44,8 @@ bridge:     (0,   145,   8)
 
 power:      {
    type:    Fusion,
-   max_output: 50,
+   max_output: 50
+   fuel_range:  0.5,
    
    loc:     (0, 0, 0),
    size:    32,
@@ -49,7 +53,7 @@ power:      {
    }
 
 drive:      {
-   type:    Yellow,
+   type:    Plasma,
    thrust:  16,
    augmenter: 30,
    scale:   0.3,
@@ -191,14 +195,20 @@ sensor:     {
    }
 
 computer:   {
-   design:  "Avionics",
+   name:    "Avionics Package",
+   abrv:    HUD,
+   type:    1,
+
    loc:     (20, 0, 80),
    size:    16,
    hull_factor: 0.5
    }
 
 computer:   {
-   design:  "Flight",
+   name:    "Flight Computer",
+   abrv:    Flight,
+   type:    2,
+
    loc:     (-20, 0, 80),
    size:    16,
    hull_factor: 0.2
@@ -218,19 +228,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0",
+      model: "GearNose0.mag",
       start: (0, -14, 113),
       end:   (0, -40, 127)
    },
 
    gear: {
-      model: "GearLeft0",
+      model: "GearLeft0.mag",
       start: (-25, -20, 10),
       end:   (-45, -40, 10)
    },
 
    gear: {
-      model: "GearRight0",
+      model: "GearRight0.mag",
       start: ( 25, -20, 10),
       end:   ( 45, -40, 10)
    },
@@ -238,7 +248,7 @@ gear: {
 
 thruster: {
    design:           Thruster,
-   type:             Yellow
+   type:             Plasma
    loc:              (0, -52,0),
    size:             32,
    hull_factor:      0.8
@@ -294,7 +304,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -12),
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -304,7 +314,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX"
+   debris:           "DebrisX.mag"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -317,13 +327,54 @@ death_spiral: {
 
 
 map: {
-   sprite: "RazorMap0",
-   sprite: "RazorMap1",
-   sprite: "RazorMap2",
-   sprite: "RazorMap3",
-   sprite: "RazorMap4",
-   sprite: "RazorMap5",
-   sprite: "RazorMap6",
-   sprite: "RazorMap7",
+   sprite: "RazorMap0.pcx",
+   sprite: "RazorMap1.pcx",
+   sprite: "RazorMap2.pcx",
+   sprite: "RazorMap3.pcx",
+   sprite: "RazorMap4.pcx",
+   sprite: "RazorMap5.pcx",
+   sprite: "RazorMap6.pcx",
+   sprite: "RazorMap7.pcx",
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 1.0
+   light: {
+      name: "Port"
+      loc: (-75, -125, 6)
+      color: "red"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-75, 125, 6)
+      color: "green"
+      intensity: 100
+      radius: 30
+      mode: "steady"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-55, 0, 20)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+   light: {
+      name: "Ventral"
+      loc: (-55, 0, -12)
+      color: "white"
+      intensity: 100
+      radius: 30
+      mode: "blink"
+      blink_interval: 1.0
+   }
+}
