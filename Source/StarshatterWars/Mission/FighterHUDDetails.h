@@ -49,6 +49,7 @@ private:
     bool bShowCaution = true;
     EMode Modes[2] = { EMode::Ship, EMode::FOV };
     TArray<FRow> StatusRows;
+    TArray<FString> StatusTextLines;
     TArray<SSWDamagePanel::FCell> DamageRows;
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;

@@ -136,6 +136,7 @@ void SFighterHUDDetails::Refresh()
     TargetDisplayColor = FLinearColor::Yellow;
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
+    StatusTextLines.Reset();
     bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
@@ -194,6 +195,45 @@ void SFighterHUDDetails::Refresh()
         StatusRows.Add({TEXT("HULL"), PlayerHull});
         if (P->GetShield()) StatusRows.Add({TEXT("SHIELD"), double(P->GetShieldStrength())});
         if (P->GetPrimary()) StatusRows.Add({TEXT("GUNS"), Charge(P->GetPrimary())});
+
+        // Legacy status text lines (EMCON, missiles, decoy, systems, lives)
+        if (Sensor* SensorDataForStatus = P->GetSensor())
+        {
+            if (!SensorDataForStatus->IsPowerOn() || SensorDataForStatus->GetEnergy() <= 0)
+            {
+                const bool bBlink = (FPlatformTime::Seconds() > 0) && (int32(FPlatformTime::Seconds()) & 1);
+                StatusTextLines.Add(bBlink ? TEXT("EMCON  SENSOR-OFF") : TEXT("EMCON"));
+            }
+            else
+            {
+                StatusTextLines.Add(FString::Printf(TEXT("EMCON  MODE %d"), P->GetEMCON()));
+            }
+        }
+        else
+        {
+            StatusTextLines.Add(FString::Printf(TEXT("EMCON  MODE %d"), P->GetEMCON()));
+        }
+
+        WeaponGroup* SelectedSecondary = P->GetSecondaryGroup();
+        ListIter<WeaponGroup> WIt = P->GetWeapons();
+        while (++WIt)
+        {
+            WeaponGroup* W = WIt.value();
+            if (!W || !W->IsMissile()) continue;
+            const char* Name = (W->GetDesign() && W->GetDesign()->name.length()) ? W->GetDesign()->name.data() : "MSL";
+            const bool bSelected = (W == SelectedSecondary);
+            StatusTextLines.Add(FString::Printf(TEXT("%hs  %d%s"), Name, W->Ammo(), bSelected ? TEXT(" *") : TEXT("")));
+        }
+
+        if (P->GetDecoy())
+            StatusTextLines.Add(FString::Printf(TEXT("DECOY  %d"), P->GetDecoy()->Ammo()));
+
+        if (const char* Dir = P->GetDirectorInfo())
+            if (Dir[0]) StatusTextLines.Add(FString::Printf(TEXT("SYSTEMS  %hs"), Dir));
+
+        if (P->GetRespawnCount() > 0)
+            StatusTextLines.Add(FString::Printf(TEXT("LIVES  %d"), P->GetRespawnCount() + 1));
+
         Primary = WeaponLabel(P->GetPrimaryGroup()); Secondary = WeaponLabel(P->GetSecondaryGroup());
         // Legacy warning cells remain in fixed positions as damage changes.
         SSWDamagePanel::Build(P, DamageRows);
@@ -455,10 +495,12 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         if (M==EMode::Ship)
         {
             for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,36+I*25)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
-            // Reserve the footer below the six possible status gauges. Follow
-            // actual engine spool/power state, not merely the held input key.
+            // Legacy text status lines under the gauges
+            const double TextBase = 36 + StatusRows.Num()*25 + 4;
+            for (int32 I=0; I<StatusTextLines.Num(); ++I)
+                Text(P+FVector2D(8, TextBase + I*14)*Scale, StatusTextLines[I]);
             if (bAugmenterActive)
-                Text(P+FVector2D(8,192)*Scale, TEXT("AUGMENTER ACTIVE"), FLinearColor(0.1f,1.0f,0.3f,1.0f));
+                Text(P+FVector2D(8, TextBase + StatusTextLines.Num()*14)*Scale, TEXT("AUGMENTER ACTIVE"), FLinearColor(0.1f,1.0f,0.3f,1.0f));
         }
         else
         {
