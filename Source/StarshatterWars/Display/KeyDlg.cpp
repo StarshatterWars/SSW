@@ -1,5 +1,4 @@
-#include "InputMappingContext.h"
-#include "EnhancedActionKeyMapping.h"
+
 /*=============================================================================
     Project:        Starshatter Wars
     Studio:         Fractal Dev Studios
@@ -19,7 +18,8 @@
 =============================================================================*/
 
 #include "KeyDlg.h"
-
+#include "InputMappingContext.h"
+#include "EnhancedActionKeyMapping.h"
 // UMG
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
