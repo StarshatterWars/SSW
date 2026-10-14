@@ -1,5 +1,6 @@
-#include "GameStructs_System.h"
 #include "TacticalReferenceActor.h"
+#include "GameStructs_System.h"
+
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
