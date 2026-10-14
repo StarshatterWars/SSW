@@ -8,6 +8,7 @@ class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UTextRenderComponent;
+class UDirectionalLightComponent;
 
 // In-game tactical ship viewer: shows a ship mesh, mouse-drag rotates, wheel zooms.
 UCLASS(Blueprintable)
@@ -62,6 +63,9 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UTextRenderComponent* CloseText;
 
+    UPROPERTY(VisibleAnywhere)
+    UDirectionalLightComponent* KeyLight;
+
     UPROPERTY(EditAnywhere, Category = "Tactical")
     float Yaw = 180.f;
 
@@ -75,7 +79,7 @@ protected:
     float MinDistance = 200.f;
 
     UPROPERTY(EditAnywhere, Category = "Tactical")
-    float MaxDistance = 4000.f;
+    float MaxDistance = 20000.f;
 
     UPROPERTY(EditAnywhere, Category = "Tactical")
     float OrbitSpeed = 0.4f;

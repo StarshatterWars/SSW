@@ -1,10 +1,13 @@
+
 #include "TacticalReferenceActor.h"
+
 #include "GameStructs_System.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Engine/StaticMesh.h"
 
 ATacticalReferenceActor::ATacticalReferenceActor()
@@ -46,6 +49,12 @@ ATacticalReferenceActor::ATacticalReferenceActor()
     CloseText->SetWorldSize(32.f);
     CloseText->SetRelativeLocation(FVector(0.f, 0.f, -80.f));
     CloseText->SetVisibility(false);
+
+    KeyLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("KeyLight"));
+    KeyLight->SetupAttachment(Root);
+    KeyLight->SetIntensity(8.f);
+    KeyLight->SetLightColor(FLinearColor(0.9f, 0.95f, 1.f));
+    KeyLight->SetRelativeRotation(FRotator(-40.f, 30.f, 0.f));
 
     ApplyView();
 }
