@@ -2406,8 +2406,9 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
         const FVector2D Position = Project(Waypoint.Location);
         const FLinearColor Color = Waypoint.bNext ? FLinearColor::White : FLinearColor(0.25f, 0.65f, 1);
         if (HasPrevious) Line({Previous, Position}, Color);
-        Line({Position + FVector2D(-5, -5), Position + FVector2D(5, -5),
-              Position + FVector2D(5, 5), Position + FVector2D(-5, 5), Position + FVector2D(-5, -5)}, Color);
+        const float WP = 8.f * FMath::Clamp(ZoomScale / 12.f, 0.35f, 3.5f);
+        Line({Position + FVector2D(-WP, -WP), Position + FVector2D(WP, -WP),
+              Position + FVector2D(WP, WP), Position + FVector2D(-WP, WP), Position + FVector2D(-WP, -WP)}, Color);
         Label(Position + FVector2D(8, 8), Waypoint.Label, Color);
         Previous = Position;
         HasPrevious = true;
@@ -2415,6 +2416,9 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
     const FVector2D Size = Geometry.GetLocalSize();
     const double ZoomedRadius = GetDisplayRadius() / ZoomScale;
     const bool bUseSprites = ZoomedRadius <= 70000.0; // rep >= 3
+
+    // Scale indicator icons with the map zoom so they grow/shrink with the view.
+    const float IconScale = FMath::Clamp(ZoomScale / 12.f, 0.35f, 3.5f);
 
     for (const auto& Contact : LiveContacts)
     {
@@ -2435,7 +2439,7 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
                         Design->ShipName, SpriteName);
                     if (Tex)
                     {
-                        const float SpriteSize = 32.f;
+                        const float SpriteSize = 64.f * IconScale;
                         FSlateBrush Brush;
                         Brush.SetResourceObject(Tex);
                         Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
@@ -2449,7 +2453,7 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
         }
         if (!bDrewSprite)
         {
-            const float Radius = Contact.bPlayer ? 7.f : 4.f;
+            const float Radius = (Contact.bPlayer ? 16.f : 8.f) * IconScale;
             Line({Position + FVector2D(0, -Radius), Position + FVector2D(Radius, 0),
                   Position + FVector2D(0, Radius), Position + FVector2D(-Radius, 0),
                   Position + FVector2D(0, -Radius)}, Contact.Color);

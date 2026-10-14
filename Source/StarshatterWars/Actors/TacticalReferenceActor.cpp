@@ -1,4 +1,6 @@
+
 #include "TacticalReferenceActor.h"
+#include "GameStructs_System.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -110,4 +112,17 @@ void ATacticalReferenceActor::ApplyView()
         Arm->TargetArmLength = Distance;
         Arm->SetRelativeRotation(FRotator(Pitch, Yaw, 0.f));
     }
+}
+
+void ATacticalReferenceActor::ShowShipDesign(const FShipDesign& Design)
+{
+    if (Design.Mesh.IsNull())
+    {
+        ShowShip(Design.ShipName);
+        return;
+    }
+    if (UStaticMesh* Mesh = Design.Mesh.LoadSynchronous())
+        SetDisplayMesh(Mesh);
+    else
+        ShowShip(Design.ShipName);
 }

@@ -2744,10 +2744,15 @@ void UMissionNavDlg::RefreshLiveNavigation()
         {
             Ship* Vessel = Ships.value();
             if (!Vessel || Vessel->IsDead()) continue;
-            // NavDlg::UpdateLists: neutral, own side, or more than KNOWN intel.
-            const bool Visible = Vessel == Player || Vessel->GetIFF() == 0 || Vessel->GetIFF() == Player->GetIFF()
-                || (Vessel->GetElement() && Vessel->GetElement()->GetIntelLevel() > EIntel::KNOWN);
-            if (!Visible) continue;
+            // Friendly/neutral always. Hostiles if in the player's region (visible in 3D),
+            // on the sensor track list, or with element intel above KNOWN.
+            const bool bFriendly = Vessel == Player || Vessel->GetIFF() == 0 || Vessel->GetIFF() == Player->GetIFF();
+            const bool bLocal = Region == PlayerRegion;
+            bool bTracked = false;
+            if (!bFriendly && Player->GetSensor())
+                bTracked = Player->GetSensor()->FindContact(Vessel) != nullptr;
+            const bool bIntel = Vessel->GetElement() && Vessel->GetElement()->GetIntelLevel() > EIntel::KNOWN;
+            if (!bFriendly && !bLocal && !bTracked && !bIntel) continue;
             auto& Contact = LiveContacts.AddDefaulted_GetRef();
             Contact.Id = static_cast<uint32>(Vessel->GetIdentity());
             Contact.Name = ANSI_TO_TCHAR(Vessel->GetName());

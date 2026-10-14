@@ -18,6 +18,7 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Tactical")
     void ShowShip(const FString& DesignName);
+    void ShowShipDesign(const struct FShipDesign& Design);
 
     UFUNCTION(BlueprintCallable, Category = "Tactical")
     void SetDisplayMesh(UStaticMesh* Mesh);

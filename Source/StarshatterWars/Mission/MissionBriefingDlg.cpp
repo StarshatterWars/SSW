@@ -2657,7 +2657,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
         TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
     };
     const FKey Keys[] = {EKeys::F1, EKeys::F1, EKeys::F2, EKeys::F2, EKeys::F3,
-        EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
+        EKeys::F5, EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
         EKeys::Right, EKeys::Up, EKeys::Add};
     auto IsMapped = [this](UInputAction* Action)
     {
@@ -2672,7 +2672,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
     {
         const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), Names[Command], Names[Command]);
         UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
-        const EInputActionValueType Type = Command >= 10 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
+        const EInputActionValueType Type = Command >= 11 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
         if (Action && Action->ValueType != Type)
         {
             UE_LOG(LogTemp, Warning, TEXT("[MissionCamera] %s has the wrong value type; using the default binding."), Names[Command]);
@@ -2689,7 +2689,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
             auto Map = [this, Action, Shift, Command](FKey Key, bool bNegative)
             {
                 auto& Mapping = MissionCameraContext->MapKey(Action, Key);
-                if (Command == 1 || Command == 3 || Command == 8 || Command == 10 || Command == 11)
+                if (Command == 1 || Command == 3 || Command == 9 || Command == 11 || Command == 12)
                 {
                     auto* Chord = NewObject<UInputTriggerChordAction>(MissionCameraContext.Get());
                     Chord->ChordAction = Shift;
@@ -2698,13 +2698,13 @@ void UMissionBriefingDlg::BindMissionCameraInput()
                 if (bNegative) Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(MissionCameraContext.Get()));
             };
             Map(Keys[Command], false);
-            if (Command == 10) Map(EKeys::Left, true);
-            if (Command == 11) Map(EKeys::Down, true);
-            if (Command == 12) Map(EKeys::Subtract, true);
+            if (Command == 11) Map(EKeys::Left, true);
+            if (Command == 12) Map(EKeys::Down, true);
+            if (Command == 13) Map(EKeys::Subtract, true);
         }
-        MissionMenuInput->BindAction(Action, Command >= 10 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
+        MissionMenuInput->BindAction(Action, Command >= 11 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
             this, &UMissionBriefingDlg::OnMissionCameraCommand, Command);
-        if (Command >= 10)
+        if (Command >= 11)
         {
             MissionMenuInput->BindAction(Action, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
             MissionMenuInput->BindAction(Action, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
@@ -2716,9 +2716,9 @@ void UMissionBriefingDlg::BindMissionCameraInput()
 void UMissionBriefingDlg::ReleaseMissionCameraCommand(const FInputActionValue&, int32 Command)
 {
     if (!MissionCameraRig) return;
-    if (Command == 10) MissionCameraRig->LookX = 0.0;
-    if (Command == 11) MissionCameraRig->LookY = 0.0;
-    if (Command == 12) MissionCameraRig->RangeInput = 0.0;
+    if (Command == 11) MissionCameraRig->LookX = 0.0;
+    if (Command == 12) MissionCameraRig->LookY = 0.0;
+    if (Command == 13) MissionCameraRig->RangeInput = 0.0;
 }
 
 void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value, int32 Command)
@@ -2728,14 +2728,14 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
     const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
     // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
     if ((Command == 0 || Command == 2) && Shift) return;
-    if (Command >= 10)
+    if (Command >= 11)
     {
         const float Axis = Value.Get<float>();
         if (!FMath::IsFinite(Axis)) return;
         const double Amount = FMath::Clamp(double(Axis), -1.0, 1.0);
-        if (Command == 10) MissionCameraRig->LookX = Amount;
-        if (Command == 11) MissionCameraRig->LookY = Amount;
-        if (Command == 12) MissionCameraRig->RangeInput = Amount;
+        if (Command == 11) MissionCameraRig->LookX = Amount;
+        if (Command == 12) MissionCameraRig->LookY = Amount;
+        if (Command == 13) MissionCameraRig->RangeInput = Amount;
         return;
     }
     switch (Command)

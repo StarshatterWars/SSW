@@ -28,6 +28,8 @@
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "TacticalReferenceActor.h"
+#include "EngineUtils.h"
 
 #include "MenuScreen.h"
 #include "GameStructs.h"
@@ -287,6 +289,29 @@ void UTacRefDlg::SelectShipByIndex(int32 Index)
     if (TxtCaption)     TxtCaption->SetText(FText::FromString(Caption));
     if (TxtStats)       TxtStats->SetText(FText::FromString(Stats));
     if (TxtDescription) TxtDescription->SetText(FText::FromString(Desc));
+
+    // Show the ship in the tactical viewer.
+    if (UWorld* World = GetWorld())
+    {
+        ATacticalReferenceActor* Viewer = nullptr;
+        for (TActorIterator<ATacticalReferenceActor> It(World); It; ++It)
+        {
+            Viewer = *It;
+            break;
+        }
+        if (!Viewer)
+        {
+            FActorSpawnParameters Params;
+            Viewer = World->SpawnActor<ATacticalReferenceActor>(
+                ATacticalReferenceActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+        }
+        if (Viewer)
+        {
+            Viewer->ShowShipDesign(*Row);
+            if (APlayerController* PC = GetOwningPlayer())
+                PC->SetViewTarget(Viewer);
+        }
+    }
 }
 
 void UTacRefDlg::BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FString& OutStats, FString& OutDesc) const
