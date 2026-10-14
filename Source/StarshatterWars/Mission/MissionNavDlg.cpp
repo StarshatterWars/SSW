@@ -19,6 +19,7 @@
 #include "Game.h"
 #include "Sim.h"
 #include "Ship.h"
+#include "Sensor.h"
 #include "SimRegion.h"
 #include "SimElement.h"
 #include "Instruction.h"
