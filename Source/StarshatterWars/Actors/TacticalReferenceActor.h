@@ -7,6 +7,7 @@
 class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
+class UTextRenderComponent;
 
 // In-game tactical ship viewer: shows a ship mesh, mouse-drag rotates, wheel zooms.
 UCLASS(Blueprintable)
@@ -36,6 +37,7 @@ public:
     // Cutout is x=32, w=1024, y=285, h=640 in a 1920x1080 frame.
     UFUNCTION(BlueprintCallable, Category = "Tactical")
     void CenterInPanel();
+    void ShowUnavailableMessage(bool bShow);
 
     virtual void Tick(float DeltaTime) override;
 
@@ -53,6 +55,12 @@ protected:
 
     UPROPERTY(VisibleAnywhere)
     UCameraComponent* Camera;
+
+    UPROPERTY(VisibleAnywhere)
+    UTextRenderComponent* MessageText;
+
+    UPROPERTY(VisibleAnywhere)
+    UTextRenderComponent* CloseText;
 
     UPROPERTY(EditAnywhere, Category = "Tactical")
     float Yaw = 180.f;

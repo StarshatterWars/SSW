@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 
 ATacticalReferenceActor::ATacticalReferenceActor()
@@ -26,6 +27,25 @@ ATacticalReferenceActor::ATacticalReferenceActor()
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
     Camera->SetupAttachment(Arm);
 
+    MessageText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("MessageText"));
+    MessageText->SetupAttachment(Root);
+    MessageText->SetText(FText::FromString(TEXT("Not Available")));
+    MessageText->SetTextRenderColor(FColor(180, 200, 220));
+    MessageText->SetHorizontalAlignment(EHTA_Center);
+    MessageText->SetVerticalAlignment(EVRTA_TextCenter);
+    MessageText->SetWorldSize(48.f);
+    MessageText->SetVisibility(false);
+
+    CloseText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("CloseText"));
+    CloseText->SetupAttachment(Root);
+    CloseText->SetText(FText::FromString(TEXT("[ Close ]")));
+    CloseText->SetTextRenderColor(FColor(220, 160, 120));
+    CloseText->SetHorizontalAlignment(EHTA_Center);
+    CloseText->SetVerticalAlignment(EVRTA_TextCenter);
+    CloseText->SetWorldSize(32.f);
+    CloseText->SetRelativeLocation(FVector(0.f, 0.f, -80.f));
+    CloseText->SetVisibility(false);
+
     ApplyView();
 }
 
@@ -38,9 +58,11 @@ void ATacticalReferenceActor::BeginPlay()
 void ATacticalReferenceActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (!bCaptureMouse) return;
-
     APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+    if (MessageText && MessageText->IsVisible() && PC && PC->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+        ShowUnavailableMessage(false);
+
+    if (!bCaptureMouse) return;
     if (!PC) return;
 
     float MX = 0.f, MY = 0.f;
@@ -55,6 +77,7 @@ void ATacticalReferenceActor::Tick(float DeltaTime)
 
 void ATacticalReferenceActor::ShowShip(const FString& DesignName)
 {
+    if (ShipMesh) { ShipMesh->SetStaticMesh(nullptr); ShipMesh->SetVisibility(false); }
     if (DesignName.IsEmpty() || !GetWorld()) return;
 
     const FString BPPath = FString::Printf(
@@ -74,14 +97,22 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
     const FString MeshPath = FString::Printf(
         TEXT("/Game/Models/%s/%s.%s"), *DesignName, *DesignName, *DesignName);
     if (UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *MeshPath))
+    {
         SetDisplayMesh(Mesh);
+        return;
+    }
+    ShowUnavailableMessage(true);
 }
 
 void ATacticalReferenceActor::SetDisplayMesh(UStaticMesh* Mesh)
 {
-    if (!ShipMesh || !Mesh) return;
+    if (!ShipMesh) return;
+    ShipMesh->SetStaticMesh(nullptr);
+    ShipMesh->SetVisibility(false);
+    if (!Mesh) return;
     ShipMesh->SetStaticMesh(Mesh);
     ShipMesh->SetVisibility(true);
+    ShowUnavailableMessage(false);
 }
 
 void ATacticalReferenceActor::AddOrbitDelta(float YawDelta, float PitchDelta)
@@ -141,4 +172,18 @@ void ATacticalReferenceActor::CenterInPanel()
     const float OffX = (0.5f - CutoutCenterX) * 2.f * HalfW;
     const float OffY = (CutoutCenterY - 0.5f) * 2.f * HalfH;
     Camera->SetRelativeLocation(FVector(0.f, OffX, OffY));
+}
+
+void ATacticalReferenceActor::ShowUnavailableMessage(bool bShow)
+{
+    if (MessageText) MessageText->SetVisibility(bShow);
+    if (CloseText)
+    {
+        CloseText->SetVisibility(bShow);
+        if (bShow) CloseText->SetRelativeRotation(FRotator(0.f, Yaw, 0.f));
+    }
+    if (!MessageText) return;
+    MessageText->SetVisibility(bShow);
+    if (bShow)
+        MessageText->SetRelativeRotation(FRotator(0.f, Yaw, 0.f));
 }
