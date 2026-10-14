@@ -32,6 +32,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Tactical")
     void ResetView();
 
+    // Shift the camera so the ship appears in the panel cutout, not screen center.
+    // Cutout is x=32, w=1024, y=285, h=640 in a 1920x1080 frame.
+    UFUNCTION(BlueprintCallable, Category = "Tactical")
+    void CenterInPanel();
+
     virtual void Tick(float DeltaTime) override;
 
 protected:

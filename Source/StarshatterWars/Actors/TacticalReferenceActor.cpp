@@ -1,6 +1,5 @@
-
-#include "TacticalReferenceActor.h"
 #include "GameStructs_System.h"
+#include "TacticalReferenceActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -21,6 +20,7 @@ ATacticalReferenceActor::ATacticalReferenceActor()
     Arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Arm"));
     Arm->SetupAttachment(Root);
     Arm->TargetArmLength = Distance;
+    CenterInPanel();
     Arm->bDoCollisionTest = false;
 
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -110,6 +110,7 @@ void ATacticalReferenceActor::ApplyView()
     if (Arm)
     {
         Arm->TargetArmLength = Distance;
+    CenterInPanel();
         Arm->SetRelativeRotation(FRotator(Pitch, Yaw, 0.f));
     }
 }
@@ -125,4 +126,19 @@ void ATacticalReferenceActor::ShowShipDesign(const FShipDesign& Design)
         SetDisplayMesh(Mesh);
     else
         ShowShip(Design.ShipName);
+}
+
+void ATacticalReferenceActor::CenterInPanel()
+{
+    if (!Camera) return;
+    // Panel cutout center as a fraction of a 1920x1080 frame.
+    const float CutoutCenterX = (32.f + 1024.f * 0.5f) / 1920.f; // 0.2833
+    const float CutoutCenterY = (285.f + 640.f * 0.5f) / 1080.f; // 0.5602
+    const float FOV = Camera->FieldOfView;
+    const float HalfW = Distance * FMath::Tan(FMath::DegreesToRadians(FOV * 0.5f));
+    const float HalfH = HalfW * (1080.f / 1920.f);
+    // Offset the camera so the ship (at origin) lands at the cutout center.
+    const float OffX = (0.5f - CutoutCenterX) * 2.f * HalfW;
+    const float OffY = (CutoutCenterY - 0.5f) * 2.f * HalfH;
+    Camera->SetRelativeLocation(FVector(0.f, OffX, OffY));
 }
