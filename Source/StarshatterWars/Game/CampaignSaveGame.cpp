@@ -17,6 +17,7 @@
 */
 
 #include "CampaignSaveGame.h"
+#include "CampaignSlotSave.h"
 
 #include "Campaign.h"
 #include "Combatant.h"
@@ -726,6 +727,9 @@ CampaignSaveGame::Save(const char* name)
             CombatGroup::SaveOrderOfBattle(s, g);
     }
 }
+
+    // Per-campaign Unreal save slot.
+    UCampaignSlotSave::SaveCampaign(campaign);
 
 void
 CampaignSaveGame::Delete(const char* name)

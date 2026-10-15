@@ -1,4 +1,4 @@
-﻿#include "ContactsDlg.h"
+#include "ContactsDlg.h"
 #include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
 #include "MissionObjectTarget.h"
@@ -14,6 +14,9 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SListView.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Layout/SBox.h"
+#include "Engine/Texture2D.h"
 #include "Styling/CoreStyle.h"
 
 namespace {
@@ -23,6 +26,8 @@ struct FContactRowData {
     double Range = 0;
     bool Enemy = false;
     FLinearColor Color = FLinearColor::Yellow;
+    UTexture2D* Icon = nullptr;
+    TSharedPtr<FSlateBrush> Brush;
 };
 using FContactRow = TSharedPtr<FContactRowData>;
 class SContactsList : public SCompoundWidget {
@@ -52,9 +57,14 @@ public:
                                 .ButtonColorAndOpacity_Lambda([this,Row](){return Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()
                                     ?FLinearColor(0.2f,0.45f,0.65f,1):FLinearColor(0.035f,0.035f,0.035f,1);})
                                 .OnClicked_Lambda([this,Row](){if(Host.IsValid() && Row->Actor.IsValid())Host->SelectMissionContact(Row->Actor.Get());return FReply::Handled();})
-                                [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
+                                [SNew(SHorizontalBox)
+                                    +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
+                                    [SNew(SBox).WidthOverride(48).HeightOverride(48)
+                                        [SNew(SImage).Image_Lambda([Row](){return Row->Brush.IsValid()?Row->Brush.Get():FCoreStyle::Get().GetDefaultBrush();})]]
+                                    +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+                                    [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
                                     .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %s"),
-                                        Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,*UFormattingUtils::FormatDistance(Row->Range * 1000.0)));})]];
+                                        Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,*UFormattingUtils::FormatDistance(Row->Range * 1000.0)));})]]];
                     })]
                 +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text_Lambda([this](){return FText::FromString(FString::Printf(TEXT("%d CONTACTS"),Rows.Num()));})]]];
         Refresh();
@@ -90,6 +100,12 @@ private:
                 const int Team=Simulation->GetMission()?Simulation->GetMission()->GetTeam():Player->GetIFF();
                 Row->Enemy=Data->GetIFF()>0 && Data->GetIFF()!=Team;
                 if(Data->GetIFF()>0)Row->Color=Row->Enemy?FLinearColor::Red:FLinearColor(0.25f,0.65f,1,1);
+                if(!Row->Icon){
+                    const FString ShipName=Row->Type;
+                    const FString Path=FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"),*ShipName,*ShipName,*ShipName);
+                    Row->Icon=LoadObject<UTexture2D>(nullptr,*Path);
+                    if(Row->Icon){Row->Brush=MakeShared<FSlateImageBrush>(Row->Icon,FVector2D(48,48));}
+                }
             } else {
                 FMissionObjectData Object;
                 if(!ReadMissionObject(Actor,Player,Region,Object))continue;
