@@ -2800,6 +2800,23 @@ bool ASystemSceneBuilder::GetMissionBodyInfo(AActor* Actor, FString& Name, FStri
         Type = (*Body)->GetType() == Orbital::MOON ? TEXT("Moon") :
             ((*Body)->GetType() == Orbital::STAR ? TEXT("Star") : TEXT("Planet"));
         AuthoredLocation = (*Body)->Location();
+        if ((*Body)->GetType() == Orbital::STAR) {
+            const TCHAR* ClassToken = nullptr;
+            switch ((*Body)->GetSubtype()) {
+            case Star::O: ClassToken = TEXT("O"); break;
+            case Star::B: ClassToken = TEXT("B"); break;
+            case Star::A: ClassToken = TEXT("A"); break;
+            case Star::F: ClassToken = TEXT("F"); break;
+            case Star::G: ClassToken = TEXT("G"); break;
+            case Star::K: ClassToken = TEXT("K"); break;
+            case Star::M: ClassToken = TEXT("M"); break;
+            default: break; // Retain authored map for special stellar classes.
+            }
+            if (ClassToken) {
+                ImagePath = FString::Printf(TEXT("/Game/GameData/Galaxy/StarIcons/Star%s_map.Star%s_map"), ClassToken, ClassToken);
+                return true;
+            }
+        }
         FString TextureName = ANSI_TO_TCHAR((*Body)->GetMapName());
         if (TextureName.IsEmpty()) TextureName = ANSI_TO_TCHAR((*Body)->GetTextureName());
         TextureName.ReplaceInline(TEXT("\\"), TEXT("/"));

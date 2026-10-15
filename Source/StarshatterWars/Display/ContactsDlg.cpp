@@ -1,4 +1,4 @@
-#include "ContactsDlg.h"
+﻿#include "ContactsDlg.h"
 #include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
 #include "MissionObjectTarget.h"
@@ -17,6 +17,8 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBox.h"
 #include "Engine/Texture2D.h"
+#include "UObject/StrongObjectPtr.h"
+#include "ShipDesignRegistry.h"
 #include "Styling/CoreStyle.h"
 
 namespace {
@@ -26,7 +28,8 @@ struct FContactRowData {
     double Range = 0;
     bool Enemy = false;
     FLinearColor Color = FLinearColor::Yellow;
-    UTexture2D* Icon = nullptr;
+    TStrongObjectPtr<UTexture2D> Icon;
+    bool IconLoadAttempted = false;
     TSharedPtr<FSlateBrush> Brush;
 };
 using FContactRow = TSharedPtr<FContactRowData>;
@@ -60,7 +63,8 @@ public:
                                 [SNew(SHorizontalBox)
                                     +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
                                     [SNew(SBox).WidthOverride(48).HeightOverride(48)
-                                        [SNew(SImage).Image_Lambda([Row](){return Row->Brush.IsValid()?Row->Brush.Get():FCoreStyle::Get().GetDefaultBrush();})]]
+                                        [SNew(SImage).ColorAndOpacity(FLinearColor::White)
+                                        .Image_Lambda([Row](){return Row->Brush.IsValid()?Row->Brush.Get():FCoreStyle::Get().GetBrush("WhiteBrush");})]]
                                     +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
                                     [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
                                     .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %s"),
@@ -100,16 +104,48 @@ private:
                 const int Team=Simulation->GetMission()?Simulation->GetMission()->GetTeam():Player->GetIFF();
                 Row->Enemy=Data->GetIFF()>0 && Data->GetIFF()!=Team;
                 if(Data->GetIFF()>0)Row->Color=Row->Enemy?FLinearColor::Red:FLinearColor(0.25f,0.65f,1,1);
-                if(!Row->Icon){
-                    const FString ShipName=Row->Type;
-                    const FString Path=FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"),*ShipName,*ShipName,*ShipName);
-                    Row->Icon=LoadObject<UTexture2D>(nullptr,*Path);
-                    if(Row->Icon){Row->Brush=MakeShared<FSlateImageBrush>(Row->Icon,FVector2D(48,48));}
+                if(!Row->IconLoadAttempted){
+                    Row->IconLoadAttempted = true;
+                    FString Path;
+                    if(const FShipDesign* D = Data->Design() ? ShipDesignRegistry::Find(Data->Design()->name) : nullptr){
+                        if(!D->HudIconName.IsEmpty()){
+                            FString Icon = D->HudIconName;
+                            if(Icon.StartsWith(TEXT("/Game/"))) Path = Icon;
+                            else { Icon.RemoveFromEnd(TEXT(".pcx"), ESearchCase::IgnoreCase);
+                                   Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *D->ShipName, *Icon, *Icon); }
+                        }
+                    }
+                    if(Path.IsEmpty()){
+                        const FString ShipName = Row->Type;
+                        Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipName, *ShipName, *ShipName);
+                    }
+                    if (Data->GetClassification() == CLASSIFICATION::FARCASTER)
+                        Path = TEXT("/Game/UI/Ships/Farcaster/FarcasterHud.FarcasterHud");
+                    Row->Icon.Reset(LoadObject<UTexture2D>(nullptr, *Path));
+                    if(Row->Icon.IsValid()){
+                        Row->Brush = MakeShared<FSlateBrush>();
+                        Row->Brush->SetResourceObject(Row->Icon.Get());
+                        Row->Brush->ImageSize = FVector2D(48,48);
+                        Row->Brush->DrawAs = ESlateBrushDrawType::Image;
+                    }
                 }
             } else {
                 FMissionObjectData Object;
                 if(!ReadMissionObject(Actor,Player,Region,Object))continue;
                 Row->Name=Object.Name;Row->Type=Object.Type;Row->Range=Object.RangeKm;
+                if (!Row->IconLoadAttempted) {
+                    Row->IconLoadAttempted = true;
+                    const FString ImagePath = Cast<AWaypointActor>(Actor)
+                        ? TEXT("/Game/UI/HUD/lead.lead") : Object.ImagePath;
+                    if (!ImagePath.IsEmpty())
+                        Row->Icon.Reset(LoadObject<UTexture2D>(nullptr, *ImagePath));
+                    if (Row->Icon.IsValid()) {
+                        Row->Brush = MakeShared<FSlateBrush>();
+                        Row->Brush->SetResourceObject(Row->Icon.Get());
+                        Row->Brush->ImageSize = FVector2D(48,48);
+                        Row->Brush->DrawAs = ESlateBrushDrawType::Image;
+                    }
+                }
             }
             if(!EnemiesOnly || Row->Enemy)Updated.Add(Row);
         }
