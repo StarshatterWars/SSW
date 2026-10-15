@@ -29,6 +29,7 @@
 
 ABaikalShipActor::ABaikalShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Baikal"));
     ConfigureTurretsFromShipDef(TEXT("Baikal"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(1.6f));

@@ -4,6 +4,7 @@
 
 AIntruderShipActor::AIntruderShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Intruder"));
     SetActorScale3D(FVector(0.250000f));
     ApplyIntruderDefaults();
 }

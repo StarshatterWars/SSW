@@ -162,6 +162,14 @@ AShipActor::AShipActor()
     VFXRoot->SetupAttachment(ShipRoot);
     VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
+    TurretMountRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TurretMountRoot"));
+    TurretMountRoot->SetupAttachment(VFXRoot);
+    TurretMountRoot->bEditableWhenInherited = true;
+
+    WeaponHardpointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponHardpointRoot"));
+    WeaponHardpointRoot->SetupAttachment(VFXRoot);
+    WeaponHardpointRoot->bEditableWhenInherited = true;
+
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
     FocusPoint->SetupAttachment(PointRoot);
 

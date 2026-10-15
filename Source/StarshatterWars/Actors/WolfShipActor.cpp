@@ -2,6 +2,7 @@
 
 AWolfShipActor::AWolfShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Wolf"));
     ConfigureTurretsFromShipDef(TEXT("Wolf"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(1.7f));

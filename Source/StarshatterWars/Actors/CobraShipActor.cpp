@@ -4,6 +4,7 @@
 
 ACobraShipActor::ACobraShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Cobra"));
     SetActorScale3D(FVector(0.260000f));
     ApplyCobraDefaults();
 }

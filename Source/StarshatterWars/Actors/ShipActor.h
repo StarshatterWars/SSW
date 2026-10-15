@@ -19,6 +19,7 @@ class UMaterialInstanceDynamic;
 class Ship;
 class Drive;
 class UChildActorComponent;
+class UShipWeaponMountComponent;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -85,7 +86,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TArray<FShipTurretMountDef> TurretMountDefs;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") bool bEnableTurretActors = true;
     UFUNCTION(BlueprintCallable, CallInEditor, Category="Ship|Turrets") void RebuildTurretActors();
+    // Constructor-only: create inherited native mount components from ship.def.
     void ConfigureTurretsFromShipDef(FName ShipDef);
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TObjectPtr<USceneComponent> TurretMountRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TArray<TObjectPtr<USceneComponent>> NativeTurretMounts;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TArray<TObjectPtr<UChildActorComponent>> NativeTurretBPSlots;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Weapons") TObjectPtr<USceneComponent> WeaponHardpointRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Weapons") TArray<TObjectPtr<UShipWeaponMountComponent>> NativeWeaponHardpoints;
+    // Constructor-only. Per-station Child Actor Class is assigned in the ship BP.
+    void ConfigureWeaponHardpointsFromShipDef(FName ShipDef);
     void ClearTurretActors();
     void UpdateTurretActors();
     UPROPERTY(Transient) TArray<TObjectPtr<UChildActorComponent>> TurretComponents;

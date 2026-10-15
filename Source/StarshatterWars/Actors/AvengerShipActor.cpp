@@ -4,6 +4,7 @@
 
 AAvengerShipActor::AAvengerShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Avenger"));
     SetActorScale3D(FVector(0.270000f));
     ApplyAvengerDefaults();
 }

@@ -4,6 +4,7 @@
 
 ARaptorShipActor::ARaptorShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Raptor"));
     SetActorScale3D(FVector(0.250000f));
     ApplyRaptorDefaults();
 }

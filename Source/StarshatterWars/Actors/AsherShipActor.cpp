@@ -4,6 +4,7 @@
 
 AAsherShipActor::AAsherShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Asher"));
     ConfigureTurretsFromShipDef(TEXT("Asher"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(2.5f));

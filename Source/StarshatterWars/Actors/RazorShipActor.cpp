@@ -4,6 +4,7 @@
 
 ARazorShipActor::ARazorShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Razor"));
     SetActorScale3D(FVector(0.230000f));
     ApplyRazorDefaults();
 }

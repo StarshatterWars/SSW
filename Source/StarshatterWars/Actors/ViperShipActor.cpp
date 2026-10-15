@@ -4,6 +4,7 @@
 
 AViperShipActor::AViperShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Viper"));
     SetActorScale3D(FVector(0.230000f));
     ApplyViperDefaults();
 }

@@ -4,6 +4,7 @@
 
 AFalconShipActor::AFalconShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Falcon"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.270000f));
     ApplyFalconDefaults();

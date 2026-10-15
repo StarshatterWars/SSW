@@ -4,6 +4,7 @@
 
 AStormhawkShipActor::AStormhawkShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Stormhawk"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.250000f));
     ApplyStormhawkDefaults();

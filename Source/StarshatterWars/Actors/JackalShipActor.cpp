@@ -4,6 +4,7 @@
 
 AJackalShipActor::AJackalShipActor()
 {
+    ConfigureWeaponHardpointsFromShipDef(TEXT("Jackal"));
     SetActorScale3D(FVector(0.275000f));
     ApplyJackalDefaults();
 }
