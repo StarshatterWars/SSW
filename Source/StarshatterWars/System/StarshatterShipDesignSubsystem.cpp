@@ -1,7 +1,7 @@
 /*=============================================================================
 	Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright (c) 2025–2026.
+	Copyright (c) 2025â€“2026.
 
 	SUBSYSTEM:    StarshatterShipDesignSubsystem (Unreal Engine)
 	FILE:         StarshatterShipDesignSubsystem.h / .cpp
@@ -392,6 +392,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	bool bLocalRepairScreen = true;
 	bool bLocalWepScreen = true;
 	bool bLocalDegrees = false;
+	bAnglesAreDegrees = false;
 	bool bLocalHidden = false;
 
 	FVector LocalSpin = FVector::ZeroVector;
@@ -420,6 +421,11 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			GetDefText(LocalShipName, Def, fn);
 			NewShipDesign.ShipName = FString(LocalShipName);
 		}
+		else if (Key == "degrees")
+        {
+            GetDefBool(bLocalDegrees, Def, fn);
+            bAnglesAreDegrees = bLocalDegrees;
+        }
 		else if (Key == "display_name")
 		{
 			GetDefText(LocalDisplayName, Def, fn);
@@ -3053,46 +3059,46 @@ void UStarshatterShipDesignSubsystem::ParseWeapon(TermStruct* Val, const char* F
 		else if (Key == "azimuth")
 		{
 			GetDefNumber(Az, PDef, Fn);
-			// if (bAnglesInDegrees) Az = FMath::DegreesToRadians(Az);
+			if (bAnglesAreDegrees) Az = FMath::DegreesToRadians(Az);
 			NewWpn.AzimuthRadians = Az;
 		}
 		else if (Key == "elevation")
 		{
 			GetDefNumber(El, PDef, Fn);
-			// if (bAnglesInDegrees) El = FMath::DegreesToRadians(El);
+			if (bAnglesAreDegrees) El = FMath::DegreesToRadians(El);
 			NewWpn.ElevationRadians = El;
 		}
 		else if (Key == "aim_az_max")
 		{
 			GetDefNumber(AzMax, PDef, Fn);
-			// if (bAnglesInDegrees) AzMax = FMath::DegreesToRadians(AzMax);
+			if (bAnglesAreDegrees) AzMax = FMath::DegreesToRadians(AzMax);
 			AzMin = 0.0f - AzMax; // legacy
 		}
 		else if (Key == "aim_el_max")
 		{
 			GetDefNumber(ElMax, PDef, Fn);
-			// if (bAnglesInDegrees) ElMax = FMath::DegreesToRadians(ElMax);
+			if (bAnglesAreDegrees) ElMax = FMath::DegreesToRadians(ElMax);
 			ElMin = 0.0f - ElMax; // legacy
 		}
 		else if (Key == "aim_az_min")
 		{
 			GetDefNumber(AzMin, PDef, Fn);
-			// if (bAnglesInDegrees) AzMin = FMath::DegreesToRadians(AzMin);
+			if (bAnglesAreDegrees) AzMin = FMath::DegreesToRadians(AzMin);
 		}
 		else if (Key == "aim_el_min")
 		{
 			GetDefNumber(ElMin, PDef, Fn);
-			// if (bAnglesInDegrees) ElMin = FMath::DegreesToRadians(ElMin);
+			if (bAnglesAreDegrees) ElMin = FMath::DegreesToRadians(ElMin);
 		}
 		else if (Key == "aim_az_rest" || Key == "rest_azimuth")
 		{
 			GetDefNumber(AzRest, PDef, Fn);
-			// if (bAnglesInDegrees) AzRest = FMath::DegreesToRadians(AzRest);
+			if (bAnglesAreDegrees) AzRest = FMath::DegreesToRadians(AzRest);
 		}
 		else if (Key == "aim_el_rest" || Key == "rest_elevation")
 		{
 			GetDefNumber(ElRest, PDef, Fn);
-			// if (bAnglesInDegrees) ElRest = FMath::DegreesToRadians(ElRest);
+			if (bAnglesAreDegrees) ElRest = FMath::DegreesToRadians(ElRest);
 		}
 		else if (Key == "explosion")
 		{
@@ -4066,7 +4072,7 @@ void UStarshatterShipDesignSubsystem::ParseSquadron(TermStruct* Val, const char*
 		}
 	}
 
-	// Optional safety (legacy doesn’t clamp, but this prevents garbage):
+	// Optional safety (legacy doesnâ€™t clamp, but this prevents garbage):
 	if (NewSq.Count < 0) NewSq.Count = 0;
 	if (NewSq.Avail < 0) NewSq.Avail = 0;
 	if (NewSq.Avail > NewSq.Count) NewSq.Avail = NewSq.Count;
@@ -4620,7 +4626,7 @@ FDebris UStarshatterShipDesignSubsystem::ParseDebris(TermStruct* Val, const char
 		}
 	}
 
-	// Optional safety (legacy doesn’t clamp, but prevents nonsense):
+	// Optional safety (legacy doesnâ€™t clamp, but prevents nonsense):
 	if (NewDeb.Count < 0) NewDeb.Count = 0;
 
 	return NewDeb;

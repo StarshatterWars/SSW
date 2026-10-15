@@ -6,6 +6,7 @@
 
 #include "Components/AudioComponent.h"
 #include "Sound/SoundCue.h"
+#include "TurretActor.h"
 #include "ShipActor.generated.h"
 
 class USceneComponent;
@@ -17,6 +18,7 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class Ship;
 class Drive;
+class UChildActorComponent;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -76,6 +78,18 @@ public:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaTime) override;
+
+    // BP class selection is shared through a visual-set asset, with per-ship overrides.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TObjectPtr<UTurretVisualSet> TurretVisuals;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TMap<FName,TSubclassOf<ATurretActor>> TurretClassOverrides;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TArray<FShipTurretMountDef> TurretMountDefs;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") bool bEnableTurretActors = true;
+    UFUNCTION(BlueprintCallable, CallInEditor, Category="Ship|Turrets") void RebuildTurretActors();
+    void ConfigureTurretsFromShipDef(FName ShipDef);
+    void ClearTurretActors();
+    void UpdateTurretActors();
+    UPROPERTY(Transient) TArray<TObjectPtr<UChildActorComponent>> TurretComponents;
+    TArray<FName> SpawnedTurretTypes;
 
     void BindRuntimeShip(Ship* InShip);
     void UpdateFromRuntimeShip(float DeltaTime);

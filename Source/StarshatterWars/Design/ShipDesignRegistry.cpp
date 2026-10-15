@@ -831,8 +831,9 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         }
         else
         {
-            MuzzleCount = 1;
-            Muzzles[0] = Src.Location;
+            // Turret barrels are local to the mount, not ship-space muzzles.
+            MuzzleCount = WpnDesign->turret.length() > 0 && WpnDesign->nbarrels > 0 ? 0 : 1;
+            Muzzles[0] = WpnDesign->turret.length() > 0 ? FVector::ZeroVector : Src.Location;
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[ShipDesignRegistry] Weapon '%s' has no muzzles; using Location fallback"),
@@ -882,6 +883,10 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewWeapon->SetRestElevation(Src.Aim.ElRest);
         }
 
+        // Parser has already applied ship scale to Location and Size.
+        NewWeapon->Mount(Src.Location, Src.Size, Src.HullFactor);
+        NewWeapon->SetName(TCHAR_TO_ANSI(*Src.Name));
+        NewWeapon->SetSourceIndex(Src.SourceIndex);
         Legacy->weapons.append(NewWeapon);
 
         UE_LOG(LogTemp, Warning,

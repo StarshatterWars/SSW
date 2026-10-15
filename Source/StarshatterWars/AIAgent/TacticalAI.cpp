@@ -1,4 +1,4 @@
-﻿/*  Project STARSHATTER WARS
+/*  Project STARSHATTER WARS
 	Fractal Dev Studios
 	Copyright © 2025-2026. All Rights Reserved.
 
@@ -549,13 +549,9 @@ TacticalAI::SelectTarget()
 		return;
 	}
 
-	/*
-	 * TEMP UE MIGRATION NOTE:
-	 *
-	 * Weapons are not fully initialized yet.
-	 * Allow sensors and tactical target selection to operate
-	 * even when runtime weapon objects are missing.
-	 */
+	// Legacy: unarmed vessels must not engage. Weapons are built before AI creation.
+	if (ship->GetWeapons().size() < 1)
+		roe = NONE;
 
 	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TacticalAI::SelectTarget ENTER] Ship='%hs' IFF=%d Weapons=%d ROE=%d CurrentTarget='%hs'"),
@@ -571,22 +567,6 @@ TacticalAI::SelectTarget()
 
 	SimObject* ward =
 		ship_ai ? ship_ai->GetWard() : nullptr;
-
-	//-------------------------------------------------------------
-	// INSTRUCTION TARGET OVERRIDE
-	//-------------------------------------------------------------
-	if (navpt && navpt->GetTarget())
-	{
-		ship_ai->SetTarget(navpt->GetTarget());
-
-		UE_LOG(LogTemp, VeryVerbose,
-			TEXT("[TacticalAI::SelectTarget] INSTRUCTION TARGET OVERRIDE Ship='%hs' Target='%hs'"),
-			ship ? ship->GetName() : "NULL",
-			navpt->GetTarget() ?
-			navpt->GetTarget()->GetName() : "NULL");
-
-		return;
-	}
 
 	//-------------------------------------------------------------
 	// If not allowed to engage, drop and return
@@ -687,20 +667,9 @@ TacticalAI::SelectTarget()
 		}
 	}
 
-	//-------------------------------------------------------------
-	// Target reacquisition delay
-	//
-	// TEMP UE MIGRATION:
-	// Disable reacquisition blocking while
-	// runtime tactical tracking stabilizes.
-	//-------------------------------------------------------------
+	// Legacy: a dropped target cannot be reacquired until the cooldown expires.
 	if (ship_ai->DropTime() > 0)
-	{
-		UE_LOG(LogTemp, VeryVerbose,
-			TEXT("[TacticalAI::SelectTarget] IGNORE DropTime Ship='%hs' DropTime=%.2f"),
-			ship ? ship->GetName() : "NULL",
-			ship_ai->DropTime());
-	}
+		return;
 
 	//-------------------------------------------------------------
 	// Directed ROE
@@ -715,6 +684,11 @@ TacticalAI::SelectTarget()
 			target->GetType() == ESimObject::SHIP)
 		{
 			SelectTargetDirected((Ship*)target);
+		}
+		else if (navpt && navpt->GetTarget() &&
+			navpt->GetTarget()->GetType() == ESimObject::SHIP)
+		{
+			SelectTargetDirected((Ship*)navpt->GetTarget());
 		}
 		else
 		{

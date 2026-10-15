@@ -4,6 +4,7 @@
 
 AOrionShipActor::AOrionShipActor()
 {
+    ConfigureTurretsFromShipDef(TEXT("Orion"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(4.0f));
     ApplyOrionDefaults();

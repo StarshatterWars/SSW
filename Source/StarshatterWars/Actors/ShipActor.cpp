@@ -1,4 +1,4 @@
-﻿
+
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -332,6 +332,7 @@ void AShipActor::OnConstruction(const FTransform& Transform)
             RebuildNavLights();
         }
     }
+    RebuildTurretActors();
 }
 
 void AShipActor::BeginPlay()
@@ -342,11 +343,13 @@ void AShipActor::BeginPlay()
     // Reset inherited Blueprint defaults as well as native defaults.
     if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
     Super::BeginPlay();
+    RebuildTurretActors();
 }
 
 void AShipActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     SetActorTickEnabled(false);
+    ClearTurretActors();
     RuntimeShip = nullptr;
     for (UAudioComponent* Audio : {EngineAudioComponent.Get(), BurnerAudioComponent.Get(), RumbleAudioComponent.Get()}) {
         if (IsValid(Audio)) { Audio->Stop(); Audio->DestroyComponent(); }
@@ -371,6 +374,7 @@ AShipActor::Tick(float DeltaTime)
     if (RuntimeShip)
     {
         UpdateFromRuntimeShip(DeltaTime);
+        UpdateTurretActors();
         UpdateNavLights(DeltaTime);
         UpdateMainEnginesFromRuntime(DeltaTime);
         UpdateEngineAudioFromRuntime(DeltaTime);
@@ -1626,6 +1630,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
     RuntimeShip = InShip;
+    RebuildTurretActors();
 
     // Once per bind, not per frame. Flight-axis dimensions are independent of
     // world heading and include the actual BP actor/component scale hierarchy.

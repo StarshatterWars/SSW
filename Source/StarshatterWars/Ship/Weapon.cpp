@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -325,7 +325,7 @@ void Weapon::ExecFrame(double seconds)
     if (design->self_aiming) {
         Track(target, subtarget);
     }
-    else if (turret) {
+    else if (HasTurretGeometry()) {
         ZeroAim();
     }
 
@@ -571,7 +571,7 @@ int Weapon::Track(SimObject* targ, SimSystem* sub)
         firing = 0;
         Aim();
     }
-    else if (turret) {
+    else if (HasTurretGeometry()) {
         ZeroAim();
     }
 
@@ -745,7 +745,7 @@ SimShot* Weapon::FireBarrel(int n)
     // missiles always launch in rail direction:
     else {
         // unless they are on a mobile launcher
-        if (turret && design->self_aiming) {
+        if (HasTurretGeometry() && design->self_aiming) {
             shot = CreateShot(shotpos, aim_cam, design, ship);
             if (shot)
                 shot->SetVelocity(base_vel);
@@ -848,9 +848,7 @@ void Weapon::Orient(const Physical* rep)
     YAxis = YAxis.GetSafeNormal();
     ZAxis = ZAxis.GetSafeNormal();
 
-    // Defensive orthonormalization:
-    ZAxis = (ZAxis - FVector::DotProduct(ZAxis, XAxis) * XAxis).GetSafeNormal();
-    YAxis = FVector::CrossProduct(XAxis, ZAxis).GetSafeNormal();
+    // Preserve the legacy camera basis. Cross(right, forward) would invert up.
 
     // UE orientation matrix (rotation only):
     const FMatrix ShipRotM(
@@ -871,7 +869,7 @@ void Weapon::Orient(const Physical* rep)
     const FTransform ShipXform(ShipM);
 
     // Align graphics with camera:
-    if (turret)
+    if (HasTurretGeometry())
     {
         if (!design->self_aiming)
             ZeroAim();
@@ -885,8 +883,7 @@ void Weapon::Orient(const Physical* rep)
         AimY = AimY.GetSafeNormal();
         AimZ = AimZ.GetSafeNormal();
 
-        AimZ = (AimZ - FVector::DotProduct(AimZ, AimX) * AimX).GetSafeNormal();
-        AimY = FVector::CrossProduct(AimX, AimZ).GetSafeNormal();
+        // Use the legacy aim basis unchanged, including its up direction.
 
         const FMatrix AimRotM(
             FPlane(AimX.X, AimX.Y, AimX.Z, 0.0f),
@@ -896,8 +893,10 @@ void Weapon::Orient(const Physical* rep)
         );
 
         // Turret itself uses aim orientation:
-        turret->MoveTo(mount_loc);
-        turret->SetOrientation(AimRotM);
+        if (turret) {
+            turret->MoveTo(mount_loc);
+            turret->SetOrientation(AimRotM);
+        }
 
         // Turret base uses ship orientation with one-axis adjustment:
         if (turret_base)

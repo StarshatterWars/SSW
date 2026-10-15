@@ -100,6 +100,14 @@ public:
     int                GetIndex() const { return index; }
     void               SetIndex(int n) { index = n; }
 
+    bool HasTurretGeometry() const { return design && (design->turret.length() > 0 || design->turret_model != nullptr); }
+    int GetTurretBarrelCount() const { return nbarrels; }
+    FVector GetTurretBarrelOffset(int I) const { return I >= 0 && I < nbarrels ? rel_pts[I] : FVector::ZeroVector; }
+    const Camera& GetTurretAimCamera() const { return aim_cam; }
+    FVector GetTurretMountRelative() const { return mount_rel; }
+    double GetTurretAzimuthOffset() const { return old_azimuth; }
+    double GetTurretElevationOffset() const { return old_elevation; }
+
     FVector            GetAimVector() const { return aim_cam.vpn(); }
     void               SetAzimuth(double a) { aim_azimuth = (float)a; }
     double             GetAzimuth() const { return aim_azimuth; }

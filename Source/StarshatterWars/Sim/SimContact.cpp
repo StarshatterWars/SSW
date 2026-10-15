@@ -268,19 +268,13 @@ SimContact::Threat(const Ship* observer) const
 	{
 		if (ship && ship->GetLife() != 0)
 		{
-			/*
-			 * TEMP UE MIGRATION NOTE:
-			 *
-			 * Runtime weapons are not fully initialized yet.
-			 * Do NOT require weapon objects for hostile contact
-			 * classification during sensor/tactical migration.
-			 */
 
 			threat =
 				(ship->GetIFF() &&
 					ship->GetIFF() != observer->GetIFF() &&
 					ship->GetEMCON() > 2 &&
-					ship->IsTracking((Ship*)observer));
+					ship->IsTracking((Ship*)observer) &&
+					ship->GetWeapons().size() > 0);
 
 			if (threat && observer->GetIFF() == 0)
 			{

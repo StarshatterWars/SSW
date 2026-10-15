@@ -2,6 +2,7 @@
 
 AGoliathShipActor::AGoliathShipActor()
 {
+    ConfigureTurretsFromShipDef(TEXT("Goliath"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(3.3f));
     ApplyGoliathDefaults();
