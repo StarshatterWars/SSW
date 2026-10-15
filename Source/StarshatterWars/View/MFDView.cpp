@@ -421,7 +421,57 @@ void MFDView::Draw3D()
         return;
     }
 
-    // TODO: port elite-style 3D radar; keep same marker rules as legacy.
+    const int cx = RectPx.x + RectPx.w / 2;
+    const int cy = RectPx.y + RectPx.h / 2;
+    const int R  = FMath::Min(RectPx.w, RectPx.h) / 2 - 6;
+
+    auto Plot = [&](int x, int y, const FColor& C)
+    {
+        if (CockpitHUDTexture) CockpitHUDTexture->FillRect(x, y, x + 1, y + 1, C);
+        else if (window)       window->FillRect(x, y, x + 1, y + 1, C);
+    };
+
+    // Semi-transparent sphere: outline, equator, meridian.
+    const FColor Sphere(40, 90, 140, 90);
+    const FColor Axis(60, 120, 170, 70);
+    for (int a = 0; a < 360; a += 3)
+    {
+        const float Rad = FMath::DegreesToRadians((float)a);
+        Plot(cx + (int)(R * FMath::Cos(Rad)), cy + (int)(R * FMath::Sin(Rad)), Sphere);
+        Plot(cx + (int)(R * FMath::Cos(Rad)), cy + (int)(R * 0.35f * FMath::Sin(Rad)), Axis);
+        Plot(cx + (int)(R * 0.35f * FMath::Cos(Rad)), cy + (int)(R * FMath::Sin(Rad)), Axis);
+    }
+
+    // Ships in 3D relative to the player.
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    Sensor* SensorPtr = ShipPtr->GetSensor();
+    const double Range = SensorPtr ? SensorPtr->GetBeamRange() : 75000.0;
+    const FVector Origin = ShipPtr->GetLocation();
+
+    if (Region)
+    {
+        ListIter<Ship> It = Region->GetShips();
+        while (++It)
+        {
+            Ship* S = It.value();
+            if (!S || S == ShipPtr || S->IsDead()) continue;
+            const FVector Rel = S->GetLocation() - Origin;
+            const double Dist = Rel.Size();
+            if (Dist < 1.0 || Dist > Range) continue;
+
+            const double Scale = (double)R / Range;
+            const int px = cx + (int)(Rel.Y * Scale);
+            const int py = cy - (int)(Rel.Z * Scale);
+            const uint8 Bright = (uint8)FMath::Clamp(255.0 - (Dist / Range) * 180.0, 60.0, 255.0);
+            const FColor Mark = (S->GetIFF() != ShipPtr->GetIFF())
+                ? FColor(255, 60, 60, Bright) : FColor(80, 200, 255, Bright);
+            for (int dy = -1; dy <= 1; ++dy)
+                for (int dx = -1; dx <= 1; ++dx)
+                    Plot(px + dx, py + dy, Mark);
+        }
+    }
+
     DrawSensorLabels("3D");
 }
 

@@ -142,7 +142,6 @@ void UPlayerDlg::NativeConstruct()
     }
 
     BuildMedalsGrid(4, 4); 
-    Debug_ShowAllMedals();   // TEST: force show all 16
 
 
     RefreshUIFromSubsystem(); 

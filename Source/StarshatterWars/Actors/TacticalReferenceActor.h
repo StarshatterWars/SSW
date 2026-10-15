@@ -51,6 +51,9 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* ShipMesh;
 
+    UPROPERTY()
+    AActor* SpawnedVisual = nullptr;
+
     UPROPERTY(VisibleAnywhere)
     USpringArmComponent* Arm;
 

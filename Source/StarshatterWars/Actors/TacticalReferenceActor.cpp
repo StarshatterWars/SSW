@@ -1,8 +1,5 @@
-
-#include "TacticalReferenceActor.h"
-
 #include "GameStructs_System.h"
-
+#include "TacticalReferenceActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -87,6 +84,7 @@ void ATacticalReferenceActor::Tick(float DeltaTime)
 
 void ATacticalReferenceActor::ShowShip(const FString& DesignName)
 {
+    if (SpawnedVisual) { SpawnedVisual->Destroy(); SpawnedVisual = nullptr; }
     if (ShipMesh) { ShipMesh->SetStaticMesh(nullptr); ShipMesh->SetVisibility(false); }
     if (DesignName.IsEmpty() || !GetWorld()) return;
 
@@ -98,6 +96,7 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
         Params.Owner = this;
         if (AActor* Visual = GetWorld()->SpawnActor<AActor>(BPClass, GetActorTransform(), Params))
         {
+            SpawnedVisual = Visual;
             Visual->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
             if (ShipMesh) ShipMesh->SetVisibility(false);
             return;
@@ -116,6 +115,7 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
 
 void ATacticalReferenceActor::SetDisplayMesh(UStaticMesh* Mesh)
 {
+    if (SpawnedVisual) { SpawnedVisual->Destroy(); SpawnedVisual = nullptr; }
     if (!ShipMesh) return;
     ShipMesh->SetStaticMesh(nullptr);
     ShipMesh->SetVisibility(false);

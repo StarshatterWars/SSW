@@ -726,10 +726,10 @@ CampaignSaveGame::Save(const char* name)
         if (g)
             CombatGroup::SaveOrderOfBattle(s, g);
     }
-}
 
     // Per-campaign Unreal save slot.
     UCampaignSlotSave::SaveCampaign(campaign);
+}
 
 void
 CampaignSaveGame::Delete(const char* name)

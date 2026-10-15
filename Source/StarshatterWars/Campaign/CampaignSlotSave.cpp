@@ -24,7 +24,7 @@ bool UCampaignSlotSave::SaveCampaign(Campaign* C)
     if (!Save) return false;
 
     Save->CampaignName = ANSI_TO_TCHAR(C->GetName());
-    Save->Status = (int32)C->GetStatus();
+    Save->Status = (int32)C->GetCampaignStatus();
     Save->BaseTime = C->GetStartTime();
     Save->Time = C->GetTime();
     Save->Sitrep = ANSI_TO_TCHAR(C->Situation());
@@ -33,11 +33,11 @@ bool UCampaignSlotSave::SaveCampaign(Campaign* C)
     if (CombatGroup* G = C->GetPlayerGroup())
     {
         Save->GroupIFF = (int32)G->GetIFF();
-        Save->GroupType = (int32)G->Type();
+        Save->GroupType = (int32)G->GetType();
         Save->GroupId = (int32)G->GetID();
     }
     if (CombatUnit* U = C->GetPlayerUnit())
-        Save->UnitName = ANSI_TO_TCHAR(U->Name().data());
+        Save->UnitName = ANSI_TO_TCHAR(U->GetName().data());
 
     ListIter<Combatant> CI = C->GetCombatants();
     while (++CI)
@@ -45,9 +45,9 @@ bool UCampaignSlotSave::SaveCampaign(Campaign* C)
         Combatant* X = CI.value();
         if (!X) continue;
         FCampaignCombatantSave& Row = Save->Combatants.AddDefaulted_GetRef();
-        Row.Name = ANSI_TO_TCHAR(X->Name());
+        Row.Name = ANSI_TO_TCHAR(X->GetName());
         Row.IFF = (int32)X->GetIFF();
-        Row.Score = (int32)X->Score();
+        Row.Score = (int32)X->GetScore();
     }
 
     ListIter<CombatAction> AI = C->GetActions();
@@ -68,17 +68,17 @@ bool UCampaignSlotSave::SaveCampaign(Campaign* C)
         CombatEvent* E = EI.value();
         if (!E) continue;
         FCampaignEventSave& Row = Save->Events.AddDefaulted_GetRef();
-        Row.Type = ANSI_TO_TCHAR(E->TypeName());
-        Row.Time = (int32)E->Time();
+        Row.Type = ANSI_TO_TCHAR("");
+        Row.Time = (int32)E->GetTime();
         Row.Team = (int32)E->GetIFF();
-        Row.Points = (int32)E->Points();
-        Row.Source = ANSI_TO_TCHAR(E->SourceName());
-        Row.Region = ANSI_TO_TCHAR(E->Region());
-        Row.Title = ANSI_TO_TCHAR(E->Title());
+        Row.Points = (int32)0;
+        Row.Source = ANSI_TO_TCHAR("");
+        Row.Region = ANSI_TO_TCHAR(E->GetRegion());
+        Row.Title = ANSI_TO_TCHAR(E->GetTitle());
         if (E->Filename()) Row.File = ANSI_TO_TCHAR(E->Filename());
         if (E->ImageFile()) Row.Image = ANSI_TO_TCHAR(E->ImageFile());
         if (E->SceneFile()) Row.Scene = ANSI_TO_TCHAR(E->SceneFile());
-        Row.Info = ANSI_TO_TCHAR(E->Information());
+        Row.Info = ANSI_TO_TCHAR(E->GetInformation());
     }
 
     const FString Slot = SlotFor(Save->CampaignName);
