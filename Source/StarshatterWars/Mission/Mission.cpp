@@ -210,6 +210,29 @@ bool Mission::LoadMissionCommon(
 			ShipDesignRegistry::Find(
 				SrcElem.Design);
 
+		if (!DesignRow && !SrcElem.Design.IsEmpty())
+		{
+			FShipDesign Placeholder;
+			Placeholder.ShipName = SrcElem.Design;
+			Placeholder.DisplayName = SrcElem.Design;
+			Placeholder.ShipClass = TEXT("Fighter");
+			Placeholder.ShipType = 1;
+			Placeholder.Scale = 1.0f;
+			Placeholder.Mass = 20.0;
+			Placeholder.Integrity = 100.0f;
+			Placeholder.Vlimit = 800.0f;
+			Placeholder.Agility = 150.0f;
+			Placeholder.RollRate = 1.5f;
+			Placeholder.PitchRate = 1.2f;
+			Placeholder.YawRate = 0.8f;
+			ShipDesignRegistry::RegisterDesign(FName(*SrcElem.Design), Placeholder);
+			DesignRow = ShipDesignRegistry::Find(SrcElem.Design);
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Mission::LoadMissionCommon] Registered placeholder FShipDesign Element='%s' Design='%s'"),
+				*SrcElem.Name,
+				*SrcElem.Design);
+		}
+
 		if (!DesignRow)
 		{
 			UE_LOG(LogTemp, Error,

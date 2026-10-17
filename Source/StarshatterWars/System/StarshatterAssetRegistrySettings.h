@@ -204,6 +204,12 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> ContactListClass;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> MissionDebriefClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> AwardPopupClass;
+
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)
 // ------------------------------------------------------------------

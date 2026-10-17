@@ -1,31 +1,72 @@
 #include "ShipActor.h"
-#include "ShipWeaponMountComponent.h"
+
 #include "Components/SceneComponent.h"
-#include "Camera.h"
-#include "Math/RotationMatrix.h"
-void AShipActor::ConfigureWeaponHardpointsFromShipDef(FName ShipDef)
+#include "ShipDesignRegistry.h"
+#include "HardPoint.h"
+#include "UObject/UObjectThreadContext.h"
+
+namespace
 {
-    if(!WeaponHardpointRoot || NativeWeaponHardpoints.Num()) return;
-    TArray<FNativeWeaponMountDef> Definitions;
-    ShipWeaponMountCatalog::Get(ShipDef,Definitions);
-    int32 LoadoutIndex=0, FixedIndex=0;
-    for(const FNativeWeaponMountDef& Def:Definitions) {
-        FString Label=Def.Name.ToString();
-        for(TCHAR& Ch:Label) if(!FChar::IsAlnum(Ch)) Ch=TEXT('_');
-        const int32 Index=Def.bLoadout ? ++LoadoutIndex : ++FixedIndex;
-        const FName Name(*FString::Printf(TEXT("%s_%02d_%s"),Def.bLoadout ? TEXT("MissileHardpointBP") : TEXT("WeaponBP"),Index,*Label));
-        UShipWeaponMountComponent* Slot=CreateDefaultSubobject<UShipWeaponMountComponent>(Name);
-        Slot->SetupAttachment(WeaponHardpointRoot);
-        Slot->StationName=Def.Name;
-        Slot->bLoadoutHardpoint=Def.bLoadout;
-        Slot->AllowedWeaponTypes=Def.Types;
-        Slot->LegacyLocation=Def.Location;
-        Slot->LegacyMuzzle=Def.Muzzle;
-        Slot->SetRelativeLocation(FVector(Def.Location.Z,Def.Location.X,Def.Location.Y));
-        Camera Aim; Aim.Yaw(Def.Azimuth); Aim.Pitch(Def.Elevation);
-        const FVector F=Aim.vpn(), U=Aim.vup();
-        Slot->SetRelativeRotation(FRotationMatrix::MakeFromXZ(FVector(F.Z,F.X,F.Y),FVector(U.Z,U.X,U.Y)).Rotator());
-        // Ship-scale is inherited once. Child BP meshes can supply model import scale.
-        NativeWeaponHardpoints.Add(Slot);
+    bool InConstructor()
+    {
+        return FUObjectThreadContext::Get().IsInConstructor > 0;
+    }
+}
+
+void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
+{
+    auto MakeScene = [this](FName Name, USceneComponent* Parent) -> USceneComponent*
+    {
+        USceneComponent* Comp = InConstructor()
+            ? CreateDefaultSubobject<USceneComponent>(Name)
+            : NewObject<USceneComponent>(this, Name);
+        if (!Comp) return nullptr;
+        Comp->SetupAttachment(Parent ? Parent : GetRootComponent());
+        if (!InConstructor()) Comp->RegisterComponent();
+        return Comp;
+    };
+
+    if (!WeaponHardpointRoot)
+    {
+        WeaponHardpointRoot = MakeScene(TEXT("WeaponHardpointRoot"), RootComponent);
+    }
+
+    if (!InConstructor())
+    {
+        for (TObjectPtr<USceneComponent>& Mount : NativeWeaponHardpoints)
+        {
+            if (Mount) Mount->DestroyComponent();
+        }
+    }
+    NativeWeaponHardpoints.Reset();
+
+    const ShipDesign* Design = ShipDesignRegistry::FindLegacy(TCHAR_TO_ANSI(*ShipName));
+    if (Design)
+    {
+        for (int i = 0; i < Design->hardpoints.size(); ++i)
+        {
+            HardPoint* Hp = Design->hardpoints[i];
+            if (!Hp) continue;
+
+            FShipPointDef Point;
+            Point.PointName = FName(*FString::Printf(TEXT("HP_%d"), i));
+            Point.LocalOffset = Hp->MountLocation();
+            WeaponMountPointDefs.Add(Point);
+        }
+    }
+
+    for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
+    {
+        const FShipPointDef& Def = WeaponMountPointDefs[Index];
+        const FName Name = Def.PointName.IsNone()
+            ? FName(*FString::Printf(TEXT("Hardpoint_%d"), Index))
+            : Def.PointName;
+
+        USceneComponent* Mount = MakeScene(Name, WeaponHardpointRoot);
+        if (!Mount) continue;
+
+        Mount->SetRelativeLocation(Def.LocalOffset);
+        Mount->SetRelativeRotation(Def.LocalRotation);
+        NativeWeaponHardpoints.Add(Mount);
     }
 }

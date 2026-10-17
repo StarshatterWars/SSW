@@ -27,6 +27,7 @@ public:
     static const TCHAR* MedalName(int32 MedalId);
     static const TCHAR* MedalAbrv(int32 MedalId);          // optional if medals don’t have abrv
     static const TCHAR* MedalDescription(int32 MedalId);
+    static void ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn);
 
 private:
     static void BuildCaches();

@@ -273,7 +273,11 @@ void UMissionDebriefDlg::Show()
                         Points = PlayerObj->GetMissionPoints(Stats, SimPtr->StartTime()) + Stats->GetCommandPoints();
 
                     char ScoreTxt[64] = { 0 };
-                    sprintf_s(ScoreTxt, "%d %s", Points, "DebriefDlg: Points");
+                    sprintf_s(ScoreTxt, "%d points", Points);
+                    if (MissionPtr)
+                    {
+                        strcat_s(ScoreTxt, MissionPtr->IsComplete() ? "  Complete" : "  Incomplete");
+                    }
                     MissionScore->SetText(FText::FromString(ANSI_TO_TCHAR(ScoreTxt)));
                     break;
                 }
@@ -314,6 +318,8 @@ void UMissionDebriefDlg::ExecFrame(float /*DeltaSeconds*/)
             if (Selected.Num() < 1)
             {
                 UnitList->SetSelectedIndex(0);
+                if (UDebriefListItem* Row = Cast<UDebriefListItem>(UnitList->GetItemAt(0)))
+                    DrawSelectedUnit(Row->DataIndex);
             }
         }
     }
@@ -368,6 +374,14 @@ void UMissionDebriefDlg::DrawUnits()
     if (SelectIndex != INDEX_NONE)
     {
         UnitList->SetSelectedIndex(SelectIndex);
+        if (UDebriefListItem* Row = Cast<UDebriefListItem>(UnitList->GetItemAt(SelectIndex)))
+            DrawSelectedUnit(Row->DataIndex);
+    }
+    else if (UnitList->GetNumItems() > 0)
+    {
+        UnitList->SetSelectedIndex(0);
+        if (UDebriefListItem* Row = Cast<UDebriefListItem>(UnitList->GetItemAt(0)))
+            DrawSelectedUnit(Row->DataIndex);
     }
 }
 
@@ -419,6 +433,22 @@ void UMissionDebriefDlg::DrawSelectedUnit(int32 StatsIndex)
     AddSummary("Missiles Fired:", Stats->GetMissileShots());
     AddSummary("Missile Hits:", Stats->GetMissileHits());
     AddSummary("Missile Kills:", Stats->GetMissileKills());
+
+    SummaryList->AddItem(UDebriefListItem::Make(this, TEXT(" ")));
+
+    AddSummary("Deaths:", Stats->GetDeaths());
+    AddSummary("Collisions:", Stats->GetColls());
+    AddSummary("Points:", Stats->GetPoints());
+    AddSummary("Command Points:", Stats->GetCommandPoints());
+
+    if (MissionPtr)
+    {
+        SummaryList->AddItem(UDebriefListItem::Make(
+            this,
+            TEXT("Result:"),
+            MissionPtr->IsComplete() ? TEXT("Complete") : TEXT("Incomplete")
+        ));
+    }
 
     // Events:
     ListIter<SimEvent> Iter = Stats->GetEvents();

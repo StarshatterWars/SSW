@@ -249,6 +249,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.CampaignSelectScreenClass"),
         TEXT("UI.CampaignLoadClass"),
         TEXT("UI.MissionSelectScreenClass"),
+        TEXT("UI.MissionDebriefClass"),
         TEXT("UI.ExitDlgClass"),
         TEXT("UI.QuitMenuClass"),
         TEXT("UI.FirstRunDlgClass"),
@@ -265,6 +266,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.ObjectivesScreenClass"),
         TEXT("UI.FlightOpsScreenClass"),
         TEXT("UI.ContactListClass"),
+         TEXT("UI.AwardPopupClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

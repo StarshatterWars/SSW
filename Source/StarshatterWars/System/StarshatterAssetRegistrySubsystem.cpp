@@ -698,6 +698,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.MissionDebriefClass
+    if (!Cache.Contains(TEXT("UI.MissionDebriefClass")))
+    {
+        if (!Settings->MissionDebriefClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MissionDebriefClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MissionDebriefClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MissionDebriefClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MissionDebriefClass is not set in Project Settings"));
+        }
+    }
+
     // UI.FlightOpsScreenClass
     if (!Cache.Contains(TEXT("UI.FlightOpsScreenClass")))
     {
@@ -731,6 +749,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] ContactListClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.AwardPopupClass
+    if (!Cache.Contains(TEXT("UI.AwardPopupClass")))
+    {
+        if (!Settings->AwardPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->AwardPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.AwardPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.AwardPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] AwardPopupClass is not set in Project Settings"));
         }
     }
     // ------------------------------------------------------------------

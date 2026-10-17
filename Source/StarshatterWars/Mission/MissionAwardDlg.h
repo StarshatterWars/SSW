@@ -69,6 +69,8 @@ public:
     UFUNCTION(BlueprintCallable)
     void ShowPlayer();
 
+    void EnsureUi();
+
 protected:
     /** Close button click / Enter / Escape */
     UFUNCTION()

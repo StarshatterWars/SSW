@@ -110,6 +110,8 @@ public:
     // Awards (registry-backed presentation)
     // ------------------------------------------------------------------
     bool    ShowAward() const;
+    int32   GetPendingAwardId() const { return PendingAwardId; }
+    bool    IsPendingAwardRank() const { return bPendingAwardIsRank; }
     FString AwardName() const;
     FString AwardDesc() const;
     USound* AwardSound() const;

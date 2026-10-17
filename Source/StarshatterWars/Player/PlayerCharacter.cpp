@@ -10,6 +10,7 @@
 #include "PlayerCharacter.h"
 
 #include "AwardInfoRegistry.h"
+#include "Campaign.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Game.h"
@@ -964,18 +965,35 @@ void PlayerCharacter::ProcessStats(ShipStats* Stats, uint32 StartTimeMs)
 
     Rank = GetRank();
 
-    // Promotion presentation only (no medal evaluation here yet)
     if (OldRankId != Rank)
     {
         PendingAwardId = Rank;
         bPendingAwardIsRank = true;
     }
+    else
+    {
+        Campaign* Camp = Campaign::GetCampaign();
+        UAwardInfoRegistry::ForEachMedal([&](const FMedalInfo& Medal)
+        {
+            if (PendingAwardId != 0) return;
+            const int32 Bit = Medal.MedalId < 16 ? (1 << Medal.MedalId) : Medal.MedalId;
+            if (Medal.MedalId <= 0 || (MedalsMask & Bit)) return;
+            if (Medal.bDynamicCampaignOnly && Camp && Camp->GetCampaignId() >= Campaign::SINGLE_MISSIONS) return;
+            if (Medal.CampaignId > 0 && (!Camp || Camp->GetCampaignId() != Medal.CampaignId)) return;
+            if (Medal.bCampaignCompleteRequired && Camp && !Camp->IsComplete()) return;
+
+            AddMedal(Bit);
+            PendingAwardId = Medal.MedalId;
+            bPendingAwardIsRank = false;
+        });
+    }
 
     Save();
 }
 
-bool PlayerCharacter::EarnedAward(int32 /*AwardId*/, bool /*bIsRank*/, ShipStats* /*InShipStats*/)
+bool PlayerCharacter::EarnedAward(int32 AwardId, bool bIsRank, ShipStats* /*InShipStats*/)
 {
-    // Registry-driven award eligibility not implemented yet.
-    return false;
+    if (bIsRank)
+        return GetRank() >= AwardId;
+    return (MedalsMask & (1 << AwardId)) != 0;
 }

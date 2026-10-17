@@ -95,6 +95,7 @@ protected:
     bool bClosingMissionPreview = false;
     bool StartLiveMission();
     bool bLiveMissionStarted = false;
+    bool bMissionCompleteHandedOff = false;
     bool EnableMissionMenuInput();
     void DisableMissionMenuInput();
     void ToggleMissionMenu();

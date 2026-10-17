@@ -21,6 +21,132 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/SizeBox.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
+#include "Components/BorderSlot.h"
+#include "Engine/Texture2D.h"
+#include "Engine/Font.h"
+#include "AwardInfoRegistry.h"
+#include "Kismet/GameplayStatics.h"
+
+void UMissionAwardDlg::EnsureUi()
+{
+    if (!WidgetTree) return;
+
+    USizeBox* Host = Cast<USizeBox>(WidgetTree->FindWidget(TEXT("RuntimeHost")));
+    if (!Host)
+    {
+        UCanvasPanel* Root = Cast<UCanvasPanel>(GetRootWidget());
+        if (!Root)
+        {
+            Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AwardRoot"));
+            WidgetTree->RootWidget = Root;
+        }
+
+        UBorder* Frame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Background"));
+        if (UTexture2D* FrameTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Frame1.Frame1")))
+        {
+            FSlateBrush Brush;
+            Brush.SetResourceObject(FrameTex);
+            Brush.DrawAs = ESlateBrushDrawType::Box;
+            Brush.Margin = FMargin(0.2f, 0.2f, 0.2f, 0.25f);
+            Frame->SetBrush(Brush);
+        }
+        if (UCanvasPanelSlot* FrameSlot = Root->AddChildToCanvas(Frame))
+        {
+            FrameSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+            FrameSlot->SetOffsets(FMargin(0.f));
+        }
+
+        UCanvasPanel* Inner = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AwardInner"));
+        Frame->AddChild(Inner);
+
+        UTextBlock* WTitle = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("PanelTitle"));
+        WTitle->SetText(FText::FromString(TEXT("Congratulations")));
+        WTitle->SetJustification(ETextJustify::Center);
+        WTitle->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        if (UFont* Font = LoadObject<UFont>(nullptr, TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font")))
+        {
+            FSlateFontInfo Info = WTitle->GetFont();
+            Info.FontObject = Font;
+            Info.Size = 22;
+            WTitle->SetFont(Info);
+        }
+        if (UCanvasPanelSlot* TitleSlot = Inner->AddChildToCanvas(WTitle))
+        {
+            TitleSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
+            TitleSlot->SetOffsets(FMargin(0.f, 32.f, 0.f, 28.f));
+            TitleSlot->SetAlignment(FVector2D(0.f, 0.f));
+        }
+
+        Host = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("RuntimeHost"));
+        if (UCanvasPanelSlot* HostSlot = Inner->AddChildToCanvas(Host))
+        {
+            HostSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+            HostSlot->SetOffsets(FMargin(48.f, 72.f, 48.f, 24.f));
+        }
+    }
+
+    if (lbl_name && lbl_info && img_rank && btn_close) return;
+
+    UVerticalBox* Box = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("AwardContent"));
+    Host->AddChild(Box);
+
+    auto AddLabel = [this, Box](const TCHAR* Name, int32 Size) -> UTextBlock*
+    {
+        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
+        Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        Label->SetJustification(ETextJustify::Center);
+        Label->SetAutoWrapText(true);
+        if (UFont* Font = LoadObject<UFont>(nullptr, TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font")))
+        {
+            FSlateFontInfo Info = Label->GetFont();
+            Info.FontObject = Font;
+            Info.Size = Size;
+            Label->SetFont(Info);
+        }
+        if (UVerticalBoxSlot* Slot = Box->AddChildToVerticalBox(Label))
+        {
+            Slot->SetPadding(FMargin(12.f, 8.f));
+            Slot->SetHorizontalAlignment(HAlign_Center);
+        }
+        return Label;
+    };
+
+    if (!lbl_name) lbl_name = AddLabel(TEXT("AwardName"), 20);
+    if (!img_rank)
+    {
+        img_rank = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("AwardImage"));
+        USizeBox* Sized = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("AwardImageSize"));
+        Sized->SetHeightOverride(160.f);
+        Sized->SetWidthOverride(160.f);
+        Sized->AddChild(img_rank);
+        if (UVerticalBoxSlot* VSlot = Box->AddChildToVerticalBox(Sized))
+            VSlot->SetHorizontalAlignment(HAlign_Center);
+    }
+    if (!lbl_info) lbl_info = AddLabel(TEXT("AwardInfo"), 14);
+    if (!btn_close)
+    {
+        btn_close = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("AwardClose"));
+        UTextBlock* CloseLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("AwardCloseLabel"));
+        CloseLabel->SetText(FText::FromString(TEXT("Close")));
+        CloseLabel->SetJustification(ETextJustify::Center);
+        btn_close->AddChild(CloseLabel);
+        if (UVerticalBoxSlot* VSlot = Box->AddChildToVerticalBox(btn_close))
+        {
+            VSlot->SetPadding(FMargin(0.f, 16.f));
+            VSlot->SetHorizontalAlignment(HAlign_Center);
+        }
+    }
+
+    BindFormWidgets();
+    if (btn_close)
+        btn_close->OnClicked.AddUniqueDynamic(this, &UMissionAwardDlg::OnCloseClicked);
+}
 
 // Input:
 #include "Input/Reply.h"
@@ -31,9 +157,7 @@
 #include "Campaign.h"
 #include "Starshatter.h"
 #include "SSWRuntimeSubsystem.h"
-
-// If you have a sound wrapper, include it here.
-// #include "Sound.h"
+#include "Sound.h"
 
 UMissionAwardDlg::UMissionAwardDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -43,18 +167,12 @@ UMissionAwardDlg::UMissionAwardDlg(const FObjectInitializer& ObjectInitializer)
 void UMissionAwardDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+    EnsureUi();
 
-    // Bind close:
     if (btn_close)
-    {
-        btn_close->OnClicked.AddDynamic(this, &UMissionAwardDlg::OnCloseClicked);
-    }
+        btn_close->OnClicked.AddUniqueDynamic(this, &UMissionAwardDlg::OnCloseClicked);
 
-    // Match legacy behavior: first frame is latched so Enter/Escape doesn't instantly close.
     bExitLatch = true;
-
-    // When shown, the owning screen typically calls ShowDialog().
-    // We do not auto-call ShowPlayer() here because some screens construct hidden.
 }
 
 FReply UMissionAwardDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
@@ -219,7 +337,7 @@ form: {
       transparent:   true
       border:        false
       font:          Verdana
-      fore_color:    (0,0,0)
+      fore_color:    (255,255,255)
    },
 
    defctrl: {
@@ -254,11 +372,11 @@ form: {
 
 void UMissionAwardDlg::ShowDialog()
 {
-    // Legacy Show(): show window, then ShowPlayer(), and latch input.
+    EnsureUi();
     SetVisibility(ESlateVisibility::Visible);
-
+    if (UTextBlock* WTitle = Cast<UTextBlock>(WidgetTree ? WidgetTree->FindWidget(TEXT("PanelTitle")) : nullptr))
+        WTitle->SetText(FText::FromString(TEXT("Congratulations")));
     ShowPlayer();
-
     bExitLatch = true;
 }
 
@@ -269,22 +387,44 @@ void UMissionAwardDlg::ShowPlayer()
     if (P)
     {
         if (lbl_name)
+        {
+            lbl_name->SetColorAndOpacity(FSlateColor(FLinearColor::White));
             lbl_name->SetText(FText::FromString(P->AwardName()));
+        }
 
         if (lbl_info)
+        {
+            lbl_info->SetColorAndOpacity(FSlateColor(FLinearColor::White));
             lbl_info->SetText(FText::FromString(P->AwardDesc()));
+        }
 
         if (img_rank)
         {
-            // NOTE:
-            // Legacy: img_rank->SetPicture(*p->AwardImage());
-            // Unreal: you need a UTexture2D/brush pipeline.
-            // This is intentionally left minimal and non-assumptive.
             img_rank->SetVisibility(ESlateVisibility::Visible);
-        }
+            const int32 PendingId = P->GetPendingAwardId();
+            const bool bPendingIsRank = P->IsPendingAwardRank();
+            const FMedalInfo* Medal = bPendingIsRank ? nullptr : UAwardInfoRegistry::FindMedal(PendingId);
+            const FRankInfo* RankInfo = bPendingIsRank ? UAwardInfoRegistry::FindRank(PendingId) : nullptr;
+            UTexture2D* Tex = nullptr;
+            if (RankInfo && RankInfo->LargeImage.ToSoftObjectPath().IsValid())
+                Tex = RankInfo->LargeImage.LoadSynchronous();
+            else if (Medal && Medal->LargeImage.ToSoftObjectPath().IsValid())
+                Tex = Medal->LargeImage.LoadSynchronous();
+            if (!Tex)
+            {
+                const FString Award = P->AwardName();
+                if (!Award.IsEmpty())
+                    Tex = LoadObject<UTexture2D>(nullptr, *FString::Printf(TEXT("/Game/UI/Awards/%s.%s"), *Award, *Award));
+            }
+            if (Tex) img_rank->SetBrushFromTexture(Tex);
 
-        // Legacy: play award sound
-        // if (USound* Congrats = P->AwardSound()) Congrats->Play();
+            USoundBase* Sound = nullptr;
+            if (RankInfo && RankInfo->GrantSound.ToSoftObjectPath().IsValid())
+                Sound = RankInfo->GrantSound.LoadSynchronous();
+            else if (Medal && Medal->GranSound.ToSoftObjectPath().IsValid())
+                Sound = Medal->GranSound.LoadSynchronous();
+            if (Sound) UGameplayStatics::PlaySound2D(this, Sound);
+        }
     }
     else
     {

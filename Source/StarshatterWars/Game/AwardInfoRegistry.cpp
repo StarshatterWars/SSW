@@ -197,3 +197,11 @@ const TCHAR* UAwardInfoRegistry::MedalDescription(int32 MedalId)
         return SafeStr(Row->Desc, TEXT(""));
     return TEXT("");
 }
+
+void UAwardInfoRegistry::ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn)
+{
+    for (const TPair<int32, const FMedalInfo*>& Pair : MedalById)
+    {
+        if (Pair.Value) Fn(*Pair.Value);
+    }
+}

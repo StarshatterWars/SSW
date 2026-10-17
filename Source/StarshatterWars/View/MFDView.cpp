@@ -363,20 +363,48 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
     Rect disp_rect(scan_x + scan_r - 41, scan_y + 2, 40, 12);
     Rect probe_rect(scan_x + scan_r - 41, scan_y + scan_r - 12, 40, 12);
 
-    // Replace these strings with your Game::GetText equivalents when available.
+    Sensor* SensorPtr = ShipPtr ? ShipPtr->GetSensor() : nullptr;
+
+    auto ModeLabel = [](ESensorMode Mode) -> const char*
+    {
+        switch (Mode)
+        {
+        case ESensorMode::PAS: return "PAS";
+        case ESensorMode::STD: return "STD";
+        case ESensorMode::ACM: return "ACM";
+        case ESensorMode::GM:  return "GM";
+        case ESensorMode::PST: return "PST";
+        case ESensorMode::CST: return "CST";
+        default:               return "STD";
+        }
+    };
+
+    char RangeText[16] = "-";
+    if (SensorPtr)
+    {
+        const int RangeKm = (int)(SensorPtr->GetBeamRange() / 1000.0);
+        snprintf(RangeText, sizeof(RangeText), "%d", RangeKm);
+    }
+
     Rect r0 = mode_rect;
-    DrawMFDText(0, "STD", r0, DT_LEFT);
+    DrawMFDText(0, SensorPtr ? ModeLabel(SensorPtr->GetMode()) : "STD", r0, DT_LEFT);
 
     Rect r1 = range_rect;
-    DrawMFDText(1, "-100+", r1, DT_LEFT);
+    DrawMFDText(1, RangeText, r1, DT_LEFT);
 
     Rect r2 = disp_rect;
     DrawMFDText(2, (MfdModeLabel ? MfdModeLabel : "MFD"), r2, DT_RIGHT);
 
-    // probe label depends on your ProbeLauncher; keep hidden by default:
-    HideMFDText(3);
+    if (ShipPtr && ShipPtr->GetProbeLauncher())
+    {
+        Rect r3 = probe_rect;
+        DrawMFDText(3, "PROBE", r3, DT_RIGHT);
+    }
+    else
+    {
+        HideMFDText(3);
+    }
 
-    // Click handling exactly like legacy:
     if (Mouse::LButton() && !MouseLatch)
     {
         MouseLatch = 1;
@@ -386,11 +414,26 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
             if (HUDView* Hud = HUDView::GetInstance())
                 Hud->CycleMFDMode(Index);
         }
-
-        // TODO: add sensor mode/range/probe clicks once Sensor + ship hooks are UE-ready.
+        else if (SensorPtr && mode_rect.Contains(Mouse::X(), Mouse::Y()))
+        {
+            SensorPtr->SetMode(Sensor::GetNextSensorMode(SensorPtr->GetMode()));
+        }
+        else if (SensorPtr && range_rect.Contains(Mouse::X(), Mouse::Y()))
+        {
+            SensorPtr->IncreaseRange();
+        }
+        else if (ShipPtr && probe_rect.Contains(Mouse::X(), Mouse::Y()))
+        {
+            ShipPtr->LaunchProbe();
+        }
+    }
+    else if (Mouse::RButton() && !MouseLatch)
+    {
+        MouseLatch = 1;
+        if (SensorPtr && range_rect.Contains(Mouse::X(), Mouse::Y()))
+            SensorPtr->DecreaseRange();
     }
 }
-
 
 // UE native MFD primitives (FSlateDrawElement). Falls back to the legacy
 // View/Bitmap path only when no HUD paint context is bound this frame.

@@ -387,6 +387,35 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
         }
     }
     ExecFrame();
+
+    if (bLiveMissionStarted && !bMissionCompleteHandedOff)
+    {
+        Sim* Simulation = Sim::GetSim();
+        if (Simulation && Simulation->IsComplete() && Manager && Manager->GetDebriefDlg())
+        {
+            bMissionCompleteHandedOff = true;
+            bLiveMissionStarted = false;
+            CloseEmptySectorPreview(true);
+            if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+            {
+                Runtime->SetPaused(true);
+                Runtime->SetGameMode(EGameMode::PLAN);
+                Runtime->EndMissionPresentation();
+            }
+            Simulation->CommitMission();
+            Manager->ShowDebriefDlg();
+            auto* Debrief = Manager->GetDebriefDlg();
+            Debrief->Show();
+            if (APlayerController* PC = GetOwningPlayer())
+            {
+                PC->bShowMouseCursor = true;
+                FInputModeGameAndUI Mode;
+                Mode.SetWidgetToFocus(Debrief->TakeWidget());
+                Mode.SetHideCursorDuringCapture(false);
+                PC->SetInputMode(Mode);
+            }
+        }
+    }
 }
 
 FText UMissionBriefingDlg::ToTextFromUtf8(const char* Utf8)
@@ -1588,24 +1617,6 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Triggered, &UMissionBriefingDlg::MissionSensorRangeDown);
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Completed, &UMissionBriefingDlg::ReleaseSensorRangeDown);
     BindWeaponAction(TEXT("IA_SensorRangeDown"), ETriggerEvent::Canceled, &UMissionBriefingDlg::ReleaseSensorRangeDown);
-
-    // Hard-coded fallback so Up always exists even if the IMC has no mapping for IA_SensorRangeUp
-    {
-        UInputAction* FallbackRangeUp = NewObject<UInputAction>(this, NAME_None, RF_Transient);
-        FallbackRangeUp->ValueType = EInputActionValueType::Boolean;
-        MissionTargetContext->MapKey(FallbackRangeUp, EKeys::PageUp);
-        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Started, this, &UMissionBriefingDlg::MissionSensorRangeUp);
-        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseSensorRangeUp);
-        MissionMenuInput->BindAction(FallbackRangeUp, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseSensorRangeUp);
-
-        UInputAction* FallbackRangeDown = NewObject<UInputAction>(this, NAME_None, RF_Transient);
-        FallbackRangeDown->ValueType = EInputActionValueType::Boolean;
-        MissionTargetContext->MapKey(FallbackRangeDown, EKeys::PageDown);
-        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Started, this, &UMissionBriefingDlg::MissionSensorRangeDown);
-        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseSensorRangeDown);
-        MissionMenuInput->BindAction(FallbackRangeDown, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseSensorRangeDown);
-    }
-
     BindWeaponAction(TEXT("IA_EMCONUp"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONUp);
     BindWeaponAction(TEXT("IA_EMCONDown"), ETriggerEvent::Started, &UMissionBriefingDlg::MissionEMCONDown);
     BindWeaponAction(TEXT("IA_TargetNearest"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionClosest);
@@ -2167,6 +2178,7 @@ bool UMissionBriefingDlg::StartLiveMission()
     Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
     Simulation->LoadMission(MissionPtr, false);
     bLiveMissionStarted = true;
+    bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
     if (!Simulation->GetActiveRegion()) return false;
     Runtime->SetGameMode(EGameMode::PLAY);
@@ -2652,12 +2664,12 @@ void UMissionBriefingDlg::BindMissionCameraInput()
     MissionCameraContext->MapKey(Shift, EKeys::RightShift);
     const TCHAR* Names[] = {
         TEXT("IA_CameraCockpit"), TEXT("IA_CameraVirtual"), TEXT("IA_CameraChase"),
-        TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraOverview"), TEXT("IA_CameraTarget"),
+        TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraTarget"),
         TEXT("IA_CameraThreat"), TEXT("IA_ViewTarget"), TEXT("IA_CameraNextObject"),
         TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
     };
     const FKey Keys[] = {EKeys::F1, EKeys::F1, EKeys::F2, EKeys::F2, EKeys::F3,
-        EKeys::F5, EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
+        EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
         EKeys::Right, EKeys::Up, EKeys::Add};
     auto IsMapped = [this](UInputAction* Action)
     {
@@ -2672,7 +2684,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
     {
         const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), Names[Command], Names[Command]);
         UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
-        const EInputActionValueType Type = Command >= 11 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
+        const EInputActionValueType Type = Command >= 10 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
         if (Action && Action->ValueType != Type)
         {
             UE_LOG(LogTemp, Warning, TEXT("[MissionCamera] %s has the wrong value type; using the default binding."), Names[Command]);
@@ -2689,7 +2701,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
             auto Map = [this, Action, Shift, Command](FKey Key, bool bNegative)
             {
                 auto& Mapping = MissionCameraContext->MapKey(Action, Key);
-                if (Command == 1 || Command == 3 || Command == 9 || Command == 11 || Command == 12)
+                if (Command == 1 || Command == 3 || Command == 8 || Command == 10 || Command == 11)
                 {
                     auto* Chord = NewObject<UInputTriggerChordAction>(MissionCameraContext.Get());
                     Chord->ChordAction = Shift;
@@ -2698,13 +2710,13 @@ void UMissionBriefingDlg::BindMissionCameraInput()
                 if (bNegative) Mapping.Modifiers.Add(NewObject<UInputModifierNegate>(MissionCameraContext.Get()));
             };
             Map(Keys[Command], false);
-            if (Command == 11) Map(EKeys::Left, true);
-            if (Command == 12) Map(EKeys::Down, true);
-            if (Command == 13) Map(EKeys::Subtract, true);
+            if (Command == 10) Map(EKeys::Left, true);
+            if (Command == 11) Map(EKeys::Down, true);
+            if (Command == 12) Map(EKeys::Subtract, true);
         }
-        MissionMenuInput->BindAction(Action, Command >= 11 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
+        MissionMenuInput->BindAction(Action, Command >= 10 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
             this, &UMissionBriefingDlg::OnMissionCameraCommand, Command);
-        if (Command >= 11)
+        if (Command >= 10)
         {
             MissionMenuInput->BindAction(Action, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
             MissionMenuInput->BindAction(Action, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
@@ -2716,9 +2728,9 @@ void UMissionBriefingDlg::BindMissionCameraInput()
 void UMissionBriefingDlg::ReleaseMissionCameraCommand(const FInputActionValue&, int32 Command)
 {
     if (!MissionCameraRig) return;
-    if (Command == 11) MissionCameraRig->LookX = 0.0;
-    if (Command == 12) MissionCameraRig->LookY = 0.0;
-    if (Command == 13) MissionCameraRig->RangeInput = 0.0;
+    if (Command == 10) MissionCameraRig->LookX = 0.0;
+    if (Command == 11) MissionCameraRig->LookY = 0.0;
+    if (Command == 12) MissionCameraRig->RangeInput = 0.0;
 }
 
 void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value, int32 Command)
@@ -2728,14 +2740,14 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
     const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
     // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
     if ((Command == 0 || Command == 2) && Shift) return;
-    if (Command >= 11)
+    if (Command >= 10)
     {
         const float Axis = Value.Get<float>();
         if (!FMath::IsFinite(Axis)) return;
         const double Amount = FMath::Clamp(double(Axis), -1.0, 1.0);
-        if (Command == 11) MissionCameraRig->LookX = Amount;
-        if (Command == 12) MissionCameraRig->LookY = Amount;
-        if (Command == 13) MissionCameraRig->RangeInput = Amount;
+        if (Command == 10) MissionCameraRig->LookX = Amount;
+        if (Command == 11) MissionCameraRig->LookY = Amount;
+        if (Command == 12) MissionCameraRig->RangeInput = Amount;
         return;
     }
     switch (Command)
@@ -2748,13 +2760,9 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
         MissionCameraRig->SetMode(FMissionCameraRig::Orbit);
         MissionCameraRig->ViewObject.Reset();
         break;
-    case 5:
-        MissionCameraRig->SetMode(FMissionCameraRig::Overview);
-        MissionCameraRig->ViewObject.Reset();
-        break;
-    case 6: MissionCameraRig->SetMode(FMissionCameraRig::Target); break;
-    case 7: MissionCameraRig->SetMode(FMissionCameraRig::Threat); break;
-    case 8:
+    case 5: MissionCameraRig->SetMode(FMissionCameraRig::Target); break;
+    case 6: MissionCameraRig->SetMode(FMissionCameraRig::Threat); break;
+    case 7:
         if (MissionCameraRig->Mode == FMissionCameraRig::Orbit &&
             MissionCameraRig->ViewObject.Get() == SelectedMissionTarget.Get())
             MissionCameraRig->SetMode(FMissionCameraRig::Chase);
@@ -2771,8 +2779,8 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
             MissionCameraRig->ViewObject = Selected;
         }
         break;
-    case 9: CycleMissionViewObject(); break;
-    case 10: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
+    case 8: CycleMissionViewObject(); break;
+    case 9: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
     default: return;
     }
     bMissionTargetInspection = false; // View-object and weapon-target selection are independent.

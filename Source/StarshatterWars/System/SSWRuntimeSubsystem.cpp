@@ -6,6 +6,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "BeamWeaponActor.h"
 
 #include "Math/RandomStream.h"
 #include "SimElement.h"
@@ -975,8 +976,24 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         };
         const FVector Position=VisualPoint(Shot->GetLocation());
         if(Shot->IsPrimary()){
-            DrawDebugLine(World,VisualPoint(Shot->GetOrigin()),Position,
-                Shot->IsBeam()?FColor::Cyan:FColor::Yellow,false,0.0f,0,2.0f);
+            const FVector Start=VisualPoint(Shot->GetOrigin());
+            if(Shot->IsBeam()){
+                Alive.Add(Shot);
+                ABeamWeaponActor* Beam=Cast<ABeamWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());
+                if(!Beam){
+                    TSubclassOf<ABeamWeaponActor> BeamClass=LoadClass<ABeamWeaponActor>(nullptr,TEXT("/Game/Weapons/BP_Laser.BP_Laser_C"));
+                    Beam=ABeamWeaponActor::SpawnBeam(World,BeamClass,Start,Position,nullptr);
+                    if(Beam){
+                        Beam->SetBeamColor(FLinearColor(0.16f,0.7f,1.0f));
+                        ProjectileVisuals.Add(Shot,Beam);
+                    }
+                }
+                if(Beam) Beam->SetBeamPoints(Start,Position);
+                else DrawDebugLine(World,Start,Position,FColor::Cyan,false,0.0f,0,2.0f);
+            }
+            else{
+                DrawDebugLine(World,Start,Position,FColor::Yellow,false,0.0f,0,2.0f);
+            }
             continue;
         }
         Alive.Add(Shot);
