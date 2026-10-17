@@ -14,6 +14,14 @@
 
 // If you have Game::GetText in UE, include your wrapper; otherwise replace calls with literal strings.
 #include "Game.h"
+#include "Instruction.h"
+#include "Sensor.h"
+#include "Sim.h"
+#include "SimContact.h"
+#include "Geometry.h"
+#include "Camera.h"
+#include "Rendering/DrawElements.h"
+#include "Styling/CoreStyle.h"
 
 bool   MFDView::bInitialized = false;
 Bitmap MFDView::SensorFOV;
@@ -383,11 +391,106 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
     }
 }
 
+
+// UE native MFD primitives (FSlateDrawElement). Falls back to the legacy
+// View/Bitmap path only when no HUD paint context is bound this frame.
+static FLinearColor MFDToLinear(const FColor& C)
+{
+    return FLinearColor(C.R / 255.f, C.G / 255.f, C.B / 255.f, C.A / 255.f);
+}
+static bool MFDPaint(FPaintContext*& Ctx, const FGeometry*& Geo, int32& Layer)
+{
+    HUDView* Hud = HUDView::GetInstance();
+    if (!Hud || !Hud->HasPaint()) return false;
+    Ctx = Hud->GetPaintContext();
+    Geo = Hud->GetPaintGeometry();
+    Layer = Hud->GetPaintLayer();
+    return Ctx && Geo;
+}
+static void MFDLine(View* V, Bitmap* Tex, int X1, int Y1, int X2, int Y2, const FColor& C)
+{
+    FPaintContext* Ctx = nullptr;
+    const FGeometry* Geo = nullptr;
+    int32 Layer = 0;
+    if (MFDPaint(Ctx, Geo, Layer))
+    {
+        TArray<FVector2D> Pts;
+        Pts.Add(FVector2D((float)X1, (float)Y1));
+        Pts.Add(FVector2D((float)X2, (float)Y2));
+        FSlateDrawElement::MakeLines(
+            Ctx->OutDrawElements, Layer, Geo->ToPaintGeometry(),
+            Pts, ESlateDrawEffect::None, MFDToLinear(C), true, 1.f);
+        return;
+    }
+    if (Tex) Tex->DrawLine(X1, Y1, X2, Y2, C);
+    else if (V) V->DrawLine(X1, Y1, X2, Y2, C);
+}
+static void MFDFill(View* V, Bitmap* Tex, int X1, int Y1, int X2, int Y2, const FColor& C)
+{
+    FPaintContext* Ctx = nullptr;
+    const FGeometry* Geo = nullptr;
+    int32 Layer = 0;
+    if (MFDPaint(Ctx, Geo, Layer))
+    {
+        const FVector2D Pos((float)X1, (float)Y1);
+        const FVector2D Size((float)(X2 - X1), (float)(Y2 - Y1));
+        FSlateDrawElement::MakeBox(
+            Ctx->OutDrawElements, Layer, Geo->ToPaintGeometry(Pos, Size),
+            FCoreStyle::Get().GetBrush("WhiteBrush"),
+            ESlateDrawEffect::None, MFDToLinear(C));
+        return;
+    }
+    if (Tex) Tex->FillRect(X1, Y1, X2, Y2, C);
+    else if (V) V->FillRect(X1, Y1, X2, Y2, C);
+}
+static void MFDEllipse(View* V, Bitmap* Tex, int X1, int Y1, int X2, int Y2, const FColor& C)
+{
+    FPaintContext* Ctx = nullptr;
+    const FGeometry* Geo = nullptr;
+    int32 Layer = 0;
+    if (MFDPaint(Ctx, Geo, Layer))
+    {
+        const float Cx = (X1 + X2) * 0.5f;
+        const float Cy = (Y1 + Y2) * 0.5f;
+        const float Rx = FMath::Abs(X2 - X1) * 0.5f;
+        const float Ry = FMath::Abs(Y2 - Y1) * 0.5f;
+        constexpr int32 Segs = 32;
+        TArray<FVector2D> Pts;
+        Pts.Reserve(Segs + 1);
+        for (int32 i = 0; i <= Segs; ++i)
+        {
+            const float T = (2.f * PI) * ((float)i / (float)Segs);
+            Pts.Add(FVector2D(Cx + FMath::Cos(T) * Rx, Cy + FMath::Sin(T) * Ry));
+        }
+        FSlateDrawElement::MakeLines(
+            Ctx->OutDrawElements, Layer, Geo->ToPaintGeometry(),
+            Pts, ESlateDrawEffect::None, MFDToLinear(C), true, 1.f);
+        return;
+    }
+    if (Tex) Tex->DrawEllipse(X1, Y1, X2, Y2, C);
+    else if (V) V->DrawEllipse(X1, Y1, X2, Y2, C);
+}
+static void MFDCross(View* V, Bitmap* Tex, int X, int Y)
+{
+    const FColor White = FColor::White;
+    MFDLine(V, Tex, X - 2, Y - 2, X + 2, Y + 2, White);
+    MFDLine(V, Tex, X - 2, Y + 2, X + 2, Y - 2, White);
+}
+static void MFDThreat(View* V, Bitmap* Tex, int X, int Y, const FColor& C, bool bShip)
+{
+    if (bShip)
+        MFDEllipse(V, Tex, X - 4, Y - 4, X + 3, Y + 3, C);
+    else
+    {
+        MFDLine(V, Tex, X,     Y - 5, X + 5, Y,     C);
+        MFDLine(V, Tex, X + 5, Y,     X,     Y + 5, C);
+        MFDLine(V, Tex, X,     Y + 5, X - 5, Y,     C);
+        MFDLine(V, Tex, X - 5, Y,     X,     Y - 5, C);
+    }
+}
+
 void MFDView::DrawSensorMFD()
 {
-    // This is the big AZ/EL scanner. Port line-by-line once Sensor/Contact math is UE-side.
-    // For now, keep the skeleton with the right label call and safe guards.
-
     if (!ShipPtr)
     {
         Rect r = RectPx;
@@ -395,7 +498,127 @@ void MFDView::DrawSensorMFD()
         return;
     }
 
-    // TODO: draw ellipses, nav point, contacts, threat markers using your Window/Bitmap API.
+    Sensor* SensorPtr = ShipPtr->GetSensor();
+    if (!SensorPtr)
+    {
+        Rect r = RectPx;
+        DrawMFDText(0, "INACTIVE", r, DT_CENTER);
+        return;
+    }
+
+    const int ScanR = RectPx.w;
+    const int ScanX = CockpitHUDTexture ? (Index * 128) : RectPx.x;
+    const int ScanY = CockpitHUDTexture ? 256           : RectPx.y;
+    const int R     = ScanR / 2;
+    const double XCtr = (ScanR / 2.0) - 0.5;
+    const double YCtr = (ScanR / 2.0) + 0.5;
+    const int Xc = (int)(ScanX + XCtr);
+    const int Yc = (int)(ScanY + YCtr);
+
+    double SweepScale = (double)R / (PI * 0.5);
+    if (SensorPtr->GetBeamLimit() > 90.0 * DEGREES)
+        SweepScale = (double)R / (90.0 * DEGREES);
+
+    // Beam-limit ellipse (legacy FOV, mode < GM).
+    if (SensorPtr->GetMode() < ESensorMode::GM)
+    {
+        const int Az = (int)(SensorPtr->GetBeamLimit() * SweepScale);
+        const int El = Az;
+        MFDEllipse(window, CockpitHUDTexture, Xc - Az, Yc - El, Xc + Az, Yc + El, HudColor);
+    }
+
+    // Next nav point: white cross in AZ/EL.
+    Instruction* NavPt = ShipPtr->GetNextNavPoint();
+    if (NavPt && NavPt->GetRegion() == ShipPtr->GetRegion())
+    {
+        const Camera& Cam = ShipPtr->GetCam();
+        const FVector Pt = NavPt->GetLocation() - ShipPtr->GetLocation();
+        const double Tx = FVector::DotProduct(Pt, Cam.vrt());
+        const double Ty = FVector::DotProduct(Pt, Cam.vup());
+        const double Tz = FVector::DotProduct(Pt, Cam.vpn());
+
+        if (Tz > 1.0)
+        {
+            const double Rng = Pt.Size();
+            if (Rng > 1.0)
+            {
+                double Az = FMath::Asin(FMath::Abs(Tx) / Rng);
+                double El = FMath::Asin(FMath::Abs(Ty) / Rng);
+                if (Tx < 0) Az = -Az;
+                if (Ty < 0) El = -El;
+
+                if (FMath::Abs(Az) < 90.0 * DEGREES)
+                {
+                    Az *= SweepScale;
+                    El *= SweepScale;
+
+                    const int X = (int)(R + Az);
+                    const int Y = (int)(R - El);
+                    if (X > 0 && X < ScanR && Y > 0 && Y < ScanR)
+                        MFDCross(window, CockpitHUDTexture, ScanX + X, ScanY + Y);
+                }
+            }
+        }
+    }
+
+    // Contacts and threat markers.
+    ListIter<SimContact> It = ShipPtr->GetContactList();
+    while (++It)
+    {
+        SimContact* Contact = It.value();
+        if (!Contact) continue;
+        Ship* CShip = Contact->GetShip();
+        if (CShip == ShipPtr) continue;
+
+        double Az = 0, El = 0, Rng = 0;
+        Contact->GetBearing(ShipPtr, Az, El, Rng);
+
+        bool bAft = false;
+        if (FMath::Abs(Az) < 90.0 * DEGREES)
+        {
+            Az *= SweepScale;
+            El *= SweepScale;
+        }
+        else
+        {
+            const double Len = FMath::Sqrt(Az * Az + El * El);
+            if (Len > 1e-6)
+            {
+                Az = R * Az / Len;
+                El = R * El / Len;
+            }
+            else
+            {
+                Az = -R;
+                El = 0;
+            }
+            bAft = true;
+        }
+
+        const int X = (int)(R + Az);
+        const int Y = (int)(R - El);
+        if (X < 0 || X > ScanR || Y < 0 || Y > ScanR) continue;
+
+        FColor Mark = HUDView::MarkerColor(Contact);
+        if (bAft)
+        {
+            Mark.R = (uint8)(Mark.R * 0.75f);
+            Mark.G = (uint8)(Mark.G * 0.75f);
+            Mark.B = (uint8)(Mark.B * 0.75f);
+        }
+
+        int Size = 1;
+        if (CShip && CShip == ShipPtr->GetTarget())
+            Size = 2;
+
+        const int MX = ScanX + X;
+        const int MY = ScanY + Y;
+        MFDFill(window, CockpitHUDTexture, MX - Size, MY - Size, MX + Size, MY + Size, Mark);
+
+        if (Contact->Threat(ShipPtr))
+            MFDThreat(window, CockpitHUDTexture, MX, MY, Mark, CShip != nullptr);
+    }
+
     DrawSensorLabels("FOV");
 }
 
@@ -408,7 +631,129 @@ void MFDView::DrawHSD()
         return;
     }
 
-    // TODO: port legacy HSD camera flattening + ring ticks + nav + contacts.
+    Sensor* SensorPtr = ShipPtr->GetSensor();
+    if (!SensorPtr)
+    {
+        Rect r = RectPx;
+        DrawMFDText(0, "INACTIVE", r, DT_CENTER);
+        return;
+    }
+
+    const int ScanR = RectPx.w;
+    const int ScanX = CockpitHUDTexture ? (Index * 128) : RectPx.x;
+    const int ScanY = CockpitHUDTexture ? 256           : RectPx.y;
+    const int R     = ScanR / 2 - 4;
+    const double XCtr = (ScanR / 2.0) - 0.5;
+    const double YCtr = (ScanR / 2.0) + 0.5;
+    const int Xc = (int)XCtr + ScanX;
+    const int Yc = (int)YCtr + ScanY;
+
+    // Beam-limit sector lines (legacy HSD, mode < PST).
+    if (SensorPtr->GetMode() < ESensorMode::PST)
+    {
+        const double S = FMath::Sin(SensorPtr->GetBeamLimit());
+        const double C = FMath::Cos(SensorPtr->GetBeamLimit());
+        const int X0 = (int)(0.1 * R * S);
+        const int Y0 = (int)(0.1 * R * C);
+        const int X1 = (int)(1.0 * R * S);
+        const int Y1 = (int)(1.0 * R * C);
+        MFDLine(window, CockpitHUDTexture, Xc - X0, Yc - Y0, Xc - X1, Yc - Y1, HudColor);
+        MFDLine(window, CockpitHUDTexture, Xc + X0, Yc - Y0, Xc + X1, Yc - Y1, HudColor);
+    }
+
+    const double RScale = (double)R / SensorPtr->GetBeamRange();
+
+    // Flatten camera to horizontal (legacy Y-up).
+    Camera HsdCam = ShipPtr->GetCam();
+    FVector Look = ShipPtr->GetLocation() + ShipPtr->GetHeading() * 1000.0;
+    Look.Y = ShipPtr->GetLocation().Y;
+    HsdCam.LookAt(Look);
+
+    // Range-ring tick marks (N/E/S/W).
+    for (int Dir = 0; Dir < 4; ++Dir)
+    {
+        FVector Tick = FVector::ZeroVector;
+        switch (Dir)
+        {
+        case 0: Tick = FVector(0, 0, 1000); break;
+        case 1: Tick = FVector(1000, 0, 0); break;
+        case 2: Tick = FVector(0, 0, -1000); break;
+        case 3: Tick = FVector(-1000, 0, 0); break;
+        }
+        const double Tx = FVector::DotProduct(Tick, HsdCam.vrt());
+        const double Tz = FVector::DotProduct(Tick, HsdCam.vpn());
+        double Az = FMath::Asin(FMath::Abs(Tx) / 1000.0);
+        if (Tx < 0) Az = -Az;
+        if (Tz < 0) Az = (Az < 0) ? (-PI - Az) : (PI - Az);
+
+        for (double Range = 0.3; Range < 1.0; Range += 0.3)
+        {
+            const int X0 = (int)(FMath::Sin(Az) * R * Range);
+            const int Y0 = (int)(FMath::Cos(Az) * R * Range);
+            const int X1 = (int)(FMath::Sin(Az) * R * (Range + 0.1));
+            const int Y1 = (int)(FMath::Cos(Az) * R * (Range + 0.1));
+            MFDLine(window, CockpitHUDTexture, Xc + X0, Yc - Y0, Xc + X1, Yc - Y1, HudColor);
+        }
+    }
+
+    // Next nav point: white cross on polar range/azimuth.
+    Instruction* NavPt = ShipPtr->GetNextNavPoint();
+    if (NavPt && NavPt->GetRegion() == ShipPtr->GetRegion())
+    {
+        const FVector Pt = NavPt->GetLocation() - ShipPtr->GetLocation();
+        const double Tx = FVector::DotProduct(Pt, HsdCam.vrt());
+        const double Tz = FVector::DotProduct(Pt, HsdCam.vpn());
+        double Rng = Pt.Size();
+        if (Rng > 1.0)
+        {
+            double Az = FMath::Asin(FMath::Abs(Tx) / Rng);
+            if (Rng > SensorPtr->GetBeamRange())
+                Rng = SensorPtr->GetBeamRange();
+            if (Tx < 0) Az = -Az;
+            if (Tz < 0) Az = (Az < 0) ? (-PI - Az) : (PI - Az);
+
+            const int X = (int)(Xc + FMath::Sin(Az) * Rng * RScale);
+            const int Y = (int)(Yc - FMath::Cos(Az) * Rng * RScale);
+            MFDCross(window, CockpitHUDTexture, X, Y);
+        }
+    }
+
+    // Contacts and threat markers.
+    const double Limit = SensorPtr->GetBeamRange();
+    ListIter<SimContact> It = ShipPtr->GetContactList();
+    while (++It)
+    {
+        SimContact* Contact = It.value();
+        if (!Contact) continue;
+        Ship* CShip = Contact->GetShip();
+        if (CShip == ShipPtr) continue;
+
+        const FVector TargPt = Contact->Location() - HsdCam.Pos();
+        const double Tx = FVector::DotProduct(TargPt, HsdCam.vrt());
+        const double Rg = Contact->Range(ShipPtr, Limit);
+        const double TrueRange = TargPt.Size();
+        if (Rg > Limit || Rg <= 0 || TrueRange < 1.0) continue;
+
+        double Az = FMath::Asin(FMath::Abs(Tx) / TrueRange);
+        if (Tx < 0) Az = -Az;
+        if (!Contact->InFront(ShipPtr))
+            Az = (Az < 0) ? (-PI - Az) : (PI - Az);
+
+        const int X = (int)(Xc + FMath::Sin(Az) * Rg * RScale);
+        const int Y = (int)(Yc - FMath::Cos(Az) * Rg * RScale);
+        if (X < ScanX || Y < ScanY) continue;
+
+        int Size = 2;
+        if (CShip && CShip == ShipPtr->GetTarget())
+            Size = 3;
+
+        const FColor Mark = HUDView::MarkerColor(Contact);
+        MFDFill(window, CockpitHUDTexture, X - Size, Y - Size, X + Size, Y + Size, Mark);
+
+        if (Contact->Threat(ShipPtr))
+            MFDThreat(window, CockpitHUDTexture, X, Y, Mark, CShip != nullptr);
+    }
+
     DrawSensorLabels("HSD");
 }
 

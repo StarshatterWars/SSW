@@ -199,6 +199,12 @@ public:
         // paint_layer intentionally left as-is
     }
 
+    // UE native paint access for MFD and other views this frame.
+    bool HasPaint() const { return paint_ctx != nullptr && paint_geo != nullptr; }
+    FPaintContext* GetPaintContext() const { return paint_ctx; }
+    const FGeometry* GetPaintGeometry() const { return paint_geo; }
+    int32 GetPaintLayer() const { return paint_layer; }
+
 protected:
     // Slate primitives (used by UE-backed DrawHUDText / DrawDiamond / etc.)
     void DrawLine(const FVector2D& A, const FVector2D& B, const FLinearColor& C, float Thickness) const;
