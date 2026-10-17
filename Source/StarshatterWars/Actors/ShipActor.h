@@ -6,7 +6,6 @@
 
 #include "Components/AudioComponent.h"
 #include "Sound/SoundCue.h"
-#include "TurretActor.h"
 #include "ShipActor.generated.h"
 
 class USceneComponent;
@@ -18,8 +17,6 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class Ship;
 class Drive;
-class UChildActorComponent;
-class UShipWeaponMountComponent;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -80,28 +77,9 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaTime) override;
 
-    // BP class selection is shared through a visual-set asset, with per-ship overrides.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TObjectPtr<UTurretVisualSet> TurretVisuals;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TMap<FName,TSubclassOf<ATurretActor>> TurretClassOverrides;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") TArray<FShipTurretMountDef> TurretMountDefs;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Turrets") bool bEnableTurretActors = true;
-    UFUNCTION(BlueprintCallable, CallInEditor, Category="Ship|Turrets") void RebuildTurretActors();
-    // Constructor-only: create inherited native mount components from ship.def.
-    void ConfigureTurretsFromShipDef(FName ShipDef);
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TObjectPtr<USceneComponent> TurretMountRoot;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TArray<TObjectPtr<USceneComponent>> NativeTurretMounts;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Turrets") TArray<TObjectPtr<UChildActorComponent>> NativeTurretBPSlots;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Weapons") TObjectPtr<USceneComponent> WeaponHardpointRoot;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Weapons") TArray<TObjectPtr<UShipWeaponMountComponent>> NativeWeaponHardpoints;
-    // Constructor-only. Per-station Child Actor Class is assigned in the ship BP.
-    void ConfigureWeaponHardpointsFromShipDef(FName ShipDef);
-    void ClearTurretActors();
-    void UpdateTurretActors();
-    UPROPERTY(Transient) TArray<TObjectPtr<UChildActorComponent>> TurretComponents;
-    TArray<FName> SpawnedTurretTypes;
-
     void BindRuntimeShip(Ship* InShip);
     void UpdateFromRuntimeShip(float DeltaTime);
+    void SyncCarriedMissiles();
 
     void BuildNavLightsFromRuntime();
     bool HasRuntimeShip() const { return RuntimeShip != nullptr; }
@@ -281,6 +259,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
     TArray<FShipPointDef> TurretBasePointDefs;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Turrets")
+    TArray<FShipPointDef> TurretMountDefs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Turrets")
+    bool bEnableTurretActors = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Turrets")
+    TArray<TSubclassOf<AActor>> TurretClassOverrides;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|Generated")
     TArray<FShipPointDef> DockPointDefs;
 
@@ -300,8 +287,36 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
     TArray<USceneComponent*> WeaponMountPoints;
 
+    // Carried-missile meshes, one per mount, shown/hidden from weapon ammo.
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UStaticMeshComponent>> CarriedMissileMeshes;
+
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
     TArray<USceneComponent*> TurretBasePoints;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Turrets")
+    TObjectPtr<USceneComponent> TurretMountRoot;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
+    TObjectPtr<USceneComponent> WeaponHardpointRoot;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Turrets")
+    TArray<TObjectPtr<USceneComponent>> NativeTurretMounts;
+
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
+    TArray<TObjectPtr<USceneComponent>> NativeWeaponHardpoints;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<AActor>> TurretComponents;
+
+    UPROPERTY(Transient)
+    TArray<TSubclassOf<AActor>> SpawnedTurretTypes;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<USceneComponent>> TurretVisuals;
+
+    UPROPERTY(Transient)
+    TArray<TSubclassOf<AActor>> NativeTurretBPSlots;
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
     TArray<USceneComponent*> DockPoints;
@@ -494,6 +509,21 @@ public:
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildTurretBasePoints();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
+    void ConfigureTurretsFromShipDef(const FString& ShipName);
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
+    void ClearTurretActors();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
+    void RebuildTurretActors();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
+    void UpdateTurretActors();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Weapons")
+    void ConfigureWeaponHardpointsFromShipDef(const FString& ShipName);
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Build")
     void RebuildDockPoints();

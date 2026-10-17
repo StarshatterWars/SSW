@@ -92,6 +92,8 @@ public:
     bool               IsBeam()    const;
 
     virtual void       ExecFrame(double factor);
+    virtual void       ApplyDamage(double damage);
+    void               KillBeams();
     virtual void       Orient(const Physical* rep);
     virtual void       Distribute(double delivered_energy, double seconds);
 
@@ -99,14 +101,6 @@ public:
     void               SetOwner(Ship* ship);
     int                GetIndex() const { return index; }
     void               SetIndex(int n) { index = n; }
-
-    bool HasTurretGeometry() const { return design && (design->turret.length() > 0 || design->turret_model != nullptr); }
-    int GetTurretBarrelCount() const { return nbarrels; }
-    FVector GetTurretBarrelOffset(int I) const { return I >= 0 && I < nbarrels ? rel_pts[I] : FVector::ZeroVector; }
-    const Camera& GetTurretAimCamera() const { return aim_cam; }
-    FVector GetTurretMountRelative() const { return mount_rel; }
-    double GetTurretAzimuthOffset() const { return old_azimuth; }
-    double GetTurretElevationOffset() const { return old_elevation; }
 
     FVector            GetAimVector() const { return aim_cam.vpn(); }
     void               SetAzimuth(double a) { aim_azimuth = (float)a; }
@@ -137,6 +131,16 @@ public:
     Solid* GetTurret();
     Solid* GetTurretBase();
     Solid* GetVisibleStore(int i);
+
+    const Camera& GetTurretAimCamera() const { return aim_cam; }
+    int GetTurretBarrelCount() const { return nbarrels; }
+    FVector GetTurretBarrelOffset(int Index) const
+    {
+        return (Index >= 0 && Index < nbarrels) ? rel_pts[Index] : FVector::ZeroVector;
+    }
+    float GetTurretAzimuthOffset() const { return aim_azimuth; }
+    float GetTurretElevationOffset() const { return aim_elevation; }
+    FVector GetTurretMountRelative() const { return GetMountLocation(); }
 
     virtual bool          Update(SimObject* obj);
     virtual const char* GetObserverName() const;

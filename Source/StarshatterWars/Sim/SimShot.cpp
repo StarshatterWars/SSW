@@ -199,6 +199,14 @@ SimShot::~SimShot()
 		sound->Stop();
 		sound->Release();
 	}
+
+	// Ship destruction deletes beams via the Weapon destructor. Drop the
+	// attached beam actor here so it does not linger after the shot is gone.
+	if (BeamActor && IsValid(BeamActor))
+	{
+		BeamActor->Destroy();
+		BeamActor = nullptr;
+	}
 }
 
 // +--------------------------------------------------------------------+
