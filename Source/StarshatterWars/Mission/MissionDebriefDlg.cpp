@@ -39,6 +39,124 @@
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
 #include "Components/RichTextBlock.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/SizeBox.h"
+
+UDebriefListItem* UDebriefListItem::Make(UObject* Outer,
+    const FString& In0, const FString& In1, const FString& In2, const FString& In3, int32 InDataIndex)
+{
+    UDebriefListItem* Item = NewObject<UDebriefListItem>(Outer);
+    Item->Col0 = In0;
+    Item->Col1 = In1;
+    Item->Col2 = In2;
+    Item->Col3 = In3;
+    Item->DataIndex = InDataIndex;
+    return Item;
+}
+
+void UDebriefRowWidget::NativeConstruct()
+{
+    Super::NativeConstruct();
+    EnsureRow();
+}
+
+void UDebriefRowWidget::EnsureRow()
+{
+    if (RowText || !WidgetTree) return;
+    UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("Row"));
+    RowText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RowText"));
+    RowText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+    RowText->SetAutoWrapText(false);
+    Row->AddChildToHorizontalBox(RowText);
+    WidgetTree->RootWidget = Row;
+}
+
+void UDebriefRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
+{
+    EnsureRow();
+    const UDebriefListItem* Item = Cast<UDebriefListItem>(ListItemObject);
+    if (!RowText) return;
+    if (!Item)
+    {
+        RowText->SetText(FText::GetEmpty());
+        return;
+    }
+    RowText->SetText(FText::FromString(
+        FString::Printf(TEXT("%s  %s  %s  %s"), *Item->Col0, *Item->Col1, *Item->Col2, *Item->Col3).TrimStartAndEnd()));
+}
+
+void UMissionDebriefDlg::EnsureUi()
+{
+    if (MissionNameWidget && UnitListWidget) return;
+
+    UVerticalBox* Box = EnsureAutoVerticalBox();
+    if (!Box || !WidgetTree) return;
+
+    auto AddLabel = [this, Box](const TCHAR* Name) -> UTextBlock*
+    {
+        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
+        Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        if (UVerticalBoxSlot* Slot = Box->AddChildToVerticalBox(Label))
+            Slot->SetPadding(FMargin(0.f, 2.f));
+        return Label;
+    };
+    auto AddList = [this, Box](const TCHAR* Name) -> UListView*
+    {
+        UDebriefListView* List = WidgetTree->ConstructWidget<UDebriefListView>(UDebriefListView::StaticClass(), Name);
+        List->SetEntry(UDebriefRowWidget::StaticClass());
+        if (UVerticalBoxSlot* Slot = Box->AddChildToVerticalBox(List))
+        {
+            Slot->SetPadding(FMargin(0.f, 6.f));
+            Slot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        }
+        USizeBox* Sized = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+        Sized->SetHeightOverride(140.f);
+        return List;
+    };
+
+    if (!MissionNameWidget) MissionNameWidget = AddLabel(TEXT("MissionName"));
+    if (!MissionSystemWidget) MissionSystemWidget = AddLabel(TEXT("MissionSystem"));
+    if (!MissionSectorWidget) MissionSectorWidget = AddLabel(TEXT("MissionSector"));
+    if (!MissionTimeStartWidget) MissionTimeStartWidget = AddLabel(TEXT("MissionTime"));
+    if (!MissionScoreWidget) MissionScoreWidget = AddLabel(TEXT("MissionScore"));
+    if (!ObjectivesWidget)
+    {
+        ObjectivesWidget = WidgetTree->ConstructWidget<URichTextBlock>(URichTextBlock::StaticClass(), TEXT("Objectives"));
+        Box->AddChildToVerticalBox(ObjectivesWidget);
+    }
+    if (!SituationWidget)
+    {
+        SituationWidget = WidgetTree->ConstructWidget<URichTextBlock>(URichTextBlock::StaticClass(), TEXT("Situation"));
+        Box->AddChildToVerticalBox(SituationWidget);
+    }
+    if (!UnitListWidget) UnitListWidget = AddList(TEXT("UnitList"));
+    if (!SummaryListWidget) SummaryListWidget = AddList(TEXT("SummaryList"));
+    if (!EventListWidget) EventListWidget = AddList(TEXT("EventList"));
+    if (!CloseButtonWidget)
+    {
+        CloseButtonWidget = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("CloseButton"));
+        UTextBlock* CloseLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("CloseLabel"));
+        CloseLabel->SetText(FText::FromString(TEXT("Close")));
+        CloseButtonWidget->AddChild(CloseLabel);
+        Box->AddChildToVerticalBox(CloseButtonWidget);
+    }
+
+    BindFormWidgets();
+    auto ArmList = [](UListView* List)
+    {
+        if (UDebriefListView* Ours = Cast<UDebriefListView>(List))
+            Ours->SetEntry(UDebriefRowWidget::StaticClass());
+    };
+    ArmList(UnitListWidget);
+    ArmList(SummaryListWidget);
+    ArmList(EventListWidget);
+    if (CloseButtonWidget)
+        CloseButtonWidget->OnClicked.AddUniqueDynamic(this, &UMissionDebriefDlg::OnCloseClicked);
+    if (UnitListWidget)
+        UnitListWidget->OnItemSelectionChanged().AddUObject(this, &UMissionDebriefDlg::OnUnitSelectionChanged);
+}
 
 UMissionDebriefDlg::UMissionDebriefDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -53,25 +171,13 @@ UMissionDebriefDlg::UMissionDebriefDlg(const FObjectInitializer& ObjectInitializ
 void UMissionDebriefDlg::NativeConstruct()
 {
     Super::NativeConstruct();
-
-    // Bind ID -> widget mapping into UBaseScreen’s FormMap:
+    EnsureUi();
     BindFormWidgets();
 
-    // Button click:
     if (CloseButtonWidget)
-    {
-        CloseButtonWidget->OnClicked.AddDynamic(this, &UMissionDebriefDlg::OnCloseClicked);
-    }
-
-    // Unit selection:
+        CloseButtonWidget->OnClicked.AddUniqueDynamic(this, &UMissionDebriefDlg::OnCloseClicked);
     if (UnitListWidget)
-    {
         UnitListWidget->OnItemSelectionChanged().AddUObject(this, &UMissionDebriefDlg::OnUnitSelectionChanged);
-    }
-
-    // Default hidden unless you show it:
-    // (Optional) leave as-is if your UI manages visibility elsewhere.
-    // SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UMissionDebriefDlg::NativeDestruct()
@@ -142,6 +248,7 @@ void UMissionDebriefDlg::Show()
 
     SetVisibility(ESlateVisibility::Visible);
     bIsShown = true;
+    EnsureUi();
 
     if (UGameInstance* GI = GetGameInstance())
     {

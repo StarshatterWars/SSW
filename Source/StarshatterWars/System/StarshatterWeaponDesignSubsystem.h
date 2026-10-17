@@ -76,6 +76,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Starshatter|WeaponDesign")
     void RebuildWeaponRegistryFromDataTable();
 
+    // Registers Laser Cannon if the data table does not already have it.
+    void EnsureLaserWeapon();
+
 public:
     // Target DT (optional; can be null if you only want in-memory cache)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|WeaponDesign")

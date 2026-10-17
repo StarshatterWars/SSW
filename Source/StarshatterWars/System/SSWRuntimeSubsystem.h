@@ -60,6 +60,8 @@ public:
     void CreateWorld();
 
     void GameLoop();
+    void OnSensorRangeUp();
+    void OnSensorRangeDown();
 
     void UpdateWorld();
     void GameState();
@@ -144,6 +146,8 @@ private:
     TMap<Ship*, double> MissionPresentationRadii;
     uint32 MissionPresentationSeed = 0;
 
+    void EnsureMfdPanels();
+    //UPROPERTY(Transient) TArray<TObjectPtr<class UMfdPanel>> MfdPanels;
     FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
     FVector GetRegionVisualLocationForRuntimeShip(Ship* RuntimeShip) const;
 

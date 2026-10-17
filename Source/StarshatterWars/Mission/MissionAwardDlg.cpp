@@ -65,18 +65,18 @@ void UMissionAwardDlg::EnsureUi()
         UCanvasPanel* Inner = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AwardInner"));
         Frame->AddChild(Inner);
 
-        UTextBlock* WTitle = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("PanelTitle"));
-        WTitle->SetText(FText::FromString(TEXT("Congratulations")));
-        WTitle->SetJustification(ETextJustify::Center);
-        WTitle->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        UTextBlock* TitleBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("PanelTitle"));
+        TitleBlock->SetText(FText::FromString(TEXT("Congratulations")));
+        TitleBlock->SetJustification(ETextJustify::Center);
+        TitleBlock->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         if (UFont* Font = LoadObject<UFont>(nullptr, TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font")))
         {
-            FSlateFontInfo Info = WTitle->GetFont();
+            FSlateFontInfo Info = TitleBlock->GetFont();
             Info.FontObject = Font;
             Info.Size = 22;
-            WTitle->SetFont(Info);
+            TitleBlock->SetFont(Info);
         }
-        if (UCanvasPanelSlot* TitleSlot = Inner->AddChildToCanvas(WTitle))
+        if (UCanvasPanelSlot* TitleSlot = Inner->AddChildToCanvas(Title))
         {
             TitleSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
             TitleSlot->SetOffsets(FMargin(0.f, 32.f, 0.f, 28.f));
@@ -125,8 +125,8 @@ void UMissionAwardDlg::EnsureUi()
         Sized->SetHeightOverride(160.f);
         Sized->SetWidthOverride(160.f);
         Sized->AddChild(img_rank);
-        if (UVerticalBoxSlot* VSlot = Box->AddChildToVerticalBox(Sized))
-            VSlot->SetHorizontalAlignment(HAlign_Center);
+        if (UVerticalBoxSlot* ImageSlot = Box->AddChildToVerticalBox(Sized))
+            ImageSlot->SetHorizontalAlignment(HAlign_Center);
     }
     if (!lbl_info) lbl_info = AddLabel(TEXT("AwardInfo"), 14);
     if (!btn_close)
@@ -136,10 +136,10 @@ void UMissionAwardDlg::EnsureUi()
         CloseLabel->SetText(FText::FromString(TEXT("Close")));
         CloseLabel->SetJustification(ETextJustify::Center);
         btn_close->AddChild(CloseLabel);
-        if (UVerticalBoxSlot* VSlot = Box->AddChildToVerticalBox(btn_close))
+        if (UVerticalBoxSlot* CloseSlot = Box->AddChildToVerticalBox(btn_close))
         {
-            VSlot->SetPadding(FMargin(0.f, 16.f));
-            VSlot->SetHorizontalAlignment(HAlign_Center);
+            CloseSlot->SetPadding(FMargin(0.f, 16.f));
+            CloseSlot->SetHorizontalAlignment(HAlign_Center);
         }
     }
 
@@ -374,8 +374,8 @@ void UMissionAwardDlg::ShowDialog()
 {
     EnsureUi();
     SetVisibility(ESlateVisibility::Visible);
-    if (UTextBlock* WTitle = Cast<UTextBlock>(WidgetTree ? WidgetTree->FindWidget(TEXT("PanelTitle")) : nullptr))
-        WTitle->SetText(FText::FromString(TEXT("Congratulations")));
+    if (UTextBlock* TitleBlock = Cast<UTextBlock>(WidgetTree ? WidgetTree->FindWidget(TEXT("PanelTitle")) : nullptr))
+        TitleBlock->SetText(FText::FromString(TEXT("Congratulations")));
     ShowPlayer();
     bExitLatch = true;
 }

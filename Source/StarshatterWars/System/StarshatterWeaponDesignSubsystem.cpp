@@ -677,6 +677,54 @@ void UStarshatterWeaponDesignSubsystem::ReadWeaponDesignData()
         TEXT("[WEAPON] ReadWeaponDesignData complete: cache=%d registry=%d"),
         DesignsByName.Num(),
         WeaponDesignRegistry::GetAll().Num());
+
+    EnsureLaserWeapon();
+}
+
+void UStarshatterWeaponDesignSubsystem::EnsureLaserWeapon()
+{
+    const FName RowName(TEXT("Laser Cannon"));
+
+    if (WeaponDesignRegistry::Find(RowName))
+        return;
+
+    FWeaponDesign W;
+    W.Type = 0;
+    W.Kind = EWeaponType::Beam;
+    W.Name = TEXT("Laser Cannon");
+    W.Group = TEXT("Laser");
+    W.Description = TEXT("Sustained energy beam. Drains capacitor while firing.");
+    W.bPrimary = true;
+    W.bBeam = true;
+    W.Guided = 1;
+    W.bSyncro = true;
+    W.Value = 100;
+    W.Ammo = -1;
+    W.Capacity = 1200.0f;
+    W.RechargeRate = 250.0f;
+    W.RefireDelay = 0.05f;
+    W.Charge = 40.0f;
+    W.MinCharge = 20.0f;
+    W.Damage = 180.0f;
+    W.Penetration = 1.0f;
+    W.Life = 0.35f;
+    W.Length = 60000.0f;
+    W.MaxRange = 60000.0f;
+    W.MinRange = 0.0f;
+    W.Speed = 0.0f;
+    W.GraphicType = 1;
+    W.Width = 8.0f;
+    W.LightColor = FColor(40, 180, 255);
+    W.SpreadAz = 0.15f;
+    W.SpreadEl = 0.15f;
+
+    DesignsByName.Add(RowName, W);
+    WeaponDesignRegistry::RegisterDesign(RowName, W);
+
+    if (WeaponDesignDataTable && !WeaponDesignDataTable->FindRow<FWeaponDesign>(RowName, TEXT("EnsureLaser"), false))
+        WeaponDesignDataTable->AddRow(RowName, W);
+
+    UE_LOG(LogTemp, Log, TEXT("[WEAPON] Registered Laser Cannon into registry and data table"));
 }
 
 void UStarshatterWeaponDesignSubsystem::RebuildWeaponRegistryFromDataTable()

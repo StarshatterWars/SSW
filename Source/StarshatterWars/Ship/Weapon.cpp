@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -214,6 +214,28 @@ Weapon::~Weapon()
 
 // +--------------------------------------------------------------------+
 
+void Weapon::KillBeams()
+{
+    if (!beams) return;
+    for (int i = 0; i < nbarrels; ++i)
+    {
+        if (!beams[i]) continue;
+        Ignore(beams[i]);
+        beams[i]->Destroy();   // drops the laser actor
+        delete beams[i];
+        beams[i] = nullptr;
+    }
+}
+
+void Weapon::ApplyDamage(double damage)
+{
+    SimSystem::ApplyDamage(damage);
+    CalcStatus();
+    // A destroyed or disabled launcher cannot keep a beam alive.
+    if (!enabled || availability <= crit_level)
+        KillBeams();
+}
+
 bool Weapon::IsPrimary() const { return design->primary; }
 bool Weapon::IsDrone()   const { return design->drone; }
 bool Weapon::IsDecoy()   const { return design->decoy_type != 0; }
@@ -275,21 +297,41 @@ Solid* Weapon::GetVisibleStore(int i)
 
 void Weapon::SetAmmo(int a)
 {
-    if (a >= 0) {
-        if (active_barrel >= 0 && design->visible_stores) {
-            while (a < ammo) {
-                if (active_barrel >= nbarrels)
-                    active_barrel = 0;
+    if (a < 0)
+        return;
 
-                if (visible_stores[active_barrel]) {
-                    GRAPHIC_DESTROY(visible_stores[active_barrel]);
-                    active_barrel++;
-                    ammo--;
-                }
+    // Drop carried stores down to the requested count. Advance even when no
+    // legacy store mesh exists so this cannot spin forever on a null store.
+    if (active_barrel >= 0 && design->visible_stores)
+    {
+        int Guard = nbarrels + 1;
+        while (a < ammo && Guard-- > 0)
+        {
+            if (active_barrel >= nbarrels)
+                active_barrel = 0;
+
+            if (visible_stores[active_barrel])
+                GRAPHIC_DESTROY(visible_stores[active_barrel]);
+
+            active_barrel++;
+            ammo--;
+        }
+    }
+
+    ammo = a;
+
+    // Rearm restores the carried-store meshes when a model is available.
+    if (!design->primary && design->visible_stores && design->shot_model && ammo > 0)
+    {
+        for (int i = 0; i < nbarrels && i < ammo; ++i)
+        {
+            if (!visible_stores[i])
+            {
+                Solid* s0 = new Solid;
+                s0->UseModel(design->shot_model);
+                visible_stores[i] = s0;
             }
         }
-
-        ammo = a;
     }
 }
 
@@ -311,6 +353,13 @@ void Weapon::ExecFrame(double seconds)
     if (orders == WeaponsOrders::POINT_DEFENSE && enabled)
         SelectTarget();
 
+    // Destroyed or disabled weapons drop any live beams immediately.
+    if (beams && (!enabled || availability <= crit_level))
+    {
+        KillBeams();
+        return;
+    }
+
     if (beams && !target) {
         for (int i = 0; i < nbarrels; i++) {
             if (beams[i]) {
@@ -325,7 +374,7 @@ void Weapon::ExecFrame(double seconds)
     if (design->self_aiming) {
         Track(target, subtarget);
     }
-    else if (HasTurretGeometry()) {
+    else if (turret) {
         ZeroAim();
     }
 
@@ -571,7 +620,7 @@ int Weapon::Track(SimObject* targ, SimSystem* sub)
         firing = 0;
         Aim();
     }
-    else if (HasTurretGeometry()) {
+    else if (turret) {
         ZeroAim();
     }
 
@@ -605,35 +654,14 @@ SimShot* Weapon::Fire()
         //NetGame* net_game = NetGame::GetInstance();
         //bool     net_client = net_game ? net_game->IsClient() : false;
 
-        // all barrels
+        // All barrels (guns and missiles). Networking is not active in this port,
+        // so both primary and secondary follow the legacy non-net fire path.
         if (active_barrel < 0) {
-            //if (net_client || IsPrimary())
-                //NetUtil::SendWepTrigger(this, nbarrels);
-
-            if (IsPrimary()) {
-                for (int i = 0; i < nbarrels; i++)
-                    shot = FireBarrel(i);
-            }
-            //else if (net_game && net_game->IsServer() && IsMissile()) {
-             //   for (int i = 0; i < nbarrels; i++) {
-             //      shot = FireBarrel(i);
-             //      NetUtil::SendWepRelease(this, shot);
-             // }
-            //}
+            for (int i = 0; i < nbarrels; i++)
+                shot = FireBarrel(i);
         }
-
-        // single barrel
         else {
-            //if (net_client || IsPrimary())
-             //   NetUtil::SendWepTrigger(this, nbarrels);
-
-            if (IsPrimary()) {
-                shot = FireBarrel(active_barrel++);
-            }
-            //else if (net_game && net_game->IsServer() && IsMissile()) {
-            //    shot = FireBarrel(active_barrel++);
-                //NetUtil::SendWepRelease(this, shot);
-            //}
+            shot = FireBarrel(active_barrel++);
 
             if (active_barrel >= nbarrels) {
                 active_barrel = 0;
@@ -745,7 +773,7 @@ SimShot* Weapon::FireBarrel(int n)
     // missiles always launch in rail direction:
     else {
         // unless they are on a mobile launcher
-        if (HasTurretGeometry() && design->self_aiming) {
+        if (turret && design->self_aiming) {
             shot = CreateShot(shotpos, aim_cam, design, ship);
             if (shot)
                 shot->SetVelocity(base_vel);
@@ -848,7 +876,9 @@ void Weapon::Orient(const Physical* rep)
     YAxis = YAxis.GetSafeNormal();
     ZAxis = ZAxis.GetSafeNormal();
 
-    // Preserve the legacy camera basis. Cross(right, forward) would invert up.
+    // Defensive orthonormalization:
+    ZAxis = (ZAxis - FVector::DotProduct(ZAxis, XAxis) * XAxis).GetSafeNormal();
+    YAxis = FVector::CrossProduct(XAxis, ZAxis).GetSafeNormal();
 
     // UE orientation matrix (rotation only):
     const FMatrix ShipRotM(
@@ -869,7 +899,7 @@ void Weapon::Orient(const Physical* rep)
     const FTransform ShipXform(ShipM);
 
     // Align graphics with camera:
-    if (HasTurretGeometry())
+    if (turret)
     {
         if (!design->self_aiming)
             ZeroAim();
@@ -883,7 +913,8 @@ void Weapon::Orient(const Physical* rep)
         AimY = AimY.GetSafeNormal();
         AimZ = AimZ.GetSafeNormal();
 
-        // Use the legacy aim basis unchanged, including its up direction.
+        AimZ = (AimZ - FVector::DotProduct(AimZ, AimX) * AimX).GetSafeNormal();
+        AimY = FVector::CrossProduct(AimX, AimZ).GetSafeNormal();
 
         const FMatrix AimRotM(
             FPlane(AimX.X, AimX.Y, AimX.Z, 0.0f),
@@ -893,10 +924,8 @@ void Weapon::Orient(const Physical* rep)
         );
 
         // Turret itself uses aim orientation:
-        if (turret) {
-            turret->MoveTo(mount_loc);
-            turret->SetOrientation(AimRotM);
-        }
+        turret->MoveTo(mount_loc);
+        turret->SetOrientation(AimRotM);
 
         // Turret base uses ship orientation with one-axis adjustment:
         if (turret_base)

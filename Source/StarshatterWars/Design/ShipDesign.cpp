@@ -26,6 +26,8 @@
 #include "HardPoint.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
+#include "WeaponDesignRegistry.h"
+#include "ShipDesignRegistry.h"
 #include "Shield.h"
 #include "ShipSquadron.h"
 #include "Sensor.h"
@@ -989,6 +991,10 @@ ShipDesign* ShipDesign::GetDesignName(const char* design_name, const char* desig
 	if (!design_name || !*design_name)
 		return 0;
 
+	// Authoritative path: data table rows registered into ShipDesignRegistry.
+	if (ShipDesign* FromRegistry = ShipDesignRegistry::FindLegacy(design_name))
+		return FromRegistry;
+
 	ShipCatalogEntry* entry = 0;
 
 	for (int i = 0; i < catalog.size(); i++) {
@@ -1028,10 +1034,11 @@ ShipDesign* ShipDesign::GetDesignName(const char* design_name, const char* desig
 		}
 		return entry->design;
 	}
-	else {
-		UE_LOG(LogShipDesign, Warning, TEXT("ShipDesign: no catalog entry for design '%s', checking mods..."), ANSI_TO_TCHAR(design_name));
-		return ShipDesign::FindModDesign(design_name, design_path);
-	}
+
+	UE_LOG(LogShipDesign, Warning,
+		TEXT("ShipDesign: no registry or catalog entry for design '%s'"),
+		ANSI_TO_TCHAR(design_name));
+	return ShipDesign::FindModDesign(design_name, design_path);
 }
 
 ShipDesign*

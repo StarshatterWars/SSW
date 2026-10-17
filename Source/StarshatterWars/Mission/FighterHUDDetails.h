@@ -20,6 +20,7 @@ public:
     virtual void Tick(const FGeometry&, double Now, float Delta) override;
     virtual int32 OnPaint(const FPaintArgs&, const FGeometry&, const FSlateRect&,
         FSlateWindowElementList&, int32, const FWidgetStyle&, bool) const override;
+    virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
     void ToggleRadio();
     void RadioSelect(int32 Number);
     bool IsRadioOpen() const { return RadioPage >= 0; }
@@ -49,7 +50,6 @@ private:
     bool bShowCaution = true;
     EMode Modes[2] = { EMode::Ship, EMode::FOV };
     TArray<FRow> StatusRows;
-    TArray<FString> StatusTextLines;
     TArray<SSWDamagePanel::FCell> DamageRows;
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
@@ -66,9 +66,10 @@ private:
     bool bAutoAvailable = false, bGearDown = false, bShoot = false;
     bool bClosingValid = false, bWarningFlash = false;
     FString PlayerIconPath, TargetIconPath;
+    TMap<FString, TStrongObjectPtr<UTexture2D>> IconCache;
+    TArray<FString> StatusTextLines;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
     FSlateBrush PlayerBrush, TargetBrush;
-    TMap<FString, TStrongObjectPtr<UTexture2D>> IconCache;
     // TAC left/right, followed by sensor FOV/HSD/3D.
     TStrongObjectPtr<UTexture2D> PanelTextures[7];
     FSlateBrush PanelBrushes[7];

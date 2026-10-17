@@ -1,7 +1,7 @@
 /*=============================================================================
 	Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright (c) 2025â€“2026.
+	Copyright (c) 2025–2026.
 
 	SUBSYSTEM:    StarshatterShipDesignSubsystem (Unreal Engine)
 	FILE:         StarshatterShipDesignSubsystem.h / .cpp
@@ -239,6 +239,58 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 	UE_LOG(LogTemp, Log,
 		TEXT("[SHIPDESIGN] ShipDesignRegistry now has %d rows"),
 		ShipDesignRegistry::Num());
+
+	EnsureViperLaser();
+}
+
+void UStarshatterShipDesignSubsystem::EnsureViperLaser()
+{
+	const FName RowName(TEXT("Viper"));
+	FShipDesign* Row = DesignsByName.Find(RowName);
+	if (!Row)
+	{
+		for (TPair<FName, FShipDesign>& Pair : DesignsByName)
+		{
+			if (Pair.Value.ShipName.Equals(TEXT("Viper"), ESearchCase::IgnoreCase))
+			{
+				Row = &Pair.Value;
+				break;
+			}
+		}
+	}
+	if (!Row)
+		return;
+
+	for (const FShipWeapon& W : Row->Weapon)
+	{
+		if (W.WeaponType.Equals(TEXT("Laser Cannon"), ESearchCase::IgnoreCase))
+			return;
+	}
+
+	FShipWeapon Laser;
+	Laser.WeaponType = TEXT("Laser Cannon");
+	Laser.Name = TEXT("Laser Cannon");
+	Laser.Abbrev = TEXT("Laser");
+	Laser.GroupName = TEXT("Laser");
+	Laser.Location = FVector(0.0f, 0.0f, 120.0f);
+	Laser.Size = 32.0f;
+	Laser.HullFactor = 0.5f;
+	Laser.Muzzles.Add(FVector(-7.0f, 7.0f, 190.0f));
+	Laser.Muzzles.Add(FVector(7.0f, 7.0f, 190.0f));
+
+	Row->Weapon.Add(Laser);
+
+	if (ShipDesignDataTable)
+	{
+		if (FShipDesign* TableRow = ShipDesignDataTable->FindRow<FShipDesign>(RowName, TEXT("EnsureViperLaser"), false))
+			*TableRow = *Row;
+		else
+			ShipDesignDataTable->AddRow(RowName, *Row);
+	}
+
+	ShipDesignRegistry::RegisterDesign(RowName, *Row);
+
+	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] Added Laser Cannon to Viper and re-registered"));
 }
 
 const FShipDesign* UStarshatterShipDesignSubsystem::FindDesignByString(const FString& Name) const
@@ -392,7 +444,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 	bool bLocalRepairScreen = true;
 	bool bLocalWepScreen = true;
 	bool bLocalDegrees = false;
-	bAnglesAreDegrees = false;
 	bool bLocalHidden = false;
 
 	FVector LocalSpin = FVector::ZeroVector;
@@ -421,11 +472,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			GetDefText(LocalShipName, Def, fn);
 			NewShipDesign.ShipName = FString(LocalShipName);
 		}
-		else if (Key == "degrees")
-        {
-            GetDefBool(bLocalDegrees, Def, fn);
-            bAnglesAreDegrees = bLocalDegrees;
-        }
 		else if (Key == "display_name")
 		{
 			GetDefText(LocalDisplayName, Def, fn);
@@ -3059,46 +3105,46 @@ void UStarshatterShipDesignSubsystem::ParseWeapon(TermStruct* Val, const char* F
 		else if (Key == "azimuth")
 		{
 			GetDefNumber(Az, PDef, Fn);
-			if (bAnglesAreDegrees) Az = FMath::DegreesToRadians(Az);
+			// if (bAnglesInDegrees) Az = FMath::DegreesToRadians(Az);
 			NewWpn.AzimuthRadians = Az;
 		}
 		else if (Key == "elevation")
 		{
 			GetDefNumber(El, PDef, Fn);
-			if (bAnglesAreDegrees) El = FMath::DegreesToRadians(El);
+			// if (bAnglesInDegrees) El = FMath::DegreesToRadians(El);
 			NewWpn.ElevationRadians = El;
 		}
 		else if (Key == "aim_az_max")
 		{
 			GetDefNumber(AzMax, PDef, Fn);
-			if (bAnglesAreDegrees) AzMax = FMath::DegreesToRadians(AzMax);
+			// if (bAnglesInDegrees) AzMax = FMath::DegreesToRadians(AzMax);
 			AzMin = 0.0f - AzMax; // legacy
 		}
 		else if (Key == "aim_el_max")
 		{
 			GetDefNumber(ElMax, PDef, Fn);
-			if (bAnglesAreDegrees) ElMax = FMath::DegreesToRadians(ElMax);
+			// if (bAnglesInDegrees) ElMax = FMath::DegreesToRadians(ElMax);
 			ElMin = 0.0f - ElMax; // legacy
 		}
 		else if (Key == "aim_az_min")
 		{
 			GetDefNumber(AzMin, PDef, Fn);
-			if (bAnglesAreDegrees) AzMin = FMath::DegreesToRadians(AzMin);
+			// if (bAnglesInDegrees) AzMin = FMath::DegreesToRadians(AzMin);
 		}
 		else if (Key == "aim_el_min")
 		{
 			GetDefNumber(ElMin, PDef, Fn);
-			if (bAnglesAreDegrees) ElMin = FMath::DegreesToRadians(ElMin);
+			// if (bAnglesInDegrees) ElMin = FMath::DegreesToRadians(ElMin);
 		}
 		else if (Key == "aim_az_rest" || Key == "rest_azimuth")
 		{
 			GetDefNumber(AzRest, PDef, Fn);
-			if (bAnglesAreDegrees) AzRest = FMath::DegreesToRadians(AzRest);
+			// if (bAnglesInDegrees) AzRest = FMath::DegreesToRadians(AzRest);
 		}
 		else if (Key == "aim_el_rest" || Key == "rest_elevation")
 		{
 			GetDefNumber(ElRest, PDef, Fn);
-			if (bAnglesAreDegrees) ElRest = FMath::DegreesToRadians(ElRest);
+			// if (bAnglesInDegrees) ElRest = FMath::DegreesToRadians(ElRest);
 		}
 		else if (Key == "explosion")
 		{
@@ -4072,7 +4118,7 @@ void UStarshatterShipDesignSubsystem::ParseSquadron(TermStruct* Val, const char*
 		}
 	}
 
-	// Optional safety (legacy doesnâ€™t clamp, but this prevents garbage):
+	// Optional safety (legacy doesn’t clamp, but this prevents garbage):
 	if (NewSq.Count < 0) NewSq.Count = 0;
 	if (NewSq.Avail < 0) NewSq.Avail = 0;
 	if (NewSq.Avail > NewSq.Count) NewSq.Avail = NewSq.Count;
@@ -4626,7 +4672,7 @@ FDebris UStarshatterShipDesignSubsystem::ParseDebris(TermStruct* Val, const char
 		}
 	}
 
-	// Optional safety (legacy doesnâ€™t clamp, but prevents nonsense):
+	// Optional safety (legacy doesn’t clamp, but prevents nonsense):
 	if (NewDeb.Count < 0) NewDeb.Count = 0;
 
 	return NewDeb;

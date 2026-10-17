@@ -29,6 +29,7 @@
 #include "SimModel.h"
 #include "Sound.h"
 #include "DataLoader.h"
+#include "WeaponDesignRegistry.h"
 
 #include "ParseUtil.h"
 
@@ -677,18 +678,26 @@ WeaponDesign::GetWeaponDesign(int type)
 WeaponDesign*
 WeaponDesign::Find(const char* name)
 {
+	if (!name || !name[0])
+		return nullptr;
+
 	for (int i = 0; i < catalog.size(); i++) {
 		WeaponDesign* d = catalog.at(i);
 
-		if (d->name == name) {
+		if (d && d->name == name) {
 			return d;
 		}
 	}
 
+	// Data table path: rows are registered into WeaponDesignRegistry.
+	// Ship hardpoint resolution uses Find(), so fall back here.
+	if (WeaponDesign* FromRegistry = WeaponDesignRegistry::FindLegacy(name))
+		return FromRegistry;
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("WeaponDesign: no catalog entry for design '%s', checking mods..."),
+		TEXT("WeaponDesign: no catalog or registry entry for design '%s'"),
 		ANSI_TO_TCHAR(name));
-	return WeaponDesign::Find(name);
+	return nullptr;
 }
 
 // +--------------------------------------------------------------------+

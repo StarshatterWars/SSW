@@ -1,4 +1,6 @@
 ﻿#include "FighterHUDDetails.h"
+#include "Engine/Engine.h"
+#include "GameFramework/PlayerController.h"
 #include "FormattingUtils.h"
 #include "MissionObjectTarget.h"
 #include "Ship.h"
@@ -119,32 +121,14 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
 }
 void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush)
 {
-    if (Path.IsEmpty() || Path == Cached) return;
-
-    // Serve from cache so the texture is never reloaded or cleared.
-    if (TStrongObjectPtr<UTexture2D>* Found = IconCache.Find(Path))
-    {
-        if (Found->IsValid())
-        {
-            Cached = Path;
-            Texture = *Found;
-            Brush.SetResourceObject(Texture.Get());
-            return;
-        }
-    }
-
-    UTexture2D* Loaded = LoadObject<UTexture2D>(nullptr, *Path);
-    if (!Loaded)
+    if (Path == Cached) return;
+    Cached = Path;
+    Texture.Reset(LoadObject<UTexture2D>(nullptr, *Path));
+    if (!Texture.IsValid())
     {
         UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing ship silhouette %s; using generic icon."), *Path);
-        Loaded = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/hud_icon.hud_icon"));
+        Texture.Reset(LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/hud_icon.hud_icon")));
     }
-    if (!Loaded) return; // keep previous valid texture; do not flash to empty
-
-    TStrongObjectPtr<UTexture2D> Held(Loaded);
-    IconCache.Add(Path, Held);
-    Cached = Path;
-    Texture = Held;
     Brush.SetResourceObject(Texture.Get());
 }
 void SFighterHUDDetails::Refresh()
@@ -154,7 +138,6 @@ void SFighterHUDDetails::Refresh()
     TargetDisplayColor = FLinearColor::Yellow;
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
-    StatusTextLines.Reset();
     bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
@@ -213,45 +196,6 @@ void SFighterHUDDetails::Refresh()
         StatusRows.Add({TEXT("HULL"), PlayerHull});
         if (P->GetShield()) StatusRows.Add({TEXT("SHIELD"), double(P->GetShieldStrength())});
         if (P->GetPrimary()) StatusRows.Add({TEXT("GUNS"), Charge(P->GetPrimary())});
-
-        // Legacy status text lines (EMCON, missiles, decoy, systems, lives)
-        if (Sensor* SensorDataForStatus = P->GetSensor())
-        {
-            if (!SensorDataForStatus->IsPowerOn() || SensorDataForStatus->GetEnergy() <= 0)
-            {
-                const bool bBlink = (FPlatformTime::Seconds() > 0) && (int32(FPlatformTime::Seconds()) & 1);
-                StatusTextLines.Add(bBlink ? TEXT("EMCON  SENSOR-OFF") : TEXT("EMCON"));
-            }
-            else
-            {
-                StatusTextLines.Add(FString::Printf(TEXT("EMCON  MODE %d"), P->GetEMCON()));
-            }
-        }
-        else
-        {
-            StatusTextLines.Add(FString::Printf(TEXT("EMCON  MODE %d"), P->GetEMCON()));
-        }
-
-        WeaponGroup* SelectedSecondary = P->GetSecondaryGroup();
-        ListIter<WeaponGroup> WIt = P->GetWeapons();
-        while (++WIt)
-        {
-            WeaponGroup* W = WIt.value();
-            if (!W || !W->IsMissile()) continue;
-            const char* Name = (W->GetDesign() && W->GetDesign()->name.length()) ? W->GetDesign()->name.data() : "MSL";
-            const bool bSelected = (W == SelectedSecondary);
-            StatusTextLines.Add(FString::Printf(TEXT("%hs  %d%s"), Name, W->Ammo(), bSelected ? TEXT(" *") : TEXT("")));
-        }
-
-        if (P->GetDecoy())
-            StatusTextLines.Add(FString::Printf(TEXT("DECOY  %d"), P->GetDecoy()->Ammo()));
-
-        if (const char* Dir = P->GetDirectorInfo())
-            if (Dir[0]) StatusTextLines.Add(FString::Printf(TEXT("SYSTEMS  %hs"), Dir));
-
-        if (P->GetRespawnCount() > 0)
-            StatusTextLines.Add(FString::Printf(TEXT("LIVES  %d"), P->GetRespawnCount() + 1));
-
         Primary = WeaponLabel(P->GetPrimaryGroup()); Secondary = WeaponLabel(P->GetSecondaryGroup());
         // Legacy warning cells remain in fixed positions as damage changes.
         SSWDamagePanel::Build(P, DamageRows);
@@ -271,10 +215,16 @@ void SFighterHUDDetails::Refresh()
                 }
                 double Az = 0, El = 0, Range = 0;
                 It->GetBearing(P, Az, El, Range);
-                if (!FMath::IsFinite(Range) || !FMath::IsFinite(Az) || !FMath::IsFinite(El) || Range <= 0 || Range > SensorRange) continue;
+                if (!FMath::IsFinite(Range) || !FMath::IsFinite(Az) || !FMath::IsFinite(El) || Range <= 0) continue;
                 Range = It->Range(P, SensorRange);
-                const int IFF = It->GetIFF(P);
-                const FLinearColor C = IFF <= 0 ? FLinearColor::Yellow : IFF == P->GetIFF() ? HUDBlue : FLinearColor::Red;
+                const int ShipIFF = It->GetShip() ? It->GetShip()->GetIFF() : It->GetIFF(P);
+                FLinearColor C = FLinearColor(0.45f, 0.45f, 0.45f);
+                if (ShipIFF > 0 && ShipIFF == P->GetIFF())
+                    C = FLinearColor(0.25f, 0.65f, 1.0f);
+                else if (It->Threat(P) || ShipIFF > 0)
+                    C = FLinearColor::Red;
+                else if (ShipIFF == 0)
+                    C = FLinearColor::Yellow;
                 Contacts.Add({Az, El, Range, C});
             }
         }
@@ -304,7 +254,7 @@ void SFighterHUDDetails::Refresh()
         Mission* TargetMission = TargetSim ? TargetSim->GetMission() : nullptr;
         if (TargetMission && T->GetIFF() > 0)
             TargetDisplayColor = T->GetIFF() == TargetMission->GetTeam()
-                ? FLinearColor(0.25f,0.65f,1.0f,1.0f) : FLinearColor::Red;
+                ? FLinearColor(0.25f, 0.65f, 1.0f) : FLinearColor::Red;
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
         TargetRange = P ? FVector::Distance(P->GetLocation(), T->GetLocation()) / 1000.0 : -1;
         LoadShipHUDIcon(IconPath(T), TargetIconPath, TargetTexture, TargetBrush);
@@ -317,17 +267,41 @@ void SFighterHUDDetails::Refresh()
             bHasTarget = true;
             TargetName = ObjectData.Name; TargetClass = ObjectData.Type;
             TargetRange = ObjectData.RangeKm; TargetHull = -1; TargetShield = -1;
-            if (!ObjectData.ImagePath.IsEmpty())
-                LoadShipHUDIcon(ObjectData.ImagePath, TargetIconPath, TargetTexture, TargetBrush);
+            if (TargetIconPath != ObjectData.ImagePath)
+            {
+                TargetIconPath = ObjectData.ImagePath;
+                TargetTexture.Reset(ObjectData.ImagePath.IsEmpty() ? nullptr : LoadObject<UTexture2D>(nullptr, *ObjectData.ImagePath));
+                TargetBrush.SetResourceObject(TargetTexture.Get());
+            }
         }
     }
 }
 void SFighterHUDDetails::CycleMFD(int32 Index)
 {
-    if (Index < 0 || Index > 1) return;
-    int32 Next = (int32(Modes[Index]) + 1) % 5;
-    if (Index == 1 && Next == int32(EMode::Ship)) Next = int32(EMode::FOV);
-    Modes[Index] = EMode(Next);
+    if (Index == 0)
+    {
+        Modes[0] = EMode::Ship;
+        return;
+    }
+    Modes[1] = Modes[1] == EMode::FOV ? EMode::HSD
+        : Modes[1] == EMode::HSD ? EMode::ThreeD
+        : EMode::FOV;
+    Invalidate(EInvalidateWidgetReason::Paint);
+}
+
+FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+    const FVector2D Size = MyGeometry.GetLocalSize();
+    const float Scale = FMath::Min(Size.X / 1280.0f, Size.Y / 720.0f);
+    const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+    const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
+    const FVector2D Extent(220.f * Scale, 215.f * Scale);
+    if (Local.X >= Right.X && Local.Y >= Right.Y && Local.X <= Right.X + Extent.X && Local.Y <= Right.Y + Extent.Y)
+    {
+        CycleMFD(1);
+        return FReply::Handled();
+    }
+    return FReply::Unhandled();
 }
 void SFighterHUDDetails::CycleWeapon(bool bPrimary)
 {
@@ -495,71 +469,70 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     for (int32 Index=0; Index<2; ++Index)
     {
         const EMode M=Modes[Index]; if (M==EMode::Off) continue;
-        // Anchor the full MFD bounds to the viewport's lower corners.
         const FVector2D P(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
-        Box(P,FVector2D(220,215)*Scale,FLinearColor(0,0.025f,0.05f,0.65f));
-        const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SENSOR FOV"):M==EMode::HSD?TEXT("SENSOR HSD"):TEXT("SENSOR 3D");
-        Text(P+FVector2D(8,8)*Scale,Title);
+        const FVector2D D(220*Scale, 215*Scale);
+        const FLinearColor Amber(0.55f, 0.9f, 0.35f, 0.9f);
+        const FLinearColor Dim(0.2f, 0.45f, 0.15f, 0.7f);
+        Box(P, D, FLinearColor(0.01f, 0.03f, 0.01f, 0.72f));
+        auto Corner = [&](FVector2D At, float XSign, float YSign)
+        {
+            const float L = 12.f * Scale;
+            Box(At, FVector2D(L, Scale), Amber);
+            Box(At, FVector2D(Scale, L), Amber);
+            if (XSign < 0) Box(At + FVector2D(-L + Scale, 0), FVector2D(L, Scale), Amber);
+            if (YSign < 0) Box(At + FVector2D(0, -L + Scale), FVector2D(Scale, L), Amber);
+        };
+        Corner(P, 1.f, 1.f);
+        Corner(P + FVector2D(D.X - Scale, 0), -1.f, 1.f);
+        Corner(P + FVector2D(0, D.Y - Scale), 1.f, -1.f);
+        Corner(P + FVector2D(D.X - Scale, D.Y - Scale), -1.f, -1.f);
+        const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SNSR  FOV"):M==EMode::HSD?TEXT("SNSR  HSD"):TEXT("SNSR  3D");
+        Text(P+FVector2D(10,6)*Scale, Title, Amber, 10);
+        Box(P+FVector2D(8,20)*Scale, FVector2D(70*Scale, Scale), Dim);
         if (M != EMode::Ship)
         {
             const int32 ArtIndex = M == EMode::FOV ? 2 : M == EMode::HSD ? 3 : 4;
             Artwork(ArtIndex,P+FVector2D(30,32)*Scale,FVector2D(160,160)*Scale);
         }
-        if (!bHasPlayer) { Text(P+FVector2D(8,36)*Scale,TEXT("NO PLAYER SHIP")); continue; }
+        if (!bHasPlayer) { Text(P+FVector2D(8,36)*Scale,TEXT("NO TRACK"), Amber); continue; }
         if (M==EMode::Ship)
         {
-            for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,36+I*25)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
-            // Legacy text status lines under the gauges
-            const double TextBase = 36 + StatusRows.Num()*25 + 4;
-            for (int32 I=0; I<StatusTextLines.Num(); ++I)
-                Text(P+FVector2D(8, TextBase + I*14)*Scale, StatusTextLines[I]);
+            for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,28+I*20)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
+            if (Ship* PShip = PlayerShip())
+                Text(P+FVector2D(8,158)*Scale, FString::Printf(TEXT("EMCON %d"), PShip->GetEMCON()), Amber, 10);
+            if (NavReadouts.Num() > 0)
+                Text(P+FVector2D(8,174)*Scale, NavReadouts[0], Amber, 10);
             if (bAugmenterActive)
-                Text(P+FVector2D(8, TextBase + StatusTextLines.Num()*14)*Scale, TEXT("AUGMENTER ACTIVE"), FLinearColor(0.1f,1.0f,0.3f,1.0f));
+                Text(P+FVector2D(8,192)*Scale, TEXT("AUG ON"), FLinearColor(0.2f,1.0f,0.35f,1.0f));
         }
         else
         {
             const FVector2D Center=P+FVector2D(110,112)*Scale;
             const double Radius=72*Scale;
-            const int32 ArtIndex = M == EMode::FOV ? 2 : M == EMode::HSD ? 3 : 4;
-            for (int32 Ring=1; !PanelTextures[ArtIndex].IsValid() && Ring<=3; ++Ring)
+            auto Mark = [&](const FVector2D& At, const FLinearColor& Color)
             {
-                TArray<FVector2D> Points;
-                for(int32 J=0;J<=48;++J) { double A=2*PI*J/48; Points.Add(Center+FVector2D(FMath::Cos(A),FMath::Sin(A))*Radius*Ring/3); }
-                FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,FLinearColor(0.1f,0.3f,0.5f,0.8f),true,Scale);
-            }
-            // Sensor symbols must render above the textured scan background.
-            // Do not batch these into the same layer as the panel artwork.
-            auto SensorBlip = [&](const FVector2D& Position, const FLinearColor& Color)
-            {
-                FSlateDrawElement::MakeBox(E,L+3,
-                    G.ToPaintGeometry(FVector2f(4*Scale,4*Scale),
-                        FSlateLayoutTransform(FVector2f(Position-FVector2D(2,2)*Scale))),
-                    FCoreStyle::Get().GetBrush("WhiteBrush"),ESlateDrawEffect::None,Color);
+                FSlateDrawElement::MakeBox(E, L+6,
+                    G.ToPaintGeometry(FVector2f(6.f, 6.f), FSlateLayoutTransform(FVector2f(At - FVector2D(3.f, 3.f)))),
+                    FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, Color);
             };
-            SensorBlip(Center,HUDBlue);
-            for(const FBlip& B:Contacts)
+            Mark(Center, Amber);
+            for (const FBlip& B : Contacts)
             {
                 FVector2D Offset;
-                if(M==EMode::FOV)
-                {
-                    if(FMath::Abs(B.Az)>PI/3 || FMath::Abs(B.El)>PI/3) continue;
-                    Offset=FVector2D(B.Az/(PI/3),-B.El/(PI/3))*Radius;
-                }
+                if (M == EMode::FOV)
+                    Offset = FVector2D(FMath::Clamp(B.Az / (PI / 2), -1.0, 1.0), FMath::Clamp(-B.El / (PI / 2), -1.0, 1.0)) * Radius;
                 else
                 {
-                    const double R=FMath::Clamp(B.Range/SensorRange,0.0,1.0)*Radius;
-                    Offset=FVector2D(FMath::Sin(B.Az),-FMath::Cos(B.Az))*R;
-                    if(M==EMode::ThreeD)
-                    {
-                        const FVector2D Base=Center+FVector2D(Offset.X,Offset.Y*0.55);
-                        Offset.Y=Offset.Y*0.55-FMath::Sin(B.El)*R*0.45;
-                        TArray<FVector2D> Stem={Base,Center+Offset};
-                        FSlateDrawElement::MakeLines(E,L+2,G.ToPaintGeometry(),Stem,ESlateDrawEffect::None,B.Color,true,Scale);
-                    }
+                    const double R = FMath::Clamp(B.Range / SensorRange, 0.0, 1.0) * Radius;
+                    Offset = FVector2D(FMath::Sin(B.Az), -FMath::Cos(B.Az)) * R;
+                    if (M == EMode::ThreeD)
+                        Offset.Y = Offset.Y * 0.55 - FMath::Sin(B.El) * R * 0.45;
+                    if (Offset.SizeSquared() > Radius * Radius)
+                        Offset = Offset.GetSafeNormal() * Radius;
                 }
-                SensorBlip(Center+Offset,B.Color);
+                Mark(Center + Offset, B.Color);
             }
-            Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%.0f KM   %d CONTACTS"),SensorRange/1000,Contacts.Num()));
+            Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%03.0f KM  %02d TRK"),SensorRange/1000,Contacts.Num()), Amber, 9);
         }
     }
     // Compact inward-facing ship columns leave the center clear for CAUTION.

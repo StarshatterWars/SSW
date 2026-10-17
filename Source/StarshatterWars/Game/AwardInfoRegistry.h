@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Engine/DataTable.h"
+#include "Templates/Function.h"
 #include "GameStructs.h" // for FRankInfo/FMedalInfo (or move them)
 #include "AwardInfoRegistry.generated.h"
 

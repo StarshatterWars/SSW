@@ -2,6 +2,7 @@
 #include "SSWRuntimeSubsystem.h"
 
 #include "SimShot.h"
+#include "Sensor.h"
 #include "WeaponDesign.h"
 #include "Engine/StaticMeshActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -35,6 +36,10 @@
 #include "Campaign.h"
 #include "CameraManager.h"
 #include "EventDispatch.h"
+#include "HUDView.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerController.h"
+#include "Framework/Application/SlateApplication.h"
 
 #include "AudioConfig.h"
 #include "UIButton.h"
@@ -279,8 +284,74 @@ bool USSWRuntimeSubsystem::TickRuntime(float DeltaSeconds)
     return true;
 }
 
+void USSWRuntimeSubsystem::EnsureMfdPanels()
+{
+}
+
+void USSWRuntimeSubsystem::OnSensorRangeUp()
+{
+    if (!SimInstance) return;
+    if (UWorld* World = GetWorld())
+        if (APlayerController* PC = World->GetFirstPlayerController())
+            if (!(PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+                return;
+    if (Ship* Player = SimInstance->GetPlayerShip())
+        if (Sensor* S = Player->GetSensor())
+            S->IncreaseRange();
+}
+
+void USSWRuntimeSubsystem::OnSensorRangeDown()
+{
+    if (!SimInstance) return;
+    if (UWorld* World = GetWorld())
+        if (APlayerController* PC = World->GetFirstPlayerController())
+            if (!(PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+                return;
+    if (Ship* Player = SimInstance->GetPlayerShip())
+        if (Sensor* S = Player->GetSensor())
+            S->DecreaseRange();
+}
+
 void USSWRuntimeSubsystem::GameLoop()
 {
+    if (UWorld* World = GetWorld())
+    {
+        if (APlayerController* PC = World->GetFirstPlayerController())
+        {
+            static bool bRangeBound = false;
+            if (!bRangeBound)
+                bRangeBound = true;
+            const bool bMod = PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift);
+            const bool bUp = PC->IsInputKeyDown(EKeys::RightBracket);
+            const bool bDown = PC->IsInputKeyDown(EKeys::LeftBracket);
+            static bool bWasUp = false, bWasDown = false;
+            if (bMod && SimInstance)
+            {
+                if (Ship* Player = SimInstance->GetPlayerShip())
+                {
+                    if (Sensor* S = Player->GetSensor())
+                    {
+                        if (bUp && !bWasUp) S->IncreaseRange();
+                        if (bDown && !bWasDown) S->DecreaseRange();
+                    }
+                }
+            }
+            bWasUp = bUp;
+            bWasDown = bDown;
+            float MX = 0.f, MY = 0.f;
+            if (!PC->GetMousePosition(MX, MY))
+            {
+                const FVector2D Cursor = FSlateApplication::Get().GetCursorPos();
+                MX = Cursor.X;
+                MY = Cursor.Y;
+            }
+            Mouse::SetState(
+                (int)MX, (int)MY,
+                PC->IsInputKeyDown(EKeys::LeftMouseButton) ? 1 : 0,
+                PC->IsInputKeyDown(EKeys::RightMouseButton) ? 1 : 0);
+        }
+    }
+
     EventDispatch* ED = EventDispatch::GetInstance();
     if (ED)
     {

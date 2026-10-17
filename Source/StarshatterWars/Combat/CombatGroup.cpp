@@ -1645,3 +1645,80 @@ CombatGroup::SaveOrderOfBattle(const char* filename, CombatGroup* force)
 		fclose(f);
 	}
 }
+
+static void AppendCombatUnit(FString& Out, CombatUnit* u)
+{
+	if (!u) return;
+	int type = u->GetType();
+	if (type == 0 && u->GetDesign())
+		type = u->GetDesign()->type;
+
+	Out += FString::Printf(TEXT("\n unit: { name: \"%s\", type: \"%s\", design: \"%s\","),
+		ANSI_TO_TCHAR(u->GetName().data()),
+		ANSI_TO_TCHAR(Ship::GetShipClassName(type)),
+		ANSI_TO_TCHAR(u->GetDesignName().data()));
+
+	if (u->GetCount() > 1)
+		Out += FString::Printf(TEXT(" count: %d,"), u->GetCount());
+	else
+		Out += FString::Printf(TEXT(" regnum:\"%s\","), ANSI_TO_TCHAR(u->GetRegistryNumber().data()));
+
+	if (u->GetRegion().length() > 0)
+	{
+		Out += FString::Printf(TEXT(" region:\"%s\", loc:(%s, %s, %s),"),
+			ANSI_TO_TCHAR(u->GetRegion().data()),
+			ANSI_TO_TCHAR(FormatNumber(u->GetLocation().X).data()),
+			ANSI_TO_TCHAR(FormatNumber(u->GetLocation().Y).data()),
+			ANSI_TO_TCHAR(FormatNumber(u->GetLocation().Z).data()));
+	}
+
+	Out += FString::Printf(TEXT(" dead_count: %d, damage: %d, heading: %d },"),
+		(int)u->DeadCount(), (int)u->GetSustainedDamage(), (int)(u->GetHeading() / DEGREES));
+}
+
+static void AppendCombatGroup(FString& Out, CombatGroup* g)
+{
+	if (!g) return;
+	Out += FString::Printf(TEXT("group: { type: %s, id: %d, name: \"%s\", intel: %s, iff: %d, unit_index: %d,"),
+		ANSI_TO_TCHAR(CombatGroup::NameFromType(g->GetType())),
+		g->GetID(),
+		ANSI_TO_TCHAR(g->GetName().data()),
+		ANSI_TO_TCHAR(Intel::GetNameFromIntel(g->GetIntelLevel())),
+		g->GetIFF(),
+		g->GetUnitIndex());
+
+	if (g->GetRegion().length())
+		Out += FString::Printf(TEXT(" region:\"%s\","), ANSI_TO_TCHAR(g->GetRegion().data()));
+	if (g->GetAssignedSystem().length())
+		Out += FString::Printf(TEXT(" system: \"%s\","), ANSI_TO_TCHAR(g->GetAssignedSystem().data()));
+	if (g->GetAssignedZone())
+	{
+		Out += FString::Printf(TEXT(" zone: \"%s\","), ANSI_TO_TCHAR(g->GetAssignedZone()->GetName()));
+		if (g->IsZoneLocked()) Out += TEXT(" zone_locked: true,");
+	}
+
+	Out += FString::Printf(TEXT(" loc: (%s, %s, %s),"),
+		ANSI_TO_TCHAR(FormatNumber(g->GetLocation().X).data()),
+		ANSI_TO_TCHAR(FormatNumber(g->GetLocation().Y).data()),
+		ANSI_TO_TCHAR(FormatNumber(g->GetLocation().Z).data()));
+
+	if (CombatGroup* parent = g->GetParent())
+		Out += FString::Printf(TEXT(" parent_type:%s, parent_id:%d,"),
+			ANSI_TO_TCHAR(CombatGroup::NameFromType(parent->GetType())), parent->GetID());
+
+	Out += FString::Printf(TEXT(" sorties: %d, kills: %d, points: %d,"),
+		g->GetSorties(), g->GetKills(), g->GetPoints());
+
+	ListIter<CombatUnit> u = g->GetUnits();
+	while (++u) AppendCombatUnit(Out, u.value());
+	Out += TEXT(" }\n");
+
+	ListIter<CombatGroup> c = g->GetComponents();
+	while (++c) AppendCombatGroup(Out, c.value());
+}
+
+void CombatGroup::AppendOrderOfBattle(FString& Out, CombatGroup* force)
+{
+	AppendCombatGroup(Out, force);
+	Out += TEXT("\n");
+}

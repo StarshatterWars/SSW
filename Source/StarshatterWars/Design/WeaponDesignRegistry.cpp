@@ -195,11 +195,13 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->flak = Row.bFlak;
     Legacy->guided = Row.Guided;
     Legacy->self_aiming = Row.bSelfAiming;
+    Legacy->syncro = Row.bSyncro;
 
     //---------------------------------------------------------
     // Stats
     //---------------------------------------------------------
     Legacy->damage = Row.Damage;
+    Legacy->penetration = Row.Penetration;
     Legacy->speed = Row.Speed;
     Legacy->life = Row.Life;
     Legacy->mass = Row.Mass;
@@ -215,6 +217,15 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->recharge_rate = Row.RechargeRate;
     Legacy->ammo = Row.Ammo;
     Legacy->capacity = Row.Capacity;
+    Legacy->charge = Row.Charge;
+    Legacy->min_charge = Row.MinCharge;
+
+    //---------------------------------------------------------
+    // Visuals
+    //---------------------------------------------------------
+    Legacy->graphic_type = Row.GraphicType;
+    Legacy->length = Row.Length;
+    Legacy->light_color = Row.LightColor;
 
     //---------------------------------------------------------
     // Aim limits
@@ -224,20 +235,10 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->aim_el_max = Row.AimElMax;
     Legacy->aim_el_min = Row.AimElMin;
 
-    // Preserve Wep.def turret geometry and aim settings for UE presentation.
-    Legacy->turret = TCHAR_TO_ANSI(*Row.Turret);
-    Legacy->turret_base = TCHAR_TO_ANSI(*Row.TurretBase);
-    Legacy->scale = Row.Scale;
-    Legacy->turret_axis = Row.TurretAxis;
-    Legacy->aim_az_rest = Row.AimAzRest;
-    Legacy->aim_el_rest = Row.AimElRest;
-    Legacy->slew_rate = Row.SlewRate;
-    Legacy->nbarrels = FMath::Clamp(Row.NBarrels, 0, WeaponDesign::MAX_STORES);
-
     //---------------------------------------------------------
     // Geometry
     //---------------------------------------------------------
-    for (int32 i = 0; i < FMath::Min<int32>(Row.MuzzlePoints.Num(), WeaponDesign::MAX_STORES); i++)
+    for (int32 i = 0; i < Row.MuzzlePoints.Num(); i++)
     {
         Legacy->muzzle_pts[i] = Row.MuzzlePoints[i];
     }

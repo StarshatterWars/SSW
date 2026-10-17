@@ -1,4 +1,4 @@
-
+﻿
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -34,6 +34,8 @@
 
 #include "Drive.h"
 #include "Ship.h"
+#include "Weapon.h"
+#include "WeaponGroup.h"
 #include "ShipDesign.h"
 #include "Thruster.h"
 
@@ -161,14 +163,6 @@ AShipActor::AShipActor()
     VFXRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VFXRoot"));
     VFXRoot->SetupAttachment(ShipRoot);
     VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
-
-    TurretMountRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TurretMountRoot"));
-    TurretMountRoot->SetupAttachment(VFXRoot);
-    TurretMountRoot->bEditableWhenInherited = true;
-
-    WeaponHardpointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponHardpointRoot"));
-    WeaponHardpointRoot->SetupAttachment(VFXRoot);
-    WeaponHardpointRoot->bEditableWhenInherited = true;
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
     FocusPoint->SetupAttachment(PointRoot);
@@ -340,7 +334,6 @@ void AShipActor::OnConstruction(const FTransform& Transform)
             RebuildNavLights();
         }
     }
-    RebuildTurretActors();
 }
 
 void AShipActor::BeginPlay()
@@ -351,13 +344,11 @@ void AShipActor::BeginPlay()
     // Reset inherited Blueprint defaults as well as native defaults.
     if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
     Super::BeginPlay();
-    RebuildTurretActors();
 }
 
 void AShipActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     SetActorTickEnabled(false);
-    ClearTurretActors();
     RuntimeShip = nullptr;
     for (UAudioComponent* Audio : {EngineAudioComponent.Get(), BurnerAudioComponent.Get(), RumbleAudioComponent.Get()}) {
         if (IsValid(Audio)) { Audio->Stop(); Audio->DestroyComponent(); }
@@ -382,7 +373,6 @@ AShipActor::Tick(float DeltaTime)
     if (RuntimeShip)
     {
         UpdateFromRuntimeShip(DeltaTime);
-        UpdateTurretActors();
         UpdateNavLights(DeltaTime);
         UpdateMainEnginesFromRuntime(DeltaTime);
         UpdateEngineAudioFromRuntime(DeltaTime);
@@ -1638,7 +1628,6 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
     RuntimeShip = InShip;
-    RebuildTurretActors();
 
     // Once per bind, not per frame. Flight-axis dimensions are independent of
     // world heading and include the actual BP actor/component scale hierarchy.
@@ -1805,6 +1794,68 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         }
     }
 
+    SyncCarriedMissiles();
+}
+
+
+void AShipActor::SyncCarriedMissiles()
+{
+    if (!RuntimeShip)
+    {
+        for (UStaticMeshComponent* Mesh : CarriedMissileMeshes)
+            if (Mesh) Mesh->SetVisibility(false);
+        return;
+    }
+
+    // Missile weapons in hardpoint order (guns are not carried stores).
+    TArray<Weapon*> Missiles;
+    ListIter<WeaponGroup> Groups = RuntimeShip->GetWeapons();
+    while (++Groups)
+    {
+        WeaponGroup* Group = Groups.value();
+        if (!Group || !Group->IsMissile()) continue;
+        ListIter<Weapon> It = Group->GetWeapons();
+        while (++It)
+            if (It.value()) Missiles.Add(It.value());
+    }
+
+    const int32 Mounts = WeaponMountPoints.Num();
+    if (CarriedMissileMeshes.Num() < Mounts)
+    {
+        static UStaticMesh* StoreMesh = nullptr;
+        if (!StoreMesh)
+            StoreMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+
+        for (int32 i = CarriedMissileMeshes.Num(); i < Mounts; ++i)
+        {
+            UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this);
+            if (!Mesh) { CarriedMissileMeshes.Add(nullptr); continue; }
+            USceneComponent* Mount = WeaponMountPoints[i];
+            Mesh->SetupAttachment(Mount ? Mount : RootComponent.Get());
+            Mesh->SetStaticMesh(StoreMesh);
+            Mesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.6f));
+            Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Mesh->SetCastShadow(false);
+            Mesh->RegisterComponent();
+            Mesh->SetVisibility(false);
+            CarriedMissileMeshes.Add(Mesh);
+        }
+    }
+
+    for (int32 i = 0; i < CarriedMissileMeshes.Num(); ++i)
+    {
+        UStaticMeshComponent* Mesh = CarriedMissileMeshes[i];
+        if (!Mesh) continue;
+
+        bool bShow = false;
+        if (Missiles.IsValidIndex(i))
+        {
+            Weapon* W = Missiles[i];
+            // Visible while carried: has ammo and the launcher is not destroyed.
+            bShow = W->Ammo() > 0 && W->GetAvailability() > 1.0;
+        }
+        Mesh->SetVisibility(bShow);
+    }
 }
 
 void AShipActor::BuildNavLightsFromRuntime()

@@ -251,6 +251,15 @@ Ship::Ship(
 
 	int sys_id = 0;
 
+	// Copy mission loadout before weapon init so hardpoint missiles can be created.
+	if (load && design && design->hardpoints.size() > 0)
+	{
+		const int n = design->hardpoints.size();
+		loadout = new int[n];
+		for (int i = 0; i < n; ++i)
+			loadout[i] = load[i];
+	}
+
 	InitializeRuntimeSystemsFromDesign();
 	InitializeRuntimeWeaponsFromDesign();
 	InitializeRuntimeLandingGearFromDesign();
@@ -849,28 +858,77 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	}
 
 	//-------------------------------------------------------------
-	// Hardpoints
+	// Hardpoints and carried missiles from the mission loadout
 	//-------------------------------------------------------------
 	for (int i = 0; i < design->hardpoints.size(); i++)
 	{
 		HardPoint* RuntimeHardpoint = new HardPoint(*design->hardpoints[i]);
-
 		hardpoints.append(RuntimeHardpoint);
 
+		const int Mounted = (loadout && i < design->hardpoints.size()) ? loadout[i] : -1;
+		if (Mounted < 0)
+			continue;
+
+		Weapon* Missile = RuntimeHardpoint->CreateWeapon(Mounted);
+		if (!Missile)
+			continue;
+
+		Missile->SetOwner(this);
+		Missile->SetID(SysID++);
+
+		if (reactors.size() > 0)
+			reactors[0]->AddClient(Missile);
+
+		systems.append(Missile);
+
+		WeaponGroup* Group = nullptr;
+		for (int g = 0; g < weapons.size(); g++)
+		{
+			if (!strcmp(weapons[g]->Name(), Missile->Group()))
+			{
+				Group = weapons[g];
+				break;
+			}
+		}
+		if (!Group)
+		{
+			Group = new WeaponGroup(Missile->Group());
+			weapons.append(Group);
+		}
+		Group->AddWeapon(Missile);
+		Group->SetAbbreviation(Missile->Abbreviation());
+
 		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship] Hardpoint runtime built Ship='%hs' Hardpoint=%p Name='%hs' Design='%hs'"),
-			GetName(),
-			RuntimeHardpoint,
-			RuntimeHardpoint->GetName(),
-			RuntimeHardpoint->GetDesign());
+			TEXT("[Ship] Hardpoint weapon Ship='%hs' HP=%d Type=%d Group='%hs' Ammo=%d"),
+			GetName(), i, Mounted, Missile->Group(), Missile->Ammo());
 	}
 
+	// Default primary (first gun) and secondary (first missile), matching legacy.
+	primary = -1;
+	secondary = -1;
+	for (int i = 0; i < weapons.size(); i++)
+	{
+		WeaponGroup* G = weapons[i];
+		if (!G) continue;
+		if (G->IsPrimary() && primary < 0)
+		{
+			primary = i;
+			G->SetFiringOrders(WeaponsOrders::MANUAL);
+		}
+		else if (G->IsMissile() && secondary < 0)
+			secondary = i;
+	}
+	if (primary < 0 && weapons.size() > 0) primary = 0;
+	if (secondary < 0 && weapons.size() > 1) secondary = 1;
+
 	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship] InitializeRuntimeWeaponsFromDesign COMPLETE Ship='%hs' Weapons=%d Hardpoints=%d Systems=%d"),
+		TEXT("[Ship] InitializeRuntimeWeaponsFromDesign COMPLETE Ship='%hs' Weapons=%d Hardpoints=%d Systems=%d Primary=%d Secondary=%d"),
 		GetName(),
 		weapons.size(),
 		hardpoints.size(),
-		systems.size());
+		systems.size(),
+		primary,
+		secondary);
 }
 
 void Ship::InitializeRuntimeLandingGearFromDesign()
