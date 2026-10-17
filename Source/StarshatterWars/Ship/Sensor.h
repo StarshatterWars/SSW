@@ -26,6 +26,7 @@
 
 // Minimal Unreal includes (required by API surface):
 #include "Math/Vector.h" // FVector
+#include "Containers/Array.h"
 
 // +--------------------------------------------------------------------+
 
@@ -67,6 +68,8 @@ public:
 	// borrow this sensor for missile seeker
 	SimObject* AcquirePassiveTargetForMissile();
 	SimObject* AcquireActiveTargetForMissile();
+
+	void SetRangeSettings(const TArray<float>& InRanges);
 
 	static ESensorMode GetNextSensorMode(ESensorMode Mode);
 

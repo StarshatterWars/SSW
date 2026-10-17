@@ -110,50 +110,34 @@ double Sensor::GetBeamRange() const
 
 void Sensor::IncreaseRange()
 {
-    if (nsettings <= 1)
-        return;
-
-    const float Current = range_settings[range_index];
-    int Best = -1;
-    float BestVal = Current;
-
-    // Next higher range value, regardless of array order
-    for (int i = 0; i < nsettings; ++i)
+    if (nsettings <= 0)
     {
-        const float V = range_settings[i];
-        if (V > Current && (Best < 0 || V < BestVal))
-        {
-            Best = i;
-            BestVal = V;
-        }
+        AddRange(10000.0);
+        AddRange(25000.0);
+        AddRange(50000.0);
+        AddRange(75000.0);
+        range_index = 0;
     }
-
-    if (Best >= 0)
-        range_index = Best;
+    if (range_index < nsettings - 1)
+        range_index++;
+    else
+        range_index = nsettings - 1;
 }
 
 void Sensor::DecreaseRange()
 {
-    if (nsettings <= 1)
-        return;
-
-    const float Current = range_settings[range_index];
-    int Best = -1;
-    float BestVal = Current;
-
-    // Next lower range value, regardless of array order
-    for (int i = 0; i < nsettings; ++i)
+    if (nsettings <= 0)
     {
-        const float V = range_settings[i];
-        if (V < Current && (Best < 0 || V > BestVal))
-        {
-            Best = i;
-            BestVal = V;
-        }
+        AddRange(10000.0);
+        AddRange(25000.0);
+        AddRange(50000.0);
+        AddRange(75000.0);
+        range_index = 0;
     }
-
-    if (Best >= 0)
-        range_index = Best;
+    if (range_index > 0)
+        range_index--;
+    else
+        range_index = 0;
 }
 
 void Sensor::AddRange(double r)
@@ -1061,6 +1045,25 @@ void Sensor::DoEMCON(int index)
     emcon = index;
 }
 
+void Sensor::SetRangeSettings(const TArray<float>& InRanges)
+{
+    nsettings = 0;
+
+    for (int32 i = 0; i < 8; ++i)
+    {
+        range_settings[i] = 0.0f;
+    }
+
+    const int32 Count = FMath::Min(InRanges.Num(), 8);
+
+    for (int32 i = 0; i < Count; ++i)
+    {
+        range_settings[i] = InRanges[i];
+    }
+
+    nsettings = Count;
+    range_index = Count > 0 ? 0 : -1;
+}
 
 ESensorMode Sensor::GetNextSensorMode(ESensorMode Mode)
 {

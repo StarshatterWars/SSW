@@ -769,6 +769,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
                 TEXT("[ASSETS] AwardPopupClass is not set in Project Settings"));
         }
     }
+
+    // UI.MFDClass
+    if (!Cache.Contains(TEXT("UI.MFDClass")))
+    {
+        if (!Settings->MFDClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MFDClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MFDClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MFDClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MFDClass is not set in Project Settings"));
+        }
+    }
     // ------------------------------------------------------------------
     // 4) Inject typed UI Theme assets (do not overwrite explicit map entries)
     // ------------------------------------------------------------------

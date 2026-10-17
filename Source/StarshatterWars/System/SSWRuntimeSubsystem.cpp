@@ -35,6 +35,11 @@
 #include "Campaign.h"
 #include "CameraManager.h"
 #include "EventDispatch.h"
+#include "MfdPanel.h"
+#include "HUDView.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerController.h"
+#include "Framework/Application/SlateApplication.h"
 
 #include "AudioConfig.h"
 #include "UIButton.h"
@@ -279,8 +284,74 @@ bool USSWRuntimeSubsystem::TickRuntime(float DeltaSeconds)
     return true;
 }
 
+void USSWRuntimeSubsystem::EnsureMfdPanels()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC) return;
+
+    PC->bShowMouseCursor = true;
+    PC->bEnableClickEvents = true;
+    PC->bEnableMouseOverEvents = true;
+    FInputModeGameAndUI Mode;
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+
+    if (MfdPanels.Num() < 3)
+    {
+        MfdPanels.Reset();
+        for (int32 i = 0; i < 3; ++i)
+        {
+            UMfdPanel* Panel = CreateWidget<UMfdPanel>(PC, UMfdPanel::StaticClass());
+            if (!Panel) continue;
+            Panel->SetMfdIndex(i);
+            Panel->BuildIfNeeded();
+            Panel->AddToViewport(90);
+            Panel->SetDesiredSizeInViewport(FVector2D(128.f, 128.f));
+            Panel->SetAnchorsInViewport(FAnchors(0.f, 0.f));
+            Panel->SetAlignmentInViewport(FVector2D(0.f, 0.f));
+            MfdPanels.Add(Panel);
+        }
+    }
+
+    int32 Width = 0, Height = 0;
+    PC->GetViewportSize(Width, Height);
+    if (Width <= 0 || Height <= 0) return;
+
+    const FVector2D Origins[3] = {
+        FVector2D(8.f, (float)Height - 136.f),
+        FVector2D((float)Width - 136.f, (float)Height - 136.f),
+        FVector2D(8.f, 8.f)
+    };
+    for (int32 i = 0; i < MfdPanels.Num() && i < 3; ++i)
+        if (MfdPanels[i])
+            MfdPanels[i]->SetPositionInViewport(Origins[i], false);
+}
+
 void USSWRuntimeSubsystem::GameLoop()
 {
+    if (SimInstance && SimInstance->GetPlayerShip())
+        EnsureMfdPanels();
+    if (UWorld* World = GetWorld())
+    {
+        if (APlayerController* PC = World->GetFirstPlayerController())
+        {
+            float MX = 0.f, MY = 0.f;
+            if (!PC->GetMousePosition(MX, MY))
+            {
+                const FVector2D Cursor = FSlateApplication::Get().GetCursorPos();
+                MX = Cursor.X;
+                MY = Cursor.Y;
+            }
+            Mouse::SetState(
+                (int)MX, (int)MY,
+                PC->IsInputKeyDown(EKeys::LeftMouseButton) ? 1 : 0,
+                PC->IsInputKeyDown(EKeys::RightMouseButton) ? 1 : 0);
+        }
+    }
+
     EventDispatch* ED = EventDispatch::GetInstance();
     if (ED)
     {

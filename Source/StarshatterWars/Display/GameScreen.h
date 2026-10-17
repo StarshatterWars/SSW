@@ -24,6 +24,20 @@
 #include "CameraView.h"
 #include "GameScreen.generated.h"
 
+UCLASS()
+class STARSHATTERWARS_API UMfdHitButton : public UUserWidget
+{
+    GENERATED_BODY()
+public:
+    int32 MfdIndex = 0;
+    int32 Corner = 0;
+    TFunction<void(int32, int32, bool)> OnHit;
+protected:
+    virtual void NativeConstruct() override;
+    virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+};
+
 // Forward declares (UMG overlays owned by GameScreen):
 class UNavDlg;
 class UEngineeringDlg;
@@ -121,6 +135,14 @@ private:
     bool IsOverlayShown() const;
 
     void ApplyInputModeForScreen(bool bExternal);
+    void FocusOverlay(UUserWidget* W);
+    void EnsureMfdHits();
+    void LayoutMfdHits();
+    void HandleMfdHit(int32 MfdIndex, int32 Corner, bool bRight);
+
+    UPROPERTY() TObjectPtr<UUserWidget> MfdHitHost;
+    UPROPERTY() TObjectPtr<UCanvasPanel> MfdHitCanvas;
+    UPROPERTY() TArray<TObjectPtr<UMfdHitButton>> MfdHits;
 
 private:
     // Spawnable widget classes (assign in defaults/BP):

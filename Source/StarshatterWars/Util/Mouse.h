@@ -61,6 +61,7 @@ public:
 	static void    Paint();
 
 	static void    SetCursorPos(int x, int y);
+	static void    SetState(int ax, int ay, int al, int ar, int aw = 0);
 	static void	   Show(bool bShow);
 	static int     SetCursor(CURSOR c);
 	static int     LoadCursor(CURSOR c, const char* name, HOTSPOT hs = HOTSPOT_CTR);

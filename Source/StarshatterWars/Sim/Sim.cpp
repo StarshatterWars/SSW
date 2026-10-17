@@ -1184,7 +1184,17 @@ Sim::CreateElements()
 
 					Element->SetLoadout(Loadout);
 
-					for (int32 i = 0; i < MissionElem->Count(); i++) {
+					const int32 PlayerSlot = MissionElem->GetPlayerIndex() > 0
+						? MissionElem->GetPlayerIndex() - 1 : INDEX_NONE;
+					TArray<int32> LaunchOrder;
+					if (PlayerSlot >= 0 && PlayerSlot < MissionElem->Count())
+						LaunchOrder.Add(PlayerSlot);
+					for (int32 i = 0; i < MissionElem->Count(); i++)
+						if (i != PlayerSlot)
+							LaunchOrder.Add(i);
+
+					for (int32 Order = 0; Order < LaunchOrder.Num(); Order++) {
+						const int32 i = LaunchOrder[Order];
 						int32 SquadronLocal = -1;
 						int32 SlotLocal = -1;
 
@@ -1204,6 +1214,8 @@ Sim::CreateElements()
 									true,
 									true);
 
+							HangarPtr->Launch(SquadronLocal, SlotLocal);
+
 							HangarSlot* HangarSlotPtr =
 								(HangarSlot*)HangarPtr->GetSlot(SquadronLocal, SlotLocal);
 
@@ -1212,7 +1224,7 @@ Sim::CreateElements()
 							if (AlertShip) {
 								AlertShip->SetRespawnCount(Respawns);
 
-								if (MissionElem->GetPlayerIndex() == i+1) {
+								if (i == PlayerSlot) {
 									if (AlertShip->GetRegion()) {
 										AlertShip->GetRegion()->SetPlayerShip(AlertShip);
 									}
@@ -1468,40 +1480,6 @@ Sim::CreateElements()
 							}
 						}
 					}
-				}
-			}
-
-			// Ensure full wing is present and queued for staggered deck launch
-			if (WantsDeckStart && Element && Carrier && HangarPtr && Element->GetNumShips() < MissionElem->Count())
-			{
-				FlightDeck* LaunchDeck = nullptr;
-				for (int32 di = 0; di < Carrier->NumFlightDecks(); ++di)
-				{
-					FlightDeck* D = Carrier->GetFlightDeck(di);
-					if (D && D->IsLaunchDeck()) { LaunchDeck = D; break; }
-				}
-				if (LaunchDeck)
-				{
-					ShipDesign* WingDesign = ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
-					const int32 Needed = MissionElem->Count() - Element->GetNumShips();
-					for (int32 w = 0; w < Needed && WingDesign; ++w)
-					{
-						char WingName[64];
-						sprintf_s(WingName, "%s %d", MissionElem->GetName().data(), Element->GetNumShips() + 1);
-						const char* WingRegion = Carrier->GetRegion()
-							? Carrier->GetRegion()->GetName()
-							: MissionElem->GetRegion().data();
-						Ship* WingShip = CreateShip(WingName, "", WingDesign,
-							WingRegion,
-							FVector::ZeroVector, MissionElem->GetIFF(), MissionElem->GetCommandAI(), Loadout);
-						if (!WingShip) continue;
-						Element->AddShip(WingShip);
-						int SlotIdx = -1;
-						if (LaunchDeck->Spot(WingShip, SlotIdx))
-							LaunchDeck->Launch(SlotIdx);
-					}
-					UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Wing filled Flight='%hs' Ships=%d/%d"),
-						MissionElem->GetName().data(), Element->GetNumShips(), MissionElem->Count());
 				}
 			}
 		}

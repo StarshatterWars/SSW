@@ -144,7 +144,8 @@ private:
     TMap<Ship*, double> MissionPresentationRadii;
     uint32 MissionPresentationSeed = 0;
 
-    FVector ConvertLegacyShipLocationToUE(const FVector& LegacyLoc) const;
+    void EnsureMfdPanels();
+    UPROPERTY(Transient) TArray<TObjectPtr<class UMfdPanel>> MfdPanels;
     FVector GetRegionVisualLocationForRuntimeShip(Ship* RuntimeShip) const;
 
 private:

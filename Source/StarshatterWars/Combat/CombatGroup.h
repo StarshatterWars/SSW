@@ -54,6 +54,7 @@ public:
 	// operations:
 	static CombatGroup* LoadOrderOfBattle(const char* fname, int iff, Combatant* combatant);
 	static void         SaveOrderOfBattle(const char* fname, CombatGroup* force);
+	static void         AppendOrderOfBattle(FString& Out, CombatGroup* force);
 	static void         MergeOrderOfBattle(BYTE* block, const char* fname, int iff, Combatant* combatant, Campaign* campaign);
 
 	void                AddComponent(CombatGroup* g);

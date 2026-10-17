@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025-2026. All Rights Reserved.
+    Copyright ï¿½ 2025-2026. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         CampaignSaveGame.cpp
@@ -17,7 +17,8 @@
 */
 
 #include "CampaignSaveGame.h"
-#include "CampaignSlotSave.h"
+#include "CampaignSlotSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Campaign.h"
 #include "Combatant.h"
@@ -175,6 +176,45 @@ static char* ParseMultiLine(const char* s)
     return multiline;
 }
 
+static const int32 SAVE_USER = 0;
+
+static int32 CurrentPlayerId()
+{
+    if (PlayerCharacter* P = PlayerCharacter::GetCurrentPlayer())
+        return P->Identity();
+    return 0;
+}
+
+static FString SlotNameFor(const char* Name, int32 PlayerId)
+{
+    return FString::Printf(TEXT("Campaign_%02d_%s"), PlayerId, ANSI_TO_TCHAR(Name ? Name : "AutoSave"));
+}
+
+static FString IndexSlotFor(int32 PlayerId)
+{
+    return FString::Printf(TEXT("Campaign_%02d_Index"), PlayerId);
+}
+
+static void RememberSlot(const FString& Slot, int32 PlayerId)
+{
+    UCampaignSaveIndex* Index = Cast<UCampaignSaveIndex>(
+        UGameplayStatics::LoadGameFromSlot(IndexSlotFor(PlayerId), SAVE_USER));
+    if (!Index)
+        Index = Cast<UCampaignSaveIndex>(UGameplayStatics::CreateSaveGameObject(UCampaignSaveIndex::StaticClass()));
+    if (!Index) return;
+    Index->SlotNames.AddUnique(Slot);
+    UGameplayStatics::SaveGameToSlot(Index, IndexSlotFor(PlayerId), SAVE_USER);
+}
+
+static void ForgetSlot(const FString& Slot, int32 PlayerId)
+{
+    UCampaignSaveIndex* Index = Cast<UCampaignSaveIndex>(
+        UGameplayStatics::LoadGameFromSlot(IndexSlotFor(PlayerId), SAVE_USER));
+    if (!Index) return;
+    Index->SlotNames.Remove(Slot);
+    UGameplayStatics::SaveGameToSlot(Index, IndexSlotFor(PlayerId), SAVE_USER);
+}
+
 void
 CampaignSaveGame::Load(const char* SourceFilename)
 {
@@ -185,18 +225,18 @@ CampaignSaveGame::Load(const char* SourceFilename)
     if (!SourceFilename || !SourceFilename[0])
         return;
 
+    const FString Slot = SlotNameFor(SourceFilename, CurrentPlayerId());
+    UCampaignSlotSaveGame* Saved = Cast<UCampaignSlotSaveGame>(
+        UGameplayStatics::LoadGameFromSlot(Slot, SAVE_USER));
+    if (!Saved || Saved->SaveText.IsEmpty())
+    {
+        UE_LOG(LogCampaignSaveGame, Error, TEXT("ERROR: no Unreal save slot '%s'"), *Slot);
+        return;
+    }
+
+    const FTCHARToUTF8 Utf8(*Saved->SaveText);
     DataLoader* loader = DataLoader::GetLoader();
-    bool use_file_sys = loader->IsFileSystemEnabled();
-    loader->UseFileSystem(true);
-    loader->SetDataPath(GetSaveDirectory() + "/");
-
-    BYTE* block = 0;
-    loader->LoadBuffer(SourceFilename, block, true);
-    loader->UseFileSystem(use_file_sys);
-
-    FPlatformProcess::Sleep(0.01f);
-
-    Parser parser(new BlockReader((const char*)block));
+    Parser parser(new BlockReader(Utf8.Get()));
     Term* term = parser.ParseTerm();
 
     if (!term) {
@@ -338,7 +378,7 @@ CampaignSaveGame::Load(const char* SourceFilename)
                             Combatant* combatant = campaign->GetCombatant(cname);
 
                             if (combatant) {
-                                CombatGroup::MergeOrderOfBattle(block, SourceFilename, iff, combatant, campaign);
+                                CombatGroup::MergeOrderOfBattle((BYTE*)Utf8.Get(), SourceFilename, iff, combatant, campaign);
                                 combatant->SetScore(score);
                             }
                             else {
@@ -586,7 +626,6 @@ CampaignSaveGame::Load(const char* SourceFilename)
         }
     }
 
-    loader->ReleaseBuffer(block);
     loader->SetDataPath(0);
 
     UE_LOG(LogCampaignSaveGame, Log, TEXT("SAVEGAME LOADED (%s)."), ANSI_TO_TCHAR(SourceFilename));
@@ -600,175 +639,117 @@ CampaignSaveGame::Save(const char* name)
     if (!campaign || !name || !*name)
         return;
 
-    CreateSaveDirectory();
-
-    Text s = GetSaveDirectory() + Text("/") + Text(name);
-
-    FILE* f = nullptr;
-    fopen_s(&f, s.data(), "w");   // be explicit
-
-    if (!f)
-        return;
-
+    FString Text;
     char timestr[32] = { 0 };
     FormatDayTime(timestr, campaign->GetTime());
 
     CombatGroup* player_group = campaign->GetPlayerGroup();
     CombatUnit* player_unit = campaign->GetPlayerUnit();
 
-    fprintf(f, "SAVEGAME\n\n");
-    fprintf(f, "campaign: \"%s\"\n\n", campaign->GetName());
+    Text += TEXT("SAVEGAME\n\n");
+    Text += FString::Printf(TEXT("campaign: \"%s\"\n\n"), ANSI_TO_TCHAR(campaign->GetName()));
 
-    // Guard against null player_group:
     if (player_group) {
-        fprintf(f, "grp_iff:  %d\n", (int)player_group->GetIFF());
-        fprintf(f, "grp_type: %d\n", (int)player_group->GetType()); // or player_group->Type()
-        fprintf(f, "grp_id:   %d\n", (int)player_group->GetID());
+        Text += FString::Printf(TEXT("grp_iff:  %d\n"), (int)player_group->GetIFF());
+        Text += FString::Printf(TEXT("grp_type: %d\n"), (int)player_group->GetType());
+        Text += FString::Printf(TEXT("grp_id:   %d\n"), (int)player_group->GetID());
     }
     else {
-        fprintf(f, "grp_iff:  %d\n", 0);
-        fprintf(f, "grp_type: %d\n", 0);
-        fprintf(f, "grp_id:   %d\n", 0);
+        Text += TEXT("grp_iff:  0\ngrp_type: 0\ngrp_id:   0\n");
     }
 
     if (player_unit)
-        fprintf(f, "unit:     \"%s\"\n", player_unit->GetName().data());
+        Text += FString::Printf(TEXT("unit:     \"%s\"\n"), ANSI_TO_TCHAR(player_unit->GetName().data()));
 
-    fprintf(f, "status:   %d\n", (int)campaign->GetCampaignStatus());
-    fprintf(f, "basetime: %f\n", campaign->GetStartTime());
-
-    fprintf(f, "time:     %f // %s\n\n",
-        campaign->GetTime(),
-        timestr);
-
-    fprintf(f, "sitrep:   \"%s\"\n", campaign->Situation());
-    fprintf(f, "orders:   \"%s\"\n\n", campaign->Orders());
+    Text += FString::Printf(TEXT("status:   %d\n"), (int)campaign->GetCampaignStatus());
+    Text += FString::Printf(TEXT("basetime: %f\n"), campaign->GetStartTime());
+    Text += FString::Printf(TEXT("time:     %f // %s\n\n"), campaign->GetTime(), ANSI_TO_TCHAR(timestr));
+    Text += FString::Printf(TEXT("sitrep:   \"%s\"\n"), ANSI_TO_TCHAR(campaign->Situation()));
+    Text += FString::Printf(TEXT("orders:   \"%s\"\n\n"), ANSI_TO_TCHAR(campaign->Orders()));
 
     ListIter<Combatant> c_iter = campaign->GetCombatants();
     while (++c_iter) {
         Combatant* c = c_iter.value();
         if (!c) continue;
-
-        fprintf(f, "combatant: {");
-        fprintf(f, " name:\"%s\",", c->GetName());   // if you don't have GetName(), use c->Name()
-        fprintf(f, " iff:%d,", c->GetIFF());
-        fprintf(f, " score:%d,", c->GetScore());  // if you don't have GetScore(), use c->Score()
-        fprintf(f, " }\n");
+        Text += FString::Printf(TEXT("combatant: { name:\"%s\", iff:%d, score:%d, }\n"),
+            ANSI_TO_TCHAR(c->GetName()), c->GetIFF(), c->GetScore());
     }
-
-    fprintf(f, "\n");
+    Text += TEXT("\n");
 
     ListIter<CombatAction> a_iter = campaign->GetActions();
     while (++a_iter) {
         CombatAction* a = a_iter.value();
         if (!a) continue;
-
-        fprintf(f, "action: { id:%4d, stat:%d", a->Identity(), a->Status());
-
+        Text += FString::Printf(TEXT("action: { id:%4d, stat:%d"), a->Identity(), (int)a->Status());
         if (a->Status() == ECombatActionStatus::PENDING) {
-            if (a->Count())
-                fprintf(f, ", count:%d", a->Count());
-
-            if (a->StartAfter())
-                fprintf(f, ", after:%d", a->StartAfter());
+            if (a->Count()) Text += FString::Printf(TEXT(", count:%d"), a->Count());
+            if (a->StartAfter()) Text += FString::Printf(TEXT(", after:%d"), a->StartAfter());
         }
-
-        fprintf(f, " }\n");
+        Text += TEXT(" }\n");
     }
-
-    fprintf(f, "\n");
+    Text += TEXT("\n");
 
     ListIter<CombatEvent> e_iter = campaign->GetEvents();
     while (++e_iter) {
         CombatEvent* e = e_iter.value();
         if (!e) continue;
-
-        fprintf(f, "event: {");
-        fprintf(f, " type:%-18s,",
-            TCHAR_TO_UTF8(*e->GetEventTypeName())
-        );
-        fprintf(f, " time:0x%08x,", e->GetTime());
-        fprintf(f, " team:%d,", e->GetIFF());
-       
         const FVector& P = e->GetPoints();
-        fprintf(f, " points:{ x:%f, y:%f, z:%f },", P.X, P.Y, P.Z);
-
-        fprintf(f, " source:\"%s\",",
-            TCHAR_TO_UTF8(*e->GetEventSourceName())
-        );
-        fprintf(f, " region:\"%s\",", e->GetRegion());
-        fprintf(f, " title:\"%s\",", e->GetTitle());
-
-        if (e->Filename())
-            fprintf(f, " file:\"%s\",", e->Filename());
-        if (e->ImageFile())
-            fprintf(f, " image:\"%s\",", e->ImageFile());
-        if (e->SceneFile())
-            fprintf(f, " scene:\"%s\",", e->SceneFile());
-
-        // Match original behavior: only write info if filename empty
+        Text += FString::Printf(TEXT("event: { type:%s, time:0x%08x, team:%d, points:{ x:%f, y:%f, z:%f }, source:\"%s\", region:\"%s\", title:\"%s\","),
+            *e->GetEventTypeName(), e->GetTime(), e->GetIFF(), P.X, P.Y, P.Z,
+            *e->GetEventSourceName(), ANSI_TO_TCHAR(e->GetRegion()), ANSI_TO_TCHAR(e->GetTitle()));
+        if (e->Filename()) Text += FString::Printf(TEXT(" file:\"%s\","), ANSI_TO_TCHAR(e->Filename()));
+        if (e->ImageFile()) Text += FString::Printf(TEXT(" image:\"%s\","), ANSI_TO_TCHAR(e->ImageFile()));
+        if (e->SceneFile()) Text += FString::Printf(TEXT(" scene:\"%s\","), ANSI_TO_TCHAR(e->SceneFile()));
         if (!e->Filename() || *e->Filename() == 0)
-            fprintf(f, " info:\"%s\"", FormatMultiLine(e->GetInformation()));
-
-        fprintf(f, " }\n");
+            Text += FString::Printf(TEXT(" info:\"%s\""), ANSI_TO_TCHAR(FormatMultiLine(e->GetInformation())));
+        Text += TEXT(" }\n");
     }
 
-    fprintf(f, "\n// ORDER OF BATTLE:\n\n");
-    fclose(f);
-
-    // Save OOB as separate append operations:
+    Text += TEXT("\n// ORDER OF BATTLE:\n\n");
     c_iter.reset();
     while (++c_iter) {
         Combatant* c = c_iter.value();
         if (!c) continue;
-
-        CombatGroup* g = c->GetForce();
-        if (g)
-            CombatGroup::SaveOrderOfBattle(s, g);
+        if (CombatGroup* g = c->GetForce())
+            CombatGroup::AppendOrderOfBattle(Text, g);
     }
 
-    // Per-campaign Unreal save slot.
-    UCampaignSlotSave::SaveCampaign(campaign);
+    UCampaignSlotSaveGame* SlotSave = Cast<UCampaignSlotSaveGame>(
+        UGameplayStatics::CreateSaveGameObject(UCampaignSlotSaveGame::StaticClass()));
+    if (!SlotSave) return;
+
+    const int32 PlayerId = CurrentPlayerId();
+    const FString Slot = SlotNameFor(name, PlayerId);
+    SlotSave->SlotName = Slot;
+    SlotSave->CampaignName = ANSI_TO_TCHAR(campaign->GetName());
+    SlotSave->SaveText = Text;
+    UGameplayStatics::SaveGameToSlot(SlotSave, Slot, SAVE_USER);
+    RememberSlot(Slot, PlayerId);
 }
 
 void
 CampaignSaveGame::Delete(const char* name)
 {
-#if PLATFORM_WINDOWS
-    Text path = GetSaveDirectory() + "/" + name;
-    DeleteFileA(path.data());
-#else
-    // Non-Windows: implement via your platform layer.
-#endif
+    if (!name || !*name) return;
+    const int32 PlayerId = CurrentPlayerId();
+    const FString Slot = SlotNameFor(name, PlayerId);
+    UGameplayStatics::DeleteGameInSlot(Slot, SAVE_USER);
+    ForgetSlot(Slot, PlayerId);
 }
 
 void
 CampaignSaveGame::RemovePlayer(PlayerCharacter* p)
 {
-    List<Text> save_list;
-    Text       save_dir = GetSaveDirectory(p) + "/";
-
-    DataLoader* loader = DataLoader::GetLoader();
-    bool use_file_sys = loader->IsFileSystemEnabled();
-    loader->UseFileSystem(true);
-    loader->SetDataPath(save_dir);
-    loader->ListFiles("*.*", save_list);
-    loader->SetDataPath(0);
-    loader->UseFileSystem(use_file_sys);
-
-#if PLATFORM_WINDOWS
-    for (int i = 0; i < save_list.size(); i++) {
-        Text* file_ptr = save_list[i];
-        DeleteFileA((save_dir + file_ptr->data()).data());
+    if (!p) return;
+    const int32 PlayerId = p->Identity();
+    UCampaignSaveIndex* Index = Cast<UCampaignSaveIndex>(
+        UGameplayStatics::LoadGameFromSlot(IndexSlotFor(PlayerId), SAVE_USER));
+    if (Index)
+    {
+        for (const FString& Slot : Index->SlotNames)
+            UGameplayStatics::DeleteGameInSlot(Slot, SAVE_USER);
     }
-
-    save_list.destroy();
-
-    RemoveDirectoryA(GetSaveDirectory(p).data());
-#else
-    // Non-Windows: implement via your platform layer.
-    save_list.destroy();
-#endif
+    UGameplayStatics::DeleteGameInSlot(IndexSlotFor(PlayerId), SAVE_USER);
 }
 
 // +--------------------------------------------------------------------+
@@ -790,28 +771,27 @@ CampaignSaveGame::LoadAuto()
 Text
 CampaignSaveGame::GetResumeFile()
 {
-    // check for auto save game:
-    FILE* f = 0;
-    ::fopen_s(&f, GetSaveDirectory() + "/AutoSave", "r");
-
-    if (f) {
-        ::fclose(f);
+    const FString Slot = SlotNameFor("AutoSave", CurrentPlayerId());
+    if (UGameplayStatics::DoesSaveGameExist(Slot, SAVE_USER))
         return "AutoSave";
-    }
-
     return Text();
 }
 
 int
 CampaignSaveGame::GetSaveGameList(List<Text>& save_list)
 {
-    DataLoader* loader = DataLoader::GetLoader();
-    bool use_file_sys = loader->IsFileSystemEnabled();
-    loader->UseFileSystem(true);
-    loader->SetDataPath(GetSaveDirectory() + "/");
-    loader->ListFiles("*.*", save_list);
-    loader->SetDataPath(0);
-    loader->UseFileSystem(use_file_sys);
+    save_list.destroy();
+    UCampaignSaveIndex* Index = Cast<UCampaignSaveIndex>(
+        UGameplayStatics::LoadGameFromSlot(IndexSlotFor(CurrentPlayerId()), SAVE_USER));
+    if (!Index) return 0;
 
+    for (const FString& Slot : Index->SlotNames)
+    {
+        FString Name = Slot;
+        const FString Prefix = FString::Printf(TEXT("Campaign_%02d_"), CurrentPlayerId());
+        if (Name.StartsWith(Prefix))
+            Name.RightChopInline(Prefix.Len());
+        save_list.append(new Text(TCHAR_TO_ANSI(*Name)));
+    }
     return save_list.size();
 }

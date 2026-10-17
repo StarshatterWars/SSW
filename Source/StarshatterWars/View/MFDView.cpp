@@ -173,7 +173,7 @@ void MFDView::Draw()
 {
     bMouseIn = false;
 
-    if (Mouse::LButton() == 0)
+    if (Mouse::LButton() == 0 && Mouse::RButton() == 0)
         MouseLatch = 0;
 
     if (RectPx.Contains(Mouse::X(), Mouse::Y()))
@@ -355,8 +355,8 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
 
     // For now, keep the clickable rect layout matching legacy:
     const int32 scan_r = RectPx.w;
-    const int32 scan_x = CockpitHUDTexture ? (Index * 128) : RectPx.x;
-    const int32 scan_y = CockpitHUDTexture ? 256 : RectPx.y;
+    const int32 scan_x = RectPx.x;
+    const int32 scan_y = RectPx.y;
 
     Rect mode_rect(scan_x + 2, scan_y + 2, 40, 12);
     Rect range_rect(scan_x + 2, scan_y + scan_r - 12, 40, 12);
@@ -383,7 +383,7 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
     if (SensorPtr)
     {
         const int RangeKm = (int)(SensorPtr->GetBeamRange() / 1000.0);
-        snprintf(RangeText, sizeof(RangeText), "%d", RangeKm);
+        snprintf(RangeText, sizeof(RangeText), "%d km", RangeKm);
     }
 
     Rect r0 = mode_rect;
@@ -422,7 +422,7 @@ void MFDView::DrawSensorLabels(const char* MfdModeLabel)
         {
             SensorPtr->IncreaseRange();
         }
-        else if (ShipPtr && probe_rect.Contains(Mouse::X(), Mouse::Y()))
+        else if (ShipPtr && ShipPtr->GetProbeLauncher() && probe_rect.Contains(Mouse::X(), Mouse::Y()))
         {
             ShipPtr->LaunchProbe();
         }

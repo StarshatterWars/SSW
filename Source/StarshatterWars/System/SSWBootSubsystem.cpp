@@ -266,7 +266,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.ObjectivesScreenClass"),
         TEXT("UI.FlightOpsScreenClass"),
         TEXT("UI.ContactListClass"),
-         TEXT("UI.AwardPopupClass"),
+        TEXT("UI.AwardPopupClass"),
+        TEXT("UI.MFDClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

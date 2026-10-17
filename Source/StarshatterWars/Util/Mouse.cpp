@@ -95,6 +95,16 @@ Mouse::Close()
 // +--------------------------------------------------------------------+
 
 void
+Mouse::SetState(int ax, int ay, int al, int ar, int aw)
+{
+	x = ax;
+	y = ay;
+	l = al ? 1 : 0;
+	r = ar ? 1 : 0;
+	w = aw;
+}
+
+void
 Mouse::SetCursorPos(int ax, int ay)
 {
 #if PLATFORM_WINDOWS
@@ -182,18 +192,6 @@ void Mouse::Show(bool bShow)
 		return;
 
 	PC->bShowMouseCursor = bShow;
-
-	// Optional: control input mode too
-	if (bShow)
-	{
-		FInputModeGameAndUI Mode;
-		PC->SetInputMode(Mode);
-	}
-	else
-	{
-		FInputModeGameOnly Mode;
-		PC->SetInputMode(Mode);
-	}
 }
 
 // +--------------------------------------------------------------------+
