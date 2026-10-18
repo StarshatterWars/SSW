@@ -10,7 +10,7 @@
 
 namespace
 {
-    bool InConstructor()
+    bool InTurretConstructor()
     {
         return FUObjectThreadContext::Get().IsInConstructor > 0;
     }
@@ -20,12 +20,12 @@ void AShipActor::ConfigureTurretsFromShipDef(const FString& ShipName)
 {
     auto MakeScene = [this](FName Name, USceneComponent* Parent) -> USceneComponent*
     {
-        USceneComponent* Comp = InConstructor()
+        USceneComponent* Comp = InTurretConstructor()
             ? CreateDefaultSubobject<USceneComponent>(Name)
             : NewObject<USceneComponent>(this, Name);
         if (!Comp) return nullptr;
         Comp->SetupAttachment(Parent ? Parent : GetRootComponent());
-        if (!InConstructor()) Comp->RegisterComponent();
+        if (!InTurretConstructor()) Comp->RegisterComponent();
         return Comp;
     };
 
@@ -58,7 +58,7 @@ void AShipActor::ConfigureTurretsFromShipDef(const FString& ShipName)
         }
     }
 
-    if (!InConstructor())
+    if (!InTurretConstructor())
     {
         for (TObjectPtr<USceneComponent>& Mount : NativeTurretMounts)
         {
@@ -85,7 +85,7 @@ void AShipActor::ConfigureTurretsFromShipDef(const FString& ShipName)
 
 void AShipActor::ClearTurretActors()
 {
-    if (InConstructor()) return;
+    if (InTurretConstructor()) return;
 
     for (TObjectPtr<AActor>& Turret : TurretComponents)
     {
@@ -103,7 +103,7 @@ void AShipActor::ClearTurretActors()
 
 void AShipActor::RebuildTurretActors()
 {
-    if (InConstructor() || !bEnableTurretActors || !GetWorld()) return;
+    if (InTurretConstructor() || !bEnableTurretActors || !GetWorld()) return;
 
     ClearTurretActors();
 
@@ -120,7 +120,7 @@ void AShipActor::RebuildTurretActors()
 
         if (!TurretClass || !Mount)
         {
-            if (Mount && !InConstructor())
+            if (Mount && !InTurretConstructor())
             {
                 UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
                 if (Mesh)
@@ -153,7 +153,7 @@ void AShipActor::RebuildTurretActors()
 
 void AShipActor::UpdateTurretActors()
 {
-    if (InConstructor() || !bEnableTurretActors || TurretComponents.Num() == 0) return;
+    if (InTurretConstructor() || !bEnableTurretActors || TurretComponents.Num() == 0) return;
 
     for (int32 Index = 0; Index < TurretComponents.Num(); ++Index)
     {

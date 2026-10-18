@@ -7,7 +7,7 @@
 
 namespace
 {
-    bool InConstructor()
+    bool InWeaponMountConstructor()
     {
         return FUObjectThreadContext::Get().IsInConstructor > 0;
     }
@@ -17,12 +17,12 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
 {
     auto MakeScene = [this](FName Name, USceneComponent* Parent) -> USceneComponent*
     {
-        USceneComponent* Comp = InConstructor()
+        USceneComponent* Comp = InWeaponMountConstructor()
             ? CreateDefaultSubobject<USceneComponent>(Name)
             : NewObject<USceneComponent>(this, Name);
         if (!Comp) return nullptr;
         Comp->SetupAttachment(Parent ? Parent : GetRootComponent());
-        if (!InConstructor()) Comp->RegisterComponent();
+        if (!InWeaponMountConstructor()) Comp->RegisterComponent();
         return Comp;
     };
 
@@ -31,7 +31,7 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         WeaponHardpointRoot = MakeScene(TEXT("WeaponHardpointRoot"), RootComponent);
     }
 
-    if (!InConstructor())
+    if (!InWeaponMountConstructor())
     {
         for (TObjectPtr<USceneComponent>& Mount : NativeWeaponHardpoints)
         {

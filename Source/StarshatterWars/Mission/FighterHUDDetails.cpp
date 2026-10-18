@@ -520,7 +520,20 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             {
                 FVector2D Offset;
                 if (M == EMode::FOV)
-                    Offset = FVector2D(FMath::Clamp(B.Az / (PI / 2), -1.0, 1.0), FMath::Clamp(-B.El / (PI / 2), -1.0, 1.0)) * Radius;
+                {
+                    Offset = FVector2D(
+                        B.Az / (PI / 2),
+                        -B.El / (PI / 2)) * Radius;
+
+                    // Clamp to the usable circular FOV area while preserving bearing.
+                    // The marker is 6x6, so keep its corners inside the circle.
+                    constexpr double MarkerHalfDiagonal = 4.25;
+                    const double UsableRadius =
+                        FMath::Max(0.0, Radius - MarkerHalfDiagonal);
+
+                    if (Offset.SizeSquared() > UsableRadius * UsableRadius)
+                        Offset = Offset.GetSafeNormal() * UsableRadius;
+                }
                 else
                 {
                     const double R = FMath::Clamp(B.Range / SensorRange, 0.0, 1.0) * Radius;
