@@ -1,4 +1,5 @@
-﻿#include "CampaignSceneDlg.h"
+#include "CampaignSceneDlg.h"
+#include "Engine/Engine.h"
 #include "Components/AudioComponent.h"
 
 #include "CmpnScreen.h"
@@ -40,6 +41,12 @@ void UCampaignSceneDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE WIDGET CONSTRUCTED Widget=%s"), *GetNameSafe(this));
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(990103, 20.0f, FColor::Cyan,
+            TEXT("SSW BUILD PROBE 20261018: CUTSCENE WIDGET CONSTRUCTED"));
+
+
     BuildRuntimeWidgets();
 
     SetVisibility(ESlateVisibility::Collapsed);
@@ -53,6 +60,15 @@ void UCampaignSceneDlg::NativeConstruct()
 void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+
+    static int32 CutsceneTraceTickCount = 0;
+    if (++CutsceneTraceTickCount % 120 == 0)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[CUTSCENE TRACE] Tick Widget=%s Running=%d Events=%d Next=%d"),
+            *GetNameSafe(this), bSceneRunning ? 1 : 0,
+            SortedEvents.Num(), NextMessageEventIndex);
+    }
 
     if (!bSceneRunning)
     {
@@ -324,6 +340,15 @@ void UCampaignSceneDlg::Hide()
 
 void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& MissionData)
 {
+    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE LOAD Scene=%s Events=%d"),
+        *MissionData.Scene, MissionData.Event.Num());
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(990104, 20.0f, FColor::Green,
+            FString::Printf(TEXT("SSW BUILD PROBE 20261018: CUTSCENE LOAD events=%d"), MissionData.Event.Num()));
+
+    UE_LOG(LogTemp, Error,
+        TEXT("[CUTSCENE TRACE] LoadSceneFromMissionData Widget=%s Scene='%s' Events=%d"),
+        *GetNameSafe(this), *MissionData.Scene, MissionData.Event.Num());
     ResetSceneState();
 
     ActiveMissionData = MissionData;
@@ -398,15 +423,8 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
         }
     }
 
-    // The cutscene must actually start its timer and process legacy CAMERA events.
-    // Previously commented out: the camera stayed at its level-authored location.
-    if (!bSceneRunning)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[PlanetCamera] Starting cutscene event timeline for '%s'"),
-            *MissionData.Scene);
-        BeginSceneByName(MissionData.Scene, 0.0f);
-    }
+    // The owning campaign screen starts the timeline after mission data loads.
+    // Do not start here: that creates two BeginSceneByName calls, resetting events.
 }
 
 void UCampaignSceneDlg::BuildSortedEventQueue()
@@ -590,6 +608,9 @@ float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
 
 void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
 {
+    UE_LOG(LogTemp, Error,
+        TEXT("[CUTSCENE TRACE] BeginSceneByName Widget=%s Scene='%s' Events=%d"),
+        *GetNameSafe(this), *InSceneName, SortedEvents.Num());
     ActiveSceneName = InSceneName;
     SceneStartRealSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
 
@@ -1035,6 +1056,9 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
 
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
+    UE_LOG(LogTemp, Error,
+        TEXT("[CUTSCENE TRACE] ExecuteCameraEvent Widget=%s Target='%s' Params=%d"),
+        *GetNameSafe(this), *Event.EventTarget, Event.EventParam.Num());
     UE_LOG(LogTemp, Warning,
         TEXT("[SceneDlg] Camera Event: Time=%.2f Target='%s' Point=%s Offset=%s Rotator=%s Params=%d"),
         (double)Event.EventTime,
@@ -1183,6 +1207,32 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
         Cam->SetBodyOrbitView(TargetActor, Orbit);
         Cam->ActivateCamera(0.0f);
+
+        // Diagnostic only: identify the camera actually driving the viewport.
+        if (UWorld* CameraWorld = GetWorld())
+        {
+            if (APlayerController* PC = CameraWorld->GetFirstPlayerController())
+            {
+                AActor* ActiveViewTarget = PC->GetViewTarget();
+                UE_LOG(LogTemp, Error,
+                    TEXT("[CAMERA CHECK] Expected=%s Actual=%s"),
+                    *GetNameSafe(Cam), *GetNameSafe(ActiveViewTarget));
+                UE_LOG(LogTemp, Error,
+                    TEXT("[CAMERA CHECK] Camera=%s Target=%s"),
+                    *Cam->GetActorLocation().ToString(), *GetNameSafe(TargetActor));
+                UE_LOG(LogTemp, Error,
+                    TEXT("[CAMERA CHECK] PlanetLocation=%s"),
+                    TargetActor ? *TargetActor->GetActorLocation().ToString() : TEXT("NULL"));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("[CAMERA CHECK] No PlayerController"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CAMERA CHECK] No World"));
+        }
         UE_LOG(LogTemp, Warning,
             TEXT("[PlanetCamera] CameraAfter=%s Rotation=%s"),
             *Cam->GetActorLocation().ToString(), *Cam->GetActorRotation().ToString());
@@ -1472,14 +1522,33 @@ ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
         if (IsValid(Candidate))
         {
             SceneCamera = Candidate;
-            SceneCamera->ActivateCamera(0.0f);
             return SceneCamera;
         }
     }
 
-    UE_LOG(LogTemp, Error,
-        TEXT("[SceneDlg] ResolveSceneCamera: persistent ASSWCameraManager not found"));
-    return nullptr;
+    // This persistent world has no authored ASSWCameraManager. Create exactly one
+    // on demand, after system-body preflight and before the first camera event.
+    // Theater's ACameraActor is independent and must not be reused for cutscenes.
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    SceneCamera = World->SpawnActor<ASSWCameraManager>(
+        ASSWCameraManager::StaticClass(),
+        FTransform::Identity,
+        SpawnParams);
+
+    if (!IsValid(SceneCamera))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SceneDlg] ResolveSceneCamera: failed to spawn ASSWCameraManager"));
+        return nullptr;
+    }
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SceneDlg] ResolveSceneCamera: spawned persistent camera=%s World=%s"),
+        *GetNameSafe(SceneCamera), *GetNameSafe(World));
+    // Do not activate until the camera event has positioned it at its target.
+    return SceneCamera;
 }
 
 void UCampaignSceneDlg::NativeDestruct()
