@@ -50,17 +50,17 @@ drive:
 {
    type:             Yellow
    thrust:           750
-   scale:            3
+   scale:            1.0
 
    port:
    {
       name:          "Drive_Top"
       loc:           (-435, 0, 43)
       rot:           (0, 180, 0)
-      flare_scale:   1.15
-      trail_scale:   1.15
+      flare_scale:   0.20
+      trail_scale:   0.20
       color:         (255, 220, 120)
-      intensity:     1.0
+      intensity:     0.35
       audio:         1.0
       trail:         true
       flare:         true
@@ -71,10 +71,10 @@ drive:
       name:          "Drive_Starboard"
       loc:           (-435, 42, 0)
       rot:           (0, 180, 0)
-      flare_scale:   1.15
-      trail_scale:   1.15
+      flare_scale:   0.20
+      trail_scale:   0.20
       color:         (255, 220, 120)
-      intensity:     1.0
+      intensity:     0.35
       audio:         1.0
       trail:         true
       flare:         true
@@ -85,10 +85,10 @@ drive:
       name:          "Drive_Port"
       loc:           (-435, -42, 0)
       rot:           (0, 180, 0)
-      flare_scale:   1.15
-      trail_scale:   1.15
+      flare_scale:   0.20
+      trail_scale:   0.20
       color:         (255, 220, 120)
-      intensity:     1.0
+      intensity:     0.35
       audio:         1.0
       trail:         true
       flare:         true
@@ -99,10 +99,10 @@ drive:
       name:          "Drive_Bottom"
       loc:           (-435, 0, -43)
       rot:           (0, 180, 0)
-      flare_scale:   1.15
-      trail_scale:   1.15
+      flare_scale:   0.20
+      trail_scale:   0.20
       color:         (255, 220, 120)
-      intensity:     1.0
+      intensity:     0.35
       audio:         1.0
       trail:         true
       flare:         true

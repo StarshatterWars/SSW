@@ -51,10 +51,63 @@ drive: {
    design:           "Plasma Drive",
    thrust:           25e3,
    scale:            12,
-   port:             ( 54, -84, -489),
-   port:             (-54, -84, -489),
-   port:             (  0, -57, -527),
-   port:             (  0,-111, -489),
+
+
+   port: {
+      name:          "Drive_1"
+      loc:           (489, 54, -84)
+      rot:           (0, 0, 0)
+      flare_scale:   0.20
+      trail_scale:   0.20
+      color:         (255, 220, 120)
+      intensity:     0.35
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   port: {
+      name:          "Drive_2"
+      loc:           (489, -54, -84)
+      rot:           (0, 0, 0)
+      flare_scale:   0.20
+      trail_scale:   0.20
+      color:         (255, 220, 120)
+      intensity:     0.35
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   port: {
+      name:          "Drive_3"
+      loc:           (527, 0, -57)
+      rot:           (0, 0, 0)
+      flare_scale:   0.20
+      trail_scale:   0.20
+      color:         (255, 220, 120)
+      intensity:     0.35
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+   port: {
+      name:          "Drive_4"
+      loc:           (489, 0, -111)
+      rot:           (0, 0, 0)
+      flare_scale:   0.20
+      trail_scale:   0.20
+      color:         (255, 220, 120)
+      intensity:     0.35
+      audio:         1.0
+      trail:         true
+      flare:         true
+   }
+
+
+
+
 
    loc:              (0, 0, -450),
    size:             50,

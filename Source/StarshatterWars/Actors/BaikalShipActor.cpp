@@ -53,6 +53,10 @@ void ABaikalShipActor::ApplyBaikalDefaults()
     /*
      * Runtime visual systems
      */
+    // Runtime drive ports from Baikal.def are authoritative.
+    NumMainEnginePoints = 0;
+    MainEnginePointDefs.Empty();
+
     bEnableMainEngineEmitters = true;
     bEnableThrusterEmitters = true;
 
@@ -60,7 +64,7 @@ void ABaikalShipActor::ApplyBaikalDefaults()
      * Main engine Niagara defaults
      */
     MainEngineEmitterRelativeScale =
-        FVector(1.15f, 0.50f, 0.50f);
+        FVector(0.65f, 0.25f, 0.25f);
 
     MainEngineEmitterRelativeRotation =
         FRotator(0.0f, 180.0f, 0.0f);

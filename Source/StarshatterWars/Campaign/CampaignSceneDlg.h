@@ -65,6 +65,9 @@ public:
 
     void LoadSceneFromMissionData(const FS_CampaignMission& MissionData);
 
+    /** Position first shot without starting cutscene time/audio. */
+    bool PrepareSceneCameraBeforeReveal();
+
     // Backward-compatible wrapper:
     void LoadCaptionsFromMissionData(const FS_CampaignMission& MissionData)
     {

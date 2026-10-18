@@ -30,11 +30,6 @@ void ASystemLevelScriptActor::BeginPlay()
 
     UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] LEVEL BEGINPLAY World=%s Actor=%s"),
         *GetNameSafe(GetWorld()), *GetNameSafe(this));
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(990101, 20.0f, FColor::Red,
-            TEXT("SSW BUILD PROBE 20261018: SYSTEM LEVEL BEGINPLAY"));
-    }
 
 
     UE_LOG(LogTemp, Warning,
@@ -78,9 +73,6 @@ void ASystemLevelScriptActor::InitializeSystemLevel()
 void ASystemLevelScriptActor::BuildCurrentSystem()
 {
     UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] LEVEL BUILD CURRENT SYSTEM"));
-    if (GEngine)
-        GEngine->AddOnScreenDebugMessage(990102, 20.0f, FColor::Yellow,
-            TEXT("SSW BUILD PROBE 20261018: SYSTEM BUILD CALLED"));
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemLevelScriptActor] BuildCurrentSystem called"));

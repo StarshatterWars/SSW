@@ -33,7 +33,7 @@ void AWolfShipActor::ApplyWolfDefaults()
      * Main engine Niagara defaults
      */
     MainEngineEmitterRelativeScale =
-        FVector(1.15f, 0.50f, 0.50f);
+        FVector(0.65f, 0.25f, 0.25f);
 
     MainEngineEmitterRelativeRotation =
         FRotator(0.0f, 180.0f, 0.0f);
@@ -81,7 +81,9 @@ void AWolfShipActor::ApplyWolfDefaults()
      * Runtime thrusters own all thruster ports.
      * Disable generated fallback thruster system.
      */
-    NumMainEnginePoints = 3;
+    // Runtime drive ports from Wolf.def are authoritative.
+    NumMainEnginePoints = 0;
+    MainEnginePointDefs.Empty();
 
     NumThrusterPoints = 0;
     ThrusterPointDefs.Empty();

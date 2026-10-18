@@ -42,9 +42,6 @@ void UCampaignSceneDlg::NativeConstruct()
     Super::NativeConstruct();
 
     UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE WIDGET CONSTRUCTED Widget=%s"), *GetNameSafe(this));
-    if (GEngine)
-        GEngine->AddOnScreenDebugMessage(990103, 20.0f, FColor::Cyan,
-            TEXT("SSW BUILD PROBE 20261018: CUTSCENE WIDGET CONSTRUCTED"));
 
 
     BuildRuntimeWidgets();
@@ -342,9 +339,6 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
 {
     UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE LOAD Scene=%s Events=%d"),
         *MissionData.Scene, MissionData.Event.Num());
-    if (GEngine)
-        GEngine->AddOnScreenDebugMessage(990104, 20.0f, FColor::Green,
-            FString::Printf(TEXT("SSW BUILD PROBE 20261018: CUTSCENE LOAD events=%d"), MissionData.Event.Num()));
 
     UE_LOG(LogTemp, Error,
         TEXT("[CUTSCENE TRACE] LoadSceneFromMissionData Widget=%s Scene='%s' Events=%d"),
@@ -606,6 +600,31 @@ float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
     return static_cast<float>(LatestTime) + FinalHoldSeconds;
 }
 
+bool UCampaignSceneDlg::PrepareSceneCameraBeforeReveal()
+{
+    if (bSceneRunning || SortedEvents.IsEmpty())
+        return false;
+
+    // Acquire the persistent camera, then position it while the load overlay
+    // is still covering the scene. Never start the event clock here.
+    if (!ResolveSceneCamera())
+        return false;
+
+    for (const FS_MissionEvent& Event : SortedEvents)
+    {
+        if (Event.EventTime > 0.1)
+            break;
+        if (Event.EventType == MISSIONEVENT_TYPE::CAMERA &&
+            Event.EventParam.Num() > 0 && Event.EventParam[0] == 3)
+        {
+            ExecuteCameraEvent(Event);
+            return true;
+        }
+    }
+    UE_LOG(LogTemp, Error, TEXT("[ScenePreload] Initial planetary camera event missing"));
+    return false;
+}
+
 void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
 {
     UE_LOG(LogTemp, Error,
@@ -670,6 +689,10 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         }
     }
 
+    // Populate time-zero image, title, and display events BEFORE the owning
+    // campaign screen removes its loading cover. The first NativeTick is too
+    // late and previously exposed a blank frame.
+    ProcessPendingEvents(0.0f);
     Show();
 
     UE_LOG(LogTemp, Warning,
@@ -735,6 +758,17 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
         PanelHoldTime = FMath::Max(0.0f, Event.EventFade.Y);
         PanelFadeOutTime = FMath::Max(0.0f, Event.EventFade.Z);
         bPanelActive = (PanelTexture != nullptr);
+
+        // The opening DISPLAY image is the first visible cutscene frame.
+        // Its authored fade-in previously started at opacity zero, exposing
+        // a black screen directly after dismissing the loading overlay.
+        // Start this one opening image fully visible; leave all later image
+        // fades and every narration/camera event time unchanged.
+        if (bPanelActive && Event.EventTime <= KINDA_SMALL_NUMBER)
+        {
+            PanelStartTime -= PanelFadeInTime;
+            if (ScenePanelImage) ScenePanelImage->SetOpacity(1.0f);
+        }
 
         UE_LOG(LogTemp, Warning,
             TEXT("[SceneDlg] Panel state started from token '%s': FadeIn=%.2f Hold=%.2f FadeOut=%.2f"),

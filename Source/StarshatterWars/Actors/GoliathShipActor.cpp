@@ -28,7 +28,7 @@ void AGoliathShipActor::ApplyGoliathDefaults()
     bMainEnginesActive = true;
     bThrustersActive = false;
 
-    MainEngineEmitterRelativeScale = FVector(1.35f, 0.60f, 0.60f);
+    MainEngineEmitterRelativeScale = FVector(0.70f, 0.26f, 0.26f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
 
     ThrusterEmitterRelativeScale = FVector(0.75f, 0.30f, 0.30f);
@@ -49,37 +49,16 @@ void AGoliathShipActor::ApplyGoliathDefaults()
     ComputerPointBOffset = FVector(80.0f, -20.0f, -16.0f);
     ReactorPointOffset = FVector(-280.0f, 0.0f, 4.0f);
 
-    NumMainEnginePoints = 4;
+    // Main engine ports are supplied by the runtime drive system from
+    // Goliath.def. Do not add parallel generated engine mount components.
+    NumMainEnginePoints = 0;
+    MainEnginePointDefs.Empty();
+
     NumThrusterPoints = 0;
     NumWeaponMountPoints = 4;
     NumTurretBasePoints = 0;
     NumDockPoints = 2;
     NumLandingPoints = 2;
-
-    MainEnginePointDefs.Empty();
-    {
-        FShipPointDef P;
-
-        P.LocalOffset = FVector(-489.0f, 54.0f, -84.0f);
-        P.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
-        P.PointName = TEXT("Drive_Port_0");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-489.0f, -54.0f, -84.0f);
-        P.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
-        P.PointName = TEXT("Drive_Port_1");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-527.0f, 0.0f, -57.0f);
-        P.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
-        P.PointName = TEXT("Drive_Center_0");
-        MainEnginePointDefs.Add(P);
-
-        P.LocalOffset = FVector(-489.0f, 0.0f, -111.0f);
-        P.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
-        P.PointName = TEXT("Drive_Center_1");
-        MainEnginePointDefs.Add(P);
-    }
 
     ThrusterPointDefs.Empty();
 
