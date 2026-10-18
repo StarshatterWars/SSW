@@ -1,4 +1,4 @@
-﻿
+
 /*
     Project Starshatter Wars
     Fractal Dev Studios
@@ -36,6 +36,7 @@
 #include "Ship.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
+#include "ShipWeaponMountComponent.h"
 #include "ShipDesign.h"
 #include "Thruster.h"
 
@@ -1684,6 +1685,14 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     BuildNavLightsFromRuntime();
     BuildMainEnginesFromRuntime();
     BuildThrustersFromRuntime();
+
+    // Build presentation weapon stations from the authoritative design row,
+    // then bind live simulation Weapon objects to those stations.
+    if (RuntimeShip && RuntimeShip->Design())
+    {
+        ConfigureWeaponHardpointsFromShipDef(ANSI_TO_TCHAR(RuntimeShip->Design()->name));
+        BindRuntimeWeaponsToMounts();
+    }
 }
 
 
@@ -1800,61 +1809,67 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
 void AShipActor::SyncCarriedMissiles()
 {
-    if (!RuntimeShip)
+    // Presentation now follows the actual runtime Weapon->station binding,
+    // not incidental array order.
+    TArray<UShipWeaponMountComponent*> MissileMounts;
+
+    for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
     {
-        for (UStaticMeshComponent* Mesh : CarriedMissileMeshes)
+        UShipWeaponMountComponent* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
+        if (!Mount || !Mount->bLoadoutHardpoint || !Mount->RuntimeWeapon)
+            continue;
+
+        const WeaponDesign* Design = Mount->RuntimeWeapon->Design();
+        if (!Design || Design->primary)
+            continue;
+
+        MissileMounts.Add(Mount);
+    }
+
+    while (CarriedMissileMeshes.Num() > MissileMounts.Num())
+    {
+        if (UStaticMeshComponent* Mesh = CarriedMissileMeshes.Pop())
+            Mesh->DestroyComponent();
+    }
+
+    static UStaticMesh* StoreMesh = nullptr;
+    if (!StoreMesh)
+        StoreMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+
+    for (int32 Index = CarriedMissileMeshes.Num(); Index < MissileMounts.Num(); ++Index)
+    {
+        UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this);
+        if (!Mesh)
+        {
+            CarriedMissileMeshes.Add(nullptr);
+            continue;
+        }
+
+        Mesh->SetStaticMesh(StoreMesh);
+        Mesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.6f));
+        Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Mesh->SetCastShadow(false);
+        Mesh->RegisterComponent();
+        CarriedMissileMeshes.Add(Mesh);
+    }
+
+    for (int32 Index = 0; Index < CarriedMissileMeshes.Num(); ++Index)
+    {
+        UStaticMeshComponent* Mesh = CarriedMissileMeshes[Index];
+        UShipWeaponMountComponent* Mount = MissileMounts.IsValidIndex(Index) ? MissileMounts[Index] : nullptr;
+        if (!Mesh || !Mount || !Mount->RuntimeWeapon)
+        {
             if (Mesh) Mesh->SetVisibility(false);
-        return;
-    }
-
-    // Missile weapons in hardpoint order (guns are not carried stores).
-    TArray<Weapon*> Missiles;
-    ListIter<WeaponGroup> Groups = RuntimeShip->GetWeapons();
-    while (++Groups)
-    {
-        WeaponGroup* Group = Groups.value();
-        if (!Group || !Group->IsMissile()) continue;
-        ListIter<Weapon> It = Group->GetWeapons();
-        while (++It)
-            if (It.value()) Missiles.Add(It.value());
-    }
-
-    const int32 Mounts = WeaponMountPoints.Num();
-    if (CarriedMissileMeshes.Num() < Mounts)
-    {
-        static UStaticMesh* StoreMesh = nullptr;
-        if (!StoreMesh)
-            StoreMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-
-        for (int32 i = CarriedMissileMeshes.Num(); i < Mounts; ++i)
-        {
-            UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this);
-            if (!Mesh) { CarriedMissileMeshes.Add(nullptr); continue; }
-            USceneComponent* Mount = WeaponMountPoints[i];
-            Mesh->SetupAttachment(Mount ? Mount : RootComponent.Get());
-            Mesh->SetStaticMesh(StoreMesh);
-            Mesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.6f));
-            Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            Mesh->SetCastShadow(false);
-            Mesh->RegisterComponent();
-            Mesh->SetVisibility(false);
-            CarriedMissileMeshes.Add(Mesh);
+            continue;
         }
-    }
 
-    for (int32 i = 0; i < CarriedMissileMeshes.Num(); ++i)
-    {
-        UStaticMeshComponent* Mesh = CarriedMissileMeshes[i];
-        if (!Mesh) continue;
+        // Reattach if the runtime loadout changed stations.
+        Mesh->AttachToComponent(Mount, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+        Mesh->SetRelativeLocation(FVector::ZeroVector);
+        Mesh->SetRelativeRotation(FRotator::ZeroRotator);
 
-        bool bShow = false;
-        if (Missiles.IsValidIndex(i))
-        {
-            Weapon* W = Missiles[i];
-            // Visible while carried: has ammo and the launcher is not destroyed.
-            bShow = W->Ammo() > 0 && W->GetAvailability() > 1.0;
-        }
-        Mesh->SetVisibility(bShow);
+        Weapon* W = Mount->RuntimeWeapon;
+        Mesh->SetVisibility(W->Ammo() > 0 && W->GetAvailability() > 1.0);
     }
 }
 

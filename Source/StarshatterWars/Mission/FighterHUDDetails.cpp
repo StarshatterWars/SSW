@@ -78,6 +78,25 @@ namespace
         return FString::Printf(TEXT("%hs  %s"), G->Name(),
             G->Ammo() < 0 ? TEXT("--") : *FString::FromInt(G->Ammo()));
     }
+
+    FLinearColor SensorContactColor(const SimContact* Contact, Ship* Observer)
+    {
+        if (!Contact || !Observer)
+            return FLinearColor(0.45f, 0.45f, 0.45f, 1.0f); // unknown gray
+
+        const int32 ContactIFF = Contact->GetIFF(Observer);
+
+        if (ContactIFF < 0)
+            return FLinearColor(0.45f, 0.45f, 0.45f, 1.0f); // unknown gray
+
+        if (ContactIFF == 0)
+            return FLinearColor(1.0f, 0.85f, 0.0f, 1.0f); // neutral yellow
+
+        if (ContactIFF == Observer->GetIFF())
+            return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // friendly blue
+
+        return FLinearColor(1.0f, 0.0f, 0.0f, 1.0f); // enemy red
+    }
 }
 void SFighterHUDDetails::Construct(const FArguments& A)
 {
@@ -217,14 +236,9 @@ void SFighterHUDDetails::Refresh()
                 It->GetBearing(P, Az, El, Range);
                 if (!FMath::IsFinite(Range) || !FMath::IsFinite(Az) || !FMath::IsFinite(El) || Range <= 0) continue;
                 Range = It->Range(P, SensorRange);
-                const int ShipIFF = It->GetShip() ? It->GetShip()->GetIFF() : It->GetIFF(P);
-                FLinearColor C = FLinearColor(0.45f, 0.45f, 0.45f);
-                if (ShipIFF > 0 && ShipIFF == P->GetIFF())
-                    C = FLinearColor(0.25f, 0.65f, 1.0f);
-                else if (It->Threat(P) || ShipIFF > 0)
-                    C = FLinearColor::Red;
-                else if (ShipIFF == 0)
-                    C = FLinearColor::Yellow;
+                // Use the sensor contact's perceived IFF, not the underlying ship's true IFF.
+                // Threat status must not override identification color.
+                const FLinearColor C = SensorContactColor(It.value(), P);
                 Contacts.Add({Az, El, Range, C});
             }
         }
@@ -521,16 +535,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
                 FVector2D Offset;
                 if (M == EMode::FOV)
                 {
-                    Offset = FVector2D(
-                        B.Az / (PI / 2),
-                        -B.El / (PI / 2)) * Radius;
-
-                    // Clamp to the usable circular FOV area while preserving bearing.
-                    // The marker is 6x6, so keep its corners inside the circle.
-                    constexpr double MarkerHalfDiagonal = 4.25;
-                    const double UsableRadius =
-                        FMath::Max(0.0, Radius - MarkerHalfDiagonal);
-
+                    Offset = FVector2D(B.Az / (PI / 2), -B.El / (PI / 2)) * Radius;
+                    const double UsableRadius = FMath::Max(0.0, Radius - 4.25); // keep 6x6 marker inside circle
                     if (Offset.SizeSquared() > UsableRadius * UsableRadius)
                         Offset = Offset.GetSafeNormal() * UsableRadius;
                 }

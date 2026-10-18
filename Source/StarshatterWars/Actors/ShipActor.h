@@ -17,6 +17,8 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class Ship;
 class Drive;
+class Weapon;
+class UShipWeaponMountComponent;
 
 USTRUCT(BlueprintType)
 struct FShipPointDef
@@ -80,6 +82,8 @@ public:
     void BindRuntimeShip(Ship* InShip);
     void UpdateFromRuntimeShip(float DeltaTime);
     void SyncCarriedMissiles();
+    void BindRuntimeWeaponsToMounts();
+    bool GetRuntimeWeaponMuzzleTransform(const Weapon* InWeapon, int32 MuzzleIndex, FTransform& OutTransform) const;
 
     void BuildNavLightsFromRuntime();
     bool HasRuntimeShip() const { return RuntimeShip != nullptr; }

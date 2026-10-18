@@ -441,6 +441,23 @@ static FLinearColor MFDToLinear(const FColor& C)
 {
     return FLinearColor(C.R / 255.f, C.G / 255.f, C.B / 255.f, C.A / 255.f);
 }
+
+static FColor MFDSensorContactColor(const SimContact* Contact, Ship* Observer)
+{
+    if (!Contact || !Observer)
+        return FColor(115, 115, 115); // unknown gray
+
+    const int32 ContactIFF = Contact->GetIFF(Observer);
+
+    if (ContactIFF < 0)
+        return FColor(115, 115, 115); // unknown gray
+    if (ContactIFF == 0)
+        return FColor(255, 217, 0);   // neutral yellow
+    if (ContactIFF == Observer->GetIFF())
+        return FColor(64, 166, 255);  // friendly blue
+
+    return FColor(255, 0, 0);         // enemy red
+}
 static bool MFDPaint(FPaintContext*& Ctx, const FGeometry*& Geo, int32& Layer)
 {
     HUDView* Hud = HUDView::GetInstance();
@@ -642,7 +659,7 @@ void MFDView::DrawSensorMFD()
         const int Y = (int)(R - El);
         if (X < 0 || X > ScanR || Y < 0 || Y > ScanR) continue;
 
-        FColor Mark = HUDView::MarkerColor(Contact);
+        FColor Mark = MFDSensorContactColor(Contact, ShipPtr);
         if (bAft)
         {
             Mark.R = (uint8)(Mark.R * 0.75f);
@@ -790,7 +807,7 @@ void MFDView::DrawHSD()
         if (CShip && CShip == ShipPtr->GetTarget())
             Size = 3;
 
-        const FColor Mark = HUDView::MarkerColor(Contact);
+        const FColor Mark = MFDSensorContactColor(Contact, ShipPtr);
         MFDFill(window, CockpitHUDTexture, X - Size, Y - Size, X + Size, Y + Size, Mark);
 
         if (Contact->Threat(ShipPtr))
@@ -839,12 +856,16 @@ void MFDView::Draw3D()
 
     if (Region)
     {
-        ListIter<Ship> It = Region->GetShips();
+        ListIter<SimContact> It = ShipPtr->GetContactList();
         while (++It)
         {
-            Ship* S = It.value();
-            if (!S || S == ShipPtr || S->IsDead()) continue;
-            const FVector Rel = S->GetLocation() - Origin;
+            SimContact* Contact = It.value();
+            if (!Contact) continue;
+
+            Ship* S = Contact->GetShip();
+            if (S == ShipPtr) continue;
+
+            const FVector Rel = Contact->Location() - Origin;
             const double Dist = Rel.Size();
             if (Dist < 1.0 || Dist > Range) continue;
 
@@ -852,8 +873,10 @@ void MFDView::Draw3D()
             const int px = cx + (int)(Rel.Y * Scale);
             const int py = cy - (int)(Rel.Z * Scale);
             const uint8 Bright = (uint8)FMath::Clamp(255.0 - (Dist / Range) * 180.0, 60.0, 255.0);
-            const FColor Mark = (S->GetIFF() != ShipPtr->GetIFF())
-                ? FColor(255, 60, 60, Bright) : FColor(80, 200, 255, Bright);
+
+            FColor Mark = MFDSensorContactColor(Contact, ShipPtr);
+            Mark.A = Bright;
+
             for (int dy = -1; dy <= 1; ++dy)
                 for (int dx = -1; dx <= 1; ++dx)
                     Plot(px + dx, py + dy, Mark);

@@ -56,6 +56,16 @@ enum class EMissionSource : uint8
 };
 
 UENUM(BlueprintType)
+enum class EGameCameraMode : uint8 {
+	None			UMETA(DisplayName = "None"),
+	LiveSimulation	UMETA(DisplayName = "Live Simulation"), 
+	Static			UMETA(DisplayName = "Static"), 
+	BodyOrbit		UMETA(DisplayName = "Body Orbit"), 
+	ActorFollow		UMETA(DisplayName = "Actor Follow"), 
+	GroupFollow		UMETA(DisplayName = "Group Follow")
+};
+
+UENUM(BlueprintType)
 enum class EGraphicsRHI : uint8 {
 	RHI_DX11 UMETA(DisplayName = "DirectX 11"),
 	RHI_DX12 UMETA(DisplayName = "DirectX 12"),
