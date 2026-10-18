@@ -189,6 +189,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
     void BuildSystemScene();
 
+    // Name from the last successfully resolved runtime system.
+    const FString& GetLastResolvedSystemName() const { return LastResolvedName; }
+
     UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
     void ClearSpawnedBodies();
 

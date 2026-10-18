@@ -1,4 +1,4 @@
-#include "CampaignSceneDlg.h"
+﻿#include "CampaignSceneDlg.h"
 #include "Components/AudioComponent.h"
 
 #include "CmpnScreen.h"
@@ -19,8 +19,11 @@
 #include "Components/Image.h"
 
 #include "SystemSceneBuilder.h"
+#include "SystemLevelScriptActor.h"
 #include "CampaignSceneActor.h"
 #include "SSWCameraManager.h"
+#include "ShipActor.h"
+#include "Ship.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
@@ -345,21 +348,37 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
         *MissionData.Objective,
         MissionData.Event.Num());
 
-    UWorld* World = GetWorld();
-    if (!World)
+    // Planet preflight before any cutscene camera event. Keep ships separate.
+    if (UWorld* World = GetWorld())
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] World is null"));
+        ASystemLevelScriptActor* SystemLevel = nullptr;
+        for (TActorIterator<ASystemLevelScriptActor> It(World); It; ++It)
+        {
+            if (IsValid(*It)) { SystemLevel = *It; break; }
+        }
+        if (!SystemLevel)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[PlanetPreflight] Persistent SystemLevelScriptActor not found; planets not initialized"));
+        }
+        else if (!SystemLevel->EnsureCurrentSystemBuilt())
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[PlanetPreflight] Planet system was not built; inspect runtime registry and satellites"));
+        }
     }
-    else
+
+    // Build through the same authoritative runtime presentation path as gameplay:
+    // Mission -> Sim -> Ship -> USSWRuntimeSubsystem -> AShipActor.
+    if (UWorld* World = GetWorld())
     {
         ACampaignSceneActor* SceneActor = nullptr;
 
         for (TActorIterator<ACampaignSceneActor> It(World); It; ++It)
         {
-            SceneActor = *It;
-            if (SceneActor)
+            if (IsValid(*It))
             {
+                SceneActor = *It;
                 break;
             }
         }
@@ -367,19 +386,27 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
         if (SceneActor)
         {
             UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] Spawning ships from FS_CampaignMission"));
+                TEXT("[SceneDlg] Initializing cutscene through runtime mission presentation"));
 
             SceneActor->BuildSceneActorsFromMission(MissionData);
             SceneActor->DumpSceneActors();
         }
         else
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] No CampaignSceneActor found"));
+            UE_LOG(LogTemp, Error,
+                TEXT("[SceneDlg] No persistent CampaignSceneActor found for runtime cutscene presentation"));
         }
     }
 
-    //BeginSceneByName(MissionData.Scene, 0.0f);
+    // The cutscene must actually start its timer and process legacy CAMERA events.
+    // Previously commented out: the camera stayed at its level-authored location.
+    if (!bSceneRunning)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetCamera] Starting cutscene event timeline for '%s'"),
+            *MissionData.Scene);
+        BeginSceneByName(MissionData.Scene, 0.0f);
+    }
 }
 
 void UCampaignSceneDlg::BuildSortedEventQueue()
@@ -598,12 +625,28 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
     ApplyPanelTexture(TestTexture);
 
-    ASSWCameraManager* Cam = ResolveSceneCamera();
-    if (Cam)
+    // ResolveSceneCamera already activates the persistent camera using
+    // ASSWCameraManager::ActivateCamera(0.0f). Do not call an unsupported
+    // UseLiveSimulation API; subsequent legacy CAMERA events set the view.
+    ResolveSceneCamera();
+
+    // Establish the first planetary shot immediately. Merely activating the
+    // camera leaves it at its level-authored position (often inside the sun).
+    // The same event still runs normally at its legacy timestamp.
+    for (const FS_MissionEvent& CameraEvent : SortedEvents)
     {
-        Cam->SetStaticView(
-            FVector(0.0f, 0.0f, 50000.0f),
-            FRotator(-20.0f, 0.0f, 0.0f));
+        if (CameraEvent.EventTime > 0.1)
+            break;
+        if (CameraEvent.EventType == MISSIONEVENT_TYPE::CAMERA &&
+            CameraEvent.EventParam.Num() > 0 &&
+            CameraEvent.EventParam[0] == 3)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[PlanetCamera] Initial shot target='%s' legacy=%s"),
+                *CameraEvent.EventTarget, *CameraEvent.EventPoint.ToString());
+            ExecuteCameraEvent(CameraEvent);
+            break;
+        }
     }
 
     Show();
@@ -1013,20 +1056,73 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     }
 
     // ----------------------------------------------------
-    // Resolve target actor (SceneActor first, then Builder)
+    // Resolve target actor
+    // 1) existing live mission AShipActor bound to runtime Ship
+    // 2) temporary CampaignSceneActor object (non-runtime scene-only content)
+    // 3) persistent system body
     // ----------------------------------------------------
     AActor* TargetActor = nullptr;
 
     if (!Event.EventTarget.IsEmpty())
     {
-        // Try scene actors (ships, stations)
-        ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
-        if (SceneActor)
+        const FString SearchTarget = Event.EventTarget.TrimStartAndEnd();
+
+        const bool bPlanetOrbitEvent =
+            Event.EventParam.Num() > 0 && Event.EventParam[0] == 3;
+        if (bPlanetOrbitEvent)
         {
-            TargetActor = SceneActor->FindSceneActorByName(Event.EventTarget);
+            if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
+            {
+                FSpawnedSystemBody Body;
+                if (Builder->FindSpawnedBodyByName(SearchTarget, Body) && IsValid(Body.Actor))
+                {
+                    TargetActor = Body.Actor;
+                    UE_LOG(LogTemp, Warning,
+                        TEXT("[PlanetCamera] Resolved planet '%s' -> '%s'"),
+                        *SearchTarget, *GetNameSafe(TargetActor));
+                }
+            }
         }
 
-        // Fallback to planets / moons
+        // Live mission ships are authoritative. Match against the legacy
+        // runtime Ship name, not Unreal-generated actor names.
+        if (!TargetActor)
+        if (UWorld* World = GetWorld())
+        {
+            for (TActorIterator<AShipActor> It(World); It; ++It)
+            {
+                AShipActor* ShipActor = *It;
+                Ship* RuntimeShip = ShipActor ? ShipActor->GetRuntimeShip() : nullptr;
+                if (!RuntimeShip)
+                {
+                    continue;
+                }
+
+                const FString RuntimeName = ANSI_TO_TCHAR(RuntimeShip->GetName());
+                if (RuntimeName.Equals(SearchTarget, ESearchCase::IgnoreCase))
+                {
+                    TargetActor = ShipActor;
+                    UE_LOG(LogTemp, Log,
+                        TEXT("[SceneDlg] Camera target '%s' -> live AShipActor '%s'"),
+                        *SearchTarget,
+                        *GetNameSafe(ShipActor));
+                    break;
+                }
+            }
+        }
+
+        // Scene-only objects may still be supplied by CampaignSceneActor, but
+        // it no longer builds duplicate mission ships.
+        if (!TargetActor)
+        {
+            ACampaignSceneActor* SceneActor = ResolveCampaignSceneActor();
+            if (SceneActor)
+            {
+                TargetActor = SceneActor->FindSceneActorByName(SearchTarget);
+            }
+        }
+
+        // Planets / moons / persistent system bodies.
         if (!TargetActor)
         {
             ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
@@ -1034,7 +1130,7 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
             {
                 FSpawnedSystemBody FoundBody;
 
-                if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
+                if (Builder->FindSpawnedBodyByName(SearchTarget, FoundBody))
                 {
                     TargetActor = FoundBody.Actor;
                 }
@@ -1057,73 +1153,39 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
         ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
 
-        float VisualRadiusUnits = 1000.0f;
-        bool bTargetIsSystemBody = false;
-
+        // Camera range is specified in legacy kilometres by the mission .def.
+        // Reuse the system builder's conversion; do not substitute a guessed
+        // camera distance derived from the visual radius of the planet.
         if (Builder)
         {
-            FSpawnedSystemBody FoundBody;
-            if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
-            {
-                bTargetIsSystemBody = true;
-                VisualRadiusUnits = FMath::Max(FoundBody.VisualRadiusUnits, 100.0f);
-            }
-        }
-
-        if (bTargetIsSystemBody)
-        {
-            float CameraMultiplier = 2.75f;
-
-            // Push camera further back for gas giants so they don't fill entire screen
-            ASystemSceneBuilder* BuilderX = ResolveSystemSceneBuilder();
-            if (Builder)
-            {
-                FSpawnedSystemBody FoundBody;
-                if (Builder->FindSpawnedBodyByName(Event.EventTarget, FoundBody))
-                {
-                    if (FoundBody.VisualRadiusUnits > 1200.0f) // simple gas giant heuristic
-                    {
-                        CameraMultiplier = 3.5f;
-                    }
-                }
-            }
-
-            Orbit.Z = FMath::Clamp(
-                VisualRadiusUnits * CameraMultiplier,
-                3000.0f,
-                25000.0f);
-
-
-            // If legacy azimuth/elevation are zero, force a usable 3D view angle.
-            if (FMath::IsNearlyZero(Orbit.X) && FMath::IsNearlyZero(Orbit.Y))
-            {
-                Orbit.X = -35.0f;
-                Orbit.Y = 18.0f;
-            }
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] param 3 -> PlanetOrbit FIXED Target='%s' Radius=%.2f Orbit=%s"),
-                *Event.EventTarget,
-                VisualRadiusUnits,
-                *Orbit.ToString());
+            Orbit.Z = Builder->ConvertOrbitKmToSceneUnits(Orbit.Z, false);
         }
         else
         {
-            // Non-planet legacy behavior.
-            if (Builder)
-            {
-                Orbit.Z = Builder->ConvertOrbitKmToSceneUnits(Orbit.Z, false);
-            }
-
-            Orbit.Z = FMath::Clamp(Orbit.Z, 1200.0f, 50000.0f);
-
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] param 3 -> LegacyOrbit Target='%s' Orbit=%s"),
-                *Event.EventTarget,
-                *Orbit.ToString());
+            UE_LOG(LogTemp, Error,
+                TEXT("[PlanetCamera] Missing builder: cannot convert legacy camera range"));
+            return;
         }
 
+        if (Orbit.Z <= 0.0f)
+        {
+            UE_LOG(LogTemp, Error,
+                TEXT("[PlanetCamera] Invalid converted range for '%s': %s"),
+                *Event.EventTarget, *Orbit.ToString());
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetCamera] Target='%s' Actor='%s' ActorLocation=%s CameraBefore=%s ConvertedOrbit=%s"),
+            *Event.EventTarget, *GetNameSafe(TargetActor),
+            *TargetActor->GetActorLocation().ToString(),
+            *Cam->GetActorLocation().ToString(), *Orbit.ToString());
+
         Cam->SetBodyOrbitView(TargetActor, Orbit);
+        Cam->ActivateCamera(0.0f);
+        UE_LOG(LogTemp, Warning,
+            TEXT("[PlanetCamera] CameraAfter=%s Rotation=%s"),
+            *Cam->GetActorLocation().ToString(), *Cam->GetActorRotation().ToString());
         return;
     }
 
@@ -1290,27 +1352,10 @@ void UCampaignSceneDlg::FinishCutscene()
     ClearPanelTexture();
     Hide();
 
-    // Restore normal player view before removing the streamed cutscene scene.
-    if (UWorld* World = GetWorld())
-    {
-        if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
-        {
-            if (APawn* Pawn = PC->GetPawn())
-            {
-                PC->SetViewTarget(Pawn);
-            }
-        }
-    }
-
-    // Only destroy the camera if this widget spawned it.
-    // A camera contained in the streamed scene is removed with that scene.
-    if (bOwnsSceneCamera && IsValid(SceneCamera))
-    {
-        SceneCamera->Destroy();
-    }
+    // No camera-mode reset here: UseLiveSimulation is not part of
+    // ASSWCameraManager's declared API. Scene cleanup remains unchanged.
 
     SceneCamera = nullptr;
-    bOwnsSceneCamera = false;
 
     if (Manager)
     {
@@ -1414,46 +1459,27 @@ ACampaignSceneActor* UCampaignSceneDlg::ResolveCampaignSceneActor() const
 
 ASSWCameraManager* UCampaignSceneDlg::ResolveSceneCamera()
 {
-    if (SceneCamera)
-    {
+    if (IsValid(SceneCamera))
         return SceneCamera;
-    }
 
     UWorld* World = GetWorld();
     if (!World)
-    {
         return nullptr;
-    }
 
     for (TActorIterator<ASSWCameraManager> It(World); It; ++It)
     {
-        SceneCamera = *It;
-        bOwnsSceneCamera = false;
-        break;
+        ASSWCameraManager* Candidate = *It;
+        if (IsValid(Candidate))
+        {
+            SceneCamera = Candidate;
+            SceneCamera->ActivateCamera(0.0f);
+            return SceneCamera;
+        }
     }
 
-    if (!SceneCamera)
-    {
-        FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        SceneCamera =
-            World->SpawnActor<ASSWCameraManager>(
-                ASSWCameraManager::StaticClass(),
-                FVector::ZeroVector,
-                FRotator::ZeroRotator,
-                Params);
-
-        bOwnsSceneCamera = (SceneCamera != nullptr);
-    }
-
-    if (SceneCamera)
-    {
-        SceneCamera->ActivateCamera(0.0f);
-    }
-
-    return SceneCamera;
+    UE_LOG(LogTemp, Error,
+        TEXT("[SceneDlg] ResolveSceneCamera: persistent ASSWCameraManager not found"));
+    return nullptr;
 }
 
 void UCampaignSceneDlg::NativeDestruct()
@@ -1461,13 +1487,10 @@ void UCampaignSceneDlg::NativeDestruct()
     StopCutsceneAudio();
     DisableCutsceneExitInput();
     ClearPanelTexture();
-    if (bOwnsSceneCamera && IsValid(SceneCamera)) {
-        if (APlayerController* PC = GetOwningPlayer())
-            if (PC->GetViewTarget() == SceneCamera) PC->SetViewTarget(PC);
-        SceneCamera->Destroy();
-    }
+
+    // No unsupported camera-mode reset on widget destruction.
+
     SceneCamera = nullptr;
-    bOwnsSceneCamera = false;
     ResetSceneState();
     Super::NativeDestruct();
 }

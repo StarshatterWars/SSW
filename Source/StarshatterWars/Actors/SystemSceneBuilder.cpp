@@ -164,17 +164,18 @@ void ASystemSceneBuilder::BuildSystemScene()
         return;
     }
 
-    if (bDestroyPreviousBodiesOnBuild)
-    {
-        ClearSpawnedBodies();
-    }
-
+    // Resolve first: never destroy a working scene if legacy data is not ready.
     StarSystem* RuntimeSystem = ResolveRuntimeSystem();
     if (!RuntimeSystem)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[SystemSceneBuilder] BuildSystemScene: no runtime system resolved"));
         return;
+    }
+
+    if (bDestroyPreviousBodiesOnBuild)
+    {
+        ClearSpawnedBodies();
     }
 
     LastResolvedName = ANSI_TO_TCHAR(RuntimeSystem->GetName());
@@ -1047,7 +1048,14 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     }
 
 #if WITH_EDITOR
-    Spawned->SetActorLabel(BodyName);
+    // Presentation-only Outliner labels. Preserve BodyName in all legacy
+    // registries/maps so CAMERA targets such as "Solus" still resolve.
+    const FString DisplayName = bIsStar
+        ? FString::Printf(TEXT("%s_Star"),
+            *(TargetSystemName.IsEmpty() ? BodyName : TargetSystemName))
+        : FString::Printf(TEXT("%s_%s"),
+            *BodyName, bIsMoon ? TEXT("Moon") : TEXT("Planet"));
+    Spawned->SetActorLabel(DisplayName);
 #endif
 
     if (ParentActor)

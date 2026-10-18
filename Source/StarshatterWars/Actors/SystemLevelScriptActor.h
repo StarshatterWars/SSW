@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Engine/LevelScriptActor.h"
@@ -22,6 +22,10 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "System")
     void BuildCurrentSystem();
+
+    // Cutscene preflight: reuse live-mission system presentation when complete.
+    UFUNCTION(BlueprintCallable, Category = "System")
+    bool EnsureCurrentSystemBuilt();
 
     UFUNCTION(BlueprintCallable, Category = "System")
     void ClearCurrentSystem();

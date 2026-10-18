@@ -1,4 +1,4 @@
-#include "SystemLevelScriptActor.h"
+﻿#include "SystemLevelScriptActor.h"
 
 #include "SystemSceneBuilder.h"
 #include "CampaignSceneActor.h"
@@ -109,6 +109,66 @@ void ASystemLevelScriptActor::BuildCurrentSystem()
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemLevelScriptActor] System build complete (ships handled externally)"));
+}
+
+
+bool ASystemLevelScriptActor::EnsureCurrentSystemBuilt()
+{
+    ASystemSceneBuilder* Builder = ResolveBuilder();
+    if (!IsValid(Builder))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[PlanetPreflight] No persistent SystemSceneBuilder"));
+        return false;
+    }
+
+    const FString RequiredSystem = ResolveStartupSystemName().TrimStartAndEnd();
+    if (RequiredSystem.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[PlanetPreflight] No mission StarSystem name"));
+        return false;
+    }
+
+    auto CountPlanets = [Builder]() -> int32
+    {
+        int32 Count = 0;
+        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
+        {
+            if (IsValid(Body.Actor.Get()) && !Body.bIsOrbit &&
+                !Body.bIsMoon && !Body.BodyName.Equals(TEXT("CentralSun"), ESearchCase::IgnoreCase))
+            {
+                ++Count;
+            }
+        }
+        return Count;
+    };
+
+    const bool bSameSystem =
+        Builder->GetLastResolvedSystemName().Equals(RequiredSystem, ESearchCase::IgnoreCase);
+    const int32 ExistingPlanetCount = CountPlanets();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[PlanetPreflight] Builder=%s Required=%s LastResolved=%s ExistingPlanets=%d"),
+        *GetNameSafe(Builder), *RequiredSystem,
+        *Builder->GetLastResolvedSystemName(), ExistingPlanetCount);
+
+    if (bSameSystem && ExistingPlanetCount > 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[PlanetPreflight] Reusing existing planetary scene"));
+        return true;
+    }
+
+    // Mirror InitializeSystemLevel without reading a potentially stale system selection.
+    Builder->bBuildOnBeginPlay = false;
+    Builder->DataSource = ESystemSceneSource::StarSystem;
+    Builder->TargetSystemName = RequiredSystem;
+    Builder->TargetGalaxyName.Empty();
+    Builder->BuildSystemScene();
+
+    const int32 BuiltPlanets = CountPlanets();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[PlanetPreflight] AFTER Build: Resolved=%s Bodies=%d Planets=%d"),
+        *Builder->GetLastResolvedSystemName(), Builder->GetSpawnedBodies().Num(), BuiltPlanets);
+    return Builder->GetLastResolvedSystemName().Equals(RequiredSystem, ESearchCase::IgnoreCase)
+        && BuiltPlanets > 0;
 }
 
 void ASystemLevelScriptActor::ClearCurrentSystem()
