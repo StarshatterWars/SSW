@@ -438,18 +438,19 @@ void UMissionNavDlg::RefreshFromMission()
             *MissionRegion);
     }
 
-    if (MissionPtr && MissionPtr->GetStarSystem())
+    if (MissionPtr)
     {
-        CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
-
-        if (SelectedSystemName.IsEmpty())
-        {
-            SelectedSystemName = CurrentMissionSystemName;
-        }
+        CurrentMissionSystemName = MissionPtr->GetStarSystem()
+            ? FString(ANSI_TO_TCHAR(MissionPtr->GetStarSystem()->GetName()))
+            : FString(ANSI_TO_TCHAR(MissionPtr->GetSystem()));
+        // Every newly opened briefing should initially focus its own system,
+        // rather than retain the previously browsed mission's selection.
+        SelectedSystemName = CurrentMissionSystemName;
     }
     else
     {
         CurrentMissionSystemName.Empty();
+        SelectedSystemName.Empty();
     }
 
     SyncGalaxyMissionAndSelectionState();

@@ -81,6 +81,16 @@ bool Mission::LoadMissionCommon(
 			TCHAR_TO_ANSI(*InData.MissionSystem);
 	}
 
+    // DataTable loads must also resolve the runtime system pointer: NAV reads
+    // GetStarSystem(), not just the textual name.
+    if (!InData.MissionSystem.IsEmpty())
+    {
+        if (Galaxy* GalaxyInstance = Galaxy::GetInstance())
+            SetStarSystem(GalaxyInstance->GetSystem(TCHAR_TO_ANSI(*InData.MissionSystem)));
+        UE_LOG(LogTemp, Warning, TEXT("[Mission Data] System='%s' Resolved=%s"),
+            *InData.MissionSystem, GetStarSystem() ? TEXT("YES") : TEXT("NO"));
+    }
+
 	if (!InData.MissionRegion.IsEmpty())
 	{
 		region =

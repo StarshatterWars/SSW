@@ -40,25 +40,19 @@
 static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
 {
     if (!Info)
-    {
         return false;
-    }
 
-    // Always show normal player missions.
-    if (Info->DisplayType == EMissionDisplayType::PlayerMission)
+    const Campaign* CurrentCampaign = Campaign::GetCampaign();
+
+    // Dynamic missions come from legacy/generated MissionInfo records. They
+    // do not necessarily assign the DataTable-only DisplayType field.
+    // Do not apply static campaign cutscene filtering to those missions.
+    if (CurrentCampaign && CurrentCampaign->IsDynamic())
         return true;
 
-    // Training campaign missions (type Training) must appear in operations
-    // even if the DataTable tagged them StoryOnly/CutsceneOnly.
-    if (Info->type == (int)EMissionType::TRAINING)
-        return true;
-
-    // Training campaign: show everything that is not explicitly hidden.
-    Campaign* C = Campaign::GetCampaign();
-    if (C && C->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden)
-        return true;
-
-    return false;
+    // Static DataTable campaign: only explicitly playable missions are
+    // selectable. CutsceneOnly / StoryOnly / Hidden stay in campaign scripts.
+    return Info->DisplayType == EMissionDisplayType::PlayerMission;
 }
 
 UCmdMissionsDlg::UCmdMissionsDlg(const FObjectInitializer& ObjectInitializer)
@@ -416,12 +410,12 @@ int32 UCmdMissionsDlg::GetSelectedMissionId() const
 {
     if (!MissionList)
     {
-        return 0;
+        return -1;
     }
 
     UObject* Selected = MissionList->GetSelectedItem();
     UMissionListObject* Item = Cast<UMissionListObject>(Selected);
-    return Item ? Item->MissionId : 0;
+    return Item ? Item->MissionId : -1;
 }
 
 void UCmdMissionsDlg::SetSelectedMissionId(int32 MissionId)
@@ -463,6 +457,8 @@ void UCmdMissionsDlg::HandleMissionSelection(UObject* ItemObj)
     }
 
     UMissionListObject* Item = Cast<UMissionListObject>(ItemObj);
+    if (!Item && MissionList->GetSelectedItem())
+        Item = Cast<UMissionListObject>(MissionList->GetSelectedItem());
     if (!Item)
     {
         SelectedMission = nullptr;

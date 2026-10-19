@@ -220,13 +220,12 @@ void UMissionWeaponDlg::RefreshFromMission()
         ParentDlg,
         MissionPtr);
 
+    ClearLoadouts();
     if (!MissionPtr)
     {
         bRefreshingLoadouts = false;
         return;
     }
-
-    ClearLoadouts();
 
     MissionElement* Elem = ResolvePlayerElement();
     const FShipDesign* Design = ResolvePlayerShipDesign();
@@ -320,6 +319,31 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
             TEXT("[MissionWeaponDlg] BuildLoadouts: Count BEFORE = %d DesignLoadouts = %d"),
             Items.Num(),
             Design->Loadout.Num());
+    }
+
+    // Non-configurable ships still carry their design's default weapons.
+    // Keep this display-only: do not create or modify a MissionLoad.
+    // The legacy HardPoint::CreateWeapon defaults to design index 0.
+    if (Design->Loadout.IsEmpty())
+    {
+        FShipLoadout FixedSummary;
+        FixedSummary.Name = Design->Hardpoint.IsEmpty()
+            ? TEXT("NO CONFIGURABLE LOADOUT") : TEXT("FIXED ARMAMENT");
+
+        UMissionWeaponLoadoutListObject* Item =
+            NewObject<UMissionWeaponLoadoutListObject>(this);
+        if (Item)
+        {
+            Item->InitFromShipLoadout(FixedSummary, INDEX_NONE,
+                FormatWeight(Design->Mass), true);
+            Items.Add(Item);
+            if (WeaponListView)
+            {
+                WeaponListView->AddItem(Item);
+                WeaponListView->SetSelectedItem(Item);
+            }
+        }
+        return;
     }
 
     for (int32 i = 0; i < Design->Loadout.Num(); ++i)
@@ -693,6 +717,12 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
 
     const int32 Index = SelectedItem->GetLoadoutIndex();
 
+    // INDEX_NONE represents the informational fixed-armament row.
+    if (Index == INDEX_NONE || Design->Loadout.IsEmpty())
+    {
+        return;
+    }
+
     if (!Design->Loadout.IsValidIndex(Index))
     {
         return;
@@ -744,6 +774,14 @@ void UMissionWeaponDlg::RefreshWeaponList()
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[MissionWeaponDlg] RefreshWeaponList: ShipDesign is null"));
+        return;
+    }
+
+    if (ShipDesign->Loadout.IsEmpty())
+    {
+        UE_LOG(LogTemp, Log,
+            TEXT("[MissionWeaponDlg] Fixed armament: ship='%s' hardpoints=%d"),
+            *GetDesignName(ShipDesign), ShipDesign->Hardpoint.Num());
         return;
     }
 
@@ -974,8 +1012,12 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
         return;
     }
 
-    MissionLoad* Load = GetActivePlayerMissionLoad(MissionPtr);
-    if (!Load)
+    // Non-configurable starships use their design-default weapon at each
+    // authored hardpoint (choice 0), without requiring MissionLoad entries.
+    // Preset-capable fighters retain the existing mission loadout behavior.
+    const bool bFixedArmament = Design->Loadout.IsEmpty();
+    MissionLoad* Load = bFixedArmament ? nullptr : GetActivePlayerMissionLoad(MissionPtr);
+    if (!bFixedArmament && !Load)
     {
         return;
     }
@@ -984,7 +1026,10 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
 
     for (int32 StationIndex = 0; StationIndex < NumHardpoints; ++StationIndex)
     {
-        const int32 PointIndex = Load->GetStation(StationIndex);
+        const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+        const int32 PointIndex = bFixedArmament
+            ? (Hardpoint.AllowedWeaponTypes.IsEmpty() ? INDEX_NONE : 0)
+            : Load->GetStation(StationIndex);
 
         const FWeaponDesign* Weapon =
             ResolveWeaponDesignForStationSelection(
@@ -992,23 +1037,39 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
                 StationIndex,
                 PointIndex);
 
-        const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+        const FString WeaponName = Weapon ? Weapon->Name
+            : (PointIndex == INDEX_NONE ? TEXT("EMPTY") : TEXT("UNRESOLVED WEAPON"));
         const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex + 1);
 
         UMissionWeaponStationRowObject* Row =
             NewObject<UMissionWeaponStationRowObject>(this);
+        if (!Row)
+        {
+            continue;
+        }
 
-        const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+        // Only expose the actual default selection on a fixed ship.
+        // Do not offer every compatible alternative as though installed.
+        TArray<FString> DisplayChoices;
+        int32 DisplaySelection = PointIndex;
+        if (bFixedArmament)
+        {
+            if (PointIndex != INDEX_NONE)
+            {
+                DisplayChoices.Add(Hardpoint.AllowedWeaponTypes[0]);
+                DisplaySelection = 0;
+            }
+        }
+        else
+        {
+            DisplayChoices = Hardpoint.AllowedWeaponTypes;
+        }
 
-        Row->Init(
-            StationIndex,
-            StationLabel,
-            WeaponName,
-            Hardpoint.AllowedWeaponTypes,
-            PointIndex
-        );
+        Row->Init(StationIndex, StationLabel, WeaponName,
+            DisplayChoices, DisplaySelection);
 
-        Row->SetOwningWeaponDlg(this);
+        // No editing for fixed weapons; selectable fighter stations unchanged.
+        Row->SetOwningWeaponDlg(bFixedArmament ? nullptr : this);
 
         StationItems.Add(Row);
 
