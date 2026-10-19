@@ -22,12 +22,47 @@
 #include "MissionPlanner.h"
 
 #include "Mission.h"
+#include "Campaign.h"
 #include "MissionElement.h"
 #include "Instruction.h"
 #include "GameStructs_System.h"
 
 #include "MissionPackageListObject.h"
 #include "MissionNavListObject.h"
+
+// PKG uses the same eligibility test for list construction and selected-row
+// resolution. Keep dynamic campaigns' filtering intact; scripted Campaign 1
+// may omit team and per-element region in its .def mission data.
+static bool IsVisiblePackageElement(const Mission* MissionPtr, const MissionElement* Elem,
+    const FShipDesign* Design)
+{
+    if (!MissionPtr || !Elem || !Design)
+        return false;
+
+    const Campaign* ActiveCampaign = Campaign::GetCampaign();
+    const bool bTrainingCampaign = ActiveCampaign && ActiveCampaign->GetCampaignId() == 1;
+
+    int32 FriendlyIFF = MissionPtr->GetTeam();
+    if (bTrainingCampaign && FriendlyIFF == 0)
+    {
+        // In T1.def the mission-level team is omitted (defaults to zero),
+        // but the player flight and its allies have iff: 1.
+        if (MissionElement* PlayerElem = const_cast<Mission*>(MissionPtr)->GetPlayer())
+            FriendlyIFF = PlayerElem->GetIFF();
+    }
+
+    const FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
+    const FString ElementRegion = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
+    const bool bRegionMatches = ElementRegion.Equals(MissionRegion, ESearchCase::IgnoreCase) ||
+        (bTrainingCampaign && ElementRegion.IsEmpty() && !MissionRegion.IsEmpty());
+
+    // IsSquadron() excludes carrier-based hangar inventory; preserve that
+    // original rule for every campaign. Deployed flights such as Delta remain.
+    return Elem->GetIFF() == FriendlyIFF &&
+        !Elem->IsSquadron() &&
+        bRegionMatches &&
+        Design->ShipType < static_cast<int32>(CLASSIFICATION::STATION);
+}
 
 UMissionPackageDlg::UMissionPackageDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -130,10 +165,7 @@ MissionElement* UMissionPackageDlg::ResolveSelectedPackageElement() const
             continue;
         }
 
-        if (Elem->GetIFF() == MissionPtr->GetTeam() &&
-            !Elem->IsSquadron() &&
-            Elem->GetRegion() == MissionPtr->GetRegion() &&
-            Design->ShipType < (int32)CLASSIFICATION::STATION)
+        if (IsVisiblePackageElement(MissionPtr, Elem, Design))
         {
             if (VisibleIndex == PackageIndex)
             {
@@ -180,10 +212,7 @@ void UMissionPackageDlg::DrawPackages()
             continue;
         }
 
-        if (Elem->GetIFF() == MissionPtr->GetTeam() &&
-            !Elem->IsSquadron() &&
-            Elem->GetRegion() == MissionPtr->GetRegion() &&
-            Design->ShipType < (int32)CLASSIFICATION::STATION)
+        if (IsVisiblePackageElement(MissionPtr, Elem, Design))
         {
             UMissionPackageListObject* Item = NewObject<UMissionPackageListObject>(this);
             if (!Item)
@@ -204,6 +233,10 @@ void UMissionPackageDlg::DrawPackages()
             ++VisibleIndex;
         }
     }
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[MissionPackageDlg] Mission=%d PackageRows=%d Team=%d Region='%hs'"),
+        MissionPtr->GetIdentity(), PackageItems.Num(), MissionPtr->GetTeam(), MissionPtr->GetRegion());
 
     if (PackageIndex == INDEX_NONE && PackageItems.Num() > 0)
     {
