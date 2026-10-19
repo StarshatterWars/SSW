@@ -265,6 +265,46 @@ bool Mission::LoadMissionCommon(
 		}
 
 		//---------------------------------------------------------
+		// Campaign 1: convert authored mission loadouts.
+		// The dynamic/template mission path is intentionally unchanged.
+		//---------------------------------------------------------
+		if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
+		{
+			for (const FS_MissionLoadout& SrcLoadout : SrcElem.Loadout)
+			{
+				MissionLoad* NewLoad = new MissionLoad(SrcLoadout.Ship);
+				if (!NewLoad)
+				{
+					continue;
+				}
+
+				const FString AuthoredName = SrcLoadout.LoadoutName.TrimStartAndEnd();
+				if (!AuthoredName.IsEmpty())
+				{
+					// Named presets resolve through FShipDesign::Loadout when selected.
+					NewLoad->SetName(TCHAR_TO_ANSI(*AuthoredName));
+				}
+				else
+				{
+					// Explicit station data is relevant only for unnamed/custom
+					// configurations. FS_MissionLoadout's default station zeros
+					// must not overwrite a named preset's actual selections.
+					const int32 Count = FMath::Min(NewLoad->GetNumStations(), SrcLoadout.Stations.Num());
+					for (int32 StationIndex = 0; StationIndex < Count; ++StationIndex)
+					{
+						NewLoad->SetStation(StationIndex, SrcLoadout.Stations[StationIndex]);
+					}
+				}
+
+				Elem->GetLoadouts().append(NewLoad);
+				UE_LOG(LogStarshatterMission, Log,
+					TEXT("[Campaign1 Loadout] Element='%s' Design='%s' Ship=%d Preset='%s' RuntimeLoads=%d"),
+					*SrcElem.Name, *SrcElem.Design, SrcLoadout.Ship,
+					*AuthoredName, Elem->GetLoadouts().size());
+			}
+		}
+
+		//---------------------------------------------------------
 		// Mission role/intel
 		//---------------------------------------------------------
 

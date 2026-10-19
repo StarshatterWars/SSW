@@ -29,6 +29,7 @@ ship: {
    count:      1,
    iff:        1,
    command_ai: 0,
+   region:  "Janek"     
 }
 
 element: {
@@ -40,6 +41,7 @@ element: {
    carrier: Archon,
    iff:     1,
    loadout: { ship: -1, name: "ACM Medium Range" },
+   region:  "Janek"
    }
 
 element: {
@@ -53,6 +55,7 @@ element: {
    count:   2
    iff:     1
    loadout: { ship: -1, name: "ACM Medium Range" }
+   region:  "Janek"
 
    navpt:   { cmd: vector, loc: (10e3,-20e3, 0), speed: 500 }
    navpt:   { cmd: vector, loc: (30e3,-20e3, 0), speed: 500 }
@@ -65,17 +68,17 @@ element: {
 // VOICE-OVER
 
 
-event: { Type: Sound, time:   2, sound: "Vox/Train/Train-01-01.ogg", message: "Please wait" }
-event: { Type: Sound, time:  35, sound: "Vox/Train/Train-01-02.ogg", message: "Raise your landing gear" }
-event: { Type: Sound, time:  50, sound: "Vox/Train/Train-01-03.ogg", message: "Basic controls" }
-event: { Type: Sound, time:  75, sound: "Vox/Train/Train-01-04.ogg", message: "Mouse steering" }
-event: { Type: Sound, time: 100, sound: "Vox/Train/Train-01-05.ogg", message: "Navigation system" }
-event: { Type: Sound, time: 125, sound: "Vox/Train/Train-01-06.ogg", message: "Disengage autonav" }
-event: { Type: Sound, time: 135, sound: "Vox/Train/Train-01-07.ogg", message: "Throttle and augmenter" }
-event: { Type: Sound, time: 170, sound: "Vox/Train/Train-01-08.ogg", message: "Lateral thrusters" }
-event: { Type: Sound, id:   100, sound: "Vox/Train/Train-01-09.ogg", message: "Return to base",
+event: { Type: Sound, time:   2, sound: "Train-01-01", message: "Please wait" }
+event: { Type: Sound, time:  35, sound: "Train-01-02", message: "Raise your landing gear" }
+event: { Type: Sound, time:  50, sound: "Train-01-03", message: "Basic controls" }
+event: { Type: Sound, time:  75, sound: "Train-01-04", message: "Mouse steering" }
+event: { Type: Sound, time: 100, sound: "Train-01-05", message: "Navigation system" }
+event: { Type: Sound, time: 125, sound: "Train-01-06", message: "Disengage autonav" }
+event: { Type: Sound, time: 135, sound: "Train-01-07", message: "Throttle and augmenter" }
+event: { Type: Sound, time: 170, sound: "Train-01-08", message: "Lateral thrusters" }
+event: { Type: Sound, id:   100, sound: "Train-01-09", message: "Return to base",
          trigger: Navpoint, trigger_param: 5, trigger_ship: Delta }
-event: { Type: Sound,            sound: "Vox/Train/Train-01-10.ogg", message: "Docking procedure",
+event: { Type: Sound,            sound: "Train-01-10", message: "Docking procedure",
          trigger: Event, trigger_param: 100, delay: 25 }
 
 

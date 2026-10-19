@@ -30,9 +30,10 @@
 #include "Blueprint/UserWidget.h"
 #include "MissionWeaponDlg.generated.h"
 
-class UVerticalBox;
 class UBorder;
 class USizeBox;
+class UVerticalBox;
+class UScrollBox;
 class UTextBlock;
 class UObject;
 class UUserWidget;
@@ -93,7 +94,7 @@ protected:
     void BuildLoadouts(MissionElement* Element, const FShipDesign* Design);
     void RefreshWeaponList();
     void RefreshSelectedLoadoutStations();
-    void RefreshFixedShipWeapons(const FShipDesign* Design);
+    void PopulateFixedShipWeapons(const FShipDesign* Design);
 
     // ------------------------------------------------------------
     // Selection helpers
@@ -140,6 +141,15 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     USizeBox* RuntimeHost = nullptr;
 
+    UPROPERTY(Transient)
+    UVerticalBox* FighterLoadoutPanel = nullptr;
+
+    UPROPERTY(Transient)
+    UVerticalBox* FixedShipWeaponsPanel = nullptr;
+
+    UPROPERTY(Transient)
+    UScrollBox* FixedShipWeaponsScroll = nullptr;
+
     // ------------------------------------------------------------
     // Parent / manager
     // ------------------------------------------------------------
@@ -161,10 +171,6 @@ protected:
 
     UPROPERTY()
     UMissionLoadoutListView* StationListView = nullptr;
-
-    UPROPERTY() UVerticalBox* ConfigurablePanel = nullptr;
-    UPROPERTY() UVerticalBox* FixedWeaponsPanel = nullptr;
-    UPROPERTY() UVerticalBox* FixedWeaponsRows = nullptr;
 
     // ------------------------------------------------------------
     // Row item storage
