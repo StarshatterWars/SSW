@@ -120,10 +120,10 @@ event: { type: Camera,     param:  5,                   vec: (0.10, 0.002, -0.01
 event: { type: Display,    time:   1, message: "Training Shuttle 'Proteus'", font: Limerick18,   color: 0xffffff80, fade: (1,15,1), rect: (20,20, 400,100) }
 event: { type: Display,    time:   3, message: "Borova Orbit",               font: Limerick12,   color: 0xffffff80, fade: (1,13,1), rect: (20,40, 400,100) }
 
-event: { id: 1, time:  5,   sound: "Vox/Scenes/01/Intro-1.ogg" }
-event: { id: 2, time: 15,   sound: "Vox/Scenes/01/Intro-2.ogg" }
-event: { id: 3, time: 52,   sound: "Vox/Scenes/01/Intro-3.ogg" }
-event: { id: 4,             sound: "Vox/Scenes/01/Intro-4.ogg", trigger: Dock, trigger_ship: Proteus }
+event: { id: 1, time:  5,   sound: "Intro-1" }
+event: { id: 2, time: 15,   sound: "Intro-2" }
+event: { id: 3, time: 52,   sound: "Intro-3" }
+event: { id: 4,             sound: "Intro-4", trigger: Dock, trigger_ship: Proteus }
 
 event: { type: Hold,       param:  0, ship: Archon,     trigger: Event, trigger_param: 4 }
 event: { type: Hold,       param:  0, ship: Stalwart,   trigger: Event, trigger_param: 4 }
@@ -144,11 +144,11 @@ event: { type: Jump,       ship: Stalwart,                target: Tulkas, trigge
 event: { type: Jump,       ship: Gerson,                  target: Tulkas, trigger: Event, trigger_param: 4, delay: 18 }
 event: { type: Jump,       ship: Simmons,                 target: Tulkas, trigger: Event, trigger_param: 4, delay: 16 }
 
-event: { type: Display,               image: "Campaigns/01/Scenes/Black.pcx",              color: 0xffffffff, fade: (1,30,1), rect: (0,0,0,0)         , trigger: Event, trigger_param: 4, delay: 21 }
-event: { type: Display,               image: "Campaigns/01/Scenes/Starshatter.pcx",        color: 0xffffffff, fade: (1,10,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 22 }
-event: { type: Display,               image: "Campaigns/01/Scenes/TheGatheringStorm.pcx",  color: 0xffffffff, fade: (1, 7,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 25 }
+event: { type: Display,               image: "Black",              color: 0xffffffff, fade: (1,30,1), rect: (0,0,0,0)         , trigger: Event, trigger_param: 4, delay: 21 }
+event: { type: Display,               image: "Starshatter",        color: 0xffffffff, fade: (1,10,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 22 }
+event: { type: Display,               image: "TheGatheringStorm",  color: 0xffffffff, fade: (1, 7,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 25 }
 
-event: { id: 200, type: EndScene,   message: "Scene 1", delay: 35, trigger: Event, trigger_param: 4 }
-event: { id: 201, type: Exit,                           delay: 35, trigger: Event, trigger_param: 4 }
+event: { type: EndScene,   time: 53.0, message: "Scene 1", delay: 35, trigger: Event, trigger_param: 4 }
+event: { type: Exit,       delay: 35, trigger: Event, trigger_param: 4 }
 
 // EOF

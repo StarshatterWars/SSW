@@ -28,6 +28,7 @@
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
+#include "Misc/Paths.h"
 #include "Engine/Font.h"
 #include "Engine/Texture2D.h"
 #include "Kismet/GameplayStatics.h"
@@ -661,9 +662,10 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
-    UTexture2D* TestTexture =
-        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
-    ApplyPanelTexture(TestTexture);
+    // Scene images are driven exclusively by authored DISPLAY events.
+    // Intro.def has no opening image; News-Start.def explicitly requests "News".
+    bPanelActive = false;
+    ClearPanelTexture();
 
     // ResolveSceneCamera already activates the persistent camera using
     // ASSWCameraManager::ActivateCamera(0.0f). Do not call an unsupported
@@ -926,13 +928,28 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
         return Token;
     }
 
-    const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/02/%s.%s"), *Token, *Token);
-    if (LoadObject<UTexture2D>(nullptr, *CampaignPath))
+    // Support authored legacy paths such as Campaigns/01/Scenes/Black.pcx,
+    // as well as simple image tokens such as News. No Campaign 2 hardcoding.
+    FString RelativeToken = Token;
+    RelativeToken.ReplaceInline(TEXT("\\"), TEXT("/"));
+    if (RelativeToken.EndsWith(TEXT(".pcx"), ESearchCase::IgnoreCase))
+        RelativeToken.LeftChopInline(4);
+    if (RelativeToken.StartsWith(TEXT("Campaigns/"), ESearchCase::IgnoreCase))
+        RelativeToken.RightChopInline(10, false);
+
+    const FString AssetName = FPaths::GetCleanFilename(RelativeToken);
+    const FString CampaignFolder = FString::Printf(TEXT("/Game/UI/Campaigns/%02d/"), ResolveCampaignNumber());
+    const TArray<FString> CandidatePaths = {
+        CampaignFolder + RelativeToken + TEXT(".") + AssetName,
+        CampaignFolder + AssetName + TEXT(".") + AssetName
+    };
+    for (const FString& Candidate : CandidatePaths)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ResolveScenePanelPath: token '%s' -> '%s'"),
-            *Token, *CampaignPath);
-        return CampaignPath;
+        if (LoadObject<UTexture2D>(nullptr, *Candidate))
+        {
+            UE_LOG(LogTemp, Log, TEXT("[SceneDlg] Image '%s' resolved to '%s'"), *Token, *Candidate);
+            return Candidate;
+        }
     }
 
     UE_LOG(LogTemp, Error,
@@ -1207,6 +1224,22 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     // ----------------------------------------------------
     if (Param == 3 && TargetActor)
     {
+        // Intro.def uses mode 3 for Proteus, a ship; planetary orbit
+        // conversion is invalid for ship targets. Follow the runtime ship.
+        if (TargetActor->IsA<AShipActor>())
+        {
+            FVector BoundsOrigin, BoundsExtent;
+            TargetActor->GetActorBounds(true, BoundsOrigin, BoundsExtent);
+            const float SceneRadius = FMath::Max(250.0f, BoundsExtent.GetMax());
+            const float Distance = FMath::Max(SceneRadius * 5.0f, 1000.0f);
+            const FVector ShipOffset(-Distance, Distance * 0.20f, Distance * 0.25f);
+            Cam->SetActorFollowView(TargetActor, ShipOffset, FRotator::ZeroRotator);
+            Cam->ActivateCamera(0.0f);
+            UE_LOG(LogTemp, Log, TEXT("[SceneDlg] Ship camera mode 3 target='%s' offset=%s"),
+                *Event.EventTarget, *ShipOffset.ToString());
+            return;
+        }
+
         FVector Orbit = Event.EventPoint;
 
         ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();
