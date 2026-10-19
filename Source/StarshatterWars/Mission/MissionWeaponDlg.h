@@ -30,6 +30,7 @@
 #include "Blueprint/UserWidget.h"
 #include "MissionWeaponDlg.generated.h"
 
+class UVerticalBox;
 class UBorder;
 class USizeBox;
 class UTextBlock;
@@ -92,6 +93,7 @@ protected:
     void BuildLoadouts(MissionElement* Element, const FShipDesign* Design);
     void RefreshWeaponList();
     void RefreshSelectedLoadoutStations();
+    void RefreshFixedShipWeapons(const FShipDesign* Design);
 
     // ------------------------------------------------------------
     // Selection helpers
@@ -159,6 +161,10 @@ protected:
 
     UPROPERTY()
     UMissionLoadoutListView* StationListView = nullptr;
+
+    UPROPERTY() UVerticalBox* ConfigurablePanel = nullptr;
+    UPROPERTY() UVerticalBox* FixedWeaponsPanel = nullptr;
+    UPROPERTY() UVerticalBox* FixedWeaponsRows = nullptr;
 
     // ------------------------------------------------------------
     // Row item storage

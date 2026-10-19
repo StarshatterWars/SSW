@@ -1575,18 +1575,16 @@ Mission* Campaign::GetMission(int32 Id)
 {
     if (Id < 0)
     {
-        UE_LOG(LogCampaign, Error, TEXT("Campaign::GetMission(%d) invalid mission id"), Id);
+        UE_LOG(LogCampaign, Error, TEXT("Campaign::GetMission(%d): invalid mission id"), Id);
         return nullptr;
     }
 
-    if (mission && mission->GetIdentity() == Id)
-    {
+    // Leave dynamic campaigns and their existing mission cache untouched.
+    if (IsDynamic() && mission && mission->GetIdentity() == Id)
         return mission;
-    }
 
     MissionInfo* Info = nullptr;
-
-    for (int32 i = 0; i < missions.size(); i++)
+    for (int32 i = 0; i < missions.size(); ++i)
     {
         if (missions[i] && missions[i]->id == Id)
         {
@@ -1597,52 +1595,129 @@ Mission* Campaign::GetMission(int32 Id)
 
     if (!Info)
     {
-        UE_LOG(LogCampaign, Warning, TEXT("Campaign::GetMission(%d) could not find mission info"), Id);
+        UE_LOG(LogCampaign, Warning, TEXT("Campaign::GetMission(%d): no MissionInfo"), Id);
         return nullptr;
     }
 
-    if (!Info->mission)
+    if (IsTraining())
     {
-        UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) creating mission from campaign data..."), Id);
+        // Operations uses FS_CampaignMissionList; the actual mission payload
+        // is FS_CampaignMission in CampaignData->Missions. Their Id fields
+        // are not necessarily synchronized, so a simple Id-only join fails.
+        const FS_CampaignMission* MissionData = FindCampaignMissionById(Id);
+        const TCHAR* MatchMethod = TEXT("Id");
 
-        Info->mission = new Mission();
-        if (!Info->mission)
+        if (!MissionData && CampaignData)
         {
-            UE_LOG(LogCampaign, Error, TEXT("Campaign::GetMission(%d) failed to allocate Mission"), Id);
-            return nullptr;
+            // The mission-list Script corresponds to FS_CampaignMission.Scene.
+            const FString InfoScript = UTF8_TO_TCHAR(Info->script.data());
+            if (!InfoScript.IsEmpty())
+            {
+                for (const FS_CampaignMission& Row : CampaignData->Missions)
+                {
+                    if (!Row.Scene.IsEmpty() && Row.Scene.Equals(InfoScript, ESearchCase::IgnoreCase))
+                    {
+                        MissionData = &Row;
+                        MatchMethod = TEXT("Scene/Script");
+                        break;
+                    }
+                }
+            }
         }
 
-        Info->mission->InitializeFromInfo(*Info);
+        if (!MissionData && CampaignData)
+        {
+            // Name is a last-resort lookup for mission rows without a Scene.
+            // Require a unique match rather than silently loading the wrong mission.
+            const FString InfoName = UTF8_TO_TCHAR(Info->name.data());
+            int32 NameMatches = 0;
+            const FS_CampaignMission* NamedRow = nullptr;
+            for (const FS_CampaignMission& Row : CampaignData->Missions)
+            {
+                if (!InfoName.IsEmpty() && Row.MissionName.Equals(InfoName, ESearchCase::IgnoreCase))
+                {
+                    NamedRow = &Row;
+                    ++NameMatches;
+                }
+            }
+            if (NameMatches == 1)
+            {
+                MissionData = NamedRow;
+                MatchMethod = TEXT("MissionName");
+            }
+        }
 
-        UE_LOG(LogCampaign, Log,
-            TEXT("Campaign::GetMission(%d) initialized mission Name='%s' Scripted=%s Script='%s' Objective='%s' Sitrep='%s'"),
-            Id,
-            ANSI_TO_TCHAR(Info->mission->GetName()),
-            Info->mission->IsScripted() ? TEXT("true") : TEXT("false"),
-            ANSI_TO_TCHAR(Info->mission->GetScriptName()),
-            ANSI_TO_TCHAR(Info->mission->GetObjective()),
-            ANSI_TO_TCHAR(Info->mission->GetSituation()));
+        if (MissionData)
+        {
+            const bool bNeedsFullData = !Info->mission || Info->mission->GetElements().isEmpty();
+            if (bNeedsFullData)
+            {
+                // Build into a fresh instance. Never partially reset an existing
+                // object if the authored mission fails validation.
+                Mission* Loaded = new Mission(Id);
+                if (Loaded)
+                {
+                    const bool bValid = Loaded->LoadFromCampaignMissionData(*MissionData);
+                    Loaded->SetIdentity(Id); // Operations mission ID is canonical.
+                    Loaded->SetSource(Info->Source);
 
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Campaign::GetMission] returning mission=%p Id=%d Name='%s' Scripted=%s"),
-            Info->mission,
-            Id,
-            ANSI_TO_TCHAR(Info->mission->GetName()),
-            Info->mission->IsScripted() ? TEXT("true") : TEXT("false"));
+                    UE_LOG(LogCampaign, Warning,
+                        TEXT("[Campaign Static Mission] RequestedId=%d DataId=%d Match=%s Name='%s' Elements=%d Player=%s Valid=%d Errors='%s'"),
+                        Id, MissionData->Id, MatchMethod,
+                        ANSI_TO_TCHAR(Loaded->GetName()), Loaded->GetElements().size(),
+                        Loaded->GetPlayer() ? TEXT("YES") : TEXT("NO"),
+                        bValid ? 1 : 0, ANSI_TO_TCHAR(Loaded->ErrorMessage().data()));
+
+                    if (Loaded->GetElements().size() > 0)
+                    {
+                        // Authored data is useful even if validation reports
+                        // an error; do not discard all briefing pages.
+                        if (Info->mission && Info->mission != Loaded)
+                        {
+                            if (mission == Info->mission)
+                                mission = nullptr;
+                            delete Info->mission;
+                        }
+                        Info->mission = Loaded;
+                    }
+                    else
+                    {
+                        UE_LOG(LogCampaign, Error,
+                            TEXT("[Campaign Static Mission] Id=%d: FS_CampaignMission has no loaded elements; retaining MissionInfo briefing fallback"), Id);
+                        delete Loaded;
+                    }
+                }
+            }
+        }
+        else
+        {
+            UE_LOG(LogCampaign, Error,
+                TEXT("[Campaign Static Mission] Id=%d: no matching FS_CampaignMission (CampaignData=%s Missions=%d Script='%s' Name='%s')"),
+                Id, CampaignData ? TEXT("YES") : TEXT("NO"),
+                CampaignData ? CampaignData->Missions.Num() : 0,
+                UTF8_TO_TCHAR(Info->script.data()), UTF8_TO_TCHAR(Info->name.data()));
+        }
     }
 
-    if (IsDynamic() && Info->mission && !Info->mission->IsScripted())
+    // Metadata fallback keeps SIT operational if no authored payload matched.
+    // This also preserves the existing dynamic mission creation behavior.
+    if (!Info->mission)
     {
-        if (FCStringAnsi::Stricmp(Info->mission->GetSituation(), "Unknown") == 0)
-        {
-            UE_LOG(LogCampaign, Log, TEXT("Campaign::GetMission(%d) generating sitrep..."), Id);
-            CampaignSituationReport Sitrep(this, Info->mission);
-            Sitrep.GenerateSituationReport();
-        }
+        Info->mission = new Mission();
+        if (!Info->mission)
+            return nullptr;
+        Info->mission->InitializeFromInfo(*Info);
+    }
+
+    if (IsDynamic() && !Info->mission->IsScripted() &&
+        FCStringAnsi::Stricmp(Info->mission->GetSituation(), "Unknown") == 0)
+    {
+        CampaignSituationReport Sitrep(this, Info->mission);
+        Sitrep.GenerateSituationReport();
     }
 
     mission = Info->mission;
-    return Info->mission;
+    return mission;
 }
 
 Mission* Campaign::GetMissionByFile(const char* InFilename)
@@ -1743,39 +1818,17 @@ MissionInfo* Campaign::GetMissionInfo(int id)
 
     if (m)
     {
-        if (!m->mission)
-        {
-            m->mission = new Mission(id);
+        // Only Campaign 1 has authored FS_CampaignMission payloads in this path.
+        // Dynamic campaigns must keep their generator-created MissionInfo and Mission.
+        if (!IsTraining())
+            return m;
 
-            if (m->mission)
-            {
-                const FS_CampaignMission* MissionData = FindCampaignMissionById(id);
-
-                if (MissionData)
-                {
-                    if (!m->mission->LoadFromCampaignMissionData(*MissionData))
-                    {
-                        delete m->mission;
-                        m->mission = 0;
-
-                        UE_LOG(LogCampaign, Error,
-                            TEXT("ERROR - Campaign::GetMissionInfo(%d) failed to load from campaign data"),
-                            id);
-                    }
-                }
-                else
-                {
-                    delete m->mission;
-                    m->mission = 0;
-
-                    UE_LOG(LogCampaign, Error,
-                        TEXT("ERROR - Campaign::GetMissionInfo(%d) no matching FS_CampaignMission row"),
-                        id);
-                }
-            }
-        }
-
+        // Resolve through the same Campaign 1 loader used by the briefing.
+        // This avoids two different lookup/ownership paths for the same mission.
+        GetMission(id);
         return m;
+
+
     }
 
     UE_LOG(LogCampaign, Error,
@@ -1807,6 +1860,22 @@ Campaign::ReloadMission(int id)
 
     mission = 0;
 
+    if (IsTraining()) {
+        // Campaign 1 mission identifiers (e.g. 101) are NOT list indices.
+        for (int i = 0; i < missions.size(); ++i) {
+            MissionInfo* m = missions[i];
+            if (m && m->id == id) {
+                if (ActiveMission == m->mission)
+                    ActiveMission = nullptr;
+                delete m->mission;
+                m->mission = nullptr;
+                break;
+            }
+        }
+        return;
+    }
+
+    // Preserve the existing reload semantics for dynamic campaigns.
     if (id >= 0 && id < missions.size()) {
         MissionInfo* m = missions[id];
         delete m->mission;
@@ -2824,7 +2893,9 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->Source = MissionRow.Source;
 
        double RelativeMsnStart = UFormattingUtils::ParseStarshatterTime(*MissionRow.Start);
-        Info->start = StarSystem::GetStardate() + RelativeMsnStart;
+        // Mission::GetStart() uses mission-relative time, not absolute stardate.
+        // Do not alter the existing dynamic campaign clock behavior.
+        Info->start = IsTraining() ? RelativeMsnStart : StarSystem::GetStardate() + RelativeMsnStart;
 
         Info->type = MissionRow.Type;
         Info->DisplayType = MissionRow.DisplayType;

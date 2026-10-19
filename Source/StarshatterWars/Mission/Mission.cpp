@@ -79,6 +79,18 @@ bool Mission::LoadMissionCommon(
 	{
 		system =
 			TCHAR_TO_ANSI(*InData.MissionSystem);
+
+		// Only authored Campaign 1 FS_CampaignMission records need this
+		// full-data briefing resolution. Template-generated dynamic missions
+		// retain their existing system initialization behavior.
+		if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
+		{
+			if (Galaxy* G = Galaxy::GetInstance())
+			{
+				if (StarSystem* S = G->GetSystem(TCHAR_TO_ANSI(*InData.MissionSystem)))
+					SetStarSystem(S);
+			}
+		}
 	}
 
 	if (!InData.MissionRegion.IsEmpty())

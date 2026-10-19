@@ -367,20 +367,16 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
         return;
     }
 
-    const FString CurrentTitle = CenterTitleText->GetText().ToString();
+    // Rebind whenever the loading screen opens. The widget is reused between
+    // campaigns, so the previous displayed title must not act as a cache key.
+    Campaign* CampaignObj = Campaign::GetCampaign();
+    const char* CampaignName = CampaignObj ? CampaignObj->GetName() : nullptr;
+    const FString SelectedTitle = (CampaignName && CampaignName[0])
+        ? FString(UTF8_TO_TCHAR(CampaignName))
+        : TEXT("CAMPAIGN");
 
-    if (CurrentTitle.IsEmpty() || CurrentTitle.Equals(TEXT("CAMPAIGN"), ESearchCase::IgnoreCase))
-    {
-        Campaign* CampaignObj = Campaign::GetCampaign();
-        if (CampaignObj && CampaignObj->GetName())
-        {
-            CenterTitleText->SetText(FText::FromString(UTF8_TO_TCHAR(CampaignObj->GetName())));
-        }
-        else
-        {
-            CenterTitleText->SetText(FText::FromString(TEXT("CAMPAIGN")));
-        }
-    }
+    CenterTitleText->SetText(FText::FromString(SelectedTitle));
+    UE_LOG(LogTemp, Log, TEXT("[CmpLoadDlg] Active campaign loading title: %s"), *SelectedTitle);
 
     if (CenterImage && DefaultCenterTexture)
     {

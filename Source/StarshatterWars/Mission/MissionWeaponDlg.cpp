@@ -32,6 +32,7 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/SizeBox.h"
+#include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -220,13 +221,14 @@ void UMissionWeaponDlg::RefreshFromMission()
         ParentDlg,
         MissionPtr);
 
+    ClearLoadouts();
+    if (ConfigurablePanel) ConfigurablePanel->SetVisibility(ESlateVisibility::Visible);
+    if (FixedWeaponsPanel) FixedWeaponsPanel->SetVisibility(ESlateVisibility::Collapsed);
     if (!MissionPtr)
     {
         bRefreshingLoadouts = false;
         return;
     }
-
-    ClearLoadouts();
 
     MissionElement* Elem = ResolvePlayerElement();
     const FShipDesign* Design = ResolvePlayerShipDesign();
@@ -258,9 +260,20 @@ void UMissionWeaponDlg::RefreshFromMission()
         WeightValueText->SetText(FText::FromString(FormatWeight(CurrentMass)));
     }
 
-    BuildLoadouts(Elem, Design);
-    RefreshWeaponList();
-    RefreshSelectedLoadoutStations();
+    // Ships with no preset loadouts do not have a loadout-editing UI.
+    // Instead show one read-only ship-weapons list, never synthesizing a MissionLoad.
+    if (Design->Loadout.IsEmpty())
+    {
+        if (ConfigurablePanel) ConfigurablePanel->SetVisibility(ESlateVisibility::Collapsed);
+        if (FixedWeaponsPanel) FixedWeaponsPanel->SetVisibility(ESlateVisibility::Visible);
+        RefreshFixedShipWeapons(Design);
+    }
+    else
+    {
+        BuildLoadouts(Elem, Design);
+        RefreshWeaponList();
+        RefreshSelectedLoadoutStations();
+    }
 
     bRefreshingLoadouts = false;
 }
@@ -275,6 +288,7 @@ void UMissionWeaponDlg::ClearLoadouts()
     }
 
     StationItems.Empty();
+    if (FixedWeaponsRows) FixedWeaponsRows->ClearChildren();
 
     if (StationListView)
     {
@@ -320,6 +334,31 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
             TEXT("[MissionWeaponDlg] BuildLoadouts: Count BEFORE = %d DesignLoadouts = %d"),
             Items.Num(),
             Design->Loadout.Num());
+    }
+
+    // Non-configurable ships still carry their design's default weapons.
+    // Keep this display-only: do not create or modify a MissionLoad.
+    // The legacy HardPoint::CreateWeapon defaults to design index 0.
+    if (Design->Loadout.IsEmpty())
+    {
+        FShipLoadout FixedSummary;
+        FixedSummary.Name = Design->Hardpoint.IsEmpty()
+            ? TEXT("NO CONFIGURABLE LOADOUT") : TEXT("FIXED ARMAMENT");
+
+        UMissionWeaponLoadoutListObject* Item =
+            NewObject<UMissionWeaponLoadoutListObject>(this);
+        if (Item)
+        {
+            Item->InitFromShipLoadout(FixedSummary, INDEX_NONE,
+                FormatWeight(Design->Mass), true);
+            Items.Add(Item);
+            if (WeaponListView)
+            {
+                WeaponListView->AddItem(Item);
+                WeaponListView->SetSelectedItem(Item);
+            }
+        }
+        return;
     }
 
     for (int32 i = 0; i < Design->Loadout.Num(); ++i)
@@ -421,6 +460,40 @@ UBorder* UMissionWeaponDlg::BuildHeader(const FString& Text) const
     return Outer;
 }
 
+void UMissionWeaponDlg::RefreshFixedShipWeapons(const FShipDesign* Design)
+{
+    if (!FixedWeaponsRows || !Design)
+        return;
+
+    FixedWeaponsRows->ClearChildren();
+
+    const int32 Count = Design->Hardpoint.Num();
+    if (Count == 0)
+    {
+        FixedWeaponsRows->AddChildToVerticalBox(BuildValueText(TEXT("NO WEAPONS LISTED")));
+        return;
+    }
+
+    for (int32 Index = 0; Index < Count; ++Index)
+    {
+        const FShipHardPoint& Point = Design->Hardpoint[Index];
+        FString WeaponName = TEXT("UNSPECIFIED");
+        if (!Point.AllowedWeaponTypes.IsEmpty())
+        {
+            // Legacy default selection is index 0 for non-configurable hardpoints.
+            // Display the source key if the weapon registry cannot resolve it.
+            const FWeaponDesign* Weapon =
+                ResolveWeaponDesignForStationSelection(Design, Index, 0);
+            WeaponName = Weapon ? Weapon->Name : Point.AllowedWeaponTypes[0];
+        }
+
+        UTextBlock* Row = BuildValueText(
+            FString::Printf(TEXT("%02d   %s"), Index + 1, *WeaponName));
+        if (UVerticalBoxSlot* VSlot = FixedWeaponsRows->AddChildToVerticalBox(Row))
+            VSlot->SetPadding(FMargin(8.f, 5.f, 8.f, 5.f));
+    }
+}
+
 void UMissionWeaponDlg::BuildRuntimeLayout()
 {
     if (!WidgetTree || !RuntimeHost)
@@ -516,13 +589,42 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
 
+    // Separate presentation modes: fighters retain both configurable panels;
+    // ships without presets receive a single full-height fixed weapons list.
+    FixedWeaponsPanel = WidgetTree->ConstructWidget<UVerticalBox>(
+        UVerticalBox::StaticClass(), TEXT("FixedShipWeaponsPanel"));
+    FixedWeaponsPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (UVerticalBoxSlot* VSlot = Right->AddChildToVerticalBox(FixedWeaponsPanel))
+        VSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    if (UBorder* Header = BuildHeader(TEXT("SHIP WEAPONS")))
+    {
+        if (UVerticalBoxSlot* VSlot = FixedWeaponsPanel->AddChildToVerticalBox(Header))
+            VSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+    }
+
+    UBorder* FixedBorder = WidgetTree->ConstructWidget<UBorder>();
+    FixedBorder->SetBrushColor(MissionUIStyle::PanelBG);
+    if (UVerticalBoxSlot* VSlot = FixedWeaponsPanel->AddChildToVerticalBox(FixedBorder))
+        VSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    UScrollBox* FixedScroll = WidgetTree->ConstructWidget<UScrollBox>();
+    FixedBorder->SetContent(FixedScroll);
+    FixedWeaponsRows = WidgetTree->ConstructWidget<UVerticalBox>();
+    FixedScroll->AddChild(FixedWeaponsRows);
+
+    ConfigurablePanel = WidgetTree->ConstructWidget<UVerticalBox>(
+        UVerticalBox::StaticClass(), TEXT("ConfigurableShipLoadoutsPanel"));
+    if (UVerticalBoxSlot* VSlot = Right->AddChildToVerticalBox(ConfigurablePanel))
+        VSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
     // ------------------------------------------------------------
     // PRESET LOADOUTS HEADER
     // ------------------------------------------------------------
 
     if (UBorder* Header = BuildHeader(TEXT("STANDARD LOADOUTS")))
     {
-        if (UVerticalBoxSlot* HeaderSlot = Right->AddChildToVerticalBox(Header))
+        if (UVerticalBoxSlot* HeaderSlot = ConfigurablePanel->AddChildToVerticalBox(Header))
         {
             HeaderSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
             HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
@@ -539,7 +641,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         860.f,
         180.0f))
     {
-        if (UVerticalBoxSlot* RowSlot = Right->AddChildToVerticalBox(HeaderRow))
+        if (UVerticalBoxSlot* RowSlot = ConfigurablePanel->AddChildToVerticalBox(HeaderRow))
         {
             RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
         }
@@ -555,7 +657,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             TEXT("MissionWeaponListBorder"));
     ListBorder->SetBrushColor(MissionUIStyle::PanelBG);
 
-    if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(ListBorder))
+    if (UVerticalBoxSlot* BorderSlot = ConfigurablePanel->AddChildToVerticalBox(ListBorder))
     {
         BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
         BorderSlot->SetPadding(FMargin(0.f));
@@ -596,7 +698,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
 
     if (UBorder* Header = BuildHeader(TEXT("SELECTED LOADOUT")))
     {
-        if (UVerticalBoxSlot* HeaderSlot = Right->AddChildToVerticalBox(Header))
+        if (UVerticalBoxSlot* HeaderSlot = ConfigurablePanel->AddChildToVerticalBox(Header))
         {
             HeaderSlot->SetPadding(FMargin(0.f, 12.f, 0.f, 6.f));
             HeaderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
@@ -613,7 +715,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
         240.f,
         660.f))
     {
-        if (UVerticalBoxSlot* RowSlot = Right->AddChildToVerticalBox(HeaderRow))
+        if (UVerticalBoxSlot* RowSlot = ConfigurablePanel->AddChildToVerticalBox(HeaderRow))
         {
             RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
             RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
@@ -630,7 +732,7 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
             TEXT("MissionWeaponStationBorder"));
     StationBorder->SetBrushColor(MissionUIStyle::PanelBG);
 
-    if (UVerticalBoxSlot* BorderSlot = Right->AddChildToVerticalBox(StationBorder))
+    if (UVerticalBoxSlot* BorderSlot = ConfigurablePanel->AddChildToVerticalBox(StationBorder))
     {
         BorderSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill)); //  THIS FIXES SCROLL
         BorderSlot->SetPadding(FMargin(0.f));
@@ -693,6 +795,12 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
 
     const int32 Index = SelectedItem->GetLoadoutIndex();
 
+    // INDEX_NONE represents the informational fixed-armament row.
+    if (Index == INDEX_NONE || Design->Loadout.IsEmpty())
+    {
+        return;
+    }
+
     if (!Design->Loadout.IsValidIndex(Index))
     {
         return;
@@ -744,6 +852,14 @@ void UMissionWeaponDlg::RefreshWeaponList()
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[MissionWeaponDlg] RefreshWeaponList: ShipDesign is null"));
+        return;
+    }
+
+    if (ShipDesign->Loadout.IsEmpty())
+    {
+        UE_LOG(LogTemp, Log,
+            TEXT("[MissionWeaponDlg] Fixed armament: ship='%s' hardpoints=%d"),
+            *GetDesignName(ShipDesign), ShipDesign->Hardpoint.Num());
         return;
     }
 
@@ -974,8 +1090,12 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
         return;
     }
 
-    MissionLoad* Load = GetActivePlayerMissionLoad(MissionPtr);
-    if (!Load)
+    // Non-configurable starships use their design-default weapon at each
+    // authored hardpoint (choice 0), without requiring MissionLoad entries.
+    // Preset-capable fighters retain the existing mission loadout behavior.
+    const bool bFixedArmament = Design->Loadout.IsEmpty();
+    MissionLoad* Load = bFixedArmament ? nullptr : GetActivePlayerMissionLoad(MissionPtr);
+    if (!bFixedArmament && !Load)
     {
         return;
     }
@@ -984,7 +1104,10 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
 
     for (int32 StationIndex = 0; StationIndex < NumHardpoints; ++StationIndex)
     {
-        const int32 PointIndex = Load->GetStation(StationIndex);
+        const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+        const int32 PointIndex = bFixedArmament
+            ? (Hardpoint.AllowedWeaponTypes.IsEmpty() ? INDEX_NONE : 0)
+            : Load->GetStation(StationIndex);
 
         const FWeaponDesign* Weapon =
             ResolveWeaponDesignForStationSelection(
@@ -992,23 +1115,39 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
                 StationIndex,
                 PointIndex);
 
-        const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+        const FString WeaponName = Weapon ? Weapon->Name
+            : (PointIndex == INDEX_NONE ? TEXT("EMPTY") : TEXT("UNRESOLVED WEAPON"));
         const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex + 1);
 
         UMissionWeaponStationRowObject* Row =
             NewObject<UMissionWeaponStationRowObject>(this);
+        if (!Row)
+        {
+            continue;
+        }
 
-        const FShipHardPoint& Hardpoint = Design->Hardpoint[StationIndex];
+        // Only expose the actual default selection on a fixed ship.
+        // Do not offer every compatible alternative as though installed.
+        TArray<FString> DisplayChoices;
+        int32 DisplaySelection = PointIndex;
+        if (bFixedArmament)
+        {
+            if (PointIndex != INDEX_NONE)
+            {
+                DisplayChoices.Add(Hardpoint.AllowedWeaponTypes[0]);
+                DisplaySelection = 0;
+            }
+        }
+        else
+        {
+            DisplayChoices = Hardpoint.AllowedWeaponTypes;
+        }
 
-        Row->Init(
-            StationIndex,
-            StationLabel,
-            WeaponName,
-            Hardpoint.AllowedWeaponTypes,
-            PointIndex
-        );
+        Row->Init(StationIndex, StationLabel, WeaponName,
+            DisplayChoices, DisplaySelection);
 
-        Row->SetOwningWeaponDlg(this);
+        // No editing for fixed weapons; selectable fighter stations unchanged.
+        Row->SetOwningWeaponDlg(bFixedArmament ? nullptr : this);
 
         StationItems.Add(Row);
 
