@@ -5,7 +5,7 @@ name:    "Flight School"
 type:    "Training"
 system:  "Janus"
 region:  "Janek Station"
-id:       3
+id:       103
 
 
 objective:

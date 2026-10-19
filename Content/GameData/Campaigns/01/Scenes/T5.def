@@ -5,7 +5,7 @@ name:    "Training Cruise"
 type:    "Training"
 system:  "Janus"
 region:  "Alystra"
-id:       5
+id:       105
 
 objective:
          "Training - "

@@ -1,7 +1,7 @@
 MISSIONLIST
 
 mission: {
-	id:      0,
+	id:      100,
 	name:    "Training Introduction",
 	desc:    "Rendevous for flight training",
 	objective: "Training",
@@ -15,7 +15,7 @@ mission: {
 	sitrep:  "Rendevous with the fleet carrier Archon participating in wargame exercises in the Janus system. "
 }
 mission: {
-	id:      1,
+	id:      101,
 	name:    "Basic Space Flight",
 	desc:    "Space-based fighters.  Practice launching, flying, docking, and basic spaceborne maneuvering.",
 	objective: "Training - Practice spaceborne fighter operations.",
@@ -30,7 +30,7 @@ mission: {
 }
 
 mission: {
-	id:      2,
+	id:      102,
 	name:    "Target Practice",
 	desc:    "Space-based fighters.  Practice pairs combat against target drones.",
 	objective: "Training - Practice spaceborne fighter operations.",
@@ -45,7 +45,7 @@ mission: {
 }
 
 mission: {
-	id:      3,
+	id:      103,
 	name:    "Flight School",
 	desc:    "Airborne fighters.  Practice takeoffs, landings, and basic atmospheric maneuvering.",
 	objective: "Training - Practice airborne fighter operations.",
@@ -60,7 +60,7 @@ mission: {
 }
 
 mission: {
-	id:      4,
+	id:     104,
 	name:    "Ground Strike",
 	desc:    "Air-to-ground action. Practice destroying ground targets.",
 	objective: "Training Strike - Destroy simulated mining operation.",
@@ -75,7 +75,7 @@ mission: {
 }
 
 mission: {
-	id:      5,
+	id:      105,
 	name:    "Training Cruise",
 	desc:    "Learn to command starships. Practice engaging target drones with a Frigate class ship.",
 	objective: "Training - Practice starship fleet operations.",
@@ -90,7 +90,7 @@ mission: {
 }
 
 mission: {
-	id:      6,
+	id:      106,
 	name:    "Advanced Starship Combat",
 	desc:    "Learn to command starships. Practice engaging starship targets with a Destroyer class ship.",
 	objective: "Training - Practice advanced starship combat maneuvers.",
@@ -105,7 +105,7 @@ mission: {
 }
 
 mission: {
-	id:      7,
+	id:      107,
 	name:    "Carrier Operations",
 	desc:    "Learn to direct fleet operations. Practice orbital carrier operations.",
 	objective: "Training - Practice orbital carrier operations.",

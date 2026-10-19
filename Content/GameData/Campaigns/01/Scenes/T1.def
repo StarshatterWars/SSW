@@ -5,7 +5,7 @@ name:    "Basic Space Flight"
 type:    "Training"
 system:  "Janus"
 region:  "Janek"
-id:       1
+id:       101
 
 
 objective:
