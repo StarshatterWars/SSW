@@ -408,13 +408,12 @@ void USSWRuntimeSubsystem::UpdateWorld()
             SimInstance->GetRegions().size());
     }
 
-    bool bPresentationCameraSynced = false;
     if (CamDir)
     {
         // Exactly one legacy camera simulation update per UpdateWorld().
         CamDir->ExecFrame(Seconds);
-        // Phase 9: defer viewport synchronization until mission-body projection
-        // is updated below. This avoids looking at previous-frame body transforms.
+        // Presentation-only copy; does not mutate the legacy Camera or Sim.
+        SyncLegacyCameraView();
     }
 
     // Mission bodies are camera-relative proxies during legacy cinematics.
@@ -497,15 +496,6 @@ void USSWRuntimeSubsystem::UpdateWorld()
                         ? ConvertLegacyShipLocationToUE(CamDir->GetCamera()->vpn())
                         : FVector::ZeroVector);
 
-                // Projection must precede final camera aim and viewport copy.
-                // SyncLegacyCameraView handles ship/station orbit clearance and
-                // the currently focused body's final presentation alignment.
-                if (bCameraObserver)
-                {
-                    SyncLegacyCameraView();
-                    bPresentationCameraSynced = true;
-                }
-
                 // Phase 9: Trellis/Jalah have a valid body proxy, but the legacy
                 // orbital-camera forward points off-axis in their UE presentation.
                 // Aim ONLY the UE view at the actual updated body proxy. Preserve
@@ -568,10 +558,6 @@ void USSWRuntimeSubsystem::UpdateWorld()
             }
         }
     }
-    // Preserve the ordinary ship camera path when no mission builder exists.
-    if (CamDir && !bPresentationCameraSynced)
-        SyncLegacyCameraView();
-
 }
 
 void USSWRuntimeSubsystem::SyncLegacyCameraView()
@@ -693,7 +679,7 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
         }
         const bool bNamedStationTarget = OrbitTarget &&
             (FString(ANSI_TO_TCHAR(OrbitTarget->GetName())).Contains(TEXT("Tal Vesta"), ESearchCase::IgnoreCase) ||
-             FString(ANSI_TO_TCHAR(OrbitTarget->GetName())).Contains(TEXT("Trellis-Solus"), ESearchCase::IgnoreCase));
+             FString(ANSI_TO_TCHAR(OrbitTarget->GetName())).Contains(TEXT("Trellis Docks"), ESearchCase::IgnoreCase));
         if (OrbitTarget && (CamDir->GetMode() == CameraManager::MODE_ORBIT || bNamedStationTarget))
         {
             for (TActorIterator<AShipActor> It(World); It; ++It)
@@ -728,7 +714,7 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
                     const FString OrbitName = ANSI_TO_TCHAR(OrbitTarget->GetName());
                     const bool bStationFraming =
                         OrbitName.Contains(TEXT("Tal Vesta"), ESearchCase::IgnoreCase) ||
-                        OrbitName.Contains(TEXT("Trellis-Solus"), ESearchCase::IgnoreCase);
+                        OrbitName.Contains(TEXT("Trellis Docks"), ESearchCase::IgnoreCase);
                     const double MaximumDistance = HullExtent.Size() * 8.0;
                     if ((ActualDistance < MinimumDistance ||
                          (bStationFraming && ActualDistance > MaximumDistance)) &&
@@ -758,8 +744,42 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
         }
     }
 
-    // Planet aim correction is applied by UpdateWorld after this pose is
-    // synchronized and after UpdateMissionSpace has positioned body proxies.
+    // Phase 9: Final presentation-space orbital aim. This MUST run after the
+    // standard SyncLegacyCameraView pose is assembled, otherwise the next
+    // ApplyLegacyView overwrites an earlier correction made in the tick path.
+    // Never edit the legacy camera, the planet, or ship-facing cutscenes.
+    if (CamDir->GetViewOrbital() && !CamDir->GetViewObject())
+    {
+        for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+        {
+            ASystemSceneBuilder* Scene = *It;
+            if (!IsValid(Scene)) continue;
+            FVector TargetWorld;
+            FString TargetName;
+            if (!Scene->GetFocusedMissionBodyWorldLocation(CamDir->GetViewOrbital(), TargetWorld, TargetName))
+                continue;
+            if (TargetName.Equals(TEXT("Trellis"), ESearchCase::IgnoreCase))
+            {
+                const FVector Look = (TargetWorld - UnrealPosition).GetSafeNormal();
+                if (!Look.IsNearlyZero())
+                {
+                    UnrealForward = Look;
+                    if (FMath::Abs(FVector::DotProduct(UnrealForward, UnrealUp.GetSafeNormal())) > 0.99)
+                        UnrealUp = FVector::UpVector;
+                    static bool bTrellisAimLogged = false;
+                    if (!bTrellisAimLogged)
+                    {
+                        UE_LOG(LogSSWRuntime, Display,
+                            TEXT("[Phase9TrellisFinalAim] Camera=%s Target=%s Distance=%.1f"),
+                            *UnrealPosition.ToString(), *TargetWorld.ToString(),
+                            FVector::Distance(UnrealPosition, TargetWorld));
+                        bTrellisAimLogged = true;
+                    }
+                }
+            }
+            break;
+        }
+    }
 
     if (IsValid(PassiveView))
         PassiveView->ApplyLegacyView(UnrealPosition, UnrealForward, UnrealRight, UnrealUp);
