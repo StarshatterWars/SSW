@@ -494,10 +494,74 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
     // Positions also require the presentation world's region origin; do not
     // use only ConvertLegacyShipLocationToUE() for a world-space camera pose.
     SimRegion* CameraRegion = SimInstance ? SimInstance->GetActiveRegion() : nullptr;
-    const FVector UnrealPosition = GetVisualLocationForRegion(CameraRegion, LegacyCamera->Pos());
-    const FVector UnrealForward = ConvertLegacyShipLocationToUE(LegacyCamera->vpn());
+    FVector UnrealPosition = GetVisualLocationForRegion(CameraRegion, LegacyCamera->Pos());
+    FVector UnrealForward = ConvertLegacyShipLocationToUE(LegacyCamera->vpn());
     const FVector UnrealRight = ConvertLegacyShipLocationToUE(LegacyCamera->vrt());
-    const FVector UnrealUp = ConvertLegacyShipLocationToUE(LegacyCamera->vup());
+    FVector UnrealUp = ConvertLegacyShipLocationToUE(LegacyCamera->vup());
+
+    // Phase 9 (ship only): the legacy DropCam stand-off is based on Ship::Radius(),
+    // which is not equivalent to the actual rendered Unreal hull dimensions.
+    // Do not modify the legacy camera or ship; adjust only the passive view pose.
+    Ship* DropShip = CamDir->GetShip();
+    if (DropShip && DropShip->IsDropCam())
+    {
+        for (TActorIterator<AShipActor> It(World); It; ++It)
+        {
+            AShipActor* ShipView = *It;
+            if (!IsValid(ShipView) || ShipView->GetRuntimeShip() != DropShip)
+                continue;
+
+            FVector HullCenter = ShipView->GetActorLocation();
+            FVector HullExtent = FVector::ZeroVector;
+            bool bHaveVisibleHull = false;
+
+            // A ship may have a spawned Blueprint visual with its HullMesh hidden.
+            if (IsValid(ShipView->VisualActor))
+            {
+                ShipView->VisualActor->GetActorBounds(false, HullCenter, HullExtent, true);
+                bHaveVisibleHull = !HullExtent.IsNearlyZero();
+            }
+            if (!bHaveVisibleHull && IsValid(ShipView->HullMesh))
+            {
+                // UPrimitiveComponent::Bounds is the world-space box/sphere bound.
+                // UStaticMeshComponent has no GetComponentBounds() member function.
+                const FBoxSphereBounds ComponentBounds = ShipView->HullMesh->Bounds;
+                HullCenter = ComponentBounds.Origin;
+                HullExtent = ComponentBounds.BoxExtent;
+                bHaveVisibleHull = !HullExtent.IsNearlyZero();
+            }
+
+            if (bHaveVisibleHull)
+            {
+                const double HullRadius = HullExtent.Size();
+                const double MinimumDistance = HullRadius * 3.0;
+                const FVector FromHull = UnrealPosition - HullCenter;
+                const double CurrentDistance = FromHull.Size();
+                if (MinimumDistance > UE_DOUBLE_SMALL_NUMBER && CurrentDistance < MinimumDistance)
+                {
+                    FVector Away = FromHull.GetSafeNormal();
+                    if (Away.IsNearlyZero())
+                        Away = -UnrealForward.GetSafeNormal();
+                    if (Away.IsNearlyZero())
+                        Away = FVector::BackwardVector;
+                    UnrealPosition = HullCenter + Away * MinimumDistance;
+                    UnrealForward = (HullCenter - UnrealPosition).GetSafeNormal();
+                    // Keep the original up vector unless nearly parallel to view.
+                    if (FMath::Abs(FVector::DotProduct(UnrealForward, UnrealUp.GetSafeNormal())) > 0.99)
+                        UnrealUp = FVector::UpVector;
+
+                    static int32 ShipClearanceLogCount = 0;
+                    if (ShipClearanceLogCount++ < 30)
+                    {
+                        UE_LOG(LogSSWRuntime, Display,
+                            TEXT("[Phase9ShipDropCam] Ship='%s' VisualRadius=%.1f DistanceBefore=%.1f DistanceAfter=%.1f"),
+                            ANSI_TO_TCHAR(DropShip->GetName()), HullRadius, CurrentDistance, MinimumDistance);
+                    }
+                }
+            }
+            break;
+        }
+    }
 
     if (IsValid(PassiveView))
         PassiveView->ApplyLegacyView(UnrealPosition, UnrealForward, UnrealRight, UnrealUp);
