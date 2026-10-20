@@ -23,12 +23,15 @@
 #include "SystemLevelScriptActor.h"
 #include "CampaignSceneActor.h"
 #include "SSWCameraManager.h"
+#include "SSWLegacyCameraViewActor.h"
+#include "CameraManager.h"  // Legacy CameraDirector port; owns cutscene camera behavior
+#include "Sim.h"
+#include "Orbital.h"
 #include "ShipActor.h"
 #include "Ship.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
-#include "Misc/Paths.h"
 #include "Engine/Font.h"
 #include "Engine/Texture2D.h"
 #include "Kismet/GameplayStatics.h"
@@ -606,10 +609,9 @@ bool UCampaignSceneDlg::PrepareSceneCameraBeforeReveal()
     if (bSceneRunning || SortedEvents.IsEmpty())
         return false;
 
-    // Acquire the persistent camera, then position it while the load overlay
-    // is still covering the scene. Never start the event clock here.
-    if (!ResolveSceneCamera())
-        return false;
+    // Legacy-first: the first DataTable camera event chooses the presentation
+    // endpoint. Do not spawn ASSWCameraManager merely for preflight.
+    // Never start the event clock here.
 
     for (const FS_MissionEvent& Event : SortedEvents)
     {
@@ -662,15 +664,13 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
-    // Scene images are driven exclusively by authored DISPLAY events.
-    // Intro.def has no opening image; News-Start.def explicitly requests "News".
-    bPanelActive = false;
-    ClearPanelTexture();
+    UTexture2D* TestTexture =
+        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
+    ApplyPanelTexture(TestTexture);
 
-    // ResolveSceneCamera already activates the persistent camera using
-    // ASSWCameraManager::ActivateCamera(0.0f). Do not call an unsupported
-    // UseLiveSimulation API; subsequent legacy CAMERA events set the view.
-    ResolveSceneCamera();
+    // Phase 5: do not activate or spawn the compatibility camera here.
+    // The first DataTable camera event chooses either the passive legacy
+    // presentation actor or the existing scene-only compatibility camera.
 
     // Establish the first planetary shot immediately. Merely activating the
     // camera leaves it at its level-authored position (often inside the sun).
@@ -690,6 +690,10 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
             break;
         }
     }
+
+    // Do NOT re-activate ASSWCameraManager here: doing so steals the view
+    // target from ASSWLegacyCameraViewActor immediately after initial setup.
+    // The runtime's one ExecFrame() + SyncLegacyCameraView() drives the view.
 
     // Populate time-zero image, title, and display events BEFORE the owning
     // campaign screen removes its loading cover. The first NativeTick is too
@@ -928,28 +932,13 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
         return Token;
     }
 
-    // Support authored legacy paths such as Campaigns/01/Scenes/Black.pcx,
-    // as well as simple image tokens such as News. No Campaign 2 hardcoding.
-    FString RelativeToken = Token;
-    RelativeToken.ReplaceInline(TEXT("\\"), TEXT("/"));
-    if (RelativeToken.EndsWith(TEXT(".pcx"), ESearchCase::IgnoreCase))
-        RelativeToken.LeftChopInline(4);
-    if (RelativeToken.StartsWith(TEXT("Campaigns/"), ESearchCase::IgnoreCase))
-        RelativeToken.RightChopInline(10, false);
-
-    const FString AssetName = FPaths::GetCleanFilename(RelativeToken);
-    const FString CampaignFolder = FString::Printf(TEXT("/Game/UI/Campaigns/%02d/"), ResolveCampaignNumber());
-    const TArray<FString> CandidatePaths = {
-        CampaignFolder + RelativeToken + TEXT(".") + AssetName,
-        CampaignFolder + AssetName + TEXT(".") + AssetName
-    };
-    for (const FString& Candidate : CandidatePaths)
+    const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/02/%s.%s"), *Token, *Token);
+    if (LoadObject<UTexture2D>(nullptr, *CampaignPath))
     {
-        if (LoadObject<UTexture2D>(nullptr, *Candidate))
-        {
-            UE_LOG(LogTemp, Log, TEXT("[SceneDlg] Image '%s' resolved to '%s'"), *Token, *Candidate);
-            return Candidate;
-        }
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SceneDlg] ResolveScenePanelPath: token '%s' -> '%s'"),
+            *Token, *CampaignPath);
+        return CampaignPath;
     }
 
     UE_LOG(LogTemp, Error,
@@ -1120,13 +1109,200 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         Event.EventParam.Num());
 
     // ----------------------------------------------------
-    // Resolve camera manager
+    // DataTable CAMERA -> original Starshatter CameraDirector semantics.
+    // Do not create the UE compatibility camera for a legacy-resolved event.
+    // This runs BEFORE the Unreal presentation compatibility path.
+    // DataTable import is already authoritative; no .def parsing here.
     // ----------------------------------------------------
+    const int32 LegacyCommand =
+        Event.EventParam.IsValidIndex(0) ? Event.EventParam[0] : 0;
+
+    if (LegacyCommand >= 1 && LegacyCommand <= 6)
+    {
+        Sim* LegacySim = Sim::GetSim();
+        CameraManager* LegacyDirector = CameraManager::GetInstance();
+        Ship* PlayerShip = LegacySim ? LegacySim->GetPlayerShip() : nullptr;
+
+        // Do not divert a scene-only camera shot into an uninitialized simulation.
+        if (LegacySim && LegacyDirector && PlayerShip)
+        {
+            const FString TargetName = Event.EventTarget.TrimStartAndEnd();
+            const bool bHasTarget = !TargetName.IsEmpty();
+            const bool bBodyPrefix = TargetName.StartsWith(TEXT("body:"), ESearchCase::IgnoreCase);
+
+            Ship* TargetShip = nullptr;
+            Orbital* TargetBody = nullptr;
+            if (bHasTarget)
+            {
+                if (!bBodyPrefix)
+                {
+                    const auto TargetUtf8 = StringCast<ANSICHAR>(*TargetName);
+                    TargetShip = LegacySim->FindShip(TargetUtf8.Get());
+                }
+
+                if (!TargetShip)
+                {
+                    const FString BodyName = bBodyPrefix ? TargetName.Mid(5) : TargetName;
+                    const auto BodyUtf8 = StringCast<ANSICHAR>(*BodyName);
+                    TargetBody = LegacySim->FindOrbitalBody(BodyUtf8.Get());
+                }
+            }
+
+            // If the simulation has no matching target, preserve the working
+            // Unreal-only scene actor/body shot below, rather than losing it.
+            const bool bResolved = !bHasTarget || TargetShip || TargetBody;
+            if (bResolved)
+            {
+                if (!LegacyDirector->GetShip())
+                    LegacyDirector->SetShip(PlayerShip);
+
+                if (LegacyDirector->GetShip())
+                {
+                    const double TransitionSeconds = (double)Event.EventRect.X;
+                    switch (LegacyCommand)
+                    {
+                    case 1:
+                        if (LegacyDirector->GetMode() != CameraManager::MODE_COCKPIT)
+                            LegacyDirector->SetMode(CameraManager::MODE_COCKPIT, TransitionSeconds);
+                        break;
+                    case 2:
+                        if (LegacyDirector->GetMode() != CameraManager::MODE_CHASE)
+                            LegacyDirector->SetMode(CameraManager::MODE_CHASE, TransitionSeconds);
+                        break;
+                    case 3:
+                        if (LegacyDirector->GetMode() != CameraManager::MODE_ORBIT)
+                            LegacyDirector->SetMode(CameraManager::MODE_ORBIT, TransitionSeconds);
+                        break;
+                    case 4:
+                        if (LegacyDirector->GetMode() != CameraManager::MODE_TARGET)
+                            LegacyDirector->SetMode(CameraManager::MODE_TARGET, TransitionSeconds);
+                        break;
+                    default:
+                        break; // 5 = orbit rates, 6 = ship-based DropCam
+                    }
+
+                    if (TargetShip)
+                    {
+                        LegacyDirector->SetViewOrbital(nullptr);
+                        if (LegacyDirector->GetViewObject() != TargetShip)
+                        {
+                            if (LegacyCommand == 6)
+                            {
+                                const double Duration = Event.EventParam.IsValidIndex(1)
+                                    ? (double)Event.EventParam[1] : 0.0;
+                                const double RangeMultiplier = Event.EventParam.IsValidIndex(2)
+                                    ? (double)Event.EventParam[2] : 0.0;
+                                TargetShip->DropCam(Duration, RangeMultiplier);
+                                LegacyDirector->SetShip(TargetShip);
+                                LegacyDirector->SetMode(CameraManager::MODE_DROP, 0.0);
+                            }
+                            else
+                            {
+                                Ship* Previous = LegacyDirector->GetShip();
+                                if (Previous && Previous->IsDropCam())
+                                    Previous->CompleteTransition();
+                                if (LegacyDirector->GetShip() != PlayerShip)
+                                    LegacyDirector->SetShip(PlayerShip);
+                                LegacyDirector->SetViewObject(TargetShip, true);
+                            }
+                        }
+                    }
+                    else if (TargetBody)
+                    {
+                        LegacyDirector->SetViewOrbital(TargetBody);
+                    }
+
+                    if (LegacyCommand == 3)
+                    {
+                        LegacyDirector->SetOrbitPoint(
+                            (double)Event.EventPoint.X,
+                            (double)Event.EventPoint.Y,
+                            (double)Event.EventPoint.Z);
+                    }
+                    else if (LegacyCommand == 5)
+                    {
+                        LegacyDirector->SetOrbitRates(
+                            (double)Event.EventPoint.X,
+                            (double)Event.EventPoint.Y,
+                            (double)Event.EventPoint.Z);
+                    }
+
+                    // Phase 4: switch legacy events to the passive UE view.
+                    // Preserve ASSWCameraManager for scene-only compatibility shots.
+                    ASSWLegacyCameraViewActor* PassiveView = nullptr;
+                    UWorld* CameraWorld = GetWorld();
+                    if (CameraWorld)
+                    {
+                        for (TActorIterator<ASSWLegacyCameraViewActor> It(CameraWorld); It; ++It)
+                        {
+                            if (IsValid(*It))
+                            {
+                                PassiveView = *It;
+                                break;
+                            }
+                        }
+                        if (!IsValid(PassiveView))
+                        {
+                            FActorSpawnParameters CameraSpawnParams;
+                            CameraSpawnParams.SpawnCollisionHandlingOverride =
+                                ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                            // Start from the currently displayed transform until
+                            // the runtime publishes the next authoritative frame.
+                            FTransform SeedTransform = FTransform::Identity;
+                            if (APlayerController* PC = CameraWorld->GetFirstPlayerController())
+                            {
+                                if (AActor* CurrentView = PC->GetViewTarget())
+                                    SeedTransform = CurrentView->GetActorTransform();
+                            }
+                            PassiveView = CameraWorld->SpawnActor<ASSWLegacyCameraViewActor>(
+                                ASSWLegacyCameraViewActor::StaticClass(),
+                                SeedTransform, CameraSpawnParams);
+                        }
+                    }
+
+                    if (IsValid(PassiveView))
+                    {
+                        // Reuse the same actor across events; never rewind its
+                        // transform to a stale compatibility-camera position.
+                        PassiveView->ActivateView(0.0f);
+                    }
+                    else
+                    {
+                        // If the passive UE endpoint cannot spawn, retain the
+                        // Step 2 bridge instead of discarding the legacy event.
+                        if (ASSWCameraManager* Compatibility = ResolveSceneCamera())
+                        {
+                            Compatibility->SetLegacyViewBridgeEnabled(true);
+                            Compatibility->ActivateCamera(0.0f);
+                        }
+                        else
+                        {
+                            UE_LOG(LogTemp, Error,
+                                TEXT("[SceneDlg] No UE presentation actor for legacy camera event"));
+                        }
+                    }
+                    UE_LOG(LogTemp, Log,
+                        TEXT("[SceneDlg] DataTable camera command=%d handled by legacy CameraManager target='%s'"),
+                        LegacyCommand, *TargetName);
+                    return;
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[SceneDlg] Legacy camera target '%s' not in Sim; trying UE scene-only compatibility path"),
+                    *TargetName);
+            }
+        }
+    }
+
+    // Scene-only compatibility path. The old Unreal camera is instantiated
+    // ONLY if the legacy Sim could not resolve the event's requested target.
     ASSWCameraManager* Cam = ResolveSceneCamera();
     if (!Cam)
     {
         UE_LOG(LogTemp, Error,
-            TEXT("[SceneDlg] ExecuteCameraEvent: no camera manager"));
+            TEXT("[SceneDlg] ExecuteCameraEvent: no compatibility camera"));
         return;
     }
 
@@ -1213,6 +1389,10 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         }
     }
 
+    // A scene-only target is rendered by the existing UE fallback, not
+    // overwritten on the next frame by the legacy camera bridge.
+    Cam->SetLegacyViewBridgeEnabled(false);
+
     // ----------------------------------------------------
     // Decode legacy camera param
     // ----------------------------------------------------
@@ -1224,22 +1404,6 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     // ----------------------------------------------------
     if (Param == 3 && TargetActor)
     {
-        // Intro.def uses mode 3 for Proteus, a ship; planetary orbit
-        // conversion is invalid for ship targets. Follow the runtime ship.
-        if (TargetActor->IsA<AShipActor>())
-        {
-            FVector BoundsOrigin, BoundsExtent;
-            TargetActor->GetActorBounds(true, BoundsOrigin, BoundsExtent);
-            const float SceneRadius = FMath::Max(250.0f, BoundsExtent.GetMax());
-            const float Distance = FMath::Max(SceneRadius * 5.0f, 1000.0f);
-            const FVector ShipOffset(-Distance, Distance * 0.20f, Distance * 0.25f);
-            Cam->SetActorFollowView(TargetActor, ShipOffset, FRotator::ZeroRotator);
-            Cam->ActivateCamera(0.0f);
-            UE_LOG(LogTemp, Log, TEXT("[SceneDlg] Ship camera mode 3 target='%s' offset=%s"),
-                *Event.EventTarget, *ShipOffset.ToString());
-            return;
-        }
-
         FVector Orbit = Event.EventPoint;
 
         ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder();

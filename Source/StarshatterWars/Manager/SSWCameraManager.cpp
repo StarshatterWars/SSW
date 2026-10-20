@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Math/RotationMatrix.h"
 
 ASSWCameraManager::ASSWCameraManager()
 {
@@ -57,6 +58,55 @@ ASSWCameraManager::ActivateCamera(float BlendTime)
 		*GetActorLocation().ToString(),
 		*GetActorRotation().ToString(),
 		BlendTime);
+}
+
+void ASSWCameraManager::SetLegacyViewBridgeEnabled(bool bEnabled)
+{
+    bLegacyViewBridgeEnabled = bEnabled;
+    if (!bEnabled && Mode == ESSWCameraMode::LegacyView)
+    {
+        ClearCamera();
+    }
+}
+
+// ----------------------------------------------------
+// LEGACY VIEW ADAPTER: no physics, orbit, target selection or smoothing.
+// ----------------------------------------------------
+void ASSWCameraManager::ApplyLegacyView(
+    const FVector& UnrealPosition,
+    const FVector& UnrealForward,
+    const FVector& UnrealRight,
+    const FVector& UnrealUp)
+{
+    if (!bLegacyViewBridgeEnabled || !FMath::IsFinite(UnrealPosition.X) || !FMath::IsFinite(UnrealPosition.Y) || !FMath::IsFinite(UnrealPosition.Z) || UnrealForward.IsNearlyZero() || UnrealUp.IsNearlyZero())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SSWCameraManager] Ignored invalid legacy camera basis"));
+        return;
+    }
+
+    // UE uses X-forward, Y-right, Z-up. The vectors passed to this
+    // adapter are in UE world space, not raw Starshatter axes.
+    const FVector Forward = UnrealForward.GetSafeNormal();
+    FVector Up = (UnrealUp - Forward * FVector::DotProduct(UnrealUp, Forward)).GetSafeNormal();
+    if (Up.IsNearlyZero())
+    {
+        return;
+    }
+
+    // Maintain a right-handed, orthonormal UE basis. Right is used for
+    // consistency checking; UE's view rotation is defined by forward and up.
+    const FVector Right = FVector::CrossProduct(Up, Forward).GetSafeNormal();
+    if (!UnrealRight.IsNearlyZero() &&
+        FVector::DotProduct(Right, UnrealRight.GetSafeNormal()) < 0.0)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[SSWCameraManager] Legacy camera basis handedness differs from UE mapping"));
+    }
+
+    Mode = ESSWCameraMode::LegacyView;
+    TargetActor = nullptr;
+    SetActorLocationAndRotation(UnrealPosition, FRotationMatrix::MakeFromXZ(Forward, Up).Rotator());
 }
 
 // ----------------------------------------------------

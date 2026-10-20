@@ -5,6 +5,7 @@
 #include "SSWCameraManager.generated.h"
 
 class UCameraComponent;
+class Camera; // Starshatter simulation camera, not UCameraComponent
 
 UENUM()
 enum class ESSWCameraMode : uint8
@@ -13,7 +14,8 @@ enum class ESSWCameraMode : uint8
     Static,
     BodyOrbit,
     ActorFollow,
-    GroupFollow
+    GroupFollow,
+    LegacyView // Read-only renderer of the Starshatter Camera state
 };
 
 UCLASS()
@@ -44,6 +46,21 @@ public:
 
     void ActivateCamera(float BlendTime = 0.0f);
 
+    // Baby step 1: render an already-converted world-space legacy view.
+    // Call only AFTER CameraManager::ExecFrame(), once per simulation frame.
+    // Position and basis must be converted by the same world-space mapping as ships.
+    // Step 2: opt-in only. This prevents existing cutscene event handlers from
+    // unexpectedly losing control until their legacy dispatch is migrated.
+    void SetLegacyViewBridgeEnabled(bool bEnabled);
+    bool IsLegacyViewBridgeEnabled() const { return bLegacyViewBridgeEnabled; }
+
+    void ApplyLegacyView(
+        const FVector& UnrealPosition,
+        const FVector& UnrealForward,
+        const FVector& UnrealRight,
+        const FVector& UnrealUp);
+
+
     void SetBodyOrbitView(AActor* Target, const FVector& OrbitPoint);
     void SetOrbitRates(const FVector& Rates);
 
@@ -73,6 +90,9 @@ protected:
     void LookAt(const FVector& Target);
 
 protected:
+
+    UPROPERTY(Transient)
+    bool bLegacyViewBridgeEnabled = false;
 
     UPROPERTY()
     ESSWCameraMode Mode = ESSWCameraMode::None;

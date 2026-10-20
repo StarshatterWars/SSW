@@ -1,4 +1,4 @@
-﻿
+
 #include "SSWRuntimeSubsystem.h"
 
 #include "SimShot.h"
@@ -27,6 +27,7 @@
 #include "WaypointActor.h"
 #include "Instruction.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Sim.h"
 #include "TimerSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -35,6 +36,9 @@
 #include "Galaxy.h"
 #include "Campaign.h"
 #include "CameraManager.h"
+#include "SSWCameraManager.h"
+#include "SSWLegacyCameraViewActor.h"
+#include "Camera.h"
 #include "EventDispatch.h"
 #include "HUDView.h"
 #include "Blueprint/UserWidget.h"
@@ -412,8 +416,49 @@ void USSWRuntimeSubsystem::UpdateWorld()
 
     if (CamDir)
     {
+        // Exactly one legacy camera simulation update per UpdateWorld().
         CamDir->ExecFrame(Seconds);
+        // Presentation-only copy; does not mutate the legacy Camera or Sim.
+        SyncLegacyCameraView();
     }
+}
+
+void USSWRuntimeSubsystem::SyncLegacyCameraView()
+{
+    // Step 2 is opt-in until the cutscene event dispatcher uses CameraManager.
+    // Never advance CameraManager from here (UpdateWorld already did so).
+    UWorld* World = GetWorld();
+    if (!World || !CamDir || !CamDir->GetCamera() || !CamDir->GetShip())
+        return;
+
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC)
+        return;
+
+    // New passive UE view is preferred for legacy-driven cutscenes.
+    // Existing ASSWCameraManager remains an opt-in compatibility target.
+    ASSWLegacyCameraViewActor* PassiveView =
+        Cast<ASSWLegacyCameraViewActor>(PC->GetViewTarget());
+    ASSWCameraManager* CompatibilityView =
+        Cast<ASSWCameraManager>(PC->GetViewTarget());
+    if (!IsValid(PassiveView) &&
+        (!IsValid(CompatibilityView) || !CompatibilityView->IsLegacyViewBridgeEnabled()))
+        return;
+
+    const Camera* LegacyCamera = CamDir->GetCamera();
+    // The port's existing simulation-to-UE permutation is (X,Y,Z)->(Z,X,Y).
+    // Positions also require the presentation world's region origin; do not
+    // use only ConvertLegacyShipLocationToUE() for a world-space camera pose.
+    SimRegion* CameraRegion = SimInstance ? SimInstance->GetActiveRegion() : nullptr;
+    const FVector UnrealPosition = GetVisualLocationForRegion(CameraRegion, LegacyCamera->Pos());
+    const FVector UnrealForward = ConvertLegacyShipLocationToUE(LegacyCamera->vpn());
+    const FVector UnrealRight = ConvertLegacyShipLocationToUE(LegacyCamera->vrt());
+    const FVector UnrealUp = ConvertLegacyShipLocationToUE(LegacyCamera->vup());
+
+    if (IsValid(PassiveView))
+        PassiveView->ApplyLegacyView(UnrealPosition, UnrealForward, UnrealRight, UnrealUp);
+    else if (IsValid(CompatibilityView))
+        CompatibilityView->ApplyLegacyView(UnrealPosition, UnrealForward, UnrealRight, UnrealUp);
 }
 
 void USSWRuntimeSubsystem::GameState()

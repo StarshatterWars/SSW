@@ -1,4 +1,4 @@
-﻿/*
+/*
     Project Starshatter Wars
     Fractal Dev Studios
 
@@ -40,6 +40,7 @@ class UStaticMesh;
 class Ship;
 class AActor;
 
+class ASSWCameraManager;
 class AShipActor;
 class ASystemSceneBuilder;
 
@@ -128,6 +129,7 @@ public:
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
 private:
+    void SyncLegacyCameraView();
     void UpdateMissionWaypoints();
     void ClearMissionWaypoints();
     double WaypointRefreshSeconds = 0;
