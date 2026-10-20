@@ -2760,8 +2760,10 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             }
     }
     // Keep local ships at simulation scale (1 UE unit per simulation metre).
-    // Very distant bodies use camera-relative proxies: distance AND radius
+    // Very distant bodies use view-relative proxies: distance AND radius
     // receive the same factor, preserving apparent size without huge vertices.
+    // Observer MUST be the active legacy cinematic camera position while that
+    // camera is the view target, not the player ship's position.
     constexpr double BackgroundDistance = 1.0e8;
     const FVector Eye = GetActorLocation() + Observer;
     for (const auto& Pair : RuntimeBodyMap)

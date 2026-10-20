@@ -56,7 +56,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Solus"
-   loc:       (-200000, -120000, 0)
+   loc:       (-200e3, -100e3, 0)
 
    objective: { cmd: Vector, tgt: "Trellis-Solus" }
 }
@@ -72,7 +72,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Solus"
-   loc:        (120000, -200000, 0)
+   loc:       (150e3, -180e3, 0)
 
    objective: { cmd: Vector, tgt: "Jalah-Solus" }
 }
@@ -88,7 +88,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Jalah"
-   loc:       (-180000, -100000, 0)
+   loc:       (0, 0, 0)
 
    objective: { cmd: Vector, tgt: "Solus-Jalah" }
 }
@@ -104,7 +104,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Jalah"
-   loc:       (100000, -180000, 0)
+   loc:       (120e3, -200e3, 0)
 
    objective: { cmd: Vector, tgt: "Trellis-Jalah" }
 }
@@ -120,7 +120,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-   loc:       (-200000, -120000, 0)
+   loc:       (-100e3, -150e3, 0)
 
    objective: { cmd: Vector, tgt: "Solus-Trellis" }
 }
@@ -136,7 +136,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-   loc:       (120000, -200000, 0)
+   loc:       (50e3, -100e3, 0)
 
    objective: { cmd: Vector, tgt: "Jalah-Trellis" }
 }
@@ -152,7 +152,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Trellis"
-             loc: (0, -150000, 0)
+   loc:       (0, 0, 0)
 }
 
 element: {
@@ -166,11 +166,10 @@ element: {
    iff:       1
    playable:  false
    region:    "Trellis"
-   loc:       (-192000, -120000, 0)
+   loc:       (-120e3, -90e3, 0)
 
-   navpt:     { cmd: Vector, objective: farcast, speed: 1000, rgn: "Trellis", tgt: "Trellis-Solus" }
+   navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 1000, rgn: "Trellis" }
 }
-
 
 element: {
    name:      "Kitts"
@@ -184,8 +183,6 @@ element: {
    playable:  false
    region:    "Trellis"
    loc:       (185e3, -280e3, 0)
-
-   navpt:     { cmd: Vector, objective: target, speed: 500, rgn: "Trellis", tgt: "Blockade Runner" }
 }
 
 element: {
@@ -214,15 +211,16 @@ element: {
    iff:       1
    playable:  false
    region:    "Trellis"
-   loc:       (-212e3, -290e3, 0)
+   loc:       (212e3, -290e3, 0)
 
-   navpt:     { cmd: Vector, objective: dock, loc: (0, -150000, 0), speed: 500, rgn: "Trellis", tgt: "Trellis Docks" }
+   navpt:     { cmd: Vector, loc: (-120e3, -170e3, 0), speed: 500, rgn: "Trellis" }
 }
 
 event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 
-event: { type: Camera, time: 0.01, param: 3, target: "Solus", vec: (0,0,8e5) }
-event: { type: Camera, time: 0.01, param: 5, vec: (-0.15,0.01,0.02) }
+
+event: { type: Camera, time: 0.01,                param: 3,  target: "body:Solus",  vec: (0,0,1e7)           }
+event: { type: Camera, time: 0.01,                param: 5,                         vec: (0.12, 0.01, 0.02)  }
 
 event: { type: Hold, param: 20, event_ship: Kitts }
 event: { type: Hold, param: 20, event_ship: Lovo }
@@ -238,19 +236,17 @@ event: { type: Message, time: 0.27, sound: News_01_Campaign_Start,
 event: { type: Message, time: 4.30,
          caption: "formally requested military assistance\nfrom Terellian Alliance Force Command this morning." }
 
-event: { type: Camera,     time:  7, param: (6, 15),  target: "Blockade Runner" }
-
+event: { type: Camera,  time:  7.00, param: (6, 15),  target: "Blockade Runner" }
 event: { type: Display, time: 7.00, message: "Trellis Sector" }
 event: { type: Display, time: 7.00, message: "Blockade Runner" }
 
 event: { type: Message, time: 9.00,
          caption: "Special couriers ran the Trellis blockade\nto deliver the message" }
 
-event: { type: Messasge, time: 12.56,
+event: { type: Message, time: 12.56,
          caption: "to the Force outpost\nin the nearby Janek system." }
 
-event: { type: Camera,     time:  20.00, param: (6, 20),  target: "Kitts" }
-
+event: { type: Camera, time:  20.00, param: (6, 20),  target: "Kitts" }
 event: { type: Display, time: 20.00, message: "Dantari Separatists" }
 event: { type: Display, time: 20.00, message: "Destroyer Squadron 'Kitts'" }
 
@@ -266,8 +262,8 @@ event: { type: Message, time: 23.75,
 event: { type: Message, time: 26.63,
          caption: "and we need help to reestablish\nbasic services here.\"" }
 
-event: { type: Camera, time: 30.00, param: 3, target: "Trellis", vec: (0,0,1e6) }
-event: { type: Camera, time: 30.00, param: 5, vec: (-0.15,0.01,0.02) }
+event: { type: Camera, time:  30.00, param: 3,  target: "body:Trellis", vec: (0,0,1e8)           }
+event: { type: Camera, time: 30.00,               param: 5,                          vec: (-0.15, 0.01, 0.02) }
 
 event: { type: Display, time: 30.00, message: "Trellis" }
 
@@ -277,8 +273,8 @@ event: { type: Message, time: 30.00,
 event: { type: Message, time: 33.83,
          caption: "that erupted between the Loyalist\nand Separatist factions of the system government." }
 
-event: { type: Camera, time: 37.85, param: 3, target: "Jalah", vec: (0,0,8e5) }
-event: { type: Camera, time: 37.85, param: 5, vec: (0.12,0.01,0.02) }
+event: { type: Camera,  time:  37.85, param: 3,  target: "body:Jalah",   vec: (0,0,8e7)           }
+event: { type: Camera, time: 37.85,                param: 5,                          vec: (0.12, 0.01, 0.02) }
 
 event: { type: Display, time: 37.85, message: "Jalah" }
 
@@ -297,7 +293,7 @@ event: { type: Message, time: 49.49,
 event: { type: Display, time: 52.55, message: "Meridian Sector" }
 event: { type: Display, time: 52.55, message: "Tal Vesta Stellar Observatory" }
 
-event: { type: Messasge, time: 52.55,
+event: { type: Message, time: 52.55,
          caption: "The Loyalist faction, although still\ntechnically in control of the official government," }
 
 event: { type: Message, time: 56.50,
@@ -311,18 +307,19 @@ event: { type: Message, time: 60.50,
 event: { type: Message, time: 63.85,
          caption: "on the many Alliance citizens\nin the Solus system." }
 
-event: { type: Camera, time: 68.50, param: 3, target: "Meridian", vec: (60,0,1e5) }
+event: { type: Camera, time: 68.50, param: 3, target: "body:Meridian", vec: (60,0,1e5) }
 event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 
 event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
 
-event: { type: Camera, time: 72.55,  param: 3,  vec: (0,0,8e5), target: "Tal Vesta Stellar Observatory" }
+event: { type: Camera,  time:  72.55, param: 3,  target: "Tal Vesta Stellar Observatory",   vec: (0,0,2e3) }
+event: { type: Camera, time: 72.55,                param: 5,                          vec: (-0.13, 0.01, 0.02) }
 
 event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }
 
-event: { type: Messasge, time: 77.50,
+event: { type: Message, time: 77.50,
          caption: "An estimated 375,000 Terellians\nare trapped by the blockade." }
 
 event: { type: Message, time: 81.53,
@@ -330,6 +327,9 @@ event: { type: Message, time: 81.53,
 
 event: { type: Message, time: 85.50,
          caption: "to grant them safe passage\nback to the main Alliance systems." }
+
+event: { type: Camera, time:  85.50, param: 3,  target: "body:Solus",   vec: (60,0,1e7)         }
+event: { type: Camera, time: 85.50,                param: 5,                          vec: (0.14, 0.01, 0.02) }
 
 event: { type: EndScene, time: 89.50, message: "Briefing End" }
 event: { type: Exit }

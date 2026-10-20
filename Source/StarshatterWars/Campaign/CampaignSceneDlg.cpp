@@ -24,6 +24,7 @@
 #include "CampaignSceneActor.h"
 #include "SSWCameraManager.h"
 #include "SSWLegacyCameraViewActor.h"
+#include "SSWRuntimeSubsystem.h"
 #include "CameraManager.h"  // Legacy CameraDirector port; owns cutscene camera behavior
 #include "Sim.h"
 #include "Orbital.h"
@@ -1094,6 +1095,79 @@ ASystemSceneBuilder* UCampaignSceneDlg::ResolveSystemSceneBuilder() const
     return nullptr;
 }
 
+// Phase 7: resolve the player from the imported mission element, not its design.
+// Example: Name=Falcon, Design=CameraPod, Player=1.  No ship is spawned here.
+static Ship* SSWResolveAuthoredPlayerShip(
+    const FS_CampaignMission& MissionData, Sim* LiveSim, UWorld* World)
+{
+    if (!LiveSim)
+        return nullptr;
+
+    const FS_MissionElement* PlayerElement = nullptr;
+    int32 PlayerCount = 0;
+    for (const FS_MissionElement& Element : MissionData.Element)
+    {
+        if (Element.Player <= 0)
+            continue;
+        ++PlayerCount;
+        if (!PlayerElement)
+            PlayerElement = &Element;
+    }
+
+    if (PlayerCount != 1 || !PlayerElement)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[LegacyCamera][PLAYER_BIND] Expected one Player>0 element, found %d. Scene='%s'"),
+            PlayerCount, *MissionData.Scene);
+        return nullptr;
+    }
+
+    const FString AuthoredName = PlayerElement->Name.TrimStartAndEnd();
+    if (AuthoredName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[LegacyCamera][PLAYER_BIND] Authored player has an empty Name; design='%s'"),
+            *PlayerElement->Design);
+        return nullptr;
+    }
+
+    Ship* Result = nullptr;
+    const auto NameAnsi = StringCast<ANSICHAR>(*AuthoredName);
+    Result = LiveSim->FindShip(NameAnsi.Get());
+
+    // Sim's name lookup may not index a mission element alias.  Match the
+    // bound legacy instance through the existing UE *presentation* actor.
+    if (!Result && World)
+    {
+        for (TActorIterator<AShipActor> It(World); It; ++It)
+        {
+            AShipActor* Actor = *It;
+            Ship* BoundShip = IsValid(Actor) ? Actor->GetRuntimeShip() : nullptr;
+            if (BoundShip &&
+                AuthoredName.Equals(ANSI_TO_TCHAR(BoundShip->GetName()),
+                    ESearchCase::IgnoreCase))
+            {
+                Result = BoundShip;
+                break;
+            }
+        }
+    }
+
+    if (!Result)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[LegacyCamera][PLAYER_BIND] NOT_SPAWNED Element='%s' Design='%s' Scene='%s'"),
+            *AuthoredName, *PlayerElement->Design, *MissionData.Scene);
+        return nullptr;
+    }
+
+    UE_LOG(LogTemp, Log,
+        TEXT("[LegacyCamera][PLAYER_BIND] RESOLVED Element='%s' Design='%s' LiveShip='%s'"),
+        *AuthoredName, *PlayerElement->Design,
+        ANSI_TO_TCHAR(Result->GetName()));
+    return Result;
+}
+
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
     UE_LOG(LogTemp, Error,
@@ -1121,9 +1195,13 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
     {
         Sim* LegacySim = Sim::GetSim();
         CameraManager* LegacyDirector = CameraManager::GetInstance();
-        Ship* PlayerShip = LegacySim ? LegacySim->GetPlayerShip() : nullptr;
+        // The imported mission Player field takes precedence over Sim's
+        // potentially unassigned player pointer during preloaded cutscenes.
+        Ship* PlayerShip = SSWResolveAuthoredPlayerShip(
+            ActiveMissionData, LegacySim, GetWorld());
 
-        // Do not divert a scene-only camera shot into an uninitialized simulation.
+        // Refuse to silently substitute an arbitrary combat ship if the
+        // mission's specifically-authored player has not spawned yet.
         if (LegacySim && LegacyDirector && PlayerShip)
         {
             const FString TargetName = Event.EventTarget.TrimStartAndEnd();
@@ -1138,6 +1216,35 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                 {
                     const auto TargetUtf8 = StringCast<ANSICHAR>(*TargetName);
                     TargetShip = LegacySim->FindShip(TargetUtf8.Get());
+
+                    // Phase 6: a live UE ship actor is presentation-only, but
+                    // can provide the authoritative legacy Ship* when Sim's
+                    // name index does not contain this particular alias.
+                    // Never substitute the actor transform for legacy state.
+                    if (!TargetShip)
+                    {
+                        if (UWorld* CameraWorld = GetWorld())
+                        {
+                            for (TActorIterator<AShipActor> It(CameraWorld); It; ++It)
+                            {
+                                AShipActor* Candidate = *It;
+                                Ship* BoundShip = IsValid(Candidate)
+                                    ? Candidate->GetRuntimeShip() : nullptr;
+                                if (!BoundShip)
+                                    continue;
+
+                                const FString BoundName = ANSI_TO_TCHAR(BoundShip->GetName());
+                                if (BoundName.Equals(TargetName, ESearchCase::IgnoreCase))
+                                {
+                                    TargetShip = BoundShip;
+                                    UE_LOG(LogTemp, Log,
+                                        TEXT("[LegacyCamera] Resolved '%s' through live ShipActor binding"),
+                                        *TargetName);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (!TargetShip)
@@ -1150,11 +1257,23 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
             // If the simulation has no matching target, preserve the working
             // Unreal-only scene actor/body shot below, rather than losing it.
-            const bool bResolved = !bHasTarget || TargetShip || TargetBody;
+            // Command 5 sets orbit angular/range rates even if the optional
+            // named target cannot be resolved. A missing target must never
+            // cause those rates to be sent to the UE compatibility camera.
+            const bool bResolved = (LegacyCommand == 5) || !bHasTarget ||
+                TargetShip != nullptr || TargetBody != nullptr;
             if (bResolved)
             {
-                if (!LegacyDirector->GetShip())
+                // SetShip is the original CameraDirector ownership operation.
+                // During a DropCam transition the director intentionally follows
+                // another ship; do not interrupt that temporary ownership.
+                Ship* CurrentDirectorShip = LegacyDirector->GetShip();
+                if (!CurrentDirectorShip ||
+                    (!CurrentDirectorShip->IsDropCam() &&
+                     CurrentDirectorShip != PlayerShip))
+                {
                     LegacyDirector->SetShip(PlayerShip);
+                }
 
                 if (LegacyDirector->GetShip())
                 {
@@ -1298,6 +1417,20 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
     // Scene-only compatibility path. The old Unreal camera is instantiated
     // ONLY if the legacy Sim could not resolve the event's requested target.
+    // Phase 6 migration diagnostic: every entry here is a remaining
+    // dependency on ASSWCameraManager and must be reviewed before deletion.
+    // Log the original DataTable values; no camera behavior is changed.
+    UE_LOG(LogTemp, Warning,
+        TEXT("[LegacyCamera][COMPAT_FALLBACK] Command=%d Target='%s' Time=%.3f "
+             "Point=%s Params=%d Sim=%s SimPlayerShip=%s"),
+        LegacyCommand,
+        *Event.EventTarget,
+        (double)Event.EventTime,
+        *Event.EventPoint.ToString(),
+        Event.EventParam.Num(),
+        Sim::GetSim() ? TEXT("YES") : TEXT("NO"),
+        Sim::GetSim() && Sim::GetSim()->GetPlayerShip() ? TEXT("YES") : TEXT("NO"));
+
     ASSWCameraManager* Cam = ResolveSceneCamera();
     if (!Cam)
     {

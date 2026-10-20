@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -733,6 +733,48 @@ Sim::ExecMission()
 	// Create runtime entities
 	//-------------------------------------------------------------
 	CreateElements();
+
+	// The authored player element, not its design name or Unreal visual,
+	// owns the mission camera. Bind only after CreateElements has created
+	// the corresponding legacy Ship and registered it in a SimRegion.
+	if (MissionElement* AuthoredPlayer = mission->GetPlayer())
+	{
+		Ship* PlayerShip = nullptr;
+		const int32 PlayerIndex = AuthoredPlayer->GetPlayerIndex();
+		if (SimElement* PlayerElement = FindElement(AuthoredPlayer->GetName()))
+		{
+			PlayerShip = PlayerElement->GetShip(PlayerIndex > 0 ? PlayerIndex : 1);
+		}
+		if (!PlayerShip && PlayerIndex == 1)
+		{
+			PlayerShip = FindShip(AuthoredPlayer->GetName());
+		}
+
+		if (PlayerShip && PlayerShip->GetRegion())
+		{
+			PlayerShip->GetRegion()->SetPlayerShip(PlayerShip);
+			if (cam_dir)
+			{
+				cam_dir->SetShip(PlayerShip);
+			}
+			UE_LOG(LogTemp, Log,
+				TEXT("[MissionPlayer][BOUND] Element='%hs' Instance='%hs' Region='%hs' PlayerIndex=%d CameraDirector=%s"),
+				AuthoredPlayer->GetName().data(), PlayerShip->GetName(),
+				PlayerShip->GetRegion()->GetName(), PlayerIndex,
+				cam_dir ? TEXT("YES") : TEXT("NO"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("[MissionPlayer][SPAWN_FAILED] Element='%hs' Region='%hs' PlayerIndex=%d Ship=%p"),
+				AuthoredPlayer->GetName().data(), AuthoredPlayer->GetRegion().data(),
+				PlayerIndex, PlayerShip);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[MissionPlayer][NO_AUTHORED_PLAYER]"));
+	}
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Sim::ExecMission] CreateElements complete"));

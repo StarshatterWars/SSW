@@ -172,8 +172,21 @@ bool Mission::LoadMissionCommon(
 		Elem->SetSquadron(
 			TCHAR_TO_ANSI(*SrcElem.Squadron));
 
-		Elem->SetRegion(
-			TCHAR_TO_ANSI(*SrcElem.RegionName));
+		// Legacy .def semantics: an element without its own region inherits
+		// the mission's region. This must happen before Sim::CreateShip,
+		// which requires a valid region for the live Ship instance.
+		const FString EffectiveRegion = SrcElem.RegionName.TrimStartAndEnd().IsEmpty()
+			? InData.MissionRegion.TrimStartAndEnd()
+			: SrcElem.RegionName.TrimStartAndEnd();
+
+		Elem->SetRegion(TCHAR_TO_ANSI(*EffectiveRegion));
+		if (SrcElem.Player)
+		{
+			UE_LOG(LogStarshatterMission, Log,
+				TEXT("[MissionPlayer][REGION] Element='%s' Design='%s' AuthoredRegion='%s' EffectiveRegion='%s' MissionRegion='%s'"),
+				*SrcElem.Name, *SrcElem.Design, *SrcElem.RegionName,
+				*EffectiveRegion, *InData.MissionRegion);
+		}
 
 		Elem->SetIFF(
 			SrcElem.IFFCode);

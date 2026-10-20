@@ -393,13 +393,6 @@ void USSWRuntimeSubsystem::UpdateWorld()
             Game::GetGameTime();
 
         SimInstance->ExecFrame(Seconds);
-        if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-            if (SimRegion* ActiveRegion = SimInstance->GetActiveRegion())
-            {
-                Ship* PlayerShip = SimInstance->GetPlayerShip();
-                Builder->UpdateMissionSpace(ActiveRegion->GetLocation(),
-                    PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector);
-            }
         UpdateProjectileVisuals();
         WaypointRefreshSeconds += Seconds;
         if (WaypointRefreshSeconds >= 0.25) { WaypointRefreshSeconds = 0; UpdateMissionWaypoints(); }
@@ -420,6 +413,57 @@ void USSWRuntimeSubsystem::UpdateWorld()
         CamDir->ExecFrame(Seconds);
         // Presentation-only copy; does not mutate the legacy Camera or Sim.
         SyncLegacyCameraView();
+    }
+
+    // Mission bodies are camera-relative proxies during legacy cinematics.
+    // The camera may be millions of simulation units from the player CameraPod.
+    // Using the player ship as the projection origin makes distant planets the
+    // wrong size and places them at the wrong bearing in the active view.
+    // Run after CameraManager::ExecFrame so the camera pose is current.
+    if (SimInstance && SimInstance->GetMission() && !bPaused)
+    {
+        if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+        {
+            if (SimRegion* ActiveRegion = SimInstance->GetActiveRegion())
+            {
+                Ship* PlayerShip = SimInstance->GetPlayerShip();
+                FVector Observer = PlayerShip
+                    ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation())
+                    : FVector::ZeroVector;
+                bool bCameraObserver = false;
+                if (UWorld* World = GetWorld())
+                {
+                    if (APlayerController* PC = World->GetFirstPlayerController())
+                    {
+                        const ASSWLegacyCameraViewActor* PassiveView =
+                            Cast<ASSWLegacyCameraViewActor>(PC->GetViewTarget());
+                        ASSWCameraManager* CompatView =
+                            Cast<ASSWCameraManager>(PC->GetViewTarget());
+                        bCameraObserver = IsValid(PassiveView) ||
+                            (IsValid(CompatView) && CompatView->IsLegacyViewBridgeEnabled());
+                    }
+                }
+                if (bCameraObserver && CamDir && CamDir->GetCamera() && CamDir->GetShip())
+                {
+                    // Same local camera location used by SyncLegacyCameraView.
+                    // The builder adds its own world-space origin.
+                    Observer = ConvertLegacyShipLocationToUE(CamDir->GetCamera()->Pos());
+                }
+                Builder->UpdateMissionSpace(ActiveRegion->GetLocation(), Observer);
+
+                static int32 CameraScaleProbeCount = 0;
+                if (bCameraObserver && CameraScaleProbeCount++ < 5)
+                {
+                    const FVector PlayerUE = PlayerShip
+                        ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation())
+                        : FVector::ZeroVector;
+                    UE_LOG(LogSSWRuntime, Display,
+                        TEXT("[Phase9CameraScale] CameraRelative=1 ObserverUE=%s PlayerUE=%s BuilderWorld=%s"),
+                        *Observer.ToString(), *PlayerUE.ToString(),
+                        *Builder->GetActorLocation().ToString());
+                }
+            }
+        }
     }
 }
 
