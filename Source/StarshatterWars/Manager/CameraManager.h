@@ -99,7 +99,7 @@ public:
 	virtual Ship*	   GetViewObject()  const { return external_ship; }
 
 	virtual void       SetViewOrbital(Orbital* orb);
-	virtual void       SetViewObject(Ship* obj, bool quick = false);
+	virtual void       SetViewObject(Ship* obj, bool quick = false, bool bScriptedCameraEvent = false);
 	virtual void       SetViewObjectGroup(ListIter<Ship> group, bool quick = false);
 	virtual void       ClearGroup();
 
@@ -131,6 +131,8 @@ protected:
 	SimRegion* region;
 	Orbital* external_body;
 	Ship* external_ship;
+	// Explicit mission-camera focus; never bypass normal combat contact checks for gameplay.
+	Ship* scripted_view_ship = nullptr;
 	List<Ship>         external_group;
 
 	// Converted Starshatter Point -> Unreal FVector

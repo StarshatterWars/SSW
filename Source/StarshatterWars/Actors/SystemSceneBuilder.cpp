@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -24,6 +24,7 @@
 #include "StarSystem.h"
 #include "Orbital.h"
 #include "OrbitalBody.h"
+#include "Graphic.h" // Complete Graphic type for Body->Rep()->Location() in Phase 9 projection
 #include "OrbitalRegion.h"
 #include "PlanetActor.h"
 #include "GasGiantActor.h"
@@ -2710,7 +2711,7 @@ void ASystemSceneBuilder::ResetTemporaryCutsceneBodyScales()
 // Authored X/Y orbital plane -> simulation OtherHand -> Unreal ship frame.
 static FVector MissionOrbitalToUE(const FVector& P) { return FVector(P.Y, -P.X, P.Z); }
 
-void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer)
+void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody, const FVector& CameraForwardUE)
 {
     if (!bMissionSpace)
     {
@@ -2772,15 +2773,75 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
         const auto* Found = BodyActorMap.Find(Pair.Key);
         AActor* BodyActor = Found ? Found->Get() : nullptr;
         if (!Body || !IsValid(BodyActor)) continue;
-        const FVector Delta = MissionOrbitalToUE(Body->Location() - SectorOrigin) - Observer;
+        // Active body: use the *same* focus position as CameraManager::Orbit().
+        // Its Rep()->Location() and camera.Pos() are expressed in the same
+        // legacy camera frame. The former orbital-body translation subtracted
+        // SectorOrigin and used a different axis map; the viewport then looked
+        // away from the rendered planet despite the correct body: target.
+        const bool bFocused = (FocusBody == static_cast<const Orbital*>(Body));
+        const FVector BodyLocal = (bFocused && Body->Rep())
+            ? FVector(Body->Rep()->Location().Z, Body->Rep()->Location().X, Body->Rep()->Location().Y)
+            : MissionOrbitalToUE(Body->Location() - SectorOrigin);
+        const FVector Delta = BodyLocal - Observer;
         const double Distance = Delta.Size();
         const double Projection = Distance > BackgroundDistance ? BackgroundDistance / Distance : 1.0;
         BodyActor->SetActorLocation(Eye + Delta * Projection);
         const double* MeasuredRadius = MissionBodyRadii.Find(BodyActor);
         const FTransform* Original = MissionBodyTransforms.Find(BodyActor);
-        if (MeasuredRadius && Original)
+        if (MeasuredRadius && Original && *MeasuredRadius > UE_SMALL_NUMBER)
             BodyActor->SetActorScale3D(Original->GetScale3D() * (Body->Radius() * Projection / *MeasuredRadius));
+
+        if (bFocused)
+        {
+            // Phase 9: log the first frames of EACH body, rather than burning the
+            // entire diagnostic budget on the opening Solus shot.
+            static const Orbital* LastLoggedFocus = nullptr;
+            static int32 FramesOnFocus = 0;
+            if (LastLoggedFocus != FocusBody)
+            {
+                LastLoggedFocus = FocusBody;
+                FramesOnFocus = 0;
+            }
+            ++FramesOnFocus;
+            if (FramesOnFocus <= 5 || FramesOnFocus % 120 == 0)
+            {
+                const FVector ToBody = (BodyActor->GetActorLocation() - Eye).GetSafeNormal();
+                const FVector Forward = CameraForwardUE.GetSafeNormal();
+                const double FacingDot = Forward.IsNearlyZero()
+                    ? -2.0 : FVector::DotProduct(ToBody, Forward);
+                FVector VisualCenter = FVector::ZeroVector;
+                FVector VisualExtent = FVector::ZeroVector;
+                BodyActor->GetActorBounds(false, VisualCenter, VisualExtent, true);
+                const double ScreenHalfAngle = FMath::RadiansToDegrees(FMath::Atan2(
+                    VisualExtent.Size(), FMath::Max((BodyActor->GetActorLocation() - Eye).Size(), 1.0)));
+                UE_LOG(LogTemp, Display,
+                    TEXT("[Phase9PlanetFocusDetail] Body='%s' Frame=%d HasRep=%d Hidden=%d Camera=%s Focus=%s Delta=%.1f SimRadius=%.1f Projection=%.7f VisualRadius=%.1f HalfAngleDeg=%.2f FacingDot=%.5f ActorWorld=%s MeshCenter=%s"),
+                    *Pair.Key, FramesOnFocus, Body->Rep() ? 1 : 0,
+                    BodyActor->IsHidden() ? 1 : 0, *Observer.ToString(), *BodyLocal.ToString(),
+                    Distance, Body->Radius(), Projection, VisualExtent.Size(),
+                    ScreenHalfAngle, FacingDot, *BodyActor->GetActorLocation().ToString(), *VisualCenter.ToString());
+            }
+        }
     }
+}
+
+bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName) const
+{
+    if (!FocusBody || !bMissionSpace)
+        return false;
+    for (const auto& Pair : RuntimeBodyMap)
+    {
+        if (static_cast<const Orbital*>(Pair.Value) != FocusBody)
+            continue;
+        const auto* Found = BodyActorMap.Find(Pair.Key);
+        AActor* Actor = Found ? Found->Get() : nullptr;
+        if (!IsValid(Actor))
+            return false;
+        OutLocation = Actor->GetActorLocation();
+        OutName = Pair.Key;
+        return true;
+    }
+    return false;
 }
 
 void ASystemSceneBuilder::EndMissionSpace()

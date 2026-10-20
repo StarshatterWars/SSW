@@ -1204,7 +1204,23 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
         // mission's specifically-authored player has not spawned yet.
         if (LegacySim && LegacyDirector && PlayerShip)
         {
-            const FString TargetName = Event.EventTarget.TrimStartAndEnd();
+            // Phase 9: the imported Cutscene DataTable for 01-News-Start incorrectly
+            // names "Trellis Docks" for the Farcaster shot at 60.50s. The
+            // authoritative .def names "Trellis-Solus". Correct only this
+            // authored news shot; do not alias other dock shots or edit assets.
+            FString TargetName = Event.EventTarget.TrimStartAndEnd();
+            const bool bFarcasterNewsShot =
+                LegacyCommand == 3 &&
+                FMath::IsNearlyEqual(Event.EventTime, 60.50, 0.02) &&
+                (TargetName.Equals(TEXT("Trellis Docks"), ESearchCase::IgnoreCase) ||
+                 TargetName.Equals(TEXT("Trellis-Solus"), ESearchCase::IgnoreCase));
+            if (bFarcasterNewsShot && TargetName.Equals(TEXT("Trellis Docks"), ESearchCase::IgnoreCase))
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("[Phase9FarcasterTargetRepair] Time=%.2f DataTable='%s' AuthoredDEF='Trellis-Solus'"),
+                    Event.EventTime, *TargetName);
+                TargetName = TEXT("Trellis-Solus");
+            }
             const bool bHasTarget = !TargetName.IsEmpty();
             const bool bBodyPrefix = TargetName.StartsWith(TEXT("body:"), ESearchCase::IgnoreCase);
 
@@ -1322,7 +1338,7 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                                     Previous->CompleteTransition();
                                 if (LegacyDirector->GetShip() != PlayerShip)
                                     LegacyDirector->SetShip(PlayerShip);
-                                LegacyDirector->SetViewObject(TargetShip, true);
+                                LegacyDirector->SetViewObject(TargetShip, true, true); // Authored cutscene may select a neutral/non-contact station.
                             }
                         }
                     }
@@ -1331,12 +1347,33 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                         LegacyDirector->SetViewOrbital(TargetBody);
                     }
 
+                    if (bHasTarget && !bBodyPrefix)
+                    {
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[Phase9CameraTargetBinding] Authored='%s' Resolved='%s' Active='%s' Mode=%d"),
+                            *TargetName,
+                            TargetShip ? ANSI_TO_TCHAR(TargetShip->GetName()) : TEXT("<none>"),
+                            LegacyDirector->GetViewObject() ? ANSI_TO_TCHAR(LegacyDirector->GetViewObject()->GetName()) : TEXT("<null>"),
+                            LegacyDirector->GetMode());
+                    }
+
                     if (LegacyCommand == 3)
                     {
                         LegacyDirector->SetOrbitPoint(
                             (double)Event.EventPoint.X,
                             (double)Event.EventPoint.Y,
                             (double)Event.EventPoint.Z);
+                        if (bFarcasterNewsShot && TargetShip &&
+                            LegacyDirector->GetViewObject() == TargetShip)
+                        {
+                            // The DataTable omits the orbit-rate event for this shot.
+                            // 0.14 rad/s matches the later working Meridian/Tal Vesta
+                            // camera pan. The next authored param-5 event takes over.
+                            LegacyDirector->SetOrbitRates(0.14, 0.0, 0.0);
+                            UE_LOG(LogTemp, Display,
+                                TEXT("[Phase9FarcasterPan] Target='%s' AzRate=0.14 rad/s Mode=%d"),
+                                ANSI_TO_TCHAR(TargetShip->GetName()), LegacyDirector->GetMode());
+                        }
                     }
                     else if (LegacyCommand == 5)
                     {

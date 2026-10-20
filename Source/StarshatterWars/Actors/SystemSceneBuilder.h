@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -9,6 +9,7 @@ class USceneComponent;
 class UStarshatterEnvironmentSubsystem;
 class StarSystem;
 class OrbitalBody;
+class Orbital;
 class OrbitalRegion;
 class ACameraActor;
 class ASkyLight;
@@ -466,7 +467,8 @@ protected:
     TObjectPtr<ACameraActor> SceneCameraActor = nullptr;
 
 public:
-    void UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer);
+    void UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody = nullptr, const FVector& CameraForwardUE = FVector::ZeroVector);
+    bool GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName) const;
     void EndMissionSpace();
     bool GetMissionBodyInfo(AActor* Actor, FString& Name, FString& Type, FVector& AuthoredLocation, FString& ImagePath) const;
 private:

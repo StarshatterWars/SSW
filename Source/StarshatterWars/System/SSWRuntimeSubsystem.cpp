@@ -20,6 +20,7 @@
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 
 #include "OrbitalRegion.h"
+#include "Orbital.h"
 
 #include "Starshatter.h"
 
@@ -407,12 +408,13 @@ void USSWRuntimeSubsystem::UpdateWorld()
             SimInstance->GetRegions().size());
     }
 
+    bool bPresentationCameraSynced = false;
     if (CamDir)
     {
         // Exactly one legacy camera simulation update per UpdateWorld().
         CamDir->ExecFrame(Seconds);
-        // Presentation-only copy; does not mutate the legacy Camera or Sim.
-        SyncLegacyCameraView();
+        // Phase 9: defer viewport synchronization until mission-body projection
+        // is updated below. This avoids looking at previous-frame body transforms.
     }
 
     // Mission bodies are camera-relative proxies during legacy cinematics.
@@ -420,9 +422,46 @@ void USSWRuntimeSubsystem::UpdateWorld()
     // Using the player ship as the projection origin makes distant planets the
     // wrong size and places them at the wrong bearing in the active view.
     // Run after CameraManager::ExecFrame so the camera pose is current.
-    if (SimInstance && SimInstance->GetMission() && !bPaused)
+    // Cinematic camera updates can run while runtime simulation is paused.
+    // Keep the planetary presentation synced whenever the mission exists.
+    if (SimInstance && SimInstance->GetMission())
     {
-        if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+        // Phase 9: a cutscene can spawn its system builder without calling
+        // BeginMissionPresentation(). Do not call that method here: it invokes
+        // EndMissionPresentation() and would destroy otherwise working ship visuals.
+        // Recover only for an active legacy cinematic view.
+        ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get();
+        if (!IsValid(Builder))
+        {
+            if (UWorld* World = GetWorld())
+            {
+                if (APlayerController* PC = World->GetFirstPlayerController())
+                {
+                    const ASSWLegacyCameraViewActor* Passive =
+                        Cast<ASSWLegacyCameraViewActor>(PC->GetViewTarget());
+                    const ASSWCameraManager* Compat =
+                        Cast<ASSWCameraManager>(PC->GetViewTarget());
+                    const bool bLegacyCinematic = IsValid(Passive) ||
+                        (IsValid(Compat) && Compat->IsLegacyViewBridgeEnabled());
+                    if (bLegacyCinematic && CamDir && CamDir->GetCamera())
+                    {
+                        for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+                        {
+                            ASystemSceneBuilder* Candidate = *It;
+                            if (!IsValid(Candidate) || Candidate->GetSpawnedBodies().IsEmpty())
+                                continue;
+                            Builder = Candidate;
+                            MissionPresentationBuilder = Builder;
+                            UE_LOG(LogSSWRuntime, Display,
+                                TEXT("[Phase9PlanetBuilderRecovery] Builder='%s' Bodies=%d Paused=%d"),
+                                *Builder->GetName(), Builder->GetSpawnedBodies().Num(), bPaused ? 1 : 0);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (IsValid(Builder))
         {
             if (SimRegion* ActiveRegion = SimInstance->GetActiveRegion())
             {
@@ -443,13 +482,77 @@ void USSWRuntimeSubsystem::UpdateWorld()
                             (IsValid(CompatView) && CompatView->IsLegacyViewBridgeEnabled());
                     }
                 }
-                if (bCameraObserver && CamDir && CamDir->GetCamera() && CamDir->GetShip())
+                if (bCameraObserver && CamDir && CamDir->GetCamera())
                 {
                     // Same local camera location used by SyncLegacyCameraView.
                     // The builder adds its own world-space origin.
                     Observer = ConvertLegacyShipLocationToUE(CamDir->GetCamera()->Pos());
                 }
-                Builder->UpdateMissionSpace(ActiveRegion->GetLocation(), Observer);
+                // Match the orbital camera focus to the same legacy Rep()->Location()
+                // that CameraManager::Orbit() uses for LookAt().
+                const Orbital* FocusBody = (bCameraObserver && CamDir)
+                    ? CamDir->GetViewOrbital() : nullptr;
+                Builder->UpdateMissionSpace(ActiveRegion->GetLocation(), Observer, FocusBody,
+                    (bCameraObserver && CamDir && CamDir->GetCamera())
+                        ? ConvertLegacyShipLocationToUE(CamDir->GetCamera()->vpn())
+                        : FVector::ZeroVector);
+
+                // Projection must precede final camera aim and viewport copy.
+                // SyncLegacyCameraView handles ship/station orbit clearance and
+                // the currently focused body's final presentation alignment.
+                if (bCameraObserver)
+                {
+                    SyncLegacyCameraView();
+                    bPresentationCameraSynced = true;
+                }
+
+                // Phase 9: Trellis/Jalah have a valid body proxy, but the legacy
+                // orbital-camera forward points off-axis in their UE presentation.
+                // Aim ONLY the UE view at the actual updated body proxy. Preserve
+                // the legacy camera and already-correct Solus/Meridian shots.
+                if (bCameraObserver && FocusBody && CamDir && CamDir->GetCamera())
+                {
+                    FVector FocusWorld;
+                    FString FocusName;
+                    if (Builder->GetFocusedMissionBodyWorldLocation(FocusBody, FocusWorld, FocusName) &&
+                        (FocusName.Equals(TEXT("Trellis"), ESearchCase::IgnoreCase) ||
+                         FocusName.Equals(TEXT("Jalah"), ESearchCase::IgnoreCase)))
+                    {
+                        UWorld* CameraWorld = GetWorld();
+                        APlayerController* ViewPC = CameraWorld ? CameraWorld->GetFirstPlayerController() : nullptr;
+                        ASSWLegacyCameraViewActor* PassiveView = ViewPC
+                            ? Cast<ASSWLegacyCameraViewActor>(ViewPC->GetViewTarget()) : nullptr;
+                        ASSWCameraManager* CompatibilityView = ViewPC
+                            ? Cast<ASSWCameraManager>(ViewPC->GetViewTarget()) : nullptr;
+                        if (IsValid(PassiveView) || (IsValid(CompatibilityView) && CompatibilityView->IsLegacyViewBridgeEnabled()))
+                        {
+                            const Camera* CameraState = CamDir->GetCamera();
+                            const FVector CameraWorldPosition = GetVisualLocationForRegion(ActiveRegion, CameraState->Pos());
+                            const FVector NewForward = (FocusWorld - CameraWorldPosition).GetSafeNormal();
+                            if (!NewForward.IsNearlyZero())
+                            {
+                                FVector NewUp = ConvertLegacyShipLocationToUE(CameraState->vup()).GetSafeNormal();
+                                if (FMath::Abs(FVector::DotProduct(NewUp, NewForward)) > 0.99)
+                                    NewUp = FVector::UpVector;
+                                if (FMath::Abs(FVector::DotProduct(NewUp, NewForward)) > 0.99)
+                                    NewUp = FVector::RightVector;
+                                const FVector NewRight = FVector::CrossProduct(NewUp, NewForward).GetSafeNormal();
+                                if (IsValid(PassiveView))
+                                    PassiveView->ApplyLegacyView(CameraWorldPosition, NewForward, NewRight, NewUp);
+                                else
+                                    CompatibilityView->ApplyLegacyView(CameraWorldPosition, NewForward, NewRight, NewUp);
+                                static FString LastCorrectedBody;
+                                if (LastCorrectedBody != FocusName)
+                                {
+                                    UE_LOG(LogSSWRuntime, Display,
+                                        TEXT("[Phase9PlanetAimCorrection] Body='%s' Camera=%s Actor=%s"),
+                                        *FocusName, *CameraWorldPosition.ToString(), *FocusWorld.ToString());
+                                    LastCorrectedBody = FocusName;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 static int32 CameraScaleProbeCount = 0;
                 if (bCameraObserver && CameraScaleProbeCount++ < 5)
@@ -465,6 +568,10 @@ void USSWRuntimeSubsystem::UpdateWorld()
             }
         }
     }
+    // Preserve the ordinary ship camera path when no mission builder exists.
+    if (CamDir && !bPresentationCameraSynced)
+        SyncLegacyCameraView();
+
 }
 
 void USSWRuntimeSubsystem::SyncLegacyCameraView()
@@ -472,7 +579,7 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
     // Step 2 is opt-in until the cutscene event dispatcher uses CameraManager.
     // Never advance CameraManager from here (UpdateWorld already did so).
     UWorld* World = GetWorld();
-    if (!World || !CamDir || !CamDir->GetCamera() || !CamDir->GetShip())
+    if (!World || !CamDir || !CamDir->GetCamera())
         return;
 
     APlayerController* PC = World->GetFirstPlayerController();
@@ -562,6 +669,97 @@ void USSWRuntimeSubsystem::SyncLegacyCameraView()
             break;
         }
     }
+
+    // Phase 9: a MODE_ORBIT camera may target a station/observatory through
+    // CameraManager::SetViewObject(), rather than Ship::DropCam(). Preserve
+    // the original orbit simulation, but prevent the Unreal view entering
+    // a much larger imported visual hull.
+    if (CamDir->GetMode() >= CameraManager::MODE_ORBIT)
+    {
+        Ship* OrbitTarget = CamDir->GetViewObject();
+        // Phase 9 station target probe: emit once per change, including null targets.
+        // A null ViewObject means the authored station camera was never bound;
+        // moving the UE camera or multiplying the mesh cannot fix that case.
+        static FString PreviousStationProbe;
+        const FString StationProbe = OrbitTarget
+            ? FString(ANSI_TO_TCHAR(OrbitTarget->GetName())) : FString(TEXT("<null>"));
+        if (StationProbe != PreviousStationProbe)
+        {
+            UE_LOG(LogSSWRuntime, Display,
+                TEXT("[Phase9StationTarget] Mode=%d ViewObject='%s' ViewOrbital=%d HasCameraShip=%d"),
+                CamDir->GetMode(), *StationProbe,
+                CamDir->GetViewOrbital() ? 1 : 0, CamDir->GetShip() ? 1 : 0);
+            PreviousStationProbe = StationProbe;
+        }
+        const bool bNamedStationTarget = OrbitTarget &&
+            (FString(ANSI_TO_TCHAR(OrbitTarget->GetName())).Contains(TEXT("Tal Vesta"), ESearchCase::IgnoreCase) ||
+             FString(ANSI_TO_TCHAR(OrbitTarget->GetName())).Contains(TEXT("Trellis-Solus"), ESearchCase::IgnoreCase));
+        if (OrbitTarget && (CamDir->GetMode() == CameraManager::MODE_ORBIT || bNamedStationTarget))
+        {
+            for (TActorIterator<AShipActor> It(World); It; ++It)
+            {
+                AShipActor* ShipView = *It;
+                if (!IsValid(ShipView) || ShipView->GetRuntimeShip() != OrbitTarget)
+                    continue;
+
+                FVector HullCenter = ShipView->GetActorLocation();
+                FVector HullExtent = FVector::ZeroVector;
+                bool bHaveHull = false;
+                if (IsValid(ShipView->VisualActor))
+                {
+                    ShipView->VisualActor->GetActorBounds(false, HullCenter, HullExtent, true);
+                    bHaveHull = !HullExtent.IsNearlyZero();
+                }
+                if (!bHaveHull && IsValid(ShipView->HullMesh))
+                {
+                    const FBoxSphereBounds& Bounds = ShipView->HullMesh->Bounds;
+                    HullCenter = Bounds.Origin;
+                    HullExtent = Bounds.BoxExtent;
+                    bHaveHull = !HullExtent.IsNearlyZero();
+                }
+
+                if (bHaveHull)
+                {
+                    const double MinimumDistance = HullExtent.Size() * 3.0;
+                    const FVector Offset = UnrealPosition - HullCenter;
+                    const double ActualDistance = Offset.Size();
+                    // Only these two authored station shots need upper-bound
+                    // framing. Preserve every ship and other orbit sequence.
+                    const FString OrbitName = ANSI_TO_TCHAR(OrbitTarget->GetName());
+                    const bool bStationFraming =
+                        OrbitName.Contains(TEXT("Tal Vesta"), ESearchCase::IgnoreCase) ||
+                        OrbitName.Contains(TEXT("Trellis-Solus"), ESearchCase::IgnoreCase);
+                    const double MaximumDistance = HullExtent.Size() * 8.0;
+                    if ((ActualDistance < MinimumDistance ||
+                         (bStationFraming && ActualDistance > MaximumDistance)) &&
+                        MinimumDistance > UE_DOUBLE_SMALL_NUMBER)
+                    {
+                        FVector Away = Offset.GetSafeNormal();
+                        if (Away.IsNearlyZero())
+                            Away = -UnrealForward.GetSafeNormal();
+                        if (Away.IsNearlyZero())
+                            Away = FVector::BackwardVector;
+                        const double ClampedDistance = FMath::Clamp(ActualDistance,
+                            MinimumDistance, bStationFraming ? MaximumDistance : FMath::Max(ActualDistance, MinimumDistance));
+                        UnrealPosition = HullCenter + Away * ClampedDistance;
+                        UnrealForward = (HullCenter - UnrealPosition).GetSafeNormal();
+                        if (FMath::Abs(FVector::DotProduct(UnrealForward, UnrealUp.GetSafeNormal())) > 0.99)
+                            UnrealUp = FVector::UpVector;
+                        static int32 OrbitClearanceLogCount = 0;
+                        if (OrbitClearanceLogCount++ < 30)
+                            UE_LOG(LogSSWRuntime, Display,
+                                TEXT("[Phase9StationOrbit] Target='%s' MeshRadius=%.1f Before=%.1f After=%.1f"),
+                                ANSI_TO_TCHAR(OrbitTarget->GetName()), HullExtent.Size(),
+                                ActualDistance, ClampedDistance);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    // Planet aim correction is applied by UpdateWorld after this pose is
+    // synchronized and after UpdateMissionSpace has positioned body proxies.
 
     if (IsValid(PassiveView))
         PassiveView->ApplyLegacyView(UnrealPosition, UnrealForward, UnrealRight, UnrealUp);

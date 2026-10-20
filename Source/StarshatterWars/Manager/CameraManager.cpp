@@ -105,6 +105,7 @@ CameraManager::Reset()
 	region = 0;
 	external_ship = 0;
 	external_body = 0;
+	scripted_view_ship = nullptr;
 	transition = 0;
 	hud = 0;
 }
@@ -128,6 +129,7 @@ CameraManager::SetShip(Ship* s)
 	}
 
 	// taking control of the new ship:
+	if (ship != s) scripted_view_ship = nullptr;
 	ship = s;
 
 	if (ship) {
@@ -335,6 +337,7 @@ CameraManager::CycleViewObject()
 void
 CameraManager::SetViewOrbital(Orbital* orb)
 {
+	scripted_view_ship = nullptr;
 	external_body = orb;
 
 	if (external_body) {
@@ -356,9 +359,15 @@ CameraManager::SetViewOrbital(Orbital* orb)
 // +--------------------------------------------------------------------+
 
 void
-CameraManager::SetViewObject(Ship* obj, bool quick)
+CameraManager::SetViewObject(Ship* obj, bool quick, bool bScriptedCameraEvent)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[Phase9SetViewObject] Target='%s' CameraShip='%s' Mode=%d"),
+		obj ? ANSI_TO_TCHAR(obj->GetName()) : TEXT("<null>"),
+		ship ? ANSI_TO_TCHAR(ship->GetName()) : TEXT("<null>"), mode);
 	if (!ship) return;
+	// Script authorization belongs to the current camera target, not to every external camera.
+	if (!bScriptedCameraEvent) scripted_view_ship = nullptr;
 
 	if (!obj) {
 		obj = ship;
@@ -370,7 +379,7 @@ CameraManager::SetViewObject(Ship* obj, bool quick)
 
 	Starshatter* stars = Starshatter::GetInstance();
 
-	if (obj->GetIFF() != ship->GetIFF() && !stars->InCutscene()) {
+	if (!bScriptedCameraEvent && obj->GetIFF() != ship->GetIFF() && (!stars || !stars->InCutscene())) {
 		// only view solid contacts:
 		SimContact* c = ship->FindContact(obj);
 		if (!c || !c->ActLock())
@@ -428,6 +437,12 @@ CameraManager::SetViewObject(Ship* obj, bool quick)
 		Observe(external_ship);
 		ExternalRange(1);
 	}
+	if (bScriptedCameraEvent) {
+		scripted_view_ship = (external_ship == obj) ? obj : nullptr;
+		UE_LOG(LogTemp, Warning, TEXT("[Phase9ScriptedStationBind] Requested='%s' Bound='%s' Mode=%d"),
+			obj ? ANSI_TO_TCHAR(obj->GetName()) : TEXT("<null>"),
+			external_ship ? ANSI_TO_TCHAR(external_ship->GetName()) : TEXT("<null>"), mode);
+	}
 }
 
 // +--------------------------------------------------------------------+
@@ -443,6 +458,8 @@ CameraManager::Update(SimObject* obj)
 
 		if (ship == s)
 			ship = nullptr;
+
+		if (scripted_view_ship == s) scripted_view_ship = nullptr;
 
 		if (external_ship == s) {
 			external_point = s->GetLocation(); // FVector
@@ -510,11 +527,20 @@ CameraManager::ExecFrame(double seconds)
 	}
 	// if in an external mode, check the external ship:
 	else if (op_mode >= MODE_TARGET && op_mode <= MODE_ZOOM) {
-		if (external_ship && external_ship != ship && !stars->InCutscene()) {
+		if (external_ship && external_ship != ship && !stars->InCutscene() && external_ship != scripted_view_ship) {
 			SimContact* c = ship->FindContact(external_ship);
 			if (!c || !c->ActLock()) {
 				SetViewObject(ship);
 			}
+		}
+	}
+
+	if (scripted_view_ship && external_ship == scripted_view_ship) {
+		static Ship* LastReportedScriptedView = nullptr;
+		if (LastReportedScriptedView != scripted_view_ship) {
+			UE_LOG(LogTemp, Warning, TEXT("[Phase9ScriptedStationRetained] Target='%s' Mode=%d"),
+				ANSI_TO_TCHAR(scripted_view_ship->GetName()), op_mode);
+			LastReportedScriptedView = scripted_view_ship;
 		}
 	}
 

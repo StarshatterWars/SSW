@@ -88,7 +88,7 @@ element: {
    iff:       0
    playable:  false
    region:    "Jalah"
-   loc:       (0, 0, 0)
+   loc:       (100e3, -150e3, 0)
 
    objective: { cmd: Vector, tgt: "Solus-Jalah" }
 }
@@ -263,7 +263,7 @@ event: { type: Message, time: 26.63,
          caption: "and we need help to reestablish\nbasic services here.\"" }
 
 event: { type: Camera, time:  30.00, param: 3,  target: "body:Trellis", vec: (0,0,1e8)           }
-event: { type: Camera, time: 30.00,               param: 5,                          vec: (-0.15, 0.01, 0.02) }
+event: { type: Camera, time: 30.00,  param: 5,  vec: (-0.15, 0.01, 0.02) }
 
 event: { type: Display, time: 30.00, message: "Trellis" }
 
@@ -273,8 +273,8 @@ event: { type: Message, time: 30.00,
 event: { type: Message, time: 33.83,
          caption: "that erupted between the Loyalist\nand Separatist factions of the system government." }
 
-event: { type: Camera,  time:  37.85, param: 3,  target: "body:Jalah",   vec: (0,0,8e7)           }
-event: { type: Camera, time: 37.85,                param: 5,                          vec: (0.12, 0.01, 0.02) }
+event: { type: Camera, time:  37.85, param: 3,  target: "body:Jalah",   vec: (0,0,8e7)           }
+event: { type: Camera, time: 37.85,   param: 5,  vec: (0.12, 0.01, 0.02) }
 
 event: { type: Display, time: 37.85, message: "Jalah" }
 
@@ -299,7 +299,8 @@ event: { type: Message, time: 52.55,
 event: { type: Message, time: 56.50,
          caption: "has been trapped on the inner planets\nSolus and Meridian." }
        
-event: { type: Camera, time: 60.50, param: 3,  vec: (0,0,8e5),  target: "Trellis-Solus" }
+event: { type: Camera, time: 60.50, param: 3,  target: "Trellis-Solus", vec: (0,0,2e3)   }
+event: { type: Camera, time: 60.50, param: 5,  vec: (-0.13, 0.01, 0.02) }
 
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
@@ -314,7 +315,7 @@ event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
 
 event: { type: Camera,  time:  72.55, param: 3,  target: "Tal Vesta Stellar Observatory",   vec: (0,0,2e3) }
-event: { type: Camera, time: 72.55,                param: 5,                          vec: (-0.13, 0.01, 0.02) }
+event: { type: Camera, time: 72.55,   param: 5,  vec: (-0.13, 0.01, 0.02) }
 
 event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }
