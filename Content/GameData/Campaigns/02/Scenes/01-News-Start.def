@@ -262,8 +262,8 @@ event: { type: Message, time: 23.75,
 event: { type: Message, time: 26.63,
          caption: "and we need help to reestablish\nbasic services here.\"" }
 
-//event: { type: Camera, time:  30.00, param: 3,  target: "body:Trellis", vec: (0,0,1e8)           }
-//event: { type: Camera, time: 30.00,  param: 5,  vec: (-0.15, 0.01, 0.02) }
+event: { type: Camera, time:  30.00, param: 3,  target: "body:Trellis", vec: (0,0,1e8)           }
+event: { type: Camera, time: 30.00,  param: 5,  vec: (-0.15, 0.01, 0.02) }
 
 event: { type: Display, time: 30.00, message: "Trellis" }
 
