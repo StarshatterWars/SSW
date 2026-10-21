@@ -335,6 +335,29 @@ CameraManager::CycleViewObject()
 // +--------------------------------------------------------------------+
 
 void
+CameraManager::CommitScriptedOrbit()
+{
+    // Legacy SetMode(MODE_ORBIT) may be ignored if a matching request is
+    // pending, or may leave old_mode armed after a DropCam transition.
+    // Only a scripted camera event calls this method. Gameplay SetMode retains
+    // its original transition/restore semantics.
+    const int PreviousMode = mode;
+    const int PreviousRequest = requested_mode;
+    const int PreviousRestore = old_mode;
+    mode = MODE_ORBIT;
+    requested_mode = MODE_NONE;
+    old_mode = MODE_NONE;
+    transition = 0;
+    base_loc = FVector::ZeroVector;
+    external_point = FVector::ZeroVector;
+    UE_LOG(LogTemp, Display,
+        TEXT("[Phase9CinematicOrbitCommit] Previous=%d Requested=%d Restore=%d Effective=%d"),
+        PreviousMode, PreviousRequest, PreviousRestore, GetMode());
+}
+
+// +---------------------------------------------------------------------+
+
+void
 CameraManager::SetViewOrbital(Orbital* orb)
 {
 	scripted_view_ship = nullptr;
@@ -394,6 +417,17 @@ CameraManager::SetViewObject(Ship* obj, bool quick, bool bScriptedCameraEvent)
 		if (quick) {
 			mode = MODE_ORBIT;
 			transition = 0;
+			// Phase 9: a scripted quick orbit supersedes any unfinished
+			// cockpit/drop transition.  Otherwise GetMode() continues to
+			// report requested_mode (often MODE_COCKPIT) even while the
+			// actual camera is orbiting a station. This skips the UE
+			// station projection/framing path for Trellis-Solus.
+			if (bScriptedCameraEvent) {
+				requested_mode = MODE_NONE;
+				UE_LOG(LogTemp, Display,
+					TEXT("[Phase9QuickOrbitModeResolved] Target='%s' EffectiveMode=%d"),
+					obj ? ANSI_TO_TCHAR(obj->GetName()) : TEXT("<null>"), GetMode());
+			}
 		}
 		else {
 			SetMode(MODE_TRANSLATE);

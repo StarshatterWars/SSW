@@ -1316,6 +1316,12 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
                         break; // 5 = orbit rates, 6 = ship-based DropCam
                     }
 
+                    // Every authored orbit shot is a fresh camera transaction.
+                    // Commit after SetMode and before selecting the new focus;
+                    // preserve all scene actors and their world transforms.
+                    if (LegacyCommand == 3)
+                        LegacyDirector->CommitScriptedOrbit();
+
                     if (TargetShip)
                     {
                         LegacyDirector->SetViewOrbital(nullptr);
