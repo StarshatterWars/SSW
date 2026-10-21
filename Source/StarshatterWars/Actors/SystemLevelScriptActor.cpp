@@ -1,5 +1,4 @@
-#include "SystemLevelScriptActor.h"
-#include "Engine/Engine.h"
+﻿#include "SystemLevelScriptActor.h"
 
 #include "SystemSceneBuilder.h"
 #include "CampaignSceneActor.h"
@@ -27,10 +26,6 @@ ASystemLevelScriptActor::ASystemLevelScriptActor()
 void ASystemLevelScriptActor::BeginPlay()
 {
     Super::BeginPlay();
-
-    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] LEVEL BEGINPLAY World=%s Actor=%s"),
-        *GetNameSafe(GetWorld()), *GetNameSafe(this));
-
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemLevelScriptActor] BeginPlay"));
@@ -72,8 +67,6 @@ void ASystemLevelScriptActor::InitializeSystemLevel()
 
 void ASystemLevelScriptActor::BuildCurrentSystem()
 {
-    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] LEVEL BUILD CURRENT SYSTEM"));
-
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemLevelScriptActor] BuildCurrentSystem called"));
 
@@ -117,6 +110,7 @@ void ASystemLevelScriptActor::BuildCurrentSystem()
     UE_LOG(LogTemp, Warning,
         TEXT("[SystemLevelScriptActor] System build complete (ships handled externally)"));
 }
+
 
 bool ASystemLevelScriptActor::EnsureCurrentSystemBuilt()
 {

@@ -2788,8 +2788,46 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
         BodyActor->SetActorLocation(Eye + Delta * Projection);
         const double* MeasuredRadius = MissionBodyRadii.Find(BodyActor);
         const FTransform* Original = MissionBodyTransforms.Find(BodyActor);
-        if (MeasuredRadius && Original && *MeasuredRadius > UE_SMALL_NUMBER)
-            BodyActor->SetActorScale3D(Original->GetScale3D() * (Body->Radius() * Projection / *MeasuredRadius));
+        if (MeasuredRadius && Original && *MeasuredRadius > UE_DOUBLE_SMALL_NUMBER)
+        {
+            // Keep the focus-aware legacy camera projection intact, but prevent
+            // an oversized imported planet proxy from enveloping the camera.
+            // Clamp relative to its projected camera distance; no actors are
+            // hidden, unloaded, recreated, or destroyed here.
+            const double MaximumRadius = Distance * Projection * 0.28;
+            const double NominalRadius = Body->Radius() * Projection;
+            const double DesiredRadius = FMath::Min(NominalRadius, MaximumRadius);
+            BodyActor->SetActorScale3D(Original->GetScale3D() * (DesiredRadius / *MeasuredRadius));
+
+            // Imported planet Blueprints can scale their mesh components
+            // independently of the root. Measure the rendered sphere after
+            // applying the nominal actor scale. The minimum mesh extent
+            // excludes thin ring planes from the radius measurement.
+            double ActualSphereRadius = 0.0;
+            TArray<UStaticMeshComponent*> PlanetMeshes;
+            BodyActor->GetComponents<UStaticMeshComponent>(PlanetMeshes);
+            for (UStaticMeshComponent* Mesh : PlanetMeshes)
+            {
+                if (!IsValid(Mesh) || !Mesh->GetStaticMesh() || !Mesh->IsVisible() || Mesh->bHiddenInGame)
+                    continue;
+                const FVector Extent = Mesh->GetStaticMesh()->GetBounds().BoxExtent * Mesh->GetComponentScale().GetAbs();
+                ActualSphereRadius = FMath::Max(ActualSphereRadius, Extent.GetMin());
+            }
+            if (MaximumRadius > UE_DOUBLE_SMALL_NUMBER && ActualSphereRadius > MaximumRadius)
+            {
+                const double Correction = MaximumRadius / ActualSphereRadius;
+                BodyActor->SetActorScale3D(BodyActor->GetActorScale3D() * Correction);
+                static TSet<FString> LoggedClamps;
+                if (!LoggedClamps.Contains(Pair.Key))
+                {
+                    LoggedClamps.Add(Pair.Key);
+                    UE_LOG(LogTemp, Display,
+                        TEXT("[Phase9PlanetProxyRadiusClamp] Body='%s' Focused=%d Distance=%.1f SphereRadius=%.1f AllowedRadius=%.1f Correction=%.9f"),
+                        *Pair.Key, bFocused ? 1 : 0, Distance * Projection,
+                        ActualSphereRadius, MaximumRadius, Correction);
+                }
+            }
+        }
 
         if (bFocused)
         {
