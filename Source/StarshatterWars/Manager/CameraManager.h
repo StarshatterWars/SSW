@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -135,6 +135,8 @@ protected:
 	Ship* external_ship;
 	// Explicit mission-camera focus; never bypass normal combat contact checks for gameplay.
 	Ship* scripted_view_ship = nullptr;
+	// Protect scripted orbital BODY shots only; ship cameras retain native transitions.
+	bool bPlanetaryCinematicOrbit = false;
 	List<Ship>         external_group;
 
 	// Converted Starshatter Point -> Unreal FVector

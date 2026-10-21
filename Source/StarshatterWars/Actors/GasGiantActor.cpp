@@ -1,4 +1,4 @@
-#include "GasGiantActor.h"
+﻿#include "GasGiantActor.h"
 
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -437,7 +437,7 @@ void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius
     UVs.Reserve((Segments + 1) * 2);
     Tangents.Reserve((Segments + 1) * 2);
     Colors.Reserve((Segments + 1) * 2);
-    Triangles.Reserve(Segments * 6);
+    Triangles.Reserve(Segments * 12);
 
     for (int32 i = 0; i <= Segments; ++i)
     {
@@ -482,6 +482,9 @@ void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius
         const int32 Inner1 = Inner0 + 2;
         const int32 Outer1 = Inner0 + 3;
 
+        // Both faces of the thin annulus must render. The original mesh
+        // contained only one winding, so it vanished when viewed from its
+        // back face with the authored (one-sided) Ring2 material.
         Triangles.Add(Inner0);
         Triangles.Add(Outer1);
         Triangles.Add(Outer0);
@@ -489,6 +492,16 @@ void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius
         Triangles.Add(Inner0);
         Triangles.Add(Inner1);
         Triangles.Add(Outer1);
+
+        // Reverse winding for the opposite viewing hemisphere. This does not
+        // require changing the existing authored material to Two Sided.
+        Triangles.Add(Inner0);
+        Triangles.Add(Outer0);
+        Triangles.Add(Outer1);
+
+        Triangles.Add(Inner0);
+        Triangles.Add(Outer1);
+        Triangles.Add(Inner1);
     }
 
     RuntimeRingMesh->CreateMeshSection_LinearColor(
@@ -501,7 +514,7 @@ void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius
         Tangents,
         false);
 
-    //  NO SCALING � geometry already matches radii
+    //  NO SCALING — geometry already matches radii
     RuntimeRingMesh->SetRelativeLocation(FVector::ZeroVector);
     RuntimeRingMesh->SetRelativeRotation(FRotator::ZeroRotator);
     RuntimeRingMesh->SetRelativeScale3D(FVector(1.0f));
@@ -639,6 +652,16 @@ void AGasGiantActor::ApplyRingRadiusSettings()
         return;
     }
 
+    EnsureRuntimeRingMesh();
+    if (!RuntimeRingMesh || !RingDynamicMaterial)
+    {
+        // Preserve the Blueprint ring fallback if the runtime material fails.
+        UE_LOG(LogTemp, Error,
+            TEXT("[Phase9RingNoProceduralMaterial] Actor='%s' Ring='%s'; retaining BP ring components"),
+            *GetName(), *RingMaterialName);
+        return;
+    }
+
     HideLegacyBPRings();
     RebuildRuntimeRingMesh(InnerRingRadius, OuterRingRadius);
 
@@ -675,6 +698,12 @@ void AGasGiantActor::SetRingMaterialByName(const FString& InRingName)
 
     if (RingMaterialName.IsEmpty())
     {
+        RingDynamicMaterial = nullptr;
+        if (RuntimeRingMesh)
+        {
+            RuntimeRingMesh->SetVisibility(false, true);
+            RuntimeRingMesh->SetHiddenInGame(true, true);
+        }
         TArray<UStaticMeshComponent*> Meshes;
         GetComponents<UStaticMeshComponent>(Meshes);
 
@@ -736,6 +765,17 @@ void AGasGiantActor::SetRingMaterialByName(const FString& InRingName)
     }
 
     CurrentRingMaterial = LoadedMat;
+
+    // The runtime procedural annulus is not a StaticMeshComponent. Its material
+    // must be updated separately when the authored ring selection changes.
+    RingDynamicMaterial = UMaterialInstanceDynamic::Create(CurrentRingMaterial, this);
+    if (RuntimeRingMesh && RingDynamicMaterial)
+        RuntimeRingMesh->SetMaterial(0, RingDynamicMaterial);
+
+    UE_LOG(LogTemp, Display,
+        TEXT("[Phase9RingMaterialBound] Actor='%s' DEF='%s' Material='%s' MID='%s' ProcMesh=%d"),
+        *GetName(), *RingMaterialName, *GetNameSafe(CurrentRingMaterial),
+        *GetNameSafe(RingDynamicMaterial), RuntimeRingMesh ? 1 : 0);
 
     TArray<UStaticMeshComponent*> Meshes;
     GetComponents<UStaticMeshComponent>(Meshes);
@@ -901,22 +941,23 @@ void AGasGiantActor::EnsureRuntimeRingMesh()
     RuntimeRingMesh->bUseAsyncCooking = true;
 
     UMaterialInterface* RingMat = CurrentRingMaterial;
-
     if (!RingMat)
-    {
-        RingMat = LoadObject<UMaterialInterface>(
-            nullptr,
-            TEXT("/Script/Engine.MaterialInstanceConstant'/Game/GameData/Galaxy/GasGiants/MI_Ring2.MI_Ring2'"));
-    }
+        RingMat = RingBaseMaterial.Get();
+    if (!RingMat && !RingMaterialName.IsEmpty())
+        RingMat = LoadRingMaterialByName(RingMaterialName);
 
+    // Never silently substitute Ring2 for a different planet's authored ring.
     if (RingMat)
     {
         RingDynamicMaterial = UMaterialInstanceDynamic::Create(RingMat, this);
-
         if (RingDynamicMaterial)
-        {
             RuntimeRingMesh->SetMaterial(0, RingDynamicMaterial);
-        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[Phase9RingMaterialMissing] Actor='%s' Ring='%s' BasePath='%s'"),
+            *GetName(), *RingMaterialName, *RingMaterialBasePath);
     }
 
     UE_LOG(LogTemp, Warning,

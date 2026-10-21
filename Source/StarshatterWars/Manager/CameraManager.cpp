@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -106,6 +106,7 @@ CameraManager::Reset()
 	external_ship = 0;
 	external_body = 0;
 	scripted_view_ship = nullptr;
+	bPlanetaryCinematicOrbit = false;
 	transition = 0;
 	hud = 0;
 }
@@ -167,6 +168,11 @@ CameraManager::SetMode(int m, double t)
 
 	if (m == MODE_VIRTUAL && ship && !ship->GetCockpit())
 		return;
+
+	// Leaving orbital mode explicitly ends planet-only camera ownership.
+	// The next authored planetary SetViewOrbital() may acquire it again.
+	if (m != MODE_ORBIT && m != MODE_TRANSLATE && m != MODE_ZOOM && m != MODE_NONE)
+		bPlanetaryCinematicOrbit = false;
 
 	if (mode == m) {
 		if (mode == MODE_TARGET || mode == MODE_ORBIT)
@@ -362,6 +368,9 @@ CameraManager::SetViewOrbital(Orbital* orb)
 {
 	scripted_view_ship = nullptr;
 	external_body = orb;
+	// A selected planet owns only its own cinematic orbit. Clearing the body
+	// immediately restores original ship/Blockade Runner transition behavior.
+	bPlanetaryCinematicOrbit = (orb != nullptr);
 
 	if (external_body) {
 		range_min = external_body->Radius() * 2.5;
@@ -398,6 +407,7 @@ CameraManager::SetViewObject(Ship* obj, bool quick, bool bScriptedCameraEvent)
 	}
 
 	external_body = nullptr;
+	bPlanetaryCinematicOrbit = false;
 	external_point = FVector::ZeroVector;
 
 	Starshatter* stars = Starshatter::GetInstance();
@@ -517,6 +527,11 @@ CameraManager::ExecFrame(double seconds)
 
 	hud = HUDView::GetInstance();
 
+	// Planet-only camera ownership: preserve the authored orbit while a real
+	// Orbital is focused. Ship/Blockade Runner/DropCam sequences keep the
+	// original flight-phase transitions below, byte-for-byte.
+	const bool bKeepPlanetOrbit = bPlanetaryCinematicOrbit && external_body != nullptr;
+	if (!bKeepPlanetOrbit) {
 	const EOPSMode flight_phase = ship->GetFlightPhase();
 
 	if (flight_phase < EOPSMode::LOCKED)
@@ -545,6 +560,14 @@ CameraManager::ExecFrame(double seconds)
 		mode = old_mode;
 		requested_mode = old_mode;
 		old_mode = MODE_NONE;
+	}
+
+	} else if (mode != MODE_ORBIT || requested_mode != MODE_NONE || old_mode != MODE_NONE) {
+		// Gameplay flight-phase state may not steal a scripted planetary orbit.
+		mode = MODE_ORBIT;
+		requested_mode = MODE_NONE;
+		old_mode = MODE_NONE;
+		transition = 0.0;
 	}
 
 	int op_mode = mode;
