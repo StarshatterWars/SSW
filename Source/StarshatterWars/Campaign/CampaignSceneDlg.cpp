@@ -66,7 +66,7 @@ void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
     static int32 CutsceneTraceTickCount = 0;
     if (++CutsceneTraceTickCount % 120 == 0)
     {
-        UE_LOG(LogTemp, Error,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[CUTSCENE TRACE] Tick Widget=%s Running=%d Events=%d Next=%d"),
             *GetNameSafe(this), bSceneRunning ? 1 : 0,
             SortedEvents.Num(), NextMessageEventIndex);
@@ -376,7 +376,7 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
     UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE LOAD Scene=%s Events=%d"),
         *MissionData.Scene, MissionData.Event.Num());
 
-    UE_LOG(LogTemp, Error,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[CUTSCENE TRACE] LoadSceneFromMissionData Widget=%s Scene='%s' Events=%d"),
         *GetNameSafe(this), *MissionData.Scene, MissionData.Event.Num());
     ResetSceneState();
@@ -662,7 +662,7 @@ bool UCampaignSceneDlg::PrepareSceneCameraBeforeReveal()
 
 void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDurationSeconds)
 {
-    UE_LOG(LogTemp, Error,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[CUTSCENE TRACE] BeginSceneByName Widget=%s Scene='%s' Events=%d"),
         *GetNameSafe(this), *InSceneName, SortedEvents.Num());
     ActiveSceneName = InSceneName;
@@ -1201,7 +1201,7 @@ static Ship* SSWResolveAuthoredPlayerShip(
 
 void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 {
-    UE_LOG(LogTemp, Error,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[CUTSCENE TRACE] ExecuteCameraEvent Widget=%s Target='%s' Params=%d"),
         *GetNameSafe(this), *Event.EventTarget, Event.EventParam.Num());
     UE_LOG(LogTemp, Warning,

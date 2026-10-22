@@ -170,7 +170,7 @@ computer:   {
    }
 
 computer:   {
-   design:    "Flight",,
+   design:    "Flight",
    loc:     (-20, 0, 80),
    size:    16,
    hull_factor: 0.5

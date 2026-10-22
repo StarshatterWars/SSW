@@ -486,14 +486,11 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
     for (const FShipSensor& Src : Row.Sensor)
     {
-        if (Src.DesignName.IsEmpty())
-        {
-            continue;
-        }
+        // Legacy sensor blocks do not require a design name.
 
         Sensor* NewSensor = new Sensor();
 
-        NewSensor->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        NewSensor->SetName(Src.DesignName.IsEmpty() ? "Sensor" : TCHAR_TO_ANSI(*Src.DesignName));
         NewSensor->SetSourceIndex(Src.SourceIndex);
         NewSensor->SetHullFactor(Src.HullFactor);
         // Legacy path: AddRange in DataTable order (same as original .def ParseSensor)

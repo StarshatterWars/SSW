@@ -2437,7 +2437,7 @@ void ASystemSceneBuilder::RegisterSpawnedBody(
     Entry.VisualRadiusUnits = VisualRadiusUnits;
     Entry.OrbitRadiusUnits = OrbitRadiusUnits;
 
-    UE_LOG(LogTemp, Error,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[REGISTER BODY] Name=%s Actor=%s ActorLoc=%s SpawnLoc=%s RadiusUnits=%.2f OrbitUnits=%.2f Scale=%s IsMoon=%d IsOrbit=%d Parent=%s"),
         *BodyName,
         *GetNameSafe(Actor),

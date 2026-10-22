@@ -57,7 +57,7 @@ void WeaponGroup::SetAbbreviation(const char* a)
 
 bool WeaponGroup::IsPrimary() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsPrimary();
 
 	return false;
@@ -65,7 +65,7 @@ bool WeaponGroup::IsPrimary() const
 
 bool WeaponGroup::IsDrone() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsDrone();
 
 	return false;
@@ -73,7 +73,7 @@ bool WeaponGroup::IsDrone() const
 
 bool WeaponGroup::IsDecoy() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsDecoy();
 
 	return false;
@@ -81,7 +81,7 @@ bool WeaponGroup::IsDecoy() const
 
 bool WeaponGroup::IsProbe() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsProbe();
 
 	return false;
@@ -89,7 +89,7 @@ bool WeaponGroup::IsProbe() const
 
 bool WeaponGroup::IsMissile() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsMissile();
 
 	return false;
@@ -97,7 +97,7 @@ bool WeaponGroup::IsMissile() const
 
 bool WeaponGroup::IsBeam() const
 {
-	if (weapons.size() > 0)
+	if (GetWeapon(0))
 		return weapons[0]->IsBeam();
 
 	return false;
@@ -107,7 +107,7 @@ bool WeaponGroup::IsBeam() const
 
 void WeaponGroup::AddWeapon(Weapon* w)
 {
-	weapons.append(w);
+	if (w && !weapons.contains(w)) weapons.append(w);
 }
 
 int WeaponGroup::NumWeapons() const
@@ -156,7 +156,7 @@ Weapon* WeaponGroup::GetSelected() const
 
 bool WeaponGroup::CanTarget(uint32 tgt_class) const
 {
-	if (selected >= 0 && selected < weapons.size())
+	if (GetSelected())
 		return weapons[selected]->CanTarget(tgt_class);
 
 	return false;
@@ -210,7 +210,7 @@ SimObject* WeaponGroup::GetTarget() const
 {
 	SimObject* target = 0;
 
-	if (weapons.size())
+	if (GetWeapon(0))
 		target = weapons[0]->GetTarget();
 
 	return target;
@@ -220,7 +220,7 @@ SimSystem* WeaponGroup::GetSubTarget() const
 {
 	SimSystem* subtarget = 0;
 
-	if (weapons.size())
+	if (GetWeapon(0))
 		subtarget = weapons[0]->GetSubTarget();
 
 	return subtarget;
@@ -237,7 +237,7 @@ void WeaponGroup::DropTarget()
 
 WeaponDesign* WeaponGroup::GetDesign() const
 {
-	if (selected >= 0 && selected < weapons.size())
+	if (GetSelected())
 		return (WeaponDesign*)weapons[selected]->Design();
 
 	return 0;
@@ -320,7 +320,7 @@ int WeaponGroup::Value() const
 
 	for (int i = 0; i < weapons.size(); i++) {
 		const Weapon* w = weapons[i];
-		result += w->GetValue();
+		if (w) result += w->GetValue();
 	}
 
 	return result;

@@ -132,7 +132,7 @@ void APlanetActor::BeginPlay()
             PlanetMesh->SetMaterial(0, DefaultPlanetMaterial);
         }
 
-        UE_LOG(LogTemp, Error,
+        UE_LOG(LogTemp, VeryVerbose,
             TEXT("[PlanetActor] NATIVE PLANET MESH Actor=%s ShowNative=%d ActorLoc=%s ActorScale=%s MeshScale=%s MeshWorldScale=%s Mesh=%s Mat=%s"),
             *GetName(),
             bShowNativePlanetMesh ? 1 : 0,
@@ -277,7 +277,7 @@ void APlanetActor::SetPlanetTextures(
     GlossTexture = InGlossTexture;
     LightsTexture = InLightsTexture;
 
-    UE_LOG(LogTemp, Error,
+    UE_LOG(LogTemp, VeryVerbose,
         TEXT("[PlanetActor] SetPlanetTextures Actor=%s Base=%s Gloss=%s Lights=%s"),
         *GetName(),
         *GetNameSafe(BaseTexture),

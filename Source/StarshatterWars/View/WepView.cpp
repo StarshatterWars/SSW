@@ -290,6 +290,7 @@ void WepView::HandlePressAt(int32 X, int32 Y)
         max_wep = MAX_WEP;
 
     for (int32 i = 0; i < max_wep; i++) {
+        if (!ship->GetWeapons()[i]) continue;
         const int32 index = i * 4;
 
         if (CheckButton(index + 0, X, Y)) {

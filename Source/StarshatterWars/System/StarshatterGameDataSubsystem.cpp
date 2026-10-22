@@ -1490,7 +1490,8 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	
 	ReadCombatRosterData();
 
-	ReadCombatants();
+	// Campaign combatants are loaded after CampaignSelectDlg chooses a row.
+	if (!SelectedCampaignRowName.IsNone()) ReadCombatants();
 
 	//InitializeOrderOfBattleTable();
 	ReadOrderOfBattleData();
@@ -7167,10 +7168,8 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 		ReadCombatRosterData();
 	}
 
-	if (CombatantData.Num() == 0)
-	{
-		ReadCombatants();
-	}
+	// Refresh for the selected campaign, including switching campaigns.
+	ReadCombatants();
 
 	const TArray<FName> RowNames = GetCampaignGroupRowNames();
 	TMap<FName, CombatGroup*> GroupByRowName = BuildGroupMapFromDataTable(RowNames);

@@ -833,7 +833,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 
 		for (int g = 0; g < weapons.size(); g++)
 		{
-			if (!strcmp(weapons[g]->Name(), RuntimeWeapon->Group()))
+			if (weapons[g] && !strcmp(weapons[g]->Name(), RuntimeWeapon->Group()))
 			{
 				Group = weapons[g];
 				break;
@@ -884,7 +884,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 		WeaponGroup* Group = nullptr;
 		for (int g = 0; g < weapons.size(); g++)
 		{
-			if (!strcmp(weapons[g]->Name(), Missile->Group()))
+			if (weapons[g] && !strcmp(weapons[g]->Name(), Missile->Group()))
 			{
 				Group = weapons[g];
 				break;
@@ -2691,9 +2691,11 @@ Ship::CheckFriendlyFire()
 	// clear the FF blocked flag on all weapons
 	for (i = 0; i < weapons.size(); i++) {
 		WeaponGroup* g = weapons[i];
+		if (!g) continue;
 
 		for (j = 0; j < g->NumWeapons(); j++) {
 			Weapon* w = g->GetWeapon(j);
+			if (!w) continue;
 			w_list.append(w);
 			w->SetBlockedFriendly(false);
 		}
@@ -3917,6 +3919,7 @@ Ship::ExecSystems(double seconds)
 
 	for (i = 0; i < weapons.size(); i++) {
 		WeaponGroup* w_group = weapons[i];
+		if (!w_group) continue;
 		w_group->ExecFrame(seconds);
 
 		if (w_group->GetTrigger() && w_group->GetFiringOrders() == WeaponsOrders::MANUAL) {
@@ -3942,7 +3945,7 @@ Ship::ExecSystems(double seconds)
 			// was that the last shot from this missile group?
 			if (w_group->IsMissile() && w_group->Ammo() < 1) {
 				// is this the current secondary weapon group?
-				if (weapons[secondary] == w_group) {
+				if (GetSecondaryGroup() == w_group) {
 					winchester_cycle = true;
 				}
 			}
@@ -3967,7 +3970,7 @@ Ship::ExecSystems(double seconds)
 			if (missile && missile->CanTarget((int)CLASSIFICATION::GROUND_UNITS))
 				CycleSecondary();
 
-			else if (weapons[secondary]->Ammo() < 1)
+			else if (GetSecondaryGroup() && GetSecondaryGroup()->Ammo() < 1)
 				CycleSecondary();
 
 			else
@@ -4209,7 +4212,7 @@ Ship::DockFrame(double Seconds)
 
 		// count up weapon ammo for status mfd:
 		for (int WeaponIndex = 0; WeaponIndex < weapons.size(); WeaponIndex++)
-			weapons[WeaponIndex]->ExecFrame(Seconds);
+			if (weapons[WeaponIndex]) weapons[WeaponIndex]->ExecFrame(Seconds);
 
 		// show drive flare while on catapult:
 if (main_drive)
@@ -4296,7 +4299,7 @@ Ship::StatFrame(double Seconds)
 			navlights[NavLightIndex]->ExecFrame(Seconds);
 
 		for (int WeaponIndex = 0; WeaponIndex < weapons.size(); WeaponIndex++)
-			weapons[WeaponIndex]->ExecFrame(Seconds);
+			if (weapons[WeaponIndex]) weapons[WeaponIndex]->ExecFrame(Seconds);
 
 		if (farcaster) {
 			farcaster->ExecFrame(Seconds);
@@ -5229,7 +5232,7 @@ Ship::FindWeaponGroup(const char* InName)
 void
 Ship::SelectWeapon(int n, int w)
 {
-	if (n < weapons.size())
+	if (n >= 0 && n < weapons.size() && weapons[n])
 		weapons[n]->SelectWeapon(w);
 }
 
@@ -5243,7 +5246,7 @@ Ship::CyclePrimary()
 
 	if (IsDropship() && primary >= 0 && primary < weapons.size()) {
 		WeaponGroup* p = weapons[primary];
-		Weapon* w = p->GetSelected();
+		Weapon* w = p ? p->GetSelected() : nullptr;
 
 		if (w && w->GetTurret()) {
 			p->SetFiringOrders(WeaponsOrders::POINT_DEFENSE);
@@ -5777,13 +5780,13 @@ Ship::FireWeapon(int n)
 		if (n < 4)
 			trigger[n] = true;
 
-		if (n < weapons.size()) {
+		if (n >= 0 && n < weapons.size() && weapons[n]) {
 			weapons[n]->SetTrigger(true);
 			fired = weapons[n]->GetTrigger();
 		}
 	}
 
-	if (!fired && sim->GetPlayerShip() == this)
+	if (!fired && sim && sim->GetPlayerShip() == this)
 		UIButton::PlaySound(UIButton::SND_REJECT);
 
 	return fired;
@@ -5824,16 +5827,16 @@ Ship::AddActiveDecoy(Drone* drone)
 Weapon*
 Ship::GetPrimary() const
 {
-	if (weapons.size() > primary)
-		return weapons[primary]->GetSelected();
+	if (WeaponGroup* Group = GetPrimaryGroup())
+		return Group->GetSelected();
 	return 0;
 }
 
 Weapon*
 Ship::GetSecondary() const
 {
-	if (weapons.size() > secondary)
-		return weapons[secondary]->GetSelected();
+	if (WeaponGroup* Group = GetSecondaryGroup())
+		return Group->GetSelected();
 	return 0;
 }
 
@@ -5842,12 +5845,13 @@ Ship::GetWeaponByIndex(int n)
 {
 	for (int i = 0; i < weapons.size(); i++) {
 		WeaponGroup* g = weapons[i];
+		if (!g) continue;
 
 		List<Weapon>& wlist = g->GetWeapons();
 		for (int j = 0; j < wlist.size(); j++) {
 			Weapon* w = wlist[j];
 
-			if (w->GetIndex() == n) {
+			if (w && w->GetIndex() == n) {
 				return w;
 			}
 		}
@@ -5859,7 +5863,7 @@ Ship::GetWeaponByIndex(int n)
 WeaponGroup*
 Ship::GetPrimaryGroup() const
 {
-	if (weapons.size() > primary)
+	if (primary >= 0 && primary < weapons.size())
 		return weapons[primary];
 	return 0;
 }
@@ -5867,7 +5871,7 @@ Ship::GetPrimaryGroup() const
 WeaponGroup*
 Ship::GetSecondaryGroup() const
 {
-	if (weapons.size() > secondary)
+	if (secondary >= 0 && secondary < weapons.size())
 		return weapons[secondary];
 	return 0;
 }
@@ -5875,16 +5879,16 @@ Ship::GetSecondaryGroup() const
 WeaponDesign*
 Ship::GetPrimaryDesign() const
 {
-	if (weapons.size() > primary)
-		return (WeaponDesign*)weapons[primary]->GetSelected()->Design();
+	if (Weapon* Selected = GetPrimary())
+		return (WeaponDesign*)Selected->Design();
 	return 0;
 }
 
 WeaponDesign*
 Ship::GetSecondaryDesign() const
 {
-	if (weapons.size() > secondary)
-		return (WeaponDesign*)weapons[secondary]->GetSelected()->Design();
+	if (Weapon* Selected = GetSecondary())
+		return (WeaponDesign*)Selected->Design();
 	return 0;
 }
 
@@ -5929,7 +5933,7 @@ Ship::GetTrigger(int i) const
 	if (i >= 0) {
 		if (i < 4)
 			return trigger[i];
-		else if (i < weapons.size())
+		else if (i < weapons.size() && weapons[i])
 			return weapons[i]->GetTrigger();
 	}
 
@@ -5943,7 +5947,7 @@ Ship::SetTrigger(int i)
 		if (i < 4)
 			trigger[i] = true;
 
-		if (i < weapons.size())
+		if (i < weapons.size() && weapons[i])
 			weapons[i]->SetTrigger();
 	}
 }
@@ -6940,7 +6944,7 @@ Ship::AIValue() const
 
 	for (int i = 0; i < weapons.size(); i++) {
 		const WeaponGroup* w = weapons[i];
-		value += w->Value();
+		if (w) value += w->Value();
 	}
 
 	return value;

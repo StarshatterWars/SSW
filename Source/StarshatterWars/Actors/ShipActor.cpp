@@ -28,6 +28,7 @@
 #include "Components/PointLightComponent.h"
 
 #include "UObject/ConstructorHelpers.h"
+#include "UObject/UObjectGlobals.h"
 
 #include "Components/AudioComponent.h"
 #include "Sound/SoundCue.h"
@@ -529,7 +530,7 @@ void AShipActor::RebuildMainEngineEmitters()
         const FString Name = FString::Printf(TEXT("MainEngineEmitter_%d"), Index);
 
         UNiagaraComponent* Emitter =
-            NewObject<UNiagaraComponent>(this, *Name);
+            NewObject<UNiagaraComponent>(this, MakeUniqueObjectName(this, UNiagaraComponent::StaticClass(), FName(*Name)));
 
         if (!Emitter)
         {
@@ -568,7 +569,7 @@ void AShipActor::RebuildMainEngineEmitters()
         const FString LightName = FString::Printf(TEXT("MainEngineLight_%d"), Index);
 
         UPointLightComponent* Light =
-            NewObject<UPointLightComponent>(this, *LightName);
+            NewObject<UPointLightComponent>(this, MakeUniqueObjectName(this, UPointLightComponent::StaticClass(), FName(*LightName)));
 
         if (Light)
         {
@@ -608,7 +609,7 @@ void AShipActor::RebuildThrusterPoints()
 
         const FString Name = FString::Printf(TEXT("ThrusterPoint_%d"), Index);
 
-        USceneComponent* PointComp = NewObject<USceneComponent>(this, *Name);
+        USceneComponent* PointComp = NewObject<USceneComponent>(this, MakeUniqueObjectName(this, USceneComponent::StaticClass(), FName(*Name)));
         if (!PointComp)
         {
             continue;
@@ -692,7 +693,7 @@ void AShipActor::RebuildNavLights()
         // ----------------------------------------------------
 
         UNavLightComponent* NavLight =
-            NewObject<UNavLightComponent>(this, *Name);
+            NewObject<UNavLightComponent>(this, MakeUniqueObjectName(this, UNavLightComponent::StaticClass(), FName(*Name)));
 
         if (!NavLight)
         {
@@ -718,7 +719,7 @@ void AShipActor::RebuildNavLights()
             const FString BulbName = FString::Printf(TEXT("NavLightBulb_%d"), Index);
 
             UStaticMeshComponent* Bulb =
-                NewObject<UStaticMeshComponent>(this, *BulbName);
+                NewObject<UStaticMeshComponent>(this, MakeUniqueObjectName(this, UStaticMeshComponent::StaticClass(), FName(*BulbName)));
 
             if (Bulb)
             {
@@ -774,7 +775,7 @@ void AShipActor::RebuildNavLights()
         const FString PointLightName = FString::Printf(TEXT("NavLightPoint_%d"), Index);
 
         UPointLightComponent* PointLight =
-            NewObject<UPointLightComponent>(this, *PointLightName);
+            NewObject<UPointLightComponent>(this, MakeUniqueObjectName(this, UPointLightComponent::StaticClass(), FName(*PointLightName)));
 
         if (PointLight)
         {
@@ -1235,8 +1236,28 @@ USceneComponent* AShipActor::CreateGeneratedPoint(
     const FVector& LocalOffset,
     const FRotator& LocalRotation)
 {
+    // Falcon's constructor configures weapon hardpoints while Unreal is loading
+    // the class. Do not create/register dynamic components on the CDO or before
+    // the actor belongs to a world. OnConstruction rebuilds them for live actors.
+    if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject) || !GetWorld())
+    {
+        UE_LOG(LogTemp, Verbose,
+            TEXT("[ShipActor] Deferring generated point '%s_%d' until actor construction: %s"),
+            *BaseName, Index, *GetName());
+        return nullptr;
+    }
+
+    if (!IsValid(PointRoot))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[ShipActor] CreateGeneratedPoint: missing PointRoot on %s"), *GetName());
+        return nullptr;
+    }
+
+    // DestroyComponent() does not immediately remove the UObject from its outer.
+    // Construction-script reruns must not reuse an object name still occupied.
     const FString Name = FString::Printf(TEXT("%s_%d"), *BaseName, Index);
-    USceneComponent* Point = NewObject<USceneComponent>(this, *Name);
+    const FName UniqueName = MakeUniqueObjectName(this, USceneComponent::StaticClass(), FName(*Name));
+    USceneComponent* Point = NewObject<USceneComponent>(this, UniqueName);
 
     if (!Point)
     {
@@ -1244,9 +1265,9 @@ USceneComponent* AShipActor::CreateGeneratedPoint(
     }
 
     Point->SetupAttachment(PointRoot);
-    Point->RegisterComponent();
     Point->SetRelativeLocation(LocalOffset);
     Point->SetRelativeRotation(LocalRotation);
+    Point->RegisterComponent();
 
     return Point;
 }
@@ -1340,7 +1361,7 @@ void AShipActor::RebuildThrusterEmitters()
         const FString Name = FString::Printf(TEXT("ThrusterEmitter_%d"), Index);
 
         UNiagaraComponent* Emitter =
-            NewObject<UNiagaraComponent>(this, *Name);
+            NewObject<UNiagaraComponent>(this, MakeUniqueObjectName(this, UNiagaraComponent::StaticClass(), FName(*Name)));
 
         if (!Emitter)
         {
@@ -2012,7 +2033,8 @@ void AShipActor::BuildMainEnginesFromRuntime()
         USceneComponent* Point =
             NewObject<USceneComponent>(
                 this,
-                *FString::Printf(TEXT("RuntimeMainEnginePoint_%d"), i));
+                MakeUniqueObjectName(this, USceneComponent::StaticClass(),
+                    FName(*FString::Printf(TEXT("RuntimeMainEnginePoint_%d"), i))));
 
         if (!Point)
         {
@@ -2032,7 +2054,8 @@ void AShipActor::BuildMainEnginesFromRuntime()
         UNiagaraComponent* Emitter =
             NewObject<UNiagaraComponent>(
                 this,
-                *FString::Printf(TEXT("RuntimeMainEngineEmitter_%d"), i));
+                MakeUniqueObjectName(this, UNiagaraComponent::StaticClass(),
+                    FName(*FString::Printf(TEXT("RuntimeMainEngineEmitter_%d"), i))));
 
         if (Emitter)
         {
@@ -2286,7 +2309,7 @@ void AShipActor::CreateEngineAudioComponents()
     if (!EngineAudioComponent && EngineSoundCue)
     {
         EngineAudioComponent =
-            NewObject<UAudioComponent>(this, TEXT("EngineAudioComponent"));
+            NewObject<UAudioComponent>(this, MakeUniqueObjectName(this, UAudioComponent::StaticClass(), TEXT("EngineAudioComponent")));
 
         if (EngineAudioComponent)
         {
@@ -2301,7 +2324,7 @@ void AShipActor::CreateEngineAudioComponents()
     if (!BurnerAudioComponent && BurnerSoundCue)
     {
         BurnerAudioComponent =
-            NewObject<UAudioComponent>(this, TEXT("BurnerAudioComponent"));
+            NewObject<UAudioComponent>(this, MakeUniqueObjectName(this, UAudioComponent::StaticClass(), TEXT("BurnerAudioComponent")));
 
         if (BurnerAudioComponent)
         {
@@ -2316,7 +2339,7 @@ void AShipActor::CreateEngineAudioComponents()
     if (!RumbleAudioComponent && RumbleSoundCue)
     {
         RumbleAudioComponent =
-            NewObject<UAudioComponent>(this, TEXT("RumbleAudioComponent"));
+            NewObject<UAudioComponent>(this, MakeUniqueObjectName(this, UAudioComponent::StaticClass(), TEXT("RumbleAudioComponent")));
 
         if (RumbleAudioComponent)
         {
