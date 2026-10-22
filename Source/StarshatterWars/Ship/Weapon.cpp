@@ -1,4 +1,4 @@
-ï»¿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -168,7 +168,7 @@ Weapon::Weapon(const Weapon& w)
     Mount(w);
     FMemory::Memzero(visible_stores, sizeof(visible_stores));
 
-    nbarrels = w.nbarrels;
+    nbarrels = FMath::Clamp(w.nbarrels, 0, static_cast<int>(MAX_BARRELS));
 
     for (int i = 0; i < nbarrels; i++)
         muzzle_pts[i] = rel_pts[i] = w.muzzle_pts[i];
@@ -635,11 +635,11 @@ SimShot* Weapon::Fire()
     if (Game::Paused())
         return 0;
 
-    if (ship && ship->CheckFire())
-        return 0;
-
     if (!ship || !design || nbarrels <= 0)
         return nullptr;
+
+    if (ship->CheckFire())
+        return 0;
 
     if (ship->IsStarship() && target && !centered)
         return 0;
@@ -689,7 +689,7 @@ SimShot* Weapon::NetFirePrimary(SimObject* tgt, SimSystem* sub, int count)
 {
     SimShot* shot = 0;
 
-    if (!IsPrimary() || Game::Paused())
+    if (!ship || !design || nbarrels <= 0 || count <= 0 || !IsPrimary() || Game::Paused())
         return shot;
 
     if (active_barrel < 0 || active_barrel >= nbarrels)
@@ -718,7 +718,7 @@ SimShot* Weapon::NetFireSecondary(SimObject* tgt, SimSystem* sub, DWORD objid)
 {
     SimShot* shot = 0;
 
-    if (IsPrimary() || Game::Paused())
+    if (!ship || !design || nbarrels <= 0 || IsPrimary() || Game::Paused())
         return shot;
 
     if (active_barrel < 0 || active_barrel >= nbarrels)

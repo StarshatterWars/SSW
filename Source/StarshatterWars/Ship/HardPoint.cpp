@@ -35,10 +35,7 @@ HardPoint::HardPoint(FVector muzzle_loc, double az, double el)
 	, aim_elevation((float)el)
 	, muzzle(muzzle_loc)
 {
-    std::memset(designs, 0, sizeof(designs));
-    mount_rel = FVector::ZeroVector;
-    radius = 0.0f;
-    hull_factor = 0.5f;
+	std::memset(designs, 0, sizeof(designs));
 }
 
 // +----------------------------------------------------------------------+
@@ -75,7 +72,6 @@ HardPoint::Mount(FVector loc, float rad, float hull)
 void
 HardPoint::AddDesign(WeaponDesign* d)
 {
-    if (!d) return;
 	for (int i = 0; i < MAX_DESIGNS; i++) {
 		if (!designs[i]) {
 			designs[i] = d;

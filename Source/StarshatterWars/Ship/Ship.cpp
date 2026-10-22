@@ -817,7 +817,11 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	//-------------------------------------------------------------
 	for (int i = 0; i < design->weapons.size(); i++)
 	{
-		Weapon* RuntimeWeapon = new Weapon(*design->weapons[i]);
+		if (!design->weapons[i]) {
+            UE_LOG(LogTemp, Warning, TEXT("[ShipWeapons] Skipping null design weapon at index %d on %hs"), i, GetName());
+            continue;
+        }
+        Weapon* RuntimeWeapon = new Weapon(*design->weapons[i]);
 
 		RuntimeWeapon->SetOwner(this);
 		RuntimeWeapon->SetID(SysID++);
@@ -862,7 +866,11 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	//-------------------------------------------------------------
 	for (int i = 0; i < design->hardpoints.size(); i++)
 	{
-		HardPoint* RuntimeHardpoint = new HardPoint(*design->hardpoints[i]);
+		if (!design->hardpoints[i]) {
+            UE_LOG(LogTemp, Warning, TEXT("[ShipWeapons] Skipping null hardpoint index %d on %hs"), i, GetName());
+            continue;
+        }
+        HardPoint* RuntimeHardpoint = new HardPoint(*design->hardpoints[i]);
 		hardpoints.append(RuntimeHardpoint);
 
 		const int Mounted = (loadout && i < design->hardpoints.size()) ? loadout[i] : -1;
@@ -2503,7 +2511,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 		while (++g_iter) {
 			WeaponGroup* g = g_iter.value();
 
-			if (g->GetDesign() && g->GetDesign()->turret_model) {
+			if (g && g->GetDesign() && g->GetDesign()->turret_model) {
 				const double tsize = g->GetDesign()->turret_model->GetRadius();
 
 				ListIter<Weapon> w_iter = g->GetWeapons();
@@ -3885,7 +3893,9 @@ Ship::ExecSystems(double seconds)
             SimSystem* System = RuntimeSystems.value();
             if (!System || System==sensor || System==navsys || System==flcs) continue;
             System->Orient(this);
-            System->ExecFrame(seconds);
+            // WeaponGroup::ExecFrame owns Weapon::ExecFrame. Do not tick twice.
+            if (System->GetType() != SYSTEM_CATEGORY::WEAPON)
+                System->ExecFrame(seconds);
         }
         // Do not return here. Unreal-rendered ships still need the legacy
         // WeaponGroup::ExecFrame, manual trigger, Winchester cycle and weapon
@@ -3899,7 +3909,8 @@ Ship::ExecSystems(double seconds)
             sys->Orient(this);
             // Sensors have already run earlier in Ship::ExecFrame.
             // FLCS also runs through its dedicated flight-control path.
-            if (sys->GetType() != SYSTEM_CATEGORY::SENSOR && sys != flcs)
+            if (sys->GetType() != SYSTEM_CATEGORY::SENSOR &&
+                sys->GetType() != SYSTEM_CATEGORY::WEAPON && sys != flcs)
                 sys->ExecFrame(seconds);
         }
     }
@@ -3977,9 +3988,9 @@ Ship::ExecSystems(double seconds)
 		}
 	}
 
-	mass = (float)design->mass + wep_mass;
+	if (design) mass = (float)design->mass + wep_mass;
 
-	if (IsDropship())
+	if (design && IsDropship())
 		agility = (float)design->agility - wep_resist;
 
 	if (shieldRep && rep) {
