@@ -17,6 +17,8 @@ class STARSHATTERWARS_API AGasGiantActor : public AActor
 public:
     AGasGiantActor();
 
+    virtual void OnConstruction(const FTransform& Transform) override;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -73,7 +75,6 @@ public:
 
     void UpdateRingParameters(float PlanetScale);
     void ApplyRingSettingsToBlueprint();
-    UFUNCTION(BlueprintCallable, Category = "GasGiant|Rings")
     void ApplyRingRadiusSettings();
 
     UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
@@ -89,6 +90,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float InnerRingRadius = 1.2f;
 
+    // Retained for Trellis/scene-builder and existing Blueprint compatibility.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     bool bForceRings = false;
 
@@ -97,7 +99,6 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings", meta=(ClampMin="1.02"))
     float ForcedOuterRingRatio = 1.9f;
-
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float OuterRingRadius = 2.0f;
@@ -120,6 +121,8 @@ public:
 protected:
 
     // Root
+    void DisableAtmosphere();
+
     UPROPERTY(VisibleAnywhere)
     USceneComponent* SceneRoot;
 

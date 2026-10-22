@@ -24,6 +24,7 @@
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 
 #include "SSWGameInstance.h"
 #include "SSWRuntimeSubsystem.h"
@@ -81,6 +82,11 @@ void USSWGameInitSubsystem::RunGameInit()
     {
         UE_LOG(LogSSWGameInit, Error, TEXT("[GAMEINIT] GameInstance is not USSWGameInstance."));
         return;
+    }
+
+    if (GEngine)
+    {
+        GEngine->bEnableOnScreenDebugMessages = false;
     }
 
     UE_LOG(LogSSWGameInit, Log, TEXT("[GAMEINIT] Starting game initialization."));
