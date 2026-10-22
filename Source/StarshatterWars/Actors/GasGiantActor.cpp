@@ -1,4 +1,4 @@
-﻿#include "GasGiantActor.h"
+#include "GasGiantActor.h"
 
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -118,6 +118,7 @@ void AGasGiantActor::BeginPlay()
     Super::BeginPlay();
     InitialActorScale = GetActorScale3D();
     CreateMID();
+    if (bForceRings || !RingMaterialName.IsEmpty()) SetRingMaterialByName(RingMaterialName);
 
     UE_LOG(LogTemp, Warning,
         TEXT("[GasGiantActor] BeginPlay Actor=%s"),
@@ -242,6 +243,7 @@ void AGasGiantActor::SetPlanetRadius(float InRadiusUnits)
     }
 
     OnGasGiantRadiusChanged();
+    if (!RingMaterialName.IsEmpty()) ApplyRingRadiusSettings();
 }
 float AGasGiantActor::GetPlanetRadius() const
 {
@@ -403,6 +405,7 @@ void AGasGiantActor::SetGasGiantMaterialByName(const FString& MaterialName)
     }
 
     OnGasGiantMaterialChanged(DynamicMaterial);
+    if (!RingMaterialName.IsEmpty()) ApplyRingRadiusSettings();
 }
 
 void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius)
@@ -437,7 +440,7 @@ void AGasGiantActor::RebuildRuntimeRingMesh(float InnerRadius, float OuterRadius
     UVs.Reserve((Segments + 1) * 2);
     Tangents.Reserve((Segments + 1) * 2);
     Colors.Reserve((Segments + 1) * 2);
-    Triangles.Reserve(Segments * 6);
+    Triangles.Reserve(Segments * 12);
 
     for (int32 i = 0; i <= Segments; ++i)
     {
@@ -546,8 +549,9 @@ void AGasGiantActor::HideLegacyBPRings()
         const FString MeshName = MeshComp->GetName();
 
         const bool bIsLegacyRing =
-            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) &&
-            !MeshName.Equals(TEXT("RuntimeRingDisc"), ESearchCase::IgnoreCase);
+            MeshComp->ComponentHasTag(TEXT("Ring")) ||
+            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
+            (MeshComp->GetStaticMesh() && MeshComp->GetStaticMesh()->GetName().Equals(TEXT("Plane")));
 
         if (bIsLegacyRing)
         {
@@ -618,295 +622,109 @@ void AGasGiantActor::UpdateRingParameters(float PlanetScale)
 
 void AGasGiantActor::ApplyRingRadiusSettings()
 {
-    const bool bEnableRings =
-        !RingMaterialName.IsEmpty() &&
-        InnerRingRadius > 0.0f &&
-        OuterRingRadius > InnerRingRadius &&
-        PlanetRadiusUnits > 0.0f;
-
-    DebugInnerRadius = bEnableRings ? InnerRingRadius : 0.0f;
-    DebugOuterRadius = bEnableRings ? OuterRingRadius : 0.0f;
-
-    if (!bEnableRings)
+    if (bForceRings)
     {
+        if (RingMaterialName.TrimStartAndEnd().IsEmpty()) RingMaterialName = TEXT("Ring2");
+        if (!CurrentRingMaterial)
+            CurrentRingMaterial = Cast<UMaterialInstance>(LoadRingMaterialByName(RingMaterialName));
+        const float InnerRatio = FMath::IsFinite(ForcedInnerRingRatio) ? FMath::Max(1.01f, ForcedInnerRingRatio) : 1.2f;
+        const float OuterRatio = FMath::IsFinite(ForcedOuterRingRatio) ? FMath::Max(InnerRatio + 0.01f, ForcedOuterRingRatio) : InnerRatio + 0.7f;
+        InnerRingRadius = FMath::Max(PlanetRadiusUnits, 1.0f) * InnerRatio;
+        OuterRingRadius = FMath::Max(PlanetRadiusUnits, 1.0f) * OuterRatio;
+    }
+
+    const bool bEnabled = !RingMaterialName.TrimStartAndEnd().IsEmpty() &&
+        FMath::IsFinite(InnerRingRadius) && FMath::IsFinite(OuterRingRadius) &&
+        InnerRingRadius > 0 && OuterRingRadius > InnerRingRadius && PlanetRadiusUnits > 0;
+    DebugInnerRadius = bEnabled ? InnerRingRadius : 0;
+    DebugOuterRadius = bEnabled ? OuterRingRadius : 0;
+    if (!bEnabled)
+    {
+        HideLegacyBPRings();
         if (RuntimeRingMesh)
         {
-            RuntimeRingMesh->SetVisibility(false, true);
-            RuntimeRingMesh->SetHiddenInGame(true, true);
             RuntimeRingMesh->ClearAllMeshSections();
+            RuntimeRingMesh->SetVisibility(false);
+            RuntimeRingMesh->SetHiddenInGame(true);
         }
-
-        HideLegacyBPRings();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] RING DISABLED Actor=%s Inner=%.2f Outer=%.2f PlanetRadius=%.2f"),
-            *GetName(),
-            InnerRingRadius,
-            OuterRingRadius,
-            PlanetRadiusUnits);
-
         return;
     }
 
-    // Prefer the authored Blueprint ring mesh when it exists. The MI_Ring2
-    // shader was authored for that mesh's UV layout; the generic runtime
-    // annulus is only a fallback. Previously the authored mesh was always
-    // hidden, even when the procedural material rendered no visible pixels.
-    // Ring2 was authored on a flat plane in the gas-giant Blueprint. Do not
-    // require the component to be named "Ring": generic Plane/Disc mesh names
-    // are common. Prefer an explicitly tagged/named ring before a plane.
-    UStaticMeshComponent* AuthoredRing = nullptr;
-    int32 BestScore = 0;
-    TArray<UStaticMeshComponent*> RingCandidates;
-    GetComponents<UStaticMeshComponent>(RingCandidates);
-    for (UStaticMeshComponent* Candidate : RingCandidates)
+    // DEF radii are scene units. BP_GasGiant can apply additional scale to its
+    // Planet component. Measure geometry, not inflated culling bounds.
+    UStaticMeshComponent* PlanetVisual = CoreMesh;
+    FQuat RingRotation = GetActorQuat();
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents<UStaticMeshComponent>(Meshes);
+    for (UStaticMeshComponent* Mesh : Meshes)
     {
-        if (!IsValid(Candidate) || !Candidate->GetStaticMesh()) continue;
-        const FString ComponentName = Candidate->GetName();
-        const FString AssetName = Candidate->GetStaticMesh()->GetName();
-        if (ComponentName.Equals(TEXT("CoreMesh"), ESearchCase::IgnoreCase) ||
-            ComponentName.Equals(TEXT("Planet"), ESearchCase::IgnoreCase) ||
-            ComponentName.Equals(TEXT("Atmosphere"), ESearchCase::IgnoreCase))
-            continue;
-
-        const bool bNamedRing = Candidate->ComponentHasTag(TEXT("Ring")) ||
-            ComponentName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
-            AssetName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase);
-        const bool bNamedPlane = ComponentName.Contains(TEXT("Plane"), ESearchCase::IgnoreCase) ||
-            ComponentName.Contains(TEXT("Disc"), ESearchCase::IgnoreCase) ||
-            AssetName.Contains(TEXT("Plane"), ESearchCase::IgnoreCase) ||
-            AssetName.Contains(TEXT("Disc"), ESearchCase::IgnoreCase);
-        const int32 Score = bNamedRing ? 2 : (bNamedPlane ? 1 : 0);
-        if (Score > BestScore)
-        {
-            BestScore = Score;
-            AuthoredRing = Candidate;
-        }
-        UE_LOG(LogTemp, Display,
-            TEXT("[Phase9RingComponentAudit] Actor='%s' Component='%s' Asset='%s' RingCandidate=%d Material='%s'"),
-            *GetName(), *ComponentName, *AssetName, Score, *GetNameSafe(Candidate->GetMaterial(0)));
+        if (!IsValid(Mesh) || !Mesh->GetStaticMesh()) continue;
+        if (Mesh->GetName().Equals(TEXT("Planet"), ESearchCase::IgnoreCase)) PlanetVisual = Mesh;
+        if (Mesh->ComponentHasTag(TEXT("Ring")) || Mesh->GetName().Contains(TEXT("Ring")))
+            RingRotation = Mesh->GetComponentQuat();
     }
-
-    if (AuthoredRing && CurrentRingMaterial)
+    double VisualRadius = PlanetRadiusUnits;
+    FVector Center = GetActorLocation();
+    if (PlanetVisual && PlanetVisual->GetStaticMesh())
     {
-        // Hide only other legacy *ring-named* meshes. The selected Plane may
-        // not have "Ring" in its name and is explicitly re-enabled below.
-        HideLegacyBPRings();
-        // Ring-size-only repair. Blueprint planet meshes may inherit a large
-        // visual scale; the imported ring radius is in scene units instead.
-        // Measure the *rendered geometry* (static-mesh local sphere radius times
-        // world component scale), never Bounds.SphereRadius: its BoundsScale may
-        // be 10000 and is intended only to control culling.
-        double VisualPlanetRadius = 0.0;
-        UStaticMeshComponent* PlanetVisual = nullptr;
-        TArray<UStaticMeshComponent*> VisualMeshes;
-        GetComponents<UStaticMeshComponent>(VisualMeshes);
-        for (UStaticMeshComponent* Visual : VisualMeshes)
-        {
-            if (!IsValid(Visual) || !Visual->GetStaticMesh() || Visual == AuthoredRing)
-                continue;
-            const FString Name = Visual->GetName();
-            if (Name.Equals(TEXT("Planet"), ESearchCase::IgnoreCase))
-            {
-                PlanetVisual = Visual;
-                break;
-            }
-            if (!PlanetVisual && Name.Equals(TEXT("CoreMesh"), ESearchCase::IgnoreCase))
-                PlanetVisual = Visual;
-        }
-        if (PlanetVisual)
-        {
-            const FVector WorldScale = PlanetVisual->GetComponentScale().GetAbs();
-            const double MaxScale = FMath::Max3((double)WorldScale.X,
-                (double)WorldScale.Y, (double)WorldScale.Z);
-            VisualPlanetRadius = (double)PlanetVisual->GetStaticMesh()->GetBounds().SphereRadius * MaxScale;
-        }
-        // Preserve the authored outer/planet radius ratio (Trellis 1.9).
-        // Only enlarge the ring when the visible sphere exceeds the scene-unit
-        // planet radius; never scale or change the sphere/atmosphere themselves.
-        const double AuthoredRatio = PlanetRadiusUnits > KINDA_SMALL_NUMBER
-            ? (double)OuterRingRadius / (double)PlanetRadiusUnits : 1.0;
-        const double TargetWorldOuterRadius = FMath::Max((double)OuterRingRadius,
-            VisualPlanetRadius * AuthoredRatio);
-
-        const FVector Extent = AuthoredRing->GetStaticMesh()->GetBounds().BoxExtent;
-        const double PlaneRadius = FMath::Max3((double)Extent.X, (double)Extent.Y, (double)Extent.Z);
-        const USceneComponent* SParentComponent = AuthoredRing->GetAttachParent();
-        const FVector ParentScale = (SParentComponent ? SParentComponent->GetComponentScale() : GetActorScale3D()).GetAbs();
-        const double ParentMaxScale = FMath::Max3((double)ParentScale.X,
-            (double)ParentScale.Y, (double)ParentScale.Z);
-        if (PlaneRadius > KINDA_SMALL_NUMBER && ParentMaxScale > KINDA_SMALL_NUMBER)
-        {
-            const double UniformScale = TargetWorldOuterRadius / (PlaneRadius * ParentMaxScale);
-            AuthoredRing->SetRelativeScale3D(FVector(UniformScale));
-        }
-        UE_LOG(LogTemp, Display,
-            TEXT("[Phase9RingSizeOnly] Actor='%s' PlanetMesh='%s' VisualPlanetRadius=%.1f AuthoredOuter=%.1f Ratio=%.3f TargetOuter=%.1f PlaneLocalRadius=%.1f ParentScale=%s NewRingScale=%s"),
-            *GetName(), *GetNameSafe(PlanetVisual), VisualPlanetRadius,
-            (double)OuterRingRadius, AuthoredRatio, TargetWorldOuterRadius,
-            PlaneRadius, *ParentScale.ToString(), *AuthoredRing->GetRelativeScale3D().ToString());
-        // Retain Blueprint-authored plane rotation and UV coordinates. A flat
-        // ring is intentional; rotating it blindly can invert the shader.
-        AuthoredRing->SetMaterial(0, CurrentRingMaterial);
-        AuthoredRing->SetCullDistance(0.0f);
-        AuthoredRing->SetBoundsScale(10.0f);
-        AuthoredRing->SetCastShadow(false);
-        AuthoredRing->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        AuthoredRing->SetHiddenInGame(false, false);
-        AuthoredRing->SetVisibility(true, false);
-        if (RuntimeRingMesh)
-        {
-            RuntimeRingMesh->SetVisibility(false, false);
-            RuntimeRingMesh->SetHiddenInGame(true, false);
-        }
-        UE_LOG(LogTemp, Display,
-            TEXT("[Phase9AuthoredPlaneRing] Actor='%s' Component='%s' Asset='%s' Material='%s' Visible=%d Hidden=%d RelativeRotation=%s RelativeScale=%s"),
-            *GetName(), *AuthoredRing->GetName(), *AuthoredRing->GetStaticMesh()->GetName(),
-            *GetNameSafe(AuthoredRing->GetMaterial(0)),
-            AuthoredRing->IsVisible() ? 1 : 0, AuthoredRing->bHiddenInGame ? 1 : 0,
-            *AuthoredRing->GetRelativeRotation().ToString(), *AuthoredRing->GetRelativeScale3D().ToString());
-        return;
+        const FBoxSphereBounds LocalBounds = PlanetVisual->GetStaticMesh()->GetBounds();
+        VisualRadius = FMath::Max(VisualRadius,
+            LocalBounds.SphereRadius * PlanetVisual->GetComponentScale().GetAbsMax());
+        Center = PlanetVisual->GetComponentTransform().TransformPosition(LocalBounds.Origin);
     }
+    const double RadiusScale = VisualRadius / PlanetRadiusUnits;
+    const float Inner = float(InnerRingRadius * RadiusScale);
+    const float Outer = float(OuterRingRadius * RadiusScale);
+    RebuildRuntimeRingMesh(Inner, Outer);
+    if (!RuntimeRingMesh) return;
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("[Phase9RingPlaneFallback] Actor='%s' FoundPlane=%d LoadedRingMaterial='%s'; using procedural annulus"),
-        *GetName(), AuthoredRing ? 1 : 0, *GetNameSafe(CurrentRingMaterial));
+    // Cancel the CURRENT parent scale via SetWorldScale3D, then inherit future
+    // changes. SystemSceneBuilder rescales the entire planet for mission and
+    // cutscene projection; an absolute-scale ring would remain inside its hull.
+    RuntimeRingMesh->SetAbsolute(false, false, false);
+    RuntimeRingMesh->SetWorldScale3D(FVector::OneVector);
+    RuntimeRingMesh->SetWorldRotation(RingRotation);
+    RuntimeRingMesh->SetWorldLocation(Center + RingRotation.RotateVector(FVector(0, 0, RingPosition)));
     HideLegacyBPRings();
-    RebuildRuntimeRingMesh(InnerRingRadius, OuterRingRadius);
-    UE_LOG(LogTemp, Display, TEXT("[Phase9RingFallback] Actor='%s' AuthoredMesh=%d Material=%s"),
-        *GetName(), AuthoredRing ? 1 : 0, *GetNameSafe(CurrentRingMaterial));
 
-    if (RingDynamicMaterial)
+    UMaterialInterface* Material = RingBaseMaterial ? RingBaseMaterial.Get() : CurrentRingMaterial;
+    if (Material)
     {
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Rings Opacity"), 255.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Density"), 6.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Dark Side Brightness"), 1.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Rings Shaded Brightness"), 1.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Rings Scattering Strength"), 3.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Scattering Size"), 3.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Scattering Power"), 3.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Shadow Strength"), 0.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Shadow Hardness"), 0.0f);
-        RingDynamicMaterial->SetScalarParameterValue(TEXT("Position"), RingPosition);
-
-        RingDynamicMaterial->SetVectorParameterValue(TEXT("Rings Color 1"), FLinearColor(1.0f, 0.85f, 0.55f, 1.0f));
-        RingDynamicMaterial->SetVectorParameterValue(TEXT("Rings Color 2"), FLinearColor(1.0f, 0.75f, 0.40f, 1.0f));
-        RingDynamicMaterial->SetVectorParameterValue(TEXT("Rings Color 3"), FLinearColor(1.0f, 0.95f, 0.70f, 1.0f));
-        RingDynamicMaterial->SetVectorParameterValue(TEXT("Rings Scattering Color"), FLinearColor(1.0f, 0.85f, 0.55f, 1.0f));
+        if (!RingDynamicMaterial || RingDynamicMaterial->Parent != Material)
+            RingDynamicMaterial = UMaterialInstanceDynamic::Create(Material, this);
+        if (RingDynamicMaterial)
+        {
+            // M_Rings_Master uses round(radialUV * Edge), not world radii.
+            // Radial UV is 0.5 at the outer edge, Inner/(2*Outer) at the inner.
+            // Slightly extend the shader mask; geometry defines the exact edges.
+            RingDynamicMaterial->SetScalarParameterValue(TEXT("Outer Edge"), 0.99f);
+            RingDynamicMaterial->SetScalarParameterValue(TEXT("Inner Edge"), (Outer / Inner) * 1.01f);
+            if (bForceRings)
+                RingDynamicMaterial->SetScalarParameterValue(TEXT("RingsDensity"), 1.0f);
+            RuntimeRingMesh->SetMaterial(0, RingDynamicMaterial);
+        }
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] ApplyRingRadiusSettings annulus Actor=%s Inner=%.2f Outer=%.2f"),
-        *GetName(),
-        InnerRingRadius,
-        OuterRingRadius);
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[GasGiantRing] Missing material '%s' on %s"), *RingMaterialName, *GetName());
+    }
+    RuntimeRingMesh->SetBoundsScale(1.0f);
+    RuntimeRingMesh->SetVisibility(true);
+    RuntimeRingMesh->SetHiddenInGame(false);
+    UE_LOG(LogTemp, Display,
+        TEXT("[GasGiantRing] Actor=%s PlanetRadius=%.1f Inner=%.1f Outer=%.1f Material=%s WorldScale=%s"),
+        *GetName(), VisualRadius, Inner, Outer, *GetNameSafe(Material), *RuntimeRingMesh->GetComponentScale().ToString());
 }
 
 void AGasGiantActor::SetRingMaterialByName(const FString& InRingName)
 {
     RingMaterialName = InRingName.TrimStartAndEnd();
-    CurrentRingMaterial = nullptr;
-
-    if (RingMaterialName.IsEmpty())
-    {
-        TArray<UStaticMeshComponent*> Meshes;
-        GetComponents<UStaticMeshComponent>(Meshes);
-
-        for (UStaticMeshComponent* MeshComp : Meshes)
-        {
-            if (!MeshComp)
-            {
-                continue;
-            }
-
-            const FString MeshName = MeshComp->GetName();
-
-            const bool bIsRing =
-                MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
-                MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
-                MeshComp->ComponentHasTag(TEXT("Ring"));
-
-            if (bIsRing)
-            {
-                MeshComp->SetVisibility(false, true);
-                MeshComp->SetHiddenInGame(true, true);
-            }
-        }
-
-        OnRingMaterialChanged(nullptr);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] Ring material cleared Actor=%s"),
-            *GetName());
-
-        return;
-    }
-
-    FString CleanRingName = RingMaterialName;
-
-    const FString AssetName = CleanRingName.StartsWith(TEXT("MI_"))
-        ? CleanRingName
-        : FString(TEXT("MI_")) + CleanRingName;
-
-    const FString Path = FString::Printf(
-        TEXT("/Script/Engine.MaterialInstanceConstant'/Game/GameData/Galaxy/GasGiants/%s.%s'"),
-        *AssetName,
-        *AssetName);
-
-    UMaterialInstance* LoadedMat =
-        LoadObject<UMaterialInstance>(nullptr, *Path);
-
-    if (!LoadedMat)
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[GasGiantActor] FAILED Ring Material Actor=%s DEF='%s' Asset='%s' Path=%s"),
-            *GetName(),
-            *RingMaterialName,
-            *AssetName,
-            *Path);
-
-        OnRingMaterialChanged(nullptr);
-        return;
-    }
-
-    CurrentRingMaterial = LoadedMat;
-
-    TArray<UStaticMeshComponent*> Meshes;
-    GetComponents<UStaticMeshComponent>(Meshes);
-
-    for (UStaticMeshComponent* MeshComp : Meshes)
-    {
-        if (!MeshComp)
-        {
-            continue;
-        }
-
-        const FString MeshName = MeshComp->GetName();
-
-        const bool bIsRing =
-            MeshName.Contains(TEXT("Ring"), ESearchCase::IgnoreCase) ||
-            MeshName.Contains(TEXT("Rings"), ESearchCase::IgnoreCase) ||
-            MeshComp->ComponentHasTag(TEXT("Ring"));
-
-        if (!bIsRing)
-        {
-            continue;
-        }
-
-        MeshComp->SetMaterial(0, CurrentRingMaterial);
-        MeshComp->SetVisibility(true, true);
-        MeshComp->SetHiddenInGame(false, true);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[GasGiantActor] Ring mesh material SET Actor=%s Mesh=%s DEF='%s' Asset='%s' Mat=%s"),
-            *GetName(),
-            *MeshName,
-            *RingMaterialName,
-            *AssetName,
-            *GetNameSafe(CurrentRingMaterial));
-    }
-
+    if (bForceRings && RingMaterialName.IsEmpty()) RingMaterialName = TEXT("Ring2");
+    CurrentRingMaterial = Cast<UMaterialInstance>(LoadRingMaterialByName(RingMaterialName));
+    RingDynamicMaterial = nullptr;
+    // Allow BP notifications first. The C++ annulus is the final ring state.
     OnRingMaterialChanged(CurrentRingMaterial);
+    ApplyRingRadiusSettings();
 }
 
 UMaterialInterface* AGasGiantActor::LoadRingMaterialByName(const FString& RingName)
@@ -1034,28 +852,7 @@ void AGasGiantActor::EnsureRuntimeRingMesh()
     RuntimeRingMesh->SetHiddenInGame(true, true);
     RuntimeRingMesh->bUseAsyncCooking = true;
 
-    UMaterialInterface* RingMat = CurrentRingMaterial;
-
-    if (!RingMat)
-    {
-        RingMat = LoadObject<UMaterialInterface>(
-            nullptr,
-            TEXT("/Script/Engine.MaterialInstanceConstant'/Game/GameData/Galaxy/GasGiants/MI_Ring2.MI_Ring2'"));
-    }
-
-    if (RingMat)
-    {
-        RingDynamicMaterial = UMaterialInstanceDynamic::Create(RingMat, this);
-
-        if (RingDynamicMaterial)
-        {
-            RuntimeRingMesh->SetMaterial(0, RingDynamicMaterial);
-        }
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[GasGiantActor] RuntimeRingMesh created Actor=%s Mat=%s MID=%s"),
-        *GetName(),
-        *GetNameSafe(RingMat),
-        *GetNameSafe(RingDynamicMaterial));
+    RuntimeRingMesh->SetAbsolute(false, false, false);
+    RuntimeRingMesh->SetCanEverAffectNavigation(false);
+    RuntimeRingMesh->SetCullDistance(0.0f);
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -440,6 +440,12 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Planet Types")
     TSubclassOf<AGasGiantActor> GasGiantPlanetActorClass;
+
+    // Serialized soft class reference also declares the asset dependency for cooking.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Planet Types")
+    TSoftClassPtr<AGasGiantActor> TrellisPlanetActorClass = TSoftClassPtr<AGasGiantActor>(
+        FSoftObjectPath(TEXT("/Game/GameData/Galaxy/Giants/BP_Trellis.BP_Trellis_C")));
+
 
 
 

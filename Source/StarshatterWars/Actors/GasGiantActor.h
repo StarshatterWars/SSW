@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -73,6 +73,7 @@ public:
 
     void UpdateRingParameters(float PlanetScale);
     void ApplyRingSettingsToBlueprint();
+    UFUNCTION(BlueprintCallable, Category = "GasGiant|Rings")
     void ApplyRingRadiusSettings();
 
     UMaterialInterface* LoadRingMaterialByName(const FString& RingName);
@@ -87,6 +88,16 @@ public:
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float InnerRingRadius = 1.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
+    bool bForceRings = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings", meta=(ClampMin="1.01"))
+    float ForcedInnerRingRatio = 1.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings", meta=(ClampMin="1.02"))
+    float ForcedOuterRingRatio = 1.9f;
+
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GasGiant|Rings")
     float OuterRingRadius = 2.0f;

@@ -1,4 +1,4 @@
-#include "CampaignSceneDlg.h"
+﻿#include "CampaignSceneDlg.h"
 #include "Engine/Engine.h"
 #include "Components/AudioComponent.h"
 
@@ -80,6 +80,34 @@ void UCampaignSceneDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
     const float NowSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
 
     AdvanceSceneFromTimer(NowSeconds);
+
+    // Trellis-only cinematic elevation sweep.  ExternalElevation applies a
+    // delta, so the authored azimuth/range and orbit rates keep running.
+    if (bTrellisCameraSweepActive && bSceneRunning)
+    {
+        const double ShotSeconds = FMath::Max(0.0, (double)NowSeconds - (double)TrellisSweepStartRealSeconds);
+        constexpr double ShotLength = 7.85;
+        const double NormalizedTime = FMath::Clamp(ShotSeconds / ShotLength, 0.0, 1.0);
+        auto Smooth = [](double T) { return T * T * (3.0 - 2.0 * T); };
+
+        // The opening camera is already at +15 degrees; this offset is
+        // relative to that baseline: +10 degrees at the crest, -7 at exit.
+        const double DesiredOffsetDegrees = (NormalizedTime <= 0.50)
+            ? 10.0 * Smooth(NormalizedTime * 2.0)
+            : 10.0 - 17.0 * Smooth((NormalizedTime - 0.50) * 2.0);
+        const double DeltaRadians = FMath::DegreesToRadians(DesiredOffsetDegrees - TrellisSweepLastOffsetDegrees);
+        if (FMath::Abs(DeltaRadians) > 1.0e-7)
+        {
+            if (CameraManager* Director = CameraManager::GetInstance())
+            {
+                Director->ExternalElevation(DeltaRadians);
+                TrellisSweepLastOffsetDegrees = DesiredOffsetDegrees;
+            }
+        }
+        if (NormalizedTime >= 1.0)
+            bTrellisCameraSweepActive = false;
+    }
+
     UpdatePanelFade(NowSeconds);
 }
 
@@ -298,6 +326,9 @@ void UCampaignSceneDlg::ResetSceneState()
     SceneDurationSeconds = 0.0f;
     bSceneRunning = false;
     bCutsceneTransitionStarted = false;
+    bTrellisCameraSweepActive = false;
+    TrellisSweepStartRealSeconds = 0.0f;
+    TrellisSweepLastOffsetDegrees = 0.0;
 
     if (HeaderText)
     {
@@ -1365,9 +1396,36 @@ void UCampaignSceneDlg::ExecuteCameraEvent(const FS_MissionEvent& Event)
 
                     if (LegacyCommand == 3)
                     {
+                        // Trellis is a planar-ring gas giant. The authored 30.00s
+                        // orbit has zero elevation (edge-on to the ring plane).
+                        // Raise only this shot's camera by 15 degrees; keep the
+                        // authored azimuth, range, and all other shots untouched.
+                        const bool bTrellisRingReveal =
+                            TargetBody != nullptr &&
+                            TargetName.Equals(TEXT("body:Trellis"), ESearchCase::IgnoreCase) &&
+                            FMath::IsNearlyEqual((float)Event.EventTime, 30.0f, 0.05f);
+                        const double CameraElevation = bTrellisRingReveal
+                            ? FMath::DegreesToRadians(15.0)
+                            : (double)Event.EventPoint.Y;
+                        // Every non-Trellis orbital shot ends the sweep before
+                        // changing focus. The next authored SetOrbitPoint
+                        // establishes the new elevation without inherited tilt.
+                        if (!bTrellisRingReveal)
+                            bTrellisCameraSweepActive = false;
+                        if (bTrellisRingReveal)
+                        {
+                            bTrellisCameraSweepActive = true;
+                            TrellisSweepStartRealSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+                            TrellisSweepLastOffsetDegrees = 0.0;
+                            UE_LOG(LogTemp, Display,
+                                TEXT("[Phase9TrellisCameraSweep] START 15 -> 25 -> 8 degrees over 7.85s"));
+                            UE_LOG(LogTemp, Display,
+                                TEXT("[Phase9TrellisCameraReveal] Time=%.2f Elevation=15deg (authored=%.3f rad) Target='%s'"),
+                                (double)Event.EventTime, (double)Event.EventPoint.Y, *TargetName);
+                        }
                         LegacyDirector->SetOrbitPoint(
                             (double)Event.EventPoint.X,
-                            (double)Event.EventPoint.Y,
+                            CameraElevation,
                             (double)Event.EventPoint.Z);
                         if (bFarcasterNewsShot && TargetShip &&
                             LegacyDirector->GetViewObject() == TargetShip)

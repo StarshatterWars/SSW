@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -28,6 +28,7 @@
 #include "OrbitalRegion.h"
 #include "PlanetActor.h"
 #include "GasGiantActor.h"
+#include "TrellisPlanetActor.h"
 
 #include "Components/SkyLightComponent.h"
 #include "Components/DirectionalLightComponent.h"
@@ -589,6 +590,26 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         ResolvedClass = ResolvePlanetActorClass(PlanetType, false);
     }
 
+    const bool bIsTrellis = PlanetName.TrimStartAndEnd().Equals(TEXT("Trellis"), ESearchCase::IgnoreCase);
+    if (bIsTrellis)
+    {
+        UClass* TrellisClass = TrellisPlanetActorClass.LoadSynchronous();
+        if (TrellisClass && TrellisClass->IsChildOf(AGasGiantActor::StaticClass()))
+        {
+            ResolvedClass = TrellisClass;
+            if (!TrellisClass->IsChildOf(ATrellisPlanetActor::StaticClass()))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[TrellisVisual] Reparent BP_Trellis to TrellisPlanetActor to enable its dedicated ring controller."));
+            }
+            UE_LOG(LogTemp, Display, TEXT("[TrellisVisual] Using %s"), *TrellisClass->GetPathName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[TrellisVisual] Failed to load BP_Trellis as GasGiantActor: %s"),
+                *TrellisPlanetActorClass.ToSoftObjectPath().ToString());
+        }
+    }
+
     AActor* PlanetActor = SpawnBodyActor(
         ResolvedClass,
         PlanetName,
@@ -613,8 +634,11 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
 
     if (AGasGiantActor* Gas = Cast<AGasGiantActor>(PlanetActor))
     {
+        // Apply before DEF settings: empty/missing ring data cannot disable Trellis.
+        if (bIsTrellis) Gas->bForceRings = true;
         Gas->SetPlanetRadius(RadiusUnits);
         Gas->SetLightDirection(CorrectedLightDir);
+        if (bIsTrellis) Gas->SetRingMaterialByName(TEXT("Ring2"));
 
         if (PlanetData)
         {

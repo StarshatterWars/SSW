@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -185,6 +185,12 @@ protected:
     float SceneDurationSeconds = 0.0f;
 
     bool bSceneRunning = false;
+
+    // Trellis-only ring-reveal camera sweep. Does not alter camera manager state
+    // for other targets or change any authored DataTable camera events.
+    bool bTrellisCameraSweepActive = false;
+    float TrellisSweepStartRealSeconds = 0.0f;
+    double TrellisSweepLastOffsetDegrees = 0.0;
 
     bool bCutsceneTransitionStarted = false;
 int32 CurrentCampaignNumber = 0;
