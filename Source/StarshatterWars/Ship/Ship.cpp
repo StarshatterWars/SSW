@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -2510,6 +2510,8 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 				while (++w_iter) {
 					Weapon* w = w_iter.value();
 
+                    // UE presentation can omit the old Solid turret mesh.
+                    if (!w || !w->GetTurret()) continue;
 					const FVector tloc = w->GetTurret()->Location();
 
 					if (CheckRaySphereIntersection(tloc, tsize, shot_org, shot_vpn, shot_len)) {
@@ -3885,27 +3887,24 @@ Ship::ExecSystems(double seconds)
             System->Orient(this);
             System->ExecFrame(seconds);
         }
-        // Hangar is not a system; Unreal visuals still need its launch/recovery queue.
-        if (hangar) hangar->ExecFrame(seconds);
-        return;
+        // Do not return here. Unreal-rendered ships still need the legacy
+        // WeaponGroup::ExecFrame, manual trigger, Winchester cycle and weapon
+        // mass/resistance logic below. These groups are NOT in systems.
+    }
+    else {
+        ListIter<SimSystem> iter = systems;
+        while (++iter) {
+            SimSystem* sys = iter.value();
+            if (!sys) continue;
+            sys->Orient(this);
+            // Sensors have already run earlier in Ship::ExecFrame.
+            // FLCS also runs through its dedicated flight-control path.
+            if (sys->GetType() != SYSTEM_CATEGORY::SENSOR && sys != flcs)
+                sys->ExecFrame(seconds);
+        }
     }
 
 	int i = 0;
-
-	ListIter<SimSystem> iter = systems;
-	while (++iter) {
-		SimSystem* sys = iter.value();
-
-		sys->Orient(this);
-
-		// sensors have already been executed,
-		// they can notxbe run twice in a frame!
-		if (sys->GetType() != SYSTEM_CATEGORY::SENSOR)
-			sys->ExecFrame(seconds);
-
-		if (sys == flcs)
-			continue;
-	}
 
 	// hangars and weapon groups are not systems
 	// they must be executed separately from above
@@ -3932,7 +3931,7 @@ Ship::ExecSystems(double seconds)
 			// weapon, let it guide on the contact closest
 			// to its boresight.  this must be done before
 			// firing the weapon.
-			if (sensor && gun->Guided() && !gun->Design()->beam && !gun_tgt) {
+			if (sensor && gun->Design() && gun->Guided() && !gun->Design()->beam && !gun_tgt) {
 				gun->SetTarget(sensor->AcquirePassiveTargetForMissile(), 0);
 			}
 
@@ -3983,7 +3982,7 @@ Ship::ExecSystems(double seconds)
 	if (IsDropship())
 		agility = (float)design->agility - wep_resist;
 
-	if (shieldRep) {
+	if (shieldRep && rep) {
 		Solid* solid = (Solid*)rep;
 		shieldRep->MoveTo(solid->Location());
 		shieldRep->SetOrientation(solid->Orientation());
@@ -4001,7 +4000,7 @@ Ship::ExecSystems(double seconds)
 		}
 	}
 
-	if (cockpit) {
+	if (cockpit && rep) {
 		Solid* solid = (Solid*)rep;
 
 		const FVector cpos =

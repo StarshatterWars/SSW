@@ -1,17 +1,17 @@
 /*  Project Starshatter Wars
-	Fractal Dev Studios
-	Copyright 2025-2026. All Rights Reserved.
+    Fractal Dev Studios
+    Copyright 2025-2026. All Rights Reserved.
 
-	SUBSYSTEM:    Stars.exe
-	FILE:         WeaponGroup.cpp
-	AUTHOR:       Carlos Bott
+    SUBSYSTEM:    Stars.exe
+    FILE:         WeaponGroup.cpp
+    AUTHOR:       Carlos Bott
 
-	ORIGINAL AUTHOR AND STUDIO:
-	John DiCamillo / Destroyer Studios LLC
+    ORIGINAL AUTHOR AND STUDIO:
+    John DiCamillo / Destroyer Studios LLC
 
-	OVERVIEW
-	========
-	Weapon Control Category (Group) class
+    OVERVIEW
+    ========
+    Weapon Control Category (Group) class
 */
 
 #include "WeaponGroup.h"
@@ -22,15 +22,15 @@
 // +----------------------------------------------------------------------+
 
 WeaponGroup::WeaponGroup(const char* n)
-	: selected(0)
-	, trigger(false)
-	, orders(WeaponsOrders::MANUAL)
-	, control(WeaponsControl::SINGLE_FIRE)
-	, sweep(WeaponsSweep::SWEEP_TIGHT)
-	, mass(0.0f)
-	, resist(0.0f)
-	, name(n)
-	, ammo(0)
+    : selected(0)
+    , trigger(false)
+    , orders(WeaponsOrders::MANUAL)
+    , control(WeaponsControl::SINGLE_FIRE)
+    , sweep(WeaponsSweep::SWEEP_TIGHT)
+    , mass(0.0f)
+    , resist(0.0f)
+    , name(n)
+    , ammo(0)
 {
 }
 
@@ -38,290 +38,293 @@ WeaponGroup::WeaponGroup(const char* n)
 
 WeaponGroup::~WeaponGroup()
 {
-	weapons.destroy();
+    weapons.destroy();
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::SetName(const char* n)
 {
-	name = n;
+    name = n;
 }
 
 void WeaponGroup::SetAbbreviation(const char* a)
 {
-	abrv = a;
+    abrv = a;
 }
 
 // +--------------------------------------------------------------------+
 
 bool WeaponGroup::IsPrimary() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsPrimary();
+    if (GetWeapon(0))
+        return weapons[0]->IsPrimary();
 
-	return false;
+    return false;
 }
 
 bool WeaponGroup::IsDrone() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsDrone();
+    if (GetWeapon(0))
+        return weapons[0]->IsDrone();
 
-	return false;
+    return false;
 }
 
 bool WeaponGroup::IsDecoy() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsDecoy();
+    if (GetWeapon(0))
+        return weapons[0]->IsDecoy();
 
-	return false;
+    return false;
 }
 
 bool WeaponGroup::IsProbe() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsProbe();
+    if (GetWeapon(0))
+        return weapons[0]->IsProbe();
 
-	return false;
+    return false;
 }
 
 bool WeaponGroup::IsMissile() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsMissile();
+    if (GetWeapon(0))
+        return weapons[0]->IsMissile();
 
-	return false;
+    return false;
 }
 
 bool WeaponGroup::IsBeam() const
 {
-	if (GetWeapon(0))
-		return weapons[0]->IsBeam();
+    if (GetWeapon(0))
+        return weapons[0]->IsBeam();
 
-	return false;
+    return false;
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::AddWeapon(Weapon* w)
 {
-	if (w && !weapons.contains(w)) weapons.append(w);
+    if (w && !weapons.contains(w)) weapons.append(w);
 }
 
 int WeaponGroup::NumWeapons() const
 {
-	return weapons.size();
+    return weapons.size();
 }
 
 List<Weapon>& WeaponGroup::GetWeapons()
 {
-	return weapons;
+    return weapons;
 }
 
 bool WeaponGroup::Contains(const Weapon* w) const
 {
-	return weapons.contains(w) ? true : false;
+    return weapons.contains(w) ? true : false;
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::SelectWeapon(int n)
 {
-	if (n >= 0 && n < weapons.size())
-		selected = n;
+    if (n >= 0 && n < weapons.size())
+        selected = n;
 }
 
 void WeaponGroup::CycleWeapon()
 {
-	selected++;
+    selected++;
 
-	if (selected >= weapons.size())
-		selected = 0;
+    if (selected >= weapons.size())
+        selected = 0;
 }
 
 Weapon* WeaponGroup::GetWeapon(int n) const
 {
-	if (n >= 0 && n < weapons.size())
-		return weapons[n];
+    if (n >= 0 && n < weapons.size())
+        return weapons[n];
 
-	return 0;
+    return 0;
 }
 
 Weapon* WeaponGroup::GetSelected() const
 {
-	return selected>=0 && selected<weapons.size() ? weapons[selected] : nullptr;
+    return selected>=0 && selected<weapons.size() ? weapons[selected] : nullptr;
 }
 
 bool WeaponGroup::CanTarget(uint32 tgt_class) const
 {
-	if (GetSelected())
-		return weapons[selected]->CanTarget(tgt_class);
+    if (GetSelected())
+        return weapons[selected]->CanTarget(tgt_class);
 
-	return false;
+    return false;
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::ExecFrame(double seconds)
 {
-	ammo = 0;
-	mass = 0.0f;
-	resist = 0.0f;
+    ammo = 0;
+    mass = 0.0f;
+    resist = 0.0f;
 
-	ListIter<Weapon> iter = weapons;
-	while (++iter) {
-		Weapon* w = iter.value();
-		w->ExecFrame(seconds);
+    ListIter<Weapon> iter = weapons;
+    while (++iter) {
+        Weapon* w = iter.value();
+        if (!w) continue;
+        w->ExecFrame(seconds);
 
-		ammo += w->Ammo();
-		mass += w->Mass();
-		resist += w->Resistance();
-	}
+        ammo += w->Ammo();
+        mass += w->Mass();
+        resist += w->Resistance();
+    }
 }
 
 void WeaponGroup::CheckAmmo()
 {
-	ammo = 0;
-	mass = 0.0f;
-	resist = 0.0f;
+    ammo = 0;
+    mass = 0.0f;
+    resist = 0.0f;
 
-	ListIter<Weapon> iter = weapons;
-	while (++iter) {
-		Weapon* w = iter.value();
+    ListIter<Weapon> iter = weapons;
+    while (++iter) {
+        Weapon* w = iter.value();
+        if (!w) continue;
 
-		ammo += w->Ammo();
-		mass += w->Mass();
-		resist += w->Resistance();
-	}
+        ammo += w->Ammo();
+        mass += w->Mass();
+        resist += w->Resistance();
+    }
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::SetTarget(SimObject* target, SimSystem* subtarget)
 {
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetTarget(target, subtarget);
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetTarget(target, subtarget);
 }
 
 SimObject* WeaponGroup::GetTarget() const
 {
-	SimObject* target = 0;
+    SimObject* target = 0;
 
-	if (GetWeapon(0))
-		target = weapons[0]->GetTarget();
+    if (GetWeapon(0))
+        target = weapons[0]->GetTarget();
 
-	return target;
+    return target;
 }
 
 SimSystem* WeaponGroup::GetSubTarget() const
 {
-	SimSystem* subtarget = 0;
+    SimSystem* subtarget = 0;
 
-	if (GetWeapon(0))
-		subtarget = weapons[0]->GetSubTarget();
+    if (GetWeapon(0))
+        subtarget = weapons[0]->GetSubTarget();
 
-	return subtarget;
+    return subtarget;
 }
 
 void WeaponGroup::DropTarget()
 {
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetTarget(0, 0);
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetTarget(0, 0);
 }
 
 // +--------------------------------------------------------------------+
 
 WeaponDesign* WeaponGroup::GetDesign() const
 {
-	if (GetSelected())
-		return (WeaponDesign*)weapons[selected]->Design();
+    if (GetSelected())
+        return (WeaponDesign*)weapons[selected]->Design();
 
-	return 0;
+    return 0;
 }
 
 // +--------------------------------------------------------------------+
 
 SYSTEM_STATUS WeaponGroup::GetStatus() const
 {
-	SYSTEM_STATUS status = SYSTEM_STATUS::NOMINAL;
-	int critical = true;
+    SYSTEM_STATUS status = SYSTEM_STATUS::NOMINAL;
+    int critical = true;
 
-	ListIter<Weapon> iter = (List<Weapon>&)weapons; // cast-away const
-	while (++iter) {
-		Weapon* w = iter.value();
+    ListIter<Weapon> iter = (List<Weapon>&)weapons; // cast-away const
+    while (++iter) {
+        Weapon* w = iter.value();
+        if (!w) continue;
 
-		if (w->GetStatus() < SYSTEM_STATUS::NOMINAL)
-			status = SYSTEM_STATUS::DEGRADED;
+        if (w->GetStatus() < SYSTEM_STATUS::NOMINAL)
+            status = SYSTEM_STATUS::DEGRADED;
 
-		if (w->GetStatus() > SYSTEM_STATUS::CRITICAL)
-			critical = false;
-	}
+        if (w->GetStatus() > SYSTEM_STATUS::CRITICAL)
+            critical = false;
+    }
 
-	if (critical)
-		return SYSTEM_STATUS::CRITICAL;
+    if (critical)
+        return SYSTEM_STATUS::CRITICAL;
 
-	return status;
+    return status;
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::SetFiringOrders(WeaponsOrders o)
 {
-	orders = o;
+    orders = o;
 
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetFiringOrders(orders);
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetFiringOrders(orders);
 }
 
 void WeaponGroup::SetControlMode(WeaponsControl m)
 {
-	control = m;
+    control = m;
 
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetControlMode(control);
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetControlMode(control);
 }
 
 void WeaponGroup::SetSweep(WeaponsSweep s)
 {
-	sweep = s;
+    sweep = s;
 
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetSweep(sweep);
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetSweep(sweep);
 }
 
 // +--------------------------------------------------------------------+
 
 void WeaponGroup::SetPowerOff()
 {
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetPowerOff();
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetPowerOff();
 }
 
 void WeaponGroup::SetPowerOn()
 {
-	ListIter<Weapon> w = weapons;
-	while (++w)
-		w->SetPowerOn();
+    ListIter<Weapon> w = weapons;
+    while (++w)
+        w->SetPowerOn();
 }
 
 // +--------------------------------------------------------------------+
 
 int WeaponGroup::Value() const
 {
-	int result = 0;
+    int result = 0;
 
-	for (int i = 0; i < weapons.size(); i++) {
-		const Weapon* w = weapons[i];
-		if (w) result += w->GetValue();
-	}
+    for (int i = 0; i < weapons.size(); i++) {
+        const Weapon* w = weapons[i];
+        if (w) result += w->GetValue();
+    }
 
-	return result;
+    return result;
 }

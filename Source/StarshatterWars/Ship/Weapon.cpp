@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+ï»¿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -75,19 +75,20 @@ Weapon::Weapon(WeaponDesign* d, int nmuz, FVector* muzzles, double az, double el
     turret_base(0)
 {
     FMemory::Memzero(visible_stores, sizeof(visible_stores));
+    FMemory::Memzero(muzzle_pts, sizeof(muzzle_pts));
+    FMemory::Memzero(rel_pts, sizeof(rel_pts));
 
     if (design->primary)
         abrv = "Wep Pri";
     else
         abrv = "Wep Sec";
 
-    nbarrels = nmuz;
-
-    if (nbarrels > MAX_BARRELS)
-        nbarrels = MAX_BARRELS;
+    nbarrels = FMath::Clamp(nmuz, 0, static_cast<int>(MAX_BARRELS));
+    if (nmuz > MAX_BARRELS || nmuz < 0)
+        UE_LOG(LogSSWWeapon, Warning, TEXT("[Weapon] Invalid muzzle count %d; clamped to [0,%d]"), nmuz, MAX_BARRELS);
 
     if (nbarrels == 0 && design->nbarrels > 0) {
-        nbarrels = design->nbarrels;
+        nbarrels = FMath::Clamp(static_cast<int>(design->nbarrels), 0, static_cast<int>(MAX_BARRELS));
 
         for (int i = 0; i < nbarrels; i++)
             muzzle_pts[i] = rel_pts[i] = design->muzzle_pts[i] * design->scale;
@@ -95,16 +96,16 @@ Weapon::Weapon(WeaponDesign* d, int nmuz, FVector* muzzles, double az, double el
         ammo = design->ammo * nbarrels;
     }
     else if (nbarrels == 1 && design->nstores > 0) {
-        nbarrels = design->nstores;
+        nbarrels = FMath::Clamp(static_cast<int>(design->nstores), 0, static_cast<int>(MAX_BARRELS));
 
         for (int i = 0; i < nbarrels; i++)
-            muzzle_pts[i] = rel_pts[i] = (muzzles[0] + design->attachments[i]);
+            muzzle_pts[i] = rel_pts[i] = ((muzzles ? muzzles[0] : FVector::ZeroVector) + design->attachments[i]);
 
         ammo = nbarrels;
     }
     else {
         for (int i = 0; i < nbarrels; i++)
-            muzzle_pts[i] = rel_pts[i] = muzzles[i];
+            muzzle_pts[i] = rel_pts[i] = muzzles ? muzzles[i] : FVector::ZeroVector;
 
         ammo = design->ammo * nbarrels;
     }
@@ -637,6 +638,9 @@ SimShot* Weapon::Fire()
     if (ship && ship->CheckFire())
         return 0;
 
+    if (!ship || !design || nbarrels <= 0)
+        return nullptr;
+
     if (ship->IsStarship() && target && !centered)
         return 0;
 
@@ -744,6 +748,9 @@ SimShot* Weapon::NetFireSecondary(SimObject* tgt, SimSystem* sub, DWORD objid)
 
 SimShot* Weapon::FireBarrel(int n)
 {
+    if (!ship || !design || n < 0 || n >= nbarrels)
+        return nullptr;
+
     const FVector& base_vel = ship->GetVelocity();
     SimShot* shot = 0;
     SimRegion* region = ship->GetRegion();
@@ -820,7 +827,7 @@ SimShot* Weapon::FireBarrel(int n)
             double speed = shot->GetVelocity().Length();
             double range = (target->GetLocation() - shot->GetLocation()).Length();
 
-            if (range > design->min_range && range < design->max_range) {
+            if (speed > KINDA_SMALL_NUMBER && range > design->min_range && range < design->max_range) {
                 shot->SetFuse(range / speed);
             }
         }
@@ -838,10 +845,12 @@ SimShot* Weapon::FireBarrel(int n)
         if (ship) {
             ShipStats* stats = ShipStats::Find(ship->GetName());
 
-            if (design->primary)
-                stats->AddGunShot();
-            else if (design->decoy_type == 0 && design->damage > 0)
-                stats->AddMissileShot();
+            if (stats) {
+                if (design->primary)
+                    stats->AddGunShot();
+                else if (design->decoy_type == 0 && design->damage > 0)
+                    stats->AddMissileShot();
+            }
         }
     }
 
@@ -1138,7 +1147,7 @@ void Weapon::FindObjective()
         double  eff_shot_speed = eff_shot_vel.Length();
 
         // time to reach target:
-        double time = distance / eff_shot_speed;
+        double time = eff_shot_speed > KINDA_SMALL_NUMBER ? distance / eff_shot_speed : 0.0;
 
         // where the target will be when the shot reaches it:
         obj_w += (target->GetVelocity() - ship->GetVelocity()) * time +
@@ -1243,6 +1252,9 @@ void Weapon::AimTurret(double az, double el)
 
 void Weapon::ZeroAim()
 {
+    if (!ship || nbarrels <= 0)
+        return;
+
     aim_cam.Clone(ship->GetCam());
     if (aim_azimuth != 0) aim_cam.Yaw(aim_azimuth);
     if (aim_elevation != 0) aim_cam.Pitch(aim_elevation);

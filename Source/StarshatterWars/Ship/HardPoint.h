@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
 
@@ -44,7 +44,7 @@ public:
 	virtual void        AddDesign(WeaponDesign* dsn);
 	virtual Weapon*     CreateWeapon(int type_index = 0);
 	virtual double      GetCarryMass(int type_index = 0);
-	WeaponDesign*	    GetWeaponDesign(int n) { return designs[n]; }
+	WeaponDesign*	    GetWeaponDesign(int n) { return (n >= 0 && n < MAX_DESIGNS) ? designs[n] : nullptr; }
 
 	virtual void        Mount(FVector loc, float rad, float hull = 0.5f);
 	FVector             MountLocation()               const { return mount_rel; }
