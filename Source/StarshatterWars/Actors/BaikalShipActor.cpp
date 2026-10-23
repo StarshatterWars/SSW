@@ -29,11 +29,13 @@
 
 ABaikalShipActor::ABaikalShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Baikal"));
-    ConfigureTurretsFromShipDef(TEXT("Baikal"));
+
+
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(1.6f));
     ApplyBaikalDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void ABaikalShipActor::OnConstruction(const FTransform& Transform)
@@ -269,4 +271,34 @@ void ABaikalShipActor::BuildBaikalDockPoints()
 void ABaikalShipActor::BuildBaikalLandingPoints()
 {
     LandingPointDefs.Empty();
+}
+void ABaikalShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("Fwd Cannon");
+      Point.LocalOffset = FVector(500.000000f, 0.000000f, 25.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Interceptor 1");
+      Point.LocalOffset = FVector(-40.000000f, -50.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Starboard Cannon");
+      Point.LocalOffset = FVector(-30.000000f, 85.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Port Cannon");
+      Point.LocalOffset = FVector(-30.000000f, -85.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Starboard Cannon_Base");
+      Point.LocalOffset = FVector(-30.000000f, 85.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Port Cannon_Base");
+      Point.LocalOffset = FVector(-30.000000f, -85.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

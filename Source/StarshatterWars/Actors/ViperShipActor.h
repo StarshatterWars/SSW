@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyViperDefaults();
     void ApplyViperFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

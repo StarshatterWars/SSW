@@ -9,4 +9,6 @@ class STARSHATTERWARS_API ASpectreShipActor : public ACapitalShipActor
     GENERATED_BODY()
 public:
     ASpectreShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

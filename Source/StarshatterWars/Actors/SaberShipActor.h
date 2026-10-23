@@ -7,4 +7,6 @@ class STARSHATTERWARS_API ASaberShipActor : public AShipActor
     GENERATED_BODY()
 public:
     ASaberShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

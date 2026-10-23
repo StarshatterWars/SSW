@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyJackalDefaults();
     void ApplyJackalFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

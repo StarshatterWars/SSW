@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyCourageousDefaults();
     void ApplyCourageousFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

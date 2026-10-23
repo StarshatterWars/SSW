@@ -27,6 +27,8 @@ AIM4300ShipActor::AIM4300ShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM4300Defaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AIM4300ShipActor::OnConstruction(const FTransform& Transform)
@@ -168,4 +170,10 @@ void AIM4300ShipActor::ApplyIM4300FixedPoints()
         NavPoint->SetRelativeLocation(
             FVector(0.0f, 16.0f, 60.0f));
     }
+}
+void AIM4300ShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

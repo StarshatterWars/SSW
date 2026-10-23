@@ -4,9 +4,11 @@
 
 ACobraShipActor::ACobraShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Cobra"));
+
     SetActorScale3D(FVector(0.260000f));
     ApplyCobraDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 void ACobraShipActor::OnConstruction(const FTransform& Transform)
 {
@@ -121,4 +123,47 @@ void ACobraShipActor::ApplyCobraFixedPoints()
     if (ReactorPoint) ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     if (ComputerPointA) ComputerPointA->SetRelativeLocation(ComputerPointAOffset);
     if (ComputerPointB) ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
+}
+
+void ACobraShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("Cannon");
+      Point.LocalOffset = FVector(-32.000000f, 0.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-1");
+      Point.LocalOffset = FVector(-30.000000f, 129.000000f, -21.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-2");
+      Point.LocalOffset = FVector(-30.000000f, 105.000000f, -18.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-3");
+      Point.LocalOffset = FVector(-30.000000f, 65.000000f, -16.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-4");
+      Point.LocalOffset = FVector(-30.000000f, 40.000000f, -14.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-5");
+      Point.LocalOffset = FVector(-30.000000f, -40.000000f, -14.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-6");
+      Point.LocalOffset = FVector(-30.000000f, -65.000000f, -16.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-7");
+      Point.LocalOffset = FVector(-30.000000f, -105.000000f, -18.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-8");
+      Point.LocalOffset = FVector(-30.000000f, -128.000000f, -21.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

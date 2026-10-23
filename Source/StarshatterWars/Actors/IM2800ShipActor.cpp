@@ -27,6 +27,8 @@ AIM2800ShipActor::AIM2800ShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM2800Defaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AIM2800ShipActor::OnConstruction(const FTransform& Transform)
@@ -145,4 +147,10 @@ void AIM2800ShipActor::ApplyIM2800FixedPoints()
     {
         NavPoint->SetRelativeLocation(FVector(0.0f, 16.0f, 60.0f));
     }
+}
+void AIM2800ShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

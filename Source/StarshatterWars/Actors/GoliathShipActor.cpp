@@ -2,10 +2,12 @@
 
 AGoliathShipActor::AGoliathShipActor()
 {
-    ConfigureTurretsFromShipDef(TEXT("Goliath"));
+
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(3.3f));
     ApplyGoliathDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AGoliathShipActor::OnConstruction(const FTransform& Transform)
@@ -188,4 +190,42 @@ void AGoliathShipActor::ApplyGoliathFixedPoints()
     {
         ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     }
+}
+void AGoliathShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 1");
+      Point.LocalOffset = FVector(64.000000f, 104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 60.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 2");
+      Point.LocalOffset = FVector(64.000000f, -104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -60.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 3");
+      Point.LocalOffset = FVector(-64.000000f, 104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 4");
+      Point.LocalOffset = FVector(-64.000000f, -104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 1_Base");
+      Point.LocalOffset = FVector(64.000000f, 104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 60.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 2_Base");
+      Point.LocalOffset = FVector(64.000000f, -104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -60.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 3_Base");
+      Point.LocalOffset = FVector(-64.000000f, 104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("PDB 4_Base");
+      Point.LocalOffset = FVector(-64.000000f, -104.000000f, -17.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

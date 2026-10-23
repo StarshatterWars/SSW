@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyRazorDefaults();
     void ApplyRazorFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

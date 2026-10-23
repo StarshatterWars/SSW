@@ -27,6 +27,8 @@ ACourierShipActor::ACourierShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
     ApplyCourierDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void ACourierShipActor::OnConstruction(const FTransform& Transform)
@@ -163,4 +165,10 @@ void ACourierShipActor::ApplyCourierFixedPoints()
         NavPoint->SetRelativeLocation(
             FVector(0.0f, 16.0f, 60.0f));
     }
+}
+void ACourierShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

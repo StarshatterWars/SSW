@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AHulkBroadswordShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AHulkBroadswordShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

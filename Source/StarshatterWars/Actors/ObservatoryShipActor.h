@@ -17,4 +17,6 @@ public:
 protected:
     void ApplyObservatoryDefaults();
     void ApplyObservatoryFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

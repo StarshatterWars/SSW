@@ -8,4 +8,6 @@ class STARSHATTERWARS_API AVendettaShipActor : public ACapitalShipActor
     GENERATED_BODY()
 public:
     AVendettaShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

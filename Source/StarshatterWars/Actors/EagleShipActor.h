@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyEagleDefaults();
     void ApplyEagleFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

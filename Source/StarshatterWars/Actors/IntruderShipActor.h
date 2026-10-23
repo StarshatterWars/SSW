@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyIntruderDefaults();
     void ApplyIntruderFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

@@ -5,6 +5,8 @@ AFarcasterShipActor::AFarcasterShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(15.0f));
     ApplyFarcasterDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AFarcasterShipActor::OnConstruction(const FTransform& Transform)
@@ -107,4 +109,10 @@ void AFarcasterShipActor::ApplyFarcasterFixedPoints()
     {
         ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     }
+}
+void AFarcasterShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

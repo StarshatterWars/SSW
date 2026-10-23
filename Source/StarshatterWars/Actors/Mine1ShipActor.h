@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AMine1ShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AMine1ShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

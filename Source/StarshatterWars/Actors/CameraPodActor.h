@@ -20,4 +20,6 @@ protected:
 private:
     void ApplyCameraPodDefaults();
     void ApplyCameraPodVisibility();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

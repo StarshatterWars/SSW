@@ -4,10 +4,12 @@
 
 AFalconShipActor::AFalconShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Falcon"));
+
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.270000f));
     ApplyFalconDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 void AFalconShipActor::OnConstruction(const FTransform& Transform)
 {
@@ -97,3 +99,30 @@ void AFalconShipActor::ApplyFalconFixedPoints()
     if (ComputerPointB) ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
 }
 
+
+void AFalconShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("Cannon");
+      Point.LocalOffset = FVector(-32.000000f, 0.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-1");
+      Point.LocalOffset = FVector(-145.000000f, -110.000000f, -7.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-2");
+      Point.LocalOffset = FVector(-145.000000f, -93.000000f, -5.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-3");
+      Point.LocalOffset = FVector(-145.000000f, 93.000000f, -5.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-4");
+      Point.LocalOffset = FVector(-145.000000f, 110.000000f, -7.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
+}

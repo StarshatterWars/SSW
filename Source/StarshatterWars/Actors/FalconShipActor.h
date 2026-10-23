@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyFalconDefaults();
     void ApplyFalconFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

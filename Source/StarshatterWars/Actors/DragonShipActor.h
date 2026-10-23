@@ -8,4 +8,6 @@ class STARSHATTERWARS_API ADragonShipActor : public ACarrierActor
     GENERATED_BODY()
 public:
     ADragonShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

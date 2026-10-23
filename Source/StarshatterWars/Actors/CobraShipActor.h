@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyCobraDefaults();
     void ApplyCobraFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

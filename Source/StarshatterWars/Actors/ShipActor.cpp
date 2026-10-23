@@ -24,6 +24,7 @@
 #include "ShipActor.h"
 #include "WaypointArrival.h"
 #include "Components/SceneComponent.h"
+#include "Components/ChildActorComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/PointLightComponent.h"
 
@@ -307,22 +308,35 @@ AShipActor::AShipActor()
 
 USceneComponent* AShipActor::CreateNativeWeaponPoint(const FName& Name)
 {
-    USceneComponent* Point = CreateDefaultSubobject<USceneComponent>(Name);
+    UShipWeaponMountComponent* Point = CreateDefaultSubobject<UShipWeaponMountComponent>(Name);
     Point->SetupAttachment(WeaponHardpointRoot);
+    NativeWeaponHardpoints.Add(Point);
     AuthoredWeaponPointComponents.Add(Point);
     return Point;
 }
 
 USceneComponent* AShipActor::CreateNativeTurretPoint(const FName& Name)
 {
-    USceneComponent* Point = CreateDefaultSubobject<USceneComponent>(Name);
+    UChildActorComponent* Point = CreateDefaultSubobject<UChildActorComponent>(Name);
     Point->SetupAttachment(TurretMountRoot);
+    Point->bEditableWhenInherited = true;
     AuthoredTurretPointComponents.Add(Point);
+    NativeTurretMounts.Add(Point);
     return Point;
+}
+
+void AShipActor::InitializeNativeAuthoredAttachments()
+{
+    for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
+        CreateNativeWeaponPoint(FName(*FString::Printf(TEXT("WeaponHardpoint_%02d"), Index + 1)));
+    for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
+        CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1)));
+    SyncNativeAuthoredPoints();
 }
 
 void AShipActor::SyncNativeAuthoredPoints()
 {
+    SyncBlueprintActorSlots();
     for (int32 i = 0; i < AuthoredWeaponPointComponents.Num() && i < WeaponMountPointDefs.Num(); ++i)
     {
         if (USceneComponent* Point = AuthoredWeaponPointComponents[i].Get())
@@ -341,6 +355,28 @@ void AShipActor::SyncNativeAuthoredPoints()
     }
 }
 
+void AShipActor::SyncBlueprintActorSlots()
+{
+    // Mount components are created from exact authored definitions, never a fixed capacity.
+    // Preserve Blueprint component-level child class when no class override is configured.
+    for (int32 Index = 0; Index < AuthoredWeaponPointComponents.Num(); ++Index)
+    {
+        if (UChildActorComponent* Slot = Cast<UChildActorComponent>(AuthoredWeaponPointComponents[Index].Get()))
+        {
+            if (WeaponBlueprintClasses.IsValidIndex(Index) && WeaponBlueprintClasses[Index])
+                Slot->SetChildActorClass(WeaponBlueprintClasses[Index]);
+        }
+    }
+    for (int32 Index = 0; Index < AuthoredTurretPointComponents.Num(); ++Index)
+    {
+        if (UChildActorComponent* Slot = Cast<UChildActorComponent>(AuthoredTurretPointComponents[Index].Get()))
+        {
+            if (TurretBlueprintClasses.IsValidIndex(Index) && TurretBlueprintClasses[Index])
+                Slot->SetChildActorClass(TurretBlueprintClasses[Index]);
+        }
+    }
+}
+
 void AShipActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
@@ -353,6 +389,10 @@ void AShipActor::OnConstruction(const FTransform& Transform)
     if (VFXRoot) VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
     UpdateDerivedPointsFromHull();
+    ApplyAuthoredAttachmentDefaults();
+    SyncNativeAuthoredPoints();
+    SyncShipAttachmentCounts();
+    SyncBlueprintActorSlots();
 
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
     {
@@ -1111,107 +1151,29 @@ void AShipActor::CreateThrusterPoints()
     }
 }
 
+void AShipActor::SyncShipAttachmentCounts()
+{
+    // The .def-authored arrays, not a fixed capacity, own the presentation counts.
+    NumWeaponMountPoints = WeaponMountPointDefs.Num();
+    NumTurretBasePoints = TurretBasePointDefs.Num();
+}
+
 void AShipActor::CreateWeaponMountPoints()
 {
-    if (WeaponMountPointDefs.Num() > 0)
-    {
-        // Concrete ship classes (Orion) provide native inherited markers.
-        // Reuse them, keeping the Blueprint hierarchy and runtime accessors
-        // aligned with the same authored definitions.
-        if (AuthoredWeaponPointComponents.Num() == WeaponMountPointDefs.Num())
-        {
-            SyncNativeAuthoredPoints();
-            for (const TObjectPtr<USceneComponent>& NativePoint : AuthoredWeaponPointComponents)
-                WeaponMountPoints.Add(NativePoint.Get());
-            return;
-        }
-        for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
-        {
-            const FShipPointDef& Def = WeaponMountPointDefs[Index];
-            USceneComponent* Point = CreateGeneratedPoint(
-                TEXT("WeaponMountPoint"),
-                Index,
-                Def.LocalOffset,
-                Def.LocalRotation);
-
-            if (Point)
-            {
-                WeaponMountPoints.Add(Point);
-            }
-        }
-
-        return;
-    }
-
-    const int32 Count = FMath::Max(0, NumWeaponMountPoints);
-
-    for (int32 Index = 0; Index < Count; ++Index)
-    {
-        const float X = 100.0f + (Index * 25.0f);
-        const float Y = ((Index % 2) == 0) ? -50.0f : 50.0f;
-        const float Z = 0.0f;
-
-        USceneComponent* Point = CreateGeneratedPoint(
-            TEXT("WeaponMountPoint"),
-            Index,
-            FVector(X, Y, Z),
-            FRotator::ZeroRotator);
-
-        if (Point)
-        {
-            WeaponMountPoints.Add(Point);
-        }
-    }
+    SyncShipAttachmentCounts();
+    SyncNativeAuthoredPoints();
+    WeaponMountPoints.Reset();
+    for (const TObjectPtr<USceneComponent>& Point : AuthoredWeaponPointComponents)
+        if (Point) WeaponMountPoints.Add(Point.Get());
 }
 
 void AShipActor::CreateTurretBasePoints()
 {
-    if (TurretBasePointDefs.Num() > 0)
-    {
-        if (AuthoredTurretPointComponents.Num() == TurretBasePointDefs.Num())
-        {
-            SyncNativeAuthoredPoints();
-            for (const TObjectPtr<USceneComponent>& NativePoint : AuthoredTurretPointComponents)
-                TurretBasePoints.Add(NativePoint.Get());
-            return;
-        }
-        for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
-        {
-            const FShipPointDef& Def = TurretBasePointDefs[Index];
-            USceneComponent* Point = CreateGeneratedPoint(
-                TEXT("TurretBasePoint"),
-                Index,
-                Def.LocalOffset,
-                Def.LocalRotation);
-
-            if (Point)
-            {
-                TurretBasePoints.Add(Point);
-            }
-        }
-
-        return;
-    }
-
-    const int32 Count = FMath::Max(0, NumTurretBasePoints);
-
-    for (int32 Index = 0; Index < Count; ++Index)
-    {
-        const float X = (Index < 2) ? 50.0f : -50.0f;
-        const float Y = ((Index % 2) == 0) ? -60.0f : 60.0f;
-        const float Z = (Index < 2) ? 40.0f : -40.0f;
-
-        USceneComponent* Point = CreateGeneratedPoint(
-            TEXT("TurretBasePoint"),
-            Index,
-            FVector(X, Y, Z),
-            FRotator::ZeroRotator);
-
-        if (Point)
-        {
-            TurretBasePoints.Add(Point);
-        }
-    }
+    SyncShipAttachmentCounts();
+    SyncNativeAuthoredPoints();
+    TurretBasePoints.Reset();
+    for (const TObjectPtr<USceneComponent>& Point : AuthoredTurretPointComponents)
+        if (Point) TurretBasePoints.Add(Point.Get());
 }
 
 void AShipActor::CreateDockPoints()

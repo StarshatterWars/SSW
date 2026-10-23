@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AZZCSShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AZZCSShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

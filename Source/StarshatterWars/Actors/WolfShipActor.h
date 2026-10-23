@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyWolfDefaults();
     void ApplyWolfFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

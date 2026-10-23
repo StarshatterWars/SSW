@@ -16,4 +16,6 @@ public:
 protected:
     void ApplyGoliathDefaults();
     void ApplyGoliathFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

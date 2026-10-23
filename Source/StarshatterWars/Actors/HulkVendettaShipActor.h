@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AHulkVendettaShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AHulkVendettaShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

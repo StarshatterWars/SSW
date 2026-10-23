@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyAsherDefaults();
     void ApplyAsherFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

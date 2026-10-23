@@ -40,4 +40,6 @@ public:
 protected:
     void ApplyStation1Defaults();
     void ApplyStation1FixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

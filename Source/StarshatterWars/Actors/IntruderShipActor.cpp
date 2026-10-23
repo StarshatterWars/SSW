@@ -4,9 +4,11 @@
 
 AIntruderShipActor::AIntruderShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Intruder"));
+
     SetActorScale3D(FVector(0.250000f));
     ApplyIntruderDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 void AIntruderShipActor::OnConstruction(const FTransform& Transform)
 {
@@ -93,4 +95,31 @@ void AIntruderShipActor::ApplyIntruderFixedPoints()
     if (ReactorPoint) ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     if (ComputerPointA) ComputerPointA->SetRelativeLocation(ComputerPointAOffset);
     if (ComputerPointB) ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
+}
+
+void AIntruderShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("Cannon");
+      Point.LocalOffset = FVector(120.000000f, 0.000000f, 0.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-1");
+      Point.LocalOffset = FVector(-100.000000f, -93.000000f, -27.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-2");
+      Point.LocalOffset = FVector(-100.000000f, -62.000000f, -25.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-3");
+      Point.LocalOffset = FVector(-100.000000f, 62.000000f, -25.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("STA-4");
+      Point.LocalOffset = FVector(-100.000000f, 93.000000f, -27.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

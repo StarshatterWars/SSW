@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyRaptorDefaults();
     void ApplyRaptorFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

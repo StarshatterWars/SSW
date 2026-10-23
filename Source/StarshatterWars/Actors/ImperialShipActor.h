@@ -8,4 +8,6 @@ class STARSHATTERWARS_API AImperialShipActor : public ACapitalShipActor
     GENERATED_BODY()
 public:
     AImperialShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

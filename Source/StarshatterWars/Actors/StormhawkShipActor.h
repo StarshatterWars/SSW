@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyStormhawkDefaults();
     void ApplyStormhawkFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

@@ -5,6 +5,8 @@ AObservatoryShipActor::AObservatoryShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(5.0f));
     ApplyObservatoryDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AObservatoryShipActor::OnConstruction(const FTransform& Transform)
@@ -143,4 +145,10 @@ void AObservatoryShipActor::ApplyObservatoryFixedPoints()
     {
         ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     }
+}
+void AObservatoryShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

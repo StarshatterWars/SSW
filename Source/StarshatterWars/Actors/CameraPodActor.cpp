@@ -3,6 +3,8 @@
 ACameraPodActor::ACameraPodActor()
 {
     ApplyCameraPodDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void ACameraPodActor::OnConstruction(const FTransform& Transform)
@@ -74,4 +76,10 @@ void ACameraPodActor::ApplyCameraPodVisibility()
             Prim->SetGenerateOverlapEvents(false);
         }
     }
+}
+void ACameraPodActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

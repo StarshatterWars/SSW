@@ -41,4 +41,6 @@ public:
 protected:
     void ApplyIM2800Defaults();
     void ApplyIM2800FixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

@@ -2,11 +2,13 @@
 
 AWolfShipActor::AWolfShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Wolf"));
-    ConfigureTurretsFromShipDef(TEXT("Wolf"));
+
+
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(1.7f));
     ApplyWolfDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AWolfShipActor::OnConstruction(const FTransform& Transform)
@@ -247,4 +249,58 @@ void AWolfShipActor::ApplyWolfFixedPoints()
         ReactorPoint->SetRelativeLocation(
             FVector(-220.0f, -40.0f, 0.0f));
     }
+}
+void AWolfShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("XRay Laser 1");
+      Point.LocalOffset = FVector(800.000000f, -25.000000f, 23.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("XRay Laser 2");
+      Point.LocalOffset = FVector(800.000000f, 25.000000f, 23.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Fwd Cannon");
+      Point.LocalOffset = FVector(500.000000f, 0.000000f, 82.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Chin Cannon");
+      Point.LocalOffset = FVector(500.000000f, 0.000000f, -102.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Stbd Cannon");
+      Point.LocalOffset = FVector(38.000000f, 60.000000f, 50.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Port Cannon");
+      Point.LocalOffset = FVector(38.000000f, -60.000000f, 50.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Aft Cannon");
+      Point.LocalOffset = FVector(-256.000000f, 0.000000f, 70.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 180.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Fwd Cannon_Base");
+      Point.LocalOffset = FVector(500.000000f, 0.000000f, 82.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Chin Cannon_Base");
+      Point.LocalOffset = FVector(500.000000f, 0.000000f, -102.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Stbd Cannon_Base");
+      Point.LocalOffset = FVector(38.000000f, 60.000000f, 50.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Port Cannon_Base");
+      Point.LocalOffset = FVector(38.000000f, -60.000000f, 50.000000f);
+      Point.LocalRotation = FRotator(0.000000f, -90.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Aft Cannon_Base");
+      Point.LocalOffset = FVector(-256.000000f, 0.000000f, 70.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 180.000000f, 0.0f);
+      TurretBasePointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

@@ -40,4 +40,6 @@ public:
 protected:
     void ApplyIM3500Defaults();
     void ApplyIM3500FixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

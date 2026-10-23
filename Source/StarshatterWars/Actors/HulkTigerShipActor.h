@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AHulkTigerShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AHulkTigerShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

@@ -8,6 +8,8 @@
 #include "Sound/SoundCue.h"
 #include "ShipActor.generated.h"
 
+class UChildActorComponent;
+
 class USceneComponent;
 class UStaticMeshComponent;
 class UNiagaraComponent;
@@ -298,10 +300,10 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
     TArray<USceneComponent*> TurretBasePoints;
 
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Turrets")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Turrets")
     TObjectPtr<USceneComponent> TurretMountRoot;
 
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
     TObjectPtr<USceneComponent> WeaponHardpointRoot;
 
     /** Inherited native DEF-authored point components; one per authored entry. */
@@ -328,6 +330,19 @@ public:
 
     UPROPERTY(Transient)
     TArray<TSubclassOf<AActor>> NativeTurretBPSlots;
+
+
+    /** Blueprint actor classes, indexed by .def weapon/hardpoint order. Empty entries = no visual actor. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Blueprint Attachments")
+    TArray<TSubclassOf<AActor>> WeaponBlueprintClasses;
+
+    /** Blueprint actor classes, indexed by .def turret order. Empty entries = no visual actor. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Blueprint Attachments")
+    TArray<TSubclassOf<AActor>> TurretBlueprintClasses;
+
+    /** Apply assigned classes to the authored weapon and turret child-actor mount components. */
+    UFUNCTION(BlueprintCallable, Category="Ship|Blueprint Attachments")
+    void SyncBlueprintActorSlots();
 
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Generated")
     TArray<USceneComponent*> DockPoints;
@@ -620,6 +635,11 @@ protected:
     USceneComponent* CreateNativeWeaponPoint(const FName& Name);
     USceneComponent* CreateNativeTurretPoint(const FName& Name);
     void SyncNativeAuthoredPoints();
+    void InitializeNativeAuthoredAttachments();
+    virtual void ApplyAuthoredAttachmentDefaults() {}
+
+    /** Shared attachment builder. Ship-specific definitions determine the exact slot count. */
+    void SyncShipAttachmentCounts();
 
     void UpdateDerivedPointsFromHull();
     void UpdateNavLights(float DeltaTime);

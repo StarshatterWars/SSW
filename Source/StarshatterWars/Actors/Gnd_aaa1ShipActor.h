@@ -7,4 +7,6 @@ class STARSHATTERWARS_API AGnd_aaa1ShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AGnd_aaa1ShipActor();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

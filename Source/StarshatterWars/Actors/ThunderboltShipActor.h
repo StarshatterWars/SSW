@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyThunderboltDefaults();
     void ApplyThunderboltFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

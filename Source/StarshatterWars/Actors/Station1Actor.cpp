@@ -26,6 +26,8 @@
 AStation1Actor::AStation1Actor()
 {
     ApplyStation1Defaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 
 void AStation1Actor::OnConstruction(const FTransform& Transform)
@@ -213,4 +215,10 @@ void AStation1Actor::ApplyStation1FixedPoints()
         NavPoint->SetRelativeLocation(
             FVector::ZeroVector);
     }
+}
+void AStation1Actor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    SyncShipAttachmentCounts();
 }

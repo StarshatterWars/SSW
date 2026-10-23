@@ -2,5 +2,18 @@
 AGnd_sam1ShipActor::AGnd_sam1ShipActor()
 {
     SetActorScale3D(FVector(2.0f));
-    ConfigureTurretsFromShipDef(TEXT("Gnd_sam1"));
+
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
+}
+
+void AGnd_sam1ShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("SAM");
+      Point.LocalOffset = FVector(0.000000f, 0.000000f, 90.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

@@ -134,7 +134,7 @@ void AOrionShipActor::ApplyOrionDefaults()
         WeaponMountPointDefs.Add(Point);
     }
     TurretBasePointDefs.Empty();
-    NumTurretBasePoints = 8;
+    NumTurretBasePoints = 10;
     {
         FShipPointDef Point;
         Point.PointName = TEXT("Vanguard 1_1_Base");
@@ -175,6 +175,20 @@ void AOrionShipActor::ApplyOrionDefaults()
         Point.PointName = TEXT("Vanguard 6_6_Base");
         Point.LocalOffset = FVector(-830.0f, -64.0f, 103.0f);
         Point.LocalRotation = FRotator(0.0f, 180.0f, 0.0f);
+        TurretBasePointDefs.Add(Point);
+    }
+    {
+        FShipPointDef Point;
+        Point.PointName = TEXT("Port Phalanx_7_Base");
+        Point.LocalOffset = FVector(960.0f, 0.0f, 70.0f);
+        Point.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
+        TurretBasePointDefs.Add(Point);
+    }
+    {
+        FShipPointDef Point;
+        Point.PointName = TEXT("Port Phalanx_8_Base");
+        Point.LocalOffset = FVector(960.0f, 0.0f, -75.0f);
+        Point.LocalRotation = FRotator(0.0f, 0.0f, 0.0f);
         TurretBasePointDefs.Add(Point);
     }
     {

@@ -17,4 +17,6 @@ public:
 protected:
     void ApplyFarcasterDefaults();
     void ApplyFarcasterFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

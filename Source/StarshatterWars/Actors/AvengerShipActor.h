@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyAvengerDefaults();
     void ApplyAvengerFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

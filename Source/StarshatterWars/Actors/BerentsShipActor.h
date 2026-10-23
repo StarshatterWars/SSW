@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyBerentsDefaults();
     void ApplyBerentsFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

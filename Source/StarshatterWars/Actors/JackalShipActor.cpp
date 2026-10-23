@@ -4,9 +4,11 @@
 
 AJackalShipActor::AJackalShipActor()
 {
-    ConfigureWeaponHardpointsFromShipDef(TEXT("Jackal"));
+
     SetActorScale3D(FVector(0.275000f));
     ApplyJackalDefaults();
+    ApplyAuthoredAttachmentDefaults();
+    InitializeNativeAuthoredAttachments();
 }
 void AJackalShipActor::OnConstruction(const FTransform& Transform)
 {
@@ -72,4 +74,19 @@ void AJackalShipActor::ApplyJackalFixedPoints()
     if (ReactorPoint) ReactorPoint->SetRelativeLocation(ReactorPointOffset);
     if (ComputerPointA) ComputerPointA->SetRelativeLocation(ComputerPointAOffset);
     if (ComputerPointB) ComputerPointB->SetRelativeLocation(ComputerPointBOffset);
+}
+
+void AJackalShipActor::ApplyAuthoredAttachmentDefaults()
+{
+    WeaponMountPointDefs.Reset();
+    TurretBasePointDefs.Reset();
+    { FShipPointDef Point; Point.PointName = TEXT("Port Cannon");
+      Point.LocalOffset = FVector(160.000000f, -8.000000f, -26.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    { FShipPointDef Point; Point.PointName = TEXT("Starboard Cannon");
+      Point.LocalOffset = FVector(160.000000f, 8.000000f, -26.000000f);
+      Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
+      WeaponMountPointDefs.Add(Point); }
+    SyncShipAttachmentCounts();
 }

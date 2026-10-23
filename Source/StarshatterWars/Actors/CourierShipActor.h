@@ -34,4 +34,6 @@ public:
 protected:
     void ApplyCourierDefaults();
     void ApplyCourierFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

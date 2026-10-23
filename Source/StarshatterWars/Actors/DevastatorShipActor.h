@@ -15,4 +15,6 @@ public:
 protected:
     void ApplyDevastatorDefaults();
     void ApplyDevastatorFixedPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };

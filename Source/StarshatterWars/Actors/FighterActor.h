@@ -5,6 +5,7 @@
 #include "FighterActor.generated.h"
 
 class USceneComponent;
+class UChildActorComponent;
 
 /** A single landing-gear assembly, in the same presentation coordinate frame as PointRoot. */
 USTRUCT(BlueprintType)
@@ -45,34 +46,20 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Components")
     TObjectPtr<USceneComponent> FighterLaunchRoot;
 
-    /** Four fixed native gear assemblies. Unused slots remain present in the Blueprint hierarchy. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear1;
+    /** One actor per actual .def gear entry (no fixed four-slot padding). */
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear")
+    TArray<TObjectPtr<UChildActorComponent>> LandingGearActors;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear2;
+    /** Set BP gear actor class for each .def gear entry by index. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear")
+    TArray<TSubclassOf<AActor>> LandingGearBlueprintClasses;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear3;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear4;
-
-    /** End point is relative to its assembly; start point is the assembly origin. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear1Extended;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear2Extended;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear3Extended;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Landing Gear")
-    TObjectPtr<USceneComponent> LandingGear4Extended;
+    /** End positions for animation, indexed by .def gear entry. */
+    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear")
+    TArray<TObjectPtr<USceneComponent>> LandingGearExtendedMarkers;
 
     /** Set from each concrete fighter's authored .def gear.start / gear.end entries. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear", meta = (EditFixedSize))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear")
     TArray<FFighterLandingGearDefinition> GearDefinitions;
 
     /** Apply the authored gear marker coordinates; does not animate or alter simulation. */

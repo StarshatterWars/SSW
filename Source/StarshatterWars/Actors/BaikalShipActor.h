@@ -19,4 +19,6 @@ protected:
     void BuildBaikalTurretBasePoints();
     void BuildBaikalDockPoints();
     void BuildBaikalLandingPoints();
+protected:
+    virtual void ApplyAuthoredAttachmentDefaults() override;
 };
