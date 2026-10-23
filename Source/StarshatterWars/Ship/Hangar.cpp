@@ -234,10 +234,21 @@ Hangar::FinishPrep(HangarSlot* slot)
         if (!slot->ship) {
 		Text ship_name = slot->squadron;
 
+        // FlightDeck::Orient supplies the carrier-relative deck mount in live
+        // simulation coordinates. Sim::CreateShip expects mission/map space
+        // and converts with OtherHand() exactly once.
+        slot->deck->Orient(ship);
+        const FVector DeckMountSim = slot->deck->GetMountLocation();
+        const FVector InitialSpawnMap = OtherHand(DeckMountSim);
+        UE_LOG(LogTemp, Log,
+            TEXT("[CarrierDeckPosition][Create] Carrier='%hs' Deck='%hs' DeckMountSim=%s SpawnMap=%s"),
+            ship->GetName(), slot->deck->GetName(),
+            *DeckMountSim.ToString(), *InitialSpawnMap.ToString());
+
 		slot->ship = sim->CreateShip(ship_name, "",
 			(ShipDesign*)slot->design,
 			ship->GetRegion()->GetName(),
-			Point(0, 0, 0),
+			InitialSpawnMap,
 			slot->iff,
 			ship->GetCommandAILevel(),
 			slot->loadout);
@@ -265,6 +276,10 @@ Hangar::FinishPrep(HangarSlot* slot)
 
 		slot->slot = -1;  // take first available slot
 		if (slot->deck->Spot(slot->ship, slot->slot)) {
+            UE_LOG(LogTemp, Log,
+                TEXT("[CarrierDeckPosition][Spotted] Carrier='%hs' Deck='%hs' Fighter='%hs' Slot=%d FighterSim=%s DeckMountSim=%s"),
+                ship->GetName(), slot->deck->GetName(), slot->ship->GetName(), slot->slot,
+                *slot->ship->GetLocation().ToString(), *slot->deck->GetMountLocation().ToString());
             slot->state = ALERT;
             // Includes ships whose prep waits for a free deck spot.
             if (slot->package && slot->package->GetPlayer()==slot->ship->GetElementIndex() && slot->ship->GetRegion())

@@ -1717,6 +1717,13 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 }
 
 
+// A carrier fighter in ALERT has not received launch authorization yet.
+// This is presentation-only: no changes to simulation physics or .def data.
+static bool SSWIsStagedCarrierFighter(Ship* InShip)
+{
+    return InShip && InShip->GetCarrier() && InShip->GetFlightPhase() == EOPSMode::ALERT;
+}
+
 void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
@@ -1733,6 +1740,25 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     if (UGameInstance* GI = GetGameInstance())
         if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
             RuntimeLocation = Runtime->GetVisualSpawnLocationForRuntimeShip(RuntimeShip);
+
+    // Orion's rendered hull is scaled independently of legacy simulation slots.
+    // Offset only the visible staged aircraft, along the carrier's RIGHT axis.
+    // The underlying flight-deck slot and launch trajectories stay authoritative.
+    // Blend out the presentation correction after launch authorization.
+    Ship* StagingCarrier = RuntimeShip->GetCarrier();
+    const bool bOrionStaging = SSWIsStagedCarrierFighter(RuntimeShip) &&
+        StagingCarrier->Design() &&
+        FCStringAnsi::Stricmp(StagingCarrier->Design()->name, "Orion") == 0;
+    const double TargetLateral = bOrionStaging ? 135.0 : 0.0;
+    OrionDeckVisualLateral = (!bRuntimeVisualInitialized || DeltaTime <= 0.0f)
+        ? TargetLateral
+        : FMath::FInterpTo(OrionDeckVisualLateral, TargetLateral, DeltaTime, 4.0f);
+    if (StagingCarrier && FMath::Abs(OrionDeckVisualLateral) > 0.01)
+    {
+        const FVector Right = StagingCarrier->GetCam().vrt();
+        const FVector UERight(Right.Z, Right.X, Right.Y);
+        RuntimeLocation += UERight.GetSafeNormal() * OrionDeckVisualLateral;
+    }
 
     if (RuntimeLocation.ContainsNaN())
     {
@@ -2170,7 +2196,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             1.0f);
 
     const bool bRequested =
-        RequestAlpha > 0.01f;
+        !SSWIsStagedCarrierFighter(RuntimeShip) && RequestAlpha > 0.01f;
 
     const float TargetPower =
         bRequested
@@ -2395,8 +2421,8 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
     //-------------------------------------------------------------
     // Audio modulation
     //-------------------------------------------------------------
-    const float TargetVolume =
-        FMath::Clamp(VisualPower, 0.0f, 1.0f);
+    const float TargetVolume = SSWIsStagedCarrierFighter(RuntimeShip)
+        ? 0.0f : FMath::Clamp(VisualPower, 0.0f, 1.0f);
 
     const float TargetPitch =
         FMath::Clamp(0.5f + (VisualPower * 0.5f), 0.5f, 2.0f);
@@ -2575,7 +2601,8 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
     // Drive throttle is already normalized to 0..1. Do not substitute velocity:
     // a coasting ship need not be firing its engines.
     Drive* MainDrive = RuntimeShip->GetMainDrive();
-    const float DriveBurn = MainDrive && MainDrive->IsPowerOn()
+    const bool bDeckEnginesHeld = SSWIsStagedCarrierFighter(RuntimeShip);
+    const float DriveBurn = !bDeckEnginesHeld && MainDrive && MainDrive->IsPowerOn()
         && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
         ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
 
@@ -2592,7 +2619,8 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
+        const float VisualBurn = bDeckEnginesHeld ? 0.0f :
+            (bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn);
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(

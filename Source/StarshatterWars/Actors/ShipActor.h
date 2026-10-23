@@ -678,6 +678,7 @@ private:
 
 private:
     bool bRuntimeVisualInitialized = false;
+    double OrionDeckVisualLateral = 0.0; // UE-only staged fighter presentation adjustment
     Ship* RuntimeShip = nullptr;
 
     protected:

@@ -1,9 +1,11 @@
-﻿#include "FighterHUDDetails.h"
+#include "FighterHUDDetails.h"
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
 #include "FormattingUtils.h"
 #include "MissionObjectTarget.h"
 #include "Ship.h"
+#include "Hangar.h"
+#include "FlightDeck.h"
 #include "Drive.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
@@ -25,6 +27,7 @@
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
 #include "Framework/Application/SlateApplication.h"
+#include "InputCoreTypes.h"
 #include "Fonts/FontMeasure.h"
 
 namespace
@@ -54,6 +57,26 @@ namespace
         SimRegion* R = S ? S->GetActiveRegion() : nullptr;
         return P && R && R->GetShips().contains(P) && !P->IsDead() ? P : nullptr;
     }
+    // The carrier's Hangar owns the authoritative staged-aircraft state.
+    // Do not infer readiness from the Unreal mesh or from ship flight phase.
+    bool FindPlayerAlertSlot(Ship* Player, Hangar*& OutHangar, int& OutSquadron, int& OutSlot)
+    {
+        OutHangar = nullptr;
+        OutSquadron = -1;
+        OutSlot = -1;
+        if (!Player || Player->IsDead()) return false;
+        Ship* Carrier = Player->GetCarrier();
+        if (!Carrier && Player->GetElement()) Carrier = Player->GetElement()->GetCarrier();
+        Hangar* Candidate = Carrier ? Carrier->GetHangar() : nullptr;
+        if (!Candidate || !Candidate->FindSquadronAndSlot(Player, OutSquadron, OutSlot)) return false;
+        const HangarSlot* Slot = Candidate->GetSlot(OutSquadron, OutSlot);
+        if (!Slot || Candidate->GetState(Slot) != Hangar::ALERT ||
+            Candidate->GetShip(Slot) != Player || !Candidate->GetFlightDeck(Slot) ||
+            !Candidate->GetFlightDeck(Slot)->IsLaunchDeck()) return false;
+        OutHangar = Candidate;
+        return true;
+    }
+
     double Hull(Ship* P)
     {
         return P && P->Design() && P->Design()->integrity > 0
@@ -97,12 +120,51 @@ namespace
 
         return FLinearColor(1.0f, 0.0f, 0.0f, 1.0f); // enemy red
     }
+    // Do not enable launch merely because Hangar has allocated an ALERT ship.
+    // The physical deck slot must still contain that fighter and be READY.
+    bool IsPlayerAtLaunchPosition(Ship* Player, Hangar* PlayerHangar, int Squadron, int Slot)
+    {
+        if (!Player || !PlayerHangar || Player->GetFlightPhase() != EOPSMode::ALERT)
+            return false;
+        const HangarSlot* Staged = PlayerHangar->GetSlot(Squadron, Slot);
+        if (!Staged || PlayerHangar->GetState(Staged) != Hangar::ALERT)
+            return false;
+        FlightDeck* Deck = PlayerHangar->GetFlightDeck(Staged);
+        const int DeckSlot = PlayerHangar->GetFlightDeckSlot(Staged);
+        return Deck && Deck->IsLaunchDeck() && DeckSlot >= 0 &&
+            DeckSlot < Deck->NumSlots() &&
+            Deck->GetShip(DeckSlot) == Player &&
+            Deck->State(DeckSlot) == FlightDeck::READY;
+    }
+
 }
+// Match GEAR DOWN width; double its height for a larger launch target.
+// GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
+static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
+{
+    const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold",
+        FMath::Max(8, int32(11 * Scale)));
+    const FVector2D Label = FSlateApplication::Get().GetRenderer()->
+        GetFontMeasureService()->Measure(TEXT("GEAR DOWN"), Font);
+    const FVector2D Extent(Label.X + 10 * Scale, (Label.Y + 4 * Scale) * 2.0);
+    const FVector2D TopLeft(Size.X * 0.5 - Extent.X * 0.5,
+        Size.Y * 0.5 + 158 * Scale);
+    return FSlateRect(TopLeft.X, TopLeft.Y,
+        TopLeft.X + Extent.X, TopLeft.Y + Extent.Y);
+}
+
 void SFighterHUDDetails::Construct(const FArguments& A)
 {
     ShowHUD = A._ShowHUD; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
-    SetVisibility(EVisibility::HitTestInvisible);
+    SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
+    LaunchTexture.Reset(LoadObject<UTexture2D>(nullptr,
+        TEXT("/Game/UI/HUD/TAC_button.TAC_button")));
+    LaunchBrush.DrawAs = ESlateBrushDrawType::Image;
+    LaunchBrush.SetResourceObject(LaunchTexture.Get());
+    LaunchBrush.ImageSize = FVector2D(96, 20);
+    UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][BUTTON_TEXTURE] %s"),
+        LaunchTexture.IsValid() ? TEXT("Loaded TAC_button") : TEXT("Missing TAC_button"));
     PlayerBrush.DrawAs = TargetBrush.DrawAs = ESlateBrushDrawType::Image;
     PlayerBrush.ImageSize = TargetBrush.ImageSize = FVector2D(96, 96);
     const TCHAR* Names[] = { TEXT("TAC_left"), TEXT("TAC_right"), TEXT("sensor_fov"), TEXT("sensor_hsd"), TEXT("sensor_3d"), TEXT("CAUTION_left"), TEXT("CAUTION_right") };
@@ -310,6 +372,26 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
     const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
     const FVector2D Extent(220.f * Scale, 215.f * Scale);
+    // Legacy carrier launch: clickable only for an aircraft currently staged
+    // in ALERT. The player controls the departure, never the mission loader.
+    // Below GEAR DOWN; the frame is visible but inert until READY.
+    const FSlateRect LaunchRect = CarrierLaunchButtonRect(Size, Scale);
+    if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton &&
+        Local.X >= LaunchRect.Left && Local.X <= LaunchRect.Right &&
+        Local.Y >= LaunchRect.Top && Local.Y <= LaunchRect.Bottom)
+    {
+        Hangar* PlayerHangar = nullptr;
+        int Squadron = -1, Slot = -1;
+        Ship* P = PlayerShip();
+        if (FindPlayerAlertSlot(P, PlayerHangar, Squadron, Slot))
+        {
+            if (!IsPlayerAtLaunchPosition(P, PlayerHangar, Squadron, Slot))
+                return FReply::Handled(); // Visible but disabled while positioning.
+            if (Sim* LiveSim = Sim::GetSim())
+                LiveSim->RequestPlayerCarrierLaunch();
+            return FReply::Handled();
+        }
+    }
     if (Local.X >= Right.X && Local.Y >= Right.Y && Local.X <= Right.X + Extent.X && Local.Y <= Right.Y + Extent.Y)
     {
         CycleMFD(1);
@@ -471,6 +553,35 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
         if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
         if (bGearDown) Popup(126,TEXT("GEAR DOWN"));
+    }
+    // LAUNCH remains visible while staging but is disabled until the
+    // fighter is actually spotted and the flight-deck slot becomes READY.
+    {
+        Hangar* PlayerHangar = nullptr;
+        int Squadron = -1, Slot = -1;
+        Ship* StagedPlayer = PlayerShip();
+        if (FindPlayerAlertSlot(StagedPlayer, PlayerHangar, Squadron, Slot))
+        {
+            const bool bReady = IsPlayerAtLaunchPosition(StagedPlayer, PlayerHangar, Squadron, Slot);
+            const FLinearColor FrameTint = bReady ? FLinearColor::White : FLinearColor(0.33f, 0.33f, 0.33f, 0.8f);
+            const FSlateRect R = CarrierLaunchButtonRect(Size, Scale);
+            const FVector2D TopLeft(R.Left, R.Top);
+            const FVector2D Dimensions(R.Right - R.Left, R.Bottom - R.Top);
+            // Render exactly like the existing GEAR DOWN popup, rather than
+            // stretching TAC_button artwork to a non-native aspect ratio.
+            const FLinearColor Border = bReady ? HUDBlue : FLinearColor(0.23f, 0.29f, 0.35f, 1.f);
+            Box(TopLeft, Dimensions, FLinearColor(0, 0.015f, 0.03f, 0.75f));
+            Box(TopLeft, FVector2D(Dimensions.X, Scale), Border);
+            Box(TopLeft + FVector2D(0, Dimensions.Y - Scale), FVector2D(Dimensions.X, Scale), Border);
+            Box(TopLeft, FVector2D(Scale, Dimensions.Y), Border);
+            Box(TopLeft + FVector2D(Dimensions.X - Scale, 0), FVector2D(Scale, Dimensions.Y), Border);
+            const FSlateFontInfo LaunchFont = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11 * Scale)));
+            const FVector2D LabelSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("LAUNCH"), LaunchFont);
+            FSlateDrawElement::MakeText(E, L + 3,
+                G.ToPaintGeometry(FVector2f(LabelSize),
+                    FSlateLayoutTransform(FVector2f(TopLeft + (Dimensions - LabelSize) * 0.5f))),
+                TEXT("LAUNCH"), LaunchFont, ESlateDrawEffect::None, bReady ? HUDBlue : FLinearColor(0.23f, 0.29f, 0.35f, 1.f));
+        }
     }
     // The fighter uses weapon readouts beside the central HUD, not the capital-ship TAC frame.
     for (int32 I=5; bShowCaution && I<7; ++I)

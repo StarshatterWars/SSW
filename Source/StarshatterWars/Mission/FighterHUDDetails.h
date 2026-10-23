@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Widgets/SLeafWidget.h"
 #include "DamagePanelData.h"
 #include "Engine/Texture2D.h"
@@ -70,6 +70,9 @@ private:
     TArray<FString> StatusTextLines;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
     FSlateBrush PlayerBrush, TargetBrush;
+    // Legacy-styled player launch button frame (UE-side texture only).
+    TStrongObjectPtr<UTexture2D> LaunchTexture;
+    FSlateBrush LaunchBrush;
     // TAC left/right, followed by sensor FOV/HSD/3D.
     TStrongObjectPtr<UTexture2D> PanelTextures[7];
     FSlateBrush PanelBrushes[7];

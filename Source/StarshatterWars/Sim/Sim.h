@@ -21,6 +21,7 @@
 
 #include "Types.h"
 #include "Delegates/Delegate.h"
+#include "Containers/Array.h"
 #include "SimUniverse.h"
 #include "SimScene.h"
 #include "Physical.h"
@@ -92,6 +93,8 @@ public:
 
     void LoadMission(Mission* msn, bool preload_textures = false);
     void ExecMission();
+    // Player-controlled carrier launch; no launch queue advances until requested.
+    bool RequestPlayerCarrierLaunch();
     void CommitMission();
     void UnloadMission();
 
@@ -254,5 +257,13 @@ protected:
     Mission* mission = nullptr;
     uint32      start_time = 0;
     bool bResolvingTimeSkip = true;
+
+    // Non-owning pointers to staged AI wingmen of the current player flight.
+    // Cleared before mission ships are destroyed.
+    TArray<Ship*> DeferredPlayerWingmen;
+    Ship* DeferredLaunchPlayer = nullptr;
+    Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
+    double PlayerLaunchHoldRemaining = 0.0; // simulation seconds; 60s fallback
+    bool bPlayerLaunchRequested = false;
 
 };

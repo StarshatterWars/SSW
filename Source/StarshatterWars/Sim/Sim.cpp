@@ -85,6 +85,8 @@
 #include "GameStructs_System.h"
 
 #include "SSWRuntimeSubsystem.h"
+#include "ShipActor.h"
+#include "EngineUtils.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 
@@ -98,6 +100,30 @@
 #include "Containers/StringConv.h"
 
 #include "SSWRuntimeSubsystem.h"
+
+// Phase 14: Hide staged wingmen visuals without removing their legacy Ship
+// objects, deck occupancy, or combat-group membership.
+static void SetStagedWingmanVisualHidden(Ship* Wingman, bool bHidden)
+{
+    if (!Wingman || !GEngine) return;
+    for (const FWorldContext& Context : GEngine->GetWorldContexts())
+    {
+        UWorld* World = Context.World();
+        if (!World) continue;
+        for (TActorIterator<AShipActor> It(World); It; ++It)
+        {
+            AShipActor* Visual = *It;
+            if (IsValid(Visual) && Visual->GetRuntimeShip() == Wingman &&
+                Visual->IsHidden() != bHidden)
+            {
+                Visual->SetActorHiddenInGame(bHidden);
+                UE_LOG(LogTemp, Display,
+                    TEXT("[CarrierLaunch][WINGMAN_VISUAL] Ship='%hs' Hidden=%d"),
+                    Wingman->GetName(), bHidden ? 1 : 0);
+            }
+        }
+    }
+}
 
 // --------------------------------------------------------------------
 // FVector helpers
@@ -438,6 +464,11 @@ void Sim::UnloadMission()
     const int RegionCount = regions.size();
     const int JumpCount = jumplist.size();
     const int SplashCount = splashlist.size();
+    DeferredPlayerWingmen.Reset();
+    DeferredLaunchPlayer = nullptr;
+    PendingLaunchPlayer = nullptr;
+    PlayerLaunchHoldRemaining = 0.0;
+    bPlayerLaunchRequested = false;
     OnMissionUnloading.Broadcast();
 
     // Jobs and audio must not retain pointers to the regions being destroyed.
@@ -756,6 +787,16 @@ Sim::ExecMission()
 			if (cam_dir)
 			{
 				cam_dir->SetShip(PlayerShip);
+                // Exterior view of the fighter parked in its launch bay.
+                // Leave the carrier and legacy deck coordinate systems intact.
+                if (PlayerShip->GetFlightPhase() == EOPSMode::ALERT)
+                {
+                    cam_dir->SetMode(CameraManager::MODE_CHASE, 0.0);
+                    cam_dir->ExecFrame(0.0);
+                    UE_LOG(LogTemp, Display,
+                        TEXT("[CarrierLaunch][CAMERA_STAGED] Ship='%hs' Mode=CHASE"),
+                        PlayerShip->GetName());
+                }
 			}
 			UE_LOG(LogTemp, Log,
 				TEXT("[MissionPlayer][BOUND] Element='%hs' Instance='%hs' Region='%hs' PlayerIndex=%d CameraDirector=%s"),
@@ -1263,9 +1304,13 @@ Sim::CreateElements()
                             SquadronLocal=LaunchInventory[i].X;
                             SlotLocal=LaunchInventory[i].Y;
                             FlightDeck* AssignedDeck = AssignedDecks[Order];
+                            // pkg=false sets alert_hold=true. Otherwise
+                            // Hangar::ExecFrame automatically launches READY aircraft,
+                            // bypassing the player LAUNCH button.
+                            const bool bPlayerFlightHold = PlayerSlot >= 0 && bRequiredPlayerDeckStart;
                             const bool bPrepareRequested = HangarPtr->GotoAlert(
                                 SquadronLocal, SlotLocal, AssignedDeck, Element, Loadout,
-                                true, true);
+                                !bPlayerFlightHold, true);
 
                             const HangarSlot* HangarSlotPtr =
                                 HangarPtr->GetSlot(SquadronLocal, SlotLocal);
@@ -1283,7 +1328,30 @@ Sim::CreateElements()
                                 continue;
                             }
                             ++PreparedCount;
-                            if (!HangarPtr->Launch(SquadronLocal, SlotLocal)) {
+                            // The player requests clearance using the legacy LAUNCH control.
+                            // Keep the player and wingmen at ALERT until the player
+                            // presses LAUNCH; the player departs first.
+                            if (i == PlayerSlot) {
+                                if (bRequiredPlayerDeckStart)
+                                {
+                                    PendingLaunchPlayer = AlertShip;
+                                    PlayerLaunchHoldRemaining = 60.0;
+                                }
+                                UE_LOG(LogTemp, Display,
+                                    TEXT("[CarrierLaunch][PLAYER_AWAIT_LAUNCH] Ship='%hs' Carrier='%hs' Deck='%hs' Slot=%d"),
+                                    AlertShip->GetName(), Carrier->GetName(), AssignedDeck->GetName(),
+                                    HangarPtr->GetFlightDeckSlot(HangarSlotPtr));
+                            }
+                            else if (PlayerSlot >= 0 && bRequiredPlayerDeckStart) {
+                                // Stage AI wingmen, but do not queue their deck timers.
+                                // The first actual launch must be the player fighter.
+                                DeferredPlayerWingmen.Add(AlertShip);
+                                SetStagedWingmanVisualHidden(AlertShip, true);
+                                UE_LOG(LogTemp, Display,
+                                    TEXT("[CarrierLaunch][WINGMAN_HELD] Ship='%hs' PlayerFlight='%hs'"),
+                                    AlertShip->GetName(), MissionElem->GetName().data());
+                            }
+                            else if (!HangarPtr->Launch(SquadronLocal, SlotLocal)) {
                                 UE_LOG(LogTemp, Warning,
                                     TEXT("[CarrierLaunch][QUEUE_PENDING] Ship='%hs' deck slot=%d; remains at ALERT"),
                                     AlertShip->GetName(), HangarPtr->GetFlightDeckSlot(HangarSlotPtr));
@@ -2209,6 +2277,51 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 
 // +--------------------------------------------------------------------+
 
+bool Sim::RequestPlayerCarrierLaunch()
+{
+    Ship* Player = GetPlayerShip();
+    if (!Player || Player->IsDead() || bPlayerLaunchRequested ||
+        (PendingLaunchPlayer && PendingLaunchPlayer != Player))
+        return false;
+
+    Ship* Carrier = Player->GetCarrier();
+    if (!Carrier && Player->GetElement())
+        Carrier = Player->GetElement()->GetCarrier();
+    Hangar* CarrierHangar = Carrier ? Carrier->GetHangar() : nullptr;
+    int Squadron = -1, Slot = -1;
+    if (!CarrierHangar || !CarrierHangar->FindSquadronAndSlot(Player, Squadron, Slot))
+        return false;
+    const HangarSlot* PlayerSlot = CarrierHangar->GetSlot(Squadron, Slot);
+    if (!PlayerSlot || CarrierHangar->GetState(PlayerSlot) != Hangar::ALERT ||
+        CarrierHangar->GetShip(PlayerSlot) != Player ||
+        Player->GetFlightPhase() != EOPSMode::ALERT ||
+        !CarrierHangar->GetFlightDeck(PlayerSlot) ||
+        !CarrierHangar->GetFlightDeck(PlayerSlot)->IsLaunchDeck())
+        return false;
+
+    // Hangar ALERT describes inventory staging. Only the actual deck READY
+    // state confirms that the fighter is spotted and may begin launch timing.
+    FlightDeck* ReadyDeck = CarrierHangar->GetFlightDeck(PlayerSlot);
+    const int ReadySlot = CarrierHangar->GetFlightDeckSlot(PlayerSlot);
+    if (ReadySlot < 0 || ReadySlot >= ReadyDeck->NumSlots() ||
+        ReadyDeck->GetShip(ReadySlot) != Player ||
+        ReadyDeck->State(ReadySlot) != FlightDeck::READY)
+        return false;
+
+    // Only this command starts the player's launch/deck timer.
+    if (!CarrierHangar->Launch(Squadron, Slot))
+        return false;
+
+    DeferredLaunchPlayer = Player;
+    PendingLaunchPlayer = nullptr;
+    PlayerLaunchHoldRemaining = 0.0;
+    bPlayerLaunchRequested = true;
+    UE_LOG(LogTemp, Display,
+        TEXT("[CarrierLaunch][PLAYER_BUTTON] Ship='%hs' Carrier='%hs' PendingWingmen=%d Queued=1"),
+        Player->GetName(), Carrier->GetName(), DeferredPlayerWingmen.Num());
+    return true;
+}
+
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
@@ -2229,6 +2342,36 @@ Sim::ExecFrame(double DeltaSeconds)
 		scene->Collect();
 		return;
 	}
+
+    // Explicit click is preferred. Only after 60 elapsed simulation seconds
+    // may the legacy fallback queue the player's fighter automatically.
+    if (PendingLaunchPlayer && !bPlayerLaunchRequested)
+    {
+        PlayerLaunchHoldRemaining = FMath::Max(0.0,
+            PlayerLaunchHoldRemaining - FMath::Max(0.0, DeltaSeconds));
+        if (PlayerLaunchHoldRemaining <= 0.0)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[CarrierLaunch][PLAYER_TIMEOUT_60S] Ship='%hs'"),
+                PendingLaunchPlayer->GetName());
+            // If deck staging is invalid, retry on later simulation frames.
+            RequestPlayerCarrierLaunch();
+        }
+    }
+
+    // A fighter awaiting deck launch clearance must not run its main engines.
+    // This hold ends on explicit LAUNCH or successful 60-second fallback queue.
+    if (PendingLaunchPlayer && !bPlayerLaunchRequested &&
+        !PendingLaunchPlayer->IsDead() &&
+        PendingLaunchPlayer->GetFlightPhase() == EOPSMode::ALERT)
+    {
+        PendingLaunchPlayer->SetThrottle(0);
+    }
+
+    // Keep AI visuals hidden while waiting, independent of their simulation
+    // and deck staging. Spawn/binding may complete later in this frame.
+    for (Ship* Wingman : DeferredPlayerWingmen)
+        SetStagedWingmanVisualHidden(Wingman, true);
 
 	ListIter<SimElement> ElementIter = elements;
 	while (++ElementIter)
@@ -2255,6 +2398,52 @@ Sim::ExecFrame(double DeltaSeconds)
 
 	if (active_region)
 		active_region->ExecFrame(DeltaSeconds);
+
+    // The wingmen must not begin a launch countdown until the player's
+    // fighter has physically departed. QUEUED/LOCKED is not enough.
+    if (bPlayerLaunchRequested && DeferredLaunchPlayer &&
+        (DeferredLaunchPlayer->GetFlightPhase() == EOPSMode::LAUNCH ||
+         DeferredLaunchPlayer->GetFlightPhase() == EOPSMode::TAKEOFF ||
+         DeferredLaunchPlayer->GetFlightPhase() == EOPSMode::ACTIVE))
+    {
+        // A failed queue must remain deferred. Never expose an aircraft that
+        // has not successfully entered its deck launch sequence.
+        TArray<Ship*> StillDeferred;
+        for (Ship* Wingman : DeferredPlayerWingmen)
+        {
+            if (!Wingman || Wingman->IsDead()) continue;
+            Ship* HomeCarrier = Wingman->GetCarrier();
+            if (!HomeCarrier && Wingman->GetElement())
+                HomeCarrier = Wingman->GetElement()->GetCarrier();
+            Hangar* HomeHangar = HomeCarrier ? HomeCarrier->GetHangar() : nullptr;
+            int Squadron = -1, Slot = -1;
+            if (!HomeHangar || !HomeHangar->FindSquadronAndSlot(Wingman, Squadron, Slot))
+            {
+                StillDeferred.Add(Wingman);
+                continue;
+            }
+            const HangarSlot* HangarSlotPtr = HomeHangar->GetSlot(Squadron, Slot);
+            if (!HangarSlotPtr || HomeHangar->GetState(HangarSlotPtr) != Hangar::ALERT)
+            {
+                StillDeferred.Add(Wingman);
+                continue;
+            }
+            const bool Queued = HomeHangar->Launch(Squadron, Slot);
+            UE_LOG(LogTemp, Display,
+                TEXT("[CarrierLaunch][WINGMAN_RELEASED] Ship='%hs' Queued=%d"),
+                Wingman->GetName(), Queued ? 1 : 0);
+            if (Queued)
+                SetStagedWingmanVisualHidden(Wingman, false);
+            else
+                StillDeferred.Add(Wingman);
+        }
+        DeferredPlayerWingmen = MoveTemp(StillDeferred);
+        if (DeferredPlayerWingmen.IsEmpty())
+        {
+            DeferredLaunchPlayer = nullptr;
+            bPlayerLaunchRequested = false;
+        }
+    }
 
 	ExecEvents(DeltaSeconds);
 	ResolveHyperList();
