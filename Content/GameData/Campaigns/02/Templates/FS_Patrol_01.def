@@ -3,7 +3,7 @@ MISSION_TEMPLATE
 name:       "Fighter Patrol 1"
 type:       PATROL
 degrees:    true
-roup:       FIGHTER_SQUADRON
+group:       FIGHTER_SQUADRON
 exec_once:  false
 id:         253
 

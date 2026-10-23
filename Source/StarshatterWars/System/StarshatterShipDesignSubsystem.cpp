@@ -2623,6 +2623,8 @@ void UStarshatterShipDesignSubsystem::ParseFlightDeck(TermStruct* Val, const cha
 	float Hull = 0.5f;
 	float Light = 0.0f;
 
+	int MaxShips = 0;
+
 	FShipFlightDeck NewDeck;
 	NewDeck.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
@@ -2780,6 +2782,11 @@ void UStarshatterShipDesignSubsystem::ParseFlightDeck(TermStruct* Val, const cha
 		{
 			GetDefNumber(CycleTime, PDef, Fn);
 			NewDeck.CycleTime = CycleTime;
+		}
+		else if (Key == "max_ships")
+		{
+			GetDefNumber(MaxShips, PDef, Fn);
+			NewDeck.MaxShips = MaxShips;
 		}
 		else if (Key == "launch")
 		{

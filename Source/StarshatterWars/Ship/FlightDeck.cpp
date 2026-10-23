@@ -197,7 +197,7 @@ InboundSlot::GetObserverName() const
 
 FlightDeck::FlightDeck()
 	: SimSystem(SYSTEM_CATEGORY::FLIGHT_DECK, FLIGHT_DECK_LAUNCH, "Flight Deck", 1, 1),
-	carrier(0), index(0), num_slots(0), slots(0), cycle_time(5), num_hoops(0), hoops(0),
+	carrier(0), index(0), num_slots(0), max_ships(0), slots(0), cycle_time(5), num_hoops(0), hoops(0),
 	azimuth(0), light(0), num_catsounds(0), num_approach_pts(0)
 {
 	name = "Flight Deck";
@@ -215,7 +215,7 @@ FlightDeck::FlightDeck(const FlightDeck& s)
 	carrier(0), index(0), start_rel(s.start_rel),
 	end_rel(s.end_rel), cam_rel(s.cam_rel),
 	cycle_time(s.cycle_time),
-	num_slots(s.num_slots), slots(0),
+	num_slots(s.num_slots), max_ships(s.max_ships), slots(0),
 	num_hoops(0), hoops(0), azimuth(s.azimuth), light(0),
 	num_catsounds(0), num_approach_pts(s.num_approach_pts)
 {
@@ -306,7 +306,14 @@ FlightDeck::Close()
 void
 FlightDeck::ExecFrame(double Seconds)
 {
-	SimSystem::ExecFrame(Seconds);
+    // The legacy carrier owns deck coordinates and the launch queue.
+    if (!carrier || !slots || num_slots <= 0 || !FMath::IsFinite(Seconds) || Seconds < 0.0)
+        return;
+
+    // Carrier motion changes deck positions every frame. Unreal actors may not
+    // have a legacy Solid representation, so use the Ship simulation itself.
+    Orient(carrier);
+    SimSystem::ExecFrame(Seconds);
 
 	bool bAdvanceQueue = false;
 
@@ -541,7 +548,16 @@ FlightDeck::ExecFrame(double Seconds)
 			break;
 
 		case LAUNCH:
-			LaunchShip(SlotShip);
+            if (!SlotShip)
+            {
+                Slot->state = CLEAR;
+                Slot->sequence = 0;
+                Slot->time = 0;
+                break;
+            }
+            // A failed launch remains queued for a later frame rather than
+            // destroying the aircraft or falsely marking the slot as clear.
+            LaunchShip(SlotShip);
 			break;
 
 		case DOCKING:
@@ -589,17 +605,38 @@ FlightDeck::ExecFrame(double Seconds)
 bool
 FlightDeck::LaunchShip(Ship* slot_ship)
 {
-	FlightDeckSlot* slot = 0;
-	Sim* sim = Sim::GetSim();
+    if (!slot_ship || !carrier || !carrier->GetRegion() ||
+        !slots || num_slots <= 0)
+    {
+        UE_LOG(LogFlightDeck, Warning, TEXT("[CarrierLaunch] Rejected: missing ship, carrier, region or deck slots"));
+        return false;
+    }
 
-	if (slot_ship) {
+    FlightDeckSlot* slot = nullptr;
+    Sim* sim = Sim::GetSim();
+    if (!sim)
+    {
+        UE_LOG(LogFlightDeck, Warning, TEXT("[CarrierLaunch] Rejected: simulation unavailable"));
+        return false;
+    }
+
+    if (slot_ship) {
 		for (int i = 0; i < num_slots; i++) {
 			if (slots[i].ship == slot_ship)
 				slot = &(slots[i]);
 		}
 
-		// only suggest a launch point if no flight plan has been filed...
-		if (slot_ship->GetElement()->FlightPlanLength() == 0) {
+        // Never launch a ship not currently occupying this launch deck.
+        if (!slot || slot->state != LAUNCH)
+        {
+            UE_LOG(LogFlightDeck, Warning, TEXT("[CarrierLaunch] Rejected unqueued ship '%hs'"), slot_ship->GetName());
+            return false;
+        }
+
+        // Independent aircraft may not belong to a mission element.
+        // Keep the legacy departure waypoint for aircraft with no flight plan.
+        if (!slot_ship->GetElement() ||
+            slot_ship->GetElement()->FlightPlanLength() == 0) {
 			// NOTE: Starshatter's OtherHand() coordinate-hand conversion must be handled by your project.
 			FVector departure = end_point;
 
@@ -642,7 +679,8 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		ShipStats* stats = ShipStats::Find(slot_ship->GetName());
 		if (stats) {
 			stats->SetRegion(carrier->GetRegion()->GetName());
-			stats->SetType(slot_ship->Design()->name);
+            if (slot_ship->Design())
+                stats->SetType(slot_ship->Design()->name);
 
 			if (slot_ship->GetElement()) {
 				SimElement* elem = slot_ship->GetElement();
@@ -660,6 +698,12 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		}
 
 		sim->ProcessEventTrigger(MissionEvent::TRIGGER_LAUNCH, 0, slot_ship->GetName());
+
+        UE_LOG(LogFlightDeck, Display,
+            TEXT("[CarrierLaunch] Departed ship='%hs' carrier='%hs' deck=%d phase=%d velocity=%s"),
+            slot_ship->GetName(), carrier->GetName(), index,
+            static_cast<int32>(slot_ship->GetFlightPhase()),
+            *slot_ship->GetVelocity().ToString());
 
 		if (slot) {
 			slot->ship = 0;
@@ -724,8 +768,16 @@ FlightDeck::SetCamLoc(FVector loc)
 void
 FlightDeck::AddSlot(const FVector& spot, DWORD filter)
 {
-	if (!slots)
-		slots = new FlightDeckSlot[10];
+    // Original allocation is fixed at ten slots. Reject malformed designs
+    // instead of writing past the array.
+    constexpr int MaxDeckSlots = 10;
+    if (num_slots >= MaxDeckSlots)
+    {
+        UE_LOG(LogFlightDeck, Error, TEXT("[CarrierLaunch] Flight deck exceeds %d slots"), MaxDeckSlots);
+        return;
+    }
+    if (!slots)
+        slots = new FlightDeckSlot[MaxDeckSlots];
 
 	slots[num_slots].spot_rel = spot;
 	slots[num_slots].filter = filter;
@@ -858,25 +910,41 @@ FlightDeck::Orient(const Physical* rep)
 int
 FlightDeck::SpaceLeft(int Type) const
 {
-	int SpaceLeftCount = 0;
+    if (!slots || num_slots <= 0)
+        return 0;
 
-	for (int i = 0; i < num_slots; ++i)
-	{
-		if (slots[i].ship == nullptr && (slots[i].filter & Type))
-		{
-			++SpaceLeftCount;
-		}
-	}
+    int OccupiedCount = 0;
+    int CompatibleFreeCount = 0;
 
-	return SpaceLeftCount;
+    for (int i = 0; i < num_slots; ++i)
+    {
+        if (slots[i].ship)
+            ++OccupiedCount;
+        else if ((static_cast<uint32>(slots[i].filter) & static_cast<uint32>(Type)) != 0)
+            ++CompatibleFreeCount;
+    }
+
+    // max_ships limits concurrent occupancy, not the number of authored
+    // physical spots or how many aircraft may launch over time.
+    const int CapacityLeft = FMath::Max(0, GetMaxShips() - OccupiedCount);
+    return FMath::Min(CompatibleFreeCount, CapacityLeft);
 }
 
 // +----------------------------------------------------------------------+
 
 bool FlightDeck::Spot(Ship* s, int& outIndex)
 {
-	if (!s)
+	if (!s || !slots || num_slots <= 0)
 		return false;
+
+    int OccupiedCount = 0;
+    for (int i = 0; i < num_slots; ++i)
+        if (slots[i].ship)
+            ++OccupiedCount;
+
+    // Enforce the same limit for both automatic and explicitly selected spots.
+    if (OccupiedCount >= GetMaxShips())
+        return false;
 
 	// Build ship compatibility mask from classification
 	// (Starshatter-style: one bit per ship class)
@@ -990,8 +1058,8 @@ bool
 FlightDeck::Launch(int slotIndex)
 {
 	// Avoid C4458 if FlightDeck has a member named "index"
-	if (subtype != FLIGHT_DECK_LAUNCH)
-		return false;
+    if (subtype != FLIGHT_DECK_LAUNCH || !carrier || !carrier->GetRegion() || !slots)
+        return false;
 
 	if (slotIndex < 0 || slotIndex >= num_slots)
 		return false;
@@ -1024,6 +1092,10 @@ FlightDeck::Launch(int slotIndex)
 	slot->state = QUEUED;
 	slot->sequence = lastSeq + 1;
 	slot->time = 0;
+
+    UE_LOG(LogFlightDeck, Display,
+        TEXT("[CarrierLaunch] Queued ship='%hs' carrier='%hs' deck=%d slot=%d sequence=%d"),
+        slot->ship->GetName(), carrier->GetName(), index, slotIndex, slot->sequence);
 
 	if (lastQueuedSlot)
 	{

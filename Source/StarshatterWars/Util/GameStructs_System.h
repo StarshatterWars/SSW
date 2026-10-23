@@ -1100,6 +1100,9 @@ struct FShipFlightDeck
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CycleTime = 0.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int MaxShips = 0;
+
 	// Legacy: approach points, runway points, slots
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector> ApproachPoints;

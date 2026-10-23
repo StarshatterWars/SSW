@@ -146,6 +146,8 @@ public:
 	virtual const char* GetObserverName() const;
 
 	// accessors:
+	void           SetMaxShips(int count) { max_ships = FMath::Max(0, count); }
+	int            GetMaxShips() const { return max_ships > 0 ? FMath::Min(max_ships, num_slots) : num_slots; }
 	int            NumSlots()                 const { return num_slots; }
 	double         TimeRemaining(int index)   const;
 	int            State(int index)           const;
@@ -167,6 +169,7 @@ protected:
 	Ship* carrier;
 	int               index;
 	int               num_slots;
+	int               max_ships; // Simultaneous deck occupancy; 0 means use all authored slots.
 	FlightDeckSlot* slots;
 
 	FVector           box;

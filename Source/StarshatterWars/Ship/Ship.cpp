@@ -1035,12 +1035,12 @@ void Ship::InitializeRuntimeHangarFromDesign()
 		return;
 	}
 
-	if (design->squadrons.size() <= 0)
+	// Mission-defined squadrons are registered in Sim::CreateElements AFTER
+	// the carrier is constructed. A carrier with flight decks must therefore
+	// have a Hangar even when its ship design has no embedded squadrons.
+	if (flight_decks.size() <= 0 && design->squadrons.size() <= 0)
 	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Ship] InitializeRuntimeHangarFromDesign: no squadrons Ship='%s'"),
-			*FString(GetName()));
-		return;
+		return; // Ordinary ships have no Hangar.
 	}
 
 	if (!hangar)
@@ -1111,11 +1111,13 @@ void Ship::InitializeRuntimeHangarFromDesign()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning,
-		TEXT("[Ship] Hangar runtime built Ship='%s' Squadrons=%d EmptySlots=%d"),
+	UE_LOG(LogTemp, Display,
+		TEXT("[CarrierHangarInit] Ship='%s' Decks=%d DesignSquadrons=%d RegisteredSquadrons=%d Hangar=%p"),
 		*FString(GetName()),
+		flight_decks.size(),
+		design->squadrons.size(),
 		BuiltSquadrons,
-		hangar->NumSlotsEmpty());
+		hangar);
 }
 
 void Ship::InitializeRuntimeDeathSpiralFromDesign()

@@ -215,15 +215,23 @@ Hangar::ExecFrame(double seconds)
 bool
 Hangar::FinishPrep(HangarSlot* slot)
 {
-	if (!slot || !slot->deck || !slot->design || !ship) {
-		UE_LOG(LogTemp, Warning, TEXT("Hangar::FinishPrep - invalid slot/deck/design/ship"));
-		return false;
-	}
+    if (!slot || !slot->deck || !slot->design || !ship ||
+        !ship->GetRegion() || slot->deck->GetCarrier() != ship ||
+        !slot->deck->IsLaunchDeck())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] FinishPrep rejected invalid carrier/deck/design/region"));
+        return false;
+    }
 
-	if (slot->deck->SpaceLeft(slot->design->type)) {
+    Sim* sim = Sim::GetSim();
+    if (!sim)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] FinishPrep: simulation unavailable"));
+        return false;
+    }
+
+    if (slot->deck->SpaceLeft(slot->design->type)) {
         if (!slot->ship) {
-		Sim* sim = Sim::GetSim();
-
 		Text ship_name = slot->squadron;
 
 		slot->ship = sim->CreateShip(ship_name, "",
@@ -322,8 +330,12 @@ Hangar::CreateSquadron(Text squadron, CombatGroup* group,
 	const ShipDesign* design, int count, int iff,
 	int* def_load, int maint_count, int dead_count)
 {
-	if (nsquadrons < MAX_SQUADRONS && count > 0) {
-		HangarSlot* s = new HangarSlot[count];
+    if (nsquadrons < MAX_SQUADRONS && count > 0 && design)
+    {
+        // A malformed .def must never walk below the beginning of the slots.
+        dead_count = FMath::Clamp(dead_count, 0, count);
+        maint_count = FMath::Clamp(maint_count, 0, count - dead_count);
+        HangarSlot* s = new HangarSlot[count];
 
 		for (int i = 0; i < count; i++) {
 			s[i].squadron = squadron;
@@ -420,10 +432,13 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 bool
 Hangar::GotoAlert(int squadron, int slot, FlightDeck* d, SimElement* elem, int* loadout, bool pkg, bool expedite)
 {
-	if (squadron < nsquadrons && slot < nslots[squadron]) {
-		HangarSlot* s = &(squadrons[squadron][slot]);
+    if (squadron >= 0 && squadron < nsquadrons &&
+        slot >= 0 && slot < nslots[squadron] && squadrons[squadron] &&
+        d && ship && d->GetCarrier() == ship && d->IsLaunchDeck())
+    {
+        HangarSlot* s = &(squadrons[squadron][slot]);
 
-		if (s->state == STORAGE) {
+        if (s->state == STORAGE && s->design) {
 			s->deck = d;
 			s->state = PREP;
 			s->time = expedite ? 3 : s->design->prep_time;
@@ -446,10 +461,13 @@ Hangar::GotoAlert(int squadron, int slot, FlightDeck* d, SimElement* elem, int* 
 bool
 Hangar::Launch(int squadron, int slot)
 {
-	if (squadron < nsquadrons && slot < nslots[squadron]) {
-		HangarSlot* s = &(squadrons[squadron][slot]);
+    if (squadron >= 0 && squadron < nsquadrons &&
+        slot >= 0 && slot < nslots[squadron] && squadrons[squadron])
+    {
+        HangarSlot* s = &(squadrons[squadron][slot]);
 
-		if (s->state == ALERT && s->deck)
+        if (s->state == ALERT && s->deck && s->ship &&
+            s->deck->IsLaunchDeck() && s->deck->GetCarrier() == ship)
 			return s->deck->Launch(s->slot);
 	}
 

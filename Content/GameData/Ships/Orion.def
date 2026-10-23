@@ -128,41 +128,6 @@ drive:      {
    size:             120
    hull_factor:      0.3,
    explosion:        7
-   }
-
-thruster: {
-   type: Yellow
-   design:           Thruster,
-
-   loc:              (0, 0, 128),
-   size:             24,
-   hull_factor:      0.3
-   scale:            4
-   port_left: {loc:(-819, -176, 0), rotation:(0,0,-90), fire:0x0041, name:Thruster_left_0, flare_scale:.18, trail_scale:.18}
-   port_left: {loc:(-362, -405, -5), rotation:(0,0,-90), fire:0x0041, name:Thruster_left_1, flare_scale:.18, trail_scale:.18}
-   port_left: {loc:(717, -239, -5), rotation:(0,0,-90), fire:0x0081, name:Thruster_left_2, flare_scale:.18, trail_scale:.18}
-   port_right: {loc:(-819, 175, 0), rotation:(0,0,90), fire:0x0082, name:Thruster_right_3, flare_scale:.18, trail_scale:.18}
-   port_right: {loc:(-362, 405, -5), rotation:(0,0,90), fire:0x0082, name:Thruster_right_4, flare_scale:.18, trail_scale:.18}
-   port_right: {loc:(717, 238, -5), rotation:(0,0,90), fire:0x0042, name:Thruster_right_5, flare_scale:.18, trail_scale:.18}
-   port_fore: {loc:(-308, -368, 35), rotation:(0,0,0), fire:0x0044, name:Thruster_fore_6, flare_scale:.18, trail_scale:.18}
-   port_fore: {loc:(-308, -368, -43), rotation:(0,0,0), fire:0x0044, name:Thruster_fore_7, flare_scale:.18, trail_scale:.18}
-   port_fore: {loc:(-308, 367, 35), rotation:(0,0,0), fire:0x0084, name:Thruster_fore_8, flare_scale:.18, trail_scale:.18}
-   port_fore: {loc:(-308, 367, -43), rotation:(0,0,0), fire:0x0084, name:Thruster_fore_9, flare_scale:.18, trail_scale:.18}
-   port_aft: {loc:(-1047, -76, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_10, flare_scale:.18, trail_scale:.18}
-   port_aft: {loc:(-1047, 0, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_11, flare_scale:.18, trail_scale:.18}
-   port_aft: {loc:(-1047, 76, -66), rotation:(0,180,0), fire:0x0008, name:Thruster_aft_12, flare_scale:.18, trail_scale:.18}
-   port_top: {loc:(-358, -368, 73), rotation:(0,90,0), fire:0x0410, name:Thruster_top_13, flare_scale:.10, trail_scale:.10}
-   port_top: {loc:(-617, -368, 73), rotation:(0,90,0), fire:0x0410, name:Thruster_top_14, flare_scale:.10, trail_scale:.10}
-   port_top: {loc:(-358, 367, 73), rotation:(0,90,0), fire:0x0810, name:Thruster_top_15, flare_scale:.10, trail_scale:.10}
-   port_top: {loc:(-617, 367, 73), rotation:(0,90,0), fire:0x0810, name:Thruster_top_16, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(-358, -368, -79), rotation:(0,-90,0), fire:0x0820, name:Thruster_bottom_17, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(-617, -368, -79), rotation:(0,-90,0), fire:0x0820, name:Thruster_bottom_18, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(-358, 367, -79), rotation:(0,-90,0), fire:0x0420, name:Thruster_bottom_19, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(-617, 367, -79), rotation:(0,-90,0), fire:0x0420, name:Thruster_bottom_20, flare_scale:.10, trail_scale:.10}
-   port_top: {loc:(716, -191, 83), rotation:(0,90,0), fire:0x0210, name:Thruster_top_21, flare_scale:.10, trail_scale:.10}
-   port_top: {loc:(716, 191, 83), rotation:(0,90,0), fire:0x0210, name:Thruster_top_22, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(716, -191, -93), rotation:(0,-90,0), fire:0x0120, name:Thruster_bottom_23, flare_scale:.10, trail_scale:.10}
-   port_bottom: {loc:(716, 191, -93), rotation:(0,-90,0), fire:0x0120, name:Thruster_bottom_24, flare_scale:.10, trail_scale:.10}
 }
 
 quantum:     {
@@ -170,7 +135,7 @@ quantum:     {
    loc:              (0, 0, 0),
    size:             24,
    hull_factor:      0.3
-   }
+}
 
 shield:     {
    design:           "Grav",
@@ -178,8 +143,126 @@ shield:     {
    model:            "OShield.mag",
    bolt_hit_sound:   "shield_hit4",
    beam_hit_sound:   "shield_hit5",
+}
+
+   power:      {
+   type:             "Auxilliary Reactor",
+   design:           "Auxilliary Reactor",
+   max_output:       10e3,
+
+   loc:              (0, 0, -150),
+   hull_factor:      0.8
+}
+
+probe:     {
+   type:    "Sensor Drone",
+   design:  "Probe",
+   abrv:    "Probe",
+   muzzle:  ( 0, -80, 0),
+
+   loc:     (0, -80, 0),
+   size:    16,
+   hull_factor: 0.2
+}
+
+sensor:     {
+   design:              Sensor,
+   pcs:                 20,
+   active_efficiency:   1e6,
+   passive_efficiency:  10e3,
+   range:   25e3,
+   range:   50e3,
+   range:   75e3,
+   range:   100e3,
+
+   loc:              (0, -16, 380),
+   size:             16,
+   hull_factor:      0.1
+}
+
+power:      {
+   type:             Battery,
+   design:           Battery,
+   max_output:       1000
+}
+
+computer:   {
+   design:           "Avionics",
+   loc:              (20, 16, 80),
+   size:             16,
+   hull_factor:      0.5
    }
 
+computer:   {
+   design:           "Flight",
+   loc:              (-20, -16, 80),
+   size:             16,
+   hull_factor:      0.2
+   }
+
+nav:        {
+   loc:              (0, 16, 60),
+   design:           Computer,
+   size:             16,
+   hull_factor:      0.1
+}
+
+navlight: {
+    design: "Navigation Lights"
+    scale: 1.0
+    period: 0.5
+
+    light: {
+        name: "Port"
+        loc: (-480, -410, 0)
+        color: "red"
+        intensity: 3000
+        radius: 350
+        mode: "blink"
+        blink_interval: 0.5
+        phase: 0.0
+    }
+    light: {
+        name: "Starboard"
+        loc: (-480, 410, 0)
+        color: "green"
+        intensity: 3000
+        radius: 350
+        mode: "blink"
+        blink_interval: 0.5
+        phase: 0.25
+    }
+    light: {
+        name: "Dorsal"
+        loc: (716, 0, 100)
+        color: "white"
+        intensity: 3000
+        radius: 350
+        mode: "steady"
+        blink_interval: 0.5
+        phase: 0.0
+    }
+    light: {
+        name: "Ventral"
+        loc: (716, 0, -105)
+        color: "white"
+        intensity: 3000
+        radius: 350
+        mode: "steady"
+        blink_interval: 0.5
+        phase: 0.0
+    }
+    light: {
+        name: "Aft"
+        loc: (-1047, 0, 70)
+        color: "white"
+        intensity: 3000
+        radius: 350
+        mode: "steady"
+        blink_interval: 0.5
+        phase: 0.0
+    }
+}
 
 weapon: {
    type:             "Vanguard",
@@ -326,7 +409,6 @@ weapon:     {
    hull_factor:      0.2
 }
 
-
 flightdeck: {
    name:       "Deck 1",
    abrv:       "Deck 1",
@@ -346,7 +428,7 @@ flightdeck: {
 
    size:       170,
    hull_factor: 0.5,
-   }
+}
 
 flightdeck: {
    name:       "Deck 2",
@@ -367,7 +449,7 @@ flightdeck: {
 
    size:       170,
    hull_factor: 0.5,
-   }
+}
 
 flightdeck: {
    name:       "Deck 3",
@@ -391,7 +473,7 @@ flightdeck: {
 
    size:       120,
    hull_factor: 0.5,
-   }
+}
 
 flightdeck: {
    name:       "Deck 4",
@@ -415,69 +497,50 @@ flightdeck: {
 
    size:       120,
    hull_factor: 0.5,
-   }
-
-power:      {
-   type:             "Auxilliary Reactor",
-   design:           "Auxilliary Reactor",
-   max_output:       10e3,
-
-   loc:              (0, 0, -150),
-   hull_factor:      0.8
 }
 
-probe:     {
-   type:    "Sensor Drone",
-   design:  "Probe",
-   abrv:    "Probe",
-   muzzle:  ( 0, -80, 0),
+thruster: {
+   design:           Thruster
+   type:             Yellow
 
-   loc:     (0, -80, 0),
-   size:    16,
-   hull_factor: 0.2
-   }
+   loc:              (0, 0, 128)
+   size:             24
+   hull_factor:      0.3
+   scale:            4
 
-sensor:     {
-   design:              Sensor,
-   pcs:                 20,
-   active_efficiency:   1e6,
-   passive_efficiency:  10e3,
-   range:   25e3,
-   range:   50e3,
-   range:   75e3,
-   range:   100e3,
+   port_left:    {loc:(-819.0, -176.0, 0.0)       rotation:(0.0, 0.0, -90.0)      fire:0x0041, name:Thruster_Left_00        flare_scale:0.18, trail_scale:0.18}
+   port_left:    {loc:(-362.0, -405.0, -5.0)      rotation:(0.0, 0.0, -90.0)      fire:0x0041, name:Thruster_Left_01        flare_scale:0.18, trail_scale:0.18}
+   port_left:    {loc:(717.0, -239.0, -5.0)       rotation:(0.0, 0.0, -90.0)      fire:0x0081, name:Thruster_Left_02        flare_scale:0.18, trail_scale:0.18}
 
-   loc:              (0, -16, 380),
-   size:             16,
-   hull_factor:      0.1
-   }
+   port_right:   {loc:(-819.0, 175.0, 0.0)        rotation:(0.0, 0.0, 90.0)       fire:0x0082, name:Thruster_Right_03       flare_scale:0.18, trail_scale:0.18}
+   port_right:   {loc:(-362.0, 405.0, -5.0)       rotation:(0.0, 0.0, 90.0)       fire:0x0082, name:Thruster_Right_04       flare_scale:0.18, trail_scale:0.18}
+   port_right:   {loc:(717.0, 238.0, -5.0)        rotation:(0.0, 0.0, 90.0)       fire:0x0042, name:Thruster_Right_05       flare_scale:0.18, trail_scale:0.18}
 
-power:      {
-   type:             Battery,
-   design:           Battery,
-   max_output:       1000
-   }
+   port_fore:    {loc:(-308.0, -368.0, 35.0)      rotation:(0.0, 0.0, 0.0)        fire:0x0044, name:Thruster_Fore_06        flare_scale:0.18, trail_scale:0.18}
+   port_fore:    {loc:(-308.0, -368.0, -43.0)     rotation:(0.0, 0.0, 0.0)        fire:0x0044, name:Thruster_Fore_07        flare_scale:0.18, trail_scale:0.18}
+   port_fore:    {loc:(-308.0, 367.0, 35.0)       rotation:(0.0, 0.0, 0.0)        fire:0x0084, name:Thruster_Fore_08        flare_scale:0.18, trail_scale:0.18}
+   port_fore:    {loc:(-308.0, 367.0, -43.0)      rotation:(0.0, 0.0, 0.0)        fire:0x0084, name:Thruster_Fore_09        flare_scale:0.18, trail_scale:0.18}
 
-computer:   {
-   design:           "Avionics",
-   loc:              (20, 16, 80),
-   size:             16,
-   hull_factor:      0.5
-   }
+   port_aft:     {loc:(-1047.0, -76.0, -66.0)     rotation:(0.0, 180.0, 0.0)      fire:0x0008, name:Thruster_Aft_10         flare_scale:0.18, trail_scale:0.18}
+   port_aft:     {loc:(-1047.0, 0.0, -66.0)       rotation:(0.0, 180.0, 0.0)      fire:0x0008, name:Thruster_Aft_11         flare_scale:0.18, trail_scale:0.18}
+   port_aft:     {loc:(-1047.0, 76.0, -66.0)      rotation:(0.0, 180.0, 0.0)      fire:0x0008, name:Thruster_Aft_12         flare_scale:0.18, trail_scale:0.18}
 
-computer:   {
-   design:           "Flight",
-   loc:              (-20, -16, 80),
-   size:             16,
-   hull_factor:      0.2
-   }
+   port_top:     {loc:(-358.0, -368.0, 73.0)      rotation:(0.0, 90.0, 0.0)       fire:0x0410, name:Thruster_Top_13         flare_scale:0.10, trail_scale:0.10}
+   port_top:     {loc:(-617.0, -368.0, 73.0)      rotation:(0.0, 90.0, 0.0)       fire:0x0410, name:Thruster_Top_14         flare_scale:0.10, trail_scale:0.10}
+   port_top:     {loc:(-358.0, 367.0, 73.0)       rotation:(0.0, 90.0, 0.0)       fire:0x0810, name:Thruster_Top_15         flare_scale:0.10, trail_scale:0.10}
+   port_top:     {loc:(-617.0, 367.0, 73.0)       rotation:(0.0, 90.0, 0.0)       fire:0x0810, name:Thruster_Top_16         flare_scale:0.10, trail_scale:0.10}
 
-nav:        {
-   loc:              (0, 16, 60),
-   design:           Computer,
-   size:             16,
-   hull_factor:      0.1
-   }
+   port_bottom:  {loc:(-358.0, -368.0, -79.0)     rotation:(0.0, -90.0, 0.0)      fire:0x0820, name:Thruster_Bottom_17      flare_scale:0.10, trail_scale:0.10}
+   port_bottom:  {loc:(-617.0, -368.0, -79.0)     rotation:(0.0, -90.0, 0.0)      fire:0x0820, name:Thruster_Bottom_18      flare_scale:0.10, trail_scale:0.10}
+   port_bottom:  {loc:(-358.0, 367.0, -79.0)      rotation:(0.0, -90.0, 0.0)      fire:0x0420, name:Thruster_Bottom_19      flare_scale:0.10, trail_scale:0.10}
+   port_bottom:  {loc:(-617.0, 367.0, -79.0)      rotation:(0.0, -90.0, 0.0)      fire:0x0420, name:Thruster_Bottom_20      flare_scale:0.10, trail_scale:0.10}
+
+   port_top:     {loc:(716.0, -191.0, 83.0)       rotation:(0.0, 90.0, 0.0)       fire:0x0210, name:Thruster_Top_21         flare_scale:0.10, trail_scale:0.10}
+   port_top:     {loc:(716.0, 191.0, 83.0)        rotation:(0.0, 90.0, 0.0)       fire:0x0210, name:Thruster_Top_22         flare_scale:0.10, trail_scale:0.10}
+
+   port_bottom:  {loc:(716.0, -191.0, -93.0)      rotation:(0.0, -90.0, 0.0)      fire:0x0120, name:Thruster_Bottom_23      flare_scale:0.10, trail_scale:0.10}
+   port_bottom:  {loc:(716.0, 191.0, -93.0)       rotation:(0.0, -90.0, 0.0)      fire:0x0120, name:Thruster_Bottom_24      flare_scale:0.10, trail_scale:0.10}
+}
 
 death_spiral: {
    time:             5,
@@ -557,62 +620,3 @@ map: {
 }
 
 
-
-
-
-
-navlight: {
-   design: "Navigation Lights"
-   scale: 1.0
-   period: 0.5
-   light: {
-      name: "Port"
-      loc: (-480, -410, 0)
-      color: "red"
-      intensity: 3000
-      radius: 350
-      mode: "blink"
-      blink_interval: 0.5
-      phase: 0.0
-   }
-   light: {
-      name: "Starboard"
-      loc: (-480, 410, 0)
-      color: "green"
-      intensity: 3000
-      radius: 350
-      mode: "blink"
-      blink_interval: 0.5
-      phase: 0.25
-   }
-   light: {
-      name: "Dorsal"
-      loc: (716, 0, 100)
-      color: "white"
-      intensity: 3000
-      radius: 350
-      mode: "steady"
-      blink_interval: 0.5
-      phase: 0.0
-   }
-   light: {
-      name: "Ventral"
-      loc: (716, 0, -105)
-      color: "white"
-      intensity: 3000
-      radius: 350
-      mode: "steady"
-      blink_interval: 0.5
-      phase: 0.0
-   }
-   light: {
-      name: "Aft"
-      loc: (-1047, 0, 70)
-      color: "white"
-      intensity: 3000
-      radius: 350
-      mode: "steady"
-      blink_interval: 0.5
-      phase: 0.0
-   }
-}

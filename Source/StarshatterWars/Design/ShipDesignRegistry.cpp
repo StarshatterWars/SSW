@@ -1080,6 +1080,8 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewDeck->SetEndPoint(Src.EndPoint);
 
         NewDeck->SetCycleTime(Src.CycleTime);
+        // Respect the DataTable capacity independently of authored deck spots.
+        NewDeck->SetMaxShips(Src.MaxShips);
 
         for (int32 i = 0;
             i < Src.ApproachPoints.Num() &&
@@ -1091,12 +1093,35 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 Src.ApproachPoints[i]);
         }
 
+        // Phase 10: capture the actual masks coming from the DataTable.
+        // These are legacy ship-class bit masks, not ordinal class indexes.
+        // Thunderbolt is type 0x4; no implicit wildcard or filter rewrite.
+        int32 CompatibleThunderboltSpots = 0;
+        int32 SpotIndex = 0;
         for (const FFlightDeckSlot& Spot : Src.Slots)
         {
-            NewDeck->AddSlot(
-                Spot.Location,
-                Spot.FilterMask);
+            const uint32 FilterMask = static_cast<uint32>(Spot.FilterMask);
+            const bool bThunderboltCompatible = (FilterMask & 0x00000004u) != 0u;
+            CompatibleThunderboltSpots += bThunderboltCompatible ? 1 : 0;
+
+            UE_LOG(LogTemp, Display,
+                TEXT("[CarrierDeckImport][Slot] Row='%s' Deck='%s' Index=%d Filter=0x%08X ThunderboltCompatible=%d Location=%s"),
+                *RowName.ToString(), *Src.Name, SpotIndex,
+                FilterMask, bThunderboltCompatible ? 1 : 0,
+                *Spot.Location.ToString());
+
+            NewDeck->AddSlot(Spot.Location, Spot.FilterMask);
+            ++SpotIndex;
         }
+
+        UE_LOG(LogTemp, Display,
+            TEXT("[CarrierDeckImport][Summary] Row='%s' Deck='%s' Launch=%d Recovery=%d DataMaxShips=%d RuntimeMaxShips=%d DataSpots=%d RuntimeSpots=%d ThunderboltSpots=%d ThunderboltSpaceLeft=%d"),
+            *RowName.ToString(), *Src.Name,
+            NewDeck->IsLaunchDeck() ? 1 : 0,
+            NewDeck->IsRecoveryDeck() ? 1 : 0,
+            static_cast<int32>(Src.MaxShips), NewDeck->GetMaxShips(),
+            Src.Slots.Num(), NewDeck->NumSlots(),
+            CompatibleThunderboltSpots, NewDeck->SpaceLeft(0x00000004));
 
         Legacy->flight_decks.append(NewDeck);
 

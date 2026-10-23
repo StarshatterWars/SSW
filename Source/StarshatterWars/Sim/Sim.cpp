@@ -1151,37 +1151,48 @@ Sim::CreateElements()
             PlayerCharacter* LaunchPlayer = PlayerCharacter::GetCurrentPlayer();
             const bool PlayerCarrierStart = MissionElem->GetPlayerIndex() > 0 && Carrier &&
                 (!LaunchPlayer || !LaunchPlayer->FlyingStart());
+            // The generated .def's alert:true is authoritative, even when
+            // the user's flying-start preference is enabled.
             const bool WantsDeckStart = MissionElem->IsAlert() || PlayerCarrierStart;
+            const bool bRequiredPlayerDeckStart =
+                MissionElem->GetPlayerIndex() > 0 && WantsDeckStart;
             if (MissionElem->GetPlayerIndex() > 0)
                 UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] PlayerFlight='%hs' Squadron='%hs' Carrier='%hs' FlyingStart=%d DeckStart=%d Hangar=%d Decks=%d"),
                     MissionElem->GetName().data(), MissionElem->GetSquadron().data(), Carrier ? Carrier->GetName() : "MISSING",
                     LaunchPlayer ? LaunchPlayer->FlyingStart() : 0, WantsDeckStart ? 1 : 0,
                     HangarPtr ? 1 : 0, Carrier ? Carrier->NumFlightDecks() : 0);
+            int32 PreparedCount = 0;
             if (HangarPtr && Element && MissionElem->Count() > 0 && WantsDeckStart) {
-				FlightDeck* Deck = nullptr;
-				int32 Queue = 1000;
+                // A flight may occupy multiple launch decks. The Orion has two
+                // two-ship launch decks, so a four-ship package must be split.
+                TArray<FlightDeck*> AssignedDecks;
+                int32 FreeDeckSlots = 0;
+                ShipDesign* ShipDesignPtr =
+                    ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
 
-				ShipDesign* ShipDesignPtr =
-					ResolveLegacyShipDesign(MissionElem->GetShipDesign(), MissionElem->GetPath());
+                if (ShipDesignPtr && Carrier) {
+                    for (int32 DeckIndex = 0; DeckIndex < Carrier->NumFlightDecks(); ++DeckIndex) {
+                        FlightDeck* Candidate = Carrier->GetFlightDeck(DeckIndex);
+                        if (!Candidate || !Candidate->IsLaunchDeck()) continue;
+                        const int32 Available = Candidate->SpaceLeft(ShipDesignPtr->type);
+                        const int32 Queued = HangarPtr->PreflightQueue(Candidate);
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("[CarrierLaunch][DECK_CHECK] Flight='%hs' Deck='%hs' Available=%d Queue=%d Type=0x%08X"),
+                            MissionElem->GetName().data(), Candidate->GetName(), Available, Queued,
+                            static_cast<uint32>(ShipDesignPtr->type));
+                        // Pre-existing preflight assignments may consume deck capacity
+                        // asynchronously. Do not claim those spots twice.
+                        const int32 Reservable = FMath::Max(0, Available - Queued);
+                        FreeDeckSlots += Reservable;
+                        for (int32 Slot = 0; Slot < Reservable; ++Slot)
+                            AssignedDecks.Add(Candidate);
+                    }
+                }
 
-				if (ShipDesignPtr) {
-					for (int32 i = 0; i < Carrier->NumFlightDecks(); i++) {
-						FlightDeck* FlightDeckPtr = Carrier->GetFlightDeck(i);
-						int32 DeckQueue = HangarPtr->PreflightQueue(FlightDeckPtr);
-
-						if (FlightDeckPtr &&
-							FlightDeckPtr->IsLaunchDeck() &&
-							FlightDeckPtr->SpaceLeft(ShipDesignPtr->type) &&
-							DeckQueue < Queue) {
-							Queue = DeckQueue;
-							Deck = FlightDeckPtr;
-						}
-					}
-				}
-
+                FlightDeck* Deck = AssignedDecks.IsEmpty() ? nullptr : AssignedDecks[0];
                 // Reserve before mutation: a shortage must not duplicate a partly prepared group.
                 TArray<FIntPoint> LaunchInventory;
-                if (Deck && ShipDesignPtr) {
+                if (ShipDesignPtr) {
                     for (int Sq=0; Sq<HangarPtr->NumSquadrons(); ++Sq) {
                         if (SquadronIndex>=0 && Sq!=SquadronIndex) continue;
                         if (HangarPtr->SquadronDesign(Sq)!=ShipDesignPtr) continue;
@@ -1193,7 +1204,12 @@ Sim::CreateElements()
                 UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Flight='%hs' Deck='%hs' Inventory=%d Required=%d"),
                     MissionElem->GetName().data(), Deck ? Deck->GetName() : "MISSING",
                     LaunchInventory.Num(), MissionElem->Count());
-                if (Deck && LaunchInventory.Num()>=MissionElem->Count()) {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[CarrierLaunch] Flight='%hs' Carrier='%hs' Squadron='%hs' MatchedSq=%d FreeDeckSlots=%d ShipDesign=%p"),
+                    MissionElem->GetName().data(), Carrier ? Carrier->GetName() : "MISSING",
+                    MissionElem->GetSquadron().data(), SquadronIndex, FreeDeckSlots, ShipDesignPtr);
+                if (AssignedDecks.Num() >= MissionElem->Count() &&
+                    LaunchInventory.Num() >= MissionElem->Count()) {
                     bAlertPrep=true;
 
 					if (MissionElem->GetLoadouts().size()) {
@@ -1235,7 +1251,7 @@ Sim::CreateElements()
 						if (i != PlayerSlot)
 							LaunchOrder.Add(i);
 
-					for (int32 Order = 0; Order < LaunchOrder.Num(); Order++) {
+                    for (int32 Order = 0; Order < LaunchOrder.Num(); Order++) {
 						const int32 i = LaunchOrder[Order];
 						int32 SquadronLocal = -1;
 						int32 SlotLocal = -1;
@@ -1246,22 +1262,32 @@ Sim::CreateElements()
 						if (LegacyDesign) {
                             SquadronLocal=LaunchInventory[i].X;
                             SlotLocal=LaunchInventory[i].Y;
-							bAlertPrep = bAlertPrep &&
-								HangarPtr->GotoAlert(
-									SquadronLocal,
-									SlotLocal,
-									Deck,
-									Element,
-									Loadout,
-									true,
-									true);
+                            FlightDeck* AssignedDeck = AssignedDecks[Order];
+                            const bool bPrepareRequested = HangarPtr->GotoAlert(
+                                SquadronLocal, SlotLocal, AssignedDeck, Element, Loadout,
+                                true, true);
 
-							HangarPtr->Launch(SquadronLocal, SlotLocal);
-
-							HangarSlot* HangarSlotPtr =
-								(HangarSlot*)HangarPtr->GetSlot(SquadronLocal, SlotLocal);
-
-							Ship* AlertShip = HangarPtr->GetShip(HangarSlotPtr);
+                            const HangarSlot* HangarSlotPtr =
+                                HangarPtr->GetSlot(SquadronLocal, SlotLocal);
+                            Ship* AlertShip = HangarPtr->GetShip(HangarSlotPtr);
+                            const bool bActuallyReady = bPrepareRequested && AlertShip &&
+                                HangarPtr->GetState(HangarSlotPtr) == Hangar::ALERT &&
+                                HangarPtr->GetFlightDeck(HangarSlotPtr) == AssignedDeck;
+                            if (!bActuallyReady) {
+                                bAlertPrep = false;
+                                UE_LOG(LogTemp, Error,
+                                    TEXT("[CarrierLaunch][PREP_FAILED] Flight='%hs' Squad=%d Slot=%d Deck='%hs' Requested=%d Ship=%p State=%d"),
+                                    MissionElem->GetName().data(), SquadronLocal, SlotLocal,
+                                    AssignedDeck->GetName(), bPrepareRequested ? 1 : 0, AlertShip,
+                                    HangarPtr->GetState(HangarSlotPtr));
+                                continue;
+                            }
+                            ++PreparedCount;
+                            if (!HangarPtr->Launch(SquadronLocal, SlotLocal)) {
+                                UE_LOG(LogTemp, Warning,
+                                    TEXT("[CarrierLaunch][QUEUE_PENDING] Ship='%hs' deck slot=%d; remains at ALERT"),
+                                    AlertShip->GetName(), HangarPtr->GetFlightDeckSlot(HangarSlotPtr));
+                            }
 
 							if (AlertShip) {
 								AlertShip->SetRespawnCount(Respawns);
@@ -1280,6 +1306,7 @@ Sim::CreateElements()
 						}
 					}
 				}
+                    bAlertPrep = bAlertPrep && PreparedCount == MissionElem->Count();
 			}
 
             if (WantsDeckStart) {
@@ -1287,7 +1314,16 @@ Sim::CreateElements()
                     MissionElem->GetName().data(), Carrier ? Carrier->GetName() : "MISSING",
                     bAlertPrep ? 1 : 0, MissionElem->Count());
             }
-			if (!bAlertPrep) {
+            // A generated mission with alert:true must not silently become a
+            // flying start. This is a mission authoring/runtime data failure.
+            // Do not spawn duplicate space ships if preparation partially succeeded.
+            if (bRequiredPlayerDeckStart && !bAlertPrep) {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[CarrierLaunch][START_BLOCKED] Player flight '%hs' requires a carrier deck. "
+                         "Resolve carrier/squadron/legacy design/deck slots before spawning."),
+                    MissionElem->GetName().data());
+            }
+            if (!bAlertPrep && !bRequiredPlayerDeckStart) {
 				for (int32 i = 0; i < MissionElem->Count(); i++) {
 					MissionShip* MissionShipPtr = nullptr;
 					Text ShipName = MissionElem->GetShipName(i);
