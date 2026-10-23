@@ -1,20 +1,17 @@
 #pragma once
-#pragma once
 
 #include "CoreMinimal.h"
-#include "ShipActor.h"
+#include "CapitalShipActor.h"
 #include "WolfShipActor.generated.h"
 
-UCLASS()
-class STARSHATTERWARS_API AWolfShipActor : public AShipActor
+// Reparenting only: existing model and .def-driven defaults stay in the .cpp.
+UCLASS(Blueprintable)
+class STARSHATTERWARS_API AWolfShipActor : public ACapitalShipActor
 {
     GENERATED_BODY()
-
 public:
     AWolfShipActor();
-
     virtual void OnConstruction(const FTransform& Transform) override;
-
 protected:
     void ApplyWolfDefaults();
     void ApplyWolfFixedPoints();

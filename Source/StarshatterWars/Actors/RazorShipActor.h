@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ShipActor.h"
+#include "FighterActor.h"
 #include "RazorShipActor.generated.h"
 
 // Structural/model defaults from Razor.def. Simulation remains data-driven.
 UCLASS(Blueprintable)
-class STARSHATTERWARS_API ARazorShipActor : public AShipActor
+class STARSHATTERWARS_API ARazorShipActor : public AFighterActor
 {
     GENERATED_BODY()
 public:

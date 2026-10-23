@@ -1,32 +1,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ShipActor.h"
+#include "CapitalShipActor.h"
 #include "BaikalShipActor.generated.h"
 
-UCLASS()
-class STARSHATTERWARS_API ABaikalShipActor : public AShipActor
+// Reparenting only: existing model and .def-driven defaults stay in the .cpp.
+UCLASS(Blueprintable)
+class STARSHATTERWARS_API ABaikalShipActor : public ACapitalShipActor
 {
     GENERATED_BODY()
-
 public:
     ABaikalShipActor();
-
-    virtual void OnConstruction(
-        const FTransform& Transform) override;
-
+    virtual void OnConstruction(const FTransform& Transform) override;
 protected:
     void ApplyBaikalDefaults();
     void ApplyBaikalFixedPoints();
-
-    /*
-     * Runtime systems now own:
-     * - main engine ports
-     * - thruster ports
-     * - nav lights
-     *
-     * These remain actor-local structural points only.
-     */
     void BuildBaikalWeaponMountPoints();
     void BuildBaikalTurretBasePoints();
     void BuildBaikalDockPoints();

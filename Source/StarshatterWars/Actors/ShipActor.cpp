@@ -153,6 +153,11 @@ AShipActor::AShipActor()
     PointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("PointRoot"));
     PointRoot->SetupAttachment(ShipRoot);
 
+    WeaponHardpointRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponHardpointRoot"));
+    WeaponHardpointRoot->SetupAttachment(PointRoot);
+    TurretMountRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TurretMountRoot"));
+    TurretMountRoot->SetupAttachment(PointRoot);
+
     LightRoot = CreateDefaultSubobject<USceneComponent>(TEXT("LightRoot"));
     LightRoot->SetupAttachment(ShipRoot);
 
@@ -298,6 +303,42 @@ AShipActor::AShipActor()
     }
 
     SetThrustersActive(false);
+}
+
+USceneComponent* AShipActor::CreateNativeWeaponPoint(const FName& Name)
+{
+    USceneComponent* Point = CreateDefaultSubobject<USceneComponent>(Name);
+    Point->SetupAttachment(WeaponHardpointRoot);
+    AuthoredWeaponPointComponents.Add(Point);
+    return Point;
+}
+
+USceneComponent* AShipActor::CreateNativeTurretPoint(const FName& Name)
+{
+    USceneComponent* Point = CreateDefaultSubobject<USceneComponent>(Name);
+    Point->SetupAttachment(TurretMountRoot);
+    AuthoredTurretPointComponents.Add(Point);
+    return Point;
+}
+
+void AShipActor::SyncNativeAuthoredPoints()
+{
+    for (int32 i = 0; i < AuthoredWeaponPointComponents.Num() && i < WeaponMountPointDefs.Num(); ++i)
+    {
+        if (USceneComponent* Point = AuthoredWeaponPointComponents[i].Get())
+        {
+            Point->SetRelativeLocation(WeaponMountPointDefs[i].LocalOffset);
+            Point->SetRelativeRotation(WeaponMountPointDefs[i].LocalRotation);
+        }
+    }
+    for (int32 i = 0; i < AuthoredTurretPointComponents.Num() && i < TurretBasePointDefs.Num(); ++i)
+    {
+        if (USceneComponent* Point = AuthoredTurretPointComponents[i].Get())
+        {
+            Point->SetRelativeLocation(TurretBasePointDefs[i].LocalOffset);
+            Point->SetRelativeRotation(TurretBasePointDefs[i].LocalRotation);
+        }
+    }
 }
 
 void AShipActor::OnConstruction(const FTransform& Transform)
@@ -626,13 +667,25 @@ void AShipActor::RebuildThrusterPoints()
 
 void AShipActor::RebuildWeaponMountPoints()
 {
-    ClearSceneComponentArray(WeaponMountPoints);
+    // Native authoring components belong to the C++ actor and must survive
+    // Blueprint reconstruction. Never DestroyComponent() on those subobjects.
+    for (USceneComponent* Point : WeaponMountPoints)
+    {
+        if (IsValid(Point) && !AuthoredWeaponPointComponents.ContainsByPredicate([Point](const TObjectPtr<USceneComponent>& Entry) { return Entry.Get() == Point; }))
+            Point->DestroyComponent();
+    }
+    WeaponMountPoints.Empty();
     CreateWeaponMountPoints();
 }
 
 void AShipActor::RebuildTurretBasePoints()
 {
-    ClearSceneComponentArray(TurretBasePoints);
+    for (USceneComponent* Point : TurretBasePoints)
+    {
+        if (IsValid(Point) && !AuthoredTurretPointComponents.ContainsByPredicate([Point](const TObjectPtr<USceneComponent>& Entry) { return Entry.Get() == Point; }))
+            Point->DestroyComponent();
+    }
+    TurretBasePoints.Empty();
     CreateTurretBasePoints();
 }
 
@@ -1062,6 +1115,16 @@ void AShipActor::CreateWeaponMountPoints()
 {
     if (WeaponMountPointDefs.Num() > 0)
     {
+        // Concrete ship classes (Orion) provide native inherited markers.
+        // Reuse them, keeping the Blueprint hierarchy and runtime accessors
+        // aligned with the same authored definitions.
+        if (AuthoredWeaponPointComponents.Num() == WeaponMountPointDefs.Num())
+        {
+            SyncNativeAuthoredPoints();
+            for (const TObjectPtr<USceneComponent>& NativePoint : AuthoredWeaponPointComponents)
+                WeaponMountPoints.Add(NativePoint.Get());
+            return;
+        }
         for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
         {
             const FShipPointDef& Def = WeaponMountPointDefs[Index];
@@ -1105,6 +1168,13 @@ void AShipActor::CreateTurretBasePoints()
 {
     if (TurretBasePointDefs.Num() > 0)
     {
+        if (AuthoredTurretPointComponents.Num() == TurretBasePointDefs.Num())
+        {
+            SyncNativeAuthoredPoints();
+            for (const TObjectPtr<USceneComponent>& NativePoint : AuthoredTurretPointComponents)
+                TurretBasePoints.Add(NativePoint.Get());
+            return;
+        }
         for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
         {
             const FShipPointDef& Def = TurretBasePointDefs[Index];
@@ -1717,13 +1787,6 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 }
 
 
-// A carrier fighter in ALERT has not received launch authorization yet.
-// This is presentation-only: no changes to simulation physics or .def data.
-static bool SSWIsStagedCarrierFighter(Ship* InShip)
-{
-    return InShip && InShip->GetCarrier() && InShip->GetFlightPhase() == EOPSMode::ALERT;
-}
-
 void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
@@ -1740,25 +1803,6 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     if (UGameInstance* GI = GetGameInstance())
         if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
             RuntimeLocation = Runtime->GetVisualSpawnLocationForRuntimeShip(RuntimeShip);
-
-    // Orion's rendered hull is scaled independently of legacy simulation slots.
-    // Offset only the visible staged aircraft, along the carrier's RIGHT axis.
-    // The underlying flight-deck slot and launch trajectories stay authoritative.
-    // Blend out the presentation correction after launch authorization.
-    Ship* StagingCarrier = RuntimeShip->GetCarrier();
-    const bool bOrionStaging = SSWIsStagedCarrierFighter(RuntimeShip) &&
-        StagingCarrier->Design() &&
-        FCStringAnsi::Stricmp(StagingCarrier->Design()->name, "Orion") == 0;
-    const double TargetLateral = bOrionStaging ? 135.0 : 0.0;
-    OrionDeckVisualLateral = (!bRuntimeVisualInitialized || DeltaTime <= 0.0f)
-        ? TargetLateral
-        : FMath::FInterpTo(OrionDeckVisualLateral, TargetLateral, DeltaTime, 4.0f);
-    if (StagingCarrier && FMath::Abs(OrionDeckVisualLateral) > 0.01)
-    {
-        const FVector Right = StagingCarrier->GetCam().vrt();
-        const FVector UERight(Right.Z, Right.X, Right.Y);
-        RuntimeLocation += UERight.GetSafeNormal() * OrionDeckVisualLateral;
-    }
 
     if (RuntimeLocation.ContainsNaN())
     {
@@ -2196,7 +2240,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             1.0f);
 
     const bool bRequested =
-        !SSWIsStagedCarrierFighter(RuntimeShip) && RequestAlpha > 0.01f;
+        RequestAlpha > 0.01f;
 
     const float TargetPower =
         bRequested
@@ -2421,8 +2465,8 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
     //-------------------------------------------------------------
     // Audio modulation
     //-------------------------------------------------------------
-    const float TargetVolume = SSWIsStagedCarrierFighter(RuntimeShip)
-        ? 0.0f : FMath::Clamp(VisualPower, 0.0f, 1.0f);
+    const float TargetVolume =
+        FMath::Clamp(VisualPower, 0.0f, 1.0f);
 
     const float TargetPitch =
         FMath::Clamp(0.5f + (VisualPower * 0.5f), 0.5f, 2.0f);
@@ -2601,8 +2645,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
     // Drive throttle is already normalized to 0..1. Do not substitute velocity:
     // a coasting ship need not be firing its engines.
     Drive* MainDrive = RuntimeShip->GetMainDrive();
-    const bool bDeckEnginesHeld = SSWIsStagedCarrierFighter(RuntimeShip);
-    const float DriveBurn = !bDeckEnginesHeld && MainDrive && MainDrive->IsPowerOn()
+    const float DriveBurn = MainDrive && MainDrive->IsPowerOn()
         && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
         ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
 
@@ -2619,8 +2662,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = bDeckEnginesHeld ? 0.0f :
-            (bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn);
+        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(

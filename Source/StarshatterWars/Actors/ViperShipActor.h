@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ShipActor.h"
+#include "FighterActor.h"
 #include "ViperShipActor.generated.h"
 
 // Structural/model defaults from Viper.def. Simulation remains data-driven.
 UCLASS(Blueprintable)
-class STARSHATTERWARS_API AViperShipActor : public AShipActor
+class STARSHATTERWARS_API AViperShipActor : public AFighterActor
 {
     GENERATED_BODY()
 public:

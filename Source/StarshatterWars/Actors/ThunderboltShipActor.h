@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ShipActor.h"
+#include "FighterActor.h"
 #include "ThunderboltShipActor.generated.h"
 
 // Structural/model defaults from Thunderbolt.def. Simulation remains data-driven.
 UCLASS(Blueprintable)
-class STARSHATTERWARS_API AThunderboltShipActor : public AShipActor
+class STARSHATTERWARS_API AThunderboltShipActor : public AFighterActor
 {
     GENERATED_BODY()
 public:

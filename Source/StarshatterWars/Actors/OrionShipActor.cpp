@@ -8,6 +8,17 @@ AOrionShipActor::AOrionShipActor()
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(4.0f));
     ApplyOrionDefaults();
+    for (int32 DeckIndex = 0; DeckIndex < 4; ++DeckIndex)
+    {
+        AddNativeFlightDeck(DeckIndex, DeckIndex >= 2);
+        AddNativeHangarBay(DeckIndex);
+    }
+    for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
+        CreateNativeWeaponPoint(FName(*FString::Printf(TEXT("WeaponHardpoint_%02d"), Index + 1)));
+    for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
+        CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1)));
+    SynchronizeNativeDeckLocations();
+    SyncNativeAuthoredPoints();
 }
 
 void AOrionShipActor::OnConstruction(const FTransform& Transform)
@@ -15,6 +26,8 @@ void AOrionShipActor::OnConstruction(const FTransform& Transform)
     ApplyOrionDefaults();
     Super::OnConstruction(Transform);
     ApplyOrionFixedPoints();
+    SynchronizeNativeDeckLocations();
+    SyncNativeAuthoredPoints();
 }
 
 void AOrionShipActor::ApplyOrionDefaults()

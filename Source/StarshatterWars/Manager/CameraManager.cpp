@@ -16,6 +16,9 @@
 */
 
 #include "CameraManager.h"
+#include "CarrierActor.h"
+#include "EngineUtils.h"
+#include "Engine/World.h"
 
 #include "Ship.h"
 #include "FlightDeck.h"
@@ -993,7 +996,7 @@ CameraManager::Docking(double seconds)
 	const FVector Vrt = ship ? ship->GetCam().vrt() : FVector::RightVector;
 	const FVector Vpn = ship ? ship->GetCam().vpn() : FVector::ForwardVector;
 	const FVector Vup = ship ? ship->GetCam().vup() : FVector::UpVector;
-	const FVector Cloc = ShipLoc
+	FVector Cloc = ShipLoc
 		+ (Vrt * Bridge.X)
 		+ (Vpn * Bridge.Y)
 		+ (Vup * Bridge.Z);
@@ -1001,31 +1004,31 @@ CameraManager::Docking(double seconds)
 	// --- Camera position (from flight deck) ---
 	FVector Cpos = dock->CamLoc();
 
-	// Phase 15: the authored launch camera can lie inside Orion's enlarged
-	// Unreal hull. For a staged aircraft ONLY, position the presentation
-	// camera outside the carrier, looking back at the fighter. Do not move
-	// the simulated aircraft, the deck spot, or any legacy .def coordinate.
-	// Other carriers, recovery decks and post-launch cameras are unchanged.
-	if (flight_phase < EOPSMode::LOCKED && dock->IsLaunchDeck())
-	{
-		const Ship* Carrier = dock->GetCarrier();
-		const ShipDesign* CarrierDesign = Carrier ? Carrier->Design() : nullptr;
-		if (Carrier && CarrierDesign &&
-			FCStringAnsi::Stricmp(CarrierDesign->name, "Orion") == 0)
-		{
-			const FVector Right = Carrier->GetCam().vrt().GetSafeNormal();
-			const FVector Forward = Carrier->GetCam().vpn().GetSafeNormal();
-			const FVector Up = Carrier->GetCam().vup().GetSafeNormal();
-			const double Side = FVector::DotProduct(ShipLoc - Carrier->GetLocation(), Right);
-			const double SideSign = Side < 0.0 ? -1.0 : 1.0;
-
-			// Orion's logged displayed beam is ~3275 units. Position the
-			// lens beyond its side and above the launch-bay roof, with a
-			// rearward angle that leaves both the aircraft and bay visible.
-			Cpos = ShipLoc + Right * (SideSign * 2400.0)
-				- Forward * 1100.0 + Up * 1050.0;
-		}
-	}
+    // One presentation converter for both camera and fighter. The camera
+    // stays at the .def-authored deck camera point, transformed by exactly
+    // the same hull frame used by the fighter. Never invent bay offsets.
+    if (flight_phase < EOPSMode::LOCKED && dock->IsLaunchDeck())
+    {
+        const Ship* Carrier = dock->GetCarrier();
+        if (Carrier)
+        {
+            if (UWorld* World = GWorld)
+            {
+                for (TActorIterator<ACarrierActor> It(World); It; ++It)
+                {
+                    ACarrierActor* Actor = *It;
+                    if (IsValid(Actor) && Actor->GetCarrierSimulation() == Carrier)
+                    {
+                        Cpos = Actor->ConvertDeckWorldToLegacyCamera(dock->CamLoc());
+                        Cloc = Actor->ConvertDeckFighterToLegacyCamera(ship);
+                        const FVector FocusOffset = (Vrt * Bridge.X) + (Vpn * Bridge.Y) + (Vup * Bridge.Z);
+                        Cloc += FocusOffset;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 	// preflight:
 	if (flight_phase < EOPSMode::LOCKED) {

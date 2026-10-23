@@ -304,6 +304,13 @@ public:
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
     TObjectPtr<USceneComponent> WeaponHardpointRoot;
 
+    /** Inherited native DEF-authored point components; one per authored entry. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Authored Points")
+    TArray<TObjectPtr<USceneComponent>> AuthoredWeaponPointComponents;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Authored Points")
+    TArray<TObjectPtr<USceneComponent>> AuthoredTurretPointComponents;
+
     UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Turrets")
     TArray<TObjectPtr<USceneComponent>> NativeTurretMounts;
 
@@ -609,6 +616,11 @@ protected:
      * Internal helpers
      */
 
+    /** Base ShipActor creates and owns native authored hardpoint/turret components. */
+    USceneComponent* CreateNativeWeaponPoint(const FName& Name);
+    USceneComponent* CreateNativeTurretPoint(const FName& Name);
+    void SyncNativeAuthoredPoints();
+
     void UpdateDerivedPointsFromHull();
     void UpdateNavLights(float DeltaTime);
 
@@ -678,7 +690,6 @@ private:
 
 private:
     bool bRuntimeVisualInitialized = false;
-    double OrionDeckVisualLateral = 0.0; // UE-only staged fighter presentation adjustment
     Ship* RuntimeShip = nullptr;
 
     protected:
