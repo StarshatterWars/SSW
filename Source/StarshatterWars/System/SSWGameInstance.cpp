@@ -81,10 +81,7 @@ void USSWGameInstance::Print(const FString& A, const FString& B)
 
 	UE_LOG(LogTemp, Log, TEXT("%s"), *Msg);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, Msg);
-	}
+	// Startup/progress messages remain in UE_LOG only; no in-game overlay.
 }
 
 

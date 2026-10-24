@@ -1138,121 +1138,154 @@ Campaign::LoadMissionList(DataLoader* loader)
 void
 Campaign::LoadCustomMissions(DataLoader* loader)
 {
-    bool       ok = true;
+    if (!loader) {
+        UE_LOG(LogCampaign, Error, TEXT("Campaign::LoadCustomMissions: DataLoader is null"));
+        return;
+    }
+
+    bool ok = true;
     List<Text> files;
 
     loader->UseFileSystem(true);
     loader->ListFiles("*.*", files);
 
     for (int i = 0; i < files.size(); i++) {
+        if (!files[i])
+            continue;
+
         Text file = *files[i];
         file.setSensitive(false);
 
-        if (file.contains(".def")) {
-            BYTE* block = 0;
-            const char* SourceFilename = file.data();
+        if (!file.contains(".def"))
+            continue;
 
-            loader->UseFileSystem(true);
-            loader->LoadBuffer(SourceFilename, block, true);
-            loader->UseFileSystem(Starshatter::UseFileSystem());
+        BYTE* block = nullptr;
+        const char* SourceFilename = file.data();
+        if (!SourceFilename || !*SourceFilename)
+            continue;
 
-            if (strstr((const char*)block, "MISSION") == (const char*)block) {
-                Text  mname;
-                Text  desc;
-                Text  system = "Unknown";
-                Text  region = "Unknown";
-                int   start = 0;
-                int   type = 0;
-                int   msn_id = 0;
+        loader->UseFileSystem(true);
+        loader->LoadBuffer(SourceFilename, block, true);
+        loader->UseFileSystem(Starshatter::UseFileSystem());
 
-                Parser parser(new BlockReader((const char*)block));
-                Term* term = parser.ParseTerm();
+        // LoadBuffer can leave block null for a missing, unreadable or empty file.
+        // Never pass that pointer to strstr/BlockReader.
+        if (!block) {
+            UE_LOG(LogCampaign, Warning,
+                TEXT("Campaign::LoadCustomMissions: skipping unreadable or empty file '%s'"),
+                ANSI_TO_TCHAR(SourceFilename));
+            continue;
+        }
 
-                if (!term) {
-                    UE_LOG(LogCampaign, Warning, TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(SourceFilename));
-                    loader->ReleaseBuffer(block);
-                    continue;
-                }
-                else {
-                    TermText* file_type = term->isText();
-                    if (!file_type || file_type->value() != "MISSION") {
-                        UE_LOG(LogCampaign, Warning, TEXT("ERROR: invalid mission file '%s'"), ANSI_TO_TCHAR(SourceFilename));
-                        delete term;
-                        loader->ReleaseBuffer(block);
-                        continue;
-                    }
-                }
-
-                do {
-                    delete term; term = 0;
-                    term = parser.ParseTerm();
-
-                    if (term) {
-                        TermDef* def = term->isDef();
-                        if (!def) continue;
-
-                        if (def->name()->value() == "name") {
-                            GetDefText(mname, def, SourceFilename);
-                            mname = Game::GetText(mname);
-                        }
-                        else if (def->name()->value() == "type") {
-                            char typestr[64];
-                            GetDefText(typestr, def, SourceFilename);
-                            type = Mission::TypeFromName(typestr);
-                        }
-                        else if (def->name()->value() == "id") {
-                            GetDefNumber(msn_id, def, SourceFilename);
-                        }
-                        else if (def->name()->value() == "desc") {
-                            GetDefText(desc, def, SourceFilename);
-                            if (desc.length() > 0 && desc.length() < 32)
-                                desc = Game::GetText(desc);
-                        }
-                        else if (def->name()->value() == "system") {
-                            GetDefText(system, def, SourceFilename);
-                        }
-                        else if (def->name()->value() == "region") {
-                            GetDefText(region, def, SourceFilename);
-                        }
-                        else if (def->name()->value() == "start") {
-                            GetDefTime(start, def, SourceFilename);
-                        }
-                    }
-                } while (term);
-
-                loader->ReleaseBuffer(block);
-
-                // Legacy ID inference:
-                if (strstr(SourceFilename, "custom") == SourceFilename) {
-                    sscanf_s(SourceFilename + 6, "%d", &msn_id);
-                    if (msn_id <= i) msn_id = i + 1;
-                }
-                else if (msn_id < 1) {
-                    msn_id = i + 1;
-                }
-
-                MissionInfo* info = new MissionInfo;
-                if (info) {
-                    info->id = msn_id;
-                    info->name = mname;
-                    info->type = type;
-                    info->description = desc;
-                    info->system = system;
-                    info->region = region;
-                    info->script = SourceFilename;
-                    info->start = start;
-                    info->mission = 0;
-
-                    info->script.setSensitive(false);
-
-                    missions.append(info);
-                }
-                else {
-                    ok = false;
-                }
-            }
-
+        // Only the MISSION file type is a custom mission; other .def files
+        // in the same directory must not be parsed as missions.
+        if (FCStringAnsi::Strncmp(reinterpret_cast<const char*>(block), "MISSION", 7) != 0) {
             loader->ReleaseBuffer(block);
+            continue;
+        }
+
+        Text mname;
+        Text desc;
+        Text system = "Unknown";
+        Text region = "Unknown";
+        int start = 0;
+        int type = 0;
+        int msn_id = 0;
+        bool bValidMission = false;
+
+        // Keep the underlying buffer alive for the entire parser lifetime.
+        {
+            Parser parser(new BlockReader(reinterpret_cast<const char*>(block)));
+            Term* term = parser.ParseTerm();
+
+            if (!term) {
+                UE_LOG(LogCampaign, Warning,
+                    TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(SourceFilename));
+            }
+            else {
+                TermText* file_type = term->isText();
+                if (!file_type || file_type->value() != "MISSION") {
+                    UE_LOG(LogCampaign, Warning,
+                        TEXT("ERROR: invalid mission file '%s'"), ANSI_TO_TCHAR(SourceFilename));
+                }
+                else {
+                    bValidMission = true;
+                    do {
+                        delete term;
+                        term = parser.ParseTerm();
+
+                        if (term) {
+                            TermDef* def = term->isDef();
+                            if (!def)
+                                continue;
+
+                            if (def->name()->value() == "name") {
+                                GetDefText(mname, def, SourceFilename);
+                                mname = Game::GetText(mname);
+                            }
+                            else if (def->name()->value() == "type") {
+                                char typestr[64] = {};
+                                GetDefText(typestr, def, SourceFilename);
+                                type = Mission::TypeFromName(typestr);
+                            }
+                            else if (def->name()->value() == "id") {
+                                GetDefNumber(msn_id, def, SourceFilename);
+                            }
+                            else if (def->name()->value() == "desc") {
+                                GetDefText(desc, def, SourceFilename);
+                                if (desc.length() > 0 && desc.length() < 32)
+                                    desc = Game::GetText(desc);
+                            }
+                            else if (def->name()->value() == "system") {
+                                GetDefText(system, def, SourceFilename);
+                            }
+                            else if (def->name()->value() == "region") {
+                                GetDefText(region, def, SourceFilename);
+                            }
+                            else if (def->name()->value() == "start") {
+                                GetDefTime(start, def, SourceFilename);
+                            }
+                        }
+                    } while (term);
+                }
+                delete term;
+            }
+        }
+
+        // Exactly one release per successful LoadBuffer; never release inside
+        // the parser and again at the bottom of this loop.
+        loader->ReleaseBuffer(block);
+        block = nullptr;
+
+        if (!bValidMission)
+            continue;
+
+        // Preserve the legacy inferred custom mission IDs.
+        if (FCStringAnsi::Strncmp(SourceFilename, "custom", 6) == 0) {
+            sscanf_s(SourceFilename + 6, "%d", &msn_id);
+            if (msn_id <= i)
+                msn_id = i + 1;
+        }
+        else if (msn_id < 1) {
+            msn_id = i + 1;
+        }
+
+        MissionInfo* info = new MissionInfo;
+        if (info) {
+            info->id = msn_id;
+            info->name = mname;
+            info->type = type;
+            info->description = desc;
+            info->system = system;
+            info->region = region;
+            info->script = SourceFilename;
+            info->start = start;
+            info->mission = 0;
+            info->script.setSensitive(false);
+            missions.append(info);
+        }
+        else {
+            ok = false;
         }
     }
 
