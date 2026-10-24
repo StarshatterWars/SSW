@@ -16,8 +16,9 @@
     campaign dropdown list.
 */
 
-#include "AudioRouting.h"
+
 #include "CampaignSelectDlg.h"
+#include "AudioRouting.h"
 
 #include "MissionUIStyle.h"
 

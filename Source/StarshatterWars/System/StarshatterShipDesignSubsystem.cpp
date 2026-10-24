@@ -1,3 +1,4 @@
+
 /*=============================================================================
 	Project Starshatter Wars
 	Fractal Dev Studios
@@ -53,6 +54,7 @@
 =============================================================================*/
 
 #include "StarshatterShipDesignSubsystem.h"
+#include "NativeSkinDefinition.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
@@ -4727,57 +4729,6 @@ void UStarshatterShipDesignSubsystem::ParseMap(TermStruct* Val, const char* Fn)
 
 // +--------------------------------------------------------------------+
 
-static FSkinMtlCell ParseSkinMtlCell(TermStruct* Val, const char* Fn)
-{
-	FSkinMtlCell Out;
-
-	if (!Val || !Fn || !*Fn)
-	{
-		return Out;
-	}
-
-	const int32 ElemCount = (int32)Val->elements()->size();
-	for (int32 ElemIdx = 0; ElemIdx < ElemCount; ++ElemIdx)
-	{
-		TermDef* Def = Val->elements()->at(ElemIdx)->isDef();
-		if (!Def)
-			continue;
-
-		const Text& Key = Def->name()->value();
-
-		if (Key == "index" || Key == "cell" || Key == "id")
-		{
-			GetDefNumber(Out.CellIndex, Def, Fn);
-		}
-		else if (Key == "material" || Key == "mtl" || Key == "name")
-		{
-			Text Buf;
-			if (GetDefText(Buf, Def, Fn))
-			{
-				Out.MaterialName = FString(Buf);
-			}
-		}
-		else if (Key == "texture" || Key == "bitmap" || Key == "diffuse" || Key == "map")
-		{
-			Text Buf;
-			if (GetDefText(Buf, Def, Fn))
-			{
-				Out.TextureName = FString(Buf);
-			}
-		}
-		else if (Key == "aux" || Key == "normal" || Key == "spec" || Key == "specular")
-		{
-			Text Buf;
-			if (GetDefText(Buf, Def, Fn))
-			{
-				Out.AuxTextureName = FString(Buf);
-			}
-		}
-	}
-
-	return Out;
-}
-
 void UStarshatterShipDesignSubsystem::ParseSkin(TermStruct* Val, const char* Fn)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseSkin()"));
@@ -4819,7 +4770,7 @@ void UStarshatterShipDesignSubsystem::ParseSkin(TermStruct* Val, const char* Fn)
 				continue;
 			}
 
-			FSkinMtlCell Cell = ParseSkinMtlCell(Def->term()->isStruct(), Fn);
+			FSkinMtlCell Cell = NativeSkinDefinition::ParseMaterial(Def->term()->isStruct(), Fn);
 			NewSkin.Cells.Add(Cell);
 		}
 	}

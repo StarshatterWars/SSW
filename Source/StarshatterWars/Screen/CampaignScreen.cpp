@@ -3,9 +3,9 @@
 //     FILE:         CampaignScreen.cpp
 //     AUTHOR:       Carlos Bott */
 
-#include "AudioRouting.h"
-#include "CampaignScreen.h"
 
+#include "CampaignScreen.h"
+#include "AudioRouting.h"
 #include "TimerSubsystem.h"
 #include "SSWGameInstance.h"
 #include "StarshatterPlayerSubsystem.h"

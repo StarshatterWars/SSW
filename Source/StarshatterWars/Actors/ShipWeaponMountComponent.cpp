@@ -1,4 +1,5 @@
 #include "ShipWeaponMountComponent.h"
+#include "ShipStorePresentation.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
 #include "WeaponPresentationFrame.h"
@@ -15,6 +16,7 @@ void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeapo
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;
     RuntimeWeaponType=InWeaponType;
+    UpdateRuntimeStore();
 }
 
 void UShipWeaponMountComponent::ClearRuntimeWeapon()
@@ -24,6 +26,7 @@ void UShipWeaponMountComponent::ClearRuntimeWeapon()
     RuntimeWeapon=nullptr;
     RuntimeWeaponName=NAME_None;
     RuntimeWeaponType=NAME_None;
+    UpdateRuntimeStore();
 }
 
 int32 UShipWeaponMountComponent::GetMuzzleCount() const
@@ -65,4 +68,40 @@ void UShipWeaponMountComponent::UpdateRuntimeAim(const Camera& SimShip, const FQ
     const FQuat Aim = WeaponPresentationFrame::Display(RuntimeWeapon->GetTurretAimCamera(), SimShip, DisplayShip);
     const FQuat Parent = GetAttachParent() ? GetAttachParent()->GetComponentQuat() : FQuat::Identity;
     SetRelativeRotation(Parent.Inverse()*Aim);
+}
+
+int32 UShipWeaponMountComponent::GetRemainingRounds() const
+{
+    return RuntimeWeapon ? FMath::Max(0, RuntimeWeapon->Ammo()) : 0;
+}
+int32 UShipWeaponMountComponent::GetStoreCapacity() const
+{
+    if (!RuntimeWeapon || !RuntimeWeapon->Design()) return 0;
+    return RuntimeWeapon->Design()->nstores>0 ? RuntimeWeapon->GetTurretBarrelCount() :
+        FMath::Max(0,RuntimeWeapon->Design()->ammo*RuntimeWeapon->GetTurretBarrelCount());
+}
+bool UShipWeaponMountComponent::IsStoreAvailable() const
+{
+    return RuntimeWeapon && RuntimeWeapon->GetAvailability()>1.0;
+}
+void UShipWeaponMountComponent::UpdateRuntimeStore()
+{
+    if (!bLoadoutHardpoint) return;
+    // Primary guns retain their hull presentation even with an empty magazine.
+    if (RuntimeWeapon && RuntimeWeapon->Design() && RuntimeWeapon->Design()->primary)
+    {
+        if (AActor* Gun = GetChildActor()) Gun->SetActorHiddenInGame(false);
+        return;
+    }
+    const int32 Rounds = GetRemainingRounds();
+    const int32 Capacity = GetStoreCapacity();
+    const bool Available = IsStoreAvailable();
+    AActor* Child = GetChildActor();
+    if (Child) Child->SetActorHiddenInGame(Rounds<=0 || !Available);
+    if (PresentedRounds!=Rounds || PresentedCapacity!=Capacity || bPresentedAvailable!=Available || PresentedStore.Get()!=Child)
+    {
+        PresentedRounds=Rounds; PresentedCapacity=Capacity; bPresentedAvailable=Available; PresentedStore=Child;
+        if (Child && Child->GetClass()->ImplementsInterface(UShipStorePresentation::StaticClass()))
+            IShipStorePresentation::Execute_UpdateStorePresentation(Child,Rounds,Capacity,Available);
+    }
 }

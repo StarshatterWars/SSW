@@ -1582,6 +1582,21 @@ struct FSkinMtlCell
 	// Optional: additional map (normal/spec/etc) if present in your .def:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString AuxTextureName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FString SpecularTextureName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FString BumpTextureName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FString EmissiveTextureName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor AmbientColor = FLinearColor::White;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor DiffuseColor = FLinearColor::White;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor SpecularColor = FLinearColor::White;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) FLinearColor EmissiveColor = FLinearColor::White;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) float SpecularPower = 1;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) float BumpScale = 1;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasAmbientColor = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasDiffuseColor = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasSpecularColor = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasEmissiveColor = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasSpecularPower = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHasBumpScale = false;
 };
 
 USTRUCT(BlueprintType)

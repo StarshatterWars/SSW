@@ -15,6 +15,8 @@
 */
 
 #include "Skin.h"
+#include "GameStructs_System.h"
+#include "Polygon.h"
 #include "Solid.h"
 #include "SimModel.h"
 
@@ -42,6 +44,7 @@ Skin::Skin(const char* n)
 Skin::~Skin()
 {
     cells.destroy();
+    OwnedMaterials.destroy();
 }
 
 // +--------------------------------------------------------------------+
@@ -183,3 +186,8 @@ SkinCell::SetOrig(const Material* mtl)
 {
     orig = mtl;
 }
+
+void Skin::AddOwnedMaterial(Material* Mtl) { if(Mtl) {OwnedMaterials.append(Mtl);AddMaterial(Mtl);} }
+const SkinCell* Skin::GetCell(int32 Index) const { return Index>=0 && Index<cells.size()?cells[Index]:nullptr; }
+void Skin::SetNativeDefinition(const FShipSkin& Definition) { NativeDefinition=MakeUnique<FShipSkin>(Definition); }
+const FShipSkin* Skin::GetNativeDefinition() const { return NativeDefinition.Get(); }

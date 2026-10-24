@@ -182,8 +182,8 @@ protected:
     // Unreal GPU backing:
     UTexture2D* Texture = nullptr;
     UTextureRenderTarget2D* RenderTarget = nullptr;
-    TStrongObjectPtr<UTexture2D> TextureGuard;
-    TStrongObjectPtr<UTextureRenderTarget2D> RenderTargetGuard;
+    TStrongObjectPtr<UObject> TextureGuard;
+    TStrongObjectPtr<UObject> RenderTargetGuard;
 
     // Metadata:
     DWORD       last_modified = 0;

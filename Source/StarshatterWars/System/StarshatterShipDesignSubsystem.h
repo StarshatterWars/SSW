@@ -105,6 +105,7 @@ public:
 
 
 private:
+    friend class FNativeHullSkinTest;
 	// ---------- current-ship scratch ----------
 	void BeginDesignParse(const char* Fn);
 	void FinalizeDesignParse();

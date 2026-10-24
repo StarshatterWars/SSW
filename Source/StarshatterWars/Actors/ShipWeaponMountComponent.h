@@ -28,6 +28,16 @@ public:
 
     void BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType);
     void ClearRuntimeWeapon();
+    void UpdateRuntimeStore();
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Stores") int32 GetRemainingRounds() const;
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Stores") int32 GetStoreCapacity() const;
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Stores") bool IsStoreAvailable() const;
+private:
+    int32 PresentedRounds = INDEX_NONE;
+    int32 PresentedCapacity = INDEX_NONE;
+    bool bPresentedAvailable = false;
+    TWeakObjectPtr<AActor> PresentedStore;
+public:
     void UpdateRuntimeAim(const Camera& SimShip, const FQuat& DisplayShip);
 private:
     bool bRuntimeAimApplied = false;

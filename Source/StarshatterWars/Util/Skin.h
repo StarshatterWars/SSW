@@ -17,6 +17,8 @@
 #pragma once
 
 #include "List.h"
+#include "CoreMinimal.h"
+struct FShipSkin;
 
 // Forward declarations (keep header light)
 class SimModel;
@@ -49,6 +51,14 @@ public:
     void              SetName(const char* n);
     void              SetPath(const char* n);
     void              AddMaterial(const Material* mtl);
+    void              AddOwnedMaterial(Material* mtl);
+    const SkinCell*   GetCell(int32 Index) const;
+    void              SetNativeDefinition(const FShipSkin& Definition);
+    const FShipSkin*  GetNativeDefinition() const;
+private:
+    TUniquePtr<FShipSkin> NativeDefinition;
+    List<Material> OwnedMaterials;
+public:
 
 protected:
     char              name[NAMELEN];

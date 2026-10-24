@@ -2,9 +2,10 @@
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
 
-#include "AudioRouting.h"
+
 #include "CmdIntelDlg.h"
 
+#include "AudioRouting.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/ListView.h"

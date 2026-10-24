@@ -1238,3 +1238,9 @@ static int FindBestTexSize(int n, int max_size)
 
     return best;
 }
+
+void Bitmap::SetFilename(const char* Name)
+{
+    FCStringAnsi::Strncpy(filename, Name ? Name : "", UE_ARRAY_COUNT(filename));
+}
+

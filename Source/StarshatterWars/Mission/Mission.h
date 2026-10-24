@@ -156,7 +156,7 @@ public:
     Text              ErrorMessage() const { return errmsg; }
     void              AddError(Text err);
 
-    Text              Serialize(const char* player_elem = 0, int player_index = 0);
+    Text              Serialize(const char* player_elem = 0, int player_index = 0, bool use_simulation = true);
 
     template <typename TMissionData>
     bool LoadMissionCommon(const TMissionData& InData, bool bFullReset);

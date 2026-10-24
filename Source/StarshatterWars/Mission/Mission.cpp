@@ -267,8 +267,12 @@ bool Mission::LoadMissionCommon(
 		}
 		else
 		{
-			Elem->SetShipDesign(
-				DesignRow);
+            Elem->SetShipDesign(DesignRow);
+            if (!SrcElem.SkinName.IsEmpty())
+            {
+                const ShipDesign* Legacy=ShipDesignRegistry::FindLegacy(SrcElem.Design);
+                Elem->SetSkin(Legacy?Legacy->FindSkin(TCHAR_TO_ANSI(*SrcElem.SkinName)):nullptr);
+            }
 
 			UE_LOG(LogTemp, Warning,
 				TEXT("[Mission::LoadMissionCommon] SetShipDesign Element='%s' Design='%s' Model='%s'"),
@@ -483,7 +487,7 @@ bool Mission::LoadMissionCommon(
 }
 
 Mission::Mission()
-	: id(0)
+    : Mission(0, nullptr, nullptr)
 {
 }
 
@@ -496,6 +500,9 @@ Mission::Mission(int identity, const char* fname, const char* pname)
 	complete(false),
 	star_system(0),
 	start(33 * 3600),
+    end(0),
+    DisplayType(),
+    bTemplate(false),
 	stardate(0),
 	target(0),
 	ward(0),
@@ -877,7 +884,7 @@ Mission::Save()
 		return ok;
 	}
 
-	Text content = Serialize();
+	Text content = Serialize(nullptr, 0, false); // Save the edited definition even if a menu cutscene simulation is active.
 
 	if (content.length() < 8) {
 		AddError("Mission error: no serial");
@@ -902,11 +909,10 @@ Mission::Save()
 
 	FILE* f = nullptr;
 	fopen_s(&f, fname, "w");
-	if (f) {
-		fwrite(content.data(), content.length(), 1, f);
-		fclose(f);
-	}
-
+	if (!f) { AddError("Mission error: cannot open output file"); return false; }
+	const bool written = fwrite(content.data(), content.length(), 1, f) == 1;
+	const bool closed = fclose(f) == 0;
+	if (!written || !closed) { AddError("Mission error: cannot write output file"); return false; }
 	return ok;
 }
 
@@ -1160,9 +1166,8 @@ Mission::ParseElement(TermStruct* val)
 				else if (pdef->term()->isText()) {
 					GetDefText(skin_name, pdef, filename);
 
-					// Skin lookup is still legacy-only. Until skins are migrated to FShipDesign,
-					// leave skin unset here.
-					element->skin = nullptr;
+                    const ShipDesign* Legacy=ShipDesignRegistry::FindLegacy(design.data());
+                    element->SetSkin(Legacy?Legacy->FindSkin(skin_name.data()):nullptr);
 				}
 
 				else if (pdef->term()->isStruct()) {
@@ -1495,8 +1500,8 @@ Mission::ParseShip(TermStruct* Val, MissionElement* Element)
 				else if (Def->term()->isText()) {
 					GetDefText(SkinName, Def, filename);
 
-					// Temporary: skins not yet migrated to FShipDesign
-					//MissionShipObj->GetSkin() = nullptr;
+                    const ShipDesign* Legacy=ShipDesignRegistry::FindLegacy(Element->GetShipDesign()->ShipName);
+                    MissionShipObj->SetSkin(Legacy?Legacy->FindSkin(SkinName.data()):nullptr);
 				}
 			}
 
@@ -1910,7 +1915,7 @@ const char* Mission::GetRoleName(int32 role)
 // +--------------------------------------------------------------------+
 
 Text
-Mission::Serialize(const char* player_elem, int player_index)
+Mission::Serialize(const char* player_elem, int player_index, bool use_simulation)
 {
 	Text s = "MISSION\n\nname:   \"";
 	s += SafeString(GetName());
@@ -1942,7 +1947,7 @@ Mission::Serialize(const char* player_elem, int player_index)
 	ListIter<MissionElement> iter = GetElements();
 
 	Sim* sim = Sim::GetSim();
-	if (sim && sim->GetElements().size() > 0)
+	if (use_simulation && sim && sim->GetElements().size() > 0)
 		iter = sim->GetMissionElements();
 
 	s += "\"\n";

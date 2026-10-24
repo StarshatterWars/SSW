@@ -25,6 +25,10 @@ class UCmpnScreen;
 class UMissionBriefingDlg;
 
 class UMissionEditorDlg;
+class Mission;
+class MissionInfo;
+class MissionElement;
+class MissionEvent;
 class UMissionElementDlg;
 class UMissionEventDlg;
 class UMissionEditorNavDlg;
@@ -74,6 +78,7 @@ public:
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg();
     void ShowMissionEditorDlg();
+    void EditMission(Mission* Model, MissionInfo* Info);
 
     // Legacy alias route:
     void ShowOperationsDlg();
@@ -87,6 +92,9 @@ public:
     void ShowMissionDlg();
 
     void ShowMsnElemDlg();
+    void EditMissionElement(Mission* Model, MissionElement* Element);
+    void EditMissionEvent(Mission* Model, MissionEvent* Event);
+    void EditMissionMap(Mission* Model, MissionInfo* Info);
     void HideMsnElemDlg();
 
     void ShowMissionEventDlg();

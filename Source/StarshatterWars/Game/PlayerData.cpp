@@ -13,6 +13,7 @@
 
 
 #include "PlayerData.h"
+#include "AwardInfoRegistry.h"
 //#include "NetLobbyServer.h"
 //#include "NetLayer.h"
 #include "Ship.h"
@@ -50,7 +51,7 @@ PlayerData* PlayerData::GetCurrentPlayer()
 
 int PlayerData::RankFromName(const char* name)
 {
-	return 0;
+    return UAwardInfoRegistry::RankFromName(name ? ANSI_TO_TCHAR(name) : TEXT(""));
 }
 
 void PlayerData::SetSquadron(const char* s)

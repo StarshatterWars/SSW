@@ -369,6 +369,7 @@ void UMissionEditorNavDlg::ShowTab(int32 TabIndex)
     // Legacy behavior: if leaving nav tab, show the main mission editor dlg tab:
     if (TabIndex != 2 && Manager)
     {
+        ScrapeForm();
         UMissionEditorDlg* Dlg = Manager->GetMsnEditDlg();
         if (Dlg)
             Dlg->ShowTab(TabIndex);
@@ -409,48 +410,12 @@ void UMissionEditorNavDlg::OnSystemSelect(FString SelectedItem, ESelectInfo::Typ
 
 void UMissionEditorNavDlg::OnCommitClicked()
 {
-    if (mission)
-    {
-        ScrapeForm();
-
-        if (mission_info)
-            mission_info->name = mission->GetName();
-
-        mission->Save();
-    }
-
-    if (Manager)
-        Manager->ShowMissionSelectDlg();
+    ScrapeForm();
+    if (Manager && Manager->GetMsnEditDlg()) Manager->GetMsnEditDlg()->CommitEditing(false);
 }
-
 void UMissionEditorNavDlg::OnCancelClicked()
 {
-    if (mission)
-    {
-        Campaign* ActiveCampaign = Campaign::GetCampaign();
-
-        if (ActiveCampaign)
-        {
-            const FS_CampaignMission* MissionData =
-                ActiveCampaign->FindCampaignMissionById(mission->GetIdentity()); // or GetID()
-
-            if (MissionData)
-            {
-                mission->LoadFromCampaignMissionData(*MissionData);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("OnCancelClicked: No campaign data found for mission %d"),
-                    mission->GetIdentity());
-            }
-        }
-    }
-
-    if (Manager)
-    {
-        Manager->ShowMissionSelectDlg();
-    }
+    if (Manager && Manager->GetMsnEditDlg()) Manager->GetMsnEditDlg()->CancelEditing();
 }
 
 void UMissionEditorNavDlg::OnTabClicked_Sit()

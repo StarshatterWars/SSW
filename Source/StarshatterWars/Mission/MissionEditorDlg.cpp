@@ -19,6 +19,11 @@
 */
 
 #include "MissionEditorDlg.h"
+#include "MissionElement.h"
+#include "MissionDebriefDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/VerticalBox.h"
+#include "UObject/UnrealType.h"
 
 // UMG
 #include "Components/Button.h"
@@ -54,12 +59,23 @@ void UMissionEditorDlg::InitializeMissionEditor(UMenuScreen* InManager)
 void UMissionEditorDlg::SetMission(Mission* InMission)
 {
     mission = InMission;
+    SelectedElement = SelectedEvent = INDEX_NONE;
+    OriginalMission = mission ? ANSI_TO_TCHAR(mission->Serialize(nullptr, 0, false).data()) : FString();
+    bEditing = mission != nullptr;
     current_tab = 0;
 }
 
 void UMissionEditorDlg::SetMissionInfo(MissionInfo* InMissionInfo)
 {
     mission_info = InMissionInfo;
+    if (mission_info)
+    {
+        OriginalName = ANSI_TO_TCHAR(mission_info->name.data());
+        OriginalDescription = ANSI_TO_TCHAR(mission_info->description.data());
+        OriginalSystem = ANSI_TO_TCHAR(mission_info->system.data());
+        OriginalRegion = ANSI_TO_TCHAR(mission_info->region.data());
+        OriginalType = mission_info->type;
+    }
     current_tab = 0;
 }
 
@@ -168,6 +184,42 @@ void UMissionEditorDlg::NativeConstruct()
         CmbSystem->OnSelectionChanged.AddDynamic(this, &UMissionEditorDlg::OnSystemSelectChanged);
     }
 
+    auto BindPackageList = [this](UListView*& List, const TCHAR* Name)
+    {
+        if (!List && WidgetTree)
+        {
+            if (UVerticalBox* Box = EnsureAutoVerticalBox())
+            {
+                auto* NativeList = WidgetTree->ConstructWidget<UDebriefListView>(UDebriefListView::StaticClass(), Name);
+                NativeList->SetEntry(UDebriefRowWidget::StaticClass());
+                Box->AddChildToVerticalBox(NativeList);
+                List = NativeList;
+            }
+        }
+        if (List)
+        {
+            // FORM and BP list widgets share the native row data contract.
+            if (FClassProperty* Entry = FindFProperty<FClassProperty>(UListViewBase::StaticClass(), TEXT("EntryWidgetClass")))
+                Entry->SetObjectPropertyValue_InContainer(List, UDebriefRowWidget::StaticClass());
+            List->SetSelectionMode(ESelectionMode::Single);
+        }
+    };
+    BindPackageList(LstElem, TEXT("MissionElements"));
+    BindPackageList(LstEvent, TEXT("MissionEvents"));
+    if (LstElem)
+    {
+        LstElem->OnItemSelectionChanged().RemoveAll(this);
+        LstElem->OnItemSelectionChanged().AddWeakLambda(this, [this](UObject* Item){ ElementSelected(Item, Item != nullptr); });
+        LstElem->OnItemDoubleClicked().RemoveAll(this);
+        LstElem->OnItemDoubleClicked().AddUObject(this, &UMissionEditorDlg::ElementDoubleClicked);
+    }
+    if (LstEvent)
+    {
+        LstEvent->OnItemSelectionChanged().RemoveAll(this);
+        LstEvent->OnItemSelectionChanged().AddWeakLambda(this, [this](UObject* Item){ EventSelected(Item, Item != nullptr); });
+        LstEvent->OnItemDoubleClicked().RemoveAll(this);
+        LstEvent->OnItemDoubleClicked().AddUObject(this, &UMissionEditorDlg::EventDoubleClicked);
+    }
     Show();
 }
 
@@ -221,6 +273,7 @@ void UMissionEditorDlg::Show()
     if (!TxtName || !CmbType)
         return;
 
+    bPopulating = true;
     // Clear fields first
     TxtName->SetText(FText::GetEmpty());
 
@@ -311,6 +364,7 @@ void UMissionEditorDlg::Show()
         DrawPackages();
     }
 
+    bPopulating = false;
     ShowTab(current_tab);
 }
 
@@ -428,34 +482,72 @@ void UMissionEditorDlg::ShowTab(int32 Tab)
     if (bMap && Manager)
     {
         ScrapeForm();
-        // Manager->ShowNavDlg(); // wire to your real API
+        Manager->EditMissionMap(mission, mission_info);
     }
 }
 
 void UMissionEditorDlg::DrawPackages()
 {
-    bool elem_del = false;
-    bool elem_edit = false;
-    bool elem_inc = false;
-    bool elem_dec = false;
-
-    bool event_del = false;
-    bool event_edit = false;
-    bool event_inc = false;
-    bool event_dec = false;
-
-    // Until you wire UE ListView selection to your legacy data model, keep these disabled.
-
-    if (BtnElemDel)  BtnElemDel->SetIsEnabled(elem_del);
-    if (BtnElemEdit) BtnElemEdit->SetIsEnabled(elem_edit);
-    if (BtnElemInc)  BtnElemInc->SetIsEnabled(elem_inc);
-    if (BtnElemDec)  BtnElemDec->SetIsEnabled(elem_dec);
-
-    if (BtnEventDel)  BtnEventDel->SetIsEnabled(event_del);
-    if (BtnEventEdit) BtnEventEdit->SetIsEnabled(event_edit);
-    if (BtnEventInc)  BtnEventInc->SetIsEnabled(event_inc);
-    if (BtnEventDec)  BtnEventDec->SetIsEnabled(event_dec);
+    bPopulating = true;
+    if (LstElem) LstElem->ClearListItems();
+    if (LstEvent) LstEvent->ClearListItems();
+    if (mission)
+    {
+        auto& Elements = mission->GetElements();
+        auto& Events = mission->GetEvents();
+        SelectedElement = Elements.size() ? FMath::Clamp(SelectedElement, 0, Elements.size()-1) : INDEX_NONE;
+        SelectedEvent = Events.size() ? FMath::Clamp(SelectedEvent, 0, Events.size()-1) : INDEX_NONE;
+        if (LstElem) for (int32 I=0; I<Elements.size(); ++I)
+        {
+            auto* E = Elements[I];
+            if (E) LstElem->AddItem(UDebriefListItem::Make(this, ANSI_TO_TCHAR(E->GetName().data()),
+                FString::Printf(TEXT("x%d"), E->Count()), FString(), FString(), I));
+        }
+        if (LstEvent) for (int32 I=0; I<Events.size(); ++I)
+        {
+            auto* E = Events[I];
+            if (E) LstEvent->AddItem(UDebriefListItem::Make(this, FString::FromInt(E->EventID()),
+                ANSI_TO_TCHAR(E->EventName()), FString(), FString(), I));
+        }
+        if (LstElem && SelectedElement != INDEX_NONE) LstElem->SetSelectedIndex(SelectedElement);
+        if (LstEvent && SelectedEvent != INDEX_NONE) LstEvent->SetSelectedIndex(SelectedEvent);
+    }
+    bPopulating = false;
+    UpdateSelection();
 }
+
+void UMissionEditorDlg::UpdateSelection()
+{
+    const int32 NE = mission ? mission->GetElements().size() : 0;
+    const int32 NV = mission ? mission->GetEvents().size() : 0;
+    const bool E = SelectedElement >= 0 && SelectedElement < NE;
+    const bool V = SelectedEvent >= 0 && SelectedEvent < NV;
+    if (BtnElemDel) BtnElemDel->SetIsEnabled(E);
+    if (BtnElemEdit) BtnElemEdit->SetIsEnabled(E);
+    if (BtnElemInc) BtnElemInc->SetIsEnabled(E && SelectedElement > 0);
+    if (BtnElemDec) BtnElemDec->SetIsEnabled(E && SelectedElement < NE-1);
+    if (BtnEventDel) BtnEventDel->SetIsEnabled(V);
+    if (BtnEventEdit) BtnEventEdit->SetIsEnabled(V);
+    if (BtnEventInc) BtnEventInc->SetIsEnabled(V && SelectedEvent > 0);
+    if (BtnEventDec) BtnEventDec->SetIsEnabled(V && SelectedEvent < NV-1);
+}
+
+void UMissionEditorDlg::ElementSelected(UObject* Item, bool bSelected)
+{
+    if (bPopulating) return;
+    auto* Row = Cast<UDebriefListItem>(Item);
+    SelectedElement = bSelected && Row ? Row->DataIndex : INDEX_NONE;
+    UpdateSelection();
+}
+void UMissionEditorDlg::EventSelected(UObject* Item, bool bSelected)
+{
+    if (bPopulating) return;
+    auto* Row = Cast<UDebriefListItem>(Item);
+    SelectedEvent = bSelected && Row ? Row->DataIndex : INDEX_NONE;
+    UpdateSelection();
+}
+void UMissionEditorDlg::ElementDoubleClicked(UObject* Item) { ElementSelected(Item, true); OnElemEditClicked(); }
+void UMissionEditorDlg::EventDoubleClicked(UObject* Item) { EventSelected(Item, true); OnEventEditClicked(); }
 
 void UMissionEditorDlg::OnTabSitClicked()
 {
@@ -474,6 +566,7 @@ void UMissionEditorDlg::OnTabMapClicked()
 
 void UMissionEditorDlg::OnSystemSelectChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
+    if (bPopulating) return;
     (void)SelectedItem;
     (void)SelectionType;
 
@@ -521,54 +614,43 @@ void UMissionEditorDlg::OnSystemSelectChanged(FString SelectedItem, ESelectInfo:
     ScrapeForm();
 }
 
-void UMissionEditorDlg::OnAcceptClicked()
+void UMissionEditorDlg::OnAcceptClicked() { CommitEditing(); }
+void UMissionEditorDlg::OnCancelClicked() { CancelEditing(); }
+
+void UMissionEditorDlg::CommitEditing(bool bScrape)
 {
     if (mission)
     {
-        ScrapeForm();
-
-        if (mission_info)
-        {
-            mission_info->name = mission->GetName();
-        }
-
-        mission->Save();
+        if (bScrape) ScrapeForm();
+        if (!mission->Save()) return;
+        if (mission_info) mission_info->name = mission->GetName();
     }
-
-    if (Manager)
-    {
-        // Manager->ShowMsnSelectDlg(); // wire to your real API
-    }
+    bEditing = false;
+    if (Manager) Manager->ShowMissionSelectDlg();
 }
 
-void UMissionEditorDlg::OnCancelClicked()
+void UMissionEditorDlg::CancelEditing()
 {
-    if (mission)
+    if (mission && bEditing && !OriginalMission.IsEmpty())
     {
-        Campaign* ActiveCampaign = Campaign::GetCampaign();
-
-        if (ActiveCampaign)
+        mission->SetTarget(nullptr);
+        mission->SetWard(nullptr);
+        mission->GetElements().destroy();
+        mission->GetEvents().destroy();
+        mission->ClearSystemList();
+        mission->ParseMission(TCHAR_TO_ANSI(*OriginalMission));
+        if (mission_info)
         {
-            const FS_CampaignMission* MissionData =
-                ActiveCampaign->FindCampaignMissionById(mission->GetIdentity());
-
-            if (MissionData)
-            {
-                mission->LoadFromCampaignMissionData(*MissionData);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("OnCancelClicked: No campaign data found for mission %d"),
-                    mission->GetIdentity());
-            }
+            mission_info->name = TCHAR_TO_ANSI(*OriginalName);
+            mission_info->description = TCHAR_TO_ANSI(*OriginalDescription);
+            mission_info->system = TCHAR_TO_ANSI(*OriginalSystem);
+            mission_info->region = TCHAR_TO_ANSI(*OriginalRegion);
+            mission_info->type = OriginalType;
         }
     }
-
-    if (Manager)
-    {
-        // Manager->ShowMsnSelectDlg();
-    }
+    bEditing = false;
+    DrawPackages();
+    if (Manager) Manager->ShowMissionSelectDlg();
 }
 
 void UMissionEditorDlg::OnElemAddClicked()
@@ -599,47 +681,43 @@ void UMissionEditorDlg::OnElemAddClicked()
     }
 
     elements.append(elem);
+    SelectedElement = elements.size()-1;
 
     DrawPackages();
 
     if (Manager)
     {
-        // Manager->ShowMsnElemDlg();
+        OnElemEditClicked();
     }
 }
 
 void UMissionEditorDlg::OnElemDelClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring for UE ListView.
+    if (!mission || SelectedElement<0 || SelectedElement>=mission->GetElements().size()) return;
+    delete mission->GetElements().removeIndex(SelectedElement);
     DrawPackages();
 }
 
 void UMissionEditorDlg::OnElemEditClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring for UE ListView.
+    if (!mission || SelectedElement<0 || SelectedElement>=mission->GetElements().size()) return;
+    if (Manager) { ScrapeForm();Manager->EditMissionElement(mission, mission->GetElements()[SelectedElement]); }
+    DrawPackages();
 }
 
 void UMissionEditorDlg::OnElemIncClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedElement<0 || SelectedElement>=mission->GetElements().size()) return;
+    mission->IncreaseElemPriority(SelectedElement);
+    SelectedElement = FMath::Max(0, SelectedElement-1);
     DrawPackages();
 }
 
 void UMissionEditorDlg::OnElemDecClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedElement<0 || SelectedElement>=mission->GetElements().size()) return;
+    mission->DecreaseElemPriority(SelectedElement);
+    SelectedElement = FMath::Min(mission->GetElements().size()-1, SelectedElement+1);
     DrawPackages();
 }
 
@@ -661,46 +739,42 @@ void UMissionEditorDlg::OnEventAddClicked()
 
     event->id = id;
     events.append(event);
+    SelectedEvent = events.size()-1;
 
     DrawPackages();
 
     if (Manager)
     {
-        // Manager->ShowMsnEventDlg();
+        OnEventEditClicked();
     }
 }
 
 void UMissionEditorDlg::OnEventDelClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedEvent<0 || SelectedEvent>=mission->GetEvents().size()) return;
+    delete mission->GetEvents().removeIndex(SelectedEvent);
     DrawPackages();
 }
 
 void UMissionEditorDlg::OnEventEditClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedEvent<0 || SelectedEvent>=mission->GetEvents().size()) return;
+    if (Manager) { ScrapeForm();Manager->EditMissionEvent(mission, mission->GetEvents()[SelectedEvent]); }
+    DrawPackages();
 }
 
 void UMissionEditorDlg::OnEventIncClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedEvent<0 || SelectedEvent>=mission->GetEvents().size()) return;
+    mission->IncreaseEventPriority(SelectedEvent);
+    SelectedEvent = FMath::Max(0, SelectedEvent-1);
     DrawPackages();
 }
 
 void UMissionEditorDlg::OnEventDecClicked()
 {
-    if (!mission)
-        return;
-
-    // Requires selection wiring.
+    if (!mission || SelectedEvent<0 || SelectedEvent>=mission->GetEvents().size()) return;
+    mission->DecreaseEventPriority(SelectedEvent);
+    SelectedEvent = FMath::Min(mission->GetEvents().size()-1, SelectedEvent+1);
     DrawPackages();
 }

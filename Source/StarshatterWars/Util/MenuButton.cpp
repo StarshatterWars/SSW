@@ -11,8 +11,9 @@
     Shared menu button widget implementation.
 */
 
-#include "AudioRouting.h"
+
 #include "MenuButton.h"
+#include "AudioRouting.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"

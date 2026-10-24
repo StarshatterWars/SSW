@@ -736,6 +736,7 @@ void UMenuScreen::ShowMissionEditorDlg()
     HideAll();
     EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
     ShowDialog(MsnEditDlg, true);
+    if (MsnEditDlg) MsnEditDlg->Show();
 }
 
 void UMenuScreen::ShowMsnElemDlg()
@@ -1121,4 +1122,43 @@ void UMenuScreen::HandleCancel()
         return;
 
     Super::HandleCancel();
+}
+void UMenuScreen::EditMission(Mission* Model, MissionInfo* Info)
+{
+    EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
+    if (!MsnEditDlg || !Model) return;
+    MsnEditDlg->InitializeMissionEditor(this);
+    MsnEditDlg->SetMissionInfo(Info);
+    MsnEditDlg->SetMission(Model);
+    ShowMissionEditorDlg();
+}
+void UMenuScreen::EditMissionElement(Mission* Model, MissionElement* Element)
+{
+    EnsureDialog<UMissionElementDlg>(MsnElemDlgClass, MsnElemDlg);
+    if (!MsnElemDlg) return;
+    MsnElemDlg->InitializeDlg(this);
+    MsnElemDlg->SetMission(Model);
+    MsnElemDlg->SetMissionElement(Element);
+    ShowMsnElemDlg();
+    MsnElemDlg->ShowDlg();
+}
+void UMenuScreen::EditMissionEvent(Mission* Model, MissionEvent* Event)
+{
+    EnsureDialog<UMissionEventDlg>(MsnEventDlgClass, MsnEventDlg);
+    if (!MsnEventDlg) return;
+    MsnEventDlg->InitializeDlg(this);
+    MsnEventDlg->SetMission(Model);
+    MsnEventDlg->SetMissionEvent(Event);
+    ShowMissionEventDlg();
+    MsnEventDlg->ShowDlg();
+}
+void UMenuScreen::EditMissionMap(Mission* Model, MissionInfo* Info)
+{
+    EnsureDialog<UMissionEditorNavDlg>(MsnEditNavDlgClass, MsnEditNavDlg);
+    if (!MsnEditNavDlg) return;
+    MsnEditNavDlg->SetManager(this);
+    MsnEditNavDlg->SetMission(Model);
+    MsnEditNavDlg->SetMissionInfo(Info);
+    ShowNavDlg();
+    MsnEditNavDlg->Show();
 }

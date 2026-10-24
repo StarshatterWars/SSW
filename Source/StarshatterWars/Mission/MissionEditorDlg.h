@@ -42,9 +42,24 @@ public:
     void SetMission(Mission* InMission);
     void SetMissionInfo(MissionInfo* InMissionInfo);
     void Show();
+    void CommitEditing(bool bScrape = true);
+    void CancelEditing();
     void ShowTab(int32 Tab);
 
 protected:
+    friend class FMissionEditorActionsTest;
+    void UpdateSelection();
+    void ElementSelected(UObject* Item, bool bSelected);
+    void EventSelected(UObject* Item, bool bSelected);
+    void ElementDoubleClicked(UObject* Item);
+    void EventDoubleClicked(UObject* Item);
+    int32 SelectedElement = INDEX_NONE;
+    int32 SelectedEvent = INDEX_NONE;
+    FString OriginalMission;
+    FString OriginalName, OriginalDescription, OriginalSystem, OriginalRegion;
+    int32 OriginalType = 0;
+    bool bPopulating = false;
+    bool bEditing = false;
     // Legacy behaviors
     void ScrapeForm();
     void DrawPackages();

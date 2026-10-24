@@ -23,11 +23,16 @@
     - CancelButton is owned by UBaseScreen; this file binds to it safely.
     - This preserves your existing workflow:
         Show() -> PopulateShipDropdown() -> SelectShipByIndex()
-    - Weapon mode currently shows placeholder text (as before).
+    - Weapon mode browses the runtime weapon registry and legacy catalog.
 
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "WeaponDesign.h"
+#include "WeaponDesignRegistry.h"
+#include "Bitmap.h"
+#include "Ship.h"
+#include "Components/Image.h"
 #include "TacticalReferenceActor.h"
 #include "EngineUtils.h"
 
@@ -164,6 +169,8 @@ bool UTacRefDlg::PassesCategoryFilter(const FShipDesign& Row) const
 // -----------------------------------------------------------------------------
 void UTacRefDlg::PopulateShipDropdown()
 {
+    if (EmpireCombo) EmpireCombo->SetIsEnabled(true);
+    if (WeaponBeauty) WeaponBeauty->SetVisibility(ESlateVisibility::Collapsed);
     ShipRowNames.Reset();
 
     if (!ShipCombo)
@@ -246,7 +253,7 @@ void UTacRefDlg::HandleShipComboChanged(FString SelectedItem, ESelectInfo::Type 
     (void)SelectedItem;
     (void)SelectionType;
 
-    if (!ShipCombo)
+    if (!ShipCombo || bPopulatingReference)
         return;
 
     // Resolve index from the selected option label
@@ -255,6 +262,7 @@ void UTacRefDlg::HandleShipComboChanged(FString SelectedItem, ESelectInfo::Type 
     if (Index == INDEX_NONE)
         return;
 
+    if (Mode == 1) { SelectWeaponByIndex(Index); return; }
     SelectedShipIndex = Index;
     SelectShipByIndex(Index);
 }
@@ -428,9 +436,7 @@ void UTacRefDlg::HandleWeaponModeClicked()
 {
     Mode = 1;
 
-    if (TxtCaption)     TxtCaption->SetText(FText::FromString(TEXT("WEAPON REFERENCE")));
-    if (TxtStats)       TxtStats->SetText(FText::FromString(TEXT("WEAPON MODE NOT WIRED YET.")));
-    if (TxtDescription) TxtDescription->SetText(FText::GetEmpty());
+    PopulateWeaponDropdown();
 }
 
 // -----------------------------------------------------------------------------
@@ -518,7 +524,7 @@ void UTacRefDlg::HandleEmpireComboChanged(FString SelectedItem, ESelectInfo::Typ
     (void)SelectedItem;
     (void)SelectionType;
 
-    if (!EmpireCombo)
+    if (!EmpireCombo || Mode == 1)
         return;
 
     const int32 Index = EmpireCombo->FindOptionIndex(EmpireCombo->GetSelectedOption());
@@ -618,3 +624,63 @@ void UTacRefDlg::PopulateEmpireDropdown_AutoDetect(bool bRespectCategory, bool b
     EmpireCombo->SetSelectedIndex(SelectIndex);
 }
 
+
+void UTacRefDlg::PopulateWeaponDropdown()
+{
+    TSet<FName> Names;
+    for (int32 I=0; I<WeaponDesign::catalog.size(); ++I)
+        if (const auto* D=WeaponDesign::catalog[I]) Names.Add(FName(ANSI_TO_TCHAR(D->name.data())));
+    for (const auto& Pair : WeaponDesignRegistry::GetAll()) Names.Add(Pair.Key);
+    WeaponNames.Reset();
+    for (FName Name : Names)
+        if (const auto* D=WeaponDesign::Find(TCHAR_TO_ANSI(*Name.ToString())))
+            if (!D->secret || bShowSecretDesigns) WeaponNames.Add(Name);
+    WeaponNames.Sort([](FName A,FName B){return A.ToString()<B.ToString();});
+    bPopulatingReference = true;
+    if (EmpireCombo) EmpireCombo->SetIsEnabled(false);
+    if (ShipCombo)
+    {
+        ShipCombo->ClearOptions();
+        for (FName Name : WeaponNames) ShipCombo->AddOption(Name.ToString());
+        if (!WeaponNames.IsEmpty()) ShipCombo->SetSelectedIndex(0);
+    }
+    bPopulatingReference = false;
+    // Remove the previous ship preview: legacy weapon pages display weapon artwork.
+    if (GetWorld()) for (TActorIterator<ATacticalReferenceActor> It(GetWorld()); It; ++It)
+    { It->SetDisplayMesh(nullptr); It->ShowUnavailableMessage(false); }
+    SelectWeaponByIndex(WeaponNames.IsEmpty() ? INDEX_NONE : 0);
+}
+
+void UTacRefDlg::BuildWeaponTexts(const WeaponDesign& D,FString& Caption,FString& Stats,FString& Description)
+{
+    Caption=ANSI_TO_TCHAR(D.name.data());
+    const TCHAR* Kind=D.damage<1 ? TEXT("OTHER") : D.beam ? TEXT("BEAM") : D.primary ? TEXT("BOLT") :
+        D.drone ? TEXT("DRONE") : D.guided ? TEXT("GUIDED MISSILE") : TEXT("MISSILE");
+    TArray<FString> Targets;
+    if (D.target_type & int32(CLASSIFICATION::DROPSHIPS)) Targets.Add(TEXT("Fighters"));
+    if (D.target_type & int32(CLASSIFICATION::STARSHIPS)) Targets.Add(TEXT("Starships"));
+    if (D.target_type & int32(CLASSIFICATION::GROUND_UNITS)) Targets.Add(TEXT("Ground units"));
+    const FString Damage=D.damage>0 ? FString::Printf(TEXT("%.0f%s"),D.damage*D.charge,D.beam?TEXT("/s"):TEXT("")) : TEXT("None");
+    Stats=FString::Printf(TEXT("NAME: %s\nTYPE: %s%s\nTARGETS: %s\nSPEED: %.0f m/s\nRANGE: %.0f m\nDAMAGE: %s"),
+        *Caption,Kind,D.turret.length()>0&&D.damage>=1?TEXT(" TURRET"):TEXT(""),
+        *FString::Join(Targets,TEXT(", ")),D.speed,D.max_range,*Damage);
+    if (!D.primary && D.damage>0) Stats+=FString::Printf(TEXT("\nKILL RADIUS: %.0f m"),D.lethal_radius);
+    Description=D.description.length() ? ANSI_TO_TCHAR(D.description.data()) : TEXT("NO DESCRIPTION AVAILABLE.");
+}
+
+void UTacRefDlg::SelectWeaponByIndex(int32 Index)
+{
+    const WeaponDesign* D=WeaponNames.IsValidIndex(Index) ? WeaponDesign::Find(TCHAR_TO_ANSI(*WeaponNames[Index].ToString())) : nullptr;
+    FString Caption=TEXT("NO WEAPONS AVAILABLE"),Stats,Description;
+    if (D) BuildWeaponTexts(*D,Caption,Stats,Description);
+    if (TxtDisplayName) TxtDisplayName->SetText(FText::FromString(Caption));
+    if (TxtCaption) TxtCaption->SetText(FText::FromString(Caption));
+    if (TxtStats) TxtStats->SetText(FText::FromString(Stats));
+    if (TxtDescription) TxtDescription->SetText(FText::FromString(Description));
+    if (WeaponBeauty)
+    {
+        UTexture2D* Image=D&&D->beauty_img ? D->beauty_img->GetTexture() : nullptr;
+        WeaponBeauty->SetBrushFromTexture(Image);
+        WeaponBeauty->SetVisibility(Image?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+    }
+}

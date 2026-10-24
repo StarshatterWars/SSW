@@ -1741,6 +1741,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     RuntimeTurretBaseRestRotations.Reset();
     for (auto& Component : NativeWeaponHardpoints)
         if (auto* Mount = Cast<UShipWeaponMountComponent>(Component.Get())) Mount->ClearRuntimeWeapon();
+    RestoreHullSkin();
     RuntimeShip = InShip;
 
     // Once per bind, not per frame. Flight-axis dimensions are independent of
@@ -1917,6 +1918,7 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     }
 
     SyncCarriedMissiles();
+    SyncHullSkin();
 }
 
 
@@ -1929,8 +1931,9 @@ void AShipActor::SyncCarriedMissiles()
     for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
     {
         UShipWeaponMountComponent* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
-        if (!Mount || !Mount->bLoadoutHardpoint || !Mount->RuntimeWeapon)
-            continue;
+        if (!Mount || !Mount->bLoadoutHardpoint) continue;
+        Mount->UpdateRuntimeStore();
+        if (!Mount->RuntimeWeapon) continue;
 
         const WeaponDesign* Design = Mount->RuntimeWeapon->Design();
         if (!Design || Design->primary)

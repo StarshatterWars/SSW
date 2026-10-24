@@ -460,15 +460,7 @@ int32 PlayerCharacter::RankFromName(const char* InNameAnsi)
 
 int32 PlayerCharacter::RankFromName(const FString& InName)
 {
-    const FString N = InName.TrimStartAndEnd();
-
-    if (N.Equals(TEXT("Conscript"), ESearchCase::IgnoreCase)) return 0;
-    if (N.Equals(TEXT("Ensign"), ESearchCase::IgnoreCase)) return 1;
-    if (N.Equals(TEXT("Lieutenant"), ESearchCase::IgnoreCase)) return 2;
-    if (N.Equals(TEXT("Commander"), ESearchCase::IgnoreCase)) return 3;
-    if (N.Equals(TEXT("Captain"), ESearchCase::IgnoreCase)) return 4;
-
-    return 0;
+    return UAwardInfoRegistry::RankFromName(InName);
 }
 
 const char* PlayerCharacter::RankDescription(int32 /*RankId*/) { return ""; }

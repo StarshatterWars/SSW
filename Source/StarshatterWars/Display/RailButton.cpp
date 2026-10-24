@@ -11,8 +11,9 @@
     Dedicated stretch-style button for dialog rails.
 */
 
-#include "AudioRouting.h"
+
 #include "RailButton.h"
+#include "AudioRouting.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"

@@ -11,6 +11,9 @@
 class UChildActorComponent;
 
 class USceneComponent;
+class Skin;
+class UTexture2D;
+class UStaticMesh;
 class UStaticMeshComponent;
 class UNiagaraComponent;
 class UNiagaraSystem;
@@ -84,6 +87,23 @@ public:
     void BindRuntimeShip(Ship* InShip);
     void UpdateFromRuntimeShip(float DeltaTime);
     void SyncCarriedMissiles();
+    UFUNCTION(BlueprintCallable, Category="Ship|Skin") void RefreshHullSkin();
+    // Alias an imported native material slot to the exact legacy material name.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Skin") TMap<FName,FName> HullSkinSlotAliases;
+    // Keys are SkinName.MaterialName (for example Blue.Hull).
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Skin") TMap<FName,TObjectPtr<UMaterialInterface>> HullSkinMaterialOverrides;
+    // Legacy texture name -> imported UE texture, useful when assets were renamed.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Skin") TMap<FName,TObjectPtr<UTexture2D>> HullSkinTextureOverrides;
+private:
+    friend class FNativeHullSkinTest;
+    void SyncHullSkin();
+    void ApplyHullSkin(const Skin* Selected);
+    void RestoreHullSkin();
+    UTexture2D* ResolveHullSkinTexture(const FString& TextureName,const FString& SourceFile);
+    const Skin* PresentedHullSkin = nullptr;
+    TWeakObjectPtr<UStaticMesh> PresentedSkinMesh;
+    UPROPERTY(Transient) TMap<int32,TObjectPtr<UMaterialInterface>> OriginalHullSkinMaterials;
+public:
     void BindRuntimeWeaponsToMounts();
     bool GetRuntimeWeaponMuzzleTransform(const Weapon* InWeapon, int32 MuzzleIndex, FTransform& OutTransform) const;
 

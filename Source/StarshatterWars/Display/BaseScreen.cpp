@@ -7,8 +7,9 @@
     AUTHOR:       Carlos Bott
 */
 
-#include "AudioRouting.h"
+
 #include "BaseScreen.h"
+#include "AudioRouting.h"
 
 // Core:
 #include "Misc/Char.h"

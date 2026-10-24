@@ -23,6 +23,8 @@
 */
 
 #include "MissionSelectDlg.h"
+#include "MenuScreen.h"
+#include "MissionInfo.h"
 
 #include "MissionListItem.h"
 
@@ -531,14 +533,20 @@ void UMissionSelectDlg::OnCancelClicked()
 
 void UMissionSelectDlg::OnNewClicked()
 {
-    // Legacy editor flow referenced MenuScreen + MsnEditDlg.
-    // If you have an equivalent UE editor, call it here.
-    // This function is still a real handler (no stub call sites).
+    if (!manager || !CampaignPtr || CampaignPtr->GetCampaignId()!=Campaign::CUSTOM_MISSIONS) return;
+    MissionInfo* Info=CampaignPtr->CreateNewMission();
+    if (!Info || !Info->mission) return;
+    MissionId=Info->id;EditMission=Info->mission;
+    manager->EditMission(EditMission,Info);
 }
 
 void UMissionSelectDlg::OnEditClicked()
 {
-    // Legacy editor flow referenced MenuScreen + MsnEditDlg.
+    if (!manager || !CampaignPtr || CampaignPtr->GetCampaignId()!=Campaign::CUSTOM_MISSIONS) return;
+    MissionInfo* Info=CampaignPtr->GetMissionInfo(MissionId);
+    Mission* Model=CampaignPtr->GetMission(MissionId);
+    if (!Model) return;
+    EditMission=Model;manager->EditMission(Model,Info);
 }
 
 void UMissionSelectDlg::OnDeleteClicked()

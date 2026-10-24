@@ -224,3 +224,18 @@ void UAwardInfoRegistry::ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn)
     for (int32 Id : Ids)
         if (const FMedalInfo* Row = FindMedal(Id)) Fn(*Row);
 }
+
+int32 UAwardInfoRegistry::RankFromName(const FString& Name)
+{
+    const FString Key=Name.TrimStartAndEnd();
+    if (Key.IsEmpty() || !RankTable.IsValid()) return 0;
+    int32 Result=MAX_int32;
+    for (const auto& Pair : RankById)
+    {
+        const FRankInfo* Row=Pair.Value;
+        if (Row && (Row->Name.Equals(Key,ESearchCase::IgnoreCase) ||
+                    (!Row->Abrv.IsEmpty() && Row->Abrv.Equals(Key,ESearchCase::IgnoreCase))))
+            Result=FMath::Min(Result,Row->RankId);
+    }
+    return Result==MAX_int32 ? 0 : Result;
+}

@@ -17,6 +17,9 @@
 */
 
 #include "ShipDesignRegistry.h"
+#include "Skin.h"
+#include "NativeSkinDefinition.h"
+#include "Polygon.h"
 #include "Power.h"
 #include "Drive.h"
 #include "Thruster.h"
@@ -1237,6 +1240,44 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         Legacy->weapons.size(),
         Legacy->hardpoints.size());
 
+    TArray<FShipSkin> EffectiveSkins=Row.Skin;
+    const auto NeedsMetadata=[](const FShipSkin& Skin)
+    {
+        if(Skin.Cells.IsEmpty()) return true;
+        for(const auto& Cell:Skin.Cells)
+            if(!Cell.TextureName.IsEmpty() || !Cell.AuxTextureName.IsEmpty() || !Cell.SpecularTextureName.IsEmpty() ||
+               !Cell.BumpTextureName.IsEmpty() || !Cell.EmissiveTextureName.IsEmpty() || Cell.bHasAmbientColor ||
+               Cell.bHasDiffuseColor || Cell.bHasSpecularColor || Cell.bHasEmissiveColor || Cell.bHasSpecularPower || Cell.bHasBumpScale) return false;
+        return true;
+    };
+    bool Missing=EffectiveSkins.IsEmpty();for(const auto& Skin:EffectiveSkins) Missing|=NeedsMetadata(Skin);
+    if(Missing)
+    {
+        TArray<FShipSkin> Authored;
+        FString Source=NameStr+TEXT(".def");
+        if(!EffectiveSkins.IsEmpty() && !EffectiveSkins[0].SourceFile.IsEmpty()) Source=EffectiveSkins[0].SourceFile;
+        if(NativeSkinDefinition::LoadAuthoredSkins(Source,Authored))
+        {
+            if(EffectiveSkins.IsEmpty()) EffectiveSkins=MoveTemp(Authored);
+            else for(auto& Skin:EffectiveSkins) if(NeedsMetadata(Skin))
+                for(const auto& Original:Authored) if(Original.Name==Skin.Name) {Skin=Original;break;}
+        }
+    }
+    for (const FShipSkin& SourceSkin : EffectiveSkins)
+    {
+        auto* Converted=new Skin(TCHAR_TO_ANSI(*SourceSkin.Name));
+        Converted->SetNativeDefinition(SourceSkin);
+        for (const FSkinMtlCell& Cell : SourceSkin.Cells)
+        {
+            auto* Mtl=new Material;
+            CopyStringToAnsi(Mtl->name,UE_ARRAY_COUNT(Mtl->name),Cell.MaterialName);
+            Mtl->Ka=Cell.AmbientColor.ToFColorSRGB(); Mtl->Kd=Cell.DiffuseColor.ToFColorSRGB();
+            Mtl->Ks=Cell.SpecularColor.ToFColorSRGB(); Mtl->Ke=Cell.EmissiveColor.ToFColorSRGB();
+            Mtl->power=Cell.SpecularPower; Mtl->bump=Cell.BumpScale;
+            Converted->AddOwnedMaterial(Mtl);
+        }
+        Legacy->skins.append(Converted);
+    }
     return Legacy;
 }
 

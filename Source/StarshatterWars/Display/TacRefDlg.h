@@ -20,7 +20,7 @@
         FIGHTER   -> EShipCategory::Fighter
         TRANSPORT -> EShipCategory::Transport
         FACILITY  -> EShipCategory::Building
-    - Weapon button switches to weapon reference placeholder (existing behavior)
+    - Weapon button switches to the weapon reference browser
 
     IMPORTANT
     =========
@@ -44,6 +44,8 @@
 
 #include "TacRefDlg.generated.h"
 
+class WeaponDesign;
+class UImage;
 class UButton;
 class UTextBlock;
 class URichTextBlock;
@@ -157,6 +159,13 @@ protected:
     // ---------------------------------------------------------------------
     // Internals
     // ---------------------------------------------------------------------
+    friend class FWeaponReferenceTest;
+    TArray<FName> WeaponNames;
+    bool bPopulatingReference = false;
+    void PopulateWeaponDropdown();
+    void SelectWeaponByIndex(int32 Index);
+    static void BuildWeaponTexts(const WeaponDesign& Design, FString& Caption, FString& Stats, FString& Description);
+    UPROPERTY(meta=(BindWidgetOptional)) UImage* WeaponBeauty = nullptr;
     void PopulateShipDropdown();
     bool PassesCategoryFilter(const FShipDesign& Row) const;
 

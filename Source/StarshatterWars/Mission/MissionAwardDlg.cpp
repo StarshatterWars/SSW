@@ -15,8 +15,9 @@
     UAwardDlg implementation (Unreal port)
 */
 
-#include "AudioRouting.h"
+
 #include "MissionAwardDlg.h"
+#include "AudioRouting.h"
 
 // UMG:
 #include "Components/TextBlock.h"
