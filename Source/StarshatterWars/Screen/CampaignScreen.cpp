@@ -3,6 +3,7 @@
 //     FILE:         CampaignScreen.cpp
 //     AUTHOR:       Carlos Bott */
 
+#include "AudioRouting.h"
 #include "CampaignScreen.h"
 
 #include "TimerSubsystem.h"
@@ -515,7 +516,7 @@ void UCampaignScreen::PlayUISound(UObject* WorldContext, USoundBase* UISound)
 {
 	if (UISound)
 	{
-		UGameplayStatics::PlaySound2D(WorldContext, UISound);
+		SSWAudioRouting::Play2D(WorldContext,UISound,EStarshatterAudioChannel::Effects);
 	}
 }
 

@@ -52,6 +52,7 @@ void USound::SetListener(const Camera& /*cam*/, const FVector& InVel)
 void USound::SetFilename(const char* s)
 {
     if (!s) return;
+    AssetReference = UTF8_TO_TCHAR(s);
 
     int n = (int)FCStringAnsi::Strlen(s);
     if (n >= 60)
@@ -111,7 +112,7 @@ void USound::EnsureAssetLoaded()
     if (SoundAsset)
         return;
 
-    const FString Ref = FString(ANSI_TO_TCHAR(filename_ansi));
+    const FString Ref = AssetReference;
     SoundAsset = LoadSoundAssetFromString(Ref);
 
     if (!SoundAsset)
@@ -143,7 +144,7 @@ void USound::ApplyAttenuation()
 
     // Simple sphere attenuation:
     S.AttenuationShape = EAttenuationShape::Sphere;
-    S.AttenuationShapeExtents = FVector(FMath::Max(1.0f, max_distance), 0, 0);
+    S.AttenuationShapeExtents = FVector(FMath::Max(0.0f, min_distance), 0, 0);
 
     S.FalloffDistance = FMath::Max(0.0f, max_distance - min_distance);
     S.dBAttenuationAtMax = -60.0f;
@@ -169,24 +170,8 @@ void USound::EnsureAudioComponent()
     const bool bIs3D = (flags & LOCALIZED) || (flags & LOC_3D);
     const bool bIsUI = (flags & INTERFACE) != 0;
 
-    if (bIs3D)
-    {
-        AudioComp = UGameplayStatics::SpawnSoundAtLocation(
-            World,
-            SoundAsset,
-            location,
-            FRotator::ZeroRotator,
-            CentibelsToVolumeMultiplier(volume)
-        );
-    }
-    else
-    {
-        AudioComp = UGameplayStatics::SpawnSound2D(
-            World,
-            SoundAsset,
-            CentibelsToVolumeMultiplier(volume)
-        );
-    }
+    AudioComp = UGameplayStatics::CreateSound2D(World, SoundAsset,
+        CentibelsToVolumeMultiplier(volume), 1.f, 0.f, nullptr, false, false);
 
     if (!AudioComp)
     {
@@ -197,11 +182,22 @@ void USound::EnsureAudioComponent()
 
     AudioComp->bIsUISound = bIsUI;
 
-    const bool bLoop = (flags & LOOP) != 0;
-    AudioComp->bAutoDestroy = !bLoop;
+    AudioComp->bAutoDestroy = false;
+    AudioComp->bAllowSpatialization = bIs3D;
+    AudioComp->SetWorldLocation(location);
+    AudioComp->OnAudioFinishedNative.AddWeakLambda(this, [this](UAudioComponent*) { HandleFinished(); });
 
     if (bIs3D)
         ApplyAttenuation();
+}
+
+USound* USound::CreateFromAsset(USoundBase* Asset, const char* Name, DWORD Flags)
+{
+    if (!Asset) return nullptr;
+    USound* S=NewObject<USound>(GetTransientPackage());
+    S->SetFilename(Name); S->SoundAsset=Asset; S->flags=Flags; S->status=READY;
+    S->AddToRoot(); S->bOwnsLegacyRoot=true;
+    return S;
 }
 
 USound* USound::CreateStream(const char* InFilename)
@@ -231,7 +227,9 @@ USound* USound::CreateStream(const char* InFilename)
 
     S->status = INITIALIZING;
     S->EnsureAssetLoaded();
-    return S->IsReady() ? S : nullptr;
+    if (!S->IsReady()) return nullptr;
+    S->AddToRoot(); S->bOwnsLegacyRoot=true;
+    return S;
 }
 
 USound* USound::CreateOggStream(const char* InFilename)
@@ -246,7 +244,9 @@ USound* USound::CreateOggStream(const char* InFilename)
 
     S->status = INITIALIZING;
     S->EnsureAssetLoaded();
-    return S->IsReady() ? S : nullptr;
+    if (!S->IsReady()) return nullptr;
+    S->AddToRoot(); S->bOwnsLegacyRoot=true;
+    return S;
 }
 
 void USound::Update()
@@ -266,21 +266,29 @@ void USound::Update()
 void USound::Release()
 {
     flags &= ~LOCKED;
+    bReleaseWhenFinished = false;
+    if (IsValid(AudioComp)) AudioComp->OnAudioFinishedNative.RemoveAll(this);
     Stop();
     if (IsValid(AudioComp)) AudioComp->DestroyComponent();
     AudioComp = nullptr;
     AttenuationAsset = nullptr;
     SoundAsset = nullptr;
+    if (bOwnsLegacyRoot) { bOwnsLegacyRoot=false; RemoveFromRoot(); }
     status = DONE;
     bIsPlaying = false;
 }
 
 HRESULT USound::Play()
 {
+    EnsureAssetLoaded();
+    if (!SoundAsset) return E_FAIL;
+    if (!IsValid(AudioComp)) AudioComp=nullptr;
+    EnsureAudioComponent();
     if (!AudioComp || !SoundAsset)
         return E_FAIL;
 
     AudioComp->SetSound(SoundAsset);
+    AudioComp->SetPaused(false);
     AudioComp->Play();
 
     StartTimeSeconds = FPlatformTime::Seconds();
@@ -290,12 +298,30 @@ HRESULT USound::Play()
     return S_OK;
 }
 
+HRESULT USound::PlayAndRelease()
+{
+    bReleaseWhenFinished=true;
+    const HRESULT Result=Play();
+    if (Result!=S_OK) Release();
+    return Result;
+}
+
+void USound::HandleFinished()
+{
+    if ((flags & LOOP) && bIsPlaying && IsValid(AudioComp))
+    {
+        AudioComp->Play();
+        return;
+    }
+    status=DONE; bIsPlaying=false;
+    if (bReleaseWhenFinished) Release();
+}
+
 HRESULT USound::Stop()
 {
-    if (AudioComp)
-        AudioComp->Stop();
-
     bIsPlaying = false;
+    if (IsValid(AudioComp))
+        AudioComp->Stop();
     status = DONE;
     return S_OK;
 }
@@ -340,6 +366,8 @@ USound* USound::Duplicate()
 
     // Copy filename (legacy behavior)
     FCStringAnsi::Strcpy(NewSound->filename_ansi, filename_ansi);
+    NewSound->AssetReference = AssetReference;
+    NewSound->AddToRoot(); NewSound->bOwnsLegacyRoot=true;
 
     // Share the same sound asset (this is correct in UE)
     NewSound->SoundAsset = SoundAsset;

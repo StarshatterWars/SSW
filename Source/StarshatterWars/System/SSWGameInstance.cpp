@@ -6,6 +6,7 @@
 #include "SimUniverse.h"
 #include "Galaxy.h"
 #include "DataLoader.h"
+#include "Sound.h"
 #include "Sim.h"
 #include "FormattingUtils.h"
 
@@ -274,6 +275,7 @@ void USSWGameInstance::LoadTransitionScreen()
 void USSWGameInstance::Init()
 {
 	Super::Init();
+	USound::SetWorldContext(this);
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(
@@ -294,6 +296,7 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 
 void USSWGameInstance::Shutdown()
 {
+	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
 	Super::Shutdown();

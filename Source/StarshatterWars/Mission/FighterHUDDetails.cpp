@@ -165,6 +165,10 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     LaunchBrush.ImageSize = FVector2D(96, 20);
     UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][BUTTON_TEXTURE] %s"),
         LaunchTexture.IsValid() ? TEXT("Loaded TAC_button") : TEXT("Missing TAC_button"));
+    ILSTexture.Reset(LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/HUD/ILS.ILS")));
+    ILSBrush.SetResourceObject(ILSTexture.Get());
+    ILSBrush.DrawAs = ESlateBrushDrawType::Image;
+    ILSBrush.ImageSize = FVector2D(360,180);
     PlayerBrush.DrawAs = TargetBrush.DrawAs = ESlateBrushDrawType::Image;
     PlayerBrush.ImageSize = TargetBrush.ImageSize = FVector2D(96, 96);
     const TCHAR* Names[] = { TEXT("TAC_left"), TEXT("TAC_right"), TEXT("sensor_fov"), TEXT("sensor_hsd"), TEXT("sensor_3d"), TEXT("CAUTION_left"), TEXT("CAUTION_right") };
@@ -187,6 +191,7 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
     bWarningFlash = FMath::Fmod(Now, 1.0) >= 0.5;
     if (Ship* Player = PlayerShip())
     {
+        UpdateILSMode(Player->GetIdentity(), Player->GetInbound() != nullptr);
         PitchDegrees = FMath::RadiansToDegrees(Player->GetCompassPitch());
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(Player->GetCompassHeading()) + 360.0, 360.0);
         const FVector Right = Player->GetCam().vrt();
@@ -195,7 +200,7 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
         if (FMath::Square(Right.Y) + FMath::Square(Up.Y) > 1.e-8)
             BankRadians = FMath::Atan2(Right.Y, Up.Y);
     }
-    else { PitchDegrees = BankRadians = 0; }
+    else { PitchDegrees = BankRadians = 0; UpdateILSMode(INDEX_NONE, false); }
     if (Now < NextSample) return;
     NextSample = Now + 0.1;
     Refresh();
@@ -768,6 +773,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
             Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?HUDBlue:FLinearColor(0.12f,0.2f,0.25f,1));
         Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
     }
+    DrawILS(G, E, L);
     return L+3;
 }
 
@@ -883,6 +889,9 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
         Labels.Add(P->IsAutoLandEngaged() ? TEXT("Disengage autoland") : TEXT("Engage autoland"));
         Commands.Add(10001);
         Enabled.Add(P->IsAutoLandEngaged() ? P->GetFlightPhase() < EOPSMode::DOCKING : P->CanAutoLand());
+        Labels.Add(bILSMode ? TEXT("Hide ILS hoops") : TEXT("Show ILS hoops"));
+        Commands.Add(10002);
+        Enabled.Add(P->IsDropship());
     }
 }
 void SFighterHUDDetails::RadioSelect(int32 Number)
@@ -913,6 +922,13 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
     }
     if (RadioPage==0) { RadioHistory.Add(RadioPage); RadioRecipient=Number; RadioPage=Number==3 ? 7 : 1; return; }
     if (RadioPage==1) { RadioHistory.Add(RadioPage); RadioPage=-Commands[I]; return; }
+    if (Commands[I]==10002)
+    {
+        bILSMode = !bILSMode;
+        Invalidate(EInvalidateWidgetReason::Paint);
+        CloseRadio();
+        return;
+    }
     if (Commands[I]==10001)
     {
         P->SetAutoLand(!P->IsAutoLandEngaged());
@@ -951,4 +967,17 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
     if (RadioPage==2) Message->AddTarget(P->GetTarget());
     RadioTraffic::Transmit(Message);
     CloseRadio();
+}
+
+void SFighterHUDDetails::UpdateILSMode(int32 PlayerId, bool bInbound)
+{
+    if (PlayerId != ILSPlayerId)
+    {
+        ILSPlayerId = PlayerId;
+        bILSMode = false;
+        bILSInbound = false;
+    }
+    // Enable once on assignment; a manual Hide must survive subsequent HUD ticks.
+    if (bInbound && !bILSInbound) bILSMode = true;
+    bILSInbound = bInbound;
 }

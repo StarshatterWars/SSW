@@ -29,6 +29,7 @@
 
 // Unreal minimal includes for public API primitives:
 #include "Math/Color.h"
+#include "UObject/StrongObjectPtr.h"
 #include "Math/IntRect.h"
 
 #include "COlor.h"
@@ -91,6 +92,7 @@ public:
     // Copy/blit:
     void        BitBlt(int x, int y, const Bitmap& srcImage, int sx, int sy, int w, int h, bool blend = false);
     void        CopyBitmap(const Bitmap& rhs);
+    void        SetCPUImage(int w,int h,const FColor* pixels,int t=BMP_SOLID,bool upload=true);
     void        CopyImage(int w, int h, BYTE* p, int t = BMP_SOLID);
     void        CopyImage(int w, int h, ColorIndex* p, int t = BMP_SOLID); // convenience overload
     void        CopyHighColorImage(int w, int h, DWORD* p, int t = BMP_SOLID);
@@ -180,6 +182,8 @@ protected:
     // Unreal GPU backing:
     UTexture2D* Texture = nullptr;
     UTextureRenderTarget2D* RenderTarget = nullptr;
+    TStrongObjectPtr<UTexture2D> TextureGuard;
+    TStrongObjectPtr<UTextureRenderTarget2D> RenderTargetGuard;
 
     // Metadata:
     DWORD       last_modified = 0;

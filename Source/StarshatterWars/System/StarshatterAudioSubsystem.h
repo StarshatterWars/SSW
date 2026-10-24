@@ -23,10 +23,14 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "AudioRouting.h"
 #include "StarshatterAudioSubsystem.generated.h"
 
 class AMusicController;
 class USoundBase;
+class USoundClass;
+class USoundMix;
+class UAudioComponent;
 class UStarshatterAudioSettings;
 class UStarshatterSettingsSaveGame;
 
@@ -51,6 +55,10 @@ public:
     void LoadAudioConfig();
     void SaveAudioConfig();
     void ApplySettingsToRuntime();
+    void ApplyRuntimeSettings(const UStarshatterAudioSettings& Settings);
+    void RouteAudioComponent(UAudioComponent* Component,EStarshatterAudioChannel Channel);
+    float GetChannelGain(EStarshatterAudioChannel Channel) const;
+    float GetMasterGain() const { return RuntimeMaster; }
 
 public:
     void LoadFromSaveGame(const UStarshatterSettingsSaveGame* SaveGame);
@@ -75,6 +83,16 @@ public:
     void SetMenuMusic(USoundBase* InMusic) { MenuMusic = InMusic; }
     void SetHoverSound(USoundBase* InSound) { HoverSound = InSound; }
     void SetAcceptSound(USoundBase* InSound) { AcceptSound = InSound; }
+
+private:
+    void EnsureRouting();
+    void UpdateRoutingMix();
+    UPROPERTY(Transient) TObjectPtr<USoundMix> RuntimeMix;
+    UPROPERTY(Transient) TMap<FString,TObjectPtr<USoundClass>> RuntimeClasses;
+    TMap<USoundClass*,EStarshatterAudioChannel> RuntimeChannels;
+    TWeakObjectPtr<UWorld> MixWorld;
+    float RuntimeMaster=1.f, RuntimeMusic=1.f, RuntimeEffects=1.f, RuntimeVoice=1.f;
+    int32 RuntimeQuality=0;
 
 private:
     UPROPERTY()

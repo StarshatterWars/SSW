@@ -127,7 +127,8 @@ HUDSounds::PlaySound(int n)
 	if (sound && !sound->IsPlaying()) {
 		const int gui_volume = AudioConfig::GuiVolume();
 		sound->SetVolume(gui_volume);
-		sound->Play();
+		if (sound == red_alert) sound->Play();
+		else sound->PlayAndRelease();
 	}
 }
 

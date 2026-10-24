@@ -18,6 +18,7 @@
 #include "SimModel.h"
 #include "ModelFile.h"
 #include "Surface.h"
+#include "MeshCollision.h"
 #include "Segment.h"
 #include "Shadow.h"
 #include "SimLight.h"
@@ -270,7 +271,7 @@ void Solid::UpdateShadows(List<SimLight>& lights)
 }
 
 // --------------------------------------------------------------------
-// Collision: Solid vs Solid (UE-native bounding test)
+// Collision: sphere broad phase, cached triangle narrow phase
 // --------------------------------------------------------------------
 
 int Solid::CollidesWith(Graphic& other)
@@ -283,37 +284,32 @@ int Solid::CollidesWith(Graphic& other)
     if (delta.Size() > Radius() + other.Radius())
         return 0;
 
-    return 1;
+    Solid& OtherSolid = static_cast<Solid&>(other);
+    if (!model || !OtherSolid.model || !MeshCollision::HasGeometry(*model) || !MeshCollision::HasGeometry(*OtherSolid.model))
+        return 1; // Preserve the authored sphere fallback for geometry-free reps.
+    FTransform Pose(OrientationMatrix), OtherPose(OtherSolid.OrientationMatrix);
+    Pose.SetTranslation(loc); OtherPose.SetTranslation(OtherSolid.loc);
+    return MeshCollision::Overlap(*model, Pose, *OtherSolid.model, OtherPose) ? 1 : 0;
 }
 
 // --------------------------------------------------------------------
-// Ray intersection (bounding sphere only)
+// Ray intersection (nearest mesh surface, sphere fallback without geometry)
 // --------------------------------------------------------------------
 
-int Solid::CheckRayIntersection(
-    FVector rayOrigin,
-    FVector rayDir,
-    double length,
-    FVector& outHit,
-    bool /*treat_translucent_polys_as_solid*/)
+int Solid::CheckRayIntersection(FVector rayOrigin, FVector rayDir, double length,
+    FVector& outHit, bool treat_translucent_polys_as_solid)
 {
-    if (!model)
+    intersection_poly = nullptr;
+    if (!model || rayOrigin.ContainsNaN() || rayDir.ContainsNaN() || !FMath::IsFinite(length) || length < 0)
         return 0;
-
-    // NOTE: caller should provide normalized rayDir
-    const FVector toCenter = loc - rayOrigin;
-    const double proj = FVector::DotProduct(toCenter, rayDir);
-
-    if (proj < 0.0 || proj > length)
-        return 0;
-
-    const FVector closest = rayOrigin + rayDir * (float)proj;
-
-    if ((closest - loc).Size() > radius)
-        return 0;
-
-    outHit = closest;
-    return 1;
+    rayDir = rayDir.GetSafeNormal();
+    if (rayDir.IsNearlyZero()) return 0;
+    if (!MeshCollision::HasGeometry(*model))
+        return MeshCollision::RaySphere(rayOrigin, rayDir, length, loc, radius, outHit) ? 1 : 0;
+    FTransform Pose(OrientationMatrix);
+    Pose.SetTranslation(loc);
+    return MeshCollision::Ray(*model, Pose, rayOrigin, rayDir, length,
+        treat_translucent_polys_as_solid, outHit, intersection_poly) ? 1 : 0;
 }
 
 // --------------------------------------------------------------------

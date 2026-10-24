@@ -414,9 +414,8 @@ void UEngineeringDlg::OnPowerOn()
 
 void UEngineeringDlg::OnOverride()
 {
-    // In classic, override button state toggles.
-    // In UE, you should track state with a bool or by reading a checkbox-like widget.
-    const bool bOver = true; // TODO: replace with actual UI state
+    SimSystem* First=selected_source ? selected_source : (selected_clients.size()>0 ? selected_clients[0] : nullptr);
+    const bool bOver=First && !First->IsOverrideActive();
 
     if (selected_source) {
         selected_source->SetOverride(bOver);
@@ -452,9 +451,7 @@ void UEngineeringDlg::OnComponentSelected()
 void UEngineeringDlg::OnAutoRepair()
 {
     if (ship) {
-        // In classic: ship->EnableRepair(auto_repair->GetButtonState() > 0);
-        // In UE: track a bool toggle; placeholder:
-        ship->EnableRepair(true);
+        ship->EnableRepair(!ship->AutoRepair());
     }
 }
 

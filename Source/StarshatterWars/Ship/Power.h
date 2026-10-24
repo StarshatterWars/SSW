@@ -49,6 +49,7 @@ public:
 	// override from System:
 	virtual void   SetPowerLevel(double level);
 	virtual void   SetOverride(bool over);
+	virtual bool   IsOverrideActive() const override { return requested_power_level > 1.0f; }
 
 	// for power drain damage:
 	virtual void   DrainPower(double to_level);

@@ -42,6 +42,7 @@ public:
     static void SetWorldContext(UObject* InWorldContext);
 
     // Legacy factories (now load USoundBase assets):
+    static USound* CreateFromAsset(USoundBase* Asset, const char* Name, DWORD Flags);
     static USound* CreateStream(const char* InFilename);
     static USound* CreateOggStream(const char* InFilename); // same behavior as CreateStream in UE
 
@@ -60,6 +61,7 @@ public:
 
     // transport operations:
     virtual HRESULT Play();
+    HRESULT PlayAndRelease();
     virtual HRESULT Rewind();
     virtual HRESULT Pause();
     virtual HRESULT Stop();
@@ -140,6 +142,8 @@ protected:
     bool   bIsPlaying = false;
 
 private:
+    friend class FLegacySoundLoadingTest;
+    void HandleFinished();
     void EnsureAssetLoaded();
     void EnsureAudioComponent();
     void ApplyAttenuation();
@@ -171,6 +175,9 @@ private:
     float max_distance = 4000.f;
 
     char filename_ansi[64] = { 0 };
+    FString AssetReference;
+    bool bOwnsLegacyRoot = false;
+    bool bReleaseWhenFinished = false;
 
 private:
     static TWeakObjectPtr<UObject> WorldContext;

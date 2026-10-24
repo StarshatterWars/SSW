@@ -15,6 +15,7 @@
 	Starship class
 */
 #include "Ship.h"
+#include "MeshCollision.h"
 #include "CoreMinimal.h"        // UE_LOG, FVector, basic UE types
 #include "Math/Vector.h"        // FVector (explicit)
 #include "ProfilingDebugging/CpuProfilerTrace.h"
@@ -2448,10 +2449,10 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	if (shot_len < 1000)
 		shot_len = 1000;
 
-	FVector hull_impact;
-	FVector shield_impact;
-	FVector turret_impact;
-	FVector closest;
+	FVector hull_impact = FVector::ZeroVector;
+	FVector shield_impact = FVector::ZeroVector;
+	FVector turret_impact = FVector::ZeroVector;
+	FVector closest = FVector::ZeroVector;
 	double   d0 = 1e9;
 	double   d1 = 1e9;
 	double   ds = 1e9;
@@ -2479,7 +2480,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 		Solid* s = (Solid*)detail.GetRep(detail_level, i);
 		if (s) {
 			if (easy) {
-				hit_hull = CheckRaySphereIntersection(s->Location(), s->Radius(), shot_org, shot_vpn, shot_len);
+				hit_hull = MeshCollision::RaySphere(shot_org, shot_vpn, shot_len, s->Location(), s->Radius(), hull_impact);
 			}
 			else {
 				hit_hull = s->CheckRayIntersection(shot_org, shot_vpn, blow_len, hull_impact) ? true : false;
@@ -2488,11 +2489,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	}
 
     if (!hit_hull && detail.NumModels(detail_level)==0) {
-        const FVector Relative=GetLocation()-shot_org;
-        const double Along=FMath::Clamp(FVector::DotProduct(Relative,shot_vpn),0.0,shot_len);
-        const FVector Nearest=shot_org+shot_vpn*Along;
-        hit_hull=(Nearest-GetLocation()).SizeSquared()<=FMath::Square(double(GetRadius()));
-        if(hit_hull)hull_impact=Nearest;
+        hit_hull=MeshCollision::RaySphere(shot_org,shot_vpn,shot_len,GetLocation(),GetRadius(),hull_impact);
     }
 	if (hit_hull) {
 		if (GetShieldStrength() > 5 && !shieldRep)

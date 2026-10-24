@@ -31,7 +31,11 @@ public:
     void CycleWeapon(bool bPrimary);
 private:
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
+    friend class FRecoveryILSHUDTest;
+    void UpdateILSMode(int32 PlayerId, bool bInbound);
     bool bILSMode = false;
+    bool bILSInbound = false;
+    int32 ILSPlayerId = INDEX_NONE;
     TStrongObjectPtr<UTexture2D> ILSTexture;
     FSlateBrush ILSBrush;
     void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;

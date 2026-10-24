@@ -145,7 +145,7 @@ void AThunderboltShipActor::ApplyAuthoredAttachmentDefaults()
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("Turret");
       Point.LocalOffset = FVector(-195.000000f, 0.000000f, 0.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141600f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 180.000420918, 0.000000000);
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("STA-1");
       Point.LocalOffset = FVector(-70.000000f, -116.000000f, -25.000000f);
@@ -173,7 +173,7 @@ void AThunderboltShipActor::ApplyAuthoredAttachmentDefaults()
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("Turret_Base");
       Point.LocalOffset = FVector(-195.000000f, 0.000000f, 0.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141600f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 180.000420918, 0.000000000);
       TurretBasePointDefs.Add(Point); }
     SyncShipAttachmentCounts();
 }

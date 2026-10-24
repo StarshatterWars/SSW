@@ -11,6 +11,7 @@
     Shared menu button widget implementation.
 */
 
+#include "AudioRouting.h"
 #include "MenuButton.h"
 
 #include "Components/Button.h"
@@ -184,7 +185,7 @@ void UMenuButton::HandleClicked()
 
     if (ClickSound)
     {
-        UGameplayStatics::PlaySound2D(this, ClickSound);
+        SSWAudioRouting::Play2D(this,ClickSound,EStarshatterAudioChannel::Effects);
     }
 }
 
@@ -197,7 +198,7 @@ void UMenuButton::HandleHovered()
 
     if (HoverSound)
     {
-        UGameplayStatics::PlaySound2D(this, HoverSound);
+        SSWAudioRouting::Play2D(this,HoverSound,EStarshatterAudioChannel::Effects);
     }
 }
 

@@ -643,7 +643,7 @@ SimShot::Activate(SimScene& scene)
 				else {
 					sound->SetLocation(GetLocation());
 					sound->SetVolume(volume);
-					sound->Play();
+					sound->PlayAndRelease();
 					sound = 0; // fire and forget
 				}
 			}

@@ -2,6 +2,7 @@
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
 
+#include "AudioRouting.h"
 #include "CmdIntelDlg.h"
 
 #include "Components/Button.h"
@@ -420,7 +421,7 @@ void UCmdIntelDlg::OnPlayClicked()
 
 	if (AudioAsset)
 	{
-		UGameplayStatics::PlaySound2D(this, AudioAsset);
+		SSWAudioRouting::Play2D(this,AudioAsset,EStarshatterAudioChannel::Voice);
 	}
 }
 

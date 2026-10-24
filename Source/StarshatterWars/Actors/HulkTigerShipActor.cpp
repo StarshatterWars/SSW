@@ -30,7 +30,7 @@ void AHulkTigerShipActor::ApplyAuthoredAttachmentDefaults()
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB-2");
       Point.LocalOffset = FVector(-420.000000f, 0.000000f, 135.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141590f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 179.999847961, 0.000000000);
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB-1_Base");
       Point.LocalOffset = FVector(220.000000f, 0.000000f, 75.000000f);
@@ -38,7 +38,7 @@ void AHulkTigerShipActor::ApplyAuthoredAttachmentDefaults()
       TurretBasePointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB-2_Base");
       Point.LocalOffset = FVector(-420.000000f, 0.000000f, 135.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141590f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 179.999847961, 0.000000000);
       TurretBasePointDefs.Add(Point); }
     SyncShipAttachmentCounts();
 }

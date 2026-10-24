@@ -7,6 +7,7 @@
     AUTHOR:       Carlos Bott
 */
 
+#include "AudioRouting.h"
 #include "BaseScreen.h"
 
 // Core:
@@ -2155,7 +2156,7 @@ void UBaseScreen::PlayButtonSfx(USoundBase* Sound) const
         return;
 
     // UI-only, non-spatialized, no attenuation concerns:
-    UGameplayStatics::PlaySound2D(this, Sound, ButtonSfxVolume);
+    SSWAudioRouting::Play2D(this,Sound,EStarshatterAudioChannel::Effects,ButtonSfxVolume);
 }
 
 void UBaseScreen::HookButtonSfx(UButton* Button)

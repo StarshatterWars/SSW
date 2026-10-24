@@ -1,4 +1,5 @@
-﻿#include "CampaignSceneDlg.h"
+﻿#include "AudioRouting.h"
+#include "CampaignSceneDlg.h"
 #include "Engine/Engine.h"
 #include "Components/AudioComponent.h"
 
@@ -853,8 +854,8 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
             CutsceneAudioComponents.RemoveAll([](const TWeakObjectPtr<UAudioComponent>& Entry)
             { return !Entry.IsValid(); });
             // Auto-destroy after natural completion; retain a weak handle for scene cleanup.
-            if (UAudioComponent* Audio = UGameplayStatics::SpawnSound2D(
-                this, Sound, 1.0f, 1.0f, 0.0f, nullptr, false, true))
+            if (UAudioComponent* Audio = SSWAudioRouting::Play2D(
+                this,Sound,SSWAudioRouting::InferChannel(Sound->GetPathName()),1.f,true))
             {
                 CutsceneAudioComponents.Add(Audio);
             }

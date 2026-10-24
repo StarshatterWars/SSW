@@ -194,7 +194,7 @@ private:
         [SNew(SHorizontalBox)
          +SHorizontalBox::Slot()[Button(TEXT("Off"),[this](){if(auto* S=CurrentSystem())S->SetPowerOff();},[this](){return CurrentSystem()!=nullptr;})]
          +SHorizontalBox::Slot()[Button(TEXT("On"),[this](){if(auto* S=CurrentSystem())S->SetPowerOn();},[this](){return CurrentSystem()!=nullptr;})]
-         +SHorizontalBox::Slot()[Button(TEXT("Override"),[this](){if(auto* S=CurrentSystem())S->SetOverride(S->GetPowerLevel()<=100);},[this](){return CurrentSystem()!=nullptr;})]];
+         +SHorizontalBox::Slot()[Button(TEXT("Toggle override"),[this](){if(auto* S=CurrentSystem())S->SetOverride(!S->IsOverrideActive());},[this](){return CurrentSystem()!=nullptr;})]];
         Details->AddSlot().AutoHeight()[Label(TEXT("POWER ALLOCATION"))];
         Details->AddSlot().AutoHeight().Padding(0,4)
         [SNew(SSlider).IsEnabled_Lambda([this](){return CurrentSystem() && CurrentSystem()->IsPowerOn();})

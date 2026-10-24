@@ -646,7 +646,7 @@ Explosion::Activate(SimScene& scene)
         if (sound) {
             sound->SetLocation(GetLocation());
             sound->SetVolume(AudioConfig::EfxVolume());
-            sound->Play();
+            sound->PlayAndRelease();
         }
     }
 

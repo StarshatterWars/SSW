@@ -138,8 +138,8 @@ public:
     {
         return (Index >= 0 && Index < nbarrels) ? rel_pts[Index] : FVector::ZeroVector;
     }
-    float GetTurretAzimuthOffset() const { return aim_azimuth; }
-    float GetTurretElevationOffset() const { return aim_elevation; }
+    float GetTurretAzimuthOffset() const { return old_azimuth; }
+    float GetTurretElevationOffset() const { return old_elevation; }
     FVector GetTurretMountRelative() const { return GetMountLocation(); }
 
     virtual bool          Update(SimObject* obj);

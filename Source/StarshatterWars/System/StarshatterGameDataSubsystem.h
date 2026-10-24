@@ -535,6 +535,7 @@ protected:
     
     UPROPERTY(Transient)
     UDataTable* AwardsDataTable = nullptr;
+    friend class FMedalEligibilityTest;
     UPROPERTY(Transient)
     UDataTable* RanksDataTable = nullptr;
     UPROPERTY(Transient)

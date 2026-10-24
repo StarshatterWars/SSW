@@ -7,6 +7,7 @@ class UStaticMeshComponent;
 class USceneComponent;
 class Weapon;
 class Ship;
+class Camera;
 
 // Visual-only actor. Legacy Weapon remains responsible for targeting and firing.
 UCLASS(Blueprintable)
@@ -31,6 +32,7 @@ public:
     UFUNCTION(BlueprintPure, Category="Turret") bool GetMuzzleTransform(int32 BarrelIndex, FTransform& OutTransform) const;
     void SetPreviewAim(double Azimuth, double Elevation);
     void SyncFromWeapon(const Weapon& InWeapon, const Ship& InShip);
+    void SyncFromWeaponFrame(const Weapon& InWeapon, const Camera& SimShip, const FQuat& DisplayShip);
 private:
     bool bHasRuntimeMuzzles = false;
     TArray<FVector> RuntimeMuzzles;

@@ -10,6 +10,7 @@
 #include "PlayerCharacter.h"
 
 #include "AwardInfoRegistry.h"
+#include "MedalEligibility.h"
 #include "Campaign.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -90,9 +91,7 @@ const FString& PlayerCharacter::ChatMacro(int32 Index) const
 
 int32 PlayerCharacter::GetRank() const
 {
-    // If you have real rank table logic, hook it here.
-    // For now: use cached value.
-    return CachedRankId;
+    return UAwardInfoRegistry::RankForPoints(PlayerPoints, CachedRankId);
 }
 
 int32 PlayerCharacter::Medal(int32 N) const
@@ -250,6 +249,8 @@ void PlayerCharacter::SetCreateDate(int32 InUtcSeconds)
 void PlayerCharacter::SetRank(int32 RankId)
 {
     CachedRankId = FMath::Max(0, RankId);
+    if (const FRankInfo* Row = UAwardInfoRegistry::FindRank(CachedRankId))
+        PlayerPoints = FMath::Max(0, Row->TotalPoints);
     bDirty = true;
 }
 
@@ -325,7 +326,7 @@ void PlayerCharacter::AddPoints(int32 InPoints)
     // NOTE: legacy typically only adds positive points
     if (InPoints != 0)
     {
-        PlayerPoints = FMath::Max(0, PlayerPoints + InPoints);
+        PlayerPoints = int32(FMath::Clamp(int64(PlayerPoints) + InPoints, int64(0), int64(MAX_int32)));
         bDirty = true;
     }
 }
@@ -839,7 +840,7 @@ void PlayerCharacter::ToPlayerInfo(FS_PlayerGameInfo& OutInfo) const
     OutInfo.Callsign = PlayerCallsign;
     OutInfo.Squadron = PlayerSquadron;
 
-    OutInfo.Rank = CachedRankId;
+    OutInfo.Rank = GetRank();
 
     OutInfo.FlightModel = FlightModelMode;
     OutInfo.LandingMode = LandingMode;
@@ -972,28 +973,35 @@ void PlayerCharacter::ProcessStats(ShipStats* Stats, uint32 StartTimeMs)
     }
     else
     {
-        Campaign* Camp = Campaign::GetCampaign();
         UAwardInfoRegistry::ForEachMedal([&](const FMedalInfo& Medal)
         {
             if (PendingAwardId != 0) return;
-            const int32 Bit = Medal.MedalId < 16 ? (1 << Medal.MedalId) : Medal.MedalId;
-            if (Medal.MedalId <= 0 || (MedalsMask & Bit)) return;
-            if (Medal.bDynamicCampaignOnly && Camp && Camp->GetCampaignId() >= Campaign::SINGLE_MISSIONS) return;
-            if (Medal.CampaignId > 0 && (!Camp || Camp->GetCampaignId() != Medal.CampaignId)) return;
-            if (Medal.bCampaignCompleteRequired && Camp && !Camp->IsComplete()) return;
-
-            AddMedal(Bit);
-            PendingAwardId = Medal.MedalId;
-            bPendingAwardIsRank = false;
+            if (EarnedAward(Medal.MedalId, false, Stats) && Medal.bCeremony)
+            {
+                PendingAwardId = Medal.MedalId;
+                bPendingAwardIsRank = false;
+            }
         });
     }
 
     Save();
 }
 
-bool PlayerCharacter::EarnedAward(int32 AwardId, bool bIsRank, ShipStats* /*InShipStats*/)
+bool PlayerCharacter::EarnedAward(int32 AwardId, bool bIsRank, ShipStats* Stats)
 {
-    if (bIsRank)
-        return GetRank() >= AwardId;
-    return (MedalsMask & (1 << AwardId)) != 0;
+    if (bIsRank) return GetRank() >= AwardId;
+    const FMedalInfo* Medal = UAwardInfoRegistry::FindMedal(AwardId);
+    if (!Medal || !Stats) return false;
+    FMedalEligibilityContext Context;
+    Context.Rank=GetRank(); Context.Medals=MedalsMask; Context.ShipClass=Stats->GetShipClass();
+    Context.TotalPoints=PlayerPoints; Context.TotalMissions=MissionCount;
+    Context.MissionPoints=Stats->GetPoints(); Context.Kills=Stats->GetGunKills()+Stats->GetMissileKills();
+    Context.Deaths=Stats->GetDeaths(); Context.Collisions=Stats->GetColls();
+    Context.bCompletedCampaign=HasCompletedCampaign(Medal->CampaignId);
+    Campaign* Camp=Campaign::GetCampaign();
+    Context.bHasCampaign=Camp!=nullptr; Context.bDynamicCampaign=Camp && Camp->IsDynamic();
+    if (!MedalEligibility::MeetsRequirements(*Medal,Context)) return false;
+    if (Medal->Lottery>=2 && FMath::RandRange(1,Medal->Lottery)!=1) return false;
+    AddMedal(Medal->MedalId);
+    return true;
 }

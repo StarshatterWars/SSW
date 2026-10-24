@@ -150,6 +150,24 @@ const FRankInfo* UAwardInfoRegistry::FindRank(int32 RankId)
     return FindByKey<FRankInfo, int32>(RankById, RankId);
 }
 
+int32 UAwardInfoRegistry::RankForPoints(int32 Points, int32 UnloadedFallback)
+{
+    if (RankById.IsEmpty()) return UnloadedFallback;
+    int32 Result = 0;
+    int32 BestThreshold = -1;
+    for (const auto& Pair : RankById)
+    {
+        const FRankInfo* Row = Pair.Value;
+        if (!Row || Row->TotalPoints < 0 || Points < Row->TotalPoints) continue;
+        if (Row->TotalPoints > BestThreshold || (Row->TotalPoints == BestThreshold && Row->RankId > Result))
+        {
+            BestThreshold = Row->TotalPoints;
+            Result = Row->RankId;
+        }
+    }
+    return Result;
+}
+
 const TCHAR* UAwardInfoRegistry::RankName(int32 RankId)
 {
     if (const FRankInfo* Row = FindRank(RankId))
@@ -200,8 +218,9 @@ const TCHAR* UAwardInfoRegistry::MedalDescription(int32 MedalId)
 
 void UAwardInfoRegistry::ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn)
 {
-    for (const TPair<int32, const FMedalInfo*>& Pair : MedalById)
-    {
-        if (Pair.Value) Fn(*Pair.Value);
-    }
+    TArray<int32> Ids;
+    MedalById.GetKeys(Ids);
+    Ids.Sort(); // The legacy authored medal table is ordered by ascending flag.
+    for (int32 Id : Ids)
+        if (const FMedalInfo* Row = FindMedal(Id)) Fn(*Row);
 }

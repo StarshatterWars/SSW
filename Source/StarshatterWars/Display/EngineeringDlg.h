@@ -181,6 +181,7 @@ protected:
     // ----------------------------------------------------------------
     // Legacy state (ported)
     // ----------------------------------------------------------------
+    friend class FEngineeringControlsTest;
     Ship* ship = nullptr;
     PowerSource* route_source = nullptr;
 

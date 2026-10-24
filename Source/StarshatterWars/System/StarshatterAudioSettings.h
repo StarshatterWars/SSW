@@ -39,8 +39,7 @@ public:
     // Save current values back to config.
     void Save() const;
 
-    // Optional: apply to runtime audio (SoundMix/SoundClass/AudioModulation etc.)
-    // You can leave this as a no-op until you wire actual SoundClasses.
+    // Apply master, category buses and configured audio quality to runtime audio.
     void ApplyToRuntimeAudio(UObject* WorldContextObject) const;
 
 public:

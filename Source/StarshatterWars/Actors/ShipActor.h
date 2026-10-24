@@ -722,6 +722,7 @@ private:
 
 private:
     bool bRuntimeVisualInitialized = false;
+    TMap<USceneComponent*,FQuat> RuntimeTurretBaseRestRotations;
     Ship* RuntimeShip = nullptr;
 
     protected:

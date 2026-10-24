@@ -33,10 +33,20 @@
 class SimModel;
 class Segment;
 
+struct FSurfaceCollisionNode
+{
+    FBox Bounds = FBox(ForceInit);
+    int32 Left = INDEX_NONE, Right = INDEX_NONE;
+    int32 First = 0, Count = 0;
+};
+
 struct FSurfaceCollisionCache
 {
     TArray<FVector> LocalVerts;
     TArray<int32>   Indices;      // Triangulated indices (triplets)
+    TArray<int32> PolyIds;
+    TArray<int32> TriangleOrder;
+    TArray<FSurfaceCollisionNode> Nodes;
     FBox            LocalBounds;  // Bounds of LocalVerts
     bool            bValid = false;
 
@@ -44,6 +54,9 @@ struct FSurfaceCollisionCache
     {
         LocalVerts.Reset();
         Indices.Reset();
+        PolyIds.Reset();
+        TriangleOrder.Reset();
+        Nodes.Reset();
         LocalBounds.Init();
         bValid = false;
     }
@@ -110,6 +123,7 @@ public:
 
     // UE-native collision cache (replaces OPCODE)
     void           BuildCollisionCache();
+    void           InvalidateCollisionCache() { Collision.Reset(); }
     const FSurfaceCollisionCache& GetCollisionCache() const { return Collision; }
 
     void           ComputeTangents();

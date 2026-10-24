@@ -29,59 +29,14 @@
 
 namespace
 {
-    struct FSurfaceCollisionCache
-    {
-        bool  bValid = false;
-        FBox  LocalBounds = FBox(EForceInit::ForceInit);
-        int32 NumTris = 0;
-    };
-
-    // One cache per Surface* without touching the class layout:
-    static TMap<const Surface*, FSurfaceCollisionCache> GSurfaceCache;
-
     static void InvalidateSurfaceCache(const Surface* S)
     {
-        if (!S) return;
-        if (FSurfaceCollisionCache* Cache = GSurfaceCache.Find(S))
-        {
-            Cache->bValid = false;
-            Cache->LocalBounds = FBox(EForceInit::ForceInit);
-            Cache->NumTris = 0;
-        }
+        if (S) const_cast<Surface*>(S)->InvalidateCollisionCache();
     }
 
     static void BuildSurfaceCache(const Surface* S)
     {
-        if (!S) return;
-
-        FSurfaceCollisionCache& Cache = GSurfaceCache.FindOrAdd(S);
-        Cache.bValid = false;
-        Cache.LocalBounds = FBox(EForceInit::ForceInit);
-        Cache.NumTris = 0;
-
-        VertexSet* V = S->GetVertexSet();
-        Poly* P = S->GetPolys();
-        const int  NP = S->GetNumPolys();
-
-        if (!V || !P || NP < 1 || V->nverts < 1)
-            return;
-
-        // Local bounds from vertex locations:
-        for (int i = 0; i < V->nverts; ++i)
-            Cache.LocalBounds += V->loc[i];
-
-        // Triangle count estimate:
-        int32 Tris = 0;
-        for (int i = 0; i < NP; ++i)
-        {
-            const int nv = P[i].nverts;
-            if (nv == 3) Tris += 1;
-            else if (nv == 4) Tris += 2;
-            else if (nv > 4)  Tris += (nv - 2); // fan triangulation
-        }
-
-        Cache.NumTris = Tris;
-        Cache.bValid = true;
+        if (S) const_cast<Surface*>(S)->BuildCollisionCache();
     }
 
     // Mesh optimization epsilon (legacy-ish)
@@ -157,7 +112,7 @@ Surface::~Surface()
     polys = nullptr;
 
     InvalidateSurfaceCache(this);
-    GSurfaceCache.Remove(this);
+
 }
 
 void Surface::SetName(const char* n)
@@ -270,6 +225,7 @@ void Surface::ScaleBy(double factor)
 
 void Surface::BuildHull()
 {
+    InvalidateCollisionCache();
     if (npolys < 1 || !vertex_set || vertex_set->nverts < 1)
         return;
 

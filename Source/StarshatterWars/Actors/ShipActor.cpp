@@ -510,6 +510,7 @@ AShipActor::Tick(float DeltaTime)
     if (RuntimeShip)
     {
         UpdateFromRuntimeShip(DeltaTime);
+        UpdateTurretActors();
         UpdateNavLights(DeltaTime);
         UpdateMainEnginesFromRuntime(DeltaTime);
         UpdateEngineAudioFromRuntime(DeltaTime);
@@ -1735,6 +1736,11 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
 void AShipActor::BindRuntimeShip(Ship* InShip)
 {
     if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
+    for (auto& Entry : RuntimeTurretBaseRestRotations)
+        if (IsValid(Entry.Key)) Entry.Key->SetRelativeRotation(Entry.Value);
+    RuntimeTurretBaseRestRotations.Reset();
+    for (auto& Component : NativeWeaponHardpoints)
+        if (auto* Mount = Cast<UShipWeaponMountComponent>(Component.Get())) Mount->ClearRuntimeWeapon();
     RuntimeShip = InShip;
 
     // Once per bind, not per frame. Flight-axis dimensions are independent of

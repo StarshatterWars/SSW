@@ -114,6 +114,7 @@ public:
 	virtual double    GetPowerLevel()   const { return power_level * 100; }
 	virtual void      SetPowerLevel(double level);
 	virtual void      SetOverride(bool over);
+	virtual bool      IsOverrideActive() const { return power_level > 1.0f; }
 
 	// for power drain damage:
 	virtual void      DrainPower(double to_level);

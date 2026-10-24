@@ -16,6 +16,7 @@
     campaign dropdown list.
 */
 
+#include "AudioRouting.h"
 #include "CampaignSelectDlg.h"
 
 #include "MissionUIStyle.h"
@@ -1022,7 +1023,7 @@ void UCampaignSelectDlg::PlayUISound(UObject* WorldContext, USoundBase* UISound)
 {
     if (UISound)
     {
-        UGameplayStatics::PlaySound2D(WorldContext, UISound);
+        SSWAudioRouting::Play2D(WorldContext,UISound,EStarshatterAudioChannel::Effects);
     }
 }
 

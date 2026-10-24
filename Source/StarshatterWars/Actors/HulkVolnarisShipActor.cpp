@@ -34,7 +34,7 @@ void AHulkVolnarisShipActor::ApplyAuthoredAttachmentDefaults()
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB 3");
       Point.LocalOffset = FVector(-255.000000f, 0.000000f, 55.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141590f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 179.999847961, 0.000000000);
       WeaponMountPointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB 1_Base");
       Point.LocalOffset = FVector(340.000000f, 0.000000f, 45.000000f);
@@ -46,7 +46,7 @@ void AHulkVolnarisShipActor::ApplyAuthoredAttachmentDefaults()
       TurretBasePointDefs.Add(Point); }
     { FShipPointDef Point; Point.PointName = TEXT("PDB 3_Base");
       Point.LocalOffset = FVector(-255.000000f, 0.000000f, 55.000000f);
-      Point.LocalRotation = FRotator(0.000000f, 3.141590f, 0.0f);
+      Point.LocalRotation = FRotator(0.000000000, 179.999847961, 0.000000000);
       TurretBasePointDefs.Add(Point); }
     SyncShipAttachmentCounts();
 }

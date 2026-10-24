@@ -233,6 +233,8 @@ public:
     bool  EarnedAward(int32 AwardId, bool bIsRank, ShipStats* InShipStats);
 
 private:
+    friend class FPlayerRankProgressionTest;
+    friend class FMedalEligibilityTest;
     void CreateUniqueID();
 
 private:

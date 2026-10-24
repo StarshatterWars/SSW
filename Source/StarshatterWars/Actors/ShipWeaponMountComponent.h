@@ -4,6 +4,7 @@
 #include "ShipWeaponMountComponent.generated.h"
 
 class Weapon;
+class Camera;
 
 UCLASS(ClassGroup=(Starshatter), meta=(BlueprintSpawnableComponent))
 class STARSHATTERWARS_API UShipWeaponMountComponent : public UChildActorComponent
@@ -27,6 +28,11 @@ public:
 
     void BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType);
     void ClearRuntimeWeapon();
+    void UpdateRuntimeAim(const Camera& SimShip, const FQuat& DisplayShip);
+private:
+    bool bRuntimeAimApplied = false;
+    FQuat RestMountRotation = FQuat::Identity;
+public:
     bool IsBoundTo(const Weapon* InWeapon) const { return RuntimeWeapon==InWeapon; }
 
     /** One native BP child per authored fixed-weapon muzzle, parented to this mount. */

@@ -19,6 +19,7 @@ public:
 
     // Ranks
     static const FRankInfo* FindRank(int32 RankId);
+    static int32 RankForPoints(int32 Points, int32 UnloadedFallback = 0);
     static const TCHAR* RankName(int32 RankId);
     static const TCHAR* RankAbrv(int32 RankId);
     static const TCHAR* RankDescription(int32 RankId);
@@ -31,6 +32,8 @@ public:
     static void ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn);
 
 private:
+    friend class FPlayerRankProgressionTest;
+    friend class FMedalEligibilityTest;
     static void BuildCaches();
 
     template<typename TRow, typename TKey>

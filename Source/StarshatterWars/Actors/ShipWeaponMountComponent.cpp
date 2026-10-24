@@ -1,5 +1,7 @@
 #include "ShipWeaponMountComponent.h"
 #include "Weapon.h"
+#include "WeaponDesign.h"
+#include "WeaponPresentationFrame.h"
 
 UShipWeaponMountComponent::UShipWeaponMountComponent()
 {
@@ -9,6 +11,7 @@ UShipWeaponMountComponent::UShipWeaponMountComponent()
 
 void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType)
 {
+    if (RuntimeWeapon != InWeapon) ClearRuntimeWeapon();
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;
     RuntimeWeaponType=InWeaponType;
@@ -16,6 +19,8 @@ void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeapo
 
 void UShipWeaponMountComponent::ClearRuntimeWeapon()
 {
+    if (bRuntimeAimApplied) SetRelativeRotation(RestMountRotation);
+    bRuntimeAimApplied = false;
     RuntimeWeapon=nullptr;
     RuntimeWeaponName=NAME_None;
     RuntimeWeaponType=NAME_None;
@@ -50,4 +55,14 @@ FTransform UShipWeaponMountComponent::GetMuzzleWorldTransform(int32 MuzzleIndex)
     FTransform Result=GetComponentTransform();
     Result.SetLocation(GetMuzzleWorldLocation(MuzzleIndex));
     return Result;
+}
+
+void UShipWeaponMountComponent::UpdateRuntimeAim(const Camera& SimShip, const FQuat& DisplayShip)
+{
+    // Fixed fighter gun/pylon placement must not be rotated by an aim camera.
+    if (!RuntimeWeapon || bLoadoutHardpoint || !RuntimeWeapon->Design() || !RuntimeWeapon->Design()->turret.length()) return;
+    if (!bRuntimeAimApplied) { RestMountRotation = GetRelativeRotation().Quaternion(); bRuntimeAimApplied = true; }
+    const FQuat Aim = WeaponPresentationFrame::Display(RuntimeWeapon->GetTurretAimCamera(), SimShip, DisplayShip);
+    const FQuat Parent = GetAttachParent() ? GetAttachParent()->GetComponentQuat() : FQuat::Identity;
+    SetRelativeRotation(Parent.Inverse()*Aim);
 }

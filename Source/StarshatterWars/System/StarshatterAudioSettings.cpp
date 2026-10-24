@@ -1,4 +1,6 @@
 #include "StarshatterAudioSettings.h"
+#include "StarshatterAudioSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "Engine/Engine.h"
 #include "Misc/ConfigCacheIni.h"
@@ -37,15 +39,9 @@ void UStarshatterAudioSettings::Save() const
 
 void UStarshatterAudioSettings::ApplyToRuntimeAudio(UObject* WorldContextObject) const
 {
-    // Stub: UE-native runtime routing goes here.
-    // Examples you might implement next:
-    // - Set SoundClass volumes (Master/Music/SFX/Voice)
-    // - Apply a SoundMix override
-    // - Apply Audio Modulation parameters
-    //
-    // Leaving this as a no-op is fine and compiles cleanly.
-
-    (void)WorldContextObject;
+    UStarshatterAudioSubsystem* Audio=UStarshatterAudioSubsystem::Get(WorldContextObject);
+    if(!Audio)Audio=UStarshatterAudioSubsystem::Get(Cast<UGameInstance>(WorldContextObject));
+    if(Audio)Audio->ApplyRuntimeSettings(*this);
 }
 
 // -------------------------

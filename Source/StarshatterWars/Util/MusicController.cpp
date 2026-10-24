@@ -1,6 +1,7 @@
 // /*  Project nGenEx	Fractal Dev Games	Copyright (C) 2024. All Rights Reserved.	SUBSYSTEM:    SSW	FILE:         Game.cpp	AUTHOR:       Carlos Bott*/
 
 
+#include "AudioRouting.h"
 #include "MusicController.h"
 #include "Sound/SoundBase.h"
 #include "Components/AudioComponent.h"
@@ -39,6 +40,7 @@ void AMusicController::PlayMusic(USoundBase* Music)
 		return;
 
 	MusicComponent->SetSound(Music);
+	SSWAudioRouting::Route(MusicComponent,EStarshatterAudioChannel::Music);
 	MusicComponent->Play();
 }
 
@@ -47,7 +49,7 @@ void AMusicController::PlayUISound(USoundBase* Sound)
 	if (!Sound)
 		return;
 
-	UGameplayStatics::PlaySound2D(this, Sound);
+	SSWAudioRouting::Play2D(this, Sound,EStarshatterAudioChannel::Effects);
 }
 
 void AMusicController::StopMusic()

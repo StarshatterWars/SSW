@@ -15,6 +15,7 @@
     UAwardDlg implementation (Unreal port)
 */
 
+#include "AudioRouting.h"
 #include "MissionAwardDlg.h"
 
 // UMG:
@@ -423,7 +424,7 @@ void UMissionAwardDlg::ShowPlayer()
                 Sound = RankInfo->GrantSound.LoadSynchronous();
             else if (Medal && Medal->GranSound.ToSoftObjectPath().IsValid())
                 Sound = Medal->GranSound.LoadSynchronous();
-            if (Sound) UGameplayStatics::PlaySound2D(this, Sound);
+            if (Sound) SSWAudioRouting::Play2D(this,Sound,EStarshatterAudioChannel::Voice);
         }
     }
     else

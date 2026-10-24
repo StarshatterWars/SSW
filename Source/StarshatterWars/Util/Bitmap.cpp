@@ -25,6 +25,7 @@
 #include "Bitmap.h"
 
 #include "CoreMinimal.h"
+#include "Misc/App.h"
 
 #include "Engine/Engine.h"
 #include "Engine/Texture.h"
@@ -166,6 +167,7 @@ void Bitmap::EnsureRenderTarget()
         return;
 
     RenderTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage(), NAME_None, RF_Transient);
+    RenderTargetGuard.Reset(RenderTarget);
     if (!RenderTarget) {
         UE_LOG(LogTemp, Error, TEXT("Bitmap::EnsureRenderTarget failed (null RenderTarget) for %hs"), filename);
         return;
@@ -245,6 +247,8 @@ void Bitmap::UploadBGRA(const void* SrcBGRA8, int SrcW, int SrcH, bool bHasAlpha
     if (!TempTex)
         return;
 
+    Texture = TempTex;
+    TextureGuard.Reset(Texture);
     TempTex->SRGB = bSRGB;
     TempTex->NeverStream = true;
     TempTex->MipGenSettings = TMGS_NoMipmaps;
@@ -315,16 +319,32 @@ void Bitmap::ClearImage()
     height = 0;
     mapsize = 0;
 
+    pix=nullptr;hipix=nullptr;HiPixelsCPU.Reset();
     ownpix = false;
     alpha_loaded = false;
     texture = false;
 
     Texture = nullptr;
     RenderTarget = nullptr;
+    TextureGuard.Reset();RenderTargetGuard.Reset();
+}
+
+void Bitmap::SetCPUImage(int w,int h,const FColor* pixels,int t,bool upload)
+{
+    if(!pixels || w<1 || h<1 || int64(w)*h>16*1024*1024){ClearImage();return;}
+    TArray<FColor> Copy;Copy.Append(pixels,w*h); // Handles aliased source buffers.
+    if(upload && FApp::CanEverRender())CopyHighColorImage(w,h,reinterpret_cast<DWORD*>(Copy.GetData()),t);
+    if(ownpix){delete[] pix;delete[] hipix;}
+    pix=nullptr;hipix=new FColor[w*h];ownpix=true;
+    FMemory::Memcpy(hipix,Copy.GetData(),int64(w)*h*sizeof(FColor));
+    width=w;height=h;mapsize=w*h;type=t;
+    alpha_loaded=t!=BMP_SOLID;
 }
 
 void Bitmap::CopyBitmap(const Bitmap& rhs)
 {
+    if(rhs.HiPixels()){SetCPUImage(rhs.Width(),rhs.Height(),rhs.HiPixels(),rhs.Type());return;}
+
     type = rhs.type;
     width = rhs.width;
     height = rhs.height;

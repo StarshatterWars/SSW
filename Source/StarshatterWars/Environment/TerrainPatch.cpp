@@ -84,7 +84,7 @@ TerrainPatch::TerrainPatch(Terrain* terr, const Bitmap* patch, const Rect& r,
 
 	ZeroMem(detail_levels, sizeof(detail_levels));
 
-	terrain_width = 0;
+	terrain_width = patch ? patch->Width() : 0;
 
 	loc = (p1 + p2) * 0.5;
 	loc.Y = base;
@@ -92,19 +92,20 @@ TerrainPatch::TerrainPatch(Terrain* terr, const Bitmap* patch, const Rect& r,
 	radius = (float)(size * 0.75);
 	heights = new float[MAX_VERTS];
 
-	// Flat initialization (placeholder until CPU height sampling is implemented):
-	for (int i = 0; i < MAX_VERTS; ++i)
-	{
-		float alt = 0.0f;
-
-		if (alt < min_height) min_height = alt;
-		if (alt > max_height) max_height = alt;
-
-		// Preserve original "water cutout" behavior in spirit:
-		// without per-pixel red channel, we can't detect red < 2,
-		// so we leave alt unchanged here.
-		heights[i] = alt;
-	}
+	const int TextureStep=rect.w/(PATCH_SIZE-1);
+    for(int Row=0;Row<PATCH_SIZE;++Row)
+    {
+        const int Y=patch ? FMath::Clamp(rect.y+Row*TextureStep,0,FMath::Max(0,patch->Height()-1)) : 0;
+        for(int Col=0;Col<PATCH_SIZE;++Col)
+        {
+            const int X=patch ? FMath::Clamp(rect.x+(PATCH_SIZE-1-Col)*TextureStep,0,FMath::Max(0,patch->Width()-1)) : 0;
+            const uint8 Red=patch ? patch->GetColor(X,Y).R : 0;
+            float Alt=float(Red*mtnscale);
+            min_height=FMath::Min(min_height,Alt);max_height=FMath::Max(max_height,Alt);
+            if(terrain && terrain->WaterTexture() && Red<2)Alt=-5000.f;
+            heights[Row*PATCH_SIZE+Col]=Alt;
+        }
+    }
 
 	Material* mtl = new Material;
 	mtl->Ka = FColor(128, 128, 128, 255);
@@ -742,7 +743,7 @@ TerrainPatch::BlendValue(double y)
 int
 TerrainPatch::CalcLayer(Poly* poly)
 {
-	if (terrain && poly) {
+	if (terrain && poly && terrain->GetLayers().size()>0) {
 		if (water)
 			return 0;
 
@@ -1082,11 +1083,13 @@ TerrainPatch::Height(double x, double z) const
 
 	double height = 0;
 
+	if (!heights || scale<=0 || !FMath::IsFinite(x) || !FMath::IsFinite(z)) return 0;
 	x /= scale;
 	z /= scale;
 
-	int x0 = (int)x;
-	int z0 = (int)z;
+	if (x<0 || z<0 || x>PATCH_SIZE-1 || z>PATCH_SIZE-1) return 0;
+	int x0 = FMath::Min((int)x,PATCH_SIZE-2);
+	int z0 = FMath::Min((int)z,PATCH_SIZE-2);
 
 	if (x0 >= 0 && x0 < PATCH_SIZE && z0 >= 0 && z0 < PATCH_SIZE) {
 		double dx = x - x0;

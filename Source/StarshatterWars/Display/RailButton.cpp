@@ -11,6 +11,7 @@
     Dedicated stretch-style button for dialog rails.
 */
 
+#include "AudioRouting.h"
 #include "RailButton.h"
 
 #include "Components/Button.h"
@@ -129,7 +130,7 @@ void URailButton::HandleClicked()
 
     if (ClickSound)
     {
-        UGameplayStatics::PlaySound2D(this, ClickSound);
+        SSWAudioRouting::Play2D(this,ClickSound,EStarshatterAudioChannel::Effects);
     }
 }
 
@@ -142,7 +143,7 @@ void URailButton::HandleHovered()
 
     if (HoverSound)
     {
-        UGameplayStatics::PlaySound2D(this, HoverSound);
+        SSWAudioRouting::Play2D(this,HoverSound,EStarshatterAudioChannel::Effects);
     }
 }
 

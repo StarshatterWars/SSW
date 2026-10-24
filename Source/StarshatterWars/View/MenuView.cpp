@@ -32,7 +32,7 @@
 // Local helpers
 // ---------------------------------------------------------------------
 
-static FColor ScaleColor(const FColor& C, float S)
+static FColor MenuViewScaleColor(const FColor& C, float S)
 {
     const int32 R = FMath::Clamp(FMath::RoundToInt(C.R * S), 0, 255);
     const int32 G = FMath::Clamp(FMath::RoundToInt(C.G * S), 0, 255);
@@ -297,7 +297,7 @@ void MenuView::DrawMenu(int mx, int my, Menu* m)
         menu_rect.y = height - menu_rect.h - 2;
 
     // Background + border:
-    FillRect(menu_rect, ScaleColor(BackColor, 0.20f));
+    FillRect(menu_rect, MenuViewScaleColor(BackColor, 0.20f));
     DrawRect(menu_rect, BackColor);
 
     Rect item_rect = menu_rect;
@@ -348,8 +348,8 @@ void MenuView::DrawMenu(int mx, int my, Menu* m)
             }
 
             if (MI_Selected(It) != 0) {
-                FillRect(fill_rect, ScaleColor(BackColor, 0.35f));
-                DrawRect(fill_rect, ScaleColor(BackColor, 0.75f));
+                FillRect(fill_rect, MenuViewScaleColor(BackColor, 0.35f));
+                DrawRect(fill_rect, MenuViewScaleColor(BackColor, 0.75f));
 
                 if (It->GetSubmenu()) {
                     submenu = It->GetSubmenu();
@@ -362,7 +362,7 @@ void MenuView::DrawMenu(int mx, int my, Menu* m)
             if (MI_IsEnabled(It))
                 HUDFont->SetColor(TextColor);
             else
-                HUDFont->SetColor(ScaleColor(TextColor, 0.33f));
+                HUDFont->SetColor(MenuViewScaleColor(TextColor, 0.33f));
 
             SetFont(HUDFont);
 

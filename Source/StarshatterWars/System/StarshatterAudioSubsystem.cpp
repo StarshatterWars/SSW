@@ -18,6 +18,12 @@
 
 #include "MusicController.h"
 #include "StarshatterAudioSettings.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
+#include "Sound/AudioSettings.h"
+#include "AudioDevice.h"
+#include "UObject/UObjectIterator.h"
 #include "StarshatterSettingsSaveGame.h"
 #include "GameStructs.h"
 
@@ -30,6 +36,11 @@ void UStarshatterAudioSubsystem::Initialize(FSubsystemCollectionBase & Collectio
 
 void UStarshatterAudioSubsystem::Deinitialize()
 {
+    if (UWorld* OldWorld=MixWorld.Get())
+        UGameplayStatics::PopSoundMixModifier(OldWorld,RuntimeMix);
+    if(UWorld* World=GetWorld())if(FAudioDevice* Device=World->GetAudioDeviceRaw())Device->SetTransientPrimaryVolume(1.f);
+    for (auto& Pair : RuntimeClasses)if(Pair.Value)Pair.Value->SetParentClass(nullptr);
+    RuntimeClasses.Reset();RuntimeChannels.Reset();RuntimeMix=nullptr;MixWorld.Reset();
     MusicController = nullptr;
     MenuMusic = nullptr;
     HoverSound = nullptr;
@@ -249,7 +260,7 @@ void UStarshatterAudioSubsystem::PlayUISound(UObject* Context, USoundBase* UISou
         return;
     }
 
-    UGameplayStatics::PlaySound2D(Context, UISound);
+    SSWAudioRouting::Play2D(Context,UISound,EStarshatterAudioChannel::Effects);
 }
 
 void UStarshatterAudioSubsystem::PlayHoverSound(UObject* Context)
@@ -291,4 +302,69 @@ bool UStarshatterAudioSubsystem::IsSoundPlaying()
     }
 
     return false;
+}
+float UStarshatterAudioSubsystem::GetChannelGain(EStarshatterAudioChannel Channel) const
+{
+    switch(Channel){case EStarshatterAudioChannel::Music:return RuntimeMusic;
+    case EStarshatterAudioChannel::Voice:return RuntimeVoice;default:return RuntimeEffects;}
+}
+void UStarshatterAudioSubsystem::EnsureRouting()
+{
+    if(!RuntimeMix){RuntimeMix=NewObject<USoundMix>(this);RuntimeMix->Duration=-1.f;RuntimeMix->FadeInTime=0.f;RuntimeMix->FadeOutTime=0.f;}
+    UWorld* World=GetWorld();
+    if(World && World!=MixWorld.Get())
+    {
+        if(UWorld* Old=MixWorld.Get())UGameplayStatics::PopSoundMixModifier(Old,RuntimeMix);
+        MixWorld=World;UGameplayStatics::PushSoundMixModifier(World,RuntimeMix);
+    }
+}
+void UStarshatterAudioSubsystem::UpdateRoutingMix()
+{
+    EnsureRouting();UWorld* World=GetWorld();if(!World)return;
+    if(FAudioDevice* Device=World->GetAudioDeviceRaw())
+    {
+        Device->SetTransientPrimaryVolume(RuntimeMaster);
+        const UAudioSettings* Config=GetDefault<UAudioSettings>();
+        if(Config->GetQualityLevelSettingsNum()>0)
+            Device->SetMaxChannels(Config->GetQualityLevelSettings(FMath::Clamp(RuntimeQuality,0,Config->GetQualityLevelSettingsNum()-1)).MaxChannels);
+    }
+    for(const auto& Pair : RuntimeChannels)
+        UGameplayStatics::SetSoundMixClassOverride(World,RuntimeMix,Pair.Key,GetChannelGain(Pair.Value),1.f,0.f,false);
+}
+void UStarshatterAudioSubsystem::ApplyRuntimeSettings(const UStarshatterAudioSettings& Settings)
+{
+    RuntimeMaster=FMath::Clamp(Settings.GetMasterVolume(),0.f,1.f);
+    RuntimeMusic=FMath::Clamp(Settings.GetMusicVolume(),0.f,1.f);
+    RuntimeEffects=FMath::Clamp(Settings.GetEffectsVolume(),0.f,1.f);
+    RuntimeVoice=FMath::Clamp(Settings.GetVoiceVolume(),0.f,1.f);
+    RuntimeQuality=Settings.GetSoundQuality();
+    UWorld* World=GetWorld();
+    if(World)for(TObjectIterator<UAudioComponent> It;It;++It)
+        if(It->GetWorld()==World && It->Sound)
+        {
+            const auto* Existing=RuntimeChannels.Find(It->SoundClassOverride);
+            RouteAudioComponent(*It,Existing ? *Existing : SSWAudioRouting::InferChannel(It->Sound->GetPathName()));
+        }
+    UpdateRoutingMix();
+}
+void UStarshatterAudioSubsystem::RouteAudioComponent(UAudioComponent* Component,EStarshatterAudioChannel Channel)
+{
+    if(!Component)return;EnsureRouting();
+    USoundClass* Original=Component->SoundClassOverride;
+    if(Original && RuntimeChannels.Contains(Original))Original=Original->ParentClass;
+    if(!Original && Component->Sound)Original=Component->Sound->GetSoundClass();
+    if(!Original)Original=GetDefault<UAudioSettings>()->GetDefaultSoundClass();
+    const FString Key=FString::Printf(TEXT("%d:%s"),int32(Channel),*GetPathNameSafe(Original));
+    TObjectPtr<USoundClass>& Class=RuntimeClasses.FindOrAdd(Key);
+    if(!Class)
+    {
+        Class=NewObject<USoundClass>(this);
+        if(Original)Class->Properties=Original->Properties;
+        Class->Properties.Volume=1.f;Class->Properties.Pitch=1.f;
+        Class->Properties.bIsMusic=Channel==EStarshatterAudioChannel::Music;
+        Class->SetParentClass(Original);RuntimeChannels.Add(Class,Channel);
+        if(UWorld* World=GetWorld())if(FAudioDevice* Device=World->GetAudioDeviceRaw())Device->RegisterSoundClass(Class);
+    }
+    Component->SoundClassOverride=Class;
+    UpdateRoutingMix();
 }

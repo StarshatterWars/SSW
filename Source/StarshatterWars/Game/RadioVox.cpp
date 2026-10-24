@@ -1,4 +1,5 @@
-﻿#include "RadioVox.h"
+﻿#include "AudioRouting.h"
+#include "RadioVox.h"
 #include "RadioView.h"
 #include "AudioConfig.h"
 #include "Components/AudioComponent.h"
@@ -109,9 +110,11 @@ bool RadioVox::Update()
         USoundBase* Sound = PhraseAssets[index++].Get();
         if (!Sound || !RadioWorldContext.IsValid()) continue;
         const float Volume = FMath::Pow(10.0f, float(AudioConfig::VoxVolume()) / 2000.0f);
-        UAudioComponent* Audio = UGameplayStatics::SpawnSound2D(RadioWorldContext.Get(), Sound,
+        UAudioComponent* Audio = UGameplayStatics::CreateSound2D(RadioWorldContext.Get(), Sound,
             Volume, 1.0f, 0.0f, nullptr, false, false);
         if (!Audio) continue;
+        SSWAudioRouting::Route(Audio,EStarshatterAudioChannel::Voice);
+        Audio->Play();
         Audio->bIsUISound = false;
         PlayingAudio.Reset(Audio);
         return true;

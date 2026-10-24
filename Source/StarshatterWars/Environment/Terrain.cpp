@@ -150,10 +150,15 @@ Terrain::BuildTerrain()
 {
 	DataLoader* Loader = DataLoader::GetLoader();
 
+    if(!Loader || !region)return;
 	// Text -> const char* for legacy loader API:
 	Loader->SetDataPath(datapath.data());
 
-	Loader->LoadGameBitmap(region->PatchName(), terrain_patch);
+    if(!Loader->LoadGameBitmap(region->PatchName(),terrain_patch) || terrain_patch.Width()<PATCH_SIZE || terrain_patch.Height()<PATCH_SIZE)
+    {
+        UE_LOG(LogTemp,Warning,TEXT("[Terrain] Height map is missing or too small; terrain build skipped."));
+        return;
+    }
 	Loader->LoadGameBitmap(region->ApronName(), terrain_apron);
 
 	Loader->LoadTexture(region->PatchTexture(), terrain_texture);

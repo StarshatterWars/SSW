@@ -4325,7 +4325,48 @@ struct FMedalInfo : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal")
-	int32 MedalId = 0; // if you truly need bitmask semantics keep it as-is
+	int32 MedalId = 0; // Authored bit flag, never an ordinal index.
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 MinRank = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 MaxRank = MAX_int32;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 RequiredAwards = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 MinShipClass = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 MaxShipClass = MAX_int32;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 TotalPoints = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 MissionPoints = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 TotalMissions = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 Kills = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 Lost = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 Collision = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	int32 Lottery = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal|Eligibility")
+	bool bEligibilityConfigured = false;
+
+
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Medal")
 	FString Name;
