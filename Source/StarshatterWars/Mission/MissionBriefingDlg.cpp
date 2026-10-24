@@ -23,6 +23,7 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "FlightDeck.h"
 #include "MissionObjectTarget.h"
 
 #include "Sensor.h"
@@ -3248,6 +3249,12 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
     if (!Player || !Region || !Region->GetShips().contains(Player) || Player->IsDead()) return;
     if (LastAutoNavInputFrame == GFrameCounter) return;
     LastAutoNavInputFrame = GFrameCounter;
+    if (Player->GetInbound())
+    {
+        Player->SetAutoLand(!Player->IsAutoLandEngaged());
+        SyncMissionNavigationTarget();
+        return;
+    }
     // Explicit autonav input commits a selected route waypoint. Selection alone
     // never changes the flight plan. B on the current destination remains a toggle.
     if (AWaypointActor* Chosen = Cast<AWaypointActor>(SelectedMissionTarget.Get())) {
@@ -3287,6 +3294,22 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
     Ship* Pilot = LiveSim ? LiveSim->GetPlayerShip() : nullptr;
     SimRegion* ActiveRegion = LiveSim ? LiveSim->GetActiveRegion() : nullptr;
     if (!Pilot || !ActiveRegion || !ActiveRegion->GetShips().contains(Pilot) || !Pilot->GetElement()) return;
+    InboundSlot* Arrival=Pilot->GetInbound();
+    FlightDeck* RecoveryDeck=Arrival?Arrival->GetDeck():nullptr;
+    const Ship* RecoveryCarrier=RecoveryDeck?RecoveryDeck->GetCarrier():nullptr;
+    if(Arrival && Arrival->Cleared() && RecoveryCarrier)
+    {
+        if(!bRecoveryTargetSelected || Pilot->IsAutoLandEngaged())
+            for(TActorIterator<AShipActor> It(GetWorld());It;++It)
+                if(It->GetRuntimeShip()==RecoveryCarrier)
+                {
+                    if(SelectedMissionTarget.Get()!=*It) SelectMissionContact(*It);
+                    bRecoveryTargetSelected=SelectedMissionTarget.Get()==*It;
+                    break;
+                }
+        return;
+    }
+    bRecoveryTargetSelected=false;
     Instruction* RoutePoint = Pilot->GetNextNavPoint();
     const bool Engaged = Pilot->IsAutoNavEngaged();
     const bool AutoChanged = Engaged && (!bAutoNavSelectionActive || AutoNavSelectedRoutePoint != RoutePoint);

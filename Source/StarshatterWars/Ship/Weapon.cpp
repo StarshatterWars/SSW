@@ -765,8 +765,11 @@ SimShot* Weapon::FireBarrel(int n)
     rail_cam.Clone(aim_cam);
 
     FVector shotpos = muzzle_pts[n];
+    Camera NativeRail;
+    const bool HasNativeMuzzle=ship->GetNativeWeaponMuzzle(this,n,shotpos,NativeRail);
+    if(HasNativeMuzzle) rail_cam.Clone(NativeRail);
     if (design->length > 0)
-        shotpos = shotpos + aim_cam.vpn() * design->length;
+        shotpos = shotpos + ((HasNativeMuzzle && !design->primary && !design->self_aiming)?rail_cam.vpn():aim_cam.vpn()) * design->length;
 
     // guns may be slewed towards target:
     if (design->primary) {
@@ -798,7 +801,8 @@ SimShot* Weapon::FireBarrel(int n)
                     Orient(0,0)*EjectLocal.X + Orient(1,0)*EjectLocal.Y + Orient(2,0)*EjectLocal.Z,
                     Orient(0,1)*EjectLocal.X + Orient(1,1)*EjectLocal.Y + Orient(2,1)*EjectLocal.Z,
                     Orient(0,2)*EjectLocal.X + Orient(1,2)*EjectLocal.Y + Orient(2,2)*EjectLocal.Z);
-                shot->SetVelocity(base_vel + eject);
+                const FVector NativeEject=rail_cam.vrt()*EjectLocal.X+rail_cam.vup()*EjectLocal.Y+rail_cam.vpn()*EjectLocal.Z;
+                shot->SetVelocity(base_vel + (HasNativeMuzzle?NativeEject:eject));
             }
         }
 

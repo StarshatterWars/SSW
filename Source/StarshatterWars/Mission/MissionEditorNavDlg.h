@@ -39,6 +39,7 @@
 #include "MissionEditorNavDlg.generated.h"
 
 class UMenuScreen;
+class UMissionRouteMap;
 class Mission;
 class MissionInfo;
 class StarSystem;
@@ -57,7 +58,7 @@ public:
     virtual void ScrapeForm();
 
     void SetManager(UMenuScreen* InManager) { Manager = InManager; }
-    void SetMission(Mission* InMission) { mission = InMission; }
+    void SetMission(Mission* InMission);
     void SetMissionInfo(MissionInfo* InInfo) { mission_info = InInfo; }
 
 protected:
@@ -109,6 +110,7 @@ private:
 private:
     UPROPERTY(Transient) TObjectPtr<UMenuScreen> Manager = nullptr;
 
+    UPROPERTY(Transient) TObjectPtr<UMissionRouteMap> RouteMap;
     Mission* mission = nullptr;       // legacy core pointer
     MissionInfo* mission_info = nullptr;  // legacy core pointer
 

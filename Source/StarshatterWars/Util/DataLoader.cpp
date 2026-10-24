@@ -9,6 +9,8 @@
 */
 
 #include "DataLoader.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
 #include "Bitmap.h"
 #include "Sound.h"
 #include "Resource.h"
@@ -123,7 +125,19 @@ DataLoader::ListFiles(const char* filter, List<Text>& list, bool recurse)
 void
 DataLoader::ListFileSystem(const char* filter, List<Text>& list, Text base_path, bool recurse)
 {
-	
+    const FString Base=ANSI_TO_TCHAR(base_path.data());
+    TArray<FString> Roots;
+    if(FPaths::IsRelative(Base)) {Roots.Add(FPaths::ConvertRelativePathToFull(Base));Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()/TEXT("GameData")/Base));}
+    else Roots.Add(Base);
+    TSet<FString> Seen;TArray<FString> Names;
+    for(FString Root:Roots)
+    {
+        FPaths::NormalizeDirectoryName(Root);TArray<FString> Found;
+        if(recurse) IFileManager::Get().FindFilesRecursive(Found,*Root,ANSI_TO_TCHAR(filter),true,false,false);
+        else {IFileManager::Get().FindFiles(Found,*(Root/ANSI_TO_TCHAR(filter)),true,false);for(auto& Name:Found)Name=Root/Name;}
+        for(FString Name:Found) {FPaths::MakePathRelativeTo(Name,*(Root+TEXT("/")));const FString Key=Name.ToLower();if(!Seen.Contains(Key)){Seen.Add(Key);Names.Add(Name);}}
+    }
+    Names.Sort();for(const auto& Name:Names) list.append(new Text(TCHAR_TO_ANSI(*Name)));
 }
 
 // +--------------------------------------------------------------------+

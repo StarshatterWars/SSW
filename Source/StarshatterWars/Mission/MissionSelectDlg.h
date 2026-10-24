@@ -127,6 +127,10 @@ protected:
     UFUNCTION() void OnNewClicked();
     UFUNCTION() void OnEditClicked();
     UFUNCTION() void OnDeleteClicked();
+    UFUNCTION() void ConfirmDeleteMission();
+    UFUNCTION() void CancelDeleteMission();
+    int32 PendingDeleteId=-1;
+    Campaign* PendingDeleteCampaign=nullptr;
 
     // Campaign selection handlers:
     UFUNCTION() void OnCampaignComboChanged(FString SelectedItem, ESelectInfo::Type SelectionType);

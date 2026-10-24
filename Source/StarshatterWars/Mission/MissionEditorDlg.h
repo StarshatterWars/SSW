@@ -56,6 +56,7 @@ protected:
     int32 SelectedElement = INDEX_NONE;
     int32 SelectedEvent = INDEX_NONE;
     FString OriginalMission;
+    FString OriginalTarget, OriginalWard;
     FString OriginalName, OriginalDescription, OriginalSystem, OriginalRegion;
     int32 OriginalType = 0;
     bool bPopulating = false;

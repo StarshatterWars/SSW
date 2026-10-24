@@ -17,6 +17,10 @@
 */
 
 #include "MusicManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Sound/SoundBase.h"
+#include "Misc/Paths.h"
+#include "Misc/ScopeExit.h"
 #include "MusicTrack.h"
 
 #include "Random.h"
@@ -165,12 +169,18 @@ void MusicManager::ScanTracks()
 {
     DataLoader* loader = DataLoader::GetLoader();
 
+    const Text PreviousPath=loader->GetDataPath();
+    ON_SCOPE_EXIT {loader->SetDataPath(PreviousPath);};
     bool old_file_system = loader->IsFileSystemEnabled();
     loader->UseFileSystem(true);
     loader->SetDataPath("Music/");
 
     List<Text> files;
     loader->ListFiles("*.ogg", files, true);
+    auto& Registry=FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+    FARFilter Filter;Filter.PackagePaths.Add(TEXT("/Game/Audio/Music"));Filter.ClassPaths.Add(USoundBase::StaticClass()->GetClassPathName());Filter.bRecursivePaths=true;Filter.bRecursiveClasses=true;
+    TArray<FAssetData> Assets;Registry.GetAssets(Filter,Assets);Assets.Sort([](const FAssetData& A,const FAssetData& B){return A.PackageName.LexicalLess(B.PackageName);});
+    for(const auto& Asset:Assets)files.append(new Text(TCHAR_TO_UTF8(*Asset.GetSoftObjectPath().ToString())));
 
     if (files.size() == 0) {
         loader->UseFileSystem(old_file_system);
@@ -183,10 +193,13 @@ void MusicManager::ScanTracks()
     ListIter<Text> iter = files;
     while (++iter) {
         Text* name = iter.value();
-        Text* file = new Text("Music/");
-
-        name->setSensitive(false);
-        file->append(*name);
+        const bool Native=name->indexOf("/Game/")==0;
+        Text* file = new Text(Native?name->data():"Music/");
+        if(!Native) file->append(*name);
+        FString Category=FPaths::GetBaseFilename(UTF8_TO_TCHAR(name->data()));Category.RemoveFromStart(TEXT("SSW_"));
+        if(Category.StartsWith(TEXT("Battle")))Category=TEXT("Combat")+Category;
+        if(Category.StartsWith(TEXT("Main")))Category=TEXT("Menu")+Category;
+        *name=TCHAR_TO_UTF8(*Category);name->setSensitive(false);
 
         if (name->indexOf("Menu") == 0) {
             menu_tracks.append(file);

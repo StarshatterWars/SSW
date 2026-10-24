@@ -1,6 +1,8 @@
 #include "FighterHUDDetails.h"
 #include "Ship.h"
 #include "FlightDeck.h"
+#include "RecoveryGuidance.h"
+#include "Styling/CoreStyle.h"
 #include "Sim.h"
 #include "SimRegion.h"
 #include "SSWRuntimeSubsystem.h"
@@ -63,6 +65,32 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
             FSlateDrawElement::MakeLines(Elements, Layer+1, Geometry.ToPaintGeometry(), First, ESlateDrawEffect::None, ILSColor, true);
             FSlateDrawElement::MakeLines(Elements, Layer+1, Geometry.ToPaintGeometry(), Second, ESlateDrawEffect::None, ILSColor, true);
         }
+        auto Label=[&](const FVector2D& At,const FString& Message)
+        {
+            FSlateDrawElement::MakeText(Elements,Layer+2,
+                Geometry.ToPaintGeometry(FVector2D(240,20),FSlateLayoutTransform(At+FVector2D(9,-8))),
+                Message,FCoreStyle::GetDefaultFontStyle("Regular",10),ESlateDrawEffect::None,ILSColor);
+        };
+        for(int32 Marker=0;Marker<3;++Marker)
+        {
+            FVector2D Point;
+            const FVector Position=RecoveryGuidance::Marker(Deck->StartPoint(),Deck->EndPoint(),Marker);
+            if(Project(Carrier,Position,Point))
+            {
+                const TArray<FVector2D> Diamond={Point+FVector2D(0,-6),Point+FVector2D(6,0),Point+FVector2D(0,6),Point+FVector2D(-6,0),Point+FVector2D(0,-6)};
+                FSlateDrawElement::MakeLines(Elements,Layer+2,Geometry.ToPaintGeometry(),Diamond,ESlateDrawEffect::None,ILSColor,true,1.5f);
+                Label(Point,FString::Printf(TEXT("%s  %.1f km"),RecoveryGuidance::Name(Marker),FVector::Distance(Player->GetLocation(),Position)/1000.0));
+            }
+        }
+        InboundSlot* Assigned=Player->GetInbound();
+        if(Assigned && Assigned->GetDeck()==Deck)
+        {
+            const FVector Aim=Assigned->Approach()>0 || !Assigned->Cleared()
+                ? Deck->ApproachPoint(Assigned->Approach())+Assigned->Offset()
+                : Assigned->Final()?Deck->EndPoint():Deck->StartPoint();
+            FVector2D Point;
+            if(Project(Carrier,Aim,Point)) Label(Point,FString::Printf(TEXT("LAND %hs"),Deck->GetName()));
+        }
         bool HasHoops = false;
         // Far to near, matching the foreground translucent legacy frames.
         for (int32 Index = Deck->NumHoops()-1; Index >= 0; --Index)
@@ -86,7 +114,6 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
                 FSlateDrawElement::MakeCustomVerts(Elements, Layer+1,
                     FSlateApplication::Get().GetRenderer()->GetResourceHandle(ILSBrush), Vertices, Indices, nullptr, 0, 0);
             }
-            else
             {
                 TArray<FVector2D> Outline = {Points[0],Points[1],Points[2],Points[3],Points[0]};
                 FSlateDrawElement::MakeLines(Elements, Layer+1, Geometry.ToPaintGeometry(), Outline,

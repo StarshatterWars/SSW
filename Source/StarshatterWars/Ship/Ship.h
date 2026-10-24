@@ -67,6 +67,7 @@ class ShieldRep;
 class ShipDesign;
 class ShipKiller;
 class Solid;
+class AShipActor;
 class Skin;
 class USound;
 class Sensor;
@@ -444,6 +445,12 @@ public:
     // Navigation uses actual BP hull geometry when the data-table design has
     // only an import scale in its radius field. Simulation coordinates remain legacy.
     double GetNavigationHullRadius() const { return navigation_hull_radius > 0.0 ? navigation_hull_radius : GetRadius(); }
+    void SetNativeCockpitRequested(bool Requested) {bNativeCockpitRequested=Requested;}
+    bool IsNativeCockpitRequested() const {return bNativeCockpitRequested;}
+    void BindNativePresentation(AShipActor* Actor);
+    AShipActor* GetNativePresentation() const;
+    void ExpandNativeCollisionRadius(double Value) {if(FMath::IsFinite(Value)&&Value>radius) radius=Value;}
+    bool GetNativeWeaponMuzzle(const Weapon* W,int32 Index,FVector& Position,Camera& Frame) const;
     void SetNavigationHullRadius(double value) { if (FMath::IsFinite(value) && value > 0.0) navigation_hull_radius = value; }
 private:
     double navigation_hull_radius = 0.0;
@@ -644,6 +651,8 @@ protected:
     static int        landing_model;
     static double     friendly_fire_level;
 
+    bool bNativeCockpitRequested=false;
+    TWeakObjectPtr<AShipActor> NativePresentation;
     const FShipDesign* UnrealDesign = nullptr;
     bool               player_ship = false;
 

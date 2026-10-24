@@ -251,6 +251,7 @@ protected:
     void SyncMissionNavigationTarget();
     uint64 LastAutoNavInputFrame = MAX_uint64;
     class Instruction* AutoNavSelectedRoutePoint = nullptr; // comparison only
+    bool bRecoveryTargetSelected = false;
     bool bAutoNavSelectionActive = false;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> MissionWeaponActions;
     bool bContactsOnlyPanel = false;

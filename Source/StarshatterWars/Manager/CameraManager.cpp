@@ -626,6 +626,9 @@ CameraManager::ExecFrame(double seconds)
 		}
 	}
 
+    // Native cockpits also exist when the legacy Solid representation is absent.
+    ship->SetNativeCockpitRequested(op_mode==MODE_COCKPIT || op_mode==MODE_VIRTUAL || op_mode==MODE_TARGET);
+
 	if (hud && hud->Ambient() != FColor::Black)
 		sim->GetScene()->SetAmbient(hud->Ambient());
 	else

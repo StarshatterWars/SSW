@@ -51,6 +51,7 @@ bool Mission::LoadMissionCommon(
 	const TMissionData& InData,
 	bool bFullReset)
 {
+    bool bMissingDesign=false;
 	if (bFullReset)
 	{
 		ok = false;
@@ -235,28 +236,6 @@ bool Mission::LoadMissionCommon(
 			ShipDesignRegistry::Find(
 				SrcElem.Design);
 
-		if (!DesignRow && !SrcElem.Design.IsEmpty())
-		{
-			FShipDesign Placeholder;
-			Placeholder.ShipName = SrcElem.Design;
-			Placeholder.DisplayName = SrcElem.Design;
-			Placeholder.ShipClass = TEXT("Fighter");
-			Placeholder.ShipType = 1;
-			Placeholder.Scale = 1.0f;
-			Placeholder.Mass = 20.0;
-			Placeholder.Integrity = 100.0f;
-			Placeholder.Vlimit = 800.0f;
-			Placeholder.Agility = 150.0f;
-			Placeholder.RollRate = 1.5f;
-			Placeholder.PitchRate = 1.2f;
-			Placeholder.YawRate = 0.8f;
-			ShipDesignRegistry::RegisterDesign(FName(*SrcElem.Design), Placeholder);
-			DesignRow = ShipDesignRegistry::Find(SrcElem.Design);
-			UE_LOG(LogTemp, Warning,
-				TEXT("[Mission::LoadMissionCommon] Registered placeholder FShipDesign Element='%s' Design='%s'"),
-				*SrcElem.Name,
-				*SrcElem.Design);
-		}
 
 		if (!DesignRow)
 		{
@@ -264,6 +243,7 @@ bool Mission::LoadMissionCommon(
 				TEXT("[Mission::LoadMissionCommon] Missing FShipDesign Element='%s' Design='%s'"),
 				*SrcElem.Name,
 				*SrcElem.Design);
+            bMissingDesign=true;
 		}
 		else
 		{
@@ -321,6 +301,22 @@ bool Mission::LoadMissionCommon(
 			}
 		}
 
+        for(const FS_MissionShip& SourceShip:SrcElem.Ship)
+        {
+            auto* RuntimeShip=new MissionShip;
+            RuntimeShip->SetName(TCHAR_TO_ANSI(*SourceShip.ShipName));RuntimeShip->SetRegNum(TCHAR_TO_ANSI(*SourceShip.RegNum));
+            RuntimeShip->SetRegion(TCHAR_TO_ANSI(*SourceShip.Region));
+            RuntimeShip->SetLocation(SourceShip.Location);RuntimeShip->SetVelocity(SourceShip.Velocity);
+            RuntimeShip->SetRespawns(SourceShip.Respawns);RuntimeShip->SetIntegrity(SourceShip.Integrity);
+            RuntimeShip->SetHeading(SourceShip.Heading > -1e8 ? SourceShip.Heading*(degrees?DEGREES:1.0) : -1e9);
+            int AmmoValues[16],FuelValues[4];
+            for(int32 I=0;I<16;++I) AmmoValues[I]=SourceShip.Ammo.IsValidIndex(I)?SourceShip.Ammo[I]:-10;
+            for(int32 I=0;I<4;++I) FuelValues[I]=SourceShip.Fuel.IsValidIndex(I)?SourceShip.Fuel[I]:-10;
+            RuntimeShip->SetAmmo(AmmoValues);RuntimeShip->SetFuel(FuelValues);
+            if(!SourceShip.SkinName.IsEmpty())
+                if(const ShipDesign* Legacy=ShipDesignRegistry::FindLegacy(SrcElem.Design)) RuntimeShip->SetSkin(Legacy->FindSkin(TCHAR_TO_ANSI(*SourceShip.SkinName)));
+            Elem->GetShips().append(RuntimeShip);
+        }
 		//---------------------------------------------------------
 		// Mission role/intel
 		//---------------------------------------------------------
@@ -478,6 +474,7 @@ bool Mission::LoadMissionCommon(
 		true;
 
 	Validate();
+    if(bMissingDesign) {ok=false;AddError("Missing authored ship design; mission cannot launch.");}
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Mission::LoadMissionCommon] COMPLETE Elements=%d"),

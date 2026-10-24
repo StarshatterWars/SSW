@@ -61,6 +61,8 @@ void UMissionEditorDlg::SetMission(Mission* InMission)
     mission = InMission;
     SelectedElement = SelectedEvent = INDEX_NONE;
     OriginalMission = mission ? ANSI_TO_TCHAR(mission->Serialize(nullptr, 0, false).data()) : FString();
+    OriginalTarget=mission && mission->GetTarget()?ANSI_TO_TCHAR(mission->GetTarget()->GetName()):FString();
+    OriginalWard=mission && mission->GetWard()?ANSI_TO_TCHAR(mission->GetWard()->GetName()):FString();
     bEditing = mission != nullptr;
     current_tab = 0;
 }
@@ -639,6 +641,8 @@ void UMissionEditorDlg::CancelEditing()
         mission->GetEvents().destroy();
         mission->ClearSystemList();
         mission->ParseMission(TCHAR_TO_ANSI(*OriginalMission));
+        mission->SetTarget(OriginalTarget.IsEmpty()?nullptr:mission->FindElement(TCHAR_TO_ANSI(*OriginalTarget)));
+        mission->SetWard(OriginalWard.IsEmpty()?nullptr:mission->FindElement(TCHAR_TO_ANSI(*OriginalWard)));
         if (mission_info)
         {
             mission_info->name = TCHAR_TO_ANSI(*OriginalName);

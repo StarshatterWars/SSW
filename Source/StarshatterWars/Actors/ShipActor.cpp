@@ -1742,7 +1742,10 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     for (auto& Component : NativeWeaponHardpoints)
         if (auto* Mount = Cast<UShipWeaponMountComponent>(Component.Get())) Mount->ClearRuntimeWeapon();
     RestoreHullSkin();
+    if(RuntimeShip && RuntimeShip!=InShip) RuntimeShip->BindNativePresentation(nullptr);
     RuntimeShip = InShip;
+    NativeGeometry.Reset();
+    if(InShip) InShip->BindNativePresentation(this);
 
     // Once per bind, not per frame. Flight-axis dimensions are independent of
     // world heading and include the actual BP actor/component scale hierarchy.
@@ -1758,6 +1761,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
         // actor origin used by simulation, excluding Niagara and light bounds.
         const double NavigationRadius = NavigationBounds.Origin.Size() + NavigationBounds.SphereRadius;
         InShip->SetNavigationHullRadius(NavigationRadius);
+        InShip->ExpandNativeCollisionRadius(NavigationRadius);
         UE_LOG(LogTemp, Display, TEXT("[AutoNavHull] Ship='%hs' DesignRadius=%.3f HullRadius=%.3f ArrivalRadius=%.3f"),
             InShip->GetName(), InShip->GetRadius(), InShip->GetNavigationHullRadius(),
             LegacyWaypointArrival::Radius(InShip->GetNavigationHullRadius()));

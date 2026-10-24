@@ -1,4 +1,5 @@
 #include "FighterActor.h"
+#include "Sim.h"
 #include "FighterLandingGearComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/ChildActorComponent.h"
@@ -51,6 +52,12 @@ void AFighterActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     UpdateLandingGearPresentation();
+    if(Ship* Runtime=GetRuntimeShip())
+    {
+        const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && Runtime->IsNativeCockpitRequested();
+        CockpitActor->SetVisibility(Visible,true);
+        if(auto* Child=CockpitActor->GetChildActor())Child->SetActorHiddenInGame(!Visible);
+    }
 }
 
 float AFighterActor::GetLandingGearDeployment() const

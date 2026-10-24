@@ -24,11 +24,18 @@ bool FCampaignRankLookupTest::RunTest(const FString& Parameters)
     for(int32 I=0;I<128;++I) if(const FRankInfo* Rank=UAwardInfoRegistry::FindRank(I))
     {
         ++Found;
+        TestEqual(TEXT("Legacy helper full rank name"),FString(UTF8_TO_TCHAR(PlayerCharacter::RankName(I))),Rank->Name);
+        TestEqual(TEXT("Legacy helper rank description"),FString(UTF8_TO_TCHAR(PlayerCharacter::RankDescription(I))),FString(UAwardInfoRegistry::RankDescription(I)));
+        TestEqual(TEXT("Legacy helper abbreviation"),FString(UTF8_TO_TCHAR(PlayerCharacter::RankAbrv(I))),FString(UAwardInfoRegistry::RankAbrv(I)));
         TestEqual(*FString::Printf(TEXT("Campaign full name %s"),*Rank->Name),PlayerData::RankFromName(TCHAR_TO_ANSI(*Rank->Name)),I);
         TestEqual(TEXT("Case and surrounding whitespace"),PlayerCharacter::RankFromName(TEXT(" ")+Rank->Name.ToLower()+TEXT(" ")),I);
         if(!Rank->Abrv.IsEmpty()) TestEqual(TEXT("Rank abbreviation"),UAwardInfoRegistry::RankFromName(Rank->Abrv),I);
     }
     TestTrue(TEXT("All eleven legacy rank grades loaded"),Found>=11);
+    UAwardInfoRegistry::ForEachMedal([&](const FMedalInfo& Medal){
+        TestEqual(TEXT("Legacy medal name"),FString(UTF8_TO_TCHAR(PlayerCharacter::MedalName(Medal.MedalId))),FString(UAwardInfoRegistry::MedalName(Medal.MedalId)));
+        TestEqual(TEXT("Legacy medal description"),FString(UTF8_TO_TCHAR(PlayerCharacter::MedalDescription(Medal.MedalId))),FString(UAwardInfoRegistry::MedalDescription(Medal.MedalId)));
+    });
     TestEqual(TEXT("Unknown names preserve legacy fallback"),PlayerData::RankFromName("not-a-rank"),0);
     TestEqual(TEXT("Null name is safe"),PlayerData::RankFromName(nullptr),0);
     return true;

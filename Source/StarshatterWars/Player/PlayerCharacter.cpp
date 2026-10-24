@@ -8,6 +8,8 @@
 */
 
 #include "PlayerCharacter.h"
+#include <map>
+#include <string>
 
 #include "AwardInfoRegistry.h"
 #include "MedalEligibility.h"
@@ -427,31 +429,9 @@ void PlayerCharacter::SetGunsight(int32 InOnOff) { bGunSight = (InOnOff != 0); b
 // Legacy static rank/medal helpers (compile-safe stubs)
 // ------------------------------------------------------------------
 
-const char* PlayerCharacter::RankName(int32 RankId)
-{
-    switch (RankId)
-    {
-    case 0:  return "Conscript";
-    case 1:  return "Ensign";
-    case 2:  return "Lieutenant";
-    case 3:  return "Commander";
-    case 4:  return "Captain";
-    default: return "Officer";
-    }
-}
-
-const char* PlayerCharacter::RankAbrv(int32 RankId)
-{
-    switch (RankId)
-    {
-    case 0:  return "CNS";
-    case 1:  return "ENS";
-    case 2:  return "LT";
-    case 3:  return "CDR";
-    case 4:  return "CPT";
-    default: return "OFF";
-    }
-}
+namespace {const char* AwardText(int Kind,int Id,const TCHAR* Text) {static std::map<std::pair<int,int>,std::string> Cache;auto& Value=Cache[{Kind,Id}];const std::string NewValue=TCHAR_TO_UTF8(Text?Text:TEXT(""));if(Value!=NewValue)Value=NewValue;return Value.c_str();}}
+const char* PlayerCharacter::RankName(int32 Id) {return AwardText(0,Id,UAwardInfoRegistry::RankName(Id));}
+const char* PlayerCharacter::RankAbrv(int32 Id) {return AwardText(1,Id,UAwardInfoRegistry::RankAbrv(Id));}
 
 int32 PlayerCharacter::RankFromName(const char* InNameAnsi)
 {
@@ -463,9 +443,9 @@ int32 PlayerCharacter::RankFromName(const FString& InName)
     return UAwardInfoRegistry::RankFromName(InName);
 }
 
-const char* PlayerCharacter::RankDescription(int32 /*RankId*/) { return ""; }
-const char* PlayerCharacter::MedalName(int32 /*MedalBit*/) { return ""; }
-const char* PlayerCharacter::MedalDescription(int32 /*MedalBit*/) { return ""; }
+const char* PlayerCharacter::RankDescription(int32 Id) {return AwardText(2,Id,UAwardInfoRegistry::RankDescription(Id));}
+const char* PlayerCharacter::MedalName(int32 Id) {return AwardText(3,Id,UAwardInfoRegistry::MedalName(Id));}
+const char* PlayerCharacter::MedalDescription(int32 Id) {return AwardText(4,Id,UAwardInfoRegistry::MedalDescription(Id));}
 
 
 int32 PlayerCharacter::CommandRankRequired(int32 Mask)

@@ -2473,11 +2473,11 @@ struct FS_MissionShip : public FTableRowBase {
 		Fuel.SetNum(4);
 
 		for (int AmmoIndex = 0; AmmoIndex < Ammo.Num(); AmmoIndex++) {
-			Ammo[AmmoIndex] = 0;
+			Ammo[AmmoIndex] = -10;
 		}
 
 		for (int FuelIndex = 0; FuelIndex < Fuel.Num(); FuelIndex++) {
-			Fuel[FuelIndex] = 0;
+			Fuel[FuelIndex] = -10;
 		}
 	}
 };

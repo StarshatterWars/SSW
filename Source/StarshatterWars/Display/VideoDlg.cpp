@@ -303,7 +303,10 @@ void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
     if (bApplyRuntimeToo)
     {
         if (UStarshatterVideoSubsystem* VideoSS = GetVideoSubsystem())
+        {
+            VideoSS->SetConfig(C);
             VideoSS->ApplySettingsToRuntime();
+        }
     }
 
     bDirty = false;

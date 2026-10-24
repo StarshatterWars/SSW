@@ -1764,15 +1764,17 @@ Campaign::DeleteMission(int id)
     }
 
     if (m) {
-        char full_path[256];
-
-        if (path[FCStringAnsi::Strlen(path) - 1] == '/')
-            FCStringAnsi::Snprintf(full_path, sizeof(full_path), "%s%s", path, m->script.data());
-        else
-            FCStringAnsi::Snprintf(full_path, sizeof(full_path), "%s/%s", path, m->script.data());
-
-        // Unreal-friendly delete:
-        IFileManager::Get().Delete(ANSI_TO_TCHAR(full_path), /*RequireExists*/false, /*EvenReadOnly*/true, /*Quiet*/false);
+        if(campaign_id!=CUSTOM_MISSIONS) return;
+        FString Root=FPaths::ConvertRelativePathToFull(ANSI_TO_TCHAR(path));
+        FString Full=FPaths::ConvertRelativePathToFull(Root/ANSI_TO_TCHAR(m->script.data()));
+        if(!IFileManager::Get().FileExists(*Full))
+        {
+            Root=FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()/TEXT("GameData")/ANSI_TO_TCHAR(path));
+            Full=FPaths::ConvertRelativePathToFull(Root/ANSI_TO_TCHAR(m->script.data()));
+        }
+        FPaths::CollapseRelativeDirectories(Full);
+        if(!FPaths::IsUnderDirectory(Full,Root)||!FPaths::GetExtension(Full).Equals(TEXT("def"),ESearchCase::IgnoreCase))return;
+        if(!IFileManager::Get().Delete(*Full,true,false,false))return;
 
         Load();
     }

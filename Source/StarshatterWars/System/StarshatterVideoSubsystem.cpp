@@ -9,6 +9,9 @@
 */
 
 #include "StarshatterVideoSubsystem.h"
+#include "Engine/Engine.h"
+#include "GameFramework/GameUserSettings.h"
+#include "HAL/IConsoleManager.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -197,6 +200,7 @@ bool UStarshatterVideoSubsystem::SaveVideoConfig(const FString& InRelativeOrAbso
     WriteLine(Lines, TEXT("width"), FString::FromInt(C.Width));
     WriteLine(Lines, TEXT("height"), FString::FromInt(C.Height));
     WriteLine(Lines, TEXT("depth"), TEXT("32"));
+    WriteLine(Lines, TEXT("fullscreen"), C.bFullscreen?TEXT("true"):TEXT("false"));
     Lines.Add(TEXT(""));
 
     WriteLine(Lines, TEXT("max_tex"), FString::FromInt(C.MaxTextureSize));
@@ -267,12 +271,20 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
 {
     SaveVideoConfig(TEXT("video.cfg"));
 
-    // Apply Unreal runtime settings here if this method already supports them:
-    // - resolution
-    // - fullscreen/windowed
-    // - VSync
-    // - scalability
-    // - frame limit
+    SanitizeConfig(CurrentConfig);
+    if(UGameUserSettings* Settings=GEngine?GEngine->GetGameUserSettings():nullptr)
+    {
+        Settings->SetScreenResolution(FIntPoint(CurrentConfig.Width,CurrentConfig.Height));
+        Settings->SetFullscreenMode(CurrentConfig.bFullscreen?EWindowMode::Fullscreen:EWindowMode::Windowed);
+        Settings->SetShadowQuality(CurrentConfig.bShadows?3:0);
+        Settings->SetTextureQuality(FMath::Clamp(FMath::FloorLog2(CurrentConfig.MaxTextureSize)-8,0,3));
+        if(FApp::CanEverRender()) Settings->ApplySettings(false);
+    }
+    if(GEngine) GEngine->DisplayGamma=FMath::Clamp(2.2f*CurrentConfig.GammaLevel/128.f,0.5f,4.f);
+    auto SetCVar=[](const TCHAR* Name,int32 Value){if(auto* C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByGameSetting);};
+    SetCVar(TEXT("r.LensFlareQuality"),CurrentConfig.bLensFlare?2:0);
+    SetCVar(TEXT("r.DetailMode"),CurrentConfig.TerrainDetailIndex);
+    SetCVar(TEXT("r.MaterialQualityLevel"),(CurrentConfig.bBumpMaps||CurrentConfig.bSpecularMaps)?1:0);
 
     OnVideoChangeRequested.Broadcast(CurrentConfig);
 

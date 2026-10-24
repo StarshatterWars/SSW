@@ -17,6 +17,7 @@
 */
 
 #include "MusicTrack.h"
+#include "DataLoader.h"
 
 #include "AudioConfig.h"
 #include "Game.h"
@@ -62,8 +63,13 @@ MusicTrack::MusicTrack(const Text& txt, MusicMode m, int n)
 
     name.setSensitive(false);
 
-    if (name.contains(".ogg")) {
-        sound = USound::CreateOggStream(name);
+    if (name.contains(".ogg") || name.indexOf("/Game/")==0) {
+        if(name.indexOf("/Game/")==0) sound=USound::CreateOggStream(name);
+        else if(auto* Loader=DataLoader::GetLoader())
+        {
+            const Text Previous=Loader->GetDataPath();Loader->SetDataPath("");
+            Loader->LoadSound(name,sound,USound::STREAMED|USound::OGGVORBIS,true);Loader->SetDataPath(Previous);
+        }
 
         if (!sound) {
             UE_LOG(LogStarshatterAudio, Warning, TEXT("MusicTrack: Failed to create OGG stream for track."));

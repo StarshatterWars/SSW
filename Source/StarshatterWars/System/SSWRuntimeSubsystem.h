@@ -42,6 +42,7 @@ class AActor;
 
 class ASSWCameraManager;
 class AShipActor;
+class ANativeTerrainActor;
 class ASystemSceneBuilder;
 
 
@@ -142,6 +143,7 @@ private:
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> ProjectileFallbackMesh;
     UPROPERTY(Transient) TMap<FString,TObjectPtr<UStaticMesh>> ProjectileMeshes;
     TWeakObjectPtr<ASystemSceneBuilder> MissionPresentationBuilder;
+    TWeakObjectPtr<ANativeTerrainActor> NativeTerrain;
     TArray<TWeakObjectPtr<AShipActor>> MissionPresentationShips;
     // Presentation only: fixed spawn offsets preserve legacy movement and navigation.
     TMap<Ship*, FVector> MissionPresentationOffsets;

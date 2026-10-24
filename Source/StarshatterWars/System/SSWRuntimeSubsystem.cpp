@@ -1,5 +1,6 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "NativeTerrainActor.h"
 
 #include "SimShot.h"
 #include "Sensor.h"
@@ -395,6 +396,11 @@ void USSWRuntimeSubsystem::UpdateWorld()
 
         SimInstance->ExecFrame(Seconds);
         UpdateProjectileVisuals();
+        if(SimRegion* Region=SimInstance->GetActiveRegion())
+        {
+            if(Region->GetTerrain() && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
+            if(auto* Surface=NativeTerrain.Get())Surface->UpdateTerrain(Region->GetTerrain(),SimInstance->GetPlayerShip()?SimInstance->GetPlayerShip()->GetLocation():FVector::ZeroVector,GetVisualLocationForRegion(Region,FVector::ZeroVector));
+        }
         WaypointRefreshSeconds += Seconds;
         if (WaypointRefreshSeconds >= 0.25) { WaypointRefreshSeconds = 0; UpdateMissionWaypoints(); }
 
@@ -1366,6 +1372,7 @@ void USSWRuntimeSubsystem::HandleMissionUnloading()
 
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
+    if(auto* Surface=NativeTerrain.Get())Surface->Destroy();NativeTerrain.Reset();
     ClearMissionWaypoints();
     ClearProjectileVisuals();
     for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
@@ -1388,6 +1395,16 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
 bool USSWRuntimeSubsystem::GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const
 {
     if (!Carrier || !Carrier->GetRegion()) return false;
+    for(const TWeakObjectPtr<AShipActor>& Visual:MissionPresentationShips)
+        if(Visual.IsValid() && Visual->GetRuntimeShip()==Carrier)
+        {
+            const FVector Delta=SimPoint-Carrier->GetLocation();
+            const Camera& Frame=Carrier->GetCam();
+            const FVector Local(FVector::DotProduct(Delta,Frame.vpn()),
+                FVector::DotProduct(Delta,Frame.vrt()),FVector::DotProduct(Delta,Frame.vup()));
+            OutPoint=Visual->GetActorTransform().TransformPosition(Local);
+            return true;
+        }
     OutPoint = GetVisualLocationForRegion(Carrier->GetRegion(), SimPoint);
     return true;
 }

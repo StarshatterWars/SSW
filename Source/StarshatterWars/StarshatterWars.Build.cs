@@ -32,6 +32,8 @@ public class StarshatterWars : ModuleRules
             "NiagaraCore",
             "RenderCore",
             "ImageCore",
+            "PhysicsCore",
+            "Chaos",
             "RHI",
             "DeveloperSettings",
         });

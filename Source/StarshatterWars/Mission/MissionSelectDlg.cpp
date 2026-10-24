@@ -23,6 +23,7 @@
 */
 
 #include "MissionSelectDlg.h"
+#include "ConfirmDlg.h"
 #include "MenuScreen.h"
 #include "MissionInfo.h"
 
@@ -220,7 +221,7 @@ void UMissionSelectDlg::Show()
     if (CampaignPtr)
     {
         const int32 Id = CampaignPtr->GetCampaignId();
-        bEditable = (Id >= Campaign::MULTIPLAYER_MISSIONS && Id <= Campaign::CUSTOM_MISSIONS);
+        bEditable = (Id == Campaign::CUSTOM_MISSIONS);
 
         if (UButton* NewBtn = GetButton(301))  NewBtn->SetIsEnabled(bEditable);
         if (UButton* EditBtn = GetButton(302)) EditBtn->SetIsEnabled(false);
@@ -473,7 +474,7 @@ void UMissionSelectDlg::OnCampaignComboChanged(FString SelectedItem, ESelectInfo
 
         // Update editability:
         const int32 Id = C->GetCampaignId();
-        bEditable = (Id >= Campaign::MULTIPLAYER_MISSIONS && Id <= Campaign::CUSTOM_MISSIONS);
+        bEditable = (Id == Campaign::CUSTOM_MISSIONS);
 
         if (UButton* NewBtn = GetButton(301))  NewBtn->SetIsEnabled(bEditable);
         if (UButton* EditBtn = GetButton(302)) EditBtn->SetIsEnabled(false);
@@ -551,6 +552,24 @@ void UMissionSelectDlg::OnEditClicked()
 
 void UMissionSelectDlg::OnDeleteClicked()
 {
-    // Legacy confirm flow referenced ConfirmDlg.
-    // If you have a confirm dialog screen, invoke it here.
+    if(!manager || !CampaignPtr || CampaignPtr->GetCampaignId()!=Campaign::CUSTOM_MISSIONS || MissionId<=0 || !CampaignPtr->GetMissionInfo(MissionId))return;
+    manager->ShowConfirmDlg();auto* Dialog=manager->GetConfirmDlg();if(!Dialog)return;
+    PendingDeleteId=MissionId;PendingDeleteCampaign=CampaignPtr;
+    Dialog->SetTitle(TEXT("Delete custom mission"));
+    Dialog->SetMessage(TEXT("Permanently delete this custom mission?"));
+    Dialog->OnConfirmed.RemoveAll(this);Dialog->OnCanceled.RemoveAll(this);
+    Dialog->OnConfirmed.AddDynamic(this,&UMissionSelectDlg::ConfirmDeleteMission);
+    Dialog->OnCanceled.AddDynamic(this,&UMissionSelectDlg::CancelDeleteMission);
+}
+
+void UMissionSelectDlg::ConfirmDeleteMission()
+{
+    const int32 Id=PendingDeleteId;Campaign* Expected=PendingDeleteCampaign;CancelDeleteMission();
+    if(!Expected||Expected!=CampaignPtr||Expected!=Campaign::GetCampaign()||Expected->GetCampaignId()!=Campaign::CUSTOM_MISSIONS||Id<=0||!Expected->GetMissionInfo(Id))return;
+    Expected->DeleteMission(Id);MissionId=0;SelectedMissionIndex=-1;EditMission=nullptr;PopulateMissions();UpdateDescriptionAndButtons();
+}
+void UMissionSelectDlg::CancelDeleteMission()
+{
+    PendingDeleteId=-1;PendingDeleteCampaign=nullptr;
+    if(manager)if(auto* D=manager->GetConfirmDlg()){D->OnConfirmed.RemoveAll(this);D->OnCanceled.RemoveAll(this);}
 }

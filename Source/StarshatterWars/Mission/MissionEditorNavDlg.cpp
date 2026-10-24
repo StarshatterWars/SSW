@@ -29,6 +29,10 @@
 
 
 #include "MissionEditorNavDlg.h"
+#include "MissionRouteMap.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 
 #include "MenuScreen.h"
 #include "MissionEditorDlg.h"
@@ -76,6 +80,14 @@ void UMissionEditorNavDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    if(WidgetTree && !RouteMap)
+    {
+        UCanvasPanel* Canvas=Cast<UCanvasPanel>(WidgetTree->RootWidget);
+        if(!Canvas){auto* Old=WidgetTree->RootWidget.Get();Canvas=WidgetTree->ConstructWidget<UCanvasPanel>();WidgetTree->RootWidget=Canvas;if(Old){auto* MapSlot=Canvas->AddChildToCanvas(Old);MapSlot->SetAnchors(FAnchors(0,0,1,1));MapSlot->SetOffsets(FMargin(0));}}
+        RouteMap=WidgetTree->ConstructWidget<UMissionRouteMap>();RouteMap->Model=mission;RouteMap->SetClipping(EWidgetClipping::ClipToBounds);
+        RouteMap->RegionName=[this](){return CmbRegion?CmbRegion->GetSelectedOption():(mission?FString(ANSI_TO_TCHAR(mission->GetRegion())):FString());};
+        auto* MapSlot=Canvas->AddChildToCanvas(RouteMap);MapSlot->SetAnchors(FAnchors(.04f,.32f,.96f,.89f));MapSlot->SetOffsets(FMargin(0));MapSlot->SetZOrder(5);
+    }
     BindFormWidgets();
     RegisterControls();
     PopulateTypeOptionsIfEmpty();
@@ -432,3 +444,5 @@ void UMissionEditorNavDlg::OnTabClicked_Map()
 {
     ShowTab(2);
 }
+
+void UMissionEditorNavDlg::SetMission(Mission* InMission){mission=InMission;if(RouteMap)RouteMap->Model=mission;}

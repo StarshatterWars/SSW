@@ -20,6 +20,8 @@ class UNiagaraSystem;
 class UPointLightComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class FNativeShipGeometry;
+class Camera;
 class Ship;
 class Drive;
 class Weapon;
@@ -85,6 +87,12 @@ public:
     virtual void Tick(float DeltaTime) override;
 
     void BindRuntimeShip(Ship* InShip);
+    int32 QueryNativeHullRay(const Camera& Frame,const FVector& Origin,const FVector& Direction,double Length,FVector& Hit,Weapon*& HitWeapon);
+    int32 QueryNativeHullOverlap(const Camera& Frame,AShipActor& Other,const Camera& OtherFrame);
+    bool GetSimulationWeaponMuzzle(const Camera& Frame,const Weapon* InWeapon,int32 Index,FVector& Position,Camera& MuzzleFrame);
+private:
+    TSharedPtr<FNativeShipGeometry> NativeGeometry;
+public:
     void UpdateFromRuntimeShip(float DeltaTime);
     void SyncCarriedMissiles();
     UFUNCTION(BlueprintCallable, Category="Ship|Skin") void RefreshHullSkin();

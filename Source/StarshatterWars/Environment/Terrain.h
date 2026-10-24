@@ -62,6 +62,7 @@ public:
 	virtual void      ExecFrame(double seconds);
 
 	double            Height(double x, double y) const;
+    double NativeSampleSpacing() const {return scale;}
 
 	const Vec3B* Normals()      const { return terrain_normals; }
 	TerrainRegion* GetRegion() { return region; }

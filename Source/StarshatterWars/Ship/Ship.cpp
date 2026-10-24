@@ -15,6 +15,7 @@
 	Starship class
 */
 #include "Ship.h"
+#include "ShipActor.h"
 #include "MeshCollision.h"
 #include "CoreMinimal.h"        // UE_LOG, FVector, basic UE types
 #include "Math/Vector.h"        // FVector (explicit)
@@ -1156,6 +1157,8 @@ void Ship::InitializeRuntimeDeathSpiralFromDesign()
 
 Ship::~Ship()
 {
+    if(auto* Actor=GetNativePresentation()) Actor->BindRuntimeShip(nullptr);
+
 	// the loadout can notxbe cleared during Destroy, because it
 	// is needed after Destroy to create the re-spawned ship
 
@@ -2166,8 +2169,11 @@ Ship::CollidesWith(Physical& o)
 	if (DeltaLoc.Length() > GetRadius() + o.GetRadius())
 		return 0;
 
-	if (!o.GetRep())
-		return 1;
+    if(o.GetType()==ESimObject::SHIP)
+        if(auto* A=GetNativePresentation())
+            if(auto* B=static_cast<Ship&>(o).GetNativePresentation())
+            {const int32 Native=A->QueryNativeHullOverlap(GetCam(),*B,o.GetCam());if(Native>=0) return Native;}
+    if (!o.GetRep()) return 1;
 
 	for (int i = 0; i < detail.NumModels(detail_level); i++) {
 		Graphic* g = detail.GetRep(detail_level, i);
@@ -2476,7 +2482,11 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	if (shieldRep && hit_type == HIT_SHIELD && !shot->IsBeam())
 		blow_len = shieldRep->Radius() * 2;
 
-	for (int i = 0; i < detail.NumModels(detail_level) && !hit_hull; i++) {
+    int32 NativeResult=-1;Weapon* NativeWeapon=nullptr;
+    if(auto* Actor=GetNativePresentation()) NativeResult=Actor->QueryNativeHullRay(GetCam(),shot_org,shot_vpn,blow_len,hull_impact,NativeWeapon);
+    if(NativeResult>0) hit_hull=true;
+    if(NativeWeapon && wep) *wep=NativeWeapon;
+    for (int i = 0; NativeResult<0 && i < detail.NumModels(detail_level) && !hit_hull; i++) {
 		Solid* s = (Solid*)detail.GetRep(detail_level, i);
 		if (s) {
 			if (easy) {
@@ -2488,7 +2498,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 		}
 	}
 
-    if (!hit_hull && detail.NumModels(detail_level)==0) {
+    if (NativeResult<0 && !hit_hull && detail.NumModels(detail_level)==0) {
         hit_hull=MeshCollision::RaySphere(shot_org,shot_vpn,shot_len,GetLocation(),GetRadius(),hull_impact);
     }
 	if (hit_hull) {
@@ -2496,6 +2506,7 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 			hit_type = HIT_SHIELD;
 
 		hit_type = hit_type | HIT_HULL;
+        if(NativeWeapon) hit_type |= HIT_TURRET;
 		hpt = hull_impact;
 
 		d1 = (hull_impact - shot_org).Length();
@@ -2976,6 +2987,7 @@ Ship::IsAutoNavEngaged()
 void
 Ship::SetAutoNav(bool engage)
 {
+    if (engage && inbound && sim && sim->GetPlayerShip()==this) { SetAutoLand(true);return; }
     if (!navsys) {
         UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: ship has no navigation system."));
         return;
@@ -4403,6 +4415,7 @@ Ship::GetCockpit() const
 void
 Ship::ShowCockpit()
 {
+    bNativeCockpitRequested=true;
 	if (cockpit) {
 		cockpit->Show();
 
@@ -4435,6 +4448,7 @@ Ship::ShowCockpit()
 void
 Ship::HideCockpit()
 {
+    bNativeCockpitRequested=false;
 	if (cockpit)
 		cockpit->Hide();
 }
@@ -7133,3 +7147,8 @@ void Ship::StopManualFlight()
     SetManualThrottle(0);
     if (HasManualThrottle() && flcs) flcs->FullStop();
 }
+
+void Ship::BindNativePresentation(AShipActor* Actor) { NativePresentation=Actor; }
+AShipActor* Ship::GetNativePresentation() const { return NativePresentation.Get(); }
+bool Ship::GetNativeWeaponMuzzle(const Weapon* W,int32 Index,FVector& Position,Camera& Frame) const
+{ auto* Actor=GetNativePresentation();return Actor&&Actor->GetSimulationWeaponMuzzle(GetCam(),W,Index,Position,Frame); }

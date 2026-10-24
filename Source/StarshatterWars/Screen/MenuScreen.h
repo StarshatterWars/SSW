@@ -112,6 +112,7 @@ public:
     void ShowExitDlg();
     void ShowConfirmDlg();
     void HideConfirmDlg();
+    UConfirmDlg* GetConfirmDlg() const {return ConfirmDlg;}
 
     void ShowLoadDlg();
     void HideLoadDlg();
