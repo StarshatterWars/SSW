@@ -232,24 +232,10 @@ struct FMissionCameraRig
                     CameraSimPoint += Right * HeldLaneOffset;
                 }
             }
-            if (bLaunchDeckHold)
-            {
-                // The old implementation held Eye at CamLoc() for the entire
-                // launch run, making the flight look like a static tableau.
-                // Travel forward along the .def launch segment, carrier-relative.
-                // A partial follow factor leaves perceptible motion of both the
-                // fighter and the bay, while preserving the authored camera lane.
-                const FVector DeckRun = ActiveDeck->EndPoint() - ActiveDeck->StartPoint();
-                const double DeckLength = DeckRun.Size();
-                if (DeckLength > 1.0)
-                {
-                    const FVector Along = DeckRun / DeckLength;
-                    const double DistanceAlong = FMath::Clamp(
-                        FVector::DotProduct(Player->GetLocation() - ActiveDeck->StartPoint(), Along),
-                        0.0, DeckLength);
-                    CameraSimPoint += Along * (0.70 * DistanceAlong);
-                }
-            }
+            // Keep the camera stationed INSIDE the carrier's launch bay.
+            // Its authored .def cam position, adjusted only for the occupied lane,
+            // stays carrier-relative while the fighter travels through the tube.
+            // Do not move this viewpoint along the catapult or behind the fighter.
             const FVector Offset = CameraSimPoint - Player->GetLocation();
             const auto& Basis = Player->GetCam();
             Eye = Pose.TransformPosition(FVector(FVector::DotProduct(Offset, Basis.vpn()),
@@ -275,19 +261,15 @@ struct FMissionCameraRig
                 if (RunUE.IsNearlyZero()) RunUE = Forward.GetSafeNormal();
                 if (RunUE.IsNearlyZero()) RunUE = FVector::ForwardVector;
 
-                // Follow the same authored launch direction used by FlightDeck.
-                // Actual AShipActor location incorporates the carrier's model
-                // transform and the fighter's parked lane: use it for framing.
+                // Eye is still the converted authored in-bay camera point.
+                // Tracking rotation follows the actual rendered hull as it stages
+                // and accelerates away; world-up prevents unwanted camera roll.
                 const FVector FighterCenter = Visual->GetActorLocation();
                 const FVector WorldUp = FVector::UpVector;
-                const double Standoff = FMath::Clamp(Radius * 2.7, 140.0, 850.0);
-                const double Height = FMath::Clamp(Radius * 0.9, 65.0, 320.0);
-                const FVector DesiredEye = FighterCenter - RunUE * Standoff + WorldUp * Height;
                 const FVector Target = FighterCenter + RunUE * FMath::Min(Radius * 0.22, 60.0);
-                // Use the full camera reframe only for launch decks. Other
-                // docked/recovery views preserve their original layout.
-                Eye = DesiredEye;
-                Rotation = Aim(Target - Eye, WorldUp, Rotation);
+                const FVector LookDirection = Target - Eye;
+                if (!LookDirection.IsNearlyZero())
+                    Rotation = Aim(LookDirection, WorldUp, Rotation);
             }
             else
             {
