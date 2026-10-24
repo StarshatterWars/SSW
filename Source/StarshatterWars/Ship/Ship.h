@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter 4.5
+/*  Project Starshatter 4.5
     Destroyer Studios LLC
     Copyright © 1997-2004. All Rights Reserved.
 
@@ -450,6 +450,9 @@ private:
 public:
     bool                    IsAutoNavEngaged();
     void                    SetAutoNav(bool engage = true);
+    bool                    CanAutoLand() const;
+    bool                    IsAutoLandEngaged() const { return bAutoLand; }
+    bool                    SetAutoLand(bool engage = true);
     void                    CommandMode();
 
     void                    ClearTrack();
@@ -600,6 +603,7 @@ protected:
     Ship* carrier;
     FlightDeck* dock;
     InboundSlot* inbound;
+    bool bAutoLand = false;
 
     SimDirector* net_control;
 

@@ -1,68 +1,55 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "ShipActor.h"
 #include "FighterActor.generated.h"
 
-class USceneComponent;
 class UChildActorComponent;
+class UFighterLandingGearComponent;
 
-/** A single landing-gear assembly, in the same presentation coordinate frame as PointRoot. */
+/** Authoring data only; coordinates are unscaled ship-local (forward, right, up). */
 USTRUCT(BlueprintType)
 struct FFighterLandingGearDefinition
 {
     GENERATED_BODY()
-
-    /** Whether this native gear slot is used by this fighter design. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear")
-    bool bEnabled = false;
-
-    /** Legacy gear.start, converted to the ship actor's presentation frame. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear")
-    FVector RetractedPosition = FVector::ZeroVector;
-
-    /** Legacy gear.end, converted to the ship actor's presentation frame. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear")
-    FVector ExtendedPosition = FVector::ZeroVector;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear") bool bEnabled = true;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear") FVector RetractedPosition = FVector::ZeroVector;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear") FVector ExtendedPosition = FVector::ZeroVector;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear") FString Model;
+    FFighterLandingGearDefinition() = default;
+    FFighterLandingGearDefinition(const TCHAR* InModel, const FVector& Start, const FVector& End)
+        : RetractedPosition(Start), ExtendedPosition(End), Model(InModel) {}
 };
 
-/** Common fighter presentation attachments. Gear physics and simulation stay with legacy Ship. */
+/** Shared fighter presentation. Legacy Ship/LandingGear remain the flight and gear authority. */
 UCLASS(Blueprintable)
 class STARSHATTERWARS_API AFighterActor : public AShipActor
 {
     GENERATED_BODY()
-
 public:
     AFighterActor();
-
     virtual void OnConstruction(const FTransform& Transform) override;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Components")
-    TObjectPtr<USceneComponent> FighterCockpitRoot;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Components")
-    TObjectPtr<USceneComponent> FighterLandingGearRoot;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fighter|Components")
-    TObjectPtr<USceneComponent> FighterLaunchRoot;
-
-    /** One actor per actual .def gear entry (no fixed four-slot padding). */
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear")
-    TArray<TObjectPtr<UChildActorComponent>> LandingGearActors;
-
-    /** Set BP gear actor class for each .def gear entry by index. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear")
-    TArray<TSubclassOf<AActor>> LandingGearBlueprintClasses;
-
-    /** End positions for animation, indexed by .def gear entry. */
-    UPROPERTY(Transient, VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear")
-    TArray<TObjectPtr<USceneComponent>> LandingGearExtendedMarkers;
-
-    /** Set from each concrete fighter's authored .def gear.start / gear.end entries. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fighter|Landing Gear")
-    TArray<FFighterLandingGearDefinition> GearDefinitions;
-
-    /** Apply the authored gear marker coordinates; does not animate or alter simulation. */
-    UFUNCTION(BlueprintCallable, Category = "Fighter|Landing Gear")
-    void SynchronizeLandingGearMarkers();
+    virtual void Tick(float DeltaTime) override;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterCockpitRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterLandingGearRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterLaunchRoot;
+    /** Select this native component and set Child Actor Class to your cockpit BP. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") TObjectPtr<UChildActorComponent> CockpitActor;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") FString AuthoredCockpitModel;
+    /** Legacy source metadata, not an additional UE scale multiplier. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") float AuthoredCockpitScale = 1;
+    /** Exactly one native child-actor component per nested .def gear entry. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear") TArray<TObjectPtr<UFighterLandingGearComponent>> LandingGearActors;
+    /** Optional class overrides for compatibility; empty entries preserve component-level BP classes. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear") TArray<TSubclassOf<AActor>> LandingGearBlueprintClasses;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear") TArray<FFighterLandingGearDefinition> GearDefinitions;
+    /** Editor/unbound-actor preview only. Bound ships always use the legacy deployment fraction. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Landing Gear", meta=(ClampMin="0", ClampMax="1")) float PreviewGearDeployment = 0;
+    UFUNCTION(BlueprintPure, Category="Fighter|Landing Gear") float GetLandingGearDeployment() const;
+    /** Compatibility entry point: synchronizes native components without creating markers or slots. */
+    UFUNCTION(BlueprintCallable, Category="Fighter|Landing Gear") void SynchronizeLandingGearMarkers();
+protected:
+    /** Called once in each concrete native constructor with its authored definitions. */
+    void InitializeNativeFighterAttachments(const TCHAR* CockpitModel, float CockpitScale,
+        const FVector& CockpitPosition, const TArray<FFighterLandingGearDefinition>& Definitions);
+    void UpdateLandingGearPresentation();
 };

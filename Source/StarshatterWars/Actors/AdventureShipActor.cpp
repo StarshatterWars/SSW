@@ -4,7 +4,7 @@ AAdventureShipActor::AAdventureShipActor()
     SetActorScale3D(FVector(2.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Adventure"));
 }
 
 void AAdventureShipActor::ApplyAuthoredAttachmentDefaults()

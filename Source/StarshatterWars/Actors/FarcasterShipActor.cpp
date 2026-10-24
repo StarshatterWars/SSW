@@ -6,7 +6,7 @@ AFarcasterShipActor::AFarcasterShipActor()
     SetActorScale3D(FVector(15.0f));
     ApplyFarcasterDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Farcaster"));
 }
 
 void AFarcasterShipActor::OnConstruction(const FTransform& Transform)

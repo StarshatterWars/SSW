@@ -10,7 +10,13 @@ AThunderboltShipActor::AThunderboltShipActor()
     SetActorScale3D(FVector(0.270000f));
     ApplyThunderboltDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Thunderbolt"));
+    InitializeNativeFighterAttachments(TEXT("ThunderboltPit"), 0.020000f, FVector(20.000000f, 0.000000f, 180.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose1"), FVector(144.000000f, 0.000000f, -15.000000f), FVector(158.000000f, 0.000000f, -35.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft1"), FVector(-64.000000f, -20.000000f, -22.000000f), FVector(-64.000000f, -42.000000f, -48.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight1"), FVector(-64.000000f, 20.000000f, -22.000000f), FVector(-64.000000f, 42.000000f, -48.000000f)),
+    });
+
 }
 void AThunderboltShipActor::OnConstruction(const FTransform& Transform)
 {

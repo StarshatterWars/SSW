@@ -4,7 +4,7 @@ AZZFFShipActor::AZZFFShipActor()
     SetActorScale3D(FVector(8.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZFF"));
 }
 
 void AZZFFShipActor::ApplyAuthoredAttachmentDefaults()

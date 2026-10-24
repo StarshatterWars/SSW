@@ -29,8 +29,14 @@ public:
     void ClearRuntimeWeapon();
     bool IsBoundTo(const Weapon* InWeapon) const { return RuntimeWeapon==InWeapon; }
 
+    /** One native BP child per authored fixed-weapon muzzle, parented to this mount. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon Mount|Barrels")
+    TArray<TObjectPtr<UChildActorComponent>> BarrelComponents;
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")
     int32 GetMuzzleCount() const;
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")
     FVector GetMuzzleWorldLocation(int32 MuzzleIndex=0) const;
+    UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")
     FTransform GetMuzzleWorldTransform(int32 MuzzleIndex=0) const;
 };
 
@@ -41,7 +47,10 @@ struct FNativeWeaponMountDef
     TArray<FName> Types;
     FVector Location=FVector::ZeroVector;
     FVector Muzzle=FVector::ZeroVector;
+    TArray<FVector> Muzzles;
+    TArray<FVector> BarrelOffsets;
     double Azimuth=0;
     double Elevation=0;
 };
+namespace FighterWeaponMountCatalog { void Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Out); }
 namespace ShipWeaponMountCatalog { void Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Out); }

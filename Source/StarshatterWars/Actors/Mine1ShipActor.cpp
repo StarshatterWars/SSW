@@ -4,7 +4,7 @@ AMine1ShipActor::AMine1ShipActor()
     SetActorScale3D(FVector(1.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Mine1"));
 }
 
 void AMine1ShipActor::ApplyAuthoredAttachmentDefaults()

@@ -325,10 +325,54 @@ USceneComponent* AShipActor::CreateNativeTurretPoint(const FName& Name)
     return Point;
 }
 
-void AShipActor::InitializeNativeAuthoredAttachments()
+void AShipActor::InitializeNativeAuthoredAttachments(FName FighterDef)
 {
+    TArray<FNativeWeaponMountDef> FighterMounts;
+    if (!FighterDef.IsNone())
+    {
+        ShipWeaponMountCatalog::Get(FighterDef, FighterMounts);
+        checkf(FighterMounts.Num() == WeaponMountPointDefs.Num(), TEXT("Ship weapon catalog mismatch: %s"), *FighterDef.ToString());
+        HullWeaponRoot = CreateDefaultSubobject<USceneComponent>(TEXT("HullWeaponRoot"));
+        HullWeaponRoot->SetupAttachment(PointRoot);
+    }
+    int32 HullIndex = 0;
     for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
-        CreateNativeWeaponPoint(FName(*FString::Printf(TEXT("WeaponHardpoint_%02d"), Index + 1)));
+    {
+        const FNativeWeaponMountDef* Definition = FighterMounts.IsValidIndex(Index) ? &FighterMounts[Index] : nullptr;
+        // Keep existing loadout component names so their BP overrides retain their identity.
+        const FName ComponentName = Definition && !Definition->bLoadout
+            ? FName(*FString::Printf(TEXT("HullWeapon_%02d"), ++HullIndex))
+            : FName(*FString::Printf(TEXT("WeaponHardpoint_%02d"), Index + 1));
+        UShipWeaponMountComponent* Mount = CastChecked<UShipWeaponMountComponent>(CreateNativeWeaponPoint(ComponentName));
+        if (Definition)
+        {
+            Mount->StationName = Definition->Name;
+            Mount->bLoadoutHardpoint = Definition->bLoadout;
+            Mount->AllowedWeaponTypes = Definition->Types;
+            Mount->LegacyLocation = Definition->Location;
+            Mount->LegacyMuzzle = Definition->Muzzle;
+            Mount->LegacyMuzzles = Definition->Muzzles;
+            if (!Definition->bLoadout)
+            {
+                for (int32 BarrelIndex = 0; BarrelIndex < Definition->BarrelOffsets.Num(); ++BarrelIndex)
+                {
+                    const FName BarrelName(*FString::Printf(TEXT("%s_Barrel_%02d"), *ComponentName.ToString(), BarrelIndex + 1));
+                    UChildActorComponent* Barrel = CreateDefaultSubobject<UChildActorComponent>(BarrelName);
+                    Barrel->bEditableWhenInherited = true;
+                    Barrel->SetMobility(EComponentMobility::Movable);
+                    Barrel->SetupAttachment(Mount);
+                    Barrel->SetRelativeLocation(Definition->BarrelOffsets[BarrelIndex]);
+                    Mount->BarrelComponents.Add(Barrel);
+                }
+            }
+            if (Definition->bLoadout) LoadoutHardpoints.Add(Mount);
+            else
+            {
+                Mount->SetupAttachment(HullWeaponRoot);
+                HullWeaponMounts.Add(Mount);
+            }
+        }
+    }
     for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
         CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1)));
     SyncNativeAuthoredPoints();
@@ -367,6 +411,16 @@ void AShipActor::SyncBlueprintActorSlots()
                 Slot->SetChildActorClass(WeaponBlueprintClasses[Index]);
         }
     }
+    // Role-specific overrides take precedence over the compatible combined array.
+    auto ApplyRoleClasses = [](const TArray<TObjectPtr<USceneComponent>>& Mounts, const TArray<TSubclassOf<AActor>>& Classes)
+    {
+        for (int32 Index = 0; Index < Mounts.Num(); ++Index)
+            if (UChildActorComponent* Slot = Cast<UChildActorComponent>(Mounts[Index].Get()))
+                if (Classes.IsValidIndex(Index) && Classes[Index] && Slot->GetChildActorClass() != Classes[Index])
+                    Slot->SetChildActorClass(Classes[Index]);
+    };
+    ApplyRoleClasses(HullWeaponMounts, HullWeaponBlueprintClasses);
+    ApplyRoleClasses(LoadoutHardpoints, LoadoutHardpointBlueprintClasses);
     for (int32 Index = 0; Index < AuthoredTurretPointComponents.Num(); ++Index)
     {
         if (UChildActorComponent* Slot = Cast<UChildActorComponent>(AuthoredTurretPointComponents[Index].Get()))
@@ -1922,7 +1976,7 @@ void AShipActor::SyncCarriedMissiles()
         Mesh->SetRelativeRotation(FRotator::ZeroRotator);
 
         Weapon* W = Mount->RuntimeWeapon;
-        Mesh->SetVisibility(W->Ammo() > 0 && W->GetAvailability() > 1.0);
+        Mesh->SetVisibility((!HullWeaponRoot || !Mount->GetChildActorClass()) && W->Ammo() > 0 && W->GetAvailability() > 1.0);
     }
 }
 

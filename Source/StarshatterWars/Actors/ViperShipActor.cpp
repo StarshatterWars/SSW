@@ -8,7 +8,13 @@ AViperShipActor::AViperShipActor()
     SetActorScale3D(FVector(0.230000f));
     ApplyViperDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Viper"));
+    InitializeNativeFighterAttachments(TEXT("ViperPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(73.000000f, 0.000000f, -14.000000f), FVector(87.000000f, 0.000000f, -40.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-40.000000f, -30.000000f, -12.000000f), FVector(-40.000000f, -50.000000f, -40.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight0.mag"), FVector(-40.000000f, 30.000000f, -12.000000f), FVector(-40.000000f, 50.000000f, -40.000000f)),
+    });
+
 }
 void AViperShipActor::OnConstruction(const FTransform& Transform)
 {

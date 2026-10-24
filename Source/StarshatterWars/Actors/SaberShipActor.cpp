@@ -4,7 +4,12 @@ ASaberShipActor::ASaberShipActor()
     SetActorScale3D(FVector(0.2f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Saber"));
+    InitializeNativeFighterAttachments(TEXT(""), 1.000000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("LeftSkid"), FVector(0.000000f, -40.000000f, -36.000000f), FVector(0.000000f, -58.000000f, -54.000000f)),
+        FFighterLandingGearDefinition(TEXT("RightSkid"), FVector(0.000000f, 40.000000f, -36.000000f), FVector(0.000000f, 58.000000f, -54.000000f)),
+    });
+
 }
 
 void ASaberShipActor::ApplyAuthoredAttachmentDefaults()

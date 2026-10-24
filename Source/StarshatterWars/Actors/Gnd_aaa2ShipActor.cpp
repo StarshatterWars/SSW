@@ -4,7 +4,7 @@ AGnd_aaa2ShipActor::AGnd_aaa2ShipActor()
     SetActorScale3D(FVector(2.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Gnd_aaa2"));
 }
 
 void AGnd_aaa2ShipActor::ApplyAuthoredAttachmentDefaults()

@@ -110,6 +110,7 @@ Hangar::~Hangar()
 void
 Hangar::ExecFrame(double seconds)
 {
+    if (!FMath::IsFinite(seconds) || seconds < 0) return;
 	for (int n = 0; n < nsquadrons; n++) {
 		if (squadrons[n] && nslots[n] > 0) {
 			for (int i = 0; i < nslots[n]; i++) {
@@ -135,15 +136,10 @@ Hangar::ExecFrame(double seconds)
 						slot->state = APPROACH;
 					break;
 
-				case MAINT:
-					if (slot->time > 0) {
-						slot->time -= seconds;
-					}
-					else {
-						slot->time = 0;
-						slot->state = STORAGE;
-					}
-					break;
+                case MAINT:
+                    slot->time = FMath::Max(0.0, slot->time - seconds);
+                    if (slot->time <= 0 && !slot->ship) slot->state = STORAGE;
+                    break;
 
 				case PREP:
 					if (slot->time > 0) {
@@ -310,7 +306,14 @@ Hangar::Update(SimObject* obj)
 				if (slot->ship == obj) {
 					// was ship destroyed in combat,
 					// or did it just dock here?
-					if (slot->state != MAINT) {
+                    // The recovered runtime object is retired by SimRegion::DockShips.
+                    // Keep maintenance inventory/time, but never reuse its destroyed pointer.
+                    if (slot->state == MAINT) {
+                        slot->ship = nullptr;
+                        slot->deck = nullptr;
+                        slot->slot = -1;
+                    }
+                    else {
 						slot->state = UNAVAIL;
 						slot->ship = 0;
 						slot->deck = 0;
@@ -568,12 +571,25 @@ Hangar::Stow(Ship* incoming)
 	int squadron = -1;
 	int slot = -1;
 
-	if (FindSlot(incoming, squadron, slot)) {
-		HangarSlot* s = &(squadrons[squadron][slot]);
-		s->state = MAINT;
+    if (!incoming || !incoming->Design() || incoming->Design()->integrity <= 0) return false;
+    if (FindSlot(incoming, squadron, slot) && squadron >= 0 && squadron < nsquadrons &&
+        slot >= 0 && slot < nslots[squadron] && squadrons[squadron]) {
+        HangarSlot* s = &(squadrons[squadron][slot]);
+        if (s->state == MAINT && s->ship == incoming) return true;
+        s->ship = incoming;
+        Observe(incoming);
+        s->deck = nullptr;
+        s->slot = -1;
+        s->state = MAINT;
 		s->design = incoming->Design();
 		s->time = 2400;
-		s->package = 0;   // XXX MEMORY LEAK?
+        s->package = nullptr;
+        s->alert_hold = false;
+        // Keep the selected loadout for the next fresh, fully serviced airframe.
+        if (const int* CurrentLoadout = incoming->GetLoadout()) {
+            const int Count = FMath::Min(16, incoming->Design()->hardpoints.size());
+            for (int Index=0; Index<Count; ++Index) s->loadout[Index] = CurrentLoadout[Index];
+        }
 
 		// extra maintenance time?
 		if (incoming->GetIntegrity() < incoming->Design()->integrity) {

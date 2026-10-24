@@ -28,7 +28,7 @@ AIM2800ShipActor::AIM2800ShipActor()
     SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM2800Defaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("CargoC"));
 }
 
 void AIM2800ShipActor::OnConstruction(const FTransform& Transform)

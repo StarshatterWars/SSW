@@ -9,7 +9,13 @@ AEagleShipActor::AEagleShipActor()
     SetActorScale3D(FVector(0.250000f));
     ApplyEagleDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Eagle"));
+    InitializeNativeFighterAttachments(TEXT("EaglePit"), 0.020000f, FVector(23.000000f, 0.000000f, 102.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose1"), FVector(100.000000f, 0.000000f, -18.000000f), FVector(130.000000f, 0.000000f, -38.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft1"), FVector(-74.000000f, -20.000000f, -20.000000f), FVector(-70.000000f, -40.000000f, -50.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight1"), FVector(-74.000000f, 20.000000f, -20.000000f), FVector(-70.000000f, 40.000000f, -50.000000f)),
+    });
+
 }
 void AEagleShipActor::OnConstruction(const FTransform& Transform)
 {

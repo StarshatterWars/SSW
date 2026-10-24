@@ -48,6 +48,8 @@ public:
 
     GEAR_STATE        GetState()        const { return state; }
     void              SetState(GEAR_STATE s);
+    /** Read-only legacy transit fraction for native fighter presentation. */
+    double            GetDeployment() const { return FMath::Clamp(transit, 0.0, 1.0); }
     int               NumGear()         const { return ngear; }
     Solid* GetGear(int i);
     FVector           GetGearStop(int i);

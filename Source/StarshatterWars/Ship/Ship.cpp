@@ -2064,6 +2064,7 @@ void
 Ship::SetInbound(InboundSlot* s)
 {
 	inbound = s;
+    if (!inbound && (flight_phase == EOPSMode::DOCKING || flight_phase == EOPSMode::DOCKED)) bAutoLand = false;
 
 	if (inbound && flight_phase == EOPSMode::ACTIVE) {
 		flight_phase = EOPSMode::APPROACH;
@@ -2991,6 +2992,8 @@ Ship::SetAutoNav(bool engage)
         navsys->EngageAutoNav();
         if (!navsys->AutoNavEngaged()) return;
         bManualThrottle = false;
+        if (bAutoLand && inbound) inbound->SetFinal(false);
+        bAutoLand = false;
     }
     else {
         // Clear the requested state even during a navigation power loss.
@@ -3499,8 +3502,12 @@ void
 Ship::ExecNavFrame(
 	double Seconds)
 {
+    // Validate the landing clearance before updating the active flight director.
+    if (bAutoLand && flight_phase < EOPSMode::DOCKING && !CanAutoLand())
+        SetAutoLand(false);
+
 	bool AutoPilot =
-		false;
+		bAutoLand;
 
 	//-------------------------------------------------------------
 	// Update director info string
@@ -6574,6 +6581,14 @@ Ship::SetControls(MotionController* m)
 		return;
 	}
 
+    if (bAutoLand && inbound) {
+        if (!dir || dir->GetType() != ESteerAIType::FIGHTER) {
+            delete dir;
+            dir = SteerAI::Create(this, ESteerAIType::FIGHTER);
+        }
+        return;
+    }
+
 	if (navsys && navsys->AutoNavEngaged()) {
 		NavAI* nav = 0;
 
@@ -7086,6 +7101,11 @@ void Ship::EnableManualFlight()
         UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
         navsys->DisengageAutoNav();
     }
+    if (bAutoLand) {
+        if (inbound) inbound->SetFinal(false);
+        UE_LOG(LogTemp, Display, TEXT("[AutoLand] Manual takeover ship='%hs'"), GetName());
+    }
+    bAutoLand = false;
     delete dir;
     dir = new FEnhancedRotationDirector(this);
     bManualRotation = true;

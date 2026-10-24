@@ -1,8 +1,8 @@
 #pragma once
-#include "ShipActor.h"
+#include "FighterActor.h"
 #include "ZZAShipActor.generated.h"
 UCLASS(Blueprintable)
-class STARSHATTERWARS_API AZZAShipActor : public AShipActor
+class STARSHATTERWARS_API AZZAShipActor : public AFighterActor
 {
     GENERATED_BODY()
 public:

@@ -1022,6 +1022,8 @@ enum class RadioMessageAction : uint8
 	// Count
 	//-------------------------------------------------------------
 
+	REQUEST_LANDING_CLEARANCE UMETA(DisplayName = "Request Landing Clearance"),
+
 	NUM_ACTIONS     UMETA(DisplayName = "Num Actions")
 };
 

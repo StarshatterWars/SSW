@@ -306,6 +306,18 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ship|Weapons")
     TObjectPtr<USceneComponent> WeaponHardpointRoot;
 
+    /** Fighter fixed weapons, separate from selectable loadout stations. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Hull Weapons")
+    TObjectPtr<USceneComponent> HullWeaponRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Hull Weapons")
+    TArray<TObjectPtr<USceneComponent>> HullWeaponMounts;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Loadout Hardpoints")
+    TArray<TObjectPtr<USceneComponent>> LoadoutHardpoints;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Hull Weapons")
+    TArray<TSubclassOf<AActor>> HullWeaponBlueprintClasses;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Loadout Hardpoints")
+    TArray<TSubclassOf<AActor>> LoadoutHardpointBlueprintClasses;
+
     /** Inherited native DEF-authored point components; one per authored entry. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Ship|Authored Points")
     TArray<TObjectPtr<USceneComponent>> AuthoredWeaponPointComponents;
@@ -635,7 +647,7 @@ protected:
     USceneComponent* CreateNativeWeaponPoint(const FName& Name);
     USceneComponent* CreateNativeTurretPoint(const FName& Name);
     void SyncNativeAuthoredPoints();
-    void InitializeNativeAuthoredAttachments();
+    void InitializeNativeAuthoredAttachments(FName FighterDef = NAME_None);
     virtual void ApplyAuthoredAttachmentDefaults() {}
 
     /** Shared attachment builder. Ship-specific definitions determine the exact slot count. */

@@ -4,7 +4,7 @@ AZZCAShipActor::AZZCAShipActor()
     SetActorScale3D(FVector(4.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZCA"));
 }
 
 void AZZCAShipActor::ApplyAuthoredAttachmentDefaults()

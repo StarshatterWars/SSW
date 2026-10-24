@@ -8,7 +8,13 @@ AAvengerShipActor::AAvengerShipActor()
     SetActorScale3D(FVector(0.270000f));
     ApplyAvengerDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Avenger"));
+    InitializeNativeFighterAttachments(TEXT("AvengerPit"), 0.020000f, FVector(0.000000f, 0.000000f, 256.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(144.000000f, 0.000000f, -25.000000f), FVector(155.000000f, 0.000000f, -45.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-64.000000f, -20.000000f, -25.000000f), FVector(-64.000000f, -42.000000f, -50.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight0.mag"), FVector(-64.000000f, 20.000000f, -25.000000f), FVector(-64.000000f, 42.000000f, -50.000000f)),
+    });
+
 }
 void AAvengerShipActor::OnConstruction(const FTransform& Transform)
 {

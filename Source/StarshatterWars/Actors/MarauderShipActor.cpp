@@ -5,7 +5,7 @@ AMarauderShipActor::AMarauderShipActor()
     SetActorScale3D(FVector(2.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Marauder"));
 }
 
 void AMarauderShipActor::ApplyAuthoredAttachmentDefaults()

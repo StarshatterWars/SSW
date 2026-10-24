@@ -10,7 +10,7 @@ ADevastatorShipActor::ADevastatorShipActor()
     SetActorScale3D(FVector(2.5f));
     ApplyDevastatorDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Devastator"));
 }
 
 void ADevastatorShipActor::OnConstruction(const FTransform& Transform)

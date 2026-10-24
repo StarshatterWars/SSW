@@ -1,9 +1,13 @@
 // Model defaults derived from Orion.def.
 #include "OrionShipActor.h"
 #include "Components/SceneComponent.h"
+#include "CarrierInteriorBuilderComponent.h"
 
 AOrionShipActor::AOrionShipActor()
 {
+    InteriorBuilder = CreateDefaultSubobject<UCarrierInteriorBuilderComponent>(TEXT("OrionInteriorBuilder"));
+    InteriorBuilder->SetupAttachment(PointRoot);
+    InteriorBuilder->LoadOrionFullInteriorLayout();
     ConfigureTurretsFromShipDef(TEXT("Orion"));
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(4.0f));
@@ -13,10 +17,7 @@ AOrionShipActor::AOrionShipActor()
         AddNativeFlightDeck(DeckIndex, DeckIndex >= 2);
         AddNativeHangarBay(DeckIndex);
     }
-    for (int32 Index = 0; Index < WeaponMountPointDefs.Num(); ++Index)
-        CreateNativeWeaponPoint(FName(*FString::Printf(TEXT("WeaponHardpoint_%02d"), Index + 1)));
-    for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
-        CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1)));
+    InitializeNativeAuthoredAttachments(TEXT("Orion"));
     SynchronizeNativeDeckLocations();
     SyncNativeAuthoredPoints();
 }
@@ -28,6 +29,7 @@ void AOrionShipActor::OnConstruction(const FTransform& Transform)
     ApplyOrionFixedPoints();
     SynchronizeNativeDeckLocations();
     SyncNativeAuthoredPoints();
+    if (InteriorBuilder && InteriorBuilder->bAutoRebuild) InteriorBuilder->RebuildInterior();
 }
 
 void AOrionShipActor::ApplyOrionDefaults()

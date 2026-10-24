@@ -45,6 +45,7 @@ protected:
 	virtual bool      ProcessMessageAction(RadioMessage* msg, Ship* s);
 
 	virtual bool      Inbound(RadioMessage* msg, Ship* s);
+    virtual bool      LandingClearance(RadioMessage* msg, Ship* s);
 	virtual bool      Picture(RadioMessage* msg, Ship* s);
 	virtual bool      Support(RadioMessage* msg, Ship* s);
 	virtual bool      SkipNavpoint(RadioMessage* msg, Ship* s);

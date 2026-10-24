@@ -10,7 +10,7 @@ ACourageousShipActor::ACourageousShipActor()
     SetActorScale3D(FVector(2.2f));
     ApplyCourageousDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Courageous"));
 }
 
 void ACourageousShipActor::OnConstruction(const FTransform& Transform)

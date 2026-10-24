@@ -4,7 +4,10 @@ AZZAShipActor::AZZAShipActor()
     SetActorScale3D(FVector(0.75f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZA"));
+    InitializeNativeFighterAttachments(TEXT(""), 1.000000f, FVector(0.000000f, 0.000000f, 0.000000f), {
+    });
+
 }
 
 void AZZAShipActor::ApplyAuthoredAttachmentDefaults()

@@ -8,7 +8,7 @@ AWolfShipActor::AWolfShipActor()
     SetActorScale3D(FVector(1.7f));
     ApplyWolfDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Wolf"));
 }
 
 void AWolfShipActor::OnConstruction(const FTransform& Transform)

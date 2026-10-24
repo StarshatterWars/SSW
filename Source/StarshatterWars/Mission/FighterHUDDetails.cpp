@@ -228,7 +228,7 @@ void SFighterHUDDetails::Refresh()
     {
         FlightSpeed = P->GetVelocity().Size();
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
-        bAutoAvailable = P->IsAutoNavEngaged();
+        bAutoAvailable = P->IsAutoNavEngaged() || P->IsAutoLandEngaged();
         bGearDown = P->IsGearDown();
         bAugmenterActive = P->GetMainDrive() && P->GetMainDrive()->IsAugmenterOn();
         JumpSeconds = P->GetQuantumDrive() ? P->GetQuantumDrive()->JumpTime() : 0;
@@ -241,7 +241,14 @@ void SFighterHUDDetails::Refresh()
             const int32 Eta = P->GetMissileEta(I);
             if (Eta > 0) MissileReadouts.Add(FString::Printf(TEXT("T %d:%02d"), Eta/60, Eta%60));
         }
-        if (Instruction* Nav = P->GetNextNavPoint())
+        if (InboundSlot* Arrival = P->GetInbound())
+        {
+            NavReadouts.Add(P->IsAutoLandEngaged() ? TEXT("AUTO LAND") : TEXT("INBOUND"));
+            NavReadouts.Add(Arrival->Cleared() ? TEXT("CLEARED TO LAND") : TEXT("HOLD FOR CLEARANCE"));
+            if (FlightDeck* Deck = Arrival->GetDeck())
+                NavReadouts.Add(FString(ANSI_TO_TCHAR(Deck->GetName())));
+        }
+        else if (Instruction* Nav = P->GetNextNavPoint())
         {
             NavReadouts.Add(FString::Printf(TEXT("%s %d"), P->IsAutoNavEngaged() ? TEXT("AUTO NAV") : TEXT("NAV"), P->GetNavIndex(Nav)));
             const char* Action = Instruction::ActionName(Nav->GetAction());
@@ -831,7 +838,7 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
     {
         Page(TEXT("Wingman"),1,Wing && !Wing->IsDead());
         Page(TEXT("Element"),2,Element != nullptr);
-        Page(TEXT("Control"),3,P->GetController()!=nullptr);
+        Page(TEXT("Control / Landing"),3,P->GetController()!=nullptr || P->GetInbound()!=nullptr);
     }
     else if (RadioPage == 1)
     {
@@ -869,7 +876,13 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
     else if (RadioPage == 7)
     {
         Title=TEXT("CONTROL"); Add(TEXT("Request picture"),RadioMessageAction::REQUEST_PICTURE);
-        Add(TEXT("Request backup"),RadioMessageAction::REQUEST_SUPPORT); Add(TEXT("Call inbound"),RadioMessageAction::CALL_INBOUND); Add(TEXT("Call finals"),RadioMessageAction::CALL_FINALS);
+        Add(TEXT("Request backup"),RadioMessageAction::REQUEST_SUPPORT);
+        Add(TEXT("Call inbound"),RadioMessageAction::CALL_INBOUND);
+        Add(TEXT("Request landing clearance"),RadioMessageAction::REQUEST_LANDING_CLEARANCE,P->GetInbound()!=nullptr);
+        Add(TEXT("Call finals"),RadioMessageAction::CALL_FINALS,P->GetInbound() && P->GetInbound()->Cleared());
+        Labels.Add(P->IsAutoLandEngaged() ? TEXT("Disengage autoland") : TEXT("Engage autoland"));
+        Commands.Add(10001);
+        Enabled.Add(P->IsAutoLandEngaged() ? P->GetFlightPhase() < EOPSMode::DOCKING : P->CanAutoLand());
     }
 }
 void SFighterHUDDetails::RadioSelect(int32 Number)
@@ -900,6 +913,12 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
     }
     if (RadioPage==0) { RadioHistory.Add(RadioPage); RadioRecipient=Number; RadioPage=Number==3 ? 7 : 1; return; }
     if (RadioPage==1) { RadioHistory.Add(RadioPage); RadioPage=-Commands[I]; return; }
+    if (Commands[I]==10001)
+    {
+        P->SetAutoLand(!P->IsAutoLandEngaged());
+        CloseRadio();
+        return;
+    }
     const RadioMessageAction Action=static_cast<RadioMessageAction>(Commands[I]);
     SimElement* Element=P->GetElement();
     RadioMessage* Message=nullptr;
@@ -913,7 +932,13 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
     else
     {
         Ship* Destination=nullptr;
-        if (RadioRecipient==3) Destination=P->GetController();
+        if (RadioRecipient==3) {
+            InboundSlot* Arrival = P->GetInbound();
+            const bool RecoveryCall = Action==RadioMessageAction::CALL_INBOUND ||
+                Action==RadioMessageAction::REQUEST_LANDING_CLEARANCE || Action==RadioMessageAction::CALL_FINALS;
+            Destination = RecoveryCall && Arrival && Arrival->GetDeck()
+                ? const_cast<Ship*>(Arrival->GetDeck()->GetCarrier()) : P->GetController();
+        }
         else if (Element)
         {
             const int32 Index=P->GetElementIndex();

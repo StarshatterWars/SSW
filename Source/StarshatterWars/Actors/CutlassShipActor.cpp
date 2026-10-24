@@ -4,7 +4,12 @@ ACutlassShipActor::ACutlassShipActor()
     SetActorScale3D(FVector(0.24f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Cutlass"));
+    InitializeNativeFighterAttachments(TEXT(""), 1.000000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("LeftSkid"), FVector(0.000000f, -20.000000f, -16.000000f), FVector(0.000000f, -48.000000f, -44.000000f)),
+        FFighterLandingGearDefinition(TEXT("RightSkid"), FVector(0.000000f, 20.000000f, -16.000000f), FVector(0.000000f, 48.000000f, -44.000000f)),
+    });
+
 }
 
 void ACutlassShipActor::ApplyAuthoredAttachmentDefaults()

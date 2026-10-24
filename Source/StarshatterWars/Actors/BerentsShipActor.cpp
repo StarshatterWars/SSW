@@ -10,7 +10,7 @@ ABerentsShipActor::ABerentsShipActor()
     SetActorScale3D(FVector(2.5f));
     ApplyBerentsDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Berents"));
 }
 
 void ABerentsShipActor::OnConstruction(const FTransform& Transform)

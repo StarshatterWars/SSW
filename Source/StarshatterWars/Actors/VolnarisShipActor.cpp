@@ -5,7 +5,7 @@ AVolnarisShipActor::AVolnarisShipActor()
     SetActorScale3D(FVector(3.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Volnaris"));
 }
 
 void AVolnarisShipActor::ApplyAuthoredAttachmentDefaults()

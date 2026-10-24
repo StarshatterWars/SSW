@@ -5,7 +5,7 @@ ABroadswordShipActor::ABroadswordShipActor()
     SetActorScale3D(FVector(3.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Broadsword"));
 }
 
 void ABroadswordShipActor::ApplyAuthoredAttachmentDefaults()

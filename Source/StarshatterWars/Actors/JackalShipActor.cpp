@@ -8,7 +8,14 @@ AJackalShipActor::AJackalShipActor()
     SetActorScale3D(FVector(0.275000f));
     ApplyJackalDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Jackal"));
+    InitializeNativeFighterAttachments(TEXT("JackalPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("zgear_r.mag"), FVector(-10.000000f, 34.000000f, -30.000000f), FVector(-10.000000f, 74.000000f, -60.000000f)),
+        FFighterLandingGearDefinition(TEXT("zgear_l.mag"), FVector(-10.000000f, -34.000000f, -30.000000f), FVector(-10.000000f, -74.000000f, -60.000000f)),
+        FFighterLandingGearDefinition(TEXT("zgear_r.mag"), FVector(-140.000000f, 34.000000f, -30.000000f), FVector(-140.000000f, 74.000000f, -60.000000f)),
+        FFighterLandingGearDefinition(TEXT("zgear_l.mag"), FVector(-140.000000f, -34.000000f, -30.000000f), FVector(-140.000000f, -74.000000f, -60.000000f)),
+    });
+
 }
 void AJackalShipActor::OnConstruction(const FTransform& Transform)
 {

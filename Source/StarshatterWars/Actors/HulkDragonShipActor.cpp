@@ -5,7 +5,7 @@ AHulkDragonShipActor::AHulkDragonShipActor()
     SetActorScale3D(FVector(3.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Hulk-Dragon"));
 }
 
 void AHulkDragonShipActor::ApplyAuthoredAttachmentDefaults()

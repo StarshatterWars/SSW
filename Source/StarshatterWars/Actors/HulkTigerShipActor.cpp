@@ -5,7 +5,7 @@ AHulkTigerShipActor::AHulkTigerShipActor()
     SetActorScale3D(FVector(1.8f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Hulk-Tiger"));
 }
 
 void AHulkTigerShipActor::ApplyAuthoredAttachmentDefaults()

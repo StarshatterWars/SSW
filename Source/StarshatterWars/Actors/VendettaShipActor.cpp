@@ -5,7 +5,7 @@ AVendettaShipActor::AVendettaShipActor()
     SetActorScale3D(FVector(4.2f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Vendetta"));
 }
 
 void AVendettaShipActor::ApplyAuthoredAttachmentDefaults()

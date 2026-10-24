@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -362,8 +362,15 @@ RadioHandler::ProcessMessageAction(RadioMessage* msg, Ship* ship)
 	if (msg->GetRadioAction() == RadioMessageAction::CALL_INBOUND)
 		return Inbound(msg, ship);
 
-	if (msg->GetRadioAction() == RadioMessageAction::CALL_FINALS)
-		return true;   // acknowledge
+    if (msg->GetRadioAction() == RadioMessageAction::REQUEST_LANDING_CLEARANCE)
+        return LandingClearance(msg, ship);
+
+	if (msg->GetRadioAction() == RadioMessageAction::CALL_FINALS) {
+        Ship* Sender = const_cast<Ship*>(msg->GetSender());
+        InboundSlot* Slot = Sender ? Sender->GetInbound() : nullptr;
+        if (!Slot || !Slot->GetDeck() || Slot->GetDeck()->GetCarrier() != ship) return false;
+        return LandingClearance(msg, ship);
+    }
 
 	if (msg->GetRadioAction() == RadioMessageAction::REQUEST_PICTURE)
 		return Picture(msg, ship);
@@ -408,7 +415,9 @@ RadioHandler::LaunchProbe(RadioMessage* msg, Ship* ship)
 bool
 RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 {
+    if (!msg || !ship || ship->IsDead() || ship->IsDying()) return false;
 	Ship* inbound = (Ship*)msg->GetSender();
+    if (!inbound || inbound == ship || !inbound->IsDropship() || inbound->IsHostileTo(ship)) return false;
 	Hangar* hangar = ship->GetHangar();
 	FlightDeck* deck = 0;
 	int         squadron = -1;
@@ -437,7 +446,7 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 
 				for (int i = 0; i < ship->NumFlightDecks(); i++) {
 					FlightDeck* d = ship->GetFlightDeck(i);
-					if (d->IsRecoveryDeck()) {
+					if (d && d->IsRecoveryDeck() && d->NumSlots() > 0) {
 						int nwaiting = d->GetRecoveryQueue().size();
 
 						if (nwaiting < shortest_queue) {
@@ -471,6 +480,12 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 
 	// put sender in recovery queue, if not already there:
 	InboundSlot* inbound_slot = inbound->GetInbound();
+    if (inbound_slot && inbound_slot->GetDeck() != deck) {
+        RadioMessage* Denied = new RadioMessage(inbound, ship, RadioMessageAction::NACK);
+        Denied->SetInfo("Already assigned to another recovery deck");
+        RadioTraffic::Transmit(Denied);
+        return false;
+    }
 	int          sequence = 0;
 
 	if (!inbound_slot) {
@@ -478,11 +493,11 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 		sequence = deck->Inbound(inbound_slot);
 	}
 	else {
-		sequence = inbound_slot->Index();
+		sequence = deck->RecoveryPosition(inbound_slot);
 	}
 
 	// inform sender of status:
-	RadioMessage* approach = new RadioMessage(inbound, ship, RadioMessageAction::CALL_APPROACH);
+	RadioMessage* approach = new RadioMessage(inbound, ship, inbound_slot->Cleared() ? RadioMessageAction::CALL_CLEARANCE : RadioMessageAction::CALL_APPROACH);
 
 	if (inbound_slot->Cleared()) {
 		const char* DeckNameAnsi = deck ? deck->GetName() : "Unknown Deck";
@@ -494,10 +509,39 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 		const FString Info = FString::Printf(TEXT("Sequenced to land %d on %s"), sequence, ANSI_TO_TCHAR(DeckNameAnsi));
 		approach->SetInfo(TCHAR_TO_ANSI(*Info));
 	}
+    else approach->SetInfo("Hold position; awaiting recovery clearance");
 
 	RadioTraffic::Transmit(approach);
 
 	return false;
+}
+
+bool
+RadioHandler::LandingClearance(RadioMessage* msg, Ship* ship)
+{
+    Ship* Sender = msg ? const_cast<Ship*>(msg->GetSender()) : nullptr;
+    if (!ship || !Sender || Sender->IsHostileTo(ship)) return false;
+    InboundSlot* Slot = Sender->GetInbound();
+    FlightDeck* Deck = Slot ? Slot->GetDeck() : nullptr;
+    if (!Deck || Deck->GetCarrier() != ship || Sender->GetRegion() != ship->GetRegion())
+    {
+        RadioMessage* Reply = new RadioMessage(Sender, ship, RadioMessageAction::NACK);
+        Reply->SetInfo("Call inbound to this carrier first");
+        RadioTraffic::Transmit(Reply);
+        return false;
+    }
+    const bool WasCleared = Slot->Cleared() != 0;
+    Deck->GrantClearance();
+    // GrantClearance already transmitted a newly issued clearance.
+    if (!WasCleared && Slot->Cleared()) return false;
+    RadioMessage* Reply = new RadioMessage(Sender, ship,
+        Slot->Cleared() ? RadioMessageAction::CALL_CLEARANCE : RadioMessageAction::CALL_APPROACH);
+    const FString Info = Slot->Cleared()
+        ? FString::Printf(TEXT("Cleared to land on %hs"), Deck->GetName())
+        : FString::Printf(TEXT("Hold; recovery sequence %d on %hs"), Deck->RecoveryPosition(Slot), Deck->GetName());
+    Reply->SetInfo(TCHAR_TO_ANSI(*Info));
+    RadioTraffic::Transmit(Reply);
+    return false;
 }
 
 bool

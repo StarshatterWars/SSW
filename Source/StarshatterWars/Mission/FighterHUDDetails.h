@@ -30,6 +30,10 @@ public:
     void ToggleCautionPanel() { bShowCaution = !bShowCaution; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void CycleWeapon(bool bPrimary);
 private:
+    void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
+    bool bILSMode = false;
+    TStrongObjectPtr<UTexture2D> ILSTexture;
+    FSlateBrush ILSBrush;
     void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
     int32 RadioPage = -1; // 0 root, 1 categories, 2 target, 3 combat, 4 formation, 5 mission, 6 sensors, 7 control
     TArray<int32> RadioHistory;

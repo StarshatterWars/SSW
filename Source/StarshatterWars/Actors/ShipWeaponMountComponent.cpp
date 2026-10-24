@@ -23,11 +23,13 @@ void UShipWeaponMountComponent::ClearRuntimeWeapon()
 
 int32 UShipWeaponMountComponent::GetMuzzleCount() const
 {
-    return LegacyMuzzles.Num()>0 ? LegacyMuzzles.Num() : 1;
+    return BarrelComponents.Num()>0 ? BarrelComponents.Num() : (LegacyMuzzles.Num()>0 ? LegacyMuzzles.Num() : 1);
 }
 
 FVector UShipWeaponMountComponent::GetMuzzleWorldLocation(int32 MuzzleIndex) const
 {
+    if (BarrelComponents.IsValidIndex(MuzzleIndex) && BarrelComponents[MuzzleIndex])
+        return BarrelComponents[MuzzleIndex]->GetComponentLocation();
     FVector ShipSpaceMuzzle=LegacyMuzzle;
     if (LegacyMuzzles.Num()>0)
     {
@@ -43,6 +45,8 @@ FVector UShipWeaponMountComponent::GetMuzzleWorldLocation(int32 MuzzleIndex) con
 
 FTransform UShipWeaponMountComponent::GetMuzzleWorldTransform(int32 MuzzleIndex) const
 {
+    if (BarrelComponents.IsValidIndex(MuzzleIndex) && BarrelComponents[MuzzleIndex])
+        return BarrelComponents[MuzzleIndex]->GetComponentTransform();
     FTransform Result=GetComponentTransform();
     Result.SetLocation(GetMuzzleWorldLocation(MuzzleIndex));
     return Result;

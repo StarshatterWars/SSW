@@ -5,7 +5,7 @@ ADragonShipActor::ADragonShipActor()
     SetActorScale3D(FVector(3.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Dragon"));
 }
 
 void ADragonShipActor::ApplyAuthoredAttachmentDefaults()

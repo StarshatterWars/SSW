@@ -28,7 +28,7 @@ ACourierShipActor::ACourierShipActor()
     SetActorScale3D(FVector(1.2f, 1.2f, 1.2f));
     ApplyCourierDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Courier"));
 }
 
 void ACourierShipActor::OnConstruction(const FTransform& Transform)

@@ -5,7 +5,7 @@ ATigerShipActor::ATigerShipActor()
     SetActorScale3D(FVector(1.8f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Tiger"));
 }
 
 void ATigerShipActor::ApplyAuthoredAttachmentDefaults()

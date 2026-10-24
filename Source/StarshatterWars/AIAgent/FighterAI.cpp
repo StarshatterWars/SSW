@@ -101,6 +101,7 @@ FighterAI::ExecFrame(double s)
         order = navpt->GetRadioAction();
 
     if (inbound) {
+        if (!inbound->Cleared()) { inbound->SetFinal(false); time_to_dock = 0; }
         form_up = false;
         rtb_code = 1;
 
@@ -147,8 +148,7 @@ FighterAI::ExecFrame(double s)
                 time_to_dock -= s;
 
                 if (time_to_dock <= 0) {
-                    deck->Dock(ship);
-                    time_to_dock = 0;
+                    time_to_dock = deck->Dock(ship) ? 0 : 0.1;
                 }
 
                 return;

@@ -6,7 +6,7 @@ AObservatoryShipActor::AObservatoryShipActor()
     SetActorScale3D(FVector(5.0f));
     ApplyObservatoryDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Observatory"));
 }
 
 void AObservatoryShipActor::OnConstruction(const FTransform& Transform)

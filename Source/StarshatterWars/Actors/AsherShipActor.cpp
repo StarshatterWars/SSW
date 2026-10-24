@@ -10,7 +10,7 @@ AAsherShipActor::AAsherShipActor()
     SetActorScale3D(FVector(2.5f));
     ApplyAsherDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Asher"));
 }
 
 void AAsherShipActor::OnConstruction(const FTransform& Transform)

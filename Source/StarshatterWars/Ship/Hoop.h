@@ -38,6 +38,8 @@ public:
 
 	virtual void      Update();
 	static  void      SetColor(FColor c);
+    int               GetWidth() const { return width; }
+    int               GetHeight() const { return height; }
 
 protected:
 	virtual void      CreatePolys();

@@ -5,7 +5,7 @@ AHulkVendettaShipActor::AHulkVendettaShipActor()
     SetActorScale3D(FVector(4.2f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Hulk-Vendetta"));
 }
 
 void AHulkVendettaShipActor::ApplyAuthoredAttachmentDefaults()

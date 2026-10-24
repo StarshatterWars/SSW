@@ -35,7 +35,7 @@ ABaikalShipActor::ABaikalShipActor()
     SetActorScale3D(FVector(1.6f));
     ApplyBaikalDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Baikal"));
 }
 
 void ABaikalShipActor::OnConstruction(const FTransform& Transform)

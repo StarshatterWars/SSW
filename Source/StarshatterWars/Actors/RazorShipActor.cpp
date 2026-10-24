@@ -8,7 +8,13 @@ ARazorShipActor::ARazorShipActor()
     SetActorScale3D(FVector(0.230000f));
     ApplyRazorDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Razor"));
+    InitializeNativeFighterAttachments(TEXT("RazorPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(113.000000f, 0.000000f, -14.000000f), FVector(127.000000f, 0.000000f, -40.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(10.000000f, -25.000000f, -20.000000f), FVector(10.000000f, -45.000000f, -40.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight0.mag"), FVector(10.000000f, 25.000000f, -20.000000f), FVector(10.000000f, 45.000000f, -40.000000f)),
+    });
+
 }
 void ARazorShipActor::OnConstruction(const FTransform& Transform)
 {

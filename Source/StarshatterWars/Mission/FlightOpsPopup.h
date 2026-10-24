@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -177,7 +177,7 @@ private:
             if(Filter==H->NumSquadrons() && !(Status>Hangar::STORAGE && Status<Hangar::ACTIVE))continue;
             if(Filter==H->NumSquadrons()+1 && Status<Hangar::ACTIVE)continue;
             auto* Craft=H->GetShip(Slot);
-            const FString Caption=FString::Printf(TEXT("%s%s / %d    %s    %s    %ds"),SelectedSquad==Q && SelectedSlots.Contains(I)?TEXT("> "):TEXT(""),UTF8_TO_TCHAR(H->SquadronName(Q).data()),I+1,Craft?UTF8_TO_TCHAR(Craft->GetName()):TEXT("--"),UTF8_TO_TCHAR(H->StatusName(Slot).data()),FMath::Max(0,FMath::CeilToInt(H->TimeRemaining(Slot))));
+            const FString Caption=FString::Printf(TEXT("%s%s / %d    %s    %s    %ds"),SelectedSquad==Q && SelectedSlots.Contains(I)?TEXT("> "):TEXT(""),UTF8_TO_TCHAR(H->SquadronName(Q).data()),I+1,Craft?UTF8_TO_TCHAR(Craft->GetName()):TEXT("--"),Status==Hangar::MAINT?TEXT("TURNAROUND (repair / refuel / rearm)"):UTF8_TO_TCHAR(H->StatusName(Slot).data()),FMath::Max(0,FMath::CeilToInt(H->TimeRemaining(Slot))));
             Rows->AddSlot().AutoHeight().Padding(0,2)[SNew(SButton).OnClicked_Lambda([this,Q,I](){SelectSlot(Q,I);return FReply::Handled();})[Label(Caption,true)]];
         }
     }

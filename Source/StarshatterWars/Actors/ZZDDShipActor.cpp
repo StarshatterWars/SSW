@@ -4,7 +4,7 @@ AZZDDShipActor::AZZDDShipActor()
     SetActorScale3D(FVector(2.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZDD"));
 }
 
 void AZZDDShipActor::ApplyAuthoredAttachmentDefaults()

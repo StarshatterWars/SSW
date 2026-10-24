@@ -4,7 +4,7 @@ AS6ShipActor::AS6ShipActor()
     SetActorScale3D(FVector(9.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("S6"));
 }
 
 void AS6ShipActor::ApplyAuthoredAttachmentDefaults()

@@ -4,7 +4,7 @@ AZZCSShipActor::AZZCSShipActor()
     SetActorScale3D(FVector(7.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZCS"));
 }
 
 void AZZCSShipActor::ApplyAuthoredAttachmentDefaults()

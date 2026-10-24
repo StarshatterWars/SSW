@@ -1043,6 +1043,7 @@ FlightDeck::Clear(int slotIndex)
 	{
 		if (iter->GetShip() == s)
 		{
+			if (s->GetInbound() == iter.value()) s->SetInbound(nullptr);
 			delete iter.removeItem(); // legacy ownership model
 			break;
 		}
@@ -1175,11 +1176,9 @@ FlightDeck::Dock(Ship* s)
 	if (!s)
 		return false;
 
-	if (subtype != FLIGHT_DECK_RECOVERY)
-		return false;
-
-	if (slots[0].time > 0)
-		return false;
+    if (!CanRecoverShip(s) || !s->GetInbound() ||
+        s->GetInbound()->GetDeck() != this || !s->GetInbound()->Cleared())
+        return false;
 
 	int slotIndex = 0;
 	if (!Spot(s, slotIndex))
@@ -1257,13 +1256,14 @@ FlightDeck::Dock(Ship* s)
 int
 FlightDeck::Inbound(InboundSlot*& s)
 {
-	if (s && s->GetShip()) {
+	if (s && s->GetShip() && carrier && IsRecoveryDeck() && slots && num_slots > 0) {
+        Orient(carrier);
 		Ship* inbound = s->GetShip();
 
 		if (recovery_queue.contains(s)) {
 			InboundSlot* orig = s;
 			s = recovery_queue.find(s);
-			delete orig;
+			if (orig != s) delete orig;
 		}
 		else {
 			recovery_queue.append(s);
@@ -1297,7 +1297,7 @@ FlightDeck::Inbound(InboundSlot*& s)
 		// if the new guy is first in line, and the deck is almost ready,
 		// go ahead and clear him for approach now
 		recovery_queue.sort();
-		if (recovery_queue[0] == s && !s->Cleared() && slots[0].time <= 3)
+		if (recovery_queue[0] == s && !s->Cleared() && s->Distance() < 35e3 && CanRecoverShip(inbound))
 			s->Clear();
 
 		return recovery_queue.index(s) + 1;
@@ -1306,28 +1306,39 @@ FlightDeck::Inbound(InboundSlot*& s)
 	return 0;
 }
 
+bool FlightDeck::CanRecoverShip(const Ship* incoming) const
+{
+    if (!incoming || !carrier || carrier->IsDead() || carrier->IsDying() ||
+        !IsRecoveryDeck() || !slots || num_slots <= 0) return false;
+    // Recovery uses the authored first capture spot; do not clear a second aircraft
+    // while that spot is occupied or the deck is cycling.
+    return !slots[0].ship && slots[0].time <= 0 &&
+        (static_cast<uint32>(slots[0].filter) & static_cast<uint32>(incoming->GetClassification())) != 0;
+}
+
+int FlightDeck::RecoveryPosition(InboundSlot* incoming) const
+{
+    return incoming && recovery_queue.contains(incoming) ? recovery_queue.index(incoming) + 1 : 0;
+}
+
 void
 FlightDeck::GrantClearance()
 {
-	if (recovery_queue.size() > 0) {
-		if (recovery_queue[0]->Cleared() && recovery_queue[0]->Distance() > 45e3) {
-			recovery_queue[0]->Clear(false);
-		}
-
-		if (!recovery_queue[0]->Cleared()) {
-			recovery_queue.sort();
-
-			if (recovery_queue[0]->Distance() < 35e3) {
-				recovery_queue[0]->Clear();
-
-				Ship* dst = recovery_queue[0]->GetShip();
-
-				RadioMessage* clearance = new RadioMessage(dst, carrier, RadioMessageAction::CALL_CLEARANCE);
-				clearance->SetInfo(Text("for final approach to ") + GetName());
-				RadioTraffic::Transmit(clearance);
-			}
-		}
-	}
+    if (!carrier || !slots || num_slots <= 0 || !IsRecoveryDeck() || recovery_queue.size() == 0) return;
+    InboundSlot* First = recovery_queue[0];
+    if (!First || !First->GetShip()) return;
+    if (First->Cleared() && First->Distance() > 45e3) First->Clear(false);
+    if (First->Cleared()) return;
+    recovery_queue.sort();
+    First = recovery_queue[0];
+    Ship* Incoming = First ? First->GetShip() : nullptr;
+    if (Incoming && First->Distance() < 35e3 && CanRecoverShip(Incoming))
+    {
+        First->Clear();
+        RadioMessage* Clearance = new RadioMessage(Incoming, carrier, RadioMessageAction::CALL_CLEARANCE);
+        Clearance->SetInfo(Text("for final approach to ") + GetName());
+        RadioTraffic::Transmit(Clearance);
+    }
 }
 
 // +----------------------------------------------------------------------+
@@ -1485,4 +1496,20 @@ bool
 FlightDeck::ContainsPoint(const FVector& p) const
 {
 	return (p - GetMountLocation()).Size() < GetRadius();
+}
+
+bool FlightDeck::GetILSHoopCorners(int hoopIndex, FVector (&corners)[4]) const
+{
+    if (!IsRecoveryDeck() || !carrier || !hoops || hoopIndex < 0 || hoopIndex >= num_hoops ||
+        (start_point - end_point).IsNearlyZero()) return false;
+    const Hoop& Ring = hoops[hoopIndex];
+    const double HalfWidth = Ring.GetWidth() * 0.5;
+    const double HalfHeight = Ring.GetHeight() * 0.5;
+    // Same winding and texture coordinates as Hoop::CreatePolys().
+    const FVector Local[4] = {
+        FVector(-HalfWidth, -HalfHeight, 0), FVector(HalfWidth, -HalfHeight, 0),
+        FVector(HalfWidth, HalfHeight, 0), FVector(-HalfWidth, HalfHeight, 0)};
+    for (int i = 0; i < 4; ++i)
+        corners[i] = Ring.Location() + Ring.Orientation().TransformVector(Local[i]);
+    return true;
 }

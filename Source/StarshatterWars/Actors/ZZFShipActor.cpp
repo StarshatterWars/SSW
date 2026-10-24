@@ -4,7 +4,10 @@ AZZFShipActor::AZZFShipActor()
     SetActorScale3D(FVector(0.25f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("ZZF"));
+    InitializeNativeFighterAttachments(TEXT(""), 1.000000f, FVector(0.000000f, 0.000000f, 0.000000f), {
+    });
+
 }
 
 void AZZFShipActor::ApplyAuthoredAttachmentDefaults()

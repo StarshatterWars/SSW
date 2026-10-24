@@ -4,7 +4,7 @@ AFortressShipActor::AFortressShipActor()
     SetActorScale3D(FVector(11.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Fortress"));
 }
 
 void AFortressShipActor::ApplyAuthoredAttachmentDefaults()

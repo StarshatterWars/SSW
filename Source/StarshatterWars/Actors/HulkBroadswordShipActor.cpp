@@ -5,7 +5,7 @@ AHulkBroadswordShipActor::AHulkBroadswordShipActor()
     SetActorScale3D(FVector(3.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Hulk-Broadsword"));
 }
 
 void AHulkBroadswordShipActor::ApplyAuthoredAttachmentDefaults()

@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -20,6 +20,7 @@
 #include "RadioVox.h"
 #include "Instruction.h"
 #include "Ship.h"
+#include "FlightDeck.h"
 #include "SimContact.h"
 #include "SimElement.h"
 #include "Sim.h"
@@ -76,7 +77,9 @@ RadioTraffic::SendQuickMessage(Ship* ship, RadioMessageAction action)
 
 	if (elem) {
 		if (action >= RadioMessageAction::REQUEST_PICTURE) {
-			Ship* controller = ship->GetController();
+            InboundSlot* Inbound = ship->GetInbound();
+            Ship* controller = (action == RadioMessageAction::CALL_FINALS || action == RadioMessageAction::REQUEST_LANDING_CLEARANCE) && Inbound && Inbound->GetDeck()
+                ? const_cast<Ship*>(Inbound->GetDeck()->GetCarrier()) : ship->GetController();
 
 			if (controller && !ship->IsStarship()) {
 				RadioMessage* msg = new RadioMessage(controller, ship, action);

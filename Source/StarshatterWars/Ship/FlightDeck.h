@@ -113,6 +113,8 @@ public:
 	virtual bool   Dock(Ship* s);
 	virtual int    Inbound(InboundSlot*& s);
 	virtual void   GrantClearance();
+    bool           CanRecoverShip(const Ship* incoming) const;
+    int            RecoveryPosition(InboundSlot* incoming) const;
 
 	virtual void   AddSlot(const FVector& loc, DWORD filter = 0xf);
 
@@ -157,6 +159,7 @@ public:
 	Ship* GetShip(int index)         const;
 	int            NumHoops()                 const { return num_hoops; }
 	Hoop* GetHoops()                 const { return hoops; }
+    bool GetILSHoopCorners(int hoopIndex, FVector (&corners)[4]) const;
 	SimLight* GetLight() { return light; }
 
 	List<InboundSlot>& GetRecoveryQueue() { return recovery_queue; }

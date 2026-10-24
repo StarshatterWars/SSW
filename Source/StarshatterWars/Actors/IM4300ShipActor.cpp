@@ -28,7 +28,7 @@ AIM4300ShipActor::AIM4300ShipActor()
     SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM4300Defaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("CargoB"));
 }
 
 void AIM4300ShipActor::OnConstruction(const FTransform& Transform)

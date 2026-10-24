@@ -5,7 +5,7 @@ AHulkVolnarisShipActor::AHulkVolnarisShipActor()
     SetActorScale3D(FVector(3.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Hulk-Volnaris"));
 }
 
 void AHulkVolnarisShipActor::ApplyAuthoredAttachmentDefaults()

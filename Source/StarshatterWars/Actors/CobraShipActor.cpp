@@ -8,7 +8,13 @@ ACobraShipActor::ACobraShipActor()
     SetActorScale3D(FVector(0.260000f));
     ApplyCobraDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Cobra"));
+    InitializeNativeFighterAttachments(TEXT("CobraPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+        FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(104.000000f, 0.000000f, -15.000000f), FVector(118.000000f, 0.000000f, -42.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-48.000000f, -28.000000f, -22.000000f), FVector(-48.000000f, -42.000000f, -42.000000f)),
+        FFighterLandingGearDefinition(TEXT("GearRight0.mag"), FVector(-48.000000f, 28.000000f, -22.000000f), FVector(-48.000000f, 42.000000f, -42.000000f)),
+    });
+
 }
 void ACobraShipActor::OnConstruction(const FTransform& Transform)
 {

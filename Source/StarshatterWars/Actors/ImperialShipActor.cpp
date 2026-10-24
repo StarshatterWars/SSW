@@ -5,7 +5,7 @@ AImperialShipActor::AImperialShipActor()
     SetActorScale3D(FVector(4.0f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Imperial"));
 }
 
 void AImperialShipActor::ApplyAuthoredAttachmentDefaults()

@@ -7,7 +7,7 @@ AGoliathShipActor::AGoliathShipActor()
     SetActorScale3D(FVector(3.3f));
     ApplyGoliathDefaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Goliath"));
 }
 
 void AGoliathShipActor::OnConstruction(const FTransform& Transform)

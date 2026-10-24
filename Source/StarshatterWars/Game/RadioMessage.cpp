@@ -174,6 +174,8 @@ const char* RadioMessage::ActionName(RadioMessageAction a)
 	case RadioMessageAction::PICTURE: 
 		return "Picture is clear";
 
+	case RadioMessageAction::REQUEST_LANDING_CLEARANCE:
+		return "Request landing clearance";
 	case RadioMessageAction::CALL_INBOUND:
 		return "Calling Inbound";
 	case RadioMessageAction::CALL_APPROACH:

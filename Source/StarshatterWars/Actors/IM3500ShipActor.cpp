@@ -28,7 +28,7 @@ AIM3500ShipActor::AIM3500ShipActor()
     SetActorScale3D(FVector(2.5f, 2.5f, 2.5f));
     ApplyIM3500Defaults();
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("CargoA"));
 }
 
 void AIM3500ShipActor::OnConstruction(const FTransform& Transform)

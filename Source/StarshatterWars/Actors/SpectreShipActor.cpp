@@ -5,7 +5,7 @@ ASpectreShipActor::ASpectreShipActor()
     SetActorScale3D(FVector(2.5f));
 
     ApplyAuthoredAttachmentDefaults();
-    InitializeNativeAuthoredAttachments();
+    InitializeNativeAuthoredAttachments(TEXT("Spectre"));
 }
 
 void ASpectreShipActor::ApplyAuthoredAttachmentDefaults()
