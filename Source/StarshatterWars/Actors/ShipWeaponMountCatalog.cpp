@@ -1,8 +1,7 @@
 #include "ShipWeaponMountComponent.h"
-void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Out)
+namespace
 {
-    Out.Reset();
-    if (ShipDef == FName(TEXT("Adventure")))
+    FORCENOINLINE void Mounts_0(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("PDB-1"); M.bLoadout=false; M.Location=FVector(240.000000000,52.000000000,130.000000000);
@@ -46,9 +45,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(42.600000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Light-PDB"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Asher")))
+    FORCENOINLINE void Mounts_1(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-22.000000000,-9.000000000,400.000000000);
@@ -106,9 +104,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(13.200000000,-1.920000000,0.000000000));
           M.Types.Add(TEXT("Phalanx Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Avenger")))
+    FORCENOINLINE void Mounts_2(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,160.000000000);
@@ -191,9 +188,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Archer"));
           M.Types.Add(TEXT("Vector"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Baikal")))
+    FORCENOINLINE void Mounts_3(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Fwd Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,25.000000000,500.000000000);
@@ -225,9 +221,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(87.500000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Ursa Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Berents")))
+    FORCENOINLINE void Mounts_4(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Plasma Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,300.000000000);
@@ -271,9 +266,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(13.200000000,-1.920000000,0.000000000));
           M.Types.Add(TEXT("Phalanx Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Broadsword")))
+    FORCENOINLINE void Mounts_5(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-45.000000000,-33.000000000,340.000000000);
@@ -358,9 +352,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(37.428571429,0.000000000,2.857142857));
           M.Types.Add(TEXT("Helicon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Cobra")))
+    FORCENOINLINE void Mounts_6(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,-32.000000000);
@@ -431,9 +424,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Muzzles.Add(FVector(-128.000000000,-21.000000000,-70.000000000));
           M.Types.Add(TEXT("Archer"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Courageous")))
+    FORCENOINLINE void Mounts_7(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-40.000000000,-12.000000000,600.000000000);
@@ -536,13 +528,11 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(15.000000000,-2.181818182,0.000000000));
           M.Types.Add(TEXT("Phalanx Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Courier")))
+    FORCENOINLINE void Mounts_8(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("Cutlass")))
+    FORCENOINLINE void Mounts_9(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,32.000000000);
@@ -573,9 +563,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Vector"));
           M.Types.Add(TEXT("Harpoon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Devastator")))
+    FORCENOINLINE void Mounts_10(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Gamma Laser 1"); M.bLoadout=false; M.Location=FVector(-65.000000000,-22.000000000,730.000000000);
@@ -651,9 +640,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(28.800000000,-3.360000000,0.000000000));
           M.Types.Add(TEXT("Vanguard"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Dragon")))
+    FORCENOINLINE void Mounts_11(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(-30.000000000,-15.000000000,330.000000000);
@@ -739,9 +727,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(75.000000000,-4.000000000,-11.000000000));
           M.Types.Add(TEXT("Rail-12 Inverted"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Eagle")))
+    FORCENOINLINE void Mounts_12(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,32.000000000);
@@ -822,9 +809,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Harpoon"));
           M.Types.Add(TEXT("Hammer"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Falcon")))
+    FORCENOINLINE void Mounts_13(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,-32.000000000);
@@ -868,13 +854,11 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Vector"));
           M.Types.Add(TEXT("Harpoon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Farcaster")))
+    FORCENOINLINE void Mounts_14(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("Fortress")))
+    FORCENOINLINE void Mounts_15(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Turret 1A"); M.bLoadout=false; M.Location=FVector(0.000000000,388.000000000,320.000000000);
@@ -918,9 +902,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(29.545454545,-1.818181818,0.000000000));
           M.Types.Add(TEXT("Viking Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Gnd_aaa1")))
+    FORCENOINLINE void Mounts_16(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,160.000000000,0.000000000);
@@ -931,9 +914,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(70.000000000,20.000000000,0.000000000));
           M.Types.Add(TEXT("AAA Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Gnd_aaa2")))
+    FORCENOINLINE void Mounts_17(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,160.000000000,0.000000000);
@@ -944,9 +926,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(68.000000000,-29.000000000,-8.000000000));
           M.Types.Add(TEXT("Quad AAA"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Gnd_sam1")))
+    FORCENOINLINE void Mounts_18(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("SAM"); M.bLoadout=false; M.Location=FVector(0.000000000,90.000000000,0.000000000);
@@ -969,9 +950,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(-36.000000000,50.000000000,-99.000000000));
           M.Types.Add(TEXT("SAM-1"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Goliath")))
+    FORCENOINLINE void Mounts_19(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("PDB 1"); M.bLoadout=false; M.Location=FVector(104.000000000,-17.000000000,64.000000000);
@@ -1009,9 +989,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(115.151515152,-18.181818182,0.000000000));
           M.Types.Add(TEXT("Orca Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Broadsword")))
+    FORCENOINLINE void Mounts_20(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-45.000000000,-33.000000000,340.000000000);
@@ -1096,9 +1075,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(37.428571429,0.000000000,2.857142857));
           M.Types.Add(TEXT("Helicon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Dragon")))
+    FORCENOINLINE void Mounts_21(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(-30.000000000,-15.000000000,330.000000000);
@@ -1184,9 +1162,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(75.000000000,-4.000000000,-11.000000000));
           M.Types.Add(TEXT("Rail-12 Inverted"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Imperial")))
+    FORCENOINLINE void Mounts_22(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Gamma Laser 1"); M.bLoadout=false; M.Location=FVector(-42.000000000,-9.000000000,620.000000000);
@@ -1268,9 +1245,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(56.250000000,-3.000000000,8.250000000));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Tiger")))
+    FORCENOINLINE void Mounts_23(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(74.000000000,-12.000000000,110.000000000);
@@ -1309,9 +1285,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(72.777777778,0.000000000,5.555555556));
           M.Types.Add(TEXT("Helicon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Vendetta")))
+    FORCENOINLINE void Mounts_24(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Gamma Laser 1"); M.bLoadout=false; M.Location=FVector(-8.000000000,33.000000000,600.000000000);
@@ -1400,9 +1375,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(53.571428571,-2.857142857,7.857142857));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Hulk-Volnaris")))
+    FORCENOINLINE void Mounts_25(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-34.000000000,-19.000000000,460.000000000);
@@ -1454,21 +1428,17 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(75.000000000,-4.000000000,11.000000000));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("CargoC")))
+    FORCENOINLINE void Mounts_26(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("CargoA")))
+    FORCENOINLINE void Mounts_27(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("CargoB")))
+    FORCENOINLINE void Mounts_28(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("Imperial")))
+    FORCENOINLINE void Mounts_29(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Gamma Laser 1"); M.bLoadout=false; M.Location=FVector(-42.000000000,-9.000000000,620.000000000);
@@ -1550,9 +1520,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(56.250000000,-3.000000000,8.250000000));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Intruder")))
+    FORCENOINLINE void Mounts_30(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,120.000000000);
@@ -1595,9 +1564,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Vector"));
           M.Types.Add(TEXT("Harpoon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Jackal")))
+    FORCENOINLINE void Mounts_31(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Port Cannon"); M.bLoadout=false; M.Location=FVector(-8.000000000,-26.000000000,160.000000000);
@@ -1613,9 +1581,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(22.000000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Vulcan Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Marauder")))
+    FORCENOINLINE void Mounts_32(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Port Cannon"); M.bLoadout=false; M.Location=FVector(-260.000000000,-32.000000000,60.000000000);
@@ -1645,9 +1612,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(42.600000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Light-PDB"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Mine1")))
+    FORCENOINLINE void Mounts_33(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Fwd Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,0.000000000);
@@ -1662,13 +1628,11 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(75.000000000,-105.000000000,-8.000000000));
           M.Types.Add(TEXT("Blockade Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Observatory")))
+    FORCENOINLINE void Mounts_34(TArray<FNativeWeaponMountDef>& Out)
     {
-        return;
     }
-    if (ShipDef == FName(TEXT("Orion")))
+    FORCENOINLINE void Mounts_35(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Vanguard 1"); M.bLoadout=false; M.Location=FVector(128.000000000,95.000000000,704.000000000);
@@ -1740,9 +1704,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(8.250000000,-1.200000000,0.000000000));
           M.Types.Add(TEXT("Phalanx Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("QShip")))
+    FORCENOINLINE void Mounts_36(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Port Cannon"); M.bLoadout=false; M.Location=FVector(-30.000000000,0.000000000,360.000000000);
@@ -1786,9 +1749,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(42.600000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Light-PDB"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Raptor")))
+    FORCENOINLINE void Mounts_37(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,120.000000000);
@@ -1867,9 +1829,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Archer"));
           M.Types.Add(TEXT("Vector"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Razor")))
+    FORCENOINLINE void Mounts_38(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,32.000000000);
@@ -1936,9 +1897,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Muzzles.Add(FVector(-126.000000000,-29.000000000,-50.000000000));
           M.Types.Add(TEXT("Archer"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("S5")))
+    FORCENOINLINE void Mounts_39(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Turret 1A"); M.bLoadout=false; M.Location=FVector(1150.000000000,488.000000000,0.000000000);
@@ -1996,9 +1956,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(28.125000000,-1.500000000,-4.125000000));
           M.Types.Add(TEXT("Rail-12 Inverted"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("S6")))
+    FORCENOINLINE void Mounts_40(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Turret 1"); M.bLoadout=false; M.Location=FVector(0.000000000,118.000000000,920.000000000);
@@ -2028,9 +1987,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(36.111111111,-2.222222222,0.000000000));
           M.Types.Add(TEXT("Viking Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("S7")))
+    FORCENOINLINE void Mounts_41(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Graser 1"); M.bLoadout=false; M.Location=FVector(240.000000000,50.000000000,100.000000000);
@@ -2112,9 +2070,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(15.000000000,-0.800000000,-2.200000000));
           M.Types.Add(TEXT("Rail-12 Inverted"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Saber")))
+    FORCENOINLINE void Mounts_42(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,32.000000000);
@@ -2158,9 +2115,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Vector"));
           M.Types.Add(TEXT("Harpoon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Spectre")))
+    FORCENOINLINE void Mounts_43(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-36.000000000,-9.000000000,400.000000000);
@@ -2232,9 +2188,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(13.200000000,-1.920000000,0.000000000));
           M.Types.Add(TEXT("Phalanx Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Stormhawk")))
+    FORCENOINLINE void Mounts_44(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,32.000000000);
@@ -2298,9 +2253,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Javelin"));
           M.Types.Add(TEXT("Vector"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Thunderbolt")))
+    FORCENOINLINE void Mounts_45(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,160.000000000);
@@ -2374,9 +2328,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Harpoon"));
           M.Types.Add(TEXT("Hammer"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Tiger")))
+    FORCENOINLINE void Mounts_46(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(74.000000000,-12.000000000,110.000000000);
@@ -2415,9 +2368,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(72.777777778,0.000000000,5.555555556));
           M.Types.Add(TEXT("Helicon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Vendetta")))
+    FORCENOINLINE void Mounts_47(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Gamma Laser 1"); M.bLoadout=false; M.Location=FVector(-8.000000000,33.000000000,600.000000000);
@@ -2506,9 +2458,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(53.571428571,-2.857142857,7.857142857));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Viper")))
+    FORCENOINLINE void Mounts_48(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,120.000000000);
@@ -2561,9 +2512,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.Types.Add(TEXT("Archer"));
           M.Types.Add(TEXT("Harpoon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Volnaris")))
+    FORCENOINLINE void Mounts_49(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-34.000000000,-19.000000000,460.000000000);
@@ -2615,9 +2565,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(75.000000000,-4.000000000,11.000000000));
           M.Types.Add(TEXT("Rail-12"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Wolf")))
+    FORCENOINLINE void Mounts_50(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("XRay Laser 1"); M.bLoadout=false; M.Location=FVector(-25.000000000,23.000000000,800.000000000);
@@ -2678,9 +2627,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(88.235294118,-4.705882353,12.941176471));
           M.Types.Add(TEXT("Orca Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("Zodiac")))
+    FORCENOINLINE void Mounts_51(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Main Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,-10.000000000,110.000000000);
@@ -2704,9 +2652,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(39.466666667,4.266666667,0.000000000));
           M.Types.Add(TEXT("LCA Turret"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZA")))
+    FORCENOINLINE void Mounts_52(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,20.000000000);
@@ -2715,9 +2662,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(60.000000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Zolon Cannon"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZCA")))
+    FORCENOINLINE void Mounts_53(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(-60.000000000,0.000000000,128.000000000);
@@ -2747,9 +2693,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(64.000000000,0.000000000,4.000000000));
           M.Types.Add(TEXT("Zolon Laser"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZCS")))
+    FORCENOINLINE void Mounts_54(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(-60.000000000,0.000000000,128.000000000);
@@ -2779,9 +2724,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(64.000000000,0.000000000,4.000000000));
           M.Types.Add(TEXT("Zolon Laser"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZDD")))
+    FORCENOINLINE void Mounts_55(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(0.000000000,200.000000000,-228.000000000);
@@ -2797,9 +2741,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(38.000000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Zolon Laser"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZFF")))
+    FORCENOINLINE void Mounts_56(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Laser 1"); M.bLoadout=false; M.Location=FVector(-60.000000000,0.000000000,128.000000000);
@@ -2829,9 +2772,8 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(64.000000000,0.000000000,4.000000000));
           M.Types.Add(TEXT("Zolon Laser"));
           Out.Add(M); }
-        return;
     }
-    if (ShipDef == FName(TEXT("ZZF")))
+    FORCENOINLINE void Mounts_57(TArray<FNativeWeaponMountDef>& Out)
     {
         { FNativeWeaponMountDef M;
           M.Name=TEXT("Cannon"); M.bLoadout=false; M.Location=FVector(0.000000000,0.000000000,10.000000000);
@@ -2840,6 +2782,67 @@ void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Ou
           M.BarrelOffsets.Add(FVector(80.000000000,0.000000000,0.000000000));
           M.Types.Add(TEXT("Zolon Cannon"));
           Out.Add(M); }
-        return;
     }
+}
+void ShipWeaponMountCatalog::Get(FName ShipDef,TArray<FNativeWeaponMountDef>& Out)
+{
+    Out.Reset();
+    if (ShipDef == FName(TEXT("Adventure"))) { Mounts_0(Out); return; }
+    if (ShipDef == FName(TEXT("Asher"))) { Mounts_1(Out); return; }
+    if (ShipDef == FName(TEXT("Avenger"))) { Mounts_2(Out); return; }
+    if (ShipDef == FName(TEXT("Baikal"))) { Mounts_3(Out); return; }
+    if (ShipDef == FName(TEXT("Berents"))) { Mounts_4(Out); return; }
+    if (ShipDef == FName(TEXT("Broadsword"))) { Mounts_5(Out); return; }
+    if (ShipDef == FName(TEXT("Cobra"))) { Mounts_6(Out); return; }
+    if (ShipDef == FName(TEXT("Courageous"))) { Mounts_7(Out); return; }
+    if (ShipDef == FName(TEXT("Courier"))) { Mounts_8(Out); return; }
+    if (ShipDef == FName(TEXT("Cutlass"))) { Mounts_9(Out); return; }
+    if (ShipDef == FName(TEXT("Devastator"))) { Mounts_10(Out); return; }
+    if (ShipDef == FName(TEXT("Dragon"))) { Mounts_11(Out); return; }
+    if (ShipDef == FName(TEXT("Eagle"))) { Mounts_12(Out); return; }
+    if (ShipDef == FName(TEXT("Falcon"))) { Mounts_13(Out); return; }
+    if (ShipDef == FName(TEXT("Farcaster"))) { Mounts_14(Out); return; }
+    if (ShipDef == FName(TEXT("Fortress"))) { Mounts_15(Out); return; }
+    if (ShipDef == FName(TEXT("Gnd_aaa1"))) { Mounts_16(Out); return; }
+    if (ShipDef == FName(TEXT("Gnd_aaa2"))) { Mounts_17(Out); return; }
+    if (ShipDef == FName(TEXT("Gnd_sam1"))) { Mounts_18(Out); return; }
+    if (ShipDef == FName(TEXT("Goliath"))) { Mounts_19(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Broadsword"))) { Mounts_20(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Dragon"))) { Mounts_21(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Imperial"))) { Mounts_22(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Tiger"))) { Mounts_23(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Vendetta"))) { Mounts_24(Out); return; }
+    if (ShipDef == FName(TEXT("Hulk-Volnaris"))) { Mounts_25(Out); return; }
+    if (ShipDef == FName(TEXT("CargoC"))) { Mounts_26(Out); return; }
+    if (ShipDef == FName(TEXT("CargoA"))) { Mounts_27(Out); return; }
+    if (ShipDef == FName(TEXT("CargoB"))) { Mounts_28(Out); return; }
+    if (ShipDef == FName(TEXT("Imperial"))) { Mounts_29(Out); return; }
+    if (ShipDef == FName(TEXT("Intruder"))) { Mounts_30(Out); return; }
+    if (ShipDef == FName(TEXT("Jackal"))) { Mounts_31(Out); return; }
+    if (ShipDef == FName(TEXT("Marauder"))) { Mounts_32(Out); return; }
+    if (ShipDef == FName(TEXT("Mine1"))) { Mounts_33(Out); return; }
+    if (ShipDef == FName(TEXT("Observatory"))) { Mounts_34(Out); return; }
+    if (ShipDef == FName(TEXT("Orion"))) { Mounts_35(Out); return; }
+    if (ShipDef == FName(TEXT("QShip"))) { Mounts_36(Out); return; }
+    if (ShipDef == FName(TEXT("Raptor"))) { Mounts_37(Out); return; }
+    if (ShipDef == FName(TEXT("Razor"))) { Mounts_38(Out); return; }
+    if (ShipDef == FName(TEXT("S5"))) { Mounts_39(Out); return; }
+    if (ShipDef == FName(TEXT("S6"))) { Mounts_40(Out); return; }
+    if (ShipDef == FName(TEXT("S7"))) { Mounts_41(Out); return; }
+    if (ShipDef == FName(TEXT("Saber"))) { Mounts_42(Out); return; }
+    if (ShipDef == FName(TEXT("Spectre"))) { Mounts_43(Out); return; }
+    if (ShipDef == FName(TEXT("Stormhawk"))) { Mounts_44(Out); return; }
+    if (ShipDef == FName(TEXT("Thunderbolt"))) { Mounts_45(Out); return; }
+    if (ShipDef == FName(TEXT("Tiger"))) { Mounts_46(Out); return; }
+    if (ShipDef == FName(TEXT("Vendetta"))) { Mounts_47(Out); return; }
+    if (ShipDef == FName(TEXT("Viper"))) { Mounts_48(Out); return; }
+    if (ShipDef == FName(TEXT("Volnaris"))) { Mounts_49(Out); return; }
+    if (ShipDef == FName(TEXT("Wolf"))) { Mounts_50(Out); return; }
+    if (ShipDef == FName(TEXT("Zodiac"))) { Mounts_51(Out); return; }
+    if (ShipDef == FName(TEXT("ZZA"))) { Mounts_52(Out); return; }
+    if (ShipDef == FName(TEXT("ZZCA"))) { Mounts_53(Out); return; }
+    if (ShipDef == FName(TEXT("ZZCS"))) { Mounts_54(Out); return; }
+    if (ShipDef == FName(TEXT("ZZDD"))) { Mounts_55(Out); return; }
+    if (ShipDef == FName(TEXT("ZZFF"))) { Mounts_56(Out); return; }
+    if (ShipDef == FName(TEXT("ZZF"))) { Mounts_57(Out); return; }
 }
