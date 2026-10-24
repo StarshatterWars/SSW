@@ -258,21 +258,40 @@ struct FMissionCameraRig
                 if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
                     Runtime->GetCarrierVisualPoint(Player->GetCarrier(), CameraSimPoint, Eye);
 
-            if (bLaunchDeckHold && bHeldDeckPoseValid)
+            if (ActiveDeck->IsLaunchDeck() && Player->GetCarrier())
             {
-                // Keep the stationary carrier-relative camera pointing out of
-                // the bay instead of looking back toward the moving fighter.
-                Rotation = HeldDeckRotation;
+                // The camera must see the rendered fighter, not only point out
+                // of the bay. Both the carrier frame and the player visual can
+                // differ from the raw simulation coordinate frame.
+                FVector StartUE = FVector::ZeroVector;
+                FVector EndUE = FVector::ZeroVector;
+                FVector RunUE = FVector::ZeroVector;
+                if (UGameInstance* GI = PC->GetGameInstance())
+                    if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), ActiveDeck->StartPoint(), StartUE) &&
+                            Runtime->GetCarrierVisualPoint(Player->GetCarrier(), ActiveDeck->EndPoint(), EndUE))
+                            RunUE = (EndUE - StartUE).GetSafeNormal();
+
+                if (RunUE.IsNearlyZero()) RunUE = Forward.GetSafeNormal();
+                if (RunUE.IsNearlyZero()) RunUE = FVector::ForwardVector;
+
+                // Follow the same authored launch direction used by FlightDeck.
+                // Actual AShipActor location incorporates the carrier's model
+                // transform and the fighter's parked lane: use it for framing.
+                const FVector FighterCenter = Visual->GetActorLocation();
+                const FVector WorldUp = FVector::UpVector;
+                const double Standoff = FMath::Clamp(Radius * 2.7, 140.0, 850.0);
+                const double Height = FMath::Clamp(Radius * 0.9, 65.0, 320.0);
+                const FVector DesiredEye = FighterCenter - RunUE * Standoff + WorldUp * Height;
+                const FVector Target = FighterCenter + RunUE * FMath::Min(Radius * 0.22, 60.0);
+                // Use the full camera reframe only for launch decks. Other
+                // docked/recovery views preserve their original layout.
+                Eye = DesiredEye;
+                Rotation = Aim(Target - Eye, WorldUp, Rotation);
             }
             else
             {
-                // Confirmed 180-degree pre-launch correction from prior test.
-                Rotation = FQuat(Up.GetSafeNormal(), PI) * Aim(Bridge - Eye, Up, Rotation);
-                if (ActiveDeck->IsLaunchDeck() && Phase < EOPSMode::LOCKED)
-                {
-                    HeldDeckRotation = Rotation;
-                    bHeldDeckPoseValid = true;
-                }
+                Rotation = Aim(Bridge - Eye, Up, Rotation);
             }
         }
         else if (Mode == Drop || bTransition)

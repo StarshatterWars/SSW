@@ -21,6 +21,7 @@
 #include "Engine/World.h"
 
 #include "Ship.h"
+#include "SimElement.h"
 #include "FlightDeck.h"
 #include "ShipDesign.h"
 #include "SimContact.h"
@@ -111,6 +112,11 @@ CameraManager::Reset()
 	external_body = 0;
 	scripted_view_ship = nullptr;
 	bPlanetaryCinematicOrbit = false;
+	bCarrierLaunchCameraHeld = false;
+	bLaunchBayAnchorValid = false;
+	bLaunchBayExitValid = false;
+	LaunchBayAnchorCarrier = nullptr;
+	bLaunchBayStartValid = false;
 	transition = 0;
 	hud = 0;
 }
@@ -134,7 +140,14 @@ CameraManager::SetShip(Ship* s)
 	}
 
 	// taking control of the new ship:
-	if (ship != s) scripted_view_ship = nullptr;
+	if (ship != s) {
+		scripted_view_ship = nullptr;
+		bCarrierLaunchCameraHeld = false;
+		bLaunchBayAnchorValid = false;
+		bLaunchBayExitValid = false;
+		LaunchBayAnchorCarrier = nullptr;
+		bLaunchBayStartValid = false;
+	}
 	ship = s;
 
 	if (ship) {
@@ -538,29 +551,117 @@ CameraManager::ExecFrame(double seconds)
 	if (!bKeepPlanetOrbit) {
 	const EOPSMode flight_phase = ship->GetFlightPhase();
 
-	if (flight_phase < EOPSMode::LOCKED)
+	// Launch-camera ownership is latched for the current player fighter. Do not
+	// surrender the view merely because the hangar detaches the deck pointer or
+	// changes the flight phase on the button press.
+	FlightDeck* LaunchViewDeck = ship->GetDock();
+	const bool bOnCarrierLaunchDeck = LaunchViewDeck && LaunchViewDeck->IsLaunchDeck();
+	const Ship* LaunchCarrier = bOnCarrierLaunchDeck ? LaunchViewDeck->GetCarrier() : ship->GetCarrier();
+	if (!LaunchCarrier && ship->GetElement())
+		LaunchCarrier = ship->GetElement()->GetCarrier();
+	if (!LaunchCarrier && bCarrierLaunchCameraHeld)
+		LaunchCarrier = LaunchBayAnchorCarrier;
+
+	// First sight of an ALERT fighter establishes a physical starting point.
+	// ACTIVE is a state, not a geometric proof the ship has cleared the bay.
+	if (LaunchCarrier && flight_phase >= EOPSMode::ALERT &&
+		flight_phase < EOPSMode::ACTIVE && !bLaunchBayStartValid)
+	{
+		LaunchBayStartWorld = ship->GetLocation();
+		LaunchBayStartCarrierWorld = LaunchCarrier->GetLocation();
+		LaunchBayStartForward = ship->GetCam().vpn().GetSafeNormal();
+		bLaunchBayStartValid = true;
+	}
+	if (LaunchCarrier && bOnCarrierLaunchDeck && bLaunchBayStartValid && !bLaunchBayExitValid)
+	{
+		const FVector AuthoredExit = LaunchViewDeck->EndPoint();
+		const FVector RelativeExit = AuthoredExit - LaunchBayStartWorld;
+		const double ForwardDistance = FVector::DotProduct(RelativeExit, LaunchBayStartForward);
+		// EndPoint may be in a different coordinate frame. Reject endpoints behind
+		// the parked fighter or indistinguishable from its starting location.
+		if (ForwardDistance > FMath::Max(100.0, static_cast<double>(ship->GetRadius()) * 2.0))
+		{
+			LaunchBayExit = AuthoredExit;
+			bLaunchBayExitValid = true;
+		}
+	}
+	bool bPhysicallyClear = false;
+	if (LaunchCarrier && bLaunchBayStartValid)
+	{
+		// Account for carrier movement since staging; this measures fighter
+		// travel relative to the bay, not motion of the carrier itself.
+		const FVector RelativeTravel = (ship->GetLocation() - LaunchCarrier->GetLocation()) -
+			(LaunchBayStartWorld - LaunchBayStartCarrierWorld);
+		const double ForwardTravel = FVector::DotProduct(RelativeTravel, LaunchBayStartForward);
+		const double MinDeparture = FMath::Max(500.0, static_cast<double>(ship->GetRadius()) * 8.0);
+		if (bLaunchBayExitValid)
+		{
+			const double ExitDistance = FVector::DotProduct(LaunchBayExit - LaunchBayStartWorld, LaunchBayStartForward);
+			bPhysicallyClear = ForwardTravel >= FMath::Max(MinDeparture, ExitDistance);
+		}
+		else
+		{
+			// If no reliable authored exit exists, retain the bay camera for a
+			// substantial actual movement rather than switching on a phase change.
+			bPhysicallyClear = ForwardTravel >= FMath::Max(MinDeparture, static_cast<double>(LaunchCarrier->GetRadius()));
+		}
+	}
+	const bool bLaunchCompleted = ship->IsAirborne() &&
+		flight_phase >= EOPSMode::ACTIVE && bPhysicallyClear;
+	if (bLaunchCompleted || ship->IsDead() || ship->IsDying())
+	{
+		bCarrierLaunchCameraHeld = false;
+		bLaunchBayAnchorValid = false;
+		bLaunchBayExitValid = false;
+		bLaunchBayStartValid = false;
+		LaunchBayAnchorCarrier = nullptr;
+		UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][CAMERA_RELEASE] Fighter='%hs' Clear=%d"),
+			ship->GetName(), bPhysicallyClear ? 1 : 0);
+	}
+	else if ((LaunchCarrier || bCarrierLaunchCameraHeld) &&
+		(flight_phase >= EOPSMode::ALERT || bCarrierLaunchCameraHeld) &&
+		!ship->IsDead())
+	{
+		bCarrierLaunchCameraHeld = true;
+	}
+
+	const bool bFollowLaunchingFighter =
+		bCarrierLaunchCameraHeld && !bKeepPlanetOrbit;
+
+	if (bFollowLaunchingFighter)
+	{
+		// Commit rather than request a mode transition. Otherwise the
+		// flight-phase camera policy below can replace CHASE with DOCKING
+		// or COCKPIT before the fighter leaves the bay.
+		mode = MODE_CHASE;
+		requested_mode = MODE_NONE;
+		old_mode = MODE_NONE;
+		transition = 0.0;
+		external_ship = nullptr;
+	}
+	else if (flight_phase < EOPSMode::LOCKED)
 		SetMode(MODE_DOCKING);
 
-	if (ship->IsAirborne()) {
+	if (!bFollowLaunchingFighter && ship->IsAirborne()) {
 		if (flight_phase >= EOPSMode::DOCKING)
 			SetMode(MODE_DOCKING);
 	}
-	else {
+	else if (!bFollowLaunchingFighter) {
 		if (flight_phase >= EOPSMode::RECOVERY)
 			SetMode(MODE_DOCKING);
 	}
 
-	if (flight_phase >= EOPSMode::LOCKED && flight_phase < EOPSMode::ACTIVE) {
+	if (!bFollowLaunchingFighter && flight_phase >= EOPSMode::LOCKED && flight_phase < EOPSMode::ACTIVE) {
 		const int m = GetMode();
 		if (m != MODE_COCKPIT && m != MODE_VIRTUAL)
 			SetMode(MODE_COCKPIT);
 	}
 
-	if (ship->InTransition()) {
+	if (!bFollowLaunchingFighter && ship->InTransition()) {
 		SetMode(MODE_DROP);
 	}
 	// automatically restore mode after transition:
-	else if (old_mode != MODE_NONE) {
+	else if (!bFollowLaunchingFighter && old_mode != MODE_NONE) {
 		mode = old_mode;
 		requested_mode = old_mode;
 		old_mode = MODE_NONE;
@@ -637,7 +738,12 @@ CameraManager::ExecFrame(double seconds)
 	switch (op_mode) {
 	default:
 	case MODE_COCKPIT:      Cockpit(seconds);    break;
-	case MODE_CHASE:        Chase(seconds);      break;
+	case MODE_CHASE:
+		if (bCarrierLaunchCameraHeld)
+			LaunchBayChase(seconds);
+		else
+			Chase(seconds);
+		break;
 	case MODE_TARGET:       Target(seconds);     break;
 	case MODE_THREAT:       Threat(seconds);     break;
 	case MODE_VIRTUAL:      Virtual(seconds);    break;
@@ -752,6 +858,86 @@ CameraManager::Chase(double seconds)
 		camera.vup() * (Chase.Z * (float)step);
 
 	camera.MoveTo(Cpos);
+}
+
+// +--------------------------------------------------------------------+
+// Third-person launch-bay presentation. Do not use the carrier bay camera
+// position here: a bay camera can look at the rear wall instead of the ship.
+// Both the camera and fighter are expressed in the same legacy camera frame.
+void
+CameraManager::LaunchBayChase(double seconds)
+{
+    if (!ship)
+        return;
+
+    FlightDeck* Deck = ship->GetDock();
+    const Ship* Carrier = Deck && Deck->IsLaunchDeck()
+        ? Deck->GetCarrier() : ship->GetCarrier();
+    if (!Carrier && ship->GetElement())
+        Carrier = ship->GetElement()->GetCarrier();
+    if (!Carrier && bCarrierLaunchCameraHeld)
+        Carrier = LaunchBayAnchorCarrier;
+
+    // Same presentation converter as the 3D carrier/fighter. Do not alter
+    // authored coordinates or translate/rotate the fighter itself.
+    FVector Focus = ship->GetLocation();
+    if (Carrier && GWorld)
+    {
+        for (TActorIterator<ACarrierActor> It(GWorld); It; ++It)
+        {
+            ACarrierActor* Actor = *It;
+            if (IsValid(Actor) && Actor->GetCarrierSimulation() == Carrier)
+            {
+                Focus = Actor->ConvertDeckFighterToLegacyCamera(ship);
+                break;
+            }
+        }
+    }
+
+    // Capture the known-good 180-degree view ONCE while staged. The old
+    // implementation moved this camera with the fighter each frame and
+    // thereby immediately left the carrier bay when LAUNCH was pressed.
+    if (!bLaunchBayAnchorValid || LaunchBayAnchorCarrier != Carrier)
+    {
+        const FVector Forward = ship->GetCam().vpn().GetSafeNormal();
+        const FVector Up = ship->GetCam().vup().GetSafeNormal();
+        const FVector ChaseOffset = ship->GetChaseLocation();
+        const double Radius = FMath::Max(static_cast<double>(ship->GetRadius()), 1.0);
+        const double Back = FMath::Max(FMath::Abs(static_cast<double>(ChaseOffset.Y)), Radius * 3.0);
+        const double Height = FMath::Max(FMath::Abs(static_cast<double>(ChaseOffset.Z)), Radius * 1.25);
+        const FVector InitialLocation = Focus - Forward * Back + Up * Height;
+
+        LaunchBayAnchorCarrier = Carrier;
+        if (Carrier)
+        {
+            const FVector Delta = InitialLocation - Carrier->GetLocation();
+            LaunchBayAnchorLocal = FVector(
+                FVector::DotProduct(Delta, Carrier->GetCam().vpn().GetSafeNormal()),
+                FVector::DotProduct(Delta, Carrier->GetCam().vrt().GetSafeNormal()),
+                FVector::DotProduct(Delta, Carrier->GetCam().vup().GetSafeNormal()));
+        }
+        else
+        {
+            LaunchBayAnchorLocal = InitialLocation;
+        }
+        bLaunchBayAnchorValid = true;
+        UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][BAY_CAMERA_ANCHORED] Fighter='%hs' Carrier='%hs'"),
+            ship->GetName(), Carrier ? Carrier->GetName() : "<none>");
+    }
+
+    FVector CameraLocation = LaunchBayAnchorLocal;
+    if (Carrier)
+    {
+        CameraLocation = Carrier->GetLocation()
+            + Carrier->GetCam().vpn().GetSafeNormal() * LaunchBayAnchorLocal.X
+            + Carrier->GetCam().vrt().GetSafeNormal() * LaunchBayAnchorLocal.Y
+            + Carrier->GetCam().vup().GetSafeNormal() * LaunchBayAnchorLocal.Z;
+    }
+
+    // Remain physically inside the carrier bay while tracking the moving
+    // fighter. Normal chase resumes only after the authored launch exit.
+    camera.MoveTo(CameraLocation);
+    camera.LookAt(Focus);
 }
 
 // +--------------------------------------------------------------------+
