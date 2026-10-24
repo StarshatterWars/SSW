@@ -302,6 +302,23 @@ struct FMissionCameraRig
                 {
                     Rotation = HeldLaunchFacing;
                 }
+
+                // Move the camera farther back INSIDE the launch bay without
+                // recomputing its already-correct forward-looking rotation.
+                // Carrier camera vpn() is the legacy forward/tube axis;
+                // using it avoids the diagonal departure-waypoint offset.
+                constexpr double RearwardCameraOffset = 140.0;
+                const FVector CarrierForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
+                const FVector RearCameraSimPoint = CameraSimPoint - CarrierForward * RearwardCameraOffset;
+                if (UGameInstance* GI = PC->GetGameInstance())
+                {
+                    if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+                    {
+                        FVector RearEye = Eye;
+                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), RearCameraSimPoint, RearEye))
+                            Eye = RearEye;
+                    }
+                }
             }
             else
             {
