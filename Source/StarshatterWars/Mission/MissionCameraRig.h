@@ -36,6 +36,9 @@ struct FMissionCameraRig
     double HeldLaneOffset = 0.0;
     FQuat HeldDeckRotation = FQuat::Identity;
     bool bHeldDeckPoseValid = false;
+    // Preserve the pre-launch view during launch-tube traversal.
+    FQuat HeldLaunchFacing = FQuat::Identity;
+    bool bHeldLaunchFacingValid = false;
     // Deck release is a presentation hand-off, not an instantaneous camera cut.
     bool bLaunchExitBlendActive = false;
     double LaunchExitBlendElapsed = 0.0;
@@ -132,7 +135,10 @@ struct FMissionCameraRig
             Phase < EOPSMode::LOCKED)
         {
             if (HeldLaunchDeck != Deck || HeldLaunchPlayer != Player)
+            {
                 bHeldDeckPoseValid = false;
+                bHeldLaunchFacingValid = false;
+            }
             HeldLaunchDeck = Deck;
             HeldLaunchPlayer = Player;
             bLaunchExitBlendActive = false;
@@ -143,6 +149,7 @@ struct FMissionCameraRig
             HeldLaunchDeck = nullptr;
             HeldLaunchPlayer = nullptr;
             bHeldDeckPoseValid = false;
+            bHeldLaunchFacingValid = false;
         }
 
         bool bLaunchDeckHold = false;
@@ -183,6 +190,7 @@ struct FMissionCameraRig
             HeldLaunchDeck = nullptr;
             HeldLaunchPlayer = nullptr;
             bHeldDeckPoseValid = false;
+            bHeldLaunchFacingValid = false;
         }
 
         const bool bDock = (Deck && (Phase < EOPSMode::LOCKED ||
@@ -269,7 +277,31 @@ struct FMissionCameraRig
                 const FVector Target = FighterCenter + RunUE * FMath::Min(Radius * 0.22, 60.0);
                 const FVector LookDirection = Target - Eye;
                 if (!LookDirection.IsNearlyZero())
-                    Rotation = Aim(LookDirection, WorldUp, Rotation);
+                {
+                    if (!bLaunchDeckHold)
+                    {
+                        // The starting view is already correct.
+                        Rotation = Aim(-LookDirection, WorldUp, Rotation);
+                        HeldLaunchFacing = Rotation;
+                        bHeldLaunchFacingValid = true;
+                    }
+                    else if (bHeldLaunchFacingValid)
+                    {
+                        // Do not turn toward the back wall as fighter moves past.
+                        Rotation = HeldLaunchFacing;
+                    }
+                    else
+                    {
+                        // Rare case: camera starts directly in launch phase.
+                        Rotation = Aim(-LookDirection, WorldUp, Rotation);
+                        HeldLaunchFacing = Rotation;
+                        bHeldLaunchFacingValid = true;
+                    }
+                }
+                else if (bLaunchDeckHold && bHeldLaunchFacingValid)
+                {
+                    Rotation = HeldLaunchFacing;
+                }
             }
             else
             {
