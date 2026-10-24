@@ -423,6 +423,39 @@ void USSWRuntimeSubsystem::UpdateWorld()
         // is updated below. This avoids looking at previous-frame body transforms.
     }
 
+    // Launch camera diagnosis only. Does not change any view targets or transforms.
+    // Report the actual PlayerController camera during the ALERT pre-launch screen.
+    if (SimInstance && SimInstance->GetMission())
+    {
+        Ship* DiagnosticPlayer = SimInstance->GetPlayerShip();
+        if (DiagnosticPlayer && DiagnosticPlayer->GetFlightPhase() == EOPSMode::ALERT)
+        {
+            static uint32 LaunchCameraProbeCounter = 0;
+            if ((LaunchCameraProbeCounter++ % 180) == 0)
+            {
+                if (UWorld* DiagnosticWorld = GetWorld())
+                {
+                    if (APlayerController* DiagnosticPC = DiagnosticWorld->GetFirstPlayerController())
+                    {
+                        AActor* ActiveTarget = DiagnosticPC->GetViewTarget();
+                        FVector ActualPosition = FVector::ZeroVector;
+                        FRotator ActualRotation = FRotator::ZeroRotator;
+                        DiagnosticPC->GetPlayerViewPoint(ActualPosition, ActualRotation);
+                        UE_LOG(LogSSWRuntime, Warning,
+                            TEXT("[PRELAUNCH_CAMERA_DIAG] Ship='%hs' ViewTarget='%s' Class='%s' CameraPosition=%s CameraRotation=%s LegacyMode=%d LegacyShip='%s'"),
+                            DiagnosticPlayer->GetName(),
+                            IsValid(ActiveTarget) ? *ActiveTarget->GetName() : TEXT("<null>"),
+                            IsValid(ActiveTarget) ? *ActiveTarget->GetClass()->GetName() : TEXT("<null>"),
+                            *ActualPosition.ToString(),
+                            *ActualRotation.ToString(),
+                            CamDir ? CamDir->GetMode() : -1,
+                            (CamDir && CamDir->GetShip()) ? ANSI_TO_TCHAR(CamDir->GetShip()->GetName()) : TEXT("<null>"));
+                    }
+                }
+            }
+        }
+    }
+
     // Mission bodies are camera-relative proxies during legacy cinematics.
     // The camera may be millions of simulation units from the player CameraPod.
     // Using the player ship as the projection origin makes distant planets the

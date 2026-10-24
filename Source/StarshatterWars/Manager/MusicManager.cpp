@@ -34,11 +34,6 @@
 #include "Logging/LogMacros.h"
 #include "GameStructs.h"
 
-#if PLATFORM_WINDOWS
-#include "Windows/AllowWindowsPlatformTypes.h"
-#include <Windows.h>
-#include "Windows/HideWindowsPlatformTypes.h"
-#endif
 
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterMusic, Log, All);
 
@@ -52,20 +47,16 @@ MusicManager::MusicManager()
     , track(nullptr)
     , next_track(nullptr)
     , no_music(true)
-    , hproc(0)
 {
     music_manager = this;
 
+    // MusicManager is ticked by USSWRuntimeSubsystem on the game thread.
+    // Do not start a worker: track creation uses NewObject<USound>().
     ScanTracks();
-
-    if (!no_music)
-        StartThread();
 }
 
 MusicManager::~MusicManager()
 {
-    StopThread();
-
     delete track;
     delete next_track;
 
@@ -111,6 +102,14 @@ MusicManager* MusicManager::GetInstance()
 
 void MusicManager::ExecFrame()
 {
+    // Legacy music track creation and playback touch Unreal UObjects.
+    // A music worker thread must never execute this path.
+    if (!IsInGameThread())
+    {
+        UE_LOG(LogStarshatterMusic, Error, TEXT("MusicManager::ExecFrame called off the game thread; update skipped"));
+        return;
+    }
+
     if (no_music)
         return;
 
@@ -289,6 +288,12 @@ const char* MusicManager::GetModeName(MusicMode InMode)
 
 void MusicManager::SetMode(MusicMode InMode)
 {
+    if (!IsInGameThread())
+    {
+        UE_LOG(LogStarshatterMusic, Error, TEXT("MusicManager::SetMode called off the game thread; mode change skipped"));
+        return;
+    }
+
     if (!music_manager || music_manager->no_music)
         return;
 
@@ -469,79 +474,3 @@ void MusicManager::ShuffleTracks()
             tracks->shuffle();
     }
 }
-
-// +--------------------------------------------------------------------+
-
-#if PLATFORM_WINDOWS
-static DWORD WINAPI MusicManagerThreadProc(LPVOID link);
-#endif
-
-void MusicManager::StartThread()
-{
-#if PLATFORM_WINDOWS
-    if (hproc != 0) {
-        DWORD result = 0;
-        ::GetExitCodeThread(hproc, &result);
-
-        if (result != STILL_ACTIVE) {
-            ::CloseHandle(hproc);
-            hproc = 0;
-        }
-        else {
-            return;
-        }
-    }
-
-    if (hproc == 0) {
-        DWORD thread_id = 0;
-        hproc = ::CreateThread(nullptr, 4096, MusicManagerThreadProc, (LPVOID)this, 0, &thread_id);
-
-        if (hproc == 0) {
-            static int report = 10;
-            if (report > 0) {
-                UE_LOG(LogStarshatterMusic, Warning,
-                    TEXT("WARNING: MusicManager failed to create thread (err=%08x)"),
-                    (uint32)::GetLastError());
-                report--;
-
-                if (report == 0) {
-                    UE_LOG(LogStarshatterMusic, Warning,
-                        TEXT("Further warnings of this type will be suppressed."));
-                }
-            }
-        }
-    }
-#else
-    UE_LOG(LogStarshatterMusic, Warning, TEXT("MusicManager::StartThread() is only supported on Windows in this build."));
-#endif
-}
-
-void MusicManager::StopThread()
-{
-#if PLATFORM_WINDOWS
-    if (hproc != 0) {
-        SetMode(MusicMode::SHUTDOWN);
-        ::WaitForSingleObject(hproc, 1500);
-        ::CloseHandle(hproc);
-        hproc = 0;
-    }
-#endif
-}
-
-#if PLATFORM_WINDOWS
-static DWORD WINAPI MusicManagerThreadProc(LPVOID link)
-{
-    MusicManager* mgr = (MusicManager*)link;
-
-    if (mgr) {
-        while (mgr->GetMode() != MusicMode::SHUTDOWN) {
-            mgr->ExecFrame();
-            ::Sleep(100);
-        }
-
-        return 0;
-    }
-
-    return (DWORD)E_POINTER;
-}
-#endif

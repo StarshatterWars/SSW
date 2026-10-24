@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Camera/CameraActor.h"
@@ -30,7 +30,17 @@ struct FMissionCameraRig
     double Distance = 0.0;
     bool bWide = false, bDropCaptured = false, bWasTransition = false;
     FVector DropPosition = FVector::ZeroVector;
-
+    // Launch presentation only: retain the authored deck while the fighter exits.
+    FlightDeck* HeldLaunchDeck = nullptr;
+    Ship* HeldLaunchPlayer = nullptr;
+    double HeldLaneOffset = 0.0;
+    FQuat HeldDeckRotation = FQuat::Identity;
+    bool bHeldDeckPoseValid = false;
+    // Deck release is a presentation hand-off, not an instantaneous camera cut.
+    bool bLaunchExitBlendActive = false;
+    double LaunchExitBlendElapsed = 0.0;
+    FVector LaunchExitBlendEye = FVector::ZeroVector;
+    FQuat LaunchExitBlendRotation = FQuat::Identity;
 
     void RestoreVisibility(APlayerController* PC)
     {
@@ -115,8 +125,69 @@ struct FMissionCameraRig
 
         const EOPSMode Phase = Player->GetFlightPhase();
         FlightDeck* Deck = Player->GetDock();
-        const bool bDock = Deck && (Phase < EOPSMode::LOCKED ||
-            (Player->IsAirborne() ? Phase >= EOPSMode::DOCKING : Phase >= EOPSMode::RECOVERY));
+        // Cache the real authored flight deck while the player is staged.
+        // The simulation can advance from ALERT to LAUNCH in a single frame;
+        // flight phase alone must not release the camera inside the bay.
+        if (Deck && Deck->IsLaunchDeck() && Player->GetCarrier() &&
+            Phase < EOPSMode::LOCKED)
+        {
+            if (HeldLaunchDeck != Deck || HeldLaunchPlayer != Player)
+                bHeldDeckPoseValid = false;
+            HeldLaunchDeck = Deck;
+            HeldLaunchPlayer = Player;
+            bLaunchExitBlendActive = false;
+            LaunchExitBlendElapsed = 0.0;
+        }
+        else if (HeldLaunchPlayer != Player)
+        {
+            HeldLaunchDeck = nullptr;
+            HeldLaunchPlayer = nullptr;
+            bHeldDeckPoseValid = false;
+        }
+
+        bool bLaunchDeckHold = false;
+        if (HeldLaunchDeck && HeldLaunchPlayer == Player &&
+            Player->GetCarrier() && Phase >= EOPSMode::LOCKED &&
+            Phase <= EOPSMode::ACTIVE)
+        {
+            // Compare actual simulation position with the authored launch segment;
+            // carrier motion is already incorporated by FlightDeck::Orient().
+            const FVector Start = HeldLaunchDeck->StartPoint();
+            const FVector End = HeldLaunchDeck->EndPoint();
+            const FVector Run = End - Start;
+            const double RunLengthSq = Run.SizeSquared();
+            const double Progress = RunLengthSq > 1.0
+                ? FVector::DotProduct(Player->GetLocation() - Start, Run) / RunLengthSq
+                : 1.0;
+            bLaunchDeckHold = Progress < 1.0;
+            if (!bLaunchDeckHold)
+            {
+                // Start from the *last displayed* camera pose for a seamless
+                // transition, even if the authored end is passed in one frame.
+                bLaunchExitBlendActive = true;
+                LaunchExitBlendElapsed = 0.0;
+                LaunchExitBlendEye = CameraActor->GetActorLocation();
+                LaunchExitBlendRotation = CameraActor->GetActorQuat();
+                HeldLaunchDeck = nullptr;
+                HeldLaunchPlayer = nullptr;
+                bHeldDeckPoseValid = false;
+            }
+        }
+        else if (HeldLaunchDeck && Phase > EOPSMode::ACTIVE)
+        {
+            // The simulation can skip directly beyond ACTIVE in one tick.
+            bLaunchExitBlendActive = true;
+            LaunchExitBlendElapsed = 0.0;
+            LaunchExitBlendEye = CameraActor->GetActorLocation();
+            LaunchExitBlendRotation = CameraActor->GetActorQuat();
+            HeldLaunchDeck = nullptr;
+            HeldLaunchPlayer = nullptr;
+            bHeldDeckPoseValid = false;
+        }
+
+        const bool bDock = (Deck && (Phase < EOPSMode::LOCKED ||
+            (Player->IsAirborne() ? Phase >= EOPSMode::DOCKING : Phase >= EOPSMode::RECOVERY))) ||
+            bLaunchDeckHold;
         const bool bTransition = Player->InTransition();
         if (bTransition != bWasTransition) { bDropCaptured = false; bWasTransition = bTransition; }
         const bool bPadlock = Mode == Target && Selected && Player->GetTarget() == Selected->GetRuntimeShip();
@@ -142,15 +213,67 @@ struct FMissionCameraRig
         if (bDock)
         {
             // Deck camera is in simulation space; rebase into the displayed ship frame.
-            const FVector Offset = Deck->CamLoc() - Player->GetLocation();
+            FlightDeck* ActiveDeck = bLaunchDeckHold ? HeldLaunchDeck : Deck;
+            if (!ActiveDeck) return;
+            FVector CameraSimPoint = ActiveDeck->CamLoc();
+            if (ActiveDeck->IsLaunchDeck() && Player->GetCarrier())
+            {
+                // .def cam is often on the centerline. The two authored launch
+                // lanes are displaced sideways (Orion: X=+60 and X=-60).
+                // Preserve the authored camera height and fore/aft separation,
+                // but move its lateral coordinate into the fighter's actual spot.
+                const FVector Run = (ActiveDeck->EndPoint() - ActiveDeck->StartPoint()).GetSafeNormal();
+                const FVector CarrierUp = Player->GetCarrier()->GetCam().vup().GetSafeNormal();
+                const FVector Right = FVector::CrossProduct(Run, CarrierUp).GetSafeNormal();
+                if (!Right.IsNearlyZero())
+                {
+                    if (!bLaunchDeckHold)
+                        HeldLaneOffset = FVector::DotProduct(Player->GetLocation() - CameraSimPoint, Right);
+                    CameraSimPoint += Right * HeldLaneOffset;
+                }
+            }
+            if (bLaunchDeckHold)
+            {
+                // The old implementation held Eye at CamLoc() for the entire
+                // launch run, making the flight look like a static tableau.
+                // Travel forward along the .def launch segment, carrier-relative.
+                // A partial follow factor leaves perceptible motion of both the
+                // fighter and the bay, while preserving the authored camera lane.
+                const FVector DeckRun = ActiveDeck->EndPoint() - ActiveDeck->StartPoint();
+                const double DeckLength = DeckRun.Size();
+                if (DeckLength > 1.0)
+                {
+                    const FVector Along = DeckRun / DeckLength;
+                    const double DistanceAlong = FMath::Clamp(
+                        FVector::DotProduct(Player->GetLocation() - ActiveDeck->StartPoint(), Along),
+                        0.0, DeckLength);
+                    CameraSimPoint += Along * (0.70 * DistanceAlong);
+                }
+            }
+            const FVector Offset = CameraSimPoint - Player->GetLocation();
             const auto& Basis = Player->GetCam();
             Eye = Pose.TransformPosition(FVector(FVector::DotProduct(Offset, Basis.vpn()),
                 FVector::DotProduct(Offset, Basis.vrt()), FVector::DotProduct(Offset, Basis.vup())));
-            if (UGameInstance* GI=PC->GetGameInstance()) {
-                if (USSWRuntimeSubsystem* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>())
-                    Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Deck->CamLoc(), Eye);
+            if (UGameInstance* GI = PC->GetGameInstance())
+                if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+                    Runtime->GetCarrierVisualPoint(Player->GetCarrier(), CameraSimPoint, Eye);
+
+            if (bLaunchDeckHold && bHeldDeckPoseValid)
+            {
+                // Keep the stationary carrier-relative camera pointing out of
+                // the bay instead of looking back toward the moving fighter.
+                Rotation = HeldDeckRotation;
             }
-            Rotation = Aim(Bridge - Eye, Up, Rotation);
+            else
+            {
+                // Confirmed 180-degree pre-launch correction from prior test.
+                Rotation = FQuat(Up.GetSafeNormal(), PI) * Aim(Bridge - Eye, Up, Rotation);
+                if (ActiveDeck->IsLaunchDeck() && Phase < EOPSMode::LOCKED)
+                {
+                    HeldDeckRotation = Rotation;
+                    bHeldDeckPoseValid = true;
+                }
+            }
         }
         else if (Mode == Drop || bTransition)
         {
@@ -205,11 +328,23 @@ struct FMissionCameraRig
             Eye = Center - Direction * Distance + Up * FMath::Max(FMath::Abs(ScaledChase.Z), Radius * 0.45);
             Rotation = Aim(Bridge + Forward * Radius - Eye, Up, Rotation);
         }
+        // Blend the final deck frame into the normal flight camera rather than
+        // snapping between two unrelated world-space eye positions.
+        if (bLaunchExitBlendActive)
+        {
+            LaunchExitBlendElapsed += Dt;
+            const double Alpha = FMath::Clamp(LaunchExitBlendElapsed / 0.85, 0.0, 1.0);
+            const double Smooth = Alpha * Alpha * (3.0 - 2.0 * Alpha);
+            Eye = FMath::Lerp(LaunchExitBlendEye, Eye, Smooth);
+            Rotation = FQuat::Slerp(LaunchExitBlendRotation, Rotation, Smooth).GetNormalized();
+            if (Alpha >= 1.0)
+                bLaunchExitBlendActive = false;
+        }
         if (Eye.ContainsNaN() || Rotation.ContainsNaN()) return;
         // The actor updates every rendered frame; the old 60 Hz timer left the camera
         // behind on intervening frames (a large offset at fighter speeds).
         // Attach chase view to the displayed hull so both move together between callbacks.
-        const bool FollowHull = Mode == Chase && !bDock && !bTransition;
+        const bool FollowHull = Mode == Chase && !bDock && !bTransition && !bLaunchExitBlendActive;
         if (FollowHull) {
             if (CameraActor->GetAttachParentActor() != Visual)
                 CameraActor->AttachToActor(Visual, FAttachmentTransformRules::KeepWorldTransform);

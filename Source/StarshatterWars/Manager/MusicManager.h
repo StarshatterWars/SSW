@@ -46,8 +46,8 @@ public:
     static bool         IsNoMusic();
 
 protected:
-    void                StartThread();
-    void                StopThread();
+    // The runtime subsystem calls ExecFrame on the game thread.
+    // No dedicated thread: Unreal UObjects must not be created from workers.
 
     // Track sequencing within the CURRENT mode playlist:
     void                GetNextTrack(int TrackIndex);
@@ -76,6 +76,5 @@ protected:
 
     bool                no_music;
 
-    HANDLE              hproc;
     ThreadSync          sync;
 };
