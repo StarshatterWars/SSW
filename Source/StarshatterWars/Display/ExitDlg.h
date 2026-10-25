@@ -1,7 +1,7 @@
 /*=============================================================================
     Project:        Starshatter Wars (Unreal Port)
     Studio:         Fractal Dev Studios
-    Copyright:      (C) 2025–2026.
+    Copyright:      (C) 2025â€“2026.
 
     DIALOG:         ExitDlg
     FILE:           ExitDlg.h
@@ -25,6 +25,7 @@
 class UButton;
 class UScrollBox;
 class URichTextBlock;
+class UTextBlock;
 class UMenuScreen;
 
 UCLASS(BlueprintType, Blueprintable)
@@ -67,10 +68,7 @@ protected:
     /* --------------------------------------------------------------------
        Credits
        -------------------------------------------------------------------- */
-    bool LoadCreditsFile(FString& OutText) const;
-    void ApplyCredits(const FString& Text);
-    void TickCredits(float DeltaTime);
-
+    void BuildModernExitScreen();
 protected:
     /* --------------------------------------------------------------------
        Widgets (BindWidgetOptional)
@@ -81,18 +79,7 @@ protected:
 
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> CancelBtn;
-
-    UPROPERTY(meta = (BindWidgetOptional))
-    TObjectPtr<UScrollBox> CreditsScroll;
-
-    UPROPERTY(meta = (BindWidgetOptional))
-    TObjectPtr<URichTextBlock> CreditsText;
-
 protected:
 
     bool  bExitLatch = false;
-    float ScrollOffset = 0.0f;
-
-    UPROPERTY(EditAnywhere, Category = "ExitDlg")
-    float ScrollPixelsPerSecond = 22.0f;
 };

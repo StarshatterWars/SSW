@@ -36,7 +36,20 @@
 #include "Components/TextBlock.h"
 #include "OptionsManagedPage.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/SizeBox.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/PanelWidget.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/ButtonSlot.h"
+#include "MissionUIStyle.h"
+#include "StarshatterUIStyleSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 // Input
 #include "Input/Reply.h"
@@ -83,7 +96,8 @@ void UOptionsScreen::NativeConstruct()
         }
     }
 
-    // Default tab
+    BuildCreditsPage();
+    StandardizeTopTabs();
     ShowAudDlg();
 
     if (TitleText)
@@ -107,7 +121,7 @@ void UOptionsScreen::NativeConstruct()
 
         PC->SetInputMode(Mode);
 
-        // Also set user focus (avoids ìdoes not support focusî warnings)
+        // Also set user focus (avoids ‚Äúdoes not support focus‚Äù warnings)
         if (BtnAudio)
             BtnAudio->SetUserFocus(PC);
         else
@@ -199,9 +213,57 @@ void UOptionsScreen::SwitchToWidget(UWidget* Widget)
 // Tab visuals
 // ------------------------------------------------------------
 
+void UOptionsScreen::StandardizeTopTabs()
+{
+    // Use one shared style and one label treatment for all eight top tabs.
+    // The seven pre-existing WBP buttons keep their click bindings and parents.
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick,
+                        BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    const TCHAR* Names[] = { TEXT("AUDIO"), TEXT("CONTROLS"), TEXT("GAME"),
+                             TEXT("JOYSTICK"), TEXT("KEYBOARD"), TEXT("MODS"),
+                             TEXT("VIDEO"), TEXT("CREDITS") };
+
+    UStarshatterUIStyleSubsystem* SharedStyle = nullptr;
+    if (UGameInstance* GI = GetGameInstance())
+        SharedStyle = GI->GetSubsystem<UStarshatterUIStyleSubsystem>();
+
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Tabs); ++Index)
+    {
+        UButton* Tab = Tabs[Index];
+        if (!Tab) continue;
+
+        if (SharedStyle)
+            SharedStyle->ApplyMenuButtonStyle(Tab);
+
+        // Normalize existing WBP TextBlocks as well as the dynamically built Credits tab.
+        UTextBlock* Label = Cast<UTextBlock>(Tab->GetContent());
+        if (!Label && Tab->GetContent())
+        {
+            if (USizeBox* Wrapper = Cast<USizeBox>(Tab->GetContent()))
+                Label = Cast<UTextBlock>(Wrapper->GetContent());
+        }
+        if (Label)
+        {
+            Label->SetText(FText::FromString(Names[Index]));
+            Label->SetFont(MissionUIStyle::GetInfoLabelFont(13));
+            Label->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
+            Label->SetJustification(ETextJustify::Center);
+        }
+
+        if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(Tab->GetContent() ? Tab->GetContent()->Slot : nullptr))
+        {
+            ButtonContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
+            ButtonContentSlot->SetPadding(FMargin(10.f, 8.f));
+        }
+
+    }
+    UE_LOG(LogOptionsScreen, Log, TEXT("[Options] Standardized all 8 top tab buttons."));
+}
+
 void UOptionsScreen::SetActiveTab(UButton* ActiveButton)
 {
-    // Radio behavior: selected tab disabled (lets Disabled style look ìselectedî if you want)
+    // Radio behavior: selected tab disabled (lets Disabled style look ‚Äúselected‚Äù if you want)
     if (BtnAudio)    BtnAudio->SetIsEnabled(BtnAudio != ActiveButton);
     if (BtnControls) BtnControls->SetIsEnabled(BtnControls != ActiveButton);
     if (BtnGame)     BtnGame->SetIsEnabled(BtnGame != ActiveButton);
@@ -209,6 +271,7 @@ void UOptionsScreen::SetActiveTab(UButton* ActiveButton)
     if (BtnKeyboard) BtnKeyboard->SetIsEnabled(BtnKeyboard != ActiveButton);
     if (BtnMods)     BtnMods->SetIsEnabled(BtnMods != ActiveButton);
     if (BtnVideo)    BtnVideo->SetIsEnabled(BtnVideo != ActiveButton);
+    if (BtnCredits)  BtnCredits->SetIsEnabled(BtnCredits != ActiveButton);
 
     // OPTION B: border highlight
     UpdateTabBorders(ActiveButton);
@@ -236,6 +299,7 @@ void UOptionsScreen::UpdateTabBorders(UButton* ActiveButton)
     SetBorderSelected(BorderKeyboard, ActiveButton == BtnKeyboard);
     SetBorderSelected(BorderMods, ActiveButton == BtnMods);
     SetBorderSelected(BorderVideo, ActiveButton == BtnVideo);
+    SetBorderSelected(BorderCredits, ActiveButton == BtnCredits);
 }
 
 // ------------------------------------------------------------
@@ -244,14 +308,14 @@ void UOptionsScreen::UpdateTabBorders(UButton* ActiveButton)
 
 int32 UOptionsScreen::GetCurrentTabIndex() const
 {
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo };
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
 
     // Prefer actual keyboard focus:
     for (int32 i = 0; i < UE_ARRAY_COUNT(Tabs); ++i)
         if (Tabs[i] && Tabs[i]->HasKeyboardFocus())
             return i;
 
-    // Fallback: infer from ìselected tab disabledî state
+    // Fallback: infer from ‚Äúselected tab disabled‚Äù state
     for (int32 i = 0; i < UE_ARRAY_COUNT(Tabs); ++i)
         if (Tabs[i] && !Tabs[i]->GetIsEnabled())
             return i;
@@ -261,7 +325,7 @@ int32 UOptionsScreen::GetCurrentTabIndex() const
 
 void UOptionsScreen::FocusTabByDelta(int32 Delta)
 {
-    const int32 Count = 7;
+    const int32 Count = 8;
     int32 Cur = GetCurrentTabIndex();
     int32 Next = Cur;
 
@@ -279,6 +343,7 @@ void UOptionsScreen::FocusTabByDelta(int32 Delta)
         case 4: Candidate = BtnKeyboard; break;
         case 5: Candidate = BtnMods; break;
         case 6: Candidate = BtnVideo; break;
+        case 7: Candidate = BtnCredits; break;
         default: break;
         }
 
@@ -295,6 +360,7 @@ void UOptionsScreen::FocusTabByDelta(int32 Delta)
         case 4: ShowKeyDlg(); break;
         case 5: ShowModDlg(); break;
         case 6: ShowVidDlg(); break;
+        case 7: ShowCreditsDlg(); break;
         default: break;
         }
 
@@ -314,6 +380,7 @@ void UOptionsScreen::OnJoystickClicked() { ShowJoyDlg(); }
 void UOptionsScreen::OnKeyboardClicked() { ShowKeyDlg(); }
 void UOptionsScreen::OnModsClicked() { ShowModDlg(); }
 void UOptionsScreen::OnVideoClicked() { ShowVidDlg(); }
+void UOptionsScreen::OnCreditsClicked() { ShowCreditsDlg(); }
 
 void UOptionsScreen::OnSaveClicked() { ApplyOptions(); }
 void UOptionsScreen::OnCancelClicked() { CancelOptions(); }
@@ -385,6 +452,113 @@ void UOptionsScreen::ShowVidDlg()
         if (BtnVideo) BtnVideo->SetUserFocus(PC);
 }
 
+
+void UOptionsScreen::BuildCreditsPage()
+{
+    if (!OptionsSwitcher || !WidgetTree || CreditsPage) return;
+
+    UBorder* Page = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Options_CreditsPage"));
+    Page->SetBrushColor(FLinearColor(0.025f, 0.055f, 0.083f, 1.f));
+    Page->SetPadding(FMargin(22.f));
+    CreditsPage = Page;
+    UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>();
+    Page->SetContent(Content);
+
+    UBorder* HeadingBand = WidgetTree->ConstructWidget<UBorder>();
+    HeadingBand->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+    HeadingBand->SetPadding(FMargin(16.f, 10.f));
+    UTextBlock* Heading = WidgetTree->ConstructWidget<UTextBlock>();
+    Heading->SetText(FText::FromString(TEXT("ABOUT / CREDITS")));
+    Heading->SetFont(MissionUIStyle::GetHeaderFont(30));
+    Heading->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+    HeadingBand->SetContent(Heading);
+    Content->AddChildToVerticalBox(HeadingBand)->SetPadding(FMargin(0.f, 0.f, 0.f, 15.f));
+
+    UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
+    Caption->SetText(FText::FromString(TEXT("STARSHATTER WARS  /  DEVELOPMENT AND ACKNOWLEDGEMENTS")));
+    Caption->SetFont(MissionUIStyle::GetInfoLabelFont(13));
+    Caption->SetColorAndOpacity(FSlateColor(FLinearColor(0.16f, 0.77f, 0.91f, 1.f)));
+    Content->AddChildToVerticalBox(Caption)->SetPadding(FMargin(0.f, 0.f, 0.f, 13.f));
+
+    CreditsScroll = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("Options_CreditsScroll"));
+    CreditsScroll->SetScrollBarVisibility(ESlateVisibility::Visible);
+    Content->AddChildToVerticalBox(CreditsScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    CreditsText = WidgetTree->ConstructWidget<UTextBlock>();
+    CreditsText->SetFont(MissionUIStyle::GetRowFont(16));
+    CreditsText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+    CreditsText->SetAutoWrapText(true);
+    CreditsScroll->AddChild(CreditsText);
+    ReloadCredits();
+    OptionsSwitcher->AddChild(Page);
+
+    // Append the Credits tab to the same tab strip that owns Video.
+    UWidget* TabAncestorWidget = BorderVideo ? static_cast<UWidget*>(BorderVideo.Get()) : static_cast<UWidget*>(BtnVideo.Get());
+    UPanelWidget* TabPanel = nullptr;
+    while (TabAncestorWidget && !TabPanel)
+    {
+        UPanelWidget* Parent = TabAncestorWidget->GetParent();
+        if (!Parent) break;
+        if (Cast<UHorizontalBox>(Parent) || Cast<UVerticalBox>(Parent)) TabPanel = Parent;
+        TabAncestorWidget = Parent;
+    }
+    if (!TabPanel)
+    {
+        UE_LOG(LogOptionsScreen, Error, TEXT("[OptionsCredits] Video tab strip not found. Check WBP tab panel."));
+        return;
+    }
+    BorderCredits = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Options_BorderCredits"));
+    BorderCredits->SetBrushColor(FLinearColor(0.45f, 0.48f, 0.52f, 0.f));
+    BorderCredits->SetPadding(FMargin(2.f));
+    BtnCredits = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("Options_BtnCredits"));
+    UTextBlock* ButtonText = WidgetTree->ConstructWidget<UTextBlock>();
+    ButtonText->SetText(FText::FromString(TEXT("CREDITS")));
+    ButtonText->SetFont(MissionUIStyle::GetInfoLabelFont(13));
+    ButtonText->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
+    if (UButtonSlot* CreditsButtonSlot = Cast<UButtonSlot>(BtnCredits->AddChild(ButtonText)))
+    {
+        CreditsButtonSlot->SetPadding(FMargin(10.f, 8.f));
+        CreditsButtonSlot->SetHorizontalAlignment(HAlign_Center);
+        CreditsButtonSlot->SetVerticalAlignment(VAlign_Center);
+    }
+    if (UGameInstance* GI = GetGameInstance())
+        if (UStarshatterUIStyleSubsystem* Styles = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
+            Styles->ApplyMenuButtonStyle(BtnCredits);
+    BorderCredits->SetContent(BtnCredits);
+    TabPanel->AddChild(BorderCredits);
+    BtnCredits->OnClicked.AddUniqueDynamic(this, &UOptionsScreen::OnCreditsClicked);
+    UE_LOG(LogOptionsScreen, Log, TEXT("[OptionsCredits] Credits tab and page ready"));
+}
+
+void UOptionsScreen::ReloadCredits()
+{
+    if (!CreditsText) return;
+    FString Text;
+    const TArray<FString> Paths = {
+        FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/credits.txt")),
+        FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/credits.txt"))
+    };
+    for (const FString& Path : Paths)
+        if (FPaths::FileExists(Path) && FFileHelper::LoadFileToString(Text, *Path)) break;
+    if (Text.IsEmpty())
+    {
+        Text = TEXT("STARSHATTER WARS\n\nFractal Dev Studios\n\nCredits unavailable: add credits.txt under Content/Data or Data.");
+        UE_LOG(LogOptionsScreen, Warning, TEXT("[OptionsCredits] credits.txt not found"));
+    }
+    CreditsText->SetText(FText::FromString(Text));
+    if (CreditsScroll) CreditsScroll->ScrollToStart();
+}
+
+void UOptionsScreen::ShowCreditsDlg()
+{
+    if (!CreditsPage) BuildCreditsPage();
+    if (!CreditsPage) return;
+    SetActiveTab(BtnCredits);
+    SwitchToWidget(CreditsPage.Get());
+    if (CreditsScroll) CreditsScroll->ScrollToStart();
+    if (APlayerController* PC = GetOwningPlayer())
+        if (BtnCredits) BtnCredits->SetUserFocus(PC);
+}
+
 // ------------------------------------------------------------
 // Apply / Cancel orchestration
 // ------------------------------------------------------------
@@ -396,7 +570,7 @@ void UOptionsScreen::ApplyOptions()
     // NOTE:
     // Right now, your subdialogs (AudioDlg/VideoDlg/etc.) already push settings
     // when their Apply button is pressed (often via Manager->ApplyOptions()).
-    // If you later remove ìSaveî and auto-apply on tab switch, weíll call Apply()
+    // If you later remove ‚ÄúSave‚Äù and auto-apply on tab switch, we‚Äôll call Apply()
     // on the page being left inside FocusTabByDelta / ShowXxx methods.
 }
 
@@ -412,7 +586,7 @@ void UOptionsScreen::CancelOptions()
     else
     {
         UE_LOG(LogOptionsScreen, Warning, TEXT("[Options] CancelOptions: MenuManager is NULL"));
-        RemoveFromParent(); // safe fallback so you donít get stuck
+        RemoveFromParent(); // safe fallback so you don‚Äôt get stuck
     }
 }
 

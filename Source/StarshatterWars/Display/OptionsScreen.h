@@ -51,6 +51,7 @@ class UButton;
 class UBorder;
 class UTextBlock;
 class UWidgetSwitcher;
+class UScrollBox;
 class UWidget;
 class UUserWidget;
 class UMenuScreen;
@@ -92,6 +93,7 @@ public:
     void ShowKeyDlg();
     void ShowModDlg();
     void ShowVidDlg();
+    void ShowCreditsDlg();
 
 protected:
     // ------------------------------------------------------------
@@ -110,6 +112,7 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> BtnKeyboard = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> BtnMods = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> BtnVideo = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> BtnCredits = nullptr;
 
     // Optional bottom buttons (if you still have them in WBP)
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> BtnSave = nullptr;
@@ -139,12 +142,19 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UBorder> BorderKeyboard = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UBorder> BorderMods = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UBorder> BorderVideo = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UBorder> BorderCredits = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UWidget> CreditsPage = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UScrollBox> CreditsScroll = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CreditsText = nullptr;
 
 private:
     // ------------------------------------------------------------
     // Delegate binding
     // ------------------------------------------------------------
     void BindDelegates();
+    void StandardizeTopTabs();
+    void BuildCreditsPage();
+    void ReloadCredits();
     bool bDelegatesBound = false;
 
     // ------------------------------------------------------------
@@ -178,6 +188,7 @@ private:
     UFUNCTION() void OnKeyboardClicked();
     UFUNCTION() void OnModsClicked();
     UFUNCTION() void OnVideoClicked();
+    UFUNCTION() void OnCreditsClicked();
 
     UFUNCTION() void OnSaveClicked();
     UFUNCTION() void OnCancelClicked();
