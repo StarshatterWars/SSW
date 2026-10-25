@@ -370,6 +370,25 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.MultiplayerMissionTable
+    if (!Cache.Contains(TEXT("Data.MultiplayerMissionTable")))
+    {
+        if (!Settings->MultiplayerMissionDataTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MultiplayerMissionDataTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.MultiplayerMissionTable"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log,
+                TEXT("[ASSETS] Bind Data.MultiplayerMissionTable -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MultiplayerMissionTable is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 3) Inject typed UI widget classes (do not overwrite explicit map entries)
     //    NOTE: We store them in the generic Cache as UObject soft refs so the
@@ -660,6 +679,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] SingleMissionClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.MultiplayerMissionClass")))
+    {
+        if (!Settings->MultiplayerMissionScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MultiplayerMissionScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MultiplayerMissionClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MultiplayerMissionClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MultiplayerMissionClass is not set in Project Settings"));
         }
     }
 

@@ -237,6 +237,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.SystemMapTable"),
         TEXT("Data.CutsceneTable"),
         TEXT("Data.SingleMissionTable"),
+        TEXT("Data.MultiplayerMissionTable"),
 
         TEXT("Data.OrderOfBattleTable"),
         TEXT("Data.MedalsTable"),
@@ -263,12 +264,13 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.CampaignSceneClass"),
         TEXT("UI.WeaponsScreenClass"),
         TEXT("UI.SingleMissionClass"),
+        TEXT("UI.MultiplayerMissionClass"),
         TEXT("UI.EngineeringScreenClass"),
         TEXT("UI.NavigationScreenClass"),
         TEXT("UI.ObjectivesScreenClass"),
         TEXT("UI.FlightOpsScreenClass"),
         TEXT("UI.ContactListClass"),
-         TEXT("UI.AwardPopupClass"),
+        TEXT("UI.AwardPopupClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

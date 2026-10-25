@@ -35,6 +35,7 @@ class UTextBlock;
 class Starshatter;
 class Campaign;
 class UMenuScreen;
+class UMultiplayerDlg;
 
 UCLASS()
 class STARSHATTERWARS_API UMenuDlg : public UBaseScreen
@@ -110,7 +111,10 @@ protected:
     bool bHasCampaignSelected = true;
     bool bDelegatesBound = false;
 
-    // Hover ìalt textî
+    UPROPERTY(Transient)
+    TObjectPtr<UMultiplayerDlg> MultiplayerScreen = nullptr;
+
+    // Hover ‚Äúalt text‚Äù
     FString AltStart;
     FString AltCampaign;
     FString AltMission;

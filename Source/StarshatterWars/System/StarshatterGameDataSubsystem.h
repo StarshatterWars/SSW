@@ -199,6 +199,9 @@ public:
 
     void LoadMissionList(FString Path);
     void LoadSingleMissions();
+    void LoadMultiplayerMissions();
+    UDataTable* GetMultiplayerMissionsDataTable() const { return MultiplayerMissionsDataTable; }
+    const TArray<FS_CampaignMission>& GetMultiplayerMissionScenarios() const { return MultiplayerMissionScenarios; }
     UDataTable* GetSingleMissionsDataTable() const { return SingleMissionsDataTable; }
     const TArray<FS_CampaignMissionList>& GetSingleMissionCatalog() const { return SingleMissionCatalog; }
     const TArray<FS_CampaignMission>& GetSingleMissionScenarios() const { return SingleMissionScenarios; }
@@ -517,6 +520,8 @@ protected:
     TArray<FS_CampaignMissionList> SingleMissionCatalog;
     UPROPERTY(Transient)
     TArray<FS_CampaignMission> SingleMissionScenarios;
+    UPROPERTY(Transient)
+    TArray<FS_CampaignMission> MultiplayerMissionScenarios;
     bool bParsingStandaloneMission = false;
     TArray<FS_MissionElement> MissionElementArray;
     TArray<FS_MissionEvent> MissionEventArray;
@@ -560,6 +565,8 @@ protected:
 
     UPROPERTY(Transient)
     UDataTable* SingleMissionsDataTable = nullptr;
+    UPROPERTY(Transient)
+    UDataTable* MultiplayerMissionsDataTable = nullptr;
 
 	FS_Campaign ActiveCampaign;
 

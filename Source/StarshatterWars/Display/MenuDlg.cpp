@@ -32,6 +32,9 @@
 #include "Starshatter.h"
 #include "Campaign.h"
 #include "MenuScreen.h"
+#include "MultiplayerDlg.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerController.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
 
@@ -93,6 +96,19 @@ void UMenuDlg::NativeConstruct()
     else
     {
         UE_LOG(LogMenuDlg, Warning, TEXT("VersionText is not bound (BindWidgetOptional)."));
+    }
+
+    // Widget bindings can become available after NativeOnInitialized on some
+    // Blueprint-derived menu instances. Rebind idempotently at construction.
+    if (BtnMulti)
+    {
+        BtnMulti->OnClicked.RemoveDynamic(this, &UMenuDlg::OnMultiplayer);
+        BtnMulti->OnClicked.AddDynamic(this, &UMenuDlg::OnMultiplayer);
+        UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] Construct: BtnMulti bound, enabled=%d"), BtnMulti->GetIsEnabled() ? 1 : 0);
+    }
+    else
+    {
+        UE_LOG(LogMenuDlg, Error, TEXT("[MultiplayerNav] Construct: BtnMulti missing. Check WBP_MenuDlg BindWidget variable name."));
     }
 
     RefreshFromPlayerState();
@@ -187,9 +203,8 @@ void UMenuDlg::RefreshFromPlayerState()
 
 void UMenuDlg::Show()
 {
-    // Legacy behavior: disable multiplayer when UseFileSystem() is true:
-    if (BtnMulti && Starshatter::UseFileSystem())
-        BtnMulti->SetIsEnabled(false);
+    // Multiplayer mission selection is available independently of the legacy filesystem mode.
+    if (BtnMulti) BtnMulti->SetIsEnabled(true);
 
     ClearDescription();
 }
@@ -250,8 +265,66 @@ void UMenuDlg::OnPlayer()
 void UMenuDlg::OnMultiplayer()
 {
     ClearDescription();
-    UE_LOG(LogMenuDlg, Log, TEXT("OnMultiplayer()"));
-    // Hook this up when multiplayer lobby routing exists
+    UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] CLICK: OnMultiplayer; Manager=%s; enabled=%d"),
+        *GetNameSafe(Manager.Get()), BtnMulti && BtnMulti->GetIsEnabled() ? 1 : 0);
+
+    if (!Manager)
+    {
+        UE_LOG(LogMenuDlg, Error, TEXT("[MultiplayerNav] FAILED: MenuDlg.Manager is null"));
+        return;
+    }
+
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC)
+    {
+        PC = Manager->GetOwningPlayer();
+        UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] Menu owner missing, manager owner=%s"), *GetNameSafe(PC));
+    }
+    if (!PC)
+    {
+        UE_LOG(LogMenuDlg, Error, TEXT("[MultiplayerNav] FAILED: neither menu nor manager has an owning player"));
+        return;
+    }
+
+    if (!MultiplayerScreen)
+    {
+        MultiplayerScreen = CreateWidget<UMultiplayerDlg>(PC, UMultiplayerDlg::StaticClass());
+        if (!MultiplayerScreen)
+        {
+            UE_LOG(LogMenuDlg, Error, TEXT("[MultiplayerNav] FAILED: CreateWidget<UMultiplayerDlg> returned null"));
+            return;
+        }
+        MultiplayerScreen->SetMenuManager(Manager);
+        MultiplayerScreen->InitializeDlg(Manager);
+        UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] CREATED widget=%s class=%s"),
+            *GetNameSafe(MultiplayerScreen.Get()), *GetNameSafe(MultiplayerScreen->GetClass()));
+    }
+
+    // Build/refresh while this main menu is still visible, then transfer focus.
+    MultiplayerScreen->Show();
+    if (!MultiplayerScreen->IsInViewport())
+    {
+        MultiplayerScreen->AddToViewport(300);
+    }
+    MultiplayerScreen->SetVisibility(ESlateVisibility::Visible);
+    MultiplayerScreen->SetIsEnabled(true);
+    MultiplayerScreen->SetIsFocusable(true);
+    MultiplayerScreen->SetDialogInputEnabled(true);
+
+    // Previously the menu stayed on screen and retained focus. It is now
+    // hidden only after the multiplayer widget has been created successfully.
+    SetVisibility(ESlateVisibility::Hidden);
+    FInputModeGameAndUI InputMode;
+    InputMode.SetWidgetToFocus(MultiplayerScreen->TakeWidget());
+    InputMode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = true;
+
+    UE_LOG(LogMenuDlg, Warning,
+        TEXT("[MultiplayerNav] OPEN: viewport=%d visible=%d widget=%s"),
+        MultiplayerScreen->IsInViewport() ? 1 : 0,
+        MultiplayerScreen->GetVisibility() == ESlateVisibility::Visible ? 1 : 0,
+        *GetNameSafe(MultiplayerScreen.Get()));
 }
 
 void UMenuDlg::OnOptions()
@@ -344,10 +417,8 @@ void UMenuDlg::EnableMenuButtons(bool bEnable)
     SetButtonEnabled(BtnMission, bEnable);
     SetButtonEnabled(BtnPlayer, bEnable);
 
-    if (BtnMulti && Starshatter::UseFileSystem())
-        SetButtonEnabled(BtnMulti, false);
-    else
-        SetButtonEnabled(BtnMulti, bEnable);
+    // No legacy filesystem gate.
+    SetButtonEnabled(BtnMulti, bEnable);
 
     // Options is a top-level menu entry now (single entry point to all sub-options):
     SetButtonEnabled(BtnOptions, bEnable);
@@ -370,7 +441,7 @@ void UMenuDlg::ApplyMenuGating()
 
     // NO CAMPAIGN SELECTED:
     // Enable: Campaign, Mission, Options, Tac, Quit
-    // Disable: Start, Player, Multi
+    // Disable: Start; multiplayer remains independently available
     if (!bHasCampaignSelected)
     {
         EnableMenuButtons(false);
@@ -384,8 +455,7 @@ void UMenuDlg::ApplyMenuGating()
         SetButtonEnabled(BtnTac, true);
         SetButtonEnabled(BtnQuit, true);
 
-        // Preserve legacy multiplayer filesystem rule
-        if (BtnMulti && Starshatter::UseFileSystem())
-            SetButtonEnabled(BtnMulti, false);
+        // Multiplayer missions do not depend on an existing campaign selection.
+        SetButtonEnabled(BtnMulti, true);
     }
 }

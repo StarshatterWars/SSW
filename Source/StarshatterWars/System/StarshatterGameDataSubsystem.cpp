@@ -1518,6 +1518,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	ReadCampaignData();
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][01] LoadAll about to call LoadSingleMissions"));
 	LoadSingleMissions();
+    LoadMultiplayerMissions();
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][99] LoadAll returned from LoadSingleMissions: scenarios=%d table=%s rows=%d"),
         SingleMissionScenarios.Num(), *GetPathNameSafe(SingleMissionsDataTable),
         SingleMissionsDataTable ? SingleMissionsDataTable->GetRowNames().Num() : -1);
@@ -1780,6 +1781,138 @@ void UStarshatterGameDataSubsystem::LoadSingleMissions()
         TEXT("[SingleMissions] Imported %d rows into DT_SingleMissions (FS_CampaignMission). Save the DataTable asset to retain them."),
         PendingRows.Num());
     ReadRows();
+#endif
+}
+
+
+// Separate multiplayer ingestion, following the Single Missions FS_CampaignMission
+// DataTable path. The Multiplayer folder contains standalone *.def scenarios;
+// unlike single-player, no Missions.def catalog is required.
+void UStarshatterGameDataSubsystem::LoadMultiplayerMissions()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][01] LoadMultiplayerMissions ENTER"));
+    MultiplayerMissionScenarios.Reset();
+
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UStarshatterAssetRegistrySubsystem* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+        {
+            MultiplayerMissionsDataTable = Assets->GetDataTable(TEXT("Data.MultiplayerMissionTable"), false);
+            UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][02] Registry Data.MultiplayerMissionTable=%s"),
+                *GetPathNameSafe(MultiplayerMissionsDataTable));
+        }
+    }
+    if (!MultiplayerMissionsDataTable)
+    {
+        MultiplayerMissionsDataTable = LoadObject<UDataTable>(nullptr,
+            TEXT("/Game/GameData/DataTables/DT_MultiplayerMissions.DT_MultiplayerMissions"));
+        UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][03] Default asset fallback=%s"),
+            *GetPathNameSafe(MultiplayerMissionsDataTable));
+    }
+    if (!MultiplayerMissionsDataTable ||
+        MultiplayerMissionsDataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[MPTRACE][ERROR] Missing DT_MultiplayerMissions or wrong row structure. Expected FS_CampaignMission; actual=%s"),
+            MultiplayerMissionsDataTable ? *GetPathNameSafe(MultiplayerMissionsDataTable->GetRowStruct()) : TEXT("NULL"));
+        return;
+    }
+
+    const auto ReadTableRows = [this]()
+    {
+        MultiplayerMissionScenarios.Reset();
+        for (const FName& RowName : MultiplayerMissionsDataTable->GetRowNames())
+        {
+            const FS_CampaignMission* Row = MultiplayerMissionsDataTable->FindRow<FS_CampaignMission>(
+                RowName, TEXT("MultiplayerMissionImport"), false);
+            if (Row && Row->Id > 0)
+            {
+                MultiplayerMissionScenarios.Add(*Row);
+            }
+        }
+        UE_LOG(LogTemp, Display, TEXT("[MPTRACE][READ] DT_MultiplayerMissions rows=%d accepted=%d"),
+            MultiplayerMissionsDataTable->GetRowNames().Num(), MultiplayerMissionScenarios.Num());
+    };
+
+#if !WITH_EDITOR
+    ReadTableRows();
+    return;
+#else
+    const FString MissionDir = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("GameData/Multiplayer"));
+    TArray<FString> MissionFiles;
+    IFileManager::Get().FindFiles(MissionFiles, *FPaths::Combine(MissionDir, TEXT("*.def")), true, false);
+    MissionFiles.Sort();
+    UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][04] directory=%s exists=%d files=%d"),
+        *MissionDir, IFileManager::Get().DirectoryExists(*MissionDir) ? 1 : 0, MissionFiles.Num());
+    if (MissionFiles.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MPTRACE][ERROR] No .def mission files found under %s"), *MissionDir);
+        ReadTableRows();
+        return;
+    }
+
+    const TArray<FS_CampaignMissionList> PreviousList = MissionListArray;
+    const TArray<FS_CampaignMission> PreviousScenarios = MissionArray;
+    const FS_CampaignMission PreviousCutscene = CutsceneData;
+    const bool bPreviousStandalone = bParsingStandaloneMission;
+    bParsingStandaloneMission = true;
+    TMap<FName, FS_CampaignMission> PendingRows;
+    TSet<int32> UsedIds;
+    int32 NextId = 1;
+    for (const FString& File : MissionFiles)
+    {
+        // Optional catalog is not itself a scenario.
+        if (File.Equals(TEXT("Missions.def"), ESearchCase::IgnoreCase)) continue;
+        const FString FullPath = FPaths::Combine(MissionDir, File);
+        const int32 Before = MissionArray.Num();
+        UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][05] Parsing file=%s"), *FullPath);
+        ParseMission(TCHAR_TO_ANSI(*FullPath));
+        if (MissionArray.Num() != Before + 1)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[MPTRACE][ERROR] ParseMission failed: %s (before=%d after=%d)"),
+                *FullPath, Before, MissionArray.Num());
+            continue;
+        }
+        FS_CampaignMission Scenario = MissionArray.Last();
+        // Preserve explicit mission IDs where unique. Missing or duplicate IDs
+        // receive stable sequential IDs in sorted filename order.
+        if (Scenario.Id <= 0 || UsedIds.Contains(Scenario.Id))
+        {
+            while (UsedIds.Contains(NextId)) ++NextId;
+            Scenario.Id = NextId++;
+        }
+        UsedIds.Add(Scenario.Id);
+        Scenario.RowName = FName(*FString::Printf(TEXT("Mission_%03d"), Scenario.Id));
+        if (Scenario.MissionName.IsEmpty()) Scenario.MissionName = FPaths::GetBaseFilename(File);
+        Scenario.Source = EMissionSource::Scripted;
+        Scenario.DisplayType = EMissionDisplayType::PlayerMission;
+        UE_LOG(LogTemp, Display, TEXT("[MPTRACE][06] Parsed id=%d title='%s' elements=%d events=%d"),
+            Scenario.Id, *Scenario.MissionName, Scenario.Element.Num(), Scenario.Event.Num());
+        PendingRows.Add(Scenario.RowName, MoveTemp(Scenario));
+    }
+    MissionListArray = PreviousList;
+    MissionArray = PreviousScenarios;
+    CutsceneData = PreviousCutscene;
+    bParsingStandaloneMission = bPreviousStandalone;
+
+    if (PendingRows.Num() != MissionFiles.Num() || PendingRows.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MPTRACE][ERROR] Partial import %d/%d. Preserving existing table."),
+            PendingRows.Num(), MissionFiles.Num());
+        ReadTableRows();
+        return;
+    }
+    MultiplayerMissionsDataTable->Modify();
+    MultiplayerMissionsDataTable->EmptyTable();
+    for (const TPair<FName, FS_CampaignMission>& Pair : PendingRows)
+    {
+        MultiplayerMissionsDataTable->AddRow(Pair.Key, Pair.Value);
+        UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][07] AddRow=%s id=%d"), *Pair.Key.ToString(), Pair.Value.Id);
+    }
+    MultiplayerMissionsDataTable->MarkPackageDirty();
+    UE_LOG(LogTemp, Display, TEXT("[MPTRACE][08] Complete. DataTable rows=%d (editor save required for persistence)"),
+        MultiplayerMissionsDataTable->GetRowNames().Num());
+    ReadTableRows();
 #endif
 }
 
