@@ -32,7 +32,7 @@ protected:
     void LaunchSelected();
     UTextBlock* MakeLabel(const FString& Value, int32 Size, const FLinearColor& Tint, bool bWrap = false);
     UBorder* MakePanel(const FLinearColor& Tint);
-    UButton* MakeActionButton(const FString& Label, bool bEnabled = true);
+    UButton* MakeActionButton(const FString& Label, bool bEnabled = true, bool bRosterButton = false);
     UFUNCTION() void OnLaunchPressed();
     UFUNCTION() void OnBackPressed();
     UFUNCTION() void OnMission01Pressed();

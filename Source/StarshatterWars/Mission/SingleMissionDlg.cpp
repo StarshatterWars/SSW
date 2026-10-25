@@ -26,6 +26,7 @@
 #include "Engine/GameInstance.h"
 #include "FormatUtil.h"
 #include "MenuScreen.h"
+#include "StarshatterUIStyleSubsystem.h"
 
 namespace SingleMissionColors
 {
@@ -69,7 +70,7 @@ UBorder* USingleMissionDlg::MakePanel(const FLinearColor& Tint)
     return Panel;
 }
 
-UButton* USingleMissionDlg::MakeActionButton(const FString& Label, bool bEnabled)
+UButton* USingleMissionDlg::MakeActionButton(const FString& Label, bool bEnabled, bool bRosterButton)
 {
     UButton* Button = WidgetTree->ConstructWidget<UButton>();
     FButtonStyle Style = Button->GetStyle();
@@ -77,11 +78,23 @@ UButton* USingleMissionDlg::MakeActionButton(const FString& Label, bool bEnabled
     Style.Hovered.TintColor = FSlateColor(SingleMissionColors::Selected);
     Style.Pressed.TintColor = FSlateColor(SingleMissionColors::Accent);
     Button->SetStyle(Style);
+    // Shared menu action styling matches Campaign Selection and other menus.
+    // Roster entries retain distinct selected-state highlighting.
+    if (!bRosterButton)
+    {
+        if (UGameInstance* GI = GetGameInstance())
+        {
+            if (UStarshatterUIStyleSubsystem* Styles = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
+            {
+                Styles->ApplyMenuButtonStyle(Button);
+            }
+        }
+    }
     Button->SetIsEnabled(bEnabled);
-    UTextBlock* Text = MakeLabel(Label, 16, SingleMissionColors::Primary);
+    UTextBlock* Text = MakeLabel(Label, bRosterButton ? 17 : 15, SingleMissionColors::Primary);
     if (UButtonSlot* ButtonContent = Cast<UButtonSlot>(Button->AddChild(Text)))
     {
-        ButtonContent->SetPadding(FMargin(18.f, 12.f));
+        ButtonContent->SetPadding(FMargin(bRosterButton ? 16.f : 12.f, bRosterButton ? 11.f : 9.f));
         ButtonContent->SetHorizontalAlignment(HAlign_Left);
         ButtonContent->SetVerticalAlignment(VAlign_Center);
     }
@@ -107,8 +120,8 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     Scale->SetStretchDirection(EStretchDirection::DownOnly);
     Background->SetContent(Scale);
     USizeBox* FrameSize = WidgetTree->ConstructWidget<USizeBox>();
-    FrameSize->SetWidthOverride(1360.f);
-    FrameSize->SetHeightOverride(780.f);
+    FrameSize->SetWidthOverride(1600.f);
+    FrameSize->SetHeightOverride(900.f);
     Scale->SetContent(FrameSize);
     UVerticalBox* Full = WidgetTree->ConstructWidget<UVerticalBox>();
     FrameSize->SetContent(Full);
@@ -133,7 +146,9 @@ void USingleMissionDlg::BuildSingleMissionScreen()
 
     UBorder* LeftPanel = MakePanel(SingleMissionColors::Panel);
     UHorizontalBoxSlot* Left = Columns->AddChildToHorizontalBox(LeftPanel);
-    Left->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    FSlateChildSize LeftColumnSize(ESlateSizeRule::Fill);
+    LeftColumnSize.Value = 0.88f;
+    Left->SetSize(LeftColumnSize);
     Left->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
     UVerticalBox* LeftContent = WidgetTree->ConstructWidget<UVerticalBox>();
     LeftPanel->SetContent(LeftContent);
@@ -147,7 +162,9 @@ void USingleMissionDlg::BuildSingleMissionScreen()
 
     UBorder* RightPanel = MakePanel(SingleMissionColors::Panel);
     UHorizontalBoxSlot* Right = Columns->AddChildToHorizontalBox(RightPanel);
-    Right->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    FSlateChildSize RightColumnSize(ESlateSizeRule::Fill);
+    RightColumnSize.Value = 1.12f;
+    Right->SetSize(RightColumnSize);
     // Constrain mission intelligence to the right column and scroll independently
     // of the roster and the action bar. Long SITREPs/objectives remain accessible.
     MissionDetailsScroll = WidgetTree->ConstructWidget<UScrollBox>(
@@ -176,13 +193,13 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
     UButton* BackButton = MakeActionButton(TEXT("BACK TO MAIN MENU"));
-    Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+    Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
     BackButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnBackPressed);
 
     // Keep legacy editing affordances visible, but disabled for built-in missions.
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
 
     LaunchButton = MakeActionButton(TEXT("OPEN MISSION BRIEFING"), false);
     Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -236,7 +253,7 @@ void USingleMissionDlg::RefreshMissionRoster()
         const FString MissionLabel = Scenario->MissionName.IsEmpty()
             ? FString::Printf(TEXT("%02d  /  UNNAMED OPERATION"), Scenario->Id)
             : Scenario->MissionName;
-        UButton* RowButton = MakeActionButton(MissionLabel);
+        UButton* RowButton = MakeActionButton(MissionLabel, true, true);
         switch (DisplayIndex)
         {
         case 0: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission01Pressed); break;
