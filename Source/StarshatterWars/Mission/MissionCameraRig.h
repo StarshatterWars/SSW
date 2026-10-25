@@ -307,9 +307,15 @@ struct FMissionCameraRig
                 // recomputing its already-correct forward-looking rotation.
                 // Carrier camera vpn() is the legacy forward/tube axis;
                 // using it avoids the diagonal departure-waypoint offset.
-                constexpr double RearwardCameraOffset = 140.0;
+                constexpr double RearwardCameraOffset = 160.0;
+                constexpr double CameraHeightAboveAuthored = 40.0;
                 const FVector CarrierForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
-                const FVector RearCameraSimPoint = CameraSimPoint - CarrierForward * RearwardCameraOffset;
+                const FVector CarrierUp = Player->GetCarrier()->GetCam().vup().GetSafeNormal();
+                // Stay behind the fighter, but move UP along the carrier's own
+                // vertical axis rather than down toward the launch-bay floor.
+                const FVector RearCameraSimPoint = CameraSimPoint
+                    - CarrierForward * RearwardCameraOffset
+                    + CarrierUp * CameraHeightAboveAuthored;
                 if (UGameInstance* GI = PC->GetGameInstance())
                 {
                     if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
