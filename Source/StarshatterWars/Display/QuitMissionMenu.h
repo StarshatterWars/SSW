@@ -9,7 +9,7 @@ class UTextBlock;
 UENUM(BlueprintType)
 enum class EMissionQuitAction : uint8
 {
-    None = 0, Accept = 1, Abort = 2, Resume = 3, Controls = 4
+    None = 0, Accept = 1, Abort = 2, Resume = 3, Controls = 4, ExitWindows = 5
 };
 
 DECLARE_DELEGATE_OneParam(FMissionQuitActionRequested, EMissionQuitAction);
@@ -26,6 +26,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="Mission Menu") void AbortMission();
     UFUNCTION(BlueprintCallable, Category="Mission Menu") void ResumeMission();
     UFUNCTION(BlueprintCallable, Category="Mission Menu") void OpenControls();
+    UFUNCTION(BlueprintCallable, Category="Mission Menu") void ExitToWindows();
     UFUNCTION(BlueprintCallable, Category="Mission Menu") void SetStatusMessage(const FText& Message);
     UPROPERTY(BlueprintReadOnly, Category="Mission Menu") FText StatusMessage;
     UFUNCTION(BlueprintImplementableEvent, Category="Mission Menu") void OnStatusMessageChanged(const FText& Message);
@@ -40,6 +41,7 @@ protected:
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> AbortBtn;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ResumeBtn;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ControlsBtn;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ExitWindowsBtn;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> TitleText;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> StatusText;
 };

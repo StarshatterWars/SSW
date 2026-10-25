@@ -1,5 +1,6 @@
 #include "QuitMissionMenu.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
 #include "Components/TextBlock.h"
 #include "InputCoreTypes.h"
 #include "Blueprint/WidgetTree.h"
@@ -24,41 +25,72 @@ void UQuitMissionMenu::BuildGeneratedContent()
         return;
     }
     if (!TitleText) TitleText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("ExitTitle")));
-    // Make room for four rows and a wrapped validation message inside the frame.
+    // Five readable actions, status feedback, and a slightly larger modern command frame.
     if (USizeBox* Frame = Cast<USizeBox>(WidgetTree->FindWidget(TEXT("DlgSizeBox"))))
     {
-        Frame->SetHeightOverride(320.0f);
-        if (UCanvasPanelSlot* CSlot = Cast<UCanvasPanelSlot>(Frame->Slot))
-            CSlot->SetSize(FVector2D(512.0f, 320.0f));
+        Frame->SetHeightOverride(408.0f);
+        if (UCanvasPanelSlot* FrameCanvasSlot = Cast<UCanvasPanelSlot>(Frame->Slot))
+            FrameCanvasSlot->SetSize(FVector2D(580.0f, 408.0f));
     }
     if (USizeBox* Content = Cast<USizeBox>(WidgetTree->FindWidget(TEXT("SizeBox_5"))))
         Content->ClearWidthOverride();
+
+    if (TitleText)
+    {
+        TitleText->SetText(FText::FromString(TEXT("MISSION CONTROL  /  PAUSED")));
+        TitleText->SetJustification(ETextJustify::Left);
+        TitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.53f, 0.84f, 0.96f, 1.0f)));
+    }
 
     FSlateFontInfo RowFont = TitleText ? TitleText->GetFont() : FCoreStyle::GetDefaultFontStyle("Regular", 16);
     RowFont.Size = 16;
     auto MakeButton = [&](TObjectPtr<UButton>& Button, const TCHAR* Name, const TCHAR* Label)
     {
-        // Reuse generated widgets when NativeConstruct runs again.
         if (!Button) Button = Cast<UButton>(WidgetTree->FindWidget(FName(Name)));
-        if (Button) return;
-        Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(Name));
+        if (!Button)
+        {
+            Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(Name));
+            if (UVerticalBoxSlot* RowSlot = Container->AddChildToVerticalBox(Button))
+            {
+                RowSlot->SetPadding(FMargin(12.0f, 5.0f));
+                RowSlot->SetHorizontalAlignment(HAlign_Fill);
+                RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+            }
+        }
 
-        UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-        Text->SetText(FText::FromString(Label));
-        Text->SetFont(RowFont);
-        Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.04f, 0.04f, 0.04f, 1.0f)));
-        Text->SetMargin(FMargin(8.0f, 4.0f));
-        Text->SetVisibility(ESlateVisibility::HitTestInvisible);
-        Button->AddChild(Text);
-        UVerticalBoxSlot* Slot = Container->AddChildToVerticalBox(Button);
-        Slot->SetPadding(FMargin(4.0f, 3.0f));
-        Slot->SetHorizontalAlignment(HAlign_Fill);
-        Slot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        UTextBlock* LabelWidget = Button->GetContent() ? Cast<UTextBlock>(Button->GetContent()) : nullptr;
+        if (!LabelWidget)
+        {
+            if (Button->GetContent()) Button->ClearChildren();
+            LabelWidget = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+            Button->AddChild(LabelWidget);
+        }
+        LabelWidget->SetText(FText::FromString(Label));
+        LabelWidget->SetFont(RowFont);
+        LabelWidget->SetJustification(ETextJustify::Left);
+        LabelWidget->SetColorAndOpacity(FSlateColor(FLinearColor(0.79f, 0.93f, 1.0f, 1.0f)));
+        LabelWidget->SetMargin(FMargin(10.0f, 7.0f));
+        LabelWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+        if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(LabelWidget->Slot))
+        {
+            ButtonContentSlot->SetHorizontalAlignment(HAlign_Fill);
+            ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
+        }
+        // Solid charcoal-blue background with a brighter blue hover state.
+        FButtonStyle RowStyle = Button->GetStyle();
+        RowStyle.Normal.DrawAs = ESlateBrushDrawType::Box;
+        RowStyle.Hovered.DrawAs = ESlateBrushDrawType::Box;
+        RowStyle.Pressed.DrawAs = ESlateBrushDrawType::Box;
+        RowStyle.Normal.TintColor = FSlateColor(FLinearColor(0.055f, 0.105f, 0.16f, 0.98f));
+        RowStyle.Hovered.TintColor = FSlateColor(FLinearColor(0.09f, 0.24f, 0.36f, 1.0f));
+        RowStyle.Pressed.TintColor = FSlateColor(FLinearColor(0.035f, 0.32f, 0.49f, 1.0f));
+        Button->SetStyle(RowStyle);
     };
-    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1. End Mission and Accept Results"));
-    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2. Abort and Discard Mission"));
-    MakeButton(ResumeBtn, TEXT("ResumeBtn"), TEXT("3. Resume Current Mission"));
-    MakeButton(ControlsBtn, TEXT("ControlsBtn"), TEXT("4. Control Setup"));
+    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1.   END MISSION  /  ACCEPT RESULTS"));
+    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2.   ABORT MISSION  /  DISCARD RESULTS"));
+    MakeButton(ResumeBtn, TEXT("ResumeBtn"), TEXT("3.   RESUME MISSION"));
+    MakeButton(ControlsBtn, TEXT("ControlsBtn"), TEXT("4.   CONTROL SETUP"));
+    MakeButton(ExitWindowsBtn, TEXT("ExitWindowsBtn"), TEXT("5.   QUIT AND EXIT TO WINDOWS"));
     if (!StatusText) StatusText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("StatusText")));
     if (!StatusText)
     {
@@ -68,7 +100,7 @@ void UQuitMissionMenu::BuildGeneratedContent()
         StatusText->SetFont(StatusFont);
         StatusText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.65f, 0.25f)));
         StatusText->SetAutoWrapText(true);
-        Container->AddChildToVerticalBox(StatusText)->SetPadding(FMargin(8.0f, 4.0f));
+        Container->AddChildToVerticalBox(StatusText)->SetPadding(FMargin(12.0f, 6.0f));
     }
 }
 
@@ -80,7 +112,7 @@ void UQuitMissionMenu::NativeConstruct()
     if (AbortBtn) { AbortBtn->OnClicked.RemoveAll(this); AbortBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::AbortMission); }
     if (ResumeBtn) { ResumeBtn->OnClicked.RemoveAll(this); ResumeBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ResumeMission); }
     if (ControlsBtn) { ControlsBtn->OnClicked.RemoveAll(this); ControlsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::OpenControls); }
-    // Keep the title authored in WBP_QuitMissionMenu (ExitTitle or TitleText).
+    if (ExitWindowsBtn) { ExitWindowsBtn->OnClicked.RemoveAll(this); ExitWindowsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ExitToWindows); }
     SetStatusMessage(StatusMessage);
     SetDialogInputEnabled(true);
 }
@@ -90,6 +122,7 @@ void UQuitMissionMenu::NativeDestruct()
     if (AbortBtn) AbortBtn->OnClicked.RemoveAll(this);
     if (ResumeBtn) ResumeBtn->OnClicked.RemoveAll(this);
     if (ControlsBtn) ControlsBtn->OnClicked.RemoveAll(this);
+    if (ExitWindowsBtn) ExitWindowsBtn->OnClicked.RemoveAll(this);
     OnActionRequested.Unbind();
     Super::NativeDestruct();
 }
@@ -97,6 +130,7 @@ void UQuitMissionMenu::AcceptMission() { OnActionRequested.ExecuteIfBound(EMissi
 void UQuitMissionMenu::AbortMission() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Abort); }
 void UQuitMissionMenu::ResumeMission() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Resume); }
 void UQuitMissionMenu::OpenControls() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Controls); }
+void UQuitMissionMenu::ExitToWindows() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::ExitWindows); }
 void UQuitMissionMenu::HandleAccept() { ResumeMission(); }
 void UQuitMissionMenu::HandleCancel() { ResumeMission(); }
 void UQuitMissionMenu::SetStatusMessage(const FText& Message)
@@ -112,13 +146,17 @@ void UQuitMissionMenu::SetStatusMessage(const FText& Message)
 FReply UQuitMissionMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
 {
     const FKey Key = Event.GetKey();
-    const bool bMenuKey = Key == EKeys::Escape || Key == EKeys::One || Key == EKeys::Two || Key == EKeys::Three || Key == EKeys::Four;
+    const bool bMenuKey = Key == EKeys::Escape || Key == EKeys::One || Key == EKeys::Two ||
+        Key == EKeys::Three || Key == EKeys::Four || Key == EKeys::Five ||
+        Key == EKeys::NumPadOne || Key == EKeys::NumPadTwo || Key == EKeys::NumPadThree ||
+        Key == EKeys::NumPadFour || Key == EKeys::NumPadFive;
     if (!bMenuKey) return Super::NativeOnPreviewKeyDown(Geometry, Event);
     if (!Event.IsRepeat())
     {
-        if (Key == EKeys::One) AcceptMission();
-        else if (Key == EKeys::Two) AbortMission();
-        else if (Key == EKeys::Four) OpenControls();
+        if (Key == EKeys::One || Key == EKeys::NumPadOne) AcceptMission();
+        else if (Key == EKeys::Two || Key == EKeys::NumPadTwo) AbortMission();
+        else if (Key == EKeys::Four || Key == EKeys::NumPadFour) OpenControls();
+        else if (Key == EKeys::Five || Key == EKeys::NumPadFive) ExitToWindows();
         else ResumeMission();
     }
     return FReply::Handled();

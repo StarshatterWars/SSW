@@ -9,6 +9,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/Layout/SBorder.h"
@@ -38,7 +39,11 @@ public:
         const FKey Key = Event.GetKey();
         int32 Code = Key == EKeys::Escape ? 27 :
             Key == EKeys::One ? '1' : Key == EKeys::Two ? '2' :
-            Key == EKeys::Three ? '3' : Key == EKeys::Four ? '4' : 0;
+            Key == EKeys::Three ? '3' : Key == EKeys::Four ? '4' :
+            Key == EKeys::Five ? '5' :
+            Key == EKeys::NumPadOne ? '1' : Key == EKeys::NumPadTwo ? '2' :
+            Key == EKeys::NumPadThree ? '3' : Key == EKeys::NumPadFour ? '4' :
+            Key == EKeys::NumPadFive ? '5' : 0;
         return Owner && Owner->OnKeyDown(Code, false) ? FReply::Handled() : FReply::Unhandled();
     }
 private:
@@ -110,24 +115,46 @@ void QuitView::ShowMenu()
         }
         UE_LOG(LogTemp, Warning, TEXT("[QuitView] Cannot create mission menu widget; using Slate fallback"));
     }
+    const FLinearColor XTextColor(0.79f, 0.93f, 1.0f, 1.0f);
     TSharedRef<SVerticalBox> Items = SNew(SVerticalBox);
-    Items->AddSlot().AutoHeight().Padding(12)[SNew(STextBlock).Text(FText::FromString(TEXT("SIMULATION MENU")))
+    Items->AddSlot().AutoHeight().Padding(12, 10, 12, 22)
+    [SNew(STextBlock).Text(FText::FromString(TEXT("MISSION CONTROL  /  PAUSED")))
+        .ColorAndOpacity(FLinearColor(0.53f, 0.84f, 0.96f))
         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 24))];
-    const TCHAR* Labels[] = { TEXT("1. End Mission and Accept Results"), TEXT("2. Abort and Discard Mission"),
-        TEXT("3. Resume Current Mission"), TEXT("4. Control Setup") };
-    for (int32 Index = 0; Index < 4; ++Index)
+    const TCHAR* Labels[] = {
+        TEXT("1.   END MISSION  /  ACCEPT RESULTS"),
+        TEXT("2.   ABORT MISSION  /  DISCARD RESULTS"),
+        TEXT("3.   RESUME MISSION"),
+        TEXT("4.   CONTROL SETUP"),
+        TEXT("5.   QUIT AND EXIT TO WINDOWS")
+    };
+    for (int32 Index = 0; Index < 5; ++Index)
     {
-        Items->AddSlot().AutoHeight().Padding(6)[SNew(SButton)
+        Items->AddSlot().AutoHeight().Padding(12, 5)
+        [SNew(SButton)
+            .ButtonColorAndOpacity(FLinearColor(0.07f, 0.17f, 0.25f))
+            .ContentPadding(FMargin(12, 11))
+            .HAlign(HAlign_Left)
             .OnClicked_Lambda([this, Index]() { ExecuteAction(Index + 1); return FReply::Handled(); })
-            [SNew(STextBlock).Text(FText::FromString(Labels[Index])).Font(FCoreStyle::GetDefaultFontStyle("Regular", 20))]];
+            [SNew(STextBlock)
+                .Justification(ETextJustify::Left)
+                .ColorAndOpacity(XTextColor)
+                .Text(FText::FromString(Labels[Index]))
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 17))]];
     }
-    Items->AddSlot().AutoHeight().Padding(8)[SNew(STextBlock).AutoWrapText(true)
+    Items->AddSlot().AutoHeight().Padding(12, 9)
+    [SNew(STextBlock).AutoWrapText(true)
+        .ColorAndOpacity(FLinearColor(1.0f, 0.7f, 0.35f))
         .Text_Lambda([this]() { return FText::FromString(Rejection); })];
     TSharedRef<SWidget> Content = SNew(SOverlay)
-        + SOverlay::Slot()[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0,0,0,0.65f))]
+        + SOverlay::Slot()
+        [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(FLinearColor(0.005f, 0.012f, 0.025f, 0.83f))]
         + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
-        [SNew(SBox).WidthOverride(580)[SNew(SBorder).Padding(20)[Items]]];
+        [SNew(SBox).WidthOverride(620)
+            [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                .BorderBackgroundColor(FLinearColor(0.018f, 0.037f, 0.065f, 1.0f))
+                .Padding(22)[Items]]];
     Overlay = SNew(SSimulationMenu).Owner(this).Content(Content);
     World->GetGameViewport()->AddViewportWidgetContent(Overlay.ToSharedRef(), 2000);
     PC->bShowMouseCursor = true;
@@ -169,15 +196,24 @@ bool QuitView::OnKeyDown(int32 Key, bool bRepeat)
 {
     if (!bMenuShown || bRepeat) return false;
     if (Key == 27) { ExecuteAction(Resume); return true; }
-    if (Key >= '1' && Key <= '4') { ExecuteAction(Key - '0'); return true; }
+    if (Key >= '1' && Key <= '5') { ExecuteAction(Key - '0'); return true; }
     return false;
 }
 void QuitView::ExecuteAction(uintptr_t Action)
 {
-    if (!bMenuShown || Action < Accept || Action > Controls) return;
+    if (!bMenuShown || Action < Accept || Action > ExitWindows) return;
     if (Action == Accept && !CanAccept())
     {
         if (UQuitMissionMenu* Widget = MenuWidget.Get()) Widget->SetStatusMessage(FText::FromString(Rejection));
+        return;
+    }
+    // Exit is handled locally, so it cannot fall through into the existing
+    // mission Abort/Accept handler (which would change campaign state).
+    if (Action == ExitWindows)
+    {
+        APlayerController* PC = Controller.Get();
+        CloseMenu();
+        if (PC) UKismetSystemLibrary::QuitGame(PC, PC, EQuitPreference::Quit, false);
         return;
     }
     CloseMenu();

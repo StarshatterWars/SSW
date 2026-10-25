@@ -8,7 +8,7 @@ class UQuitMissionMenu;
 class QuitView : public View
 {
 public:
-    enum EAction : uintptr_t { Accept = 1, Abort = 2, Resume = 3, Controls = 4 };
+    enum EAction : uintptr_t { Accept = 1, Abort = 2, Resume = 3, Controls = 4, ExitWindows = 5 };
     explicit QuitView(View* Parent);
     virtual ~QuitView();
     static void Initialize(View* Parent);

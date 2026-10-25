@@ -114,352 +114,239 @@ void UCampaignSelectDlg::InitializeDlg(UMenuScreen* InManager)
 
 void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
 {
-    if (!WidgetTree)
-    {
-        return;
-    }
+    if (!WidgetTree) return;
 
-    RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
-
+    // The Blueprint supplies Campaign -> Background -> RootCanvas.
+    // Keep that authored hierarchy and build the interactive content only once.
+    RootCanvas = Cast<UCanvasPanel>(WidgetTree->FindWidget(TEXT("RootCanvas")));
+    if (!RootCanvas)
+        RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
     if (!RootCanvas)
     {
-        RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
-            UCanvasPanel::StaticClass(),
-            TEXT("RootCanvas"));
+        RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
         WidgetTree->RootWidget = RootCanvas;
     }
+    if (WidgetTree->FindWidget(TEXT("CampaignSelect_MainBorder"))) return;
 
-    if (WidgetTree->FindWidget(TEXT("CampaignSelect_MainBorder")) != nullptr)
+    // Tactical UI palette: background, raised panels, muted labels and icy cyan.
+    const FLinearColor Back(0.012f, 0.025f, 0.045f, 1.f);
+    const FLinearColor Panel(0.025f, 0.055f, 0.083f, 0.97f);
+    const FLinearColor Raised(0.052f, 0.098f, 0.138f, 1.f);
+    const FLinearColor Accent(0.16f, 0.77f, 0.91f, 1.f);
+    const FLinearColor Primary(0.92f, 0.96f, 0.98f, 1.f);
+    const FLinearColor Muted(0.56f, 0.68f, 0.75f, 1.f);
+
+    UBorder* Backdrop = CreatePanelBorder(TEXT("CampaignSelect_Backdrop"), Back);
+    if (UCanvasPanelSlot* WidgetSlot = RootCanvas->AddChildToCanvas(Backdrop))
     {
-        return;
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(0.f));
+        WidgetSlot->SetZOrder(0);
     }
 
-    BackgroundImage = WidgetTree->ConstructWidget<UImage>(
-        UImage::StaticClass(),
-        TEXT("CampaignSelect_Background"));
-
-    if (UCanvasPanelSlot* BgCanvasSlot = RootCanvas->AddChildToCanvas(BackgroundImage))
+    // Small top-level margins allow the whole layout to scale with the viewport.
+    MainBorder = CreatePanelBorder(TEXT("CampaignSelect_MainBorder"), Panel);
+    if (UCanvasPanelSlot* WidgetSlot = RootCanvas->AddChildToCanvas(MainBorder))
     {
-        BgCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-        BgCanvasSlot->SetOffsets(FMargin(0.f));
-        BgCanvasSlot->SetZOrder(0);
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(32.f, 24.f, 32.f, 24.f));
+        WidgetSlot->SetZOrder(1);
     }
-
-    if (UTexture2D* FrameTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Frame1.Frame1")))
-    {
-        BackgroundImage->SetBrushFromTexture(FrameTex, true);
-    }
-
-    TitleText = CreateText(
-        TEXT("CampaignSelect_TitleText"),
-        TEXT("DYNAMIC CAMPAIGNS"),
-        18,
-        MissionUIStyle::HeaderText,
-        ETextJustify::Left,
-        false);
-
-    if (UCanvasPanelSlot* TitleCanvasSlot = RootCanvas->AddChildToCanvas(TitleText))
-    {
-        TitleCanvasSlot->SetPosition(FVector2D(12.f, 32.f));
-        TitleCanvasSlot->SetAutoSize(true);
-        TitleCanvasSlot->SetZOrder(1);
-    }
-
-    MainBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_MainBorder"),
-        MissionUIStyle::PanelBG);
-
-    if (UCanvasPanelSlot* MainCanvasSlot = RootCanvas->AddChildToCanvas(MainBorder))
-    {
-        MainCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-        MainCanvasSlot->SetOffsets(FMargin(36.f, 120.f, 36.f, 32.f));
-        MainCanvasSlot->SetZOrder(1);
-    }
-
     UCanvasPanel* MainCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
-        UCanvasPanel::StaticClass(),
-        TEXT("CampaignSelect_MainCanvas"));
+        UCanvasPanel::StaticClass(), TEXT("CampaignSelect_MainCanvas"));
     MainBorder->SetContent(MainCanvas);
 
-    UBorder* NameBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_NameBorder"),
-        MissionUIStyle::HeaderBG);
-
-    if (UCanvasPanelSlot* NameCanvasSlot = MainCanvas->AddChildToCanvas(NameBorder))
+    // HEADER: overline / page title / active pilot identity.
+    UTextBlock* Overline = CreateText(TEXT("CampaignSelect_Overline"),
+        TEXT("STARSHATTER WARS   /   CAMPAIGN COMMAND"), 12, Accent);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(Overline))
     {
-        NameCanvasSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
-        NameCanvasSlot->SetAlignment(FVector2D(1.f, 0.f));
-        NameCanvasSlot->SetPosition(FVector2D(-14.f, 18.f));
-        NameCanvasSlot->SetSize(FVector2D(256.f, 32.f));
+        WidgetSlot->SetPosition(FVector2D(30.f, 18.f));
+        WidgetSlot->SetAutoSize(true);
     }
-
-    PlayerNameText = CreateText(
-        TEXT("CampaignSelect_PlayerNameText"),
-        TEXT("PLAYER"),
-        16,
-        MissionUIStyle::InfoValueText,
-        ETextJustify::Right,
-        false);
-
-    NameBorder->SetContent(PlayerNameText);
-
-    CampaignNameText = CreateText(
-        TEXT("CampaignSelect_CampaignNameText"),
-        TEXT("CAMPAIGN"),
-        20,
-        MissionUIStyle::HeaderText,
-        ETextJustify::Center,
-        false);
-
-    if (UCanvasPanelSlot* CampaignNameCanvasSlot = MainCanvas->AddChildToCanvas(CampaignNameText))
+    TitleText = CreateText(TEXT("CampaignSelect_TitleText"),
+        TEXT("SELECT CAMPAIGN"), 30, Primary);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(TitleText))
     {
-        CampaignNameCanvasSlot->SetAnchors(FAnchors(0.5f, 0.f, 0.5f, 0.f));
-        CampaignNameCanvasSlot->SetAlignment(FVector2D(0.5f, 0.f));
-        CampaignNameCanvasSlot->SetPosition(FVector2D(0.f, 52.f));
-        CampaignNameCanvasSlot->SetSize(FVector2D(512.f, 32.f));
+        WidgetSlot->SetPosition(FVector2D(30.f, 37.f));
+        WidgetSlot->SetAutoSize(true);
+    }
+    UTextBlock* PilotCaption = CreateText(TEXT("CampaignSelect_PilotCaption"),
+        TEXT("ACTIVE PILOT"), 11, Muted, ETextJustify::Right);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(PilotCaption))
+    {
+        WidgetSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
+        WidgetSlot->SetAlignment(FVector2D(1.f, 0.f));
+        WidgetSlot->SetPosition(FVector2D(-30.f, 24.f));
+        WidgetSlot->SetAutoSize(true);
+    }
+    PlayerNameText = CreateText(TEXT("CampaignSelect_PlayerNameText"),
+        TEXT("PLAYER"), 16, Primary, ETextJustify::Right);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(PlayerNameText))
+    {
+        WidgetSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
+        WidgetSlot->SetAlignment(FVector2D(1.f, 0.f));
+        WidgetSlot->SetPosition(FVector2D(-30.f, 45.f));
+        WidgetSlot->SetAutoSize(true);
+    }
+    UBorder* Divider = CreatePanelBorder(TEXT("CampaignSelect_HeaderDivider"), Accent);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(Divider))
+    {
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
+        WidgetSlot->SetOffsets(FMargin(30.f, 90.f, 30.f, 2.f));
     }
 
     BuildCampaignDropdown(MainCanvas);
 
-    UHorizontalBox* MainRow = WidgetTree->ConstructWidget<UHorizontalBox>(
-        UHorizontalBox::StaticClass(),
-        TEXT("CampaignSelect_MainRow"));
-
-    if (UCanvasPanelSlot* MainRowCanvasSlot = MainCanvas->AddChildToCanvas(MainRow))
+    // The selected campaign name takes the rest of the selection-row width.
+    CampaignNameText = CreateText(TEXT("CampaignSelect_CampaignNameText"),
+        TEXT("CAMPAIGN"), 23, Primary, ETextJustify::Left, false);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(CampaignNameText))
     {
-        MainRowCanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-        MainRowCanvasSlot->SetOffsets(FMargin(32.f, 160.f, 32.f, 100.f));
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
+        WidgetSlot->SetOffsets(FMargin(405.f, 131.f, 28.f, 38.f));
     }
 
-    UBorder* LeftBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_LeftBorder"),
-        MissionUIStyle::PanelBG);
-
-    UBorder* RightBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_RightBorder"),
-        MissionUIStyle::PanelBG);
-
+    // BODY: responsive artwork column and independently scrolling briefing.
+    UHorizontalBox* ContentRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(), TEXT("CampaignSelect_ContentRow"));
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(ContentRow))
     {
-        UHorizontalBoxSlot* LeftHBoxSlot = MainRow->AddChildToHorizontalBox(LeftBorder);
-        LeftHBoxSlot->SetPadding(FMargin(0.f, 0.f, 24.f, 0.f));
-        LeftHBoxSlot->SetHorizontalAlignment(HAlign_Left);
-        LeftHBoxSlot->SetVerticalAlignment(VAlign_Fill);
-        LeftHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(30.f, 202.f, 30.f, 91.f));
     }
-
+    UBorder* ArtPanel = CreatePanelBorder(TEXT("CampaignSelect_ArtPanel"), Raised);
+    if (UHorizontalBoxSlot* WidgetSlot = ContentRow->AddChildToHorizontalBox(ArtPanel))
     {
-        UHorizontalBoxSlot* RightHBoxSlot = MainRow->AddChildToHorizontalBox(RightBorder);
-        RightHBoxSlot->SetPadding(FMargin(0.f));
-        RightHBoxSlot->SetHorizontalAlignment(HAlign_Fill);
-        RightHBoxSlot->SetVerticalAlignment(VAlign_Fill);
-        RightHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        WidgetSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        WidgetSlot->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+        WidgetSlot->SetVerticalAlignment(VAlign_Fill);
     }
-
-    USizeBox* LeftSize = WidgetTree->ConstructWidget<USizeBox>(
-        USizeBox::StaticClass(),
-        TEXT("CampaignSelect_LeftSize"));
-    LeftSize->SetWidthOverride(520.f);
-    LeftSize->SetHeightOverride(384.f);
-    LeftBorder->SetContent(LeftSize);
-
-    UBorder* PictureInnerBorder = CreatePanelBorder(
-        TEXT("CampaignSelect_PictureInnerBorder"),
-        MissionUIStyle::HeaderBG);
-    LeftSize->SetContent(PictureInnerBorder);
-
+    UCanvasPanel* ArtCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
+        UCanvasPanel::StaticClass(), TEXT("CampaignSelect_ArtCanvas"));
+    ArtPanel->SetContent(ArtCanvas);
     CampaignImage = WidgetTree->ConstructWidget<UImage>(
-        UImage::StaticClass(),
-        TEXT("CampaignSelect_CampaignImage"));
-
-    CampaignImage->SetBrushSize(FVector2D(520.f, 520.f));
-
-    PictureInnerBorder->SetContent(CampaignImage);
-
-    UVerticalBox* RightVBox = WidgetTree->ConstructWidget<UVerticalBox>(
-        UVerticalBox::StaticClass(),
-        TEXT("CampaignSelect_RightVBox"));
-    RightBorder->SetContent(RightVBox);
-
-    auto AddHeader = [&](const FString& HeaderText, const TCHAR* BaseName) -> void
-        {
-            UBorder* HeaderBorder = CreatePanelBorder(
-                MakeUniqueWidgetName(BaseName),
-                MissionUIStyle::HeaderBG);
-
-            UTextBlock* HeaderLabel = CreateText(
-                MakeUniqueWidgetName(TEXT("CampaignSelect_HeaderLabel")),
-                HeaderText,
-                20,
-                MissionUIStyle::HeaderText,
-                ETextJustify::Left,
-                false);
-
-            HeaderBorder->SetContent(HeaderLabel);
-
-            UVerticalBoxSlot* HeaderVBoxSlot = RightVBox->AddChildToVerticalBox(HeaderBorder);
-            HeaderVBoxSlot->SetPadding(FMargin(4.f, 2.f, 4.f, 2.f));
-            HeaderVBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        };
-
-    auto AddBodyText = [&](TObjectPtr<UTextBlock>& OutText, float Height, const TCHAR* SizeBoxBase, const TCHAR* TextBase, bool bWrap = true) -> void
-        {
-            USizeBox* BodySizeBox = WidgetTree->ConstructWidget<USizeBox>(
-                USizeBox::StaticClass(),
-                MakeUniqueWidgetName(SizeBoxBase));
-            BodySizeBox->SetHeightOverride(Height);
-
-            OutText = CreateText(
-                MakeUniqueWidgetName(TextBase),
-                TEXT(""),
-                16,
-                MissionUIStyle::InfoValueText,
-                ETextJustify::Left,
-                bWrap);
-
-            BodySizeBox->SetContent(OutText);
-
-            UVerticalBoxSlot* BodyVBoxSlot = RightVBox->AddChildToVerticalBox(BodySizeBox);
-            BodyVBoxSlot->SetPadding(FMargin(6.f, 0.f, 6.f, 0.f));
-            BodyVBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-        };
-
-    AddHeader(TEXT("Description"), TEXT("CampaignSelect_DescriptionHeaderBorder"));
-    AddBodyText(DescriptionText, 128.f, TEXT("CampaignSelect_DescriptionSizeBox"), TEXT("CampaignSelect_DescriptionText"), true);
-
-    AddHeader(TEXT("Situation"), TEXT("CampaignSelect_SituationHeaderBorder"));
-    AddBodyText(SituationText, 192.f, TEXT("CampaignSelect_SituationSizeBox"), TEXT("CampaignSelect_SituationText"), true);
-
-    AddHeader(TEXT("Orders"), TEXT("CampaignSelect_OrdersHeaderBorder"));
-    AddBodyText(Orders1Text, 28.f, TEXT("CampaignSelect_Orders1SizeBox"), TEXT("CampaignSelect_Orders1Text"), true);
-    AddBodyText(Orders2Text, 28.f, TEXT("CampaignSelect_Orders2SizeBox"), TEXT("CampaignSelect_Orders2Text"), true);
-    AddBodyText(Orders3Text, 28.f, TEXT("CampaignSelect_Orders3SizeBox"), TEXT("CampaignSelect_Orders3Text"), true);
-    AddBodyText(Orders4Text, 28.f, TEXT("CampaignSelect_Orders4SizeBox"), TEXT("CampaignSelect_Orders4Text"), true);
-
-    UHorizontalBox* MetaHeaderRow = WidgetTree->ConstructWidget<UHorizontalBox>(
-        UHorizontalBox::StaticClass(),
-        TEXT("CampaignSelect_MetaHeaderRow"));
+        UImage::StaticClass(), TEXT("CampaignSelect_CampaignImage"));
+    CampaignImage->SetBrushSize(FVector2D(1024.f, 1024.f));
+    CampaignImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    if (UCanvasPanelSlot* WidgetSlot = ArtCanvas->AddChildToCanvas(CampaignImage))
     {
-        UVerticalBoxSlot* MetaHeaderVBoxSlot = RightVBox->AddChildToVerticalBox(MetaHeaderRow);
-        MetaHeaderVBoxSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
+        WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(5.f));
     }
-
-    UBorder* LocationHeader = CreatePanelBorder(
-        TEXT("CampaignSelect_LocationHeader"),
-        MissionUIStyle::HeaderBG);
-    UTextBlock* LocationLabel = CreateText(
-        TEXT("CampaignSelect_LocationLabel"),
-        TEXT("Location"),
-        20,
-        MissionUIStyle::HeaderText,
-        ETextJustify::Left,
-        false);
-    LocationHeader->SetContent(LocationLabel);
-
-    UBorder* StartHeader = CreatePanelBorder(
-        TEXT("CampaignSelect_StartHeader"),
-        MissionUIStyle::HeaderBG);
-    UTextBlock* StartLabel = CreateText(
-        TEXT("CampaignSelect_StartLabel"),
-        TEXT("Start"),
-        20,
-        MissionUIStyle::HeaderText,
-        ETextJustify::Left,
-        false);
-    StartHeader->SetContent(StartLabel);
-
+    UBorder* ArtCaptionBg = CreatePanelBorder(TEXT("CampaignSelect_ArtCaptionBG"), FLinearColor(0.012f,0.025f,0.04f,0.95f));
+    if (UCanvasPanelSlot* WidgetSlot = ArtCanvas->AddChildToCanvas(ArtCaptionBg))
     {
-        UHorizontalBoxSlot* LocationHeaderHBoxSlot = MetaHeaderRow->AddChildToHorizontalBox(LocationHeader);
-        LocationHeaderHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        LocationHeaderHBoxSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+        WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(5.f, -45.f, 5.f, 39.f));
+        WidgetSlot->SetZOrder(2);
     }
+    ArtCaptionBg->SetContent(CreateText(TEXT("CampaignSelect_ArtCaption"),
+        TEXT(" CAMPAIGN INTELLIGENCE  /  ARCHIVE PREVIEW"), 12, Accent));
 
+    UBorder* BriefingPanel = CreatePanelBorder(TEXT("CampaignSelect_BriefingPanel"), Raised);
+    if (UHorizontalBoxSlot* WidgetSlot = ContentRow->AddChildToHorizontalBox(BriefingPanel))
     {
-        UHorizontalBoxSlot* StartHeaderHBoxSlot = MetaHeaderRow->AddChildToHorizontalBox(StartHeader);
-        StartHeaderHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        WidgetSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        WidgetSlot->SetPadding(FMargin(14.f, 0.f, 0.f, 0.f));
+        WidgetSlot->SetVerticalAlignment(VAlign_Fill);
     }
+    UScrollBox* BriefingScroll = WidgetTree->ConstructWidget<UScrollBox>(
+        UScrollBox::StaticClass(), TEXT("CampaignSelect_BriefingScroll"));
+    BriefingPanel->SetContent(BriefingScroll);
+    UVerticalBox* BriefingVBox = WidgetTree->ConstructWidget<UVerticalBox>(
+        UVerticalBox::StaticClass(), TEXT("CampaignSelect_BriefingContent"));
+    BriefingScroll->AddChild(BriefingVBox);
 
-    UHorizontalBox* MetaValueRow = WidgetTree->ConstructWidget<UHorizontalBox>(
-        UHorizontalBox::StaticClass(),
-        TEXT("CampaignSelect_MetaValueRow"));
+    auto AddSection = [&](const TCHAR* Heading, TObjectPtr<UTextBlock>& Output,
+                          const TCHAR* TextName, float MinHeight)
     {
-        UVerticalBoxSlot* MetaValueVBoxSlot = RightVBox->AddChildToVerticalBox(MetaValueRow);
-        MetaValueVBoxSlot->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
-    }
-
-    LocationSystemText = CreateText(
-        TEXT("CampaignSelect_LocationSystemText"),
-        TEXT(""),
-        12,
-        MissionUIStyle::InfoValueText,
-        ETextJustify::Left,
-        true);
-
-    CampaignStartTimeText = CreateText(
-        TEXT("CampaignSelect_CampaignStartTimeText"),
-        TEXT(""),
-        12,
-        MissionUIStyle::InfoValueText,
-        ETextJustify::Left,
-        true);
-
+        UTextBlock* Caption = CreateText(MakeUniqueWidgetName(TEXT("CampaignSelect_SectionCaption")),
+            Heading, 13, Accent);
+        if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(Caption))
+            WidgetSlot->SetPadding(FMargin(20.f, 20.f, 18.f, 9.f));
+        Output = CreateText(TextName, TEXT(""), 16, Primary, ETextJustify::Left, true);
+        Output->SetWrapTextAt(520.f);
+        USizeBox* SectionSize = WidgetTree->ConstructWidget<USizeBox>(
+            USizeBox::StaticClass(), MakeUniqueWidgetName(TEXT("CampaignSelect_SectionSize")));
+        SectionSize->SetMinDesiredHeight(MinHeight);
+        SectionSize->SetContent(Output);
+        if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(SectionSize))
+            WidgetSlot->SetPadding(FMargin(20.f, 0.f, 20.f, 6.f));
+    };
+    AddSection(TEXT("01  /  OVERVIEW"), DescriptionText, TEXT("CampaignSelect_DescriptionText"), 72.f);
+    AddSection(TEXT("02  /  TACTICAL SITUATION"), SituationText, TEXT("CampaignSelect_SituationText"), 108.f);
+    UTextBlock* OrdersCaption = CreateText(TEXT("CampaignSelect_OrdersCaption"),
+        TEXT("03  /  MISSION DIRECTIVES"), 13, Accent);
+    if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(OrdersCaption))
+        WidgetSlot->SetPadding(FMargin(20.f, 20.f, 20.f, 12.f));
+    auto AddOrder = [&](TObjectPtr<UTextBlock>& Output, const TCHAR* Name)
     {
-        UHorizontalBoxSlot* LocationValueHBoxSlot = MetaValueRow->AddChildToHorizontalBox(LocationSystemText);
-        LocationValueHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        LocationValueHBoxSlot->SetPadding(FMargin(0.f, 0.f, 24.f, 0.f));
-    }
-
+        Output = CreateText(Name, TEXT(""), 15, Primary, ETextJustify::Left, true);
+        Output->SetWrapTextAt(520.f);
+        if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(Output))
+            WidgetSlot->SetPadding(FMargin(20.f, 0.f, 20.f, 8.f));
+    };
+    AddOrder(Orders1Text, TEXT("CampaignSelect_Orders1Text"));
+    AddOrder(Orders2Text, TEXT("CampaignSelect_Orders2Text"));
+    AddOrder(Orders3Text, TEXT("CampaignSelect_Orders3Text"));
+    AddOrder(Orders4Text, TEXT("CampaignSelect_Orders4Text"));
+    UTextBlock* MetaCaption = CreateText(TEXT("CampaignSelect_MetaCaption"),
+        TEXT("04  /  DEPLOYMENT PARAMETERS"), 13, Accent);
+    if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(MetaCaption))
+        WidgetSlot->SetPadding(FMargin(20.f, 20.f, 20.f, 10.f));
+    UHorizontalBox* MetaRow = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(), TEXT("CampaignSelect_MetaRow"));
+    if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(MetaRow))
+        WidgetSlot->SetPadding(FMargin(20.f, 0.f, 20.f, 24.f));
+    auto AddMeta = [&](const TCHAR* Label, TObjectPtr<UTextBlock>& Output, const TCHAR* Name)
     {
-        UHorizontalBoxSlot* StartValueHBoxSlot = MetaValueRow->AddChildToHorizontalBox(CampaignStartTimeText);
-        StartValueHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
+        UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>(
+            UVerticalBox::StaticClass(), MakeUniqueWidgetName(TEXT("CampaignSelect_MetaColumn")));
+        if (UHorizontalBoxSlot* WidgetSlot = MetaRow->AddChildToHorizontalBox(Column))
+            WidgetSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        UTextBlock* Caption = CreateText(MakeUniqueWidgetName(TEXT("CampaignSelect_MetaLabel")),
+            Label, 11, Muted);
+        Column->AddChildToVerticalBox(Caption);
+        Output = CreateText(Name, TEXT(""), 14, Primary, ETextJustify::Left, true);
+        if (UVerticalBoxSlot* WidgetSlot = Column->AddChildToVerticalBox(Output))
+            WidgetSlot->SetPadding(FMargin(0.f, 7.f, 8.f, 0.f));
+    };
+    AddMeta(TEXT("STAR SYSTEM  /  REGION"), LocationSystemText, TEXT("CampaignSelect_LocationSystemText"));
+    AddMeta(TEXT("OPERATIONS START"), CampaignStartTimeText, TEXT("CampaignSelect_CampaignStartTimeText"));
 
-    UHorizontalBox* ButtonRow = WidgetTree->ConstructWidget<UHorizontalBox>(
-        UHorizontalBox::StaticClass(),
-        TEXT("CampaignSelect_ButtonRow"));
-
-    if (UCanvasPanelSlot* ButtonRowCanvasSlot = MainCanvas->AddChildToCanvas(ButtonRow))
+    // ACTION BAR: status hint on the left, all original actions to the right.
+    UBorder* FooterLine = CreatePanelBorder(TEXT("CampaignSelect_FooterLine"), Accent);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(FooterLine))
     {
-        ButtonRowCanvasSlot->SetAnchors(FAnchors(1.f, 1.f, 1.f, 1.f));
-        ButtonRowCanvasSlot->SetAlignment(FVector2D(1.f, 1.f));
-        ButtonRowCanvasSlot->SetPosition(FVector2D(-100.f, -53.f));
-        ButtonRowCanvasSlot->SetAutoSize(true);
+        WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
+        WidgetSlot->SetOffsets(FMargin(30.f, -77.f, 30.f, 2.f));
     }
-
-    UWidget* PlayButtonWidget = CreateMenuButton(
-        TEXT("CampaignSelect_PlayButton"),
-        PlayButton,
-        PlayButtonText,
-        TEXT("START"));
-
-    UWidget* RestartButtonWidget = CreateMenuButton(
-        TEXT("CampaignSelect_RestartButton"),
-        RestartButton,
-        RestartButtonText,
-        TEXT("RESTART"));
-
-    UWidget* CancelButtonWidget = CreateMenuButton(
-        TEXT("CampaignSelect_CancelButton"),
-        CancelButton,
-        CancelButtonText,
-        TEXT("CANCEL"));
-
+    UTextBlock* FooterLabel = CreateText(TEXT("CampaignSelect_FooterLabel"),
+        TEXT("OPERATIONS READY   /   SELECT A CAMPAIGN TO DEPLOY"), 12, Muted);
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(FooterLabel))
     {
-        UHorizontalBoxSlot* PlayButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(PlayButtonWidget);
-        PlayButtonHBoxSlot->SetPadding(FMargin(0.f, 0.f, 36.f, 0.f));
-        PlayButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+        WidgetSlot->SetPosition(FVector2D(30.f, -45.f));
+        WidgetSlot->SetAutoSize(true);
     }
-
+    UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>(
+        UHorizontalBox::StaticClass(), TEXT("CampaignSelect_ButtonRow"));
+    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(Actions))
     {
-        UHorizontalBoxSlot* RestartButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(RestartButtonWidget);
-        RestartButtonHBoxSlot->SetPadding(FMargin(0.f, 0.f, 36.f, 0.f));
-        RestartButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        WidgetSlot->SetAnchors(FAnchors(1.f, 1.f, 1.f, 1.f));
+        WidgetSlot->SetAlignment(FVector2D(1.f, 1.f));
+        WidgetSlot->SetPosition(FVector2D(-30.f, -18.f));
+        WidgetSlot->SetAutoSize(true);
     }
-
+    auto AddAction = [&](UWidget* ButtonWidget)
     {
-        UHorizontalBoxSlot* CancelButtonHBoxSlot = ButtonRow->AddChildToHorizontalBox(CancelButtonWidget);
-        CancelButtonHBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    }
-
+        if (UHorizontalBoxSlot* WidgetSlot = Actions->AddChildToHorizontalBox(ButtonWidget))
+            WidgetSlot->SetPadding(FMargin(8.f, 0.f, 0.f, 0.f));
+    };
+    AddAction(CreateMenuButton(TEXT("CampaignSelect_CancelButton"), CancelButton, CancelButtonText, TEXT("BACK")));
+    AddAction(CreateMenuButton(TEXT("CampaignSelect_RestartButton"), RestartButton, RestartButtonText, TEXT("RESTART")));
+    AddAction(CreateMenuButton(TEXT("CampaignSelect_PlayButton"), PlayButton, PlayButtonText, TEXT("START")));
     ApplyButtonStyle(PlayButton);
     ApplyButtonStyle(RestartButton);
     ApplyButtonStyle(CancelButton);
@@ -470,13 +357,13 @@ void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
     UBorder* CampaignSelectHeader = WidgetTree->ConstructWidget<UBorder>(
         UBorder::StaticClass(),
         TEXT("CampaignSelect_DropdownHeader"));
-    CampaignSelectHeader->SetBrushColor(MissionUIStyle::HeaderBG);
+    CampaignSelectHeader->SetBrushColor(FLinearColor(0.052f, 0.098f, 0.138f, 1.f));
 
     UTextBlock* CampaignSelectHeaderText = CreateText(
         TEXT("CampaignSelect_DropdownHeaderText"),
-        TEXT("CAMPAIGN"),
-        18,
-        MissionUIStyle::HeaderText,
+        TEXT("AVAILABLE CAMPAIGNS"),
+        12,
+        FLinearColor(0.16f, 0.77f, 0.91f, 1.f),
         ETextJustify::Left,
         false);
 
@@ -484,27 +371,27 @@ void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
 
     if (UCanvasPanelSlot* DropdownHeaderCanvasSlot = MainCanvas->AddChildToCanvas(CampaignSelectHeader))
     {
-        DropdownHeaderCanvasSlot->SetPosition(FVector2D(36.f, 8.f));
-        DropdownHeaderCanvasSlot->SetSize(FVector2D(300.f, 28.f));
+        DropdownHeaderCanvasSlot->SetPosition(FVector2D(30.f, 112.f));
+        DropdownHeaderCanvasSlot->SetSize(FVector2D(340.f, 22.f));
         DropdownHeaderCanvasSlot->SetZOrder(3);
     }
 
     UBorder* CampaignDropdownFrame = WidgetTree->ConstructWidget<UBorder>(
         UBorder::StaticClass(),
         TEXT("CampaignSelect_DropdownFrame"));
-    CampaignDropdownFrame->SetBrushColor(MissionUIStyle::HeaderBG);
+    CampaignDropdownFrame->SetBrushColor(FLinearColor(0.16f, 0.77f, 0.91f, 1.f));
 
     if (UCanvasPanelSlot* FrameCanvasSlot = MainCanvas->AddChildToCanvas(CampaignDropdownFrame))
     {
-        FrameCanvasSlot->SetPosition(FVector2D(36.f, 44.f));
-        FrameCanvasSlot->SetSize(FVector2D(300.f, 40.f));
+        FrameCanvasSlot->SetPosition(FVector2D(30.f, 139.f));
+        FrameCanvasSlot->SetSize(FVector2D(340.f, 42.f));
         FrameCanvasSlot->SetZOrder(3);
     }
 
     UBorder* CampaignDropdownInner = WidgetTree->ConstructWidget<UBorder>(
         UBorder::StaticClass(),
         TEXT("CampaignSelect_DropdownInner"));
-    CampaignDropdownInner->SetBrushColor(MissionUIStyle::PanelBG);
+    CampaignDropdownInner->SetBrushColor(FLinearColor(0.025f, 0.055f, 0.083f, 1.f));
     CampaignDropdownFrame->SetContent(CampaignDropdownInner);
 
     CampaignDropdownButton = WidgetTree->ConstructWidget<UButton>(
@@ -516,7 +403,7 @@ void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
         TEXT("CampaignSelect_DropdownButtonText"),
         TEXT("SELECT CAMPAIGN"),
         16,
-        MissionUIStyle::ComboMenuBG,   
+        FLinearColor(0.92f, 0.96f, 0.98f, 1.f),
         ETextJustify::Left,
         false);
 
@@ -530,13 +417,13 @@ void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
     CampaignDropdownPopupBorder = WidgetTree->ConstructWidget<UBorder>(
         UBorder::StaticClass(),
         TEXT("CampaignSelect_DropdownPopupBorder"));
-    CampaignDropdownPopupBorder->SetBrushColor(MissionUIStyle::PanelBG);
+    CampaignDropdownPopupBorder->SetBrushColor(FLinearColor(0.025f, 0.055f, 0.083f, 1.f));
     CampaignDropdownPopupBorder->SetVisibility(ESlateVisibility::Collapsed);
 
     if (UCanvasPanelSlot* PopupCanvasSlot = MainCanvas->AddChildToCanvas(CampaignDropdownPopupBorder))
     {
-        PopupCanvasSlot->SetPosition(FVector2D(36.f, 80.f));
-        PopupCanvasSlot->SetSize(FVector2D(300.f, 220.f));
+        PopupCanvasSlot->SetPosition(FVector2D(30.f, 181.f));
+        PopupCanvasSlot->SetSize(FVector2D(340.f, 260.f));
         PopupCanvasSlot->SetZOrder(20);
     }
 
@@ -562,9 +449,9 @@ void UCampaignSelectDlg::RebuildCampaignDropdownOptions()
     CampaignOptionButtons.Reset();
     CampaignOptionButtonTexts.Reset();
 
-    const FLinearColor PopupBG = FLinearColor(0.10f, 0.11f, 0.13f, 1.0f);
-    const FLinearColor RowBG = FLinearColor(0.18f, 0.18f, 0.20f, 1.0f);
-    const FLinearColor RowSelectedBG = FLinearColor(0.32f, 0.42f, 0.58f, 1.0f);
+    const FLinearColor PopupBG = FLinearColor(0.025f, 0.055f, 0.083f, 1.0f);
+    const FLinearColor RowBG = FLinearColor(0.052f, 0.098f, 0.138f, 1.0f);
+    const FLinearColor RowSelectedBG = FLinearColor(0.12f, 0.30f, 0.39f, 1.0f);
     const FLinearColor RowTextColor = FLinearColor(0.92f, 0.93f, 0.95f, 1.0f);
 
     if (CampaignDropdownPopupBorder)
@@ -1305,8 +1192,8 @@ UWidget* UCampaignSelectDlg::CreateMenuButton(
         USizeBox::StaticClass(),
         MakeUniqueWidgetName(TEXT("CampaignSelect_ButtonSizeWrapper")));
 
-    SizeWrapper->SetWidthOverride(256.f);
-    SizeWrapper->SetHeightOverride(40.f);
+    SizeWrapper->SetWidthOverride(148.f);
+    SizeWrapper->SetHeightOverride(46.f);
 
     OutButton = WidgetTree->ConstructWidget<UButton>(
         UButton::StaticClass(),

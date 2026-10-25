@@ -38,6 +38,8 @@
 
 // Legacy/runtime:
 #include "Campaign.h"
+#include "CampaignSave.h"
+#include "SSWGameInstance.h"
 #include "Starshatter.h"
 #include "CombatEvent.h"
 #include "PlayerCharacter.h"
@@ -236,14 +238,28 @@ CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
         return nullptr;
     }
 
+    // A fresh runtime CombatEvent may be unvisited after loading a saved
+    // campaign. Use the campaign's persistent scene history as well.
+    const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
+    const UCampaignSave* Save = GI ? GI->CampaignSave : nullptr;
+    const bool bMatchingSave = Save && !Save->CampaignRowName.IsNone() &&
+        Save->CampaignRowName == GI->SelectedCampaignRowName;
+
     ListIter<CombatEvent> Iter = CampaignPtr->GetEvents();
     while (++Iter)
     {
         CombatEvent* Event = Iter.value();
-        if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+        if (!Event || Event->Visited() || !Event->SceneFile() || !*Event->SceneFile())
+            continue;
+
+        const FString SceneName = UTF8_TO_TCHAR(Event->SceneFile());
+        if (bMatchingSave && Save->PlayedSceneNames.ContainsByPredicate(
+                [&SceneName](const FString& Played)
+                { return Played.Equals(SceneName, ESearchCase::IgnoreCase); }))
         {
-            return Event;
+            continue;
         }
+        return Event;
     }
 
     return nullptr;
@@ -1205,7 +1221,34 @@ bool UCmpnScreen::ContinuePendingSceneTransition()
     HideCmpLoadDlg();
 
     if (PendingSceneEvent)
+    {
         PendingSceneEvent->SetVisited(true);
+
+        // Persist the scene only after playback has actually begun. Continue
+        // does not replay it; Restart creates a new UCampaignSave with no history.
+        if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+        {
+            UCampaignSave* Save = GI->CampaignSave;
+            if (Save && !Save->CampaignRowName.IsNone() &&
+                Save->CampaignRowName == GI->SelectedCampaignRowName &&
+                !ActiveSceneName.IsEmpty())
+            {
+                if (!Save->PlayedSceneNames.ContainsByPredicate(
+                        [this](const FString& Played)
+                        { return Played.Equals(ActiveSceneName, ESearchCase::IgnoreCase); }))
+                {
+                    Save->PlayedSceneNames.Add(ActiveSceneName);
+                    const FString SavedSlotName = UCampaignSave::MakeSlotNameFromRowName(Save->CampaignRowName);
+                    if (!UGameplayStatics::SaveGameToSlot(Save, SavedSlotName, 0))
+                    {
+                        UE_LOG(LogTemp, Error,
+                            TEXT("[CampaignScene] Failed to persist played scene '%s' in '%s'"),
+                            *ActiveSceneName, *SavedSlotName);
+                    }
+                }
+            }
+        }
+    }
 
     UE_LOG(LogTemp, Warning,
         TEXT("[ScenePreload] REVEALED '%s' after %d stable frames; timer begins now"),
