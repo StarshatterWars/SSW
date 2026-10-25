@@ -20,8 +20,10 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    // ILS is available for ALL player spacecraft (fighters, shuttles, etc.),
+    // not only vessels classified as dropships.
     if (!bILSMode || !Player || !Region || !Region->GetShips().contains(Player) ||
-        !Player->IsDropship() || Player->IsDead() || Player->InTransition() ||
+        Player->IsDead() || Player->InTransition() ||
         (Player->GetFlightPhase() != EOPSMode::ACTIVE &&
          Player->GetFlightPhase() != EOPSMode::APPROACH && Player->GetFlightPhase() != EOPSMode::RECOVERY) ||
         !GEngine || !FSlateApplication::IsInitialized()) return;
