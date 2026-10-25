@@ -1,0 +1,368 @@
+/* Starshatter Wars - modern single-mission roster.
+   Uses legacy Single Missions campaign and original PREP-mode handoff.
+   The existing MissionSelectDlg is intentionally not modified. */
+#include "SingleMissionDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/ScaleBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
+#include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Styling/CoreStyle.h"
+#include "Campaign.h"
+#include "MissionInfo.h"
+#include "Mission.h"
+#include "StarshatterGameDataSubsystem.h"
+#include "Engine/DataTable.h"
+#include "Engine/GameInstance.h"
+#include "FormatUtil.h"
+#include "MenuScreen.h"
+
+namespace SingleMissionColors
+{
+    const FLinearColor Backdrop(0.012f, 0.025f, 0.045f, 1.0f);
+    const FLinearColor Panel(0.025f, 0.055f, 0.083f, 0.97f);
+    const FLinearColor Row(0.052f, 0.098f, 0.138f, 1.0f);
+    const FLinearColor Selected(0.085f, 0.290f, 0.405f, 1.0f);
+    const FLinearColor Accent(0.16f, 0.77f, 0.91f, 1.0f);
+    const FLinearColor Primary(0.92f, 0.97f, 1.0f, 1.0f);
+    const FLinearColor Muted(0.61f, 0.72f, 0.81f, 1.0f);
+}
+
+USingleMissionDlg::USingleMissionDlg(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
+{
+    SetIsFocusable(true);
+}
+
+void USingleMissionDlg::NativeConstruct()
+{
+    Super::NativeConstruct();
+    BuildSingleMissionScreen();
+}
+
+UTextBlock* USingleMissionDlg::MakeLabel(const FString& Value, int32 Size,
+    const FLinearColor& Tint, bool bWrap)
+{
+    UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
+    Label->SetText(FText::FromString(Value));
+    Label->SetFont(FCoreStyle::GetDefaultFontStyle(Size >= 22 ? "Bold" : "Regular", Size));
+    Label->SetColorAndOpacity(FSlateColor(Tint));
+    Label->SetAutoWrapText(bWrap);
+    return Label;
+}
+
+UBorder* USingleMissionDlg::MakePanel(const FLinearColor& Tint)
+{
+    UBorder* Panel = WidgetTree->ConstructWidget<UBorder>();
+    Panel->SetBrushColor(Tint);
+    Panel->SetPadding(FMargin(18.f));
+    return Panel;
+}
+
+UButton* USingleMissionDlg::MakeActionButton(const FString& Label, bool bEnabled)
+{
+    UButton* Button = WidgetTree->ConstructWidget<UButton>();
+    FButtonStyle Style = Button->GetStyle();
+    Style.Normal.TintColor = FSlateColor(SingleMissionColors::Row);
+    Style.Hovered.TintColor = FSlateColor(SingleMissionColors::Selected);
+    Style.Pressed.TintColor = FSlateColor(SingleMissionColors::Accent);
+    Button->SetStyle(Style);
+    Button->SetIsEnabled(bEnabled);
+    UTextBlock* Text = MakeLabel(Label, 16, SingleMissionColors::Primary);
+    if (UButtonSlot* ButtonContent = Cast<UButtonSlot>(Button->AddChild(Text)))
+    {
+        ButtonContent->SetPadding(FMargin(18.f, 12.f));
+        ButtonContent->SetHorizontalAlignment(HAlign_Left);
+        ButtonContent->SetVerticalAlignment(VAlign_Center);
+    }
+    return Button;
+}
+
+void USingleMissionDlg::BuildSingleMissionScreen()
+{
+    if (!WidgetTree) return;
+    if (WidgetTree->FindWidget(TEXT("SingleMission_Root"))) return;
+
+    // Self-contained layout; WBP may remain the host class with no designer edits.
+    UCanvasPanel* Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("SingleMission_Root"));
+    WidgetTree->RootWidget = Root;
+    UBorder* Background = MakePanel(SingleMissionColors::Backdrop);
+    if (UCanvasPanelSlot* BackgroundCanvas = Root->AddChildToCanvas(Background))
+    {
+        BackgroundCanvas->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        BackgroundCanvas->SetOffsets(FMargin(0.f));
+    }
+    UScaleBox* Scale = WidgetTree->ConstructWidget<UScaleBox>();
+    Scale->SetStretch(EStretch::ScaleToFit);
+    Scale->SetStretchDirection(EStretchDirection::DownOnly);
+    Background->SetContent(Scale);
+    USizeBox* FrameSize = WidgetTree->ConstructWidget<USizeBox>();
+    FrameSize->SetWidthOverride(1360.f);
+    FrameSize->SetHeightOverride(780.f);
+    Scale->SetContent(FrameSize);
+    UVerticalBox* Full = WidgetTree->ConstructWidget<UVerticalBox>();
+    FrameSize->SetContent(Full);
+
+    UVerticalBox* Heading = WidgetTree->ConstructWidget<UVerticalBox>();
+    Full->AddChildToVerticalBox(Heading)->SetPadding(FMargin(5.f, 4.f, 5.f, 18.f));
+    Heading->AddChildToVerticalBox(MakeLabel(TEXT("STARSHATTER WARS  /  TACTICAL OPERATIONS  /  SINGLE PLAYER"), 15, SingleMissionColors::Accent));
+    Heading->AddChildToVerticalBox(MakeLabel(TEXT("SINGLE MISSIONS"), 38, SingleMissionColors::Primary))->SetPadding(FMargin(0.f, 5.f));
+    Heading->AddChildToVerticalBox(MakeLabel(TEXT("INDEPENDENT SORTIES  /  NO CAMPAIGN PROGRESSION  /  OFFLINE"), 14, SingleMissionColors::Muted));
+    UBorder* HeaderRule = MakePanel(SingleMissionColors::Accent);
+    HeaderRule->SetPadding(FMargin(0.f));
+    UVerticalBoxSlot* RuleSlot = Heading->AddChildToVerticalBox(HeaderRule);
+    RuleSlot->SetPadding(FMargin(0.f, 16.f, 0.f, 0.f));
+    USizeBox* RuleSize = WidgetTree->ConstructWidget<USizeBox>();
+    RuleSize->SetHeightOverride(2.f);
+    HeaderRule->SetContent(RuleSize);
+
+    UHorizontalBox* Columns = WidgetTree->ConstructWidget<UHorizontalBox>();
+    UVerticalBoxSlot* ColumnArea = Full->AddChildToVerticalBox(Columns);
+    ColumnArea->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    ColumnArea->SetPadding(FMargin(5.f, 0.f, 5.f, 12.f));
+
+    UBorder* LeftPanel = MakePanel(SingleMissionColors::Panel);
+    UHorizontalBoxSlot* Left = Columns->AddChildToHorizontalBox(LeftPanel);
+    Left->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Left->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+    UVerticalBox* LeftContent = WidgetTree->ConstructWidget<UVerticalBox>();
+    LeftPanel->SetContent(LeftContent);
+    LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("AVAILABLE OPERATIONS"), 18, SingleMissionColors::Accent));
+    MissionCountLabel = MakeLabel(TEXT(""), 13, SingleMissionColors::Muted);
+    LeftContent->AddChildToVerticalBox(MissionCountLabel)->SetPadding(FMargin(0.f, 5.f, 0.f, 12.f));
+    UScrollBox* RosterScroll = WidgetTree->ConstructWidget<UScrollBox>();
+    LeftContent->AddChildToVerticalBox(RosterScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    MissionRoster = WidgetTree->ConstructWidget<UVerticalBox>();
+    RosterScroll->AddChild(MissionRoster);
+
+    UBorder* RightPanel = MakePanel(SingleMissionColors::Panel);
+    UHorizontalBoxSlot* Right = Columns->AddChildToHorizontalBox(RightPanel);
+    Right->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    // Constrain mission intelligence to the right column and scroll independently
+    // of the roster and the action bar. Long SITREPs/objectives remain accessible.
+    MissionDetailsScroll = WidgetTree->ConstructWidget<UScrollBox>(
+        UScrollBox::StaticClass(), TEXT("SingleMission_DetailsScroll"));
+    MissionDetailsScroll->SetOrientation(EOrientation::Orient_Vertical);
+    MissionDetailsScroll->SetScrollBarVisibility(ESlateVisibility::Visible);
+    RightPanel->SetContent(MissionDetailsScroll);
+    UVerticalBox* RightContent = WidgetTree->ConstructWidget<UVerticalBox>();
+    MissionDetailsScroll->AddChild(RightContent);
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION INTELLIGENCE  /  AUTHORED SCENARIO"), 18, SingleMissionColors::Accent));
+    MissionTitle = MakeLabel(TEXT("SELECT A MISSION"), 26, SingleMissionColors::Primary, true);
+    RightContent->AddChildToVerticalBox(MissionTitle)->SetPadding(FMargin(0.f, 14.f, 0.f, 14.f));
+    MissionRole = MakeLabel(TEXT(""), 15, SingleMissionColors::Accent);
+    MissionLocation = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
+    MissionTime = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
+    RightContent->AddChildToVerticalBox(MissionRole)->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+    RightContent->AddChildToVerticalBox(MissionLocation)->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+    RightContent->AddChildToVerticalBox(MissionTime)->SetPadding(FMargin(0.f, 0.f, 0.f, 18.f));
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("TACTICAL SITUATION"), 17, SingleMissionColors::Accent));
+    MissionSummary = MakeLabel(TEXT("Choose a mission from the roster."), 17, SingleMissionColors::Primary, true);
+    RightContent->AddChildToVerticalBox(MissionSummary)->SetPadding(FMargin(0.f, 8.f, 0.f, 20.f));
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION OBJECTIVE"), 17, SingleMissionColors::Accent));
+    MissionObjectives = MakeLabel(TEXT("The full objectives and loadout appear in Mission Briefing."), 15, SingleMissionColors::Primary, true);
+    RightContent->AddChildToVerticalBox(MissionObjectives)->SetPadding(FMargin(0.f, 8.f));
+
+    UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
+    UButton* BackButton = MakeActionButton(TEXT("BACK TO MAIN MENU"));
+    Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+    BackButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnBackPressed);
+
+    // Keep legacy editing affordances visible, but disabled for built-in missions.
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+
+    LaunchButton = MakeActionButton(TEXT("OPEN MISSION BRIEFING"), false);
+    Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    LaunchButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnLaunchPressed);
+}
+
+void USingleMissionDlg::Show()
+{
+    // Do not call UMissionSelectDlg::Show(): it switches among single/custom/multiplayer.
+    UBaseScreen::Show();
+    if (!MissionRoster) BuildSingleMissionScreen();
+    RefreshMissionRoster();
+}
+
+void USingleMissionDlg::RefreshMissionRoster()
+{
+    if (!MissionRoster) return;
+    MissionRoster->ClearChildren();
+    MissionButtons.Reset();
+    MissionIds.Reset();
+    ScenarioRows.Reset();
+    ChosenIndex = INDEX_NONE;
+    SelectedMissionIndex = INDEX_NONE;
+    MissionId = 0;
+    bEditable = false;
+
+    UStarshatterGameDataSubsystem* GameData = GetGameInstance()
+        ? GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
+    UDataTable* DataTable = GameData ? GameData->GetSingleMissionsDataTable() : nullptr;
+    if (!DataTable || DataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
+    {
+        MissionCountLabel->SetText(FText::FromString(TEXT("DT_SingleMissions unavailable or incorrect row structure")));
+        RefreshMissionDetails();
+        return;
+    }
+
+    TArray<FName> RowNames = DataTable->GetRowNames();
+    // Sort by authored mission ID, not by unpredictable DataTable iteration order.
+    TArray<const FS_CampaignMission*> SortedRows;
+    for (const FName& RowName : RowNames)
+    {
+        const FS_CampaignMission* Scenario = DataTable->FindRow<FS_CampaignMission>(RowName, TEXT("SingleMissionRoster"), false);
+        if (Scenario && Scenario->Id > 0) SortedRows.Add(Scenario);
+    }
+    SortedRows.Sort([](const FS_CampaignMission& A, const FS_CampaignMission& B) { return A.Id < B.Id; });
+
+    for (const FS_CampaignMission* Scenario : SortedRows)
+    {
+        if (!Scenario || MissionIds.Num() >= 10) continue;
+        const int32 DisplayIndex = MissionIds.Num();
+        const FString MissionLabel = Scenario->MissionName.IsEmpty()
+            ? FString::Printf(TEXT("%02d  /  UNNAMED OPERATION"), Scenario->Id)
+            : Scenario->MissionName;
+        UButton* RowButton = MakeActionButton(MissionLabel);
+        switch (DisplayIndex)
+        {
+        case 0: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission01Pressed); break;
+        case 1: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission02Pressed); break;
+        case 2: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission03Pressed); break;
+        case 3: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission04Pressed); break;
+        case 4: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission05Pressed); break;
+        case 5: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission06Pressed); break;
+        case 6: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission07Pressed); break;
+        case 7: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission08Pressed); break;
+        case 8: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission09Pressed); break;
+        case 9: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission10Pressed); break;
+        default: break;
+        }
+        MissionRoster->AddChildToVerticalBox(RowButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+        MissionIds.Add(Scenario->Id);
+        ScenarioRows.Add(Scenario);
+        MissionButtons.Add(RowButton);
+    }
+    MissionCountLabel->SetText(FText::FromString(FString::Printf(
+        TEXT("%d missions  /  sourced from DT_SingleMissions"), MissionIds.Num())));
+    if (!MissionIds.IsEmpty()) SelectMissionAt(0);
+    else RefreshMissionDetails();
+}
+
+void USingleMissionDlg::SelectMissionAt(int32 Index)
+{
+    if (!MissionIds.IsValidIndex(Index)) return;
+    ChosenIndex = Index;
+    SelectedMissionIndex = Index;
+    MissionId = MissionIds[Index];
+    for (int32 i = 0; i < MissionButtons.Num(); ++i)
+    {
+        if (UButton* Button = MissionButtons[i])
+        {
+            FButtonStyle Style = Button->GetStyle();
+            Style.Normal.TintColor = FSlateColor(i == Index ? SingleMissionColors::Selected : SingleMissionColors::Row);
+            Button->SetStyle(Style);
+        }
+    }
+    RefreshMissionDetails();
+    // Each selected operation opens at the top of its intelligence report.
+    if (MissionDetailsScroll) MissionDetailsScroll->ScrollToStart();
+}
+
+void USingleMissionDlg::RefreshMissionDetails()
+{
+    const FS_CampaignMission* Scenario = ScenarioRows.IsValidIndex(ChosenIndex)
+        ? ScenarioRows[ChosenIndex] : nullptr;
+    if (MissionTitle) MissionTitle->SetText(FText::FromString(Scenario
+        ? Scenario->MissionName : TEXT("NO MISSION SELECTED")));
+    if (MissionRole) MissionRole->SetText(FText::FromString(Scenario
+        ? FString::Printf(TEXT("OPERATION TYPE  /  %s"),
+            *FString(Mission::GetRoleName(static_cast<int32>(Scenario->MissionType)))) : TEXT("")));
+    if (MissionLocation) MissionLocation->SetText(FText::FromString(Scenario
+        ? FString::Printf(TEXT("SYSTEM  /  %s     REGION  /  %s"),
+            *Scenario->MissionSystem, *Scenario->MissionRegion) : TEXT("")));
+    if (MissionTime) MissionTime->SetText(FText::FromString(Scenario
+        ? FString::Printf(TEXT("START TIME  /  %s     FORCES  /  %d ELEMENTS"),
+            *Scenario->StartTime, Scenario->Element.Num()) : TEXT("")));
+    const FString Situation = Scenario
+        ? (!Scenario->Sitrep.IsEmpty() ? Scenario->Sitrep : Scenario->Desc) : FString();
+    if (MissionSummary) MissionSummary->SetText(FText::FromString(Scenario
+        ? Situation.Replace(TEXT("\\n"), TEXT("\n")) : TEXT("Choose a mission from the roster.")));
+    if (MissionObjectives) MissionObjectives->SetText(FText::FromString(Scenario && !Scenario->Objective.IsEmpty()
+        ? Scenario->Objective.Replace(TEXT("\\n"), TEXT("\n"))
+        : TEXT("Full objectives and loadout are available in Mission Briefing.")));
+    if (LaunchButton) LaunchButton->SetIsEnabled(Scenario != nullptr);
+}
+
+void USingleMissionDlg::LaunchSelected()
+{
+    if (!ScenarioRows.IsValidIndex(ChosenIndex) || MissionId <= 0) return;
+
+    // The existing mission briefing consumes a legacy Mission object. Use the
+    // preserved PREP-mode handoff only when the built-in campaign is hydrated.
+    // Do not claim successful loading solely because a DataTable row exists.
+    Campaign* SingleCampaign = nullptr;
+    ListIter<Campaign> Iter = Campaign::GetAllCampaigns();
+    while (++Iter)
+    {
+        Campaign* Candidate = Iter.value();
+        if (Candidate && Candidate->GetCampaignId() == Campaign::SINGLE_MISSIONS)
+        {
+            SingleCampaign = Campaign::SelectCampaign(Candidate->GetName());
+            break;
+        }
+    }
+    if (!SingleCampaign)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Cannot start %d: Single Missions campaign not initialized"), MissionId);
+        return;
+    }
+    CampaignPtr = SingleCampaign;
+    if (CampaignPtr->GetMissionList().isEmpty()) CampaignPtr->Load();
+    if (!CampaignPtr->GetMissionInfo(MissionId))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] DT mission %d has no legacy MissionInfo; briefing bridge not ready"), MissionId);
+        return;
+    }
+    OnAcceptClicked();
+}
+void USingleMissionDlg::HandleAccept() { LaunchSelected(); }
+void USingleMissionDlg::HandleCancel() { OnBackPressed(); }
+void USingleMissionDlg::OnLaunchPressed() { LaunchSelected(); }
+void USingleMissionDlg::OnBackPressed()
+{
+    // The inherited OnCancelClicked only hides this widget and broadcasts a
+    // delegate. The main menu route must be invoked explicitly here.
+    if (manager)
+    {
+        manager->ShowMenuDlg();
+    }
+    else
+    {
+        // Fallback for an uninitialized menu manager.
+        OnCancelClicked();
+    }
+}
+void USingleMissionDlg::OnMission01Pressed() { SelectMissionAt(0); }
+void USingleMissionDlg::OnMission02Pressed() { SelectMissionAt(1); }
+void USingleMissionDlg::OnMission03Pressed() { SelectMissionAt(2); }
+void USingleMissionDlg::OnMission04Pressed() { SelectMissionAt(3); }
+void USingleMissionDlg::OnMission05Pressed() { SelectMissionAt(4); }
+void USingleMissionDlg::OnMission06Pressed() { SelectMissionAt(5); }
+void USingleMissionDlg::OnMission07Pressed() { SelectMissionAt(6); }
+void USingleMissionDlg::OnMission08Pressed() { SelectMissionAt(7); }
+void USingleMissionDlg::OnMission09Pressed() { SelectMissionAt(8); }
+void USingleMissionDlg::OnMission10Pressed() { SelectMissionAt(9); }

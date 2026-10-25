@@ -408,6 +408,22 @@ void UStarshatterGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collect
 
 	CutsceneDataTable = Assets->GetDataTable(TEXT("Data.CutsceneTable"), true);
 
+    // Dedicated authored single-mission table, separate from campaigns/cutscenes.
+    SingleMissionsDataTable = Assets->GetDataTable(TEXT("Data.SingleMissionTable"), false);
+    if (!SingleMissionsDataTable)
+    {
+        // Optional fixed asset fallback; recommended to configure asset registry binding.
+        SingleMissionsDataTable = LoadObject<UDataTable>(nullptr,
+            TEXT("/Game/GameData/DataTables/DT_SingleMissions.DT_SingleMissions"));
+    }
+    if (SingleMissionsDataTable && SingleMissionsDataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] DT_SingleMissions has incorrect row struct: %s"),
+            *GetNameSafe(SingleMissionsDataTable->GetRowStruct()));
+        SingleMissionsDataTable = nullptr;
+    }
+
+
 	UE_LOG(LogTemp, Log, TEXT("[GAMEDATA] DT Campaign=%s"),
 		*GetNameSafe(CampaignDataTable));
 
@@ -1473,14 +1489,22 @@ void UStarshatterGameDataSubsystem::SetActiveCampaign(const FS_Campaign& Campaig
 
 void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 {
-	if (bLoaded)
-		return;
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][00] LoadAll ENTER full=%d alreadyLoaded=%d GI=%s"),
+        bFull ? 1 : 0, bLoaded ? 1 : 0, *GetPathNameSafe(GetGameInstance()));
+    if (bLoaded)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][00] LoadAll SKIPPED: bLoaded already true. No single-mission ingestion will occur on this call."));
+        return;
+    }
 
-	bLoaded = true;
+    bLoaded = true;
 
-	CacheSSWInstance();
-	if (!SSWInstance)
-		return;
+    CacheSSWInstance();
+    if (!SSWInstance)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][00] LoadAll ABORTED: USSWGameInstance unavailable; bLoaded remains true."));
+        return;
+    }
 	
 	LoadContentBundle();
 
@@ -1492,6 +1516,11 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	
 	InitializeCampaignData();
 	ReadCampaignData();
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][01] LoadAll about to call LoadSingleMissions"));
+	LoadSingleMissions();
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][99] LoadAll returned from LoadSingleMissions: scenarios=%d table=%s rows=%d"),
+        SingleMissionScenarios.Num(), *GetPathNameSafe(SingleMissionsDataTable),
+        SingleMissionsDataTable ? SingleMissionsDataTable->GetRowNames().Num() : -1);
 	
 	ReadCombatRosterData();
 
@@ -1521,6 +1550,245 @@ void UStarshatterGameDataSubsystem::InitializeCampaignData() {
 		FileName.Append("campaign.def");
 		LoadCampaignData(TCHAR_TO_ANSI(*FileName), true);
 	}
+}
+
+// Load standalone missions independently from campaign scenario/cutscene arrays.
+// The catalog (Missions.def) supplies IDs and scripts; the numbered .def files
+// supply the complete authored mission models for previews and later execution.
+void UStarshatterGameDataSubsystem::LoadSingleMissions()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][02] LoadSingleMissions ENTER content=%s existingTable=%s"),
+        *FPaths::ProjectContentDir(), *GetPathNameSafe(SingleMissionsDataTable));
+    SingleMissionCatalog.Reset();
+    SingleMissionScenarios.Reset();
+
+    // Resolve the actual configured registry key on every load. This also
+    // handles cases where asset loading order left the pointer null during
+    // GameInstanceSubsystem::Initialize().
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UStarshatterAssetRegistrySubsystem* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][03] Registry subsystem=%s querying Data.SingleMissionTable"), *GetPathNameSafe(Assets));
+            UDataTable* RegistryTable = Assets->GetDataTable(TEXT("Data.SingleMissionTable"), false);
+            UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][04] Registry returned=%s"), *GetPathNameSafe(RegistryTable));
+            if (RegistryTable)
+            {
+                SingleMissionsDataTable = RegistryTable;
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[SingleMissions] Registry key Data.SingleMissionTable did not resolve a DataTable."));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[SMTRACE][03] AssetRegistry subsystem MISSING"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][03] GameInstance MISSING"));
+    }
+    if (!SingleMissionsDataTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][05] Registry miss; attempting fixed /Game/GameData/DataTables/DT_SingleMissions path"));
+        SingleMissionsDataTable = LoadObject<UDataTable>(nullptr,
+            TEXT("/Game/GameData/DataTables/DT_SingleMissions.DT_SingleMissions"));
+    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SingleMissions] Table=%s Struct=%s Expected=%s"),
+        *GetPathNameSafe(SingleMissionsDataTable),
+        SingleMissionsDataTable ? *GetPathNameSafe(SingleMissionsDataTable->GetRowStruct()) : TEXT("<null>"),
+        *GetPathNameSafe(FS_CampaignMission::StaticStruct()));
+
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][06] Table path=%s rowStruct=%s expected=%s initialRows=%d"),
+        *GetPathNameSafe(SingleMissionsDataTable),
+        SingleMissionsDataTable ? *GetPathNameSafe(SingleMissionsDataTable->GetRowStruct()) : TEXT("NULL"),
+        *GetPathNameSafe(FS_CampaignMission::StaticStruct()),
+        SingleMissionsDataTable ? SingleMissionsDataTable->GetRowNames().Num() : -1);
+
+    // The built-in mission data uses exactly the same table row as authored
+    // campaign/training mission scenarios: FS_CampaignMission.
+    if (!SingleMissionsDataTable ||
+        SingleMissionsDataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][FATAL] Cannot ingest: missing table or wrong row struct."));
+        UE_LOG(LogTemp, Error,
+            TEXT("[SingleMissions] DT_SingleMissions missing or wrong Row Structure. Select FS_CampaignMission (not FS_SingleMissionRow) in the DataTable asset."));
+        return;
+    }
+
+    const auto ReadRows = [this]()
+    {
+        SingleMissionCatalog.Reset();
+        SingleMissionScenarios.Reset();
+        TArray<FName> Names = SingleMissionsDataTable->GetRowNames();
+        Names.Sort([](const FName& A, const FName& B) { return A.LexicalLess(B); });
+        for (const FName& RowName : Names)
+        {
+            const FS_CampaignMission* Row = SingleMissionsDataTable->FindRow<FS_CampaignMission>(
+                RowName, TEXT("ReadSingleMissions"), false);
+            if (!Row || Row->Id <= 0) continue;
+            SingleMissionScenarios.Add(*Row);
+            FS_CampaignMissionList Entry;
+            Entry.Id = Row->Id;
+            Entry.Name = Row->MissionName;
+            Entry.Description = Row->Desc;
+            Entry.Sitrep = Row->Sitrep;
+            Entry.Objective = Row->Objective;
+            Entry.System = Row->MissionSystem;
+            Entry.Region = Row->MissionRegion;
+            Entry.Start = Row->StartTime;
+            Entry.Source = EMissionSource::Scripted;
+            Entry.Available = true;
+            Entry.Complete = false;
+            Entry.Status = EMISSIONSTATUS::Available;
+            SingleMissionCatalog.Add(Entry);
+        }
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][READ] ReadRows rawRows=%d accepted=%d"),
+            Names.Num(), SingleMissionScenarios.Num());
+        UE_LOG(LogTemp, Display,
+            TEXT("[SingleMissions] DataTable contains %d standard FS_CampaignMission rows (%s)"),
+            SingleMissionScenarios.Num(), *GetPathNameSafe(SingleMissionsDataTable));
+    };
+
+#if !WITH_EDITOR
+    // Cooked content is authoritative; never mutate a packaged DataTable.
+    ReadRows();
+    return;
+#else
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][07] WITH_EDITOR=1; attempting import from .def files. PIE=%d"), GIsPlayInEditorWorld ? 1 : 0);
+    // Only the dedicated single-player directory is accepted.
+    const FString MissionsDir = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("GameData/Missions"));
+    const FString CatalogFile = FPaths::Combine(MissionsDir, TEXT("Missions.def"));
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][08] catalog=%s exists=%d directory=%s exists=%d"),
+        *CatalogFile, FPaths::FileExists(CatalogFile) ? 1 : 0,
+        *MissionsDir, IFileManager::Get().DirectoryExists(*MissionsDir) ? 1 : 0);
+    if (!FPaths::FileExists(CatalogFile))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Catalog missing: %s"), *CatalogFile);
+        ReadRows();
+        return;
+    }
+
+    // Reuse the original grammar and all nested parsing functions.
+    // Isolate scratch state from the campaign and cutscene import pipelines.
+    const TArray<FS_CampaignMissionList> PreviousList = MissionListArray;
+    const TArray<FS_CampaignMission> PreviousScenarios = MissionArray;
+    const FS_CampaignMission PreviousCutscene = CutsceneData;
+    const bool bPreviousStandalone = bParsingStandaloneMission;
+
+    LoadMissionList(MissionsDir + TEXT("/"));
+    const TArray<FS_CampaignMissionList> ParsedList = MissionListArray;
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][09] Missions.def parsed catalog entries=%d"), ParsedList.Num());
+    for (const FS_CampaignMissionList& DebugEntry : ParsedList)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][10] Catalog ID=%d name='%s' script='%s'"),
+            DebugEntry.Id, *DebugEntry.Name, *DebugEntry.Script);
+    }
+    bParsingStandaloneMission = true;
+
+    TMap<FName, FS_CampaignMission> PendingRows;
+    TSet<int32> SeenIds;
+    for (const FS_CampaignMissionList& CatalogEntry : ParsedList)
+    {
+        if (CatalogEntry.Id <= 0 || SeenIds.Contains(CatalogEntry.Id) ||
+            CatalogEntry.Script.IsEmpty() ||
+            CatalogEntry.Script != FPaths::GetCleanFilename(CatalogEntry.Script) ||
+            !CatalogEntry.Script.EndsWith(TEXT(".def"), ESearchCase::IgnoreCase))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Bad catalog ID/script: %d / %s"),
+                CatalogEntry.Id, *CatalogEntry.Script);
+            continue;
+        }
+        SeenIds.Add(CatalogEntry.Id);
+        const FString ScenarioFile = FPaths::Combine(MissionsDir, CatalogEntry.Script);
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][11] Scenario ID=%d file=%s exists=%d"),
+            CatalogEntry.Id, *ScenarioFile, FPaths::FileExists(ScenarioFile) ? 1 : 0);
+        if (!FPaths::FileExists(ScenarioFile))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Missing scenario: %s"), *ScenarioFile);
+            continue;
+        }
+        const int32 BeforeCount = MissionArray.Num();
+        ParseMission(TCHAR_TO_ANSI(*ScenarioFile));
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][12] ParseMission result ID=%d missionArrayBefore=%d after=%d"),
+            CatalogEntry.Id, BeforeCount, MissionArray.Num());
+        if (MissionArray.Num() != BeforeCount + 1)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Parser did not create a mission for %s"), *ScenarioFile);
+            continue;
+        }
+
+        FS_CampaignMission Scenario = MissionArray.Last();
+        // Most original standalone .def scenarios have no 'id' field.
+        // Missions.def is authoritative for mission identity.
+        Scenario.Id = CatalogEntry.Id;
+        Scenario.RowName = FName(*FString::Printf(TEXT("Mission_%03d"), CatalogEntry.Id));
+        if (Scenario.MissionName.IsEmpty()) Scenario.MissionName = CatalogEntry.Name;
+        if (Scenario.Desc.IsEmpty()) Scenario.Desc = CatalogEntry.Description;
+        if (Scenario.Sitrep.IsEmpty()) Scenario.Sitrep = CatalogEntry.Sitrep;
+        if (Scenario.Objective.IsEmpty()) Scenario.Objective = CatalogEntry.Objective;
+        if (Scenario.MissionSystem.IsEmpty()) Scenario.MissionSystem = CatalogEntry.System;
+        if (Scenario.MissionRegion.IsEmpty()) Scenario.MissionRegion = CatalogEntry.Region;
+        if (Scenario.StartTime.IsEmpty()) Scenario.StartTime = CatalogEntry.Start;
+        Scenario.Source = EMissionSource::Scripted;
+        Scenario.DisplayType = EMissionDisplayType::PlayerMission;
+
+        UE_LOG(LogTemp, Display,
+            TEXT("[SingleMissions] Parsed %03d '%s': elements=%d events=%d"),
+            Scenario.Id, *Scenario.MissionName, Scenario.Element.Num(), Scenario.Event.Num());
+        PendingRows.Add(Scenario.RowName, MoveTemp(Scenario));
+    }
+
+    MissionListArray = PreviousList;
+    MissionArray = PreviousScenarios;
+    CutsceneData = PreviousCutscene;
+    bParsingStandaloneMission = bPreviousStandalone;
+
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][13] Import summary catalog=%d pending=%d existingTableRows=%d"),
+        ParsedList.Num(), PendingRows.Num(), SingleMissionsDataTable->GetRowNames().Num());
+    if (ParsedList.IsEmpty() || PendingRows.Num() != ParsedList.Num())
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("[SingleMissions] Import incomplete: %d/%d scenarios; existing DT kept."),
+            PendingRows.Num(), ParsedList.Num());
+        ReadRows();
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][14] COMMIT begin table=%s oldRows=%d"),
+        *GetPathNameSafe(SingleMissionsDataTable), SingleMissionsDataTable->GetRowNames().Num());
+    SingleMissionsDataTable->Modify();
+    SingleMissionsDataTable->EmptyTable();
+    for (const TPair<FName, FS_CampaignMission>& RowPair : PendingRows)
+    {
+        SingleMissionsDataTable->AddRow(RowPair.Key, RowPair.Value);
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][15] AddRow '%s' ID=%d tableRowsNow=%d"),
+            *RowPair.Key.ToString(), RowPair.Value.Id, SingleMissionsDataTable->GetRowNames().Num());
+    }
+    SingleMissionsDataTable->MarkPackageDirty();
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][16] COMMIT done tableRows=%d packageDirty=%d"),
+        SingleMissionsDataTable->GetRowNames().Num(),
+        SingleMissionsDataTable->GetOutermost()->IsDirty() ? 1 : 0);
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SingleMissions] Runtime table now has %d rows. Editor Play does not save this to the .uasset; save/reimport in a non-PIE editor workflow for persistence."),
+        SingleMissionsDataTable->GetRowNames().Num());
+    UE_LOG(LogTemp, Display,
+        TEXT("[SingleMissions] Imported %d rows into DT_SingleMissions (FS_CampaignMission). Save the DataTable asset to retain them."),
+        PendingRows.Num());
+    ReadRows();
+#endif
+}
+
+const FS_CampaignMission* UStarshatterGameDataSubsystem::FindSingleMissionScenario(int32 MissionId) const
+{
+    return SingleMissionScenarios.FindByPredicate([MissionId](const FS_CampaignMission& Scenario)
+    {
+        return Scenario.Id == MissionId;
+    });
 }
 
 void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
@@ -2496,6 +2764,7 @@ void UStarshatterGameDataSubsystem::LoadZones(
 void
 UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][CATALOG] LoadMissionList called path=%s"), *Path);
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadMissionList()"));
 	MissionListArray.Empty();
 
@@ -2970,6 +3239,10 @@ void UStarshatterGameDataSubsystem::LoadScriptedMission(FString Name)
 
 void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 {
+    if (bParsingStandaloneMission)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][PARSER] ParseMission standalone fn=%s"), fn ? ANSI_TO_TCHAR(fn) : TEXT("NULL"));
+    }
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseMission()"));
 
 	if (!fn || !*fn)
@@ -3213,8 +3486,14 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 
 	MissionArray.Add(NewMission);
 
-	CutsceneDataTable->AddRow(FName(NewMission.MissionName), NewMission);
-	CutsceneData = NewMission;
+	if (!bParsingStandaloneMission)
+	{
+		if (CutsceneDataTable)
+		{
+			CutsceneDataTable->AddRow(FName(NewMission.MissionName), NewMission);
+		}
+		CutsceneData = NewMission;
+	}
 }
 
 bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(

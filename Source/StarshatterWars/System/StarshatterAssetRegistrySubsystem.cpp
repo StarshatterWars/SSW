@@ -351,6 +351,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.SingleMissionTable
+    if (!Cache.Contains(TEXT("Data.SingleMissionTable")))
+    {
+        if (!Settings->SingleMissionDataTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->SingleMissionDataTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.SingleMissionTable"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log,
+                TEXT("[ASSETS] Bind Data.SingleMissionTable -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] SingleMissioTable is not set in Project Settings"));
+        }
+    }
 
     // ------------------------------------------------------------------
     // 3) Inject typed UI widget classes (do not overwrite explicit map entries)
@@ -608,6 +626,7 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+
     // UI.MenuScreenClass
     if (!Cache.Contains(TEXT("UI.QuitMenuClass")))
     {
@@ -623,6 +642,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] QuitMenuClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.MenuScreenClass
+    if (!Cache.Contains(TEXT("UI.SingleMissionClass")))
+    {
+        if (!Settings->SingleMissionScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->SingleMissionScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.SingleMissionClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.SingleMissionClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] SingleMissionClass is not set in Project Settings"));
         }
     }
 

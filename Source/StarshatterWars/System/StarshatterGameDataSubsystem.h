@@ -141,6 +141,8 @@ FORCEINLINE uint32 GetTypeHash(const FCombatGroupKey& Key)
     return Hash;
 }
 
+// DT_SingleMissions uses the standard FS_CampaignMission row structure from GameStructs.h.
+
 UCLASS()
 class STARSHATTERWARS_API UStarshatterGameDataSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
@@ -196,6 +198,11 @@ public:
         const FString& CampaignId);
 
     void LoadMissionList(FString Path);
+    void LoadSingleMissions();
+    UDataTable* GetSingleMissionsDataTable() const { return SingleMissionsDataTable; }
+    const TArray<FS_CampaignMissionList>& GetSingleMissionCatalog() const { return SingleMissionCatalog; }
+    const TArray<FS_CampaignMission>& GetSingleMissionScenarios() const { return SingleMissionScenarios; }
+    const FS_CampaignMission* FindSingleMissionScenario(int32 MissionId) const;
     void LoadTemplateList(FString Path);
 
     void LoadCutscene(FString Name);
@@ -505,6 +512,12 @@ protected:
     TArray<FS_CampaignMissionList> MissionListArray;
     TArray<FS_CampaignTemplateList> TemplateListArray;
     TArray<FS_CampaignMission> MissionArray;
+    // Standalone mission data is never stored in the campaign or cutscene arrays.
+    UPROPERTY(Transient)
+    TArray<FS_CampaignMissionList> SingleMissionCatalog;
+    UPROPERTY(Transient)
+    TArray<FS_CampaignMission> SingleMissionScenarios;
+    bool bParsingStandaloneMission = false;
     TArray<FS_MissionElement> MissionElementArray;
     TArray<FS_MissionEvent> MissionEventArray;
     TArray<FS_MissionLoadout> MissionLoadoutArray;
@@ -544,6 +557,9 @@ protected:
 
     UPROPERTY(Transient)
     UDataTable* CutsceneDataTable = nullptr;
+
+    UPROPERTY(Transient)
+    UDataTable* SingleMissionsDataTable = nullptr;
 
 	FS_Campaign ActiveCampaign;
 

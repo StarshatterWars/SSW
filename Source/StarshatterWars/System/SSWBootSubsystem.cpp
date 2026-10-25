@@ -236,6 +236,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.GalaxyMapTable"),
         TEXT("Data.SystemMapTable"),
         TEXT("Data.CutsceneTable"),
+        TEXT("Data.SingleMissionTable"),
 
         TEXT("Data.OrderOfBattleTable"),
         TEXT("Data.MedalsTable"),
@@ -261,6 +262,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.MissionScreenClass"),
         TEXT("UI.CampaignSceneClass"),
         TEXT("UI.WeaponsScreenClass"),
+        TEXT("UI.SingleMissionClass"),
         TEXT("UI.EngineeringScreenClass"),
         TEXT("UI.NavigationScreenClass"),
         TEXT("UI.ObjectivesScreenClass"),
