@@ -27,13 +27,14 @@
 #include "FormatUtil.h"
 #include "MenuScreen.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "MissionUIStyle.h"
 
 namespace SingleMissionColors
 {
     const FLinearColor Backdrop(0.012f, 0.025f, 0.045f, 1.0f);
     const FLinearColor Panel(0.025f, 0.055f, 0.083f, 0.97f);
-    const FLinearColor Row(0.052f, 0.098f, 0.138f, 1.0f);
-    const FLinearColor Selected(0.085f, 0.290f, 0.405f, 1.0f);
+    const FLinearColor Row(0.68f, 0.80f, 0.85f, 1.0f);
+    const FLinearColor Selected(0.23f, 0.73f, 0.88f, 1.0f);
     const FLinearColor Accent(0.16f, 0.77f, 0.91f, 1.0f);
     const FLinearColor Primary(0.92f, 0.97f, 1.0f, 1.0f);
     const FLinearColor Muted(0.61f, 0.72f, 0.81f, 1.0f);
@@ -56,7 +57,10 @@ UTextBlock* USingleMissionDlg::MakeLabel(const FString& Value, int32 Size,
 {
     UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
     Label->SetText(FText::FromString(Value));
-    Label->SetFont(FCoreStyle::GetDefaultFontStyle(Size >= 22 ? "Bold" : "Regular", Size));
+    // Match Campaign Selection's Serpentine header styling for titles.
+    Label->SetFont(Size >= 22
+        ? MissionUIStyle::GetHeaderFont(Size)
+        : FCoreStyle::GetDefaultFontStyle("Regular", Size));
     Label->SetColorAndOpacity(FSlateColor(Tint));
     Label->SetAutoWrapText(bWrap);
     return Label;
@@ -91,7 +95,7 @@ UButton* USingleMissionDlg::MakeActionButton(const FString& Label, bool bEnabled
         }
     }
     Button->SetIsEnabled(bEnabled);
-    UTextBlock* Text = MakeLabel(Label, bRosterButton ? 17 : 15, SingleMissionColors::Primary);
+    UTextBlock* Text = MakeLabel(Label, bRosterButton ? 17 : 15, FLinearColor::Black);
     if (UButtonSlot* ButtonContent = Cast<UButtonSlot>(Button->AddChild(Text)))
     {
         ButtonContent->SetPadding(FMargin(bRosterButton ? 16.f : 12.f, bRosterButton ? 11.f : 9.f));
@@ -129,7 +133,11 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     UVerticalBox* Heading = WidgetTree->ConstructWidget<UVerticalBox>();
     Full->AddChildToVerticalBox(Heading)->SetPadding(FMargin(5.f, 4.f, 5.f, 18.f));
     Heading->AddChildToVerticalBox(MakeLabel(TEXT("STARSHATTER WARS  /  TACTICAL OPERATIONS  /  SINGLE PLAYER"), 15, SingleMissionColors::Accent));
-    Heading->AddChildToVerticalBox(MakeLabel(TEXT("SINGLE MISSIONS"), 38, SingleMissionColors::Primary))->SetPadding(FMargin(0.f, 5.f));
+    // Dark-grey title band, shared visually with the Campaign Selection header.
+    UBorder* SingleTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
+    SingleTitleBand->SetPadding(FMargin(18.f, 11.f, 18.f, 11.f));
+    SingleTitleBand->SetContent(MakeLabel(TEXT("SINGLE MISSIONS"), 38, SingleMissionColors::Primary));
+    Heading->AddChildToVerticalBox(SingleTitleBand)->SetPadding(FMargin(0.f, 7.f, 0.f, 7.f));
     Heading->AddChildToVerticalBox(MakeLabel(TEXT("INDEPENDENT SORTIES  /  NO CAMPAIGN PROGRESSION  /  OFFLINE"), 14, SingleMissionColors::Muted));
     UBorder* HeaderRule = MakePanel(SingleMissionColors::Accent);
     HeaderRule->SetPadding(FMargin(0.f));
@@ -176,7 +184,10 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     MissionDetailsScroll->AddChild(RightContent);
     RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION INTELLIGENCE  /  AUTHORED SCENARIO"), 18, SingleMissionColors::Accent));
     MissionTitle = MakeLabel(TEXT("SELECT A MISSION"), 26, SingleMissionColors::Primary, true);
-    RightContent->AddChildToVerticalBox(MissionTitle)->SetPadding(FMargin(0.f, 14.f, 0.f, 14.f));
+    UBorder* MissionTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
+    MissionTitleBand->SetPadding(FMargin(14.f, 10.f, 14.f, 10.f));
+    MissionTitleBand->SetContent(MissionTitle);
+    RightContent->AddChildToVerticalBox(MissionTitleBand)->SetPadding(FMargin(0.f, 14.f, 0.f, 14.f));
     MissionRole = MakeLabel(TEXT(""), 15, SingleMissionColors::Accent);
     MissionLocation = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
     MissionTime = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
