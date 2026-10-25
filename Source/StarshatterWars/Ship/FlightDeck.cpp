@@ -1,4 +1,4 @@
-﻿/*  Project STARSHATTER WARS
+/*  Project STARSHATTER WARS
 	Fractal Dev Studios
 	Copyright © 2025-2026. All Rights Reserved.
 
@@ -51,6 +51,28 @@ DEFINE_LOG_CATEGORY_STATIC(LogFlightDeck, Log, All);
 
 static USound* tire_sound = 0;
 static USound* catapult_sound = 0;
+
+
+namespace
+{
+	constexpr double kLaunchDeckShiftLeftUnits = 15.0; // 40
+	constexpr double kLaunchDeckShiftDownUnits = 68.0; // 50
+
+	FVector GetLaunchDeckPresentationOffset(const FlightDeck* Deck, const Ship* Carrier)
+	{
+		if (!Deck || !Carrier || !Deck->IsLaunchDeck())
+			return FVector::ZeroVector;
+
+		const FVector Right = Carrier->GetCam().vrt().GetSafeNormal();
+		const FVector Up    = Carrier->GetCam().vup().GetSafeNormal();
+
+		if (Right.IsNearlyZero() || Up.IsNearlyZero())
+			return FVector::ZeroVector;
+
+		return (-Right * kLaunchDeckShiftLeftUnits) +
+		       (-Up    * kLaunchDeckShiftDownUnits);
+	}
+}
 
 // +======================================================================+
 
@@ -362,8 +384,9 @@ FlightDeck::ExecFrame(double Seconds)
 
 			if (SlotShip)
 			{
+				const FVector PresentationOffset = GetLaunchDeckPresentationOffset(this, carrier);
 				SlotShip->CloneCam(C);
-				SlotShip->MoveTo(Slot->spot_loc);
+				SlotShip->MoveTo(Slot->spot_loc + PresentationOffset);
 				SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 				SlotShip->SetVelocity(carrier->GetVelocity());
 			}
@@ -383,8 +406,9 @@ FlightDeck::ExecFrame(double Seconds)
 
 				if (SlotShip)
 				{
+					const FVector PresentationOffset = GetLaunchDeckPresentationOffset(this, carrier);
 					SlotShip->CloneCam(C);
-					SlotShip->MoveTo(Slot->spot_loc);
+					SlotShip->MoveTo(Slot->spot_loc + PresentationOffset);
 					SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					SlotShip->SetFlightPhase(EOPSMode::ALERT);
 				}
@@ -434,6 +458,9 @@ FlightDeck::ExecFrame(double Seconds)
 					Camera C;
 					C.Clone(carrier->GetCam());
 					C.Yaw(azimuth);
+					const FVector PresentationOffset = GetLaunchDeckPresentationOffset(this, carrier);
+					const FVector ShiftedSpotLoc = Slot->spot_loc + PresentationOffset;
+					const FVector ShiftedStartPoint = start_point + PresentationOffset;
 
 					// rotate:
 					if (Slot->time > 3 * Ct4)
@@ -442,7 +469,7 @@ FlightDeck::ExecFrame(double Seconds)
 
 						C.Yaw(Dyaw * Step);
 						SlotShip->CloneCam(C);
-						SlotShip->MoveTo(Slot->spot_loc);
+						SlotShip->MoveTo(ShiftedSpotLoc);
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())
@@ -471,7 +498,7 @@ FlightDeck::ExecFrame(double Seconds)
 						const double Step = (Slot->time - 2 * Ct4) / Ct4;
 
 						const FVector Loc =
-							start_point + (Slot->spot_loc - start_point) * (float)Step;
+							ShiftedStartPoint + (ShiftedSpotLoc - ShiftedStartPoint) * (float)Step;
 
 						C.Yaw(Dyaw);
 						SlotShip->CloneCam(C);
@@ -505,7 +532,7 @@ FlightDeck::ExecFrame(double Seconds)
 
 						C.Yaw(Dyaw * Step);
 						SlotShip->CloneCam(C);
-						SlotShip->MoveTo(start_point);
+						SlotShip->MoveTo(ShiftedStartPoint);
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())
@@ -533,7 +560,7 @@ FlightDeck::ExecFrame(double Seconds)
 					{
 						SlotShip->SetThrottle(100);
 						SlotShip->CloneCam(C);
-						SlotShip->MoveTo(start_point);
+						SlotShip->MoveTo(ShiftedStartPoint);
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					}
 
@@ -1009,8 +1036,9 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 		WorkCam.Clone(carrier->GetCam());
 		WorkCam.Yaw(azimuth);
 
+		const FVector PresentationOffset = GetLaunchDeckPresentationOffset(this, carrier);
 		s->CloneCam(WorkCam);
-		s->MoveTo(slots[outIndex].spot_loc);
+		s->MoveTo(slots[outIndex].spot_loc + PresentationOffset);
 
 		if (LandingGear* Gear = s->GetGear())
 		{
