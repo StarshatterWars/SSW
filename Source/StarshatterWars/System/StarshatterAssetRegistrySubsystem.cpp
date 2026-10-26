@@ -720,6 +720,42 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.CustomMissionScreenClass
+    if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
+    {
+        if (!Settings->CustomMissionScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CustomMissionScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CustomMissionScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CustomMissionScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CustomMissionScreenClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.CampaignMissionScreenClass
+    if (!Cache.Contains(TEXT("UI.CampaignMissionScreenClass")))
+    {
+        if (!Settings->CampaignMissionScreenClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CampaignMissionScreenClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CampaignMissionScreenClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CampaignMissionScreenClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CampaignMissionScreenClass is not set in Project Settings"));
+        }
+    }
+
     // UI.EngineeringScreenClass
     if (!Cache.Contains(TEXT("UI.EngineeringScreenClass")))
     {

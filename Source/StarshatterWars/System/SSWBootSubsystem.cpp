@@ -265,6 +265,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.CampaignSceneClass"),
         TEXT("UI.WeaponsScreenClass"),
         TEXT("UI.SingleMissionClass"),
+        TEXT("UI.CustomMissionScreenClass"),
+        TEXT("UI.CampaignMissionScreenClass"),
         TEXT("UI.MissionEditorClass"),
         TEXT("UI.MultiplayerMissionClass"),
         TEXT("UI.EngineeringScreenClass"),

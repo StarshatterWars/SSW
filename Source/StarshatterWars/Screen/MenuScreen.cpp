@@ -12,6 +12,8 @@
 #include "PlayerDlg.h"
 #include "AwardShowDlg.h"
 #include "MissionSelectDlg.h"
+#include "CustomMissionDlg.h"
+#include "CampaignMissionDlg.h"
 #include "CmdMissionsDlg.h"
 #include "CampaignSelectDlg.h"
 #include "MissionEditorDlg.h"
@@ -211,6 +213,8 @@ void UMenuScreen::HideAll()
     HideDialog(AwardDlg);
 
     HideDialog(MissionSelectDlg);
+    HideDialog(CustomMissionDlg);
+    HideDialog(CampaignMissionDlg);
     HideDialog(CmdMissionsDlg);
     HideDialog(CmdDlg);
     HideDialog(CmpnScreen);
@@ -287,6 +291,8 @@ void UMenuScreen::TearDown()
 
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionBriefingDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionSelectDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(CustomMissionDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(CampaignMissionDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmpSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdMissionsDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdDlg));
@@ -621,6 +627,18 @@ void UMenuScreen::HideCmpnScreen()
     HideDialog(CmpnScreen);
 }
 
+void UMenuScreen::ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository)
+{
+    if (!InMission || !InRepository)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] Standalone briefing requires a mission and repository"));
+        return;
+    }
+    PendingStandaloneMission = InMission;
+    PendingStandaloneRepository = InRepository;
+    ShowMissionDlg();
+}
+
 void UMenuScreen::ShowMissionDlg()
 {
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: BEGIN"));
@@ -685,6 +703,12 @@ void UMenuScreen::ShowMissionDlg()
     MissionBriefingDlg->Show();
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ShowMsnDlg"));
+    if (PendingStandaloneMission)
+        MissionBriefingDlg->SetStandaloneMission(PendingStandaloneMission, PendingStandaloneRepository);
+    else
+        MissionBriefingDlg->ClearStandaloneMission();
+    PendingStandaloneMission = nullptr;
+    PendingStandaloneRepository = nullptr;
     MissionBriefingDlg->ShowMsnDlg();
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: END InViewport=%d Vis=%d"),
@@ -694,6 +718,12 @@ void UMenuScreen::ShowMissionDlg()
 
 void UMenuScreen::ShowMissionSelectDlg()
 {
+    if (bReturnToCustomMissionsAfterEditor)
+    {
+        bReturnToCustomMissionsAfterEditor = false;
+        ShowCustomMissionDlg();
+        return;
+    }
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionSelectDlg: BEGIN"));
 
     if (!MsnSelectDlgClass)
@@ -742,6 +772,56 @@ void UMenuScreen::ShowMissionSelectDlg()
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionSelectDlg: SHOWN InViewport=%d Vis=%d"),
         MissionSelectDlg->IsInViewport() ? 1 : 0,
         (int32)MissionSelectDlg->GetVisibility());
+}
+
+void UMenuScreen::ShowCampaignMissionDlg()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    if (!CampaignMissionDlg)
+    {
+        CampaignMissionDlg = CreateWidget<UCampaignMissionDlg>(PC, UCampaignMissionDlg::StaticClass());
+        if (!CampaignMissionDlg) return;
+    }
+    HideAll();
+    CampaignMissionDlg->SetMenuManager(this);
+    CampaignMissionDlg->InitializeDlg(this);
+    if (CampaignMissionDlg->IsInViewport()) CampaignMissionDlg->RemoveFromParent();
+    CampaignMissionDlg->AddToViewport(300);
+    CampaignMissionDlg->SetIsEnabled(true);
+    CampaignMissionDlg->SetIsFocusable(true);
+    CampaignMissionDlg->SetVisibility(ESlateVisibility::Visible);
+    CampaignMissionDlg->SetDialogInputEnabled(true);
+    CurrentDialog = CampaignMissionDlg;
+    ApplyUIFocus(PC, CampaignMissionDlg);
+    CampaignMissionDlg->Show();
+}
+
+void UMenuScreen::ShowCustomMissionDlg()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+
+    // Native class requires no new Blueprint asset. A future WBP subclass can
+    // replace it without altering the routing code.
+    if (!CustomMissionDlg)
+    {
+        CustomMissionDlg = CreateWidget<UCustomMissionDlg>(PC, UCustomMissionDlg::StaticClass());
+        if (!CustomMissionDlg) return;
+    }
+
+    HideAll();
+    CustomMissionDlg->SetMenuManager(this);
+    CustomMissionDlg->InitializeDlg(this);
+    if (CustomMissionDlg->IsInViewport()) CustomMissionDlg->RemoveFromParent();
+    CustomMissionDlg->AddToViewport(300);
+    CustomMissionDlg->SetIsEnabled(true);
+    CustomMissionDlg->SetIsFocusable(true);
+    CustomMissionDlg->SetVisibility(ESlateVisibility::Visible);
+    CustomMissionDlg->SetDialogInputEnabled(true);
+    CurrentDialog = CustomMissionDlg;
+    ApplyUIFocus(PC, CustomMissionDlg);
+    CustomMissionDlg->Show();
 }
 
 void UMenuScreen::ShowMissionEditorDlg()
@@ -1166,6 +1246,7 @@ void UMenuScreen::HandleCancel()
 }
 void UMenuScreen::EditMission(Mission* Model, MissionInfo* Info)
 {
+    bReturnToCustomMissionsAfterEditor = (CurrentDialog.Get() == CustomMissionDlg.Get());
     EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
     if (!MsnEditDlg || !Model) return;
     MsnEditDlg->InitializeMissionEditor(this);

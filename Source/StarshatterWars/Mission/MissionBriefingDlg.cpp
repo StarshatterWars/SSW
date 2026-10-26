@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -327,6 +327,9 @@ void UMissionBriefingDlg::NativeDestruct()
 
 void UMissionBriefingDlg::ExecFrame()
 {
+    if (bStandaloneMission)
+        return; // No story campaign score, unit or T+ for standalone missions.
+
     if (!CampaignPtr)
         CampaignPtr = Campaign::GetCampaign();
 
@@ -507,30 +510,46 @@ void UMissionBriefingDlg::InitializeSubPanels()
     }
 }
 
+void UMissionBriefingDlg::SetStandaloneMission(Mission* InMission, Campaign* InRepository)
+{
+    bStandaloneMission = (InMission != nullptr);
+    StandaloneRepository = bStandaloneMission ? InRepository : nullptr;
+    MissionPtr = InMission;
+    CampaignPtr = StandaloneRepository;
+    InfoPtr = nullptr;
+}
+
+void UMissionBriefingDlg::ClearStandaloneMission()
+{
+    bStandaloneMission = false;
+    StandaloneRepository = nullptr;
+    MissionPtr = nullptr;
+    CampaignPtr = nullptr;
+    InfoPtr = nullptr;
+}
+
 void UMissionBriefingDlg::ShowMsnDlg()
 {
     CloseEmptySectorPreview();
-    // Always reacquire the current campaign.
-    // The dialog can be reused across campaign switches.
-    CampaignPtr = Campaign::GetCampaign();
-    MissionPtr = nullptr;
     PackageIndex = -1;
-
-    int32 MissionId = -1;
-
-    if (CampaignPtr)
+    if (bStandaloneMission)
     {
-        MissionId = CampaignPtr->GetMissionId();
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[MissionBriefingDlg] ShowMsnDlg: Campaign=%p MissionId=%d"),
-            CampaignPtr,
-            MissionId);
-
-        if (MissionId > 0)
-        {
+        // The caller owns the legacy Mission; no story campaign selection or
+        // story campaign mission state is changed here.
+        CampaignPtr = StandaloneRepository;
+        UE_LOG(LogTemp, Log, TEXT("[MissionBriefingDlg] Standalone Mission=%p Repository=%p"),
+            MissionPtr, CampaignPtr);
+    }
+    else
+    {
+        // Preserve the original campaign-driven briefing behavior.
+        CampaignPtr = Campaign::GetCampaign();
+        MissionPtr = nullptr;
+        const int32 MissionId = CampaignPtr ? CampaignPtr->GetMissionId() : -1;
+        if (CampaignPtr && MissionId > 0)
             MissionPtr = CampaignPtr->GetMission(MissionId);
-        }
+        UE_LOG(LogTemp, Warning,
+            TEXT("[MissionBriefingDlg] Campaign=%p MissionId=%d"), CampaignPtr, MissionId);
     }
 
     UE_LOG(LogTemp, Warning,
@@ -560,7 +579,7 @@ void UMissionBriefingDlg::ShowMsnDlg()
             MissionPtr,
             CampaignPtr);
 
-        if (!bIsScripted)
+        if (!bIsScripted && !bStandaloneMission)
         {
             const bool bNeedsSitrep =
                 SitStr.IsEmpty() ||
@@ -2323,6 +2342,13 @@ void UMissionBriefingDlg::OnCommit()
 }
 void UMissionBriefingDlg::OnCancel()
 {
+    if (bStandaloneMission)
+    {
+        ClearStandaloneMission();
+        if (manager) manager->ShowMenuDlg();
+        else Hide();
+        return;
+    }
     if (manager) {
         manager->ShowOperationsDlg();
     }

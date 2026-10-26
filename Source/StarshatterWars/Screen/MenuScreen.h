@@ -18,6 +18,8 @@ class UPlayerDlg;
 class UAwardShowDlg;
 
 class UMissionSelectDlg;
+class UCustomMissionDlg;
+class UCampaignMissionDlg;
 class UCampaignSelectDlg;
 class UCmdMissionsDlg;
 class UCmdDlg;
@@ -26,6 +28,7 @@ class UMissionBriefingDlg;
 
 class UMissionEditorDlg;
 class Mission;
+class Campaign;
 class MissionInfo;
 class MissionElement;
 class MissionEvent;
@@ -77,6 +80,8 @@ public:
     void ShowMenuDlg();
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg();
+    void ShowCustomMissionDlg();
+    void ShowCampaignMissionDlg();
     void ShowMissionEditorDlg();
     void EditMission(Mission* Model, MissionInfo* Info);
 
@@ -90,6 +95,7 @@ public:
     void HideCmpnScreen();
 
     void ShowMissionDlg();
+    void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
 
     void ShowMsnElemDlg();
     void EditMissionElement(Mission* Model, MissionElement* Element);
@@ -275,6 +281,11 @@ protected:
     UPROPERTY()
     TObjectPtr<UMissionSelectDlg> MissionSelectDlg;
 
+    UPROPERTY(Transient)
+    TObjectPtr<UCustomMissionDlg> CustomMissionDlg;
+    UPROPERTY(Transient) TObjectPtr<UCampaignMissionDlg> CampaignMissionDlg;
+    bool bReturnToCustomMissionsAfterEditor = false;
+
     UPROPERTY()
     TObjectPtr<UMissionBriefingDlg> MissionBriefingDlg;
 
@@ -325,4 +336,6 @@ protected:
     bool bExitLatch = false;
     bool bShowMissionsRequested = false;
     bool bRequestVideoChange = false;
+    Mission* PendingStandaloneMission = nullptr;
+    Campaign* PendingStandaloneRepository = nullptr;
 };

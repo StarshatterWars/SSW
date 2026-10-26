@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
@@ -72,6 +72,10 @@ public:
 
     void SetCampaign(Campaign* InCampaign) { CampaignPtr = InCampaign; }
     void SetMission(Mission* InMission) { MissionPtr = InMission; }
+    // Standalone missions are supplied directly, without modifying Campaign::GetCampaign().
+    void SetStandaloneMission(Mission* InMission, Campaign* InRepository);
+    void ClearStandaloneMission();
+    bool IsStandaloneMission() const { return bStandaloneMission; }
 
     // Menu manager hookup (matches your existing pattern)
     virtual void SetMenuManager(UMenuScreen* InManager);
@@ -436,6 +440,8 @@ protected:
     Campaign* CampaignPtr = nullptr;
     Mission* MissionPtr = nullptr;
     MissionInfo* InfoPtr = nullptr;
+    bool bStandaloneMission = false;
+    Campaign* StandaloneRepository = nullptr;
     int32 PackageIndex = -1;
 
 private:

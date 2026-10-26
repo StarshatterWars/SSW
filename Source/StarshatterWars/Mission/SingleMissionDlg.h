@@ -24,6 +24,8 @@ public:
     virtual void Show() override;
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
+    virtual bool IsCustomMissionView() const { return false; }
+    virtual bool IsCampaignMissionView() const { return false; }
 protected:
     virtual void NativeConstruct() override;
     void BuildSingleMissionScreen();
@@ -42,6 +44,9 @@ protected:
     UFUNCTION() void OnCustomDeleteConfirmed();
     UFUNCTION() void OnCustomDeleteCanceled();
     UFUNCTION() void OnBackPressed();
+    UFUNCTION() void OnCampaignTabPressed();
+    UFUNCTION() void OnSingleTabPressed();
+    UFUNCTION() void OnCustomTabPressed();
     UFUNCTION() void OnMission01Pressed();
     UFUNCTION() void OnMission02Pressed();
     UFUNCTION() void OnMission03Pressed();
@@ -69,6 +74,7 @@ protected:
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
     TArray<MissionInfo*> CustomMissionInfos;
+    TArray<MissionInfo*> CampaignMissionInfos;
     Campaign* CustomCampaign = nullptr; // Owned by legacy Campaign registry.
     int32 PendingCustomDeleteId = INDEX_NONE;
     int32 ChosenIndex = INDEX_NONE;
