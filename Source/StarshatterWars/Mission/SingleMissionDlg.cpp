@@ -400,7 +400,10 @@ void USingleMissionDlg::LaunchSelected()
     {
         if (CustomCampaign)
         {
-            Campaign::SelectCampaign(CustomCampaign->GetName());
+            // CustomCampaign was resolved from Campaign::GetAllCampaigns() during roster refresh.
+    // Do not perform a redundant name-based lookup: it can dereference invalid
+    // legacy ANSI name storage inside Campaign::SelectCampaign().
+    CampaignPtr = CustomCampaign;
             CampaignPtr = CustomCampaign;
             OnAcceptClicked();
         }
@@ -481,7 +484,10 @@ void USingleMissionDlg::OnCustomMissionChosen()
 void USingleMissionDlg::OnCreateMission()
 {
     if (!manager || !CustomCampaign) return;
-    Campaign::SelectCampaign(CustomCampaign->GetName());
+    // CustomCampaign was resolved from Campaign::GetAllCampaigns() during roster refresh.
+    // Do not perform a redundant name-based lookup: it can dereference invalid
+    // legacy ANSI name storage inside Campaign::SelectCampaign().
+    CampaignPtr = CustomCampaign;
     MissionInfo* Info = CustomCampaign->CreateNewMission();
     if (!Info || !Info->mission) return;
     manager->EditMission(Info->mission, Info);
@@ -492,7 +498,10 @@ void USingleMissionDlg::OnEditMission()
     if (!manager || !CustomCampaign || !CustomMissionInfos.IsValidIndex(ChosenIndex)) return;
     MissionInfo* Info = CustomMissionInfos[ChosenIndex];
     if (!Info) return; // Built-in missions are read-only.
-    Campaign::SelectCampaign(CustomCampaign->GetName());
+    // CustomCampaign was resolved from Campaign::GetAllCampaigns() during roster refresh.
+    // Do not perform a redundant name-based lookup: it can dereference invalid
+    // legacy ANSI name storage inside Campaign::SelectCampaign().
+    CampaignPtr = CustomCampaign;
     Mission* Model = CustomCampaign->GetMission(Info->id);
     if (!Model) return;
     manager->EditMission(Model, Info);
