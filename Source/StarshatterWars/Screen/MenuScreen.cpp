@@ -75,6 +75,19 @@ void UMenuScreen::Initialize(UGameInstance* InGI)
     if (!CmpnScreenClass)
         CmpnScreenClass = Assets->GetWidgetClass(TEXT("UI.CampaignScreenClass"), true);
 
+    // Mission Editor is supplied by WBP_MissionEditorScreen, derived from UMissionEditorDlg.
+    // Prefer the registry entry rather than an old Blueprint default.
+    if (TSubclassOf<UMissionEditorDlg> RegisteredEditor =
+            ResolveWidgetOrLog<UMissionEditorDlg>(Assets, TEXT("UI.MissionEditorClass")))
+    {
+        if (MsnEditDlg && MsnEditDlg->GetClass() != RegisteredEditor.Get())
+        {
+            MsnEditDlg->RemoveFromParent();
+            MsnEditDlg = nullptr;
+        }
+        MsnEditDlgClass = RegisteredEditor;
+    }
+
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] Initialize: MenuDlgClass=%s Options=%s FirstTime=%s Exit=%s CmpLoad=%s CmpnScreen=%s"),
         *GetNameSafe(MenuDlgClass.Get()),
         *GetNameSafe(OptionsScreenClass.Get()),
@@ -733,10 +746,38 @@ void UMenuScreen::ShowMissionSelectDlg()
 
 void UMenuScreen::ShowMissionEditorDlg()
 {
-    HideAll();
+    // Single Missions is displayed by a separate menu host. Give the editor a
+    // higher viewport layer so its transparent parent cannot consume clicks.
+    constexpr int32 MissionEditorZOrder = 2000;
+
+    if (!MsnEditDlgClass)
+    {
+        if (UGameInstance* GI = GetGameInstance())
+        {
+            Initialize(GI);
+        }
+    }
+
     EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
-    ShowDialog(MsnEditDlg, true);
-    if (MsnEditDlg) MsnEditDlg->Show();
+    if (!MsnEditDlg)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionEditor] Cannot open: UI.MissionEditorClass is unresolved or widget creation failed."));
+        return;
+    }
+
+    HideAll();
+    MsnEditDlg->SetMenuManager(this);
+    ShowDialog(MsnEditDlg, MissionEditorZOrder);
+    MsnEditDlg->SetIsEnabled(true);
+    MsnEditDlg->SetIsFocusable(true);
+    MsnEditDlg->SetDialogInputEnabled(true);
+    MsnEditDlg->Show();
+
+    // Focus after Show() has populated its editable UMG controls.
+    ApplyUIFocus(GetOwningPlayer(), MsnEditDlg);
+    UE_LOG(LogTemp, Display, TEXT("[MissionEditor] Shown: %s Z=%d enabled=%d visibility=%d"),
+        *GetNameSafe(MsnEditDlg), MissionEditorZOrder,
+        MsnEditDlg->GetIsEnabled() ? 1 : 0, (int32)MsnEditDlg->GetVisibility());
 }
 
 void UMenuScreen::ShowMsnElemDlg()
@@ -745,12 +786,12 @@ void UMenuScreen::ShowMsnElemDlg()
     if (!MsnElemDlg) return;
 
     if (MsnEditDlg && MsnEditDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditDlg, false);
+        ShowDialog(MsnEditDlg, 2000);
 
     if (MsnEditNavDlg && MsnEditNavDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditNavDlg, false);
+        ShowDialog(MsnEditNavDlg, 2100);
 
-    ShowDialog(MsnElemDlg, true);
+    ShowDialog(MsnElemDlg, 2200);
 }
 
 void UMenuScreen::HideMsnElemDlg()
@@ -758,10 +799,10 @@ void UMenuScreen::HideMsnElemDlg()
     HideDialog(MsnElemDlg);
 
     if (MsnEditDlg && MsnEditDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditDlg, true);
+        ShowDialog(MsnEditDlg, 2000);
 
     if (MsnEditNavDlg && MsnEditNavDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditNavDlg, true);
+        ShowDialog(MsnEditNavDlg, 2100);
 }
 
 void UMenuScreen::ShowMissionEventDlg()
@@ -770,12 +811,12 @@ void UMenuScreen::ShowMissionEventDlg()
     if (!MsnEventDlg) return;
 
     if (MsnEditDlg && MsnEditDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditDlg, false);
+        ShowDialog(MsnEditDlg, 2000);
 
     if (MsnEditNavDlg && MsnEditNavDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditNavDlg, false);
+        ShowDialog(MsnEditNavDlg, 2100);
 
-    ShowDialog(MsnEventDlg, true);
+    ShowDialog(MsnEventDlg, 2200);
 }
 
 void UMenuScreen::HideMsnEventDlg()
@@ -783,10 +824,10 @@ void UMenuScreen::HideMsnEventDlg()
     HideDialog(MsnEventDlg);
 
     if (MsnEditDlg && MsnEditDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditDlg, true);
+        ShowDialog(MsnEditDlg, 2000);
 
     if (MsnEditNavDlg && MsnEditNavDlg->GetVisibility() == ESlateVisibility::Visible)
-        ShowDialog(MsnEditNavDlg, true);
+        ShowDialog(MsnEditNavDlg, 2100);
 }
 
 void UMenuScreen::ShowNavDlg()
@@ -797,7 +838,7 @@ void UMenuScreen::ShowNavDlg()
     if (MsnEditNavDlg->GetVisibility() != ESlateVisibility::Visible)
     {
         HideAll();
-        ShowDialog(MsnEditNavDlg, true);
+        ShowDialog(MsnEditNavDlg, 2100);
     }
 }
 

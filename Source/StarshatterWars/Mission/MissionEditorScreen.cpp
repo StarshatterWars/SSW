@@ -19,6 +19,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "MissionUIStyle.h"
+#include "Styling/SlateTypes.h"
 
 UMissionEditorScreen::UMissionEditorScreen(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -118,12 +119,39 @@ void UMissionEditorScreen::BuildNativeLayout()
         Parent->AddChildToVerticalBox(Label(Name, 14))->SetPadding(FMargin(0.f, 4.f, 0.f, 3.f));
         Output = WidgetTree->ConstructWidget<UComboBoxString>();
         Output->SetIsEnabled(true);
-        // Taller compact selectors with a more generous drop-down list.
         Output->SetMaxListHeight(360.f);
+
+        // Keep dropdown surfaces very dark gray (not black), with white
+        // text for both the selected entry and highlighted list entries.
+        const FLinearColor ComboGray(0.085f, 0.090f, 0.100f, 1.f);
+        const FLinearColor ComboHighlight(0.16f, 0.20f, 0.23f, 1.f);
+        FComboBoxStyle ComboStyle = Output->GetWidgetStyle();
+        FComboButtonStyle& ComboButton = ComboStyle.ComboButtonStyle;
+        ComboButton.ButtonStyle.Normal.TintColor = FSlateColor(ComboGray);
+        ComboButton.ButtonStyle.Hovered.TintColor = FSlateColor(ComboGray);
+        ComboButton.ButtonStyle.Pressed.TintColor = FSlateColor(ComboGray);
+        ComboButton.ButtonStyle.Disabled.TintColor = FSlateColor(ComboGray);
+        ComboButton.MenuBorderBrush.TintColor = FSlateColor(ComboGray);
+        Output->SetWidgetStyle(ComboStyle);
+
+        FTableRowStyle ItemStyle = Output->GetItemStyle();
+        ItemStyle.EvenRowBackgroundBrush.TintColor = FSlateColor(ComboGray);
+        ItemStyle.OddRowBackgroundBrush.TintColor = FSlateColor(ComboGray);
+        ItemStyle.EvenRowBackgroundHoveredBrush.TintColor = FSlateColor(ComboHighlight);
+        ItemStyle.OddRowBackgroundHoveredBrush.TintColor = FSlateColor(ComboHighlight);
+        ItemStyle.TextColor = FSlateColor(FLinearColor::White);
+        ItemStyle.SelectedTextColor = FSlateColor(FLinearColor::White);
+        Output->SetItemStyle(ItemStyle);
+
         USizeBox* ComboHeight = WidgetTree->ConstructWidget<USizeBox>();
         ComboHeight->SetMinDesiredHeight(48.f);
         ComboHeight->SetContent(Output);
-        Parent->AddChildToVerticalBox(ComboHeight)->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+        UBorder* CyanFrame = WidgetTree->ConstructWidget<UBorder>();
+        CyanFrame->SetBrushColor(Accent);
+        CyanFrame->SetPadding(FMargin(2.f));
+        CyanFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        CyanFrame->SetContent(ComboHeight);
+        Parent->AddChildToVerticalBox(CyanFrame)->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
     };
 
     UCanvasPanel* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget);
@@ -172,7 +200,11 @@ void UMissionEditorScreen::BuildNativeLayout()
     Details->AddChildToVerticalBox(PropertyTop);
     UVerticalBox* NameColumn = WidgetTree->ConstructWidget<UVerticalBox>();
     UVerticalBox* TypeColumn = WidgetTree->ConstructWidget<UVerticalBox>();
-    PropertyTop->AddChildToHorizontalBox(NameColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill))->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+    if (UHorizontalBoxSlot* NameSlot = PropertyTop->AddChildToHorizontalBox(NameColumn))
+    {
+        NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        NameSlot->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+    }
     PropertyTop->AddChildToHorizontalBox(TypeColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     Field(NameColumn, TEXT("Mission name"), TxtName);
     Combo(TypeColumn, TEXT("Mission type"), CmbType);
@@ -211,7 +243,11 @@ void UMissionEditorScreen::BuildNativeLayout()
     Details->AddChildToVerticalBox(LocationRow);
     UVerticalBox* SystemColumn = WidgetTree->ConstructWidget<UVerticalBox>();
     UVerticalBox* RegionColumn = WidgetTree->ConstructWidget<UVerticalBox>();
-    LocationRow->AddChildToHorizontalBox(SystemColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill))->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+    if (UHorizontalBoxSlot* SystemSlot = LocationRow->AddChildToHorizontalBox(SystemColumn))
+    {
+        SystemSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        SystemSlot->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
+    }
     LocationRow->AddChildToHorizontalBox(RegionColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     Combo(SystemColumn, TEXT("System"), CmbSystem);
     Combo(RegionColumn, TEXT("Region"), CmbRegion);
