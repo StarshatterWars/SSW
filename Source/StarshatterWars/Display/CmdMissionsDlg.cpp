@@ -242,6 +242,18 @@ void UCmdMissionsDlg::RebuildMissionList()
 
     List<MissionInfo>& Missions = CampaignPtr->GetMissionList();
 
+    FString VisibleIds;
+    for (int32 Index = 0; Index < Missions.size(); ++Index)
+    {
+        MissionInfo* Info = Missions[Index];
+        if (!ShouldShowMissionInCmdMissionsDlg(Info)) continue;
+        if (!VisibleIds.IsEmpty()) VisibleIds += TEXT(",");
+        VisibleIds += FString::FromInt(Info->id);
+    }
+    UE_LOG(LogTemp, Warning,
+        TEXT("[MissionRosterCompare][Operations] campaign=%p id=%d total=%d visible=[%s]"),
+        CampaignPtr, CampaignPtr->GetCampaignId(), Missions.size(), *VisibleIds);
+
     UE_LOG(LogTemp, Warning,
         TEXT("[CmdMissionsDlg] RebuildMissionList: missions=%d"),
         Missions.size());

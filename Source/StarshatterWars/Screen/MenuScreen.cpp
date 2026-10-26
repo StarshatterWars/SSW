@@ -16,6 +16,7 @@
 #include "CampaignMissionDlg.h"
 #include "CmdMissionsDlg.h"
 #include "CampaignSelectDlg.h"
+#include "Campaign.h"
 #include "MissionEditorDlg.h"
 #include "MissionElementDlg.h"
 #include "MissionBriefingDlg.h"
@@ -776,6 +777,18 @@ void UMenuScreen::ShowMissionSelectDlg()
 
 void UMenuScreen::ShowCampaignMissionDlg()
 {
+    // Mission tabs are navigation, not campaign activation. Never redirect to
+    // Campaign Select merely because the current campaign is not ACTIVE:
+    // that prevents Campaign Missions from being viewed before Operations.
+    // The actual campaign lifecycle is owned by the Start/Continue flow.
+    Campaign* ActiveCampaign = Campaign::GetCampaign();
+    UE_LOG(LogTemp, Warning,
+        TEXT("[CampaignMissionEntry] Direct opening: campaign=%p id=%d active=%d missions=%d"),
+        static_cast<void*>(ActiveCampaign),
+        ActiveCampaign ? ActiveCampaign->GetCampaignId() : -1,
+        ActiveCampaign && ActiveCampaign->IsActive() ? 1 : 0,
+        ActiveCampaign ? ActiveCampaign->GetMissionList().size() : 0);
+
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     if (!CampaignMissionDlg)
@@ -809,6 +822,9 @@ void UMenuScreen::ShowCustomMissionDlg()
         CustomMissionDlg = CreateWidget<UCustomMissionDlg>(PC, UCustomMissionDlg::StaticClass());
         if (!CustomMissionDlg) return;
     }
+
+    // Ensure the native custom widget hierarchy exists before viewport insertion.
+    CustomMissionDlg->TakeWidget();
 
     HideAll();
     CustomMissionDlg->SetMenuManager(this);

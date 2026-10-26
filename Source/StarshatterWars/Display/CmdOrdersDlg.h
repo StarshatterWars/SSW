@@ -7,6 +7,7 @@
 class UTextBlock;
 class UCmdDlg;
 
+/** Operations > Orders. Layout is constructed in C++ and does not require Blueprint bindings. */
 UCLASS()
 class STARSHATTERWARS_API UCmdOrdersDlg : public UUserWidget
 {
@@ -14,15 +15,14 @@ class STARSHATTERWARS_API UCmdOrdersDlg : public UUserWidget
 
 public:
     UCmdOrdersDlg(const FObjectInitializer& ObjectInitializer);
-
     virtual void NativeConstruct() override;
 
-public:
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
     void ShowOrdersDlg();
     void SetCampaignOrders();
 
 protected:
+    // Retained for compatibility with existing WBP_CmdOrdersDlg bindings.
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* CampaignNameText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* DescriptionText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* SituationText = nullptr;
@@ -32,7 +32,8 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* Orders4Text = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* LocationSystemText = nullptr;
 
-protected:
-    UPROPERTY()
-    UCmdDlg* ParentCmdDlg = nullptr;
+    UPROPERTY() UCmdDlg* ParentCmdDlg = nullptr;
+
+private:
+    void BuildModernOrdersLayout();
 };
