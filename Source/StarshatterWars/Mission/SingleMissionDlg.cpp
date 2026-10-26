@@ -20,6 +20,7 @@
 #include "Styling/CoreStyle.h"
 #include "Campaign.h"
 #include "MissionInfo.h"
+#include "ConfirmDlg.h"
 #include "Mission.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "Engine/DataTable.h"
@@ -205,10 +206,15 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
     BackButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnBackPressed);
 
-    // Reserved mission editing actions. Keep visible but disabled until implemented.
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    NewMissionButton = MakeActionButton(TEXT("NEW MISSION"), false);
+    EditMissionButton = MakeActionButton(TEXT("EDIT MISSION"), false);
+    DeleteMissionButton = MakeActionButton(TEXT("DELETE MISSION"), false);
+    Actions->AddChildToHorizontalBox(NewMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(EditMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(DeleteMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    NewMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCreateMission);
+    EditMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnEditMission);
+    DeleteMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnDeleteMission);
 
     LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
     Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -230,6 +236,8 @@ void USingleMissionDlg::RefreshMissionRoster()
     MissionButtons.Reset();
     MissionIds.Reset();
     ScenarioRows.Reset();
+    CustomMissionInfos.Reset();
+    CustomCampaign = nullptr;
     ChosenIndex = INDEX_NONE;
     SelectedMissionIndex = INDEX_NONE;
     MissionId = 0;
@@ -280,12 +288,48 @@ void USingleMissionDlg::RefreshMissionRoster()
         MissionRoster->AddChildToVerticalBox(RowButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
         MissionIds.Add(Scenario->Id);
         ScenarioRows.Add(Scenario);
+        CustomMissionInfos.Add(nullptr);
         MissionButtons.Add(RowButton);
     }
+    // Custom missions reside in the writable legacy mission campaign, not the
+    // cooked DT_SingleMissions asset. Never allow editing of DataTable entries.
+    ListIter<Campaign> CustomCampaignIter = Campaign::GetAllCampaigns();
+    while (++CustomCampaignIter)
+    {
+        Campaign* CandidateCampaign = CustomCampaignIter.value();
+        if (CandidateCampaign && CandidateCampaign->GetCampaignId() == Campaign::CUSTOM_MISSIONS)
+        {
+            CustomCampaign = CandidateCampaign;
+            break;
+        }
+    }
+    if (CustomCampaign)
+    {
+        ListIter<MissionInfo> CustomIter = CustomCampaign->GetMissionList();
+        while (++CustomIter)
+        {
+            MissionInfo* CustomInfo = CustomIter.value();
+            if (!CustomInfo || CustomInfo->id <= 0) continue;
+            UButton* CustomButton = MakeActionButton(
+                FString::Printf(TEXT("CUSTOM: %s"), ANSI_TO_TCHAR(CustomInfo->name.data())), true, true);
+            CustomButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
+            MissionRoster->AddChildToVerticalBox(CustomButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+            MissionButtons.Add(CustomButton);
+            MissionIds.Add(CustomInfo->id);
+            ScenarioRows.Add(nullptr);
+            CustomMissionInfos.Add(CustomInfo);
+        }
+    }
+    if (NewMissionButton) NewMissionButton->SetIsEnabled(CustomCampaign != nullptr && manager != nullptr);
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
         TEXT("%d missions"), MissionIds.Num())));
     if (!MissionIds.IsEmpty()) SelectMissionAt(0);
-    else RefreshMissionDetails();
+    else
+    {
+        if (EditMissionButton) EditMissionButton->SetIsEnabled(false);
+        if (DeleteMissionButton) DeleteMissionButton->SetIsEnabled(false);
+        RefreshMissionDetails();
+    }
 }
 
 void USingleMissionDlg::SelectMissionAt(int32 Index)
@@ -303,6 +347,9 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
             Button->SetStyle(Style);
         }
     }
+    bEditable = CustomMissionInfos.IsValidIndex(Index) && CustomMissionInfos[Index] != nullptr;
+    if (EditMissionButton) EditMissionButton->SetIsEnabled(bEditable && manager != nullptr);
+    if (DeleteMissionButton) DeleteMissionButton->SetIsEnabled(bEditable && manager != nullptr);
     RefreshMissionDetails();
     // Each selected operation opens at the top of its intelligence report.
     if (MissionDetailsScroll) MissionDetailsScroll->ScrollToStart();
@@ -312,6 +359,19 @@ void USingleMissionDlg::RefreshMissionDetails()
 {
     const FS_CampaignMission* Scenario = ScenarioRows.IsValidIndex(ChosenIndex)
         ? ScenarioRows[ChosenIndex] : nullptr;
+    MissionInfo* CustomInfo = CustomMissionInfos.IsValidIndex(ChosenIndex) ? CustomMissionInfos[ChosenIndex] : nullptr;
+    if (CustomInfo)
+    {
+        if (MissionTitle) MissionTitle->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->name.data())));
+        if (MissionRole) MissionRole->SetText(FText::FromString(TEXT("CUSTOM MISSION")));
+        if (MissionLocation) MissionLocation->SetText(FText::FromString(
+            FString::Printf(TEXT("%s / %s"), ANSI_TO_TCHAR(CustomInfo->system.data()), ANSI_TO_TCHAR(CustomInfo->region.data()))));
+        if (MissionTime) MissionTime->SetText(FText::GetEmpty());
+        if (MissionSummary) MissionSummary->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->description.data())));
+        if (MissionObjectives) MissionObjectives->SetText(FText::GetEmpty());
+        if (LaunchButton) LaunchButton->SetIsEnabled(true);
+        return;
+    }
     if (MissionTitle) MissionTitle->SetText(FText::FromString(Scenario
         ? Scenario->MissionName : TEXT("NO MISSION SELECTED")));
     if (MissionRole) MissionRole->SetText(FText::FromString(Scenario
@@ -336,6 +396,16 @@ void USingleMissionDlg::RefreshMissionDetails()
 void USingleMissionDlg::LaunchSelected()
 {
     if (!ScenarioRows.IsValidIndex(ChosenIndex) || MissionId <= 0) return;
+    if (CustomMissionInfos.IsValidIndex(ChosenIndex) && CustomMissionInfos[ChosenIndex])
+    {
+        if (CustomCampaign)
+        {
+            Campaign::SelectCampaign(CustomCampaign->GetName());
+            CampaignPtr = CustomCampaign;
+            OnAcceptClicked();
+        }
+        return;
+    }
 
     // The existing mission briefing consumes a legacy Mission object. Use the
     // preserved PREP-mode handoff only when the built-in campaign is hydrated.
@@ -392,3 +462,78 @@ void USingleMissionDlg::OnMission07Pressed() { SelectMissionAt(6); }
 void USingleMissionDlg::OnMission08Pressed() { SelectMissionAt(7); }
 void USingleMissionDlg::OnMission09Pressed() { SelectMissionAt(8); }
 void USingleMissionDlg::OnMission10Pressed() { SelectMissionAt(9); }
+
+void USingleMissionDlg::OnCustomMissionChosen()
+{
+    // Unlike built-in missions, the number of custom entries is unrestricted.
+    for (int32 Index = 0; Index < MissionButtons.Num(); ++Index)
+    {
+        UButton* EntryButton = MissionButtons[Index];
+        if (EntryButton && CustomMissionInfos.IsValidIndex(Index) && CustomMissionInfos[Index]
+            && (EntryButton->IsHovered() || EntryButton->HasKeyboardFocus()))
+        {
+            SelectMissionAt(Index);
+            return;
+        }
+    }
+}
+
+void USingleMissionDlg::OnCreateMission()
+{
+    if (!manager || !CustomCampaign) return;
+    Campaign::SelectCampaign(CustomCampaign->GetName());
+    MissionInfo* Info = CustomCampaign->CreateNewMission();
+    if (!Info || !Info->mission) return;
+    manager->EditMission(Info->mission, Info);
+}
+
+void USingleMissionDlg::OnEditMission()
+{
+    if (!manager || !CustomCampaign || !CustomMissionInfos.IsValidIndex(ChosenIndex)) return;
+    MissionInfo* Info = CustomMissionInfos[ChosenIndex];
+    if (!Info) return; // Built-in missions are read-only.
+    Campaign::SelectCampaign(CustomCampaign->GetName());
+    Mission* Model = CustomCampaign->GetMission(Info->id);
+    if (!Model) return;
+    manager->EditMission(Model, Info);
+}
+
+void USingleMissionDlg::OnDeleteMission()
+{
+    if (!manager || !CustomCampaign || !CustomMissionInfos.IsValidIndex(ChosenIndex)) return;
+    MissionInfo* Info = CustomMissionInfos[ChosenIndex];
+    if (!Info) return;
+    UConfirmDlg* Dialog = manager->GetConfirmDlg();
+    if (!Dialog) return;
+    PendingCustomDeleteId = Info->id;
+    Dialog->OnConfirmed.RemoveDynamic(this, &USingleMissionDlg::OnCustomDeleteConfirmed);
+    Dialog->OnCanceled.RemoveDynamic(this, &USingleMissionDlg::OnCustomDeleteCanceled);
+    Dialog->OnConfirmed.AddDynamic(this, &USingleMissionDlg::OnCustomDeleteConfirmed);
+    Dialog->OnCanceled.AddDynamic(this, &USingleMissionDlg::OnCustomDeleteCanceled);
+    Dialog->SetTitle(TEXT("Delete mission"));
+    Dialog->SetMessage(FString::Printf(TEXT("Delete '%s'?"), ANSI_TO_TCHAR(Info->name.data())));
+    manager->ShowConfirmDlg();
+}
+
+void USingleMissionDlg::OnCustomDeleteConfirmed()
+{
+    const int32 IdToDelete = PendingCustomDeleteId;
+    OnCustomDeleteCanceled();
+    if (!CustomCampaign || IdToDelete <= 0 || !CustomCampaign->GetMissionInfo(IdToDelete)) return;
+    CustomCampaign->DeleteMission(IdToDelete);
+    RefreshMissionRoster();
+    if (manager) manager->ShowMissionSelectDlg(); // Existing manager route; pending routing integration.
+}
+
+void USingleMissionDlg::OnCustomDeleteCanceled()
+{
+    PendingCustomDeleteId = INDEX_NONE;
+    if (manager)
+    {
+        if (UConfirmDlg* Dialog = manager->GetConfirmDlg())
+        {
+            Dialog->OnConfirmed.RemoveDynamic(this, &USingleMissionDlg::OnCustomDeleteConfirmed);
+            Dialog->OnCanceled.RemoveDynamic(this, &USingleMissionDlg::OnCustomDeleteCanceled);
+        }
+    }
+}

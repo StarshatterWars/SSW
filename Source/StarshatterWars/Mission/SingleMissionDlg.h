@@ -12,6 +12,7 @@ class UTextBlock;
 class UVerticalBox;
 class UCanvasPanel;
 class MissionInfo;
+class Campaign;
 struct FS_CampaignMission;
 
 UCLASS()
@@ -34,6 +35,12 @@ protected:
     UBorder* MakePanel(const FLinearColor& Tint);
     UButton* MakeActionButton(const FString& Label, bool bEnabled = true, bool bRosterButton = false);
     UFUNCTION() void OnLaunchPressed();
+    UFUNCTION() void OnCreateMission();
+    UFUNCTION() void OnEditMission();
+    UFUNCTION() void OnDeleteMission();
+    UFUNCTION() void OnCustomMissionChosen();
+    UFUNCTION() void OnCustomDeleteConfirmed();
+    UFUNCTION() void OnCustomDeleteCanceled();
     UFUNCTION() void OnBackPressed();
     UFUNCTION() void OnMission01Pressed();
     UFUNCTION() void OnMission02Pressed();
@@ -55,8 +62,14 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionObjectives = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionCountLabel = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> LaunchButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> NewMissionButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> EditMissionButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> DeleteMissionButton = nullptr;
     UPROPERTY(Transient) TArray<TObjectPtr<UButton>> MissionButtons;
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
+    TArray<MissionInfo*> CustomMissionInfos;
+    Campaign* CustomCampaign = nullptr; // Owned by legacy Campaign registry.
+    int32 PendingCustomDeleteId = INDEX_NONE;
     int32 ChosenIndex = INDEX_NONE;
 };
