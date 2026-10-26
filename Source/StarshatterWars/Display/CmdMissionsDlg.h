@@ -39,6 +39,20 @@ class Campaign;
 class Mission;
 class MissionInfo;
 class UCmpnScreen;
+class UCanvasPanel;
+class UVerticalBox;
+class UCmdMissionsDlg;
+
+/** One callback instance per native roster button. */
+UCLASS()
+class STARSHATTERWARS_API UCmdMissionRowProxy : public UObject
+{
+    GENERATED_BODY()
+public:
+    TWeakObjectPtr<UCmdMissionsDlg> Owner;
+    int32 MissionId = 0;
+    UFUNCTION() void Activate();
+};
 
 UCLASS()
 class STARSHATTERWARS_API UCmdMissionsDlg : public UBaseScreen
@@ -65,6 +79,9 @@ public:
 private:
     void ExecFrame();
 
+    void BuildModernMissionsLayout();
+    void RefreshModernMissionRows();
+    void SyncModernSelection();
     void RebuildMissionList();
     void AppendNewMissionsIfAny();
     void ValidateSelectionStillExists();
@@ -87,7 +104,7 @@ private:
     void AddMissionInfoToList(MissionInfo* Info);
 
 private:
-    UPROPERTY(meta = (BindWidget)) UListView* MissionList = nullptr;
+    UPROPERTY(meta = (BindWidgetOptional)) UListView* MissionList = nullptr;
 
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* MissionNameText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* MissionTypeText = nullptr;
@@ -100,6 +117,12 @@ private:
     UPROPERTY(meta = (BindWidgetOptional)) UImage* MissionImage = nullptr;
 
 private:
+    UPROPERTY(Transient) UVerticalBox* NativeMissionRows = nullptr;
+    UPROPERTY(Transient) UTextBlock* NativeMissionCount = nullptr;
+    UPROPERTY(Transient) TArray<TObjectPtr<UCmdMissionRowProxy>> RowCallbacks;
+    UPROPERTY(Transient) TArray<TObjectPtr<UButton>> RowButtons;
+    UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> RowLabels;
+    UPROPERTY(Transient) TArray<int32> RowMissionIds;
     UCmpnScreen* Manager = nullptr;
 
     Starshatter* Stars = nullptr;
