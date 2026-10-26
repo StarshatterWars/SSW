@@ -2,6 +2,8 @@
    Uses legacy Single Missions campaign and original PREP-mode handoff.
    The existing MissionSelectDlg is intentionally not modified. */
 #include "SingleMissionDlg.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -483,14 +485,97 @@ void USingleMissionDlg::OnCustomMissionChosen()
 
 void USingleMissionDlg::OnCreateMission()
 {
-    if (!manager || !CustomCampaign) return;
-    // CustomCampaign was resolved from Campaign::GetAllCampaigns() during roster refresh.
-    // Do not perform a redundant name-based lookup: it can dereference invalid
-    // legacy ANSI name storage inside Campaign::SelectCampaign().
+    if (!manager || !CustomCampaign || CustomCampaign->GetCampaignId() != Campaign::CUSTOM_MISSIONS)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CustomMissions] New Mission: custom campaign unavailable"));
+        return;
+    }
+
+    // Custom scenario IDs begin at 1000 and are never allocated from the
+    // built-in single-player or multiplayer mission ID ranges.
+    int32 NextId = 1000;
+    ListIter<MissionInfo> Existing = CustomCampaign->GetMissionList();
+    while (++Existing)
+    {
+        const MissionInfo* ExistingInfo = Existing.value();
+        if (ExistingInfo && ExistingInfo->id >= NextId)
+        {
+            NextId = ExistingInfo->id + 1;
+        }
+    }
+
+    const FString CustomDir = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("GameData/Custom"));
+    if (!IFileManager::Get().MakeDirectory(*CustomDir, true))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CustomMissions] Failed to create %s"), *CustomDir);
+        return;
+    }
+
+    // A mission already saved on disk may not have been ingested into the
+    // legacy campaign list. Do not overwrite it when assigning a new ID.
+    FString ScriptFilename;
+    FString FullFilename;
+    do
+    {
+        ScriptFilename = FString::Printf(TEXT("custom%04d.def"), NextId);
+        FullFilename = FPaths::Combine(CustomDir, ScriptFilename);
+        if (!IFileManager::Get().FileExists(*FullFilename))
+        {
+            break;
+        }
+        ++NextId;
+    } while (NextId < MAX_int32);
+
+    if (NextId == MAX_int32 && IFileManager::Get().FileExists(*FullFilename))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[CustomMissions] No available mission ID"));
+        return;
+    }
+
+    // Mission::Save() writes directly to the Mission's path and filename.
+    // Use the same folder that the Custom DataTable importer will scan.
+    FString MissionDirectory = CustomDir;
+    MissionDirectory += TEXT("/");
+    FTCHARToUTF8 FilenameUtf8(*ScriptFilename);
+    FTCHARToUTF8 DirectoryUtf8(*MissionDirectory);
+
+    MissionInfo* NewInfo = new MissionInfo;
+    if (!NewInfo)
+    {
+        return;
+    }
+    NewInfo->id = NextId;
+    // Legacy MsnSelectDlg::OnNew creates a new MissionInfo and Mission rather
+    // than copying a preset mission. Match that blank starting framework.
+    // Mission() defaults to 01:00 on day 2 (33 hours), IFF/team 1 and type 0.
+    NewInfo->name = "New Custom Mission";
+    NewInfo->description = "";
+    NewInfo->situation = "Mission Unknown";
+    NewInfo->objective = "Mission Unspecified";
+    NewInfo->system = "";
+    NewInfo->region = "";
+    NewInfo->type = 0;
+    NewInfo->start = 33 * 3600;
+    NewInfo->script = FilenameUtf8.Get();
+    NewInfo->script.setSensitive(false);
+    NewInfo->mission = new Mission(NextId, FilenameUtf8.Get(), DirectoryUtf8.Get());
+    if (!NewInfo->mission)
+    {
+        delete NewInfo;
+        return;
+    }
+    NewInfo->mission->SetName(NewInfo->name.data());
+    NewInfo->mission->SetDescription(NewInfo->description.data());
+    NewInfo->mission->SetObjective(NewInfo->objective.data());
+    NewInfo->mission->SetMissionType(NewInfo->type);
+    NewInfo->mission->SetStart(NewInfo->start);
+    NewInfo->mission->SetTeam(1);
+    // Do not assign a system, region, elements or events until the editor
+    // supplies them. That is also how the original New Mission starts.
+    CustomCampaign->GetMissionList().append(NewInfo);
     CampaignPtr = CustomCampaign;
-    MissionInfo* Info = CustomCampaign->CreateNewMission();
-    if (!Info || !Info->mission) return;
-    manager->EditMission(Info->mission, Info);
+    UE_LOG(LogTemp, Display, TEXT("[CustomMissions] Creating mission id=%d file=%s"), NextId, *FullFilename);
+    manager->EditMission(NewInfo->mission, NewInfo);
 }
 
 void USingleMissionDlg::OnEditMission()

@@ -810,6 +810,25 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.MissionEditorClass
+    if (!Cache.Contains(TEXT("UI.MissionEditorClass")))
+    {
+        if (!Settings->MissionEditorClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MissionEditorClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MissionEditorClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MissionEditorClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MissionEditorClass is not set in Project Settings"));
+        }
+    }
+
+
     // UI.FlightOpsScreenClass
     if (!Cache.Contains(TEXT("UI.FlightOpsScreenClass")))
     {
