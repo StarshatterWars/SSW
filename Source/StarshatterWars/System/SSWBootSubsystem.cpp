@@ -238,6 +238,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.CutsceneTable"),
         TEXT("Data.SingleMissionTable"),
         TEXT("Data.MultiplayerMissionTable"),
+        TEXT("Data.CustomMissionTable"),
 
         TEXT("Data.OrderOfBattleTable"),
         TEXT("Data.MedalsTable"),

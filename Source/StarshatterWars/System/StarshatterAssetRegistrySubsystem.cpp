@@ -389,6 +389,26 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.CustomMissionTable
+    if (!Cache.Contains(TEXT("Data.CustomMissionTable")))
+    {
+        if (!Settings->CustomMissionDataTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CustomMissionDataTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.CustomMissionTable"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log,
+                TEXT("[ASSETS] Bind Data.CustomMissionTable -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CustomMissionTable is not set in Project Settings"));
+        }
+    }
+
+
     // ------------------------------------------------------------------
     // 3) Inject typed UI widget classes (do not overwrite explicit map entries)
     //    NOTE: We store them in the generic Cache as UObject soft refs so the

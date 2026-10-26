@@ -142,6 +142,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> MultiplayerMissionDataTable;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
+    TSoftObjectPtr<UDataTable> CustomMissionDataTable;
+
     // ------------------------------------------------------------------
     // Optional UI bindings (config-backed)
     // ------------------------------------------------------------------
@@ -169,7 +172,6 @@ public:
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> MissionScreenClass;
-
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> PlayerLogbookScreenClass;
