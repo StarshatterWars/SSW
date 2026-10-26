@@ -166,12 +166,12 @@ void UExitDlg::BuildModernExitScreen()
     USizeBox* Frame = WidgetTree->ConstructWidget<USizeBox>(
         USizeBox::StaticClass(), TEXT("ExitDlg_ModalFrame"));
     Frame->SetWidthOverride(780.f);
-    Frame->SetHeightOverride(420.f);
+    Frame->SetHeightOverride(300.f);
     if (UCanvasPanelSlot* ModalCanvasSlot = Root->AddChildToCanvas(Frame))
     {
         ModalCanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
         ModalCanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-        ModalCanvasSlot->SetSize(FVector2D(780.f, 420.f));
+        ModalCanvasSlot->SetSize(FVector2D(780.f, 300.f));
         ModalCanvasSlot->SetPosition(FVector2D::ZeroVector);
         ModalCanvasSlot->SetZOrder(10);
     }
@@ -187,18 +187,10 @@ void UExitDlg::BuildModernExitScreen()
     UVerticalBox* Main = WidgetTree->ConstructWidget<UVerticalBox>();
     MainPanel->SetContent(Main);
 
-    Main->AddChildToVerticalBox(MakeText(
-        TEXT("STARSHATTER WARS  /  SESSION CONTROL"), 12, Accent))
-        ->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
-
     UBorder* HeadingBand = MakeBorder(TitleBand);
     HeadingBand->SetPadding(FMargin(14.f, 8.f));
-    HeadingBand->SetContent(MakeText(TEXT("EXIT STARSHATTER WARS"), 28, Primary, true));
+    HeadingBand->SetContent(MakeText(TEXT("EXIT GAME"), 28, Primary, true));
     Main->AddChildToVerticalBox(HeadingBand)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
-
-    Main->AddChildToVerticalBox(MakeText(
-        TEXT("END CURRENT SESSION  /  RETURN TO OPERATING SYSTEM"), 12, Muted))
-        ->SetPadding(FMargin(0.f, 0.f, 0.f, 14.f));
 
     UBorder* HeaderLine = MakeBorder(Accent);
     USizeBox* LineHeight = WidgetTree->ConstructWidget<USizeBox>();
@@ -221,15 +213,11 @@ void UExitDlg::BuildModernExitScreen()
 
     UVerticalBox* Notice = WidgetTree->ConstructWidget<UVerticalBox>();
     NoticePanel->SetContent(Notice);
-    Notice->AddChildToVerticalBox(MakeText(TEXT("01  /  CONFIRM EXIT"), 13, Accent))
-        ->SetPadding(FMargin(0.f, 0.f, 0.f, 11.f));
-    Notice->AddChildToVerticalBox(MakeText(TEXT("TERMINATE SESSION"), 20, Primary, true))
-        ->SetPadding(FMargin(0.f, 0.f, 0.f, 9.f));
     Notice->AddChildToVerticalBox(MakeText(
-        TEXT("Are you sure you want to exit Starshatter Wars?"), 15, Primary))
+        TEXT("Exit Starshatter Wars?"), 15, Primary))
         ->SetPadding(FMargin(0.f, 0.f, 0.f, 11.f));
     Notice->AddChildToVerticalBox(MakeText(
-        TEXT("Any unsaved mission or campaign progress may be lost. Select CANCEL to return to the main menu."),
+        TEXT("Unsaved progress may be lost."),
         13, Muted));
 
     UBorder* FooterLine = MakeBorder(Accent);
@@ -240,9 +228,6 @@ void UExitDlg::BuildModernExitScreen()
 
     UHorizontalBox* Footer = WidgetTree->ConstructWidget<UHorizontalBox>();
     Main->AddChildToVerticalBox(Footer);
-
-    UTextBlock* FooterHint = MakeText(TEXT("AWAITING CONFIRMATION"), 11, Muted);
-    Footer->AddChildToHorizontalBox(FooterHint)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 
     auto MakeMenuButton = [&](const TCHAR* Name, const FString& Label, TObjectPtr<UButton>& OutButton)
     {

@@ -168,27 +168,11 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     }
 
     // HEADER: overline / page title / active pilot identity.
-    UTextBlock* Overline = CreateText(TEXT("CampaignSelect_Overline"),
-        TEXT("STARSHATTER WARS   /   CAMPAIGN COMMAND"), 12, Accent);
-    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(Overline))
-    {
-        WidgetSlot->SetPosition(FVector2D(30.f, 18.f));
-        WidgetSlot->SetAutoSize(true);
-    }
     TitleText = CreateText(TEXT("CampaignSelect_TitleText"),
-        TEXT("SELECT CAMPAIGN"), 30, Primary);
+        TEXT("CAMPAIGNS"), 30, Primary);
     if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(TitleText))
     {
         WidgetSlot->SetPosition(FVector2D(30.f, 37.f));
-        WidgetSlot->SetAutoSize(true);
-    }
-    UTextBlock* PilotCaption = CreateText(TEXT("CampaignSelect_PilotCaption"),
-        TEXT("ACTIVE PILOT"), 11, Muted, ETextJustify::Right);
-    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(PilotCaption))
-    {
-        WidgetSlot->SetAnchors(FAnchors(1.f, 0.f, 1.f, 0.f));
-        WidgetSlot->SetAlignment(FVector2D(1.f, 0.f));
-        WidgetSlot->SetPosition(FVector2D(-30.f, 24.f));
         WidgetSlot->SetAutoSize(true);
     }
     PlayerNameText = CreateText(TEXT("CampaignSelect_PlayerNameText"),
@@ -245,16 +229,6 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         WidgetSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
         WidgetSlot->SetOffsets(FMargin(5.f));
     }
-    UBorder* ArtCaptionBg = CreatePanelBorder(TEXT("CampaignSelect_ArtCaptionBG"), FLinearColor(0.012f,0.025f,0.04f,0.95f));
-    if (UCanvasPanelSlot* WidgetSlot = ArtCanvas->AddChildToCanvas(ArtCaptionBg))
-    {
-        WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
-        WidgetSlot->SetOffsets(FMargin(5.f, -45.f, 5.f, 39.f));
-        WidgetSlot->SetZOrder(2);
-    }
-    ArtCaptionBg->SetContent(CreateText(TEXT("CampaignSelect_ArtCaption"),
-        TEXT(" CAMPAIGN INTELLIGENCE  /  ARCHIVE PREVIEW"), 12, Accent));
-
     UBorder* BriefingPanel = CreatePanelBorder(TEXT("CampaignSelect_BriefingPanel"), Raised);
     if (UHorizontalBoxSlot* WidgetSlot = ContentRow->AddChildToHorizontalBox(BriefingPanel))
     {
@@ -285,10 +259,10 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(SectionSize))
             WidgetSlot->SetPadding(FMargin(20.f, 0.f, 20.f, 6.f));
     };
-    AddSection(TEXT("01  /  OVERVIEW"), DescriptionText, TEXT("CampaignSelect_DescriptionText"), 72.f);
-    AddSection(TEXT("02  /  TACTICAL SITUATION"), SituationText, TEXT("CampaignSelect_SituationText"), 108.f);
+    AddSection(TEXT("OVERVIEW"), DescriptionText, TEXT("CampaignSelect_DescriptionText"), 72.f);
+    AddSection(TEXT("SITUATION"), SituationText, TEXT("CampaignSelect_SituationText"), 108.f);
     UTextBlock* OrdersCaption = CreateText(TEXT("CampaignSelect_OrdersCaption"),
-        TEXT("03  /  MISSION DIRECTIVES"), 13, Accent);
+        TEXT("ORDERS"), 13, Accent);
     if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(OrdersCaption))
         WidgetSlot->SetPadding(FMargin(20.f, 20.f, 20.f, 12.f));
     auto AddOrder = [&](TObjectPtr<UTextBlock>& Output, const TCHAR* Name)
@@ -303,7 +277,7 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     AddOrder(Orders3Text, TEXT("CampaignSelect_Orders3Text"));
     AddOrder(Orders4Text, TEXT("CampaignSelect_Orders4Text"));
     UTextBlock* MetaCaption = CreateText(TEXT("CampaignSelect_MetaCaption"),
-        TEXT("04  /  DEPLOYMENT PARAMETERS"), 13, Accent);
+        TEXT("DETAILS"), 13, Accent);
     if (UVerticalBoxSlot* WidgetSlot = BriefingVBox->AddChildToVerticalBox(MetaCaption))
         WidgetSlot->SetPadding(FMargin(20.f, 20.f, 20.f, 10.f));
     UHorizontalBox* MetaRow = WidgetTree->ConstructWidget<UHorizontalBox>(
@@ -323,8 +297,8 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         if (UVerticalBoxSlot* WidgetSlot = Column->AddChildToVerticalBox(Output))
             WidgetSlot->SetPadding(FMargin(0.f, 7.f, 8.f, 0.f));
     };
-    AddMeta(TEXT("STAR SYSTEM  /  REGION"), LocationSystemText, TEXT("CampaignSelect_LocationSystemText"));
-    AddMeta(TEXT("OPERATIONS START"), CampaignStartTimeText, TEXT("CampaignSelect_CampaignStartTimeText"));
+    AddMeta(TEXT("LOCATION"), LocationSystemText, TEXT("CampaignSelect_LocationSystemText"));
+    AddMeta(TEXT("START TIME"), CampaignStartTimeText, TEXT("CampaignSelect_CampaignStartTimeText"));
 
     // ACTION BAR: status hint on the left, all original actions to the right.
     UBorder* FooterLine = CreatePanelBorder(TEXT("CampaignSelect_FooterLine"), Accent);
@@ -332,14 +306,6 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     {
         WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f));
         WidgetSlot->SetOffsets(FMargin(30.f, -77.f, 30.f, 2.f));
-    }
-    UTextBlock* FooterLabel = CreateText(TEXT("CampaignSelect_FooterLabel"),
-        TEXT("OPERATIONS READY   /   SELECT A CAMPAIGN TO DEPLOY"), 12, Muted);
-    if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(FooterLabel))
-    {
-        WidgetSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-        WidgetSlot->SetPosition(FVector2D(30.f, -45.f));
-        WidgetSlot->SetAutoSize(true);
     }
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>(
         UHorizontalBox::StaticClass(), TEXT("CampaignSelect_ButtonRow"));
@@ -372,7 +338,7 @@ void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
 
     UTextBlock* CampaignSelectHeaderText = CreateText(
         TEXT("CampaignSelect_DropdownHeaderText"),
-        TEXT("AVAILABLE CAMPAIGNS"),
+        TEXT("CAMPAIGNS"),
         12,
         FLinearColor(0.16f, 0.77f, 0.91f, 1.f),
         ETextJustify::Left,
