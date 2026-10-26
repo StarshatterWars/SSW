@@ -876,7 +876,7 @@ void UCmdMissionsDlg::BuildModernMissionsLayout()
     MissionSystemText = MissionText(WidgetTree, TEXT(""), CmdText); MissionLine(Location, MissionSystemText);
     MissionRegionText = MissionText(WidgetTree, TEXT(""), CmdMuted); MissionLine(Location, MissionRegionText, 0.f);
 
-    UVerticalBox* Objectives = MissionCard(WidgetTree, Details, TEXT("TASKFOCE"));
+    UVerticalBox* Objectives = MissionCard(WidgetTree, Details, TEXT("TASKFORCE"));
     MissionObjectiveText = MissionText(WidgetTree, TEXT(""), CmdText); MissionLine(Objectives, MissionObjectiveText, 0.f);
 
     UVerticalBox* Sitrep = MissionCard(WidgetTree, Details, TEXT("SITUATION REPORT"));
