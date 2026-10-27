@@ -24,6 +24,7 @@ public:
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     void BuildMultiplayerScreen();
     void RefreshMissionRoster();

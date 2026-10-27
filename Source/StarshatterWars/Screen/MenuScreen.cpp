@@ -740,6 +740,8 @@ void UMenuScreen::ShowMissionSelectDlg()
 
 void UMenuScreen::ShowMultiplayerMissionDlg()
 {
+    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowMultiplayerMode(); return; }
+
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     if (!MultiplayerMissionDlg)
@@ -760,6 +762,8 @@ void UMenuScreen::ShowMultiplayerMissionDlg()
 
 void UMenuScreen::ShowSingleMissionDlg()
 {
+    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowSingleMode(); return; }
+
     if (bReturnToCustomMissionsAfterEditor)
     {
         bReturnToCustomMissionsAfterEditor = false;
@@ -818,6 +822,8 @@ void UMenuScreen::ShowSingleMissionDlg()
 
 void UMenuScreen::ShowCustomMissionDlg()
 {
+    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowCustomMode(); return; }
+
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
 

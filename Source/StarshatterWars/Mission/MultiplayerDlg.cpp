@@ -46,6 +46,13 @@ UMultiplayerDlg::UMultiplayerDlg(const FObjectInitializer& ObjectInitializer)
     SetIsFocusable(true);
 }
 
+TSharedRef<SWidget> UMultiplayerDlg::RebuildWidget()
+{
+    if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, UWidgetTree::StaticClass(), TEXT("WidgetTree"));
+    BuildMultiplayerScreen();
+    return Super::RebuildWidget();
+}
+
 void UMultiplayerDlg::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -57,7 +64,7 @@ UTextBlock* UMultiplayerDlg::MakeLabel(const FString& Value, int32 Size,
 {
     UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
     Label->SetText(FText::FromString(Value));
-    Label->SetFont(FCoreStyle::GetDefaultFontStyle(Size >= 22 ? "Bold" : "Regular", Size));
+    Label->SetFont(Size >= 22 ? MissionUIStyle::GetHeaderFont(Size) : FCoreStyle::GetDefaultFontStyle("Regular", Size));
     Label->SetColorAndOpacity(FSlateColor(Tint));
     Label->SetAutoWrapText(bWrap);
     return Label;
@@ -203,16 +210,16 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
 
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
-    UButton* BackButton = MakeActionButton(TEXT("BACK TO MAIN MENU"));
+    UButton* BackButton = MakeActionButton(TEXT("BACK"));
     Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
     BackButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnBackPressed);
 
     // Keep legacy editing affordances visible, but disabled for built-in missions.
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
 
-    LaunchButton = MakeActionButton(TEXT("OPEN MULTIPLAYER BRIEFING"), false);
+    LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
     Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     LaunchButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnLaunchPressed);
 }

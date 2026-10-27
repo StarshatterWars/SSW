@@ -27,6 +27,7 @@ public:
     virtual bool IsCustomMissionView() const { return false; }
     virtual bool IsCampaignMissionView() const { return false; }
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     void BuildSingleMissionScreen();
     void RefreshMissionRoster();

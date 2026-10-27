@@ -50,6 +50,13 @@ USingleMissionDlg::USingleMissionDlg(const FObjectInitializer& ObjectInitializer
     SetIsFocusable(true);
 }
 
+TSharedRef<SWidget> USingleMissionDlg::RebuildWidget()
+{
+    if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, UWidgetTree::StaticClass(), TEXT("WidgetTree"));
+    BuildSingleMissionScreen();
+    return Super::RebuildWidget();
+}
+
 void USingleMissionDlg::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -139,7 +146,7 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     // Dark-grey title band, shared visually with the Campaign Selection header.
     UBorder* SingleTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
     SingleTitleBand->SetPadding(FMargin(18.f, 11.f, 18.f, 11.f));
-    SingleTitleBand->SetContent(MakeLabel(IsCustomMissionView() ? TEXT("CUSTOM MISSIONS") : TEXT("SINGLE MISSIONS"), 38, SingleMissionColors::Primary));
+    SingleTitleBand->SetContent(MakeLabel(IsCampaignMissionView() ? TEXT("CAMPAIGN MISSIONS") : (IsCustomMissionView() ? TEXT("CUSTOM MISSIONS") : TEXT("SINGLE MISSIONS")), 38, SingleMissionColors::Primary));
     Heading->AddChildToVerticalBox(SingleTitleBand)->SetPadding(FMargin(0.f, 7.f, 0.f, 7.f));
     // Mission selection hub tabs. The active tab is not clickable; Multiplayer
     // is intentionally disabled until its standalone session workflow is ready.
@@ -264,7 +271,31 @@ void USingleMissionDlg::RefreshMissionRoster()
     MissionId = 0;
     bEditable = false;
 
-    if (!IsCustomMissionView())
+    if (IsCampaignMissionView())
+    {
+        Campaign* ActiveCampaign = Campaign::GetCampaign();
+        if (ActiveCampaign)
+        {
+            ListIter<MissionInfo> MissionIter = ActiveCampaign->GetMissionList();
+            while (++MissionIter)
+            {
+                MissionInfo* Info = MissionIter.value();
+                if (!Info || Info->id <= 0) continue;
+                UButton* MissionButton = MakeActionButton(ANSI_TO_TCHAR(Info->name.data()), true, true);
+                MissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
+                MissionRoster->AddChildToVerticalBox(MissionButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+                MissionButtons.Add(MissionButton);
+                MissionIds.Add(Info->id);
+                ScenarioRows.Add(nullptr);
+                CustomMissionInfos.Add(Info);
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] No active campaign"));
+        }
+    }
+    else if (!IsCustomMissionView())
     {
     UStarshatterGameDataSubsystem* GameData = GetGameInstance()
         ? GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
@@ -376,7 +407,7 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
             Button->SetStyle(Style);
         }
     }
-    bEditable = CustomMissionInfos.IsValidIndex(Index) && CustomMissionInfos[Index] != nullptr;
+    bEditable = IsCustomMissionView() && CustomMissionInfos.IsValidIndex(Index) && CustomMissionInfos[Index] != nullptr;
     if (EditMissionButton) EditMissionButton->SetIsEnabled(bEditable && manager != nullptr);
     if (DeleteMissionButton) DeleteMissionButton->SetIsEnabled(bEditable && manager != nullptr);
     RefreshMissionDetails();
@@ -392,7 +423,7 @@ void USingleMissionDlg::RefreshMissionDetails()
     if (CustomInfo)
     {
         if (MissionTitle) MissionTitle->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->name.data())));
-        if (MissionRole) MissionRole->SetText(FText::FromString(TEXT("CUSTOM MISSION")));
+        if (MissionRole) MissionRole->SetText(FText::FromString(IsCampaignMissionView() ? TEXT("CAMPAIGN MISSION") : TEXT("CUSTOM MISSION")));
         if (MissionLocation) MissionLocation->SetText(FText::FromString(
             FString::Printf(TEXT("%s / %s"), ANSI_TO_TCHAR(CustomInfo->system.data()), ANSI_TO_TCHAR(CustomInfo->region.data()))));
         if (MissionTime) MissionTime->SetText(FText::GetEmpty());
@@ -426,6 +457,27 @@ void USingleMissionDlg::LaunchSelected()
 {
     if (!manager || !MissionIds.IsValidIndex(ChosenIndex) || MissionId <= 0)
         return;
+
+    if (IsCampaignMissionView())
+    {
+        Campaign* ActiveCampaign = Campaign::GetCampaign();
+        if (!ActiveCampaign || !ActiveCampaign->GetMissionInfo(MissionId))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Invalid active campaign mission ID=%d"), MissionId);
+            return;
+        }
+        ActiveCampaign->SetMissionId(MissionId);
+        if (!ActiveCampaign->GetMission(MissionId))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Failed to load mission ID=%d"), MissionId);
+            return;
+        }
+        if (UGameInstance* GI = GetGameInstance())
+            if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+                Runtime->SetGameMode(EGameMode::PREP);
+        manager->ShowMissionDlg();
+        return;
+    }
 
     const bool bCustom = CustomMissionInfos.IsValidIndex(ChosenIndex)
         && CustomMissionInfos[ChosenIndex] != nullptr;
@@ -494,7 +546,7 @@ void USingleMissionDlg::OnBackPressed()
 }
 void USingleMissionDlg::OnCampaignTabPressed()
 {
-    if (manager) manager->ShowCampaignSelectDlg();
+    if (manager) manager->ShowMissionSelectDlg();
 }
 void USingleMissionDlg::OnSingleTabPressed()
 {

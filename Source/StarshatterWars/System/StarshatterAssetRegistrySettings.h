@@ -232,7 +232,7 @@ public:
     TSoftClassPtr<UUserWidget> MissionDebriefClass;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
-    TSoftClassPtr<UUserWidget> MissionsPanelClass   ;
+    TSoftClassPtr<UUserWidget> MissionsPanelClass;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> AwardPopupClass;
