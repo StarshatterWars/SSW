@@ -93,6 +93,7 @@ void UCampaignSelectDlg::NativeConstruct()
 
     BuildWidgetTreeIfNeeded();
     HookupEvents();
+    ApplyCampaignMenuButtonTextures();
     RegisterControls();
     RefreshUIFromSubsystem();
 }
@@ -126,7 +127,17 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
         WidgetTree->RootWidget = RootCanvas;
     }
-    if (WidgetTree->FindWidget(TEXT("CampaignSelect_MainBorder"))) return;
+    // BaseScreen binds the authored CancelButton and skins it with the old button image.
+    if (CancelButton && CancelButton != MenuButton)
+    {
+        CancelButton->SetVisibility(ESlateVisibility::Collapsed);
+        CancelButton = nullptr;
+    }
+    if (WidgetTree->FindWidget(TEXT("CampaignSelect_MainBorder")))
+    {
+        EnsureCampaignIconButtons();
+        return;
+    }
 
     // Tactical UI palette: background, raised panels, muted labels and icy cyan.
     const FLinearColor Back(0.012f, 0.025f, 0.045f, 1.f);
@@ -341,6 +352,28 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         WidgetSlot->SetPosition(FVector2D(30.f, -45.f));
         WidgetSlot->SetAutoSize(true);
     }
+    EnsureCampaignIconButtons();
+}
+
+void UCampaignSelectDlg::EnsureCampaignIconButtons()
+{
+    if (!WidgetTree) return;
+    if (UWidget* Existing = WidgetTree->FindWidget(TEXT("CampaignSelect_MenuButton")))
+    {
+        if (UButton* ExistingButton = Cast<UButton>(Existing))
+            MenuButton = ExistingButton;
+        ApplyCampaignMenuButtonTextures();
+        if (CancelButton && CancelButton != MenuButton)
+            CancelButton->SetVisibility(ESlateVisibility::Collapsed);
+        return;
+    }
+    if (MenuButton)
+    {
+        MenuButton->SetVisibility(ESlateVisibility::Collapsed);
+        MenuButton = nullptr;
+    }
+    UCanvasPanel* MainCanvas = Cast<UCanvasPanel>(WidgetTree->FindWidget(TEXT("CampaignSelect_MainCanvas")));
+    if (!MainCanvas) return;
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>(
         UHorizontalBox::StaticClass(), TEXT("CampaignSelect_ButtonRow"));
     if (UCanvasPanelSlot* WidgetSlot = MainCanvas->AddChildToCanvas(Actions))
@@ -349,18 +382,106 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
         WidgetSlot->SetAlignment(FVector2D(1.f, 1.f));
         WidgetSlot->SetPosition(FVector2D(-30.f, -18.f));
         WidgetSlot->SetAutoSize(true);
+        WidgetSlot->SetZOrder(10);
     }
-    auto AddAction = [&](UWidget* ButtonWidget)
+    auto AddIconAction = [&](const FName Name, TObjectPtr<UButton>& OutButton, const TCHAR* IconPath, const TCHAR* NormalPath, const TCHAR* PressedPath, const TCHAR* Tip)
     {
-        if (UHorizontalBoxSlot* WidgetSlot = Actions->AddChildToHorizontalBox(ButtonWidget))
+        UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+        UTexture2D* NormalTexture = LoadObject<UTexture2D>(nullptr, NormalPath);
+        UTexture2D* PressedTexture = LoadObject<UTexture2D>(nullptr, PressedPath);
+        FButtonStyle Style;
+        auto SetBrush = [](FSlateBrush& Brush, UTexture2D* Texture)
+        {
+            Brush = FSlateBrush();
+            if (!Texture) return;
+            Brush.SetResourceObject(Texture);
+            Brush.DrawAs = ESlateBrushDrawType::Image;
+            Brush.ImageSize = FVector2D(64.f, 64.f);
+            Brush.Margin = FMargin(0.f);
+            Brush.TintColor = FSlateColor(FLinearColor::White);
+        };
+        SetBrush(Style.Normal, NormalTexture);
+        SetBrush(Style.Hovered, PressedTexture ? PressedTexture : NormalTexture);
+        SetBrush(Style.Pressed, PressedTexture ? PressedTexture : NormalTexture);
+        SetBrush(Style.Disabled, NormalTexture);
+        Style.NormalPadding = FMargin(0.f);
+        Style.PressedPadding = FMargin(0.f);
+        Button->SetStyle(Style);
+        Button->SetToolTipText(FText::FromString(Tip));
+        Button->SetVisibility(ESlateVisibility::Visible);
+        USizeBox* ButtonBox = WidgetTree->ConstructWidget<USizeBox>();
+        ButtonBox->SetWidthOverride(64.f);
+        ButtonBox->SetHeightOverride(64.f);
+        ButtonBox->SetContent(Button);
+        USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>();
+        IconBox->SetWidthOverride(36.f);
+        IconBox->SetHeightOverride(36.f);
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        if (UTexture2D* IconTex = LoadObject<UTexture2D>(nullptr, IconPath))
+            Icon->SetBrushFromTexture(IconTex, false);
+        IconBox->SetContent(Icon);
+        Button->SetContent(IconBox);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(6.f));
+        }
+        OutButton = Button;
+        if (UHorizontalBoxSlot* WidgetSlot = Actions->AddChildToHorizontalBox(ButtonBox))
             WidgetSlot->SetPadding(FMargin(8.f, 0.f, 0.f, 0.f));
     };
-    AddAction(CreateMenuButton(TEXT("CampaignSelect_CancelButton"), CancelButton, CancelButtonText, TEXT("BACK")));
-    AddAction(CreateMenuButton(TEXT("CampaignSelect_RestartButton"), RestartButton, RestartButtonText, TEXT("RESTART")));
-    AddAction(CreateMenuButton(TEXT("CampaignSelect_PlayButton"), PlayButton, PlayButtonText, TEXT("START")));
-    ApplyButtonStyle(PlayButton);
-    ApplyButtonStyle(RestartButton);
-    ApplyButtonStyle(CancelButton);
+    AddIconAction(TEXT("CampaignSelect_MenuButton"), MenuButton,
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Menu_256x256.T_Menu_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"),
+        TEXT("Menu"));
+    AddIconAction(TEXT("CampaignSelect_RestartButton"), RestartButton,
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Refresh_256x256.T_Refresh_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Yellow_n.T_Btn01Yellow_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Yellow_p.T_Btn01Yellow_p"),
+        TEXT("Restart"));
+    AddIconAction(TEXT("CampaignSelect_PlayButton"), PlayButton,
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Play_256x256.T_Play_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_n.T_Btn01Green_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_p.T_Btn01Green_p"),
+        TEXT("Continue"));
+    ApplyCampaignMenuButtonTextures();
+    if (CancelButton && CancelButton != MenuButton)
+        CancelButton->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UCampaignSelectDlg::ApplyCampaignMenuButtonTextures()
+{
+    if (!MenuButton) return;
+    auto SetBrush = [](FSlateBrush& Brush, UTexture2D* Texture)
+    {
+        Brush = FSlateBrush();
+        if (!Texture) return;
+        Brush.SetResourceObject(Texture);
+        Brush.DrawAs = ESlateBrushDrawType::Image;
+        Brush.ImageSize = FVector2D(64.f, 64.f);
+        Brush.Margin = FMargin(0.f);
+        Brush.TintColor = FSlateColor(FLinearColor::White);
+    };
+    UTexture2D* RedNormal = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"));
+    UTexture2D* RedPressed = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"));
+    FButtonStyle Style;
+    SetBrush(Style.Normal, RedNormal);
+    SetBrush(Style.Hovered, RedPressed ? RedPressed : RedNormal);
+    SetBrush(Style.Pressed, RedPressed ? RedPressed : RedNormal);
+    SetBrush(Style.Disabled, RedNormal);
+    Style.NormalPadding = FMargin(0.f);
+    Style.PressedPadding = FMargin(0.f);
+    MenuButton->SetStyle(Style);
+    if (USizeBox* IconBox = Cast<USizeBox>(MenuButton->GetChildAt(0)))
+    {
+        if (UImage* Icon = Cast<UImage>(IconBox->GetContent()))
+        {
+            if (UTexture2D* MenuTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Menu_256x256.T_Menu_256x256")))
+                Icon->SetBrushFromTexture(MenuTex, false);
+        }
+    }
 }
 
 void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
@@ -608,16 +729,16 @@ void UCampaignSelectDlg::HookupEvents()
         RestartButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnRestartButtonUnHovered);
     }
 
-    if (CancelButton)
+    if (MenuButton)
     {
-        CancelButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
-        CancelButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
+        MenuButton->OnClicked.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
+        MenuButton->OnClicked.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonClicked);
 
-        CancelButton->OnHovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
-        CancelButton->OnHovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
+        MenuButton->OnHovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
+        MenuButton->OnHovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonHovered);
 
-        CancelButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
-        CancelButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
+        MenuButton->OnUnhovered.RemoveDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
+        MenuButton->OnUnhovered.AddDynamic(this, &UCampaignSelectDlg::OnCancelButtonUnHovered);
     }
 }
 
@@ -838,9 +959,9 @@ void UCampaignSelectDlg::UpdateCampaignButtons()
         RestartButton->SetIsEnabled(bHasSave);
     }
 
-    if (CancelButton)
+    if (MenuButton)
     {
-        CancelButton->SetIsEnabled(true);
+        MenuButton->SetIsEnabled(true);
     }
 }
 

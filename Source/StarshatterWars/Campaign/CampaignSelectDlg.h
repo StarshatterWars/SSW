@@ -88,6 +88,8 @@ protected:
 
 protected:
     void BuildWidgetTreeIfNeeded();
+    void EnsureCampaignIconButtons();
+    void ApplyCampaignMenuButtonTextures();
     void HookupEvents();
     void PopulateCampaignDropdown();
     void RefreshFromSelection();
