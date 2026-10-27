@@ -30,6 +30,7 @@
 
 class UButton;
 class UTextBlock;
+class UWidgetTree;
 
 // Legacy forward decls:
 class Starshatter;
@@ -51,6 +52,9 @@ protected:
 
     // Use for per-show refresh / gating re-eval
     virtual void NativeConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    void BuildModernMenu();
+    void RefreshIdentityLabels();
 
 public:
     virtual void ExecFrame(double DeltaTime) override;
@@ -99,6 +103,9 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UTextBlock> VersionText;
 
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerIdentityText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignIdentityText = nullptr;
+
 protected:
     // ------------------------------------------------------------
     // Runtime state
@@ -110,6 +117,9 @@ protected:
     bool bFirstRun_NoPlayerSave = false;
     bool bHasCampaignSelected = true;
     bool bDelegatesBound = false;
+    bool bDesignerGameButton = false;
+    bool bDesignerTacButton = false;
+    bool bDesignerExitButton = false;
 
     UPROPERTY(Transient)
     TObjectPtr<UMultiplayerDlg> MultiplayerScreen = nullptr;
