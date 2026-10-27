@@ -15,6 +15,8 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Styling/CoreStyle.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/ScaleBox.h"
@@ -55,16 +57,95 @@ void UMissionsPanelDriver::BuildDriverLayout()
     DarkHeaderStrip->SetHeightOverride(5.f);
     DarkHeaderRule->SetContent(DarkHeaderStrip);
     Column->AddChildToVerticalBox(DarkHeaderRule)->SetPadding(FMargin(0.f,0.f,0.f,12.f));
-    UHorizontalBox* Tabs=WidgetTree->ConstructWidget<UHorizontalBox>();Column->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f,0.f,0.f,12.f));
-    auto Tab=[this,Tabs,Label](const TCHAR* Name)->UButton*{ UButton* B=WidgetTree->ConstructWidget<UButton>(); B->SetContent(Label(Name,20,FLinearColor::Black)); UHorizontalBoxSlot* S=Tabs->AddChildToHorizontalBox(B);FSlateChildSize F;F.SizeRule=ESlateSizeRule::Fill;F.Value=1.f;S->SetSize(F);S->SetPadding(FMargin(0.f,0.f,10.f,0.f)); return B; };
-    Tab(TEXT("CAMPAIGN"))->OnClicked.AddDynamic(this,&UMissionsPanelDriver::OpenCampaign);
-    Tab(TEXT("SINGLE"))->OnClicked.AddDynamic(this,&UMissionsPanelDriver::OpenSingle);
-    Tab(TEXT("CUSTOM"))->OnClicked.AddDynamic(this,&UMissionsPanelDriver::OpenCustom);
-    Tab(TEXT("MULTIPLAYER"))->OnClicked.AddDynamic(this,&UMissionsPanelDriver::OpenMultiplayer);
+    // Five top-row buttons: four modes and MENU, with the menu pinned to the far right.
+    UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Column->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+    auto MakeTab = [this, Tabs](const TCHAR* Name, bool bIsMenu)->UButton*
+    {
+        UButton* NewButton = WidgetTree->ConstructWidget<UButton>();
+        UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
+        Caption->SetText(FText::FromString(Name));
+        Caption->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Caption->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        Caption->SetJustification(ETextJustify::Center);
+        Caption->SetAutoWrapText(false);
+        NewButton->SetContent(Caption);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(Caption->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(10.f, 4.f));
+        }
+        UHorizontalBoxSlot* TabSlot = Tabs->AddChildToHorizontalBox(NewButton);
+        TabSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        TabSlot->SetPadding(FMargin(0.f, 0.f, bIsMenu ? 0.f : 10.f, 0.f));
+        return NewButton;
+    };
+    CampaignTab = MakeTab(TEXT("CAMPAIGN"), false);
+    SingleTab = MakeTab(TEXT("SINGLE"), false);
+    CustomTab = MakeTab(TEXT("CUSTOM"), false);
+    MultiplayerTab = MakeTab(TEXT("MULTIPLAYER"), false);
+    MenuTab = MakeTab(TEXT("MENU"), true);
+    CampaignTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCampaign);
+    SingleTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenSingle);
+    CustomTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCustom);
+    MultiplayerTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenMultiplayer);
+    MenuTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::Back);
+    RefreshTabStyles();
     ContentHost=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("MissionsDriver_ContentHost"));
     UVerticalBoxSlot* S=Column->AddChildToVerticalBox(ContentHost); FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;Fill.Value=1.f;S->SetSize(Fill);S->SetHorizontalAlignment(HAlign_Fill);S->SetVerticalAlignment(VAlign_Fill);
-    UButton* Return=WidgetTree->ConstructWidget<UButton>();Return->SetContent(Label(TEXT("RETURN TO MAIN MENU"),16,FLinearColor::Black));Column->AddChildToVerticalBox(Return)->SetPadding(FMargin(0.f,8.f,0.f,0.f));Return->OnClicked.AddDynamic(this,&UMissionsPanelDriver::Back);
+
 }
+void UMissionsPanelDriver::RefreshTabStyles()
+{
+    // Active tab is blue, inactive tabs cyan, MENU always red.
+    const TCHAR* BlueN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_n.T_Btn01Blue_n");
+    const TCHAR* BlueP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_p.T_Btn01Blue_p");
+    const TCHAR* CyanN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Cyan_n.T_Btn01Cyan_n");
+    const TCHAR* CyanP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Cyan_p.T_Btn01Cyan_p");
+    const TCHAR* RedN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n");
+    const TCHAR* RedP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p");
+
+    auto StyleTab = [](UButton* Button, const TCHAR* NormalPath, const TCHAR* PressedPath)
+    {
+        if (!Button) return;
+        UTexture2D* NormalTexture = LoadObject<UTexture2D>(nullptr, NormalPath);
+        UTexture2D* PressedTexture = LoadObject<UTexture2D>(nullptr, PressedPath);
+        if (!NormalTexture || !PressedTexture)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[MissionsDriver] Tab texture missing: %s or %s"), NormalPath, PressedPath);
+        }
+        FButtonStyle Style = Button->GetStyle();
+        if (NormalTexture)
+        {
+            Style.Normal.SetResourceObject(NormalTexture);
+            Style.Normal.DrawAs = ESlateBrushDrawType::Image;
+            Style.Normal.TintColor = FSlateColor(FLinearColor::White);
+        }
+        if (PressedTexture)
+        {
+            Style.Hovered.SetResourceObject(PressedTexture);
+            Style.Pressed.SetResourceObject(PressedTexture);
+            Style.Hovered.DrawAs = ESlateBrushDrawType::Image;
+            Style.Pressed.DrawAs = ESlateBrushDrawType::Image;
+            Style.Hovered.TintColor = FSlateColor(FLinearColor::White);
+            Style.Pressed.TintColor = FSlateColor(FLinearColor::White);
+        }
+        Style.NormalPadding = FMargin(0.f);
+        Style.PressedPadding = FMargin(0.f);
+        Button->SetStyle(Style);
+    };
+    StyleTab(CampaignTab, ActiveMode == EMissionsNavigationMode::Campaign ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Campaign ? BlueP : CyanP);
+    StyleTab(SingleTab, ActiveMode == EMissionsNavigationMode::Single ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Single ? BlueP : CyanP);
+    StyleTab(CustomTab, ActiveMode == EMissionsNavigationMode::Custom ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Custom ? BlueP : CyanP);
+    StyleTab(MultiplayerTab, ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueP : CyanP);
+    StyleTab(MenuTab, RedN, RedP);
+}
+
 void UMissionsPanelDriver::HideChildHeader(UUserWidget* Child)
 {
     if (!Child || !Child->WidgetTree) return;
@@ -90,6 +171,11 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
     HideChildHeader(Child);
     Child->SetVisibility(ESlateVisibility::Visible);
     if (ModeTitle)ModeTitle->SetText(FText::FromString(InModeTitle));
+    if (Child == CampaignChild) ActiveMode = EMissionsNavigationMode::Campaign;
+    else if (Child == SingleChild) ActiveMode = EMissionsNavigationMode::Single;
+    else if (Child == CustomChild) ActiveMode = EMissionsNavigationMode::Custom;
+    else if (Child == MultiplayerChild) ActiveMode = EMissionsNavigationMode::Multiplayer;
+    RefreshTabStyles();
     UE_LOG(LogTemp,Warning,TEXT("[MissionsDriver] Embedded %s class=%s"),InModeTitle,*GetNameSafe(Child->GetClass()));
 }
 void UMissionsPanelDriver::ShowCampaignMode()

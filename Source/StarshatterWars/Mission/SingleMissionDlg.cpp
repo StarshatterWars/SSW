@@ -534,7 +534,7 @@ void USingleMissionDlg::LaunchSelected()
     // or the inherited campaign OnAcceptClicked(). Active story campaign is unchanged.
     // Do not invoke Repository->Load() here.  The selected DT_SingleMissions
     // row is already authoritative and Load() can reset the legacy singleton
-    // while its pointer is still in use (the previous crash at this line).
+    // while its pointer is still in use (the previous crash at this line).n
     // DT_SingleMissions and legacy SINGLE_MISSIONS are separate registries.
     // A cooked DataTable mission can be selected without a legacy MissionInfo.
     // In that case construct directly from the selected, authoritative row.
