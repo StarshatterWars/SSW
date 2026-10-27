@@ -2215,7 +2215,9 @@ void UMissionBriefingDlg::OnCommit()
     UGameViewportClient* Viewport = World ? World->GetGameViewport() : nullptr;
     if (!MissionPtr || !Viewport)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefing] No mission/viewport for sector preview"));
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] PROCEED blocked: no mission or game viewport. Mission=%p Viewport=%p"), MissionPtr, Viewport);
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red,
+            TEXT("MISSION PROCEED: Mission data or viewport unavailable. See Output Log."));
         return;
     }
 
@@ -2231,8 +2233,10 @@ void UMissionBriefingDlg::OnCommit()
     if (SystemName.IsEmpty() || !FPackageName::IsValidLongPackageName(PackagePath) ||
         !FPackageName::DoesPackageExist(PackagePath, &PackageFilename))
     {
-        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] System map not found: %s"), *PackagePath);
-        return; // Leave the briefing available when the map cannot be resolved.
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] PROCEED blocked: system map not found: %s (mission=%hs)"), *PackagePath, MissionPtr->GetName());
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 9.f, FColor::Red,
+            FString::Printf(TEXT("MISSION PROCEED: Missing map %s"), *PackagePath));
+        return; // Do not enter an empty mission when the authored map is absent.
     }
 
 

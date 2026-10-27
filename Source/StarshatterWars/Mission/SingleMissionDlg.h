@@ -15,19 +15,6 @@ class MissionInfo;
 class Campaign;
 struct FS_CampaignMission;
 
-class USingleMissionDlg;
-
-// One delegate target per dynamic roster entry; avoids the old ten-row cap.
-UCLASS()
-class STARSHATTERWARS_API UCampaignMissionRowClick : public UObject
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(Transient) TObjectPtr<USingleMissionDlg> Owner = nullptr;
-    int32 MissionId = 0;
-    UFUNCTION() void OnClicked();
-};
-
 UCLASS()
 class STARSHATTERWARS_API USingleMissionDlg : public UMissionSelectDlg
 {
@@ -35,14 +22,11 @@ class STARSHATTERWARS_API USingleMissionDlg : public UMissionSelectDlg
 public:
     USingleMissionDlg(const FObjectInitializer& ObjectInitializer);
     virtual void Show() override;
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-    void ChooseCampaignMissionById(int32 InMissionId);
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
     virtual bool IsCustomMissionView() const { return false; }
     virtual bool IsCampaignMissionView() const { return false; }
 protected:
-    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     void BuildSingleMissionScreen();
     void RefreshMissionRoster();
@@ -63,6 +47,7 @@ protected:
     UFUNCTION() void OnCampaignTabPressed();
     UFUNCTION() void OnSingleTabPressed();
     UFUNCTION() void OnCustomTabPressed();
+    UFUNCTION() void OnMultiplayerTabPressed();
     UFUNCTION() void OnMission01Pressed();
     UFUNCTION() void OnMission02Pressed();
     UFUNCTION() void OnMission03Pressed();
@@ -90,10 +75,6 @@ protected:
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
     TArray<MissionInfo*> CustomMissionInfos;
-    TArray<MissionInfo*> CampaignMissionInfos;
-    UPROPERTY(Transient) TArray<TObjectPtr<UCampaignMissionRowClick>> CampaignRowCallbacks;
-    Campaign* LastCampaignRoster = nullptr;
-    TArray<int32> LastCampaignMissionIds;
     Campaign* CustomCampaign = nullptr; // Owned by legacy Campaign registry.
     int32 PendingCustomDeleteId = INDEX_NONE;
     int32 ChosenIndex = INDEX_NONE;

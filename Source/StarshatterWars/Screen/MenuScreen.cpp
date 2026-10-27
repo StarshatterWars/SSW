@@ -12,11 +12,11 @@
 #include "PlayerDlg.h"
 #include "AwardShowDlg.h"
 #include "MissionSelectDlg.h"
+#include "MissionsPanelDriver.h"
+#include "MultiplayerDlg.h"
 #include "CustomMissionDlg.h"
-#include "CampaignMissionDlg.h"
 #include "CmdMissionsDlg.h"
 #include "CampaignSelectDlg.h"
-#include "Campaign.h"
 #include "MissionEditorDlg.h"
 #include "MissionElementDlg.h"
 #include "MissionBriefingDlg.h"
@@ -213,9 +213,11 @@ void UMenuScreen::HideAll()
     HideDialog(PlayerDlg);
     HideDialog(AwardDlg);
 
+    HideDialog(MissionsPanelDriver);
+    HideDialog(MultiplayerMissionDlg);
+    HideDialog(CustomMissionDlg);
     HideDialog(MissionSelectDlg);
     HideDialog(CustomMissionDlg);
-    HideDialog(CampaignMissionDlg);
     HideDialog(CmdMissionsDlg);
     HideDialog(CmdDlg);
     HideDialog(CmpnScreen);
@@ -293,7 +295,6 @@ void UMenuScreen::TearDown()
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionBriefingDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CustomMissionDlg));
-    Destroy(reinterpret_cast<UBaseScreen*&>(CampaignMissionDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmpSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdMissionsDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmdDlg));
@@ -719,6 +720,46 @@ void UMenuScreen::ShowMissionDlg()
 
 void UMenuScreen::ShowMissionSelectDlg()
 {
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) { UE_LOG(LogTemp, Error, TEXT("[MissionsDriver] Missing player controller")); return; }
+    if (!MissionsPanelDriver)
+        MissionsPanelDriver = CreateWidget<UMissionsPanelDriver>(PC, UMissionsPanelDriver::StaticClass());
+    if (!MissionsPanelDriver) return;
+    HideAll();
+    MissionsPanelDriver->SetMenuManager(this);
+    if (MissionsPanelDriver->IsInViewport()) MissionsPanelDriver->RemoveFromParent();
+    MissionsPanelDriver->AddToViewport(300);
+    MissionsPanelDriver->SetVisibility(ESlateVisibility::Visible);
+    MissionsPanelDriver->SetIsEnabled(true);
+    MissionsPanelDriver->SetIsFocusable(true);
+    MissionsPanelDriver->SetDialogInputEnabled(true);
+    CurrentDialog = MissionsPanelDriver;
+    ApplyUIFocus(PC, MissionsPanelDriver);
+    MissionsPanelDriver->Show();
+}
+
+void UMenuScreen::ShowMultiplayerMissionDlg()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    if (!MultiplayerMissionDlg)
+        MultiplayerMissionDlg = CreateWidget<UMultiplayerDlg>(PC, UMultiplayerDlg::StaticClass());
+    if (!MultiplayerMissionDlg) return;
+    HideAll();
+    MultiplayerMissionDlg->SetMenuManager(this);
+    if (MultiplayerMissionDlg->IsInViewport()) MultiplayerMissionDlg->RemoveFromParent();
+    MultiplayerMissionDlg->AddToViewport(300);
+    MultiplayerMissionDlg->SetVisibility(ESlateVisibility::Visible);
+    MultiplayerMissionDlg->SetIsEnabled(true);
+    MultiplayerMissionDlg->SetIsFocusable(true);
+    MultiplayerMissionDlg->SetDialogInputEnabled(true);
+    CurrentDialog = MultiplayerMissionDlg;
+    ApplyUIFocus(PC, MultiplayerMissionDlg);
+    MultiplayerMissionDlg->Show();
+}
+
+void UMenuScreen::ShowSingleMissionDlg()
+{
     if (bReturnToCustomMissionsAfterEditor)
     {
         bReturnToCustomMissionsAfterEditor = false;
@@ -775,41 +816,6 @@ void UMenuScreen::ShowMissionSelectDlg()
         (int32)MissionSelectDlg->GetVisibility());
 }
 
-void UMenuScreen::ShowCampaignMissionDlg()
-{
-    // Mission tabs are navigation, not campaign activation. Never redirect to
-    // Campaign Select merely because the current campaign is not ACTIVE:
-    // that prevents Campaign Missions from being viewed before Operations.
-    // The actual campaign lifecycle is owned by the Start/Continue flow.
-    Campaign* ActiveCampaign = Campaign::GetCampaign();
-    UE_LOG(LogTemp, Warning,
-        TEXT("[CampaignMissionEntry] Direct opening: campaign=%p id=%d active=%d missions=%d"),
-        static_cast<void*>(ActiveCampaign),
-        ActiveCampaign ? ActiveCampaign->GetCampaignId() : -1,
-        ActiveCampaign && ActiveCampaign->IsActive() ? 1 : 0,
-        ActiveCampaign ? ActiveCampaign->GetMissionList().size() : 0);
-
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC) return;
-    if (!CampaignMissionDlg)
-    {
-        CampaignMissionDlg = CreateWidget<UCampaignMissionDlg>(PC, UCampaignMissionDlg::StaticClass());
-        if (!CampaignMissionDlg) return;
-    }
-    HideAll();
-    CampaignMissionDlg->SetMenuManager(this);
-    CampaignMissionDlg->InitializeDlg(this);
-    if (CampaignMissionDlg->IsInViewport()) CampaignMissionDlg->RemoveFromParent();
-    CampaignMissionDlg->AddToViewport(300);
-    CampaignMissionDlg->SetIsEnabled(true);
-    CampaignMissionDlg->SetIsFocusable(true);
-    CampaignMissionDlg->SetVisibility(ESlateVisibility::Visible);
-    CampaignMissionDlg->SetDialogInputEnabled(true);
-    CurrentDialog = CampaignMissionDlg;
-    ApplyUIFocus(PC, CampaignMissionDlg);
-    CampaignMissionDlg->Show();
-}
-
 void UMenuScreen::ShowCustomMissionDlg()
 {
     APlayerController* PC = GetOwningPlayer();
@@ -822,9 +828,6 @@ void UMenuScreen::ShowCustomMissionDlg()
         CustomMissionDlg = CreateWidget<UCustomMissionDlg>(PC, UCustomMissionDlg::StaticClass());
         if (!CustomMissionDlg) return;
     }
-
-    // Ensure the native custom widget hierarchy exists before viewport insertion.
-    CustomMissionDlg->TakeWidget();
 
     HideAll();
     CustomMissionDlg->SetMenuManager(this);

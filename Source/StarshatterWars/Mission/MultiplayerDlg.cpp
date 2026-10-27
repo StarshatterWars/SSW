@@ -129,6 +129,7 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
 
     UVerticalBox* Heading = WidgetTree->ConstructWidget<UVerticalBox>();
     Full->AddChildToVerticalBox(Heading)->SetPadding(FMargin(5.f, 4.f, 5.f, 18.f));
+    Heading->AddChildToVerticalBox(MakeLabel(TEXT("STARSHATTER WARS  /  TACTICAL OPERATIONS  /  MULTIPLAYER"), 15, MultiplayerColors::Accent));
     // Dark-grey title band, shared visually with the Campaign Selection header.
     UBorder* SingleTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
     SingleTitleBand->SetPadding(FMargin(18.f, 11.f, 18.f, 11.f));
@@ -136,6 +137,7 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     MultiplayerHeaderText->SetFont(MissionUIStyle::GetHeaderFont(38));
     SingleTitleBand->SetContent(MultiplayerHeaderText);
     Heading->AddChildToVerticalBox(SingleTitleBand)->SetPadding(FMargin(0.f, 7.f, 0.f, 7.f));
+    Heading->AddChildToVerticalBox(MakeLabel(TEXT("MULTIPLAYER SCENARIOS  /  NETWORK OPERATIONS"), 14, MultiplayerColors::Muted));
     UBorder* HeaderRule = MakePanel(MultiplayerColors::Accent);
     HeaderRule->SetPadding(FMargin(0.f));
     UVerticalBoxSlot* RuleSlot = Heading->AddChildToVerticalBox(HeaderRule);
@@ -157,7 +159,7 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     Left->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
     UVerticalBox* LeftContent = WidgetTree->ConstructWidget<UVerticalBox>();
     LeftPanel->SetContent(LeftContent);
-    LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSIONS"), 18, MultiplayerColors::Accent));
+    LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("AVAILABLE OPERATIONS"), 18, MultiplayerColors::Accent));
     MissionCountLabel = MakeLabel(TEXT(""), 13, MultiplayerColors::Muted);
     LeftContent->AddChildToVerticalBox(MissionCountLabel)->SetPadding(FMargin(0.f, 5.f, 0.f, 12.f));
     UScrollBox* RosterScroll = WidgetTree->ConstructWidget<UScrollBox>();
@@ -179,7 +181,7 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     RightPanel->SetContent(MissionDetailsScroll);
     UVerticalBox* RightContent = WidgetTree->ConstructWidget<UVerticalBox>();
     MissionDetailsScroll->AddChild(RightContent);
-    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("BRIEFING"), 18, MultiplayerColors::Accent));
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION INTELLIGENCE  /  AUTHORED SCENARIO"), 18, MultiplayerColors::Accent));
     MissionTitle = MakeLabel(TEXT("SELECT A MISSION"), 26, MultiplayerColors::Primary, true);
     MissionTitle->SetFont(MissionUIStyle::GetHeaderFont(26));
     UBorder* MissionTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
@@ -192,20 +194,25 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     RightContent->AddChildToVerticalBox(MissionRole)->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
     RightContent->AddChildToVerticalBox(MissionLocation)->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
     RightContent->AddChildToVerticalBox(MissionTime)->SetPadding(FMargin(0.f, 0.f, 0.f, 18.f));
-    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("SITUATION"), 17, MultiplayerColors::Accent));
-    MissionSummary = MakeLabel(TEXT(""), 17, MultiplayerColors::Primary, true);
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("TACTICAL SITUATION"), 17, MultiplayerColors::Accent));
+    MissionSummary = MakeLabel(TEXT("Choose a mission from the roster."), 17, MultiplayerColors::Primary, true);
     RightContent->AddChildToVerticalBox(MissionSummary)->SetPadding(FMargin(0.f, 8.f, 0.f, 20.f));
-    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("OBJECTIVES"), 17, MultiplayerColors::Accent));
-    MissionObjectives = MakeLabel(TEXT(""), 15, MultiplayerColors::Primary, true);
+    RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION OBJECTIVE"), 17, MultiplayerColors::Accent));
+    MissionObjectives = MakeLabel(TEXT("Full objectives and loadout are available in Multiplayer Briefing."), 15, MultiplayerColors::Primary, true);
     RightContent->AddChildToVerticalBox(MissionObjectives)->SetPadding(FMargin(0.f, 8.f));
 
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
-    UButton* BackButton = MakeActionButton(TEXT("BACK"));
+    UButton* BackButton = MakeActionButton(TEXT("BACK TO MAIN MENU"));
     Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
     BackButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnBackPressed);
 
-    LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
+    // Keep legacy editing affordances visible, but disabled for built-in missions.
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE MISSION"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+
+    LaunchButton = MakeActionButton(TEXT("OPEN MULTIPLAYER BRIEFING"), false);
     Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     LaunchButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnLaunchPressed);
 }
@@ -278,7 +285,7 @@ void UMultiplayerDlg::RefreshMissionRoster()
         MissionButtons.Add(RowButton);
     }
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
-        TEXT("%d missions"), MissionIds.Num())));
+        TEXT("%d missions  /  sourced from DT_MultiplayerMissions"), MissionIds.Num())));
     if (!MissionIds.IsEmpty()) SelectMissionAt(0);
     else RefreshMissionDetails();
 }
@@ -310,21 +317,21 @@ void UMultiplayerDlg::RefreshMissionDetails()
     if (MissionTitle) MissionTitle->SetText(FText::FromString(Scenario
         ? Scenario->MissionName : TEXT("NO MISSION SELECTED")));
     if (MissionRole) MissionRole->SetText(FText::FromString(Scenario
-        ? FString::Printf(TEXT("TYPE: %s"),
+        ? FString::Printf(TEXT("OPERATION TYPE  /  %s"),
             *FString(Mission::GetRoleName(static_cast<int32>(Scenario->MissionType)))) : TEXT("")));
     if (MissionLocation) MissionLocation->SetText(FText::FromString(Scenario
-        ? FString::Printf(TEXT("%s / %s"),
+        ? FString::Printf(TEXT("SYSTEM  /  %s     REGION  /  %s"),
             *Scenario->MissionSystem, *Scenario->MissionRegion) : TEXT("")));
     if (MissionTime) MissionTime->SetText(FText::FromString(Scenario
-        ? FString::Printf(TEXT("%s  /  %d elements"),
+        ? FString::Printf(TEXT("START TIME  /  %s     FORCES  /  %d ELEMENTS"),
             *Scenario->StartTime, Scenario->Element.Num()) : TEXT("")));
     const FString Situation = Scenario
         ? (!Scenario->Sitrep.IsEmpty() ? Scenario->Sitrep : Scenario->Desc) : FString();
     if (MissionSummary) MissionSummary->SetText(FText::FromString(Scenario
-        ? Situation.Replace(TEXT("\\n"), TEXT("\n")) : TEXT("")));
+        ? Situation.Replace(TEXT("\\n"), TEXT("\n")) : TEXT("Choose a mission from the roster.")));
     if (MissionObjectives) MissionObjectives->SetText(FText::FromString(Scenario && !Scenario->Objective.IsEmpty()
         ? Scenario->Objective.Replace(TEXT("\\n"), TEXT("\n"))
-        : TEXT("")));
+        : TEXT("Full objectives and loadout are available in Multiplayer Briefing.")));
     if (LaunchButton) LaunchButton->SetIsEnabled(Scenario != nullptr);
 }
 
@@ -370,7 +377,7 @@ void UMultiplayerDlg::OnBackPressed()
     // This dialog is created directly by MenuDlg; remove it from the viewport
     // so it cannot remain above the main menu after Back.
     RemoveFromParent();
-    if (manager) manager->ShowMenuDlg();
+    if (manager) manager->ShowMissionSelectDlg();
     else OnCancelClicked();
 }
 void UMultiplayerDlg::OnMission01Pressed() { SelectMissionAt(0); }

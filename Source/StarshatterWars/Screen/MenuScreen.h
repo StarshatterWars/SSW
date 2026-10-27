@@ -19,7 +19,8 @@ class UAwardShowDlg;
 
 class UMissionSelectDlg;
 class UCustomMissionDlg;
-class UCampaignMissionDlg;
+class UMissionsPanelDriver;
+class UMultiplayerDlg;
 class UCampaignSelectDlg;
 class UCmdMissionsDlg;
 class UCmdDlg;
@@ -79,9 +80,10 @@ public:
 
     void ShowMenuDlg();
     void ShowCampaignSelectDlg();
-    void ShowMissionSelectDlg();
+    void ShowMissionSelectDlg(); // Entry: four-way mission driver
+    void ShowSingleMissionDlg(); // Built-in single mission roster
+    void ShowMultiplayerMissionDlg();
     void ShowCustomMissionDlg();
-    void ShowCampaignMissionDlg();
     void ShowMissionEditorDlg();
     void EditMission(Mission* Model, MissionInfo* Info);
 
@@ -278,12 +280,17 @@ protected:
     UPROPERTY()
     TObjectPtr<UAwardShowDlg> AwardDlg;
 
+    UPROPERTY(Transient)
+    TObjectPtr<UMissionsPanelDriver> MissionsPanelDriver;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UMultiplayerDlg> MultiplayerMissionDlg;
+
     UPROPERTY()
     TObjectPtr<UMissionSelectDlg> MissionSelectDlg;
 
     UPROPERTY(Transient)
     TObjectPtr<UCustomMissionDlg> CustomMissionDlg;
-    UPROPERTY(Transient) TObjectPtr<UCampaignMissionDlg> CampaignMissionDlg;
     bool bReturnToCustomMissionsAfterEditor = false;
 
     UPROPERTY()
