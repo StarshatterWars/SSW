@@ -1,4 +1,5 @@
 /* Starshatter Wars - modern single-mission roster.
+/* Starshatter Wars - modern single-mission roster.
    Uses legacy Multiplayer Missions campaign and original PREP-mode handoff.
    The existing MissionSelectDlg is intentionally not modified. */
 #include "MultiplayerDlg.h"
@@ -292,7 +293,7 @@ void UMultiplayerDlg::RefreshMissionRoster()
         MissionButtons.Add(RowButton);
     }
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
-        TEXT("%d missions  /  sourced from DT_MultiplayerMissions"), MissionIds.Num())));
+        TEXT("%d Available Missions"), MissionIds.Num())));
     if (!MissionIds.IsEmpty()) SelectMissionAt(0);
     else RefreshMissionDetails();
 }

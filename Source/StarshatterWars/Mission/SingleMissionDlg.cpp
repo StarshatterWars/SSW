@@ -33,6 +33,26 @@
 #include "StarshatterUIStyleSubsystem.h"
 #include "MissionUIStyle.h"
 
+void USSWCampaignMissionRowAction::Activate()
+{
+    if (USingleMissionDlg* Dialog = Owner.Get())
+        Dialog->SelectCampaignMissionRow(RowIndex);
+}
+
+void USingleMissionDlg::SelectCampaignMissionRow(int32 RowIndex)
+{
+    if (IsCampaignMissionView()) SelectMissionAt(RowIndex);
+}
+
+// Match the visibility rules used by Operations (CmdMissionsDlg).
+static bool SSWIsVisibleCampaignMission(const MissionInfo* Info, Campaign* Current)
+{
+    if (!Info) return false;
+    if (Info->DisplayType == EMissionDisplayType::PlayerMission) return true;
+    if (Info->type == static_cast<int32>(EMissionType::TRAINING)) return true;
+    return Current && Current->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden;
+}
+
 namespace SingleMissionColors
 {
     const FLinearColor Backdrop(0.012f, 0.025f, 0.045f, 1.0f);
@@ -260,8 +280,10 @@ void USingleMissionDlg::Show()
 void USingleMissionDlg::RefreshMissionRoster()
 {
     if (!MissionRoster) return;
+    const int32 PreviousId = IsCampaignMissionView() ? MissionId : 0;
     MissionRoster->ClearChildren();
     MissionButtons.Reset();
+    CampaignRowActions.Reset();
     MissionIds.Reset();
     ScenarioRows.Reset();
     CustomMissionInfos.Reset();
@@ -276,23 +298,32 @@ void USingleMissionDlg::RefreshMissionRoster()
         Campaign* ActiveCampaign = Campaign::GetCampaign();
         if (ActiveCampaign)
         {
-            ListIter<MissionInfo> MissionIter = ActiveCampaign->GetMissionList();
-            while (++MissionIter)
+            // Operations does not load a different campaign or synthesize missions.
+            // It reads the current campaign's populated mission list.
+            List<MissionInfo>& ActiveMissions = ActiveCampaign->GetMissionList();
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Active campaign=%hs total=%d"),
+                ActiveCampaign->GetName(), ActiveMissions.size());
+            for (int32 MissionIndex = 0; MissionIndex < ActiveMissions.size(); ++MissionIndex)
             {
-                MissionInfo* Info = MissionIter.value();
-                if (!Info || Info->id <= 0) continue;
-                UButton* MissionButton = MakeActionButton(ANSI_TO_TCHAR(Info->name.data()), true, true);
-                MissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
-                MissionRoster->AddChildToVerticalBox(MissionButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
-                MissionButtons.Add(MissionButton);
+                MissionInfo* Info = ActiveMissions[MissionIndex];
+                if (!SSWIsVisibleCampaignMission(Info, ActiveCampaign)) continue;
+                UButton* RowButton = MakeActionButton(UTF8_TO_TCHAR(Info->name.data()), true, true);
+                USSWCampaignMissionRowAction* Action = NewObject<USSWCampaignMissionRowAction>(this);
+                Action->Owner = this;
+                Action->RowIndex = MissionIds.Num();
+                RowButton->OnClicked.AddDynamic(Action, &USSWCampaignMissionRowAction::Activate);
+                CampaignRowActions.Add(Action);
+                MissionRoster->AddChildToVerticalBox(RowButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+                MissionButtons.Add(RowButton);
                 MissionIds.Add(Info->id);
                 ScenarioRows.Add(nullptr);
                 CustomMissionInfos.Add(Info);
             }
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Operations-compatible visible=%d"), MissionIds.Num());
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] No active campaign"));
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] No active campaign; Operations has no campaign either"));
         }
     }
     else if (!IsCustomMissionView())
@@ -383,7 +414,19 @@ void USingleMissionDlg::RefreshMissionRoster()
     if (DeleteMissionButton) DeleteMissionButton->SetVisibility(IsCustomMissionView() ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
         TEXT("%d missions"), MissionIds.Num())));
-    if (!MissionIds.IsEmpty()) SelectMissionAt(0);
+    if (IsCampaignMissionView() && MissionIds.IsEmpty())
+    {
+        MissionCountLabel->SetText(FText::FromString(
+            Campaign::GetCampaign() ? TEXT("No playable missions in the active campaign")
+                                    : TEXT("No active campaign. Start or load a campaign in Operations.")));
+    }
+    int32 RestoreIndex = 0;
+    if (IsCampaignMissionView() && PreviousId > 0)
+    {
+        const int32 ExistingIndex = MissionIds.IndexOfByKey(PreviousId);
+        if (ExistingIndex != INDEX_NONE) RestoreIndex = ExistingIndex;
+    }
+    if (!MissionIds.IsEmpty()) SelectMissionAt(RestoreIndex);
     else
     {
         if (EditMissionButton) EditMissionButton->SetIsEnabled(false);
@@ -466,12 +509,19 @@ void USingleMissionDlg::LaunchSelected()
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Invalid active campaign mission ID=%d"), MissionId);
             return;
         }
-        ActiveCampaign->SetMissionId(MissionId);
-        if (!ActiveCampaign->GetMission(MissionId))
+        Mission* ReadyMission = ActiveCampaign->GetMission(MissionId);
+        if (!ReadyMission)
         {
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Failed to load mission ID=%d"), MissionId);
             return;
         }
+        // Validate before altering the current campaign mission selection.
+        if (!ReadyMission->IsOK())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Mission id=%d is not ready"), MissionId);
+            return;
+        }
+        ActiveCampaign->SetMissionId(MissionId);
         if (UGameInstance* GI = GetGameInstance())
             if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
                 Runtime->SetGameMode(EGameMode::PREP);

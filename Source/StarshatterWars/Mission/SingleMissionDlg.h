@@ -13,6 +13,18 @@ class UVerticalBox;
 class UCanvasPanel;
 class MissionInfo;
 class Campaign;
+class USingleMissionDlg;
+
+/** Per-row selection callback: never infer selection from hover or focus. */
+UCLASS()
+class STARSHATTERWARS_API USSWCampaignMissionRowAction : public UObject
+{
+    GENERATED_BODY()
+public:
+    TWeakObjectPtr<USingleMissionDlg> Owner;
+    int32 RowIndex = INDEX_NONE;
+    UFUNCTION() void Activate();
+};
 struct FS_CampaignMission;
 
 UCLASS()
@@ -24,6 +36,7 @@ public:
     virtual void Show() override;
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
+    void SelectCampaignMissionRow(int32 RowIndex);
     virtual bool IsCustomMissionView() const { return false; }
     virtual bool IsCampaignMissionView() const { return false; }
 protected:
@@ -73,6 +86,7 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UButton> EditMissionButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> DeleteMissionButton = nullptr;
     UPROPERTY(Transient) TArray<TObjectPtr<UButton>> MissionButtons;
+    UPROPERTY(Transient) TArray<TObjectPtr<USSWCampaignMissionRowAction>> CampaignRowActions;
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
     TArray<MissionInfo*> CustomMissionInfos;
