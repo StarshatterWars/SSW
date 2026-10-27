@@ -24,7 +24,6 @@
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
-#include "Engine/Engine.h"
 
 #include "SSWGameInstance.h"
 #include "SSWRuntimeSubsystem.h"
@@ -33,6 +32,7 @@
 #include "FontManager.h"
 #include "MusicController.h"
 #include "TimerSubsystem.h"
+#include "StarshatterPlayerSubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSSWGameInit, Log, All);
 
@@ -82,11 +82,6 @@ void USSWGameInitSubsystem::RunGameInit()
     {
         UE_LOG(LogSSWGameInit, Error, TEXT("[GAMEINIT] GameInstance is not USSWGameInstance."));
         return;
-    }
-
-    if (GEngine)
-    {
-        GEngine->bEnableOnScreenDebugMessages = false;
     }
 
     UE_LOG(LogSSWGameInit, Log, TEXT("[GAMEINIT] Starting game initialization."));
@@ -205,7 +200,15 @@ void USSWGameInitSubsystem::InitUniverseSave()
 
     GI->LoadOrCreateUniverse();
 
-    UE_LOG(LogSSWGameInit, Log, TEXT("[GAMEINIT] Universe save initialized."));
+    if (UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+    {
+        if (!PlayerSS->HasLoaded())
+            PlayerSS->LoadPlayer();
+    }
+
+    GI->ResumeCampaignClockFromPlayer();
+
+    UE_LOG(LogSSWGameInit, Log, TEXT("[GAMEINIT] Universe and campaign clocks started."));
 }
 
 void USSWGameInitSubsystem::BindRuntimeAutosave()

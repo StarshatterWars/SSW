@@ -6,7 +6,6 @@
 #include "SimUniverse.h"
 #include "Galaxy.h"
 #include "DataLoader.h"
-#include "Sound.h"
 #include "Sim.h"
 #include "FormattingUtils.h"
 
@@ -36,9 +35,9 @@
 #include "FontManager.h"
 
 #include "CampaignSave.h"
-#include "StarshatterGameDataSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
-#include "Campaign.h"
+#include "TimerSubsystem.h"
+#include "StarshatterGameDataSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
 #undef UpdateResource
@@ -83,94 +82,15 @@ void USSWGameInstance::Print(const FString& A, const FString& B)
 
 	UE_LOG(LogTemp, Log, TEXT("%s"), *Msg);
 
-	// Startup/progress messages remain in UE_LOG only; no in-game overlay.
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, Msg);
+	}
 }
 
-
-bool USSWGameInstance::RestoreSavedActiveCampaign()
-{
-    // Idempotent: menu construction and the Missions driver may both request restoration.
-    UStarshatterPlayerSubsystem* PlayerSS = GetSubsystem<UStarshatterPlayerSubsystem>();
-    UStarshatterGameDataSubsystem* DataSS = GetSubsystem<UStarshatterGameDataSubsystem>();
-    if (!PlayerSS || !DataSS)
-        return false;
-
-    if (!PlayerSS->HasLoaded() && !PlayerSS->LoadPlayer())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CampaignRestore] Player save could not be read"));
-        return false;
-    }
-
-    if (!PlayerSS->HadExistingSaveOnLoad())
-    {
-        UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] No existing player save; campaign not selected"));
-        return false;
-    }
-
-    const FS_PlayerGameInfo& SavedPlayer = PlayerSS->GetPlayerInfo();
-    const int32 SavedIndex = SavedPlayer.Campaign; // 1-based, as stored by CampaignSelectDlg
-    if (SavedIndex <= 0)
-        return false;
-
-    // LoadAll belongs to the normal EGameMode::INIT pipeline. Never invoke it here.
-    if (!DataSS->IsLoaded())
-    {
-        UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] Data subsystem not ready; deferred"));
-        return false;
-    }
-
-    const FS_Campaign* SavedCampaign = DataSS->GetCampaignByIndex1Based(SavedIndex);
-    if (!SavedCampaign || !SavedCampaign->bAvailable)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CampaignRestore] Invalid/unavailable saved campaign index=%d"), SavedIndex);
-        return false;
-    }
-
-    if (!SavedPlayer.CampaignRowName.IsNone() &&
-        SavedPlayer.CampaignRowName != SavedCampaign->RowName)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[CampaignRestore] Saved row mismatch: index=%d saved=%s resolved=%s; refusing to change campaigns"),
-            SavedIndex, *SavedPlayer.CampaignRowName.ToString(), *SavedCampaign->RowName.ToString());
-        return false;
-    }
-
-    Campaign* Live = Campaign::GetCampaign();
-    if (!Live || Live->GetCampaignId() != SavedIndex)
-    {
-        if (!Campaign::SelectFromData(*SavedCampaign))
-        {
-            UE_LOG(LogTemp, Error, TEXT("[CampaignRestore] SelectFromData failed for %s"), *SavedCampaign->Name);
-            return false;
-        }
-        Live = Campaign::GetCampaign();
-        if (!Live)
-            return false;
-        Live->Start();
-    }
-
-    DataSS->CampaignIndex = SavedIndex - 1;
-    DataSS->SelectedCampaignRowName = SavedCampaign->RowName;
-    SelectedCampaignIndex = SavedIndex;
-    SelectedCampaignRowName = SavedCampaign->RowName;
-    SelectedCampaignDisplayName = SavedCampaign->Name;
-
-    // Do not create/reset a campaign save. A saved slot is loaded only if it exists.
-    if (!CampaignSave || CampaignSave->CampaignRowName != SavedCampaign->RowName)
-    {
-        const FString Slot = UCampaignSave::MakeSlotNameFromRowName(SavedCampaign->RowName);
-        if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
-            LoadOrCreateCampaignSave(SavedIndex, SavedCampaign->RowName, SavedCampaign->Name);
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] Active campaign='%s' id=%d missions=%d"),
-        *SavedCampaign->Name, SavedIndex, Live->GetMissionList().size());
-    return true;
-}
 
 void USSWGameInstance::ShowMainMenuScreen()
 {
-	RestoreSavedActiveCampaign();
 	RemoveScreens();
 
 	UWorld* World = GetWorld();
@@ -356,7 +276,6 @@ void USSWGameInstance::LoadTransitionScreen()
 void USSWGameInstance::Init()
 {
 	Super::Init();
-	USound::SetWorldContext(this);
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(
@@ -377,7 +296,6 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 
 void USSWGameInstance::Shutdown()
 {
-	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
 	Super::Shutdown();
@@ -1068,6 +986,9 @@ bool USSWGameInstance::SaveCampaign()
 		return false;
 	}
 
+	if (UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>())
+		CampaignSave->SavedUniverseTimeSeconds = Timer->GetUniverseTimeSeconds();
+
 	const FString Slot =
 		UCampaignSave::MakeSlotNameFromRowName(CampaignSave->CampaignRowName);
 
@@ -1395,6 +1316,47 @@ FString USSWGameInstance::GetCampaignAndUniverseTimeLine() const
 		*UniverseStr,
 		*TPlusStr
 	);
+}
+
+void USSWGameInstance::ResumeCampaignClockFromPlayer()
+{
+	LoadOrCreateUniverse();
+
+	UStarshatterPlayerSubsystem* PlayerSS = GetSubsystem<UStarshatterPlayerSubsystem>();
+	UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>();
+	if (!PlayerSS || !Timer || !PlayerSS->HasLoaded())
+		return;
+
+	const FS_PlayerGameInfo& Info = PlayerSS->GetPlayerInfo();
+	if (Info.Campaign <= 0 && Info.CampaignRowName.IsNone())
+		return;
+
+	SelectedCampaignIndex = Info.Campaign > 0 ? Info.Campaign : 1;
+	SelectedCampaignRowName = Info.CampaignRowName;
+	LoadOrCreateCampaignSave(SelectedCampaignIndex, SelectedCampaignRowName, SelectedCampaignDisplayName);
+	if (!CampaignSave)
+		return;
+
+	const uint64 Now = Timer->GetUniverseTimeSeconds();
+	if (!CampaignSave->bInitialized || CampaignSave->CampaignStartUniverseSeconds == 0)
+	{
+		CampaignSave->InitializeCampaignClock(Now);
+		SaveCampaign();
+	}
+	if (CampaignSave->SavedUniverseTimeSeconds > Now)
+		Timer->SetUniverseTimeSeconds(CampaignSave->SavedUniverseTimeSeconds);
+
+	Timer->SetCampaignSave(CampaignSave);
+	Timer->StartClock();
+	Timer->OnClockTick();
+	UE_LOG(LogTemp, Log, TEXT("[CampaignClock] Started from player save. Universe=%llu Start=%llu"),
+		(unsigned long long)Timer->GetUniverseTimeSeconds(),
+		(unsigned long long)CampaignSave->CampaignStartUniverseSeconds);
+}
+
+void USSWGameInstance::RestoreSavedActiveCampaign()
+{
+	ResumeCampaignClockFromPlayer();
 }
 
 void USSWGameInstance::HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow)

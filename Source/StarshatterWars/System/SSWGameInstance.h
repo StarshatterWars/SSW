@@ -153,9 +153,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Variables")
 	void ShowMainMenuScreen();
 
-	/** Restore the player-save campaign without overwriting live campaign progress. */
-	bool RestoreSavedActiveCampaign();
-
 	/** Rebuilds the MenuScreen shell in the newly loaded world and enters Operations. */
 	void ShowOperationsAfterLevelLoad();
 
@@ -482,6 +479,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Time")
 	FString GetCampaignAndUniverseTimeLine() const;
 
+	void ResumeCampaignClockFromPlayer();
+	void RestoreSavedActiveCampaign();
 	void HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow);
 
 	void SetupMusicController();

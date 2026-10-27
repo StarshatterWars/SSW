@@ -58,6 +58,7 @@ public:
 	int64 UniverseBaseUnixSeconds = 0;
 
 	void StartClock();
+	bool IsClockRunning() const { return TickHandle.IsValid(); }
 	void StopClock();
 
 	void OnClockTick();

@@ -69,6 +69,8 @@ class UCmdMissionsDlg;
 class UCmdIntelDlg;
 class UCmdTheaterDlg;
 class UCmdMsgDlg;
+class UCampaignMissionDlg;
+class UCanvasPanel;
 
 enum class ECmdScreen : uint8
 {
@@ -190,6 +192,24 @@ private:
     UPROPERTY()
     TArray<UMenuButton*> AllMenuButtons;
 
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsMenuTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsOrdersTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsTheaterTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsForcesTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsIntelTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsMissionTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> OperationsPlayTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UCampaignMissionDlg> OperationsCampaignMissions = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UCanvasPanel> OperationsContentHost = nullptr;
+
+    void BuildOperationsChrome();
+    void RefreshOperationsHeader();
+    void RefreshOperationsTabStyles();
+    UFUNCTION() void OpenOperationsOrders();
+    UFUNCTION() void OpenOperationsTheater();
+    UFUNCTION() void OpenOperationsForces();
+    UFUNCTION() void OpenOperationsIntel();
+    UFUNCTION() void OpenOperationsMissions();
     void ShowDlg();
     void HideDlg();
     void RefreshUIFromSubsystem();

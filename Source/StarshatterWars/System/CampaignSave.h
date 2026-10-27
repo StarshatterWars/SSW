@@ -39,10 +39,6 @@ public:
 	UPROPERTY(SaveGame)
 	FString CampaignDisplayName;
 
-	/** Cutscenes already presented in this campaign; reset with a new save on Restart. */
-	UPROPERTY(SaveGame)
-	TArray<FString> PlayedSceneNames;
-
 	// ----------------------
 	// Campaign Clock
 	// ----------------------
@@ -51,9 +47,17 @@ public:
 	UPROPERTY(SaveGame)
 	uint64 CampaignStartUniverseSeconds = 0;
 
+	/** Last universe time written with this campaign save. */
+	UPROPERTY(SaveGame)
+	uint64 SavedUniverseTimeSeconds = 0;
+
 	/** Set true after InitializeClock is called at campaign start. */
 	UPROPERTY(SaveGame)
 	bool bInitialized = false;
+
+	/** Cutscenes already played for this campaign. */
+	UPROPERTY(SaveGame)
+	TArray<FString> PlayedSceneNames;
 
 public:
 	// ----------------------
