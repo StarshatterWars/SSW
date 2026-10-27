@@ -37,6 +37,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<UMenuScreen> Manager = nullptr;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanel> ContentHost = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> ModeTitle = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CurrentTimeText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignTimeText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerNameText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerGroupText = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> ActiveChild = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> CampaignChild = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> SingleChild = nullptr;
@@ -44,6 +48,11 @@ private:
     UPROPERTY(Transient) TObjectPtr<UUserWidget> MultiplayerChild = nullptr;
     void SelectChild(UUserWidget* Child, const TCHAR* Title);
     void HideChildHeader(UUserWidget* Child);
+    void RefreshHeaderStatus();
+    void BindHeaderClock();
+    void HandleHeaderClock(uint64 UniverseSecondsNow);
+    void HandleCampaignClock(uint64 UniverseSecondsNow, uint64 TPlusSeconds);
+    bool bHeaderClockBound = false;
     UFUNCTION() void OpenCampaign();
     UFUNCTION() void OpenSingle();
     UFUNCTION() void OpenCustom();

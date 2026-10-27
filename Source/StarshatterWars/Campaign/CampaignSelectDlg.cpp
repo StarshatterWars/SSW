@@ -93,7 +93,6 @@ void UCampaignSelectDlg::NativeConstruct()
 
     BuildWidgetTreeIfNeeded();
     HookupEvents();
-    ApplyCampaignMenuButtonTextures();
     RegisterControls();
     RefreshUIFromSubsystem();
 }
@@ -360,9 +359,7 @@ void UCampaignSelectDlg::EnsureCampaignIconButtons()
     if (!WidgetTree) return;
     if (UWidget* Existing = WidgetTree->FindWidget(TEXT("CampaignSelect_MenuButton")))
     {
-        if (UButton* ExistingButton = Cast<UButton>(Existing))
-            MenuButton = ExistingButton;
-        ApplyCampaignMenuButtonTextures();
+        if (MenuButton) MenuButton->SetVisibility(ESlateVisibility::Visible);
         if (CancelButton && CancelButton != MenuButton)
             CancelButton->SetVisibility(ESlateVisibility::Collapsed);
         return;
@@ -446,42 +443,8 @@ void UCampaignSelectDlg::EnsureCampaignIconButtons()
         TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_n.T_Btn01Green_n"),
         TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_p.T_Btn01Green_p"),
         TEXT("Continue"));
-    ApplyCampaignMenuButtonTextures();
     if (CancelButton && CancelButton != MenuButton)
         CancelButton->SetVisibility(ESlateVisibility::Collapsed);
-}
-
-void UCampaignSelectDlg::ApplyCampaignMenuButtonTextures()
-{
-    if (!MenuButton) return;
-    auto SetBrush = [](FSlateBrush& Brush, UTexture2D* Texture)
-    {
-        Brush = FSlateBrush();
-        if (!Texture) return;
-        Brush.SetResourceObject(Texture);
-        Brush.DrawAs = ESlateBrushDrawType::Image;
-        Brush.ImageSize = FVector2D(64.f, 64.f);
-        Brush.Margin = FMargin(0.f);
-        Brush.TintColor = FSlateColor(FLinearColor::White);
-    };
-    UTexture2D* RedNormal = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"));
-    UTexture2D* RedPressed = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"));
-    FButtonStyle Style;
-    SetBrush(Style.Normal, RedNormal);
-    SetBrush(Style.Hovered, RedPressed ? RedPressed : RedNormal);
-    SetBrush(Style.Pressed, RedPressed ? RedPressed : RedNormal);
-    SetBrush(Style.Disabled, RedNormal);
-    Style.NormalPadding = FMargin(0.f);
-    Style.PressedPadding = FMargin(0.f);
-    MenuButton->SetStyle(Style);
-    if (USizeBox* IconBox = Cast<USizeBox>(MenuButton->GetChildAt(0)))
-    {
-        if (UImage* Icon = Cast<UImage>(IconBox->GetContent()))
-        {
-            if (UTexture2D* MenuTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Menu_256x256.T_Menu_256x256")))
-                Icon->SetBrushFromTexture(MenuTex, false);
-        }
-    }
 }
 
 void UCampaignSelectDlg::BuildCampaignDropdown(UCanvasPanel* MainCanvas)
@@ -1156,7 +1119,7 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
         PlayerSS->SavePlayer(true);
     }
 
-    if (bRestart)
+    if (bRestart || !DoesSelectedCampaignSaveExist())
     {
         GI->CreateNewCampaignSave(
             GI->SelectedCampaignIndex,
@@ -1165,38 +1128,16 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     }
     else
     {
-        const bool bHasSave = DoesSelectedCampaignSaveExist();
-
-        if (bHasSave)
-        {
-            GI->LoadOrCreateSelectedCampaignSave();
-        }
-        else
-        {
-            GI->CreateNewCampaignSave(
-                GI->SelectedCampaignIndex,
-                GI->SelectedCampaignRowName,
-                GI->SelectedCampaignDisplayName);
-        }
-
-        if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
-        {
-            Timer->SetCampaignSave(GI->CampaignSave);
-
-            if (!bHasSave)
-            {
-                Timer->RestartCampaignClock(true);
-            }
-        }
+        GI->LoadOrCreateSelectedCampaignSave();
     }
 
-    if (bRestart)
+    if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
     {
-        if (UTimerSubsystem* Timer = GIBase->GetSubsystem<UTimerSubsystem>())
-        {
-            Timer->SetCampaignSave(GI->CampaignSave);
+        Timer->SetCampaignSave(GI->CampaignSave);
+        Timer->StartClock();
+        if (bRestart || (GI->CampaignSave && GI->CampaignSave->CampaignStartUniverseSeconds == 0))
             Timer->RestartCampaignClock(true);
-        }
+        Timer->OnClockTick();
     }
 
     Mouse::Show(false);
