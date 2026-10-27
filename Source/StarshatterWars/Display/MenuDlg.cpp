@@ -31,11 +31,14 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Border.h"
+#include "Components/Image.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ButtonSlot.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "MissionUIStyle.h"
 #include "Styling/CoreStyle.h"
@@ -71,8 +74,8 @@ void UMenuDlg::BuildModernMenu()
 {
     if (!WidgetTree || WidgetTree->FindWidget(TEXT("SSWMenu_ModernRoot"))) return;
 
-    // Reuse designer-authored buttons if present. Preserve their child content,
-    // normal/hover/pressed brushes, dimensions and Blueprint-selected typography.
+    // Reuse designer-authored button instances when available. Text is rendered
+    // independently above them to defeat stale Blueprint text content.
     UButton* AuthoredGameButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnStart")));
     UButton* AuthoredTacButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnTac")));
     UButton* AuthoredExitButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnQuit")));
@@ -101,10 +104,21 @@ void UMenuDlg::BuildModernMenu()
     const FLinearColor Accent(0.35f, 0.74f, 0.86f, 1.f);
     const FLinearColor Muted(0.65f, 0.74f, 0.79f, 1.f);
 
-    UBorder* Backdrop = WidgetTree->ConstructWidget<UBorder>();
-    Backdrop->SetBrushColor(FLinearColor(0.045f, 0.085f, 0.12f, 1.f));
+    UImage* Backdrop = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("SSWMenu_SciFiBackground"));
+    if (UTexture2D* BackgroundTexture = LoadObject<UTexture2D>(nullptr,
+        TEXT("/Game/SciFiUIComponents/Textures/Bg/T_SciFi_Bg001.T_SciFi_Bg001")))
+    {
+        Backdrop->SetBrushFromTexture(BackgroundTexture, true);
+        Backdrop->SetColorAndOpacity(FLinearColor::White);
+    }
+    else
+    {
+        UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] SciFi background texture not found"));
+        Backdrop->SetColorAndOpacity(FLinearColor(0.045f, 0.085f, 0.12f, 1.f));
+    }
+    Backdrop->SetVisibility(ESlateVisibility::HitTestInvisible);
     UCanvasPanelSlot* BG = Root->AddChildToCanvas(Backdrop);
-    BG->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f)); BG->SetOffsets(FMargin(0.f));
+    BG->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f)); BG->SetOffsets(FMargin(0.f)); BG->SetZOrder(-2);
 
     UVerticalBox* Page = WidgetTree->ConstructWidget<UVerticalBox>();
     UCanvasPanelSlot* Main = Root->AddChildToCanvas(Page);
@@ -158,60 +172,75 @@ void UMenuDlg::BuildModernMenu()
     else Tile(BTac, TEXT("TACTICAL REFERENCE"), TEXT("Ships, weapons and mission roles"), 0);
     if (AuthoredExitButton) BQuit = AuthoredExitButton;
     else Tile(BQuit, TEXT("EXIT TO WINDOWS"), TEXT("Close Starshatter Wars"), 1);
-    // All button content shares the same left alignment and exact 16 px inset.
-    // Large Serpentine headings are tinted for each sci-fi color family;
-    // the subtitle uses the standard, smaller UI face at 16 px.
-    auto FormatButtonContent = [this, &Text](UButton* TargetButton,
-        const TCHAR* Caption, const TCHAR* Subtitle, const FLinearColor& CaptionColor,
-        const FLinearColor& SubtitleColor)
+    // Render text as a sibling *above* the textured UButton, not as its content.
+    // This is deliberate: Blueprint button content / SynchronizeProperties can
+    // reinstate an old centered black TextBlock after a native content rebuild.
+    // The label layer is HitTestInvisible, so the real button receives all input.
+    const FLinearColor BlueText(0.84f, 0.94f, 1.f, 1.f);
+    const FLinearColor GreenText(0.81f, 1.f, 0.87f, 1.f);
+    const FLinearColor CyanText(0.83f, 1.f, 1.f, 1.f);
+    const FLinearColor RedText(1.f, 0.85f, 0.87f, 1.f);
+
+    struct FButtonLabelSpec
     {
-        if (!TargetButton) return;
-        while (TargetButton->GetChildrenCount() > 0)
-            TargetButton->RemoveChildAt(0);
-        UVerticalBox* Words = WidgetTree->ConstructWidget<UVerticalBox>();
-        UTextBlock* MainLabel = Text(Caption, 32, CaptionColor, true);
-        MainLabel->SetJustification(ETextJustify::Left);
-        MainLabel->SetAutoWrapText(true);
-        UTextBlock* DetailLabel = Text(Subtitle, 16, SubtitleColor, false);
-        DetailLabel->SetJustification(ETextJustify::Left);
-        DetailLabel->SetAutoWrapText(true);
-        Words->AddChildToVerticalBox(MainLabel);
-        Words->AddChildToVerticalBox(DetailLabel)->SetPadding(FMargin(0.f, 3.f, 0.f, 0.f));
-        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(TargetButton->AddChild(Words)))
-        {
-            ContentSlot->SetPadding(FMargin(16.f));
-            ContentSlot->SetHorizontalAlignment(HAlign_Fill);
-            ContentSlot->SetVerticalAlignment(VAlign_Center);
-        }
+        UButton* Button;
+        const TCHAR* Heading;
+        const TCHAR* Subtitle;
+        FLinearColor TextColor;
     };
-    const FLinearColor BlueTitle(0.82f, 0.93f, 1.f, 1.f);
-    const FLinearColor BlueSubtitle(0.69f, 0.83f, 0.92f, 1.f);
-    const FLinearColor GreenTitle(0.80f, 1.f, 0.87f, 1.f);
-    const FLinearColor GreenSubtitle(0.69f, 0.90f, 0.78f, 1.f);
-    const FLinearColor RedTitle(1.f, 0.83f, 0.85f, 1.f);
-    const FLinearColor RedSubtitle(0.96f, 0.73f, 0.76f, 1.f);
-    FormatButtonContent(BStart, TEXT("CONTINUE"), TEXT("Resume current operation"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BCampaign, TEXT("CAMPAIGNS"), TEXT("Select or restart a campaign"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BMission, TEXT("MISSIONS"), TEXT("Campaign, single and custom missions"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BMulti, TEXT("MULTIPLAYER"), TEXT("Network operations"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BPlayer, TEXT("PLAYER"), TEXT("Personnel and logbook"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BOptions, TEXT("OPTIONS"), TEXT("Settings and controls"), BlueTitle, BlueSubtitle);
-    FormatButtonContent(BTac, TEXT("TACTICAL REFERENCE"), TEXT("Ships, weapons and mission roles"), GreenTitle, GreenSubtitle);
-    FormatButtonContent(BQuit, TEXT("EXIT TO WINDOWS"), TEXT("Close Starshatter Wars"), RedTitle, RedSubtitle);
-    UButton* Buttons[8] = { BStart, BCampaign, BMission, BMulti, BPlayer, BOptions, BTac, BQuit };
+    const FButtonLabelSpec ButtonSpecs[] = {
+        {BStart, TEXT("CONTINUE"), TEXT("Resume current operation"), GreenText},
+        {BCampaign, TEXT("CAMPAIGNS"), TEXT("Select or restart a campaign"), BlueText},
+        {BMission, TEXT("MISSIONS"), TEXT("Campaign, single and custom missions"), BlueText},
+        {BMulti, TEXT("MULTIPLAYER"), TEXT("Network operations"), BlueText},
+        {BPlayer, TEXT("PLAYER"), TEXT("Personnel and logbook"), BlueText},
+        {BOptions, TEXT("OPTIONS"), TEXT("Settings and controls"), BlueText},
+        {BTac, TEXT("TACTICAL REFERENCE"), TEXT("Ships, weapons and mission roles"), CyanText},
+        {BQuit, TEXT("EXIT TO WINDOWS"), TEXT("Close Starshatter Wars"), RedText}
+    };
     for (int32 RowIndex = 0; RowIndex < 4; ++RowIndex)
     {
-        UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
-        UVerticalBoxSlot* RowSlot = MenuArea->AddChildToVerticalBox(Row);
-        RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        RowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
-        for (int32 ColIndex = 0; ColIndex < 2; ++ColIndex)
+        UHorizontalBox* ButtonRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+        UVerticalBoxSlot* ButtonRowSlot = MenuArea->AddChildToVerticalBox(ButtonRow);
+        ButtonRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        ButtonRowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+        for (int32 ColumnIndex = 0; ColumnIndex < 2; ++ColumnIndex)
         {
-            UHorizontalBoxSlot* TileSlot = Row->AddChildToHorizontalBox(Buttons[RowIndex * 2 + ColIndex]);
-            TileSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            TileSlot->SetPadding(FMargin(0.f, 0.f, ColIndex == 0 ? 10.f : 0.f, 0.f));
+            const int32 Index = RowIndex * 2 + ColumnIndex;
+            const FButtonLabelSpec& Spec = ButtonSpecs[Index];
+            UOverlay* ButtonOverlay = WidgetTree->ConstructWidget<UOverlay>();
+            UHorizontalBoxSlot* ButtonColumnSlot = ButtonRow->AddChildToHorizontalBox(ButtonOverlay);
+            ButtonColumnSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            ButtonColumnSlot->SetPadding(FMargin(0.f, 0.f, ColumnIndex == 0 ? 10.f : 0.f, 0.f));
+
+            if (Spec.Button)
+            {
+                Spec.Button->ClearChildren();
+                UOverlaySlot* ButtonOverlaySlot = ButtonOverlay->AddChildToOverlay(Spec.Button);
+                ButtonOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+                ButtonOverlaySlot->SetVerticalAlignment(VAlign_Fill);
+            }
+
+            UVerticalBox* TextStack = WidgetTree->ConstructWidget<UVerticalBox>();
+            TextStack->SetVisibility(ESlateVisibility::HitTestInvisible);
+            UTextBlock* HeadingLabel = Text(Spec.Heading, 28, Spec.TextColor, true);
+            HeadingLabel->SetJustification(ETextJustify::Left);
+            HeadingLabel->SetAutoWrapText(false);
+            TextStack->AddChildToVerticalBox(HeadingLabel);
+            UTextBlock* SubtitleLabel = Text(Spec.Subtitle, 12, Spec.TextColor);
+            SubtitleLabel->SetJustification(ETextJustify::Left);
+            SubtitleLabel->SetAutoWrapText(false);
+            TextStack->AddChildToVerticalBox(SubtitleLabel)->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
+            UOverlaySlot* LabelOverlaySlot = ButtonOverlay->AddChildToOverlay(TextStack);
+            // The SciFi button textures have a beveled/transparent leading edge.
+            // Use a safe text inset so left-justified labels sit inside the visible button body.
+            LabelOverlaySlot->SetPadding(FMargin(70.f, 0.f, 20.f, 0.f));
+            LabelOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+            LabelOverlaySlot->SetVerticalAlignment(VAlign_Center);
         }
     }
+    UE_LOG(LogMenuDlg, Warning,
+        TEXT("[MainMenu][LAYOUT-V4] Overlay labels inside button body: 28pt Serpentine / 12pt subtitle / safe 64px left inset"));
 
     DescriptionText = Text(TEXT(""), 13, Muted);
     Page->AddChildToVerticalBox(DescriptionText)->SetPadding(FMargin(6.f, 0.f, 6.f, 8.f));
@@ -283,14 +312,14 @@ void UMenuDlg::NativeConstruct()
     {
         if (auto* StyleSS = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
         {
-            if (!bDesignerGameButton) StyleSS->ApplyMenuButtonStyle(BtnStart);
+            StyleSS->ApplyMenuButtonStyle(BtnStart);
             StyleSS->ApplyMenuButtonStyle(BtnCampaign);
             StyleSS->ApplyMenuButtonStyle(BtnMission);
             StyleSS->ApplyMenuButtonStyle(BtnPlayer);
             StyleSS->ApplyMenuButtonStyle(BtnMulti);
             StyleSS->ApplyMenuButtonStyle(BtnOptions);
-            if (!bDesignerTacButton) StyleSS->ApplyMenuButtonStyle(BtnTac);
-            if (!bDesignerExitButton) StyleSS->ApplyMenuButtonStyle(BtnQuit);
+            StyleSS->ApplyMenuButtonStyle(BtnTac);
+            StyleSS->ApplyMenuButtonStyle(BtnQuit);
         }
     }
 
@@ -309,6 +338,8 @@ void UMenuDlg::NativeConstruct()
     UTexture2D* RedPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Red_p.T_Btn02Red_p"));
     UTexture2D* GreenNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Green_n.T_Btn02Green_n"));
     UTexture2D* GreenPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Green_p.T_Btn02Green_p"));
+    UTexture2D* CyanNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Cyan_n.T_Btn02Cyan_n"));
+    UTexture2D* CyanPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Cyan_p.T_Btn02Cyan_p"));
 
     const TArray<UButton*> MenuButtons = {
         BtnStart, BtnCampaign, BtnMission, BtnMulti,
@@ -317,14 +348,14 @@ void UMenuDlg::NativeConstruct()
     for (UButton* StyledButton : MenuButtons)
     {
         if (!StyledButton) continue;
-        if ((StyledButton == BtnStart && bDesignerGameButton) ||
-            (StyledButton == BtnTac && bDesignerTacButton) ||
-            (StyledButton == BtnQuit && bDesignerExitButton))
-            continue; // Blueprint button appearance is authoritative.
+        // Apply the color family even to Blueprint drop-in buttons. Their widget
+        // instances/positioning remain designer-authored; visual states use the
+        // exact game-supplied textures so an old metallic brush cannot leak through.
         const bool bExit = StyledButton == BtnQuit;
         const bool bTactical = StyledButton == BtnTac;
-        UTexture2D* NormalTexture = bExit ? RedNormal : (bTactical ? GreenNormal : BlueNormal);
-        UTexture2D* PressedTexture = bExit ? RedPressed : (bTactical ? GreenPressed : BluePressed);
+        const bool bContinue = StyledButton == BtnStart;
+        UTexture2D* NormalTexture = bExit ? RedNormal : (bTactical ? CyanNormal : (bContinue ? GreenNormal : BlueNormal));
+        UTexture2D* PressedTexture = bExit ? RedPressed : (bTactical ? CyanPressed : (bContinue ? GreenPressed : BluePressed));
         if (!PressedTexture) PressedTexture = NormalTexture;
 
         FButtonStyle ButtonStyle = StyledButton->GetStyle();
@@ -348,9 +379,9 @@ void UMenuDlg::NativeConstruct()
         {
             // Missing assets: retain distinct, functional native UI states.
             const FLinearColor BaseColor = bExit ? FLinearColor(0.43f, 0.10f, 0.14f, 1.f)
-                : (bTactical ? FLinearColor(0.10f, 0.34f, 0.26f, 1.f) : FLinearColor(0.16f, 0.27f, 0.36f, 1.f));
+                : (bTactical ? FLinearColor(0.08f, 0.36f, 0.44f, 1.f) : (bContinue ? FLinearColor(0.10f, 0.34f, 0.26f, 1.f) : FLinearColor(0.16f, 0.27f, 0.36f, 1.f)));
             const FLinearColor HighlightColor = bExit ? FLinearColor(0.75f, 0.20f, 0.24f, 1.f)
-                : (bTactical ? FLinearColor(0.19f, 0.57f, 0.39f, 1.f) : FLinearColor(0.30f, 0.49f, 0.62f, 1.f));
+                : (bTactical ? FLinearColor(0.18f, 0.64f, 0.72f, 1.f) : (bContinue ? FLinearColor(0.19f, 0.57f, 0.39f, 1.f) : FLinearColor(0.30f, 0.49f, 0.62f, 1.f)));
             ButtonStyle.Normal.DrawAs = ESlateBrushDrawType::Box;
             ButtonStyle.Hovered.DrawAs = ESlateBrushDrawType::Box;
             ButtonStyle.Pressed.DrawAs = ESlateBrushDrawType::Box;
