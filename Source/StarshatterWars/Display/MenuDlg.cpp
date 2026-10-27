@@ -48,6 +48,7 @@
 // Legacy
 #include "Starshatter.h"
 #include "Campaign.h"
+#include "SSWGameInstance.h"
 #include "MenuScreen.h"
 #include "MultiplayerDlg.h"
 #include "Blueprint/UserWidget.h"
@@ -234,7 +235,7 @@ void UMenuDlg::BuildModernMenu()
             UOverlaySlot* LabelOverlaySlot = ButtonOverlay->AddChildToOverlay(TextStack);
             // The SciFi button textures have a beveled/transparent leading edge.
             // Use a safe text inset so left-justified labels sit inside the visible button body.
-            LabelOverlaySlot->SetPadding(FMargin(70.f, 0.f, 20.f, 0.f));
+            LabelOverlaySlot->SetPadding(FMargin(64.f, 0.f, 20.f, 0.f));
             LabelOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
             LabelOverlaySlot->SetVerticalAlignment(VAlign_Center);
         }
@@ -539,12 +540,39 @@ void UMenuDlg::ExecFrame(double DeltaTime)
 void UMenuDlg::OnStart()
 {
     ClearDescription();
-    UE_LOG(LogMenuDlg, Log, TEXT("OnStart()"));
+    UE_LOG(LogMenuDlg, Log, TEXT("[MainMenu] Continue: restoring campaign and opening Operations Missions"));
 
-    if (Stars)
-        Stars->StartOrResumeGame();
+    // Continue is a campaign action, not an unconditional switch to PLAY mode.
+    // Restore the saved campaign before Operations rebuilds its live mission list.
+    USSWGameInstance* SSWGI = Cast<USSWGameInstance>(GetGameInstance());
+    if (SSWGI)
+    {
+        SSWGI->RestoreSavedActiveCampaign();
+    }
+
+    Campaign* ActiveCampaign = Campaign::GetCampaign();
+    if (!ActiveCampaign)
+    {
+        UE_LOG(LogMenuDlg, Warning,
+            TEXT("[MainMenu] Continue: no active campaign; opening Campaign Selection"));
+        if (Manager) Manager->ShowCampaignSelectDlg();
+        return;
+    }
+
+    UE_LOG(LogMenuDlg, Log,
+        TEXT("[MainMenu] Continue: campaign=%d missions=%d"),
+        ActiveCampaign->GetCampaignId(), ActiveCampaign->GetMissionList().size());
+
+    if (Manager)
+    {
+        // Authoritative Operations roster: UCmdMissionsDlg reads the active
+        // Campaign::GetMissionList() and filters player-selectable missions.
+        Manager->ShowOperationsMissionsDlg();
+    }
     else
-        UE_LOG(LogMenuDlg, Warning, TEXT("Stars is null in OnStart()."));
+    {
+        UE_LOG(LogMenuDlg, Error, TEXT("[MainMenu] Continue: MenuScreen manager unavailable"));
+    }
 }
 
 void UMenuDlg::OnCampaign()

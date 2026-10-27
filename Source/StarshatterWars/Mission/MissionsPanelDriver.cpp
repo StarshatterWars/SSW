@@ -1,6 +1,7 @@
 #include "MissionsPanelDriver.h"
 #include "MenuScreen.h"
-#include "SSWGameInstance.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "StarshatterGameDataSubsystem.h"
 #include "SingleMissionDlg.h"
 #include "CustomMissionDlg.h"
 #include "CampaignMissionDlg.h"
@@ -93,10 +94,33 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
 }
 void UMissionsPanelDriver::ShowCampaignMode()
 {
-    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance())) GI->RestoreSavedActiveCampaign();
+    // Resolve the active player-save campaign display name on each visit.
+    // No campaign selection or mission generation takes place in this UI method.
+    FString CampaignHeading = TEXT("CAMPAIGN MISSIONS");
+    if (UGameInstance* GameInstance = GetGameInstance())
+    {
+        UStarshatterPlayerSubsystem* PlayerSS = GameInstance->GetSubsystem<UStarshatterPlayerSubsystem>();
+        UStarshatterGameDataSubsystem* DataSS = GameInstance->GetSubsystem<UStarshatterGameDataSubsystem>();
+        if (PlayerSS && DataSS)
+        {
+            if (!PlayerSS->HasLoaded()) PlayerSS->LoadPlayer();
+            const FS_PlayerGameInfo& SavedPlayer = PlayerSS->GetPlayerInfo();
+            if (SavedPlayer.Campaign > 0)
+            {
+                if (const FS_Campaign* Row = DataSS->GetCampaignByIndex1Based(SavedPlayer.Campaign))
+                {
+                    if (!Row->Name.IsEmpty())
+                    {
+                        CampaignHeading = Row->Name.ToUpper() + TEXT(" CAMPAIGN MISSIONS");
+                    }
+                }
+            }
+        }
+    }
+
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
     if (!CampaignChild) {UCampaignMissionDlg* W=CreateWidget<UCampaignMissionDlg>(PC,UCampaignMissionDlg::StaticClass());CampaignChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
-    if (UCampaignMissionDlg* W=Cast<UCampaignMissionDlg>(CampaignChild)){ W->Show();SelectChild(W,TEXT("CAMPAIGN MISSIONS")); }
+    if (UCampaignMissionDlg* W=Cast<UCampaignMissionDlg>(CampaignChild)){ W->Show();SelectChild(W,*CampaignHeading); }
 }
 void UMissionsPanelDriver::ShowSingleMode()
 {

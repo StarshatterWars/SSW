@@ -33,26 +33,6 @@
 #include "StarshatterUIStyleSubsystem.h"
 #include "MissionUIStyle.h"
 
-void USSWCampaignMissionRowAction::Activate()
-{
-    if (USingleMissionDlg* Dialog = Owner.Get())
-        Dialog->SelectCampaignMissionRow(RowIndex);
-}
-
-void USingleMissionDlg::SelectCampaignMissionRow(int32 RowIndex)
-{
-    if (IsCampaignMissionView()) SelectMissionAt(RowIndex);
-}
-
-// Match the visibility rules used by Operations (CmdMissionsDlg).
-static bool SSWIsVisibleCampaignMission(const MissionInfo* Info, Campaign* Current)
-{
-    if (!Info) return false;
-    if (Info->DisplayType == EMissionDisplayType::PlayerMission) return true;
-    if (Info->type == static_cast<int32>(EMissionType::TRAINING)) return true;
-    return Current && Current->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden;
-}
-
 namespace SingleMissionColors
 {
     const FLinearColor Backdrop(0.012f, 0.025f, 0.045f, 1.0f);
@@ -68,6 +48,13 @@ USingleMissionDlg::USingleMissionDlg(const FObjectInitializer& ObjectInitializer
     : Super(ObjectInitializer)
 {
     SetIsFocusable(true);
+}
+
+USingleMissionDlg::~USingleMissionDlg()
+{
+    for (Mission* OwnedModel : StandaloneBriefingModels)
+        delete OwnedModel;
+    StandaloneBriefingModels.Reset();
 }
 
 TSharedRef<SWidget> USingleMissionDlg::RebuildWidget()
@@ -280,10 +267,8 @@ void USingleMissionDlg::Show()
 void USingleMissionDlg::RefreshMissionRoster()
 {
     if (!MissionRoster) return;
-    const int32 PreviousId = IsCampaignMissionView() ? MissionId : 0;
     MissionRoster->ClearChildren();
     MissionButtons.Reset();
-    CampaignRowActions.Reset();
     MissionIds.Reset();
     ScenarioRows.Reset();
     CustomMissionInfos.Reset();
@@ -298,32 +283,23 @@ void USingleMissionDlg::RefreshMissionRoster()
         Campaign* ActiveCampaign = Campaign::GetCampaign();
         if (ActiveCampaign)
         {
-            // Operations does not load a different campaign or synthesize missions.
-            // It reads the current campaign's populated mission list.
-            List<MissionInfo>& ActiveMissions = ActiveCampaign->GetMissionList();
-            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Active campaign=%hs total=%d"),
-                ActiveCampaign->GetName(), ActiveMissions.size());
-            for (int32 MissionIndex = 0; MissionIndex < ActiveMissions.size(); ++MissionIndex)
+            ListIter<MissionInfo> MissionIter = ActiveCampaign->GetMissionList();
+            while (++MissionIter)
             {
-                MissionInfo* Info = ActiveMissions[MissionIndex];
-                if (!SSWIsVisibleCampaignMission(Info, ActiveCampaign)) continue;
-                UButton* RowButton = MakeActionButton(UTF8_TO_TCHAR(Info->name.data()), true, true);
-                USSWCampaignMissionRowAction* Action = NewObject<USSWCampaignMissionRowAction>(this);
-                Action->Owner = this;
-                Action->RowIndex = MissionIds.Num();
-                RowButton->OnClicked.AddDynamic(Action, &USSWCampaignMissionRowAction::Activate);
-                CampaignRowActions.Add(Action);
-                MissionRoster->AddChildToVerticalBox(RowButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
-                MissionButtons.Add(RowButton);
+                MissionInfo* Info = MissionIter.value();
+                if (!Info || Info->id <= 0) continue;
+                UButton* MissionButton = MakeActionButton(ANSI_TO_TCHAR(Info->name.data()), true, true);
+                MissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
+                MissionRoster->AddChildToVerticalBox(MissionButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+                MissionButtons.Add(MissionButton);
                 MissionIds.Add(Info->id);
                 ScenarioRows.Add(nullptr);
                 CustomMissionInfos.Add(Info);
             }
-            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Operations-compatible visible=%d"), MissionIds.Num());
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] No active campaign; Operations has no campaign either"));
+            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] No active campaign"));
         }
     }
     else if (!IsCustomMissionView())
@@ -414,19 +390,7 @@ void USingleMissionDlg::RefreshMissionRoster()
     if (DeleteMissionButton) DeleteMissionButton->SetVisibility(IsCustomMissionView() ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
         TEXT("%d missions"), MissionIds.Num())));
-    if (IsCampaignMissionView() && MissionIds.IsEmpty())
-    {
-        MissionCountLabel->SetText(FText::FromString(
-            Campaign::GetCampaign() ? TEXT("No playable missions in the active campaign")
-                                    : TEXT("No active campaign. Start or load a campaign in Operations.")));
-    }
-    int32 RestoreIndex = 0;
-    if (IsCampaignMissionView() && PreviousId > 0)
-    {
-        const int32 ExistingIndex = MissionIds.IndexOfByKey(PreviousId);
-        if (ExistingIndex != INDEX_NONE) RestoreIndex = ExistingIndex;
-    }
-    if (!MissionIds.IsEmpty()) SelectMissionAt(RestoreIndex);
+    if (!MissionIds.IsEmpty()) SelectMissionAt(0);
     else
     {
         if (EditMissionButton) EditMissionButton->SetIsEnabled(false);
@@ -498,8 +462,14 @@ void USingleMissionDlg::RefreshMissionDetails()
 
 void USingleMissionDlg::LaunchSelected()
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SingleMissions][BRIEFING] clicked manager=%s index=%d id=%d count=%d"),
+        manager ? TEXT("YES") : TEXT("NO"), ChosenIndex, MissionId, MissionIds.Num());
     if (!manager || !MissionIds.IsValidIndex(ChosenIndex) || MissionId <= 0)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions][BRIEFING] invalid selection or manager"));
         return;
+    }
 
     if (IsCampaignMissionView())
     {
@@ -509,19 +479,12 @@ void USingleMissionDlg::LaunchSelected()
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Invalid active campaign mission ID=%d"), MissionId);
             return;
         }
-        Mission* ReadyMission = ActiveCampaign->GetMission(MissionId);
-        if (!ReadyMission)
+        ActiveCampaign->SetMissionId(MissionId);
+        if (!ActiveCampaign->GetMission(MissionId))
         {
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Failed to load mission ID=%d"), MissionId);
             return;
         }
-        // Validate before altering the current campaign mission selection.
-        if (!ReadyMission->IsOK())
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[CampaignMissions] Mission id=%d is not ready"), MissionId);
-            return;
-        }
-        ActiveCampaign->SetMissionId(MissionId);
         if (UGameInstance* GI = GetGameInstance())
             if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
                 Runtime->SetGameMode(EGameMode::PREP);
@@ -532,36 +495,82 @@ void USingleMissionDlg::LaunchSelected()
     const bool bCustom = CustomMissionInfos.IsValidIndex(ChosenIndex)
         && CustomMissionInfos[ChosenIndex] != nullptr;
 
+    // Standalone DataTable missions do not require a legacy SINGLE_MISSIONS
+    // repository. Requiring one here prevented the briefing from opening.
     Campaign* Repository = bCustom ? CustomCampaign : nullptr;
-    if (!Repository)
+    if (bCustom && !Repository)
     {
-        ListIter<Campaign> CampaignIter = Campaign::GetAllCampaigns();
-        while (++CampaignIter)
+        UE_LOG(LogTemp, Error,
+            TEXT("[SingleMissions] Custom mission %d has no repository"), MissionId);
+        return;
+    }
+    if (!bCustom)
+    {
+        // The active campaign remains the repository context. Never call
+        // SelectCampaign() or Load() while transitioning to a briefing.
+        Repository = Campaign::GetCampaign();
+        if (!Repository)
         {
-            Campaign* Candidate = CampaignIter.value();
-            if (Candidate && Candidate->GetCampaignId() == Campaign::SINGLE_MISSIONS)
+            ListIter<Campaign> CampaignIter = Campaign::GetAllCampaigns();
+            while (++CampaignIter)
             {
-                Repository = Candidate;
-                break;
+                Campaign* Candidate = CampaignIter.value();
+                if (Candidate && Candidate->GetCampaignId() == Campaign::SINGLE_MISSIONS)
+                {
+                    Repository = Candidate;
+                    break;
+                }
             }
         }
     }
     if (!Repository)
     {
-        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Mission %d has no standalone repository"), MissionId);
+        UE_LOG(LogTemp, Error,
+            TEXT("[SingleMissions] No campaign context available to open briefing ID=%d"), MissionId);
         return;
     }
 
     // Resolve the standalone model without using SelectCampaign(), SetMissionId(),
     // or the inherited campaign OnAcceptClicked(). Active story campaign is unchanged.
-    if (Repository->GetMissionList().isEmpty()) Repository->Load();
-    MissionInfo* Info = Repository->GetMissionInfo(MissionId);
-    if (!Info)
+    // Do not invoke Repository->Load() here.  The selected DT_SingleMissions
+    // row is already authoritative and Load() can reset the legacy singleton
+    // while its pointer is still in use (the previous crash at this line).
+    // DT_SingleMissions and legacy SINGLE_MISSIONS are separate registries.
+    // A cooked DataTable mission can be selected without a legacy MissionInfo.
+    // In that case construct directly from the selected, authoritative row.
+    Mission* Model = nullptr;
+    const FS_CampaignMission* SelectedRow = ScenarioRows.IsValidIndex(ChosenIndex)
+        ? ScenarioRows[ChosenIndex] : nullptr;
+    if (SelectedRow && !bCustom)
     {
-        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] No MissionInfo for standalone mission %d"), MissionId);
-        return;
+        if (!StandaloneBriefingMission || StandaloneBriefingMissionId != MissionId)
+        {
+            // Retain previously opened models for the lifetime of this widget, since
+            // the mission briefing may still reference them while navigating.
+            Mission* NewModel = new Mission(MissionId);
+            if (!NewModel->LoadFromCampaignMissionData(*SelectedRow))
+            {
+                UE_LOG(LogTemp, Error, TEXT("[SingleMissions] DataTable mission %d failed validation: %s"),
+                    MissionId, ANSI_TO_TCHAR(NewModel->ErrorMessage().data()));
+                delete NewModel;
+                return;
+            }
+            StandaloneBriefingModels.Add(NewModel);
+            StandaloneBriefingMission = NewModel;
+            StandaloneBriefingMissionId = MissionId;
+        }
+        Model = StandaloneBriefingMission;
     }
-    Mission* Model = Repository->GetMission(MissionId);
+    else
+    {
+        MissionInfo* Info = Repository->GetMissionInfo(MissionId);
+        if (!Info)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] No MissionInfo for standalone mission %d"), MissionId);
+            return;
+        }
+        Model = Repository->GetMission(MissionId);
+    }
     if (!Model)
     {
         UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Could not instantiate standalone mission %d"), MissionId);
@@ -575,6 +584,9 @@ void USingleMissionDlg::LaunchSelected()
     }
 
     UE_LOG(LogTemp, Log, TEXT("[SingleMissions] Launching standalone ID=%d custom=%d"), MissionId, bCustom ? 1 : 0);
+    UE_LOG(LogTemp, Warning,
+        TEXT("[SingleMissions][BRIEFING] routing to ShowStandaloneMissionDlg mission=%p repository=%p"),
+        Model, Repository);
     manager->ShowStandaloneMissionDlg(Model, Repository);
 }
 void USingleMissionDlg::HandleAccept() { LaunchSelected(); }
