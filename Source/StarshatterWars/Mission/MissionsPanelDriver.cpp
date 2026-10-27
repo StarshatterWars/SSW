@@ -1,5 +1,6 @@
 #include "MissionsPanelDriver.h"
 #include "MenuScreen.h"
+#include "SSWGameInstance.h"
 #include "SingleMissionDlg.h"
 #include "CustomMissionDlg.h"
 #include "CampaignMissionDlg.h"
@@ -92,6 +93,7 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
 }
 void UMissionsPanelDriver::ShowCampaignMode()
 {
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance())) GI->RestoreSavedActiveCampaign();
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
     if (!CampaignChild) {UCampaignMissionDlg* W=CreateWidget<UCampaignMissionDlg>(PC,UCampaignMissionDlg::StaticClass());CampaignChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
     if (UCampaignMissionDlg* W=Cast<UCampaignMissionDlg>(CampaignChild)){ W->Show();SelectChild(W,TEXT("CAMPAIGN MISSIONS")); }

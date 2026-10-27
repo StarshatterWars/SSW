@@ -37,6 +37,8 @@
 
 #include "CampaignSave.h"
 #include "StarshatterGameDataSubsystem.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "Campaign.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
 #undef UpdateResource
@@ -85,8 +87,90 @@ void USSWGameInstance::Print(const FString& A, const FString& B)
 }
 
 
+bool USSWGameInstance::RestoreSavedActiveCampaign()
+{
+    // Idempotent: menu construction and the Missions driver may both request restoration.
+    UStarshatterPlayerSubsystem* PlayerSS = GetSubsystem<UStarshatterPlayerSubsystem>();
+    UStarshatterGameDataSubsystem* DataSS = GetSubsystem<UStarshatterGameDataSubsystem>();
+    if (!PlayerSS || !DataSS)
+        return false;
+
+    if (!PlayerSS->HasLoaded() && !PlayerSS->LoadPlayer())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CampaignRestore] Player save could not be read"));
+        return false;
+    }
+
+    if (!PlayerSS->HadExistingSaveOnLoad())
+    {
+        UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] No existing player save; campaign not selected"));
+        return false;
+    }
+
+    const FS_PlayerGameInfo& SavedPlayer = PlayerSS->GetPlayerInfo();
+    const int32 SavedIndex = SavedPlayer.Campaign; // 1-based, as stored by CampaignSelectDlg
+    if (SavedIndex <= 0)
+        return false;
+
+    // LoadAll belongs to the normal EGameMode::INIT pipeline. Never invoke it here.
+    if (!DataSS->IsLoaded())
+    {
+        UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] Data subsystem not ready; deferred"));
+        return false;
+    }
+
+    const FS_Campaign* SavedCampaign = DataSS->GetCampaignByIndex1Based(SavedIndex);
+    if (!SavedCampaign || !SavedCampaign->bAvailable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[CampaignRestore] Invalid/unavailable saved campaign index=%d"), SavedIndex);
+        return false;
+    }
+
+    if (!SavedPlayer.CampaignRowName.IsNone() &&
+        SavedPlayer.CampaignRowName != SavedCampaign->RowName)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("[CampaignRestore] Saved row mismatch: index=%d saved=%s resolved=%s; refusing to change campaigns"),
+            SavedIndex, *SavedPlayer.CampaignRowName.ToString(), *SavedCampaign->RowName.ToString());
+        return false;
+    }
+
+    Campaign* Live = Campaign::GetCampaign();
+    if (!Live || Live->GetCampaignId() != SavedIndex)
+    {
+        if (!Campaign::SelectFromData(*SavedCampaign))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CampaignRestore] SelectFromData failed for %s"), *SavedCampaign->Name);
+            return false;
+        }
+        Live = Campaign::GetCampaign();
+        if (!Live)
+            return false;
+        Live->Start();
+    }
+
+    DataSS->CampaignIndex = SavedIndex - 1;
+    DataSS->SelectedCampaignRowName = SavedCampaign->RowName;
+    SelectedCampaignIndex = SavedIndex;
+    SelectedCampaignRowName = SavedCampaign->RowName;
+    SelectedCampaignDisplayName = SavedCampaign->Name;
+
+    // Do not create/reset a campaign save. A saved slot is loaded only if it exists.
+    if (!CampaignSave || CampaignSave->CampaignRowName != SavedCampaign->RowName)
+    {
+        const FString Slot = UCampaignSave::MakeSlotNameFromRowName(SavedCampaign->RowName);
+        if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
+            LoadOrCreateCampaignSave(SavedIndex, SavedCampaign->RowName, SavedCampaign->Name);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] Active campaign='%s' id=%d missions=%d"),
+        *SavedCampaign->Name, SavedIndex, Live->GetMissionList().size());
+    return true;
+}
+
 void USSWGameInstance::ShowMainMenuScreen()
 {
+	RestoreSavedActiveCampaign();
 	RemoveScreens();
 
 	UWorld* World = GetWorld();
