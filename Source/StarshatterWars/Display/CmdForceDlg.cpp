@@ -2,10 +2,10 @@
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
-    SUBSYSTEM:    UI
-    FILE:         CmdForceDlg.cpp
-    AUTHOR:       Carlos Bott
-    ORIGINAL:     John DiCamillo / Destroyer Studios LLC
+    SUBSYSTEM:            UI
+    FILE:                 CmdForceDlg.cpp
+    AUTHOR:               Carlos Bott
+    ORIGINAL CONCEPT:     John DiCamillo / Destroyer Studios LLC
 
     OVERVIEW
     ========
@@ -16,6 +16,7 @@
 */
 
 #include "CmdForceDlg.h"
+#include "CmdTwoColumnLayout.h"
 #include "CmdForceListItem.h"
 
 #include "Components/Button.h"
@@ -288,6 +289,58 @@ void UCmdForceDlg::NativeConstruct()
     {
         CmdMsgDlg->HideMsgDlg();
     }
+
+    // Layout-only modernization: move EXISTING Blueprint widgets, especially
+    // CombatantList. Never create a new list view or replace its entry class.
+    if (UCanvasPanel* Canvas = SSWTwoColumn::FindCanvas(this))
+    {
+        if (CombatantList && ForcesComboBox)
+        {
+            // Detach before clearing the old layout, retaining UPROPERTY-owned widgets.
+            ForcesComboBox->RemoveFromParent();
+            CombatantList->RemoveFromParent();
+            if (DescList) DescList->RemoveFromParent();
+            if (TransferButton) TransferButton->RemoveFromParent();
+            if (GroupNameText) GroupNameText->RemoveFromParent();
+            if (GroupTypeText) GroupTypeText->RemoveFromParent();
+            if (GroupLocationText) GroupLocationText->RemoveFromParent();
+            if (GroupEmpireText) GroupEmpireText->RemoveFromParent();
+            if (GroupInfoText) GroupInfoText->RemoveFromParent();
+            if (CmdMsgDlg) CmdMsgDlg->RemoveFromParent();
+
+            Canvas->ClearChildren();
+            UHorizontalBox* Columns = SSWTwoColumn::Begin(WidgetTree, Canvas, TEXT("ForceNative"));
+            UVerticalBox* Left = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("ForceNativeLeft"), 1.f);
+            UVerticalBox* Right = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("ForceNativeRight"), 1.25f);
+            SSWTwoColumn::Append(Left, SSWTwoColumn::Label(WidgetTree, TEXT("ForceNativeListHeading"), TEXT("FORCES"), 24));
+            SSWTwoColumn::Append(Left, ForcesComboBox);
+            SSWTwoColumn::Append(Left, CombatantList, true);
+            SSWTwoColumn::Append(Right, SSWTwoColumn::Label(WidgetTree, TEXT("ForceNativeDetailsHeading"), TEXT("FORCE DETAILS"), 24));
+            UScrollBox* DetailScroll = SSWTwoColumn::Scroller(WidgetTree, TEXT("ForceNativeDetailsScroll"));
+            SSWTwoColumn::Append(Right, DetailScroll, true);
+            UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ForceNativeDetailsContent"));
+            DetailScroll->AddChild(Details);
+            SSWTwoColumn::Append(Details, GroupNameText);
+            SSWTwoColumn::Append(Details, GroupTypeText);
+            SSWTwoColumn::Append(Details, GroupEmpireText);
+            SSWTwoColumn::Append(Details, GroupLocationText);
+            SSWTwoColumn::Append(Details, GroupInfoText);
+            // DescList is retained for compatibility, but kept hidden unless populated.
+            if (DescList) { SSWTwoColumn::Append(Details, DescList); DescList->SetVisibility(ESlateVisibility::Collapsed); }
+            SSWTwoColumn::Append(Right, TransferButton);
+            // A separate label is already normally inside the Blueprint button;
+            // do not detach its nested label into another parent.
+            if (CmdMsgDlg) SSWTwoColumn::FullCanvas(Canvas, CmdMsgDlg, 20);
+            SSWTwoColumn::White(GroupNameText, 22);
+            SSWTwoColumn::White(GroupTypeText);
+            SSWTwoColumn::White(GroupLocationText);
+            SSWTwoColumn::White(GroupEmpireText);
+            SSWTwoColumn::White(GroupInfoText);
+            UE_LOG(LogCmdForceDlg, Log, TEXT("[CmdForceDlg] Reused existing CombatantList in 2-column layout"));
+        }
+        else UE_LOG(LogCmdForceDlg, Warning, TEXT("[CmdForceDlg] No layout change: Blueprint CombatantList/ForcesComboBox missing"));
+    }
+    else UE_LOG(LogCmdForceDlg, Warning, TEXT("[CmdForceDlg] No CanvasRoot/root CanvasPanel; retained Blueprint layout"));
 }
 
 void UCmdForceDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

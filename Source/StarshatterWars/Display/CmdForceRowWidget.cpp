@@ -17,6 +17,7 @@
 
 #include "Components/TextBlock.h"
 #include "Components/Spacer.h"
+#include "Styling/SlateColor.h"
 
 void UCmdForceRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
@@ -45,6 +46,8 @@ void UCmdForceRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (RowText)
 	{
 		RowText->SetText(FText::FromString(CurrentItem->DisplayText));
+        RowText->SetColorAndOpacity(FSlateColor(FLinearColor(0.91f, 0.94f, 0.97f, 1.f)));
+        RowText->SetColorAndOpacity(FSlateColor(FLinearColor(0.91f, 0.94f, 0.97f, 1.f)));
 	}
 
 	if (IndentSpacer)
@@ -55,6 +58,7 @@ void UCmdForceRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	if (ExpandText)
 	{
+        ExpandText->SetColorAndOpacity(FSlateColor(FLinearColor(0.91f, 0.94f, 0.97f, 1.f)));
 		if (CurrentItem->IsGroup() && CurrentItem->bHasChildren)
 		{
 			ExpandText->SetText(FText::FromString(

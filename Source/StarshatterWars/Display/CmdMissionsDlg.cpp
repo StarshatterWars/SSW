@@ -532,13 +532,13 @@ void UCmdMissionsDlg::UpdateMissionDetailPanel(UMissionListObject* Item)
     }
 
     if (MissionNameText)      MissionNameText->SetText(FText::FromString(Item->MissionName));
-    if (MissionTypeText)      MissionTypeText->SetText(FText::FromString(Item->MissionType));
-    if (MissionStatusText)    MissionStatusText->SetText(FText::FromString(Item->MissionStatus));
-    if (MissionSystemText)    MissionSystemText->SetText(FText::FromString(Item->MissionSystem));
-    if (MissionRegionText)    MissionRegionText->SetText(FText::FromString(Item->MissionRegion));
+    if (MissionTypeText)      MissionTypeText->SetText(FText::FromString(FString::Printf(TEXT("TYPE:  %s"), *Item->MissionType)));
+    if (MissionStatusText)    MissionStatusText->SetText(FText::FromString(FString::Printf(TEXT("STATUS:  %s"), *Item->MissionStatus)));
+    if (MissionSystemText)    MissionSystemText->SetText(FText::FromString(FString::Printf(TEXT("SYSTEM:  %s"), *Item->MissionSystem)));
+    if (MissionRegionText)    MissionRegionText->SetText(FText::FromString(FString::Printf(TEXT("REGION:  %s"), *Item->MissionRegion)));
     if (MissionObjectiveText) MissionObjectiveText->SetText(FText::FromString(Item->MissionObjective));
     if (MissionSitrepText)    MissionSitrepText->SetText(FText::FromString(Item->MissionSitrep));
-    if (MissionStartText)     MissionStartText->SetText(FText::FromString(Item->MissionTime));
+    if (MissionStartText)     MissionStartText->SetText(FText::FromString(FString::Printf(TEXT("START TIME:  %s"), *Item->MissionTime)));
 }
 
 void UCmdMissionsDlg::SetDescriptionForMissionInfo(MissionInfo* Info)
@@ -756,6 +756,9 @@ namespace
         Text->SetColorAndOpacity(FSlateColor(Color));
         Text->SetAutoWrapText(true);
         Text->SetJustification(ETextJustify::Left);
+        FSlateFontInfo Font = Text->GetFont();
+        Font.Size = 15;
+        Text->SetFont(Font);
         return Text;
     }
     void MissionLine(UVerticalBox* Parent, UWidget* Child, float Bottom = 10.f)
@@ -767,12 +770,17 @@ namespace
     UVerticalBox* MissionCard(UWidgetTree* Tree, UVerticalBox* Parent, const TCHAR* Header)
     {
         UBorder* Card = Tree->ConstructWidget<UBorder>();
-        Card->SetBrushColor(FLinearColor(0.07f, 0.10f, 0.15f, 0.9f));
-        Card->SetPadding(FMargin(13.f));
-        MissionLine(Parent, Card, 12.f);
+        Card->SetBrushColor(FLinearColor(0.055f, 0.085f, 0.125f, 0.94f));
+        Card->SetPadding(FMargin(20.f, 16.f, 20.f, 18.f));
+        MissionLine(Parent, Card, 14.f);
         UVerticalBox* Contents = Tree->ConstructWidget<UVerticalBox>();
         Card->SetContent(Contents);
-        MissionLine(Contents, MissionText(Tree, FString(Header), CmdAccent), 8.f);
+        UTextBlock* Heading = MissionText(Tree, FString(Header), CmdAccent);
+        FSlateFontInfo HeadingFont = Heading->GetFont();
+        HeadingFont.Size = 13;
+        HeadingFont.TypefaceFontName = FName(TEXT("Bold"));
+        Heading->SetFont(HeadingFont);
+        MissionLine(Contents, Heading, 12.f);
         return Contents;
     }
 }
@@ -862,12 +870,18 @@ void UCmdMissionsDlg::BuildModernMissionsLayout()
     UScrollBox* DetailScroll = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("Missions_DetailScroll"));
     UHorizontalBoxSlot* DetailSlot = Columns->AddChildToHorizontalBox(DetailScroll);
     DetailSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    DetailSlot->SetPadding(FMargin(4.f, 0.f, 12.f, 0.f));
     DetailSlot->SetVerticalAlignment(VAlign_Fill);
     UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>();
     DetailScroll->AddChild(Details);
 
     UVerticalBox* Identity = MissionCard(WidgetTree, Details, TEXT("MISSION DETAILS"));
-    MissionNameText = MissionText(WidgetTree, TEXT("SELECT A MISSION"), CmdText); MissionLine(Identity, MissionNameText);
+    MissionNameText = MissionText(WidgetTree, TEXT("SELECT A MISSION"), CmdText);
+    FSlateFontInfo NameFont = MissionNameText->GetFont();
+    NameFont.Size = 23;
+    NameFont.TypefaceFontName = FName(TEXT("Bold"));
+    MissionNameText->SetFont(NameFont);
+    MissionLine(Identity, MissionNameText, 16.f);
     MissionTypeText = MissionText(WidgetTree, TEXT(""), CmdMuted); MissionLine(Identity, MissionTypeText);
     MissionStatusText = MissionText(WidgetTree, TEXT(""), CmdMuted); MissionLine(Identity, MissionStatusText);
     MissionStartText = MissionText(WidgetTree, TEXT(""), CmdMuted); MissionLine(Identity, MissionStartText, 0.f);
@@ -876,7 +890,7 @@ void UCmdMissionsDlg::BuildModernMissionsLayout()
     MissionSystemText = MissionText(WidgetTree, TEXT(""), CmdText); MissionLine(Location, MissionSystemText);
     MissionRegionText = MissionText(WidgetTree, TEXT(""), CmdMuted); MissionLine(Location, MissionRegionText, 0.f);
 
-    UVerticalBox* Objectives = MissionCard(WidgetTree, Details, TEXT("TASKFORCE"));
+    UVerticalBox* Objectives = MissionCard(WidgetTree, Details, TEXT("FORCES"));
     MissionObjectiveText = MissionText(WidgetTree, TEXT(""), CmdText); MissionLine(Objectives, MissionObjectiveText, 0.f);
 
     UVerticalBox* Sitrep = MissionCard(WidgetTree, Details, TEXT("SITUATION REPORT"));
@@ -911,9 +925,7 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
             ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
         }
         MissionLine(Content, MissionText(WidgetTree,
-            FString::Printf(TEXT("%03d  %s"), Item->MissionId, *Item->MissionName), CmdText), 4.f);
-        MissionLine(Content, MissionText(WidgetTree,
-            FString::Printf(TEXT("%s"), *Item->MissionType), CmdMuted), 0.f);
+            Item->MissionName, CmdText), 0.f);
         MissionLine(NativeMissionRows, Button, 8.f);
         UCmdMissionRowProxy* Proxy = NewObject<UCmdMissionRowProxy>(this);
         Proxy->Owner = this;

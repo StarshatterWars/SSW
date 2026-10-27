@@ -4,10 +4,12 @@
 
 
 #include "CmdIntelDlg.h"
+#include "CmdTwoColumnLayout.h"
 
 #include "AudioRouting.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/Border.h"
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
@@ -86,6 +88,88 @@ void UCmdIntelDlg::NativeConstruct()
 	{
 		UE_LOG(LogTemp, Error, TEXT("[CmdIntelDlg] IntelList is NULL"));
 	}
+
+    // Retain the original Blueprint UListView instance and its selection delegate.
+    // The native layout only reparents the original widgets; never ConstructWidget
+    // with the same name as an existing Blueprint widget.
+    if (UCanvasPanel* Canvas = SSWTwoColumn::FindCanvas(this))
+    {
+        if (IntelList)
+        {
+            IntelList->RemoveFromParent();
+            if (IntelNameText) IntelNameText->RemoveFromParent();
+            if (IntelSourceText) IntelSourceText->RemoveFromParent();
+            if (IntelLocationText) IntelLocationText->RemoveFromParent();
+            if (IntelDateText) IntelDateText->RemoveFromParent();
+            if (IntelMessageText) IntelMessageText->RemoveFromParent();
+            if (IntelImage) IntelImage->RemoveFromParent();
+            if (AudioButton) AudioButton->RemoveFromParent();
+            if (mov_news) mov_news->RemoveFromParent();
+            Canvas->ClearChildren();
+            UHorizontalBox* Columns = SSWTwoColumn::Begin(WidgetTree, Canvas, TEXT("IntelNative"));
+            UVerticalBox* Left = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("IntelNativeLeft"), 1.f);
+            UVerticalBox* Right = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("IntelNativeRight"), 1.25f);
+            SSWTwoColumn::Append(Left, SSWTwoColumn::Label(WidgetTree, TEXT("IntelNativeListHeading"), TEXT("INTELLIGENCE REPORTS"), 24));
+            SSWTwoColumn::Append(Left, IntelList, true);
+            // Scrollable report: fixed-height 300 px top section with metadata
+            // wrapping in the left column and a 256x256 image on the right.
+            UScrollBox* DetailScroll = SSWTwoColumn::Scroller(WidgetTree, TEXT("IntelNativeDetailsScroll"));
+            SSWTwoColumn::Append(Right, DetailScroll, true);
+            UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("IntelNativeDetailsContent"));
+            DetailScroll->AddChild(Details);
+            SSWTwoColumn::Append(Details, SSWTwoColumn::Label(WidgetTree, TEXT("IntelNativeDetailsHeading"), TEXT("REPORT DETAILS"), 24));
+
+            USizeBox* TopBand = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("IntelNativeTopBand"));
+            TopBand->SetHeightOverride(300.f);
+            SSWTwoColumn::Append(Details, TopBand);
+            UHorizontalBox* TopColumns = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("IntelNativeTopColumns"));
+            TopBand->AddChild(TopColumns);
+            UVerticalBox* Metadata = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("IntelNativeMetadata"));
+            if (UHorizontalBoxSlot* MetadataSlot = TopColumns->AddChildToHorizontalBox(Metadata))
+            {
+                FSlateChildSize MetadataFill;
+                MetadataFill.SizeRule = ESlateSizeRule::Fill;
+                MetadataFill.Value = 1.f;
+                MetadataSlot->SetSize(MetadataFill);
+                MetadataSlot->SetVerticalAlignment(VAlign_Top);
+                MetadataSlot->SetPadding(FMargin(0.f, 8.f, 12.f, 0.f));
+            }
+            SSWTwoColumn::Append(Metadata, IntelNameText);
+            SSWTwoColumn::Append(Metadata, IntelSourceText);
+            SSWTwoColumn::Append(Metadata, IntelLocationText);
+            SSWTwoColumn::Append(Metadata, IntelDateText);
+
+            if (IntelImage)
+            {
+                // Outer 8 px inset; white 1 px border with 256 px square artwork.
+                UBorder* ImageFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("IntelNativeImageWhiteFrame"));
+                ImageFrame->SetBrushColor(FLinearColor::White);
+                ImageFrame->SetPadding(FMargin(1.f));
+                USizeBox* ImageSquare = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("IntelNativeSquareImage"));
+                ImageSquare->SetWidthOverride(256.f);
+                ImageSquare->SetHeightOverride(256.f);
+                ImageSquare->AddChild(IntelImage);
+                ImageFrame->SetContent(ImageSquare);
+                if (UHorizontalBoxSlot* ImageSlot = TopColumns->AddChildToHorizontalBox(ImageFrame))
+                {
+                    ImageSlot->SetHorizontalAlignment(HAlign_Right);
+                    ImageSlot->SetVerticalAlignment(VAlign_Top);
+                    ImageSlot->SetPadding(FMargin(0.f, 8.f, 8.f, 0.f));
+                }
+            }
+            SSWTwoColumn::Append(Details, IntelMessageText);
+            SSWTwoColumn::Append(Details, AudioButton);
+            if (mov_news) { SSWTwoColumn::Append(Details, mov_news); mov_news->SetVisibility(ESlateVisibility::Collapsed); }
+            SSWTwoColumn::White(IntelNameText, 22);
+            SSWTwoColumn::White(IntelSourceText);
+            SSWTwoColumn::White(IntelLocationText);
+            SSWTwoColumn::White(IntelDateText);
+            SSWTwoColumn::White(IntelMessageText);
+            UE_LOG(LogTemp, Log, TEXT("[CmdIntelDlg] Reused original IntelList in 2-column layout"));
+        }
+        else UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] No IntelList; original Blueprint layout retained"));
+    }
+    else UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] No CanvasRoot/root CanvasPanel; original Blueprint layout retained"));
 
 	ClearNewsDetails();
 	AppendNewEventsIfAny();
