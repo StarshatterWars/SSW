@@ -29,6 +29,7 @@
 #include "FormatUtil.h"
 #include "MenuScreen.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "MissionsPanelDriver.h"
 
 namespace MultiplayerColors
 {
@@ -219,10 +220,6 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
     Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
     Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-
-    LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
-    Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    LaunchButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnLaunchPressed);
 }
 
 void UMultiplayerDlg::Show()
@@ -295,7 +292,12 @@ void UMultiplayerDlg::RefreshMissionRoster()
     MissionCountLabel->SetText(FText::FromString(FString::Printf(
         TEXT("%d Available Missions"), MissionIds.Num())));
     if (!MissionIds.IsEmpty()) SelectMissionAt(0);
-    else RefreshMissionDetails();
+    else
+    {
+        RefreshMissionDetails();
+        if (UMissionsPanelDriver* Driver = GetTypedOuter<UMissionsPanelDriver>())
+            Driver->UpdateBriefingEnabled();
+    }
 }
 
 void UMultiplayerDlg::SelectMissionAt(int32 Index)
@@ -314,6 +316,8 @@ void UMultiplayerDlg::SelectMissionAt(int32 Index)
         }
     }
     RefreshMissionDetails();
+    if (UMissionsPanelDriver* Driver = GetTypedOuter<UMissionsPanelDriver>())
+        Driver->UpdateBriefingEnabled();
     // Each selected operation opens at the top of its intelligence report.
     if (MissionDetailsScroll) MissionDetailsScroll->ScrollToStart();
 }

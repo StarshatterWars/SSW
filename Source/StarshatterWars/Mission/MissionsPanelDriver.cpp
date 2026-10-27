@@ -57,10 +57,36 @@ void UMissionsPanelDriver::BuildDriverLayout()
     DarkHeaderStrip->SetHeightOverride(5.f);
     DarkHeaderRule->SetContent(DarkHeaderStrip);
     Column->AddChildToVerticalBox(DarkHeaderRule)->SetPadding(FMargin(0.f,0.f,0.f,12.f));
-    // Five top-row buttons: four modes and MENU, with the menu pinned to the far right.
+    // MENU on the left, four modes, BRIEFING on the right.
     UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
     Column->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
-    auto MakeTab = [this, Tabs](const TCHAR* Name, bool bIsMenu)->UButton*
+    auto MakeIconTab = [this, Tabs](const TCHAR* IconPath)->UButton*
+    {
+        UButton* NewButton = WidgetTree->ConstructWidget<UButton>();
+        USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>();
+        IconBox->SetWidthOverride(40.f);
+        IconBox->SetHeightOverride(40.f);
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, IconPath))
+            Icon->SetBrushFromTexture(Tex, true);
+        else
+            UE_LOG(LogTemp, Warning, TEXT("[MissionsDriver] Icon missing: %s"), IconPath);
+        IconBox->SetContent(Icon);
+        NewButton->SetContent(IconBox);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(4.f));
+        }
+        return NewButton;
+    };
+    MenuTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Menu_256x256.T_Menu_256x256"));
+    UHorizontalBoxSlot* MenuSlot = Tabs->AddChildToHorizontalBox(MenuTab);
+    MenuSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    MenuSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+    MenuSlot->SetVerticalAlignment(VAlign_Center);
+    auto MakeTab = [this, Tabs](const TCHAR* Name)->UButton*
     {
         UButton* NewButton = WidgetTree->ConstructWidget<UButton>();
         UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
@@ -78,19 +104,25 @@ void UMissionsPanelDriver::BuildDriverLayout()
         }
         UHorizontalBoxSlot* TabSlot = Tabs->AddChildToHorizontalBox(NewButton);
         TabSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        TabSlot->SetPadding(FMargin(0.f, 0.f, bIsMenu ? 0.f : 10.f, 0.f));
+        TabSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
         return NewButton;
     };
-    CampaignTab = MakeTab(TEXT("CAMPAIGN"), false);
-    SingleTab = MakeTab(TEXT("SINGLE"), false);
-    CustomTab = MakeTab(TEXT("CUSTOM"), false);
-    MultiplayerTab = MakeTab(TEXT("MULTIPLAYER"), false);
-    MenuTab = MakeTab(TEXT("MENU"), true);
+    CampaignTab = MakeTab(TEXT("CAMPAIGN"));
+    SingleTab = MakeTab(TEXT("SINGLE"));
+    CustomTab = MakeTab(TEXT("CUSTOM"));
+    MultiplayerTab = MakeTab(TEXT("MULTIPLAYER"));
+    BriefingTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Briefing_256x256.T_Briefing_256x256"));
+    BriefingTab->SetIsEnabled(false);
+    UHorizontalBoxSlot* BriefingSlot = Tabs->AddChildToHorizontalBox(BriefingTab);
+    BriefingSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    BriefingSlot->SetPadding(FMargin(0.f));
+    BriefingSlot->SetVerticalAlignment(VAlign_Center);
     CampaignTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCampaign);
     SingleTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenSingle);
     CustomTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCustom);
     MultiplayerTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenMultiplayer);
     MenuTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::Back);
+    BriefingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenBriefing);
     RefreshTabStyles();
     ContentHost=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("MissionsDriver_ContentHost"));
     UVerticalBoxSlot* S=Column->AddChildToVerticalBox(ContentHost); FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;Fill.Value=1.f;S->SetSize(Fill);S->SetHorizontalAlignment(HAlign_Fill);S->SetVerticalAlignment(VAlign_Fill);
@@ -105,6 +137,8 @@ void UMissionsPanelDriver::RefreshTabStyles()
     const TCHAR* CyanP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Cyan_p.T_Btn01Cyan_p");
     const TCHAR* RedN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n");
     const TCHAR* RedP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p");
+    const TCHAR* GreenN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_n.T_Btn01Green_n");
+    const TCHAR* GreenP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_p.T_Btn01Green_p");
 
     auto StyleTab = [](UButton* Button, const TCHAR* NormalPath, const TCHAR* PressedPath)
     {
@@ -144,6 +178,7 @@ void UMissionsPanelDriver::RefreshTabStyles()
     StyleTab(MultiplayerTab, ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueP : CyanP);
     StyleTab(MenuTab, RedN, RedP);
+    StyleTab(BriefingTab, GreenN, GreenP);
 }
 
 void UMissionsPanelDriver::HideChildHeader(UUserWidget* Child)
@@ -176,6 +211,7 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
     else if (Child == CustomChild) ActiveMode = EMissionsNavigationMode::Custom;
     else if (Child == MultiplayerChild) ActiveMode = EMissionsNavigationMode::Multiplayer;
     RefreshTabStyles();
+    UpdateBriefingEnabled();
     UE_LOG(LogTemp,Warning,TEXT("[MissionsDriver] Embedded %s class=%s"),InModeTitle,*GetNameSafe(Child->GetClass()));
 }
 void UMissionsPanelDriver::ShowCampaignMode()
@@ -237,3 +273,20 @@ void UMissionsPanelDriver::OpenSingle(){ShowSingleMode();}
 void UMissionsPanelDriver::OpenCustom(){ShowCustomMode();}
 void UMissionsPanelDriver::OpenMultiplayer(){ShowMultiplayerMode();}
 void UMissionsPanelDriver::Back(){if(Manager)Manager->ShowMenuDlg();}
+void UMissionsPanelDriver::UpdateBriefingEnabled()
+{
+    bool bHasSelection = false;
+    if (USingleMissionDlg* Single = Cast<USingleMissionDlg>(ActiveChild))
+        bHasSelection = Single->HasSelectedMission();
+    else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
+        bHasSelection = Multi->HasSelectedMission();
+    if (BriefingTab) BriefingTab->SetIsEnabled(bHasSelection);
+}
+void UMissionsPanelDriver::OpenBriefing()
+{
+    if (!BriefingTab || !BriefingTab->GetIsEnabled()) return;
+    if (USingleMissionDlg* Single = Cast<USingleMissionDlg>(ActiveChild))
+        Single->HandleAccept();
+    else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
+        Multi->HandleAccept();
+}

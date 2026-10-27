@@ -28,6 +28,7 @@ public:
     virtual void HandleCancel() override;
     virtual bool IsCustomMissionView() const { return false; }
     virtual bool IsCampaignMissionView() const { return false; }
+    bool HasSelectedMission() const { return MissionIds.IsValidIndex(ChosenIndex) && MissionId > 0; }
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;

@@ -16,6 +16,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -237,23 +238,70 @@ void USingleMissionDlg::BuildSingleMissionScreen()
 
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
-    UButton* BackButton = MakeActionButton(TEXT("BACK"));
-    Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
-    BackButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnBackPressed);
 
-    NewMissionButton = MakeActionButton(TEXT("NEW MISSION"), false);
-    EditMissionButton = MakeActionButton(TEXT("EDIT MISSION"), false);
-    DeleteMissionButton = MakeActionButton(TEXT("DELETE MISSION"), false);
+    auto MakeCustomAction = [this](const TCHAR* IconPath, const TCHAR* NormalPath, const TCHAR* PressedPath, const TCHAR* Tip, bool bEnabled)->UButton*
+    {
+        UButton* Button = WidgetTree->ConstructWidget<UButton>();
+        UTexture2D* NormalTexture = LoadObject<UTexture2D>(nullptr, NormalPath);
+        UTexture2D* PressedTexture = LoadObject<UTexture2D>(nullptr, PressedPath);
+        FButtonStyle Style = Button->GetStyle();
+        if (NormalTexture)
+        {
+            Style.Normal.SetResourceObject(NormalTexture);
+            Style.Normal.DrawAs = ESlateBrushDrawType::Image;
+            Style.Normal.TintColor = FSlateColor(FLinearColor::White);
+        }
+        if (PressedTexture)
+        {
+            Style.Hovered.SetResourceObject(PressedTexture);
+            Style.Pressed.SetResourceObject(PressedTexture);
+            Style.Hovered.DrawAs = ESlateBrushDrawType::Image;
+            Style.Pressed.DrawAs = ESlateBrushDrawType::Image;
+            Style.Hovered.TintColor = FSlateColor(FLinearColor::White);
+            Style.Pressed.TintColor = FSlateColor(FLinearColor::White);
+        }
+        Style.NormalPadding = FMargin(0.f);
+        Style.PressedPadding = FMargin(0.f);
+        Button->SetStyle(Style);
+        Button->SetIsEnabled(bEnabled);
+        Button->SetToolTipText(FText::FromString(Tip));
+        USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>();
+        IconBox->SetWidthOverride(64.f);
+        IconBox->SetHeightOverride(64.f);
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        if (UTexture2D* IconTex = LoadObject<UTexture2D>(nullptr, IconPath))
+            Icon->SetBrushFromTexture(IconTex, true);
+        IconBox->SetContent(Icon);
+        Button->SetContent(IconBox);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(6.f));
+        }
+        return Button;
+    };
+    NewMissionButton = MakeCustomAction(
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Plus_256x256.T_Plus_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_n.T_Btn01Green_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_p.T_Btn01Green_p"),
+        TEXT("New mission"), false);
+    EditMissionButton = MakeCustomAction(
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Gear_256x256.T_Gear_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Yellow_n.T_Btn01Yellow_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Yellow_p.T_Btn01Yellow_p"),
+        TEXT("Edit mission"), false);
+    DeleteMissionButton = MakeCustomAction(
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Minus_256x256.T_Minus_256x256"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"),
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"),
+        TEXT("Delete mission"), false);
     Actions->AddChildToHorizontalBox(NewMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
     Actions->AddChildToHorizontalBox(EditMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
     Actions->AddChildToHorizontalBox(DeleteMissionButton)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
     NewMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCreateMission);
     EditMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnEditMission);
     DeleteMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnDeleteMission);
-
-    LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
-    Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    LaunchButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnLaunchPressed);
 }
 
 void USingleMissionDlg::Show()

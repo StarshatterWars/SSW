@@ -19,6 +19,7 @@ public:
     void ShowSingleMode();
     void ShowCustomMode();
     void ShowMultiplayerMode();
+    void UpdateBriefingEnabled();
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
@@ -32,6 +33,7 @@ private:
     UPROPERTY(Transient) TObjectPtr<UButton> CustomTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> MultiplayerTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> MenuTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> BriefingTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UMenuScreen> Manager = nullptr;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanel> ContentHost = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> ModeTitle = nullptr;
@@ -47,4 +49,5 @@ private:
     UFUNCTION() void OpenCustom();
     UFUNCTION() void OpenMultiplayer();
     UFUNCTION() void Back();
+    UFUNCTION() void OpenBriefing();
 };
