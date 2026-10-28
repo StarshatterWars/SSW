@@ -38,8 +38,6 @@
 
 // Legacy/runtime:
 #include "Campaign.h"
-#include "CampaignSave.h"
-#include "SSWGameInstance.h"
 #include "Starshatter.h"
 #include "CombatEvent.h"
 #include "PlayerCharacter.h"
@@ -238,28 +236,14 @@ CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
         return nullptr;
     }
 
-    // A fresh runtime CombatEvent may be unvisited after loading a saved
-    // campaign. Use the campaign's persistent scene history as well.
-    const USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance());
-    const UCampaignSave* Save = GI ? GI->CampaignSave : nullptr;
-    const bool bMatchingSave = Save && !Save->CampaignRowName.IsNone() &&
-        Save->CampaignRowName == GI->SelectedCampaignRowName;
-
     ListIter<CombatEvent> Iter = CampaignPtr->GetEvents();
     while (++Iter)
     {
         CombatEvent* Event = Iter.value();
-        if (!Event || Event->Visited() || !Event->SceneFile() || !*Event->SceneFile())
-            continue;
-
-        const FString SceneName = UTF8_TO_TCHAR(Event->SceneFile());
-        if (bMatchingSave && Save->PlayedSceneNames.ContainsByPredicate(
-                [&SceneName](const FString& Played)
-                { return Played.Equals(SceneName, ESearchCase::IgnoreCase); }))
+        if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
         {
-            continue;
+            return Event;
         }
-        return Event;
     }
 
     return nullptr;
@@ -350,11 +334,7 @@ void UCmpnScreen::TearDown()
 
 void UCmpnScreen::Show()
 {
-    if (bIsShown)
-    {
-        return;
-    }
-
+    Setup();
     RefreshRuntimePointers();
     ApplyManagerToChildren();
 
@@ -370,9 +350,11 @@ void UCmpnScreen::Show()
     CombatEvent* StartupSceneEvent = FindFirstPendingSceneEvent();
     if (StartupSceneEvent && PrimeSceneTransitionForEvent(StartupSceneEvent))
     {
+        UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] Show: cutscene pending, starting scene"));
         return;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("[CmpnScreen] Show: no cutscene, opening operations"));
     ShowCmdDlg();
 }
 
@@ -931,10 +913,6 @@ void UCmpnScreen::ShowCmpLoadDlg()
 
     CmpLoadDlg->SetLoadingStage(TEXT("LOADING..."), 0.0f);
     CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
-    // Move the already-created loading widget above the cutscene widget.
-    // UUserWidget has AddToViewport(ZOrder), but no SetZOrderInViewport.
-    CmpLoadDlg->RemoveFromParent();
-    CmpLoadDlg->AddToViewport(1000);
     CmpLoadDlg->SetIsEnabled(true);
     CmpLoadDlg->SetIsFocusable(true);
     CmpLoadDlg->SetDialogInputEnabled(true);
@@ -1107,156 +1085,109 @@ bool UCmpnScreen::PrimeSceneTransitionForEvent(CombatEvent* Event)
 bool UCmpnScreen::ContinuePendingSceneTransition()
 {
     if (!bSceneTransitionActive || !bHasPendingSceneMission)
-        return false;
-
-    if (!CmpLoadDlg || !CmpSceneDlg)
-        return false;
-
-    // Do not ever reveal the scene on a timer alone. The loading overlay is
-    // deliberately in front of the scene (Z=95 vs scene Z=90).
-    if (CmpLoadDlg->GetVisibility() != ESlateVisibility::Visible)
     {
-        CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);
-        CmpLoadDlg->SetIsEnabled(true);
+        return false;
+    }
+
+    if (CmpLoadDlg && CmpLoadDlg->GetVisibility() != ESlateVisibility::Visible)
+    {
+        ShowCmpLoadDlg();
     }
 
     if (!StreamSceneSystemLevel(PendingSceneMission))
     {
-        CmpLoadDlg->SetLoadingStage(TEXT("FAILED TO LOAD SYSTEM"), 1.0f);
-        UE_LOG(LogTemp, Error, TEXT("[ScenePreload] Failed to stream %s"),
+        UE_LOG(LogTemp, Error,
+            TEXT("[CmpnScreen] ContinuePendingSceneTransition: FAILED streaming Mission='%s' System='%s'"),
+            *PendingSceneMission.MissionName,
             *PendingSceneMission.MissionSystem);
+
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("FAILED TO LOAD SYSTEM"), 1.0f);
+        }
+
         return false;
     }
 
-    // Hidden loading alone is insufficient: streamed level actors only get
-    // their live BeginPlay / mesh registration after the sublevel is visible.
-    if (!IsSceneVisualReady())
+    if (!bSceneStreamingBlockedOnce)
     {
-        CmpLoadDlg->SetLoadingStage(TEXT("LOADING SYSTEM..."), 0.15f);
-        SceneReadyFrameCount = 0;
-        return true;
-    }
-
-    if (!bScenePresentationPrepared)
-    {
-        CmpLoadDlg->SetLoadingStage(TEXT("BUILDING SHIPS AND PLANETS..."), 0.45f);
-
-        if (ActiveSceneStreamingLevel)
+        if (CmpLoadDlg)
         {
-            ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
-            ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+            CmpLoadDlg->SetLoadingStage(TEXT("PREPARING TEXTURES..."), 0.60f);
         }
+
         if (UWorld* World = GetWorld())
+        {
             World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 
-        if (!ActiveSceneStreamingLevel ||
-            !ActiveSceneStreamingLevel->IsLevelVisible() ||
-            ActiveSceneStreamingLevel->IsStreamingStatePending())
-        {
-            SceneReadyFrameCount = 0;
-            return true;
-        }
-
-        if (CampaignPtr)
-            CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
-        else
-            CmpSceneDlg->SetCampaignNumber(2);
-
-        // Runtime mission presentation is constructed exactly once, behind
-        // the loading overlay, before any cutscene timer or narration starts.
-        CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
-
-        if (!CmpSceneDlg->PrepareSceneCameraBeforeReveal())
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("[ScenePreload] Failed to initialize opening camera; loading screen retained"));
-            CmpLoadDlg->SetLoadingStage(TEXT("CAMERA PRELOAD FAILED"), 0.85f);
-            return false;
-        }
-        bScenePresentationPrepared = true;
-
-        if (UWorld* World = GetWorld())
-        {
             FStreamingManagerCollection& StreamingManager = FStreamingManagerCollection::Get();
             StreamingManager.BlockTillAllRequestsFinished(0.0f, true);
         }
-        bSceneWarmupStarted = true;
+
         bSceneStreamingBlockedOnce = true;
+        bSceneWarmupStarted = true;
+
+        // Increased hold to suppress shader/material flash
         SceneWarmupReadyTime =
-            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + ScenePostLoadWarmupSeconds;
-        SceneReadyFrameCount = 0;
+            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + 4.0f;
+
         return true;
     }
 
-    // The scene must settle for consecutive rendered frames, rather than a
-    // single wall-clock hold. Check loading, visibility, shader precompiles,
-    // and streaming manager pending work before removing the loading cover.
-    if (ActiveSceneStreamingLevel &&
-        ActiveSceneStreamingLevel->IsLevelVisible() &&
-        !ActiveSceneStreamingLevel->IsStreamingStatePending() &&
-        AreShadersReadyForReveal() &&
-        UGameplayStatics::GetRealTimeSeconds(GetWorld()) >= SceneWarmupReadyTime)
+    const float Now = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+
+    if (Now < SceneWarmupReadyTime)
     {
-        ++SceneReadyFrameCount;
+        if (CmpLoadDlg)
+        {
+            CmpLoadDlg->SetLoadingStage(TEXT("WARMING UP SCENE..."), 0.85f);
+        }
+
+        return true;
+    }
+
+    if (CmpLoadDlg)
+    {
+        CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE..."), 0.95f);
+    }
+
+    if (ActiveSceneStreamingLevel)
+    {
+        ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
+        ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+    }
+
+    if (UWorld* World = GetWorld())
+    {
+        World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+    }
+
+    if (CampaignPtr)
+    {
+        CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
     }
     else
     {
-        SceneReadyFrameCount = 0;
+        CmpSceneDlg->SetCampaignNumber(2);
     }
 
-    if (!CanRevealSceneNow() || !ActiveSceneStreamingLevel->IsLevelVisible())
-    {
-        CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE ASSETS..."), 0.90f);
-        return true;
-    }
+    CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
 
-    // Keep the loading screen on top until the first cutscene image and
-    // timeline-zero DISPLAY events have been initialized. This prevents the
-    // black frame previously visible between HideCmpLoadDlg and the first tick.
-    CmpSceneDlg->SetIsEnabled(true);
-    CmpSceneDlg->Show();
-    CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
-    // BeginSceneByName now processes t=0 events synchronously. The clock and
-    // UI are prepared before the load cover is dismissed in this same frame.
     HideCmpLoadDlg();
+    ShowCmpSceneDlg();
+    CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
 
     if (PendingSceneEvent)
     {
         PendingSceneEvent->SetVisited(true);
-
-        // Persist the scene only after playback has actually begun. Continue
-        // does not replay it; Restart creates a new UCampaignSave with no history.
-        if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
-        {
-            UCampaignSave* Save = GI->CampaignSave;
-            if (Save && !Save->CampaignRowName.IsNone() &&
-                Save->CampaignRowName == GI->SelectedCampaignRowName &&
-                !ActiveSceneName.IsEmpty())
-            {
-                if (!Save->PlayedSceneNames.ContainsByPredicate(
-                        [this](const FString& Played)
-                        { return Played.Equals(ActiveSceneName, ESearchCase::IgnoreCase); }))
-                {
-                    Save->PlayedSceneNames.Add(ActiveSceneName);
-                    const FString SavedSlotName = UCampaignSave::MakeSlotNameFromRowName(Save->CampaignRowName);
-                    if (!UGameplayStatics::SaveGameToSlot(Save, SavedSlotName, 0))
-                    {
-                        UE_LOG(LogTemp, Error,
-                            TEXT("[CampaignScene] Failed to persist played scene '%s' in '%s'"),
-                            *ActiveSceneName, *SavedSlotName);
-                    }
-                }
-            }
-        }
     }
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[ScenePreload] REVEALED '%s' after %d stable frames; timer begins now"),
-        *ActiveSceneName, SceneReadyFrameCount);
+        TEXT("[CmpnScreen] ContinuePendingSceneTransition: COMPLETE"));
+
     ClearPendingSceneTransition();
     return true;
 }
-
 void UCmpnScreen::ClearPendingSceneTransition()
 {
     PendingSceneEvent = nullptr;
@@ -1265,7 +1196,6 @@ void UCmpnScreen::ClearPendingSceneTransition()
 
     bSceneTransitionActive = false;
     bSceneStreamingBlockedOnce = false;
-    bScenePresentationPrepared = false;
     bSceneWarmupStarted = false;
 
     SceneLoadScreenStartTime = 0.0f;
@@ -1320,8 +1250,7 @@ bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
     if (ActiveSceneStreamingLevel)
     {
         ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
-        // Preserve visibility once the preload phase has activated the level.
-        // Visibility is owned by ContinuePendingSceneTransition().
+        ActiveSceneStreamingLevel->SetShouldBeVisible(false);
 
         UE_LOG(LogTemp, Log,
             TEXT("[CmpnScreen] StreamSceneSystemLevel: reusing existing streaming level for %s"),
@@ -1375,7 +1304,6 @@ void UCmpnScreen::BeginSceneTransition()
 {
     bSceneTransitionActive = true;
     bSceneStreamingBlockedOnce = false;
-    bScenePresentationPrepared = false;
     bSceneWarmupStarted = false;
 
     SceneLoadScreenStartTime = UGameplayStatics::GetRealTimeSeconds(GetWorld());

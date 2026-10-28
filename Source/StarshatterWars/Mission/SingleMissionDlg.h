@@ -17,6 +17,16 @@ class Campaign;
 struct FS_CampaignMission;
 
 UCLASS()
+class STARSHATTERWARS_API USingleMissionRowProxy : public UObject
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY() TObjectPtr<USingleMissionDlg> Owner;
+    int32 Index = INDEX_NONE;
+    UFUNCTION() void Activate();
+};
+
+UCLASS()
 class STARSHATTERWARS_API USingleMissionDlg : public UMissionSelectDlg
 {
     GENERATED_BODY()
@@ -29,12 +39,12 @@ public:
     virtual bool IsCustomMissionView() const { return false; }
     virtual bool IsCampaignMissionView() const { return false; }
     bool HasSelectedMission() const { return MissionIds.IsValidIndex(ChosenIndex) && MissionId > 0; }
+    void SelectMissionAt(int32 Index);
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     void BuildSingleMissionScreen();
     void RefreshMissionRoster();
-    void SelectMissionAt(int32 Index);
     void RefreshMissionDetails();
     void LaunchSelected();
     UTextBlock* MakeLabel(const FString& Value, int32 Size, const FLinearColor& Tint, bool bWrap = false);
@@ -70,12 +80,14 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionTime = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionSummary = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionObjectives = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionSitrep = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionCountLabel = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> LaunchButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> NewMissionButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> EditMissionButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> DeleteMissionButton = nullptr;
     UPROPERTY(Transient) TArray<TObjectPtr<UButton>> MissionButtons;
+    UPROPERTY(Transient) TArray<TObjectPtr<USingleMissionRowProxy>> RowProxies;
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
     TArray<MissionInfo*> CustomMissionInfos;

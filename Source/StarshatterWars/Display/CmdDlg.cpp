@@ -21,6 +21,20 @@
 // UMG:
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/Image.h"
+#include "Components/SizeBox.h"
+#include "Components/ScaleBox.h"
+#include "Components/Border.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/WidgetSwitcherSlot.h"
+#include "Engine/Texture2D.h"
+#include "MissionUIStyle.h"
+#include "Blueprint/WidgetTree.h"
 
 // Starshatter core:
 #include "Campaign.h"
@@ -53,6 +67,7 @@
 #include "CmdForceDlg.h"
 #include "CmdIntelDlg.h"
 #include "CmdTheaterDlg.h"
+#include "CampaignMissionDlg.h"
 #include "Mission.h"
 #include "GameStructs_UI.h"
 
@@ -125,17 +140,18 @@ void UCmdDlg::NativeConstruct()
     if (TitleText)
     {
         TitleText->SetText(FText::FromString(TEXT("CAMPAIGN OPERATIONS")));
+        TitleText->SetVisibility(ESlateVisibility::Collapsed);
     }
+
+    BuildOperationsChrome();
+    RefreshOperationsHeader();
 
     if (!MenuButtonClass || !MenuToggleGroup || !MenuButtonContainer)
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("[CmdDlg] Missing bindings: MenuButtonClass=%s MenuToggleGroup=%s MenuButtonContainer=%s"),
-            *GetNameSafe(MenuButtonClass.Get()),
-            *GetNameSafe(MenuToggleGroup),
-            *GetNameSafe(MenuButtonContainer));
-        return;
+        UE_LOG(LogTemp, Log, TEXT("[CmdDlg] Old menu bindings absent; using code header."));
     }
+    else
+    {
 
     MenuButtonContainer->ClearChildren();
     AllMenuButtons.Empty();
@@ -171,6 +187,7 @@ void UCmdDlg::NativeConstruct()
         NewButton->OnHovered.AddDynamic(this, &UCmdDlg::OnMenuToggleHovered);
 
         AllMenuButtons.Add(NewButton);
+    }
     }
 
     if (ReturnButton)
@@ -256,6 +273,295 @@ void UCmdDlg::NativeConstruct()
         }
     }
 }
+
+void UCmdDlg::BuildOperationsChrome()
+{
+    if (!WidgetTree || WidgetTree->FindWidget(TEXT("OperationsChrome"))) return;
+
+    UCanvasPanel* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+    if (!Root) Root = Cast<UCanvasPanel>(WidgetTree->FindWidget(TEXT("CanvasRoot")));
+    if (!Root) Root = Cast<UCanvasPanel>(WidgetTree->FindWidget(TEXT("CanvasPanel_27")));
+    if (!Root)
+    {
+        Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("CanvasRoot"));
+        WidgetTree->RootWidget = Root;
+    }
+
+    for (UWidget* Child : Root->GetAllChildren())
+    {
+        if (!Child || Child == OperationalSwitcher) continue;
+        if (UImage* Image = Cast<UImage>(Child))
+            Image->SetVisibility(ESlateVisibility::Collapsed);
+        else if (Child->GetName().Contains(TEXT("Title")))
+            Child->SetVisibility(ESlateVisibility::Collapsed);
+    }
+    if (MenuButtonContainer) MenuButtonContainer->SetVisibility(ESlateVisibility::Collapsed);
+    if (ReturnButton) ReturnButton->SetVisibility(ESlateVisibility::Collapsed);
+    if (MissionButton) MissionButton->SetVisibility(ESlateVisibility::Collapsed);
+    if (UWidget* LeftPanel = WidgetTree->FindWidget(TEXT("LeftDialogPanel")))
+        LeftPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (UWidget* OldFrame = WidgetTree->FindWidget(TEXT("CampaignSelectBackground")))
+        OldFrame->SetVisibility(ESlateVisibility::Collapsed);
+    if (UWidget* OldPanel = WidgetTree->FindWidget(TEXT("Border_5")))
+        OldPanel->SetVisibility(ESlateVisibility::Collapsed);
+
+    USizeBox* Frame = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("OperationsFrame"));
+    Frame->SetWidthOverride(1920.f);
+    Frame->SetHeightOverride(1080.f);
+    Frame->SetMinDesiredWidth(1920.f);
+    Frame->SetMinDesiredHeight(1080.f);
+    Frame->SetMaxDesiredWidth(1920.f);
+    Frame->SetMaxDesiredHeight(1080.f);
+    Frame->SetClipping(EWidgetClipping::ClipToBounds);
+    UBorder* FrameBorder = WidgetTree->ConstructWidget<UBorder>();
+    FrameBorder->SetPadding(FMargin(0.f));
+    FrameBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
+    FrameBorder->SetClipping(EWidgetClipping::ClipToBounds);
+    if (UTexture2D* PanelTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Panel.Panel")))
+    {
+        FSlateBrush PanelBrush;
+        PanelBrush.SetResourceObject(PanelTex);
+        PanelBrush.DrawAs = ESlateBrushDrawType::Image;
+        FrameBorder->SetBrush(PanelBrush);
+    }
+    Frame->SetContent(FrameBorder);
+    UScaleBox* Fit = WidgetTree->ConstructWidget<UScaleBox>(UScaleBox::StaticClass(), TEXT("OperationsFit"));
+    Fit->SetStretch(EStretch::ScaleToFit);
+    Fit->SetStretchDirection(EStretchDirection::Both);
+    Fit->SetContent(Frame);
+    if (UCanvasPanelSlot* Main = Root->AddChildToCanvas(Fit))
+    {
+        Main->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        Main->SetOffsets(FMargin(0.f));
+        Main->SetZOrder(20);
+    }
+
+    UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("OperationsChrome"));
+    FrameBorder->SetContent(Column);
+
+    UBorder* Header = WidgetTree->ConstructWidget<UBorder>();
+    Header->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+    Header->SetPadding(FMargin(18.f, 9.f));
+    UHorizontalBox* TitleRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    UTextBlock* OperationsTitle = WidgetTree->ConstructWidget<UTextBlock>();
+    OperationsTitle->SetText(FText::FromString(TEXT("OPERATIONS")));
+    OperationsTitle->SetFont(MissionUIStyle::GetHeaderFont(38));
+    OperationsTitle->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+    if (UHorizontalBoxSlot* LeftSlot = TitleRow->AddChildToHorizontalBox(OperationsTitle))
+    {
+        LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        LeftSlot->SetVerticalAlignment(VAlign_Center);
+    }
+    if (!CampaignNameText) CampaignNameText = WidgetTree->ConstructWidget<UTextBlock>();
+    CampaignNameText->SetText(FText::FromString(bHasCurrentCampaign ? CurrentCampaignData.Name.ToUpper() : TEXT("")));
+    CampaignNameText->SetFont(MissionUIStyle::GetHeaderFont(38));
+    CampaignNameText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+    CampaignNameText->SetJustification(ETextJustify::Right);
+    if (UHorizontalBoxSlot* RightSlot = TitleRow->AddChildToHorizontalBox(CampaignNameText))
+    {
+        RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        RightSlot->SetHorizontalAlignment(HAlign_Fill);
+        RightSlot->SetVerticalAlignment(VAlign_Center);
+    }
+    Header->SetContent(TitleRow);
+    Column->AddChildToVerticalBox(Header);
+
+    UBorder* StatusBar = WidgetTree->ConstructWidget<UBorder>();
+    StatusBar->SetBrushColor(FLinearColor(0.07f, 0.08f, 0.09f, 1.f));
+    StatusBar->SetPadding(FMargin(12.f, 8.f));
+    UHorizontalBox* StatusRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto AddStatus = [this, StatusRow](const TCHAR* Caption, UTextBlock*& Value)
+    {
+        UVerticalBox* Cell = WidgetTree->ConstructWidget<UVerticalBox>();
+        UTextBlock* CaptionText = WidgetTree->ConstructWidget<UTextBlock>();
+        CaptionText->SetText(FText::FromString(Caption));
+        CaptionText->SetFont(MissionUIStyle::GetInfoLabelFont(12));
+        CaptionText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f, 1.f)));
+        CaptionText->SetJustification(ETextJustify::Left);
+        CaptionText->SetAutoWrapText(false);
+        if (UVerticalBoxSlot* CaptionSlot = Cell->AddChildToVerticalBox(CaptionText))
+            CaptionSlot->SetHorizontalAlignment(HAlign_Left);
+        if (!Value) Value = WidgetTree->ConstructWidget<UTextBlock>();
+        Value->SetText(FText::FromString(TEXT("--")));
+        Value->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        Value->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f, 1.f)));
+        Value->SetJustification(ETextJustify::Left);
+        Value->SetAutoWrapText(false);
+        if (UVerticalBoxSlot* ValueSlot = Cell->AddChildToVerticalBox(Value))
+        {
+            ValueSlot->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
+            ValueSlot->SetHorizontalAlignment(HAlign_Left);
+        }
+        if (UHorizontalBoxSlot* CellSlot = StatusRow->AddChildToHorizontalBox(Cell))
+        {
+            CellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            CellSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+            CellSlot->SetHorizontalAlignment(HAlign_Left);
+            CellSlot->SetVerticalAlignment(VAlign_Top);
+        }
+    };
+    AddStatus(TEXT("TIME"), GameTimeText);
+    AddStatus(TEXT("CAMPAIGN"), CampaignTPlusText);
+    AddStatus(TEXT("PILOT"), PlayerNameText);
+    AddStatus(TEXT("UNIT"), CurrentUnitText);
+    AddStatus(TEXT("SCORE"), PlayerScoreText);
+    StatusBar->SetContent(StatusRow);
+    Column->AddChildToVerticalBox(StatusBar)->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+
+    UBorder* Rule = WidgetTree->ConstructWidget<UBorder>();
+    Rule->SetBrushColor(FLinearColor(0.20f, 0.21f, 0.23f, 1.f));
+    USizeBox* RuleSize = WidgetTree->ConstructWidget<USizeBox>();
+    RuleSize->SetHeightOverride(5.f);
+    Rule->SetContent(RuleSize);
+    Column->AddChildToVerticalBox(Rule)->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+
+    UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Column->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+    auto MakeIconTab = [this](const TCHAR* IconPath)->UButton*
+    {
+        UButton* Button = WidgetTree->ConstructWidget<UButton>();
+        USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>();
+        IconBox->SetWidthOverride(40.f);
+        IconBox->SetHeightOverride(40.f);
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, IconPath))
+            Icon->SetBrushFromTexture(Tex, true);
+        IconBox->SetContent(Icon);
+        Button->SetContent(IconBox);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(4.f));
+        }
+        return Button;
+    };
+    auto MakeTab = [this, Tabs](const TCHAR* Name)->UButton*
+    {
+        UButton* Button = WidgetTree->ConstructWidget<UButton>();
+        UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
+        Caption->SetText(FText::FromString(Name));
+        Caption->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Caption->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        Caption->SetJustification(ETextJustify::Center);
+        Button->SetContent(Caption);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(Caption->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(10.f, 4.f));
+        }
+        if (UHorizontalBoxSlot* TabSlot = Tabs->AddChildToHorizontalBox(Button))
+        {
+            TabSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            TabSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+        }
+        return Button;
+    };
+    OperationsMenuTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Menu_256x256.T_Menu_256x256"));
+    if (UHorizontalBoxSlot* MenuSlot = Tabs->AddChildToHorizontalBox(OperationsMenuTab))
+    {
+        MenuSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        MenuSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+        MenuSlot->SetVerticalAlignment(VAlign_Center);
+    }
+    OperationsOrdersTab = MakeTab(TEXT("ORDERS"));
+    OperationsTheaterTab = MakeTab(TEXT("THEATER"));
+    OperationsForcesTab = MakeTab(TEXT("FORCES"));
+    OperationsIntelTab = MakeTab(TEXT("INTEL"));
+    OperationsMissionTab = MakeTab(TEXT("MISSION"));
+    OperationsPlayTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Briefing_256x256.T_Briefing_256x256"));
+    if (UHorizontalBoxSlot* PlaySlot = Tabs->AddChildToHorizontalBox(OperationsPlayTab))
+    {
+        PlaySlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        PlaySlot->SetPadding(FMargin(0.f));
+        PlaySlot->SetVerticalAlignment(VAlign_Center);
+    }
+    OperationsMenuTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OnCancelButtonClicked);
+    OperationsOrdersTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsOrders);
+    OperationsTheaterTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsTheater);
+    OperationsForcesTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsForces);
+    OperationsIntelTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsIntel);
+    OperationsMissionTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsMissions);
+    OperationsPlayTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OnMissionButtonClicked);
+    RefreshOperationsTabStyles();
+
+    UCanvasPanel* Host = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("OperationsContentHost"));
+    OperationsContentHost = Host;
+    if (UVerticalBoxSlot* HostSlot = Column->AddChildToVerticalBox(Host))
+    {
+        FSlateChildSize Fill;
+        Fill.SizeRule = ESlateSizeRule::Fill;
+        Fill.Value = 1.f;
+        HostSlot->SetSize(Fill);
+        HostSlot->SetHorizontalAlignment(HAlign_Fill);
+        HostSlot->SetVerticalAlignment(VAlign_Fill);
+    }
+    if (!OperationalSwitcher)
+        OperationalSwitcher = WidgetTree->ConstructWidget<UWidgetSwitcher>(UWidgetSwitcher::StaticClass(), TEXT("OperationalSwitcher"));
+    if (OperationalSwitcher)
+    {
+        OperationalSwitcher->RemoveFromParent();
+        if (UCanvasPanelSlot* ContentSlot = Host->AddChildToCanvas(OperationalSwitcher))
+        {
+            ContentSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+            ContentSlot->SetOffsets(FMargin(0.f));
+        }
+        OperationalSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    }
+}
+
+void UCmdDlg::RefreshOperationsHeader()
+{
+    if (!CampaignNameText) return;
+    if (bHasCurrentCampaign && !CurrentCampaignData.Name.IsEmpty())
+        CampaignNameText->SetText(FText::FromString(CurrentCampaignData.Name.ToUpper()));
+    else if (Campaign* Live = Campaign::GetCampaign())
+        CampaignNameText->SetText(FText::FromString(FString(UTF8_TO_TCHAR(Live->GetName())).ToUpper()));
+}
+
+void UCmdDlg::RefreshOperationsTabStyles()
+{
+    auto Style = [](UButton* Button, const TCHAR* NormalPath, const TCHAR* PressedPath)
+    {
+        if (!Button) return;
+        UTexture2D* Normal = LoadObject<UTexture2D>(nullptr, NormalPath);
+        UTexture2D* Pressed = LoadObject<UTexture2D>(nullptr, PressedPath);
+        FButtonStyle ButtonStyle;
+        auto SetBrush = [](FSlateBrush& Brush, UTexture2D* Texture)
+        {
+            Brush = FSlateBrush();
+            if (!Texture) return;
+            Brush.SetResourceObject(Texture);
+            Brush.DrawAs = ESlateBrushDrawType::Image;
+            Brush.ImageSize = FVector2D(64.f, 64.f);
+            Brush.Margin = FMargin(0.f);
+            Brush.TintColor = FSlateColor(FLinearColor::White);
+        };
+        SetBrush(ButtonStyle.Normal, Normal);
+        SetBrush(ButtonStyle.Hovered, Pressed ? Pressed : Normal);
+        SetBrush(ButtonStyle.Pressed, Pressed ? Pressed : Normal);
+        SetBrush(ButtonStyle.Disabled, Normal);
+        Button->SetStyle(ButtonStyle);
+    };
+    const TCHAR* BlueN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_n.T_Btn01Blue_n");
+    const TCHAR* BlueP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_p.T_Btn01Blue_p");
+    const TCHAR* CyanN = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Cyan_n.T_Btn01Cyan_n");
+    const TCHAR* CyanP = TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Cyan_p.T_Btn01Cyan_p");
+    Style(OperationsMenuTab, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"), TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"));
+    Style(OperationsPlayTab, TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_n.T_Btn01Green_n"), TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Green_p.T_Btn01Green_p"));
+    Style(OperationsOrdersTab, CurrentScreen == ECmdScreen::Orders ? BlueN : CyanN, CurrentScreen == ECmdScreen::Orders ? BlueP : CyanP);
+    Style(OperationsTheaterTab, CurrentScreen == ECmdScreen::Theater ? BlueN : CyanN, CurrentScreen == ECmdScreen::Theater ? BlueP : CyanP);
+    Style(OperationsForcesTab, CurrentScreen == ECmdScreen::Forces ? BlueN : CyanN, CurrentScreen == ECmdScreen::Forces ? BlueP : CyanP);
+    Style(OperationsIntelTab, CurrentScreen == ECmdScreen::Intel ? BlueN : CyanN, CurrentScreen == ECmdScreen::Intel ? BlueP : CyanP);
+    Style(OperationsMissionTab, CurrentScreen == ECmdScreen::Missions ? BlueN : CyanN, CurrentScreen == ECmdScreen::Missions ? BlueP : CyanP);
+}
+
+void UCmdDlg::OpenOperationsOrders() { CurrentScreen = ECmdScreen::Orders; LoadOrdersInfo(); RefreshOperationsTabStyles(); }
+void UCmdDlg::OpenOperationsTheater() { CurrentScreen = ECmdScreen::Theater; LoadTheaterInfo(); RefreshOperationsTabStyles(); }
+void UCmdDlg::OpenOperationsForces() { CurrentScreen = ECmdScreen::Forces; LoadForcesInfo(); RefreshOperationsTabStyles(); }
+void UCmdDlg::OpenOperationsIntel() { CurrentScreen = ECmdScreen::Intel; LoadIntelInfo(); RefreshOperationsTabStyles(); }
+void UCmdDlg::OpenOperationsMissions() { CurrentScreen = ECmdScreen::Missions; LoadMissionsInfo(); RefreshOperationsTabStyles(); }
 
 void UCmdDlg::NativePreConstruct()
 {
@@ -394,6 +700,7 @@ void UCmdDlg::SetManager(UCmpnScreen* InManager)
 void UCmdDlg::ShowCmdDlg()
 {
     CampaignPtr = Campaign::GetCampaign();
+    RefreshOperationsHeader();
 
     if (txt_name)
     {
@@ -413,11 +720,9 @@ void UCmdDlg::ShowCmdDlg()
 
     SetVisibility(ESlateVisibility::Visible);
 
-    if (CurrentScreen == ECmdScreen::None)
-    {
-        CurrentScreen = ECmdScreen::Orders;
-        LoadOrdersInfo();
-    }
+    CurrentScreen = ECmdScreen::Missions;
+    LoadMissionsInfo();
+    RefreshOperationsTabStyles();
 
     UpdateMissionButton();
 
@@ -428,25 +733,40 @@ void UCmdDlg::ShowCmdDlg()
 
 void UCmdDlg::ExecFrame(double DeltaTime)
 {
+    UTimerSubsystem* Timer = GetGameInstance() ? GetGameInstance()->GetSubsystem<UTimerSubsystem>() : nullptr;
+    USSWGameInstance* SSW = Cast<USSWGameInstance>(GetGameInstance());
+    if (SSW && Timer)
+    {
+        if (!SSW->CampaignSave)
+        {
+            UStarshatterPlayerSubsystem* PlayerSS = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+            if (PlayerSS && !PlayerSS->HasLoaded())
+                PlayerSS->LoadPlayer();
+            const FS_PlayerGameInfo Info = PlayerSS ? PlayerSS->GetPlayerInfo() : FS_PlayerGameInfo();
+            const int32 CampaignIndex = Info.Campaign > 0 ? Info.Campaign : 1;
+            SSW->LoadOrCreateCampaignSave(CampaignIndex, Info.CampaignRowName, FString());
+        }
+        if (SSW->CampaignSave && !Timer->HasCampaignSave())
+            Timer->SetCampaignSave(SSW->CampaignSave);
+        Timer->StartClock();
+    }
+
     if (!CampaignPtr)
         CampaignPtr = Campaign::GetCampaign();
 
-    if (!CampaignPtr)
-        return;
-
-    if (CurrentUnitText)
+    if (CurrentUnitText && CampaignPtr)
     {
         CombatGroup* G = CampaignPtr->GetPlayerGroup();
         if (G)
             CurrentUnitText->SetText(FText::FromString(G->GetDescription()));
     }
 
-    if (PlayerScoreText)
+    if (PlayerScoreText && CampaignPtr)
     {
         const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
         const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
         PlayerScoreText->SetText(FText::FromString(ScoreStr));
-        PlayerScoreText->SetJustification(ETextJustify::Right);
+        PlayerScoreText->SetJustification(ETextJustify::Left);
     }
 
     if (CampaignTPlusText)
@@ -457,11 +777,6 @@ void UCmdDlg::ExecFrame(double DeltaTime)
         // -2147483648 in the UI.
         USSWGameInstance* SSWInstance =
             Cast<USSWGameInstance>(GetGameInstance());
-
-        UTimerSubsystem* Timer =
-            GetGameInstance()
-                ? GetGameInstance()->GetSubsystem<UTimerSubsystem>()
-                : nullptr;
 
         if (SSWInstance &&
             Timer &&
@@ -588,74 +903,43 @@ void UCmdDlg::OnCancelButtonUnHovered()
 
 void UCmdDlg::OnMissionButtonClicked()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: BEGIN"));
-
-    UStarshatterEnvironmentSubsystem* EnvSubsystem =
-        GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>() : nullptr;
-
-    if (!CampaignPtr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CampaignPtr is NULL"));
-        return;
-    }
+    if (!manager)
+        if (USSWGameInstance* SSW = Cast<USSWGameInstance>(GetGameInstance()))
+            manager = SSW->MainMenuScreen.Get();
 
     if (!CmdMissionsPanel)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CmdMissionsPanel is NULL"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: no missions panel"));
         return;
     }
-
-    if (!EnvSubsystem)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: EnvSubsystem is NULL"));
-        return;
-    }
-
-    if (!manager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: manager is NULL"));
-        return;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Preconditions passed"));
 
     if (!CmdMissionsPanel->CanAcceptSelectedMission())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: CanAcceptSelectedMission returned false"));
         return;
-    }
 
     const int32 SelectedMissionId = CmdMissionsPanel->GetSelectedMissionId();
-
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: SelectedMissionId=%d"), SelectedMissionId);
-
-    if (SelectedMissionId <= 0)
+    Campaign* ActiveCampaign = CampaignPtr ? CampaignPtr : Campaign::GetCampaign();
+    if (!ActiveCampaign || SelectedMissionId <= 0 || !ActiveCampaign->GetMissionInfo(SelectedMissionId))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Invalid SelectedMissionId"));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: no accepted mission"));
         return;
     }
 
-    CampaignPtr->SetMissionId(SelectedMissionId);
-
-    Mission* ActiveMission = CampaignPtr->GetMission(SelectedMissionId);
-
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Campaign mission now=%s"),
-        ActiveMission ? TEXT("VALID") : TEXT("NULL"));
-
-    if (ActiveMission)
+    ActiveCampaign->SetMissionId(SelectedMissionId);
+    if (!ActiveCampaign->GetMission(SelectedMissionId))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: ActiveMissionName=%s"),
-            ANSI_TO_TCHAR(ActiveMission->GetName()));
+        UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: failed to load mission %d"), SelectedMissionId);
+        return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Switching to PREP mode"));
+    if (UGameInstance* GI = GetGameInstance())
+        if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+            Runtime->SetGameMode(EGameMode::PREP);
 
-    EnvSubsystem->SetGameMode(EGameMode::PREP);
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: About to call ShowMissionDlg"));
-
-    manager->ShowMissionDlg();
-
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Returned from ShowMissionDlg"));
+    if (manager)
+    {
+        SetVisibility(ESlateVisibility::Collapsed);
+        manager->ShowMissionDlg();
+    }
 }
 
 void UCmdDlg::OnMissionButtonHovered()
@@ -713,7 +997,12 @@ void UCmdDlg::LoadForcesInfo()
     if (OperationalSwitcher)
     {
         OperationalSwitcher->SetActiveWidgetIndex(2);
+        OperationalSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     }
+    if (CmdMissionsPanel)
+        CmdMissionsPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (OperationsCampaignMissions)
+        OperationsCampaignMissions->SetVisibility(ESlateVisibility::Collapsed);
 
     if (OperationsModeText)
     {
@@ -737,7 +1026,12 @@ void UCmdDlg::LoadOrdersInfo()
     if (OperationalSwitcher)
     {
         OperationalSwitcher->SetActiveWidgetIndex(0);
+        OperationalSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     }
+    if (CmdMissionsPanel)
+        CmdMissionsPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (OperationsCampaignMissions)
+        OperationsCampaignMissions->SetVisibility(ESlateVisibility::Collapsed);
 
     if (OperationsModeText)
     {
@@ -758,29 +1052,34 @@ void UCmdDlg::LoadMissionsInfo()
         AudioSS->PlayAcceptSound(this);
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadMissionsInfo: BEGIN"));
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] LoadMissionsInfo: CmdMissionsPanel=%s"),
-        CmdMissionsPanel ? TEXT("VALID") : TEXT("NULL"));
-
+    BuildOperationsChrome();
     if (OperationalSwitcher)
-    {
-        OperationalSwitcher->SetActiveWidgetIndex(4);
-    }
-
+        OperationalSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+    if (OperationsCampaignMissions)
+        OperationsCampaignMissions->SetVisibility(ESlateVisibility::Collapsed);
     if (OperationsModeText)
-    {
         OperationsModeText->SetText(FText::FromString("MISSIONS"));
-    }
 
+    if (!CmdMissionsPanel)
+        CmdMissionsPanel = CreateWidget<UCmdMissionsDlg>(this, UCmdMissionsDlg::StaticClass());
+    if (CmdMissionsPanel)
+        CmdMissionsPanel->SetParentCmdDlg(this);
+
+    if (CmdMissionsPanel && OperationsContentHost && CmdMissionsPanel->GetParent() != OperationsContentHost)
+    {
+        CmdMissionsPanel->RemoveFromParent();
+        if (UCanvasPanelSlot* ContentSlot = OperationsContentHost->AddChildToCanvas(CmdMissionsPanel))
+        {
+            ContentSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+            ContentSlot->SetOffsets(FMargin(0.f));
+        }
+    }
     if (CmdMissionsPanel)
     {
         CmdMissionsPanel->ShowMissionsDlg();
+        CmdMissionsPanel->SetVisibility(ESlateVisibility::Visible);
     }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("[CmdDlg] LoadMissionsInfo: CmdMissionsPanel is NULL"));
-    }
-
+    RefreshOperationsHeader();
     UpdateMissionButton();
 }
 
@@ -806,7 +1105,26 @@ void UCmdDlg::LoadIntelInfo()
     if (OperationalSwitcher)
     {
         OperationalSwitcher->SetActiveWidgetIndex(3);
+        OperationalSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     }
+    if (CmdIntelPanel && CmdOrdersPanel)
+    {
+        if (UWidgetSwitcherSlot* IntelSlot = Cast<UWidgetSwitcherSlot>(CmdIntelPanel->Slot))
+        {
+            IntelSlot->SetHorizontalAlignment(HAlign_Fill);
+            IntelSlot->SetVerticalAlignment(VAlign_Fill);
+            IntelSlot->SetPadding(FMargin(0.f));
+        }
+        if (UWidgetSwitcherSlot* OrdersSlot = Cast<UWidgetSwitcherSlot>(CmdOrdersPanel->Slot))
+        {
+            OrdersSlot->SetHorizontalAlignment(HAlign_Fill);
+            OrdersSlot->SetVerticalAlignment(VAlign_Fill);
+        }
+    }
+    if (CmdMissionsPanel)
+        CmdMissionsPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (OperationsCampaignMissions)
+        OperationsCampaignMissions->SetVisibility(ESlateVisibility::Collapsed);
 
     if (OperationsModeText)
     {
@@ -833,7 +1151,12 @@ void UCmdDlg::LoadTheaterInfo()
     if (OperationalSwitcher)
     {
         OperationalSwitcher->SetActiveWidgetIndex(1);
+        OperationalSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     }
+    if (CmdMissionsPanel)
+        CmdMissionsPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (OperationsCampaignMissions)
+        OperationsCampaignMissions->SetVisibility(ESlateVisibility::Collapsed);
 
     if (OperationsModeText)
     {
@@ -1030,25 +1353,18 @@ void UCmdDlg::RefreshCommandButtons()
     {
         AllMenuButtons[3]->SetIsEnabled(!bDisablePanels && bHasIntelEntries);
     }
+    if (OperationsTheaterTab) OperationsTheaterTab->SetIsEnabled(!bDisablePanels);
+    if (OperationsForcesTab) OperationsForcesTab->SetIsEnabled(!bDisablePanels);
+    if (OperationsIntelTab) OperationsIntelTab->SetIsEnabled(!bDisablePanels && bHasIntelEntries);
 
     bLastDisableState = bDisablePanels;
 }
 
 void UCmdDlg::UpdateMissionButton()
 {
-    if (!MissionButton)
-    {
-        return;
-    }
-
-    bool bEnable = false;
-
-    if (CurrentScreen == ECmdScreen::Missions && CmdMissionsPanel)
-    {
-        bEnable = CmdMissionsPanel->CanAcceptSelectedMission();
-    }
-
-    MissionButton->SetIsEnabled(bEnable);
+    bool bEnable = CurrentScreen == ECmdScreen::Missions && CmdMissionsPanel && CmdMissionsPanel->CanAcceptSelectedMission();
+    if (MissionButton) MissionButton->SetIsEnabled(bEnable);
+    if (OperationsPlayTab) OperationsPlayTab->SetIsEnabled(bEnable);
 }
 
 void UCmdDlg::ShowMissionsPanel()

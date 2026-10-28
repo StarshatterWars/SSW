@@ -430,11 +430,10 @@ void UCmdMissionsDlg::ValidateSelectionStillExists()
 
 int32 UCmdMissionsDlg::GetSelectedMissionId() const
 {
+    if (SelectedMissionItem)
+        return SelectedMissionItem->MissionId;
     if (!MissionList)
-    {
         return 0;
-    }
-
     UObject* Selected = MissionList->GetSelectedItem();
     UMissionListObject* Item = Cast<UMissionListObject>(Selected);
     return Item ? Item->MissionId : 0;
@@ -939,7 +938,7 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
 
 void UCmdMissionsDlg::SyncModernSelection()
 {
-    const int32 SelectedId = GetSelectedMissionId();
+    const int32 SelectedId = SelectedMissionItem ? SelectedMissionItem->MissionId : GetSelectedMissionId();
     for (int32 Index = 0; Index < RowButtons.Num(); ++Index)
     {
         if (RowButtons[Index])

@@ -217,6 +217,40 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     RightPanel->SetContent(MissionDetailsScroll);
     UVerticalBox* RightContent = WidgetTree->ConstructWidget<UVerticalBox>();
     MissionDetailsScroll->AddChild(RightContent);
+    if (IsCampaignMissionView())
+    {
+        auto Card = [this, RightContent](const TCHAR* Header) -> UVerticalBox*
+        {
+            UBorder* CardBorder = MakePanel(FLinearColor(0.055f, 0.085f, 0.125f, 0.94f));
+            CardBorder->SetPadding(FMargin(20.f, 16.f, 20.f, 18.f));
+            RightContent->AddChildToVerticalBox(CardBorder)->SetPadding(FMargin(0.f, 0.f, 0.f, 14.f));
+            UVerticalBox* Contents = WidgetTree->ConstructWidget<UVerticalBox>();
+            CardBorder->SetContent(Contents);
+            Contents->AddChildToVerticalBox(MakeLabel(Header, 13, SingleMissionColors::Accent))->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+            return Contents;
+        };
+        UVerticalBox* Details = Card(TEXT("MISSION DETAILS"));
+        MissionTitle = MakeLabel(TEXT("SELECT A MISSION"), 23, SingleMissionColors::Primary, true);
+        MissionTitle->SetFont(MissionUIStyle::GetHeaderFont(23));
+        Details->AddChildToVerticalBox(MissionTitle)->SetPadding(FMargin(0.f, 0.f, 0.f, 16.f));
+        MissionRole = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
+        MissionLocation = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
+        MissionTime = MakeLabel(TEXT(""), 15, SingleMissionColors::Muted);
+        Details->AddChildToVerticalBox(MissionRole)->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+        Details->AddChildToVerticalBox(MissionLocation)->SetPadding(FMargin(0.f, 0.f, 0.f, 10.f));
+        Details->AddChildToVerticalBox(MissionTime);
+        UVerticalBox* Location = Card(TEXT("LOCATION"));
+        MissionSummary = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
+        Location->AddChildToVerticalBox(MissionSummary);
+        UVerticalBox* Forces = Card(TEXT("FORCES"));
+        MissionObjectives = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
+        Forces->AddChildToVerticalBox(MissionObjectives);
+        UVerticalBox* Sitrep = Card(TEXT("SITUATION REPORT"));
+        MissionSitrep = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
+        Sitrep->AddChildToVerticalBox(MissionSitrep);
+    }
+    else
+    {
     RightContent->AddChildToVerticalBox(MakeLabel(TEXT("BRIEFING"), 18, SingleMissionColors::Accent));
     MissionTitle = MakeLabel(TEXT("SELECT A MISSION"), 26, SingleMissionColors::Primary, true);
     UBorder* MissionTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
@@ -235,7 +269,10 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     RightContent->AddChildToVerticalBox(MakeLabel(TEXT("OBJECTIVES"), 17, SingleMissionColors::Accent));
     MissionObjectives = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
     RightContent->AddChildToVerticalBox(MissionObjectives)->SetPadding(FMargin(0.f, 8.f));
+    }
 
+    if (!IsCampaignMissionView())
+    {
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
 
@@ -252,6 +289,7 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
     Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     LaunchButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnLaunchPressed);
+    }
 }
 
 void USingleMissionDlg::Show()
@@ -267,6 +305,7 @@ void USingleMissionDlg::RefreshMissionRoster()
     if (!MissionRoster) return;
     MissionRoster->ClearChildren();
     MissionButtons.Reset();
+    RowProxies.Reset();
     MissionIds.Reset();
     ScenarioRows.Reset();
     CustomMissionInfos.Reset();
@@ -291,7 +330,11 @@ void USingleMissionDlg::RefreshMissionRoster()
                     && !(ActiveCampaign->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden))
                     continue;
                 UButton* MissionButton = MakeActionButton(ANSI_TO_TCHAR(Info->name.data()), true, true);
-                MissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
+                USingleMissionRowProxy* Proxy = NewObject<USingleMissionRowProxy>(this);
+                Proxy->Owner = this;
+                Proxy->Index = MissionButtons.Num();
+                MissionButton->OnClicked.AddDynamic(Proxy, &USingleMissionRowProxy::Activate);
+                RowProxies.Add(Proxy);
                 MissionRoster->AddChildToVerticalBox(MissionButton)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
                 MissionButtons.Add(MissionButton);
                 MissionIds.Add(Info->id);
@@ -448,16 +491,16 @@ void USingleMissionDlg::RefreshMissionDetails()
         const FString Status = CustomInfo->mission ? TEXT("Active") : TEXT("Available");
         if (MissionTitle) MissionTitle->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->name.data())));
         if (MissionRole) MissionRole->SetText(FText::FromString(FString::Printf(TEXT("TYPE:  %s"), *TypeName)));
-        if (MissionLocation) MissionLocation->SetText(FText::FromString(
-            FString::Printf(TEXT("SYSTEM:  %s     REGION:  %s"),
+        if (MissionLocation) MissionLocation->SetText(FText::FromString(FString::Printf(TEXT("STATUS:  %s"), *Status)));
+        if (MissionTime) MissionTime->SetText(FText::FromString(FString::Printf(TEXT("START TIME:  %s"), ANSI_TO_TCHAR(StartTime))));
+        if (MissionSummary) MissionSummary->SetText(FText::FromString(
+            FString::Printf(TEXT("SYSTEM:  %s\nREGION:  %s"),
                 ANSI_TO_TCHAR(CustomInfo->system.data()), ANSI_TO_TCHAR(CustomInfo->region.data()))));
-        if (MissionTime) MissionTime->SetText(FText::FromString(
-            FString::Printf(TEXT("STATUS:  %s     START TIME:  %s"), *Status, ANSI_TO_TCHAR(StartTime))));
-        if (MissionSummary) MissionSummary->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->description.data())));
         if (MissionObjectives) MissionObjectives->SetText(FText::FromString(
             CustomInfo->player_info.length()
             ? ANSI_TO_TCHAR(CustomInfo->player_info.data())
-            : TEXT("Full objectives and loadout are available in Mission Briefing.")));
+            : TEXT("")));
+        if (MissionSitrep) MissionSitrep->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->description.data())));
         if (LaunchButton) LaunchButton->SetIsEnabled(true);
         return;
     }
@@ -650,6 +693,11 @@ void USingleMissionDlg::OnMission07Pressed() { SelectMissionAt(6); }
 void USingleMissionDlg::OnMission08Pressed() { SelectMissionAt(7); }
 void USingleMissionDlg::OnMission09Pressed() { SelectMissionAt(8); }
 void USingleMissionDlg::OnMission10Pressed() { SelectMissionAt(9); }
+
+void USingleMissionRowProxy::Activate()
+{
+    if (Owner) Owner->SelectMissionAt(Index);
+}
 
 void USingleMissionDlg::OnCustomMissionChosen()
 {

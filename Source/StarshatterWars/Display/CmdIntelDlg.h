@@ -28,6 +28,17 @@ class UWidget;
 class UIntelListObject;
 class UTexture2D;
 class USoundBase;
+class UVerticalBox;
+
+UCLASS()
+class STARSHATTERWARS_API UCmdIntelRowProxy : public UObject
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY() TObjectPtr<UCmdIntelDlg> Owner;
+	UPROPERTY() TObjectPtr<UIntelListObject> Item;
+	UFUNCTION() void Activate();
+};
 
 class Starshatter;
 class Campaign;
@@ -50,9 +61,12 @@ public:
 	void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
 	void ShowIntelDlg();
 	void RefreshIntelData();
+	void OnNewsSelectionChanged(UObject* Item);
 
 private:
 	void BindFormWidgets();
+	void BuildTwoPanelLayout();
+	void RefreshIntelRows();
 	void ExecFrame();
 	void RebuildNewsListIfCampaignChanged();
 	void AppendNewEventsIfAny();
@@ -86,6 +100,10 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelDateText = nullptr;
 	UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* IntelMessageText = nullptr;
 	UPROPERTY(meta = (BindWidgetOptional)) UImage* IntelImage = nullptr;
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> NativeIntelRows = nullptr;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> IntelCountText = nullptr;
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> IntelRowButtons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UCmdIntelRowProxy>> IntelRowCallbacks;
 
 	UPROPERTY(meta = (BindWidgetOptional)) UWidget* mov_news = nullptr;
 
@@ -114,5 +132,4 @@ private:
 	UFUNCTION() void OnSaveClicked();
 	UFUNCTION() void OnPlayClicked();
 
-	void OnNewsSelectionChanged(UObject* Item);
 };

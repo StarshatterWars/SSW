@@ -2,16 +2,21 @@
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
 
-
 #include "CmdIntelDlg.h"
-#include "CmdTwoColumnLayout.h"
 
-#include "AudioRouting.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
-#include "Components/Border.h"
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
+#include "Components/SizeBox.h"
+#include "Components/WidgetSwitcherSlot.h"
 #include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Texture2D.h"
@@ -89,89 +94,8 @@ void UCmdIntelDlg::NativeConstruct()
 		UE_LOG(LogTemp, Error, TEXT("[CmdIntelDlg] IntelList is NULL"));
 	}
 
-    // Retain the original Blueprint UListView instance and its selection delegate.
-    // The native layout only reparents the original widgets; never ConstructWidget
-    // with the same name as an existing Blueprint widget.
-    if (UCanvasPanel* Canvas = SSWTwoColumn::FindCanvas(this))
-    {
-        if (IntelList)
-        {
-            IntelList->RemoveFromParent();
-            if (IntelNameText) IntelNameText->RemoveFromParent();
-            if (IntelSourceText) IntelSourceText->RemoveFromParent();
-            if (IntelLocationText) IntelLocationText->RemoveFromParent();
-            if (IntelDateText) IntelDateText->RemoveFromParent();
-            if (IntelMessageText) IntelMessageText->RemoveFromParent();
-            if (IntelImage) IntelImage->RemoveFromParent();
-            if (AudioButton) AudioButton->RemoveFromParent();
-            if (mov_news) mov_news->RemoveFromParent();
-            Canvas->ClearChildren();
-            UHorizontalBox* Columns = SSWTwoColumn::Begin(WidgetTree, Canvas, TEXT("IntelNative"));
-            UVerticalBox* Left = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("IntelNativeLeft"), 1.f);
-            UVerticalBox* Right = SSWTwoColumn::Column(WidgetTree, Columns, TEXT("IntelNativeRight"), 1.25f);
-            SSWTwoColumn::Append(Left, SSWTwoColumn::Label(WidgetTree, TEXT("IntelNativeListHeading"), TEXT("INTELLIGENCE REPORTS"), 24));
-            SSWTwoColumn::Append(Left, IntelList, true);
-            // Scrollable report: fixed-height 300 px top section with metadata
-            // wrapping in the left column and a 256x256 image on the right.
-            UScrollBox* DetailScroll = SSWTwoColumn::Scroller(WidgetTree, TEXT("IntelNativeDetailsScroll"));
-            SSWTwoColumn::Append(Right, DetailScroll, true);
-            UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("IntelNativeDetailsContent"));
-            DetailScroll->AddChild(Details);
-            SSWTwoColumn::Append(Details, SSWTwoColumn::Label(WidgetTree, TEXT("IntelNativeDetailsHeading"), TEXT("REPORT DETAILS"), 24));
-
-            USizeBox* TopBand = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("IntelNativeTopBand"));
-            TopBand->SetHeightOverride(300.f);
-            SSWTwoColumn::Append(Details, TopBand);
-            UHorizontalBox* TopColumns = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("IntelNativeTopColumns"));
-            TopBand->AddChild(TopColumns);
-            UVerticalBox* Metadata = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("IntelNativeMetadata"));
-            if (UHorizontalBoxSlot* MetadataSlot = TopColumns->AddChildToHorizontalBox(Metadata))
-            {
-                FSlateChildSize MetadataFill;
-                MetadataFill.SizeRule = ESlateSizeRule::Fill;
-                MetadataFill.Value = 1.f;
-                MetadataSlot->SetSize(MetadataFill);
-                MetadataSlot->SetVerticalAlignment(VAlign_Top);
-                MetadataSlot->SetPadding(FMargin(0.f, 8.f, 12.f, 0.f));
-            }
-            SSWTwoColumn::Append(Metadata, IntelNameText);
-            SSWTwoColumn::Append(Metadata, IntelSourceText);
-            SSWTwoColumn::Append(Metadata, IntelLocationText);
-            SSWTwoColumn::Append(Metadata, IntelDateText);
-
-            if (IntelImage)
-            {
-                // Outer 8 px inset; white 1 px border with 256 px square artwork.
-                UBorder* ImageFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("IntelNativeImageWhiteFrame"));
-                ImageFrame->SetBrushColor(FLinearColor::White);
-                ImageFrame->SetPadding(FMargin(1.f));
-                USizeBox* ImageSquare = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("IntelNativeSquareImage"));
-                ImageSquare->SetWidthOverride(256.f);
-                ImageSquare->SetHeightOverride(256.f);
-                ImageSquare->AddChild(IntelImage);
-                ImageFrame->SetContent(ImageSquare);
-                if (UHorizontalBoxSlot* ImageSlot = TopColumns->AddChildToHorizontalBox(ImageFrame))
-                {
-                    ImageSlot->SetHorizontalAlignment(HAlign_Right);
-                    ImageSlot->SetVerticalAlignment(VAlign_Top);
-                    ImageSlot->SetPadding(FMargin(0.f, 8.f, 8.f, 0.f));
-                }
-            }
-            SSWTwoColumn::Append(Details, IntelMessageText);
-            SSWTwoColumn::Append(Details, AudioButton);
-            if (mov_news) { SSWTwoColumn::Append(Details, mov_news); mov_news->SetVisibility(ESlateVisibility::Collapsed); }
-            SSWTwoColumn::White(IntelNameText, 22);
-            SSWTwoColumn::White(IntelSourceText);
-            SSWTwoColumn::White(IntelLocationText);
-            SSWTwoColumn::White(IntelDateText);
-            SSWTwoColumn::White(IntelMessageText);
-            UE_LOG(LogTemp, Log, TEXT("[CmdIntelDlg] Reused original IntelList in 2-column layout"));
-        }
-        else UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] No IntelList; original Blueprint layout retained"));
-    }
-    else UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] No CanvasRoot/root CanvasPanel; original Blueprint layout retained"));
-
 	ClearNewsDetails();
+	BuildTwoPanelLayout();
 	AppendNewEventsIfAny();
 }
 
@@ -188,6 +112,145 @@ void UCmdIntelDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 // +----------------------------------------------------------------------+
 // | BindFormWidgets                                                      |
 // +----------------------------------------------------------------------+
+
+void UCmdIntelRowProxy::Activate()
+{
+	if (Owner && Item)
+		Owner->OnNewsSelectionChanged(Item);
+}
+
+void UCmdIntelDlg::BuildTwoPanelLayout()
+{
+	if (!WidgetTree || WidgetTree->FindWidget(TEXT("IntelTwoPanel")))
+		return;
+
+	UCanvasPanel* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+	if (!Root)
+	{
+		Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("CanvasRoot"));
+		WidgetTree->RootWidget = Root;
+	}
+
+	UImage* Background = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IntelPanelBackground"));
+	if (UTexture2D* PanelTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Panel.Panel")))
+		Background->SetBrushFromTexture(PanelTex, true);
+	Background->SetVisibility(ESlateVisibility::HitTestInvisible);
+	if (UCanvasPanelSlot* BgSlot = Root->AddChildToCanvas(Background))
+	{
+		BgSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+		BgSlot->SetOffsets(FMargin(0.f));
+		BgSlot->SetZOrder(0);
+	}
+
+	UHorizontalBox* Columns = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("IntelTwoPanel"));
+	if (UCanvasPanelSlot* ColumnsSlot = Root->AddChildToCanvas(Columns))
+	{
+		ColumnsSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+		ColumnsSlot->SetOffsets(FMargin(12.f));
+		ColumnsSlot->SetZOrder(10);
+	}
+
+	auto MakeText = [this](const FString& Value, int32 Size, const FLinearColor& Color)->UTextBlock*
+	{
+		UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>();
+		Text->SetText(FText::FromString(Value));
+		Text->SetColorAndOpacity(FSlateColor(Color));
+		Text->SetAutoWrapText(true);
+		FSlateFontInfo Font = Text->GetFont();
+		Font.Size = Size;
+		Text->SetFont(Font);
+		return Text;
+	};
+
+	UBorder* LeftCard = WidgetTree->ConstructWidget<UBorder>();
+	LeftCard->SetPadding(FMargin(16.f));
+	LeftCard->SetBrushColor(FLinearColor(0.18f, 0.18f, 0.18f, 0.94f));
+	UScrollBox* LeftScroll = WidgetTree->ConstructWidget<UScrollBox>();
+	UVerticalBox* LeftContents = WidgetTree->ConstructWidget<UVerticalBox>();
+	LeftScroll->AddChild(LeftContents);
+	LeftCard->SetContent(LeftScroll);
+	if (UHorizontalBoxSlot* LeftSlot = Columns->AddChildToHorizontalBox(LeftCard))
+	{
+		LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+		LeftSlot->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
+	}
+	LeftContents->AddChildToVerticalBox(MakeText(TEXT("INTEL"), 18, FLinearColor(0.95f, 0.97f, 1.f)));
+	IntelCountText = MakeText(TEXT("0 REPORTS"), 14, FLinearColor(0.71f, 0.81f, 0.88f));
+	LeftContents->AddChildToVerticalBox(IntelCountText)->SetPadding(FMargin(0.f, 4.f, 0.f, 12.f));
+	if (!IntelList)
+		IntelList = WidgetTree->ConstructWidget<UListView>(UListView::StaticClass(), TEXT("IntelList"));
+	IntelList->RemoveFromParent();
+	IntelList->SetVisibility(ESlateVisibility::Visible);
+	if (UVerticalBoxSlot* ListSlot = LeftContents->AddChildToVerticalBox(IntelList))
+	{
+		FSlateChildSize Fill;
+		Fill.SizeRule = ESlateSizeRule::Fill;
+		Fill.Value = 1.f;
+		ListSlot->SetSize(Fill);
+	}
+
+	UBorder* RightCard = WidgetTree->ConstructWidget<UBorder>();
+	RightCard->SetPadding(FMargin(16.f));
+	RightCard->SetBrushColor(FLinearColor(0.45f, 0.45f, 0.45f, 0.92f));
+	UScrollBox* RightScroll = WidgetTree->ConstructWidget<UScrollBox>();
+	UVerticalBox* RightContents = WidgetTree->ConstructWidget<UVerticalBox>();
+	RightScroll->AddChild(RightContents);
+	RightCard->SetContent(RightScroll);
+	if (UHorizontalBoxSlot* RightSlot = Columns->AddChildToHorizontalBox(RightCard))
+	{
+		RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+		RightSlot->SetPadding(FMargin(8.f, 0.f, 0.f, 0.f));
+	}
+	RightContents->AddChildToVerticalBox(MakeText(TEXT("REPORT"), 18, FLinearColor(0.95f, 0.97f, 1.f)))->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+	if (!IntelNameText) IntelNameText = MakeText(TEXT("SELECT A REPORT"), 22, FLinearColor(0.95f, 0.97f, 1.f));
+	if (!IntelSourceText) IntelSourceText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelLocationText) IntelLocationText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelDateText) IntelDateText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelMessageText) IntelMessageText = MakeText(TEXT(""), 15, FLinearColor(0.95f, 0.97f, 1.f));
+	if (!IntelImage) IntelImage = WidgetTree->ConstructWidget<UImage>();
+	IntelImage->SetVisibility(ESlateVisibility::Collapsed);
+
+	UHorizontalBox* TopRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+	USizeBox* InfoColumn = WidgetTree->ConstructWidget<USizeBox>();
+	InfoColumn->SetWidthOverride(280.f);
+	UVerticalBox* Info = WidgetTree->ConstructWidget<UVerticalBox>();
+	Info->AddChildToVerticalBox(IntelNameText)->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
+	Info->AddChildToVerticalBox(IntelSourceText);
+	Info->AddChildToVerticalBox(IntelLocationText);
+	Info->AddChildToVerticalBox(IntelDateText);
+	InfoColumn->SetContent(Info);
+	if (UHorizontalBoxSlot* InfoSlot = TopRow->AddChildToHorizontalBox(InfoColumn))
+	{
+		InfoSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+		InfoSlot->SetVerticalAlignment(VAlign_Top);
+		InfoSlot->SetPadding(FMargin(0.f, 4.f, 4.f, 4.f));
+	}
+
+	USizeBox* ImageBox = WidgetTree->ConstructWidget<USizeBox>();
+	ImageBox->SetWidthOverride(256.f);
+	ImageBox->SetHeightOverride(256.f);
+	IntelImage->SetDesiredSizeOverride(FVector2D(256.f, 256.f));
+	ImageBox->SetContent(IntelImage);
+	if (UHorizontalBoxSlot* ImageSlot = TopRow->AddChildToHorizontalBox(ImageBox))
+	{
+		ImageSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+		ImageSlot->SetHorizontalAlignment(HAlign_Right);
+		ImageSlot->SetVerticalAlignment(VAlign_Top);
+		ImageSlot->SetPadding(FMargin(4.f));
+	}
+	if (UVerticalBoxSlot* TopSlot = RightContents->AddChildToVerticalBox(TopRow))
+	{
+		TopSlot->SetHorizontalAlignment(HAlign_Fill);
+		TopSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+	}
+	RightContents->AddChildToVerticalBox(IntelMessageText);
+}
+
+void UCmdIntelDlg::RefreshIntelRows()
+{
+	if (IntelCountText && IntelList)
+		IntelCountText->SetText(FText::FromString(FString::Printf(TEXT("%d REPORTS"), IntelList->GetNumItems())));
+}
 
 void UCmdIntelDlg::BindFormWidgets()
 {
@@ -217,6 +280,38 @@ void UCmdIntelDlg::BindFormWidgets()
 void UCmdIntelDlg::ShowIntelDlg()
 {
 	SetVisibility(ESlateVisibility::Visible);
+	SetClipping(EWidgetClipping::ClipToBounds);
+
+	if (UWidgetSwitcherSlot* SwitcherSlot = Cast<UWidgetSwitcherSlot>(Slot))
+	{
+		SwitcherSlot->SetHorizontalAlignment(HAlign_Fill);
+		SwitcherSlot->SetVerticalAlignment(VAlign_Fill);
+		SwitcherSlot->SetPadding(FMargin(0.f));
+	}
+	else if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Slot))
+	{
+		CanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+		CanvasSlot->SetOffsets(FMargin(0.f));
+		CanvasSlot->SetAutoSize(false);
+	}
+
+	if (WidgetTree)
+	{
+		if (UCanvasPanel* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget))
+		{
+			Root->SetClipping(EWidgetClipping::ClipToBounds);
+			for (UWidget* Child : Root->GetAllChildren())
+			{
+				if (UCanvasPanelSlot* ChildSlot = Cast<UCanvasPanelSlot>(Child ? Child->Slot : nullptr))
+				{
+					ChildSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+					ChildSlot->SetOffsets(FMargin(0.f));
+					ChildSlot->SetAutoSize(false);
+				}
+			}
+		}
+	}
+
 	RefreshIntelData();
 }
 
@@ -304,7 +399,7 @@ void UCmdIntelDlg::AppendNewEventsIfAny()
 	}
 
 	AutoScrollToFirstUnreadIfNeeded();
-	AutoSelectFirstItemIfNeeded();
+	RefreshIntelRows();
 }
 
 // +----------------------------------------------------------------------+
@@ -343,20 +438,19 @@ void UCmdIntelDlg::ClearNewsDetails()
 
 	if (IntelImage)
 	{
-		if (DefaultNewsTexture)
-		{
-			IntelImage->SetBrushFromTexture(DefaultNewsTexture, true);
-		}
-		else
-		{
-			IntelImage->SetBrush(FSlateBrush());
-		}
+		IntelImage->SetBrush(FSlateBrush());
+		IntelImage->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.f));
+		IntelImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
-
-	if (AudioButton)
-	{
-		AudioButton->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	if (UWidget* ImageField = GetWidgetFromName(TEXT("ImageField")))
+		ImageField->SetVisibility(ESlateVisibility::Collapsed);
+	if (UWidget* ImageBorder = GetWidgetFromName(TEXT("IntelImageBorder")))
+		ImageBorder->SetVisibility(ESlateVisibility::Collapsed);
+	if (AudioButton) AudioButton->SetVisibility(ESlateVisibility::Collapsed);
+	if (UWidget* Detail = GetWidgetFromName(TEXT("NewsDetail")))
+		Detail->SetVisibility(ESlateVisibility::Hidden);
+	if (UWidget* DetailPanel = GetWidgetFromName(TEXT("IntelDetail")))
+		DetailPanel->SetVisibility(ESlateVisibility::Hidden);
 }
 
 // +----------------------------------------------------------------------+
@@ -393,7 +487,7 @@ void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 
 	if (!Item)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] SelectionChanged: Item is NULL"));
+		ClearNewsDetails();
 		return;
 	}
 
@@ -457,17 +551,18 @@ void UCmdIntelDlg::SetSelectedIntelData(UIntelListObject* Item)
 			LoadedTexture,
 			FVector2D(LoadedTexture->GetSizeX(), LoadedTexture->GetSizeY()));
 		IntelImage->SetBrush(Brush);
+		IntelImage->SetColorAndOpacity(FLinearColor::White);
+		IntelImage->SetVisibility(ESlateVisibility::Visible);
+		if (UWidget* ImageField = GetWidgetFromName(TEXT("ImageField")))
+			ImageField->SetVisibility(ESlateVisibility::Visible);
+		if (UWidget* ImageBorder = GetWidgetFromName(TEXT("IntelImageBorder")))
+			ImageBorder->SetVisibility(ESlateVisibility::Visible);
 	}
 	else if (IntelImage)
 	{
-		if (DefaultNewsTexture)
-		{
-			IntelImage->SetBrushFromTexture(DefaultNewsTexture, true);
-		}
-		else
-		{
-			IntelImage->SetBrush(FSlateBrush());
-		}
+		IntelImage->SetBrush(FSlateBrush());
+		IntelImage->SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.f));
+		IntelImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	const bool bHasAudio = !Item->NewsAudio.IsEmpty();
@@ -506,7 +601,7 @@ void UCmdIntelDlg::OnPlayClicked()
 
 	if (AudioAsset)
 	{
-		SSWAudioRouting::Play2D(this,AudioAsset,EStarshatterAudioChannel::Voice);
+		UGameplayStatics::PlaySound2D(this, AudioAsset);
 	}
 }
 
