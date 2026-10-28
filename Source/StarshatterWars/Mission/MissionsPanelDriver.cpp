@@ -24,6 +24,12 @@
 #include "Engine/Texture2D.h"
 #include "MissionUIStyle.h"
 #include "GameFramework/PlayerController.h"
+#include "Campaign.h"
+#include "CombatGroup.h"
+#include "TimerSubsystem.h"
+#include "CampaignSave.h"
+#include "SSWGameInstance.h"
+#include "Misc/DateTime.h"
 
 TSharedRef<SWidget> UMissionsPanelDriver::RebuildWidget()
 {
@@ -31,7 +37,44 @@ TSharedRef<SWidget> UMissionsPanelDriver::RebuildWidget()
     BuildDriverLayout();
     return Super::RebuildWidget();
 }
-void UMissionsPanelDriver::NativeConstruct() { Super::NativeConstruct(); BuildDriverLayout(); }
+void UMissionsPanelDriver::NativeConstruct()
+{
+    Super::NativeConstruct();
+    BuildDriverLayout();
+    BindHeaderClock();
+    RefreshHeaderStatus();
+}
+void UMissionsPanelDriver::BindHeaderClock()
+{
+    UGameInstance* GI = GetGameInstance();
+    if (!GI) return;
+    USSWGameInstance* SSW = Cast<USSWGameInstance>(GI);
+    UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
+    if (!Timer) return;
+    if (Timer->UniverseBaseUnixSeconds <= 0 && SSW)
+    {
+        SSW->LoadOrCreateUniverse();
+        Timer = GI->GetSubsystem<UTimerSubsystem>();
+        if (!Timer) return;
+    }
+    if (SSW && SSW->CampaignSave && !Timer->HasCampaignSave())
+        Timer->SetCampaignSave(SSW->CampaignSave);
+    if (!bHeaderClockBound)
+    {
+        Timer->OnUniverseSecond.AddUObject(this, &UMissionsPanelDriver::HandleHeaderClock);
+        Timer->OnCampaignTPlusChanged.AddUObject(this, &UMissionsPanelDriver::HandleCampaignClock);
+        bHeaderClockBound = true;
+    }
+    HandleHeaderClock(Timer->GetUniverseTimeSeconds());
+}
+void UMissionsPanelDriver::HandleHeaderClock(uint64 UniverseSecondsNow)
+{
+    RefreshHeaderStatus();
+}
+void UMissionsPanelDriver::HandleCampaignClock(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
+{
+    RefreshHeaderStatus();
+}
 void UMissionsPanelDriver::BuildDriverLayout()
 {
     if (!WidgetTree || WidgetTree->FindWidget(TEXT("MissionsDriver_Contents"))) return;
@@ -50,6 +93,36 @@ void UMissionsPanelDriver::BuildDriverLayout()
     ModeTitle->SetFont(MissionUIStyle::GetHeaderFont(38));
     Header->SetContent(ModeTitle);
     Column->AddChildToVerticalBox(Header)->SetPadding(FMargin(0.f,0.f,0.f,0.f));
+    UBorder* StatusBar = WidgetTree->ConstructWidget<UBorder>();
+    StatusBar->SetBrushColor(FLinearColor(0.07f, 0.08f, 0.09f, 1.f));
+    StatusBar->SetPadding(FMargin(12.f, 8.f));
+    UHorizontalBox* StatusRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto AddStatus = [this, StatusRow](const TCHAR* Caption, TObjectPtr<UTextBlock>& Value)
+    {
+        UVerticalBox* Cell = WidgetTree->ConstructWidget<UVerticalBox>();
+        UTextBlock* CaptionText = WidgetTree->ConstructWidget<UTextBlock>();
+        CaptionText->SetText(FText::FromString(Caption));
+        CaptionText->SetFont(MissionUIStyle::GetInfoLabelFont(12));
+        CaptionText->SetColorAndOpacity(FSlateColor(FLinearColor(0.16f, 0.77f, 0.91f, 1.f)));
+        Cell->AddChildToVerticalBox(CaptionText);
+        Value = WidgetTree->ConstructWidget<UTextBlock>();
+        Value->SetText(FText::FromString(TEXT("--")));
+        Value->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        Value->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f, 1.f)));
+        if (UVerticalBoxSlot* ValueSlot = Cell->AddChildToVerticalBox(Value))
+            ValueSlot->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
+        if (UHorizontalBoxSlot* CellSlot = StatusRow->AddChildToHorizontalBox(Cell))
+        {
+            CellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            CellSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+        }
+    };
+    AddStatus(TEXT("TIME"), CurrentTimeText);
+    AddStatus(TEXT("CAMPAIGN"), CampaignTimeText);
+    AddStatus(TEXT("PILOT"), PlayerNameText);
+    AddStatus(TEXT("UNIT"), PlayerGroupText);
+    StatusBar->SetContent(StatusRow);
+    Column->AddChildToVerticalBox(StatusBar)->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
     UBorder* DarkHeaderRule=WidgetTree->ConstructWidget<UBorder>();
     DarkHeaderRule->SetBrushColor(FLinearColor(0.20f,0.21f,0.23f,1.f));
     DarkHeaderRule->SetPadding(FMargin(0.f));
@@ -273,6 +346,55 @@ void UMissionsPanelDriver::OpenSingle(){ShowSingleMode();}
 void UMissionsPanelDriver::OpenCustom(){ShowCustomMode();}
 void UMissionsPanelDriver::OpenMultiplayer(){ShowMultiplayerMode();}
 void UMissionsPanelDriver::Back(){if(Manager)Manager->ShowMenuDlg();}
+void UMissionsPanelDriver::RefreshHeaderStatus()
+{
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+        {
+            if (!PlayerSS->HasLoaded()) PlayerSS->LoadPlayer();
+            if (PlayerNameText) PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().Name));
+        }
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        {
+            const uint64 Now = Timer->GetUniverseTimeSeconds();
+            int64 BaseUnixSeconds = Timer->UniverseBaseUnixSeconds;
+            if (BaseUnixSeconds <= 0)
+                BaseUnixSeconds = FDateTime(2228, 1, 1).ToUnixTimestamp();
+            if (CurrentTimeText)
+            {
+                const FDateTime UniverseDateTime = FDateTime::FromUnixTimestamp(BaseUnixSeconds + static_cast<int64>(Now));
+                CurrentTimeText->SetText(FText::FromString(UniverseDateTime.ToString(TEXT("%Y-%m-%d %H:%M:%S"))));
+            }
+            if (CampaignTimeText)
+            {
+                uint64 TPlusSeconds = Timer->GetCampaignTPlusSeconds();
+                UCampaignSave* Save = Timer->GetCampaignSave();
+                if (!Save)
+                    if (USSWGameInstance* SSW = Cast<USSWGameInstance>(GI))
+                        Save = SSW->CampaignSave;
+                if (Save)
+                    TPlusSeconds = Save->GetTPlusSeconds(Now);
+                const uint64 Days = TPlusSeconds / 86400ULL;
+                const uint64 Rest = TPlusSeconds % 86400ULL;
+                CampaignTimeText->SetText(FText::FromString(FString::Printf(
+                    TEXT("Day %02llu  %02llu:%02llu:%02llu"),
+                    (unsigned long long)(Days + 1ULL),
+                    (unsigned long long)(Rest / 3600ULL),
+                    (unsigned long long)((Rest % 3600ULL) / 60ULL),
+                    (unsigned long long)(Rest % 60ULL))));
+            }
+        }
+    }
+    if (PlayerGroupText)
+    {
+        FString GroupName = TEXT("UNASSIGNED");
+        if (Campaign* Live = Campaign::GetCampaign())
+            if (CombatGroup* Group = Live->GetPlayerGroup())
+                GroupName = Group->GetDescription();
+        PlayerGroupText->SetText(FText::FromString(GroupName));
+    }
+}
 void UMissionsPanelDriver::UpdateBriefingEnabled()
 {
     bool bHasSelection = false;
