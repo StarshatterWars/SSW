@@ -648,9 +648,9 @@ void UCmdDlg::OnMissionButtonClicked()
             ANSI_TO_TCHAR(ActiveMission->GetName()));
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Switching to PLAN mode"));
+    UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: Switching to PREP mode"));
 
-    EnvSubsystem->SetGameMode(EGameMode::PLAN);
+    EnvSubsystem->SetGameMode(EGameMode::PREP);
     UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] OnMissionButtonClicked: About to call ShowMissionDlg"));
 
     manager->ShowMissionDlg();

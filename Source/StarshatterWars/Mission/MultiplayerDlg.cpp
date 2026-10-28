@@ -209,17 +209,6 @@ void UMultiplayerDlg::BuildMultiplayerScreen()
     RightContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSION OBJECTIVE"), 17, MultiplayerColors::Accent));
     MissionObjectives = MakeLabel(TEXT("Full objectives and loadout are available in Multiplayer Briefing."), 15, MultiplayerColors::Primary, true);
     RightContent->AddChildToVerticalBox(MissionObjectives)->SetPadding(FMargin(0.f, 8.f));
-
-    UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
-    Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
-    UButton* BackButton = MakeActionButton(TEXT("BACK"));
-    Actions->AddChildToHorizontalBox(BackButton)->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
-    BackButton->OnClicked.AddDynamic(this, &UMultiplayerDlg::OnBackPressed);
-
-    // Keep legacy editing affordances visible, but disabled for built-in missions.
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("NEW"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("EDIT"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
-    Actions->AddChildToHorizontalBox(MakeActionButton(TEXT("DELETE"), false))->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
 }
 
 void UMultiplayerDlg::Show()

@@ -48,6 +48,7 @@
 // Legacy
 #include "Starshatter.h"
 #include "Campaign.h"
+#include "CombatGroup.h"
 #include "SSWGameInstance.h"
 #include "MenuScreen.h"
 #include "MultiplayerDlg.h"
@@ -55,6 +56,9 @@
 #include "GameFramework/PlayerController.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "TimerSubsystem.h"
+#include "CampaignSave.h"
+#include "Misc/DateTime.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogMenuDlg, Log, All);
 
@@ -126,26 +130,43 @@ void UMenuDlg::BuildModernMenu()
     Main->SetAnchors(FAnchors(0.07f, 0.06f, 0.93f, 0.94f)); Main->SetOffsets(FMargin(0.f));
 
     UBorder* Header = WidgetTree->ConstructWidget<UBorder>();
-    Header->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+    Header->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
     Header->SetPadding(FMargin(24.f, 14.f));
     Page->AddChildToVerticalBox(Header)->SetPadding(FMargin(0.f, 0.f, 0.f, 16.f));
     UHorizontalBox* HeaderContent = WidgetTree->ConstructWidget<UHorizontalBox>();
     Header->SetContent(HeaderContent);
-    UVerticalBox* Brand = WidgetTree->ConstructWidget<UVerticalBox>();
-    UHorizontalBoxSlot* BrandSlot = HeaderContent->AddChildToHorizontalBox(Brand);
-    BrandSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    Brand->AddChildToVerticalBox(Text(TEXT("FRACTAL DEV STUDIOS  /  COMMAND INTERFACE"), 13, Accent));
-    Brand->AddChildToVerticalBox(Text(TEXT("STARSHATTER WARS"), 38, Primary, true));
-
-    UVerticalBox* Identity = WidgetTree->ConstructWidget<UVerticalBox>();
-    UHorizontalBoxSlot* IdentitySlot = HeaderContent->AddChildToHorizontalBox(Identity);
-    IdentitySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    Identity->AddChildToVerticalBox(Text(TEXT("ACTIVE PLAYER"), 12, Accent));
-    PlayerIdentityText = Text(TEXT("PLAYER NOT LOADED"), 20, Primary);
-    Identity->AddChildToVerticalBox(PlayerIdentityText);
-    Identity->AddChildToVerticalBox(Text(TEXT("CURRENT CAMPAIGN"), 12, Accent))->SetPadding(FMargin(0.f, 10.f, 0.f, 0.f));
-    CampaignIdentityText = Text(TEXT("NO ACTIVE CAMPAIGN"), 18, Primary);
-    Identity->AddChildToVerticalBox(CampaignIdentityText);
+    UTextBlock* XTitle = Text(TEXT("STARSHATTER WARS"), 38, Primary, true);
+    XTitle->SetJustification(ETextJustify::Left);
+    XTitle->SetAutoWrapText(false);
+    UHorizontalBoxSlot* TitleSlot = HeaderContent->AddChildToHorizontalBox(XTitle);
+    TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    TitleSlot->SetVerticalAlignment(VAlign_Center);
+    TitleSlot->SetHorizontalAlignment(HAlign_Left);
+    USizeBox* LogoBox = WidgetTree->ConstructWidget<USizeBox>();
+    LogoBox->SetWidthOverride(256.f);
+    LogoBox->SetHeightOverride(256.f);
+    UImage* Logo = WidgetTree->ConstructWidget<UImage>();
+    const TCHAR* LogoPaths[] = {
+        TEXT("/Game/UI/SSW.SSW"),
+        TEXT("/Game/UI/SSW_Logo.SSW_Logo"),
+        TEXT("/Game/UI/T_SSW.T_SSW"),
+        TEXT("/Game/UI/T_SSW_Logo.T_SSW_Logo")
+    };
+    for (const TCHAR* Path : LogoPaths)
+    {
+        if (UTexture2D* LogoTex = LoadObject<UTexture2D>(nullptr, Path))
+        {
+            Logo->SetBrushFromTexture(LogoTex, true);
+            break;
+        }
+    }
+    if (!Logo->GetBrush().GetResourceObject())
+        UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] SSW logo missing"));
+    LogoBox->SetContent(Logo);
+    UHorizontalBoxSlot* LogoSlot = HeaderContent->AddChildToHorizontalBox(LogoBox);
+    LogoSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    LogoSlot->SetHorizontalAlignment(HAlign_Right);
+    LogoSlot->SetVerticalAlignment(VAlign_Center);
 
     UVerticalBox* MenuArea = WidgetTree->ConstructWidget<UVerticalBox>();
     UVerticalBoxSlot* AreaSlot = Page->AddChildToVerticalBox(MenuArea);
@@ -243,6 +264,70 @@ void UMenuDlg::BuildModernMenu()
     UE_LOG(LogMenuDlg, Warning,
         TEXT("[MainMenu][LAYOUT-V4] Overlay labels inside button body: 28pt Serpentine / 12pt subtitle / safe 64px left inset"));
 
+    UBorder* DataPanel = WidgetTree->ConstructWidget<UBorder>();
+    DataPanel->SetBrushColor(FLinearColor(0.07f, 0.08f, 0.09f, 1.f));
+    DataPanel->SetPadding(FMargin(18.f, 10.f));
+    Page->AddChildToVerticalBox(DataPanel)->SetPadding(FMargin(0.f, 8.f, 0.f, 8.f));
+    UHorizontalBox* DataRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    DataPanel->SetContent(DataRow);
+
+    UVerticalBox* CampaignBlock = WidgetTree->ConstructWidget<UVerticalBox>();
+    UHorizontalBoxSlot* CampaignSlot = DataRow->AddChildToHorizontalBox(CampaignBlock);
+    CampaignSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    CampaignSlot->SetHorizontalAlignment(HAlign_Left);
+    UTextBlock* CampaignCaption = Text(TEXT("CAMPAIGN"), 16, Accent);
+    CampaignCaption->SetJustification(ETextJustify::Left);
+    CampaignBlock->AddChildToVerticalBox(CampaignCaption)->SetHorizontalAlignment(HAlign_Left);
+    CampaignIdentityText = Text(TEXT("NO ACTIVE CAMPAIGN"), 16, Primary);
+    CampaignIdentityText->SetJustification(ETextJustify::Left);
+    CampaignBlock->AddChildToVerticalBox(CampaignIdentityText)->SetHorizontalAlignment(HAlign_Left);
+    UTextBlock* CampaignTimeCaption = Text(TEXT("CAMPAIGN TIME"), 16, Accent);
+    CampaignTimeCaption->SetJustification(ETextJustify::Left);
+    if (UVerticalBoxSlot* CampaignTimeCaptionSlot = CampaignBlock->AddChildToVerticalBox(CampaignTimeCaption))
+    {
+        CampaignTimeCaptionSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
+        CampaignTimeCaptionSlot->SetHorizontalAlignment(HAlign_Left);
+    }
+    CampaignTimeText = Text(TEXT("Day 01  00:00:00"), 16, Primary);
+    CampaignTimeText->SetJustification(ETextJustify::Left);
+    if (UVerticalBoxSlot* CampaignTimeSlot = CampaignBlock->AddChildToVerticalBox(CampaignTimeText))
+    {
+        CampaignTimeSlot->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
+        CampaignTimeSlot->SetHorizontalAlignment(HAlign_Left);
+    }
+
+    UVerticalBox* TimeBlock = WidgetTree->ConstructWidget<UVerticalBox>();
+    UHorizontalBoxSlot* TimeSlot = DataRow->AddChildToHorizontalBox(TimeBlock);
+    TimeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    TimeSlot->SetHorizontalAlignment(HAlign_Center);
+    UTextBlock* TimeCaption = Text(TEXT("TIME"), 16, Accent);
+    TimeCaption->SetJustification(ETextJustify::Center);
+    TimeBlock->AddChildToVerticalBox(TimeCaption)->SetHorizontalAlignment(HAlign_Center);
+    UniverseTimeText = Text(TEXT("--"), 16, Primary);
+    UniverseTimeText->SetJustification(ETextJustify::Center);
+    TimeBlock->AddChildToVerticalBox(UniverseTimeText)->SetHorizontalAlignment(HAlign_Center);
+
+    UVerticalBox* PlayerBlock = WidgetTree->ConstructWidget<UVerticalBox>();
+    UHorizontalBoxSlot* PlayerSlot = DataRow->AddChildToHorizontalBox(PlayerBlock);
+    PlayerSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    PlayerSlot->SetHorizontalAlignment(HAlign_Right);
+    UTextBlock* PlayerCaption = Text(TEXT("PLAYER"), 16, Accent);
+    PlayerCaption->SetJustification(ETextJustify::Right);
+    PlayerBlock->AddChildToVerticalBox(PlayerCaption)->SetHorizontalAlignment(HAlign_Right);
+    PlayerIdentityText = Text(TEXT("PLAYER NOT LOADED"), 16, Primary);
+    PlayerIdentityText->SetJustification(ETextJustify::Right);
+    PlayerBlock->AddChildToVerticalBox(PlayerIdentityText)->SetHorizontalAlignment(HAlign_Right);
+    UTextBlock* UnitCaption = Text(TEXT("UNIT"), 16, Accent);
+    UnitCaption->SetJustification(ETextJustify::Right);
+    if (UVerticalBoxSlot* UnitCaptionSlot = PlayerBlock->AddChildToVerticalBox(UnitCaption))
+    {
+        UnitCaptionSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
+        UnitCaptionSlot->SetHorizontalAlignment(HAlign_Right);
+    }
+    UnitText = Text(TEXT("UNASSIGNED"), 16, Primary);
+    UnitText->SetJustification(ETextJustify::Right);
+    PlayerBlock->AddChildToVerticalBox(UnitText)->SetHorizontalAlignment(HAlign_Right);
+
     DescriptionText = Text(TEXT(""), 13, Muted);
     Page->AddChildToVerticalBox(DescriptionText)->SetPadding(FMargin(6.f, 0.f, 6.f, 8.f));
     VersionText = Text(TEXT(""), 12, Muted);
@@ -279,7 +364,77 @@ void UMenuDlg::RefreshIdentityLabels()
         }
     }
     PlayerIdentityText->SetText(FText::FromString(Name));
+    PlayerIdentityText->SetJustification(ETextJustify::Right);
     CampaignIdentityText->SetText(FText::FromString(CampaignName));
+    CampaignIdentityText->SetJustification(ETextJustify::Left);
+    if (UnitText)
+    {
+        FString UnitName = TEXT("UNASSIGNED");
+        if (Campaign* Live = Campaign::GetCampaign())
+            if (CombatGroup* Group = Live->GetPlayerGroup())
+                UnitName = Group->GetDescription();
+        UnitText->SetText(FText::FromString(UnitName));
+        UnitText->SetJustification(ETextJustify::Right);
+    }
+    RefreshClockLabels();
+}
+
+void UMenuDlg::BindMenuClock()
+{
+    UGameInstance* GI = GetGameInstance();
+    if (!GI) return;
+    UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
+    if (!Timer) return;
+    Timer->OnUniverseSecond.RemoveAll(this);
+    Timer->OnUniverseSecond.AddUObject(this, &UMenuDlg::HandleMenuClock);
+    RefreshClockLabels();
+}
+
+void UMenuDlg::HandleMenuClock(uint64)
+{
+    RefreshClockLabels();
+}
+
+void UMenuDlg::RefreshClockLabels()
+{
+    if (!UniverseTimeText && !CampaignTimeText) return;
+    UGameInstance* GI = GetGameInstance();
+    if (!GI) return;
+    UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>();
+    if (!Timer) return;
+
+    const uint64 Now = Timer->GetUniverseTimeSeconds();
+    int64 BaseUnixSeconds = Timer->UniverseBaseUnixSeconds;
+    if (BaseUnixSeconds <= 0)
+        BaseUnixSeconds = FDateTime(2228, 1, 1).ToUnixTimestamp();
+
+    if (UniverseTimeText)
+    {
+        const FDateTime UniverseDateTime = FDateTime::FromUnixTimestamp(BaseUnixSeconds + static_cast<int64>(Now));
+        UniverseTimeText->SetText(FText::FromString(UniverseDateTime.ToString(TEXT("%Y-%m-%d %H:%M:%S"))));
+        UniverseTimeText->SetJustification(ETextJustify::Right);
+    }
+
+    if (CampaignTimeText)
+    {
+        uint64 TPlusSeconds = Timer->GetCampaignTPlusSeconds();
+        UCampaignSave* Save = Timer->GetCampaignSave();
+        if (!Save)
+            if (USSWGameInstance* SSW = Cast<USSWGameInstance>(GI))
+                Save = SSW->CampaignSave;
+        if (Save)
+            TPlusSeconds = Save->GetTPlusSeconds(Now);
+
+        const uint64 Days = TPlusSeconds / 86400ULL;
+        const uint64 Rest = TPlusSeconds % 86400ULL;
+        CampaignTimeText->SetText(FText::FromString(FString::Printf(
+            TEXT("Day %02llu  %02llu:%02llu:%02llu"),
+            (unsigned long long)(Days + 1ULL),
+            (unsigned long long)(Rest / 3600ULL),
+            (unsigned long long)((Rest % 3600ULL) / 60ULL),
+            (unsigned long long)(Rest % 60ULL))));
+        CampaignTimeText->SetJustification(ETextJustify::Left);
+    }
 }
 
 void UMenuDlg::NativeOnInitialized()
@@ -429,6 +584,7 @@ void UMenuDlg::NativeConstruct()
 
     RefreshFromPlayerState();
     RefreshIdentityLabels();
+    BindMenuClock();
     ApplyMenuGating();
 
     // First run routing AFTER gating
@@ -521,6 +677,7 @@ void UMenuDlg::Show()
 {
     RefreshFromPlayerState();
     RefreshIdentityLabels();
+    BindMenuClock();
     ApplyMenuGating();
     // Multiplayer mission selection is available independently of the legacy filesystem mode.
     if (BtnMulti) BtnMulti->SetIsEnabled(true);

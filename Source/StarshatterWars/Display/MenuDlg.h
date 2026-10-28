@@ -55,6 +55,9 @@ protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     void BuildModernMenu();
     void RefreshIdentityLabels();
+    void RefreshClockLabels();
+    void HandleMenuClock(uint64 UniverseSecondsNow);
+    void BindMenuClock();
 
 public:
     virtual void ExecFrame(double DeltaTime) override;
@@ -105,6 +108,9 @@ protected:
 
     UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayerIdentityText = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignIdentityText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> UniverseTimeText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> CampaignTimeText = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> UnitText = nullptr;
 
 protected:
     // ------------------------------------------------------------
