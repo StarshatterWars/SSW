@@ -59,6 +59,7 @@ public:
 
 	void StartClock();
 	void StopClock();
+	bool IsClockRunning() const { return TickHandle.IsValid(); }
 
 	void OnClockTick();
 

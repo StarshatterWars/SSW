@@ -35,10 +35,7 @@ UTimerSubsystem* UTimerSubsystem::Get()
 void UTimerSubsystem::StartClock()
 {
 	if (TickHandle.IsValid())
-	{
-		FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
-		TickHandle.Reset();
-	}
+		return;
 
 	if (TimeStepSeconds <= 0.0)
 	{

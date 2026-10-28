@@ -748,7 +748,8 @@ void UCmdDlg::ExecFrame(double DeltaTime)
         }
         if (SSW->CampaignSave && !Timer->HasCampaignSave())
             Timer->SetCampaignSave(SSW->CampaignSave);
-        Timer->StartClock();
+        if (!Timer->IsClockRunning())
+            Timer->StartClock();
     }
 
     if (!CampaignPtr)

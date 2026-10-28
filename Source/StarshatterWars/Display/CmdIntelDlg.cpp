@@ -162,14 +162,18 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 		return Text;
 	};
 
+	UBorder* LeftOutline = WidgetTree->ConstructWidget<UBorder>();
+	LeftOutline->SetPadding(FMargin(2.f));
+	LeftOutline->SetBrushColor(FLinearColor(0.72f, 0.72f, 0.72f, 1.f));
 	UBorder* LeftCard = WidgetTree->ConstructWidget<UBorder>();
 	LeftCard->SetPadding(FMargin(16.f));
-	LeftCard->SetBrushColor(FLinearColor(0.18f, 0.18f, 0.18f, 0.94f));
+	LeftCard->SetBrushColor(FLinearColor(0.12f, 0.12f, 0.12f, 0.96f));
 	UScrollBox* LeftScroll = WidgetTree->ConstructWidget<UScrollBox>();
 	UVerticalBox* LeftContents = WidgetTree->ConstructWidget<UVerticalBox>();
 	LeftScroll->AddChild(LeftContents);
 	LeftCard->SetContent(LeftScroll);
-	if (UHorizontalBoxSlot* LeftSlot = Columns->AddChildToHorizontalBox(LeftCard))
+	LeftOutline->SetContent(LeftCard);
+	if (UHorizontalBoxSlot* LeftSlot = Columns->AddChildToHorizontalBox(LeftOutline))
 	{
 		LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 		LeftSlot->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
@@ -189,14 +193,18 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 		ListSlot->SetSize(Fill);
 	}
 
+	UBorder* RightOutline = WidgetTree->ConstructWidget<UBorder>();
+	RightOutline->SetPadding(FMargin(2.f));
+	RightOutline->SetBrushColor(FLinearColor(0.72f, 0.72f, 0.72f, 1.f));
 	UBorder* RightCard = WidgetTree->ConstructWidget<UBorder>();
 	RightCard->SetPadding(FMargin(16.f));
-	RightCard->SetBrushColor(FLinearColor(0.45f, 0.45f, 0.45f, 0.92f));
+	RightCard->SetBrushColor(FLinearColor(0.12f, 0.12f, 0.12f, 0.96f));
 	UScrollBox* RightScroll = WidgetTree->ConstructWidget<UScrollBox>();
 	UVerticalBox* RightContents = WidgetTree->ConstructWidget<UVerticalBox>();
 	RightScroll->AddChild(RightContents);
 	RightCard->SetContent(RightScroll);
-	if (UHorizontalBoxSlot* RightSlot = Columns->AddChildToHorizontalBox(RightCard))
+	RightOutline->SetContent(RightCard);
+	if (UHorizontalBoxSlot* RightSlot = Columns->AddChildToHorizontalBox(RightOutline))
 	{
 		RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 		RightSlot->SetPadding(FMargin(8.f, 0.f, 0.f, 0.f));
