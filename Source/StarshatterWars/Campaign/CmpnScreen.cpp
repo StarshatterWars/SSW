@@ -1148,34 +1148,48 @@ bool UCmpnScreen::ContinuePendingSceneTransition()
 
     if (CmpLoadDlg)
     {
-        CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE..."), 0.95f);
+        CmpLoadDlg->SetLoadingStage(TEXT("LOADING SCENE ELEMENTS..."), 0.95f);
     }
 
-    if (ActiveSceneStreamingLevel)
+    if (!bSceneContentPrepared)
     {
-        ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
-        ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+        if (ActiveSceneStreamingLevel)
+        {
+            ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
+            ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+        }
+        if (UWorld* World = GetWorld())
+        {
+            World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+            FStreamingManagerCollection& StreamingManager = FStreamingManagerCollection::Get();
+            StreamingManager.BlockTillAllRequestsFinished(0.0f, true);
+        }
+        if (CampaignPtr)
+            CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
+        else
+            CmpSceneDlg->SetCampaignNumber(2);
+        CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
+        ShowCmpSceneDlg();
+        CmpSceneDlg->PrepareSceneForReveal(ActiveSceneName, ActiveSceneDurationSeconds);
+        bSceneContentPrepared = true;
+        return true;
     }
 
     if (UWorld* World = GetWorld())
     {
-        World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+        const bool bStillLoading = World->GetNumStreamingLevelsBeingLoaded() > 0 || World->IsVisibilityRequestPending();
+        FStreamingManagerCollection& StreamingManager = FStreamingManagerCollection::Get();
+        StreamingManager.UpdateResourceStreaming(World->GetDeltaSeconds(), true);
+        if (bStillLoading)
+        {
+            if (CmpLoadDlg)
+                CmpLoadDlg->SetLoadingStage(TEXT("WAITING FOR TEXTURES..."), 0.98f);
+            return true;
+        }
     }
-
-    if (CampaignPtr)
-    {
-        CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
-    }
-    else
-    {
-        CmpSceneDlg->SetCampaignNumber(2);
-    }
-
-    CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
 
     HideCmpLoadDlg();
-    ShowCmpSceneDlg();
-    CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
+    CmpSceneDlg->StartSceneClock();
 
     if (PendingSceneEvent)
     {
@@ -1197,6 +1211,7 @@ void UCmpnScreen::ClearPendingSceneTransition()
     bSceneTransitionActive = false;
     bSceneStreamingBlockedOnce = false;
     bSceneWarmupStarted = false;
+    bSceneContentPrepared = false;
 
     SceneLoadScreenStartTime = 0.0f;
     SceneWarmupReadyTime = 0.0f;

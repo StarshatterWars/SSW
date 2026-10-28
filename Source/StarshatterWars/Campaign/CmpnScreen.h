@@ -203,8 +203,8 @@ protected:
     bool bHasPendingSceneMission = false;
     bool bSceneTransitionActive = false;
     bool bSceneStreamingBlockedOnce = false;
-    bool bScenePresentationPrepared = false;
     bool bSceneWarmupStarted = false;
+    bool bSceneContentPrepared = false;
 
     FString ActiveSceneName;
     float ActiveSceneDurationSeconds = 0.0f;

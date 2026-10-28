@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026. All Rights Reserved.
 
@@ -65,9 +65,6 @@ public:
 
     void LoadSceneFromMissionData(const FS_CampaignMission& MissionData);
 
-    /** Position first shot without starting cutscene time/audio. */
-    bool PrepareSceneCameraBeforeReveal();
-
     // Backward-compatible wrapper:
     void LoadCaptionsFromMissionData(const FS_CampaignMission& MissionData)
     {
@@ -75,6 +72,9 @@ public:
     }
 
     void BeginSceneByName(const FString& InSceneName, float InDurationSeconds);
+    void PrepareSceneForReveal(const FString& InSceneName, float InDurationSeconds);
+    void StartSceneClock();
+    bool PrepareSceneCameraBeforeReveal();
     void AdvanceSceneFromTimer(float NowSeconds);
 
     bool IsSceneRunning() const { return bSceneRunning; }
@@ -186,12 +186,7 @@ protected:
 
     bool bSceneRunning = false;
 
-    // Trellis-only ring-reveal camera sweep. Does not alter camera manager state
-    // for other targets or change any authored DataTable camera events.
-    bool bTrellisCameraSweepActive = false;
-    float TrellisSweepStartRealSeconds = 0.0f;
-    double TrellisSweepLastOffsetDegrees = 0.0;
-
     bool bCutsceneTransitionStarted = false;
+    bool bOwnsSceneCamera = false;
 int32 CurrentCampaignNumber = 0;
 };
