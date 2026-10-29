@@ -167,7 +167,7 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 	LeftOutline->SetBrushColor(FLinearColor(0.72f, 0.72f, 0.72f, 1.f));
 	UBorder* LeftCard = WidgetTree->ConstructWidget<UBorder>();
 	LeftCard->SetPadding(FMargin(16.f));
-	LeftCard->SetBrushColor(FLinearColor(0.12f, 0.12f, 0.12f, 0.96f));
+	LeftCard->SetBrushColor(FLinearColor(0.08f, 0.08f, 0.08f, 0.96f));
 	UScrollBox* LeftScroll = WidgetTree->ConstructWidget<UScrollBox>();
 	UVerticalBox* LeftContents = WidgetTree->ConstructWidget<UVerticalBox>();
 	LeftScroll->AddChild(LeftContents);
@@ -198,7 +198,7 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 	RightOutline->SetBrushColor(FLinearColor(0.72f, 0.72f, 0.72f, 1.f));
 	UBorder* RightCard = WidgetTree->ConstructWidget<UBorder>();
 	RightCard->SetPadding(FMargin(16.f));
-	RightCard->SetBrushColor(FLinearColor(0.12f, 0.12f, 0.12f, 0.96f));
+	RightCard->SetBrushColor(FLinearColor(0.08f, 0.08f, 0.08, 0.96f));
 	UScrollBox* RightScroll = WidgetTree->ConstructWidget<UScrollBox>();
 	UVerticalBox* RightContents = WidgetTree->ConstructWidget<UVerticalBox>();
 	RightScroll->AddChild(RightContents);
