@@ -98,6 +98,7 @@ public:
 
     void ShowMissionDlg();
     void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
+    void ReturnFromMissionBriefing();
 
     void ShowMsnElemDlg();
     void EditMissionElement(Mission* Model, MissionElement* Element);
@@ -343,6 +344,9 @@ protected:
     bool bExitLatch = false;
     bool bShowMissionsRequested = false;
     bool bRequestVideoChange = false;
+    UPROPERTY(Transient)
+    TWeakObjectPtr<UBaseScreen> MissionBriefingCaller;
+    bool bBriefingCallerWasStandalone = false;
     Mission* PendingStandaloneMission = nullptr;
     Campaign* PendingStandaloneRepository = nullptr;
 };

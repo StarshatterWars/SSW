@@ -19,9 +19,30 @@ UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectIniti
 {
 }
 
+void UMissionObjectiveDlg::NativePreConstruct()
+{
+    Super::NativePreConstruct();
+    ApplyBriefingTextPresentation();
+}
+
+void UMissionObjectiveDlg::ApplyBriefingTextPresentation()
+{
+    if (!bModernBriefingText) return;
+    for (UTextBlock* Text : { SituationText, ObjectivesText })
+    {
+        if (!Text) continue;
+        FSlateFontInfo Font = Text->GetFont();
+        Font.Size = FMath::Clamp(BriefingBodyFontSize, 12, 24);
+        Text->SetFont(Font);
+        Text->SetColorAndOpacity(FSlateColor(BriefingBodyColor));
+        Text->SetAutoWrapText(true);
+    }
+}
+
 void UMissionObjectiveDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+    ApplyBriefingTextPresentation();
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] NativeConstruct"));
 }

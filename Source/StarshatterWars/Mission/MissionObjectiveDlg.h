@@ -26,6 +26,18 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
+    virtual void NativePreConstruct() override;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation")
+    bool bModernBriefingText = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation", meta = (ClampMin = "12", ClampMax = "24"))
+    int32 BriefingBodyFontSize = 18;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation")
+    FLinearColor BriefingBodyColor = FLinearColor(0.88f, 0.93f, 0.98f, 1.f);
+
+    void ApplyBriefingTextPresentation();
 
 private:
     Mission* ResolveMission() const;

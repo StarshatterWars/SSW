@@ -23,6 +23,16 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "MissionUIStyle.h"
+#include "Components/Border.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/ButtonSlot.h"
+#include "Components/ScaleBox.h"
+#include "Components/CanvasPanel.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "FlightDeck.h"
 #include "MissionObjectTarget.h"
 
@@ -159,6 +169,8 @@ void UMissionBriefingDlg::InitializeDlg(UMenuScreen* InManager)
 
 void UMissionBriefingDlg::NativePreConstruct()
 {
+    Super::NativePreConstruct();
+    ApplyBriefingPresentation();
 
     if (MissionSituationPanel)
     {
@@ -191,8 +203,8 @@ void UMissionBriefingDlg::NativeConstruct()
         RootSizeBox->SetHeightOverride(1080.f);
     }
 
-    UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(RootSizeBox->Slot);
-    if (Slot)
+    UCanvasPanelSlot* CanvasSlot = RootSizeBox ? Cast<UCanvasPanelSlot>(RootSizeBox->Slot) : nullptr;
+    if (CanvasSlot)
     {
         CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
         CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
@@ -286,8 +298,11 @@ void UMissionBriefingDlg::NativeConstruct()
         ReturnButton->OnClicked.AddDynamic(this, &UMissionBriefingDlg::HandleCancelClicked);
     }
 
+    ApplyBriefingPresentation();
     BuildMenuButtons();
     InitializeSubPanels();
+    BuildBriefingChrome();
+    RefreshHeader();
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] NativeConstruct: UI initialized"));
 }
@@ -432,6 +447,312 @@ FText UMissionBriefingDlg::ToTextFromUtf8(const char* Utf8)
     return FText::FromString(FString(UTF8_TO_TCHAR(Utf8)));
 }
 
+void UMissionBriefingDlg::ApplyBriefingPresentation()
+{
+    if (BriefingFrame || !bModernBriefingPresentation) return;
+
+    // Keep Blueprint fonts and geometry; adjust only the briefing's visual hierarchy.
+    auto StyleText = [](UTextBlock* Text, int32 Size, const FLinearColor& Color)
+    {
+        if (!Text) return;
+        FSlateFontInfo Font = Text->GetFont();
+        Font.Size = Size;
+        Text->SetFont(Font);
+        Text->SetColorAndOpacity(FSlateColor(Color));
+    };
+    StyleText(TitleText, 24, BriefingAccentColor);
+    StyleText(MissionNameText, 28, BriefingTextColor);
+    for (UTextBlock* Text : { MissionSystemText, MissionSectorText,
+        MissionTimeStartText, MissionTimeTargetText })
+    {
+        StyleText(Text, 18, BriefingTextColor);
+    }
+    StyleText(MissionTimeTargetLabelText, 16, BriefingAccentColor);
+
+    if (MissionButton)
+        MissionButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "AcceptTip", "Accept the mission using the current briefing and loadout."));
+    if (ReturnButton)
+        ReturnButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "CancelTip", "Return without launching the mission."));
+}
+
+
+void UMissionBriefingDlg::BuildBriefingChrome()
+{
+    if (!WidgetTree || !MissionSwitcher) return;
+    if (BriefingFrame)
+    {
+        if (TitleText) TitleText->SetText(NSLOCTEXT("MissionBriefing", "HeaderTitle", "MISSION BRIEFING"));
+        RefreshBriefingTabStyles();
+        return;
+    }
+
+    UCanvasPanel* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+    if (!Root && RootSizeBox)
+    {
+        // Preserve the existing outer sizing when the Blueprint root is not a canvas.
+        Root = WidgetTree->ConstructWidget<UCanvasPanel>();
+        RootSizeBox->SetContent(Root);
+    }
+    if (!Root)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MissionBriefingDlg] No canvas/size-box host for briefing header"));
+        return;
+    }
+
+    BriefingFrame = WidgetTree->ConstructWidget<USizeBox>();
+    BriefingFrame->SetWidthOverride(1920.f);
+    BriefingFrame->SetHeightOverride(1080.f);
+    BriefingFrame->SetClipping(EWidgetClipping::ClipToBounds);
+    UBorder* FrameBorder = WidgetTree->ConstructWidget<UBorder>();
+    FrameBorder->SetPadding(FMargin(0.f));
+    FrameBorder->SetBrushColor(FLinearColor::Transparent);
+    if (UTexture2D* Panel = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Panel.Panel")))
+    {
+        FSlateBrush Brush;
+        Brush.SetResourceObject(Panel);
+        Brush.DrawAs = ESlateBrushDrawType::Image;
+        FrameBorder->SetBrush(Brush);
+    }
+    BriefingFrame->SetContent(FrameBorder);
+    UScaleBox* Fit = WidgetTree->ConstructWidget<UScaleBox>();
+    Fit->SetStretch(EStretch::ScaleToFit);
+    Fit->SetStretchDirection(EStretchDirection::Both);
+    Fit->SetContent(BriefingFrame);
+
+    UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>();
+    FrameBorder->SetContent(Column);
+    auto AddBar = [this, Column](const FLinearColor& Color, const FMargin& BarPadding)->UBorder*
+    {
+        UBorder* Bar = WidgetTree->ConstructWidget<UBorder>();
+        Bar->SetBrushColor(Color);
+        Bar->SetPadding(BarPadding);
+        Column->AddChildToVerticalBox(Bar);
+        return Bar;
+    };
+    UBorder* Header = AddBar(FLinearColor(0.105f, 0.113f, 0.125f, 1.f), FMargin(18.f, 9.f));
+    UHorizontalBox* Titles = WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto AddTitle = [this, Titles](UTextBlock*& Text, bool Right)
+    {
+        if (!Text) Text = WidgetTree->ConstructWidget<UTextBlock>();
+        Text->RemoveFromParent();
+        Text->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        Text->SetFont(MissionUIStyle::GetHeaderFont(38));
+        Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+        Text->SetJustification(Right ? ETextJustify::Right : ETextJustify::Left);
+        if (UHorizontalBoxSlot* Cell = Titles->AddChildToHorizontalBox(Text))
+        {
+            Cell->SetSize(FSlateChildSize(Right ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic));
+            Cell->SetVerticalAlignment(VAlign_Center);
+            if (Right) Cell->SetPadding(FMargin(24.f, 0.f, 0.f, 0.f));
+        }
+    };
+    AddTitle(TitleText, false);
+    TitleText->SetText(NSLOCTEXT("MissionBriefing", "HeaderTitle", "MISSION BRIEFING"));
+    AddTitle(MissionNameText, true);
+    Header->SetContent(Titles);
+
+    auto AddStatusRow = [this, AddBar](const TArray<TPair<FString, UTextBlock**>>& Entries)
+    {
+        UBorder* Bar = AddBar(FLinearColor(0.07f, 0.08f, 0.09f, 1.f), FMargin(12.f, 8.f));
+        UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+        for (const auto& Entry : Entries)
+        {
+            UVerticalBox* Cell = WidgetTree->ConstructWidget<UVerticalBox>();
+            UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
+            Caption->SetText(FText::FromString(Entry.Key));
+            Caption->SetFont(MissionUIStyle::GetInfoLabelFont(12));
+            Caption->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+            Cell->AddChildToVerticalBox(Caption);
+            UTextBlock*& Value = *Entry.Value;
+            if (!Value) Value = WidgetTree->ConstructWidget<UTextBlock>();
+            Value->RemoveFromParent();
+            Value->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+            Value->SetFont(MissionUIStyle::GetInfoValueFont(16));
+            Value->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+            Value->SetJustification(ETextJustify::Left);
+            Value->SetAutoWrapText(false);
+            Cell->AddChildToVerticalBox(Value)->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
+            UHorizontalBoxSlot* CellSlot = Row->AddChildToHorizontalBox(Cell);
+            CellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            CellSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+            CellSlot->SetHorizontalAlignment(HAlign_Left);
+        }
+        Bar->SetContent(Row);
+    };
+    AddStatusRow({{TEXT("TIME"), &GameTimeText}, {TEXT("CAMPAIGN"), &MissionTPlusText},
+        {TEXT("PILOT"), &PlayerNameText}, {TEXT("UNIT"), &CurrentUnitText}, {TEXT("SCORE"), &PlayerScoreText}});
+    AddStatusRow({{TEXT("SYSTEM"), &MissionSystemText}, {TEXT("SECTOR"), &MissionSectorText},
+        {TEXT("START"), &MissionTimeStartText}, {TEXT("TARGET"), &MissionTimeTargetText}});
+    UBorder* Rule = AddBar(FLinearColor(0.20f, 0.21f, 0.23f, 1.f), FMargin(0.f));
+    USizeBox* RuleSize = WidgetTree->ConstructWidget<USizeBox>();
+    RuleSize->SetHeightOverride(5.f);
+    Rule->SetContent(RuleSize);
+
+    UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Column->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f, 12.f));
+    auto AddTab = [this, Tabs](UButton*& Button, UTextBlock*& Caption, const TCHAR* Label)
+    {
+        if (!Button) Button = WidgetTree->ConstructWidget<UButton>();
+        Button->RemoveFromParent();
+        Button->SetVisibility(ESlateVisibility::Visible);
+        if (!Caption) Caption = WidgetTree->ConstructWidget<UTextBlock>();
+        Caption->RemoveFromParent();
+        Caption->SetText(FText::FromString(Label));
+        Caption->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Caption->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        Caption->SetJustification(ETextJustify::Center);
+        Button->SetContent(Caption);
+        if (UButtonSlot* Cell = Cast<UButtonSlot>(Caption->Slot))
+        {
+            Cell->SetPadding(FMargin(10.f, 4.f));
+            Cell->SetHorizontalAlignment(HAlign_Center);
+            Cell->SetVerticalAlignment(VAlign_Center);
+        }
+        UHorizontalBoxSlot* Cell = Tabs->AddChildToHorizontalBox(Button);
+        Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        Cell->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+    };
+    BriefingTabs.Empty();
+    for (const TCHAR* Label : { TEXT("SITUATION"), TEXT("PACKAGE"), TEXT("NAVIGATION"), TEXT("WEAPONS") })
+    {
+        UButton* Button = nullptr;
+        UTextBlock* Caption = nullptr;
+        AddTab(Button, Caption, Label);
+        Button->OnHovered.AddUniqueDynamic(this, &UMissionBriefingDlg::HandleBriefingTabHovered);
+        BriefingTabs.Add(Button);
+    }
+    BriefingTabs[0]->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::OpenBriefingSituation);
+    BriefingTabs[1]->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::OpenBriefingPackage);
+    BriefingTabs[2]->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::OpenBriefingNavigation);
+    BriefingTabs[3]->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::OpenBriefingWeapons);
+    auto AddArrow = [this, Tabs](UButton*& Button, const TCHAR* IconPath, const FText& Tip, bool AtStart)
+    {
+        if (!Button) Button = WidgetTree->ConstructWidget<UButton>();
+        Button->RemoveFromParent();
+        Button->SetVisibility(ESlateVisibility::Visible);
+        Button->SetToolTipText(Tip);
+        USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>();
+        IconBox->SetWidthOverride(40.f);
+        IconBox->SetHeightOverride(40.f);
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, IconPath))
+            Icon->SetBrushFromTexture(Texture, true);
+        IconBox->SetContent(Icon);
+        Button->SetContent(IconBox);
+        if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
+        {
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetPadding(FMargin(4.f));
+        }
+        UHorizontalBoxSlot* TabSlot = Tabs->AddChildToHorizontalBox(Button);
+        TabSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+        TabSlot->SetPadding(AtStart ? FMargin(0.f, 0.f, 10.f, 0.f) : FMargin(0.f));
+        TabSlot->SetVerticalAlignment(VAlign_Center);
+        // Keep the navigation order identical to CmdDlg: back, tabs, forward.
+        if (AtStart)
+        {
+            TArray<UWidget*> Children = Tabs->GetAllChildren();
+            Tabs->ClearChildren();
+            UHorizontalBoxSlot* BackSlot = Tabs->AddChildToHorizontalBox(Button);
+            BackSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+            BackSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+            BackSlot->SetVerticalAlignment(VAlign_Center);
+            for (UWidget* Child : Children)
+            {
+                if (Child == Button) continue;
+                UHorizontalBoxSlot* Cell = Tabs->AddChildToHorizontalBox(Child);
+                Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+                Cell->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
+            }
+        }
+    };
+    AddArrow(ReturnButton,
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"),
+        NSLOCTEXT("MissionBriefing", "BackToCaller", "Cancel and return to the previous screen"), true);
+    AddArrow(MissionButton,
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"),
+        NSLOCTEXT("MissionBriefing", "AcceptArrow", "Accept mission"), false);
+    MissionButton->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::HandleAcceptClicked);
+    ReturnButton->OnClicked.AddUniqueDynamic(this, &UMissionBriefingDlg::HandleCancelClicked);
+
+    MissionSwitcher->RemoveFromParent();
+    UVerticalBoxSlot* Content = Column->AddChildToVerticalBox(MissionSwitcher);
+    Content->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Content->SetHorizontalAlignment(HAlign_Fill);
+    Content->SetVerticalAlignment(VAlign_Fill);
+    // All live bindings were moved first; hide only the now obsolete Blueprint frame.
+    for (UWidget* Child : Root->GetAllChildren())
+        if (Child) Child->SetVisibility(ESlateVisibility::Collapsed);
+    if (MenuButtonContainer) MenuButtonContainer->SetVisibility(ESlateVisibility::Collapsed);
+    if (UCanvasPanelSlot* Main = Root->AddChildToCanvas(Fit))
+    {
+        Main->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        Main->SetOffsets(FMargin(0.f));
+        Main->SetZOrder(20);
+    }
+    RefreshBriefingTabStyles();
+}
+
+void UMissionBriefingDlg::RefreshBriefingTabStyles()
+{
+    // Same texture states as CmdDlg::RefreshOperationsTabStyles.
+    auto Style = [](UButton* Button, const TCHAR* Color)
+    {
+        if (!Button) return;
+        FButtonStyle Style = Button->GetStyle();
+        auto Brush = [Color](const TCHAR* State)->FSlateBrush
+        {
+            const FString Path = FString::Printf(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01%s_%s.T_Btn01%s_%s"), Color, State, Color, State);
+            FSlateBrush Result;
+            if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path))
+            {
+                Result.SetResourceObject(Texture);
+                Result.DrawAs = ESlateBrushDrawType::Image;
+                Result.ImageSize = FVector2D(64.f, 64.f);
+            }
+            else
+            {
+                Result.DrawAs = ESlateBrushDrawType::Box;
+                Result.TintColor = FSlateColor(FLinearColor(0.1f, 0.2f, 0.3f, 1.f));
+            }
+            return Result;
+        };
+        Style.Normal = Brush(TEXT("n"));
+        Style.Hovered = Brush(TEXT("p"));
+        Style.Pressed = Style.Hovered;
+        Style.Disabled = Style.Normal;
+        Button->SetStyle(Style);
+    };
+    for (int32 Index = 0; Index < BriefingTabs.Num(); ++Index)
+        Style(BriefingTabs[Index], Index == static_cast<int32>(CurrentMode) ? TEXT("Blue") : TEXT("Cyan"));
+    if (BriefingFrame)
+    {
+        Style(MissionButton, TEXT("Green"));
+        Style(ReturnButton, TEXT("Red"));
+    }
+}
+
+void UMissionBriefingDlg::HandleBriefingTabHovered()
+{
+    if (UGameInstance* GI = GetGameInstance())
+        if (UStarshatterAudioSubsystem* Audio = GI->GetSubsystem<UStarshatterAudioSubsystem>())
+            Audio->PlayHoverSound(this);
+}
+
+void UMissionBriefingDlg::ActivateBriefingTab(EMissionBriefingMode Mode)
+{
+    if (UGameInstance* GI = GetGameInstance())
+        if (UStarshatterAudioSubsystem* Audio = GI->GetSubsystem<UStarshatterAudioSubsystem>())
+            Audio->PlayAcceptSound(this);
+    SetMode(Mode);
+}
+
+void UMissionBriefingDlg::OpenBriefingSituation() { ActivateBriefingTab(EMissionBriefingMode::SIT); }
+void UMissionBriefingDlg::OpenBriefingPackage() { ActivateBriefingTab(EMissionBriefingMode::PKG); }
+void UMissionBriefingDlg::OpenBriefingNavigation() { ActivateBriefingTab(EMissionBriefingMode::NAV); }
+void UMissionBriefingDlg::OpenBriefingWeapons() { ActivateBriefingTab(EMissionBriefingMode::WEP); }
+
 void UMissionBriefingDlg::BuildMenuButtons()
 {
     if (!MenuButtonClass || !MenuToggleGroup || !MenuButtonContainer)
@@ -458,17 +779,35 @@ void UMissionBriefingDlg::BuildMenuButtons()
         }
 
         NewButton->SetLayoutMode(ELayoutMode::FillWidth);
-        NewButton->SetButtonSize(0.f, 42.f);
-        NewButton->SetLabelFontSizeValue(16);
+        NewButton->SetButtonSize(0.f, bModernBriefingPresentation ? FMath::Clamp(BriefingTabHeight, 32.f, 80.f) : 42.f);
+        NewButton->SetLabelFontSizeValue(bModernBriefingPresentation ? FMath::Clamp(BriefingTabFontSize, 12, 24) : 16);
         NewButton->SetMenuOption(Item);
         NewButton->SetButtonText(FText::FromString(Item).ToUpper());
 
         if (UVerticalBoxSlot* VBoxSlot = MenuVBox->AddChildToVerticalBox(NewButton))
         {
             VBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 0.f));
+            VBoxSlot->SetPadding(FMargin(0.f, 0.f, 0.f, bModernBriefingPresentation ? 6.f : 0.f));
             VBoxSlot->SetHorizontalAlignment(HAlign_Fill);
             VBoxSlot->SetVerticalAlignment(VAlign_Center);
+        }
+
+        if (bModernBriefingPresentation)
+        {
+            FText Label = FText::FromString(Item);
+            if (Item == TEXT("SIT")) Label = NSLOCTEXT("MissionBriefing", "SituationTab", "SITUATION");
+            else if (Item == TEXT("PKG")) Label = NSLOCTEXT("MissionBriefing", "PackageTab", "PACKAGE");
+            else if (Item == TEXT("NAV")) Label = NSLOCTEXT("MissionBriefing", "NavigationTab", "NAVIGATION");
+            else if (Item == TEXT("WEP")) Label = NSLOCTEXT("MissionBriefing", "WeaponsTab", "WEAPONS");
+
+            // SetButtonText also changes MenuOption. Update only the visual label
+            // here so the legacy SIT/PKG/NAV/WEP routing and selection still work.
+            if (NewButton->Label) NewButton->Label->SetText(Label);
+            NewButton->SetToolTipText(Label);
+            NewButton->SelectedColor = FLinearColor(BriefingAccentColor.R * 0.25f,
+                BriefingAccentColor.G * 0.25f, BriefingAccentColor.B * 0.25f, 1.f);
+            NewButton->HoveredColor = FLinearColor(0.12f, 0.19f, 0.26f, 1.f);
+            NewButton->SetSelected(false);
         }
 
         MenuToggleGroup->RegisterButton(NewButton);
@@ -624,6 +963,8 @@ void UMissionBriefingDlg::ShowMsnDlg()
     RefreshHeader();
 
     const bool bHasMission = (MissionPtr != nullptr);
+    for (UButton* Tab : BriefingTabs)
+        if (Tab) Tab->SetIsEnabled(bHasMission);
 
     for (UMenuButton* Button : AllMenuButtons)
     {
@@ -752,6 +1093,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
     }
 
     RefreshMenuSelection();
+    RefreshBriefingTabStyles();
 
     switch (CurrentMode)
     {
@@ -2346,19 +2688,9 @@ void UMissionBriefingDlg::OnCommit()
 }
 void UMissionBriefingDlg::OnCancel()
 {
-    if (bStandaloneMission)
-    {
-        ClearStandaloneMission();
-        if (manager) manager->ShowMenuDlg();
-        else Hide();
-        return;
-    }
-    if (manager) {
-        manager->ShowOperationsDlg();
-    }
-    else {
-        Hide();
-    }
+    if (bStandaloneMission) ClearStandaloneMission();
+    if (manager) manager->ReturnFromMissionBriefing();
+    else Hide();
 }
 
 void UMissionBriefingDlg::HandleAcceptClicked()

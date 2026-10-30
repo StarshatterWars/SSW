@@ -670,6 +670,13 @@ void UMenuScreen::ShowMissionDlg()
         return;
     }
 
+    // Capture the source before HideAll clears CurrentDialog. Re-showing the
+    // briefing itself must not replace the original caller with the briefing.
+    if (CurrentDialog != MissionBriefingDlg)
+    {
+        MissionBriefingCaller = CurrentDialog.Get();
+        bBriefingCallerWasStandalone = (PendingStandaloneMission != nullptr);
+    }
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before HideAll"));
     HideAll();
 
@@ -716,6 +723,35 @@ void UMenuScreen::ShowMissionDlg()
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: END InViewport=%d Vis=%d"),
         MissionBriefingDlg->IsInViewport() ? 1 : 0,
         (int32)MissionBriefingDlg->GetVisibility());
+}
+
+void UMenuScreen::ReturnFromMissionBriefing()
+{
+    UBaseScreen* Caller = MissionBriefingCaller.Get();
+    MissionBriefingCaller.Reset();
+    if (Caller && (Caller == CmpnScreen || Caller == CmdDlg))
+    {
+        ShowOperationsDlg();
+        return;
+    }
+    if (!Caller || Caller == MissionBriefingDlg)
+    {
+        if (bBriefingCallerWasStandalone) ShowMissionSelectDlg();
+        else ShowOperationsDlg();
+        return;
+    }
+
+    // Restore the same mission-list instance and its current selection. Avoid
+    // RemoveFromParent/AddToViewport, which would reconstruct its controls.
+    HideAll();
+    if (!Caller->IsInViewport()) Caller->AddToViewport(300);
+    Caller->SetVisibility(ESlateVisibility::Visible);
+    Caller->SetIsEnabled(true);
+    Caller->SetIsFocusable(true);
+    Caller->SetDialogInputEnabled(true);
+    CurrentDialog = Caller;
+    bIsShown = true;
+    if (APlayerController* PC = GetOwningPlayer()) ApplyUIFocus(PC, Caller);
 }
 
 void UMenuScreen::ShowMissionSelectDlg()

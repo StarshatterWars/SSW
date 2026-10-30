@@ -94,6 +94,35 @@ protected:
 
     void SetMode(EMissionBriefingMode NewMode);
     void RefreshHeader();
+    void ApplyBriefingPresentation();
+    void BuildBriefingChrome();
+    void RefreshBriefingTabStyles();
+    void ActivateBriefingTab(EMissionBriefingMode Mode);
+    UFUNCTION() void HandleBriefingTabHovered();
+    UFUNCTION() void OpenBriefingSituation();
+    UFUNCTION() void OpenBriefingPackage();
+    UFUNCTION() void OpenBriefingNavigation();
+    UFUNCTION() void OpenBriefingWeapons();
+    UPROPERTY(Transient) TObjectPtr<class USizeBox> BriefingFrame = nullptr;
+    UPROPERTY(Transient) TArray<TObjectPtr<UButton>> BriefingTabs;
+
+
+    // Presentation only: existing Blueprint widget bindings and tab IDs are retained.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionBriefing|Presentation")
+    bool bModernBriefingPresentation = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionBriefing|Presentation", meta = (ClampMin = "32.0", ClampMax = "80.0"))
+    float BriefingTabHeight = 48.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionBriefing|Presentation", meta = (ClampMin = "12", ClampMax = "24"))
+    int32 BriefingTabFontSize = 16;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionBriefing|Presentation")
+    FLinearColor BriefingAccentColor = FLinearColor(0.35f, 0.8f, 1.f, 1.f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionBriefing|Presentation")
+    FLinearColor BriefingTextColor = FLinearColor(0.88f, 0.93f, 0.98f, 1.f);
+
     void CloseEmptySectorPreview(bool bPreserveSimulation = false);
     void HandleSimulationUnloading();
     bool bClosingMissionPreview = false;
