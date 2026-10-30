@@ -59,6 +59,9 @@ public:
     // BaseScreen polling hook (kept for parity; no polling required)
     virtual void ExecFrame(double DeltaTime) override;
 
+    void Apply();
+    void Cancel();
+
     void SetOptionsManager(UOptionsScreen* InManager) { OptionsManager = InManager; }
 
 protected:

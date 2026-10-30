@@ -55,6 +55,12 @@ bool UStarshatterSettingsSaveGame::MigrateToCurrentVersion()
             bChanged = true;
             break;
 
+        case 1:
+            // Added game options and legacy joystick axes; absent fields keep defaults.
+            SaveVersion = 2;
+            bChanged = true;
+            break;
+
         default:
             // Unknown version; force to current to avoid looping.
             SaveVersion = CurrentVersion;
@@ -127,7 +133,7 @@ void UStarshatterSettingsSaveGame::Sanitize()
 
 FString UStarshatterSettingsSaveGame::GetDefaultSlotName()
 {
-    return TEXT("StarshatterSettings");
+    return TEXT("options");
 }
 
 int32 UStarshatterSettingsSaveGame::GetDefaultUserIndex()

@@ -68,6 +68,7 @@ protected:
     // ------------------------------------------------------------
     // Lifecycle
     // ------------------------------------------------------------
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeOnInitialized() override;
     virtual void NativeConstruct() override;
 
@@ -153,6 +154,12 @@ private:
     // ------------------------------------------------------------
     void BindDelegates();
     void StandardizeTopTabs();
+    void BuildModernShell();
+    void StylePage(UUserWidget* Page);
+    UPROPERTY(Transient) TObjectPtr<UWidget> ModernShell = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> OptionsSaveStatus = nullptr;
+    int32 ActiveTabIndex = 0;
+    friend class FOptionsModernizationTest;
     void BuildCreditsPage();
     void ReloadCredits();
     bool bDelegatesBound = false;

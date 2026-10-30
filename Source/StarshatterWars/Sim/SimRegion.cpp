@@ -588,6 +588,21 @@ SimShot* SimRegion::FindShotByObjID(uint32 objid)
 
 // +--------------------------------------------------------------------+
 
+// Region travel must move ownership as well as the ship's region pointer.
+void SimRegion::TransferObject(Ship* ShipToMove)
+{
+    if (!ShipToMove) return;
+    SimRegion* Previous = ShipToMove->GetRegion();
+    if (Previous && Previous != this)
+    {
+        Previous->ships.remove(ShipToMove);
+        Previous->carriers.remove(ShipToMove);
+        Previous->selection.remove(ShipToMove);
+        if (Previous->player_ship == ShipToMove) Previous->player_ship = nullptr;
+    }
+    InsertObject(ShipToMove);
+}
+
 void SimRegion::InsertObject(Ship* s)
 {
     if (!s)

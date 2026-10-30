@@ -18,6 +18,7 @@
 =============================================================================*/
 
 #include "KeyDlg.h"
+#include "StarshatterInputLabels.h"
 #include "InputMappingContext.h"
 #include "EnhancedActionKeyMapping.h"
 // UMG
@@ -410,6 +411,7 @@ void UKeyDlg::BuildKeyList()
             continue;
 
         const EStarshatterInputAction Action = (EStarshatterInputAction)Value;
+        if (Action==EStarshatterInputAction::None) continue;
 
         // -----------------------------
         // Create Row Container
@@ -437,10 +439,21 @@ void UKeyDlg::BuildKeyList()
 
         if (UHorizontalBoxSlot* LeftSlot = Row->AddChildToHorizontalBox(RowBtn))
         {
-            LeftSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            FSlateChildSize ActionWidth(ESlateSizeRule::Fill); ActionWidth.Value=2.f;
+            LeftSlot->SetSize(ActionWidth);
             LeftSlot->SetHorizontalAlignment(HAlign_Fill);
             LeftSlot->SetVerticalAlignment(VAlign_Center);
             LeftSlot->SetPadding(FMargin(0.f, 4.f, 8.f, 4.f));
+        }
+
+        UTextBlock* TypeText=WidgetTree->ConstructWidget<UTextBlock>();
+        TypeText->SetText(UStarshatterInputLabels::GetValueTypeLabel(EInputActionValueType::Boolean));
+        ApplyStandardValueTextStyle(TypeText);
+        if (auto* TypeSlot=Row->AddChildToHorizontalBox(TypeText))
+        {
+            TypeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            TypeSlot->SetVerticalAlignment(VAlign_Center);
+            TypeSlot->SetPadding(FMargin(12.f,4.f));
         }
 
         // -----------------------------
@@ -597,6 +610,13 @@ void UKeyDlg::OnClearClicked()
     RefreshDisplayFromSettings();
 }
 
+void UKeyDlg::Apply() { CommitPendingToSettings(); }
+void UKeyDlg::Cancel()
+{
+    PendingRemaps.Reset(); PendingClears.Reset(); bCapturing=false;
+    RefreshDisplayFromSettings();
+}
+
 void UKeyDlg::OnApplyClicked()
 {
     CommitPendingToSettings();
@@ -711,11 +731,8 @@ void UKeyDlg::RefreshDisplayFromSettings()
 
 FString UKeyDlg::ActionToDisplayString(EStarshatterInputAction Action)
 {
-    const UEnum* Enum = StaticEnum<EStarshatterInputAction>();
-    if (Enum)
-        return Enum->GetDisplayNameTextByValue((int64)Action).ToString();
+    return UStarshatterInputLabels::GetLegacyActionLabel(Action).ToString();
 
-    return TEXT("ACTION");
 }
 
 FString UKeyDlg::KeyToDisplayString(const FKey& Key)
@@ -736,17 +753,16 @@ bool UKeyDlg::IsModifierKey(const FKey& Key)
 void UKeyDlg::AppendFighterHUDBindings()
 {
     if (!KeyListVBox || !WidgetTree) return;
-    UInputMappingContext* IMC = LoadObject<UInputMappingContext>(nullptr,
-        TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
-    if (!IMC)
+    const TCHAR* ContextPaths[] = { TEXT("/Game/Input/IMC_Game.IMC_Game"), TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD") };
+    const TCHAR* ContextLabels[] = { TEXT("FLIGHT CONTROLS (REFERENCE)"), TEXT("FIGHTER HUD (REFERENCE)") };
+    for (int32 ContextIndex=0; ContextIndex<2; ++ContextIndex)
     {
-        UE_LOG(LogKeyDlg, Warning, TEXT("[KeyDlg] IMC_FighterHUD not found"));
-        return;
-    }
+    UInputMappingContext* IMC=LoadObject<UInputMappingContext>(nullptr,ContextPaths[ContextIndex]);
+    if (!IMC) continue;
     // Section header
     if (UTextBlock* Header = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass()))
     {
-        Header->SetText(FText::FromString(TEXT("FIGHTER HUD")));
+        Header->SetText(FText::FromString(ContextLabels[ContextIndex]));
         Header->SetColorAndOpacity(UITextColor);
         if (UVerticalBoxSlot* HS = KeyListVBox->AddChildToVerticalBox(Header))
             HS->SetPadding(FMargin(0.f, 12.f, 0.f, 4.f));
@@ -759,14 +775,24 @@ void UKeyDlg::AppendFighterHUDBindings()
         UTextBlock* ActionText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
         UTextBlock* KeyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
         if (!ActionText || !KeyText) continue;
-        ActionText->SetText(FText::FromString(M.Action->GetName().ToUpper()));
+        ActionText->SetText(UStarshatterInputLabels::GetActionLabel(M.Action).ToUpper());
+        ActionText->SetAutoWrapText(true);
         ActionText->SetColorAndOpacity(UITextColor);
-        KeyText->SetText(FText::FromString(M.Key.GetDisplayName().ToString().ToUpper()));
+        KeyText->SetText(UStarshatterInputLabels::GetBindingKeyLabel(M).ToUpper());
         ApplyStandardValueTextStyle(KeyText);
         if (UHorizontalBoxSlot* L = Row->AddChildToHorizontalBox(ActionText))
         {
             L->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
             L->SetPadding(FMargin(0.f, 4.f, 8.f, 4.f));
+        }
+        UTextBlock* TypeText=WidgetTree->ConstructWidget<UTextBlock>();
+        TypeText->SetText(UStarshatterInputLabels::GetActionTypeLabel(M.Action));
+        ApplyStandardValueTextStyle(TypeText);
+        if (auto* TypeSlot=Row->AddChildToHorizontalBox(TypeText))
+        {
+            TypeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            TypeSlot->SetVerticalAlignment(VAlign_Center);
+            TypeSlot->SetPadding(FMargin(12.f,4.f));
         }
         if (UHorizontalBoxSlot* R = Row->AddChildToHorizontalBox(KeyText))
         {
@@ -776,5 +802,6 @@ void UKeyDlg::AppendFighterHUDBindings()
         }
         if (UVerticalBoxSlot* VS = KeyListVBox->AddChildToVerticalBox(Row))
             VS->SetPadding(FMargin(0.f, 2.f));
+    }
     }
 }

@@ -38,6 +38,21 @@
 
 #include "StarshatterSettingsSaveGame.generated.h"
 
+USTRUCT(BlueprintType)
+struct FSSWGameOptions
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FlightModel = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 LandingModel = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FlyingStart = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 AILevel = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 HUDMode = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 HUDColor = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FriendlyFire = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 GridMode = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Gunsight = 0;
+};
+
 UCLASS()
 class STARSHATTERWARS_API UStarshatterSettingsSaveGame : public USaveGame
 {
@@ -51,7 +66,7 @@ public:
     // ----------------------------------------------------------------
 
     /** Increment when you change schema/meaning of saved fields. */
-    static constexpr int32 CurrentVersion = 1;
+    static constexpr int32 CurrentVersion = 2;
 
     /**
         Version stored in the save file.
@@ -74,6 +89,11 @@ public:
     // ----------------------------------------------------------------
     // Settings Payload
     // ----------------------------------------------------------------
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Settings|Game")
+    FSSWGameOptions GameOptions;
+    UPROPERTY() bool bHasGameOptions = false;
+    UPROPERTY() TMap<int32,int32> JoystickBindings;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Settings|Audio")
     FStarshatterAudioConfig Audio;

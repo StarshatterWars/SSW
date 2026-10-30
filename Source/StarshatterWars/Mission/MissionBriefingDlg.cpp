@@ -23,6 +23,10 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "QuantumDrive.h"
+#include "QuantumTravel.h"
+#include "QuantumTravelPopup.h"
+#include "TravelTransition.h"
 #include "Blueprint/WidgetTree.h"
 #include "MissionUIStyle.h"
 #include "Components/Border.h"
@@ -1273,6 +1277,7 @@ void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
     if (bClosingMissionPreview) return;
     TGuardValue<bool> ClosingGuard(bClosingMissionPreview, true);
     // Close callbacks/input before their Ship* and MissionEvent* sources die.
+    ClearTravelPresentation();
     DisableMissionMenuInput();
     if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
     MissionPlayerCameraActor.Reset();
@@ -2004,6 +2009,24 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDDetails.ToSharedRef(), 810);
     }
+    QuantumMenuAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_QuantumMenu.IA_QuantumMenu"));
+    bool bQuantumMapped = false;
+    for (const UInputMappingContext* Context : {FighterInputContext.Get(), MissionMenuContext.Get()})
+    {
+        if (!Context) continue;
+        for (const auto& Mapping : Context->GetMappings())
+            if (Mapping.Action && Mapping.Action->GetName() == TEXT("IA_QuantumMenu"))
+            {
+                QuantumMenuAction = const_cast<UInputAction*>(Mapping.Action.Get());
+                bQuantumMapped = true;
+            }
+    }
+    if (!QuantumMenuAction) { QuantumMenuAction = NewObject<UInputAction>(this); QuantumMenuAction->ValueType = EInputActionValueType::Boolean; }
+    if (QuantumMenuAction->ValueType == EInputActionValueType::Boolean)
+    {
+        if (!bQuantumMapped) MissionTargetContext->MapKey(QuantumMenuAction.Get(), EKeys::Q);
+        MissionMenuInput->BindAction(QuantumMenuAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleQuantumTravel);
+    }
     Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
@@ -2029,10 +2052,20 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     {
         if (WeakThis.IsValid()) WeakThis->HandleMissionMenuAction(Choice);
     }, QuitMissionMenuClass);
+    // The briefing widget is collapsed during flight, so use a world timer.
+    FTimerManagerTimerParameters TravelTimerParameters;
+    TravelTimerParameters.bLoop = true;
+    TravelTimerParameters.bMaxOncePerFrame = true;
+    GetWorld()->GetTimerManager().SetTimer(TravelPresentationTimer,
+        FTimerDelegate::CreateWeakLambda(this, [this]()
+        { if (GetWorld()) UpdateTravelPresentation(GetWorld()->GetDeltaSeconds()); }),
+        1.f / 60.f, TravelTimerParameters);
     return true;
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    CloseQuantumTravel();
+    QuantumMenuAction = nullptr;
     CloseNavigationPopup();
     NavMapAction=nullptr;
     CloseFlightOpsPopup();
@@ -2287,13 +2320,13 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 }
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
-    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
+    return bLiveMissionStarted && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
 bool UMissionBriefingDlg::CanShowFighterHUD() const
 {
-    return bLiveMissionStarted && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
+    return bLiveMissionStarted && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 void UMissionBriefingDlg::CycleFighterMFDLeft()
@@ -2314,6 +2347,7 @@ void UMissionBriefingDlg::CycleFighterWeapon()
 
 void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
 {
+    CloseQuantumTravel();
     CloseNavigationPopup();
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
@@ -2396,6 +2430,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    if (QuantumPopup.IsValid()) { CloseQuantumTravel(); return; }
     if(NavigationPopup.IsValid()){CloseNavigationPopup();return;}
     if(FlightOpsPopup.IsValid()){CloseFlightOpsPopup();return;}
     if(ObjectivesPopup.IsValid()){CloseObjectivesPopup();return;}
@@ -3192,6 +3227,7 @@ void UMissionBriefingDlg::CycleMissionViewObject()
 
 void UMissionBriefingDlg::ToggleEngineering()
 {
+    CloseQuantumTravel();
     CloseNavigationPopup();
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
@@ -3236,6 +3272,7 @@ void UMissionBriefingDlg::CloseEngineering()
 
 void UMissionBriefingDlg::ToggleObjectivesPopup()
 {
+    CloseQuantumTravel();
     CloseFlightOpsPopup();
     CloseNavigationPopup();
     CloseEngineering();
@@ -3283,6 +3320,7 @@ void UMissionBriefingDlg::CloseObjectivesPopup()
 
 void UMissionBriefingDlg::ToggleFlightOpsPopup()
 {
+    CloseQuantumTravel();
     CloseNavigationPopup();
     CloseEngineering();
     CloseWeaponsPopup();
@@ -3329,6 +3367,7 @@ void UMissionBriefingDlg::CloseFlightOpsPopup()
 
 void UMissionBriefingDlg::ToggleNavigationPopup()
 {
+    CloseQuantumTravel();
     UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Open/close requested"));
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
@@ -3463,6 +3502,7 @@ void UMissionBriefingDlg::DropMissionWeaponTarget()
 
 void UMissionBriefingDlg::ToggleContactsPanel()
 {
+    CloseQuantumTravel();
     CloseNavigationPopup();
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
@@ -3730,3 +3770,133 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
     }
 }
 
+
+void UMissionBriefingDlg::ToggleQuantumTravel()
+{
+    if (QuantumPopup.IsValid()) { CloseQuantumTravel(); return; }
+    CloseNavigationPopup(); CloseFlightOpsPopup(); CloseObjectivesPopup(); CloseWeaponsPopup(); CloseEngineering();
+    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport() || GetWorld()->IsPaused()) return;
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    ClearMissionRotationInput();
+    if (MissionCameraRig) MissionCameraRig->LookX = MissionCameraRig->LookY = MissionCameraRig->RangeInput = 0;
+    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
+    bQuantumPreviousCursor = PC->bShowMouseCursor;
+    TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
+    QuantumPopup = SNew(SQuantumTravelPopup)
+        .ResolveShip([Owner](){Sim* S=Sim::GetSim();return Owner.IsValid() && Owner->bLiveMissionStarted && S ? S->GetPlayerShip() : nullptr;})
+        .CanOperate([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted && Owner->GetWorld() && !Owner->GetWorld()->IsPaused() && !Owner->PendingTravelLevel;})
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseQuantumTravel();}));
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(QuantumPopup.ToSharedRef(), 1150);
+    FInputModeUIOnly Mode; Mode.SetWidgetToFocus(QuantumPopup); Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    PC->SetInputMode(Mode); PC->bShowMouseCursor=true;
+}
+
+void UMissionBriefingDlg::CloseQuantumTravel()
+{
+    if (!QuantumPopup.IsValid()) return;
+    if (GetWorld() && GetWorld()->GetGameViewport()) GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(QuantumPopup.ToSharedRef());
+    QuantumPopup.Reset();
+    if (APlayerController* PC=GetOwningPlayer()) { PC->SetInputMode(FInputModeGameOnly()); PC->bShowMouseCursor=bQuantumPreviousCursor; }
+}
+
+void UMissionBriefingDlg::ClearTravelPresentation(bool bStopUpdates)
+{
+    if (bStopUpdates && GetWorld()) GetWorld()->GetTimerManager().ClearTimer(TravelPresentationTimer);
+    CloseQuantumTravel();
+    if (GetWorld() && GetWorld()->GetGameViewport() && TravelTransition.IsValid()) GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(TravelTransition.ToSharedRef());
+    TravelTransition.Reset(); PresentedTravelRegion=nullptr; PendingTravelPackage.Empty(); TravelRevealAt=0;
+    if (PendingTravelLevel)
+    {
+        PendingTravelLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
+        PendingTravelLevel->SetShouldBeVisible(false); PendingTravelLevel->SetShouldBeLoaded(false); PendingTravelLevel->SetIsRequestingUnloadAndRemoval(true);
+        PendingTravelLevel=nullptr;
+    }
+}
+
+void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
+{
+    if (!bLiveMissionStarted || !GetWorld() || MissionSceneCover.IsValid()) return;
+    Sim* Simulation=Sim::GetSim(); Ship* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    SimRegion* Region=Pilot?Pilot->GetRegion():nullptr;
+    if (!Pilot || !Region || Pilot->IsDead() || Pilot->IsDying()) { ClearTravelPresentation(false); return; }
+    auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
+    const FString Package=Region->GetSystem()?FString(TEXT("/Game/Maps/"))+UTF8_TO_TCHAR(Region->GetSystem()->GetName()):FString();
+    if (PresentedTravelRegion != Region)
+    {
+        if (PresentedTravelRegion)
+        {
+            CloseQuantumTravel(); SelectedMissionTarget.Reset(); SelectedMissionTargetName=FText::GetEmpty(); bMissionTargetInspection=false;
+            MissionPlayerCameraActor.Reset(); MissionPlayerCameraSearchTime=0; MissionPlayerCameraDistance=0;
+            if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
+            if (Runtime) Runtime->RefreshTravelPresentation();
+            UE_LOG(LogTemp,Display,TEXT("[Travel] Presentation arrival %hs"),Region->GetName());
+        }
+        PresentedTravelRegion=Region;
+    }
+    if (!PendingTravelLevel && !Package.IsEmpty() && !Package.Equals(MissionSystemPackage,ESearchCase::IgnoreCase) && Package!=PendingTravelPackage)
+    {
+        PendingTravelPackage=Package;
+        if (FPackageName::DoesPackageExist(Package))
+        {
+            bool Started=false;
+            PendingTravelLevel=ULevelStreamingDynamic::LoadLevelInstance(GetWorld(),Package,FVector::ZeroVector,FRotator::ZeroRotator,Started);
+            if (Started && PendingTravelLevel)
+            {
+                TravelLoadStarted=GetWorld()->GetTimeSeconds();
+                PendingTravelLevel->OnLevelShown.AddDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
+                PendingTravelLevel->SetShouldBeLoaded(true); PendingTravelLevel->SetShouldBeVisible(true);
+            }
+            else { PendingTravelLevel=nullptr; UE_LOG(LogTemp,Error,TEXT("[Travel] Could not stream %s"),*Package); }
+        }
+        else UE_LOG(LogTemp,Error,TEXT("[Travel] Destination map missing: %s"),*Package);
+    }
+    if (PendingTravelLevel)
+    {
+        if (PendingTravelLevel->IsLevelVisible()) HandleTravelSystemShown();
+        if (PendingTravelLevel && GetWorld()->GetTimeSeconds()-TravelLoadStarted>30)
+        {
+            UE_LOG(LogTemp,Error,TEXT("[Travel] Destination presentation timed out: %s"),*PendingTravelPackage);
+            PendingTravelLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
+            PendingTravelLevel->SetShouldBeVisible(false);PendingTravelLevel->SetShouldBeLoaded(false);PendingTravelLevel->SetIsRequestingUnloadAndRemoval(true);PendingTravelLevel=nullptr;
+        }
+    }
+    const bool Transit=Pilot->GetWarpFactor()>1.01 || PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt;
+    if (Transit)
+    {
+        CloseQuantumTravel();
+        if (!TravelTransition.IsValid() && GetWorld()->GetGameViewport())
+        {
+            TravelTransition=SNew(STravelTransition);
+            GetWorld()->GetGameViewport()->AddViewportWidgetContent(TravelTransition.ToSharedRef(),1800);
+        }
+        if (TravelTransition.IsValid()) TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Pilot->GetWarpFactor(),PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt,UTF8_TO_TCHAR(Region->GetName()));
+    }
+    else if (TravelTransition.IsValid())
+    {
+        if(GetWorld()->GetGameViewport())GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(TravelTransition.ToSharedRef());
+        TravelTransition.Reset();
+    }
+}
+
+void UMissionBriefingDlg::HandleTravelSystemShown()
+{
+    if (!PendingTravelLevel || !bLiveMissionStarted || !GetWorld()) return;
+    ASystemSceneBuilder* Builder=nullptr;
+    for(TActorIterator<ASystemSceneBuilder> It(GetWorld());It;++It)
+        if(It->GetLevel()==PendingTravelLevel->GetLoadedLevel() && !It->GetSpawnedRegions().IsEmpty()){Builder=*It;break;}
+    if(!Builder)return;
+    if(auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())Runtime->RefreshTravelPresentation(Builder);
+    if(MissionSystemLevel)
+    {
+        MissionSystemLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleMissionSystemLevelShown);
+        MissionSystemLevel->SetShouldBeVisible(false);MissionSystemLevel->SetShouldBeLoaded(false);MissionSystemLevel->SetIsRequestingUnloadAndRemoval(true);
+    }
+    MissionSystemLevel=PendingTravelLevel;
+    MissionSystemPackage=PendingTravelPackage;
+    PendingTravelLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
+    PendingTravelLevel=nullptr;
+    TravelRevealAt=GetWorld()->GetTimeSeconds()+1.5;
+    UE_LOG(LogTemp,Display,TEXT("[Travel] Destination system presentation ready: %s"),*MissionSystemPackage);
+}

@@ -29,6 +29,20 @@
 =============================================================================*/
 
 #include "OptionsScreen.h"
+#include "AudioDlg.h"
+#include "VideoDlg.h"
+#include "ControlOptionsDlg.h"
+#include "GameOptionsDlg.h"
+#include "JoyDlg.h"
+#include "KeyDlg.h"
+#include "OptionsPage.h"
+#include "StarshatterSettingsSaveSubsystem.h"
+#include "Components/ScaleBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/Image.h"
+#include "Components/Slider.h"
+#include "Components/ComboBoxString.h"
+
 
 // UMG
 #include "Components/Button.h"
@@ -65,6 +79,14 @@ UOptionsScreen::UOptionsScreen(const FObjectInitializer& ObjectInitializer)
 {
     bIsFocusable = true;
     SetDialogInputEnabled(true);
+}
+
+TSharedRef<SWidget> UOptionsScreen::RebuildWidget()
+{
+    // Reuse every authored page and control; only replace their outer presentation.
+    BuildCreditsPage();
+    BuildModernShell();
+    return Super::RebuildWidget();
 }
 
 void UOptionsScreen::NativeOnInitialized()
@@ -207,6 +229,7 @@ void UOptionsScreen::SwitchToWidget(UWidget* Widget)
     }
 
     OptionsSwitcher->SetActiveWidget(Widget);
+    if (auto* Page = Cast<UUserWidget>(Widget)) StylePage(Page);
 }
 
 // ------------------------------------------------------------
@@ -215,65 +238,31 @@ void UOptionsScreen::SwitchToWidget(UWidget* Widget)
 
 void UOptionsScreen::StandardizeTopTabs()
 {
-    // Use one shared style and one label treatment for all eight top tabs.
-    // The seven pre-existing WBP buttons keep their click bindings and parents.
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick,
-                        BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
-    const TCHAR* Names[] = { TEXT("AUDIO"), TEXT("CONTROLS"), TEXT("GAME"),
-                             TEXT("JOYSTICK"), TEXT("KEYBOARD"), TEXT("MODS"),
-                             TEXT("VIDEO"), TEXT("CREDITS") };
-
-    UStarshatterUIStyleSubsystem* SharedStyle = nullptr;
-    if (UGameInstance* GI = GetGameInstance())
-        SharedStyle = GI->GetSubsystem<UStarshatterUIStyleSubsystem>();
-
-    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Tabs); ++Index)
-    {
-        UButton* Tab = Tabs[Index];
-        if (!Tab) continue;
-
-        if (SharedStyle)
-            SharedStyle->ApplyMenuButtonStyle(Tab);
-
-        // Normalize existing WBP TextBlocks as well as the dynamically built Credits tab.
-        UTextBlock* Label = Cast<UTextBlock>(Tab->GetContent());
-        if (!Label && Tab->GetContent())
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    const TCHAR* Labels[] = { TEXT("AUDIO"), TEXT("CONTROLS"), TEXT("GAME"), TEXT("JOYSTICK"), TEXT("KEYBOARD"), TEXT("MODS"), TEXT("VIDEO"), TEXT("CREDITS") };
+    for (int32 Index=0; Index<UE_ARRAY_COUNT(Tabs); ++Index)
+        if (UButton* Tab=Tabs[Index])
         {
-            if (USizeBox* Wrapper = Cast<USizeBox>(Tab->GetContent()))
-                Label = Cast<UTextBlock>(Wrapper->GetContent());
+            MissionUIStyle::ApplyActionButtonStyle(Tab, Index==ActiveTabIndex ? TEXT("Blue") : TEXT("Cyan"));
+            Tab->SetIsEnabled(true);
+            if (auto* Label=Cast<UTextBlock>(Tab->GetContent()))
+            {
+                Label->SetText(FText::FromString(Labels[Index]));
+                Label->SetFont(MissionUIStyle::GetHeaderFont(22));
+                Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+                Label->SetJustification(ETextJustify::Center);
+            }
         }
-        if (Label)
-        {
-            Label->SetText(FText::FromString(Names[Index]));
-            Label->SetFont(MissionUIStyle::GetInfoLabelFont(13));
-            Label->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
-            Label->SetJustification(ETextJustify::Center);
-        }
-
-        if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(Tab->GetContent() ? Tab->GetContent()->Slot : nullptr))
-        {
-            ButtonContentSlot->SetHorizontalAlignment(HAlign_Center);
-            ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
-            ButtonContentSlot->SetPadding(FMargin(10.f, 8.f));
-        }
-
-    }
-    UE_LOG(LogOptionsScreen, Log, TEXT("[Options] Standardized all 8 top tab buttons."));
+    MissionUIStyle::ApplyActionButtonStyle(BtnCancel,TEXT("Red"));
+    MissionUIStyle::ApplyActionButtonStyle(BtnSave,TEXT("Green"));
 }
 
 void UOptionsScreen::SetActiveTab(UButton* ActiveButton)
 {
-    // Radio behavior: selected tab disabled (lets Disabled style look “selected” if you want)
-    if (BtnAudio)    BtnAudio->SetIsEnabled(BtnAudio != ActiveButton);
-    if (BtnControls) BtnControls->SetIsEnabled(BtnControls != ActiveButton);
-    if (BtnGame)     BtnGame->SetIsEnabled(BtnGame != ActiveButton);
-    if (BtnJoystick) BtnJoystick->SetIsEnabled(BtnJoystick != ActiveButton);
-    if (BtnKeyboard) BtnKeyboard->SetIsEnabled(BtnKeyboard != ActiveButton);
-    if (BtnMods)     BtnMods->SetIsEnabled(BtnMods != ActiveButton);
-    if (BtnVideo)    BtnVideo->SetIsEnabled(BtnVideo != ActiveButton);
-    if (BtnCredits)  BtnCredits->SetIsEnabled(BtnCredits != ActiveButton);
-
-    // OPTION B: border highlight
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    for (int32 Index=0; Index<UE_ARRAY_COUNT(Tabs); ++Index)
+        if (Tabs[Index] && Tabs[Index]==ActiveButton) ActiveTabIndex=Index;
+    StandardizeTopTabs();
     UpdateTabBorders(ActiveButton);
 }
 
@@ -308,19 +297,7 @@ void UOptionsScreen::UpdateTabBorders(UButton* ActiveButton)
 
 int32 UOptionsScreen::GetCurrentTabIndex() const
 {
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
-
-    // Prefer actual keyboard focus:
-    for (int32 i = 0; i < UE_ARRAY_COUNT(Tabs); ++i)
-        if (Tabs[i] && Tabs[i]->HasKeyboardFocus())
-            return i;
-
-    // Fallback: infer from “selected tab disabled” state
-    for (int32 i = 0; i < UE_ARRAY_COUNT(Tabs); ++i)
-        if (Tabs[i] && !Tabs[i]->GetIsEnabled())
-            return i;
-
-    return 0;
+    return ActiveTabIndex;
 }
 
 void UOptionsScreen::FocusTabByDelta(int32 Delta)
@@ -567,16 +544,40 @@ void UOptionsScreen::ApplyOptions()
 {
     UE_LOG(LogOptionsScreen, Log, TEXT("[Options] ApplyOptions()"));
 
-    // NOTE:
-    // Right now, your subdialogs (AudioDlg/VideoDlg/etc.) already push settings
-    // when their Apply button is pressed (often via Manager->ApplyOptions()).
-    // If you later remove “Save” and auto-apply on tab switch, we’ll call Apply()
-    // on the page being left inside FocusTabByDelta / ShowXxx methods.
+    if (auto* Page=Cast<UAudioDlg>(AudioDlg)) Page->Apply();
+    if (auto* Page=Cast<UControlOptionsDlg>(ControlsDlg)) Page->Apply();
+    if (auto* Page=Cast<UGameOptionsDlg>(GameDlg)) Page->Apply();
+    if (auto* Page=Cast<UJoyDlg>(JoystickDlg)) Page->Apply();
+    if (auto* Page=Cast<UKeyDlg>(KeyboardDlg)) Page->Apply();
+    if (auto* Page=Cast<UVideoDlg>(VideoDlg)) Page->Apply();
+    if (ModsDlg && ModsDlg->Implements<UOptionsPage>())
+    {
+        IOptionsPage::Execute_ApplySettings(ModsDlg);
+        IOptionsPage::Execute_SaveSettings(ModsDlg);
+    }
+    auto* Save=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterSettingsSaveSubsystem>():nullptr;
+    bool Saved=false;
+    if (Save && (Save->HasSettings() || Save->LoadOrCreateSettings()))
+    {
+        Save->CaptureCurrentOptions();
+        Saved=Save->SaveSettings();
+    }
+    if (OptionsSaveStatus) OptionsSaveStatus->SetText(FText::FromString(Saved?TEXT("SAVED TO options.sav"):TEXT("SAVE FAILED - PLEASE RETRY")));
+    if (!Saved) UE_LOG(LogOptionsScreen,Error,TEXT("[Options] Could not save options.sav"));
+
 }
 
 void UOptionsScreen::CancelOptions()
 {
     UE_LOG(LogOptionsScreen, Log, TEXT("[Options] CancelOptions()"));
+
+    if (auto* Page=Cast<UAudioDlg>(AudioDlg)) Page->Cancel();
+    if (auto* Page=Cast<UControlOptionsDlg>(ControlsDlg)) Page->Cancel();
+    if (auto* Page=Cast<UGameOptionsDlg>(GameDlg)) Page->Cancel();
+    if (auto* Page=Cast<UJoyDlg>(JoystickDlg)) Page->Cancel();
+    if (auto* Page=Cast<UKeyDlg>(KeyboardDlg)) Page->Cancel();
+    if (auto* Page=Cast<UVideoDlg>(VideoDlg)) Page->Cancel();
+    if (ModsDlg && ModsDlg->Implements<UOptionsPage>()) IOptionsPage::Execute_CancelChanges(ModsDlg);
 
     // Return to menu
     if (UMenuScreen* Menu = GetMenuManager())
@@ -596,4 +597,79 @@ void UOptionsScreen::ReturnFromKeyDlg()
     // Return to Keyboard tab/page by default (matches your current request).
     ShowKeyDlg();
     SetKeyboardFocus();
+}
+
+void UOptionsScreen::BuildModernShell()
+{
+    if (ModernShell || !WidgetTree || !OptionsSwitcher) return;
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    // A partial Blueprint must retain its authored layout rather than lose navigation.
+    for (UButton* Tab : Tabs) if (!Tab) return;
+    auto* Scale=WidgetTree->ConstructWidget<UScaleBox>(UScaleBox::StaticClass(),TEXT("OptionsModernScale"));
+    Scale->SetStretch(EStretch::ScaleToFit);
+    auto* Frame=WidgetTree->ConstructWidget<USizeBox>(); Frame->SetWidthOverride(1920); Frame->SetHeightOverride(1080); Scale->SetContent(Frame);
+    auto* Background=WidgetTree->ConstructWidget<UBorder>(); Background->SetBrushColor(FLinearColor(0.025f,0.055f,0.083f,1)); Background->SetPadding(FMargin(18)); Frame->SetContent(Background);
+    auto* Column=WidgetTree->ConstructWidget<UVerticalBox>(); Background->SetContent(Column);
+    auto* Header=WidgetTree->ConstructWidget<UBorder>(); Header->SetBrushColor(FLinearColor(0.105f,0.113f,0.125f,1)); Header->SetPadding(FMargin(18,9));
+    if (!TitleText) TitleText=WidgetTree->ConstructWidget<UTextBlock>(); else TitleText->RemoveFromParent();
+    TitleText->SetText(FText::FromString(TEXT("OPTIONS"))); TitleText->SetFont(MissionUIStyle::GetHeaderFont(38)); TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White)); auto* HeaderRow=WidgetTree->ConstructWidget<UHorizontalBox>();
+    HeaderRow->AddChildToHorizontalBox(TitleText)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    OptionsSaveStatus=WidgetTree->ConstructWidget<UTextBlock>();OptionsSaveStatus->SetFont(MissionUIStyle::GetRowFont(18));OptionsSaveStatus->SetColorAndOpacity(FSlateColor(FLinearColor(0.16f,0.77f,0.91f,1)));
+    HeaderRow->AddChildToHorizontalBox(OptionsSaveStatus)->SetVerticalAlignment(VAlign_Center);Header->SetContent(HeaderRow);
+    Column->AddChildToVerticalBox(Header)->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    auto* Rule=WidgetTree->ConstructWidget<UBorder>(); Rule->SetBrushColor(FLinearColor(0.16f,0.77f,0.91f,1));
+    auto* RuleSize=WidgetTree->ConstructWidget<USizeBox>(); RuleSize->SetHeightOverride(5); RuleSize->SetContent(Rule); Column->AddChildToVerticalBox(RuleSize);
+    auto* Strip=WidgetTree->ConstructWidget<UHorizontalBox>(); Column->AddChildToVerticalBox(Strip)->SetPadding(FMargin(0,12));
+    auto Arrow=[this,Strip](TObjectPtr<UButton>& Button,const TCHAR* Path,const TCHAR* Tip,const FLinearColor& Color)
+    {
+        if (!Button) Button=WidgetTree->ConstructWidget<UButton>(); else Button->RemoveFromParent();
+        Button->SetVisibility(ESlateVisibility::Visible); Button->SetRenderOpacity(1.f);
+        auto* Icon=WidgetTree->ConstructWidget<UImage>(); MissionUIStyle::SetActionIcon(Icon,Path,Color);
+        auto* Box=WidgetTree->ConstructWidget<USizeBox>(); Box->SetWidthOverride(40);Box->SetHeightOverride(40);Box->SetContent(Icon);Button->SetContent(Box);
+        if (auto* IconSlot=Cast<UButtonSlot>(Box->Slot)) { IconSlot->SetHorizontalAlignment(HAlign_Center);IconSlot->SetVerticalAlignment(VAlign_Center);IconSlot->SetPadding(FMargin(4)); }
+        Button->SetToolTipText(FText::FromString(Tip));
+        auto* Cell=Strip->AddChildToHorizontalBox(Button);Cell->SetPadding(FMargin(6,0));Cell->SetVerticalAlignment(VAlign_Fill);
+    };
+    Arrow(BtnCancel,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"),TEXT("Back - discard unapplied changes"),FLinearColor(1,0.12f,0.08f,1));
+    for (UButton* Tab : Tabs)
+    {
+        Tab->RemoveFromParent();
+        auto* Caption=WidgetTree->ConstructWidget<UTextBlock>();Tab->SetContent(Caption);
+        auto* Cell=Strip->AddChildToHorizontalBox(Tab);Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));Cell->SetPadding(FMargin(5,0));
+    }
+    Arrow(BtnSave,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"),TEXT("Apply changes across all settings pages"),FLinearColor(0.1f,1,0.2f,1));
+    OptionsSwitcher->RemoveFromParent();
+    auto* Content=WidgetTree->ConstructWidget<UBorder>();Content->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));Content->SetPadding(FMargin(12));Content->SetContent(OptionsSwitcher);
+    Column->AddChildToVerticalBox(Content)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    WidgetTree->RootWidget=Scale;ModernShell=Scale;
+    // Bind any arrows created above; AddUnique preserves existing Blueprint delegates.
+    BtnSave->OnClicked.AddUniqueDynamic(this,&UOptionsScreen::OnSaveClicked);
+    BtnCancel->OnClicked.AddUniqueDynamic(this,&UOptionsScreen::OnCancelClicked);
+}
+
+void UOptionsScreen::StylePage(UUserWidget* Page)
+{
+    if (!Page || !Page->WidgetTree) return;
+    Page->WidgetTree->ForEachWidget([this](UWidget* Widget)
+    {
+        const FString Name=Widget->GetName();
+        if (auto* Text=Cast<UTextBlock>(Widget))
+        {
+            Text->SetFont(MissionUIStyle::GetRowFont(18));
+            Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        }
+        if (auto* Slider=Cast<USlider>(Widget))
+        {
+            Slider->SetSliderBarColor(FLinearColor(0.10f,0.20f,0.28f,1));
+            Slider->SetSliderHandleColor(FLinearColor(0.16f,0.77f,0.91f,1));
+        }
+        if (auto* Button=Cast<UButton>(Widget))
+        {
+            MissionUIStyle::ApplyActionButtonStyle(Button,TEXT("Blue"));
+            // Header owns shared actions. Keep page objects/delegates for legacy callers.
+            if (Name==TEXT("ApplyBtn") || Name==TEXT("CancelBtn") || Name==TEXT("MenuButton") ||
+                Name==TEXT("AudTabButton") || Name==TEXT("VidTabButton") || Name==TEXT("CtlTabButton") ||
+                Name==TEXT("OptTabButton") || Name==TEXT("ModTabButton") || Name==TEXT("JoyTabButton") || Name==TEXT("KeyTabButton")) Button->SetVisibility(ESlateVisibility::Collapsed);
+        }
+    });
 }

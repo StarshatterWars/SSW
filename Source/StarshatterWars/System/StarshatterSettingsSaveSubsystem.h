@@ -47,6 +47,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Starshatter|Settings")
     bool SaveSettings();
 
+    /** Snapshot all applied page models before writing options.sav. */
+    void CaptureCurrentOptions();
+    void RestoreConfigModels();
+    void RestoreGameOptions();
+    void RestoreJoystickBindings(class KeyMap& Mapping);
+
+
 public:
     // ----------------------------------------------------------------
     // Back-compat API (optional; keep if already used)

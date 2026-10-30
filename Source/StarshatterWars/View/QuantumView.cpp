@@ -23,6 +23,7 @@
 #include "QuantumView.h"
 
 #include "QuantumDrive.h"
+#include "QuantumTravel.h"
 #include "HUDView.h"
 #include "View.h"
 #include "Ship.h"
@@ -53,17 +54,14 @@ QuantumView* QuantumView::QuantumViewInstance = nullptr;
 // ------------------------------------------------------------
 void QuantumView::Initialize()
 {
-    static bool bInitialized = false;
-    if (bInitialized) return;
-
-    QuantumMenu = new Menu("Quantum Drive");
-    bInitialized = true;
+    if (!QuantumMenu) QuantumMenu = new Menu("Quantum Drive");
 }
 
 void QuantumView::Close()
 {
     delete QuantumMenu;
     QuantumMenu = nullptr;
+    bShowMenu = false;
 }
 
 // ------------------------------------------------------------
@@ -216,7 +214,7 @@ void QuantumView::ExecFrame()
         return;
     }
 
-    const int32 MaxItems = QuantumMenu->NumItems();
+    const int32 MaxItems = FMath::Min(9, QuantumMenu->NumItems());
     for (int32 i = 0; i < MaxItems; i++) {
         if (Keyboard::KeyDown('1' + i)) {
             MenuItem* Item = QuantumMenu->GetItem(i);
@@ -225,7 +223,7 @@ void QuantumView::ExecFrame()
                 // Stored pointer data:
                 SimRegion* Region = reinterpret_cast<SimRegion*>(Item->GetData());
 
-                if (Region && QDrive) {
+                if (Region && QDrive && SimPtr && QuantumTravel::GetRegions(SimPtr, ShipPtr).Contains(Region)) {
                     QDrive->SetDestination(Region, FVector::ZeroVector);
                     QDrive->Engage();
                 }
@@ -250,6 +248,14 @@ bool QuantumView::IsMenuShown() const
 
 void QuantumView::ShowMenu()
 {
+    SimPtr = Sim::GetSim();
+    Ship* CurrentShip = SimPtr ? SimPtr->GetPlayerShip() : nullptr;
+    if (ShipPtr != CurrentShip)
+    {
+        if (ShipPtr) Ignore(ShipPtr);
+        ShipPtr = CurrentShip;
+        if (ShipPtr) Observe(ShipPtr);
+    }
     if (!ShipPtr) return;
 
     if (!bShowMenu) {
@@ -277,67 +283,17 @@ void QuantumView::CloseMenu()
 // ------------------------------------------------------------
 Menu* QuantumView::GetQuantumMenu(Ship* InShip)
 {
-    if (!InShip || !SimPtr || !QuantumMenu)
-        return nullptr;
-
-    if (!InShip->IsStarship())
-        return nullptr;
-
+    SimPtr = Sim::GetSim();
+    Initialize();
+    if (!InShip || !InShip->IsStarship() || !SimPtr || !QuantumMenu) return nullptr;
     QuantumMenu->ClearItems();
-
-    SimRegion* CurrentRegion = InShip->GetRegion();
-    if (!CurrentRegion)
-        return nullptr;
-
-    StarSystem* CurrentSystem = CurrentRegion->GetSystem();
-
-    List<SimRegion> RegionList;
-
-    // Local regions in same star system:
-    ListIter<SimRegion> Iter = SimPtr->GetRegions();
-    while (++Iter) {
-        SimRegion* Rgn = Iter.value();
-        StarSystem* RgnSystem = Rgn->GetSystem();
-
-        if (Rgn != CurrentRegion && !Rgn->IsAirSpace() && RgnSystem == CurrentSystem) {
-            RegionList.append(Rgn);
-        }
+    int Index = 1;
+    for (SimRegion* Region : QuantumTravel::GetRegions(SimPtr, InShip))
+    {
+        const FString Label = Region->GetSystem() == InShip->GetRegion()->GetSystem()
+            ? FString::Printf(TEXT("%d. %hs"), Index++, Region->GetName())
+            : FString::Printf(TEXT("%d. %hs/%hs"), Index++, Region->GetSystem()->GetName(), Region->GetName());
+        QuantumMenu->AddItem(TCHAR_TO_UTF8(*Label), reinterpret_cast<uintptr_t>(Region));
     }
-
-    // Sort local regions by distance (legacy list sort):
-    RegionList.sort();
-
-    // Add linked regions in other systems:
-    Iter.reset();
-    while (++Iter) {
-        SimRegion* Rgn = Iter.value();
-        StarSystem* RgnSystem = Rgn->GetSystem();
-
-        if (Rgn != CurrentRegion &&
-            Rgn->GetType() != SimRegion::AIR_SPACE &&
-            RgnSystem != CurrentSystem &&
-            CurrentRegion->GetLinks().contains(Rgn))
-        {
-            RegionList.append(Rgn);
-        }
-    }
-
-    // Populate menu items (store SimRegion* as pointer payload):
-    int32 n = 1;
-    Iter.attach(RegionList);
-    while (++Iter) {
-        SimRegion* Rgn = Iter.value();
-        StarSystem* RgnSystem = Rgn->GetSystem();
-
-        char TextBuf[64] = {};
-        if (RgnSystem != CurrentSystem)
-            sprintf_s(TextBuf, "%d. %s/%s", n++, RgnSystem->GetName(), Rgn->GetName());
-        else
-            sprintf_s(TextBuf, "%d. %s", n++, Rgn->GetName());
-
-        // IMPORTANT: add a pointer-safe API on MenuItem:
-        QuantumMenu->AddItem(TextBuf, reinterpret_cast<uintptr_t>(Rgn));
-    }
-
     return QuantumMenu;
 }

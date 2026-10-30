@@ -42,7 +42,7 @@ public:
 
 	virtual void   ExecFrame(double seconds);
 	void           SetShip(Ship* s) { ship = s; }
-	void           SetDest(Ship* d) { dest = d; }
+	void           SetDest(Ship* d);
 
 	FVector        ApproachPoint(int i) const { return approach_point[i]; }
 	FVector        StartPoint()         const { return start_point; }

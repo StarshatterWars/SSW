@@ -57,6 +57,7 @@ static inline FVector RandomDirectionPoint()
 
 QuantumDrive::QuantumDrive(SUBTYPE s, double cap, double rate)
 	: SimSystem(SYSTEM_CATEGORY::DRIVE, s, "Quantum", qdrive_value, (float)cap, (float)cap, (float)rate),
+	ship(nullptr), dst_loc(FVector::ZeroVector),
 	dst_rgn(0),
 	active_state(ACTIVE_READY),
 	warp_fov(1),
@@ -75,6 +76,7 @@ QuantumDrive::QuantumDrive(SUBTYPE s, double cap, double rate)
 
 QuantumDrive::QuantumDrive(const QuantumDrive& d)
 	: SimSystem(d),
+	ship(nullptr), dst_loc(FVector::ZeroVector),
 	dst_rgn(0),
 	active_state(ACTIVE_READY),
 	warp_fov(1),
@@ -107,7 +109,7 @@ QuantumDrive::SetDestination(SimRegion* rgn, const FVector& loc)
 bool
 QuantumDrive::Engage(bool immediate)
 {
-	if (active_state == ACTIVE_READY && ship != 0 &&
+	if (active_state == ACTIVE_READY && ship != 0 && ship->GetRegion() && dst_rgn &&
 		IsPowerOn() && GetStatus() == SYSTEM_STATUS::NOMINAL && energy == capacity) {
 
 		active_state = ACTIVE_COUNTDOWN;
@@ -162,9 +164,11 @@ QuantumDrive::AbortJump()
 	energy = 0;
 	warp_fov = 1;
 
+	if (!ship) return;
 	ship->SetWarp(warp_fov);
 
 	SimRegion* r = ship->GetRegion();
+	if (!r) return;
 	ListIter<Ship> neighbor = r->GetShips();
 
 	while (++neighbor) {
@@ -229,6 +233,7 @@ QuantumDrive::ExecFrame(double seconds)
 			ship->SetWarp(warp_fov);
 
 			SimRegion* r = ship->GetRegion();
+			if (!r) { AbortJump(); return; }
 			ListIter<Ship> neighbor = r->GetShips();
 
 			while (++neighbor) {
@@ -254,9 +259,9 @@ QuantumDrive::Jump()
 	if (ship && sim && dst_rgn) {
 		const double dist = 150e3 + RandomRangeDouble(0.0, 60e3);
 
-		FVector esc_vec =
-			dst_rgn->GetOrbitalRegion()->Location() -
-			dst_rgn->GetOrbitalRegion()->Primary()->Location();
+        OrbitalRegion* Orbital = dst_rgn->GetOrbitalRegion();
+        if (!Orbital || !Orbital->Primary()) { AbortJump(); return; }
+		FVector esc_vec = Orbital->Location() - Orbital->Primary()->Location();
 
 		esc_vec.Normalize();
 		esc_vec *= dist;

@@ -328,7 +328,7 @@ void UJoyDlg::BuildAxisRow(const FString& LabelText, UButton* AxisButton, UCheck
         if (BtnSize)
         {
             BtnSize->SetWidthOverride(360.f);   // tweak if you want a wider/narrower button
-            BtnSize->SetHeightOverride(0.f);
+            BtnSize->SetHeightOverride(40.f);
             BtnSize->AddChild(AxisButton);
 
             if (UHorizontalBoxSlot* S = ControlGroup->AddChildToHorizontalBox(BtnSize))

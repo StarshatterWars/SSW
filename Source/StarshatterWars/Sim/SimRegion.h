@@ -87,6 +87,7 @@ public:
 
     // Objects:
     virtual void InsertObject(Ship* ship);
+    void TransferObject(Ship* ship);
     virtual void InsertObject(SimShot* shot);
     virtual void InsertObject(Explosion* explosion);
     virtual void InsertObject(Debris* debris);

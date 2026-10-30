@@ -1,0 +1,130 @@
+﻿STARSHATTER WARS
+A Fractal Dev Studios Production
+
+UNREAL DEVELOPMENT
+
+Chief Unreal Programmer — Carlos Bott
+
+LEGACY STARSHATTER CREDITS
+
+Starshatter Wars builds on the original Starshatter.
+The original development team and contributors remain credited below.
+
+STARSHATTER: The Gathering Storm
+A Destroyer Studios Production
+
+
+DEVELOPMENT
+
+Producer    John DiCamillo
+Designer    John DiCamillo
+
+Lead Programmer    John DiCamillo
+nGen Programmer    John DiCamillo
+Magic3D Programmer    John DiCamillo
+
+Art Director    Sean Moser
+3D Artwork    Jason Blaz
+    John DiCamillo
+2D Artwork    John DiCamillo
+    Sean Moser
+
+Player Manual    John DiCamillo
+
+AUDIO TEAM
+
+Audio Director    Scott Cairns
+Voice Over Director    Stuart Smith
+Musical Score    Scott Cairns
+Sound Effects    John DiCamillo
+
+    Jonas Devlin    Stephen Hirst
+    Sarah Hunter    Amanda Gerrard
+    President Valmar    Andrew Godbold
+    Admiral Evars    James Turner
+    Vice Admiral Caldott    John DiCamillo
+    Kash Anlon    Sam Cavanaugh
+    Newscaster    Stuart Smith
+    Newscaster    Jodie Connor
+    Training Instructor    Callum Hayes
+
+    Fighter Pilot 1    Anthony Howes
+    Fighter Pilot 2    Stuart Smith
+    Fighter Pilot 3    Scott Cairns
+    Fighter Pilot 4    Lina Cairns
+
+QUALITY ASSURANCE
+
+Beta Team Leads    Crazy Eddie
+    Mehrunes
+    Pheagey
+
+Beta Testers
+Dragon Lady * cybersleuth58 * ravenMKII * sky_walker *
+se5a * DamoclesX * Henry * executioner_de * FLY135 *
+Ancient Angel * Phoenix Starflare * Vice * Daedalus *
+Deadmannumberone * Deslok * Gunfighter * sniperscope *
+Swordsman * Steelviper33 * Phear * spacedad62 * loafer *
+mldaalder *URG_thrash * Gmicek * Veloxi * DarkeLyte *
+bliu * Slaor * Maddi * Qrias * xaotik * Blair * Slippy *
+Lord QDaan * A2597 * Lord Darkstar * Mr_Torgo * Rhett *
+Col. Blackwolf * starbird34 * fattytheking * Maurader *
+FS_Lancer * GreenJedi * Mopar * Bloodborg * tyrkina *
+amwhere * Bollinger * texmurph * trancetopia * XPav *
+Fallen_angel * panick * Game Ender * Spector445 * Magus *
+Darrylbar * Kallis * river * Stuntie * Kurimuzon * Ace1 *
+John Rowan * Matti Kuokkanen * Parias * Livid Hybrid *
+Mutos * Seawolf156 * Leonides * Elenkis * RedMenace *
+Bob McDobb * bk_raven * Dekzar * Mark Garanchon * jwal *
+Mark Hymer * Ploppy * Red Menace * Rick BC * dukrous *
+nanoprobe * Vespero * Alex Belton * Brian Rubin * Jason
+Ross * John Magarrell * Pumpkin Patch * Tony Molder
+
+
+CREATIVE CONSULTANTS
+
+Design    Greg Eakin
+Graphics    Mark DiCamillo
+
+TECHNICAL CONSULTANTS
+
+Aerodynamics    Joseph R. DiCamillo
+Digital Control Systems    David Jenkins
+Dynamic Campaign    John Walker
+
+SPECIAL THANKS
+
+Ken Beckett
+Richard Brewer
+David Coy
+Dan Foy
+Jill Goldworn
+Marc Hudgins
+Randy Littlejohn
+Jack Nichols
+Jay Patel
+David Ray
+Jeff Reitman
+John Walker
+
+NaturalPoint
+Prime Sounds
+Propellerheads
+Sound Ideas
+Xiphophorous
+
+EXTRA SPECIAL THANKS
+
+Mary DiCamillo
+Marisa DiCamillo
+Michael DiCamillo
+Connor DiCamillo
+
+TEAM MASCOT
+
+Jake
+
+PUBLIC RELATIONS
+
+http://www.starshatter.com
+milo@starshatter.com

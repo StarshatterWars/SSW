@@ -299,7 +299,7 @@ void UAudioDlg::OnApplyClicked()
 void UAudioDlg::OnCancelClicked()
 {
     if (OptionsManager)
-        OptionsManager->ApplyOptions();
+        OptionsManager->CancelOptions();
     else 
         Cancel();
 }

@@ -399,6 +399,7 @@ void USSWBootSubsystem::BootPlayerSave(const FBootContext& Ctx)
     }
 
     bNeedsFirstRun = !Ctx.PlayerSS->HadExistingSaveOnLoad();
+    if (Ctx.SaveSS) Ctx.SaveSS->RestoreGameOptions();
 }
 
 void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)

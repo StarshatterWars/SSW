@@ -16,6 +16,7 @@
 #include "Farcaster.h"
 
 #include "QuantumDrive.h"
+#include "QuantumTravel.h"
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "Explosion.h"
@@ -84,7 +85,7 @@ Farcaster::ExecFrame(double seconds)
 {
 	SimSystem::ExecFrame(seconds);
 
-	if (ship && !no_dest) {
+	if (ship) {
 		if (!dest) {
 			SimElement* elem = ship->GetElement();
 
@@ -93,7 +94,7 @@ Farcaster::ExecFrame(double seconds)
 				Instruction* obj = elem->GetObjective(0);
 
 				if (sim && obj)
-					dest = sim->FindShip(obj->GetTargetName());
+					SetDest(sim->FindShip(obj->GetTargetName()));
 			}
 
 			if (!dest)
@@ -101,8 +102,7 @@ Farcaster::ExecFrame(double seconds)
 		}
 		else {
 			if (dest->IsDying() || dest->IsDead()) {
-				dest = 0;
-				no_dest = true;
+				SetDest(nullptr);
 			}
 		}
 	}
@@ -111,8 +111,25 @@ Farcaster::ExecFrame(double seconds)
 	if (no_dest)
 		energy = 0.0f;
 
-	if (active_state == QuantumDrive::ACTIVE_READY && energy >= capacity &&
-		ship && ship->GetRegion() && dest && dest->GetRegion()) {
+    // A disappearing link must release the traveler instead of leaving warp latched.
+    if (active_state == QuantumDrive::ACTIVE_PREWARP &&
+        (!dest || !dest->GetRegion() || !dest->GetFarcaster()))
+    {
+        if (jumpship) { jumpship->SetWarp(1); Ignore(jumpship); jumpship = nullptr; }
+        if (ship && ship->GetRegion())
+            for (int Index=0; Index<ship->GetRegion()->GetShips().size(); ++Index)
+            {
+                Ship* Neighbor = ship->GetRegion()->GetShips()[Index];
+                if (Neighbor && Neighbor->IsDropship() && FVector::Distance(Neighbor->GetLocation(),ship->GetLocation())<5e3)
+                    Neighbor->SetWarp(1);
+            }
+        active_state = QuantumDrive::ACTIVE_READY;
+        warp_fov = 1;
+        return;
+    }
+
+	if (active_state == QuantumDrive::ACTIVE_READY && IsPowerOn() && GetStatus() == SYSTEM_STATUS::NOMINAL && energy >= capacity &&
+		ship && ship->GetRegion() && dest && dest->GetRegion() && dest->GetFarcaster()) {
 
 		SimRegion* rgn = ship->GetRegion();
 		ListIter<Ship> s_iter = rgn->GetShips();
@@ -171,6 +188,7 @@ Farcaster::ExecFrame(double seconds)
 				jumpship->SetWarp(warp_fov);
 
 				SimRegion* r = ship->GetRegion();
+				if (!r) { jumpship->SetWarp(1); warp_fov=1; active_state=QuantumDrive::ACTIVE_READY; return; }
 				ListIter<Ship> neighbor = r->GetShips();
 
 				while (++neighbor) {
@@ -195,7 +213,7 @@ void
 Farcaster::Jump()
 {
 	Sim* sim = Sim::GetSim();
-	if (!sim || !ship || !dest || !jumpship)
+	if (!sim || !ship || !dest || !jumpship || !ship->GetRegion() || !dest->GetRegion())
 		return;
 
 	SimRegion* rgn = ship->GetRegion();
@@ -204,11 +222,8 @@ Farcaster::Jump()
 	sim->CreateExplosion(jumpship->GetLocation(), FVector::ZeroVector,
 		EExplosionType::QUANTUM_FLASH, 1.0f, 0, rgn);
 
-	// NOTE:
-	// Original code used: dest->Location().OtherHand()
-	// That helper is not available once Point is converted to FVector.
-	// Using dest->Location() as the best safe equivalent here (destination position in the dst region).
-	sim->RequestHyperJump(jumpship, dst, dest->GetLocation(), 0, ship, dest);
+	// Queue map-space coordinates; ResolveHyperList converts them back to sim space.
+	sim->RequestHyperJump(jumpship, dst, QuantumTravel::FarcasterMapLocation(dest->GetLocation()), 0, ship, dest);
 
 	energy = 0.0f;
 
@@ -236,6 +251,15 @@ Farcaster::Arrive(Ship* s)
 }
 
 // +----------------------------------------------------------------------+
+
+void Farcaster::SetDest(Ship* Destination)
+{
+    if (dest == Destination) return;
+    if (dest) Ignore(dest);
+    dest = Destination;
+    no_dest = dest == nullptr;
+    if (dest) Observe(dest);
+}
 
 void
 Farcaster::SetApproachPoint(int i, FVector loc)
@@ -296,10 +320,12 @@ Farcaster::Orient(const Physical* rep)
 bool
 Farcaster::Update(SimObject* obj)
 {
+	if (obj == dest) { dest = nullptr; no_dest = true; }
 	if (obj == jumpship) {
 		jumpship->SetWarp(1);
 
-		SimRegion* r = ship->GetRegion();
+		SimRegion* r = ship ? ship->GetRegion() : nullptr;
+		if (!r) { jumpship = nullptr; return SimObserver::Update(obj); }
 		ListIter<Ship> neighbor = r->GetShips();
 
 		while (++neighbor) {

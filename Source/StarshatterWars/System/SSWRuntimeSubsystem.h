@@ -129,6 +129,7 @@ public:
     bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
+    void RefreshTravelPresentation(ASystemSceneBuilder* Builder = nullptr);
 private:
     void SyncLegacyCameraView();
     void UpdateMissionWaypoints();

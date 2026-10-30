@@ -1,5 +1,6 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "StarshatterSettingsSaveSubsystem.h"
 #include "NativeTerrainActor.h"
 
 #include "SimShot.h"
@@ -173,6 +174,12 @@ bool USSWRuntimeSubsystem::InitGame()
     RuntimeInput->AddController(JoystickController);
 
     Joystick::EnumerateDevices();
+    if (auto* Save=GetGameInstance()->GetSubsystem<UStarshatterSettingsSaveSubsystem>())
+    {
+        Save->RestoreJoystickBindings(KeyCfg);
+        Save->RestoreGameOptions();
+    }
+
 
     MapKeys();
 
@@ -1394,6 +1401,31 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
             PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector);
     }
 }
+void USSWRuntimeSubsystem::RefreshTravelPresentation(ASystemSceneBuilder* Builder)
+{
+    if (Builder && Builder != MissionPresentationBuilder.Get())
+    {
+        if (ASystemSceneBuilder* Previous = MissionPresentationBuilder.Get()) Previous->EndMissionSpace();
+        MissionPresentationBuilder = Builder;
+    }
+    if (auto* Surface = NativeTerrain.Get()) Surface->Destroy();
+    NativeTerrain.Reset();
+    ClearProjectileVisuals();
+    ClearMissionWaypoints();
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Region) return;
+    for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
+        if (Actor.IsValid() && Actor->GetRuntimeShip()) Actor->SetActorHiddenInGame(Actor->GetRuntimeShip()->GetRegion() != Region);
+    for (int Index=0; Index<Region->GetShips().size(); ++Index)
+        if (Ship* Data = Region->GetShips()[Index])
+            if (!Data->IsDead() && !Data->IsDying())
+                if (AShipActor* Visual = SpawnVisualForRuntimeShip(Data)) Visual->SetActorHiddenInGame(false);
+    if (ASystemSceneBuilder* Current = MissionPresentationBuilder.Get())
+        Current->UpdateMissionSpace(Region->GetLocation(), Simulation->GetPlayerShip() ? ConvertLegacyShipLocationToUE(Simulation->GetPlayerShip()->GetLocation()) : FVector::ZeroVector);
+    UpdateMissionWaypoints();
+}
+
 void USSWRuntimeSubsystem::HandleMissionUnloading()
 {
     SetPaused(true);

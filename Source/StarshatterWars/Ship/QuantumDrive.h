@@ -50,6 +50,7 @@ public:
 	void              SetDestination(SimRegion* rgn, const FVector& loc);
 	bool              Engage(bool immediate = false);
 	int               ActiveState() const { return active_state; }
+    void CancelJump() { if (active_state == ACTIVE_COUNTDOWN || active_state == ACTIVE_PREWARP) AbortJump(); }
 	double            WarpFactor()  const { return warp_fov; }
 	double            JumpTime()    const { return jump_time; }
 	virtual void      SetPowerOff();

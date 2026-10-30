@@ -2541,7 +2541,7 @@ Sim::ResolveHyperList()
 							Ship* s = deck->GetShip(i);
 
 							if (s) {
-								dest->InsertObject(s);
+								dest->TransferObject(s);
 								s->ClearTrack();
 							}
 						}
@@ -2579,7 +2579,7 @@ Sim::ResolveHyperList()
 
 							const FVector Delta = s->GetLocation() - jumpship->GetLocation();
 
-							dest->InsertObject(s);
+							dest->TransferObject(s);
 
 							// LEGACY:
 							// jump->loc is map-authored destination.
@@ -2603,7 +2603,7 @@ Sim::ResolveHyperList()
 					}
 
 					// now it is safe to move the main jump ship:
-					dest->InsertObject(jumpship);
+					dest->TransferObject(jumpship);
 
 					// LEGACY:
 					// jump->loc is map-authored destination.
@@ -2708,7 +2708,7 @@ Sim::ResolveHyperList()
 						TEXT("Warning: Unusual jump request for ship '%s'"),
 						ANSI_TO_TCHAR(jumpship->GetName()));
 
-					regions[1]->InsertObject(jumpship);
+					regions[1]->TransferObject(jumpship);
 				}
 
 				Sensor* sensor = jumpship->GetSensor();
@@ -2722,7 +2722,10 @@ Sim::ResolveHyperList()
 
 		if (pship && pship->GetRegion()) {
 			if (active_region != pship->GetRegion()) {
-				pship->GetRegion()->SetPlayerShip(pship);
+                SimRegion* ArrivalRegion = pship->GetRegion();
+				ArrivalRegion->SetPlayerShip(pship);
+                ActivateRegion(ArrivalRegion);
+                UE_LOG(LogTemp, Display, TEXT("[Travel] Player arrived in '%hs'"), ArrivalRegion->GetName());
 			}
 		}
 	}
