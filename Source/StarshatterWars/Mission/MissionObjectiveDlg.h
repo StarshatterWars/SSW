@@ -23,6 +23,7 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "MissionObjective")
     void RefreshFromMission();
+    void SetShipPreviewActive(bool bActive);
 
 protected:
     virtual void NativeConstruct() override;
@@ -34,6 +35,11 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UScrollBox> SituationScroll;
     UPROPERTY(Transient) TObjectPtr<class UScrollBox> ObjectivesScroll;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewStatusText;
+    UPROPERTY(Transient) TObjectPtr<class UShipBriefingPreview> ShipPreview;
+    bool bShipPreviewActive = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation")
+    bool bUse3DShipPreview = true;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation")
     bool bModernBriefingText = true;

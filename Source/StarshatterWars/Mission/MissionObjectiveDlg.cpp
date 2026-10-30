@@ -1,4 +1,7 @@
 #include "MissionObjectiveDlg.h"
+#include "ShipBriefingPreview.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/HorizontalBox.h"
@@ -99,7 +102,26 @@ void UMissionObjectiveDlg::BuildSituationLayout()
     UScaleBox* PreviewFit = WidgetTree->ConstructWidget<UScaleBox>();
     PreviewFit->SetStretch(EStretch::ScaleToFit);
     PreviewFit->SetContent(PreviewImage);
-    ShipColumn->AddChildToVerticalBox(PreviewFit)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    UOverlay* PreviewArea = WidgetTree->ConstructWidget<UOverlay>();
+    UOverlaySlot* ImageSlot = PreviewArea->AddChildToOverlay(PreviewFit);
+    ImageSlot->SetHorizontalAlignment(HAlign_Fill);
+    ImageSlot->SetVerticalAlignment(VAlign_Fill);
+    ShipPreview = WidgetTree->ConstructWidget<UShipBriefingPreview>();
+    if (ShipPreview)
+    {
+        UOverlaySlot* PreviewSlot = PreviewArea->AddChildToOverlay(ShipPreview);
+        PreviewSlot->SetHorizontalAlignment(HAlign_Fill);
+        PreviewSlot->SetVerticalAlignment(VAlign_Fill);
+        ShipPreview->SetVisibility(ESlateVisibility::Collapsed);
+        ShipPreview->SetToolTipText(NSLOCTEXT("MissionBriefing", "ShipPreviewControls", "Drag to rotate. Mouse wheel to zoom. Double-click to reset."));
+    }
+    UBorder* PreviewFrame = WidgetTree->ConstructWidget<UBorder>();
+    PreviewFrame->SetBrushColor(FLinearColor(0.012f, 0.014f, 0.018f, 1.f));
+    PreviewFrame->SetPadding(FMargin(4.f));
+    PreviewFrame->SetContent(PreviewArea);
+    UVerticalBoxSlot* FrameSlot = ShipColumn->AddChildToVerticalBox(PreviewFrame);
+    FrameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    FrameSlot->SetPadding(FMargin(8.f, 0.f, 8.f, 0.f));
     PreviewStatusText = WidgetTree->ConstructWidget<UTextBlock>();
     PreviewStatusText->SetText(NSLOCTEXT("MissionBriefing", "PreviewUnavailable", "PREVIEW UNAVAILABLE"));
     PreviewStatusText->SetFont(MissionUIStyle::GetInfoValueFont(16));
@@ -140,6 +162,12 @@ void UMissionObjectiveDlg::NativeConstruct()
     ApplyBriefingTextPresentation();
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] NativeConstruct"));
+}
+
+void UMissionObjectiveDlg::SetShipPreviewActive(bool bActive)
+{
+    bShipPreviewActive = bActive;
+    if (ShipPreview) ShipPreview->SetPreviewActive(bActive && bUse3DShipPreview);
 }
 
 void UMissionObjectiveDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
@@ -332,6 +360,17 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
 
     MissionElement* PlayerElem = (MissionPtr && MissionPtr->IsOK()) ? MissionPtr->GetPlayer() : nullptr;
     const FShipDesign* Design = PlayerElem ? PlayerElem->GetShipDesign() : nullptr;
+    if (ShipPreview)
+    {
+        const bool bHasModel = bUse3DShipPreview && ShipPreview->SetShipDesign(Design);
+        ShipPreview->SetPreviewActive(bHasModel && bShipPreviewActive);
+        if (bHasModel)
+        {
+            PreviewImage->SetVisibility(ESlateVisibility::Collapsed);
+            if (PreviewStatusText) PreviewStatusText->SetVisibility(ESlateVisibility::Collapsed);
+            return;
+        }
+    }
     if (!Design || Design->Map.Num() == 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] Preview: no player design/sprite"));

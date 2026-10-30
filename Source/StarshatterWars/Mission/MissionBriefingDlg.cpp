@@ -1088,6 +1088,7 @@ void UMissionBriefingDlg::RefreshHeader()
 void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
 {
     CurrentMode = NewMode;
+    if (MissionSituationPanel) MissionSituationPanel->SetShipPreviewActive(NewMode == EMissionBriefingMode::SIT);
 
     if (MissionSwitcher)
     {
@@ -2623,6 +2624,8 @@ void UMissionBriefingDlg::OnCommit()
     MissionSystemLevel->SetShouldBeLoaded(true);
     MissionSystemLevel->SetShouldBeVisible(true);
 
+    // Release the isolated ship preview before entering the live mission.
+    if (MissionSituationPanel) MissionSituationPanel->SetShipPreviewActive(false);
     // Hide all menu-owned dialogs, including the briefing's outer host.
     if (manager) manager->Hide();
     if (Manager) Manager->Hide();
@@ -2699,6 +2702,7 @@ void UMissionBriefingDlg::OnCommit()
 }
 void UMissionBriefingDlg::OnCancel()
 {
+    if (MissionSituationPanel) MissionSituationPanel->SetShipPreviewActive(false);
     if (bStandaloneMission) ClearStandaloneMission();
     if (manager) manager->ReturnFromMissionBriefing();
     else Hide();
