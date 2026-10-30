@@ -39,7 +39,6 @@ bool Ship::SetAutoLand(bool engage)
         dir = LandingDirector;
         bAutoLand = true;
         director_info = "Autoland";
-        LowerGear();
         RadioView::Message("Autoland engaged. Following assigned recovery approach.");
         UE_LOG(LogTemp, Display, TEXT("[AutoLand] Engaged ship='%hs' deck='%hs'"),
             GetName(), inbound->GetDeck()->GetName());

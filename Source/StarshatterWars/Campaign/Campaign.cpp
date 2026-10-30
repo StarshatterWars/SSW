@@ -16,6 +16,7 @@
 */
 
 #include "Campaign.h"
+#include "CampaignPresentationRules.h"
 
 #include "CampaignPlanStrategic.h"
 #include "CampaignPlanAssignment.h"
@@ -2898,6 +2899,10 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
     // Mission list
     // FS_CampaignMissionList -> MissionInfo
     // ------------------------------------------------------------
+    CutsceneMissionIds.Empty();
+    for (const FS_CampaignMission& Authored : Data.Missions)
+        if (!Authored.Scene.TrimStartAndEnd().IsEmpty()) CutsceneMissionIds.Add(Authored.Id);
+
     for (const FS_CampaignMissionList& MissionRow : Data.MissionList)
     {
         MissionInfo* Info = new MissionInfo;
@@ -2921,7 +2926,8 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->start = StarSystem::GetStardate() + RelativeMsnStart;
 
         Info->type = MissionRow.Type;
-        Info->DisplayType = MissionRow.DisplayType;
+        Info->is_cutscene = CampaignPresentationRules::IsAuthoredScene(MissionRow.Id, Data.Missions);
+        Info->DisplayType = CampaignPresentationRules::MissionDisplayType(MissionRow, Data.Missions);
 
         Info->min_rank = 0;
         Info->max_rank = 100;

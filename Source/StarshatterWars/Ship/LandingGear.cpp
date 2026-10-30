@@ -123,8 +123,11 @@ void LandingGear::Initialize()
         // Unreal conversion note:
         // DataLoader::SetDataPath expects FString in your UE port.
         // Keep call site valid by using TEXT("") literal (FString-compatible).
+        if (!loader) return;
+        const FString PreviousPath = ANSI_TO_TCHAR(loader->GetDataPath());
         loader->SetDataPath("Sounds/");
         loader->LoadSound("GearTransit.wav", gear_transit_sound);
+        loader->SetDataPath(TCHAR_TO_ANSI(*PreviousPath));
     }
 }
 
@@ -166,6 +169,7 @@ void LandingGear::SetState(GEAR_STATE s)
     Sim* CurrentSim = Sim::GetSim();
     if (ship && CurrentSim && ship == CurrentSim->GetPlayerShip()) {
         if (state == GEAR_LOWER || state == GEAR_RAISE) {
+            Initialize();
             if (gear_transit_sound) {
                 USound* sound = gear_transit_sound->Duplicate();
                 if (sound) {

@@ -16,6 +16,7 @@
 */
 
 #include "CmpnScreen.h"
+#include "CampaignPresentationRules.h"
 
 // UE:
 #include "Blueprint/UserWidget.h"
@@ -240,7 +241,8 @@ CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
     while (++Iter)
     {
         CombatEvent* Event = Iter.value();
-        if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+        if (Event && CampaignPresentationRules::IsSceneDue(Event->Visited(),
+            Event->SceneFile() && *Event->SceneFile(), Event->GetTime(), CampaignPtr->GetTime()))
         {
             return Event;
         }

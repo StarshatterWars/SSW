@@ -1241,6 +1241,14 @@ FighterAI::SeekTarget()
     }
 
     if (inbound) {
+        if (ship->IsAutoLandEngaged() && inbound->Cleared() && inbound->GetDeck())
+        {
+            FlightDeck* RecoveryDeck = inbound->GetDeck();
+            const double InnerDistance = (RecoveryDeck->StartPoint() - RecoveryDeck->EndPoint()).Size() * 0.25;
+            if (InnerDistance > 1.0 &&
+                FVector::Distance(ship->GetLocation(), RecoveryDeck->EndPoint()) <= InnerDistance)
+                ship->LowerGear();
+        }
         Steer result = Seek(objective);
 
         if (over_threshold && objective.Z < 0) {
@@ -1276,7 +1284,7 @@ FighterAI::SeekTarget()
                     }
 
                     inbound->SetFinal(true);
-                    ship->LowerGear();
+                    if (!ship->IsAutoLandEngaged()) ship->LowerGear();
                     result.brake = 1;
                     result.stop = 1;
                 }

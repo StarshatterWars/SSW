@@ -731,13 +731,13 @@ void UMenuScreen::ReturnFromMissionBriefing()
     MissionBriefingCaller.Reset();
     if (Caller && (Caller == CmpnScreen || Caller == CmdDlg))
     {
-        ShowOperationsDlg();
+        ShowOperationsMissionsDlg();
         return;
     }
     if (!Caller || Caller == MissionBriefingDlg)
     {
         if (bBriefingCallerWasStandalone) ShowMissionSelectDlg();
-        else ShowOperationsDlg();
+        else ShowOperationsMissionsDlg();
         return;
     }
 

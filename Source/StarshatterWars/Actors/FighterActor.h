@@ -3,6 +3,7 @@
 #include "ShipActor.h"
 #include "FighterActor.generated.h"
 
+class UStaticMeshComponent;
 class UChildActorComponent;
 class UFighterLandingGearComponent;
 
@@ -27,6 +28,12 @@ class STARSHATTERWARS_API AFighterActor : public AShipActor
     GENERATED_BODY()
 public:
     AFighterActor();
+    // Assign meshes and relative transforms directly in each fighter Blueprint.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> LeftGear;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> RightGear;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> NoseGear;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> Cockpit;
+
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void Tick(float DeltaTime) override;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterCockpitRoot;

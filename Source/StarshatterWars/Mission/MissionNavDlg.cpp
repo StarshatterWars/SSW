@@ -60,6 +60,7 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ScrollBox.h"
@@ -994,6 +995,35 @@ void UMissionNavDlg::BuildRuntimeLayout()
     ApplyPanelStyles();
 }
 
+namespace
+{
+    void ApplyNavigationButtonStyle(UMenuButton* Menu)
+    {
+        if (!Menu || !Menu->Button) return;
+        Menu->NormalColor = Menu->HoveredColor = Menu->SelectedColor = FLinearColor::Transparent;
+        if (Menu->BackgroundImage) Menu->BackgroundImage->SetColorAndOpacity(FLinearColor::Transparent);
+        auto Brush = [](const TCHAR* Color, const TCHAR* State)
+        {
+            FSlateBrush Result;
+            const FString Path = FString::Printf(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn03%s_%s.T_Btn03%s_%s"), Color, State, Color, State);
+            if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path))
+            {
+                Result.SetResourceObject(Texture);
+                Result.DrawAs = ESlateBrushDrawType::Image;
+                Result.ImageSize = FVector2D(132.f, 34.f);
+            }
+            return Result;
+        };
+        FButtonStyle Style = Menu->Button->GetStyle();
+        Style.Normal = Brush(Menu->IsSelected() ? TEXT("Cyan") : TEXT("Blue"), TEXT("n"));
+        Style.Hovered = Brush(TEXT("Cyan"), TEXT("p"));
+        Style.Pressed = Style.Hovered;
+        Style.Disabled = Style.Normal;
+        Menu->Button->SetStyle(Style);
+        if (Menu->Label) Menu->Label->SetColorAndOpacity(FLinearColor::White);
+    }
+}
+
 void UMissionNavDlg::BuildNavModeButtons()
 {
     if (!NavModeButtonBox || !MenuButtonClass)
@@ -1491,6 +1521,7 @@ void UMissionNavDlg::RefreshNavModeSelection()
         if (Button)
         {
             Button->SetSelected(Button->MenuOption == ActiveLabel);
+            ApplyNavigationButtonStyle(Button);
         }
     }
 }
@@ -1504,6 +1535,7 @@ void UMissionNavDlg::RefreshFilterSelection()
         if (Button)
         {
             Button->SetSelected(Button->MenuOption == ActiveLabel);
+            ApplyNavigationButtonStyle(Button);
         }
     }
 

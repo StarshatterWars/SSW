@@ -110,6 +110,8 @@ public:
 
     // NEW: DataTable-backed campaign path
     void                 LoadFromData(const FS_Campaign& Data);
+    bool IsCutsceneMission(int Id) const { return CutsceneMissionIds.Contains(Id); }
+
     static Campaign* CreateFromData(const FS_Campaign& Data);
     static Campaign* SelectFromData(const FS_Campaign& Data);
 
@@ -312,4 +314,7 @@ protected:
 
 private:
     Mission* ActiveMission = nullptr;
+private:
+    TSet<int32> CutsceneMissionIds;
+
 };

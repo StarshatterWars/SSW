@@ -2,12 +2,26 @@
 #include "Sim.h"
 #include "FighterLandingGearComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/ChildActorComponent.h"
 #include "Ship.h"
 #include "LandingGear.h"
 
 AFighterActor::AFighterActor()
 {
+    LeftGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftGear"));
+    RightGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightGear"));
+    NoseGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NoseGear"));
+    Cockpit = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cockpit"));
+    for (UStaticMeshComponent* Mesh : {LeftGear.Get(), RightGear.Get(), NoseGear.Get(), Cockpit.Get()})
+    {
+        Mesh->SetupAttachment(HullMesh);
+        Mesh->bEditableWhenInherited = true;
+        Mesh->SetMobility(EComponentMobility::Movable);
+        Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Mesh->SetGenerateOverlapEvents(false);
+        Mesh->SetCanEverAffectNavigation(false);
+    }
     FighterCockpitRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterCockpitRoot"));
     FighterCockpitRoot->SetupAttachment(PointRoot);
     FighterLandingGearRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLandingGearRoot"));
@@ -55,8 +69,9 @@ void AFighterActor::Tick(float DeltaTime)
     if(Ship* Runtime=GetRuntimeShip())
     {
         const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && Runtime->IsNativeCockpitRequested();
-        CockpitActor->SetVisibility(Visible,true);
-        if(auto* Child=CockpitActor->GetChildActor())Child->SetActorHiddenInGame(!Visible);
+        Cockpit->SetVisibility(Visible, true);
+        CockpitActor->SetVisibility(Visible && !Cockpit->GetStaticMesh(),true);
+        if(auto* Child=CockpitActor->GetChildActor())Child->SetActorHiddenInGame(!Visible || Cockpit->GetStaticMesh());
     }
 }
 
@@ -84,6 +99,8 @@ void AFighterActor::SynchronizeLandingGearMarkers()
 void AFighterActor::UpdateLandingGearPresentation()
 {
     const float Deployment = GetLandingGearDeployment();
+    for (UStaticMeshComponent* Mesh : {LeftGear.Get(), RightGear.Get(), NoseGear.Get()})
+        if (Mesh && Mesh->GetStaticMesh()) Mesh->SetVisibility(Deployment > 0.f, true);
     for (int32 Index = 0; Index < LandingGearActors.Num(); ++Index)
         if (UFighterLandingGearComponent* Gear = LandingGearActors[Index])
             Gear->ApplyDeployment(Deployment, !GearDefinitions.IsValidIndex(Index) || GearDefinitions[Index].bEnabled);

@@ -63,6 +63,8 @@ public:
     int      start_before;
     int      start_after;
 
+    // Authored scene metadata takes precedence over training list fallbacks.
+    bool     is_cutscene = false;
     EMissionDisplayType DisplayType;
     EMissionSource      Source;
 
