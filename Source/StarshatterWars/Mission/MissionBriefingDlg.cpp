@@ -413,7 +413,8 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
         if (Simulation && Simulation->IsComplete() && Manager && Manager->GetDebriefDlg())
         {
             bMissionCompleteHandedOff = true;
-            bLiveMissionStarted = false;
+            // Cleanup must still see the live session so it stops its mission clock.
+            // CloseEmptySectorPreview clears bLiveMissionStarted itself.
             CloseEmptySectorPreview(true);
             if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
             {
@@ -2492,11 +2493,20 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
         Self->CloseEmptySectorPreview();
         Self->MissionPtr = nullptr;
         Self->InfoPtr = nullptr;
-        if (Action == QuitView::Abort)
+        // A standalone mission leaves the active story campaign untouched.
+        if (Action == QuitView::Abort && !Self->bStandaloneMission)
             if (Campaign* Camp = Campaign::GetCampaign())
                 if (Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS) Camp->RollbackMission();
         if (Runtime) Runtime->SetGameMode(EGameMode::CMPN);
-        if (Self->manager) Self->manager->ShowOperationsMissionsDlg();
+        if (Self->bStandaloneMission)
+        {
+            Self->ClearStandaloneMission();
+            if (Self->manager) Self->manager->ReturnFromMissionBriefing();
+        }
+        else if (Self->manager)
+        {
+            Self->manager->ShowOperationsMissionsDlg();
+        }
     });
 }
 
