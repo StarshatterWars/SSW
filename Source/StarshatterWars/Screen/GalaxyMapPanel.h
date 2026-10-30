@@ -39,6 +39,7 @@ class StarSystem;
 
 // Generic callbacks so this panel can be reused by Mission Navigation,
 // Operations, or any other screen without hard-wiring navigation flow.
+DECLARE_DELEGATE_RetVal_OneParam(bool, FGalaxyCanSelectSystemDelegate, const FString&);
 DECLARE_DELEGATE_OneParam(FGalaxySystemSelectedDelegate, const FString&);
 DECLARE_DELEGATE_OneParam(FGalaxySystemActivatedDelegate, const FString&);
 
@@ -86,6 +87,12 @@ public:
 
     void SetSelectedSystem(const FString& InSystemName);
     const FString& GetSelectedSystem() const { return SelectedSystemName; }
+    // Optional owner policy. Unbound keeps mission navigation's existing behavior.
+    FGalaxyCanSelectSystemDelegate OnCanSelectSystem;
+    bool CanSelectSystem(const FString& Name) const
+    {
+        return !OnCanSelectSystem.IsBound() || OnCanSelectSystem.Execute(Name);
+    }
 
     void SetCurrentMissionSystem(const FString& InSystemName);
     void SetRoutePath(const TArray<FString>& InRouteSystems);

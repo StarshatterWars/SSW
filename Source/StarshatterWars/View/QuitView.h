@@ -1,5 +1,8 @@
 #pragma once
 #include "View.h"
+#include "Styling/SlateTypes.h"
+#include "UObject/StrongObjectPtr.h"
+class UTexture2D;
 class APlayerController;
 class SWidget;
 class UQuitMissionMenu;
@@ -28,6 +31,8 @@ private:
     static QuitView* quit_view;
     TWeakObjectPtr<APlayerController> Controller;
     TSharedPtr<SWidget> Overlay;
+    TArray<FButtonStyle> PauseButtonStyles;
+    TArray<TStrongObjectPtr<UTexture2D>> PauseButtonTextures;
     TSubclassOf<UQuitMissionMenu> MenuWidgetClass;
     TWeakObjectPtr<UQuitMissionMenu> MenuWidget;
     TFunction<void(uintptr_t)> ActionHandler;

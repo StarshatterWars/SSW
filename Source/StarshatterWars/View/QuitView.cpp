@@ -1,4 +1,6 @@
 #include "QuitView.h"
+#include "Engine/Texture2D.h"
+#include "MissionUIStyle.h"
 #include "QuitMissionMenu.h"
 #include "Sim.h"
 #include "Ship.h"
@@ -128,11 +130,33 @@ void QuitView::ShowMenu()
         TEXT("4.   CONTROL SETUP"),
         TEXT("5.   QUIT AND EXIT TO WINDOWS")
     };
+    PauseButtonStyles.SetNum(5);
+    PauseButtonTextures.Reset();
+    const TCHAR* Colors[] = {TEXT("Green"), TEXT("Red"), TEXT("Green"), TEXT("Blue"), TEXT("Red")};
+    for (int32 Index = 0; Index < 5; ++Index)
+    {
+        auto Brush = [&](const TCHAR* State)
+        {
+            FSlateBrush Result;
+            const FString Path = FString::Printf(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01%s_%s.T_Btn01%s_%s"), Colors[Index], State, Colors[Index], State);
+            if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path))
+            {
+                PauseButtonTextures.Emplace(Texture);
+                Result.SetResourceObject(Texture);
+                Result.DrawAs = ESlateBrushDrawType::Image;
+            }
+            return Result;
+        };
+        PauseButtonStyles[Index].Normal = Brush(TEXT("n"));
+        PauseButtonStyles[Index].Hovered = Brush(TEXT("p"));
+        PauseButtonStyles[Index].Pressed = PauseButtonStyles[Index].Hovered;
+    }
     for (int32 Index = 0; Index < 5; ++Index)
     {
         Items->AddSlot().AutoHeight().Padding(12, 5)
         [SNew(SButton)
-            .ButtonColorAndOpacity(FLinearColor(0.07f, 0.17f, 0.25f))
+            .ButtonStyle(&PauseButtonStyles[Index])
+            .ButtonColorAndOpacity(FLinearColor::White)
             .ContentPadding(FMargin(12, 11))
             .HAlign(HAlign_Left)
             .OnClicked_Lambda([this, Index]() { ExecuteAction(Index + 1); return FReply::Handled(); })
@@ -140,7 +164,7 @@ void QuitView::ShowMenu()
                 .Justification(ETextJustify::Left)
                 .ColorAndOpacity(XTextColor)
                 .Text(FText::FromString(Labels[Index]))
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 17))]];
+                .Font(MissionUIStyle::GetHeaderFont(17))]];
     }
     Items->AddSlot().AutoHeight().Padding(12, 9)
     [SNew(STextBlock).AutoWrapText(true)
@@ -190,6 +214,8 @@ void QuitView::CloseMenu()
         PC->SetInputMode(FInputModeGameOnly());
     }
     Overlay.Reset();
+    PauseButtonStyles.Reset();
+    PauseButtonTextures.Reset();
 }
 
 bool QuitView::OnKeyDown(int32 Key, bool bRepeat)

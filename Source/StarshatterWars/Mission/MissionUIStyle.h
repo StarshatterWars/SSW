@@ -16,6 +16,7 @@
 #include "Styling/SlateTypes.h"
 
 class UButton;
+class UImage;
 class UGameInstance;
 
 namespace MissionUIStyle
@@ -23,6 +24,9 @@ namespace MissionUIStyle
     // -----------------------------------------------------------------
     // Reuse the configured menu textures, states, sounds and typography.
     void ApplyMenuButtonStyle(UButton* Button, UGameInstance* GameInstance);
+
+    void ApplyActionButtonStyle(UButton* Button, const TCHAR* Color);
+    void SetActionIcon(UImage* Image, const TCHAR* TexturePath, const FLinearColor& Color);
 
     // Colors
     // -----------------------------------------------------------------

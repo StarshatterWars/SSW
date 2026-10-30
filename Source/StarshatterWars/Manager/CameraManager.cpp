@@ -610,6 +610,12 @@ CameraManager::ExecFrame(double seconds)
 		flight_phase >= EOPSMode::ACTIVE && bPhysicallyClear;
 	if (bLaunchCompleted || ship->IsDead() || ship->IsDying())
 	{
+		// Retract only as the held launch view hands off to the flight camera.
+		if (bLaunchCompleted && bCarrierLaunchCameraHeld && !ship->IsDead() && !ship->IsDying())
+		{
+			ship->RaiseGear();
+			UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][GEAR_CAMERA_HANDOFF] Fighter='%hs'"), ship->GetName());
+		}
 		bCarrierLaunchCameraHeld = false;
 		bLaunchBayAnchorValid = false;
 		bLaunchBayExitValid = false;

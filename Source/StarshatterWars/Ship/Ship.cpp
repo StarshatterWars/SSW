@@ -2042,7 +2042,10 @@ Ship::SetFlightPhase(EOPSMode phase)
 {
     const bool bLaunchFinished = phase == EOPSMode::ACTIVE &&
         (flight_phase == EOPSMode::LAUNCH || flight_phase == EOPSMode::TAKEOFF);
-    if (bLaunchFinished && IsDropship()) RaiseGear();
+    CameraManager* LaunchCamera = CameraManager::GetInstance();
+    const bool bWaitForLaunchCamera = Sim::GetSim() && Sim::GetSim()->GetPlayerShip() == this && LaunchCamera &&
+        LaunchCamera->GetShip() == this && LaunchCamera->IsCarrierLaunchCameraHeld();
+    if (bLaunchFinished && IsDropship() && !bWaitForLaunchCamera) RaiseGear();
 	if (phase == EOPSMode::ACTIVE && !launch_time) {
 		launch_time = Game::GetGameTime() + 1;
 		dock = 0;

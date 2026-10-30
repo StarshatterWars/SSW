@@ -14,6 +14,12 @@
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
 #include "StarshatterUIStyleSubsystem.h"
+#include "Components/Button.h"
+#include "Components/Image.h"
+#include "Components/PanelWidget.h"
+#include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 namespace MissionUIStyle
 {
@@ -22,6 +28,60 @@ namespace MissionUIStyle
         if (Button && GameInstance)
             if (auto* Style = GameInstance->GetSubsystem<UStarshatterUIStyleSubsystem>())
                 Style->ApplyMenuButtonStyle(Button);
+    }
+
+    void ApplyActionButtonStyle(UButton* Button, const TCHAR* Color)
+    {
+        if (!Button) return;
+        FButtonStyle Style = Button->GetStyle();
+        auto Brush = [Color](const TCHAR* State)
+        {
+            FSlateBrush Result;
+            const FString Path = FString::Printf(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01%s_%s.T_Btn01%s_%s"), Color, State, Color, State);
+            if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path))
+            {
+                Result.SetResourceObject(Texture);
+                Result.DrawAs = ESlateBrushDrawType::Image;
+                Result.ImageSize = FVector2D(64.f, 64.f);
+            }
+            return Result;
+        };
+        Style.Normal = Brush(TEXT("n"));
+        Style.Hovered = Brush(TEXT("p"));
+        Style.Pressed = Style.Hovered;
+        Style.Disabled = Style.Normal;
+        Style.Disabled.TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 0.35f));
+        Button->SetStyle(Style);
+        Button->SetBackgroundColor(FLinearColor::White);
+        Button->SetColorAndOpacity(FLinearColor::White);
+        TFunction<void(UWidget*)> StyleCaption = [&](UWidget* Widget)
+        {
+            if (UTextBlock* Text = Cast<UTextBlock>(Widget))
+            {
+                Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+                Text->SetFont(GetHeaderFont(16));
+            }
+            if (UPanelWidget* Panel = Cast<UPanelWidget>(Widget))
+                for (UWidget* Child : Panel->GetAllChildren()) StyleCaption(Child);
+        };
+        StyleCaption(Button->GetContent());
+    }
+
+    void SetActionIcon(UImage* Image, const TCHAR* TexturePath, const FLinearColor& Color)
+    {
+        if (!Image) return;
+        UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, TexturePath);
+        UMaterialInterface* Mask = LoadObject<UMaterialInterface>(nullptr,
+            TEXT("/Game/UI/Materials/M_UIIconAlpha.M_UIIconAlpha"));
+        if (Texture && Mask)
+        {
+            UMaterialInstanceDynamic* Instance = UMaterialInstanceDynamic::Create(Mask, Image);
+            Instance->SetTextureParameterValue(TEXT("IconTexture"), Texture);
+            Image->SetBrushFromMaterial(Instance);
+        }
+        else if (Texture) Image->SetBrushFromTexture(Texture, true);
+        Image->SetColorAndOpacity(Color);
+        Image->SetVisibility(ESlateVisibility::HitTestInvisible);
     }
 
     const FLinearColor HeaderBG = FLinearColor(0.08f, 0.08f, 0.08f, 1.0f);

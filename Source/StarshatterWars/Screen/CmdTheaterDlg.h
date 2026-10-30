@@ -133,6 +133,10 @@ protected:
     StarSystem* FindRuntimeSystemByName(
         const FString& InSystemName) const;
 
+    bool CanSelectTheaterSystem(const FString& Name) const;
+    void RefreshCampaignSelection();
+    FString CampaignSelectionKey;
+    const Campaign* SelectionCampaign = nullptr;
     void EnsureDefaultSystemSelection();
     void SyncMapContext();
     void RefreshSystemSelector();

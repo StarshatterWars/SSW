@@ -61,6 +61,7 @@
 // Starshatter:
 #include "Starshatter.h"
 #include "Campaign.h"
+#include "CampaignSystemSelectionRules.h"
 #include "MissionElement.h"
 #include "Mouse.h"
 
@@ -154,6 +155,7 @@ void UCmdTheaterDlg::NativeTick(
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
     ExecFrame();
+    if (IsVisible()) RefreshCampaignSelection();
     UpdateSystemSunCamera();
     UpdateSystemPlanets();
 }
@@ -694,6 +696,7 @@ void UCmdTheaterDlg::BuildMapPanels()
         }
         else
         {
+            GalaxyMapPanel->OnCanSelectSystem.BindUObject(this, &UCmdTheaterDlg::CanSelectTheaterSystem);
             GalaxyMapPanel->OnSystemSelected.BindUObject(
                 this,
                 &UCmdTheaterDlg::HandleGalaxySystemSelected);
@@ -1362,9 +1365,33 @@ StarSystem* UCmdTheaterDlg::FindRuntimeSystemByName(
     return nullptr;
 }
 
+bool UCmdTheaterDlg::CanSelectTheaterSystem(const FString& Name) const
+{
+    return CampaignSystemSelectionRules::CanSelect(Campaign::GetCampaign(), Name);
+}
+
+void UCmdTheaterDlg::RefreshCampaignSelection()
+{
+    Campaign* ActiveCampaign = Campaign::GetCampaign();
+    TArray<FString> Names = CampaignSystemSelectionRules::GetSystemNames(ActiveCampaign);
+    Names.Sort();
+    const int RuntimeCount = GetEnvironmentSubsystem() ? GetEnvironmentSubsystem()->GetRuntimeStarSystems().Num() : 0;
+    const FString Key = FString::Printf(TEXT("%d:%d:"), ActiveCampaign ? ActiveCampaign->GetCampaignId() : -1, RuntimeCount) + FString::Join(Names, TEXT("|"));
+    if (SelectionCampaign == ActiveCampaign && CampaignSelectionKey == Key) return;
+    CampaignPtr = ActiveCampaign;
+    CampaignSelectionKey = Key;
+    SelectionCampaign = ActiveCampaign;
+    SelectedSystemName.Empty();
+    SelectedSectorName.Empty();
+    SelectedStructureElement = nullptr;
+    SelectedOperationsGroup = nullptr;
+    if (SectorMapPanel) SectorMapPanel->SetSelectedOperationsGroup(nullptr);
+    SetViewMode(VIEW_GALAXY);
+}
+
 void UCmdTheaterDlg::EnsureDefaultSystemSelection()
 {
-    if (!SelectedSystemName.IsEmpty() &&
+    if (!SelectedSystemName.IsEmpty() && CanSelectTheaterSystem(SelectedSystemName) &&
         FindRuntimeSystemByName(
             SelectedSystemName))
     {
@@ -1387,7 +1414,7 @@ void UCmdTheaterDlg::EnsureDefaultSystemSelection()
     for (StarSystem* System :
         Env->GetRuntimeStarSystems())
     {
-        if (!System)
+        if (!System || !CanSelectTheaterSystem(UTF8_TO_TCHAR(System->GetName())))
         {
             continue;
         }
@@ -1405,6 +1432,9 @@ void UCmdTheaterDlg::SyncMapContext()
 
     if (SelectedSystemName.IsEmpty())
     {
+        if (GalaxyMapPanel) GalaxyMapPanel->SetSelectedSystem(TEXT(""));
+        RefreshSystemSelector();
+        RefreshRegionSelector();
         return;
     }
 
@@ -1478,7 +1508,7 @@ void UCmdTheaterDlg::RefreshSystemSelector()
             FString(ANSI_TO_TCHAR(System->GetName()))
             .TrimStartAndEnd();
 
-        if (!SystemName.IsEmpty())
+        if (CanSelectTheaterSystem(SystemName))
         {
             SystemNames.AddUnique(SystemName);
         }
@@ -1755,6 +1785,8 @@ void UCmdTheaterDlg::SetPanelBackgroundVisible(bool bVisible)
 void UCmdTheaterDlg::SetViewMode(
     EViewMode NewMode)
 {
+    EnsureDefaultSystemSelection();
+    if (NewMode != VIEW_GALAXY && SelectedSystemName.IsEmpty()) NewMode = VIEW_GALAXY;
     if (CurrentViewMode != NewMode)
     {
         bSunPresentationReady = false;
@@ -1883,6 +1915,7 @@ void UCmdTheaterDlg::RefreshViewButtons()
 void UCmdTheaterDlg::HandleGalaxySystemSelected(
     const FString& InSystemName)
 {
+    if (!CanSelectTheaterSystem(InSystemName)) return;
     const FString CleanName =
         InSystemName.TrimStartAndEnd();
 
@@ -1916,6 +1949,7 @@ void UCmdTheaterDlg::HandleGalaxySystemSelected(
 void UCmdTheaterDlg::HandleGalaxySystemActivated(
     const FString& InSystemName)
 {
+    if (!CanSelectTheaterSystem(InSystemName)) return;
     HandleGalaxySystemSelected(
         InSystemName);
 
@@ -1942,6 +1976,7 @@ void UCmdTheaterDlg::HandleGalaxySystemActivated(
 void UCmdTheaterDlg::HandleSystemPrimaryStarActivated(
     const FString& InSystemName)
 {
+    if (!CanSelectTheaterSystem(InSystemName)) return;
     const FString CleanName =
         InSystemName.TrimStartAndEnd();
 
@@ -2020,7 +2055,7 @@ void UCmdTheaterDlg::OnSystemSelectionChanged(
     const FString CleanSystem =
         SelectedItem.TrimStartAndEnd();
 
-    if (CleanSystem.IsEmpty())
+    if (!CanSelectTheaterSystem(CleanSystem))
     {
         return;
     }
@@ -2069,6 +2104,7 @@ void UCmdTheaterDlg::OnRegionSelectionChanged(
     FString SelectedItem,
     ESelectInfo::Type SelectionType)
 {
+    if (!CanSelectTheaterSystem(SelectedSystemName)) return;
     if (bUpdatingRegionSelector)
     {
         return;

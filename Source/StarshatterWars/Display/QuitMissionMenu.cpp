@@ -1,4 +1,5 @@
 #include "QuitMissionMenu.h"
+#include "MissionUIStyle.h"
 #include "Components/Button.h"
 #include "Components/ButtonSlot.h"
 #include "Components/TextBlock.h"
@@ -76,15 +77,10 @@ void UQuitMissionMenu::BuildGeneratedContent()
             ButtonContentSlot->SetHorizontalAlignment(HAlign_Fill);
             ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
         }
-        // Solid charcoal-blue background with a brighter blue hover state.
-        FButtonStyle RowStyle = Button->GetStyle();
-        RowStyle.Normal.DrawAs = ESlateBrushDrawType::Box;
-        RowStyle.Hovered.DrawAs = ESlateBrushDrawType::Box;
-        RowStyle.Pressed.DrawAs = ESlateBrushDrawType::Box;
-        RowStyle.Normal.TintColor = FSlateColor(FLinearColor(0.055f, 0.105f, 0.16f, 0.98f));
-        RowStyle.Hovered.TintColor = FSlateColor(FLinearColor(0.09f, 0.24f, 0.36f, 1.0f));
-        RowStyle.Pressed.TintColor = FSlateColor(FLinearColor(0.035f, 0.32f, 0.49f, 1.0f));
-        Button->SetStyle(RowStyle);
+        MissionUIStyle::ApplyMenuButtonStyle(Button, GetGameInstance());
+        const bool bDestructive = FCString::Strcmp(Name, TEXT("AbortBtn")) == 0 || FCString::Strcmp(Name, TEXT("ExitWindowsBtn")) == 0;
+        const bool bControls = FCString::Strcmp(Name, TEXT("ControlsBtn")) == 0;
+        MissionUIStyle::ApplyActionButtonStyle(Button, bDestructive ? TEXT("Red") : (bControls ? TEXT("Blue") : TEXT("Green")));
     };
     MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1.   END MISSION  /  ACCEPT RESULTS"));
     MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2.   ABORT MISSION  /  DISCARD RESULTS"));

@@ -9,6 +9,7 @@
 
 // UMG
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/ScrollBox.h"
 #include "Components/RichTextBlock.h"
 #include "Blueprint/WidgetTree.h"
@@ -232,12 +233,20 @@ void UExitDlg::BuildModernExitScreen()
     auto MakeMenuButton = [&](const TCHAR* Name, const FString& Label, TObjectPtr<UButton>& OutButton)
     {
         USizeBox* SizeWrapper = WidgetTree->ConstructWidget<USizeBox>();
-        SizeWrapper->SetWidthOverride(180.f);
+        SizeWrapper->SetWidthOverride(64.f);
         SizeWrapper->SetHeightOverride(40.f);
         OutButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(Name));
-        UTextBlock* ButtonText = MakeText(Label, 13, FLinearColor::Black);
-        ButtonText->SetJustification(ETextJustify::Center);
-        if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(OutButton->AddChild(ButtonText)))
+        const bool bCancel = Label == TEXT("CANCEL");
+        UHorizontalBox* Contents = WidgetTree->ConstructWidget<UHorizontalBox>();
+        UImage* Icon = WidgetTree->ConstructWidget<UImage>();
+        MissionUIStyle::SetActionIcon(Icon, bCancel
+            ? TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256")
+            : TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_OnOff_256x256.T_OnOff_256x256"),
+            bCancel ? FLinearColor(0.25f, 0.7f, 1.f) : FLinearColor(1.f, 0.15f, 0.15f));
+        USizeBox* IconSize = WidgetTree->ConstructWidget<USizeBox>();
+        IconSize->SetWidthOverride(24.f); IconSize->SetHeightOverride(24.f); IconSize->SetContent(Icon);
+        Contents->AddChildToHorizontalBox(IconSize)->SetVerticalAlignment(VAlign_Center);
+        if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(OutButton->AddChild(Contents)))
         {
             ButtonSlot->SetPadding(FMargin(9.f, 5.f));
             ButtonSlot->SetHorizontalAlignment(HAlign_Center);
@@ -248,6 +257,8 @@ void UExitDlg::BuildModernExitScreen()
             if (UStarshatterUIStyleSubsystem* Style = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
                 Style->ApplyMenuButtonStyle(OutButton);
         }
+        MissionUIStyle::ApplyActionButtonStyle(OutButton, bCancel ? TEXT("Blue") : TEXT("Red"));
+        OutButton->SetToolTipText(FText::FromString(Label));
         SizeWrapper->SetContent(OutButton);
         Footer->AddChildToHorizontalBox(SizeWrapper)->SetPadding(FMargin(7.f, 0.f, 0.f, 0.f));
     };

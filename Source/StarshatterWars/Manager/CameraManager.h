@@ -64,6 +64,7 @@ public:
 	int operator==(const CameraManager& that) const { return this == &that; }
 
 	static CameraManager* GetInstance();
+	bool IsCarrierLaunchCameraHeld() const { return bCarrierLaunchCameraHeld; }
 
 	// CAMERA:
 	static int         GetCameraMode();

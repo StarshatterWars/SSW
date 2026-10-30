@@ -828,6 +828,7 @@ void UGalaxyMapPanel::ClearGalaxyMap()
 
 void UGalaxyMapPanel::SetSelectedSystem(const FString& InSystemName)
 {
+    if (!InSystemName.TrimStartAndEnd().IsEmpty() && !CanSelectSystem(InSystemName)) return;
     SelectedSystemName = InSystemName.TrimStartAndEnd();
     RefreshSelectionVisuals();
     Invalidate(EInvalidateWidget::Paint);
@@ -1022,7 +1023,7 @@ bool UGalaxyMapPanel::HitTestSystemAtLocalPoint(const FVector2D& LocalPoint, FSt
         }
     }
 
-    if (!BestName.IsEmpty())
+    if (!BestName.IsEmpty() && CanSelectSystem(BestName))
     {
         OutSystemName = BestName;
         return true;
@@ -1231,6 +1232,7 @@ bool UGalaxyMapPanel::IsRouteLink(const FString& A, const FString& B) const
 
 void UGalaxyMapPanel::SetSelectedSystem(const FString& InSystemName, bool bAutoFocus)
 {
+    if (!InSystemName.TrimStartAndEnd().IsEmpty() && !CanSelectSystem(InSystemName)) return;
     SelectedSystemName = InSystemName.TrimStartAndEnd();
     RefreshSelectionVisuals();
 

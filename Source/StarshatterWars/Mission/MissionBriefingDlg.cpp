@@ -638,6 +638,7 @@ void UMissionBriefingDlg::BuildBriefingChrome()
         UImage* Icon = WidgetTree->ConstructWidget<UImage>();
         if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, IconPath))
             Icon->SetBrushFromTexture(Texture, true);
+        if (AtStart) MissionUIStyle::SetActionIcon(Icon, IconPath, FLinearColor(1.f, 0.15f, 0.15f));
         IconBox->SetContent(Icon);
         Button->SetContent(IconBox);
         if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
