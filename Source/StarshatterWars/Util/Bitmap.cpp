@@ -251,7 +251,9 @@ void Bitmap::UploadBGRA(const void* SrcBGRA8, int SrcW, int SrcH, bool bHasAlpha
     TextureGuard.Reset(Texture);
     TempTex->SRGB = bSRGB;
     TempTex->NeverStream = true;
+#if WITH_EDITORONLY_DATA
     TempTex->MipGenSettings = TMGS_NoMipmaps;
+#endif
 
     if (!TempTex->GetPlatformData() || TempTex->GetPlatformData()->Mips.Num() < 1)
         return;

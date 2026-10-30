@@ -446,8 +446,10 @@ EShipEmpire UFormattingUtils::GetShipEmpireFromString(const FString& InString)
     for (int32 i = 0; i < NumEnums; ++i)
     {
         // Skip hidden _MAX entry
-        if (Enum->HasMetaData(TEXT("Hidden"), i))
-            continue;
+#if WITH_EDITOR
+        if (Enum->HasMetaData(TEXT("Hidden"), i)) continue;
+#endif
+        if (Enum->GetNameStringByIndex(i).EndsWith(TEXT("_MAX"))) continue;
 
         // Compare enum NAME (Terellian)
         const FString NameString =

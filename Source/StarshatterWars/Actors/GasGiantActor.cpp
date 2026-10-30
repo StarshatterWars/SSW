@@ -31,7 +31,11 @@ static void SetBPObjectPropertyByName(UObject* Object, const FString& WantedName
         }
 
         const FString InternalName = Prop->GetName();
+#if WITH_EDITOR
         const FString DisplayName = Prop->GetMetaData(TEXT("DisplayName"));
+#else
+        const FString DisplayName = InternalName;
+#endif
 
         const FString InternalCompact =
             InternalName.Replace(TEXT(" "), TEXT(""))

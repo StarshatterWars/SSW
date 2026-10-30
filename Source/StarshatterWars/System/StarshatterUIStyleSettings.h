@@ -47,6 +47,7 @@ public:
         return TEXT("UI Style");
     }
 
+#if WITH_EDITOR
     virtual FText GetSectionText() const override
     {
         return FText::FromString(TEXT("UI Style"));
@@ -56,6 +57,8 @@ public:
     {
         return FText::FromString(TEXT("Centralized UI theme bindings (textures/fonts/colors) used by the UI Style subsystem."));
     }
+#endif
+
 
 public:
     // ------------------------------------------------------------

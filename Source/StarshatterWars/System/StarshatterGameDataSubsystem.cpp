@@ -1444,6 +1444,7 @@ void UStarshatterGameDataSubsystem::InitializeOrderOfBattleTable()
 
 void UStarshatterGameDataSubsystem::ExportDataToCSV(UDataTable* DataTable, const FString& FileName)
 {
+#if WITH_EDITOR
 	if (!DataTable)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Export failed: DataTable is null."));
@@ -1463,6 +1464,9 @@ void UStarshatterGameDataSubsystem::ExportDataToCSV(UDataTable* DataTable, const
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to write DataTable CSV to file."));
 	}
+#else
+    UE_LOG(LogTemp, Warning, TEXT("DataTable CSV export is only available in the Editor."));
+#endif
 }
 
 void UStarshatterGameDataSubsystem::GetSSWInstance()

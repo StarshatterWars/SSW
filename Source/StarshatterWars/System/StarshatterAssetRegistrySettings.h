@@ -57,6 +57,7 @@ public:
         return TEXT("Asset Registry");
     }
 
+#if WITH_EDITOR
     virtual FText GetSectionText() const override
     {
         return FText::FromString("Asset Registry");
@@ -68,6 +69,8 @@ public:
             "Centralized asset bindings used during boot to validate and load required assets."
         );
     }
+#endif
+
 
     // ------------------------------------------------------------------
     // Registry bindings

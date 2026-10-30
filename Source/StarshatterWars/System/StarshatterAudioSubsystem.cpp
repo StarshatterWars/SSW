@@ -39,7 +39,10 @@ void UStarshatterAudioSubsystem::Deinitialize()
     if (UWorld* OldWorld=MixWorld.Get())
         UGameplayStatics::PopSoundMixModifier(OldWorld,RuntimeMix);
     if(UWorld* World=GetWorld())if(FAudioDevice* Device=World->GetAudioDeviceRaw())Device->SetTransientPrimaryVolume(1.f);
-    for (auto& Pair : RuntimeClasses)if(Pair.Value)Pair.Value->SetParentClass(nullptr);
+    for (auto& Pair : RuntimeClasses)if(Pair.Value){
+        if (Pair.Value->ParentClass) Pair.Value->ParentClass->ChildClasses.Remove(Pair.Value);
+        Pair.Value->ParentClass = nullptr;
+    }
     RuntimeClasses.Reset();RuntimeChannels.Reset();RuntimeMix=nullptr;MixWorld.Reset();
     MusicController = nullptr;
     MenuMusic = nullptr;
@@ -362,7 +365,7 @@ void UStarshatterAudioSubsystem::RouteAudioComponent(UAudioComponent* Component,
         if(Original)Class->Properties=Original->Properties;
         Class->Properties.Volume=1.f;Class->Properties.Pitch=1.f;
         Class->Properties.bIsMusic=Channel==EStarshatterAudioChannel::Music;
-        Class->SetParentClass(Original);RuntimeChannels.Add(Class,Channel);
+        Class->ParentClass = Original;RuntimeChannels.Add(Class,Channel);
         if(UWorld* World=GetWorld())if(FAudioDevice* Device=World->GetAudioDeviceRaw())Device->RegisterSoundClass(Class);
     }
     Component->SoundClassOverride=Class;
