@@ -443,10 +443,8 @@ void UMissionWeaponDlg::BuildLoadouts(MissionElement* Element, const FShipDesign
         }
     }
 
-    if (!bHasSelected && Items.Num() > 0 && WeaponListView)
-    {
-        WeaponListView->SetSelectedItem(Items[0]);
-    }
+    // An unnamed/custom loadout is not the first preset. Leave it unselected
+    // so the user can explicitly choose any preset, including the first one.
 
     if (bLogLoadoutsVerbose)
     {
@@ -486,7 +484,7 @@ UTextBlock* UMissionWeaponDlg::BuildLabelText(const FString& Text) const
     UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
     T->SetText(FText::FromString(Text));
     T->SetColorAndOpacity(MissionUIStyle::InfoLabelText);
-    T->SetFont(MissionUIStyle::GetInfoLabelFont(13));
+    T->SetFont(MissionUIStyle::GetInfoLabelFont(12));
     return T;
 }
 
@@ -495,19 +493,19 @@ UTextBlock* UMissionWeaponDlg::BuildValueText(const FString& Text) const
     UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
     T->SetText(FText::FromString(Text));
     T->SetColorAndOpacity(MissionUIStyle::InfoValueText);
-    T->SetFont(MissionUIStyle::GetInfoValueFont(14));
+    T->SetFont(MissionUIStyle::GetInfoValueFont(16));
     return T;
 }
 
 UBorder* UMissionWeaponDlg::BuildHeader(const FString& Text) const
 {
     UBorder* Outer = WidgetTree->ConstructWidget<UBorder>();
-    Outer->SetBrushColor(MissionUIStyle::HeaderBG);
+    Outer->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
 
     UTextBlock* T = WidgetTree->ConstructWidget<UTextBlock>();
     T->SetText(FText::FromString(Text));
     T->SetColorAndOpacity(MissionUIStyle::HeaderText);
-    T->SetFont(MissionUIStyle::GetHeaderFont(18));
+    T->SetFont(MissionUIStyle::GetHeaderFont(22));
 
     Outer->SetContent(T);
     return Outer;
@@ -814,6 +812,10 @@ void UMissionWeaponDlg::PopulateFixedShipWeapons(const FShipDesign* Design)
 
 void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
 {
+    // Refreshing selects rows for display; only an explicit user selection
+    // may apply a preset over the mission's current station choices.
+    if (bRefreshingLoadouts) return;
+
     UMissionWeaponLoadoutListObject* SelectedItem =
         Cast<UMissionWeaponLoadoutListObject>(Item);
 

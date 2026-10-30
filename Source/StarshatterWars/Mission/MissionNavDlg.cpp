@@ -58,6 +58,7 @@
 #include "Algo/Reverse.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -425,6 +426,8 @@ FReply UMissionNavDlg::NativeOnMouseMove(
 
 void UMissionNavDlg::RefreshFromMission()
 {
+    const Mission* PreviousMission = MissionPtr; // compare only; previous mission may have unloaded
+    const FString PreviousMissionSystem = CurrentMissionSystemName;
     MissionPtr = ResolveMission();
     if (bInMissionNavigation) { RefreshLiveNavigation(); SyncSubPanels(); RefreshObjectListPanel(); RefreshDetailPanel(); return; }
 
@@ -439,18 +442,22 @@ void UMissionNavDlg::RefreshFromMission()
             *MissionRegion);
     }
 
-    if (MissionPtr && MissionPtr->GetStarSystem())
+    CurrentMissionSystemName.Empty();
+    if (MissionPtr)
     {
-        CurrentMissionSystemName = FString(MissionPtr->GetStarSystem()->GetName());
-
-        if (SelectedSystemName.IsEmpty())
-        {
-            SelectedSystemName = CurrentMissionSystemName;
-        }
+        // Match the briefing header: the authored system name is authoritative.
+        if (const char* AuthoredSystem = MissionPtr->GetSystem())
+            CurrentMissionSystemName = FString(UTF8_TO_TCHAR(AuthoredSystem)).TrimStartAndEnd();
+        if (CurrentMissionSystemName.IsEmpty() && MissionPtr->GetStarSystem())
+            CurrentMissionSystemName = FString(UTF8_TO_TCHAR(MissionPtr->GetStarSystem()->GetName())).TrimStartAndEnd();
     }
-    else
+
+    if (!MissionPtr || MissionPtr != PreviousMission || SelectedSystemName.IsEmpty() ||
+        !CurrentMissionSystemName.Equals(PreviousMissionSystem, ESearchCase::IgnoreCase))
     {
-        CurrentMissionSystemName.Empty();
+        // A reused Navigation panel must start on this mission's system rather
+        // than a system inspected during another mission. Same-mission browsing stays intact.
+        SelectedSystemName = CurrentMissionSystemName;
     }
 
     SyncGalaxyMissionAndSelectionState();
@@ -1336,10 +1343,42 @@ UMenuButton* UMissionNavDlg::CreateFilterButton(const FString& Label, int32 Row,
 void UMissionNavDlg::ApplyBriefingPanelPresentation()
 {
     if (bInMissionNavigation) return;
-    if (RuntimeHost)
+    // Stretch the existing Blueprint hosts, rather than sizing the map from
+    // the sidebar's desired height. Do not rebuild or reparent the widget tree.
+    for (UWidget* Host = RuntimeHost; Host; Host = Host->GetParent())
     {
-        RuntimeHost->ClearWidthOverride();
-        RuntimeHost->ClearHeightOverride();
+        if (USizeBox* SizeHost = Cast<USizeBox>(Host))
+        {
+            SizeHost->ClearWidthOverride();
+            SizeHost->ClearHeightOverride();
+            SizeHost->ClearMaxDesiredWidth();
+            SizeHost->ClearMaxDesiredHeight();
+        }
+        if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Host->Slot))
+        {
+            CanvasSlot->SetAutoSize(false);
+            CanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+            CanvasSlot->SetAlignment(FVector2D::ZeroVector);
+            CanvasSlot->SetOffsets(FMargin(0.f));
+        }
+        else if (UVerticalBoxSlot* VerticalSlot = Cast<UVerticalBoxSlot>(Host->Slot))
+        {
+            VerticalSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            VerticalSlot->SetHorizontalAlignment(HAlign_Fill);
+            VerticalSlot->SetVerticalAlignment(VAlign_Fill);
+        }
+        else if (UHorizontalBoxSlot* HorizontalSlot = Cast<UHorizontalBoxSlot>(Host->Slot))
+        {
+            HorizontalSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            HorizontalSlot->SetHorizontalAlignment(HAlign_Fill);
+            HorizontalSlot->SetVerticalAlignment(VAlign_Fill);
+        }
+        if (UBorder* BorderHost = Cast<UBorder>(Host))
+        {
+            BorderHost->SetHorizontalAlignment(HAlign_Fill);
+            BorderHost->SetVerticalAlignment(VAlign_Fill);
+        }
+        if (WidgetTree && Host == WidgetTree->RootWidget) break;
     }
     for (UBorder* Bar : { ObjectListTitleBar, DetailTitleBar })
     {

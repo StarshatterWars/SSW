@@ -582,7 +582,7 @@ void UMissionBriefingDlg::BuildBriefingChrome()
     AddStatusRow({{TEXT("TIME"), &GameTimeText}, {TEXT("CAMPAIGN"), &MissionTPlusText},
         {TEXT("PILOT"), &PlayerNameText}, {TEXT("UNIT"), &CurrentUnitText}, {TEXT("SCORE"), &PlayerScoreText}});
     AddStatusRow({{TEXT("SYSTEM"), &MissionSystemText}, {TEXT("SECTOR"), &MissionSectorText},
-        {TEXT("START"), &MissionTimeStartText}, {TEXT("TARGET"), &MissionTimeTargetText}});
+        {TEXT("START"), &MissionTimeStartText}, {TEXT("TRGT TIME"), &MissionTimeTargetText}});
     UBorder* Rule = AddBar(FLinearColor(0.20f, 0.21f, 0.23f, 1.f), FMargin(0.f));
     USizeBox* RuleSize = WidgetTree->ConstructWidget<USizeBox>();
     RuleSize->SetHeightOverride(5.f);
@@ -1057,7 +1057,11 @@ void UMissionBriefingDlg::RefreshHeader()
         }
     }
 
-    if (MissionTimeTargetText && MissionTimeTargetLabelText)
+    if (MissionTimeTargetLabelText)
+        MissionTimeTargetLabelText->SetText(bShowTimeOnTarget
+            ? NSLOCTEXT("MissionBriefing", "TRTTimeLabel", "TRGT TIME") : FText::GetEmpty());
+
+    if (MissionTimeTargetText)
     {
         if (bShowTimeOnTarget)
         {
@@ -1067,18 +1071,15 @@ void UMissionBriefingDlg::RefreshHeader()
                 char Buf[32] = { 0 };
                 FormatDayTime(Buf, TimeOnTarget);
                 MissionTimeTargetText->SetText(ToTextFromUtf8(Buf));
-                MissionTimeTargetLabelText->SetText(FText::FromString(TEXT("TARGET:")));
             }
             else
             {
-                MissionTimeTargetText->SetText(FText::GetEmpty());
-                MissionTimeTargetLabelText->SetText(FText::GetEmpty());
+                MissionTimeTargetText->SetText(NSLOCTEXT("MissionBriefing", "UnknownTRTTime", "UNKNOWN"));
             }
         }
         else
         {
             MissionTimeTargetText->SetText(FText::GetEmpty());
-            MissionTimeTargetLabelText->SetText(FText::GetEmpty());
         }
     }
 }
