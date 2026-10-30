@@ -138,6 +138,7 @@ protected:
     void BuildFilterButtons();
 
     void ApplyPanelStyles();
+    void ApplyBriefingPanelPresentation();
 
     void RefreshNavModeSelection();
     void RefreshFilterSelection();

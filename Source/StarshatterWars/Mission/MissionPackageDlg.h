@@ -58,6 +58,11 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    void BuildPackageLayout();
+    UPROPERTY(Transient) TObjectPtr<class UBorder> PresentationRoot;
+    Mission* LastPackageMission = nullptr; // comparison only; never dereferenced
+    int32 LastPackageMissionId = INDEX_NONE;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:

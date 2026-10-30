@@ -278,6 +278,7 @@ void UMissionNavDlg::NativeConstruct()
 
     BuildRuntimeLayout();
     BuildNavModeButtons();
+    ApplyBriefingPanelPresentation();
     if (bInMissionNavigation && SectorMapPanel)
     {
         SectorMapPanel->SetLiveNavigation(true);
@@ -1330,6 +1331,48 @@ UMenuButton* UMissionNavDlg::CreateFilterButton(const FString& Label, int32 Row,
 
     FilterButtons.Add(NewButton);
     return NewButton;
+}
+
+void UMissionNavDlg::ApplyBriefingPanelPresentation()
+{
+    if (bInMissionNavigation) return;
+    if (RuntimeHost)
+    {
+        RuntimeHost->ClearWidthOverride();
+        RuntimeHost->ClearHeightOverride();
+    }
+    for (UBorder* Bar : { ObjectListTitleBar, DetailTitleBar })
+    {
+        if (!Bar) continue;
+        Bar->SetBrush(FSlateBrush());
+        Bar->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+        Bar->SetPadding(FMargin(12.f, 8.f));
+    }
+    for (UTextBlock* Text : { ObjectListTitleText, DetailTitleText })
+        if (Text) Text->SetFont(MissionUIStyle::GetHeaderFont(22));
+    if (ObjectListHost)
+    {
+        ObjectListHost->SetWidthOverride(380.f);
+        ObjectListHost->ClearHeightOverride();
+    }
+    if (DetailHost)
+    {
+        DetailHost->SetWidthOverride(380.f);
+        DetailHost->ClearHeightOverride();
+        if (UVerticalBoxSlot* Cell = Cast<UVerticalBoxSlot>(DetailHost->Slot))
+            Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    }
+    if (DetailBorder)
+        if (UVerticalBoxSlot* Cell = Cast<UVerticalBoxSlot>(DetailBorder->Slot))
+            Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    if (DetailBodyText)
+    {
+        DetailBodyText->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        DetailBodyText->SetWrapTextAt(0.f);
+        DetailBodyText->SetAutoWrapText(true);
+    }
+    if (ZoomOutButton) ZoomOutButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "ZoomOut", "Zoom out"));
+    if (ZoomInButton) ZoomInButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "ZoomIn", "Zoom in"));
 }
 
 void UMissionNavDlg::ApplyPanelStyles()

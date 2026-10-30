@@ -1,4 +1,16 @@
 #include "MissionObjectiveDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
+#include "Components/SizeBox.h"
+#include "Components/ScaleBox.h"
+#include "MissionUIStyle.h"
+
 
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
@@ -19,6 +31,89 @@ UMissionObjectiveDlg::UMissionObjectiveDlg(const FObjectInitializer& ObjectIniti
 {
 }
 
+
+TSharedRef<SWidget> UMissionObjectiveDlg::RebuildWidget()
+{
+    BuildSituationLayout();
+    return Super::RebuildWidget();
+}
+
+void UMissionObjectiveDlg::BuildSituationLayout()
+{
+    if (!WidgetTree || PresentationRoot) return;
+    if (!SituationText) SituationText = WidgetTree->ConstructWidget<UTextBlock>();
+    if (!ObjectivesText) ObjectivesText = WidgetTree->ConstructWidget<UTextBlock>();
+    if (!PlayerCaptionText) PlayerCaptionText = WidgetTree->ConstructWidget<UTextBlock>();
+    if (!PreviewImage) PreviewImage = WidgetTree->ConstructWidget<UImage>();
+    for (UWidget* Widget : { static_cast<UWidget*>(SituationText), static_cast<UWidget*>(ObjectivesText),
+        static_cast<UWidget*>(PlayerCaptionText), static_cast<UWidget*>(PreviewImage) })
+        Widget->RemoveFromParent();
+
+    PresentationRoot = WidgetTree->ConstructWidget<UBorder>();
+    PresentationRoot->SetPadding(FMargin(16.f));
+    PresentationRoot->SetBrushColor(FLinearColor(0.045f, 0.055f, 0.065f, 0.96f));
+    WidgetTree->RootWidget = PresentationRoot;
+    UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+    PresentationRoot->SetContent(Row);
+    UVerticalBox* TextColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    UHorizontalBoxSlot* TextSlot = Row->AddChildToHorizontalBox(TextColumn);
+    FSlateChildSize TextSize(ESlateSizeRule::Fill); TextSize.Value = 2.f;
+    TextSlot->SetSize(TextSize);
+    TextSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+
+    auto Section = [this](UVerticalBox* Column, const FText& Heading, UTextBlock* Text)->UScrollBox*
+    {
+        UBorder* Header = WidgetTree->ConstructWidget<UBorder>();
+        Header->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+        Header->SetPadding(FMargin(12.f, 8.f));
+        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
+        Label->SetText(Heading);
+        Label->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Label->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+        Header->SetContent(Label);
+        Column->AddChildToVerticalBox(Header);
+        UScrollBox* Scroll = WidgetTree->ConstructWidget<UScrollBox>();
+        Scroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+        Scroll->SetAnimateWheelScrolling(true);
+        Scroll->SetScrollBarVisibility(ESlateVisibility::Visible);
+        Scroll->AddChild(Text);
+        Text->SetAutoWrapText(true);
+        Text->SetWrapTextAt(0.f);
+        if (UScrollBoxSlot* BodySlot = Cast<UScrollBoxSlot>(Text->Slot))
+            BodySlot->SetPadding(FMargin(12.f));
+        UVerticalBoxSlot* ScrollSlot = Column->AddChildToVerticalBox(Scroll);
+        ScrollSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        ScrollSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+        return Scroll;
+    };
+    SituationScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "SituationHeading", "SITUATION"), SituationText);
+    ObjectivesScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "ObjectivesHeading", "OBJECTIVES"), ObjectivesText);
+
+    UVerticalBox* ShipColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    Row->AddChildToHorizontalBox(ShipColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    UTextBlock* ShipTitle = WidgetTree->ConstructWidget<UTextBlock>();
+    ShipTitle->SetText(NSLOCTEXT("MissionBriefing", "PlayerShipHeading", "PLAYER SHIP"));
+    ShipTitle->SetFont(MissionUIStyle::GetHeaderFont(22));
+    ShipTitle->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+    ShipColumn->AddChildToVerticalBox(ShipTitle)->SetPadding(FMargin(12.f, 8.f));
+    UScaleBox* PreviewFit = WidgetTree->ConstructWidget<UScaleBox>();
+    PreviewFit->SetStretch(EStretch::ScaleToFit);
+    PreviewFit->SetContent(PreviewImage);
+    ShipColumn->AddChildToVerticalBox(PreviewFit)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    PreviewStatusText = WidgetTree->ConstructWidget<UTextBlock>();
+    PreviewStatusText->SetText(NSLOCTEXT("MissionBriefing", "PreviewUnavailable", "PREVIEW UNAVAILABLE"));
+    PreviewStatusText->SetFont(MissionUIStyle::GetInfoValueFont(16));
+    PreviewStatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.75f, 0.8f)));
+    PreviewStatusText->SetJustification(ETextJustify::Center);
+    ShipColumn->AddChildToVerticalBox(PreviewStatusText);
+    PlayerCaptionText->SetFont(MissionUIStyle::GetInfoValueFont(18));
+    PlayerCaptionText->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+    PlayerCaptionText->SetAutoWrapText(true);
+    PlayerCaptionText->SetJustification(ETextJustify::Center);
+    ShipColumn->AddChildToVerticalBox(PlayerCaptionText)->SetPadding(FMargin(12.f));
+    ApplyBriefingTextPresentation();
+}
+
 void UMissionObjectiveDlg::NativePreConstruct()
 {
     Super::NativePreConstruct();
@@ -31,7 +126,7 @@ void UMissionObjectiveDlg::ApplyBriefingTextPresentation()
     for (UTextBlock* Text : { SituationText, ObjectivesText })
     {
         if (!Text) continue;
-        FSlateFontInfo Font = Text->GetFont();
+        FSlateFontInfo Font = MissionUIStyle::GetInfoValueFont();
         Font.Size = FMath::Clamp(BriefingBodyFontSize, 12, 24);
         Text->SetFont(Font);
         Text->SetColorAndOpacity(FSlateColor(BriefingBodyColor));
@@ -78,7 +173,13 @@ void UMissionObjectiveDlg::RefreshFromMission()
         (MissionPtr && MissionPtr->GetObjective()) ? UTF8_TO_TCHAR(MissionPtr->GetObjective()) : TEXT("NULL"),
         (MissionPtr && MissionPtr->IsScripted()) ? TEXT("true") : TEXT("false"));
 
+    const FText OldSituation = SituationText ? SituationText->GetText() : FText::GetEmpty();
+    const FText OldObjectives = ObjectivesText ? ObjectivesText->GetText() : FText::GetEmpty();
     RefreshSituationAndObjectives(MissionPtr);
+    if (SituationScroll && SituationText && !OldSituation.EqualTo(SituationText->GetText()))
+        SituationScroll->ScrollToStart();
+    if (ObjectivesScroll && ObjectivesText && !OldObjectives.EqualTo(ObjectivesText->GetText()))
+        ObjectivesScroll->ScrollToStart();
     RefreshPlayerCaption(MissionPtr);
     RefreshPreviewPlaceholder(MissionPtr);
 }
@@ -225,6 +326,7 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
         return;
     }
 
+    if (PreviewStatusText) PreviewStatusText->SetVisibility(ESlateVisibility::Visible);
     PreviewImage->SetVisibility(ESlateVisibility::Visible);
     PreviewImage->SetBrushFromTexture(nullptr);
 
@@ -242,6 +344,7 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
     if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path))
     {
         PreviewImage->SetBrushFromTexture(Tex, true);
+        if (PreviewStatusText) PreviewStatusText->SetVisibility(ESlateVisibility::Collapsed);
         UE_LOG(LogTemp, Warning, TEXT("[MissionObjectiveDlg] Preview: set %s"), *Path);
     }
     else

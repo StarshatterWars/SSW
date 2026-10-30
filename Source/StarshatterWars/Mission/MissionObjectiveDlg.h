@@ -27,6 +27,13 @@ public:
 protected:
     virtual void NativeConstruct() override;
     virtual void NativePreConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    void BuildSituationLayout();
+
+    UPROPERTY(Transient) TObjectPtr<class UBorder> PresentationRoot;
+    UPROPERTY(Transient) TObjectPtr<class UScrollBox> SituationScroll;
+    UPROPERTY(Transient) TObjectPtr<class UScrollBox> ObjectivesScroll;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PreviewStatusText;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MissionObjective|Presentation")
     bool bModernBriefingText = true;

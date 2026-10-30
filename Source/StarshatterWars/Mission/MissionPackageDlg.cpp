@@ -5,6 +5,18 @@
 */
 
 #include "MissionPackageDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
+#include "Components/SizeBox.h"
+#include "Components/ScaleBox.h"
+#include "MissionUIStyle.h"
+
 
 #include "MissionListLayout.h"
 
@@ -69,25 +81,84 @@ UMissionPackageDlg::UMissionPackageDlg(const FObjectInitializer& ObjectInitializ
 {
 }
 
+
+TSharedRef<SWidget> UMissionPackageDlg::RebuildWidget()
+{
+    BuildPackageLayout();
+    return Super::RebuildWidget();
+}
+
+void UMissionPackageDlg::BuildPackageLayout()
+{
+    // The Blueprint supplies list entry classes; retain its list instances.
+    if (!WidgetTree || PresentationRoot || !PackageList || !NavList) return;
+    if (!PackageHeaderRow) PackageHeaderRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    if (!NavHeaderRow) NavHeaderRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    for (UWidget* Widget : { static_cast<UWidget*>(PackageList), static_cast<UWidget*>(NavList),
+        static_cast<UWidget*>(PackageHeaderRow), static_cast<UWidget*>(NavHeaderRow) })
+        Widget->RemoveFromParent();
+    PresentationRoot = WidgetTree->ConstructWidget<UBorder>();
+    PresentationRoot->SetBrushColor(FLinearColor(0.045f, 0.055f, 0.065f, 0.96f));
+    PresentationRoot->SetPadding(FMargin(16.f));
+    WidgetTree->RootWidget = PresentationRoot;
+    UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+    PresentationRoot->SetContent(Row);
+    UVerticalBox* Tables = WidgetTree->ConstructWidget<UVerticalBox>();
+    UHorizontalBoxSlot* TableSlot = Row->AddChildToHorizontalBox(Tables);
+    FSlateChildSize TableSize(ESlateSizeRule::Fill); TableSize.Value = 3.f;
+    TableSlot->SetSize(TableSize);
+    TableSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+    auto Heading = [this](const FText& HeadingText)->UBorder*
+    {
+        UBorder* Bar = WidgetTree->ConstructWidget<UBorder>();
+        Bar->SetBrushColor(FLinearColor(0.105f, 0.113f, 0.125f, 1.f));
+        Bar->SetPadding(FMargin(12.f, 8.f));
+        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
+        Label->SetText(HeadingText);
+        Label->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Label->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+        Bar->SetContent(Label);
+        return Bar;
+    };
+    Tables->AddChildToVerticalBox(Heading(NSLOCTEXT("MissionBriefing", "PackageRoster", "MISSION PACKAGE")));
+    Tables->AddChildToVerticalBox(PackageHeaderRow);
+    PackageTableSizebox = WidgetTree->ConstructWidget<USizeBox>();
+    PackageTableSizebox->SetContent(PackageList);
+    Tables->AddChildToVerticalBox(PackageTableSizebox)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Tables->AddChildToVerticalBox(Heading(NSLOCTEXT("MissionBriefing", "PackageRoute", "SELECTED FLIGHT ROUTE")))->SetPadding(FMargin(0.f, 12.f, 0.f, 0.f));
+    Tables->AddChildToVerticalBox(NavHeaderRow);
+    Tables->AddChildToVerticalBox(NavList)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    UVerticalBox* Summary = WidgetTree->ConstructWidget<UVerticalBox>();
+    Row->AddChildToHorizontalBox(Summary)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Summary->AddChildToVerticalBox(Heading(NSLOCTEXT("MissionBriefing", "PackageThreats", "KNOWN THREATS")));
+    UScrollBox* ThreatScroll = WidgetTree->ConstructWidget<UScrollBox>();
+    ThreatScroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+    Summary->AddChildToVerticalBox(ThreatScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    for (UTextBlock** Threat : { &Threat0, &Threat1, &Threat2, &Threat3, &Threat4 })
+    {
+        if (!*Threat) *Threat = WidgetTree->ConstructWidget<UTextBlock>();
+        (*Threat)->RemoveFromParent();
+        (*Threat)->SetFont(MissionUIStyle::GetInfoValueFont(18));
+        (*Threat)->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 0.93f, 0.98f)));
+        (*Threat)->SetAutoWrapText(true);
+        ThreatScroll->AddChild(*Threat);
+        if (UScrollBoxSlot* Cell = Cast<UScrollBoxSlot>((*Threat)->Slot)) Cell->SetPadding(FMargin(12.f, 8.f));
+    }
+    if (MissionRosterLabel)
+    {
+        MissionRosterLabel->RemoveFromParent();
+        MissionRosterLabel->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        MissionRosterLabel->SetAutoWrapText(true);
+        Summary->AddChildToVerticalBox(MissionRosterLabel);
+    }
+}
+
 void UMissionPackageDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
     bHeadersBuiltFromGeometry = false;
-
-    if (PanelSizeBox)
-    {
-        PanelSizeBox->SetWidthOverride(1490.f);
-        PanelSizeBox->SetHeightOverride(685.f);
-
-        if (UCanvasPanelSlot* PanelCanvasSlot = Cast<UCanvasPanelSlot>(PanelSizeBox->Slot))
-        {
-            PanelCanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
-            PanelCanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-            PanelCanvasSlot->SetPosition(FVector2D(0.f, 0.f));
-            PanelCanvasSlot->SetSize(FVector2D(1490.f, 685.f));
-        }
-    }
 
     if (PackageList)
     {
@@ -130,7 +201,12 @@ Mission* UMissionPackageDlg::ResolveMission() const
 
 void UMissionPackageDlg::RefreshFromMission()
 {
-    PackageIndex = INDEX_NONE;
+    Mission* CurrentMission = ResolveMission();
+    const int32 CurrentId = CurrentMission ? CurrentMission->GetIdentity() : INDEX_NONE;
+    if (CurrentMission != LastPackageMission || CurrentId != LastPackageMissionId)
+        PackageIndex = INDEX_NONE;
+    LastPackageMission = CurrentMission;
+    LastPackageMissionId = CurrentId;
 
     DrawPackages();
     DrawNavPlan();
@@ -238,7 +314,7 @@ void UMissionPackageDlg::DrawPackages()
         TEXT("[MissionPackageDlg] Mission=%d PackageRows=%d Team=%d Region='%hs'"),
         MissionPtr->GetIdentity(), PackageItems.Num(), MissionPtr->GetTeam(), MissionPtr->GetRegion());
 
-    if (PackageIndex == INDEX_NONE && PackageItems.Num() > 0)
+    if (!PackageItems.IsValidIndex(PackageIndex) && PackageItems.Num() > 0)
     {
         PackageIndex = 0;
     }
