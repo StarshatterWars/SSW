@@ -606,7 +606,8 @@ CameraManager::ExecFrame(double seconds)
 			bPhysicallyClear = ForwardTravel >= FMath::Max(MinDeparture, static_cast<double>(LaunchCarrier->GetRadius()));
 		}
 	}
-	const bool bLaunchCompleted = ship->IsAirborne() &&
+	// IsAirborne means atmospheric AIR_SPACE, not departure from a carrier.
+	const bool bLaunchCompleted =
 		flight_phase >= EOPSMode::ACTIVE && bPhysicallyClear;
 	if (bLaunchCompleted || ship->IsDead() || ship->IsDying())
 	{
@@ -625,7 +626,7 @@ CameraManager::ExecFrame(double seconds)
 			ship->GetName(), bPhysicallyClear ? 1 : 0);
 	}
 	else if ((LaunchCarrier || bCarrierLaunchCameraHeld) &&
-		(flight_phase >= EOPSMode::ALERT || bCarrierLaunchCameraHeld) &&
+		((flight_phase >= EOPSMode::ALERT && flight_phase < EOPSMode::ACTIVE) || bCarrierLaunchCameraHeld) &&
 		!ship->IsDead())
 	{
 		bCarrierLaunchCameraHeld = true;
