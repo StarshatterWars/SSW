@@ -18,6 +18,7 @@
 =============================================================================*/
 
 #include "KeyDlg.h"
+#include "MissionUIStyle.h"
 #include "StarshatterInputBindings.h"
 #include "StarshatterControlsSettings.h"
 #include "InputAction.h"
@@ -258,6 +259,7 @@ void UKeyDlg::AppendFighterHUDBindings()
             auto* Label=WidgetTree->ConstructWidget<UTextBlock>();
             auto* Key=WidgetTree->ConstructWidget<UTextBlock>();
             StyleButton_Default(Button,18);
+            MissionUIStyle::ApplyActionButtonStyle(Button,TEXT("Blue"));
             FString Text=UStarshatterInputLabels::GetActionLabel(Mapping.Action).ToString().ToUpper();
             if(Mapping.Action->ValueType==EInputActionValueType::Axis1D && !Mapping.Key.IsAxis1D())
             {
