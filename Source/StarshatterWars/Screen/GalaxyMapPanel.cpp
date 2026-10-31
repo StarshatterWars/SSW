@@ -201,6 +201,13 @@ void UGalaxyMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
+    // The owner policy can change when switching campaigns without rebuilding the galaxy.
+    if (OnCanSelectSystem.IsBound() && !SelectedSystemName.IsEmpty() &&
+        !CanSelectSystem(SelectedSystemName))
+    {
+        SetSelectedSystem(TEXT(""));
+    }
+
     if (bCameraAnimating)
     {
         CurrentPan = FMath::Vector2DInterpTo(

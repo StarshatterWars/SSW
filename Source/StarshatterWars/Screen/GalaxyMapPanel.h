@@ -47,6 +47,7 @@ UCLASS()
 class STARSHATTERWARS_API UGalaxyMapPanel : public UUserWidget
 {
     GENERATED_BODY()
+    friend class FCampaignSystemSelectionTest;
 
 public:
     UGalaxyMapPanel(const FObjectInitializer& ObjectInitializer);
