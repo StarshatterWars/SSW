@@ -61,7 +61,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-01.ogg",
+   sound:           "A01-01",
    event_message:   "Glad to see you guys! Thanks for escorting us.",
    event_chance:    50,
 
@@ -75,7 +75,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-07.ogg",
+   sound:           "A01-07",
    event_message:   "Looks like our pick-up is late.",
    event_chance:    50,
 
@@ -88,7 +88,7 @@ event: {
    id:              6,
    event:           Message,
    event_ship:      Player,
-   sound:           "Vox/Misc/A01-08.ogg",
+   sound:           "A01-08",
    event_message:   "Can you stick with us in case there's any trouble?",
 
    trigger:         Event,
@@ -101,7 +101,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-06.ogg",
+   sound:           "A01-06",
    event_message:   "Thanks for the lift.  I think we are clear now.",
 
    trigger:         Navpoint,
@@ -116,7 +116,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-09.ogg",
+   sound:           "A01-09",
    event_message:   "Looks like our escort is here.  Let's get going.",
 
    trigger:         Skipped,
@@ -128,7 +128,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-10.ogg",
+   sound:           "A01-10",
    event_message:   "We were expecting some Zodiacs to pick up our cargo.",
 
    trigger:         Skipped,
@@ -139,7 +139,7 @@ event: {
    id:              106,
    event:           Message,
    event_ship:      Player,
-   sound:           "Vox/Misc/A01-11.ogg",
+   sound:           "A01-11",
    event_message:   "Still can't see them.  I hope everything is all right.",
 
    trigger:         Event,

@@ -417,7 +417,7 @@ event: {
    id:              100,
    time:            230.0,
    event:           Message,
-   sound:           "Vox/Misc/A02-09.ogg",
+   sound:           "A02-09",
    event_message:   "All units alert: we show several high-speed contacts inbound.",
    event_source:    A1,
 }
@@ -426,7 +426,7 @@ event: {
    id:              101,
    time:            233.0,
    event:           Message,
-   sound:           "Vox/Misc/A02-03.ogg",
+   sound:           "A02-03",
    event_message:   "Contacts are unknown configuration and presumed hostile.",
    event_source:    A1,
 }
@@ -435,7 +435,7 @@ event: {
    id:              102,
    time:            238.0,
    event:           Objective,
-   sound:           "Vox/Misc/A02-10.ogg",
+   sound:           "A02-10",
    event_message:   "All units: Defend the Zolon Consular Starship.",
    event_source:    A1,
    event_param:     4,

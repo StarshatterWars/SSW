@@ -24,9 +24,9 @@ event: { type: BeginScene, time:   0, message: "Scene 1" }
 
 event: { type: Display,    message: "MAIL", font: Limerick18, color: 0xffffffff, fade: (0,80,0), rect: (20,20, 300,100) }
 
-event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6.wav" }
+event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6" }
 
-event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12.wav" }
+event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12" }
 
 event: { type: Display,               fade: (0,80,0), rect: (20,40, 600,150), font: OCRB, color: 0xff33ff44,
          message: "TO: $RANK $NAME\nCO: $GROUP\nFM: Sara Hunter - Ele'aan Consulate Jarnell\nRE: BACK TO BOROVA\n-----\nPATH: Ele'aan Consular Net Center | Jarnell Main Traffic Relay | Athenar Terminus | Janek Station Courier Drop | 4TH FLEET HQ | $GROUP\n-----\n" }
@@ -38,7 +38,7 @@ event: { type: Display,    time:   5, fade: (0,80,0), rect: (20,190, 600,800), f
 event: {
    event: Message
    time:  5
-   sound: "Vox/Scenes/03/Mail_02_Back_to_Borova.ogg"
+   sound: "Mail_02_Back_to_Borova"
 }
 
 

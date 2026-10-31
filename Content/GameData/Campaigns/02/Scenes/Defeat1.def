@@ -58,13 +58,13 @@ event: { type: Display,    message: "Defeat",             font: Limerick18, colo
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/02/End_02_Defeat.ogg"
+   sound: "End_02_Defeat"
 }
 
 event: { type: Camera,     time:  20, param: 3, target: "Kitts",          vec: (1,0.05,4e3) }
 event: { type: Camera,                param: 5,                           vec: (-0.08,-0.005, 0.01) }
 
-event: { type: Display,    time:  40, image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  40, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  42, message: "Scene 1" }
 event: { type: Exit }

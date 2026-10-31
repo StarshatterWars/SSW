@@ -154,9 +154,9 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Operation Firestorm\nClassified: SECRET R3 NTK" }
 
-event: { type: Messasge,   time:   3, sound: "Vox/Scenes/04/C4-B06-OK.ogg" }
+event: { type: Messasge,   time:   3, sound: "C4-B06-OK" }
 
-event: { type: Display,    time:   5, image: "Campaigns/04/Scenes/Strat.pcx", color: 0xffffffff, fade: (1,9,1), rect: (-280,-280,256,256) }
+event: { type: Display,    time:   5, image: "Strat", color: 0xffffffff, fade: (1,9,1), rect: (-280,-280,256,256) }
 
 
 event: { type: Camera,     time:  22, param: 3,      target: "body:Loris",   vec: (2, -0.2, 2e7)        }

@@ -79,7 +79,7 @@ action: {
    text:       "Hegemony Outpost Discovered",
    source:     News,
    file:       "Actions/01-campaign-start.txt",
-   image:      "Actions/01-campaign-start.pcx"
+   image:      "01-campaign-start"
    scene:      "01-Campaign-Start"
 }
 
@@ -174,7 +174,7 @@ action: {
    text:       "Borovan Archaelith Still Missing",
    source:     News,
    file:       "Actions/02-borovan-archaelith.txt"
-   image:      "Actions/02-borovan-archaelith.pcx"
+   image:      "02-borovan-archaelith"
    scene:      "02-Borovan-Archaelith"
 }
 
@@ -188,7 +188,7 @@ action: {
    text:       "Technite Found on Haiche",
    source:     News,
    file:       "Actions/03-technite-found.txt"
-   image:      "Actions/03-technite-found.pcx"
+   image:      "03-technite-found"
    scene:      "03-Technite-Found"
 }
 
@@ -202,7 +202,7 @@ action: {
    text:       "Zolon Ambassador",
    source:     FORCOM,
    file:       "Actions/04-zolon-ambassador.txt",
-   image:      "Actions/04-zolon-ambassador.pcx"
+   image:      "04-zolon-ambassador"
    scene:      "04-Zolon-Ambassador"
 }
 
@@ -390,7 +390,7 @@ action: {
    text:       "Operation Firestorm",
    source:     News,
    file:       "Actions/05-operation-firestorm.txt",
-   image:      "Actions/banner-alliance.pcx"
+   image:      "banner-alliance"
    scene:      "05-Operation-Firestorm"
 }
 
@@ -481,7 +481,7 @@ action: {
    text:       "Strategic Directives",
    source:     FORCOM,
    file:       "Actions/06-strategy.txt"
-   image:      "Actions/06-strategy.pcx"
+   image:      "06-strategy"
    scene:      "06-Strategy"
 }
 
@@ -495,7 +495,7 @@ action: {
    text:       "New Job",
    source:     Mail,
    file:       "Actions/m1-new-job.txt"
-   image:      "Actions/m0-mail-icon.pcx"
+   image:      "m0-mail-icon"
    scene:      "M1-New-Job"
 }
 
@@ -509,7 +509,7 @@ action: {
    text:       "Loris Government Collapse",
    source:     SECURE,
    file:       "Actions/07-Loris-Collapse.txt"
-   image:      "Actions/07-Loris-Collapse.pcx"
+   image:      "07-Loris-Collapse"
    scene:      "07-Loris-Collapse"
 }
 
@@ -582,7 +582,7 @@ action: {
    text:       "Kolchev System",
    source:     FORCOM,
    file:       "Actions/09-kolchev.txt"
-   image:      "Actions/09-kolchev.pcx"
+   image:      "09-kolchev"
    scene:      "09-Kolchev"
 
    req: { action: 100, status: COMPLETE }
@@ -598,7 +598,7 @@ action: {
    text:       "Something You Need to Know",
    source:     Mail,
    file:       "Actions/m2-need-to-know.txt"
-   image:      "Actions/m0-mail-icon.pcx"
+   image:      "m0-mail-icon"
    scene:      "M2-Need-to-Know"
 }
 
@@ -624,7 +624,7 @@ action: {
    sys:        Loris,
    asset_type: fleet,
    asset_id:   7,
-   image:      "Actions/banner-alliance.pcx"
+   image:      "banner-alliance"
    after:      "03/22:00:00",
 
    req: { action: 70, status: COMPLETE }
@@ -681,7 +681,7 @@ action: {
    text:       "The Return of Masil Gannet",
    source:     Mail,
    file:       "Actions/08-masil-gannet.txt"
-   image:      "Actions/08-masil-gannet.pcx"
+   image:      "08-masil-gannet"
    scene:      "08-Masil-Gannet"
 
    req: { action: 200, status: COMPLETE }
@@ -698,7 +698,7 @@ action: {
    text:       "Korian System",
    source:     FORCOM,
    file:       "Actions/10-korius.txt"
-   image:      "Actions/10-korius.pcx"
+   image:      "10-korius"
    scene:      "10-Korius"
 
    req: { action: 200, status: COMPLETE }
@@ -751,7 +751,7 @@ action: {
    sys:        Korius,
    asset_type: fleet,
    asset_id:   7,
-   image:      "Actions/banner-alliance.pcx"
+   image:      "banner-alliance"
 
    req: { action: 250, status: COMPLETE }
 }
@@ -805,7 +805,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Victory"
    file:       "Actions/victory.txt"
-   image:      "Actions/victory"
+   image:      "victory"
    scene:      "Victory"
 
    req: { c1: "Marakan Hegemony",    group_type: fleet, group_id: 3, comp: LT, score: 6000 },
@@ -824,7 +824,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def1.txt"
-   image:      "Actions/def1"
+   image:      "def1"
    scene:      "Defeat1"
 
    req: { c1: "Terellian Alliance", c2: "Marakan Hegemony", comp: RLT, score: -2000 },
@@ -839,7 +839,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def1.txt"
-   image:      "Actions/def1"
+   image:      "def1"
    scene:      "Defeat1"
 
    req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 9, comp: LT, score: 3200 },
@@ -854,7 +854,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def1.txt"
-   image:      "Actions/def1"
+   image:      "def1"
    scene:      "Defeat1"
 
    req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 11, comp: LT, score: 3200 },
@@ -869,7 +869,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def1.txt"
-   image:      "Actions/def1"
+   image:      "def1"
    scene:      "Defeat1"
 
    req: { c1: "Terellian Alliance", group_type: fleet, group_id: 6, comp: LT, score: 7500 },
@@ -884,7 +884,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def1.txt"
-   image:      "Actions/def1"
+   image:      "def1"
    scene:      "Defeat1"
 
    req: { c1: "Terellian Alliance", group_type: fleet, group_id: 7, comp: LT, score: 7500 },
@@ -902,7 +902,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def2.txt"
-   image:      "Actions/def2"
+   image:      "def2"
    scene:      "Defeat2"
 
    req: { c1: "Terellian Alliance", c2: "Marakan Hegemony", comp: RLT, score: -2000 },
@@ -917,7 +917,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def2.txt"
-   image:      "Actions/def2"
+   image:      "def2"
    scene:      "Defeat2"
 
    req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 9, comp: LT, score: 3200 },
@@ -932,7 +932,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def2.txt"
-   image:      "Actions/def2"
+   image:      "def2"
    scene:      "Defeat2"
 
    req: { c1: "Terellian Alliance", group_type: carrier_group, group_id: 11, comp: LT, score: 3200 },
@@ -947,7 +947,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def2.txt"
-   image:      "Actions/def2"
+   image:      "def2"
    scene:      "Defeat2"
 
    req: { c1: "Terellian Alliance", group_type: fleet, group_id: 6, comp: LT, score: 7500 },
@@ -962,7 +962,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Firestorm Defeat"
    file:       "Actions/def2.txt"
-   image:      "Actions/def2"
+   image:      "def2"
    scene:      "Defeat2"
 
    req: { c1: "Terellian Alliance", group_type: fleet, group_id: 7, comp: LT, score: 7500 },

@@ -4076,6 +4076,26 @@ void UStarshatterGameDataSubsystem::ParseMissionLoadout(TermStruct* val, const c
 
 // +--------------------------------------------------------------------+
 
+namespace
+{
+    int64 ReadLegacySceneEnum(const UEnum* Enum, const FString& Text)
+    {
+        auto Canonical = [](FString Name)
+        {
+            Name = Name.ToUpper();
+            for (const TCHAR* Part : {TEXT("_"), TEXT(" "), TEXT("("), TEXT(")")}) Name.ReplaceInline(Part, TEXT(""));
+            Name.RemoveFromStart(TEXT("TRIGGER"));
+            return Name;
+        };
+        const FString Key = Canonical(Text);
+        for (int32 Index = 0; Index < Enum->NumEnums() - 1; ++Index)
+            if (Canonical(Enum->GetNameStringByIndex(Index)) == Key ||
+                Canonical(Enum->GetDisplayNameTextByIndex(Index).ToString()) == Key)
+                return Enum->GetValueByIndex(Index);
+        return INDEX_NONE;
+    }
+}
+
 void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseEvent()"));
@@ -4096,7 +4116,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	Text TriggerTarget = "";
 
 	// ---- scalars ----
-	int32  EventId = 1;
+	int32  EventId = 0;
 	int32  EventChance = 0;
 	int32  EventDelay = 0;
 	float  EventScale = 1.0f;
@@ -4128,6 +4148,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
 	FS_MissionEvent NewMissionEvent;
+    NewMissionEvent.EventId = 0; // Authored IDs are opt-in, not repeated default 1.
 	NewMissionEvent.EventTime = EventTime;
 
 	const int32 ElemCount = (int32)Val->elements()->size();
@@ -4147,7 +4168,10 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			const FString NormalizedType =
 				NormalizeCombatGroupType(FString(typestr));
 
-			if (!FStringToEnum<MISSIONEVENT_TYPE>(NormalizedType, EventType, false))
+            const int64 ParsedType = ReadLegacySceneEnum(StaticEnum<MISSIONEVENT_TYPE>(), FString(typestr));
+            if (ParsedType != INDEX_NONE) EventType = static_cast<MISSIONEVENT_TYPE>(ParsedType);
+            else if (NormalizedType == TEXT("EXIT")) return; // EndScene owns the return to Operations.
+            else
 			{
 				EventType = MISSIONEVENT_TYPE::MESSAGE;
 
@@ -4168,7 +4192,9 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 			const FString NormalizedType =
 				NormalizeCombatGroupType(FString(typestr));
 
-			if (!FStringToEnum<MISSIONEVENT_TRIGGER>(NormalizedType, EventTrigger, false))
+            const int64 ParsedTrigger = ReadLegacySceneEnum(StaticEnum<MISSIONEVENT_TRIGGER>(), FString(typestr));
+            if (ParsedTrigger != INDEX_NONE) EventTrigger = static_cast<MISSIONEVENT_TRIGGER>(ParsedTrigger);
+            else
 			{
 				EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
 
@@ -8076,4 +8102,79 @@ void UStarshatterGameDataSubsystem::ApplyDesignToUnit(CombatUnit* Unit, const FS
 		TCHAR_TO_ANSI(*DesignRow->Description),
 		TCHAR_TO_ANSI(*WeaponSummary));
 
+}
+bool UStarshatterGameDataSubsystem::RebuildCampaignCutscenePresentation()
+{
+#if WITH_EDITOR
+    UDataTable* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_Campaign.DT_Campaign"));
+    if (!Table || Table->GetRowStruct() != FS_Campaign::StaticStruct()) return false;
+    const auto SavedMissions = MissionArray;
+    const auto SavedElements = MissionElementArray;
+    const auto SavedEvents = MissionEventArray;
+    const double SavedEventTime = LastParsedMissionEventTime;
+    const bool SavedStandalone = bParsingStandaloneMission;
+    bParsingStandaloneMission = true; // Do not modify the unrelated cutscene cache table.
+    int32 Count = 0;
+    TMap<FName, FS_Campaign> OriginalRows;
+    for (const auto& Entry : Table->GetRowMap())
+        OriginalRows.Add(Entry.Key, *reinterpret_cast<const FS_Campaign*>(Entry.Value));
+    Table->Modify();
+    for (const auto& Entry : Table->GetRowMap())
+    {
+        FS_Campaign& Row = *reinterpret_cast<FS_Campaign*>(Entry.Value);
+        const FString Folder = FPaths::ProjectContentDir() / FString::Printf(TEXT("GameData/Campaigns/%02d/Scenes"), Row.Index + 1);
+        TArray<FString> Files;
+        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.def")), true, false);
+        Files.Sort();
+        for (const FString& File : Files)
+        {
+            const int32 Before = MissionArray.Num();
+            const FString Path = Folder / File;
+            const auto Utf8 = StringCast<ANSICHAR>(*Path);
+            ParseMission(Utf8.Get());
+            if (MissionArray.Num() <= Before || MissionArray.Last().Scene.IsEmpty() ||
+                MissionArray.Last().MissionType == EMissionType::TRAINING) continue;
+            FS_CampaignMission Scene = MissionArray.Last();
+            Scene.DisplayType = EMissionDisplayType::CutsceneOnly;
+            const int32 Existing = Row.Missions.IndexOfByPredicate([&Scene](const FS_CampaignMission& Candidate)
+                { return Candidate.Scene.Equals(Scene.Scene, ESearchCase::IgnoreCase); });
+            if (Existing != INDEX_NONE) Row.Missions[Existing] = MoveTemp(Scene);
+            else Row.Missions.Add(MoveTemp(Scene));
+            ++Count;
+        }
+    }
+    MissionArray = SavedMissions;
+    MissionElementArray = SavedElements;
+    MissionEventArray = SavedEvents;
+    LastParsedMissionEventTime = SavedEventTime;
+    bParsingStandaloneMission = SavedStandalone;
+    int32 ProtectedCount = 0;
+    bool bPreserved = true;
+    for (const auto& Entry : OriginalRows)
+    {
+        FS_Campaign Before = Entry.Value;
+        FS_Campaign After = *Table->FindRow<FS_Campaign>(Entry.Key, TEXT("Scene migration verification"));
+        auto Protected = [](const FS_CampaignMission& Mission)
+            { return Mission.Scene.IsEmpty() || Mission.MissionType == EMissionType::TRAINING; };
+        const auto OldMissions = Before.Missions.FilterByPredicate(Protected);
+        const auto NewMissions = After.Missions.FilterByPredicate(Protected);
+        ProtectedCount += OldMissions.Num();
+        if (OldMissions.Num() != NewMissions.Num()) bPreserved = false;
+        for (int32 Index = 0; Index < FMath::Min(OldMissions.Num(), NewMissions.Num()); ++Index)
+            bPreserved &= FS_CampaignMission::StaticStruct()->CompareScriptStruct(&OldMissions[Index], &NewMissions[Index], 0);
+        Before.Missions.Reset(); After.Missions.Reset();
+        bPreserved &= FS_Campaign::StaticStruct()->CompareScriptStruct(&Before, &After, 0);
+    }
+    if (!bPreserved)
+    {
+        for (const auto& Entry : OriginalRows) Table->AddRow(Entry.Key, Entry.Value);
+        UE_LOG(LogTemp, Error, TEXT("[CampaignSceneMigration] Verification rejected changes outside scene records"));
+        return false;
+    }
+    if (Count > 0) Table->MarkPackageDirty();
+    UE_LOG(LogTemp, Display, TEXT("[CampaignSceneMigration] Rebuilt %d authored scenes; %d playable/training records and all other campaign fields verified unchanged"), Count, ProtectedCount);
+    return Count > 0;
+#else
+    return false;
+#endif
 }

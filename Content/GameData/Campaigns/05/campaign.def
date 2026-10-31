@@ -107,7 +107,7 @@ action: {
    text:       "Operation Nightfall",
    source:     FORCOM,
    file:       "Actions/01-operation-nightfall.txt"
-   image:      "Actions/01-operation-nightfall.pcx"
+   image:      "01-operation-nightfall"
    scene:      "01-Operation-Nightfall"
 }
 
@@ -174,7 +174,7 @@ action: {
    text:       "Tiger Bay Colony",
    source:     News,
    file:       "Actions/02-garden.txt",
-   image:      "Actions/02-garden.pcx"
+   image:      "02-garden"
    scene:      "02-Garden"
 }
 
@@ -188,7 +188,7 @@ action: {
    text:       "Radix System",
    source:     News,
    file:       "Actions/03-radix.txt",
-   image:      "Actions/03-radix.pcx"
+   image:      "03-radix"
    scene:      "03-Radix"
 }
 
@@ -202,7 +202,7 @@ action: {
    text:       "Peace Rally",
    source:     News,
    file:       "Actions/04-politics.txt",
-   image:      "Actions/04-politics.pcx"
+   image:      "04-politics"
    scene:      "04-Politics"
 
    req: { action: 400, status: COMPLETE }
@@ -220,7 +220,7 @@ action: {
    asset_type: fleet,
    asset_id:   1,
    after:      "02/06:30:00",
-   image:      "Actions/AA-senesca-sector.pcx",
+   image:      "AA-senesca-sector",
 }
 
 action: {
@@ -231,7 +231,7 @@ action: {
    asset_type: carrier_group,
    asset_id:   4,
    after:      "02/18:30:00",
-   image:      "Actions/AA-garden-sector.pcx",
+   image:      "AA-garden-sector",
 }
 
 action: {
@@ -244,7 +244,7 @@ action: {
    text:       "Geothermal Platforms",
    source:     FORCOM,
    file:       "Actions/06-geothermal-platforms.txt",
-   image:      "Actions/06-geothermal-platforms.pcx"
+   image:      "06-geothermal-platforms"
    scene:      "06-Geothermal-Platforms"
 }
 
@@ -292,7 +292,7 @@ action: {
    text:       "Ramek Station",
    source:     FORCOM,
    file:       "Actions/08-ramek-station.txt",
-   image:      "Actions/08-ramek-station.pcx"
+   image:      "08-ramek-station"
    scene:      "08-Ramek-Station"
 }
 
@@ -353,7 +353,7 @@ action: {
    asset_type: fleet,
    asset_id:   2,
    after:      "02/09:30:00",
-   image:      "Actions/03-radix.pcx",
+   image:      "03-radix",
 }
 
 action: {
@@ -366,7 +366,7 @@ action: {
    text:       "Deadman's Alley",
    source:     SECURE,
    file:       "Actions/07-deadmans-alley.txt",
-   image:      "Actions/07-deadmans-alley.pcx"
+   image:      "07-deadmans-alley"
    scene:      "07-Deadmans-Alley"
 }
 
@@ -378,7 +378,7 @@ action: {
    asset_type: fleet,
    asset_id:   2,
    after:      "04/04:40:00",
-   image:      "Actions/AA-senna-sector.pcx",
+   image:      "AA-senna-sector",
 }
 
 
@@ -394,7 +394,7 @@ action: {
    asset_type: fleet,
    asset_id:   1,
    after:      "06/04:30:00",
-   image:      "Actions/AA-nerasil-sector.pcx",
+   image:      "AA-nerasil-sector",
 
    req: { c1: "Marakan Hegemony", group_type: battalion, group_id: 4, comp: LT, score: 2000 },
 }
@@ -443,7 +443,7 @@ action: {
    text:       "Garrison Military Laboratory",
    source:     SECURE,
    file:       "Actions/09-garrison-station.txt",
-   image:      "Actions/09-garrison-station.pcx"
+   image:      "09-garrison-station"
    scene:      "09-Garrison-Station"
 
    req: { action: 400, status: COMPLETE }
@@ -490,7 +490,7 @@ action: {
    asset_type: fleet,
    asset_id:   1,
    delay:      70e3, // 20 hours
-   image:      "Actions/AA-rhofar-sector.pcx"
+   image:      "AA-rhofar-sector"
 
    req: { action: 400, status: COMPLETE }
 }
@@ -503,7 +503,7 @@ action: {
    asset_type: fleet,
    asset_id:   2,
    delay:      100e3, // 30 hours
-   image:      "Actions/AA-korul-sector.pcx"
+   image:      "AA-korul-sector"
 
    req: { action: 400, status: COMPLETE }
 }
@@ -528,7 +528,7 @@ action: {
    asset_type: fleet,
    asset_id:   1,
    delay:      150e3, // 40 hours
-   image:      "Actions/AA-garrison-sector.pcx",
+   image:      "AA-garrison-sector",
 
    req: { action: 410, status: COMPLETE }
 }
@@ -584,7 +584,7 @@ action: {
    text:       "Broken Communications",
    source:     Mail,
    file:       "Actions/m1-incommunicado.txt",
-   image:      "Actions/m0-mail-icon.pcx",
+   image:      "m0-mail-icon",
    scene:      "M1-Incommunicado"
    delay:      60e3
 
@@ -638,7 +638,7 @@ action: {
    zone:       Path,
    asset_type: fleet,
    asset_id:   1,
-   image:      "Actions/AA-path-sector.pcx"
+   image:      "AA-path-sector"
 
    req: { c1: "Marakan Hegemony", group_type: battalion, group_id: 12, comp: LT, score: 2000 },
 }
@@ -692,7 +692,7 @@ action: {
    text:       "Trocanther Biodomes",
    source:     SECURE,
    file:       "Actions/10-trocanther-biodomes.txt",
-   image:      "Actions/10-trocanther-biodomes.pcx"
+   image:      "10-trocanther-biodomes"
    scene:      "10-Trocanther-Biodomes"
 
    req: { action: 600, status: COMPLETE }
@@ -706,7 +706,7 @@ action: {
    zone:       Narcissus,
    asset_type: fleet,
    asset_id:   1,
-   image:      "Actions/AA-narcissus-sector.pcx"
+   image:      "AA-narcissus-sector"
    delay:      60e3,
 
    req: { action: 600, status: COMPLETE }
@@ -719,7 +719,7 @@ action: {
    zone:       Volante,
    asset_type: fleet,
    asset_id:   2,
-   image:      "Actions/AA-volante-sector.pcx"
+   image:      "AA-volante-sector"
    delay:      60e3,
 
    req: { action: 600, status: COMPLETE }
@@ -842,7 +842,7 @@ action: {
    text:       "Endgame",
    source:     FORCOM,
    file:       "Actions/12-endgame.txt",
-   image:      "Actions/banner-alliance.pcx",
+   image:      "banner-alliance",
    scene:      "12-Endgame"
 
    req: { c1: "Marakan Hegemony", group_type: fleet, group_id: 9, comp: LT, score: 4000 },
@@ -993,7 +993,7 @@ action: {
    zone:       Xanthe,
    asset_type: fleet,
    asset_id:   1,
-   image:      "Actions/AA-xanthe-sector.pcx",
+   image:      "AA-xanthe-sector",
 
    req: { action: 800, status: COMPLETE }
 }
@@ -1017,7 +1017,7 @@ action: {
    zone:       Marak,
    asset_type: fleet,
    asset_id:   1,
-   image:      "Actions/AA-marak-sector.pcx",
+   image:      "AA-marak-sector",
    delay:      70e3,
 
    req: { action: 830, status: COMPLETE }
@@ -1121,7 +1121,7 @@ action: {
    text:       "This Can't Wait Any Longer...",
    source:     Mail,
    file:       "Actions/m2-final-message.txt",
-   image:      "Actions/m0-mail-icon.pcx",
+   image:      "m0-mail-icon",
    scene:      "M2-Final-Message"
 
    delay:      50e3,
@@ -1138,7 +1138,7 @@ action: {
    text:       "Status of Marak Prime",
    source:     FORCOM,
    file:       "Actions/15-disappearance.txt",
-   image:      "Actions/banner-alliance.pcx",
+   image:      "banner-alliance",
    scene:      "15-Disappearance"
 
    delay:      200e3,
@@ -1161,7 +1161,7 @@ action: {
    rgn:        Marak,
    text:       "Operation Nightfall Victory",
    file:       "Actions/victory.txt",
-   image:      "Actions/victory",
+   image:      "victory",
    scene:      "Victory"
 
    delay:      250e3,
@@ -1179,7 +1179,7 @@ action: {
    rgn:        Marak,
    text:       "Operation Nightfall Victory",
    file:       "Actions/victory.txt",
-   image:      "Actions/victory",
+   image:      "victory",
    scene:      "Victory"
 
    req: { action: 800, status: COMPLETE }
@@ -1195,7 +1195,7 @@ action: {
    rgn:        Marak,
    text:       "Operation Nightfall Victory",
    file:       "Actions/victory.txt",
-   image:      "Actions/victory",
+   image:      "victory",
    scene:      "Victory"
 
    req: { action: 800, status: COMPLETE }
@@ -1210,7 +1210,7 @@ action: {
    rgn:        Marak,
    text:       "Operation Nightfall Victory",
    file:       "Actions/victory.txt",
-   image:      "Actions/victory",
+   image:      "victory",
    scene:      "Victory"
 
    req: { action: 800, status: COMPLETE }
@@ -1228,7 +1228,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def1.txt",
-   image:      "Actions/def1",
+   image:      "def1",
    scene:      "Defeat1"
 
    req: { action: 400, status: COMPLETE, not: true }
@@ -1243,7 +1243,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def1.txt",
-   image:      "Actions/def1",
+   image:      "def1",
    scene:      "Defeat1"
 
    req: { action: 400, status: COMPLETE, not: true }
@@ -1259,7 +1259,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def1.txt",
-   image:      "Actions/def1",
+   image:      "def1",
    scene:      "Defeat1"
 
    req: { action: 400, status: COMPLETE, not: true }
@@ -1274,7 +1274,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def1.txt",
-   image:      "Actions/def1",
+   image:      "def1",
    scene:      "Defeat1"
 
    req: { action: 400, status: COMPLETE, not: true }
@@ -1293,7 +1293,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def2.txt",
-   image:      "Actions/def2",
+   image:      "def2",
    scene:      "Defeat2"
 
    req: { action: 600, status: COMPLETE, not: true }
@@ -1308,7 +1308,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def2.txt",
-   image:      "Actions/def2",
+   image:      "def2",
    scene:      "Defeat2"
 
    req: { action: 600, status: COMPLETE, not: true }
@@ -1324,7 +1324,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def2.txt",
-   image:      "Actions/def2",
+   image:      "def2",
    scene:      "Defeat2"
 
    req: { action: 600, status: COMPLETE, not: true }
@@ -1339,7 +1339,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def2.txt",
-   image:      "Actions/def2",
+   image:      "def2",
    scene:      "Defeat2"
 
    req: { action: 600, status: COMPLETE, not: true }
@@ -1358,7 +1358,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def3.txt",
-   image:      "Actions/def3",
+   image:      "def3",
    scene:      "Defeat3"
 
    req: { action: 800, status: COMPLETE, not: true }
@@ -1373,7 +1373,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def3.txt",
-   image:      "Actions/def3",
+   image:      "def3",
    scene:      "Defeat3"
 
    req: { action: 800, status: COMPLETE, not: true }
@@ -1389,7 +1389,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def3.txt",
-   image:      "Actions/def3",
+   image:      "def3",
    scene:      "Defeat3"
 
    req: { action: 800, status: COMPLETE, not: true }
@@ -1404,7 +1404,7 @@ action: {
    rgn:        Jarnell,
    text:       "Operation Nightfall Defeat",
    file:       "Actions/def3.txt",
-   image:      "Actions/def3",
+   image:      "def3",
    scene:      "Defeat3"
 
    req: { action: 800, status: COMPLETE, not: true }

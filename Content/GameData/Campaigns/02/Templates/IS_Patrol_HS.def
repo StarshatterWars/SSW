@@ -169,7 +169,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    HS,
-   sound:           "Vox/Misc/A02-01.ogg",
+   sound:           "A02-01",
    event_message:   "Mayday! Mayday! We are under attack!",
 
    trigger:         Navpoint,

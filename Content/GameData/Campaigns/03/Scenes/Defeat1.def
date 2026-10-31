@@ -85,14 +85,14 @@ event: { type: Display,    message: "Defeat",             font: Limerick18, colo
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/03/End_02_Defeat.ogg"
+   sound: "End_02_Defeat"
 }
 
 event: { type: Camera,     time:  10, param: (6,25), target: Dragon }
 
 event: { type: Camera,     time:  30, param: (6,15), target: Vendetta }
 
-event: { type: Display,    time:  38, image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  38, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  40, message: "Scene 1" }
 event: { type: Exit }

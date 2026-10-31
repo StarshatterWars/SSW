@@ -106,7 +106,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Status of Marak Prime\nClassified: TOP SECRET R7 NTK/EO" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_15.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_15" }
 
 
 event: { type: Camera,     time:  10, param: 3,      target: "Dragon",     vec: (2, -0.1, 8e3)        }

@@ -148,19 +148,19 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/02/Scenes/News.pcx",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3, target: "body:Jarnell",   vec: (1,0,4e6) }
 event: { type: Camera,                param: 5,                           vec: (0.13, 0.01, 0.01) }
 event: { type: Display,               message: "Jarnell",                 font: Limerick18,     color: 0xffffff80, fade: (1,9,1), rect: (20,20, 300,100) }
 event: { type: Display,    time:   5, message: "Alliance Capitol",        font: Limerick12,     color: 0xffffff80, fade: (1,7,1), rect: (20,40, 300,100) }
-event: { type: Display,               image:   "Campaigns/02/Scenes/Senate.pcx", color: 0xffffffff, fade: (1,7,1), rect: (-280,-280, 256,256) }
+event: { type: Display,               image:   "Senate", color: 0xffffffff, fade: (1,7,1), rect: (-280,-280, 256,256) }
 
 event: {
    event: Message
    time:  6
-   sound: "Vox/Scenes/02/News_09_Senate_Resolution.ogg"
+   sound: "News_09_Senate_Resolution"
 }
 
 

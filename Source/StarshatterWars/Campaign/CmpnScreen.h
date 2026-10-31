@@ -26,6 +26,7 @@
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
 #include "GameStructs.h"
+#include "RenderCommandFence.h"
 #include "CmpnScreen.generated.h"
 
 class UCmdDlg;
@@ -64,6 +65,7 @@ public:
 
     /** Unload the active cutscene/system stream without replacing the persistent world. */
     void CleanupActiveScene();
+    void CompleteActiveScene();
 
     bool CloseTopmost();
 
@@ -203,7 +205,10 @@ protected:
     bool bHasPendingSceneMission = false;
     bool bSceneTransitionActive = false;
     bool bSceneStreamingBlockedOnce = false;
+    friend class FCampaignSceneLoadingGateTest;
     bool bScenePresentationPrepared = false;
+    bool bScenePlaybackStarted = false;
+    FRenderCommandFence SceneRevealFence;
     bool bSceneWarmupStarted = false;
 
     FString ActiveSceneName;

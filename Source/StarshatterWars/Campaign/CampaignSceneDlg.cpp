@@ -1,5 +1,6 @@
 ﻿
 #include "CampaignSceneDlg.h"
+#include "CampaignPresentationRules.h"
 #include "AudioRouting.h"
 #include "Engine/Engine.h"
 #include "Components/AudioComponent.h"
@@ -32,11 +33,19 @@
 #include "Orbital.h"
 #include "ShipActor.h"
 #include "Ship.h"
+#include "ShipDesignRegistry.h"
+#include "MissionEvent.h"
+#include "Misc/Paths.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 
 #include "Engine/Font.h"
 #include "Engine/Texture2D.h"
+#include "Engine/StaticMesh.h"
+#if WITH_EDITOR
+#include "AssetCompilingManager.h"
+#endif
+#include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 UCampaignSceneDlg::UCampaignSceneDlg(const FObjectInitializer& ObjectInitializer)
@@ -48,7 +57,7 @@ void UCampaignSceneDlg::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE WIDGET CONSTRUCTED Widget=%s"), *GetNameSafe(this));
+    UE_LOG(LogTemp, Verbose, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE WIDGET CONSTRUCTED Widget=%s"), *GetNameSafe(this));
 
 
     BuildRuntimeWidgets();
@@ -317,6 +326,9 @@ void UCampaignSceneDlg::ResetSceneState()
     StopCutsceneAudio();
     ActiveMissionData = FS_CampaignMission();
     SortedEvents.Empty();
+    FiredSceneEventIds.Empty();
+    PreparedSceneAssets.Empty();
+    MissingSceneAsset.Empty();
 
     DisplayBlocks.Empty();
     SortedDisplayTimes.Empty();
@@ -375,7 +387,7 @@ void UCampaignSceneDlg::Hide()
 
 void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& MissionData)
 {
-    UE_LOG(LogTemp, Error, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE LOAD Scene=%s Events=%d"),
+    UE_LOG(LogTemp, Verbose, TEXT("[SSW BUILD PROBE 20261018] CUTSCENE LOAD Scene=%s Events=%d"),
         *MissionData.Scene, MissionData.Event.Num());
 
     UE_LOG(LogTemp, VeryVerbose,
@@ -397,6 +409,7 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
     }
 
     BuildSortedEventQueue();
+    PreloadSceneAssets();
 
     UE_LOG(LogTemp, Warning,
         TEXT("[SceneDlg] LoadSceneFromMissionData: Mission=%s Scene=%s Objective=%s Events=%d"),
@@ -405,23 +418,19 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
         *MissionData.Objective,
         MissionData.Event.Num());
 
-    // Planet preflight before any cutscene camera event. Keep ships separate.
-    if (UWorld* World = GetWorld())
+    // Build the authored scene system explicitly. Campaign::GetMission() may
+    // still refer to the assignment that called this scene.
+    if (ASystemSceneBuilder* Builder = ResolveSystemSceneBuilder())
     {
-        ASystemLevelScriptActor* SystemLevel = nullptr;
-        for (TActorIterator<ASystemLevelScriptActor> It(World); It; ++It)
+        const FString SystemName = MissionData.MissionSystem.TrimStartAndEnd();
+        if (!Builder->GetLastResolvedSystemName().Equals(SystemName, ESearchCase::IgnoreCase) ||
+            Builder->GetSpawnedBodies().IsEmpty())
         {
-            if (IsValid(*It)) { SystemLevel = *It; break; }
-        }
-        if (!SystemLevel)
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("[PlanetPreflight] Persistent SystemLevelScriptActor not found; planets not initialized"));
-        }
-        else if (!SystemLevel->EnsureCurrentSystemBuilt())
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("[PlanetPreflight] Planet system was not built; inspect runtime registry and satellites"));
+            Builder->bBuildOnBeginPlay = false;
+            Builder->DataSource = ESystemSceneSource::StarSystem;
+            Builder->TargetSystemName = SystemName;
+            Builder->TargetGalaxyName.Empty();
+            Builder->BuildSystemScene();
         }
     }
 
@@ -462,8 +471,11 @@ void UCampaignSceneDlg::LoadSceneFromMissionData(const FS_CampaignMission& Missi
 void UCampaignSceneDlg::BuildSortedEventQueue()
 {
     SortedEvents = ActiveMissionData.Event;
+    FiredSceneEventIds.Empty();
+    for (int32 Index = 0; Index < SortedEvents.Num(); ++Index)
+        if (SortedEvents[Index].EventId <= 0) SortedEvents[Index].EventId = 100000 + Index;
 
-    SortedEvents.Sort([](const FS_MissionEvent& A, const FS_MissionEvent& B)
+    SortedEvents.StableSort([](const FS_MissionEvent& A, const FS_MissionEvent& B)
         {
             return A.EventTime < B.EventTime;
         });
@@ -589,7 +601,16 @@ FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) cons
         return Token;
     }
 
-    const int32 CampaignNum = ResolveCampaignNumber();
+    // Legacy definitions use Vox/Scenes/03/Name.wav; imported assets use
+    // the same basename under /Game/Audio/Vox/Scenes/<campaign>/.
+    Token.ReplaceInline(TEXT("\\"), TEXT("/"));
+    int32 CampaignNum = ResolveCampaignNumber();
+    TArray<FString> Parts;
+    Token.ParseIntoArray(Parts, TEXT("/"), true);
+    const int32 ScenePart = Parts.IndexOfByKey(TEXT("Scenes"));
+    if (Parts.IsValidIndex(ScenePart + 1) && ScenePart != INDEX_NONE && Parts[ScenePart + 1].IsNumeric())
+        CampaignNum = FCString::Atoi(*Parts[ScenePart + 1]);
+    Token = FPaths::GetBaseFilename(Token);
 
     TArray<FString> CandidatePaths;
     CandidatePaths.Add(FString::Printf(
@@ -604,6 +625,7 @@ FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) cons
         *Token,
         *Token));
 
+    CandidatePaths.Add(FString::Printf(TEXT("/Game/Audio/Effects/%s.%s"), *Token, *Token));
     CandidatePaths.Add(FString::Printf(
         TEXT("/Game/Audio/%s.%s"),
         *Token,
@@ -631,6 +653,12 @@ float UCampaignSceneDlg::ResolveSceneDurationSeconds() const
 
     for (const FS_MissionEvent& Event : SortedEvents)
     {
+        if (Event.EventType == MISSIONEVENT_TYPE::END_SCENE)
+        {
+            const bool bTriggered = CampaignPresentationRules::HasRuntimeSceneTrigger(Event);
+            if (bTriggered) return TNumericLimits<float>::Max();
+            if (Event.EventTime > 0.0) return static_cast<float>(Event.EventTime + Event.EventDelay);
+        }
         LatestTime = FMath::Max(LatestTime, Event.EventTime);
     }
 
@@ -649,16 +677,20 @@ bool UCampaignSceneDlg::PrepareSceneCameraBeforeReveal()
 
     for (const FS_MissionEvent& Event : SortedEvents)
     {
-        if (Event.EventTime > 0.1)
-            break;
         if (Event.EventType == MISSIONEVENT_TYPE::CAMERA &&
-            Event.EventParam.Num() > 0 && Event.EventParam[0] == 3)
+            (!Event.EventParam.Num() || Event.EventParam[0] != 5))
         {
             ExecuteCameraEvent(Event);
-            return true;
+            if (CameraManager* Director = CameraManager::GetInstance()) Director->ExecFrame(0.0);
+            if (UGameInstance* GI = GetGameInstance())
+                if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+                    Runtime->PrepareCutsceneView();
+            APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+            AActor* View = PC ? PC->GetViewTarget() : nullptr;
+            return IsValid(View) && (View->IsA<ASSWLegacyCameraViewActor>() || View->IsA<ASSWCameraManager>());
         }
     }
-    UE_LOG(LogTemp, Error, TEXT("[ScenePreload] Initial planetary camera event missing"));
+    UE_LOG(LogTemp, Warning, TEXT("[ScenePreload] Initial camera event missing"));
     return false;
 }
 
@@ -667,6 +699,8 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
     UE_LOG(LogTemp, VeryVerbose,
         TEXT("[CUTSCENE TRACE] BeginSceneByName Widget=%s Scene='%s' Events=%d"),
         *GetNameSafe(this), *InSceneName, SortedEvents.Num());
+    for (TActorIterator<ACampaignSceneActor> It(GetWorld()); It; ++It)
+        It->SetScenePlaybackEnabled(true);
     ActiveSceneName = InSceneName;
     SceneStartRealSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());
 
@@ -698,9 +732,7 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
         CaptionTextBottom->SetText(FText::GetEmpty());
     }
 
-    UTexture2D* TestTexture =
-        ResolveScenePanelTexture(TEXT("/Script/Engine.Texture2D'/Game/UI/Campaigns/02/News.News'"));
-    ApplyPanelTexture(TestTexture);
+    ClearPanelTexture();
 
     // Phase 5: do not activate or spawn the compatibility camera here.
     // The first DataTable camera event chooses either the passive legacy
@@ -818,14 +850,7 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
             PanelFadeOutTime);
     }
 
-    const FString Message = FixEscapedText(Event.EventMessage);
-    if (!Message.IsEmpty())
-    {
-        if (MessageTitleText)
-        {
-            MessageTitleText->SetText(FText::FromString(Message));
-        }
-    }
+    if (!Event.EventMessage.IsEmpty()) ExecuteDisplayBlockAtTime(Event.EventTime);
 }
 
 void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
@@ -876,44 +901,19 @@ void UCampaignSceneDlg::ExecuteMessageEvent(const FS_MissionEvent& Event)
 
 void UCampaignSceneDlg::ProcessPendingEvents(float ElapsedSeconds)
 {
-    while (NextMessageEventIndex < SortedEvents.Num())
+    // Triggered events cannot block later timed events in the sorted queue.
+    for (const FS_MissionEvent& Event : SortedEvents)
     {
-        const FS_MissionEvent& Event = SortedEvents[NextMessageEventIndex];
-
-        if (ElapsedSeconds + KINDA_SMALL_NUMBER < Event.EventTime)
+        if (FiredSceneEventIds.Contains(Event.EventId) || !IsSceneEventReady(Event, ElapsedSeconds)) continue;
+        FiredSceneEventIds.Add(Event.EventId);
+        if (Event.EventType == MISSIONEVENT_TYPE::DISPLAY) ExecuteDisplayEvent(Event);
+        else if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE) ExecuteMessageEvent(Event);
+        else if (Event.EventType == MISSIONEVENT_TYPE::CAMERA) ExecuteCameraEvent(Event);
+        else if (Event.EventType == MISSIONEVENT_TYPE::END_SCENE)
         {
-            break;
+            FinishCutscene();
+            return; // Finish clears the queue.
         }
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[SceneDlg] ProcessPendingEvents: firing EventIndex=%d Type=%d Time=%.2f Target='%s' Message='%s' Caption='%s'"),
-            NextMessageEventIndex,
-            (int32)Event.EventType,
-            Event.EventTime,
-            *Event.EventTarget,
-            *Event.EventMessage,
-            *Event.EventCaption);
-
-        if (Event.EventType == MISSIONEVENT_TYPE::DISPLAY)
-        {
-            ExecuteDisplayEvent(Event);
-        }
-        else if (Event.EventType == MISSIONEVENT_TYPE::MESSAGE)
-        {
-            ExecuteMessageEvent(Event);
-        }
-        else if (Event.EventType == MISSIONEVENT_TYPE::CAMERA)
-        {
-            ExecuteCameraEvent(Event);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[SceneDlg] ProcessPendingEvents: unhandled event type %d"),
-                (int32)Event.EventType);
-        }
-
-        ++NextMessageEventIndex;
     }
 }
 
@@ -927,6 +927,7 @@ void UCampaignSceneDlg::AdvanceSceneFromTimer(float NowSeconds)
     const float Elapsed = NowSeconds - SceneStartRealSeconds;
 
     ProcessPendingEvents(Elapsed);
+    if (!bSceneRunning) return; // An authored EndScene may already have finished and cleared state.
 
     if (Elapsed >= SceneDurationSeconds)
     {
@@ -966,7 +967,15 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
         return Token;
     }
 
-    const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/02/%s.%s"), *Token, *Token);
+    Token.ReplaceInline(TEXT("\\"), TEXT("/"));
+    int32 PanelCampaign = ResolveCampaignNumber();
+    TArray<FString> Parts;
+    Token.ParseIntoArray(Parts, TEXT("/"), true);
+    const int32 CampaignPart = Parts.IndexOfByKey(TEXT("Campaigns"));
+    if (CampaignPart != INDEX_NONE && Parts.IsValidIndex(CampaignPart + 1) && Parts[CampaignPart + 1].IsNumeric())
+        PanelCampaign = FCString::Atoi(*Parts[CampaignPart + 1]);
+    Token = FPaths::GetBaseFilename(Token);
+    const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/%02d/%s.%s"), PanelCampaign, *Token, *Token);
     if (LoadObject<UTexture2D>(nullptr, *CampaignPath))
     {
         UE_LOG(LogTemp, Warning,
@@ -1859,6 +1868,9 @@ void UCampaignSceneDlg::FinishCutscene()
         return;
     }
 
+    if (bSceneRunning && Manager) Manager->CompleteActiveScene();
+    for (TActorIterator<ACampaignSceneActor> It(GetWorld()); It; ++It)
+        It->SetScenePlaybackEnabled(false);
     bCutsceneTransitionStarted = true;
     bSceneRunning = false;
     bPanelActive = false;
@@ -1880,6 +1892,7 @@ void UCampaignSceneDlg::FinishCutscene()
         Manager->ShowCmdDlg();
     }
     ResetSceneState();
+    bCutsceneTransitionStarted = true; // Ignore repeated exit input until a new scene loads.
 }
 
 bool UCampaignSceneDlg::ResolveElementRegionForTarget(const FString& TargetName, FString& OutRegionName) const
@@ -2094,4 +2107,99 @@ void UCampaignSceneDlg::StopCutsceneAudio()
     {
         if (UAudioComponent* Audio = Entry.Get()) { Audio->Stop(); Audio->DestroyComponent(); }
     }
+}
+
+bool UCampaignSceneDlg::IsPreparedSceneReady(FString& OutStatus) const
+{
+    UWorld* World = GetWorld();
+    if (!World) { OutStatus = TEXT("WAITING FOR WORLD..."); return false; }
+    if (!MissingSceneAsset.IsEmpty()) { OutStatus = TEXT("MISSING SCENE ASSET: ") + MissingSceneAsset; return false; }
+#if WITH_EDITOR
+    if (FAssetCompilingManager::Get().GetNumRemainingAssets() > 0)
+    { OutStatus = TEXT("COMPILING SCENE ASSETS..."); return false; }
+#endif
+    bool bEnvironmentReady = false;
+    for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+    {
+        if (!It->GetLastResolvedSystemName().Equals(ActiveMissionData.MissionSystem.TrimStartAndEnd(), ESearchCase::IgnoreCase)) continue;
+        bEnvironmentReady = !It->GetSpawnedBodies().IsEmpty();
+        for (const FSpawnedSystemBody& Body : It->GetSpawnedBodies())
+            if (!IsValid(Body.Actor.Get())) bEnvironmentReady = false;
+        if (bEnvironmentReady) break;
+    }
+    if (!bEnvironmentReady) { OutStatus = TEXT("WAITING FOR SYSTEM ENVIRONMENT..."); return false; }
+    bool bMissionReady = false;
+    for (TActorIterator<ACampaignSceneActor> It(World); It; ++It)
+        if (It->AreSceneShipsReady(OutStatus)) { bMissionReady = true; break; }
+    if (!bMissionReady) return false;
+    // Compile/register every populated mesh in the visible world, including
+    // planet children and ship attachments. Empty optional gear is allowed.
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        if (It->IsHidden()) continue;
+        TInlineComponentArray<UStaticMeshComponent*> Meshes(*It);
+        for (UStaticMeshComponent* Component : Meshes)
+        {
+            UStaticMesh* Mesh = Component->GetStaticMesh();
+            if (!Mesh || !Component->IsVisible()) continue;
+            if (!Component->IsRegistered() || !Component->IsRenderStateCreated() ||
+                Mesh->IsCompiling() || !Mesh->GetRenderData())
+            {
+                OutStatus = FString::Printf(TEXT("PREPARING MESH: %s"), *Mesh->GetName());
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void UCampaignSceneDlg::PreloadSceneAssets()
+{
+    PreparedSceneAssets.Reset();
+    MissingSceneAsset.Empty();
+    // Hold every authored ship class before playback, including later arrivals.
+    // The runtime still controls when each element actually spawns.
+    TSet<FString> Designs;
+    for (const FS_MissionElement& Element : ActiveMissionData.Element)
+    {
+        if (Element.Design.IsEmpty() || Designs.Contains(Element.Design)) continue;
+        Designs.Add(Element.Design);
+        const FShipDesign* Design = ShipDesignRegistry::Find(Element.Design);
+        const FString Model = Design && !Design->Model.IsEmpty() ? Design->Model : Element.Design;
+        const FString Path = FString::Printf(TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Model, *Model, *Model);
+        if (UClass* Class = LoadClass<AShipActor>(nullptr, *Path)) PreparedSceneAssets.Add(Class);
+        else if (MissingSceneAsset.IsEmpty()) MissingSceneAsset = Path;
+    }
+    TSet<FString> Images, Sounds;
+    for (const FS_MissionEvent& Event : SortedEvents)
+    {
+        if (!Event.EventImage.IsEmpty() && !Images.Contains(Event.EventImage))
+        {
+            Images.Add(Event.EventImage);
+            if (UTexture2D* Texture = ResolveScenePanelTexture(Event.EventImage))
+            {
+                PreparedSceneAssets.Add(Texture);
+                Texture->SetForceMipLevelsToBeResident(60.0f);
+            }
+            else if (MissingSceneAsset.IsEmpty()) MissingSceneAsset = Event.EventImage;
+        }
+        if (!Event.EventSound.IsEmpty() && !Sounds.Contains(Event.EventSound))
+        {
+            Sounds.Add(Event.EventSound);
+            if (USoundBase* Sound = ResolveSceneSound(Event.EventSound)) PreparedSceneAssets.Add(Sound);
+        }
+    }
+}
+
+bool UCampaignSceneDlg::IsSceneEventReady(const FS_MissionEvent& Event, float ElapsedSeconds) const
+{
+    const bool bTriggered = CampaignPresentationRules::HasRuntimeSceneTrigger(Event);
+    if (!bTriggered) return ElapsedSeconds + KINDA_SMALL_NUMBER >= Event.EventTime + Event.EventDelay;
+    if (Sim* Runtime = Sim::GetSim())
+    {
+        ListIter<MissionEvent> Events = Runtime->GetEvents();
+        while (++Events)
+            if (Events.value()->EventID() == Event.EventId) return Events.value()->IsComplete();
+    }
+    return false;
 }

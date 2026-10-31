@@ -4,6 +4,7 @@
 #include "SceneMeshActor.h"
 #include "SystemSceneBuilder.h"
 #include "Game.h"
+#include "Starshatter.h"
 #include "Drive.h"
 #include "Instruction.h"
 #include "Mission.h"
@@ -14,6 +15,7 @@
 #include "EngineUtils.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
 
 #include "PlanetActor.h"
 #include "ShipActor.h"
@@ -76,7 +78,7 @@ void ACampaignSceneActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    if (bEnableRuntimeAITick)
+    if (bEnableRuntimeAITick && bScenePlaybackEnabled)
     {
         TickRuntimeShips(DeltaSeconds);
     }
@@ -169,6 +171,15 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 
 void ACampaignSceneActor::ClearRuntimeShips()
 {
+    SetScenePlaybackEnabled(false);
+    if (CutsceneMission && Sim::GetSim() && Sim::GetSim()->GetMission() == CutsceneMission)
+    {
+        Mission* OwnedMission = CutsceneMission;
+        if (Starshatter* Stars = Starshatter::GetInstance())
+            if (Stars->InCutscene()) Stars->EndCutscene();
+        Sim::GetSim()->UnloadMission();
+        delete OwnedMission;
+    }
     CutsceneMission = nullptr;
     UE_LOG(LogTemp, Warning,
         TEXT("[CampaignSceneActor] ClearRuntimeShips skipped. Runtime ships are owned by Sim/SimRegion."));
@@ -261,7 +272,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(
         if (UTimerSubsystem* Timer =
             GI->GetSubsystem<UTimerSubsystem>())
         {
-            Timer->StartMissionRun(true);
+            Timer->StopMissionRun();
         }
     }
 
@@ -282,6 +293,12 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(
     //-------------------------------------------------------------
     if (Sim* SimInst = Sim::GetSim())
     {
+        // Never execute an old live mission when LoadMission refuses a replacement.
+        if (SimInst->GetMission())
+        {
+            UE_LOG(LogTemp, Error, TEXT("[ScenePreload] Another mission is still loaded"));
+            return;
+        }
         Mission* LegacyMission =
             new Mission();
 
@@ -290,9 +307,12 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(
             //-----------------------------------------------------
             // Build legacy mission from data
             //-----------------------------------------------------
-            LegacyMission->LoadMissionCommon(
-                MissionData,
-                true);
+            if (!LegacyMission->LoadMissionCommon(MissionData, true))
+            {
+                UE_LOG(LogTemp, Error, TEXT("[ScenePreload] Mission model data is incomplete"));
+                delete LegacyMission;
+                return;
+            }
 
             //-----------------------------------------------------
             // Load into sim
@@ -1051,3 +1071,54 @@ void ACampaignSceneActor::BuildSimRegionsFromEnvironment()
 
 
 
+
+bool ACampaignSceneActor::IsSceneBuilt() const
+{
+    return CutsceneMission && Sim::GetSim() && Sim::GetSim()->GetMission() == CutsceneMission;
+}
+
+void ACampaignSceneActor::SetScenePlaybackEnabled(bool bEnabled)
+{
+    if (bEnabled == bScenePlaybackEnabled) return;
+    bScenePlaybackEnabled = bEnabled;
+    if (bEnabled && IsSceneBuilt()) Sim::GetSim()->BeginPreparedCutscenePlayback(CutsceneMission);
+    if (UGameInstance* GI = GetGameInstance())
+        if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
+        {
+            if (bEnabled) Timer->StartMissionRun(true);
+            else Timer->StopMissionRun();
+        }
+}
+
+bool ACampaignSceneActor::AreSceneShipsReady(FString& OutStatus) const
+{
+    if (!IsSceneBuilt()) { OutStatus = TEXT("WAITING FOR SCENE MISSION..."); return false; }
+    // Check ships that exist at time zero; deferred reinforcements must not be
+    // spawned early just to pass the loading gate.
+    bool bHasShips = false;
+    ListIter<SimRegion> Regions = Sim::GetSim()->GetRegions();
+    while (++Regions)
+    {
+        ListIter<Ship> Ships = Regions.value()->GetShips();
+        while (++Ships)
+        {
+            Ship* RuntimeShip = Ships.value();
+            bHasShips = true;
+            AShipActor* Visual = nullptr;
+            for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+                if (IsValid(*It) && It->GetRuntimeShip() == RuntimeShip) { Visual = *It; break; }
+            // Camera pods are intentionally invisible and have no hull art.
+            if (Visual && Visual->IsA<ACameraPodActor>()) continue;
+            if (!Visual || !Visual->HullMesh || !Visual->HullMesh->GetStaticMesh() ||
+                !Visual->HullMesh->IsRegistered() || !Visual->HullMesh->IsRenderStateCreated() ||
+                Visual->HullMesh->GetStaticMesh()->IsCompiling() ||
+                !Visual->HullMesh->GetStaticMesh()->GetRenderData())
+            {
+                OutStatus = FString::Printf(TEXT("LOADING MODEL: %s"), ANSI_TO_TCHAR(RuntimeShip->GetName()));
+                return false;
+            }
+        }
+    }
+    if (!bHasShips) { OutStatus = TEXT("WAITING FOR SCENE SHIPS..."); return false; }
+    return true;
+}

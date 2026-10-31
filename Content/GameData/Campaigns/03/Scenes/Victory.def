@@ -80,12 +80,12 @@ event: { type: Display,    message: "Victory",            font: Limerick18, colo
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/03/End_01_Victory.ogg"
+   sound: "End_01_Victory"
 }
 
 event: { type: Camera,     time:  15, param: (6,30), target: Archon }
 
-event: { type: Display,    time:  38, image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  38, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  40, message: "Scene 1" }
 event: { type: Exit }

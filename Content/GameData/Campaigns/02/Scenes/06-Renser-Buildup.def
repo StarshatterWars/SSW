@@ -79,7 +79,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 event: { type: Camera,                param: 3,  target: "Ironhelm",  vec: (1,0.2,350e3)           }
 event: { type: Camera,                param: 5,                       vec: (0.10, 0.01, 0.02)  }
 
@@ -94,7 +94,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), fon
 event: {
    event: Message
    time:  5
-   sound: "Vox/Scenes/02/Briefing_06.ogg"
+   sound: "Briefing_06"
 }
 
 

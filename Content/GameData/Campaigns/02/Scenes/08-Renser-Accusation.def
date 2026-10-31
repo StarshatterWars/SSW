@@ -155,8 +155,8 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/02/Scenes/News.pcx",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3,  target: "body:Renser",   vec: (1,0,1e7) }
 event: { type: Camera,                param: 5,                           vec: (-0.13, 0.01, 0.02) }
@@ -164,7 +164,7 @@ event: { type: Camera,                param: 5,                           vec: (
 event: {
    event: Message
    time:  6
-   sound: "Vox/Scenes/02/News_08_Renser_Accusation.ogg"
+   sound: "News_08_Renser_Accusation"
 }
 event: { type: Display,               message: "Renser System",           font: Limerick18,   color: 0xffffff80, fade: (1,7,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Marakan Hegemony",        font: Limerick12,   color: 0xffffff80, fade: (1,7,1), rect: (20,40, 300,100) }

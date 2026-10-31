@@ -130,6 +130,8 @@ public:
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
     void RefreshTravelPresentation(ASystemSceneBuilder* Builder = nullptr);
+    // Publish a prepared cinematic camera without advancing simulation time.
+    void PrepareCutsceneView() { SyncLegacyCameraView(); }
 private:
     void SyncLegacyCameraView();
     void UpdateMissionWaypoints();

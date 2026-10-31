@@ -30,6 +30,7 @@
 #include "Starshatter.h"
 #include "PlayerCharacter.h"
 #include "FormattingUtils.h"
+#include "Misc/Paths.h"
 #include "Mouse.h"
 #include "SSWGameInstance.h"
 
@@ -706,12 +707,15 @@ FString UCmdIntelDlg::GetIntelImageAssetPath(const FString& IntelImageName) cons
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 
 	const FString CampaignFolder = FString::Printf(TEXT("%02d"), CampaignIndex);
+    FString ImageToken = IntelImageName;
+    ImageToken.ReplaceInline(TEXT("\\"), TEXT("/"));
+    const FString ImageName = FPaths::GetBaseFilename(ImageToken);
 
 	const FString AssetPath = FString::Printf(
 		TEXT("/Game/UI/Campaigns/%s/%s.%s"),
 		*CampaignFolder,
-		*IntelImageName,
-		*IntelImageName);
+		*ImageName,
+		*ImageName);
 
 	UE_LOG(LogTemp, Log,
 		TEXT("[CmdIntelDlg] Intel Image Asset: %s"),
@@ -730,12 +734,13 @@ void UCmdIntelDlg::GetIntelAudioFile(const FString& IntelAudioName)
 	if (!SSWInstance)
 		return;
 
-	AudioPath = TEXT("/Game/Audio/Vox/Scenes/0");
-	AudioPath.Append(FString::FromInt(SSWInstance->GetActiveCampaign().Index + 1));
-	AudioPath.Append(TEXT("/"));
-	AudioPath.Append(IntelAudioName);
-	AudioPath.Append(TEXT("."));
-	AudioPath.Append(IntelAudioName);
+    FString Token = IntelAudioName;
+    Token.ReplaceInline(TEXT("\\"), TEXT("/"));
+    Token = FPaths::GetBaseFilename(Token);
+    const Campaign* CurrentCampaign = Campaign::GetCampaign();
+    const int32 Number = CurrentCampaign ? CurrentCampaign->GetCampaignId() : SSWInstance->GetActiveCampaign().Index + 1;
+    AudioPath = Token.IsEmpty() ? FString() : FString::Printf(
+        TEXT("/Game/Audio/Vox/Scenes/%02d/%s.%s"), Number, *Token, *Token);
 
 	UE_LOG(LogTemp, Log, TEXT("Action Audio: %s"), *AudioPath);
 }

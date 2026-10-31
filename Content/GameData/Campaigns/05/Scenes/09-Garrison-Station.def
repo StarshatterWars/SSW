@@ -38,14 +38,14 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "*************************************\n*** FLASH CODED +$TIME \n*** GARRISON MILITARY LABORATORY\n*** GARRISON SECTOR\n*** CLASSIFIED: SECRET R3 NTK\n*************************************" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_09_Garrison_Station.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_09_Garrison_Station" }
 
 
 event: { type: Camera,     time:  15, param: 3,      target: "Garrison Laboratory",  vec: (2, 0.1, 27e3)      }
 event: { type: Camera,                param: 5,                                      vec: (0.11, 0.01, -0.02) }
 
 
-event: { type: Display,    time:  20, image: "Campaigns/05/Scenes/Turret.pcx", color: 0xffffffff, fade: (1,7,1), rect: (-280,-280,256,256) }
+event: { type: Display,    time:  20, image: "Turret", color: 0xffffffff, fade: (1,7,1), rect: (-280,-280,256,256) }
 
 
 event: { type: EndScene,   time:  48, message: "Scene 1" }

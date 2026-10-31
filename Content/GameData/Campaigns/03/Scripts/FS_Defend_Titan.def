@@ -184,7 +184,7 @@ event: {
    type:            Message,
    event_ship:      Player,
    event_source:    A1,
-   sound:           "Vox/Misc/A02-01.ogg",
+   sound:           "A02-01",
    event_message:   "vox.misc.a02-01",
 
    trigger:         Time,

@@ -38,7 +38,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Ramek Station\nClassified: SECRET R2 NTK" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_08_Ramek_Station.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_08_Ramek_Station" }
 
 
 event: { type: Camera,     time:  10, param: 3,      target: "body:Ramek", vec: (2, 0.1, 7e7)          }

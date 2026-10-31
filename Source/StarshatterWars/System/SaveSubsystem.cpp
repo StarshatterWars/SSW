@@ -1,4 +1,5 @@
 #include "SaveSubsystem.h"
+#include "SSWGameInstance.h"
 
 #include "TimerSubsystem.h"
 #include "CampaignSave.h"
@@ -239,6 +240,11 @@ bool USaveSubsystem::DoesCampaignSaveExist(FName RowName) const
 
 UCampaignSave* USaveSubsystem::LoadOrCreateCampaignSave(int32 CampaignIndex, FName RowName, const FString& DisplayName)
 {
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        CampaignSave = GI->LoadOrCreateCampaignSave(CampaignIndex, RowName, DisplayName);
+        return CampaignSave;
+    }
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 	if (RowName.IsNone())
 		return nullptr;
@@ -276,6 +282,11 @@ UCampaignSave* USaveSubsystem::LoadOrCreateCampaignSave(int32 CampaignIndex, FNa
 
 UCampaignSave* USaveSubsystem::CreateNewCampaignSave(int32 CampaignIndex, FName RowName, const FString& DisplayName)
 {
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        CampaignSave = GI->CreateNewCampaignSave(CampaignIndex, RowName, DisplayName);
+        return CampaignSave;
+    }
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 	if (RowName.IsNone())
 		return nullptr;
@@ -318,6 +329,10 @@ UCampaignSave* USaveSubsystem::CreateNewCampaignSave(int32 CampaignIndex, FName 
 
 bool USaveSubsystem::SaveCampaign(bool /*bForce*/)
 {
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        CampaignSave = GI->CampaignSave;
+    }
 	if (!CampaignSave || CampaignSave->CampaignRowName.IsNone())
 		return false;
 

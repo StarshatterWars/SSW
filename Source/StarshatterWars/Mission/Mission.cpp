@@ -14,6 +14,7 @@
 */
 
 #include "Mission.h"
+#include "CampaignPresentationRules.h"
 
 #include "MissionEvent.h"
 #include "StarSystem.h"
@@ -131,8 +132,8 @@ bool Mission::LoadMissionCommon(
 			InData.Stardate;
 
 		start =
-			UFormattingUtils::ParseStarshatterTime(
-				InData.StartTime);
+            InData.StartTime.IsEmpty() && !InData.Scene.IsEmpty() && InData.MissionType != EMissionType::TRAINING
+                ? 0 : UFormattingUtils::ParseStarshatterTime(InData.StartTime);
 
 		end =
 			0;
@@ -403,6 +404,7 @@ bool Mission::LoadMissionCommon(
 	// EVENTS
 	//-------------------------------------------------------------
 
+    int32 SceneEventIndex = 0;
 	for (const FS_MissionEvent& SrcEvent : InData.Event)
 	{
 		MissionEvent* Ev =
@@ -445,6 +447,32 @@ bool Mission::LoadMissionCommon(
 		Ev->event_sound =
 			TCHAR_TO_ANSI(*SrcEvent.EventSound);
 
+        if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
+        {
+            if (!InData.Scene.IsEmpty() && InData.MissionType != EMissionType::TRAINING)
+            {
+                Ev->id = SrcEvent.EventId > 0 ? SrcEvent.EventId : 100000 + SceneEventIndex;
+                Ev->SetEventParams(SrcEvent.EventParam.GetData(), FMath::Min(SrcEvent.EventNParams, SrcEvent.EventParam.Num()));
+                Ev->SetTriggerParams(SrcEvent.TriggerParam.GetData(), FMath::Min(SrcEvent.TriggerNParams, SrcEvent.TriggerParam.Num()));
+                Ev->trigger_ship = TCHAR_TO_ANSI(*SrcEvent.TriggerShip);
+                Ev->trigger_target = TCHAR_TO_ANSI(*SrcEvent.TriggerTarget);
+                Ev->event_point = SrcEvent.EventPoint;
+                Ev->event_chance = SrcEvent.EventChance;
+                if (!CampaignPresentationRules::HasRuntimeSceneTrigger(SrcEvent))
+                    Ev->trigger = MissionEvent::TRIGGER_TIME;
+                // UCampaignSceneDlg owns cinematic text/audio/cameras. Keep
+                // silent runtime events for dependency and docking triggers.
+                if (SrcEvent.EventType == MISSIONEVENT_TYPE::MESSAGE ||
+                    SrcEvent.EventType == MISSIONEVENT_TYPE::CAMERA ||
+                    SrcEvent.EventType == MISSIONEVENT_TYPE::DISPLAY)
+                {
+                    Ev->event = MissionEvent::MESSAGE;
+                    Ev->event_message = "";
+                    Ev->event_sound = "";
+                }
+            }
+        }
+        ++SceneEventIndex;
 		AddEvent(
 			Ev);
 	}

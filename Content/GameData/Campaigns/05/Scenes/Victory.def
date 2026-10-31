@@ -81,7 +81,7 @@ event: { type: Display,    message: "Victory",            font: Limerick18, colo
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/05/End_01_Victory.ogg"
+   sound: "End_01_Victory"
 }
 
 event: { type: Camera,     time:  10, param: 3,      target: Orion, vec: (2,0,8e3) }
@@ -108,8 +108,8 @@ event: { type: Camera,                param: 5,                            vec: 
 event: { type: Display,    message: "Jarnell", font: Limerick18, color: 0xffffff80, fade: (1,4,1), rect: (20,20, 600,100) }
 
 
-event: { type: Display,    time:  45, image: "Campaigns/05/Scenes/Black.pcx", color: 0xffffffff, fade: (1,20,0), rect: (0,0,0,0) }
-event: { type: Display,    time:  48, image: "Campaigns/05/Scenes/Alliance.pcx",  color: 0xffffffff, fade: (1,7,1), rect: (0,0, -256,-256) }
+event: { type: Display,    time:  45, image: "Black", color: 0xffffffff, fade: (1,20,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  48, image: "Alliance",  color: 0xffffffff, fade: (1,7,1), rect: (0,0, -256,-256) }
 
 
 event: { type: EndScene,   time:  60, message: "Scene 1" }

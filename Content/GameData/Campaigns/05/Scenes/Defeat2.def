@@ -70,7 +70,7 @@ event: { type: Display,    message: "Defeat",                    font: Limerick1
 event: {
    event: Message
    time:  3
-   sound: "Vox/Scenes/05/End_03_Defeat.ogg"
+   sound: "End_03_Defeat"
 }
 
 event: { type: Camera,     time:  10, param: 3, target: Imperial, vec: (1, 0, 8e3) }
@@ -88,7 +88,7 @@ event: { type: Camera,     time:  27, param: (6,21,2), target: Devastator }
 
 event: { type: Damage,     time:  30, param: 1e7, ship: Heracles, target: Heracles }
 
-event: { type: Display,    time:  38, image: "Campaigns/05/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  38, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  40, message: "Scene 1" }
 event: { type: Exit }

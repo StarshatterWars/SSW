@@ -56,7 +56,7 @@ event: { type: Display,    message: "Defeat",              font: Limerick18, col
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/05/End_02_Defeat.ogg"
+   sound: "End_02_Defeat"
 }
 
 event: { type: Camera,     time:  10, param: (6,22), target: Dragon      }
@@ -65,7 +65,7 @@ event: { type: Camera,     time:  20, param: (6,15), target: "Avenger 1" }
 
 event: { type: Camera,     time:  30, param: (6,32), target: Imperial    }
 
-event: { type: Display,    time:  38, image: "Campaigns/05/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  38, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  40, message: "Scene 1" }
 event: { type: Exit }

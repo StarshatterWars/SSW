@@ -65,7 +65,7 @@ event: { type: Display,    message: "Defeat",                    font: Limerick1
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/04/End_03_Defeat.ogg"
+   sound: "End_03_Defeat"
 }
 
 event: { type: Camera,     time:  10, param: (6,20), target: Vendetta }
@@ -81,7 +81,7 @@ event: { type: Camera,                param: 5,                     vec: (0.1,0,
 
 event: { type: Damage,     time:  32, param: 1e9, ship: Heracles, target: Heracles }
 
-event: { type: Display,    time:  43, image: "Campaigns/04/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  43, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 event: { type: EndScene,   time:  45, message: "Scene 1" }
 event: { type: Exit }
 

@@ -126,6 +126,8 @@ public:
     const List<TemplateList>& GetTemplates() const { return templates; }
 
     void SetMission(Mission* InMission);
+    bool OwnsMission(const Mission* InMission) const
+    { return InMission && (mission == InMission || ActiveMission == InMission); }
     Mission* GetMission() const;
 
     // accessors:

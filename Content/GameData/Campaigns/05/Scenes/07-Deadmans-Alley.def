@@ -104,7 +104,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "*************************************\n*** FLASH CODED +$TIME \n*** DEADMAN'S ALLEY MILITARY BASE\n*** SHADOW CANYON SECTOR \n*** CLASSIFIED: SECRET R3 NTK\n*************************************" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_07_Deadmans_Alley_2.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_07_Deadmans_Alley_2" }
 
 event: { type: Camera,     time:  15, param: 3,      target: "Radix Base",  vec: (2, 0.15, 7e3)       }
 event: { type: Camera,                param: 5,                             vec: (-0.11, 0.01, -0.01) }

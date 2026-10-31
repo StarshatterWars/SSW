@@ -191,18 +191,18 @@ event: {
 
 // VOICE-OVER
 
-event: { id: 101, Type: Sound, time:    2, sound: "Vox/Train/Train-05-01.ogg", message: "" }
-event: { id: 102, Type: Sound, delay:  10, sound: "Vox/Train/Train-05-02.ogg", message: "", trigger: Event,  trigger_param:  101 }
-event: { id: 103, Type: Sound, delay:  14, sound: "Vox/Train/Train-05-03.ogg", message: "", trigger: Event,  trigger_param:  102 }
-event: { id: 104, Type: Sound, delay:  16, sound: "Vox/Train/Train-05-04.ogg", message: "", trigger: Event,  trigger_param:  103 }
-event: { id: 105, Type: Sound, delay:  16, sound: "Vox/Train/Train-05-05.ogg", message: "", trigger: Event,  trigger_param:  104 }
-event: { id: 106, Type: Sound, delay:  10, sound: "Vox/Train/Train-05-06.ogg", message: "", trigger: Event,  trigger_param:  105 }
-event: { id: 107, Type: Sound, delay:   8, sound: "Vox/Train/Train-05-07.ogg", message: "", trigger: Event,  trigger_param:  106 }
-event: { id: 108, Type: Sound, delay:   8, sound: "Vox/Train/Train-05-08.ogg", message: "", trigger: Event,  trigger_param:  107 }
-event: { id: 109, Type: Sound, delay:  25, sound: "Vox/Train/Train-05-09.ogg", message: "", trigger: Event,  trigger_param:  108 }
-event: { id: 110, Type: Sound, delay:   2, sound: "Vox/Train/Train-05-10.ogg", message: "", trigger: "Event (ALL)",  trigger_param:  (5,109) }
-event: { id: 111, Type: Sound, delay:   1, sound: "Vox/Train/Train-05-11.ogg", message: "", trigger: "Event (ALL)",  trigger_param:  (7,110) }
-event: { id: 112, Type: Sound, delay:   5, sound: "Vox/Train/Train-05-12.ogg", message: "", trigger: Event,  trigger_param:  111 }
+event: { id: 101, Type: Sound, time:    2, sound: "Train-05-01", message: "" }
+event: { id: 102, Type: Sound, delay:  10, sound: "Train-05-02", message: "", trigger: Event,  trigger_param:  101 }
+event: { id: 103, Type: Sound, delay:  14, sound: "Train-05-03", message: "", trigger: Event,  trigger_param:  102 }
+event: { id: 104, Type: Sound, delay:  16, sound: "Train-05-04", message: "", trigger: Event,  trigger_param:  103 }
+event: { id: 105, Type: Sound, delay:  16, sound: "Train-05-05", message: "", trigger: Event,  trigger_param:  104 }
+event: { id: 106, Type: Sound, delay:  10, sound: "Train-05-06", message: "", trigger: Event,  trigger_param:  105 }
+event: { id: 107, Type: Sound, delay:   8, sound: "Train-05-07", message: "", trigger: Event,  trigger_param:  106 }
+event: { id: 108, Type: Sound, delay:   8, sound: "Train-05-08", message: "", trigger: Event,  trigger_param:  107 }
+event: { id: 109, Type: Sound, delay:  25, sound: "Train-05-09", message: "", trigger: Event,  trigger_param:  108 }
+event: { id: 110, Type: Sound, delay:   2, sound: "Train-05-10", message: "", trigger: "Event (ALL)",  trigger_param:  (5,109) }
+event: { id: 111, Type: Sound, delay:   1, sound: "Train-05-11", message: "", trigger: "Event (ALL)",  trigger_param:  (7,110) }
+event: { id: 112, Type: Sound, delay:   5, sound: "Train-05-12", message: "", trigger: Event,  trigger_param:  111 }
 
 
 /**********************/

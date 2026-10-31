@@ -112,7 +112,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward1,
-   sound:           "Vox/Misc/A01-01.ogg",
+   sound:           "A01-01",
    event_message:   "Glad to see you guys! Thanks for escorting us.",
 
    trigger:         Event,
@@ -125,7 +125,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward1,
-   sound:           "Vox/Misc/A01-02.ogg",
+   sound:           "A01-02",
    event_message:   "OK, we're ready to make the jump.",
 
    trigger:         Navpoint,
@@ -138,7 +138,7 @@ event: {
    id:              4,
    event:           Message,
    event_ship:      Player,
-   sound:           "Vox/Misc/A01-03.ogg",
+   sound:           "A01-03",
    event_message:   "Form up and we'll go through together.",
 
    trigger:         Event,
@@ -151,7 +151,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward,
-   sound:           "Vox/Misc/A01-04.ogg",
+   sound:           "A01-04",
    event_message:   "All right, we're half way there.",
 
    trigger:         Navpoint,
@@ -163,7 +163,7 @@ event: {
    id:              6,
    event:           Message,
    event_ship:      Player,
-   sound:           "Vox/Misc/A01-05.ogg",
+   sound:           "A01-05",
    event_message:   "Next stop: Harmony Station.",
 
    trigger:         Event,
@@ -176,7 +176,7 @@ event: {
    event:           Message,
    event_ship:      Player,
    event_source:    Ward1,
-   sound:           "Vox/Misc/A01-06.ogg",
+   sound:           "A01-06",
    event_message:   "Thanks for the lift.  I think we are clear now.",
 
    trigger:         Navpoint,

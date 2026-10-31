@@ -197,7 +197,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3, target: "body:Jalah",     vec: (3,0,1e8) }
 event: { type: Camera,                param: 5,                           vec: (0.13, 0.01, 0.01) }
@@ -206,7 +206,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB,       color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Separatist Withdrawal to Jalah\nClassified: CONFIDENTIAL DND/CRYPTO" }
 
-event: { Type: Sound,    time:   2, sound: "Vox/Scenes/02/Briefing_11-OK.ogg" }
+event: { Type: Sound,    time:   2, sound: "Briefing_11-OK" }
 
 
 event: { type: Camera,     time:  10, param: 3,  target: Goliath,       vec: (-1,-0.1,7e3) }

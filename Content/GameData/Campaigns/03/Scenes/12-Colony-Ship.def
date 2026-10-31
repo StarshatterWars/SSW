@@ -72,7 +72,7 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3,  target: "body:Silessia", vec: (2, -0.15, 2.3e7)   }
 event: { type: Camera,                param: 5,                           vec: (-0.11, 0.015, -0.015)  }
@@ -83,7 +83,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: Limerick12, color: 0xffffff80,
          message: "Capitol" }
 
-event: { Type: Sound,    time:   5, sound: "Vox/Scenes/03/News_12_Colony_Ship.ogg" }
+event: { Type: Sound,    time:   5, sound: "News_12_Colony_Ship" }
 event: { type: Camera,     time:   8, param: 3, target: "Far Horizon", vec: (1,-0.2,25e3)  }
 event: { type: Camera,                param: 5,                        vec: (0.15, 0.02, 0.02)  }
 event: { type: Display,    fade:  (1,7,1), rect: (20,20, 600,150), font: Limerick18, color: 0xffffff80,

@@ -137,7 +137,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 event: { type: Camera,                param: 3,  target: "Fort Talden 1", vec: (1,0,7000)       }
 event: { type: Camera,                param: 5,                           vec: (0.09, 0.007, -0.01) }
 event: { type: Damage,     time:   1, ship: "AAA 1",         param: 2e5  }
@@ -151,7 +151,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "*************************************\n*** FLASH CODED +$TIME \n*** FORT TALDEN ADVANCED PROJECTS\n*** BOROVA SECTOR \n*** CLASSIFIED: SECRET R3 NTK\n*************************************" }
-event: { Type: Sound,    time:   5, sound: "Vox/Scenes/03/Briefing_04_sam.ogg" }
+event: { Type: Sound,    time:   5, sound: "Briefing_04_sam" }
 event: { type: EndScene,   time:  45, message: "Scene 1" }
 event: { type: Exit }
 

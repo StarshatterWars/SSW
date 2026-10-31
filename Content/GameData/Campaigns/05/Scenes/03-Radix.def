@@ -23,19 +23,19 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/05/Scenes/Black.pcx", color: 0xffffffff, fade: (0,4,1), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/05/Scenes/News.pcx",  color: 0xffffffff, fade: (1,3,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,4,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,3,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3,      target: "body:Radix",  vec: (2, 0.1, 2.7e7)      }
 event: { type: Camera,                param: 5,                              vec: (-0.11, 0.007, -0.01) }
 
 
-event: { Type: Sound,    time:   4, sound: "Vox/Scenes/05/News_03_Radix.ogg" }
+event: { Type: Sound,    time:   4, sound: "News_03_Radix" }
 event: { type: Display,    time:   5, message: "Radix System",  font: Limerick18,   color: 0xffffff80, fade: (1,4,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Capitol Planet", font: Limerick12,   color: 0xffffff80, fade: (1,4,1), rect: (20,40, 300,100) }
 
 
-event: { type: Display,    time:  20, image: "Campaigns/05/Scenes/Map.pcx", color: 0xffffffff, fade: (1,25,1), rect: (-280,-280,256,256) }
+event: { type: Display,    time:  20, image: "Map", color: 0xffffffff, fade: (1,25,1), rect: (-280,-280,256,256) }
 
 
 event: { type: Camera,     time:  35, param: 3,  target: "body:Senna", vec: ( 0.77, 0.15, 1.7e7) }

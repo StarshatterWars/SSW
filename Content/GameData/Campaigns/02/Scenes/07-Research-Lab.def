@@ -198,8 +198,8 @@ than a bunch of hungry college students."
 ***/
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/02/Scenes/News.pcx",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,5,2), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,4,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3,  target: "Tal Vesta Stellar Observatory",   vec: (0,0,5e3) }
 event: { type: Camera,                param: 5,                                             vec: (-0.13, 0.01, 0.02) }
@@ -208,7 +208,7 @@ event: { type: Camera,                param: 5,                                 
 event: {
    event: Message
    time:  6
-   sound: "Vox/Scenes/02/News_07_Research_Lab.ogg"
+   sound: "News_07_Research_Lab"
 }
 event: { type: Display,               message: "Meridian Sector",                font: Limerick18,   color: 0xffffff80, fade: (1,7,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Tal Vesta Stellar Observatory",  font: Limerick12,   color: 0xffffff80, fade: (1,7,1), rect: (20,40, 300,100) }

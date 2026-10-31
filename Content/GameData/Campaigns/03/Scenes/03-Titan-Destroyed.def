@@ -311,7 +311,7 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Display,               message: "Force:Space Fourth Fleet", font: Limerick18,   color: 0xffffff80, fade: (1,7,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "7th Carrier Group 'Titan'", font: Limerick12,  color: 0xffffff80, fade: (1,7,1), rect: (20,40, 300,100) }
@@ -329,7 +329,7 @@ event: { type: Camera,     time:  20, param: (6,23), target: "Throne"   }
 event: { type: Camera,     time:  25, param: 3,      target: "Stalwart", vec: (0.2,0,3e3)   }
 event: { type: Camera,                param: 5,                   vec: (-0.13, 0.01, 0.01)  }
 
-event: { Type: Sound,    time:  28, sound: "Vox/Scenes/03/News_03_Titan_Destroyed.ogg" }
+event: { Type: Sound,    time:  28, sound: "News_03_Titan_Destroyed" }
 
 event: { type: Camera,     time:  30, param: (6,10), target: "Titan", vec: (15e3,0,6e3)   }
 

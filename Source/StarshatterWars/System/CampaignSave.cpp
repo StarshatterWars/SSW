@@ -1,4 +1,8 @@
 #include "CampaignSave.h"
+#include "Campaign.h"
+#include "CombatEvent.h"
+#include "MissionInfo.h"
+#include "Mission.h"
 
 FString UCampaignSave::MakeSlotNameFromCampaignIndex(int32 InCampaignIndex)
 {
@@ -70,4 +74,54 @@ FString UCampaignSave::MakeSlotNameFromRowName(FName RowName)
 		TEXT("CampaignSave_%s"),
 		*RowName.ToString()
 	);
+}
+
+bool UCampaignSave::HasPlayedScene(const FString& SceneName) const
+{
+    const FString Name = SceneName.TrimStartAndEnd();
+    return !Name.IsEmpty() && PlayedSceneNames.ContainsByPredicate(
+        [&Name](const FString& Existing) { return Existing.Equals(Name, ESearchCase::IgnoreCase); });
+}
+
+bool UCampaignSave::RecordPlayedScene(const FString& SceneName)
+{
+    const FString Name = SceneName.TrimStartAndEnd();
+    if (Name.IsEmpty() || HasPlayedScene(Name)) return false;
+    PlayedSceneNames.Add(Name);
+    return true;
+}
+
+bool UCampaignSave::RecordCompletedMission(int32 MissionId)
+{
+    if (MissionId <= 0 || CompletedMissionIds.Contains(MissionId)) return false;
+    CompletedMissionIds.Add(MissionId);
+    return true;
+}
+
+void UCampaignSave::RestoreProgress(Campaign* CampaignPtr) const
+{
+    if (!CampaignPtr || CampaignPtr->GetCampaignId() != CampaignIndex) return;
+    ListIter<CombatEvent> Events = CampaignPtr->GetEvents();
+    while (++Events)
+    {
+        CombatEvent* Event = Events.value();
+        if (Event && Event->SceneFile() && HasPlayedScene(ANSI_TO_TCHAR(Event->SceneFile())))
+            Event->SetVisited(true);
+    }
+    ListIter<MissionInfo> Missions = CampaignPtr->GetMissionList();
+    while (++Missions)
+    {
+        MissionInfo* Info = Missions.value();
+        // Preserve repeatable assignments and never complete a newly loaded replay.
+        if (Info && Info->exec_once != 0 && CompletedMissionIds.Contains(Info->id))
+            Info->exec_once = -1;
+    }
+}
+
+bool UCampaignSave::RecordCompletedMission(Campaign* CampaignPtr, const Mission* MissionPtr)
+{
+    if (!CampaignPtr || CampaignPtr->GetCampaignId() != CampaignIndex ||
+        !MissionPtr || !MissionPtr->IsComplete() || !CampaignPtr->OwnsMission(MissionPtr) ||
+        CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity())) return false;
+    return RecordCompletedMission(MissionPtr->GetIdentity());
 }

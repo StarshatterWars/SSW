@@ -183,7 +183,7 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/04/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3,  target: "body:Haiche",   vec: (2, -0.15, 2.7e7)   }
 event: { type: Camera,                param: 5,                           vec: (-0.11, 0.015, -0.015)  }
@@ -194,7 +194,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,250), font: OCRB, color: 0xffffff80,
          message: "*************************************\n*** FLASH CODED +$TIME \n*** TECHNITE FOUND ON HAICHE\n*** TANTALUS SECTOR \n*** CLASSIFIED: SECRET R3 NTK\n*************************************" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/04/Briefing_03_sam.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_03_sam" }
 
 
 event: { type: Camera,     time:  30, param: 3,  target: "Tantalus Mining Station", vec: (0,0.005,9e3)       }

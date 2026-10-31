@@ -64,7 +64,7 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3,  target: "body:Silessia",   vec: (2, -0.15, 2.7e7)   }
 event: { type: Camera,                param: 5,                           vec: (-0.11, 0.015, -0.02)  }
@@ -75,7 +75,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Brotherhood of Iron\nClassified: CONFIDENTIAL DND/CRYPTO" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/03/C3-B13-OK.ogg" }
+event: { Type: Sound,    time:   3, sound: "C3-B13-OK" }
 
 
 event: { type: Camera,     time:  10, param: 3,  target: "body:Vesta",    vec: (1, -0.15, 6e7)   }
@@ -84,7 +84,7 @@ event: { type: Display,               fade: (1,7,1), rect: (20,20, 600,150), fon
          message: "Vesta Sector" }
 
 event: { type: Display,    time:  20, fade: (1,8,1), rect: (-280,-280, 256,256), color: 0xffffffff,
-         image: "Campaigns/03/Scenes/Marauder.pcx" }
+         image: "Marauder" }
 
 
 event: { type: Camera,     time:  35, param: (6,15), target: "Cutlass 1" }

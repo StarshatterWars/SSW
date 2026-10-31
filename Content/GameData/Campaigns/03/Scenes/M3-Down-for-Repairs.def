@@ -26,9 +26,9 @@ event: { type: Camera,     time:   0, param: (6, 90), target: "Magellan IV" }
 
 event: { type: Display,    message: "MAIL", font: Limerick18, color: 0xffffffff, fade: (0,90,0), rect: (20,20, 300,100) }
 
-event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6.wav" }
+event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6" }
 
-event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12.wav" }
+event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12" }
 
 event: { type: Display,               fade: (0,90,0), rect: (20,40, 600,150), font: OCRB, color: 0xff33ff44,
          message: "TO: $RANK $NAME\nCO: $GROUP\nFM: Capt. Jonas Devlin - Magellan IV\nRE: DOWN FOR REPAIRS\n-----\nPATH: Magellan IV Shipboard | Organon Motives | Thralis Relay | Force Command Transceiver | 4TH FLEET HQ | $GROUP\n-----" }
@@ -40,7 +40,7 @@ event: { type: Display,    time:   5, fade: (0,90,0), rect: (20,190, 600,800), f
 event: {
    event: Message
    time:  5
-   sound: "Vox/Scenes/03/Mail_03_Down_for_Repairs.ogg"
+   sound: "Mail_03_Down_for_Repairs"
 }
 
 

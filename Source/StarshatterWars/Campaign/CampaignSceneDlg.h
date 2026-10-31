@@ -67,6 +67,7 @@ public:
 
     /** Position first shot without starting cutscene time/audio. */
     bool PrepareSceneCameraBeforeReveal();
+    bool IsPreparedSceneReady(FString& OutStatus) const;
 
     // Backward-compatible wrapper:
     void LoadCaptionsFromMissionData(const FS_CampaignMission& MissionData)
@@ -171,8 +172,16 @@ protected:
     UPROPERTY()
     FS_CampaignMission ActiveMissionData;
 
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UObject>> PreparedSceneAssets;
+    FString MissingSceneAsset;
+    void PreloadSceneAssets();
+
     UPROPERTY()
     TArray<FS_MissionEvent> SortedEvents;
+    TSet<int32> FiredSceneEventIds;
+    bool IsSceneEventReady(const FS_MissionEvent& Event, float ElapsedSeconds) const;
+    friend class FCampaignScenePresentationTest;
 
     TMap<double, TArray<FString>> DisplayBlocks;
     TArray<double> SortedDisplayTimes;

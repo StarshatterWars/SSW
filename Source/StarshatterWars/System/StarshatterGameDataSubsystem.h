@@ -209,6 +209,9 @@ public:
     void LoadTemplateList(FString Path);
 
     void LoadCutscene(FString Name);
+    /** Authoring migration: rebuild only scene rows, preserving playable missions. */
+    UFUNCTION(BlueprintCallable, Category="Campaign|Authoring")
+    bool RebuildCampaignCutscenePresentation();
     void LoadTemplateMission(FString Name);
     void LoadScriptedMission(FString Name);
 

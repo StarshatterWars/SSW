@@ -66,14 +66,14 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (0,3,1), rect: (0,0,0,0) }
-event: { type: Display,               image: "Campaigns/03/Scenes/News.pcx",  color: 0xffffffff, fade: (1,2,1), rect: (0,0, -512,-128) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,3,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "News",  color: 0xffffffff, fade: (1,2,1), rect: (0,0, -512,-128) }
 
 event: { type: Camera,                param: 3,  target: "body:Borova",  vec: (2,0,1.3e7)           }
 event: { type: Camera,                param: 5,                          vec: (0.12, 0.012, 0.025)  }
 event: { type: Display,    time:   4, message: "Borovan Republic", font: Limerick18,   color: 0xffffff80, fade: (1,4,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Capitol",      font: Limerick12,   color: 0xffffff80, fade: (1,4,1), rect: (20,40, 300,100) }
-event: { type: Messasge,              sound: "Vox/Scenes/03/News_06_Ele'aan_Diplomats.ogg" }
+event: { type: Messasge,              sound: "News_06_Ele_aan_Diplomats" }
 
 
 event: { type: Camera,     time:  10, param: (6,30), target: Consul }

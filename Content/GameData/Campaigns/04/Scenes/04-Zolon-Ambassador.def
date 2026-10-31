@@ -119,7 +119,7 @@ element: {
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
-event: { type: Display,               image: "Campaigns/04/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3,  target: "body:Tarsus I", vec: (2, -0.15, 1.7e7)       }
 event: { type: Camera,                param: 5,                           vec: (-0.11, 0.015, -0.015)  }
@@ -130,7 +130,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Zolon Ambassador\nClassified: SECRET R2 NTK" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/04/C4-B04-OK.ogg" }
+event: { Type: Sound,    time:   3, sound: "C4-B04-OK" }
 
 
 event: { type: Camera,     time:  10, param: (6,30), target: "Zolon Ambassador" }

@@ -132,7 +132,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 event: { type: Camera,                param: 3, target: "body:Jalah",     vec: (3,0,2e8) }
 event: { type: Camera,                param: 5,                           vec: (0.13, 0.01, 0.01) }
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), font: Limerick18, color: 0xffffffff,
@@ -140,7 +140,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: $TIME\nSubject: Hegemony Task Force TF4.3\nClassified: CONFIDENTIAL DND/CRYPTO" }
 
-event: { Type: Sound,    time:  2,  sound: "Vox/Scenes/02/Briefing_10-OK.ogg" }
+event: { Type: Sound,    time:  2,  sound: "Briefing_10-OK" }
 
 event: { type: Camera,     time:  15, param: 3,  target: Manticore,     vec: (-1,-0.1,15e3) }
 event: { type: Camera,                param: 5,  target: Manticore,     vec: (-0.16, 0.01, 0.01) }

@@ -26,7 +26,7 @@ element: {
 event: { type: BeginScene, time:   0, message: "Scene 1" }
 
 
-event: { type: Display,    time:   1, message: "--------------------------------------------------------\nNO MAIL HEADER RECORDS AVAILABLE\n--------------------------------------------------------",    fade: (0,4,0), rect: (20, 20, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6.wav" }
+event: { type: Display,    time:   1, message: "--------------------------------------------------------\nNO MAIL HEADER RECORDS AVAILABLE\n--------------------------------------------------------",    fade: (0,4,0), rect: (20, 20, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6" }
 
 event: { type: Display,    time:   2, message: "CONTENTS ENCRYPTED", fade: (0,3,0), rect: (20,70, 600,800), font: OCRB, color: 0xff33ff44 }
 
@@ -34,7 +34,7 @@ event: { type: Display,    time: 3.0, message: "Decrypting...", fade: (0,0.5,0),
 
 event: { type: Display,    time: 3.5, message: "Decrypting.........", fade: (0,0.5,0), rect: (20,95, 600,800), font: OCRB, color: 0xff33ff44 }
 
-event: { type: Display,    time: 4.0, message: "Decrypting..............Complete.", fade: (0,1,0), rect: (20,95, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12.wav" }
+event: { type: Display,    time: 4.0, message: "Decrypting..............Complete.", fade: (0,1,0), rect: (20,95, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12" }
 
 event: { type: Display,    time:   5, fade: (0,80,0), rect: (20,20, 600,150), font: OCRB, color: 0xff33ff44,
          message: "================\nMESSAGE FOLLOWS:\n================" }
@@ -47,7 +47,7 @@ I don't have very much time.  I could be discovered at any moment.  I need to ke
 event: {
    event: Message
    time:  5
-   sound: "Vox/Scenes/05/Mail_02_Final_Message.ogg"
+   sound: "Mail_02_Final_Message"
 }
 
 

@@ -62,6 +62,9 @@ public:
     void BuildSceneActorsFromMission(const FS_CampaignMission& MissionData);
 
     void ClearSceneActors();
+    void SetScenePlaybackEnabled(bool bEnabled);
+    bool IsSceneBuilt() const;
+    bool AreSceneShipsReady(FString& OutStatus) const;
     void DumpSceneActors() const;
 
     //-------------------------------------------------------------
@@ -201,7 +204,8 @@ private:
     void ClearRuntimeShips();
 
 private:
-    // Identity only; Sim owns the lifetime. Never dereference this pointer.
+    // Scene-created mission. Release only while Sim still owns this identity.
+    bool bScenePlaybackEnabled = false;
     Mission* CutsceneMission = nullptr;
     Ship* CurrentPlayerShip = nullptr;
     FString CurrentMissionRegionName;

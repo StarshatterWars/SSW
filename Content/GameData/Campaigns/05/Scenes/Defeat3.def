@@ -77,7 +77,7 @@ event: { type: Display,    message: "Defeat",                    font: Limerick1
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/05/End_04_Defeat.ogg"
+   sound: "End_04_Defeat"
 }
 
 event: { type: Camera,     time:  10, param: (6,30,3), target: Broadsword }
@@ -89,7 +89,7 @@ event: { type: Damage,     time:  24, param: 2e4, ship: Devastator, target: Deva
 event: { type: Camera,     time:  30, param: (6,20,1.5), target: Courageous }
 event: { type: Damage,     time:  34, param: 4e4, ship: Devastator, target: Devastator }
 
-event: { type: Display,    time:  43, image: "Campaigns/05/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  43, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  45, message: "Scene 1" }
 event: { type: Exit }

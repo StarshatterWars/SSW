@@ -13,6 +13,10 @@
 */
 
 #include "Sim.h"
+#include "SSWGameInstance.h"
+#include "CampaignSave.h"
+#include "Campaign.h"
+#include "MissionInfo.h"
 #include "Templates/UnrealTemplate.h"
 #include "RadioVox.h"
 #include "RadioView.h"
@@ -380,6 +384,27 @@ Sim::~Sim()
 void
 Sim::CommitMission()
 {
+    // Commit is also called when aborting. Persist only a completed campaign
+    // assignment, and use mission ownership to exclude standalone missions.
+    Campaign* ActiveCampaign = Campaign::GetCampaign();
+    if (mission && mission->IsComplete() && ActiveCampaign &&
+        ActiveCampaign->OwnsMission(mission) &&
+        !ActiveCampaign->IsCutsceneMission(mission->GetIdentity()))
+    {
+        if (USSWRuntimeSubsystem* Runtime = GetSSWRuntimeSubsystem())
+        {
+            if (USSWGameInstance* GI = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+            {
+                UCampaignSave* Save = GI->CampaignSave;
+                if (Save && Save->CampaignIndex == ActiveCampaign->GetCampaignId() &&
+                    Save->RecordCompletedMission(ActiveCampaign, mission))
+                {
+                    Save->RestoreProgress(ActiveCampaign);
+                    GI->SaveCampaign();
+                }
+            }
+        }
+    }
 	for (int i = 0; i < regions.size(); i++)
 		regions[i]->CommitMission();
 
@@ -3411,4 +3436,10 @@ Sim::ResolveInstructionTargets()
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Sim::ResolveInstructionTargets] COMPLETE"));
+}
+
+void Sim::BeginPreparedCutscenePlayback(const Mission* PreparedMission)
+{
+    if (mission && mission == PreparedMission)
+        start_time = Game::GetGameTime();
 }

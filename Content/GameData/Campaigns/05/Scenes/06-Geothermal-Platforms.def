@@ -135,7 +135,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: 03/21:00:00\nSubject: Tiger Bay Geothermal Platforms\nClassified: SECRET R2 NTK" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_06_Tiger_Bay.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_06_Tiger_Bay" }
 
 event: { type: Camera,     time:  15, param: 3,  target: "Platform 1", vec: ( 0.77, 0.05, 4e3) }
 event: { type: Camera,                param: 5,                        vec: (-0.07, 0.01, -0.01) }

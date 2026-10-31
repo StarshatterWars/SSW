@@ -4,6 +4,19 @@
 
 namespace CampaignPresentationRules
 {
+    inline bool HasRuntimeSceneTrigger(const FS_MissionEvent& Event)
+    {
+        return Event.TriggerNParams > 0 || !Event.TriggerShip.IsEmpty() || !Event.TriggerTarget.IsEmpty() ||
+            (Event.EventTrigger != MISSIONEVENT_TRIGGER::TRIGGER_TIME &&
+             Event.EventTrigger != MISSIONEVENT_TRIGGER::TRIGGER_EVENT);
+    }
+    inline bool IsCampaignUnlocked(int32 CampaignIndex, const FS_PlayerGameInfo& Player)
+    {
+        if (CampaignIndex < 1 || CampaignIndex > 5) return false;
+        for (int32 Previous = 2; Previous < CampaignIndex; ++Previous)
+            if (!Player.IsCampaignComplete(Previous)) return false;
+        return true;
+    }
     inline bool IsSceneDue(bool bVisited, bool bHasScene, double EventTime, double CampaignTime)
     {
         return !bVisited && bHasScene && FMath::IsFinite(EventTime) &&

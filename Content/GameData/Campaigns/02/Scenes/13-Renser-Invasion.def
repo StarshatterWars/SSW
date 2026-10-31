@@ -143,7 +143,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 
 event: { type: Camera,                param: 3, target: "body:Jarnell",   vec: (2, 0, 1.7e7) }
 event: { type: Camera,                param: 5,                           vec: (-0.12, 0.01, 0.01) }
@@ -152,7 +152,7 @@ event: { type: Display,    time:   1, message: "The PRESIDENT of the TERELLIAN A
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/02/News_13_Renser_Invasion.ogg"
+   sound: "News_13_Renser_Invasion"
 }
 
 event: { type: Camera,     time:  20, param: 3, target: "Archon",         vec: (4,0,5e3) }

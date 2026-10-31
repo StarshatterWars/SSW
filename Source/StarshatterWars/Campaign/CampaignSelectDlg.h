@@ -94,6 +94,7 @@ protected:
     void RefreshUIFromSubsystem();
     void UpdateCampaignButtons();
     bool DoesSelectedCampaignSaveExist() const;
+    bool IsCampaignUnlocked(int32 CampaignIndex1Based) const;
     UTexture2D* LoadCampaignTexture(int32 CampaignIndex1Based) const;
 
     void StartSelectedCampaignFlow(bool bRestart);

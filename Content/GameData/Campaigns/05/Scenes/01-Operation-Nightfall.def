@@ -87,7 +87,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,20, 600,150), fon
 event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), font: OCRB, color: 0xffffff80,
          message: "Timestamp: 01/00:00:00\nSubject: Operation Nightfall\nClassified: TOP SECRET R7 NTK/EO" }
 
-event: { Type: Sound,    time:   3, sound: "Vox/Scenes/05/Briefing_01_Nightfall.ogg" }
+event: { Type: Sound,    time:   3, sound: "Briefing_01_Nightfall" }
 
 
 event: { type: Camera,     time:  10, param: 3,      target: "Orion",  vec: (-2, -0.1, 8e3)      }
@@ -114,7 +114,7 @@ event: { type: Display,               font: Limerick12, color: 0xffffff80, fade:
          message: "Hegemony Starbase" }
 
 
-event: { type: Display,    time:  75, image: "Campaigns/05/Scenes/Nightfall.pcx", color: 0xffffffff, fade: (1,20,1), rect: (-280,-280,256,256) }
+event: { type: Display,    time:  75, image: "Nightfall", color: 0xffffffff, fade: (1,20,1), rect: (-280,-280,256,256) }
 
 
 event: { type: Camera,     time:  80, param: 3,      target: "body:Garden",  vec: (-1, 0.1, 1.4e7)      }

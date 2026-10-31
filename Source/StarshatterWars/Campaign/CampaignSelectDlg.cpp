@@ -41,6 +41,7 @@
 
 #include "Campaign.h"
 #include "CampaignSave.h"
+#include "CampaignPresentationRules.h"
 #include "CmpLoadDlg.h"
 #include "Game.h"
 #include "Keyboard.h"
@@ -496,6 +497,11 @@ void UCampaignSelectDlg::RebuildCampaignDropdownOptions()
             UButton::StaticClass(),
             MakeUniqueWidgetName(TEXT("CampaignSelect_OptionButton")));
 
+        const bool bUnlocked = IsCampaignUnlocked(CampaignIndexByOptionIndex[i]);
+        RowButton->SetIsEnabled(bUnlocked);
+        RowButton->SetToolTipText(FText::FromString(bUnlocked ? FString() : FString::Printf(
+            TEXT("Complete Campaign %d to unlock"), CampaignIndexByOptionIndex[i] - 1)));
+
         // Keep button visually transparent so the border drives the row color.
         FButtonStyle TransparentButtonStyle = RowButton->GetStyle();
         TransparentButtonStyle.Normal.TintColor = FSlateColor(FLinearColor::Transparent);
@@ -506,12 +512,14 @@ void UCampaignSelectDlg::RebuildCampaignDropdownOptions()
 
         UTextBlock* RowText = CreateText(
             MakeUniqueWidgetName(TEXT("CampaignSelect_OptionText")),
-            CampaignDisplayNamesByOptionIndex[i],
+            CampaignDisplayNamesByOptionIndex[i] + (bUnlocked ? TEXT("") : TEXT("  (LOCKED)")),
             14,
             RowTextColor,
             ETextJustify::Left,
             false);
 
+        RowText->SetAutoWrapText(true);
+        RowText->SetWrapTextAt(280.0f);
         if (UButtonSlot* RowButtonSlot = Cast<UButtonSlot>(RowButton->AddChild(RowText)))
         {
             RowButtonSlot->SetPadding(FMargin(12.f, 3.f, 8.f, 3.f));
@@ -563,7 +571,8 @@ void UCampaignSelectDlg::HideCampaignDropdown()
 
 void UCampaignSelectDlg::SelectCampaignOption(int32 NewIndex)
 {
-    if (!CampaignIndexByOptionIndex.IsValidIndex(NewIndex))
+    if (!CampaignIndexByOptionIndex.IsValidIndex(NewIndex) ||
+        !IsCampaignUnlocked(CampaignIndexByOptionIndex[NewIndex]))
     {
         return;
     }
@@ -685,6 +694,8 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
         }
     }
 
+    if (CampaignIndexByOptionIndex.IsValidIndex(SelectedOptionIndex) &&
+        !IsCampaignUnlocked(CampaignIndexByOptionIndex[SelectedOptionIndex])) SelectedOptionIndex = 0;
     if (!CampaignIndexByOptionIndex.IsValidIndex(SelectedOptionIndex))
     {
         SelectedOptionIndex = CampaignIndexByOptionIndex.Num() > 0 ? 0 : INDEX_NONE;
@@ -824,10 +835,12 @@ void UCampaignSelectDlg::RefreshUIFromSubsystem()
 void UCampaignSelectDlg::UpdateCampaignButtons()
 {
     const bool bHasSave = DoesSelectedCampaignSaveExist();
+    const bool bUnlocked = CampaignIndexByOptionIndex.IsValidIndex(Selected) &&
+        IsCampaignUnlocked(CampaignIndexByOptionIndex[Selected]);
 
     if (PlayButton)
     {
-        PlayButton->SetIsEnabled(Selected != INDEX_NONE);
+        PlayButton->SetIsEnabled(bUnlocked);
     }
 
     if (PlayButtonText)
@@ -838,7 +851,7 @@ void UCampaignSelectDlg::UpdateCampaignButtons()
 
     if (RestartButton)
     {
-        RestartButton->SetIsEnabled(bHasSave);
+        RestartButton->SetIsEnabled(bHasSave && bUnlocked);
     }
 
     if (CancelButton)
@@ -946,6 +959,8 @@ void UCampaignSelectDlg::PlayUISound(UObject* WorldContext, USoundBase* UISound)
 
 void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
 {
+    if (!CampaignIndexByOptionIndex.IsValidIndex(Selected) ||
+        !IsCampaignUnlocked(CampaignIndexByOptionIndex[Selected])) return;
     PickedRowName = CampaignRowNamesByOptionIndex.IsValidIndex(Selected)
         ? CampaignRowNamesByOptionIndex[Selected]
         : NAME_None;
@@ -998,6 +1013,12 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     }
 
     const int32 CampaignIndex1Based = CampaignIndexByOptionIndex[Selected];
+    if (!IsCampaignUnlocked(CampaignIndex1Based))
+    {
+        manager->HideCmpLoadDlg();
+        manager->ShowCampaignSelectDlg();
+        return;
+    }
     const FS_Campaign* CampaignData = DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
     if (!CampaignData)
     {
@@ -1361,4 +1382,10 @@ void UCampaignSelectDlg::ShowDlg()
 void UCampaignSelectDlg::HideDlg()
 {
     SetVisibility(ESlateVisibility::Collapsed);
+}
+bool UCampaignSelectDlg::IsCampaignUnlocked(int32 CampaignIndex1Based) const
+{
+    UGameInstance* GI = GetGameInstance();
+    const UStarshatterPlayerSubsystem* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    return Players && CampaignPresentationRules::IsCampaignUnlocked(CampaignIndex1Based, Players->GetPlayerInfo());
 }

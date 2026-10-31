@@ -224,6 +224,7 @@ public:
     void ProcessEventTrigger(int type, int event_id = 0, const char* ship = nullptr, int param = 0);
 
     double MissionClock() const;
+    void BeginPreparedCutscenePlayback(const Mission* PreparedMission);
     uint32 StartTime() const { return start_time; }
 
 protected:

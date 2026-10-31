@@ -24,9 +24,9 @@ event: { type: BeginScene, time:   0, message: "Scene 1" }
 
 event: { type: Display,    message: "MAIL", font: Limerick18, color: 0xffffffff, fade: (0,73,0), rect: (20,20, 300,100) }
 
-event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6.wav" }
+event: { type: Display,    time:   1, message: "Decoding Path...",    fade: (0,2,0), rect: (20, 40, 600,150), font: OCRB, color: 0xff33ff44, sound: "Bleep6" }
 
-event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12.wav" }
+event: { type: Display,    time:   3, message: "Decoding Content...", fade: (0,2,0), rect: (20,190, 600,800), font: OCRB, color: 0xff33ff44, sound: "Bleep12" }
 
 event: { type: Display,               fade: (0,67,0), rect: (20,40, 600,150), font: OCRB, color: 0xff33ff44,
          message: "TO: $RANK $NAME\nCO: $GROUP\nFM: Capt. Jonas Devlin - Magellan IV\nRE: CATCHING UP\n-----\nPATH: Magellan IV Shipboard | Loris Station | Northeast Transceiver 4 | Silessian Outer Relay | Silessian Inner Relay | Janek Station Courier Drop | 3RD FLEET HQ | Trellis Relay | $GROUP\n-----" }
@@ -38,19 +38,19 @@ event: { type: Display,    time:   5, fade: (0,65,0), rect: (20,190, 600,800), f
 event: {
    event: Message
    time:  5
-   sound: "Vox/Scenes/02/Mail_01a.ogg"
+   sound: "Mail_01a"
 }
 
 event: {
    event: Message
    time:  32
-   sound: "Vox/Scenes/02/Mail_01b.ogg"
+   sound: "Mail_01b"
 }
 
 event: {
    event: Message
    time:  45
-   sound: "Vox/Scenes/02/Mail_01c.ogg"
+   sound: "Mail_01c"
 }
 
 

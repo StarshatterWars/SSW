@@ -61,12 +61,12 @@ event: { type: Display,    message: "Stalemate",                  font: Limerick
 event: {
    event: Message
    time:  2
-   sound: "Vox/Scenes/03/End_03_Defeat.ogg"
+   sound: "End_03_Defeat"
 }
 
 event: { type: Camera,     time:  15, param: (6,40), target: Vendetta }
 
-event: { type: Display,    time:  43, image: "Campaigns/03/Scenes/Black.pcx", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
+event: { type: Display,    time:  43, image: "Black", color: 0xffffffff, fade: (1,10,0), rect: (0,0,0,0) }
 
 event: { type: EndScene,   time:  45, message: "Scene 1" }
 event: { type: Exit }

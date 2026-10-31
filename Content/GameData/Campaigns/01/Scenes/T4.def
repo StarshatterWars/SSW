@@ -190,10 +190,10 @@ event: {
 // VOICE-OVER
 
 
-event: { id: 200, Type: Sound, time:   2, sound: "Vox/Train/Train-04-01.ogg", message: "Please wait" }
-event: { id: 210, Type: Sound, time:  20, sound: "Vox/Train/Train-04-02.ogg", message: "Taking off" }
-event: { id: 220, Type: Sound, time:  40, sound: "Vox/Train/Train-04-03.ogg", message: "Raise your langing gear" }
-event: { id: 230, Type: Sound, time:  60, sound: "Vox/Train/Train-04-04.ogg", message: "Set sensor display to HSD mode" }
+event: { id: 200, Type: Sound, time:   2, sound: "Train-04-01", message: "Please wait" }
+event: { id: 210, Type: Sound, time:  20, sound: "Train-04-02", message: "Taking off" }
+event: { id: 220, Type: Sound, time:  40, sound: "Train-04-03", message: "Raise your langing gear" }
+event: { id: 230, Type: Sound, time:  60, sound: "Train-04-04", message: "Set sensor display to HSD mode" }
 
 /**
  ** THIS MESSAGE IS NONSENSE!
@@ -202,7 +202,7 @@ event: {
     id:             240,
     type:           Message,
     message:        "Steer towards ground targets"
-    sound:          "Vox/Train/Train-04-05.ogg",
+    sound:          "Train-04-05",
     trigger:        Navpoint,
     trigger_param:  2,
     trigger_ship:   Alpha
@@ -213,7 +213,7 @@ event: {
 event: {
     id:             250,
     type:           Message,
-    sound:          "Vox/Train/Train-04-06.ogg",
+    sound:          "Train-04-06",
     message:        "Air-to-ground combat skills",
     trigger:        Navpoint,
     trigger_param:  2,
@@ -224,7 +224,7 @@ event: {
 event: {
     id:             260,
     type:           Message,
-    sound:          "Vox/Train/Train-04-07.ogg",
+    sound:          "Train-04-07",
     message:        "Sort targets with your wingman",
     trigger:        Event,
     trigger_param:  250,
@@ -234,7 +234,7 @@ event: {
 event: { 
     id:             270,
     type:           Message,
-    sound:          "Vox/Train/Train-04-08.ogg",
+    sound:          "Train-04-08",
     message:        "Engage your target",
     trigger:        Event,
     trigger_param:  260,
@@ -244,7 +244,7 @@ event: {
 event: { 
     id:             300,
     type:           Message,
-    sound:          "Vox/Train/Train-04-09.ogg",
+    sound:          "Train-04-09",
     message:        "Engage a second target",
     trigger:        Event,
     trigger_param:  270,
@@ -255,7 +255,7 @@ event: {
 event: {
     id:             310,
     type:           Message,
-    sound:          "Vox/Train/Train-04-10.ogg",
+    sound:          "Train-04-10",
     message:        "Resume nav route",
     trigger:        "Event (ALL)",
     trigger_param:   (101, 102, 103, 104), 
@@ -265,7 +265,7 @@ event: {
 event: {
     id:             311,
     type:           Message,
-    sound:          "Vox/Train/Train-04-11.ogg",
+    sound:          "Train-04-11",
     message:        "Return to base",
     trigger:        Event,
     trigger_param:  310,

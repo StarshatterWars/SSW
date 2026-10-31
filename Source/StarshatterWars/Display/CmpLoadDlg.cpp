@@ -61,6 +61,15 @@ UCmpLoadDlg::UCmpLoadDlg(const FObjectInitializer& ObjectInitializer)
 {
 }
 
+TSharedRef<SWidget> UCmpLoadDlg::RebuildWidget()
+{
+    // Build the native root before Slate caches it. Replacing the root in
+    // NativeConstruct alone leaves the first display attached to the old tree.
+    if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, NAME_None, RF_Transient);
+    BuildScreen();
+    return Super::RebuildWidget();
+}
+
 void UCmpLoadDlg::NativeConstruct()
 {
     Super::NativeConstruct();

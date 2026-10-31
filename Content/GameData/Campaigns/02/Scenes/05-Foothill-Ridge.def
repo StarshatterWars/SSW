@@ -308,7 +308,7 @@ element: {
 
 
 event: { type: BeginScene, time:   0, message: "Scene 1" }
-event: { type: Display,               image: "Campaigns/02/Scenes/Black.pcx", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
+event: { type: Display,               image: "Black", color: 0xffffffff, fade: (0,1,1), rect: (0,0,0,0) }
 event: { type: Camera,                param: 3,  target: "Foothill Base",  vec: (1,0.05,2800)           }
 event: { type: Camera,                param: 5,                         vec: (0.12, 0.01, 0.02)  }
 
@@ -323,7 +323,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), fon
 event: {
    event: Message
    time:  1
-   sound: "Vox/Scenes/02/Briefing_05_sam.ogg"
+   sound: "Briefing_05_sam"
 }
 
 

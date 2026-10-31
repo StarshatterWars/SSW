@@ -16,6 +16,11 @@
 */
 
 #include "CmpnScreen.h"
+#include "SSWGameInstance.h"
+#include "CampaignSave.h"
+#include "CampaignSceneActor.h"
+#include "EngineUtils.h"
+#include "UObject/UObjectGlobals.h"
 #include "CampaignPresentationRules.h"
 
 // UE:
@@ -35,6 +40,7 @@
 #include "CmpLoadDlg.h"
 #include "CampaignSceneDlg.h"
 #include "ShaderPipelineCache.h"
+#include "ShaderCompiler.h"
 #include "MenuScreen.h"
 
 // Legacy/runtime:
@@ -125,6 +131,8 @@ void UCmpnScreen::RefreshRuntimePointers()
 {
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+        if (GI->CampaignSave) GI->CampaignSave->RestoreProgress(CampaignPtr);
 }
 
 void UCmpnScreen::ApplyManagerToChildren()
@@ -230,6 +238,19 @@ const FS_CampaignMission* UCmpnScreen::FindCampaignMissionByScene(const FString&
     return nullptr;
 }
 
+namespace
+{
+    bool WasCampaignScenePresented(const UGameInstance* Instance, const Campaign* Story, const CombatEvent* Event)
+    {
+        if (!Event) return false;
+        const USSWGameInstance* GI = Cast<USSWGameInstance>(Instance);
+        const UCampaignSave* Save = GI ? GI->CampaignSave : nullptr;
+        if (Save && Story && Save->CampaignIndex == Story->GetCampaignId() && Event->SceneFile())
+            return Save->HasPlayedScene(ANSI_TO_TCHAR(Event->SceneFile()));
+        return Event->Visited();
+    }
+}
+
 CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
 {
     if (!CampaignPtr || !CampaignPtr->IsActive() || CampaignPtr->GetEvents().isEmpty())
@@ -241,7 +262,7 @@ CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
     while (++Iter)
     {
         CombatEvent* Event = Iter.value();
-        if (Event && CampaignPresentationRules::IsSceneDue(Event->Visited(),
+        if (Event && CampaignPresentationRules::IsSceneDue(WasCampaignScenePresented(GetGameInstance(), CampaignPtr, Event),
             Event->SceneFile() && *Event->SceneFile(), Event->GetTime(), CampaignPtr->GetTime()))
         {
             return Event;
@@ -393,6 +414,9 @@ void UCmpnScreen::CleanupActiveScene()
         TEXT("[CmpnScreen] CleanupActiveScene: begin"));
 
     HideCmpSceneDlg();
+    bScenePlaybackStarted = false;
+    for (TActorIterator<ACampaignSceneActor> It(GetWorld()); It; ++It)
+        It->ClearSceneActors();
 
     if (ActiveSceneStreamingLevel)
     {
@@ -420,6 +444,13 @@ void UCmpnScreen::CleanupActiveScene()
 
 bool UCmpnScreen::CloseTopmost()
 {
+    if (bSceneTransitionActive)
+    {
+        CleanupActiveScene();
+        HideCmpLoadDlg();
+        ShowCmdDlg();
+        return true;
+    }
     if (IsCmdMsgShown())
     {
         HideCmdMsgDlg();
@@ -645,7 +676,7 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
                 bool bSceneStarted = false;
                 CombatEvent* Event = CampaignPtr->GetLastEvent();
 
-                if (Event && !Event->Visited() && Event->SceneFile() && *Event->SceneFile())
+                if (Event && !WasCampaignScenePresented(GetGameInstance(), CampaignPtr, Event) && Event->SceneFile() && *Event->SceneFile())
                 {
                     bSceneStarted = TryStartSceneForEvent(Event);
                 }
@@ -739,6 +770,10 @@ void UCmpnScreen::ShowOperationsMissions()
     TimeTilChange = 0.5;
     bExitLatch = true;
     bWaitForMissionQuitRelease = true;
+    // Continue and mission-return navigation use this entry point. Apply the
+    // same readiness gate as campaign selection, without chaining scenes on Finish.
+    if (CombatEvent* Pending = FindFirstPendingSceneEvent())
+        if (PrimeSceneTransitionForEvent(Pending)) return;
     ShowCmdDlg();
     if (CmdDlg) CmdDlg->ShowMissionsPanel();
 }
@@ -957,21 +992,10 @@ float UCmpnScreen::GetFieldOfView() const
 
 float UCmpnScreen::GetSceneDurationSeconds(const FString& SceneName) const
 {
-    if (SceneName.Equals(TEXT("01-News-Start"), ESearchCase::IgnoreCase))        return 95.0f;
-    if (SceneName.Equals(TEXT("02-Coup-Failure"), ESearchCase::IgnoreCase))      return 75.0f;
-    if (SceneName.Equals(TEXT("03-Blockade-Broken"), ESearchCase::IgnoreCase))   return 65.0f;
-    if (SceneName.Equals(TEXT("04-Harmony-Risk"), ESearchCase::IgnoreCase))      return 50.0f;
-    if (SceneName.Equals(TEXT("05-Foothill-Ridge"), ESearchCase::IgnoreCase))    return 60.0f;
-    if (SceneName.Equals(TEXT("06-Renser-Buildup"), ESearchCase::IgnoreCase))    return 60.0f;
-    if (SceneName.Equals(TEXT("07-Research-Lab"), ESearchCase::IgnoreCase))      return 75.0f;
-    if (SceneName.Equals(TEXT("08-Renser-Accusation"), ESearchCase::IgnoreCase)) return 75.0f;
-    if (SceneName.Equals(TEXT("09-Senate-Resolution"), ESearchCase::IgnoreCase)) return 75.0f;
-    if (SceneName.Equals(TEXT("10-Renser-Arrival"), ESearchCase::IgnoreCase))    return 60.0f;
-    if (SceneName.Equals(TEXT("11-Dantari-Pullback"), ESearchCase::IgnoreCase))  return 60.0f;
-    if (SceneName.Equals(TEXT("12-Cease-Fire"), ESearchCase::IgnoreCase))        return 60.0f;
-    if (SceneName.Equals(TEXT("13-Renser-Invasion"), ESearchCase::IgnoreCase))   return 60.0f;
-
-    return 30.0f;
+    // Each authored scene supplies its own EndScene time. Zero delegates to
+    // the shared player's event-derived duration instead of truncating other
+    // campaigns to the old 30-second fallback.
+    return 0.0f;
 }
 
 bool UCmpnScreen::TryStartSceneForEvent(CombatEvent* Event)
@@ -1111,78 +1135,71 @@ bool UCmpnScreen::ContinuePendingSceneTransition()
         return false;
     }
 
+    // Make the level visible behind the opaque cover BEFORE building models.
+    // Reusing a stream must not toggle it hidden on every polling frame.
+    ActiveSceneStreamingLevel->SetShouldBeVisible(true);
+    if (!ActiveSceneStreamingLevel->IsLevelLoaded() ||
+        !ActiveSceneStreamingLevel->IsLevelVisible() ||
+        ActiveSceneStreamingLevel->IsStreamingStatePending())
+    {
+        if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(TEXT("LOADING ENVIRONMENT..."), 0.35f);
+        return true;
+    }
+
+    if (!bScenePresentationPrepared)
+    {
+        if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(TEXT("BUILDING SCENE MODELS..."), 0.50f);
+        CmpSceneDlg->SetCampaignNumber(CampaignPtr ? CampaignPtr->GetCampaignId() : 2);
+        CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
+        bScenePresentationPrepared = true;
+        return true;
+    }
+
+    FString ReadinessStatus;
+    if (IsAsyncLoading() || !CmpSceneDlg->IsPreparedSceneReady(ReadinessStatus) || !AreShadersReadyForReveal())
+    {
+        SceneReadyFrameCount = 0;
+        if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(
+            ReadinessStatus.IsEmpty() ? TEXT("PREPARING SCENE ASSETS...") : ReadinessStatus, 0.65f);
+        return true;
+    }
+
     if (!bSceneStreamingBlockedOnce)
     {
-        if (CmpLoadDlg)
+        if (!CmpSceneDlg->PrepareSceneCameraBeforeReveal())
         {
-            CmpLoadDlg->SetLoadingStage(TEXT("PREPARING TEXTURES..."), 0.60f);
+            if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(TEXT("WAITING FOR SCENE CAMERA..."), 0.75f);
+            return true;
         }
-
-        if (UWorld* World = GetWorld())
-        {
-            World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
-
-            FStreamingManagerCollection& StreamingManager = FStreamingManagerCollection::Get();
-            StreamingManager.BlockTillAllRequestsFinished(0.0f, true);
-        }
-
+        // Request textures only after the actual models and opening view exist.
+        FStreamingManagerCollection& Streaming = FStreamingManagerCollection::Get();
+        Streaming.StreamAllResources(0.0f);
+        Streaming.BlockTillAllRequestsFinished(0.0f, true);
+        SceneRevealFence.BeginFence();
         bSceneStreamingBlockedOnce = true;
         bSceneWarmupStarted = true;
-
-        // Increased hold to suppress shader/material flash
-        SceneWarmupReadyTime =
-            UGameplayStatics::GetRealTimeSeconds(GetWorld()) + 4.0f;
-
+        SceneWarmupReadyTime = UGameplayStatics::GetRealTimeSeconds(GetWorld()) + ScenePostLoadWarmupSeconds;
         return true;
     }
 
-    const float Now = UGameplayStatics::GetRealTimeSeconds(GetWorld());
-
-    if (Now < SceneWarmupReadyTime)
+    if (!SceneRevealFence.IsFenceComplete() ||
+        FStreamingManagerCollection::Get().GetNumWantingResources() > 0)
     {
-        if (CmpLoadDlg)
-        {
-            CmpLoadDlg->SetLoadingStage(TEXT("WARMING UP SCENE..."), 0.85f);
-        }
-
+        SceneReadyFrameCount = 0;
+        if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(TEXT("LOADING SCENE TEXTURES..."), 0.85f);
         return true;
     }
-
-    if (CmpLoadDlg)
+    ++SceneReadyFrameCount;
+    if (!CanRevealSceneNow())
     {
-        CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE..."), 0.95f);
+        if (CmpLoadDlg) CmpLoadDlg->SetLoadingStage(TEXT("FINALIZING SCENE..."), 0.95f);
+        return true;
     }
-
-    if (ActiveSceneStreamingLevel)
-    {
-        ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
-        ActiveSceneStreamingLevel->SetShouldBeVisible(true);
-    }
-
-    if (UWorld* World = GetWorld())
-    {
-        World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
-    }
-
-    if (CampaignPtr)
-    {
-        CmpSceneDlg->SetCampaignNumber(CampaignPtr->GetCampaignId());
-    }
-    else
-    {
-        CmpSceneDlg->SetCampaignNumber(2);
-    }
-
-    CmpSceneDlg->LoadSceneFromMissionData(PendingSceneMission);
 
     HideCmpLoadDlg();
     ShowCmpSceneDlg();
+    bScenePlaybackStarted = true;
     CmpSceneDlg->BeginSceneByName(ActiveSceneName, ActiveSceneDurationSeconds);
-
-    if (PendingSceneEvent)
-    {
-        PendingSceneEvent->SetVisited(true);
-    }
 
     UE_LOG(LogTemp, Warning,
         TEXT("[CmpnScreen] ContinuePendingSceneTransition: COMPLETE"));
@@ -1195,6 +1212,7 @@ void UCmpnScreen::ClearPendingSceneTransition()
     PendingSceneEvent = nullptr;
     PendingSceneMission = FS_CampaignMission();
     bHasPendingSceneMission = false;
+    bScenePresentationPrepared = false;
 
     bSceneTransitionActive = false;
     bSceneStreamingBlockedOnce = false;
@@ -1252,7 +1270,7 @@ bool UCmpnScreen::StreamSceneSystemLevel(const FS_CampaignMission& SceneMission)
     if (ActiveSceneStreamingLevel)
     {
         ActiveSceneStreamingLevel->SetShouldBeLoaded(true);
-        ActiveSceneStreamingLevel->SetShouldBeVisible(false);
+        // Visibility is controlled by the preparation stage, not stream polling.
 
         UE_LOG(LogTemp, Log,
             TEXT("[CmpnScreen] StreamSceneSystemLevel: reusing existing streaming level for %s"),
@@ -1298,12 +1316,17 @@ bool UCmpnScreen::IsSceneVisualReady() const
         return false;
     }
 
-    return ActiveSceneStreamingLevel->IsLevelLoaded() &&
+    return ActiveSceneStreamingLevel->IsLevelLoaded() && ActiveSceneStreamingLevel->IsLevelVisible() &&
         !ActiveSceneStreamingLevel->IsStreamingStatePending();
 }
 
 void UCmpnScreen::BeginSceneTransition()
 {
+    bScenePresentationPrepared = false;
+    bScenePlaybackStarted = false;
+    if (UGameInstance* GI = GetGameInstance())
+        if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+            Runtime->SetPaused(true);
     bSceneTransitionActive = true;
     bSceneStreamingBlockedOnce = false;
     bSceneWarmupStarted = false;
@@ -1315,7 +1338,8 @@ void UCmpnScreen::BeginSceneTransition()
 
 bool UCmpnScreen::AreShadersReadyForReveal() const
 {
-    return FShaderPipelineCache::NumPrecompilesRemaining() == 0;
+    return FShaderPipelineCache::NumPrecompilesRemaining() == 0 &&
+        (!GShaderCompilingManager || !GShaderCompilingManager->IsCompiling());
 }
 
 bool UCmpnScreen::CanRevealSceneNow() const
@@ -1336,7 +1360,9 @@ bool UCmpnScreen::CanRevealSceneNow() const
         bSceneWarmupStarted && (Now >= SceneWarmupReadyTime);
     const bool bShadersReady = AreShadersReadyForReveal();
 
-    return bMinTimeSatisfied &&
+    FString Status;
+    return bScenePresentationPrepared && CmpSceneDlg && CmpSceneDlg->IsPreparedSceneReady(Status) &&
+        bMinTimeSatisfied &&
         bLevelReady &&
         bWarmupSatisfied &&
         bShadersReady &&
@@ -1347,4 +1373,26 @@ void UCmpnScreen::SetActiveCampaignName(const FString& InName)
 {
     ActiveCampaignName = InName;
     UE_LOG(LogTemp, Log, TEXT("[CmpnScreen] ActiveCampaignName set to: %s"), *ActiveCampaignName);
+}
+void UCmpnScreen::CompleteActiveScene()
+{
+    if (!bScenePlaybackStarted || !CampaignPtr) return;
+    bScenePlaybackStarted = false;
+    ListIter<CombatEvent> Events = CampaignPtr->GetEvents();
+    while (++Events)
+    {
+        CombatEvent* Event = Events.value();
+        if (Event && Event->SceneFile() && ActiveSceneName.Equals(ANSI_TO_TCHAR(Event->SceneFile()), ESearchCase::IgnoreCase))
+            Event->SetVisited(true);
+    }
+    if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        UCampaignSave* Save = GI->CampaignSave;
+        if (Save && Save->CampaignIndex == CampaignPtr->GetCampaignId())
+        {
+            Save->RecordPlayedScene(ActiveSceneName);
+            Save->RestoreProgress(CampaignPtr);
+            GI->SaveCampaign();
+        }
+    }
 }

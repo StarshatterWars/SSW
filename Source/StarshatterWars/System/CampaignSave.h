@@ -43,6 +43,16 @@ public:
 	UPROPERTY(SaveGame)
 	TArray<FString> PlayedSceneNames;
 
+    /** Completed assignments, scoped to this campaign. Replays remain playable. */
+    UPROPERTY(SaveGame)
+    TArray<int32> CompletedMissionIds;
+
+    bool HasPlayedScene(const FString& SceneName) const;
+    bool RecordPlayedScene(const FString& SceneName);
+    bool RecordCompletedMission(int32 MissionId);
+    bool RecordCompletedMission(class Campaign* CampaignPtr, const class Mission* MissionPtr);
+    void RestoreProgress(class Campaign* CampaignPtr) const;
+
 	// ----------------------
 	// Campaign Clock
 	// ----------------------

@@ -562,7 +562,7 @@ void UMenuScreen::ShowOperationsMissionsDlg()
     CmpnScreen->ShowOperationsMissions();
     if (UCmdDlg* Operations = CmpnScreen->GetCmdDlg())
     {
-        ApplyUIFocus(PC, Operations);
+        if (Operations->GetVisibility() == ESlateVisibility::Visible) ApplyUIFocus(PC, Operations);
     }
 }
 
