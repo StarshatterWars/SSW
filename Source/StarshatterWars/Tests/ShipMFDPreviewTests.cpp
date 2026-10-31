@@ -5,6 +5,9 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/DataTable.h"
 #include "Sim.h"
+#include "Engine/World.h"
+#include "Engine/SceneCapture2D.h"
+#include "FighterHUDDetails.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "RenderingThread.h"
@@ -49,6 +52,9 @@ bool FPlayerMFDRenderTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Target uses full panel dimensions"),Target.GetBrush().ImageSize.Equals(FVector2D(512,256)));
     auto* TargetMaterial=Cast<UMaterialInstanceDynamic>(Target.GetBrush().GetResourceObject());
     TestTrue(TEXT("Target uses transparent UI material"),TargetMaterial && TargetMaterial->GetBlendMode()==BLEND_Translucent);
+    TestTrue(TEXT("Same IFF is friendly even when mission team is zero"),SFighterHUDDetails::IdentificationColor(1,1).Equals(FLinearColor(0.25f,0.65f,1.f)));
+    TestTrue(TEXT("Opposing IFF is red"),SFighterHUDDetails::IdentificationColor(2,1).Equals(FLinearColor::Red));
+    TestTrue(TEXT("Neutral contact is yellow"),SFighterHUDDetails::IdentificationColor(0,1).Equals(FLinearColor(1.f,0.85f,0.f)));
     if(GUsingNullRHI){AddWarning(TEXT("No GPU: rendered pixel verification skipped"));return true;}
     FlushRenderingCommands();
     TArray<FLinearColor> Pixels;
@@ -69,6 +75,30 @@ bool FPlayerMFDRenderTest::RunTest(const FString& Parameters)
     AddInfo(FString::Printf(TEXT("Player MFD: hull=%d background=%d bounds=(%d,%d)-(%d,%d) fill=%.3f"),Hull,Empty,MinX,MinY,MaxX,MaxY,Fill));
     TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(512,256,Output,PNG);
     TestTrue(TEXT("Preview image exported"),FFileHelper::SaveArrayToFile(PNG,*(FPaths::ProjectSavedDir()/TEXT("Automation/PlayerMFDFalcon.png"))));
+    const auto* Orion=Table->FindRow<FShipDesign>(TEXT("Orion"),TEXT("Target MFD render"));
+    if(TestNotNull(TEXT("Target Orion carrier design"),Orion) && TestTrue(TEXT("Target carrier preview ready"),Target.SetDesign(Orion)))
+    {
+        const FQuat ActualHeading=FRotator(5.f,110.f,12.f).Quaternion();
+        Target.SetView(ActualHeading,FVector(0,-3,1),FVector::UpVector);
+        TestTrue(TEXT("Target preview uses live ship orientation"),Target.Visual->GetActorQuat().Equals(ActualHeading,0.001));
+        Target.SetView(FRotator(5.f,160.f,12.f).Quaternion(),FVector(0,-3,1),FVector::UpVector);
+        TestFalse(TEXT("Heading change updates the preview"),Target.Visual->GetActorQuat().Equals(ActualHeading,0.001));
+        TestTrue(TEXT("Player view remains unchanged"),Player.Visual->GetActorQuat().Equals(FQuat::Identity,0.001));
+        FlushRenderingCommands();
+        TArray<FLinearColor> TargetPixels;
+        Target.Target->GameThread_GetRenderTargetResource()->ReadLinearColorPixels(TargetPixels);
+        int32 TargetHull=0,TargetEmpty=0;TArray<FColor> TargetOutput;
+        for(const auto& Pixel:TargetPixels)
+        {
+            if(Pixel.A<0.5f)++TargetHull;else ++TargetEmpty;
+            FLinearColor Display=Pixel;Display.A=1.f-Pixel.A;TargetOutput.Add(Display.ToFColor(true));
+        }
+        TestTrue(TEXT("Target MFD renders carrier geometry"),TargetHull>1000);
+        TestTrue(TEXT("Target MFD retains transparent background"),TargetEmpty>1000);
+        AddInfo(FString::Printf(TEXT("Target Orion MFD: hull=%d background=%d"),TargetHull,TargetEmpty));
+        TArray64<uint8> TargetPNG;FImageUtils::PNGCompressImageArray(512,256,TargetOutput,TargetPNG);
+        TestTrue(TEXT("Target preview exported"),FFileHelper::SaveArrayToFile(TargetPNG,*(FPaths::ProjectSavedDir()/TEXT("Automation/TargetMFDOrion.png"))));
+    }
     return true;
 }
 #endif

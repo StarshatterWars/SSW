@@ -17,7 +17,7 @@ void FShipMFDPreview::Clear()
     if(Capture.IsValid())Capture->Destroy();
     if(Visual.IsValid())Visual->Destroy();
     Capture.Reset();Visual.Reset();Brush.SetResourceObject(nullptr);
-    Material.Reset();Target.Reset();Scene.Reset();Key.Empty();
+    Material.Reset();Target.Reset();Scene.Reset();Key.Empty();bHasLiveView=false;
 }
 bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
 {
@@ -27,7 +27,7 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     {
         // Refresh at the HUD sampling rate after streaming/shader warmup.
         // Both captures stay in their own preview worlds.
-        if(!GUsingNullRHI && Capture.IsValid())
+        if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView)
         {
             Scene->GetWorld()->SendAllEndOfFrameUpdates();
             Capture->GetCaptureComponent2D()->CaptureScene();
@@ -84,4 +84,34 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     Brush.SetResourceObject(Material.Get());Brush.ImageSize=FVector2D(bPlayerPanel ? 512 : 256,256);
     Brush.DrawAs=ESlateBrushDrawType::Image;Key=NextKey;
     return true;
+}
+
+void FShipMFDPreview::SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp)
+{
+    if(!IsReady() || !Capture.IsValid() || TargetRotation.ContainsNaN() || ToObserver.ContainsNaN() || ToObserver.IsNearlyZero())return;
+    bHasLiveView=true;
+    Visual->SetActorRotation(TargetRotation.GetNormalized());
+    const FVector Direction=ToObserver.GetSafeNormal();
+    FVector Up=ObserverUp.GetSafeNormal();
+    if(Up.IsNearlyZero() || FMath::Abs(FVector::DotProduct(Up,Direction))>0.99)
+        Up=FMath::Abs(Direction.Z)<0.99 ? FVector::UpVector : FVector::RightVector;
+    const FQuat CameraRotation=FRotationMatrix::MakeFromXZ(-Direction,Up).ToQuat();
+    // The preview contains only copied mesh components, never the live ship.
+    const FBox Bounds=Visual->GetComponentsBoundingBox(true);
+    if(!Bounds.IsValid)return;
+    const FVector Center=Bounds.GetCenter();
+    double Width=0,Height=0;
+    for(int32 Corner=0;Corner<8;++Corner)
+    {
+        const FVector V=Bounds.GetExtent()*FVector((Corner&1)?1:-1,(Corner&2)?1:-1,(Corner&4)?1:-1);
+        Width=FMath::Max(Width,FMath::Abs(FVector::DotProduct(V,CameraRotation.GetAxisY()))*2.0);
+        Height=FMath::Max(Height,FMath::Abs(FVector::DotProduct(V,CameraRotation.GetAxisZ()))*2.0);
+    }
+    Capture->SetActorLocationAndRotation(Center+Direction*400.f,CameraRotation);
+    auto* Component=Capture->GetCaptureComponent2D();
+    Component->ProjectionType=ECameraProjectionMode::Orthographic;
+    Component->OrthoWidth=FMath::Max(Width,Height*2.0)*1.08;
+    Scene->GetWorld()->UpdateWorldComponents(false,false);
+    Scene->GetWorld()->SendAllEndOfFrameUpdates();
+    if(!GUsingNullRHI)Component->CaptureScene();
 }

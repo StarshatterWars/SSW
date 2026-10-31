@@ -24,6 +24,12 @@ public:
     virtual int32 OnPaint(const FPaintArgs&, const FGeometry&, const FSlateRect&,
         FSlateWindowElementList&, int32, const FWidgetStyle&, bool) const override;
     virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+    static FLinearColor IdentificationColor(int32 ContactIFF,int32 ObserverIFF)
+    {
+        return ContactIFF<0 ? FLinearColor(0.45f,0.45f,0.45f) :
+            ContactIFF==0 ? FLinearColor(1.f,0.85f,0.f) :
+            ContactIFF==ObserverIFF ? FLinearColor(0.25f,0.65f,1.f) : FLinearColor::Red;
+    }
     void ToggleRadio();
     void RadioSelect(int32 Number);
     bool IsRadioOpen() const { return RadioPage >= 0; }

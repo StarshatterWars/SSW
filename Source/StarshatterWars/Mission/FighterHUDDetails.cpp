@@ -109,18 +109,7 @@ namespace
         if (!Contact || !Observer)
             return FLinearColor(0.45f, 0.45f, 0.45f, 1.0f); // unknown gray
 
-        const int32 ContactIFF = Contact->GetIFF(Observer);
-
-        if (ContactIFF < 0)
-            return FLinearColor(0.45f, 0.45f, 0.45f, 1.0f); // unknown gray
-
-        if (ContactIFF == 0)
-            return FLinearColor(1.0f, 0.85f, 0.0f, 1.0f); // neutral yellow
-
-        if (ContactIFF == Observer->GetIFF())
-            return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // friendly blue
-
-        return FLinearColor(1.0f, 0.0f, 0.0f, 1.0f); // enemy red
+        return SFighterHUDDetails::IdentificationColor(Contact->GetIFF(Observer),Observer->GetIFF());
     }
     // Do not enable launch merely because Hangar has allocated an ALERT ship.
     // The physical deck slot must still contain that fighter and be READY.
@@ -342,14 +331,17 @@ void SFighterHUDDetails::Refresh()
         TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
         // Identification is relative to the observing ship, not mission team 0.
-        const int32 TargetIFF=T->GetIFF();
-        TargetDisplayColor=TargetIFF<0 ? FLinearColor(0.45f,0.45f,0.45f) :
-            TargetIFF==0 ? FLinearColor(1.f,0.85f,0.f) :
-            P && TargetIFF==P->GetIFF() ? FLinearColor(0.25f,0.65f,1.f) : FLinearColor::Red;
+        TargetDisplayColor=IdentificationColor(T->GetIFF(),P?P->GetIFF():-1);
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
         TargetRange = P ? FVector::Distance(P->GetLocation(), T->GetLocation()) / 1000.0 : -1;
         if(!TargetMFDPreview)TargetMFDPreview=MakeUnique<FShipMFDPreview>(true);
         TargetMFDPreview->SetDesign(T->Design()?ShipDesignRegistry::Find(T->Design()->name):nullptr);
+        AShipActor* TargetActor=T->GetNativePresentation();
+        if(!IsValid(TargetActor))TargetActor=A;
+        AShipActor* PlayerActor=P?P->GetNativePresentation():nullptr;
+        if(IsValid(TargetActor) && IsValid(PlayerActor))
+            TargetMFDPreview->SetView(TargetActor->GetActorQuat(),
+                PlayerActor->GetActorLocation()-TargetActor->GetActorLocation(),PlayerActor->GetActorUpVector());
     }
     else
     {
