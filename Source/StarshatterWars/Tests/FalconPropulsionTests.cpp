@@ -7,6 +7,8 @@
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
 #include "Misc/ScopeExit.h"
+#include "StarshatterShipDesignSubsystem.h"
+#include "Engine/GameInstance.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFalconPropulsionTest,"Starshatter.Fighters.FalconPropulsion",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FFalconPropulsionTest::RunTest(const FString& Parameters)
 {
@@ -26,6 +28,16 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     }
     if (TestTrue(TEXT("Falcon RCS ports exist"),!F->Thruster.IsEmpty() && !F->Thruster[0].Ports.IsEmpty()))
         TestTrue(TEXT("RCS shares the engine port scale convention"),F->Thruster[0].Ports[0].Location.Equals(FVector(0.f,-8.f,3.f),0.001));
+    {
+        const FShipDesign CachedFalcon = *F;
+        ON_SCOPE_EXIT { Table->AddRow(TEXT("Falcon"), CachedFalcon); };
+        auto* Importer = NewObject<UStarshatterShipDesignSubsystem>(NewObject<UGameInstance>());
+        TestTrue(TEXT("Definition reparse preserves runtime exhaust coordinates"),Importer->ReimportFalconFlightSystems());
+        const auto* Reparsed = Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Reparsed exhaust"));
+        if (TestNotNull(TEXT("Reparsed Falcon"),Reparsed) && !Reparsed->Drive.IsEmpty() && !Reparsed->Drive[0].Ports.IsEmpty())
+            TestTrue(TEXT("Startup LoadShipDesign scales Falcon nozzle exactly once"),Reparsed->Drive[0].Ports[0].Location.Equals(FVector(-47.f,9.f,3.f),0.001));
+    }
+    F=Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Restored propulsion"));
     const auto Original=ShipDesignRegistry::GetAll();
     const auto OriginalWeapons=WeaponDesignRegistry::GetAll();
     ON_SCOPE_EXIT {ShipDesignRegistry::Clear();WeaponDesignRegistry::Clear();for(const auto& P:OriginalWeapons)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);for(const auto& P:Original)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};
@@ -48,6 +60,13 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     for(int32 I=0;I<300;++I){Engine.SetThrottle(100,false,1./60.);Reactor.ExecFrame(1./60.);Output=Engine.GetThrust(1./60.);}
     TestTrue(TEXT("Real reactor supplies positive drive thrust at full throttle"),Output>0.f);
     AddInfo(FString::Printf(TEXT("Falcon full-throttle output %.3f, visual power %.3f"),Output,Engine.GetVisualPower()));
+    const float NormalThrust=Output;
+    for(int32 I=0;I<120;++I){Engine.SetThrottle(100,true,1./60.);Reactor.ExecFrame(1./60.);Output=Engine.GetThrust(1./60.);}
+    TestTrue(TEXT("Held augmenter spools on"),Engine.IsAugmenterOn());
+    TestTrue(TEXT("Augmenter increases actual engine thrust"),Output>NormalThrust);
+    TestTrue(TEXT("Augmenter increases exhaust power"),Engine.GetVisualPower()>1.f);
+    Engine.SetThrottle(100,false,2.);Reactor.ExecFrame(1./60.);
+    TestFalse(TEXT("Released augmenter spools off"),Engine.IsAugmenterOn());
     Engine.SetThrottle(0,false,2.);Reactor.ExecFrame(1./60.);
     TestEqual(TEXT("Zero throttle gives zero thrust"),Engine.GetThrust(1./60.),0.f);
     return true;

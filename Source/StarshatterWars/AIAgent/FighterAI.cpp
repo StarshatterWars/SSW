@@ -670,7 +670,7 @@ FighterAI::Navigator()
         (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
-    if (ship->GetMissionClock() < 10000) {
+    if (ship->GetMissionClockMS() < 10000) {
         if (ship->IsAirborne())
             Accumulate(SeekTarget());
     }
@@ -825,7 +825,7 @@ FighterAI::ThrottleControl()
         formation = false;
 
     // LAUNCH / TAKEOFF
-    if (ship->GetMissionClock() < 10000) {
+    if (ship->GetMissionClockMS() < 10000) {
         formation = false;
         throttle = 100.0;
         brakes = 0.0;
@@ -1211,7 +1211,7 @@ FighterAI::SeekTarget()
     Ship* ward = ship->GetWard();
 
     if ((!target && !ward && !navpt && !farcaster && !patrol && !inbound && !rtb_code) ||
-        ship->GetMissionClock() < 10000) {
+        ship->GetMissionClockMS() < 10000) {
         if (element_index > 1) {
             // break formation if threatened:
             if (threat_missile)

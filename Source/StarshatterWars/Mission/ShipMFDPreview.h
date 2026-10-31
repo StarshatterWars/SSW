@@ -12,12 +12,14 @@ struct FShipDesign;
 class FShipMFDPreview
 {
 public:
-    FShipMFDPreview();
+    explicit FShipMFDPreview(bool bInPlayerPanel = false);
     ~FShipMFDPreview();
     bool SetDesign(const FShipDesign* Design);
     bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }
     const FSlateBrush& GetBrush() const { return Brush; }
 private:
+    friend class FPlayerMFDRenderTest;
+    bool bPlayerPanel = false;
     void Clear();
     FString Key;
     TUniquePtr<FPreviewScene> Scene;

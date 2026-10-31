@@ -414,6 +414,26 @@ void UMissionBriefingDlg::UpdateLiveMission()
         }
     }
 
+    // Resolve hold state from the configured key, independent of action-event
+    // consumption or one-shot Hold triggers. Never hard-code Tab or bypass rebinds.
+    if (CanUseFighterHUD() && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused())
+    {
+        if (APlayerController* PC=GetOwningPlayer())
+        {
+            bool bMapped=false,bHeld=false;
+            for(const auto& Mapping:AutoNavInputContext->GetMappings())
+            {
+                if(!Mapping.Action || Mapping.Action->GetName()!=TEXT("IA_Augmenter") || Mapping.Modifiers.Num()!=0)continue;
+                bool bSimple=true;
+                for(const auto& Trigger:Mapping.Triggers)
+                    if(Trigger && !Trigger->IsA<UInputTriggerHold>())bSimple=false;
+                if(!bSimple || !Mapping.Key.IsValid())continue;
+                bMapped=true;bHeld|=PC->IsInputKeyDown(Mapping.Key);
+            }
+            if(bMapped)ApplyMissionAugmenter(bHeld && !StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
+        }
+    }
+
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) ClearMissionRotationInput();
 
     ExecFrame();
@@ -2009,7 +2029,16 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             UE_LOG(LogTemp, Display, TEXT("[AugmenterInput] %s -> %s"), *Mapping.Key.ToString(), *BoostAction->GetPathName());
         }
     }
-    if (AutoNavInputContext->GetMappings().Num()) { StarshatterInputBindings::RegisterContext(AutoNavInputContext.Get()); Input->AddMappingContext(AutoNavInputContext.Get(), 1105); }
+    if (AutoNavInputContext->GetMappings().Num())
+    {
+        // Register the authored signature first to retain existing saved rebinds.
+        StarshatterInputBindings::RegisterContext(AutoNavInputContext.Get());
+        for(int32 Index=0;Index<AutoNavInputContext->GetMappings().Num();++Index)
+        {
+            StarshatterInputBindings::ConfigureAugmenterHold(AutoNavInputContext->GetMapping(Index),AutoNavInputContext.Get());
+        }
+        Input->AddMappingContext(AutoNavInputContext.Get(),1105);
+    }
     else UE_LOG(LogTemp, Error, TEXT("[AutoNavInput] No IA_AutoNav mapping found in the active fighter/menu contexts."));
     BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
     BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
@@ -3044,7 +3073,11 @@ void UMissionBriefingDlg::ApplyMissionAugmenter(bool Enabled)
     if (!Player || !Region || !Region->GetShips().contains(Player)) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
     { Player->ClearManualRotationInput(); return; }
+    const bool WasEnabled=Player->GetAugmenter();
     Player->SetManualAugmenter(Enabled);
+    if(WasEnabled!=Player->GetAugmenter())
+        UE_LOG(LogTemp,Display,TEXT("[AugmenterState] Ship='%hs' Held=%d Enabled=%d Throttle=%.1f Request=%.1f"),
+            Player->GetName(),Enabled,Player->GetAugmenter(),Player->GetThrottle(),Player->GetThrottleRequest());
 }
 
 void UMissionBriefingDlg::OnMissionStrafe(const FInputActionValue& Value) { ApplyMissionTranslation(0,Value.Get<float>()); }

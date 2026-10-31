@@ -153,3 +153,16 @@ FKey StarshatterInputBindings::ResolvedKey(const FString& Name,FKey Default)
     const auto& Config=UStarshatterKeyboardSettings::Get()->GetKeyboardConfig();
     const FKey* Saved=Config.EnhancedBindings.Find(BindingId);return Saved && Saved->IsValid()?*Saved:Default;
 }
+
+void StarshatterInputBindings::ConfigureAugmenterHold(FEnhancedActionKeyMapping& Mapping,UObject* Owner)
+{
+    if(!Owner || !Mapping.Action || Mapping.Action->GetName()!=TEXT("IA_Augmenter"))return;
+    for(auto& Trigger:Mapping.Triggers)
+        if(const auto* Hold=Cast<UInputTriggerHold>(Trigger))
+        {
+            auto* Continuous=DuplicateObject<UInputTriggerHold>(Hold,Owner);
+            Continuous->HoldTimeThreshold=UE_SMALL_NUMBER;
+            Continuous->bIsOneShot=false;
+            Trigger=Continuous;
+        }
+}

@@ -283,7 +283,7 @@ void SFighterHUDDetails::Refresh()
         PlayerName = ANSI_TO_TCHAR(P->GetName());
         PlayerClass = ANSI_TO_TCHAR(P->GetShipClassName());
         PlayerShield = P->GetShield() ? P->GetShieldStrength() : -1;
-        if(!PlayerMFDPreview)PlayerMFDPreview=MakeUnique<FShipMFDPreview>();
+        if(!PlayerMFDPreview)PlayerMFDPreview=MakeUnique<FShipMFDPreview>(true);
         PlayerMFDPreview->SetDesign(P->Design()?ShipDesignRegistry::Find(P->Design()->name):nullptr);
         if (P->GetMainDrive()) StatusRows.Add({TEXT("THRUST"), P->GetThrottle()});
         if (P->GetReactors().size() > 0 && P->GetReactors()[0])
@@ -341,14 +341,14 @@ void SFighterHUDDetails::Refresh()
         }
         TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
-        Sim* TargetSim = Sim::GetSim();
-        Mission* TargetMission = TargetSim ? TargetSim->GetMission() : nullptr;
-        if (TargetMission && T->GetIFF() > 0)
-            TargetDisplayColor = T->GetIFF() == TargetMission->GetTeam()
-                ? FLinearColor(0.25f, 0.65f, 1.0f) : FLinearColor::Red;
+        // Identification is relative to the observing ship, not mission team 0.
+        const int32 TargetIFF=T->GetIFF();
+        TargetDisplayColor=TargetIFF<0 ? FLinearColor(0.45f,0.45f,0.45f) :
+            TargetIFF==0 ? FLinearColor(1.f,0.85f,0.f) :
+            P && TargetIFF==P->GetIFF() ? FLinearColor(0.25f,0.65f,1.f) : FLinearColor::Red;
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
         TargetRange = P ? FVector::Distance(P->GetLocation(), T->GetLocation()) / 1000.0 : -1;
-        if(!TargetMFDPreview)TargetMFDPreview=MakeUnique<FShipMFDPreview>();
+        if(!TargetMFDPreview)TargetMFDPreview=MakeUnique<FShipMFDPreview>(true);
         TargetMFDPreview->SetDesign(T->Design()?ShipDesignRegistry::Find(T->Design()->name):nullptr);
     }
     else
@@ -705,7 +705,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         const FVector2D P(232*Scale,Size.Y-(172+HomeRowHeight)*Scale);
         ShipText(P,PlayerName);
         if(PlayerMFDPreview && PlayerMFDPreview->IsReady())
-            Icon(P+FVector2D(48,24)*Scale,PlayerMFDPreview->GetBrush(),true,PlayerHull);
+            FSlateDrawElement::MakeBox(E,L+1,
+                G.ToPaintGeometry(FVector2f(176*Scale,88*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(0,22)*Scale))),
+                &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
         ShipText(P+FVector2D(0,112)*Scale,PlayerClass);
         if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
         ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),ShipHealthColor(PlayerHull));
@@ -757,7 +759,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         }
         else ShipText(P,TargetName,TargetDisplayColor);
         if(TargetMFDPreview && TargetMFDPreview->IsReady())
-            Icon(P+FVector2D(48,24)*Scale,TargetMFDPreview->GetBrush(),true,TargetHull);
+            FSlateDrawElement::MakeBox(E,L+1,
+                G.ToPaintGeometry(FVector2f(176*Scale,88*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(0,22)*Scale))),
+                &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(TargetHull));
         else if(TargetHull<0)
             Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,TargetClass,TargetDisplayColor);

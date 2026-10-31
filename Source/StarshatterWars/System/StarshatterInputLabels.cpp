@@ -27,7 +27,7 @@ FText UStarshatterInputLabels::GetValueTypeLabel(EInputActionValueType ValueType
 FText UStarshatterInputLabels::GetDefaultActionLabel(FName ActionName)
 {
     const FString Name=ActionName.ToString();
-    if (ActionName==TEXT("IA_Augmenter")) return NSLOCTEXT("SSW.InputActions","IA_Augmenter","Toggle Afterburner");
+    if (ActionName==TEXT("IA_Augmenter")) return NSLOCTEXT("SSW.InputActions","IA_Augmenter","Augmenter (Hold)");
     if (ActionName==TEXT("IA_AutoNav")) return NSLOCTEXT("SSW.InputActions","IA_AutoNav","Toggle Autonav");
     if (ActionName==TEXT("IA_CameraChase")) return NSLOCTEXT("SSW.InputActions","IA_CameraChase","Chase View");
     if (ActionName==TEXT("IA_CameraCockpit")) return NSLOCTEXT("SSW.InputActions","IA_CameraCockpit","Cockpit View");

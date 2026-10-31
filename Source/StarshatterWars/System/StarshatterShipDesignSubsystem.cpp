@@ -934,6 +934,21 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		return;
 	}
 
+    // Falcon's authored FX ports compensate for the 0.27 hull scale.
+    // Apply that scale in the normal startup parse as well as editor imports:
+    // RuntimeEmitterLocalPosition removes it before applying the hull transform.
+    // Keep every other system location, ship scale, and design unchanged.
+    if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase))
+    {
+        const float PortScale = LocalScale > 0.f ? LocalScale : 1.f;
+        for (auto& Drive : NewShipDesign.Drive)
+            for (auto& Port : Drive.Ports)
+                Port.Location *= PortScale;
+        for (auto& Thruster : NewShipDesign.Thruster)
+            for (auto& Port : Thruster.Ports)
+                Port.Location *= PortScale;
+    }
+
 	const FName CleanRowName(*ShipName);
 
 	if (FShipDesign* Existing =
@@ -4896,15 +4911,6 @@ bool UStarshatterShipDesignSubsystem::ReimportFalconFlightSystems()
     if(Valid)
     {
         Updated.Power=Parsed->Power;Updated.Drive=Parsed->Drive;Updated.Thruster=Parsed->Thruster;
-        // RuntimeEmitterLocalPosition removes design.scale before the component
-        // hierarchy applies the actor scale. This scoped import must therefore
-        // store scaled ports, without changing the shared parser or hull scale.
-        for (auto& Drive : Updated.Drive)
-            for (auto& Port : Drive.Ports)
-                Port.Location *= Original.Scale;
-        for (auto& Thruster : Updated.Thruster)
-            for (auto& Port : Thruster.Ports)
-                Port.Location *= Original.Scale;
         Updated.NavSys=Parsed->NavSys;Updated.Computer=Parsed->Computer;Updated.Sensor=Parsed->Sensor;
     }
     Table->AddRow(TEXT("Falcon"),Updated);ShipDesignDataTable=Previous;
