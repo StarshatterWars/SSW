@@ -550,7 +550,6 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		{
 			GetDefNumber(LocalScale, Def, fn);
 			NewShipDesign.Scale = LocalScale;
-			CurrentShipScale = LocalScale;
 		}
 		else if (Key == "explosion_scale")
 		{
@@ -4897,6 +4896,15 @@ bool UStarshatterShipDesignSubsystem::ReimportFalconFlightSystems()
     if(Valid)
     {
         Updated.Power=Parsed->Power;Updated.Drive=Parsed->Drive;Updated.Thruster=Parsed->Thruster;
+        // RuntimeEmitterLocalPosition removes design.scale before the component
+        // hierarchy applies the actor scale. This scoped import must therefore
+        // store scaled ports, without changing the shared parser or hull scale.
+        for (auto& Drive : Updated.Drive)
+            for (auto& Port : Drive.Ports)
+                Port.Location *= Original.Scale;
+        for (auto& Thruster : Updated.Thruster)
+            for (auto& Port : Thruster.Ports)
+                Port.Location *= Original.Scale;
         Updated.NavSys=Parsed->NavSys;Updated.Computer=Parsed->Computer;Updated.Sensor=Parsed->Sensor;
     }
     Table->AddRow(TEXT("Falcon"),Updated);ShipDesignDataTable=Previous;
