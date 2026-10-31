@@ -1,0 +1,49 @@
+{
+	"FileVersion": 3,
+	"Version": 2,
+	"VersionName": "2.0",
+	"FriendlyName": "ProceduralVortexTunnel",
+	"Description": "",
+	"Category": "Procedural",
+	"CreatedBy": "Athian Games",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EngineVersion": "5.7.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "ProceduralVortexTunnel",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"PlatformAllowList": [
+				"Win64",
+				"Mac"
+			],
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		},
+		{
+			"Name": "ProceduralVortexEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"PlatformAllowList": [
+				"Win64",
+				"Mac"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		}
+	]
+}

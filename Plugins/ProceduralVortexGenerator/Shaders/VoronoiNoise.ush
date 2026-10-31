@@ -1,0 +1,35 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+
+struct VoronoiNoise
+{
+	float GetVoronoiNoise(float3 p, float seed)
+	{
+		VortexRandom VR;
+
+		float3 b, r, g = floor(p);
+		p = frac(p);
+
+		float d = 1.;
+
+		for (int k = -1; k <= 1; k++)
+		{
+			for (int j = -1; j <= 1; j++)
+			{
+				for (int i = -1; i <= 1; i++)
+				{
+					b = float3(i, j, k);
+					r = b - p + VR.GetVortexRandom3D(g + b, seed);
+					d = min(d, dot(r, r));
+					b.z = 0.0;
+					r = b - p + VR.GetVortexRandom3D(g + b, seed);
+					d = min(d, dot(r, r));
+					b.z = 1.;
+					r = b - p + VR.GetVortexRandom3D(g + b, seed);
+					d = min(d, dot(r, r));
+				}
+			}
+		}
+
+		return d;
+	}
+};

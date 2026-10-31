@@ -59,7 +59,7 @@ drive:      {
    thrust:  20,
    augmenter: 60,
    scale:   0.35,
-   port:    (-45, 0, 0),
+   port:    (-180, 0, 0),
 
    loc:     (0, 0, -100),
    size:    16,
@@ -233,35 +233,41 @@ thruster: {
    size:             32,
    hull_factor:      0.8
 
-   port_fore: {loc:(0, -25, 0), fire: 0x0044, rotation:(0, 0, 0)},
-   port_fore: {loc:(-1, -21, 0), fire: 0x0044, rotation:(0, 0, 0)},
-   port_fore: {loc:(-1, 21, 0), fire: 0x0084, rotation:(0, 0, 0)},
-   port_fore: {loc:(0, 25, 0), fire: 0x0084, rotation:(0, 0, 0)},
+   port_fore: {loc:(0, -100, 0), fire: 0x0044, rotation:(0, 0, 0)},
+   port_fore: {loc:(-4, -84, 0), fire: 0x0044, rotation:(0, 0, 0)},
+   port_fore: {loc:(-4, 84, 0), fire: 0x0084, rotation:(0, 0, 0)},
+   port_fore: {loc:(0, 100, 0), fire: 0x0084, rotation:(0, 0, 0)},
 
-   port_aft: {loc:(-34, -20, 0), fire: 0x0088, rotation:(0, 0, 180)},
-   port_aft: {loc:(-35, -16, 0), fire: 0x0088, rotation:(0, 0, 180)},
-   port_aft: {loc:(-35, 16, 0), fire: 0x0048, rotation:(0, 0, 180)},
-   port_aft: {loc:(-34, 20, 0), fire: 0x0048, rotation:(0, 0, 180)},
+   port_aft: {loc:(-136, -80, 0), fire: 0x0088, rotation:(0, 0, 180)},
+   port_aft: {loc:(-140, -64, 0), fire: 0x0088, rotation:(0, 0, 180)},
+   port_aft: {loc:(-140, 64, 0), fire: 0x0048, rotation:(0, 0, 180)},
+   port_aft: {loc:(-136, 80, 0), fire: 0x0048, rotation:(0, 0, 180)},
 
-   port_top: {loc:(30, -3, 3), fire: 0x0210, rotation:(0, 90, 0)},
-   port_top: {loc:(26, -3, 3), fire: 0x0210, rotation:(0, 90, 0)},
-   port_top: {loc:(26, 3, 3), fire: 0x0210, rotation:(0, 90, 0)},
-   port_top: {loc:(30, 3, 3), fire: 0x0210, rotation:(0, 90, 0)},
+   port_top: {loc:(120, -12, 12), fire: 0x0210, rotation:(0, 90, 0)},
+   port_top: {loc:(104, -12, 12), fire: 0x0210, rotation:(0, 90, 0)},
+   port_top: {loc:(104, 12, 12), fire: 0x0210, rotation:(0, 90, 0)},
+   port_top: {loc:(120, 12, 12), fire: 0x0210, rotation:(0, 90, 0)},
 
-   port_bottom: {loc:(30, -3, -4), fire: 0x0120, rotation:(0, -90, 0)},
-   port_bottom: {loc:(26, -3, -4), fire: 0x0120, rotation:(0, -90, 0)},
-   port_bottom: {loc:(26, 3, -4), fire: 0x0120, rotation:(0, -90, 0)},
-   port_bottom: {loc:(30, 3, -4), fire: 0x0120, rotation:(0, -90, 0)},
+   port_bottom: {loc:(120, -12, -16), fire: 0x0120, rotation:(0, -90, 0)},
+   port_bottom: {loc:(104, -12, -16), fire: 0x0120, rotation:(0, -90, 0)},
+   port_bottom: {loc:(104, 12, -16), fire: 0x0120, rotation:(0, -90, 0)},
+   port_bottom: {loc:(120, 12, -16), fire: 0x0120, rotation:(0, -90, 0)},
 
-   port_top: {loc:(-18, -17, 10), fire: 0x0510, rotation:(0, 90, 0)},
-   port_top: {loc:(-24, -17, 10), fire: 0x0510, rotation:(0, 90, 0)},
-   port_top: {loc:(-18, 17, 10), fire: 0x0910, rotation:(0, 90, 0)},
-   port_top: {loc:(-24, 17, 10), fire: 0x0910, rotation:(0, 90, 0)},
+   port_top: {loc:(-72, -68, 40), fire: 0x0510, rotation:(0, 90, 0)},
+   port_top: {loc:(-96, -68, 40), fire: 0x0510, rotation:(0, 90, 0)},
+   port_top: {loc:(-72, 68, 40), fire: 0x0910, rotation:(0, 90, 0)},
+   port_top: {loc:(-96, 68, 40), fire: 0x0910, rotation:(0, 90, 0)},
 
-   port_bottom: {loc:(-18, -17, -10), fire: 0x0A20, rotation:(0, -90, 0)},
-   port_bottom: {loc:(-24, -17, -10), fire: 0x0A20, rotation:(0, -90, 0)},
-   port_bottom: {loc:(-18, 17, -10), fire: 0x0620, rotation:(0, -90, 0)},
-   port_bottom: {loc:(-24, 17, -10), fire: 0x0620, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-72, -68, -40), fire: 0x0A20, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-96, -68, -40), fire: 0x0A20, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-72, 68, -40), fire: 0x0620, rotation:(0, -90, 0)},
+   port_bottom: {loc:(-96, 68, -40), fire: 0x0620, rotation:(0, -90, 0)},
+   // Outboard lateral RCS pairs; exhaust points away from the hull.
+   port_left: {loc:(-6, -102, 0), fire: 0x0002, rotation:(0, 0, -90)}
+   port_left: {loc:(6, -102, 0), fire: 0x0002, rotation:(0, 0, -90)}
+   port_right: {loc:(-6, 102, 0), fire: 0x0001, rotation:(0, 0, 90)}
+   port_right: {loc:(6, 102, 0), fire: 0x0001, rotation:(0, 0, 90)}
+
 }
 
 

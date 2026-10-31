@@ -1,0 +1,60 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+
+struct PerlinFBM
+{
+
+float3 GetFBM(float3 p, float amplitude, float frequency, float roughness, float persistance, int octaves, int seed)
+{
+    float3  d = float3(0,0,0);
+    VortexRandom VR;
+    for( int i=0; i < octaves; i++ )
+    {
+        float3 n = VR.GetGradientNoise(p * frequency, seed);
+        d += n * frequency * amplitude; 
+        amplitude *= persistance;         
+        frequency *= roughness;   
+        
+    }
+
+	return d;
+}
+
+float MapFBM(float3 p, float amplitude, float frequency, float roughness, float persistance, int octaves, int seed)
+{
+    float d1 = GetFBM(p, amplitude, frequency, roughness, persistance, octaves, seed).x;
+    d1 -= 0.37;
+    d1 *= 0.7;
+    return d1;
+}
+
+float3 GetNormal(float3 pos, float3 delta, float amplitude, float frequency, float roughness, float persistance, int octaves, int seed)
+{
+   	float3 nor = float3(MapFBM(pos+delta, amplitude, frequency, roughness, persistance, octaves, seed).x - 
+     MapFBM(pos-delta, amplitude, frequency, roughness, persistance, octaves, seed).x,
+	                 MapFBM(pos+delta.yxz, amplitude, frequency, roughness, persistance, octaves, seed).x - 
+                   MapFBM(pos-delta.yxz, amplitude, frequency, roughness, persistance, octaves, seed).x,
+	                 MapFBM(pos+delta.yzx, amplitude, frequency, roughness, persistance, octaves, seed).x - 
+                   MapFBM(pos-delta.yzx, amplitude, frequency, roughness, persistance, octaves, seed).x);
+
+    return normalize(nor);
+}
+
+float3 GetPerlinFBM(float3 p, float amplitude, float frequency, float roughness, float persistance, int octaves, int seed)
+{
+    float3 Q = float3(0,0,0);
+    float3 R = float3(0,0,0);
+
+    Q.x = GetFBM(p * 0.1, amplitude, frequency, roughness, persistance, octaves, seed);
+    Q.y = GetFBM(p * 0.1 + float3(10, 5, 1), amplitude, frequency, roughness, persistance, octaves, seed);
+    Q.z = GetFBM(p * 0.1 - float3(1, 0.5, 9), amplitude, frequency, roughness, persistance, octaves, seed);
+
+    R.x = GetFBM(p * 0.1 + 0.1 * Q + float3(2, 1, 3), amplitude, frequency, roughness, persistance, octaves, seed);
+    R.y = GetFBM(p * 0.1 + 0.05 * Q + float3(1, 3, 1), amplitude, frequency, roughness, persistance, octaves, seed);
+    R.z = GetFBM(p * 0.1 - 0.1 * Q - float3(1, 2, 5), amplitude, frequency, roughness, persistance, octaves, seed);
+
+    float3 fbmnoise = GetFBM(p * 0.1 + 0.1 * R, amplitude, frequency, roughness, persistance, octaves, seed);
+    return fbmnoise;
+
+}
+
+};

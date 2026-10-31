@@ -2901,7 +2901,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
     // ------------------------------------------------------------
     CutsceneMissionIds.Empty();
     for (const FS_CampaignMission& Authored : Data.Missions)
-        if (!Authored.Scene.TrimStartAndEnd().IsEmpty()) CutsceneMissionIds.Add(Authored.Id);
+        if (Authored.MissionType != EMissionType::TRAINING && !Authored.Scene.TrimStartAndEnd().IsEmpty()) CutsceneMissionIds.Add(Authored.Id);
 
     for (const FS_CampaignMissionList& MissionRow : Data.MissionList)
     {
@@ -2922,8 +2922,8 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->situation   = TCHAR_TO_ANSI(*MissionRow.Sitrep);
         Info->Source = MissionRow.Source;
 
-       double RelativeMsnStart = UFormattingUtils::ParseStarshatterTime(*MissionRow.Start);
-        Info->start = StarSystem::GetStardate() + RelativeMsnStart;
+        // MissionInfo times are campaign-relative, like Mission::GetStart().
+        Info->start = UFormattingUtils::ParseStarshatterTime(MissionRow.Start);
 
         Info->type = MissionRow.Type;
         Info->is_cutscene = CampaignPresentationRules::IsAuthoredScene(MissionRow.Id, Data.Missions);

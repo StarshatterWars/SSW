@@ -3053,7 +3053,17 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 							GetDefText(TypeName, pdef, fn);
 							//Type = Mission::TypeFromName(typestr);
 							NewMissionList.TypeName = FString(TypeName);
+                            const FString Normalized = NormalizeCombatGroupType(FString(TypeName));
+                            if (FStringToEnum<EMissionType>(Normalized, LocalMissionType, false))
+                                NewMissionList.Type = static_cast<int32>(LocalMissionType);
 						}
+
+                        else if (pdef->name()->value() == "cutscene")
+                        {
+                            bool IsCutscene = false;
+                            GetDefBool(IsCutscene, pdef, fn);
+                            NewMissionList.DisplayType = IsCutscene ? EMissionDisplayType::CutsceneOnly : EMissionDisplayType::PlayerMission;
+                        }
 
 						// Preserve legacy defaults (set repeatedly in your original loop):
 						NewMissionList.Source = EMissionSource::Scripted;
@@ -8174,6 +8184,78 @@ bool UStarshatterGameDataSubsystem::RebuildCampaignCutscenePresentation()
     if (Count > 0) Table->MarkPackageDirty();
     UE_LOG(LogTemp, Display, TEXT("[CampaignSceneMigration] Rebuilt %d authored scenes; %d playable/training records and all other campaign fields verified unchanged"), Count, ProtectedCount);
     return Count > 0;
+#else
+    return false;
+#endif
+}
+
+
+bool UStarshatterGameDataSubsystem::RebuildCampaignOneTrainingMissions()
+{
+#if WITH_EDITOR
+    UDataTable* Table=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_Campaign.DT_Campaign"));
+    if(!Table || Table->GetRowStruct()!=FS_Campaign::StaticStruct())return false;
+    FS_Campaign* Training=nullptr;
+    for(const auto& Pair:Table->GetRowMap())
+    {
+        auto* Row=reinterpret_cast<FS_Campaign*>(Pair.Value);
+        if(Row->Index==0 && Row->Name.Equals(TEXT("Operation Live Fire"),ESearchCase::IgnoreCase)){Training=Row;break;}
+    }
+    if(!Training)return false;
+    const FS_Campaign Before=*Training;
+    const auto SavedMissions=MissionArray;
+    const auto SavedElements=MissionElementArray;
+    const auto SavedEvents=MissionEventArray;
+    const double SavedTime=LastParsedMissionEventTime;
+    const bool SavedStandalone=bParsingStandaloneMission;
+    bParsingStandaloneMission=true; // Read scripts without writing the unrelated scene cache.
+    const auto SavedList=MissionListArray;
+    LoadMissionList(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/"));
+    const auto ParsedList=MissionListArray;
+    MissionListArray=SavedList;
+    TMap<int32,FS_CampaignMission> Parsed;
+    for(const auto& Entry:ParsedList)
+    {
+        if(Entry.Id<101 || Entry.Id>107)continue;
+        const FString Path=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes")/(Entry.Script+TEXT(".def"));
+        const int32 Count=MissionArray.Num();
+        const auto Ansi=StringCast<ANSICHAR>(*Path);ParseMission(Ansi.Get());
+        if(MissionArray.Num()!=Count+1)continue;
+        FS_CampaignMission Mission=MissionArray.Last();
+        // The ID must come from the actual def, never from file order or array position.
+        if(Mission.Id!=Entry.Id || Mission.MissionType!=EMissionType::TRAINING ||
+            !Mission.Scene.Equals(Entry.Script,ESearchCase::IgnoreCase))continue;
+        if(Mission.StartTime.IsEmpty())Mission.StartTime=Entry.Start;
+        Mission.DisplayType=EMissionDisplayType::PlayerMission;
+        Parsed.Add(Mission.Id,MoveTemp(Mission));
+    }
+    const FString IntroPath=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/Intro.def");
+    const int32 IntroCount=MissionArray.Num();
+    const auto IntroAnsi=StringCast<ANSICHAR>(*IntroPath);ParseMission(IntroAnsi.Get());
+    const bool bIntroParsed=MissionArray.Num()==IntroCount+1 && MissionArray.Last().Id==100 &&
+        MissionArray.Last().Scene.Equals(TEXT("Intro"),ESearchCase::IgnoreCase);
+    FS_CampaignMission Intro;
+    if(bIntroParsed){Intro=MissionArray.Last();Intro.DisplayType=EMissionDisplayType::CutsceneOnly;}
+    MissionArray=SavedMissions;MissionElementArray=SavedElements;MissionEventArray=SavedEvents;
+    LastParsedMissionEventTime=SavedTime;bParsingStandaloneMission=SavedStandalone;
+    if(Parsed.Num()!=7 || !bIntroParsed){UE_LOG(LogTemp,Error,TEXT("[Campaign1Ingestion] Expected seven def IDs, parsed %d"),Parsed.Num());return false;}
+    FS_Campaign Updated=Before;
+    Updated.MissionList=ParsedList;
+    for(const auto& Pair:Parsed)
+    {
+        const int32 Index=Updated.Missions.IndexOfByPredicate([&Pair](const FS_CampaignMission& M)
+            {return M.Scene.Equals(Pair.Value.Scene,ESearchCase::IgnoreCase);});
+        if(Index==INDEX_NONE)return false;
+        Updated.Missions[Index]=Pair.Value;
+    }
+    const int32 IntroIndex=Updated.Missions.IndexOfByPredicate([](const FS_CampaignMission& M)
+        {return M.Scene.Equals(TEXT("Intro"),ESearchCase::IgnoreCase);});
+    if(IntroIndex==INDEX_NONE)return false;
+    Updated.Missions[IntroIndex]=MoveTemp(Intro);
+    // Only Campaign 1's mission list and eight authored scenarios may change.
+    Table->Modify();*Training=MoveTemp(Updated);Table->MarkPackageDirty();
+    UE_LOG(LogTemp,Display,TEXT("[Campaign1Ingestion] Reingested Campaign 1 intro 100 and training missions 101-107; other campaign rows untouched"));
+    return true;
 #else
     return false;
 #endif

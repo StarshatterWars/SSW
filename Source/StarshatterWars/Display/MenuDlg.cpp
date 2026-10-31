@@ -147,6 +147,7 @@ void UMenuDlg::BuildModernMenu()
     LogoBox->SetHeightOverride(256.f);
     UImage* Logo = WidgetTree->ConstructWidget<UImage>();
     const TCHAR* LogoPaths[] = {
+        TEXT("/Game/UI/SSW_Circular.SSW_Circular"),
         TEXT("/Game/UI/SSW.SSW"),
         TEXT("/Game/UI/SSW_Logo.SSW_Logo"),
         TEXT("/Game/UI/T_SSW.T_SSW"),

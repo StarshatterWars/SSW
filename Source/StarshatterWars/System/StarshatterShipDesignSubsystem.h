@@ -77,6 +77,8 @@ class STARSHATTERWARS_API UStarshatterShipDesignSubsystem : public UGameInstance
 	GENERATED_BODY()
 
 public:
+    UFUNCTION(BlueprintCallable,Category="ShipDesign|Authoring")
+    bool ReimportFighterEnginePorts();
 	// ---------- lifecycle ----------
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

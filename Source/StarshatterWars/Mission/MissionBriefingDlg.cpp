@@ -648,7 +648,8 @@ void UMissionBriefingDlg::BuildBriefingChrome()
         UImage* Icon = WidgetTree->ConstructWidget<UImage>();
         if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, IconPath))
             Icon->SetBrushFromTexture(Texture, true);
-        if (AtStart) MissionUIStyle::SetActionIcon(Icon, IconPath, FLinearColor(1.f, 0.15f, 0.15f));
+        if (AtStart) MissionUIStyle::SetActionIcon(Icon, IconPath, FLinearColor::White);
+        Button->SetColorAndOpacity(FLinearColor::White);
         IconBox->SetContent(Icon);
         Button->SetContent(IconBox);
         if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(IconBox->Slot))
@@ -1376,6 +1377,27 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !MissionSystemLevel) return;
+
+    // Some authored system maps contain an unconfigured builder. Resolve the
+    // selected mission explicitly before looking for its star or Sim regions.
+    if (MissionPtr)
+    {
+        const FString SystemName=ToTextFromUtf8(MissionPtr->GetSystem()).ToString().TrimStartAndEnd();
+        for (TActorIterator<ASystemSceneBuilder> It(World); It; ++It)
+        {
+            if (It->GetLevel()!=MissionSystemLevel->GetLoadedLevel())continue;
+            if (!It->GetLastResolvedSystemName().Equals(SystemName,ESearchCase::IgnoreCase) ||
+                It->GetSpawnedBodies().IsEmpty())
+            {
+                It->bBuildOnBeginPlay=false;
+                It->DataSource=ESystemSceneSource::StarSystem;
+                It->TargetSystemName=SystemName;
+                It->TargetGalaxyName.Empty();
+                It->BuildSystemScene();
+            }
+            break;
+        }
+    }
 
     // Builders can spawn into the persistent level: also check the owner chain.
     UStaticMeshComponent* StarMesh = nullptr;

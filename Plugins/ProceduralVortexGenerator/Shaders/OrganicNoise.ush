@@ -1,0 +1,106 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+#include "PerlinFBM.ush"
+
+struct FOrganicNoiseParams
+{
+	float3 Position;
+	float Time;
+	float Scale;
+	float Detail;
+	float Turbulence;
+	float HoleFrequency;
+	float HoleSize;
+    int Seed;
+};
+
+struct FOrganicNoise
+{
+	// Hash function
+    float3 GetVortexRandom3D(float3 p)
+    {
+        p = frac(p * float3(443.8975, 397.2973, 491.1871));
+        p += dot(p.zxy, p.yxz + 19.19);
+        return frac(float3(p.x * p.y, p.y * p.z, p.z * p.x));
+    }
+
+    // Improved Perlin noise
+    float perlinNoise(float3 p)
+    {
+        float3 i = floor(p);
+        float3 f = frac(p);
+        f = f * f * (3.0 - 2.0 * f);
+
+        return lerp(
+            lerp(lerp(dot(GetVortexRandom3D(i + float3(0, 0, 0)), f - float3(0, 0, 0), Seed),
+                      dot(GetVortexRandom3D(i + float3(1, 0, 0)), f - float3(1, 0, 0)), f.x),
+                 lerp(dot(GetVortexRandom3D(i + float3(0, 1, 0)), f - float3(0, 1, 0)),
+                      dot(GetVortexRandom3D(i + float3(1, 1, 0)), f - float3(1, 1, 0)), f.x), f.y),
+            lerp(lerp(dot(GetVortexRandom3D(i + float3(0, 0, 1)), f - float3(0, 0, 1)),
+                      dot(GetVortexRandom3D(i + float3(1, 0, 1)), f - float3(1, 0, 1)), f.x),
+                 lerp(dot(GetVortexRandom3D(i + float3(0, 1, 1)), f - float3(0, 1, 1)),
+                      dot(GetVortexRandom3D(i + float3(1, 1, 1)), f - float3(1, 1, 1)), f.x), f.y), f.z);
+    }
+
+    // Fractal Brownian Motion
+    float fbm(float3 p, int octaves)
+    {
+        float value = 0.0;
+        float amplitude = 0.5;
+        float frequency = 1.0;
+        for (int i = 0; i < octaves; i++)
+        {
+            value += amplitude * perlinNoise(p * frequency);
+            amplitude *= 0.5;
+            frequency *= 2.0;
+        }
+        return value;
+    }
+
+    // Warping function
+    float3 warp(float3 p, float time, float turbulence)
+    {
+        float3 q = p;
+        q += 0.1 * sin(q.yzx * 1.3 + time);
+        q += 0.15 * sin(q.zxy * 1.7 - time * 1.1);
+        q += 0.12 * sin(q.yzx * 2.0 + time * 0.7);
+        return q + turbulence * sin(q * 2.5 + time * 0.8);
+    }
+
+    // Main noise function
+    float GetOrganicVortexNoise(FOrganicNoiseParams Params)
+    {
+        PerlinFBM PF;
+        float3 p = Params.Position * Params.Scale;
+        float3 warpedP = warp(p, Params.Time, Params.Turbulence);
+        
+        // Base noise
+        float noise = PF.GetPerlinFBM(warpedP, 4);
+        
+        // Add detail
+        noise += Params.Detail * fbm(warpedP * 4.0, 3);
+        
+        // Create hole-like structures
+        float holes = smoothstep(0.1, 0.6, fbm(warpedP * Params.HoleFrequency, 2));
+        holes = pow(holes, Params.HoleSize);
+        
+        // Combine noise and holes
+        noise = lerp(noise, 0.0, holes);
+        
+        return noise;
+    }
+
+    // Function to generate color based on noise value
+    float3 getVortexColor(float noiseValue, float3 baseColor, float3 accentColor)
+    {
+        float3 color = lerp(baseColor, accentColor, smoothstep(0.2, 0.8, noiseValue));
+        return color;
+    }
+
+    // Main function to be called from your shader
+    float4 OrganicVortexNoiseMain(FOrganicNoiseParams Params, float3 BaseColor, float3 AccentColor)
+    {
+        float noiseValue = organicVortexNoise(Params);
+        float3 color = getVortexColor(noiseValue, BaseColor, AccentColor);
+        return float4(color, noiseValue);
+    }
+};

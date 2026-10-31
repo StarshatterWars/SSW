@@ -212,6 +212,9 @@ public:
     /** Authoring migration: rebuild only scene rows, preserving playable missions. */
     UFUNCTION(BlueprintCallable, Category="Campaign|Authoring")
     bool RebuildCampaignCutscenePresentation();
+    /** Reingest Campaign 1 intro and seven training scripts through ParseMission. */
+    UFUNCTION(BlueprintCallable, Category="Campaign|Authoring")
+    bool RebuildCampaignOneTrainingMissions();
     void LoadTemplateMission(FString Name);
     void LoadScriptedMission(FString Name);
 

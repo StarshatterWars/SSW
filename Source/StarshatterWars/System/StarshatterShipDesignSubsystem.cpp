@@ -4816,3 +4816,64 @@ const FShipDesign* UStarshatterShipDesignSubsystem::GetDesignRowByName(const FSt
 	const FString CleanName = DesignName.TrimStartAndEnd();
 	return GetDesignRow(FName(*CleanName));
 }
+
+
+bool UStarshatterShipDesignSubsystem::ReimportFighterEnginePorts()
+{
+#if WITH_EDITOR
+    UDataTable* PreviousTable=ShipDesignDataTable;
+    UDataTable* Table=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    if(!Table || Table->GetRowStruct()!=FShipDesign::StaticStruct())return false;
+    TMap<FName,FShipDesign> Originals;
+    for(const TCHAR* Name:{TEXT("Falcon"),TEXT("Thunderbolt"),TEXT("Eagle"),TEXT("Stormhawk"),TEXT("Viper"),TEXT("Razor"),TEXT("Cobra")})
+    {
+        const auto* Row=Table->FindRow<FShipDesign>(FName(Name),TEXT("Port ingestion"));
+        if(!Row)return false;
+        Originals.Add(FName(Name),*Row);
+    }
+    ShipDesignDataTable=Table;
+    bool bValid=true;
+    for(const auto& Entry:Originals)
+    {
+        const FString File=FPaths::ProjectContentDir()/TEXT("GameData/Ships")/(Entry.Key.ToString()+TEXT(".def"));
+        const auto FileAnsi=StringCast<ANSICHAR>(*File);LoadShipDesign(FileAnsi.Get());
+        const auto* Parsed=Table->FindRow<FShipDesign>(Entry.Key,TEXT("Port ingestion"));
+        UE_LOG(LogTemp,Display,TEXT("[FighterPorts] %s drive systems %d/%d thruster systems %d/%d"),*Entry.Key.ToString(),Entry.Value.Drive.Num(),Parsed?Parsed->Drive.Num():-1,Entry.Value.Thruster.Num(),Parsed?Parsed->Thruster.Num():-1);
+        if(!Parsed || Parsed->Drive.IsEmpty() || Parsed->Thruster.IsEmpty() ||
+            (!Entry.Value.Drive.IsEmpty() && Parsed->Drive.Num()!=Entry.Value.Drive.Num()) ||
+            (!Entry.Value.Thruster.IsEmpty() && Parsed->Thruster.Num()!=Entry.Value.Thruster.Num()))
+        {bValid=false;break;}
+        FShipDesign Updated=Entry.Value;
+        // Older cached rows omit the thruster system entirely. Restore the
+        // authored system before replacing its model-space port locations.
+        if(Updated.Drive.IsEmpty())Updated.Drive=Parsed->Drive;
+        if(Updated.Thruster.IsEmpty())Updated.Thruster=Parsed->Thruster;
+        for(int32 D=0;D<Updated.Drive.Num();++D)
+        {
+            if(Updated.Drive[D].Ports.Num()!=Parsed->Drive[D].Ports.Num())
+            {Updated.Drive[D].Ports=Parsed->Drive[D].Ports;continue;}
+            for(int32 P=0;P<Updated.Drive[D].Ports.Num();++P)
+                Updated.Drive[D].Ports[P].Location=Parsed->Drive[D].Ports[P].Location;
+        }
+        for(int32 T=0;T<Updated.Thruster.Num();++T)
+        {
+            if(Updated.Thruster[T].Ports.Num()!=Parsed->Thruster[T].Ports.Num())
+            {Updated.Thruster[T].Ports=Parsed->Thruster[T].Ports;continue;}
+            for(int32 P=0;P<Updated.Thruster[T].Ports.Num();++P)
+                {
+                Updated.Thruster[T].Ports[P].Location=Parsed->Thruster[T].Ports[P].Location;
+                Updated.Thruster[T].Ports[P].Rotation=Parsed->Thruster[T].Ports[P].Rotation;
+                }
+        }
+        Table->AddRow(Entry.Key,Updated);
+        if(!bValid)break;
+    }
+    ShipDesignDataTable=PreviousTable;
+    if(!bValid){for(const auto& Entry:Originals)Table->AddRow(Entry.Key,Entry.Value);return false;}
+    Table->MarkPackageDirty();
+    UE_LOG(LogTemp,Display,TEXT("[FighterPorts] Reingested engine/RCS ports for seven Alliance fighters; other design fields preserved"));
+    return true;
+#else
+    return false;
+#endif
+}

@@ -1,0 +1,38 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+
+struct RippleVariation
+{
+
+    VortexRandom VR;
+
+    float GetNoise3D(float3 p, float3 coefficient, float seed)
+    {
+    
+        float3 ip = floor(p);
+        float4 h = float4(0, coefficient.y, coefficient.z, coefficient.y + coefficient.z) + dot(ip, coefficient);
+        
+        p -= ip; 
+        p = p*p*(3. - 2.*p);
+        
+        seed += 43758.5453;
+        h = lerp(frac(sin(h) * seed), frac(sin(h + coefficient.x) * seed), p.x);
+        h.xy = lerp(h.xz, h.yw, p.y);
+        return lerp(h.x, h.y, p.z); 
+    }
+
+    float SmoothNoise(float a, float b)
+    {
+        
+        float h = saturate(.5 + .5*(a - b));
+        return lerp(b, a, h) + h*(1. - h);
+    }
+
+    float GetRipple(float3 p, float3 coefficient, float3 seed, float smoothness) 
+    {
+        float noise = GetNoise3D(p, coefficient, seed);
+        return SmoothNoise(noise - smoothness / 10, -length(p) + smoothness * 10);
+    }
+
+};
+
+

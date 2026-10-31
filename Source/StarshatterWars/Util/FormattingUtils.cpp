@@ -559,8 +559,18 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
 
     if (!InTime.Split(TEXT("/"), &DayPart, &TimePart))
     {
-        UE_LOG(LogTemp, Error, TEXT("[ParseStarshatterTime] FAILED split on '/' for '%s'"), *InTime);
-        return 0;
+        // Legacy training scripts also express elapsed hours, e.g. T7's 129:30:00.
+        TArray<FString> ElapsedParts;
+        InTime.ParseIntoArray(ElapsedParts, TEXT(":"), false);
+        if (ElapsedParts.Num() != 3 || !ElapsedParts[0].IsNumeric() ||
+            !ElapsedParts[1].IsNumeric() || !ElapsedParts[2].IsNumeric())
+        {
+            UE_LOG(LogTemp, Error, TEXT("[ParseStarshatterTime] Invalid time '%s'"), *InTime);
+            return 0;
+        }
+        DayPart = TEXT("1");
+        TimePart = InTime;
+
     }
 
     UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] DayPart = '%s', TimePart = '%s'"), *DayPart, *TimePart);

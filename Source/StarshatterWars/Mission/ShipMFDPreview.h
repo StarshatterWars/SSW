@@ -1,0 +1,29 @@
+#pragma once
+#include "CoreMinimal.h"
+#include "Styling/SlateBrush.h"
+#include "UObject/StrongObjectPtr.h"
+class FPreviewScene;
+class AActor;
+class ASceneCapture2D;
+class UTextureRenderTarget2D;
+class UMaterialInstanceDynamic;
+struct FShipDesign;
+// Asset-only, isolated rendering. Never retains a simulation Ship or game actor.
+class FShipMFDPreview
+{
+public:
+    FShipMFDPreview();
+    ~FShipMFDPreview();
+    bool SetDesign(const FShipDesign* Design);
+    bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }
+    const FSlateBrush& GetBrush() const { return Brush; }
+private:
+    void Clear();
+    FString Key;
+    TUniquePtr<FPreviewScene> Scene;
+    TWeakObjectPtr<AActor> Visual;
+    TWeakObjectPtr<ASceneCapture2D> Capture;
+    TStrongObjectPtr<UTextureRenderTarget2D> Target;
+    TStrongObjectPtr<UMaterialInstanceDynamic> Material;
+    FSlateBrush Brush;
+};

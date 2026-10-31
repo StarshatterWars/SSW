@@ -5,9 +5,25 @@ name:   "Campaign 01 - Intro"
 type:   "Patrol"
 system: Borova
 region: Borova
+id:       100
+start:    "01/09:23:00"
+objective: "Training Introduction"
 stardate: 1001994001
 
 degrees: true
+
+// Passive camera host, matching Campaign 2's news introduction.
+element: {
+   name:      Falcon
+   design:    CameraPod
+   mission:   Misc
+   intel:     Secret
+   count:     1
+   iff:       1
+   player:    1
+   region:    "Borova"
+   loc:       (0, 0, 0)
+}
 
 element: {
    name:      "Archon"
@@ -18,8 +34,7 @@ element: {
    count:     1
    command_ai:1
    iff:       1
-   player:    1
-   playable:  true
+   playable:  false
    region:    "Borova"
    loc:       (0, 0, 0)
    navpt:     { cmd: Vector, loc: (0, -80e3, 0), speed: 500 }
@@ -107,48 +122,46 @@ element: {
    navpt:     { cmd: RTB,    loc: (4e3,  9e3, 0), speed: 350 }
 }
 
-event: { id: 100, type: BeginScene, time:   0, message: "Scene 1" }
+// All presentation events use explicit scene-relative times. The intro must
+// finish even when the shuttle's simulated docking sequence cannot complete.
+event: { type: BeginScene, time: 0, message: "Training Introduction" }
+event: { type: Camera, time: 0.01, param: 3, target: "Proteus", vec: (1,0.25,600) }
+event: { type: Camera, time: 0.01, param: 5, vec: (0.06,0,0) }
+event: { type: Display, time: 1, message: "Training Shuttle 'Proteus'" }
+event: { type: Display, time: 3, message: "Borova Orbit" }
 
-event: { type: Hold,       param: 99, ship: Archon     }
-event: { type: Hold,       param: 99, ship: Stalwart   }
-event: { type: Hold,       param: 99, ship: Gerson     }
-event: { type: Hold,       param: 99, ship: Simmons    }
+event: { type: Message, time: 5, sound: "Intro-1" }
+event: { type: Message, time: 15, sound: "Intro-2" }
 
-event: { type: Camera,     param:  3, target: Proteus,  vec: (1,-0.1,1500) }
-event: { type: Camera,     param:  5,                   vec: (0.10, 0.002, -0.01) }
+event: { type: Camera, time: 30, param: 3, target: "Archon", vec: (2,0.3,6000) }
+event: { type: Camera, time: 30, param: 5, vec: (0.05,0,0) }
+event: { type: Display, time: 30, message: "Task Force 3.7" }
+event: { type: Display, time: 30, message: "CV-71 'Archon'" }
+event: { type: Camera, time: 42, param: 3, target: "Proteus", vec: (2,0.2,600) }
+event: { type: Camera, time: 42, param: 5, vec: (-0.05,0,0) }
+event: { type: Message, time: 52, sound: "Intro-3" }
 
-event: { type: Display,    time:   1, message: "Training Shuttle 'Proteus'", font: Limerick18,   color: 0xffffff80, fade: (1,15,1), rect: (20,20, 400,100) }
-event: { type: Display,    time:   3, message: "Borova Orbit",               font: Limerick12,   color: 0xffffff80, fade: (1,13,1), rect: (20,40, 400,100) }
+event: { type: Camera, time: 60, param: 3, target: "Archon", vec: (2,0.3,6000) }
+event: { type: Camera, time: 60, param: 5, vec: (0.05,0,0) }
+event: { type: Message, time: 60, sound: "Intro-4" }
+event: { type: Display, time: 60, message: "Task Force 3.7" }
+event: { type: Display, time: 60, message: "CV-71 'Archon'" }
+event: { type: Camera, time: 70, param: 3, target: "Stalwart", vec: (2,0.25,4500) }
+event: { type: Camera, time: 70, param: 5, vec: (0.05,0,0) }
+event: { type: Display, time: 70, message: "CA-524 'Stalwart'" }
+event: { type: Camera, time: 74, param: 3, target: "Gerson", vec: (2,0.25,3500) }
+event: { type: Camera, time: 74, param: 5, vec: (0.05,0,0) }
+event: { type: Display, time: 74, message: "DD/E-682 'Gerson'" }
+event: { type: Camera, time: 78, param: 3, target: "Simmons", vec: (2,0.25,3500) }
+event: { type: Camera, time: 78, param: 5, vec: (0.05,0,0) }
+event: { type: Display, time: 78, message: "DD/E-687 'Simmons'" }
 
-event: { id: 1, time:  5,   sound: "Intro-1" }
-event: { id: 2, time: 15,   sound: "Intro-2" }
-event: { id: 3, time: 52,   sound: "Intro-3" }
-event: { id: 4,             sound: "Intro-4", trigger: Dock, trigger_ship: Proteus }
-
-event: { type: Hold,       param:  0, ship: Archon,     trigger: Event, trigger_param: 4 }
-event: { type: Hold,       param:  0, ship: Stalwart,   trigger: Event, trigger_param: 4 }
-event: { type: Hold,       param:  0, ship: Gerson,     trigger: Event, trigger_param: 4 }
-event: { type: Hold,       param:  0, ship: Simmons,    trigger: Event, trigger_param: 4 }
-
-event: { type: Camera,     param:  3, target: Archon,   vec: (2,0,2700),           trigger: Event, trigger_param: 4 }
-event: { type: Camera,     param:  5,                   vec: (0.12, 0.006, -0.02), trigger: Event, trigger_param: 4 }
-
-event: { type: Display,    message: "Task Force 3.7",     font: Limerick18,   color: 0xffffff80, fade: (1,10,1), rect: (20,20, 400,100), trigger: Event, trigger_param: 4 }
-event: { type: Display,    message: "CV-71 'Archon'",     font: Limerick12,   color: 0xffffff80, fade: (1,1,1),  rect: (20,40, 200,100), trigger: Event, trigger_param: 4 }
-event: { type: Display,    message: "CA-524 'Stalwart'",  font: Limerick12,   color: 0xffffff80, fade: (1,1,1),  rect: (20,40, 200,100), trigger: Event, trigger_param: 4, delay: 3 }
-event: { type: Display,    message: "DD/E-682 'Gerson'",  font: Limerick12,   color: 0xffffff80, fade: (1,1,1),  rect: (20,40, 200,100), trigger: Event, trigger_param: 4, delay: 6 }
-event: { type: Display,    message: "DD/E-687 'Simmons'", font: Limerick12,   color: 0xffffff80, fade: (1,1,1),  rect: (20,40, 200,100), trigger: Event, trigger_param: 4, delay: 9 }
-
-event: { type: Jump,       ship: Archon,                  target: Tulkas, trigger: Event, trigger_param: 4, delay: 20 }
-event: { type: Jump,       ship: Stalwart,                target: Tulkas, trigger: Event, trigger_param: 4, delay: 19 }
-event: { type: Jump,       ship: Gerson,                  target: Tulkas, trigger: Event, trigger_param: 4, delay: 18 }
-event: { type: Jump,       ship: Simmons,                 target: Tulkas, trigger: Event, trigger_param: 4, delay: 16 }
-
-event: { type: Display,               image: "Black",              color: 0xffffffff, fade: (1,30,1), rect: (0,0,0,0)         , trigger: Event, trigger_param: 4, delay: 21 }
-event: { type: Display,               image: "Starshatter",        color: 0xffffffff, fade: (1,10,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 22 }
-event: { type: Display,               image: "TheGatheringStorm",  color: 0xffffffff, fade: (1, 7,1), rect: (0,0, -1024,-256) , trigger: Event, trigger_param: 4, delay: 25 }
-
-event: { type: EndScene,   time: 53.0, message: "Scene 1", delay: 35, trigger: Event, trigger_param: 4 }
-event: { type: Exit,       delay: 35, trigger: Event, trigger_param: 4 }
-
+event: { type: Jump, time: 80, event_ship: "Simmons", target: "Tulkas" }
+event: { type: Jump, time: 82, event_ship: "Gerson", target: "Tulkas" }
+event: { type: Jump, time: 83, event_ship: "Stalwart", target: "Tulkas" }
+event: { type: Jump, time: 84, event_ship: "Archon", target: "Tulkas" }
+event: { type: Display, time: 85, image: "Black", fade: (1,15,1), rect: (0,0,0,0) }
+event: { type: Display, time: 86, image: "StarshatterWars", fade: (1,11,1), rect: (0,0,0,0) }
+event: { type: EndScene, time: 100, message: "Training Introduction End" }
+event: { type: Exit }
 // EOF

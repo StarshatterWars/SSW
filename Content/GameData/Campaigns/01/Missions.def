@@ -6,7 +6,7 @@ mission: {
 	desc:    "Rendevous for flight training",
 	objective: "Training",
 	start:   "01/09:23:00",
-	script:  "T1",
+	script:  "Intro",
 	type:    "Patrol"
 	system:  "Borova"
 	region:  "Borova"

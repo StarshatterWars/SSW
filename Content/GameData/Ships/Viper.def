@@ -57,7 +57,7 @@ drive:      {
    thrust:  16,
    augmenter: 30,
    scale:   0.32,
-   port:    (0, 0, -166),
+   port:    (-166, 0, 0),
 
    loc:     (0, 0, -80),
    size:    16,
@@ -231,20 +231,32 @@ thruster: {
    hull_factor:      0.8,
    scale:            0.12,
 
-   port_fore:   {loc:(-110, -20, 5), fire: 0x0044}
-   port_fore:   {loc:( 110, -20, 5), fire: 0x0084}
+   port_fore: {loc:(5, -110, -20), fire: 0x0044, rotation:(0, 0, 0)}
+   port_fore: {loc:(5, 110, -20), fire: 0x0084, rotation:(0, 0, 0)}
 
-   port_aft:    {loc:(-110, -20, -45), fire: 0x0088}
-   port_aft:    {loc:( 110, -20, -45), fire: 0x0048}
+   port_aft: {loc:(-45, -110, -20), fire: 0x0088, rotation:(0, 0, 180)}
+   port_aft: {loc:(-45, 110, -20), fire: 0x0048, rotation:(0, 0, 180)}
 
-   port_top:    {loc:(-20, 5, 40), fire: 0x0210}
-   port_top:    {loc:( 20, 5, 40), fire: 0x0210}
+   port_top: {loc:(40, -20, 5), fire: 0x0210, rotation:(0, 90, 0)}
+   port_top: {loc:(40, 20, 5), fire: 0x0210, rotation:(0, 90, 0)}
 
-   port_bottom: {loc:(-20, -10, 40), fire: 0x0120}
-   port_bottom: {loc:( 20, -10, 40), fire: 0x0120}
+   port_bottom: {loc:(40, -20, -10), fire: 0x0120, rotation:(0, -90, 0)}
+   port_bottom: {loc:(40, 20, -10), fire: 0x0120, rotation:(0, -90, 0)}
 
-   port_left:   {loc:(-15, 0, 100), fire: 0x0081}
-   port_right:  {loc:( 15, 0, 100), fire: 0x0042}
+   port_left:   {loc:(100, -15, 0), fire: 0x0081, rotation:(0, 0, -90)}
+   port_right:  {loc:(100, 15, 0), fire: 0x0042, rotation:(0, 0, 90)}
+   // Wing-mounted pairs supply roll as well as vertical translation.
+   port_top: {loc:(-25, -110, -15), fire: 0x0410, rotation:(0, 90, 0)}
+   port_top: {loc:(-25, 110, -15), fire: 0x0810, rotation:(0, 90, 0)}
+   port_bottom: {loc:(-25, -110, -25), fire: 0x0820, rotation:(0, -90, 0)}
+   port_bottom: {loc:(-25, 110, -25), fire: 0x0420, rotation:(0, -90, 0)}
+
+   // Outboard lateral RCS pairs; exhaust points away from the hull.
+   port_left: {loc:(-45, -112, -20), fire: 0x0002, rotation:(0, 0, -90)}
+   port_left: {loc:(5, -112, -20), fire: 0x0002, rotation:(0, 0, -90)}
+   port_right: {loc:(-45, 112, -20), fire: 0x0001, rotation:(0, 0, 90)}
+   port_right: {loc:(5, 112, -20), fire: 0x0001, rotation:(0, 0, 90)}
+
 }
 
 death_spiral: {

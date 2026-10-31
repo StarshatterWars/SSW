@@ -677,24 +677,13 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 		if (!slot_ship->IsAirborne()) {
 			FVector cat;
 
-            // Respect the flight-deck start/end coordinates from the ship .def.
-            // These points are already in world space after Orient(carrier).
-            const FVector AuthoredLaunchRun = end_point - start_point;
-            if (AuthoredLaunchRun.SizeSquared() > 1.0)
-            {
-                cat = AuthoredLaunchRun.GetSafeNormal() * 300.0;
-            }
-            else if (fabs(azimuth) < 5 * DEGREES)
-            {
-                cat = carrier->GetHeading().GetSafeNormal() * 300.0;
-            }
-            else
-            {
-                Camera c;
-                c.Clone(carrier->GetCam());
-                c.Yaw(azimuth);
-                cat = c.vpn().GetSafeNormal() * 300.0;
-            }
+            // EndPoint is the outbound clearance waypoint, not the launch rail.
+            // Orion's endpoints fan out by +/-2 km; using that vector makes the
+            // fighter depart sideways. The rail follows the deck's azimuth.
+            Camera LaunchFrame;
+            LaunchFrame.Clone(carrier->GetCam());
+            LaunchFrame.Yaw(azimuth);
+            cat=LaunchFrame.vpn().GetSafeNormal()*300.0;
 
 			slot_ship->SetVelocity(carrier->GetVelocity() + cat);
 			slot_ship->SetFlightPhase(EOPSMode::LAUNCH);

@@ -41,6 +41,8 @@
 #include "ShipWeaponMountComponent.h"
 #include "ShipDesign.h"
 #include "Thruster.h"
+#include "Sim.h"
+#include "StarshatterAudioSubsystem.h"
 
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
@@ -1800,6 +1802,22 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
         MainDrive,
         MainDrive ? MainDrive->NumPorts() : 0);
 
+    if (RuntimeShip)
+    {
+        // Older visual Blueprints can have empty FX overrides. Preserve any
+        // authored assignments, and supply the game's existing exhaust systems.
+        if (!MainEngineEmitterSystem)
+            MainEngineEmitterSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Blue.NS_RocketExhaust_Blue"));
+        if (!ThrusterFlareSystem && !ThrusterTrailSystem)
+            ThrusterTrailSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
+        CreateEngineAudioComponents();
+    }
+    else
+    {
+        for (UAudioComponent* Audio : {EngineAudioComponent.Get(),BurnerAudioComponent.Get(),RumbleAudioComponent.Get()})
+            if (Audio) Audio->Stop();
+    }
+
     BuildNavLightsFromRuntime();
     BuildMainEnginesFromRuntime();
     BuildThrustersFromRuntime();
@@ -2262,18 +2280,14 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float Throttle =
         (float)RuntimeShip->GetThrottle();
 
-    const float RequestAlpha =
-        FMath::Clamp(
-            ThrottleRequest / 100.0f,
-            0.0f,
-            1.0f);
+    const float RequestAlpha = FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f);
 
     const bool bRequested =
         RequestAlpha > 0.01f;
 
     const float TargetPower =
         bRequested
-        ? FMath::Max(RequestAlpha, 0.20f)
+        ? RequestAlpha
         : 0.0f;
 
     if (bRequested)
@@ -2412,9 +2426,14 @@ void AShipActor::CreateEngineAudioComponents()
 
         if (EngineAudioComponent)
         {
+            EngineAudioComponent->bAutoActivate=false;
+            EngineAudioComponent->bAllowSpatialization=false;
             EngineAudioComponent->SetupAttachment(RootComponent);
             EngineAudioComponent->RegisterComponent();
             EngineAudioComponent->SetSound(EngineSoundCue);
+            if(UGameInstance* GI=GetGameInstance())
+                if(auto* Audio=GI->GetSubsystem<UStarshatterAudioSubsystem>())
+                    Audio->RouteAudioComponent(EngineAudioComponent,EStarshatterAudioChannel::Effects);
             EngineAudioComponent->bAutoActivate = false;
             EngineAudioComponent->SetVolumeMultiplier(0.0f);
         }
@@ -2461,6 +2480,13 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
         return;
     }
 
+    Sim* AudioSim=Sim::GetSim();
+    if (!AudioSim || AudioSim->GetPlayerShip()!=RuntimeShip)
+    {
+        if (EngineAudioComponent) EngineAudioComponent->Stop();
+        return;
+    }
+
     //-------------------------------------------------------------
     // Resolve main drive safely
     //-------------------------------------------------------------
@@ -2495,7 +2521,7 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
     // Audio modulation
     //-------------------------------------------------------------
     const float TargetVolume =
-        FMath::Clamp(VisualPower, 0.0f, 1.0f);
+        FMath::Clamp(VisualPower, 0.0f, 1.5f);
 
     const float TargetPitch =
         FMath::Clamp(0.5f + (VisualPower * 0.5f), 0.5f, 2.0f);

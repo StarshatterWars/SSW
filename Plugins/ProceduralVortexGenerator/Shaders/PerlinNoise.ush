@@ -1,0 +1,66 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+
+struct PerlinNoise
+{
+
+     float EaseInOut(float interpolator)
+     {
+        float easeInValue = pow(abs(interpolator), 2);
+        float easeOutValue = 1 - pow(abs(1 - interpolator) , 2);
+        return lerp(easeInValue, easeOutValue, interpolator);
+    }
+
+    float GetPerlinNoise(float3 value, float seed)
+    {
+
+        VortexRandom VR;
+   
+        float3 fraction = frac(value);
+
+        float interpolatorX = EaseInOut(fraction.x);
+        float interpolatorY = EaseInOut(fraction.y);
+        float interpolatorZ = EaseInOut(fraction.z);
+
+        float cellNoiseZ[2] = {0,0};
+
+        for(int z=0;z<=1;z++)
+        {
+            float cellNoiseY[2]={0,0};
+            for(int y=0;y<=1;y++)
+            {
+                float cellNoiseX[2]= {0,0};
+                for(int x=0;x<=1;x++)
+                {
+                    float3 cell = floor(value) + float3(x, y, z);
+                    float3 cellDirection = VR.GetVortexNoise(cell, seed) * 2 - 1;
+                    float3 compareVector = fraction - float3(x, y, z);
+                    cellNoiseX[x] = dot(cellDirection, compareVector);
+                }
+
+                cellNoiseY[y] = lerp(cellNoiseX[0], cellNoiseX[1], interpolatorX);
+            }
+            cellNoiseZ[z] = lerp(cellNoiseY[0], cellNoiseY[1], interpolatorY);
+        }
+
+        float noise = lerp(cellNoiseZ[0], cellNoiseZ[1], interpolatorZ);
+        return noise;
+    }
+
+
+    float SampleLayeredNoise(float3 p, float frequency,  int octaves, float amplitude, float gradientscale, float frequencyscale, float seed)
+    {
+        
+        float noise = 0;
+
+        float G = exp2(gradientscale);
+        for (int j = 0; j < octaves; ++j)
+            {
+                noise += amplitude * GetPerlinNoise(p * frequency, seed);
+                frequency *= frequencyscale;
+                amplitude *= G;
+            }		  
+            
+        return noise;
+    }
+
+};

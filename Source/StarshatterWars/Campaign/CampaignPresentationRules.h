@@ -25,7 +25,7 @@ namespace CampaignPresentationRules
     inline bool IsAuthoredScene(int32 Id, const TArray<FS_CampaignMission>& Missions)
     {
         for (const FS_CampaignMission& Mission : Missions)
-            if (Mission.Id == Id && !Mission.Scene.TrimStartAndEnd().IsEmpty()) return true;
+            if (Mission.Id == Id && Mission.MissionType != EMissionType::TRAINING && !Mission.Scene.TrimStartAndEnd().IsEmpty()) return true;
         return false;
     }
     inline EMissionDisplayType MissionDisplayType(const FS_CampaignMissionList& Row,

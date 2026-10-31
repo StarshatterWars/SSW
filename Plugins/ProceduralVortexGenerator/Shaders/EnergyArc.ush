@@ -1,0 +1,96 @@
+﻿#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+ 
+struct EnergyArcVortex
+{
+    VortexRandom VR;
+    
+    float GetGradientNoise(float3 p, float seed)
+    {
+        float3 i = floor(p);
+        float3 f = frac(p);
+        float3 a = f * f * (3.0 - 2.0 * f);
+
+        float n000 = dot(VR.GetVortexNoise(i, seed), f);
+        float n100 = dot(VR.GetVortexNoise(i + float3(1.0, 0.0, 0.0), seed), f - float3(1.0, 0.0, 0.0));
+        float n010 = dot(VR.GetVortexNoise(i + float3(0.0, 1.0, 0.0), seed), f - float3(0.0, 1.0, 0.0));
+        float n110 = dot(VR.GetVortexNoise(i + float3(1.0, 1.0, 0.0), seed), f - float3(1.0, 1.0, 0.0));
+        float n001 = dot(VR.GetVortexNoise(i + float3(0.0, 0.0, 1.0), seed), f - float3(0.0, 0.0, 1.0));
+        float n101 = dot(VR.GetVortexNoise(i + float3(1.0, 0.0, 1.0), seed), f - float3(1.0, 0.0, 1.0));
+        float n011 = dot(VR.GetVortexNoise(i + float3(0.0, 1.0, 1.0), seed), f - float3(0.0, 1.0, 1.0));
+        float n111 = dot(VR.GetVortexNoise(i + float3(1.0, 1.0, 1.0), seed), f - float3(1.0, 1.0, 1.0));
+        
+        return lerp(
+            lerp(lerp(n000, n100, a.x), lerp(n010, n110, a.x), a.y),
+            lerp(lerp(n001, n101, a.x), lerp(n011, n111, a.x), a.y), a.z);
+    }
+    
+    float3 GetArcNoise(float3 p, float3 seed)
+    {
+        float3 g = float3(
+            GetGradientNoise(p + float3(0, seed.y, seed.z), seed.x),
+            GetGradientNoise(p + float3(seed.x, 0, seed.z), seed.y),
+            GetGradientNoise(p + float3(seed.x, seed.y, 0), seed.z)
+        );
+        
+        return pow(max(0, 1.0 - abs(g * 2.0)), float3(2,2,2));
+    }
+
+    float3 GetLightningBranch(float3 p, float3 seed, float detail)
+    {
+        float3 branch = float3(0,0,0);
+        float scale = 1.0;
+        
+        for(int i = 0; i < 3; i++)
+        {
+            float3 offset = float3(
+                sin(p.x * scale + seed.x),
+                cos(p.y * scale + seed.y),
+                sin(p.z * scale + seed.z)
+            );
+            
+            float3 arcNoise = GetArcNoise(p * scale + offset, seed);
+            branch += arcNoise * (1.0 / scale) * detail;
+            
+            scale *= 2.0;
+            seed = seed.yzx;
+        }
+        
+        return branch;
+    }
+    
+    float3 GetEnergyVortex(float3 p, float3 coefficient, float3 roughness, float3 arcpower1, float3 arcpower2, 
+                       int octaves, float3 seed, float3 spiralParams, float3 arcParams, float3 energyParams)
+    {
+        float3 sum = float3(0,0,0);
+        float3 y = float3(1,1,1);
+        float3 amp = coefficient;
+    
+        for(int i = 0; i < octaves; i++)
+        {
+            float angle = i * spiralParams.x + length(p.xy);
+            float2 spiral = float2(cos(angle), sin(angle)) * spiralParams.y;
+            float3 spiralOffset = float3(spiral.x, spiral.y, spiralParams.z * 0.1);
+        
+            float3 pos = p * (i == 0 ? 1 : i * 2) + spiralOffset;
+            float3 mainArc = GetArcNoise(pos, seed * (i + 1));
+            float3 branches = GetLightningBranch(pos, seed + float3(i,i*2,i*3), roughness.x * arcParams.x) * arcParams.y;
+        
+            float3 Arc1 = pow(y + 0.1, arcpower1);
+            float3 Arc2 = pow(mainArc + branches + 0.1, arcpower2);
+        
+            float3 energyField = float3(
+                sin(pos.x * energyParams.x + seed.x),
+                cos(pos.y * energyParams.x + seed.y),
+                sin(pos.z * energyParams.x + seed.z)
+            ) * energyParams.y + energyParams.z;
+        
+            sum += (Arc1 * Arc2 + energyField) * amp;
+        
+            amp *= roughness;
+            y = lerp(y, mainArc, 0.8);
+            seed = seed.yzx + float3(1.0, 2.0, 3.0);
+        }
+
+        return max(0, sum);
+    }
+};

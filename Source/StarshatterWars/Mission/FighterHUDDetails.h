@@ -1,10 +1,12 @@
 #pragma once
 #include "Widgets/SLeafWidget.h"
 #include "DamagePanelData.h"
+#include "ShipMFDPreview.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 
 class AActor;
+class FShipMFDPreview;
 
 // Live fighter readouts. Simulation objects are sampled, never retained.
 class SFighterHUDDetails : public SLeafWidget
@@ -15,6 +17,7 @@ public:
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, SelectedTarget)
         SLATE_ATTRIBUTE(FText, SelectedName)
     SLATE_END_ARGS()
+    virtual ~SFighterHUDDetails();
     void Construct(const FArguments& Args);
     virtual FVector2D ComputeDesiredSize(float) const override { return FVector2D::ZeroVector; }
     virtual void Tick(const FGeometry&, double Now, float Delta) override;
@@ -78,6 +81,8 @@ private:
     TArray<FString> StatusTextLines;
     TStrongObjectPtr<UTexture2D> PlayerTexture, TargetTexture;
     FSlateBrush PlayerBrush, TargetBrush;
+    TUniquePtr<FShipMFDPreview> PlayerMFDPreview;
+    TUniquePtr<FShipMFDPreview> TargetMFDPreview;
     // Legacy-styled player launch button frame (UE-side texture only).
     TStrongObjectPtr<UTexture2D> LaunchTexture;
     FSlateBrush LaunchBrush;

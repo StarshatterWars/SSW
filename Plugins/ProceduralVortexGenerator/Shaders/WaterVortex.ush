@@ -1,0 +1,84 @@
+﻿#pragma once
+
+#include "/Engine/Public/Platform.ush"
+
+struct FWaterVortexParams
+{
+    float3 Position;
+    float Time;
+    float Scale;
+    float VortexStrength;
+    float Turbulence;
+    float3 WaterColor;
+    float3 FoamColor;
+};
+
+float hash(float2 p)
+{
+    p = frac(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return frac(p.x * p.y * (p.x + p.y));
+}
+
+float noise(float2 x)
+{
+    float2 p = floor(x);
+    float2 f = frac(x);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float n = p.x + p.y * 57.0;
+    return lerp(lerp(hash(p),
+                hash(p + float2(1.0, 0.0)), f.x),
+            lerp(hash(p + float2(0.0, 1.0)),
+                hash(p + float2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(float2 x, int octaves)
+{
+    float v = 0.0;
+    float a = 0.5;
+    float2 shift = float2(100, 100);
+    for (int i = 0; i < octaves; ++i) {
+        v += a * noise(x);
+        x = x * 2.0 + shift;
+        a *= 0.5;
+    }
+    return v;
+}
+
+float4 WaterVortex(FWaterVortexParams Params)
+{
+    float2 p = Params.Position.xy * Params.Scale;
+    float z = Params.Position.z;
+    
+    // Vortex shape
+    float2 center = float2(0.5, 0.5) * Params.Scale;
+    float2 toCenter = center - p;
+    float angle = atan2(toCenter.y, toCenter.x);
+    float dist = length(toCenter);
+    
+    // Swirl effect
+    float swirl = angle + Params.VortexStrength / (dist + 0.001) + Params.Time;
+    
+    // Water surface
+    float waterNoise = fbm(p + float2(cos(swirl), sin(swirl)) * dist + Params.Time * 0.1, 4);
+    waterNoise += fbm(p * 2.0 - float2(sin(swirl), cos(swirl)) * dist + Params.Time * 0.2, 3) * 0.5;
+    
+    // Turbulence
+    float turbulence = fbm(p * 3.0 + Params.Time * 0.3, 2) * Params.Turbulence;
+    
+    // Combine
+    float water = waterNoise + turbulence;
+    
+    // Depth effect
+    float depth = smoothstep(0.0, 1.0, dist * 0.5);
+    
+    // Foam
+    float foam = smoothstep(0.7, 0.8, water);
+    
+    // Final color
+    float3 color = lerp(Params.WaterColor, Params.FoamColor, foam);
+    color = lerp(color, Params.WaterColor * 0.5, depth); // Darken with depth
+    
+    return float4(color, 1.0);
+}

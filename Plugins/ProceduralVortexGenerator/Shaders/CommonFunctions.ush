@@ -1,0 +1,60 @@
+﻿#include "/Engine/Public/Platform.ush"
+#include "/Engine/Private/Common.ush"
+
+#define PI 3.14159265359
+
+struct VortexRandom
+{
+	float GetVortexNoise(float3 p, float seed)
+    {
+        return frac(sin(dot(p ,float3(12.9898,78.233,126.7235)+ seed)) * 43758.5453);
+    }
+
+	float GetVortexRandom1D(float3 value, float3 dotDir = float3(12.9898, 78.233, 37.719))
+	{
+		float3 smallValue = cos(value);
+		float random = dot(smallValue, dotDir);
+		random = frac(sin(random) * 143758.5453);
+		return random;
+	}
+
+	float3 GetVortexRandom3D(float3 value, float seed)
+	{
+		return float3(
+			GetVortexRandom1D(value, float3(12.989, 78.233, 37.719) + seed),
+			GetVortexRandom1D(value, float3(39.346, 11.135, 83.155) + seed * 2),
+			GetVortexRandom1D(value, float3(73.156, 52.235, 09.151) + seed * 4)
+		);
+	}
+
+	  float3 GetGradientNoise(float3 x, int seed)
+	{
+		float3 i = floor(x);
+		float3 w = frac(x);
+		
+		float3 u = w*w*(3.0-2.0*w);
+		float3 du = 6.0*w*(1.0-w);
+		
+		float a = GetVortexNoise(i+float3(0.0,0.0,0.0), seed);
+		float b = GetVortexNoise(i+float3(1.0,0.0,0.0), seed);
+		float c = GetVortexNoise(i+float3(0.0,1.0,0.0), seed);
+		float d = GetVortexNoise(i+float3(1.0,1.0,0.0), seed);
+		float e = GetVortexNoise(i+float3(0.0,0.0,1.0), seed);
+		float f = GetVortexNoise(i+float3(1.0,0.0,1.0), seed);
+		float g = GetVortexNoise(i+float3(0.0,1.0,1.0), seed);
+		float h = GetVortexNoise(i+float3(1.0,1.0,1.0), seed);
+		
+		float k0 =   a;
+		float k1 =   b - a;
+		float k2 =   c - a;
+		float k3 =   e - a;
+		float k4 =   a - b - c + d;
+		float k5 =   a - c - e + g;
+		float k6 =   a - b - e + f;
+		float k7 = - a + b + c - d + e - f - g + h;
+
+		return du * float3(k1 + k4*u.y + k6*u.z + k7*u.y*u.z,
+								k2 + k5*u.z + k4*u.x + k7*u.z*u.x,
+								k3 + k6*u.x + k5*u.y + k7*u.x*u.y);
+	}
+};

@@ -835,6 +835,14 @@ void UCampaignSelectDlg::RefreshUIFromSubsystem()
 void UCampaignSelectDlg::UpdateCampaignButtons()
 {
     const bool bHasSave = DoesSelectedCampaignSaveExist();
+    MissionUIStyle::ApplyActionButtonStyle(CancelButton, TEXT("Red"));
+    MissionUIStyle::ApplyActionButtonStyle(RestartButton, TEXT("Blue"));
+    MissionUIStyle::ApplyActionButtonStyle(PlayButton, TEXT("Green"));
+    if (CancelButton) CancelButton->SetToolTipText(NSLOCTEXT("CampaignSelect","BackTip","Back to the main menu"));
+    if (RestartButton) RestartButton->SetToolTipText(NSLOCTEXT("CampaignSelect","RestartTip","Restart the selected campaign"));
+    if (PlayButton) PlayButton->SetToolTipText(bHasSave
+        ? NSLOCTEXT("CampaignSelect","ContinueTip","Continue the selected campaign")
+        : NSLOCTEXT("CampaignSelect","StartTip","Start the selected campaign"));
     const bool bUnlocked = CampaignIndexByOptionIndex.IsValidIndex(Selected) &&
         IsCampaignUnlocked(CampaignIndexByOptionIndex[Selected]);
 
@@ -1242,7 +1250,7 @@ UWidget* UCampaignSelectDlg::CreateMenuButton(
         USizeBox::StaticClass(),
         MakeUniqueWidgetName(TEXT("CampaignSelect_ButtonSizeWrapper")));
 
-    SizeWrapper->SetWidthOverride(148.f);
+    SizeWrapper->SetWidthOverride(64.f);
     SizeWrapper->SetHeightOverride(46.f);
 
     OutButton = WidgetTree->ConstructWidget<UButton>(
@@ -1263,12 +1271,12 @@ UWidget* UCampaignSelectDlg::CreateMenuButton(
     UImage* Icon = WidgetTree->ConstructWidget<UImage>();
     const TCHAR* IconName = bBack ? TEXT("Menu") : (bRestart ? TEXT("Refresh") : TEXT("Play"));
     const FString IconPath = FString::Printf(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_%s_256x256.T_%s_256x256"), IconName, IconName);
-    MissionUIStyle::SetActionIcon(Icon, *IconPath, bBack ? FLinearColor(1.f, 0.15f, 0.15f)
-        : (bRestart ? FLinearColor(0.25f, 0.7f, 1.f) : FLinearColor(0.2f, 1.f, 0.35f)));
+    MissionUIStyle::SetActionIcon(Icon, *IconPath, FLinearColor::White);
     USizeBox* IconSize = WidgetTree->ConstructWidget<USizeBox>();
     IconSize->SetWidthOverride(26.f); IconSize->SetHeightOverride(26.f); IconSize->SetContent(Icon);
     Contents->AddChildToHorizontalBox(IconSize)->SetVerticalAlignment(VAlign_Center);
-    Contents->AddChildToHorizontalBox(OutText)->SetPadding(FMargin(10.f, 0.f, 0.f, 0.f));
+    OutText->SetVisibility(ESlateVisibility::Collapsed);
+    OutButton->SetToolTipText(FText::FromString(Label));
     if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(OutButton->AddChild(Contents)))
     {
         ButtonSlot->SetHorizontalAlignment(HAlign_Center);

@@ -1,0 +1,77 @@
+﻿#pragma once
+
+#include "/Engine/Public/Platform.ush"
+
+struct FVolumetricCloudParams
+{
+	float3 Position;
+	float Time;
+	float Scale;
+	float Density;
+	float Coverage;
+	float3 CloudColor;
+	float3 SkyColor;
+	float3 SunDirection;
+};
+
+float hash(float3 p)
+{
+	p = frac(p * 0.3183099 + 0.1);
+	p *= 17.0;
+	return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float noise(float3 x)
+{
+	float3 p = floor(x);
+	float3 f = frac(x);
+	f = f * f * (3.0 - 2.0 * f);
+    
+	return lerp(lerp(lerp(hash(p + float3(0,0,0)), 
+						hash(p + float3(1,0,0)), f.x),
+				   lerp(hash(p + float3(0,1,0)), 
+						hash(p + float3(1,1,0)), f.x), f.y),
+			   lerp(lerp(hash(p + float3(0,0,1)), 
+						hash(p + float3(1,0,1)), f.x),
+				   lerp(hash(p + float3(0,1,1)), 
+						hash(p + float3(1,1,1)), f.x), f.y), f.z);
+}
+
+float fbm(float3 x, int octaves)
+{
+	float v = 0.0;
+	float a = 0.5;
+	float3 shift = float3(100, 100, 100);
+	for (int i = 0; i < octaves; ++i) {
+		v += a * noise(x);
+		x = x * 2.0 + shift;
+		a *= 0.5;
+	}
+	return v;
+}
+
+float4 VolumetricClouds(FVolumetricCloudParams Params)
+{
+	float3 p = Params.Position * Params.Scale;
+	p.xy += Params.Time * 0.1; // Simple cloud movement
+    
+	// Shape
+	float shape = fbm(p, 4);
+	shape = smoothstep(Params.Coverage, 1.0, shape);
+    
+	// Detail
+	float detail = fbm(p * 3.0 + Params.Time * 0.2, 3);
+    
+	// Combine
+	float clouds = shape * detail * Params.Density;
+    
+	// Lighting
+	float3 sunDir = normalize(Params.SunDirection);
+	float sunDot = max(dot(sunDir, float3(0, 1, 0)), 0.0);
+	float3 lightColor = lerp(Params.CloudColor, float3(1,1,1), pow(sunDot, 8.0));
+    
+	// Final color
+	float3 color = lerp(Params.SkyColor, lightColor, clouds);
+    
+	return float4(color, clouds);
+}

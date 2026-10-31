@@ -1,0 +1,37 @@
+#include "/Plugin/VortexTunnel/SimplexNoise.ush"
+
+struct CurlNoise
+{
+    float3 GetSimpleNoise3(float3 pos , float coefficient, float seed)
+    {
+        SimplexNoise SP;
+        float s  = SP.GetSimplexNoise(pos, coefficient, seed);
+        float s1 = SP.GetSimplexNoise(float3(pos.y - 19.1 + seed , pos.z + 33.4 + seed * 2 , pos.x + 47.2 + seed * 4), coefficient, seed * 200);
+        float s2 = SP.GetSimplexNoise(float3(pos.z + 74.2 + seed * 12 , pos.x - 124.5  + seed * 1.4, pos.y + 99.4  + seed * 34), coefficient, seed + 100);
+        return float3( s , s1 , s2 );
+    }
+
+    float3 GetCurlNoise(float3 pos , float coefficient, float seed)
+    {
+
+        float3 dx = float3( coefficient   , 0.0 , 0.0 );
+        float3 dy = float3( 0.0 , coefficient   , 0.0 );
+        float3 dz = float3( 0.0 , 0.0 , coefficient );
+
+        float3 p_x0 = GetSimpleNoise3(pos - dx, coefficient, seed);
+        float3 p_x1 = GetSimpleNoise3(pos + dx, coefficient, seed);
+        float3 p_y0 = GetSimpleNoise3(pos - dy, coefficient, seed);
+        float3 p_y1 = GetSimpleNoise3(pos + dy, coefficient, seed);
+        float3 p_z0 = GetSimpleNoise3(pos - dz, coefficient, seed);
+        float3 p_z1 = GetSimpleNoise3(pos + dz, coefficient, seed);
+
+        float x = p_y1.z - p_y0.z - p_z1.y + p_z0.y;
+        float y = p_z1.x - p_z0.x - p_x1.z + p_x0.z;
+        float z = p_x1.y - p_x0.y - p_y1.x + p_y0.x;
+
+        const float divisor = 1 / (2 * coefficient);
+        return normalize( float3( x , y , z ) * divisor );
+    }
+
+};
+

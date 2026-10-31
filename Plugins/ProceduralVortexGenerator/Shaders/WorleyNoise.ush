@@ -1,0 +1,30 @@
+#include "/Plugin/VortexTunnel/CommonFunctions.ush"
+
+struct WorleyNoise
+{
+    float GetWorleyNoise(float3 p, float factor, float seed)
+    {		
+        VortexRandom VR;
+
+        float r = abs(factor + 0.01);
+        float3 f = floor(p);
+        float3 x = frac(p);
+        for(int i = -1; i<=1; i++)
+        {
+            for(int j = -1; j<=1; j++)
+            {
+                for(int k = -1; k<=1; k++)
+                {
+                    float3 q = float3(i,j,k);
+                    float3 v = q + float3(VR.GetVortexNoise((q+f)*1.11, seed), VR.GetVortexNoise((q+f)*1.14, seed), VR.GetVortexNoise((q+f)*1.17, seed)) - x;
+                    float d = dot(v, v);
+                    r = min(r, d);
+                }
+            }
+        }
+
+        return r;
+    }	
+
+};
+
