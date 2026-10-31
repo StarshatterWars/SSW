@@ -67,6 +67,51 @@ drive:      {
    hull_factor: 0.85
    }
 
+computer:   {
+   design:    "Avionics",
+   loc:     (20, 0, 80),
+   size:    8,
+   hull_factor: 0.2
+   }
+
+computer:   {
+   design:    "Flight",
+   loc:     (-20, 0, 80),
+   size:    16,
+   hull_factor: 0.5
+   }
+
+gear: {
+   name:    "Undercarriage",
+   abrv:    Gear,
+   loc:     (0, 0, 0),
+   size:    16,
+   hull_factor: 0.5,
+
+   gear: {
+      model: "GearNose1",
+      start: (0,  -8,  90),
+      end:   (0, -28, 120)
+      },
+
+   gear: {
+      model: "GearLeft1",
+      start: (-20, -17, -79),
+      end:   (-40, -37, -75)
+      },
+
+   gear: {
+      model: "GearRight1",
+      start: ( 20, -17, -79),
+      end:   ( 40, -37, -75)
+      },
+   }
+
+nav:        {
+   loc:     (0, 0, 60),
+   size:    16,
+   hull_factor: 0.1
+   }
 
 weapon:     {
    type:    "Delta Cannon",
@@ -161,53 +206,6 @@ sensor:     {
    size:    25,
    hull_factor: 0.25
    }
-
-computer:   {
-   design:    "Avionics",
-   loc:     (20, 0, 80),
-   size:    8,
-   hull_factor: 0.2
-   }
-
-computer:   {
-   design:    "Flight",
-   loc:     (-20, 0, 80),
-   size:    16,
-   hull_factor: 0.5
-   }
-
-gear: {
-   name:    "Undercarriage",
-   abrv:    Gear,
-   loc:     (0, 0, 0),
-   size:    16,
-   hull_factor: 0.5,
-
-   gear: {
-      model: "GearNose1",
-      start: (0,  -8,  90),
-      end:   (0, -28, 120)
-      },
-
-   gear: {
-      model: "GearLeft1",
-      start: (-20, -17, -79),
-      end:   (-40, -37, -75)
-      },
-
-   gear: {
-      model: "GearRight1",
-      start: ( 20, -17, -79),
-      end:   ( 40, -37, -75)
-      },
-   }
-
-nav:        {
-   loc:     (0, 0, 60),
-   size:    16,
-   hull_factor: 0.1
-   }
-
 
 thruster: {
    design:           Thruster,

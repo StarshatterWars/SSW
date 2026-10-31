@@ -23,7 +23,7 @@ bool FTrainingRankAccessTest::RunTest(const FString& Parameters)
         Player.SetRank(Rank);
         for(int32 Id=101;Id<=107;++Id)
         {
-            const int32 Required=Id==105?3:Id==106?4:Id==107?6:0;
+            const int32 Required=Id==104?1:Id==105?3:Id==106?4:Id==107?6:0;
             TestEqual(FString::Printf(TEXT("Mission %d at rank %d"),Id,Rank),Training.IsMissionRankUnlocked(Id),Rank>=Required);
         }
     }

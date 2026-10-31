@@ -4,6 +4,9 @@
 #include "GameStructs_System.h"
 #include "Power.h"
 #include "Drive.h"
+#include "ShipDesignRegistry.h"
+#include "WeaponDesignRegistry.h"
+#include "Misc/ScopeExit.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFalconPropulsionTest,"Starshatter.Fighters.FalconPropulsion",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FFalconPropulsionTest::RunTest(const FString& Parameters)
 {
@@ -16,6 +19,21 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Computer coverage"),F->Computer.Num(),S->Computer.Num());
     if(!TestTrue(TEXT("Reactor and drive exist"),!F->Power.IsEmpty()&&!F->Drive.IsEmpty()))return false;
     TestEqual(TEXT("Authored Falcon reactor output"),F->Power[0].Output,65.f);
+    const auto Original=ShipDesignRegistry::GetAll();
+    const auto OriginalWeapons=WeaponDesignRegistry::GetAll();
+    ON_SCOPE_EXIT {ShipDesignRegistry::Clear();WeaponDesignRegistry::Clear();for(const auto& P:OriginalWeapons)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);for(const auto& P:Original)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};
+    auto* Weapons=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_WeaponDesign.DT_WeaponDesign"));
+    if(!TestNotNull(TEXT("Weapons table"),Weapons))return false;
+    for(const auto& P:Weapons->GetRowMap())WeaponDesignRegistry::RegisterDesign(P.Key,*reinterpret_cast<const FWeaponDesign*>(P.Value));
+    // Reproduce a definition with an unnamed nav block. A row count alone
+    // missed the runtime conversion dropping this valid component.
+    FShipDesign Unnamed=*F;
+    for(auto& N:Unnamed.NavSys)N.DesignName.Empty();
+    ShipDesignRegistry::RegisterDesign(FName(TEXT("Falcon")),Unnamed);
+    const auto* Runtime=ShipDesignRegistry::FindLegacy(FName(TEXT("Falcon")));
+    if(!TestNotNull(TEXT("Runtime Falcon design"),Runtime))return false;
+    TestTrue(TEXT("Unnamed navigation is created at runtime"),Runtime->navsystems.size()>0);
+    TestNotNull(TEXT("Runtime navigation pointer"),Runtime->navsys);
     PowerSource Reactor(F->Power[0].Type,F->Power[0].Output,F->Power[0].Fuel);
     Drive Engine(F->Drive[0].Type,F->Drive[0].Thrust,F->Drive[0].Augmenter,false);
     Reactor.AddClient(&Engine);

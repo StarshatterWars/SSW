@@ -457,14 +457,12 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     
     for (const FShipNavSystem& Src : Row.NavSys)
     {
-        if (Src.DesignName.IsEmpty())
-        {
-            continue;
-        }
-
+        // A bare nav block is a complete legacy navigation system. Its
+        // optional design name must not decide whether it exists at runtime.
         NavSystem* NewNavSys = new NavSystem();
-
-        NewNavSys->SetName(TCHAR_TO_ANSI(*Src.DesignName));
+        const FString NavName=Src.DesignName.IsEmpty()?TEXT("Navigation"):Src.DesignName;
+        NewNavSys->SetName(TCHAR_TO_ANSI(*NavName));
+        NewNavSys->Mount(Src.Location,Src.Size,Src.HullFactor);
         NewNavSys->SetSourceIndex(Src.SourceIndex);
         NewNavSys->SetHullFactor(Src.HullFactor);
 
