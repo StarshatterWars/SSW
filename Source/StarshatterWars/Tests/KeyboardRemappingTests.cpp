@@ -69,14 +69,12 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
                     TestTrue(TEXT("Authored chord action retained"),CastChecked<UInputTriggerChordAction>(Copied.Triggers[Trigger])->ChordAction==OriginalChord->ChordAction);
         }
     }
-    KeyMap Legacy;Legacy.DefaultKeyMap();const int32 PitchIndex=Legacy.FindMapIndex(KEY_PITCH_UP);
-    const int32 OriginalPitch=Legacy.GetKeyMap(PitchIndex)->key;
-    Config.RemappedKeys.Add(EStarshatterInputAction::PitchUp,EKeys::F9);
-    StarshatterInputBindings::ApplyLegacy(Legacy,Config,Owner.Get());
-    TestNotEqual(TEXT("Legacy controller key actually changes"),Legacy.GetKeyMap(PitchIndex)->key,OriginalPitch);
-    Config.RemappedKeys.Remove(EStarshatterInputAction::PitchUp);StarshatterInputBindings::ApplyLegacy(Legacy,Config,Owner.Get());
-    TestEqual(TEXT("Legacy reset restores original mapping"),Legacy.GetKeyMap(PitchIndex)->key,OriginalPitch);
-
+    auto* Supplemental=StarshatterInputBindings::SupplementalContext(Owner.Get());
+    for(const auto& Mapping:Supplemental->GetMappings())
+    {
+        Config.EnhancedBindings.Add(StarshatterInputBindings::Id(Mapping),EKeys::F10);Settings->SetKeyboardConfig(Config);
+        TestEqual(TEXT("C++ controls honor saved overrides"),StarshatterInputBindings::ResolvedKey(Mapping.Action->GetName(),Mapping.Key),EKeys::F10);
+    }
     auto* Save=NewObject<UStarshatterSettingsSaveGame>();Save->KeyboardConfig=Config;Save->KeyboardConfig.EnhancedBindings.Add(NegativeId,EKeys::F10);
     const FString Slot=TEXT("Automation/KeyboardRemapping/")+FGuid::NewGuid().ToString(EGuidFormats::Digits)+TEXT("/options");
     ON_SCOPE_EXIT {UGameplayStatics::DeleteGameInSlot(Slot,0);};
@@ -84,6 +82,7 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
     auto* Loaded=Cast<UStarshatterSettingsSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot,0));
     if (TestNotNull(TEXT("Reload options payload"),Loaded)) TestEqual(TEXT("Enhanced binding survives options save/reload"),Loaded->KeyboardConfig.EnhancedBindings.FindRef(NegativeId),EKeys::F10);
 
+    Settings->SetKeyboardConfig(Previous);StarshatterInputBindings::Refresh();
     UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     auto* Class=LoadClass<UKeyDlg>(nullptr,TEXT("/Game/Screens/Options/WBP_KeyboardDlg.WBP_KeyboardDlg_C"));
@@ -99,19 +98,17 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
         Page->SelectedEnhancedId=Pair.Key;Page->bHasSelection=true;Page->BeginCaptureForSelected();
         TestTrue(TEXT("Every enhanced control accepts a replacement"),Page->CaptureKey(EKeys::F11));
     }
-    const uint32* F12Code=nullptr;const uint32* CharacterCode=nullptr;
-    FInputKeyManager::Get().GetCodesFromKey(EKeys::F12,F12Code,CharacterCode);
-    for(const auto& Pair:Page->RowMap)
+    int32 DisplayedRows=0;for(const auto& Pair:Page->CategoryBoxes) if(Pair.Value.IsValid()) DisplayedRows+=Pair.Value->GetChildrenCount();
+    TestEqual(TEXT("Only actual bindings are displayed, without legacy rows"),DisplayedRows,Page->EnhancedRows.Num());
+    for (const auto& Pair:Page->EnhancedRows)
     {
-        Page->SelectAction(Pair.Key);TestTrue(TEXT("Every legacy row accepts a key"),Page->CaptureKey(EKeys::F12));
-        FStarshatterKeyboardConfig OneBinding;OneBinding.RemappedKeys.Add(Pair.Key,EKeys::F12);
-        StarshatterInputBindings::ApplyLegacy(Legacy,OneBinding,Owner.Get());
-        bool bApplied=false;
-        for(int32 Index=0;Index<Legacy.GetNumKeys();++Index) if(F12Code && Legacy.GetKeyMap(Index)->key==static_cast<int32>(*F12Code)) bApplied=true;
-        TestTrue(*FString::Printf(TEXT("Legacy row has working runtime bridge: %s"),*StaticEnum<EStarshatterInputAction>()->GetNameStringByValue(static_cast<int64>(Pair.Key))),bApplied);
+        const FString Name=Pair.Value.Mapping.Action->GetName();
+        TestFalse(TEXT("Obsolete camera aliases removed"),Name==TEXT("IA_ViewCockpit") || Name==TEXT("IA_ViewVirtualCockpit") || Name==TEXT("IA_ViewChase") || Name==TEXT("IA_ViewOrbit"));
+        auto* Caption=Cast<UTextBlock>(Pair.Value.Button->GetContent());
+        if(TestNotNull(TEXT("Binding button has caption"),Caption)) TestFalse(TEXT("Keys only appear in key column"),Caption->GetText().ToString().Contains(TEXT("[")));
     }
-    AddInfo(FString::Printf(TEXT("Remappable buttons: %d enhanced, %d legacy"),Page->EnhancedRows.Num(),Page->RowMap.Num()));
-    Page->Cancel();TestEqual(TEXT("Cancel discards all legacy edits"),Page->PendingRemaps.Num(),0);
+    AddInfo(FString::Printf(TEXT("Remappable real binding buttons: %d"),Page->EnhancedRows.Num()));
+    Page->Cancel();
     TestEqual(TEXT("Cancel discards all enhanced edits"),Page->PendingEnhanced.Num(),0);
     TestTrue(TEXT("Cancel leaves settings unchanged"),Settings->GetKeyboardConfig().EnhancedBindings.OrderIndependentCompareEqual(Previous.EnhancedBindings));
     return true;

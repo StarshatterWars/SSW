@@ -562,7 +562,7 @@ void UOptionsScreen::ApplyOptions()
         Save->CaptureCurrentOptions();
         Saved=Save->SaveSettings();
     }
-    if (OptionsSaveStatus) OptionsSaveStatus->SetText(FText::FromString(Saved?TEXT("SAVED TO options.sav"):TEXT("SAVE FAILED - PLEASE RETRY")));
+    if (OptionsSaveStatus) OptionsSaveStatus->SetText(FText::FromString(Saved?TEXT("Options saved"):TEXT("SAVE FAILED - PLEASE RETRY")));
     if (!Saved) UE_LOG(LogOptionsScreen,Error,TEXT("[Options] Could not save options.sav"));
 
 }

@@ -69,10 +69,16 @@ public:
 
     // Screen lifecycle
     void Show();
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    void BuildModernShell();
+    void RefreshCategoryStyles();
+    friend class FModernReferenceScreensTest;
+    UPROPERTY(Transient) TObjectPtr<UWidget> ModernShell=nullptr;
     void ExecFrame();
 
 protected:
     virtual void NativeOnInitialized() override;
+    virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:

@@ -22,6 +22,8 @@
 =============================================================================*/
 
 #include "PlayerDlg.h"
+#include "ModernMenuLayout.h"
+#include "MissionUIStyle.h"
 
 // UMG
 #include "Blueprint/WidgetTree.h"
@@ -39,6 +41,7 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/Image.h"
+#include "Components/Border.h"
 
 // Helpers
 #include "FormattingUtils.h"
@@ -153,6 +156,8 @@ void UPlayerDlg::NativeConstruct()
     BuildStatsRows();
 
     RefreshUIFromSubsystem();
+    MissionUIStyle::ApplyActionButtonStyle(ApplyButton.Get(),TEXT("Green"));
+    MissionUIStyle::ApplyActionButtonStyle(CancelButton.Get(),TEXT("Red"));
 }
 
 void UPlayerDlg::NativeDestruct()
@@ -172,6 +177,7 @@ void UPlayerDlg::ShowDlg()
 {
     SetVisibility(ESlateVisibility::Visible);
     RefreshUIFromSubsystem();
+    RefreshSavedPlayerList();
 }
 
 void UPlayerDlg::HideDlg()
@@ -232,7 +238,7 @@ void UPlayerDlg::EnsureLayout()
     {
         S->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
         S->SetAlignment(FVector2D(0.f, 0.f));
-        S->SetOffsets(FMargin(24.f, 64.f, 24.f, 24.f));
+        S->SetOffsets(FMargin(24.f, ModernShell?18.f:64.f, 24.f, 24.f));
         S->SetAutoSize(false);
         S->SetZOrder(100);
     }
@@ -244,7 +250,8 @@ void UPlayerDlg::EnsureLayout()
     if (!LeftPanel || !StatsScroll || !StatsVBox)
         return;
 
-    if (UHorizontalBoxSlot* L = MainRow->AddChildToHorizontalBox(LeftPanel))
+    auto* LeftWidth=WidgetTree->ConstructWidget<USizeBox>();LeftWidth->SetWidthOverride(320);LeftWidth->SetContent(LeftPanel);
+    if (UHorizontalBoxSlot* L = MainRow->AddChildToHorizontalBox(LeftWidth))
     {
         L->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
         L->SetHorizontalAlignment(HAlign_Left);
@@ -388,6 +395,7 @@ void UPlayerDlg::BuildRosterPanel()
         if (UVerticalBoxSlot* S = LeftPanel->AddChildToVerticalBox(txt_profile_name))
             S->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
     }
+    BuildSavedPlayerControls();
 }
 
 // ------------------------------------------------------------------------
@@ -565,17 +573,18 @@ void UPlayerDlg::BuildChatMacrosRows()
 // Model <-> UI (SUBSYSTEM)
 // ------------------------------------------------------------------------
 
-void UPlayerDlg::UpdatePlayerFromUI_Subsystem()
+bool UPlayerDlg::UpdatePlayerFromUI_Subsystem()
 {
     UStarshatterPlayerSubsystem* SS = GetPlayerSS();
     if (!SS)
-        return;
+        return false;
 
     // Make sure it has loaded at least once
     if (!SS->HasLoaded())
         SS->LoadPlayer();
 
     FS_PlayerGameInfo& Info = SS->GetMutablePlayerInfo();
+    if(bNewPilot && NewPilotDraft.IsSet()) Info=NewPilotDraft.GetValue();
 
     if (edt_name)
     {
@@ -604,7 +613,7 @@ void UPlayerDlg::UpdatePlayerFromUI_Subsystem()
         }
     }
 
-    SS->SavePlayer(true);
+    return true;
 }
 
 void UPlayerDlg::RefreshUIFromSubsystem()
@@ -619,7 +628,7 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     if (!SS->HasLoaded())
         SS->LoadPlayer();
 
-    const FS_PlayerGameInfo& Info = SS->GetPlayerInfo();
+    const FS_PlayerGameInfo& Info = bNewPilot && NewPilotDraft.IsSet()?NewPilotDraft.GetValue():SS->GetPlayerInfo();
 
     UE_LOG(LogPlayerDlg, Warning, TEXT("[PlayerDlg] Refresh: Name='%s' Callsign='%s' Empire=%d Rank=%d"),
         *Info.Name, *Info.Callsign, Info.Empire, Info.Rank);
@@ -712,7 +721,7 @@ void UPlayerDlg::RefreshUIFromSubsystem()
         // bit 0..15 => MedalId 1..16
         // -------------------------
         //ApplyMedalsMask((uint32)Info.MedalsMask);
-        ApplyMedalsMask(0xFFFF);
+        ApplyMedalsMask((uint32)Info.MedalsMask);
     }
     else
     {
@@ -754,17 +763,24 @@ void UPlayerDlg::RefreshUIFromSubsystem()
 
 void UPlayerDlg::OnAdd()
 {
-    UE_LOG(LogPlayerDlg, Warning, TEXT("[PlayerDlg] Add is disabled for single-profile subsystem flow."));
+    if(auto* SS=GetPlayerSS())
+    {
+        FS_PlayerGameInfo Draft;Draft.CreateTime=FDateTime::UtcNow().ToUnixTimestamp();NewPilotDraft=MoveTemp(Draft);
+        bNewPilot=true;SelectedSavedSlot.Reset();
+        if(SavedPlayersCombo) SavedPlayersCombo->ClearSelection();
+        RefreshUIFromSubsystem();
+        if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Enter a name, then save the new pilot.")));
+    }
 }
 
 void UPlayerDlg::OnDel()
 {
-    UE_LOG(LogPlayerDlg, Warning, TEXT("[PlayerDlg] Delete is disabled for single-profile subsystem flow."));
+    if(!SelectedSavedSlot.IsEmpty() && DeleteSavedConfirmation) DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UPlayerDlg::OnApply()
 {
-    UpdatePlayerFromUI_Subsystem();
+    if(!SaveSelectedPlayer()) return;
 
     if (manager)
         manager->ShowMenuDlg();
@@ -774,6 +790,8 @@ void UPlayerDlg::OnApply()
 
 void UPlayerDlg::OnCancel()
 {
+    NewPilotDraft.Reset();
+    bNewPilot=false;
     RefreshUIFromSubsystem();
 
     if (manager)
@@ -915,3 +933,122 @@ void UPlayerDlg::Debug_ShowAllMedals()
 
 
 
+
+TSharedRef<SWidget> UPlayerDlg::RebuildWidget()
+{
+    BuildModernShell();return Super::RebuildWidget();
+}
+void UPlayerDlg::BuildModernShell()
+{
+    if(ModernShell || !WidgetTree) return;
+    auto Shell=ModernMenuLayout::Build(WidgetTree,TEXT("PLAYER LOGBOOK"));
+    CancelButton=ModernMenuLayout::AddArrow(WidgetTree,Shell.Actions,CancelButton.Get(),false);
+    auto* Profile=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("PROFILE"));
+    auto* Service=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("SERVICE RECORD"));
+    auto* Awards=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("AWARDS"));
+    auto* Macros=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("CHAT MACROS"));
+    Profile->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnProfileSection);
+    Service->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnServiceSection);
+    Awards->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnAwardsSection);
+    Macros->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnMacrosSection);
+    ApplyButton=ModernMenuLayout::AddArrow(WidgetTree,Shell.Actions,ApplyButton.Get(),true);
+    RootCanvas=WidgetTree->ConstructWidget<UCanvasPanel>();
+    auto* Content=WidgetTree->ConstructWidget<UBorder>();Content->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));Content->SetPadding(FMargin(0));Content->SetContent(RootCanvas);
+    Shell.Body->AddChildToVerticalBox(Content)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    WidgetTree->RootWidget=Shell.Root;ModernShell=Shell.Root;
+}
+void UPlayerDlg::ScrollToSection(UWidget* Widget)
+{
+    if(StatsScroll && Widget) StatsScroll->ScrollWidgetIntoView(Widget,true,EDescendantScrollDestination::TopOrLeft);
+}
+void UPlayerDlg::OnProfileSection() {ScrollToSection(edt_name);}
+void UPlayerDlg::OnServiceSection() {ScrollToSection(txt_created);}
+void UPlayerDlg::OnAwardsSection() {ScrollToSection(medals_grid);}
+void UPlayerDlg::OnMacrosSection() {if(MacroEdits.IsValidIndex(1)) ScrollToSection(MacroEdits[1]);}
+
+void UPlayerDlg::BuildSavedPlayerControls()
+{
+    auto* Heading=WidgetTree->ConstructWidget<UTextBlock>();Heading->SetText(FText::FromString(TEXT("SAVED PILOTS")));Heading->SetFont(MissionUIStyle::GetHeaderFont(22));Heading->SetColorAndOpacity(FLinearColor::White);
+    LeftPanel->AddChildToVerticalBox(Heading)->SetPadding(FMargin(0,20,0,10));
+    SavedPlayersCombo=WidgetTree->ConstructWidget<UComboBoxString>();
+    SavedPlayersCombo->OnSelectionChanged.AddUniqueDynamic(this,&UPlayerDlg::OnSavedPlayerChanged);LeftPanel->AddChildToVerticalBox(SavedPlayersCombo)->SetPadding(FMargin(0,0,0,12));
+    auto Add=[&](UButton* Existing,const TCHAR* Caption,const TCHAR* Color)
+    {
+        auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();auto* Button=ModernMenuLayout::AddButton(WidgetTree,Row,Existing,Caption);
+        MissionUIStyle::ApplyActionButtonStyle(Button,Color);
+        if(auto* Text=Cast<UTextBlock>(Button->GetContent())) Text->SetFont(MissionUIStyle::GetHeaderFont(20));
+        auto* Height=WidgetTree->ConstructWidget<USizeBox>();Height->SetHeightOverride(48);Height->SetContent(Row);LeftPanel->AddChildToVerticalBox(Height)->SetPadding(FMargin(0,4));return Button;
+    };
+    AddPlayerButton=Add(AddPlayerButton.Get(),TEXT("NEW PILOT"),TEXT("Blue"));AddPlayerButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnAdd);
+    LoadSavedButton=Add(nullptr,TEXT("LOAD"),TEXT("Blue"));LoadSavedButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnLoadSavedPlayer);
+    SaveSavedButton=Add(nullptr,TEXT("SAVE"),TEXT("Green"));SaveSavedButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnSaveSavedPlayer);
+    DeletePlayerButton=Add(DeletePlayerButton.Get(),TEXT("DELETE"),TEXT("Red"));DeletePlayerButton->SetToolTipText(FText::FromString(TEXT("Delete the selected saved copy")));DeletePlayerButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnDel);
+    SavedPlayerStatus=WidgetTree->ConstructWidget<UTextBlock>();SavedPlayerStatus->SetFont(MissionUIStyle::GetRowFont(17));SavedPlayerStatus->SetColorAndOpacity(FLinearColor(0.16f,0.77f,0.91f,1));SavedPlayerStatus->SetWrapTextAt(310);LeftPanel->AddChildToVerticalBox(SavedPlayerStatus)->SetPadding(FMargin(0,14));
+    DeleteSavedConfirmation=WidgetTree->ConstructWidget<UVerticalBox>();
+    auto* Question=WidgetTree->ConstructWidget<UTextBlock>();Question->SetText(FText::FromString(TEXT("Delete the selected saved pilot?")));Question->SetAutoWrapText(true);Question->SetFont(MissionUIStyle::GetRowFont(18));Question->SetColorAndOpacity(FLinearColor::White);DeleteSavedConfirmation->AddChildToVerticalBox(Question);
+    auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();DeleteSavedConfirmation->AddChildToVerticalBox(Actions)->SetPadding(FMargin(0,10));
+    auto* Delete=ModernMenuLayout::AddButton(WidgetTree,Actions,nullptr,TEXT("DELETE"));MissionUIStyle::ApplyActionButtonStyle(Delete,TEXT("Red"));Delete->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnConfirmDeleteSavedPlayer);
+    auto* Keep=ModernMenuLayout::AddButton(WidgetTree,Actions,nullptr,TEXT("CANCEL"));Keep->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnKeepSavedPlayer);
+    DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Collapsed);LeftPanel->AddChildToVerticalBox(DeleteSavedConfirmation);
+    RefreshSavedPlayerList();
+}
+void UPlayerDlg::RefreshSavedPlayerList()
+{
+    if(!SavedPlayersCombo) return;
+    bRefreshingSavedPlayers=true;SavedPlayersCombo->ClearOptions();SavedPlayerSlots.Reset();
+    if(auto* SS=GetPlayerSS())
+    {
+        if(SelectedSavedSlot.IsEmpty() && !bNewPilot) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
+        const auto Saved=SS->GetSavedPlayers();
+        // First access may import the pre-existing single pilot save.
+        if(SelectedSavedSlot.IsEmpty() && !bNewPilot) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
+        for(const auto& Entry:Saved){SavedPlayersCombo->AddOption(Entry.DisplayName);SavedPlayerSlots.Add(Entry.Slot);}
+        const int32 Selected=SavedPlayerSlots.IndexOfByKey(SelectedSavedSlot);
+        if(Selected!=INDEX_NONE) SavedPlayersCombo->SetSelectedIndex(Selected);else SelectedSavedSlot.Reset();
+    }
+    bRefreshingSavedPlayers=false;
+    if(LoadSavedButton) LoadSavedButton->SetIsEnabled(!SelectedSavedSlot.IsEmpty());
+    if(DeletePlayerButton) DeletePlayerButton->SetIsEnabled(!SelectedSavedSlot.IsEmpty());
+    if(DeleteSavedConfirmation) DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Collapsed);
+}
+void UPlayerDlg::OnSavedPlayerChanged(FString Selected,ESelectInfo::Type SelectionType)
+{
+    if(bRefreshingSavedPlayers || !SavedPlayersCombo) return;
+    const int32 Index=SavedPlayersCombo->GetSelectedIndex();SelectedSavedSlot=SavedPlayerSlots.IsValidIndex(Index)?SavedPlayerSlots[Index]:FString();
+    if(LoadSavedButton) LoadSavedButton->SetIsEnabled(!SelectedSavedSlot.IsEmpty());
+    if(DeletePlayerButton) DeletePlayerButton->SetIsEnabled(!SelectedSavedSlot.IsEmpty());
+    OnKeepSavedPlayer();
+}
+bool UPlayerDlg::SaveSelectedPlayer()
+{
+    auto* SS=GetPlayerSS();if(!SS || !edt_name) return false;
+    const FString Name=edt_name->GetText().ToString().TrimStartAndEnd();
+    if(Name.IsEmpty()){if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Enter a pilot name before saving.")));return false;}
+    for(const auto& Entry:SS->GetSavedPlayers())
+        if(Entry.Slot!=SelectedSavedSlot && Entry.DisplayName.Equals(Name,ESearchCase::IgnoreCase))
+        {if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("That name is already saved. Select it to overwrite, or choose another name.")));return false;}
+    const FS_PlayerGameInfo BeforeSave=SS->GetPlayerInfo();
+    if(!UpdatePlayerFromUI_Subsystem() || !SS->SavePlayerAs(Name,SelectedSavedSlot))
+    {SS->GetMutablePlayerInfo()=BeforeSave;if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Unable to save pilot. Please retry.")));return false;}
+    bNewPilot=false;NewPilotDraft.Reset();SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();RefreshSavedPlayerList();RefreshUIFromSubsystem();
+    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Pilot saved")));return true;
+}
+void UPlayerDlg::OnSaveSavedPlayer() {SaveSelectedPlayer();}
+void UPlayerDlg::OnLoadSavedPlayer()
+{
+    auto* SS=GetPlayerSS();if(!SS || SelectedSavedSlot.IsEmpty()) return;
+    const bool Loaded=SS->LoadSavedPlayer(SelectedSavedSlot);
+    if(Loaded){bNewPilot=false;NewPilotDraft.Reset();RefreshUIFromSubsystem();OnKeepSavedPlayer();}
+    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Loaded?TEXT("Pilot loaded"):TEXT("Unable to load selected pilot")));
+}
+void UPlayerDlg::OnConfirmDeleteSavedPlayer()
+{
+    auto* SS=GetPlayerSS();if(!SS || SelectedSavedSlot.IsEmpty()) return;
+    const bool Deleted=SS->DeleteSavedPlayer(SelectedSavedSlot);
+    if(Deleted){SelectedSavedSlot.Reset();RefreshSavedPlayerList();}
+    OnKeepSavedPlayer();if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Deleted?TEXT("Saved pilot deleted"):TEXT("Unable to delete selected save")));
+}
+void UPlayerDlg::OnKeepSavedPlayer()
+{
+    if(DeleteSavedConfirmation) DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Collapsed);
+}

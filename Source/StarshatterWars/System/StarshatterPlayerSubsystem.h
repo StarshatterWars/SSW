@@ -59,6 +59,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Starshatter|PlayerSave")
     bool SavePlayer(bool bForce = false);
 
+
+    UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
+    TArray<FPlayerSaveSlotInfo> GetSavedPlayers() const;
+    UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
+    bool SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot=TEXT(""));
+    UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
+    bool LoadSavedPlayer(const FString& SavedSlot);
+    UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
+    bool DeleteSavedPlayer(const FString& SavedSlot);
+    FString GetActiveSavedPlayerSlot() const;
+    FString GetPlayerIndexSlot() const {return SlotName+TEXT("_Profiles");}
+
     UPROPERTY(BlueprintAssignable, Category = "Starshatter|PlayerSave")
     FOnPlayerSaveLoaded OnPlayerSaveLoaded;
 
@@ -66,6 +78,10 @@ public:
     void DebugDump(const FString& Tag = TEXT("")) const;
 
 private:
+    UPlayerSaveIndexGame* ReadPlayerIndex(bool bImportLegacy) const;
+    bool WritePlayerIndex(UPlayerSaveIndexGame* Index) const;
+    bool IsManagedPlayerSlot(const FString& SavedSlot) const;
+
     bool SaveGameInternal(const FString& InSlotName, int32 InUserIndex,
         const FS_PlayerGameInfo& InPlayerData, int32 InSaveVersion);
 

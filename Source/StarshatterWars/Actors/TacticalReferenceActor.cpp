@@ -1,5 +1,6 @@
 
 #include "TacticalReferenceActor.h"
+#include "StarshatterInputBindings.h"
 #include "GameStructs_System.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -75,10 +76,10 @@ void ATacticalReferenceActor::Tick(float DeltaTime)
 
     float MX = 0.f, MY = 0.f;
     PC->GetInputMouseDelta(MX, MY);
-    if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
+    if (PC->IsInputKeyDown(StarshatterInputBindings::ResolvedKey(TEXT("SSW_ReferenceCameraOrbit"),EKeys::LeftMouseButton)))
         AddOrbitDelta(MX, -MY);
 
-    const float Wheel = PC->GetInputAnalogKeyState(EKeys::MouseWheelAxis);
+    const float Wheel = PC->GetInputAnalogKeyState(StarshatterInputBindings::ResolvedKey(TEXT("SSW_ReferenceCameraZoom"),EKeys::MouseWheelAxis));
     if (!FMath::IsNearlyZero(Wheel))
         AddZoomDelta(-Wheel);
 }

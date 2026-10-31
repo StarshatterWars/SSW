@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "GameStructs.h"
+#include "Components/ComboBoxString.h"
 #include "PlayerDlg.generated.h"
 
 class UButton;
@@ -25,6 +27,15 @@ public:
     UPlayerDlg(const FObjectInitializer& ObjectInitializer);
 
     void InitializeDlg(UMenuScreen* InManager);
+    virtual TSharedRef<SWidget> RebuildWidget() override;
+    void BuildModernShell();
+    UFUNCTION() void OnProfileSection();
+    UFUNCTION() void OnServiceSection();
+    UFUNCTION() void OnAwardsSection();
+    UFUNCTION() void OnMacrosSection();
+    void ScrollToSection(UWidget* Widget);
+    friend class FModernReferenceScreensTest;
+    UPROPERTY(Transient) TObjectPtr<UWidget> ModernShell=nullptr;
 
     virtual void NativeOnInitialized() override;
     virtual void NativePreConstruct() override;
@@ -44,10 +55,28 @@ protected:
 
     // -------- Build UI rows --------
     void BuildRosterPanel();
+    void BuildSavedPlayerControls();
+    void RefreshSavedPlayerList();
+    bool SaveSelectedPlayer();
+    UFUNCTION() void OnLoadSavedPlayer();
+    UFUNCTION() void OnSaveSavedPlayer();
+    UFUNCTION() void OnConfirmDeleteSavedPlayer();
+    UFUNCTION() void OnKeepSavedPlayer();
+    UFUNCTION() void OnSavedPlayerChanged(FString Selected,ESelectInfo::Type SelectionType);
+    UPROPERTY(Transient) TObjectPtr<UComboBoxString> SavedPlayersCombo=nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SavedPlayerStatus=nullptr;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> DeleteSavedConfirmation=nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> LoadSavedButton=nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> SaveSavedButton=nullptr;
+    TArray<FString> SavedPlayerSlots;
+    FString SelectedSavedSlot;
+    bool bRefreshingSavedPlayers=false;
+    bool bNewPilot=false;
+    TOptional<FS_PlayerGameInfo> NewPilotDraft;
     void BuildStatsRows();
 
     // -------- Model <-> UI (SUBSYSTEM) --------
-    void UpdatePlayerFromUI_Subsystem();   // UI -> PlayerInfo + Save
+    bool UpdatePlayerFromUI_Subsystem();   // UI -> PlayerInfo + Save
     void RefreshUIFromSubsystem();         // PlayerInfo -> UI
 
     UStarshatterPlayerSubsystem* GetPlayerSS() const;

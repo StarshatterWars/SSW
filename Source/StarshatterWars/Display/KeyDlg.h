@@ -94,16 +94,12 @@ private:
     void CommitPendingToSettings();
 
     // Selection/capture
-    void SelectAction(EStarshatterInputAction Action);
     void BeginCaptureForSelected();
 
     // Styling
     void ApplyStandardValueTextStyle(UTextBlock* Block) const;
 
     // Helpers
-    static FString ActionToDisplayString(EStarshatterInputAction Action);
-    static FString KeyToDisplayString(const FKey& Key);
-    static bool IsModifierKey(const FKey& Key);
 
 private:
     // One handler for all row buttons (pressed is deterministic via IsPressed())
@@ -134,26 +130,13 @@ private:
     TMap<FString,FEnhancedRow> EnhancedRows;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputMappingContext>> BindingContexts;
 
-    EStarshatterInputAction SelectedAction = EStarshatterInputAction::Pause;
     bool bHasSelection = false;
 
     // Pending edits staged until Apply:
-    TMap<EStarshatterInputAction, FKey> PendingRemaps;
-    TSet<EStarshatterInputAction> PendingClears;
 
     // Scroll list widgets we construct
     UPROPERTY(Transient) TObjectPtr<UScrollBox>  KeyScrollBox = nullptr;
     UPROPERTY(Transient) TObjectPtr<UVerticalBox> KeyListVBox = nullptr;
-
-    struct FKeyRowWidgets
-    {
-        TObjectPtr<UButton>    RowButton = nullptr;
-        TObjectPtr<UTextBlock> ActionText = nullptr;
-        TObjectPtr<UTextBlock> KeyText = nullptr;
-    };
-
-    TMap<EStarshatterInputAction, FKeyRowWidgets> RowMap;
-    TMap<TWeakObjectPtr<UButton>, EStarshatterInputAction> ButtonToAction;
 
     TWeakObjectPtr<UButton> SelectedRowButton;
 

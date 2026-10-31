@@ -49,3 +49,23 @@ public:
     UPROPERTY(BlueprintReadWrite, SaveGame, Category = "SaveGame Data")
     FS_PlayerGameInfo PlayerInfo;
 };
+
+
+USTRUCT(BlueprintType)
+struct FPlayerSaveSlotInfo
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly,SaveGame) FString Slot;
+    UPROPERTY(BlueprintReadOnly,SaveGame) FString DisplayName;
+    UPROPERTY(BlueprintReadOnly,SaveGame) FDateTime SavedAt;
+};
+
+UCLASS()
+class STARSHATTERWARS_API UPlayerSaveIndexGame : public USaveGame
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(SaveGame) int32 Version=1;
+    UPROPERTY(SaveGame) TArray<FPlayerSaveSlotInfo> Players;
+    UPROPERTY(SaveGame) FString ActiveSlot;
+};

@@ -10,8 +10,6 @@
 
 #include "StarshatterKeyboardSettings.h"
 #include "StarshatterInputBindings.h"
-#include "SSWRuntimeSubsystem.h"
-#include "Engine/GameInstance.h"
 
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
@@ -182,14 +180,12 @@ void UStarshatterKeyboardSettings::ApplyToEnhancedInput(UObject* WorldContextObj
     }
 
     StarshatterInputBindings::Refresh();
-    if (auto* GI=World->GetGameInstance())
-        if (auto* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->MapKeys();
 
     // Architecture hook:
     // - Boot-time: ensure mappings rebuild.
     // - UI-time: when you implement per-action remap, you will apply Keyboard.RemappedKeys into
     //   either a runtime mapping context or Enhanced Input user settings.
-    UE_LOG(LogStarshatterKeyboardSettings, Log, TEXT("Keyboard settings applied (Remaps=%d)."), Keyboard.RemappedKeys.Num());
+    UE_LOG(LogStarshatterKeyboardSettings, Log, TEXT("Keyboard settings applied (Bindings=%d)."), Keyboard.EnhancedBindings.Num());
 
     InputSS->RequestRebuildControlMappings();
 #endif

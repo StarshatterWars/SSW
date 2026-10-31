@@ -6,9 +6,7 @@
 #include "InputTriggers.h"
 #include "UObject/UnrealType.h"
 #include "Misc/SecureHash.h"
-#include "KeyMap.h"
 #include "GameFramework/PlayerController.h"
-#include "GameStructs_InputDefaults.h"
 
 namespace
 {
@@ -48,6 +46,11 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
     Add(TEXT("SSW_HUDVisibility"),TEXT("Show / Hide HUD"),EKeys::H);
     Add(TEXT("SSW_WeaponCycle"),TEXT("Cycle Active Weapon"),EKeys::BackSpace);
+    Add(TEXT("SSW_SensorRangeUp"),TEXT("Increase Sensor Range (Alternate)"),EKeys::RightBracket);
+    Add(TEXT("SSW_SensorRangeDown"),TEXT("Decrease Sensor Range (Alternate)"),EKeys::LeftBracket);
+    Add(TEXT("SSW_ReferenceCameraOrbit"),TEXT("Orbit Reference Preview"),EKeys::LeftMouseButton);
+    Add(TEXT("SSW_ReferenceCameraZoom"),TEXT("Zoom Reference Preview"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
+    Add(TEXT("SSW_BriefingAccept"),TEXT("Accept Mission Briefing"),EKeys::Enter);
     const FKey Digits[]={EKeys::Zero,EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six,EKeys::Seven,EKeys::Eight,EKeys::Nine};
     for (int32 Index=0;Index<10;++Index)
         Add(*FString::Printf(TEXT("SSW_RadioChoice%d"),Index),FString::Printf(TEXT("Radio Menu Choice %d"),Index),Digits[Index]);
@@ -64,6 +67,7 @@ bool StarshatterInputBindings::IsModifierDown(APlayerController* Controller,cons
                 if (Mapping.Action && Mapping.Action->GetName().Contains(TEXT("Modifier")) && Mapping.Action->GetName().Contains(Modifier))
                 { bFound=true;if(Controller->IsInputKeyDown(Mapping.Key)) return true; }
     if (bFound) return false;
+    if(Modifier==TEXT("Control")) return Controller->IsInputKeyDown(EKeys::LeftControl) || Controller->IsInputKeyDown(EKeys::RightControl);
     return Controller->IsInputKeyDown(EKeys::LeftShift) || Controller->IsInputKeyDown(EKeys::RightShift);
 }
 
@@ -142,134 +146,10 @@ FString StarshatterInputBindings::Category(const FString& Name)
     return TEXT("GENERAL");
 }
 
-void StarshatterInputBindings::ApplyLegacy(KeyMap& Mapping,const FStarshatterKeyboardConfig& Config,UObject* Owner)
+
+FKey StarshatterInputBindings::ResolvedKey(const FString& Name,FKey Default)
 {
-    static TMap<TWeakObjectPtr<UObject>,TMap<int32,int32>> OriginalKeys;
-    for(auto It=OriginalKeys.CreateIterator();It;++It) if(!It.Key().IsValid()) It.RemoveCurrent();
-    TMap<int32,int32>* Original=Owner?&OriginalKeys.FindOrAdd(Owner):nullptr;
-    if(Original) for(const auto& Pair:*Original)
-    {const int32 Index=Mapping.FindMapIndex(Pair.Key);if(Index>=0 && Index<Mapping.GetNumKeys()) Mapping.GetKeyMap(Index)->key=Pair.Value;}
-    // Filled by the explicit legacy action bridge below. Retains each default chord.
-    auto Apply=[&](EStarshatterInputAction Action,int32 Legacy)
-    {
-        const FKey* Key=Config.RemappedKeys.Find(Action);
-        if (!Key) return;
-        const uint32* Code=nullptr;const uint32* Character=nullptr;
-        FInputKeyManager::Get().GetCodesFromKey(*Key,Code,Character);
-        if (!Code) return;
-        const int32 Index=Mapping.FindMapIndex(Legacy);
-        if (Index>=0 && Index<Mapping.GetNumKeys())
-        {
-            if(Original && !Original->Contains(Legacy)) Original->Add(Legacy,Mapping.GetKeyMap(Index)->key);
-            Mapping.GetKeyMap(Index)->key=static_cast<int32>(*Code);
-        }
-    };
-    Apply(EStarshatterInputAction::ExitGame,KEY_EXIT);
-Apply(EStarshatterInputAction::Pause,KEY_PAUSE);
-Apply(EStarshatterInputAction::TimeCompress,KEY_TIME_COMPRESS);
-Apply(EStarshatterInputAction::TimeExpand,KEY_TIME_EXPAND);
-Apply(EStarshatterInputAction::TimeSkip,KEY_TIME_SKIP);
-Apply(EStarshatterInputAction::PitchUp,KEY_PITCH_UP);
-Apply(EStarshatterInputAction::PitchDown,KEY_PITCH_DOWN);
-Apply(EStarshatterInputAction::YawLeft,KEY_YAW_LEFT);
-Apply(EStarshatterInputAction::YawRight,KEY_YAW_RIGHT);
-Apply(EStarshatterInputAction::RollLeft,KEY_ROLL_LEFT);
-Apply(EStarshatterInputAction::RollRight,KEY_ROLL_RIGHT);
-Apply(EStarshatterInputAction::PlusX,KEY_PLUS_X);
-Apply(EStarshatterInputAction::MinusX,KEY_MINUS_X);
-Apply(EStarshatterInputAction::PlusY,KEY_PLUS_Y);
-Apply(EStarshatterInputAction::MinusY,KEY_MINUS_Y);
-Apply(EStarshatterInputAction::PlusZ,KEY_PLUS_Z);
-Apply(EStarshatterInputAction::MinusZ,KEY_MINUS_Z);
-Apply(EStarshatterInputAction::ThrottleUp,KEY_THROTTLE_UP);
-Apply(EStarshatterInputAction::ThrottleDown,KEY_THROTTLE_DOWN);
-Apply(EStarshatterInputAction::ThrottleZero,KEY_THROTTLE_ZERO);
-Apply(EStarshatterInputAction::ThrottleFull,KEY_THROTTLE_FULL);
-Apply(EStarshatterInputAction::Augmenter,KEY_AUGMENTER);
-Apply(EStarshatterInputAction::FlcsModeAuto,KEY_FLCS_MODE_AUTO);
-Apply(EStarshatterInputAction::CommandMode,KEY_COMMAND_MODE);
-Apply(EStarshatterInputAction::CyclePrimary,KEY_CYCLE_PRIMARY);
-Apply(EStarshatterInputAction::CycleSecondary,KEY_CYCLE_SECONDARY);
-Apply(EStarshatterInputAction::Decoy,KEY_DECOY);
-Apply(EStarshatterInputAction::LockTarget,KEY_LOCK_TARGET);
-Apply(EStarshatterInputAction::LockThreat,KEY_LOCK_THREAT);
-Apply(EStarshatterInputAction::LockClosestShip,KEY_LOCK_CLOSEST_SHIP);
-Apply(EStarshatterInputAction::LockClosestThreat,KEY_LOCK_CLOSEST_THREAT);
-Apply(EStarshatterInputAction::LockHostileShip,KEY_LOCK_HOSTILE_SHIP);
-Apply(EStarshatterInputAction::LockHostileThreat,KEY_LOCK_HOSTILE_THREAT);
-Apply(EStarshatterInputAction::CycleSubtarget,KEY_CYCLE_SUBTARGET);
-Apply(EStarshatterInputAction::PrevSubtarget,KEY_PREV_SUBTARGET);
-Apply(EStarshatterInputAction::TargetPadlock,KEY_TARGET_PADLOCK);
-Apply(EStarshatterInputAction::GearToggle,KEY_GEAR_TOGGLE);
-Apply(EStarshatterInputAction::NavlightToggle,KEY_NAVLIGHT_TOGGLE);
-Apply(EStarshatterInputAction::AutoNav,KEY_AUTO_NAV);
-Apply(EStarshatterInputAction::DropOrbit,KEY_DROP_ORBIT);
-Apply(EStarshatterInputAction::ShieldsUp,KEY_SHIELDS_UP);
-Apply(EStarshatterInputAction::ShieldsDown,KEY_SHIELDS_DOWN);
-Apply(EStarshatterInputAction::ShieldsFull,KEY_SHIELDS_FULL);
-Apply(EStarshatterInputAction::ShieldsZero,KEY_SHIELDS_ZERO);
-Apply(EStarshatterInputAction::SensorMode,KEY_SENSOR_MODE);
-Apply(EStarshatterInputAction::SensorGroundMode,KEY_SENSOR_GROUND_MODE);
-Apply(EStarshatterInputAction::LaunchProbe,KEY_LAUNCH_PROBE);
-Apply(EStarshatterInputAction::SensorRangeMinus,KEY_SENSOR_RANGE_MINUS);
-Apply(EStarshatterInputAction::SensorRangePlus,KEY_SENSOR_RANGE_PLUS);
-Apply(EStarshatterInputAction::EmconMinus,KEY_EMCON_MINUS);
-Apply(EStarshatterInputAction::EmconPlus,KEY_EMCON_PLUS);
-Apply(EStarshatterInputAction::CamBridge,KEY_CAM_BRIDGE);
-Apply(EStarshatterInputAction::CamVirt,KEY_CAM_VIRT);
-Apply(EStarshatterInputAction::CamChase,KEY_CAM_CHASE);
-Apply(EStarshatterInputAction::CamDrop,KEY_CAM_DROP);
-Apply(EStarshatterInputAction::CamExtern,KEY_CAM_EXTERN);
-Apply(EStarshatterInputAction::ZoomWide,KEY_ZOOM_WIDE);
-Apply(EStarshatterInputAction::CamCycleObject,KEY_CAM_CYCLE_OBJECT);
-Apply(EStarshatterInputAction::CamExtPlusAz,KEY_CAM_EXT_PLUS_AZ);
-Apply(EStarshatterInputAction::CamExtMinusAz,KEY_CAM_EXT_MINUS_AZ);
-Apply(EStarshatterInputAction::CamExtPlusEl,KEY_CAM_EXT_PLUS_EL);
-Apply(EStarshatterInputAction::CamExtMinusEl,KEY_CAM_EXT_MINUS_EL);
-Apply(EStarshatterInputAction::CamExtPlusRange,KEY_CAM_EXT_PLUS_RANGE);
-Apply(EStarshatterInputAction::CamExtMinusRange,KEY_CAM_EXT_MINUS_RANGE);
-Apply(EStarshatterInputAction::CamViewSelection,KEY_CAM_VIEW_SELECTION);
-Apply(EStarshatterInputAction::CamVirtPlusAz,KEY_CAM_VIRT_PLUS_AZ);
-Apply(EStarshatterInputAction::CamVirtMinusAz,KEY_CAM_VIRT_MINUS_AZ);
-Apply(EStarshatterInputAction::CamVirtPlusEl,KEY_CAM_VIRT_PLUS_EL);
-Apply(EStarshatterInputAction::CamVirtMinusEl,KEY_CAM_VIRT_MINUS_EL);
-Apply(EStarshatterInputAction::HudMode,KEY_HUD_MODE);
-Apply(EStarshatterInputAction::HudColor,KEY_HUD_COLOR);
-Apply(EStarshatterInputAction::HudWarn,KEY_HUD_WARN);
-Apply(EStarshatterInputAction::HudInst,KEY_HUD_INST);
-Apply(EStarshatterInputAction::NavDialog,KEY_NAV_DLG);
-Apply(EStarshatterInputAction::WeaponDialog,KEY_WEP_DLG);
-Apply(EStarshatterInputAction::FlightDialog,KEY_FLT_DLG);
-Apply(EStarshatterInputAction::EngineDialog,KEY_ENG_DLG);
-Apply(EStarshatterInputAction::RadioMenu,KEY_RADIO_MENU);
-Apply(EStarshatterInputAction::QuantumMenu,KEY_QUANTUM_MENU);
-Apply(EStarshatterInputAction::MFD1,KEY_MFD1);
-Apply(EStarshatterInputAction::MFD2,KEY_MFD2);
-Apply(EStarshatterInputAction::SelfDestruct,KEY_SELF_DESTRUCT);
-Apply(EStarshatterInputAction::SwapRollYaw,KEY_SWAP_ROLL_YAW);
-Apply(EStarshatterInputAction::CommAttackTgt,KEY_COMM_ATTACK_TGT);
-Apply(EStarshatterInputAction::CommEscortTgt,KEY_COMM_ESCORT_TGT);
-Apply(EStarshatterInputAction::CommWepFree,KEY_COMM_WEP_FREE);
-Apply(EStarshatterInputAction::CommWepHold,KEY_COMM_WEP_HOLD);
-Apply(EStarshatterInputAction::CommCoverMe,KEY_COMM_COVER_ME);
-Apply(EStarshatterInputAction::CommSkipNav,KEY_COMM_SKIP_NAV);
-Apply(EStarshatterInputAction::CommReturnToBase,KEY_COMM_RETURN_TO_BASE);
-Apply(EStarshatterInputAction::CommCallInbound,KEY_COMM_CALL_INBOUND);
-Apply(EStarshatterInputAction::CommRequestPicture,KEY_COMM_REQUEST_PICTURE);
-Apply(EStarshatterInputAction::CommRequestSupport,KEY_COMM_REQUEST_SUPPORT);
-Apply(EStarshatterInputAction::ChatBroadcast,KEY_CHAT_BROADCAST);
-Apply(EStarshatterInputAction::ChatTeam,KEY_CHAT_TEAM);
-Apply(EStarshatterInputAction::ChatWing,KEY_CHAT_WING);
-Apply(EStarshatterInputAction::ChatUnit,KEY_CHAT_UNIT);
-Apply(EStarshatterInputAction::IncStardate,KEY_INC_STARDATE);
-Apply(EStarshatterInputAction::DecStardate,KEY_DEC_STARDATE);
-Apply(EStarshatterInputAction::Action0,KEY_ACTION_0);
-Apply(EStarshatterInputAction::Action1,KEY_ACTION_1);
-Apply(EStarshatterInputAction::FirePrimary,KEY_ACTION_0);
-Apply(EStarshatterInputAction::FireSecondary,KEY_ACTION_1);
-Apply(EStarshatterInputAction::CameraNextView,KEY_NEXT_VIEW);
-Apply(EStarshatterInputAction::CameraChase,KEY_CAM_CHASE);
-Apply(EStarshatterInputAction::CameraExternal,KEY_CAM_EXTERN);
-Apply(EStarshatterInputAction::CameraZoomIn,KEY_ZOOM_IN);
-Apply(EStarshatterInputAction::CameraZoomOut,KEY_ZOOM_OUT);
+    const FString BindingId=Name+TEXT("|")+Default.ToString()+TEXT("|")+FMD5::HashAnsiString(TEXT(""));
+    const auto& Config=UStarshatterKeyboardSettings::Get()->GetKeyboardConfig();
+    const FKey* Saved=Config.EnhancedBindings.Find(BindingId);return Saved && Saved->IsValid()?*Saved:Default;
 }

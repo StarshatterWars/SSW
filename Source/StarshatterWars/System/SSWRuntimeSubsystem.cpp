@@ -337,8 +337,8 @@ void USSWRuntimeSubsystem::GameLoop()
             if (!bRangeBound)
                 bRangeBound = true;
             const bool bMod = StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift"));
-            const bool bUp = PC->IsInputKeyDown(EKeys::RightBracket);
-            const bool bDown = PC->IsInputKeyDown(EKeys::LeftBracket);
+            const bool bUp = PC->IsInputKeyDown(StarshatterInputBindings::ResolvedKey(TEXT("SSW_SensorRangeUp"),EKeys::RightBracket));
+            const bool bDown = PC->IsInputKeyDown(StarshatterInputBindings::ResolvedKey(TEXT("SSW_SensorRangeDown"),EKeys::LeftBracket));
             static bool bWasUp = false, bWasDown = false;
             if (bMod && SimInstance)
             {
@@ -1021,7 +1021,6 @@ void USSWRuntimeSubsystem::HandleExitState()
 
 void USSWRuntimeSubsystem::MapKeys()
 {
-    StarshatterInputBindings::ApplyLegacy(KeyCfg,UStarshatterKeyboardSettings::Get()->GetKeyboardConfig(),this);
     const int32 NumKeys = KeyCfg.GetNumKeys();
 
     if (NumKeys <= 0)

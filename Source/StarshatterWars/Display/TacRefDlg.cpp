@@ -28,6 +28,20 @@
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "ModernMenuLayout.h"
+#include "MissionUIStyle.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
+#include "Components/ScaleBox.h"
+#include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "WeaponDesign.h"
 #include "WeaponDesignRegistry.h"
 #include "Bitmap.h"
@@ -169,6 +183,7 @@ bool UTacRefDlg::PassesCategoryFilter(const FShipDesign& Row) const
 // -----------------------------------------------------------------------------
 void UTacRefDlg::PopulateShipDropdown()
 {
+    RefreshCategoryStyles();
     if (EmpireCombo) EmpireCombo->SetIsEnabled(true);
     if (WeaponBeauty) WeaponBeauty->SetVisibility(ESlateVisibility::Collapsed);
     ShipRowNames.Reset();
@@ -627,6 +642,7 @@ void UTacRefDlg::PopulateEmpireDropdown_AutoDetect(bool bRespectCategory, bool b
 
 void UTacRefDlg::PopulateWeaponDropdown()
 {
+    RefreshCategoryStyles();
     TSet<FName> Names;
     for (int32 I=0; I<WeaponDesign::catalog.size(); ++I)
         if (const auto* D=WeaponDesign::catalog[I]) Names.Add(FName(ANSI_TO_TCHAR(D->name.data())));
@@ -683,4 +699,98 @@ void UTacRefDlg::SelectWeaponByIndex(int32 Index)
         WeaponBeauty->SetBrushFromTexture(Image);
         WeaponBeauty->SetVisibility(Image?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
     }
+}
+
+TSharedRef<SWidget> UTacRefDlg::RebuildWidget()
+{
+    BuildModernShell();return Super::RebuildWidget();
+}
+void UTacRefDlg::BuildModernShell()
+{
+    if(ModernShell || !WidgetTree || !ShipCombo) return;
+    auto Shell=ModernMenuLayout::Build(WidgetTree,TEXT("TACTICAL REFERENCE"),true);
+    CancelButton=ModernMenuLayout::AddArrow(WidgetTree,Shell.Actions,CancelButton.Get(),false);
+    CancelButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleCloseClicked);
+    StationButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,StationButton,TEXT("STATIONS"));
+    ShipButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,ShipButton,TEXT("SHIPS"));
+    FighterButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,FighterButton,TEXT("FIGHTERS"));
+    TransportButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,TransportButton,TEXT("TRANSPORTS"));
+    BuildingButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,BuildingButton,TEXT("FACILITIES"));
+    WeaponButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,WeaponButton,TEXT("WEAPONS"));
+    StationButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleStationModeClicked);
+    ShipButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleShipModeClicked);
+    FighterButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleFighterModeClicked);
+    TransportButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleTransportModeClicked);
+    BuildingButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleBuildingModeClicked);
+    WeaponButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleWeaponModeClicked);
+    auto* Selectors=WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto AddSelector=[&](const TCHAR* Caption,UWidget* Selector)
+    {
+        if(!Selector) return;
+        auto* Label=WidgetTree->ConstructWidget<UTextBlock>();Label->SetText(FText::FromString(Caption));Label->SetFont(MissionUIStyle::GetRowFont(18));Label->SetColorAndOpacity(FLinearColor::White);
+        auto* LabelCell=Selectors->AddChildToHorizontalBox(Label);LabelCell->SetVerticalAlignment(VAlign_Center);LabelCell->SetPadding(FMargin(12,0));
+        Selector->RemoveFromParent();auto* Cell=Selectors->AddChildToHorizontalBox(Selector);Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));Cell->SetPadding(FMargin(0,6,12,6));
+    };
+    AddSelector(TEXT("FACTION"),EmpireCombo);AddSelector(TEXT("DESIGN"),ShipCombo);
+    auto* SelectorBand=WidgetTree->ConstructWidget<UBorder>();SelectorBand->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));SelectorBand->SetPadding(FMargin(8));SelectorBand->SetContent(Selectors);
+    Shell.Body->AddChildToVerticalBox(SelectorBand)->SetPadding(FMargin(0,0,0,12));
+    auto* Main=WidgetTree->ConstructWidget<UHorizontalBox>();Shell.Body->AddChildToVerticalBox(Main)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    // The transparent center preserves the existing world-rendered ship and orbit/zoom controls.
+    auto* PreviewFrame=WidgetTree->ConstructWidget<UBorder>();PreviewFrame->SetBrushColor(FLinearColor(0.01f,0.015f,0.02f,1));PreviewFrame->SetPadding(FMargin(5));
+    auto* Preview=WidgetTree->ConstructWidget<UVerticalBox>();
+    if(!TxtDisplayName) TxtDisplayName=WidgetTree->ConstructWidget<UTextBlock>();else TxtDisplayName->RemoveFromParent();
+    TxtDisplayName->SetFont(MissionUIStyle::GetHeaderFont(26));TxtDisplayName->SetColorAndOpacity(FLinearColor::White);TxtDisplayName->SetJustification(ETextJustify::Center);
+    auto* NameBand=WidgetTree->ConstructWidget<UBorder>();NameBand->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));NameBand->SetContent(TxtDisplayName);Preview->AddChildToVerticalBox(NameBand);
+    auto* Cutout=WidgetTree->ConstructWidget<UBorder>();Cutout->SetBrushColor(FLinearColor::Transparent);Cutout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    if(!WeaponBeauty) WeaponBeauty=WidgetTree->ConstructWidget<UImage>();else WeaponBeauty->RemoveFromParent();
+    WeaponBeauty->SetVisibility(ESlateVisibility::Collapsed);
+    auto* ArtScale=WidgetTree->ConstructWidget<UScaleBox>();ArtScale->SetStretch(EStretch::ScaleToFit);ArtScale->SetContent(WeaponBeauty);Cutout->SetContent(ArtScale);Preview->AddChildToVerticalBox(Cutout)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    // Border only: four opaque strips enclose a transparent preview, never covering the model.
+    PreviewFrame->SetBrushColor(FLinearColor::Transparent);PreviewFrame->SetContent(Preview);
+    auto* FramedPreview=WidgetTree->ConstructWidget<UOverlay>();
+    auto* PreviewOverlaySlot=FramedPreview->AddChildToOverlay(PreviewFrame);PreviewOverlaySlot->SetHorizontalAlignment(HAlign_Fill);PreviewOverlaySlot->SetVerticalAlignment(VAlign_Fill);
+    for(int32 Edge=0;Edge<4;++Edge)
+    {
+        auto* Line=WidgetTree->ConstructWidget<UBorder>();Line->SetBrushColor(FLinearColor(0.01f,0.015f,0.02f,1));
+        auto* Thickness=WidgetTree->ConstructWidget<USizeBox>();Thickness->SetContent(Line);
+        if(Edge<2) Thickness->SetWidthOverride(5);else Thickness->SetHeightOverride(5);
+        auto* EdgeSlot=FramedPreview->AddChildToOverlay(Thickness);
+        EdgeSlot->SetHorizontalAlignment(Edge==0?HAlign_Left:Edge==1?HAlign_Right:HAlign_Fill);
+        EdgeSlot->SetVerticalAlignment(Edge==2?VAlign_Top:Edge==3?VAlign_Bottom:VAlign_Fill);
+    }
+    auto* PreviewCell=Main->AddChildToHorizontalBox(FramedPreview);PreviewCell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));PreviewCell->SetPadding(FMargin(0,0,16,0));
+    auto* DetailsWidth=WidgetTree->ConstructWidget<USizeBox>();DetailsWidth->SetWidthOverride(760);
+    auto* Details=WidgetTree->ConstructWidget<UBorder>();Details->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));Details->SetPadding(FMargin(22));
+    auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();auto* TextColumn=WidgetTree->ConstructWidget<UVerticalBox>();Scroll->AddChild(TextColumn);Details->SetContent(Scroll);DetailsWidth->SetContent(Details);Main->AddChildToHorizontalBox(DetailsWidth);
+    if(!TxtCaption) TxtCaption=WidgetTree->ConstructWidget<UTextBlock>();else TxtCaption->RemoveFromParent();
+    TxtCaption->SetFont(MissionUIStyle::GetHeaderFont(24));TxtCaption->SetColorAndOpacity(FLinearColor(0.16f,0.77f,0.91f,1));TxtCaption->SetAutoWrapText(true);TextColumn->AddChildToVerticalBox(TxtCaption)->SetPadding(FMargin(0,0,0,18));
+    if(!TxtStats) TxtStats=WidgetTree->ConstructWidget<URichTextBlock>();else TxtStats->RemoveFromParent();
+    if(!TxtDescription) TxtDescription=WidgetTree->ConstructWidget<URichTextBlock>();else TxtDescription->RemoveFromParent();
+    for(auto* Text:{TxtStats,TxtDescription})
+    {
+        FTextBlockStyle TextStyle;TextStyle.SetFont(MissionUIStyle::GetRowFont(18));TextStyle.SetColorAndOpacity(FLinearColor::White);Text->SetDefaultTextStyle(TextStyle);Text->SetAutoWrapText(true);
+        TextColumn->AddChildToVerticalBox(Text)->SetPadding(FMargin(0,0,0,22));
+    }
+    WidgetTree->RootWidget=Shell.Root;ModernShell=Shell.Root;RefreshCategoryStyles();
+}
+void UTacRefDlg::RefreshCategoryStyles()
+{
+    ModernMenuLayout::SetSelected(StationButton,Mode==0 && ActiveCategory==EShipCategory::Station);
+    ModernMenuLayout::SetSelected(ShipButton,Mode==0 && ActiveCategory==EShipCategory::CapitalShip);
+    ModernMenuLayout::SetSelected(FighterButton,Mode==0 && ActiveCategory==EShipCategory::Fighter);
+    ModernMenuLayout::SetSelected(TransportButton,Mode==0 && ActiveCategory==EShipCategory::Transport);
+    ModernMenuLayout::SetSelected(BuildingButton,Mode==0 && ActiveCategory==EShipCategory::Building);
+    ModernMenuLayout::SetSelected(WeaponButton,Mode==1);
+}
+
+void UTacRefDlg::NativeConstruct()
+{
+    Super::NativeConstruct();
+    MissionUIStyle::ApplyActionButtonStyle(CancelButton.Get(),TEXT("Red"));
+    if(Mode==0)
+    {
+        const bool WasPopulating=bPopulatingReference;bPopulatingReference=true;
+        PopulateEmpireDropdown_AutoDetect(true,true);bPopulatingReference=WasPopulating;
+    }
+    RefreshCategoryStyles();
 }

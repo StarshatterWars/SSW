@@ -389,7 +389,7 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
     {
         ClearMissionRotationInput();
         if (APlayerController* PC=GetOwningPlayer())
-            if (PC->WasInputKeyJustPressed(EKeys::Enter)) OnCommit();
+            if (PC->WasInputKeyJustPressed(StarshatterInputBindings::ResolvedKey(TEXT("SSW_BriefingAccept"),EKeys::Enter))) OnCommit();
         ExecFrame();
     }
 }
@@ -3559,7 +3559,7 @@ void UMissionBriefingDlg::ToggleContactsPanel()
 void UMissionBriefingDlg::CycleMissionSensor()
 {
     APlayerController* SensorPC = GetOwningPlayer();
-    if (SensorPC && (StarshatterInputBindings::IsModifierDown(SensorPC,TEXT("Shift")) || SensorPC->IsInputKeyDown(EKeys::LeftControl) || SensorPC->IsInputKeyDown(EKeys::RightControl))) return;
+    if (SensorPC && (StarshatterInputBindings::IsModifierDown(SensorPC,TEXT("Shift")) || StarshatterInputBindings::IsModifierDown(SensorPC,TEXT("Control")))) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
     if (!P || P->IsDead()) return;
