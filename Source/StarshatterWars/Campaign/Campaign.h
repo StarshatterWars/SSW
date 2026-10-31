@@ -110,6 +110,8 @@ public:
 
     // NEW: DataTable-backed campaign path
     void                 LoadFromData(const FS_Campaign& Data);
+    bool IsMissionRankUnlocked(int32 Id) const;
+    FString MissionRankRequirement(int32 Id) const;
     bool IsCutsceneMission(int Id) const { return CutsceneMissionIds.Contains(Id); }
 
     static Campaign* CreateFromData(const FS_Campaign& Data);

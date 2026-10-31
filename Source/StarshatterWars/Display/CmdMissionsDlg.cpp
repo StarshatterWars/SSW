@@ -570,6 +570,8 @@ bool UCmdMissionsDlg::CanAcceptMission(MissionInfo* Info) const
         return false;
     }
 
+    if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Info->id)) return false;
+
     if (Info->mission)
     {
         return Info->mission->IsOK();
@@ -738,8 +740,12 @@ void UCmdMissionsDlg::AddMissionInfoToList(MissionInfo* Info)
             break;
         }
 
-        Item->MissionStatus = TEXT("Available");
+        Item->MissionStatus = CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Info->id)
+            ? TEXT("Locked - ")+CampaignPtr->MissionRankRequirement(Info->id) : TEXT("Available");
     }
+
+    if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Info->id))
+        Item->MissionStatus=TEXT("Locked - ")+CampaignPtr->MissionRankRequirement(Info->id);
 
     char StartTime[64] = { 0 };
     FormatDayTime(StartTime, Info->start);
@@ -909,7 +915,7 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
     RowCallbacks.Empty(); RowButtons.Empty(); RowLabels.Empty(); RowMissionIds.Empty();
     const int32 Count = MissionList->GetNumItems();
     if (NativeMissionCount)
-        NativeMissionCount->SetText(FText::FromString(FString::Printf(TEXT("%d AVAILABLE MISSIONS"), Count)));
+        NativeMissionCount->SetText(FText::FromString(FString::Printf(TEXT("%d MISSIONS"), Count)));
     if (!Count)
     {
         MissionLine(NativeMissionRows, MissionText(WidgetTree, TEXT("No missions available"), CmdMuted));
@@ -920,6 +926,8 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
         UMissionListObject* Item = Cast<UMissionListObject>(MissionList->GetItemAt(Index));
         if (!Item) continue;
         UButton* Button = WidgetTree->ConstructWidget<UButton>();
+        if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Item->MissionId))
+            Button->SetToolTipText(FText::FromString(CampaignPtr->MissionRankRequirement(Item->MissionId)));
         Button->SetBackgroundColor(FLinearColor(0.16f, 0.23f, 0.31f, 1.f));
         UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>();
         if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(Button->AddChild(Content)))
@@ -930,6 +938,8 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
         }
         MissionLine(Content, MissionText(WidgetTree,
             Item->MissionName, CmdText), 0.f);
+        if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Item->MissionId))
+            MissionLine(Content, MissionText(WidgetTree, CampaignPtr->MissionRankRequirement(Item->MissionId), CmdMuted), 0.f);
         MissionLine(NativeMissionRows, Button, 8.f);
         UCmdMissionRowProxy* Proxy = NewObject<UCmdMissionRowProxy>(this);
         Proxy->Owner = this;

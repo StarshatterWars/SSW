@@ -2229,6 +2229,9 @@ struct FS_CampaignMissionList : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	bool Complete;
 
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	int32 MinRank = 0;
+
 	FS_CampaignMissionList() {
 		
 		Id = 0;

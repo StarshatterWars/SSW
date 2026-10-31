@@ -77,6 +77,7 @@ mission: {
 mission: {
 	id:      105,
 	name:    "Training Cruise",
+	min_rank: 3,
 	desc:    "Learn to command starships. Practice engaging target drones with a Frigate class ship.",
 	objective: "Training - Practice starship fleet operations.",
 	start:   "03/15:20:00",
@@ -92,6 +93,7 @@ mission: {
 mission: {
 	id:      106,
 	name:    "Advanced Starship Combat",
+	min_rank: 4,
 	desc:    "Learn to command starships. Practice engaging starship targets with a Destroyer class ship.",
 	objective: "Training - Practice advanced starship combat maneuvers.",
 	start:   "04/11:00:00",
@@ -107,6 +109,7 @@ mission: {
 mission: {
 	id:      107,
 	name:    "Carrier Operations",
+	min_rank: 6,
 	desc:    "Learn to direct fleet operations. Practice orbital carrier operations.",
 	objective: "Training - Practice orbital carrier operations.",
 	start:   "05/09:30:00",

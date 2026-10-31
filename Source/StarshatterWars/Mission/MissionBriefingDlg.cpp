@@ -2632,6 +2632,11 @@ bool UMissionBriefingDlg::StartLiveMission()
 
 void UMissionBriefingDlg::OnCommit()
 {
+    if (!bStandaloneMission && CampaignPtr && MissionPtr && !CampaignPtr->IsMissionRankUnlocked(MissionPtr->GetIdentity()))
+    {
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow, CampaignPtr->MissionRankRequirement(MissionPtr->GetIdentity()));
+        return;
+    }
     // Ignore a repeated launch while this preview is loading or visible.
     if (MissionSystemLevel) return;
     UWorld* World = GetWorld();

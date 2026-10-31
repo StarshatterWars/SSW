@@ -2996,7 +2996,11 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 							GetDefNumber(MissionId, pdef, fn);
 							NewMissionList.Id = MissionId;
 						}
-						else if (pdef->name()->value() == "name")
+						else if (pdef->name()->value() == "min_rank")
+                        {
+                            GetDefNumber(NewMissionList.MinRank, pdef, fn);
+                        }
+                        else if (pdef->name()->value() == "name")
 						{
 							GetDefText(MLName, pdef, fn);
 							NewMissionList.Name = FString(MLName);

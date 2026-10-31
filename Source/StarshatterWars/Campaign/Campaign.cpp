@@ -2929,7 +2929,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->is_cutscene = CampaignPresentationRules::IsAuthoredScene(MissionRow.Id, Data.Missions);
         Info->DisplayType = CampaignPresentationRules::MissionDisplayType(MissionRow, Data.Missions);
 
-        Info->min_rank = 0;
+        Info->min_rank = FMath::Max(0, MissionRow.MinRank);
         Info->max_rank = 100;
         Info->action_id = 0;
         Info->action_status = 0;
@@ -3399,4 +3399,25 @@ const FS_CampaignMission* Campaign::FindCampaignMissionByScript(const char* Scri
     }
 
     return nullptr;
+}
+
+// Rank gates affect player acceptance, not mission loading for previews/tools.
+bool Campaign::IsMissionRankUnlocked(int32 Id) const
+{
+    if (!IsTraining()) return true;
+    for (int32 I=0; I<missions.size(); ++I)
+        if (missions[I] && missions[I]->id==Id)
+        {
+            const PlayerCharacter* Player=PlayerCharacter::GetCurrentPlayer();
+            return missions[I]->min_rank <= (Player ? Player->GetRank() : 0);
+        }
+    return false;
+}
+FString Campaign::MissionRankRequirement(int32 Id) const
+{
+    if (!IsTraining()) return FString();
+    for (int32 I=0; I<missions.size(); ++I)
+        if (missions[I] && missions[I]->id==Id && missions[I]->min_rank>0)
+            return FString::Printf(TEXT("Requires %s"), UTF8_TO_TCHAR(PlayerCharacter::RankName(missions[I]->min_rank)));
+    return FString();
 }

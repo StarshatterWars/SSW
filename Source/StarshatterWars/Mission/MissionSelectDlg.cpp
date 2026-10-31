@@ -447,7 +447,9 @@ void UMissionSelectDlg::UpdateDescriptionAndButtons()
 
     Desc->SetText(FText::FromString(D));
 
-    if (Accept) Accept->SetIsEnabled(true);
+    const bool bRankUnlocked=CampaignPtr->IsMissionRankUnlocked(MissionId);
+    if (!bRankUnlocked) Desc->SetText(FText::FromString(D+TEXT("\n\n")+CampaignPtr->MissionRankRequirement(MissionId)));
+    if (Accept) Accept->SetIsEnabled(bRankUnlocked);
     if (EditBtn) EditBtn->SetIsEnabled(bEditable);
     if (DelBtn) DelBtn->SetIsEnabled(bEditable);
 }
@@ -500,7 +502,7 @@ void UMissionSelectDlg::OnMissionListSelectionChanged(UObject* SelectedItem)
 
 void UMissionSelectDlg::OnAcceptClicked()
 {
-    if (SelectedMissionIndex >= 0 && CampaignPtr)
+    if (SelectedMissionIndex >= 0 && CampaignPtr && CampaignPtr->IsMissionRankUnlocked(MissionId))
     {
         if (MissionId != 0)
         {

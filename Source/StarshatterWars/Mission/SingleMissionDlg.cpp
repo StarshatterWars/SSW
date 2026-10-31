@@ -2,6 +2,7 @@
    Uses legacy Single Missions campaign and original PREP-mode handoff.
    The existing MissionSelectDlg is intentionally not modified. */
 #include "SingleMissionDlg.h"
+#include "MissionRankRules.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Blueprint/WidgetTree.h"
@@ -377,6 +378,8 @@ void USingleMissionDlg::RefreshMissionRoster()
             ? FString::Printf(TEXT("%02d  /  UNNAMED OPERATION"), Scenario->Id)
             : Scenario->MissionName;
         UButton* RowButton = MakeActionButton(MissionLabel, true, true);
+        const int32 RequiredRank=MissionRankRules::Required(*Scenario);
+        if (!MissionRankRules::Unlocked(RequiredRank)) RowButton->SetToolTipText(FText::FromString(MissionRankRules::Requirement(RequiredRank)));
         switch (DisplayIndex)
         {
         case 0: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission01Pressed); break;
@@ -501,7 +504,10 @@ void USingleMissionDlg::RefreshMissionDetails()
             ? ANSI_TO_TCHAR(CustomInfo->player_info.data())
             : TEXT("")));
         if (MissionSitrep) MissionSitrep->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->description.data())));
-        if (LaunchButton) LaunchButton->SetIsEnabled(true);
+        Campaign* Active=Campaign::GetCampaign();
+        const bool bRankUnlocked=!IsCampaignMissionView() || (Active && Active->IsMissionRankUnlocked(MissionId));
+        if (!bRankUnlocked && MissionObjectives) MissionObjectives->SetText(FText::FromString(Active->MissionRankRequirement(MissionId)));
+        if (LaunchButton) LaunchButton->SetIsEnabled(bRankUnlocked);
         return;
     }
     if (MissionTitle) MissionTitle->SetText(FText::FromString(Scenario
@@ -522,7 +528,15 @@ void USingleMissionDlg::RefreshMissionDetails()
     if (MissionObjectives) MissionObjectives->SetText(FText::FromString(Scenario && !Scenario->Objective.IsEmpty()
         ? Scenario->Objective.Replace(TEXT("\\n"), TEXT("\n"))
         : TEXT("Full objectives and loadout are available in Mission Briefing.")));
-    if (LaunchButton) LaunchButton->SetIsEnabled(Scenario != nullptr);
+    const int32 RequiredRank=Scenario?MissionRankRules::Required(*Scenario):6;
+    const bool bRankUnlocked=Scenario && MissionRankRules::Unlocked(RequiredRank);
+    if (!bRankUnlocked && Scenario && MissionObjectives)
+        MissionObjectives->SetText(FText::FromString(Scenario->Objective+TEXT("\n\n")+MissionRankRules::Requirement(RequiredRank)));
+    if (LaunchButton)
+    {
+        LaunchButton->SetIsEnabled(bRankUnlocked);
+        LaunchButton->SetToolTipText(bRankUnlocked?FText::GetEmpty():FText::FromString(MissionRankRules::Requirement(RequiredRank)));
+    }
 }
 
 void USingleMissionDlg::LaunchSelected()
@@ -539,7 +553,7 @@ void USingleMissionDlg::LaunchSelected()
     if (IsCampaignMissionView())
     {
         Campaign* ActiveCampaign = Campaign::GetCampaign();
-        if (!ActiveCampaign || !ActiveCampaign->GetMissionInfo(MissionId))
+        if (!ActiveCampaign || !ActiveCampaign->GetMissionInfo(MissionId) || !ActiveCampaign->IsMissionRankUnlocked(MissionId))
         {
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Invalid active campaign mission ID=%d"), MissionId);
             return;
@@ -606,6 +620,7 @@ void USingleMissionDlg::LaunchSelected()
     Mission* Model = nullptr;
     const FS_CampaignMission* SelectedRow = ScenarioRows.IsValidIndex(ChosenIndex)
         ? ScenarioRows[ChosenIndex] : nullptr;
+    if (!bCustom && (!SelectedRow || !MissionRankRules::Unlocked(MissionRankRules::Required(*SelectedRow)))) return;
     if (SelectedRow && !bCustom)
     {
         if (!StandaloneBriefingMission || StandaloneBriefingMissionId != MissionId)
