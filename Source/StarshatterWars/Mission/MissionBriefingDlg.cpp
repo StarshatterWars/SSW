@@ -1945,8 +1945,23 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] IA_MFDRightCycle is missing or is not Boolean."));
     MissionWeaponActions.Reset();
     auto BindWeaponAction = [this](const TCHAR* ActionName, ETriggerEvent Event, void (UMissionBriefingDlg::*Handler)()) {
-        const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), ActionName, ActionName);
-        UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
+        // Bind the asset used by the mapping context, including actions in subfolders.
+        UInputAction* Action = nullptr;
+        const UInputMappingContext* Contexts[] = { FighterInputContext.Get(), MissionMenuContext.Get() };
+        for (const UInputMappingContext* Context : Contexts) {
+            if (!Context) continue;
+            for (const FEnhancedActionKeyMapping& Mapping : Context->GetMappings()) {
+                if (Mapping.Action && Mapping.Action->GetName().Equals(ActionName, ESearchCase::IgnoreCase)) {
+                    Action = const_cast<UInputAction*>(Mapping.Action.Get());
+                    break;
+                }
+            }
+            if (Action) break;
+        }
+        if (!Action) {
+            const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), ActionName, ActionName);
+            Action = LoadObject<UInputAction>(nullptr, *Path);
+        }
         if (Action && Action->ValueType == EInputActionValueType::Boolean) {
             MissionWeaponActions.Add(Action);
             MissionMenuInput->BindAction(Action, Event, this, Handler);

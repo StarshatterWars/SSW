@@ -43,9 +43,12 @@ public:
 	bool           AutoNavEngaged();
 	void           EngageAutoNav();
 	void           DisengageAutoNav();
+	void           BeginRTBRecovery();
 
 protected:
 	bool           autonav = false;
+	bool           rtb_recovery = false;
+	double         recovery_call_delay = 0.0;
 };
 
 // +--------------------------------------------------------------------+

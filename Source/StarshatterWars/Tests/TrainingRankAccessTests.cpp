@@ -13,6 +13,23 @@ bool FTrainingRankAccessTest::RunTest(const FString& Parameters)
     const FS_Campaign* Row=nullptr;
     for(const auto& Pair:Table->GetRowMap()) {auto* C=reinterpret_cast<const FS_Campaign*>(Pair.Value);if(C->Name.Equals(TEXT("Operation Live Fire"),ESearchCase::IgnoreCase)){Row=C;break;}}
     if(!TestNotNull(TEXT("Training campaign"),Row))return false;
+    const FS_CampaignMission* T1=Row->Missions.FindByPredicate([](const FS_CampaignMission& M){return M.Id==101;});
+    if(!TestNotNull(TEXT("Training mission 1"),T1))return false;
+    int32 VoiceCount=0;
+    for(const auto& Event:T1->Event)
+    {
+        if(!Event.EventSound.StartsWith(TEXT("Train-01-")))continue;
+        ++VoiceCount;
+        if(VoiceCount<=8) TestTrue(TEXT("Timed narration uses time trigger"),Event.EventTrigger==MISSIONEVENT_TRIGGER::TRIGGER_TIME);
+        if(Event.EventSound==TEXT("Train-01-09"))
+        {
+            TestTrue(TEXT("RTB narration uses navpoint trigger"),Event.EventTrigger==MISSIONEVENT_TRIGGER::TRIGGER_NAVPT);
+            TestTrue(TEXT("RTB narration retains waypoint 5"),Event.TriggerNParams>0&&Event.TriggerParam.Num()>0&&Event.TriggerParam[0]==5);
+        }
+        if(Event.EventSound==TEXT("Train-01-10"))
+            TestTrue(TEXT("Docking narration retains event 100 dependency"),Event.TriggerNParams>0&&Event.TriggerParam.Num()>0&&Event.TriggerParam[0]==100);
+    }
+    TestEqual(TEXT("All ten T1 narration events imported"),VoiceCount,10);
     Campaign Training(1,"Rank access verification",true);Training.LoadFromData(*Row);
     PlayerCharacter Player;
     auto* Previous=PlayerCharacter::GetCurrentPlayer();

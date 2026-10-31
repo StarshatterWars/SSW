@@ -30,6 +30,13 @@ bool FLegacySoundLoadingTest::RunTest(const FString& Parameters)
     if(Explicit)Explicit->Release();
     USound* Gear=nullptr;TestTrue(TEXT("Second actual sound resolves independently"),Loader.LoadSound("GearTransit.wav",Gear,0,true)!=0);
     if(Gear)Gear->Release();
+    for(int32 Clip=1;Clip<=10;++Clip)
+    {
+        const FString Name=FString::Printf(TEXT("Train-01-%02d"),Clip);
+        USound* Voice=nullptr;
+        TestTrue(Name+TEXT(" resolves from bare training voice name"),Loader.LoadSound(TCHAR_TO_UTF8(*Name),Voice,USound::AMBIENT,true)!=0);
+        if(Voice) {TestTrue(Name+TEXT(" has an Unreal sound asset"),Voice->IsReady()&&Voice->SoundAsset!=nullptr);Voice->Release();}
+    }
     USound* Missing=Sound;TestEqual(TEXT("Missing optional sound returns failure"),Loader.LoadSound("Audit_Missing_12345.wav",Missing,0,true),0);
     TestNull(TEXT("Failure clears output pointer"),Missing);
     Loader.EnableMedia(false);TestEqual(TEXT("Legacy media disable honored"),Loader.LoadSound("Tires.wav",Missing,0,true),0);

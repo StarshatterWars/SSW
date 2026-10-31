@@ -456,11 +456,13 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
     };
     auto Gauge = [&](FVector2D P, const FString& Label, double Percent)
     {
-        const FLinearColor C = DamageColor(Percent);
+        const bool bThrust = Label == TEXT("THRUST");
+        const FLinearColor C = bThrust ? HUDBlue : DamageColor(Percent);
         Text(P, Label.Left(12), C);
         Box(P+FVector2D(88,5)*Scale,FVector2D(78,6)*Scale,FLinearColor(0.05f,0.1f,0.18f,0.8f));
         if (Percent >= 0) Box(P+FVector2D(88,5)*Scale,FVector2D(78*FMath::Clamp(Percent/100.0,0.0,1.0),6)*Scale,C);
-        Text(P+FVector2D(171,0)*Scale,Percent < 0 ? TEXT("--") : FString::Printf(TEXT("%.0f%%"),Percent),C);
+        Text(P+FVector2D(171,0)*Scale,bThrust && Percent >= 0.0 && Percent < 0.5
+            ? TEXT("OFF") : Percent < 0 ? TEXT("--") : FString::Printf(TEXT("%.0f%%"),Percent),C);
     };
     auto Icon = [&](FVector2D P, const FSlateBrush& B, bool Valid, double H)
     {

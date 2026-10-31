@@ -3536,6 +3536,7 @@ Ship::ExecNavFrame(
 		navsys->ExecFrame(
 			Seconds);
 
+        AutoPilot = AutoPilot || bAutoLand;
         // NavSystem may clear its flag when the route ends or power is lost.
         // Do not leave the UE player running a stale navigation director.
         if (!navsys->AutoNavEngaged() && dir && dir->GetType() == ESteerAIType::NAV &&

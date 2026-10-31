@@ -550,6 +550,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		{
 			GetDefNumber(LocalScale, Def, fn);
 			NewShipDesign.Scale = LocalScale;
+			CurrentShipScale = LocalScale;
 		}
 		else if (Key == "explosion_scale")
 		{

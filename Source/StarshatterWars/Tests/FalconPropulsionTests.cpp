@@ -4,6 +4,7 @@
 #include "GameStructs_System.h"
 #include "Power.h"
 #include "Drive.h"
+#include "Ship.h"
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
 #include "Misc/ScopeExit.h"
@@ -19,6 +20,12 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Computer coverage"),F->Computer.Num(),S->Computer.Num());
     if(!TestTrue(TEXT("Reactor and drive exist"),!F->Power.IsEmpty()&&!F->Drive.IsEmpty()))return false;
     TestEqual(TEXT("Authored Falcon reactor output"),F->Power[0].Output,65.f);
+    TestEqual(TEXT("Falcon has twin exhausts"),F->Drive[0].Ports.Num(),2);
+    if(F->Drive[0].Ports.Num()==2)
+    {
+        TestTrue(TEXT("Left exhaust matches mesh nozzle"),F->Drive[0].Ports[0].Location.Equals(FVector(-47,9,3)*0.27,0.001));
+        TestTrue(TEXT("Right exhaust matches mesh nozzle"),F->Drive[0].Ports[1].Location.Equals(FVector(-47,-9,3)*0.27,0.001));
+    }
     const auto Original=ShipDesignRegistry::GetAll();
     const auto OriginalWeapons=WeaponDesignRegistry::GetAll();
     ON_SCOPE_EXIT {ShipDesignRegistry::Clear();WeaponDesignRegistry::Clear();for(const auto& P:OriginalWeapons)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);for(const auto& P:Original)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};
@@ -34,6 +41,23 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     if(!TestNotNull(TEXT("Runtime Falcon design"),Runtime))return false;
     TestTrue(TEXT("Unnamed navigation is created at runtime"),Runtime->navsystems.size()>0);
     TestNotNull(TEXT("Runtime navigation pointer"),Runtime->navsys);
+    {
+        Ship ShipFixture("Falcon propulsion fixture","",const_cast<ShipDesign*>(Runtime),1,0,nullptr,false);
+        ShipFixture.SetFlightPhase(EOPSMode::ACTIVE);
+        ShipFixture.SetThrottleRequest(100);
+        ShipFixture.SetThrottle(100);
+        double LiveThrust=0;
+        for(int32 Frame=0;Frame<300;++Frame)
+        {
+            ShipFixture.ExecThrottle(1./60.);
+            ShipFixture.ExecSystems(1./60.);
+            ShipFixture.ExecFLCSFrame();
+            LiveThrust=ShipFixture.GetThrust(1./60.);
+        }
+        TestTrue(TEXT("Assembled Falcon receives reactor energy and produces thrust"),LiveThrust>0.);
+        TestNotNull(TEXT("Assembled Falcon has navigation"),ShipFixture.GetNavSystem());
+        AddInfo(FString::Printf(TEXT("Assembled Falcon thrust %.3f, throttle %.1f, request %.1f"),LiveThrust,ShipFixture.GetThrottle(),ShipFixture.GetThrottleRequest()));
+    }
     PowerSource Reactor(F->Power[0].Type,F->Power[0].Output,F->Power[0].Fuel);
     Drive Engine(F->Drive[0].Type,F->Drive[0].Thrust,F->Drive[0].Augmenter,false);
     Reactor.AddClient(&Engine);

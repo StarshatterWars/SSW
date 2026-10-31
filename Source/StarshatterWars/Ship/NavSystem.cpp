@@ -20,6 +20,10 @@
 #include "HUDSounds.h"
 #include "UIButton.h"
 #include "Game.h"
+#include "Instruction.h"
+#include "FlightDeck.h"
+#include "RadioMessage.h"
+#include "RadioTraffic.h"
 
 #include "Logging/LogMacros.h"
 
@@ -58,6 +62,34 @@ NavSystem::~NavSystem()
 
 void NavSystem::ExecFrame(double seconds)
 {
+	// Run outside NavAI's steering callback: SetAutoLand replaces that director.
+	if (rtb_recovery && autonav && ship && IsPowerOn()) {
+		Instruction* Route = ship->GetNextNavPoint();
+		if (!Route || Route->GetAction() != EInstruction::RTB || ship->IsDead() || ship->IsDying()) {
+			rtb_recovery = false;
+		}
+		else {
+			InboundSlot* Arrival = ship->GetInbound();
+			if (Arrival && Arrival->Cleared() && ship->CanAutoLand()) {
+				if (ship->SetAutoLand(true)) {
+					ship->SetNavptStatus(Route, INSTRUCTION_STATUS::COMPLETE);
+					UE_LOG(LogTemp, Display, TEXT("[AutoNavRTB] Recovery handed to autoland Ship='%hs'"), ship->GetName());
+				}
+			}
+			else if ((recovery_call_delay -= FMath::Max(0.0, seconds)) <= 0.0) {
+				Ship* Controller = Arrival && Arrival->GetDeck()
+					? const_cast<Ship*>(Arrival->GetDeck()->GetCarrier()) : ship->GetController();
+				if (Controller && !Controller->IsDead() && !Controller->IsDying()) {
+					const RadioMessageAction Action = Arrival
+						? RadioMessageAction::REQUEST_LANDING_CLEARANCE : RadioMessageAction::CALL_INBOUND;
+					RadioTraffic::Transmit(new RadioMessage(Controller, ship, Action));
+					UE_LOG(LogTemp, Display, TEXT("[AutoNavRTB] %s Ship='%hs' Controller='%hs'"),
+						Arrival ? TEXT("Request clearance") : TEXT("Call inbound"), ship->GetName(), Controller->GetName());
+				}
+				recovery_call_delay = 10.0;
+			}
+		}
+	}
 	if (autonav && ship && !ship->GetNextNavPoint()) {
         UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] No next route instruction Ship='%hs'"), ship->GetName());
         autonav = false;
@@ -99,6 +131,14 @@ void NavSystem::DisengageAutoNav()
 		HUDSounds::PlaySound(HUDSounds::SND_NAV_MODE);
 
 	autonav = false;
+	rtb_recovery = false;
+}
+
+void NavSystem::BeginRTBRecovery()
+{
+	if (!autonav || rtb_recovery) return;
+	rtb_recovery = true;
+	recovery_call_delay = 0.0;
 }
 
 // +--------------------------------------------------------------------+

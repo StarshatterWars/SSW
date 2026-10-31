@@ -4159,9 +4159,10 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 	}
 
 	MISSIONEVENT_TYPE EventType = MISSIONEVENT_TYPE::MESSAGE;
-	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_EVENT;
+	MISSIONEVENT_TRIGGER EventTrigger = MISSIONEVENT_TRIGGER::TRIGGER_TIME;
 
 	FS_MissionEvent NewMissionEvent;
+    NewMissionEvent.EventTrigger = EventTrigger;
     NewMissionEvent.EventId = 0; // Authored IDs are opt-in, not repeated default 1.
 	NewMissionEvent.EventTime = EventTime;
 
@@ -4184,6 +4185,7 @@ void UStarshatterGameDataSubsystem::ParseEvent(TermStruct* Val, const char* Fn)
 
             const int64 ParsedType = ReadLegacySceneEnum(StaticEnum<MISSIONEVENT_TYPE>(), FString(typestr));
             if (ParsedType != INDEX_NONE) EventType = static_cast<MISSIONEVENT_TYPE>(ParsedType);
+            else if (NormalizedType == TEXT("SOUND")) EventType = MISSIONEVENT_TYPE::MESSAGE;
             else if (NormalizedType == TEXT("EXIT")) return; // EndScene owns the return to Operations.
             else
 			{

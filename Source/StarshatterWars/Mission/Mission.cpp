@@ -447,6 +447,13 @@ bool Mission::LoadMissionCommon(
 		Ev->event_sound =
 			TCHAR_TO_ANSI(*SrcEvent.EventSound);
 
+        // Gameplay/training events need the same trigger data as cutscenes.
+        Ev->SetEventParams(SrcEvent.EventParam.GetData(), FMath::Min(SrcEvent.EventNParams, SrcEvent.EventParam.Num()));
+        Ev->SetTriggerParams(SrcEvent.TriggerParam.GetData(), FMath::Min(SrcEvent.TriggerNParams, SrcEvent.TriggerParam.Num()));
+        Ev->trigger_ship = TCHAR_TO_ANSI(*SrcEvent.TriggerShip);
+        Ev->trigger_target = TCHAR_TO_ANSI(*SrcEvent.TriggerTarget);
+        Ev->event_chance = SrcEvent.EventChance;
+
         if constexpr (std::is_same_v<TMissionData, FS_CampaignMission>)
         {
             if (!InData.Scene.IsEmpty() && InData.MissionType != EMissionType::TRAINING)

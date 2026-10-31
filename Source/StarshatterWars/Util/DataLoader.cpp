@@ -273,6 +273,13 @@ DataLoader::LoadSound(const char* name, USound*& snd, DWORD flags, bool optional
             Candidates.Add(Package+TEXT(".")+FPaths::GetCleanFilename(Package));
         }
     }
+    // Legacy training definitions use bare voice names, not asset paths.
+    if (Input.StartsWith(TEXT("Train-"), ESearchCase::IgnoreCase))
+    {
+        const FString Name = FPaths::GetBaseFilename(Input);
+        const FString Package = TEXT("/Game/Audio/Vox/Train/") + Name;
+        Candidates.AddUnique(Package + TEXT(".") + Name);
+    }
     for (const FString& Candidate : Candidates)
     {
         const FString Package=FPackageName::ObjectPathToPackageName(Candidate);

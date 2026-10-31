@@ -560,6 +560,11 @@ NavAI::SeekTarget()
         PreviousRoutePosition = Current;
         bHasPreviousRoutePosition = true;
         if (Arrived) {
+            // An RTB marker starts recovery; it is not a completed vector leg.
+            if (navpt->GetAction() == EInstruction::RTB && ship->IsDropship()) {
+                if (NavSystem* Navigation = ship->GetNavSystem()) Navigation->BeginRTBRecovery();
+                return Steer();
+            }
             const int CompletedIndex = ship->GetNavIndex(navpt);
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
             Instruction* Next = ship->GetNextNavPoint();
