@@ -9,6 +9,9 @@
 */
 
 #include "StarshatterKeyboardSettings.h"
+#include "StarshatterInputBindings.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
@@ -117,6 +120,9 @@ void UStarshatterKeyboardSettings::SetKeyboardConfig(const FStarshatterKeyboardC
 
 void UStarshatterKeyboardSettings::Sanitize()
 {
+    for (auto It=Keyboard.EnhancedBindings.CreateIterator();It;++It)
+        if (It.Key().IsEmpty() || !It.Value().IsValid()) It.RemoveCurrent();
+
     Keyboard.KeyRepeatDelaySeconds = FMath::Clamp(Keyboard.KeyRepeatDelaySeconds, 0.0f, 1.0f);
     Keyboard.KeyRepeatRateSeconds = FMath::Clamp(Keyboard.KeyRepeatRateSeconds, 0.01f, 0.50f);
 
@@ -174,6 +180,10 @@ void UStarshatterKeyboardSettings::ApplyToEnhancedInput(UObject* WorldContextObj
         UE_LOG(LogStarshatterKeyboardSettings, Log, TEXT("Keyboard disabled by settings."));
         return;
     }
+
+    StarshatterInputBindings::Refresh();
+    if (auto* GI=World->GetGameInstance())
+        if (auto* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->MapKeys();
 
     // Architecture hook:
     // - Boot-time: ensure mappings rebuild.

@@ -9,6 +9,7 @@
 */
 
 #include "StarshatterControlsSettings.h"
+#include "StarshatterInputBindings.h"
 
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
@@ -136,26 +137,26 @@ void UStarshatterControlsSettings::InstallOnlySelectedContext(UEnhancedInputLoca
     {
         UInputMappingContext* Ctx = ArcadeContext.Get();
         if (!Ctx) Ctx = ArcadeContext.LoadSynchronous();
-        if (Ctx) Subsystem->RemoveMappingContext(Ctx);
+        if (Ctx) Subsystem->RemoveMappingContext(StarshatterInputBindings::RuntimeContext(Ctx,Subsystem));
     }
 
     if (!FlightSimContext.IsNull())
     {
         UInputMappingContext* Ctx = FlightSimContext.Get();
         if (!Ctx) Ctx = FlightSimContext.LoadSynchronous();
-        if (Ctx) Subsystem->RemoveMappingContext(Ctx);
+        if (Ctx) Subsystem->RemoveMappingContext(StarshatterInputBindings::RuntimeContext(Ctx,Subsystem));
     }
 
     if (!HybridContext.IsNull())
     {
         UInputMappingContext* Ctx = HybridContext.Get();
         if (!Ctx) Ctx = HybridContext.LoadSynchronous();
-        if (Ctx) Subsystem->RemoveMappingContext(Ctx);
+        if (Ctx) Subsystem->RemoveMappingContext(StarshatterInputBindings::RuntimeContext(Ctx,Subsystem));
     }
 
     if (Selected)
     {
-        Subsystem->AddMappingContext(Selected, MappingPriority);
+        Subsystem->AddMappingContext(StarshatterInputBindings::RuntimeContext(Selected,Subsystem), MappingPriority);
     }
 
     Subsystem->RequestRebuildControlMappings();

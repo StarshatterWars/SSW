@@ -1,5 +1,7 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "StarshatterInputBindings.h"
+#include "StarshatterKeyboardSettings.h"
 #include "StarshatterSettingsSaveSubsystem.h"
 #include "NativeTerrainActor.h"
 
@@ -306,7 +308,7 @@ void USSWRuntimeSubsystem::OnSensorRangeUp()
     if (!SimInstance) return;
     if (UWorld* World = GetWorld())
         if (APlayerController* PC = World->GetFirstPlayerController())
-            if (!(PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+            if (!(StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift"))))
                 return;
     if (Ship* Player = SimInstance->GetPlayerShip())
         if (Sensor* S = Player->GetSensor())
@@ -318,7 +320,7 @@ void USSWRuntimeSubsystem::OnSensorRangeDown()
     if (!SimInstance) return;
     if (UWorld* World = GetWorld())
         if (APlayerController* PC = World->GetFirstPlayerController())
-            if (!(PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+            if (!(StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift"))))
                 return;
     if (Ship* Player = SimInstance->GetPlayerShip())
         if (Sensor* S = Player->GetSensor())
@@ -334,7 +336,7 @@ void USSWRuntimeSubsystem::GameLoop()
             static bool bRangeBound = false;
             if (!bRangeBound)
                 bRangeBound = true;
-            const bool bMod = PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift);
+            const bool bMod = StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift"));
             const bool bUp = PC->IsInputKeyDown(EKeys::RightBracket);
             const bool bDown = PC->IsInputKeyDown(EKeys::LeftBracket);
             static bool bWasUp = false, bWasDown = false;
@@ -1019,6 +1021,7 @@ void USSWRuntimeSubsystem::HandleExitState()
 
 void USSWRuntimeSubsystem::MapKeys()
 {
+    StarshatterInputBindings::ApplyLegacy(KeyCfg,UStarshatterKeyboardSettings::Get()->GetKeyboardConfig(),this);
     const int32 NumKeys = KeyCfg.GetNumKeys();
 
     if (NumKeys <= 0)

@@ -23,6 +23,7 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "StarshatterInputBindings.h"
 #include "QuantumDrive.h"
 #include "QuantumTravel.h"
 #include "QuantumTravelPopup.h"
@@ -383,6 +384,19 @@ void UMissionBriefingDlg::ExecFrame()
 void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+    // Flight updates use the world timer even while this menu widget is collapsed.
+    if (!bLiveMissionStarted)
+    {
+        ClearMissionRotationInput();
+        if (APlayerController* PC=GetOwningPlayer())
+            if (PC->WasInputKeyJustPressed(EKeys::Enter)) OnCommit();
+        ExecFrame();
+    }
+}
+
+void UMissionBriefingDlg::UpdateLiveMission()
+{
+    if (!bLiveMissionStarted) return;
     SyncMissionNavigationTarget();
     // Fallback for a plain mapped Boolean key when another action consumes
     // IA_AutoNav before its callback. The callback and this path are deduplicated.
@@ -402,15 +416,7 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) ClearMissionRotationInput();
 
-    if (APlayerController* PC = GetOwningPlayer())
-    {
-        if (PC->WasInputKeyJustPressed(EKeys::Enter))
-        {
-            OnCommit();
-        }
-    }
     ExecFrame();
-
     if (bLiveMissionStarted && !bMissionCompleteHandedOff)
     {
         Sim* Simulation = Sim::GetSim();
@@ -1586,6 +1592,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     auto* Input = LP ? LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
     if (!Input || !manager) return false;
     MissionMenuContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Game.IMC_Game"));
+    MissionMenuContext=StarshatterInputBindings::RuntimeContext(MissionMenuContext.Get(),this);
     UInputAction* Action = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Quit.IA_Quit"));
     if (!MissionMenuContext || !Action) return false;
 
@@ -1719,6 +1726,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice0"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Zero);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio0);
     }
@@ -1726,6 +1734,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice1"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::One);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio1);
     }
@@ -1733,6 +1742,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice2"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Two);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio2);
     }
@@ -1740,6 +1750,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice3"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Three);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio3);
     }
@@ -1747,6 +1758,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice4"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Four);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio4);
     }
@@ -1754,6 +1766,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         UInputAction* Choice=NewObject<UInputAction>(this,NAME_None,RF_Transient);
         Choice->ValueType=EInputActionValueType::Boolean;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice5"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Five);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio5);
     }
@@ -1762,6 +1775,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         Choice->ValueType=EInputActionValueType::Boolean;
         Choice->bConsumeInput=true;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice6"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Six);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio6);
     }
@@ -1770,6 +1784,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         Choice->ValueType=EInputActionValueType::Boolean;
         Choice->bConsumeInput=true;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice7"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Seven);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio7);
     }
@@ -1778,6 +1793,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         Choice->ValueType=EInputActionValueType::Boolean;
         Choice->bConsumeInput=true;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice8"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Eight);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio8);
     }
@@ -1786,6 +1802,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         Choice->ValueType=EInputActionValueType::Boolean;
         Choice->bConsumeInput=true;
         RadioChoiceActions.Add(Choice);
+        Choice->Rename(TEXT("SSW_RadioChoice9"),RadioChoiceContext.Get());
         RadioChoiceContext->MapKey(Choice,EKeys::Nine);
         MissionMenuInput->BindAction(Choice,ETriggerEvent::Started,this,&UMissionBriefingDlg::SelectFighterRadio9);
     }
@@ -1814,13 +1831,13 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
     // Use the transient wheel context so asset paths, Hold triggers,
     // or boolean action settings cannot suppress the one-frame wheel pulse.
-    MissionTargetZoomAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    MissionTargetZoomAction = NewObject<UInputAction>(this, TEXT("SSW_TargetZoom"), RF_Transient);
     MissionTargetZoomAction->ValueType = EInputActionValueType::Axis1D;
     MissionTargetZoomAction->bConsumeInput = true;
     MissionTargetContext->MapKey(MissionTargetZoomAction.Get(), EKeys::MouseWheelAxis);
     MissionMenuInput->BindAction(MissionTargetZoomAction.Get(), ETriggerEvent::Triggered,
         this, &UMissionBriefingDlg::OnTargetZoom);
-    FighterHUDToggleAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    FighterHUDToggleAction = NewObject<UInputAction>(this, TEXT("SSW_HUDVisibility"), RF_Transient);
     FighterHUDToggleAction->ValueType = EInputActionValueType::Boolean;
     MissionTargetContext->MapKey(FighterHUDToggleAction.Get(), EKeys::H);
     MissionMenuInput->BindAction(FighterHUDToggleAction.Get(), ETriggerEvent::Started,
@@ -1842,6 +1859,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     // Compatibility with the existing asset's current name.
     if (!FighterInputContext)
         FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Fighter.IMC_Fighter"));
+    FighterInputContext=StarshatterInputBindings::RuntimeContext(FighterInputContext.Get(),this);
     bAddedFighterInputContext = FighterInputContext && !Input->HasMappingContext(FighterInputContext.Get());
     if (bAddedFighterInputContext) Input->AddMappingContext(FighterInputContext.Get(), 1000);
     if (!FighterInputContext)
@@ -1954,7 +1972,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             UE_LOG(LogTemp, Display, TEXT("[AugmenterInput] %s -> %s"), *Mapping.Key.ToString(), *BoostAction->GetPathName());
         }
     }
-    if (AutoNavInputContext->GetMappings().Num()) Input->AddMappingContext(AutoNavInputContext.Get(), 1105);
+    if (AutoNavInputContext->GetMappings().Num()) { StarshatterInputBindings::RegisterContext(AutoNavInputContext.Get()); Input->AddMappingContext(AutoNavInputContext.Get(), 1105); }
     else UE_LOG(LogTemp, Error, TEXT("[AutoNavInput] No IA_AutoNav mapping found in the active fighter/menu contexts."));
     BindWeaponAction(TEXT("IA_FirePrimary"), ETriggerEvent::Triggered, &UMissionBriefingDlg::FireMissionPrimary);
     BindWeaponAction(TEXT("IA_FireSecondary"), ETriggerEvent::Started, &UMissionBriefingDlg::FireMissionSecondary);
@@ -1996,7 +2014,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     BindWeaponAction(TEXT("IA_TargetSubsystemNext"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystem);
     BindWeaponAction(TEXT("IA_TargetSubsystemPrevious"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystemPrevious);
     BindWeaponAction(TEXT("IA_TargetHostileThreat"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionHostileThreat);
-    FighterWeaponCycleAction = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+    FighterWeaponCycleAction = NewObject<UInputAction>(this, TEXT("SSW_WeaponCycle"), RF_Transient);
     FighterWeaponCycleAction->ValueType = EInputActionValueType::Boolean;
     MissionTargetContext->MapKey(FighterWeaponCycleAction.Get(), EKeys::BackSpace);
     MissionMenuInput->BindAction(FighterWeaponCycleAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::CycleFighterWeapon);
@@ -2027,7 +2045,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         if (!bQuantumMapped) MissionTargetContext->MapKey(QuantumMenuAction.Get(), EKeys::Q);
         MissionMenuInput->BindAction(QuantumMenuAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleQuantumTravel);
     }
-    Input->AddMappingContext(MissionTargetContext.Get(), 1001);
+    StarshatterInputBindings::RegisterContext(MissionTargetContext.Get()); Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
@@ -2052,14 +2070,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     {
         if (WeakThis.IsValid()) WeakThis->HandleMissionMenuAction(Choice);
     }, QuitMissionMenuClass);
-    // The briefing widget is collapsed during flight, so use a world timer.
-    FTimerManagerTimerParameters TravelTimerParameters;
-    TravelTimerParameters.bLoop = true;
-    TravelTimerParameters.bMaxOncePerFrame = true;
-    GetWorld()->GetTimerManager().SetTimer(TravelPresentationTimer,
-        FTimerDelegate::CreateWeakLambda(this, [this]()
-        { if (GetWorld()) UpdateTravelPresentation(GetWorld()->GetDeltaSeconds()); }),
-        1.f / 60.f, TravelTimerParameters);
+    StartLiveSessionUpdates();
     return true;
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
@@ -2165,7 +2176,7 @@ void UMissionBriefingDlg::NextMissionTarget()
     bNextTargetHeld = true;
     // Do not also advance when the user invokes Shift+T for reverse targeting.
     APlayerController* PC = GetOwningPlayer();
-    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
+    if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
     CycleMissionTarget(1);
 }
 void UMissionBriefingDlg::ReleaseNextMissionTarget() { bNextTargetHeld = false; }
@@ -2341,7 +2352,7 @@ void UMissionBriefingDlg::CycleFighterWeapon()
 {
     if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid()) return;
     APlayerController* PC = GetOwningPlayer();
-    const bool Primary = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    const bool Primary = PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
     FighterHUDDetails->CycleWeapon(Primary);
 }
 
@@ -2406,7 +2417,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
-    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))) return;
+    if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
     bFighterHUDVisible = !bFighterHUDVisible;
     if (!bFighterHUDVisible && FighterHUDDetails.IsValid())
     {
@@ -2821,7 +2832,7 @@ void UMissionBriefingDlg::UpdateFighterRadioInput()
     if (!Input || !RadioChoiceContext) return;
     if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsRadioOpen())
     {
-        if (!Input->HasMappingContext(RadioChoiceContext.Get())) Input->AddMappingContext(RadioChoiceContext.Get(),1100);
+        if (!Input->HasMappingContext(RadioChoiceContext.Get())) { StarshatterInputBindings::RegisterContext(RadioChoiceContext.Get()); Input->AddMappingContext(RadioChoiceContext.Get(),1100); }
     }
     else Input->RemoveMappingContext(RadioChoiceContext.Get());
 }
@@ -2909,7 +2920,7 @@ void UMissionBriefingDlg::ApplyMissionRotation(int32 Axis, float Value)
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused())
     { Player->ClearManualRotationInput(); return; }
     APlayerController* PC = GetOwningPlayer();
-    if (PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+    if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift"))))
     {
         Player->SetManualRotationAxis(Axis, 0.0f);
         return;
@@ -2946,7 +2957,7 @@ void UMissionBriefingDlg::ApplyMissionShields(int32 Command)
     // Plain S/X can also fire while the Shift chord is active; give full/zero priority.
     if (APlayerController* PC = GetOwningPlayer())
     {
-        if (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift))
+        if (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))
         {
             if (Command == 1) Command = 2;
             if (Command == -1) Command = -2;
@@ -3006,7 +3017,7 @@ void UMissionBriefingDlg::ReleaseMissionVerticalThrust() { ApplyMissionTranslati
 void UMissionBriefingDlg::OnMissionAugmenter()
 {
     APlayerController* PC = GetOwningPlayer();
-    const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    const bool Shift = PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
     ApplyMissionAugmenter(!Shift);
 }
 void UMissionBriefingDlg::ReleaseMissionAugmenter() { ApplyMissionAugmenter(false); }
@@ -3136,7 +3147,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
             MissionMenuInput->BindAction(Action, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
         }
     }
-    Input->AddMappingContext(MissionCameraContext.Get(), 1002);
+    StarshatterInputBindings::RegisterContext(MissionCameraContext.Get()); Input->AddMappingContext(MissionCameraContext.Get(), 1002);
 }
 
 void UMissionBriefingDlg::ReleaseMissionCameraCommand(const FInputActionValue&, int32 Command)
@@ -3151,7 +3162,7 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
 {
     if (!CanUseFighterHUD() || !MissionCameraRig || !GetWorld() || GetWorld()->IsPaused()) return;
     APlayerController* PC = GetOwningPlayer();
-    const bool Shift = PC && (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift));
+    const bool Shift = PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
     // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
     if ((Command == 0 || Command == 2) && Shift) return;
     if (Command >= 10)
@@ -3548,7 +3559,7 @@ void UMissionBriefingDlg::ToggleContactsPanel()
 void UMissionBriefingDlg::CycleMissionSensor()
 {
     APlayerController* SensorPC = GetOwningPlayer();
-    if (SensorPC && (SensorPC->IsInputKeyDown(EKeys::LeftShift) || SensorPC->IsInputKeyDown(EKeys::RightShift) || SensorPC->IsInputKeyDown(EKeys::LeftControl) || SensorPC->IsInputKeyDown(EKeys::RightControl))) return;
+    if (SensorPC && (StarshatterInputBindings::IsModifierDown(SensorPC,TEXT("Shift")) || SensorPC->IsInputKeyDown(EKeys::LeftControl) || SensorPC->IsInputKeyDown(EKeys::RightControl))) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim(); Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
     if (!P || P->IsDead()) return;
@@ -3899,4 +3910,19 @@ void UMissionBriefingDlg::HandleTravelSystemShown()
     PendingTravelLevel=nullptr;
     TravelRevealAt=GetWorld()->GetTimeSeconds()+1.5;
     UE_LOG(LogTemp,Display,TEXT("[Travel] Destination system presentation ready: %s"),*MissionSystemPackage);
+}
+
+void UMissionBriefingDlg::StartLiveSessionUpdates()
+{
+    if (!GetWorld()) return;
+    FTimerManagerTimerParameters TimerParameters;
+    TimerParameters.bLoop=true;
+    TimerParameters.bMaxOncePerFrame=true;
+    GetWorld()->GetTimerManager().SetTimer(TravelPresentationTimer,
+        FTimerDelegate::CreateWeakLambda(this,[this]()
+        {
+            if (!GetWorld() || !bLiveMissionStarted) return;
+            UpdateLiveMission();
+            if (bLiveMissionStarted) UpdateTravelPresentation(GetWorld()->GetDeltaSeconds());
+        }),0.000001f,TimerParameters);
 }

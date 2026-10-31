@@ -16,7 +16,7 @@
     - Click a row to select an action, then press a key to stage a new bind.
     - Apply commits ALL pending changes to UStarshatterKeyboardSettings (config-backed CDO)
       and applies to runtime via UStarshatterKeyboardSubsystem.
-    - Clear removes the CURRENT selected action binding (staged until Apply).
+    - Clear restores the CURRENT selected action default (staged until Apply).
 
     IMPORTANT
     =========
@@ -31,7 +31,7 @@
 #include "InputCoreTypes.h"
 
 #include "GameStructs.h" // EStarshatterInputAction
-#include "KeyDlg.generated.h"
+
 
 class UButton;
 class UTextBlock;
@@ -39,6 +39,9 @@ class UScrollBox;
 class UVerticalBox;
 class UHorizontalBox;
 class UOptionsScreen;
+class UInputMappingContext;
+#include "EnhancedActionKeyMapping.h"
+#include "KeyDlg.generated.h"
 
 UCLASS()
 class STARSHATTERWARS_API UKeyDlg : public UBaseScreen
@@ -55,6 +58,11 @@ public:
 
     // Key capture:
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+    virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnMouseWheel(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnAnalogValueChanged(const FGeometry& Geometry,const FAnalogInputEvent& Event) override;
 
     // BaseScreen polling hook (kept for parity; no polling required)
     virtual void ExecFrame(double DeltaTime) override;
@@ -78,6 +86,8 @@ private:
     void BuildKeyRows();
     void BuildKeyList();
     void AppendFighterHUDBindings();
+    UVerticalBox* CategoryBox(const FString& Category);
+    bool CaptureKey(FKey Key);
 
     // Model/UI
     void RefreshDisplayFromSettings();
@@ -107,7 +117,22 @@ private:
 private:
     bool bDelegatesBound = false;
 
+    friend class FKeyboardRemappingTest;
     bool bCapturing = false;
+    FString SelectedEnhancedId;
+    double CaptureStarted=0;
+    FVector2D CaptureMouseDelta=FVector2D::ZeroVector;
+    TMap<FString,FKey> PendingEnhanced;
+    TSet<FString> PendingEnhancedClears;
+    TMap<FString,TWeakObjectPtr<UVerticalBox>> CategoryBoxes;
+    struct FEnhancedRow
+    {
+        FEnhancedActionKeyMapping Mapping;
+        TObjectPtr<UButton> Button=nullptr;
+        TObjectPtr<UTextBlock> KeyText=nullptr;
+    };
+    TMap<FString,FEnhancedRow> EnhancedRows;
+    UPROPERTY(Transient) TArray<TObjectPtr<UInputMappingContext>> BindingContexts;
 
     EStarshatterInputAction SelectedAction = EStarshatterInputAction::Pause;
     bool bHasSelection = false;

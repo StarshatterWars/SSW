@@ -18,6 +18,10 @@
 =============================================================================*/
 
 #include "KeyDlg.h"
+#include "StarshatterInputBindings.h"
+#include "StarshatterControlsSettings.h"
+#include "InputAction.h"
+#include "InputModifiers.h"
 #include "StarshatterInputLabels.h"
 #include "InputMappingContext.h"
 #include "EnhancedActionKeyMapping.h"
@@ -266,7 +270,7 @@ void UKeyDlg::NativeConstruct()
     bCapturing = false;
     bHasSelection = false;
     PendingRemaps.Reset();
-    PendingClears.Reset();
+    PendingClears.Reset(); PendingEnhanced.Reset(); PendingEnhancedClears.Reset();
 
     RefreshDisplayFromSettings();
     SetKeyboardFocus();
@@ -317,6 +321,8 @@ void UKeyDlg::BuildKeyRows()
     VBox->ClearChildren();
     RowMap.Reset();
     ButtonToAction.Reset();
+    EnhancedRows.Reset(); BindingContexts.Reset(); CategoryBoxes.Reset();
+    bHasSelection=false; bCapturing=false; SelectedEnhancedId.Reset();
     SelectedRowButton.Reset();
 
     // -------------------------
@@ -386,422 +392,233 @@ void UKeyDlg::ApplyStandardValueTextStyle(UTextBlock* Block) const
     Block->SetJustification(ETextJustify::Right);
 }
 
-void UKeyDlg::BuildKeyList()
+UVerticalBox* UKeyDlg::CategoryBox(const FString& Category)
 {
-    if (!KeyListVBox || !WidgetTree)
-        return;
-
-    KeyListVBox->ClearChildren();
-
-    const UEnum* Enum = StaticEnum<EStarshatterInputAction>();
-    if (!Enum)
-        return;
-
-    const int32 EnumCount = Enum->NumEnums();
-
-    for (int32 i = 0; i < EnumCount; ++i)
-    {
-        const FString Name = Enum->GetNameStringByIndex(i);
-        const int64 Value = Enum->GetValueByIndex(i);
-
-        if (Name.EndsWith(TEXT("_MAX")) || Name.EndsWith(TEXT("MAX")))
-            continue;
-
-        if (!Enum->IsValidEnumValue(Value))
-            continue;
-
-        const EStarshatterInputAction Action = (EStarshatterInputAction)Value;
-        if (Action==EStarshatterInputAction::None) continue;
-
-        // -----------------------------
-        // Create Row Container
-        // -----------------------------
-        UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-        if (!Row)
-            continue;
-
-       
-        // -----------------------------
-        // LEFT: Action Button (50%)
-        // -----------------------------
-        UButton* RowBtn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
-        UTextBlock* ActionText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-
-        if (!RowBtn || !ActionText)
-            continue;
-        StyleButton_Default(RowBtn, 18);
-        ActionText->SetText(FText::FromString(ActionToDisplayString(Action).ToUpper()));
-        ActionText->SetColorAndOpacity(UITextColor);
-        ActionText->SetJustification(ETextJustify::Left);
-
-        RowBtn->SetContent(ActionText);
-        RowBtn->OnPressed.AddUniqueDynamic(this, &UKeyDlg::OnRowButtonPressed);
-
-        if (UHorizontalBoxSlot* LeftSlot = Row->AddChildToHorizontalBox(RowBtn))
-        {
-            FSlateChildSize ActionWidth(ESlateSizeRule::Fill); ActionWidth.Value=2.f;
-            LeftSlot->SetSize(ActionWidth);
-            LeftSlot->SetHorizontalAlignment(HAlign_Fill);
-            LeftSlot->SetVerticalAlignment(VAlign_Center);
-            LeftSlot->SetPadding(FMargin(0.f, 4.f, 8.f, 4.f));
-        }
-
-        UTextBlock* TypeText=WidgetTree->ConstructWidget<UTextBlock>();
-        TypeText->SetText(UStarshatterInputLabels::GetValueTypeLabel(EInputActionValueType::Boolean));
-        ApplyStandardValueTextStyle(TypeText);
-        if (auto* TypeSlot=Row->AddChildToHorizontalBox(TypeText))
-        {
-            TypeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            TypeSlot->SetVerticalAlignment(VAlign_Center);
-            TypeSlot->SetPadding(FMargin(12.f,4.f));
-        }
-
-        // -----------------------------
-        // RIGHT: Key Text (50%)
-        // -----------------------------
-        UTextBlock* KeyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-        if (!KeyText)
-            continue;
-
-        ApplyStandardValueTextStyle(KeyText);
-        KeyText->SetText(FText::FromString(TEXT("UNBOUND")));
-
-        if (UHorizontalBoxSlot* RightSlot = Row->AddChildToHorizontalBox(KeyText))
-        {
-            RightSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            RightSlot->SetHorizontalAlignment(HAlign_Right);
-            RightSlot->SetVerticalAlignment(VAlign_Center);
-            RightSlot->SetPadding(FMargin(8.f, 4.f, 0.f, 4.f));
-        }
-
-        // -----------------------------
-        // Add Row to VBox
-        // -----------------------------
-        if (UVerticalBoxSlot* VS = KeyListVBox->AddChildToVerticalBox(Row))
-        {
-            VS->SetPadding(FMargin(0.f, 2.f));
-            VS->SetHorizontalAlignment(HAlign_Fill);
-        }
-
-        // -----------------------------
-        // Store references
-        // -----------------------------
-        FKeyRowWidgets Widgets;
-        Widgets.RowButton = RowBtn;
-        Widgets.ActionText = ActionText;
-        Widgets.KeyText = KeyText;
-
-        RowMap.Add(Action, Widgets);
-        ButtonToAction.Add(RowBtn, Action);
-    }
-
-    // Select first row by default
-    if (!bHasSelection && RowMap.Num() > 0)
-    {
-        for (const TPair<EStarshatterInputAction, FKeyRowWidgets>& Pair : RowMap)
-        {
-            SelectAction(Pair.Key);
-            break;
-        }
-    }
-    AppendFighterHUDBindings();
+    if (auto* Found=CategoryBoxes.Find(Category)) return Found->Get();
+    auto* Header=WidgetTree->ConstructWidget<UTextBlock>();
+    Header->SetText(FText::FromString(Category));
+    Header->SetColorAndOpacity(FLinearColor(0.2f,0.85f,1.f));
+    auto Font=Header->GetFont();Font.Size=20;Header->SetFont(Font);
+    KeyListVBox->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,18,0,6));
+    auto* Box=WidgetTree->ConstructWidget<UVerticalBox>();
+    KeyListVBox->AddChildToVerticalBox(Box);
+    CategoryBoxes.Add(Category,Box);return Box;
 }
 
-// ------------------------------------------------------------
-// Selection + capture
-// ------------------------------------------------------------
+void UKeyDlg::BuildKeyList()
+{
+    if (!KeyListVBox || !WidgetTree) return;
+    KeyListVBox->ClearChildren();CategoryBoxes.Reset();
+    RowMap.Reset();ButtonToAction.Reset();EnhancedRows.Reset();BindingContexts.Reset();
+    bHasSelection=false;bCapturing=false;SelectedEnhancedId.Reset();
+    auto* Help=WidgetTree->ConstructWidget<UTextBlock>();
+    Help->SetText(FText::FromString(TEXT("SELECT A CONTROL TO REBIND. ESC CANCELS CAPTURE. APPLY SAVES CHANGES.")));
+    Help->SetAutoWrapText(true);Help->SetColorAndOpacity(UITextColor);
+    KeyListVBox->AddChildToVerticalBox(Help)->SetPadding(FMargin(0,0,0,8));
+    const TCHAR* Categories[]={TEXT("MOVEMENT & FLIGHT"),TEXT("CAMERA & VIEWS"),TEXT("WEAPONS"),TEXT("TARGETING"),TEXT("SENSORS"),TEXT("NAVIGATION & SHIP SYSTEMS"),TEXT("HUD & PANELS"),TEXT("COMMUNICATIONS"),TEXT("MODIFIER KEYS"),TEXT("GENERAL")};
+    for (const TCHAR* Category:Categories) CategoryBox(Category);
+    AppendFighterHUDBindings();
+    const auto* Enum=StaticEnum<EStarshatterInputAction>();
+    for (int32 Index=0;Index<Enum->NumEnums();++Index)
+    {
+        const FString Name=Enum->GetNameStringByIndex(Index);
+        if (Name.EndsWith(TEXT("MAX"))) continue;
+        const auto Action=static_cast<EStarshatterInputAction>(Enum->GetValueByIndex(Index));
+        if (Action==EStarshatterInputAction::None || Action==EStarshatterInputAction::Action0 || Action==EStarshatterInputAction::Action1 ||
+            Action==EStarshatterInputAction::TargetNext || Action==EStarshatterInputAction::TargetPrevious ||
+            Action==EStarshatterInputAction::CameraChase || Action==EStarshatterInputAction::CameraExternal) continue;
+        auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();
+        auto* Button=WidgetTree->ConstructWidget<UButton>();
+        auto* Label=WidgetTree->ConstructWidget<UTextBlock>();
+        auto* Key=WidgetTree->ConstructWidget<UTextBlock>();
+        StyleButton_Default(Button,18);
+        FKey OriginalKey;bool Shift=false,Control=false,Alt=false;
+        if(!GetDefaultKeyForAction(Action,OriginalKey,Shift,Control,Alt)) continue;
+        FString Caption=ActionToDisplayString(Action).ToUpper();
+        if(OriginalKey.IsValid()) Caption+=TEXT("  [")+FormatKeyStringWithMods(OriginalKey,Shift,Control,Alt).ToUpper()+TEXT("]");
+        Label->SetText(FText::FromString(Caption));Label->SetColorAndOpacity(UITextColor);
+        Label->SetAutoWrapText(true);Button->SetContent(Label);
+        Button->OnPressed.AddUniqueDynamic(this,&UKeyDlg::OnRowButtonPressed);
+        auto* RowSlot=Row->AddChildToHorizontalBox(Button);FSlateChildSize Size(ESlateSizeRule::Fill);Size.Value=3;RowSlot->SetSize(Size);RowSlot->SetPadding(FMargin(0,3,20,3));
+        ApplyStandardValueTextStyle(Key);
+        RowSlot=Row->AddChildToHorizontalBox(Key);RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));RowSlot->SetVerticalAlignment(VAlign_Center);
+        CategoryBox(StarshatterInputBindings::Category(Name))->AddChildToVerticalBox(Row);
+        FKeyRowWidgets Widgets;Widgets.RowButton=Button;Widgets.ActionText=Label;Widgets.KeyText=Key;
+        RowMap.Add(Action,Widgets);ButtonToAction.Add(Button,Action);
+    }
+}
+
+void UKeyDlg::AppendFighterHUDBindings()
+{
+    TArray<UInputMappingContext*> Contexts;
+    const TCHAR* Paths[]={TEXT("/Game/Input/IMC_Game.IMC_Game"),TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD")};
+    for (const TCHAR* Path:Paths) if(auto* Context=LoadObject<UInputMappingContext>(nullptr,Path)) Contexts.AddUnique(Context);
+    auto* Controls=UStarshatterControlsSettings::Get();
+    const TSoftObjectPtr<UInputMappingContext> Models[]={Controls->GetArcadeContext(),Controls->GetFlightSimContext(),Controls->GetHybridContext()};
+    for (const auto& Model:Models) if (!Model.IsNull()) if(auto* Context=Model.LoadSynchronous()) Contexts.AddUnique(Context);
+    Contexts.Add(StarshatterInputBindings::SupplementalContext(this));
+    for (auto* Context:Contexts)
+    {
+        BindingContexts.Add(Context);
+        for (const auto& Mapping:Context->GetMappings())
+        {
+            if (!Mapping.Action) continue;
+            const FString Id=StarshatterInputBindings::Id(Mapping);
+            if (EnhancedRows.Contains(Id)) continue;
+            auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();
+            auto* Button=WidgetTree->ConstructWidget<UButton>();
+            auto* Label=WidgetTree->ConstructWidget<UTextBlock>();
+            auto* Key=WidgetTree->ConstructWidget<UTextBlock>();
+            StyleButton_Default(Button,18);
+            FString Text=UStarshatterInputLabels::GetActionLabel(Mapping.Action).ToString().ToUpper();
+            // Original key distinguishes independently remappable directions/alternate bindings.
+            Text+=TEXT("  [")+Mapping.Key.GetDisplayName().ToString().ToUpper()+TEXT("]");
+            Label->SetText(FText::FromString(Text));Label->SetColorAndOpacity(UITextColor);Label->SetAutoWrapText(true);
+            Button->SetContent(Label);Button->OnPressed.AddUniqueDynamic(this,&UKeyDlg::OnRowButtonPressed);
+            auto* RowSlot=Row->AddChildToHorizontalBox(Button);FSlateChildSize Size(ESlateSizeRule::Fill);Size.Value=3;RowSlot->SetSize(Size);RowSlot->SetPadding(FMargin(0,3,20,3));
+            ApplyStandardValueTextStyle(Key);RowSlot=Row->AddChildToHorizontalBox(Key);RowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));RowSlot->SetVerticalAlignment(VAlign_Center);
+            CategoryBox(StarshatterInputBindings::Category(Mapping.Action->GetName()))->AddChildToVerticalBox(Row);
+            FEnhancedRow Item;Item.Mapping=Mapping;Item.Button=Button;Item.KeyText=Key;EnhancedRows.Add(Id,Item);
+        }
+    }
+}
 
 void UKeyDlg::OnRowButtonPressed()
 {
-    // Deterministic: find the pressed button
-    for (const TPair<TWeakObjectPtr<UButton>, EStarshatterInputAction>& Pair : ButtonToAction)
-    {
-        UButton* B = Pair.Key.Get();
-        if (!B) continue;
-
-        if (B->IsPressed())
+    for (const auto& Pair:EnhancedRows)
+        if (Pair.Value.Button && Pair.Value.Button->IsPressed())
         {
-            SelectAction(Pair.Value);
-            return;
+            SelectedEnhancedId=Pair.Key;bHasSelection=true;SelectedRowButton=Pair.Value.Button;
+            BeginCaptureForSelected();SetKeyboardFocus();return;
         }
-    }
-
-    // Fallback: keyboard focus (if it happens to work)
-    for (const TPair<TWeakObjectPtr<UButton>, EStarshatterInputAction>& Pair : ButtonToAction)
-    {
-        UButton* B = Pair.Key.Get();
-        if (!B) continue;
-
-        if (B->HasKeyboardFocus())
-        {
-            SelectAction(Pair.Value);
-            return;
-        }
-    }
+    for (const auto& Pair:ButtonToAction)
+        if (Pair.Key.IsValid() && Pair.Key->IsPressed()) {SelectAction(Pair.Value);return;}
 }
-
 void UKeyDlg::SelectAction(EStarshatterInputAction Action)
 {
-    SelectedAction = Action;
-    bHasSelection = true;
-
-    if (const FKeyRowWidgets* Row = RowMap.Find(Action))
-        SelectedRowButton = Row->RowButton;
-
-    BeginCaptureForSelected();
-    SetKeyboardFocus();
+    SelectedEnhancedId.Reset();SelectedAction=Action;bHasSelection=true;
+    if (auto* Row=RowMap.Find(Action)) SelectedRowButton=Row->RowButton;
+    BeginCaptureForSelected();SetKeyboardFocus();
 }
-
 void UKeyDlg::BeginCaptureForSelected()
 {
-    if (!bHasSelection)
-        return;
-
-    bCapturing = true;
-    PendingClears.Remove(SelectedAction);
+    if (!bHasSelection) return;
+    bCapturing=true;CaptureStarted=FPlatformTime::Seconds();CaptureMouseDelta=FVector2D::ZeroVector;
+    RefreshDisplayFromSettings();
 }
-
-// ------------------------------------------------------------
-// Key capture
-// ------------------------------------------------------------
-
-FReply UKeyDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+bool UKeyDlg::CaptureKey(FKey Key)
 {
-    const FKey PressedKey = InKeyEvent.GetKey();
-
-    // ESC = cancel/return
-    if (PressedKey == EKeys::Escape || PressedKey == EKeys::Virtual_Back)
+    if (!bCapturing || !bHasSelection || !Key.IsValid()) return false;
+    if (SelectedEnhancedId.IsEmpty() && (Key.IsMouseButton() || Key.IsGamepadKey() || Key.IsAxis1D() || Key.IsAxis2D() || Key.IsAxis3D())) return false;
+    if (SelectedEnhancedId.IsEmpty()) {PendingRemaps.Add(SelectedAction,Key);PendingClears.Remove(SelectedAction);}
+    else {PendingEnhanced.Add(SelectedEnhancedId,Key);PendingEnhancedClears.Remove(SelectedEnhancedId);}
+    bCapturing=false;RefreshDisplayFromSettings();return true;
+}
+FReply UKeyDlg::NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
+{
+    if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Virtual_Back)
     {
-        OnCancelClicked();
+        if (bCapturing) {bCapturing=false;RefreshDisplayFromSettings();}
+        else OnCancelClicked();
         return FReply::Handled();
     }
-
-    if (!bCapturing || !bHasSelection)
-        return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
-
-    if (!PressedKey.IsValid() || IsModifierKey(PressedKey))
-        return FReply::Handled();
-
-    PendingRemaps.Add(SelectedAction, PressedKey);
-    PendingClears.Remove(SelectedAction);
-
-    bCapturing = false;
-
-    RefreshDisplayFromSettings();
-    return FReply::Handled();
+    return CaptureKey(Event.GetKey())?FReply::Handled():Super::NativeOnKeyDown(Geometry,Event);
 }
-
-void UKeyDlg::HandleAccept() { OnApplyClicked(); }
-void UKeyDlg::HandleCancel() { OnCancelClicked(); }
-
-// ------------------------------------------------------------
-// Buttons
-// ------------------------------------------------------------
-
+FReply UKeyDlg::NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    return CaptureKey(Event.GetEffectingButton())?FReply::Handled():Super::NativeOnMouseButtonDown(Geometry,Event);
+}
+FReply UKeyDlg::NativeOnMouseWheel(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    FKey Key=Event.GetWheelDelta()>0?EKeys::MouseScrollUp:EKeys::MouseScrollDown;
+    if (const auto* Row=EnhancedRows.Find(SelectedEnhancedId))
+        if (Row->Mapping.Action && Row->Mapping.Action->ValueType!=EInputActionValueType::Boolean) Key=EKeys::MouseWheelAxis;
+    return CaptureKey(Key)?FReply::Handled():Super::NativeOnMouseWheel(Geometry,Event);
+}
+FReply UKeyDlg::NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if (bCapturing && FPlatformTime::Seconds()-CaptureStarted>0.35)
+        if (const auto* Row=EnhancedRows.Find(SelectedEnhancedId))
+            if (Row->Mapping.Action && Row->Mapping.Action->ValueType!=EInputActionValueType::Boolean)
+            {
+                CaptureMouseDelta+=Event.GetCursorDelta();
+                if (CaptureMouseDelta.GetAbsMax()>30)
+                    if (CaptureKey(FMath::Abs(CaptureMouseDelta.X)>FMath::Abs(CaptureMouseDelta.Y)?EKeys::MouseX:EKeys::MouseY)) return FReply::Handled();
+            }
+    return Super::NativeOnMouseMove(Geometry,Event);
+}
+FReply UKeyDlg::NativeOnAnalogValueChanged(const FGeometry& Geometry,const FAnalogInputEvent& Event)
+{
+    return FMath::Abs(Event.GetAnalogValue())>0.6f && CaptureKey(Event.GetKey())?FReply::Handled():Super::NativeOnAnalogValueChanged(Geometry,Event);
+}
+void UKeyDlg::HandleAccept() {OnApplyClicked();}
+void UKeyDlg::HandleCancel() {OnCancelClicked();}
 void UKeyDlg::OnClearClicked()
 {
-    if (!bHasSelection)
-        return;
-
-    PendingRemaps.Remove(SelectedAction);
-    PendingClears.Add(SelectedAction);
-
-    bCapturing = false;
-    RefreshDisplayFromSettings();
+    if (!bHasSelection) return;
+    if (SelectedEnhancedId.IsEmpty()) {PendingRemaps.Remove(SelectedAction);PendingClears.Add(SelectedAction);}
+    else {PendingEnhanced.Remove(SelectedEnhancedId);PendingEnhancedClears.Add(SelectedEnhancedId);}
+    bCapturing=false;RefreshDisplayFromSettings();
 }
-
-void UKeyDlg::Apply() { CommitPendingToSettings(); }
+void UKeyDlg::Apply() {CommitPendingToSettings();}
 void UKeyDlg::Cancel()
 {
-    PendingRemaps.Reset(); PendingClears.Reset(); bCapturing=false;
+    PendingRemaps.Reset();PendingClears.Reset();PendingEnhanced.Reset();PendingEnhancedClears.Reset();bCapturing=false;
     RefreshDisplayFromSettings();
 }
-
 void UKeyDlg::OnApplyClicked()
 {
     CommitPendingToSettings();
-
-    if (OptionsManager)
-        OptionsManager->ReturnFromKeyDlg();
-    else
-        SetVisibility(ESlateVisibility::Collapsed);
+    if (OptionsManager) OptionsManager->ReturnFromKeyDlg();else SetVisibility(ESlateVisibility::Collapsed);
 }
-
 void UKeyDlg::OnCancelClicked()
 {
-    PendingRemaps.Reset();
-    PendingClears.Reset();
-    bCapturing = false;
-
-    if (OptionsManager)
-        OptionsManager->ReturnFromKeyDlg();
-    else
-        SetVisibility(ESlateVisibility::Collapsed);
+    Cancel();if (OptionsManager) OptionsManager->ReturnFromKeyDlg();else SetVisibility(ESlateVisibility::Collapsed);
 }
-
-// ------------------------------------------------------------
-// Commit + refresh
-// ------------------------------------------------------------
-
 void UKeyDlg::CommitPendingToSettings()
 {
-    UStarshatterKeyboardSettings* Settings = UStarshatterKeyboardSettings::Get();
-    if (!Settings)
-        return;
-
-    Settings->Load();
-
-    FStarshatterKeyboardConfig Cfg = Settings->GetKeyboardConfig();
-
-    for (const EStarshatterInputAction A : PendingClears)
-        Cfg.RemappedKeys.Remove(A);
-
-    for (const TPair<EStarshatterInputAction, FKey>& Pair : PendingRemaps)
-        Cfg.RemappedKeys.Add(Pair.Key, Pair.Value);
-
-    Settings->SetKeyboardConfig(Cfg);
-    Settings->Save();
-
-    if (UStarshatterKeyboardSubsystem* KBSS = UStarshatterKeyboardSubsystem::Get(this))
-        KBSS->ApplySettingsToRuntime(this);
-
-    PendingRemaps.Reset();
-    PendingClears.Reset();
-
+    auto* Settings=UStarshatterKeyboardSettings::Get();Settings->Load();
+    auto Config=Settings->GetKeyboardConfig();
+    for (auto Action:PendingClears) Config.RemappedKeys.Remove(Action);
+    for (const auto& Pair:PendingRemaps) Config.RemappedKeys.Add(Pair.Key,Pair.Value);
+    for (const auto& Id:PendingEnhancedClears) Config.EnhancedBindings.Remove(Id);
+    for (const auto& Pair:PendingEnhanced) Config.EnhancedBindings.Add(Pair.Key,Pair.Value);
+    Settings->SetKeyboardConfig(Config);Settings->Save();
+    if (auto* Subsystem=UStarshatterKeyboardSubsystem::Get(this)) Subsystem->ApplySettingsToRuntime(this);
+    PendingRemaps.Reset();PendingClears.Reset();PendingEnhanced.Reset();PendingEnhancedClears.Reset();bCapturing=false;
     RefreshDisplayFromSettings();
 }
-
 void UKeyDlg::RefreshDisplayFromSettings()
 {
-    UStarshatterKeyboardSettings* Settings = UStarshatterKeyboardSettings::Get();
-    if (!Settings)
-        return;
-
-    Settings->Load();
-    const FStarshatterKeyboardConfig& Cfg = Settings->GetKeyboardConfig();
-
-    for (TPair<EStarshatterInputAction, FKeyRowWidgets>& Pair : RowMap)
+    auto* Settings=UStarshatterKeyboardSettings::Get();Settings->Load();const auto& Config=Settings->GetKeyboardConfig();
+    for (auto& Pair:RowMap)
     {
-        const EStarshatterInputAction Action = Pair.Key;
-        FKeyRowWidgets& W = Pair.Value;
-
-        if (!W.KeyText)
-            continue;
-
-        // 1) Pending clear
-        if (PendingClears.Contains(Action))
+        FKey Key;bool Shift=false,Ctrl=false,Alt=false;
+        GetDefaultKeyForAction(Pair.Key,Key,Shift,Ctrl,Alt);
+        if (!PendingClears.Contains(Pair.Key))
         {
-            W.KeyText->SetText(FText::FromString(TEXT("UNBOUND")));
-            continue;
+            if (const auto* Saved=Config.RemappedKeys.Find(Pair.Key)) Key=*Saved;
+            if (const auto* Pending=PendingRemaps.Find(Pair.Key)) Key=*Pending;
         }
-
-        // 2) Pending remap
-        if (const FKey* Pending = PendingRemaps.Find(Action))
+        const FString Text=bCapturing && SelectedEnhancedId.IsEmpty() && SelectedAction==Pair.Key?TEXT("PRESS A KEY..."):FormatKeyStringWithMods(Key,Shift,Ctrl,Alt);
+        Pair.Value.KeyText->SetText(FText::FromString(Text));
+    }
+    for (auto& Pair:EnhancedRows)
+    {
+        auto Mapping=Pair.Value.Mapping;
+        if (!PendingEnhancedClears.Contains(Pair.Key))
         {
-            W.KeyText->SetText(FText::FromString(KeyToDisplayString(*Pending)));
-            continue;
+            if (const auto* Saved=Config.EnhancedBindings.Find(Pair.Key)) Mapping.Key=*Saved;
+            if (const auto* Pending=PendingEnhanced.Find(Pair.Key)) Mapping.Key=*Pending;
         }
-
-        // 3) Saved override
-        if (const FKey* Saved = Cfg.RemappedKeys.Find(Action))
-        {
-            W.KeyText->SetText(FText::FromString(KeyToDisplayString(*Saved)));
-            continue;
-        }
-
-        // 4) Default fallback (legacy defmap)
-        {
-            FKey DefKey;
-            bool bShift = false, bCtrl = false, bAlt = false;
-            if (GetDefaultKeyForAction(Action, DefKey, bShift, bCtrl, bAlt))
-            {
-                W.KeyText->SetText(FText::FromString(FormatKeyStringWithMods(DefKey, bShift, bCtrl, bAlt)));
-                continue;
-            }
-        }
-
-        // 5) No mapping
-        W.KeyText->SetText(FText::FromString(TEXT("UNBOUND")));
+        Pair.Value.KeyText->SetText(bCapturing && SelectedEnhancedId==Pair.Key?FText::FromString(TEXT("PRESS A KEY...")):UStarshatterInputLabels::GetBindingKeyLabel(Mapping).ToUpper());
     }
 }
+FString UKeyDlg::ActionToDisplayString(EStarshatterInputAction Action) {return UStarshatterInputLabels::GetLegacyActionLabel(Action).ToString();}
+FString UKeyDlg::KeyToDisplayString(const FKey& Key) {return Key.IsValid()?Key.GetDisplayName().ToString():TEXT("UNBOUND");}
+bool UKeyDlg::IsModifierKey(const FKey& Key) {return Key.IsModifierKey();}
 
-// ------------------------------------------------------------
-// Display helpers
-// ------------------------------------------------------------
-
-FString UKeyDlg::ActionToDisplayString(EStarshatterInputAction Action)
+FReply UKeyDlg::NativeOnPreviewMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event)
 {
-    return UStarshatterInputLabels::GetLegacyActionLabel(Action).ToString();
-
-}
-
-FString UKeyDlg::KeyToDisplayString(const FKey& Key)
-{
-    if (!Key.IsValid())
-        return TEXT("UNBOUND");
-
-    return Key.GetDisplayName().ToString();
-}
-
-bool UKeyDlg::IsModifierKey(const FKey& Key)
-{
-    return Key == EKeys::LeftShift || Key == EKeys::RightShift ||
-        Key == EKeys::LeftControl || Key == EKeys::RightControl ||
-        Key == EKeys::LeftAlt || Key == EKeys::RightAlt ||
-        Key == EKeys::LeftCommand || Key == EKeys::RightCommand;
-}
-void UKeyDlg::AppendFighterHUDBindings()
-{
-    if (!KeyListVBox || !WidgetTree) return;
-    const TCHAR* ContextPaths[] = { TEXT("/Game/Input/IMC_Game.IMC_Game"), TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD") };
-    const TCHAR* ContextLabels[] = { TEXT("FLIGHT CONTROLS (REFERENCE)"), TEXT("FIGHTER HUD (REFERENCE)") };
-    for (int32 ContextIndex=0; ContextIndex<2; ++ContextIndex)
-    {
-    UInputMappingContext* IMC=LoadObject<UInputMappingContext>(nullptr,ContextPaths[ContextIndex]);
-    if (!IMC) continue;
-    // Section header
-    if (UTextBlock* Header = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass()))
-    {
-        Header->SetText(FText::FromString(ContextLabels[ContextIndex]));
-        Header->SetColorAndOpacity(UITextColor);
-        if (UVerticalBoxSlot* HS = KeyListVBox->AddChildToVerticalBox(Header))
-            HS->SetPadding(FMargin(0.f, 12.f, 0.f, 4.f));
-    }
-    for (const FEnhancedActionKeyMapping& M : IMC->GetMappings())
-    {
-        if (!M.Action) continue;
-        UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-        if (!Row) continue;
-        UTextBlock* ActionText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-        UTextBlock* KeyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-        if (!ActionText || !KeyText) continue;
-        ActionText->SetText(UStarshatterInputLabels::GetActionLabel(M.Action).ToUpper());
-        ActionText->SetAutoWrapText(true);
-        ActionText->SetColorAndOpacity(UITextColor);
-        KeyText->SetText(UStarshatterInputLabels::GetBindingKeyLabel(M).ToUpper());
-        ApplyStandardValueTextStyle(KeyText);
-        if (UHorizontalBoxSlot* L = Row->AddChildToHorizontalBox(ActionText))
-        {
-            L->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            L->SetPadding(FMargin(0.f, 4.f, 8.f, 4.f));
-        }
-        UTextBlock* TypeText=WidgetTree->ConstructWidget<UTextBlock>();
-        TypeText->SetText(UStarshatterInputLabels::GetActionTypeLabel(M.Action));
-        ApplyStandardValueTextStyle(TypeText);
-        if (auto* TypeSlot=Row->AddChildToHorizontalBox(TypeText))
-        {
-            TypeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            TypeSlot->SetVerticalAlignment(VAlign_Center);
-            TypeSlot->SetPadding(FMargin(12.f,4.f));
-        }
-        if (UHorizontalBoxSlot* R = Row->AddChildToHorizontalBox(KeyText))
-        {
-            R->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            R->SetHorizontalAlignment(HAlign_Right);
-            R->SetPadding(FMargin(8.f, 4.f, 0.f, 4.f));
-        }
-        if (UVerticalBoxSlot* VS = KeyListVBox->AddChildToVerticalBox(Row))
-            VS->SetPadding(FMargin(0.f, 2.f));
-    }
-    }
+    return CaptureKey(Event.GetEffectingButton())?FReply::Handled():Super::NativeOnPreviewMouseButtonDown(Geometry,Event);
 }

@@ -169,6 +169,9 @@ protected:
     void ToggleQuantumTravel();
     void CloseQuantumTravel();
     void UpdateTravelPresentation(float DeltaSeconds);
+    void StartLiveSessionUpdates();
+    void UpdateLiveMission();
+    friend class FMissionHiddenLiveTickTest;
     void ClearTravelPresentation(bool bStopUpdates = true);
     UFUNCTION() void HandleTravelSystemShown();
     UPROPERTY(Transient) TObjectPtr<UInputAction> QuantumMenuAction;

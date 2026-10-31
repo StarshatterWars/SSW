@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "StarshatterWarsCharacter.h"
+#include "StarshatterInputBindings.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -70,7 +71,7 @@ void AStarshatterWarsCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			Subsystem->AddMappingContext(StarshatterInputBindings::RuntimeContext(DefaultMappingContext,this), 0);
 		}
 	}
 	

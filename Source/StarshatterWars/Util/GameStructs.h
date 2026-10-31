@@ -4774,6 +4774,10 @@ struct FStarshatterKeyboardConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Keyboard")
 	TMap<EStarshatterInputAction, FKey> RemappedKeys;
+
+	// Stable per-binding overrides; separate positive/negative axis mappings remain independent.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|Keyboard")
+	TMap<FString, FKey> EnhancedBindings;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
