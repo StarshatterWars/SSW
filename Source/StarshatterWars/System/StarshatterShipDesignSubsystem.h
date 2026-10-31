@@ -79,6 +79,9 @@ class STARSHATTERWARS_API UStarshatterShipDesignSubsystem : public UGameInstance
 public:
     UFUNCTION(BlueprintCallable,Category="ShipDesign|Authoring")
     bool ReimportFighterEnginePorts();
+
+    UFUNCTION(BlueprintCallable, CallInEditor, Category="Import")
+    bool ReimportFalconFlightSystems();
 	// ---------- lifecycle ----------
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

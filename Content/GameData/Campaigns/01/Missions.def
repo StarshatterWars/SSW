@@ -112,7 +112,7 @@ mission: {
 	min_rank: 6,
 	desc:    "Learn to direct fleet operations. Practice orbital carrier operations.",
 	objective: "Training - Practice orbital carrier operations.",
-	start:   "05/09:30:00",
+	start:   "06/09:30:00",
 	script:  "T7",
 	type:    "Training"
 	system: "Janus"

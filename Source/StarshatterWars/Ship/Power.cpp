@@ -37,7 +37,7 @@ PowerSource::PowerSource(EPowerSource stype, double max_out, double f_ratio)
 		SYSTEM_CATEGORY::POWER_SOURCE,
 		(int)stype,
 		"Power",
-		source_value[(int)stype],
+		source_value[FMath::Clamp(static_cast<int>(stype) - 1, 0, 2)],
 		0),
 	max_output((float)max_out),
 	fuel_ratio((float)f_ratio),

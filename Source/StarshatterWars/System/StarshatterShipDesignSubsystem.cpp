@@ -4877,3 +4877,31 @@ bool UStarshatterShipDesignSubsystem::ReimportFighterEnginePorts()
     return false;
 #endif
 }
+
+bool UStarshatterShipDesignSubsystem::ReimportFalconFlightSystems()
+{
+#if WITH_EDITOR
+    UDataTable* Previous=ShipDesignDataTable;
+    auto* Table=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    const auto* Existing=Table?Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Falcon systems")):nullptr;
+    if(!Existing)return false;
+    const FShipDesign Original=*Existing;
+    ShipDesignDataTable=Table;
+    const FString File=FPaths::ProjectContentDir()/TEXT("GameData/Ships/Falcon.def");
+    const auto Ansi=StringCast<ANSICHAR>(*File);LoadShipDesign(Ansi.Get());
+    const auto* Parsed=Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Falcon systems"));
+    const bool Valid=Parsed && !Parsed->Power.IsEmpty() && Parsed->Power[0].Output>0 &&
+        !Parsed->NavSys.IsEmpty() && !Parsed->Drive.IsEmpty() && !Parsed->Thruster.IsEmpty();
+    FShipDesign Updated=Original;
+    if(Valid)
+    {
+        Updated.Power=Parsed->Power;Updated.Drive=Parsed->Drive;Updated.Thruster=Parsed->Thruster;
+        Updated.NavSys=Parsed->NavSys;Updated.Computer=Parsed->Computer;Updated.Sensor=Parsed->Sensor;
+    }
+    Table->AddRow(TEXT("Falcon"),Updated);ShipDesignDataTable=Previous;
+    if(Valid)Table->MarkPackageDirty();
+    return Valid;
+#else
+    return false;
+#endif
+}
