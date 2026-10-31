@@ -22,6 +22,8 @@
 #include "Engine/Texture2D.h"
 
 #include "IntelListObject.h"
+#include "IntelLVElement.h"
+#include "MissionUIStyle.h"
 #include "CmpnScreen.h"
 #include "Campaign.h"
 #include "CombatEvent.h"
@@ -60,6 +62,14 @@ void UCmdIntelDlg::SetParentCmdDlg(UCmdDlg* InParentCmdDlg)
 // +----------------------------------------------------------------------+
 // | NativeConstruct                                                      |
 // +----------------------------------------------------------------------+
+
+TSharedRef<SWidget> UCmdIntelDlg::RebuildWidget()
+{
+    if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"));
+    BindFormWidgets();
+    BuildTwoPanelLayout();
+    return Super::RebuildWidget();
+}
 
 void UCmdIntelDlg::NativeConstruct()
 {
@@ -182,8 +192,13 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 	LeftContents->AddChildToVerticalBox(MakeText(TEXT("INTEL"), 18, FLinearColor(0.95f, 0.97f, 1.f)));
 	IntelCountText = MakeText(TEXT("0 REPORTS"), 14, FLinearColor(0.71f, 0.81f, 0.88f));
 	LeftContents->AddChildToVerticalBox(IntelCountText)->SetPadding(FMargin(0.f, 4.f, 0.f, 12.f));
-	if (!IntelList)
-		IntelList = WidgetTree->ConstructWidget<UListView>(UListView::StaticClass(), TEXT("IntelList"));
+	// Replace the Blueprint list with a native virtualized report list.
+    if (IntelList) { IntelList->OnItemSelectionChanged().RemoveAll(this); IntelList->RemoveFromParent(); }
+    IntelList = WidgetTree->ConstructWidget<UIntelReportList>(UIntelReportList::StaticClass(), TEXT("NativeIntelList"));
+    IntelList->OnItemSelectionChanged().AddUObject(this, &UCmdIntelDlg::OnNewsSelectionChanged);
+    IntelList->SetSelectionMode(ESelectionMode::Single);
+    LeftScroll->RemoveChild(LeftContents);
+    LeftCard->SetContent(LeftContents);
 	IntelList->RemoveFromParent();
 	IntelList->SetVisibility(ESlateVisibility::Visible);
 	if (UVerticalBoxSlot* ListSlot = LeftContents->AddChildToVerticalBox(IntelList))
@@ -252,7 +267,13 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 		TopSlot->SetHorizontalAlignment(HAlign_Fill);
 		TopSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
 	}
-	RightContents->AddChildToVerticalBox(IntelMessageText);
+    RightContents->AddChildToVerticalBox(IntelMessageText);
+    if (AudioButton)
+    {
+        AudioButton->RemoveFromParent();
+        MissionUIStyle::ApplyActionButtonStyle(AudioButton, TEXT("Blue"));
+        RightContents->AddChildToVerticalBox(AudioButton)->SetPadding(FMargin(0.f, 16.f, 0.f, 0.f));
+    }
 }
 
 void UCmdIntelDlg::RefreshIntelRows()
@@ -314,7 +335,7 @@ void UCmdIntelDlg::ShowIntelDlg()
 				if (UCanvasPanelSlot* ChildSlot = Cast<UCanvasPanelSlot>(Child ? Child->Slot : nullptr))
 				{
 					ChildSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-					ChildSlot->SetOffsets(FMargin(0.f));
+					ChildSlot->SetOffsets(Child->GetName() == TEXT("IntelTwoPanel") ? FMargin(12.f) : FMargin(0.f));
 					ChildSlot->SetAutoSize(false);
 				}
 			}
@@ -351,21 +372,27 @@ void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
 {
 	Campaign* Current = Campaign::GetCampaign();
 	if (!Current)
-		return;
+    {
+        CampaignPtr = nullptr;
+        if (IntelList) IntelList->ClearListItems();
+        ClearNewsDetails();
+        RefreshIntelRows();
+        return;
+    }
 
 	const double CurrentUpdateTime = Current->GetUpdateTime();
 
-	if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime)
+	if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime ||
+        (IntelList && IntelList->GetNumItems() != Current->GetEvents().size()))
 	{
-		CampaignPtr = Current;
-		UpdateTime = CurrentUpdateTime;
-
-		if (IntelList)
-		{
-			IntelList->ClearListItems();
-		}
-
-		ClearNewsDetails();
+        if (CampaignPtr != Current)
+        {
+            if (IntelList) IntelList->ClearListItems();
+            ClearNewsDetails();
+        }
+        CampaignPtr = Current;
+        UpdateTime = CurrentUpdateTime;
+		AppendNewEventsIfAny();
 	}
 }
 
@@ -378,6 +405,10 @@ void UCmdIntelDlg::AppendNewEventsIfAny()
 	if (!CampaignPtr || !IntelList)
 		return;
 
+	CombatEvent* PreviousEvent = nullptr;
+	if (UIntelListObject* Previous = Cast<UIntelListObject>(IntelList->GetSelectedItem())) PreviousEvent = Previous->EventPtr;
+	IntelList->ClearSelection();
+	ClearNewsDetails();
 	IntelList->ClearListItems();
 
 	List<CombatEvent>& Events = CampaignPtr->GetEvents();
@@ -405,10 +436,12 @@ void UCmdIntelDlg::AppendNewEventsIfAny()
 		Item->NewsAudio = Info->AudioFile() ? UTF8_TO_TCHAR(Info->AudioFile()) : TEXT("");
 
 		IntelList->AddItem(Item);
+		if (Info == PreviousEvent) IntelList->SetSelectedItem(Item);
 	}
 
 	AutoScrollToFirstUnreadIfNeeded();
 	RefreshIntelRows();
+	if (GetVisibility() == ESlateVisibility::Visible) AutoSelectFirstItemIfNeeded();
 }
 
 // +----------------------------------------------------------------------+
@@ -519,7 +552,10 @@ void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 	if (IntelList)
 	{
 		IntelList->RequestRefresh();
-	}
+        for (UUserWidget* Entry : IntelList->GetDisplayedEntryWidgets())
+            if (UIntelLVElement* Report = Cast<UIntelLVElement>(Entry))
+                Report->NativeOnListItemObjectSet(Report->GetListItem<UIntelListObject>());
+    }
 }
 
 // +----------------------------------------------------------------------+

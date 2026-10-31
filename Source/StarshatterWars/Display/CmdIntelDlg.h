@@ -49,10 +49,12 @@ UCLASS()
 class STARSHATTERWARS_API UCmdIntelDlg : public UBaseScreen
 {
 	GENERATED_BODY()
+	friend class FIntelNativeReportsTest;
 
 public:
 	UCmdIntelDlg(const FObjectInitializer& ObjectInitializer);
 
+	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
