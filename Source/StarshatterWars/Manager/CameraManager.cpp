@@ -904,7 +904,10 @@ CameraManager::LaunchBayChase(double seconds)
     // Capture the known-good 180-degree view ONCE while staged. The old
     // implementation moved this camera with the fighter each frame and
     // thereby immediately left the carrier bay when LAUNCH was pressed.
-    if (!bLaunchBayAnchorValid || LaunchBayAnchorCarrier != Carrier)
+    // Presentation binding can complete after the first ALERT tick. Refresh the
+    // parked anchor until launch begins; then hold it fixed through departure.
+    if (!bLaunchBayAnchorValid || LaunchBayAnchorCarrier != Carrier ||
+        ship->GetFlightPhase() == EOPSMode::ALERT)
     {
         const FVector Forward = ship->GetCam().vpn().GetSafeNormal();
         const FVector Up = ship->GetCam().vup().GetSafeNormal();
@@ -943,8 +946,8 @@ CameraManager::LaunchBayChase(double seconds)
 
     // Remain physically inside the carrier bay while tracking the moving
     // fighter. Normal chase resumes only after the authored launch exit.
-    camera.MoveTo(CameraLocation);
-    camera.LookAt(Focus);
+    const FVector ViewUp = Carrier ? Carrier->GetCam().vup() : ship->GetCam().vup();
+    camera.LookAt(Focus, CameraLocation, ViewUp);
 }
 
 // +--------------------------------------------------------------------+

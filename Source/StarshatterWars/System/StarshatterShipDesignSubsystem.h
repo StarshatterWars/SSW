@@ -1,7 +1,7 @@
 /*=============================================================================
 	Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright (c) 2025–2026.
+	Copyright (c) 2025ï¿½2026.
 
 	SUBSYSTEM:    StarshatterShipDesignSubsystem (Unreal Engine)
 	FILE:         StarshatterShipDesignSubsystem.h / .cpp
@@ -112,6 +112,7 @@ public:
 private:
     friend class FNativeHullSkinTest;
     friend class FZodiacPropulsionTest;
+    friend class FRecoveryNativeScaleTest;
 	// ---------- current-ship scratch ----------
 	void BeginDesignParse(const char* Fn);
 	void FinalizeDesignParse();
@@ -120,7 +121,7 @@ private:
 
 	const FShipDesign* FindDesignByString(const FString& Name) const;
 
-	// “Ship root” parser calls these:
+	// ï¿½Ship rootï¿½ parser calls these:
 	void ParsePower(TermStruct* val, const char* fn);
 	void ParseDrive(TermStruct* val, const char* fn);
 	void ParseQuantumDrive(TermStruct* Val, const char* Fn);

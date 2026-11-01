@@ -117,14 +117,14 @@ FVector ACarrierActor::ConvertDeckWorldToUE(const FVector& LegacyWorld) const
     const Ship* Carrier = GetCarrierSimulation();
     if (!Carrier) return LegacyWorld;
 
-    // Legacy simulation basis is right/up/forward. UE actor local axes are
-    // forward/right/up; actor transform supplies actual BP/model scale ONCE.
+    // FlightDeck::Orient already applied native scale in simulation coordinates.
+    // Convert only orientation/translation here, so camera and fighter agree.
     const FVector Delta = LegacyWorld - Carrier->GetLocation();
     const FVector Local(
         FVector::DotProduct(Delta, Carrier->GetCam().vpn().GetSafeNormal()),
         FVector::DotProduct(Delta, Carrier->GetCam().vrt().GetSafeNormal()),
         FVector::DotProduct(Delta, Carrier->GetCam().vup().GetSafeNormal()));
-    return GetActorTransform().TransformPosition(Local);
+    return GetActorTransform().TransformPositionNoScale(Local);
 }
 
 FVector ACarrierActor::ConvertDeckFighterToUE(Ship* Fighter)

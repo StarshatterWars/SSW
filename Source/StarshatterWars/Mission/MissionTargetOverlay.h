@@ -149,7 +149,7 @@ public:
             const int32 Index=Side?(Direction.X<0?0:1):(Direction.Y<0?2:3);
             const FLinearColor Color=TargetColor.Get();
             const FVector2D Native=ChaseBrushes[Index].ImageSize;
-            const FVector2D D=Native*(32.0*HudScale/FMath::Max(1.0,FMath::Max(Native.X,Native.Y)));
+            const FVector2D D=Native; // Native 64x64 chase art; no HUD enlargement.
             if (ChaseTextures[Index].IsValid())
                 FSlateDrawElement::MakeBox(Elements,Layer+1,Geometry.ToPaintGeometry(FVector2f(D),
                     FSlateLayoutTransform(FVector2f(Center-D*0.5))),&ChaseBrushes[Index],ESlateDrawEffect::None,Color);

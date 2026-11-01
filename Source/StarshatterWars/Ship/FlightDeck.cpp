@@ -21,7 +21,6 @@
 #include "Logging/LogMacros.h"
 
 #include "Ship.h"
-#include "ShipActor.h"
 #include "ShipManager.h"
 #include "ShipDesign.h"
 #include "SimElement.h"
@@ -56,23 +55,13 @@ static USound* catapult_sound = 0;
 
 namespace
 {
-	constexpr double kLaunchDeckShiftLeftUnits = 15.0; // 40
-	constexpr double kLaunchDeckShiftDownUnits = 68.0; // 50
+    // Simulation spot coordinates come from the legacy definition. Visual bay
+    // alignment belongs to carrier presentation, never an invented physics offset.
+    FVector GetLaunchDeckPresentationOffset(const FlightDeck*, const Ship*)
+    {
+        return FVector::ZeroVector;
+    }
 
-	FVector GetLaunchDeckPresentationOffset(const FlightDeck* Deck, const Ship* Carrier)
-	{
-		if (!Deck || !Carrier || !Deck->IsLaunchDeck())
-			return FVector::ZeroVector;
-
-		const FVector Right = Carrier->GetCam().vrt().GetSafeNormal();
-		const FVector Up    = Carrier->GetCam().vup().GetSafeNormal();
-
-		if (Right.IsNearlyZero() || Up.IsNearlyZero())
-			return FVector::ZeroVector;
-
-		return (-Right * kLaunchDeckShiftLeftUnits) +
-		       (-Up    * kLaunchDeckShiftDownUnits);
-	}
 }
 
 // +======================================================================+
@@ -859,19 +848,10 @@ FlightDeck::Orient(const Physical* rep)
 	);
 
 	const FTransform RepXform(CamM);
-    // Native carrier actors scale model-space deck coordinates. Recovery steering
-    // and collision must use that same metric, rather than scaling only the HUD.
-    // Launch placement has its own established presentation path and is unchanged.
-    FVector RecoveryScale = FVector::OneVector;
-    if (IsRecoveryDeck() && carrier)
-        if (const AShipActor* Actor = carrier->GetNativePresentation())
-        {
-            const FVector Scale = Actor->GetActorScale3D();
-            RecoveryScale = FVector(Scale.Y, Scale.Z, Scale.X); // right/up/forward
-        }
+    // Legacy right/up/forward coordinates, already definition-scaled at ingestion.
+    // Unreal actor transforms must never change authoritative simulation points.
     const auto ToWorld = [&](const FVector& Local) {
-        const FVector Scaled = Local * RecoveryScale;
-        return RepLoc + XAxis*Scaled.X + YAxis*Scaled.Y + ZAxis*Scaled.Z;
+        return RepLoc + XAxis*Local.X + YAxis*Local.Y + ZAxis*Local.Z;
     };
 
 	// Transform deck-relative points into world space:
@@ -1520,10 +1500,8 @@ bool FlightDeck::GetILSHoopCorners(int hoopIndex, FVector (&corners)[4]) const
     if (!IsRecoveryDeck() || !carrier || !hoops || hoopIndex < 0 || hoopIndex >= num_hoops ||
         (start_point - end_point).IsNearlyZero()) return false;
     const Hoop& Ring = hoops[hoopIndex];
-    FVector Scale = FVector::OneVector;
-    if (const AShipActor* Actor = carrier->GetNativePresentation()) Scale = Actor->GetActorScale3D();
-    const double HalfWidth = Ring.GetWidth() * 0.5 * FMath::Abs(Scale.Y);
-    const double HalfHeight = Ring.GetHeight() * 0.5 * FMath::Abs(Scale.Z);
+    const double HalfWidth = Ring.GetWidth() * 0.5;
+    const double HalfHeight = Ring.GetHeight() * 0.5;
     // Same winding and texture coordinates as Hoop::CreatePolys().
     const FVector Local[4] = {
         FVector(-HalfWidth, -HalfHeight, 0), FVector(HalfWidth, -HalfHeight, 0),

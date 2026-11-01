@@ -820,6 +820,8 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		}
 		else if (Key == "flightdeck" && Def->term() && Def->term()->isStruct())
 		{
+            // Legacy definition scale is applied once, independently of Unreal actors.
+            TGuardValue<float> DefinitionDeckScale(CurrentShipScale, LocalScale);
 			ParseFlightDeck(Def->term()->isStruct(), fn);
 		}
 		else if (Key == "gear" && Def->term() && Def->term()->isStruct())
