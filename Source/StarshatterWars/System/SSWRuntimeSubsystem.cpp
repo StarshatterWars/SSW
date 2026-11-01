@@ -1,6 +1,7 @@
 
 #include "SSWRuntimeSubsystem.h"
 #include "WeaponBlueprintResolver.h"
+#include "GameFramework/MovementComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "StarshatterInputBindings.h"
 #include "StarshatterKeyboardSettings.h"
@@ -1558,6 +1559,10 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                     // Visual only: legacy SimShot controls flight, impacts and lifetime.
                     ExistingVisual->SetActorEnableCollision(false);
                     ExistingVisual->SetActorTickEnabled(false);
+                    TArray<UMovementComponent*> MovementComponents;
+                    ExistingVisual->GetComponents(MovementComponents);
+                    for (UMovementComponent* Movement : MovementComponents)
+                        Movement->SetComponentTickEnabled(false);
                     TArray<UPrimitiveComponent*> Primitives;
                     ExistingVisual->GetComponents(Primitives);
                     for (UPrimitiveComponent* Primitive : Primitives)

@@ -5,7 +5,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWeaponBlueprintResolverTest, "Starshatter.Weap
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FWeaponBlueprintResolverTest::RunTest(const FString& Parameters)
 {
-    for (const TCHAR* Name : {TEXT("Archer"), TEXT("Hammer"), TEXT("Javelin"), TEXT("Torpedo"), TEXT("Vector")})
+    for (const TCHAR* Name : {TEXT("Archer"), TEXT("Hammer"), TEXT("Javelin"), TEXT("Torpedo"), TEXT("Vector"), TEXT("Harpoon")})
     {
         UClass* Class = WeaponBlueprintResolver::Resolve(Name, TEXT("Unused"));
         TestNotNull(*FString::Printf(TEXT("%s model resolves to Blueprint"), Name), Class);
