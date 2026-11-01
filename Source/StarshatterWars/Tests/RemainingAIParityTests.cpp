@@ -19,6 +19,8 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "Subsystems/SubsystemCollection.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "ShipActor.h"
 
 namespace {
 // Exercise the production subsystem lifecycle without initializing unrelated game systems.
@@ -245,6 +247,33 @@ bool FRemainingCollisionPassTest::RunTest(const FString& Parameters)
     A->MoveTo(FVector::ZeroVector);TestFalse(TEXT("Returning to the carrier cannot reactivate launch protection"),A->IsClearingLaunchCarrier(B));
     R.CollideShips();TestTrue(TEXT("Eligible player collision invokes legacy physical response"),A->GetVelocity().IsNearlyZero() && B->GetVelocity().IsNearlyZero());
     TestTrue(TEXT("Collision preserves surviving ships in the region"),R.GetShips().contains(A)&&R.GetShips().contains(B));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecoveryNativeScaleTest,"Starshatter.AIParity.Remaining.RecoveryNativeScale",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FRecoveryNativeScaleTest::RunTest(const FString& Parameters)
+{
+    FRemainingDesigns Designs;
+    const bool OwnLoader=DataLoader::GetLoader()==nullptr; if(OwnLoader)DataLoader::Initialize();
+    ON_SCOPE_EXIT {if(OwnLoader)DataLoader::Close();};
+    Ship Carrier("Carrier","",Designs.Add(TEXT("RecoveryScaleCarrier"),CLASSIFICATION::CARRIER),1,0,nullptr,false);
+    auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false);
+    ON_SCOPE_EXIT {Carrier.BindNativePresentation(nullptr);World->DestroyWorld(false);};
+    auto* Actor=World->SpawnActor<AShipActor>();Actor->SetActorScale3D(FVector(4));Carrier.BindNativePresentation(Actor);
+    FlightDeck Deck;Deck.SetRecoveryDeck();Deck.SetCarrier(&Carrier);
+    Deck.SetStartPoint(FVector(305,0,-1950));Deck.SetEndPoint(FVector(305,-12,-500));
+    Deck.SetApproachPoint(0,FVector(280,0,-2300));Deck.SetApproachPoint(1,FVector(1500,0,-1000));
+    Deck.Orient(&Carrier);
+    const auto WorldPoint=[&](FVector Local){return Carrier.GetLocation()+Carrier.GetCam().vrt()*Local.X+Carrier.GetCam().vup()*Local.Y+Carrier.GetCam().vpn()*Local.Z;};
+    TestTrue(TEXT("AI outer marker uses actual scale-four carrier lane"),Deck.StartPoint().Equals(WorldPoint(FVector(1220,0,-7800)),0.001));
+    TestTrue(TEXT("Approach routes around full-sized hull rather than centerline"),Deck.ApproachPoint(1).Equals(WorldPoint(FVector(6000,0,-4000)),0.001));
+    FVector Corners[4];TestTrue(TEXT("Recovery hoop geometry exists"),Deck.GetILSHoopCorners(3,Corners));
+    TestTrue(TEXT("Last hoop and AI outer marker coincide"),((Corners[0]+Corners[1]+Corners[2]+Corners[3])*0.25).Equals(Deck.StartPoint(),0.001));
+    const FVector Once=Deck.StartPoint();Deck.Orient(&Carrier);TestTrue(TEXT("Repeated orientation never compounds scale"),Deck.StartPoint().Equals(Once,0.001));
+    Actor->SetActorScale3D(FVector::OneVector);Deck.Orient(&Carrier);
+    TestTrue(TEXT("Unit-scale legacy coordinates retain their original result"),Deck.StartPoint().Equals(WorldPoint(FVector(305,0,-1950)),0.001));
+    Deck.SetLaunchDeck();Actor->SetActorScale3D(FVector(4));Deck.Orient(&Carrier);
+    TestTrue(TEXT("Working launch geometry is unchanged"),Deck.StartPoint().Equals(WorldPoint(FVector(305,0,-1950)),0.001));
     return true;
 }
 #endif

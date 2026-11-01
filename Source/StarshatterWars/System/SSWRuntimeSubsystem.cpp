@@ -1469,7 +1469,8 @@ bool USSWRuntimeSubsystem::GetCarrierVisualPoint(Ship* Carrier, const FVector& S
             const Camera& Frame=Carrier->GetCam();
             const FVector Local(FVector::DotProduct(Delta,Frame.vpn()),
                 FVector::DotProduct(Delta,Frame.vrt()),FVector::DotProduct(Delta,Frame.vup()));
-            OutPoint=Visual->GetActorTransform().TransformPosition(Local);
+            // Recovery points already include the native carrier scale in FlightDeck::Orient.
+            OutPoint=Visual->GetActorTransform().TransformPositionNoScale(Local);
             return true;
         }
     OutPoint = GetVisualLocationForRegion(Carrier->GetRegion(), SimPoint);

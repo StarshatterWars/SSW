@@ -21,6 +21,7 @@
 #include "Logging/LogMacros.h"
 
 #include "Ship.h"
+#include "ShipActor.h"
 #include "ShipManager.h"
 #include "ShipDesign.h"
 #include "SimElement.h"
@@ -858,9 +859,20 @@ FlightDeck::Orient(const Physical* rep)
 	);
 
 	const FTransform RepXform(CamM);
-	const auto ToWorld = [&](const FVector& Local) {
-		return RepLoc + XAxis*Local.X + YAxis*Local.Y + ZAxis*Local.Z;
-	};
+    // Native carrier actors scale model-space deck coordinates. Recovery steering
+    // and collision must use that same metric, rather than scaling only the HUD.
+    // Launch placement has its own established presentation path and is unchanged.
+    FVector RecoveryScale = FVector::OneVector;
+    if (IsRecoveryDeck() && carrier)
+        if (const AShipActor* Actor = carrier->GetNativePresentation())
+        {
+            const FVector Scale = Actor->GetActorScale3D();
+            RecoveryScale = FVector(Scale.Y, Scale.Z, Scale.X); // right/up/forward
+        }
+    const auto ToWorld = [&](const FVector& Local) {
+        const FVector Scaled = Local * RecoveryScale;
+        return RepLoc + XAxis*Scaled.X + YAxis*Scaled.Y + ZAxis*Scaled.Z;
+    };
 
 	// Transform deck-relative points into world space:
 	start_point = ToWorld(start_rel);
@@ -1508,8 +1520,10 @@ bool FlightDeck::GetILSHoopCorners(int hoopIndex, FVector (&corners)[4]) const
     if (!IsRecoveryDeck() || !carrier || !hoops || hoopIndex < 0 || hoopIndex >= num_hoops ||
         (start_point - end_point).IsNearlyZero()) return false;
     const Hoop& Ring = hoops[hoopIndex];
-    const double HalfWidth = Ring.GetWidth() * 0.5;
-    const double HalfHeight = Ring.GetHeight() * 0.5;
+    FVector Scale = FVector::OneVector;
+    if (const AShipActor* Actor = carrier->GetNativePresentation()) Scale = Actor->GetActorScale3D();
+    const double HalfWidth = Ring.GetWidth() * 0.5 * FMath::Abs(Scale.Y);
+    const double HalfHeight = Ring.GetHeight() * 0.5 * FMath::Abs(Scale.Z);
     // Same winding and texture coordinates as Hoop::CreatePolys().
     const FVector Local[4] = {
         FVector(-HalfWidth, -HalfHeight, 0), FVector(HalfWidth, -HalfHeight, 0),
