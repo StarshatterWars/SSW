@@ -90,10 +90,7 @@ DropShipAI::FindObjective()
 			(DstOrbLoc - SelfOrbLoc) +
 			FVector(0.0f, 0.0f, -1.0e6f);
 
-		// Starshatter "OtherHand()" likely flips handedness; replace with your project helper.
-		// If you don't have one yet, keep destination as-is and log once for verification.
-		// obj_w = dst.OtherHand();
-		obj_w = dst;
+		obj_w = OtherHand(dst);
 	}
 
 	// Distance from self to navpt:

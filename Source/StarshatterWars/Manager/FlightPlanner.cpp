@@ -32,6 +32,7 @@
 #include "Callsign.h"
 
 #include "Game.h"
+#include "Random.h"
 
 #include "CoreMinimal.h" // UE_LOG, FMath
 #include "Math/Vector.h" // FVector
@@ -44,8 +45,8 @@ FlightPlanner::FlightPlanner(Ship* s)
 	sim = Sim::GetSim();
 
 	// Original: 250e3 + 10e3 * (int) Random(0, 8.9)
-	// UE: inclusive ints, 0..8
-	const int32 RandBucket = FMath::RandRange(0, 8);
+	// Preserve the original continuous draw then truncation distribution.
+	const int32 RandBucket = static_cast<int32>(RandomDouble(0,8.9));
 	patrol_range = static_cast<float>(250e3 + 10e3 * RandBucket);
 }
 
@@ -302,7 +303,7 @@ FlightPlanner::CreateEscortRoute(SimElement* elem, SimElement* ward)
 	else
 		loc += ship->GetCam().vup() * 1e3;
 	
-	//loc = loc.OtherHand();
+	loc = OtherHand(loc);
 
 	rloc.SetReferenceLoc(nullptr);
 	rloc.SetBaseLocation(loc);

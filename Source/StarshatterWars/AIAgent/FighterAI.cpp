@@ -17,6 +17,7 @@
 
 
 #include "FighterAI.h"
+#include "LegacyAIParity.h"
 #include "CoreMinimal.h"
 #include "FighterTacticalAI.h"
 #include "Ship.h"
@@ -95,10 +96,10 @@ FighterAI::ExecFrame(double s)
     inbound = ship->GetInbound();
     missile_time -= s;
 
-    RadioMessageAction order = RadioMessageAction::NONE;
+    EInstruction order = EInstruction::None;
 
     if (navpt)
-        order = navpt->GetRadioAction();
+        order = navpt->GetAction();
 
     if (inbound) {
         if (!inbound->Cleared()) { inbound->SetFinal(false); time_to_dock = 0; }
@@ -206,8 +207,7 @@ FighterAI::ExecFrame(double s)
         }
     }
 
-    const EInstruction InstrOrder =
-        static_cast<EInstruction>(static_cast<int32>(order));
+    const EInstruction InstrOrder = order;
 
     if (!target && InstrOrder != EInstruction::Strike)
         ship->SetSensorMode(ESensorMode::STD);
@@ -313,10 +313,10 @@ FighterAI::FindObjective()
         if (orders)
             action = orders->GetRadioAction();
 
-        if (navpt && action != RadioMessageAction::NONE) {
+        if (navpt && action == RadioMessageAction::NONE) {
             FindObjectiveNavPoint();
             if (distance < 5e3) {
-                action = navpt->GetRadioAction();
+                action = LegacyAIParity::RecoveryAction(navpt->GetAction(),navpt->GetRadioAction());
             }
         }
 
@@ -329,7 +329,7 @@ FighterAI::FindObjective()
                 controller = (Ship*)orders->GetTarget();
             }
 
-            else if (navpt && navpt->GetRadioAction() == RadioMessageAction::DOCK_WITH && navpt->GetTarget()) {
+            else if (navpt && LegacyAIParity::RecoveryAction(navpt->GetAction(),navpt->GetRadioAction()) == RadioMessageAction::DOCK_WITH && navpt->GetTarget()) {
                 controller = (Ship*)navpt->GetTarget();
             }
 
@@ -364,7 +364,7 @@ FighterAI::ReturnToBase(Ship* controller)
                 self_rgn->GetOrbitalRegion()->Primary()) {
 
                 FVector npt = rtb_rgn->GetLocation() - self_rgn->GetLocation();
-                obj_w = npt; // NOTE: Original used OtherHand().
+                obj_w = OtherHand(npt);
 
                 // distance from self to navpt:
                 distance = (obj_w - ship->GetLocation()).Size();
@@ -482,7 +482,7 @@ FighterAI::FindObjectiveNavPoint()
             self_rgn->GetOrbitalRegion()->Primary()) {
 
             FVector npt = nav_rgn->GetLocation() - self_rgn->GetLocation();
-            obj_w = npt; // NOTE: Original used OtherHand().
+            obj_w = OtherHand(npt);
 
             // distance from self to navpt:
             distance = (obj_w - ship->GetLocation()).Size();

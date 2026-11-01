@@ -17,6 +17,7 @@
 #include "QuantumDrive.h"
 
 #include "Drive.h"
+#include "Random.h"
 #include "Explosion.h"
 #include "Game.h"
 #include "Ship.h"
@@ -39,12 +40,12 @@ static int qdrive_value = 3;
 
 static inline double RandomRangeDouble(double Min, double Max)
 {
-	return FMath::FRandRange(static_cast<float>(Min), static_cast<float>(Max));
+	return RandomDouble(Min,Max);
 }
 
 static inline FVector RandomDirectionUE()
 {
-	return FMath::VRand();
+	return RandomDirection();
 }
 
 static inline FVector RandomDirectionPoint()

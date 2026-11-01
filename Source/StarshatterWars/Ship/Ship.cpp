@@ -4860,7 +4860,7 @@ Ship::CanTimeSkip()
 	Instruction* NavPt =
 		GetNextNavPoint();
 
-	if (GetMissionClock() < 10000 /* || NetGame::IsNetGame() */)
+	if (GetMissionClockMS() < 10000 /* || NetGame::IsNetGame() */)
 	{
 		return false;
 	}

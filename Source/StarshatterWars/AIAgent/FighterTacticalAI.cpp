@@ -284,9 +284,8 @@ void FighterTacticalAI::SelectTargetOpportunity()
 
 				// if on patrol, check target distance from navpoint:
 				if (roe == FLEXIBLE && navpt) {
-					// UE: FVector has no OtherHand(). Use the navpoint location directly.
-					// If you still need Starshatter axis remapping, do it explicitly here.
-					const double NDist = (navpt->GetLocation() - ContactShip->GetLocation()).Length();
+					// Convert authored patrol point into the contact simulation frame.
+					const double NDist = (OtherHand(navpt->GetLocation()) - ContactShip->GetLocation()).Length();
 					if (NDist > 80e3)
 						continue;
 				}

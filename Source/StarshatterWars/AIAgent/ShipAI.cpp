@@ -87,7 +87,7 @@ ShipAI::ShipAI(SimObject* s)
 	ship = (Ship*)self;
 
 	Sim* sim = Sim::GetSim();
-	Ship* pship = sim->GetPlayerShip();
+	Ship* pship = sim ? sim->GetPlayerShip() : nullptr;
 	int   player_team = 1;
 
 	if (pship)
@@ -362,7 +362,7 @@ ShipAI::ExecFrame(double secs)
 	const int32 ClockMS =
 		ship->GetMissionClockMS();
 
-	if (ClockMS < 500)
+	if (ClockMS < 5000)
 	{
 		return;
 	}
@@ -494,323 +494,110 @@ ShipAI::ClosingVelocity()
 void
 ShipAI::FindObjective()
 {
-	distance = 0.0;
-	obj_w = FVector::ZeroVector;
-	objective = FVector::ZeroVector;
+    if (!ship) return;
+	distance = 0;
 
-	if (!ship)
-	{
-		return;
-	}
-
-	const FVector ShipLoc =
-		ship->GetLocation();
-
-	RadioMessageAction order =
-		ship->GetRadioOrders()
-		? ship->GetRadioOrders()->GetRadioAction()
-		: RadioMessageAction::NONE;
-
-	const bool form =
-		(order == RadioMessageAction::WEP_HOLD) ||
-		(order == RadioMessageAction::FORM_UP) ||
-		(order == RadioMessageAction::MOVE_PATROL) ||
-		(order == RadioMessageAction::RTB) ||
-		(order == RadioMessageAction::DOCK_WITH) ||
-		((order == RadioMessageAction::NONE) && !target);
-	
-	Ship* ward =
-		ship->GetWard();
-
-	UE_LOG(LogTemp, VeryVerbose,
-		TEXT("[FindObjective ENTRY] Ship='%hs' Order=%d Form=%d ElementIndex=%d Target='%hs' Navpt=%p NavAction=%d NavTarget='%hs' FarcasterPtr=%p Ward='%hs'"),
-		ship ? ship->GetName() : "NULL",
-		(int32)order,
-		form ? 1 : 0,
-		element_index,
-		target ? target->GetName() : "NULL",
-		navpt,
-		navpt ? (int32)navpt->GetAction() : -1,
-		(navpt && navpt->GetTargetName()) ? navpt->GetTargetName() : "NULL",
-		farcaster,
-		ward ? ward->GetName() : "NULL");
-
-	if (ship && !_stricmp(ship->GetName(), "Lovo"))
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[LOVO TRACE FindObjective PRE] ")
-			TEXT("Order=%d Form=%d ElementIndex=%d ")
-			TEXT("Ward='%hs' Leader='%hs' ")
-			TEXT("Target='%hs' ShipTarget='%hs' ")
-			TEXT("Navpt=%p NavAction=%d NavTarget='%hs'"),
-			(int32)order,
-			form ? 1 : 0,
-			element_index,
-			ward ? ward->GetName() : "NULL",
-			ship->GetLeader() ? ship->GetLeader()->GetName() : "NULL",
-			target ? target->GetName() : "NULL",
-			ship->GetTarget() ? ship->GetTarget()->GetName() : "NULL",
-			navpt,
-			navpt ? (int32)navpt->GetAction() : -1,
-			(navpt && navpt->GetTargetName())
-			? navpt->GetTargetName()
-			: "NULL");
-	}
-
-	//-------------------------------------------------------------
-	// QUANTUM / FARCAST
-	//-------------------------------------------------------------
+	const RadioMessageAction order = ship->GetRadioOrders() ? ship->GetRadioOrders()->GetRadioAction() : RadioMessageAction::NONE;
 
 	if (order == RadioMessageAction::QUANTUM_TO ||
-		order == RadioMessageAction::FARCAST_TO)
-	{
-		ship->SetDirectorInfo("AI Quantum");
+			order == RadioMessageAction::FARCAST_TO) {
+
 		FindObjectiveQuantum();
-	}
-
-	//-------------------------------------------------------------
-	// EXPLICIT WARD FORMATION
-	//-------------------------------------------------------------
-
-	else if (ward && ward != ship)
-	{
-		ship->SetDirectorInfo("AI Ward Formation");
-
-		UE_LOG(LogTemp, VeryVerbose,
-			TEXT("[FORMATION] ")
-			TEXT("Ship='%hs' Ward='%hs' ")
-			TEXT("ElementIndex=%d Navpt=%p Target='%hs'"),
-			ship ? ship->GetName() : "NULL",
-			ward ? ward->GetName() : "NULL",
-			element_index,
-			navpt,
-			target ? target->GetName() : "NULL");
-
-		FindObjectiveFormation();
-	}
-
-	//-------------------------------------------------------------
-	// ELEMENT FORMATION
-	//-------------------------------------------------------------
-
-	else if (form && element_index > 1)
-	{
-		ship->SetDirectorInfo("AI Element Formation");
-
-		if (navpt &&
-			navpt->GetAction() == EInstruction::Launch)
-		{
-			FindObjectiveNavPoint();
-		}
-		else
-		{
-			FindObjectiveFormation();
-		}
-	}
-
-	//-------------------------------------------------------------
-	// NORMAL OBJECTIVE FLOW
-	//-------------------------------------------------------------
-
-	else
-	{
-		bool directed = false;
-
-		if (tactical)
-		{
-			directed =
-				(tactical->RulesOfEngagement() ==
-					TacticalAI::DIRECTED);
-		}
-
-		bool bObjectiveHandled = false;
-
-		//---------------------------------------------------------
-		// THREAT / RETREAT
-		//---------------------------------------------------------
-
-		if (threat && !directed)
-		{
-			if (support)
-			{
-				const double d_support =
-					(support->GetLocation() - ShipLoc).Size();
-
-				if (d_support > 35e3)
-				{
-					ship->SetDirectorInfo("Regroup");
-
-					FindObjectiveTarget(support);
-
-					bObjectiveHandled = true;
-				}
-			}
-			else if (threat != target)
-			{
-				ship->SetDirectorInfo("Retreat");
-
-				FVector AwayFromThreat =
-					ShipLoc - threat->GetLocation();
-
-				if (!AwayFromThreat.IsNearlyZero())
-				{
-					AwayFromThreat.Normalize();
-
-					obj_w =
-						ShipLoc +
-						AwayFromThreat * 100000.0f;
-
-					bObjectiveHandled = true;
-				}
-			}
-		}
-
-		//---------------------------------------------------------
-		// NORMAL OBJECTIVES
-		//---------------------------------------------------------
-
-		if (!bObjectiveHandled)
-		{
-			if (navpt)
-			{
-				const EInstruction NavAction =
-					navpt->GetAction();
-
-				UE_LOG(LogTemp, VeryVerbose,
-					TEXT("[FindObjective ROUTE] ")
-					TEXT("Ship='%hs' Action=%d ")
-					TEXT("Target='%hs' Farcast=%d"),
-					ship ? ship->GetName() : "NULL",
-					(int32)NavAction,
-					navpt->GetTargetName()
-					? navpt->GetTargetName()
-					: "NULL",
-					navpt->GetFarcast());
-
-				//-------------------------------------------------
-				// ONLY explicit target orders use target pursuit
-				//-------------------------------------------------
-
-				if (NavAction == EInstruction::Target)
-				{
-					ship->SetDirectorInfo("Seek Target");
-
-					if (target)
-					{
-						FindObjectiveTarget(target);
-					}
-					else
-					{
-						FindObjectiveNavPoint();
-					}
-				}
-
-				//-------------------------------------------------
-				// ALL navigation-style commands:
-				// Vector, Dock, Farcast, StopAt, etc
-				//-------------------------------------------------
-
-				else
-				{
-					ship->SetDirectorInfo("Seek Navpoint");
-
-					FindObjectiveNavPoint();
-				}
-			}
-			else if (target)
-			{
-				ship->SetDirectorInfo("Seek Target");
-
-				FindObjectiveTarget(target);
-			}
-			else if (patrol)
-			{
-				ship->SetDirectorInfo("Patrol");
-
-				FindObjectivePatrol();
-			}
-			else if (rumor)
-			{
-				ship->SetDirectorInfo("Search");
-
-				FindObjectiveTarget(rumor);
-			}
-			else
-			{
-				obj_w = FVector::ZeroVector;
-				objective = FVector::ZeroVector;
-				distance = 0.0;
-			}
-		}
-	}
-
-	//-------------------------------------------------------------
-	// FINALIZE OBJECTIVE
-	//-------------------------------------------------------------
-
-	objective = obj_w;
-
-	const bool bInvalidObjW =
-		obj_w.ContainsNaN() ||
-		!FMath::IsFinite(obj_w.X) ||
-		!FMath::IsFinite(obj_w.Y) ||
-		!FMath::IsFinite(obj_w.Z);
-
-	const bool bInvalidObjective =
-		objective.ContainsNaN() ||
-		!FMath::IsFinite(objective.X) ||
-		!FMath::IsFinite(objective.Y) ||
-		!FMath::IsFinite(objective.Z);
-
-	if (bInvalidObjW || bInvalidObjective)
-	{
-		UE_LOG(LogTemp, Error,
-			TEXT("[ShipAI::FindObjective] INVALID OBJECTIVE ")
-			TEXT("Ship='%hs' ObjW=%s Objective=%s Resetting."),
-			ship ? ship->GetName() : "NULL",
-			*obj_w.ToString(),
-			*objective.ToString());
-
-		obj_w = FVector::ZeroVector;
-		objective = FVector::ZeroVector;
-		distance = 0.0;
-
+		objective = Transform(obj_w);
 		return;
 	}
 
-	if (!objective.IsNearlyZero())
-	{
-		distance =
-			(objective - ShipLoc).Size();
-	}
-	else
-	{
-		distance = 0.0;
+	bool  form  = (order == RadioMessageAction::WEP_HOLD)    ||
+	(order == RadioMessageAction::FORM_UP)     ||
+	(order == RadioMessageAction::MOVE_PATROL) ||
+	(order == RadioMessageAction::RTB)         ||
+	(order == RadioMessageAction::DOCK_WITH)   ||
+	(order == RadioMessageAction::NONE && !target)                  ||
+	(farcaster);
+
+	Ship* ward  = ship->GetWard();
+
+	// if not the element leader, stay in formation:
+	if (form && element_index > 1) {
+		ship->SetDirectorInfo("Formation");
+
+		if (navpt && navpt->GetAction() == EInstruction::Launch) {
+			FindObjectiveNavPoint();
+		}
+		else {
+			navpt = 0;
+			FindObjectiveFormation();
+		}
+
+		// transform into camera coords:
+		objective = Transform(obj_w);
+		return;
 	}
 
-	UE_LOG(LogTemp, VeryVerbose,
-		TEXT("[ShipAI::FindObjective WORLD] ")
-		TEXT("Ship='%hs' ")
-		TEXT("Target='%hs' Threat='%hs' Support='%hs' ")
-		TEXT("Ward='%hs' Navpt=%d Patrol=%d Rumor='%hs' ")
-		TEXT("ObjW=%s ObjectiveWorld=%s ")
-		TEXT("ShipLoc=%s ObjectiveDelta=%s ")
-		TEXT("Distance=%.2f ElementIndex=%d Form=%d"),
-		ship ? ship->GetName() : "NULL",
-		target ? target->GetName() : "NULL",
-		threat ? threat->GetName() : "NULL",
-		support ? support->GetName() : "NULL",
-		ward ? ward->GetName() : "NULL",
-		navpt ? 1 : 0,
-		patrol ? 1 : 0,
-		rumor ? rumor->GetName() : "NULL",
-		*obj_w.ToString(),
-		*objective.ToString(),
-		*ShipLoc.ToString(),
-		*(objective - ShipLoc).ToString(),
-		distance,
-		element_index,
-		form ? 1 : 0);
+	// under orders?
+	bool directed = false;
+	if (tactical)
+	directed = (tactical->RulesOfEngagement() == TacticalAI::DIRECTED);
+
+	// threat processing:
+	if (threat && !directed) {
+		double d_threat = FVector(threat->GetLocation() - ship->GetLocation()).Size();
+
+		// seek support:
+		if (support) {
+			double d_support = FVector(support->GetLocation() - ship->GetLocation()).Size();
+			if (d_support > 35e3) {
+				ship->SetDirectorInfo("Regroup");
+				FindObjectiveTarget(support);
+				objective = Transform(obj_w);
+				return;
+			}
+		}
+
+		// run away:
+		else if (threat != target) {
+			ship->SetDirectorInfo("Retreat");
+			obj_w = ship->GetLocation() + FVector(ship->GetLocation() - threat->GetLocation()) * 100;
+			objective = Transform(obj_w);
+			return;
+		}
+	}
+
+	// normal processing:
+	if (target) {
+		ship->SetDirectorInfo("Seek Target");
+		FindObjectiveTarget(target);
+		objective = AimTransform(obj_w);
+	}
+
+	else if (patrol) {
+		ship->SetDirectorInfo("Patrol");
+		FindObjectivePatrol();
+		objective = Transform(obj_w);
+	}
+
+	else if (ward) {
+		ship->SetDirectorInfo("Seek Ward");
+		FindObjectiveFormation();
+		objective = Transform(obj_w);
+	}
+
+	else if (navpt && form) {
+		ship->SetDirectorInfo("Seek Navpoint");
+		FindObjectiveNavPoint();
+		objective = Transform(obj_w);
+	}
+
+	else if (rumor) {
+		ship->SetDirectorInfo("Search");
+		FindObjectiveTarget(rumor);
+		objective = Transform(obj_w);
+	}
+
+	else {
+		obj_w     = FVector::ZeroVector;
+		objective = FVector::ZeroVector;
+	}
 }
 
 // +--------------------------------------------------------------------+
@@ -818,172 +605,72 @@ ShipAI::FindObjective()
 void
 ShipAI::FindObjectiveTarget(SimObject* tgt)
 {
-	if (!self || !ship)
-	{
+    if (!ship) return;
+	if (!tgt) {
 		obj_w = FVector::ZeroVector;
-		distance = 0.0;
 		return;
 	}
 
-	if (!tgt)
-	{
-		obj_w = FVector::ZeroVector;
-		distance = 0.0;
-		return;
-	}
+	navpt = 0; // this tells fire control that we are chasing a target,
+	// instead of a navpoint!
 
-	/*
-	 * IMPORTANT:
-	 *
-	 * Do NOT clear navpt here.
-	 *
-	 * A target may now be the objective object for:
-	 * - farcaster approach
-	 * - docking
-	 * - stop-at
-	 * - escort
-	 * - attack
-	 *
-	 * The navpoint owns the instruction/action context.
-	 */
+	FVector  cv   = ClosingVelocity();
+	double cvl  = cv.Size();
+	double time = 0;
 
-	const FVector SelfLoc =
-		self->GetLocation();
+	if (cvl > 50) {
+		// distance from self to target:
+		distance = FVector(tgt->GetLocation() - self->GetLocation()).Size();
 
-	const FVector TargetLoc =
-		tgt->GetLocation();
+		// time to reach target:
+		time = distance / cvl;
 
-	const FVector ClosingVel =
-		ClosingVelocity();
+		// where the target will be when we reach it:
+		if (time < 15) {
+			FVector run_vec = tgt->GetVelocity();
+			obj_w   = tgt->GetLocation() + (run_vec * time);
 
-	const double ClosingSpeed =
-		ClosingVel.Size();
 
-	double time = 0.0;
-
-	const bool bStaticObjective =
-		tgt->GetVelocity().IsNearlyZero();
-
-	/*
-	 * Static objectives should not be lead-predicted.
-	 * Stations, farcasters, docks, and fixed nav objects should resolve
-	 * directly to their current world location.
-	 */
-
-	if (bStaticObjective)
-	{
-		obj_w =
-			TargetLoc;
-	}
-	else if (ClosingSpeed > 50.0)
-	{
-		distance =
-			(TargetLoc - SelfLoc).Size();
-
-		time =
-			distance / ClosingSpeed;
-
-		if (time < 15.0)
-		{
-			const FVector TargetVel =
-				tgt->GetVelocity();
-
-			obj_w =
-				TargetLoc +
-				TargetVel * static_cast<float>(time);
-
-			if (time < 10.0)
-			{
-				obj_w +=
-					tgt->GetAcceleration() *
-					static_cast<float>(0.33 * time * time);
-			}
+			if (time < 10)
+			obj_w += (tgt->GetAcceleration() * 0.33 * time * time);
 		}
+		else {
+			obj_w = tgt->GetLocation();
+		}
+	}
+
+	else {
+		obj_w = tgt->GetLocation();
+	}
+
+	distance = FVector(obj_w - self->GetLocation()).Size();
+
+	if (cvl > 50) {
+		time = distance / cvl;
+
+		// where we will be when the target gets there:
+		if (time < 15) {
+			FVector self_dest = self->GetLocation() + cv * time;
+			FVector err = obj_w - self_dest;
+
+			obj_w += err;
+		}
+	}
+
+	FVector approach = obj_w - self->GetLocation();
+	distance = approach.Size();
+
+	if (bracket && distance > 25e3) {
+		FVector offset = FVector::CrossProduct(approach,FVector(0,1,0));
+		offset.Normalize();
+		offset *= 15e3;
+
+		Ship* s = (Ship*) self;
+		if (s->GetElementIndex() & 1)
+		obj_w -= offset;
 		else
-		{
-			obj_w =
-				TargetLoc;
-		}
+		obj_w += offset;
 	}
-	else
-	{
-		obj_w =
-			TargetLoc;
-	}
-
-	distance =
-		(obj_w - SelfLoc).Size();
-
-	if (!bStaticObjective && ClosingSpeed > 50.0)
-	{
-		time =
-			distance / ClosingSpeed;
-
-		if (time < 15.0)
-		{
-			const FVector SelfDest =
-				SelfLoc +
-				ClosingVel * static_cast<float>(time);
-
-			const FVector Error =
-				obj_w - SelfDest;
-
-			obj_w +=
-				Error;
-		}
-	}
-
-	const FVector Approach =
-		obj_w - SelfLoc;
-
-	distance =
-		Approach.Size();
-
-	if (!bStaticObjective &&
-		bracket &&
-		distance > 25e3)
-	{
-		FVector Offset =
-			FVector::CrossProduct(
-				Approach,
-				FVector(0.0f, 1.0f, 0.0f));
-
-		if (!Offset.IsNearlyZero())
-		{
-			Offset.Normalize();
-
-			Offset *=
-				15e3f;
-
-			Ship* s =
-				static_cast<Ship*>(self);
-
-			if (s && (s->GetElementIndex() & 1))
-			{
-				obj_w -=
-					Offset;
-			}
-			else
-			{
-				obj_w +=
-					Offset;
-			}
-		}
-	}
-
-	UE_LOG(LogTemp, VeryVerbose,
-		TEXT("[ShipAI::FindObjectiveTarget] Ship='%hs' Target='%hs' Static=%d Navpt=%p SelfLoc=%s TargetLoc=%s TargetVel=%s ClosingSpeed=%.2f ObjW=%s Distance=%.2f Bracket=%d"),
-		ship ? ship->GetName() : "NULL",
-		tgt ? tgt->GetName() : "NULL",
-		bStaticObjective ? 1 : 0,
-		navpt,
-		*SelfLoc.ToString(),
-		*TargetLoc.ToString(),
-		*tgt->GetVelocity().ToString(),
-		ClosingSpeed,
-		*obj_w.ToString(),
-		distance,
-		bracket ? 1 : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -1477,15 +1164,8 @@ ShipAI::FindObjectiveFarcaster(
 		}
 
 		//---------------------------------------------------------
-		// Legacy flow:
-		// original code does objective = Transform(obj_w).
-		//
-		// Since your current port is keeping ShipAI objectives in
-		// legacy/runtime space, keep objective equal to obj_w.
-		//---------------------------------------------------------
-
-		objective =
-			obj_w;
+		// Steering consumes camera-relative simulation coordinates.
+		objective = Transform(obj_w);
 	}
 
 	UE_LOG(LogTemp, Warning,
@@ -1649,79 +1329,29 @@ ShipAI::SetIdentify(bool i)
 void
 ShipAI::Navigator()
 {
+    if (!ship) return;
 	accumulator.Clear();
 	magnitude = 0;
 
-	if (!ship)
-	{
-		return;
-	}
-
-	if (bObjectiveCompleteLockout)
-	{
-		target = nullptr;
-		threat = nullptr;
-		rumor = nullptr;
-		patrol = 0;
-		farcaster = nullptr;
-
-		ship->DropTarget();
-
-		ship->SetHelmHeading(0.0);
-		ship->SetHelmPitch(0.0);
-
-		ship->SetThrottle(0.0);
-		ship->SetThrottleRequest(0.0);
-
-		ship->SetTransX(0.0);
-		ship->SetTransY(0.0);
-		ship->SetTransZ(0.0);
-
-		ship->SetVelocity(FVector::ZeroVector);
-
-		ship->SetDirectorInfo("Objective complete lockout");
-		return;
-	}
-
 	hold = false;
-
-	if ((ship->GetElement() &&
-		ship->GetElement()->GetHoldTime() > 0) ||
-		(navpt &&
-			navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE &&
-			navpt->GetHoldTime() > 0))
-	{
-		hold = true;
-	}
+	if ((ship->GetElement() && ship->GetElement()->GetHoldTime() > 0) ||
+			(navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
+	hold = true;
 
 	ship->SetFLCSMode(EFLCSMode::HELM);
 
 	if (target)
-	{
-		ship->SetDirectorInfo("Seek Target");
-	}
+	ship->SetDirectorInfo("seek-target");
 	else if (rumor)
-	{
-		ship->SetDirectorInfo("Seek Rumor");
-	}
+	ship->SetDirectorInfo("seek-rumor");
 	else
-	{
-		ship->SetDirectorInfo("Cruise");
-	}
+	ship->SetDirectorInfo("none");
 
-	if (!bObjectiveArrivalLatched)
-	{
-		Accumulate(AvoidCollision());
-		Accumulate(AvoidTerrain());
-	}
+	Accumulate(AvoidCollision());
+	Accumulate(AvoidTerrain());
 
 	if (!hold)
-	{
-		Steer Seek =
-			SeekTarget();
-
-		Accumulate(Seek);
-	}
+	Accumulate(SeekTarget());
 
 	HelmControl();
 	ThrottleControl();
@@ -1780,149 +1410,64 @@ void ShipAI::HelmControl()
 	ship->SetTransX(trans_x);
 	ship->SetTransY(trans_y);
 	ship->SetTransZ(trans_z);
+
+    ship->ExecFLCSFrame();
 }
 
 void
 ShipAI::ThrottleControl()
 {
-	if (!ship)
-	{
-		return;
-	}
+    if (!ship) return;
+	if (navpt && !threat && !target) {     // lead only, get speed from navpt
+		double speed = navpt->GetSpeed();
 
-	//-------------------------------------------------------------
-	// Legacy station keeping
-	//-------------------------------------------------------------
-
-	if (distance < 0.0)
-	{
-		throttle =
-			0.0;
-
-		old_throttle =
-			0.0;
-
-		ship->SetThrottle(
-			0.0);
-
-		ship->SetThrottleRequest(
-			0.0);
-
-		if (ship->GetFLCS())
-		{
-			ship->GetFLCS()->FullStop();
-		}
-
-		return;
-	}
-
-	//-------------------------------------------------------------
-	// Default throttle
-	//-------------------------------------------------------------
-
-	throttle =
-		100.0;
-
-	//-------------------------------------------------------------
-	// Objective arrival braking
-	//-------------------------------------------------------------
-
-	if (navpt ||
-		patrol ||
-		farcaster)
-	{
-		const EObjectiveArrivalType ArrivalType =
-			DetermineArrivalType();
-
-		const FObjectiveArrivalSettings ArrivalSettings =
-			FObjectiveArrivalUtils::MakeSettings(
-				ArrivalType,
-				ship);
-
-		const FObjectiveArrivalState ArrivalState =
-			FObjectiveArrivalUtils::EvaluateArrival(
-				ship->GetLocation(),
-				ship->GetVelocity(),
-				obj_w,
-				ArrivalSettings);
-
-		//---------------------------------------------------------
-		// Brake zone
-		//---------------------------------------------------------
-
-		if (ArrivalState.bInsideBrakeRadius)
-		{
-			throttle *=
-				ArrivalState.DesiredThrottleScale;
-		}
-
-		//---------------------------------------------------------
-		// Arrival zone
-		//---------------------------------------------------------
-
-		if (ArrivalState.bInsideArrivalRadius)
-		{
-			throttle =
-				0.0;
-
-			if (ship->GetFLCS())
-			{
-				ship->GetFLCS()->FullStop();
-			}
-		}
-
-		//---------------------------------------------------------
-		// Completion
-		//---------------------------------------------------------
-
-		if (ArrivalState.bComplete)
-		{
-			throttle =
-				0.0;
-
-			if (ship->GetFLCS())
-			{
-				ship->GetFLCS()->FullStop();
-			}
-
-			if (!bObjectiveArrived)
-			{
-				bObjectiveArrived =
-					true;
-
-				UE_LOG(LogTemp, Warning,
-					TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
-					ship->GetName(),
-					static_cast<int32>(ArrivalType),
-					ArrivalState.Distance,
-					ArrivalState.Speed);
-			}
-		}
+		if (speed > 0 && ship->GetVelocityLimit()>0)
+		throttle = speed / ship->GetVelocityLimit() * 100;
 		else
-		{
-			bObjectiveArrived =
-				false;
+		throttle = 50;
+	}
+
+	else if (patrol && !threat && !target) { // lead only, get speed from navpt
+		double speed = 200;
+
+		if (distance > 5000)
+		speed = 500;
+
+		if (ship->GetVelocity().Size() > speed)
+		throttle = 0;
+		else
+		throttle = 50;
+	}
+
+	else {
+		if (threat || target || element_index < 2) { // element lead
+			throttle = 100;
+
+			if (!threat && !target)
+			throttle = 50;
+
+			if (accumulator.brake > 0) {
+				throttle *= (1 - accumulator.brake);
+			}
+		}
+
+		else {                                       // wingman
+			Ship* lead = ship->GetElement() ? ship->GetElement()->GetShip(1) : nullptr;
+            if (!lead) return;
+			double lv = lead->GetVelocity().Size();
+			double sv = ship->GetVelocity().Size();
+			double dv = lv-sv;
+			double dt = 0;
+
+			if (dv > 0)       dt = dv * 1e-2 * seconds;
+			else if (dv < 0)  dt = dv * 1e-2 * seconds;
+
+			throttle = old_throttle + dt;
 		}
 	}
 
-	//-------------------------------------------------------------
-	// Final clamp/apply
-	//-------------------------------------------------------------
-
-	throttle =
-		FMath::Clamp(
-			throttle,
-			0.0,
-			100.0);
-
-	old_throttle =
-		throttle;
-
-	ship->SetThrottle(
-		throttle);
-
-	ship->SetThrottleRequest(
-		throttle);
+	old_throttle = throttle;
+	ship->SetThrottle(static_cast<int>(throttle));
 }
 
 // +--------------------------------------------------------------------+
@@ -2375,8 +1920,7 @@ ShipAI::AvoidCloseObject(SimObject* obj)
 	Steer avoid =
 		Flee(LocalObstacle);
 
-	avoid.brake = 0.5;
-	brake = 0.5;
+	avoid.brake = 0.3;
 
 	ship->SetDirectorInfo("Avoid collision");
 

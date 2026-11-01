@@ -96,16 +96,16 @@ RLoc::Resolve()
 	}
 
 	if (Dex > 0.0f) {
-		const double D = (double)Dex + (double)FMath::FRandRange(-(float)DexVar, (float)DexVar);
-		const double A = (double)Az + (double)FMath::FRandRange(-(float)AzVar, (float)AzVar);
-		const double E = (double)El + (double)FMath::FRandRange(-(float)ElVar, (float)ElVar);
+		const double D = (double)Dex + RandomDouble(-DexVar,DexVar);
+		const double A = (double)Az + RandomDouble(-AzVar,AzVar);
+		const double E = (double)El + RandomDouble(-ElVar,ElVar);
 
 		// Original Starshatter coordinate intent preserved:
 		// x = d*sin(a), y = -d*cos(a), z = d*sin(e)
 		const FVector Offset(
-			(float)(D * sin(A)),
-			(float)(D * -cos(A)),
-			(float)(D * sin(E))
+			D * sin(A),
+			D * -cos(A),
+			D * sin(E)
 		);
 
 		Loc = BaseLoc + Offset;
