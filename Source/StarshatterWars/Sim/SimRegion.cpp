@@ -1149,6 +1149,7 @@ SimRegion::DockShips()
                 TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
                 ANSI_TO_TCHAR(ship->GetName()));
 
+            if (bPlayerDocked && sim) sim->NotifyPlayerDocked();
             ship->Destroy();
 
             if (bPlayerDocked) {

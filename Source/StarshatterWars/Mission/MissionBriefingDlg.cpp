@@ -440,7 +440,10 @@ void UMissionBriefingDlg::UpdateLiveMission()
     if (bLiveMissionStarted && !bMissionCompleteHandedOff)
     {
         Sim* Simulation = Sim::GetSim();
-        if (Simulation && Simulation->IsComplete() && Manager && Manager->GetDebriefDlg())
+        // Recovery removes the fighter before requesting PLAN; hand off even
+        // when mission objectives have not marked completion.
+        if (Simulation && (Simulation->IsComplete() || Simulation->HasPlayerDocked())
+            && Manager && Manager->GetDebriefDlg())
         {
             bMissionCompleteHandedOff = true;
             // Cleanup must still see the live session so it stops its mission clock.

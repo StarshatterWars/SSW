@@ -489,6 +489,7 @@ void Sim::UnloadMission()
     const int RegionCount = regions.size();
     const int JumpCount = jumplist.size();
     const int SplashCount = splashlist.size();
+    bPlayerDocked = false;
     DeferredPlayerWingmen.Reset();
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;

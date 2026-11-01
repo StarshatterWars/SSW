@@ -200,6 +200,9 @@ public:
     bool IsTestMode() const { return test_mode; }
     bool IsActive()   const;
     bool IsComplete() const;
+    /** Recovery ends the player flight without changing mission outcome. */
+    bool HasPlayerDocked() const { return bPlayerDocked; }
+    void NotifyPlayerDocked() { bPlayerDocked = true; }
 
     MotionController* GetControls() const { return ctrl; }
 
@@ -252,6 +255,7 @@ protected:
 
     MotionController* ctrl = nullptr;
 
+    bool bPlayerDocked = false;
     bool bUnloadingMission = false;
     bool        test_mode = false;
     bool        grid_shown = false;
