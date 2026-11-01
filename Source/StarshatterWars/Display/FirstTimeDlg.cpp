@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025–2026.
+    Copyright (c) 2025ï¿½2026.
 
     DIALOG:      FirstTimeDlg
     FILE:        FirstTimeDlg.cpp
@@ -22,6 +22,21 @@
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/ComboBoxString.h"
+
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
+#include "Components/SizeBox.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/TextBlock.h"
+#include "Components/Image.h"
+#include "Components/ButtonSlot.h"
+#include "MissionUIStyle.h"
+#include "Engine/Texture2D.h"
 
 // UE:
 #include "Engine/GameInstance.h"
@@ -250,7 +265,7 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
     }
     else
     {
-        // First timer (don’t overwrite if you already have something meaningful)
+        // First timer (donï¿½t overwrite if you already have something meaningful)
         if (Info.Rank < 0) Info.Rank = 0;
     }
 }
@@ -325,4 +340,64 @@ void UFirstTimeDlg::OnAcceptClicked()
         //     PlayerDlg->RefreshFromPlayerInfo();
         // }
     }
+}
+
+TSharedRef<SWidget> UFirstTimeDlg::RebuildWidget()
+{
+    if (!WidgetTree) WidgetTree=NewObject<UWidgetTree>(this,NAME_None,RF_Transient);
+    BuildModernDialog();
+    return Super::RebuildWidget();
+}
+
+void UFirstTimeDlg::BuildModernDialog()
+{
+    if (bModernDialogBuilt || !WidgetTree) return;
+    auto* Root=WidgetTree->ConstructWidget<UCanvasPanel>();WidgetTree->RootWidget=Root;
+    auto* Dim=WidgetTree->ConstructWidget<UBorder>();Dim->SetBrushColor(FLinearColor(0,0,0,0.7f));
+    auto* DimSlot=Root->AddChildToCanvas(Dim);DimSlot->SetAnchors(FAnchors(0,0,1,1));DimSlot->SetOffsets(FMargin(0));
+    auto* Frame=WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),TEXT("FirstRunFrame"));
+    Frame->SetWidthOverride(512);Frame->SetHeightOverride(512);
+    auto* Modal=Root->AddChildToCanvas(Frame);Modal->SetAnchors(FAnchors(0.5f));Modal->SetAlignment(FVector2D(0.5f));
+    Modal->SetSize(FVector2D(512));Modal->SetPosition(FVector2D::ZeroVector);Modal->SetZOrder(1);
+    auto* Panel=WidgetTree->ConstructWidget<UBorder>();Panel->SetBrushColor(MissionUIStyle::PanelBG);Panel->SetPadding(FMargin(20));Frame->SetContent(Panel);
+    auto* Column=WidgetTree->ConstructWidget<UVerticalBox>();Panel->SetContent(Column);
+    auto Text=[&](const TCHAR* Value,int32 Size,bool Heading=false){auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Value));
+        T->SetFont(Heading?MissionUIStyle::GetHeaderFont(Size):MissionUIStyle::GetRowFont(Size));T->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f,0.96f,1)));return T;};
+    auto* Header=WidgetTree->ConstructWidget<UBorder>();Header->SetBrushColor(FLinearColor(0.105f,0.113f,0.125f));Header->SetPadding(FMargin(12,10));
+    Header->SetContent(Text(TEXT("NEW PILOT"),26,true));Column->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,12));
+    auto* Intro=Text(TEXT("Create your pilot profile to begin."),16);Column->AddChildToVerticalBox(Intro)->SetPadding(FMargin(0,0,0,12));
+    auto Row=[&](const TCHAR* Label,UWidget* Input){auto* H=WidgetTree->ConstructWidget<UHorizontalBox>();
+        auto* LabelBox=WidgetTree->ConstructWidget<USizeBox>();LabelBox->SetWidthOverride(140);LabelBox->SetContent(Text(Label,16));
+        H->AddChildToHorizontalBox(LabelBox)->SetVerticalAlignment(VAlign_Center);
+        auto* InputSlot=H->AddChildToHorizontalBox(Input);InputSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));InputSlot->SetVerticalAlignment(VAlign_Fill);
+        auto* Height=WidgetTree->ConstructWidget<USizeBox>();Height->SetHeightOverride(44);Height->SetContent(H);
+        Column->AddChildToVerticalBox(Height)->SetPadding(FMargin(0,0,0,10));};
+    NameEdit=WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(),TEXT("ModernNameEdit"));
+    CallsignEdit=WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(),TEXT("ModernCallsignEdit"));
+    for(auto* Edit:{NameEdit.Get(),CallsignEdit.Get()}){auto Style=Edit->GetWidgetStyle();Style.SetFont(MissionUIStyle::GetRowFont(16));
+        Style.SetForegroundColor(FLinearColor::White);Style.SetBackgroundColor(FLinearColor(0.025f,0.045f,0.065f));Style.SetPadding(FMargin(10,5));Edit->SetWidgetStyle(Style);}
+    EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=WidgetTree->ConstructWidget<UComboBoxString>();ExperienceCombo=WidgetTree->ConstructWidget<UComboBoxString>();
+    for(auto* Combo:{EmpireCombo.Get(),PlayStyleCombo.Get(),ExperienceCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
+        auto ComboStyle=Combo->GetWidgetStyle();
+        ComboStyle.ComboButtonStyle.ButtonStyle.Normal.TintColor=FSlateColor(FLinearColor(0.025f,0.045f,0.065f));
+        ComboStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
+        ComboStyle.ComboButtonStyle.ButtonStyle.Pressed.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
+        Combo->SetWidgetStyle(ComboStyle);}
+    Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);Row(TEXT("Flight model"),PlayStyleCombo);Row(TEXT("Experience"),ExperienceCombo);
+    auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto Action=[&](TObjectPtr<UButton>& Button,const TCHAR* Color,const TCHAR* Icon,const TCHAR* Tooltip){
+        auto* Box=WidgetTree->ConstructWidget<USizeBox>();Box->SetWidthOverride(72);Box->SetHeightOverride(48);
+        Button=WidgetTree->ConstructWidget<UButton>();MissionUIStyle::ApplyActionButtonStyle(Button,Color);Button->SetToolTipText(FText::FromString(Tooltip));
+        auto* Image=WidgetTree->ConstructWidget<UImage>();
+        if (auto* Texture=LoadObject<UTexture2D>(nullptr,Icon)) Image->SetBrushFromTexture(Texture,true);
+        Image->SetColorAndOpacity(FLinearColor::White);
+        Image->SetVisibility(ESlateVisibility::HitTestInvisible);
+        auto* IconSize=WidgetTree->ConstructWidget<USizeBox>();IconSize->SetWidthOverride(24);IconSize->SetHeightOverride(24);IconSize->SetContent(Image);
+        if(auto* IconSlot=Cast<UButtonSlot>(Button->AddChild(IconSize))){IconSlot->SetPadding(FMargin(9,5));IconSlot->SetHorizontalAlignment(HAlign_Center);IconSlot->SetVerticalAlignment(VAlign_Center);}
+        Box->SetContent(Button);
+        Actions->AddChildToHorizontalBox(Box)->SetPadding(FMargin(6,0));};
+    Action(CancelBtn,TEXT("Blue"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"),TEXT("Cancel"));
+    Action(AcceptBtn,TEXT("Green"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"),TEXT("Create pilot"));
+    auto* ActionSlot=Column->AddChildToVerticalBox(Actions);ActionSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));ActionSlot->SetVerticalAlignment(VAlign_Bottom);ActionSlot->SetHorizontalAlignment(HAlign_Right);
+    bModernDialogBuilt=true;
 }

@@ -41,6 +41,7 @@ UCLASS()
 class STARSHATTERWARS_API UCmpLoadDlg : public UBaseScreen
 {
     GENERATED_BODY()
+    friend class FCampaignHeaderRefreshTest;
 
 public:
     UCmpLoadDlg(const FObjectInitializer& ObjectInitializer);
@@ -86,6 +87,7 @@ protected:
     USpacer* BuildVBoxSpacer(UVerticalBox* Parent, float Height);
 
 protected:
+    FString LoadingCampaignName;
     bool bScreenBuilt = false;
     uint32 ShowTimeMs = 0;
 

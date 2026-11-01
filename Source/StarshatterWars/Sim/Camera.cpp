@@ -10,7 +10,7 @@ static bool CameraVectorIsFinite(const FVector& V)
 }
 
 Camera::Camera(double x, double y, double z)
-	: pos((float)x, (float)y, (float)z)
+	: pos(x,y,z)
 {
 	orientation.Identity();
 }
@@ -80,36 +80,32 @@ void Camera::Aim(double roll, double pitch, double yaw)
 {
     if (!FMath::IsFinite(roll) || !FMath::IsFinite(pitch) || !FMath::IsFinite(yaw)) return;
     orientation.Rotate(roll, pitch, yaw);
-    Normalize();
 }
 
 void Camera::Yaw(double yaw)
 {
     if (!FMath::IsFinite(yaw)) return;
     orientation.Yaw(yaw);
-    Normalize();
 }
 
 void Camera::Pitch(double pitch)
 {
     if (!FMath::IsFinite(pitch)) return;
     orientation.Pitch(pitch);
-    Normalize();
 }
 
 void Camera::Roll(double roll)
 {
     if (!FMath::IsFinite(roll)) return;
     orientation.Roll(roll);
-    Normalize();
 }
 
 void
 Camera::MoveTo(double x, double y, double z)
 {
-	pos.X = (float)x;
-	pos.Y = (float)y;
-	pos.Z = (float)z;
+	pos.X = x;
+	pos.Y = y;
+	pos.Z = z;
 }
 
 void
@@ -121,9 +117,9 @@ Camera::MoveTo(const FVector& p)
 void
 Camera::MoveBy(double dx, double dy, double dz)
 {
-	pos.X += (float)dx;
-	pos.Y += (float)dy;
-	pos.Z += (float)dz;
+	pos.X += dx;
+	pos.Y += dz;
+	pos.Z += dy;
 }
 
 void

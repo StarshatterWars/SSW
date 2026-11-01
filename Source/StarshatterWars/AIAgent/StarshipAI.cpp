@@ -35,7 +35,6 @@
 #include "Random.h"
 
 #include "CoreMinimal.h"
-#include "ObjectiveArrivalUtils.h"
 
 // +----------------------------------------------------------------------+
 
@@ -887,127 +886,8 @@ StarshipAI::ThrottleControl()
     }
 
     //-------------------------------------------------------------
-    // Objective arrival braking / station keeping
-    //-------------------------------------------------------------
-
-    if (navpt ||
-        farcaster ||
-        patrol)
-    {
-        const EObjectiveArrivalType ArrivalType =
-            DetermineArrivalType();
-
-        const FObjectiveArrivalSettings ArrivalSettings =
-            FObjectiveArrivalUtils::MakeSettings(
-                ArrivalType,
-                ship);
-
-        const FObjectiveArrivalState ArrivalState =
-            FObjectiveArrivalUtils::EvaluateArrival(
-                ship->GetLocation(),
-                ship->GetVelocity(),
-                obj_w,
-                ArrivalSettings);
-
-        if (ArrivalState.bInsideBrakeRadius)
-        {
-            //---------------------------------------------------------
-            // Progressive throttle reduction
-            //---------------------------------------------------------
-
-            throttle *=
-                ArrivalState.DesiredThrottleScale;
-
-            //---------------------------------------------------------
-            // Aggressive late braking
-            //---------------------------------------------------------
-
-            const double BrakeAlpha =
-                FMath::Clamp(
-                    1.0 -
-                    ArrivalState.DesiredThrottleScale,
-                    0.0,
-                    1.0);
-
-            brakes =
-                FMath::Max(
-                    brakes,
-                    FMath::InterpEaseIn(
-                        0.0,
-                        1.0,
-                        BrakeAlpha,
-                        3.0));
-
-            //---------------------------------------------------------
-            // Final arrival stop
-            //---------------------------------------------------------
-
-            if (ArrivalState.bInsideArrivalRadius)
-            {
-                throttle =
-                    0.0;
-
-                brakes =
-                    1.0;
-
-                if (ship->GetFLCS())
-                {
-                    ship->GetFLCS()->FullStop();
-                }
-            }
-
-            UE_LOG(LogTemp, VeryVerbose,
-                TEXT("[BRAKE TRANS] Ship='%hs' Dist=%.2f ")
-                TEXT("ThrottleScale=%.2f BrakeAlpha=%.2f Brakes=%.2f"),
-                ship->GetName(),
-                ArrivalState.Distance,
-                ArrivalState.DesiredThrottleScale,
-                BrakeAlpha,
-                brakes);
-        }
-
-        if (ArrivalState.bComplete)
-        {
-            throttle =
-                0.0;
-
-            brakes =
-                1.0;
-
-            if (ship->GetFLCS())
-            {
-                ship->GetFLCS()->FullStop();
-            }
-
-            if (!bObjectiveArrived)
-            {
-                bObjectiveArrived =
-                    true;
-
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
-                    ship->GetName(),
-                    static_cast<int32>(ArrivalType),
-                    ArrivalState.Distance,
-                    ArrivalState.Speed);
-            }
-        }
-        else
-        {
-            bObjectiveArrived =
-                false;
-        }
-    }
-
-    //-------------------------------------------------------------
     // Final throttle clamp and apply
     //-------------------------------------------------------------
-
-    throttle =
-        FMath::Clamp(
-            throttle,
-            0.0,
-            100.0);
 
     old_throttle =
         throttle;
@@ -1055,22 +935,6 @@ StarshipAI::SeekTarget()
 {
     if (!ship)
     {
-        return Steer();
-    }
-
-    //-------------------------------------------------------------
-    // Objective arrival complete
-    //-------------------------------------------------------------
-
-    if (bObjectiveArrived)
-    {
-        if (navpt)
-        {
-            ship->SetNavptStatus(
-                navpt,
-                INSTRUCTION_STATUS::COMPLETE);
-        }
-
         return Steer();
     }
 

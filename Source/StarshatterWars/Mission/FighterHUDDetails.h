@@ -1,5 +1,7 @@
 #pragma once
-#include "Widgets/SLeafWidget.h"
+#include "Widgets/SCompoundWidget.h"
+class SScrollBox;
+class SVerticalBox;
 #include "DamagePanelData.h"
 #include "ShipMFDPreview.h"
 #include "Engine/Texture2D.h"
@@ -9,7 +11,7 @@ class AActor;
 class FShipMFDPreview;
 
 // Live fighter readouts. Simulation objects are sampled, never retained.
-class SFighterHUDDetails : public SLeafWidget
+class SFighterHUDDetails : public SCompoundWidget
 {
 public:
     SLATE_BEGIN_ARGS(SFighterHUDDetails) {}
@@ -36,7 +38,8 @@ public:
     void CloseRadio() { RadioPage = -1; RadioRecipient = 0; RadioElementId = 0; RadioRecipientPage = 0; RadioHistory.Reset(); }
     void CycleMFD(int32 Index);
     void ToggleWeaponsPanel() { bShowWeapons = !bShowWeapons; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
-    void ToggleCautionPanel() { bShowCaution = !bShowCaution; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
+    void ToggleCautionPanel() { bShowCaution = !bShowCaution; if (bShowCaution) bShowInformation = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
+    void ToggleInformationPanel() { bShowInformation = !bShowInformation; if (bShowInformation) bShowCaution = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void CycleWeapon(bool bPrimary);
 private:
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
@@ -64,7 +67,16 @@ private:
     double NextSample = 0;
     mutable bool bLoggedPanelPaint = false;
     bool bShowWeapons = true;
-    bool bShowCaution = true;
+    bool bShowCaution = false;
+    bool bShowInformation = true;
+    friend class FHUDInformationPanelTest;
+    float InformationScale = 1.f;
+    int32 PanelPlayerId = INDEX_NONE;
+    TSharedPtr<SScrollBox> InformationScroll;
+    TSharedPtr<SVerticalBox> InformationRows;
+    TArray<FString> InformationCaptions;
+    TArray<double> InformationExpiry;
+    void UpdateInformationMessages();
     EMode Modes[2] = { EMode::Ship, EMode::FOV };
     TArray<FRow> StatusRows;
     TArray<SSWDamagePanel::FCell> DamageRows;
@@ -93,6 +105,6 @@ private:
     TStrongObjectPtr<UTexture2D> LaunchTexture;
     FSlateBrush LaunchBrush;
     // TAC left/right, followed by sensor FOV/HSD/3D.
-    TStrongObjectPtr<UTexture2D> PanelTextures[7];
-    FSlateBrush PanelBrushes[7];
+    TStrongObjectPtr<UTexture2D> PanelTextures[9];
+    FSlateBrush PanelBrushes[9];
 };

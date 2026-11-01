@@ -122,6 +122,7 @@ void UCmpLoadDlg::Show()
 
 void UCmpLoadDlg::Hide()
 {
+    LoadingCampaignName.Empty();
     SetDialogInputEnabled(false);
     SetVisibility(ESlateVisibility::Collapsed);
 }
@@ -380,7 +381,7 @@ void UCmpLoadDlg::ApplyCampaignTitleCard()
     // campaigns, so the previous displayed title must not act as a cache key.
     Campaign* CampaignObj = Campaign::GetCampaign();
     const char* CampaignName = CampaignObj ? CampaignObj->GetName() : nullptr;
-    const FString SelectedTitle = (CampaignName && CampaignName[0])
+    const FString SelectedTitle = !LoadingCampaignName.IsEmpty() ? LoadingCampaignName : (CampaignName && CampaignName[0])
         ? FString(UTF8_TO_TCHAR(CampaignName))
         : TEXT("CAMPAIGN");
 
@@ -540,6 +541,7 @@ USpacer* UCmpLoadDlg::BuildVBoxSpacer(UVerticalBox* Parent, float Height)
 
 void UCmpLoadDlg::SetCampaignName(const FString& InName)
 {
+    LoadingCampaignName = InName;
     if (CenterTitleText)
     {
         CenterTitleText->SetText(FText::FromString(InName));

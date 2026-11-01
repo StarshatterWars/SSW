@@ -34,7 +34,9 @@ public:
 
     // accessors:
     virtual ESteerAIType GetType()     const { return ESteerAIType::NONE; }
-    virtual bool         GetSubframe() const { return false; }
+    // Keep the legacy virtual contract behind the Unreal accessor.
+    virtual int          Subframe() const { return false; }
+    virtual bool         GetSubframe() const { return Subframe() != 0; }
 
     // operations:
     virtual void ExecFrame(double factor) {}

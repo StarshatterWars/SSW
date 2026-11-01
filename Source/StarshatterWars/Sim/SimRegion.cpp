@@ -279,6 +279,12 @@ SimRegion::ExecFrame(double seconds)
         return;
     }
 
+    // Legacy inactive regions accumulate elapsed game time between queue turns.
+    if (sim && !active) {
+        seconds = FMath::Min((Game::GetGameTime()-sim_time)/1000.0,3*Game::GetMaxFrameLength());
+    }
+    sim_time = Game::GetGameTime();
+    if (orbital_region) location = orbital_region->Location();
     UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
@@ -323,9 +329,11 @@ SimRegion::ExecFrame(double seconds)
         else ++i;
     }
 
-    DestroyShips();
-
-    sim_time += (DWORD)(seconds * 1000.0);
+    if (!Game::Paused()) {
+        DockShips();
+        if (active) { CollideShips(); CrashShips(); }
+        DestroyShips();
+    }
 }
 
 // +--------------------------------------------------------------------+
@@ -747,6 +755,8 @@ void SimRegion::UpdateShips(double seconds)
         return;
 
     carriers.clear();
+    if (ai_index > ships.size()) ai_index=0;
+    int ShipIndex=0;
 
     for (int i = 0; i < ships.size(); /* manual */) {
         Ship* s = ships[i];
@@ -762,7 +772,9 @@ void SimRegion::UpdateShips(double seconds)
         if (s->GetRegion() != this)
             s->SetRegion(this);
 
+        s->SetAIMode(ShipIndex == ai_index || s == player_ship ? 2 : 1);
         s->ExecFrame(seconds);
+        ++ShipIndex;
 
         if (s->NumFlightDecks() > 0)
             carriers.append(s);
@@ -783,6 +795,7 @@ void SimRegion::UpdateShips(double seconds)
 
     if (player_ship && IsDeadShip(player_ship))
         player_ship = nullptr;
+    ++ai_index;
 }
 
 void SimRegion::UpdateShots(double seconds)
@@ -1087,7 +1100,7 @@ SimRegion::DockShips()
             (ship->GetFlightPhase() == EOPSMode::DOCKED);
 
         if (bDocked) {
-            sim->ProcessEventTrigger(
+            if (sim) sim->ProcessEventTrigger(
                 (int)MISSIONEVENT_TRIGGER::TRIGGER_DOCK,
                 0,
                 ship->GetName());
@@ -1226,4 +1239,244 @@ SimRegion::FindObject(const char* obj_name)
     }
 
     return nullptr;
+}
+// Legacy local collision/crash pass, adapted from Stars45 Sim.cpp (9972413).
+void
+SimRegion::CollideShips()
+{
+	if (ships.size() < 2 && debris.size() < 1)
+	return;
+
+	List<Ship> kill_list;
+
+	int s_index = 0;
+
+	ListIter<Ship> ship_iter = ships;
+	while (++ship_iter) {
+		Ship* ship = ship_iter.value();
+
+		if (ship->InTransition()                  ||
+				ship->GetFlightPhase() < EOPSMode::ACTIVE ||
+				ship->GetMissionClockMS() < 10000          ||
+				ship->IsNetObserver())
+		continue;
+
+		int t_index = 0;
+		ListIter<Ship> targ_iter = ships;
+		while (++targ_iter) {
+			Ship* targ = targ_iter.value();
+
+			if (t_index++ <= s_index) continue;
+
+			if (targ == ship) continue;
+
+			if (targ->InTransition()                  ||
+					targ->GetFlightPhase() < EOPSMode::ACTIVE ||
+					targ->GetMissionClockMS() < 10000          ||
+					targ->IsNetObserver())
+			continue;
+
+			// ignore AI fighter collisions:
+			if (ship->IsDropship()     &&
+					ship != player_ship    &&
+					targ->IsDropship()     &&
+					targ != player_ship)
+			continue;
+
+			// don't collide with own runway!
+			if (ship->IsAirborne() && ship->GetCarrier() == targ)
+			continue;
+			if (targ->IsAirborne() && targ->GetCarrier() == ship)
+			continue;
+
+            if (ship->IsClearingLaunchCarrier(targ) || targ->IsClearingLaunchCarrier(ship))
+                continue;
+
+			// impact:
+			if (ship->CollidesWith(*targ)) {
+				FVector3f tv1(targ->GetVelocity());
+				FVector3f sv1(ship->GetVelocity());
+
+				Physical::SemiElasticCollision(*ship, *targ);
+
+				FVector3f tv2(targ->GetVelocity());
+				FVector3f sv2(ship->GetVelocity());
+
+				double dvs = (sv2-sv1).Size();
+				double dvt = (tv2-tv1).Size();
+                if ((ship == player_ship || targ == player_ship) && (dvs > 20 || dvt > 20))
+                    UE_LOG(LogTemp,Display,TEXT("[NativeCollision] '%hs' vs '%hs' dV=%.2f/%.2f positions=%s / %s"),
+                        ship->GetName(),targ->GetName(),dvs,dvt,*ship->GetLocation().ToString(),*targ->GetLocation().ToString());
+
+
+				if (dvs > 20) dvs *= dvs;
+				if (dvt > 20) dvt *= dvt;
+
+				{ // Local simulation owns collision damage.
+
+					ship->InflictDamage(dvs);
+
+
+					targ->InflictDamage(dvt);
+
+
+				}
+
+				// then delete the ship:
+				if (targ->GetIntegrity() < 1.0f) {
+
+
+					if (!kill_list.contains(targ)) {
+						ShipStats* r = ShipStats::Find(targ->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, ship->GetName());
+
+						if (targ->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
+							r = ShipStats::Find(ship->GetName());
+							if (r) r->AddPoints(targ->Value());
+						}
+
+						kill_list.insert(targ);
+					}
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+
+
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, targ->GetName());
+
+						if (ship->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
+							r = ShipStats::Find(targ->GetName());
+							if (r) r->AddPoints(ship->Value());
+						}
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		ListIter<Debris> debris_iter = debris;
+		while (++debris_iter) {
+			Debris* d = debris_iter.value();
+
+			if (d->GetRadius() < 50)
+			continue;
+
+			if (ship->CollidesWith(*d)) {
+				FVector3f tv1(d->GetVelocity());
+				FVector3f sv1(ship->GetVelocity());
+
+				Physical::SemiElasticCollision(*ship, *d);
+
+				FVector3f tv2(d->GetVelocity());
+				FVector3f sv2(ship->GetVelocity());
+
+				{ // Local simulation owns collision damage.
+					ship->InflictDamage((sv2-sv1).Size());
+				}
+
+				d->InflictDamage((tv2-tv1).Size());
+
+				// then delete the debris:
+				if (d->GetIntegrity() < 1.0f) {
+					if (sim) sim->CreateExplosion(d->GetLocation(), d->GetVelocity(), EExplosionType::LARGE_EXPLOSION, 1.0f, 1.0f, this);
+					debris_iter.removeItem();
+					delete d;
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, "Debris");
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		ListIter<Asteroid> a_iter = asteroids;
+		while (++a_iter) {
+			Asteroid* a = a_iter.value();
+
+			if (ship->CollidesWith(*a)) {
+				FVector3f sv1(ship->GetVelocity());
+				Physical::SemiElasticCollision(*ship, *a);
+				FVector3f sv2(ship->GetVelocity());
+
+				{ // Local simulation owns collision damage.
+					ship->InflictDamage((sv2-sv1).Size() * 10);
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, "Asteroid");
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		s_index++;
+	}
+
+	ListIter<Ship> killed(kill_list);
+	while (++killed) {
+		Ship* kill = killed.value();
+		kill->DeathSpiral();
+	}
+}
+
+void
+SimRegion::CrashShips()
+{
+	if (type != AIR_SPACE || !terrain)
+	return;
+
+	ListIter<Ship> ship_iter = ships;
+	while (++ship_iter) {
+		Ship* ship = ship_iter.value();
+
+		if (!ship->IsGroundUnit() &&
+				!ship->InTransition() &&
+				ship->GetClassification() != CLASSIFICATION::LCA &&
+				ship->GetAltitudeAGL() < ship->GetRadius()/2) {
+			if (ship->GetFlightPhase() == EOPSMode::ACTIVE || ship->GetFlightPhase() == EOPSMode::APPROACH) {
+				ship->InflictDamage(1e6);
+
+				if (ship->GetIntegrity() < 1.0f) {
+
+					ShipStats* r = ShipStats::Find(ship->GetName());
+					if (r) r->AddEvent(ESimEvent::CRASH);
+
+					ship->DeathSpiral();
+				}
+			}
+		}
+	}
+
+	ListIter<SimShot> shot_iter = shots;
+	while (++shot_iter) {
+		SimShot* shot = shot_iter.value();
+
+		if (shot->IsBeam() || shot->IsDecoy())
+		continue;
+
+		if (shot->AltitudeMSL() < 5e3 &&
+				shot->AltitudeAGL() < 5) {
+
+			// shot hit the ground, destroy it:
+
+
+			if (shot->IsDrone())
+			drones.remove((Drone*) shot);
+
+			shot_iter.removeItem();
+			delete shot;
+		}
+	}
 }

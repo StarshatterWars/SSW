@@ -116,9 +116,7 @@ protected:
 	virtual void      NavlightControl();
 
 	virtual void      CheckTarget();
-	virtual void	  UpdateObjectiveArrival();
 
-	EObjectiveArrivalType DetermineArrivalType() const;
 
 	Ship*			ship;
 	Ship*			support;
@@ -154,8 +152,5 @@ protected:
 	FVector          patrol_loc;
 	int              ai_level;
 
-	bool bObjectiveArrivalLatched = false;
-	bool bObjectiveCompleteLockout = false;
-	bool bObjectiveArrived = false;
 };
 

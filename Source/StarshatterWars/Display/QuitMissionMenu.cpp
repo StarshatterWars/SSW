@@ -139,14 +139,15 @@ void UQuitMissionMenu::SetStatusMessage(const FText& Message)
     }
     OnStatusMessageChanged(Message);
 }
-FReply UQuitMissionMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+FReply UQuitMissionMenu::HandleLocalMenuKey(const FKeyEvent& Event)
 {
+    if (!IsDialogInputEnabled() || (GetVisibility() == ESlateVisibility::Hidden || GetVisibility() == ESlateVisibility::Collapsed) || !GetIsEnabled()) return FReply::Unhandled();
     const FKey Key = Event.GetKey();
     const bool bMenuKey = Key == EKeys::Escape || Key == EKeys::One || Key == EKeys::Two ||
         Key == EKeys::Three || Key == EKeys::Four || Key == EKeys::Five ||
         Key == EKeys::NumPadOne || Key == EKeys::NumPadTwo || Key == EKeys::NumPadThree ||
         Key == EKeys::NumPadFour || Key == EKeys::NumPadFive;
-    if (!bMenuKey) return Super::NativeOnPreviewKeyDown(Geometry, Event);
+    if (!bMenuKey) return FReply::Unhandled();
     if (!Event.IsRepeat())
     {
         if (Key == EKeys::One || Key == EKeys::NumPadOne) AcceptMission();
@@ -156,4 +157,17 @@ FReply UQuitMissionMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry, const
         else ResumeMission();
     }
     return FReply::Handled();
+}
+
+FReply UQuitMissionMenu::NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
+{
+    const FReply Reply=HandleLocalMenuKey(Event);
+    return Reply.IsEventHandled()?Reply:Super::NativeOnPreviewKeyDown(Geometry,Event);
+}
+FReply UQuitMissionMenu::NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
+{
+    // The focused dialog itself receives the bubble event. Preview is needed
+    // separately when focus moves into one of its buttons.
+    const FReply Reply=HandleLocalMenuKey(Event);
+    return Reply.IsEventHandled()?Reply:Super::NativeOnKeyDown(Geometry,Event);
 }

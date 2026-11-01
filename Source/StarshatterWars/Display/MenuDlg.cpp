@@ -43,6 +43,7 @@
 #include "MissionUIStyle.h"
 #include "Styling/CoreStyle.h"
 #include "Engine/Texture2D.h"
+#include "Materials/MaterialInterface.h"
 #include "StarshatterGameDataSubsystem.h"
 
 // Legacy
@@ -145,7 +146,9 @@ void UMenuDlg::BuildModernMenu()
     USizeBox* LogoBox = WidgetTree->ConstructWidget<USizeBox>();
     LogoBox->SetWidthOverride(256.f);
     LogoBox->SetHeightOverride(256.f);
-    UImage* Logo = WidgetTree->ConstructWidget<UImage>();
+    UImage* Logo = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("SSWMenu_CircularLogo"));
+    Logo->SetColorAndOpacity(FLinearColor::White);
+    Logo->SetVisibility(ESlateVisibility::HitTestInvisible);
     const TCHAR* LogoPaths[] = {
         TEXT("/Game/UI/SSW_Circular.SSW_Circular"),
         TEXT("/Game/UI/SSW.SSW"),
@@ -157,12 +160,21 @@ void UMenuDlg::BuildModernMenu()
     {
         if (UTexture2D* LogoTex = LoadObject<UTexture2D>(nullptr, Path))
         {
-            Logo->SetBrushFromTexture(LogoTex, true);
+            Logo->SetBrushFromTexture(LogoTex, false);
+            Logo->SetDesiredSizeOverride(FVector2D(256.f));
             break;
         }
     }
     if (!Logo->GetBrush().GetResourceObject())
         UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] SSW logo missing"));
+    // The rendered logo texture has an empty alpha channel. Preserve its RGB
+    // artwork and apply a procedural circular mask in the UI material.
+    if (UMaterialInterface* CircularLogo = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo")))
+    {
+        Logo->SetBrushFromMaterial(CircularLogo);
+        Logo->SetDesiredSizeOverride(FVector2D(256.f));
+    }
     LogoBox->SetContent(Logo);
     UHorizontalBoxSlot* LogoSlot = HeaderContent->AddChildToHorizontalBox(LogoBox);
     LogoSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));

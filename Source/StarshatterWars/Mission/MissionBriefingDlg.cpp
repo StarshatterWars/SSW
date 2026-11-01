@@ -1955,6 +1955,9 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (HUDWarningsAction && HUDWarningsAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(HUDWarningsAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterCautionPanel);
     else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing Boolean IA_HUDWarnings in /Game/Input."));
+    HUDInformationAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_HUDInformation.IA_HUDInformation"));
+    if(HUDInformationAction && HUDInformationAction->ValueType==EInputActionValueType::Boolean)
+        MissionMenuInput->BindAction(HUDInformationAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterInformationPanel);
     FighterMFDLeftAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDLeftCycle.IA_MFDLeftCycle"));
     FighterMFDRightAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDRightCycle.IA_MFDRightCycle"));
     if (FighterMFDLeftAction && FighterMFDLeftAction->ValueType == EInputActionValueType::Boolean)
@@ -2158,6 +2161,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     FighterHUDDetails.Reset();
     WeaponsPanelAction = nullptr;
     HUDWarningsAction = nullptr;
+    HUDInformationAction = nullptr;
     FighterMFDLeftAction = nullptr;
     FighterMFDRightAction = nullptr;
     FighterWeaponCycleAction = nullptr;
@@ -2365,13 +2369,11 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
                 SimRegion* Region = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;
                 Ship* Data = IsValid(Actor) ? Actor->GetRuntimeShip() : nullptr;
                 if (!Data || !Region || !Region->GetShips().contains(Data)) return Neutral;
-                const int32 IFF = Data->GetIFF();
-                if (IFF <= 0) return Neutral;
-                Mission* CurrentMission = CurrentSim->GetMission();
-                if (!CurrentMission) return Neutral;
-                return IFF == CurrentMission->GetTeam()
-                    ? FLinearColor(0.25f, 0.65f, 1.0f, 1.0f)
-                    : FLinearColor::Red;
+                Ship* Observer = CurrentSim->GetPlayerShip();
+                if (!Observer || !Region->GetShips().contains(Observer)) return Neutral;
+                const SimContact* Contact = Observer->FindContact(Data);
+                const int32 IFF = Contact ? Contact->GetIFF(Observer) : Data->GetIFF();
+                return SFighterHUDDetails::IdentificationColor(IFF,Observer->GetIFF());
             })
             .TargetName_Lambda([WeakThis]()
             {
@@ -4000,4 +4002,9 @@ void UMissionBriefingDlg::StartLiveSessionUpdates()
             UpdateLiveMission();
             if (bLiveMissionStarted) UpdateTravelPresentation(GetWorld()->GetDeltaSeconds());
         }),0.000001f,TimerParameters);
+}
+
+void UMissionBriefingDlg::ToggleFighterInformationPanel()
+{
+    if(CanUseFighterHUD() && FighterHUDDetails.IsValid())FighterHUDDetails->ToggleInformationPanel();
 }

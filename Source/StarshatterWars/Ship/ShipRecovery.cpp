@@ -10,7 +10,8 @@ bool Ship::CanAutoLand() const
 {
     if (!sim || sim->GetPlayerShip() != this || !IsDropship() || IsDead() || IsDying() ||
         InTransition() || net_control || !inbound || !inbound->Cleared() ||
-        (flight_phase != EOPSMode::APPROACH && flight_phase != EOPSMode::RECOVERY)) return false;
+        (flight_phase != EOPSMode::APPROACH && flight_phase != EOPSMode::RECOVERY &&
+         !(bAutoLand && flight_phase == EOPSMode::ACTIVE))) return false;
     FlightDeck* Deck = inbound->GetDeck();
     const Ship* Carrier = Deck ? Deck->GetCarrier() : nullptr;
     return Carrier && !Carrier->IsDead() && !Carrier->IsDying() && GetRegion() &&

@@ -34,11 +34,13 @@ UCLASS(BlueprintType, Blueprintable)
 class STARSHATTERWARS_API UFirstTimeDlg : public UBaseScreen
 {
     GENERATED_BODY()
+    friend class FFirstRunPresentationTest;
 
 public:
     UFirstTimeDlg(const FObjectInitializer& ObjectInitializer);
 
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
 
     UFUNCTION()
@@ -48,6 +50,9 @@ protected:
     void OnCancelClicked();
 
 private:
+    void BuildModernDialog();
+    bool bModernDialogBuilt = false;
+
     // Helpers
     UStarshatterPlayerSubsystem* GetPlayerSubsystem() const;
 

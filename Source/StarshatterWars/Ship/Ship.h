@@ -200,6 +200,8 @@ public:
     int               NumFlightDecks() const;
     FlightDeck*       GetFlightDeck(int i = 0) const;
     Ship*             GetCarrier() const { return carrier; }
+    void              BeginCarrierLaunchClearance() { bClearingLaunchCarrier = true; }
+    bool              IsClearingLaunchCarrier(const Ship* Other);
     FlightDeck*       GetDock() const { return dock; }
     void              SetCarrier(Ship* c, FlightDeck* d);
     void              Stow();
@@ -604,6 +606,7 @@ protected:
     BYTE              old_emcon;
     bool              invulnerable;
 
+    bool              bClearingLaunchCarrier = false;
     DWORD             launch_time;
     DWORD             friendly_fire_time;
 

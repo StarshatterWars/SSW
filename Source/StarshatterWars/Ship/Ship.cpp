@@ -2060,9 +2060,26 @@ Ship::SetFlightPhase(EOPSMode phase)
 		dock = 0;
 }
 
+bool Ship::IsClearingLaunchCarrier(const Ship* Other)
+{
+    if (!bClearingLaunchCarrier || !Other || Other != carrier) return false;
+    if (inbound || flight_phase < EOPSMode::LAUNCH || flight_phase > EOPSMode::ACTIVE ||
+        Other->IsDead() || Other->IsDying() ||
+        FVector::Dist(GetLocation(),Other->GetLocation()) > Other->GetNavigationHullRadius()+GetNavigationHullRadius())
+    {
+        bClearingLaunchCarrier=false;
+        return false;
+    }
+    // Unreal's native hull surrounds the existing procedural launch corridor.
+    // Suppress only the launching ship/own-carrier pair until first hull exit.
+    // This latch is never set by RTB, inbound clearance, or recovery.
+    return true;
+}
+
 void
 Ship::SetCarrier(Ship* c, FlightDeck* d)
 {
+    if (carrier != c) bClearingLaunchCarrier=false;
 	carrier = c;
 	dock = d;
 
@@ -2074,6 +2091,7 @@ void
 Ship::SetInbound(InboundSlot* s)
 {
 	inbound = s;
+    if (s) bClearingLaunchCarrier=false;
     if (!inbound && (flight_phase == EOPSMode::DOCKING || flight_phase == EOPSMode::DOCKED)) bAutoLand = false;
 
 	if (inbound && flight_phase == EOPSMode::ACTIVE) {
@@ -3127,7 +3145,7 @@ Ship::SetNavptStatus(Instruction* navpt, INSTRUCTION_STATUS status)
 
 		navpt->SetStatus(status);
 
-		if (status == INSTRUCTION_STATUS::COMPLETE)
+		if (status == INSTRUCTION_STATUS::COMPLETE && sim)
 			sim->ProcessEventTrigger(MissionEvent::TRIGGER_NAVPT, 0, GetName(), GetNavIndex(navpt));
 
 		if (element) {
@@ -3655,7 +3673,6 @@ Ship::ExecPhysics(double seconds)
     if (bManualRotation && sim && sim->GetPlayerShip()==this && !InTransition() && !IsDead() && !IsDying())
     {
         if (!design || seconds<=0 || !FMath::IsFinite(seconds) || mass<=0) return;
-        ExecManualRotation(seconds);
         thrust = (float)GetThrust(seconds);
         if (!FMath::IsFinite(thrust)) thrust=0;
         SetupAgility();
@@ -3692,6 +3709,8 @@ Ship::ExecPhysics(double seconds)
 	if (net_control)
 	{
 		net_control->ExecFrame(seconds);
+        GetThrust(seconds); // Presentation only; network owns the state.
+        return;
 	}
 
 	//-------------------------------------------------------------
@@ -3705,18 +3724,7 @@ Ship::ExecPhysics(double seconds)
 			GetName());
 	}
 
-	//-------------------------------------------------------------
-	// FLCS must run after AI/control has updated helm/throttle
-	// but before thrust is calculated.
-	//-------------------------------------------------------------
-	const bool bDebugDisableFLCS =
-		false;
-
-	// NavAI runs its FLCS after helm commands in each physics substep.
-	if (flcs && !bDebugDisableFLCS && (!dir || dir->GetType() != ESteerAIType::NAV))
-	{
-		ExecFLCSFrame();
-	}
+	// Each director applies FLCS after issuing its subframe helm commands.
 
 	//-------------------------------------------------------------
 	// BR turn/target tracking
@@ -3792,32 +3800,6 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	// Throttle request -> actual throttle
 	//-------------------------------------------------------------
-	const double TargetThrottle =
-		FMath::Clamp(
-			throttle_request,
-			0.0,
-			100.0);
-
-	const double ThrottleStep =
-		FMath::Max(
-			75.0 * seconds,
-			1.0);
-
-	if (throttle < TargetThrottle)
-	{
-		throttle =
-			FMath::Min(
-				throttle + ThrottleStep,
-				TargetThrottle);
-	}
-	else if (throttle > TargetThrottle)
-	{
-		throttle =
-			FMath::Max(
-				throttle - ThrottleStep,
-				TargetThrottle);
-	}
-
 	//-------------------------------------------------------------
 	// Compute cached physical thrust.
 	// Physical::ExecFrame integrates this value.
@@ -3869,10 +3851,13 @@ Ship::ExecPhysics(double seconds)
 	// Legacy physics dispatch
 	//-------------------------------------------------------------
 	if (IsAirborne())
-	{
-		Physical::ExecFrame(seconds);
-		return;
-	}
+    {
+        const FVector Before = velocity;
+        AeroFrame(seconds);
+        const FVector Delta = velocity - Before + FVector(0,g_accel*seconds,0);
+        g_force = static_cast<float>(FVector::DotProduct(Delta,cam.vup())/seconds)/9.8f;
+        return;
+    }
 
 	if (IsDying() || flight_model < 2)
 	{
@@ -6817,22 +6802,14 @@ Ship::ACS() const
 
 double Ship::GetMissionClock() const
 {
-	if (const UTimerSubsystem* Timer = UTimerSubsystem::Get())
-	{
-		return Timer->GetMissionTimeSeconds();
-	}
-
-	return 0.0;
+    return GetMissionClockMS() / 1000.0;
 }
 
 int32 Ship::GetMissionClockMS() const
 {
-	if (const UTimerSubsystem* Timer = UTimerSubsystem::Get())
-	{
-		return Timer->GetMissionTimeMS();
-	}
-
-	return 0;
+    // Legacy MissionClock is elapsed time since THIS ship launched. Using the
+    // global mission clock removes the ten-second grace after a hangar wait.
+    return launch_time ? static_cast<int32>(Game::GetGameTime() + 1 - launch_time) : 0;
 }
 
 // +----------------------------------------------------------------------+

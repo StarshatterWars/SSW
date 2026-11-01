@@ -943,10 +943,10 @@ void UCmpnScreen::ShowCmpLoadDlg()
         return;
     }
 
-    if (!ActiveCampaignName.IsEmpty())
-    {
+    if (Campaign* Live = Campaign::GetCampaign())
+        CmpLoadDlg->SetCampaignName(FString(UTF8_TO_TCHAR(Live->GetName())));
+    else
         CmpLoadDlg->SetCampaignName(ActiveCampaignName);
-    }
 
     CmpLoadDlg->SetLoadingStage(TEXT("LOADING..."), 0.0f);
     CmpLoadDlg->SetVisibility(ESlateVisibility::Visible);

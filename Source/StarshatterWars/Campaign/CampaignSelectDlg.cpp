@@ -993,6 +993,14 @@ void UCampaignSelectDlg::StartSelectedCampaignFlow(bool bRestart)
     }
 
     manager->ShowCmpLoadDlg();
+    // The loading overlay is painted before deferred campaign activation.
+    // Supply the requested title now, while the old campaign is still active.
+    if (UCmpLoadDlg* Loading = manager->GetCmpLoadDlg())
+    {
+        if (auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>())
+            if (const FS_Campaign* Row = Data->GetCampaignByIndex1Based(CampaignIndexByOptionIndex[Selected]))
+                Loading->SetCampaignName(Row->Name);
+    }
 
     World->GetTimerManager().SetTimerForNextTick(
         FTimerDelegate::CreateUObject(this, &UCampaignSelectDlg::FinishSelectedCampaignFlow, bRestart));

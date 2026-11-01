@@ -77,6 +77,8 @@ public:
     void CommitMission();
 
     void DockShips();
+    void CollideShips();
+    void CrashShips();
 
     bool  IsActive()   const { return active; }
     bool  IsAirSpace() const { return type == AIR_SPACE; }

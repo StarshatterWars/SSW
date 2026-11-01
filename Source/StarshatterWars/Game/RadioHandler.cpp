@@ -365,12 +365,9 @@ RadioHandler::ProcessMessageAction(RadioMessage* msg, Ship* ship)
     if (msg->GetRadioAction() == RadioMessageAction::REQUEST_LANDING_CLEARANCE)
         return LandingClearance(msg, ship);
 
-	if (msg->GetRadioAction() == RadioMessageAction::CALL_FINALS) {
-        Ship* Sender = const_cast<Ship*>(msg->GetSender());
-        InboundSlot* Slot = Sender ? Sender->GetInbound() : nullptr;
-        if (!Slot || !Slot->GetDeck() || Slot->GetDeck()->GetCarrier() != ship) return false;
-        return LandingClearance(msg, ship);
-    }
+	// Legacy finals call is informational; clearance remains deck-owned.
+	if (msg->GetRadioAction() == RadioMessageAction::CALL_FINALS)
+        return true;
 
 	if (msg->GetRadioAction() == RadioMessageAction::REQUEST_PICTURE)
 		return Picture(msg, ship);
@@ -493,11 +490,11 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 		sequence = deck->Inbound(inbound_slot);
 	}
 	else {
-		sequence = deck->RecoveryPosition(inbound_slot);
+		sequence = inbound_slot->Index();
 	}
 
 	// inform sender of status:
-	RadioMessage* approach = new RadioMessage(inbound, ship, inbound_slot->Cleared() ? RadioMessageAction::CALL_CLEARANCE : RadioMessageAction::CALL_APPROACH);
+	RadioMessage* approach = new RadioMessage(inbound, ship, RadioMessageAction::CALL_APPROACH);
 
 	if (inbound_slot->Cleared()) {
 		const char* DeckNameAnsi = deck ? deck->GetName() : "Unknown Deck";

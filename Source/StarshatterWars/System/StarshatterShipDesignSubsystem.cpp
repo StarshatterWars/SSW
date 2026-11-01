@@ -934,11 +934,12 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		return;
 	}
 
-    // Falcon's authored FX ports compensate for the 0.27 hull scale.
+    // Falcon and Zodiac author FX ports in the hull's Unreal local axes.
     // Apply that scale in the normal startup parse as well as editor imports:
     // RuntimeEmitterLocalPosition removes it before applying the hull transform.
     // Keep every other system location, ship scale, and design unchanged.
-    if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase))
+    if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Zodiac"), ESearchCase::IgnoreCase))
     {
         const float PortScale = LocalScale > 0.f ? LocalScale : 1.f;
         for (auto& Drive : NewShipDesign.Drive)

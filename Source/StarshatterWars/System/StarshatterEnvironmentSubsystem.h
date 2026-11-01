@@ -95,6 +95,7 @@ class STARSHATTERWARS_API UStarshatterEnvironmentSubsystem
     , public FTickableGameObject
 {
     GENERATED_BODY()
+    friend class FRemainingCollisionPassTest;
 
 public:
 

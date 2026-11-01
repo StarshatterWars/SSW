@@ -513,11 +513,22 @@ void UCmdDlg::BuildOperationsChrome()
 
 void UCmdDlg::RefreshOperationsHeader()
 {
-    if (!CampaignNameText) return;
-    if (bHasCurrentCampaign && !CurrentCampaignData.Name.IsEmpty())
-        CampaignNameText->SetText(FText::FromString(CurrentCampaignData.Name.ToUpper()));
-    else if (Campaign* Live = Campaign::GetCampaign())
-        CampaignNameText->SetText(FText::FromString(FString(UTF8_TO_TCHAR(Live->GetName())).ToUpper()));
+    // This widget survives campaign switches. Resolve metadata again instead
+    // of treating the NativeConstruct snapshot as the active campaign.
+    CampaignPtr = Campaign::GetCampaign();
+    UGameInstance* GI = GetGameInstance();
+    auto* Data = GI ? GI->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
+    auto* Player = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    const int32 Index = CampaignPtr ? CampaignPtr->GetCampaignId()
+        : Player ? Player->GetPlayerInfo().Campaign : 0;
+    const FS_Campaign* Row = Data ? Data->GetCampaignByIndex1Based(Index) : nullptr;
+    CurrentCampaignData = Row ? *Row : FS_Campaign{};
+    bHasCurrentCampaign = Row != nullptr;
+    const FString Name = CampaignPtr ? FString(UTF8_TO_TCHAR(CampaignPtr->GetName()))
+        : Row ? Row->Name : FString();
+    if (CampaignNameText) CampaignNameText->SetText(FText::FromString(Name.ToUpper()));
+    if (CurrentLocationText) CurrentLocationText->SetText(FText::FromString(
+        Row && !Row->System.IsEmpty() ? Row->System + TEXT(" System") : FString()).ToUpper());
 }
 
 void UCmdDlg::RefreshOperationsTabStyles()

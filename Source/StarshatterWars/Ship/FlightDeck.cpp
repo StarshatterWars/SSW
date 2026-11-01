@@ -684,6 +684,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
             LaunchFrame.Clone(carrier->GetCam());
             LaunchFrame.Yaw(azimuth);
             cat=LaunchFrame.vpn().GetSafeNormal()*300.0;
+            slot_ship->BeginCarrierLaunchClearance();
 
 			slot_ship->SetVelocity(carrier->GetVelocity() + cat);
 			slot_ship->SetFlightPhase(EOPSMode::LAUNCH);
@@ -935,24 +936,11 @@ FlightDeck::Orient(const Physical* rep)
 int
 FlightDeck::SpaceLeft(int Type) const
 {
-    if (!slots || num_slots <= 0)
-        return 0;
-
-    int OccupiedCount = 0;
-    int CompatibleFreeCount = 0;
-
-    for (int i = 0; i < num_slots; ++i)
-    {
-        if (slots[i].ship)
-            ++OccupiedCount;
-        else if ((static_cast<uint32>(slots[i].filter) & static_cast<uint32>(Type)) != 0)
-            ++CompatibleFreeCount;
-    }
-
-    // max_ships limits concurrent occupancy, not the number of authored
-    // physical spots or how many aircraft may launch over time.
-    const int CapacityLeft = FMath::Max(0, GetMaxShips() - OccupiedCount);
-    return FMath::Min(CompatibleFreeCount, CapacityLeft);
+    if (!slots || num_slots <= 0) return 0;
+    int Count = 0;
+    for (int i=0; i<num_slots; ++i)
+        if (!slots[i].ship && (slots[i].filter & Type)) ++Count;
+    return Count;
 }
 
 // +----------------------------------------------------------------------+
@@ -961,15 +949,6 @@ bool FlightDeck::Spot(Ship* s, int& outIndex)
 {
 	if (!s || !slots || num_slots <= 0)
 		return false;
-
-    int OccupiedCount = 0;
-    for (int i = 0; i < num_slots; ++i)
-        if (slots[i].ship)
-            ++OccupiedCount;
-
-    // Enforce the same limit for both automatic and explicitly selected spots.
-    if (OccupiedCount >= GetMaxShips())
-        return false;
 
 	// Build ship compatibility mask from classification
 	// (Starshatter-style: one bit per ship class)
@@ -1323,7 +1302,7 @@ FlightDeck::Inbound(InboundSlot*& s)
 		// if the new guy is first in line, and the deck is almost ready,
 		// go ahead and clear him for approach now
 		recovery_queue.sort();
-		if (recovery_queue[0] == s && !s->Cleared() && s->Distance() < 35e3 && CanRecoverShip(inbound))
+		if (recovery_queue[0] == s && !s->Cleared() && slots[0].time <= 3)
 			s->Clear();
 
 		return recovery_queue.index(s) + 1;
@@ -1358,7 +1337,7 @@ FlightDeck::GrantClearance()
     recovery_queue.sort();
     First = recovery_queue[0];
     Ship* Incoming = First ? First->GetShip() : nullptr;
-    if (Incoming && First->Distance() < 35e3 && CanRecoverShip(Incoming))
+    if (Incoming && First->Distance() < 35e3)
     {
         First->Clear();
         RadioMessage* Clearance = new RadioMessage(Incoming, carrier, RadioMessageAction::CALL_CLEARANCE);

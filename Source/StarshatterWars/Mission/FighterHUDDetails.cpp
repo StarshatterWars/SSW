@@ -29,6 +29,11 @@
 #include "Framework/Application/SlateApplication.h"
 #include "InputCoreTypes.h"
 #include "Fonts/FontMeasure.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Text/STextBlock.h"
 
 SFighterHUDDetails::~SFighterHUDDetails()=default;
 
@@ -162,7 +167,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     ILSBrush.ImageSize = FVector2D(360,180);
     PlayerBrush.DrawAs = TargetBrush.DrawAs = ESlateBrushDrawType::Image;
     PlayerBrush.ImageSize = TargetBrush.ImageSize = FVector2D(96, 96);
-    const TCHAR* Names[] = { TEXT("TAC_left"), TEXT("TAC_right"), TEXT("sensor_fov"), TEXT("sensor_hsd"), TEXT("sensor_3d"), TEXT("CAUTION_left"), TEXT("CAUTION_right") };
+    const TCHAR* Names[] = { TEXT("TAC_left"), TEXT("TAC_right"), TEXT("sensor_fov"), TEXT("sensor_hsd"), TEXT("sensor_3d"), TEXT("CAUTION_left"), TEXT("CAUTION_right"), TEXT("INSTR_left"), TEXT("INSTR_right") };
     for (int32 I = 0; I < UE_ARRAY_COUNT(Names); ++I)
     {
         const FString Path = FString::Printf(TEXT("/Game/UI/HUD/%s.%s"), Names[I], Names[I]);
@@ -175,13 +180,38 @@ void SFighterHUDDetails::Construct(const FArguments& A)
         UE_LOG(LogTemp, Log, TEXT("[FighterHUD] Panel %s: %s"), *Path,
             PanelTextures[I].IsValid() ? TEXT("loaded") : TEXT("MISSING"));
     }
+    ChildSlot
+    [ SNew(SOverlay)
+        + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Bottom)
+        [ SNew(SBox)
+            .WidthOverride_Lambda([this]{ return 512.f * InformationScale; })
+            .HeightOverride_Lambda([this]{ return 256.f * InformationScale; })
+            .Visibility_Lambda([this]{ return ShowHUD.Get() && bShowInformation ? EVisibility::Visible : EVisibility::Collapsed; })
+            [ SNew(SBox)
+                .Padding_Lambda([this]{ return FMargin(112,150,112,28) * InformationScale; })
+                [ SAssignNew(InformationScroll,SScrollBox)
+                    .Clipping(EWidgetClipping::ClipToBoundsAlways)
+                    + SScrollBox::Slot()
+                    [ SAssignNew(InformationRows,SVerticalBox) ]
+                ]
+            ]
+        ]
+    ];
+
 }
 void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
 {
-    SLeafWidget::Tick(G, Now, Delta);
+    SCompoundWidget::Tick(G, Now, Delta);
+    const FVector2D Size=G.GetLocalSize();
+    InformationScale=FMath::Min(Size.X/1280.0,Size.Y/720.0);
+    UpdateInformationMessages();
     bWarningFlash = FMath::Fmod(Now, 1.0) >= 0.5;
     if (Ship* Player = PlayerShip())
     {
+        if (PanelPlayerId != Player->GetIdentity())
+        {
+            PanelPlayerId=Player->GetIdentity();bShowCaution=false;bShowInformation=true;
+        }
         UpdateILSMode(Player->GetIdentity(), Player->GetInbound() != nullptr);
         PitchDegrees = FMath::RadiansToDegrees(Player->GetCompassPitch());
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(Player->GetCompassHeading()) + 360.0, 360.0);
@@ -412,8 +442,8 @@ void SFighterHUDDetails::CycleWeapon(bool bPrimary)
 {
     if (Ship* P = PlayerShip()) { if (bPrimary) P->CyclePrimary(); else P->CycleSecondary(); Refresh(); }
 }
-int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const FSlateRect&,
-    FSlateWindowElementList& E, int32 L, const FWidgetStyle&, bool) const
+int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, const FSlateRect& Cull,
+    FSlateWindowElementList& E, int32 L, const FWidgetStyle& Style, bool Enabled) const
 {
     if (!ShowHUD.Get()) return L;
     const double LowerReadoutBaseline = 30.0;
@@ -761,13 +791,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),TargetDisplayColor);
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
-    TArray<FRadioHUDLine> RadioLines;
-    RadioView::GetHUDMessages(RadioLines);
-    for (int32 LineIndex = 0; LineIndex < RadioLines.Num(); ++LineIndex)
+    // Both panels share the same 512x256 native artwork extents and anchor.
+    for(int32 I=7;bShowInformation && I<9;++I)
     {
-        FLinearColor Color = HUDBlue;
-        Color.A *= RadioLines[LineIndex].Opacity;
-        Text(FVector2D(24*Scale, (94+20*LineIndex)*Scale), RadioLines[LineIndex].Caption, Color);
+        const FVector2D D=FVector2D(256,256)*Scale;
+        Artwork(I,FVector2D(Size.X*0.5+(I==7?-D.X:0.0),Size.Y-D.Y),D);
     }
     if (IsRadioOpen())
     {
@@ -781,7 +809,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs&, const FGeometry& G, const F
         Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
     }
     DrawILS(G, E, L);
-    return L+3;
+    return SCompoundWidget::OnPaint(Args,G,Cull,E,L+4,Style,Enabled);
 }
 
 namespace
@@ -987,4 +1015,24 @@ void SFighterHUDDetails::UpdateILSMode(int32 PlayerId, bool bInbound)
     // Enable once on assignment; a manual Hide must survive subsequent HUD ticks.
     if (bInbound && !bILSInbound) bILSMode = true;
     bILSInbound = bInbound;
+}
+
+void SFighterHUDDetails::UpdateInformationMessages()
+{
+    TArray<FRadioHUDLine> Lines;RadioView::GetHUDMessages(Lines);
+    bool Changed=Lines.Num()!=InformationCaptions.Num();
+    for(int32 I=0;!Changed && I<Lines.Num();++I)
+        Changed=Lines[I].Caption!=InformationCaptions[I] || Lines[I].ExpiresAt!=InformationExpiry[I];
+    if(!Changed || !InformationRows) return;
+    InformationRows->ClearChildren();InformationCaptions.Reset();InformationExpiry.Reset();
+    for(const auto& Line:Lines)
+    {
+        InformationCaptions.Add(Line.Caption);InformationExpiry.Add(Line.ExpiresAt);
+        InformationRows->AddSlot().AutoHeight().Padding(0,0,0,3)
+        [ SNew(STextBlock).Text(FText::FromString(Line.Caption)).AutoWrapText(true)
+            .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(8,int32(11*InformationScale)));})
+            .ColorAndOpacity_Lambda([Expiry=Line.ExpiresAt]{FLinearColor Color=HUDBlue;Color.A=FMath::Clamp(Expiry-FPlatformTime::Seconds(),0.0,1.0);return FSlateColor(Color);})
+        ];
+    }
+    if(InformationScroll)InformationScroll->ScrollToEnd();
 }

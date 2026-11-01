@@ -111,6 +111,7 @@ public:
 
 private:
     friend class FNativeHullSkinTest;
+    friend class FZodiacPropulsionTest;
 	// ---------- current-ship scratch ----------
 	void BeginDesignParse(const char* Fn);
 	void FinalizeDesignParse();

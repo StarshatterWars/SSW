@@ -50,7 +50,6 @@
 
 #include "Game.h"
 #include "Random.h"
-#include "ObjectiveArrivalUtils.h"
 
 // +----------------------------------------------------------------------+
 
@@ -372,76 +371,58 @@ ShipAI::ExecFrame(double secs)
 
 	NavlightControl();
 
-	if (!bObjectiveCompleteLockout)
+
+	CheckTarget();
+
+	if (tactical)
 	{
-		CheckTarget();
-
-		if (tactical)
-		{
-			tactical->ExecFrame(seconds);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error,
-				TEXT("[ShipAI::ExecFrame] NULL Tactical Ship='%hs'"),
-				ship ? ship->GetName() : "NULL");
-		}
-
-		if (target && target != ship->GetTarget())
-		{
-			ship->LockTarget(target);
-
-			if (target == ship->GetTarget() &&
-				target->GetType() == ESimObject::SHIP)
-			{
-				if (target->GetIdentity() != engaged_ship_id &&
-					Game::GetGameTime() - last_call_time > 10000)
-				{
-					RadioMessage* msg =
-						new RadioMessage(
-							ship->GetElement(),
-							ship,
-							RadioMessageAction::CALL_ENGAGING);
-
-					msg->AddTarget(target);
-
-					RadioTraffic::Transmit(msg);
-
-					last_call_time =
-						Game::GetGameTime();
-
-					engaged_ship_id =
-						target->GetIdentity();
-				}
-			}
-		}
-		else if (!target)
-		{
-			target =
-				ship->GetTarget();
-
-			if (engaged_ship_id && !target)
-			{
-				engaged_ship_id =
-					0;
-			}
-		}
+		tactical->ExecFrame(seconds);
 	}
 	else
 	{
-		target = nullptr;
-		threat = nullptr;
-		rumor = nullptr;
-		patrol = 0;
-		farcaster = nullptr;
+		UE_LOG(LogTemp, Error,
+			TEXT("[ShipAI::ExecFrame] NULL Tactical Ship='%hs'"),
+			ship ? ship->GetName() : "NULL");
+	}
 
-		//---------------------------------------------------------
-		// Reset arrival state when objective flow is locked out.
-		//---------------------------------------------------------
+	if (target && target != ship->GetTarget())
+	{
+		ship->LockTarget(target);
 
-		bObjectiveArrived = false;
+		if (target == ship->GetTarget() &&
+			target->GetType() == ESimObject::SHIP)
+		{
+			if (target->GetIdentity() != engaged_ship_id &&
+				Game::GetGameTime() - last_call_time > 10000)
+			{
+				RadioMessage* msg =
+					new RadioMessage(
+						ship->GetElement(),
+						ship,
+						RadioMessageAction::CALL_ENGAGING);
 
-		ship->DropTarget();
+				msg->AddTarget(target);
+
+				RadioTraffic::Transmit(msg);
+
+				last_call_time =
+					Game::GetGameTime();
+
+				engaged_ship_id =
+					target->GetIdentity();
+			}
+		}
+	}
+	else if (!target)
+	{
+		target =
+			ship->GetTarget();
+
+		if (engaged_ship_id && !target)
+		{
+			engaged_ship_id =
+				0;
+		}
 	}
 
 	FindObjective();
@@ -449,9 +430,7 @@ ShipAI::ExecFrame(double secs)
 	//-------------------------------------------------------------
 	// Navigator owns helm/throttle behavior.
 	//
-	// Objective arrival braking is handled inside the derived
-	// Navigator / ThrottleControl path so normal throttle logic
-	// cannot overwrite it afterward.
+	// Completion advances the route without disabling tactical assessment.
 	//-------------------------------------------------------------
 
 	Navigator();
@@ -698,231 +677,61 @@ ShipAI::FindObjectivePatrol()
 void
 ShipAI::FindObjectiveNavPoint()
 {
-	SimRegion* SelfRgn =
-		ship ? ship->GetRegion() : nullptr;
+    if (!ship || !navpt) return;
+	SimRegion*     self_rgn = ship->GetRegion();
+	SimRegion*     nav_rgn  = navpt->GetRegion();
+	QuantumDrive*  qdrive   = ship->GetQuantumDrive();
 
-	SimRegion* NavRgn =
-		navpt ? navpt->GetRegion() : nullptr;
+	if (!self_rgn)
+	return;
 
-	QuantumDrive* QDrive =
-		ship ? ship->GetQuantumDrive() : nullptr;
-
-	if (!ship || !SelfRgn || !navpt)
-	{
-		return;
+	if (!nav_rgn) {
+		nav_rgn = self_rgn;
+		navpt->SetRegion(nav_rgn);
 	}
 
-	//-------------------------------------------------------------
-	// Ensure navpoint region exists
-	//-------------------------------------------------------------
+	bool use_farcaster      = self_rgn != nav_rgn &&
+	(navpt->GetFarcast() ||
+	!qdrive ||
+	!qdrive->IsPowerOn() ||
+	qdrive->GetStatus() < SYSTEM_STATUS::DEGRADED
+	);
 
-	if (!NavRgn)
-	{
-		NavRgn =
-			SelfRgn;
-
-		navpt->SetRegion(
-			NavRgn);
+	if (use_farcaster) {
+		FindObjectiveFarcaster(self_rgn, nav_rgn);
 	}
 
-	//-------------------------------------------------------------
-	// Determine whether farcaster routing is required
-	//-------------------------------------------------------------
+	else {
+		if (farcaster) {
+			if (farcaster->GetShip() && farcaster->GetDest() && farcaster->GetShip()->GetRegion() != self_rgn)
+			farcaster = farcaster->GetDest()->GetFarcaster();
 
-	const bool bUseFarcaster =
-		(SelfRgn != NavRgn) &&
-		(navpt->GetFarcast() ||
-			!QDrive ||
-			!QDrive->IsPowerOn() ||
-			QDrive->GetStatus() < SYSTEM_STATUS::DEGRADED);
-
-	if (bUseFarcaster)
-	{
-		FindObjectiveFarcaster(
-			SelfRgn,
-			NavRgn);
-
-		return;
-	}
-
-	//-------------------------------------------------------------
-	// Legacy non-farcaster routing
-	//-------------------------------------------------------------
-
-	if (farcaster)
-	{
-		if (farcaster->GetShip() &&
-			farcaster->GetShip()->GetRegion() != SelfRgn)
-		{
-			if (farcaster->GetDest())
-			{
-				farcaster =
-					farcaster->GetDest()->GetFarcaster();
-			}
+			if (farcaster) obj_w = farcaster->EndPoint();
 		}
 
-		if (farcaster)
-		{
-			obj_w =
-				farcaster->EndPoint();
-		}
-	}
+		else {
+			// transform from starsystem to world coordinates:
+			FVector npt = navpt->GetRegion()->GetLocation() + navpt->GetLocation();
 
-	//-------------------------------------------------------------
-	// Standard navpoint objective
-	//-------------------------------------------------------------
+			SimRegion* active_region = ship->GetRegion();
 
-	if (!farcaster)
-	{
-		//---------------------------------------------------------
-		// Runtime object target
-		//---------------------------------------------------------
+			if (active_region)
+			npt -= active_region->GetLocation();
 
-		bool bResolvedRuntimeTarget =
-			false;
+			npt = OtherHand(npt);
 
-		if (navpt->GetTargetName() &&
-			strlen(navpt->GetTargetName()) > 0)
-		{
-			SimObject* TargetObj =
-				SelfRgn->FindObject(
-					navpt->GetTargetName());
-
-			if (TargetObj)
-			{
-				//-------------------------------------------------
-				// IMPORTANT:
-				// Runtime sim owns world-space.
-				// NO handedness conversion here.
-				//-------------------------------------------------
-
-				obj_w =
-					TargetObj->GetLocation();
-
-				bResolvedRuntimeTarget =
-					true;
-
-				UE_LOG(LogTemp, VeryVerbose,
-					TEXT("[ShipAI::FindObjectiveNavPoint] RuntimeTarget='%hs' ObjW=%s"),
-					navpt->GetTargetName(),
-					*obj_w.ToString());
-			}
-			else
-			{
-				UE_LOG(LogTemp, VeryVerbose,
-					TEXT("[ShipAI::FindObjectiveNavPoint] FAILED RuntimeTarget='%hs'"),
-					navpt->GetTargetName());
-			}
+			obj_w = npt;
 		}
 
-		//---------------------------------------------------------
-		// Static navpoint fallback
-		//---------------------------------------------------------
+		// distance from self to navpt:
+		distance = FVector(obj_w - ship->GetLocation()).Size();
 
-		if (!bResolvedRuntimeTarget)
-		{
-			//-----------------------------------------------------
-			// Legacy transform chain:
-			//
-			// Region world location
-			// + local navpoint offset
-			// - active region origin
-			//-----------------------------------------------------
+		if (farcaster && distance < 1000)
+		farcaster = 0;
 
-			FVector Npt =
-				navpt->GetRegion()->GetLocation() +
-				navpt->GetLocation();
-
-			SimRegion* ActiveRegion =
-				ship->GetRegion();
-
-			if (ActiveRegion)
-			{
-				Npt -=
-					ActiveRegion->GetLocation();
-			}
-
-			//-----------------------------------------------------
-			// IMPORTANT:
-			// Only static authored navpoints use OtherHand().
-			//-----------------------------------------------------
-
-			Npt =
-				OtherHand(Npt);
-
-			obj_w =
-				Npt;
-
-			UE_LOG(LogTemp, VeryVerbose,
-				TEXT("[ShipAI::FindObjectiveNavPoint] StaticNav ObjW=%s"),
-				*obj_w.ToString());
-		}
+		if (distance <  1000 || (navpt->GetAction() == EInstruction::Launch && distance > 25000))
+		ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
 	}
-
-	//-------------------------------------------------------------
-	// Objective
-	//-------------------------------------------------------------
-
-	objective =
-		obj_w;
-
-	//-------------------------------------------------------------
-	// Distance
-	//-------------------------------------------------------------
-
-	distance =
-		(obj_w - ship->GetLocation()).Size();
-
-	//-------------------------------------------------------------
-	// Farcaster cleanup
-	//-------------------------------------------------------------
-
-	if (farcaster &&
-		distance < 1000.0)
-	{
-		farcaster =
-			nullptr;
-	}
-
-	//-------------------------------------------------------------
-	// Navpoint completion
-	//-------------------------------------------------------------
-
-	const double CompletionRadius =
-		navpt->GetFarcast()
-		? 5000.0
-		: 1000.0;
-
-	if (distance <= CompletionRadius ||
-		(navpt->GetAction() == EInstruction::Launch &&
-			distance > 25000.0))
-	{
-		ship->SetNavptStatus(
-			navpt,
-			INSTRUCTION_STATUS::COMPLETE);
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Objective Arrival COMPLETE] Ship='%hs' Target='%hs' Distance=%.2f Radius=%.2f Action=%d Farcast=%d"),
-			ship ? ship->GetName() : "NULL",
-			navpt->GetTargetName()
-			? navpt->GetTargetName()
-			: "NULL",
-			distance,
-			CompletionRadius,
-			(int32)navpt->GetAction(),
-			navpt->GetFarcast());
-	}
-
-	UE_LOG(LogTemp, VeryVerbose,
-		TEXT("[ShipAI::FindObjectiveNavPoint] Ship='%hs' SelfRgn='%hs' NavRgn='%hs' NavLoc=%s ObjW=%s ShipLoc=%s Dist=%.2f Farcast=%d"),
-		ship ? ship->GetName() : "NULL",
-		SelfRgn ? SelfRgn->GetName() : "NULL",
-		NavRgn ? NavRgn->GetName() : "NULL",
-		*navpt->GetLocation().ToString(),
-		*obj_w.ToString(),
-		*ship->GetLocation().ToString(),
-		distance,
-		farcaster ? 1 : 0);
 }
 
 // +--------------------------------------------------------------------+
@@ -2023,120 +1832,5 @@ ShipAI::CheckTarget()
 			if (tgt_ship->GetIFF() == ship->GetIFF() && !tgt_ship->IsRogue())
 				target = 0;
 		}
-	}
-}
-
-/*
-========================================================================
-DETERMINE ARRIVAL TYPE
-========================================================================
-*/
-
-EObjectiveArrivalType
-ShipAI::DetermineArrivalType() const
-{
-	if (!ship)
-	{
-		return EObjectiveArrivalType::Generic;
-	}
-
-	Instruction* NavPoint =
-		ship->GetNextNavPoint();
-
-	if (!NavPoint)
-	{
-		return EObjectiveArrivalType::Generic;
-	}
-
-	//-------------------------------------------------------------
-	// Explicit instruction action driven behavior
-	//-------------------------------------------------------------
-
-	switch (NavPoint->GetAction())
-	{
-	case EInstruction::Dock:
-	case EInstruction::RTB:
-		return EObjectiveArrivalType::Dock;
-
-	case EInstruction::Patrol:
-	case EInstruction::Sweep		:
-	case EInstruction::Recon:
-		return EObjectiveArrivalType::Patrol;
-
-	case EInstruction::Escort:
-	case EInstruction::Defend:
-		return EObjectiveArrivalType::Formation;
-
-	case EInstruction::Vector:
-	default:
-		break;
-	}
-
-	//-------------------------------------------------------------
-	// Farcaster objective
-	//-------------------------------------------------------------
-
-	if (NavPoint->GetFarcast() != 0)
-	{
-		return EObjectiveArrivalType::Farcaster;
-	}
-
-	return EObjectiveArrivalType::Generic;
-}
-
-/*
-========================================================================
-UPDATE OBJECTIVE ARRIVAL
-========================================================================
-*/
-
-void
-ShipAI::UpdateObjectiveArrival()
-{
-	if (!ship)
-	{
-		return;
-	}
-
-	if (objective.IsNearlyZero())
-	{
-		return;
-	}
-
-	const EObjectiveArrivalType ArrivalType =
-		DetermineArrivalType();
-
-	const FObjectiveArrivalSettings ArrivalSettings =
-		FObjectiveArrivalUtils::MakeSettings(
-			ArrivalType,
-			ship);
-
-	const FVector ShipLocation =
-		ship->GetLocation();
-
-	const FVector ShipVelocity =
-		ship->GetVelocity();
-
-	const FVector ObjectiveLocation =
-		objective;
-
-	const FObjectiveArrivalState ArrivalState =
-		FObjectiveArrivalUtils::EvaluateArrival(
-			ShipLocation,
-			ShipVelocity,
-			ObjectiveLocation,
-			ArrivalSettings);
-
-	bObjectiveArrived =
-		ArrivalState.bComplete;
-
-	if (ArrivalState.bComplete)
-	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Objective Arrival] Ship='%hs' Type=%d Dist=%.1f Speed=%.1f"),
-			ship->GetName(),
-			static_cast<int32>(ArrivalType),
-			ArrivalState.Distance,
-			ArrivalState.Speed);
 	}
 }

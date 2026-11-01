@@ -848,7 +848,6 @@ void UCmdMissionsDlg::BuildModernMissionsLayout()
     MainSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
     MainSlot->SetOffsets(FMargin(0.f));
     MainSlot->SetZOrder(0);
-    MissionLine(Page, MissionText(WidgetTree, TEXT("OPERATIONS  /  MISSION SELECTION"), CmdAccent), 8.f);
     NativeMissionCount = MissionText(WidgetTree, TEXT("AVAILABLE MISSIONS"), CmdMuted);
     MissionLine(Page, NativeMissionCount, 14.f);
 

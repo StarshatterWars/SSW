@@ -19,6 +19,7 @@ UCLASS(BlueprintType, Blueprintable)
 class STARSHATTERWARS_API UQuitMissionMenu : public UBaseScreen
 {
     GENERATED_BODY()
+    friend class FQuitLocalKeysTest;
 public:
     UQuitMissionMenu(const FObjectInitializer& ObjectInitializer);
     FMissionQuitActionRequested OnActionRequested;
@@ -34,6 +35,8 @@ protected:
     void BuildGeneratedContent();
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
+    FReply HandleLocalMenuKey(const FKeyEvent& Event);
+    virtual FReply NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
     virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;

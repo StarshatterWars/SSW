@@ -35,6 +35,8 @@ public:
         ChildSlot [ Args._Content.ToSharedRef() ];
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
+    virtual FReply OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override
+    { return OnPreviewKeyDown(Geometry,Event); }
     virtual FReply OnPreviewKeyDown(const FGeometry&, const FKeyEvent& Event) override
     {
         if (Event.IsRepeat()) return FReply::Handled();

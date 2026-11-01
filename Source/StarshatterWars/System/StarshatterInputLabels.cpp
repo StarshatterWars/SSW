@@ -56,6 +56,7 @@ FText UStarshatterInputLabels::GetDefaultActionLabel(FName ActionName)
     if (ActionName==TEXT("IA_GroundMode")) return NSLOCTEXT("SSW.InputActions","IA_GroundMode","Toggle Ground Targeting");
     if (ActionName==TEXT("IA_HUDColor")) return NSLOCTEXT("SSW.InputActions","IA_HUDColor","Cycle HUD Color");
     if (ActionName==TEXT("IA_HUDInstruments")) return NSLOCTEXT("SSW.InputActions","IA_HUDInstruments","Toggle HUD Instruments");
+    if (ActionName==TEXT("IA_HUDInformation")) return NSLOCTEXT("SSW.InputActions","IA_HUDInformation","Toggle HUD Information");
     if (ActionName==TEXT("IA_HUDWarnings")) return NSLOCTEXT("SSW.InputActions","IA_HUDWarnings","Toggle HUD Warnings");
     if (ActionName==TEXT("IA_HudMode")) return NSLOCTEXT("SSW.InputActions","IA_HudMode","Cycle HUD Mode");
     if (ActionName==TEXT("IA_LaunchProbe")) return NSLOCTEXT("SSW.InputActions","IA_LaunchProbe","Launch Sensor Probe");

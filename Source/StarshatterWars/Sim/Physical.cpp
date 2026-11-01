@@ -38,7 +38,7 @@ static inline double NormalizeAndReturnLength(FVector& V)
 	const double Len = (double)V.Size();
 	if (Len > 1e-9)
 	{
-		V /= (float)Len;
+		V /= Len;
 		return Len;
 	}
 	V = FVector::ZeroVector;
@@ -180,141 +180,68 @@ Physical::~Physical()
 void
 Physical::ExecFrame(double s)
 {
-	const double OriginalSeconds =
-		s;
+    if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
+	FVector orig_velocity = GetVelocity();
+	arcade_velocity = FVector::ZeroVector;
 
-	const FVector OrigVelocity =
-		GetVelocity();
-
-	arcade_velocity =
-		FVector::ZeroVector;
-
-	//-------------------------------------------------------------
-	// Update director
-	//-------------------------------------------------------------
+	// if this object is under direction,
+	// but doesn't need subframe accuracy,
+	// update the control parameters:
 	if (dir && !dir->GetSubframe())
-	{
-		dir->ExecFrame(s);
-	}
+	dir->ExecFrame(s);
 
-	//-------------------------------------------------------------
-	// Lifetime
-	//-------------------------------------------------------------
+	// decrement life before destroying the frame time:
 	if (life > 0)
-	{
-		life -= s;
-	}
+	life -= s;
 
-	//-------------------------------------------------------------
-	// Integrate using fixed substeps
-	//-------------------------------------------------------------
-	double SecondsThisSlice =
-		s;
+	// integrate equations
+	// using slices no larger
+	// than sub_frame:
 
-	while (s > 0.0)
-	{
-		SecondsThisSlice =
-			(s > sub_frame)
-			? sub_frame
-			: s;
+	double seconds = s;
 
-		//---------------------------------------------------------
-		// Subframe director
-		//---------------------------------------------------------
+	while (s > 0.0) {
+		if (s > sub_frame)
+		seconds = sub_frame;
+		else
+		seconds = s;
+
+		// if the director needs subframe accuracy, run it now:
 		if (dir && dir->GetSubframe())
-		{
-			dir->ExecFrame(
-				SecondsThisSlice);
-		}
+		dir->ExecFrame(seconds);
 
-		//---------------------------------------------------------
-		// Angular motion
-		//---------------------------------------------------------
 		if (!straight)
-		{
-			AngularFrame(
-				SecondsThisSlice);
+		AngularFrame(seconds);
+
+		// LINEAR MOVEMENT ----------------------------
+		FVector pos = cam.Pos();
+
+		// if the object is thrusting,
+		// accelerate along the camera normal:
+		if (thrust) {
+			FVector thrustvec = cam.vpn();
+			thrustvec *= ((thrust/mass) * seconds);
+			velocity += thrustvec;
 		}
 
-		//---------------------------------------------------------
-		// Position
-		//---------------------------------------------------------
-		FVector Pos =
-			cam.Pos();
+		LinearFrame(seconds);
 
-		//---------------------------------------------------------
-		// Main thrust
-		//---------------------------------------------------------
-		if (thrust != 0.0f)
-		{
-			FVector ThrustVec =
-				cam.vpn();
+		// move the position by the (time-frame scaled) velocity:
+		pos += velocity * seconds;
+		cam.MoveTo(pos);
 
-			ThrustVec *=
-				(float)(
-					((double)thrust / (double)mass) *
-					SecondsThisSlice);
-
-			velocity +=
-				ThrustVec;
-		}
-
-		//---------------------------------------------------------
-		// Lateral thrust / gravity / drag
-		//---------------------------------------------------------
-		const FVector VelBeforeLinear =
-			velocity;
-
-		LinearFrame(
-			SecondsThisSlice);
-
-		//---------------------------------------------------------
-		// Move object
-		//---------------------------------------------------------
-		const FVector PosBeforeMove =
-			Pos;
-
-		Pos +=
-			velocity *
-			(float)SecondsThisSlice;
-
-		cam.MoveTo(Pos);
-
-		s -=
-			SecondsThisSlice;
+		s -= seconds;
 	}
 
-	alpha =
-		0.0f;
+	alpha = 0.0f;
 
-	//-------------------------------------------------------------
-	// Flight path
-	//-------------------------------------------------------------
+
 	if (!straight)
-	{
-		CalcFlightPath();
-	}
+	CalcFlightPath();
 
-	//-------------------------------------------------------------
-	// Acceleration
-	//-------------------------------------------------------------
-	if (OriginalSeconds > 0.0)
-	{
-		accel =
-			(GetVelocity() - OrigVelocity) *
-			(float)(1.0 / OriginalSeconds);
-	}
-	else
-	{
-		accel =
-			FVector::ZeroVector;
-	}
-
+	accel = (GetVelocity() - orig_velocity) * (1/seconds);
 	if (!IsFiniteVector(accel))
-	{
-		accel =
-			FVector::ZeroVector;
-	}
+	accel = FVector::ZeroVector;
 }
 
 // +--------------------------------------------------------------------+
@@ -322,6 +249,7 @@ Physical::ExecFrame(double s)
 void
 Physical::AeroFrame(double s)
 {
+    if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
 	arcade_velocity = FVector::ZeroVector;
 
 	// if this object is under direction,
@@ -354,7 +282,7 @@ Physical::AeroFrame(double s)
 		if (thrust != 0.0f)
 		{
 			FVector ThrustVec = cam.vpn();
-			ThrustVec *= (float)(((double)thrust / (double)mass) * SecondsThisSlice);
+			ThrustVec *= ((thrust/mass) * SecondsThisSlice);
 			velocity += ThrustVec;
 		}
 
@@ -367,7 +295,7 @@ Physical::AeroFrame(double s)
 		// if no thrusters, do constant gravity:
 		else if (g_accel > 0.0f)
 		{
-			velocity += FVector(0.0f, -(float)g_accel, 0.0f) * (float)SecondsThisSlice;
+			velocity += FVector(0.0f, -(float)g_accel, 0.0f) * SecondsThisSlice;
 		}
 
 		// compute alpha, rho, drag, and lift:
@@ -387,7 +315,7 @@ Physical::AeroFrame(double s)
 			FVector Vpn = cam.vpn();
 
 			// vfp1 = vfp - vrt * (vfp dot vrt)
-			FVector Vfp1 = Vfp - Vrt * (float)(Vfp | Vrt);
+			FVector Vfp1 = Vfp - Vrt * (Vfp | Vrt);
 			NormalizeAndReturnLength(Vfp1);
 
 			const double CosAlpha = (double)(Vfp1 | Vpn);
@@ -406,32 +334,32 @@ Physical::AeroFrame(double s)
 				alpha = -alpha;
 
 			if (alpha <= stall)
-				Lift = (double)CL * (double)alpha * Rho * V2;
+				Lift = (CL * alpha) * Rho * V2;
 			else
-				Lift = (double)CL * (double)(2.0f * stall - alpha) * Rho * V2;
+				Lift = (CL * (2*stall - alpha)) * Rho * V2;
 
 			// add lift to velocity:
-			if (FMath::IsFinite((float)Lift))
-				velocity += Vup * (float)(Lift * SecondsThisSlice);
+			if (FMath::IsFinite(Lift))
+				velocity += Vup * Lift * SecondsThisSlice;
 			else
 				Lift = 0.0;
 
 			// if drag applies, decelerate:
-			const double Alpha2 = (double)alpha * (double)alpha;
+			const double Alpha2 = alpha * alpha;
 			const double DragEff = ((double)drag + ((double)CD * Alpha2)) * Rho * V2;
 
 			FVector Vn = velocity;
 			NormalizeAndReturnLength(Vn);
 
-			velocity += Vn * (float)(-DragEff * SecondsThisSlice);
+			velocity += Vn * -DragEff * SecondsThisSlice;
 		}
 		else
 		{
-			velocity *= (float)std::exp(-(double)drag * SecondsThisSlice);
+			velocity *= std::exp(-drag * SecondsThisSlice);
 		}
 
 		// move the position by the (time-frame scaled) velocity:
-		Pos += velocity * (float)SecondsThisSlice;
+		Pos += velocity * SecondsThisSlice;
 		cam.MoveTo(Pos);
 
 		s -= SecondsThisSlice;
@@ -452,6 +380,7 @@ double Physical::GetDensity() const
 void
 Physical::ArcadeFrame(double s)
 {
+    if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
 	// if this object is under direction,
 	// but doesn't need subframe accuracy,
 	// update the control parameters:
@@ -484,23 +413,23 @@ Physical::ArcadeFrame(double s)
 		const double Bleed = (double)(arcade_velocity | cam.vpn());
 
 		Speed *= std::pow(Bleed, 30.0);
-		arcade_velocity = cam.vpn() * (float)Speed;
+		arcade_velocity = cam.vpn() * Speed;
 
 		if (thrust != 0.0f)
 		{
 			FVector ThrustVec = cam.vpn();
-			ThrustVec *= (float)(((double)thrust / (double)mass) * SecondsThisSlice);
+			ThrustVec *= ((thrust/mass) * SecondsThisSlice);
 			arcade_velocity += ThrustVec;
 		}
 
 		if (drag != 0.0f)
-			arcade_velocity *= (float)std::exp(-(double)drag * SecondsThisSlice);
+			arcade_velocity *= std::exp(-drag * SecondsThisSlice);
 
 		LinearFrame(SecondsThisSlice);
 
 		// move the position by the (time-frame scaled) velocity:
-		Pos += arcade_velocity * (float)SecondsThisSlice +
-			velocity * (float)SecondsThisSlice;
+		Pos += arcade_velocity * SecondsThisSlice +
+			velocity * SecondsThisSlice;
 
 		cam.MoveTo(Pos);
 
@@ -576,51 +505,45 @@ void Physical::LinearFrame(double SecondsThisSlice)
 {
 	// deal with lateral thrusters:
 
-	if (trans_x != 0.0f) // side-to-side
-	{
-		FVector TransVec = cam.vrt();
-		TransVec *= (float)(((double)trans_x / (double)mass) * SecondsThisSlice);
-		velocity += TransVec;
+	if (trans_x) { // side-to-side
+		FVector transvec = cam.vrt();
+		transvec *= ((trans_x/mass) * SecondsThisSlice);
+
+		velocity += transvec;
 	}
 
-	if (trans_y != 0.0f) // fore-and-aft
-	{
-		FVector TransVec = cam.vpn();
-		TransVec *= (float)(((double)trans_y / (double)mass) * SecondsThisSlice);
-		velocity += TransVec;
+	if (trans_y) { // fore-and-aft
+		FVector transvec = cam.vpn();
+		transvec *= ((trans_y/mass) * SecondsThisSlice);
+
+		velocity += transvec;
 	}
 
-	if (trans_z != 0.0f) // up-and-down
-	{
-		FVector TransVec = cam.vup();
-		TransVec *= (float)(((double)trans_z / (double)mass) * SecondsThisSlice);
-		velocity += TransVec;
+	if (trans_z) { // up-and-down
+		FVector transvec = cam.vup();
+		transvec *= ((trans_z/mass) * SecondsThisSlice);
+
+		velocity += transvec;
 	}
 
 	// if gravity applies, attract:
-	if (primary_mass > 0.0)
-	{
-		FVector G = primary_loc - cam.Pos();
-		const double R = NormalizeAndReturnLength(G);
+	if (primary_mass > 0) {
+		FVector  g = primary_loc - cam.Pos();
+		double r = NormalizeAndReturnLength(g);
 
-		// g *= GRAV * primary_mass / (r*r)
-		if (R > 1e-6)
-		{
-			const double Scale = GRAV * primary_mass / (R * R);
-			G *= (float)Scale;
-			velocity += G * (float)SecondsThisSlice;
-		}
+		if (r > 1e-6) g *= GRAV * primary_mass / (r*r);
+        else g = FVector::ZeroVector;
+
+		velocity += g * SecondsThisSlice;
 	}
 
 	// constant gravity:
-	else if (g_accel > 0.0f)
-	{
-		velocity += FVector(0.0f, -(float)g_accel, 0.0f) * (float)SecondsThisSlice;
-	}
+	else if (g_accel > 0)
+	velocity += FVector(0, -g_accel, 0) * SecondsThisSlice;
 
-	// if drag applies, decelerate:
-	if (drag != 0.0f)
-		velocity *= (float)std::exp(-(double)drag * SecondsThisSlice);
+	// if drag applies, decellerate:
+	if (drag)
+	velocity *= exp(-drag * SecondsThisSlice);
 }
 
 // +--------------------------------------------------------------------+
@@ -638,9 +561,9 @@ void Physical::CalcFlightPath()
 	FVector Tmp = FlightPath;
 
 	// dot into camera basis:
-	FlightPath.X = (float)(Tmp | cam.vrt());
-	FlightPath.Y = (float)(Tmp | cam.vup());
-	FlightPath.Z = (float)(Tmp | cam.vpn());
+	FlightPath.X = (Tmp | cam.vrt());
+	FlightPath.Y = (Tmp | cam.vup());
+	FlightPath.Z = (Tmp | cam.vpn());
 
 	if (FlightPath.Z < 0.1f)
 		return;
@@ -655,9 +578,9 @@ void Physical::CalcFlightPath()
 	YawCam.Clone(cam);
 	YawCam.Yaw(flight_path_yaw);
 
-	FlightPath.X = (float)(Tmp | YawCam.vrt());
-	FlightPath.Y = (float)(Tmp | YawCam.vup());
-	FlightPath.Z = (float)(Tmp | YawCam.vpn());
+	FlightPath.X = (Tmp | YawCam.vrt());
+	FlightPath.Y = (Tmp | YawCam.vup());
+	FlightPath.Z = (Tmp | YawCam.vpn());
 
 	flight_path_pitch = (float)std::atan((double)FlightPath.Y / (double)FlightPath.Z);
 }
@@ -948,60 +871,64 @@ int Physical::CollidesWith(Physical& o)
 
 void Physical::ElasticCollision(Physical& a, Physical& b)
 {
-	const double MassSum = (double)a.mass + (double)b.mass;
-	const double MassDelta = (double)a.mass - (double)b.mass;
+    if (a.mass + b.mass <= 0) return;
+	double mass_sum   = a.mass + b.mass;
+	double mass_delta = a.mass - b.mass;
 
-	const FVector VelA = (b.velocity * (float)(2.0 * (double)b.mass) + a.velocity * (float)MassDelta) * (float)(1.0 / MassSum);
-	const FVector VelB = (a.velocity * (float)(2.0 * (double)a.mass) - b.velocity * (float)MassDelta) * (float)(1.0 / MassSum);
+	FVector vel_a = (FVector(b.velocity) * (2 * b.mass) + FVector(a.velocity) * mass_delta) * (1/mass_sum);
+	FVector vel_b = (FVector(a.velocity) * (2 * a.mass) - FVector(b.velocity) * mass_delta) * (1/mass_sum);
 
-	a.velocity = VelA;
-	b.velocity = VelB;
+	a.velocity = vel_a;
+	b.velocity = vel_b;
 }
 
 // +--------------------------------------------------------------------+
 
 void Physical::InelasticCollision(Physical& a, Physical& b)
 {
-	const double MassSum = (double)a.mass + (double)b.mass;
+    if (a.mass + b.mass <= 0) return;
+	double mass_sum   = a.mass + b.mass;
 
-	const FVector VelA = (a.velocity * (float)(double)a.mass + b.velocity * (float)(double)b.mass) * (float)(1.0 / MassSum);
+	FVector vel_a = (FVector(a.velocity) * a.mass + FVector(b.velocity) * b.mass) * (1/mass_sum);
 
-	a.velocity = VelA;
-	b.velocity = VelA;
+	a.velocity = vel_a;
+	b.velocity = vel_a;
 }
 
 // +--------------------------------------------------------------------+
 
 void Physical::SemiElasticCollision(Physical& a, Physical& b)
 {
-	const double MassSum = (double)a.mass + (double)b.mass;
-	const double MassDelta = (double)a.mass - (double)b.mass;
+    if (a.mass + b.mass <= 0) return;
+	double mass_sum   = a.mass + b.mass;
+	double mass_delta = a.mass - b.mass;
 
-	const FVector AVel = a.GetVelocity();
-	const FVector BVel = b.GetVelocity();
-	const FVector DV = AVel - BVel;
+	FVector avel  = a.GetVelocity();
+	FVector bvel  = b.GetVelocity();
+	FVector dv    = avel - bvel;
 
 	// low delta-v: stick
-	if ((double)DV.Size() < 20.0)
-	{
-		if ((double)a.mass > (double)b.mass)
+	if (dv.Size() < 20) {
+		if (a.mass > b.mass) {
 			b.velocity = a.velocity;
-		else
+		}
+
+		else {
 			a.velocity = b.velocity;
+		}
 	}
 
 	// high delta-v: bounce
-	else
-	{
-		const FVector VeA = (BVel * (float)(2.0 * (double)b.mass) + AVel * (float)MassDelta) * (float)(1.0 / MassSum) * 0.65f;
-		const FVector VeB = (AVel * (float)(2.0 * (double)a.mass) - BVel * (float)MassDelta) * (float)(1.0 / MassSum) * 0.65f;
-		const FVector ViAB = (AVel * (float)(double)a.mass + BVel * (float)(double)b.mass) * (float)(1.0 / MassSum) * 0.35f;
+	else {
+		FVector Ve_a  = (bvel * (2 * b.mass) + avel * mass_delta) * (1/mass_sum) * 0.65;
+		FVector Ve_b  = (avel * (2 * a.mass) - bvel * mass_delta) * (1/mass_sum) * 0.65;
+		FVector Vi_ab = (avel * a.mass + bvel * b.mass)           * (1/mass_sum) * 0.35;
 
 		a.arcade_velocity = FVector::ZeroVector;
 		b.arcade_velocity = FVector::ZeroVector;
 
-		a.velocity = VeA + ViAB;
-		b.velocity = VeB + ViAB;
+		a.velocity = Ve_a + Vi_ab;
+		b.velocity = Ve_b + Vi_ab;
 	}
 }
 

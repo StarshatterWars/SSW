@@ -86,6 +86,7 @@ UCLASS()
 class STARSHATTERWARS_API UCmdDlg : public UBaseScreen
 {
     GENERATED_BODY()
+    friend class FCampaignHeaderRefreshTest;
 
 public:
     UCmdDlg(const FObjectInitializer& ObjectInitializer);

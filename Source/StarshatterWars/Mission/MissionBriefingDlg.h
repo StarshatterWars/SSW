@@ -268,6 +268,8 @@ protected:
     void OnTargetZoom(const FInputActionValue& Value);
     void ToggleFighterHUD();
     void ToggleFighterCautionPanel();
+    void ToggleFighterInformationPanel();
+    UPROPERTY(Transient) TObjectPtr<UInputAction> HUDInformationAction;
     UPROPERTY(Transient) TObjectPtr<UInputAction> HUDWarningsAction;
     void ToggleFighterWeaponsPanel();
     UPROPERTY(Transient) TObjectPtr<UInputAction> WeaponsPanelAction;
