@@ -216,6 +216,7 @@ protected:
     INSTRUCTION_STATUS   status = INSTRUCTION_STATUS::PENDING;
     double               time = 0.0;
     double               delay = 0.0;
+    double               trainingFlightSeconds = 0.0;
 
     int                  event = MESSAGE;
     Text                 event_ship;

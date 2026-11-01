@@ -38,6 +38,7 @@ struct FMissionCameraRig
     bool bHeldDeckPoseValid = false;
     // Preserve the pre-launch view during launch-tube traversal.
     FQuat HeldLaunchFacing = FQuat::Identity;
+    FVector HeldLaunchEyeCorrection = FVector::ZeroVector;
     bool bHeldLaunchFacingValid = false;
     // Deck release is a presentation hand-off, not an instantaneous camera cut.
     bool bLaunchExitBlendActive = false;
@@ -262,52 +263,19 @@ struct FMissionCameraRig
                 FVector RunUE = FVector::ZeroVector;
                 if (UGameInstance* GI = PC->GetGameInstance())
                     if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
-                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), ActiveDeck->StartPoint(), StartUE) &&
-                            Runtime->GetCarrierVisualPoint(Player->GetCarrier(), ActiveDeck->EndPoint(), EndUE))
+                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Player->GetCarrier()->GetLocation(), StartUE) &&
+                            Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Player->GetCarrier()->GetLocation()
+                                + Player->GetCarrier()->GetCam().vpn(), EndUE))
                             RunUE = (EndUE - StartUE).GetSafeNormal();
 
                 if (RunUE.IsNearlyZero()) RunUE = Forward.GetSafeNormal();
                 if (RunUE.IsNearlyZero()) RunUE = FVector::ForwardVector;
 
-                // Eye is still the converted authored in-bay camera point.
-                // Tracking rotation follows the actual rendered hull as it stages
-                // and accelerates away; world-up prevents unwanted camera roll.
-                const FVector FighterCenter = Visual->GetActorLocation();
-                const FVector WorldUp = FVector::UpVector;
-                const FVector Target = FighterCenter + RunUE * FMath::Min(Radius * 0.22, 60.0);
-                const FVector LookDirection = Target - Eye;
-                if (!LookDirection.IsNearlyZero())
-                {
-                    if (!bLaunchDeckHold)
-                    {
-                        // The starting view is already correct.
-                        Rotation = Aim(-LookDirection, WorldUp, Rotation);
-                        HeldLaunchFacing = Rotation;
-                        bHeldLaunchFacingValid = true;
-                    }
-                    else if (bHeldLaunchFacingValid)
-                    {
-                        // Do not turn toward the back wall as fighter moves past.
-                        Rotation = HeldLaunchFacing;
-                    }
-                    else
-                    {
-                        // Rare case: camera starts directly in launch phase.
-                        Rotation = Aim(-LookDirection, WorldUp, Rotation);
-                        HeldLaunchFacing = Rotation;
-                        bHeldLaunchFacingValid = true;
-                    }
-                }
-                else if (bLaunchDeckHold && bHeldLaunchFacingValid)
-                {
-                    Rotation = HeldLaunchFacing;
-                }
-
                 // Move the camera farther back INSIDE the launch bay without
                 // recomputing its already-correct forward-looking rotation.
                 // Carrier camera vpn() is the legacy forward/tube axis;
                 // using it avoids the diagonal departure-waypoint offset.
-                constexpr double RearwardCameraOffset = 160.0;
+                const double RearwardCameraOffset = FMath::Max(160.0, Radius * 3.0);
                 constexpr double CameraHeightAboveAuthored = 0.0;
                 const FVector CarrierForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
                 const FVector CarrierUp = Player->GetCarrier()->GetCam().vup().GetSafeNormal();
@@ -325,6 +293,22 @@ struct FMissionCameraRig
                             Eye = RearEye;
                     }
                 }
+                // Aim toward the displayed fighter from the final eye position.
+                const FVector Target = Visual->GetActorLocation()
+                    + RunUE * FMath::Min(Radius * 0.22, 60.0);
+                if (Phase == EOPSMode::ALERT || !bHeldLaunchFacingValid)
+                {
+                    const FVector FramedEye = Target - RunUE * (Radius * 3.5) + Up * (Radius * 0.5);
+                    HeldLaunchEyeCorrection = FramedEye - Eye;
+                    Rotation = Aim(RunUE - Up * 0.12, Up, Rotation);
+                    HeldLaunchFacing = Rotation;
+                    bHeldLaunchFacingValid = true;
+                }
+                else
+                {
+                    Rotation = HeldLaunchFacing;
+                }
+                Eye += HeldLaunchEyeCorrection;
             }
             else
             {

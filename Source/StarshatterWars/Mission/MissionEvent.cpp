@@ -97,7 +97,22 @@ MissionEvent::ExecFrame(double seconds)
 	}
 
 	if (status == INSTRUCTION_STATUS::PENDING)
+	{
+        // T1's flight lessons must not run while the player waits in the bay.
+        // Keep the initial "Please wait" cue and every other mission unchanged.
+        const bool bT1FlightLesson = trigger == TRIGGER_TIME && time >= 35.0 &&
+            FString(ANSI_TO_TCHAR(event_sound.data())).StartsWith(TEXT("Train-01-"));
+        if (bT1FlightLesson)
+        {
+            Ship* Player = sim->GetPlayerShip();
+            const CameraManager* Camera = CameraManager::GetInstance();
+            if (!Player || Player->GetFlightPhase() != EOPSMode::ACTIVE ||
+                (Camera && Camera->IsCarrierLaunchCameraHeld()))
+                return;
+            trainingFlightSeconds += seconds;
+        }
 		CheckTrigger();
+    }
 
 	if (status == INSTRUCTION_STATUS::ACTIVE) {
 		if (delay > 0)
@@ -145,12 +160,15 @@ MissionEvent::CheckTrigger()
 {
 	Sim* sim = Sim::GetSim();
 
-	if (time > 0 && time > sim->MissionClock())
+    const bool bT1FlightLesson = trigger == TRIGGER_TIME && time >= 35.0 &&
+        FString(ANSI_TO_TCHAR(event_sound.data())).StartsWith(TEXT("Train-01-"));
+    const double EventClock = bT1FlightLesson ? trainingFlightSeconds + 33.0 : sim->MissionClock();
+	if (time > 0 && time > EventClock)
 		return false;
 
 	switch (trigger) {
 	case TRIGGER_TIME: {
-		if (time <= sim->MissionClock())
+		if (time <= EventClock)
 			Activate();
 	}
 					 break;

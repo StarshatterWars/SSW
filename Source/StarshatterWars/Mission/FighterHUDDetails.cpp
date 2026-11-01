@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 #include "FormattingUtils.h"
 #include "MissionObjectTarget.h"
+#include "MissionUIStyle.h"
 #include "Ship.h"
 #include "Hangar.h"
 #include "FlightDeck.h"
@@ -186,7 +187,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
         [ SNew(SBox)
             .WidthOverride_Lambda([this]{ return 512.f * InformationScale; })
             .HeightOverride_Lambda([this]{ return 256.f * InformationScale; })
-            .Visibility_Lambda([this]{ return ShowHUD.Get() && bShowInformation ? EVisibility::Visible : EVisibility::Collapsed; })
+            .Visibility_Lambda([this]{ return ShowHUD.Get() && bShowInformation && !InformationCaptions.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
             [ SNew(SBox)
                 .Padding_Lambda([this]{ return FMargin(112,150,112,28) * InformationScale; })
                 [ SAssignNew(InformationScroll,SScrollBox)
@@ -792,7 +793,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     // Both panels share the same 512x256 native artwork extents and anchor.
-    for(int32 I=7;bShowInformation && I<9;++I)
+    for(int32 I=7;bShowInformation && !InformationCaptions.IsEmpty() && I<9;++I)
     {
         const FVector2D D=FVector2D(256,256)*Scale;
         Artwork(I,FVector2D(Size.X*0.5+(I==7?-D.X:0.0),Size.Y-D.Y),D);
@@ -1030,7 +1031,7 @@ void SFighterHUDDetails::UpdateInformationMessages()
         InformationCaptions.Add(Line.Caption);InformationExpiry.Add(Line.ExpiresAt);
         InformationRows->AddSlot().AutoHeight().Padding(0,0,0,3)
         [ SNew(STextBlock).Text(FText::FromString(Line.Caption)).AutoWrapText(true)
-            .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(8,int32(11*InformationScale)));})
+            .Font(MissionUIStyle::GetInfoLabelFont(12))
             .ColorAndOpacity_Lambda([Expiry=Line.ExpiresAt]{FLinearColor Color=HUDBlue;Color.A=FMath::Clamp(Expiry-FPlatformTime::Seconds(),0.0,1.0);return FSlateColor(Color);})
         ];
     }
