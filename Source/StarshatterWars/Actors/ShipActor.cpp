@@ -2280,7 +2280,10 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float Throttle =
         (float)RuntimeShip->GetThrottle();
 
-    const float RequestAlpha = FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f);
+    // Deck restraint suppresses drive physics, but engine spool-up is still visible.
+    const float SpoolPower = RuntimeShip->GetFlightPhase() == EOPSMode::LOCKED
+        ? FMath::Clamp(ThrottleRequest / 100.f, 0.f, 1.f) : 0.f;
+    const float RequestAlpha = FMath::Max(SpoolPower, FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f));
 
     const bool bRequested =
         RequestAlpha > 0.01f;
@@ -2514,8 +2517,9 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
     //-------------------------------------------------------------
     // Runtime visual power
     //-------------------------------------------------------------
-    const float VisualPower =
-        MainDrive->GetVisualPower();
+    const float SpoolPower = RuntimeShip->GetFlightPhase() == EOPSMode::LOCKED
+        ? FMath::Clamp(static_cast<float>(RuntimeShip->GetThrottleRequest()) / 100.f, 0.f, 1.f) : 0.f;
+    const float VisualPower = FMath::Max(SpoolPower, MainDrive->GetVisualPower());
 
     //-------------------------------------------------------------
     // Audio modulation

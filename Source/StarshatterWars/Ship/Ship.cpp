@@ -7122,7 +7122,13 @@ void Ship::SetManualAugmenter(bool Enabled)
 {
     if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
-    if (Enabled) EnableManualFlight();
+    if (Enabled)
+    {
+        EnableManualFlight();
+        // A held boost command requests full engine power; legacy SetAugmenter
+        // correctly rejects augmentation at training cruise throttle (50%).
+        SetManualThrottle(100);
+    }
     SetAugmenter(Enabled);
 }
 

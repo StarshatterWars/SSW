@@ -415,22 +415,22 @@ void UMissionBriefingDlg::UpdateLiveMission()
     }
 
     // Resolve hold state from the configured key, independent of action-event
-    // consumption or one-shot Hold triggers. Never hard-code Tab or bypass rebinds.
-    if (CanUseFighterHUD() && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused())
+    // consumption or one-shot Hold triggers. Tab is also an explicit temporary hold fallback.
+    if (CanUseFighterHUD() && GetWorld() && !GetWorld()->IsPaused())
     {
         if (APlayerController* PC=GetOwningPlayer())
         {
-            bool bMapped=false,bHeld=false;
-            for(const auto& Mapping:AutoNavInputContext->GetMappings())
+            bool bHeld=PC->IsInputKeyDown(EKeys::Tab);
+            if (AutoNavInputContext) for(const auto& Mapping:AutoNavInputContext->GetMappings())
             {
                 if(!Mapping.Action || Mapping.Action->GetName()!=TEXT("IA_Augmenter") || Mapping.Modifiers.Num()!=0)continue;
                 bool bSimple=true;
                 for(const auto& Trigger:Mapping.Triggers)
                     if(Trigger && !Trigger->IsA<UInputTriggerHold>())bSimple=false;
                 if(!bSimple || !Mapping.Key.IsValid())continue;
-                bMapped=true;bHeld|=PC->IsInputKeyDown(Mapping.Key);
+                bHeld|=PC->IsInputKeyDown(Mapping.Key);
             }
-            if(bMapped)ApplyMissionAugmenter(bHeld && !StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
+            ApplyMissionAugmenter(bHeld && !StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
         }
     }
 

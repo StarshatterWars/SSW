@@ -6,6 +6,7 @@
 #include "Components/ChildActorComponent.h"
 #include "Ship.h"
 #include "LandingGear.h"
+#include "Misc/PackageName.h"
 
 AFighterActor::AFighterActor()
 {
@@ -44,9 +45,22 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
     for (int32 Index = 0; Index < Definitions.Num(); ++Index)
     {
         const FFighterLandingGearDefinition& Def = Definitions[Index];
-        UFighterLandingGearComponent* Gear = CreateDefaultSubobject<UFighterLandingGearComponent>(
-            FName(*FString::Printf(TEXT("LandingGear_%02d"), Index + 1)));
-        Gear->SetupAttachment(FighterLandingGearRoot);
+        UStaticMeshComponent* GearMount = Index == 0 ? NoseGear.Get() : Index == 1 ? LeftGear.Get() : Index == 2 ? RightGear.Get() : nullptr;
+        const FName ComponentName = GearMount
+            ? FName(*(GearMount->GetName() + TEXT("Actor")))
+            : FName(*FString::Printf(TEXT("LandingGear_%02d"), Index + 1));
+        UFighterLandingGearComponent* Gear = CreateDefaultSubobject<UFighterLandingGearComponent>(ComponentName);
+        Gear->SetupAttachment(GearMount ? static_cast<USceneComponent*>(GearMount) : FighterLandingGearRoot.Get());
+        if (GearMount)
+        {
+            // Keep the authored deployment offsets on the child; the named mount remains editable.
+            const FString Package = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s"), *GearMount->GetName());
+            if (FPackageName::DoesPackageExist(Package))
+            {
+                const FString ClassPath = Package + TEXT(".BP_") + GearMount->GetName() + TEXT("_C");
+                Gear->SetChildActorClass(LoadClass<AActor>(nullptr, *ClassPath));
+            }
+        }
         Gear->AuthoredIndex = Index;
         Gear->AuthoredModel = Def.Model;
         Gear->RetractedPosition = Def.RetractedPosition;

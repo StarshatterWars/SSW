@@ -555,6 +555,8 @@ FlightDeck::ExecFrame(double Seconds)
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 					}
 
+                    // The deck owns all pre-launch translation and both turns.
+                    SlotShip->SetVelocity(carrier->GetVelocity());
 					SlotShip->SetFlightPhase(EOPSMode::LOCKED);
 				}
 			}

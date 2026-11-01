@@ -197,7 +197,7 @@ bool Mission::LoadMissionCommon(
 			SrcElem.Count);
 
 		Elem->SetPlayer(
-			SrcElem.Player ? 1 : 0);
+			SrcElem.Player);
 
 		Elem->SetAlert(
 			SrcElem.Alert);

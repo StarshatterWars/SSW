@@ -849,8 +849,15 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
     const EPlanetType PlanetType =
         ResolvePlanetTypeFromData(MoonName, true);
 
-    const TSubclassOf<AActor> ResolvedMoonClass =
-        ResolvePlanetActorClass(PlanetType, true);
+    FString TextureName = ANSI_TO_TCHAR(MoonBody->GetTextureName());
+    TextureName.ReplaceInline(TEXT("\\"), TEXT("/"));
+    TextureName = FPaths::GetBaseFilename(TextureName);
+    UTexture2D* MoonTexture = TextureName.IsEmpty() ? nullptr : LoadObject<UTexture2D>(nullptr,
+        *FString::Printf(TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"), *TextureName, *TextureName));
+    // A generic planet BP may own a terrestrial material internally. Use the native
+    // definition-driven sphere when this moon supplies an imported surface texture.
+    const TSubclassOf<AActor> ResolvedMoonClass = MoonTexture
+        ? TSubclassOf<AActor>(APlanetActor::StaticClass()) : ResolvePlanetActorClass(PlanetType, true);
 
     AActor* MoonActor = SpawnBodyActor(
         ResolvedMoonClass,
@@ -860,6 +867,14 @@ void ASystemSceneBuilder::BuildRuntimeMoon(
         ParentActor,
         true,
         false);
+
+    if (APlanetActor* MoonVisual = Cast<APlanetActor>(MoonActor))
+    {
+        MoonVisual->SetPlanetRadius(RadiusUnits);
+        if (MoonTexture) MoonVisual->SetPlanetTextures(MoonTexture, nullptr, nullptr);
+        const FVector RawLightDir = (StarAnchorWorldLocation - MoonWorldLocation).GetSafeNormal();
+        MoonVisual->SetLightDirection(FVector(-RawLightDir.Z, RawLightDir.Y, RawLightDir.X));
+    }
 
     RegisterSpawnedBody(
         MoonName,

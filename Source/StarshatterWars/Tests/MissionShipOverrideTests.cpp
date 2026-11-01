@@ -14,11 +14,12 @@ bool FMissionShipOverridesTest::RunTest(const FString& Parameters)
     ON_SCOPE_EXIT {ShipDesignRegistry::Clear();for(const auto& Pair:Original)ShipDesignRegistry::RegisterDesign(Pair.Key,Pair.Value);};
     FShipDesign Design;Design.ShipName=Key.ToString();Design.ShipClass=TEXT("Fighter");ShipDesignRegistry::RegisterDesign(Key,Design);
     FS_CampaignMission Source;Source.Degrees=true;Source.StartTime=TEXT("1/00:00:00");
-    FS_MissionElement Element;Element.Name=TEXT("Audit flight");Element.Design=Key.ToString();Element.Count=2;Element.Player=1;
+    FS_MissionElement Element;Element.Name=TEXT("Audit flight");Element.Design=Key.ToString();Element.Count=2;Element.Player=2;
     FS_MissionShip A;A.ShipName=TEXT("Leader");A.RegNum=TEXT("NX-19");A.Location=FVector(11,22,33);A.Heading=90;A.Integrity=42;A.Ammo[0]=0;A.Fuel[0]=17;
     Element.Ship.Add(A);Element.Ship.Add(FS_MissionShip());Source.Element.Add(Element);
     Mission Model;Model.LoadFromCampaignMissionData(Source);
     if(!TestEqual(TEXT("Mission element survives conversion"),Model.GetElements().size(),1))return false;
+    TestEqual(TEXT("Authored player slot two is preserved"),Model.GetElements()[0]->GetPlayerIndex(),2);
     auto& Ships=Model.GetElements()[0]->GetShips();
     if(!TestEqual(TEXT("Individual ships survive conversion"),Ships.size(),2))return false;
     TestEqual(TEXT("Authored ship name"),FString(ANSI_TO_TCHAR(Ships[0]->GetName())),FString(TEXT("Leader")));
