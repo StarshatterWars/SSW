@@ -1,5 +1,7 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "WeaponBlueprintResolver.h"
+#include "Components/PrimitiveComponent.h"
 #include "StarshatterInputBindings.h"
 #include "StarshatterKeyboardSettings.h"
 #include "StarshatterSettingsSaveSubsystem.h"
@@ -1539,8 +1541,43 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             continue;
         }
         Alive.Add(Shot);
-        AStaticMeshActor* Visual=Cast<AStaticMeshActor>(ProjectileVisuals.FindRef(Shot).Get());
-        if(!Visual && ProjectileVisuals.Num()<512){
+        AActor* ExistingVisual = ProjectileVisuals.FindRef(Shot).Get();
+        const WeaponDesign* ShotDesign = Shot->GetDesign();
+        if (!ExistingVisual && ProjectileVisuals.Num() < 512 && ShotDesign)
+        {
+            if (UClass* MissileClass = WeaponBlueprintResolver::Resolve(
+                ANSI_TO_TCHAR(ShotDesign->model.data()), ANSI_TO_TCHAR(ShotDesign->name.data())))
+            {
+                FActorSpawnParameters MissileParams;
+                MissileParams.ObjectFlags |= RF_Transient;
+                MissileParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                ExistingVisual = World->SpawnActor<AActor>(MissileClass, Position,
+                    ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation(), MissileParams);
+                if (ExistingVisual)
+                {
+                    // Visual only: legacy SimShot controls flight, impacts and lifetime.
+                    ExistingVisual->SetActorEnableCollision(false);
+                    ExistingVisual->SetActorTickEnabled(false);
+                    TArray<UPrimitiveComponent*> Primitives;
+                    ExistingVisual->GetComponents(Primitives);
+                    for (UPrimitiveComponent* Primitive : Primitives)
+                    {
+                        Primitive->SetSimulatePhysics(false);
+                        Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                        Primitive->SetMobility(EComponentMobility::Movable);
+                    }
+                    ProjectileVisuals.Add(Shot, ExistingVisual);
+                }
+            }
+        }
+        if (ExistingVisual)
+        {
+            ExistingVisual->SetActorLocationAndRotation(Position,
+                ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation());
+            continue;
+        }
+        AStaticMeshActor* Visual=nullptr;
+        if(ProjectileVisuals.Num()<512){
             if(!ProjectileFallbackMesh)ProjectileFallbackMesh=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere"));
             UStaticMesh* Mesh=ProjectileFallbackMesh;
             const WeaponDesign* Design=Shot->GetDesign();

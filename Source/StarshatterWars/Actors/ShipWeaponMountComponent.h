@@ -50,6 +50,8 @@ public:
     TArray<TObjectPtr<UChildActorComponent>> BarrelComponents;
     UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")
     int32 GetMuzzleCount() const;
+    /** Automatically selected store; explicit Blueprint assignments remain authoritative. */
+    TWeakObjectPtr<UClass> ResolvedStoreClass;
     UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")
     FVector GetMuzzleWorldLocation(int32 MuzzleIndex=0) const;
     UFUNCTION(BlueprintPure, Category="Weapon Mount|Barrels")

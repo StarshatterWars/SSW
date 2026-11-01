@@ -225,7 +225,7 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.12
    light:            200
-   model:            "missile03.mag"
+   model:            "archer"
    trail:            "smoke.pcx"
    trail_width:      1.5
    trail_dim:        7
@@ -284,7 +284,7 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.15
    light:            200
-   model:            "missile03.mag"
+   model:            "javelin"
    trail:            "smoke.pcx"
    trail_width:      2
    trail_dim:        7
@@ -339,7 +339,7 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.15
    light:            200
-   model:            "missile02.mag"
+   model:            "vector"
    trail:            "smoke.pcx"
    trail_width:      2
    trail_dim:        6
@@ -393,7 +393,7 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.15
    light:            200
-   model:            "missile04.mag"
+   model:            "hammer"
    trail:            "smoke.pcx"
    trail_width:      2.5
    trail_dim:        5
@@ -448,7 +448,7 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.15
    light:            200
-   model:            "missile02.mag"
+   model:            "harpoon"
    trail:            "smoke.pcx"
    trail_width:      2
    trail_dim:        5

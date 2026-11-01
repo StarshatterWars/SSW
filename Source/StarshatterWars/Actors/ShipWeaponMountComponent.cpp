@@ -1,4 +1,5 @@
 #include "ShipWeaponMountComponent.h"
+#include "WeaponBlueprintResolver.h"
 #include "ShipStorePresentation.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
@@ -13,6 +14,16 @@ UShipWeaponMountComponent::UShipWeaponMountComponent()
 void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType)
 {
     if (RuntimeWeapon != InWeapon) ClearRuntimeWeapon();
+    if (InWeapon && InWeapon->Design() && !InWeapon->Design()->primary
+        && (!GetChildActorClass() || GetChildActorClass() == ResolvedStoreClass.Get()))
+    {
+        if (UClass* Class = WeaponBlueprintResolver::Resolve(
+            ANSI_TO_TCHAR(InWeapon->Design()->model.data()), ANSI_TO_TCHAR(InWeapon->Design()->name.data())))
+        {
+            SetChildActorClass(Class);
+            ResolvedStoreClass = Class;
+        }
+    }
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;
     RuntimeWeaponType=InWeaponType;
@@ -23,6 +34,9 @@ void UShipWeaponMountComponent::ClearRuntimeWeapon()
 {
     if (bRuntimeAimApplied) SetRelativeRotation(RestMountRotation);
     bRuntimeAimApplied = false;
+    if (ResolvedStoreClass.IsValid() && GetChildActorClass() == ResolvedStoreClass.Get())
+        SetChildActorClass(nullptr);
+    ResolvedStoreClass.Reset();
     RuntimeWeapon=nullptr;
     RuntimeWeaponName=NAME_None;
     RuntimeWeaponType=NAME_None;
