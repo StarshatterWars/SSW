@@ -100,7 +100,7 @@ bool RadioVox::AddPhrase(const char* Key)
 bool RadioVox::Start() { return RadioAudioController && RadioWorldContext.IsValid() && RadioAudioController->Add(this); }
 bool RadioVox::Update()
 {
-    if (message.length()) { RadioView::Message(message.data()); message = ""; }
+    if (message.length()) { RadioView::Message(message.data(), HUDSource); message = ""; }
     if (PlayingAudio.IsValid())
     {
         if (PlayingAudio->IsPlaying()) return true;

@@ -460,6 +460,7 @@ FlightDeck::ExecFrame(double Seconds)
 						C.Yaw(Dyaw * Step);
 						SlotShip->CloneCam(C);
 						SlotShip->MoveTo(ShiftedSpotLoc);
+                        SlotShip->SetVelocity(carrier->GetVelocity());
 						SlotShip->TranslateBy(carrier->GetCam().vup() * Slot->clearance);
 
 						if (carrier->IsGroundUnit())

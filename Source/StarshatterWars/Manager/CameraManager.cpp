@@ -574,12 +574,15 @@ CameraManager::ExecFrame(double seconds)
 	}
 	if (LaunchCarrier && bOnCarrierLaunchDeck && bLaunchBayStartValid && !bLaunchBayExitValid)
 	{
-		const FVector AuthoredExit = LaunchViewDeck->EndPoint();
+		// StartPoint is the catapult/tube mouth; EndPoint is the distant,
+		// laterally displaced departure waypoint.
+		const FVector AuthoredExit = LaunchViewDeck->StartPoint()
+            + LaunchCarrier->GetCam().vpn().GetSafeNormal() * FMath::Max(1.0, double(ship->GetRadius()) * 1.5);
 		const FVector RelativeExit = AuthoredExit - LaunchBayStartWorld;
 		const double ForwardDistance = FVector::DotProduct(RelativeExit, LaunchBayStartForward);
 		// EndPoint may be in a different coordinate frame. Reject endpoints behind
 		// the parked fighter or indistinguishable from its starting location.
-		if (ForwardDistance > FMath::Max(100.0, static_cast<double>(ship->GetRadius()) * 2.0))
+		if (ForwardDistance > 1.0)
 		{
 			LaunchBayExit = AuthoredExit;
 			bLaunchBayExitValid = true;
@@ -597,7 +600,7 @@ CameraManager::ExecFrame(double seconds)
 		if (bLaunchBayExitValid)
 		{
 			const double ExitDistance = FVector::DotProduct(LaunchBayExit - LaunchBayStartWorld, LaunchBayStartForward);
-			bPhysicallyClear = ForwardTravel >= FMath::Max(MinDeparture, ExitDistance);
+			bPhysicallyClear = ForwardTravel >= ExitDistance;
 		}
 		else
 		{

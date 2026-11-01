@@ -161,13 +161,10 @@ struct FMissionCameraRig
             // Compare actual simulation position with the authored launch segment;
             // carrier motion is already incorporated by FlightDeck::Orient().
             const FVector Start = HeldLaunchDeck->StartPoint();
-            const FVector End = HeldLaunchDeck->EndPoint();
-            const FVector Run = End - Start;
-            const double RunLengthSq = Run.SizeSquared();
-            const double Progress = RunLengthSq > 1.0
-                ? FVector::DotProduct(Player->GetLocation() - Start, Run) / RunLengthSq
-                : 1.0;
-            bLaunchDeckHold = Progress < 1.0;
+            const FVector TubeForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
+            const double ExitClearance = FMath::Max(1.0, double(Player->GetRadius()) * 1.5);
+            bLaunchDeckHold = Phase < EOPSMode::ACTIVE ||
+                FVector::DotProduct(Player->GetLocation() - Start, TubeForward) < ExitClearance;
             if (!bLaunchDeckHold)
             {
                 // Start from the *last displayed* camera pose for a seamless

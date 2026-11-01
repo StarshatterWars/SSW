@@ -45,6 +45,7 @@ struct FRadioHUDLine
     FString Caption;
     float Opacity = 1;
     double ExpiresAt = 0;
+    int Source = 0; // 0 system/instruction, 1 player, 2 other ship
 };
 
 class RadioView : public View, public SimObserver
@@ -64,7 +65,7 @@ public:
     virtual void      ShowMenu();
     virtual void      CloseMenu();
 
-    static void       Message(const char* msg);
+    static void       Message(const char* msg, int Source = 0);
     static void       ClearMessages();
     static void GetHUDMessages(TArray<FRadioHUDLine>& OutLines);
 

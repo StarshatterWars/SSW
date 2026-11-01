@@ -680,13 +680,14 @@ Menu* RadioView::GetRadioMenu(Ship* s)
 // Message queue (thread-safe)
 // ---------------------------------------------------------------------
 
-void RadioView::Message(const char* msg)
+void RadioView::Message(const char* msg, int Source)
 {
     if (!msg || !*msg) return;
     FScopeLock Lock(&sync);
     if (RadioHUDLines.Num() >= MAX_MSG) RadioHUDLines.RemoveAt(0);
     FRadioHUDLine Line;
     Line.Caption = ANSI_TO_TCHAR(msg);
+    Line.Source = Source;
     Line.ExpiresAt = FPlatformTime::Seconds() + 10.0;
     RadioHUDLines.Add(MoveTemp(Line));
 

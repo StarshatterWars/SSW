@@ -418,9 +418,9 @@ flightdeck: {
    start:      ( 60,  -20,  850)
    end:        (2e3,   15, 3500),
 
-   spot:       { loc: ( 45, -20, 825), filter: 0x7 },
-   spot:       { loc: ( 75, -20, 825), filter: 0x7 },
-   spot:       { loc: ( 60, -20, 825), filter: 0x8 },
+   spot:       { loc: ( 45, -20, 775), filter: 0x7 },
+   spot:       { loc: ( 75, -20, 775), filter: 0x7 },
+   spot:       { loc: ( 60, -20, 775), filter: 0x8 },
 
    launch:     true,
    max_ships:  2,
@@ -439,9 +439,9 @@ flightdeck: {
    start:      ( -60,  -20,  850)
    end:        (-2e3,   15, 3500),
 
-   spot:       { loc: (-45, -20, 825), filter: 0x7 },
-   spot:       { loc: (-75, -20, 825), filter: 0x7 },
-   spot:       { loc: (-60, -20, 825), filter: 0x8 },
+   spot:       { loc: (-45, -20, 775), filter: 0x7 },
+   spot:       { loc: (-75, -20, 775), filter: 0x7 },
+   spot:       { loc: (-60, -20, 775), filter: 0x8 },
 
    launch:     true,
    max_ships:  2,

@@ -106,6 +106,17 @@ FighterAI::ExecFrame(double s)
         form_up = false;
         rtb_code = 1;
 
+        // Final landing interpolation returns before SeekTarget; check the
+        // inner marker here so automatic recovery can lower the gear too.
+        if (ship->IsAutoLandEngaged() && inbound->Cleared() && inbound->GetDeck())
+        {
+            FlightDeck* RecoveryDeck = inbound->GetDeck();
+            const double InnerDistance = (RecoveryDeck->StartPoint() - RecoveryDeck->EndPoint()).Size() * 0.25;
+            if (InnerDistance > 1.0 &&
+                FVector::Distance(ship->GetLocation(), RecoveryDeck->EndPoint()) <= InnerDistance)
+                ship->LowerGear();
+        }
+
         // CHEAT LANDING:
         if (inbound->Final() && time_to_dock > 0) {
             FlightDeck* deck = inbound->GetDeck();
@@ -1241,14 +1252,6 @@ FighterAI::SeekTarget()
     }
 
     if (inbound) {
-        if (ship->IsAutoLandEngaged() && inbound->Cleared() && inbound->GetDeck())
-        {
-            FlightDeck* RecoveryDeck = inbound->GetDeck();
-            const double InnerDistance = (RecoveryDeck->StartPoint() - RecoveryDeck->EndPoint()).Size() * 0.25;
-            if (InnerDistance > 1.0 &&
-                FVector::Distance(ship->GetLocation(), RecoveryDeck->EndPoint()) <= InnerDistance)
-                ship->LowerGear();
-        }
         Steer result = Seek(objective);
 
         if (over_threshold && objective.Z < 0) {

@@ -1032,7 +1032,7 @@ void SFighterHUDDetails::UpdateInformationMessages()
         InformationRows->AddSlot().AutoHeight().Padding(0,0,0,3)
         [ SNew(STextBlock).Text(FText::FromString(Line.Caption)).AutoWrapText(true)
             .Font(MissionUIStyle::GetInfoLabelFont(12))
-            .ColorAndOpacity_Lambda([Expiry=Line.ExpiresAt]{FLinearColor Color=HUDBlue;Color.A=FMath::Clamp(Expiry-FPlatformTime::Seconds(),0.0,1.0);return FSlateColor(Color);})
+            .ColorAndOpacity_Lambda([Expiry=Line.ExpiresAt,Source=Line.Source]{FLinearColor Color=Source==1?FLinearColor(0.35f,1.f,0.55f):Source==2?FLinearColor(1.f,0.78f,0.3f):HUDBlue;Color.A=FMath::Clamp(Expiry-FPlatformTime::Seconds(),0.0,1.0);return FSlateColor(Color);})
         ];
     }
     if(InformationScroll)InformationScroll->ScrollToEnd();

@@ -45,6 +45,7 @@ public:
 	// Operations:
 	virtual bool      AddPhrase(const char* key);
 	virtual bool      Start();
+    void SetHUDSource(int Source) { HUDSource = Source; }
 
 	static void       Initialize(UObject* WorldContext = nullptr);
 	static void       Close();
@@ -59,4 +60,5 @@ protected:
     TStrongObjectPtr<UAudioComponent> PlayingAudio;
 	int               index;
 	int               channel;
+    int HUDSource = 0;
 };

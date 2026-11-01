@@ -264,7 +264,7 @@ bool FRecoveryNativeScaleTest::RunTest(const FString& Parameters)
     const auto* Row=Table->FindRow<FShipDesign>(TEXT("Orion"),TEXT("Legacy deck coordinates"));
     if(!TestNotNull(TEXT("Real Orion definition parses"),Row) || !TestEqual(TEXT("All four decks parse"),Row->FlightDeck.Num(),4))return false;
     TestTrue(TEXT("Legacy parser scales recovery start exactly once"),Row->FlightDeck[2].StartPoint.Equals(FVector(1220,0,-7800),0.001));
-    TestTrue(TEXT("Legacy parser scales launch spot exactly once"),Row->FlightDeck[0].Slots[0].Location.Equals(FVector(180,-80,3300),0.001));
+    TestTrue(TEXT("Legacy parser scales revised launch spot exactly once"),Row->FlightDeck[0].Slots[0].Location.Equals(FVector(180,-80,3100),0.001));
     FRemainingDesigns Designs;
     const bool OwnLoader=DataLoader::GetLoader()==nullptr; if(OwnLoader)DataLoader::Initialize();
     ON_SCOPE_EXIT {if(OwnLoader)DataLoader::Close();};

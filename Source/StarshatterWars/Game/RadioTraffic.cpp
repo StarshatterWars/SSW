@@ -382,14 +382,17 @@ RadioTraffic::DisplayMessage(RadioMessage* msg)
 	const char* path[8] = { "1", "1", "2", "3", "4", "5", "6", "7" };
 
 	RadioVox* vox = new RadioVox(vox_channel, path[vox_channel], txt_buf);
+    const int HUDSource = msg->GetSender()
+        ? (Sim::GetSim() && msg->GetSender() == Sim::GetSim()->GetPlayerShip() ? 1 : 2) : 0;
 
 	if (vox) {
+        vox->SetHUDSource(HUDSource);
 		vox->AddPhrase(dst_buf);
 		vox->AddPhrase(src_buf);
 		vox->AddPhrase(act_buf);
 
 		if (!vox->Start()) {
-			RadioView::Message(txt_buf);
+			RadioView::Message(txt_buf, HUDSource);
 			delete vox;
 		}
 	}

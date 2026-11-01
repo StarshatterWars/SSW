@@ -1311,10 +1311,12 @@ Sim::CreateElements()
 					const int32 PlayerSlot = MissionElem->GetPlayerIndex() > 0
 						? MissionElem->GetPlayerIndex() - 1 : INDEX_NONE;
 					TArray<int32> LaunchOrder;
-					if (PlayerSlot >= 0 && PlayerSlot < MissionElem->Count())
+                    const bool bT1InstructorFirst = mission && mission->GetIdentity() == 101 &&
+                        FString(ANSI_TO_TCHAR(mission->GetName())) == TEXT("Basic Space Flight");
+					if (!bT1InstructorFirst && PlayerSlot >= 0 && PlayerSlot < MissionElem->Count())
 						LaunchOrder.Add(PlayerSlot);
 					for (int32 i = 0; i < MissionElem->Count(); i++)
-						if (i != PlayerSlot)
+						if (bT1InstructorFirst || i != PlayerSlot)
 							LaunchOrder.Add(i);
 
                     for (int32 Order = 0; Order < LaunchOrder.Num(); Order++) {
@@ -1367,11 +1369,11 @@ Sim::CreateElements()
                                     AlertShip->GetName(), Carrier->GetName(), AssignedDeck->GetName(),
                                     HangarPtr->GetFlightDeckSlot(HangarSlotPtr));
                             }
-                            else if (PlayerSlot >= 0 && bRequiredPlayerDeckStart) {
+                            else if (PlayerSlot >= 0 && bRequiredPlayerDeckStart && !bT1InstructorFirst) {
                                 // Stage AI wingmen, but do not queue their deck timers.
                                 // The first actual launch must be the player fighter.
                                 DeferredPlayerWingmen.Add(AlertShip);
-                                SetStagedWingmanVisualHidden(AlertShip, true);
+                                SetStagedWingmanVisualHidden(AlertShip, false);
                                 UE_LOG(LogTemp, Display,
                                     TEXT("[CarrierLaunch][WINGMAN_HELD] Ship='%hs' PlayerFlight='%hs'"),
                                     AlertShip->GetName(), MissionElem->GetName().data());
@@ -2393,10 +2395,10 @@ Sim::ExecFrame(double DeltaSeconds)
         PendingLaunchPlayer->SetThrottle(0);
     }
 
-    // Keep AI visuals hidden while waiting, independent of their simulation
-    // and deck staging. Spawn/binding may complete later in this frame.
+    // Keep staged wingmen visible in their assigned slots while waiting.
+    // Spawn/binding may complete later in this frame.
     for (Ship* Wingman : DeferredPlayerWingmen)
-        SetStagedWingmanVisualHidden(Wingman, true);
+        SetStagedWingmanVisualHidden(Wingman, false);
 
 	ListIter<SimElement> ElementIter = elements;
 	while (++ElementIter)
