@@ -50,10 +50,10 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
             ? FName(*(GearMount->GetName() + TEXT("Actor")))
             : FName(*FString::Printf(TEXT("LandingGear_%02d"), Index + 1));
         UFighterLandingGearComponent* Gear = CreateDefaultSubobject<UFighterLandingGearComponent>(ComponentName);
-        Gear->SetupAttachment(GearMount ? static_cast<USceneComponent*>(GearMount) : FighterLandingGearRoot.Get());
+        Gear->SetupAttachment(FighterLandingGearRoot);
         if (GearMount)
         {
-            // Keep the authored deployment offsets on the child; the named mount remains editable.
+            // DEF positions are relative to FighterLandingGearRoot, independent of mesh mount edits.
             const FString Package = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s"), *GearMount->GetName());
             if (FPackageName::DoesPackageExist(Package))
             {
@@ -103,6 +103,9 @@ void AFighterActor::SynchronizeLandingGearMarkers()
     {
         UFighterLandingGearComponent* Gear = LandingGearActors[Index];
         if (!Gear) continue;
+        // Correct attachment overrides serialized by existing fighter Blueprints.
+        if (Gear->GetAttachParent() != FighterLandingGearRoot)
+            Gear->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
         if (LandingGearBlueprintClasses.IsValidIndex(Index) && LandingGearBlueprintClasses[Index]
             && Gear->GetChildActorClass() != LandingGearBlueprintClasses[Index])
             Gear->SetChildActorClass(LandingGearBlueprintClasses[Index]);

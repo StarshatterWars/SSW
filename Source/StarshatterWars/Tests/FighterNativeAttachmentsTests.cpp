@@ -60,6 +60,7 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
             TestTrue(*(Prefix+TEXT("native BP-editable gear")), Gear &&
                 Gear->CreationMethod == EComponentCreationMethod::Native && Gear->bEditableWhenInherited);
             if (!Gear) continue;
+            TestEqual(*(Prefix+TEXT("gear attaches directly to landing gear root")), Gear->GetAttachParent(), Defaults->FighterLandingGearRoot.Get());
             TestEqual(*(Prefix+TEXT("definition order preserved")), Gear->AuthoredIndex, Index);
             TestEqual(*(Prefix+TEXT("gear model preserved")), Gear->AuthoredModel, Defaults->GearDefinitions[Index].Model);
             TestEqual(*(Prefix+TEXT("authored start preserved")), Gear->GetRelativeLocation(), Defaults->GearDefinitions[Index].RetractedPosition);
