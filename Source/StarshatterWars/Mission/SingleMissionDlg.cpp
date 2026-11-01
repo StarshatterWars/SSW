@@ -325,7 +325,8 @@ void USingleMissionDlg::RefreshMissionRoster()
             while (++MissionIter)
             {
                 MissionInfo* Info = MissionIter.value();
-                if (!Info || Info->id <= 0) continue;
+                if (!Info || Info->id <= 0 || ActiveCampaign->IsCutsceneMission(Info->id)
+                    || Info->DisplayType == EMissionDisplayType::CutsceneOnly) continue;
                 if (Info->DisplayType != EMissionDisplayType::PlayerMission
                     && Info->type != (int)EMissionType::TRAINING
                     && !(ActiveCampaign->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden))
