@@ -57,10 +57,11 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
         if (GearMount)
         {
             // DEF positions are relative to FighterLandingGearRoot, independent of mesh mount edits.
-            const FString Package = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s"), *GearMount->GetName());
+            const FString AssetName = Index == 1 ? TEXT("RightGear") : Index == 2 ? TEXT("LeftGear") : GearMount->GetName();
+            const FString Package = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s"), *AssetName);
             if (FPackageName::DoesPackageExist(Package))
             {
-                const FString ClassPath = Package + TEXT(".BP_") + GearMount->GetName() + TEXT("_C");
+                const FString ClassPath = Package + TEXT(".BP_") + AssetName + TEXT("_C");
                 Gear->SetChildActorClass(LoadClass<AActor>(nullptr, *ClassPath));
             }
         }

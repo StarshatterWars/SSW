@@ -124,6 +124,27 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
     Legacy.SetState(LandingGear::GEAR_RAISE);
     Legacy.ExecFrame(0.1);
     TestTrue(TEXT("Legacy reversal remains continuous"), FMath::IsNearlyEqual(Legacy.GetDeployment(),0.15));
+    UClass* FalconBP = LoadClass<AFighterActor>(nullptr, TEXT("/Game/Models/Falcon/BP_Falcon.BP_Falcon_C"));
+    if (TestNotNull(TEXT("Actual Falcon Blueprint loads"), FalconBP))
+    {
+        AFighterActor* LiveFalcon = World->SpawnActor<AFighterActor>(FalconBP);
+        if (TestNotNull(TEXT("Actual Falcon Blueprint spawns"), LiveFalcon))
+        {
+            LiveFalcon->PreviewGearDeployment = 0;
+            LiveFalcon->SynchronizeLandingGearMarkers();
+            for (UFighterLandingGearComponent* Gear : LiveFalcon->LandingGearActors)
+            {
+                TestFalse(TEXT("Falcon Blueprint retracts native gear"), Gear->bGearVisible);
+                if (AActor* Child = Gear->GetChildActor())
+                {
+                    TArray<UStaticMeshComponent*> Meshes;
+                    Child->GetComponents(Meshes);
+                    for (UStaticMeshComponent* Mesh : Meshes)
+                        TestFalse(TEXT("Falcon Blueprint gear mesh is hidden when up"), Mesh->IsVisible());
+                }
+            }
+        }
+    }
     World->DestroyWorld(false);
     return true;
 }
