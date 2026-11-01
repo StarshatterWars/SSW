@@ -23,12 +23,12 @@ bool FCampaignPresentationRulesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Ordinary player assignment retained"),
         MissionDisplayType(Row,Authored)==EMissionDisplayType::PlayerMission);
     AFighterActor* Fighter=GetMutableDefault<AFighterActor>();
-    for(UStaticMeshComponent* Mesh:{Fighter->LeftGear.Get(),Fighter->RightGear.Get(),Fighter->NoseGear.Get(),Fighter->Cockpit.Get()})
+    for(UStaticMeshComponent* Mesh:{Fighter->LeftGear.Get(),Fighter->RightGear.Get(),Fighter->NoseGear.Get()})
     {
         if(TestNotNull(TEXT("Static attachment exists before gear art is assigned"),Mesh))
         {
             TestTrue(TEXT("Attachment uses its appropriate root"), Mesh->GetAttachParent() ==
-                (Mesh == Fighter->Cockpit.Get() ? Fighter->HullMesh : Fighter->FighterLandingGearRoot.Get()));
+                Fighter->FighterLandingGearRoot.Get());
             TestTrue(TEXT("No attachment collision"),Mesh->GetCollisionEnabled()==ECollisionEnabled::NoCollision);
         }
     }

@@ -18,7 +18,7 @@ AFighterActor::AFighterActor()
     Cockpit = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cockpit"));
     for (UStaticMeshComponent* Mesh : {LeftGear.Get(), RightGear.Get(), NoseGear.Get(), Cockpit.Get()})
     {
-        Mesh->SetupAttachment(Mesh == Cockpit.Get() ? HullMesh : FighterLandingGearRoot.Get());
+        Mesh->SetupAttachment(FighterLandingGearRoot);
         Mesh->bEditableWhenInherited = true;
         Mesh->SetMobility(EComponentMobility::Movable);
         Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -29,10 +29,11 @@ AFighterActor::AFighterActor()
     FighterCockpitRoot->SetupAttachment(PointRoot);
     FighterLaunchRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLaunchRoot"));
     FighterLaunchRoot->SetupAttachment(PointRoot);
-    CockpitActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("CockpitActor"));
-    CockpitActor->SetupAttachment(FighterCockpitRoot);
-    CockpitActor->bEditableWhenInherited = true;
-    CockpitActor->SetMobility(EComponentMobility::Movable);
+    CockpitComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("CockpitComponent"));
+    CockpitComponent->SetupAttachment(FighterCockpitRoot);
+    CockpitComponent->bEditableWhenInherited = true;
+    CockpitComponent->SetMobility(EComponentMobility::Movable);
+    Cockpit->SetupAttachment(CockpitComponent);
 }
 
 void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel, float CockpitScale,
@@ -51,6 +52,8 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
             : FName(*FString::Printf(TEXT("LandingGear_%02d"), Index + 1));
         UFighterLandingGearComponent* Gear = CreateDefaultSubobject<UFighterLandingGearComponent>(ComponentName);
         Gear->SetupAttachment(FighterLandingGearRoot);
+        Gear->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        if (GearMount) GearMount->SetupAttachment(Gear);
         if (GearMount)
         {
             // DEF positions are relative to FighterLandingGearRoot, independent of mesh mount edits.
@@ -84,8 +87,8 @@ void AFighterActor::Tick(float DeltaTime)
     {
         const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && Runtime->IsNativeCockpitRequested();
         Cockpit->SetVisibility(Visible, true);
-        CockpitActor->SetVisibility(Visible && !Cockpit->GetStaticMesh(),true);
-        if(auto* Child=CockpitActor->GetChildActor())Child->SetActorHiddenInGame(!Visible || Cockpit->GetStaticMesh());
+        CockpitComponent->SetVisibility(Visible,true);
+        if(auto* Child=CockpitComponent->GetChildActor())Child->SetActorHiddenInGame(!Visible || Cockpit->GetStaticMesh());
     }
 }
 
@@ -98,9 +101,8 @@ float AFighterActor::GetLandingGearDeployment() const
 
 void AFighterActor::SynchronizeLandingGearMarkers()
 {
-    for (UStaticMeshComponent* Mount : {NoseGear.Get(), LeftGear.Get(), RightGear.Get()})
-        if (Mount && Mount->GetAttachParent() != FighterLandingGearRoot)
-            Mount->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
+    if (Cockpit && Cockpit->GetAttachParent() != CockpitComponent)
+        Cockpit->AttachToComponent(CockpitComponent, FAttachmentTransformRules::KeepRelativeTransform);
     // Native components survive reconstruction. Never replace a BP-assigned child actor class.
     for (int32 Index = 0; Index < LandingGearActors.Num(); ++Index)
     {
@@ -109,6 +111,10 @@ void AFighterActor::SynchronizeLandingGearMarkers()
         // Correct attachment overrides serialized by existing fighter Blueprints.
         if (Gear->GetAttachParent() != FighterLandingGearRoot)
             Gear->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
+        Gear->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        UStaticMeshComponent* Mount = Index == 0 ? NoseGear.Get() : Index == 1 ? LeftGear.Get() : Index == 2 ? RightGear.Get() : nullptr;
+        if (Mount && Mount->GetAttachParent() != Gear)
+            Mount->AttachToComponent(Gear, FAttachmentTransformRules::KeepRelativeTransform);
         if (LandingGearBlueprintClasses.IsValidIndex(Index) && LandingGearBlueprintClasses[Index]
             && Gear->GetChildActorClass() != LandingGearBlueprintClasses[Index])
             Gear->SetChildActorClass(LandingGearBlueprintClasses[Index]);

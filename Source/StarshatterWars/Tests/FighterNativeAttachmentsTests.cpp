@@ -3,6 +3,7 @@
 #include "FighterActor.h"
 #include "FighterLandingGearComponent.h"
 #include "Components/ChildActorComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "LandingGear.h"
 #include "AvengerShipActor.h"
@@ -51,9 +52,10 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
         AFighterActor* Defaults = CastChecked<AFighterActor>(Design.Class->GetDefaultObject());
         const FString Prefix = Design.Class->GetName() + TEXT(": ");
         TestEqual(*(Prefix+TEXT("exact authored gear count")), Defaults->LandingGearActors.Num(), Design.GearCount);
-        TestNotNull(*(Prefix+TEXT("one cockpit child actor component")), Defaults->CockpitActor.Get());
+        TestEqual(*(Prefix+TEXT("cockpit mesh belongs to cockpit component")), Defaults->Cockpit->GetAttachParent(), static_cast<USceneComponent*>(Defaults->CockpitComponent.Get()));
+        TestNotNull(*(Prefix+TEXT("one cockpit child actor component")), Defaults->CockpitComponent.Get());
         TestTrue(*(Prefix+TEXT("cockpit is native and BP editable")),
-            Defaults->CockpitActor->CreationMethod == EComponentCreationMethod::Native && Defaults->CockpitActor->bEditableWhenInherited);
+            Defaults->CockpitComponent->CreationMethod == EComponentCreationMethod::Native && Defaults->CockpitComponent->bEditableWhenInherited);
         for (int32 Index=0; Index<Defaults->LandingGearActors.Num(); ++Index)
         {
             UFighterLandingGearComponent* Gear = Defaults->LandingGearActors[Index];
@@ -61,6 +63,9 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
                 Gear->CreationMethod == EComponentCreationMethod::Native && Gear->bEditableWhenInherited);
             if (!Gear) continue;
             TestEqual(*(Prefix+TEXT("gear attaches directly to landing gear root")), Gear->GetAttachParent(), Defaults->FighterLandingGearRoot.Get());
+            TestTrue(*(Prefix+TEXT("gear yaw is minus ninety")), Gear->GetRelativeRotation().Equals(FRotator(0,-90,0)));
+            UStaticMeshComponent* Mesh = Index == 0 ? Defaults->NoseGear.Get() : Index == 1 ? Defaults->LeftGear.Get() : Index == 2 ? Defaults->RightGear.Get() : nullptr;
+            if (Mesh) TestEqual(*(Prefix+TEXT("mesh belongs to matching gear actor")), Mesh->GetAttachParent(), static_cast<USceneComponent*>(Gear));
             TestEqual(*(Prefix+TEXT("definition order preserved")), Gear->AuthoredIndex, Index);
             TestEqual(*(Prefix+TEXT("gear model preserved")), Gear->AuthoredModel, Defaults->GearDefinitions[Index].Model);
             TestEqual(*(Prefix+TEXT("authored start preserved")), Gear->GetRelativeLocation(), Defaults->GearDefinitions[Index].RetractedPosition);
@@ -77,14 +82,14 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Raptor DEF start axis conversion"), Nose->RetractedPosition, FVector(134,0,-25));
     TestEqual(TEXT("Raptor DEF end axis conversion"), Nose->ExtendedPosition, FVector(148,0,-50));
     Nose->SetChildActorClass(AActor::StaticClass());
-    Fighter->CockpitActor->SetChildActorClass(AActor::StaticClass());
+    Fighter->CockpitComponent->SetChildActorClass(AActor::StaticClass());
     Fighter->PreviewGearDeployment = 0.5f;
     Fighter->SynchronizeLandingGearMarkers();
     TestEqual(TEXT("Half deployment follows legacy start/end"), Nose->GetRelativeLocation(), FVector(141,0,-37.5));
     Fighter->RerunConstructionScripts();
     Fighter->RerunConstructionScripts();
     TestEqual(TEXT("Reconstruction retains assigned gear class"), Nose->GetChildActorClass(), TSubclassOf<AActor>(AActor::StaticClass()));
-    TestEqual(TEXT("Reconstruction retains assigned cockpit class"), Fighter->CockpitActor->GetChildActorClass(), TSubclassOf<AActor>(AActor::StaticClass()));
+    TestEqual(TEXT("Reconstruction retains assigned cockpit class"), Fighter->CockpitComponent->GetChildActorClass(), TSubclassOf<AActor>(AActor::StaticClass()));
     TArray<UFighterLandingGearComponent*> GearComponents;
     Fighter->GetComponents(GearComponents);
     TestEqual(TEXT("Repeated construction creates no gear duplicates"), GearComponents.Num(),3);

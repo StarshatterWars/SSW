@@ -40,7 +40,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterLandingGearRoot;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Components") TObjectPtr<USceneComponent> FighterLaunchRoot;
     /** Select this native component and set Child Actor Class to your cockpit BP. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") TObjectPtr<UChildActorComponent> CockpitActor;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") TObjectPtr<UChildActorComponent> CockpitComponent;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") FString AuthoredCockpitModel;
     /** Legacy source metadata, not an additional UE scale multiplier. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") float AuthoredCockpitScale = 1;
