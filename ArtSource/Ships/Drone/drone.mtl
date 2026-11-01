@@ -1,0 +1,35 @@
+#
+# drone Material Library exported by Magic 2.0
+#
+
+newmtl (default)
+Ka 0.05020 0.05020 0.05020
+Kd 0.60235 0.60235 0.60235
+Ks 0.50000 0.50000 0.50000
+Ns 10.00000
+illum 2
+
+newmtl Black
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 0.00000
+illum 2
+map_Kd Black.pcx
+
+newmtl Metal
+Ka 0.20078 0.20078 0.20078
+Kd 1.00000 1.00000 1.00000
+Ks 0.37020 0.36863 0.36392
+Ns 15.00000
+illum 2
+map_Kd Metal+.pcx
+
+newmtl Plate
+Ka 0.30118 0.30118 0.30118
+Kd 1.00000 1.00000 1.00000
+Ks 0.23137 0.23039 0.22745
+Ns 8.00000
+illum 2
+map_Kd Plate+.pcx
+

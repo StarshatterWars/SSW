@@ -55,6 +55,8 @@ public:
     int               NumGear()         const { return ngear; }
     Solid* GetGear(int i);
     FVector           GetGearStop(int i);
+    FVector GetGearStartLocal(int i) const { return i >= 0 && i < ngear ? start[i] : FVector::ZeroVector; }
+    FVector GetGearEndLocal(int i) const { return i >= 0 && i < ngear ? end[i] : FVector::ZeroVector; }
     double            GetTouchDown();
     double            GetClearance()    const { return clearance; }
 

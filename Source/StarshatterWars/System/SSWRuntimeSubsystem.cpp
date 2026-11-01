@@ -1232,6 +1232,18 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
             nullptr,
             *BPClassPath);
 
+    // TargetDrone keeps its legacy model identifier; allow an explicitly named
+    // drone Blueprint without requiring DEF or simulation changes.
+    if (!BPClass && DesignName.Equals(TEXT("TargetDrone"), ESearchCase::IgnoreCase))
+    {
+        for (const TCHAR* Path : {
+            TEXT("/Game/Models/TargetDrone/BP_TargetDrone.BP_TargetDrone_C"),
+            TEXT("/Game/Models/Drone/BP_Drone.BP_Drone_C")})
+        {
+            BPClass = LoadClass<AShipActor>(nullptr, Path);
+            if (BPClass) break;
+        }
+    }
     if (!BPClass)
     {
         UE_LOG(LogSSWRuntime, VeryVerbose,

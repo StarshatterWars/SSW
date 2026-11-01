@@ -4,8 +4,10 @@
 #include "FighterLandingGearComponent.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "LandingGear.h"
+#include "Ship.h"
 #include "AvengerShipActor.h"
 #include "CobraShipActor.h"
 #include "CutlassShipActor.h"
@@ -22,6 +24,13 @@
 #include "ZodiacShipActor.h"
 #include "ZZAShipActor.h"
 #include "ZZFShipActor.h"
+
+class FGearTestShip : public Ship
+{
+public:
+    FGearTestShip() : Ship("GearTest", "", static_cast<ShipDesign*>(nullptr), 1, 0, nullptr, false) {}
+    void SetTestGear(LandingGear* InGear) { if (gear) systems.remove(gear); gear = InGear; if (gear) systems.append(gear); }
+};
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFighterNativeAttachmentsTest, "Starshatter.Fighter.NativeAttachments",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -64,7 +73,7 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
             if (!Gear) continue;
             TestEqual(*(Prefix+TEXT("gear attaches directly to landing gear root")), Gear->GetAttachParent(), Defaults->FighterLandingGearRoot.Get());
             TestTrue(*(Prefix+TEXT("gear yaw is minus ninety")), Gear->GetRelativeRotation().Equals(FRotator(0,-90,0)));
-            UStaticMeshComponent* Mesh = Index == 0 ? Defaults->NoseGear.Get() : Index == 1 ? Defaults->LeftGear.Get() : Index == 2 ? Defaults->RightGear.Get() : nullptr;
+            UStaticMeshComponent* Mesh = Index == 0 ? Defaults->NoseGear.Get() : Index == 1 ? Defaults->RightGear.Get() : Index == 2 ? Defaults->LeftGear.Get() : nullptr;
             if (Mesh) TestEqual(*(Prefix+TEXT("mesh belongs to matching gear actor")), Mesh->GetAttachParent(), static_cast<USceneComponent*>(Gear));
             TestEqual(*(Prefix+TEXT("definition order preserved")), Gear->AuthoredIndex, Index);
             TestEqual(*(Prefix+TEXT("gear model preserved")), Gear->AuthoredModel, Defaults->GearDefinitions[Index].Model);
@@ -130,8 +139,51 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
         AFighterActor* LiveFalcon = World->SpawnActor<AFighterActor>(FalconBP);
         if (TestNotNull(TEXT("Actual Falcon Blueprint spawns"), LiveFalcon))
         {
+            AddExpectedError(TEXT("No ShipDesign for 'GearTest'"), EAutomationExpectedErrorFlags::Contains, 1);
+            FGearTestShip RuntimeShip;
+            LandingGear RuntimeGear;
+            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
+            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
+            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
+            RuntimeShip.SetTestGear(&RuntimeGear);
+            LiveFalcon->BindRuntimeShip(&RuntimeShip);
+            RuntimeGear.SetState(LandingGear::GEAR_DOWN);
+            LiveFalcon->Tick(0.01f);
+            for (UFighterLandingGearComponent* Gear : LiveFalcon->LandingGearActors)
+                TestTrue(TEXT("Bound runtime gear shows down state"), Gear->bGearVisible);
+            RuntimeGear.SetState(LandingGear::GEAR_RAISE);
+            RuntimeShip.ExecSystems(1.1);
+            RuntimeShip.ExecSystems(0);
+            LiveFalcon->Tick(0.01f);
+            for (UFighterLandingGearComponent* Gear : LiveFalcon->LandingGearActors)
+                TestFalse(TEXT("Bound runtime gear hides after retraction"), Gear->bGearVisible);
+            TArray<UChildActorComponent*> BoundAssemblies;
+            LiveFalcon->GetComponents(BoundAssemblies);
+            int32 CheckedAssemblies = 0;
+            for (UChildActorComponent* Assembly : BoundAssemblies)
+            {
+                if (!GetNameSafe(Assembly->GetChildActorClass()).Contains(TEXT("Gear"))) continue;
+                ++CheckedAssemblies;
+                TestFalse(TEXT("Saved Blueprint gear assembly retracts"), Assembly->IsVisible());
+                if (AActor* Child = Assembly->GetChildActor())
+                    TestTrue(TEXT("Saved Blueprint gear actor is hidden"), Child->IsHidden());
+            }
+            TestTrue(TEXT("Actual Falcon gear assemblies were checked"), CheckedAssemblies >= 3);
+            LiveFalcon->BindRuntimeShip(nullptr);
+            RuntimeShip.SetTestGear(nullptr);
             LiveFalcon->PreviewGearDeployment = 0;
             LiveFalcon->SynchronizeLandingGearMarkers();
+            TArray<UStaticMeshComponent*> FalconMeshes;
+            LiveFalcon->GetComponents(FalconMeshes);
+            for (UStaticMeshComponent* Mesh : FalconMeshes)
+            {
+                if (Mesh->GetStaticMesh() && Mesh->GetStaticMesh()->GetPathName().Contains(TEXT("/LandingGear/")))
+                {
+                    AddInfo(FString::Printf(TEXT("Falcon gear mesh %s Parent=%s Visible=%d"),
+                        *Mesh->GetName(), *GetNameSafe(Mesh->GetAttachParent()), Mesh->IsVisible()));
+                    TestFalse(TEXT("All Falcon gear meshes retract, including saved BP components"), Mesh->IsVisible());
+                }
+            }
             for (UFighterLandingGearComponent* Gear : LiveFalcon->LandingGearActors)
             {
                 TestFalse(TEXT("Falcon Blueprint retracts native gear"), Gear->bGearVisible);
