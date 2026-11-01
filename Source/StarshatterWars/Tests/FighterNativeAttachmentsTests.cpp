@@ -107,6 +107,11 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Custom animation still receives deployment"), Nose->Deployment,0.6f);
     Nose->ApplyDeployment(2);
     TestEqual(TEXT("Presentation clamps deployment"), Nose->Deployment,1.f);
+    Nose->ApplyDeployment(1.f, true, false);
+    TestFalse(TEXT("Simulation visibility hides each gear even at full extension"), Nose->bGearVisible);
+    TestTrue(TEXT("Simulation visibility hides the child actor"), Nose->GetChildActor()->IsHidden());
+    Nose->ApplyDeployment(1.f, true, true);
+    TestTrue(TEXT("Down visibility restores the gear"), Nose->bGearVisible);
     LandingGear Legacy;
     Legacy.SetState(LandingGear::GEAR_LOWER);
     Legacy.ExecFrame(0.25);

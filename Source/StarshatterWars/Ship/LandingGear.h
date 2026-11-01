@@ -50,6 +50,8 @@ public:
     void              SetState(GEAR_STATE s);
     /** Read-only legacy transit fraction for native fighter presentation. */
     double            GetDeployment() const { return FMath::Clamp(transit, 0.0, 1.0); }
+    /** Presentation visibility for each authored gear; simulation remains authoritative. */
+    bool              IsGearVisible(int index) const;
     int               NumGear()         const { return ngear; }
     Solid* GetGear(int i);
     FVector           GetGearStop(int i);

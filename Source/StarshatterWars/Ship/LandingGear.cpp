@@ -345,3 +345,9 @@ double LandingGear::GetTouchDown()
 
     return down;
 }
+
+bool LandingGear::IsGearVisible(int index) const
+{
+    return index >= 0 && index < ngear && state != GEAR_UP
+        && (state == GEAR_DOWN || state == GEAR_LOWER || GetDeployment() > 0.0);
+}

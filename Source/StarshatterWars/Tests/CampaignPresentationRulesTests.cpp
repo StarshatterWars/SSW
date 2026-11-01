@@ -27,7 +27,8 @@ bool FCampaignPresentationRulesTest::RunTest(const FString& Parameters)
     {
         if(TestNotNull(TEXT("Static attachment exists before gear art is assigned"),Mesh))
         {
-            TestTrue(TEXT("Attachment is directly under hull"),Mesh->GetAttachParent()==Fighter->HullMesh);
+            TestTrue(TEXT("Attachment uses its appropriate root"), Mesh->GetAttachParent() ==
+                (Mesh == Fighter->Cockpit.Get() ? Fighter->HullMesh : Fighter->FighterLandingGearRoot.Get()));
             TestTrue(TEXT("No attachment collision"),Mesh->GetCollisionEnabled()==ECollisionEnabled::NoCollision);
         }
     }

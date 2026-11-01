@@ -10,13 +10,15 @@
 
 AFighterActor::AFighterActor()
 {
+    FighterLandingGearRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLandingGearRoot"));
+    FighterLandingGearRoot->SetupAttachment(PointRoot);
     LeftGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftGear"));
     RightGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightGear"));
     NoseGear = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NoseGear"));
     Cockpit = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cockpit"));
     for (UStaticMeshComponent* Mesh : {LeftGear.Get(), RightGear.Get(), NoseGear.Get(), Cockpit.Get()})
     {
-        Mesh->SetupAttachment(HullMesh);
+        Mesh->SetupAttachment(Mesh == Cockpit.Get() ? HullMesh : FighterLandingGearRoot.Get());
         Mesh->bEditableWhenInherited = true;
         Mesh->SetMobility(EComponentMobility::Movable);
         Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -25,8 +27,6 @@ AFighterActor::AFighterActor()
     }
     FighterCockpitRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterCockpitRoot"));
     FighterCockpitRoot->SetupAttachment(PointRoot);
-    FighterLandingGearRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLandingGearRoot"));
-    FighterLandingGearRoot->SetupAttachment(PointRoot);
     FighterLaunchRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLaunchRoot"));
     FighterLaunchRoot->SetupAttachment(PointRoot);
     CockpitActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("CockpitActor"));
@@ -98,6 +98,9 @@ float AFighterActor::GetLandingGearDeployment() const
 
 void AFighterActor::SynchronizeLandingGearMarkers()
 {
+    for (UStaticMeshComponent* Mount : {NoseGear.Get(), LeftGear.Get(), RightGear.Get()})
+        if (Mount && Mount->GetAttachParent() != FighterLandingGearRoot)
+            Mount->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
     // Native components survive reconstruction. Never replace a BP-assigned child actor class.
     for (int32 Index = 0; Index < LandingGearActors.Num(); ++Index)
     {
@@ -116,9 +119,11 @@ void AFighterActor::SynchronizeLandingGearMarkers()
 void AFighterActor::UpdateLandingGearPresentation()
 {
     const float Deployment = GetLandingGearDeployment();
+    const LandingGear* RuntimeGear = GetRuntimeShip() ? GetRuntimeShip()->GetGear() : nullptr;
     for (UStaticMeshComponent* Mesh : {LeftGear.Get(), RightGear.Get(), NoseGear.Get()})
         if (Mesh && Mesh->GetStaticMesh()) Mesh->SetVisibility(Deployment > 0.f, true);
     for (int32 Index = 0; Index < LandingGearActors.Num(); ++Index)
         if (UFighterLandingGearComponent* Gear = LandingGearActors[Index])
-            Gear->ApplyDeployment(Deployment, !GearDefinitions.IsValidIndex(Index) || GearDefinitions[Index].bEnabled);
+            Gear->ApplyDeployment(Deployment, !GearDefinitions.IsValidIndex(Index) || GearDefinitions[Index].bEnabled,
+                !RuntimeGear || RuntimeGear->IsGearVisible(Index));
 }

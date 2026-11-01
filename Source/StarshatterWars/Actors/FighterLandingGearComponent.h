@@ -18,5 +18,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Landing Gear|Animation") bool bAnimateTranslation = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Landing Gear|Animation") bool bHideWhenRetracted = true;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Landing Gear|Animation") float Deployment = 0;
-    void ApplyDeployment(float Fraction, bool bEnabled = true);
+    /** Actual visibility, supplied by the legacy landing gear system for bound ships. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Landing Gear|Animation") bool bGearVisible = false;
+    void ApplyDeployment(float Fraction, bool bEnabled = true, bool bStateVisible = true);
 };
