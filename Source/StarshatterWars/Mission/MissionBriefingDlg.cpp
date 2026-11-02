@@ -2168,6 +2168,9 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     // Stop the timer before resetting the rig; otherwise it recreates a chase
     // camera over the parked ship while the debrief is being presented.
     if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
+    if (MissionTargetOverlay.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(MissionTargetOverlay.ToSharedRef());
+    MissionTargetOverlay.Reset();
     CloseQuantumTravel();
     QuantumMenuAction = nullptr;
     CloseNavigationPopup();

@@ -22,6 +22,7 @@
 #include "RadioView.h"
 #include "Instruction.h"
 #include "Weapon.h"
+#include "WeaponDesign.h"
 #include "WeaponGroup.h"
 #include "QuantumDrive.h"
 #include "Power.h"
@@ -35,6 +36,39 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Text/STextBlock.h"
+
+FString SFighterHUDDetails::FormatWeaponReadout(const WeaponGroup* Group)
+{
+    if (!Group) return TEXT("NONE");
+    const Weapon* Selected=Group->GetSelected();
+    if (Group->IsPrimary() && Selected && Selected->Design())
+    {
+        FString Name=ANSI_TO_TCHAR(Selected->Design()->name);
+        Name.RemoveFromEnd(TEXT(" Cannon"),ESearchCase::IgnoreCase);
+        return FString(TEXT("GUNS: "))+Name.ToUpper();
+    }
+    return FString::Printf(TEXT("%hs  %s"),Group->Name(),
+        Group->Ammo()<0 ? TEXT("--") : *FString::FromInt(Group->Ammo()));
+}
+
+FString SFighterHUDDetails::FormatStatusReadout(const FString& Label,double Percent,bool bAugmenter)
+{
+    if (!FMath::IsFinite(Percent) || Percent<0.0) return TEXT("--");
+    if (Label.Equals(TEXT("HULL"),ESearchCase::IgnoreCase))
+    {
+        if (Percent>=99.95) return TEXT("INTACT");
+        if (Percent>=75.0) return TEXT("LIGHT DMG");
+        if (Percent>=50.0) return TEXT("MOD DMG");
+        if (Percent>=25.0) return TEXT("HEAVY DMG");
+        return Percent>0.0 ? TEXT("CRITICAL") : TEXT("DESTROYED");
+    }
+    if (Label.Equals(TEXT("THRUST"),ESearchCase::IgnoreCase) && bAugmenter) return TEXT("AUG");
+    if (Percent<0.5) return Label.Equals(TEXT("FUEL"),ESearchCase::IgnoreCase) ? TEXT("EMPTY") : TEXT("OFF");
+    if (Percent<33.0) return TEXT("LOW");
+    if (Percent<66.0) return TEXT("MED");
+    // Charge is sampled between recharge frames: near-full is presented as FULL.
+    return Percent<99.0 ? TEXT("HIGH") : TEXT("FULL");
+}
 
 SFighterHUDDetails::~SFighterHUDDetails()=default;
 
@@ -102,12 +136,6 @@ namespace
         if (Icon.StartsWith(TEXT("/Game/"))) return Icon;
         Icon.RemoveFromEnd(TEXT(".pcx"), ESearchCase::IgnoreCase);
         return FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *D->ShipName, *Icon, *Icon);
-    }
-    FString WeaponLabel(WeaponGroup* G)
-    {
-        if (!G) return TEXT("NONE");
-        return FString::Printf(TEXT("%hs  %s"), G->Name(),
-            G->Ammo() < 0 ? TEXT("--") : *FString::FromInt(G->Ammo()));
     }
 
     FLinearColor SensorContactColor(const SimContact* Contact, Ship* Observer)
@@ -312,7 +340,7 @@ void SFighterHUDDetails::Refresh()
         StatusRows.Add({TEXT("HULL"), PlayerHull});
         if (P->GetShield()) StatusRows.Add({TEXT("SHIELD"), double(P->GetShieldStrength())});
         if (P->GetPrimary()) StatusRows.Add({TEXT("GUNS"), Charge(P->GetPrimary())});
-        Primary = WeaponLabel(P->GetPrimaryGroup()); Secondary = WeaponLabel(P->GetSecondaryGroup());
+        Primary = FormatWeaponReadout(P->GetPrimaryGroup()); Secondary = FormatWeaponReadout(P->GetSecondaryGroup());
         // Legacy warning cells remain in fixed positions as damage changes.
         SSWDamagePanel::Build(P, DamageRows);
         Sensor* SensorData = P->GetSensor();
@@ -482,10 +510,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const bool bThrust = Label == TEXT("THRUST");
         const FLinearColor C = bThrust ? HUDBlue : DamageColor(Percent);
         Text(P, Label.Left(12), C);
-        Box(P+FVector2D(88,5)*Scale,FVector2D(78,6)*Scale,FLinearColor(0.05f,0.1f,0.18f,0.8f));
-        if (Percent >= 0) Box(P+FVector2D(88,5)*Scale,FVector2D(78*FMath::Clamp(Percent/100.0,0.0,1.0),6)*Scale,C);
-        Text(P+FVector2D(171,0)*Scale,bThrust && Percent >= 0.0 && Percent < 0.5
-            ? TEXT("OFF") : Percent < 0 ? TEXT("--") : FString::Printf(TEXT("%.0f%%"),Percent),C);
+        Box(P+FVector2D(88,5)*Scale,FVector2D(50,6)*Scale,FLinearColor(0.05f,0.1f,0.18f,0.8f));
+        if (Percent >= 0) Box(P+FVector2D(88,5)*Scale,FVector2D(50*FMath::Clamp(Percent/100.0,0.0,1.0),6)*Scale,C);
+        Text(P+FVector2D(145,0)*Scale,FormatStatusReadout(Label,Percent,bThrust && bAugmenterActive),C);
     };
     auto Icon = [&](FVector2D P, const FSlateBrush& B, bool Valid, double H)
     {
@@ -733,8 +760,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
         ShipText(P+FVector2D(0,112)*Scale,PlayerClass);
         if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
-        ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,PlayerHull>=0?FString::Printf(TEXT("HULL  %.0f%%"),PlayerHull):TEXT("HULL  --"),ShipHealthColor(PlayerHull));
-        ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,PlayerShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),PlayerShield):TEXT("SHIELD  --"),ShipHealthColor(PlayerShield));
+        ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),PlayerHull),ShipHealthColor(PlayerHull));
+        ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),PlayerShield),ShipHealthColor(PlayerShield));
         if (bShowWeapons)
         {
         ReticleText(-248,LowerReadoutBaseline,108,Primary.ToUpper());
@@ -788,8 +815,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         else if(TargetHull<0)
             Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,TargetClass,TargetDisplayColor);
-        if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString::Printf(TEXT("HULL  %.0f%%"),TargetHull),TargetDisplayColor);
-        if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,TargetShield>=0?FString::Printf(TEXT("SHIELD  %.0f%%"),TargetShield):TEXT("SHIELD  --"),TargetDisplayColor);
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
+        if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     // Both panels share the same 512x256 native artwork extents and anchor.

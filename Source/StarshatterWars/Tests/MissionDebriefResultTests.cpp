@@ -6,9 +6,12 @@
 #include "MissionDebriefDlg.h"
 #include "Mission.h"
 #include "SimEvent.h"
+#include "SimElement.h"
+#include "Instruction.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Components/TextBlock.h"
+#include "Components/RichTextBlock.h"
 #include "Components/CanvasPanel.h"
 #include "Blueprint/WidgetTree.h"
 #include "Slate/WidgetRenderer.h"
@@ -45,6 +48,20 @@ bool FMissionDebriefResultTest::RunTest(const FString&)
     TestFalse(TEXT("Failed primary objective overrides completion count"),EvaluateMissionDebrief(E).bSuccess);
     E={}; E.bDocked=true;
     TestEqual(TEXT("No authored criteria is not falsely labeled success"),EvaluateMissionDebrief(E).Outcome,FString(TEXT("NOT ASSESSED")));
+    Mission Training; Training.SetIdentity(101); Training.SetMissionType(int(EMissionType::TRAINING));
+    SimElement Route("Delta",1); ShipStats SafeRecovery("Delta 2",1);
+    SafeRecovery.AddEvent(ESimEvent::DOCK,"Archon");
+    for (int I=0; I<5; ++I)
+    {
+        auto* N=new Instruction("Janek",FVector::ZeroVector,I==4 ? EInstruction::RTB : EInstruction::Vector);
+        N->SetStatus(I==4 ? INSTRUCTION_STATUS::ACTIVE : INSTRUCTION_STATUS::COMPLETE);
+        Route.AddNavPoint(N,nullptr,false);
+    }
+    auto Collected=CollectMissionDebriefEvidence(&Training,&Route,&SafeRecovery);
+    TestEqual(TEXT("Runtime route collects all five checkpoints including recovered RTB"),Collected.CompletedRoutePoints,5);
+    TestTrue(TEXT("Real instructions and DOCK event produce T1 success"),EvaluateMissionDebrief(Collected).bSuccess);
+    Route.GetFlightPlan().at(1)->SetStatus(INSTRUCTION_STATUS::SKIPPED);
+    TestFalse(TEXT("Runtime skipped instruction is not treated as completed"),EvaluateMissionDebrief(CollectMissionDebriefEvidence(&Training,&Route,&SafeRecovery)).bSuccess);
     auto* Save=NewObject<UCampaignSave>();
     FMissionDebriefRecord Record; Record.MissionId=101; Record.Outcome=TEXT("SUCCESS");
     Record.Evidence=TEXT("5/5 waypoints; safely docked"); Record.Points=100; Record.Pilot=TEXT("Fixture");
@@ -73,6 +90,8 @@ bool FMissionDebriefUiTest::RunTest(const FString&)
     auto* Screen=NewObject<UMissionDebriefDlg>(World,Class); Screen->Initialize();
     auto Widget=Screen->TakeWidget(); Widget->SlatePrepass();
     TestTrue(TEXT("Modern debrief built"),Screen->bModernUiBuilt);
+    TestTrue(TEXT("Unit rows use the required compiled UMG asset"),
+        Screen->UnitListWidget->GetEntryWidgetClass() && Screen->UnitListWidget->GetEntryWidgetClass()->ClassGeneratedBy!=nullptr);
     if (!TestNotNull(TEXT("Result label exists"),Screen->OutcomeWidget.Get())) return false;
     Screen->EnsureUi(); Screen->EnsureUi();
     TestEqual(TEXT("One modern accept button after repeated setup"),Screen->CloseButtonWidget->GetToolTipText().ToString(),FString(TEXT("Accept debrief and return")));
@@ -91,6 +110,7 @@ bool FMissionDebriefUiTest::RunTest(const FString&)
     if (TestNotNull(TEXT("Snapshot first row"),First)) TestEqual(TEXT("Unit switch uses its own snapshot"),First->Col1,FString(TEXT("2")));
     Screen->DrawSelectedUnit(0);
     TestTrue(TEXT("Player event log survives cleanup"),Screen->EventListWidget->GetNumItems()>=2);
+    Screen->ObjectivesWidget->SetText(FText::FromString(TEXT("Practice launching, flying, docking, and basic spaceborne maneuvering.")));
     Screen->MissionNameWidget->SetText(FText::FromString(TEXT("Basic Space Flight")));
     Screen->MissionSystemWidget->SetText(FText::FromString(TEXT("Janus")));
     Screen->MissionSectorWidget->SetText(FText::FromString(TEXT("Janek")));

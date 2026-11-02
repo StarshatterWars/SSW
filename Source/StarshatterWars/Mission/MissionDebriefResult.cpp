@@ -1,4 +1,8 @@
 #include "MissionDebriefResult.h"
+#include "Mission.h"
+#include "SimElement.h"
+#include "Instruction.h"
+#include "SimEvent.h"
 
 FMissionDebriefResult EvaluateMissionDebrief(const FMissionDebriefEvidence& E)
 {
@@ -18,4 +22,38 @@ FMissionDebriefResult EvaluateMissionDebrief(const FMissionDebriefEvidence& E)
             FString::Printf(TEXT("Primary objectives: %d/%d complete."),E.CompletedObjectives,E.RequiredObjectives)};
     }
     return {false,TEXT("NOT ASSESSED"),TEXT("No measurable primary objectives are defined. Points and recovery do not establish success.")};
+}
+
+FMissionDebriefEvidence CollectMissionDebriefEvidence(const Mission* MissionPtr,SimElement* Element,ShipStats* Stats)
+{
+    FMissionDebriefEvidence E;
+    E.bBasicFlightTraining = MissionPtr && MissionPtr->GetIdentity()==101
+        && MissionPtr->GetMissionType()==int(EMissionType::TRAINING);
+    if (Stats)
+    {
+        Stats->Summarize();
+        E.bDocked=Stats->HasEvent(ESimEvent::DOCK);
+        E.bLost=Stats->GetDeaths()>0 || Stats->GetColls()>0;
+    }
+    if (Element)
+    {
+        for (int32 I=0; I<Element->NumObjectives(); ++I)
+        {
+            Instruction* O=Element->GetObjective(I);
+            if (!O || O->GetPriority()!=Instruction::PRIMARY) continue;
+            ++E.RequiredObjectives;
+            if (O->GetStatus()==INSTRUCTION_STATUS::COMPLETE) ++E.CompletedObjectives;
+            if (O->GetStatus()==INSTRUCTION_STATUS::FAILED || O->GetStatus()==INSTRUCTION_STATUS::ABORTED) E.bFailedObjective=true;
+        }
+        ListIter<Instruction> Route=Element->GetFlightPlan();
+        while (++Route)
+        {
+            Instruction* N=Route.value();
+            ++E.RoutePoints;
+            if (N->GetStatus()==INSTRUCTION_STATUS::COMPLETE
+                || (N->GetAction()==EInstruction::RTB && E.bDocked
+                    && N->GetStatus()<=INSTRUCTION_STATUS::ACTIVE)) ++E.CompletedRoutePoints;
+        }
+    }
+    return E;
 }

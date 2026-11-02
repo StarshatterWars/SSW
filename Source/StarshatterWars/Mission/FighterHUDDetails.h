@@ -8,6 +8,7 @@ class SVerticalBox;
 #include "UObject/StrongObjectPtr.h"
 
 class AActor;
+class WeaponGroup;
 class FShipMFDPreview;
 
 // Live fighter readouts. Simulation objects are sampled, never retained.
@@ -41,6 +42,8 @@ public:
     void ToggleCautionPanel() { bShowCaution = !bShowCaution; if (bShowCaution) bShowInformation = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void ToggleInformationPanel() { bShowInformation = !bShowInformation; if (bShowInformation) bShowCaution = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void CycleWeapon(bool bPrimary);
+    static FString FormatWeaponReadout(const WeaponGroup* Group);
+    static FString FormatStatusReadout(const FString& Label, double Percent, bool bAugmenter=false);
 private:
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     friend class FRecoveryILSHUDTest;

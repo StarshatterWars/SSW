@@ -813,6 +813,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	}
 
 	int SysID = systems.size();
+    int WeaponIndex = 1; // Legacy one-based firing/mount identity.
 
 	//-------------------------------------------------------------
 	// Weapon groups from design weapons
@@ -827,11 +828,11 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 
 		RuntimeWeapon->SetOwner(this);
 		RuntimeWeapon->SetID(SysID++);
+        RuntimeWeapon->SetIndex(WeaponIndex++);
 
-		if (reactors.size() > 0)
-		{
-			reactors[0]->AddClient(RuntimeWeapon);
-		}
+        const int SourceIndex = RuntimeWeapon->GetSourceIndex();
+        if (SourceIndex >= 0 && SourceIndex < reactors.size())
+            reactors[SourceIndex]->AddClient(RuntimeWeapon);
 
 		systems.append(RuntimeWeapon);
 
@@ -853,6 +854,9 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 		}
 
 		Group->AddWeapon(RuntimeWeapon);
+        Group->SetAbbreviation(RuntimeWeapon->Abbreviation());
+        RuntimeWeapon->SetFiringOrders(IsDropship() && RuntimeWeapon->GetTurret()
+            ? WeaponsOrders::POINT_DEFENSE : WeaponsOrders::MANUAL);
 
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship] Weapon runtime built Ship='%hs' Weapon=%p Group='%hs' Groups=%d Systems=%d"),
@@ -885,9 +889,8 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 
 		Missile->SetOwner(this);
 		Missile->SetID(SysID++);
+        Missile->SetIndex(WeaponIndex++);
 
-		if (reactors.size() > 0)
-			reactors[0]->AddClient(Missile);
 
 		systems.append(Missile);
 

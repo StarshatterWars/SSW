@@ -20,3 +20,8 @@ struct FMissionDebriefResult
     FString Reason;
 };
 FMissionDebriefResult EvaluateMissionDebrief(const FMissionDebriefEvidence& Evidence);
+
+class Mission;
+class SimElement;
+class ShipStats;
+FMissionDebriefEvidence CollectMissionDebriefEvidence(const Mission* MissionPtr,SimElement* Element,ShipStats* Stats);

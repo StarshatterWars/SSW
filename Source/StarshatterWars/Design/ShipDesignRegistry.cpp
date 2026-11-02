@@ -32,6 +32,7 @@
 #include "Computer.h"
 #include "FlightComputer.h"
 #include "HardPoint.h"
+#include "ShipLoad.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
 #include "LandingGear.h"
@@ -885,6 +886,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewWeapon->Mount(Src.Location, Src.Size, Src.HullFactor);
         NewWeapon->SetName(TCHAR_TO_ANSI(*Src.Name));
         NewWeapon->SetSourceIndex(Src.SourceIndex);
+        if (!Src.Abbrev.IsEmpty()) NewWeapon->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
         Legacy->weapons.append(NewWeapon);
 
         UE_LOG(LogTemp, Warning,
@@ -976,6 +978,17 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             *Src.Name,
             *Src.DesignName,
             Src.AllowedWeaponTypes.Num());
+    }
+
+    // Preserve the DEF's named presets and per-hardpoint type indices. Mission
+    // loadout resolution searches this legacy list before constructing a ship.
+    for (const FShipLoadout& Src : Row.Loadout)
+    {
+        auto* Load = new ShipLoad();
+        Load->SetName(TCHAR_TO_ANSI(*Src.Name));
+        for (int32 I=0; I<FMath::Min(16,Src.Stations.Num()); ++I)
+            Load->SetStation(I,Src.Stations[I]);
+        Legacy->loadouts.append(Load);
     }
 
     //-------------------------------------------------------------

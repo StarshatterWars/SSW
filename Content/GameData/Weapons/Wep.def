@@ -28,7 +28,7 @@ primary: {
    bitmap:           "shot0"
    flash:            "flash0"
    flash_scale:      0.5
-   sound:            "Shot1.wav"
+   sound:            "Shot1"
    sound_min_dist:   100
    sound_max_dist:   15e3
 }
@@ -36,7 +36,7 @@ primary: {
 primary: {
    name:             "Delta Cannon"
    group:            GUNS
-   beauty:           "Delta_Beauty.pcx"
+   beauty:           "Delta_Beauty"
    description:      "The DELTA CANNON is the current generation standard high-energy particle weapon in use on most Alliance fighters.  Notorious for reliablity problems in its early years of service, the Delta Cannon is now considered one of the most potent and effective small energy weapons ever fielded by Force:Space.  The Delta Cannon has improved focus and high bolt velocity that contribute to its accuracy at ranges up to 10 km."
    target_type:      0x000f00ff
    value:            1
@@ -58,10 +58,10 @@ primary: {
    width:            2.0
    length:           80.0
    light:            100
-   bitmap:           "shot1.pcx"
-   flash:            "flash1.pcx"
+   bitmap:           "shot1"
+   flash:            "flash1"
    flash_scale:      0.5
-   sound:            "Zap8.wav"
+   sound:            "Zap8"
    sound_min_dist:   100
    sound_max_dist:   15e3
 }
@@ -94,7 +94,7 @@ primary: {
    bitmap:           "shot4"
    flash:            "flash4"
    flash_scale:      0.5
-   sound:            "blockade_cannon.wav"
+   sound:            "blockade_cannon"
    sound_min_dist:   500
    sound_max_dist:   17e3
 }
@@ -132,7 +132,7 @@ primary: {
    bitmap:           "shot1.pcx"
    flash:            "flash1.pcx"
    flash_scale:      0.5
-   sound:            "Zap8.wav"
+   sound:            "Zap8"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -172,7 +172,7 @@ primary: {
    bitmap:           "shot4.pcx"
    flash:            "flash4.pcx"
    flash_scale:      0.5
-   sound:            "Zap8.wav"
+   sound:            "Zap8"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -345,7 +345,7 @@ missile: {
    trail_dim:        6
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "missile.wav"
+   sound:            "missile"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -786,7 +786,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      1
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1021,7 +1021,7 @@ primary: {
    bitmap:           "shot1.pcx"
    flash:            "flash1.pcx"
    flash_scale:      1
-   sound:            "Shot2.wav"
+   sound:            "Shot2"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
