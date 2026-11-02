@@ -51,7 +51,10 @@ bool FFalconExternalStoresTest::RunTest(const FString& Parameters)
         if (Mount->GetChildActor()) TestTrue(TEXT("Missile is attached to its loadout point"),Mount->GetChildActor()->GetRootComponent()->GetAttachParent() == Mount);
         Mount->RuntimeWeapon->SetAmmo(0);
         Mount->UpdateRuntimeStore();
-        if (Mount->GetChildActor()) TestTrue(TEXT("Expended missile is hidden"),Mount->GetChildActor()->IsHidden());
+        TestNull(TEXT("Expended carried missile is destroyed"),Mount->GetChildActor());
+        Mount->RuntimeWeapon->SetAmmo(1);
+        Mount->UpdateRuntimeStore();
+        TestNotNull(TEXT("Rearmed station recreates its carried missile"),Mount->GetChildActor());
     }
     TestEqual(TEXT("All four Falcon loadout stations checked"),Checked,4);
     const int32 Count = Falcon->NativeWeaponHardpoints.Num();

@@ -1,6 +1,8 @@
 
 #include "SSWRuntimeSubsystem.h"
 #include "WeaponBlueprintResolver.h"
+#include "MissileFlightPresentation.h"
+#include "MissileActor.h"
 #include "GameFramework/MovementComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "StarshatterInputBindings.h"
@@ -1569,20 +1571,10 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 if (ExistingVisual)
                 {
                     // Visual only: legacy SimShot controls flight, impacts and lifetime.
-                    ExistingVisual->SetActorEnableCollision(false);
-                    ExistingVisual->SetActorTickEnabled(false);
-                    TArray<UMovementComponent*> MovementComponents;
-                    ExistingVisual->GetComponents(MovementComponents);
-                    for (UMovementComponent* Movement : MovementComponents)
-                        Movement->SetComponentTickEnabled(false);
-                    TArray<UPrimitiveComponent*> Primitives;
-                    ExistingVisual->GetComponents(Primitives);
-                    for (UPrimitiveComponent* Primitive : Primitives)
-                    {
-                        Primitive->SetSimulatePhysics(false);
-                        Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-                        Primitive->SetMobility(EComponentMobility::Movable);
-                    }
+                    if (auto* Missile = Cast<AMissileActor>(ExistingVisual))
+                        Missile->BeginSimulationFlight();
+                    else
+                        MissileFlightPresentation::Release(ExistingVisual);
                     ProjectileVisuals.Add(Shot, ExistingVisual);
                 }
             }

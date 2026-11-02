@@ -231,7 +231,7 @@ missile: {
    trail_dim:        7
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "missile.wav"
+   sound:            "missile"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -290,7 +290,7 @@ missile: {
    trail_dim:        7
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "missile.wav"
+   sound:            "missile"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -399,7 +399,7 @@ missile: {
    trail_dim:        5
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "missile.wav"
+   sound:            "missile"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -454,7 +454,7 @@ missile: {
    trail_dim:        5
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "Missile1.wav"
+   sound:            "Missile1"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -508,13 +508,13 @@ missile: {
    graphic_type:     1	// solid
    scale:            0.15
    light:            200
-   model:            "missile00.mag"
+   model:            "rocket"
    trail:            "smoke.pcx"
    trail_width:      1
    trail_dim:        8
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "missile2.wav"
+   sound:            "missile2"
    sound_min_dist:   1e3
    sound_max_dist:   10e3
 }
@@ -560,10 +560,10 @@ missile: {
    pitch_rate:       1
    yaw_rate:         1
 
-   turret:           "recon.mag"
+   turret:           "recon"
    scale:            0.15
 
-   sound:            "click.wav"
+   sound:            "click"
    sound_min_dist:   1e3
    sound_max_dist:   4e3
 }
@@ -599,7 +599,7 @@ drone: {
    flare:            "shot7.pcx"
    flare_scale:      1.3
 
-   sound:            "decoy.wav"
+   sound:            "decoy"
    sound_min_dist:   1e3
    sound_max_dist:   10e3
 }
@@ -641,7 +641,7 @@ primary: {
    bitmap:           "shot0.pcx"
    flash:            "flash0.pcx"
    flash_scale:      1.0
-   sound:            "blockade_cannon.wav"
+   sound:            "blockade_cannon"
    sound_min_dist:   3e3
    sound_max_dist:   30e3
 }
@@ -676,7 +676,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      0.2
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -706,7 +706,7 @@ primary: {
    light:            150
    light_color:      (140,255,180)
    bitmap:           "ShotZ.pcx"
-   sound:            "shot4.wav"
+   sound:            "shot4"
    sound_min_dist:   500
    sound_max_dist:   20e3
 }
@@ -746,7 +746,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      1
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -823,7 +823,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      1
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -862,7 +862,7 @@ primary: {
    bitmap:           "Orca/shot0.pcx"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
-   sound:            "Shot2.wav"
+   sound:            "Shot2"
    sound_min_dist:   3e3
    sound_max_dist:   30e3
 }
@@ -900,7 +900,7 @@ primary: {
    bitmap:           "Orca/shot0.pcx"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
-   sound:            "Shot2.wav"
+   sound:            "Shot2"
    sound_min_dist:   3e3
    sound_max_dist:   30e3
 }
@@ -940,7 +940,7 @@ primary: {
    bitmap:           "Orca/shot0.pcx"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
-   sound:            "Shot2.wav"
+   sound:            "Shot2"
    sound_min_dist:   3e3
    sound_max_dist:   30e3
 }
@@ -979,7 +979,7 @@ primary: {
    bitmap:           "Orca/shot0.pcx"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
-   sound:            "Shot2.wav"
+   sound:            "Shot2"
    sound_min_dist:   3e3
    sound_max_dist:   30e3
 }
@@ -1067,7 +1067,7 @@ primary: {
    flash:	     "Marakan/Gauss_Flash.jpg",
    flash_scale:	     0.2,
 
-   sound:            "Marakan/Gauss_Sound.wav",
+   sound:            "Gauss_Sound",
    sound_min_dist:   2e3,
    sound_max_dist:   20e3
 }
@@ -1112,7 +1112,7 @@ primary: {
    flash:	     "Marakan/Gauss_Flash.jpg",
    flash_scale:	     0.2,
 
-   sound:            "Marakan/Gauss_Sound.wav",
+   sound:            "Gauss_Sound",
    sound_min_dist:   2e3,
    sound_max_dist:   20e3
 }
@@ -1160,7 +1160,7 @@ primary: {
    flash:	     "Marakan/Rail_Flash.jpg",
    flash_scale:	     0.3,
 
-   sound:            "Marakan/Rail_Sound.wav",
+   sound:            "Rail_Sound",
    sound_min_dist:   2e3,
    sound_max_dist:   20e3
 }
@@ -1210,7 +1210,7 @@ primary: {
    flare:            "Marakan/Rail_Flare.jpg",
    flare_scale:      0.03,
 
-   sound:            "Marakan/Rail_Sound.wav",
+   sound:            "Rail_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1259,7 +1259,7 @@ primary: {
    flare:            "Marakan/Rail_Flare.jpg",
    flare_scale:      0.03,
 
-   sound:            "Marakan/Rail_Sound.wav",
+   sound:            "Rail_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1311,7 +1311,7 @@ primary: {
    flash:	     "Marakan/Rail_Flash.jpg",
    flash_scale:	     1.9,
 
-   sound:            "Marakan/Rail_Sound.wav",
+   sound:            "Rail_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1368,7 +1368,7 @@ primary: {
    flare_scale:      0.8,
    trail:            "Marakan/Mag_Trail.jpg",
    trail_width:       6,
-   sound:            "Marakan/Mag_Sound.wav",
+   sound:            "Mag_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1438,7 +1438,7 @@ drone: {
    trail:            "Marakan/Rostov_Trail.jpg",
    trail_width:       20,
 
-   sound:            "Marakan/Rostov_Sound.wav",
+   sound:            "Rostov_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1507,7 +1507,7 @@ drone: {
    trail:            "Marakan/Rostov_Trail.jpg",
    trail_width:       20,
 
-   sound:            "Marakan/Rostov_Sound.wav",
+   sound:            "Rostov_Sound",
    sound_min_dist:   3e3,
    sound_max_dist:   30e3
 }
@@ -1540,7 +1540,7 @@ primary: {
    graphic_type:     2	// sprite
    scale:            1
    bitmap:           "shot7.pcx"
-   sound:            "shot4.wav"
+   sound:            "shot4"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1575,7 +1575,7 @@ beam: {
    bitmap:           "shot9.pcx"
    flash:            "flash9.pcx"
    flash_scale:      1.75
-   sound:            "beam2.wav"
+   sound:            "beam2"
    sound_min_dist:   10e3
    sound_max_dist:   50e3
 }
@@ -1613,7 +1613,7 @@ beam: {
    bitmap:           "ShotGamma.pcx"
    flash:            "FlashGamma.pcx"
    flash_scale:      2
-   sound:            "Beam3.wav"
+   sound:            "Beam3"
    sound_min_dist:   10e3
    sound_max_dist:   50e3
 }
@@ -1657,7 +1657,7 @@ beam: {
    bitmap:           "ShotGamma.pcx"
    flash:            "FlashGamma.pcx"
    flash_scale:      2
-   sound:            "Beam3.wav"
+   sound:            "Beam3"
    sound_min_dist:   10e3
    sound_max_dist:   50e3
 }
@@ -1694,7 +1694,7 @@ beam: {
    bitmap:           "ShotZBeam.pcx"
    flash:            "FlashZBeam.pcx"
    flash_scale:      2
-   sound:            "Beam3.wav"
+   sound:            "Beam3"
    sound_min_dist:   10e3
    sound_max_dist:   50e3
 }
@@ -1735,7 +1735,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      1
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1777,7 +1777,7 @@ primary: {
    bitmap:           "shot2.pcx"
    flash:            "flash2.pcx"
    flash_scale:      1
-   sound:            "shot3.wav"
+   sound:            "shot3"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1835,7 +1835,7 @@ missile: {
    trail_dim:        6
    flare:            "drive.pcx"
    flare_scale:      0.25
-   sound:            "Missile1.wav"
+   sound:            "Missile1"
    sound_min_dist:   1e3
    sound_max_dist:   15e3
 }
@@ -1889,7 +1889,7 @@ missile: {
    trail_dim:        6
    flare:            "shot6.pcx"
    flare_scale:      1
-   sound:            "Mk7.wav"
+   sound:            "Mk7"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1939,7 +1939,7 @@ drone: {
    model:            "FusionTorp.mag"
    flare:            "drive.pcx"
    flare_scale:      1.25
-   sound:            "Torpedo.wav"
+   sound:            "Torpedo"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -1991,7 +1991,7 @@ drone: {
    model:            "Nike.mag"
    flare:            "drive.pcx"
    flare_scale:      1.25
-   sound:            "Nike.wav"
+   sound:            "Nike"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -2043,7 +2043,7 @@ drone: {
    model:            "Nike.mag"
    flare:            "drive.pcx"
    flare_scale:      1.25
-   sound:            "Nike.wav"
+   sound:            "Nike"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -2095,7 +2095,7 @@ drone: {
    model:            "Nike.mag"
    flare:            "drive.pcx"
    flare_scale:      1.25
-   sound:            "Nike.wav"
+   sound:            "Nike"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
 }
@@ -2128,7 +2128,7 @@ drone: {
    flare:            "drive.pcx"
    flare_scale:      1
 
-   sound:            "probe.wav"
+   sound:            "probe"
    sound_min_dist:   1e3
    sound_max_dist:   10e3
 }

@@ -111,6 +111,19 @@ void UShipWeaponMountComponent::UpdateRuntimeStore()
     const int32 Capacity = GetStoreCapacity();
     const bool Available = IsStoreAvailable();
     AActor* Child = GetChildActor();
+    // Empty missile stations should release their carried actor, rather than
+    // retain an invisible child for the rest of the fighter's lifetime. Fired
+    // missiles are separate world actors managed by the simulation shot.
+    if (Rounds <= 0 && Child)
+    {
+        DestroyChildActor();
+        Child = nullptr;
+    }
+    else if (Rounds > 0 && !Child && GetChildActorClass())
+    {
+        CreateChildActor();
+        Child = GetChildActor();
+    }
     if (Child) Child->SetActorHiddenInGame(Rounds<=0 || !Available);
     if (PresentedRounds!=Rounds || PresentedCapacity!=Capacity || bPresentedAvailable!=Available || PresentedStore.Get()!=Child)
     {
