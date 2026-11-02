@@ -47,6 +47,7 @@ public:
     // UUserWidget lifecycle
     // ------------------------------------------------------------
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
@@ -81,6 +82,8 @@ private:
     void UpdateExitLatchFromInput(const FKeyEvent& InKeyEvent, bool& bOutHandled);
 
 private:
+    friend class FAwardPresentationTest;
+    bool bModernUiBuilt=false;
     // ------------------------------------------------------------
     // Manager / dependencies
     // ------------------------------------------------------------

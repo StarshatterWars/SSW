@@ -46,6 +46,10 @@
 #include "CombatGroup.h"
 #include "CmpnScreen.h"
 #include "SSWRuntimeSubsystem.h"
+#include "SSWGameInstance.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "MissionCompletionStatus.h"
+#include "Sim.h"
 
 
 static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
@@ -254,6 +258,17 @@ void UCmdMissionsDlg::RebuildMissionList()
         return;
     }
 
+    if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
+        if (GI->CampaignSave)
+            if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+                if (MissionCompletionStatus::ImportCampaign(Players->GetMutablePlayerInfo(),*GI->CampaignSave,CampaignPtr->GetCampaignId()))
+                {
+                    if(Players->GetPlayerInfo().bTrainingGraduate)
+                        if(auto* Pilot=PlayerCharacter::GetCurrentPlayer())
+                        {Pilot->CompleteFlightTraining();Players->GetMutablePlayerInfo().Rank=Pilot->GetRank();}
+                    Players->MarkDirty();
+                    if(!Players->SavePlayer(true)) UE_LOG(LogTemp,Warning,TEXT("[CmdMissionsDlg] Could not save imported player mission completion"));
+                }
     MissionList->ClearListItems();
 
     SelectedMission = nullptr;
@@ -714,7 +729,9 @@ void UCmdMissionsDlg::AddMissionInfoToList(MissionInfo* Info)
             ? TEXT("Training")
             : UTF8_TO_TCHAR(M->GetTypeName());
 
-        Item->MissionStatus = TEXT("Active");
+        Sim* Live=Sim::GetSim();
+        Item->MissionStatus = Live && Live->GetMission()==M && !Live->IsComplete() && !Live->HasPlayerDocked()
+            ? TEXT("Active") : TEXT("Available");
     }
     else
     {
@@ -746,6 +763,13 @@ void UCmdMissionsDlg::AddMissionInfoToList(MissionInfo* Info)
 
     if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Info->id))
         Item->MissionStatus=TEXT("Locked - ")+CampaignPtr->MissionRankRequirement(Info->id);
+    if (CampaignPtr)
+        if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
+        {
+            const auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>();
+            if (MissionCompletionStatus::IsCompleted(GI->CampaignSave,Players?&Players->GetPlayerInfo():nullptr,CampaignPtr->GetCampaignId(),Info->id))
+                Item->MissionStatus=TEXT("Completed");
+        }
 
     char StartTime[64] = { 0 };
     FormatDayTime(StartTime, Info->start);

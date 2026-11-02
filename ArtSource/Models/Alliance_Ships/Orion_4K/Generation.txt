@@ -1,0 +1,1 @@
+UV-preserving revision: deterministic 4x Lanczos resampling directly from original Hangar_D.jpg and Hangar_G.jpg, followed by restrained unsharp masking (0x0.7+0.45+0.025). No AI redrawing, geometry changes, island movement or new features. Original textures unchanged. Both outputs 4096x4096. This improves edge clarity but cannot recover genuinely missing source detail.

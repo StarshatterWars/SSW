@@ -61,6 +61,8 @@ public:
     UPROPERTY(SaveGame)
     TArray<int32> CompletedMissionIds;
 
+    UPROPERTY(SaveGame) bool bTrainingGraduate = false;
+
     UPROPERTY(SaveGame)
     TArray<FMissionDebriefRecord> MissionDebriefs;
 

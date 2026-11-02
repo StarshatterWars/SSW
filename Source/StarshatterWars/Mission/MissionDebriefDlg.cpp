@@ -191,7 +191,7 @@ void UMissionDebriefDlg::EnsureUi()
         const FString Heading(Columns);
         TArray<FString> Captions;
         if (Heading.StartsWith(TEXT("PKG"))) Captions={TEXT("PKG"),TEXT("CALLSIGN"),TEXT("ROLE"),TEXT("TYPE")};
-        else if (Heading.StartsWith(TEXT("STATISTIC"))) Captions={TEXT("STATISTIC"),TEXT("VALUE")};
+        else if (Heading.StartsWith(TEXT("STATISTIC"))) Captions={TEXT("STATISTICS"),TEXT("VALUE")};
         else Captions={TEXT("TIME"),TEXT("EVENT"),TEXT("TARGET / DETAILS")};
         const float Weights[3][4]={{0.65f,0.35f,0,0},{0.16f,0.46f,0.38f,0},{0.1f,0.35f,0.3f,0.25f}};
         auto* Headings=WidgetTree->ConstructWidget<UHorizontalBox>();
@@ -210,7 +210,7 @@ void UMissionDebriefDlg::EnsureUi()
         return List;
     };
     UnitListWidget=AddList(Left,TEXT("ACTIVE UNITS"),TEXT("PKG     CALLSIGN                  ROLE                  TYPE"),0.4f);
-    SummaryListWidget=AddList(Left,TEXT("MISSION SUMMARY"),TEXT("STATISTIC                                      VALUE"),0.6f);
+    SummaryListWidget=AddList(Left,TEXT("MISSION SUMMARY"),TEXT("STATISTICS                                     VALUE"),0.6f);
     EventListWidget=AddList(Right,TEXT("MISSION LOG"),TEXT("TIME               EVENT                                      TARGET / DETAILS"),1.f);
     auto* LSlot=Body->AddChildToHorizontalBox(Panel(Left)); LSlot->SetSize(DebriefFill(0.48f)); LSlot->SetPadding(FMargin(0,0,12,0));
     Body->AddChildToHorizontalBox(Panel(Right))->SetSize(DebriefFill(0.52f));
@@ -704,10 +704,31 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
             ? FLinearColor(0.2f,1.f,0.4f) : FLinearColor(1.f,0.75f,0.2f)));
     }
     if (EvidenceWidget) EvidenceWidget->SetText(FText::FromString(DebriefResult.Reason));
-    if (MissionPtr && DebriefResult.bSuccess) MissionPtr->SetComplete(true);
+    if (MissionPtr)
+    {
+        MissionPtr->SetActive(false);
+        if (DebriefResult.bSuccess) MissionPtr->SetComplete(true);
+    }
     if (!SimPtr || !MissionPtr || (RecordedMission==MissionPtr && RecordedStartTime==SimPtr->StartTime())) return;
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
     if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
+    {
+        if (DebriefResult.bSuccess && CampaignPtr && CampaignPtr->OwnsMission(MissionPtr)
+            && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity()))
+            if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+            {
+                auto& Info=Players->GetMutablePlayerInfo();
+                Info.MarkMissionCompleted(CampaignPtr->GetCampaignId(),MissionPtr->GetIdentity());
+                if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
+                    && MissionPtr->GetMissionType()==int(EMissionType::TRAINING))
+                {
+                    Info.bTrainingGraduate=true;
+                    if(auto* Pilot=PlayerCharacter::GetCurrentPlayer()){Pilot->CompleteFlightTraining();Info.Rank=Pilot->GetRank();}
+                }
+                Players->MarkDirty();
+                if (!Players->SavePlayer(true))
+                    UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Could not save player mission completion"));
+            }
         if (UCampaignSave* Save=GI->CampaignSave; Save && CampaignPtr
             && Save->CampaignIndex==CampaignPtr->GetCampaignId() && CampaignPtr->OwnsMission(MissionPtr))
         {
@@ -717,10 +738,16 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
             Record.Outcome=DebriefResult.Outcome; Record.Evidence=DebriefResult.Reason;
             Record.Points=Points; Record.RecordedAt=FDateTime::UtcNow();
             Save->MissionDebriefs.Add(Record);
-            if (DebriefResult.bSuccess) Save->RecordCompletedMission(CampaignPtr,MissionPtr);
+            if (DebriefResult.bSuccess)
+            {
+                Save->RecordCompletedMission(CampaignPtr,MissionPtr);
+                if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
+                    && MissionPtr->GetMissionType()==int(EMissionType::TRAINING)) Save->bTrainingGraduate=true;
+            }
             if (!GI->SaveCampaign())
                 UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Could not save mission result for %d"),Record.MissionId);
         }
+    }
     RecordedMission=MissionPtr; RecordedStartTime=SimPtr->StartTime();
     UE_LOG(LogTemp,Display,TEXT("[MissionDebrief] Mission=%d Outcome=%s Points=%d Evidence=%s"),
         MissionPtr->GetIdentity(),*DebriefResult.Outcome,Points,*DebriefResult.Reason);

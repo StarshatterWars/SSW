@@ -93,7 +93,8 @@ const FString& PlayerCharacter::ChatMacro(int32 Index) const
 
 int32 PlayerCharacter::GetRank() const
 {
-    return UAwardInfoRegistry::RankForPoints(PlayerPoints, CachedRankId);
+    const int32 PointsRank=UAwardInfoRegistry::RankForPoints(PlayerPoints, CachedRankId);
+    return bTrainingGraduate ? FMath::Max(PointsRank,UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) : PointsRank;
 }
 
 int32 PlayerCharacter::Medal(int32 N) const
@@ -246,6 +247,14 @@ void PlayerCharacter::SetCreateDate(int32 InUtcSeconds)
 {
     CreateDateUtc = FMath::Max(0, InUtcSeconds);
     bDirty = true;
+}
+
+void PlayerCharacter::CompleteFlightTraining()
+{
+    const int32 Before=GetRank();
+    bTrainingGraduate=true; bDirty=true;
+    const int32 After=GetRank();
+    if(After>Before){PendingAwardId=After; bPendingAwardIsRank=true; Rank=After;}
 }
 
 void PlayerCharacter::SetRank(int32 RankId)
@@ -761,6 +770,7 @@ void PlayerCharacter::FromPlayerInfo(const FS_PlayerGameInfo& InInfo)
     PlayerCallsign = InInfo.Callsign;
 
     CachedRankId = InInfo.Rank;
+    bTrainingGraduate = InInfo.bTrainingGraduate || InInfo.HasCompletedMission(1,103);
 
     FlightModelMode = InInfo.FlightModel;
     LandingMode = InInfo.LandingMode;
@@ -813,6 +823,7 @@ void PlayerCharacter::ToPlayerInfo(FS_PlayerGameInfo& OutInfo) const
     OutInfo.Squadron = PlayerSquadron;
 
     OutInfo.Rank = GetRank();
+    OutInfo.bTrainingGraduate = bTrainingGraduate;
 
     OutInfo.FlightModel = FlightModelMode;
     OutInfo.LandingMode = LandingMode;

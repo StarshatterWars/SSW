@@ -140,6 +140,8 @@ public:
 
     void SetCreateDate(int32 InUtcSeconds);
     void SetRank(int32 RankId);
+    /** SSW rule: successful T3 completion grants an Ensign rank floor, without bonus score. */
+    void CompleteFlightTraining();
     void SetPoints(int32 InPoints);
     void SetMedals(int32 InMask);
 
@@ -270,6 +272,7 @@ private:
 
     // Cached/explicit rank id (optional)
     int32 CachedRankId = 0;
+    bool bTrainingGraduate = false;
 
     // Gameplay options
     int32 FlightModelMode = 0;

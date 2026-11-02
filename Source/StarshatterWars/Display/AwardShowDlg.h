@@ -47,6 +47,7 @@ public:
     // UUserWidget lifecycle
     // ------------------------------------------------------------
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
@@ -64,6 +65,7 @@ public:
     /** Show dialog (calls ShowAward and latches input) */
     UFUNCTION(BlueprintCallable)
     void ShowDialog();
+    void EnsureUi();
 
     /** Equivalent to legacy SetRank(int r) */
     UFUNCTION(BlueprintCallable)
@@ -113,6 +115,8 @@ private:
     // 1
     UPROPERTY(meta = (BindWidgetOptional), Transient)
     UButton* btn_close = nullptr;
+    friend class FAwardPresentationTest;
+    bool bModernUiBuilt=false;
 
     // ------------------------------------------------------------
     // State

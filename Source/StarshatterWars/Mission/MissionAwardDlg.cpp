@@ -17,6 +17,7 @@
 
 
 #include "MissionAwardDlg.h"
+#include "AwardPresentation.h"
 #include "AudioRouting.h"
 
 // UMG:
@@ -35,119 +36,25 @@
 #include "AwardInfoRegistry.h"
 #include "Kismet/GameplayStatics.h"
 
+TSharedRef<SWidget> UMissionAwardDlg::RebuildWidget()
+{
+    EnsureUi();
+    return Super::RebuildWidget();
+}
+
 void UMissionAwardDlg::EnsureUi()
 {
-    if (!WidgetTree) return;
-
-    USizeBox* Host = Cast<USizeBox>(WidgetTree->FindWidget(TEXT("RuntimeHost")));
-    if (!Host)
+    if(bModernUiBuilt) return;
+    if(!WidgetTree)return;
+    if(!RootCanvas)
     {
-        UCanvasPanel* Root = Cast<UCanvasPanel>(GetRootWidget());
-        if (!Root)
-        {
-            Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AwardRoot"));
-            WidgetTree->RootWidget = Root;
-        }
-
-        UBorder* Frame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Background"));
-        if (UTexture2D* FrameTex = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Frame1.Frame1")))
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(FrameTex);
-            Brush.DrawAs = ESlateBrushDrawType::Box;
-            Brush.Margin = FMargin(0.2f, 0.2f, 0.2f, 0.25f);
-            Frame->SetBrush(Brush);
-        }
-        if (UCanvasPanelSlot* FrameSlot = Root->AddChildToCanvas(Frame))
-        {
-            FrameSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-            FrameSlot->SetOffsets(FMargin(0.f));
-        }
-
-        UCanvasPanel* Inner = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AwardInner"));
-        Frame->AddChild(Inner);
-
-        UTextBlock* TitleBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("PanelTitle"));
-        TitleBlock->SetText(FText::FromString(TEXT("Congratulations")));
-        TitleBlock->SetJustification(ETextJustify::Center);
-        TitleBlock->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-        if (UFont* Font = LoadObject<UFont>(nullptr, TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font")))
-        {
-            FSlateFontInfo Info = TitleBlock->GetFont();
-            Info.FontObject = Font;
-            Info.Size = 22;
-            TitleBlock->SetFont(Info);
-        }
-        if (UCanvasPanelSlot* TitleSlot = Inner->AddChildToCanvas(Title))
-        {
-            TitleSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 0.f));
-            TitleSlot->SetOffsets(FMargin(0.f, 32.f, 0.f, 28.f));
-            TitleSlot->SetAlignment(FVector2D(0.f, 0.f));
-        }
-
-        Host = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("RuntimeHost"));
-        if (UCanvasPanelSlot* HostSlot = Inner->AddChildToCanvas(Host))
-        {
-            HostSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-            HostSlot->SetOffsets(FMargin(48.f, 72.f, 48.f, 24.f));
-        }
+        RootCanvas=Cast<UCanvasPanel>(GetRootWidget());
+        if(!RootCanvas){RootCanvas=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("RootCanvas"));WidgetTree->RootWidget=RootCanvas;}
     }
-
-    if (lbl_name && lbl_info && img_rank && btn_close) return;
-
-    UVerticalBox* Box = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("AwardContent"));
-    Host->AddChild(Box);
-
-    auto AddLabel = [this, Box](const TCHAR* Name, int32 Size) -> UTextBlock*
-    {
-        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
-        Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-        Label->SetJustification(ETextJustify::Center);
-        Label->SetAutoWrapText(true);
-        if (UFont* Font = LoadObject<UFont>(nullptr, TEXT("/Game/Font/SERPNTB_Font.SERPNTB_Font")))
-        {
-            FSlateFontInfo Info = Label->GetFont();
-            Info.FontObject = Font;
-            Info.Size = Size;
-            Label->SetFont(Info);
-        }
-        if (UVerticalBoxSlot* Slot = Box->AddChildToVerticalBox(Label))
-        {
-            Slot->SetPadding(FMargin(12.f, 8.f));
-            Slot->SetHorizontalAlignment(HAlign_Center);
-        }
-        return Label;
-    };
-
-    if (!lbl_name) lbl_name = AddLabel(TEXT("AwardName"), 20);
-    if (!img_rank)
-    {
-        img_rank = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("AwardImage"));
-        USizeBox* Sized = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("AwardImageSize"));
-        Sized->SetHeightOverride(160.f);
-        Sized->SetWidthOverride(160.f);
-        Sized->AddChild(img_rank);
-        if (UVerticalBoxSlot* ImageSlot = Box->AddChildToVerticalBox(Sized))
-            ImageSlot->SetHorizontalAlignment(HAlign_Center);
-    }
-    if (!lbl_info) lbl_info = AddLabel(TEXT("AwardInfo"), 14);
-    if (!btn_close)
-    {
-        btn_close = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("AwardClose"));
-        UTextBlock* CloseLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("AwardCloseLabel"));
-        CloseLabel->SetText(FText::FromString(TEXT("Close")));
-        CloseLabel->SetJustification(ETextJustify::Center);
-        btn_close->AddChild(CloseLabel);
-        if (UVerticalBoxSlot* CloseSlot = Box->AddChildToVerticalBox(btn_close))
-        {
-            CloseSlot->SetPadding(FMargin(0.f, 16.f));
-            CloseSlot->SetHorizontalAlignment(HAlign_Center);
-        }
-    }
-
-    BindFormWidgets();
-    if (btn_close)
-        btn_close->OnClicked.AddUniqueDynamic(this, &UMissionAwardDlg::OnCloseClicked);
+    auto* Box=EnsureAutoVerticalBoxWithOffsets(FMargin(24));if(!Box)return;
+    if(RootCanvas)for(auto* Child:RootCanvas->GetAllChildren())if(Child!=Box)Child->SetVisibility(ESlateVisibility::Collapsed);
+    AwardPresentation::Build(WidgetTree,Box,lbl_name,lbl_info,img_rank,btn_close);
+    bModernUiBuilt=true;BindFormWidgets();btn_close->OnClicked.AddUniqueDynamic(this,&UMissionAwardDlg::OnCloseClicked);
 }
 
 // Input:

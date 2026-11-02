@@ -22,6 +22,8 @@
 */
 
 #include "ShipActor.h"
+#include "FighterActor.h"
+#include "FighterExhaustTuning.h"
 #include "WaypointArrival.h"
 #include "Components/SceneComponent.h"
 #include "Components/ChildActorComponent.h"
@@ -1806,8 +1808,10 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     {
         // Older visual Blueprints can have empty FX overrides. Preserve any
         // authored assignments, and supply the game's existing exhaust systems.
+        if (Cast<AFighterActor>(this) && (!MainEngineEmitterSystem || MainEngineEmitterSystem->GetPathName()==FighterExhaustTuning::StockSystem))
+            if(auto* Tuned=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::FighterSystem))MainEngineEmitterSystem=Tuned;
         if (!MainEngineEmitterSystem)
-            MainEngineEmitterSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Blue.NS_RocketExhaust_Blue"));
+            MainEngineEmitterSystem=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::StockSystem);
         if (!ThrusterFlareSystem && !ThrusterTrailSystem)
             ThrusterTrailSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
         CreateEngineAudioComponents();
@@ -2283,7 +2287,8 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     // Deck restraint suppresses drive physics, but engine spool-up is still visible.
     const float SpoolPower = RuntimeShip->GetFlightPhase() == EOPSMode::LOCKED
         ? FMath::Clamp(ThrottleRequest / 100.f, 0.f, 1.f) : 0.f;
-    const float RequestAlpha = FMath::Max(SpoolPower, FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f));
+    const float RawPower = FMath::Max(SpoolPower, FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f));
+    const float RequestAlpha = Cast<AFighterActor>(this) ? FighterExhaustTuning::VisualPower(RawPower) : RawPower;
 
     const bool bRequested =
         RequestAlpha > 0.01f;

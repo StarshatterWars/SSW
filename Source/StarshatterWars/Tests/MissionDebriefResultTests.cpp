@@ -90,6 +90,9 @@ bool FMissionDebriefUiTest::RunTest(const FString&)
     auto* Screen=NewObject<UMissionDebriefDlg>(World,Class); Screen->Initialize();
     auto Widget=Screen->TakeWidget(); Widget->SlatePrepass();
     TestTrue(TEXT("Modern debrief built"),Screen->bModernUiBuilt);
+    bool Statistics=false;
+    Screen->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* T=Cast<UTextBlock>(W))Statistics|=T->GetText().ToString()==TEXT("STATISTICS");});
+    TestTrue(TEXT("Statistics heading uses correct spelling"),Statistics);
     TestTrue(TEXT("Unit rows use the required compiled UMG asset"),
         Screen->UnitListWidget->GetEntryWidgetClass() && Screen->UnitListWidget->GetEntryWidgetClass()->ClassGeneratedBy!=nullptr);
     if (!TestNotNull(TEXT("Result label exists"),Screen->OutcomeWidget.Get())) return false;

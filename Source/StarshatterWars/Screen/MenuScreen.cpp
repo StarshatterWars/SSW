@@ -1,4 +1,5 @@
 #include "MenuScreen.h"
+#include "PlayerCharacter.h"
 
 // UE:
 #include "Engine/World.h"
@@ -1142,7 +1143,14 @@ void UMenuScreen::ShowAwardDlg()
 {
     HideAll();
     EnsureDialog<UAwardShowDlg>(AwardDlgClass, AwardDlg);
+    if(AwardDlg)
+    {
+        if(auto* P=PlayerCharacter::GetCurrentPlayer();P && P->ShowAward())
+        {if(P->IsPendingAwardRank())AwardDlg->SetRank(P->GetPendingAwardId());else AwardDlg->SetMedal(P->GetPendingAwardId());}
+        AwardDlg->SetMenuManager(this);
+    }
     ShowDialog(AwardDlg, true);
+    if(AwardDlg)AwardDlg->ShowDialog();
 }
 
 void UMenuScreen::ShowExitDlg()

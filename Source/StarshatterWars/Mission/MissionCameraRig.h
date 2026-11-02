@@ -59,6 +59,18 @@ struct FMissionCameraRig
         if (auto* Fighter = Cast<AFighterActor>(PlayerActor.Get())) Fighter->SetCockpitViewActive(false);
     }
 
+    bool bRecoveryViewHeld = false;
+    FTransform RecoveryViewPose = FTransform::Identity;
+    void HoldRecoveryView(APlayerController* PC, ACameraActor* Camera)
+    {
+        if (!Camera) return;
+        if (!bRecoveryViewHeld) { RecoveryViewPose=Camera->GetActorTransform(); bRecoveryViewHeld=true; }
+        Camera->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        Camera->SetActorTransform(RecoveryViewPose,false,nullptr,ETeleportType::TeleportPhysics);
+        RestoreVisibility(PC);
+        if (PC && PC->GetViewTarget()!=Camera) PC->SetViewTarget(Camera);
+    }
+
     void Reset(APlayerController* PC)
     {
         RestoreVisibility(PC);
@@ -134,6 +146,13 @@ struct FMissionCameraRig
 
         const EOPSMode Phase = Player->GetFlightPhase();
         FlightDeck* Deck = Player->GetDock();
+        // Once caught by a recovery deck, keep the last stable external pose.
+        // Neither hull taxi/spotting nor a near-coincident deck look-at can shake it.
+        if (bRecoveryViewHeld || (Deck && Deck->IsRecoveryDeck() && Phase >= EOPSMode::DOCKING))
+        {
+            HoldRecoveryView(PC,CameraActor);
+            return;
+        }
         // Cache the real authored flight deck while the player is staged.
         // The simulation can advance from ALERT to LAUNCH in a single frame;
         // flight phase alone must not release the camera inside the bay.

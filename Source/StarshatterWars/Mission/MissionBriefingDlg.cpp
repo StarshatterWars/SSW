@@ -447,6 +447,7 @@ void UMissionBriefingDlg::UpdateLiveMission()
             UMissionDebriefDlg* Debrief = Manager ? Manager->GetDebriefDlg()
                 : manager ? manager->GetMissionDebriefDlg() : nullptr;
             if (!Debrief) return;
+            if (MissionCameraRig) MissionCameraRig->HoldRecoveryView(GetOwningPlayer(),MissionPreviewCamera.Get());
             bMissionCompleteHandedOff = true;
             DisableMissionMenuInput();
             if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
@@ -2167,6 +2168,8 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    if (IsValid(MissionPreviewCamera))
+        MissionPreviewCamera->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
     // Stop the timer before resetting the rig; otherwise it recreates a chase
     // camera over the parked ship while the debrief is being presented.
     if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);

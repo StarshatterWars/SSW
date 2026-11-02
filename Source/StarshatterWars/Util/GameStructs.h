@@ -1284,9 +1284,29 @@ struct FGroupData : public FTableRowBase {
 };
 
 USTRUCT(BlueprintType)
+struct FS_CompletedMission
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadWrite, SaveGame) int32 CampaignId = 0;
+    UPROPERTY(BlueprintReadWrite, SaveGame) int32 MissionId = 0;
+};
+
+USTRUCT(BlueprintType)
 struct FS_PlayerGameInfo : public FTableRowBase
 {
 	GENERATED_BODY()
+    UPROPERTY(BlueprintReadWrite, SaveGame) bool bTrainingGraduate = false;
+    /** Successful assignments, scoped by campaign; additive for existing saves. */
+    UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FS_CompletedMission> CompletedMissions;
+    bool HasCompletedMission(int32 CampaignId, int32 MissionId) const
+    {
+        return CompletedMissions.ContainsByPredicate([=](const FS_CompletedMission& M){ return M.CampaignId==CampaignId && M.MissionId==MissionId; });
+    }
+    bool MarkMissionCompleted(int32 CampaignId, int32 MissionId)
+    {
+        if(CampaignId<0 || MissionId<=0 || HasCompletedMission(CampaignId,MissionId)) return false;
+        FS_CompletedMission M; M.CampaignId=CampaignId; M.MissionId=MissionId; CompletedMissions.Add(M); return true;
+    }
 
 	// ------------------------------------------------------------
 	// Identity / profile

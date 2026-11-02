@@ -281,6 +281,7 @@ void UMissionPlanner::ShowAwardDlg()
 {
     HideAll();
     ShowDialog(AwardDlg);
+    if(AwardDlg)AwardDlg->ShowDialog();
 }
 
 void UMissionPlanner::HideAwardDlg()

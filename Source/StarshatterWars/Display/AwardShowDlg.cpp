@@ -16,6 +16,10 @@
 */
 
 #include "AwardShowDlg.h"
+#include "AwardPresentation.h"
+#include "Components/CanvasPanel.h"
+#include "MenuScreen.h"
+#include "AwardInfoRegistry.h"
 
 // UMG:
 #include "Components/TextBlock.h"
@@ -37,13 +41,35 @@ UAwardShowDlg::UAwardShowDlg(const FObjectInitializer& ObjectInitializer)
 {
 }
 
+TSharedRef<SWidget> UAwardShowDlg::RebuildWidget()
+{
+    EnsureUi();
+    return Super::RebuildWidget();
+}
+
+void UAwardShowDlg::EnsureUi()
+{
+    if(bModernUiBuilt)return;
+    if(!WidgetTree)return;
+    if(!RootCanvas)
+    {
+        RootCanvas=Cast<UCanvasPanel>(GetRootWidget());
+        if(!RootCanvas){RootCanvas=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("RootCanvas"));WidgetTree->RootWidget=RootCanvas;}
+    }
+    auto* Box=EnsureAutoVerticalBoxWithOffsets(FMargin(24));if(!Box)return;
+    if(RootCanvas)for(auto* Child:RootCanvas->GetAllChildren())if(Child!=Box)Child->SetVisibility(ESlateVisibility::Collapsed);
+    AwardPresentation::Build(WidgetTree,Box,lbl_name,lbl_info,img_rank,btn_close);
+    bModernUiBuilt=true;BindFormWidgets();btn_close->OnClicked.AddUniqueDynamic(this,&UAwardShowDlg::OnCloseClicked);
+}
+
 void UAwardShowDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+    EnsureUi();
 
     if (btn_close)
     {
-        btn_close->OnClicked.AddDynamic(this, &UAwardShowDlg::OnCloseClicked);
+        btn_close->OnClicked.AddUniqueDynamic(this, &UAwardShowDlg::OnCloseClicked);
     }
 
     // Latch to prevent immediate close on first input frame.
@@ -124,6 +150,7 @@ void UAwardShowDlg::SetManager(UBaseScreen* InManager)
 
 void UAwardShowDlg::ShowDialog()
 {
+    EnsureUi();
     SetVisibility(ESlateVisibility::Visible);
 
     ShowAward();
@@ -161,8 +188,8 @@ void UAwardShowDlg::ShowAward()
 
         if (img_rank)
         {
-            // Legacy: img_rank->SetPicture(*Player::RankInsignia(rank, 1));
-            // Unreal: you need to convert that to a UTexture2D/brush update.
+            if(const auto* Row=UAwardInfoRegistry::FindRank(Rank))
+                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture);
             img_rank->SetVisibility(ESlateVisibility::Visible);
         }
     }
@@ -176,7 +203,8 @@ void UAwardShowDlg::ShowAward()
 
         if (img_rank)
         {
-            // Legacy: img_rank->SetPicture(*Player::MedalInsignia(medal, 1));
+            if(const auto* Row=UAwardInfoRegistry::FindMedal(Medal))
+                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture);
             img_rank->SetVisibility(ESlateVisibility::Visible);
         }
     }
@@ -194,16 +222,7 @@ void UAwardShowDlg::ShowAward()
 
 void UAwardShowDlg::OnCloseClicked()
 {
-    // Legacy: manager->ShowPlayerDlg();
-    if (Manager)
-    {
-        // If your Manager is a MenuScreen widget with ShowPlayerDlg(), cast and call it.
-        // Example:
-        // if (UMenuScreen* Menu = Cast<UMenuScreen>(Manager)) { Menu->ShowPlayerDlg(); }
-        //
-        // Kept generic to avoid assuming your concrete menu class.
-        UE_LOG(LogTemp, Warning, TEXT("AwardShowDlg: Manager is set, but ShowPlayerDlg() call is not bound (cast to your menu widget)."));
-    }
-
+    if(auto* P=PlayerCharacter::GetCurrentPlayer())P->ClearShowAward();
+    if(auto* Menu=GetMenuManager()){Menu->ShowPlayerDlg();return;}
     SetVisibility(ESlateVisibility::Hidden);
 }

@@ -15,7 +15,7 @@ bool FPlayerRankProgressionTest::RunTest(const FString& Parameters)
     UDataTable* Table=NewObject<UDataTable>();Table->RowStruct=FRankInfo::StaticStruct();
     FRankInfo Row;Row.RankId=7;Row.TotalPoints=1000;Table->AddRow(TEXT("Senior"),Row);
     Row.RankId=0;Row.TotalPoints=0;Table->AddRow(TEXT("Cadet"),Row);
-    Row.RankId=2;Row.TotalPoints=100;Table->AddRow(TEXT("Junior"),Row);
+    Row.RankId=2;Row.TotalPoints=100;Row.Name=TEXT("Ensign");Table->AddRow(TEXT("Junior"),Row);
     UAwardInfoRegistry::Initialize(Table,nullptr);
     PlayerCharacter Player;Player.SetPoints(99);
     TestEqual(TEXT("Below promotion threshold"),Player.GetRank(),0);
@@ -32,6 +32,17 @@ bool FPlayerRankProgressionTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Mission statistics promote player"),Player.GetRank(),2);
     TestTrue(TEXT("Promotion queues rank ceremony"),Player.ShowAward() && Player.IsPendingAwardRank() && Player.GetPendingAwardId()==2);
     Player.SetPoints(MAX_int32);Player.AddPoints(1);TestEqual(TEXT("Points cannot overflow into a demotion"),Player.GetPoints(),MAX_int32);
+    PlayerCharacter Graduate;Graduate.SetPoints(10);Graduate.CompleteFlightTraining();
+    TestEqual(TEXT("T3 completion grants Ensign"),Graduate.GetRank(),2);
+    TestEqual(TEXT("Graduation does not fabricate score"),Graduate.GetPoints(),10);
+    TestTrue(TEXT("Graduation queues promotion ceremony"),Graduate.ShowAward() && Graduate.IsPendingAwardRank());
+    FS_PlayerGameInfo GraduateSave;Graduate.ToPlayerInfo(GraduateSave);
+    PlayerCharacter RestoredGraduate;RestoredGraduate.FromPlayerInfo(GraduateSave);
+    TestEqual(TEXT("Graduation rank survives reload below points threshold"),RestoredGraduate.GetRank(),2);
+    RestoredGraduate.ClearShowAward();RestoredGraduate.CompleteFlightTraining();
+    TestFalse(TEXT("Replaying T3 does not repeat rank ceremony"),RestoredGraduate.ShowAward());
+    PlayerCharacter Senior;Senior.SetPoints(2000);Senior.CompleteFlightTraining();
+    TestEqual(TEXT("Graduation cannot demote a senior pilot"),Senior.GetRank(),7);
     UAwardInfoRegistry::Reset();Player.SetRank(4);TestEqual(TEXT("Unloaded table preserves profile fallback"),Player.GetRank(),4);
     UAwardInfoRegistry::Initialize(Table,nullptr);TestEqual(TEXT("Loading table resumes points authority"),Player.GetRank(),7);
     return true;
