@@ -10,7 +10,7 @@ AFalconShipActor::AFalconShipActor()
     ApplyFalconDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Falcon"));
-    InitializeNativeFighterAttachments(TEXT("FalconPit"), 0.020000f, FVector(23.000000f, 0.000000f, 131.000000f), {
+    InitializeNativeFighterAttachments(TEXT("FalconPit"), 0.020000f, FVector(131.000000f, 0.000000f, 23.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose1"), FVector(90.000000f, 0.000000f, -8.000000f), FVector(120.000000f, 0.000000f, -28.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft1"), FVector(-79.000000f, -20.000000f, -17.000000f), FVector(-75.000000f, -40.000000f, -37.000000f)),
         FFighterLandingGearDefinition(TEXT("GearRight1"), FVector(-79.000000f, 20.000000f, -17.000000f), FVector(-75.000000f, 40.000000f, -37.000000f)),

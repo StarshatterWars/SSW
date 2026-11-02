@@ -4,6 +4,20 @@
 #include "GameFramework/SaveGame.h"
 #include "CampaignSave.generated.h"
 
+/** One flown mission result; separate from its score and legacy teardown flag. */
+USTRUCT(BlueprintType)
+struct FMissionDebriefRecord
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame,BlueprintReadOnly) int32 MissionId = 0;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FString MissionName;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FString Pilot;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FString Outcome;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FString Evidence;
+    UPROPERTY(SaveGame,BlueprintReadOnly) int32 Points = 0;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FDateTime RecordedAt;
+};
+
 /**
  * Minimal Campaign SaveGame:
  * - Campaign identity (index + row name + display name)
@@ -46,6 +60,9 @@ public:
     /** Completed assignments, scoped to this campaign. Replays remain playable. */
     UPROPERTY(SaveGame)
     TArray<int32> CompletedMissionIds;
+
+    UPROPERTY(SaveGame)
+    TArray<FMissionDebriefRecord> MissionDebriefs;
 
     bool HasPlayedScene(const FString& SceneName) const;
     bool RecordPlayedScene(const FString& SceneName);

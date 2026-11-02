@@ -20,6 +20,7 @@
 #include "MissionEditorDlg.h"
 #include "MissionElementDlg.h"
 #include "MissionBriefingDlg.h"
+#include "MissionDebriefDlg.h"
 #include "MissionEventDlg.h"
 #include "MissionEditorNavDlg.h"
 #include "OptionsScreen.h"
@@ -224,6 +225,7 @@ void UMenuScreen::HideAll()
     HideDialog(CmpSelectDlg);
 
     HideDialog(MissionBriefingDlg);
+    HideDialog(MissionDebriefDlg);
 
     HideDialog(MsnEditDlg);
     HideDialog(MsnElemDlg);
@@ -293,6 +295,7 @@ void UMenuScreen::TearDown()
     Destroy(reinterpret_cast<UBaseScreen*&>(AwardDlg));
 
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionBriefingDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(MissionDebriefDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(MissionSelectDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CustomMissionDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(CmpSelectDlg));
@@ -723,6 +726,26 @@ void UMenuScreen::ShowMissionDlg()
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: END InViewport=%d Vis=%d"),
         MissionBriefingDlg->IsInViewport() ? 1 : 0,
         (int32)MissionBriefingDlg->GetVisibility());
+}
+
+UMissionDebriefDlg* UMenuScreen::GetMissionDebriefDlg()
+{
+    TSubclassOf<UMissionDebriefDlg> DebriefClass = UMissionDebriefDlg::StaticClass();
+    if (UGameInstance* GI = GetGameInstance())
+        if (auto* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+            if (auto Registered = ResolveWidgetOrLog<UMissionDebriefDlg>(Assets,TEXT("UI.MissionDebriefClass")))
+                DebriefClass = Registered;
+    return EnsureDialog<UMissionDebriefDlg>(DebriefClass,MissionDebriefDlg);
+}
+
+void UMenuScreen::ShowMissionDebriefDlg()
+{
+    if (auto* Debrief = GetMissionDebriefDlg())
+    {
+        HideAll();
+        Debrief->Show();
+        ShowDialog(Debrief,300);
+    }
 }
 
 void UMenuScreen::ReturnFromMissionBriefing()

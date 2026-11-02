@@ -36,6 +36,14 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
         const auto* Reparsed = Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Reparsed exhaust"));
         if (TestNotNull(TEXT("Reparsed Falcon"),Reparsed) && !Reparsed->Drive.IsEmpty() && !Reparsed->Drive[0].Ports.IsEmpty())
             TestTrue(TEXT("Startup LoadShipDesign scales Falcon nozzle exactly once"),Reparsed->Drive[0].Ports[0].Location.Equals(FVector(-47.f,9.f,3.f),0.001));
+        if (Reparsed && TestTrue(TEXT("Falcon landing gear definition exists"),!Reparsed->LandingGear.IsEmpty())
+            && TestEqual(TEXT("Three authored gear entries"),Reparsed->LandingGear[0].GearItems.Num(),3))
+        {
+            const auto& Gear = Reparsed->LandingGear[0].GearItems;
+            TestTrue(TEXT("Legacy nose endpoint scaled once"),Gear[0].End.Equals(FVector(0,-28,120)*0.27,0.001));
+            TestTrue(TEXT("Legacy left endpoint scaled once"),Gear[1].End.Equals(FVector(-40,-37,-75)*0.27,0.001));
+            TestTrue(TEXT("Legacy right endpoint scaled once"),Gear[2].End.Equals(FVector(40,-37,-75)*0.27,0.001));
+        }
     }
     F=Table->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Restored propulsion"));
     const auto Original=ShipDesignRegistry::GetAll();

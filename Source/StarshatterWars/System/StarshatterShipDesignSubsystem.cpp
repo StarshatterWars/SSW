@@ -826,6 +826,8 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		}
 		else if (Key == "gear" && Def->term() && Def->term()->isStruct())
 		{
+            // Legacy scales landing gear endpoints once by the definition scale.
+            TGuardValue<float> DefinitionGearScale(CurrentShipScale, LocalScale);
 			ParseLandingGear(Def->term()->isStruct(), fn);
 		}
 		else if (Key == "weapon" && Def->term() && Def->term()->isStruct())
@@ -4915,6 +4917,7 @@ bool UStarshatterShipDesignSubsystem::ReimportFalconFlightSystems()
     {
         Updated.Power=Parsed->Power;Updated.Drive=Parsed->Drive;Updated.Thruster=Parsed->Thruster;
         Updated.NavSys=Parsed->NavSys;Updated.Computer=Parsed->Computer;Updated.Sensor=Parsed->Sensor;
+        Updated.LandingGear=Parsed->LandingGear;
     }
     Table->AddRow(TEXT("Falcon"),Updated);ShipDesignDataTable=Previous;
     if(Valid)Table->MarkPackageDirty();

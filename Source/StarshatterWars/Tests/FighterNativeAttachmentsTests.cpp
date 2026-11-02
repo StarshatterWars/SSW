@@ -73,7 +73,7 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
             if (!Gear) continue;
             TestEqual(*(Prefix+TEXT("gear attaches directly to landing gear root")), Gear->GetAttachParent(), Defaults->FighterLandingGearRoot.Get());
             TestTrue(*(Prefix+TEXT("gear yaw is minus ninety")), Gear->GetRelativeRotation().Equals(FRotator(0,-90,0)));
-            UStaticMeshComponent* Mesh = Index == 0 ? Defaults->NoseGear.Get() : Index == 1 ? Defaults->RightGear.Get() : Index == 2 ? Defaults->LeftGear.Get() : nullptr;
+            UStaticMeshComponent* Mesh = Index == 0 ? Defaults->NoseGear.Get() : Index == 1 ? Defaults->LeftGear.Get() : Index == 2 ? Defaults->RightGear.Get() : nullptr;
             if (Mesh) TestEqual(*(Prefix+TEXT("mesh belongs to matching gear actor")), Mesh->GetAttachParent(), static_cast<USceneComponent*>(Gear));
             TestEqual(*(Prefix+TEXT("definition order preserved")), Gear->AuthoredIndex, Index);
             TestEqual(*(Prefix+TEXT("gear model preserved")), Gear->AuthoredModel, Defaults->GearDefinitions[Index].Model);
@@ -139,18 +139,59 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
         AFighterActor* LiveFalcon = World->SpawnActor<AFighterActor>(FalconBP);
         if (TestNotNull(TEXT("Actual Falcon Blueprint spawns"), LiveFalcon))
         {
+            UClass* FalconPit = LoadClass<AActor>(nullptr,TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"));
+            TestNotNull(TEXT("FalconPit Blueprint exists"),FalconPit);
+            TestEqual(TEXT("Saved Falcon uses FalconPit cockpit Blueprint"),LiveFalcon->CockpitComponent->GetChildActorClass().Get(),FalconPit);
+            TestNotNull(TEXT("Falcon cockpit child is instantiated"),LiveFalcon->CockpitComponent->GetChildActor());
+            TestTrue(TEXT("Falcon cockpit mount converts DEF bridge forward and height"),
+                LiveFalcon->FighterCockpitRoot->GetRelativeLocation().Equals(FVector(131.f,0.f,23.f)));
+            TestTrue(TEXT("Falcon cockpit yaw matches gear minus ninety"),
+                LiveFalcon->CockpitComponent->GetRelativeRotation().Equals(FRotator(0.f,-90.f,0.f)));
+            TestTrue(TEXT("Falcon cockpit uses independent legacy model scale"),
+                LiveFalcon->CockpitComponent->GetRelativeScale3D().Equals(FVector(0.02f/0.27f),0.0001f));
+            LiveFalcon->RerunConstructionScripts();
+            TestTrue(TEXT("Cockpit scale is not compounded by reconstruction"),
+                LiveFalcon->CockpitComponent->GetRelativeScale3D().Equals(FVector(0.02f/0.27f),0.0001f));
             AddExpectedError(TEXT("No ShipDesign for 'GearTest'"), EAutomationExpectedErrorFlags::Contains, 1);
             FGearTestShip RuntimeShip;
             LandingGear RuntimeGear;
             RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
-            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
-            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(0,-1,0));
+            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(-2,-1,0));
+            RuntimeGear.AddGear(nullptr, FVector::ZeroVector, FVector(2,-1,0));
             RuntimeShip.SetTestGear(&RuntimeGear);
             LiveFalcon->BindRuntimeShip(&RuntimeShip);
             RuntimeGear.SetState(LandingGear::GEAR_DOWN);
+            RuntimeShip.ExecSystems(0);
             LiveFalcon->Tick(0.01f);
             for (UFighterLandingGearComponent* Gear : LiveFalcon->LandingGearActors)
                 TestTrue(TEXT("Bound runtime gear shows down state"), Gear->bGearVisible);
+            TArray<UChildActorComponent*> DeployedAssemblies;
+            LiveFalcon->GetComponents(DeployedAssemblies);
+            for (auto* Assembly : DeployedAssemblies)
+            {
+                const FString Name = Assembly->GetName();
+                if (!Name.Contains(TEXT("Gear"))) continue;
+                TestTrue(TEXT("Saved gear assembly follows fighter gear root"),Assembly->GetAttachParent()==LiveFalcon->FighterLandingGearRoot);
+                if (Name.Contains(TEXT("LeftGear")))
+                {
+                    TestTrue(TEXT("Left gear follows legacy negative lateral coordinate"),Assembly->GetRelativeLocation().Y < 0);
+                    TestTrue(TEXT("Left station uses swapped RightGear Blueprint"),GetNameSafe(Assembly->GetChildActorClass()).Contains(TEXT("BP_RightGear")));
+                }
+                if (Name.Contains(TEXT("RightGear")))
+                {
+                    TestTrue(TEXT("Right gear follows legacy positive lateral coordinate"),Assembly->GetRelativeLocation().Y > 0);
+                    TestTrue(TEXT("Right station uses swapped LeftGear Blueprint"),GetNameSafe(Assembly->GetChildActorClass()).Contains(TEXT("BP_LeftGear")));
+                }
+                if (AActor* GearActor = Assembly->GetChildActor())
+                {
+                    FBox Bounds(ForceInit);
+                    TArray<UStaticMeshComponent*> GearMeshes;
+                    GearActor->GetComponents(GearMeshes);
+                    for (auto* Mesh : GearMeshes)
+                        if (Mesh->GetStaticMesh()) Bounds += Mesh->CalcBounds(Mesh->GetComponentTransform().GetRelativeTransform(GearActor->GetActorTransform())).GetBox();
+                    TestTrue(TEXT("Wheel bottom aligns with legacy deployed endpoint"),Bounds.IsValid && FMath::IsNearlyZero(Bounds.Min.Z,0.05));
+                }
+            }
             RuntimeGear.SetState(LandingGear::GEAR_RAISE);
             RuntimeShip.ExecSystems(1.1);
             RuntimeShip.ExecSystems(0);

@@ -223,6 +223,7 @@ SimRegion::~SimRegion()
 void SimRegion::ReleaseMissionObjects(TSet<Ship*>& OwnedShips)
 {
     player_ship = nullptr;
+    recovered_player = nullptr;
     TSet<Ship*> RegionShips;
     for (int i = 0; i < ships.size(); ++i) if (ships[i]) RegionShips.Add(ships[i]);
     for (int i = 0; i < dead_ships.size(); ++i) if (dead_ships[i]) RegionShips.Add(dead_ships[i]);
@@ -1100,6 +1101,7 @@ SimRegion::DockShips()
             (ship->GetFlightPhase() == EOPSMode::DOCKED);
 
         if (bDocked) {
+            if (ship == recovered_player) continue; // recovery events are recorded once
             if (sim) sim->ProcessEventTrigger(
                 (int)MISSIONEVENT_TRIGGER::TRIGGER_DOCK,
                 0,
@@ -1135,9 +1137,26 @@ SimRegion::DockShips()
                 }
             }
 
-            // then delete the ship:
+            // Player recovery is staged; NPCs retain legacy immediate removal.
             const bool bPlayerDocked =
                 (player_ship == ship);
+
+            if (bPlayerDocked)
+            {
+                recovered_player = ship;
+                // Preserve the final objective evaluation previously performed
+                // by Destroy(), but keep the parked fighter and its systems alive.
+                if (SimElement* Element = ship->GetElement())
+                    for (int Index=0;Index<Element->NumObjectives();++Index)
+                        if (Instruction* Objective = Element->GetObjective(Index))
+                            if (Objective->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) Objective->Evaluate(ship);
+                if (sim) sim->NotifyPlayerDocked();
+                if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
+                    if (UGameInstance* GI = World->GetGameInstance())
+                        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PLAN);
+                UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Parked fighter '%hs' retained until debrief is visible"),ship->GetName());
+                continue;
+            }
 
             char ship_name[33];
             strcpy_s(ship_name, ship->GetName());
@@ -1149,32 +1168,7 @@ SimRegion::DockShips()
                 TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
                 ANSI_TO_TCHAR(ship->GetName()));
 
-            if (bPlayerDocked && sim) sim->NotifyPlayerDocked();
             ship->Destroy();
-
-            if (bPlayerDocked) {
-                
-                UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
-                if (!World)
-                    return;
-
-                UGameInstance* GI = World->GetGameInstance();
-                if (!GI)
-                    return;
-
-                USSWRuntimeSubsystem* RuntimeSS =
-                    GI->GetSubsystem<USSWRuntimeSubsystem>();
-
-                if (RuntimeSS)
-                {
-                    RuntimeSS->SetGameMode(EGameMode::PLAN);
-                
-
-                    UE_LOG(LogTemp, Log,
-                        TEXT("[SimRegion::DockShips] Player docked ship='%s' Returning to PLAN_MODE"),
-                        ANSI_TO_TCHAR(ship_name));
-                }
-            }
 
             if (carrier) {
                 UE_LOG(LogTemp, Log,

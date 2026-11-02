@@ -26,6 +26,7 @@ class UCmdMissionsDlg;
 class UCmdDlg;
 class UCmpnScreen;
 class UMissionBriefingDlg;
+class UMissionDebriefDlg;
 
 class UMissionEditorDlg;
 class Mission;
@@ -99,6 +100,8 @@ public:
     void ShowMissionDlg();
     void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
     void ReturnFromMissionBriefing();
+    UMissionDebriefDlg* GetMissionDebriefDlg();
+    void ShowMissionDebriefDlg();
 
     void ShowMsnElemDlg();
     void EditMissionElement(Mission* Model, MissionElement* Element);
@@ -296,6 +299,9 @@ protected:
 
     UPROPERTY()
     TObjectPtr<UMissionBriefingDlg> MissionBriefingDlg;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UMissionDebriefDlg> MissionDebriefDlg;
 
     UPROPERTY()
     TObjectPtr<UCmdMissionsDlg> CmdMissionsDlg;

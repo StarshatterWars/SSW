@@ -440,25 +440,27 @@ void UMissionBriefingDlg::UpdateLiveMission()
     if (bLiveMissionStarted && !bMissionCompleteHandedOff)
     {
         Sim* Simulation = Sim::GetSim();
-        // Recovery removes the fighter before requesting PLAN; hand off even
-        // when mission objectives have not marked completion.
-        if (Simulation && (Simulation->IsComplete() || Simulation->HasPlayerDocked())
-            && Manager && Manager->GetDebriefDlg())
+        // A recovered player stays parked until the debrief has been presented.
+        if (Simulation && (Simulation->IsComplete() || Simulation->HasPlayerDocked()))
         {
+            UMissionDebriefDlg* Debrief = Manager ? Manager->GetDebriefDlg()
+                : manager ? manager->GetMissionDebriefDlg() : nullptr;
+            if (!Debrief) return;
             bMissionCompleteHandedOff = true;
-            // Cleanup must still see the live session so it stops its mission clock.
-            // CloseEmptySectorPreview clears bLiveMissionStarted itself.
-            CloseEmptySectorPreview(true);
+            DisableMissionMenuInput();
             if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
             {
                 Runtime->SetPaused(true);
                 Runtime->SetGameMode(EGameMode::PLAN);
-                Runtime->EndMissionPresentation();
             }
-            Simulation->CommitMission();
-            Manager->ShowDebriefDlg();
-            auto* Debrief = Manager->GetDebriefDlg();
-            Debrief->Show();
+            if (auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>()) Timer->StopMissionRun();
+            if (Manager)
+            {
+                Manager->ShowDebriefDlg();
+                Debrief->Show();
+            }
+            else manager->ShowMissionDebriefDlg();
+            UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Debrief opened after completion/recovery"));
             if (APlayerController* PC = GetOwningPlayer())
             {
                 PC->bShowMouseCursor = true;
@@ -467,6 +469,22 @@ void UMissionBriefingDlg::UpdateLiveMission()
                 Mode.SetHideCursorDuringCapture(false);
                 PC->SetInputMode(Mode);
             }
+            // Give Slate a frame to display the debrief before removing the
+            // landed fighter/camera/HUD. Retain simulation data for debrief stats
+            // until its accept action unloads the mission.
+            const Mission* FinishedMission = Simulation->GetMission();
+            TWeakObjectPtr<UMissionBriefingDlg> WeakThis(this);
+            TWeakObjectPtr<UMissionDebriefDlg> WeakDebrief(Debrief);
+            GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis,WeakDebrief,FinishedMission]()
+            {
+                Sim* LiveSim = Sim::GetSim();
+                if (!WeakThis.IsValid() || !WeakDebrief.IsValid() || !LiveSim
+                    || LiveSim->GetMission()!=FinishedMission || !WeakDebrief->IsInViewport()
+                    || WeakDebrief->GetVisibility()!=ESlateVisibility::Visible) return;
+                WeakThis->CloseEmptySectorPreview(true);
+                LiveSim->CommitMission();
+                UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Flight presentation removed after visible debrief"));
+            });
         }
     }
 }
@@ -2147,6 +2165,9 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    // Stop the timer before resetting the rig; otherwise it recreates a chase
+    // camera over the parked ship while the debrief is being presented.
+    if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(MissionTargetCameraTimer);
     CloseQuantumTravel();
     QuantumMenuAction = nullptr;
     CloseNavigationPopup();
@@ -2402,13 +2423,15 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 }
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
-    return bLiveMissionStarted && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
+    return bLiveMissionStarted && !bMissionCompleteHandedOff
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
 bool UMissionBriefingDlg::CanShowFighterHUD() const
 {
-    return bLiveMissionStarted && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
+    return bLiveMissionStarted && !bMissionCompleteHandedOff
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 void UMissionBriefingDlg::CycleFighterMFDLeft()
@@ -3112,7 +3135,8 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
 {
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
-    if (!World || !PC || !bLiveMissionStarted || !IsValid(MissionPreviewCamera)) return;
+    if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
+        || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
     if (bMissionControlsOpen || EngineeringPopup.IsValid() || (WeaponsPopup.IsValid() && !bContactsOnlyPanel) || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;

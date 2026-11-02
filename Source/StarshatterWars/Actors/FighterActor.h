@@ -59,5 +59,6 @@ protected:
     void InitializeNativeFighterAttachments(const TCHAR* CockpitModel, float CockpitScale,
         const FVector& CockpitPosition, const TArray<FFighterLandingGearDefinition>& Definitions);
     void UpdateLandingGearPresentation();
+    void ConfigureCockpitBlueprint();
     int32 LastReportedGearState = INDEX_NONE;
 };

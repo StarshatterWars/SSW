@@ -162,6 +162,7 @@ protected:
     int             current_view = 0;
 
     Ship* player_ship = nullptr;
+    Ship* recovered_player = nullptr; // retained until debrief/mission teardown
 
     List<Ship>      ships;
     List<Ship>      carriers;

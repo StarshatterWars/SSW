@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
+#include "MissionDebriefResult.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Components/ListView.h"
@@ -27,6 +28,9 @@ public:
     UPROPERTY() FString Col2;
     UPROPERTY() FString Col3;
     UPROPERTY() int32 DataIndex = INDEX_NONE;
+    UPROPERTY() TArray<TObjectPtr<UDebriefListItem>> SummaryRows;
+    UPROPERTY() TArray<TObjectPtr<UDebriefListItem>> EventRows;
+    bool bHasSnapshot=false;
 
     static UDebriefListItem* Make(UObject* Outer,
         const FString& In0,
@@ -43,12 +47,14 @@ class STARSHATTERWARS_API UDebriefRowWidget : public UUserWidget, public IUserOb
 
 public:
     virtual void NativeConstruct() override;
+    virtual TSharedRef<SWidget> RebuildWidget() override;
 
 protected:
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
     void EnsureRow();
 
     UPROPERTY() TObjectPtr<UTextBlock> RowText;
+    UPROPERTY() TArray<TObjectPtr<UTextBlock>> RowColumns;
 };
 
 UCLASS()
@@ -106,4 +112,13 @@ public:
     Sim* SimPtr = nullptr;
     Ship* PlayerShip = nullptr;
     bool bIsShown = false;
+    UPROPERTY() TObjectPtr<UTextBlock> OutcomeWidget;
+    UPROPERTY() TObjectPtr<UTextBlock> EvidenceWidget;
+    FMissionDebriefResult DebriefResult;
+    Mission* RecordedMission = nullptr;
+    uint32 RecordedStartTime = MAX_uint32;
+    bool bModernUiBuilt = false;
+    UPROPERTY() TMap<int32,TObjectPtr<UDebriefListItem>> UnitSnapshots;
+    void RefreshOutcomeAndRecord(int32 Points);
+
 };

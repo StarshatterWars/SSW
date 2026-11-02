@@ -10,6 +10,22 @@
 #include "Components/PrimitiveComponent.h"
 #include "Misc/PackageName.h"
 
+namespace
+{
+    void ApplyMainGearBlueprint(UChildActorComponent* Assembly, int32 Index)
+    {
+        if (!Assembly || (Index != 1 && Index != 2)) return;
+        const FString Existing = GetPathNameSafe(Assembly->GetChildActorClass());
+        // Only exchange the standard gear BPs; custom assemblies stay assigned.
+        if (!Existing.Contains(TEXT("/Game/Models/LandingGear/BP_LeftGear."))
+            && !Existing.Contains(TEXT("/Game/Models/LandingGear/BP_RightGear."))) return;
+        const TCHAR* Asset = Index == 1 ? TEXT("RightGear") : TEXT("LeftGear");
+        const FString Path = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s.BP_%s_C"),Asset,Asset);
+        if (UClass* Desired = LoadClass<AActor>(nullptr,*Path))
+            if (Assembly->GetChildActorClass() != Desired) Assembly->SetChildActorClass(Desired);
+    }
+}
+
 AFighterActor::AFighterActor()
 {
     FighterLandingGearRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FighterLandingGearRoot"));
@@ -43,12 +59,13 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
 {
     AuthoredCockpitModel = CockpitModel;
     AuthoredCockpitScale = CockpitScale;
+    ConfigureCockpitBlueprint();
     FighterCockpitRoot->SetRelativeLocation(CockpitPosition);
     GearDefinitions = Definitions;
     for (int32 Index = 0; Index < Definitions.Num(); ++Index)
     {
         const FFighterLandingGearDefinition& Def = Definitions[Index];
-        UStaticMeshComponent* GearMount = Index == 0 ? NoseGear.Get() : Index == 1 ? RightGear.Get() : Index == 2 ? LeftGear.Get() : nullptr;
+        UStaticMeshComponent* GearMount = Index == 0 ? NoseGear.Get() : Index == 1 ? LeftGear.Get() : Index == 2 ? RightGear.Get() : nullptr;
         const FName ComponentName = GearMount
             ? FName(*(GearMount->GetName() + TEXT("Actor")))
             : FName(*FString::Printf(TEXT("LandingGear_%02d"), Index + 1));
@@ -59,7 +76,8 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
         if (GearMount)
         {
             // DEF positions are relative to FighterLandingGearRoot, independent of mesh mount edits.
-            const FString AssetName = GearMount->GetName();
+            const FString AssetName = GearMount == LeftGear ? TEXT("RightGear")
+                : GearMount == RightGear ? TEXT("LeftGear") : GearMount->GetName();
             const FString Package = FString::Printf(TEXT("/Game/Models/LandingGear/BP_%s"), *AssetName);
             if (FPackageName::DoesPackageExist(Package))
             {
@@ -79,7 +97,44 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
 void AFighterActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    ConfigureCockpitBlueprint();
     SynchronizeLandingGearMarkers();
+}
+
+void AFighterActor::ConfigureCockpitBlueprint()
+{
+    if (!CockpitComponent) return;
+    const Ship* Runtime = GetRuntimeShip();
+    const bool IsFalcon = AuthoredCockpitModel.Equals(TEXT("FalconPit"),ESearchCase::IgnoreCase)
+        || (HullMesh && HullMesh->GetStaticMesh() && HullMesh->GetStaticMesh()->GetName().Equals(TEXT("Falcon"),ESearchCase::IgnoreCase))
+        || (Runtime && Runtime->Design() && !FCStringAnsi::Stricmp(Runtime->Design()->name,"Falcon"));
+    if (!IsFalcon) return;
+    const FString FalconPitPath(TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"));
+    // Preserve explicit custom cockpit assemblies and their authored transforms.
+    if (CockpitComponent->GetChildActorClass()
+        && CockpitComponent->GetChildActorClass()->GetPathName() != FalconPitPath) return;
+    if (!CockpitComponent->GetChildActorClass())
+        if (UClass* Class = LoadClass<AActor>(nullptr,*FalconPitPath))
+            CockpitComponent->SetChildActorClass(Class);
+    CockpitComponent->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+    // Legacy loads hull and cockpit models at independent DEF scales. The
+    // cockpit inherits the hull's scale here, so compensate once at its mount.
+    const ShipDesign* Design = Runtime ? Runtime->Design() : nullptr;
+    if (FighterCockpitRoot)
+    {
+        // DEF bridge axes are lateral, forward, up; model-local UE axes are forward, lateral, up.
+        const FVector Bridge = Design && Design->scale > SMALL_NUMBER
+            ? FVector(Design->bridge_vec.Y, Design->bridge_vec.X, Design->bridge_vec.Z) / Design->scale
+            : FVector(131.f, 0.f, 23.f);
+        FighterCockpitRoot->SetRelativeLocation(Bridge);
+        CockpitComponent->SetRelativeLocation(FVector::ZeroVector);
+    }
+    const float HullScale = Design ? Design->scale : 0.27f;
+    const float CockpitScale = Design ? Design->cockpit_scale : 0.02f;
+    if (FMath::IsFinite(HullScale) && FMath::IsFinite(CockpitScale)
+        && HullScale > SMALL_NUMBER && CockpitScale > 0.f)
+        CockpitComponent->SetRelativeScale3D(FVector(CockpitScale / HullScale));
+
 }
 
 void AFighterActor::Tick(float DeltaTime)
@@ -88,10 +143,15 @@ void AFighterActor::Tick(float DeltaTime)
     UpdateLandingGearPresentation();
     if(Ship* Runtime=GetRuntimeShip())
     {
+        ConfigureCockpitBlueprint();
         const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && Runtime->IsNativeCockpitRequested();
-        Cockpit->SetVisibility(Visible, true);
         CockpitComponent->SetVisibility(Visible,true);
-        if(auto* Child=CockpitComponent->GetChildActor())Child->SetActorHiddenInGame(!Visible || Cockpit->GetStaticMesh());
+        Cockpit->SetVisibility(Visible && !CockpitComponent->GetChildActorClass(), true);
+        if(auto* Child=CockpitComponent->GetChildActor())
+        {
+            Child->SetActorHiddenInGame(!Visible);
+            Child->SetActorEnableCollision(false);
+        }
     }
 }
 
@@ -115,12 +175,13 @@ void AFighterActor::SynchronizeLandingGearMarkers()
         if (Gear->GetAttachParent() != FighterLandingGearRoot)
             Gear->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
         Gear->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
-        UStaticMeshComponent* Mount = Index == 0 ? NoseGear.Get() : Index == 1 ? RightGear.Get() : Index == 2 ? LeftGear.Get() : nullptr;
+        UStaticMeshComponent* Mount = Index == 0 ? NoseGear.Get() : Index == 1 ? LeftGear.Get() : Index == 2 ? RightGear.Get() : nullptr;
         if (Mount && Mount->GetAttachParent() != Gear)
             Mount->AttachToComponent(Gear, FAttachmentTransformRules::KeepRelativeTransform);
         if (LandingGearBlueprintClasses.IsValidIndex(Index) && LandingGearBlueprintClasses[Index]
             && Gear->GetChildActorClass() != LandingGearBlueprintClasses[Index])
             Gear->SetChildActorClass(LandingGearBlueprintClasses[Index]);
+        ApplyMainGearBlueprint(Gear,Index);
     }
     UpdateLandingGearPresentation();
 }
@@ -148,8 +209,8 @@ void AFighterActor::UpdateLandingGearPresentation()
             return FVector(P.Z, P.X, P.Y);
         };
         for (const auto& Pair : {TPair<UStaticMeshComponent*, int32>(NoseGear.Get(),0),
-            TPair<UStaticMeshComponent*, int32>(LeftGear.Get(),2),
-            TPair<UStaticMeshComponent*, int32>(RightGear.Get(),1)})
+            TPair<UStaticMeshComponent*, int32>(LeftGear.Get(),1),
+            TPair<UStaticMeshComponent*, int32>(RightGear.Get(),2)})
         {
             if (Pair.Key && Pair.Key->GetStaticMesh())
             {
@@ -162,9 +223,22 @@ void AFighterActor::UpdateLandingGearPresentation()
         for (UChildActorComponent* Assembly : Assemblies)
         {
             if (Assembly == CockpitComponent) continue;
-            const FString Name = Assembly->GetName() + TEXT(" ") + GetNameSafe(Assembly->GetChildActorClass());
-            int32 Index = Name.Contains(TEXT("NoseGear")) ? 0 : Name.Contains(TEXT("LeftGear")) ? 2 : Name.Contains(TEXT("RightGear")) ? 1 : INDEX_NONE;
+            // Resolve the station from its component name before looking at the
+            // child BP: the left station deliberately carries BP_RightGear.
+            FString Name = Assembly->GetName();
+            const bool NamedStation = Name.Contains(TEXT("NoseGear")) || Name.Contains(TEXT("LeftGear")) || Name.Contains(TEXT("RightGear"));
+            static const FName StationTags[] = {TEXT("SSW_NoseGearStation"),TEXT("SSW_LeftGearStation"),TEXT("SSW_RightGearStation")};
+            int32 CachedStation = INDEX_NONE;
+            if (!NamedStation)
+                for (int32 Station=0;Station<3;++Station)
+                    if (Assembly->ComponentTags.Contains(StationTags[Station])) CachedStation=Station;
+            if (!NamedStation)
+                Name = GetNameSafe(Assembly->GetChildActorClass());
+            const int32 Index = CachedStation != INDEX_NONE ? CachedStation
+                : Name.Contains(TEXT("NoseGear")) ? 0 : Name.Contains(TEXT("LeftGear")) ? 1 : Name.Contains(TEXT("RightGear")) ? 2 : INDEX_NONE;
             if (Index == INDEX_NONE) continue;
+            Assembly->ComponentTags.AddUnique(StationTags[Index]);
+            ApplyMainGearBlueprint(Assembly,Index);
             if (Assembly->GetAttachParent() != FighterLandingGearRoot)
                 Assembly->AttachToComponent(FighterLandingGearRoot, FAttachmentTransformRules::KeepRelativeTransform);
             Assembly->SetRelativeLocation(Position(Index));
