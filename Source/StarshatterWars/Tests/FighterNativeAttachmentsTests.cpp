@@ -5,6 +5,7 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "StaticMeshResources.h"
 #include "Engine/World.h"
 #include "LandingGear.h"
 #include "Ship.h"
@@ -143,6 +144,30 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
             TestNotNull(TEXT("FalconPit Blueprint exists"),FalconPit);
             TestEqual(TEXT("Saved Falcon uses FalconPit cockpit Blueprint"),LiveFalcon->CockpitComponent->GetChildActorClass().Get(),FalconPit);
             TestNotNull(TEXT("Falcon cockpit child is instantiated"),LiveFalcon->CockpitComponent->GetChildActor());
+            auto CanopyCenter=[](UStaticMeshComponent* Component,FName SlotName,FVector& Center)
+            {
+                if (!Component || !Component->GetStaticMesh() || !Component->GetStaticMesh()->GetRenderData()) return false;
+                UStaticMesh* Mesh=Component->GetStaticMesh();
+                const int32 Material=Mesh->GetMaterialIndex(SlotName);
+                const auto& LOD=Mesh->GetRenderData()->LODResources[0];
+                FBox Bounds(ForceInit);
+                for (const auto& Section:LOD.Sections)
+                    if (Section.MaterialIndex==Material)
+                        for (uint32 I=Section.FirstIndex;I<Section.FirstIndex+Section.NumTriangles*3;++I)
+                            Bounds+=FVector(LOD.VertexBuffers.PositionVertexBuffer.VertexPosition(LOD.IndexBuffer.GetIndex(I)));
+                if (!Bounds.IsValid) return false;
+                Center=Component->GetComponentTransform().TransformPosition(Bounds.GetCenter()); return true;
+            };
+            FVector HullCanopy,CockpitCanopy;
+            TestTrue(TEXT("Hull glass section exists"),CanopyCenter(LiveFalcon->HullMesh,TEXT("glass"),HullCanopy));
+            TArray<UStaticMeshComponent*> CockpitMeshes;
+            LiveFalcon->CockpitComponent->GetChildActor()->GetComponents(CockpitMeshes);
+            bool FoundCockpitCanopy=false;
+            for (auto* Mesh:CockpitMeshes)
+                if (CanopyCenter(Mesh,TEXT("CANOPY_D"),CockpitCanopy)) { FoundCockpitCanopy=true; break; }
+            TestTrue(TEXT("FalconPit canopy section exists"),FoundCockpitCanopy);
+            TestTrue(TEXT("Imported cockpit canopy aligns with actual hull canopy"),HullCanopy.Equals(CockpitCanopy,0.05));
+
             TestTrue(TEXT("Falcon cockpit mount converts DEF bridge forward and height"),
                 LiveFalcon->FighterCockpitRoot->GetRelativeLocation().Equals(FVector(131.f,0.f,23.f)));
             TestTrue(TEXT("Falcon cockpit yaw matches gear minus ninety"),

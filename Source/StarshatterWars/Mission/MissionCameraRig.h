@@ -5,12 +5,15 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "ShipActor.h"
+#include "FighterActor.h"
+#include "Components/ChildActorComponent.h"
 #include "Ship.h"
 #include "FlightDeck.h"
 #include "SimRegion.h"
 #include "SSWRuntimeSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "MissionTargetOverlay.h"
+#include "MissionViewCamera.h"
 
 // Presentation adapter for Stars45/CameraDirector modes. Simulation positions
 // cannot be used as UE world positions: region-shell placement moves visuals.
@@ -52,6 +55,7 @@ struct FMissionCameraRig
             for (const auto& Entry : HiddenByCamera)
                 if (AActor* Actor = Entry.Get()) PC->HiddenActors.Remove(Actor);
         HiddenByCamera.Reset();
+        if (auto* Fighter = Cast<AFighterActor>(PlayerActor.Get())) Fighter->SetCockpitViewActive(false);
     }
 
     void Reset(APlayerController* PC)
@@ -199,22 +203,35 @@ struct FMissionCameraRig
         const bool bPadlock = Mode == Target && Selected && Player->GetTarget() == Selected->GetRuntimeShip();
         const bool bInternalPadlock = bPadlock && Player->GetCockpit() != nullptr;
         const bool bInternal = !bDock && !bTransition && (Mode == Cockpit || Mode == Virtual || bInternalPadlock);
-        if (!bInternal) RestoreVisibility(PC);
-        else
+        RestoreVisibility(PC);
+        if (auto* Fighter = Cast<AFighterActor>(Visual)) Fighter->SetCockpitViewActive(!bDock && !bTransition && Mode == Cockpit);
+        if (bInternal)
         {
             // Hide only for this player view; do not stop simulation or effects.
             TArray<AActor*> Actors;
             Visual->GetAttachedActors(Actors, false, true);
             Actors.Add(Visual);
+            AActor* CockpitActor = nullptr;
+            if (auto* Fighter = Cast<AFighterActor>(Visual))
+                if (Fighter->IsCockpitViewActive() && Fighter->CockpitComponent) CockpitActor = Fighter->CockpitComponent->GetChildActor();
             for (AActor* Actor : Actors)
-                if (IsValid(Actor) && !PC->HiddenActors.Contains(Actor))
+                if (IsValid(Actor) && Actor != CockpitActor && !(CockpitActor && Actor->IsAttachedTo(CockpitActor)) && !PC->HiddenActors.Contains(Actor))
                 {
                     PC->HiddenActors.Add(Actor);
                     HiddenByCamera.Add(Actor);
                 }
         }
 
+        if (auto* ViewCamera = Cast<UMissionViewCameraComponent>(CameraActor->GetCameraComponent()))
+            ViewCamera->bCockpitView = !bDock && !bTransition && Mode == Cockpit;
         FVector Eye = Bridge;
+        // FalconPit is authored around the pilot eye; its visual-origin correction
+        // must also move the cockpit camera, never the legacy simulation bridge.
+        if (auto* Fighter = Cast<AFighterActor>(Visual))
+            if (Fighter->IsCockpitViewActive() && Fighter->CockpitComponent &&
+                Fighter->CockpitComponent->GetChildActorClass() &&
+                Fighter->CockpitComponent->GetChildActorClass()->GetPathName() == TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"))
+                Eye = Fighter->CockpitComponent->GetComponentLocation();
         FQuat Rotation = ShipRotation;
         if (bDock)
         {

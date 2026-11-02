@@ -28,6 +28,9 @@ class STARSHATTERWARS_API AFighterActor : public AShipActor
     GENERATED_BODY()
 public:
     AFighterActor();
+    void SetCockpitViewActive(bool Active) { bCockpitViewActive = Active; }
+    bool IsCockpitViewActive() const { return bCockpitViewActive; }
+    bool bCockpitViewActive = false;
     // Assign meshes and relative transforms directly in each fighter Blueprint.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> LeftGear;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> RightGear;
@@ -44,6 +47,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") FString AuthoredCockpitModel;
     /** Legacy source metadata, not an additional UE scale multiplier. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Cockpit") float AuthoredCockpitScale = 1;
+    /** Imported FalconPit origin correction in fighter-local units; does not move the simulation bridge. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fighter|Cockpit")
+    FVector FalconCockpitVisualOffset = FVector(-59.61085f, -0.036505f, -4.81578f);
     /** Exactly one native child-actor component per nested .def gear entry. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Landing Gear") TArray<TObjectPtr<UFighterLandingGearComponent>> LandingGearActors;
     /** Optional class overrides for compatibility; empty entries preserve component-level BP classes. */

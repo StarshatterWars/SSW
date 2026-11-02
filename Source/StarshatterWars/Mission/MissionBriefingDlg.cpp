@@ -23,6 +23,7 @@
 */
 
 #include "MissionBriefingDlg.h"
+#include "MissionViewCamera.h"
 #include "StarshatterInputBindings.h"
 #include "QuantumDrive.h"
 #include "QuantumTravel.h"
@@ -1553,7 +1554,7 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
 
     if (!IsValid(MissionPreviewCamera))
     {
-        MissionPreviewCamera = World->SpawnActor<ACameraActor>();
+        MissionPreviewCamera = World->SpawnActor<AMissionViewCamera>();
         if (!MissionPreviewCamera) return;
         PreviousMissionViewTarget = PC->GetViewTarget();
     }
@@ -1912,7 +1913,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         FighterHUDPanels = SNew(SFighterHUDPanels).ShowPanels_Lambda([HUDOwner]()
         {
             return HUDOwner.IsValid() && HUDOwner->bLiveMissionStarted &&
-                HUDOwner->bFighterHUDVisible && !HUDOwner->MissionSceneCover.IsValid() &&
+                HUDOwner->bFighterHUDVisible && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
                 !HUDOwner->bMissionControlsOpen &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
         });

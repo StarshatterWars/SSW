@@ -127,7 +127,10 @@ void AFighterActor::ConfigureCockpitBlueprint()
             ? FVector(Design->bridge_vec.Y, Design->bridge_vec.X, Design->bridge_vec.Z) / Design->scale
             : FVector(131.f, 0.f, 23.f);
         FighterCockpitRoot->SetRelativeLocation(Bridge);
-        CockpitComponent->SetRelativeLocation(FVector::ZeroVector);
+        // Imported hull glass and FalconPit CANOPY_D have different origins.
+        // This offset aligns their centers after hull +90 and cockpit -90 yaw,
+        // leaving the legacy bridge/viewpoint and independent model scale intact.
+        CockpitComponent->SetRelativeLocation(FalconCockpitVisualOffset);
     }
     const float HullScale = Design ? Design->scale : 0.27f;
     const float CockpitScale = Design ? Design->cockpit_scale : 0.02f;
@@ -144,7 +147,7 @@ void AFighterActor::Tick(float DeltaTime)
     if(Ship* Runtime=GetRuntimeShip())
     {
         ConfigureCockpitBlueprint();
-        const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && Runtime->IsNativeCockpitRequested();
+        const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && bCockpitViewActive;
         CockpitComponent->SetVisibility(Visible,true);
         Cockpit->SetVisibility(Visible && !CockpitComponent->GetChildActorClass(), true);
         if(auto* Child=CockpitComponent->GetChildActor())

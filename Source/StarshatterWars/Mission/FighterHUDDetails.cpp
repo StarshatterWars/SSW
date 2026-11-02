@@ -1,4 +1,6 @@
 #include "FighterHUDDetails.h"
+#include "CockpitDisplays.h"
+#include "FighterActor.h"
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
 #include "FormattingUtils.h"
@@ -254,7 +256,11 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
     if (Now < NextSample) return;
     NextSample = Now + 0.1;
     Refresh();
+    if (!CockpitDisplays) CockpitDisplays = MakeUnique<FCockpitDisplays>();
+    Ship* Current = PlayerShip();
+    CockpitDisplays->Update(Current ? Cast<AFighterActor>(Current->GetNativePresentation()) : nullptr, SharedThis(this), ShowHUD.Get());
 }
+bool SFighterHUDDetails::IsCockpitDisplayActive() const { return CockpitDisplays && CockpitDisplays->IsActive(); }
 void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush)
 {
     if (Path == Cached) return;
@@ -556,6 +562,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Box(P+FVector2D(D.X-Scale,0),FVector2D(Scale,D.Y),Color);
         Text(P+FVector2D(5,2)*Scale,Label,Color);
     };
+    if (!IsCockpitDisplayActive())
+    {
     if (bHasPlayer)
     {
 
@@ -819,6 +827,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
+    } // External instruments; radio and information remain available in cockpit.
     // Both panels share the same 512x256 native artwork extents and anchor.
     for(int32 I=7;bShowInformation && !InformationCaptions.IsEmpty() && I<9;++I)
     {

@@ -4,12 +4,15 @@ class SScrollBox;
 class SVerticalBox;
 #include "DamagePanelData.h"
 #include "ShipMFDPreview.h"
+#include "CockpitDisplays.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 
 class AActor;
 class WeaponGroup;
 class FShipMFDPreview;
+class FCockpitDisplays;
+class SCockpitInstrument;
 
 // Live fighter readouts. Simulation objects are sampled, never retained.
 class SFighterHUDDetails : public SCompoundWidget
@@ -44,7 +47,11 @@ public:
     void CycleWeapon(bool bPrimary);
     static FString FormatWeaponReadout(const WeaponGroup* Group);
     static FString FormatStatusReadout(const FString& Label, double Percent, bool bAugmenter=false);
+    bool IsCockpitDisplayActive() const;
 private:
+    friend class SCockpitInstrument;
+    friend class FCockpitDisplaysTest;
+    TUniquePtr<FCockpitDisplays> CockpitDisplays;
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     friend class FRecoveryILSHUDTest;
     void UpdateILSMode(int32 PlayerId, bool bInbound);
