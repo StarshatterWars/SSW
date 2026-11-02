@@ -1536,13 +1536,22 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             return Result;
         };
         const FVector Position=VisualPoint(Shot->GetLocation());
+        auto MountProjectileClass = [this, Owner, Shot]() -> UClass*
+        {
+            if (auto* Shooter = Cast<AShipActor>(FindRegionActorForRuntimeShip(Owner)))
+                return Shooter->GetRuntimeWeaponProjectileClass(Shot->GetSourceWeapon());
+            return nullptr;
+        };
         if(Shot->IsPrimary()){
             const FVector Start=VisualPoint(Shot->GetOrigin());
             if(Shot->IsBeam()){
                 Alive.Add(Shot);
                 ABeamWeaponActor* Beam=Cast<ABeamWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());
                 if(!Beam){
-                    TSubclassOf<ABeamWeaponActor> BeamClass=LoadClass<ABeamWeaponActor>(nullptr,TEXT("/Game/Weapons/BP_Laser.BP_Laser_C"));
+                    UClass* Override = MountProjectileClass();
+                    const TSubclassOf<ABeamWeaponActor> BeamClass = Override && Override->IsChildOf(ABeamWeaponActor::StaticClass())
+                        ? TSubclassOf<ABeamWeaponActor>(Override)
+                        : TSubclassOf<ABeamWeaponActor>(LoadClass<ABeamWeaponActor>(nullptr,TEXT("/Game/Weapons/BP_Laser.BP_Laser_C")));
                     Beam=ABeamWeaponActor::SpawnBeam(World,BeamClass,Start,Position,nullptr);
                     if(Beam){
                         Beam->SetBeamColor(FLinearColor(0.16f,0.7f,1.0f));
@@ -1559,8 +1568,10 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 const FVector Direction = ConvertLegacyShipLocationToUE(Shot->GetVelocity()).GetSafeNormal();
                 if (!Bolt && ProjectileVisuals.Num() < 512)
                 {
-                    const auto BoltClass = ABoltWeaponActor::BlueprintClassForWeapon(
-                        ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
+                    UClass* Override = MountProjectileClass();
+                    const TSubclassOf<ABoltWeaponActor> BoltClass = Override && Override->IsChildOf(ABoltWeaponActor::StaticClass())
+                        ? TSubclassOf<ABoltWeaponActor>(Override) : ABoltWeaponActor::BlueprintClassForWeapon(
+                            ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
                     FActorSpawnParameters Params;
                     Params.ObjectFlags |= RF_Transient;
                     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -1583,8 +1594,10 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         const WeaponDesign* ShotDesign = Shot->GetDesign();
         if (!ExistingVisual && ProjectileVisuals.Num() < 512 && ShotDesign)
         {
-            if (UClass* MissileClass = WeaponBlueprintResolver::Resolve(
-                ANSI_TO_TCHAR(ShotDesign->model.data()), ANSI_TO_TCHAR(ShotDesign->name.data())))
+            UClass* MissileClass = MountProjectileClass();
+            if (!MissileClass) MissileClass = WeaponBlueprintResolver::Resolve(
+                ANSI_TO_TCHAR(ShotDesign->model.data()), ANSI_TO_TCHAR(ShotDesign->name.data()));
+            if (MissileClass)
             {
                 FActorSpawnParameters MissileParams;
                 MissileParams.ObjectFlags |= RF_Transient;

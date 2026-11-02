@@ -226,13 +226,19 @@ TSubclassOf<ABoltWeaponActor> ABoltWeaponActor::ClassForWeapon(const FString& We
     return ABoltWeaponActor::StaticClass();
 }
 
-TSubclassOf<ABoltWeaponActor> ABoltWeaponActor::BlueprintClassForWeapon(const FString& WeaponName)
+FString ABoltWeaponActor::BlueprintPathForWeapon(const FString& WeaponName)
 {
     UClass* Native = ClassForWeapon(WeaponName).Get();
-    if (Native == ABoltWeaponActor::StaticClass()) return Native;
-    const FString BoltName = Native->GetName().LeftChop(5); // Actor suffix.
-    const FString Folder = BoltName.LeftChop(4); // Bolt suffix.
-    const FString Path = FString::Printf(TEXT("/Game/Model/Bolt/%s/BP_%s.BP_%s_C"), *Folder, *BoltName, *BoltName);
-    if (UClass* Blueprint = LoadClass<ABoltWeaponActor>(nullptr, *Path)) return Blueprint;
-    return Native;
+    if (Native == ABoltWeaponActor::StaticClass()) return FString();
+    const FString BoltName = Native->GetName().LeftChop(5);
+    const FString Folder = BoltName.LeftChop(4);
+    return FString::Printf(TEXT("/Game/Models/Weapons/Bolt/%s/BP_%s.BP_%s_C"), *Folder, *BoltName, *BoltName);
+}
+
+TSubclassOf<ABoltWeaponActor> ABoltWeaponActor::BlueprintClassForWeapon(const FString& WeaponName)
+{
+    const FString Path = BlueprintPathForWeapon(WeaponName);
+    if (!Path.IsEmpty())
+        if (UClass* Blueprint = LoadClass<ABoltWeaponActor>(nullptr, *Path)) return Blueprint;
+    return ClassForWeapon(WeaponName);
 }

@@ -113,6 +113,7 @@ private:
     UPROPERTY(Transient) TMap<int32,TObjectPtr<UMaterialInterface>> OriginalHullSkinMaterials;
 public:
     void BindRuntimeWeaponsToMounts();
+    UClass* GetRuntimeWeaponProjectileClass(const Weapon* InWeapon) const;
     bool GetRuntimeWeaponMuzzleTransform(const Weapon* InWeapon, int32 MuzzleIndex, FTransform& OutTransform) const;
 
     void BuildNavLightsFromRuntime();

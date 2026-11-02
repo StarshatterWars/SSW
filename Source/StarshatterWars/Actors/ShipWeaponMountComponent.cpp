@@ -4,11 +4,25 @@
 #include "Weapon.h"
 #include "WeaponDesign.h"
 #include "WeaponPresentationFrame.h"
+#include "BoltWeaponActor.h"
 
 UShipWeaponMountComponent::UShipWeaponMountComponent()
 {
     bEditableWhenInherited=true;
     PrimaryComponentTick.bCanEverTick=false;
+}
+
+void UShipWeaponMountComponent::ConfigureProjectileBlueprint(const FString& DefinitionPath, bool bFromDefinition)
+{
+    if (bFromDefinition) DefinitionProjectileBlueprint = DefinitionPath;
+    FSoftObjectPath Path(DefinitionPath);
+    if (ProjectileBlueprint.IsNull() || ProjectileBlueprint.ToSoftObjectPath() == AutoProjectileBlueprint)
+        ProjectileBlueprint = TSoftClassPtr<AActor>(Path);
+    AutoProjectileBlueprint = Path;
+}
+UClass* UShipWeaponMountComponent::ResolveProjectileClass() const
+{
+    return ProjectileBlueprint.LoadSynchronous();
 }
 
 void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType)
@@ -23,6 +37,15 @@ void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeapo
             SetChildActorClass(Class);
             ResolvedStoreClass = Class;
         }
+    }
+    if (InWeapon && InWeapon->Design() && DefinitionProjectileBlueprint.IsEmpty())
+    {
+        const WeaponDesign* Design = InWeapon->Design();
+        if (Design->primary && !Design->beam)
+            ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(InWeaponType.ToString()),false);
+        else if (!Design->primary)
+            if (UClass* Class = WeaponBlueprintResolver::Resolve(ANSI_TO_TCHAR(Design->model.data()), InWeaponType.ToString()))
+                ConfigureProjectileBlueprint(Class->GetPathName(),false);
     }
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;

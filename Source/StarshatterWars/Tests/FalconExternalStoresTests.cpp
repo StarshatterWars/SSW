@@ -41,6 +41,9 @@ bool FFalconExternalStoresTest::RunTest(const FString& Parameters)
     const int Stations[] = {0,1,1,0};
     Ship Runtime("StoreTest","",ShipDesignRegistry::FindLegacy(FName(TEXT("Falcon"))),1,0,Stations,false);
     Falcon->BindRuntimeShip(&Runtime);
+    UClass* DeltaBolt=LoadClass<AActor>(nullptr,TEXT("/Game/Models/Weapons/Bolt/Delta/BP_DeltaBolt.BP_DeltaBolt_C"));
+    TestNotNull(TEXT("Delta projectile Blueprint exists"),DeltaBolt);
+    TestEqual(TEXT("Falcon gun uses its component projectile class"),Falcon->GetRuntimeWeaponProjectileClass(Runtime.GetPrimary()),DeltaBolt);
     int32 Checked = 0;
     for (const auto& Base : Falcon->NativeWeaponHardpoints)
     {
@@ -49,6 +52,7 @@ bool FFalconExternalStoresTest::RunTest(const FString& Parameters)
         ++Checked;
         if (!TestNotNull(TEXT("Station has runtime missile"),Mount->RuntimeWeapon)) continue;
         TestNotNull(TEXT("Missile Blueprint spawned at station"),Mount->GetChildActor());
+        if (Mount->GetChildActor()) TestEqual(TEXT("Fired missile Blueprint agrees with the loaded station"),Mount->ResolveProjectileClass(),Mount->GetChildActor()->GetClass());
         TestTrue(TEXT("Station identity survives weapon grouping"),Mount->LegacyLocation.Equals(Mount->RuntimeWeapon->GetMountRelativeLocation(),0.001));
         if (Mount->GetChildActor()) TestTrue(TEXT("Missile is attached to its loadout point"),Mount->GetChildActor()->GetRootComponent()->GetAttachParent() == Mount);
         if (auto* Missile=Cast<AMissileActor>(Mount->GetChildActor()))

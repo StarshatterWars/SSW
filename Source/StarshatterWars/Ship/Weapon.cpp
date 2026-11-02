@@ -812,6 +812,7 @@ SimShot* Weapon::FireBarrel(int n)
     }
 
     if (shot) {
+        shot->SetSourceWeapon(this);
         if (ammo > 0)
             ammo--;
 

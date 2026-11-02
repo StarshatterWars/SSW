@@ -1214,6 +1214,7 @@ USTRUCT(BlueprintType)
 struct FShipWeapon
 {
 	GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Presentation") FString ProjectileBlueprint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString WeaponType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Name;
@@ -1252,6 +1253,7 @@ USTRUCT(BlueprintType)
 struct FShipHardPoint
 {
 	GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Presentation") FString ProjectileBlueprint;
 
 	// Allowed weapon types for this hardpoint (legacy: wtypes[8])
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

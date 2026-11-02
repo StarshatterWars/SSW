@@ -27,6 +27,7 @@
 // +--------------------------------------------------------------------+
 
 class Camera;
+class Weapon;
 class Ship;
 class Trail;
 class SimSystem;      // renamed from System to avoid Unreal conflicts
@@ -55,6 +56,8 @@ public:
 	virtual void       Activate(SimScene& scene);
 	virtual void       Deactivate(SimScene& scene);
 
+    void SetSourceWeapon(const Weapon* InWeapon) { source_weapon = InWeapon; }
+    const Weapon* GetSourceWeapon() const { return source_weapon; }
 	const Ship* Owner()        const { return owner; }
 	double             Damage()       const;
 	int                ShotType()     const { return type; }
@@ -110,6 +113,7 @@ public:
 
 protected:
 	const Ship* owner;
+    const Weapon* source_weapon = nullptr; // Non-owning presentation identity only.
 
 	int                type;
 	float              base_damage;

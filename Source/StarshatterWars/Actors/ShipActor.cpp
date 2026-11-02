@@ -22,6 +22,7 @@
 */
 
 #include "ShipActor.h"
+#include "BoltWeaponActor.h"
 #include "FighterActor.h"
 #include "FighterExhaustTuning.h"
 #include "WaypointArrival.h"
@@ -353,6 +354,8 @@ void AShipActor::InitializeNativeAuthoredAttachments(FName FighterDef)
             Mount->StationName = Definition->Name;
             Mount->bLoadoutHardpoint = Definition->bLoadout;
             Mount->AllowedWeaponTypes = Definition->Types;
+            if (!Definition->bLoadout && Definition->Types.Num())
+                Mount->ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(Definition->Types[0].ToString()),false);
             Mount->LegacyLocation = Definition->Location;
             Mount->LegacyMuzzle = Definition->Muzzle;
             Mount->LegacyMuzzles = Definition->Muzzles;

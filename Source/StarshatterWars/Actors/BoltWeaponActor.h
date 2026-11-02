@@ -31,6 +31,7 @@ public:
 
     /** Native presentation class for an exact Wep.def name, or the generic bolt fallback. */
     static TSubclassOf<ABoltWeaponActor> ClassForWeapon(const FString& WeaponName);
+    static FString BlueprintPathForWeapon(const FString& WeaponName);
     static TSubclassOf<ABoltWeaponActor> BlueprintClassForWeapon(const FString& WeaponName);
 
     /** Activate a world-space visual whose movement and lifetime belong to SimShot. */

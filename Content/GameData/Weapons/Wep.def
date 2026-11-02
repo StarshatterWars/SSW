@@ -638,7 +638,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            8
    length:           100
-   bitmap:           "shot0.pcx"
+   bitmap:           "shot0"
    flash:            "flash0.pcx"
    flash_scale:      1.0
    sound:            "blockade_cannon"
@@ -673,7 +673,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            5
    length:           120
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      0.2
    sound:            "shot3"
@@ -743,7 +743,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            20
    length:           400
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      1
    sound:            "shot3"
@@ -783,7 +783,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            20
    length:           400
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      1
    sound:            "shot3"
@@ -820,7 +820,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            20
    length:           150
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      1
    sound:            "shot3"
@@ -859,7 +859,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            10
    length:           120
-   bitmap:           "Orca/shot0.pcx"
+   bitmap:           "shot0"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
    sound:            "Shot2"
@@ -897,7 +897,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            10
    length:           120
-   bitmap:           "Orca/shot0.pcx"
+   bitmap:           "shot0"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
    sound:            "Shot2"
@@ -937,7 +937,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            15
    length:           150
-   bitmap:           "Orca/shot0.pcx"
+   bitmap:           "shot0"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
    sound:            "Shot2"
@@ -976,7 +976,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            15
    length:           150
-   bitmap:           "Orca/shot0.pcx"
+   bitmap:           "shot0"
    flash:            "Orca/flash0.pcx"
    flash_scale:      1.5
    sound:            "Shot2"
@@ -1732,7 +1732,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            32
    length:           800
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      1
    sound:            "shot3"
@@ -1774,7 +1774,7 @@ primary: {
    graphic_type:     3	// bolt
    width:            32
    length:           500
-   bitmap:           "shot2.pcx"
+   bitmap:           "shot2"
    flash:            "flash2.pcx"
    flash_scale:      1
    sound:            "shot3"

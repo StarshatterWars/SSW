@@ -6,6 +6,7 @@
 #include "Weapon.h"
 #include "WeaponDesign.h"
 #include "WeaponGroup.h"
+#include "BoltWeaponActor.h"
 #include "UObject/UObjectThreadContext.h"
 
 namespace
@@ -66,6 +67,8 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         Mount->StationName = FName(*Src.Name);
         Mount->bLoadoutHardpoint = false;
         Mount->AllowedWeaponTypes = {FName(*Src.WeaponType)};
+        Mount->ConfigureProjectileBlueprint(Src.ProjectileBlueprint.IsEmpty()
+            ? ABoltWeaponActor::BlueprintPathForWeapon(Src.WeaponType) : Src.ProjectileBlueprint);
         Mount->LegacyLocation = Src.Location;
         Mount->LegacyMuzzles = Src.Muzzles;
         Mount->LegacyMuzzle = Src.Muzzles.Num() ? Src.Muzzles[0] : Src.Location;
@@ -79,6 +82,7 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         if (!Mount) continue;
         Mount->StationName = FName(*(Hp.Name.IsEmpty() ? Hp.Abbrev : Hp.Name));
         Mount->bLoadoutHardpoint = true;
+        Mount->ConfigureProjectileBlueprint(Hp.ProjectileBlueprint);
         Mount->AllowedWeaponTypes.Reset();
         for (const FString& Type : Hp.AllowedWeaponTypes)
             Mount->AllowedWeaponTypes.Add(FName(*Type));
@@ -206,4 +210,13 @@ bool AShipActor::GetRuntimeWeaponMuzzleTransform(const Weapon* InWeapon,int32 Mu
         }
     }
     return false;
+}
+
+UClass* AShipActor::GetRuntimeWeaponProjectileClass(const Weapon* InWeapon) const
+{
+    if (!InWeapon) return nullptr;
+    for (const auto& Base : NativeWeaponHardpoints)
+        if (const auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get()))
+            if (Mount->IsBoundTo(InWeapon)) return Mount->ResolveProjectileClass();
+    return nullptr;
 }
