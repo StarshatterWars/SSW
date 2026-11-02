@@ -9,8 +9,8 @@ class UNiagaraSystem;
 class USphereComponent;
 
 /**
- * Bolt-torpedo style energy projectile.
- * Replaces the legacy Bolt sprite for non-beam energy weapons.
+ * Presentation for graphic_type 3 projectiles, including energy bolts and railgun rounds.
+ * Replaces the legacy Bolt sprite; graphic type does not determine damage behavior.
  * Travels from spawn point along a direction for a fixed lifetime,
  * then destroys itself (impact handling is done by the simulation).
  *
@@ -23,6 +23,13 @@ class STARSHATTERWARS_API ABoltWeaponActor : public AActor
 
 public:
     ABoltWeaponActor();
+
+    /** Exact Wep.def identity; gameplay values continue to come from WeaponDesign. */
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Bolt")
+    FString WeaponDefinitionName;
+
+    /** Native presentation class for an exact Wep.def name, or the generic bolt fallback. */
+    static TSubclassOf<ABoltWeaponActor> ClassForWeapon(const FString& WeaponName);
 
     /** Spawn a bolt projectile. Speed is cm/s. Life is seconds. */
     UFUNCTION(BlueprintCallable, Category = "Bolt", meta = (WorldContext = "WorldContextObject"))

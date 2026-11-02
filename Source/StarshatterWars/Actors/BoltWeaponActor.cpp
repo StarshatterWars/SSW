@@ -1,4 +1,29 @@
 #include "BoltWeaponActor.h"
+#include "AlphaCannonBoltActor.h"
+#include "DeltaCannonBoltActor.h"
+#include "HeavyCannonBoltActor.h"
+#include "FighterTurretBoltActor.h"
+#include "LCATurretBoltActor.h"
+#include "BlockadeCannonBoltActor.h"
+#include "VulcanCannonBoltActor.h"
+#include "PhalanxCannonBoltActor.h"
+#include "VikingCannonBoltActor.h"
+#include "UrsaCannonBoltActor.h"
+#include "OrcaCannonBoltActor.h"
+#include "OrcaInvertedBoltActor.h"
+#include "Orca2CannonBoltActor.h"
+#include "Orca2InvertedBoltActor.h"
+#include "VanguardBoltActor.h"
+#include "HeliconBoltActor.h"
+#include "LightPDBBoltActor.h"
+#include "Rail5BoltActor.h"
+#include "Rail12BoltActor.h"
+#include "Rail12InvertedBoltActor.h"
+#include "Rail15BoltActor.h"
+#include "Mag18BoltActor.h"
+#include "AAACannonBoltActor.h"
+#include "QuadAAABoltActor.h"
+
 
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
@@ -106,4 +131,33 @@ void ABoltWeaponActor::Expire()
         TrailFX->DeactivateImmediate();
     }
     Destroy();
+}
+
+TSubclassOf<ABoltWeaponActor> ABoltWeaponActor::ClassForWeapon(const FString& WeaponName)
+{
+    if (WeaponName == TEXT("Alpha Cannon")) return AAlphaCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Delta Cannon")) return ADeltaCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Heavy Cannon")) return AHeavyCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Fighter Turret")) return AFighterTurretBoltActor::StaticClass();
+    if (WeaponName == TEXT("LCA Turret")) return ALCATurretBoltActor::StaticClass();
+    if (WeaponName == TEXT("Blockade Cannon")) return ABlockadeCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Vulcan Cannon")) return AVulcanCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Phalanx Cannon")) return APhalanxCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Viking Cannon")) return AVikingCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Ursa Cannon")) return AUrsaCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Orca Cannon")) return AOrcaCannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Orca Inverted")) return AOrcaInvertedBoltActor::StaticClass();
+    if (WeaponName == TEXT("Orca 2 Cannon")) return AOrca2CannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Orca 2 Inverted")) return AOrca2InvertedBoltActor::StaticClass();
+    if (WeaponName == TEXT("Vanguard")) return AVanguardBoltActor::StaticClass();
+    if (WeaponName == TEXT("Helicon")) return AHeliconBoltActor::StaticClass();
+    if (WeaponName == TEXT("Light-PDB")) return ALightPDBBoltActor::StaticClass();
+    if (WeaponName == TEXT("Rail-5")) return ARail5BoltActor::StaticClass();
+    if (WeaponName == TEXT("Rail-12")) return ARail12BoltActor::StaticClass();
+    if (WeaponName == TEXT("Rail-12 Inverted")) return ARail12InvertedBoltActor::StaticClass();
+    if (WeaponName == TEXT("Rail-15")) return ARail15BoltActor::StaticClass();
+    if (WeaponName == TEXT("Mag-18")) return AMag18BoltActor::StaticClass();
+    if (WeaponName == TEXT("AAA Cannon")) return AAAACannonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Quad AAA")) return AQuadAAABoltActor::StaticClass();
+    return ABoltWeaponActor::StaticClass();
 }

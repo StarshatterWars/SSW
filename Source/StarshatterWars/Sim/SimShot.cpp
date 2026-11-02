@@ -131,7 +131,7 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 	if (rep)
 		rep->MoveTo(pos);
 
-	// Non-beam energy bolts become photon torpedoes
+	// Graphic type 3 uses bolt presentation for energy and solid projectiles.
 	if (!beam && design->graphic_type == Graphic::BOLT)
 	{
 		static TSubclassOf<ABoltWeaponActor> BoltClass = nullptr;
