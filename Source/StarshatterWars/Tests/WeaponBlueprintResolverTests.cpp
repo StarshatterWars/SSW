@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraComponent.h"
+#include "RocketMissileActor.h"
+#include "ReconPodActor.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWeaponBlueprintResolverTest, "Starshatter.Weapons.BlueprintModels",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FWeaponBlueprintResolverTest::RunTest(const FString& Parameters)
@@ -17,6 +19,17 @@ bool FWeaponBlueprintResolverTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Recon pod directly inherits MissileActor"),ReconClass->GetSuperClass(),AMissileActor::StaticClass());
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World = UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    auto* Rocket = World->SpawnActor<ARocketMissileActor>();
+    auto* Recon = World->SpawnActor<AReconPodActor>();
+    for (auto* Mesh : {Rocket->MeshComponent.Get(),Recon->MeshComponent.Get()})
+    {
+        if (TestNotNull(TEXT("Rocket/recon provides native static mesh component"),Mesh))
+        {
+            TestTrue(TEXT("Mesh attaches to missile root"),Mesh->GetAttachParent() == Mesh->GetOwner()->GetRootComponent());
+            TestEqual(TEXT("Mesh leaves collision to legacy simulation"),Mesh->GetCollisionEnabled(),ECollisionEnabled::NoCollision);
+            TestTrue(TEXT("Mesh can be edited in inherited Blueprint"),Mesh->bEditableWhenInherited);
+        }
+    }
     auto* Fighter = World->SpawnActor<AActor>();
     auto* Root = NewObject<USceneComponent>(Fighter);
     Fighter->SetRootComponent(Root);
