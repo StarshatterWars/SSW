@@ -3,6 +3,9 @@
    The existing MissionSelectDlg is intentionally not modified. */
 #include "SingleMissionDlg.h"
 #include "MissionRankRules.h"
+#include "MissionCompletionStatus.h"
+#include "SSWGameInstance.h"
+#include "StarshatterPlayerSubsystem.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Blueprint/WidgetTree.h"
@@ -459,7 +462,22 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
         if (UButton* Button = MissionButtons[i])
         {
             FButtonStyle Style = Button->GetStyle();
-            Style.Normal.TintColor = FSlateColor(i == Index ? SingleMissionColors::Selected : SingleMissionColors::Row);
+            Campaign* Active = IsCampaignMissionView() ? Campaign::GetCampaign() : CustomCampaign;
+            const int32 Scope = Active ? Active->GetCampaignId() : Campaign::SINGLE_MISSIONS;
+            const auto* GI = Cast<USSWGameInstance>(GetGameInstance());
+            const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+            const bool bCompleted = MissionCompletionStatus::IsCompleted(GI ? GI->CampaignSave : nullptr,
+                Players ? &Players->GetPlayerInfo() : nullptr, Scope, MissionIds[i]);
+            const FS_CampaignMission* Scenario = ScenarioRows.IsValidIndex(i) ? ScenarioRows[i] : nullptr;
+            const bool bUnavailable = IsCampaignMissionView()
+                ? (!Active || !Active->IsMissionRankUnlocked(MissionIds[i]))
+                : (!IsCustomMissionView() && (!Scenario || !MissionRankRules::Unlocked(MissionRankRules::Required(*Scenario))));
+            const FLinearColor Tint = bCompleted ? FLinearColor(0.25f, 1.f, 0.35f)
+                : bUnavailable ? FLinearColor(1.f, 0.2f, 0.2f)
+                : i == Index ? SingleMissionColors::Selected : SingleMissionColors::Row;
+            Style.Normal.TintColor = FSlateColor(Tint);
+            Style.Hovered.TintColor = FSlateColor(bCompleted || bUnavailable ? Tint : SingleMissionColors::Selected);
+            Style.Pressed.TintColor = FSlateColor(bCompleted || bUnavailable ? Tint : SingleMissionColors::Accent);
             Button->SetStyle(Style);
         }
     }

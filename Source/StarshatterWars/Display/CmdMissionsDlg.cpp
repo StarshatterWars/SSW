@@ -552,7 +552,13 @@ void UCmdMissionsDlg::UpdateMissionDetailPanel(UMissionListObject* Item)
 
     if (MissionNameText)      MissionNameText->SetText(FText::FromString(Item->MissionName));
     if (MissionTypeText)      MissionTypeText->SetText(FText::FromString(FString::Printf(TEXT("TYPE:  %s"), *Item->MissionType)));
-    if (MissionStatusText)    MissionStatusText->SetText(FText::FromString(FString::Printf(TEXT("STATUS:  %s"), *Item->MissionStatus)));
+    if (MissionStatusText)
+    {
+        MissionStatusText->SetText(FText::FromString(FString::Printf(TEXT("STATUS:  %s"), *Item->MissionStatus)));
+        MissionStatusText->SetColorAndOpacity(FSlateColor(Item->MissionStatus == TEXT("Completed")
+            ? FLinearColor(0.2f, 1.f, 0.35f) : Item->MissionStatus.StartsWith(TEXT("Locked"))
+            ? FLinearColor(1.f, 0.2f, 0.2f) : FLinearColor(0.71f, 0.81f, 0.88f)));
+    }
     if (MissionSystemText)    MissionSystemText->SetText(FText::FromString(FString::Printf(TEXT("SYSTEM:  %s"), *Item->MissionSystem)));
     if (MissionRegionText)    MissionRegionText->SetText(FText::FromString(FString::Printf(TEXT("REGION:  %s"), *Item->MissionRegion)));
     if (MissionObjectiveText) MissionObjectiveText->SetText(FText::FromString(Item->MissionObjective));
@@ -960,7 +966,8 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
             ButtonContentSlot->SetVerticalAlignment(VAlign_Center);
         }
         MissionLine(Content, MissionText(WidgetTree,
-            Item->MissionName, CmdText), 0.f);
+            Item->MissionName, Item->MissionStatus == TEXT("Completed") ? FLinearColor(0.2f, 1.f, 0.35f)
+                : Item->MissionStatus.StartsWith(TEXT("Locked")) ? FLinearColor(1.f, 0.2f, 0.2f) : CmdText), 0.f);
         if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Item->MissionId))
             MissionLine(Content, MissionText(WidgetTree, CampaignPtr->MissionRankRequirement(Item->MissionId), CmdMuted), 0.f);
         MissionLine(NativeMissionRows, Button, 8.f);
