@@ -182,6 +182,7 @@ static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
 
 void SFighterHUDDetails::Construct(const FArguments& A)
 {
+    ThirdPerson = A._ThirdPerson;
     ShowHUD = A._ShowHUD; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
@@ -564,7 +565,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     };
     if (!IsCockpitDisplayActive())
     {
-    if (bHasPlayer)
+    if (bHasPlayer && !ThirdPerson.Get())
     {
 
         // Attitude instrument in the central ring: 5 degree pitch marks, banked with the ship.
@@ -630,6 +631,28 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
         if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
         if (bGearDown) Popup(126,TEXT("GEAR DOWN"));
+    }
+    if (bHasPlayer && ThirdPerson.Get())
+    {
+        // External cameras keep the view of the ship clear. The bottom MFDs,
+        // projected target cues and ILS remain in their existing locations.
+        const FVector2D P(20*Scale,24*Scale);
+        Text(P,FString::Printf(TEXT("SPD %.0f   HDG %03d"),FlightSpeed,FMath::RoundToInt(HeadingDegrees)%360),HUDBlue,12);
+        if (NavReadouts.Num()) Text(P+FVector2D(0,22)*Scale,NavReadouts[0],HUDBlue,11);
+        if (NavReadouts.Num()>1) Text(P+FVector2D(0,40)*Scale,NavReadouts[1],HUDBlue,11);
+        if (bShowWeapons)
+        {
+            Text(P+FVector2D(0,62)*Scale,Primary.ToUpper(),HUDBlue,11);
+            Text(P+FVector2D(0,80)*Scale,Secondary.ToUpper(),HUDBlue,11);
+        }
+        FString State;
+        if(bGearDown) State=TEXT("GEAR DOWN");
+        if(bAutoAvailable) State+=State.IsEmpty()?TEXT("AUTO"):TEXT("   AUTO");
+        if(bShoot && bShowWeapons) State+=State.IsEmpty()?TEXT("SHOOT"):TEXT("   SHOOT");
+        if(!State.IsEmpty())Text(P+FVector2D(0,102)*Scale,State,HUDBlue,10);
+        if(JumpSeconds>0)Text(P+FVector2D(0,124)*Scale,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)),HUDBlue,12);
+        else if(ThreatLevel==2 && bWarningFlash)Text(P+FVector2D(0,124)*Scale,TEXT("MISSILE WARNING"),FLinearColor::Red,12);
+        else if(ThreatLevel==1)Text(P+FVector2D(0,124)*Scale,TEXT("LOCK WARNING"),FLinearColor::Yellow,12);
     }
     // LAUNCH remains visible while staging but is disabled until the
     // fighter is actually spotted and the flight-deck slot becomes READY.
@@ -770,7 +793,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
         ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),PlayerHull),ShipHealthColor(PlayerHull));
         ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),PlayerShield),ShipHealthColor(PlayerShield));
-        if (bShowWeapons)
+        if (bShowWeapons && !ThirdPerson.Get())
         {
         ReticleText(-248,LowerReadoutBaseline,108,Primary.ToUpper());
         ReticleText(-248,LowerReadoutBaseline+LowerReadoutRowHeight,108,Secondary.ToUpper());

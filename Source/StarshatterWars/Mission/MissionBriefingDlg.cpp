@@ -1913,7 +1913,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         FighterHUDPanels = SNew(SFighterHUDPanels).ShowPanels_Lambda([HUDOwner]()
         {
             return HUDOwner.IsValid() && HUDOwner->bLiveMissionStarted &&
-                HUDOwner->bFighterHUDVisible && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
+                HUDOwner->bFighterHUDVisible && !(HUDOwner->MissionCameraRig.IsValid() && HUDOwner->MissionCameraRig->bThirdPersonView) && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
                 !HUDOwner->bMissionControlsOpen &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
         });
@@ -2113,6 +2113,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     {
         TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
         FighterHUDDetails = SNew(SFighterHUDDetails)
+            .ThirdPerson_Lambda([Owner]() { return Owner.IsValid() && Owner->MissionCameraRig.IsValid() && Owner->MissionCameraRig->bThirdPersonView; })
             .ShowHUD_Lambda([Owner]() { return Owner.IsValid() && Owner->bFighterHUDVisible && Owner->CanShowFighterHUD(); })
             .SelectedTarget_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
             .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });

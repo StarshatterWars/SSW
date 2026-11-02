@@ -22,6 +22,7 @@ struct FMissionCameraRig
 {
     enum EMode { Cockpit, Virtual, Chase, Drop, Orbit, Overview, Target, Threat };
     EMode Mode = Chase;
+    bool bThirdPersonView = false;
     TWeakObjectPtr<AShipActor> ViewObject;
     TWeakObjectPtr<AShipActor> BoundsActor;
     TWeakObjectPtr<AShipActor> PlayerActor;
@@ -203,6 +204,7 @@ struct FMissionCameraRig
         const bool bPadlock = Mode == Target && Selected && Player->GetTarget() == Selected->GetRuntimeShip();
         const bool bInternalPadlock = bPadlock && Player->GetCockpit() != nullptr;
         const bool bInternal = !bDock && !bTransition && (Mode == Cockpit || Mode == Virtual || bInternalPadlock);
+        bThirdPersonView = !bInternal && !bDock && !bTransition;
         RestoreVisibility(PC);
         if (auto* Fighter = Cast<AFighterActor>(Visual)) Fighter->SetCockpitViewActive(!bDock && !bTransition && Mode == Cockpit);
         if (bInternal)

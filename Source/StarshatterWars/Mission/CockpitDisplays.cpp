@@ -37,8 +37,13 @@ public:
                 auto P=[&](double X){return FVector2D(512+C*X-S*Y,256+S*X+C*Y);};
                 Line(P(-150),P(-45),Blue);Line(P(45),P(150),Blue);
             }
-            Text(70,418,H->Primary.ToUpper(),Blue,24);
-            Text(660,418,H->Secondary.ToUpper(),Blue,24);
+            if(H->JumpSeconds>0)Text(340,80,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(H->JumpSeconds)),Blue,24);
+            else if(H->ThreatLevel==2 && H->bWarningFlash)Text(340,80,TEXT("MISSILE WARNING"),FLinearColor::Red,24);
+            else if(H->ThreatLevel==1)Text(350,80,TEXT("LOCK WARNING"),FLinearColor::Yellow,24);
+            if(H->bShoot && H->bShowWeapons)Text(465,365,TEXT("SHOOT"),Blue,24);
+            if(H->bAutoAvailable)Text(465,120,TEXT("AUTO"),Blue,24);
+            if(H->bShowWeapons){Text(70,418,H->Primary.ToUpper(),Blue,24);
+            Text(660,418,H->Secondary.ToUpper(),Blue,24);}
             if(H->NavReadouts.Num())Text(70,465,H->NavReadouts[0],Blue,22);
             if(H->bGearDown)Text(720,465,TEXT("GEAR DOWN"),Blue,22);
             return L+1;
@@ -50,7 +55,11 @@ public:
             Text(20,16,H->PlayerName,Blue);
             int32 Y=65;
             for(const auto& Row:H->StatusRows){Text(20,Y,Row.Label,Blue,24);Text(220,Y,SFighterHUDDetails::FormatStatusReadout(Row.Label,Row.Percent,H->bAugmenterActive),Blue,24);Y+=38;}
-            if(H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady())Image({120,270},{270,135},H->PlayerMFDPreview->GetBrush());
+            if(H->bShowCaution){
+                Text(20,260,TEXT("CAUTION"),Blue,20);
+                for(int32 I=0;I<FMath::Min(12,H->DamageRows.Num());++I){const auto& Cell=H->DamageRows[I];if(Cell.Status>=0)Text(20+(I%3)*160,300+(I/3)*28,Cell.Label,SSWDamagePanel::Color(Cell.Status,FPlatformTime::Seconds(),Blue),16);}
+            }
+            else if(H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady())Image({120,270},{270,135},H->PlayerMFDPreview->GetBrush());
             Text(20,440,H->HomeCarrierReadout,Blue,20);
             Text(20,477,H->PlayerClass,Blue,20);
         }
@@ -145,6 +154,7 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
 #include "Components/SceneCaptureComponent2D.h"
 #include "AssetCompilingManager.h"
 #include "ShaderCompiler.h"
+#include "ShowFlags.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCockpitDisplaysTest,"Starshatter.HUD.CockpitDisplays",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FCockpitDisplaysTest::RunTest(const FString&)
 {
@@ -189,10 +199,12 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
         }
         BeginCleanup(Renderer);
         Fighter->CockpitComponent->SetVisibility(true,true);Child->SetActorHiddenInGame(false);
-        for(auto* Panel:Panels)Panel->TickComponent(.2f,LEVELTICK_All,nullptr);
+        for(auto* Panel:Panels){Panel->SetRedrawTime(0);Panel->TickComponent(.2f,LEVELTICK_All,nullptr);}
         FlushRenderingCommands();
         Displays.Update(Fighter,HUD,true);
         TestTrue(TEXT("Registered physical displays become ready"),Displays.IsActive());
+        for(auto* Panel:Panels){TArray<FColor> P;Panel->GetRenderTarget()->GameThread_GetRenderTargetResource()->ReadPixels(P);int32 Lit=0;for(const auto& C:P)if(C.B>50 && C.G>50)++Lit;TestTrue(TEXT("Mounted widget render target contains live readouts"),Lit>100);}
+
         auto* Camera=World->SpawnActor<AMissionViewCamera>();
         auto* View=Cast<UMissionViewCameraComponent>(Camera->GetCameraComponent());
         TestNotNull(TEXT("Mission camera owns near-plane adapter"),View);
@@ -200,11 +212,11 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
         auto* Owner=World->SpawnActor<AActor>();auto* CaptureComponent=NewObject<USceneCaptureComponent2D>(Owner);
         CaptureComponent->RegisterComponent();CaptureComponent->SetWorldLocation(Fighter->CockpitComponent->GetComponentLocation());CaptureComponent->SetWorldRotation(Fighter->GetActorRotation());
         CaptureComponent->FOVAngle=70;CaptureComponent->bOverride_CustomNearClippingPlane=true;CaptureComponent->CustomNearClippingPlane=.05f;
-        CaptureComponent->PrimitiveRenderMode=ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;CaptureComponent->ShowOnlyActors.Add(Child);CaptureComponent->ShowFlags.SetLighting(false);
+        CaptureComponent->PrimitiveRenderMode=ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;CaptureComponent->ShowOnlyActors.Add(Child);for(auto* Panel:Panels)CaptureComponent->ShowOnlyComponent(Panel);ApplyViewMode(VMI_Unlit,true,CaptureComponent->ShowFlags);CaptureComponent->CaptureSource=SCS_SceneColorHDR;CaptureComponent->ShowFlags.SetPostProcessing(false);
         TStrongObjectPtr<UTextureRenderTarget2D> CockpitRT(NewObject<UTextureRenderTarget2D>());CockpitRT->InitAutoFormat(1280,720);CaptureComponent->TextureTarget=CockpitRT.Get();
         FAssetCompilingManager::Get().FinishAllCompilation();
         if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
-        World->SendAllEndOfFrameUpdates();CaptureComponent->CaptureScene();FlushRenderingCommands();
+        World->UpdateWorldComponents(false,false);World->SendAllEndOfFrameUpdates();CaptureComponent->CaptureScene();FlushRenderingCommands();
         TArray<FColor> CockpitPixels;CockpitRT->GameThread_GetRenderTargetResource()->ReadPixels(CockpitPixels);
         TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,CockpitPixels,PNG);
         TestTrue(TEXT("Mounted cockpit preview written"),FFileHelper::SaveArrayToFile(PNG,*(Capture+TEXT("mounted.png"))));

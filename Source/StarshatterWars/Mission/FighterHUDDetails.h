@@ -18,8 +18,9 @@ class SCockpitInstrument;
 class SFighterHUDDetails : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SFighterHUDDetails) {}
+    SLATE_BEGIN_ARGS(SFighterHUDDetails) : _ThirdPerson(false) {}
         SLATE_ATTRIBUTE(bool, ShowHUD)
+        SLATE_ATTRIBUTE(bool, ThirdPerson)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, SelectedTarget)
         SLATE_ATTRIBUTE(FText, SelectedName)
     SLATE_END_ARGS()
@@ -51,6 +52,7 @@ public:
 private:
     friend class SCockpitInstrument;
     friend class FCockpitDisplaysTest;
+    friend class FThirdPersonMiniHUDTest;
     TUniquePtr<FCockpitDisplays> CockpitDisplays;
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     friend class FRecoveryILSHUDTest;
@@ -72,6 +74,7 @@ private:
     void Refresh();
     void LoadShipHUDIcon(const FString& Path, FString& CachedPath, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush);
     TAttribute<bool> ShowHUD;
+    TAttribute<bool> ThirdPerson;
     TAttribute<TWeakObjectPtr<AActor>> SelectedTarget;
     TAttribute<FText> SelectedName;
     double NextSample = 0;
