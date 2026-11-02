@@ -1549,6 +1549,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 ABeamWeaponActor* Beam=Cast<ABeamWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());
                 if(!Beam){
                     UClass* Override = MountProjectileClass();
+                    if (!Override && Shot->GetDesign()) Override=WeaponBlueprintResolver::ResolveProjectile(ANSI_TO_TCHAR(Shot->GetDesign()->projectile.data()));
                     const TSubclassOf<ABeamWeaponActor> BeamClass = Override && Override->IsChildOf(ABeamWeaponActor::StaticClass())
                         ? TSubclassOf<ABeamWeaponActor>(Override)
                         : TSubclassOf<ABeamWeaponActor>(LoadClass<ABeamWeaponActor>(nullptr,TEXT("/Game/Weapons/BP_Laser.BP_Laser_C")));
@@ -1569,6 +1570,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 if (!Bolt && ProjectileVisuals.Num() < 512)
                 {
                     UClass* Override = MountProjectileClass();
+                    if (!Override && Shot->GetDesign()) Override=WeaponBlueprintResolver::ResolveProjectile(ANSI_TO_TCHAR(Shot->GetDesign()->projectile.data()));
                     const TSubclassOf<ABoltWeaponActor> BoltClass = Override && Override->IsChildOf(ABoltWeaponActor::StaticClass())
                         ? TSubclassOf<ABoltWeaponActor>(Override) : ABoltWeaponActor::BlueprintClassForWeapon(
                             ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
@@ -1595,6 +1597,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         if (!ExistingVisual && ProjectileVisuals.Num() < 512 && ShotDesign)
         {
             UClass* MissileClass = MountProjectileClass();
+            if (!MissileClass) MissileClass = WeaponBlueprintResolver::ResolveProjectile(ANSI_TO_TCHAR(ShotDesign->projectile.data()));
             if (!MissileClass) MissileClass = WeaponBlueprintResolver::Resolve(
                 ANSI_TO_TCHAR(ShotDesign->model.data()), ANSI_TO_TCHAR(ShotDesign->name.data()));
             if (MissileClass)

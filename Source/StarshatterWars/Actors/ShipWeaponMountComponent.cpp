@@ -12,10 +12,9 @@ UShipWeaponMountComponent::UShipWeaponMountComponent()
     PrimaryComponentTick.bCanEverTick=false;
 }
 
-void UShipWeaponMountComponent::ConfigureProjectileBlueprint(const FString& DefinitionPath, bool bFromDefinition)
+void UShipWeaponMountComponent::ConfigureProjectileBlueprint(const FString& DefaultPath)
 {
-    if (bFromDefinition) DefinitionProjectileBlueprint = DefinitionPath;
-    FSoftObjectPath Path(DefinitionPath);
+    FSoftObjectPath Path(DefaultPath);
     if (ProjectileBlueprint.IsNull() || ProjectileBlueprint.ToSoftObjectPath() == AutoProjectileBlueprint)
         ProjectileBlueprint = TSoftClassPtr<AActor>(Path);
     AutoProjectileBlueprint = Path;
@@ -38,14 +37,16 @@ void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeapo
             ResolvedStoreClass = Class;
         }
     }
-    if (InWeapon && InWeapon->Design() && DefinitionProjectileBlueprint.IsEmpty())
+    if (InWeapon && InWeapon->Design())
     {
         const WeaponDesign* Design = InWeapon->Design();
-        if (Design->primary && !Design->beam)
-            ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(InWeaponType.ToString()),false);
+        if (Design->projectile.length())
+            ConfigureProjectileBlueprint(WeaponBlueprintResolver::ProjectileClassPath(ANSI_TO_TCHAR(Design->projectile.data())));
+        else if (Design->primary && !Design->beam)
+            ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(InWeaponType.ToString()));
         else if (!Design->primary)
             if (UClass* Class = WeaponBlueprintResolver::Resolve(ANSI_TO_TCHAR(Design->model.data()), InWeaponType.ToString()))
-                ConfigureProjectileBlueprint(Class->GetPathName(),false);
+                ConfigureProjectileBlueprint(Class->GetPathName());
     }
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;

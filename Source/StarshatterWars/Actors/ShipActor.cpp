@@ -355,7 +355,7 @@ void AShipActor::InitializeNativeAuthoredAttachments(FName FighterDef)
             Mount->bLoadoutHardpoint = Definition->bLoadout;
             Mount->AllowedWeaponTypes = Definition->Types;
             if (!Definition->bLoadout && Definition->Types.Num())
-                Mount->ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(Definition->Types[0].ToString()),false);
+                Mount->ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(Definition->Types[0].ToString()));
             Mount->LegacyLocation = Definition->Location;
             Mount->LegacyMuzzle = Definition->Muzzle;
             Mount->LegacyMuzzles = Definition->Muzzles;

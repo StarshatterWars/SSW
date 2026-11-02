@@ -186,6 +186,8 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     //---------------------------------------------------------
     Legacy->name = TCHAR_TO_ANSI(*Row.Name);
     Legacy->group = TCHAR_TO_ANSI(*Row.Group);
+    Legacy->model = TCHAR_TO_ANSI(*Row.Model);
+    Legacy->projectile = TCHAR_TO_ANSI(*Row.Projectile);
 
     //---------------------------------------------------------
     // Flags

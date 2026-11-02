@@ -184,6 +184,7 @@ public:
 	Text              beauty;
 	Text              bitmap;
 	Text              model;
+    Text              projectile;       // Unreal fired-projectile Blueprint reference.
 	Text              turret;
 	Text              turret_base;
 	Text              trail;

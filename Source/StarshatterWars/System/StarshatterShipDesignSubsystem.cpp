@@ -3077,12 +3077,6 @@ void UStarshatterShipDesignSubsystem::ParseWeapon(TermStruct* Val, const char* F
 			GetDefText(WType, PDef, Fn);
 			NewWpn.WeaponType = FString(WType);
 		}
-        else if (Key == "projectile_blueprint")
-        {
-            Text Path;
-            GetDefText(Path, PDef, Fn);
-            NewWpn.ProjectileBlueprint = FString(Path);
-        }
 		else if (Key == "name")
 		{
 			GetDefText(WName, PDef, Fn);
@@ -3369,12 +3363,6 @@ void UStarshatterShipDesignSubsystem::ParseHardPoint(TermStruct* Val, const char
 					*NewHP.SourceFile, MaxTypes);
 			}
 		}
-        else if (Key == "projectile_blueprint")
-        {
-            Text Path;
-            GetDefText(Path, PDef, Fn);
-            NewHP.ProjectileBlueprint = FString(Path);
-        }
 		else if (Key == "name")
 		{
 			GetDefText(WName, PDef, Fn);

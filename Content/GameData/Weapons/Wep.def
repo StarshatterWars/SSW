@@ -2,6 +2,7 @@ WEAPON
 
 primary: {
    name:             "Alpha Cannon"
+   projectile:       "AlphaBolt"
    group:            GUNS
    beauty:           "Alpha_Beauty"
    description:      "The ALPHA CANNON is the high-energy particle weapon in use on most Hegemony fighter craft. Analysts believe that this weapon is nearing end-of-life phase out, but remains in service because it is cheap and reliable.  The Alpha Cannon tends to be low in effective damage and penetration, but makes up for those limitations with a high refire rate."
@@ -35,6 +36,7 @@ primary: {
 
 primary: {
    name:             "Delta Cannon"
+   projectile:       "DeltaBolt"
    group:            GUNS
    beauty:           "Delta_Beauty"
    description:      "The DELTA CANNON is the current generation standard high-energy particle weapon in use on most Alliance fighters.  Notorious for reliablity problems in its early years of service, the Delta Cannon is now considered one of the most potent and effective small energy weapons ever fielded by Force:Space.  The Delta Cannon has improved focus and high bolt velocity that contribute to its accuracy at ranges up to 10 km."
@@ -68,6 +70,7 @@ primary: {
 
 primary: {
    name:             "Heavy Cannon"
+   projectile:       "HeavyBolt"
    group:            GUNS
    beauty:           "Heavy_Beauty"
    description:      "The HEAVY ENERGY CANNON has recently been fitted on the F/A-38D Thunderbolt series of attack fighters.  The Heavy is a slimmed down version of the retired 'Chain Lightning' cannon used on early model LCAs for mine sweeping and antiship warfare.  This is the first time a weapon of this caliber has been fitted on a single seat fighter.  The Heavy is too slow and unweildy to be effective against maneuvering fighters, but the high damage potential makes this weapon a first-rate ship killer."
@@ -101,6 +104,7 @@ primary: {
 
 primary: {
    name:             "Fighter Turret"
+   projectile:       "FighterBolt"
    group:            TURRET
    beauty:           "Turret1_Beauty"
    description:      "This automated FIGHTER TURRET provides rear quarter protection for the F/A-38D Thunderbolt series of attack fighters.  The turret is tied into the Alliance sensor network and will automatically engage any threat that comes within its range.  Even though it is not the most accurate platform in the fleet, the Fighter Turret is an effective deterrent to any fighters attempting a tail chase on the 'Bolt."
@@ -139,6 +143,7 @@ primary: {
 
 primary: {
    name:             "LCA Turret"
+   projectile:       "LCABolt"
    group:            TURRET
    secret:           true
 
@@ -607,6 +612,7 @@ drone: {
 
 primary: {
    name:             "Blockade Cannon"
+   projectile:       "BlockadeBolt"
    group:            PDB
    beauty:           "Blockade_Beauty.pcx"
    description:      "The BLOCKADE CANNON is an energy bolt turret that is usually mounted on space mines.  The Blockade Cannon is designed to engage civilian shipping, but it is also quite effective against fighter and attack craft."
@@ -649,6 +655,7 @@ primary: {
 
 primary: {
    name:             "Vulcan Cannon"
+   projectile:       "VulcanBolt"
    group:            VULCAN
    beauty:           "Vulcan_Beauty.pcx"
    description:      "The VULCAN CANNON is a rapid-fire energy bolt weapon that is generally deployed on LCA-class attack craft.  The Vulcan can engage targets ranging from small fighters to medium-size starships and ground units."
@@ -713,6 +720,7 @@ primary: {
 
 primary: {
    name:             "Phalanx Cannon"
+   projectile:       "PhalanxBolt"
    group:            PDB
    beauty:           "Phalanx_Beauty.pcx"
    description:      "The PHALANX CANNON is the standard point defense battery (PDB) for smaller Force:Space starships.  Each Phalanx mount is a freely rotating ball turret with two alternate firing barrels.  The Phalanx is deadly accurate against fighter and combat drone targets at short ranges."
@@ -753,6 +761,7 @@ primary: {
 
 primary: {
    name:             "Viking Cannon"
+   projectile:       "VikingBolt"
    group:            PDB
    beauty:           "Viking_Beauty.pcx"
    description:      "The VIKING CANNON is the standard point defense battery (PDB) for many military stations.  Each Viking mount is a freely rotating cylindrical turret with two alternate firing barrels.  The Viking is quite accurate and delivers a devastating punch against against fighter targets at short to medium ranges."
@@ -793,6 +802,7 @@ primary: {
 
 primary: {
    name:             "Ursa Cannon"
+   projectile:       "UrsaBolt"
    group:            PDB
    beauty:           "Ursa_Beauty.pcx"
    description:      "The URSA CANNON is an older point defense battery (PDB) system in use on some Hegemony and Independent Worlds frigate-class starships.  The Ursa Cannon has only half the rate of fire of the Alliance's Phalanx system, but its high-speed bolts make in an effective offensive and defensive gun."
@@ -830,6 +840,7 @@ primary: {
 
 primary: {
    name:             "Orca Cannon"
+   projectile:       "OrcaBolt"
    group:            PDB
    beauty:           "Orca_Beauty.pcx"
    description:      "The ORCA CANNON is the standard point defense battery (PDB) for Hegemony and Independent Worlds starships.  Each Orca mount is an articulated deck platform turret with two alternate firing barrels.  The Orca is deadly accurate against fighter and combat drone targets at short ranges, but lacks the speed and rate of fire of the Alliance Phalanx PDB system."
@@ -869,6 +880,7 @@ primary: {
 
 primary: {
    name:             "Orca Inverted"
+   projectile:       "OrcaInvertedBolt"
    group:            PDB
    beauty:           "Orca_Beauty.pcx"
    target_type:      0x000fffff
@@ -907,6 +919,7 @@ primary: {
 
 primary: {
    name:             "Orca 2 Cannon"
+   projectile:       "Orca2Bolt"
    group:            PDB
    beauty:           "Orca_Beauty.pcx"
    description:      "The ORCA 2 CANNON is the big brother of the standard Orca PDB.  Outwardly similar to the standard Orca, this heavy duty gun is mainly used defending Hegemony stations.  Each Orca 2 mount is an articulated deck platform turret with two alternate firing barrels.  Slower and less accurate than the standard Orca mount, this high-powered weapon packs quite a wallop when it does manage to hit the target."
@@ -947,6 +960,7 @@ primary: {
 
 primary: {
    name:             "Orca 2 Inverted"
+   projectile:       "Orca2InvertedBolt"
    group:            PDB
    beauty:           "Orca_Beauty.pcx"
    target_type:      0x000fffff
@@ -986,6 +1000,7 @@ primary: {
 
 primary: {
    name:             "Vanguard"
+   projectile:       "VanguardBolt"
    group:            GUNS
    beauty:           "Vanguard_Beauty.pcx"
    description:      "The VANGUARD CANNON is the standard point defense battery (PDB) for Force:Space cruisers and carriers.  Each Vanguard mount is an articulated deck platform turret with two alternate firing barrels.  The Vanguard is more powerful than the Phalanx system used on smaller starships, but not quite as accurate."
@@ -1028,6 +1043,7 @@ primary: {
 
 primary: {
    name:             "Helicon"
+   projectile:       "HeliconBolt"
    group:             PDB
    beauty:           "Helicon_Beauty.pcx"
 
@@ -1074,6 +1090,7 @@ primary: {
 
 primary: {
    name:             "Light-PDB"
+   projectile:       "LightPDBBolt"
    group:            PDB
    secret:           true
 
@@ -1120,6 +1137,7 @@ primary: {
 
 primary: {
    name:             "Rail-5"
+   projectile:       "Rail5Bolt"
    group:             RAIL
    secret:           true
 
@@ -1168,6 +1186,7 @@ primary: {
 
 primary: {
    name:             "Rail-12"
+   projectile:       "Rail12Bolt"
    group:             RAIL
    beauty:           "Rail12_Beauty.pcx"
 
@@ -1218,6 +1237,7 @@ primary: {
 
 primary: {
    name:             "Rail-12 Inverted"
+   projectile:       "Rail12InvertedBolt"
    group:             RAIL
 
    target_type:      0x000fffff
@@ -1266,6 +1286,7 @@ primary: {
 
 primary: {
    name:             "Rail-15"
+   projectile:       "Rail15Bolt"
    group:             RAIL
    beauty:           "Rail15_Beauty.pcx"
 
@@ -1319,6 +1340,7 @@ primary: {
 
 primary: {
    name:             "Mag-18"
+   projectile:       "Mag18Bolt"
    group:             MAG
    beauty:           "Mag18_Beauty.pcx"
 
@@ -1702,6 +1724,7 @@ beam: {
 
 primary: {
    name:             "AAA Cannon"
+   projectile:       "AAABolt"
    group:            AAA
    beauty:           "Ground/AAA2_Beauty.pcx"
    description:      "The ANTI AIRCRAFT ARTILLERY (AAA) CANNON is an autonomous ground-based energy bolt system optimized for area defense against hostile airborne targets.  This variant has two alternate firing barrels mounted on an upright turret with built-in multifrequency sensor.  It can engage fighters and attack craft at ranges up to 50 km."
@@ -1742,6 +1765,7 @@ primary: {
 
 primary: {
    name:             "Quad AAA"
+   projectile:       "QuadAAABolt"
    group:            AAA
    beauty:           "Ground/AAA4_Beauty.pcx"
    description:      "The ANTI AIRCRAFT ARTILLERY (AAA) CANNON is an autonomous ground-based energy bolt system optimized for area defense against hostile airborne targets.  This variant has four sequenced barrels for increased firing speed and coverage.  It can engage fighters and attack craft at ranges up to 50 km."

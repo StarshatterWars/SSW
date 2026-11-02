@@ -373,6 +373,7 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 else if (Key == "turret") { Text T = ""; GetDefText(T, PDef, fn); W.Turret = FString(T); }
                 else if (Key == "turret_base") { Text T = ""; GetDefText(T, PDef, fn); W.TurretBase = FString(T); }
                 else if (Key == "model") { Text T = ""; GetDefText(T, PDef, fn); W.Model = FString(T); }
+                else if (Key == "projectile") { Text T = ""; GetDefText(T, PDef, fn); W.Projectile = FString(T); }
                 else if (Key == "trail") { Text T = ""; GetDefText(T, PDef, fn); W.Trail = FString(T); }
                 else if (Key == "flash") { Text T = ""; GetDefText(T, PDef, fn); W.Flash = FString(T); }
                 else if (Key == "flare") { Text T = ""; GetDefText(T, PDef, fn); W.Flare = FString(T); }

@@ -26,11 +26,10 @@ public:
     /** Fired projectile, separate from the carried store or gun-mount actor. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon Mount|Projectile")
     TSoftClassPtr<AActor> ProjectileBlueprint;
-    void ConfigureProjectileBlueprint(const FString& DefinitionPath, bool bFromDefinition=true);
+    void ConfigureProjectileBlueprint(const FString& DefaultPath);
     UClass* ResolveProjectileClass() const;
 private:
     UPROPERTY() FSoftObjectPath AutoProjectileBlueprint;
-    UPROPERTY() FString DefinitionProjectileBlueprint;
 public:
     // Non-UObject simulation pointer; never owned here.
     Weapon* RuntimeWeapon=nullptr;

@@ -6,6 +6,29 @@
 
 namespace WeaponBlueprintResolver
 {
+    inline FString ProjectileClassPath(const FString& Reference)
+    {
+        FString Path=FPackageName::ExportTextPathToObjectPath(Reference.TrimStartAndEnd());
+        if (Path.IsEmpty()) return FString();
+        if (!Path.StartsWith(TEXT("/")))
+        {
+            FString Name=Path;
+            Name.RemoveFromStart(TEXT("BP_")); Name.RemoveFromEnd(TEXT("_C"));
+            const FString Folder=Name.EndsWith(TEXT("Bolt"))
+                ? TEXT("/Game/Models/Weapons/Bolt/")+Name.LeftChop(4)
+                : TEXT("/Game/Models/Weapons/")+Name;
+            Path=Folder+TEXT("/BP_")+Name;
+        }
+        if (!Path.Contains(TEXT("."))) Path+=TEXT(".")+FPaths::GetBaseFilename(Path);
+        if (!Path.EndsWith(TEXT("_C"))) Path+=TEXT("_C");
+        return Path;
+    }
+    inline UClass* ResolveProjectile(const FString& Reference)
+    {
+        const FString Path=ProjectileClassPath(Reference);
+        return Path.IsEmpty()?nullptr:LoadClass<AActor>(nullptr,*Path);
+    }
+
     inline UClass* Resolve(const FString& Model, const FString& WeaponName)
     {
         for (const FString& Source : {Model, WeaponName})

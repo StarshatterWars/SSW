@@ -83,6 +83,7 @@ WeaponDesign::WeaponDesign()
 	max_range = 0.0f;
 	max_track = 0.0f;
 
+	projectile = "";
 	graphic_type = 0;
 	width = 0;
 	length = 0;
@@ -322,6 +323,7 @@ WeaponDesign::LoadDesign(const char* path, const char* filename, bool mod)
 								else if (defname == "turret")               GetDefText(design->turret, pdef, filename);
 								else if (defname == "turret_base")          GetDefText(design->turret_base, pdef, filename);
 								else if (defname == "model")                GetDefText(design->model, pdef, filename);
+                                else if (defname == "projectile")           GetDefText(design->projectile, pdef, filename);
 								else if (defname == "trail")                GetDefText(design->trail, pdef, filename);
 								else if (defname == "flash")                GetDefText(design->flash, pdef, filename);
 								else if (defname == "flare")                GetDefText(design->flare, pdef, filename);

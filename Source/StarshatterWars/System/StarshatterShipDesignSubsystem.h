@@ -111,7 +111,6 @@ public:
 
 private:
     friend class FNativeHullSkinTest;
-    friend class FProjectileDefinitionTest;
     friend class FZodiacPropulsionTest;
     friend class FRecoveryNativeScaleTest;
 	// ---------- current-ship scratch ----------

@@ -7,6 +7,8 @@
 #include "WeaponDesign.h"
 #include "WeaponGroup.h"
 #include "BoltWeaponActor.h"
+#include "WeaponBlueprintResolver.h"
+#include "WeaponDesignRegistry.h"
 #include "UObject/UObjectThreadContext.h"
 
 namespace
@@ -67,8 +69,10 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         Mount->StationName = FName(*Src.Name);
         Mount->bLoadoutHardpoint = false;
         Mount->AllowedWeaponTypes = {FName(*Src.WeaponType)};
-        Mount->ConfigureProjectileBlueprint(Src.ProjectileBlueprint.IsEmpty()
-            ? ABoltWeaponActor::BlueprintPathForWeapon(Src.WeaponType) : Src.ProjectileBlueprint);
+        const WeaponDesign* ProjectileDesign=WeaponDesignRegistry::FindLegacy(Src.WeaponType);
+        Mount->ConfigureProjectileBlueprint(ProjectileDesign && ProjectileDesign->projectile.length()
+            ? WeaponBlueprintResolver::ProjectileClassPath(ANSI_TO_TCHAR(ProjectileDesign->projectile.data()))
+            : ABoltWeaponActor::BlueprintPathForWeapon(Src.WeaponType));
         Mount->LegacyLocation = Src.Location;
         Mount->LegacyMuzzles = Src.Muzzles;
         Mount->LegacyMuzzle = Src.Muzzles.Num() ? Src.Muzzles[0] : Src.Location;
@@ -82,7 +86,6 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         if (!Mount) continue;
         Mount->StationName = FName(*(Hp.Name.IsEmpty() ? Hp.Abbrev : Hp.Name));
         Mount->bLoadoutHardpoint = true;
-        Mount->ConfigureProjectileBlueprint(Hp.ProjectileBlueprint);
         Mount->AllowedWeaponTypes.Reset();
         for (const FString& Type : Hp.AllowedWeaponTypes)
             Mount->AllowedWeaponTypes.Add(FName(*Type));

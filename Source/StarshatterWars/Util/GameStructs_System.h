@@ -449,6 +449,9 @@ struct FWeaponDesign : public FTableRowBase
 	FString Model;         // shot model path
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Projectile;    // Fired projectile BP; independent of carried model.
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString Trail;         // trail texture
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -1214,7 +1217,6 @@ USTRUCT(BlueprintType)
 struct FShipWeapon
 {
 	GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Presentation") FString ProjectileBlueprint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString WeaponType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FString Name;
@@ -1253,7 +1255,6 @@ USTRUCT(BlueprintType)
 struct FShipHardPoint
 {
 	GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Presentation") FString ProjectileBlueprint;
 
 	// Allowed weapon types for this hardpoint (legacy: wtypes[8])
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
