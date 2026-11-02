@@ -6,7 +6,8 @@
 
 class UNiagaraComponent;
 class UNiagaraSystem;
-class USphereComponent;
+class UStaticMeshComponent;
+class UMaterialInterface;
 
 /**
  * Presentation for graphic_type 3 projectiles, including energy bolts and railgun rounds.
@@ -30,6 +31,10 @@ public:
 
     /** Native presentation class for an exact Wep.def name, or the generic bolt fallback. */
     static TSubclassOf<ABoltWeaponActor> ClassForWeapon(const FString& WeaponName);
+    static TSubclassOf<ABoltWeaponActor> BlueprintClassForWeapon(const FString& WeaponName);
+
+    /** Activate a world-space visual whose movement and lifetime belong to SimShot. */
+    void BeginSimulationFlight();
 
     /** Spawn a bolt projectile. Speed is cm/s. Life is seconds. */
     UFUNCTION(BlueprintCallable, Category = "Bolt", meta = (WorldContext = "WorldContextObject"))
@@ -48,6 +53,9 @@ public:
     void OnBoltExpired(FVector Location);
 
 protected:
+    virtual void OnConstruction(const FTransform& Transform) override;
+    void ApplyPresentationDefaults();
+    void ActivateVisuals();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
@@ -56,8 +64,22 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt")
     TObjectPtr<USceneComponent> Root;
 
+    /** Small visible projectile core; never participates in damage collision. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt")
+    TObjectPtr<UStaticMeshComponent> ProjectileMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt")
+    TObjectPtr<UNiagaraComponent> CoreFX;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt")
     TObjectPtr<UNiagaraComponent> TrailFX;
+
+    /** Per-weapon MI, applied to the inherited sphere in editor and game. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bolt")
+    TObjectPtr<UMaterialInterface> BoltMaterial;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bolt")
+    TObjectPtr<UNiagaraSystem> CoreSystem;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bolt")
     TObjectPtr<UNiagaraSystem> BoltSystem;

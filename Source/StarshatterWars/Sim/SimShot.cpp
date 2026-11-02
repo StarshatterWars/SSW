@@ -35,7 +35,6 @@
 #include "Game.h"
 #include "Bolt.h"
 #include "BeamWeaponActor.h"
-#include "BoltWeaponActor.h"
 #include "Sprite.h"
 #include "Solid.h"
 #include "SimLight.h"
@@ -131,23 +130,9 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 	if (rep)
 		rep->MoveTo(pos);
 
-	// Graphic type 3 uses bolt presentation for energy and solid projectiles.
-	if (!beam && design->graphic_type == Graphic::BOLT)
-	{
-		static TSubclassOf<ABoltWeaponActor> BoltClass = nullptr;
-		if (!BoltClass)
-		{
-			BoltClass = LoadClass<ABoltWeaponActor>(nullptr, TEXT("/Game/Weapons/BP_Bolt.BP_Bolt_C"));
-			if (!BoltClass)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[SimShot] BP_Bolt not found, using ABoltWeaponActor"));
-				BoltClass = ABoltWeaponActor::StaticClass();
-			}
-		}
-		const float Speed = design->speed > 0 ? design->speed : 15000.0f;
-		const float Life  = design->life  > 0 ? design->life  : 2.0f;
-		ABoltWeaponActor::SpawnBolt(nullptr, BoltClass, pos, shot_cam.vpn(), Speed, Life, nullptr);
-	}
+    // Unreal bolt presentation is owned by the runtime subsystem, using this
+    // shot's converted position, impact and lifetime. Do not spawn an independent
+    // moving actor here in legacy simulation coordinates.
 
 	light = 0;
 

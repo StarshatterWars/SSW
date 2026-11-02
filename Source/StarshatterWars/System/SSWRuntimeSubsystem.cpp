@@ -17,6 +17,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "BeamWeaponActor.h"
+#include "BoltWeaponActor.h"
+#include "Graphic.h"
 
 #include "Math/RandomStream.h"
 #include "SimElement.h"
@@ -1549,6 +1551,27 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 }
                 if(Beam) Beam->SetBeamPoints(Start,Position);
                 else DrawDebugLine(World,Start,Position,FColor::Cyan,false,0.0f,0,2.0f);
+            }
+            else if (Shot->GetDesign() && Shot->GetDesign()->graphic_type == Graphic::BOLT)
+            {
+                Alive.Add(Shot);
+                ABoltWeaponActor* Bolt = Cast<ABoltWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());
+                const FVector Direction = ConvertLegacyShipLocationToUE(Shot->GetVelocity()).GetSafeNormal();
+                if (!Bolt && ProjectileVisuals.Num() < 512)
+                {
+                    const auto BoltClass = ABoltWeaponActor::BlueprintClassForWeapon(
+                        ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
+                    FActorSpawnParameters Params;
+                    Params.ObjectFlags |= RF_Transient;
+                    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                    Bolt = World->SpawnActor<ABoltWeaponActor>(BoltClass, Position, Direction.Rotation(), Params);
+                    if (Bolt)
+                    {
+                        Bolt->BeginSimulationFlight();
+                        ProjectileVisuals.Add(Shot, Bolt);
+                    }
+                }
+                if (Bolt) Bolt->SetActorLocationAndRotation(Position, Direction.Rotation());
             }
             else{
                 DrawDebugLine(World,Start,Position,FColor::Yellow,false,0.0f,0,2.0f);
