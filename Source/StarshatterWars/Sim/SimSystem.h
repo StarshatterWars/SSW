@@ -91,6 +91,7 @@ public:
 	virtual void      Mount(const SimSystem& system);
 
 	FVector           GetMountLocation()  const { return mount_loc; }
+	FVector           GetMountRelativeLocation() const { return mount_rel; }
 	double            GetRadius()         const { return radius; }
 	double            GetHullProtection() const { return hull_factor; }
 

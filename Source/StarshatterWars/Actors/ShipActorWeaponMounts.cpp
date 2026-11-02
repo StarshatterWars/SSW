@@ -34,9 +34,31 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
     const FShipDesign* Design = ShipDesignRegistry::Find(ShipName);
     if (!Design) return;
     NativeWeaponHardpoints = AuthoredWeaponPointComponents;
+    // Older visual Blueprints derive from the generic ship/fighter class and
+    // have no native stations. Supply missing presentation mounts from the DEF;
+    // never change the simulation loadout or replace authored mount overrides.
+    auto EnsureMount = [&](int32 MountIndex, const FVector& Location, double Azimuth, double Elevation)
+    {
+        if (AuthoredWeaponPointComponents.IsValidIndex(MountIndex)
+            && Cast<UShipWeaponMountComponent>(AuthoredWeaponPointComponents[MountIndex].Get())) return;
+        if (InWeaponMountConstructor() || !GetWorld()) return;
+        UShipWeaponMountComponent* Mount = NewObject<UShipWeaponMountComponent>(this);
+        AddInstanceComponent(Mount);
+        Mount->SetMobility(EComponentMobility::Movable);
+        Mount->SetupAttachment(PointRoot);
+        const double Scale = FMath::Abs(Design->Scale) > SMALL_NUMBER ? Design->Scale : 1.0;
+        Mount->SetRelativeLocation(WeaponMountLocation(Location / Scale));
+        Mount->SetRelativeRotation(WeaponMountRotation(Azimuth, Elevation));
+        Mount->RegisterComponent();
+        if (AuthoredWeaponPointComponents.Num() <= MountIndex)
+            AuthoredWeaponPointComponents.SetNum(MountIndex + 1);
+        AuthoredWeaponPointComponents[MountIndex] = Mount;
+        NativeWeaponHardpoints = AuthoredWeaponPointComponents;
+    };
     int32 Index = 0;
     for (const FShipWeapon& Src : Design->Weapon)
     {
+        EnsureMount(Index, Src.Location, Src.AzimuthRadians, Src.ElevationRadians);
         UShipWeaponMountComponent* Mount = AuthoredWeaponPointComponents.IsValidIndex(Index)
             ? Cast<UShipWeaponMountComponent>(AuthoredWeaponPointComponents[Index].Get()) : nullptr;
         ++Index;
@@ -50,11 +72,12 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
     }
     for (const FShipHardPoint& Hp : Design->Hardpoint)
     {
+        EnsureMount(Index, Hp.Location, Hp.AzimuthRadians, Hp.ElevationRadians);
         UShipWeaponMountComponent* Mount = AuthoredWeaponPointComponents.IsValidIndex(Index)
             ? Cast<UShipWeaponMountComponent>(AuthoredWeaponPointComponents[Index].Get()) : nullptr;
         ++Index;
         if (!Mount) continue;
-        Mount->StationName = FName(*Hp.Name);
+        Mount->StationName = FName(*(Hp.Name.IsEmpty() ? Hp.Abbrev : Hp.Name));
         Mount->bLoadoutHardpoint = true;
         Mount->AllowedWeaponTypes.Reset();
         for (const FString& Type : Hp.AllowedWeaponTypes)
@@ -95,8 +118,36 @@ void AShipActor::BindRuntimeWeaponsToMounts()
 
         UShipWeaponMountComponent* Match=nullptr;
 
+        // The runtime weapon retains its hardpoint's legacy mount location,
+        // including definitions whose station abbreviation is omitted.
+        if (WD && !WD->primary)
+        {
+            for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
+            {
+                auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
+                if (Mount && !Mount->RuntimeWeapon && Mount->bLoadoutHardpoint
+                    && Mount->LegacyLocation.Equals(W->GetMountRelativeLocation(), 0.001)
+                    && Mount->AllowedWeaponTypes.Contains(WeaponType))
+                { Match = Mount; break; }
+            }
+        }
+
+        // HardPoint::CreateWeapon retains the station abbreviation. Group
+        // iteration order can differ from station order for mixed loadouts.
+        if (!Match && WD && !WD->primary && W->Abbreviation() && W->Abbreviation()[0])
+        {
+            const FName Station(ANSI_TO_TCHAR(W->Abbreviation()));
+            for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
+            {
+                auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
+                if (Mount && !Mount->RuntimeWeapon && Mount->bLoadoutHardpoint
+                    && Mount->StationName == Station && Mount->AllowedWeaponTypes.Contains(WeaponType))
+                { Match = Mount; break; }
+            }
+        }
+
         // Installed weapons: exact station/name match first.
-        if (!WeaponName.IsNone())
+        if (!Match && !WeaponName.IsNone())
         {
             for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
             {
