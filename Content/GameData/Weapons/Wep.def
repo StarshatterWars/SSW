@@ -127,7 +127,7 @@ primary: {
    aim_az_max:       0.75
    aim_el_max:       0.50
 
-   turret:           "turret.mag"
+   turret:           "turret"
    scale:            0.22
 
    graphic_type:     3	// bolt
@@ -167,8 +167,8 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:       0.00
 
-   turret:           "Alliance/LCATurretGuns.mag"
-   turret_base:      "Alliance/LCaTurretBase.mag"
+   turret:           "LCATurretGuns"
+   turret_base:      "LCaTurretBase"
    scale:            0.12
 
    graphic_type:     3	// bolt
@@ -506,7 +506,7 @@ missile: {
    pitch_rate:       0.5
    yaw_rate:         0.5
 
-   turret:           "rocket_launcher.mag"
+   turret:           "rocket_launcher"
    scale:            0.15
    eject:            (0, 0, 300)
 
@@ -514,7 +514,7 @@ missile: {
    scale:            0.15
    light:            200
    model:            "rocket"
-   trail:            "smoke.pcx"
+   trail:            "smoke"
    trail_width:      1
    trail_dim:        8
    flare:            "drive.pcx"
@@ -637,15 +637,15 @@ primary: {
    aim_el_max:       1.00
    slew_rate:        0.10 // ~5 degrees / second
 
-   turret:           "mine_guns.mag"
-   turret_base:      "mine_base.mag"
+   turret:           "mine_guns"
+   turret_base:      "mine_base"
    scale:            1
 
    graphic_type:     3	// bolt
    width:            8
    length:           100
    bitmap:           "shot0"
-   flash:            "flash0.pcx"
+   flash:            "flash0"
    flash_scale:      1.0
    sound:            "blockade_cannon"
    sound_min_dist:   3e3
@@ -743,7 +743,7 @@ primary: {
    aim_az_max:       1.00
    aim_el_max:       0.50
 
-   turret:           "Alliance/BallTurret2opt.mag"
+   turret:           "BallTurret2opt"
    scale:            0.3
    muzzle:           ( 16,   0,  110),
    muzzle:           (-16,   0,  110),
@@ -752,7 +752,7 @@ primary: {
    width:            20
    length:           400
    bitmap:           "shot2"
-   flash:            "flash2.pcx"
+   flash:            "flash2"
    flash_scale:      1
    sound:            "shot3"
    sound_min_dist:   2e3
@@ -784,7 +784,7 @@ primary: {
    aim_az_max:       1.00
    aim_el_max:       0.50
 
-   turret:           "Alliance/BallTurret1opt.mag"
+   turret:           "BallTurret1opt"
    scale:            5
    muzzle:           ( 4, 0, 65)
    muzzle:           (-4, 0, 65)
@@ -824,14 +824,14 @@ primary: {
    aim_az_max:       0.05
    aim_el_max:       0.70
 
-   turret:           "Dantari/Ursa.mag"
+   turret:           "Ursa"
    scale:            2
 
    graphic_type:     3	// bolt
    width:            20
    length:           150
    bitmap:           "shot2"
-   flash:            "flash2.pcx"
+   flash:            "flash2"
    flash_scale:      1
    sound:            "shot3"
    sound_min_dist:   2e3
@@ -864,14 +864,14 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "Dantari/Rail-12.mag"
+   turret:           "Rail-12"
    scale:            2
 
    graphic_type:     3	// bolt
    width:            10
    length:           120
    bitmap:           "shot0"
-   flash:            "Orca/flash0.pcx"
+   flash:            "flash0"
    flash_scale:      1.5
    sound:            "Shot2"
    sound_min_dist:   3e3
@@ -903,14 +903,14 @@ primary: {
    aim_el_max:       0.10
    aim_el_min:      -0.80
 
-   turret:           "Dantari/Rail-12-Inverted.mag"
+   turret:           "Rail-12-Inverted"
    scale:            2
 
    graphic_type:     3	// bolt
    width:            10
    length:           120
    bitmap:           "shot0"
-   flash:            "Orca/flash0.pcx"
+   flash:            "flash0"
    flash_scale:      1.5
    sound:            "Shot2"
    sound_min_dist:   3e3
@@ -943,8 +943,8 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "Orca/t2_guns.mag"
-   turret_base:      "Orca/t2_base.mag"
+   turret:           "t2_guns"
+   turret_base:      "t2_base"
    scale:            1
 
    graphic_type:     3	// bolt
@@ -983,15 +983,15 @@ primary: {
    aim_el_max:       0.10
    aim_el_min:      -0.80
 
-   turret:           "Orca/t2_guns.mag"
-   turret_base:      "Orca/t2_base_inv.mag"
+   turret:           "t2_guns"
+   turret_base:      "t2_base_inv"
    scale:            1
 
    graphic_type:     3	// bolt
    width:            15
    length:           150
    bitmap:           "shot0"
-   flash:            "Orca/flash0.pcx"
+   flash:            "flash0"
    flash_scale:      1.5
    sound:            "Shot2"
    sound_min_dist:   3e3
@@ -1024,8 +1024,8 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "Alliance/Guns1opt.mag"
-   turret_base:      "Alliance/Base1opt.mag"
+   turret:           "Guns1opt"
+   turret_base:      "Base1opt"
    scale:            1.2
    muzzle:           ( 7,   0,  60),
    muzzle:           (-7,   0,  60),
@@ -1033,8 +1033,8 @@ primary: {
    graphic_type:     3	// bolt
    width:            3
    length:           60
-   bitmap:           "shot1.pcx"
-   flash:            "flash1.pcx"
+   bitmap:           "shot1"
+   flash:            "flash1"
    flash_scale:      1
    sound:            "Shot2"
    sound_min_dist:   2e3
@@ -1045,7 +1045,7 @@ primary: {
    name:             "Helicon"
    projectile:       "HeliconBolt"
    group:             PDB
-   beauty:           "Helicon_Beauty.pcx"
+   beauty:           "Helicon_Beauty"
 
    target_type:      0x000fffff
    value:            1
@@ -1071,7 +1071,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1
-   turret:          "Marakan/28MMGAUSSGUN.MAG"
+   turret:          "28MMGAUSSGUN"
    muzzle:           (0, 10, 131)
 
    width:            4
@@ -1079,8 +1079,8 @@ primary: {
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Gauss_Bolt.jpg",
-   flash:	     "Marakan/Gauss_Flash.jpg",
+   bitmap:   	     "Gauss_Bolt",
+   flash:	     "Gauss_Flash",
    flash_scale:	     0.2,
 
    sound:            "Gauss_Sound",
@@ -1118,15 +1118,15 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1.5,
-   turret:          "Marakan/SmallGun.mag",
+   turret:          "SmallGun",
 
    width:            4
    length:           45
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Gauss_Bolt.jpg",
-   flash:	     "Marakan/Gauss_Flash.jpg",
+   bitmap:   	     "Gauss_Bolt",
+   flash:			"Gauss_Flash",
    flash_scale:	     0.2,
 
    sound:            "Gauss_Sound",
@@ -1165,7 +1165,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            2,
-   turret:          "Marakan/Rail-12.mag",
+   turret:          "Rail-12",
    muzzle:             ( 4, 11, 75),
    muzzle:             (-4, 11, 75),
 
@@ -1174,8 +1174,8 @@ primary: {
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Rail_Bolt.jpg",
-   flash:	     "Marakan/Rail_Flash.jpg",
+   bitmap:   	     "Rail_Bolt",
+   flash:			"Rail_Flash",
    flash_scale:	     0.3,
 
    sound:            "Rail_Sound",
@@ -1188,7 +1188,7 @@ primary: {
    name:             "Rail-12"
    projectile:       "Rail12Bolt"
    group:             RAIL
-   beauty:           "Rail12_Beauty.pcx"
+   beauty:           "Rail12_Beauty"
 
    target_type:      0x000fffff
    value:            1
@@ -1214,7 +1214,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
-   turret:          "Marakan/Rail-12.mag",
+   turret:          "Rail-12",
    muzzle:           ( 4, 11, 75),
    muzzle:           (-4, 11, 75),
 
@@ -1223,10 +1223,10 @@ primary: {
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Rail_Bolt.jpg",
-   flash:	     "Marakan/Rail_Flash.jpg",
+   bitmap:   	     "Rail_Bolt",
+   flash:			"Rail_Flash",
    flash_scale:	     1.5,
-   flare:            "Marakan/Rail_Flare.jpg",
+   flare:            "Rail_Flare",
    flare_scale:      0.03,
 
    sound:            "Rail_Sound",
@@ -1264,7 +1264,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
-   turret:          "Marakan/Rail-12-Inverted.mag",
+   turret:          "Rail-12-Inverted",
    muzzle:           ( 4, -11, 75),
    muzzle:           (-4, -11, 75),
 
@@ -1273,10 +1273,10 @@ primary: {
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Rail_Bolt.jpg",
-   flash:	     "Marakan/Rail_Flash.jpg",
+   bitmap:   	     "Rail_Bolt",
+   flash:			"Rail_Flash",
    flash_scale:	     1.5,
-   flare:            "Marakan/Rail_Flare.jpg",
+   flare:            "Rail_Flare",
    flare_scale:      0.03,
 
    sound:            "Rail_Sound",
@@ -1288,7 +1288,7 @@ primary: {
    name:             "Rail-15"
    projectile:       "Rail15Bolt"
    group:             RAIL
-   beauty:           "Rail15_Beauty.pcx"
+   beauty:           "Rail15_Beauty"
 
    target_type:      0x0000fff0
    value:            5
@@ -1321,15 +1321,15 @@ primary: {
    graphic_type:     3
    scale:            4,
 
-   turret:          "Marakan/DUEL15INRAILGUN.MAG",
+   turret:          "DUEL15INRAILGUN",
 
    width:            18,
    length:           170,
 
    light:            200,
    light_color:      (114, 45, 0),
-   bitmap:   	     "Marakan/Rail_Bolt.jpg",
-   flash:	     "Marakan/Rail_Flash.jpg",
+   bitmap:   	     "Rail_Bolt",
+   flash:			"Rail_Flash",
    flash_scale:	     1.9,
 
    sound:            "Rail_Sound",
@@ -1342,7 +1342,7 @@ primary: {
    name:             "Mag-18"
    projectile:       "Mag18Bolt"
    group:             MAG
-   beauty:           "Mag18_Beauty.pcx"
+   beauty:           "Mag18_Beauty"
 
    target_type:      0x0000fff0
    value:            5
@@ -1374,7 +1374,7 @@ primary: {
 
    scale:            4,
 
-   turret:          "Marakan/18INMAGGUN.MAG",
+   turret:          "18INMAGGUN",
    muzzle:             (0, 12, 81),
 
    width:            50,
@@ -1383,12 +1383,12 @@ primary: {
 
    light:            200,
    light_color:      (100, 10, 0),
-   bitmap:   	     "Marakan/Mag_Bolt.jpg",
-   flash:	     "Marakan/Mag_Flash.jpg",
+   bitmap:   	     "Mag_Bolt",
+   flash:			"Mag_Flash",
    flash_scale:	     3,
-   flare:            "Marakan/Mag_Flare.jpg",
+   flare:            "Mag_Flare",
    flare_scale:      0.8,
-   trail:            "Marakan/Mag_Trail.jpg",
+   trail:            "Mag_Trail",
    trail_width:       6,
    sound:            "Mag_Sound",
    sound_min_dist:   3e3,
@@ -1399,7 +1399,7 @@ primary: {
 drone: {
    name:             "Rostov"
    group:             ROSTOV
-   beauty:           "Rostov_Beauty.pcx"
+   beauty:           "Rostov_Beauty"
    target_type:       0x0000fff0
    value:             5
 
@@ -1432,7 +1432,7 @@ drone: {
    recharge_rate:   	  10,
   
    scale:            4,
-   turret:          "Marakan/Rostov-L.MAG",
+   turret:          "Rostov-L",
 
    syncro:	        false,
    self_aiming:         true,
@@ -1452,12 +1452,12 @@ drone: {
    light:            200,
    light_color:      (160, 100, 00),
 
-   model:   	     "Marakan/MISSILE.mag",
-   flash:	     "Marakan/Rostov_Flash.jpg",
+   model:   	     "MISSILE",
+   flash:			"Rostov_Flash",
    flash_scale:	     2,
-   flare:            "Marakan/Rostov_Flare.jpg",
+   flare:            "Rostov_Flare",
    flare_scale:      1.5,
-   trail:            "Marakan/Rostov_Trail.jpg",
+   trail:            "Rostov_Trail",
    trail_width:       20,
 
    sound:            "Rostov_Sound",
@@ -1501,7 +1501,7 @@ drone: {
    recharge_rate:   	  10,
   
    scale:            4,
-   turret:          "Marakan/Rostov-R.MAG",
+   turret:          "Rostov-R",
 
    syncro:	        false,
    self_aiming:         true,
@@ -1521,12 +1521,12 @@ drone: {
    light:            200,
    light_color:      (160, 100, 00),
 
-   model:   	     "Marakan/MISSILE.mag",
-   flash:	     "Marakan/Rostov_Flash.jpg",
+   model:   	     "MISSILE",
+   flash:			"Rostov_Flash",
    flash_scale:	     2,
-   flare:            "Marakan/Rostov_Flare.jpg",
+   flare:            "Rostov_Flare",
    flare_scale:      1.5,
-   trail:            "Marakan/Rostov_Trail.jpg",
+   trail:            "Rostov_Trail",
    trail_width:       20,
 
    sound:            "Rostov_Sound",
@@ -1561,7 +1561,7 @@ primary: {
 
    graphic_type:     2	// sprite
    scale:            1
-   bitmap:           "shot7.pcx"
+   bitmap:           "shot7"
    sound:            "shot4"
    sound_min_dist:   2e3
    sound_max_dist:   20e3
@@ -1594,8 +1594,8 @@ beam: {
    graphic_type:     3	// bolt
    width:            20
    length:           3e8
-   bitmap:           "shot9.pcx"
-   flash:            "flash9.pcx"
+   bitmap:           "shot9"
+   flash:            "flash9"
    flash_scale:      1.75
    sound:            "beam2"
    sound_min_dist:   10e3
@@ -1632,8 +1632,8 @@ beam: {
    graphic_type:     3	// bolt
    width:            25
    length:           3e8
-   bitmap:           "ShotGamma.pcx"
-   flash:            "FlashGamma.pcx"
+   bitmap:           "ShotGamma"
+   flash:            "FlashGamma"
    flash_scale:      2
    sound:            "Beam3"
    sound_min_dist:   10e3
@@ -1665,8 +1665,8 @@ beam: {
    aim_el_max:       0.65
    aim_el_min:      -0.08
 
-   turret:           "GraserTurret/guns.mag"
-   turret_base:      "GraserTurret/base.mag"
+   turret:           "graserguns"
+   turret_base:      "graserbase"
    scale:            2
    muzzle:           ( 0,  0,  90),
 
@@ -1676,8 +1676,8 @@ beam: {
    graphic_type:     3	// bolt
    width:            50
    length:           3e8
-   bitmap:           "ShotGamma.pcx"
-   flash:            "FlashGamma.pcx"
+   bitmap:           "ShotGamma"
+   flash:            "FlashGamma"
    flash_scale:      2
    sound:            "Beam3"
    sound_min_dist:   10e3
@@ -1713,8 +1713,8 @@ beam: {
    graphic_type:     3	// bolt
    width:            25
    length:           3e8
-   bitmap:           "ShotZBeam.pcx"
-   flash:            "FlashZBeam.pcx"
+   bitmap:           "ShotZBeam"
+   flash:            "FlashZBeam"
    flash_scale:      2
    sound:            "Beam3"
    sound_min_dist:   10e3
@@ -1746,8 +1746,8 @@ primary: {
    aim_az_max:       3.15
    aim_el_max:       0.75
 
-   turret:           "Ground/AAA2Guns.mag"
-   turret_base:      "Ground/AAA2Turret.mag"
+   turret:           "AAA2Guns"
+   turret_base:      "AAA2Turret"
    scale:            2
    muzzle:           ( 12,   0,  112),
    muzzle:           (-12,   0,  112),
@@ -1756,7 +1756,7 @@ primary: {
    width:            32
    length:           800
    bitmap:           "shot2"
-   flash:            "flash2.pcx"
+   flash:            "flash2"
    flash_scale:      1
    sound:            "shot3"
    sound_min_dist:   2e3
@@ -1767,7 +1767,7 @@ primary: {
    name:             "Quad AAA"
    projectile:       "QuadAAABolt"
    group:            AAA
-   beauty:           "Ground/AAA4_Beauty.pcx"
+   beauty:           "AAA4_Beauty"
    description:      "The ANTI AIRCRAFT ARTILLERY (AAA) CANNON is an autonomous ground-based energy bolt system optimized for area defense against hostile airborne targets.  This variant has four sequenced barrels for increased firing speed and coverage.  It can engage fighters and attack craft at ranges up to 50 km."
    target_type:      0x000fffff
    value:            1
@@ -1787,8 +1787,8 @@ primary: {
    aim_az_max:       3.15
    aim_el_max:       0.75
 
-   turret:           "Ground/AAA4Guns.mag"
-   turret_base:      "Ground/AAA4Turret.mag"
+   turret:           "AAA4Guns"
+   turret_base:      "AAA4Turret"
    scale:            2
    muzzle:           ( 29,   9,  68)
    muzzle:           (-29,   9,  68)
@@ -1799,7 +1799,7 @@ primary: {
    width:            32
    length:           500
    bitmap:           "shot2"
-   flash:            "flash2.pcx"
+   flash:            "flash2"
    flash_scale:      1
    sound:            "shot3"
    sound_min_dist:   2e3
@@ -1811,7 +1811,7 @@ primary: {
 missile: {
    name:             "SAM-1"
    group:            SAM
-   beauty:           "Ground/SAM_Beauty.pcx"
+   beauty:           "SAM_Beauty"
    description:      "The SURFACE-TO-AIR MISSILE (SAM) BATTERY is an autonomous ground-launched guided missile system designed for area defense against a variety of airborne targets.  Each SAM Battery carries eight missiles on an upright turret with integrated sensor array.  It can engage fighters and attack craft at ranges up to 20 km."
    target_type:      0x0f
    value:            4
@@ -1847,17 +1847,17 @@ missile: {
    pitch_rate:       3
    yaw_rate:         3
 
-   turret:           "Ground/SAMRail.mag"
-   turret_base:      "Ground/SAMTurret.mag"
+   turret:           "SAMRail"
+   turret_base:      "SAMTurret"
    scale:            2
 
    graphic_type:     1	// solid
    light:            200
-   model:            "sam.mag"
-   trail:            "smoke.pcx"
+   model:            "sam"
+   trail:            "smoke"
    trail_width:      5
    trail_dim:        6
-   flare:            "drive.pcx"
+   flare:            "drive"
    flare_scale:      0.25
    sound:            "Missile1"
    sound_min_dist:   1e3
@@ -1907,11 +1907,11 @@ missile: {
 
    graphic_type:     1	// solid
    scale:            0.1
-   model:            "Alliance/Mk7.mag"
-   trail:            "smoke.pcx"
+   model:            "Mk7"
+   trail:            "smoke"
    trail_width:      2
    trail_dim:        6
-   flare:            "shot6.pcx"
+   flare:            "shot6"
    flare_scale:      1
    sound:            "Mk7"
    sound_min_dist:   2e3
@@ -1960,8 +1960,8 @@ drone: {
 
    graphic_type:     1	// solid
    scale:            0.5
-   model:            "FusionTorp.mag"
-   flare:            "drive.pcx"
+   model:            "FusionTorp"
+   flare:            "drive"
    flare_scale:      1.25
    sound:            "Torpedo"
    sound_min_dist:   2e3
@@ -2012,8 +2012,8 @@ drone: {
 
    graphic_type:     1	// solid
    scale:            0.5
-   model:            "Nike.mag"
-   flare:            "drive.pcx"
+   model:            "Nike"
+   flare:            "drive"
    flare_scale:      1.25
    sound:            "Nike"
    sound_min_dist:   2e3
@@ -2064,8 +2064,8 @@ drone: {
 
    graphic_type:     1	// solid
    scale:            0.5
-   model:            "Nike.mag"
-   flare:            "drive.pcx"
+   model:            "Nike"
+   flare:            "drive"
    flare_scale:      1.25
    sound:            "Nike"
    sound_min_dist:   2e3
@@ -2116,8 +2116,8 @@ drone: {
 
    graphic_type:     1	// solid
    scale:            0.5
-   model:            "Nike.mag"
-   flare:            "drive.pcx"
+   model:            "Nike"
+   flare:            "drive"
    flare_scale:      1.25
    sound:            "Nike"
    sound_min_dist:   2e3
