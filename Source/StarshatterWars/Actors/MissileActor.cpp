@@ -4,6 +4,7 @@
 #include "NiagaraSystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Engine/StaticMesh.h"
 
 AMissileActor::AMissileActor()
 {
@@ -23,6 +24,29 @@ AMissileActor::AMissileActor()
     if (Exhaust.Succeeded()) TrailComponent->SetAsset(Exhaust.Object);
 }
 
+void AMissileActor::AlignImportedMeshes()
+{
+    if (!bAlignImportedMeshForward) return;
+    TArray<UStaticMeshComponent*> Meshes;
+    GetComponents(Meshes);
+    for (UStaticMeshComponent* Mesh : Meshes)
+    {
+        const UStaticMesh* Model = Mesh->GetStaticMesh();
+        if (Mesh == GetRootComponent()) continue; // Never turn the simulation actor frame.
+        if (!Model || !Model->GetPathName().StartsWith(TEXT("/Game/Models/Weapons/"))) continue;
+        // This import convention applies to the elongated stock +Y missile
+        // bodies, not decorations or arbitrary custom meshes attached to them.
+        const FVector Extent = Model->GetBounds().BoxExtent;
+        if (Extent.Y <= 2.0 * FMath::Max(Extent.X,Extent.Z)) continue;
+        const FVector ModelForward = Mesh->GetComponentTransform().TransformVector(FVector::RightVector).GetSafeNormal();
+        const FVector ActorForward = GetActorForwardVector();
+        if (ModelForward.IsNearlyZero() || ModelForward.Equals(ActorForward,0.0001)) continue;
+        // Rotate the body about its existing attachment origin. Neither the
+        // station nor the actor frame moves. Already-corrected BPs are a no-op.
+        Mesh->SetWorldRotation(FQuat::FindBetweenNormals(ModelForward,ActorForward) * Mesh->GetComponentQuat());
+    }
+}
+
 void AMissileActor::PositionTrail()
 {
     if (!bAutoPositionTrail || !TrailComponent) return;
@@ -39,6 +63,7 @@ void AMissileActor::PositionTrail()
 void AMissileActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    AlignImportedMeshes();
     PositionTrail();
     if (!bInFlight && TrailComponent)
     {
@@ -53,6 +78,7 @@ void AMissileActor::BeginSimulationFlight()
     MissileFlightPresentation::Release(this);
     SetLifeSpan(0.f);
     bInFlight = true;
+    AlignImportedMeshes();
     PositionTrail();
     if (bEnableTrail && TrailComponent)
     {

@@ -35,11 +35,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Missile|Trail")
     bool bEnableTrail = true;
 
+    /** Imported stock missile meshes point along +Y; actor/simulation forward is +X.
+     * Disable for a custom Blueprint that deliberately manages its own visual frame. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Missile|Mesh")
+    bool bAlignImportedMeshForward = true;
+
     virtual void OnConstruction(const FTransform& Transform) override;
 
 protected:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+    void AlignImportedMeshes();
     void PositionTrail();
 };

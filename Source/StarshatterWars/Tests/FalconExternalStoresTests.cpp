@@ -9,6 +9,8 @@
 #include "WeaponDesignRegistry.h"
 #include "Ship.h"
 #include "Weapon.h"
+#include "MissileActor.h"
+#include "Components/StaticMeshComponent.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFalconExternalStoresTest, "Starshatter.Weapons.FalconExternalStores",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -49,6 +51,14 @@ bool FFalconExternalStoresTest::RunTest(const FString& Parameters)
         TestNotNull(TEXT("Missile Blueprint spawned at station"),Mount->GetChildActor());
         TestTrue(TEXT("Station identity survives weapon grouping"),Mount->LegacyLocation.Equals(Mount->RuntimeWeapon->GetMountRelativeLocation(),0.001));
         if (Mount->GetChildActor()) TestTrue(TEXT("Missile is attached to its loadout point"),Mount->GetChildActor()->GetRootComponent()->GetAttachParent() == Mount);
+        if (auto* Missile=Cast<AMissileActor>(Mount->GetChildActor()))
+        {
+            TestTrue(TEXT("Missile actor forward matches fighter forward"),Missile->GetActorForwardVector().Equals(Falcon->GetActorForwardVector(),.0001));
+            TestTrue(TEXT("Hardpoint position is unchanged"),Missile->GetActorLocation().Equals(Mount->GetComponentLocation(),.001));
+            TArray<UStaticMeshComponent*> Bodies;Missile->GetComponents(Bodies);
+            for(auto* Body:Bodies)if(Body->GetStaticMesh())
+                TestTrue(TEXT("Carried missile nose matches fighter forward"),Body->GetComponentTransform().TransformVector(FVector::RightVector).GetSafeNormal().Equals(Falcon->GetActorForwardVector(),.0001));
+        }
         Mount->RuntimeWeapon->SetAmmo(0);
         Mount->UpdateRuntimeStore();
         TestNull(TEXT("Expended carried missile is destroyed"),Mount->GetChildActor());
