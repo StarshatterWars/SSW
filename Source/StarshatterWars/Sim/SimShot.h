@@ -113,6 +113,7 @@ public:
 
 protected:
 	const Ship* owner;
+    double BeamDamageSeconds=0; // Actual simulation step; Game::FrameTime is a port stub.
     const Weapon* source_weapon = nullptr; // Non-owning presentation identity only.
 
 	int                type;

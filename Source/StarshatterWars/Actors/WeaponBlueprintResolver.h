@@ -14,7 +14,9 @@ namespace WeaponBlueprintResolver
         {
             FString Name=Path;
             Name.RemoveFromStart(TEXT("BP_")); Name.RemoveFromEnd(TEXT("_C"));
-            const FString Folder=Name.EndsWith(TEXT("Bolt"))
+            const FString Folder=Name.EndsWith(TEXT("Beam"))
+                ? TEXT("/Game/Models/Weapons/Beams/")+Name.LeftChop(4)
+                : Name.EndsWith(TEXT("Bolt"))
                 ? TEXT("/Game/Models/Weapons/Bolt/")+Name.LeftChop(4)
                 : TEXT("/Game/Models/Weapons/")+Name;
             Path=Folder+TEXT("/BP_")+Name;

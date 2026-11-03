@@ -2,7 +2,7 @@
 ARocketsTurretActor::ARocketsTurretActor()
 {
     WeaponType=TEXT("Rockets");
-    LegacyGunModel=TEXT("rocket_launcher.mag");
+    LegacyGunModel=TEXT("RocketLauncherGuns");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=0.15f;
     BaseAxis=0;

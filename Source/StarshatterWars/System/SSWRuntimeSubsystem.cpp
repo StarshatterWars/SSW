@@ -1114,6 +1114,7 @@ void USSWRuntimeSubsystem::SetPaused(bool bInPaused)
 
     bPaused = bInPaused;
     SyncExplosionClock();
+    SyncBeamPresentationClock();
 
     UE_LOG(LogSSWRuntime, Log,
         TEXT("[RUNTIME] Pause state: %s"),
@@ -1555,14 +1556,14 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                     if (!Override && Shot->GetDesign()) Override=WeaponBlueprintResolver::ResolveProjectile(ANSI_TO_TCHAR(Shot->GetDesign()->projectile.data()));
                     const TSubclassOf<ABeamWeaponActor> BeamClass = Override && Override->IsChildOf(ABeamWeaponActor::StaticClass())
                         ? TSubclassOf<ABeamWeaponActor>(Override)
-                        : TSubclassOf<ABeamWeaponActor>(LoadClass<ABeamWeaponActor>(nullptr,TEXT("/Game/Weapons/BP_Laser.BP_Laser_C")));
+                        : ABeamWeaponActor::BlueprintClassForWeapon(ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
                     Beam=ABeamWeaponActor::SpawnBeam(World,BeamClass,Start,Position,nullptr);
                     if(Beam){
-                        Beam->SetBeamColor(FLinearColor(0.16f,0.7f,1.0f));
+                        Beam->BeginSimulationBeam(ANSI_TO_TCHAR(Shot->GetDesign()->name.data()));
                         ProjectileVisuals.Add(Shot,Beam);
                     }
                 }
-                if(Beam) Beam->SetBeamPoints(Start,Position);
+                if(Beam){Beam->SetPresentationClock(bPaused,TimeCompression);Beam->SetBeamPoints(Start,Position);}
                 else DrawDebugLine(World,Start,Position,FColor::Cyan,false,0.0f,0,2.0f);
             }
             else if (Shot->GetDesign() && Shot->GetDesign()->graphic_type == Graphic::BOLT)

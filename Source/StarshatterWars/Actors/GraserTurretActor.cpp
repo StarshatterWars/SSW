@@ -2,7 +2,7 @@
 AGraserTurretActor::AGraserTurretActor()
 {
     WeaponType=TEXT("Graser Turret");
-    LegacyGunModel=TEXT("GraserTurret/guns.mag");
+    LegacyGunModel=TEXT("GraserTurret");
     LegacyBaseModel=TEXT("GraserTurretBase");
     LegacyModelScale=2.0f;
     BaseAxis=0;

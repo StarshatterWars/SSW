@@ -2,7 +2,7 @@
 AVikingCannonTurretActor::AVikingCannonTurretActor()
 {
     WeaponType=TEXT("Viking Cannon");
-    LegacyGunModel=TEXT("Alliance/BallTurret1opt.mag");
+    LegacyGunModel=TEXT("VikingCannonTurret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=5.0f;
     BaseAxis=0;

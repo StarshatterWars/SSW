@@ -127,7 +127,7 @@ primary: {
    aim_az_max:       0.75
    aim_el_max:       0.50
 
-   turret:           "turret"
+   turret:           "FighterTurret"
    scale:            0.22
 
    graphic_type:     3	// bolt
@@ -506,7 +506,7 @@ missile: {
    pitch_rate:       0.5
    yaw_rate:         0.5
 
-   turret:           "rocket_launcher"
+   turret:           "RocketLauncherGuns"
    scale:            0.15
    eject:            (0, 0, 300)
 
@@ -565,7 +565,7 @@ missile: {
    pitch_rate:       1
    yaw_rate:         1
 
-   turret:           "recon"
+   turret:           "ReconTurret"
    scale:            0.15
 
    sound:            "click"
@@ -637,7 +637,7 @@ primary: {
    aim_el_max:       1.00
    slew_rate:        0.10 // ~5 degrees / second
 
-   turret:           "mine_guns"
+   turret:           "BlockadeCannonTurret"
    turret_base:      "BlockadeTurretBase"
    scale:            1
 
@@ -743,7 +743,7 @@ primary: {
    aim_az_max:       1.00
    aim_el_max:       0.50
 
-   turret:           "BallTurret2opt"
+   turret:           "PhalanxCannonTurret"
    scale:            0.3
    muzzle:           ( 16,   0,  110),
    muzzle:           (-16,   0,  110),
@@ -784,7 +784,7 @@ primary: {
    aim_az_max:       1.00
    aim_el_max:       0.50
 
-   turret:           "BallTurret1opt"
+   turret:           "VikingCannonTurret"
    scale:            5
    muzzle:           ( 4, 0, 65)
    muzzle:           (-4, 0, 65)
@@ -824,7 +824,7 @@ primary: {
    aim_az_max:       0.05
    aim_el_max:       0.70
 
-   turret:           "Ursa"
+   turret:           "UrsaCannonTurret"
    scale:            2
 
    graphic_type:     3	// bolt
@@ -864,7 +864,7 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "Rail-12"
+   turret:           "OrcaCannonTurret"
    scale:            2
 
    graphic_type:     3	// bolt
@@ -903,7 +903,7 @@ primary: {
    aim_el_max:       0.10
    aim_el_min:      -0.80
 
-   turret:           "Rail-12-Inverted"
+   turret:           "OrcaInvertedTurret"
    scale:            2
 
    graphic_type:     3	// bolt
@@ -943,7 +943,7 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "t2_guns"
+   turret:           "Orca2CannonTurret"
    turret_base:      "Orca2TurretBase"
    scale:            1
 
@@ -983,7 +983,7 @@ primary: {
    aim_el_max:       0.10
    aim_el_min:      -0.80
 
-   turret:           "t2_guns"
+   turret:           "Orca2CannonTurretInverted"
    turret_base:      "Orca2InvertedTurretBase"
    scale:            1
 
@@ -1024,7 +1024,7 @@ primary: {
    aim_el_max:       0.80
    aim_el_min:      -0.10
 
-   turret:           "Guns1opt"
+   turret:           "VanguardTurret"
    turret_base:      "VanguardTurretBase"
    scale:            1.2
    muzzle:           ( 7,   0,  60),
@@ -1071,7 +1071,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1
-   turret:          "28MMGAUSSGUN"
+   turret:          "HeliconTurret"
    muzzle:           (0, 10, 131)
 
    width:            4
@@ -1118,7 +1118,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1.5,
-   turret:          "SmallGun",
+   turret:          "Light_PDBTurret",
 
    width:            4
    length:           45
@@ -1165,7 +1165,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            2,
-   turret:          "Rail-12",
+   turret:          "Rail_5Turret",
    muzzle:             ( 4, 11, 75),
    muzzle:             (-4, 11, 75),
 
@@ -1214,7 +1214,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
-   turret:          "Rail-12",
+   turret:          "Rail_12Turret",
    muzzle:           ( 4, 11, 75),
    muzzle:           (-4, 11, 75),
 
@@ -1264,7 +1264,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
-   turret:          "Rail-12-Inverted",
+   turret:          "Rail_12TurretInverted",
    muzzle:           ( 4, -11, 75),
    muzzle:           (-4, -11, 75),
 
@@ -1321,7 +1321,7 @@ primary: {
    graphic_type:     3
    scale:            4,
 
-   turret:          "DUEL15INRAILGUN",
+   turret:          "Rail_15Turret",
 
    width:            18,
    length:           170,
@@ -1374,7 +1374,7 @@ primary: {
 
    scale:            4,
 
-   turret:          "18INMAGGUN",
+   turret:          "Mag_18Turret",
    muzzle:             (0, 12, 81),
 
    width:            50,
@@ -1432,7 +1432,7 @@ drone: {
    recharge_rate:   	  10,
   
    scale:            4,
-   turret:          "Rostov-L",
+   turret:          "RostovTurret",
 
    syncro:	        false,
    self_aiming:         true,
@@ -1501,7 +1501,7 @@ drone: {
    recharge_rate:   	  10,
   
    scale:            4,
-   turret:          "Rostov-R",
+   turret:          "Rostov_StarboardTurret",
 
    syncro:	        false,
    self_aiming:         true,
@@ -1569,6 +1569,7 @@ primary: {
 
 beam: {
    name:             "XRay Laser"
+   projectile:       "XRayBeam"
    group:            XRAY
    beauty:           "XRay_Beauty.pcx"
    description:      "XRAY LASER batteries are the most common primary beam weapons used by destroyer and light cruiser class starships in the Blue Drift region.  These weapons deliver a tremendous amount of destructive energy each second the beams are in contact with the hull armor of their target.  However, the coherent x-rays are easily scattered by standard gravitational deflector shields, giving them a low shield penetration factor."
@@ -1604,6 +1605,7 @@ beam: {
 
 beam: {
    name:             "Gamma Laser"
+   projectile:       "GammaBeam"
    group:            GRASER
    beauty:           "Gamma_Beauty.pcx"
    description:      "GAMMA RAY LASER batteries are the most powerful primary beam weapons in service in the Blue Drift region.  Used mainly by heavy cruiser class starships, these weapons are more than twice as powerful as the X-Ray Laser batteries used on lighter starships.  Like their smaller cousins, Gamma Ray Lasers have poor shield penetration, but they still pack enough punch to make an effective weapon against heavy starships and orbital stations."
@@ -1642,6 +1644,7 @@ beam: {
 
 beam: {
    name:             "Graser Turret"
+   projectile:       "GraserBeam"
    group:            GRASER
    beauty:           "GraserTurret_Beauty.pcx"
    description:      "GAMMA RAY LASER TURRETS are often mounted on Hegemony military stations for defense against starship assault.  These weapons are essentially turret-mounted versions of the Gamma Ray Lasers used on heavy starships.  Backed by the powerful reactors of a military station, Gamma Ray Laser Turrets have the endurance to wear down enemy starships even through the scattering effect of their gravitational deflector shields."
@@ -1665,7 +1668,7 @@ beam: {
    aim_el_max:       0.65
    aim_el_min:      -0.08
 
-   turret:           "graserguns"
+   turret:           "GraserTurret"
    turret_base:      "GraserTurretBase"
    scale:            2
    muzzle:           ( 0,  0,  90),
@@ -1687,6 +1690,7 @@ beam: {
 
 beam: {
    name:             "Zolon Laser"
+   projectile:       "ZolonBeam"
    group:            LASER
    target_type:      0x000ffff0
    value:            15
@@ -1746,7 +1750,7 @@ primary: {
    aim_az_max:       3.15
    aim_el_max:       0.75
 
-   turret:           "AAA2Guns"
+   turret:           "AAACannonGuns"
    turret_base:      "AAATurretBase"
    scale:            2
    muzzle:           ( 12,   0,  112),
@@ -1787,7 +1791,7 @@ primary: {
    aim_az_max:       3.15
    aim_el_max:       0.75
 
-   turret:           "AAA4Guns"
+   turret:           "QuadAAAGuns"
    turret_base:      "QuadAAATurretBase"
    scale:            2
    muzzle:           ( 29,   9,  68)
@@ -1847,7 +1851,7 @@ missile: {
    pitch_rate:       3
    yaw_rate:         3
 
-   turret:           "SAMRail"
+   turret:           "SAM_1Turret"
    turret_base:      "SAM1TurretBase"
    scale:            2
 

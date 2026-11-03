@@ -2,7 +2,7 @@
 AMag18TurretActor::AMag18TurretActor()
 {
     WeaponType=TEXT("Mag-18");
-    LegacyGunModel=TEXT("Marakan/18INMAGGUN.MAG");
+    LegacyGunModel=TEXT("Mag_18Turret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=4.0f;
     BaseAxis=0;

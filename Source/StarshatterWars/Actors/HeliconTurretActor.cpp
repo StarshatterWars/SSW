@@ -2,7 +2,7 @@
 AHeliconTurretActor::AHeliconTurretActor()
 {
     WeaponType=TEXT("Helicon");
-    LegacyGunModel=TEXT("Marakan/28MMGAUSSGUN.MAG");
+    LegacyGunModel=TEXT("HeliconTurret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=1.0f;
     BaseAxis=0;

@@ -22,6 +22,15 @@ class STARSHATTERWARS_API ABeamWeaponActor : public AActor
 
 public:
     ABeamWeaponActor();
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Beam|Definition") FString WeaponDefinitionName;
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Beam|Definition") FString LegacyBitmap;
+    static TSubclassOf<ABeamWeaponActor> ClassForWeapon(const FString& Name);
+    static TSubclassOf<ABeamWeaponActor> BlueprintClassForWeapon(const FString& Name);
+    static FString BlueprintPathForWeapon(const FString& Name);
+    void BeginSimulationBeam(const FString& Name);
+    void SetPresentationClock(bool bPaused,float Dilation);
+    virtual void OnConstruction(const FTransform& Transform) override;
+
 
     /** Spawn a beam actor in the active game world. Returns null if no world. */
     UFUNCTION(BlueprintCallable, Category = "Beam", meta = (WorldContext = "WorldContextObject"))
@@ -73,6 +82,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Beam", meta = (ClampMin = "0.1"))
     float BeamWidth = 8.0f;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Beam",meta=(ClampMin="0.01")) float PackReferenceWidth=20.0f;
 
     /** If > 0, actor auto-destroys after this many seconds. 0 = live until explicitly destroyed. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Beam", meta = (ClampMin = "0.0"))
@@ -91,4 +101,5 @@ protected:
     bool bBeamActive = true;
 
     float Age = 0.0f;
+    bool bSimulationControlled=false;
 };

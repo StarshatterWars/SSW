@@ -2,7 +2,7 @@
 AVanguardTurretActor::AVanguardTurretActor()
 {
     WeaponType=TEXT("Vanguard");
-    LegacyGunModel=TEXT("Alliance/Guns1opt.mag");
+    LegacyGunModel=TEXT("VanguardTurret");
     LegacyBaseModel=TEXT("VanguardTurretBase");
     LegacyModelScale=1.2f;
     BaseAxis=0;

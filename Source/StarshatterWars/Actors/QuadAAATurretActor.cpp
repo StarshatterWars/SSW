@@ -2,7 +2,7 @@
 AQuadAAATurretActor::AQuadAAATurretActor()
 {
     WeaponType=TEXT("Quad AAA");
-    LegacyGunModel=TEXT("Ground/AAA4Guns.mag");
+    LegacyGunModel=TEXT("QuadAAAGuns");
     LegacyBaseModel=TEXT("QuadAAATurretBase");
     LegacyModelScale=2.0f;
     BaseAxis=0;

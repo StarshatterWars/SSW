@@ -2,7 +2,7 @@
 ARail5TurretActor::ARail5TurretActor()
 {
     WeaponType=TEXT("Rail-5");
-    LegacyGunModel=TEXT("Marakan/Rail-12.mag");
+    LegacyGunModel=TEXT("Rail_5Turret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=2.0f;
     BaseAxis=0;

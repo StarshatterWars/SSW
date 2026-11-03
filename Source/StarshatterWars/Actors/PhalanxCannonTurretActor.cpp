@@ -2,7 +2,7 @@
 APhalanxCannonTurretActor::APhalanxCannonTurretActor()
 {
     WeaponType=TEXT("Phalanx Cannon");
-    LegacyGunModel=TEXT("Alliance/BallTurret2opt.mag");
+    LegacyGunModel=TEXT("PhalanxCannonTurret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=0.3f;
     BaseAxis=0;

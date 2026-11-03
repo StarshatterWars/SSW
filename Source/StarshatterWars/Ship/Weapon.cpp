@@ -1005,6 +1005,8 @@ void Weapon::SetBeamPoints(bool aim)
     for (int i = 0; i < nbarrels; i++) {
         if (beams && beams[i]) {
             FVector from = muzzle_pts[i];
+            Camera NativeMuzzleFrame;
+            if(ship)ship->GetNativeWeaponMuzzle(this,i,from,NativeMuzzleFrame);
             FVector to;
             double  len = design->length;
 

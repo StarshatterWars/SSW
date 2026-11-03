@@ -2,7 +2,7 @@
 ARail12InvertedTurretActor::ARail12InvertedTurretActor()
 {
     WeaponType=TEXT("Rail-12 Inverted");
-    LegacyGunModel=TEXT("Marakan/Rail-12-Inverted.mag");
+    LegacyGunModel=TEXT("Rail_12TurretInverted");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=3.0f;
     BaseAxis=0;

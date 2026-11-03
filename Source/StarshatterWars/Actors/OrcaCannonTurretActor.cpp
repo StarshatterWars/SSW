@@ -2,7 +2,7 @@
 AOrcaCannonTurretActor::AOrcaCannonTurretActor()
 {
     WeaponType=TEXT("Orca Cannon");
-    LegacyGunModel=TEXT("Dantari/Rail-12.mag");
+    LegacyGunModel=TEXT("OrcaCannonTurret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=2.0f;
     BaseAxis=0;

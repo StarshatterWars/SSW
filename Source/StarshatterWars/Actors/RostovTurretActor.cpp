@@ -2,7 +2,7 @@
 ARostovTurretActor::ARostovTurretActor()
 {
     WeaponType=TEXT("Rostov");
-    LegacyGunModel=TEXT("Marakan/Rostov-L.MAG");
+    LegacyGunModel=TEXT("RostovTurret");
     LegacyBaseModel=TEXT("");
     LegacyModelScale=4.0f;
     BaseAxis=0;

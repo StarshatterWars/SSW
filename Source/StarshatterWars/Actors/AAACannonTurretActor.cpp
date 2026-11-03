@@ -2,7 +2,7 @@
 AAAACannonTurretActor::AAAACannonTurretActor()
 {
     WeaponType=TEXT("AAA Cannon");
-    LegacyGunModel=TEXT("Ground/AAA2Guns.mag");
+    LegacyGunModel=TEXT("AAACannonGuns");
     LegacyBaseModel=TEXT("AAATurretBase");
     LegacyModelScale=2.0f;
     BaseAxis=0;

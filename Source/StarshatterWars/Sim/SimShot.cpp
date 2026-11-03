@@ -303,6 +303,7 @@ SimShot::IsHostileTo(const SimObject* o) const
 void
 SimShot::ExecFrame(double seconds)
 {
+    BeamDamageSeconds=Game::Paused()?0.0:FMath::Max(0.0,seconds);
 	altitude_agl = -1.0e6f;
 
 	// add random flickering effect:
@@ -484,21 +485,8 @@ SimShot::SetBeamPoints(const FVector& from, const FVector& to)
 		{
 			BeamActor->SetBeamPoints(from, to);
 		}
-		else if (!BeamActor)
-		{
-			// Drop-in Blueprint laser: /Game/Weapons/BP_Laser
-			static TSubclassOf<ABeamWeaponActor> LaserClass = nullptr;
-			if (!LaserClass)
-			{
-				LaserClass = LoadClass<ABeamWeaponActor>(nullptr, TEXT("/Game/Weapons/BP_Laser.BP_Laser_C"));
-				if (!LaserClass)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("[SimShot] BP_Laser not found, falling back to ABeamWeaponActor"));
-					LaserClass = ABeamWeaponActor::StaticClass();
-				}
-			}
-			BeamActor = ABeamWeaponActor::SpawnBeam(nullptr, LaserClass, from, to, nullptr);
-		}
+        // Unbound beams are presented once by the runtime in converted coordinates.
+
 	}
 
 	if (flash) {
@@ -568,7 +556,7 @@ SimShot::Damage() const
 				fade = (design->length - len) / (design->length - design->min_range);
 		}
 
-		damage = base_damage * charge * fade * Game::FrameTime();
+		damage = base_damage * charge * fade * BeamDamageSeconds;
 	}
 
 	// energy wep damage based on time:

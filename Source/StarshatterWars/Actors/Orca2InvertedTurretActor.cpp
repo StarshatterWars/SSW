@@ -2,7 +2,7 @@
 AOrca2InvertedTurretActor::AOrca2InvertedTurretActor()
 {
     WeaponType=TEXT("Orca 2 Inverted");
-    LegacyGunModel=TEXT("Orca/t2_guns.mag");
+    LegacyGunModel=TEXT("Orca2CannonTurretInverted");
     LegacyBaseModel=TEXT("Orca2InvertedTurretBase");
     LegacyModelScale=1.0f;
     BaseAxis=0;
