@@ -8,6 +8,8 @@ class UNiagaraComponent;
 class UNiagaraSystem;
 class UStaticMeshComponent;
 class UMaterialInterface;
+class UMaterialBillboardComponent;
+class UMaterialInstanceDynamic;
 
 /**
  * Presentation for graphic_type 3 projectiles, including energy bolts and railgun rounds.
@@ -74,6 +76,26 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt")
     TObjectPtr<UNiagaraComponent> TrailFX;
+
+    /** Depth-tested, camera-facing photon halo. Never participates in collision. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt|Visibility")
+    TObjectPtr<UMaterialBillboardComponent> PhotonGlow;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility")
+    TObjectPtr<UMaterialInterface> PhotonGlowMaterial;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility", meta = (ClampMin = "0.0"))
+    float GlowWorldRadius = 45.0f;
+
+    /** Small screen-space halo keeps fast projectiles legible at combat range. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility", meta = (ClampMin = "0.0", ClampMax = "0.05"))
+    float GlowScreenRadius = 0.008f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility", meta = (ClampMin = "0.0"))
+    float GlowIntensity = 10.0f;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UMaterialInstanceDynamic> PhotonGlowMID;
 
     /** Per-weapon MI, applied to the inherited sphere in editor and game. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bolt")

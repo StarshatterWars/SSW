@@ -109,6 +109,8 @@ WeaponDesign::WeaponDesign()
 	flash_img = 0;
 	flare_img = 0;
 	sound_resource = 0;
+    sound_min_distance = 1.0f;
+    sound_max_distance = 100000.0f;
 
 	ammo = -1;
 	ripple_count = 0;
@@ -604,7 +606,9 @@ WeaponDesign::LoadDesign(const char* path, const char* filename, bool mod)
 							loader->SetDataPath(path);
 
 							if (design->sound_resource) {
-								design->sound_resource->SetMinDistance(sound_min_dist);
+								design->sound_min_distance = sound_min_dist;
+                            design->sound_max_distance = sound_max_dist;
+                            design->sound_resource->SetMinDistance(sound_min_dist);
 								design->sound_resource->SetMaxDistance(sound_max_dist);
 							}
 						}

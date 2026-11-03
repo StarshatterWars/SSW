@@ -698,6 +698,7 @@ primary: {
 
 primary: {
    name:             "Zolon Cannon"
+   projectile:       "ZolonBolt"
    group:            GUNS
    target_type:      0x000fffff
    value:            2
@@ -715,7 +716,7 @@ primary: {
    aim_az_max:       0.25
    aim_el_max:       0.25
 
-   graphic_type:     2 // sprite
+   graphic_type:     3 // bolt presentation
    scale:            0.75
    light:            150
    light_color:      (140,255,180)
@@ -1555,6 +1556,7 @@ drone: {
 
 primary: {
    name:             "Plasma Cannon"
+   projectile:       "PlasmaBolt"
    group:            CANNON
    beauty:           "Decoy_Beauty.pcx"
    description:      "The PLASMA CANNON is used as the primary antiship gun on Alliance Frigates."
@@ -1576,7 +1578,7 @@ primary: {
    aim_az_max:       1.00
    aim_el_max:       0.50
 
-   graphic_type:     2	// sprite
+   graphic_type:     3 // bolt presentation
    scale:            1
    bitmap:           "shot7"
    sound:            "shot4"

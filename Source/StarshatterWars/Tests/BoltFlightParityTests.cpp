@@ -25,6 +25,6 @@ bool FMasslessBoltParityTest::RunTest(const FString&)
   TestTrue(*(R.Name+TEXT(" lifetime advances")),FMath::IsNearlyEqual(S.GetLife(),Life-.02,.00001));
   TestTrue(*(R.Name+TEXT(" damage remains positive")),S.Damage()>0);TestEqual(TEXT("Definition width retained"),D->width,R.Width);
  }
- TestEqual(TEXT("All bolt entries tested"),Bolts,24);TestEqual(TEXT("All turret entries tested"),Turrets,26);return true;
+ TestEqual(TEXT("All bolt entries tested"),Bolts,26);TestEqual(TEXT("All turret entries tested"),Turrets,26);return true;
 }
 #endif

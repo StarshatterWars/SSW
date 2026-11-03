@@ -20,6 +20,7 @@
 #include "Misc/FileHelper.h"
 #include "Engine/DataTable.h"
 #include "WeaponDesignRegistry.h"
+#include "ShipDesign.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
 // If you have constants like DEGREES (rad-per-degree), include where defined:
@@ -378,6 +379,8 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 else if (Key == "flash") { Text T = ""; GetDefText(T, PDef, fn); W.Flash = FString(T); }
                 else if (Key == "flare") { Text T = ""; GetDefText(T, PDef, fn); W.Flare = FString(T); }
                 else if (Key == "sound") { Text T = ""; GetDefText(T, PDef, fn); W.Sound = FString(T); }
+                else if (Key == "sound_min_dist") { GetDefNumber(W.SoundMinDistance, PDef, fn); }
+                else if (Key == "sound_max_dist") { GetDefNumber(W.SoundMaxDistance, PDef, fn); }
 
                 // Special cases (legacy)
                 else if (Key == "degrees")
@@ -483,7 +486,7 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 {
                     Text T = "";
                     GetDefText(T, PDef, fn);
-                    W.DecoyType = 0;
+                    W.DecoyType = ShipDesign::ClassForName(T.data());
                 }
                 else if (Key == "damage_type")
                 {

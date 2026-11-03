@@ -36,7 +36,7 @@ bool FWeaponProjectileFieldTest::RunTest(const FString&)
             TestEqual(TEXT("Registry carries projectile without loss"),FString(ANSI_TO_TCHAR(Legacy->projectile.data())),Row->Projectile);
         TestNotNull(TEXT("Authored projectile Blueprint loads"),WeaponBlueprintResolver::ResolveProjectile(Row->Projectile));
     }
-    TestEqual(TEXT("All 24 bolt weapons covered"),Count,24);
+    TestEqual(TEXT("All 26 bolt weapons covered"),Count,26);
     FWeaponDesign Fixture;Fixture.Name=TEXT("Projectile registry fixture");Fixture.Model=TEXT("Archer");Fixture.Projectile=TEXT("DeltaBolt");
     WeaponDesignRegistry::RegisterDesign(FName(TEXT("ProjectileFixture")),Fixture);
     const auto* Legacy=WeaponDesignRegistry::FindLegacy(FName(TEXT("ProjectileFixture")));

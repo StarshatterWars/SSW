@@ -463,6 +463,12 @@ struct FWeaponDesign : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString Sound;         // sound id/path
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SoundMinDistance = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SoundMaxDistance = 100000.0f;
+
 	// Animation frames (legacy up to 16; UE only used first)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FString> AnimFrames;
@@ -547,8 +553,8 @@ struct FWeaponDesign : public FTableRowBase
 		NStores = FMath::Clamp(NStores, 0, SSW_MAX_STORES);
 
 		// Force fixed size:
-		MuzzlePoints.SetNum(SSW_MAX_STORES);
-		Attachments.SetNum(SSW_MAX_STORES);
+		MuzzlePoints.SetNumZeroed(SSW_MAX_STORES);
+		Attachments.SetNumZeroed(SSW_MAX_STORES);
 	}
 };
 

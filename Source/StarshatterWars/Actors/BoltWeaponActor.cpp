@@ -1,6 +1,8 @@
 #include "BoltWeaponActor.h"
 #include "AlphaBoltActor.h"
 #include "DeltaBoltActor.h"
+#include "ZolonBoltActor.h"
+#include "PlasmaBoltActor.h"
 #include "HeavyBoltActor.h"
 #include "FighterBoltActor.h"
 #include "LCABoltActor.h"
@@ -30,6 +32,8 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/MaterialBillboardComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -49,6 +53,15 @@ ABoltWeaponActor::ABoltWeaponActor()
     ProjectileMesh->SetRelativeScale3D(FVector(0.2f)); // 20 cm visible energy core; BP may override.
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     if (Sphere.Succeeded()) ProjectileMesh->SetStaticMesh(Sphere.Object);
+
+    PhotonGlow = CreateDefaultSubobject<UMaterialBillboardComponent>(TEXT("PhotonGlow"));
+    PhotonGlow->SetupAttachment(Root);
+    PhotonGlow->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PhotonGlow->SetGenerateOverlapEvents(false);
+    PhotonGlow->SetCastShadow(false);
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> GlowAsset(
+        TEXT("/Game/Models/Weapons/Bolt/Shared/M_BoltGlow.M_BoltGlow"));
+    if (GlowAsset.Succeeded()) PhotonGlowMaterial = GlowAsset.Object;
 
     CoreFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("CoreFX"));
     CoreFX->SetupAttachment(Root);
@@ -110,6 +123,24 @@ ABoltWeaponActor* ABoltWeaponActor::SpawnBolt(UObject* WorldContextObject,
 void ABoltWeaponActor::ApplyPresentationDefaults()
 {
     if (ProjectileMesh && BoltMaterial) ProjectileMesh->SetMaterial(0, BoltMaterial);
+    if (PhotonGlow && PhotonGlowMaterial)
+    {
+        if (!PhotonGlowMID || PhotonGlowMID->Parent != PhotonGlowMaterial)
+            PhotonGlowMID = UMaterialInstanceDynamic::Create(PhotonGlowMaterial, this);
+        PhotonGlowMID->SetVectorParameterValue(TEXT("BoltColor"), BoltColor);
+        PhotonGlowMID->SetScalarParameterValue(TEXT("GlowIntensity"), GlowIntensity);
+        TArray<FMaterialSpriteElement> Elements;
+        FMaterialSpriteElement WorldHalo;
+        WorldHalo.Material = PhotonGlowMID;
+        WorldHalo.BaseSizeX = WorldHalo.BaseSizeY = GlowWorldRadius;
+        Elements.Add(WorldHalo);
+        FMaterialSpriteElement ScreenHalo = WorldHalo;
+        ScreenHalo.bSizeIsInScreenSpace = true;
+        ScreenHalo.BaseSizeX = ScreenHalo.BaseSizeY = GlowScreenRadius;
+        Elements.Add(ScreenHalo);
+        PhotonGlow->SetElements(Elements);
+    }
+
     if (CoreFX) CoreFX->SetAsset(CoreSystem);
     if (TrailFX) TrailFX->SetAsset(BoltSystem);
 }
@@ -137,6 +168,7 @@ void ABoltWeaponActor::Launch(FVector Origin, FVector Direction, float Speed, fl
     {
         SetActorRotation(MoveDirection.Rotation());
     }
+    ApplyPresentationDefaults();
     ActivateVisuals();
 }
 
@@ -201,6 +233,8 @@ TSubclassOf<ABoltWeaponActor> ABoltWeaponActor::ClassForWeapon(const FString& We
 {
     if (WeaponName == TEXT("Alpha Cannon")) return AAlphaBoltActor::StaticClass();
     if (WeaponName == TEXT("Delta Cannon")) return ADeltaBoltActor::StaticClass();
+    if (WeaponName == TEXT("Zolon Cannon")) return AZolonBoltActor::StaticClass();
+    if (WeaponName == TEXT("Plasma Cannon")) return APlasmaBoltActor::StaticClass();
     if (WeaponName == TEXT("Heavy Cannon")) return AHeavyBoltActor::StaticClass();
     if (WeaponName == TEXT("Fighter Turret")) return AFighterBoltActor::StaticClass();
     if (WeaponName == TEXT("LCA Turret")) return ALCABoltActor::StaticClass();

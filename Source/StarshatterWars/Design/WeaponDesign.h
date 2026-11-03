@@ -191,6 +191,8 @@ public:
 	Text              flash;
 	Text              flare;
 	Text              sound;
+    float             sound_min_distance;
+    float             sound_max_distance;
 
 	Bitmap* beauty_img;
 	Bitmap* animation;

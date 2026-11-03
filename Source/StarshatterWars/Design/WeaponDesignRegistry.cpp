@@ -179,92 +179,104 @@ const TMap<FName, FWeaponDesign>& WeaponDesignRegistry::GetAll()
 WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     const FName& RowName,
     const FWeaponDesign& Row)
+
 {
     WeaponDesign* Legacy = new WeaponDesign();
-
-    if (!Legacy)
-    {
-        return nullptr;
-    }
-
-    //---------------------------------------------------------
-    // Identity
-    //---------------------------------------------------------
+    // Every parsed value is retained; no axis or angle conversion occurs here.
+    Legacy->type = Row.Type;
     Legacy->name = TCHAR_TO_ANSI(*Row.Name);
     Legacy->group = TCHAR_TO_ANSI(*Row.Group);
-    Legacy->model = TCHAR_TO_ANSI(*Row.Model);
-    Legacy->projectile = TCHAR_TO_ANSI(*Row.Projectile);
-    Legacy->flash = TCHAR_TO_ANSI(*Row.Flash);
-    Legacy->flash_scale = Row.FlashScale;
-    Legacy->turret = TCHAR_TO_ANSI(*Row.Turret);
-    Legacy->turret_base = TCHAR_TO_ANSI(*Row.TurretBase);
-    Legacy->turret_axis = Row.TurretAxis;
-
-    //---------------------------------------------------------
-    // Flags
-    //---------------------------------------------------------
+    Legacy->description = TCHAR_TO_ANSI(*Row.Description);
+    Legacy->secret = Row.bSecret;
+    Legacy->drone = Row.bDrone;
     Legacy->primary = Row.bPrimary;
     Legacy->beam = Row.bBeam;
     Legacy->flak = Row.bFlak;
     Legacy->guided = Row.Guided;
     Legacy->self_aiming = Row.bSelfAiming;
     Legacy->syncro = Row.bSyncro;
-
-    //---------------------------------------------------------
-    // Stats
-    //---------------------------------------------------------
+    Legacy->value = Row.Value;
+    Legacy->decoy_type = Row.DecoyType;
+    Legacy->probe = Row.bProbe;
+    Legacy->target_type = Row.TargetType;
+    Legacy->visible_stores = Row.bVisibleStores;
+    Legacy->nstores = FMath::Clamp(Row.NStores,0,int32(WeaponDesign::MAX_STORES));
+    Legacy->nbarrels = FMath::Clamp(Row.NBarrels,0,int32(WeaponDesign::MAX_STORES));
+    Legacy->recharge_rate = Row.RechargeRate;
+    Legacy->refire_delay = Row.RefireDelay;
+    Legacy->salvo_delay = Row.SalvoDelay;
+    Legacy->charge = Row.Charge;
+    Legacy->min_charge = Row.MinCharge;
+    Legacy->ammo = Row.Ammo;
+    Legacy->ripple_count = Row.RippleCount;
+    Legacy->capacity = Row.Capacity;
+    Legacy->carry_mass = Row.CarryMass;
+    Legacy->carry_resist = Row.CarryResist;
     Legacy->damage = Row.Damage;
+    Legacy->damage_type = Row.DamageType;
     Legacy->penetration = Row.Penetration;
+    Legacy->lethal_radius = Row.LethalRadius;
+    Legacy->integrity = Row.Integrity;
     Legacy->speed = Row.Speed;
     Legacy->life = Row.Life;
     Legacy->mass = Row.Mass;
     Legacy->drag = Row.Drag;
-
+    Legacy->thrust = Row.Thrust;
+    Legacy->roll_rate = Row.RollRate;
+    Legacy->pitch_rate = Row.PitchRate;
+    Legacy->yaw_rate = Row.YawRate;
+    Legacy->roll_drag = Row.RollDrag;
+    Legacy->pitch_drag = Row.PitchDrag;
+    Legacy->yaw_drag = Row.YawDrag;
     Legacy->min_range = Row.MinRange;
     Legacy->max_range = Row.MaxRange;
-
-    //---------------------------------------------------------
-    // Firing
-    //---------------------------------------------------------
-    Legacy->refire_delay = Row.RefireDelay;
-    Legacy->recharge_rate = Row.RechargeRate;
-    Legacy->ammo = Row.Ammo;
-    Legacy->capacity = Row.Capacity;
-    Legacy->charge = Row.Charge;
-    Legacy->min_charge = Row.MinCharge;
-
-    //---------------------------------------------------------
-    // Visuals
-    //---------------------------------------------------------
+    Legacy->max_track = Row.MaxTrack;
     Legacy->graphic_type = Row.GraphicType;
-    Legacy->length = Row.Length;
     Legacy->width = Row.Width;
+    Legacy->length = Row.Length;
     Legacy->scale = Row.Scale;
+    Legacy->explosion_scale = Row.ExplosionScale;
+    Legacy->light = Row.Light;
     Legacy->light_color = Row.LightColor;
-
-    //---------------------------------------------------------
-    // Aim limits
-    //---------------------------------------------------------
+    Legacy->flash_scale = Row.FlashScale;
+    Legacy->flare_scale = Row.FlareScale;
+    Legacy->trail_length = static_cast<int>(Row.TrailLength);
+    Legacy->trail_width = Row.TrailWidth;
+    Legacy->trail_dim = static_cast<int>(Row.TrailDim);
+    Legacy->beauty = TCHAR_TO_ANSI(*Row.Beauty);
+    Legacy->bitmap = TCHAR_TO_ANSI(*Row.Bitmap);
+    Legacy->turret = TCHAR_TO_ANSI(*Row.Turret);
+    Legacy->turret_base = TCHAR_TO_ANSI(*Row.TurretBase);
+    Legacy->model = TCHAR_TO_ANSI(*Row.Model);
+    Legacy->projectile = TCHAR_TO_ANSI(*Row.Projectile);
+    Legacy->trail = TCHAR_TO_ANSI(*Row.Trail);
+    Legacy->flash = TCHAR_TO_ANSI(*Row.Flash);
+    Legacy->flare = TCHAR_TO_ANSI(*Row.Flare);
+    Legacy->sound = TCHAR_TO_ANSI(*Row.Sound);
+    Legacy->sound_min_distance = Row.SoundMinDistance;
+    Legacy->sound_max_distance = Row.SoundMaxDistance;
+    Legacy->anim_length = FMath::Clamp(Row.AnimLength,0,FMath::Min(Row.AnimFrames.Num(),16));
+    Legacy->firing_cone = Row.FiringCone;
     Legacy->aim_az_max = Row.AimAzMax;
     Legacy->aim_az_min = Row.AimAzMin;
+    Legacy->aim_az_rest = Row.AimAzRest;
     Legacy->aim_el_max = Row.AimElMax;
     Legacy->aim_el_min = Row.AimElMin;
-
-    //---------------------------------------------------------
-    // Geometry
-    //---------------------------------------------------------
-    Legacy->nbarrels = FMath::Clamp(Row.NBarrels, 0, int32(WeaponDesign::MAX_STORES));
-    for (int32 i = 0; i < FMath::Min(Row.MuzzlePoints.Num(), int32(WeaponDesign::MAX_STORES)); i++)
-    {
-        Legacy->muzzle_pts[i] = Row.MuzzlePoints[i];
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[WeaponDesignRegistry] Legacy built Row='%s' Name='%s' Damage=%.1f Speed=%.1f"),
-        *RowName.ToString(),
-        *Row.Name,
-        Row.Damage,
-        Row.Speed);
-
+    Legacy->aim_el_rest = Row.AimElRest;
+    Legacy->slew_rate = Row.SlewRate;
+    Legacy->turret_axis = Row.TurretAxis;
+    Legacy->spread_az = Row.SpreadAz;
+    Legacy->spread_el = Row.SpreadEl;
+    Legacy->det_range = Row.DetRange;
+    Legacy->det_count = Row.DetCount;
+    Legacy->det_spread = Row.DetSpread;
+    Legacy->det_child = TCHAR_TO_ANSI(*Row.DetChild);
+    Legacy->eject = Row.Eject;
+    for(int32 I=0;I<FMath::Min(Row.MuzzlePoints.Num(),int32(WeaponDesign::MAX_STORES));++I)
+        Legacy->muzzle_pts[I]=Row.MuzzlePoints[I];
+    for(int32 I=0;I<FMath::Min(Row.Attachments.Num(),int32(WeaponDesign::MAX_STORES));++I)
+        Legacy->attachments[I]=Row.Attachments[I];
+    for(int32 I=0;I<FMath::Min(Row.AnimFrames.Num(),16);++I)
+        Legacy->anim_frames[I]=TCHAR_TO_ANSI(*Row.AnimFrames[I]);
     return Legacy;
 }
