@@ -30,8 +30,18 @@ class Solid;
 class ParticleManager;
 class SimSystem;
 class SimRegion;
+class Ship;
 
 // +--------------------------------------------------------------------+
+
+struct FExplosionPresentation
+{
+ uint64 Serial=0;EExplosionType Type=EExplosionType::NONE;
+ FVector Location=FVector::ZeroVector;
+ float ExplosionScale=1,ParticleScale=1,Lifetime=0;
+ SimRegion* Region=nullptr;bool bHidden=false;
+ bool bMuzzleFlash=false;const Ship* Shooter=nullptr;FVector Direction=FVector::ForwardVector;
+};
 
 class Explosion : public SimObject,
     public SimObserver
@@ -54,6 +64,12 @@ public:
 
     virtual void      ExecFrame(double seconds);
 
+    FExplosionPresentation GetPresentation() const;
+    static TArray<FExplosionPresentation> ConsumePresentationEvents();
+    static void ClearPresentationEvents();
+    void QueuePresentationEvent() const;
+    static void QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter);
+
     ParticleManager*  GetParticles() { return particles; }
 
     virtual void      Activate(SimScene& scene);
@@ -64,6 +80,8 @@ public:
     virtual const char* GetObserverName() const;
 
 protected:
+    uint64 PresentationSerial=0;
+    float PresentationExplosionScale=1,PresentationParticleScale=1;
     EExplosionType               type;
     ParticleManager*             particles;
 

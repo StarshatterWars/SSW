@@ -412,6 +412,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
 
         SimInstance->ExecFrame(Seconds);
         UpdateProjectileVisuals();
+        UpdateExplosionVisuals(Seconds);
         if(SimRegion* Region=SimInstance->GetActiveRegion())
         {
             if(Region->GetTerrain() && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
@@ -1112,6 +1113,7 @@ void USSWRuntimeSubsystem::SetPaused(bool bInPaused)
         return;
 
     bPaused = bInPaused;
+    SyncExplosionClock();
 
     UE_LOG(LogSSWRuntime, Log,
         TEXT("[RUNTIME] Pause state: %s"),
@@ -1461,6 +1463,7 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
     if(auto* Surface=NativeTerrain.Get())Surface->Destroy();NativeTerrain.Reset();
     ClearMissionWaypoints();
     ClearProjectileVisuals();
+    ClearExplosionVisuals();
     for (const TWeakObjectPtr<AShipActor>& Actor : MissionPresentationShips)
     {
         if (!Actor.IsValid()) continue;

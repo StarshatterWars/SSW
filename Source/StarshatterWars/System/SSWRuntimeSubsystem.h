@@ -35,6 +35,7 @@ class Sim;
 class CameraManager;
 class MultiController;
 
+class AExplosionActor;
 class SimShot; class SimRegion; class AWaypointActor;
 class UStaticMesh;
 class Ship;
@@ -140,6 +141,11 @@ private:
     bool bWaypointClassResolved = false;
     UPROPERTY(Transient) TSubclassOf<AWaypointActor> WaypointClass;
     TMap<FString, TWeakObjectPtr<AWaypointActor>> MissionWaypoints;
+    void UpdateExplosionVisuals(double Seconds);
+    void SyncExplosionClock();
+    SimRegion* ExplosionVisualRegion=nullptr;
+    void ClearExplosionVisuals();
+    TMap<uint64,TWeakObjectPtr<AExplosionActor>> ExplosionVisuals;
     void UpdateProjectileVisuals();
     void ClearProjectileVisuals();
     TMap<SimShot*, TWeakObjectPtr<AActor>> ProjectileVisuals;

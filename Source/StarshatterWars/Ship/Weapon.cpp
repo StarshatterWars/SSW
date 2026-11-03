@@ -18,6 +18,7 @@
 
 // Starshatter / SSW core:
 #include "SimShot.h"
+#include "Explosion.h"
 #include "Drone.h"
 #include "SimContact.h"
 #include "Ship.h"
@@ -768,6 +769,7 @@ SimShot* Weapon::FireBarrel(int n)
     Camera NativeRail;
     const bool HasNativeMuzzle=ship->GetNativeWeaponMuzzle(this,n,shotpos,NativeRail);
     if(HasNativeMuzzle) rail_cam.Clone(NativeRail);
+    const FVector FlashPosition=shotpos;
     if (design->length > 0)
         shotpos = shotpos + ((HasNativeMuzzle && !design->primary && !design->self_aiming)?rail_cam.vpn():aim_cam.vpn()) * design->length;
 
@@ -813,6 +815,9 @@ SimShot* Weapon::FireBarrel(int n)
 
     if (shot) {
         shot->SetSourceWeapon(this);
+        // Successful legacy fire event only; the flash never applies damage.
+        if((design->flash.length() || design->flash_img) && design->flash_scale>0)
+            Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship);
         if (ammo > 0)
             ammo--;
 

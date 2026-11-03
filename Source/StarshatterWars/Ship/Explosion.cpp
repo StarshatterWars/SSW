@@ -52,6 +52,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempExplos, Log, All);
 
 // +--------------------------------------------------------------------+
 
+namespace { uint64 NextExplosionPresentationSerial=0;TArray<FExplosionPresentation> ExplosionPresentationEvents; }
 const int MAX_EXPLOSION_TYPES = 32;
 
 static float      lifetimes[MAX_EXPLOSION_TYPES];
@@ -88,6 +89,8 @@ Explosion::Explosion(EExplosionType InType, const FVector& InPos, const FVector&
     , particles(nullptr)
     , source(InSource)
 {
+    PresentationSerial=++NextExplosionPresentationSerial;
+    PresentationExplosionScale=InExplosionScale;PresentationParticleScale=InParticleScale;
     Observe(source);
 
     MoveTo(InPos);
@@ -177,6 +180,26 @@ Explosion::Explosion(EExplosionType InType, const FVector& InPos, const FVector&
         light->MoveTo(InPos);
     }
 }
+
+
+FExplosionPresentation Explosion::GetPresentation() const
+{
+ FExplosionPresentation P;P.Serial=PresentationSerial;P.Type=type;P.Location=GetLocation();
+ P.ExplosionScale=PresentationExplosionScale;P.ParticleScale=PresentationParticleScale;P.Lifetime=GetLife();P.Region=GetRegion();
+ Sim* S=Sim::GetSim();Ship* Player=S?S->GetPlayerShip():nullptr;
+ P.bHidden=Player && source==Player && CameraManager::GetCameraMode()==CameraManager::MODE_COCKPIT && !Player->IsDying();
+ return P;
+}
+TArray<FExplosionPresentation> Explosion::ConsumePresentationEvents(){TArray<FExplosionPresentation> Result=MoveTemp(ExplosionPresentationEvents);ExplosionPresentationEvents.Reset();return Result;}
+void Explosion::QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter)
+{
+ if(FlashScale<=0)return;
+ FExplosionPresentation P;P.Serial=++NextExplosionPresentationSerial;P.Location=Position;P.Direction=Direction;
+ P.ExplosionScale=P.ParticleScale=FlashScale;P.Region=Region;P.bMuzzleFlash=true;P.Shooter=Shooter;
+ ExplosionPresentationEvents.Add(P);
+}
+void Explosion::QueuePresentationEvent() const{ExplosionPresentationEvents.Add(GetPresentation());}
+void Explosion::ClearPresentationEvents(){ExplosionPresentationEvents.Reset();}
 
 
 // +--------------------------------------------------------------------+
@@ -524,6 +547,7 @@ Explosion::Initialize()
 void
 Explosion::Close()
 {
+    ClearPresentationEvents();
     // Texture lifetime is expected to be managed by Unreal / DataLoader, notxmanual delete.
     for (int t = 0; t < MAX_EXPLOSION_TYPES; t++) {
         bitmaps[t] = 0;

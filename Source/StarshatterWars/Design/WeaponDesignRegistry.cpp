@@ -194,6 +194,8 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->group = TCHAR_TO_ANSI(*Row.Group);
     Legacy->model = TCHAR_TO_ANSI(*Row.Model);
     Legacy->projectile = TCHAR_TO_ANSI(*Row.Projectile);
+    Legacy->flash = TCHAR_TO_ANSI(*Row.Flash);
+    Legacy->flash_scale = Row.FlashScale;
     Legacy->turret = TCHAR_TO_ANSI(*Row.Turret);
     Legacy->turret_base = TCHAR_TO_ANSI(*Row.TurretBase);
     Legacy->turret_axis = Row.TurretAxis;

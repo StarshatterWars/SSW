@@ -1936,6 +1936,7 @@ Sim::CreateExplosion(const FVector& pos, const FVector& vel, EExplosionType type
 	else if (active_region)
 		active_region->InsertObject(exp);
 
+	exp->QueuePresentationEvent();
 	return exp;
 }
 
