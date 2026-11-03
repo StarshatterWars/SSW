@@ -3923,7 +3923,7 @@ Ship::ExecSystems(double seconds)
             if (!System || System==sensor || System==navsys || System==flcs) continue;
             System->Orient(this);
             // WeaponGroup::ExecFrame owns Weapon::ExecFrame. Do not tick twice.
-            if (System->GetType() != SYSTEM_CATEGORY::WEAPON)
+            if (System->GetType() != SYSTEM_CATEGORY::WEAPON || System==decoy || System==probe)
                 System->ExecFrame(seconds);
         }
         // Do not return here. Unreal-rendered ships still need the legacy
@@ -3939,7 +3939,7 @@ Ship::ExecSystems(double seconds)
             // Sensors have already run earlier in Ship::ExecFrame.
             // FLCS also runs through its dedicated flight-control path.
             if (sys->GetType() != SYSTEM_CATEGORY::SENSOR &&
-                sys->GetType() != SYSTEM_CATEGORY::WEAPON && sys != flcs)
+                (sys->GetType() != SYSTEM_CATEGORY::WEAPON || sys==decoy || sys==probe) && sys != flcs)
                 sys->ExecFrame(seconds);
         }
     }

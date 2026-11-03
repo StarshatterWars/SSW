@@ -17,6 +17,9 @@
 #include "ShipActor.h"
 #include "ShipProbeComponent.h"
 #include "ShipDecoyComponent.h"
+#include "DataLoader.h"
+#include "Sensor.h"
+#include "SimContact.h"
 
 namespace {
 struct FOrdnanceCatalog {
@@ -26,6 +29,13 @@ struct FOrdnanceCatalog {
 };
 class FArmedPulse : public SimShot {
 public: FArmedPulse(const FVector& P,WeaponDesign* D,const Ship* O):SimShot(P,Camera(),D,O){armed=true;}
+};
+class FDecoyTarget : public Ship {
+public: using Ship::Ship;
+ void LightAugmenter(){throttle=100;SetAugmenter(true);}
+};
+class FDecoySeeker : public SeekerAI {
+public: using SeekerAI::SeekerAI;using SeekerAI::CheckDecoys;
 };
 class FRegionSteps : public SimRegion {
 public: using SimRegion::SimRegion; using SimRegion::UpdateShots;
@@ -55,8 +65,13 @@ bool FDroneProfilesParity::RunTest(const FString&){
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDroneCollisionParity,"Starshatter.Weapons.Drones.CollisionAndRecon",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FDroneCollisionParity::RunTest(const FString&){
- TUniquePtr<Sim> OwnedSim;if(!Sim::GetSim())OwnedSim=MakeUnique<Sim>(nullptr);
- ShipDesign SD;SD.ship_class=static_cast<int>(CLASSIFICATION::FIGHTER);SD.integrity=1000;SD.radius=200;SD.scale=1;
+ const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
+ TUniquePtr<Sim> OwnedSim;if(!Sim::GetSim()){
+ // This repository has no legacy Explosions.def; cosmetic explosions use UE assets.
+ AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);
+ OwnedSim=MakeUnique<Sim>(nullptr);
+ }
+ ShipDesign SD;SD.type=static_cast<int>(CLASSIFICATION::FIGHTER);SD.integrity=1000;SD.radius=200;SD.scale=1;
  Ship Owner("Drone parity shooter","",&SD,1,0,nullptr,false);
  FRegionSteps Region(Sim::GetSim(),"Drone parity",SimRegion::REAL_SPACE);
  Ship* Target=new Ship("Drone parity target","",&SD,2,0,nullptr,false);Target->MoveTo(FVector(0,0,5000));Region.InsertObject(Target);
@@ -76,22 +91,40 @@ bool FDroneCollisionParity::RunTest(const FString&){
  Region.InsertObject(new FArmedPulse(Victim->GetLocation(),&Bolt,&Owner));Region.DamageShips();
  TestTrue(TEXT("Interceptor destroys deployable drone"),Victim->GetLife()<=0);Region.UpdateShots(0);
  TestEqual(TEXT("Destroyed drone cleanup"),Region.GetDrones().size(),0);TestEqual(TEXT("Consumed interceptor cleanup"),Region.GetShots().size(),0);
+ Drone BeamVictim(FVector(0,0,500),Camera(),&D,nullptr);
+ WeaponDesign BD;BD.name="Drone beam parity";BD.primary=1;BD.beam=1;BD.graphic_type=3;BD.damage=20;BD.charge=1;BD.life=2;BD.mass=1;BD.length=10000;BD.min_range=1000;
+ SimShot Beam(FVector::ZeroVector,Camera(),&BD,&Owner);Beam.ExecFrame(.1);Beam.SetBeamPoints(FVector::ZeroVector,FVector(0,0,1000));
+ FVector Impact;const double DroneHealth=BeamVictim.GetIntegrity();
+ TestTrue(TEXT("Beam intersects deployable drone"),BeamVictim.HitBy(&Beam,Impact)!=0);
+ TestTrue(TEXT("Beam damage integrates delta exactly once"),FMath::IsNearlyEqual(DroneHealth-BeamVictim.GetIntegrity(),2.0,.001));
  return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDroneSeekerParity,"Starshatter.Weapons.Drones.SeekerDelayAndDecoyRecovery",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FDroneSeekerParity::RunTest(const FString&){
  WeaponDesign D;D.name="Seeker parity";D.mass=1;D.life=10;D.guided=1;
- SimShot Shot(FVector::ZeroVector,Camera(),&D);SeekerAI Seeker(&Shot);Seeker.SetDelay(1);
+ SimShot Shot(FVector::ZeroVector,Camera(),&D);FDecoySeeker Seeker(&Shot);Seeker.SetDelay(1);
  for(int I=0;I<4;++I)Seeker.ExecFrame(.25);TestEqual(TEXT("One second arming delay advances"),Seeker.GetDelay(),0.0);
  Seeker.SetDelay(1);Seeker.ExecFrame(0);TestEqual(TEXT("Zero delta does not arm"),Seeker.GetDelay(),1.0);
- ShipDesign SD;SD.ship_class=static_cast<int>(CLASSIFICATION::FIGHTER);Ship Original("Seeker original","",&SD,2,0,nullptr,false);
+ ShipDesign SD;SD.type=static_cast<int>(CLASSIFICATION::FIGHTER);FDecoyTarget Original("Seeker original","",&SD,2,0,nullptr,false);
  D.drone=1;D.decoy_type=static_cast<int>(CLASSIFICATION::FIGHTER);Drone Decoy(FVector::ZeroVector,Camera(),&D);
  Seeker.SetTarget(&Original);Seeker.SetTarget(&Decoy);Seeker.Update(&Decoy);
  TestTrue(TEXT("Expired decoy restores original ship"),Seeker.GetTarget()==&Original);
+ Original.AddActiveDecoy(&Decoy);
+ Seeker.SetTarget(&Original);
+ for(int I=0;I<1000 && Seeker.GetTarget()==&Original;++I)Seeker.CheckDecoys(1000);
+ TestTrue(TEXT("Closer decoy can spoof legacy seeker"),Seeker.GetTarget()==&Decoy);
+ Original.LightAugmenter();Seeker.CheckDecoys(1000);
+ TestTrue(TEXT("Lit augmenter rejects decoy and restores ship"),Seeker.GetTarget()==&Original);
  Seeker.Update(&Original);TestNull(TEXT("Destroyed original target clears seeker"),Seeker.GetTarget());return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FShipLauncherParity,"Starshatter.Weapons.Drones.SeparateShipLaunchers",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FShipLauncherParity::RunTest(const FString&){
+ const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
+ TUniquePtr<Sim> OwnedSim;if(!Sim::GetSim()){
+ // This repository has no legacy Explosions.def; cosmetic explosions use UE assets.
+ AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);
+ OwnedSim=MakeUnique<Sim>(nullptr);
+ }
  FOrdnanceCatalog Catalog;const auto Before=ShipDesignRegistry::GetAll();ON_SCOPE_EXIT{ShipDesignRegistry::Clear();for(const auto& P:Before)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};
  FShipDesign Row;FShipWeapon Decoy;Decoy.Name="Countermeasures";Decoy.WeaponType="Fighter Decoy";Decoy.Muzzles.Add(FVector::ZeroVector);Row.Weapon.Add(Decoy);
  FShipWeapon Probe;Probe.Name="Probe launcher";Probe.WeaponType="Sensor Drone";Probe.Muzzles.Add(FVector::ZeroVector);Row.Weapon.Add(Probe);
@@ -100,7 +133,50 @@ bool FShipLauncherParity::RunTest(const FString&){
  TestNotNull(TEXT("Dedicated decoy design"),Design->decoy);TestNotNull(TEXT("Dedicated probe design"),Design->probe);TestEqual(TEXT("Launchers excluded from guns"),Design->weapons.size(),0);
  Ship S("Launcher parity","",Design,1,0,nullptr,false);TestNotNull(TEXT("Runtime decoy"),S.GetDecoy());TestNotNull(TEXT("Runtime probe"),S.GetProbeLauncher());
  TestTrue(TEXT("Launchers are separate objects"),S.GetDecoy()!=S.GetProbeLauncher());
+ FRegionSteps Region(nullptr,"Launcher fixture",SimRegion::REAL_SPACE);S.SetRegion(&Region);
+ const int DecoyAmmo=S.GetDecoy()->Ammo();const int ProbeAmmo=S.GetProbeLauncher()->Ammo();
+ TestTrue(TEXT("Decoy deploys through legacy Ship"),S.FireDecoy());
+ TestEqual(TEXT("Decoy consumes one store"),S.GetDecoy()->Ammo(),DecoyAmmo-1);
+ TestFalse(TEXT("Decoy respects its refire delay"),S.FireDecoy());
+ S.LaunchProbe();TestNotNull(TEXT("Probe associated with launching ship"),S.GetProbe());
+ TestEqual(TEXT("Probe consumes its own ammo"),S.GetProbeLauncher()->Ammo(),ProbeAmmo-1);
+ TestEqual(TEXT("Decoy ammo independent of probe"),S.GetDecoy()->Ammo(),DecoyAmmo-1);
+ S.ExecSystems(1.1);TestTrue(TEXT("Separate decoy cooldown ticks outside groups"),S.FireDecoy());
+ for(int I=0;I<Region.GetDrones().size();++I)Region.GetDrones()[I]->SetLife(0);
+ Region.UpdateShots(0);TestNull(TEXT("Expired probe removes owner association"),S.GetProbe());
+ TestEqual(TEXT("Expired decoys leave active list"),S.GetActiveDecoys().size(),0);
+ auto* Recon=WeaponDesignRegistry::FindLegacy(FName(TEXT("Recon Pod")));
+ FVector Muzzle=FVector::ZeroVector;Weapon Scanner(Recon,1,&Muzzle);Scanner.SetOwner(&S);
+ Scanner.Distribute(100,1);const int ScanAmmo=Scanner.Ammo();
+ TestNotNull(TEXT("Mounted recon emits first pulse"),Scanner.Fire());Scanner.ExecFrame(.36);
+ TestEqual(TEXT("One trigger emits two scans and consumes two units"),Scanner.Ammo(),ScanAmmo-2);
+ TestEqual(TEXT("Both scan pulses are separate from deployed drones"),Region.GetShots().size(),2);
  const auto* Actor=GetDefault<AShipActor>();TestNotNull(TEXT("Shared ship ProbeComponent"),Actor->ProbeComponent.Get());TestNotNull(TEXT("Shared ship DecoyComponent"),Actor->DecoyComponent.Get());
  TestFalse(TEXT("Unbound probe fails safely"),Actor->ProbeComponent->Deploy());TestFalse(TEXT("Unbound decoy fails safely"),Actor->DecoyComponent->Deploy());return true;
+}
+namespace {
+class FProbeSensor : public Sensor {
+public: using Sensor::ProcessContact;
+ FProbeSensor(){energy=capacity;AddRange(1000000);SetMode(ESensorMode::PAS);}
+};
+class FProbeTarget : public Ship {
+public: using Ship::Ship;
+ virtual double PCS() const override{return 0;}
+ virtual double ACS() const override{return 1e9;}
+};
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProbeCoverageParity,"Starshatter.Weapons.Drones.ProbeSensorCoverage",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FProbeCoverageParity::RunTest(const FString&){
+ ShipDesign SD;SD.type=static_cast<int>(CLASSIFICATION::FIGHTER);SD.radius=10;SD.detet=1e9;
+ Ship Owner("Probe sensor owner","",&SD,1,0,nullptr,false);
+ FProbeTarget Target("Probe sensor target","",&SD,2,0,nullptr,false);Target.MoveTo(FVector(0,0,200000));
+ WeaponDesign PD;PD.name="Coverage probe";PD.drone=1;PD.probe=1;PD.lethal_radius=50000;PD.life=30;PD.mass=1;
+ Drone* Probe=new Drone(FVector(0,0,150001),Camera(),&PD,&Owner);Owner.SetProbe(Probe);
+ FProbeSensor Sensor;Sensor.SetShip(&Owner);Sensor.ProcessContact(&Target,-PI,PI);
+ SimContact* Contact=Sensor.FindContact(&Target);
+ if(TestNotNull(TEXT("Contact 49.999km from probe detected"),Contact))TestTrue(TEXT("Contact flagged as probe scan"),Contact->IsProbed());
+ Sensor.ClearAllContacts();Probe->MoveTo(FVector(0,0,149999));Sensor.ProcessContact(&Target,-PI,PI);
+ TestNull(TEXT("Contact beyond 50km receives no probe detection"),Sensor.FindContact(&Target));
+ delete Probe;TestNull(TEXT("Probe destruction clears ship pointer"),Owner.GetProbe());return true;
 }
 #endif

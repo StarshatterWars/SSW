@@ -1522,6 +1522,8 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
     const auto Shots=ProjectilePresentationList::Collect(*Region);
     for(SimShot* Shot:Shots){
         if(!Shot || Shot->GetLife()<=0)continue;
+        // Legacy recon emits invisible scan pulses; the pod stays mounted.
+        if (Shot->GetDesign() && Shot->GetDesign()->damage<0 && !Shot->GetDesign()->graphic_type) continue;
         Ship* Owner=const_cast<Ship*>(Shot->Owner());
         if(Owner && !Region->GetShips().contains(Owner))Owner=nullptr;
         // Match the owner's presentation offset. These spheres never collide in UE:

@@ -1,1515 +1,1515 @@
-/*  Project Starshatter Wars
-    Fractal Dev Studios
-    Copyright © 2025–2026. All Rights Reserved.
-
-    ORIGINAL WORK:
-    Starshatter 4.5
-    Copyright © 1997–2004 Destroyer Studios LLC
-    Original Author: John DiCamillo
-
-    SUBSYSTEM:    StarshatterWars
-    FILE:         SimRegion.cpp
-    AUTHOR:       Carlos Bott
-
-    OVERVIEW
-    ========
-    Simulation Region implementation (FVector-only, no networking, no stubs)
-*/
-
-#include "SimRegion.h"
-#include "Sim.h"
-
-// Core world types:
-#include "StarSystem.h"
-//#include "OrbitalRegion.h"
-#include "TerrainRegion.h"
-#include "Terrain.h"
-#include "Grid.h"
-
-// Sim objects:
-#include "SimObject.h"
-#include "SimElement.h"
-#include "SimEvent.h"
-#include "Ship.h"
-#include "Sensor.h"
-#include "SimShot.h"
+/*  Project Starshatter Wars
+    Fractal Dev Studios
+    Copyright © 2025–2026. All Rights Reserved.
+
+    ORIGINAL WORK:
+    Starshatter 4.5
+    Copyright © 1997–2004 Destroyer Studios LLC
+    Original Author: John DiCamillo
+
+    SUBSYSTEM:    StarshatterWars
+    FILE:         SimRegion.cpp
+    AUTHOR:       Carlos Bott
+
+    OVERVIEW
+    ========
+    Simulation Region implementation (FVector-only, no networking, no stubs)
+*/
+
+#include "SimRegion.h"
+#include "Sim.h"
+
+// Core world types:
+#include "StarSystem.h"
+//#include "OrbitalRegion.h"
+#include "TerrainRegion.h"
+#include "Terrain.h"
+#include "Grid.h"
+
+// Sim objects:
+#include "SimObject.h"
+#include "SimElement.h"
+#include "SimEvent.h"
+#include "Ship.h"
+#include "Sensor.h"
+#include "SimShot.h"
 #include "Drone.h"
-#include "WeaponDesign.h"
-#include "Explosion.h"
-#include "Debris.h"
-#include "Asteroid.h"
-#include "SimContact.h"
-#include "FlightDeck.h"
-#include "Hangar.h"
-#include "Instruction.h"
-#include "GameStructs.h"
-#include "Random.h"
-
-// Systems:
-#include "Game.h"
-
-// Unreal:
-#include "Math/UnrealMathUtility.h"
-#include "SSWRuntimeSubsystem.h"
-#include "Engine/World.h"
-#include "Engine/GameInstance.h"
-#include "ShipActor.h"
-#include "UObject/UObjectIterator.h"
-
-// The simulation owns Ship, while UE owns AShipActor. Break that link before
-// releasing simulation storage. Snapshot first because Destroy mutates objects.
-static void DetachRegionShipActors(const TSet<Ship*>& OwnedShips)
-{
-    TArray<TWeakObjectPtr<AShipActor>> Actors;
-    for (TObjectIterator<AShipActor> It; It; ++It) {
-        AShipActor* Actor = *It;
-        if (IsValid(Actor) && !Actor->HasAnyFlags(RF_ClassDefaultObject) &&
-            OwnedShips.Contains(Actor->GetRuntimeShip()))
-            Actors.Add(Actor);
-    }
-    for (const TWeakObjectPtr<AShipActor>& WeakActor : Actors) {
-        if (AShipActor* Actor = WeakActor.Get()) {
-            Actor->BindRuntimeShip(nullptr);
-            Actor->Destroy();
-        }
-    }
-}
-
-// +--------------------------------------------------------------------+
-// Local helpers (single edit point if your API differs)
-// +--------------------------------------------------------------------+
-
-static FORCEINLINE int ClampIFF(int iff)
-{
-    if (iff < 0) return 0;
-    if (iff > 4) return 4;
-    return iff;
-}
-
-static FORCEINLINE bool IsDeadShip(const Ship* s)
-{
-    if (!s)
-    {
-        return true;
-    }
-
-    // TEMP UE PORT:
-    // Do not use GetLife() here yet. Some runtime ships/static ships
-    // may not have legacy life initialized correctly.
-    if (s->IsDead())
-    {
-        return true;
-    }
-
-    if (s->IsDying())
-    {
-        return true;
-    }
-
-    return false;
-}
-
-static FORCEINLINE bool IsDeadShot(const SimShot* s)
-{
-    if (!s) return true;
-    if (s->GetLife() <= 0) return true;
-    return false;
-}
-
-static FORCEINLINE bool IsDeadExplosion(const Explosion* e)
-{
-    if (!e) return true;
-    if (e->GetLife() <= 0) return true;
-    return false;
-}
-
-// IMPORTANT: ObjID getter name can vary across your port.
-// If your build fails here, change ONLY these helpers.
-static FORCEINLINE uint32 GetObjID_Ship(const Ship* s)
-{
-    return s ? (uint32)s->GetObjID() : 0;
-}
-
-static FORCEINLINE uint32 GetObjID_Shot(const SimShot* s)
-{
-    return s ? (uint32)s->GetObjID() : 0;
-}
-
-// +--------------------------------------------------------------------+
-
-int SimRegion::operator<(const SimRegion& r) const
-{
-    return name < r.name;
-}
-
-int SimRegion::operator<=(const SimRegion& r) const
-{
-    return (*this < r) || (*this == r);
-}
-
-// +--------------------------------------------------------------------+
-
-SimRegion::SimRegion(Sim* s, const char* n, int t)
-    : sim(s), name(n), type(t)
-{
-    if (sim)
-        star_system = sim->GetStarSystem();
-
-    orbital_region = nullptr;
-    location = FVector::ZeroVector;
-    grid = nullptr;
-    terrain = nullptr;
-    active = false;
-    player_ship = nullptr;
-    current_view = 0;
-    sim_time = 0;
-    ai_index = 0;
-}
-
-SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
-    : sim(SimPtr),
-    orbital_region(OrbitalRegionPtr),
-    type(REAL_SPACE)
-{
-    star_system = nullptr;
-    location = FVector::ZeroVector;
-    grid = nullptr;
-    terrain = nullptr;
-    active = false;
-    player_ship = nullptr;
-    current_view = 0;
-    sim_time = 0;
-    ai_index = 0;
-
-    if (orbital_region) {
-        star_system = orbital_region->System();
-        name = orbital_region->GetName();
-        location = orbital_region->Location();
-
-        grid = new Grid(
-            (int32)orbital_region->Radius(),
-            (int32)orbital_region->GetGridSpace()
-        );
-
-        if (orbital_region->GetType() == Orbital::TERRAIN) {
-            TerrainRegion* TerrainRegionPtr = (TerrainRegion*)orbital_region;
-            terrain = new Terrain(TerrainRegionPtr);
-            type = AIR_SPACE;
-        }
-        else {
-            type = REAL_SPACE;
-        }
-    }
-    else {
-        name = "Unknown";
-        location = FVector::ZeroVector;
-    }
-}
-
-SimRegion::~SimRegion()
-{
-    // Also support destruction of a standalone region. Sim::UnloadMission
-    // calls this phase across every region first, leaving this set empty.
-    TSet<Ship*> OwnedShips;
-    ReleaseMissionObjects(OwnedShips);
-    for (Ship* OwnedShip : OwnedShips) OwnedShip->Destroy();
-    for (Ship* OwnedShip : OwnedShips) delete OwnedShip;
-    delete terrain;
-    terrain = nullptr;
-    delete grid;
-    grid = nullptr;
-    links.clear();
-}
-
-void SimRegion::ReleaseMissionObjects(TSet<Ship*>& OwnedShips)
-{
-    player_ship = nullptr;
-    recovered_player = nullptr;
-    TSet<Ship*> RegionShips;
-    for (int i = 0; i < ships.size(); ++i) if (ships[i]) RegionShips.Add(ships[i]);
-    for (int i = 0; i < dead_ships.size(); ++i) if (dead_ships[i]) RegionShips.Add(dead_ships[i]);
-    for (int i = 0; i < retired_ships.size(); ++i) if (retired_ships[i]) RegionShips.Add(retired_ships[i]);
-    DetachRegionShipActors(RegionShips);
-    for (Ship* RegionShip : RegionShips) OwnedShips.Add(RegionShip);
-    ships.clear();
-    dead_ships.clear();
-    retired_ships.clear();
-    carriers.clear();
-    selection.clear();
-
-    // Sensor creates these contacts with new; this database owns them.
-    for (int i = 0; i < 5; ++i) track_database[i].destroy();
-    shots.destroy();
-    drones.destroy(); // Separate owning list in SSW, unlike legacy.
-    explosions.destroy();
-    debris.destroy();
-    asteroids.destroy();
-}
-
-// +--------------------------------------------------------------------+
-
-void SimRegion::Activate()
-{
-    if (active)
-        return;
-
-    active = true;
-
-    if (star_system && orbital_region) {
-        star_system->SetActiveRegion(orbital_region);
-    }
-}
-
-void SimRegion::Deactivate()
-{
-    if (!active)
-        return;
-
-    active = false;
-
-    for (int i = 0; i < 5; ++i)
-        track_database[i].destroy();
-}
-
-// +--------------------------------------------------------------------+
-
-void
-SimRegion::ExecFrame(double seconds)
-{
-    if (seconds <= 0)
-    {
-        return;
-    }
-
-    // Legacy inactive regions accumulate elapsed game time between queue turns.
-    if (sim && !active) {
-        seconds = FMath::Min((Game::GetGameTime()-sim_time)/1000.0,3*Game::GetMaxFrameLength());
-    }
-    sim_time = Game::GetGameTime();
-    if (orbital_region) location = orbital_region->Location();
-    UpdateTracking(seconds);
-    UpdateShips(seconds);
-    UpdateShots(seconds);
-    DamageShips();
-
-    UpdateExplosions(seconds);
-
-    // Legacy advances and expires debris alongside explosions.
-    for (int i = 0; i < debris.size(); ) {
-        Debris* Piece = debris[i];
-        if (Piece && Piece->GetLife() > 0) Piece->ExecFrame(seconds);
-        if (!Piece || Piece->GetLife() <= 0) {
-            debris.removeIndex(i);
-            delete Piece;
-        }
-        else ++i;
-    }
-
-    if (!Game::Paused()) {
-        DockShips();
-        if (active) { CollideShips(); CrashShips(); }
-        DestroyShips();
-    }
-}
-
-// +--------------------------------------------------------------------+
-
-void SimRegion::ShowGrid(int show)
-{
-    if (grid)
-        grid->ShowGrid(show ? true : false);
-}
-
-void SimRegion::NextView()
-{
-    current_view++;
-    if (current_view > 3)
-        current_view = 0;
-}
-
-// +--------------------------------------------------------------------+
-
-bool SimRegion::CanTimeSkip() const
-{
-    if (shots.size() > 0)  return false;
-    if (drones.size() > 0) return false;
-
-    for (int i = 0; i < ships.size(); ++i) {
-        Ship* s = ships[i];
-        if (!s) continue;
-
-        if (s->IsInCombat())
-            return false;
-
-        if (s->IsDying() || s->IsDead())
-            return false;
-    }
-
-    return true;
-}
-
-void
-SimRegion::ResolveTimeSkip(double seconds)
-{
-    if (seconds <= 0)
-        return;
-
-    for (int32 i = 0; i < ships.size(); i++) {
-        Ship* ship = ships[i];
-
-        if (!ship)
-            continue;
-
-        Ship* ward = ship->GetWard();
-
-        ship->ExecSystems(seconds);
-        ship->ExecMaintFrame(seconds);
-
-        ship->ClearTrack();
-
-        ListIter<SimContact> contact = ship->GetContactList();
-        while (++contact) {
-            contact->ClearTrack();
-        }
-
-        if (ship->IsStatic())
-            continue;
-
-        InboundSlot* inbound = ship->GetInbound();
-
-        if (inbound) {
-            if (inbound->Cleared()) {
-                FlightDeck* deck = inbound->GetDeck();
-
-                if (deck) {
-                    ship->SetCarrier((Ship*)deck->GetCarrier(), deck);
-                    ship->SetFlightPhase(EOPSMode::DOCKED);
-                    ship->Stow();
-                    deck->Clear(inbound->Index());
-                }
-            }
-
-            continue;
-        }
-
-        if (ship->GetHangar()) {
-            ship->GetHangar()->ExecFrame(seconds);
-
-            List<FlightDeck>& flight_decks = ship->GetFlightDecks();
-
-            for (int32 n = 0; n < flight_decks.size(); n++) {
-                if (flight_decks[n])
-                    flight_decks[n]->ExecFrame(seconds);
-            }
-        }
-
-        Instruction* navpt = ship->GetNextNavPoint();
-
-        FVector dest = ship->GetLocation();
-        double  speed = 500.0;
-        double  space = 2.0e3 * (ship->GetElementIndex() - 1);
-
-        if (ship->IsStarship())
-            space *= 5.0;
-
-        if (navpt && navpt->GetAction() == EInstruction::Launch) {
-            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-            navpt = ship->GetNextNavPoint();
-        }
-
-        if (navpt) {
-            dest = OtherHand(navpt->GetLocation());
-            speed = navpt->GetSpeed();
-        }
-        else if (ward) {
-            FVector delta = ship->GetLocation() - ward->GetLocation();
-            delta.Z = 0.0f;
-
-            if (delta.Size() > 25e3) {
-                delta.Normalize();
-                dest = ward->GetLocation() + delta * 25e3;
-            }
-        }
-
-        FVector delta = dest - ship->GetLocation();
-        FVector unit = delta;
-
-        double dist = unit.Size();
-
-        if (dist > SMALL_NUMBER)
-            unit /= dist;
-        else
-            unit = FVector::ZeroVector;
-
-        dist -= space;
-
-        if (dist > 1e3) {
-            if (speed < 50.0)
-                speed = 500.0;
-
-            double etr = dist / speed;
-
-            if (etr > seconds)
-                etr = seconds;
-
-            FVector trans = unit * (speed * etr);
-
-            if (ship->GetFuelLevel() > 1) {
-                ship->MoveTo(ship->GetLocation() + trans);
-                ship->SetVelocity(unit * speed);
-            }
-
-            ship->LookAt(dest);
-
-            if (ship->IsStarship()) {
-                ship->SetFLCSMode(EFLCSMode::HELM);
-                ship->SetHelmHeading(ship->GetCompassHeading());
-                ship->SetHelmPitch(ship->GetCompassPitch());
-            }
-        }
-        else if (navpt && navpt->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) {
-            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-        }
-
-        if (ward) {
-            FVector ward_heading = ward->GetHeading();
-            ward_heading.Z = 0.0f;
-
-            if (!ward_heading.IsNearlyZero())
-                ward_heading.Normalize();
-
-            if (ship->GetFuelLevel() > 1) {
-                ship->SetVelocity(ward->GetVelocity());
-            }
-
-            ship->LookAt(ship->GetLocation() + ward_heading * 1e6);
-
-            if (ship->IsStarship()) {
-                ship->SetFLCSMode(EFLCSMode::HELM);
-                ship->SetHelmHeading(ship->GetCompassHeading());
-                ship->SetHelmPitch(ship->GetCompassPitch());
-            }
-        }
-
-        if (dist > 1.0 || ward) {
-            for (int32 j = 0; j < ships.size(); j++) {
-                Ship* test = ships[j];
-
-                if (!test)
-                    continue;
-
-                if (ship != test && test->GetMass() >= ship->GetMass()) {
-                    FVector sep = ship->GetLocation() - test->GetLocation();
-
-                    if (sep.Size() < ship->GetRadius() * 2 + test->GetRadius() * 2) {
-                        ship->MoveTo(test->GetLocation() + OtherHand(RandomPoint()));
-                    }
-                }
-            }
-        }
-    }
-
-    DockShips();
-}
-
-// +--------------------------------------------------------------------+
-
-Ship* SimRegion::FindShip(const char* n)
-{
-    if (!n || !*n)
-        return nullptr;
-
-    for (int i = 0; i < ships.size(); i++) {
-        Ship* s = ships[i];
-        if (!s) continue;
-
-        if (!_stricmp(s->GetName(), n))
-            return s;
-    }
-
-    return nullptr;
-}
-
-Ship* SimRegion::FindShipByObjID(uint32 objid)
-{
-    if (!objid)
-        return nullptr;
-
-    for (int i = 0; i < ships.size(); i++) {
-        Ship* s = ships[i];
-        if (!s) continue;
-
-        if (GetObjID_Ship(s) == objid)
-            return s;
-    }
-
-    return nullptr;
-}
-
-SimShot* SimRegion::FindShotByObjID(uint32 objid)
-{
-    if (!objid)
-        return nullptr;
-
-    for (int i = 0; i < drones.size(); i++) {
-        Drone* d = drones[i];
-        if (!d) continue;
-
-        if (GetObjID_Shot((SimShot*)d) == objid)
-            return (SimShot*)d;
-    }
-
-    for (int i = 0; i < shots.size(); i++) {
-        SimShot* s = shots[i];
-        if (!s) continue;
-
-        if (GetObjID_Shot(s) == objid)
-            return s;
-    }
-
-    return nullptr;
-}
-
-// +--------------------------------------------------------------------+
-
-// Region travel must move ownership as well as the ship's region pointer.
-void SimRegion::TransferObject(Ship* ShipToMove)
-{
-    if (!ShipToMove) return;
-    SimRegion* Previous = ShipToMove->GetRegion();
-    if (Previous && Previous != this)
-    {
-        Previous->ships.remove(ShipToMove);
-        Previous->carriers.remove(ShipToMove);
-        Previous->selection.remove(ShipToMove);
-        if (Previous->player_ship == ShipToMove) Previous->player_ship = nullptr;
-    }
-    InsertObject(ShipToMove);
-}
-
-void SimRegion::InsertObject(Ship* s)
-{
-    if (!s)
-        return;
-
-    if (!ships.contains(s))
-        ships.append(s);
-
-    if (s->NumFlightDecks() > 0) {
-        if (!carriers.contains(s))
-            carriers.append(s);
-    }
-
-    TranslateObject((SimObject*)s);
-
-    if (!player_ship) {
-        SimElement* elem = s->GetElement();
-        if (elem && elem->GetPlayer() > 0) {
-            player_ship = s;
-        }
-    }
-}
-
-void SimRegion::InsertObject(SimShot* shot)
-{
-    if (!shot)
-        return;
-
-    if (Drone* d = dynamic_cast<Drone*>(shot)) {
-        if (!drones.contains(d))
-            drones.append(d);
-    }
-    else {
-        if (!shots.contains(shot))
-            shots.append(shot);
-    }
-
-    TranslateObject((SimObject*)shot);
-}
-
-void SimRegion::InsertObject(Explosion* e)
-{
-    if (!e)
-        return;
-
-    if (!explosions.contains(e))
-        explosions.append(e);
-
-    TranslateObject((SimObject*)e);
-}
-
-void SimRegion::InsertObject(Debris* d)
-{
-    if (!d)
-        return;
-
-    if (!debris.contains(d))
-        debris.append(d);
-
-    TranslateObject((SimObject*)d);
-}
-
-void SimRegion::InsertObject(Asteroid* a)
-{
-    if (!a)
-        return;
-
-    if (!asteroids.contains(a))
-        asteroids.append(a);
-
-    TranslateObject((SimObject*)a);
-}
-
-// +--------------------------------------------------------------------+
-
-void SimRegion::SetPlayerShip(Ship* s)
-{
-    player_ship = s;
-}
-
-// +--------------------------------------------------------------------+
-// Selection
-// +--------------------------------------------------------------------+
-
-void SimRegion::SetSelection(Ship* s)
-{
-    selection.clear();
-    if (s)
-        selection.append(s);
-}
-
-bool SimRegion::IsSelected(Ship* s)
-{
-    return s && selection.contains(s);
-}
-
-ListIter<Ship> SimRegion::GetSelection()
-{
-    return selection;
-}
-
-void SimRegion::ClearSelection()
-{
-    selection.clear();
-}
-
-void SimRegion::AddSelection(Ship* s)
-{
-    if (s && !selection.contains(s))
-        selection.append(s);
-}
-
-// +--------------------------------------------------------------------+
-// Tracking
-// +--------------------------------------------------------------------+
-
-List<SimContact>& SimRegion::GetTrackList(int iff)
-{
-    return track_database[ClampIFF(iff)];
-}
-
-// +--------------------------------------------------------------------+
-// Internal mechanics
-// +--------------------------------------------------------------------+
-
-void SimRegion::TranslateObject(SimObject* obj)
-{
-    if (!obj)
-        return;
-
-    obj->SetRegion(this);
-
-    // Migration-safe: do not mutate coordinates here.
-    // Treat SimObject::Location() as region-local and use region->GetLocation() when needed.
-}
-
-// +--------------------------------------------------------------------+
-
-TArray<SimShot*> SimRegion::GetProjectiles()
-{
-    TArray<SimShot*> Result;
-    for (int I=0; I<shots.size(); ++I) if (shots[I]) Result.AddUnique(shots[I]);
-    for (int I=0; I<drones.size(); ++I) if (drones[I]) Result.AddUnique(drones[I]);
-    return Result;
-}
-
-void SimRegion::DamageShips()
-{
-    // Restore legacy shot/ship damage dispatch after projectile movement.
-    // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
-    for (SimShot* Shot : GetProjectiles()) {
-        if (!Shot || IsDeadShot(Shot)) continue;
-        for (int ShipIndex=0;ShipIndex<ships.size();++ShipIndex) {
-            Ship* Victim=ships[ShipIndex];
-            if (!Victim || Victim==Shot->Owner() || Victim->IsDead() || Victim->IsDying()) continue;
-            FVector Impact=FVector::ZeroVector;
-            if (!Victim->HitBy(Shot,Impact)) continue;
-            if (Shot->Damage() < 0 && Shot->Owner()) {
-                if (auto* Stats = ShipStats::Find(Shot->Owner()->GetName()))
-                    Stats->AddEvent(ESimEvent::SCAN_TARGET, Victim->GetName());
-            }
-            if (!Shot->HitTarget() && Shot->Owner()) {
-                ShipStats* Stats=ShipStats::Find(Shot->Owner()->GetName());
-                if (Stats) {if(Shot->IsPrimary())Stats->AddGunHit();else if(Shot->Damage()>0)Stats->AddMissileHit();}
-            }
-            Shot->SetHitTarget(true);
-            if (Victim->GetIntegrity()<1 && !Victim->InTransition()) {
-                const char* KillerName=Shot->Owner()?Shot->Owner()->GetName():"[KIA]";
-                if(auto* VictimStats=ShipStats::Find(Victim->GetName()))VictimStats->AddEvent(ESimEvent::DESTROYED,KillerName);
-                if(Shot->Owner())if(auto* KillerStats=ShipStats::Find(KillerName)){
-                    KillerStats->AddEvent(Shot->IsMissile()?ESimEvent::MISSILE_KILL:ESimEvent::GUNS_KILL,Victim->GetName());
-                    if(Shot->Owner()->GetIFF()!=Victim->GetIFF() && (Victim->GetIFF()>0 || Shot->Owner()->GetIFF()>1))KillerStats->AddPoints(Victim->Value());
-                }
-                Victim->DeathSpiral();
-            }
-            if (!Shot->IsBeam()) {Shot->SetLife(0);break;}
-        }
-        // Legacy allows weapons whose mask contains DRONE to intercept drones.
-        // Keep the owning lists separate and defer deletion to UpdateShots.
-        if (IsDeadShot(Shot) || !(Shot->GetDesign()->target_type & static_cast<uint32>(CLASSIFICATION::DRONE))) continue;
-        for (int I=0; I<drones.size(); ++I) {
-            Drone* Victim = drones[I];
-            if (!Victim || Victim==Shot || IsDeadShot(Victim) || Victim->Owner()==Shot->Owner()) continue;
-            FVector Impact=FVector::ZeroVector;
-            if (!Victim->HitBy(Shot,Impact)) continue;
-            if (Victim->GetIntegrity()<1) {
-                if (sim) sim->CreateExplosion(Victim->GetLocation(),Victim->GetVelocity(),EExplosionType::SHOT_BLAST,1,1,this);
-                Victim->SetLife(0);
-            }
-            if (!Shot->IsBeam()) {
-                if (Shot->Owner()) if (auto* Stats=ShipStats::Find(Shot->Owner()->GetName())) {
-                    if (Shot->IsPrimary()) Stats->AddGunHit(); else Stats->AddMissileHit();
-                }
-                Shot->SetLife(0);
-                break;
-            }
-        }
-    }
-
-}
-
-void SimRegion::UpdateShips(double seconds)
-{
-    if (ships.size() == 0)
-        return;
-
-    carriers.clear();
-    if (ai_index > ships.size()) ai_index=0;
-    int ShipIndex=0;
-
-    for (int i = 0; i < ships.size(); /* manual */) {
-        Ship* s = ships[i];
-
-        if (!s || IsDeadShip(s)) {
-            if (s && !dead_ships.contains(s))
-                dead_ships.append(s);
-
-            ships.removeIndex(i);
-            continue;
-        }
-
-        if (s->GetRegion() != this)
-            s->SetRegion(this);
-
-        s->SetAIMode(ShipIndex == ai_index || s == player_ship ? 2 : 1);
-        s->ExecFrame(seconds);
-        ++ShipIndex;
-
-        if (s->NumFlightDecks() > 0)
-            carriers.append(s);
-
-        if (IsDeadShip(s)) {
-            if (!dead_ships.contains(s))
-                dead_ships.append(s);
-
-            ships.removeIndex(i);
-            continue;
-        }
-
-        ++i;
-    }
-
-    if (player_ship && player_ship->GetRegion() != this)
-        player_ship = nullptr;
-
-    if (player_ship && IsDeadShip(player_ship))
-        player_ship = nullptr;
-    ++ai_index;
-}
-
-void SimRegion::UpdateShots(double seconds)
-{
-    for (int i = 0; i < shots.size(); /* manual */) {
-        SimShot* s = shots[i];
-
-        if (!s || IsDeadShot(s)) {
-            shots.removeIndex(i);
-            delete s;
-            continue;
-        }
-
-        if (s->GetRegion() != this)
-            s->SetRegion(this);
-
-        s->ExecFrame(seconds);
-
-        if (IsDeadShot(s)) {
-            shots.removeIndex(i);
-            delete s;
-            continue;
-        }
-
-        ++i;
-    }
-
-    for (int i = 0; i < drones.size(); /* manual */) {
-        Drone* d = drones[i];
-
-        if (!d || IsDeadShot((SimShot*)d)) {
-            drones.removeIndex(i);
-            delete d;
-            continue;
-        }
-
-        if (d->GetRegion() != this)
-            d->SetRegion(this);
-
-        d->ExecFrame(seconds);
-
-        if (IsDeadShot((SimShot*)d)) {
-            drones.removeIndex(i);
-            delete d;
-            continue;
-        }
-
-        ++i;
-    }
-}
-
-void SimRegion::UpdateExplosions(double seconds)
-{
-    for (int i = 0; i < explosions.size(); /* manual */) {
-        Explosion* e = explosions[i];
-
-        if (!e || IsDeadExplosion(e)) {
-            explosions.removeIndex(i);
-            delete e;
-            continue;
-        }
-
-        if (e->GetRegion() != this)
-            e->SetRegion(this);
-
-        e->ExecFrame(seconds);
-
-        if (IsDeadExplosion(e)) {
-            explosions.removeIndex(i);
-            delete e;
-            continue;
-        }
-
-        ++i;
-    }
-}
-
-void
-SimRegion::UpdateTracking(double seconds)
-{
-    UE_LOG(LogTemp, VeryVerbose,
-        TEXT("[SimRegion::UpdateTracking] ENTER Region='%hs' Ships=%d Active=%d"),
-        GetName(),
-        ships.size(),
-        active ? 1 : 0);
-
-    (void)seconds;
-
-    // Legacy UpdateTracks: expire owned shared sensor records, then reset
-    // their per-frame detection state before sensors contribute new readings.
-    for (int IFF = 0; IFF < 5; ++IFF) {
-        ListIter<SimContact> Tracks = track_database[IFF];
-        while (++Tracks) {
-            SimContact* Contact = Tracks.value();
-            Ship* ContactShip = Contact->GetShip();
-            SimShot* ContactShot = Contact->GetShot();
-            const bool bLost = ContactShip
-                ? (ContactShip->GetRegion() != this || IsDeadShip(ContactShip))
-                : (!ContactShot || ContactShot->GetLife() <= 0);
-            if (Contact->Age() < 0 || bLost) delete Tracks.removeItem();
-            else Contact->Reset();
-        }
-    }
-
-    for (int i = 0; i < ships.size(); ++i)
-    {
-        Ship* observer = ships[i];
-
-        if (!observer || IsDeadShip(observer))
-        {
-            continue;
-        }
-
-        Sensor* sensor = observer->GetSensor();
-
-        if (!sensor)
-        {
-            continue;
-        }
-
-        for (int j = 0; j < ships.size(); ++j)
-        {
-            Ship* target = ships[j];
-
-            if (!target || target == observer)
-            {
-                continue;
-            }
-
-            if (IsDeadShip(target))
-            {
-                continue;
-            }
-
-            UE_LOG(LogTemp, VeryVerbose,
-                TEXT("[SimRegion::UpdateTracking] PAIR] Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
-                GetName(),
-                observer ? observer->GetName() : "NULL",
-                target ? target->GetName() : "NULL",
-                observer ? observer->GetIFF() : -1,
-                target ? target->GetIFF() : -1);
-
-            observer->FindContact(target);
-
-            UE_LOG(LogTemp, VeryVerbose,
-                TEXT("[SimRegion::UpdateTracking] CONTACTS Observer='%hs' Contacts=%d"),
-                observer->GetName(),
-                observer->GetContactList().size());
-        }
-    }
-}
-
-// +--------------------------------------------------------------------+
-
-void SimRegion::DestroyShips()
-{
-    if (dead_ships.size() == 0)
-        return;
-
-    for (int i = 0; i < dead_ships.size(); ++i) {
-        Ship* s = dead_ships[i];
-        if (!s) continue;
-        DestroyShip(s);
-    }
-
-    dead_ships.clear();
-}
-
-void
-SimRegion::DestroyShip(Ship* ship)
-{
-    if (!ship)
-    {
-        return;
-    }
-
-    if (ships.contains(ship))
-    {
-        ships.remove(ship);
-    }
-
-    if (carriers.contains(ship))
-    {
-        carriers.remove(ship);
-    }
-
-    if (selection.contains(ship))
-    {
-        selection.remove(ship);
-    }
-
-    if (player_ship == ship)
-    {
-        player_ship = nullptr;
-    }
-
-    // Retain ownership rather than orphaning the allocation. Final deletion
-    // occurs at region teardown after actors are unbound.
-    if (!retired_ships.contains(ship)) {
-        retired_ships.append(ship);
-        TSet<Ship*> DetachedShip;
-        DetachedShip.Add(ship);
-        DetachRegionShipActors(DetachedShip);
-    }
-}
-
-void SimRegion::CommitMission()
-{
-    // Region is being finalized at mission end.
-    // Purpose: detach volatile runtime state that should not persist past mission end.
-
-    // 1) Clear selection + player references (avoid dangling pointers later):
-    ClearSelection();
-
-    if (player_ship)
-    {
-        // Ensure the ship doesn’t keep region-local transient state:
-        Sensor* S = player_ship->GetSensor();
-        if (S)
-            S->ClearAllContacts();
-    }
-
-    player_ship = nullptr;
-
-    // 2) Flush per-ship transient states that should not persist:
-    //    (Do NOT delete ships here; Sim/Scene GC handles dead objects separately.)
-    ListIter<Ship> s_iter = ships;
-    while (++s_iter)
-    {
-        Ship* S = s_iter.value();
-        if (!S) continue;
-
-        // Stop “tracking” / region-local cached lists:
-        S->ClearTrack();
-
-        // Clear sensor contacts so they don’t persist into post-mission menus:
-        Sensor* SensorPtr = S->GetSensor();
-        if (SensorPtr)
-            SensorPtr->ClearAllContacts();
-
-        // If you have any per-mission flags that need clearing, do it here.
-        // Examples (only if they exist in your Ship class):
-        // S->SetAutoNav(false);
-        // S->SetInCombat(false);
-    }
-
-    // 3) Clean up transient shots/drones lists (if region owns these containers):
-    //    If your region uses Scene GC via SetLife(0) etc., mark them.
-    ListIter<SimShot> sh_iter = shots;
-    while (++sh_iter)
-    {
-        SimShot* Shot = sh_iter.value();
-        if (Shot)
-            Shot->SetLife(0);
-    }
-
-    ListIter<Drone> d_iter = drones;
-    while (++d_iter)
-    {
-        Drone* D = d_iter.value();
-        if (D)
-            D->SetLife(0);
-    }
-
-    // 4) Terrain/grid end-of-mission housekeeping:
-    if (terrain)
-    {
-        // If your Terrain class has an end-mission/cleanup call, invoke it.
-        // Otherwise, at minimum ensure it is not “active”.
-        if (terrain && sim && sim->GetScene())
-        {
-            terrain->Deactivate(*sim->GetScene());
-        }
-    }
-
-    if (grid)
-    {
-        // If grid has any dynamic render buffers, reset them.
-        // This is harmless even if ShowGrid was used.
-        grid->ShowGrid(false);
-    }
-
-    // 5) Region is no longer considered active after commit:
-    active = false;
-}
-
-void
-SimRegion::DockShips()
-{
-    if (ships.size() == 0)
-        return;
-
-    ListIter<Ship> ship_iter = ships;
-
-    while (++ship_iter) {
-        Ship* ship = ship_iter.value();
-
-        if (!ship)
-            continue;
-
-        const bool bDocked =
-            (ship->GetFlightPhase() == EOPSMode::DOCKED);
-
-        if (bDocked) {
-            if (ship == recovered_player) continue; // recovery events are recorded once
-            if (sim) sim->ProcessEventTrigger(
-                (int)MISSIONEVENT_TRIGGER::TRIGGER_DOCK,
-                0,
-                ship->GetName());
-
-            // who did this ship dock with?
-            Ship* carrier = ship->GetCarrier();
-
-            if (carrier) {
-                ShipStats* ShipStatsPtr =
-                    ShipStats::Find(ship->GetName());
-
-                if (ShipStatsPtr) {
-                    if (ship->IsAirborne()) {
-                        ShipStatsPtr->AddEvent(
-                            ESimEvent::LAND,
-                            carrier->GetName());
-                    }
-                    else {
-                        ShipStatsPtr->AddEvent(
-                            ESimEvent::DOCK,
-                            carrier->GetName());
-                    }
-                }
-
-                ShipStats* CarrierStats =
-                    ShipStats::Find(carrier->GetName());
-
-                if (CarrierStats) {
-                    CarrierStats->AddEvent(
-                        ESimEvent::RECOVER_SHIP,
-                        ship->GetName());
-                }
-            }
-
-            // Player recovery is staged; NPCs retain legacy immediate removal.
-            const bool bPlayerDocked =
-                (player_ship == ship);
-
-            if (bPlayerDocked)
-            {
-                recovered_player = ship;
-                // Preserve the final objective evaluation previously performed
-                // by Destroy(), but keep the parked fighter and its systems alive.
-                if (SimElement* Element = ship->GetElement())
-                    for (int Index=0;Index<Element->NumObjectives();++Index)
-                        if (Instruction* Objective = Element->GetObjective(Index))
-                            if (Objective->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) Objective->Evaluate(ship);
-                if (sim) sim->NotifyPlayerDocked();
-                if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
-                    if (UGameInstance* GI = World->GetGameInstance())
-                        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PLAN);
-                UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Parked fighter '%hs' retained until debrief is visible"),ship->GetName());
-                continue;
-            }
-
-            char ship_name[33];
-            strcpy_s(ship_name, ship->GetName());
-
-            selection.remove(ship);
-            dead_ships.insert(ship_iter.removeItem());
-
-            UE_LOG(LogTemp, Log,
-                TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
-                ANSI_TO_TCHAR(ship->GetName()));
-
-            ship->Destroy();
-
-            if (carrier) {
-                UE_LOG(LogTemp, Log,
-                    TEXT("[SimRegion::DockShips] Ship='%s' DockedWith='%s'"),
-                    ANSI_TO_TCHAR(ship_name),
-                    ANSI_TO_TCHAR(carrier->GetName()));
-            }
-            else {
-                UE_LOG(LogTemp, Warning,
-                    TEXT("[SimRegion::DockShips] Ship='%s' Docked with NULL carrier"),
-                    ANSI_TO_TCHAR(ship_name));
-            }
-        }
-    }
-}
-
-SimObject*
-SimRegion::FindObject(const char* obj_name)
-{
-    if (!obj_name || !*obj_name)
-    {
-        return nullptr;
-    }
-
-    //-------------------------------------------------------------
-    // Ships, stations, farcasters, carriers loaded as Ship
-    //-------------------------------------------------------------
-
-    ListIter<Ship> ship_iter =
-        ships;
-
-    while (++ship_iter)
-    {
-        Ship* s =
-            ship_iter.value();
-
-        if (s &&
-            s->GetName() &&
-            !_stricmp(s->GetName(), obj_name))
-        {
-            return s;
-        }
-    }
-
-    //-------------------------------------------------------------
-    // Carriers may also be tracked separately
-    //-------------------------------------------------------------
-
-    ListIter<Ship> carrier_iter =
-        carriers;
-
-    while (++carrier_iter)
-    {
-        Ship* s =
-            carrier_iter.value();
-
-        if (s &&
-            s->GetName() &&
-            !_stricmp(s->GetName(), obj_name))
-        {
-            return s;
-        }
-    }
-
-    return nullptr;
-}
-// Legacy local collision/crash pass, adapted from Stars45 Sim.cpp (9972413).
-void
-SimRegion::CollideShips()
-{
-	if (ships.size() < 2 && debris.size() < 1)
-	return;
-
-	List<Ship> kill_list;
-
-	int s_index = 0;
-
-	ListIter<Ship> ship_iter = ships;
-	while (++ship_iter) {
-		Ship* ship = ship_iter.value();
-
-		if (ship->InTransition()                  ||
-				ship->GetFlightPhase() < EOPSMode::ACTIVE ||
-				ship->GetMissionClockMS() < 10000          ||
-				ship->IsNetObserver())
-		continue;
-
-		int t_index = 0;
-		ListIter<Ship> targ_iter = ships;
-		while (++targ_iter) {
-			Ship* targ = targ_iter.value();
-
-			if (t_index++ <= s_index) continue;
-
-			if (targ == ship) continue;
-
-			if (targ->InTransition()                  ||
-					targ->GetFlightPhase() < EOPSMode::ACTIVE ||
-					targ->GetMissionClockMS() < 10000          ||
-					targ->IsNetObserver())
-			continue;
-
-			// ignore AI fighter collisions:
-			if (ship->IsDropship()     &&
-					ship != player_ship    &&
-					targ->IsDropship()     &&
-					targ != player_ship)
-			continue;
-
-			// don't collide with own runway!
-			if (ship->IsAirborne() && ship->GetCarrier() == targ)
-			continue;
-			if (targ->IsAirborne() && targ->GetCarrier() == ship)
-			continue;
-
-            if (ship->IsClearingLaunchCarrier(targ) || targ->IsClearingLaunchCarrier(ship))
-                continue;
-
-			// impact:
-			if (ship->CollidesWith(*targ)) {
-				FVector3f tv1(targ->GetVelocity());
-				FVector3f sv1(ship->GetVelocity());
-
-				Physical::SemiElasticCollision(*ship, *targ);
-
-				FVector3f tv2(targ->GetVelocity());
-				FVector3f sv2(ship->GetVelocity());
-
-				double dvs = (sv2-sv1).Size();
-				double dvt = (tv2-tv1).Size();
-                if ((ship == player_ship || targ == player_ship) && (dvs > 20 || dvt > 20))
-                    UE_LOG(LogTemp,Display,TEXT("[NativeCollision] '%hs' vs '%hs' dV=%.2f/%.2f positions=%s / %s"),
-                        ship->GetName(),targ->GetName(),dvs,dvt,*ship->GetLocation().ToString(),*targ->GetLocation().ToString());
-
-
-				if (dvs > 20) dvs *= dvs;
-				if (dvt > 20) dvt *= dvt;
-
-				{ // Local simulation owns collision damage.
-
-					ship->InflictDamage(dvs);
-
-
-					targ->InflictDamage(dvt);
-
-
-				}
-
-				// then delete the ship:
-				if (targ->GetIntegrity() < 1.0f) {
-
-
-					if (!kill_list.contains(targ)) {
-						ShipStats* r = ShipStats::Find(targ->GetName());
-						if (r) r->AddEvent(ESimEvent::COLLIDE, ship->GetName());
-
-						if (targ->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
-							r = ShipStats::Find(ship->GetName());
-							if (r) r->AddPoints(targ->Value());
-						}
-
-						kill_list.insert(targ);
-					}
-				}
-
-				if (ship->GetIntegrity() < 1.0f) {
-
-
-					if (!kill_list.contains(ship)) {
-						ShipStats* r = ShipStats::Find(ship->GetName());
-						if (r) r->AddEvent(ESimEvent::COLLIDE, targ->GetName());
-
-						if (ship->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
-							r = ShipStats::Find(targ->GetName());
-							if (r) r->AddPoints(ship->Value());
-						}
-
-						kill_list.insert(ship);
-					}
-				}
-			}
-		}
-
-		ListIter<Debris> debris_iter = debris;
-		while (++debris_iter) {
-			Debris* d = debris_iter.value();
-
-			if (d->GetRadius() < 50)
-			continue;
-
-			if (ship->CollidesWith(*d)) {
-				FVector3f tv1(d->GetVelocity());
-				FVector3f sv1(ship->GetVelocity());
-
-				Physical::SemiElasticCollision(*ship, *d);
-
-				FVector3f tv2(d->GetVelocity());
-				FVector3f sv2(ship->GetVelocity());
-
-				{ // Local simulation owns collision damage.
-					ship->InflictDamage((sv2-sv1).Size());
-				}
-
-				d->InflictDamage((tv2-tv1).Size());
-
-				// then delete the debris:
-				if (d->GetIntegrity() < 1.0f) {
-					if (sim) sim->CreateExplosion(d->GetLocation(), d->GetVelocity(), EExplosionType::LARGE_EXPLOSION, 1.0f, 1.0f, this);
-					debris_iter.removeItem();
-					delete d;
-				}
-
-				if (ship->GetIntegrity() < 1.0f) {
-					if (!kill_list.contains(ship)) {
-						ShipStats* r = ShipStats::Find(ship->GetName());
-						if (r) r->AddEvent(ESimEvent::COLLIDE, "Debris");
-
-						kill_list.insert(ship);
-					}
-				}
-			}
-		}
-
-		ListIter<Asteroid> a_iter = asteroids;
-		while (++a_iter) {
-			Asteroid* a = a_iter.value();
-
-			if (ship->CollidesWith(*a)) {
-				FVector3f sv1(ship->GetVelocity());
-				Physical::SemiElasticCollision(*ship, *a);
-				FVector3f sv2(ship->GetVelocity());
-
-				{ // Local simulation owns collision damage.
-					ship->InflictDamage((sv2-sv1).Size() * 10);
-				}
-
-				if (ship->GetIntegrity() < 1.0f) {
-					if (!kill_list.contains(ship)) {
-						ShipStats* r = ShipStats::Find(ship->GetName());
-						if (r) r->AddEvent(ESimEvent::COLLIDE, "Asteroid");
-
-						kill_list.insert(ship);
-					}
-				}
-			}
-		}
-
-		s_index++;
-	}
-
-	ListIter<Ship> killed(kill_list);
-	while (++killed) {
-		Ship* kill = killed.value();
-		kill->DeathSpiral();
-	}
-}
-
-void
-SimRegion::CrashShips()
-{
-	if (type != AIR_SPACE || !terrain)
-	return;
-
-	ListIter<Ship> ship_iter = ships;
-	while (++ship_iter) {
-		Ship* ship = ship_iter.value();
-
-		if (!ship->IsGroundUnit() &&
-				!ship->InTransition() &&
-				ship->GetClassification() != CLASSIFICATION::LCA &&
-				ship->GetAltitudeAGL() < ship->GetRadius()/2) {
-			if (ship->GetFlightPhase() == EOPSMode::ACTIVE || ship->GetFlightPhase() == EOPSMode::APPROACH) {
-				ship->InflictDamage(1e6);
-
-				if (ship->GetIntegrity() < 1.0f) {
-
-					ShipStats* r = ShipStats::Find(ship->GetName());
-					if (r) r->AddEvent(ESimEvent::CRASH);
-
-					ship->DeathSpiral();
-				}
-			}
-		}
-	}
-
-	ListIter<SimShot> shot_iter = shots;
-	while (++shot_iter) {
-		SimShot* shot = shot_iter.value();
-
-		if (shot->IsBeam() || shot->IsDecoy())
-		continue;
-
-		if (shot->AltitudeMSL() < 5e3 &&
-				shot->AltitudeAGL() < 5) {
-
-			// shot hit the ground, destroy it:
-
-
-			if (shot->IsDrone())
-			drones.remove((Drone*) shot);
-
-			shot_iter.removeItem();
-			delete shot;
-		}
-	}
-}
+#include "WeaponDesign.h"
+#include "Explosion.h"
+#include "Debris.h"
+#include "Asteroid.h"
+#include "SimContact.h"
+#include "FlightDeck.h"
+#include "Hangar.h"
+#include "Instruction.h"
+#include "GameStructs.h"
+#include "Random.h"
+
+// Systems:
+#include "Game.h"
+
+// Unreal:
+#include "Math/UnrealMathUtility.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "ShipActor.h"
+#include "UObject/UObjectIterator.h"
+
+// The simulation owns Ship, while UE owns AShipActor. Break that link before
+// releasing simulation storage. Snapshot first because Destroy mutates objects.
+static void DetachRegionShipActors(const TSet<Ship*>& OwnedShips)
+{
+    TArray<TWeakObjectPtr<AShipActor>> Actors;
+    for (TObjectIterator<AShipActor> It; It; ++It) {
+        AShipActor* Actor = *It;
+        if (IsValid(Actor) && !Actor->HasAnyFlags(RF_ClassDefaultObject) &&
+            OwnedShips.Contains(Actor->GetRuntimeShip()))
+            Actors.Add(Actor);
+    }
+    for (const TWeakObjectPtr<AShipActor>& WeakActor : Actors) {
+        if (AShipActor* Actor = WeakActor.Get()) {
+            Actor->BindRuntimeShip(nullptr);
+            Actor->Destroy();
+        }
+    }
+}
+
+// +--------------------------------------------------------------------+
+// Local helpers (single edit point if your API differs)
+// +--------------------------------------------------------------------+
+
+static FORCEINLINE int ClampIFF(int iff)
+{
+    if (iff < 0) return 0;
+    if (iff > 4) return 4;
+    return iff;
+}
+
+static FORCEINLINE bool IsDeadShip(const Ship* s)
+{
+    if (!s)
+    {
+        return true;
+    }
+
+    // TEMP UE PORT:
+    // Do not use GetLife() here yet. Some runtime ships/static ships
+    // may not have legacy life initialized correctly.
+    if (s->IsDead())
+    {
+        return true;
+    }
+
+    if (s->IsDying())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static FORCEINLINE bool IsDeadShot(const SimShot* s)
+{
+    if (!s) return true;
+    if (s->GetLife() <= 0) return true;
+    return false;
+}
+
+static FORCEINLINE bool IsDeadExplosion(const Explosion* e)
+{
+    if (!e) return true;
+    if (e->GetLife() <= 0) return true;
+    return false;
+}
+
+// IMPORTANT: ObjID getter name can vary across your port.
+// If your build fails here, change ONLY these helpers.
+static FORCEINLINE uint32 GetObjID_Ship(const Ship* s)
+{
+    return s ? (uint32)s->GetObjID() : 0;
+}
+
+static FORCEINLINE uint32 GetObjID_Shot(const SimShot* s)
+{
+    return s ? (uint32)s->GetObjID() : 0;
+}
+
+// +--------------------------------------------------------------------+
+
+int SimRegion::operator<(const SimRegion& r) const
+{
+    return name < r.name;
+}
+
+int SimRegion::operator<=(const SimRegion& r) const
+{
+    return (*this < r) || (*this == r);
+}
+
+// +--------------------------------------------------------------------+
+
+SimRegion::SimRegion(Sim* s, const char* n, int t)
+    : sim(s), name(n), type(t)
+{
+    if (sim)
+        star_system = sim->GetStarSystem();
+
+    orbital_region = nullptr;
+    location = FVector::ZeroVector;
+    grid = nullptr;
+    terrain = nullptr;
+    active = false;
+    player_ship = nullptr;
+    current_view = 0;
+    sim_time = 0;
+    ai_index = 0;
+}
+
+SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
+    : sim(SimPtr),
+    orbital_region(OrbitalRegionPtr),
+    type(REAL_SPACE)
+{
+    star_system = nullptr;
+    location = FVector::ZeroVector;
+    grid = nullptr;
+    terrain = nullptr;
+    active = false;
+    player_ship = nullptr;
+    current_view = 0;
+    sim_time = 0;
+    ai_index = 0;
+
+    if (orbital_region) {
+        star_system = orbital_region->System();
+        name = orbital_region->GetName();
+        location = orbital_region->Location();
+
+        grid = new Grid(
+            (int32)orbital_region->Radius(),
+            (int32)orbital_region->GetGridSpace()
+        );
+
+        if (orbital_region->GetType() == Orbital::TERRAIN) {
+            TerrainRegion* TerrainRegionPtr = (TerrainRegion*)orbital_region;
+            terrain = new Terrain(TerrainRegionPtr);
+            type = AIR_SPACE;
+        }
+        else {
+            type = REAL_SPACE;
+        }
+    }
+    else {
+        name = "Unknown";
+        location = FVector::ZeroVector;
+    }
+}
+
+SimRegion::~SimRegion()
+{
+    // Also support destruction of a standalone region. Sim::UnloadMission
+    // calls this phase across every region first, leaving this set empty.
+    TSet<Ship*> OwnedShips;
+    ReleaseMissionObjects(OwnedShips);
+    for (Ship* OwnedShip : OwnedShips) OwnedShip->Destroy();
+    for (Ship* OwnedShip : OwnedShips) delete OwnedShip;
+    delete terrain;
+    terrain = nullptr;
+    delete grid;
+    grid = nullptr;
+    links.clear();
+}
+
+void SimRegion::ReleaseMissionObjects(TSet<Ship*>& OwnedShips)
+{
+    player_ship = nullptr;
+    recovered_player = nullptr;
+    TSet<Ship*> RegionShips;
+    for (int i = 0; i < ships.size(); ++i) if (ships[i]) RegionShips.Add(ships[i]);
+    for (int i = 0; i < dead_ships.size(); ++i) if (dead_ships[i]) RegionShips.Add(dead_ships[i]);
+    for (int i = 0; i < retired_ships.size(); ++i) if (retired_ships[i]) RegionShips.Add(retired_ships[i]);
+    DetachRegionShipActors(RegionShips);
+    for (Ship* RegionShip : RegionShips) OwnedShips.Add(RegionShip);
+    ships.clear();
+    dead_ships.clear();
+    retired_ships.clear();
+    carriers.clear();
+    selection.clear();
+
+    // Sensor creates these contacts with new; this database owns them.
+    for (int i = 0; i < 5; ++i) track_database[i].destroy();
+    shots.destroy();
+    drones.destroy(); // Separate owning list in SSW, unlike legacy.
+    explosions.destroy();
+    debris.destroy();
+    asteroids.destroy();
+}
+
+// +--------------------------------------------------------------------+
+
+void SimRegion::Activate()
+{
+    if (active)
+        return;
+
+    active = true;
+
+    if (star_system && orbital_region) {
+        star_system->SetActiveRegion(orbital_region);
+    }
+}
+
+void SimRegion::Deactivate()
+{
+    if (!active)
+        return;
+
+    active = false;
+
+    for (int i = 0; i < 5; ++i)
+        track_database[i].destroy();
+}
+
+// +--------------------------------------------------------------------+
+
+void
+SimRegion::ExecFrame(double seconds)
+{
+    if (seconds <= 0)
+    {
+        return;
+    }
+
+    // Legacy inactive regions accumulate elapsed game time between queue turns.
+    if (sim && !active) {
+        seconds = FMath::Min((Game::GetGameTime()-sim_time)/1000.0,3*Game::GetMaxFrameLength());
+    }
+    sim_time = Game::GetGameTime();
+    if (orbital_region) location = orbital_region->Location();
+    UpdateTracking(seconds);
+    UpdateShips(seconds);
+    UpdateShots(seconds);
+    DamageShips();
+
+    UpdateExplosions(seconds);
+
+    // Legacy advances and expires debris alongside explosions.
+    for (int i = 0; i < debris.size(); ) {
+        Debris* Piece = debris[i];
+        if (Piece && Piece->GetLife() > 0) Piece->ExecFrame(seconds);
+        if (!Piece || Piece->GetLife() <= 0) {
+            debris.removeIndex(i);
+            delete Piece;
+        }
+        else ++i;
+    }
+
+    if (!Game::Paused()) {
+        DockShips();
+        if (active) { CollideShips(); CrashShips(); }
+        DestroyShips();
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+void SimRegion::ShowGrid(int show)
+{
+    if (grid)
+        grid->ShowGrid(show ? true : false);
+}
+
+void SimRegion::NextView()
+{
+    current_view++;
+    if (current_view > 3)
+        current_view = 0;
+}
+
+// +--------------------------------------------------------------------+
+
+bool SimRegion::CanTimeSkip() const
+{
+    if (shots.size() > 0)  return false;
+    if (drones.size() > 0) return false;
+
+    for (int i = 0; i < ships.size(); ++i) {
+        Ship* s = ships[i];
+        if (!s) continue;
+
+        if (s->IsInCombat())
+            return false;
+
+        if (s->IsDying() || s->IsDead())
+            return false;
+    }
+
+    return true;
+}
+
+void
+SimRegion::ResolveTimeSkip(double seconds)
+{
+    if (seconds <= 0)
+        return;
+
+    for (int32 i = 0; i < ships.size(); i++) {
+        Ship* ship = ships[i];
+
+        if (!ship)
+            continue;
+
+        Ship* ward = ship->GetWard();
+
+        ship->ExecSystems(seconds);
+        ship->ExecMaintFrame(seconds);
+
+        ship->ClearTrack();
+
+        ListIter<SimContact> contact = ship->GetContactList();
+        while (++contact) {
+            contact->ClearTrack();
+        }
+
+        if (ship->IsStatic())
+            continue;
+
+        InboundSlot* inbound = ship->GetInbound();
+
+        if (inbound) {
+            if (inbound->Cleared()) {
+                FlightDeck* deck = inbound->GetDeck();
+
+                if (deck) {
+                    ship->SetCarrier((Ship*)deck->GetCarrier(), deck);
+                    ship->SetFlightPhase(EOPSMode::DOCKED);
+                    ship->Stow();
+                    deck->Clear(inbound->Index());
+                }
+            }
+
+            continue;
+        }
+
+        if (ship->GetHangar()) {
+            ship->GetHangar()->ExecFrame(seconds);
+
+            List<FlightDeck>& flight_decks = ship->GetFlightDecks();
+
+            for (int32 n = 0; n < flight_decks.size(); n++) {
+                if (flight_decks[n])
+                    flight_decks[n]->ExecFrame(seconds);
+            }
+        }
+
+        Instruction* navpt = ship->GetNextNavPoint();
+
+        FVector dest = ship->GetLocation();
+        double  speed = 500.0;
+        double  space = 2.0e3 * (ship->GetElementIndex() - 1);
+
+        if (ship->IsStarship())
+            space *= 5.0;
+
+        if (navpt && navpt->GetAction() == EInstruction::Launch) {
+            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+            navpt = ship->GetNextNavPoint();
+        }
+
+        if (navpt) {
+            dest = OtherHand(navpt->GetLocation());
+            speed = navpt->GetSpeed();
+        }
+        else if (ward) {
+            FVector delta = ship->GetLocation() - ward->GetLocation();
+            delta.Z = 0.0f;
+
+            if (delta.Size() > 25e3) {
+                delta.Normalize();
+                dest = ward->GetLocation() + delta * 25e3;
+            }
+        }
+
+        FVector delta = dest - ship->GetLocation();
+        FVector unit = delta;
+
+        double dist = unit.Size();
+
+        if (dist > SMALL_NUMBER)
+            unit /= dist;
+        else
+            unit = FVector::ZeroVector;
+
+        dist -= space;
+
+        if (dist > 1e3) {
+            if (speed < 50.0)
+                speed = 500.0;
+
+            double etr = dist / speed;
+
+            if (etr > seconds)
+                etr = seconds;
+
+            FVector trans = unit * (speed * etr);
+
+            if (ship->GetFuelLevel() > 1) {
+                ship->MoveTo(ship->GetLocation() + trans);
+                ship->SetVelocity(unit * speed);
+            }
+
+            ship->LookAt(dest);
+
+            if (ship->IsStarship()) {
+                ship->SetFLCSMode(EFLCSMode::HELM);
+                ship->SetHelmHeading(ship->GetCompassHeading());
+                ship->SetHelmPitch(ship->GetCompassPitch());
+            }
+        }
+        else if (navpt && navpt->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) {
+            ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+        }
+
+        if (ward) {
+            FVector ward_heading = ward->GetHeading();
+            ward_heading.Z = 0.0f;
+
+            if (!ward_heading.IsNearlyZero())
+                ward_heading.Normalize();
+
+            if (ship->GetFuelLevel() > 1) {
+                ship->SetVelocity(ward->GetVelocity());
+            }
+
+            ship->LookAt(ship->GetLocation() + ward_heading * 1e6);
+
+            if (ship->IsStarship()) {
+                ship->SetFLCSMode(EFLCSMode::HELM);
+                ship->SetHelmHeading(ship->GetCompassHeading());
+                ship->SetHelmPitch(ship->GetCompassPitch());
+            }
+        }
+
+        if (dist > 1.0 || ward) {
+            for (int32 j = 0; j < ships.size(); j++) {
+                Ship* test = ships[j];
+
+                if (!test)
+                    continue;
+
+                if (ship != test && test->GetMass() >= ship->GetMass()) {
+                    FVector sep = ship->GetLocation() - test->GetLocation();
+
+                    if (sep.Size() < ship->GetRadius() * 2 + test->GetRadius() * 2) {
+                        ship->MoveTo(test->GetLocation() + OtherHand(RandomPoint()));
+                    }
+                }
+            }
+        }
+    }
+
+    DockShips();
+}
+
+// +--------------------------------------------------------------------+
+
+Ship* SimRegion::FindShip(const char* n)
+{
+    if (!n || !*n)
+        return nullptr;
+
+    for (int i = 0; i < ships.size(); i++) {
+        Ship* s = ships[i];
+        if (!s) continue;
+
+        if (!_stricmp(s->GetName(), n))
+            return s;
+    }
+
+    return nullptr;
+}
+
+Ship* SimRegion::FindShipByObjID(uint32 objid)
+{
+    if (!objid)
+        return nullptr;
+
+    for (int i = 0; i < ships.size(); i++) {
+        Ship* s = ships[i];
+        if (!s) continue;
+
+        if (GetObjID_Ship(s) == objid)
+            return s;
+    }
+
+    return nullptr;
+}
+
+SimShot* SimRegion::FindShotByObjID(uint32 objid)
+{
+    if (!objid)
+        return nullptr;
+
+    for (int i = 0; i < drones.size(); i++) {
+        Drone* d = drones[i];
+        if (!d) continue;
+
+        if (GetObjID_Shot((SimShot*)d) == objid)
+            return (SimShot*)d;
+    }
+
+    for (int i = 0; i < shots.size(); i++) {
+        SimShot* s = shots[i];
+        if (!s) continue;
+
+        if (GetObjID_Shot(s) == objid)
+            return s;
+    }
+
+    return nullptr;
+}
+
+// +--------------------------------------------------------------------+
+
+// Region travel must move ownership as well as the ship's region pointer.
+void SimRegion::TransferObject(Ship* ShipToMove)
+{
+    if (!ShipToMove) return;
+    SimRegion* Previous = ShipToMove->GetRegion();
+    if (Previous && Previous != this)
+    {
+        Previous->ships.remove(ShipToMove);
+        Previous->carriers.remove(ShipToMove);
+        Previous->selection.remove(ShipToMove);
+        if (Previous->player_ship == ShipToMove) Previous->player_ship = nullptr;
+    }
+    InsertObject(ShipToMove);
+}
+
+void SimRegion::InsertObject(Ship* s)
+{
+    if (!s)
+        return;
+
+    if (!ships.contains(s))
+        ships.append(s);
+
+    if (s->NumFlightDecks() > 0) {
+        if (!carriers.contains(s))
+            carriers.append(s);
+    }
+
+    TranslateObject((SimObject*)s);
+
+    if (!player_ship) {
+        SimElement* elem = s->GetElement();
+        if (elem && elem->GetPlayer() > 0) {
+            player_ship = s;
+        }
+    }
+}
+
+void SimRegion::InsertObject(SimShot* shot)
+{
+    if (!shot)
+        return;
+
+    if (Drone* d = dynamic_cast<Drone*>(shot)) {
+        if (!drones.contains(d))
+            drones.append(d);
+    }
+    else {
+        if (!shots.contains(shot))
+            shots.append(shot);
+    }
+
+    TranslateObject((SimObject*)shot);
+}
+
+void SimRegion::InsertObject(Explosion* e)
+{
+    if (!e)
+        return;
+
+    if (!explosions.contains(e))
+        explosions.append(e);
+
+    TranslateObject((SimObject*)e);
+}
+
+void SimRegion::InsertObject(Debris* d)
+{
+    if (!d)
+        return;
+
+    if (!debris.contains(d))
+        debris.append(d);
+
+    TranslateObject((SimObject*)d);
+}
+
+void SimRegion::InsertObject(Asteroid* a)
+{
+    if (!a)
+        return;
+
+    if (!asteroids.contains(a))
+        asteroids.append(a);
+
+    TranslateObject((SimObject*)a);
+}
+
+// +--------------------------------------------------------------------+
+
+void SimRegion::SetPlayerShip(Ship* s)
+{
+    player_ship = s;
+}
+
+// +--------------------------------------------------------------------+
+// Selection
+// +--------------------------------------------------------------------+
+
+void SimRegion::SetSelection(Ship* s)
+{
+    selection.clear();
+    if (s)
+        selection.append(s);
+}
+
+bool SimRegion::IsSelected(Ship* s)
+{
+    return s && selection.contains(s);
+}
+
+ListIter<Ship> SimRegion::GetSelection()
+{
+    return selection;
+}
+
+void SimRegion::ClearSelection()
+{
+    selection.clear();
+}
+
+void SimRegion::AddSelection(Ship* s)
+{
+    if (s && !selection.contains(s))
+        selection.append(s);
+}
+
+// +--------------------------------------------------------------------+
+// Tracking
+// +--------------------------------------------------------------------+
+
+List<SimContact>& SimRegion::GetTrackList(int iff)
+{
+    return track_database[ClampIFF(iff)];
+}
+
+// +--------------------------------------------------------------------+
+// Internal mechanics
+// +--------------------------------------------------------------------+
+
+void SimRegion::TranslateObject(SimObject* obj)
+{
+    if (!obj)
+        return;
+
+    obj->SetRegion(this);
+
+    // Migration-safe: do not mutate coordinates here.
+    // Treat SimObject::Location() as region-local and use region->GetLocation() when needed.
+}
+
+// +--------------------------------------------------------------------+
+
+TArray<SimShot*> SimRegion::GetProjectiles()
+{
+    TArray<SimShot*> Result;
+    for (int I=0; I<shots.size(); ++I) if (shots[I]) Result.AddUnique(shots[I]);
+    for (int I=0; I<drones.size(); ++I) if (drones[I]) Result.AddUnique(drones[I]);
+    return Result;
+}
+
+void SimRegion::DamageShips()
+{
+    // Restore legacy shot/ship damage dispatch after projectile movement.
+    // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
+    for (SimShot* Shot : GetProjectiles()) {
+        if (!Shot || IsDeadShot(Shot)) continue;
+        for (int ShipIndex=0;ShipIndex<ships.size();++ShipIndex) {
+            Ship* Victim=ships[ShipIndex];
+            if (!Victim || Victim==Shot->Owner() || Victim->IsDead() || Victim->IsDying()) continue;
+            FVector Impact=FVector::ZeroVector;
+            if (!Victim->HitBy(Shot,Impact)) continue;
+            if (Shot->Damage() < 0 && Shot->Owner()) {
+                if (auto* Stats = ShipStats::Find(Shot->Owner()->GetName()))
+                    Stats->AddEvent(ESimEvent::SCAN_TARGET, Victim->GetName());
+            }
+            if (!Shot->HitTarget() && Shot->Owner()) {
+                ShipStats* Stats=ShipStats::Find(Shot->Owner()->GetName());
+                if (Stats) {if(Shot->IsPrimary())Stats->AddGunHit();else if(Shot->Damage()>0)Stats->AddMissileHit();}
+            }
+            Shot->SetHitTarget(true);
+            if (Victim->GetIntegrity()<1 && !Victim->InTransition()) {
+                const char* KillerName=Shot->Owner()?Shot->Owner()->GetName():"[KIA]";
+                if(auto* VictimStats=ShipStats::Find(Victim->GetName()))VictimStats->AddEvent(ESimEvent::DESTROYED,KillerName);
+                if(Shot->Owner())if(auto* KillerStats=ShipStats::Find(KillerName)){
+                    KillerStats->AddEvent(Shot->IsMissile()?ESimEvent::MISSILE_KILL:ESimEvent::GUNS_KILL,Victim->GetName());
+                    if(Shot->Owner()->GetIFF()!=Victim->GetIFF() && (Victim->GetIFF()>0 || Shot->Owner()->GetIFF()>1))KillerStats->AddPoints(Victim->Value());
+                }
+                Victim->DeathSpiral();
+            }
+            if (!Shot->IsBeam()) {Shot->SetLife(0);break;}
+        }
+        // Legacy allows weapons whose mask contains DRONE to intercept drones.
+        // Keep the owning lists separate and defer deletion to UpdateShots.
+        if (IsDeadShot(Shot) || !(Shot->GetDesign()->target_type & static_cast<uint32>(CLASSIFICATION::DRONE))) continue;
+        for (int I=0; I<drones.size(); ++I) {
+            Drone* Victim = drones[I];
+            if (!Victim || Victim==Shot || IsDeadShot(Victim) || Victim->Owner()==Shot->Owner()) continue;
+            FVector Impact=FVector::ZeroVector;
+            if (!Victim->HitBy(Shot,Impact)) continue;
+            if (Victim->GetIntegrity()<1) {
+                if (sim) sim->CreateExplosion(Victim->GetLocation(),Victim->GetVelocity(),EExplosionType::SHOT_BLAST,1,1,this);
+                Victim->SetLife(0);
+            }
+            if (!Shot->IsBeam()) {
+                if (Shot->Owner()) if (auto* Stats=ShipStats::Find(Shot->Owner()->GetName())) {
+                    if (Shot->IsPrimary()) Stats->AddGunHit(); else Stats->AddMissileHit();
+                }
+                Shot->SetLife(0);
+                break;
+            }
+        }
+    }
+
+}
+
+void SimRegion::UpdateShips(double seconds)
+{
+    if (ships.size() == 0)
+        return;
+
+    carriers.clear();
+    if (ai_index > ships.size()) ai_index=0;
+    int ShipIndex=0;
+
+    for (int i = 0; i < ships.size(); /* manual */) {
+        Ship* s = ships[i];
+
+        if (!s || IsDeadShip(s)) {
+            if (s && !dead_ships.contains(s))
+                dead_ships.append(s);
+
+            ships.removeIndex(i);
+            continue;
+        }
+
+        if (s->GetRegion() != this)
+            s->SetRegion(this);
+
+        s->SetAIMode(ShipIndex == ai_index || s == player_ship ? 2 : 1);
+        s->ExecFrame(seconds);
+        ++ShipIndex;
+
+        if (s->NumFlightDecks() > 0)
+            carriers.append(s);
+
+        if (IsDeadShip(s)) {
+            if (!dead_ships.contains(s))
+                dead_ships.append(s);
+
+            ships.removeIndex(i);
+            continue;
+        }
+
+        ++i;
+    }
+
+    if (player_ship && player_ship->GetRegion() != this)
+        player_ship = nullptr;
+
+    if (player_ship && IsDeadShip(player_ship))
+        player_ship = nullptr;
+    ++ai_index;
+}
+
+void SimRegion::UpdateShots(double seconds)
+{
+    for (int i = 0; i < shots.size(); /* manual */) {
+        SimShot* s = shots[i];
+
+        if (!s || IsDeadShot(s)) {
+            shots.removeIndex(i);
+            delete s;
+            continue;
+        }
+
+        if (s->GetRegion() != this)
+            s->SetRegion(this);
+
+        s->ExecFrame(seconds);
+
+        if (IsDeadShot(s)) {
+            shots.removeIndex(i);
+            delete s;
+            continue;
+        }
+
+        ++i;
+    }
+
+    for (int i = 0; i < drones.size(); /* manual */) {
+        Drone* d = drones[i];
+
+        if (!d || IsDeadShot((SimShot*)d)) {
+            drones.removeIndex(i);
+            delete d;
+            continue;
+        }
+
+        if (d->GetRegion() != this)
+            d->SetRegion(this);
+
+        d->ExecFrame(seconds);
+
+        if (IsDeadShot((SimShot*)d)) {
+            drones.removeIndex(i);
+            delete d;
+            continue;
+        }
+
+        ++i;
+    }
+}
+
+void SimRegion::UpdateExplosions(double seconds)
+{
+    for (int i = 0; i < explosions.size(); /* manual */) {
+        Explosion* e = explosions[i];
+
+        if (!e || IsDeadExplosion(e)) {
+            explosions.removeIndex(i);
+            delete e;
+            continue;
+        }
+
+        if (e->GetRegion() != this)
+            e->SetRegion(this);
+
+        e->ExecFrame(seconds);
+
+        if (IsDeadExplosion(e)) {
+            explosions.removeIndex(i);
+            delete e;
+            continue;
+        }
+
+        ++i;
+    }
+}
+
+void
+SimRegion::UpdateTracking(double seconds)
+{
+    UE_LOG(LogTemp, VeryVerbose,
+        TEXT("[SimRegion::UpdateTracking] ENTER Region='%hs' Ships=%d Active=%d"),
+        GetName(),
+        ships.size(),
+        active ? 1 : 0);
+
+    (void)seconds;
+
+    // Legacy UpdateTracks: expire owned shared sensor records, then reset
+    // their per-frame detection state before sensors contribute new readings.
+    for (int IFF = 0; IFF < 5; ++IFF) {
+        ListIter<SimContact> Tracks = track_database[IFF];
+        while (++Tracks) {
+            SimContact* Contact = Tracks.value();
+            Ship* ContactShip = Contact->GetShip();
+            SimShot* ContactShot = Contact->GetShot();
+            const bool bLost = ContactShip
+                ? (ContactShip->GetRegion() != this || IsDeadShip(ContactShip))
+                : (!ContactShot || ContactShot->GetLife() <= 0);
+            if (Contact->Age() < 0 || bLost) delete Tracks.removeItem();
+            else Contact->Reset();
+        }
+    }
+
+    for (int i = 0; i < ships.size(); ++i)
+    {
+        Ship* observer = ships[i];
+
+        if (!observer || IsDeadShip(observer))
+        {
+            continue;
+        }
+
+        Sensor* sensor = observer->GetSensor();
+
+        if (!sensor)
+        {
+            continue;
+        }
+
+        for (int j = 0; j < ships.size(); ++j)
+        {
+            Ship* target = ships[j];
+
+            if (!target || target == observer)
+            {
+                continue;
+            }
+
+            if (IsDeadShip(target))
+            {
+                continue;
+            }
+
+            UE_LOG(LogTemp, VeryVerbose,
+                TEXT("[SimRegion::UpdateTracking] PAIR] Region='%hs' Observer='%hs' Target='%hs' ObserverIFF=%d TargetIFF=%d"),
+                GetName(),
+                observer ? observer->GetName() : "NULL",
+                target ? target->GetName() : "NULL",
+                observer ? observer->GetIFF() : -1,
+                target ? target->GetIFF() : -1);
+
+            observer->FindContact(target);
+
+            UE_LOG(LogTemp, VeryVerbose,
+                TEXT("[SimRegion::UpdateTracking] CONTACTS Observer='%hs' Contacts=%d"),
+                observer->GetName(),
+                observer->GetContactList().size());
+        }
+    }
+}
+
+// +--------------------------------------------------------------------+
+
+void SimRegion::DestroyShips()
+{
+    if (dead_ships.size() == 0)
+        return;
+
+    for (int i = 0; i < dead_ships.size(); ++i) {
+        Ship* s = dead_ships[i];
+        if (!s) continue;
+        DestroyShip(s);
+    }
+
+    dead_ships.clear();
+}
+
+void
+SimRegion::DestroyShip(Ship* ship)
+{
+    if (!ship)
+    {
+        return;
+    }
+
+    if (ships.contains(ship))
+    {
+        ships.remove(ship);
+    }
+
+    if (carriers.contains(ship))
+    {
+        carriers.remove(ship);
+    }
+
+    if (selection.contains(ship))
+    {
+        selection.remove(ship);
+    }
+
+    if (player_ship == ship)
+    {
+        player_ship = nullptr;
+    }
+
+    // Retain ownership rather than orphaning the allocation. Final deletion
+    // occurs at region teardown after actors are unbound.
+    if (!retired_ships.contains(ship)) {
+        retired_ships.append(ship);
+        TSet<Ship*> DetachedShip;
+        DetachedShip.Add(ship);
+        DetachRegionShipActors(DetachedShip);
+    }
+}
+
+void SimRegion::CommitMission()
+{
+    // Region is being finalized at mission end.
+    // Purpose: detach volatile runtime state that should not persist past mission end.
+
+    // 1) Clear selection + player references (avoid dangling pointers later):
+    ClearSelection();
+
+    if (player_ship)
+    {
+        // Ensure the ship doesn’t keep region-local transient state:
+        Sensor* S = player_ship->GetSensor();
+        if (S)
+            S->ClearAllContacts();
+    }
+
+    player_ship = nullptr;
+
+    // 2) Flush per-ship transient states that should not persist:
+    //    (Do NOT delete ships here; Sim/Scene GC handles dead objects separately.)
+    ListIter<Ship> s_iter = ships;
+    while (++s_iter)
+    {
+        Ship* S = s_iter.value();
+        if (!S) continue;
+
+        // Stop “tracking” / region-local cached lists:
+        S->ClearTrack();
+
+        // Clear sensor contacts so they don’t persist into post-mission menus:
+        Sensor* SensorPtr = S->GetSensor();
+        if (SensorPtr)
+            SensorPtr->ClearAllContacts();
+
+        // If you have any per-mission flags that need clearing, do it here.
+        // Examples (only if they exist in your Ship class):
+        // S->SetAutoNav(false);
+        // S->SetInCombat(false);
+    }
+
+    // 3) Clean up transient shots/drones lists (if region owns these containers):
+    //    If your region uses Scene GC via SetLife(0) etc., mark them.
+    ListIter<SimShot> sh_iter = shots;
+    while (++sh_iter)
+    {
+        SimShot* Shot = sh_iter.value();
+        if (Shot)
+            Shot->SetLife(0);
+    }
+
+    ListIter<Drone> d_iter = drones;
+    while (++d_iter)
+    {
+        Drone* D = d_iter.value();
+        if (D)
+            D->SetLife(0);
+    }
+
+    // 4) Terrain/grid end-of-mission housekeeping:
+    if (terrain)
+    {
+        // If your Terrain class has an end-mission/cleanup call, invoke it.
+        // Otherwise, at minimum ensure it is not “active”.
+        if (terrain && sim && sim->GetScene())
+        {
+            terrain->Deactivate(*sim->GetScene());
+        }
+    }
+
+    if (grid)
+    {
+        // If grid has any dynamic render buffers, reset them.
+        // This is harmless even if ShowGrid was used.
+        grid->ShowGrid(false);
+    }
+
+    // 5) Region is no longer considered active after commit:
+    active = false;
+}
+
+void
+SimRegion::DockShips()
+{
+    if (ships.size() == 0)
+        return;
+
+    ListIter<Ship> ship_iter = ships;
+
+    while (++ship_iter) {
+        Ship* ship = ship_iter.value();
+
+        if (!ship)
+            continue;
+
+        const bool bDocked =
+            (ship->GetFlightPhase() == EOPSMode::DOCKED);
+
+        if (bDocked) {
+            if (ship == recovered_player) continue; // recovery events are recorded once
+            if (sim) sim->ProcessEventTrigger(
+                (int)MISSIONEVENT_TRIGGER::TRIGGER_DOCK,
+                0,
+                ship->GetName());
+
+            // who did this ship dock with?
+            Ship* carrier = ship->GetCarrier();
+
+            if (carrier) {
+                ShipStats* ShipStatsPtr =
+                    ShipStats::Find(ship->GetName());
+
+                if (ShipStatsPtr) {
+                    if (ship->IsAirborne()) {
+                        ShipStatsPtr->AddEvent(
+                            ESimEvent::LAND,
+                            carrier->GetName());
+                    }
+                    else {
+                        ShipStatsPtr->AddEvent(
+                            ESimEvent::DOCK,
+                            carrier->GetName());
+                    }
+                }
+
+                ShipStats* CarrierStats =
+                    ShipStats::Find(carrier->GetName());
+
+                if (CarrierStats) {
+                    CarrierStats->AddEvent(
+                        ESimEvent::RECOVER_SHIP,
+                        ship->GetName());
+                }
+            }
+
+            // Player recovery is staged; NPCs retain legacy immediate removal.
+            const bool bPlayerDocked =
+                (player_ship == ship);
+
+            if (bPlayerDocked)
+            {
+                recovered_player = ship;
+                // Preserve the final objective evaluation previously performed
+                // by Destroy(), but keep the parked fighter and its systems alive.
+                if (SimElement* Element = ship->GetElement())
+                    for (int Index=0;Index<Element->NumObjectives();++Index)
+                        if (Instruction* Objective = Element->GetObjective(Index))
+                            if (Objective->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) Objective->Evaluate(ship);
+                if (sim) sim->NotifyPlayerDocked();
+                if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
+                    if (UGameInstance* GI = World->GetGameInstance())
+                        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PLAN);
+                UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Parked fighter '%hs' retained until debrief is visible"),ship->GetName());
+                continue;
+            }
+
+            char ship_name[33];
+            strcpy_s(ship_name, ship->GetName());
+
+            selection.remove(ship);
+            dead_ships.insert(ship_iter.removeItem());
+
+            UE_LOG(LogTemp, Log,
+                TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
+                ANSI_TO_TCHAR(ship->GetName()));
+
+            ship->Destroy();
+
+            if (carrier) {
+                UE_LOG(LogTemp, Log,
+                    TEXT("[SimRegion::DockShips] Ship='%s' DockedWith='%s'"),
+                    ANSI_TO_TCHAR(ship_name),
+                    ANSI_TO_TCHAR(carrier->GetName()));
+            }
+            else {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("[SimRegion::DockShips] Ship='%s' Docked with NULL carrier"),
+                    ANSI_TO_TCHAR(ship_name));
+            }
+        }
+    }
+}
+
+SimObject*
+SimRegion::FindObject(const char* obj_name)
+{
+    if (!obj_name || !*obj_name)
+    {
+        return nullptr;
+    }
+
+    //-------------------------------------------------------------
+    // Ships, stations, farcasters, carriers loaded as Ship
+    //-------------------------------------------------------------
+
+    ListIter<Ship> ship_iter =
+        ships;
+
+    while (++ship_iter)
+    {
+        Ship* s =
+            ship_iter.value();
+
+        if (s &&
+            s->GetName() &&
+            !_stricmp(s->GetName(), obj_name))
+        {
+            return s;
+        }
+    }
+
+    //-------------------------------------------------------------
+    // Carriers may also be tracked separately
+    //-------------------------------------------------------------
+
+    ListIter<Ship> carrier_iter =
+        carriers;
+
+    while (++carrier_iter)
+    {
+        Ship* s =
+            carrier_iter.value();
+
+        if (s &&
+            s->GetName() &&
+            !_stricmp(s->GetName(), obj_name))
+        {
+            return s;
+        }
+    }
+
+    return nullptr;
+}
+// Legacy local collision/crash pass, adapted from Stars45 Sim.cpp (9972413).
+void
+SimRegion::CollideShips()
+{
+	if (ships.size() < 2 && debris.size() < 1)
+	return;
+
+	List<Ship> kill_list;
+
+	int s_index = 0;
+
+	ListIter<Ship> ship_iter = ships;
+	while (++ship_iter) {
+		Ship* ship = ship_iter.value();
+
+		if (ship->InTransition()                  ||
+				ship->GetFlightPhase() < EOPSMode::ACTIVE ||
+				ship->GetMissionClockMS() < 10000          ||
+				ship->IsNetObserver())
+		continue;
+
+		int t_index = 0;
+		ListIter<Ship> targ_iter = ships;
+		while (++targ_iter) {
+			Ship* targ = targ_iter.value();
+
+			if (t_index++ <= s_index) continue;
+
+			if (targ == ship) continue;
+
+			if (targ->InTransition()                  ||
+					targ->GetFlightPhase() < EOPSMode::ACTIVE ||
+					targ->GetMissionClockMS() < 10000          ||
+					targ->IsNetObserver())
+			continue;
+
+			// ignore AI fighter collisions:
+			if (ship->IsDropship()     &&
+					ship != player_ship    &&
+					targ->IsDropship()     &&
+					targ != player_ship)
+			continue;
+
+			// don't collide with own runway!
+			if (ship->IsAirborne() && ship->GetCarrier() == targ)
+			continue;
+			if (targ->IsAirborne() && targ->GetCarrier() == ship)
+			continue;
+
+            if (ship->IsClearingLaunchCarrier(targ) || targ->IsClearingLaunchCarrier(ship))
+                continue;
+
+			// impact:
+			if (ship->CollidesWith(*targ)) {
+				FVector3f tv1(targ->GetVelocity());
+				FVector3f sv1(ship->GetVelocity());
+
+				Physical::SemiElasticCollision(*ship, *targ);
+
+				FVector3f tv2(targ->GetVelocity());
+				FVector3f sv2(ship->GetVelocity());
+
+				double dvs = (sv2-sv1).Size();
+				double dvt = (tv2-tv1).Size();
+                if ((ship == player_ship || targ == player_ship) && (dvs > 20 || dvt > 20))
+                    UE_LOG(LogTemp,Display,TEXT("[NativeCollision] '%hs' vs '%hs' dV=%.2f/%.2f positions=%s / %s"),
+                        ship->GetName(),targ->GetName(),dvs,dvt,*ship->GetLocation().ToString(),*targ->GetLocation().ToString());
+
+
+				if (dvs > 20) dvs *= dvs;
+				if (dvt > 20) dvt *= dvt;
+
+				{ // Local simulation owns collision damage.
+
+					ship->InflictDamage(dvs);
+
+
+					targ->InflictDamage(dvt);
+
+
+				}
+
+				// then delete the ship:
+				if (targ->GetIntegrity() < 1.0f) {
+
+
+					if (!kill_list.contains(targ)) {
+						ShipStats* r = ShipStats::Find(targ->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, ship->GetName());
+
+						if (targ->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
+							r = ShipStats::Find(ship->GetName());
+							if (r) r->AddPoints(targ->Value());
+						}
+
+						kill_list.insert(targ);
+					}
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+
+
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, targ->GetName());
+
+						if (ship->GetIFF() > 0 && ship->GetIFF() != targ->GetIFF()) {
+							r = ShipStats::Find(targ->GetName());
+							if (r) r->AddPoints(ship->Value());
+						}
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		ListIter<Debris> debris_iter = debris;
+		while (++debris_iter) {
+			Debris* d = debris_iter.value();
+
+			if (d->GetRadius() < 50)
+			continue;
+
+			if (ship->CollidesWith(*d)) {
+				FVector3f tv1(d->GetVelocity());
+				FVector3f sv1(ship->GetVelocity());
+
+				Physical::SemiElasticCollision(*ship, *d);
+
+				FVector3f tv2(d->GetVelocity());
+				FVector3f sv2(ship->GetVelocity());
+
+				{ // Local simulation owns collision damage.
+					ship->InflictDamage((sv2-sv1).Size());
+				}
+
+				d->InflictDamage((tv2-tv1).Size());
+
+				// then delete the debris:
+				if (d->GetIntegrity() < 1.0f) {
+					if (sim) sim->CreateExplosion(d->GetLocation(), d->GetVelocity(), EExplosionType::LARGE_EXPLOSION, 1.0f, 1.0f, this);
+					debris_iter.removeItem();
+					delete d;
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, "Debris");
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		ListIter<Asteroid> a_iter = asteroids;
+		while (++a_iter) {
+			Asteroid* a = a_iter.value();
+
+			if (ship->CollidesWith(*a)) {
+				FVector3f sv1(ship->GetVelocity());
+				Physical::SemiElasticCollision(*ship, *a);
+				FVector3f sv2(ship->GetVelocity());
+
+				{ // Local simulation owns collision damage.
+					ship->InflictDamage((sv2-sv1).Size() * 10);
+				}
+
+				if (ship->GetIntegrity() < 1.0f) {
+					if (!kill_list.contains(ship)) {
+						ShipStats* r = ShipStats::Find(ship->GetName());
+						if (r) r->AddEvent(ESimEvent::COLLIDE, "Asteroid");
+
+						kill_list.insert(ship);
+					}
+				}
+			}
+		}
+
+		s_index++;
+	}
+
+	ListIter<Ship> killed(kill_list);
+	while (++killed) {
+		Ship* kill = killed.value();
+		kill->DeathSpiral();
+	}
+}
+
+void
+SimRegion::CrashShips()
+{
+	if (type != AIR_SPACE || !terrain)
+	return;
+
+	ListIter<Ship> ship_iter = ships;
+	while (++ship_iter) {
+		Ship* ship = ship_iter.value();
+
+		if (!ship->IsGroundUnit() &&
+				!ship->InTransition() &&
+				ship->GetClassification() != CLASSIFICATION::LCA &&
+				ship->GetAltitudeAGL() < ship->GetRadius()/2) {
+			if (ship->GetFlightPhase() == EOPSMode::ACTIVE || ship->GetFlightPhase() == EOPSMode::APPROACH) {
+				ship->InflictDamage(1e6);
+
+				if (ship->GetIntegrity() < 1.0f) {
+
+					ShipStats* r = ShipStats::Find(ship->GetName());
+					if (r) r->AddEvent(ESimEvent::CRASH);
+
+					ship->DeathSpiral();
+				}
+			}
+		}
+	}
+
+	ListIter<SimShot> shot_iter = shots;
+	while (++shot_iter) {
+		SimShot* shot = shot_iter.value();
+
+		if (shot->IsBeam() || shot->IsDecoy())
+		continue;
+
+		if (shot->AltitudeMSL() < 5e3 &&
+				shot->AltitudeAGL() < 5) {
+
+			// shot hit the ground, destroy it:
+
+
+			if (shot->IsDrone())
+			drones.remove((Drone*) shot);
+
+			shot_iter.removeItem();
+			delete shot;
+		}
+	}
+}
