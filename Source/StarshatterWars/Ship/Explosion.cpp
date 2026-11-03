@@ -191,11 +191,11 @@ FExplosionPresentation Explosion::GetPresentation() const
  return P;
 }
 TArray<FExplosionPresentation> Explosion::ConsumePresentationEvents(){TArray<FExplosionPresentation> Result=MoveTemp(ExplosionPresentationEvents);ExplosionPresentationEvents.Reset();return Result;}
-void Explosion::QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter)
+void Explosion::QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter,const FString& FlashId)
 {
  if(FlashScale<=0)return;
  FExplosionPresentation P;P.Serial=++NextExplosionPresentationSerial;P.Location=Position;P.Direction=Direction;
- P.ExplosionScale=P.ParticleScale=FlashScale;P.Region=Region;P.bMuzzleFlash=true;P.Shooter=Shooter;
+ P.ExplosionScale=P.ParticleScale=FlashScale;P.Region=Region;P.bMuzzleFlash=true;P.Shooter=Shooter;P.FlashId=FlashId;
  ExplosionPresentationEvents.Add(P);
 }
 void Explosion::QueuePresentationEvent() const{ExplosionPresentationEvents.Add(GetPresentation());}
@@ -663,12 +663,12 @@ Explosion::Activate(SimScene& scene)
     if (particles && !filter)
         scene.AddGraphic(particles);
 
-    if (sounds[(int)obj_type]) {
-        USound* sound = sounds[(int)obj_type]->Duplicate();
+    if (sounds[(int)type]) {
+        USound* sound = sounds[(int)type]->Duplicate();
 
         // fire and forget:
         if (sound) {
-            sound->SetLocation(GetLocation());
+            sound->SetLocation(FVector(GetLocation().Z,GetLocation().X,GetLocation().Y));
             sound->SetVolume(AudioConfig::EfxVolume());
             sound->PlayAndRelease();
         }

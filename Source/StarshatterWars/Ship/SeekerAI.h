@@ -66,6 +66,7 @@ protected:
     // 1: pure pursuit
     // 2: lead pursuit
 
+    double            step_seconds = 0.0;
     double            delay = 0.0;    // don't start seeking until then
     bool              overshot = false;
 };

@@ -28,6 +28,7 @@
 #include "SeekerAI.h"
 #include "Sim.h"
 #include "Ship.h"
+#include "ShipActor.h"
 #include "Trail.h"
 #include "AudioConfig.h"
 #include "TerrainRegion.h"
@@ -606,6 +607,7 @@ SimShot::Activate(SimScene& scene)
 		scene.AddGraphic(flare);
 
 	if (first_frame) {
+        design->ResolveSoundResource();
 		if (design->sound_resource) {
 			sound = design->sound_resource->Duplicate();
 
@@ -617,12 +619,12 @@ SimShot::Activate(SimScene& scene)
 					volume = max_vol;
 
 				if (beam) {
-					sound->SetLocation(origin);
+					sound->SetLocation(GetSoundWorldLocation(origin));
 					sound->SetVolume(volume);
 					sound->Play();
 				}
 				else {
-					sound->SetLocation(GetLocation());
+					sound->SetLocation(GetSoundWorldLocation(GetLocation()));
 					sound->SetVolume(volume);
 					sound->PlayAndRelease();
 					sound = 0; // fire and forget
@@ -682,4 +684,13 @@ SimShot::Update(SimObject* obj)
 		owner = 0;
 
 	return SimObserver::Update(obj);
+}
+
+FVector SimShot::GetSoundWorldLocation(const FVector& Point) const
+{
+ FVector Out(Point.Z,Point.X,Point.Y);
+ if(owner)if(auto* A=owner->GetNativePresentation()){
+  const FVector P=owner->GetLocation();Out+=A->GetActorLocation()-FVector(P.Z,P.X,P.Y);
+ }
+ return Out;
 }

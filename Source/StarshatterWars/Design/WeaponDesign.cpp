@@ -720,3 +720,17 @@ WeaponDesign::GetDesignList(List<Text>& designs)
 
 	return designs.size();
 }
+
+// Lazy Unreal audio binding preserves the bare legacy ID and configured attenuation.
+bool WeaponDesign::ResolveSoundResource()
+{
+ if(sound_resource)return true;
+ if(!sound.length())return false;
+ auto* Loader=DataLoader::GetLoader();if(!Loader)return false;
+ const Text Previous=Loader->GetDataPath();Loader->SetDataPath("Sounds/");
+ Loader->LoadSound(sound.data(),sound_resource,USound::LOCALIZED|USound::LOC_3D,true);
+ Loader->SetDataPath(Previous.data());
+ if(!sound_resource)return false;
+ sound_resource->SetMinDistance(sound_min_distance);sound_resource->SetMaxDistance(sound_max_distance);
+ return true;
+}

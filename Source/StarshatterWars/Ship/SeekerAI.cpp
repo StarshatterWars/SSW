@@ -65,7 +65,7 @@ SeekerAI::~SeekerAI()
 void
 SeekerAI::ExecFrame(double seconds)
 {
-    (void)seconds;
+    step_seconds=FMath::Max(0.0,seconds);
 
     // setup:
     FindObjective();
@@ -80,7 +80,7 @@ void
 SeekerAI::Navigator()
 {
     if (delay > 0) {
-        delay -= Game::FrameTime();
+        delay = FMath::Max(0.0,delay-step_seconds);
     }
     else {
         Steer s = SeekTarget();

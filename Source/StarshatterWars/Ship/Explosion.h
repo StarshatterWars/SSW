@@ -40,7 +40,7 @@ struct FExplosionPresentation
  FVector Location=FVector::ZeroVector;
  float ExplosionScale=1,ParticleScale=1,Lifetime=0;
  SimRegion* Region=nullptr;bool bHidden=false;
- bool bMuzzleFlash=false;const Ship* Shooter=nullptr;FVector Direction=FVector::ForwardVector;
+ FString FlashId;bool bMuzzleFlash=false;const Ship* Shooter=nullptr;FVector Direction=FVector::ForwardVector;
 };
 
 class Explosion : public SimObject,
@@ -68,7 +68,7 @@ public:
     static TArray<FExplosionPresentation> ConsumePresentationEvents();
     static void ClearPresentationEvents();
     void QueuePresentationEvent() const;
-    static void QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter);
+    static void QueueMuzzleFlash(const FVector& Position,const FVector& Direction,float FlashScale,SimRegion* Region,const Ship* Shooter,const FString& FlashId=FString());
 
     ParticleManager*  GetParticles() { return particles; }
 

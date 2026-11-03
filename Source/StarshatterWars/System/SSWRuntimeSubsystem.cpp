@@ -11,6 +11,7 @@
 #include "NativeTerrainActor.h"
 
 #include "SimShot.h"
+#include "ProjectilePresentationList.h"
 #include "Sensor.h"
 #include "WeaponDesign.h"
 #include "Engine/StaticMeshActor.h"
@@ -1518,19 +1519,19 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
     SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
     if(!World || !Region || !MissionPresentationBuilder.IsValid()){ClearProjectileVisuals();return;}
     TSet<SimShot*> Alive;
-    auto& Shots=Region->GetShots();
-    for(int I=0;I<Shots.size();++I){
-        SimShot* Shot=Shots[I]; if(!Shot || Shot->GetLife()<=0)continue;
+    const auto Shots=ProjectilePresentationList::Collect(*Region);
+    for(SimShot* Shot:Shots){
+        if(!Shot || Shot->GetLife()<=0)continue;
         Ship* Owner=const_cast<Ship*>(Shot->Owner());
-        if(!Owner || !Region->GetShips().contains(Owner))continue;
+        if(Owner && !Region->GetShips().contains(Owner))Owner=nullptr;
         // Match the owner's presentation offset. These spheres never collide in UE:
         // simulation shots remain authoritative for movement and damage.
-        const FVector Offset=GetVisualSpawnLocationForRuntimeShip(Owner)-ConvertLegacyShipLocationToUE(Owner->GetLocation());
+        const FVector Offset=Owner ? GetVisualSpawnLocationForRuntimeShip(Owner)-ConvertLegacyShipLocationToUE(Owner->GetLocation()) : FVector::ZeroVector;
         Ship* TargetShip=dynamic_cast<Ship*>(Shot->GetTarget());
         if(TargetShip && !Region->GetShips().contains(TargetShip))TargetShip=nullptr;
         auto VisualPoint=[this,Owner,TargetShip,Offset](const FVector& Point){
             FVector Result=ConvertLegacyShipLocationToUE(Point)+Offset;
-            if(TargetShip){
+            if(TargetShip && Owner){
                 const FVector Leg=TargetShip->GetLocation()-Owner->GetLocation();
                 const double Along=Leg.SizeSquared()>SMALL_NUMBER?FMath::Clamp(
                     FVector::DotProduct(Point-Owner->GetLocation(),Leg)/Leg.SizeSquared(),0.0,1.0):0.0;

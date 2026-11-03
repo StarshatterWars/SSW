@@ -1,3 +1,4 @@
+#include "AudioRouting.h"
 #include "Sound.h"
 
 #include "Engine/Engine.h"
@@ -184,6 +185,7 @@ void USound::EnsureAudioComponent()
 
     AudioComp->bAutoDestroy = false;
     AudioComp->bAllowSpatialization = bIs3D;
+    SSWAudioRouting::Route(AudioComp,SSWAudioRouting::InferChannel(SoundAsset->GetPathName()));
     AudioComp->SetWorldLocation(location);
     AudioComp->OnAudioFinishedNative.AddWeakLambda(this, [this](UAudioComponent*) { HandleFinished(); });
 

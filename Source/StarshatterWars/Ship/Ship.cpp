@@ -2271,8 +2271,9 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 	}
 
 	// MISSILE PROCESSING ------------------------------------------------
-	if (Shot->IsMissile() && rep) {
-		if (DistLen < rep->Radius()) {
+	if (Shot->IsMissile()) {
+        // Unreal hulls may have no legacy Graphic; retain missile collision/proximity semantics.
+		if (DistLen < (rep ? rep->Radius() : GetRadius())) {
 			HullImpact = Impact = ShotLoc;
 
 			HitType = CheckShotIntersection(Shot, Impact, HullImpact, &HitWeapon);

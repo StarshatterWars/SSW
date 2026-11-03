@@ -202,10 +202,8 @@ Drone::HitBy(SimShot* shot, FVector& impact)
 	if (hit_type != HIT_NOTHING) {
 		double effective_damage = shot->Damage() * dscale;
 
-		if (shot->IsBeam()) {
-			effective_damage *= Game::FrameTime();
-		}
-		else {
+        // SimShot::Damage already integrates beam damage over the simulation step.
+		if (!shot->IsBeam()) {
 			ApplyTorque(shot->GetVelocity() * (float)effective_damage * 1e-6f);
 		}
 

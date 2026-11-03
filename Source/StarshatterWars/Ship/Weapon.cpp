@@ -817,7 +817,7 @@ SimShot* Weapon::FireBarrel(int n)
         shot->SetSourceWeapon(this);
         // Successful legacy fire event only; the flash never applies damage.
         if((design->flash.length() || design->flash_img) && design->flash_scale>0)
-            Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship);
+            Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship,ANSI_TO_TCHAR(design->flash.data()));
         if (ammo > 0)
             ammo--;
 

@@ -112,6 +112,7 @@ public:
 	int operator == (const SimShot& s) const { return id == s.id; }
 
 protected:
+    FVector GetSoundWorldLocation(const FVector& Point) const;
 	const Ship* owner;
     double BeamDamageSeconds=0; // Actual simulation step; Game::FrameTime is a port stub.
     const Weapon* source_weapon = nullptr; // Non-owning presentation identity only.

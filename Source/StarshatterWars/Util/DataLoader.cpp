@@ -1,3 +1,5 @@
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Modules/ModuleManager.h"
 /*  Project nGenEx
 	Destroyer Studios LLC
 	Copyright © 1997-2004. All Rights Reserved.
@@ -290,6 +292,14 @@ DataLoader::LoadSound(const char* name, USound*& snd, DWORD flags, bool optional
             return snd ? 1 : 0;
         }
     }
+    // Imported audio preserves subfolders; bare legacy IDs must resolve there too.
+    TArray<FAssetData> AudioAssets;
+    auto& Registry=FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+    Registry.GetAssetsByPath(FName(TEXT("/Game/Audio/Sounds")),AudioAssets,true);
+    UObject* Match=nullptr;bool Ambiguous=false;
+    for(const auto& A:AudioAssets)if(A.AssetName==FName(*FPaths::GetBaseFilename(Input)))
+        if(auto* Sound=Cast<USoundBase>(A.GetAsset())){if(Match && Match!=Sound)Ambiguous=true;Match=Sound;}
+    if(Match && !Ambiguous){snd=USound::CreateFromAsset(CastChecked<USoundBase>(Match),TCHAR_TO_UTF8(*Match->GetPathName()),flags);return snd?1:0;}
     if (!optional) UE_LOG(LogTemp,Warning,TEXT("[DataLoader] Sound asset missing: '%s' (path '%hs')"),*Input,GetDataPath());
     return 0;
 }

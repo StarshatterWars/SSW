@@ -78,6 +78,8 @@ public:
 	float GetPitchDrag() const { return pitch_drag; }
 	float GetYawDrag() const { return yaw_drag; }
 
+    bool ResolveSoundResource();
+
 	// Do NOT define a file-scope `static List<WeaponDesign> catalog;` anywhere.
 	static List<WeaponDesign> catalog;
 	static List<WeaponDesign> mod_catalog;
