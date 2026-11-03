@@ -10,7 +10,7 @@ class Ship;
 class Camera;
 
 // Visual-only actor. Legacy Weapon remains responsible for targeting and firing.
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, BlueprintType)
 class STARSHATTERWARS_API ATurretActor : public AActor
 {
     GENERATED_BODY()
@@ -30,11 +30,16 @@ public:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Turret|Definition") TArray<FVector> LegacyMuzzles;
     // Mesh-relative transforms/materials are authored in BP; pivots alone are driven by simulation.
     UFUNCTION(BlueprintPure, Category="Turret") bool GetMuzzleTransform(int32 BarrelIndex, FTransform& OutTransform) const;
+    UFUNCTION(BlueprintCallable, Category="Turret|Definition")
+    void ApplyWeaponDefinition(FName InWeaponType);
     void SetPreviewAim(double Azimuth, double Elevation);
+    void SetSeparateBasePresentation(bool bSeparate);
     void SyncFromWeapon(const Weapon& InWeapon, const Ship& InShip);
     void SyncFromWeaponFrame(const Weapon& InWeapon, const Camera& SimShip, const FQuat& DisplayShip);
 private:
     bool bHasRuntimeMuzzles = false;
+    bool bSeparateBaseActive=false;
+    bool bBaseVisibilityBeforeSplit=true;
     TArray<FVector> RuntimeMuzzles;
 };
 

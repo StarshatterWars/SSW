@@ -23,6 +23,8 @@
 
 #include "ShipActor.h"
 #include "BoltWeaponActor.h"
+#include "TurretBaseComponent.h"
+#include "TurretBaseCatalog.h"
 #include "FighterActor.h"
 #include "FighterExhaustTuning.h"
 #include "WaypointArrival.h"
@@ -322,7 +324,7 @@ USceneComponent* AShipActor::CreateNativeWeaponPoint(const FName& Name)
 
 USceneComponent* AShipActor::CreateNativeTurretPoint(const FName& Name)
 {
-    UChildActorComponent* Point = CreateDefaultSubobject<UChildActorComponent>(Name);
+    UTurretBaseComponent* Point = CreateDefaultSubobject<UTurretBaseComponent>(Name);
     Point->SetupAttachment(TurretMountRoot);
     Point->bEditableWhenInherited = true;
     AuthoredTurretPointComponents.Add(Point);
@@ -354,6 +356,7 @@ void AShipActor::InitializeNativeAuthoredAttachments(FName FighterDef)
             Mount->StationName = Definition->Name;
             Mount->bLoadoutHardpoint = Definition->bLoadout;
             Mount->AllowedWeaponTypes = Definition->Types;
+            if(!Definition->bLoadout && Definition->Types.Num())Mount->ConfigureTurretVisual(Definition->Types[0]);
             if (!Definition->bLoadout && Definition->Types.Num())
                 Mount->ConfigureProjectileBlueprint(ABoltWeaponActor::BlueprintPathForWeapon(Definition->Types[0].ToString()));
             Mount->LegacyLocation = Definition->Location;
@@ -380,13 +383,52 @@ void AShipActor::InitializeNativeAuthoredAttachments(FName FighterDef)
             }
         }
     }
+    TSet<int32> MatchedWeapons;
     for (int32 Index = 0; Index < TurretBasePointDefs.Num(); ++Index)
-        CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1)));
+    {
+        auto* Base=CastChecked<UTurretBaseComponent>(CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"), Index + 1))));
+        for(int32 W=0;W<FighterMounts.Num() && W<WeaponMountPointDefs.Num();++W)
+        {
+            if(MatchedWeapons.Contains(W) || FighterMounts[W].bLoadout || !FighterMounts[W].Types.Num())continue;
+            if(!TurretBasePointDefs[Index].LocalOffset.Equals(WeaponMountPointDefs[W].LocalOffset,.001))continue;
+            Base->SourceWeaponIndex=W;Base->Configure(FighterMounts[W].Types[0]);MatchedWeapons.Add(W);break;
+        }
+    }
+    // Some older definitions omitted separate base points. A weapon with a
+    // turret_base still gets a native base at its existing weapon mount pose.
+    for(int32 W=0;W<FighterMounts.Num() && W<WeaponMountPointDefs.Num();++W)
+    {
+        if(MatchedWeapons.Contains(W) || FighterMounts[W].bLoadout || !FighterMounts[W].Types.Num())continue;
+        FString Model;float Scale;TurretBaseCatalog::Definition(FighterMounts[W].Types[0],Model,Scale);
+        if(Model.IsEmpty())continue;
+        FShipPointDef Def=WeaponMountPointDefs[W];Def.PointName=FName(*(Def.PointName.ToString()+TEXT("_Base")));
+        TurretBasePointDefs.Add(Def);
+        const int32 BaseIndex=AuthoredTurretPointComponents.Num();
+        auto* Base=CastChecked<UTurretBaseComponent>(CreateNativeTurretPoint(FName(*FString::Printf(TEXT("TurretMount_%02d"),BaseIndex+1))));
+        Base->SourceWeaponIndex=W;Base->Configure(FighterMounts[W].Types[0]);
+    }
+    SyncShipAttachmentCounts();
     SyncNativeAuthoredPoints();
 }
 
 void AShipActor::SyncNativeAuthoredPoints()
 {
+    // Derived legacy constructors can reset their point-definition arrays.
+    // Retain native bases synthesized from Wep.def after those resets.
+    while(TurretBasePointDefs.Num()<AuthoredTurretPointComponents.Num())
+    {
+        const int32 Index=TurretBasePointDefs.Num();
+        const auto* Base=Cast<UTurretBaseComponent>(AuthoredTurretPointComponents[Index].Get());
+        FShipPointDef Def;
+        if(Base && WeaponMountPointDefs.IsValidIndex(Base->SourceWeaponIndex))Def=WeaponMountPointDefs[Base->SourceWeaponIndex];
+        else if(AuthoredTurretPointComponents[Index]){
+            Def.LocalOffset=AuthoredTurretPointComponents[Index]->GetRelativeLocation();
+            Def.LocalRotation=AuthoredTurretPointComponents[Index]->GetRelativeRotation();
+        }
+        Def.PointName=AuthoredTurretPointComponents[Index]?AuthoredTurretPointComponents[Index]->GetFName():NAME_None;
+        TurretBasePointDefs.Add(Def);
+    }
+    SyncShipAttachmentCounts();
     SyncBlueprintActorSlots();
     for (int32 i = 0; i < AuthoredWeaponPointComponents.Num() && i < WeaponMountPointDefs.Num(); ++i)
     {
@@ -454,6 +496,7 @@ void AShipActor::OnConstruction(const FTransform& Transform)
     SyncNativeAuthoredPoints();
     SyncShipAttachmentCounts();
     SyncBlueprintActorSlots();
+    RebuildTurretActors();
 
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
     {
@@ -1835,6 +1878,8 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     {
         ConfigureWeaponHardpointsFromShipDef(ANSI_TO_TCHAR(RuntimeShip->Design()->name));
         BindRuntimeWeaponsToMounts();
+        ConfigureRuntimeTurretBases();
+        RebuildTurretActors();
     }
 }
 

@@ -12,9 +12,15 @@ TMap<FName, WeaponDesign*> WeaponDesignRegistry::LegacyDesignsByName;
 //-------------------------------------------------------------
 void WeaponDesignRegistry::Clear()
 {
+    // Row keys and display-name aliases may refer to the same owned design.
+    TSet<WeaponDesign*> Deleted;
     for (TPair<FName, WeaponDesign*>& Pair : LegacyDesignsByName)
     {
-        delete Pair.Value;
+        if (Pair.Value && !Deleted.Contains(Pair.Value))
+        {
+            Deleted.Add(Pair.Value);
+            delete Pair.Value;
+        }
     }
 
     LegacyDesignsByName.Empty();
@@ -188,6 +194,9 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->group = TCHAR_TO_ANSI(*Row.Group);
     Legacy->model = TCHAR_TO_ANSI(*Row.Model);
     Legacy->projectile = TCHAR_TO_ANSI(*Row.Projectile);
+    Legacy->turret = TCHAR_TO_ANSI(*Row.Turret);
+    Legacy->turret_base = TCHAR_TO_ANSI(*Row.TurretBase);
+    Legacy->turret_axis = Row.TurretAxis;
 
     //---------------------------------------------------------
     // Flags

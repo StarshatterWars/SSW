@@ -1,4 +1,6 @@
 #include "TurretCatalog.h"
+#include "WeaponDesignRegistry.h"
+#include "Misc/PackageName.h"
 #include "FighterTurretActor.h"
 #include "LCATurretActor.h"
 #include "RocketsTurretActor.h"
@@ -54,6 +56,19 @@ TSubclassOf<ATurretActor> TurretCatalog::FindClass(FName Type)
     if(Type==FName(TEXT("Quad AAA"))) return AQuadAAATurretActor::StaticClass();
     if(Type==FName(TEXT("SAM-1"))) return ASAM1TurretActor::StaticClass();
     return nullptr;
+}
+TSubclassOf<ATurretActor> TurretCatalog::VisualClass(FName Type)
+{
+    const auto* Row=WeaponDesignRegistry::Find(Type);
+    if(Row && Row->Turret.IsEmpty())return nullptr;
+    UClass* Native=FindClass(Type).Get();
+    if(!Native && (!Row || Row->Turret.IsEmpty()))return nullptr;
+    const FString Name=Native?Native->GetName().LeftChop(5):TEXT("Turret");
+    const FString Package=Native?FString::Printf(TEXT("/Game/Models/Weapons/Turret/%s/BP_%s"),*Name.LeftChop(6),*Name)
+        :TEXT("/Game/Models/Weapons/Turret/BP_Turret");
+    if(FPackageName::DoesPackageExist(Package))
+        if(UClass* BP=LoadClass<ATurretActor>(nullptr,*(Package+TEXT(".BP_")+Name+TEXT("_C"))))return BP;
+    return Native?Native:ATurretActor::StaticClass();
 }
 void TurretCatalog::ShipMounts(FName ShipDef,TArray<FShipTurretMountDef>& Out)
 {

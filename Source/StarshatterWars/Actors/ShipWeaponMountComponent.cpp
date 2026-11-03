@@ -5,11 +5,19 @@
 #include "WeaponDesign.h"
 #include "WeaponPresentationFrame.h"
 #include "BoltWeaponActor.h"
+#include "TurretCatalog.h"
+#include "TurretActor.h"
 
 UShipWeaponMountComponent::UShipWeaponMountComponent()
 {
     bEditableWhenInherited=true;
     PrimaryComponentTick.bCanEverTick=false;
+}
+
+void UShipWeaponMountComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+    if(LauncherVisual){LauncherVisual->DestroyComponent();LauncherVisual=nullptr;}
+    Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
 void UShipWeaponMountComponent::ConfigureProjectileBlueprint(const FString& DefaultPath)
@@ -22,6 +30,33 @@ void UShipWeaponMountComponent::ConfigureProjectileBlueprint(const FString& Defa
 UClass* UShipWeaponMountComponent::ResolveProjectileClass() const
 {
     return ProjectileBlueprint.LoadSynchronous();
+}
+
+void UShipWeaponMountComponent::ConfigureTurretVisual(FName Type)
+{
+    UClass* OldAuto=AutoTurretClass.Get();
+    const auto Default=TurretCatalog::VisualClass(Type);
+    if(!TurretBlueprint || TurretBlueprint==AutoTurretClass)TurretBlueprint=Default;
+    AutoTurretClass=Default;
+    UClass* Class=TurretBlueprint.Get();
+    if(bLoadoutHardpoint)
+    {
+        // Launchers can coexist with carried stores; never replace a missile actor.
+        if(!Class && LauncherVisual){LauncherVisual->DestroyComponent();LauncherVisual=nullptr;}
+        if(Class && !LauncherVisual && GetOwner() && GetWorld())
+        {
+            LauncherVisual=NewObject<UChildActorComponent>(GetOwner(),NAME_None,RF_Transient);
+            GetOwner()->AddInstanceComponent(LauncherVisual);LauncherVisual->SetupAttachment(this);
+            LauncherVisual->SetChildActorClass(Class);LauncherVisual->RegisterComponent();
+        }
+        else if(LauncherVisual && LauncherVisual->GetChildActorClass()!=Class)LauncherVisual->SetChildActorClass(Class);
+    }
+    else if(!GetChildActorClass() || GetChildActorClass()==OldAuto)SetChildActorClass(Class);
+    if(auto* Visual=GetTurretVisualActor())Visual->ApplyWeaponDefinition(Type);
+}
+ATurretActor* UShipWeaponMountComponent::GetTurretVisualActor() const
+{
+    return Cast<ATurretActor>(bLoadoutHardpoint?(LauncherVisual?LauncherVisual->GetChildActor():nullptr):GetChildActor());
 }
 
 void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeaponName,FName InWeaponType)
@@ -48,6 +83,7 @@ void UShipWeaponMountComponent::BindRuntimeWeapon(Weapon* InWeapon,FName InWeapo
             if (UClass* Class = WeaponBlueprintResolver::Resolve(ANSI_TO_TCHAR(Design->model.data()), InWeaponType.ToString()))
                 ConfigureProjectileBlueprint(Class->GetPathName());
     }
+    if(InWeapon)ConfigureTurretVisual(InWeaponType);
     RuntimeWeapon=InWeapon;
     RuntimeWeaponName=InWeaponName;
     RuntimeWeaponType=InWeaponType;
@@ -61,6 +97,7 @@ void UShipWeaponMountComponent::ClearRuntimeWeapon()
     if (ResolvedStoreClass.IsValid() && GetChildActorClass() == ResolvedStoreClass.Get())
         SetChildActorClass(nullptr);
     ResolvedStoreClass.Reset();
+    if(LauncherVisual){LauncherVisual->DestroyComponent();LauncherVisual=nullptr;}
     RuntimeWeapon=nullptr;
     RuntimeWeaponName=NAME_None;
     RuntimeWeaponType=NAME_None;

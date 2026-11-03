@@ -585,6 +585,7 @@ public:
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
     void RebuildTurretActors();
+    void ConfigureRuntimeTurretBases();
 
     UFUNCTION(BlueprintCallable, CallInEditor, Category = "Ship|Turrets")
     void UpdateTurretActors();

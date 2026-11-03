@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "Math/RotationMatrix.h"
 #include "WeaponPresentationFrame.h"
+#include "WeaponDesignRegistry.h"
 namespace {
 FQuat DisplayRotation(const Camera& Cam)
 {
@@ -15,13 +16,14 @@ FQuat DisplayRotation(const Camera& Cam)
 }
 ATurretActor::ATurretActor()
 {
-    PrimaryActorTick.bCanEverTick=false;
+    PrimaryActorTick.bCanEverTick=false;SetActorEnableCollision(false);
     MountRoot=CreateDefaultSubobject<USceneComponent>(TEXT("MountRoot")); SetRootComponent(MountRoot);
     BasePivot=CreateDefaultSubobject<USceneComponent>(TEXT("BasePivot")); BasePivot->SetupAttachment(MountRoot);
     GunPivot=CreateDefaultSubobject<USceneComponent>(TEXT("GunPivot")); GunPivot->SetupAttachment(MountRoot);
     BaseMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh")); BaseMesh->SetupAttachment(BasePivot);
     GunMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh")); GunMesh->SetupAttachment(GunPivot);
     for (UStaticMeshComponent* Mesh : {BaseMesh.Get(),GunMesh.Get()}) {
+        Mesh->bEditableWhenInherited=true;
         Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         Mesh->SetGenerateOverlapEvents(false);
         Mesh->SetCanEverAffectNavigation(false);
@@ -30,6 +32,7 @@ ATurretActor::ATurretActor()
 void ATurretActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    ApplyWeaponDefinition(WeaponType);
     BasePivot->SetRelativeScale3D(FVector(LegacyModelScale));
     GunPivot->SetRelativeScale3D(FVector(LegacyModelScale));
 }
@@ -73,4 +76,24 @@ bool ATurretActor::GetMuzzleTransform(int32 BarrelIndex,FTransform& OutTransform
     const FVector P=Points[BarrelIndex];
     OutTransform=FTransform(GunPivot->GetComponentQuat(),GunPivot->GetComponentTransform().TransformPosition(FVector(P.Z,P.X,P.Y)));
     return true;
+}
+
+void ATurretActor::SetSeparateBasePresentation(bool bSeparate)
+{
+    if(!BaseMesh || bSeparate==bSeparateBaseActive)return;
+    if(bSeparate){bBaseVisibilityBeforeSplit=BaseMesh->IsVisible();BaseMesh->SetVisibility(false);}
+    else BaseMesh->SetVisibility(bBaseVisibilityBeforeSplit);
+    bSeparateBaseActive=bSeparate;
+}
+
+void ATurretActor::ApplyWeaponDefinition(FName InWeaponType)
+{
+    WeaponType=InWeaponType;
+    if(const auto* Row=WeaponDesignRegistry::Find(InWeaponType))
+    {
+        LegacyGunModel=Row->Turret;LegacyBaseModel=Row->TurretBase;
+        LegacyModelScale=Row->Scale;BaseAxis=Row->TurretAxis;
+    }
+    if(BasePivot)BasePivot->SetRelativeScale3D(FVector(LegacyModelScale));
+    if(GunPivot)GunPivot->SetRelativeScale3D(FVector(LegacyModelScale));
 }

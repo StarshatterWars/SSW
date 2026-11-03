@@ -69,6 +69,7 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
         Mount->StationName = FName(*Src.Name);
         Mount->bLoadoutHardpoint = false;
         Mount->AllowedWeaponTypes = {FName(*Src.WeaponType)};
+        Mount->ConfigureTurretVisual(FName(*Src.WeaponType));
         const WeaponDesign* ProjectileDesign=WeaponDesignRegistry::FindLegacy(Src.WeaponType);
         Mount->ConfigureProjectileBlueprint(ProjectileDesign && ProjectileDesign->projectile.length()
             ? WeaponBlueprintResolver::ProjectileClassPath(ANSI_TO_TCHAR(ProjectileDesign->projectile.data()))

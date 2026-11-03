@@ -5,6 +5,7 @@
 
 class Weapon;
 class Camera;
+class ATurretActor;
 
 UCLASS(ClassGroup=(Starshatter), meta=(BlueprintSpawnableComponent))
 class STARSHATTERWARS_API UShipWeaponMountComponent : public UChildActorComponent
@@ -12,6 +13,7 @@ class STARSHATTERWARS_API UShipWeaponMountComponent : public UChildActorComponen
     GENERATED_BODY()
 public:
     UShipWeaponMountComponent();
+    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon Mount|Definition") FName StationName;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon Mount|Definition") bool bLoadoutHardpoint=false;
@@ -30,6 +32,15 @@ public:
     UClass* ResolveProjectileClass() const;
 private:
     UPROPERTY() FSoftObjectPath AutoProjectileBlueprint;
+public:
+    /** Gun/launcher visual, separate from the fired Projectile Blueprint. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon Mount|Turret")
+    TSubclassOf<ATurretActor> TurretBlueprint;
+    void ConfigureTurretVisual(FName Type);
+    ATurretActor* GetTurretVisualActor() const;
+private:
+    UPROPERTY() TSubclassOf<ATurretActor> AutoTurretClass;
+    UPROPERTY(Transient) TObjectPtr<UChildActorComponent> LauncherVisual;
 public:
     // Non-UObject simulation pointer; never owned here.
     Weapon* RuntimeWeapon=nullptr;
