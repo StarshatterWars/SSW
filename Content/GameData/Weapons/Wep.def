@@ -129,6 +129,7 @@ primary: {
 
    turret:           "FighterTurret"
    scale:            0.22
+   muzzle:           (-0.21667, -0.88883,  21.58200)
 
    graphic_type:     3	// bolt
    width:            2
@@ -170,6 +171,8 @@ primary: {
    turret:           "LCATurretGuns"
    turret_base:      "LCATurretBase"
    scale:            0.12
+   muzzle:           ( 16.96400, -0.07480,  143.70500)
+   muzzle:           (-17.09400, -0.07480,  143.70500)
 
    graphic_type:     3	// bolt
    width:            2
@@ -640,6 +643,10 @@ primary: {
    turret:           "BlockadeCannonTurret"
    turret_base:      "BlockadeTurretBase"
    scale:            1
+   muzzle:           ( 80.89925, -4.64675,  64.12400)
+   muzzle:           ( 80.89925,  7.69900,  64.12400)
+   muzzle:           (-80.82900, -4.64675,  64.12400)
+   muzzle:           (-80.82900,  7.69900,  64.12400)
 
    graphic_type:     3	// bolt
    width:            8
@@ -745,8 +752,8 @@ primary: {
 
    turret:           "PhalanxCannonTurret"
    scale:            0.3
-   muzzle:           ( 16,   0,  110),
-   muzzle:           (-16,   0,  110),
+   muzzle:           ( 16.00638, -0.04213,  128.00925)
+   muzzle:           (-16.00913, -0.04213,  128.00925)
 
    graphic_type:     3	// bolt
    width:            20
@@ -786,9 +793,8 @@ primary: {
 
    turret:           "VikingCannonTurret"
    scale:            5
-   muzzle:           ( 4, 0, 65)
-   muzzle:           (-4, 0, 65)
-
+   muzzle:           ( 4.73400, -0.02600,  64.13800)
+   muzzle:           (-4.96600, -0.02600,  64.13800)
    graphic_type:     3	// bolt
    width:            20
    length:           400
@@ -826,6 +832,7 @@ primary: {
 
    turret:           "UrsaCannonTurret"
    scale:            2
+   muzzle:           (-0.08638,  0.24938,  61.20200)
 
    graphic_type:     3	// bolt
    width:            20
@@ -866,6 +873,8 @@ primary: {
 
    turret:           "OrcaCannonTurret"
    scale:            2
+   muzzle:           ( 4.73400,  11.39300,  72.62100)
+   muzzle:           (-4.96600,  11.39300,  72.62100)
 
    graphic_type:     3	// bolt
    width:            10
@@ -905,6 +914,8 @@ primary: {
 
    turret:           "OrcaInvertedTurret"
    scale:            2
+   muzzle:           ( 4.93613, -11.38800,  72.62100)
+   muzzle:           (-4.76387, -11.38800,  72.62100)
 
    graphic_type:     3	// bolt
    width:            10
@@ -946,6 +957,8 @@ primary: {
    turret:           "Orca2CannonTurret"
    turret_base:      "Orca2TurretBase"
    scale:            1
+   muzzle:           ( 29.90386,  0.63029,  189.83800)
+   muzzle:           (-29.90386,  0.63029,  189.83800)
 
    graphic_type:     3	// bolt
    width:            15
@@ -986,6 +999,8 @@ primary: {
    turret:           "Orca2CannonTurretInverted"
    turret_base:      "Orca2InvertedTurretBase"
    scale:            1
+   muzzle:           ( 29.90386,  0.63029,  189.83800)
+   muzzle:           (-29.90386,  0.63029,  189.83800)
 
    graphic_type:     3	// bolt
    width:            15
@@ -1027,8 +1042,8 @@ primary: {
    turret:           "VanguardTurret"
    turret_base:      "VanguardTurretBase"
    scale:            1.2
-   muzzle:           ( 7,   0,  60),
-   muzzle:           (-7,   0,  60),
+   muzzle:           ( 7.23575, -1.27200,  62.16700)
+   muzzle:           (-7.23575, -1.27200,  62.16700)
 
    graphic_type:     3	// bolt
    width:            3
@@ -1071,9 +1086,8 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1
+   muzzle:           ( 0.29567,  9.71989,  131.72900)
    turret:          "HeliconTurret"
-   muzzle:           (0, 10, 131)
-
    width:            4
    length:           45
 
@@ -1118,6 +1132,7 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            1.5,
+   muzzle:           (-0.01462,  0.10938,  66.57600)
    turret:          "Light_PDBTurret",
 
    width:            4
@@ -1165,9 +1180,9 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            2,
+   muzzle:           ( 4.73400,  11.39300,  72.62100)
+   muzzle:           (-4.96600,  11.39300,  72.62100)
    turret:          "Rail_5Turret",
-   muzzle:             ( 4, 11, 75),
-   muzzle:             (-4, 11, 75),
 
    width:            10,
    length:           120,
@@ -1214,9 +1229,9 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
+   muzzle:           ( 4.73400,  11.39300,  72.62100)
+   muzzle:           (-4.96600,  11.39300,  72.62100)
    turret:          "Rail_12Turret",
-   muzzle:           ( 4, 11, 75),
-   muzzle:           (-4, 11, 75),
 
    width:            15,
    length:           150,
@@ -1264,9 +1279,9 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            3,
+   muzzle:           ( 4.93613, -11.38800,  72.62100)
+   muzzle:           (-4.76387, -11.38800,  72.62100)
    turret:          "Rail_12TurretInverted",
-   muzzle:           ( 4, -11, 75),
-   muzzle:           (-4, -11, 75),
 
    width:            15,
    length:           150,
@@ -1320,6 +1335,8 @@ primary: {
 
    graphic_type:     3
    scale:            4,
+   muzzle:           ( 3.46850,  10.30725,  96.51500)
+   muzzle:           (-9.69750,  10.39350,  96.51500)
 
    turret:          "Rail_15Turret",
 
@@ -1373,9 +1390,9 @@ primary: {
    graphic_type:     3,	     // blob
 
    scale:            4,
+   muzzle:           ( 0.54750,  11.35604,  83.64607)
 
    turret:          "Mag_18Turret",
-   muzzle:             (0, 12, 81),
 
    width:            50,
    length:           230,
@@ -1671,7 +1688,7 @@ beam: {
    turret:           "GraserTurret"
    turret_base:      "GraserTurretBase"
    scale:            2
-   muzzle:           ( 0,  0,  90),
+   muzzle:           ( 0.00000, -0.00000,  88.98700)
 
    spread_az:        0.1
    spread_el:        0.1
@@ -1753,8 +1770,8 @@ primary: {
    turret:           "AAACannonGuns"
    turret_base:      "AAATurretBase"
    scale:            2
-   muzzle:           ( 12,   0,  112),
-   muzzle:           (-12,   0,  112),
+   muzzle:           ( 12.71500, -0.06520,  111.20500)
+   muzzle:           (-12.82860, -0.06520,  111.20500)
 
    graphic_type:     3	// bolt
    width:            32
@@ -1794,11 +1811,10 @@ primary: {
    turret:           "QuadAAAGuns"
    turret_base:      "QuadAAATurretBase"
    scale:            2
-   muzzle:           ( 29,   9,  68)
-   muzzle:           (-29,   9,  68)
-   muzzle:           ( 29,  -8,  68)
-   muzzle:           (-29,  -8,  68)
-
+   muzzle:           ( 29.45050, -9.04640,  66.56200)
+   muzzle:           ( 29.45050,  9.33040,  66.56200)
+   muzzle:           (-29.45050, -9.04640,  66.56200)
+   muzzle:           (-29.45050,  9.33040,  66.56200)
    graphic_type:     3	// bolt
    width:            32
    length:           500

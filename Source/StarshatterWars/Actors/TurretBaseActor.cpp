@@ -7,6 +7,7 @@ ATurretBaseActor::ATurretBaseActor()
     BaseRoot=CreateDefaultSubobject<USceneComponent>(TEXT("BaseRoot"));SetRootComponent(BaseRoot);
     ModelRoot=CreateDefaultSubobject<USceneComponent>(TEXT("ModelRoot"));ModelRoot->SetupAttachment(BaseRoot);
     BaseMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));BaseMesh->SetupAttachment(ModelRoot);
+    BaseMesh->SetRelativeRotation(FRotator(0.f,-90.f,0.f));
     BaseMesh->bEditableWhenInherited=true;ModelRoot->bEditableWhenInherited=true;
     BaseMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     BaseMesh->SetGenerateOverlapEvents(false);BaseMesh->SetCanEverAffectNavigation(false);

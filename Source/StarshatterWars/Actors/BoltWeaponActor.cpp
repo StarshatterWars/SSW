@@ -46,7 +46,7 @@ ABoltWeaponActor::ABoltWeaponActor()
     ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ProjectileMesh->SetGenerateOverlapEvents(false);
     ProjectileMesh->SetCastShadow(false);
-    ProjectileMesh->SetRelativeScale3D(FVector(0.04f)); // 4 cm core; BP may override.
+    ProjectileMesh->SetRelativeScale3D(FVector(0.2f)); // 20 cm visible energy core; BP may override.
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     if (Sphere.Succeeded()) ProjectileMesh->SetStaticMesh(Sphere.Object);
 
@@ -54,7 +54,7 @@ ABoltWeaponActor::ABoltWeaponActor()
     CoreFX->SetupAttachment(Root);
     CoreFX->SetAutoActivate(false);
     CoreFX->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-    CoreFX->SetRelativeScale3D(FVector(0.01f));
+    CoreFX->SetRelativeScale3D(FVector(0.05f));
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Energy(
         TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Energy.NS_RocketExhaust_Energy"));
     if (Energy.Succeeded()) { CoreSystem = Energy.Object; CoreFX->SetAsset(CoreSystem); }
@@ -63,7 +63,7 @@ ABoltWeaponActor::ABoltWeaponActor()
     TrailFX->SetupAttachment(Root);
     TrailFX->SetAutoActivate(false);
     TrailFX->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-    TrailFX->SetRelativeScale3D(FVector(0.015f));
+    TrailFX->SetRelativeScale3D(FVector(0.06f));
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Exhaust(
         TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Blue.NS_RocketExhaust_Blue"));
     if (Exhaust.Succeeded()) { BoltSystem = Exhaust.Object; TrailFX->SetAsset(BoltSystem); }

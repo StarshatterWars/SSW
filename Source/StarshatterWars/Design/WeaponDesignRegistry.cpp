@@ -238,6 +238,8 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     //---------------------------------------------------------
     Legacy->graphic_type = Row.GraphicType;
     Legacy->length = Row.Length;
+    Legacy->width = Row.Width;
+    Legacy->scale = Row.Scale;
     Legacy->light_color = Row.LightColor;
 
     //---------------------------------------------------------
@@ -251,7 +253,8 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     //---------------------------------------------------------
     // Geometry
     //---------------------------------------------------------
-    for (int32 i = 0; i < Row.MuzzlePoints.Num(); i++)
+    Legacy->nbarrels = FMath::Clamp(Row.NBarrels, 0, int32(WeaponDesign::MAX_STORES));
+    for (int32 i = 0; i < FMath::Min(Row.MuzzlePoints.Num(), int32(WeaponDesign::MAX_STORES)); i++)
     {
         Legacy->muzzle_pts[i] = Row.MuzzlePoints[i];
     }

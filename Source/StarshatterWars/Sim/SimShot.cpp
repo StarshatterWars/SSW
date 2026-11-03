@@ -335,8 +335,16 @@ SimShot::ExecFrame(double seconds)
 	else {
 		origin = GetLocation();
 
-		if (!first_frame)
-			Physical::ExecFrame(seconds);
+		if (!first_frame) {
+            // Legacy bolts can be massless and still move at their defined velocity.
+            // Physical's port safety guard rejects zero mass before updating life.
+            if (primary && design->graphic_type == Graphic::BOLT && mass == 0) {
+                if (life > 0) life -= seconds;
+                LinearFrame(seconds);
+                MoveTo(GetLocation() + velocity * seconds);
+            }
+            else Physical::ExecFrame(seconds);
+        }
 		else
 			Physical::ExecFrame(0);
 

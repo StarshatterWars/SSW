@@ -22,6 +22,9 @@ ATurretActor::ATurretActor()
     GunPivot=CreateDefaultSubobject<USceneComponent>(TEXT("GunPivot")); GunPivot->SetupAttachment(MountRoot);
     BaseMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh")); BaseMesh->SetupAttachment(BasePivot);
     GunMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh")); GunMesh->SetupAttachment(GunPivot);
+    // Imported turret models use +Y forward; aim frames use Unreal +X.
+    BaseMesh->SetRelativeRotation(FRotator(0.f,-90.f,0.f));
+    GunMesh->SetRelativeRotation(FRotator(0.f,-90.f,0.f));
     for (UStaticMeshComponent* Mesh : {BaseMesh.Get(),GunMesh.Get()}) {
         Mesh->bEditableWhenInherited=true;
         Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -93,6 +96,8 @@ void ATurretActor::ApplyWeaponDefinition(FName InWeaponType)
     {
         LegacyGunModel=Row->Turret;LegacyBaseModel=Row->TurretBase;
         LegacyModelScale=Row->Scale;BaseAxis=Row->TurretAxis;
+        LegacyMuzzles.Reset();
+        for(int32 I=0;I<FMath::Min(Row->NBarrels,Row->MuzzlePoints.Num());++I)LegacyMuzzles.Add(Row->MuzzlePoints[I]);
     }
     if(BasePivot)BasePivot->SetRelativeScale3D(FVector(LegacyModelScale));
     if(GunPivot)GunPivot->SetRelativeScale3D(FVector(LegacyModelScale));
