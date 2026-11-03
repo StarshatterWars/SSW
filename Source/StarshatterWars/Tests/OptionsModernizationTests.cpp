@@ -81,8 +81,9 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     auto Widget=Screen->TakeWidget(); Widget->SlatePrepass();
     TestNotNull(TEXT("Modern shell built"),Screen->ModernShell.Get());
     TestTrue(TEXT("Original switcher retained"),Switcher==Screen->OptionsSwitcher);
-    TestEqual(TEXT("Seven original pages plus Credits, no duplication"),Switcher->GetNumWidgets(),8);
-    for (UUserWidget* Page:Pages) TestTrue(TEXT("Original page identity retained"),Switcher->GetChildIndex(Page)>=0);
+    TestEqual(TEXT("Six settings pages plus native Mods and Credits, no duplication"),Switcher->GetNumWidgets(),8);
+    for (UUserWidget* Page:Pages) if(Page!=Screen->ModsDlg) TestTrue(TEXT("Original settings page identity retained"),Switcher->GetChildIndex(Page)>=0);
+    TestEqual(TEXT("Obsolete Mods placeholder removed"),Switcher->GetChildIndex(Screen->ModsDlg),INDEX_NONE);
     TestNotNull(TEXT("Red back arrow"),Screen->BtnCancel.Get());TestNotNull(TEXT("Green apply arrow"),Screen->BtnSave.Get());
     TestTrue(TEXT("Header back arrow visible"),Screen->BtnCancel->GetVisibility()==ESlateVisibility::Visible);
     TestTrue(TEXT("Header apply arrow visible"),Screen->BtnSave->GetVisibility()==ESlateVisibility::Visible);
@@ -91,6 +92,12 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     Screen->FocusTabByDelta(1);TestTrue(TEXT("Forward tab navigation"),Switcher->GetActiveWidget()==Pages[3]);
     Screen->FocusTabByDelta(-1);TestTrue(TEXT("Reverse tab navigation"),Switcher->GetActiveWidget()==Pages[2]);
     Screen->ShowCreditsDlg();TestTrue(TEXT("Credits retained"),Switcher->GetActiveWidget()==Screen->CreditsPage);
+    Screen->ShowModDlg();
+    TestTrue(TEXT("Mods tab opens native empty page"), Switcher->GetActiveWidget()==Screen->ModsPage);
+    auto* EmptyMods=Cast<UTextBlock>(Screen->WidgetTree->FindWidget(TEXT("Options_ModsEmptyState")));
+    TestNotNull(TEXT("Mods empty-state label exists"),EmptyMods);
+    if(EmptyMods) TestEqual(TEXT("Mods page has no fabricated entries"),EmptyMods->GetText().ToString(),FString(TEXT("No mods available.")));
+    Screen->ShowGameDlg();TestTrue(TEXT("Leaving mods preserves authored game page"),Switcher->GetActiveWidget()==Pages[2]);
     Screen->ShowAudDlg();
     FString CaptureDir;
     if (!GUsingNullRHI && FParse::Value(FCommandLine::Get(),TEXT("OptionsCaptureDir="),CaptureDir))

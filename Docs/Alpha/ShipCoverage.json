@@ -1,0 +1,842 @@
+[
+  {
+    "design": "Adventure",
+    "name": "Adventure",
+    "class": "Carrier",
+    "model": "Adventure",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Adventure.def"
+  },
+  {
+    "design": "Archaelith",
+    "name": "Archaelith",
+    "class": "Drone",
+    "model": "Archaelith",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Archaelith.def"
+  },
+  {
+    "design": "Asher",
+    "name": "Asher",
+    "class": "Destroyer",
+    "model": "Asher",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Asher.def"
+  },
+  {
+    "design": "Avenger",
+    "name": "Avenger",
+    "class": "attack",
+    "model": "Avenger",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Avenger.def"
+  },
+  {
+    "design": "Baikal",
+    "name": "Baikal",
+    "class": "Frigate",
+    "model": "Baikal",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Baikal.def"
+  },
+  {
+    "design": "Barracks",
+    "name": "Barracks",
+    "class": "Building",
+    "model": "Barracks",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Barracks.def"
+  },
+  {
+    "design": "Berents",
+    "name": "Berents",
+    "class": "Frigate",
+    "model": "Berents",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Berents.def"
+  },
+  {
+    "design": "BioDome",
+    "name": "BioDome",
+    "class": "Building",
+    "model": "A1-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/BioDome.def"
+  },
+  {
+    "design": "BioDome2",
+    "name": "BioDome2",
+    "class": "Building",
+    "model": "A3-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/BioDome2.def"
+  },
+  {
+    "design": "BioTrail",
+    "name": "BioTrail",
+    "class": "Building",
+    "model": "A2-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/BioTrail.def"
+  },
+  {
+    "design": "Bldg00",
+    "name": "Bldg00",
+    "class": "Building",
+    "model": "Bldg00-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg00.def"
+  },
+  {
+    "design": "Bldg01",
+    "name": "Bldg01",
+    "class": "Building",
+    "model": "Bldg01-0.mag",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg01.def"
+  },
+  {
+    "design": "Bldg02",
+    "name": "Bldg02",
+    "class": "Building",
+    "model": "Bldg02-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg02.def"
+  },
+  {
+    "design": "Bldg03",
+    "name": "Bldg03",
+    "class": "Building",
+    "model": "Bldg03-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg03.def"
+  },
+  {
+    "design": "Bldg04",
+    "name": "Bldg04",
+    "class": "Building",
+    "model": "Bldg04-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg04.def"
+  },
+  {
+    "design": "Bldg05",
+    "name": "Bldg05",
+    "class": "Building",
+    "model": "Bldg05-0",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Bldg05.def"
+  },
+  {
+    "design": "Broadsword",
+    "name": "Broadsword",
+    "class": "Destroyer",
+    "model": "Broadsword",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Broadsword.def"
+  },
+  {
+    "design": "CameraPod",
+    "name": "CameraPod",
+    "class": "Drone",
+    "model": "CameraPod",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/CameraPod.def"
+  },
+  {
+    "design": "CargoA",
+    "name": "IM3500",
+    "class": "Freighter",
+    "model": "IM3500",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/CargoA.def"
+  },
+  {
+    "design": "CargoB",
+    "name": "IM4300",
+    "class": "Freighter",
+    "model": "IM4300",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/CargoB.def"
+  },
+  {
+    "design": "CargoC",
+    "name": "IM2800",
+    "class": "Cargo",
+    "model": "IM2800",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/CargoC.def"
+  },
+  {
+    "design": "City00",
+    "name": "City00",
+    "class": "Building",
+    "model": "City00",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/City00.def"
+  },
+  {
+    "design": "City01",
+    "name": "City01",
+    "class": "Building",
+    "model": "City01",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/City01.def"
+  },
+  {
+    "design": "City02",
+    "name": "City02",
+    "class": "Building",
+    "model": "City02",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/City02.def"
+  },
+  {
+    "design": "City03",
+    "name": "City03",
+    "class": "Building",
+    "model": "Vesta02",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/City03.def"
+  },
+  {
+    "design": "Cobra",
+    "name": "Cobra",
+    "class": "Attack",
+    "model": "Cobra",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Cobra.def"
+  },
+  {
+    "design": "Colony",
+    "name": "Colony",
+    "class": "Station",
+    "model": "Colony",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Colony.def"
+  },
+  {
+    "design": "Cool00",
+    "name": "Cool00",
+    "class": "Building",
+    "model": "Cool00",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Cool00.def"
+  },
+  {
+    "design": "Courageous",
+    "name": "Courageous",
+    "class": "Cruiser",
+    "model": "Courageous",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Courageous.def"
+  },
+  {
+    "design": "Courier",
+    "name": "Courier",
+    "class": "Courier",
+    "model": "Courier",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Courier.def"
+  },
+  {
+    "design": "Cutlass",
+    "name": "Cutlass",
+    "class": "Fighter",
+    "model": "Cutlass",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Cutlass.def"
+  },
+  {
+    "design": "Devastator",
+    "name": "Devastator",
+    "class": "Cruiser",
+    "model": "Devastator",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Devastator.def"
+  },
+  {
+    "design": "Dragon",
+    "name": "Dragon",
+    "class": "Carrier",
+    "model": "Dragon",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dragon.def"
+  },
+  {
+    "design": "Dsrt00",
+    "name": "Dsrt00",
+    "class": "Building",
+    "model": "Dsrt00",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt00.def"
+  },
+  {
+    "design": "Dsrt01",
+    "name": "Dsrt01",
+    "class": "Building",
+    "model": "Dsrt01",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt01.def"
+  },
+  {
+    "design": "Dsrt02",
+    "name": "Dsrt02",
+    "class": "Building",
+    "model": "Dsrt02",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt02.def"
+  },
+  {
+    "design": "Dsrt03",
+    "name": "Dsrt03",
+    "class": "Building",
+    "model": "Dsrt03",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt03.def"
+  },
+  {
+    "design": "Dsrt04",
+    "name": "Dsrt04",
+    "class": "Building",
+    "model": "Dsrt04",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt04.def"
+  },
+  {
+    "design": "Dsrt05",
+    "name": "Dsrt05",
+    "class": "Building",
+    "model": "Dsrt05",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Dsrt05.def"
+  },
+  {
+    "design": "Eagle",
+    "name": "Eagle",
+    "class": "Fighter",
+    "model": "Eagle",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Eagle.def"
+  },
+  {
+    "design": "Fact00",
+    "name": "Fact00",
+    "class": "Building",
+    "model": "Fact00",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fact00.def"
+  },
+  {
+    "design": "Fact01",
+    "name": "Fact01",
+    "class": "Building",
+    "model": "Fact01",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fact01.def"
+  },
+  {
+    "design": "Fact02",
+    "name": "Fact02",
+    "class": "Building",
+    "model": "Fact02",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fact02.def"
+  },
+  {
+    "design": "Fact03",
+    "name": "Fact03",
+    "class": "Building",
+    "model": "Fact03",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fact03.def"
+  },
+  {
+    "design": "Fact04",
+    "name": "Fact04",
+    "class": "Building",
+    "model": "Fact04",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fact04.def"
+  },
+  {
+    "design": "Falcon",
+    "name": "Falcon",
+    "class": "Fighter",
+    "model": "Falcon",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Falcon.def"
+  },
+  {
+    "design": "Farcaster",
+    "name": "Farcaster",
+    "class": "Farcaster",
+    "model": "Farcaster",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Farcaster.def"
+  },
+  {
+    "design": "Farcaster2",
+    "name": "Marakan",
+    "class": "Farcaster",
+    "model": "Farcaster2",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Farcaster2.def"
+  },
+  {
+    "design": "FoothillBase",
+    "name": "Airbase2",
+    "class": "STARBASE",
+    "model": "Base2",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/FoothillBase.def"
+  },
+  {
+    "design": "Fortress",
+    "name": "Station3",
+    "class": "STATION",
+    "model": "Fortress",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Fortress.def"
+  },
+  {
+    "design": "FreightXfer",
+    "name": "Station1",
+    "class": "STATION",
+    "model": "Xfer",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/FreightXfer.def"
+  },
+  {
+    "design": "Gnd_aaa1",
+    "name": "AAA 1",
+    "class": "SAM",
+    "model": "Tower3",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Gnd_aaa1.def"
+  },
+  {
+    "design": "Gnd_aaa2",
+    "name": "AAA 2",
+    "class": "SAM",
+    "model": "Tower3",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Gnd_aaa2.def"
+  },
+  {
+    "design": "Gnd_sam1",
+    "name": "SAM 1",
+    "class": "SAM",
+    "model": "SAMBase",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Gnd_sam1.def"
+  },
+  {
+    "design": "Goliath",
+    "name": "Goliath",
+    "class": "Carrier",
+    "model": "Goliath",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Goliath.def"
+  },
+  {
+    "design": "Harmony",
+    "name": "Station2",
+    "class": "STATION",
+    "model": "Harmony",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Harmony.def"
+  },
+  {
+    "design": "Hulk-Broadsword",
+    "name": "Hulk-Broadsword",
+    "class": "Hulk",
+    "model": "Hulk-Broadsword",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Broadsword.def"
+  },
+  {
+    "design": "Hulk-Dragon",
+    "name": "Hulk-Dragon",
+    "class": "Hulk",
+    "model": "Hulk-Dragon",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Dragon.def"
+  },
+  {
+    "design": "Hulk-Imperial",
+    "name": "Hulk-Imperial",
+    "class": "Hulk",
+    "model": "Hulk-Imperial",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Imperial.def"
+  },
+  {
+    "design": "Hulk-Tiger",
+    "name": "Hulk-Tiger",
+    "class": "Hulk",
+    "model": "Hulk-Frigate",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Tiger.def"
+  },
+  {
+    "design": "Hulk-Vendetta",
+    "name": "Hulk-Vendetta",
+    "class": "Hulk",
+    "model": "Hulk-Vendetta",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Vendetta.def"
+  },
+  {
+    "design": "Hulk-Volnaris",
+    "name": "Hulk-Volnaris",
+    "class": "Hulk",
+    "model": "Hulk-Volnaris",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Hulk-Volnaris.def"
+  },
+  {
+    "design": "Imperial",
+    "name": "Imperial",
+    "class": "Cruiser",
+    "model": "Imperial",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Imperial.def"
+  },
+  {
+    "design": "Intruder",
+    "name": "Intruder",
+    "class": "fighter",
+    "model": "Intruder",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Intruder.def"
+  },
+  {
+    "design": "Jackal",
+    "name": "Jackal",
+    "class": "LCA",
+    "model": "Jackal",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Jackal.def"
+  },
+  {
+    "design": "JanekStation",
+    "name": "Airbase1",
+    "class": "STARBASE",
+    "model": "Base1",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/JanekStation.def"
+  },
+  {
+    "design": "Marauder",
+    "name": "Marauder",
+    "class": "Frigate",
+    "model": "Marauder",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Marauder.def"
+  },
+  {
+    "design": "Mine1",
+    "name": "BlockadeMine",
+    "class": "Mine",
+    "model": "Mine",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Mine1.def"
+  },
+  {
+    "design": "Observatory",
+    "name": "Observatory",
+    "class": "STATION",
+    "model": "Observatory",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Observatory.def"
+  },
+  {
+    "design": "Orion",
+    "name": "Orion",
+    "class": "Carrier",
+    "model": "Orion",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Orion.def"
+  },
+  {
+    "design": "Platform",
+    "name": "Platform",
+    "class": "Building",
+    "model": "Platform",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Platform.def"
+  },
+  {
+    "design": "QShip",
+    "name": "QShip",
+    "class": "Freighter",
+    "model": "QShip",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/QShip.def"
+  },
+  {
+    "design": "RadixBase",
+    "name": "Airbase2",
+    "class": "STARBASE",
+    "model": "Radix",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/RadixBase.def"
+  },
+  {
+    "design": "Raptor",
+    "name": "Raptor",
+    "class": "fighter",
+    "model": "Raptor",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Raptor.def"
+  },
+  {
+    "design": "Razor",
+    "name": "Razor",
+    "class": "Fighter",
+    "model": "Razor",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Razor.def"
+  },
+  {
+    "design": "Reac01",
+    "name": "Reac01",
+    "class": "Building",
+    "model": "Reactor",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Reac01.def"
+  },
+  {
+    "design": "Relay1",
+    "name": "Relay1",
+    "class": "COMSAT",
+    "model": "Relay",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Relay1.def"
+  },
+  {
+    "design": "S5",
+    "name": "Station5",
+    "class": "STATION",
+    "model": "S5",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/S5.def"
+  },
+  {
+    "design": "S6",
+    "name": "Station6",
+    "class": "STATION",
+    "model": "MarakanXfer",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/S6.def"
+  },
+  {
+    "design": "S7",
+    "name": "Station7",
+    "class": "STATION",
+    "model": "MarakanLab",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/S7.def"
+  },
+  {
+    "design": "Saber",
+    "name": "Saber",
+    "class": "Fighter",
+    "model": "Saber",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Saber.def"
+  },
+  {
+    "design": "Senate",
+    "name": "Senate",
+    "class": "Building",
+    "model": "senate2",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Senate.def"
+  },
+  {
+    "design": "Spectre",
+    "name": "Spectre",
+    "class": "Destroyer",
+    "model": "Spectre",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Spectre.def"
+  },
+  {
+    "design": "Stormhawk",
+    "name": "Stormhawk",
+    "class": "Fighter",
+    "model": "Stormhawk",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Stormhawk.def"
+  },
+  {
+    "design": "TanisBase",
+    "name": "Airbase3",
+    "class": "STARBASE",
+    "model": "Tanis",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/TanisBase.def"
+  },
+  {
+    "design": "Tank00",
+    "name": "Tank00",
+    "class": "Building",
+    "model": "Tank00",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Tank00.def"
+  },
+  {
+    "design": "TankerA",
+    "name": "IM1906",
+    "class": "Freighter",
+    "model": "TankerA",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/TankerA.def"
+  },
+  {
+    "design": "TankerB",
+    "name": "IM1912",
+    "class": "Freighter",
+    "model": "TankerB",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/TankerB.def"
+  },
+  {
+    "design": "TargetDrone",
+    "name": "TargetDrone",
+    "class": "Drone",
+    "model": "TargetDrone",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/TargetDrone.def"
+  },
+  {
+    "design": "TelmeraStarport",
+    "name": "Airbase1",
+    "class": "STARBASE",
+    "model": "Telmera",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/TelmeraStarport.def"
+  },
+  {
+    "design": "Thunderbolt",
+    "name": "Thunderbolt",
+    "class": "Attack",
+    "model": "Thunderbolt",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Thunderbolt.def"
+  },
+  {
+    "design": "Tiger",
+    "name": "Tiger",
+    "class": "Frigate",
+    "model": "Tiger",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Tiger.def"
+  },
+  {
+    "design": "TigerBayBase",
+    "name": "Airbase2",
+    "class": "STARBASE",
+    "model": "TigerBay",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/TigerBayBase.def"
+  },
+  {
+    "design": "Transport",
+    "name": "Transport",
+    "class": "Courier",
+    "model": "Transport",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Transport.def"
+  },
+  {
+    "design": "Vendetta",
+    "name": "Vendetta",
+    "class": "Cruiser",
+    "model": "Vendetta",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Vendetta.def"
+  },
+  {
+    "design": "Viper",
+    "name": "Viper",
+    "class": "Fighter",
+    "model": "Viper",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Viper.def"
+  },
+  {
+    "design": "Volnaris",
+    "name": "Volnaris",
+    "class": "Destroyer",
+    "model": "Volnaris",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/Volnaris.def"
+  },
+  {
+    "design": "Wolf",
+    "name": "Wolf",
+    "class": "Destroyer",
+    "model": "Wolf",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Wolf.def"
+  },
+  {
+    "design": "Zodiac",
+    "name": "Zodiac",
+    "class": "LCA",
+    "model": "Zodiac",
+    "blueprint_file_exists": true,
+    "definition": "Content/GameData/Ships/Zodiac.def"
+  },
+  {
+    "design": "ZZA",
+    "name": "ZZA",
+    "class": "Attack",
+    "model": "ZAttack",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZA.def"
+  },
+  {
+    "design": "ZZCA",
+    "name": "ZZCA",
+    "class": "Cruiser",
+    "model": "ZolonCA",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZCA.def"
+  },
+  {
+    "design": "ZZCS",
+    "name": "ZZCS",
+    "class": "Cruiser",
+    "model": "ZolonCS",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZCS.def"
+  },
+  {
+    "design": "ZZDD",
+    "name": "ZZDD",
+    "class": "Destroyer",
+    "model": "ZZDD",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZDD.def"
+  },
+  {
+    "design": "ZZF",
+    "name": "ZZF",
+    "class": "Fighter",
+    "model": "ZFighter",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZF.def"
+  },
+  {
+    "design": "ZZFF",
+    "name": "ZZFF",
+    "class": "Frigate",
+    "model": "ZolonFF",
+    "blueprint_file_exists": false,
+    "definition": "Content/GameData/Ships/ZZFF.def"
+  }
+]

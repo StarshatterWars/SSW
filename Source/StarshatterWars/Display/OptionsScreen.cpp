@@ -84,6 +84,7 @@ UOptionsScreen::UOptionsScreen(const FObjectInitializer& ObjectInitializer)
 TSharedRef<SWidget> UOptionsScreen::RebuildWidget()
 {
     // Reuse every authored page and control; only replace their outer presentation.
+    BuildModsPage();
     BuildCreditsPage();
     BuildModernShell();
     return Super::RebuildWidget();
@@ -118,6 +119,7 @@ void UOptionsScreen::NativeConstruct()
         }
     }
 
+    BuildModsPage();
     BuildCreditsPage();
     StandardizeTopTabs();
     ShowAudDlg();
@@ -414,7 +416,8 @@ void UOptionsScreen::ShowKeyDlg()
 void UOptionsScreen::ShowModDlg()
 {
     SetActiveTab(BtnMods);
-    SwitchToWidget(ModsDlg.Get());
+    BuildModsPage();
+    SwitchToWidget(ModsPage.Get());
 
     if (APlayerController* PC = GetOwningPlayer())
         if (BtnMods) BtnMods->SetUserFocus(PC);
@@ -672,4 +675,27 @@ void UOptionsScreen::StylePage(UUserWidget* Page)
                 Name==TEXT("OptTabButton") || Name==TEXT("ModTabButton") || Name==TEXT("JoyTabButton") || Name==TEXT("KeyTabButton")) Button->SetVisibility(ESlateVisibility::Collapsed);
         }
     });
+}
+
+void UOptionsScreen::BuildModsPage()
+{
+    if (!OptionsSwitcher || !WidgetTree || ModsPage) return;
+    UBorder* Page = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Options_ModsPage"));
+    ModsPage = Page;
+    if (ModsDlg && ModsDlg->GetParent() == OptionsSwitcher) OptionsSwitcher->RemoveChild(ModsDlg);
+    Page->SetPadding(FMargin(32.f));
+    Page->SetBrushColor(FLinearColor(0.008f, 0.025f, 0.04f, 0.94f));
+    UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>();
+    Page->SetContent(Content);
+    UTextBlock* Heading = WidgetTree->ConstructWidget<UTextBlock>();
+    Heading->SetText(FText::FromString(TEXT("MODS")));
+    Heading->SetFont(MissionUIStyle::GetInfoLabelFont(24));
+    Heading->SetColorAndOpacity(FSlateColor(FLinearColor(0.35f, 0.85f, 1.f)));
+    Content->AddChildToVerticalBox(Heading)->SetPadding(FMargin(0.f, 0.f, 0.f, 24.f));
+    UTextBlock* EmptyState = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Options_ModsEmptyState"));
+    EmptyState->SetText(FText::FromString(TEXT("No mods available.")));
+    EmptyState->SetFont(MissionUIStyle::GetRowFont(18));
+    EmptyState->SetColorAndOpacity(FSlateColor(FLinearColor(0.65f, 0.75f, 0.8f)));
+    Content->AddChildToVerticalBox(EmptyState);
+    OptionsSwitcher->AddChild(Page);
 }

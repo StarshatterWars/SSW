@@ -1,0 +1,1084 @@
+{
+  "ships": [
+    {
+      "design": "Adventure",
+      "model": "Adventure",
+      "path": "/Game/Models/Adventure/BP_Adventure",
+      "class": "Carrier",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Archaelith",
+      "model": "Archaelith",
+      "path": "/Game/Models/Archaelith/BP_Archaelith",
+      "class": "Drone",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Asher",
+      "model": "Asher",
+      "path": "/Game/Models/Asher/BP_Asher",
+      "class": "Destroyer",
+      "status": "configured",
+      "actor_class": "/Game/Models/Asher/BP_Asher.BP_Asher_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Asher/Asher.Asher",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Avenger",
+      "model": "Avenger",
+      "path": "/Game/Models/Avenger/BP_Avenger",
+      "class": "Attack",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Avenger/BP_Avenger.BP_Avenger_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Baikal",
+      "model": "Baikal",
+      "path": "/Game/Models/Baikal/BP_Baikal",
+      "class": "Frigate",
+      "status": "configured",
+      "actor_class": "/Game/Models/Baikal/BP_Baikal.BP_Baikal_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Baikal/Baikal.Baikal",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Barracks",
+      "model": "Barracks",
+      "path": "/Game/Models/Barracks/BP_Barracks",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Berents",
+      "model": "Berents",
+      "path": "/Game/Models/Berents/BP_Berents",
+      "class": "Frigate",
+      "status": "configured",
+      "actor_class": "/Game/Models/Berents/BP_Berents.BP_Berents_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Berents/Berents.Berents",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "BioDome",
+      "model": "A1-0",
+      "path": "/Game/Models/A1-0/BP_A1-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "BioDome2",
+      "model": "A3-0",
+      "path": "/Game/Models/A3-0/BP_A3-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "BioTrail",
+      "model": "A2-0",
+      "path": "/Game/Models/A2-0/BP_A2-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg00",
+      "model": "Bldg00-0",
+      "path": "/Game/Models/Bldg00-0/BP_Bldg00-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg01",
+      "model": "Bldg01-0.mag",
+      "path": "/Game/Models/Bldg01-0.mag/BP_Bldg01-0.mag",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg02",
+      "model": "Bldg02-0",
+      "path": "/Game/Models/Bldg02-0/BP_Bldg02-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg03",
+      "model": "Bldg03-0",
+      "path": "/Game/Models/Bldg03-0/BP_Bldg03-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg04",
+      "model": "Bldg04-0",
+      "path": "/Game/Models/Bldg04-0/BP_Bldg04-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Bldg05",
+      "model": "Bldg05-0",
+      "path": "/Game/Models/Bldg05-0/BP_Bldg05-0",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Broadsword",
+      "model": "Broadsword",
+      "path": "/Game/Models/Broadsword/BP_Broadsword",
+      "class": "Destroyer",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "CameraPod",
+      "model": "CameraPod",
+      "path": "/Game/Models/CameraPod/BP_CameraPod",
+      "class": "Drone",
+      "status": "configured",
+      "actor_class": "/Game/Models/CameraPod/BP_CameraPod.BP_CameraPod_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/CameraPod/CameraPod.CameraPod",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "IM3500",
+      "model": "IM3500",
+      "path": "/Game/Models/IM3500/BP_IM3500",
+      "class": "Freighter",
+      "status": "configured",
+      "actor_class": "/Game/Models/IM3500/BP_IM3500.BP_IM3500_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/IM4300/IM4300.IM4300",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "IM4300",
+      "model": "IM4300",
+      "path": "/Game/Models/IM4300/BP_IM4300",
+      "class": "Freighter",
+      "status": "configured",
+      "actor_class": "/Game/Models/IM4300/BP_IM4300.BP_IM4300_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/IM4300/IM4300.IM4300",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "IM2800",
+      "model": "IM2800",
+      "path": "/Game/Models/IM2800/BP_IM2800",
+      "class": "Cargo",
+      "status": "configured",
+      "actor_class": "/Game/Models/IM2800/BP_IM2800.BP_IM2800_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/IM4300/IM4300.IM4300",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "City00",
+      "model": "City00",
+      "path": "/Game/Models/City00/BP_City00",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "City01",
+      "model": "City01",
+      "path": "/Game/Models/City01/BP_City01",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "City02",
+      "model": "City02",
+      "path": "/Game/Models/City02/BP_City02",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "City03",
+      "model": "Vesta02",
+      "path": "/Game/Models/Vesta02/BP_Vesta02",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Cobra",
+      "model": "Cobra",
+      "path": "/Game/Models/Cobra/BP_Cobra",
+      "class": "Attack",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Cobra/BP_Cobra.BP_Cobra_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Colony",
+      "model": "Colony",
+      "path": "/Game/Models/Colony/BP_Colony",
+      "class": "Station",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Cool00",
+      "model": "Cool00",
+      "path": "/Game/Models/Cool00/BP_Cool00",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Courageous",
+      "model": "Courageous",
+      "path": "/Game/Models/Courageous/BP_Courageous",
+      "class": "Cruiser",
+      "status": "configured",
+      "actor_class": "/Game/Models/Courageous/BP_Courageous.BP_Courageous_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Courageous/Courageous.Courageous",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Courier",
+      "model": "Courier",
+      "path": "/Game/Models/Courier/BP_Courier",
+      "class": "Courier",
+      "status": "configured",
+      "actor_class": "/Game/Models/Courier/BP_Courier.BP_Courier_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Courier/Courier.Courier",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Cutlass",
+      "model": "Cutlass",
+      "path": "/Game/Models/Cutlass/BP_Cutlass",
+      "class": "Fighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Devastator",
+      "model": "Devastator",
+      "path": "/Game/Models/Devastator/BP_Devastator",
+      "class": "Cruiser",
+      "status": "configured",
+      "actor_class": "/Game/Models/Devastator/BP_Devastator.BP_Devastator_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Devastator/Devastator.Devastator",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dragon",
+      "model": "Dragon",
+      "path": "/Game/Models/Dragon/BP_Dragon",
+      "class": "Carrier",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt00",
+      "model": "Dsrt00",
+      "path": "/Game/Models/Dsrt00/BP_Dsrt00",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt01",
+      "model": "Dsrt01",
+      "path": "/Game/Models/Dsrt01/BP_Dsrt01",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt02",
+      "model": "Dsrt02",
+      "path": "/Game/Models/Dsrt02/BP_Dsrt02",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt03",
+      "model": "Dsrt03",
+      "path": "/Game/Models/Dsrt03/BP_Dsrt03",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt04",
+      "model": "Dsrt04",
+      "path": "/Game/Models/Dsrt04/BP_Dsrt04",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Dsrt05",
+      "model": "Dsrt05",
+      "path": "/Game/Models/Dsrt05/BP_Dsrt05",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Eagle",
+      "model": "Eagle",
+      "path": "/Game/Models/Eagle/BP_Eagle",
+      "class": "Fighter",
+      "status": "configured",
+      "actor_class": "/Game/Models/Eagle/BP_Eagle.BP_Eagle_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Eagle/Eagle.Eagle",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Fact00",
+      "model": "Fact00",
+      "path": "/Game/Models/Fact00/BP_Fact00",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Fact01",
+      "model": "Fact01",
+      "path": "/Game/Models/Fact01/BP_Fact01",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Fact02",
+      "model": "Fact02",
+      "path": "/Game/Models/Fact02/BP_Fact02",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Fact03",
+      "model": "Fact03",
+      "path": "/Game/Models/Fact03/BP_Fact03",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Fact04",
+      "model": "Fact04",
+      "path": "/Game/Models/Fact04/BP_Fact04",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Falcon",
+      "model": "Falcon",
+      "path": "/Game/Models/Falcon/BP_Falcon",
+      "class": "Fighter",
+      "status": "configured",
+      "actor_class": "/Game/Models/Falcon/BP_Falcon.BP_Falcon_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Falcon/Falcon.Falcon",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Farcaster",
+      "model": "Farcaster",
+      "path": "/Game/Models/Farcaster/BP_Farcaster",
+      "class": "Farcaster",
+      "status": "configured",
+      "actor_class": "/Game/Models/Farcaster/BP_Farcaster.BP_Farcaster_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Farcaster/Farcaster.Farcaster",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Marakan",
+      "model": "Farcaster2",
+      "path": "/Game/Models/Farcaster2/BP_Farcaster2",
+      "class": "Farcaster",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Airbase2",
+      "model": "TigerBay",
+      "path": "/Game/Models/TigerBay/BP_TigerBay",
+      "class": "STARBASE",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station3",
+      "model": "Fortress",
+      "path": "/Game/Models/Fortress/BP_Fortress",
+      "class": "STATION",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station1",
+      "model": "Xfer",
+      "path": "/Game/Models/Xfer/BP_Xfer",
+      "class": "STATION",
+      "status": "configured",
+      "actor_class": "/Game/Models/Xfer/BP_Xfer.BP_Xfer_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Xfer/Xfer.Xfer",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "AAA 1",
+      "model": "Tower3",
+      "path": "/Game/Models/Tower3/BP_Tower3",
+      "class": "SAM",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "AAA 2",
+      "model": "Tower3",
+      "path": "/Game/Models/Tower3/BP_Tower3",
+      "class": "SAM",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "SAM 1",
+      "model": "SAMBase",
+      "path": "/Game/Models/SAMBase/BP_SAMBase",
+      "class": "SAM",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Goliath",
+      "model": "Goliath",
+      "path": "/Game/Models/Goliath/BP_Goliath",
+      "class": "Carrier",
+      "status": "configured",
+      "actor_class": "/Game/Models/Goliath/BP_Goliath.BP_Goliath_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Goliath/Goliath.Goliath",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station2",
+      "model": "Harmony",
+      "path": "/Game/Models/Harmony/BP_Harmony",
+      "class": "STATION",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Broadsword",
+      "model": "Hulk-Broadsword",
+      "path": "/Game/Models/Hulk-Broadsword/BP_Hulk-Broadsword",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Dragon",
+      "model": "Hulk-Dragon",
+      "path": "/Game/Models/Hulk-Dragon/BP_Hulk-Dragon",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Imperial",
+      "model": "Hulk-Imperial",
+      "path": "/Game/Models/Hulk-Imperial/BP_Hulk-Imperial",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Tiger",
+      "model": "Hulk-Frigate",
+      "path": "/Game/Models/Hulk-Frigate/BP_Hulk-Frigate",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Vendetta",
+      "model": "Hulk-Vendetta",
+      "path": "/Game/Models/Hulk-Vendetta/BP_Hulk-Vendetta",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Hulk-Volnaris",
+      "model": "Hulk-Volnaris",
+      "path": "/Game/Models/Hulk-Volnaris/BP_Hulk-Volnaris",
+      "class": "Hulk",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Imperial",
+      "model": "Imperial",
+      "path": "/Game/Models/Imperial/BP_Imperial",
+      "class": "Cruiser",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Intruder",
+      "model": "Intruder",
+      "path": "/Game/Models/Intruder/BP_Intruder",
+      "class": "fighter",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Intruder/BP_Intruder.BP_Intruder_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Jackal",
+      "model": "Jackal",
+      "path": "/Game/Models/Jackal/BP_Jackal",
+      "class": "LCA",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Jackal/BP_Jackal.BP_Jackal_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Airbase1",
+      "model": "Telmera",
+      "path": "/Game/Models/Telmera/BP_Telmera",
+      "class": "STARBASE",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Marauder",
+      "model": "Marauder",
+      "path": "/Game/Models/Marauder/BP_Marauder",
+      "class": "Frigate",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "BlockadeMine",
+      "model": "Mine",
+      "path": "/Game/Models/Mine/BP_Mine",
+      "class": "Mine",
+      "status": "configured",
+      "actor_class": "/Game/Models/Mine/BP_Mine.BP_Mine_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Mine/mine.mine",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Observatory",
+      "model": "Observatory",
+      "path": "/Game/Models/Observatory/BP_Observatory",
+      "class": "STATION",
+      "status": "configured",
+      "actor_class": "/Game/Models/Observatory/BP_Observatory.BP_Observatory_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Observatory/Observatory.Observatory",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Orion",
+      "model": "Orion",
+      "path": "/Game/Models/Orion/BP_Orion",
+      "class": "Carrier",
+      "status": "configured",
+      "actor_class": "/Game/Models/Orion/BP_Orion.BP_Orion_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Orion/orion.orion",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Platform",
+      "model": "Platform",
+      "path": "/Game/Models/Platform/BP_Platform",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "QShip",
+      "model": "QShip",
+      "path": "/Game/Models/QShip/BP_QShip",
+      "class": "Freighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Raptor",
+      "model": "Raptor",
+      "path": "/Game/Models/Raptor/BP_Raptor",
+      "class": "fighter",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Raptor/BP_Raptor.BP_Raptor_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Razor",
+      "model": "Razor",
+      "path": "/Game/Models/Razor/BP_Razor",
+      "class": "Fighter",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Razor/BP_Razor.BP_Razor_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Reac01",
+      "model": "Reactor",
+      "path": "/Game/Models/Reactor/BP_Reactor",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Relay1",
+      "model": "Relay",
+      "path": "/Game/Models/Relay/BP_Relay",
+      "class": "COMSAT",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station5",
+      "model": "S5",
+      "path": "/Game/Models/S5/BP_S5",
+      "class": "STATION",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station6",
+      "model": "MarakanXfer",
+      "path": "/Game/Models/MarakanXfer/BP_MarakanXfer",
+      "class": "STATION",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Station7",
+      "model": "MarakanLab",
+      "path": "/Game/Models/MarakanLab/BP_MarakanLab",
+      "class": "STATION",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Saber",
+      "model": "Saber",
+      "path": "/Game/Models/Saber/BP_Saber",
+      "class": "Fighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Senate",
+      "model": "senate2",
+      "path": "/Game/Models/senate2/BP_senate2",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Spectre",
+      "model": "Spectre",
+      "path": "/Game/Models/Spectre/BP_Spectre",
+      "class": "Destroyer",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Stormhawk",
+      "model": "Stormhawk",
+      "path": "/Game/Models/Stormhawk/BP_Stormhawk",
+      "class": "Fighter",
+      "status": "configured",
+      "actor_class": "/Game/Models/Stormhawk/BP_Stormhawk.BP_Stormhawk_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Stormhawk/Storm.Storm",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Airbase3",
+      "model": "Tanis",
+      "path": "/Game/Models/Tanis/BP_Tanis",
+      "class": "STARBASE",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Tank00",
+      "model": "Tank00",
+      "path": "/Game/Models/Tank00/BP_Tank00",
+      "class": "Building",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "IM1906",
+      "model": "TankerA",
+      "path": "/Game/Models/TankerA/BP_TankerA",
+      "class": "Freighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "IM1912",
+      "model": "TankerB",
+      "path": "/Game/Models/TankerB/BP_TankerB",
+      "class": "Freighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "TargetDrone",
+      "model": "drone2b6",
+      "path": "/Game/Models/drone2b6/BP_drone2b6",
+      "class": "Drone",
+      "status": "runtime_fallback_requires_spawn_test",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified.",
+      "known_runtime_fallback": "/Game/Models/TargetDrone/BP_TargetDrone"
+    },
+    {
+      "design": "Thunderbolt",
+      "model": "Thunderbolt",
+      "path": "/Game/Models/Thunderbolt/BP_Thunderbolt",
+      "class": "Attack",
+      "status": "configured",
+      "actor_class": "/Game/Models/Thunderbolt/BP_Thunderbolt.BP_Thunderbolt_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Thunderbolt/Thunderbolt.Thunderbolt",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Tiger",
+      "model": "Tiger",
+      "path": "/Game/Models/Tiger/BP_Tiger",
+      "class": "Frigate",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Transport",
+      "model": "Transport",
+      "path": "/Game/Models/Transport/BP_Transport",
+      "class": "Courier",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Vendetta",
+      "model": "Vendetta",
+      "path": "/Game/Models/Vendetta/BP_Vendetta",
+      "class": "Cruiser",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Viper",
+      "model": "Viper",
+      "path": "/Game/Models/Viper/BP_Viper",
+      "class": "Fighter",
+      "status": "no_hull_on_CDO_requires_spawn_test",
+      "actor_class": "/Game/Models/Viper/BP_Viper.BP_Viper_C",
+      "native_ship_actor": true,
+      "hull_mesh": null,
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Volnaris",
+      "model": "Volnaris",
+      "path": "/Game/Models/Volnaris/BP_Volnaris",
+      "class": "Destroyer",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Wolf",
+      "model": "Wolf",
+      "path": "/Game/Models/Wolf/BP_Wolf",
+      "class": "Destroyer",
+      "status": "configured",
+      "actor_class": "/Game/Models/Wolf/BP_Wolf.BP_Wolf_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Wolf/Wolf.Wolf",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "Zodiac",
+      "model": "Zodiac",
+      "path": "/Game/Models/Zodiac/BP_Zodiac",
+      "class": "LCA",
+      "status": "configured",
+      "actor_class": "/Game/Models/Zodiac/BP_Zodiac.BP_Zodiac_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Zodiac/Zodiac.Zodiac",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZA",
+      "model": "ZAttack",
+      "path": "/Game/Models/ZAttack/BP_ZAttack",
+      "class": "Attack",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZCA",
+      "model": "ZolonCA",
+      "path": "/Game/Models/ZolonCA/BP_ZolonCA",
+      "class": "Cruiser",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZCS",
+      "model": "ZolonCS",
+      "path": "/Game/Models/ZolonCS/BP_ZolonCS",
+      "class": "Cruiser",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZDD",
+      "model": "ZZDD",
+      "path": "/Game/Models/ZZDD/BP_ZZDD",
+      "class": "Destroyer",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZF",
+      "model": "ZFighter",
+      "path": "/Game/Models/ZFighter/BP_ZFighter",
+      "class": "Fighter",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "ZZFF",
+      "model": "ZolonFF",
+      "path": "/Game/Models/ZolonFF/BP_ZolonFF",
+      "class": "Frigate",
+      "status": "missing_blueprint",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    },
+    {
+      "design": "BlockadeMine",
+      "model": "Mine",
+      "path": "/Game/Models/Mine/BP_Mine",
+      "class": "Mine",
+      "status": "configured",
+      "actor_class": "/Game/Models/Mine/BP_Mine.BP_Mine_C",
+      "native_ship_actor": true,
+      "hull_mesh": "/Game/Models/Mine/mine.mine",
+      "verification_limit": "CDO inspection only; construction scripts, Blueprint component overrides, runtime actor spawn and in-flight visibility are not verified."
+    }
+  ],
+  "turrets": [
+    {
+      "path": "/Game/Models/Weapons/Turret/LightPDB/BP_LightPDBTurret.BP_LightPDBTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/LightPDB/Light_PDBTurret.Light_PDBTurret",
+      "weapon": "Light-PDB"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/VikingCannon/BP_VikingCannonTurret.BP_VikingCannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/VikingCannon/VikingCannonTurret.VikingCannonTurret",
+      "weapon": "Viking Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/AAACannon/BP_AAACannonTurret.BP_AAACannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/AAACannon/AAACannonGuns.AAACannonGuns",
+      "weapon": "AAA Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/QuadAAA/BP_QuadAAATurret.BP_QuadAAATurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/QuadAAA/QuadAAAGuns.QuadAAAGuns",
+      "weapon": "Quad AAA"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/SAM1/BP_SAM1Turret.BP_SAM1Turret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/SAM1/SAM_1Turret.SAM_1Turret",
+      "weapon": "SAM-1"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rail5/BP_Rail5Turret.BP_Rail5Turret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rail5/Rail_5Turret.Rail_5Turret",
+      "weapon": "Rail-5"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Helicon/BP_HeliconTurret.BP_HeliconTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Helicon/HeliconTurret.HeliconTurret",
+      "weapon": "Helicon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rail12/BP_Rail12Turret.BP_Rail12Turret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rail12/Rail_12Turret.Rail_12Turret",
+      "weapon": "Rail-12"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rail12Inverted/BP_Rail12InvertedTurret.BP_Rail12InvertedTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rail12Inverted/Rail_12TurretInverted.Rail_12TurretInverted",
+      "weapon": "Rail-12 Inverted"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rostov/BP_RostovTurret.BP_RostovTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rostov/RostovTurret.RostovTurret",
+      "weapon": "Rostov"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/RostovStarboard/BP_RostovStarboardTurret.BP_RostovStarboardTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/RostovStarboard/Rostov_StarboardTurret.Rostov_StarboardTurret",
+      "weapon": "Rostov-Starboard"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Mag18/BP_Mag18Turret.BP_Mag18Turret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Mag18/Mag_18Turret.Mag_18Turret",
+      "weapon": "Mag-18"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/BlockadeCannon/BP_BlockadeCannonTurret.BP_BlockadeCannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/BlockadeCannon/BlockadeCannonTurret.BlockadeCannonTurret",
+      "weapon": "Blockade Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Graser/BP_GraserTurret.BP_GraserTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Graser/GraserTurret.GraserTurret",
+      "weapon": "Graser Turret"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/PhalanxCannon/BP_PhalanxCannonTurret.BP_PhalanxCannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/PhalanxCannon/PhalanxCannonTurret.PhalanxCannonTurret",
+      "weapon": "Phalanx Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/UrsaCannon/BP_UrsaCannonTurret.BP_UrsaCannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/UrsaCannon/UrsaCannonTurret.UrsaCannonTurret",
+      "weapon": "Ursa Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Vanguard/BP_VanguardTurret.BP_VanguardTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Vanguard/vangaurdTurret.vangaurdTurret",
+      "weapon": "Vanguard"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Fighter/BP_FighterTurret.BP_FighterTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Fighter/FighterTurret.FighterTurret",
+      "weapon": "Fighter Turret"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/OrcaCannon/BP_OrcaCannonTurret.BP_OrcaCannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/OrcaCannon/OrcaCannonTurret.OrcaCannonTurret",
+      "weapon": "Orca Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/OrcaInverted/BP_OrcaInvertedTurret.BP_OrcaInvertedTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/OrcaInverted/OrcaInvertedTurret.OrcaInvertedTurret",
+      "weapon": "Orca Inverted"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/LCA/BP_LCATurret.BP_LCATurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/LCA/LCATurretGuns.LCATurretGuns",
+      "weapon": "LCA Turret"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/BP_Turret.BP_Turret",
+      "native_turret_actor": true,
+      "mesh": null,
+      "weapon": "None"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Orca2Cannon/BP_Orca2CannonTurret.BP_Orca2CannonTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Orca2Cannon/Orca2CannonTurret.Orca2CannonTurret",
+      "weapon": "Orca 2 Cannon"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Orca2Inverted/BP_Orca2InvertedTurret.BP_Orca2InvertedTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Orca2Inverted/Orca2CannonTurretInverted.Orca2CannonTurretInverted",
+      "weapon": "Orca 2 Inverted"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rail15/BP_Rail15Turret.BP_Rail15Turret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rail15/Rail_15Turret.Rail_15Turret",
+      "weapon": "Rail-15"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/ReconPod/BP_ReconPodTurret.BP_ReconPodTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/ReconPod/ReconTurret.ReconTurret",
+      "weapon": "Recon Pod"
+    },
+    {
+      "path": "/Game/Models/Weapons/Turret/Rockets/BP_RocketsTurret.BP_RocketsTurret",
+      "native_turret_actor": true,
+      "mesh": "/Game/Models/Weapons/Turret/Rockets/RocketLauncherGuns.RocketLauncherGuns",
+      "weapon": "Rockets"
+    }
+  ],
+  "verification_limit": "Read-only data-table and CDO audit, not live mission or firing verification. BP_Turret is a generic parent and intentionally has no specific mesh."
+}

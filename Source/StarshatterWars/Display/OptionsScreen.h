@@ -161,6 +161,8 @@ private:
     int32 ActiveTabIndex = 0;
     friend class FOptionsModernizationTest;
     void BuildCreditsPage();
+    void BuildModsPage();
+    UPROPERTY(Transient) TObjectPtr<UWidget> ModsPage = nullptr;
     void ReloadCredits();
     bool bDelegatesBound = false;
 
