@@ -887,7 +887,10 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewWeapon->SetName(TCHAR_TO_ANSI(*Src.Name));
         NewWeapon->SetSourceIndex(Src.SourceIndex);
         if (!Src.Abbrev.IsEmpty()) NewWeapon->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
-        Legacy->weapons.append(NewWeapon);
+        // Countermeasure/probe launchers are separate legacy systems, not selectable guns.
+        if (WpnDesign->decoy_type && !Legacy->decoy) Legacy->decoy = NewWeapon;
+        else if (WpnDesign->probe && !Legacy->probe) Legacy->probe = NewWeapon;
+        else Legacy->weapons.append(NewWeapon);
 
         UE_LOG(LogTemp, Warning,
             TEXT("[ShipDesignRegistry] Weapon built Row='%s' Weapon=%p Name='%s' Type='%s' Group='%s' Muzzles=%d SourceIndex=%d"),

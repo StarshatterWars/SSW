@@ -75,6 +75,8 @@ public:
     void  NextView();
 
     void CommitMission();
+    void DamageShips(); // Legacy projectile/ship/drone collision dispatch.
+    TArray<SimShot*> GetProjectiles(); // Non-owning view of both owning lists.
 
     void DockShips();
     void CollideShips();

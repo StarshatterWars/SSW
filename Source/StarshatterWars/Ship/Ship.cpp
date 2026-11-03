@@ -916,6 +916,21 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 			GetName(), i, Mounted, Missile->Group(), Missile->Ammo());
 	}
 
+    // Legacy creates dedicated launchers outside the selectable weapon groups.
+    auto CreateLauncher = [&](Weapon* Template) -> Weapon* {
+        if (!Template) return nullptr;
+        Weapon* Launcher = new Weapon(*Template);
+        Launcher->SetOwner(this);
+        Launcher->SetID(SysID++);
+        Launcher->SetIndex(WeaponIndex++);
+        const int Source = Launcher->GetSourceIndex();
+        if (Source >= 0 && Source < reactors.size()) reactors[Source]->AddClient(Launcher);
+        systems.append(Launcher);
+        return Launcher;
+    };
+    decoy = CreateLauncher(design->decoy);
+    probe = CreateLauncher(design->probe);
+
 	// Default primary (first gun) and secondary (first missile), matching legacy.
 	primary = -1;
 	secondary = -1;
