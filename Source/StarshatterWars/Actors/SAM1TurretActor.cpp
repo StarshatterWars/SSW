@@ -3,7 +3,7 @@ ASAM1TurretActor::ASAM1TurretActor()
 {
     WeaponType=TEXT("SAM-1");
     LegacyGunModel=TEXT("Ground/SAMRail.mag");
-    LegacyBaseModel=TEXT("Ground/SAMTurret.mag");
+    LegacyBaseModel=TEXT("SAM1TurretBase");
     LegacyModelScale=2.0f;
     BaseAxis=0;
 }

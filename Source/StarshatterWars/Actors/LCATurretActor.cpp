@@ -3,7 +3,7 @@ ALCATurretActor::ALCATurretActor()
 {
     WeaponType=TEXT("LCA Turret");
     LegacyGunModel=TEXT("Alliance/LCATurretGuns.mag");
-    LegacyBaseModel=TEXT("Alliance/LCaTurretBase.mag");
+    LegacyBaseModel=TEXT("LCATurretBase");
     LegacyModelScale=0.12f;
     BaseAxis=0;
 }

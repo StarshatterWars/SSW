@@ -1,2 +1,2 @@
 #include "BlockadeTurretBaseActor.h"
-ABlockadeTurretBaseActor::ABlockadeTurretBaseActor(){LegacyBaseModel=TEXT("mine_base");LegacyModelScale=1.0f;}
+ABlockadeTurretBaseActor::ABlockadeTurretBaseActor(){LegacyBaseModel=TEXT("BlockadeTurretBase");LegacyModelScale=1.0f;}

@@ -1,0 +1,12 @@
+#
+# LCATurretBase Material Library exported by Magic 2.0
+#
+
+newmtl LCATurret
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.30000 0.30000 0.30000
+Ns 20.00000
+illum 2
+map_Kd LCATurret_D.jpg
+

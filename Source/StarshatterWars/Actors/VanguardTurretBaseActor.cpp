@@ -1,2 +1,2 @@
 #include "VanguardTurretBaseActor.h"
-AVanguardTurretBaseActor::AVanguardTurretBaseActor(){LegacyBaseModel=TEXT("Base1opt");LegacyModelScale=1.2f;}
+AVanguardTurretBaseActor::AVanguardTurretBaseActor(){LegacyBaseModel=TEXT("VanguardTurretBase");LegacyModelScale=1.2f;}

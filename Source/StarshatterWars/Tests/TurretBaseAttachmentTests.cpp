@@ -23,6 +23,16 @@ bool FTurretBaseAttachmentTest::RunTest(const FString&)
     ON_SCOPE_EXIT{ShipDesignRegistry::Clear();WeaponDesignRegistry::Clear();for(const auto& P:Before)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);for(const auto& P:ShipsBefore)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};
     auto* Importer=NewObject<UStarshatterWeaponDesignSubsystem>(NewObject<UGameInstance>());
     const FString File=FPaths::ProjectContentDir()/TEXT("GameData/Weapons/Wep.def");const auto Ansi=StringCast<ANSICHAR>(*File);Importer->LoadWeaponDesign(Ansi.Get());
+    // Renamed DEF keys and old saved model references resolve identically.
+    TestEqual(TEXT("LCA model alias"),TurretBaseCatalog::NativeClass(TEXT("LCATurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("LCaTurretBase")).Get());
+    TestEqual(TEXT("Blockade model alias"),TurretBaseCatalog::NativeClass(TEXT("BlockadeTurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("mine_base")).Get());
+    TestEqual(TEXT("Orca2 model alias"),TurretBaseCatalog::NativeClass(TEXT("Orca2TurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("t2_base")).Get());
+    TestEqual(TEXT("Orca2Inverted model alias"),TurretBaseCatalog::NativeClass(TEXT("Orca2InvertedTurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("t2_base_inv")).Get());
+    TestEqual(TEXT("Vanguard model alias"),TurretBaseCatalog::NativeClass(TEXT("VanguardTurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("Base1opt")).Get());
+    TestEqual(TEXT("Graser model alias"),TurretBaseCatalog::NativeClass(TEXT("GraserTurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("graserbase")).Get());
+    TestEqual(TEXT("AAA model alias"),TurretBaseCatalog::NativeClass(TEXT("AAATurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("AAA2Turret")).Get());
+    TestEqual(TEXT("QuadAAA model alias"),TurretBaseCatalog::NativeClass(TEXT("QuadAAATurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("AAA4Turret")).Get());
+    TestEqual(TEXT("SAM1 model alias"),TurretBaseCatalog::NativeClass(TEXT("SAM1TurretBase")).Get(),TurretBaseCatalog::NativeClass(TEXT("SAMTurret")).Get());
     const TCHAR* Types[]={
         TEXT("LCA Turret"),
         TEXT("Blockade Cannon"),
@@ -42,6 +52,9 @@ bool FTurretBaseAttachmentTest::RunTest(const FString&)
         TestEqual(TEXT("Existing turret_base field drives base identity"),Model,Row->TurretBase);
         TestEqual(TEXT("Existing scale drives the base visual"),Scale,Row->Scale);
         TestTrue(TEXT("Dedicated base class resolves"),TurretBaseCatalog::NativeClass(Model).Get()!=ATurretBaseActor::StaticClass());
+        const FString BaseName=TurretBaseCatalog::NativeClass(Model)->GetName().LeftChop(5);
+        const FString ExpectedPath=FString::Printf(TEXT("/Game/Models/Weapons/TurretBase/%s/BP_%s.BP_%s_C"),*BaseName,*BaseName,*BaseName);
+        TestEqual(TEXT("Renamed base Blueprint resolves"),TurretBaseCatalog::VisualClass(Model)->GetPathName(),ExpectedPath);
         const auto* Legacy=WeaponDesignRegistry::FindLegacy(FString(Type));
         if(TestNotNull(TEXT("Runtime design"),Legacy)){
             TestEqual(TEXT("Turret field crosses registry"),FString(ANSI_TO_TCHAR(Legacy->turret.data())),Row->Turret);

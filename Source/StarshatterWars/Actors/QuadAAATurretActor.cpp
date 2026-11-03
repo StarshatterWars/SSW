@@ -3,7 +3,7 @@ AQuadAAATurretActor::AQuadAAATurretActor()
 {
     WeaponType=TEXT("Quad AAA");
     LegacyGunModel=TEXT("Ground/AAA4Guns.mag");
-    LegacyBaseModel=TEXT("Ground/AAA4Turret.mag");
+    LegacyBaseModel=TEXT("QuadAAATurretBase");
     LegacyModelScale=2.0f;
     BaseAxis=0;
     LegacyMuzzles.Add(FVector(29.0,9.0,68.0));

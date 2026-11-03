@@ -1,2 +1,2 @@
 #include "GraserTurretBaseActor.h"
-AGraserTurretBaseActor::AGraserTurretBaseActor(){LegacyBaseModel=TEXT("graserbase");LegacyModelScale=2.0f;}
+AGraserTurretBaseActor::AGraserTurretBaseActor(){LegacyBaseModel=TEXT("GraserTurretBase");LegacyModelScale=2.0f;}
