@@ -61,7 +61,9 @@ bool FMissionEditorActionsTest::RunTest(const FString& Parameters)
     auto* Trigger=new MissionEvent;Trigger->id=19;Saved.GetEvents().append(Trigger);
     TestTrue(TEXT("Edited mission saves successfully"),Saved.Save());
     FString Written;TestTrue(TEXT("Mission output exists"),FFileHelper::LoadFileToString(Written,*File));
-    Mission Reloaded;TestTrue(TEXT("Reloaded mission definition is valid"),Reloaded.ParseMission(TCHAR_TO_ANSI(*Written)));
+    Mission Reloaded;const bool Parsed=Reloaded.ParseMission(TCHAR_TO_ANSI(*Written));
+    AddInfo(FString::Printf(TEXT("Roundtrip parser: %hs | saved: %s"),Reloaded.ErrorMessage().data(),*Written));
+    TestTrue(TEXT("Reloaded mission definition is valid"),Parsed);
     TestEqual(TEXT("Saved edit survives reload"),FString(ANSI_TO_TCHAR(Reloaded.GetName())),FString("Edited mission"));
     TestTrue(TEXT("Package and persistent event ID survive reload"),Reloaded.GetElements().size()==1&&Reloaded.GetEvents().size()==1&&Reloaded.GetEvents()[0]->EventID()==19);
     Dlg->mission=nullptr;Dlg->mission_info=nullptr;

@@ -1,5 +1,12 @@
 ﻿#pragma once
 #include "Widgets/SLeafWidget.h"
+#include "NativeHUDSymbology.h"
+#include "ShipActor.h"
+#include "Sim.h"
+#include "SimRegion.h"
+#include "Ship.h"
+#include "WeaponDesign.h"
+#include "WeaponGroup.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/GameViewportClient.h"
 #include "SceneView.h"
@@ -71,6 +78,7 @@ public:
             ChaseBrushes[I].DrawAs=ESlateBrushDrawType::Image;
             if (ChaseTextures[I].IsValid()) ChaseBrushes[I].ImageSize=FVector2D(ChaseTextures[I]->GetSizeX(),ChaseTextures[I]->GetSizeY());
         }
+        for(int I=0;I<4;++I){const FString Path=FString::Printf(TEXT("/Game/UI/HUD/Cross%d.Cross%d"),I+1,I+1);CrossTextures[I].Reset(LoadObject<UTexture2D>(nullptr,*Path));CrossBrushes[I].SetResourceObject(CrossTextures[I].Get());CrossBrushes[I].DrawAs=ESlateBrushDrawType::Image;}
         ForceVolatile(true);
         SetVisibility(EVisibility::HitTestInvisible);
     }
@@ -164,13 +172,23 @@ public:
             return Layer+3;
         }
         // Scale viewport pixels into this widget's local coordinates (including DPI).
-        const FVector2D ReticleSize(64.0 * Size.X / Width, 64.0 * Size.Y / Height);
+        const FSlateBrush* MarkerBrush=&ReticleBrush;
+        double MarkerSize=FNativeHUDSymbology::LeadSize;
+        if(auto* Selected=Cast<AShipActor>(Actor)){
+            auto* S=Sim::GetSim();auto* R=S?S->GetActiveRegion():nullptr;Ship* P=S?S->GetPlayerShip():nullptr;Ship* T=Selected->GetRuntimeShip();
+            if(P&&T&&R&&R->GetShips().contains(P)&&R->GetShips().contains(T)){
+                int Role=1;if(P->IsStarship()&&P->GetSecondaryGroup()&&P->GetSecondaryGroup()->GetTarget()==T&&P->GetTarget()!=T)Role=2;
+                const auto* D=P->GetPrimaryDesign();const int I=FNativeHUDSymbology::CrosshairIndex(Role,FVector::Distance(P->GetLocation(),T->GetLocation()),D?D->max_range:0,D!=nullptr)-1;
+                if(CrossTextures[I].IsValid()){MarkerBrush=&CrossBrushes[I];MarkerSize=FNativeHUDSymbology::TargetSize;}
+            }
+        }
+        const FVector2D ReticleSize(MarkerSize * Size.X / Width, MarkerSize * Size.Y / Height);
         const FVector2D TopLeft = Center - ReticleSize * 0.5;
         const FLinearColor Color = TargetColor.Get();
         if (ReticleTexture.IsValid())
             FSlateDrawElement::MakeBox(Elements, Layer + 1,
                 Geometry.ToPaintGeometry(FVector2f(ReticleSize), FSlateLayoutTransform(FVector2f(TopLeft))),
-                &ReticleBrush, ESlateDrawEffect::None, Color);
+                MarkerBrush, ESlateDrawEffect::None, Color);
         const FText Label = TargetName.Get();
         const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", 14);
         const FVector2D TextSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
@@ -187,6 +205,7 @@ private:
     mutable FVector2D LastOffscreenDirection = FVector2D(0,1);
     TStrongObjectPtr<UTexture2D> ReticleTexture;
     FSlateBrush ReticleBrush;
+    TStrongObjectPtr<UTexture2D> CrossTextures[4];FSlateBrush CrossBrushes[4];
     TStrongObjectPtr<UTexture2D> ChaseTextures[4];
     FSlateBrush ChaseBrushes[4];
     TWeakObjectPtr<APlayerController> Controller;

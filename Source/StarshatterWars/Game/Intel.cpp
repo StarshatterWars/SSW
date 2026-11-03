@@ -4,6 +4,7 @@
 #include "Intel.h"
 #include "Game.h"
 #include "DataLoader.h"
+#include <string>
 
 // +--------------------------------------------------------------------+
 
@@ -73,10 +74,8 @@ Intel::GetNameFromIntel(EIntel IntelType)
 		return "Unknown";
 	}
 
-	static FString CachedName;
-
-	CachedName =
-		EnumPtr->GetDisplayNameTextByValue(Value).ToString();
-
-	return TCHAR_TO_ANSI(*CachedName);
+    // TCHAR_TO_ANSI owns a temporary buffer; never return its pointer.
+    static thread_local std::string CachedName;
+    CachedName=TCHAR_TO_UTF8(*EnumPtr->GetDisplayNameTextByValue(Value).ToString());
+    return CachedName.c_str();
 }

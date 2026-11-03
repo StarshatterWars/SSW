@@ -23,6 +23,8 @@ public class StarshatterWars : ModuleRules
             "UMG",
             "MediaAssets",
             "CommonUI",
+            "OnlineSubsystem",
+            "OnlineSubsystemUtils",
             "ProceduralMeshComponent",
         });
 

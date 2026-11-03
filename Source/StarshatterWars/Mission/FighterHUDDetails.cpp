@@ -1,4 +1,6 @@
 #include "FighterHUDDetails.h"
+#include "NativeHUDSymbology.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
 #include "CockpitDisplays.h"
 #include "FighterActor.h"
 #include "Engine/Engine.h"
@@ -182,6 +184,7 @@ static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
 
 void SFighterHUDDetails::Construct(const FArguments& A)
 {
+    Symbology=MakeUnique<FNativeHUDSymbology>();
     ThirdPerson = A._ThirdPerson;
     ShowHUD = A._ShowHUD; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
@@ -254,6 +257,7 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
             BankRadians = FMath::Atan2(Right.Y, Up.Y);
     }
     else { PitchDegrees = BankRadians = 0; UpdateILSMode(INDEX_NONE, false); }
+    if(Symbology)Symbology->Refresh(PlayerShip());
     if (Now < NextSample) return;
     NextSample = Now + 0.1;
     Refresh();
@@ -284,11 +288,14 @@ void SFighterHUDDetails::Refresh()
     bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
+    bHelmMode=false;CompactNavLabel=TEXT("FREE FLIGHT");
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
     PlayerHull = Hull(P); Primary = Secondary = TEXT("NONE");
     if (P)
     {
         FlightSpeed = P->GetVelocity().Size();
+        OrderedHeading=FMath::RadiansToDegrees(P->GetHelmHeading());OrderedPitch=FMath::RadiansToDegrees(P->GetHelmPitch());
+        bHelmMode=P->GetFLCSMode()==EFLCSMode::HELM;
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
         bAutoAvailable = P->IsAutoNavEngaged() || P->IsAutoLandEngaged();
         bGearDown = P->IsGearDown();
@@ -305,6 +312,7 @@ void SFighterHUDDetails::Refresh()
         }
         if (InboundSlot* Arrival = P->GetInbound())
         {
+            CompactNavLabel=P->IsAutoLandEngaged()?TEXT("AUTO LAND"):TEXT("INBOUND");
             NavReadouts.Add(P->IsAutoLandEngaged() ? TEXT("AUTO LAND") : TEXT("INBOUND"));
             NavReadouts.Add(Arrival->Cleared() ? TEXT("CLEARED TO LAND") : TEXT("HOLD FOR CLEARANCE"));
             if (FlightDeck* Deck = Arrival->GetDeck())
@@ -312,6 +320,7 @@ void SFighterHUDDetails::Refresh()
         }
         else if (Instruction* Nav = P->GetNextNavPoint())
         {
+            CompactNavLabel=FString::Printf(TEXT("NAV %02d  %hs"),P->GetNavIndex(Nav),Nav->GetRegionName());
             NavReadouts.Add(FString::Printf(TEXT("%s %d"), P->IsAutoNavEngaged() ? TEXT("AUTO NAV") : TEXT("NAV"), P->GetNavIndex(Nav)));
             const char* Action = Instruction::ActionName(Nav->GetAction());
             if (Action && *Action) NavReadouts.Add(FString(ANSI_TO_TCHAR(Action)).ToUpper());
@@ -634,25 +643,32 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     if (bHasPlayer && ThirdPerson.Get())
     {
-        // External cameras keep the view of the ship clear. The bottom MFDs,
-        // projected target cues and ILS remain in their existing locations.
-        const FVector2D P(20*Scale,24*Scale);
-        Text(P,FString::Printf(TEXT("SPD %.0f   HDG %03d"),FlightSpeed,FMath::RoundToInt(HeadingDegrees)%360),HUDBlue,12);
-        if (NavReadouts.Num()) Text(P+FVector2D(0,22)*Scale,NavReadouts[0],HUDBlue,11);
-        if (NavReadouts.Num()>1) Text(P+FVector2D(0,40)*Scale,NavReadouts[1],HUDBlue,11);
-        if (bShowWeapons)
-        {
-            Text(P+FVector2D(0,62)*Scale,Primary.ToUpper(),HUDBlue,11);
-            Text(P+FVector2D(0,80)*Scale,Secondary.ToUpper(),HUDBlue,11);
+        // Compact flight deck: clear central view, stable alignment and restrained glass.
+        const FVector2D P(Size.X*.5-280*Scale,20*Scale),D(560*Scale,100*Scale);
+        static const FSlateRoundedBoxBrush Glass(FLinearColor(.012f,.024f,.038f,.82f),10.f);
+        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
+        Box(P+FVector2D(20,0)*Scale,FVector2D(520*Scale,Scale),FLinearColor(.2,.65,.8,.55));
+        const FLinearColor Muted(.42,.62,.7,.9),White(.88,.96,1,1),Green(.25,1,.58,1);
+        auto MiniText=[&](double X,double Y,const FString& Value,int SizeIn,FLinearColor Tint){
+            const FSlateFontInfo Font=SizeIn>=20?FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(SizeIn*Scale))):MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(SizeIn*Scale)));
+            FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(430*Scale,30*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(X,Y)*Scale))),Value,Font,ESlateDrawEffect::None,Tint);
+        };
+        Box(P+FVector2D(104,18)*Scale,FVector2D(Scale,64*Scale),FLinearColor(.2,.4,.5,.35));
+        MiniText(124,12,TEXT("VELOCITY"),10,Muted);MiniText(124,29,FString::Printf(TEXT("%.0f"),FlightSpeed),26,White);MiniText(124,61,TEXT("M / S"),10,Muted);
+        MiniText(232,12,TEXT("HEADING"),10,Muted);MiniText(232,30,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),22,White);
+        MiniText(330,12,bAutoAvailable?TEXT("AUTO PILOT"):TEXT("FLIGHT CONTROL"),10,bAutoAvailable?Green:Muted);
+        MiniText(330,33,CompactNavLabel.Left(26),13,White);
+        FString State=bGearDown?TEXT("GEAR DOWN"):TEXT("GEAR UP");if(bAugmenterActive)State+=TEXT("   AUG");
+        MiniText(330,62,State,10,bAugmenterActive?Green:Muted);
+        if(bShowWeapons){MiniText(124,80,Primary.ToUpper().Left(22),10,Muted);MiniText(330,80,Secondary.ToUpper().Left(24),10,Muted);}
+        if(JumpSeconds>0||ThreatLevel>0){
+            const FString Alert=JumpSeconds>0?FString::Printf(TEXT("QUANTUM  %02d"),FMath::CeilToInt(JumpSeconds)):ThreatLevel==2?TEXT("MISSILE INBOUND"):TEXT("TARGET LOCK");
+            const FLinearColor AlertColor=JumpSeconds>0?HUDBlue:ThreatLevel==2?FLinearColor(1,.22,.16,1):FLinearColor(1,.78,.25,1);
+            const FVector2D AP(Size.X*.5-110*Scale,132*Scale),AD(220*Scale,26*Scale);
+            Box(AP,AD,FLinearColor(.03,.012,.01,.75));Box(AP,FVector2D(2*Scale,AD.Y),AlertColor);
+            FSlateDrawElement::MakeText(E,L+3,G.ToPaintGeometry(FVector2f(AD),FSlateLayoutTransform(FVector2f(AP+FVector2D(14,5)*Scale))),Alert,FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(9,int(11*Scale))),ESlateDrawEffect::None,AlertColor);
         }
-        FString State;
-        if(bGearDown) State=TEXT("GEAR DOWN");
-        if(bAutoAvailable) State+=State.IsEmpty()?TEXT("AUTO"):TEXT("   AUTO");
-        if(bShoot && bShowWeapons) State+=State.IsEmpty()?TEXT("SHOOT"):TEXT("   SHOOT");
-        if(!State.IsEmpty())Text(P+FVector2D(0,102)*Scale,State,HUDBlue,10);
-        if(JumpSeconds>0)Text(P+FVector2D(0,124)*Scale,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)),HUDBlue,12);
-        else if(ThreatLevel==2 && bWarningFlash)Text(P+FVector2D(0,124)*Scale,TEXT("MISSILE WARNING"),FLinearColor::Red,12);
-        else if(ThreatLevel==1)Text(P+FVector2D(0,124)*Scale,TEXT("LOCK WARNING"),FLinearColor::Yellow,12);
+
     }
     // LAUNCH remains visible while staging but is disabled until the
     // fighter is actually spotted and the flight-deck slot becomes READY.
@@ -869,7 +885,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
     }
     DrawILS(G, E, L);
-    return SCompoundWidget::OnPaint(Args,G,Cull,E,L+4,Style,Enabled);
+    if(bHasPlayer && Symbology){
+        Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons);
+        Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get());
+    }
+    return SCompoundWidget::OnPaint(Args,G,Cull,E,L+5,Style,Enabled);
 }
 
 namespace

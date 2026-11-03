@@ -28,30 +28,50 @@
 #include "SimModel.h"
 #include "DataLoader.h"
 #include "Game.h"
+#include "Misc/Paths.h"
+#include "NativeAsteroidActor.h"
+#include "Engine/StaticMesh.h"
 
 // +--------------------------------------------------------------------+
 
 static FVector asteroid_velocity = FVector::ZeroVector;
 static SimModel* asteroid_model[32];
+static double library_radii[6]{};
 
 // +--------------------------------------------------------------------+
 
 Asteroid::Asteroid(int t, const FVector& pos, double m)
-	: Debris(asteroid_model[t % 6], pos, asteroid_velocity, m)
+	: Debris(asteroid_model[((t % 6)+6)%6], pos, asteroid_velocity, m)
 {
+    MeshVariant=((t%6)+6)%6;
+    if(library_radii[MeshVariant]>0){radius=library_radii[MeshVariant];bLibraryBounds=true;}
 	life = -1;
 }
 
 // +--------------------------------------------------------------------+
 
+int Asteroid::HitBy(SimShot* Shot,FVector& Impact)
+{
+    if(!bLibraryBounds)return Debris::HitBy(Shot,Impact);
+    // The imported mesh replaces the old MAG visual. Use its raw bounding
+    // radius for simulation collision, not the unrelated old mesh triangles.
+    Graphic* LegacyRep=rep;rep=nullptr;
+    const int Hit=Debris::HitBy(Shot,Impact);
+    rep=LegacyRep;return Hit;
+}
+
 void
 Asteroid::Initialize()
 {
+    FMemory::Memzero(library_radii,sizeof(library_radii));
+    const auto* Library=GetDefault<UAsteroidLibrarySettings>();
+    for(int I=0;I<6 && Library->Meshes.Num()>0;++I)
+        if(auto* Mesh=Library->Meshes[I%Library->Meshes.Num()].LoadSynchronous())library_radii[I]=ANativeAsteroidActor::RawRadius(Mesh->GetBounds().SphereRadius);
 	FMemory::Memzero(asteroid_model, sizeof(asteroid_model));
 
 	DataLoader* loader = DataLoader::GetLoader();
 	Text old_path = loader->GetDataPath();
-	loader->SetDataPath("Galaxy/Asteroids/");
+	loader->SetDataPath(TCHAR_TO_ANSI(*(FPaths::ProjectContentDir()/TEXT("GameData/Galaxy/Asteroids/"))));
 
 	int n = 0;
 
@@ -89,19 +109,6 @@ Asteroid::Initialize()
 	if (a) {
 		a->Load("a4.mag", 20);
 		asteroid_model[n++] = a;
-	}
-
-	List<Text> mod_asteroids;
-	loader->SetDataPath("Mods/Galaxy/Asteroids/");
-	loader->ListFiles("*.mag", mod_asteroids);
-
-	ListIter<Text> iter = mod_asteroids;
-	while (++iter && n < 32) {
-		a = new SimModel;
-		if (a) {
-			a->Load(*iter.value(), 50);
-			asteroid_model[n++] = a;
-		}
 	}
 
 	loader->SetDataPath(old_path);

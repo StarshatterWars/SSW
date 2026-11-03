@@ -15,8 +15,23 @@
 #include "HAL/PlatformTime.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 
 Game* game = 0;
+namespace { double LegacyFrameSeconds=0.0; double LegacyGUISeconds=0.0; }
+void Game::SetFrameClock(double Delta, uint32 Compression, bool bIsPaused)
+{
+    LegacyGUISeconds=FMath::IsFinite(Delta)?FMath::Max(0.0,Delta):0.0;
+    const uint32 Scale=FMath::Max(1u,Compression);
+    // Stars45 clamps ordinary frames, but allows compressed frames to expand.
+    LegacyFrameSeconds=Scale==1?FMath::Min(LegacyGUISeconds,max_frame_length):LegacyGUISeconds*Scale;
+    paused=bIsPaused;
+    if(paused) LegacyFrameSeconds=0;
+    time_comp=Scale;
+    ++frame_number;
+}
+void Game::SetPausedState(bool bIsPaused) { paused=bIsPaused; }
+
 
 bool     Game::active = false;
 bool     Game::paused = false;
@@ -85,6 +100,11 @@ void Game::Activate(bool f)
 
 void Game::Pause(bool f)
 {
+    SetPausedState(f);
+    // Legacy overlays call Game::Pause; keep the native loop in the same state.
+    if(auto* Env=UStarshatterEnvironmentSubsystem::Get())
+        if(auto* GI=Env->GetGameInstance())
+            if(auto* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>())Runtime->SetPaused(f);
 }
 
 uint32
@@ -141,17 +161,17 @@ void Game::SkipGameTime(double seconds)
 
 double Game::FrameRate()
 {
-	return 0.0;
+    return LegacyGUISeconds>0?1.0/LegacyGUISeconds:0.0;
 }
 
 double Game::FrameTime()
 {
-	return 0.0;
+    return paused?0.0:LegacyFrameSeconds;
 }
 
 double Game::GUITime()
 {
-	return 0.0;
+    return LegacyGUISeconds;
 }
 
 void

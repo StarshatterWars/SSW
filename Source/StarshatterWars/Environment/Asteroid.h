@@ -28,7 +28,12 @@ class Asteroid : public Debris
 public:
 	Asteroid(int type, const FVector& pos, double mass);
 
+    int GetMeshVariant() const {return MeshVariant;}
+    virtual int HitBy(SimShot* Shot,FVector& Impact) override;
 	static void Initialize();
 	static void Close();
+private:
+    int MeshVariant=0;
+    bool bLibraryBounds=false;
 };
 

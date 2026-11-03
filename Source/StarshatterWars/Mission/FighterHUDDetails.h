@@ -1,5 +1,6 @@
 #pragma once
 #include "Widgets/SCompoundWidget.h"
+#include "NativeHUDSymbology.h"
 class SScrollBox;
 class SVerticalBox;
 #include "DamagePanelData.h"
@@ -9,6 +10,7 @@ class SVerticalBox;
 #include "UObject/StrongObjectPtr.h"
 
 class AActor;
+class FNativeHUDSymbology;
 class WeaponGroup;
 class FShipMFDPreview;
 class FCockpitDisplays;
@@ -54,6 +56,10 @@ private:
     friend class FCockpitDisplaysTest;
     friend class FThirdPersonMiniHUDTest;
     TUniquePtr<FCockpitDisplays> CockpitDisplays;
+    TUniquePtr<FNativeHUDSymbology> Symbology;
+    double OrderedHeading=0,OrderedPitch=0;
+    bool bHelmMode=false;
+    FString CompactNavLabel=TEXT("FREE FLIGHT");
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     friend class FRecoveryILSHUDTest;
     void UpdateILSMode(int32 PlayerId, bool bInbound);

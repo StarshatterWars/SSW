@@ -147,6 +147,8 @@ private:
     void ClearExplosionVisuals();
     TMap<uint64,TWeakObjectPtr<AExplosionActor>> ExplosionVisuals;
     void SyncBeamPresentationClock();
+    void UpdateAsteroidVisuals();
+    TMap<class Asteroid*,TWeakObjectPtr<AActor>> AsteroidVisuals;
     void UpdateProjectileVisuals();
     void ClearProjectileVisuals();
     TMap<SimShot*, TWeakObjectPtr<AActor>> ProjectileVisuals;

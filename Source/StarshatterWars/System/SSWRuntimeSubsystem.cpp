@@ -1,5 +1,6 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
 #include "WeaponBlueprintResolver.h"
 #include "MissileFlightPresentation.h"
 #include "MissileActor.h"
@@ -12,6 +13,8 @@
 
 #include "SimShot.h"
 #include "ProjectilePresentationList.h"
+#include "NativeAsteroidActor.h"
+#include "Asteroid.h"
 #include "Sensor.h"
 #include "WeaponDesign.h"
 #include "Engine/StaticMeshActor.h"
@@ -294,6 +297,7 @@ void USSWRuntimeSubsystem::StopRuntime()
     RuntimeTickerHandle.Reset();
 
     bRuntimeRunning = false;
+    Game::SetFrameClock(0,TimeCompression,true);
 
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] Game loop stopped."));
 }
@@ -301,6 +305,7 @@ void USSWRuntimeSubsystem::StopRuntime()
 bool USSWRuntimeSubsystem::TickRuntime(float DeltaSeconds)
 {
     LastDeltaSeconds = DeltaSeconds;
+    Game::SetFrameClock(DeltaSeconds,TimeCompression,bPaused);
 
     GameLoop();
 
@@ -390,9 +395,11 @@ void USSWRuntimeSubsystem::GameLoop()
 void USSWRuntimeSubsystem::UpdateWorld()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_UpdateWorld);
-    const double Seconds =
-        static_cast<double>(LastDeltaSeconds) *
-        static_cast<double>(TimeCompression);
+    const double Seconds = Game::FrameTime();
+    // Advance the authoritative universe clock once, using the same simulation
+    // delta as physics. Environment's independent tick defers while we run.
+    if (auto* Env=UStarshatterEnvironmentSubsystem::Get())
+        Env->TickEnvironmentTime(Seconds);
 
     Galaxy* GalaxyInstance = Galaxy::GetInstance();
     if (GalaxyInstance)
@@ -411,7 +418,9 @@ void USSWRuntimeSubsystem::UpdateWorld()
         const uint32 BeforeTime =
             Game::GetGameTime();
 
+        if(auto* GI=GetGameInstance())if(auto* Timer=GI->GetSubsystem<UTimerSubsystem>())Timer->ManualMissionTick(float(Seconds));
         SimInstance->ExecFrame(Seconds);
+        UpdateAsteroidVisuals();
         UpdateProjectileVisuals();
         UpdateExplosionVisuals(Seconds);
         if(SimRegion* Region=SimInstance->GetActiveRegion())
@@ -1114,6 +1123,10 @@ void USSWRuntimeSubsystem::SetPaused(bool bInPaused)
         return;
 
     bPaused = bInPaused;
+    Game::SetPausedState(bPaused);
+    if(auto* GI=GetGameInstance())if(auto* Timer=GI->GetSubsystem<UTimerSubsystem>()){
+        if(bPaused)Timer->PauseMissionClock();else Timer->ResumeMissionClock();
+    }
     SyncExplosionClock();
     SyncBeamPresentationClock();
 
@@ -1510,9 +1523,28 @@ FVector USSWRuntimeSubsystem::GetVisualSpawnLocationForRuntimeShip(Ship* Runtime
 
 void USSWRuntimeSubsystem::ClearProjectileVisuals()
 {
+    for(auto& Entry:AsteroidVisuals)if(auto* Actor=Entry.Value.Get())Actor->Destroy();
+    AsteroidVisuals.Reset();
     for(auto& Pair:ProjectileVisuals)if(Pair.Value.IsValid())Pair.Value->Destroy();
     ProjectileVisuals.Empty(); ProjectileMeshes.Empty(); ProjectileFallbackMesh=nullptr;
 }
+void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
+{
+    UWorld* World=GetWorld();SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
+    TSet<Asteroid*> Alive;
+    const auto* Library=GetDefault<UAsteroidLibrarySettings>();
+    if(World && Region && Library->Meshes.Num()>0)for(int I=0;I<Region->GetRoids().size();++I){
+        Asteroid* Rock=Region->GetRoids()[I];if(!Rock)continue;Alive.Add(Rock);
+        auto* Actor=Cast<ANativeAsteroidActor>(AsteroidVisuals.FindRef(Rock).Get());
+        if(!Actor){FActorSpawnParameters Params;Params.ObjectFlags|=RF_Transient;
+            Actor=World->SpawnActor<ANativeAsteroidActor>(FVector::ZeroVector,FRotator::ZeroRotator,Params);
+            if(Actor)AsteroidVisuals.Add(Rock,Actor);}
+        if(Actor){Actor->UpdateFromSimulation(*Rock,GetVisualLocationForRegion(Region,Rock->GetLocation()),Library->Meshes[Rock->GetMeshVariant()%Library->Meshes.Num()].LoadSynchronous());}
+    }
+    for(auto It=AsteroidVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
+        if(auto* A=It.Value().Get())A->Destroy();It.RemoveCurrent();}
+}
+
 void USSWRuntimeSubsystem::UpdateProjectileVisuals()
 {
     UWorld* World=GetWorld();
@@ -1691,7 +1723,7 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
         bWaypointClassResolved = true;
         WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Models/Waypoint/BP_Waypoint.BP_Waypoint_C"));
         if (!WaypointClass) WaypointClass = LoadClass<AWaypointActor>(nullptr, TEXT("/Game/Actors/BP_Waypoint.BP_Waypoint_C"));
-        if (!WaypointClass) UE_LOG(LogSSWRuntime, Warning, TEXT("Create /Game/Actors/BP_Waypoint with the supplied editor script. Using hidden native waypoint actors until then."));
+        if (!WaypointClass) UE_LOG(LogSSWRuntime, Warning, TEXT("Create /Game/Actors/BP_Waypoint with the supplied editor script. Using native plumbob markers."));
     }
     TSet<FString> ActiveKeys;
     ListIter<SimElement> Elements = LiveSim->GetElements();
@@ -1730,7 +1762,11 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
             Actor->LegacyLocation = Point->GetLocation();
             Actor->bNextWaypoint = Point == Element->GetNextNavPoint();
             Actor->SetActorLocation(GetVisualLocationForRegion(Point->GetRegion(), OtherHand(Point->GetLocation())));
-            Actor->SetActorHiddenInGame(true);
+            const Ship* Player=LiveSim->GetPlayerShip();
+            const bool OwnRoute=Player && Player->GetElement()==Element;
+            const bool InSector=Point->GetRegion()==LiveSim->GetActiveRegion();
+            Actor->SetActorScale3D(FVector::OneVector);
+            Actor->RefreshAppearance(OwnRoute && InSector && Point->GetStatus()<=INSTRUCTION_STATUS::ACTIVE);
             Actor->SetActorEnableCollision(false);
 #if WITH_EDITOR
             Actor->SetActorLabel(FString::Printf(TEXT("NAV %hs %d"), Element->GetName().data(), Index));

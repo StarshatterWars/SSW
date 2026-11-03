@@ -766,7 +766,7 @@ void SimRegion::DamageShips()
         }
         // Legacy allows weapons whose mask contains DRONE to intercept drones.
         // Keep the owning lists separate and defer deletion to UpdateShots.
-        if (IsDeadShot(Shot) || !(Shot->GetDesign()->target_type & static_cast<uint32>(CLASSIFICATION::DRONE))) continue;
+        if (!IsDeadShot(Shot) && (Shot->GetDesign()->target_type & static_cast<uint32>(CLASSIFICATION::DRONE))) {
         for (int I=0; I<drones.size(); ++I) {
             Drone* Victim = drones[I];
             if (!Victim || Victim==Shot || IsDeadShot(Victim) || Victim->Owner()==Shot->Owner()) continue;
@@ -784,8 +784,27 @@ void SimRegion::DamageShips()
                 break;
             }
         }
+        }
+        if (IsDeadShot(Shot)) continue;
+        // Legacy ignores debris smaller than 50 simulation units.
+        for (int I=0; I<debris.size(); ++I) {
+            Debris* Piece=debris[I];
+            if (!Piece || Piece->GetRadius()<50) continue;
+            FVector Impact;
+            if (!Piece->HitBy(Shot,Impact)) continue;
+            if (Piece->GetIntegrity()<1) {
+                if(sim) sim->CreateExplosion(Piece->GetLocation(),Piece->GetVelocity(),EExplosionType::LARGE_EXPLOSION,1,1,this);
+                debris.removeIndex(I--);
+                delete Piece;
+            }
+            if (!Shot->IsBeam()) {Shot->SetLife(0);break;}
+        }
+        if (IsDeadShot(Shot)) continue;
+        for (int I=0; I<asteroids.size(); ++I) {
+            Asteroid* Rock=asteroids[I];FVector Impact;
+            if (Rock && Rock->HitBy(Shot,Impact) && !Shot->IsBeam()) {Shot->SetLife(0);break;}
+        }
     }
-
 }
 
 void SimRegion::UpdateShips(double seconds)

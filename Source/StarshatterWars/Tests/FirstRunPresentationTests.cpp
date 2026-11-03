@@ -24,6 +24,7 @@
 #include "FormattingUtils.h"
 #include "Internationalization/Regex.h"
 #include "HAL/FileManager.h"
+#include "RHI.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFirstRunPresentationTest,"Starshatter.Menu.FirstRunAndCircularLogo",
     EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -45,13 +46,27 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     auto* Logo=Cast<UImage>(Menu->WidgetTree->FindWidget(TEXT("SSWMenu_CircularLogo")));
     if(!TestNotNull(TEXT("Main menu circular logo widget exists"),Logo))return false;
     TestTrue(TEXT("Circular asset is actually assigned"),Logo->GetBrush().GetResourceObject() && Logo->GetBrush().GetResourceObject()->GetPathName()==TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo"));
+    if (GUsingNullRHI) {
+        auto VerifyAsset=[&](UButton* Button,const TCHAR* Path){
+            auto* Size=Button?Cast<USizeBox>(Button->GetContent()):nullptr;
+            auto* Icon=Size?Cast<UImage>(Size->GetContent()):nullptr;
+            TestNotNull(TEXT("Standard icon widget exists"),Icon);
+            if(Icon)TestTrue(TEXT("Standard arrow asset assigned"),Icon->GetBrush().GetResourceObject() && Icon->GetBrush().GetResourceObject()->GetPathName()==Path);
+        };
+        VerifyAsset(Setup->AcceptBtn,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"));
+        VerifyAsset(Setup->CancelBtn,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"));
+        AddWarning(TEXT("NullRHI: structural and asset assertions passed; pixel captures require an RHI-enabled run."));
+        return true;
+    }
     FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();
     if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
     const FString Dir=FPaths::ProjectSavedDir()/TEXT("Automation/FirstRunAndLogo");IFileManager::Get().MakeDirectory(*Dir,true);
     FWidgetRenderer Renderer(true,false);
     auto Capture=[&](TSharedRef<SWidget> Widget,const TCHAR* Name){Widget->SlatePrepass();Renderer.DrawWidget(Widget,FVector2D(1920,1080));FlushRenderingCommands();
         auto* Target=Renderer.DrawWidget(Widget,FVector2D(1920,1080));FlushRenderingCommands();TArray<FColor> Pixels;FReadSurfaceDataFlags Flags(RCM_UNorm);Flags.SetLinearToGamma(false);
-        Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags);TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1920,1080,Pixels,PNG);
+        if(!Target || !Target->GameThread_GetRenderTargetResource()) {AddError(TEXT("UI capture target unavailable"));return Pixels;}
+        if(!Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags)){AddError(TEXT("UI capture readback failed"));return Pixels;}
+        TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1920,1080,Pixels,PNG);
         TestTrue(TEXT("UI verification capture saved"),FFileHelper::SaveArrayToFile(PNG,*FPaths::Combine(Dir,FString(Name)+TEXT(".png")))); return Pixels;};
     Capture(SetupSlate,TEXT("FirstRun"));Capture(MenuSlate,TEXT("MainMenu"));
     AddInfo(FString::Printf(TEXT("Circular logo geometry %s at %s, opacity %.3f brush tint %s"),*Logo->GetCachedGeometry().GetLocalSize().ToString(),*Logo->GetCachedGeometry().GetAbsolutePosition().ToString(),Logo->GetRenderOpacity(),*Logo->GetBrush().TintColor.GetSpecifiedColor().ToString()));

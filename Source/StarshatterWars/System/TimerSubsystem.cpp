@@ -1,4 +1,5 @@
 #include "TimerSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 #include "CampaignSave.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Ticker.h"
@@ -71,7 +72,9 @@ void UTimerSubsystem::StopClock()
 
 bool UTimerSubsystem::HandleTicker(float DeltaSeconds)
 {
-	AdvanceMissionClock(DeltaSeconds);
+    auto* GI=GetGameInstance();
+    auto* Runtime=GI?GI->GetSubsystem<USSWRuntimeSubsystem>():nullptr;
+    if(!Runtime || !Runtime->IsRuntimeRunning())AdvanceMissionClock(DeltaSeconds);
 
 	AccumRealSeconds += (double)DeltaSeconds;
 
@@ -335,7 +338,7 @@ void UTimerSubsystem::ManualMissionTick(float DeltaSeconds)
 		OnMissionSecond.Broadcast(CurMissionSec);
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[TimerSubsystem] ManualMissionTick Time=%.3f MS=%d State=%d"),
 		MissionTimelineSeconds,
 		GetMissionTimeMS(),

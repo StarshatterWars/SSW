@@ -20,10 +20,10 @@ bool FStorePresentationTest::RunTest(const FString& Parameters)
     if(Child)
     {
         TestFalse(TEXT("Loaded store is visible"),Child->IsHidden());
-        WeaponSystem.SetAmmo(0);Mount->UpdateRuntimeStore();TestTrue(TEXT("Spent store is hidden"),Child->IsHidden());
-        WeaponSystem.SetAmmo(2);Mount->UpdateRuntimeStore();TestFalse(TEXT("Rearm restores store"),Child->IsHidden());
+        WeaponSystem.SetAmmo(0);Mount->UpdateRuntimeStore();TestNull(TEXT("Spent store child is released"),Mount->GetChildActor());
+        WeaponSystem.SetAmmo(2);Mount->UpdateRuntimeStore();Child=Mount->GetChildActor();TestNotNull(TEXT("Rearm creates carried store"),Child);if(Child)TestFalse(TEXT("Rearmed store is visible"),Child->IsHidden());
         TestEqual(TEXT("BP sees actual remaining rounds"),Mount->GetRemainingRounds(),2);
-        Mount->ClearRuntimeWeapon();TestTrue(TEXT("Unbound station hides stale BP store"),Child->IsHidden());
+        Mount->ClearRuntimeWeapon();TestNull(TEXT("Unbound station releases stale BP store"),Mount->GetChildActor());
     }
     Mount->RuntimeWeapon=nullptr;World->DestroyWorld(false);
     return true;

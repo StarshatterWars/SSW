@@ -29,6 +29,7 @@
 #include "QuantumDrive.h"
 #include "Sensor.h"
 #include "Shield.h"
+#include "SystemDesign.h"
 #include "Computer.h"
 #include "FlightComputer.h"
 #include "HardPoint.h"
@@ -542,17 +543,25 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewShield->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
         }
 
+        if(!Src.DesignName.IsEmpty())
+            if(auto* System=SystemDesign::Find(TCHAR_TO_ANSI(*Src.DesignName)))NewShield->SetDesign(System);
         NewShield->SetSourceIndex(Src.SourceIndex);
         NewShield->SetHullFactor(Src.HullFactor);
 
-        NewShield->SetCapacity(Src.Capacity);
-        NewShield->SetConsumption(Src.Consumption);
-        NewShield->SetShieldFactor(Src.Factor);
-        NewShield->SetShieldCutoff(Src.Cutoff);
-        NewShield->SetShieldCurve(Src.Curve);
-        NewShield->SetDeflectionCost(Src.DeflectionCost);
+        NewShield->Mount(Src.Location,Src.Size,Src.HullFactor);
+        NewShield->SetExplosionType(static_cast<EExplosionType>(Src.ExplosionType));
+        // Legacy selects mode first, then applies only positive optional overrides.
         NewShield->SetShieldCapacitor(Src.bShieldCapacitor);
         NewShield->SetShieldBubble(Src.bShieldBubble);
+        if (Src.Capacity>0) NewShield->SetCapacity(Src.Capacity);
+        if (Src.Consumption>0) NewShield->SetConsumption(Src.Consumption);
+        if (Src.Factor>0) NewShield->SetShieldFactor(Src.Factor);
+        if (Src.Cutoff>0) NewShield->SetShieldCutoff(Src.Cutoff);
+        if (Src.Curve>0) NewShield->SetShieldCurve(Src.Curve);
+        if (Src.DeflectionCost>0) NewShield->SetDeflectionCost(Src.DeflectionCost);
+        if (Src.Emcon1>=0 && Src.Emcon1<=100) NewShield->SetEMCONPower(1,Src.Emcon1);
+        if (Src.Emcon2>=0 && Src.Emcon2<=100) NewShield->SetEMCONPower(2,Src.Emcon2);
+        if (Src.Emcon3>=0 && Src.Emcon3<=100) NewShield->SetEMCONPower(3,Src.Emcon3);
 
         Legacy->shields.append(NewShield);
 

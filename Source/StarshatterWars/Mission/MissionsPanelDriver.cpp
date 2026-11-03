@@ -333,7 +333,7 @@ void UMissionsPanelDriver::ShowMultiplayerMode()
 {
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
     if (!MultiplayerChild) {UMultiplayerDlg* W=CreateWidget<UMultiplayerDlg>(PC,UMultiplayerDlg::StaticClass());MultiplayerChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
-    if (UMultiplayerDlg* W=Cast<UMultiplayerDlg>(MultiplayerChild)){W->Show();SelectChild(W,TEXT("MULTIPLAYER MISSIONS"));}
+    if (UMultiplayerDlg* W=Cast<UMultiplayerDlg>(MultiplayerChild)){W->Show();SelectChild(W,TEXT("MULTIPLAYER SESSIONS"));}
 }
 void UMissionsPanelDriver::Show()
 {
@@ -402,7 +402,7 @@ void UMissionsPanelDriver::UpdateBriefingEnabled()
         bHasSelection = Single->HasSelectedMission();
     else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
         bHasSelection = Multi->HasSelectedMission();
-    if (BriefingTab) { BriefingTab->SetIsEnabled(bHasSelection); BriefingTab->SetVisibility(Cast<USingleMissionDlg>(ActiveChild) ? ESlateVisibility::Collapsed : ESlateVisibility::Visible); }
+    if (BriefingTab) { BriefingTab->SetIsEnabled(bHasSelection); BriefingTab->SetVisibility((Cast<USingleMissionDlg>(ActiveChild) || Cast<UMultiplayerDlg>(ActiveChild)) ? ESlateVisibility::Collapsed : ESlateVisibility::Visible); }
 }
 void UMissionsPanelDriver::OpenBriefing()
 {

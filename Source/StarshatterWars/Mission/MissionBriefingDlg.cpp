@@ -2396,6 +2396,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
             {
                 const FLinearColor Neutral = FLinearColor::Yellow;
                 if (!WeakThis.IsValid()) return Neutral;
+                if(Cast<AWaypointActor>(WeakThis->SelectedMissionTarget.Get()))return FLinearColor(.25f,1.f,.5f);
                 AShipActor* Actor = Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
                 Sim* CurrentSim = Sim::GetSim();
                 SimRegion* Region = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;

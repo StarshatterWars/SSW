@@ -27,6 +27,7 @@
 #include "Terrain.h"
 
 #include "Solid.h"
+#include "MeshCollision.h"
 #include "DataLoader.h"
 #include "Game.h"
 #include "GameStructs_System.h"
@@ -123,13 +124,14 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 
 		const FVector shot_vpn_raw = shot_loc - shot->GetOrigin();
 		FVector       shot_vpn = shot_vpn_raw;
-		double        shot_len = shot_vpn.Normalize();
+		double        shot_len = shot_vpn.Size();
+        shot_vpn.Normalize();
 
 		if (shot_len == 0.0)
 			shot_len = 1000.0;
 
 		// impact:
-		if (solid) {
+		if (solid && solid->GetModel()) {
 			if (solid->CheckRayIntersection(shot->GetOrigin(), shot_vpn, shot_len, impact)) {
 				// trim beam shots to impact point:
 				if (shot->IsBeam())
@@ -157,7 +159,7 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 			}
 		}
 		else {
-			if (dlen < GetRadius()) {
+            if (MeshCollision::RaySphere(shot->GetOrigin(),shot_vpn,shot_len,GetLocation(),GetRadius(),impact)) {
 				hull_impact = impact = shot_loc;
 
 				if (sim) {
@@ -177,10 +179,8 @@ Debris::HitBy(SimShot* shot, FVector& impact)
 	if (hit_type != HIT_NOTHING) {
 		double effective_damage = shot->Damage() * dscale;
 
-		if (shot->IsBeam()) {
-			effective_damage *= Game::FrameTime();
-		}
-		else {
+        // Beam damage is integrated once by SimShot::Damage in this port.
+		if (!shot->IsBeam()) {
 			ApplyTorque(shot->GetVelocity() * (float)effective_damage * 1e-6f);
 		}
 

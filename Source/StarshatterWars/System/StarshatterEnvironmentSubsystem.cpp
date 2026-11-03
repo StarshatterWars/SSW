@@ -18,6 +18,7 @@
 =============================================================================*/
 
 #include "StarshatterEnvironmentSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 
 // Core
 #include "Logging/LogMacros.h"
@@ -2025,6 +2026,7 @@ void UStarshatterEnvironmentSubsystem::SetSimTimeScale(double NewScale)
 
 void UStarshatterEnvironmentSubsystem::TickEnvironmentTime(double DeltaSeconds)
 {
+    if (!bLoaded || !bBaseTimeInitialized) return;
 	AdvanceSimulationClock(DeltaSeconds);
 
 	StarSystem::SetSimulationTime(GetSimulationClockSeconds());
@@ -2043,6 +2045,9 @@ void UStarshatterEnvironmentSubsystem::Tick(float DeltaTime)
 		return;
 	}
 
+    if (auto* GI=GetGameInstance())
+        if (auto* Runtime=GI->GetSubsystem<USSWRuntimeSubsystem>())
+            if (Runtime->IsRuntimeRunning()) return;
 	AdvanceSimulationClock(DeltaTime);
 }
 

@@ -85,7 +85,10 @@ public:
 
 	static bool       DisplayModeSupported(int w, int h, int bpp);
 
-	static double     FrameRate();
+	// One update per native runtime tick; GUI delta is uncompressed.
+    static void       SetFrameClock(double RealDelta, uint32 Compression, bool bIsPaused);
+    static void       SetPausedState(bool bIsPaused);
+    static double     FrameRate();
 	static double     FrameTime();
 	static double     GUITime();
 	static void       SetMaxFrameLength(double seconds) { max_frame_length = seconds; }

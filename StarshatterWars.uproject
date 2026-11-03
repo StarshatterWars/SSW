@@ -43,6 +43,14 @@
 				"Mac",
 				"Linux"
 			]
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystemNull",
+			"Enabled": true
 		}
 	]
 }
