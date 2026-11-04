@@ -3898,6 +3898,8 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
 void UMissionBriefingDlg::ToggleQuantumTravel()
 {
     if (QuantumPopup.IsValid()) { CloseQuantumTravel(); return; }
+    Ship* QuantumPlayer=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
+    if(!QuantumPlayer || !QuantumPlayer->GetQuantumDrive()) return;
     CloseNavigationPopup(); CloseFlightOpsPopup(); CloseObjectivesPopup(); CloseWeaponsPopup(); CloseEngineering();
     if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport() || GetWorld()->IsPaused()) return;
     APlayerController* PC = GetOwningPlayer();

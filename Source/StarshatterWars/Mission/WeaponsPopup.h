@@ -11,6 +11,7 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
+#include "InMissionButtonStyle.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Framework/Application/SlateApplication.h"
@@ -96,6 +97,7 @@ public:
     }
 
 private:
+    FInMissionButtonStyle ModernButtons;
     bool Embedded=false;
     bool ContactsOnly=false;
     enum class EContactSort { Distance, Name };
@@ -146,12 +148,9 @@ private:
         return SNew(STextBlock).Text(Text(S)).ColorAndOpacity(Blue())
             .Font(FCoreStyle::GetDefaultFontStyle("Bold",Size));
     }
-    TSharedRef<SWidget> ButtonLabel(const FString& S,int32 Size=16) {
-        return SNew(STextBlock).Text(Text(S.ToUpper())).ColorAndOpacity(FLinearColor::Black)
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold",Size)).AutoWrapText(true);
-    }
+    TSharedRef<SWidget> ButtonLabel(const FString& S,int32 Size=16) { return ModernButtons.Content(S,Size); }
     TSharedRef<SWidget> OrderButton(int32 I,WeaponsOrders Order,const TCHAR* Caption) {
-        return SNew(SButton).IsFocusable(false)
+        return SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
             .ToolTipText(Text(Caption))
             .ButtonColorAndOpacity_Lambda([this,I,Order](){auto* G=Group(I);return G && G->GetFiringOrders()==Order ? FLinearColor(0.45f,0.8f,1.0f) : FLinearColor::White;})
             .IsEnabled_Lambda([this,I](){return Operable() && Group(I);})
@@ -236,7 +235,7 @@ private:
             auto* T=C->GetShip();
             if (!T || T==P || !C->Visible(P) || T->IsDead()) continue;
             ContactsBox->AddSlot().AutoHeight().Padding(0,2)
-            [SNew(SButton).IsFocusable(false)
+            [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
              .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->LockTarget(Current);ContactState.Empty();RefreshContacts();return FReply::Handled();})
               .ButtonColorAndOpacity(P->GetTarget()==T ? FLinearColor(0.2f,0.45f,0.65f,1) : FLinearColor(0.035f,0.035f,0.035f,1))
              [SNew(STextBlock).Text(Text(ContactLabel(C,P))).Font(FCoreStyle::GetDefaultFontStyle("Regular",14))
@@ -251,7 +250,7 @@ private:
         for (int32 I=0; I<Target->GetSystems().size(); ++I) {
             auto* System=Target->GetSystems()[I]; if (!System) continue;
             SystemsBox->AddSlot().AutoHeight().Padding(0,2)
-            [SNew(SButton).IsFocusable(false)
+            [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
              .OnClicked_Lambda([this,Target,System](){
                 auto* Current=ContactShip(Target);
                 if (Operable() && Current && Player()->GetTarget()==Current) {
@@ -278,14 +277,14 @@ private:
             +SVerticalBox::Slot().AutoHeight().Padding(0,4)
             [SNew(SHorizontalBox)
              +SHorizontalBox::Slot().FillWidth(1).Padding(0,0,4,0)
-             [SNew(SButton).IsFocusable(false)
+             [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
               .OnClicked_Lambda([this](){return ChangeContactSort(EContactSort::Name);})
-              [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black)
+              [SNew(STextBlock).ColorAndOpacity(FLinearColor::White)
                .Text_Lambda([this](){return Text(ContactSortCaption(EContactSort::Name));})]]
              +SHorizontalBox::Slot().FillWidth(1)
-             [SNew(SButton).IsFocusable(false)
+             [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
               .OnClicked_Lambda([this](){return ChangeContactSort(EContactSort::Distance);})
-              [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black)
+              [SNew(STextBlock).ColorAndOpacity(FLinearColor::White)
                .Text_Lambda([this](){return Text(ContactSortCaption(EContactSort::Distance));})]]]
 
             +SVerticalBox::Slot().FillHeight(1)[ContactScroll];
@@ -308,7 +307,7 @@ private:
             Rows->AddSlot().FillHeight(1).Padding(0,3)
             [SNew(SHorizontalBox)
              +SHorizontalBox::Slot().FillWidth(1.5f)
-              [SNew(SButton).IsFocusable(false).ToolTipText(Text(TEXT("Hold to request group fire")))
+              [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false).ToolTipText(Text(TEXT("Hold to request group fire")))
                .IsEnabled_Lambda([this,I](){auto* W=Group(I);return Operable() && W && W->NumWeapons()>0 && W->GetFiringOrders()==WeaponsOrders::MANUAL;})
                .OnPressed_Lambda([this,I](){if(Operable())HeldGroup=I;})
                .OnReleased_Lambda([this](){StopFire();})
@@ -326,22 +325,22 @@ private:
         if (!ContactsOnly) for (int32 Slot=0;Slot<4 && Page*4+Slot<Count;++Slot) {
             const int32 I=Page*4+Slot;
             Rows->AddSlot().AutoHeight().Padding(0,2)[SNew(SHorizontalBox)
-                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
                     .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I)){
                         bool On=false;for(int J=0;J<G->NumWeapons();++J)if(auto* W=G->GetWeapon(J))if(W->IsPowerOn())On=true;
                         if(On)G->SetPowerOff();else G->SetPowerOn();}return FReply::Handled();})[ButtonLabel(TEXT("POWER"),12)]]
-                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
                     .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I))G->SetControlMode(static_cast<WeaponsControl>((int(G->GetControlMode())+1)%3));return FReply::Handled();})
-                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("PATTERN"):G->GetControlMode()==WeaponsControl::SINGLE_FIRE?TEXT("SINGLE"):G->GetControlMode()==WeaponsControl::RIPPLE_FIRE?TEXT("RIPPLE"):TEXT("SALVO"));})]]
-                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false)
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("PATTERN"):G->GetControlMode()==WeaponsControl::SINGLE_FIRE?TEXT("SINGLE"):G->GetControlMode()==WeaponsControl::RIPPLE_FIRE?TEXT("RIPPLE"):TEXT("SALVO"));})]]
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
                     .OnClicked_Lambda([this,I](){if(Operable())if(auto* G=Group(I))G->SetSweep(static_cast<WeaponsSweep>((int(G->GetSweep())+1)%3));return FReply::Handled();})
-                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("SWEEP"):G->GetSweep()==WeaponsSweep::SWEEP_NONE?TEXT("NONE"):G->GetSweep()==WeaponsSweep::SWEEP_TIGHT?TEXT("TIGHT"):TEXT("WIDE"));})]]];
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,I](){auto* G=Group(I);return Text(!G?TEXT("SWEEP"):G->GetSweep()==WeaponsSweep::SWEEP_NONE?TEXT("NONE"):G->GetSweep()==WeaponsSweep::SWEEP_TIGHT?TEXT("TIGHT"):TEXT("WIDE"));})]]];
         }
         auto Footer=SNew(SHorizontalBox)
-          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Previous"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && Page>0).OnClicked_Lambda([this](){StopFire();--Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Previous"))]]
           +SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center)[Label(FString::Printf(TEXT("%d / %d"),Page+1,FMath::Max(1,(Count+3)/4)))]
-          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && (Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Next"))]]
-          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(FooterStyle ? FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[ButtonLabel(TEXT("Close"))]];
+          +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ContentPadding(FMargin(24,10)).IsEnabled(!ContactsOnly && (Page+1)*4<Count).OnClicked_Lambda([this](){StopFire();++Page;Rebuild();return FReply::Handled();})[ButtonLabel(TEXT("Next"))]]
+          +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){StopFire();Close.ExecuteIfBound();return FReply::Handled();})[ButtonLabel(TEXT("Close"))]];
         if (FooterHost.IsValid()) FooterHost->SetContent(Footer);
         else Root->AddSlot().AutoHeight()[Frame(Footer)];
         RefreshContacts();

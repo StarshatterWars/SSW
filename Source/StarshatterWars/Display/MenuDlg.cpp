@@ -115,7 +115,7 @@ void UMenuDlg::BuildModernMenu()
     Label(TEXT("FRACTAL DEV STUDIOS"),13,Muted,104,64,600,28);
     Label(TEXT("TACTICAL SPACE COMBAT"),14,Cyan,104,376,750,28);
     Label(TEXT("STARSHATTER"),64,White,96,420,960,90,true);
-    Label(TEXT("WARS"),92,White,96,499,850,124,true);
+    Label(TEXT("WARS"),64,White,96,499,850,124,true);
     Panel(104,646,78,3,Cyan);
     Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),17,Muted,104,673,850,44);
     auto* Logo=WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),TEXT("SSWMenu_CircularLogo"));
@@ -131,8 +131,9 @@ void UMenuDlg::BuildModernMenu()
     auto Card=[&](UButton* Button,const TCHAR* Heading,const TCHAR* Subtitle,float X,float Y,float W,float H,bool Primary=false){
         Button->ClearChildren();Button->SetToolTipText(FText::FromString(Subtitle));Place(Button,X,Y,W,H);
         // Separate hit-test-transparent labels protect against stale BP content.
-        Label(Heading,Primary?28:20,White,X+34,Y+(Primary?24:18),W-64,40,true);
-        Label(Subtitle,12,Muted,X+34,Y+(Primary?70:58),W-64,28);
+        const float LabelInset=Button==BtnQuit?66.f:50.f;
+        Label(Heading,Primary?26:18,White,X+LabelInset,Y+(Primary?24:18),W-LabelInset-32,36,true);
+        Label(Subtitle,11,Muted,X+LabelInset,Y+(Primary?70:58),W-LabelInset-32,26);
     };
     Card(BtnStart,TEXT("CONTINUE"),TEXT("Return to your active campaign"),1100,234,664,116,true);
     Card(BtnCampaign,TEXT("CAMPAIGNS"),TEXT("Choose your operation"),1100,376,324,104);
@@ -141,7 +142,7 @@ void UMenuDlg::BuildModernMenu()
     Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1440,498,324,104);
     Card(BtnTac,TEXT("REFERENCE"),TEXT("Ships, weapons and tactics"),1100,620,324,104);
     Card(BtnOptions,TEXT("OPTIONS"),TEXT("Display, sound and controls"),1440,620,324,104);
-    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,750,664,78);
+    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,750,664,96);
     // Compact, persistent campaign/pilot context; no opaque full-width slab.
     Label(TEXT("ACTIVE CAMPAIGN"),12,Cyan,104,930,560,25);
     CampaignIdentityText=Label(TEXT("NO ACTIVE CAMPAIGN"),19,White,104,960,580,32);

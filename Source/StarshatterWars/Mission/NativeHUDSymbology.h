@@ -15,7 +15,7 @@ public:
  static constexpr double TargetSize=64,LeadSize=32;
  void Refresh(Ship* Player);
  void Paint(const FGeometry& G,FSlateWindowElementList& E,int32 Layer,bool Mini,AActor* Selected,bool DrawWeapons)const;
- void PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 Layer,double Heading,double OrderedHeading,double Pitch,double OrderedPitch,bool Helm,bool Mini)const;
+ void PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 Layer,double Heading,double OrderedHeading,double Pitch,double OrderedPitch,bool Helm,bool Mini,double RollDegrees=0)const;
 private:
  struct FMarker{FVector Position;TWeakObjectPtr<AActor> Actor;int32 Cross=1;FLinearColor Color;};
  TArray<FMarker> Markers;

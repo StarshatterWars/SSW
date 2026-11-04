@@ -174,7 +174,7 @@ static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
     const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold",
         FMath::Max(8, int32(11 * Scale)));
     const FVector2D Label = FSlateApplication::Get().GetRenderer()->
-        GetFontMeasureService()->Measure(TEXT("GEAR DOWN"), Font);
+        GetFontMeasureService()->Measure(TEXT("LAUNCH"), Font);
     const FVector2D Extent(Label.X + 10 * Scale, (Label.Y + 4 * Scale) * 2.0);
     const FVector2D TopLeft(Size.X * 0.5 - Extent.X * 0.5,
         Size.Y * 0.5 + 158 * Scale);
@@ -572,9 +572,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Box(P+FVector2D(D.X-Scale,0),FVector2D(Scale,D.Y),Color);
         Text(P+FVector2D(5,2)*Scale,Label,Color);
     };
+    Ship* HUDPlayer=PlayerShip();
+    const bool bPreTakeoff=HUDPlayer && HUDPlayer->GetDock() && HUDPlayer->GetDock()->IsLaunchDeck() && HUDPlayer->GetFlightPhase()<EOPSMode::ACTIVE;
     if (!IsCockpitDisplayActive())
     {
-    if (bHasPlayer && !ThirdPerson.Get())
+    if (bHasPlayer && !ThirdPerson.Get() && !bPreTakeoff)
     {
 
         // Attitude instrument in the central ring: 5 degree pitch marks, banked with the ship.
@@ -639,12 +641,12 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         else if (ThreatLevel==2 && bWarningFlash) Popup(-168,TEXT("MISSILE WARNING"),FLinearColor::Red);
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
         if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
-        if (bGearDown) Popup(126,TEXT("GEAR DOWN"));
+        if (bGearDown) Popup(126,TEXT("GEAR"));
     }
     if (bHasPlayer && ThirdPerson.Get())
     {
         // Compact flight deck: clear central view, stable alignment and restrained glass.
-        const FVector2D P(Size.X*.5-330*Scale,20*Scale),D(660*Scale,100*Scale);
+        const FVector2D P(Size.X*.5-330*Scale,20*Scale),D(660*Scale,112*Scale);
         static const FSlateRoundedBoxBrush Glass(FLinearColor(.012f,.024f,.038f,.82f),10.f);
         FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
         Box(P+FVector2D(20,0)*Scale,FVector2D(620*Scale,Scale),FLinearColor(.2,.65,.8,.55));
@@ -654,12 +656,18 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(430*Scale,30*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(X,Y)*Scale))),Value,Font,ESlateDrawEffect::None,Tint);
         };
         Box(P+FVector2D(104,18)*Scale,FVector2D(Scale,64*Scale),FLinearColor(.2,.4,.5,.35));
-        MiniText(579,2,TEXT("PITCH"),8,Muted);
+
         MiniText(124,12,TEXT("VELOCITY"),10,Muted);MiniText(124,29,FString::Printf(TEXT("%.0f"),FlightSpeed),26,White);MiniText(124,61,TEXT("M / S"),10,Muted);
-        MiniText(232,12,TEXT("HEADING"),10,Muted);MiniText(232,30,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),22,White);
+        {
+            const FString Heading=FString::Printf(TEXT("%03d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360);
+            const auto Font=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
+            const FVector2D Extent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Heading,Font);
+            const FVector2D HP(Size.X*.5-274*Scale-Extent.X*.5,P.Y+92*Scale);
+            FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(Extent),FSlateLayoutTransform(FVector2f(HP))),Heading,Font,ESlateDrawEffect::None,HUDBlue);
+        }
         MiniText(330,12,bAutoAvailable?TEXT("AUTO PILOT"):TEXT("FLIGHT CONTROL"),10,bAutoAvailable?Green:Muted);
         MiniText(330,33,CompactNavLabel.Left(26),13,White);
-        FString State=bGearDown?TEXT("GEAR DOWN"):TEXT("GEAR UP");if(bAugmenterActive)State+=TEXT("   AUG");
+        FString State=bGearDown?TEXT("GEAR"):TEXT("GEAR UP");if(bAugmenterActive)State+=TEXT("   AUG");
         MiniText(330,62,State,10,bAugmenterActive?Green:Muted);
         if(bShowWeapons){MiniText(124,80,Primary.ToUpper().Left(22),10,Muted);MiniText(330,80,Secondary.ToUpper().Left(24),10,Muted);}
         if(JumpSeconds>0||ThreatLevel>0){
@@ -810,7 +818,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
         ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),PlayerHull),ShipHealthColor(PlayerHull));
         ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),PlayerShield),ShipHealthColor(PlayerShield));
-        if (bShowWeapons && !ThirdPerson.Get())
+        if (bShowWeapons && !ThirdPerson.Get() && !bPreTakeoff)
         {
         ReticleText(-248,LowerReadoutBaseline,108,Primary.ToUpper());
         ReticleText(-248,LowerReadoutBaseline+LowerReadoutRowHeight,108,Secondary.ToUpper());
@@ -887,8 +895,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     DrawILS(G, E, L);
     if(bHasPlayer && Symbology){
-        Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons);
-        Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get());
+        Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons && !bPreTakeoff);
+        Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
     }
     return SCompoundWidget::OnPaint(Args,G,Cull,E,L+5,Style,Enabled);
 }

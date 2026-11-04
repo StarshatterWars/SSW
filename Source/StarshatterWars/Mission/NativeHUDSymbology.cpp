@@ -41,16 +41,33 @@ void FNativeHUDSymbology::Paint(const FGeometry& G,FSlateWindowElementList& E,in
  if(!Mini)Art(G,E,L,0,Size*.5,LeadSize*Size.X/W,FLinearColor(.25,.7,1,.5));
  for(const auto& M:Markers){if(M.Actor.IsValid()&&M.Actor.Get()==Selected)continue;const FVector4 Clip=Projection.ComputeViewProjectionMatrix().TransformFVector4(FVector4(M.Position,1));if(Clip.W<=0)continue;const double X=Clip.X/Clip.W,Y=Clip.Y/Clip.W;if(FMath::Abs(X)>1||FMath::Abs(Y)>1)continue;const FVector2D Point((R.Min.X+(X*.5+.5)*R.Width())*Size.X/W,(R.Min.Y+(.5-Y*.5)*R.Height())*Size.Y/H);Art(G,E,L+1,M.Cross,Point,(M.Cross==0||M.Cross==5?LeadSize:TargetSize)*Size.X/W,M.Color);}
 }
-void FNativeHUDSymbology::PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 L,double Heading,double Ordered,double Pitch,double OrderedPitch,bool Helm,bool Mini)const{
+void FNativeHUDSymbology::PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 L,double Heading,double Ordered,double Pitch,double OrderedPitch,bool Helm,bool Mini,double Roll)const{
  const FVector2D Size=G.GetLocalSize();const double Scale=FMath::Min(Size.X/1280,Size.Y/720);const FVector2D Center=Mini?FVector2D(Size.X*.5-274*Scale,70*Scale):FVector2D(Size.X-82*Scale,94*Scale);const double D=(Mini?80:104)*Scale;const FLinearColor Tint(.45,.85,1,.85);
  if(Mini){
-  const FVector2D PitchCenter(Size.X*.5+274*Scale,70*Scale);
-  Art(G,E,L,8,PitchCenter,D,Tint,FMath::DegreesToRadians(180-Pitch));
-  Art(G,E,L+1,7,PitchCenter,D,FLinearColor(.9,1,1,.75),0);
-  if(Helm&&FMath::Abs(OrderedPitch-Pitch)>5)
-   Art(G,E,L+2,7,PitchCenter,D,FLinearColor(.25,1,.55,1),FMath::DegreesToRadians(CompassDelta(Pitch,OrderedPitch)));
- }
- // Source ring has north at the bottom; rotate 180deg before heading rotation.
+  // Three gimbals share a fixed ship reference. Only presentation uses these angles.
+  const FVector2D C(Size.X*.5-274*Scale,64*Scale);
+  const FLinearColor Cyan(.25,.85,1,.95),Amber(1,.68,.2,.95),Violet(.76,.48,1,.95);
+  auto Line=[&](const FVector2D& A,const FVector2D& B,FLinearColor Color,float Width=1.f){TArray<FVector2D> P;P.Add(A);P.Add(B);FSlateDrawElement::MakeLines(E,L+2,G.ToPaintGeometry(),P,ESlateDrawEffect::None,Color,true,Width*Scale);};
+  // Keep the original numbered heading artwork and its fixed reference pointer.
+  Art(G,E,L,6,C,90*Scale,Cyan,FMath::DegreesToRadians(180-Heading));
+  Art(G,E,L+1,7,C,90*Scale,FLinearColor(.9,1,1,.8),0);
+  auto Curve=[&](const TArray<FVector2D>& Points,FLinearColor Color){FSlateDrawElement::MakeLines(E,L+1,G.ToPaintGeometry(),Points,ESlateDrawEffect::None,Color,true,float(Scale));};
+  auto PitchPoint=[&](double V,double Radius){const double A=FMath::DegreesToRadians((V-FMath::Clamp(Pitch,-15.0,15.0))*8-90);return C+FVector2D(FMath::Cos(A),FMath::Sin(A))*Radius*Scale;};
+  TArray<FVector2D> Circle;for(int I=0;I<=96;++I){const double A=2*PI*I/96;Circle.Add(C+FVector2D(FMath::Cos(A),FMath::Sin(A))*32*Scale);}Curve(Circle,Amber.CopyWithNewOpacity(.6));
+  for(int V=-15;V<=15;V+=5){Line(PitchPoint(V,32),PitchPoint(V,28),Amber,1.4);
+
+  }
+  Line(C+FVector2D(0,-35)*Scale,C+FVector2D(0,-29)*Scale,FLinearColor::White,1.5);
+  // Orthographic wire globe: meridians and parallels bank with the actual roll.
+  const double Bank=FMath::DegreesToRadians(-Roll);
+  auto GlobePoint=[&](double Latitude,double Longitude){const double X=FMath::Cos(Latitude)*FMath::Sin(Longitude),Y=FMath::Sin(Latitude);return C+FVector2D(X*FMath::Cos(Bank)-Y*FMath::Sin(Bank),X*FMath::Sin(Bank)+Y*FMath::Cos(Bank))*17*Scale;};
+  Circle.Reset();for(int I=0;I<=96;++I){const double A=2*PI*I/96;Circle.Add(C+FVector2D(FMath::Cos(A),FMath::Sin(A))*17*Scale);}Curve(Circle,Violet);
+  for(int Lat=-60;Lat<=60;Lat+=30){TArray<FVector2D> Points;for(int I=-90;I<=90;I+=5)Points.Add(GlobePoint(FMath::DegreesToRadians(double(Lat)),FMath::DegreesToRadians(double(I))));Curve(Points,Violet.CopyWithNewOpacity(Lat==0?.95:.5));}
+  for(int Lon=-60;Lon<=60;Lon+=30){TArray<FVector2D> Points;for(int I=-90;I<=90;I+=5)Points.Add(GlobePoint(FMath::DegreesToRadians(double(I)),FMath::DegreesToRadians(double(Lon))));Curve(Points,Violet.CopyWithNewOpacity(.65));}
+  // Fixed wings retain an unambiguous ship reference against the rotating globe.
+  Line(C-FVector2D(6,0)*Scale,C+FVector2D(6,0)*Scale,FLinearColor(.9,.97,1),1.5);
+  Line(C-FVector2D(0,4)*Scale,C+FVector2D(0,4)*Scale,FLinearColor(.9,.97,1),1.5);  return;
+ } // Source ring has north at the bottom; rotate 180deg before heading rotation.
  Art(G,E,L,6,Center,D,Tint,FMath::DegreesToRadians(180-Heading));
  if(Helm&&HelmCueVisible(Heading,Ordered,Pitch,OrderedPitch)){
   Art(G,E,L+1,7,Center,D,FLinearColor(.25,1,.55,1),FMath::DegreesToRadians(CompassDelta(Heading,Ordered)));

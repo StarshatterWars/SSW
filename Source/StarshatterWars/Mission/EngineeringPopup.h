@@ -11,6 +11,7 @@
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
+#include "InMissionButtonStyle.h"
 #include "InputCoreTypes.h"
 #include "Ship.h"
 #include "Power.h"
@@ -84,6 +85,7 @@ public:
         if (Dirty) Rebuild();
     }
 private:
+    FInMissionButtonStyle ModernButtons;
     bool Embedded=false;
     TFunction<Ship*()> ResolveShip;
     FSimpleDelegate Close;
@@ -112,13 +114,10 @@ private:
         return SNew(STextBlock).Text(Text(S)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1))
             .Font(FCoreStyle::GetDefaultFontStyle("Regular",Size)).AutoWrapText(true);
     }
-    TSharedRef<SWidget> ButtonLabel(const FString& S, int32 Size=14) {
-        return SNew(STextBlock).Text(Text(S.ToUpper())).ColorAndOpacity(FLinearColor::Black)
-            .Font(FCoreStyle::GetDefaultFontStyle("Regular",Size)).AutoWrapText(true);
-    }
+    TSharedRef<SWidget> ButtonLabel(const FString& S, int32 Size=14) { return ModernButtons.Content(S,Size); }
     static FText ButtonText(const FString& S) { return Text(S.ToUpper()); }
     TSharedRef<SWidget> Button(const FString& S, TFunction<void()> Action, TFunction<bool()> Enabled=[](){return true;}) {
-        return SNew(SButton).ContentPadding(FMargin(8,6)).IsEnabled_Lambda([Enabled](){return Enabled();})
+        return SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ContentPadding(FMargin(8,6)).IsEnabled_Lambda([Enabled](){return Enabled();})
             .OnClicked_Lambda([Action](){Action();return FReply::Handled();})[ButtonLabel(S)];
     }
     static FString RepairETR(Ship* P, SimSystem* S)
@@ -184,8 +183,8 @@ private:
             for (int c=0;c<Source->Clients().size();++c) {
                 const int Index=SystemIndex(Source->Clients()[c]); if (Index<0) continue;
                 Sources->AddSlot().AutoHeight().Padding(12,2)
-                [SNew(SButton).OnClicked_Lambda([this,Index](){Select(Index);return FReply::Handled();})
-                 [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,Index](){SimSystem* S=SystemAt(Index);return ButtonText(S ? FString::Printf(TEXT("%hs   %.0f%%   %s"),S->GetName(),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));})]];
+                [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this,Index](){Select(Index);return FReply::Handled();})
+                 [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,Index](){SimSystem* S=SystemAt(Index);return ButtonText(S ? FString::Printf(TEXT("%hs   %.0f%%   %s"),S->GetName(),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));})]];
             }
         }
         Details->AddSlot().AutoHeight().Padding(0,0,0,8)[Label(Name(CurrentSystem()),16)];
@@ -218,8 +217,8 @@ private:
         Components->AddSlot().AutoHeight().Padding(0,0,0,12)[Label(TEXT("COMPONENTS / SPARES"),16)];
         if(SimSystem* S=CurrentSystem())for(int i=0;i<S->GetComponents().size();++i) {
             SimComponent* C=S->GetComponents()[i];if(!C)continue;
-            Components->AddSlot().AutoHeight()[SNew(SButton).OnClicked_Lambda([this,i](){Component=i;return FReply::Handled();})
-             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,i](){auto* Sys=CurrentSystem();auto* Cmp=Sys && i<Sys->GetComponents().size()?Sys->GetComponents()[i]:nullptr;
+            Components->AddSlot().AutoHeight()[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this,i](){Component=i;return FReply::Handled();})
+             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,i](){auto* Sys=CurrentSystem();auto* Cmp=Sys && i<Sys->GetComponents().size()?Sys->GetComponents()[i]:nullptr;
                 return ButtonText(Cmp?FString::Printf(TEXT("%s%hs   %.0f%%   Spares %d"),Component==i?TEXT("> "):TEXT(""),Cmp->Name(),Cmp->Availability(),Cmp->SpareCount()):TEXT(""));})]];
         }
         Components->AddSlot().AutoHeight().Padding(0,8)[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){auto* C=CurrentComponent();auto* Now=GetShip();if(!C || !Now)return Text(TEXT("Select a component to repair."));
@@ -228,13 +227,13 @@ private:
          +SHorizontalBox::Slot()[Button(TEXT("Repair"),[this](){if(auto* C=CurrentComponent()){C->Repair();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->Availability()<100 && C->TimeRemaining()<=0;})]
          +SHorizontalBox::Slot()[Button(TEXT("Replace"),[this](){if(auto* C=CurrentComponent()){C->Replace();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->SpareCount()>0 && C->TimeRemaining()<=0;})]];
         Repairs->AddSlot().AutoHeight()[Label(TEXT("REPAIR QUEUE"),16)];
-        Details->AddSlot().AutoHeight().Padding(0,8)[SNew(SButton).OnClicked_Lambda([this](){if(auto* Now=GetShip())Now->EnableRepair(!Now->AutoRepair());return FReply::Handled();})
-         [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return ButtonText(GetShip() && GetShip()->AutoRepair()?TEXT("Automatic repair: ON"):TEXT("Automatic repair: OFF"));})]];
+        Details->AddSlot().AutoHeight().Padding(0,8)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this](){if(auto* Now=GetShip())Now->EnableRepair(!Now->AutoRepair());return FReply::Handled();})
+         [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return ButtonText(GetShip() && GetShip()->AutoRepair()?TEXT("Automatic repair: ON"):TEXT("Automatic repair: OFF"));})]];
         Repairs->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){return Text(GetShip()?FString::Printf(TEXT("Repair teams: %d"),GetShip()->RepairTeams()):TEXT(""));})];
         Repairs->AddSlot().AutoHeight().Padding(0,6)[Label(TEXT("SYSTEM / ETR"))];
         for(int i=0;i<P->RepairQueue().size();++i) {
-            Repairs->AddSlot().AutoHeight().Padding(0,4)[SNew(SButton).OnClicked_Lambda([this,i](){auto* Now=GetShip();if(Now && i<Now->RepairQueue().size()){Queue=i;Select(SystemIndex(Now->RepairQueue()[i]));}return FReply::Handled();})
-             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this,i](){auto* Now=GetShip();return ButtonText(Now && i<Now->RepairQueue().size()?FString::Printf(TEXT("%s%d. %s   %s"),Queue==i?TEXT("> "):TEXT(""),i+1,*Name(Now->RepairQueue()[i]),*RepairETR(Now,Now->RepairQueue()[i])):TEXT(""));})]];
+            Repairs->AddSlot().AutoHeight().Padding(0,4)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this,i](){auto* Now=GetShip();if(Now && i<Now->RepairQueue().size()){Queue=i;Select(SystemIndex(Now->RepairQueue()[i]));}return FReply::Handled();})
+             [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,i](){auto* Now=GetShip();return ButtonText(Now && i<Now->RepairQueue().size()?FString::Printf(TEXT("%s%d. %s   %s"),Queue==i?TEXT("> "):TEXT(""),i+1,*Name(Now->RepairQueue()[i]),*RepairETR(Now,Now->RepairQueue()[i])):TEXT(""));})]];
         }
         Repairs->AddSlot().AutoHeight().Padding(0,8)[SNew(SHorizontalBox)
          +SHorizontalBox::Slot()[Button(TEXT("Move up"),[this](){GetShip()->IncreaseRepairPriority(Queue);--Queue;Dirty=true;},[this](){return GetShip() && Queue>0 && Queue<GetShip()->RepairQueue().size();})]

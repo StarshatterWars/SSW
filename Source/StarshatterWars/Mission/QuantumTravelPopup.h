@@ -13,6 +13,7 @@
 #include "Engine/Texture2D.h"
 #include "InputCoreTypes.h"
 #include "MissionUIStyle.h"
+#include "InMissionButtonStyle.h"
 #include "QuantumTravel.h"
 #include "QuantumDrive.h"
 #include "Ship.h"
@@ -40,9 +41,9 @@ public:
             + SVerticalBox::Slot().AutoHeight().Padding(16,4)[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(1.f,0.8f,0.4f)).Font(MissionUIStyle::GetRowFont(15)).Text_Lambda([this](){return FText::FromString(Message);})]
             + SVerticalBox::Slot().AutoHeight().Padding(16,8)
              [SNew(SHorizontalBox)
-              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})[Text(TEXT("REFRESH"))]]
-              +SHorizontalBox::Slot().FillWidth(2).Padding(12,0)[SNew(SButton).ButtonStyle(&Red).IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);}).OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})[Text(TEXT("ABORT COUNTDOWN"))]]
-              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Red).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Text(TEXT("CLOSE"))]]];
+              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})[ModernButtons.Content(TEXT("REFRESH"))]]
+              +SHorizontalBox::Slot().FillWidth(2).Padding(12,0)[SNew(SButton).ButtonStyle(&Red).IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);}).OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})[ModernButtons.Content(TEXT("ABORT COUNTDOWN"))]]
+              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Red).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[ModernButtons.Content(TEXT("CLOSE"))]]];
         ChildSlot[SNew(SOverlay)
             +SOverlay::Slot()[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.005f,0.01f,0.025f,0.8f))]
             +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)[SNew(SBox).WidthOverride(1040).HeightOverride(720)[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.015f,0.035f,0.065f,1)).Padding(12)[Content]]]]];
@@ -57,6 +58,7 @@ public:
         return FReply::Handled();
     }
 private:
+    FInMissionButtonStyle ModernButtons;
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;
