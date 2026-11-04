@@ -1,4 +1,5 @@
-﻿
+#include "ShipVisualCatalog.h"
+
 #include "CampaignSceneDlg.h"
 #include "CampaignPresentationRules.h"
 #include "AudioRouting.h"
@@ -2166,8 +2167,8 @@ void UCampaignSceneDlg::PreloadSceneAssets()
         Designs.Add(Element.Design);
         const FShipDesign* Design = ShipDesignRegistry::Find(Element.Design);
         const FString Model = Design && !Design->Model.IsEmpty() ? Design->Model : Element.Design;
-        const FString Path = FString::Printf(TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Model, *Model, *Model);
-        if (UClass* Class = LoadClass<AShipActor>(nullptr, *Path)) PreparedSceneAssets.Add(Class);
+        const FString Path = ShipVisualCatalog::CanonicalClassPath(Element.Design, Model);
+        if (UClass* Class = ShipVisualCatalog::Resolve(Element.Design, Model)) PreparedSceneAssets.Add(Class);
         else if (MissingSceneAsset.IsEmpty()) MissingSceneAsset = Path;
     }
     TSet<FString> Images, Sounds;

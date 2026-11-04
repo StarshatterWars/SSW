@@ -2,6 +2,7 @@
 #include "SSWRuntimeSubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "WeaponBlueprintResolver.h"
+#include "ShipVisualCatalog.h"
 #include "MissileFlightPresentation.h"
 #include "MissileActor.h"
 #include "GameFramework/MovementComponent.h"
@@ -1236,41 +1237,11 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
         return nullptr;
     }
 
-    const FString ModelName =
-        !Row->Model.IsEmpty()
-        ? Row->Model
-        : DesignName;
-
-    const FString BPClassPath =
-        FString::Printf(
-            TEXT("/Game/Models/%s/BP_%s.BP_%s_C"),
-            *ModelName,
-            *ModelName,
-            *ModelName);
-
-    UClass* BPClass =
-        LoadClass<AShipActor>(
-            nullptr,
-            *BPClassPath);
-
-    // TargetDrone keeps its legacy model identifier; allow an explicitly named
-    // drone Blueprint without requiring DEF or simulation changes.
-    if (!BPClass && DesignName.Equals(TEXT("TargetDrone"), ESearchCase::IgnoreCase))
-    {
-        for (const TCHAR* Path : {
-            TEXT("/Game/Models/TargetDrone/BP_TargetDrone.BP_TargetDrone_C"),
-            TEXT("/Game/Models/Drone/BP_Drone.BP_Drone_C")})
-        {
-            BPClass = LoadClass<AShipActor>(nullptr, Path);
-            if (BPClass) break;
-        }
-    }
+    UClass* BPClass = ShipVisualCatalog::Resolve(DesignName, Row->Model);
     if (!BPClass)
     {
-        UE_LOG(LogSSWRuntime, VeryVerbose,
-            TEXT("[RuntimeVisual] Missing BP class '%s'"),
-            *BPClassPath);
-
+        UE_LOG(LogSSWRuntime, Warning, TEXT("[RuntimeVisual] Missing ship Blueprint for Design='%s' Expected='%s'"),
+            *DesignName, *ShipVisualCatalog::CanonicalClassPath(DesignName, Row->Model));
         return nullptr;
     }
 
@@ -1325,7 +1296,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
         TEXT("[RuntimeVisual] Spawned Ship='%hs' Actor='%s' Model='%s' Loc=%s"),
         RuntimeShip->GetName(),
         *ShipActor->GetName(),
-        *ModelName,
+        *ShipVisualCatalog::DefinitionName(DesignName, Row->Model),
         *SpawnLoc.ToString());
 
     return ShipActor;

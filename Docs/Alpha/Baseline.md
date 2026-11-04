@@ -13,3 +13,7 @@
 ## Open work
 
 See AlphaCompletionRoadmap.md for the requested Alpha Phase 1 and Phase 2 scope. Ship inventory is evidence for scheduling imports, not a completion claim. Existing space art has not been replaced or rescaled. No gameplay replication has been added in this starter stage.
+
+## User verification update — 2026-11-04
+
+Turrets verified by the user and accepted as complete. This does not mark remaining ship/fighter coverage, cinematic playback or mission playthroughs complete.

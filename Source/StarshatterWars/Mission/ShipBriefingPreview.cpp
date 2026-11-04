@@ -1,3 +1,4 @@
+#include "ShipVisualCatalog.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
@@ -133,15 +134,10 @@ bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefi
     }
     if (OutParts.IsEmpty() && !Design.ShipName.IsEmpty())
     {
-        const FString Package = FString::Printf(TEXT("/Game/Models/%s/BP_%s"), *Design.ShipName, *Design.ShipName);
-        if (FPackageName::IsValidLongPackageName(Package) && FPackageName::DoesPackageExist(Package))
+        if (UClass* VisualClass = ShipVisualCatalog::Resolve(Design.ShipName, Design.Model))
         {
-            const FString ClassPath = Package + TEXT(".BP_") + Design.ShipName + TEXT("_C");
-            if (UClass* VisualClass = LoadClass<AActor>(nullptr, *ClassPath))
-            {
-                TSet<UClass*> ClassStack;
-                CollectTemplateParts(VisualClass, FTransform::Identity, OutParts, ClassStack);
-            }
+            TSet<UClass*> ClassStack;
+            CollectTemplateParts(VisualClass, FTransform::Identity, OutParts, ClassStack);
         }
         if (OutParts.IsEmpty())
         {

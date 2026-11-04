@@ -1,3 +1,5 @@
+#include "ShipDesignRegistry.h"
+#include "ShipVisualCatalog.h"
 
 #include "TacticalReferenceActor.h"
 #include "StarshatterInputBindings.h"
@@ -90,9 +92,8 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
     if (ShipMesh) { ShipMesh->SetStaticMesh(nullptr); ShipMesh->SetVisibility(false); }
     if (DesignName.IsEmpty() || !GetWorld()) return;
 
-    const FString BPPath = FString::Printf(
-        TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *DesignName, *DesignName, *DesignName);
-    if (UClass* BPClass = LoadClass<AActor>(nullptr, *BPPath))
+    const FShipDesign* Design = ShipDesignRegistry::Find(DesignName);
+    if (UClass* BPClass = ShipVisualCatalog::Resolve(DesignName, Design ? Design->Model : FString()))
     {
         FActorSpawnParameters Params;
         Params.Owner = this;
