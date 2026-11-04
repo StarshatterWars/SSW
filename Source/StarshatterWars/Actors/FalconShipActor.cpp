@@ -1,6 +1,9 @@
 // Structural defaults from Falcon.def; simulation remains data-driven.
 #include "FalconShipActor.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/ChildActorComponent.h"
+#include "ShipWeaponMountComponent.h"
 
 AFalconShipActor::AFalconShipActor()
 {
@@ -22,6 +25,7 @@ void AFalconShipActor::OnConstruction(const FTransform& Transform)
     ApplyFalconDefaults();
     Super::OnConstruction(Transform);
     ApplyFalconFixedPoints();
+    AlignFixedGunMuzzles();
 }
 void AFalconShipActor::ApplyFalconDefaults()
 {
@@ -131,4 +135,30 @@ void AFalconShipActor::ApplyAuthoredAttachmentDefaults()
       Point.LocalRotation = FRotator(0.000000f, 0.000000f, 0.0f);
       WeaponMountPointDefs.Add(Point); }
     SyncShipAttachmentCounts();
+}
+
+
+void AFalconShipActor::AlignFixedGunMuzzles()
+{
+    if (!HullMesh || AuthoredWeaponPointComponents.IsEmpty()) return;
+    UShipWeaponMountComponent* Gun=Cast<UShipWeaponMountComponent>(AuthoredWeaponPointComponents[0].Get());
+    if (!Gun || Gun->bLoadoutHardpoint) return;
+
+    // Centers of the outer fixed-barrel front rings in the imported Falcon
+    // mesh, measured from its vertices. These are mesh-local positions, not
+    // the legacy DEF's forward-130 muzzle positions. Preserve the two-shot
+    // legacy gun cycle; only the native muzzle presentation frame changes.
+    const FVector HullMuzzles[] = {
+        FVector(-30.271500, -5.209600, 8.124070),
+        FVector( 31.821710, -5.209610, 8.124070)
+    };
+    const FTransform HullTransform=HullMesh->GetComponentTransform();
+    const FTransform MountTransform=Gun->GetComponentTransform();
+    for (int32 Index=0;Index<UE_ARRAY_COUNT(HullMuzzles);++Index)
+    {
+        if (!Gun->BarrelComponents.IsValidIndex(Index) || !Gun->BarrelComponents[Index]) continue;
+        Gun->BarrelComponents[Index]->SetRelativeLocation(
+            MountTransform.InverseTransformPosition(HullTransform.TransformPosition(HullMuzzles[Index])));
+        Gun->BarrelComponents[Index]->SetRelativeRotation(FRotator::ZeroRotator);
+    }
 }

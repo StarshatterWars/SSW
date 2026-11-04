@@ -1,7 +1,8 @@
-#include "ShipDesignRegistry.h"
-#include "ShipVisualCatalog.h"
+
 
 #include "TacticalReferenceActor.h"
+#include "ShipDesignRegistry.h"
+#include "ShipVisualCatalog.h"
 #include "StarshatterInputBindings.h"
 #include "GameStructs_System.h"
 #include "Components/StaticMeshComponent.h"

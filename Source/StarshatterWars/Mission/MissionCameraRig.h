@@ -64,6 +64,7 @@ struct FMissionCameraRig
     void HoldRecoveryView(APlayerController* PC, ACameraActor* Camera)
     {
         if (!Camera) return;
+        if (auto* Visual=PlayerActor.Get()) Visual->HoldRecoveryPresentation();
         if (!bRecoveryViewHeld) { RecoveryViewPose=Camera->GetActorTransform(); bRecoveryViewHeld=true; }
         Camera->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
         Camera->SetActorTransform(RecoveryViewPose,false,nullptr,ETeleportType::TeleportPhysics);
@@ -74,6 +75,7 @@ struct FMissionCameraRig
     void Reset(APlayerController* PC)
     {
         RestoreVisibility(PC);
+        if (auto* Visual=PlayerActor.Get()) Visual->ReleaseRecoveryPresentation();
         *this = FMissionCameraRig();
     }
 

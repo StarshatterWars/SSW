@@ -1,6 +1,7 @@
 // Structural defaults from Razor.def; simulation remains data-driven.
 #include "RazorShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 ARazorShipActor::ARazorShipActor()
 {
@@ -9,6 +10,7 @@ ARazorShipActor::ARazorShipActor()
     ApplyRazorDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Razor"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("RazorPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(113.000000f, 0.000000f, -14.000000f), FVector(127.000000f, 0.000000f, -40.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(10.000000f, -25.000000f, -20.000000f), FVector(10.000000f, -45.000000f, -40.000000f)),
@@ -31,7 +33,7 @@ void ARazorShipActor::ApplyRazorDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Razor(*this);
     BridgePointOffset = FVector(8.000000f, 0.000000f, 145.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(8.000000f, 0.000000f, 145.000000f);

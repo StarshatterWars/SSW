@@ -1,5 +1,4 @@
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "Modules/ModuleManager.h"
+
 /*  Project nGenEx
 	Destroyer Studios LLC
 	Copyright © 1997-2004. All Rights Reserved.
@@ -11,6 +10,10 @@
 */
 
 #include "DataLoader.h"
+
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Modules/ModuleManager.h"
+
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Bitmap.h"

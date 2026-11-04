@@ -40,6 +40,8 @@
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
+#include "Components/ScaleBox.h"
+#include "Brushes/SlateColorBrush.h"
 #include "MissionUIStyle.h"
 #include "Styling/CoreStyle.h"
 #include "Engine/Texture2D.h"
@@ -79,276 +81,78 @@ TSharedRef<SWidget> UMenuDlg::RebuildWidget()
 void UMenuDlg::BuildModernMenu()
 {
     if (!WidgetTree || WidgetTree->FindWidget(TEXT("SSWMenu_ModernRoot"))) return;
-
-    // Reuse designer-authored button instances when available. Text is rendered
-    // independently above them to defeat stale Blueprint text content.
-    UButton* AuthoredGameButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnStart")));
-    UButton* AuthoredTacButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnTac")));
-    UButton* AuthoredExitButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnQuit")));
-    bDesignerGameButton = (AuthoredGameButton != nullptr);
-    bDesignerTacButton = (AuthoredTacButton != nullptr);
-    bDesignerExitButton = (AuthoredExitButton != nullptr);
-
-    // The designer buttons are moved into the native dashboard; they are not
-    // recreated, so Widget Blueprint styling stays authoritative.
-    if (AuthoredGameButton) AuthoredGameButton->RemoveFromParent();
-    if (AuthoredTacButton) AuthoredTacButton->RemoveFromParent();
-    if (AuthoredExitButton) AuthoredExitButton->RemoveFromParent();
-    UCanvasPanel* Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("SSWMenu_ModernRoot"));
-    WidgetTree->RootWidget = Root;
-
-    auto Text = [this](const FString& Value, int32 Size, FLinearColor Color, bool Header = false) -> UTextBlock*
-    {
-        UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
-        Label->SetText(FText::FromString(Value));
-        Label->SetFont(Header ? MissionUIStyle::GetHeaderFont(Size) : FCoreStyle::GetDefaultFontStyle("Regular", Size));
-        Label->SetColorAndOpacity(FSlateColor(Color));
-        Label->SetAutoWrapText(true);
-        return Label;
+    auto Existing=[this](const TCHAR* Name){return Cast<UButton>(WidgetTree->FindWidget(Name));};
+    UButton* Start=Existing(TEXT("BtnStart"));
+    UButton* Tactical=Existing(TEXT("BtnTac"));
+    UButton* Exit=Existing(TEXT("BtnQuit"));
+    bDesignerGameButton=Start!=nullptr;bDesignerTacButton=Tactical!=nullptr;bDesignerExitButton=Exit!=nullptr;
+    for(UButton* Button:{Start,Tactical,Exit})if(Button)Button->RemoveFromParent();
+    auto* Root=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("SSWMenu_ModernRoot"));
+    WidgetTree->RootWidget=Root;
+    auto* Backdrop=WidgetTree->ConstructWidget<UImage>();
+    if(auto* Texture=LoadObject<UTexture2D>(nullptr,TEXT("/Game/SciFiUIComponents/Textures/Bg/T_SciFi_Bg001.T_SciFi_Bg001")))Backdrop->SetBrushFromTexture(Texture);
+    Backdrop->SetColorAndOpacity(FLinearColor(.58f,.7f,.85f,1));Backdrop->SetVisibility(ESlateVisibility::HitTestInvisible);
+    auto* BackgroundSlot=Root->AddChildToCanvas(Backdrop);BackgroundSlot->SetAnchors(FAnchors(0,0,1,1));BackgroundSlot->SetOffsets(FMargin(0));
+    auto* Fit=WidgetTree->ConstructWidget<UScaleBox>();Fit->SetStretch(EStretch::ScaleToFit);
+    auto* FitSlot=Root->AddChildToCanvas(Fit);FitSlot->SetAnchors(FAnchors(0,0,1,1));FitSlot->SetOffsets(FMargin(0));
+    auto* Frame=WidgetTree->ConstructWidget<USizeBox>();Frame->SetWidthOverride(1920);Frame->SetHeightOverride(1080);Fit->SetContent(Frame);
+    auto* Page=WidgetTree->ConstructWidget<UCanvasPanel>();Frame->SetContent(Page);
+    auto Place=[Page](UWidget* Widget,float X,float Y,float W,float H){auto* Slot=Page->AddChildToCanvas(Widget);Slot->SetPosition(FVector2D(X,Y));Slot->SetSize(FVector2D(W,H));return Slot;};
+    const FLinearColor White(.9f,.96f,1,1),Muted(.4f,.56f,.65f,1),Cyan(.3f,.82f,.95f,1);
+    auto Label=[&](const TCHAR* Value,int Size,FLinearColor Color,float X,float Y,float W,float H,bool Header=false){
+        auto* Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Value));
+        Text->SetFont(Header?MissionUIStyle::GetHeaderFont(Size):MissionUIStyle::GetInfoLabelFont(Size));
+        Text->SetColorAndOpacity(Color);Text->SetAutoWrapText(false);Text->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Text,X,Y,W,H);return Text;
     };
-    const FLinearColor Primary(0.92f, 0.97f, 0.99f, 1.f);
-    const FLinearColor Accent(0.35f, 0.74f, 0.86f, 1.f);
-    const FLinearColor Muted(0.65f, 0.74f, 0.79f, 1.f);
-
-    UImage* Backdrop = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("SSWMenu_SciFiBackground"));
-    if (UTexture2D* BackgroundTexture = LoadObject<UTexture2D>(nullptr,
-        TEXT("/Game/SciFiUIComponents/Textures/Bg/T_SciFi_Bg001.T_SciFi_Bg001")))
-    {
-        Backdrop->SetBrushFromTexture(BackgroundTexture, true);
-        Backdrop->SetColorAndOpacity(FLinearColor::White);
-    }
-    else
-    {
-        UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] SciFi background texture not found"));
-        Backdrop->SetColorAndOpacity(FLinearColor(0.045f, 0.085f, 0.12f, 1.f));
-    }
-    Backdrop->SetVisibility(ESlateVisibility::HitTestInvisible);
-    UCanvasPanelSlot* BG = Root->AddChildToCanvas(Backdrop);
-    BG->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f)); BG->SetOffsets(FMargin(0.f)); BG->SetZOrder(-2);
-
-    UVerticalBox* Page = WidgetTree->ConstructWidget<UVerticalBox>();
-    UCanvasPanelSlot* Main = Root->AddChildToCanvas(Page);
-    Main->SetAnchors(FAnchors(0.07f, 0.06f, 0.93f, 0.94f)); Main->SetOffsets(FMargin(0.f));
-
-    UBorder* Header = WidgetTree->ConstructWidget<UBorder>();
-    Header->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
-    Header->SetPadding(FMargin(24.f, 14.f));
-    Page->AddChildToVerticalBox(Header)->SetPadding(FMargin(0.f, 0.f, 0.f, 16.f));
-    UHorizontalBox* HeaderContent = WidgetTree->ConstructWidget<UHorizontalBox>();
-    Header->SetContent(HeaderContent);
-    UTextBlock* XTitle = Text(TEXT("STARSHATTER WARS"), 38, Primary, true);
-    XTitle->SetJustification(ETextJustify::Left);
-    XTitle->SetAutoWrapText(false);
-    UHorizontalBoxSlot* TitleSlot = HeaderContent->AddChildToHorizontalBox(XTitle);
-    TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    TitleSlot->SetVerticalAlignment(VAlign_Center);
-    TitleSlot->SetHorizontalAlignment(HAlign_Left);
-    USizeBox* LogoBox = WidgetTree->ConstructWidget<USizeBox>();
-    LogoBox->SetWidthOverride(256.f);
-    LogoBox->SetHeightOverride(256.f);
-    UImage* Logo = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("SSWMenu_CircularLogo"));
-    Logo->SetColorAndOpacity(FLinearColor::White);
-    Logo->SetVisibility(ESlateVisibility::HitTestInvisible);
-    const TCHAR* LogoPaths[] = {
-        TEXT("/Game/UI/SSW_Circular.SSW_Circular"),
-        TEXT("/Game/UI/SSW.SSW"),
-        TEXT("/Game/UI/SSW_Logo.SSW_Logo"),
-        TEXT("/Game/UI/T_SSW.T_SSW"),
-        TEXT("/Game/UI/T_SSW_Logo.T_SSW_Logo")
+    auto Panel=[&](float X,float Y,float W,float H,FLinearColor Color){
+        auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetBrush(FSlateColorBrush(FLinearColor::White));Border->SetBrushColor(Color);
+        Border->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Border,X,Y,W,H);return Border;
     };
-    for (const TCHAR* Path : LogoPaths)
-    {
-        if (UTexture2D* LogoTex = LoadObject<UTexture2D>(nullptr, Path))
-        {
-            Logo->SetBrushFromTexture(LogoTex, false);
-            Logo->SetDesiredSizeOverride(FVector2D(256.f));
-            break;
-        }
-    }
-    if (!Logo->GetBrush().GetResourceObject())
-        UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] SSW logo missing"));
-    // The rendered logo texture has an empty alpha channel. Preserve its RGB
-    // artwork and apply a procedural circular mask in the UI material.
-    if (UMaterialInterface* CircularLogo = LoadObject<UMaterialInterface>(nullptr,
-        TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo")))
-    {
-        Logo->SetBrushFromMaterial(CircularLogo);
-        Logo->SetDesiredSizeOverride(FVector2D(256.f));
-    }
-    LogoBox->SetContent(Logo);
-    UHorizontalBoxSlot* LogoSlot = HeaderContent->AddChildToHorizontalBox(LogoBox);
-    LogoSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-    LogoSlot->SetHorizontalAlignment(HAlign_Right);
-    LogoSlot->SetVerticalAlignment(VAlign_Center);
-
-    UVerticalBox* MenuArea = WidgetTree->ConstructWidget<UVerticalBox>();
-    UVerticalBoxSlot* AreaSlot = Page->AddChildToVerticalBox(MenuArea);
-    AreaSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-
-    // Button layout is rebuilt uniformly for native and designer-authored buttons.
-    // The designer's brush/style remains authoritative for drop-in buttons.
-    auto Tile = [this](UButton*& OutButton, const TCHAR* Caption, const TCHAR* Subcaption, int32 Column)
-    {
-        (void)Caption;
-        (void)Subcaption;
-        (void)Column;
-        OutButton = WidgetTree->ConstructWidget<UButton>();
+    // Quiet contrast behind navigation; the space scene stays visible at left.
+    Panel(1052,92,772,760,FLinearColor(.006f,.015f,.026f,.88f));
+    Panel(1052,92,2,760,FLinearColor(.13f,.45f,.6f,.65f));
+    Panel(96,905,1728,1,FLinearColor(.2f,.48f,.6f,.6f));
+    Label(TEXT("FRACTAL DEV STUDIOS"),13,Muted,104,64,600,28);
+    Label(TEXT("TACTICAL SPACE COMBAT"),14,Cyan,104,376,750,28);
+    Label(TEXT("STARSHATTER"),64,White,96,420,960,90,true);
+    Label(TEXT("WARS"),92,White,96,499,850,124,true);
+    Panel(104,646,78,3,Cyan);
+    Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),17,Muted,104,673,850,44);
+    auto* Logo=WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),TEXT("SSWMenu_CircularLogo"));
+    if(auto* Material=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo")))Logo->SetBrushFromMaterial(Material);
+    else if(auto* Texture=LoadObject<UTexture2D>(nullptr,TEXT("/Game/UI/SSW_Circular.SSW_Circular")))Logo->SetBrushFromTexture(Texture);
+    Logo->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Logo,104,128,214,214);
+    Label(TEXT("MAIN MENU"),13,Cyan,1100,130,500,28);
+    Label(TEXT("OPERATIONS"),30,White,1100,162,664,48,true);
+    auto NewButton=[this](const TCHAR* Name){return WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(),Name);};
+    BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=NewButton(TEXT("BtnCampaign"));BtnMission=NewButton(TEXT("BtnMission"));
+    BtnPlayer=NewButton(TEXT("BtnPlayer"));BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
+    BtnTac=Tactical?Tactical:NewButton(TEXT("BtnTac"));BtnQuit=Exit?Exit:NewButton(TEXT("BtnQuit"));
+    auto Card=[&](UButton* Button,const TCHAR* Heading,const TCHAR* Subtitle,float X,float Y,float W,float H,bool Primary=false){
+        Button->ClearChildren();Button->SetToolTipText(FText::FromString(Subtitle));Place(Button,X,Y,W,H);
+        // Separate hit-test-transparent labels protect against stale BP content.
+        Label(Heading,Primary?28:20,White,X+34,Y+(Primary?24:18),W-64,40,true);
+        Label(Subtitle,12,Muted,X+34,Y+(Primary?70:58),W-64,28);
     };
-    UButton *BStart = nullptr, *BCampaign = nullptr, *BMission = nullptr, *BMulti = nullptr;
-    UButton *BPlayer = nullptr, *BOptions = nullptr, *BTac = nullptr, *BQuit = nullptr;
-    if (AuthoredGameButton) BStart = AuthoredGameButton;
-    else Tile(BStart, TEXT("CONTINUE"), TEXT("Resume current operation"), 0);
-    Tile(BCampaign, TEXT("CAMPAIGNS"), TEXT("Select or restart a campaign"), 1);
-    Tile(BMission, TEXT("MISSIONS"), TEXT("Campaign, single and custom missions"), 0);
-    Tile(BMulti, TEXT("MULTIPLAYER"), TEXT("Network operations"), 1);
-    Tile(BPlayer, TEXT("PLAYER"), TEXT("Personnel and logbook"), 0);
-    Tile(BOptions, TEXT("OPTIONS"), TEXT("Settings and controls"), 1);
-    if (AuthoredTacButton) BTac = AuthoredTacButton;
-    else Tile(BTac, TEXT("TACTICAL REFERENCE"), TEXT("Ships, weapons and mission roles"), 0);
-    if (AuthoredExitButton) BQuit = AuthoredExitButton;
-    else Tile(BQuit, TEXT("EXIT TO WINDOWS"), TEXT("Close Starshatter Wars"), 1);
-    // Render text as a sibling *above* the textured UButton, not as its content.
-    // This is deliberate: Blueprint button content / SynchronizeProperties can
-    // reinstate an old centered black TextBlock after a native content rebuild.
-    // The label layer is HitTestInvisible, so the real button receives all input.
-    const FLinearColor BlueText(0.84f, 0.94f, 1.f, 1.f);
-    const FLinearColor GreenText(0.81f, 1.f, 0.87f, 1.f);
-    const FLinearColor CyanText(0.83f, 1.f, 1.f, 1.f);
-    const FLinearColor RedText(1.f, 0.85f, 0.87f, 1.f);
-
-    struct FButtonLabelSpec
-    {
-        UButton* Button;
-        const TCHAR* Heading;
-        const TCHAR* Subtitle;
-        FLinearColor TextColor;
-    };
-    const FButtonLabelSpec ButtonSpecs[] = {
-        {BStart, TEXT("CONTINUE"), TEXT("Resume current operation"), GreenText},
-        {BCampaign, TEXT("CAMPAIGNS"), TEXT("Select or restart a campaign"), BlueText},
-        {BMission, TEXT("MISSIONS"), TEXT("Campaign, single and custom missions"), BlueText},
-        {BMulti, TEXT("MULTIPLAYER"), TEXT("Network operations"), BlueText},
-        {BPlayer, TEXT("PLAYER"), TEXT("Personnel and logbook"), BlueText},
-        {BOptions, TEXT("OPTIONS"), TEXT("Settings and controls"), BlueText},
-        {BTac, TEXT("TACTICAL REFERENCE"), TEXT("Ships, weapons and mission roles"), CyanText},
-        {BQuit, TEXT("EXIT TO WINDOWS"), TEXT("Close Starshatter Wars"), RedText}
-    };
-    for (int32 RowIndex = 0; RowIndex < 4; ++RowIndex)
-    {
-        UHorizontalBox* ButtonRow = WidgetTree->ConstructWidget<UHorizontalBox>();
-        UVerticalBoxSlot* ButtonRowSlot = MenuArea->AddChildToVerticalBox(ButtonRow);
-        ButtonRowSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        ButtonRowSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
-        for (int32 ColumnIndex = 0; ColumnIndex < 2; ++ColumnIndex)
-        {
-            const int32 Index = RowIndex * 2 + ColumnIndex;
-            const FButtonLabelSpec& Spec = ButtonSpecs[Index];
-            UOverlay* ButtonOverlay = WidgetTree->ConstructWidget<UOverlay>();
-            UHorizontalBoxSlot* ButtonColumnSlot = ButtonRow->AddChildToHorizontalBox(ButtonOverlay);
-            ButtonColumnSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            ButtonColumnSlot->SetPadding(FMargin(0.f, 0.f, ColumnIndex == 0 ? 10.f : 0.f, 0.f));
-
-            if (Spec.Button)
-            {
-                Spec.Button->ClearChildren();
-                UOverlaySlot* ButtonOverlaySlot = ButtonOverlay->AddChildToOverlay(Spec.Button);
-                ButtonOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
-                ButtonOverlaySlot->SetVerticalAlignment(VAlign_Fill);
-            }
-
-            UVerticalBox* TextStack = WidgetTree->ConstructWidget<UVerticalBox>();
-            TextStack->SetVisibility(ESlateVisibility::HitTestInvisible);
-            UTextBlock* HeadingLabel = Text(Spec.Heading, 28, Spec.TextColor, true);
-            HeadingLabel->SetJustification(ETextJustify::Left);
-            HeadingLabel->SetAutoWrapText(false);
-            TextStack->AddChildToVerticalBox(HeadingLabel);
-            UTextBlock* SubtitleLabel = Text(Spec.Subtitle, 12, Spec.TextColor);
-            SubtitleLabel->SetJustification(ETextJustify::Left);
-            SubtitleLabel->SetAutoWrapText(false);
-            TextStack->AddChildToVerticalBox(SubtitleLabel)->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
-            UOverlaySlot* LabelOverlaySlot = ButtonOverlay->AddChildToOverlay(TextStack);
-            // The SciFi button textures have a beveled/transparent leading edge.
-            // Use a safe text inset so left-justified labels sit inside the visible button body.
-            LabelOverlaySlot->SetPadding(FMargin(64.f, 0.f, 20.f, 0.f));
-            LabelOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
-            LabelOverlaySlot->SetVerticalAlignment(VAlign_Center);
-        }
-    }
-    UE_LOG(LogMenuDlg, Warning,
-        TEXT("[MainMenu][LAYOUT-V4] Overlay labels inside button body: 28pt Serpentine / 12pt subtitle / safe 64px left inset"));
-
-    UBorder* DataPanel = WidgetTree->ConstructWidget<UBorder>();
-    DataPanel->SetBrushColor(FLinearColor(0.07f, 0.08f, 0.09f, 1.f));
-    DataPanel->SetPadding(FMargin(18.f, 10.f));
-    Page->AddChildToVerticalBox(DataPanel)->SetPadding(FMargin(0.f, 8.f, 0.f, 8.f));
-    UHorizontalBox* DataRow = WidgetTree->ConstructWidget<UHorizontalBox>();
-    DataPanel->SetContent(DataRow);
-
-    UVerticalBox* CampaignBlock = WidgetTree->ConstructWidget<UVerticalBox>();
-    UHorizontalBoxSlot* CampaignSlot = DataRow->AddChildToHorizontalBox(CampaignBlock);
-    CampaignSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    CampaignSlot->SetHorizontalAlignment(HAlign_Left);
-    UTextBlock* CampaignCaption = Text(TEXT("CAMPAIGN"), 16, Accent);
-    CampaignCaption->SetJustification(ETextJustify::Left);
-    CampaignBlock->AddChildToVerticalBox(CampaignCaption)->SetHorizontalAlignment(HAlign_Left);
-    CampaignIdentityText = Text(TEXT("NO ACTIVE CAMPAIGN"), 16, Primary);
-    CampaignIdentityText->SetJustification(ETextJustify::Left);
-    CampaignBlock->AddChildToVerticalBox(CampaignIdentityText)->SetHorizontalAlignment(HAlign_Left);
-    UTextBlock* CampaignTimeCaption = Text(TEXT("CAMPAIGN TIME"), 16, Accent);
-    CampaignTimeCaption->SetJustification(ETextJustify::Left);
-    if (UVerticalBoxSlot* CampaignTimeCaptionSlot = CampaignBlock->AddChildToVerticalBox(CampaignTimeCaption))
-    {
-        CampaignTimeCaptionSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
-        CampaignTimeCaptionSlot->SetHorizontalAlignment(HAlign_Left);
-    }
-    CampaignTimeText = Text(TEXT("Day 01  00:00:00"), 16, Primary);
-    CampaignTimeText->SetJustification(ETextJustify::Left);
-    if (UVerticalBoxSlot* CampaignTimeSlot = CampaignBlock->AddChildToVerticalBox(CampaignTimeText))
-    {
-        CampaignTimeSlot->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
-        CampaignTimeSlot->SetHorizontalAlignment(HAlign_Left);
-    }
-
-    UVerticalBox* TimeBlock = WidgetTree->ConstructWidget<UVerticalBox>();
-    UHorizontalBoxSlot* TimeSlot = DataRow->AddChildToHorizontalBox(TimeBlock);
-    TimeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    TimeSlot->SetHorizontalAlignment(HAlign_Center);
-    UTextBlock* TimeCaption = Text(TEXT("TIME"), 16, Accent);
-    TimeCaption->SetJustification(ETextJustify::Center);
-    TimeBlock->AddChildToVerticalBox(TimeCaption)->SetHorizontalAlignment(HAlign_Center);
-    UniverseTimeText = Text(TEXT("--"), 16, Primary);
-    UniverseTimeText->SetJustification(ETextJustify::Center);
-    TimeBlock->AddChildToVerticalBox(UniverseTimeText)->SetHorizontalAlignment(HAlign_Center);
-
-    UVerticalBox* PlayerBlock = WidgetTree->ConstructWidget<UVerticalBox>();
-    UHorizontalBoxSlot* PlayerSlot = DataRow->AddChildToHorizontalBox(PlayerBlock);
-    PlayerSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    PlayerSlot->SetHorizontalAlignment(HAlign_Right);
-    UTextBlock* PlayerCaption = Text(TEXT("PLAYER"), 16, Accent);
-    PlayerCaption->SetJustification(ETextJustify::Right);
-    PlayerBlock->AddChildToVerticalBox(PlayerCaption)->SetHorizontalAlignment(HAlign_Right);
-    PlayerIdentityText = Text(TEXT("PLAYER NOT LOADED"), 16, Primary);
-    PlayerIdentityText->SetJustification(ETextJustify::Right);
-    PlayerBlock->AddChildToVerticalBox(PlayerIdentityText)->SetHorizontalAlignment(HAlign_Right);
-    UTextBlock* UnitCaption = Text(TEXT("UNIT"), 16, Accent);
-    UnitCaption->SetJustification(ETextJustify::Right);
-    if (UVerticalBoxSlot* UnitCaptionSlot = PlayerBlock->AddChildToVerticalBox(UnitCaption))
-    {
-        UnitCaptionSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
-        UnitCaptionSlot->SetHorizontalAlignment(HAlign_Right);
-    }
-    UnitText = Text(TEXT("UNASSIGNED"), 16, Primary);
-    UnitText->SetJustification(ETextJustify::Right);
-    PlayerBlock->AddChildToVerticalBox(UnitText)->SetHorizontalAlignment(HAlign_Right);
-
-    DescriptionText = Text(TEXT(""), 13, Muted);
-    Page->AddChildToVerticalBox(DescriptionText)->SetPadding(FMargin(6.f, 0.f, 6.f, 8.f));
-    VersionText = Text(TEXT(""), 12, Muted);
-    Page->AddChildToVerticalBox(VersionText);
-
-    BtnStart = BStart; BtnCampaign = BCampaign; BtnMission = BMission;
-    BtnMulti = BMulti; BtnPlayer = BPlayer; BtnOptions = BOptions;
-    BtnTac = BTac; BtnQuit = BQuit;
+    Card(BtnStart,TEXT("CONTINUE"),TEXT("Return to your active campaign"),1100,234,664,116,true);
+    Card(BtnCampaign,TEXT("CAMPAIGNS"),TEXT("Choose your operation"),1100,376,324,104);
+    Card(BtnMission,TEXT("MISSIONS"),TEXT("Campaign, single and custom"),1440,376,324,104);
+    Card(BtnPlayer,TEXT("PLAYER"),TEXT("Personnel and logbook"),1100,498,324,104);
+    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1440,498,324,104);
+    Card(BtnTac,TEXT("REFERENCE"),TEXT("Ships, weapons and tactics"),1100,620,324,104);
+    Card(BtnOptions,TEXT("OPTIONS"),TEXT("Display, sound and controls"),1440,620,324,104);
+    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,750,664,78);
+    // Compact, persistent campaign/pilot context; no opaque full-width slab.
+    Label(TEXT("ACTIVE CAMPAIGN"),12,Cyan,104,930,560,25);
+    CampaignIdentityText=Label(TEXT("NO ACTIVE CAMPAIGN"),19,White,104,960,580,32);
+    CampaignTimeText=Label(TEXT("Day 01 00:00:00"),12,Muted,104,1000,580,25);
+    Label(TEXT("UNIVERSE TIME"),12,Cyan,720,930,480,25)->SetJustification(ETextJustify::Center);
+    UniverseTimeText=Label(TEXT("--"),17,White,720,965,480,32);UniverseTimeText->SetJustification(ETextJustify::Center);
+    Label(TEXT("PILOT"),12,Cyan,1330,930,434,25)->SetJustification(ETextJustify::Right);
+    PlayerIdentityText=Label(TEXT("PLAYER NOT LOADED"),19,White,1330,960,434,32);PlayerIdentityText->SetJustification(ETextJustify::Right);
+    UnitText=Label(TEXT("UNASSIGNED"),12,Muted,1330,1000,434,25);UnitText->SetJustification(ETextJustify::Right);
+    DescriptionText=Label(TEXT(""),13,Muted,104,852,1650,35);
+    VersionText=Label(TEXT(""),11,Muted,104,1040,700,25);
 }
 
 void UMenuDlg::RefreshIdentityLabels()
@@ -539,8 +343,8 @@ void UMenuDlg::NativeConstruct()
             ButtonStyle.Pressed.DrawAs = ESlateBrushDrawType::Image;
             ButtonStyle.Disabled.DrawAs = ESlateBrushDrawType::Image;
             // Preserve the authored texture colors; only brighten interaction states.
-            ButtonStyle.Normal.TintColor = FSlateColor(FLinearColor::White);
-            ButtonStyle.Hovered.TintColor = FSlateColor(FLinearColor(1.08f, 1.08f, 1.08f, 1.f));
+            ButtonStyle.Normal.TintColor = FSlateColor(FLinearColor(.58f,.70f,.82f,.90f));
+            ButtonStyle.Hovered.TintColor = FSlateColor(FLinearColor(.95f, 1.f, 1.f, 1.f));
             ButtonStyle.Pressed.TintColor = FSlateColor(FLinearColor::White);
             ButtonStyle.Disabled.TintColor = FSlateColor(FLinearColor(0.45f, 0.48f, 0.50f, 0.65f));
         }

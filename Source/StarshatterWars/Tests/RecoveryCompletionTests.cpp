@@ -46,14 +46,17 @@ bool FRecoveryCameraHoldTest::RunTest(const FString&)
     ON_SCOPE_EXIT{World->DestroyWorld(false);};
     auto* Fighter=World->SpawnActor<AFighterActor>();auto* Camera=World->SpawnActor<ACameraActor>();
     const FTransform Pose(FRotator(-15,45,3),FVector(100,200,300));Camera->SetActorTransform(Pose);
+    const FTransform ParkedPose=Fighter->GetActorTransform();
     Camera->AttachToActor(Fighter,FAttachmentTransformRules::KeepWorldTransform);
     FMissionCameraRig Rig;Rig.PlayerActor=Fighter;Rig.HoldRecoveryView(nullptr,Camera);
     TestNull(TEXT("Recovery camera releases moving hull"),Camera->GetAttachParentActor());
     Fighter->SetActorLocationAndRotation(FVector(8000,-6000,1200),FRotator(30,170,-60));
     TestTrue(TEXT("Docked hull motion cannot jitter held camera"),Camera->GetActorTransform().Equals(Pose,.001));
     Camera->SetActorLocation(FVector(1,2,3));Rig.HoldRecoveryView(nullptr,Camera);
+    TestTrue(TEXT("Docking updates cannot shake the parked fighter"),Fighter->GetActorTransform().Equals(ParkedPose,.001));
     TestTrue(TEXT("Later recovery callbacks retain the original pose"),Camera->GetActorTransform().Equals(Pose,.001));
     Rig.Reset(nullptr);TestFalse(TEXT("Next mission resets recovery hold"),Rig.bRecoveryViewHeld);
+    TestFalse(TEXT("Next mission releases the parked fighter pose"),Fighter->bRecoveryPresentationHeld);
     return true;
 }
 #endif

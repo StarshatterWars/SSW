@@ -339,6 +339,7 @@ void UMissionsPanelDriver::Show()
 {
     BuildDriverLayout();SetVisibility(ESlateVisibility::Visible);
     if (!ActiveChild) ShowSingleMode();
+    else if (USingleMissionDlg* Missions=Cast<USingleMissionDlg>(ActiveChild)) Missions->Show();
 }
 void UMissionsPanelDriver::HandleCancel(){Back();}
 void UMissionsPanelDriver::OpenCampaign(){ShowCampaignMode();}

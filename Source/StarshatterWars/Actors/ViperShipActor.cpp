@@ -1,6 +1,7 @@
 // Structural defaults from Viper.def; simulation remains data-driven.
 #include "ViperShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 AViperShipActor::AViperShipActor()
 {
@@ -9,6 +10,7 @@ AViperShipActor::AViperShipActor()
     ApplyViperDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Viper"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("ViperPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(73.000000f, 0.000000f, -14.000000f), FVector(87.000000f, 0.000000f, -40.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-40.000000f, -30.000000f, -12.000000f), FVector(-40.000000f, -50.000000f, -40.000000f)),
@@ -31,7 +33,7 @@ void AViperShipActor::ApplyViperDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Viper(*this);
     BridgePointOffset = FVector(8.000000f, 0.000000f, 145.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(8.000000f, 0.000000f, 145.000000f);

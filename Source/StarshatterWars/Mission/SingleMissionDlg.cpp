@@ -510,7 +510,14 @@ void USingleMissionDlg::RefreshMissionDetails()
         }
         if (CustomInfo->mission)
             TypeName = UTF8_TO_TCHAR(CustomInfo->mission->GetTypeName());
-        const FString Status = CustomInfo->mission ? TEXT("Active") : TEXT("Available");
+        const auto* GI=Cast<USSWGameInstance>(GetGameInstance());
+        const auto* Players=GI?GI->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+        Campaign* CompletionScope=IsCampaignMissionView()?Campaign::GetCampaign():CustomCampaign;
+        const int32 CampaignId=CompletionScope?CompletionScope->GetCampaignId():Campaign::SINGLE_MISSIONS;
+        const bool Completed=MissionCompletionStatus::IsCompleted(GI?GI->CampaignSave:nullptr,
+            Players?&Players->GetPlayerInfo():nullptr,CampaignId,MissionId);
+        const FString Status = Completed ? TEXT("Completed")
+            : CustomInfo->mission && CustomInfo->mission->IsActive() ? TEXT("Active") : TEXT("Available");
         if (MissionTitle) MissionTitle->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->name.data())));
         if (MissionRole) MissionRole->SetText(FText::FromString(FString::Printf(TEXT("TYPE:  %s"), *TypeName)));
         if (MissionLocation) MissionLocation->SetText(FText::FromString(FString::Printf(TEXT("STATUS:  %s"), *Status)));

@@ -1789,7 +1789,7 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
 
 void AShipActor::BindRuntimeShip(Ship* InShip)
 {
-    if (RuntimeShip != InShip) bRuntimeVisualInitialized = false;
+    if (RuntimeShip != InShip) { bRuntimeVisualInitialized = false; ReleaseRecoveryPresentation(); }
     for (auto& Entry : RuntimeTurretBaseRestRotations)
         if (IsValid(Entry.Key)) Entry.Key->SetRelativeRotation(Entry.Value);
     RuntimeTurretBaseRestRotations.Reset();
@@ -1837,6 +1837,10 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 
 
     // Runtime ships use runtime Niagara thrusters only.
+    // Clear editor preview effects before creating simulation-controlled FX.
+    ClearComponentArray(MainEngineEmitters);
+    ClearPointLights(MainEngineLights);
+    ClearSceneComponentArray(MainEnginePoints);
     // Clear old generated fallback thruster emitters.
     SetThrustersActive(false);
     ClearComponentArray(ThrusterEmitters);
@@ -1953,7 +1957,11 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
     const double Alpha = bSnap ? 1.0 : 1.0-FMath::Exp(-double(DeltaTime)/BlendSeconds);
     const FVector DisplayLocation = FMath::Lerp(CurrentLocation,RuntimeLocation,Alpha);
     const FQuat DisplayRotation = FQuat::Slerp(GetActorQuat(),TargetRotation,Alpha).GetNormalized();
-    if (bSnap || !CurrentLocation.Equals(DisplayLocation,0.001) ||
+    if (bRecoveryPresentationHeld)
+    {
+        HoldRecoveryPresentation();
+    }
+    else if (bSnap || !CurrentLocation.Equals(DisplayLocation,0.001) ||
         !GetActorQuat().Equals(DisplayRotation,0.000001))
     {
         SetActorLocationAndRotation(DisplayLocation,DisplayRotation,false,nullptr,ETeleportType::TeleportPhysics);
@@ -2164,7 +2172,9 @@ FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition)
     const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : nullptr;
     const double DesignScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER
         ? static_cast<double>(Design->scale) : 1.0;
-    const FVector AuthoredPosition = ImportedPosition / DesignScale;
+    const FVector UnscaledPosition = ImportedPosition / DesignScale;
+    const FVector AuthoredPosition = bLegacyEmitterCoordinates
+        ? FVector(UnscaledPosition.Z, -UnscaledPosition.X, UnscaledPosition.Y) : UnscaledPosition;
     if (!HullMesh || !VFXRoot)
     {
         return AuthoredPosition;
@@ -2223,6 +2233,23 @@ void AShipActor::BuildMainEnginesFromRuntime()
                 FRotator(0.0f, 180.0f, 0.0f)));
 
         RuntimeMainEnginePoints.Add(Point);
+
+        // A small local light keeps the nozzle warm at idle without a thrust jet.
+        // Components share the authored engine point; no extra actors or ticking.
+        UPointLightComponent* IdleGlow=NewObject<UPointLightComponent>(this);
+        IdleGlow->SetupAttachment(Point);
+        IdleGlow->SetMobility(EComponentMobility::Movable);
+        IdleGlow->SetCastShadows(false);
+        FLinearColor GlowColor(.18f,.52f,1.f);
+        const bool YellowFX=MainEngineEmitterSystem && MainEngineEmitterSystem->GetPathName().Contains(TEXT("Yellow"));
+        if (YellowFX || MainDrive->GetDriveType()==EDriveType::YELLOW) GlowColor=FLinearColor(1.f,.34f,.035f);
+        else if (MainDrive->GetDriveType()==EDriveType::RED) GlowColor=FLinearColor(1.f,.035f,.015f);
+        else if (MainDrive->GetDriveType()==EDriveType::GREEN) GlowColor=FLinearColor(.08f,1.f,.24f);
+        IdleGlow->SetLightColor(GlowColor);
+        IdleGlow->SetIntensity(.5f);
+        IdleGlow->SetAttenuationRadius(FMath::Clamp(20.f*float(GetActorScale3D().GetAbsMax())*FMath::Max(.25f,MainDrive->GetPortScale(i)),1.f,12.f));
+        IdleGlow->RegisterComponent();
+        RuntimeIdleEngineLights.Add(IdleGlow);
 
         UNiagaraComponent* Emitter =
             NewObject<UNiagaraComponent>(
@@ -2283,6 +2310,7 @@ void AShipActor::ClearRuntimeNavLights()
 
 void AShipActor::ClearRuntimeMainEngines()
 {
+    ClearPointLights(RuntimeIdleEngineLights);
     for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
     {
         if (Emitter)
@@ -2374,6 +2402,13 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
                 0.0f;
         }
     }
+
+    for (UPointLightComponent* Glow : RuntimeIdleEngineLights)
+        if (Glow)
+        {
+            Glow->SetVisibility(!RuntimeShip->IsDead() && !RuntimeShip->IsDying());
+            Glow->SetIntensity(.5f+2.f*FMath::Clamp(MainEngineVisualPower,0.f,1.f));
+        }
 
     const bool bActive =
         MainEngineVisualPower > 0.03f;
@@ -2672,6 +2707,21 @@ void AShipActor::BuildThrustersFromRuntime()
         FX.Direction = Port->Direction;
         FX.Location = Port->Location;
         FX.Rotation = Port->Rotation;
+        // These original DEFs specify exhaust direction by port key, without
+        // explicit rotation fields. Derive the visual orientation only.
+        if (bLegacyEmitterCoordinates)
+        {
+            switch (Port->Direction)
+            {
+            case EThrusterPortDir::FORE: FX.Rotation = FRotator::ZeroRotator; break;
+            case EThrusterPortDir::AFT: FX.Rotation = FRotator(0,180,0); break;
+            case EThrusterPortDir::TOP: FX.Rotation = FRotator(90,0,0); break;
+            case EThrusterPortDir::BOTTOM: FX.Rotation = FRotator(-90,0,0); break;
+            case EThrusterPortDir::LEFT: FX.Rotation = FRotator(0,90,0); break;
+            case EThrusterPortDir::RIGHT: FX.Rotation = FRotator(0,-90,0); break;
+            default: break;
+            }
+        }
         FX.PortScale = Port->PortScale;
         FX.AudioMultiplier = Port->AudioMultiplier;
         FX.RuntimePortIndex = PortIndex;
@@ -2688,7 +2738,7 @@ void AShipActor::BuildThrustersFromRuntime()
                 FX.Flare->SetAutoActivate(false);
                 FX.Flare->RegisterComponent();
                 FX.Flare->SetRelativeRotation(
-                    ConvertLegacyPortRotation(Port->Rotation));
+                    ConvertLegacyPortRotation(FX.Rotation));
 
                 FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
                 FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
@@ -2705,7 +2755,7 @@ void AShipActor::BuildThrustersFromRuntime()
                 FX.Trail->SetupAttachment(VFXRoot);
                 FX.Trail->SetRelativeLocation(PortLocation);
                 FX.Trail->SetRelativeRotation(
-                    ConvertLegacyPortRotation(Port->Rotation));
+                    ConvertLegacyPortRotation(FX.Rotation));
                 FX.Trail->SetAutoActivate(false);
                 FX.Trail->RegisterComponent();
 
@@ -3035,4 +3085,15 @@ void AShipActor::DebugFireAllThrusters(float BurnValue)
 
     UE_LOG(LogTemp, Warning,
         TEXT("==================================================="));
+}
+
+void AShipActor::HoldRecoveryPresentation()
+{
+    if (!bRecoveryPresentationHeld)
+    {
+        RecoveryPresentationPose=GetActorTransform();
+        bRecoveryPresentationHeld=true;
+    }
+    // Presentation only: do not feed the held pose into legacy docking physics.
+    SetActorTransform(RecoveryPresentationPose,false,nullptr,ETeleportType::TeleportPhysics);
 }

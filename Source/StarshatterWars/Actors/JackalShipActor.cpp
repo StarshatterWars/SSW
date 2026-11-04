@@ -1,6 +1,7 @@
 // Structural defaults from Jackal.def; simulation remains data-driven.
 #include "JackalShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 AJackalShipActor::AJackalShipActor()
 {
@@ -9,6 +10,7 @@ AJackalShipActor::AJackalShipActor()
     ApplyJackalDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Jackal"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("JackalPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
         FFighterLandingGearDefinition(TEXT("zgear_r.mag"), FVector(-10.000000f, 34.000000f, -30.000000f), FVector(-10.000000f, 74.000000f, -60.000000f)),
         FFighterLandingGearDefinition(TEXT("zgear_l.mag"), FVector(-10.000000f, -34.000000f, -30.000000f), FVector(-10.000000f, -74.000000f, -60.000000f)),
@@ -32,7 +34,7 @@ void AJackalShipActor::ApplyJackalDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Jackal(*this);
     BridgePointOffset = FVector(8.000000f, 0.000000f, 145.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(8.000000f, 0.000000f, 145.000000f);

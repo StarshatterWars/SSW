@@ -644,16 +644,17 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     if (bHasPlayer && ThirdPerson.Get())
     {
         // Compact flight deck: clear central view, stable alignment and restrained glass.
-        const FVector2D P(Size.X*.5-280*Scale,20*Scale),D(560*Scale,100*Scale);
+        const FVector2D P(Size.X*.5-330*Scale,20*Scale),D(660*Scale,100*Scale);
         static const FSlateRoundedBoxBrush Glass(FLinearColor(.012f,.024f,.038f,.82f),10.f);
         FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
-        Box(P+FVector2D(20,0)*Scale,FVector2D(520*Scale,Scale),FLinearColor(.2,.65,.8,.55));
+        Box(P+FVector2D(20,0)*Scale,FVector2D(620*Scale,Scale),FLinearColor(.2,.65,.8,.55));
         const FLinearColor Muted(.42,.62,.7,.9),White(.88,.96,1,1),Green(.25,1,.58,1);
         auto MiniText=[&](double X,double Y,const FString& Value,int SizeIn,FLinearColor Tint){
             const FSlateFontInfo Font=SizeIn>=20?FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(SizeIn*Scale))):MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(SizeIn*Scale)));
             FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(430*Scale,30*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(X,Y)*Scale))),Value,Font,ESlateDrawEffect::None,Tint);
         };
         Box(P+FVector2D(104,18)*Scale,FVector2D(Scale,64*Scale),FLinearColor(.2,.4,.5,.35));
+        MiniText(579,2,TEXT("PITCH"),8,Muted);
         MiniText(124,12,TEXT("VELOCITY"),10,Muted);MiniText(124,29,FString::Printf(TEXT("%.0f"),FlightSpeed),26,White);MiniText(124,61,TEXT("M / S"),10,Muted);
         MiniText(232,12,TEXT("HEADING"),10,Muted);MiniText(232,30,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),22,White);
         MiniText(330,12,bAutoAvailable?TEXT("AUTO PILOT"):TEXT("FLIGHT CONTROL"),10,bAutoAvailable?Green:Muted);

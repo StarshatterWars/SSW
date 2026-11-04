@@ -1,5 +1,6 @@
-#include "ShipVisualCatalog.h"
+
 #include "ShipBriefingPreview.h"
+#include "ShipVisualCatalog.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
 #include "Blueprint/WidgetTree.h"

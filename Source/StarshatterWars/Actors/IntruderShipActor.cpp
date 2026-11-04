@@ -1,6 +1,7 @@
 // Structural defaults from Intruder.def; simulation remains data-driven.
 #include "IntruderShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 AIntruderShipActor::AIntruderShipActor()
 {
@@ -9,6 +10,7 @@ AIntruderShipActor::AIntruderShipActor()
     ApplyIntruderDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Intruder"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("IntruderPit"), 0.020000f, FVector(0.000000f, 0.000000f, 240.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(134.000000f, 0.000000f, -25.000000f), FVector(148.000000f, 0.000000f, -50.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-64.000000f, -20.000000f, -30.000000f), FVector(-64.000000f, -45.000000f, -60.000000f)),
@@ -31,7 +33,7 @@ void AIntruderShipActor::ApplyIntruderDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Intruder(*this);
     BridgePointOffset = FVector(0.000000f, 0.000000f, 240.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(0.000000f, 0.000000f, 240.000000f);

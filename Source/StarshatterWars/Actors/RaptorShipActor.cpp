@@ -1,6 +1,7 @@
 // Structural defaults from Raptor.def; simulation remains data-driven.
 #include "RaptorShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 ARaptorShipActor::ARaptorShipActor()
 {
@@ -9,6 +10,7 @@ ARaptorShipActor::ARaptorShipActor()
     ApplyRaptorDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Raptor"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("RaptorPit"), 0.020000f, FVector(0.000000f, 0.000000f, 240.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(134.000000f, 0.000000f, -25.000000f), FVector(148.000000f, 0.000000f, -50.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-64.000000f, -20.000000f, -30.000000f), FVector(-64.000000f, -45.000000f, -60.000000f)),
@@ -31,7 +33,7 @@ void ARaptorShipActor::ApplyRaptorDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Raptor(*this);
     BridgePointOffset = FVector(0.000000f, 0.000000f, 240.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(0.000000f, 0.000000f, 240.000000f);

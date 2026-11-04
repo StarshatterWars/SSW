@@ -1,6 +1,5 @@
-#include "ShipVisualCatalog.h"
-
 #include "CampaignSceneDlg.h"
+#include "ShipVisualCatalog.h"
 #include "CampaignPresentationRules.h"
 #include "AudioRouting.h"
 #include "Engine/Engine.h"

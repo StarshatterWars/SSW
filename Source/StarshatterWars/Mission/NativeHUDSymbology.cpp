@@ -42,7 +42,14 @@ void FNativeHUDSymbology::Paint(const FGeometry& G,FSlateWindowElementList& E,in
  for(const auto& M:Markers){if(M.Actor.IsValid()&&M.Actor.Get()==Selected)continue;const FVector4 Clip=Projection.ComputeViewProjectionMatrix().TransformFVector4(FVector4(M.Position,1));if(Clip.W<=0)continue;const double X=Clip.X/Clip.W,Y=Clip.Y/Clip.W;if(FMath::Abs(X)>1||FMath::Abs(Y)>1)continue;const FVector2D Point((R.Min.X+(X*.5+.5)*R.Width())*Size.X/W,(R.Min.Y+(.5-Y*.5)*R.Height())*Size.Y/H);Art(G,E,L+1,M.Cross,Point,(M.Cross==0||M.Cross==5?LeadSize:TargetSize)*Size.X/W,M.Color);}
 }
 void FNativeHUDSymbology::PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 L,double Heading,double Ordered,double Pitch,double OrderedPitch,bool Helm,bool Mini)const{
- const FVector2D Size=G.GetLocalSize();const double Scale=FMath::Min(Size.X/1280,Size.Y/720);const FVector2D Center=Mini?FVector2D(Size.X*.5-224*Scale,70*Scale):FVector2D(Size.X-82*Scale,94*Scale);const double D=(Mini?80:104)*Scale;const FLinearColor Tint(.45,.85,1,.85);
+ const FVector2D Size=G.GetLocalSize();const double Scale=FMath::Min(Size.X/1280,Size.Y/720);const FVector2D Center=Mini?FVector2D(Size.X*.5-274*Scale,70*Scale):FVector2D(Size.X-82*Scale,94*Scale);const double D=(Mini?80:104)*Scale;const FLinearColor Tint(.45,.85,1,.85);
+ if(Mini){
+  const FVector2D PitchCenter(Size.X*.5+274*Scale,70*Scale);
+  Art(G,E,L,8,PitchCenter,D,Tint,FMath::DegreesToRadians(180-Pitch));
+  Art(G,E,L+1,7,PitchCenter,D,FLinearColor(.9,1,1,.75),0);
+  if(Helm&&FMath::Abs(OrderedPitch-Pitch)>5)
+   Art(G,E,L+2,7,PitchCenter,D,FLinearColor(.25,1,.55,1),FMath::DegreesToRadians(CompassDelta(Pitch,OrderedPitch)));
+ }
  // Source ring has north at the bottom; rotate 180deg before heading rotation.
  Art(G,E,L,6,Center,D,Tint,FMath::DegreesToRadians(180-Heading));
  if(Helm&&HelmCueVisible(Heading,Ordered,Pitch,OrderedPitch)){

@@ -100,6 +100,11 @@ private:
     TSharedPtr<FNativeShipGeometry> NativeGeometry;
 public:
     void UpdateFromRuntimeShip(float DeltaTime);
+    void HoldRecoveryPresentation();
+    void ReleaseRecoveryPresentation() { bRecoveryPresentationHeld = false; }
+    bool bRecoveryPresentationHeld = false;
+    FTransform RecoveryPresentationPose = FTransform::Identity;
+
     void SyncCarriedMissiles();
     UFUNCTION(BlueprintCallable, Category="Ship|Skin") void RefreshHullSkin();
     // Alias an imported native material slot to the exact legacy material name.
@@ -507,6 +512,9 @@ public:
     UPROPERTY(Transient)
     TArray<TObjectPtr<UNiagaraComponent>> RuntimeMainEngineEmitters;
 
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UPointLightComponent>> RuntimeIdleEngineLights;
+
     // Parallel to successful emitter creations; retained across throttle updates.
     TArray<FVector> RuntimeMainEngineBaseScales;
 
@@ -518,6 +526,10 @@ public:
 
     UPROPERTY(Transient)
     TObjectPtr<UAudioComponent> RumbleAudioComponent;
+
+    // Some unconverted DEFs retain local X=right, Y=up, Z=forward for FX ports.
+    UPROPERTY(EditDefaultsOnly, Category="Ship|FX")
+    bool bLegacyEmitterCoordinates = false;
 
     FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const;
     void BuildMainEnginesFromRuntime();

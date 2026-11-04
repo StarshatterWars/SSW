@@ -1,6 +1,7 @@
 // Structural defaults from Avenger.def; simulation remains data-driven.
 #include "AvengerShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 AAvengerShipActor::AAvengerShipActor()
 {
@@ -9,6 +10,7 @@ AAvengerShipActor::AAvengerShipActor()
     ApplyAvengerDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Avenger"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("AvengerPit"), 0.020000f, FVector(0.000000f, 0.000000f, 256.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(144.000000f, 0.000000f, -25.000000f), FVector(155.000000f, 0.000000f, -45.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-64.000000f, -20.000000f, -25.000000f), FVector(-64.000000f, -42.000000f, -50.000000f)),
@@ -31,7 +33,7 @@ void AAvengerShipActor::ApplyAvengerDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Avenger(*this);
     BridgePointOffset = FVector(0.000000f, 0.000000f, 256.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(0.000000f, 0.000000f, 256.000000f);

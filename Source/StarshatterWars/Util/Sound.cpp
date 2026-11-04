@@ -1,6 +1,6 @@
-#include "AudioRouting.h"
-#include "Sound.h"
 
+#include "Sound.h"
+#include "AudioRouting.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundAttenuation.h"

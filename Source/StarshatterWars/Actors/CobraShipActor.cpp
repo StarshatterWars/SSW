@@ -1,6 +1,7 @@
 // Structural defaults from Cobra.def; simulation remains data-driven.
 #include "CobraShipActor.h"
 #include "Components/SceneComponent.h"
+#include "MarakanFighterEffects.h"
 
 ACobraShipActor::ACobraShipActor()
 {
@@ -9,6 +10,7 @@ ACobraShipActor::ACobraShipActor()
     ApplyCobraDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Cobra"));
+    MarakanFighterEffects::AlignWeapons(*this);
     InitializeNativeFighterAttachments(TEXT("CobraPit"), 0.020000f, FVector(8.000000f, 0.000000f, 145.000000f), {
         FFighterLandingGearDefinition(TEXT("GearNose0.mag"), FVector(104.000000f, 0.000000f, -15.000000f), FVector(118.000000f, 0.000000f, -42.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft0.mag"), FVector(-48.000000f, -28.000000f, -22.000000f), FVector(-48.000000f, -42.000000f, -42.000000f)),
@@ -31,7 +33,7 @@ void ACobraShipActor::ApplyCobraDefaults()
     MainEngineEmitterRelativeScale = FVector(1.15f, 0.5f, 0.5f);
     MainEngineEmitterRelativeRotation = FRotator(0.0f, 180.0f, 0.0f);
     NumMainEnginePoints = NumThrusterPoints = 0;
-    MainEnginePointDefs.Empty(); ThrusterPointDefs.Empty(); NavLightDefs.Empty();
+    MarakanFighterEffects::Cobra(*this);
     BridgePointOffset = FVector(8.000000f, 0.000000f, 145.000000f);
     ChasePointOffset = FVector(250.000000f, 0.000000f, -1200.000000f);
     FocusPointOffset = FVector(8.000000f, 0.000000f, 145.000000f);

@@ -15,6 +15,7 @@ public:
 protected:
     void ApplyFalconDefaults();
     void ApplyFalconFixedPoints();
+    void AlignFixedGunMuzzles();
 protected:
     virtual void ApplyAuthoredAttachmentDefaults() override;
 };

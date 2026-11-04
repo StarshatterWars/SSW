@@ -938,12 +938,20 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		return;
 	}
 
-    // Falcon and Zodiac author FX ports in the hull's Unreal local axes.
+    // These visual actors remove the imported design scale before applying
+    // their hull transform. Normalize their FX ports consistently at import.
     // Apply that scale in the normal startup parse as well as editor imports:
     // RuntimeEmitterLocalPosition removes it before applying the hull transform.
     // Keep every other system location, ship scale, and design unchanged.
     if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Zodiac"), ESearchCase::IgnoreCase))
+        ShipName.Equals(TEXT("Zodiac"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Avenger"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Cobra"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Intruder"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Jackal"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Raptor"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Razor"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Viper"), ESearchCase::IgnoreCase))
     {
         const float PortScale = LocalScale > 0.f ? LocalScale : 1.f;
         for (auto& Drive : NewShipDesign.Drive)
@@ -4922,6 +4930,47 @@ bool UStarshatterShipDesignSubsystem::ReimportFalconFlightSystems()
     Table->AddRow(TEXT("Falcon"),Updated);ShipDesignDataTable=Previous;
     if(Valid)Table->MarkPackageDirty();
     return Valid;
+#else
+    return false;
+#endif
+}
+
+
+bool UStarshatterShipDesignSubsystem::ReimportMarakanFlightEffects()
+{
+#if WITH_EDITOR
+    UDataTable* Previous = ShipDesignDataTable;
+    UDataTable* Table = LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    if (!Table || Table->GetRowStruct()!=FShipDesign::StaticStruct()) return false;
+    TMap<FName,FShipDesign> Originals;
+    for (const TCHAR* Name : {TEXT("Avenger"),TEXT("Cobra"),TEXT("Intruder"),TEXT("Jackal"),TEXT("Raptor"),TEXT("Razor"),TEXT("Viper")})
+    {
+        const auto* Row=Table->FindRow<FShipDesign>(FName(Name),TEXT("Marakan FX refresh"));
+        if (!Row) return false;
+        Originals.Add(FName(Name),*Row);
+    }
+    ShipDesignDataTable=Table;
+    bool Valid=true;
+    for (const auto& Entry : Originals)
+    {
+        const FString File=FPaths::ProjectContentDir()/TEXT("GameData/Ships")/(Entry.Key.ToString()+TEXT(".def"));
+        const auto Ansi=StringCast<ANSICHAR>(*File); LoadShipDesign(Ansi.Get());
+        const auto* Parsed=Table->FindRow<FShipDesign>(Entry.Key,TEXT("Marakan FX refresh"));
+        if (!Parsed || Parsed->Drive.Num()!=Entry.Value.Drive.Num() || Parsed->Thruster.IsEmpty() || Parsed->Navlight.IsEmpty()) {Valid=false;break;}
+        FShipDesign Updated=Entry.Value;
+        for (int32 D=0;D<Updated.Drive.Num();++D)
+        {
+            Updated.Drive[D].Ports=Parsed->Drive[D].Ports;
+            Updated.Drive[D].DriveScale=Parsed->Drive[D].DriveScale;
+        }
+        Updated.Thruster=Parsed->Thruster;
+        Updated.Navlight=Parsed->Navlight;
+        Table->AddRow(Entry.Key,Updated);
+    }
+    ShipDesignDataTable=Previous;
+    if (!Valid) {for(const auto& Entry:Originals)Table->AddRow(Entry.Key,Entry.Value);return false;}
+    Table->MarkPackageDirty();
+    return true;
 #else
     return false;
 #endif
