@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
 
@@ -29,11 +29,9 @@ public:
 	Asteroid(int type, const FVector& pos, double mass);
 
     int GetMeshVariant() const {return MeshVariant;}
-    virtual int HitBy(SimShot* Shot,FVector& Impact) override;
 	static void Initialize();
 	static void Close();
 private:
     int MeshVariant=0;
-    bool bLibraryBounds=false;
 };
 

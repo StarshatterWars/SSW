@@ -89,10 +89,17 @@ bool FParityIntelNamesTest::RunTest(const FString&){
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNativeAsteroidScaleTest,"Starshatter.Parity.P03.AsteroidLibraryScale",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FNativeAsteroidScaleTest::RunTest(const FString&){
+ Asteroid::Initialize(); // Must work without parsing any legacy MAG geometry.
  const auto* Library=GetDefault<UAsteroidLibrarySettings>();TestEqual(TEXT("Six library variants configured"),Library->Meshes.Num(),6);
  for(const auto& Ref:Library->Meshes){auto* Mesh=Ref.LoadSynchronous();if(TestNotNull(TEXT("Imported asteroid library mesh"),Mesh)){
  const double Radius=Mesh->GetBounds().SphereRadius;TestTrue(TEXT("Nonzero imported bounds"),Radius>0);TestEqual(TEXT("Raw radius preserved"),ANativeAsteroidActor::RawRadius(Radius),Radius);
  AddInfo(FString::Printf(TEXT("Asteroid %s raw radius retained %.3f, mesh scale 1"),*Mesh->GetPathName(),Radius));}}
+ for(int32 Index=0;Index<6 && Library->Meshes.Num()>0;++Index){
+ if(auto* Mesh=Library->Meshes[Index%Library->Meshes.Num()].LoadSynchronous()){
+ Asteroid Rock(Index,FVector::ZeroVector,100);
+ TestEqual(TEXT("Simulation keeps the selected pack mesh raw radius"),double(Rock.GetRadius()),double(float(Mesh->GetBounds().SphereRadius)));
+ TestEqual(TEXT("Stable pack variant"),Rock.GetMeshVariant(),Index);
+ }}
  TestEqual(TEXT("Invalid radius rejected"),ANativeAsteroidActor::RawRadius(0),0.0);return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FShieldHullIntegrationTest,"Starshatter.Parity.P02.ShieldHullIntegration",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)

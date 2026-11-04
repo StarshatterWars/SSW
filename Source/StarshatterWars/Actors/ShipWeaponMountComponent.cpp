@@ -5,6 +5,7 @@
 #include "WeaponDesign.h"
 #include "WeaponPresentationFrame.h"
 #include "BoltWeaponActor.h"
+#include "BeamWeaponActor.h"
 #include "TurretCatalog.h"
 #include "TurretActor.h"
 
@@ -34,6 +35,14 @@ UClass* UShipWeaponMountComponent::ResolveProjectileClass() const
 
 void UShipWeaponMountComponent::ConfigureTurretVisual(FName Type)
 {
+    // Older ship BPs placed fired-projectile actors in the gun/store slot.
+    // Preserve their projectile choice, but never display an unfired energy bolt.
+    UClass* MountedClass=GetChildActorClass();
+    if(MountedClass && (MountedClass->IsChildOf(ABoltWeaponActor::StaticClass()) || MountedClass->IsChildOf(ABeamWeaponActor::StaticClass())))
+    {
+        if(ProjectileBlueprint.IsNull()) ProjectileBlueprint=TSoftClassPtr<AActor>(MountedClass);
+        SetChildActorClass(nullptr);
+    }
     UClass* OldAuto=AutoTurretClass.Get();
     const auto Default=TurretCatalog::VisualClass(Type);
     if(!TurretBlueprint || TurretBlueprint==AutoTurretClass)TurretBlueprint=Default;

@@ -11,14 +11,53 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
 #include "HAL/PlatformTime.h"
+#include "Components/Button.h"
+#include "Components/VerticalBox.h"
+#include "Slate/WidgetRenderer.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "ImageUtils.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "HAL/FileManager.h"
+#include "RenderingThread.h"
+#include "DynamicRHI.h"
+#include "AssetCompilingManager.h"
+#include "ShaderCompiler.h"
+#include "ContentStreaming.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNativeSessionSettingsTest,"Starshatter.Sessions.SettingsAndValidation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FNativeSessionSettingsTest::RunTest(const FString&){
  auto S=USSWSessionSubsystem::MakeSettings(TEXT(" Test game "),99,true);TestEqual(TEXT("Player cap bounded"),S.NumPublicConnections,16);TestTrue(TEXT("LAN advertises"),S.bIsLANMatch&&S.bShouldAdvertise);TestTrue(TEXT("Join in progress allowed"),S.bAllowJoinInProgress);FString Name,Project;S.Get(FName(TEXT("SSW_TITLE")),Name);S.Get(FName(TEXT("SSW_PROJECT")),Project);TestEqual(TEXT("Trimmed title"),Name,FString(TEXT("Test game")));TestEqual(TEXT("Cross-game search tag"),Project,FString(TEXT("StarshatterWars")));
  auto* Service=NewObject<USSWSessionSubsystem>(NewObject<UGameInstance>());TestFalse(TEXT("No session by default"),Service->HasSession());TestFalse(TEXT("Invalid join does not travel"),Service->JoinSession(-1));TestEqual(TEXT("Error is surfaced"),Service->State,ESSWSessionState::Failed);TestFalse(TEXT("No stale busy state"),Service->IsBusy());return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNativeSessionUITest,"Starshatter.Sessions.NativeDialog",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
-bool FNativeSessionUITest::RunTest(const FString&){
- auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());ON_SCOPE_EXIT{World->DestroyWorld(false);};auto* Screen=NewObject<UMultiplayerDlg>(World);Screen->Initialize();auto Widget=Screen->TakeWidget();TestEqual(TEXT("Native session root"),Screen->WidgetTree->RootWidget->GetFName(),FName(TEXT("SSWNativeSessionScreen")));TArray<UWidget*> Widgets;Screen->WidgetTree->GetAllWidgets(Widgets);TSet<FString> Labels;for(auto* W:Widgets)if(auto* T=Cast<UTextBlock>(W))Labels.Add(T->GetText().ToString());TestTrue(TEXT("Host tab"),Labels.Contains(TEXT("CREATE SESSION")));TestTrue(TEXT("Join tab"),Labels.Contains(TEXT("JOIN SESSION")));TestTrue(TEXT("Host action"),Labels.Contains(TEXT("CREATE GAME")));TestTrue(TEXT("Search action"),Labels.Contains(TEXT("FIND GAMES / REFRESH")));TestTrue(TEXT("Join action"),Labels.Contains(TEXT("JOIN SELECTED GAME")));TestFalse(TEXT("No legacy mission/briefing selection"),Screen->HasSelectedMission());return true;
+bool FNativeSessionUITest::RunTest(const FString&)
+{
+ auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
+ ON_SCOPE_EXIT{World->DestroyWorld(false);};auto* Screen=NewObject<UMultiplayerDlg>(World);Screen->Initialize();auto Widget=Screen->TakeWidget();
+ TestEqual(TEXT("Native session root"),Screen->WidgetTree->RootWidget->GetFName(),FName(TEXT("SSWNativeSessionScreen")));
+ TArray<UWidget*> Widgets;Screen->WidgetTree->GetAllWidgets(Widgets);TSet<FString> Labels;
+ for(auto* W:Widgets){
+  if(auto* T=Cast<UTextBlock>(W))Labels.Add(T->GetText().ToString());
+  if(auto* B=Cast<UButton>(W)){auto* Resource=B->GetStyle().Normal.GetResourceObject();TestTrue(TEXT("Session buttons use modern cyan textures"),Resource&&Resource->GetPathName().Contains(TEXT("T_Btn01Cyan_")));}
+ }
+ TestTrue(TEXT("Host tab"),Labels.Contains(TEXT("CREATE SESSION")));TestTrue(TEXT("Join tab"),Labels.Contains(TEXT("JOIN SESSION")));
+ TestTrue(TEXT("Host action"),Labels.Contains(TEXT("CREATE GAME")));TestTrue(TEXT("Search action"),Labels.Contains(TEXT("FIND GAMES / REFRESH")));
+ TestTrue(TEXT("Join action"),Labels.Contains(TEXT("JOIN SELECTED GAME")));TestFalse(TEXT("No legacy mission/briefing selection"),Screen->HasSelectedMission());
+ Screen->JoinMode();TestEqual(TEXT("Join mode displays browser"),Screen->JoinPanel->GetVisibility(),ESlateVisibility::Visible);TestEqual(TEXT("Join mode hides host form"),Screen->HostPanel->GetVisibility(),ESlateVisibility::Collapsed);
+ Screen->HostMode();TestEqual(TEXT("Host form returns"),Screen->HostPanel->GetVisibility(),ESlateVisibility::Visible);
+ FString Folder;
+ if(!GUsingNullRHI&&FParse::Value(FCommandLine::Get(),TEXT("SessionCapture="),Folder)){
+  IFileManager::Get().MakeDirectory(*Folder,true);FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
+  FWidgetRenderer Renderer(true,false);
+  for(int Mode=0;Mode<2;++Mode){
+   if(Mode)Screen->JoinMode();else Screen->HostMode();Widget->SlatePrepass();Renderer.DrawWidget(Widget,FVector2D(1280,900));FlushRenderingCommands();
+   auto* Target=Renderer.DrawWidget(Widget,FVector2D(1280,900));FlushRenderingCommands();TArray<FColor> Pixels;FReadSurfaceDataFlags Flags(RCM_UNorm);Flags.SetLinearToGamma(false);Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags);
+   TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,900,Pixels,PNG);TestTrue(TEXT("Session layout preview saves"),FFileHelper::SaveArrayToFile(PNG,*FPaths::Combine(Folder,Mode?TEXT("Join.png"):TEXT("Create.png"))));
+  }
+ }
+ return true;
 }
 namespace {
 struct FSessionLANState {

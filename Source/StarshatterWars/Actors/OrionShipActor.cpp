@@ -1,6 +1,7 @@
 // Model defaults derived from Orion.def.
 #include "OrionShipActor.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "CarrierInteriorBuilderComponent.h"
 
 AOrionShipActor::AOrionShipActor()
@@ -34,6 +35,10 @@ void AOrionShipActor::OnConstruction(const FTransform& Transform)
 
 void AOrionShipActor::ApplyOrionDefaults()
 {
+    // Orion's imported hull points along mesh +Y. The shared VisualRoot turns
+    // -Y into flight +X, so compensate only this mesh; authored deck points,
+    // turrets, simulation coordinates and the carrier camera stay unchanged.
+    if (HullMesh) HullMesh->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
     bAutoRebuildGeneratedComponents = true;
     bRebuildOnConstruction = true;
     bEnableMainEngineEmitters = true;

@@ -402,7 +402,7 @@ void UMissionsPanelDriver::UpdateBriefingEnabled()
         bHasSelection = Single->HasSelectedMission();
     else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
         bHasSelection = Multi->HasSelectedMission();
-    if (BriefingTab) { BriefingTab->SetIsEnabled(bHasSelection); BriefingTab->SetVisibility((Cast<USingleMissionDlg>(ActiveChild) || Cast<UMultiplayerDlg>(ActiveChild)) ? ESlateVisibility::Collapsed : ESlateVisibility::Visible); }
+    if (BriefingTab) { BriefingTab->SetIsEnabled(bHasSelection); BriefingTab->SetVisibility(Cast<UMultiplayerDlg>(ActiveChild) ? ESlateVisibility::Collapsed : ESlateVisibility::Visible); }
 }
 void UMissionsPanelDriver::OpenBriefing()
 {

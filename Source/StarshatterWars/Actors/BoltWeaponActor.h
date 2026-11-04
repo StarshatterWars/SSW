@@ -85,7 +85,7 @@ protected:
     TObjectPtr<UMaterialInterface> PhotonGlowMaterial;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility", meta = (ClampMin = "0.0"))
-    float GlowWorldRadius = 45.0f;
+    float GlowWorldRadius = 9.0f;
 
     /** Small screen-space halo keeps fast projectiles legible at combat range. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility", meta = (ClampMin = "0.0", ClampMax = "0.05"))
@@ -123,4 +123,5 @@ protected:
     float LifeRemaining = 2.0f;
 
     bool bLaunched = false;
+    bool bFlightVisualsActive = false;
 };

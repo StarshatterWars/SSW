@@ -56,6 +56,9 @@ protected:
  UPROPERTY(Transient)TObjectPtr<UButton> LeaveButton;
  UPROPERTY(Transient)TObjectPtr<UButton> CancelSearchButton;
 
+ UPROPERTY(Transient)TObjectPtr<UButton> HostTab;
+ UPROPERTY(Transient)TObjectPtr<UButton> JoinTab;
+ friend class FNativeSessionUITest;
  int32 Selected=INDEX_NONE;
  bool bHostMode=true;
 };
