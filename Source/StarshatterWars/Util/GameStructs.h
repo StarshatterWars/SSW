@@ -1296,6 +1296,7 @@ struct FS_PlayerGameInfo : public FTableRowBase
 {
 	GENERATED_BODY()
     UPROPERTY(BlueprintReadWrite, SaveGame) bool bTrainingGraduate = false;
+    UPROPERTY(SaveGame) bool bStartedAsEnsign = false;
     /** Successful assignments, scoped by campaign; additive for existing saves. */
     UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FS_CompletedMission> CompletedMissions;
     bool HasCompletedMission(int32 CampaignId, int32 MissionId) const

@@ -37,6 +37,8 @@ public:
     virtual void HandleAccept() override;
     virtual void HandleCancel() override;
     virtual bool IsCustomMissionView() const { return false; }
+    virtual bool IsStoryMissionView() const { return false; }
+    void SetTrainingView() { bTrainingView = true; }
     virtual bool IsCampaignMissionView() const { return false; }
     bool HasSelectedMission() const { return MissionIds.IsValidIndex(ChosenIndex) && MissionId > 0; }
     void SelectMissionAt(int32 Index);
@@ -61,7 +63,6 @@ protected:
     UFUNCTION() void OnCampaignTabPressed();
     UFUNCTION() void OnSingleTabPressed();
     UFUNCTION() void OnCustomTabPressed();
-    UFUNCTION() void OnMultiplayerTabPressed();
     UFUNCTION() void OnMission01Pressed();
     UFUNCTION() void OnMission02Pressed();
     UFUNCTION() void OnMission03Pressed();
@@ -94,6 +95,11 @@ protected:
     TArray<Mission*> StandaloneBriefingModels; // Owned, released with selector widget.
     Mission* StandaloneBriefingMission = nullptr;
     int32 StandaloneBriefingMissionId = INDEX_NONE;
+    Campaign* GetRosterCampaign();
+    UFUNCTION() void ToggleTrainingOverview();
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> TrainingOverview;
+    bool bTrainingView = false;
+    Campaign* TrainingCampaign = nullptr;
     Campaign* CustomCampaign = nullptr; // Owned by legacy Campaign registry.
     int32 PendingCustomDeleteId = INDEX_NONE;
     int32 ChosenIndex = INDEX_NONE;

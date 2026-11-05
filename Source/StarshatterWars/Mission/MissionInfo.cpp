@@ -51,6 +51,7 @@ MissionInfo::MissionInfo()
     , start_before(TIME_NEVER)
     , start_after(0)
     , DisplayType(EMissionDisplayType::PlayerMission)
+    , Source(EMissionSource::Unknown)
 {
 }
 

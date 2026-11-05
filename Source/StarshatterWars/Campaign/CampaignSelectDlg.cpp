@@ -667,7 +667,7 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
 
     for (const FS_Campaign& Row : Campaigns)
     {
-        if (!Row.bAvailable)
+        if (!Row.bAvailable || Row.Index + 1 == Campaign::TRAINING_CAMPAIGN)
         {
             continue;
         }

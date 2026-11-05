@@ -33,6 +33,7 @@
 #include "Keyboard.h"
 
 #include "StarshatterPlayerSubsystem.h"
+#include "CampaignPresentationRules.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameStructs.h"
@@ -488,12 +489,17 @@ void UMenuScreen::ShowMenuDlg()
     MenuDlg->SetIsFocusable(true);
     MenuDlg->SetVisibility(ESlateVisibility::Visible);
     MenuDlg->SetDialogInputEnabled(true);
+    MenuDlg->Show();
 
     CurrentDialog = MenuDlg;
 }
 
 void UMenuScreen::ShowCampaignSelectDlg()
 {
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo())) return;
+
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCampaignSelectDlg: BEGIN"));
 
     if (!CmpSelectDlgClass)
@@ -774,6 +780,7 @@ void UMenuScreen::ReturnFromMissionBriefing()
     Caller->SetIsFocusable(true);
     Caller->SetDialogInputEnabled(true);
     CurrentDialog = Caller;
+    if (Caller == MissionsPanelDriver) MissionsPanelDriver->RefreshTabAccess();
     bIsShown = true;
     if (APlayerController* PC = GetOwningPlayer()) ApplyUIFocus(PC, Caller);
 }
@@ -800,8 +807,6 @@ void UMenuScreen::ShowMissionSelectDlg()
 
 void UMenuScreen::ShowMultiplayerMissionDlg()
 {
-    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowMultiplayerMode(); return; }
-
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     if (!MultiplayerMissionDlg)
@@ -822,6 +827,13 @@ void UMenuScreen::ShowMultiplayerMissionDlg()
 
 void UMenuScreen::ShowSingleMissionDlg()
 {
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()))
+    {
+        ShowMissionSelectDlg();
+        return;
+    }
     if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowSingleMode(); return; }
 
     if (bReturnToCustomMissionsAfterEditor)
@@ -882,6 +894,13 @@ void UMenuScreen::ShowSingleMissionDlg()
 
 void UMenuScreen::ShowCustomMissionDlg()
 {
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()))
+    {
+        ShowMissionSelectDlg();
+        return;
+    }
     if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowCustomMode(); return; }
 
     APlayerController* PC = GetOwningPlayer();

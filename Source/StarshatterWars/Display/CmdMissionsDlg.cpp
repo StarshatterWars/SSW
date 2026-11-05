@@ -62,7 +62,8 @@ static bool ShouldShowMissionInCmdMissionsDlg(const MissionInfo* Info)
     // Preserve training metadata fallbacks, but never expose an authored scene.
     if (Info->is_cutscene) return false;
     if (Campaign* Active = Campaign::GetCampaign())
-        if (Active->IsCutsceneMission(Info->id)) return false;
+        if (Active->IsCutsceneMission(Info->id) ||
+            (Active->IsDynamic() && Info->Source != EMissionSource::Dynamic)) return false;
 
     // Always show normal player missions.
     if (Info->DisplayType == EMissionDisplayType::PlayerMission)

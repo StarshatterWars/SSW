@@ -1,11 +1,12 @@
 #include "MissionsPanelDriver.h"
 #include "MenuScreen.h"
 #include "StarshatterPlayerSubsystem.h"
-#include "StarshatterGameDataSubsystem.h"
+#include "CampaignPresentationRules.h"
 #include "SingleMissionDlg.h"
 #include "CustomMissionDlg.h"
 #include "CampaignMissionDlg.h"
-#include "MultiplayerDlg.h"
+#include "StoryMissionsDlg.h"
+#include "StarshatterAssetRegistrySubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -180,10 +181,11 @@ void UMissionsPanelDriver::BuildDriverLayout()
         TabSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
         return NewButton;
     };
-    CampaignTab = MakeTab(TEXT("CAMPAIGN"));
+    CampaignTab = MakeTab(TEXT("DYNAMIC"));
+    StoryTab = MakeTab(TEXT("STORY"));
+    TrainingTab = MakeTab(TEXT("TRAINING"));
     SingleTab = MakeTab(TEXT("SINGLE"));
     CustomTab = MakeTab(TEXT("CUSTOM"));
-    MultiplayerTab = MakeTab(TEXT("MULTIPLAYER"));
     BriefingTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Briefing_256x256.T_Briefing_256x256"));
     BriefingTab->SetIsEnabled(false);
     UHorizontalBoxSlot* BriefingSlot = Tabs->AddChildToHorizontalBox(BriefingTab);
@@ -191,9 +193,10 @@ void UMissionsPanelDriver::BuildDriverLayout()
     BriefingSlot->SetPadding(FMargin(0.f));
     BriefingSlot->SetVerticalAlignment(VAlign_Center);
     CampaignTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCampaign);
+    TrainingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenTraining);
     SingleTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenSingle);
     CustomTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCustom);
-    MultiplayerTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenMultiplayer);
+    StoryTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenStory);
     MenuTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::Back);
     BriefingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenBriefing);
     RefreshTabStyles();
@@ -244,12 +247,14 @@ void UMissionsPanelDriver::RefreshTabStyles()
     };
     StyleTab(CampaignTab, ActiveMode == EMissionsNavigationMode::Campaign ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Campaign ? BlueP : CyanP);
+    StyleTab(TrainingTab, ActiveMode == EMissionsNavigationMode::Training ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Training ? BlueP : CyanP);
     StyleTab(SingleTab, ActiveMode == EMissionsNavigationMode::Single ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Single ? BlueP : CyanP);
     StyleTab(CustomTab, ActiveMode == EMissionsNavigationMode::Custom ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Custom ? BlueP : CyanP);
-    StyleTab(MultiplayerTab, ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueN : CyanN,
-        ActiveMode == EMissionsNavigationMode::Multiplayer ? BlueP : CyanP);
+    StyleTab(StoryTab, ActiveMode == EMissionsNavigationMode::Story ? BlueN : CyanN,
+        ActiveMode == EMissionsNavigationMode::Story ? BlueP : CyanP);
     StyleTab(MenuTab, RedN, RedP);
     StyleTab(BriefingTab, GreenN, GreenP);
 }
@@ -280,72 +285,150 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
     Child->SetVisibility(ESlateVisibility::Visible);
     if (ModeTitle)ModeTitle->SetText(FText::FromString(InModeTitle));
     if (Child == CampaignChild) ActiveMode = EMissionsNavigationMode::Campaign;
+    else if (Child == TrainingChild) ActiveMode = EMissionsNavigationMode::Training;
     else if (Child == SingleChild) ActiveMode = EMissionsNavigationMode::Single;
     else if (Child == CustomChild) ActiveMode = EMissionsNavigationMode::Custom;
-    else if (Child == MultiplayerChild) ActiveMode = EMissionsNavigationMode::Multiplayer;
+    else if (Child == StoryChild) ActiveMode = EMissionsNavigationMode::Story;
     RefreshTabStyles();
     UpdateBriefingEnabled();
     UE_LOG(LogTemp,Warning,TEXT("[MissionsDriver] Embedded %s class=%s"),InModeTitle,*GetNameSafe(Child->GetClass()));
 }
+bool UMissionsPanelDriver::IsCampaignTabUnlocked() const
+{
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    const Campaign* Active = Campaign::GetCampaign();
+    return Active && !Active->IsTraining() && Active->GetCampaignId() < Campaign::SINGLE_MISSIONS &&
+        Players && CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo());
+}
+
+bool UMissionsPanelDriver::AreStandaloneTabsUnlocked() const
+{
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    return Players && CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo());
+}
+
 void UMissionsPanelDriver::ShowCampaignMode()
 {
-    // Resolve the active player-save campaign display name on each visit.
-    // No campaign selection or mission generation takes place in this UI method.
-    FString CampaignHeading = TEXT("CAMPAIGN MISSIONS");
-    if (UGameInstance* GameInstance = GetGameInstance())
-    {
-        UStarshatterPlayerSubsystem* PlayerSS = GameInstance->GetSubsystem<UStarshatterPlayerSubsystem>();
-        UStarshatterGameDataSubsystem* DataSS = GameInstance->GetSubsystem<UStarshatterGameDataSubsystem>();
-        if (PlayerSS && DataSS)
-        {
-            if (!PlayerSS->HasLoaded()) PlayerSS->LoadPlayer();
-            const FS_PlayerGameInfo& SavedPlayer = PlayerSS->GetPlayerInfo();
-            if (SavedPlayer.Campaign > 0)
-            {
-                if (const FS_Campaign* Row = DataSS->GetCampaignByIndex1Based(SavedPlayer.Campaign))
-                {
-                    if (!Row->Name.IsEmpty())
-                    {
-                        CampaignHeading = Row->Name.ToUpper() + TEXT(" CAMPAIGN MISSIONS");
-                    }
-                }
-            }
-        }
-    }
+    if (!IsCampaignTabUnlocked()) return;
+    const Campaign* Active = Campaign::GetCampaign();
+    const FString CampaignHeading = Active && !Active->IsTraining()
+        ? FString(UTF8_TO_TCHAR(Active->GetName())).ToUpper() + TEXT(" DYNAMIC MISSIONS")
+        : TEXT("DYNAMIC MISSIONS");
 
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
-    if (!CampaignChild) {UCampaignMissionDlg* W=CreateWidget<UCampaignMissionDlg>(PC,UCampaignMissionDlg::StaticClass());CampaignChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
+    if (!CampaignChild)
+    {
+        UClass* DynamicClass = UCampaignMissionDlg::StaticClass();
+        if (auto* Assets = GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+        {
+            UClass* Registered = Assets->GetWidgetClass(TEXT("UI.DynamicMissionClass")).Get();
+            if (Registered && Registered->IsChildOf(UCampaignMissionDlg::StaticClass()) &&
+                !Registered->IsChildOf(UStoryMissionsDlg::StaticClass()))
+                DynamicClass = Registered;
+        }
+        auto* Dynamic = CreateWidget<UCampaignMissionDlg>(PC, DynamicClass);
+        if (!Dynamic) return;
+        Dynamic->SetMenuManager(Manager);
+        Dynamic->InitializeDlg(Manager);
+        CampaignChild = Dynamic;
+    }
     if (UCampaignMissionDlg* W=Cast<UCampaignMissionDlg>(CampaignChild)){ W->Show();SelectChild(W,*CampaignHeading); }
 }
 void UMissionsPanelDriver::ShowSingleMode()
 {
+    if (!AreStandaloneTabsUnlocked()) { OpenTraining(); return; }
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
     if (!SingleChild) {USingleMissionDlg* W=CreateWidget<USingleMissionDlg>(PC,USingleMissionDlg::StaticClass());SingleChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
     if (USingleMissionDlg* W=Cast<USingleMissionDlg>(SingleChild)){W->Show();SelectChild(W,TEXT("SINGLE MISSIONS"));}
 }
 void UMissionsPanelDriver::ShowCustomMode()
 {
+    if (!AreStandaloneTabsUnlocked()) { OpenTraining(); return; }
     APlayerController* PC=GetOwningPlayer(); if (!PC)return;
     if (!CustomChild) {UCustomMissionDlg* W=CreateWidget<UCustomMissionDlg>(PC,UCustomMissionDlg::StaticClass());CustomChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
     if (UCustomMissionDlg* W=Cast<UCustomMissionDlg>(CustomChild)){W->Show();SelectChild(W,TEXT("CUSTOM MISSIONS"));}
 }
-void UMissionsPanelDriver::ShowMultiplayerMode()
+void UMissionsPanelDriver::RefreshTabAccess()
 {
-    APlayerController* PC=GetOwningPlayer(); if (!PC)return;
-    if (!MultiplayerChild) {UMultiplayerDlg* W=CreateWidget<UMultiplayerDlg>(PC,UMultiplayerDlg::StaticClass());MultiplayerChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
-    if (UMultiplayerDlg* W=Cast<UMultiplayerDlg>(MultiplayerChild)){W->Show();SelectChild(W,TEXT("MULTIPLAYER SESSIONS"));}
+    const bool bCampaignUnlocked = IsCampaignTabUnlocked();
+    CampaignTab->SetIsEnabled(bCampaignUnlocked);
+    StoryTab->SetIsEnabled(bCampaignUnlocked);
+    CampaignTab->SetToolTipText(FText::FromString(bCampaignUnlocked
+        ? TEXT("View active campaign missions") : TEXT("Deploy a campaign after Flight School or as a first-run Ensign")));
+    const bool bStandaloneUnlocked = AreStandaloneTabsUnlocked();
+    for (UButton* Tab : {SingleTab.Get(), CustomTab.Get()})
+    {
+        Tab->SetIsEnabled(bStandaloneUnlocked);
+        Tab->SetToolTipText(bStandaloneUnlocked ? FText::GetEmpty()
+            : FText::FromString(TEXT("Complete Flight School or start as an Ensign to unlock")));
+    }
 }
+
 void UMissionsPanelDriver::Show()
 {
     BuildDriverLayout();SetVisibility(ESlateVisibility::Visible);
-    if (!ActiveChild) ShowSingleMode();
+    RefreshTabAccess();
+    const bool bCampaignUnlocked = IsCampaignTabUnlocked();
+    const bool bStandaloneUnlocked = AreStandaloneTabsUnlocked();
+    if (ActiveMode == EMissionsNavigationMode::Campaign && bCampaignUnlocked) ShowCampaignMode();
+    else if (!ActiveChild || ActiveMode == EMissionsNavigationMode::Campaign ||
+        (ActiveMode == EMissionsNavigationMode::Story && !bCampaignUnlocked) ||
+        (!bStandaloneUnlocked && (ActiveMode == EMissionsNavigationMode::Single || ActiveMode == EMissionsNavigationMode::Custom)))
+    {
+        if (bStandaloneUnlocked) ShowSingleMode();
+        else OpenTraining();
+    }
+    else if (ActiveMode == EMissionsNavigationMode::Story) OpenStory();
     else if (USingleMissionDlg* Missions=Cast<USingleMissionDlg>(ActiveChild)) Missions->Show();
 }
 void UMissionsPanelDriver::HandleCancel(){Back();}
 void UMissionsPanelDriver::OpenCampaign(){ShowCampaignMode();}
+void UMissionsPanelDriver::OpenTraining()
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    if (!TrainingChild)
+    {
+        auto* Training = CreateWidget<UCampaignMissionDlg>(PC, UCampaignMissionDlg::StaticClass());
+        if (!Training) return;
+        Training->SetTrainingView();
+        Training->SetMenuManager(Manager);
+        Training->InitializeDlg(Manager);
+        TrainingChild = Training;
+    }
+    auto* Training = CastChecked<UCampaignMissionDlg>(TrainingChild);
+    Training->Show();
+    SelectChild(Training, TEXT("OPERATION LIVE FIRE | TRAINING"));
+}
 void UMissionsPanelDriver::OpenSingle(){ShowSingleMode();}
 void UMissionsPanelDriver::OpenCustom(){ShowCustomMode();}
-void UMissionsPanelDriver::OpenMultiplayer(){ShowMultiplayerMode();}
+void UMissionsPanelDriver::OpenStory()
+{
+    if (!IsCampaignTabUnlocked()) return;
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    if (!StoryChild)
+    {
+        UClass* StoryClass = UStoryMissionsDlg::StaticClass();
+        if (auto* Assets = GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+        {
+            UClass* Registered = Assets->GetWidgetClass(TEXT("UI.CampaignMissionScreenClass")).Get();
+            if (Registered && Registered->IsChildOf(UStoryMissionsDlg::StaticClass()))
+                StoryClass = Registered;
+        }
+        auto* Story = CreateWidget<UStoryMissionsDlg>(PC, StoryClass);
+        if (!Story) return;
+        Story->SetMenuManager(Manager);
+        Story->InitializeDlg(Manager);
+        StoryChild = Story;
+    }
+    auto* Story = CastChecked<UStoryMissionsDlg>(StoryChild);
+    Story->Show();
+    const FString Heading = FString(UTF8_TO_TCHAR(Campaign::GetCampaign()->GetName())).ToUpper() + TEXT(" STORY MISSIONS");
+    SelectChild(Story, *Heading);
+}
 void UMissionsPanelDriver::Back(){if(Manager)Manager->ShowMenuDlg();}
 void UMissionsPanelDriver::RefreshHeaderStatus()
 {
@@ -401,15 +484,11 @@ void UMissionsPanelDriver::UpdateBriefingEnabled()
     bool bHasSelection = false;
     if (USingleMissionDlg* Single = Cast<USingleMissionDlg>(ActiveChild))
         bHasSelection = Single->HasSelectedMission();
-    else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
-        bHasSelection = Multi->HasSelectedMission();
-    if (BriefingTab) { BriefingTab->SetIsEnabled(bHasSelection); BriefingTab->SetVisibility(Cast<UMultiplayerDlg>(ActiveChild) ? ESlateVisibility::Collapsed : ESlateVisibility::Visible); }
+    if (BriefingTab) BriefingTab->SetIsEnabled(bHasSelection);
 }
 void UMissionsPanelDriver::OpenBriefing()
 {
     if (!BriefingTab || !BriefingTab->GetIsEnabled()) return;
     if (USingleMissionDlg* Single = Cast<USingleMissionDlg>(ActiveChild))
         Single->HandleAccept();
-    else if (UMultiplayerDlg* Multi = Cast<UMultiplayerDlg>(ActiveChild))
-        Multi->HandleAccept();
 }

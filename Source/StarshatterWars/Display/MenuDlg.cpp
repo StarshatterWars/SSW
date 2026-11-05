@@ -58,6 +58,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "StarshatterPlayerSubsystem.h"
+#include "CampaignPresentationRules.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "TimerSubsystem.h"
 #include "CampaignSave.h"
@@ -767,7 +768,6 @@ void UMenuDlg::ApplyMenuGating()
         EnableMenuButtons(false);
 
         SetButtonEnabled(BtnPlayer, true);
-        SetButtonEnabled(BtnCampaign, true);
         SetButtonEnabled(BtnMission, true);
 
         SetButtonEnabled(BtnOptions, true);
@@ -778,4 +778,12 @@ void UMenuDlg::ApplyMenuGating()
         // Multiplayer missions do not depend on an existing campaign selection.
         SetButtonEnabled(BtnMulti, true);
     }
+
+    const UGameInstance* GI = GetGameInstance();
+    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    const bool bCampaignUnlocked = Players && CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo());
+    SetButtonEnabled(BtnCampaign, bCampaignUnlocked);
+    if (BtnCampaign)
+        BtnCampaign->SetToolTipText(FText::FromString(bCampaignUnlocked
+            ? TEXT("Choose your operation") : TEXT("Complete Flight School or start as an Ensign to unlock campaigns")));
 }

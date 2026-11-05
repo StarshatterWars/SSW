@@ -1,5 +1,6 @@
 #include "MultiplayerDlg.h"
 #include "SSWSessionSubsystem.h"
+#include "StarshatterGameDataSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/VerticalBox.h"
@@ -76,6 +77,21 @@ void UMultiplayerDlg::BuildSessionScreen()
     Capacity=WidgetTree->ConstructWidget<USpinBox>();Capacity->SetMinValue(2);Capacity->SetMaxValue(16);Capacity->SetMinSliderValue(2);Capacity->SetMaxSliderValue(16);Capacity->SetDelta(1);Capacity->SetValue(8);
     Capacity->SetMinFractionalDigits(0);Capacity->SetMaxFractionalDigits(0);Capacity->SetFont(MissionUIStyle::GetRowFont(18));Capacity->SetForegroundColor(FSlateColor(FLinearColor::White));
     FSpinBoxStyle SpinStyle=Capacity->GetWidgetStyle();SpinStyle.BackgroundBrush=InputBrush;SpinStyle.HoveredBackgroundBrush=InputBrush;SpinStyle.InactiveFillBrush=InputBrush;SpinStyle.ActiveFillBrush=InputBrush;Capacity->SetWidgetStyle(SpinStyle);CapacitySize->SetContent(Capacity);
+    if (const auto* GI = GetGameInstance())
+    {
+        if (const auto* Data = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
+        {
+            const auto& Missions = Data->GetMultiplayerMissionScenarios();
+            if (!Missions.IsEmpty())
+            {
+                Form->AddChildToVerticalBox(Label(TEXT("MULTIPLAYER MISSION CATALOG"),14))->SetPadding(FMargin(0,16,0,8));
+                auto* Catalog = WidgetTree->ConstructWidget<UScrollBox>();
+                Form->AddChildToVerticalBox(Catalog)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+                for (const auto& Mission : Missions)
+                    Catalog->AddChild(Label(Mission.MissionName,16));
+            }
+        }
+    }
     CreateButton=Button(TEXT("CREATE GAME"),HostPanel);CreateButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Create);
     JoinPanel=WidgetTree->ConstructWidget<UVerticalBox>();Main->AddChildToVerticalBox(JoinPanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     SearchButton=Button(TEXT("FIND GAMES / REFRESH"),JoinPanel);SearchButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Search);
@@ -127,6 +143,6 @@ void UMultiplayerDlg::Search(){Selected=INDEX_NONE;if(auto* S=Service())S->FindS
 void UMultiplayerDlg::Join(){if(auto* S=Service())S->JoinSession(Selected);}
 void UMultiplayerDlg::Leave(){if(auto* S=Service())S->LeaveSession();}
 void UMultiplayerDlg::CancelSearch(){if(auto* S=Service())S->CancelSearch();}
-void UMultiplayerDlg::Back(){if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMissionSelectDlg();}
+void UMultiplayerDlg::Back(){if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMenuDlg();}
 void UMultiplayerDlg::HandleAccept(){if(bHostMode)Create();else Join();}
 void UMultiplayerDlg::HandleCancel(){Back();}

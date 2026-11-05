@@ -882,6 +882,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.DynamicMissionClass
+    if (!Cache.Contains(TEXT("UI.DynamicMissionClass")))
+    {
+        if (!Settings->DynamicMissionsPanelClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->DynamicMissionsPanelClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.DynamicMissionClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.DynamicMissionClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] DynamicMissionsPanelClass is not set in Project Settings"));
+        }
+    }
+
     // UI.FlightOpsScreenClass
     if (!Cache.Contains(TEXT("UI.FlightOpsScreenClass")))
     {

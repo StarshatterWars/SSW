@@ -60,6 +60,7 @@ protected:
     void BindMenuClock();
 
 public:
+    void Show() override;
     virtual void ExecFrame(double DeltaTime) override;
 
     void RefreshFromPlayerState();
@@ -148,7 +149,6 @@ protected:
     void BindUMGDelegates();
 
     void SetButtonEnabled(UButton* Button, bool bEnable);
-    void Show();
 
     void ClearDescription();
     void SetDescription(const FString& Text);

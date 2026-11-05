@@ -527,6 +527,7 @@ void UCmdDlg::RefreshOperationsHeader()
     const FString Name = CampaignPtr ? FString(UTF8_TO_TCHAR(CampaignPtr->GetName()))
         : Row ? Row->Name : FString();
     if (CampaignNameText) CampaignNameText->SetText(FText::FromString(Name.ToUpper()));
+    if (PlayerNameText) PlayerNameText->SetText(Player ? FText::FromString(Player->GetPlayerInfo().Name) : FText::GetEmpty());
     if (CurrentLocationText) CurrentLocationText->SetText(FText::FromString(
         Row && !Row->System.IsEmpty() ? Row->System + TEXT(" System") : FString()).ToUpper());
 }

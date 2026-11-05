@@ -10,6 +10,14 @@ namespace CampaignPresentationRules
             (Event.EventTrigger != MISSIONEVENT_TRIGGER::TRIGGER_TIME &&
              Event.EventTrigger != MISSIONEVENT_TRIGGER::TRIGGER_EVENT);
     }
+    inline bool HasPassedFlightSchool(const FS_PlayerGameInfo& Player)
+    {
+        return Player.bTrainingGraduate || Player.HasCompletedMission(1, 103);
+    }
+    inline bool CanSelectCampaign(const FS_PlayerGameInfo& Player)
+    {
+        return Player.bStartedAsEnsign || HasPassedFlightSchool(Player);
+    }
     inline bool IsCampaignUnlocked(int32 CampaignIndex, const FS_PlayerGameInfo& Player)
     {
         if (CampaignIndex < 1 || CampaignIndex > 5) return false;

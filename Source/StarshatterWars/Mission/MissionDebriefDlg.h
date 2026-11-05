@@ -79,6 +79,12 @@ public:
     virtual void HandleCancel() override;
 
     void Show();
+    void SetTrainingCampaign(Campaign* InCampaign) { TrainingCampaign = InCampaign; }
+
+private:
+    Campaign* TrainingCampaign = nullptr;
+
+public:
     void Hide();
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
 

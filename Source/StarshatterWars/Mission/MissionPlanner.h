@@ -31,6 +31,7 @@
 
 // Forward declarations (keep header light)
 class UUserWidget;
+class Campaign;
 
 class UMissionObjectiveDlg;
 class UMissionPackageDlg;
@@ -82,7 +83,7 @@ public:
     bool IsNavShown() const;
     UMissionNavDlg* GetNavDlg() const { return NavDlg; }
 
-    void ShowDebriefDlg();
+    void ShowDebriefDlg(Campaign* TrainingCampaign = nullptr);
     void HideDebriefDlg();
     bool IsDebriefShown() const;
     UMissionDebriefDlg* GetDebriefDlg() const { return DebriefDlg; }

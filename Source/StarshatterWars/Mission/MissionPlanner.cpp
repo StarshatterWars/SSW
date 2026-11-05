@@ -257,9 +257,10 @@ bool UMissionPlanner::IsNavShown() const
 // Debrief
 // -----------------------------
 
-void UMissionPlanner::ShowDebriefDlg()
+void UMissionPlanner::ShowDebriefDlg(Campaign* TrainingCampaign)
 {
     HideAll();
+    if (DebriefDlg) DebriefDlg->SetTrainingCampaign(TrainingCampaign);
     ShowDialog(DebriefDlg);
 }
 

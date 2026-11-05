@@ -1,4 +1,5 @@
 #include "StarshatterPlayerSubsystem.h"
+#include "PlayerCharacter.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Logging/LogMacros.h"
@@ -121,6 +122,10 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
             bDirty = false;
         }
 
+        PlayerCharacter::Initialize();
+        PlayerCharacter::SetWorldContext(GetGameInstance());
+        PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(PlayerInfo);
+
         UE_LOG(LogStarshatterPlayerSubsystem, Log,
             TEXT("[PlayerSubsystem] Player loaded: Name='%s' Callsign='%s' Empire=%d Rank=%d (SaveVersion=%d)"),
             *PlayerInfo.Name, *PlayerInfo.Callsign, PlayerInfo.Empire, PlayerInfo.Rank, LoadedSaveVersion);
@@ -147,6 +152,8 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
     const bool bOk = SaveGameInternal(SlotName, UserIndex, PlayerInfo, CURRENT_SAVE_VERSION);
     if (bOk)
     {
+        bHadExistingSave = true;
+        bLoaded = true;
         bDirty = false;
 
         UE_LOG(LogStarshatterPlayerSubsystem, Log,

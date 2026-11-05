@@ -353,7 +353,8 @@ void UMissionDebriefDlg::Show()
     }
 
     MissionPtr = nullptr;
-    CampaignPtr = Campaign::GetCampaign();
+    CampaignPtr = TrainingCampaign ? TrainingCampaign : Campaign::GetCampaign();
+    TrainingCampaign = nullptr;
     SimPtr = Sim::GetSim();
 
     PlayerShip = nullptr;

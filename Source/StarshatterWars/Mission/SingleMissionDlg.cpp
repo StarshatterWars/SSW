@@ -57,6 +57,7 @@ USingleMissionDlg::USingleMissionDlg(const FObjectInitializer& ObjectInitializer
 
 USingleMissionDlg::~USingleMissionDlg()
 {
+    delete TrainingCampaign;
     for (Mission* OwnedModel : StandaloneBriefingModels)
         delete OwnedModel;
     StandaloneBriefingModels.Reset();
@@ -164,18 +165,15 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     // is intentionally disabled until its standalone session workflow is ready.
     UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
     Heading->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f, 2.f, 0.f, 4.f));
-    UButton* CampaignTab = MakeActionButton(TEXT("CAMPAIGN"));
+    UButton* CampaignTab = MakeActionButton(TEXT("DYNAMIC"));
     UButton* SingleTab = MakeActionButton(TEXT("SINGLE"), IsCustomMissionView());
     UButton* CustomTab = MakeActionButton(TEXT("CUSTOM"), !IsCustomMissionView());
-    UButton* MultiplayerTab = MakeActionButton(TEXT("MULTIPLAYER"), true);
     Tabs->AddChildToHorizontalBox(CampaignTab)->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
     Tabs->AddChildToHorizontalBox(SingleTab)->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
     Tabs->AddChildToHorizontalBox(CustomTab)->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
-    Tabs->AddChildToHorizontalBox(MultiplayerTab);
     CampaignTab->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCampaignTabPressed);
     SingleTab->OnClicked.AddDynamic(this, &USingleMissionDlg::OnSingleTabPressed);
     CustomTab->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomTabPressed);
-    MultiplayerTab->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMultiplayerTabPressed);
     if (UTextBlock* ActiveText = Cast<UTextBlock>((IsCustomMissionView() ? CustomTab : SingleTab)->GetChildAt(0)))
         ActiveText->SetColorAndOpacity(FSlateColor(SingleMissionColors::Primary));
     UBorder* HeaderRule = MakePanel(SingleMissionColors::Accent);
@@ -202,6 +200,15 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSIONS"), 18, SingleMissionColors::Accent));
     MissionCountLabel = MakeLabel(TEXT(""), 13, SingleMissionColors::Muted);
     LeftContent->AddChildToVerticalBox(MissionCountLabel)->SetPadding(FMargin(0.f, 5.f, 0.f, 12.f));
+    if (bTrainingView)
+    {
+        UButton* OverviewButton = MakeActionButton(TEXT("OPERATION OVERVIEW"));
+        OverviewButton->OnClicked.AddDynamic(this, &USingleMissionDlg::ToggleTrainingOverview);
+        LeftContent->AddChildToVerticalBox(OverviewButton)->SetPadding(FMargin(0, 0, 0, 8));
+        TrainingOverview = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
+        TrainingOverview->SetVisibility(ESlateVisibility::Collapsed);
+        LeftContent->AddChildToVerticalBox(TrainingOverview)->SetPadding(FMargin(0, 0, 0, 12));
+    }
     UScrollBox* RosterScroll = WidgetTree->ConstructWidget<UScrollBox>();
     LeftContent->AddChildToVerticalBox(RosterScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     MissionRoster = WidgetTree->ConstructWidget<UVerticalBox>();
@@ -304,6 +311,40 @@ void USingleMissionDlg::Show()
     RefreshMissionRoster();
 }
 
+Campaign* USingleMissionDlg::GetRosterCampaign()
+{
+    if (!bTrainingView)
+    {
+        Campaign* Active = Campaign::GetCampaign();
+        return Active && !Active->IsTraining() ? Active : nullptr;
+    }
+
+    if (!TrainingCampaign)
+        if (UGameInstance* GI = GetGameInstance())
+            if (auto* Data = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
+                if (const FS_Campaign* Row = Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN))
+                    TrainingCampaign = Campaign::CreateFromData(*Row);
+    return TrainingCampaign;
+}
+
+void USingleMissionDlg::ToggleTrainingOverview()
+{
+    if (!TrainingOverview) return;
+    if (TrainingOverview->GetVisibility() == ESlateVisibility::Visible)
+    {
+        TrainingOverview->SetVisibility(ESlateVisibility::Collapsed);
+        return;
+    }
+    Campaign* Training = GetRosterCampaign();
+    FString Description = Training ? UTF8_TO_TCHAR(Training->GetDescription()) : TEXT("");
+    if (Description.TrimStartAndEnd().IsEmpty())
+        Description = TEXT("Third Fleet flight training, from basic carrier operations to weapons practice and advanced ship handling.");
+    TrainingOverview->SetText(FText::FromString(
+        TEXT("OPERATION LIVE FIRE\n\n") + Description +
+        TEXT("\n\nComplete Flight School to earn promotion to Ensign.")));
+    TrainingOverview->SetVisibility(ESlateVisibility::Visible);
+}
+
 void USingleMissionDlg::RefreshMissionRoster()
 {
     if (!MissionRoster) return;
@@ -319,9 +360,17 @@ void USingleMissionDlg::RefreshMissionRoster()
     MissionId = 0;
     bEditable = false;
 
+    if (IsStoryMissionView())
+    {
+        RefreshMissionDetails();
+        MissionCountLabel->SetText(FText::FromString(TEXT("0 missions")));
+        if (MissionTitle) MissionTitle->SetText(FText::FromString(TEXT("NO STORY MISSIONS AVAILABLE")));
+        return;
+    }
+
     if (IsCampaignMissionView())
     {
-        Campaign* ActiveCampaign = Campaign::GetCampaign();
+        Campaign* ActiveCampaign = GetRosterCampaign();
         if (ActiveCampaign)
         {
             ListIter<MissionInfo> MissionIter = ActiveCampaign->GetMissionList();
@@ -330,9 +379,9 @@ void USingleMissionDlg::RefreshMissionRoster()
                 MissionInfo* Info = MissionIter.value();
                 if (!Info || Info->id <= 0 || ActiveCampaign->IsCutsceneMission(Info->id)
                     || Info->DisplayType == EMissionDisplayType::CutsceneOnly) continue;
-                if (Info->DisplayType != EMissionDisplayType::PlayerMission
-                    && Info->type != (int)EMissionType::TRAINING
-                    && !(ActiveCampaign->IsTraining() && Info->DisplayType != EMissionDisplayType::Hidden))
+                if (bTrainingView ? Info->DisplayType == EMissionDisplayType::Hidden
+                                  : Info->DisplayType != EMissionDisplayType::PlayerMission ||
+                                    (ActiveCampaign->IsDynamic() && Info->Source != EMissionSource::Dynamic))
                     continue;
                 UButton* MissionButton = MakeActionButton(ANSI_TO_TCHAR(Info->name.data()), true, true);
                 USingleMissionRowProxy* Proxy = NewObject<USingleMissionRowProxy>(this);
@@ -440,8 +489,9 @@ void USingleMissionDlg::RefreshMissionRoster()
     if (NewMissionButton) { NewMissionButton->SetVisibility(IsCustomMissionView() ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); NewMissionButton->SetIsEnabled(IsCustomMissionView() && CustomCampaign != nullptr && manager != nullptr); }
     if (EditMissionButton) EditMissionButton->SetVisibility(IsCustomMissionView() ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     if (DeleteMissionButton) DeleteMissionButton->SetVisibility(IsCustomMissionView() ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-    MissionCountLabel->SetText(FText::FromString(FString::Printf(
-        TEXT("%d missions"), MissionIds.Num())));
+    MissionCountLabel->SetText(FText::Format(
+        NSLOCTEXT("SingleMissionDlg", "MissionCount", "{0} {0}|plural(one=mission,other=missions)"),
+        MissionIds.Num()));
     if (!MissionIds.IsEmpty()) SelectMissionAt(0);
     else
     {
@@ -462,7 +512,7 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
         if (UButton* Button = MissionButtons[i])
         {
             FButtonStyle Style = Button->GetStyle();
-            Campaign* Active = IsCampaignMissionView() ? Campaign::GetCampaign() : CustomCampaign;
+            Campaign* Active = IsCampaignMissionView() ? GetRosterCampaign() : CustomCampaign;
             const int32 Scope = Active ? Active->GetCampaignId() : Campaign::SINGLE_MISSIONS;
             const auto* GI = Cast<USSWGameInstance>(GetGameInstance());
             const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
@@ -512,7 +562,7 @@ void USingleMissionDlg::RefreshMissionDetails()
             TypeName = UTF8_TO_TCHAR(CustomInfo->mission->GetTypeName());
         const auto* GI=Cast<USSWGameInstance>(GetGameInstance());
         const auto* Players=GI?GI->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
-        Campaign* CompletionScope=IsCampaignMissionView()?Campaign::GetCampaign():CustomCampaign;
+        Campaign* CompletionScope=IsCampaignMissionView()?GetRosterCampaign():CustomCampaign;
         const int32 CampaignId=CompletionScope?CompletionScope->GetCampaignId():Campaign::SINGLE_MISSIONS;
         const bool Completed=MissionCompletionStatus::IsCompleted(GI?GI->CampaignSave:nullptr,
             Players?&Players->GetPlayerInfo():nullptr,CampaignId,MissionId);
@@ -530,9 +580,9 @@ void USingleMissionDlg::RefreshMissionDetails()
             ? ANSI_TO_TCHAR(CustomInfo->player_info.data())
             : TEXT("")));
         if (MissionSitrep) MissionSitrep->SetText(FText::FromString(ANSI_TO_TCHAR(CustomInfo->description.data())));
-        Campaign* Active=Campaign::GetCampaign();
+        Campaign* Active=CompletionScope;
         const bool bRankUnlocked=!IsCampaignMissionView() || (Active && Active->IsMissionRankUnlocked(MissionId));
-        if (!bRankUnlocked && MissionObjectives) MissionObjectives->SetText(FText::FromString(Active->MissionRankRequirement(MissionId)));
+        if (!bRankUnlocked && Active && MissionObjectives) MissionObjectives->SetText(FText::FromString(Active->MissionRankRequirement(MissionId)));
         if (LaunchButton) LaunchButton->SetIsEnabled(bRankUnlocked);
         return;
     }
@@ -578,14 +628,15 @@ void USingleMissionDlg::LaunchSelected()
 
     if (IsCampaignMissionView())
     {
-        Campaign* ActiveCampaign = Campaign::GetCampaign();
+        Campaign* ActiveCampaign = GetRosterCampaign();
         if (!ActiveCampaign || !ActiveCampaign->GetMissionInfo(MissionId) || !ActiveCampaign->IsMissionRankUnlocked(MissionId))
         {
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Invalid active campaign mission ID=%d"), MissionId);
             return;
         }
-        ActiveCampaign->SetMissionId(MissionId);
-        if (!ActiveCampaign->GetMission(MissionId))
+        if (!bTrainingView) ActiveCampaign->SetMissionId(MissionId);
+        Mission* Model = ActiveCampaign->GetMission(MissionId);
+        if (!Model)
         {
             UE_LOG(LogTemp, Error, TEXT("[CampaignMissions] Failed to load mission ID=%d"), MissionId);
             return;
@@ -593,7 +644,8 @@ void USingleMissionDlg::LaunchSelected()
         if (UGameInstance* GI = GetGameInstance())
             if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
                 Runtime->SetGameMode(EGameMode::PREP);
-        manager->ShowMissionDlg();
+        if (bTrainingView) manager->ShowStandaloneMissionDlg(Model, ActiveCampaign);
+        else manager->ShowMissionDlg();
         return;
     }
 
@@ -902,9 +954,4 @@ void USingleMissionDlg::OnCustomDeleteCanceled()
             Dialog->OnCanceled.RemoveDynamic(this, &USingleMissionDlg::OnCustomDeleteCanceled);
         }
     }
-}
-
-void USingleMissionDlg::OnMultiplayerTabPressed()
-{
-    if (manager) manager->ShowMultiplayerMissionDlg();
 }

@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "MissionCompletionStatus.h"
+#include "CampaignPresentationRules.h"
 #include "PlayerSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "MissionCameraRig.h"
@@ -19,6 +20,7 @@ bool FMissionCompletionPersistenceTest::RunTest(const FString&)
     TestFalse(TEXT("Same mission ID in another campaign stays incomplete"),MissionCompletionStatus::IsCompleted(CampaignSave,&PlayerSave->PlayerInfo,2,101));
     TestFalse(TEXT("Other assignments stay incomplete"),MissionCompletionStatus::IsCompleted(CampaignSave,&PlayerSave->PlayerInfo,1,102));
     TestFalse(TEXT("Invalid completion ignored"),PlayerSave->PlayerInfo.MarkMissionCompleted(1,0));
+    PlayerSave->PlayerInfo.MarkMissionCompleted(1,103);
     PlayerSave->PlayerInfo.bTrainingGraduate=true;CampaignSave->bTrainingGraduate=true;
     const FString Prefix=TEXT("Automation_Completion_")+FGuid::NewGuid().ToString(EGuidFormats::Digits);
     const FString PlayerSlot=Prefix+TEXT("_Player"),CampaignSlot=Prefix+TEXT("_Campaign");
@@ -32,8 +34,25 @@ bool FMissionCompletionPersistenceTest::RunTest(const FString&)
         TestTrue(TEXT("Campaign save independently preserves completion"),MissionCompletionStatus::IsCompleted(LoadedCampaign,nullptr,1,101));
         TestTrue(TEXT("Graduation persists in player save"),LoadedPlayer->PlayerInfo.bTrainingGraduate);
         TestTrue(TEXT("Graduation persists in campaign save"),LoadedCampaign->bTrainingGraduate);
-        TestEqual(TEXT("Completion does not duplicate"),LoadedPlayer->PlayerInfo.CompletedMissions.Num(),1);
+        TestTrue(TEXT("Flight School unlock survives player reload"),
+            CampaignPresentationRules::HasPassedFlightSchool(LoadedPlayer->PlayerInfo));
+        TestTrue(TEXT("Graduate can select a campaign after reload"),
+            CampaignPresentationRules::CanSelectCampaign(LoadedPlayer->PlayerInfo));
+        TestEqual(TEXT("Completion does not duplicate"),LoadedPlayer->PlayerInfo.CompletedMissions.Num(),2);
         TestEqual(TEXT("Other player data preserved"),LoadedPlayer->PlayerInfo.Name,FString(TEXT("Completion fixture")));
+    }
+    auto* EnsignSave = NewObject<UPlayerSaveGame>();
+    EnsignSave->PlayerInfo.bStartedAsEnsign = true;
+    EnsignSave->PlayerInfo.Campaign = 2;
+    TestTrue(TEXT("First-run Ensign .sav writes"), UGameplayStatics::SaveGameToSlot(EnsignSave, PlayerSlot, 0));
+    const auto* LoadedEnsign = Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot(PlayerSlot, 0));
+    if (TestNotNull(TEXT("First-run Ensign .sav reloads"), LoadedEnsign))
+    {
+        TestTrue(TEXT("First-run Ensign can select a campaign after reload"),
+            CampaignPresentationRules::CanSelectCampaign(LoadedEnsign->PlayerInfo));
+        TestFalse(TEXT("First-run Ensign still requires Flight School after reload"),
+            CampaignPresentationRules::HasPassedFlightSchool(LoadedEnsign->PlayerInfo));
+        TestEqual(TEXT("Selected story campaign survives player reload"), LoadedEnsign->PlayerInfo.Campaign, 2);
     }
     return true;
 }

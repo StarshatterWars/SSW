@@ -273,6 +273,7 @@ private:
     // Cached/explicit rank id (optional)
     int32 CachedRankId = 0;
     bool bTrainingGraduate = false;
+    bool bStartedAsEnsign = false;
 
     // Gameplay options
     int32 FlightModelMode = 0;

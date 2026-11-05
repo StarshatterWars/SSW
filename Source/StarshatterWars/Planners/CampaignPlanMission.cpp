@@ -47,7 +47,11 @@ CampaignPlanMission::ExecFrame()
         player_group = campaign->GetPlayerGroup();
         if (!player_group) return;
 
-        int missionCount = campaign->GetMissionList().size();
+        int missionCount = 0;
+        ListIter<MissionInfo> Missions = campaign->GetMissionList();
+        while (++Missions)
+            if (const MissionInfo* Info = Missions.value(); Info && Info->Source == EMissionSource::Dynamic)
+                ++missionCount;
 
         if (missionCount > 0) {
             // starships only get one mission to pick from:
@@ -98,12 +102,10 @@ CampaignPlanMission::SelectStartTime()
     const int   MISSION_DELAY = 1800;  // 30 minutes
     double      base_time = 0;
 
-    List<MissionInfo>& info_list = campaign->GetMissionList();
-
-    if (info_list.size() > 0) {
-        MissionInfo* info = info_list[info_list.size() - 1];
-        base_time = info->start;
-    }
+    ListIter<MissionInfo> Missions = campaign->GetMissionList();
+    while (++Missions)
+        if (const MissionInfo* Info = Missions.value(); Info && Info->Source == EMissionSource::Dynamic)
+            base_time = Info->start;
 
     if (base_time == 0)
         base_time = campaign->GetTime() + MISSION_DELAY;

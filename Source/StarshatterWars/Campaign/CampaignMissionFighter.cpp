@@ -3180,6 +3180,7 @@ MissionInfo* CampaignMissionFighter::DescribeMission()
         return nullptr;
     }
 
+    Info->Source = EMissionSource::Dynamic;
     Info->id = mission->GetIdentity();
     Info->mission = mission;
     Info->name = TCHAR_TO_ANSI(*Name);

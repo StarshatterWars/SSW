@@ -472,7 +472,7 @@ void UMissionBriefingDlg::UpdateLiveMission()
             if (auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>()) Timer->StopMissionRun();
             if (Manager)
             {
-                Manager->ShowDebriefDlg();
+                Manager->ShowDebriefDlg(CampaignPtr && CampaignPtr->IsTraining() ? CampaignPtr : nullptr);
                 Debrief->Show();
             }
             else manager->ShowMissionDebriefDlg();
@@ -1080,6 +1080,10 @@ void UMissionBriefingDlg::ShowMsnDlg()
 
 void UMissionBriefingDlg::RefreshHeader()
 {
+    if (PlayerNameText)
+        if (auto* GI = GetGameInstance())
+            if (const auto* Players = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+                PlayerNameText->SetText(FText::FromString(Players->GetPlayerInfo().Name));
     if (MissionNameText)
     {
         MissionNameText->SetText(
@@ -2639,7 +2643,7 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
         {
             Self->CloseEmptySectorPreview(true);
             if (Runtime) Runtime->SetGameMode(EGameMode::PLAN);
-            Self->Manager->ShowDebriefDlg();
+            Self->Manager->ShowDebriefDlg(Self->CampaignPtr && Self->CampaignPtr->IsTraining() ? Self->CampaignPtr : nullptr);
             auto* Debrief = Self->Manager->GetDebriefDlg();
             Debrief->Show();
             if (APlayerController* PC = Self->GetOwningPlayer())
@@ -2745,7 +2749,7 @@ bool UMissionBriefingDlg::StartLiveMission()
 
 void UMissionBriefingDlg::OnCommit()
 {
-    if (!bStandaloneMission && CampaignPtr && MissionPtr && !CampaignPtr->IsMissionRankUnlocked(MissionPtr->GetIdentity()))
+    if (CampaignPtr && (!bStandaloneMission || CampaignPtr->IsTraining()) && MissionPtr && !CampaignPtr->IsMissionRankUnlocked(MissionPtr->GetIdentity()))
     {
         if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow, CampaignPtr->MissionRankRequirement(MissionPtr->GetIdentity()));
         return;

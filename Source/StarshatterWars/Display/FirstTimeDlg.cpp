@@ -13,10 +13,15 @@
     Authoritative-only implementation:
       - Reads/writes FS_PlayerGameInfo via UStarshatterPlayerSubsystem
       - Saves via UStarshatterPlayerSubsystem::SavePlayer(true)
-      - Does NOT touch legacy PlayerCharacter or KeyMap
+      - Initializes the runtime pilot after the first successful save
 */
 
 #include "FirstTimeDlg.h"
+#include "AwardInfoRegistry.h"
+#include "PlayerCharacter.h"
+#include "Campaign.h"
+#include "SSWGameInstance.h"
+#include "StarshatterGameDataSubsystem.h"
 
 // UMG:
 #include "Components/Button.h"
@@ -121,7 +126,7 @@ void UFirstTimeDlg::PopulateDefaultsIfNeeded()
         {
             ExperienceCombo->ClearOptions();
             ExperienceCombo->AddOption(TEXT("Cadet (First timer)"));
-            ExperienceCombo->AddOption(TEXT("Admiral (Experienced)"));
+            ExperienceCombo->AddOption(TEXT("Ensign (Experienced)"));
         }
 
         if (ExperienceCombo->GetSelectedIndex() < 0)
@@ -255,13 +260,10 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
         if (ExpIndex < 0) ExpIndex = 0;
     }
 
-    if (ExpIndex > 0)
+    Info.bStartedAsEnsign = ExpIndex > 0;
+    if (Info.bStartedAsEnsign)
     {
-        // Experienced
-        Info.Rank = 2;                 // Lieutenant
-        Info.HighestTrainingMission = 255;
-        Info.Trained = 255;
-        Info.TrainingMask = -1;        // optional: if your logic treats -1 as all bits set
+        Info.Rank = UAwardInfoRegistry::RankFromName(TEXT("Ensign"));
     }
     else
     {
@@ -303,16 +305,15 @@ void UFirstTimeDlg::OnAcceptClicked()
 
     FS_PlayerGameInfo& Info = PlayerSS->GetMutablePlayerInfo();
 
-    // Apply UI -> Info
-    ApplyUiToPlayerInfo(Info);
-
-    // Optional: enforce minimal defaults on first save
-    EnsureMinimalFirstRunDefaults(Info);
-
-    PlayerSS->DebugDump(TEXT(" BEFORE ApplyUiToPlayerInfo"));
     ApplyUiToPlayerInfo(Info);
     EnsureMinimalFirstRunDefaults(Info);
-    PlayerSS->DebugDump(TEXT(" BEFORE SavePlayer(true)"));
+
+    Info.Campaign = Info.bStartedAsEnsign ? Campaign::TRAINING_CAMPAIGN + 1 : Campaign::TRAINING_CAMPAIGN;
+    auto* GI = Cast<USSWGameInstance>(GetGameInstance());
+    const auto* Data = GI ? GI->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
+    const FS_Campaign* InitialCampaign = Data ? Data->GetCampaignByIndex1Based(Info.Campaign) : nullptr;
+    Info.CampaignRowName = InitialCampaign ? InitialCampaign->RowName : NAME_None;
+
     const bool bOk = PlayerSS->SavePlayer(true);
     PlayerSS->DebugDump(TEXT(" AFTER SavePlayer(true)"));
     if (!bOk)
@@ -320,6 +321,13 @@ void UFirstTimeDlg::OnAcceptClicked()
         UE_LOG(LogFirstTimeDlg, Error, TEXT("SavePlayer(true) failed"));
         return;
     }
+
+    // Bind the new save to the live pilot before campaign prep or simulation.
+    PlayerCharacter::Initialize();
+    PlayerCharacter::SetWorldContext(GetGameInstance());
+    PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(Info);
+    if (GI && GI->RestoreSavedActiveCampaign())
+        GI->LoadOrCreateSelectedCampaignSave();
 
     // Router back to menu
     if (MenuManager)

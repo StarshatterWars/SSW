@@ -1878,6 +1878,7 @@ CampaignMissionStarship::DescribeMission()
     if (!info)
         return nullptr;
 
+    info->Source = EMissionSource::Dynamic;
     info->id = mission->GetIdentity();
     info->mission = mission;
 

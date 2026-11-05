@@ -94,7 +94,7 @@ const FString& PlayerCharacter::ChatMacro(int32 Index) const
 int32 PlayerCharacter::GetRank() const
 {
     const int32 PointsRank=UAwardInfoRegistry::RankForPoints(PlayerPoints, CachedRankId);
-    return bTrainingGraduate ? FMath::Max(PointsRank,UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) : PointsRank;
+    return (bTrainingGraduate || bStartedAsEnsign) ? FMath::Max(PointsRank,UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) : PointsRank;
 }
 
 int32 PlayerCharacter::Medal(int32 N) const
@@ -701,8 +701,9 @@ void PlayerCharacter::Load(UObject* WorldContext)
     GPlayerRoster.destroy();
     GSelectedPlayer = nullptr;
 
-    // Ensure subsystem has loaded
+    // The player subsystem initializes the runtime pilot when it loads a save.
     PlayerSS->LoadFromBoot();
+    if (GSelectedPlayer) return;
 
     // Create one player from saved PlayerInfo (expand to multi-profile later)
     const FS_PlayerGameInfo Info = PlayerSS->GetPlayerInfoCopy();
@@ -770,6 +771,7 @@ void PlayerCharacter::FromPlayerInfo(const FS_PlayerGameInfo& InInfo)
     PlayerCallsign = InInfo.Callsign;
 
     CachedRankId = InInfo.Rank;
+    bStartedAsEnsign = InInfo.bStartedAsEnsign;
     bTrainingGraduate = InInfo.bTrainingGraduate || InInfo.HasCompletedMission(1,103);
 
     FlightModelMode = InInfo.FlightModel;
@@ -824,6 +826,7 @@ void PlayerCharacter::ToPlayerInfo(FS_PlayerGameInfo& OutInfo) const
 
     OutInfo.Rank = GetRank();
     OutInfo.bTrainingGraduate = bTrainingGraduate;
+    OutInfo.bStartedAsEnsign = bStartedAsEnsign;
 
     OutInfo.FlightModel = FlightModelMode;
     OutInfo.LandingMode = LandingMode;

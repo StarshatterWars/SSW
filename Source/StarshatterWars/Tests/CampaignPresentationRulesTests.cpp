@@ -10,6 +10,17 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCampaignPresentationRulesTest, "Starshatter.Ca
 bool FCampaignPresentationRulesTest::RunTest(const FString& Parameters)
 {
     using namespace CampaignPresentationRules;
+    FS_PlayerGameInfo Pilot;
+    TestFalse(TEXT("New Cadet cannot select a campaign or standalone missions"), CanSelectCampaign(Pilot));
+    Pilot.bStartedAsEnsign = true;
+    TestTrue(TEXT("First-run Ensign can select a campaign and standalone missions"), CanSelectCampaign(Pilot));
+    TestFalse(TEXT("First-run Ensign still needs Flight School for the campaign mission tab"), HasPassedFlightSchool(Pilot));
+    Pilot.bStartedAsEnsign = false;
+    Pilot.MarkMissionCompleted(1, 102);
+    TestFalse(TEXT("Target Practice does not unlock campaigns"), CanSelectCampaign(Pilot));
+    Pilot.MarkMissionCompleted(1, 103);
+    TestTrue(TEXT("Saved Flight School completion unlocks the campaign mission tab"), HasPassedFlightSchool(Pilot));
+    TestTrue(TEXT("Saved Flight School completion unlocks campaign selection"), CanSelectCampaign(Pilot));
     TestTrue(TEXT("Unvisited intro due now can play"), IsSceneDue(false,true,0,0));
     TestFalse(TEXT("Future story scene cannot start on campaign entry"), IsSceneDue(false,true,500,100));
     TestFalse(TEXT("Visited intro cannot replay"), IsSceneDue(true,true,0,100));
