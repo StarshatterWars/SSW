@@ -1913,7 +1913,9 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         TWeakObjectPtr<UMissionBriefingDlg> HUDOwner(this);
         FighterHUDPanels = SNew(SFighterHUDPanels).ShowPanels_Lambda([HUDOwner]()
         {
-            return HUDOwner.IsValid() && HUDOwner->bLiveMissionStarted &&
+            Ship* Pilot=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
+            const bool Staged=Pilot && Pilot->GetDock() && Pilot->GetDock()->IsLaunchDeck() && Pilot->GetFlightPhase()<EOPSMode::ACTIVE;
+            return HUDOwner.IsValid() && HUDOwner->CanShowFighterHUD() && !Staged &&
                 HUDOwner->bFighterHUDVisible && !(HUDOwner->MissionCameraRig.IsValid() && HUDOwner->MissionCameraRig->bThirdPersonView) && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
                 !HUDOwner->bMissionControlsOpen &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
@@ -2439,6 +2441,9 @@ bool UMissionBriefingDlg::CanUseFighterHUD() const
 
 bool UMissionBriefingDlg::CanShowFighterHUD() const
 {
+    Ship* Pilot=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
+    // Cinematic recovery: do not alter controls or simulation while suppressing HUD.
+    if(Pilot && (Pilot->IsAutoLandEngaged() || Pilot->GetFlightPhase()>=EOPSMode::RECOVERY)) return false;
     return bLiveMissionStarted && !bMissionCompleteHandedOff
         && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());

@@ -657,7 +657,16 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         };
         Box(P+FVector2D(104,18)*Scale,FVector2D(Scale,64*Scale),FLinearColor(.2,.4,.5,.35));
 
-        MiniText(124,12,TEXT("VELOCITY"),10,Muted);MiniText(124,29,FString::Printf(TEXT("%.0f"),FlightSpeed),26,White);MiniText(124,61,TEXT("M / S"),10,Muted);
+        MiniText(124,12,TEXT("VELOCITY"),10,Muted);
+        const FString Speed=FString::Printf(TEXT("%.0f"),FlightSpeed);
+        MiniText(124,29,Speed,26,White);
+        const auto SpeedFont=FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(26*Scale)));
+        const FVector2D SpeedExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Speed,SpeedFont);
+        const auto UnitsFont=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
+        const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
+        const FVector2D UnitsPosition=P+FVector2D(124*Scale+SpeedExtent.X+7*Scale,29*Scale+SpeedExtent.Y-UnitsExtent.Y);
+        FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,Muted);
+        MiniText(124,69,FString::Printf(TEXT("%03d MARK %d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360,FMath::RoundToInt(PitchDegrees)),13,HUDBlue);
         {
             const FString Heading=FString::Printf(TEXT("%03d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360);
             const auto Font=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
@@ -669,7 +678,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         MiniText(330,33,CompactNavLabel.Left(26),13,White);
         FString State=bGearDown?TEXT("GEAR"):TEXT("GEAR UP");if(bAugmenterActive)State+=TEXT("   AUG");
         MiniText(330,62,State,10,bAugmenterActive?Green:Muted);
-        if(bShowWeapons){MiniText(124,80,Primary.ToUpper().Left(22),10,Muted);MiniText(330,80,Secondary.ToUpper().Left(24),10,Muted);}
+        if(bShowWeapons){MiniText(124,92,Primary.ToUpper().Left(22),10,Muted);MiniText(330,80,Secondary.ToUpper().Left(24),10,Muted);}
         if(JumpSeconds>0||ThreatLevel>0){
             const FString Alert=JumpSeconds>0?FString::Printf(TEXT("QUANTUM  %02d"),FMath::CeilToInt(JumpSeconds)):ThreatLevel==2?TEXT("MISSILE INBOUND"):TEXT("TARGET LOCK");
             const FLinearColor AlertColor=JumpSeconds>0?HUDBlue:ThreatLevel==2?FLinearColor(1,.22,.16,1):FLinearColor(1,.78,.25,1);
