@@ -48,6 +48,7 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Raptor"), TEXT("Raptor"), TEXT("Raptor"), TEXT("RaptorShipActor"), TEXT("fighter") },
     { TEXT("Razor"), TEXT("Razor"), TEXT("Razor"), TEXT("RazorShipActor"), TEXT("fighter") },
     { TEXT("Relay1"), TEXT("Relay1"), TEXT("Relay"), TEXT("Relay1ShipActor"), TEXT("comsat") },
+    { TEXT("S4"), TEXT("Station4"), TEXT("S4"), TEXT("ShipActor"), TEXT("station") },
     { TEXT("S5"), TEXT("Station5"), TEXT("S5"), TEXT("S5ShipActor"), TEXT("station") },
     { TEXT("S6"), TEXT("Station6"), TEXT("MarakanXfer"), TEXT("S6ShipActor"), TEXT("station") },
     { TEXT("S7"), TEXT("Station7"), TEXT("MarakanLab"), TEXT("S7ShipActor"), TEXT("station") },
