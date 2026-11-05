@@ -42,17 +42,18 @@ public:
     virtual bool IsCampaignMissionView() const { return false; }
     bool HasSelectedMission() const { return MissionIds.IsValidIndex(ChosenIndex) && MissionId > 0; }
     void SelectMissionAt(int32 Index);
+    void RefreshDynamicRosterIfChanged();
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     void BuildSingleMissionScreen();
     void RefreshMissionRoster();
+    int32 LastCampaignRosterSize = INDEX_NONE;
     void RefreshMissionDetails();
     void LaunchSelected();
     UTextBlock* MakeLabel(const FString& Value, int32 Size, const FLinearColor& Tint, bool bWrap = false);
     UBorder* MakePanel(const FLinearColor& Tint);
     UButton* MakeActionButton(const FString& Label, bool bEnabled = true, bool bRosterButton = false);
-    UFUNCTION() void OnLaunchPressed();
     UFUNCTION() void OnCreateMission();
     UFUNCTION() void OnEditMission();
     UFUNCTION() void OnDeleteMission();
@@ -83,7 +84,6 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionObjectives = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionSitrep = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> MissionCountLabel = nullptr;
-    UPROPERTY(Transient) TObjectPtr<UButton> LaunchButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> NewMissionButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> EditMissionButton = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> DeleteMissionButton = nullptr;

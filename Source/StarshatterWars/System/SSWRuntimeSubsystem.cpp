@@ -400,7 +400,11 @@ void USSWRuntimeSubsystem::UpdateWorld()
     // Advance the authoritative universe clock once, using the same simulation
     // delta as physics. Environment's independent tick defers while we run.
     if (auto* Env=UStarshatterEnvironmentSubsystem::Get())
-        Env->TickEnvironmentTime(Seconds);
+    {
+        const bool bCampaignScreen = GameMode == EGameMode::MENU ||
+            GameMode == EGameMode::CMPN || GameMode == EGameMode::PLAN;
+        Env->TickEnvironmentTime(bCampaignScreen ? Game::GUITime() : Seconds);
+    }
 
     Galaxy* GalaxyInstance = Galaxy::GetInstance();
     if (GalaxyInstance)

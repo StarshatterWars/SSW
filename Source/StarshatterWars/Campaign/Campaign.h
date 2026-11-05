@@ -180,6 +180,7 @@ public:
     MissionInfo* GetMissionInfo(int id);
     MissionInfo* FindMissionTemplate(int msn_type, CombatGroup* player_group);
     const FS_CampaignMission* FindCampaignMissionById(int32 id) const;
+    bool IsMissionIdInUse(int Id) const;
     void                 ReloadMission(int id);
     void                 StartMission();
     void                 RollbackMission();

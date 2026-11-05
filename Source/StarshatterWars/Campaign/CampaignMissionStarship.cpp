@@ -144,6 +144,8 @@ CampaignMissionStarship::CreateMission(CampaignMissionRequest* req)
     }
 
     static int id_key = 1;
+    while (campaign->IsMissionIdInUse(id_key))
+        ++id_key;
 
     mission = GenerateMission(id_key++);
     
@@ -279,6 +281,7 @@ CampaignMissionStarship::GenerateMission(int id)
     char name[64] = { 0 };
     sprintf_s(name, sizeof(name), "Starship Mission %d", id);
 
+    mission->SetIdentity(id);
     mission->SetName(name);
     mission->SetTeam(player_group->GetIFF());
     mission->SetStart(request->StartTime());

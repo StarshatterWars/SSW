@@ -114,7 +114,7 @@ void UMenuDlg::BuildModernMenu()
     Panel(1052,92,2,760,FLinearColor(.13f,.45f,.6f,.65f));
     Panel(96,905,1728,1,FLinearColor(.2f,.48f,.6f,.6f));
     Label(TEXT("FRACTAL DEV STUDIOS"),13,Muted,104,64,600,28);
-    Label(TEXT("TACTICAL SPACE COMBAT"),14,Cyan,104,376,750,28);
+    Label(TEXT("TACTICAL AND STRATEGIC OPERATIONS SIMULATOR"),14,Cyan,104,376,750,28);
     Label(TEXT("STARSHATTER"),64,White,96,420,960,90,true);
     Label(TEXT("WARS"),64,White,96,499,850,124,true);
     Panel(104,646,78,3,Cyan);

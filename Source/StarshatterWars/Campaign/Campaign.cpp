@@ -1879,6 +1879,18 @@ MissionInfo* Campaign::GetMissionInfo(int id)
     return 0;
 }
 
+bool Campaign::IsMissionIdInUse(int Id) const
+{
+    if (FindCampaignMissionById(Id))
+        return true;
+
+    for (int Index = 0; Index < missions.size(); ++Index)
+        if (missions[Index]->id == Id)
+            return true;
+
+    return false;
+}
+
 const FS_CampaignMission* Campaign::FindCampaignMissionById(int32 id) const
 {
     if (!CampaignData)
@@ -3359,7 +3371,8 @@ const FS_CampaignMission* Campaign::FindCampaignMissionData(int32 MissionType, C
 
     for (const FS_CampaignMission& MissionRow : CampaignData->Missions)
     {
-        if (static_cast<int32>(MissionRow.MissionType) != MissionType)
+        if (IsCutsceneMission(MissionRow.Id) ||
+            static_cast<int32>(MissionRow.MissionType) != MissionType)
         {
             continue;
         }

@@ -6,6 +6,7 @@ class UMenuScreen;
 class UCanvasPanel;
 class UTextBlock;
 class UButton;
+class UBorder;
 class UUserWidget;
 UCLASS()
 class STARSHATTERWARS_API UMissionsPanelDriver : public UBaseScreen
@@ -35,6 +36,11 @@ private:
     UPROPERTY(Transient) TObjectPtr<UButton> StoryTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> MenuTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> BriefingTab = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> SummaryButton = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UButton> SummaryClose = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UBorder> SummaryOverlay = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SummaryTitle = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> SummaryDetails = nullptr;
     UPROPERTY(Transient) TObjectPtr<UMenuScreen> Manager = nullptr;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanel> ContentHost = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> ModeTitle = nullptr;
@@ -64,4 +70,6 @@ private:
     UFUNCTION() void OpenStory();
     UFUNCTION() void Back();
     UFUNCTION() void OpenBriefing();
+    UFUNCTION() void OpenCampaignSummary();
+    UFUNCTION() void CloseCampaignSummary();
 };

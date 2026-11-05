@@ -226,6 +226,8 @@ void CampaignMissionFighter::CreateMission(CampaignMissionRequest* req)
     }
 
     static int id_key = 1;
+    while (campaign->IsMissionIdInUse(id_key))
+        ++id_key;
     GenerateMission(id_key++);
 
     UE_LOG(LogTemp, Warning,
@@ -339,6 +341,7 @@ Mission* CampaignMissionFighter::GenerateMission(int id)
     char name[64] = { 0 };
     sprintf_s(name, sizeof(name), "Fighter Mission %d", id);
 
+    mission->SetIdentity(id);
     mission->SetName(name);
     mission->SetTeam(squadron->GetIFF());
     mission->SetStart(request->StartTime());

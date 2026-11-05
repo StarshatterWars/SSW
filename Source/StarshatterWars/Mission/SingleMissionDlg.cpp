@@ -282,7 +282,7 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     RightContent->AddChildToVerticalBox(MissionObjectives)->SetPadding(FMargin(0.f, 8.f));
     }
 
-    if (!IsCampaignMissionView())
+    if (IsCustomMissionView())
     {
     UHorizontalBox* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
     Full->AddChildToVerticalBox(Actions)->SetPadding(FMargin(5.f, 2.f, 5.f, 0.f));
@@ -296,10 +296,6 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     NewMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCreateMission);
     EditMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnEditMission);
     DeleteMissionButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnDeleteMission);
-
-    LaunchButton = MakeActionButton(TEXT("BRIEFING"), false);
-    Actions->AddChildToHorizontalBox(LaunchButton)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    LaunchButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnLaunchPressed);
     }
 }
 
@@ -345,9 +341,17 @@ void USingleMissionDlg::ToggleTrainingOverview()
     TrainingOverview->SetVisibility(ESlateVisibility::Visible);
 }
 
+void USingleMissionDlg::RefreshDynamicRosterIfChanged()
+{
+    Campaign* Active = GetRosterCampaign();
+    if (Active && Active->IsDynamic() && Active->GetMissionList().size() != LastCampaignRosterSize)
+        RefreshMissionRoster();
+}
+
 void USingleMissionDlg::RefreshMissionRoster()
 {
     if (!MissionRoster) return;
+    const int32 PreviousMissionId = HasSelectedMission() ? MissionId : INDEX_NONE;
     MissionRoster->ClearChildren();
     MissionButtons.Reset();
     RowProxies.Reset();
@@ -373,6 +377,7 @@ void USingleMissionDlg::RefreshMissionRoster()
         Campaign* ActiveCampaign = GetRosterCampaign();
         if (ActiveCampaign)
         {
+            LastCampaignRosterSize = ActiveCampaign->GetMissionList().size();
             ListIter<MissionInfo> MissionIter = ActiveCampaign->GetMissionList();
             while (++MissionIter)
             {
@@ -492,7 +497,11 @@ void USingleMissionDlg::RefreshMissionRoster()
     MissionCountLabel->SetText(FText::Format(
         NSLOCTEXT("SingleMissionDlg", "MissionCount", "{0} {0}|plural(one=mission,other=missions)"),
         MissionIds.Num()));
-    if (!MissionIds.IsEmpty()) SelectMissionAt(0);
+    if (!MissionIds.IsEmpty())
+    {
+        const int32 PreviousIndex = MissionIds.IndexOfByKey(PreviousMissionId);
+        SelectMissionAt(PreviousIndex == INDEX_NONE ? 0 : PreviousIndex);
+    }
     else
     {
         if (EditMissionButton) EditMissionButton->SetIsEnabled(false);
@@ -583,7 +592,6 @@ void USingleMissionDlg::RefreshMissionDetails()
         Campaign* Active=CompletionScope;
         const bool bRankUnlocked=!IsCampaignMissionView() || (Active && Active->IsMissionRankUnlocked(MissionId));
         if (!bRankUnlocked && Active && MissionObjectives) MissionObjectives->SetText(FText::FromString(Active->MissionRankRequirement(MissionId)));
-        if (LaunchButton) LaunchButton->SetIsEnabled(bRankUnlocked);
         return;
     }
     if (MissionTitle) MissionTitle->SetText(FText::FromString(Scenario
@@ -608,11 +616,6 @@ void USingleMissionDlg::RefreshMissionDetails()
     const bool bRankUnlocked=Scenario && MissionRankRules::Unlocked(RequiredRank);
     if (!bRankUnlocked && Scenario && MissionObjectives)
         MissionObjectives->SetText(FText::FromString(Scenario->Objective+TEXT("\n\n")+MissionRankRules::Requirement(RequiredRank)));
-    if (LaunchButton)
-    {
-        LaunchButton->SetIsEnabled(bRankUnlocked);
-        LaunchButton->SetToolTipText(bRankUnlocked?FText::GetEmpty():FText::FromString(MissionRankRules::Requirement(RequiredRank)));
-    }
 }
 
 void USingleMissionDlg::LaunchSelected()
@@ -749,7 +752,6 @@ void USingleMissionDlg::LaunchSelected()
 }
 void USingleMissionDlg::HandleAccept() { LaunchSelected(); }
 void USingleMissionDlg::HandleCancel() { OnBackPressed(); }
-void USingleMissionDlg::OnLaunchPressed() { LaunchSelected(); }
 void USingleMissionDlg::OnBackPressed()
 {
     // The inherited OnCancelClicked only hides this widget and broadcasts a

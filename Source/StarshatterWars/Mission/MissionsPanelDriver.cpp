@@ -22,6 +22,7 @@
 #include "Components/Image.h"
 #include "Components/ScaleBox.h"
 #include "Components/SizeBox.h"
+#include "Components/ScrollBox.h"
 #include "Engine/Texture2D.h"
 #include "MissionUIStyle.h"
 #include "GameFramework/PlayerController.h"
@@ -71,6 +72,9 @@ void UMissionsPanelDriver::BindHeaderClock()
 void UMissionsPanelDriver::HandleHeaderClock(uint64 UniverseSecondsNow)
 {
     RefreshHeaderStatus();
+    if (IsVisible() && ActiveMode == EMissionsNavigationMode::Campaign)
+        if (USingleMissionDlg* Missions = Cast<USingleMissionDlg>(ActiveChild))
+            Missions->RefreshDynamicRosterIfChanged();
 }
 void UMissionsPanelDriver::HandleCampaignClock(uint64 UniverseSecondsNow, uint64 TPlusSeconds)
 {
@@ -160,7 +164,7 @@ void UMissionsPanelDriver::BuildDriverLayout()
     MenuSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
     MenuSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
     MenuSlot->SetVerticalAlignment(VAlign_Center);
-    auto MakeTab = [this, Tabs](const TCHAR* Name)->UButton*
+    auto MakeTab = [this](UHorizontalBox* Row, const TCHAR* Name)->UButton*
     {
         UButton* NewButton = WidgetTree->ConstructWidget<UButton>();
         UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
@@ -176,16 +180,23 @@ void UMissionsPanelDriver::BuildDriverLayout()
             ContentSlot->SetVerticalAlignment(VAlign_Center);
             ContentSlot->SetPadding(FMargin(10.f, 4.f));
         }
-        UHorizontalBoxSlot* TabSlot = Tabs->AddChildToHorizontalBox(NewButton);
+        UHorizontalBoxSlot* TabSlot = Row->AddChildToHorizontalBox(NewButton);
         TabSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
         TabSlot->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
         return NewButton;
     };
-    CampaignTab = MakeTab(TEXT("DYNAMIC"));
-    StoryTab = MakeTab(TEXT("STORY"));
-    TrainingTab = MakeTab(TEXT("TRAINING"));
-    SingleTab = MakeTab(TEXT("SINGLE"));
-    CustomTab = MakeTab(TEXT("CUSTOM"));
+    CampaignTab = MakeTab(Tabs, TEXT("DYNAMIC"));
+    StoryTab = MakeTab(Tabs, TEXT("STORY"));
+    TrainingTab = MakeTab(Tabs, TEXT("TRAINING"));
+    SingleTab = MakeTab(Tabs, TEXT("SINGLE"));
+    CustomTab = MakeTab(Tabs, TEXT("CUSTOM"));
+    SummaryButton = MakeTab(StatusRow, TEXT("SUMMARY"));
+    UHorizontalBoxSlot* SummarySlot = CastChecked<UHorizontalBoxSlot>(SummaryButton->Slot);
+    SummarySlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+    SummarySlot->SetVerticalAlignment(VAlign_Center);
+    SummarySlot->SetPadding(FMargin(0.f));
+    SummaryButton->SetToolTipText(NSLOCTEXT("Missions", "CampaignSummaryTooltip", "Show active campaign summary"));
+    SummaryButton->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCampaignSummary);
     BriefingTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Briefing_256x256.T_Briefing_256x256"));
     BriefingTab->SetIsEnabled(false);
     UHorizontalBoxSlot* BriefingSlot = Tabs->AddChildToHorizontalBox(BriefingTab);
@@ -199,10 +210,41 @@ void UMissionsPanelDriver::BuildDriverLayout()
     StoryTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenStory);
     MenuTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::Back);
     BriefingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenBriefing);
-    RefreshTabStyles();
     ContentHost=WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),TEXT("MissionsDriver_ContentHost"));
     UVerticalBoxSlot* S=Column->AddChildToVerticalBox(ContentHost); FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;Fill.Value=1.f;S->SetSize(Fill);S->SetHorizontalAlignment(HAlign_Fill);S->SetVerticalAlignment(VAlign_Fill);
 
+    SummaryOverlay = WidgetTree->ConstructWidget<UBorder>();
+    SummaryOverlay->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.72f));
+    SummaryOverlay->SetVisibility(ESlateVisibility::Collapsed);
+    UCanvasPanelSlot* OverlaySlot = Root->AddChildToCanvas(SummaryOverlay);
+    OverlaySlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+    OverlaySlot->SetOffsets(FMargin(0.f));
+    OverlaySlot->SetZOrder(10);
+    UCanvasPanel* SummaryCanvas = WidgetTree->ConstructWidget<UCanvasPanel>();
+    SummaryOverlay->SetContent(SummaryCanvas);
+    UBorder* SummaryPanel = WidgetTree->ConstructWidget<UBorder>();
+    SummaryPanel->SetBrushColor(FLinearColor(0.045f, 0.09f, 0.14f, 1.f));
+    SummaryPanel->SetPadding(FMargin(24.f));
+    UCanvasPanelSlot* PanelSlot = SummaryCanvas->AddChildToCanvas(SummaryPanel);
+    PanelSlot->SetAnchors(FAnchors(0.2f, 0.18f, 0.8f, 0.82f));
+    PanelSlot->SetOffsets(FMargin(0.f));
+    UVerticalBox* SummaryColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    SummaryPanel->SetContent(SummaryColumn);
+    SummaryTitle = Label(TEXT("CAMPAIGN SUMMARY"), 28, FLinearColor::White);
+    SummaryTitle->SetFont(MissionUIStyle::GetHeaderFont(28));
+    SummaryColumn->AddChildToVerticalBox(SummaryTitle)->SetPadding(FMargin(0.f, 0.f, 0.f, 18.f));
+    UScrollBox* SummaryScroll = WidgetTree->ConstructWidget<UScrollBox>();
+    SummaryColumn->AddChildToVerticalBox(SummaryScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    SummaryDetails = Label(TEXT(""), 17, FLinearColor::White);
+    SummaryDetails->SetAutoWrapText(true);
+    SummaryScroll->AddChild(SummaryDetails);
+    SummaryClose = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Check_256x256.T_Check_256x256"));
+    SummaryClose->SetToolTipText(NSLOCTEXT("Missions", "CloseCampaignSummary", "Close campaign summary"));
+    SummaryClose->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::CloseCampaignSummary);
+    UVerticalBoxSlot* CloseSlot = SummaryColumn->AddChildToVerticalBox(SummaryClose);
+    CloseSlot->SetHorizontalAlignment(HAlign_Right);
+    CloseSlot->SetPadding(FMargin(0.f, 16.f, 0.f, 0.f));
+    RefreshTabStyles();
 }
 void UMissionsPanelDriver::RefreshTabStyles()
 {
@@ -257,6 +299,8 @@ void UMissionsPanelDriver::RefreshTabStyles()
         ActiveMode == EMissionsNavigationMode::Story ? BlueP : CyanP);
     StyleTab(MenuTab, RedN, RedP);
     StyleTab(BriefingTab, GreenN, GreenP);
+    StyleTab(SummaryButton, CyanN, CyanP);
+    StyleTab(SummaryClose, GreenN, GreenP);
 }
 
 void UMissionsPanelDriver::HideChildHeader(UUserWidget* Child)
@@ -355,6 +399,7 @@ void UMissionsPanelDriver::RefreshTabAccess()
     const bool bCampaignUnlocked = IsCampaignTabUnlocked();
     CampaignTab->SetIsEnabled(bCampaignUnlocked);
     StoryTab->SetIsEnabled(bCampaignUnlocked);
+    SummaryButton->SetIsEnabled(Campaign::GetCampaign() != nullptr);
     CampaignTab->SetToolTipText(FText::FromString(bCampaignUnlocked
         ? TEXT("View active campaign missions") : TEXT("Deploy a campaign after Flight School or as a first-run Ensign")));
     const bool bStandaloneUnlocked = AreStandaloneTabsUnlocked();
@@ -369,6 +414,7 @@ void UMissionsPanelDriver::RefreshTabAccess()
 void UMissionsPanelDriver::Show()
 {
     BuildDriverLayout();SetVisibility(ESlateVisibility::Visible);
+    CloseCampaignSummary();
     RefreshTabAccess();
     const bool bCampaignUnlocked = IsCampaignTabUnlocked();
     const bool bStandaloneUnlocked = AreStandaloneTabsUnlocked();
@@ -383,7 +429,40 @@ void UMissionsPanelDriver::Show()
     else if (ActiveMode == EMissionsNavigationMode::Story) OpenStory();
     else if (USingleMissionDlg* Missions=Cast<USingleMissionDlg>(ActiveChild)) Missions->Show();
 }
-void UMissionsPanelDriver::HandleCancel(){Back();}
+void UMissionsPanelDriver::HandleCancel()
+{
+    if (SummaryOverlay && SummaryOverlay->IsVisible()) CloseCampaignSummary();
+    else Back();
+}
+
+void UMissionsPanelDriver::OpenCampaignSummary()
+{
+    Campaign* Active = Campaign::GetCampaign();
+    if (!Active || !SummaryOverlay) return;
+
+    SummaryTitle->SetText(FText::FromString(FString(UTF8_TO_TCHAR(Active->GetName())).ToUpper()));
+    FString Details = FString(UTF8_TO_TCHAR(Active->GetDescription())).TrimStartAndEnd();
+    const FString Situation = FString(UTF8_TO_TCHAR(Active->Situation())).TrimStartAndEnd();
+    const FString Orders = FString(UTF8_TO_TCHAR(Active->Orders())).TrimStartAndEnd();
+    if (!Situation.IsEmpty())
+        Details += TEXT("\n\nSITUATION\n") + Situation;
+    if (!Orders.IsEmpty())
+        Details += TEXT("\n\nORDERS\n") + Orders;
+    SummaryDetails->SetText(Details.IsEmpty()
+        ? NSLOCTEXT("Missions", "NoCampaignSummary", "No campaign summary available.")
+        : FText::FromString(Details.TrimStart()));
+    SummaryOverlay->SetVisibility(ESlateVisibility::Visible);
+    SummaryClose->SetUserFocus(GetOwningPlayer());
+}
+
+void UMissionsPanelDriver::CloseCampaignSummary()
+{
+    if (SummaryOverlay && SummaryOverlay->IsVisible())
+    {
+        SummaryOverlay->SetVisibility(ESlateVisibility::Collapsed);
+        SummaryButton->SetUserFocus(GetOwningPlayer());
+    }
+}
 void UMissionsPanelDriver::OpenCampaign(){ShowCampaignMode();}
 void UMissionsPanelDriver::OpenTraining()
 {

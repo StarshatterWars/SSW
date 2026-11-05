@@ -42,6 +42,7 @@
 #include "Components/ButtonSlot.h"
 #include "MissionUIStyle.h"
 #include "Engine/Texture2D.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // UE:
 #include "Engine/GameInstance.h"
@@ -274,19 +275,8 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
 
 void UFirstTimeDlg::OnCancelClicked()
 {
-    UE_LOG(LogFirstTimeDlg, Log, TEXT("UFirstTimeDlg::OnCancelClicked()"));
-
-    if (MenuManager)
-    {
-        MenuManager->ShowMenuDlg();
-
-        if (UMenuDlg* MenuDlg = MenuManager->GetMenuDlg())
-        {
-            MenuDlg->RefreshFromPlayerState();
-            MenuDlg->ApplyMenuGating();
-            MenuDlg->SetDialogInputEnabled(true);
-        }
-    }
+    UE_LOG(LogFirstTimeDlg, Log, TEXT("First-run setup canceled. Exiting to Windows."));
+    UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
 }
 
 void UFirstTimeDlg::OnAcceptClicked()
@@ -404,7 +394,7 @@ void UFirstTimeDlg::BuildModernDialog()
         if(auto* IconSlot=Cast<UButtonSlot>(Button->AddChild(IconSize))){IconSlot->SetPadding(FMargin(9,5));IconSlot->SetHorizontalAlignment(HAlign_Center);IconSlot->SetVerticalAlignment(VAlign_Center);}
         Box->SetContent(Button);
         Actions->AddChildToHorizontalBox(Box)->SetPadding(FMargin(6,0));};
-    Action(CancelBtn,TEXT("Blue"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"),TEXT("Cancel"));
+    Action(CancelBtn,TEXT("Red"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_OnOff_256x256.T_OnOff_256x256"),TEXT("Exit to Windows"));
     Action(AcceptBtn,TEXT("Green"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"),TEXT("Create pilot"));
     auto* ActionSlot=Column->AddChildToVerticalBox(Actions);ActionSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));ActionSlot->SetVerticalAlignment(VAlign_Bottom);ActionSlot->SetHorizontalAlignment(HAlign_Right);
     bModernDialogBuilt=true;
