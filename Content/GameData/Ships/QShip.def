@@ -50,8 +50,8 @@ drive: {
    design:           "Plasma Drive",
    thrust:           800,
    scale:            4,
-   port:             (0, 80,-380),
-   port:             (0,-80,-380),
+   port:             (-380.00, -0.00, 80.00),
+   port:             (-380.00, -0.00, -80.00),
 
    loc:              (0,0,-250),
    size:             32,
@@ -60,11 +60,28 @@ drive: {
 }
 
 thruster: {
+   type:             Fusion,
    design:           Thruster,
 
    loc:              (0, 0, 64),
    size:             24,
    hull_factor:      0.3
+   port_left: { loc: (-158.33, -99.97, -26.13), rotation: (0, 0, -90), fire: 0x0041, flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-56.33, 99.52, 26.68), rotation: (0, 0, 90), fire: 0x0082, flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-153.95, 0.60, 99.78), rotation: (0, 90, 0), fire: 0x0510, flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (-153.95, 0.64, -99.57), rotation: (0, -90, 0), fire: 0x0A20, flare_scale: 0.12, trail_scale: 0.12 }
+   port_fore: { loc: (396.50, -16.43, 2.17), rotation: (0, 0, 0), fire: 0x0004, flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-382.95, -3.60, -31.47), rotation: (0, 180, 0), fire: 0x0008, flare_scale: 0.12, trail_scale: 0.12 }
+}
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: { name: "Port", loc: (-158.33, -99.97, -26.13), color: "red", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
+   light: { name: "Starboard", loc: (-56.33, 99.52, 26.68), color: "green", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Aft", loc: (-382.95, -3.60, -31.47), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Dorsal", loc: (-153.95, 0.60, 99.78), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
 }
 
 quantum:     {

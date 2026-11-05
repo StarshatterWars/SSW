@@ -107,6 +107,7 @@ drive:
 
 thruster:
 {
+   type:             Fusion
    design:           "Thruster"
 
    loc:              (-120, 0, 40)

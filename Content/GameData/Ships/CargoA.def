@@ -46,8 +46,8 @@ drive:      {
    design:           "Fusion Drive",
    thrust:           1500,
    scale:            4,
-   port:             (-92, 0,-326),
-   port:             ( 94, 0,-326),
+   port:             (-326.00, 92.00, 0.00),
+   port:             (-326.00, -94.00, 0.00),
 
    loc:              (0, 30, -170),
    size:             32,
@@ -56,12 +56,29 @@ drive:      {
    }
 
 thruster: {
+   type:             Fusion,
    design:           Thruster,
 
    loc:              (0, 0, 64),
    size:             24,
    hull_factor:      0.5
-   }
+   port_left: { loc: (-149.06, -115.37, 0.11), rotation: (0, 0, -90), fire: 0x0041, flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-149.06, 111.98, 0.27), rotation: (0, 0, 90), fire: 0x0082, flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-104.91, -59.50, 32.66), rotation: (0, 90, 0), fire: 0x0510, flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (136.86, -23.12, -84.69), rotation: (0, -90, 0), fire: 0x0A20, flare_scale: 0.12, trail_scale: 0.12 }
+   port_fore: { loc: (312.72, -11.71, -12.78), rotation: (0, 0, 0), fire: 0x0004, flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-300.92, 73.78, 0.12), rotation: (0, 180, 0), fire: 0x0008, flare_scale: 0.12, trail_scale: 0.12 }
+}
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: { name: "Port", loc: (-149.06, -115.37, 0.11), color: "red", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
+   light: { name: "Starboard", loc: (-149.06, 111.98, 0.27), color: "green", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Aft", loc: (-300.92, 73.78, 0.12), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Dorsal", loc: (-104.91, -59.50, 32.66), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
+}
 
 quantum:     {
    design:           "Quantum Drive",

@@ -47,8 +47,8 @@ drive:      {
    design:           "Fusion Drive",
    thrust:           600,
    scale:            4,
-   port:             (-91, 28,-488),
-   port:             ( 95, 28,-488),
+   port:             (-488.00, 91.00, 28.00),
+   port:             (-488.00, -95.00, 28.00),
 
    loc:              (0, 30, -350),
    size:             32,
@@ -57,12 +57,29 @@ drive:      {
    }
 
 thruster: {
+   type:             Fusion,
    design:           Thruster,
 
    loc:              (0, 0, 64),
    size:             24,
    hull_factor:      0.5
-   }
+   port_left: { loc: (-261.48, -115.32, 28.36), rotation: (0, 0, -90), fire: 0x0041, flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-261.48, 112.03, 28.52), rotation: (0, 0, 90), fire: 0x0082, flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-263.90, -93.90, 48.03), rotation: (0, 90, 0), fire: 0x0510, flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (-114.82, 38.76, -115.91), rotation: (0, -90, 0), fire: 0x0A20, flare_scale: 0.12, trail_scale: 0.12 }
+   port_fore: { loc: (385.80, 0.58, -0.30), rotation: (0, 0, 0), fire: 0x0004, flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-462.33, 73.83, 28.37), rotation: (0, 180, 0), fire: 0x0008, flare_scale: 0.12, trail_scale: 0.12 }
+}
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: { name: "Port", loc: (-261.48, -115.32, 28.36), color: "red", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
+   light: { name: "Starboard", loc: (-261.48, 112.03, 28.52), color: "green", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Aft", loc: (-462.33, 73.83, 28.37), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Dorsal", loc: (-263.90, -93.90, 48.03), color: "white", intensity: 1800, radius: 140, mode: "blink", blink_interval: 0.5, phase: 0 }
+}
 
 quantum:     {
    design:           "Quantum Drive",

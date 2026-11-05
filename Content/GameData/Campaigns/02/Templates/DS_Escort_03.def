@@ -17,7 +17,7 @@ callsign:   { name: Bravo,   iff: 2 }
 
 element: {
    name:    Ward,
-   design:  TypeIII,
+   design:  IM3500,
    rloc:    { ref: FC1, dex: 180e3, dex_var: 50e3, el: 0, el_var: 0 },
    mission: freight,
    count:   1,

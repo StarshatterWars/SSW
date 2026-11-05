@@ -394,12 +394,12 @@ group: {
 
   unit: {
     name:   "Ecliptic",
-    design: "TypeIII",
+    design: "IM3500",
     regnum: "1919" },
 
   unit: {
     name:   "Rand",
-    design: "TypeIII",
+    design: "IM3500",
     regnum: "2207" },
 }
 

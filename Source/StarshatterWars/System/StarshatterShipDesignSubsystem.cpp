@@ -959,6 +959,12 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
     // Keep every other system location, ship scale, and design unchanged.
     if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase) ||
         ShipName.Equals(TEXT("Zodiac"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("IM3500"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("IM2800"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("IM1906"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("IM1912"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Transport"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("QShip"), ESearchCase::IgnoreCase) ||
         ShipName.Equals(TEXT("Avenger"), ESearchCase::IgnoreCase) ||
         ShipName.Equals(TEXT("Cobra"), ESearchCase::IgnoreCase) ||
         ShipName.Equals(TEXT("Intruder"), ESearchCase::IgnoreCase) ||
