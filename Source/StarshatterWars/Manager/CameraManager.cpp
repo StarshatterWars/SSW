@@ -114,9 +114,7 @@ CameraManager::Reset()
 	bPlanetaryCinematicOrbit = false;
 	bCarrierLaunchCameraHeld = false;
 	bLaunchBayAnchorValid = false;
-	bLaunchBayExitValid = false;
 	LaunchBayAnchorCarrier = nullptr;
-	bLaunchBayStartValid = false;
 	transition = 0;
 	hud = 0;
 }
@@ -144,9 +142,7 @@ CameraManager::SetShip(Ship* s)
 		scripted_view_ship = nullptr;
 		bCarrierLaunchCameraHeld = false;
 		bLaunchBayAnchorValid = false;
-		bLaunchBayExitValid = false;
 		LaunchBayAnchorCarrier = nullptr;
-		bLaunchBayStartValid = false;
 	}
 	ship = s;
 
@@ -564,55 +560,9 @@ CameraManager::ExecFrame(double seconds)
 
 	// First sight of an ALERT fighter establishes a physical starting point.
 	// ACTIVE is a state, not a geometric proof the ship has cleared the bay.
-	if (LaunchCarrier && flight_phase >= EOPSMode::ALERT &&
-		flight_phase < EOPSMode::ACTIVE && !bLaunchBayStartValid)
-	{
-		LaunchBayStartWorld = ship->GetLocation();
-		LaunchBayStartCarrierWorld = LaunchCarrier->GetLocation();
-		LaunchBayStartForward = ship->GetCam().vpn().GetSafeNormal();
-		bLaunchBayStartValid = true;
-	}
-	if (LaunchCarrier && bOnCarrierLaunchDeck && bLaunchBayStartValid && !bLaunchBayExitValid)
-	{
-		// StartPoint is the catapult/tube mouth; EndPoint is the distant,
-		// laterally displaced departure waypoint.
-		const FVector AuthoredExit = LaunchViewDeck->StartPoint()
-            + LaunchCarrier->GetCam().vpn().GetSafeNormal() * FMath::Max(1.0, double(ship->GetRadius()) * 1.5);
-		const FVector RelativeExit = AuthoredExit - LaunchBayStartWorld;
-		const double ForwardDistance = FVector::DotProduct(RelativeExit, LaunchBayStartForward);
-		// EndPoint may be in a different coordinate frame. Reject endpoints behind
-		// the parked fighter or indistinguishable from its starting location.
-		if (ForwardDistance > 1.0)
-		{
-			LaunchBayExit = AuthoredExit;
-			bLaunchBayExitValid = true;
-		}
-	}
-	bool bPhysicallyClear = false;
-	if (LaunchCarrier && bLaunchBayStartValid)
-	{
-		// Account for carrier movement since staging; this measures fighter
-		// travel relative to the bay, not motion of the carrier itself.
-		const FVector RelativeTravel = (ship->GetLocation() - LaunchCarrier->GetLocation()) -
-			(LaunchBayStartWorld - LaunchBayStartCarrierWorld);
-		const double ForwardTravel = FVector::DotProduct(RelativeTravel, LaunchBayStartForward);
-		const double MinDeparture = FMath::Max(500.0, static_cast<double>(ship->GetRadius()) * 8.0);
-		if (bLaunchBayExitValid)
-		{
-			const double ExitDistance = FVector::DotProduct(LaunchBayExit - LaunchBayStartWorld, LaunchBayStartForward);
-			bPhysicallyClear = ForwardTravel >= ExitDistance;
-		}
-		else
-		{
-			// If no reliable authored exit exists, retain the bay camera for a
-			// substantial actual movement rather than switching on a phase change.
-			bPhysicallyClear = ForwardTravel >= FMath::Max(MinDeparture, static_cast<double>(LaunchCarrier->GetRadius()));
-		}
-	}
-	// IsAirborne means atmospheric AIR_SPACE, not departure from a carrier.
-	const bool bLaunchCompleted =
-		flight_phase >= EOPSMode::ACTIVE && bPhysicallyClear;
-	if (bLaunchCompleted || ship->IsDead() || ship->IsDying())
+    // The simulation keeps the fighter in LAUNCH until it clears the tube.
+    const bool bLaunchCompleted = bCarrierLaunchCameraHeld && flight_phase >= EOPSMode::ACTIVE;
+    if (bLaunchCompleted || ship->IsDead() || ship->IsDying())
 	{
 		// Retract only as the held launch view hands off to the flight camera.
 		if (bLaunchCompleted && bCarrierLaunchCameraHeld && !ship->IsDead() && !ship->IsDying())
@@ -622,11 +572,9 @@ CameraManager::ExecFrame(double seconds)
 		}
 		bCarrierLaunchCameraHeld = false;
 		bLaunchBayAnchorValid = false;
-		bLaunchBayExitValid = false;
-		bLaunchBayStartValid = false;
 		LaunchBayAnchorCarrier = nullptr;
 		UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][CAMERA_RELEASE] Fighter='%hs' Clear=%d"),
-			ship->GetName(), bPhysicallyClear ? 1 : 0);
+			ship->GetName(), bLaunchCompleted ? 1 : 0);
 	}
 	else if ((LaunchCarrier || bCarrierLaunchCameraHeld) &&
 		((flight_phase >= EOPSMode::ALERT && flight_phase < EOPSMode::ACTIVE) || bCarrierLaunchCameraHeld) &&

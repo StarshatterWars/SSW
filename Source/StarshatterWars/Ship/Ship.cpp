@@ -3357,6 +3357,25 @@ Ship::ExecFrame(double seconds)
 		return;
 	}
 
+    if (flight_phase == EOPSMode::LAUNCH && dock && dock->IsLaunchDeck() &&
+        carrier && !carrier->IsDead() && !carrier->IsDying())
+    {
+        // Keep the catapult velocity and heading until the whole fighter
+        // passes the tube mouth. AI, FLCS, and manual steering resume together.
+        const FVector RailDirection = GetCam().vpn().GetSafeNormal();
+        const double Clearance = FMath::Max(1.0, double(GetRadius()) * 1.5);
+        const double Travel = FVector::DotProduct(GetLocation() - dock->StartPoint(), RailDirection);
+        if (Travel < Clearance)
+        {
+            TranslateBy(GetVelocity() * seconds);
+            GetThrust(seconds);
+            return;
+        }
+
+        UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][TUBE_CLEAR] Fighter='%hs' Travel=%.2f Clearance=%.2f"),
+            GetName(), Travel, Clearance);
+    }
+
 	if (flight_phase == EOPSMode::LAUNCH ||
 		(flight_phase == EOPSMode::TAKEOFF && GetAltitudeAGL() > GetRadius())) {
 		SetFlightPhase(EOPSMode::ACTIVE);
@@ -7042,7 +7061,7 @@ bool Ship::HasManualThrottle() const
 
 void Ship::SetManualThrottle(double percent)
 {
-    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
+    if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     EnableManualFlight();
     if (navsys && navsys->AutoNavEngaged()) {
@@ -7069,7 +7088,7 @@ namespace
 
 void Ship::SetManualRotationAxis(int32 Axis, double Value)
 {
-    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
+    if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !sim ||
         sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     Value = FMath::Clamp(Value, -1.0, 1.0);
@@ -7109,7 +7128,7 @@ void Ship::ExecManualRotation(double Seconds)
 
 void Ship::EnableManualFlight()
 {
-    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
+    if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (bManualRotation || !sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
     if (navsys && navsys->AutoNavEngaged()) {
         UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
@@ -7129,7 +7148,7 @@ void Ship::EnableManualFlight()
 
 void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 {
-    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
+    if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !sim || sim->GetPlayerShip()!=this ||
         InTransition() || IsDead() || IsDying()) return;
     if (!bManualRotation && FMath::Abs(Value)<0.001) return;
@@ -7139,7 +7158,7 @@ void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 
 void Ship::SetManualAugmenter(bool Enabled)
 {
-    if (dock && (flight_phase < EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
+    if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
     if (Enabled)
     {

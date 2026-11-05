@@ -230,7 +230,6 @@ void UMenuDlg::RefreshClockLabels()
     {
         const FDateTime UniverseDateTime = FDateTime::FromUnixTimestamp(BaseUnixSeconds + static_cast<int64>(Now));
         UniverseTimeText->SetText(FText::FromString(UniverseDateTime.ToString(TEXT("%Y-%m-%d %H:%M:%S"))));
-        UniverseTimeText->SetJustification(ETextJustify::Right);
     }
 
     if (CampaignTimeText)

@@ -144,15 +144,9 @@ protected:
     // Carrier-relative fixed camera during deck launch. Reset when the
     // controlled ship changes or the fighter passes the authored deck exit.
     bool bLaunchBayAnchorValid = false;
-    bool bLaunchBayExitValid = false;
     const Ship* LaunchBayAnchorCarrier = nullptr; // non-owning legacy Ship
     FVector LaunchBayAnchorLocal = FVector::ZeroVector;
-    FVector LaunchBayExit = FVector::ZeroVector;
     // Saved launch frame: NEVER transition only because the flight phase changes.
-    bool bLaunchBayStartValid = false;
-    FVector LaunchBayStartWorld = FVector::ZeroVector;
-    FVector LaunchBayStartCarrierWorld = FVector::ZeroVector;
-    FVector LaunchBayStartForward = FVector::ForwardVector;
 	List<Ship>         external_group;
 
 	// Converted Starshatter Point -> Unreal FVector
