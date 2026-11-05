@@ -152,8 +152,9 @@ void UShipWeaponMountComponent::UpdateRuntimeAim(const Camera& SimShip, const FQ
     if (!RuntimeWeapon || bLoadoutHardpoint || !RuntimeWeapon->Design() || !RuntimeWeapon->Design()->turret.length()) return;
     if (!bRuntimeAimApplied) { RestMountRotation = GetRelativeRotation().Quaternion(); bRuntimeAimApplied = true; }
     const FQuat Aim = WeaponPresentationFrame::Display(RuntimeWeapon->GetTurretAimCamera(), SimShip, DisplayShip);
-    const FQuat Parent = GetAttachParent() ? GetAttachParent()->GetComponentQuat() : FQuat::Identity;
-    SetRelativeRotation(Parent.Inverse()*Aim);
+    // Set the world pose through the component transform so Unreal accounts
+    // for reflected parents as well as their rotation.
+    SetWorldRotation(Aim);
 }
 
 int32 UShipWeaponMountComponent::GetRemainingRounds() const

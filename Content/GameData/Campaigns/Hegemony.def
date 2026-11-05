@@ -2994,7 +2994,7 @@ group: {
   unit: {
     name:   "Minefield A",
     type:   "Mine",
-    design: "Blockade Mine",
+    design: "BlockadeMine",
     count:  8,
     },
 }
@@ -3014,7 +3014,7 @@ group: {
   unit: {
     name:   "Minefield B",
     type:   "Mine",
-    design: "Blockade Mine",
+    design: "BlockadeMine",
     count:  8,
     },
 }
@@ -3034,7 +3034,7 @@ group: {
   unit: {
     name:   "Minefield C",
     type:   "Mine",
-    design: "Blockade Mine",
+    design: "BlockadeMine",
     count:  8,
     },
 }

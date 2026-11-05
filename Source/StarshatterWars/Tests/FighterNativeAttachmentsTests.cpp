@@ -329,8 +329,9 @@ bool FFighterWeaponRolesTest::RunTest(const FString& Parameters)
     auto* Cannon = CastChecked<UShipWeaponMountComponent>(Fighter->HullWeaponMounts[0].Get());
     TestEqual(TEXT("Raptor twin cannon remains one authored weapon"), Fighter->HullWeaponMounts.Num(),1);
     TestEqual(TEXT("Raptor cannon has both authored muzzles before runtime binding"), Cannon->GetMuzzleCount(),2);
-    TestEqual(TEXT("Raptor first muzzle"), Cannon->GetMuzzleWorldLocation(0), FVector(42.5,-4.25,-4.75));
-    TestEqual(TEXT("Raptor second muzzle"), Cannon->GetMuzzleWorldLocation(1), FVector(42.5,4.25,-4.75));
+    // Keep the DEF barrel order and mirror its lateral axis for the imported hull.
+    TestEqual(TEXT("Raptor first authored muzzle in reflected hull"), Cannon->GetMuzzleWorldLocation(0), FVector(42.5,4.25,-4.75));
+    TestEqual(TEXT("Raptor second authored muzzle in reflected hull"), Cannon->GetMuzzleWorldLocation(1), FVector(42.5,-4.25,-4.75));
     Cannon->SetChildActorClass(AActor::StaticClass());
     auto* Store = CastChecked<UShipWeaponMountComponent>(Fighter->LoadoutHardpoints[0].Get());
     Store->SetChildActorClass(AActor::StaticClass());

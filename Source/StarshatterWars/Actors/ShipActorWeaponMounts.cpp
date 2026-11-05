@@ -37,6 +37,12 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
     const FShipDesign* Design = ShipDesignRegistry::Find(ShipName);
     if (!Design) return;
     NativeWeaponHardpoints = AuthoredWeaponPointComponents;
+    const bool bRotatedStation =
+        ShipName.Equals(TEXT("Station2"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Station3"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Station4"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Station5"), ESearchCase::IgnoreCase) ||
+        ShipName.Equals(TEXT("Station7"), ESearchCase::IgnoreCase);
     // Older visual Blueprints derive from the generic ship/fighter class and
     // have no native stations. Supply missing presentation mounts from the DEF;
     // never change the simulation loadout or replace authored mount overrides.
@@ -66,6 +72,14 @@ void AShipActor::ConfigureWeaponHardpointsFromShipDef(const FString& ShipName)
             ? Cast<UShipWeaponMountComponent>(AuthoredWeaponPointComponents[Index].Get()) : nullptr;
         ++Index;
         if (!Mount) continue;
+        if (bRotatedStation)
+        {
+            // The FBX hull yaw makes its model-space right axis opposite the
+            // legacy definition. The actor already applies the design scale.
+            const FVector& Location = Src.Location;
+            Mount->SetRelativeLocation(FVector(Location.Z, -Location.X, Location.Y));
+            Mount->SetRelativeRotation(WeaponMountRotation(-Src.AzimuthRadians, Src.ElevationRadians));
+        }
         Mount->StationName = FName(*Src.Name);
         Mount->bLoadoutHardpoint = false;
         Mount->AllowedWeaponTypes = {FName(*Src.WeaponType)};

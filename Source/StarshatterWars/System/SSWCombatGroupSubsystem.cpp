@@ -193,6 +193,18 @@ void USSWCombatGroupSubsystem::LoadAll(bool bFull /*= false*/)
         return;
     }
 
+    // Older campaign tables still contain the spaced design identifier.
+    for (const FName RowName : CombatGroupDataTable->GetRowNames())
+    {
+        if (FS_CombatGroup* Row = CombatGroupDataTable->FindRow<FS_CombatGroup>(
+            RowName, TEXT("Normalize blockade mine design"), false))
+        {
+            for (FS_CombatGroupUnit& Unit : Row->Unit)
+                if (Unit.UnitDesign.Equals(TEXT("Blockade Mine"), ESearchCase::IgnoreCase))
+                    Unit.UnitDesign = TEXT("BlockadeMine");
+        }
+    }
+
     //InitializeCombatRoster();
     //ReadCombatRosterData();
 

@@ -185,6 +185,20 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 		return;
 	}
 
+    const FName OldMineName(TEXT("Blockade Mine"));
+    const FName MineName(TEXT("BlockadeMine"));
+    if (const FShipDesign* OldMine = ShipDesignDataTable->FindRow<FShipDesign>(
+        OldMineName, TEXT("Normalize blockade mine design"), false))
+    {
+        if (!ShipDesignDataTable->FindRow<FShipDesign>(MineName, TEXT("Normalize blockade mine design"), false))
+        {
+            FShipDesign Mine = *OldMine;
+            Mine.ShipName = MineName.ToString();
+            ShipDesignDataTable->AddRow(MineName, Mine);
+        }
+        ShipDesignDataTable->RemoveRow(OldMineName);
+    }
+
 	DesignsByName.Empty();
 	ShipDesignRegistry::Clear();
 

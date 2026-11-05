@@ -60,16 +60,14 @@ void ATurretActor::SyncFromWeaponFrame(const Weapon& InWeapon, const Camera& Sim
     RuntimeMuzzles.SetNum(InWeapon.GetTurretBarrelCount());
     const double ModelScale=InWeapon.Design() && FMath::Abs(InWeapon.Design()->scale)>SMALL_NUMBER ? InWeapon.Design()->scale : 1.0;
     for(int32 I=0;I<RuntimeMuzzles.Num();++I) RuntimeMuzzles[I]=InWeapon.GetTurretBarrelOffset(I)/ModelScale;
-    // The native mount can already carry the aim pose. Remove this actor's
-    // actual world rotation, not only the simulated ship rotation, to avoid double aim.
-    GunPivot->SetRelativeRotation(GetActorQuat().Inverse() *
+    // The mount may already carry the aim pose or sit under a reflected hull.
+    GunPivot->SetWorldRotation(
         WeaponPresentationFrame::Display(InWeapon.GetTurretAimCamera(), SimShip, DisplayShip));
     Camera Base; Base.Clone(SimShip);
     const int32 RuntimeAxis = InWeapon.Design() ? InWeapon.Design()->turret_axis : BaseAxis;
     if(RuntimeAxis==1) Base.Pitch(InWeapon.GetElevation()+InWeapon.GetTurretElevationOffset());
     else Base.Yaw(InWeapon.GetAzimuth()+InWeapon.GetTurretAzimuthOffset());
-    BasePivot->SetRelativeRotation(GetActorQuat().Inverse() *
-        WeaponPresentationFrame::Display(Base, SimShip, DisplayShip));
+    BasePivot->SetWorldRotation(WeaponPresentationFrame::Display(Base, SimShip, DisplayShip));
 }
 
 bool ATurretActor::GetMuzzleTransform(int32 BarrelIndex,FTransform& OutTransform) const
