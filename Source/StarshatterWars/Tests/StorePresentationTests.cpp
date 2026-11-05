@@ -20,6 +20,8 @@ bool FStorePresentationTest::RunTest(const FString& Parameters)
     if(Child)
     {
         TestFalse(TEXT("Loaded store is visible"),Child->IsHidden());
+        WeaponSystem.SetAmmo(3); Mount->UpdateRuntimeStore();
+        TestNull(TEXT("Fired missile leaves its rail with reserve ammo remaining"), Mount->GetChildActor());
         WeaponSystem.SetAmmo(0);Mount->UpdateRuntimeStore();TestNull(TEXT("Spent store child is released"),Mount->GetChildActor());
         WeaponSystem.SetAmmo(2);Mount->UpdateRuntimeStore();Child=Mount->GetChildActor();TestNotNull(TEXT("Rearm creates carried store"),Child);if(Child)TestFalse(TEXT("Rearmed store is visible"),Child->IsHidden());
         TestEqual(TEXT("BP sees actual remaining rounds"),Mount->GetRemainingRounds(),2);

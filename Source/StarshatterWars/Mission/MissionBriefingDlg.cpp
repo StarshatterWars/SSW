@@ -415,6 +415,20 @@ void UMissionBriefingDlg::UpdateLiveMission()
         }
     }
 
+    // Match the autonav fallback for a plain key consumed by another flight action.
+    if (CanUseFighterHUD() && RadioMenuAction && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused() &&
+        RadioMenuAction->Triggers.IsEmpty() && RadioMenuAction->Modifiers.IsEmpty()) {
+        if (APlayerController* PC = GetOwningPlayer()) {
+            for (const FEnhancedActionKeyMapping& Mapping : AutoNavInputContext->GetMappings()) {
+                if (Mapping.Action.Get() == RadioMenuAction.Get() && Mapping.Triggers.IsEmpty() &&
+                    Mapping.Modifiers.IsEmpty() && Mapping.Key.IsValid() && PC->WasInputKeyJustPressed(Mapping.Key)) {
+                    ToggleFighterRadio();
+                    break;
+                }
+            }
+        }
+    }
+
     // Resolve hold state from the configured key, independent of action-event
     // consumption or one-shot Hold triggers. Tab is also an explicit temporary hold fallback.
     if (CanUseFighterHUD() && GetWorld() && !GetWorld()->IsPaused())
@@ -1783,8 +1797,6 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         MissionMenuInput->BindAction(EngineeringAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleEngineering);
     else UE_LOG(LogTemp,Warning,TEXT("[Engineering] IA_EngineeringPanel must be Boolean and mapped in IMC_FighterHUD."));
 
-    RadioMenuAction = LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_RadioMenu.IA_RadioMenu"));
-    if (RadioMenuAction) MissionMenuInput->BindAction(RadioMenuAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterRadio);
     RadioChoiceContext = NewObject<UInputMappingContext>(this,NAME_None,RF_Transient);
     RadioChoiceActions.Reset();
     {
@@ -2038,6 +2050,21 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
                 MissionMenuInput->BindAction(AutoAction, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionAutoNav);
             }
             UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] %s -> %s"), *Mapping.Key.ToString(), *AutoAction->GetPathName());
+        }
+    }
+    // Use the mapped radio action and keep the player's resolved key and triggers.
+    for (const UInputMappingContext* Context : AutoContexts) {
+        if (!Context) continue;
+        for (const FEnhancedActionKeyMapping& Mapping : Context->GetMappings()) {
+            if (!Mapping.Action || !Mapping.Action->GetName().Equals(TEXT("IA_RadioMenu"), ESearchCase::IgnoreCase) ||
+                Mapping.Action->ValueType != EInputActionValueType::Boolean) continue;
+            UInputAction* MappedRadioAction = const_cast<UInputAction*>(Mapping.Action.Get());
+            if (RadioMenuAction && RadioMenuAction.Get() != MappedRadioAction) continue;
+            if (!RadioMenuAction) {
+                RadioMenuAction = MappedRadioAction;
+                MissionMenuInput->BindAction(MappedRadioAction, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterRadio);
+            }
+            AutoNavInputContext->MapKey(MappedRadioAction, Mapping.Key) = Mapping;
         }
     }
     // Raise the configured boost mapping above camera defaults.
@@ -2951,7 +2978,9 @@ void UMissionBriefingDlg::UpdateFighterRadioInput()
 }
 void UMissionBriefingDlg::ToggleFighterRadio()
 {
-    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid()) return;
+    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid() || !GetWorld() || GetWorld()->IsPaused()) return;
+    if (LastRadioInputFrame == GFrameCounter) return;
+    LastRadioInputFrame = GFrameCounter;
     bFighterHUDVisible=true;
     FighterHUDDetails->ToggleRadio();
     UpdateFighterRadioInput();

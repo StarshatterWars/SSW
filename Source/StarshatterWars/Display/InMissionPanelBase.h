@@ -4,6 +4,7 @@
 #include "Styling/SlateTypes.h"
 #include "InMissionPanelBase.generated.h"
 class USizeBox;
+class UImage;
 class UTextBlock;
 class UNativeWidgetHost;
 class Ship;
@@ -23,6 +24,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Mission Panel") FMargin ContentInsets=FMargin(24,96,24,24);
     UPROPERTY(Transient) UNativeWidgetHost* FooterWidgetHost=nullptr;
     UPROPERTY(Transient) FButtonStyle FooterButtonStyle;
+    UPROPERTY(Transient) TObjectPtr<UImage> FooterCheckIcon;
     TSharedPtr<SBox> FooterContent;
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
@@ -30,5 +32,6 @@ protected:
     virtual FReply NativeOnKeyDown(const FGeometry&,const FKeyEvent&) override;
     virtual TSharedRef<SWidget> CreatePanelContent();
     virtual FText GetPanelCaption() const;
+    virtual bool UsesFlightPanelStyle() const { return false; }
     Ship* ResolvePanelShip() const;
 };

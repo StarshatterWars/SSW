@@ -118,6 +118,15 @@ gear: {
       },
 }
 
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: { name: "Port", loc: (12, -190, -2), color: "red", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.0 }
+   light: { name: "Starboard", loc: (12, 190, -2), color: "green", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Aft", loc: (-304, 0, 15), color: "white", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.0 }
+}
+
 weapon:     {
    type:             "Vulcan Cannon",
    design:           "Bolt Weapon",

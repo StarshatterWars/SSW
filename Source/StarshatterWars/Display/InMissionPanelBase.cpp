@@ -13,6 +13,8 @@
 #include "Ship.h"
 #include "MissionUIStyle.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
+#include "FlightPanelStyle.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
@@ -42,8 +44,37 @@ void UInMissionPanelBase::NativeConstruct()
     SetIsFocusable(true);
     if(!RuntimeHost)RuntimeHost=Cast<USizeBox>(GetWidgetFromName(TEXT("RuntimeHost")));
     if(!PanelTitle)PanelTitle=Cast<UTextBlock>(GetWidgetFromName(TEXT("PanelTitle")));
-    if(PanelTitle)PanelTitle->SetText(GetPanelCaption());
+    if (PanelTitle)
+    {
+        PanelTitle->SetText(GetPanelCaption());
+        if (UsesFlightPanelStyle())
+        {
+            PanelTitle->SetFont(MissionUIStyle::GetInfoLabelFont(22));
+            PanelTitle->SetColorAndOpacity(FSlateColor(FLinearColor(.88f, .96f, 1.f)));
+        }
+    }
     if(!RuntimeHost || !WidgetTree){UE_LOG(LogTemp,Error,TEXT("%s requires SizeBox RuntimeHost"),*GetName());return;}
+    if (UsesFlightPanelStyle())
+    {
+        if (UPanelWidget* Interior = RuntimeHost->GetParent())
+        {
+            if (UBorder* Frame = Cast<UBorder>(Interior->GetParent()))
+            {
+                Frame->SetBrush(FlightPanelStyle::Glass());
+                Frame->SetBrushColor(FLinearColor::White);
+            }
+            else if (UCanvasPanel* Canvas = Cast<UCanvasPanel>(Interior); Canvas && !GetWidgetFromName(TEXT("FlightGlass")))
+            {
+                UBorder* Glass = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("FlightGlass"));
+                Glass->SetBrush(FlightPanelStyle::Glass());
+                Glass->SetVisibility(ESlateVisibility::HitTestInvisible);
+                UCanvasPanelSlot* GlassSlot = Canvas->AddChildToCanvas(Glass);
+                GlassSlot->SetAnchors(FAnchors(0, 0, 1, 1));
+                GlassSlot->SetOffsets(FMargin(0));
+                GlassSlot->SetZOrder(-1);
+            }
+        }
+    }
     // Reserve the bevel/footer area independently of content size or texture resolution.
     ContentInsets.Bottom = FMath::Max(ContentInsets.Bottom, 112.0f);
     if (UCanvasPanelSlot* HostCanvasSlot = Cast<UCanvasPanelSlot>(RuntimeHost->Slot))
@@ -73,14 +104,24 @@ void UInMissionPanelBase::NativeConstruct()
         FooterSlot->SetAutoSize(false);
         FooterSlot->SetZOrder(10);
         FooterWidgetHost->SetContent(SAssignNew(FooterContent,SBox).VAlign(VAlign_Center));
+        TSharedRef<SWidget> CloseContent = SNew(STextBlock).Text(StyleText->GetText())
+            .Font(StyleText->GetFont()).ColorAndOpacity(FLinearColor::Black);
+        if (UsesFlightPanelStyle())
+        {
+            if (!FooterCheckIcon) FooterCheckIcon = WidgetTree->ConstructWidget<UImage>();
+            MissionUIStyle::SetActionIcon(FooterCheckIcon,
+                TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Check_256x256.T_Check_256x256"),
+                FLinearColor::White);
+            CloseContent = SNew(SBox).WidthOverride(28).HeightOverride(28)[FooterCheckIcon->TakeWidget()];
+        }
         FooterContent->SetContent(
             SNew(SBox).HAlign(HAlign_Right)
             [SNew(SBox).WidthOverride(160).HeightOverride(48)
                 [SNew(SButton).ButtonStyle(&FooterButtonStyle)
                     .HAlign(HAlign_Center).VAlign(VAlign_Center)
                     .OnClicked_Lambda([this](){RequestPanelClose();return FReply::Handled();})
-                    [SNew(STextBlock).Text(StyleText->GetText())
-                        .Font(StyleText->GetFont()).ColorAndOpacity(FLinearColor::Black)]]]);
+                    .ToolTipText(FText::FromString(TEXT("Close")))
+                    [CloseContent]]]);
     }
     else
     {

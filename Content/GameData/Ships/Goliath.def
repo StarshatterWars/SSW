@@ -117,10 +117,19 @@ drive: {
 
 thruster: {
    design:           Thruster,
+   type:             Yellow,
 
    loc:              (0, 0, 128),
    size:             24,
    hull_factor:      0.3
+   port_left: { loc: (-125, -188, 26), rotation: (0, 0, -90), fire: 0x0041, flare_scale: 0.16, trail_scale: 0.16 }
+   port_right: { loc: (-125, 188, 26), rotation: (0, 0, 90), fire: 0x0082, flare_scale: 0.16, trail_scale: 0.16 }
+   port_left: { loc: (-400, -140, -22), rotation: (0, 0, -90), fire: 0x0081, flare_scale: 0.16, trail_scale: 0.16 }
+   port_right: { loc: (-400, 140, -22), rotation: (0, 0, 90), fire: 0x0042, flare_scale: 0.16, trail_scale: 0.16 }
+   port_fore: { loc: (345, 0, -24), rotation: (0, 0, 0), fire: 0x0004, flare_scale: 0.16, trail_scale: 0.16 }
+   port_aft: { loc: (-450, 0, -30), rotation: (0, 180, 0), fire: 0x0008, flare_scale: 0.16, trail_scale: 0.16 }
+   port_top: { loc: (100, 0, 75), rotation: (0, 90, 0), fire: 0x0010, flare_scale: 0.16, trail_scale: 0.16 }
+   port_bottom: { loc: (100, 0, -77), rotation: (0, -90, 0), fire: 0x0020, flare_scale: 0.16, trail_scale: 0.16 }
 }
 
 quantum: {
@@ -156,6 +165,15 @@ power:      {
    hull_factor:      0.8
 }
 
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: { name: "Port", loc: (-125, -188, 26), color: "red", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.0 }
+   light: { name: "Starboard", loc: (-125, 188, 26), color: "green", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.25 }
+   light: { name: "Aft", loc: (-450, 0, 20), color: "white", intensity: 1250, radius: 100, mode: "blink", blink_interval: 0.5, phase: 0.0 }
+}
 
 weapon:     {
    type:             "Orca Cannon",

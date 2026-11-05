@@ -1,6 +1,6 @@
 #include "FighterHUDDetails.h"
 #include "NativeHUDSymbology.h"
-#include "Brushes/SlateRoundedBoxBrush.h"
+#include "FlightPanelStyle.h"
 #include "CockpitDisplays.h"
 #include "FighterActor.h"
 #include "Engine/Engine.h"
@@ -647,7 +647,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     {
         // Compact flight deck: clear central view, stable alignment and restrained glass.
         const FVector2D P(Size.X*.5-330*Scale,20*Scale),D(660*Scale,112*Scale);
-        static const FSlateRoundedBoxBrush Glass(FLinearColor(.012f,.024f,.038f,.82f),10.f);
+        const auto& Glass = FlightPanelStyle::Glass();
         FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
         Box(P+FVector2D(20,0)*Scale,FVector2D(620*Scale,Scale),FLinearColor(.2,.65,.8,.55));
         const FLinearColor Muted(.42,.62,.7,.9),White(.88,.96,1,1),Green(.25,1,.58,1);
@@ -896,7 +896,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
         BuildRadioRows(Labels,Commands,Enabled,Title);
         const FVector2D P(Size.X-260*Scale,24*Scale);
-        Box(P,FVector2D(244,64+Labels.Num()*24)*Scale,FLinearColor(0,0.025f,0.05f,0.9f));
+        const FVector2D D = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
+        const auto& Glass = FlightPanelStyle::Glass();
+        FSlateDrawElement::MakeBox(E, L+1,
+            G.ToPaintGeometry(FVector2f(D), FSlateLayoutTransform(FVector2f(P))),
+            &Glass, ESlateDrawEffect::None, Glass.TintColor.GetSpecifiedColor());
         Text(P+FVector2D(12,10)*Scale,Title);
         for (int32 I=0; I<Labels.Num(); ++I)
             Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?HUDBlue:FLinearColor(0.12f,0.2f,0.25f,1));
@@ -905,7 +909,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     DrawILS(G, E, L);
     if(bHasPlayer && Symbology){
         Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons && !bPreTakeoff);
-        Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
+        if (!bPreTakeoff && (ThirdPerson.Get() || bHelmMode))
+            Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
     }
     return SCompoundWidget::OnPaint(Args,G,Cull,E,L+5,Style,Enabled);
 }

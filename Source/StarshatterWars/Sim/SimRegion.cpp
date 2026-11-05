@@ -873,6 +873,12 @@ void SimRegion::UpdateShots(double seconds)
         s->ExecFrame(seconds);
 
         if (IsDeadShot(s)) {
+            // Shots already killed by collisions are removed above. This
+            // airburst is presentation only and belongs to natural expiry.
+            const WeaponDesign* Design = s->GetDesign();
+            if (sim && Design && !s->IsBeam() && Design->graphic_type == Graphic::BOLT)
+                sim->CreateExplosion(s->GetLocation(), FVector::ZeroVector,
+                    EExplosionType::SHOT_BLAST, 0.35f, 0.35f, this);
             shots.removeIndex(i);
             delete s;
             continue;

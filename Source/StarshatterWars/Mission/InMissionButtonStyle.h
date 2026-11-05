@@ -15,13 +15,6 @@ struct FInMissionButtonStyle {
  TSharedRef<SWidget> Content(const FString& Caption,int Size=14){
   const FString Key=Caption.ToUpper();FString Icon;
   if(Key==TEXT("CLOSE"))Icon=TEXT("Check");
-  else if(Key==TEXT("PREVIOUS"))Icon=TEXT("Arrow_L");else if(Key==TEXT("NEXT"))Icon=TEXT("Arrow_R");
-  else if(Key==TEXT("REFRESH")||Key==TEXT("REPLACE"))Icon=TEXT("Refresh");
-  else if(Key==TEXT("ABORT COUNTDOWN")||Key==TEXT("OFF"))Icon=TEXT("Stop");
-  else if(Key==TEXT("ON")||Key==TEXT("POWER"))Icon=TEXT("OnOff");
-  else if(Key==TEXT("MAN"))Icon=TEXT("Gamepad");else if(Key==TEXT("AUTO"))Icon=TEXT("Refresh");else if(Key==TEXT("DEF"))Icon=TEXT("GPS1");
-  else if(Key==TEXT("REPAIR"))Icon=TEXT("Gear");else if(Key==TEXT("TOGGLE OVERRIDE"))Icon=TEXT("Lock_Unlocked");
-  else if(Key==TEXT("MOVE UP"))Icon=TEXT("Arrow_U");else if(Key==TEXT("MOVE DOWN"))Icon=TEXT("Arrow_D");
   if(!Icon.IsEmpty()){
    if(!Icons.Contains(Icon)){const FString N=TEXT("T_")+Icon+TEXT("_256x256"),P=TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/")+N+TEXT(".")+N;auto Brush=MakeShared<FSlateBrush>();if(auto* T=LoadObject<UTexture2D>(nullptr,*P)){Textures.Emplace(T);Brush->SetResourceObject(T);Brush->DrawAs=ESlateBrushDrawType::Image;}Icons.Add(Icon,Brush);}
    return SNew(SBox).WidthOverride(28).HeightOverride(28).ToolTipText(FText::FromString(Caption))[SNew(SImage).Image(Icons[Icon].Get()).ColorAndOpacity(FLinearColor::White)];

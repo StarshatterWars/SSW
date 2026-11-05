@@ -65,6 +65,7 @@ drive: {
 
 thruster: {
    design:           Thruster,
+   type:             Yellow,
 
    loc:              (0, 0, 128),
    size:             24,

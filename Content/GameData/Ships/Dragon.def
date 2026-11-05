@@ -55,10 +55,10 @@ drive: {
    thrust:           38e3,
    scale:            10,
 
-   port:             (   0, -315, -730)
-   port:             (   0, -400, -730)
-   port:             (-440,   67, -730)
-   port:             (-440,  -24, -730)
+   port:             (-730.00, -0.00, -315.00)
+   port:             (-730.00, -0.00, -400.00)
+   port:             (-730.00, 440.00, 67.00)
+   port:             (-730.00, 440.00, -24.00)
 
    loc:              (0, 0, -120),
    size:             48,
@@ -68,10 +68,20 @@ drive: {
 
 thruster: {
    design:           Thruster,
+   type:             Yellow,
 
    loc:              (0, 0, 128),
    size:             24,
    hull_factor:      0.3
+
+   port_left: { loc: (-630.86, -868.12, 81.61), rotation: (0, 0, -90), fire: 0x0041, flare_scale: 0.18, trail_scale: 0.18 }
+   port_right: { loc: (-441.67, 530.38, -87.57), rotation: (0, 0, 90), fire: 0x0082, flare_scale: 0.18, trail_scale: 0.18 }
+   port_fore: { loc: (1147.65, -31.48, 10.22), rotation: (0, 0, 0), fire: 0x0004, flare_scale: 0.18, trail_scale: 0.18 }
+   port_aft: { loc: (-1682.03, -60.52, 15.16), rotation: (0, 180, 0), fire: 0x0008, flare_scale: 0.18, trail_scale: 0.18 }
+   port_top: { loc: (-301.02, -80.70, 295.56), rotation: (0, 90, 0), fire: 0x0010, flare_scale: 0.18, trail_scale: 0.18 }
+   port_bottom: { loc: (-312.73, -169.62, -578.11), rotation: (0, -90, 0), fire: 0x0020, flare_scale: 0.18, trail_scale: 0.18 }
+   port_left: { loc: (-880.96, -661.57, 81.61), rotation: (0, 0, -90), fire: 0x0081, flare_scale: 0.18, trail_scale: 0.18 }
+   port_right: { loc: (-872.62, 386.73, -60.06), rotation: (0, 0, 90), fire: 0x0042, flare_scale: 0.18, trail_scale: 0.18 }
 }
 
 quantum: {
@@ -101,6 +111,52 @@ power:      {
 
    loc:              (0, 0, -180),
    hull_factor:      0.6
+}
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: {
+      name: "Port"
+      loc: (-630.86, -868.12, 81.61)
+      color: "red"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-441.67, 530.38, -87.57)
+      color: "green"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.25
+   }
+   light: {
+      name: "Dorsal"
+      loc: (-301.02, -80.70, 295.56)
+      color: "white"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0
+   }
+   light: {
+      name: "Aft"
+      loc: (-1682.03, -60.52, 15.16)
+      color: "white"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.25
+   }
 }
 
 weapon:     {

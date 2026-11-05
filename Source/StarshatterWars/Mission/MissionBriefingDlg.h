@@ -304,6 +304,7 @@ protected:
     void ToggleContactsPanel();
     void ToggleMissionAutoNav();
     void SyncMissionNavigationTarget();
+    uint64 LastRadioInputFrame = MAX_uint64;
     uint64 LastAutoNavInputFrame = MAX_uint64;
     class Instruction* AutoNavSelectedRoutePoint = nullptr; // comparison only
     bool bRecoveryTargetSelected = false;

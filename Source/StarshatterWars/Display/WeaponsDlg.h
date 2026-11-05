@@ -10,4 +10,5 @@ class STARSHATTERWARS_API UWeaponsDlg : public UInMissionPanelBase
 protected:
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
+    virtual bool UsesFlightPanelStyle() const override { return true; }
 };

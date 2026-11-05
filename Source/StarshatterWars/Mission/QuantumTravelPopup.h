@@ -14,6 +14,7 @@
 #include "InputCoreTypes.h"
 #include "MissionUIStyle.h"
 #include "InMissionButtonStyle.h"
+#include "FlightPanelStyle.h"
 #include "QuantumTravel.h"
 #include "QuantumDrive.h"
 #include "Ship.h"
@@ -43,10 +44,10 @@ public:
              [SNew(SHorizontalBox)
               +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})[ModernButtons.Content(TEXT("REFRESH"))]]
               +SHorizontalBox::Slot().FillWidth(2).Padding(12,0)[SNew(SButton).ButtonStyle(&Red).IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);}).OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})[ModernButtons.Content(TEXT("ABORT COUNTDOWN"))]]
-              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Red).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[ModernButtons.Content(TEXT("CLOSE"))]]];
+              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).ToolTipText(FText::FromString(TEXT("Close"))).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[ModernButtons.Content(TEXT("CLOSE"))]]];
         ChildSlot[SNew(SOverlay)
             +SOverlay::Slot()[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.005f,0.01f,0.025f,0.8f))]
-            +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)[SNew(SBox).WidthOverride(1040).HeightOverride(720)[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.015f,0.035f,0.065f,1)).Padding(12)[Content]]]]];
+            +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)[SNew(SBox).WidthOverride(1040).HeightOverride(720)[SNew(SBorder).BorderImage(&FlightPanelStyle::Glass()).Padding(12)[Content]]]]];
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
     virtual FReply OnKeyDown(const FGeometry&, const FKeyEvent& Event) override

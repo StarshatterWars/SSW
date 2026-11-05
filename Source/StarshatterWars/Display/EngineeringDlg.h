@@ -97,6 +97,7 @@ protected:
     // ----------------------------------------------------------------
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
+    virtual bool UsesFlightPanelStyle() const override { return true; }
     virtual void BindFormWidgets() override;
     virtual FString GetLegacyFormText() const override;
 

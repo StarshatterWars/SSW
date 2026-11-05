@@ -108,6 +108,8 @@ void UShipWeaponMountComponent::ClearRuntimeWeapon()
     ResolvedStoreClass.Reset();
     if(LauncherVisual){LauncherVisual->DestroyComponent();LauncherVisual=nullptr;}
     RuntimeWeapon=nullptr;
+    bCarriedStoreSpent = false;
+    PresentedRounds = INDEX_NONE;
     RuntimeWeaponName=NAME_None;
     RuntimeWeaponType=NAME_None;
     UpdateRuntimeStore();
@@ -168,6 +170,11 @@ bool UShipWeaponMountComponent::IsStoreAvailable() const
 {
     return RuntimeWeapon && RuntimeWeapon->GetAvailability()>1.0;
 }
+bool UShipWeaponMountComponent::HasCarriedStore() const
+{
+    return !bCarriedStoreSpent && GetRemainingRounds() > 0;
+}
+
 void UShipWeaponMountComponent::UpdateRuntimeStore()
 {
     if (!bLoadoutHardpoint) return;
@@ -178,23 +185,27 @@ void UShipWeaponMountComponent::UpdateRuntimeStore()
         return;
     }
     const int32 Rounds = GetRemainingRounds();
+    // The mesh is one exposed missile. Additional rounds can still be fired
+    // from the station without putting the spent mesh back on the rail.
+    if (PresentedRounds != INDEX_NONE && Rounds != PresentedRounds)
+        bCarriedStoreSpent = Rounds < PresentedRounds;
     const int32 Capacity = GetStoreCapacity();
     const bool Available = IsStoreAvailable();
     AActor* Child = GetChildActor();
     // Empty missile stations should release their carried actor, rather than
     // retain an invisible child for the rest of the fighter's lifetime. Fired
     // missiles are separate world actors managed by the simulation shot.
-    if (Rounds <= 0 && Child)
+    if (!HasCarriedStore() && Child)
     {
         DestroyChildActor();
         Child = nullptr;
     }
-    else if (Rounds > 0 && !Child && GetChildActorClass())
+    else if (HasCarriedStore() && !Child && GetChildActorClass())
     {
         CreateChildActor();
         Child = GetChildActor();
     }
-    if (Child) Child->SetActorHiddenInGame(Rounds<=0 || !Available);
+    if (Child) Child->SetActorHiddenInGame(!Available);
     if (PresentedRounds!=Rounds || PresentedCapacity!=Capacity || bPresentedAvailable!=Available || PresentedStore.Get()!=Child)
     {
         PresentedRounds=Rounds; PresentedCapacity=Capacity; bPresentedAvailable=Available; PresentedStore=Child;

@@ -1866,6 +1866,9 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
             if(auto* Tuned=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::FighterSystem))MainEngineEmitterSystem=Tuned;
         if (!MainEngineEmitterSystem)
             MainEngineEmitterSystem=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::StockSystem);
+        if (!ThrusterFlareSystem && !ThrusterTrailSystem && MainDrive && MainDrive->GetDriveType() == EDriveType::YELLOW)
+            ThrusterTrailSystem = LoadObject<UNiagaraSystem>(nullptr,
+                TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow"));
         if (!ThrusterFlareSystem && !ThrusterTrailSystem)
             ThrusterTrailSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
         CreateEngineAudioComponents();
@@ -2070,8 +2073,8 @@ void AShipActor::SyncCarriedMissiles()
         Mesh->SetRelativeLocation(FVector::ZeroVector);
         Mesh->SetRelativeRotation(FRotator::ZeroRotator);
 
-        Weapon* W = Mount->RuntimeWeapon;
-        Mesh->SetVisibility((!HullWeaponRoot || !Mount->GetChildActorClass()) && W->Ammo() > 0 && W->GetAvailability() > 1.0);
+        Mesh->SetVisibility((!HullWeaponRoot || !Mount->GetChildActorClass()) &&
+            Mount->HasCarriedStore() && Mount->IsStoreAvailable());
     }
 }
 
@@ -2262,7 +2265,16 @@ void AShipActor::BuildMainEnginesFromRuntime()
             Emitter->SetupAttachment(Point);
             Emitter->RegisterComponent();
 
-            Emitter->SetAsset(MainEngineEmitterSystem);
+            static const TCHAR* YellowExhaustPath =
+                TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow");
+            UNiagaraSystem* Exhaust = MainEngineEmitterSystem;
+            if (MainDrive->GetDriveType() == EDriveType::YELLOW &&
+                (!Exhaust || Exhaust->GetPathName() == FighterExhaustTuning::StockSystem))
+            {
+                if (UNiagaraSystem* Yellow = LoadObject<UNiagaraSystem>(nullptr, YellowExhaustPath))
+                    Exhaust = Yellow;
+            }
+            Emitter->SetAsset(Exhaust);
             Emitter->SetRelativeLocation(FVector::ZeroVector);
             Emitter->SetRelativeScale3D(
                 MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));

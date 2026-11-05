@@ -187,6 +187,10 @@ void ABoltWeaponActor::BeginSimulationFlight()
 
 void ABoltWeaponActor::ActivateVisuals()
 {
+    // The emissive halo is the visible energy projectile. Avoid rendering
+    // the opaque placeholder sphere over it in flight.
+    if (ProjectileMesh && PhotonGlowMID)
+        ProjectileMesh->SetHiddenInGame(true);
     bFlightVisualsActive = true;
     SetActorHiddenInGame(false);
     if (CoreFX)

@@ -51,8 +51,8 @@ drive: {
    design:           "Plasma Drive",
    thrust:           1.5e3,
    scale:            7,
-   port:             (  0, -51, -398),
-   port:             (  0, -96, -351),
+   port:             (-398.00, -0.00, -51.00),
+   port:             (-351.00, -0.00, -96.00),
 
    loc:              (  0,   0, -240),
    size:             48,
@@ -149,6 +149,52 @@ power:      {
 
    loc:              (0, 0, -180),
    hull_factor:      0.6
+}
+
+navlight: {
+   design: "Navigation Lights"
+   scale: 1.0
+   period: 0.5
+   light: {
+      name: "Port"
+      loc: (-86.98, -142.85, 41.55)
+      color: "red"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0
+   }
+   light: {
+      name: "Starboard"
+      loc: (-243.17, 142.37, 40.81)
+      color: "green"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.25
+   }
+   light: {
+      name: "Dorsal"
+      loc: (107.71, 24.02, 119.77)
+      color: "white"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0
+   }
+   light: {
+      name: "Aft"
+      loc: (-551.33, -8.81, 24.62)
+      color: "white"
+      intensity: 1800
+      radius: 160
+      mode: "blink"
+      blink_interval: 0.5
+      phase: 0.25
+   }
 }
 
 weapon:     {
