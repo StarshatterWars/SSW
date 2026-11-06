@@ -3367,7 +3367,7 @@ Ship::ExecFrame(double seconds)
         const double Travel = FVector::DotProduct(GetLocation() - dock->StartPoint(), RailDirection);
         if (Travel < Clearance)
         {
-            TranslateBy(GetVelocity() * seconds);
+            MoveTo(GetLocation() + GetVelocity() * seconds);
             GetThrust(seconds);
             return;
         }

@@ -436,6 +436,19 @@ void SFighterHUDDetails::Refresh()
         }
     }
 }
+namespace
+{
+    constexpr double MiniHUDLeft = 550;
+    constexpr double MiniHUDWidth = 1120;
+    constexpr double MiniHUDHeight = 112;
+    constexpr double MiniHUDTop = 20;
+    constexpr double MiniSensorScale = 0.49;
+
+    FVector2D MiniSensorPosition(FVector2D Size, double Scale)
+    {
+        return FVector2D(Size.X * 0.5 + 452 * Scale, MiniHUDTop * Scale);
+    }
+}
 void SFighterHUDDetails::CycleMFD(int32 Index)
 {
     if (Index == 0)
@@ -454,8 +467,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Size = MyGeometry.GetLocalSize();
     const float Scale = FMath::Min(Size.X / 1280.0f, Size.Y / 720.0f);
     const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-    const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
-    const FVector2D Extent(220.f * Scale, 215.f * Scale);
+
     // Legacy carrier launch: clickable only for an aircraft currently staged
     // in ALERT. The player controls the departure, never the mission loader.
     // Below GEAR DOWN; the frame is visible but inert until READY.
@@ -476,6 +488,13 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
             return FReply::Handled();
         }
     }
+    Ship* ShipOnDeck = PlayerShip();
+    const bool bPreTakeoff = ShipOnDeck && ShipOnDeck->GetDock() &&
+        ShipOnDeck->GetDock()->IsLaunchDeck() && ShipOnDeck->GetFlightPhase() < EOPSMode::ACTIVE;
+    if (ThirdPerson.Get() && bPreTakeoff) return FReply::Unhandled();
+    const FVector2D Right = ThirdPerson.Get() ? MiniSensorPosition(Size, Scale)
+        : FVector2D(Size.X - 220 * Scale, Size.Y - 215 * Scale);
+    const FVector2D Extent = FVector2D(220, 215) * (ThirdPerson.Get() ? Scale * MiniSensorScale : Scale);
     if (Local.X >= Right.X && Local.Y >= Right.Y && Local.X <= Right.X + Extent.X && Local.Y <= Right.Y + Extent.Y)
     {
         CycleMFD(1);
@@ -574,6 +593,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     };
     Ship* HUDPlayer=PlayerShip();
     const bool bPreTakeoff=HUDPlayer && HUDPlayer->GetDock() && HUDPlayer->GetDock()->IsLaunchDeck() && HUDPlayer->GetFlightPhase()<EOPSMode::ACTIVE;
+    const bool bCapitalWeapons = HUDPlayer && HUDPlayer->IsStarship();
+    const bool bThirdPerson = ThirdPerson.Get();
+    const bool bMiniHUD = bHasPlayer && bThirdPerson && !bPreTakeoff && !IsCockpitDisplayActive();
     if (!IsCockpitDisplayActive())
     {
     if (bHasPlayer && !ThirdPerson.Get() && !bPreTakeoff)
@@ -623,7 +645,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         ReticleText(-256,SpeedRangeBaseline,108,FString::Printf(TEXT("%.0f"),FlightSpeed));
         ReticleText(-40,-100,80,FString::Printf(TEXT("%03d"),FMath::RoundToInt(HeadingDegrees)%360),true);
         ReticleText(-248,FMath::Max(88.0,LowerReadoutBaseline+(3+MissileReadouts.Num())*LowerReadoutRowHeight),108,TEXT("TAC"));
-        if (bShowWeapons)
+        if (bShowWeapons && !bCapitalWeapons)
         {
             ReticleText(-248,LowerReadoutBaseline+2*LowerReadoutRowHeight,108,DefenseReadout);
             for (int32 I=0; I<MissileReadouts.Num(); ++I)
@@ -643,30 +665,57 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
         if (bGearDown) Popup(126,TEXT("GEAR"));
     }
-    if (bHasPlayer && ThirdPerson.Get())
+    if (bHasPlayer && bMiniHUD)
     {
         // Compact flight deck: clear central view, stable alignment and restrained glass.
-        const FVector2D P(Size.X*.5-330*Scale,20*Scale),D(660*Scale,112*Scale);
+        const FVector2D P(Size.X*.5-330*Scale,MiniHUDTop*Scale);
+        const FVector2D Frame(Size.X*.5-MiniHUDLeft*Scale,P.Y);
+        const FVector2D D(MiniHUDWidth*Scale,MiniHUDHeight*Scale);
         const auto& Glass = FlightPanelStyle::Glass();
-        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
-        Box(P+FVector2D(20,0)*Scale,FVector2D(620*Scale,Scale),FLinearColor(.2,.65,.8,.55));
+        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(Frame))),&Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
+        Box(Frame+FVector2D(20,0)*Scale,FVector2D((MiniHUDWidth-40)*Scale,Scale),FLinearColor(.2,.65,.8,.55));
         const FLinearColor Muted(.42,.62,.7,.9),White(.88,.96,1,1),Green(.25,1,.58,1);
-        auto MiniText=[&](double X,double Y,const FString& Value,int SizeIn,FLinearColor Tint){
+        const auto Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        auto MiniText=[&](double X,double Y,FString Value,int SizeIn,FLinearColor Tint,double Width=0){
             const FSlateFontInfo Font=SizeIn>=20?FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(SizeIn*Scale))):MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(SizeIn*Scale)));
+            if (Width > 0 && Measure->Measure(Value,Font).X > Width*Scale)
+            {
+                while (!Value.IsEmpty() && Measure->Measure(Value+TEXT("..."),Font).X > Width*Scale)
+                    Value.LeftChopInline(1);
+                Value += TEXT("...");
+            }
             FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(430*Scale,30*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(X,Y)*Scale))),Value,Font,ESlateDrawEffect::None,Tint);
         };
-        Box(P+FVector2D(104,18)*Scale,FVector2D(Scale,64*Scale),FLinearColor(.2,.4,.5,.35));
+        for (double X : {-12.0, 104.0, 228.0, 350.0, 510.0, 654.0, 774.0})
+            Box(P+FVector2D(X,18)*Scale,FVector2D(Scale,76*Scale),FLinearColor(.2,.4,.5,.35));
 
-        MiniText(124,12,TEXT("VELOCITY"),10,Muted);
+        MiniText(-204,8,TEXT("SHIP STATUS"),10,Muted);
+        if (HUDPlayer)
+            MiniText(-78,8,FString::Printf(TEXT("EMCON %d"),HUDPlayer->GetEMCON()),10,Muted);
+        for (int32 I=0; I<StatusRows.Num(); ++I)
+        {
+            const auto& Row = StatusRows[I];
+            const bool bThrust = Row.Label == TEXT("THRUST");
+            const FLinearColor Tint = bThrust ? HUDBlue : DamageColor(Row.Percent);
+            const double Y = 22 + I*14;
+            MiniText(-204,Y,Row.Label,10,Muted);
+            Box(P+FVector2D(-137,Y+4)*Scale,FVector2D(47,4)*Scale,FLinearColor(.06,.13,.2,.9));
+            if (Row.Percent >= 0)
+                Box(P+FVector2D(-137,Y+4)*Scale,FVector2D(47*FMath::Clamp(Row.Percent/100.0,0.0,1.0),4)*Scale,Tint);
+            MiniText(-82,Y,FormatStatusReadout(Row.Label,Row.Percent,bThrust && bAugmenterActive),10,Tint,65);
+        }
+
+        MiniText(120,14,TEXT("VELOCITY"),10,Muted);
         const FString Speed=FString::Printf(TEXT("%.0f"),FlightSpeed);
-        MiniText(124,29,Speed,26,White);
+        MiniText(120,37,Speed,26,White);
         const auto SpeedFont=FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(26*Scale)));
         const FVector2D SpeedExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Speed,SpeedFont);
         const auto UnitsFont=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
         const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
-        const FVector2D UnitsPosition=P+FVector2D(124*Scale+SpeedExtent.X+7*Scale,29*Scale+SpeedExtent.Y-UnitsExtent.Y);
+        const FVector2D UnitsPosition=P+FVector2D(120*Scale+SpeedExtent.X+7*Scale,37*Scale+SpeedExtent.Y-UnitsExtent.Y);
         FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,Muted);
-        MiniText(124,69,FString::Printf(TEXT("%03d MARK %d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360,FMath::RoundToInt(PitchDegrees)),13,HUDBlue);
+        MiniText(244,14,TEXT("ATTITUDE"),10,Muted);
+        MiniText(244,43,FString::Printf(TEXT("%03d MARK %d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360,FMath::RoundToInt(PitchDegrees)),13,HUDBlue);
         {
             const FString Heading=FString::Printf(TEXT("%03d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360);
             const auto Font=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
@@ -674,11 +723,47 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             const FVector2D HP(Size.X*.5-274*Scale-Extent.X*.5,P.Y+92*Scale);
             FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(Extent),FSlateLayoutTransform(FVector2f(HP))),Heading,Font,ESlateDrawEffect::None,HUDBlue);
         }
-        MiniText(330,12,bAutoAvailable?TEXT("AUTO PILOT"):TEXT("FLIGHT CONTROL"),10,bAutoAvailable?Green:Muted);
-        MiniText(330,33,CompactNavLabel.Left(26),13,White);
-        FString State=bGearDown?TEXT("GEAR"):TEXT("GEAR UP");if(bAugmenterActive)State+=TEXT("   AUG");
-        MiniText(330,62,State,10,bAugmenterActive?Green:Muted);
-        if(bShowWeapons){MiniText(124,92,Primary.ToUpper().Left(22),10,Muted);MiniText(330,80,Secondary.ToUpper().Left(24),10,Muted);}
+        const bool bAutoland = HUDPlayer && HUDPlayer->IsAutoLandEngaged();
+        MiniText(366,14,bAutoland ? TEXT("AUTOLAND") : bAutoAvailable ? TEXT("AUTO PILOT") : TEXT("FLIGHT CONTROL"),
+            10,(bAutoland || bAutoAvailable) ? Green : Muted);
+        MiniText(366,43,CompactNavLabel,13,White,138);
+        if (NavReadouts.Num() > 0)
+            MiniText(366,62,NavReadouts[0],10,Muted,138);
+        const FString State = bGearDown ? TEXT("GEAR") : TEXT("GEAR UP");
+        MiniText(120,82,bAugmenterActive ? TEXT("AUG") : State,10,bAugmenterActive ? Green : Muted);
+        if (bShowWeapons && !bCapitalWeapons)
+        {
+            MiniText(244,82,Primary.ToUpper().Left(16),10,Muted);
+            MiniText(366,82,Secondary.ToUpper().Left(20),10,Muted);
+        }
+        MiniText(524,14,PlayerName.ToUpper().Left(16),10,Muted);
+        if (PlayerMFDPreview && PlayerMFDPreview->IsReady())
+            FSlateDrawElement::MakeBox(E,L+2,
+                G.ToPaintGeometry(FVector2f(124*Scale,62*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(523,27)*Scale))),
+                &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
+        MiniText(524,81,PlayerClass,10,White,124);
+        MiniText(524,95,HomeCarrierReadout,10,Muted,124);
+        if (bHasTarget)
+        {
+            MiniText(662,8,TargetName,10,TargetDisplayColor,108);
+            if (TargetMFDPreview && TargetMFDPreview->IsReady())
+                FSlateDrawElement::MakeBox(E,L+2,
+                    G.ToPaintGeometry(FVector2f(106*Scale,30*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(662,21)*Scale))),
+                    &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(TargetHull));
+            MiniText(662,65,TargetClass,10,TargetDisplayColor,108);
+            if (TargetHull >= 0)
+            {
+                MiniText(662,78,TEXT("HULL  ")+FormatStatusReadout(TEXT("HULL"),TargetHull),10,TargetDisplayColor,108);
+                MiniText(662,91,TEXT("SHIELD  ")+FormatStatusReadout(TEXT("SHIELD"),TargetShield),10,TargetDisplayColor,108);
+            }
+            MiniText(662,TargetHull >= 0 ? 52 : 82,TargetRange>=0
+                ? UFormattingUtils::FormatDistance(TargetRange*1000.0) : TEXT("RANGE --"),10,TargetDisplayColor,108);
+        }
+        else
+        {
+            MiniText(662,8,TEXT("TARGET"),10,Muted);
+            MiniText(662,43,TEXT("NO TRACK"),10,Muted);
+        }
         if(JumpSeconds>0||ThreatLevel>0){
             const FString Alert=JumpSeconds>0?FString::Printf(TEXT("QUANTUM  %02d"),FMath::CeilToInt(JumpSeconds)):ThreatLevel==2?TEXT("MISSILE INBOUND"):TEXT("TARGET LOCK");
             const FLinearColor AlertColor=JumpSeconds>0?HUDBlue:ThreatLevel==2?FLinearColor(1,.22,.16,1):FLinearColor(1,.78,.25,1);
@@ -725,53 +810,59 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Artwork(I,FVector2D(Size.X*0.5 + (I==5 ? -D.X : 0.0),Size.Y-D.Y),D);
     }
     if (bShowWeapons && !bHasPlayer) Text(FVector2D(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale),TEXT("WEAPONS: NO PLAYER SHIP"));
-    for (int32 Index=0; Index<2; ++Index)
+    for (int32 Index=bThirdPerson ? 1 : 0; Index<2 && (!bThirdPerson || bMiniHUD); ++Index)
     {
         const EMode M=Modes[Index]; if (M==EMode::Off) continue;
-        const FVector2D P(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
-        const FVector2D D(220*Scale, 215*Scale);
+        const FVector2D P = bMiniHUD ? MiniSensorPosition(Size, Scale)
+            : FVector2D(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
+        const double PanelScale = bMiniHUD ? MiniSensorScale * Scale : Scale;
         const FLinearColor Amber(0.55f, 0.9f, 0.35f, 0.9f);
         const FLinearColor Dim(0.2f, 0.45f, 0.15f, 0.7f);
-        Box(P, D, FLinearColor(0.01f, 0.03f, 0.01f, 0.72f));
-        auto Corner = [&](FVector2D At, float XSign, float YSign)
+        if (!bMiniHUD)
         {
-            const float L = 12.f * Scale;
-            Box(At, FVector2D(L, Scale), Amber);
-            Box(At, FVector2D(Scale, L), Amber);
-            if (XSign < 0) Box(At + FVector2D(-L + Scale, 0), FVector2D(L, Scale), Amber);
-            if (YSign < 0) Box(At + FVector2D(0, -L + Scale), FVector2D(Scale, L), Amber);
-        };
-        Corner(P, 1.f, 1.f);
-        Corner(P + FVector2D(D.X - Scale, 0), -1.f, 1.f);
-        Corner(P + FVector2D(0, D.Y - Scale), 1.f, -1.f);
-        Corner(P + FVector2D(D.X - Scale, D.Y - Scale), -1.f, -1.f);
+            const FVector2D D(220*Scale, 215*Scale);
+            Box(P, D, FLinearColor(0.01f, 0.03f, 0.01f, 0.72f));
+            auto Corner = [&](FVector2D At, float XSign, float YSign)
+            {
+                const float L = 12.f * Scale;
+                Box(At, FVector2D(L, Scale), Amber);
+                Box(At, FVector2D(Scale, L), Amber);
+                if (XSign < 0) Box(At + FVector2D(-L + Scale, 0), FVector2D(L, Scale), Amber);
+                if (YSign < 0) Box(At + FVector2D(0, -L + Scale), FVector2D(Scale, L), Amber);
+            };
+            Corner(P, 1.f, 1.f);
+            Corner(P + FVector2D(D.X - Scale, 0), -1.f, 1.f);
+            Corner(P + FVector2D(0, D.Y - Scale), 1.f, -1.f);
+            Corner(P + FVector2D(D.X - Scale, D.Y - Scale), -1.f, -1.f);
+        }
         const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SNSR  FOV"):M==EMode::HSD?TEXT("SNSR  HSD"):TEXT("SNSR  3D");
-        Text(P+FVector2D(10,6)*Scale, Title, Amber, 10);
-        Box(P+FVector2D(8,20)*Scale, FVector2D(70*Scale, Scale), Dim);
+        Text(P+FVector2D(10,6)*PanelScale, Title, Amber, bMiniHUD ? 8 : 10);
+        Box(P+FVector2D(8,20)*PanelScale, FVector2D(70*PanelScale, Scale), Dim);
         if (M != EMode::Ship)
         {
             const int32 ArtIndex = M == EMode::FOV ? 2 : M == EMode::HSD ? 3 : 4;
-            Artwork(ArtIndex,P+FVector2D(30,32)*Scale,FVector2D(160,160)*Scale);
+            Artwork(ArtIndex,P+FVector2D(30,32)*PanelScale,FVector2D(160,160)*PanelScale);
         }
-        if (!bHasPlayer) { Text(P+FVector2D(8,36)*Scale,TEXT("NO TRACK"), Amber); continue; }
+        if (!bHasPlayer) { Text(P+FVector2D(8,36)*PanelScale,TEXT("NO TRACK"), Amber); continue; }
         if (M==EMode::Ship)
         {
-            for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,28+I*20)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
+            for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,28+I*20)*PanelScale,StatusRows[I].Label,StatusRows[I].Percent);
             if (Ship* PShip = PlayerShip())
-                Text(P+FVector2D(8,158)*Scale, FString::Printf(TEXT("EMCON %d"), PShip->GetEMCON()), Amber, 10);
+                Text(P+FVector2D(8,158)*PanelScale, FString::Printf(TEXT("EMCON %d"), PShip->GetEMCON()), Amber, 10);
             if (NavReadouts.Num() > 0)
-                Text(P+FVector2D(8,174)*Scale, NavReadouts[0], Amber, 10);
+                Text(P+FVector2D(8,174)*PanelScale, NavReadouts[0], Amber, 10);
             if (bAugmenterActive)
-                Text(P+FVector2D(8,192)*Scale, TEXT("AUG ON"), FLinearColor(0.2f,1.0f,0.35f,1.0f));
+                Text(P+FVector2D(8,192)*PanelScale, TEXT("AUG ON"), FLinearColor(0.2f,1.0f,0.35f,1.0f));
         }
         else
         {
-            const FVector2D Center=P+FVector2D(110,112)*Scale;
-            const double Radius=72*Scale;
+            const FVector2D Center=P+FVector2D(110,112)*PanelScale;
+            const double Radius=72*PanelScale;
+            const float MarkerSize = bMiniHUD ? 4.f : 6.f;
             auto Mark = [&](const FVector2D& At, const FLinearColor& Color)
             {
                 FSlateDrawElement::MakeBox(E, L+6,
-                    G.ToPaintGeometry(FVector2f(6.f, 6.f), FSlateLayoutTransform(FVector2f(At - FVector2D(3.f, 3.f)))),
+                    G.ToPaintGeometry(FVector2f(MarkerSize, MarkerSize), FSlateLayoutTransform(FVector2f(At - FVector2D(MarkerSize * .5f, MarkerSize * .5f)))),
                     FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, Color);
             };
             Mark(Center, Amber);
@@ -781,7 +872,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 if (M == EMode::FOV)
                 {
                     Offset = FVector2D(B.Az / (PI / 2), -B.El / (PI / 2)) * Radius;
-                    const double UsableRadius = FMath::Max(0.0, Radius - 4.25); // keep 6x6 marker inside circle
+                    const double UsableRadius = FMath::Max(0.0, Radius - MarkerSize * 0.707107);
                     if (Offset.SizeSquared() > UsableRadius * UsableRadius)
                         Offset = Offset.GetSafeNormal() * UsableRadius;
                 }
@@ -796,7 +887,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 }
                 Mark(Center + Offset, B.Color);
             }
-            Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%03.0f KM  %02d TRK"),SensorRange/1000,Contacts.Num()), Amber, 9);
+            Text(P+FVector2D(8,192)*PanelScale,FString::Printf(TEXT("%03.0f KM  %02d TRK"),SensorRange/1000,Contacts.Num()), Amber, bMiniHUD ? 8 : 9);
         }
     }
     // Compact inward-facing ship columns leave the center clear for CAUTION.
@@ -813,7 +904,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         Text(P,Label,Color);
     };
-    if(bHasPlayer)
+    if (bHasPlayer && !bThirdPerson)
     {
         // Reserve an extra HOME row for fighters while keeping the final row at the bottom edge.
         const double HomeRowHeight = HomeCarrierReadout.IsEmpty() ? 0.0 : 20.0;
@@ -827,11 +918,14 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (!HomeCarrierReadout.IsEmpty()) ShipText(P+FVector2D(0,132)*Scale,HomeCarrierReadout);
         ShipText(P+FVector2D(0,132+HomeRowHeight)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),PlayerHull),ShipHealthColor(PlayerHull));
         ShipText(P+FVector2D(0,152+HomeRowHeight)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),PlayerShield),ShipHealthColor(PlayerShield));
-        if (bShowWeapons && !ThirdPerson.Get() && !bPreTakeoff)
+        if (bShowWeapons && !bCapitalWeapons && !ThirdPerson.Get() && !bPreTakeoff)
         {
         ReticleText(-248,LowerReadoutBaseline,108,Primary.ToUpper());
         ReticleText(-248,LowerReadoutBaseline+LowerReadoutRowHeight,108,Secondary.ToUpper());
         }
+    }
+    if (bHasPlayer && bShowCaution)
+    {
         const int32 Rows=FMath::Min(12,DamageRows.Num());
         // Fit all visible caution labels to one shared size: the smallest required.
         const auto CautionMeasure=FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
@@ -858,7 +952,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
 
         }
     }
-    if(bHasTarget)
+    if (bHasTarget && !bThirdPerson)
     {
         // Target has one additional range row. Keep its final row bottom-aligned too.
         const FVector2D P(Size.X-408*Scale,Size.Y-192*Scale);
@@ -885,6 +979,22 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     } // External instruments; radio and information remain available in cockpit.
+    if (bCapitalWeapons && bShowWeapons && !bShowCaution &&
+        (!bShowInformation || InformationCaptions.IsEmpty()))
+    {
+        const int32 MissileCount = FMath::Min(MissileReadouts.Num(), 6);
+        const FVector2D D = FVector2D(326, 69 + 18 * ((MissileCount + 1) / 2)) * Scale;
+        const FVector2D P((Size.X - D.X) * 0.5, Size.Y - D.Y - 8 * Scale);
+        const FSlateBrush& Glass = FlightPanelStyle::Glass();
+        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
+            &Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
+        Text(P+FVector2D(12,8)*Scale,TEXT("WEAPONS"),HUDBlue);
+        Text(P+FVector2D(12,29)*Scale,Primary);
+        Text(P+FVector2D(168,29)*Scale,Secondary);
+        Text(P+FVector2D(12,47)*Scale,DefenseReadout);
+        for (int32 I=0; I<MissileCount; ++I)
+            Text(P+FVector2D(12+156*(I%2),65+18*(I/2))*Scale,MissileReadouts[I]);
+    }
     // Both panels share the same 512x256 native artwork extents and anchor.
     for(int32 I=7;bShowInformation && !InformationCaptions.IsEmpty() && I<9;++I)
     {
@@ -895,7 +1005,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     {
         TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
         BuildRadioRows(Labels,Commands,Enabled,Title);
-        const FVector2D P(Size.X-260*Scale,24*Scale);
+        const FVector2D P(Size.X-260*Scale,(bMiniHUD ? MiniHUDTop+MiniHUDHeight+8 : 24)*Scale);
         const FVector2D D = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
         const auto& Glass = FlightPanelStyle::Glass();
         FSlateDrawElement::MakeBox(E, L+1,

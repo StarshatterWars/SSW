@@ -22,6 +22,8 @@ private:
     friend class FPlayerMFDRenderTest;
     bool bPlayerPanel = false;
     bool bHasLiveView = false;
+    double NextStaticCaptureAt = 0.0;
+    int32 StaticWarmupCaptures = 0;
     void Clear();
     FString Key;
     TUniquePtr<FPreviewScene> Scene;

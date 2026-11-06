@@ -7,6 +7,8 @@ class UCanvasPanel;
 class UTextBlock;
 class UButton;
 class UBorder;
+class UImage;
+class USizeBox;
 class UUserWidget;
 UCLASS()
 class STARSHATTERWARS_API UMissionsPanelDriver : public UBaseScreen
@@ -41,6 +43,8 @@ private:
     UPROPERTY(Transient) TObjectPtr<UBorder> SummaryOverlay = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> SummaryTitle = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> SummaryDetails = nullptr;
+    UPROPERTY(Transient) TObjectPtr<USizeBox> SummaryArtFrame = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UImage> SummaryArt = nullptr;
     UPROPERTY(Transient) TObjectPtr<UMenuScreen> Manager = nullptr;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanel> ContentHost = nullptr;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> ModeTitle = nullptr;

@@ -233,8 +233,18 @@ void UMissionsPanelDriver::BuildDriverLayout()
     SummaryTitle = Label(TEXT("CAMPAIGN SUMMARY"), 28, FLinearColor::White);
     SummaryTitle->SetFont(MissionUIStyle::GetHeaderFont(28));
     SummaryColumn->AddChildToVerticalBox(SummaryTitle)->SetPadding(FMargin(0.f, 0.f, 0.f, 18.f));
+    UHorizontalBox* SummaryBody = WidgetTree->ConstructWidget<UHorizontalBox>();
+    SummaryColumn->AddChildToVerticalBox(SummaryBody)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    SummaryArtFrame = WidgetTree->ConstructWidget<USizeBox>();
+    SummaryArtFrame->SetWidthOverride(300.f);
+    SummaryBody->AddChildToHorizontalBox(SummaryArtFrame)->SetPadding(FMargin(0.f, 0.f, 24.f, 0.f));
+    UScaleBox* SummaryArtScale = WidgetTree->ConstructWidget<UScaleBox>();
+    SummaryArtScale->SetStretch(EStretch::ScaleToFit);
+    SummaryArtFrame->SetContent(SummaryArtScale);
+    SummaryArt = WidgetTree->ConstructWidget<UImage>();
+    SummaryArtScale->SetContent(SummaryArt);
     UScrollBox* SummaryScroll = WidgetTree->ConstructWidget<UScrollBox>();
-    SummaryColumn->AddChildToVerticalBox(SummaryScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    SummaryBody->AddChildToHorizontalBox(SummaryScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     SummaryDetails = Label(TEXT(""), 17, FLinearColor::White);
     SummaryDetails->SetAutoWrapText(true);
     SummaryScroll->AddChild(SummaryDetails);
@@ -440,6 +450,9 @@ void UMissionsPanelDriver::OpenCampaignSummary()
     Campaign* Active = Campaign::GetCampaign();
     if (!Active || !SummaryOverlay) return;
 
+    UTexture2D* Art = MissionUIStyle::LoadCampaignArt(Active->GetCampaignId());
+    SummaryArt->SetBrushFromTexture(Art, true);
+    SummaryArtFrame->SetVisibility(Art ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     SummaryTitle->SetText(FText::FromString(FString(UTF8_TO_TCHAR(Active->GetName())).ToUpper()));
     FString Details = FString(UTF8_TO_TCHAR(Active->GetDescription())).TrimStartAndEnd();
     const FString Situation = FString(UTF8_TO_TCHAR(Active->Situation())).TrimStartAndEnd();
@@ -450,7 +463,7 @@ void UMissionsPanelDriver::OpenCampaignSummary()
         Details += TEXT("\n\nORDERS\n") + Orders;
     SummaryDetails->SetText(Details.IsEmpty()
         ? NSLOCTEXT("Missions", "NoCampaignSummary", "No campaign summary available.")
-        : FText::FromString(Details.TrimStart()));
+        : FText::FromString(Details.Replace(TEXT("\\n"), TEXT("\n")).TrimStartAndEnd()));
     SummaryOverlay->SetVisibility(ESlateVisibility::Visible);
     SummaryClose->SetUserFocus(GetOwningPlayer());
 }

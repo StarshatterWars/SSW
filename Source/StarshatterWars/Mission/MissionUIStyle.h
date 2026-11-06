@@ -18,6 +18,7 @@
 class UButton;
 class UImage;
 class UGameInstance;
+class UTexture2D;
 
 namespace MissionUIStyle
 {
@@ -27,6 +28,7 @@ namespace MissionUIStyle
 
     void ApplyActionButtonStyle(UButton* Button, const TCHAR* Color);
     void SetActionIcon(UImage* Image, const TCHAR* TexturePath, const FLinearColor& Color);
+    UTexture2D* LoadCampaignArt(int32 CampaignId);
 
     // Colors
     // -----------------------------------------------------------------

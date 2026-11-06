@@ -23,6 +23,18 @@
 
 namespace MissionUIStyle
 {
+    UTexture2D* LoadCampaignArt(int32 CampaignId)
+    {
+        static const TCHAR* Assets[] = {
+            TEXT("main"), TEXT("main"), TEXT("01-Campaign-Start"),
+            TEXT("01-Campaign-Start"), TEXT("01-Operation-Nightfall")
+        };
+        if (CampaignId < 1 || CampaignId > UE_ARRAY_COUNT(Assets)) return nullptr;
+        const TCHAR* Asset = Assets[CampaignId - 1];
+        const FString Path = FString::Printf(TEXT("/Game/UI/Campaigns/%02d/%s.%s"), CampaignId, Asset, Asset);
+        return LoadObject<UTexture2D>(nullptr, *Path);
+    }
+
     void ApplyMenuButtonStyle(UButton* Button, UGameInstance* GameInstance)
     {
         if (Button && GameInstance)

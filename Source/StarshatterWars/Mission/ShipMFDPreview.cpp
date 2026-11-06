@@ -9,6 +9,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "RHI.h"
+#include "HAL/PlatformTime.h"
 
 FShipMFDPreview::FShipMFDPreview(bool bInPlayerPanel):bPlayerPanel(bInPlayerPanel){}
 FShipMFDPreview::~FShipMFDPreview(){Clear();}
@@ -18,6 +19,8 @@ void FShipMFDPreview::Clear()
     if(Visual.IsValid())Visual->Destroy();
     Capture.Reset();Visual.Reset();Brush.SetResourceObject(nullptr);
     Material.Reset();Target.Reset();Scene.Reset();Key.Empty();bHasLiveView=false;
+    StaticWarmupCaptures = 0;
+    NextStaticCaptureAt = 0.0;
 }
 bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
 {
@@ -25,12 +28,20 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     const FString NextKey=Design->ShipName+Design->Mesh.ToSoftObjectPath().ToString();
     if(Key==NextKey && IsReady())
     {
-        // Refresh at the HUD sampling rate after streaming/shader warmup.
-        // Both captures stay in their own preview worlds.
-        if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView)
+        // The player's preview has a fixed view and HUD tint. Refresh briefly
+        // during streaming, then reuse the render target until the design changes.
+        const double Now = FPlatformTime::Seconds();
+        const bool bCaptureDue = !bPlayerPanel ||
+            (StaticWarmupCaptures > 0 && Now >= NextStaticCaptureAt);
+        if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView && bCaptureDue)
         {
             Scene->GetWorld()->SendAllEndOfFrameUpdates();
             Capture->GetCaptureComponent2D()->CaptureScene();
+            if (bPlayerPanel)
+            {
+                --StaticWarmupCaptures;
+                NextStaticCaptureAt = Now + 1.0;
+            }
         }
         return true;
     }
@@ -83,6 +94,8 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     Material->SetTextureParameterValue(TEXT("ShipTexture"),Target.Get());
     Brush.SetResourceObject(Material.Get());Brush.ImageSize=FVector2D(bPlayerPanel ? 512 : 256,256);
     Brush.DrawAs=ESlateBrushDrawType::Image;Key=NextKey;
+    StaticWarmupCaptures = 5;
+    NextStaticCaptureAt = FPlatformTime::Seconds() + 1.0;
     return true;
 }
 

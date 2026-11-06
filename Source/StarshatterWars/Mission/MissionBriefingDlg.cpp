@@ -475,7 +475,7 @@ void UMissionBriefingDlg::UpdateLiveMission()
                 Manager->ShowDebriefDlg(CampaignPtr && CampaignPtr->IsTraining() ? CampaignPtr : nullptr);
                 Debrief->Show();
             }
-            else manager->ShowMissionDebriefDlg();
+            else manager->ShowMissionDebriefDlg(CampaignPtr && CampaignPtr->IsTraining() ? CampaignPtr : nullptr);
             UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Debrief opened after completion/recovery"));
             if (APlayerController* PC = GetOwningPlayer())
             {
@@ -1378,7 +1378,6 @@ void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
     SelectedMissionTarget.Reset();
     SelectedMissionTargetName = FText::GetEmpty();
     SelectedMissionTargetLocalBounds = FBox(ForceInit);
-    MissionTitleRevealTime = -1.0;
     if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
@@ -1416,15 +1415,6 @@ void UMissionBriefingDlg::CloseEmptySectorPreview(bool bPreserveSimulation)
             if (UGameViewportClient* Viewport = World->GetGameViewport())
                 Viewport->RemoveViewportWidgetContent(MissionSceneCover.ToSharedRef());
         MissionSceneCover.Reset();
-    }
-    if (EmptySectorOverlay.IsValid())
-    {
-        if (UWorld* World = GetWorld())
-        {
-            if (UGameViewportClient* Viewport = World->GetGameViewport())
-                Viewport->RemoveViewportWidgetContent(EmptySectorOverlay.ToSharedRef());
-        }
-        EmptySectorOverlay.Reset();
     }
     for (const TWeakObjectPtr<AActor>& Actor : PreviewHiddenActors)
     {
@@ -1654,7 +1644,6 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
     for (const TWeakObjectPtr<AActor>& Actor : MissionSunHiddenActors)
         if (Actor.IsValid()) Actor->SetActorHiddenInGame(false);
     MissionSunHiddenActors.Empty();
-    MissionTitleRevealTime = World->GetTimeSeconds();
     if (MissionSceneCover.IsValid())
     {
         if (UGameViewportClient* Viewport = World->GetGameViewport())
@@ -2472,9 +2461,6 @@ bool UMissionBriefingDlg::CanUseFighterHUD() const
 
 bool UMissionBriefingDlg::CanShowFighterHUD() const
 {
-    Ship* Pilot=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
-    // Cinematic recovery: do not alter controls or simulation while suppressing HUD.
-    if(Pilot && (Pilot->IsAutoLandEngaged() || Pilot->GetFlightPhase()>=EOPSMode::RECOVERY)) return false;
     return bLiveMissionStarted && !bMissionCompleteHandedOff
         && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
@@ -2846,43 +2832,6 @@ void UMissionBriefingDlg::OnCommit()
             }
         }
     }
-
-    const auto MissionTitleOpacity = [WeakThis = TWeakObjectPtr<UMissionBriefingDlg>(this)]()
-    {
-        if (!WeakThis.IsValid()) return 0.0f;
-        UWorld* TitleWorld = WeakThis->GetWorld();
-        const double Start = WeakThis->MissionTitleRevealTime;
-        if (!TitleWorld || Start < 0.0) return 1.0f;
-        const double Elapsed = TitleWorld->GetTimeSeconds() - Start;
-        return static_cast<float>(1.0 - FMath::Clamp(Elapsed - 10.0, 0.0, 1.0));
-    };
-
-    EmptySectorOverlay = SNew(SOverlay)
-        .Visibility(EVisibility::HitTestInvisible)
-        + SOverlay::Slot()
-        .HAlign(HAlign_Center)
-        .VAlign(VAlign_Top)
-        .Padding(FMargin(32.0f, 24.0f))
-        [
-            SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 6.0f)
-            [
-                SNew(STextBlock)
-                .Text(ToTextFromUtf8(MissionPtr->GetName()))
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 18))
-                .ColorAndOpacity_Lambda([MissionTitleOpacity]()
-                {
-                    return FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, MissionTitleOpacity()));
-                })
-                .ShadowOffset(FVector2D(1.0f, 1.0f))
-                .ShadowColorAndOpacity_Lambda([MissionTitleOpacity]()
-                {
-                    return FLinearColor(0.0f, 0.0f, 0.0f, MissionTitleOpacity());
-                })
-
-            ]
-        ];
-    Viewport->AddViewportWidgetContent(EmptySectorOverlay.ToSharedRef(), 1000);
 
     if (APlayerController* PC = GetOwningPlayer())
     {

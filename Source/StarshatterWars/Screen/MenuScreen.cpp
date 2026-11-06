@@ -745,11 +745,12 @@ UMissionDebriefDlg* UMenuScreen::GetMissionDebriefDlg()
     return EnsureDialog<UMissionDebriefDlg>(DebriefClass,MissionDebriefDlg);
 }
 
-void UMenuScreen::ShowMissionDebriefDlg()
+void UMenuScreen::ShowMissionDebriefDlg(Campaign* TrainingCampaign)
 {
     if (auto* Debrief = GetMissionDebriefDlg())
     {
         HideAll();
+        Debrief->SetTrainingCampaign(TrainingCampaign);
         Debrief->Show();
         ShowDialog(Debrief,300);
     }
@@ -780,7 +781,7 @@ void UMenuScreen::ReturnFromMissionBriefing()
     Caller->SetIsFocusable(true);
     Caller->SetDialogInputEnabled(true);
     CurrentDialog = Caller;
-    if (Caller == MissionsPanelDriver) MissionsPanelDriver->RefreshTabAccess();
+    if (Caller == MissionsPanelDriver) MissionsPanelDriver->Show();
     bIsShown = true;
     if (APlayerController* PC = GetOwningPlayer()) ApplyUIFocus(PC, Caller);
 }

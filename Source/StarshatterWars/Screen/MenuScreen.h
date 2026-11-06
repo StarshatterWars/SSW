@@ -101,7 +101,7 @@ public:
     void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
     void ReturnFromMissionBriefing();
     UMissionDebriefDlg* GetMissionDebriefDlg();
-    void ShowMissionDebriefDlg();
+    void ShowMissionDebriefDlg(Campaign* TrainingCampaign = nullptr);
 
     void ShowMsnElemDlg();
     void EditMissionElement(Mission* Model, MissionElement* Element);

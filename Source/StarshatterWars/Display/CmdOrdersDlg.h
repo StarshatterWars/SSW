@@ -6,6 +6,8 @@
 
 class UTextBlock;
 class UCmdDlg;
+class UImage;
+class USizeBox;
 
 /** Operations > Orders. Layout is constructed in C++ and does not require Blueprint bindings. */
 UCLASS()
@@ -22,6 +24,7 @@ public:
     void SetCampaignOrders();
 
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     // Retained for compatibility with existing WBP_CmdOrdersDlg bindings.
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* CampaignNameText = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) UTextBlock* DescriptionText = nullptr;
@@ -35,5 +38,6 @@ protected:
     UPROPERTY() UCmdDlg* ParentCmdDlg = nullptr;
 
 private:
-    void BuildModernOrdersLayout();
+    UPROPERTY(Transient) TObjectPtr<USizeBox> CampaignArtFrame = nullptr;
+    UPROPERTY(Transient) TObjectPtr<UImage> CampaignArt = nullptr;
 };
