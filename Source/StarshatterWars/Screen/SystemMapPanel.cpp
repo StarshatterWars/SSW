@@ -642,6 +642,128 @@ void USystemMapPanel::ShowSystemOverview()
     ResetSystemView();
 }
 
+void USystemMapPanel::BuildMissionProjection(const FVector2D& Size,
+    TArray<FProjectedMapBody>& Bodies, TArray<TArray<FVector2D>>* Orbits) const
+{
+    if (!CachedPrimaryStarBody || Size.X <= 0 || Size.Y <= 0) return;
+
+    const FVector2D ScreenCenter = Size * 0.5 + PanOffset;
+    const double ShortSide = FMath::Min(Size.X, Size.Y);
+    const double FocalLength = ShortSide * 1.10 * ZoomScale;
+    const double Azimuth = FMath::DegreesToRadians(MissionMapAzimuth);
+    const double Elevation = FMath::DegreesToRadians(MissionMapElevation);
+    const FVector Forward(FMath::Cos(Elevation) * FMath::Cos(Azimuth),
+        FMath::Cos(Elevation) * FMath::Sin(Azimuth), -FMath::Sin(Elevation));
+    const FVector Right(-FMath::Sin(Azimuth), FMath::Cos(Azimuth), 0);
+    const FVector Up = FVector::CrossProduct(Forward, Right);
+    const FVector Camera = -Forward * 2.85;
+
+    auto Project = [&](const FVector& Position, double& Depth)
+    {
+        const FVector Relative = Position - Camera;
+        Depth = FVector::DotProduct(Relative, Forward);
+        return ScreenCenter + FVector2D(FVector::DotProduct(Relative, Right),
+            -FVector::DotProduct(Relative, Up)) * (FocalLength / Depth);
+    };
+    auto AddBody = [&](OrbitalBody* Body, const FVector& Position, double Diameter)
+    {
+        double Depth = 0;
+        const FVector2D Center = Project(Position, Depth);
+        Bodies.Add({Body, Center, static_cast<float>(FocalLength * Diameter / Depth), Depth});
+    };
+    auto OrbitPosition = [](const FVector& Parent, double Radius, double Phase)
+    {
+        return Parent + FVector(FMath::Cos(Phase) * Radius, FMath::Sin(Phase) * Radius, 0);
+    };
+    auto AddOrbit = [&](const FVector& Parent, double Radius, int32 Segments)
+    {
+        if (!Orbits) return;
+        auto& Points = Orbits->AddDefaulted_GetRef();
+        Points.Reserve(Segments + 1);
+        for (int32 Index = 0; Index <= Segments; ++Index)
+        {
+            double Depth = 0;
+            Points.Add(Project(OrbitPosition(Parent, Radius, 2.0 * PI * Index / Segments), Depth));
+        }
+    };
+
+    if (FocusedMoon)
+    {
+        AddBody(FocusedMoon, FVector::ZeroVector, 0.96);
+        return;
+    }
+
+    double MaxPlanetOrbit = 0;
+    for (const OrbitalBody* Planet : CachedPlanetBodies)
+        if (Planet) MaxPlanetOrbit = FMath::Max(MaxPlanetOrbit, Planet->Orbit());
+
+    if (!FocusedPlanet) AddBody(CachedPrimaryStarBody, FVector::ZeroVector, 0.20);
+    for (int32 PlanetIndex = 0; PlanetIndex < CachedPlanetBodies.Num(); ++PlanetIndex)
+    {
+        OrbitalBody* Planet = CachedPlanetBodies[PlanetIndex];
+        if (!Planet || (FocusedPlanet && Planet != FocusedPlanet)) continue;
+        const double Radius = FMath::Lerp(0.28, 1.0,
+            FMath::Sqrt(FMath::Clamp(Planet->Orbit() / FMath::Max(1.0, MaxPlanetOrbit), 0.0, 1.0)));
+        const FVector PlanetPosition = FocusedPlanet ? FVector::ZeroVector
+            : OrbitPosition(FVector::ZeroVector, Radius, ComputePlanetAngleRadians(Planet, PlanetIndex));
+        const double PlanetDiameter = FocusedPlanet ? 0.63
+            : FMath::Clamp(static_cast<double>(ComputePlanetDrawSize(Planet)) / 310.0, 0.065, 0.19);
+        if (!FocusedPlanet) AddOrbit(FVector::ZeroVector, Radius, 96);
+        AddBody(Planet, PlanetPosition, PlanetDiameter);
+
+        double MaxMoonOrbit = 0;
+        ListIter<OrbitalBody> Satellites = Planet->Satellites();
+        while (++Satellites)
+            if (const OrbitalBody* Moon = Satellites.value())
+                MaxMoonOrbit = FMath::Max(MaxMoonOrbit, Moon->Orbit());
+
+        int32 MoonIndex = 0;
+        ListIter<OrbitalBody> Moons = Planet->Satellites();
+        while (++Moons)
+        {
+            OrbitalBody* Moon = Moons.value();
+            if (!Moon) continue;
+            const double Fraction = FMath::Sqrt(FMath::Clamp(
+                Moon->Orbit() / FMath::Max(1.0, MaxMoonOrbit), 0.0, 1.0));
+            const double MoonRadius = FocusedPlanet ? FMath::Lerp(0.48, 0.94, Fraction)
+                : PlanetDiameter * FMath::Lerp(0.78, 1.27, Fraction);
+            AddOrbit(PlanetPosition, MoonRadius, 48);
+            AddBody(Moon, OrbitPosition(PlanetPosition, MoonRadius,
+                ComputeMoonAngleRadians(Moon, MoonIndex++)), FocusedPlanet ? 0.12 : 0.027);
+        }
+    }
+}
+
+void USystemMapPanel::FocusMissionBody(OrbitalBody* Body)
+{
+    if (!Body || Body == CachedPrimaryStarBody)
+    {
+        ShowSystemOverview();
+        return;
+    }
+
+    FocusedPlanet = Body->GetType() == Orbital::PLANET ? Body : nullptr;
+    FocusedMoon = Body->GetType() == Orbital::MOON ? Body : nullptr;
+    if (FocusedMoon)
+    {
+        for (OrbitalBody* Planet : CachedPlanetBodies)
+        {
+            if (!Planet) continue;
+            ListIter<OrbitalBody> Moons = Planet->Satellites();
+            while (++Moons)
+                if (Moons.value() == FocusedMoon) FocusedPlanet = Planet;
+            if (FocusedPlanet) break;
+        }
+        SavedPlanetZoom = 1.0f;
+        SavedPlanetPan = FVector2D::ZeroVector;
+    }
+    SelectedBodyName = UTF8_TO_TCHAR(Body->GetName());
+    ZoomScale = TargetZoom = 1.0f;
+    PanOffset = TargetPan = FVector2D::ZeroVector;
+    bCameraAnimating = bSmoothZoomStep = false;
+    Invalidate(EInvalidateWidget::Paint);
+}
+
 bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
 {
     if (!bValidSystem || !CachedPrimaryStarBody)
@@ -661,6 +783,30 @@ bool USystemMapPanel::CenterOnBodyByName(const FString& InBodyName)
     {
         ResetSystemView();
         return true;
+    }
+
+    if (MissionBodyPreview)
+    {
+        for (OrbitalBody* Planet : CachedPlanetBodies)
+        {
+            if (!Planet) continue;
+            if (TargetName.Equals(UTF8_TO_TCHAR(Planet->GetName()), ESearchCase::IgnoreCase))
+            {
+                FocusMissionBody(Planet);
+                return true;
+            }
+            ListIter<OrbitalBody> Moons = Planet->Satellites();
+            while (++Moons)
+            {
+                OrbitalBody* Moon = Moons.value();
+                if (Moon && TargetName.Equals(UTF8_TO_TCHAR(Moon->GetName()), ESearchCase::IgnoreCase))
+                {
+                    FocusMissionBody(Moon);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     FVector2D UnzoomedOffset = FVector2D::ZeroVector;
@@ -1335,6 +1481,25 @@ bool USystemMapPanel::HandleClickSelection(
     const FVector2D& LocalPos,
     const FGeometry& InGeometry)
 {
+    if (MissionBodyPreview)
+    {
+        TArray<FProjectedMapBody> Bodies;
+        BuildMissionProjection(InGeometry.GetLocalSize(), Bodies);
+        Bodies.Sort([](const FProjectedMapBody& A, const FProjectedMapBody& B)
+        {
+            return A.Depth < B.Depth;
+        });
+        for (const FProjectedMapBody& Item : Bodies)
+        {
+            if (FVector2D::Distance(LocalPos, Item.Center) > FMath::Max(9.f, Item.Diameter * 0.5f))
+                continue;
+            if (Item.Body == FocusedMoon) ReturnToPlanetView();
+            else if (Item.Body == FocusedPlanet) ShowSystemOverview();
+            else FocusMissionBody(Item.Body);
+            return true;
+        }
+        return false;
+    }
     if (FocusedMoon)
     {
         const FVector2D Center = InGeometry.GetLocalSize() * 0.5f + PanOffset;
@@ -1474,6 +1639,16 @@ FReply USystemMapPanel::NativeOnMouseButtonDown(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    const FKey Button = InMouseEvent.GetEffectingButton();
+    if (MissionBodyPreview && (Button == EKeys::LeftMouseButton || Button == EKeys::MiddleMouseButton))
+    {
+        bCameraAnimating = false;
+        MissionOrbitButton = Button;
+        MissionOrbitStart = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+        bOrbitingMissionMap = false;
+        return FReply::Handled().CaptureMouse(TakeWidget());
+    }
+
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
         // stop animation immediately (critical)
@@ -1483,7 +1658,7 @@ FReply USystemMapPanel::NativeOnMouseButtonDown(
         DragStartScreenPosition = InMouseEvent.GetScreenSpacePosition();
         DragStartPanOffset = PanOffset;
 
-        return FReply::Handled();
+        return MissionBodyPreview ? FReply::Handled().CaptureMouse(TakeWidget()) : FReply::Handled();
     }
 
     if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
@@ -1505,6 +1680,8 @@ FReply USystemMapPanel::NativeOnMouseButtonDoubleClick(
             InGeometry,
             InMouseEvent);
     }
+
+    if (MissionBodyPreview) return FReply::Handled();
 
     if (FocusedMoon) { ReturnToPlanetView(); return FReply::Handled(); }
 
@@ -1578,23 +1755,55 @@ FReply USystemMapPanel::NativeOnMouseButtonUp(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    if (MissionOrbitButton.IsValid() && InMouseEvent.GetEffectingButton() == MissionOrbitButton)
+    {
+        if (!bOrbitingMissionMap && MissionOrbitButton == EKeys::LeftMouseButton)
+            HandleClickSelection(InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition()), InGeometry);
+        MissionOrbitButton = FKey();
+        bOrbitingMissionMap = false;
+        return FReply::Handled().ReleaseMouseCapture();
+    }
+
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
         bDraggingMap = false;
-        return FReply::Handled();
+        return MissionBodyPreview ? FReply::Handled().ReleaseMouseCapture() : FReply::Handled();
     }
 
     return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+void USystemMapPanel::NativeOnMouseCaptureLost(const FCaptureLostEvent& Event)
+{
+    bDraggingMap = false;
+    bOrbitingMissionMap = false;
+    MissionOrbitButton = FKey();
+    Super::NativeOnMouseCaptureLost(Event);
 }
 
 FReply USystemMapPanel::NativeOnMouseMove(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    if (MissionOrbitButton.IsValid())
+    {
+        const FVector2D Position = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+        if (!bOrbitingMissionMap && FVector2D::DistSquared(Position, MissionOrbitStart) < 16.0)
+            return FReply::Handled();
+        const FVector2D Previous = bOrbitingMissionMap
+            ? InGeometry.AbsoluteToLocal(InMouseEvent.GetLastScreenSpacePosition()) : MissionOrbitStart;
+        bOrbitingMissionMap = true;
+        const FVector2D Delta = Position - Previous;
+        MissionMapAzimuth = FMath::UnwindDegrees(MissionMapAzimuth + Delta.X * 0.32);
+        MissionMapElevation = FMath::Clamp(MissionMapElevation - Delta.Y * 0.27, 8.0, 86.0);
+        Invalidate(EInvalidateWidget::Paint);
+        return FReply::Handled();
+    }
+
     if (bDraggingMap)
     {
-        const FVector2D MouseDelta =
-            InMouseEvent.GetScreenSpacePosition() - DragStartScreenPosition;
+        const FVector2D MouseDelta = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())
+            - InGeometry.AbsoluteToLocal(DragStartScreenPosition);
 
         PanOffset = ClampPanOffset(
             DragStartPanOffset + MouseDelta,
@@ -1829,6 +2038,66 @@ int32 USystemMapPanel::NativePaint(
             AllottedGeometry.ToPaintGeometry(Center - FVector2D(Size * 0.5f), FVector2D(Size)),
             Brush, ESlateDrawEffect::None, FLinearColor::White);
     };
+    if (MissionBodyPreview)
+    {
+        const FVector2D Size = AllottedGeometry.GetLocalSize();
+        FSlateDrawElement::MakeBox(OutDrawElements, ++LayerId,
+            AllottedGeometry.ToPaintGeometry(), FCoreStyle::Get().GetBrush("WhiteBrush"),
+            ESlateDrawEffect::None, FLinearColor(0.008f, 0.018f, 0.032f));
+
+        TArray<FProjectedMapBody> Bodies;
+        TArray<TArray<FVector2D>> Orbits;
+        BuildMissionProjection(Size, Bodies, &Orbits);
+        ++LayerId;
+        for (const TArray<FVector2D>& Orbit : Orbits)
+            FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(),
+                Orbit, ESlateDrawEffect::None, FLinearColor(0.20f, 0.52f, 0.67f, 0.58f), true, 1.0f);
+
+        Bodies.Sort([](const FProjectedMapBody& A, const FProjectedMapBody& B)
+        {
+            return A.Depth > B.Depth;
+        });
+        for (const FProjectedMapBody& Item : Bodies)
+        {
+            const FVector2D Extent(Item.Diameter * 0.5);
+            if (Item.Center.X + Extent.X < 0 || Item.Center.X - Extent.X > Size.X ||
+                Item.Center.Y + Extent.Y < 0 || Item.Center.Y - Extent.Y > Size.Y)
+                continue;
+
+            if (Item.Body == CachedPrimaryStarBody)
+            {
+                if (UTexture2D* Texture = GetStarTextureForClass(ToUISpectralClass(Item.Body)))
+                {
+                    FSlateBrush Brush;
+                    Brush.DrawAs = ESlateBrushDrawType::Image;
+                    Brush.SetResourceObject(Texture);
+                    FSlateDrawElement::MakeBox(OutDrawElements, ++LayerId,
+                        AllottedGeometry.ToPaintGeometry(Item.Center - Extent, Extent * 2),
+                        &Brush, ESlateDrawEffect::None, ComputeStarTint(Item.Body));
+                }
+            }
+            else
+            {
+                DrawBody(Item.Body, Item.Center, Item.Diameter, LayerId,
+                    Item.Body->GetType() == Orbital::MOON);
+            }
+
+            if (Item.Body->GetType() != Orbital::MOON || FocusedPlanet || FocusedMoon)
+                FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
+                    AllottedGeometry.ToPaintGeometry(Item.Center + FVector2D(-Extent.X, Extent.Y + 7),
+                        FVector2D(150, 20)), FString(UTF8_TO_TCHAR(Item.Body->GetName())),
+                    FCoreStyle::GetDefaultFontStyle("Regular", 11), ESlateDrawEffect::None,
+                    FLinearColor(0.65f, 0.88f, 0.96f));
+        }
+
+        FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
+            AllottedGeometry.ToPaintGeometry(FVector2D(16, 13), FVector2D(430, 20)),
+            FString(TEXT("DRAG TO ORBIT   /   RMB PAN   /   WHEEL ZOOM   /   CLICK TO FOCUS")),
+            FCoreStyle::GetDefaultFontStyle("Regular", 10), ESlateDrawEffect::None,
+            FLinearColor(0.41f, 0.68f, 0.78f));
+        return DrawBodyInfo(LayerId);
+    }
+
     if (FocusedMoon)
     {
         const FVector2D Center = AllottedGeometry.GetLocalSize() * 0.5f + PanOffset;
@@ -2238,6 +2507,20 @@ bool USystemMapPanel::FindBodyScreenPositionByName(
 
     if (!bValidSystem || !CachedRuntimeSystem || !CachedPrimaryStarBody || InBodyName.IsEmpty())
     {
+        return false;
+    }
+
+    if (MissionBodyPreview)
+    {
+        TArray<FProjectedMapBody> Bodies;
+        BuildMissionProjection(AllottedGeometry.GetLocalSize(), Bodies);
+        for (const FProjectedMapBody& Item : Bodies)
+        {
+            if (!InBodyName.Equals(UTF8_TO_TCHAR(Item.Body->GetName()), ESearchCase::IgnoreCase)) continue;
+            OutScreenPosition = Item.Center;
+            OutDrawSize = Item.Diameter;
+            return true;
+        }
         return false;
     }
 

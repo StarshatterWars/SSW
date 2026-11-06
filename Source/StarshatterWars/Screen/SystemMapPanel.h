@@ -276,6 +276,24 @@ protected:
     UPROPERTY()
     bool bDrawPrimaryStar2D = true;
 
+    struct FProjectedMapBody
+    {
+        OrbitalBody* Body;
+        FVector2D Center;
+        float Diameter;
+        double Depth;
+    };
+    void BuildMissionProjection(const FVector2D& Size, TArray<FProjectedMapBody>& Bodies,
+        TArray<TArray<FVector2D>>* Orbits = nullptr) const;
+    void FocusMissionBody(OrbitalBody* Body);
+    virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& Event) override;
+
+    FKey MissionOrbitButton;
+    FVector2D MissionOrbitStart = FVector2D::ZeroVector;
+    bool bOrbitingMissionMap = false;
+    double MissionMapAzimuth = -18.0;
+    double MissionMapElevation = 38.0;
+
     TSharedPtr<class FMissionMapBodyPreview> MissionBodyPreview;
     TSet<FString> PlanetsRenderedIn3D;
 
