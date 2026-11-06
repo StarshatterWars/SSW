@@ -197,18 +197,32 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     Left->SetPadding(FMargin(0.f, 0.f, 14.f, 0.f));
     UVerticalBox* LeftContent = WidgetTree->ConstructWidget<UVerticalBox>();
     LeftPanel->SetContent(LeftContent);
-    LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSIONS"), 18, SingleMissionColors::Accent));
-    MissionCountLabel = MakeLabel(TEXT(""), 13, SingleMissionColors::Muted);
-    LeftContent->AddChildToVerticalBox(MissionCountLabel)->SetPadding(FMargin(0.f, 5.f, 0.f, 12.f));
     if (bTrainingView)
     {
-        UButton* OverviewButton = MakeActionButton(TEXT("OPERATION OVERVIEW"));
+        UButton* OverviewButton = WidgetTree->ConstructWidget<UButton>();
+        UTextBlock* Caption = MakeLabel(TEXT("OPERATION OVERVIEW"), 16, FLinearColor::White);
+        UButtonSlot* CaptionSlot = CastChecked<UButtonSlot>(OverviewButton->AddChild(Caption));
+        CaptionSlot->SetHorizontalAlignment(HAlign_Center);
+        CaptionSlot->SetVerticalAlignment(VAlign_Center);
+        CaptionSlot->SetPadding(FMargin(14.f, 4.f));
+        MissionUIStyle::ApplyActionButtonStyle(OverviewButton, TEXT("Cyan"));
+        OverviewButton->SetToolTipText(NSLOCTEXT("Missions", "TrainingOverviewTooltip", "Show or hide the Operation Live Fire overview"));
         OverviewButton->OnClicked.AddDynamic(this, &USingleMissionDlg::ToggleTrainingOverview);
-        LeftContent->AddChildToVerticalBox(OverviewButton)->SetPadding(FMargin(0, 0, 0, 8));
+
+        USizeBox* OverviewSize = WidgetTree->ConstructWidget<USizeBox>();
+        OverviewSize->SetWidthOverride(260.f);
+        OverviewSize->SetHeightOverride(40.f);
+        OverviewSize->SetContent(OverviewButton);
+        UVerticalBoxSlot* OverviewSlot = LeftContent->AddChildToVerticalBox(OverviewSize);
+        OverviewSlot->SetHorizontalAlignment(HAlign_Left);
+        OverviewSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 18.f));
         TrainingOverview = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
         TrainingOverview->SetVisibility(ESlateVisibility::Collapsed);
         LeftContent->AddChildToVerticalBox(TrainingOverview)->SetPadding(FMargin(0, 0, 0, 12));
     }
+    LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSIONS"), 18, SingleMissionColors::Accent));
+    MissionCountLabel = MakeLabel(TEXT(""), 13, SingleMissionColors::Muted);
+    LeftContent->AddChildToVerticalBox(MissionCountLabel)->SetPadding(FMargin(0.f, 5.f, 0.f, 12.f));
     UScrollBox* RosterScroll = WidgetTree->ConstructWidget<UScrollBox>();
     LeftContent->AddChildToVerticalBox(RosterScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     MissionRoster = WidgetTree->ConstructWidget<UVerticalBox>();
