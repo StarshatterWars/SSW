@@ -62,6 +62,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "RHI.h"
+#include "Misc/PackageName.h"
+#include "Misc/Paths.h"
 
 class FMissionMapBodyPreview
 {
@@ -165,23 +167,84 @@ private:
         return true;
     }
 
-    static UTexture2D* LoadSurface(const char* TextureName)
+    static FString TextureStem(const char* TextureName)
     {
-        const FString Name = UTF8_TO_TCHAR(TextureName);
+        FString Name = UTF8_TO_TCHAR(TextureName);
+        Name.ReplaceInline(TEXT("\\"), TEXT("/"));
+        return FPaths::GetBaseFilename(Name);
+    }
+
+    static UTexture2D* LoadTexture(const FString& Folder, const FString& Name)
+    {
         if (Name.IsEmpty()) return nullptr;
-        return LoadObject<UTexture2D>(nullptr, *FString::Printf(
-            TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"), *Name, *Name));
+        const FString Package = Folder / Name;
+        if (!FPackageName::DoesPackageExist(Package)) return nullptr;
+        return LoadObject<UTexture2D>(nullptr, *(Package + TEXT(".") + Name));
+    }
+
+    static UTexture2D* LoadSurface(const char* TextureName, bool bPrefer4K = false)
+    {
+        const FString Name = TextureStem(TextureName);
+        FString Canonical = Name;
+        if (!Canonical.RemoveFromEnd(TEXT("_hi"))) Canonical.RemoveFromEnd(TEXT("_lo"));
+        if (bPrefer4K)
+        {
+            if (auto* Texture = LoadTexture(TEXT("/Game/UI/MissionNav/Surfaces"), Canonical))
+                return Texture;
+        }
+        for (const TCHAR* Folder : {TEXT("/Game/GameData/Galaxy/PlanetMaterials"),
+            TEXT("/Game/GameData/Galaxy/MoonMaterials")})
+        {
+            if (auto* Texture = LoadTexture(Folder, Name)) return Texture;
+            if (auto* Texture = LoadTexture(Folder, Canonical)) return Texture;
+        }
+        return nullptr;
     }
 
     bool InitializeBody(FBodyView& View, const OrbitalBody& Body)
     {
-        UTexture2D* Surface = LoadSurface(Body.GetTexture());
-        if (!Surface) return false;
-        auto* Planet = Scene->GetWorld()->SpawnActor<APlanetActor>();
+        const bool bMoon = Body.GetType() == Orbital::MOON;
+        const bool bGas = !bMoon && TextureStem(Body.GetTexture()).StartsWith(TEXT("GasGiant"));
+        const TCHAR* PrefabName = bMoon ? TEXT("BP_MapMoon")
+            : bGas ? TEXT("BP_MapGasGiant") : TEXT("BP_MapPlanet");
+        const FString Package = FString(TEXT("/Game/UI/MissionNav/")) + PrefabName;
+        UClass* Prefab = FPackageName::DoesPackageExist(Package)
+            ? LoadClass<APlanetActor>(nullptr, *FString::Printf(TEXT("%s.%s_C"), *Package, PrefabName))
+            : nullptr;
+        auto* Planet = Scene->GetWorld()->SpawnActor<APlanetActor>(
+            Prefab ? Prefab : APlanetActor::StaticClass());
         if (!Planet) return false;
+
+        UTexture2D* Surface = LoadSurface(Body.GetHighResTexture(), true);
+        if (!Surface) Surface = LoadSurface(Body.GetTexture(), true);
         Planet->SetPlanetRadius(50.f);
-        Planet->SetPlanetTextures(Surface, LoadSurface(Body.GetGlossTexture()), LoadSurface(Body.GetGlowTexture()));
-        Planet->SetLightDirection(FVector(-1, -0.45, 0.45).GetSafeNormal());
+        if (Surface)
+        {
+            auto* MapMaterial = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/UI/MissionNav/M_MapBody.M_MapBody"));
+            if (MapMaterial)
+            {
+                auto* Material = UMaterialInstanceDynamic::Create(MapMaterial, Planet);
+                Material->SetTextureParameterValue(TEXT("Surface"), Surface);
+                Planet->GetPlanetMeshComponent()->SetMaterial(0, Material);
+            }
+            else
+            {
+                Planet->SetPlanetTextures(Surface, LoadSurface(Body.GetGlossTexture()),
+                    LoadSurface(Body.GetGlowTexture()));
+                Planet->SetLightDirection(FVector(-1, -0.45, 0.45).GetSafeNormal());
+            }
+        }
+        else
+        {
+            const TCHAR* MaterialPath = bGas
+                ? TEXT("/Game/Space_Creator/Planet_Creator_2_V2/Materials/Material_Instances/MI_Gas_Planet_1.MI_Gas_Planet_1")
+                : TEXT("/Game/Space_Creator/PlanetCreator_1_V2/Materials/Planet_Barren/Materials_Baked/MI_Planet_Barren_Baked_Complexity_2.MI_Planet_Barren_Baked_Complexity_2");
+            if (auto* Material = LoadObject<UMaterialInterface>(nullptr, MaterialPath))
+                Planet->GetPlanetMeshComponent()->SetMaterial(0, Material);
+        }
+        UE_LOG(LogTemp, Display, TEXT("[MissionNavBody] %hs surface=%s"), Body.GetName(),
+            *GetPathNameSafe(Surface));
         Planet->SetActorEnableCollision(false);
         Planet->SetActorTickEnabled(false);
         View.Planet = Planet;
@@ -189,6 +252,9 @@ private:
         View.SpinDirection = Body.IsRetrograde() ? -1.0 : 1.0;
         View.Target.Reset(NewObject<UTextureRenderTarget2D>(GetTransientPackage()));
         View.Target->RenderTargetFormat = RTF_RGBA16f;
+        View.Target->bAutoGenerateMips = true;
+        View.Target->MipsSamplerFilter = TF_Bilinear;
+        View.Target->Filter = TF_Trilinear;
         View.Target->ClearColor = FLinearColor(0, 0, 0, 1);
         View.Target->InitAutoFormat(256, 256);
         View.Target->UpdateResourceImmediate(true);
@@ -1749,6 +1815,7 @@ int32 USystemMapPanel::NativePaint(
         FSlateBrush Fallback;
         if (!Brush)
         {
+            if (MissionBodyPreview && bMoon) return;
             UTexture2D* Texture = bMoon ? GetMoonTexture(Body) : GetPlanetTexture(Body);
             if (!Texture) return;
             Fallback.DrawAs = ESlateBrushDrawType::Image;
