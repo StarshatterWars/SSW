@@ -89,7 +89,7 @@ void UMissionObjectiveDlg::BuildSituationLayout()
         ScrollSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
         return Scroll;
     };
-    SituationScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "SituationHeading", "SITUATION"), SituationText);
+    SituationScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "SituationHeading", "SITREP"), SituationText);
     ObjectivesScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "ObjectivesHeading", "OBJECTIVES"), ObjectivesText);
 
     UVerticalBox* ShipColumn = WidgetTree->ConstructWidget<UVerticalBox>();
@@ -250,7 +250,7 @@ void UMissionObjectiveDlg::RefreshSituationAndObjectives(Mission* MissionPtr)
         {
             SituationText->SetText(
                 SitStr.IsEmpty()
-                ? FText::FromString(TEXT("NO SITUATION"))
+                ? FText::FromString(TEXT("NO SITREP"))
                 : FText::FromString(SitStr));
         }
         else

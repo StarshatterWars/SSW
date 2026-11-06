@@ -6,7 +6,7 @@ class:      Freighter
 abrv:       FREIGHT
 empire:     All
 description: "The IM1912 Tanker is an upgraded deep-space refueling vessel optimized for rapid transfer operations under escort. Its modular containment systems allow it to transport refined propellants and volatile fuels safely across contested sectors."
-hud_icon:   "TBHud.pcx"
+hud_icon:   "TBHud"
 
 model:      "TankerB"
 

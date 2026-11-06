@@ -43,6 +43,7 @@
 #include "MissionObjectTarget.h"
 
 #include "Sensor.h"
+#include "RadioView.h"
 #include "WeaponGroup.h"
 
 #include "EngineeringPopup.h"
@@ -367,19 +368,7 @@ void UMissionBriefingDlg::ExecFrame()
     if (PlayerScoreText)
     {
         const int32 TeamScore = CampaignPtr->GetPlayerTeamScore();
-        const FString ScoreStr = FString::Printf(TEXT("Team Score: %d"), TeamScore);
-        PlayerScoreText->SetText(FText::FromString(ScoreStr));
-        PlayerScoreText->SetJustification(ETextJustify::Right);
-    }
-
-    if (MissionTPlusText)
-    {
-        const double T = CampaignPtr->GetTime();
-
-        char DayTime[32] = { 0 };
-        FormatDayTime(DayTime, T);
-
-        MissionTPlusText->SetText(FText::FromString(UTF8_TO_TCHAR(DayTime)));
+        PlayerScoreText->SetText(FText::AsNumber(TeamScore));
     }
 }
 void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -597,7 +586,7 @@ void UMissionBriefingDlg::BuildBriefingChrome()
         Column->AddChildToVerticalBox(Bar);
         return Bar;
     };
-    UBorder* Header = AddBar(FLinearColor(0.105f, 0.113f, 0.125f, 1.f), FMargin(18.f, 9.f));
+    UBorder* Header = AddBar(FLinearColor(0.070f, 0.112f, 0.155f, 1.f), FMargin(18.f, 12.f));
     UHorizontalBox* Titles = WidgetTree->ConstructWidget<UHorizontalBox>();
     auto AddTitle = [this, Titles](UTextBlock*& Text, bool Right)
     {
@@ -621,7 +610,7 @@ void UMissionBriefingDlg::BuildBriefingChrome()
 
     auto AddStatusRow = [this, AddBar](const TArray<TPair<FString, UTextBlock**>>& Entries)
     {
-        UBorder* Bar = AddBar(FLinearColor(0.07f, 0.08f, 0.09f, 1.f), FMargin(12.f, 8.f));
+        UBorder* Bar = AddBar(FLinearColor(0.045f, 0.073f, 0.100f, 1.f), FMargin(18.f, 8.f));
         UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
         for (const auto& Entry : Entries)
         {
@@ -629,8 +618,15 @@ void UMissionBriefingDlg::BuildBriefingChrome()
             UTextBlock* Caption = WidgetTree->ConstructWidget<UTextBlock>();
             Caption->SetText(FText::FromString(Entry.Key));
             Caption->SetFont(MissionUIStyle::GetInfoLabelFont(12));
-            Caption->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
+            Caption->SetColorAndOpacity(FSlateColor(FLinearColor(0.48f, 0.79f, 0.88f)));
             Cell->AddChildToVerticalBox(Caption);
+            UHorizontalBoxSlot* CellSlot = Row->AddChildToHorizontalBox(Cell);
+            CellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            CellSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
+
+            if (!Entry.Value)
+                continue;
+
             UTextBlock*& Value = *Entry.Value;
             if (!Value) Value = WidgetTree->ConstructWidget<UTextBlock>();
             Value->RemoveFromParent();
@@ -640,17 +636,13 @@ void UMissionBriefingDlg::BuildBriefingChrome()
             Value->SetJustification(ETextJustify::Left);
             Value->SetAutoWrapText(false);
             Cell->AddChildToVerticalBox(Value)->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
-            UHorizontalBoxSlot* CellSlot = Row->AddChildToHorizontalBox(Cell);
-            CellSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-            CellSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
-            CellSlot->SetHorizontalAlignment(HAlign_Left);
         }
         Bar->SetContent(Row);
     };
     AddStatusRow({{TEXT("TIME"), &GameTimeText}, {TEXT("CAMPAIGN"), &MissionTPlusText},
         {TEXT("PILOT"), &PlayerNameText}, {TEXT("UNIT"), &CurrentUnitText}, {TEXT("SCORE"), &PlayerScoreText}});
     AddStatusRow({{TEXT("SYSTEM"), &MissionSystemText}, {TEXT("SECTOR"), &MissionSectorText},
-        {TEXT("START"), &MissionTimeStartText}, {TEXT("TRGT TIME"), &MissionTimeTargetText}});
+        {TEXT("START"), &MissionTimeStartText}, {TEXT("TRT TIME"), &MissionTimeTargetText}, {TEXT(""), nullptr}});
     UBorder* Rule = AddBar(FLinearColor(0.20f, 0.21f, 0.23f, 1.f), FMargin(0.f));
     USizeBox* RuleSize = WidgetTree->ConstructWidget<USizeBox>();
     RuleSize->SetHeightOverride(5.f);
@@ -681,7 +673,7 @@ void UMissionBriefingDlg::BuildBriefingChrome()
         Cell->SetPadding(FMargin(0.f, 0.f, 10.f, 0.f));
     };
     BriefingTabs.Empty();
-    for (const TCHAR* Label : { TEXT("SITUATION"), TEXT("PACKAGE"), TEXT("NAVIGATION"), TEXT("WEAPONS") })
+    for (const TCHAR* Label : { TEXT("SITREP"), TEXT("PACKAGE"), TEXT("NAVIGATION"), TEXT("WEAPONS") })
     {
         UButton* Button = nullptr;
         UTextBlock* Caption = nullptr;
@@ -865,7 +857,7 @@ void UMissionBriefingDlg::BuildMenuButtons()
         if (bModernBriefingPresentation)
         {
             FText Label = FText::FromString(Item);
-            if (Item == TEXT("SIT")) Label = NSLOCTEXT("MissionBriefing", "SituationTab", "SITUATION");
+            if (Item == TEXT("SIT")) Label = NSLOCTEXT("MissionBriefing", "SituationTab", "SITREP");
             else if (Item == TEXT("PKG")) Label = NSLOCTEXT("MissionBriefing", "PackageTab", "PACKAGE");
             else if (Item == TEXT("NAV")) Label = NSLOCTEXT("MissionBriefing", "NavigationTab", "NAVIGATION");
             else if (Item == TEXT("WEP")) Label = NSLOCTEXT("MissionBriefing", "WeaponsTab", "WEAPONS");
@@ -1080,6 +1072,26 @@ void UMissionBriefingDlg::ShowMsnDlg()
 
 void UMissionBriefingDlg::RefreshHeader()
 {
+    const FText Unavailable = FText::FromString(TEXT("—"));
+    const bool bHasCampaign = CampaignPtr && (!bStandaloneMission || CampaignPtr->IsTraining());
+
+    if (MissionTPlusText)
+        MissionTPlusText->SetText(bHasCampaign ? ToTextFromUtf8(CampaignPtr->GetName()) : Unavailable);
+    if (PlayerScoreText)
+        PlayerScoreText->SetText(bHasCampaign ? FText::AsNumber(CampaignPtr->GetPlayerTeamScore()) : Unavailable);
+    if (CurrentUnitText)
+    {
+        CombatGroup* Group = bHasCampaign ? CampaignPtr->GetPlayerGroup() : nullptr;
+        CurrentUnitText->SetText(Group ? ToTextFromUtf8(Group->GetDescription())
+            : NSLOCTEXT("MissionBriefing", "UnassignedUnit", "Unassigned"));
+    }
+    if (PlayerNameText)
+        PlayerNameText->SetText(Unavailable);
+    if (GameTimeText)
+    {
+        GameTimeText->SetText(Unavailable);
+        HandleUniverseSecondTick(0);
+    }
     if (PlayerNameText)
         if (auto* GI = GetGameInstance())
             if (const auto* Players = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
@@ -1133,7 +1145,7 @@ void UMissionBriefingDlg::RefreshHeader()
 
     if (MissionTimeTargetLabelText)
         MissionTimeTargetLabelText->SetText(bShowTimeOnTarget
-            ? NSLOCTEXT("MissionBriefing", "TRTTimeLabel", "TRGT TIME") : FText::GetEmpty());
+            ? NSLOCTEXT("MissionBriefing", "TRTTimeLabel", "TRT TIME") : FText::GetEmpty());
 
     if (MissionTimeTargetText)
     {
@@ -1883,7 +1895,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     // Use the editor-authored actions and IMC mappings, including chord triggers.
     PreviousMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_PreviousTarget.IA_PreviousTarget"));
     NextMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NextTarget.IA_NextTarget"));
-    bPreviousTargetHeld = bNextTargetHeld = false;
+    bPreviousTargetHeld = false;
     if (PreviousMissionTargetAction && PreviousMissionTargetAction->ValueType == EInputActionValueType::Boolean)
     {
         MissionMenuInput->BindAction(PreviousMissionTargetAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::PreviousMissionTarget);
@@ -1893,9 +1905,17 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     else UE_LOG(LogTemp, Warning, TEXT("[MissionInput] Missing Boolean IA_PreviousTarget."));
     if (NextMissionTargetAction && NextMissionTargetAction->ValueType == EInputActionValueType::Boolean)
     {
-        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Triggered, this, &UMissionBriefingDlg::NextMissionTarget);
-        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseNextMissionTarget);
-        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseNextMissionTarget);
+        const auto HasNextTargetMapping = [this](const UInputMappingContext* Context)
+        {
+            return Context && Context->GetMappings().ContainsByPredicate([this](const FEnhancedActionKeyMapping& Mapping)
+            {
+                return Mapping.Action.Get() == NextMissionTargetAction.Get();
+            });
+        };
+        if (!HasNextTargetMapping(FighterInputContext.Get()) && !HasNextTargetMapping(MissionMenuContext.Get()))
+            MissionTargetContext->MapKey(NextMissionTargetAction.Get(), EKeys::T);
+
+        MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::NextMissionTarget);
     }
     else UE_LOG(LogTemp, Warning, TEXT("[MissionInput] Missing Boolean IA_NextTarget."));
     MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
@@ -2128,6 +2148,8 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     BindWeaponAction(TEXT("IA_TargetSubsystemNext"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystem);
     BindWeaponAction(TEXT("IA_TargetSubsystemPrevious"), ETriggerEvent::Started, &UMissionBriefingDlg::CycleMissionSubsystemPrevious);
     BindWeaponAction(TEXT("IA_TargetHostileThreat"), ETriggerEvent::Started, &UMissionBriefingDlg::LockMissionHostileThreat);
+    UInputAction* AutoTrackAction = StarshatterInputBindings::MapTargetTracking(MissionTargetContext.Get());
+    MissionMenuInput->BindAction(AutoTrackAction, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionAutoTrack);
     FighterWeaponCycleAction = NewObject<UInputAction>(this, TEXT("SSW_WeaponCycle"), RF_Transient);
     FighterWeaponCycleAction->ValueType = EInputActionValueType::Boolean;
     MissionTargetContext->MapKey(FighterWeaponCycleAction.Get(), EKeys::BackSpace);
@@ -2254,7 +2276,6 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     MissionWeaponActions.Reset();
     AutoNavInputContext = nullptr;
     bPreviousTargetHeld = false;
-    bNextTargetHeld = false;
     RadioChoiceActions.Reset(); RadioChoiceContext = nullptr; RadioMenuAction = nullptr;
     FlightOpsPanelAction = nullptr;
     GearToggleAction = nullptr;
@@ -2296,14 +2317,64 @@ void UMissionBriefingDlg::PreviousMissionTarget()
 void UMissionBriefingDlg::ReleasePreviousMissionTarget() { bPreviousTargetHeld = false; }
 void UMissionBriefingDlg::NextMissionTarget()
 {
-    if (bNextTargetHeld) return;
-    bNextTargetHeld = true;
     // Do not also advance when the user invokes Shift+T for reverse targeting.
     APlayerController* PC = GetOwningPlayer();
     if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
-    CycleMissionTarget(1);
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
+        EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
+        FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+        (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !GetWorld() || GetWorld()->IsPaused())
+        return;
+
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Player || Player->IsDead() || Player->IsDying() || !Player->GetSensor()) return;
+
+    // Use the legacy sensor cycle for flight. T2 limits it to the current exercise group.
+    SimElement* DroneGroup = nullptr;
+    const Mission* CurrentMission = Simulation->GetMission();
+    const Instruction* Next = Player->GetNextNavPoint();
+    if (CurrentMission && CurrentMission->GetIdentity() == 102 &&
+        CurrentMission->GetMissionType() == int(EMissionType::TRAINING) && Next)
+    {
+        const int NavIndex = Player->GetNavIndex(Next);
+        if (NavIndex == 4 || NavIndex == 5)
+        {
+            SimElement* Group = Simulation->FindElement(NavIndex == 4 ? "Alpha" : "Bravo");
+            for (int Index = 1; Group && Index <= Group->GetNumShips(); ++Index)
+            {
+                const Ship* Drone = Group->GetShip(Index);
+                if (Drone && !Drone->IsDead() && !Drone->IsDying())
+                {
+                    DroneGroup = Group;
+                    break;
+                }
+            }
+        }
+    }
+
+    SimObject* Target = Player->GetSensor()->LockTarget(ESimObject::SHIP, DroneGroup != nullptr, true, DroneGroup);
+    Player->SetTarget(Target);
+    SelectedMissionTarget.Reset();
+    SelectedMissionTargetName = FText::GetEmpty();
+    if (DroneGroup)
+    {
+        UE_LOG(LogTemp, Display, TEXT("[T2TargetCycle] Group='%hs' Lock='%hs'"),
+            DroneGroup->GetName().data(), Target ? Target->GetName() : "none");
+        if (!Target)
+            RadioView::Message("No assigned drone available in this sector.");
+    }
+    if (!Target) return;
+
+    for (TActorIterator<AShipActor> It(GetWorld()); It; ++It)
+    {
+        if (It->GetRuntimeShip() == Target)
+        {
+            SelectMissionContact(*It);
+            break;
+        }
+    }
 }
-void UMissionBriefingDlg::ReleaseNextMissionTarget() { bNextTargetHeld = false; }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
@@ -2371,7 +2442,10 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
     AShipActor* ShipVisual = Cast<AShipActor>(Selected);
     Ship* SelectedShip = ShipVisual ? ShipVisual->GetRuntimeShip() : nullptr;
     // Use SSW sensor/EMCON gating and propagate the lock to weapons and mission events.
-    if (SelectedShip) Player->LockTarget(SelectedShip);
+    if (SelectedShip)
+    {
+        if (Player->GetTarget() != SelectedShip) Player->LockTarget(SelectedShip);
+    }
     else Player->DropTarget(); // Navigation selection is not a weapons lock.
     FMissionObjectData ObjectData;
     ReadMissionObject(Selected, Player, Region, ObjectData);
@@ -3765,6 +3839,15 @@ void UMissionBriefingDlg::LockMissionHostileThreat()
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* S=Sim::GetSim();Ship* P=S?S->GetPlayerShip():nullptr;
     if(P && !P->IsDead()){P->LockTarget(ESimObject::SHOT,false,true);}
+}
+
+void UMissionBriefingDlg::ToggleMissionAutoTrack()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (Player && !Player->SetAutoTrack(!Player->IsAutoTrackEngaged()))
+        RadioView::Message("Auto Track unavailable. Lock a ship in your sector while in flight.");
 }
 
 void UMissionBriefingDlg::ToggleMissionAutoNav()

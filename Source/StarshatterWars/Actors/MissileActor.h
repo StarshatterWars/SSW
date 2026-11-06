@@ -16,7 +16,8 @@ public:
 
     /** Release a world-spawned flight actor; SimShot owns movement and lifetime. */
     UFUNCTION(BlueprintCallable, Category="Missile")
-    void BeginSimulationFlight();
+    void BeginSimulationFlight(bool bIgnited = true);
+    void IgniteSimulationTrail();
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Transient, Category="Missile")
     bool bInFlight = false;

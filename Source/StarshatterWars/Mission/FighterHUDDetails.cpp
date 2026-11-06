@@ -51,6 +51,9 @@ FString SFighterHUDDetails::FormatWeaponReadout(const WeaponGroup* Group)
         Name.RemoveFromEnd(TEXT(" Cannon"),ESearchCase::IgnoreCase);
         return FString(TEXT("GUNS: "))+Name.ToUpper();
     }
+    if (Group->IsMissile() && Group->Ammo() >= 0)
+        return FString::Printf(TEXT("%hs %d RDS"), Group->Name(), Group->Ammo());
+
     return FString::Printf(TEXT("%hs  %s"),Group->Name(),
         Group->Ammo()<0 ? TEXT("--") : *FString::FromInt(Group->Ammo()));
 }
@@ -285,7 +288,7 @@ void SFighterHUDDetails::Refresh()
     TargetDisplayColor = FLinearColor::Yellow;
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
-    bAutoAvailable = bGearDown = bShoot = bClosingValid = false;
+    bAutoAvailable = bGearDown = bShoot = bClosingValid = bTargetLocked = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
     bHelmMode=false;CompactNavLabel=TEXT("FREE FLIGHT");
@@ -297,7 +300,7 @@ void SFighterHUDDetails::Refresh()
         OrderedHeading=FMath::RadiansToDegrees(P->GetHelmHeading());OrderedPitch=FMath::RadiansToDegrees(P->GetHelmPitch());
         bHelmMode=P->GetFLCSMode()==EFLCSMode::HELM;
         HeadingDegrees = FMath::Fmod(FMath::RadiansToDegrees(P->GetCompassHeading()) + 360.0, 360.0);
-        bAutoAvailable = P->IsAutoNavEngaged() || P->IsAutoLandEngaged();
+        bAutoAvailable = P->IsAutoNavEngaged() || P->IsAutoLandEngaged() || P->IsAutoTrackEngaged();
         bGearDown = P->IsGearDown();
         bAugmenterActive = P->GetMainDrive() && P->GetMainDrive()->IsAugmenterOn();
         JumpSeconds = P->GetQuantumDrive() ? P->GetQuantumDrive()->JumpTime() : 0;
@@ -399,6 +402,8 @@ void SFighterHUDDetails::Refresh()
     {
         if (P)
         {
+            Sensor* PlayerSensor = P->GetSensor();
+            bTargetLocked = P->GetTarget() == T && PlayerSensor && PlayerSensor->IsTracking(T);
             const FVector Separation = T->GetLocation()-P->GetLocation();
             bClosingValid = !Separation.IsNearlyZero();
             ClosingSpeed = FVector::DotProduct(P->GetVelocity()-T->GetVelocity(), Separation.GetSafeNormal());
@@ -639,7 +644,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             ReticleText(128,SpeedRangeBaseline,108,FString(TEXT("RNG ")) + UFormattingUtils::FormatDistance(TargetRange * 1000.0));
             if (bClosingValid) ReticleText(128,SpeedRangeBaseline+14,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
         }
-        if (bAutoAvailable) Popup(-142,TEXT("AUTO"),HUDBlue);
+        if (bAutoAvailable)
+            Popup(-142,HUDPlayer && HUDPlayer->IsAutoTrackEngaged() ? TEXT("AUTO TRACK") : TEXT("AUTO"),HUDBlue);
         if (JumpSeconds>0) Popup(-168,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(JumpSeconds)));
         else if (ThreatLevel==2 && bWarningFlash) Popup(-168,TEXT("MISSILE WARNING"),FLinearColor::Red);
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
@@ -705,17 +711,19 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
         const FVector2D UnitsPosition=P+FVector2D(120*Scale+SpeedExtent.X+7*Scale,37*Scale+SpeedExtent.Y-UnitsExtent.Y);
         FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,Muted);
-        MiniText(244,14,TEXT("ATTITUDE"),10,Muted);
-        MiniText(244,43,FString::Printf(TEXT("%03d MARK %d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360,FMath::RoundToInt(PitchDegrees)),13,HUDBlue);
-        {
-            const FString Heading=FString::Printf(TEXT("%03d"),(FMath::RoundToInt(HeadingDegrees)%360+360)%360);
-            const auto Font=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
-            const FVector2D Extent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Heading,Font);
-            const FVector2D HP(Size.X*.5-274*Scale-Extent.X*.5,P.Y+92*Scale);
-            FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(Extent),FSlateLayoutTransform(FVector2f(HP))),Heading,Font,ESlateDrawEffect::None,HUDBlue);
-        }
+        const FString Attitude = FString::Printf(TEXT("%03d MARK %d"),
+            (FMath::RoundToInt(HeadingDegrees) % 360 + 360) % 360, FMath::RoundToInt(PitchDegrees));
+        const auto AttitudeFont = MissionUIStyle::GetInfoLabelFont(FMath::Max(9, int(10 * Scale)));
+        const FVector2D AttitudeExtent = Measure->Measure(Attitude, AttitudeFont);
+        const FVector2D AttitudePosition(P.X + 56 * Scale - AttitudeExtent.X * .5, P.Y + 92 * Scale);
+        FSlateDrawElement::MakeText(E, L + 2,
+            G.ToPaintGeometry(FVector2f(AttitudeExtent), FSlateLayoutTransform(FVector2f(AttitudePosition))),
+            Attitude, AttitudeFont, ESlateDrawEffect::None, HUDBlue);
+
         const bool bAutoland = HUDPlayer && HUDPlayer->IsAutoLandEngaged();
-        MiniText(366,14,bAutoland ? TEXT("AUTOLAND") : bAutoAvailable ? TEXT("AUTO PILOT") : TEXT("FLIGHT CONTROL"),
+        const bool bAutoTrack = HUDPlayer && HUDPlayer->IsAutoTrackEngaged();
+        MiniText(366,14,bAutoTrack ? TEXT("AUTO TRACK") : bAutoland ? TEXT("AUTOLAND") :
+            bAutoAvailable ? TEXT("AUTO PILOT") : TEXT("FLIGHT CONTROL"),
             10,(bAutoland || bAutoAvailable) ? Green : Muted);
         MiniText(366,43,CompactNavLabel,13,White,138);
         if (NavReadouts.Num() > 0)
@@ -724,8 +732,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         MiniText(120,82,bAugmenterActive ? TEXT("AUG") : State,10,bAugmenterActive ? Green : Muted);
         if (bShowWeapons && !bCapitalWeapons)
         {
-            MiniText(244,82,Primary.ToUpper().Left(16),10,Muted);
-            MiniText(366,82,Secondary.ToUpper().Left(20),10,Muted);
+            MiniText(244,14,TEXT("WEAPONS"),10,Muted);
+            MiniText(244,43,Primary.ToUpper(),10,White,100);
+            MiniText(244,62,Secondary.ToUpper(),10,Muted,100);
         }
         MiniText(524,9,PlayerName.ToUpper(),10,White,124);
         if (PlayerMFDPreview && PlayerMFDPreview->IsReady())
@@ -937,7 +946,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(TargetHull));
         else if(TargetHull<0)
             Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
-        ShipText(P+FVector2D(0,112)*Scale,TargetClass,TargetDisplayColor);
+        ShipText(P+FVector2D(0,112)*Scale,
+            bTargetLocked ? TargetClass + TEXT("   LOCKED") : TargetClass, TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);

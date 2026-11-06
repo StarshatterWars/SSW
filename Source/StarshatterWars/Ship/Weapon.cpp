@@ -770,7 +770,8 @@ SimShot* Weapon::FireBarrel(int n)
     const bool HasNativeMuzzle=ship->GetNativeWeaponMuzzle(this,n,shotpos,NativeRail);
     if(HasNativeMuzzle) rail_cam.Clone(NativeRail);
     const FVector FlashPosition=shotpos;
-    if (design->length > 0)
+    const bool bRackRelease = !design->primary && guided && !turret && ship->IsDropship();
+    if (!bRackRelease && design->length > 0)
         shotpos = shotpos + ((HasNativeMuzzle && !design->primary && !design->self_aiming)?rail_cam.vpn():aim_cam.vpn()) * design->length;
 
     // guns may be slewed towards target:
@@ -804,7 +805,10 @@ SimShot* Weapon::FireBarrel(int n)
                     Orient(0,1)*EjectLocal.X + Orient(1,1)*EjectLocal.Y + Orient(2,1)*EjectLocal.Z,
                     Orient(0,2)*EjectLocal.X + Orient(1,2)*EjectLocal.Y + Orient(2,2)*EjectLocal.Z);
                 const FVector NativeEject=rail_cam.vrt()*EjectLocal.X+rail_cam.vup()*EjectLocal.Y+rail_cam.vpn()*EjectLocal.Z;
-                shot->SetVelocity(base_vel + (HasNativeMuzzle?NativeEject:eject));
+                if (bRackRelease)
+                    shot->BeginRackRelease(base_vel, ship->GetCam().vup());
+                else
+                    shot->SetVelocity(base_vel + (HasNativeMuzzle?NativeEject:eject));
             }
         }
 
@@ -816,7 +820,7 @@ SimShot* Weapon::FireBarrel(int n)
     if (shot) {
         shot->SetSourceWeapon(this);
         // Successful legacy fire event only; the flash never applies damage.
-        if((design->flash.length() || design->flash_img) && design->flash_scale>0)
+        if(!bRackRelease && (design->flash.length() || design->flash_img) && design->flash_scale>0)
             Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship,ANSI_TO_TCHAR(design->flash.data()));
         if (ammo > 0)
             ammo--;

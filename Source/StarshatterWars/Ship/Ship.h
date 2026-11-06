@@ -458,6 +458,9 @@ private:
     double navigation_hull_radius = 0.0;
 public:
     bool                    IsAutoNavEngaged();
+    bool                    IsAutoTrackEngaged() const { return bAutoTrack; }
+    bool                    SetAutoTrack(bool engage);
+    Ship*                   GetAutoTrackTarget() const;
     void                    SetAutoNav(bool engage = true);
     bool                    CanAutoLand() const;
     bool                    IsAutoLandEngaged() const { return bAutoLand; }
@@ -614,6 +617,7 @@ protected:
     FlightDeck* dock;
     InboundSlot* inbound;
     bool bAutoLand = false;
+    bool bAutoTrack = false;
 
     SimDirector* net_control;
 

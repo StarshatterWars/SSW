@@ -210,7 +210,7 @@ void USingleMissionDlg::BuildSingleMissionScreen()
         OverviewButton->OnClicked.AddDynamic(this, &USingleMissionDlg::ToggleTrainingOverview);
 
         USizeBox* OverviewSize = WidgetTree->ConstructWidget<USizeBox>();
-        OverviewSize->SetWidthOverride(260.f);
+        OverviewSize->SetMinDesiredWidth(350.f);
         OverviewSize->SetHeightOverride(40.f);
         OverviewSize->SetContent(OverviewButton);
         UVerticalBoxSlot* OverviewSlot = LeftContent->AddChildToVerticalBox(OverviewSize);

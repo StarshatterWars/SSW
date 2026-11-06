@@ -4,6 +4,7 @@
 #include "GameStructs.h"
 
 class UInputMappingContext;
+class UInputAction;
 struct FEnhancedActionKeyMapping;
 class APlayerController;
 
@@ -11,6 +12,7 @@ class APlayerController;
 namespace StarshatterInputBindings
 {
     STARSHATTERWARS_API UInputMappingContext* SupplementalContext(UObject* Owner);
+    STARSHATTERWARS_API UInputAction* MapTargetTracking(UInputMappingContext* Context);
     STARSHATTERWARS_API bool IsModifierDown(APlayerController* Controller,const FString& Modifier);
     STARSHATTERWARS_API FKey ResolvedKey(const FString& Name,FKey Default);
     STARSHATTERWARS_API FString Id(const FEnhancedActionKeyMapping& Mapping);

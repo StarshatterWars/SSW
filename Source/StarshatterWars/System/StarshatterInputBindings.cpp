@@ -34,6 +34,15 @@ namespace
     }
 }
 
+UInputAction* StarshatterInputBindings::MapTargetTracking(UInputMappingContext* Context)
+{
+    auto* Action = NewObject<UInputAction>(Context, TEXT("SSW_TargetTracking"), RF_Transient);
+    Action->ActionDescription = NSLOCTEXT("SSW.InputActions", "SSW_TargetTracking", "Target Tracking");
+    Action->ValueType = EInputActionValueType::Boolean;
+    Context->MapKey(Action, EKeys::Slash);
+    return Action;
+}
+
 UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Owner)
 {
     auto* Context=NewObject<UInputMappingContext>(Owner,NAME_None,RF_Transient);
@@ -43,6 +52,7 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
         Action->ActionDescription=FText::FromString(Label);Action->ValueType=Type;
         Context->MapKey(Action,Key);
     };
+    MapTargetTracking(Context);
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
     Add(TEXT("SSW_HUDVisibility"),TEXT("Show / Hide HUD"),EKeys::H);
     Add(TEXT("SSW_WeaponCycle"),TEXT("Cycle Active Weapon"),EKeys::BackSpace);

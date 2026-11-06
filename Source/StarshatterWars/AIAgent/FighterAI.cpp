@@ -1790,7 +1790,9 @@ FighterAI::FireControl()
             if (secondary->Locked() || (dsgn_secondary && !dsgn_secondary->self_aiming)) {
                 // is target in basket?
                 FVector tgt = AimTransform(target->GetLocation());
-                const double tgt_range = tgt.Normalize();
+                // Legacy Point::Normalize returned the original length. FVector returns success.
+                const double tgt_range = tgt.Size();
+                tgt.Normalize();
 
                 const int factor = 2 - ai_level;
                 double s_range = 0.5 + 0.2 * factor;

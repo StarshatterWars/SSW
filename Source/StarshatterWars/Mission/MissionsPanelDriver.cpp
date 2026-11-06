@@ -458,7 +458,7 @@ void UMissionsPanelDriver::OpenCampaignSummary()
     const FString Situation = FString(UTF8_TO_TCHAR(Active->Situation())).TrimStartAndEnd();
     const FString Orders = FString(UTF8_TO_TCHAR(Active->Orders())).TrimStartAndEnd();
     if (!Situation.IsEmpty())
-        Details += TEXT("\n\nSITUATION\n") + Situation;
+        Details += TEXT("\n\nSITREP\n") + Situation;
     if (!Orders.IsEmpty())
         Details += TEXT("\n\nORDERS\n") + Orders;
     SummaryDetails->SetText(Details.IsEmpty()

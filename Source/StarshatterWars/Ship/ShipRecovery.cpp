@@ -38,6 +38,7 @@ bool Ship::SetAutoLand(bool engage)
         SetAugmenter(false);
         delete dir;
         dir = LandingDirector;
+        bAutoTrack = false;
         bAutoLand = true;
         director_info = "Autoland";
         RadioView::Message("Autoland engaged. Following assigned recovery approach.");

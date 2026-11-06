@@ -73,14 +73,19 @@ void AMissileActor::OnConstruction(const FTransform& Transform)
     }
 }
 
-void AMissileActor::BeginSimulationFlight()
+void AMissileActor::BeginSimulationFlight(bool bIgnited)
 {
     MissileFlightPresentation::Release(this);
     SetLifeSpan(0.f);
     bInFlight = true;
     AlignImportedMeshes();
     PositionTrail();
-    if (bEnableTrail && TrailComponent)
+    if (bIgnited) IgniteSimulationTrail();
+}
+
+void AMissileActor::IgniteSimulationTrail()
+{
+    if (bEnableTrail && TrailComponent && !TrailComponent->IsActive())
     {
         TrailComponent->SetVisibility(true);
         TrailComponent->SetHiddenInGame(false);

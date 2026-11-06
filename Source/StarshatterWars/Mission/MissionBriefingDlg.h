@@ -135,9 +135,7 @@ protected:
     void DisableMissionMenuInput();
     void ToggleMissionMenu();
     bool bPreviousTargetHeld = false;
-    bool bNextTargetHeld = false;
     void ReleasePreviousMissionTarget();
-    void ReleaseNextMissionTarget();
     UPROPERTY(Transient) TObjectPtr<UInputAction> EngineeringAction;
     TSharedPtr<SWidget> EngineeringPopup;
     UPROPERTY(Transient) TObjectPtr<UEngineeringDlg> EngineeringPanelWidget;
@@ -303,6 +301,7 @@ protected:
     void DropMissionWeaponTarget();
     void ToggleContactsPanel();
     void ToggleMissionAutoNav();
+    void ToggleMissionAutoTrack();
     void SyncMissionNavigationTarget();
     uint64 LastRadioInputFrame = MAX_uint64;
     uint64 LastAutoNavInputFrame = MAX_uint64;

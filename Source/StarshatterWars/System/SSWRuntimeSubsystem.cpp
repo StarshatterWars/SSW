@@ -1608,6 +1608,9 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         Alive.Add(Shot);
         AActor* ExistingVisual = ProjectileVisuals.FindRef(Shot).Get();
         const WeaponDesign* ShotDesign = Shot->GetDesign();
+        const FRotator MissileRotation = FRotationMatrix::MakeFromXZ(
+            ConvertLegacyShipLocationToUE(Shot->GetHeading()),
+            ConvertLegacyShipLocationToUE(Shot->GetCam().vup())).Rotator();
         if (!ExistingVisual && ProjectileVisuals.Num() < 512 && ShotDesign)
         {
             UClass* MissileClass = MountProjectileClass();
@@ -1620,12 +1623,12 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 MissileParams.ObjectFlags |= RF_Transient;
                 MissileParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
                 ExistingVisual = World->SpawnActor<AActor>(MissileClass, Position,
-                    ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation(), MissileParams);
+                    MissileRotation, MissileParams);
                 if (ExistingVisual)
                 {
                     // Visual only: legacy SimShot controls flight, impacts and lifetime.
                     if (auto* Missile = Cast<AMissileActor>(ExistingVisual))
-                        Missile->BeginSimulationFlight();
+                        Missile->BeginSimulationFlight(!Shot->IsReleasingFromRack());
                     else
                         MissileFlightPresentation::Release(ExistingVisual);
                     ProjectileVisuals.Add(Shot, ExistingVisual);
@@ -1634,8 +1637,10 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         }
         if (ExistingVisual)
         {
-            ExistingVisual->SetActorLocationAndRotation(Position,
-                ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation());
+            ExistingVisual->SetActorLocationAndRotation(Position, MissileRotation);
+            if (!Shot->IsReleasingFromRack())
+                if (auto* Missile = Cast<AMissileActor>(ExistingVisual))
+                    Missile->IgniteSimulationTrail();
             continue;
         }
         AStaticMeshActor* Visual=nullptr;
@@ -1660,7 +1665,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             if(Mesh==ProjectileFallbackMesh)Visual->SetActorScale3D(FVector(0.1f));
             ProjectileVisuals.Add(Shot,Visual);
         }
-        if(Visual)Visual->SetActorLocationAndRotation(Position,ConvertLegacyShipLocationToUE(Shot->GetVelocity()).Rotation());
+        if (Visual) Visual->SetActorLocationAndRotation(Position, MissileRotation);
     }
     for(auto It=ProjectileVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
         if(It.Value().IsValid())It.Value()->Destroy();It.RemoveCurrent();

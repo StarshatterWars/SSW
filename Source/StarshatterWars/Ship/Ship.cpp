@@ -3032,6 +3032,7 @@ Ship::IsAutoNavEngaged()
 void
 Ship::SetAutoNav(bool engage)
 {
+    if (engage && bAutoTrack) SetAutoTrack(false);
     if (engage && inbound && sim && sim->GetPlayerShip()==this) { SetAutoLand(true);return; }
     if (!navsys) {
         UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: ship has no navigation system."));
@@ -3058,6 +3059,43 @@ Ship::SetAutoNav(bool engage)
     UE_LOG(LogTemp, Display, TEXT("[AutoNav] %s director=%d"),
         navsys->AutoNavEngaged() ? TEXT("engaged") : TEXT("disengaged"),
         dir ? static_cast<int32>(dir->GetType()) : -1);
+}
+
+Ship* Ship::GetAutoTrackTarget() const
+{
+    if (!sim || sim->GetPlayerShip() != this || !IsDropship() || IsDead() || IsDying() ||
+        InTransition() || net_control || inbound || bAutoLand || flight_phase != EOPSMode::ACTIVE ||
+        !navsys || !navsys->IsPowerOn() || !sensor || !GetRegion() || !target ||
+        target->GetType() != ESimObject::SHIP)
+        return nullptr;
+
+    Ship* Contact = static_cast<Ship*>(target);
+    return Contact != this && Contact->GetRegion() == GetRegion() && !Contact->InTransition() &&
+        !Contact->IsDead() && !Contact->IsDying() && sensor->IsTracking(Contact) ? Contact : nullptr;
+}
+
+bool Ship::SetAutoTrack(bool engage)
+{
+    if (engage == bAutoTrack) return true;
+
+    if (engage)
+    {
+        Ship* Contact = GetAutoTrackTarget();
+        if (!Contact) return false;
+
+        if (IsAutoNavEngaged()) SetAutoNav(false);
+        bAutoTrack = true;
+        bManualThrottle = false;
+        SetControls(sim->GetControls());
+        UE_LOG(LogTemp, Display, TEXT("[AutoTrack] Engaged Ship='%hs' Target='%hs'"), GetName(), Contact->GetName());
+    }
+    else
+    {
+        bAutoTrack = false;
+        SetAutoNav(false);
+        UE_LOG(LogTemp, Display, TEXT("[AutoTrack] Disengaged Ship='%hs'"), GetName());
+    }
+    return true;
 }
 
 void
@@ -3365,7 +3403,11 @@ Ship::ExecFrame(double seconds)
         // Keep the catapult velocity and heading until the whole fighter
         // passes the tube mouth. AI, FLCS, and manual steering resume together.
         const FVector RailDirection = GetCam().vpn().GetSafeNormal();
-        const double Clearance = FMath::Max(1.0, double(GetRadius()) * 1.5);
+        // The catapult start is inside the carrier. Clear its outward hull
+        // plane along the rail, with room for the fighter's trailing edge.
+        const double HullExit = FVector::DotProduct(carrier->GetLocation() - dock->StartPoint(), RailDirection)
+            + carrier->GetNavigationHullRadius();
+        const double Clearance = FMath::Max(0.0, HullExit) + FMath::Max(1.0, GetNavigationHullRadius());
         const double Travel = FVector::DotProduct(GetLocation() - dock->StartPoint(), RailDirection);
         if (Travel < Clearance)
         {
@@ -3575,12 +3617,14 @@ void
 Ship::ExecNavFrame(
 	double Seconds)
 {
+    if (bAutoTrack && !GetAutoTrackTarget()) SetAutoTrack(false);
+
     // Validate the landing clearance before updating the active flight director.
     if (bAutoLand && flight_phase < EOPSMode::DOCKING && !CanAutoLand())
         SetAutoLand(false);
 
 	bool AutoPilot =
-		bAutoLand;
+		bAutoLand || bAutoTrack;
 
 	//-------------------------------------------------------------
 	// Update director info string
@@ -3597,7 +3641,7 @@ Ship::ExecNavFrame(
         AutoPilot = AutoPilot || bAutoLand;
         // NavSystem may clear its flag when the route ends or power is lost.
         // Do not leave the UE player running a stale navigation director.
-        if (!navsys->AutoNavEngaged() && dir && dir->GetType() == ESteerAIType::NAV &&
+        if (!bAutoTrack && !navsys->AutoNavEngaged() && dir && dir->GetType() == ESteerAIType::NAV &&
             sim && sim->GetPlayerShip() == this) SetAutoNav(false);
 
 		if (navsys->AutoNavEngaged())
@@ -6632,7 +6676,7 @@ Ship::SetControls(MotionController* m)
         return;
     }
 
-	if (navsys && navsys->AutoNavEngaged()) {
+	if (bAutoTrack || (navsys && navsys->AutoNavEngaged())) {
 		NavAI* nav = 0;
 
 		if (dir) {
@@ -7141,6 +7185,7 @@ void Ship::EnableManualFlight()
         UE_LOG(LogTemp, Display, TEXT("[AutoLand] Manual takeover ship='%hs'"), GetName());
     }
     bAutoLand = false;
+    bAutoTrack = false;
     delete dir;
     dir = new FEnhancedRotationDirector(this);
     bManualRotation = true;

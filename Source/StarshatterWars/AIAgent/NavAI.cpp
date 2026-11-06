@@ -175,6 +175,23 @@ void NavAI::FindObjective()
     navpt = nullptr;
     distance = 0.0;
     complete = false;
+    bTrackingTarget = ship->IsAutoTrackEngaged();
+    if (bTrackingTarget) {
+        if (const Ship* Contact = ship->GetAutoTrackTarget()) {
+            obj_w = Contact->GetLocation();
+            objective = Transform(obj_w);
+            const FVector Separation = obj_w - ship->GetLocation();
+            distance = Separation.Size();
+            const double TargetSpeed = FVector::DotProduct(Contact->GetVelocity(), Separation.GetSafeNormal());
+            // Close to a range shared by the Falcon's guns and SRMs, then match radial speed.
+            TrackSpeed = FMath::Clamp(TargetSpeed + (distance - 7000.0) * 0.08, 0.0, 700.0);
+        }
+        else {
+            objective = FVector::ZeroVector;
+            TrackSpeed = 0.0;
+        }
+        return;
+    }
 
     // runway takeoff:
     if (takeoff) {
@@ -347,7 +364,10 @@ NavAI::Navigator()
     brakes = 0;
     hold = false;
 
-    if (navpt) {
+    if (bTrackingTarget) {
+        ship->SetDirectorInfo("Auto Track");
+    }
+    else if (navpt) {
         if (navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0) {
             ship->SetDirectorInfo("AutoHold");
             hold = true;
@@ -363,7 +383,9 @@ NavAI::Navigator()
     Accumulate(AvoidTerrain());
     Accumulate(AvoidCollision());
 
-    if (!hold)
+    if (bTrackingTarget)
+        Accumulate(SeekTarget());
+    else if (!hold)
         accumulator = SeekTarget();
 
     HelmControl();
@@ -461,9 +483,9 @@ void NavAI::ThrottleControl()
         throttle = 0.0;
         brakes = 1.0;
     }
-    else if (navpt) {
-        double DesiredSpeed = navpt->GetSpeed();
-        if (DesiredSpeed < 10.0)
+    else if (bTrackingTarget || navpt) {
+        double DesiredSpeed = bTrackingTarget ? TrackSpeed : navpt->GetSpeed();
+        if (!bTrackingTarget && DesiredSpeed < 10.0)
             DesiredSpeed = 250.0;
 
         if (Ship::GetFlightModel() > 0) {
@@ -527,6 +549,8 @@ void NavAI::ThrottleControl()
 Steer
 NavAI::SeekTarget()
 {
+    if (bTrackingTarget) return Seek(objective);
+
     if (!ship) return Steer();
     if (takeoff) return Seek(objective);
     if (navpt) {

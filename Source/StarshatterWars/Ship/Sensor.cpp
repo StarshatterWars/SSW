@@ -816,7 +816,7 @@ struct TargetOffset {
     int operator==(const TargetOffset& o) const { return offset == o.offset; }
 };
 
-SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
+SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile, SimElement* target_element)
 {
     if (!ship || ship->GetEMCON() < 3) {
         Ignore(target);
@@ -829,7 +829,19 @@ SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
 
     List<TargetOffset> targets;
 
-    while (++contact) {
+    if (target_element) {
+        // T2's assigned practice drones are known targets within this sector.
+        for (int index = 1; index <= target_element->GetNumShips(); ++index) {
+            Ship* drone = target_element->GetShip(index);
+            if (!drone || drone == ship || drone->IsDead() || drone->IsDying() ||
+                drone->InTransition() || drone->GetRegion() != ship->GetRegion())
+                continue;
+
+            targets.append(new TargetOffset(drone, FVector::Dist(ship->GetLocation(), drone->GetLocation())));
+        }
+    }
+
+    while (!target_element && ++contact) {
         if (obj_type == ESimObject::SHIP)
             test = contact->GetShip();
         else
@@ -838,14 +850,16 @@ SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
         if (!test)
             continue;
 
+        const Ship* candidate = contact->GetShip();
+
         // do not target own missiles:
         if (contact->GetShot() && contact->GetShot()->Owner() == ship)
             continue;
 
         double tgt_range = contact->Range(ship);
 
-        // do not target ships outside of detet range:
-        if (contact->GetShip() && contact->GetShip()->Design()->detet < tgt_range)
+        // Ordinary targeting retains the legacy detection-distance cutoff.
+        if (candidate && candidate->Design()->detet < tgt_range)
             continue;
 
         double d_pas = contact->PasReturn();
@@ -876,6 +890,12 @@ SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
 
     targets.sort();
 
+    if (target_element && targets.size() == 0) {
+        Ignore(target);
+        target = nullptr;
+        return nullptr;
+    }
+
     if (target) {
         int index = 100000;
         int i = 0;
@@ -895,8 +915,12 @@ SimObject* Sensor::LockTarget(ESimObject obj_type, bool closest, bool hostile)
             else
                 index = 0;
 
-            target = targets[index]->target;
-            Observe(target);
+            SimObject* next_target = targets[index]->target;
+            if (next_target != target) {
+                Ignore(target);
+                target = next_target;
+                Observe(target);
+            }
         }
     }
     else if (targets.size() > 0) {

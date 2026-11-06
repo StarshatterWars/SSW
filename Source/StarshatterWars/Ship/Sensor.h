@@ -31,6 +31,7 @@
 
 class SimShot;
 class SimContact;
+class SimElement;
 class Ship;
 
 // +--------------------------------------------------------------------+
@@ -45,7 +46,8 @@ public:
 	virtual void       ExecFrame(double seconds);
 	virtual SimObject* LockTarget(ESimObject obj_type = ESimObject::SHIP,
 		bool closest = false,
-		bool hostile = false);
+		bool hostile = false,
+		SimElement* target_element = nullptr);
 	virtual SimObject* LockTarget(SimObject* candidate);
 	virtual bool       IsTracking(SimObject* tgt);
 	virtual void       DoEMCON(int emcon);

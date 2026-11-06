@@ -301,6 +301,16 @@ SimShot::IsHostileTo(const SimObject* o) const
 
 // +--------------------------------------------------------------------+
 
+void SimShot::BeginRackRelease(const FVector& CarrierVelocity, const FVector& CarrierUp)
+{
+    constexpr double DropDistance = 1.0;
+    constexpr double DropSeconds = 0.2;
+    RackReleaseRemaining = DropSeconds;
+    armed = false;
+    thrust = 0.0f;
+    SetVelocity(CarrierVelocity - CarrierUp.GetSafeNormal() * (DropDistance / DropSeconds));
+}
+
 void
 SimShot::ExecFrame(double seconds)
 {
@@ -322,6 +332,26 @@ SimShot::ExecFrame(double seconds)
 
 	if (Game::Paused())
 		return;
+
+    if (IsReleasingFromRack()) {
+        origin = GetLocation();
+        if (first_frame) {
+            first_frame = false;
+            return;
+        }
+
+        const double DropStep = FMath::Min(seconds, RackReleaseRemaining);
+        RackReleaseRemaining -= DropStep;
+        MoveTo(GetLocation() + GetVelocity() * DropStep);
+        life = FMath::Max(0.0, life - DropStep);
+        if (RackReleaseRemaining > 0.0 || life <= 0.0)
+            return;
+
+        seconds -= DropStep;
+        thrust = FMath::Min(design->thrust, 1.0f);
+        if (!dir) armed = true;
+        if (seconds <= 0.0) return;
+    }
 
 	if (beam) {
 		if (!first_frame) {

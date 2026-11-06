@@ -112,6 +112,7 @@ private:
     double PitchDegrees = 0, BankRadians = 0;
     int32 ThreatLevel = 0;
     bool bAutoAvailable = false, bGearDown = false, bShoot = false;
+    bool bTargetLocked = false;
     bool bClosingValid = false, bWarningFlash = false;
     FString PlayerIconPath, TargetIconPath;
     TMap<FString, TStrongObjectPtr<UTexture2D>> IconCache;
