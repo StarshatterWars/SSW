@@ -2274,8 +2274,10 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 	Weapon* HitWeapon = 0;
 
 	if (!Shot->IsMissile() && !Shot->IsBeam()) {
-		if (DistLen > GetRadius() * 2.0)
-			return HIT_NOTHING;
+        // A fast bolt can cross a small hull with both endpoints outside it.
+        const FVector Nearest = FMath::ClosestPointOnSegment(GetLocation(), Shot->GetOrigin(), ShotLoc);
+        if (FVector::DistSquared(Nearest, GetLocation()) > FMath::Square(GetRadius() * 2.0))
+            return HIT_NOTHING;
 	}
 
 	if (Scale <= 0.0f && design)
@@ -2354,8 +2356,8 @@ Ship::HitBy(SimShot* Shot, FVector& Impact)
 	else {
 		HitType = CheckShotIntersection(Shot, Impact, HullImpact, &HitWeapon);
 
-		// impact:
-		if (HitType) {
+		// Impact effects require a live simulation; damage resolution does not.
+		if (HitType && sim) {
 
 			if (HitType & HIT_SHIELD) {
 				if (shieldRep)
@@ -2497,7 +2499,8 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 	if (shot_len <= 0)
 		return hit_type;
 
-	if (shot_len < 1000)
+    const bool bSweptBolt = !shot->IsBeam() && shot->GetDesign()->graphic_type == Graphic::BOLT;
+	if (!bSweptBolt && shot_len < 1000)
 		shot_len = 1000;
 
 	FVector hull_impact = FVector::ZeroVector;
@@ -2553,6 +2556,8 @@ Ship::CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** 
 		hit_type = hit_type | HIT_HULL;
         if(NativeWeapon) hit_type |= HIT_TURRET;
 		hpt = hull_impact;
+        if (bSweptBolt && (hit_type & HIT_SHIELD) == 0)
+            ipt = hull_impact;
 
 		d1 = (hull_impact - shot_org).Length();
 
@@ -3803,7 +3808,7 @@ Ship::ExecPhysics(double seconds)
 	//-------------------------------------------------------------
 	if (!dir && !net_control)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, VeryVerbose,
 			TEXT("[Ship::ExecPhysics] NO DIR Ship='%hs'"),
 			GetName());
 	}
@@ -3940,16 +3945,20 @@ Ship::ExecPhysics(double seconds)
         AeroFrame(seconds);
         const FVector Delta = velocity - Before + FVector(0,g_accel*seconds,0);
         g_force = static_cast<float>(FVector::DotProduct(Delta,cam.vup())/seconds)/9.8f;
-        return;
+    }
+    else if (IsDying() || flight_model < 2)
+    {
+        Physical::ExecFrame(seconds);
+    }
+    else
+    {
+        Physical::ArcadeFrame(seconds);
     }
 
-	if (IsDying() || flight_model < 2)
-	{
-		Physical::ExecFrame(seconds);
-		return;
-	}
-
-	Physical::ArcadeFrame(seconds);
+    // The DEF's vlimit is the normal flight limit. Legacy augmentation
+    // allows 150% of it; enforce that ceiling while the booster is producing thrust.
+    if (!IsDying() && thrust > 0.f && vlimit > 0.0 && main_drive && main_drive->IsAugmenterOn())
+        SetVelocity(GetVelocity().GetClampedToMaxSize(vlimit * 1.5));
 }
 
 // +--------------------------------------------------------------------+
@@ -5512,10 +5521,8 @@ Ship::GetThrust(double seconds) const
 			vlimit,
 			bAugOn ? 1 : 0);
 
-		if (vmag > vlimit && Vfwd > 0.0) {
-			double Vmax = vlimit;
-			if (bAugOn)
-				Vmax *= 1.5;
+        const double Vmax = vlimit * (bAugOn ? 1.5 : 1.0);
+		if (vmag > Vmax && Vfwd > 0.0) {
 
 			const double VfwdOrig = Vfwd;
 			Vfwd = 0.5 * Vfwd + 0.5;

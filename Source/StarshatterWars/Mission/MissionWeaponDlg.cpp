@@ -81,25 +81,26 @@ static FMissionRuntimeLoadout ConvertMissionLoad(const MissionLoad* InLoad)
     return Out;
 }
 
+static MissionLoad* FindPlayerMissionLoad(MissionElement* Element)
+{
+    if (!Element) return nullptr;
+
+    const int32 PlayerSlot = Element->GetPlayerIndex() - 1;
+    MissionLoad* Shared = nullptr;
+    ListIter<MissionLoad> Loads(Element->GetLoadouts());
+    while (++Loads)
+    {
+        MissionLoad* Load = Loads.value();
+        if (!Load) continue;
+        if (Load->GetShip() == PlayerSlot && PlayerSlot >= 0) return Load;
+        if (Load->GetShip() < 0 && !Shared) Shared = Load;
+    }
+    return Shared;
+}
+
 static MissionLoad* GetActivePlayerMissionLoad(Mission* InMission)
 {
-    if (!InMission)
-    {
-        return nullptr;
-    }
-
-    MissionElement* PlayerElem = InMission->GetPlayer();
-    if (!PlayerElem)
-    {
-        return nullptr;
-    }
-
-    if (PlayerElem->GetLoadouts().size() < 1)
-    {
-        return nullptr;
-    }
-
-    return PlayerElem->GetLoadouts().at(0);
+    return FindPlayerMissionLoad(InMission ? InMission->GetPlayer() : nullptr);
 }
 
 static void ApplyShipLoadoutToMissionLoad(
@@ -280,6 +281,35 @@ const FShipDesign* UMissionWeaponDlg::ResolvePlayerShipDesign() const
     return MissionDesign;
 }
 
+static void InitializePlayerMissionLoad(MissionElement& Element, const FShipDesign& Design)
+{
+    MissionLoad* Load = FindPlayerMissionLoad(&Element);
+    if (Load)
+    {
+        // Mission files can name a preset without supplying any station values.
+        // An unnamed load is an explicit custom configuration, even when empty.
+        const Text Name = Load->GetName();
+        if (Name.length())
+            if (const FShipLoadout* Preset = Design.Loadout.FindByPredicate([&Name](const FShipLoadout& Entry)
+                { return Entry.Name.Equals(ANSI_TO_TCHAR(Name.data()), ESearchCase::IgnoreCase); }))
+                ApplyShipLoadoutToMissionLoad(Load, *Preset);
+        return;
+    }
+
+    if (Design.Loadout.IsEmpty()) return;
+
+    const FShipLoadout* Default = Design.Loadout.FindByPredicate([](const FShipLoadout& Entry)
+        { return Entry.Name.Equals(TEXT("Default"), ESearchCase::IgnoreCase); });
+    if (!Default)
+        Default = Design.Loadout.FindByPredicate([](const FShipLoadout& Entry)
+            { return Entry.Stations.ContainsByPredicate([](int32 Station) { return Station >= 0; }); });
+    if (!Default) Default = &Design.Loadout[0];
+
+    Load = new MissionLoad(FMath::Max(0, Element.GetPlayerIndex() - 1));
+    ApplyShipLoadoutToMissionLoad(Load, *Default);
+    Element.GetLoadouts().append(Load);
+}
+
 void UMissionWeaponDlg::RefreshFromMission()
 {
     if (bRefreshingLoadouts)
@@ -318,6 +348,8 @@ void UMissionWeaponDlg::RefreshFromMission()
         bRefreshingLoadouts = false;
         return;
     }
+
+    InitializePlayerMissionLoad(*Elem, *Design);
 
     if (ElementNameValueText)
     {
@@ -379,12 +411,7 @@ void UMissionWeaponDlg::ClearLoadouts()
 
 bool UMissionWeaponDlg::GetSelectedLoadoutName(MissionElement* Element, FString& OutName) const
 {
-    if (!Element || Element->GetLoadouts().size() == 0)
-    {
-        return false;
-    }
-
-    MissionLoad* Load = Element->GetLoadouts().at(0);
+    MissionLoad* Load = FindPlayerMissionLoad(Element);
     if (!Load)
     {
         return false;
@@ -865,12 +892,8 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
         return;
     }
 
-    MissionLoad* Load = nullptr;
-
-    if (Elem->GetLoadouts().size() > 0)
-    {
-        Load = Elem->GetLoadouts().at(0);
-    }
+    InitializePlayerMissionLoad(*Elem, *Design);
+    MissionLoad* Load = FindPlayerMissionLoad(Elem);
 
     if (!Load)
     {
@@ -1035,12 +1058,7 @@ double UMissionWeaponDlg::ComputeCurrentCustomMass(
 
     double TotalMass = Design->Mass;
 
-    if (Element->GetLoadouts().size() < 1)
-    {
-        return TotalMass;
-    }
-
-    MissionLoad* Load = Element->GetLoadouts().at(0);
+    MissionLoad* Load = FindPlayerMissionLoad(Element);
     if (!Load)
     {
         return TotalMass;

@@ -36,8 +36,8 @@ bool FMissionHiddenLiveTickTest::RunTest(const FString& Parameters)
     Fixture->Story=MakeUnique<Campaign>(1,"Live update fixture",true);Fixture->Story->SetTime(86400);
     auto* Briefing=Fixture->Briefing.Get();
     Briefing->CampaignPtr=Fixture->Story.Get();
-    Briefing->MissionTPlusText=NewObject<UTextBlock>(Briefing);
-    Briefing->MissionTPlusText->SetText(FText::FromString(TEXT("Awaiting live update")));
+    Briefing->PlayerScoreText=NewObject<UTextBlock>(Briefing);
+    Briefing->PlayerScoreText->SetText(FText::FromString(TEXT("Awaiting live update")));
     Briefing->bLiveMissionStarted=true;
     Briefing->SetVisibility(ESlateVisibility::Collapsed);
     Briefing->StartLiveSessionUpdates();
@@ -48,7 +48,7 @@ bool FMissionHiddenLiveTickTest::RunTest(const FString& Parameters)
         Fixture->World->GetTimerManager().Tick(0.1f);
         if(++Fixture->Ticks<2)return false;
         auto* Screen=Fixture->Briefing.Get();
-        TestFalse(TEXT("Live session updates without calling widget NativeTick"),Screen->MissionTPlusText->GetText().ToString()==TEXT("Awaiting live update"));
+        TestFalse(TEXT("Live session updates without calling widget NativeTick"),Screen->PlayerScoreText->GetText().ToString()==TEXT("Awaiting live update"));
         Screen->ClearTravelPresentation();
         TestFalse(TEXT("Leaving mission removes live timer"),Fixture->World->GetTimerManager().TimerExists(Screen->TravelPresentationTimer));
         Screen->bLiveMissionStarted=false;Screen->CampaignPtr=nullptr;

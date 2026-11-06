@@ -99,6 +99,8 @@ public:
 
     DECLARE_DELEGATE_OneParam(FOnLiveContactSelected, uint32);
     FOnLiveContactSelected OnLiveContactSelected;
+    DECLARE_DELEGATE_FourParams(FOnLiveRouteClick, int32, FVector2D, bool, bool);
+    FOnLiveRouteClick OnLiveRouteClick;
     void SetLiveNavigation(bool Enabled);
     void SetLiveNavigationData(const TArray<FLiveNavigationContact>& Contacts,
         const TArray<FLiveNavigationWaypoint>& Waypoints);

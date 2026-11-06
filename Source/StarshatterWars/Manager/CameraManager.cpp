@@ -882,7 +882,7 @@ CameraManager::LaunchBayChase(double seconds)
             LaunchBayAnchorLocal = InitialLocation;
         }
         bLaunchBayAnchorValid = true;
-        UE_LOG(LogTemp, Display, TEXT("[CarrierLaunch][BAY_CAMERA_ANCHORED] Fighter='%hs' Carrier='%hs'"),
+        UE_LOG(LogTemp, VeryVerbose, TEXT("[CarrierLaunch][BAY_CAMERA_ANCHORED] Fighter='%hs' Carrier='%hs'"),
             ship->GetName(), Carrier ? Carrier->GetName() : "<none>");
     }
 

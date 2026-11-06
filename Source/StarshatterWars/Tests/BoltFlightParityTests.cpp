@@ -6,6 +6,8 @@
 #include "WeaponDesignRegistry.h"
 #include "WeaponDesign.h"
 #include "SimShot.h"
+#include "Ship.h"
+#include "ShipDesign.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMasslessBoltParityTest,"Starshatter.Weapons.BoltFlightParity",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FMasslessBoltParityTest::RunTest(const FString&)
 {
@@ -26,5 +28,55 @@ bool FMasslessBoltParityTest::RunTest(const FString&)
   TestTrue(*(R.Name+TEXT(" damage remains positive")),S.Damage()>0);TestEqual(TEXT("Definition width retained"),D->width,R.Width);
  }
  TestEqual(TEXT("All bolt entries tested"),Bolts,26);TestEqual(TEXT("All turret entries tested"),Turrets,26);return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSweptBoltDamageTest, "Starshatter.Weapons.SweptBoltDamage",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FSweptBoltDamageTest::RunTest(const FString&)
+{
+    class FTargetShip : public Ship
+    {
+    public:
+        explicit FTargetShip(ShipDesign* Design) : Ship("Bolt target", "", Design, 2, 0, nullptr, false)
+        {
+            radius = 12;
+            SetFlightPhase(EOPSMode::ACTIVE);
+        }
+    };
+    ShipDesign TargetDesign;
+    TargetDesign.integrity = 1000;
+    TargetDesign.mass = 5;
+    TargetDesign.type = static_cast<int>(CLASSIFICATION::DRONE);
+    FTargetShip Victim(&TargetDesign);
+
+    WeaponDesign Bolt;
+    Bolt.primary = true;
+    Bolt.graphic_type = Graphic::BOLT;
+    Bolt.speed = 8000;
+    Bolt.life = 1.6f;
+    Bolt.damage = 20;
+    Bolt.charge = 5;
+
+    Camera Aim;
+    const FVector Direction = Aim.vpn();
+    const FVector Center = FVector(1000, 500, 200);
+    Victim.MoveTo(Center);
+    const double Before = Victim.GetIntegrity();
+    SimShot Crossing(Center - Direction * 100, Aim, &Bolt, nullptr);
+    Crossing.SetCharge(Bolt.charge);
+    Crossing.ExecFrame(0);
+    Crossing.ExecFrame(0.025);
+    FVector Impact;
+    TestTrue(TEXT("Bolt crossing a small hull with both endpoints outside hits"), Victim.HitBy(&Crossing, Impact) != 0);
+    TestTrue(TEXT("A hit reduces actual hull integrity"), Victim.GetIntegrity() < Before);
+
+    const double AfterHit = Victim.GetIntegrity();
+    SimShot Short(Center - Direction * 28, Aim, &Bolt, nullptr);
+    Short.SetCharge(Bolt.charge);
+    Short.ExecFrame(0);
+    Short.ExecFrame(0.001);
+    TestEqual(TEXT("A bolt short of the hull does not hit early"), Victim.HitBy(&Short, Impact), 0);
+    TestEqual(TEXT("A near miss leaves hull integrity unchanged"), Victim.GetIntegrity(), AfterHit);
+    return true;
 }
 #endif

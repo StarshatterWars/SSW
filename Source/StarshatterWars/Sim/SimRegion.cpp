@@ -31,6 +31,7 @@
 #include "SimElement.h"
 #include "SimEvent.h"
 #include "Ship.h"
+#include "ShipAI.h"
 #include "Sensor.h"
 #include "SimShot.h"
 #include "Drone.h"
@@ -50,6 +51,7 @@
 
 // Unreal:
 #include "Math/UnrealMathUtility.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "SSWRuntimeSubsystem.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -290,8 +292,6 @@ SimRegion::ExecFrame(double seconds)
     UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
-    DamageShips();
-
     UpdateExplosions(seconds);
 
     // Legacy advances and expires debris alongside explosions.
@@ -306,6 +306,7 @@ SimRegion::ExecFrame(double seconds)
     }
 
     if (!Game::Paused()) {
+        DamageShips();
         DockShips();
         if (active) { CollideShips(); CrashShips(); }
         DestroyShips();
@@ -735,14 +736,21 @@ void SimRegion::TranslateObject(SimObject* obj)
 
 TArray<SimShot*> SimRegion::GetProjectiles()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_CollectProjectiles);
     TArray<SimShot*> Result;
-    for (int I=0; I<shots.size(); ++I) if (shots[I]) Result.AddUnique(shots[I]);
-    for (int I=0; I<drones.size(); ++I) if (drones[I]) Result.AddUnique(drones[I]);
+    Result.Reserve(shots.size() + drones.size());
+    // InsertObject routes each projectile into exactly one list and rejects duplicates.
+    for (int Index = 0; Index < shots.size(); ++Index)
+        if (SimShot* Shot = shots[Index]) Result.Add(Shot);
+    for (int Index = 0; Index < drones.size(); ++Index)
+        if (Drone* Shot = drones[Index]) Result.Add(Shot);
     return Result;
 }
 
 void SimRegion::DamageShips()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ProjectileCollision);
+    if (ships.size() == 0) return;
     // Restore legacy shot/ship damage dispatch after projectile movement.
     // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
     for (SimShot* Shot : GetProjectiles()) {
@@ -761,12 +769,34 @@ void SimRegion::DamageShips()
                 if (Stats) {if(Shot->IsPrimary())Stats->AddGunHit();else if(Shot->Damage()>0)Stats->AddMissileHit();}
             }
             Shot->SetHitTarget(true);
-            if (Victim->GetIntegrity()<1 && !Victim->InTransition()) {
-                const char* KillerName=Shot->Owner()?Shot->Owner()->GetName():"[KIA]";
-                if(auto* VictimStats=ShipStats::Find(Victim->GetName()))VictimStats->AddEvent(ESimEvent::DESTROYED,KillerName);
-                if(Shot->Owner())if(auto* KillerStats=ShipStats::Find(KillerName)){
-                    KillerStats->AddEvent(Shot->IsMissile()?ESimEvent::MISSILE_KILL:ESimEvent::GUNS_KILL,Victim->GetName());
-                    if(Shot->Owner()->GetIFF()!=Victim->GetIFF() && (Victim->GetIFF()>0 || Shot->Owner()->GetIFF()>1))KillerStats->AddPoints(Victim->Value());
+            if (Shot->Damage() > 0 && Victim->GetIntegrity() < 1 && !Victim->InTransition()) {
+                const Ship* Owner = Shot->Owner();
+                const char* KillerName = Owner ? Owner->GetName() : "[KIA]";
+                if (auto* VictimStats = ShipStats::Find(Victim->GetName()))
+                    VictimStats->AddEvent(ESimEvent::DESTROYED, KillerName);
+
+                if (Owner) {
+                    if (auto* Director = Owner->GetDirector())
+                        if (Director->GetType() > ESteerAIType::SEEKER && Director->GetType() < ESteerAIType::GROUND)
+                            static_cast<ShipAI*>(Director)->Splash(Victim);
+
+                    auto* KillerStats = ShipStats::Find(KillerName);
+                    if (KillerStats)
+                        KillerStats->AddEvent(Shot->IsMissile() ? ESimEvent::MISSILE_KILL : ESimEvent::GUNS_KILL,
+                            Victim->GetName());
+
+                    if (Owner->GetIFF() != Victim->GetIFF() && (Victim->GetIFF() > 0 || Owner->GetIFF() > 1)) {
+                        if (KillerStats) KillerStats->AddPoints(Victim->Value());
+                        if (SimElement* Flight = Owner->GetElement()) {
+                            const auto AwardCommandPoints = [Victim](SimElement* Element) {
+                                if (Ship* Leader = Element ? Element->GetShip(1) : nullptr)
+                                    if (auto* Stats = ShipStats::Find(Leader->GetName()))
+                                        Stats->AddCommandPoints(Victim->Value() / 2);
+                            };
+                            if (Owner->GetElementIndex() > 1) AwardCommandPoints(Flight);
+                            AwardCommandPoints(Flight->GetCommander());
+                        }
+                    }
                 }
                 Victim->DeathSpiral();
             }
@@ -866,6 +896,7 @@ void SimRegion::UpdateShips(double seconds)
 
 void SimRegion::UpdateShots(double seconds)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_AdvanceProjectiles);
     for (int i = 0; i < shots.size(); /* manual */) {
         SimShot* s = shots[i];
 

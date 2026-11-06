@@ -33,7 +33,25 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
     }
     NavigationMap->SetInMissionNavigation(true);
     NavigationMap->SetVisibility(ESlateVisibility::Visible);
-    const TSharedRef<SWidget> MapBody=NavigationMap->TakeWidget();
+    const TSharedRef<SWidget> MapBody = SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(8.f, 4.f)
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(1.f).VAlign(VAlign_Center)
+            [
+                SNew(STextBlock).Text(INVTEXT("Click waypoint to select   |   Shift+click to add   |   Alt+click to move"))
+            ]
+            + SHorizontalBox::Slot().AutoWidth()
+            [
+                SNew(SButton).ButtonStyle(&FooterButtonStyle).Text(INVTEXT("DELETE WAYPOINT"))
+                .OnClicked_Lambda([Map = TWeakObjectPtr<UMissionNavDlg>(NavigationMap)]()
+                {
+                    if (Map.IsValid()) Map->DeleteSelectedLiveNavPoint();
+                    return FReply::Handled();
+                })
+            ]
+        ]
+        + SVerticalBox::Slot().FillHeight(1.f)[NavigationMap->TakeWidget()];
     NavigationMap->RefreshFromMission();
     const TWeakObjectPtr<UNavigationDlg> Owner(this);
     return SNew(SNavigationPopup).Embedded(true).MapWidget(MapBody)

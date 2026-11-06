@@ -1505,8 +1505,10 @@ void USSWRuntimeSubsystem::ClearProjectileVisuals()
 }
 void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_AsteroidVisuals);
     UWorld* World=GetWorld();SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
     TSet<Asteroid*> Alive;
+    TMap<int32, UStaticMesh*> VariantMeshes;
     const auto* Library=GetDefault<UAsteroidLibrarySettings>();
     if(World && Region && Library->Meshes.Num()>0)for(int I=0;I<Region->GetRoids().size();++I){
         Asteroid* Rock=Region->GetRoids()[I];if(!Rock)continue;Alive.Add(Rock);
@@ -1514,7 +1516,13 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
         if(!Actor){FActorSpawnParameters Params;Params.ObjectFlags|=RF_Transient;
             Actor=World->SpawnActor<ANativeAsteroidActor>(FVector::ZeroVector,FRotator::ZeroRotator,Params);
             if(Actor)AsteroidVisuals.Add(Rock,Actor);}
-        if(Actor){Actor->UpdateFromSimulation(*Rock,GetVisualLocationForRegion(Region,Rock->GetLocation()),Library->Meshes[Rock->GetMeshVariant()%Library->Meshes.Num()].LoadSynchronous());}
+        if (Actor) {
+            const int32 Variant = Rock->GetMeshVariant() % Library->Meshes.Num();
+            UStaticMesh** Cached = VariantMeshes.Find(Variant);
+            UStaticMesh* Mesh = Cached ? *Cached : Library->Meshes[Variant].LoadSynchronous();
+            if (!Cached) VariantMeshes.Add(Variant, Mesh);
+            Actor->UpdateFromSimulation(*Rock, GetVisualLocationForRegion(Region, Rock->GetLocation()), Mesh);
+        }
     }
     for(auto It=AsteroidVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
         if(auto* A=It.Value().Get())A->Destroy();It.RemoveCurrent();}
@@ -1522,6 +1530,7 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
 
 void USSWRuntimeSubsystem::UpdateProjectileVisuals()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ProjectileVisuals);
     UWorld* World=GetWorld();
     SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
     if(!World || !Region || !MissionPresentationBuilder.IsValid()){ClearProjectileVisuals();return;}
@@ -1557,8 +1566,8 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             return nullptr;
         };
         if(Shot->IsPrimary()){
-            const FVector Start=VisualPoint(Shot->GetOrigin());
             if(Shot->IsBeam()){
+                const FVector Start=VisualPoint(Shot->GetOrigin());
                 Alive.Add(Shot);
                 ABeamWeaponActor* Beam=Cast<ABeamWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());
                 if(!Beam){
@@ -1603,7 +1612,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                 if (Bolt) Bolt->SetActorLocationAndRotation(Position, Direction.Rotation());
             }
             else{
-                DrawDebugLine(World,Start,Position,FColor::Yellow,false,0.0f,0,2.0f);
+                DrawDebugLine(World,VisualPoint(Shot->GetOrigin()),Position,FColor::Yellow,false,0.0f,0,2.0f);
             }
             continue;
         }

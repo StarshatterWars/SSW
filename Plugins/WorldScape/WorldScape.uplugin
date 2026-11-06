@@ -1,0 +1,159 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.1",
+	"FriendlyName": "WorldScape",
+	"Description": "",
+	"Category": "Terrain",
+	"CreatedBy": "IolaCorp",
+	"CreatedByURL": "",
+	"DocsURL": "https://qanga.gitbook.io/worldscape-plugin/",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/1325c95bf60546738a5bb21e2262914d",
+	"SupportURL": "https://discord.gg/eWuFnPcskQ",
+	"EngineVersion": "5.7.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "WorldScapeCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeFoliages",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeFactory",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeNoise",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeCommon",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapeVolume",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		},
+		{
+			"Name": "WorldScapePCG",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Linux"
+			],
+			"PlatformDenyList": [
+				"Mac",
+				"IOS",
+				"Android"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "Landmass",
+			"Enabled": true
+		},
+		{
+			"Name": "GeometryScripting",
+			"Enabled": true
+		},
+		{
+			"Name": "PCG",
+			"Enabled": true
+		}
+	]
+}

@@ -368,6 +368,31 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
 
         if (bLiveNavigation)
         {
+            if (Scale > UE_SMALL_NUMBER && (InMouseEvent.IsShiftDown() || InMouseEvent.IsAltDown()))
+            {
+                OnLiveRouteClick.ExecuteIfBound(INDEX_NONE, (LocalPoint - Center) / Scale,
+                    InMouseEvent.IsShiftDown(), InMouseEvent.IsAltDown());
+                return FReply::Handled();
+            }
+            int32 WaypointIndex = INDEX_NONE;
+            double WaypointDistance = FMath::Square(14.0);
+            for (const FLiveNavigationWaypoint& Waypoint : LiveWaypoints)
+            {
+                if (Waypoint.Sector != ViewedSectorName) continue;
+                const FVector2D Position = Center + FVector2D(Waypoint.Location.X, Waypoint.Location.Y) * Scale;
+                const double Distance = (Position - LocalPoint).SizeSquared();
+                if (Distance < WaypointDistance)
+                {
+                    WaypointDistance = Distance;
+                    WaypointIndex = Waypoint.PlanIndex;
+                }
+            }
+            if (WaypointIndex != INDEX_NONE)
+            {
+                OnLiveRouteClick.ExecuteIfBound(WaypointIndex, FVector2D::ZeroVector, false, false);
+                return FReply::Handled();
+            }
+
             const FLiveNavigationContact* Hit = nullptr;
             double Best = 14.0 * 14.0;
             for (const auto& Contact : LiveContacts)

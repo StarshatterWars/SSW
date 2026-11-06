@@ -285,6 +285,7 @@ void UMissionNavDlg::NativeConstruct()
     {
         SectorMapPanel->SetLiveNavigation(true);
         SectorMapPanel->OnLiveContactSelected.BindUObject(this, &UMissionNavDlg::HandleLiveContactSelected);
+        SectorMapPanel->OnLiveRouteClick.BindUObject(this, &UMissionNavDlg::HandleLiveRouteClick);
     }
 
     if (ZoomInButton)
@@ -2812,7 +2813,11 @@ void UMissionNavDlg::NativeDestruct()
     if (bInMissionNavigation)
     {
         ClearLiveNavigation();
-        if (SectorMapPanel) SectorMapPanel->OnLiveContactSelected.Unbind();
+        if (SectorMapPanel)
+        {
+            SectorMapPanel->OnLiveContactSelected.Unbind();
+            SectorMapPanel->OnLiveRouteClick.Unbind();
+        }
     }
     Super::NativeDestruct();
 }
@@ -2900,7 +2905,9 @@ void UMissionNavDlg::RefreshLiveNavigation()
         auto& Waypoint = Waypoints.AddDefaulted_GetRef();
         Waypoint.Location = Point->GetLocation();
         Waypoint.Sector = ANSI_TO_TCHAR(Point->GetRegionName());
-        Waypoint.Label = FString::Printf(TEXT("NAV %d %hs"), Number, Point->GetDescription());
+        Waypoint.PlanIndex = Number - 1;
+        Waypoint.Label = FString::Printf(TEXT("%sNAV %d %hs"),
+            Waypoint.PlanIndex == SelectedLiveWaypoint ? TEXT("> ") : TEXT(""), Number, Point->GetDescription());
         Waypoint.bNext = Point == Player->GetNextNavPoint();
     }
     if (SectorMapPanel) SectorMapPanel->SetLiveNavigationData(LiveContacts, Waypoints);
@@ -2982,6 +2989,38 @@ static Instruction* LiveNavAt(Ship* Player, int32 Index)
     return Plan.at(Index);
 }
 
+void UMissionNavDlg::HandleLiveRouteClick(int32 Index, FVector2D MapPoint, bool bAdd, bool bMove)
+{
+    Sim* Simulation = Sim::GetSim();
+    Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!bInMissionNavigation || !Player || Player->IsDead() || Player->IsDying() || !Player->GetRegion()) return;
+    if (Index != INDEX_NONE)
+    {
+        SelectedLiveWaypoint = Index;
+        RefreshLiveNavigation();
+        return;
+    }
+
+    SimRegion* Region = Player->GetRegion();
+    if (!SectorMapPanel || SectorMapPanel->GetViewedSectorName() != ANSI_TO_TCHAR(Region->GetName()) ||
+        !FMath::IsFinite(MapPoint.X) || !FMath::IsFinite(MapPoint.Y))
+        return;
+
+    if (bAdd)
+    {
+        AddLiveNavPoint(FVector(MapPoint.X, MapPoint.Y, OtherHand(Player->GetLocation()).Z));
+    }
+    else if (bMove)
+    {
+        if (Instruction* Point = LiveNavAt(Player, SelectedLiveWaypoint))
+        {
+            if (Point->GetRegion() != Region) return;
+            Point->SetLocation(FVector(MapPoint.X, MapPoint.Y, Point->GetLocation().Z));
+            RefreshLiveNavigation();
+        }
+    }
+}
+
 void UMissionNavDlg::AddLiveNavPoint(FVector Location)
 {
     if (!bInMissionNavigation) return;
@@ -3000,6 +3039,7 @@ void UMissionNavDlg::AddLiveNavPoint(FVector Location)
         Nav->SetTarget(Prior->GetTarget());
     }
     Player->AddNavPoint(Nav, Prior);
+    SelectedLiveWaypoint = INDEX_NONE;
     RefreshLiveNavigation();
 }
 
@@ -3009,9 +3049,10 @@ void UMissionNavDlg::DeleteSelectedLiveNavPoint()
     Sim* S = Sim::GetSim();
     Ship* Player = S ? S->GetPlayerShip() : nullptr;
     if (!Player) return;
-    Instruction* Nav = Player->GetNextNavPoint();
+    Instruction* Nav = LiveNavAt(Player, SelectedLiveWaypoint);
     if (!Nav) return;
     Player->DelNavPoint(Nav);
+    SelectedLiveWaypoint = INDEX_NONE;
     RefreshLiveNavigation();
 }
 

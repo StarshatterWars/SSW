@@ -18,5 +18,6 @@ struct FLiveNavigationWaypoint
 {
     FVector Location = FVector::ZeroVector;
     FString Sector, Label;
+    int32 PlanIndex = INDEX_NONE;
     bool bNext = false;
 };

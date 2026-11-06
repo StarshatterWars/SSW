@@ -366,8 +366,7 @@ Drive::GetThrust(double seconds)
         if (reac)
         {
             reac->SetCapacity(
-                reac->GetCapacity() -
-                (0.1 * seconds));
+                FMath::Max(0.0, reac->GetCapacity() - (0.1 * seconds)));
         }
     }
 

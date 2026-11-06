@@ -319,9 +319,9 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
         PowerSource* Reactor = new PowerSource(
             Src.Type,
-            Src.Output,
-            Src.Fuel
+            Src.Output
         );
+        Reactor->SetFuelRange(Src.Fuel);
 
         Reactor->SetName(TCHAR_TO_ANSI(*Src.PName));
         Reactor->SetAbbreviation(TCHAR_TO_ANSI(*Src.PAbrv));

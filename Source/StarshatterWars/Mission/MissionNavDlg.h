@@ -380,6 +380,8 @@ public:
 	// Live nav editing (legacy MapView ship menu)
 	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
 	void AddLiveNavPoint(FVector Location);
+    void HandleLiveRouteClick(int32 Index, FVector2D MapPoint, bool bAdd, bool bMove);
+    int32 SelectedLiveWaypoint = INDEX_NONE;
 
 	UFUNCTION(BlueprintCallable, Category = "MissionNav|Edit")
 	void DeleteSelectedLiveNavPoint();
