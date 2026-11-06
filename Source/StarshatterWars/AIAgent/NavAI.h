@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -44,7 +44,7 @@ public:
     virtual int       Subframe() const override { return true; }
     virtual bool      GetSubframe() const override { return true; }
     void              Disengage();
-    bool              Complete() const { return complete; }
+    bool              Complete() const { return complete || bCombatHandoffPending; }
 
 protected:
     // behaviors:
@@ -70,6 +70,7 @@ protected:
     double            RouteTraceCountdown = 0.0;
     int               RouteTraceCount = 0;
     bool              complete = false;
+    bool              bCombatHandoffPending = false;
     int               drop_state = 0;
     int               quantum_state = 0;
     int               terrain_warning = 0;

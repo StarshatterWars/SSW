@@ -4455,7 +4455,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	int32 MaintCount = 0;
 	int32 DeadCount = 0;
 	int32 Player = 0;
-	int32 CommandAI = 0;
+	int32 CommandAI = 1;
 	int32 Respawns = 0;
 	int32 HoldTime = 0;
 	int32 ZoneLock = 0;
@@ -4477,6 +4477,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 	MissionShipArray.Empty();
 
 	FS_MissionElement NewMissionElement;
+	NewMissionElement.CommandAI = CommandAI;
 
 	const int32 ElemCount = (int32)Eval->elements()->size();
 	for (int32 i = 0; i < ElemCount; ++i)

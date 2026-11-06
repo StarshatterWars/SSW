@@ -284,10 +284,12 @@ Ship::Ship(
 	///-------------------------------------------------------------
 	// AI / Director Setup
 	//-------------------------------------------------------------
-	if (bCreateAI && cmd_ai > 0)
+	// Command AI controls carrier operations. Legacy ships still have a
+	// flight director when that level is zero.
+	if (bCreateAI && GetIFF() < 100)
 	{
-		ESteerAIType RequestedAIType =
-			IsStarship() ? ESteerAIType::STARSHIP : ESteerAIType::FIGHTER;
+		const ESteerAIType RequestedAIType = IsStatic() ? ESteerAIType::GROUND
+			: IsStarship() && !IsAirborne() ? ESteerAIType::STARSHIP : ESteerAIType::FIGHTER;
 
 		SimDirector* Director = SteerAI::Create(this, RequestedAIType);
 

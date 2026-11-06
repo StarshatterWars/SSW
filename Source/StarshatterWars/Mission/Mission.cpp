@@ -328,6 +328,34 @@ bool Mission::LoadMissionCommon(
 
 		Elem->intel = SrcElem.Intel;
 
+        // Authored objective records are stored separately from the flight plan.
+        for (const FS_MissionInstruction& AuthoredObjective : SrcElem.Instruction)
+        {
+            const EInstruction Action = AuthoredObjective.Action == EInstruction::None
+                ? EInstruction::Vector : AuthoredObjective.Action;
+            const Text& ElementRegion = Elem->GetRegion();
+            const char* RegionName = ElementRegion.length() ? ElementRegion.data() : GetRegion();
+            const FTCHARToUTF8 AuthoredRegion(*AuthoredObjective.OrderRegionName);
+            auto* Objective = new Instruction(AuthoredObjective.OrderRegionName.IsEmpty() ? RegionName : AuthoredRegion.Get(),
+                AuthoredObjective.ObjectiveLocation, Action);
+            Objective->SetTarget(AuthoredObjective.ObjectiveName);
+            Objective->SetTargetDesc(TCHAR_TO_UTF8(*AuthoredObjective.ObjectiveDesc));
+            Objective->SetPriority(AuthoredObjective.Priority);
+            Objective->SetSpeed(AuthoredObjective.Speed);
+            Objective->SetFormation(static_cast<INSTRUCTION_FORMATION>(AuthoredObjective.Formation));
+            Objective->SetEMCON(AuthoredObjective.EMCON);
+            for (int32 Index = 0; Index < static_cast<int32>(INSTRUCTION_STATUS::NUM_STATUS); ++Index)
+            {
+                const auto Status = static_cast<INSTRUCTION_STATUS>(Index);
+                if (AuthoredObjective.StatusName.Equals(UTF8_TO_TCHAR(Instruction::StatusName(Status)), ESearchCase::IgnoreCase))
+                {
+                    Objective->SetStatus(Status);
+                    break;
+                }
+            }
+            Elem->AddObjective(Objective);
+        }
+
 		//---------------------------------------------------------
 		// NAVPOINT -> INSTRUCTION BRIDGE
 		//---------------------------------------------------------

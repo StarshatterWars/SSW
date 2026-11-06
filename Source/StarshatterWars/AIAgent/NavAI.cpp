@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -29,6 +29,7 @@
 #include "Farcaster.h"
 #include "Shield.h"
 #include "Sim.h"
+#include "Mission.h"
 #include "StarSystem.h"
 #include "KeyMap.h"
 #include "HUDView.h"
@@ -71,7 +72,7 @@ NavAI::~NavAI()
 void
 NavAI::ExecFrame(double s)
 {
-    if (!ship) return;
+    if (!ship || bCombatHandoffPending) return;
 
     seconds = s;
 
@@ -567,6 +568,18 @@ NavAI::SeekTarget()
             }
             const int CompletedIndex = ship->GetNavIndex(navpt);
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+            // Target Practice uses its two sweep arrivals to hand control to the pilot.
+            // NavAI is a route director; the pilot handles weapons during these exercises.
+            Sim* Simulation = Sim::GetSim();
+            const Mission* CurrentMission = Simulation ? Simulation->GetMission() : nullptr;
+            if (CurrentMission && CurrentMission->GetIdentity() == 102 &&
+                CurrentMission->GetMissionType() == int(EMissionType::TRAINING) &&
+                ship == Simulation->GetPlayerShip() && navpt->GetAction() == EInstruction::Sweep)
+            {
+                bCombatHandoffPending = true;
+                UE_LOG(LogTemp, Display, TEXT("[AutoNavCombatHandoff] Reached=%d"), CompletedIndex);
+                return Steer();
+            }
             Instruction* Next = ship->GetNextNavPoint();
             UE_LOG(LogTemp, Display, TEXT("[AutoNavRoute] Reached=%d Radius=%.2fm Next=%d Hold=%.2fs"),
                 CompletedIndex, ArrivalRadius, Next ? ship->GetNavIndex(Next) : 0,

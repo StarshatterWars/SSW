@@ -2037,9 +2037,11 @@ void AShipActor::SyncCarriedMissiles()
             Mesh->DestroyComponent();
     }
 
-    static UStaticMesh* StoreMesh = nullptr;
-    if (!StoreMesh)
-        StoreMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+    // The registered components own their meshes. Resolve the fallback again when
+    // creating components because it may be collected between missions.
+    UStaticMesh* StoreMesh = CarriedMissileMeshes.Num() < MissileMounts.Num()
+        ? LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"))
+        : nullptr;
 
     for (int32 Index = CarriedMissileMeshes.Num(); Index < MissileMounts.Num(); ++Index)
     {

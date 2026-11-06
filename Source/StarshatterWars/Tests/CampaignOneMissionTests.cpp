@@ -7,6 +7,7 @@
 #include "MissionInfo.h"
 #include "CampaignPresentationRules.h"
 #include "MissionElement.h"
+#include "Instruction.h"
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
 #include "FormattingUtils.h"
@@ -93,6 +94,20 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
         if(Element&&Element->GetPlayerIndex()>0)
         {
             ++PlayerElements;
+            if (Id == 102 || Id == 103)
+            {
+                const auto& Objectives = Element->GetObjectives();
+                TestEqual(TEXT("Drone intercept objective count"), Objectives.size(), Id == 102 ? 2 : 1);
+                for (int32 ObjectiveIndex = 0; ObjectiveIndex < Objectives.size(); ++ObjectiveIndex)
+                {
+                    const Instruction* Objective = Objectives[ObjectiveIndex];
+                    TestEqual(TEXT("Intercept action"), static_cast<int32>(Objective->GetAction()),
+                        static_cast<int32>(EInstruction::Intercept));
+                    TestEqual(TEXT("Primary priority"), Objective->GetPriority(), static_cast<int32>(Instruction::PRIMARY));
+                    TestEqual(TEXT("Target element"), FString(UTF8_TO_TCHAR(Objective->GetTargetName())),
+                        FString(Id == 103 ? TEXT("Sierra") : ObjectiveIndex == 0 ? TEXT("Alpha") : TEXT("Bravo")));
+                }
+            }
             TestFalse(TEXT("Player element has a resolved region"),FString(UTF8_TO_TCHAR(Element->GetRegion().data())).IsEmpty());
         }
     }

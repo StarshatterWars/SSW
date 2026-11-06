@@ -275,6 +275,24 @@ event: {
 }
 
 event: {
+    id: 193,
+    type: Message,
+    trigger: Navpoint,
+    trigger_param: 3,
+    trigger_ship: "Echo 1",
+    message: "Sweep point reached. Take manual control and destroy Alpha 1 through Alpha 4."
+}
+
+event: {
+    id: 194,
+    type: Message,
+    trigger: Navpoint,
+    trigger_param: 4,
+    trigger_ship: "Echo 1",
+    message: "Sweep point reached. Take manual control and destroy Bravo 1 through Bravo 4."
+}
+
+event: {
     id: 199,
     type: Message,
     trigger: "Event (ANY)",
@@ -305,7 +323,7 @@ event: {
     id: 205,
     type: Message,
     sound: "Train-02-07",
-    message: "Alpha Drones Destroyed - Proceed to next navpoint",
+    message: "Alpha drones destroyed. Re-engage Autonav and proceed to waypoint 4 for Bravo.",
     trigger: "Event (ALL)",
     trigger_param: (101, 102, 103, 104, 201),
     delay: 1
@@ -354,7 +372,7 @@ event: {
     id: 215,
     type: Message,
     sound: "Train-02-11",
-    event_message: "Vampires Destroyed",
+    event_message: "Vampires destroyed. Re-engage Autonav and return to Archon.",
     trigger: "Event (ALL)",
     trigger_param: (120, 121),
 }

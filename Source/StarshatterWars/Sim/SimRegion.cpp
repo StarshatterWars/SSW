@@ -519,15 +519,23 @@ Ship* SimRegion::FindShip(const char* n)
     if (!n || !*n)
         return nullptr;
 
+    const size_t NameLength = strlen(n);
+    Ship* ElementMatch = nullptr;
     for (int i = 0; i < ships.size(); i++) {
         Ship* s = ships[i];
         if (!s) continue;
 
-        if (!_stricmp(s->GetName(), n))
+        const char* ShipName = s->GetName();
+        if (!_stricmp(ShipName, n))
             return s;
+
+        // Element orders can name "Alpha" while the individual ships are "Alpha 1", etc.
+        if (!ElementMatch && !s->IsDead() && !_strnicmp(ShipName, n, NameLength) &&
+            ShipName[NameLength] == ' ')
+            ElementMatch = s;
     }
 
-    return nullptr;
+    return ElementMatch;
 }
 
 Ship* SimRegion::FindShipByObjID(uint32 objid)
