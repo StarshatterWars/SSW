@@ -79,6 +79,19 @@ bool FBriefingPreviewAssetsTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Ship bounds are centered and normalized"), Bounds.GetCenter().IsNearlyZero(0.05) && FMath::IsNearlyEqual(Bounds.GetExtent().Size(), 100., 0.05));
         }
     }
+    FShipDesign Falcon;
+    Falcon.ShipName = TEXT("Falcon");
+    Falcon.Hardpoint.SetNum(2);
+    FWeaponDesign Javelin;
+    Javelin.Name = TEXT("Javelin");
+    Javelin.Model = TEXT("Javelin");
+    TArray<FBriefingShipPreviewPart> Clean, Armed, Cleared;
+    TestTrue(TEXT("Falcon resolves without stores"), BriefingShipPreview::ResolveParts(Falcon, Clean));
+    TestTrue(TEXT("Falcon resolves with a Javelin"), BriefingShipPreview::ResolveParts(Falcon, Armed, {nullptr, &Javelin}));
+    TestTrue(TEXT("Selected station adds missile geometry"), Armed.Num() > Clean.Num());
+    TestTrue(TEXT("Falcon resolves with empty stations"), BriefingShipPreview::ResolveParts(Falcon, Cleared, {nullptr, nullptr}));
+    TestEqual(TEXT("Clearing a station removes its missile geometry"), Cleared.Num(), Clean.Num());
+
     FShipDesign Missing;
     Missing.ShipName = TEXT("Phase4_Missing_Preview_Asset");
     TArray<FBriefingShipPreviewPart> Parts;

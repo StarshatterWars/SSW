@@ -11,6 +11,7 @@ class UMaterialInterface;
 class UViewport;
 class UTextBlock;
 struct FShipDesign;
+struct FWeaponDesign;
 
 // Asset-only snapshot: no legacy Ship/Mission pointers and no gameplay actors.
 USTRUCT()
@@ -24,7 +25,8 @@ struct FBriefingShipPreviewPart
 
 namespace BriefingShipPreview
 {
-    STARSHATTERWARS_API bool ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts);
+    STARSHATTERWARS_API bool ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts,
+        const TArray<const FWeaponDesign*>& Stores = {});
     STARSHATTERWARS_API FBox CalculateBounds(const TArray<FBriefingShipPreviewPart>& Parts);
     STARSHATTERWARS_API float FitDistance(float Radius, const FVector2D& ViewSize);
     // Rejects main Game/PIE worlds. Only isolated preview worlds are accepted.
@@ -36,7 +38,7 @@ class STARSHATTERWARS_API UShipBriefingPreview : public UUserWidget
 {
     GENERATED_BODY()
 public:
-    bool SetShipDesign(const FShipDesign* Design);
+    bool SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores = {});
     void SetPreviewActive(bool bActive);
     void ResetView();
 protected:

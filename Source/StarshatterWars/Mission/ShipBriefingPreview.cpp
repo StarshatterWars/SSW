@@ -3,6 +3,8 @@
 #include "ShipVisualCatalog.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
+#include "ShipWeaponMountComponent.h"
+#include "WeaponBlueprintResolver.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Viewport.h"
 #include "Components/Border.h"
@@ -29,7 +31,7 @@
 namespace
 {
     void CollectTemplateParts(UClass* ActorClass, const FTransform& ParentTransform,
-        TArray<FBriefingShipPreviewPart>& Parts, TSet<UClass*>& ClassStack)
+        TArray<FBriefingShipPreviewPart>& Parts, TSet<UClass*>& ClassStack, bool bSkipLoadoutStores = false)
     {
         if (!ActorClass || ClassStack.Contains(ActorClass) || ClassStack.Num() >= 6) return;
         const AActor* DefaultActor = ActorClass->GetDefaultObject<AActor>();
@@ -106,11 +108,13 @@ namespace
             }
             else if (const UChildActorComponent* Child = Cast<UChildActorComponent>(Source))
             {
-                CollectTemplateParts(Child->GetChildActorClass(), Transform, Parts, ClassStack);
+                const auto* Mount = Cast<UShipWeaponMountComponent>(Child);
+                if (!bSkipLoadoutStores || !Mount || !Mount->bLoadoutHardpoint)
+                    CollectTemplateParts(Child->GetChildActorClass(), Transform, Parts, ClassStack, bSkipLoadoutStores);
             }
         }
         if (ShipDefaults && Parts.IsEmpty() && ShipDefaults->ShipVisualBP)
-            CollectTemplateParts(ShipDefaults->ShipVisualBP, ParentTransform, Parts, ClassStack);
+            CollectTemplateParts(ShipDefaults->ShipVisualBP, ParentTransform, Parts, ClassStack, bSkipLoadoutStores);
         ClassStack.Remove(ActorClass);
     }
 }
@@ -124,9 +128,13 @@ FBox BriefingShipPreview::CalculateBounds(const TArray<FBriefingShipPreviewPart>
     return Bounds;
 }
 
-bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts)
+bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts,
+    const TArray<const FWeaponDesign*>& Stores)
 {
     OutParts.Empty();
+    UClass* VisualClass = nullptr;
+    if (!Design.ShipName.IsEmpty() && (!Stores.IsEmpty() || Design.Mesh.IsNull()))
+        VisualClass = ShipVisualCatalog::Resolve(Design.ShipName, Design.Model);
     if (UStaticMesh* Mesh = Design.Mesh.LoadSynchronous())
     {
         FBriefingShipPreviewPart Part;
@@ -135,10 +143,10 @@ bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefi
     }
     if (OutParts.IsEmpty() && !Design.ShipName.IsEmpty())
     {
-        if (UClass* VisualClass = ShipVisualCatalog::Resolve(Design.ShipName, Design.Model))
+        if (VisualClass)
         {
             TSet<UClass*> ClassStack;
-            CollectTemplateParts(VisualClass, FTransform::Identity, OutParts, ClassStack);
+            CollectTemplateParts(VisualClass, FTransform::Identity, OutParts, ClassStack, !Stores.IsEmpty());
         }
         if (OutParts.IsEmpty())
         {
@@ -155,6 +163,46 @@ bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefi
         }
     }
     const FBox Bounds = CalculateBounds(OutParts);
+    const AShipActor* Defaults = VisualClass ? Cast<AShipActor>(VisualClass->GetDefaultObject()) : nullptr;
+    const double ShipScale = FMath::Abs(Design.Scale) > SMALL_NUMBER ? Design.Scale : 1.0;
+    for (int32 Index = 0; Bounds.IsValid && Index < Stores.Num() && Design.Hardpoint.IsValidIndex(Index); ++Index)
+    {
+        const FWeaponDesign* Store = Stores[Index];
+        if (!Store) continue;
+        UClass* StoreClass = WeaponBlueprintResolver::Resolve(Store->Model, Store->Name);
+        if (!StoreClass) continue;
+
+        const FShipHardPoint& Hardpoint = Design.Hardpoint[Index];
+        const FVector& Location = Hardpoint.Location;
+        FTransform Mount(FRotator(FMath::RadiansToDegrees(Hardpoint.ElevationRadians),
+            FMath::RadiansToDegrees(Hardpoint.AzimuthRadians), 0.0),
+            FVector(Location.Z, Location.X, Location.Y) / ShipScale);
+        if (Defaults && Defaults->LoadoutHardpoints.IsValidIndex(Index) && Defaults->LoadoutHardpoints[Index])
+        {
+            Mount = FTransform::Identity;
+            for (const USceneComponent* Point = Defaults->LoadoutHardpoints[Index].Get(); Point; Point = Point->GetAttachParent())
+                Mount = Mount * Point->GetRelativeTransform();
+        }
+
+        TArray<FBriefingShipPreviewPart> StoreParts;
+        TSet<UClass*> ClassStack;
+        CollectTemplateParts(StoreClass, FTransform::Identity, StoreParts, ClassStack);
+        for (FBriefingShipPreviewPart& Part : StoreParts)
+        {
+            const FVector Extent = Part.Mesh->GetBounds().BoxExtent;
+            // Match the carried missile mesh convention used by AMissileActor.
+            if (Part.Mesh->GetPathName().StartsWith(TEXT("/Game/Models/Weapons/")) &&
+                Extent.Y > 2.0 * FMath::Max(Extent.X, Extent.Z))
+            {
+                const FVector ModelForward = Part.Transform.TransformVector(FVector::RightVector).GetSafeNormal();
+                Part.Transform.SetRotation(FQuat::FindBetweenNormals(ModelForward, FVector::ForwardVector) *
+                    Part.Transform.GetRotation());
+            }
+            Part.Transform = Part.Transform * Mount;
+            OutParts.Add(MoveTemp(Part));
+        }
+    }
+
     const double Radius = Bounds.IsValid ? Bounds.GetExtent().Size() : 0.;
     if (!FMath::IsFinite(Radius) || Radius <= UE_SMALL_NUMBER)
     {
@@ -289,15 +337,24 @@ void UShipBriefingPreview::NativeDestruct()
     Super::NativeDestruct();
 }
 
-bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design)
+bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores)
 {
-    const FString NewKey = Design ? Design->ShipName + TEXT("|") + Design->Mesh.ToSoftObjectPath().ToString() : FString();
+    FString NewKey = Design ? Design->ShipName + TEXT("|") + Design->Mesh.ToSoftObjectPath().ToString() : FString();
+    const FString ShipKey = NewKey;
+    for (const FWeaponDesign* Store : Stores)
+        NewKey += TEXT("|") + (Store ? Store->Name : FString());
+    const bool bSameShip = !ShipKey.IsEmpty() && (DesignKey == ShipKey || DesignKey.StartsWith(ShipKey + TEXT("|")));
     if (DesignKey == NewKey && !Parts.IsEmpty()) { UpdateVisual(); return true; }
     ClearVisual();
     Parts.Empty();
     DesignKey = NewKey;
-    if (!Design || !BriefingShipPreview::ResolveParts(*Design, Parts)) return false;
-    ResetView();
+    if (!Design || !BriefingShipPreview::ResolveParts(*Design, Parts, Stores)) return false;
+    if (!bSameShip)
+    {
+        ResetView();
+        if (!Stores.IsEmpty())
+            OrbitPitch = -25.f;
+    }
     UpdateVisual();
     return true;
 }

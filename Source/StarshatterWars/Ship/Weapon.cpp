@@ -21,6 +21,7 @@
 #include "Explosion.h"
 #include "Drone.h"
 #include "SimContact.h"
+#include "Sensor.h"
 #include "Ship.h"
 #include "Sim.h"
 #include "SimEvent.h"
@@ -819,6 +820,14 @@ SimShot* Weapon::FireBarrel(int n)
 
     if (shot) {
         shot->SetSourceWeapon(this);
+        if (!shot->IsBeam() && design->graphic_type == Graphic::BOLT &&
+            target && target->GetType() == ESimObject::SHIP &&
+            ship->GetSensor() && ship->GetSensor()->IsTracking(target))
+        {
+            Ship* LockedShip = static_cast<Ship*>(target);
+            if (LockedShip->GetIFF() > 0 && LockedShip->GetIFF() != ship->GetIFF())
+                shot->SetBoltAssistTarget(LockedShip);
+        }
         // Successful legacy fire event only; the flash never applies damage.
         if(!bRackRelease && (design->flash.length() || design->flash_img) && design->flash_scale>0)
             Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship,ANSI_TO_TCHAR(design->flash.data()));

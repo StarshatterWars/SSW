@@ -58,6 +58,7 @@ public:
 
     void SetSourceWeapon(const Weapon* InWeapon) { source_weapon = InWeapon; }
     const Weapon* GetSourceWeapon() const { return source_weapon; }
+    void SetBoltAssistTarget(Ship* Target);
     void BeginRackRelease(const FVector& CarrierVelocity, const FVector& CarrierUp);
     bool IsReleasingFromRack() const { return RackReleaseRemaining > 0.0; }
 	const Ship* Owner()        const { return owner; }
@@ -119,6 +120,8 @@ protected:
     double BeamDamageSeconds=0; // Actual simulation step; Game::FrameTime is a port stub.
     const Weapon* source_weapon = nullptr; // Non-owning presentation identity only.
     double RackReleaseRemaining = 0.0;
+    Ship* BoltAssistTarget = nullptr;
+    void SteerAssistedBolt(double Seconds);
 
 	int                type;
 	float              base_damage;

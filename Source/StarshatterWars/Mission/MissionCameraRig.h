@@ -403,7 +403,7 @@ struct FMissionCameraRig
             const double Desired = FMath::Max(Radius * 1.25, BaseDistance * Zoom);
             Distance = Distance <= 0.0 ? Desired : FMath::Lerp(Distance, Desired, 1.0 - FMath::Exp(-8.0 * Dt));
             Eye = Center - Direction * Distance + Up * FMath::Max(FMath::Abs(ScaledChase.Z), Radius * 0.45);
-            Rotation = Aim(Bridge + Forward * Radius - Eye, Up, Rotation);
+            Rotation = Aim(Direction, Up, Rotation);
         }
         // Blend the final deck frame into the normal flight camera rather than
         // snapping between two unrelated world-space eye positions.

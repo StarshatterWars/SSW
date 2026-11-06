@@ -1594,7 +1594,9 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                     Bolt = World->SpawnActor<ABoltWeaponActor>(BoltClass, Position, Direction.Rotation(), Params);
                     if (Bolt)
                     {
-                        Bolt->BeginSimulationFlight();
+                        const bool bDeltaBolt =
+                            FCStringAnsi::Stricmp(Shot->GetDesign()->name.data(), "Delta Cannon") == 0;
+                        Bolt->BeginSimulationFlight(bDeltaBolt);
                         ProjectileVisuals.Add(Shot, Bolt);
                     }
                 }

@@ -37,7 +37,7 @@ public:
     static TSubclassOf<ABoltWeaponActor> BlueprintClassForWeapon(const FString& WeaponName);
 
     /** Activate a world-space visual whose movement and lifetime belong to SimShot. */
-    void BeginSimulationFlight();
+    void BeginSimulationFlight(bool bDeltaBolt = false);
 
     /** Spawn a bolt projectile. Speed is cm/s. Life is seconds. */
     UFUNCTION(BlueprintCallable, Category = "Bolt", meta = (WorldContext = "WorldContextObject"))

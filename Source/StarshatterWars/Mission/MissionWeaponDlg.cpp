@@ -23,6 +23,7 @@
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
 #include "MissionWeaponLoadoutListObject.h"
+#include "ShipBriefingPreview.h"
 #include "MissionWeaponStationRowObject.h"
 #include "MissionLoadoutListView.h"
 #include "MissionWeaponStationLVElement.h"
@@ -336,6 +337,8 @@ void UMissionWeaponDlg::RefreshFromMission()
 
     // Capital ships use authored installed weapons, not fighter loadout presets.
     const bool bHasConfigurableLoadouts = Design->Loadout.Num() > 0;
+    if (!bHasConfigurableLoadouts && LoadoutPreview)
+        LoadoutPreview->SetPreviewActive(false);
     if (FighterLoadoutPanel)
         FighterLoadoutPanel->SetVisibility(bHasConfigurableLoadouts ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     if (FixedShipWeaponsPanel)
@@ -588,6 +591,15 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     AddInfoRow(TEXT("ELEMENT:"), ElementNameValueText);
     AddInfoRow(TEXT("TYPE:"), DesignNameValueText);
     AddInfoRow(TEXT("WEIGHT:"), WeightValueText);
+
+    USizeBox* PreviewHost = WidgetTree->ConstructWidget<USizeBox>();
+    PreviewHost->SetWidthOverride(410.f);
+    PreviewHost->SetHeightOverride(350.f);
+    if (UVerticalBoxSlot* PreviewSlot = Left->AddChildToVerticalBox(PreviewHost))
+        PreviewSlot->SetPadding(FMargin(0.f, 8.f, 0.f, 0.f));
+    LoadoutPreview = WidgetTree->ConstructWidget<UShipBriefingPreview>();
+    LoadoutPreview->SetPreviewActive(false);
+    PreviewHost->SetContent(LoadoutPreview);
 
     // ------------------------------------------------------------
     // RIGHT COLUMN
@@ -1136,6 +1148,8 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
     }
 
     const int32 NumHardpoints = Design->Hardpoint.Num();
+    TArray<const FWeaponDesign*> Stores;
+    Stores.Reserve(NumHardpoints);
 
     for (int32 StationIndex = 0; StationIndex < NumHardpoints; ++StationIndex)
     {
@@ -1148,6 +1162,7 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
                 PointIndex);
 
         const FString WeaponName = Weapon ? Weapon->Name : TEXT("Empty");
+        Stores.Add(Weapon);
         const FString StationLabel = FString::Printf(TEXT("STATION %d"), StationIndex + 1);
 
         UMissionWeaponStationRowObject* Row =
@@ -1171,6 +1186,12 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
         {
             StationListView->AddItem(Row);
         }
+    }
+
+    if (LoadoutPreview)
+    {
+        const bool bHasPreview = LoadoutPreview->SetShipDesign(Design, Stores);
+        LoadoutPreview->SetPreviewActive(bHasPreview);
     }
 }
 

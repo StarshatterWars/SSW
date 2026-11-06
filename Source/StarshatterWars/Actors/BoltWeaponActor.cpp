@@ -175,12 +175,28 @@ void ABoltWeaponActor::Launch(FVector Origin, FVector Direction, float Speed, fl
     ActivateVisuals();
 }
 
-void ABoltWeaponActor::BeginSimulationFlight()
+void ABoltWeaponActor::BeginSimulationFlight(bool bDeltaBolt)
 {
     bLaunched = false;
     SetActorTickEnabled(false);
     SetLifeSpan(0.f);
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    if (bDeltaBolt)
+    {
+        if (!PhotonGlowMaterial)
+            PhotonGlowMaterial = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Models/Weapons/Bolt/Shared/M_BoltGlow.M_BoltGlow"));
+        if (PhotonGlowMaterial)
+        {
+            TArray<UStaticMeshComponent*> Meshes;
+            GetComponents(Meshes);
+            for (UStaticMeshComponent* Mesh : Meshes)
+                Mesh->SetHiddenInGame(true);
+            CoreSystem = nullptr;
+            if (CoreFX) CoreFX->DeactivateImmediate();
+            BoltColor = FLinearColor(0.8f, 0.9f, 1.0f);
+        }
+    }
     ApplyPresentationDefaults();
     ActivateVisuals();
 }
@@ -193,9 +209,9 @@ void ABoltWeaponActor::ActivateVisuals()
         ProjectileMesh->SetHiddenInGame(true);
     bFlightVisualsActive = true;
     SetActorHiddenInGame(false);
-    if (CoreFX)
+    if (CoreFX && CoreSystem)
     {
-        if (CoreSystem) CoreFX->SetAsset(CoreSystem);
+        CoreFX->SetAsset(CoreSystem);
         CoreFX->SetVariableLinearColor(TEXT("User.Color"), BoltColor);
         CoreFX->SetVariableFloat(TEXT("EnginePower"), 1.f);
         CoreFX->SetVariableFloat(TEXT("Throttle"), 100.f);

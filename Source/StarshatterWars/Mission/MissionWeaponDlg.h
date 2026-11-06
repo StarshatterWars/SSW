@@ -44,6 +44,7 @@ class UMissionLoadoutListView;
 class UMissionPlanner;
 class UMissionWeaponLoadoutListObject;
 class UMissionWeaponStationRowObject;
+class UShipBriefingPreview;
 
 class Mission;
 class MissionElement;
@@ -171,6 +172,9 @@ protected:
 
     UPROPERTY()
     UMissionLoadoutListView* StationListView = nullptr;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UShipBriefingPreview> LoadoutPreview;
 
     // ------------------------------------------------------------
     // Row item storage

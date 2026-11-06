@@ -288,7 +288,7 @@ void SFighterHUDDetails::Refresh()
     TargetDisplayColor = FLinearColor::Yellow;
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
-    bAutoAvailable = bGearDown = bShoot = bClosingValid = bTargetLocked = false;
+    bAutoAvailable = bGearDown = bShoot = bClosingValid = bTargetLocked = bTargetTracking = false;
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
     bHelmMode=false;CompactNavLabel=TEXT("FREE FLIGHT");
@@ -404,6 +404,7 @@ void SFighterHUDDetails::Refresh()
         {
             Sensor* PlayerSensor = P->GetSensor();
             bTargetLocked = P->GetTarget() == T && PlayerSensor && PlayerSensor->IsTracking(T);
+            bTargetTracking = P->IsAutoTrackEngaged() && P->GetAutoTrackTarget() == T;
             const FVector Separation = T->GetLocation()-P->GetLocation();
             bClosingValid = !Separation.IsNearlyZero();
             ClosingSpeed = FVector::DotProduct(P->GetVelocity()-T->GetVelocity(), Separation.GetSafeNormal());
@@ -947,6 +948,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         else if(TargetHull<0)
             Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,
+            bTargetTracking ? TargetClass + TEXT("   TRACKING") :
             bTargetLocked ? TargetClass + TEXT("   LOCKED") : TargetClass, TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);

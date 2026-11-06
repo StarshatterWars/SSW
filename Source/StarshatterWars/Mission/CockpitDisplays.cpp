@@ -1,6 +1,11 @@
 #include "CockpitDisplays.h"
 #include "FighterHUDDetails.h"
 #include "FighterActor.h"
+#include "Ship.h"
+#include "SimRegion.h"
+#include "Sim.h"
+#include "SSWRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/WidgetComponent.h"
@@ -15,7 +20,12 @@ class SCockpitInstrument : public SLeafWidget
 {
 public:
     SLATE_BEGIN_ARGS(SCockpitInstrument) {} SLATE_END_ARGS()
-    void Construct(const FArguments&, TWeakPtr<SFighterHUDDetails> InHUD, int32 InPanel) { HUD=InHUD; Panel=InPanel; }
+    void Construct(const FArguments&, TWeakPtr<SFighterHUDDetails> InHUD, int32 InPanel, TWeakObjectPtr<AFighterActor> InFighter = {})
+    {
+        HUD = InHUD;
+        Panel = InPanel;
+        Fighter = InFighter;
+    }
     FVector2D ComputeDesiredSize(float) const override { return Panel==2?FVector2D(1024,512):FVector2D(512,512); }
     int32 OnPaint(const FPaintArgs&,const FGeometry& G,const FSlateRect&,FSlateWindowElementList& E,int32 L,const FWidgetStyle&,bool) const override
     {
@@ -48,7 +58,32 @@ public:
             if(H->bGearDown)Text(720,465,TEXT("GEAR DOWN"),Blue,22);
             return L+1;
         }
-        const auto Mode=H->Modes[Panel];
+        if (Panel == 3)
+        {
+            const AFighterActor* Actor = Fighter.Get();
+            Sim* Simulation = Sim::GetSim();
+            const Ship* Player = Actor && Simulation ? Simulation->GetPlayerShip() : nullptr;
+            if (Player && Player != Actor->GetRuntimeShip()) Player = nullptr;
+            Text(20, 16, TEXT("MISSION STATUS"), Blue);
+            if (Player)
+            {
+                const int32 Time = FMath::Max(0, Player->GetMissionClockMS()) / 1000;
+                FString Clock = FString::Printf(TEXT("%02d:%02d:%02d"), Time / 3600, Time / 60 % 60, Time % 60);
+                const UGameInstance* GameInstance = Actor->GetGameInstance();
+                const auto* Runtime = GameInstance ? GameInstance->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+                const int32 Compression = Runtime ? Runtime->GetTimeCompression() : 1;
+                if (Compression > 1)
+                    Clock += FString::Printf(TEXT(" x%d"), Compression);
+                Text(20, 92, H->PlayerName, Blue);
+                Text(20, 160, Clock, Blue);
+                if (const SimRegion* Region = Player->GetRegion())
+                    Text(20, 230, ANSI_TO_TCHAR(Region->GetName()), Blue);
+                if (const UEnum* Phase = StaticEnum<EOPSMode>())
+                    Text(20, 300, Phase->GetNameStringByValue(static_cast<int64>(Player->GetFlightPhase())).ToUpper(), Blue);
+            }
+            return L+1;
+        }
+        const auto Mode = Panel == 4 ? SFighterHUDDetails::EMode::Ship : H->Modes[Panel];
         if(Mode==SFighterHUDDetails::EMode::Off)return L;
         if(Panel==0 && Mode==SFighterHUDDetails::EMode::Ship)
         {
@@ -65,10 +100,12 @@ public:
         }
         else if(Mode==SFighterHUDDetails::EMode::Ship)
         {
-            Text(20,16,H->bHasTarget?H->TargetName:TEXT("NO TARGET"),H->TargetDisplayColor,24);
+            Text(20,16,H->bHasTarget ? H->TargetName : TEXT("NO TARGET"), H->bHasTarget ? H->TargetDisplayColor : Blue, 24);
             if(H->bHasTarget){
                 if(H->TargetMFDPreview && H->TargetMFDPreview->IsReady())Image({30,100},{450,225},H->TargetMFDPreview->GetBrush());
-                Text(20,350,H->TargetClass,H->TargetDisplayColor,22);
+                const FString Status = H->bTargetTracking ? TEXT("   TRACKING") :
+                    H->bTargetLocked ? TEXT("   LOCKED") : TEXT("");
+                Text(20,350,H->TargetClass + Status,H->TargetDisplayColor,22);
                 Text(20,400,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
                 Text(20,450,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
             }
@@ -91,13 +128,14 @@ public:
     }
 private:
     TWeakPtr<SFighterHUDDetails> HUD;
+    TWeakObjectPtr<AFighterActor> Fighter;
     int32 Panel=0;
 };
 
 FCockpitDisplays::~FCockpitDisplays(){Clear();}
 bool FCockpitDisplays::IsActive() const
 {
-    if(!Mesh.IsValid() || Panels.Num()!=3)return false;
+    if(!Mesh.IsValid() || Panels.Num()!=5)return false;
     for(const auto& Panel:Panels)if(!Panel.IsValid() || !Panel->GetRenderTarget())return false;
     return true;
 }
@@ -116,10 +154,14 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
     if(Mesh.Get()!=Screen)
     {
         Clear();Mesh=Screen;OriginalHUD.Reset(Screen->GetMaterial(2));
-        const FVector TL[3]={{71.102417,182.349457,-40.402714},{-47.681965,190.185822,-40.402714},{48.085361,183.565155,24.140862}};
-        const FVector TR[3]={{47.681965,190.185822,-40.402714},{-71.102417,182.349457,-40.402714},{-48.085361,183.565155,24.140862}};
-        const FVector BL[3]={{70.079567,179.292480,-64.888107},{-46.659107,187.128845,-64.888107},{48.085361,183.565155,-24.397217}};
-        for(int32 I=0;I<3;++I)
+        // FalconPit mesh coordinates: own ship, sensor, combiner, mission, target.
+        const FVector TL[] = {{71.102417,182.349457,-40.402714}, {-7.01,193.36,-33.73},
+            {48.085361,183.565155,24.140862}, {35.68,193.36,-33.73}, {-47.681965,190.185822,-40.402714}};
+        const FVector TR[] = {{47.681965,190.185822,-40.402714}, {-35.66,193.36,-33.73},
+            {-48.085361,183.565155,24.140862}, {7.03,193.36,-33.73}, {-71.102417,182.349457,-40.402714}};
+        const FVector BL[] = {{70.079567,179.292480,-64.888107}, {-7.01,189.86,-62.17},
+            {48.085361,183.565155,-24.397217}, {35.68,189.86,-62.17}, {-46.659107,187.128845,-64.888107}};
+        for (int32 I = 0; I < UE_ARRAY_COUNT(TL); ++I)
         {
             auto* W=NewObject<UWidgetComponent>(Child,NAME_None,RF_Transient);
             W->SetupAttachment(Screen);W->SetWidgetSpace(EWidgetSpace::World);W->SetDrawSize(I==2?FVector2D(1024,512):FVector2D(512,512));
@@ -129,7 +171,7 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
             const FVector Right=TR[I]-TL[I],Down=BL[I]-TL[I];const FVector Normal=FVector::CrossProduct(Right,Down).GetSafeNormal();
             W->SetRelativeLocation(TL[I]+Normal*.03);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
             W->SetRelativeScale3D(FVector(1,Right.Size()/(I==2?1024:512),Down.Size()/512));
-            W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I));W->RegisterComponent();Panels.Add(W);
+            W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter)));W->RegisterComponent();Panels.Add(W);
         }
     }
     // Blank the imported HUD artwork only once the replacement is rendered.
@@ -138,7 +180,16 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
         Blank.Reset(UTexture2D::CreateTransient(1,1,PF_B8G8R8A8));
         if(Blank.IsValid()){
             auto& Data=Blank->GetPlatformData()->Mips[0].BulkData;void* Pixels=Data.Lock(LOCK_READ_WRITE);FMemory::Memzero(Pixels,4);Data.Unlock();Blank->UpdateResource();
-            if(auto* Material=Panels[2]->GetMaterialInstance()){auto* Empty=UMaterialInstanceDynamic::Create(Material,Screen);Empty->SetTextureParameterValue(TEXT("SlateUI"),Blank.Get());Screen->SetMaterial(2,Empty);}
+            // Use a base material. A widget's dynamic MID is not a valid parent.
+            auto* Material = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Engine/EngineMaterials/Widget3DPassThrough_Translucent.Widget3DPassThrough_Translucent"));
+            if (Material)
+            {
+                auto* Empty = UMaterialInstanceDynamic::Create(Material, Screen);
+                Empty->SetTextureParameterValue(TEXT("SlateUI"), Blank.Get());
+                Empty->SetVectorParameterValue(TEXT("TintColorAndOpacity"), FLinearColor::Transparent);
+                Screen->SetMaterial(2, Empty);
+            }
         }
     }
 }
@@ -172,7 +223,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
     FCockpitDisplays Displays;Fighter->SetCockpitViewActive(true);Displays.Update(Fighter,HUD,true);
     AActor* Child=Fighter->CockpitComponent->GetChildActor();
     TArray<UWidgetComponent*> Panels;Child->GetComponents(Panels);
-    TestEqual(TEXT("Two physical MFDs and a combiner"),Panels.Num(),3);
+    TestEqual(TEXT("Four physical MFDs and a combiner"),Panels.Num(),5);
     for(int32 I=0;I<Panels.Num();++I){
         TestEqual(TEXT("Attached to actual cockpit mesh"),Panels[I]->GetAttachParent(),static_cast<USceneComponent*>(Child->FindComponentByClass<UStaticMeshComponent>()));
         TestEqual(TEXT("Display collision disabled"),Panels[I]->GetCollisionEnabled(),ECollisionEnabled::NoCollision);
@@ -185,7 +236,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
     FString Capture;
     if(!GUsingNullRHI && FParse::Value(FCommandLine::Get(),TEXT("CockpitCapture="),Capture)){
         FWidgetRenderer* Renderer=new FWidgetRenderer(true);
-        for(int32 I=0;I<3;++I){
+        for(int32 I=0;I<Panels.Num();++I){
             const FVector2D Size=I==2?FVector2D(1024,512):FVector2D(512,512);
             TStrongObjectPtr<UTextureRenderTarget2D> RT(FWidgetRenderer::CreateTargetFor(Size,TF_Bilinear,true));
             RT->ClearColor=I==2?FLinearColor::Transparent:FLinearColor::Black;

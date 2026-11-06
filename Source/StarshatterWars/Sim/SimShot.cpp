@@ -301,6 +301,34 @@ SimShot::IsHostileTo(const SimObject* o) const
 
 // +--------------------------------------------------------------------+
 
+void SimShot::SetBoltAssistTarget(Ship* Target)
+{
+    BoltAssistTarget = Target;
+    if (Target) Observe(Target);
+}
+
+void SimShot::SteerAssistedBolt(double Seconds)
+{
+    if (!BoltAssistTarget || BoltAssistTarget->IsDead() || BoltAssistTarget->IsDying() ||
+        BoltAssistTarget->GetRegion() != GetRegion())
+        return;
+
+    const FVector CurrentVelocity = GetVelocity();
+    const double Speed = CurrentVelocity.Size();
+    if (Speed <= UE_SMALL_NUMBER) return;
+
+    const FVector CurrentDirection = CurrentVelocity / Speed;
+    const FVector DesiredDirection = (BoltAssistTarget->GetLocation() - GetLocation()).GetSafeNormal();
+    const double Alignment = FVector::DotProduct(CurrentDirection, DesiredDirection);
+    // Assist near the reticle and let the bolt continue straight after a miss.
+    if (Alignment < 0.866 || Alignment >= 1.0 - UE_SMALL_NUMBER) return;
+
+    const double Angle = FMath::Acos(Alignment);
+    const double MaxTurn = FMath::DegreesToRadians(35.0) * Seconds;
+    const FVector Axis = FVector::CrossProduct(CurrentDirection, DesiredDirection).GetSafeNormal();
+    SetVelocity(FQuat(Axis, FMath::Min(Angle, MaxTurn)).RotateVector(CurrentVelocity));
+}
+
 void SimShot::BeginRackRelease(const FVector& CarrierVelocity, const FVector& CarrierUp)
 {
     constexpr double DropDistance = 1.0;
@@ -367,6 +395,7 @@ SimShot::ExecFrame(double seconds)
 		origin = GetLocation();
 
 		if (!first_frame) {
+            SteerAssistedBolt(seconds);
             // Legacy bolts can be massless and still move at their defined velocity.
             // Physical's port safety guard rejects zero mass before updating life.
             if (primary && design->graphic_type == Graphic::BOLT && mass == 0) {
@@ -712,6 +741,8 @@ SimShot::Update(SimObject* obj)
 {
 	if (obj == (SimObject*)owner)
 		owner = 0;
+    if (obj == BoltAssistTarget)
+        BoltAssistTarget = nullptr;
 
 	return SimObserver::Update(obj);
 }
