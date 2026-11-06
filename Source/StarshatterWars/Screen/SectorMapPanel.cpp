@@ -244,10 +244,17 @@ int32 USectorMapPanel::NativePaint(
     const double R = GetDisplayRadius() / ZoomScale;
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
+    if (!bOperationsView)
+    {
+        FSlateDrawElement::MakeBox(OutDrawElements, LayerId + 1,
+            AllottedGeometry.ToPaintGeometry(), FCoreStyle::Get().GetBrush("WhiteBrush"),
+            ESlateDrawEffect::None, FLinearColor(0.007f, 0.016f, 0.033f));
+    }
+
     DrawRegionGrid(
         OutDrawElements,
         AllottedGeometry,
-        LayerId + 1,
+        LayerId + 2,
         Center,
         Scale,
         RegionRadius,
@@ -313,25 +320,28 @@ int32 USectorMapPanel::NativePaint(
             Rep);
     }
 
-    const FString InfoString = bLiveNavigation
-        ? FString::Printf(TEXT("%s  |  WIDTH %.1f KM"), *ViewedSectorName, R * 2.0 / 1000.0)
-        : FString::Printf(
-        TEXT("SECTOR: %s    REP: %d    SCALE: %.4f    RANGE: %.0f"),
-        ViewedSectorName.IsEmpty() ? TEXT("NONE") : *ViewedSectorName,
-        Rep,
-        Scale,
-        R * 2.0);
+    const FString InfoString = FString::Printf(TEXT("%s   /   %.1f KM"),
+        *ViewedSectorName, R * 2.0 / 1000.0);
+
+    if (!bOperationsView)
+    {
+        FSlateDrawElement::MakeText(OutDrawElements, LayerId + 500,
+            AllottedGeometry.ToPaintGeometry(FVector2D(16, 35), FVector2D(460, 20)),
+            FString(TEXT("RMB PAN   /   MMB ORBIT   /   WHEEL ZOOM")),
+            FCoreStyle::GetDefaultFontStyle("Regular", 10), ESlateDrawEffect::None,
+            FLinearColor(0.35f, 0.63f, 0.76f));
+    }
 
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 500,
         AllottedGeometry.ToPaintGeometry(
-            FVector2D(12.0f, 10.0f),
+            FVector2D(16.0f, 12.0f),
             FVector2D(520.0f, 20.0f)),
         InfoString,
-        FCoreStyle::GetDefaultFontStyle("Regular", 11),
+        FCoreStyle::GetDefaultFontStyle("Bold", 15),
         ESlateDrawEffect::None,
-        FLinearColor(0.85f, 0.90f, 1.0f, 0.95f));
+        FLinearColor(0.58f, 0.88f, 1.0f, 0.98f));
 
     return DrawRegionInfo(LayerId + 500);
 }
@@ -340,6 +350,12 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    if (!bOperationsView && InMouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton)
+    {
+        bOrbitingMap = true;
+        return FReply::Handled().CaptureMouse(TakeWidget());
+    }
+
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
         bDraggingMap = true;
@@ -370,7 +386,7 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
         {
             if (Scale > UE_SMALL_NUMBER && (InMouseEvent.IsShiftDown() || InMouseEvent.IsAltDown()))
             {
-                OnLiveRouteClick.ExecuteIfBound(INDEX_NONE, (LocalPoint - Center) / Scale,
+                OnLiveRouteClick.ExecuteIfBound(INDEX_NONE, UnprojectMapOffset(LocalPoint - Center) / Scale,
                     InMouseEvent.IsShiftDown(), InMouseEvent.IsAltDown());
                 return FReply::Handled();
             }
@@ -379,7 +395,7 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
             for (const FLiveNavigationWaypoint& Waypoint : LiveWaypoints)
             {
                 if (Waypoint.Sector != ViewedSectorName) continue;
-                const FVector2D Position = Center + FVector2D(Waypoint.Location.X, Waypoint.Location.Y) * Scale;
+                const FVector2D Position = Center + ProjectMapOffset(FVector2D(Waypoint.Location.X, Waypoint.Location.Y)) * Scale;
                 const double Distance = (Position - LocalPoint).SizeSquared();
                 if (Distance < WaypointDistance)
                 {
@@ -398,7 +414,7 @@ FReply USectorMapPanel::NativeOnMouseButtonDown(
             for (const auto& Contact : LiveContacts)
             {
                 if (Contact.System != ViewedSystemName || Contact.Sector != ViewedSectorName) continue;
-                const FVector2D Position = Center + FVector2D(Contact.Location.X, Contact.Location.Y) * Scale;
+                const FVector2D Position = Center + ProjectMapOffset(FVector2D(Contact.Location.X, Contact.Location.Y)) * Scale;
                 const double Distance = (Position - LocalPoint).SizeSquared();
                 if (Distance < Best) { Best = Distance; Hit = &Contact; }
             }
@@ -458,6 +474,12 @@ FReply USectorMapPanel::NativeOnMouseButtonUp(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    if (bOrbitingMap && InMouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton)
+    {
+        bOrbitingMap = false;
+        return FReply::Handled().ReleaseMouseCapture();
+    }
+
     if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
     {
         bDraggingMap = false;
@@ -471,10 +493,20 @@ FReply USectorMapPanel::NativeOnMouseMove(
     const FGeometry& InGeometry,
     const FPointerEvent& InMouseEvent)
 {
+    if (bOrbitingMap)
+    {
+        const FVector2D Delta = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())
+            - InGeometry.AbsoluteToLocal(InMouseEvent.GetLastScreenSpacePosition());
+        MapYaw = FMath::UnwindDegrees(MapYaw + Delta.X * 0.35);
+        MapTilt = FMath::Clamp(MapTilt + Delta.Y * 0.3, 0.0, 72.0);
+        Invalidate(EInvalidateWidget::Paint);
+        return FReply::Handled();
+    }
+
     if (bDraggingMap)
     {
-        const FVector2D MouseDelta =
-            InMouseEvent.GetScreenSpacePosition() - DragStartScreenPosition;
+        const FVector2D MouseDelta = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())
+            - InGeometry.AbsoluteToLocal(DragStartScreenPosition);
 
         PanOffset = ClampPanOffset(
             DragStartPanOffset + MouseDelta,
@@ -493,21 +525,38 @@ FReply USectorMapPanel::NativeOnMouseWheel(
 {
     const float WheelDelta = InMouseEvent.GetWheelDelta();
 
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] NativeOnMouseWheel Delta=%.3f"), WheelDelta);
-
-    if (WheelDelta > 0.0f)
+    if (!FMath::IsNearlyZero(WheelDelta))
     {
-        ZoomIn();
-        return FReply::Handled();
-    }
-
-    if (WheelDelta < 0.0f)
-    {
-        ZoomOut();
+        const FVector2D PanelSize = InGeometry.GetLocalSize();
+        ZoomAt(FMath::Pow(1.25f, WheelDelta),
+            bOperationsView ? PanelSize * 0.5
+                : InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition()),
+            PanelSize);
         return FReply::Handled();
     }
 
     return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
+void USectorMapPanel::NativeOnMouseCaptureLost(const FCaptureLostEvent& Event)
+{
+    bDraggingMap = false;
+    bOrbitingMap = false;
+    Super::NativeOnMouseCaptureLost(Event);
+}
+
+FVector2D USectorMapPanel::ProjectMapOffset(const FVector2D& Offset) const
+{
+    if (bOperationsView) return Offset;
+    const FVector2D Rotated = Offset.GetRotated(MapYaw);
+    return FVector2D(Rotated.X, Rotated.Y * FMath::Cos(FMath::DegreesToRadians(MapTilt)));
+}
+
+FVector2D USectorMapPanel::UnprojectMapOffset(const FVector2D& Offset) const
+{
+    if (bOperationsView) return Offset;
+    const double VerticalScale = FMath::Cos(FMath::DegreesToRadians(MapTilt));
+    return FVector2D(Offset.X, Offset.Y / VerticalScale).GetRotated(-MapYaw);
 }
 
 void USectorMapPanel::SetOwnerNavDlg(UMissionNavDlg* InOwnerNavDlg)
@@ -609,9 +658,7 @@ bool USectorMapPanel::CenterOnElement(MissionElement* InElement)
     const float Scale = (R > 0.0) ? static_cast<float>(C / R) : 1.0f;
 
     const FVector ElementLocation = InElement->GetLocation();
-    const FVector2D Offset(
-        ElementLocation.X * Scale,
-        ElementLocation.Y * Scale);
+    const FVector2D Offset = ProjectMapOffset(FVector2D(ElementLocation.X, ElementLocation.Y)) * Scale;
 
     PanOffset = -Offset;
     PanOffset = ClampPanOffset(PanOffset, PanelSize);
@@ -876,6 +923,42 @@ void USectorMapPanel::DrawRegionGrid(
     int32 RegionRadius,
     int32 GridStep) const
 {
+    if (!bOperationsView)
+    {
+        const auto Project = [&](double X, double Y)
+        {
+            return Center + ProjectMapOffset(FVector2D(X, Y)) * Scale;
+        };
+        int64 Step = GridStep;
+        while (Step * Scale < 24.0 && Step < RegionRadius)
+            Step *= 2;
+        const auto DrawLine = [&](const TArray<FVector2D>& Points, const FLinearColor& Color)
+        {
+            FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(),
+                Points, ESlateDrawEffect::None, Color, true, 1.0f);
+        };
+        for (int64 Offset = -(RegionRadius / Step) * Step; Offset <= RegionRadius; Offset += Step)
+        {
+            const FLinearColor Color = Offset == 0 ? FLinearColor(0.13f, 0.33f, 0.46f, 0.75f)
+                : FLinearColor(0.07f, 0.19f, 0.29f, 0.53f);
+            DrawLine({Project(Offset, -RegionRadius), Project(Offset, RegionRadius)}, Color);
+            DrawLine({Project(-RegionRadius, Offset), Project(RegionRadius, Offset)}, Color);
+        }
+        for (int32 Ring = 1; Ring <= 4; ++Ring)
+        {
+            const double Radius = static_cast<double>(RegionRadius) * Ring / 4.0;
+            TArray<FVector2D> Points;
+            Points.Reserve(97);
+            for (int32 Index = 0; Index <= 96; ++Index)
+            {
+                const double Angle = 2.0 * PI * Index / 96.0;
+                Points.Add(Project(Radius * FMath::Cos(Angle), Radius * FMath::Sin(Angle)));
+            }
+            DrawLine(Points, FLinearColor(0.12f, 0.36f, 0.52f, 0.66f));
+        }
+        return;
+    }
+
     const FLinearColor MajorColor(0.19f, 0.19f, 0.19f, 0.85f);
     const FLinearColor MinorColor(0.09f, 0.09f, 0.09f, 0.80f);
 
@@ -1023,9 +1106,7 @@ void USectorMapPanel::DrawMissionElement(
 
     const FVector ElementLocation = Element->GetLocation();
 
-    const FVector2D ScreenPos(
-        Center.X + (ElementLocation.X * Scale),
-        Center.Y + (ElementLocation.Y * Scale));
+    const FVector2D ScreenPos = Center + ProjectMapOffset(FVector2D(ElementLocation.X, ElementLocation.Y)) * Scale;
 
     const bool bVisible =
         ScreenPos.X >= 0.0f && ScreenPos.X < AllottedGeometry.GetLocalSize().X &&
@@ -1748,9 +1829,7 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
     const float RouteThickness = bIsSelected ? 2.0f : 1.0f;
 
     const FVector ElementLocation = Element->GetLocation();
-    const FVector2D ElementScreenPos(
-        Center.X + (ElementLocation.X * Scale),
-        Center.Y + (ElementLocation.Y * Scale));
+    const FVector2D ElementScreenPos = Center + ProjectMapOffset(FVector2D(ElementLocation.X, ElementLocation.Y)) * Scale;
 
     bool bHaveFirstPointInRegion = false;
     FVector2D FirstNavScreen = FVector2D::ZeroVector;
@@ -1777,9 +1856,7 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
         }
 
         const FVector NavWorld = Nav->GetLocation();
-        const FVector2D NavScreen(
-            Center.X + (NavWorld.X * Scale),
-            Center.Y + (NavWorld.Y * Scale));
+        const FVector2D NavScreen = Center + ProjectMapOffset(FVector2D(NavWorld.X, NavWorld.Y)) * Scale;
 
         if (!bHaveFirstPointInRegion)
         {
@@ -1957,8 +2034,10 @@ bool USectorMapPanel::IsElementCrowded(MissionElement* TestElement, float Scale)
 
         const FVector RefLocation = RefElement->GetLocation();
 
-        const double DX = (TestLocation.X - RefLocation.X) * Scale;
-        const double DY = (TestLocation.Y - RefLocation.Y) * Scale;
+        const FVector2D Delta = ProjectMapOffset(FVector2D(
+            TestLocation.X - RefLocation.X, TestLocation.Y - RefLocation.Y)) * Scale;
+        const double DX = Delta.X;
+        const double DY = Delta.Y;
         const double DistSq = (DX * DX) + (DY * DY);
 
         if (DistSq <= 64.0)
@@ -2003,9 +2082,7 @@ MissionElement* USectorMapPanel::HitTestMissionElementAtLocalPoint(
         }
 
         const FVector ElementLocation = Element->GetLocation();
-        const FVector2D ScreenPos(
-            Center.X + (ElementLocation.X * Scale),
-            Center.Y + (ElementLocation.Y * Scale));
+        const FVector2D ScreenPos = Center + ProjectMapOffset(FVector2D(ElementLocation.X, ElementLocation.Y)) * Scale;
 
         const double DX = LocalPoint.X - ScreenPos.X;
         const double DY = LocalPoint.Y - ScreenPos.Y;
@@ -2042,9 +2119,7 @@ bool USectorMapPanel::FindMissionElementScreenPosition(
 
     const FVector ElementLocation = Element->GetLocation();
 
-    OutScreenPos = FVector2D(
-        Center.X + (ElementLocation.X * Scale),
-        Center.Y + (ElementLocation.Y * Scale));
+    OutScreenPos = Center + ProjectMapOffset(FVector2D(ElementLocation.X, ElementLocation.Y)) * Scale;
 
     return true;
 }
@@ -2076,28 +2151,27 @@ FVector2D USectorMapPanel::ClampPanOffset(const FVector2D& InOffset, const FVect
         FMath::Clamp(InOffset.Y, -DragAllowanceY, DragAllowanceY));
 }
 
+void USectorMapPanel::ZoomAt(float Factor, const FVector2D& Anchor, const FVector2D& PanelSize)
+{
+    const float PreviousZoom = ZoomScale;
+    ZoomScale = FMath::Clamp(ZoomScale * Factor, MinZoomScale, MaxZoomScale);
+    const FVector2D AnchorOffset = Anchor - PanelSize * 0.5;
+    if (!bOperationsView)
+        PanOffset = AnchorOffset + (PanOffset - AnchorOffset) * (ZoomScale / PreviousZoom);
+    PanOffset = ClampPanOffset(PanOffset, PanelSize);
+    Invalidate(EInvalidateWidget::Paint);
+}
+
 void USectorMapPanel::ZoomIn()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn before: %.3f"), ZoomScale);
-
-    ZoomScale = FMath::Clamp(ZoomScale * 1.25f, MinZoomScale, MaxZoomScale);
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomIn after: %.3f"), ZoomScale);
-
-    Invalidate(EInvalidateWidget::Paint);
+    const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
+    ZoomAt(1.25f, PanelSize * 0.5, PanelSize);
 }
 
 void USectorMapPanel::ZoomOut()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut before: %.3f"), ZoomScale);
-
-    ZoomScale = FMath::Clamp(ZoomScale * 0.8f, MinZoomScale, MaxZoomScale);
-    PanOffset = ClampPanOffset(PanOffset, GetCachedGeometry().GetLocalSize());
-
-    UE_LOG(LogTemp, Warning, TEXT("[SectorMapPanel] ZoomOut after: %.3f"), ZoomScale);
-
-    Invalidate(EInvalidateWidget::Paint);
+    const FVector2D PanelSize = GetCachedGeometry().GetLocalSize();
+    ZoomAt(0.8f, PanelSize * 0.5, PanelSize);
 }
 
 const FShipDesign* USectorMapPanel::ResolveShipDesignForElement(MissionElement* Element) const
@@ -2402,7 +2476,7 @@ void USectorMapPanel::SelectLiveContact(uint32 Id, bool CenterOnContact)
             const double Scale = FMath::Min(Size.X, Size.Y) * 0.5 / Radius;
             for (const auto& Contact : LiveContacts)
                 if (Contact.Id == Id)
-                    PanOffset = -FVector2D(Contact.Location.X, Contact.Location.Y) * Scale;
+                    PanOffset = -ProjectMapOffset(FVector2D(Contact.Location.X, Contact.Location.Y)) * Scale;
         }
     }
     Invalidate(EInvalidateWidget::Paint);
@@ -2411,7 +2485,7 @@ void USectorMapPanel::SelectLiveContact(uint32 Id, bool CenterOnContact)
 void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
     const FGeometry& Geometry, int32 Layer, const FVector2D& Center, float Scale) const
 {
-    auto Project = [&](const FVector& Position) { return Center + FVector2D(Position.X, Position.Y) * Scale; };
+    auto Project = [&](const FVector& Position) { return Center + ProjectMapOffset(FVector2D(Position.X, Position.Y)) * Scale; };
     auto Line = [&](const TArray<FVector2D>& Points, const FLinearColor& Color)
     {
         FSlateDrawElement::MakeLines(Elements, Layer, Geometry.ToPaintGeometry(),

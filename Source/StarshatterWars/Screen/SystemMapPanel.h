@@ -53,6 +53,8 @@ class STARSHATTERWARS_API USystemMapPanel : public UUserWidget
 
 public:
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
+    void EnableMissionBodyMeshes();
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
     virtual int32 NativePaint(
@@ -274,6 +276,7 @@ protected:
     UPROPERTY()
     bool bDrawPrimaryStar2D = true;
 
+    TSharedPtr<class FMissionMapBodyPreview> MissionBodyPreview;
     TSet<FString> PlanetsRenderedIn3D;
 
     // ------------------------------------------------------------

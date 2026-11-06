@@ -54,6 +54,174 @@
 #include "Styling/CoreStyle.h"
 #include "Styling/SlateBrush.h"
 
+#include "PlanetActor.h"
+#include "PreviewScene.h"
+#include "Engine/SceneCapture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "RHI.h"
+
+class FMissionMapBodyPreview
+{
+public:
+    const FSlateBrush* FindBrush(const OrbitalBody* Body) const
+    {
+        const FBodyView* View = Views.Find(Body);
+        return View && View->Target.IsValid() ? &View->Brush : nullptr;
+    }
+
+    bool Update(const TArray<OrbitalBody*>& Bodies, double Time)
+    {
+        if (GUsingNullRHI || Bodies.IsEmpty()) return false;
+        if (!Scene && !Initialize()) return false;
+
+        for (auto It = Views.CreateIterator(); It; ++It)
+        {
+            if (!Bodies.Contains(It.Key()))
+            {
+                if (It.Value().Planet.IsValid()) It.Value().Planet->Destroy();
+                It.RemoveCurrent();
+            }
+        }
+
+        if (Time < NextCaptureTime) return false;
+        for (OrbitalBody* Body : Bodies)
+        {
+            FBodyView* View = Views.Find(Body);
+            if (!View)
+            {
+                View = &Views.Add(Body);
+                if (InitializeBody(*View, *Body))
+                {
+                    Render(*View, Time);
+                    NextCaptureTime = Time + 0.06;
+                    return true;
+                }
+            }
+        }
+
+        FBodyView* Oldest = nullptr;
+        for (auto& Entry : Views)
+        {
+            FBodyView& View = Entry.Value;
+            if (View.Target.IsValid() && (!Oldest || View.LastCapture < Oldest->LastCapture))
+                Oldest = &View;
+        }
+        if (Oldest && Time - Oldest->LastCapture >= 0.4)
+        {
+            Render(*Oldest, Time);
+            NextCaptureTime = Time + 0.12;
+            return true;
+        }
+        return false;
+    }
+
+    void Clear()
+    {
+        Views.Empty();
+        Capture.Reset();
+        Scene.Reset();
+        BaseMaterial.Reset();
+        NextCaptureTime = 0;
+    }
+
+private:
+    struct FBodyView
+    {
+        TWeakObjectPtr<APlanetActor> Planet;
+        TStrongObjectPtr<UTextureRenderTarget2D> Target;
+        TStrongObjectPtr<UMaterialInstanceDynamic> Material;
+        FSlateBrush Brush;
+        double LastCapture = 0;
+        double Tilt = 0;
+        double SpinDirection = 1;
+    };
+
+    bool Initialize()
+    {
+        BaseMaterial.Reset(LoadObject<UMaterialInterface>(nullptr,
+            TEXT("/Game/UI/Materials/M_UIPlayerShipMFD.M_UIPlayerShipMFD")));
+        if (!BaseMaterial.IsValid()) return false;
+        Scene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues()
+            .SetEditor(false).SetCreatePhysicsScene(false).SetSkyBrightness(0.f));
+        Capture = Scene->GetWorld()->SpawnActor<ASceneCapture2D>();
+        if (!Capture.IsValid())
+        {
+            Clear();
+            return false;
+        }
+
+        Capture->SetActorLocation(FVector(-350, 0, 0));
+        auto* Component = Capture->GetCaptureComponent2D();
+        Component->ProjectionType = ECameraProjectionMode::Orthographic;
+        Component->OrthoWidth = 108.f;
+        Component->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+        Component->CaptureSource = SCS_SceneColorHDR;
+        Component->bCaptureEveryFrame = false;
+        Component->bCaptureOnMovement = false;
+        Component->ShowFlags.SetPostProcessing(false);
+        return true;
+    }
+
+    static UTexture2D* LoadSurface(const char* TextureName)
+    {
+        const FString Name = UTF8_TO_TCHAR(TextureName);
+        if (Name.IsEmpty()) return nullptr;
+        return LoadObject<UTexture2D>(nullptr, *FString::Printf(
+            TEXT("/Game/GameData/Galaxy/PlanetMaterials/%s.%s"), *Name, *Name));
+    }
+
+    bool InitializeBody(FBodyView& View, const OrbitalBody& Body)
+    {
+        UTexture2D* Surface = LoadSurface(Body.GetTexture());
+        if (!Surface) return false;
+        auto* Planet = Scene->GetWorld()->SpawnActor<APlanetActor>();
+        if (!Planet) return false;
+        Planet->SetPlanetRadius(50.f);
+        Planet->SetPlanetTextures(Surface, LoadSurface(Body.GetGlossTexture()), LoadSurface(Body.GetGlowTexture()));
+        Planet->SetLightDirection(FVector(-1, -0.45, 0.45).GetSafeNormal());
+        Planet->SetActorEnableCollision(false);
+        Planet->SetActorTickEnabled(false);
+        View.Planet = Planet;
+        View.Tilt = FMath::RadiansToDegrees(Body.GetTilt());
+        View.SpinDirection = Body.IsRetrograde() ? -1.0 : 1.0;
+        View.Target.Reset(NewObject<UTextureRenderTarget2D>(GetTransientPackage()));
+        View.Target->RenderTargetFormat = RTF_RGBA16f;
+        View.Target->ClearColor = FLinearColor(0, 0, 0, 1);
+        View.Target->InitAutoFormat(256, 256);
+        View.Target->UpdateResourceImmediate(true);
+        View.Material.Reset(UMaterialInstanceDynamic::Create(BaseMaterial.Get(), GetTransientPackage()));
+        View.Material->SetTextureParameterValue(TEXT("ShipTexture"), View.Target.Get());
+        View.Brush.SetResourceObject(View.Material.Get());
+        View.Brush.DrawAs = ESlateBrushDrawType::Image;
+        return true;
+    }
+
+    void Render(FBodyView& View, double Time)
+    {
+        auto* Planet = View.Planet.Get();
+        if (!Planet) return;
+        Planet->SetActorRotation(FRotator(View.Tilt, 0, 0));
+        Planet->GetPlanetMeshComponent()->SetRelativeRotation(
+            FRotator(0, FMath::Fmod(Time * 4.0 * View.SpinDirection, 360.0), 0));
+        auto* Component = Capture->GetCaptureComponent2D();
+        Component->TextureTarget = View.Target.Get();
+        Component->ShowOnlyActors.Reset();
+        Component->ShowOnlyActors.Add(Planet);
+        Scene->GetWorld()->SendAllEndOfFrameUpdates();
+        Component->CaptureScene();
+        View.LastCapture = Time;
+    }
+
+    TUniquePtr<FPreviewScene> Scene;
+    TWeakObjectPtr<ASceneCapture2D> Capture;
+    TStrongObjectPtr<UMaterialInterface> BaseMaterial;
+    TMap<const OrbitalBody*, FBodyView> Views;
+    double NextCaptureTime = 0;
+};
+
 static void DrawOrbitEllipseLines(
     FSlateWindowElementList& OutDrawElements,
     int32 LayerId,
@@ -320,9 +488,36 @@ void USystemMapPanel::NativeConstruct()
     RefreshView();
 }
 
+void USystemMapPanel::EnableMissionBodyMeshes()
+{
+    MissionBodyPreview = MakeShared<FMissionMapBodyPreview>();
+}
+
+void USystemMapPanel::NativeDestruct()
+{
+    if (MissionBodyPreview) MissionBodyPreview->Clear();
+    Super::NativeDestruct();
+}
+
 void USystemMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (MissionBodyPreview && IsVisible())
+    {
+        TArray<OrbitalBody*> Bodies;
+        GetPlanetMapBodies(Bodies);
+        const int32 PlanetCount = Bodies.Num();
+        for (int32 Index = 0; Index < PlanetCount; ++Index)
+        {
+            if (Bodies[Index]->GetType() != Orbital::PLANET) continue;
+            ListIter<OrbitalBody> Satellites = Bodies[Index]->Satellites();
+            while (++Satellites)
+                if (OrbitalBody* Moon = Satellites.value()) Bodies.Add(Moon);
+        }
+        if (MissionBodyPreview->Update(Bodies, FPlatformTime::Seconds()))
+            Invalidate(EInvalidateWidget::Paint);
+    }
 
     if (bCameraAnimating)
     {
@@ -1546,26 +1741,33 @@ int32 USystemMapPanel::NativePaint(
         }
         return PaintLayer;
     };
+    auto DrawBody = [&](const OrbitalBody* Body, const FVector2D& Center, float Diameter,
+        int32& Layer, bool bMoon)
+    {
+        if (PlanetsRenderedIn3D.Contains(ANSI_TO_TCHAR(Body->GetName()))) return;
+        const FSlateBrush* Brush = MissionBodyPreview ? MissionBodyPreview->FindBrush(Body) : nullptr;
+        FSlateBrush Fallback;
+        if (!Brush)
+        {
+            UTexture2D* Texture = bMoon ? GetMoonTexture(Body) : GetPlanetTexture(Body);
+            if (!Texture) return;
+            Fallback.DrawAs = ESlateBrushDrawType::Image;
+            Fallback.SetResourceObject(Texture);
+            Brush = &Fallback;
+        }
+
+        // The capture has a small transparent border to keep the limb clear of its edges.
+        const float Size = Brush == &Fallback ? Diameter : Diameter * 1.08f;
+        FSlateDrawElement::MakeBox(OutDrawElements, ++Layer,
+            AllottedGeometry.ToPaintGeometry(Center - FVector2D(Size * 0.5f), FVector2D(Size)),
+            Brush, ESlateDrawEffect::None, FLinearColor::White);
+    };
     if (FocusedMoon)
     {
         const FVector2D Center = AllottedGeometry.GetLocalSize() * 0.5f + PanOffset;
         const float Diameter = 96.0f * ZoomScale;
         const FString Name = ANSI_TO_TCHAR(FocusedMoon->GetName());
-        if (!PlanetsRenderedIn3D.Contains(Name))
-        {
-            if (UTexture2D* Texture = GetMoonTexture(FocusedMoon))
-            {
-                FSlateBrush Brush;
-                Brush.DrawAs = ESlateBrushDrawType::Image;
-                Brush.SetResourceObject(Texture);
-                Brush.ImageSize = FVector2D(Diameter, Diameter);
-                FSlateDrawElement::MakeBox(OutDrawElements, ++LayerId,
-                    AllottedGeometry.ToPaintGeometry(
-                        Center - FVector2D(Diameter * 0.5f, Diameter * 0.5f),
-                        FVector2D(Diameter, Diameter)),
-                    &Brush, ESlateDrawEffect::None, FLinearColor::White);
-            }
-        }
+        DrawBody(FocusedMoon, Center, Diameter, LayerId, true);
         FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
             AllottedGeometry.ToPaintGeometry(
                 Center + FVector2D(-Diameter * 0.5f, Diameter * 0.5f + 10.0f),
@@ -1734,24 +1936,7 @@ int32 USystemMapPanel::NativePaint(
             PaintLayer += 1;
         }
 
-        UTexture2D* PlanetTexture = GetPlanetTexture(PlanetBody);
-        if (PlanetTexture && !PlanetsRenderedIn3D.Contains(ANSI_TO_TCHAR(PlanetBody->GetName())))
-        {
-            FSlateBrush PlanetBrush;
-            PlanetBrush.DrawAs = ESlateBrushDrawType::Image;
-            PlanetBrush.SetResourceObject(PlanetTexture);
-            PlanetBrush.ImageSize = FVector2D(PlanetDrawSize, PlanetDrawSize);
-
-            FSlateDrawElement::MakeBox(
-                OutDrawElements,
-                ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    FVector2D(PlanetCenter.X - PlanetDrawSize * 0.5f, PlanetCenter.Y - PlanetDrawSize * 0.5f),
-                    FVector2D(PlanetDrawSize, PlanetDrawSize)),
-                &PlanetBrush,
-                ESlateDrawEffect::None,
-                FLinearColor::White);
-        }
+        DrawBody(PlanetBody, PlanetCenter, PlanetDrawSize, PaintLayer, false);
 
         bool bHighlightMoonOrbitsForThisPlanet = false;
         const FString CleanPlanetName = ANSI_TO_TCHAR(PlanetBody->GetName());
@@ -1862,24 +2047,7 @@ int32 USystemMapPanel::NativePaint(
                     FCoreStyle::GetDefaultFontStyle("Regular", 11),
                     ESlateDrawEffect::None, EmpireColor);
             }
-            UTexture2D* MoonTexture = GetMoonTexture(MoonBody);
-            if (MoonTexture && !PlanetsRenderedIn3D.Contains(ANSI_TO_TCHAR(MoonBody->GetName())))
-            {
-                FSlateBrush MoonBrush;
-                MoonBrush.DrawAs = ESlateBrushDrawType::Image;
-                MoonBrush.SetResourceObject(MoonTexture);
-                MoonBrush.ImageSize = FVector2D(MoonDrawSize, MoonDrawSize);
-
-                FSlateDrawElement::MakeBox(
-                    OutDrawElements,
-                    ++PaintLayer,
-                    AllottedGeometry.ToPaintGeometry(
-                        FVector2D(MoonCenter.X - MoonDrawSize * 0.5f, MoonCenter.Y - MoonDrawSize * 0.5f),
-                        FVector2D(MoonDrawSize, MoonDrawSize)),
-                    &MoonBrush,
-                    ESlateDrawEffect::None,
-                    FLinearColor::White);
-            }
+            DrawBody(MoonBody, MoonCenter, MoonDrawSize, PaintLayer, true);
         }
     }
 

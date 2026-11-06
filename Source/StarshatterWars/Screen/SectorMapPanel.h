@@ -304,7 +304,15 @@ protected:
     bool bOperationsView = false;
     bool bValidView = false;
 
+    FVector2D ProjectMapOffset(const FVector2D& Offset) const;
+    FVector2D UnprojectMapOffset(const FVector2D& Offset) const;
+    void ZoomAt(float Factor, const FVector2D& Anchor, const FVector2D& PanelSize);
+    virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& Event) override;
+
     bool bDraggingMap = false;
+    bool bOrbitingMap = false;
+    double MapYaw = 0.0;
+    double MapTilt = 32.0;
     FVector2D DragStartScreenPosition = FVector2D::ZeroVector;
     FVector2D DragStartPanOffset = FVector2D::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;

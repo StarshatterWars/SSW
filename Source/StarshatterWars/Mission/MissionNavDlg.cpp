@@ -929,6 +929,7 @@ void UMissionNavDlg::BuildRuntimeLayout()
     else
     {
         SystemMapPanel->SetOwnerNavDlg(this);
+        SystemMapPanel->EnableMissionBodyMeshes();
         SystemPanelHost->SetContent(SystemMapPanel);
 
         UE_LOG(LogTemp, Warning,
