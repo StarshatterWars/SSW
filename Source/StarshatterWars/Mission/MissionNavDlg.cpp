@@ -1895,7 +1895,8 @@ void UMissionNavDlg::BuildPlanetObjects()
 
     UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects called"));
 
-    StarSystem* System = bInMissionNavigation ? FindRuntimeSystemByName(SelectedSystemName) : MissionPtr->GetStarSystem();
+    StarSystem* System = SelectedSystemName.IsEmpty()
+        ? MissionPtr->GetStarSystem() : FindRuntimeSystemByName(SelectedSystemName);
     if (!System)
     {
         UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] BuildPlanetObjects: Mission star system is null"));
