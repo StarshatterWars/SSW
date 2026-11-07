@@ -30,7 +30,9 @@ bool FTurretGunAttachmentTest::RunTest(const FString&)
   TestTrue(TEXT("Canonical Blueprint derives from native turret"),Visual->IsChildOf(Native));
   TestTrue(TEXT("Organized Blueprint path"),Visual->GetPathName().StartsWith(TEXT("/Game/Models/Weapons/Turret/")));
   const auto* Defaults=Visual->GetDefaultObject<ATurretActor>();
-  TestTrue(TEXT("Imported +Y gun faces simulation +X"),Defaults->GunMesh->GetRelativeRotation().RotateVector(FVector::RightVector).Equals(FVector::ForwardVector,.00001));
+  const bool bGroundMesh = Type == TEXT("AAA Cannon") || Type == TEXT("Quad AAA") || Type == TEXT("SAM-1");
+  const FVector MeshForward = bGroundMesh ? -FVector::RightVector : FVector::RightVector;
+  TestTrue(TEXT("Imported gun faces simulation +X"),Defaults->GunMesh->GetRelativeRotation().RotateVector(MeshForward).Equals(FVector::ForwardVector,.00001));
  }
  TestEqual(TEXT("All 26 Wep.def turret entries covered"),Seen.Num(),26);
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
@@ -42,7 +44,9 @@ bool FTurretGunAttachmentTest::RunTest(const FString&)
    TestTrue(TEXT("Gun has authored muzzle points"),R->NBarrels>0);
    TestEqual(TEXT("Every barrel represented in actor"),Gun->LegacyMuzzles.Num(),R->NBarrels);
    for(int B=0;B<R->NBarrels;++B){FTransform M;TestTrue(TEXT("Each individual muzzle resolves"),Gun->GetMuzzleTransform(B,M));const FVector P=R->MuzzlePoints[B];
-    const FVector MeshTip=Gun->GunMesh->GetComponentTransform().TransformPosition(FVector(-P.X,P.Z,P.Y));TestTrue(TEXT("Authored muzzle matches corrected mesh frame"),M.GetLocation().Equals(MeshTip,.001));}
+    const bool bGroundMesh = Type == TEXT("AAA Cannon") || Type == TEXT("Quad AAA");
+    const FVector MeshPoint = bGroundMesh ? FVector(P.X,-P.Z,P.Y) : FVector(-P.X,P.Z,P.Y);
+    const FVector MeshTip=Gun->GunMesh->GetComponentTransform().TransformPosition(MeshPoint);TestTrue(TEXT("Authored muzzle matches corrected mesh frame"),M.GetLocation().Equals(MeshTip,.001));}
   }Gun->Destroy();
  }
 
